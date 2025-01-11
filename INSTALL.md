@@ -1,8 +1,6 @@
 # Quick start
 
-Netatalk uses the Meson build system with ninja-build as the backend.
-
-Meson must be of version 0.61.2 or later.
+Netatalk uses the Meson build system with Ninja as the backend.
 
 Meson only supports out-of-tree builds, and must be passed a directory to put
 built and generated sources into. We'll call that directory "build" here. It's
@@ -79,17 +77,17 @@ options.
 
 Required:
 
-  - Berkeley DB version 4.6.0 or later (packaged as `bdb` or sometimes `db`)
+  - Berkeley DB version 4.6.0 or later (often packaged as `bdb` or sometimes `db`)
   - libevent version 2
   - libgcrypt version 1.2.3 or later
-  - meson 0.61.2 or later
+  - meson version 0.61.2 or later
   - ninja (often packaged as `ninja-build`)
 
 Required for Spotlight support:
 
   - D-Bus (also used by avahi and afpstats)
   - talloc
-  - tracker version 0.12 or later, or tinysparql and localsearch version 3.8.0 or later
+  - tracker version 0.12 or later; or tinysparql and localsearch version 3.8.0 or later
   - bison
   - flex
 
