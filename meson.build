@@ -2286,7 +2286,7 @@ if have_webmin
     init_a2boot_restart = ''
 
     if 'systemd' in init_style
-        init_netatalk_start = 'systemmctl start netatalk'
+        init_netatalk_start = 'systemctl start netatalk'
         init_netatalk_stop = 'systemctl stop netatalk'
         init_netatalk_restart = 'systemctl restart netatalk'
         init_atalkd_start = 'systemctl start atalkd'
