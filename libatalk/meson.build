@@ -46,8 +46,8 @@ if have_appletalk
 endif
 
 if have_spotlight
-    subdir('talloc')
-    libatalk_libs += libtalloc
+    subdir('dalloc')
+    libatalk_libs += libdalloc
 endif
 
 libatalk = library(
