@@ -2,6 +2,8 @@
 
 Netatalk uses the Meson build system with ninja-build as the backend.
 
+Meson must be of version 0.61.2 or later.
+
 Meson only supports out-of-tree builds, and must be passed a directory to put
 built and generated sources into. We'll call that directory "build" here. It's
 recommended to create a separate build directory for each configuration you
@@ -80,6 +82,8 @@ Required:
   - Berkeley DB version 4.6.0 or later (packaged as `bdb` or sometimes `db`)
   - libevent version 2
   - libgcrypt version 1.2.3 or later
+  - meson 0.61.2 or later
+  - ninja (often packaged as `ninja-build`)
 
 Required for Spotlight support:
 
