@@ -411,7 +411,7 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
 static int parse_entries(struct adouble *ad, uint16_t nentries, size_t valid_data_len)
 {
     uint32_t   eid, len, off;
-    uint8_t *buf = ad->ad_data + AD_HEADER_LEN;
+    uint8_t *buf = (uint8_t *) ad->ad_data + AD_HEADER_LEN;
 
     /* now, read in the entry bits */
     for (; nentries > 0; nentries-- ) {

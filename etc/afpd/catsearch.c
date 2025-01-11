@@ -424,7 +424,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 	else {
 		p++;
 	}
-	*p++ = isdir ? FILDIRBIT_ISDIR : FILDIRBIT_ISFILE;    /* IsDir ? */
+	*p++ = isdir ? (char) FILDIRBIT_ISDIR : FILDIRBIT_ISFILE;    /* IsDir ? */
 
 	if (ext) {
 		*p++ = 0;                  /* Pad */

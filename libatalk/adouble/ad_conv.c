@@ -157,7 +157,7 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
     ad_init_old(&adv2, AD_VERSION2, adea.ad_options);
 
     size_t copybuf_len = 0;
-    char* copybuf;
+    uint8_t* copybuf;
 
     if (vol->v_obj->proto == AFPPROTO_DSI)
     {

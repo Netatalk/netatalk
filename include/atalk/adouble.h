@@ -436,7 +436,7 @@ extern ssize_t adf_pread(struct ad_fd *, void *, size_t, off_t);
 extern ssize_t adf_pwrite(struct ad_fd *, const void *, size_t, off_t);
 extern int     ad_dtruncate(struct adouble *, off_t);
 extern int     ad_rtruncate(struct adouble *, const char *, off_t);
-extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads, char *buf, size_t buflen);
+extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf, size_t buflen);
 
 /* ad_size.c */
 extern off_t ad_size (const struct adouble *, uint32_t );

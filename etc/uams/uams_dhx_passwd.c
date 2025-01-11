@@ -141,7 +141,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
 
-    gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, KEYSIZE, &nwritten, Mb);
+    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *) rbuf, KEYSIZE, &nwritten, Mb);
     if (nwritten < KEYSIZE) {
         memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
         memset(rbuf, 0, KEYSIZE - nwritten);

@@ -440,7 +440,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             *data++ = esz + header;
         }
 
-        *data++ = S_ISDIR(s_path.st.st_mode) ? FILDIRBIT_ISDIR : FILDIRBIT_ISFILE;
+        *data++ = S_ISDIR(s_path.st.st_mode) ? (char) FILDIRBIT_ISDIR : FILDIRBIT_ISFILE;
         if (ext) {
              *data++ = 0;
         }
