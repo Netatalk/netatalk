@@ -1,3 +1,41 @@
+Changes in 4.1.0
+================
+* NEW: afpd: Add native metadata storage for macOS hosts, GitHub #1813
+* FIX: afpd: Do not report old AFP versions when AppleTalk support
+       is disabled, GitHub #1846
+* REM: Remove 'start tracker' and 'start dbus' afp.conf options, GitHub #1848
+* REM: Remove the running of AFP commands with root privileges, GitHub #1849
+* FIX: libatalk: Loosen AppleDouble checks for macOS, GitHub #1829
+* FIX: libatalk: Protect Netatalk metadata EA from tampering, GitHub #1855
+* FIX: Refactor retreival of native FinderInfo EA on macOS hosts, GitHub #1858
+* NEW: macipgw: Introduce a configuration file, GitHub #1852
+* UPD: macipgw: Default port value for zip/ddp service, GitHub #1836
+       This should get the gateway working on musl systems (OpenWrt)
+* FIX: afppasswd: Safe password string handling, GitHub #1845
+* NEW: meson: Introduce with-kerberos-path option for custom dependency path,
+       which can be used for Heimdal compatibility, GitHub #1822
+* UPD: meson: Define lockfiles through the Meson build system, GitHub #1850
+       Meson's with-lockfile-path now points to the lockfile root
+* UPD: meson: Detect lib paths within Homebrew build system, GitHub #1833
+* FIX: meson: Correctly detect bundled iconv on OpenWrt, GitHub #1857
+* UPD: meson: Link papd with cups only when cups is enabled, GitHub #1862
+* UPD: initscripts: Disable fork safety workaround for macOS, GitHub #1810
+* UPD: initscripts: Start in non-forking mode with launchd, GitHub #1859
+* UPD: docs: Correct atalkd.conf documentation, GitHub #1818
+* FIX: docs: Fixes for spelling and grammar, GitHub #1856
+* UPD: docs: Clarify the behavior of the -d option for daemons, GitHub #1861
+* NEW: testsuite: Introduce -X option for running on big-endian systems,
+       specifically s309x, GitHub #1817
+* FIX: testsuite: Cross-platform compatible file ID tests, GitHub #1826
+* FIX: testsuite: Don't attempt unauthorized file renaming in Error tests,
+       GitHub #1828
+* FIX: testsuite: Clean up after execution of encoding test, GitHub #1832
+* FIX: testsuite: Free memory after running tests, GitHub #1866
+* FIX: testsuite: Improve memory management in lantest, GitHub #1868
+* UPD: Rename apple_dump script to addump, GitHub #1811
+* UPD: webmin: Restructure index page into three tabs, GitHub #1785
+* UPD: docker: Bump base image to Alpine 3.21, GitHub #1842
+
 Changes in 4.0.8
 ================
 * UPD: Set resource max limit to 10240 on macOS, GitHub #1793
