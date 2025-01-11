@@ -275,13 +275,14 @@ int flags = O_RDWR;
 	}
 	did = ntohl(did);
 	if (local_chdir(vol, did) < 0) {
-		return ntohl(AFPERR_PARAM);
+		return (uint16_t) ntohl(AFPERR_PARAM);
 	}
 	fd = open(name, flags, 0666);
 	if (fd == -1) {
-		return ntohl(AFPERR_NOOBJ);
+		return (uint16_t) ntohl(AFPERR_NOOBJ);
 	}
-	return fd;
+	close(fd);
+	return (uint16_t) ntohl(AFP_OK);
 }
 
 /* ------------------------------- */

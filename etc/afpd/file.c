@@ -1472,7 +1472,7 @@ int copyfile(struct vol *s_vol,
         return AFPERR_EXIST;
     }
     size_t copybuf_len = 0;
-    char* copybuf;
+    uint8_t* copybuf;
 
     if (s_vol->v_obj->proto == AFPPROTO_DSI)
     {

@@ -217,12 +217,12 @@ static int copy_all(const int dfd, const void *buf,
 /* --------------------------
  * copy only the fork data stream
 */
-int copy_fork(int eid, struct adouble *add, struct adouble *ads, char *buf, size_t buflen)
+int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf, size_t buflen)
 {
     ssize_t cc;
     int     err = 0;
-    char    fixedbuf[8192];
-    char    *filebuf;
+    uint8_t fixedbuf[8192];
+    uint8_t *filebuf;
     int     sfd, dfd;
 
     if (buf != NULL && buflen > sizeof(fixedbuf)) {

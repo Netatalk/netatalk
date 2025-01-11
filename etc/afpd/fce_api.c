@@ -182,7 +182,7 @@ void fce_cleanup(void)
  * Construct a UDP packet for our listeners and return packet size
  * */
 static ssize_t build_fce_packet(const AFPObj *obj,
-                                char *iobuf,
+                                unsigned char *iobuf,
                                 fce_ev_t event,
                                 const char *path,
                                 const char *oldpath,
@@ -190,7 +190,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
                                 const char *user,
                                 uint32_t event_id)
 {
-    char *p = iobuf;
+    unsigned char *p = iobuf;
     size_t pathlen;
     ssize_t datalen = 0;
     uint16_t uint16;

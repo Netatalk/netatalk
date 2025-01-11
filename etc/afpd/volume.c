@@ -583,7 +583,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
             break;
 
         /* set password bit if there's a volume password */
-        *data = (volume->v_password) ? AFPSRVR_PASSWD : 0;
+        *data = (volume->v_password) ? (char) AFPSRVR_PASSWD : 0;
 
         /* Apple 2 clients running ProDOS-8 expect one volume to have
            bit 0 of this byte set.  They will not recognize anything
