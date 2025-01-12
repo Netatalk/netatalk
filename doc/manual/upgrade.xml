@@ -2064,15 +2064,15 @@
               <row>
                 <entry>root_postexec:</entry>
 
-                <entry>root postexec</entry>
+                <entry>-</entry>
+
+                <entry>-</entry>
 
                 <entry>-</entry>
 
                 <entry>-</entry>
 
-                <entry>(V)</entry>
-
-                <entry>-</entry>
+                <entry>obsoleted in 4.1.0</entry>
               </row>
 
               <row>
