@@ -419,12 +419,23 @@ jobs:
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
-      HOMEBREW_NO_INSTALLED_DEPENDENTS_CHECK: 1
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          brew install berkeley-db@5 bison cmark-gfm dbus docbook-xsl libxslt mariadb meson openldap talloc tracker
+          brew update
+          brew upgrade
+          brew install \
+            bison \
+            cmark-gfm \
+            cracklib \
+            dbus \
+            docbook-xsl \
+            mariadb \
+            meson \
+            openldap \
+            talloc \
+            tracker
       - name: Configure
         run: |
           meson setup build \
