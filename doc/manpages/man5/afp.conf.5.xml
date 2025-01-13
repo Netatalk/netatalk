@@ -528,6 +528,11 @@
           <listitem>
             <para>Specifies the encoding of the volumes filesystem. By
             default, it is the same as <option>unix charset</option>.</para>
+
+            <note>
+              <para>It is highly recommended to stick to the default UTF-8
+              encoding.</para>
+            </note>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -970,8 +975,8 @@
 
           <listitem>
             <para>Sets the path to dbus-daemon binary used by the Spotlight
-            feature. Can be used when the compile-time default path
-            does not match the runtime environment.</para>
+            feature. Can be used when the compile-time default path does not
+            match the runtime environment.</para>
           </listitem>
         </varlistentry>
 
@@ -1061,8 +1066,8 @@
 
           <listitem>
             <para>Sets the shared volume icon displayed in the Finder in
-            Classic Mac OS. Note that some versions of Classic Mac OS
-            ignores this icon. Examples of valid icon styles:</para>
+            Classic Mac OS. Note that some versions of Classic Mac OS ignores
+            this icon. Examples of valid icon styles:</para>
 
             <itemizedlist>
               <listitem>
@@ -1919,6 +1924,19 @@
             <para>set the CNID backend to be used for the volume, default is
             [@DEFAULT_CNID_SCHEME@] available schemes:
             [@compiled_backends@]</para>
+
+            <note>
+              <para>The "mysql" backend requires the system administrator to
+              configure a MySQL database instance for use with
+              netatalk.</para>
+            </note>
+
+            <warning>
+              <para>Do <emphasis>NOT</emphasis> use the "last" backend for
+              volumes, because <command>afpd</command> relies heavily on a
+              persistent ID database. Aliases will likely not work and
+              filename mangling is not supported.</para>
+            </warning>
           </listitem>
         </varlistentry>
 
@@ -2334,88 +2352,6 @@
   </refsect1>
 
   <refsect1>
-    <title>CNID backends</title>
-
-    <para>The AFP protocol primarily refers to files and directories by ID and
-    not by name. Netatalk needs a way to store these IDs in a persistent way.
-    To achieve this, Netatalk provides multiple CNID backends with different
-    capabilities. The CNID databases are by default located under
-    localstatedir.</para>
-
-    <variablelist>
-      <varlistentry>
-        <term>dbd</term>
-
-        <listitem>
-          <para>Access to the CNID database is restricted to the
-          <command>cnid_metad</command> daemon process.
-          <command>afpd</command> processes communicate with the daemon for
-          database reads and updates. If built with Berkeley DB transactions
-          the probability for database corruption is practically zero, but
-          performance can be slower than with <option>cdb</option></para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>last</term>
-
-        <listitem>
-          <para>This backend is an exception, in terms of ID persistency. ID's
-          are only valid for the current session. This is basically what
-          <command>afpd</command> did in the 1.5 (and 1.6) versions. This
-          backend is still available, as it is useful for e.g. sharing CD-ROMs.
-          Starting with Netatalk 3.0, it becomes the <emphasis>read only
-          mode</emphasis> automatically.</para>
-
-          <para><emphasis role="bold">Warning</emphasis>: It is
-          <emphasis>NOT</emphasis> recommended to use this backend for volumes
-          anymore, as <command>afpd</command> now relies heavily on a
-          persistent ID database. Aliases will likely not work and filename
-          mangling is not supported.</para>
-        </listitem>
-      </varlistentry>
-    </variablelist>
-
-    <para>Even though <command>./configure --help</command> might show that
-    there are other CNID backends available, be warned those are likely broken
-    or mainly used for testing. Don't use them unless you know what you're
-    doing, they may be removed without further notice from future
-    versions.</para>
-  </refsect1>
-
-  <refsect1>
-    <title>Charset options</title>
-
-    <para>With OS X Apple introduced the AFP3 protocol. One of the most
-    important changes was that AFP3 uses unicode names encoded as UTF-8
-    decomposed. Previous AFP/OS versions used codepages, like MacRoman,
-    MacCentralEurope, etc.</para>
-
-    <para><command>afpd</command> needs a way to preserve extended Macintosh
-    characters, or characters illegal in unix filenames, when saving files on
-    a unix filesystem. This version now uses UTF-8 as the default encoding for
-    names. '<keycode>/</keycode>' will be converted to
-    '<keycode>:</keycode>'.</para>
-
-    <para>Earlier versions used the the so called CAP encoding. An extended
-    character (&gt;0x7F) would be converted to a :xx sequence, e.g. the Apple
-    Logo (MacRoman: 0xF0) was saved as <literal>:f0</literal>. Some special
-    characters would be converted as to :xx notation as well.
-    '<keycode>/</keycode>' would be encoded to <literal>:2f</literal>, a
-    leading dot '<keycode>.</keycode>' might be encoded as
-    <literal>:2e</literal>.</para>
-
-    <para>The <option>vol charset</option> option will allow you to select
-    another volume encoding. <command>afpd</command> will accept any
-    <citerefentry>
-        <refentrytitle><command>iconv</command></refentrytitle>
-
-        <manvolnum>1</manvolnum>
-      </citerefentry> provided charset. It is highly recommended to stick to
-    the default UTF-8.</para>
-  </refsect1>
-
-  <refsect1>
     <title>See Also</title>
 
     <para><citerefentry>
@@ -2444,6 +2380,7 @@
   <refsect1>
     <title>Author</title>
 
-    <para>See <ulink url='https://netatalk.io/contributors'>CONTRIBUTORS</ulink></para>
+    <para>See <ulink
+    url="https://netatalk.io/contributors">CONTRIBUTORS</ulink></para>
   </refsect1>
 </refentry>

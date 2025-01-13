@@ -243,9 +243,13 @@ basedir regex = /usr/home</programlisting></para>
           <secondary>"last" CNID バックエンド</secondary>
         </indexterm></title>
 
-      <para>last バックエンドはメモリーにデータを保持する tdb データベースである。それ故永続性がない。netatalk 3.0
-      からは、それは自動的に<emphasis>読み込み専用モード</emphasis>になる。このバックエンドは例えば CD-ROM
+      <para>last バックエンドはメモリーにデータを保持する tdb データベースである。故永続性がなく、ID
+      はカレントセッションでしか有効ではない。netatalk 3.0
+      からは、それは<emphasis>読み込み専用モード</emphasis>になっている。このバックエンドは例えば CD-ROM や自動化テスト
       などに有用である。</para>
+
+      <para>これは基本的には <command>afpd</command> が netatalk バージョン 1.5以前で CNID
+      データの保存方法に一致している。</para>
     </sect2>
 
     <sect2>

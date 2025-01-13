@@ -446,6 +446,10 @@
           <listitem>
             <para>ボリュームのファイルシステムのエンコーディングを指定する。デフォルトでは<option>unix
             charset</option>と同じである。</para>
+
+            <note>
+              <para>デフォルトのUTF-8エンコーディングを使うことをを強く推奨する。</para>
+            </note>
           </listitem>
         </varlistentry>
       </variablelist>
@@ -908,9 +912,8 @@
           <type>(G)</type></term>
 
           <listitem>
-            <para>Classic Mac OS の Finder に表示される共有ボリューム アイコンを設定する。
-            参考に、ある Classic Mac OS バージョンでは、このアイコン設定が無視される。
-            有効なアイコン名の例は以下になる。</para>
+            <para>Classic Mac OS の Finder に表示される共有ボリューム アイコンを設定する。 参考に、ある
+            Classic Mac OS バージョンでは、このアイコン設定が無視される。 有効なアイコン名の例は以下になる。</para>
 
             <itemizedlist>
               <listitem>
@@ -1692,6 +1695,16 @@
             <para>そのボリュームに使う CNID バックエンドをセットする。デフォルトのバックエンドは
             [@DEFAULT_CNID_SCHEME@] で、有効なバックエンドは [@compiled_backends@]
             である。</para>
+
+            <note>
+              <para>「mysql」バックエンドでは、システム管理者が netatalk で使用するために MySQL データベース
+              インスタンスを構成する必要がある。</para>
+            </note>
+
+            <warning>
+              <para><command>afpd</command> が持続性のある ID
+              データベースに重く依存しているので、このバックエンドをボリュームに使用するのは推奨<emphasis>されていない</emphasis>。エイリアスはおそらく機能しないだろうし、ファイル名のマングリングもサポートされていない。</para>
+            </warning>
           </listitem>
         </varlistentry>
 
@@ -2077,81 +2090,6 @@ directory perm = 0770</programlisting></para>
   </refsect1>
 
   <refsect1>
-    <title>CNID バックエンド</title>
-
-    <para>AFP プロトコルはたいていはファイルとディレクトリを名前ではなく ID で参照する。Netatalk はこの ID
-    を永続的な方法で保管する方法を必要とする。これを達成するためにいくつかの異なる CNID バックエンドが用意されている。CNID
-    データベースはデフォルトで localstatedir の下に置かれている。</para>
-
-    <variablelist>
-      <varlistentry>
-        <term>cdb</term>
-
-        <listitem>
-          <para>"Concurrent database" バックエンドは Oracle Berkeley DB
-          を基礎としている。このバックエンドだと、いくつかの <command>afpd</command> デーモンが直接 CNID
-          データベースにアクセスする。もし一つのボリュームあたり、一つ以上の <command>afpd</command>
-          プロセスがアクティブならば、Berkeley DB ロッキングがアクセスを同期するために用いられる。欠点は単一の
-          <command>afpd</command> プロセスのクラッシュがデータベースを壊すかもしれないということである。</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>dbd</term>
-
-        <listitem>
-          <para>CNID データベースへのアクセスは <command>cnid_metad</command>
-          デーモンプロセスによって制限されている。<command>afpd</command>
-          プロセスはこのデーモンとデータベースの読み込みと更新のために通信する。もし Berkeley DB
-          トランザクションとでビルドすれば、データベースの壊れる可能性は経験的にはゼロである。しかし、パフォーマンスは
-          <option>cdb</option> とによるものより遅いかもしれない。</para>
-        </listitem>
-      </varlistentry>
-
-      <varlistentry>
-        <term>last</term>
-
-        <listitem>
-          <para>このバックエンドは、ID の持続性の点では、例外である。ID はカレントセッションでしか有効ではない。これは基本的には
-          <command>afpd</command> がバージョン 1.5（と1.6）で行ったことである。このバックエンドは、例えば共有
-          CD-ROM などで有用なので未だに有効である。Netatalk 3.0
-          からは、これは自動的に<emphasis>読み込み専用モード</emphasis>になる。</para>
-
-          <para><emphasis role="bold">警告</emphasis>: 今や
-          <command>afpd</command> が持続性のある ID
-          データベースに重く依存しているので、このバックエンドをボリュームに使用するのはもはや推奨<emphasis>されていない</emphasis>。エイリアスはおそらく機能しないだろうし、ファイル名のマングリングもサポートされていない。</para>
-        </listitem>
-      </varlistentry>
-    </variablelist>
-
-    <para><command>./configure --help</command>
-    で他の有効なバックエンドがあると表示するかもしれない。にも関わらずそれらは壊れていることもありえるし、あるいは主にテストのために使われていることを注意すべきである。
-    あなたが何をしているのかわかっている場合以外はそれらを使用してはならない。それらは将来のバージョンでそれ以上の通告なく除去されるかもしれない。</para>
-  </refsect1>
-
-  <refsect1>
-    <title>文字セットオプション</title>
-
-    <para>OS XでAppleはAFP3プロトコルを導入した。最も重要な変更の一つは、AFP3は分解済UTF-8
-    としてエンコードされたUnicode名を用いることである。以前のAFP及びOSバージョンはMacRomanやMacCentralEuropeといったコードページを用いた。</para>
-
-    <para><command>afpd</command>がunixファイルシステム上にファイルを保存するとき、拡張されたMacintosh文字やunixファイル名としては不正な文字を維持する方法が必要である。現在のバージョンは今、名前のためのデフォルトエンコーディングとしてUTF-8を用いる。「<keycode>/</keycode>」は「<keycode>:</keycode>」に変換される。</para>
-
-    <para>初期のバージョンはいわゆるCAPエンコーディングを用いた。一つの拡張文字(&gt;0x7F)は一つの :xx
-    シーケンスに変換された。例えば、Appleロゴ (MacRoman:
-    0xF0)は<literal>:f0</literal>として保存された。幾つかの特殊な文字も
-    :xx表記として変換された。「<keycode>/</keycode>」は<literal>:2f</literal>にエンコードされ、先頭のドット「<keycode>.</keycode>」は<literal>:2e</literal>にエンコードされた。</para>
-
-    <para><option>vol
-    charset</option>オプションは他のボリュームエンコーディングを選べるようにする。<command>afpd</command>は
-    <citerefentry>
-        <refentrytitle><command>iconv</command></refentrytitle>
-
-        <manvolnum>1</manvolnum>
-      </citerefentry> が提供する如何なる文字セットも受け入れる。デフォルトのUTF-8を使うことをを強く推奨する。</para>
-  </refsect1>
-
-  <refsect1>
     <title>参照</title>
 
     <para><citerefentry>
@@ -2180,6 +2118,7 @@ directory perm = 0770</programlisting></para>
   <refsect1>
     <title>著作者</title>
 
-    <para><ulink url='https://netatalk.io/contributors'>CONTRIBUTORS</ulink> を参照</para>
+    <para><ulink url="https://netatalk.io/contributors">CONTRIBUTORS</ulink>
+    を参照</para>
   </refsect1>
 </refentry>

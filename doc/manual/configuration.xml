@@ -234,9 +234,13 @@ basedir regex = /usr/home</programlisting></para>
         </indexterm></title>
 
       <para>The last backend is an in-memory tdb database. It is not
-      persistent. Starting with netatalk 3.0, it operates in <emphasis>read
-      only mode</emphasis> automatically. This is useful e.g. for mounting
-      CD-ROMs.</para>
+      persistent, with IDs valid only for the current session. Starting with
+      netatalk 3.0, it operates in <emphasis>read only mode</emphasis>. This
+      backend is useful e.g. for mounting CD-ROMs, or for automated
+      testing.</para>
+
+      <para>This is basically equivalent to how <command>afpd</command> stored
+      CNID data in netatalk 1.5 and earlier.</para>
     </sect2>
 
     <sect2>
@@ -696,8 +700,8 @@ basedir regex = /usr/home</programlisting></para>
       support exists since AppleShare client 3.8.x.</para>
 
       <para>On macOS, there exist some client-side techniques to make the
-      AFP-client more verbose, so one can have a look at what's happening while
-      negotiating the UAMs to use. Compare with this <ulink
+      AFP-client more verbose, so one can have a look at what's happening
+      while negotiating the UAMs to use. Compare with this <ulink
       url="https://web.archive.org/web/20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/">hint</ulink>.</para>
     </sect2>
 
@@ -1341,12 +1345,12 @@ aclmode = passthrough</screen>
       <sect3>
         <title>Mapping POSIX ACLs to macOS ACLs</title>
 
-        <para>When a client wants to read an object's ACL, afpd maps its
-        POSIX ACL onto an equivalent macOS ACL. Writing an object's ACL
-        requires afpd to map an macOS ACL onto a POSIX ACL. Due to
-        architectural restrictions of POSIX ACLs, it is usually impossible to
-        find an exact mapping so that the result of the mapping process will
-        be an approximation of the original ACL's semantic.</para>
+        <para>When a client wants to read an object's ACL, afpd maps its POSIX
+        ACL onto an equivalent macOS ACL. Writing an object's ACL requires
+        afpd to map an macOS ACL onto a POSIX ACL. Due to architectural
+        restrictions of POSIX ACLs, it is usually impossible to find an exact
+        mapping so that the result of the mapping process will be an
+        approximation of the original ACL's semantic.</para>
 
         <para><itemizedlist>
             <listitem>
