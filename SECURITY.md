@@ -6,16 +6,18 @@ The reporter of an accepted and patched vulnerability will be given credit in th
 
 ## Supported Versions
 
-This table indicates the Netatalk release series that are current guaranteed to get security patches.
+This table indicates the Netatalk release series that are currently guaranteed to get security patches.
+Project policy is to support a release series with security patches up to 12 months after a superseding stable release.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 4.0.x   | :white_check_mark: |
-| 3.2.x   | :white_check_mark: |
-| 3.1.x   | :white_check_mark: |
-| 3.0.x   | :x:                |
-| 2.4.x   | :white_check_mark: |
-| < 2.4   | :x:                |
+| Version | Supported          | Planned End of Life |
+| ------- | ------------------ | ------------------- |
+| 4.1.x   | :white_check_mark: | Active development  |
+| 4.0.x   | :white_check_mark: | Jan 10, 2026        |
+| 3.2.x   | :white_check_mark: | Sep 28, 2025        |
+| 3.1.x   | :white_check_mark: | May 31, 2025        |
+| 3.0.x   | :x:                | -                   |
+| 2.4.x   | :white_check_mark: | Sep 28, 2025        |
+| < 2.4   | :x:                | -                   |
 
 ## Reporting a Vulnerability
 
