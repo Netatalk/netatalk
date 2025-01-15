@@ -381,7 +381,6 @@ jobs:
             tcpd \
             tracker \
             tracker-miner-fs \
-            unicode-data \
             xsltproc
       - name: Configure
         run: |
