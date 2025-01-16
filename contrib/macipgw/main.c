@@ -171,8 +171,8 @@ macip_options * read_options(const char *conf)
     const dictionary *config;
     macip_options *options = (macip_options *)malloc(sizeof(macip_options));
 
-    config = atalk_iniparser_load(conf);
-
+    if (config = atalk_iniparser_load(conf))
+        return NULL;
     options->network = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "network", "");
     options->netmask = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "netmask", "");
     options->nameserver = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nameserver", "");
@@ -247,32 +247,34 @@ int main(int argc, char *argv[])
 
 	mio = read_options(conffile);
 
-	if ((mio->network[0] != '\0') && (net == 0)) {
-		if (gDebug & DEBUG_MACIP)
-			printf("set network to %s\n", mio->network);
-		net = atoip(mio->network);
-	}
-	if ((mio->netmask[0] != '\0') && (mask == 0)) {
-		if (gDebug & DEBUG_MACIP)
-			printf("set netmask to %s\n", mio->netmask);
-		mask = atoip(mio->netmask);
-	}
-	if ((mio->nameserver[0] != '\0') &&  (ns == 0)) {
-		if (gDebug & DEBUG_MACIP)
-			printf("set nameserver to %s\n", mio->nameserver);
-		ns = atoip(mio->nameserver);
-	}
-	if ((mio->zone[0] != '\0') && (! strcmp(zone, "*"))) {
-		if (gDebug & DEBUG_MACIP)
-			printf("set zone to %s\n", mio->zone);
-		zone = mio->zone;
-	}
-	if ((mio->unprivileged_user[0] != '\0') && (pwd == NULL)) {
-		if (gDebug & DEBUG_MACIP)
-			printf("set unprivileged_user to %s\n", mio->unprivileged_user);
-		pwd = get_user(mio->unprivileged_user);
-		user = pwd->pw_uid;
-		group = pwd->pw_gid;
+	if (mio != NULL) {
+		if ((mio->network[0] != '\0') && (net == 0)) {
+			if (gDebug & DEBUG_MACIP)
+				printf("set network to %s\n", mio->network);
+			net = atoip(mio->network);
+		}
+		if ((mio->netmask[0] != '\0') && (mask == 0)) {
+			if (gDebug & DEBUG_MACIP)
+				printf("set netmask to %s\n", mio->netmask);
+			mask = atoip(mio->netmask);
+		}
+		if ((mio->nameserver[0] != '\0') &&  (ns == 0)) {
+			if (gDebug & DEBUG_MACIP)
+				printf("set nameserver to %s\n", mio->nameserver);
+			ns = atoip(mio->nameserver);
+		}
+		if ((mio->zone[0] != '\0') && (! strcmp(zone, "*"))) {
+			if (gDebug & DEBUG_MACIP)
+				printf("set zone to %s\n", mio->zone);
+			zone = mio->zone;
+		}
+		if ((mio->unprivileged_user[0] != '\0') && (pwd == NULL)) {
+			if (gDebug & DEBUG_MACIP)
+				printf("set unprivileged_user to %s\n", mio->unprivileged_user);
+			pwd = get_user(mio->unprivileged_user);
+			user = pwd->pw_uid;
+			group = pwd->pw_gid;
+		}
 	}
 
 	net &= mask;
