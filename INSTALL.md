@@ -21,6 +21,10 @@ git clone https://github.com/netatalk/netatalk.git      # clone the repository
 cd netatalk                                             # change to the repo directory
 ```
 
+Install required software dependencies:
+
+See the following section of this file for a list of required and optional software dependencies.
+
 Then:
 
 ```
