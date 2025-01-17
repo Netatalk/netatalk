@@ -342,7 +342,7 @@ unsigned int local_setforkparam(CONN *conn, uint16_t fork,  uint16_t bitmap, off
 {
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Set Fork param fork %d bitmap 0x%x size %lld\n\n", fork, bitmap,size);
+		fprintf(stdout,"Set Fork param fork %d bitmap 0x%x size %ld\n\n", fork, bitmap,size);
 	}
 	if (ftruncate(fork, size)) {
 		return ntohl(AFPERR_PARAM);
@@ -355,7 +355,7 @@ unsigned int local_write(CONN *conn, uint16_t fork, long long offset, int size, 
 {
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"write fork %d  offset %d size %d from 0x%x\n\n", fork , offset, size, (unsigned)whence);
+		fprintf(stdout,"write fork %d  offset %lld size %d from 0x%x\n\n", fork , offset, size, (unsigned)whence);
 	}
 	if (lseek(fork, offset, SEEK_SET) == (off_t)-1) {
 		return ntohl(AFPERR_EOF);
@@ -371,7 +371,7 @@ unsigned int local_read(CONN *conn, uint16_t fork, long long offset, int size, c
 {
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"read fork %d  offset %d size %d\n\n", fork , offset, size);
+		fprintf(stdout,"read fork %d  offset %lld size %d\n\n", fork , offset, size);
 	}
 	if (lseek(fork, offset, SEEK_SET) == (off_t)-1) {
 		return ntohl(AFPERR_EOF);
@@ -510,7 +510,7 @@ int i;
 int push;
 DSI *dsi;
 
-	fprintf(stdout, "Write quantum %d, size %lld\n", Quantum, Size);
+	fprintf(stdout, "Write quantum %ld, size %ld\n", Quantum, Size);
 	header();
 
 	sprintf(temp,"WriteTest-%d", id);
@@ -700,7 +700,7 @@ int max = Request;
 int cnt = 0;
 
 	dsi = &Conn->dsi;
-	fprintf(stdout, "Copy qantum %d, size %lld %s\n", Quantum, Size, Sparse?"sparse file":"");
+	fprintf(stdout, "Copy qantum %ld, size %ld %s\n", Quantum, Size, Sparse?"sparse file":"");
 	header();
 
 	sprintf(temp,"CopyTest-%d", id);
@@ -901,7 +901,7 @@ int vol = VolID;
 int vol2 = VolID2;
 int i;
 
-	fprintf(stdout, "ServerCopy qantum %d, size %lld %s\n", Quantum, Size, Sparse?"sparse file":"");
+	fprintf(stdout, "ServerCopy qantum %ld, size %ld %s\n", Quantum, Size, Sparse?"sparse file":"");
 	header();
 
 	sprintf(temp,"ServerCopyTest-%d", id);
@@ -999,7 +999,7 @@ DSI *dsi;
 int i;
 int push;
 
-	fprintf(stdout, "Read qantum %d, size %lld %s\n", Quantum, Size, Sparse?"sparse file":"");
+	fprintf(stdout, "Read qantum %ld, size %ld %s\n", Quantum, Size, Sparse?"sparse file":"");
 	header();
 
 	if (!Filename) {
@@ -1201,7 +1201,7 @@ void (*fn)(void) = NULL;
 		Buffer = malloc(Quantum);
 	}
 	if (!Buffer) {
-		fprintf(stdout,"\t can't allocate (%d) bytes\n", Quantum);
+		fprintf(stdout,"\t can't allocate (%ld) bytes\n", Quantum);
 		return;
 	}
 

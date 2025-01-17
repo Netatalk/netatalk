@@ -110,7 +110,7 @@ static void addresult(int test, int iteration)
     fprintf(stderr, "Run %u => %s%6lu ms", iteration, resultstrings[test], t);
     if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
         avg = (rwsize / 1000) / t;
-        fprintf(stderr, " for %llu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), avg);
+        fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), avg);
     }
     fprintf(stderr, "\n");
     (*results)[iteration][test] = t;
@@ -156,7 +156,7 @@ static void displayresults(void)
         fprintf(stderr, "%s%6llu ms", resultstrings[test], avg);
         if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
             thrput = (rwsize / 1000) / avg;
-            fprintf(stderr, " for %llu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), thrput);
+            fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), thrput);
         }
 
         fprintf(stderr, "\n");
@@ -205,7 +205,7 @@ static void *rply_thread(void *p)
             if (len > 0) {
                 stored += len;
             } else {
-                fprintf(stdout, "dsi_stream_read(%d): %s\n", len, (len < 0)?strerror(errno):"EOF");
+                fprintf(stdout, "dsi_stream_read(%ld): %s\n", len, (len < 0)?strerror(errno):"EOF");
                 goto exit;
             }
         }
