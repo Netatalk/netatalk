@@ -160,7 +160,7 @@ struct passwd * get_user(const char *username) {
 	struct passwd *pwd;
 	pwd = getpwnam(username);
 	if (pwd == NULL) {
-		fprintf(stderr, "Unrecognized username: %s", username);
+		fprintf(stderr, "Unrecognized username: %s\n", username);
 		exit (EX_USAGE);
 	}
 	return pwd;
@@ -168,16 +168,18 @@ struct passwd * get_user(const char *username) {
 
 macip_options * read_options(const char *conf)
 {
-    const dictionary *config;
+    dictionary *config;
     macip_options *options = (macip_options *)malloc(sizeof(macip_options));
 
-    if (config = atalk_iniparser_load(conf))
+    if ((config = atalk_iniparser_load(conf)) == NULL)
         return NULL;
     options->network = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "network", "");
     options->netmask = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "netmask", "");
     options->nameserver = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nameserver", "");
     options->zone = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "zone", "");
     options->unprivileged_user = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "unprivileged user", "");
+
+	atalk_iniparser_freedict(config);
 
     return options;
 }
