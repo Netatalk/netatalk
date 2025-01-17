@@ -170,7 +170,7 @@ char *s;
 	}
 	if (Verbose) {
 		fprintf(stdout, "clientID              %d\n",dsi->clientID);
-		fprintf(stdout, "cmdlen                %d\n\n",dsi->cmdlen);
+		fprintf(stdout, "cmdlen                %lu\n\n",dsi->cmdlen);
 		fprintf(stdout, "header.dsi_flags      %d %s\n",dsi->header.dsi_flags, dsi->header.dsi_flags?"REPLY":"REQUEST");
 		fprintf(stdout, "header.dsi_command    %d %s\n",dsi->header.dsi_command, dsi_command2str[dsi->header.dsi_command]);
 		fprintf(stdout, "header.dsi_requestID  %d\n",ntohs(dsi->header.dsi_requestID));
@@ -1396,7 +1396,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] FPDelete conn %x Vol %d did : 0x%x <%s>\n", __func__, conn, vol, ntohl(did), name);
+		fprintf(stdout,"[%s] FPDelete conn %p Vol %d did : 0x%x <%s>\n", __func__, conn, vol, ntohl(did), name);
 	}
 	ret = AFPDelete(conn,vol, did , name);
 
@@ -1639,7 +1639,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] Set Fork param fork %d bitmap 0x%x size %lld\n", __func__, fork, bitmap,size);
+		fprintf(stdout,"[%s] Set Fork param fork %d bitmap 0x%x size %ld\n", __func__, fork, bitmap,size);
 	}
 	ret = AFPSetForkParam(conn, fork,  bitmap, size);
 	dump_header(dsi);
@@ -2102,7 +2102,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] read ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
+		fprintf(stdout,"[%s] read ext fork %d  offset %ld size %ld\n", __func__, fork , offset, size);
 	}
 
 	ret = AFPRead_ext(conn,fork, offset, size, data);
@@ -2120,7 +2120,7 @@ unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t siz
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] read ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
+		fprintf(stdout,"[%s] read ext fork %d  offset %ld size %ld\n", __func__, fork , offset, size);
 	}
 
 	ret = AFPRead_ext_async(conn,fork, offset, size, data);
@@ -2166,7 +2166,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] write fork %d  offset %d size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
+		fprintf(stdout,"[%s] write fork %d  offset %lld size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
 	}
 
 	ret = AFPWrite(conn,fork, offset, size, data, whence);
@@ -2183,7 +2183,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] write_ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
+		fprintf(stdout,"[%s] write_ext fork %d  offset %ld size %ld\n", __func__, fork , offset, size);
 	}
 
 	ret = AFPWrite_ext(conn,fork, offset, size, data, whence);
@@ -2200,7 +2200,7 @@ unsigned int FPWrite_ext_async(CONN *conn, uint16_t fork, off_t  offset, off_t s
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] write_ext fork %d  offset %lld size %lld\n", __func__, fork , offset, size);
+		fprintf(stdout,"[%s] write_ext fork %d  offset %ld size %ld\n", __func__, fork , offset, size);
 	}
 
 	ret = AFPWrite_ext_async(conn,fork, offset, size, data, whence);
