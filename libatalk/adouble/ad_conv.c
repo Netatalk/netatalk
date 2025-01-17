@@ -265,6 +265,9 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     rename(path, bdata(newpath));
     unbecome_root();
 
+    if (newpath == NULL) {
+        EC_FAIL;
+    }
     strlcpy(buf, bdata(newpath), sizeof(buf));
     *newpathp = buf;
 

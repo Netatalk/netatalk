@@ -479,7 +479,7 @@ cups_get_printer_status (struct printer *pr)
 
 /* pass the job to cups */
 
-int cups_print_job ( char * name, char *filename, char *job, char *username, char * cupsoptions )
+int cups_print_job ( char * name, const char *filename, char *job, char *username, char * cupsoptions )
 {
 	http_t          *http;          /* HTTP connection to server */
 	cups_dest_t	*dest = NULL;	/* Destination */
@@ -546,6 +546,12 @@ int cups_print_job ( char * name, char *filename, char *job, char *username, cha
 	 */
 
 	FILE *fp = fopen(filepath, "rb");
+	if (fp == NULL) {
+		LOG(log_error, logtype_papd, "Unable to open file '%s' for printing: %s", filepath, strerror(errno));
+		cupsFreeOptions(num_options, options);
+		cupsFreeDests(1, dest);
+		return 0;
+	}
 	size_t bytes;
 	char buffer[65536];
 

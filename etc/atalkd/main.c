@@ -676,10 +676,14 @@ as_debug(int sig _U_)
     struct rtmptab	*rt;
     FILE		*rtmpdebug;
 
-    if (( rtmpdebug = fopen( _PATH_ATALKDEBUG, "w" )) == NULL ) {
-	LOG(log_error, logtype_atalkd, "rtmp: %s", strerror(errno) );
+    if (_PATH_ATALKDEBUG != NULL) {
+        rtmpdebug = fopen(_PATH_ATALKDEBUG, "w");
+        if (rtmpdebug == NULL) {
+            LOG(log_error, logtype_atalkd, "rtmp: %s", strerror(errno));
+        }
     }
 
+	if (rtmpdebug) {
     for ( iface = interfaces; iface; iface = iface->i_next ) {
 	fprintf( rtmpdebug, "interface %s %u.%u ", iface->i_name,
 		ntohs( iface->i_addr.sat_addr.s_net ),
@@ -760,9 +764,9 @@ as_debug(int sig _U_)
 		fprintf( rtmpdebug, "\n" );
 	    }
 	}
+	}
+	fclose( rtmpdebug );
     }
-
-    fclose( rtmpdebug );
 }
 
 /*
