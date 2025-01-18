@@ -507,7 +507,7 @@ jobs:
         with:
           copyback: false
           prepare: |
-            export PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/x86_64/10.1/All/
+            export PKG_PATH="https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
             pkg_add \
               bison \
               db5 \
