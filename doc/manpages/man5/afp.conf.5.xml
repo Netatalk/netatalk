@@ -599,8 +599,8 @@
 
           <listitem>
             <para>Specifies the network interfaces that the server should
-            listens on. The default is advertise the first IP address of the
-            system, but to listen for any incoming request.</para>
+            listen on. The default is to advertise the first IP address of the
+            system, while listening for any incoming request.</para>
 
             <note>
               <para>Do not use at the same time as the <option>afp
