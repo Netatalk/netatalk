@@ -436,6 +436,13 @@ int dircache_add(const struct vol *vol,
 
     AFP_ASSERT(dir);
     AFP_ASSERT(ntohl(dir->d_pdid) >= 2);
+
+    if (ntohl(dir->d_did) < CNID_START) {
+        LOG(log_error, logtype_afpd,
+            "dircache_add(): did:%u is less than the allowed %d. Try rebuilding the CNID database for: \"%s\"",
+            ntohl(dir->d_did), CNID_START, cfrombstr(dir->d_u_name));
+    }
+
     AFP_ASSERT(ntohl(dir->d_did) >= CNID_START);
     AFP_ASSERT(dir->d_u_name);
     AFP_ASSERT(dir->d_vid);
