@@ -151,7 +151,7 @@ void usage(char *c)
 	if (c)
 		fprintf(stderr, "%s\n", c);
 	fprintf(stderr,
-		"Usage:\tmacipgw [-d debug] [-z zone] [-n nameserver] [-u unprivileged-user] [-V]\n"
+		"Usage:\tmacipgw [-d debug] [-f configfile] [-n nameserver] [-u unprivileged-user] [-z zone] [-V]\n"
 		"\t\tmacip-net macip-netmask\n");
 	exit(EX_USAGE);
 }
