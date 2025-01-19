@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-# This script generates the compile.xml manual page from the GitHub build.yml file.
+# This script generates the compile.md manual page from the GitHub build.yml file.
 #
-# (c) 2024 Daniel Markstedt <daniel@mindani.net>
+# (c) 2024-2025 Daniel Markstedt <daniel@mindani.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -15,128 +15,78 @@
 #  GNU General Public License for more details.
 #
 
-import datetime
 import re
-import xmltodict
 import yaml
-
-now = datetime.datetime.now()
-date_time = now.strftime("%Y-%m-%d")
 
 linebreak_escape_pattern = r'\\\n\s+'
 
-lang_en = {
-  "title_1": "Compile Netatalk from Source",
-  "title_2": "Overview",
-  "title_3": "Operating Systems",
-  "heading_1": "Install required packages",
-  "heading_2": "Configure and build",
-  "para_1": """
-  This appendix describes how to compile Netatalk from source for specific operating systems.
-  Before starting, please read through the Installation chapter first.
-  You need to have a copy of Netatalk's source code before proceeding.
-  """,
-  "para_2": """
-  Please note that these guides are automatically generated, and may not be optimized for your system.
-  Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.
-  """,
-}
-lang_jp = {
-  "title_1": "ソースコードから Netatalk をコンパイルする",
-  "title_2": "概要",
-  "title_3": "オペレーティング システム一覧",
-  "heading_1": "必要なパッケージをインストールする",
-  "heading_2": "コンフィグレーションとビルド",
-  "para_1": """
-  本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイルする手順が記載されている。
-  開始する前に、まずインストールの章をお読みください。
-  続行する前に、Netatalk のソース コードのコピーが必要になる。
-  """,
-  "para_2": """
-  本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性があるのでご了承ください。
-  また、技術的な制約により、一部の OS では Netatalk を起動する手順が不完全である。
-  """,
-}
-
-output_en = "./manual/compile.xml"
-output_jp = "./ja/manual/compile.xml"
+output_file = "./manual/compile.md"
 
 with open('../.github/workflows/build.yml', 'r') as file:
   workflow = yaml.safe_load(file)
 
-def generate_docbook(strings, output_file):
-  docbook = {
-    "appendix": {
-      "@id": "compile",
-      "appendixinfo": [
-        {
-          "pubdate": date_time
-        },
-      ],
-      "title": strings["title_1"],
-      "sect1": [
-        {
-          "@id": "compile-overview",
-          "title": strings["title_2"],
-        },
-        {
-          "para": [
-            strings["para_1"],
-            strings["para_2"],
-          ],
-        },
-        {
-          "@id": "compile-os",
-          "title": strings["title_3"],
-        },
-        {
-          "sect2": [],
-        }
-      ],
-    },
-  }
+markdown = [
+  "# Compile Netatalk from Source",
+  "",
+  "This appendix describes how to compile Netatalk from source for specific operating systems.",
+  "Before starting, please read through the Installation chapter first.",
+  "You need to have a copy of Netatalk's source code before proceeding.",
+  "",
+  "Please note that these guides are automatically generated, and may not be optimized for your system.",
+  "Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.",
+  "",
+  "## Operating Systems",
+  "",
+]
 
-  for key, value in workflow["jobs"].items():
-    sections = {}
-    # Skip the SonarCloud job
-    if value["name"] != "Static Analysis":
-      sections["@id"] = key
-      sections["title"] = value["name"]
-      para = []
-      for step in value["steps"]:
-        # Skip unnamed steps
-        if "name" not in step:
-          continue
-        # Skip GitHub actions steps irrelevant to documentation
-        if "uses" in step and step["uses"].startswith("actions/"):
-          continue
-        # Strip out line break escape sequences
-        if "run" in step:
-          step["run"] = re.sub(linebreak_escape_pattern, "", step["run"])
-        if "with" in step:
-          step["with"]["prepare"] = re.sub(linebreak_escape_pattern, "", step["with"]["prepare"])
-          step["with"]["run"] = re.sub(linebreak_escape_pattern, "", step["with"]["run"])
+for key, value in workflow["jobs"].items():
+  # Skip the SonarCloud job
+  if value["name"] != "Static Analysis":
+    markdown += [
+      "## " + value["name"],
+      "",
+    ]
+    for step in value["steps"]:
+      # Skip unnamed steps
+      if "name" not in step:
+        continue
+      # Skip GitHub actions steps irrelevant to documentation
+      if "uses" in step and step["uses"].startswith("actions/"):
+        continue
+      # Strip out line break escape sequences
+      if "run" in step:
+        step["run"] = re.sub(linebreak_escape_pattern, "", step["run"])
+      if "with" in step:
+        step["with"]["prepare"] = re.sub(linebreak_escape_pattern, "", step["with"]["prepare"])
+        step["with"]["run"] = re.sub(linebreak_escape_pattern, "", step["with"]["run"])
 
-        # The vmactions jobs have a different structure
-        if "uses" in step and step["uses"].startswith("vmactions/"):
-          para.append(strings["heading_1"])
-          para.append({"screen": step["with"]["prepare"]})
-          para.append(strings["heading_2"])
-          para.append({"screen": step["with"]["run"]})
-        else:
-          para.append(step["name"])
-          para.append({"screen": step["run"]})
+      # The vmactions jobs have a different structure
+      if "uses" in step and step["uses"].startswith("vmactions/"):
+        markdown += [
+            "Install required packages",
+            "",
+            "```",
+            step["with"]["prepare"].rstrip("\n"),
+            "```",
+            "",
+            "Configure and build",
+            "",
+            "```",
+            step["with"]["run"].rstrip("\n"),
+            "```",
+            "",
+        ]
+      else:
+        markdown += [
+            step["name"],
+            "",
+            "```",
+            step["run"].rstrip("\n"),
+            "```",
+            "",
+        ]
 
-      sections["para"] = para
+with open(output_file, 'w') as file:
+  file.write("\n".join(markdown))
 
-    docbook["appendix"]["sect1"][3]["sect2"].append(sections)
-
-  xml = xmltodict.unparse(docbook, pretty=True)
-
-  with open(output_file, 'w') as file:
-    file.write(xml)
-
-  print("Wrote to " + output_file)
-
-generate_docbook(lang_en, output_en)
-generate_docbook(lang_jp, output_jp)
+print("Wrote to " + output_file)

@@ -189,27 +189,11 @@ else
     )
 endif
 
-############
-# Programs #
-############
-
-flex = find_program('flex', required: false)
-grep = find_program('grep', required: false)
-uname = find_program('uname', required: false)
-cmarkgfm = find_program('cmark-gfm', required: false)
-
-if host_os == 'darwin'
-    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
-    if not bison.found()
-        bison = find_program('/opt/local/bin/bison', required: false)
-    endif
-else
-    bison = find_program('bison', required: false)
-endif
-
 #############
 # Libraries #
 #############
+
+uname = find_program('uname', required: false)
 
 uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
 libsearch_dirs = []
@@ -430,6 +414,7 @@ endif
 # Check for the Berkeley DB library
 #
 
+grep = find_program('grep', required: false)
 bdb_path = get_option('with-bdb-path')
 bdb_include_path_override = get_option('with-bdb-include-path')
 bdb_req_version = get_option('with-bdb-version')
@@ -864,6 +849,16 @@ endif
 # Check for Spotlight support
 #
 
+if host_os == 'darwin'
+    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+    if not bison.found()
+        bison = find_program('/opt/local/bin/bison', required: false)
+    endif
+else
+    bison = find_program('bison', required: false)
+endif
+
+flex = find_program('flex', required: false)
 talloc = dependency('talloc', required: false)
 
 tracker_prefix = get_option('with-tracker-prefix')
@@ -1616,79 +1611,6 @@ elif default_backend == 'mysql' and not use_mysql_backend
 endif
 
 #
-# Check for docbook
-#
-
-docbook_path = get_option('with-docbook-path')
-compile_manual = get_option('with-manual') != 'none'
-build_xml_docs = false
-
-xsltproc = find_program('xsltproc', required: false)
-xsl = []
-docbook_root = ''
-docbook_xsl_dirs = []
-
-if docbook_path != ''
-    docbook_xsl_dirs += [docbook_path]
-else
-    if host_os == 'darwin'
-        docbook_xsl_dirs += brew_prefix / 'opt/docbook-xsl/docbook-xsl'
-    endif
-
-    docbook_xsl_dirs += [
-        '/usr/share/sgml/docbook/xsl-stylesheets',
-        '/usr/share/xml/docbook/stylesheet/docbook-xsl',
-        '/usr/share/xml/docbook/xsl-stylesheets-nons',
-        '/usr/share/xml/docbook/xsl-stylesheets',
-        '/opt/local/share/xsl/docbook',
-        '/usr/local/share/xsl/docbook',
-        '/usr/pkg/share/xsl/docbook',
-    ]
-endif
-
-if compile_manual
-    foreach dir : docbook_xsl_dirs
-        foreach format : ['html', 'manpages']
-            if fs.exists(dir)
-                if fs.exists(dir / format / 'docbook.xsl')
-                    build_xml_docs = true
-                    docbook_root += dir
-                    xsl += dir / format / 'docbook.xsl'
-                    if (
-                        run_command(
-                            [xsltproc, '--nonet', xsl],
-                            check: false,
-                        ).returncode() == 0
-                    )
-                        message('Found docbook-xsl ' + format + ' stylesheets at ' + dir)
-                        cdata.set('DOCBOOK_ROOT', dir)
-                    endif
-                else
-                    warning('docbook-xsl ' + format + ' stylesheets not found at ' + dir)
-                endif
-            endif
-        endforeach
-        if docbook_root != ''
-            break
-        else
-            continue
-        endif
-    endforeach
-endif
-
-if compile_manual and not xsltproc.found()
-    warning(
-        'xsltproc is required to compile manpages and html documentation',
-    )
-endif
-
-if compile_manual and docbook_root == ''
-    warning(
-        'docbook-xsl stylesheets are required to compile manpages and html documentation',
-    )
-endif
-
-#
 # Test for PAM support
 #
 
@@ -2407,8 +2329,16 @@ configure_file(
 # Prepare documentation #
 #########################
 
+cmark = find_program('cmark', required: false)
+cmarkgfm = find_program('cmark-gfm', required: false)
 
-if get_option('with-readmes')
+build_man_docs = false
+build_html_docs = false
+build_readme_docs = false
+
+if 'readmes' in get_option('with-docs') and cmarkgfm.found()
+    build_readme_docs = true
+
     readmes = [
         'CONTRIBUTORS',
         'NEWS',
@@ -2421,32 +2351,46 @@ if get_option('with-readmes')
         )
     endforeach
 
-    if cmarkgfm.found()
-        readmes_md = [
-            'DOCKER',
-            'INSTALL',
-            'README',
-            'SECURITY',
-        ]
+    readmes_md = [
+        'DOCKER',
+        'INSTALL',
+        'README',
+        'SECURITY',
+    ]
 
-        foreach file : readmes_md
-            custom_target(
-                'readmes_' + file,
-                input: file + '.md',
-                output: file + '.txt',
-                command: [
-                    'cmark-gfm',
-                    '--width', '80',
-                    '--to', 'plaintext',
-                    '@INPUT@',
-                ],
-                capture: true,
-                install: true,
-                install_dir: datadir / 'doc/netatalk',
-            )
-        endforeach
+    foreach file : readmes_md
+        custom_target(
+            'readmes_' + file,
+            input: file + '.md',
+            output: file + '.txt',
+            command: [
+                cmarkgfm,
+                '--width', '80',
+                '--to', 'plaintext',
+                '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: datadir / 'doc/netatalk',
+        )
+    endforeach
+else
+    warning('cmark-gfm is required for markdown to text conversion of READMEs')
+endif
+
+if 'man' in get_option('with-docs')
+    if cmark.found() or cmarkgfm.found()
+        build_man_docs = true
     else
-        warning('cmark-gfm is required for markdown to text conversion')
+        warning('cmark or cmark-gfm is required to build man pages')
+    endif
+endif
+
+if 'html_manual' in get_option('with-docs')
+    if cmarkgfm.found()
+        build_html_docs = true
+    else
+        warning('cmark-gfm is required to build the html manual')
     endif
 endif
 
@@ -2454,15 +2398,12 @@ subdir('include')
 subdir('libatalk')
 subdir('bin')
 subdir('config')
+subdir('doc')
 subdir('etc')
 subdir('contrib')
 subdir('distrib')
 subdir('sys')
 subdir('test')
-
-if get_option('with-manual') != 'none'
-    subdir('doc')
-endif
 
 #########################
 # Configuration summary #
@@ -2570,8 +2511,9 @@ endif
 summary(summary_info, bool_yn: true, section: '  Paths:')
 
 summary_info = {
-    '  Docbook': build_xml_docs,
-    '  Manual style': get_option('with-manual'),
+    '  man pages': build_man_docs,
+    '  html manual': build_html_docs,
+    '  READMEs': build_readme_docs,
 }
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 

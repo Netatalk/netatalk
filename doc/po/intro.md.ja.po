@@ -1,0 +1,114 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Eiichirou UDA, 2015-2017
+# HAT, 2015-2017
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title #
+#: manual/intro.md:1
+#, no-wrap
+msgid "Introduction"
+msgstr "序説"
+
+#. type: Title ##
+#: manual/intro.md:3
+#, no-wrap
+msgid "Legal Notice"
+msgstr "法的条項"
+
+#. type: Plain text
+#: manual/intro.md:10
+msgid ""
+"The Netatalk software package as well as this documentation are distributed "
+"under the GNU General Public License (GPL) version 2. A copy of the license "
+"is included in this documentation, as well as within the Netatalk source "
+"distribution. An on-line copy can be found at <http://www.gnu.org/licenses/"
+"old-licenses/gpl-2.0.txt>"
+msgstr ""
+"Netatalk のソフトウェアのパッケージまたは本ドキュメントは GNU 一般公衆利用許"
+"諾書 (GPL) バージョン 2 のもとで配布されている。 Netatalk ソース一式にも本ド"
+"キュメントと同様に許諾書のコピーが同梱されている。許諾書のコピーのオンライン"
+"版は <http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt> で閲覧できる。"
+
+#. type: Title ##
+#: manual/intro.md:11
+#, no-wrap
+msgid "Overview of Netatalk"
+msgstr "Netatalk 概要"
+
+#. type: Plain text
+#: manual/intro.md:17
+msgid ""
+"Netatalk is an Open Source software package that can be used to turn a "
+"\\*NIX machine into a performant and light-weight file server for Macintosh "
+"computers. It provides a TCP/IP as well as a traditional AppleTalk transport "
+"layer."
+msgstr ""
+"Netatalk は、\\*NIX マシンを Macintosh コンピュータ用の高性能で軽量なファイ"
+"ル サーバーに変えるために使用できるオープン ソース ソフトウェア パッケージで"
+"す。TCP/IP と従来の AppleTalk トランスポート層を提供する。"
+
+#. type: Plain text
+#: manual/intro.md:24
+msgid ""
+"Using Netatalk's AFP 3.4 compliant file-server leads to noticeably higher "
+"transmission speeds for macOS clients compared to Samba/NFS, while providing "
+"users with the best possible Mac-like user experience.  It can read and "
+"write Mac metadata - macOS extended file attributes as well as Classic Mac "
+"OS resource forks - facilitating mixed environments of new and old Macs."
+msgstr ""
+"Netatalk の AFP 3.4 準拠のファイル サーバーを使用すると、macOS クライアントの"
+"転送速度が Samba/NFS に比べて著しく高速になり、ユーザーには可能な限り Mac の"
+"ようなユーザー エクスペリエンスが提供される。Mac メタデータ (macOS 拡張ファイ"
+"ル属性と Classic Mac OS リソース フォーク) の読み取りと書き込みが可能で、新旧"
+"の Mac が混在する環境を容易にする。"
+
+#. type: Plain text
+#: manual/intro.md:29
+msgid ""
+"Netatalk ships with range of capabilities to accommodate most deployment "
+"environments, including Kerberos, ACLs and LDAP. Modern macOS features such "
+"as Bonjour service discovery, Time Machine backups, and Spotlight indexed "
+"search are provided."
+msgstr ""
+"Netatalk には、Kerberos、ACL、LDAP など、ほとんどの展開環境に対応できるさまざ"
+"まな機能が搭載されている。 Bonjour サービス検出、Time Machine バックアップ、"
+"Spotlight インデックス検索などの最新の macOS 機能が提供される。"
+
+#. type: Plain text
+#: manual/intro.md:34
+msgid ""
+"For AppleTalk networks with legacy Macs and Apple IIs, Netatalk provides a "
+"print server, time server, and Apple II NetBoot server. The print server is "
+"fully integrated with CUPS, allowing old Macs to discover and print to a "
+"modern CUPS/AirPrint compatible printer on the network."
+msgstr ""
+"レガシー Mac および Apple II を使用した AppleTalk ネットワークの場合、"
+"Netatalk はプリント サーバー、タイム サーバー、および Apple II NetBoot サー"
+"バーを提供する。プリント サーバーは CUPS と完全に統合されているため、古い "
+"Mac はネットワーク上の最新の CUPS/AirPrint 互換プリンターを検出して印刷でき"
+"る。"
+
+#. type: Plain text
+#: manual/intro.md:37
+msgid ""
+"Additionally, Netatalk can be configured as an AppleTalk router through its "
+"AppleTalk Network Management daemon, providing both segmentation and zone "
+"names in traditional Macintosh networks."
+msgstr ""
+"さらに、Netatalk は AppleTalk ネットワーク管理デーモンを介して AppleTalk ルー"
+"ターとして構成でき、従来の Macintosh ネットワークでセグメンテーションとゾーン"
+"名の両方を提供する。"

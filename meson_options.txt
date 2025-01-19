@@ -64,6 +64,12 @@ option(
     description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
 )
 option(
+    'with-docs-l10n',
+    type: 'boolean',
+    value: false,
+    description: 'Build and install the localized documentation',
+)
+option(
     'with-dtrace',
     type: 'boolean',
     value: true,
@@ -136,12 +142,6 @@ option(
     description: 'Enable quota support',
 )
 option(
-    'with-readmes',
-    type: 'boolean',
-    value: true,
-    description: 'Install README documentation',
-)
-option(
     'with-rpath',
     type: 'boolean',
     value: true,
@@ -194,6 +194,12 @@ option(
     type: 'boolean',
     value: false,
     description: 'Package and install the Netatalk Webmin module',
+)
+option(
+    'with-website',
+    type: 'boolean',
+    value: false,
+    description: 'Refresh and build the Netatalk website (admin use)',
 )
 option(
     'with-zeroconf',
@@ -372,6 +378,17 @@ option(
     description: 'Set default CNID scheme',
 )
 option(
+    'with-docs',
+    type: 'array',
+    choices: [
+        'man',
+        'html_manual',
+        'readmes',
+    ],
+    value: ['man', 'html_manual', 'readmes'],
+    description: 'Choose the type documentation to build and install',
+)
+option(
     'with-init-style',
     type: 'array',
     choices: [
@@ -388,25 +405,4 @@ option(
     ],
     value: ['auto'],
     description: 'Use OS specific init config',
-)
-option(
-    'with-manual',
-    type: 'combo',
-    choices: [
-        'none',
-        'local',    # html and troff docs for installation and distribution
-        'man_only', # troff man pages only for installation and distribution
-        'www',      # html for web publishing (project admin use)
-    ],
-    value: 'local',
-    description: 'Format of manual to build and install',
-)
-option(
-    'with-manual-l10n',
-    type: 'array',
-    choices: [
-        'ja',
-    ],
-    value: [],
-    description: 'Choose the localizations of the html manual to build',
 )

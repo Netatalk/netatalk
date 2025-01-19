@@ -1,0 +1,2594 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Daniel Markstedt, 2024-2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 00:14+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title ###
+#: manpages/man8/cnid_dbd.8.md:63 manual/configuration.md:586
+#: manual/configuration.md:834
+#, no-wrap
+msgid "Configuration"
+msgstr "設定"
+
+#. type: Title ##
+#: manpages/man8/papd.8.md:61 manual/configuration.md:343
+#, no-wrap
+msgid "Authentication"
+msgstr "認証"
+
+#. type: Plain text
+#: manual/appletalk.md:154 manual/configuration.md:840 manual/install.md:4
+#: manual/upgrade.md:42
+#, no-wrap
+msgid "> **WARNING**\n"
+msgstr "> **警告**\n"
+
+#. type: Title #
+#: manual/configuration.md:1
+#, no-wrap
+msgid "Setting up Netatalk"
+msgstr "Netatalk のセットアップ"
+
+#. type: Title ##
+#: manual/configuration.md:3
+#, no-wrap
+msgid "Setting up the AFP file server"
+msgstr "AFP ファイルサーバーのセットアップ"
+
+#. type: Plain text
+#: manual/configuration.md:9
+msgid ""
+"AFP (the Apple Filing Protocol) is a protocol used on the Apple Macintosh "
+"for file services. The protocol has evolved over the years.  The final "
+"revision of the protocol, AFP 3.4, was introduced with OS X Lion (10.7)."
+msgstr ""
+"AFP (Apple Filing Protocol)  はアップル・マッキントッシュのファイルサービスに"
+"用いるプロトコルである。AFP プロトコルは年を追うごとに進展を見せ、最終バー"
+"ジョンは OS X Lion (10.7) で加えられた \"AFP 3.4\" である。"
+
+#. type: Plain text
+#: manual/configuration.md:13
+msgid ""
+"Netatalk's `afpd` daemon offers AFP fileservices to Apple clients. The "
+"configuration is managed through the `afp.conf` file which uses an ini style "
+"configuration syntax."
+msgstr ""
+"Netatalk の afpd デーモンはアップルのクライアントに対して AFP ファイルサービ"
+"スを提供する。設定ファイルは `afp.conf` のみで、\"ini\" スタイルの構文で記述"
+"する。"
+
+#. type: Plain text
+#: manual/configuration.md:16
+msgid "Support for [Spotlight](#spotlight) was added in Netatalk 3.1."
+msgstr "[Spotlight](#spotlight) サポートは Netatalk 3.1 より加えられた。"
+
+#. type: Plain text
+#: manual/configuration.md:22
+msgid ""
+"Mac OS X 10.5 (Leopard) introduced support for Time Machine backups over "
+"AFP. Two new functions ensure that backups are written to disk, not just in "
+"the server's cache. Different host operating systems honor this cache "
+"flushing differently. To make a volume a Time Machine target, use the volume "
+"option \"`time machine = yes`\"."
+msgstr ""
+"Mac OS X 10.5 (Leopard) で、AFP 経由での Time Machine バックアップがサポート"
+"されるようになった。二つの新機能で、バックアップをただサーバーのキャッシュに"
+"ではなく、 動作中のディスクに書き込むことを確実にしている。ホストのオペレー"
+"ティングシステムが異なると、 このキャッシュをフラッシュする払い出し方も異な"
+"る。ヴォリュームを作成するために、Time Machine ターゲットのボリューム作成には"
+"ボリュームオプション \"`time machine = yes`\" を使用する。"
+
+#. type: Plain text
+#: manual/configuration.md:28
+msgid ""
+"Starting with Netatalk 2.1 UNIX symlinks can be used on the server. "
+"Semantics are the same as for e.g. NFS, i.e.  they are not resolved on the "
+"server side but instead it's completely up to the client to resolve them, "
+"resulting in links that point somewhere inside the clients filesystem view."
+msgstr ""
+"Netatalk 2.1 以降では UNIX シンボリックリンクをサーバー上で使うことができる。"
+"セマンティクスは例えば NFS と同じである、すなわち、Netatalk はサーバー側でシ"
+"ンボリックリンクを追わないが、代わりにクライアント側でシンボリックリンクを解"
+"決できるよう完全に転送して、 結果としてクライアントのファイルシステムのビュー"
+"内でしかるべき場所を示すリンクとなる。"
+
+#. type: Title ###
+#: manual/configuration.md:29
+#, no-wrap
+msgid "afp.conf"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:34
+msgid ""
+"`afp.conf` is the configuration file used by afpd to determine the behaviour "
+"and configuration of the AFP file server and the AFP volume that it provides."
+msgstr ""
+"`afp.conf` は、AFP ファイルサーバー及び提供する AFP ボリュームの挙動と設定を"
+"決定するために afpd が使用する設定ファイルである。"
+
+#. type: Plain text
+#: manual/configuration.md:36
+msgid "The `afp.conf` is divided into several sections:"
+msgstr "`afp.conf` は複数のサーバーセクションに分割できる。すなわち："
+
+#. type: Plain text
+#: manual/configuration.md:38
+msgid "\\[Global\\]"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:40
+#, no-wrap
+msgid "> The global section defines general server options\n"
+msgstr "> グローバルセクションで基本的なサーバーオプションを定義する\n"
+
+#. type: Plain text
+#: manual/configuration.md:42
+msgid "\\[Homes\\]"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:44
+#, no-wrap
+msgid "> The homes section defines user home volumes\n"
+msgstr "> ホームセクションでユーザーのホームボリュームを定義する\n"
+
+#. type: Plain text
+#: manual/configuration.md:47
+msgid ""
+"Any section not called `Global` or `Homes` is interpreted as an AFP volume."
+msgstr ""
+"`Global` とも `Homes`、とも呼ばれないセクションは単なる一つの AFP ボリューム"
+"であると解釈される"
+
+#. type: Plain text
+#: manual/configuration.md:51
+msgid ""
+"For sharing user homes by defining a `Homes` section you must specify the "
+"option `basedir regex` which can be a simple string with the path to the "
+"parent directory of all user homes or a regular expression."
+msgstr ""
+"`Homes` を定義してユーザーのホームディレクトリを共有するために、 `basedir "
+"regex` オプションを明記しなければならない。 これは全てのユーザーのホームの親"
+"ディレクトリのパスあるいは正規表現からなる単純な文字列でよい。"
+
+#. type: Plain text
+#: manual/configuration.md:53
+msgid "Example:"
+msgstr "例："
+
+#. type: Plain text
+#: manual/configuration.md:56
+#, no-wrap
+msgid ""
+"    [Homes]\n"
+"    basedir regex = /home\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:59
+msgid ""
+"Now any user logging into the AFP server will have a user volume available "
+"whose path is `/home/NAME`."
+msgstr ""
+"この場合、AFP サーバーにログインできるユーザーはそれぞれ `/home/（ユーザー"
+"名）` というパス名でのユーザーボリュームを使用できる。"
+
+#. type: Plain text
+#: manual/configuration.md:62
+msgid ""
+"A more complex setup would be a server with a large amount of user homes "
+"which are split across e.g. two different filesystems:"
+msgstr ""
+"より複雑なセットアップで、例えば二つの異なったファイルシステムにわたって分割"
+"された、 大量のユーザーホームディレクトリーのあるサーバーなら："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:64
+msgid "/RAID1/homes"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:66
+msgid "/RAID2/morehomes"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:68
+msgid "The following configuration is required:"
+msgstr "以下の設定が必要である："
+
+#. type: Plain text
+#: manual/configuration.md:71
+#, no-wrap
+msgid ""
+"    [Homes]\n"
+"    basedir regex = /RAID./.*homes\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:74
+msgid ""
+"If `basedir regex` contains a symlink, set the canonicalized absolute path. "
+"When `/home` links to `/usr/home`:"
+msgstr ""
+"もし、`basedir regex` にシンボリックリンクが含まれる場合、 正規化された絶対パ"
+"スを指定すべきである。つまり、パス `/home` から `/usr/home` にシンボリックリ"
+"ンクがはられていた場合："
+
+#. type: Plain text
+#: manual/configuration.md:77
+#, no-wrap
+msgid ""
+"    [Homes]\n"
+"    basedir regex = /usr/home\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:80
+msgid ""
+"For a more detailed explanation of the available options, please refer to "
+"the `afp.conf(5)` man page."
+msgstr ""
+"他の使用できるオプションの詳細な解説については `afp.conf(5)` の man page を参"
+"照いただきたい。"
+
+#. type: Title ##
+#: manual/configuration.md:81
+#, no-wrap
+msgid "CNID backends"
+msgstr "CNID バックエンド"
+
+#. type: Plain text
+#: manual/configuration.md:91
+msgid ""
+"Unlike other protocols like SMB or NFS, the AFP protocol mostly refers to "
+"files and directories by ID and not by a path (the IDs are also called CNID, "
+"which stand for Catalog Node ID). A typical AFP request uses a directory ID "
+"and a filename, something like \"server, please open the file named 'Test' "
+"in the directory with id 167\". For example \"Aliases\" on the Mac basically "
+"work by ID (with a fallback to the absolute path in more recent AFP "
+"clients.  But this applies only to Finder, not to applications)."
+msgstr ""
+"SMB や NFS のようなほかのプロトコルとは異なり、ほとんどの場合、AFP プロトコル"
+"はファイルやディレクトリをパスではなく ID を通して参照している。（その ID は "
+"CNID とも言われ、カタログ・ノード ID (Catalog Node ID) の略である） 典型的に"
+"は、まず AFP リクエストで、例えば、“サーバーさん id 167 のディレクトリにあ"
+"る、ファイル名 'Test' というのを開いてください。”といった調子でディレクトリ "
+"IDとファイル名を用いる。例えば、Mac での \"Aliases\" は基本的には ID として作"
+"用する（より最近の AFP クライアントでは絶対パスにフォールバックするが、これ"
+"は Finder のみで当てはまることであり、アプリケーションでは当てはまらない）。"
+
+#. type: Plain text
+#: manual/configuration.md:98
+msgid ""
+"Every file in an AFP volume has to have a unique file ID, IDs must, "
+"according to the specs, never be reused, and IDs are 32 bit numbers "
+"(Directory IDs use the same ID pool). So, after ~4 billion files/folders "
+"have been written to an AFP volume, the ID pool is depleted and no new file "
+"can be written to the volume. No whining please :-)"
+msgstr ""
+"AFP ボリュームにある各々のファイルに一意のファイル ID が割り当てられる。仕様"
+"により ID は絶対に再利用禁止であり、ID は 32 bit の数字である。（ディレクト"
+"リ ID も同じ ID プールを使用する）このため、ある AFP ボリュームにおよそ 40 億"
+"個以上のファイル・フォルダーを書き込むと、その時点で ID プールが枯渇され、当"
+"該ボリュームへの新ファイルの書き込みができなくなる。愚痴はなしということでお"
+"願いしたい :-)"
+
+#. type: Plain text
+#: manual/configuration.md:105
+#, no-wrap
+msgid ""
+"Netatalk needs to map IDs to files and folders in the host filesystem.\n"
+"To achieve this, several different CNID\n"
+"backends are available and can be\n"
+"selected with the `cnid scheme` option in\n"
+"the `afp.conf(5)` configuration file. A CNID backend is basically a\n"
+"database storing ID \\<-\\> name mappings.\n"
+msgstr ""
+"Netatalk はホストのファイルシステム内で ID\n"
+"とファイルあるいはフォルダーのマップ（ID\n"
+"との対応付け）をする必要がある。 それを実現するためにいくつかの異なる\n"
+"CNID\n"
+"バックエンドが用意されていて、`afp.conf(5)`\n"
+"設定ファイル内で `cnid scheme`\n"
+"オプションで選択が可能である。CNID\n"
+"バックエンドは基本的には、ストアされた ID \\<-\\>\n"
+"名前を一対一対応させるデータベースである。\n"
+
+#. type: Plain text
+#: manual/configuration.md:109
+msgid ""
+"The CNID databases are by default located in `$prefix/var/netatalk/CNID`. "
+"You can change the location by configuring `-Dwith-statedir-path=PATH` at "
+"compile time."
+msgstr ""
+"CNID データベースはデフォルトで `$prefix/var/netatalk/CNID` に置かれる。コン"
+"パイル時に `-Dwith-statedir-path=PATH` オプションで場所を変えられる。"
+
+#. type: Plain text
+#: manual/configuration.md:112
+msgid ""
+"There is a command line utility called `dbd` available which can be used to "
+"verify, repair and rebuild the CNID database."
+msgstr ""
+"CNID データベースの検証・修復・再構築のために用いることができる `dbd` という"
+"名のコマンドが用意されていている。"
+
+#. type: Plain text
+#: manual/configuration.md:114
+#, no-wrap
+msgid "> **NOTE**\n"
+msgstr "> **注記**\n"
+
+#. type: Plain text
+#: manual/configuration.md:117
+#, no-wrap
+msgid ""
+"> There are some CNID related things you should keep in mind when\n"
+"working with netatalk:\n"
+msgstr ""
+"> netatalk で作業する上で、いくつかの CNID\n"
+"に関する点を留意しておかなければならない。すなわち：\n"
+
+#. type: Plain text
+#: manual/configuration.md:119
+#, no-wrap
+msgid "> - Don't nest volumes unless \"`vol dbnest = yes`\" is set.\n"
+msgstr ""
+"> - \"`vol dbnest = yes`\"\n"
+"が指定してある時以外はボリュームをネスト（入れ子）にしてはならない。\n"
+
+#. type: Plain text
+#: manual/configuration.md:122
+#, no-wrap
+msgid ""
+"> - CNID backends are databases, so they turn afpd into a file\n"
+"server/database mix.\n"
+msgstr ""
+"> - CNID バックエンドはデータベースである。それ故 afpd\n"
+"はファイルサーバーとデータベースの混成物とならしめている。\n"
+
+#. type: Plain text
+#: manual/configuration.md:126
+#, no-wrap
+msgid ""
+"> - If there's no more space on the filesystem left, the database will\n"
+"get corrupted. You can work around this by using the `vol dbpath`\n"
+"option and put the database files into another location.\n"
+msgstr ""
+"> - もしファイルシステムに空き容量がなくなった場合、データベースは破損するかもしれない。\n"
+"それを回避するために取る策としては、`vol dbpath`\n"
+"オプションを使用して、\n"
+"データベースファイルをどこか別の場所に置く、か、クオータを使っているならば\n"
+"CNID\n"
+"データベースフォルダーがクオータなしでユーザー／グループのオーナーとなっているか確認する。のいずれかである。\n"
+
+#. type: Plain text
+#: manual/configuration.md:132
+#, no-wrap
+msgid ""
+"> - Be careful with CNID databases for volumes that are mounted via NFS.\n"
+"That is a pretty audacious decision to make anyway, but putting a\n"
+"database there as well is really asking for trouble, i.e. database\n"
+"corruption. Use the `vol dbpath` directive to put the databases onto\n"
+"a local disk if you must use NFS mounted volumes.\n"
+msgstr ""
+"> - NFS 経由でマウントされているボリュームの CNID\n"
+"データベースには注意すべきである。\n"
+"いずれにしろそのような構成にすると決める事自体かなり無謀である。\n"
+"が、さらにデータベースもその上に置くとなると決定的にトラブルの元となる。要はデータベースの破損である。もしどうしても\n"
+"NFS\n"
+"マウントしたボリュームを使わねばならない場合はデータベースをローカルディスクに置くために\n"
+"`vol dbpath` ディレクティブを使用するべきである。\n"
+
+#. type: Title ###
+#: manual/configuration.md:133
+#, no-wrap
+msgid "dbd"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:139
+msgid ""
+"The \"Database Daemon\" backend is built on Berkeley DB. Access to the CNID "
+"database is restricted to the cnid_dbd daemon process. afpd processes "
+"communicate with the daemon for database reads and updates.  The probability "
+"for database corruption is practically zero."
+msgstr ""
+"CNID データベースへのアクセスは cnid_dbd デーモンプロセスのみに制限されてい"
+"る。afpd プロセスはデータベースの読み込みと更新のために cnid_dbd デーモン と"
+"やりとりをする。 データベースが破損する可能性は経験的にはほぼゼロである。"
+
+#. type: Plain text
+#: manual/configuration.md:141
+msgid "This is the default backend since Netatalk 2.1."
+msgstr ""
+"本バックエンドは Netatalk 2.1 以来、デフォルトのバックエンドとなっている。"
+
+#. type: Title ###
+#: manual/configuration.md:142
+#, no-wrap
+msgid "last"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:148
+msgid ""
+"The last backend is an in-memory tdb database. It is not persistent, with "
+"IDs valid only for the current session. Starting with netatalk 3.0, it "
+"operates in *read only mode*. This backend is useful e.g. for mounting CD-"
+"ROMs, or for automated testing."
+msgstr ""
+"last バックエンドはメモリーにデータを保持する tdb データベースである。故永続"
+"性がなく、ID はカレントセッションでしか有効ではない。netatalk 3.0 からは、そ"
+"れは*読み込み専用モード*になっている。このバックエンドは例えば CD-ROM や自動"
+"化テスト などに有用である。"
+
+#. type: Plain text
+#: manual/configuration.md:151
+msgid ""
+"This is basically equivalent to how `afpd` stored CNID data in netatalk 1.5 "
+"and earlier."
+msgstr ""
+"これは基本的には `afpd` が netatalk バージョン 1.5以前で CNID データの保存方"
+"法に一致している。"
+
+#. type: Title ###
+#: manual/configuration.md:152
+#, no-wrap
+msgid "mysql"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:156
+msgid ""
+"CNID backend using a MySQL server. The MySQL server has to be provisioned by "
+"the system administrator."
+msgstr ""
+"CNID バックエンドは MySQL サーバーを使用する。MySQL サーバーはシステム管理者"
+"がプロビジョニングする必要がある。"
+
+#. type: Title ##
+#: manual/configuration.md:157
+#, no-wrap
+msgid "Charsets/Unicode"
+msgstr ""
+
+#. type: Title ###
+#: manual/configuration.md:159
+#, no-wrap
+msgid "Why Unicode?"
+msgstr "なぜ Unicode？"
+
+#. type: Plain text
+#: manual/configuration.md:166
+msgid ""
+"Internally, computers don't know anything about characters and texts, they "
+"only know numbers. Therefore, each letter is assigned a number. A character "
+"set, often referred to as *charset* or *codepage*, defines the mappings "
+"between numbers and letters."
+msgstr ""
+"内部的には、コンピューターは文字（キャラクター）について、 テキストについて何"
+"も知らない、唯一“数字（数）”ならコンピュータにもわかる。 それ故各々の“字”には"
+"“数”が割り当てられている。キャラクターセット、しばしば *charset* あるいは "
+"*codepage* とも呼ばれるが、これは“数”と“字”の一対一対応を規定している。"
+
+#. type: Plain text
+#: manual/configuration.md:175
+msgid ""
+"If two or more computer systems need to communicate with each other, the "
+"have to use the same character set. In the 1960s the ASCII (American "
+"Standard Code for Information Interchange) character set was defined by the "
+"American Standards Association. The original form of ASCII represented 128 "
+"characters, more than enough to cover the English alphabet and numerals.  Up "
+"to date, ASCII has been the normative character scheme used by computers."
+msgstr ""
+"二つあるいはそれ以上のコンピューターがお互いに通信する必要がある場合、各々は"
+"同じキャラクターセットを使う必要がある。1960 年代には ASCII (American "
+"Standard Code for Information Interchange) キャラクターセットが ASA（米国標準"
+"協会：the American Standards Association）によって標準化された。 オリジナル"
+"の ASCII 形式は、英語で用いられるアルファベット及び数字を網羅するのに十分な数"
+"より多い 128 のキャラクターを表している。今日においても、ASCII はコンピュー"
+"ターで使われるキャラクタースキームの標準的なものである。"
+
+#. type: Plain text
+#: manual/configuration.md:181
+msgid ""
+"Later versions defined 256 characters to produce a more international "
+"fluency and to include some slightly esoteric graphical characters.  Using "
+"this mode of encoding each character takes exactly one byte.  Obviously, 256 "
+"characters still wasn't enough to map all the characters used in the various "
+"languages into one character set."
+msgstr ""
+"国際的にもっと都合よく、そして若干内輪向けの記号文字を含めるために、つづく"
+"バージョンでは 256 のキャラクターを規定した。 このエンコードの仕様だと一文字"
+"はきっちり 1 バイトに収まるが、明らかに、256 キャラクターというのは、 いろい"
+"ろな言語で用いる全ての文字を一つのキャラクターに一対一対応させるのに依然十分"
+"ではなかった。"
+
+#. type: Plain text
+#: manual/configuration.md:190
+msgid ""
+"As a result localized character sets were defined later, e.g the ISO-8859 "
+"character sets. Most operating system vendors introduced their own "
+"characters sets to satisfy their needs, e.g. IBM defined the *codepage 437 "
+"(DOSLatinUS)*, Apple introduced the *MacRoman* codepage and so on. The "
+"characters that were assigned number larger than 127 were referred to as "
+"*extended* characters. These character sets conflict with another, as they "
+"use the same number for different characters, or vice versa."
+msgstr ""
+"結果的には後にローカライズされたキャラクターセットが規定された。例えば "
+"ISO-8859 キャラクターセットである。 ほとんどのオペレーティングシステムベン"
+"ダーは自らの要求を満たすために、独自のキャラクターセットを導入した。すなわち "
+"IBM であれば *コードページ 437 (DOSLatinUS)*、アップルは *MacRoman* コード"
+"ページ、などである。127 以上のキャラクターが定義されているものを*拡張* キャラ"
+"クターと呼ぶ。 これらのキャラクターセットは異なるキャラクターに同じ番号をふっ"
+"てあるので、 他のキャラクターセットとまたはキャラクターセット同士で衝突を起こ"
+"す。"
+
+#. type: Plain text
+#: manual/configuration.md:195
+msgid ""
+"Almost all of those characters sets defined 256 characters, where the first "
+"128 (0-127) character mappings are identical to ASCII. As a result, "
+"communication between systems using different codepages was effectively "
+"limited to the ASCII charset."
+msgstr ""
+"そういったキャラクターセットのほぼ全てが 256 個のキャラクターを定義していて、"
+"最初の 128 個（0 から 127 まで）のキャラクターを ASCII と同一対応となるように"
+"している。結果的に、違ったコードページを使っているシステム同士の通信では、事"
+"実上 ASCII キャラクターセット限定となった。"
+
+#. type: Plain text
+#: manual/configuration.md:200
+msgid ""
+"To solve this problem new, larger character sets were defined. To make room "
+"for more character mappings, these character sets use at least 2 bytes to "
+"store a character. They are therefore referred to as *multibyte* character "
+"sets."
+msgstr ""
+"この問題を新たに解決するために、より大きいキャラクターセットが規定された。よ"
+"り多くのキャラクターマッピングの場所を確保するために、 これらのキャラクター"
+"セットは一つのキャラクターの格納のために最低でも 2 バイトを使用する。 このた"
+"めそういったキャラクターセットは*マルチバイト* キャラクターセットと呼ばれる。"
+
+#. type: Plain text
+#: manual/configuration.md:205
+msgid ""
+"One standardized multibyte charset encoding scheme is known as [Unicode]"
+"(http://www.unicode.org/). A big advantage of using a multibyte charset is "
+"that you only need one. There is no need to make sure two computers use the "
+"same charset when they are communicating."
+msgstr ""
+"標準化されたマルチバイトキャラクターエンコード方式として知られているものの一"
+"つとして [ユニコード](http://www.unicode.org/)がある。 マルチバイトキャラク"
+"ターセット使用の大きな利点として“それ一つで済む”がある。 二つのコンピューター"
+"が通信しているときに両者が同じキャラクターセットを使用しているか確認する必要"
+"がない。"
+
+#. type: Title ###
+#: manual/configuration.md:206
+#, no-wrap
+msgid "Character sets used by Apple"
+msgstr "Apple で使われている（使われていた）キャラクターセット"
+
+#. type: Plain text
+#: manual/configuration.md:211
+msgid ""
+"In the past, Apple clients used single-byte charsets to communicate over the "
+"network. Over the years Apple defined a number of codepages, western users "
+"will most likely be using the *MacRoman* codepage."
+msgstr ""
+"過去に Apple クライアントは、ネットワーク間の通信のためにシングルバイトのキャ"
+"ラクターセットを使用していた。 年を経るに従い、Apple はいくつものキャラクター"
+"セットを定義したが、欧米ユーザーは *MacRoman* コードセットを最もよく使用する"
+"であろう。"
+
+#. type: Plain text
+#: manual/configuration.md:213
+msgid "Codepages defined by Apple include:"
+msgstr "Apple の定義したコードページに含まれるもの："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:215
+msgid "MacArabic, MacFarsi"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:217
+msgid "MacCentralEurope"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:219
+msgid "MacChineseSimple"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:221
+msgid "MacChineseTraditional"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:223
+msgid "MacCroatian"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:225
+msgid "MacCyrillic"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:227
+msgid "MacDevanagari"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:229
+msgid "MacGreek"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:231
+msgid "MacHebrew"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:233
+msgid "MacIcelandic"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:235
+msgid "MacJapanese"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:237
+msgid "MacKorean"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:239
+msgid "MacRoman"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:241
+msgid "MacRomanian"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:243
+msgid "MacThai"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:245
+msgid "MacTurkish"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:251
+msgid ""
+"Starting with Mac OS X and AFP3, [UTF-8](http://www.utf-8.com/) is used.  "
+"UTF-8 encodes Unicode characters in an ASCII compatible way, each Unicode "
+"character is encoded into 1-6 ASCII characters. UTF-8 is therefore not "
+"really a charset itself, it's an encoding of the Unicode charset."
+msgstr ""
+"Mac OS X 以降そして AFP3 以降では [UTF-8](http://www.utf-8.com/)  が用いられ"
+"る。UTF-8 は Unicode キャラクターを ASCII 互換のやり方でエンコードする。各々"
+"の Unicode キャラクターは一個から六個の ASCII キャラクターにエンコードされ"
+"る。 故に、UTF-8 自体が本当のキャラクターセットなのではなく、ユニコードキャラ"
+"クターセットのエンコーディングなのである。"
+
+#. type: Plain text
+#: manual/configuration.md:258
+msgid ""
+"To complicate things, Unicode defines several *[normalization](http://"
+"www.unicode.org/reports/tr15/index.html)* forms.  While [samba](http://"
+"www.samba.org) uses *precomposed* Unicode, which most UNIX tools prefer as "
+"well, Apple decided to use the *decomposed* normalization."
+msgstr ""
+"厄介なことにも Unicode はいくつかの *[normalization（正規化）](http://"
+"www.unicode.org/reports/tr15/index.html)* 方式を規定している。[Samba](http://"
+"www.samba.org)  はほとんどの UNIX ツールも好んで用いる *precomposed* Unicode "
+"を使用する。一方 Apple は *decomposed* normalization を使うことに決めた。"
+
+#. type: Plain text
+#: manual/configuration.md:264
+msgid ""
+"For example lets take the German character 'ä'. Using the precomposed "
+"normalization, Unicode maps this character to 0xE4. In decomposed "
+"normalization, 'ä' is actually mapped to two characters, 0x61 and 0x308.  "
+"0x61 is the mapping for an 'a', 0x308 is the mapping for a *COMBINING "
+"DIAERESIS*."
+msgstr ""
+"例として、ドイツ語の文字 'ä' についてみてみる。Precomposed normalization を使"
+"えば Unicode はこの文字に 0xE4 を対応付ける。Decomposed normalization では "
+"'ä' を正確には 0x61 と 0x308 の二つの文字に対応付ける。0x61 は 'a' に、0x308 "
+"は *COMBINING DIAERESIS*（訳注：いわゆるウムラウト）に対応付けられている。"
+
+#. type: Plain text
+#: manual/configuration.md:268
+msgid ""
+"Netatalk refers to precomposed UTF-8 as *UTF8* and to decomposed UTF-8 as "
+"*UTF8-MAC*."
+msgstr ""
+"Netatalk では precomposed UTF-8 を *UTF8* と、decomposed UTF-8 を *UTF8-MAC* "
+"と呼ぶ。"
+
+#. type: Title ###
+#: manual/configuration.md:269
+#, no-wrap
+msgid "afpd and character sets"
+msgstr "afpd とキャラクターセット"
+
+#. type: Plain text
+#: manual/configuration.md:275
+msgid ""
+"To support new AFP 3.x and older AFP 2.x clients at the same time, afpd "
+"needs to be able to convert between the various charsets used. AFP 3.x "
+"clients always use UTF8-MAC, while AFP 2.x clients use one of the Apple "
+"codepages."
+msgstr ""
+"新しい AFP 3.x クライアントも古い AFP 2.x クライアントも同時にサポートするた"
+"めに、afpd は使われている様々なキャラクターセット間の変換が可能であることを必"
+"要とした。AFP 3.x クライアントは常に UTF8-MAC を、AFP 2.x クライアントは "
+"Apple コードページのうちの一つを使う。"
+
+#. type: Plain text
+#: manual/configuration.md:277
+msgid ""
+"At the time of writing, netatalk supports the following Apple codepages:"
+msgstr ""
+"本稿執筆時点（訳注：原文の）で、netatalk は以下の Apple コードページをサポー"
+"トしている："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:279
+msgid "MAC_CENTRALEUROPE"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:281
+msgid "MAC_CHINESE_SIMP"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:283
+msgid "MAC_CHINESE_TRAD"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:285
+msgid "MAC_CYRILLIC"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:287
+msgid "MAC_GREEK"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:289
+msgid "MAC_HEBREW"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:291
+msgid "MAC_JAPANESE"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:293
+msgid "MAC_KOREAN"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:295
+msgid "MAC_ROMAN"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/configuration.md:297
+msgid "MAC_TURKISH"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:299
+msgid "afpd handles three different character set options:"
+msgstr "afpd は三つの異なるキャラクターセットオプションを扱う："
+
+#. type: Plain text
+#: manual/configuration.md:301
+msgid "unix charset"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:308
+#, no-wrap
+msgid ""
+"> This is the codepage used internally by your operating system. If not\n"
+"specified, it defaults to `UTF8`. If `LOCALE` is specified and your\n"
+"system support UNIX locales, afpd tries to detect the codepage. afpd\n"
+"uses this codepage to read its configuration files, so you can use\n"
+"extended characters for volume names, login messages, etc. See\n"
+"`afp.conf(5)`.\n"
+msgstr ""
+"> これはオペレーティングシステムの内側で使われているコードページである。もし指定されていなければ、デフォルトで\n"
+"`UTF8` になる。もし `LOCALE` が指定されていて、 システムが UNIX locales\n"
+"をサポートしていれば、afpd はコードページを検出しようとし、afpd\n"
+"は検出したコードページを使って設定ファイルを読む。なので、ボリューム名やログインメッセージなどに拡張文字を使うことができる。\n"
+"`afp.conf(5)` を参照のこと。\n"
+
+#. type: Plain text
+#: manual/configuration.md:310
+msgid "mac charset"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:317
+#, no-wrap
+msgid ""
+"> As already mentioned, older Mac OS clients (up to AFP 2.2) use codepages\n"
+"to communicate with afpd. However, there is no support for negotiating\n"
+"the codepage used by the client in the AFP protocol. If not specified\n"
+"otherwise, afpd assumes the *MacRoman* codepage is used. In case your\n"
+"clients use another codepage, e.g. *MacCyrillic*, you'll **have** to\n"
+"explicitly configure this. See `afp.conf(5)`.\n"
+msgstr ""
+"> 既に述べたように、旧式の Mac OS クライアント（AFP 2.2 までのもの）は\n"
+"afpd と通信するのにコードページを用いる。しかしながら、AFP\n"
+"プロトコルにはクライアントが使用しているコードページの折り合いをつけるというサポートはない。もしほかのどこかで指定されていないと、\n"
+"afpd は *MacRoman* コードページが使われていると仮定する。\n"
+"クライアントが別のコードページ、例えば *MacCyrillic* を使っていたならば,\n"
+"それを明示的に設定**しなければならない**だろう。 `afp.conf(5)`\n"
+"を参照のこと。\n"
+
+#. type: Plain text
+#: manual/configuration.md:319
+msgid "vol charset"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:324
+#, no-wrap
+msgid ""
+"> This defines the charset afpd should use for filenames on disk. By\n"
+"default, it is the same as `unix charset`. If you have\n"
+"[iconv](http://www.gnu.org/software/libiconv/)\n"
+"installed, you can use any iconv provided charset as well.\n"
+msgstr ""
+"> これは afpd がディスク上のファイル名として使うべき charset\n"
+"を定義する。デフォルトでは `unix charset` と同じである。もし\n"
+"[iconv](http://www.gnu.org/software/libiconv/)\n"
+"がインストールしてあるならば、iconv\n"
+"が提供するキャラクターセットも使用することができる。\n"
+
+#. type: Plain text
+#: manual/configuration.md:333
+#, no-wrap
+msgid ""
+"afpd needs a way to preserve extended Macintosh characters, or\n"
+"characters illegal in UNIX filenames, when saving files on a UNIX\n"
+"filesystem. Earlier versions used the the so called CAP\n"
+"encoding. An extended character (\\>0x7F)\n"
+"would be converted to a :xx hex sequence, e.g. the Apple Logo (MacRoman:\n"
+"0xF0) was saved as :f0. Some special characters will be converted as to\n"
+":xx notation as well. '/' will be encoded to :2f, if `usedots` was not\n"
+"specified, a leading dot '.' will be encoded as :2e.\n"
+msgstr ""
+"afpd はファイルを unix\n"
+"のファイルシステムに保存する時、拡張マッキントッシュキャラクター、あるいは\n"
+"unix\n"
+"のファイル名として不正なキャラクターを保持する手段が必要である。初期のバージョンでは、いわゆる\n"
+"CAP\n"
+"エンコーディングを使った。拡張キャラクター\n"
+"(\\>0x7F) は :xx の 16 進数に変換される。例えば、アップルのロゴ\n"
+"(MacRoman: 0xF0) は :f0 として保存される。\n"
+"いくつかの特殊なキャラクターも :xx という表記に変換される。'/' は :2f\n"
+"にエンコードされる。もし、 `usedots`\n"
+"オプションが設定されていなければ、先頭のピリオド '.' は :2e\n"
+"にエンコードされる。\n"
+
+#. type: Plain text
+#: manual/configuration.md:337
+msgid ""
+"Even though this version now uses `UTF8` as the default encoding for "
+"filenames, '/' will be converted to ':'. For western users another useful "
+"setting could be `vol charset = ISO-8859-15`."
+msgstr ""
+"本ドキュメントでのバージョンではファイル名のデフォルトエンコーディングとして "
+"`UTF8` を使っているにもかかわらず、'/' は ':' に変換される。欧米のユーザーに"
+"とって別の有用な設定として `vol charset = ISO-8859-15` もあり得る。"
+
+#. type: Plain text
+#: manual/configuration.md:342
+msgid ""
+"If a character cannot be converted from the `mac charset` to the selected "
+"`vol charset`, you'll receive a -50 error on the mac. *Note*: Whenever you "
+"can, please stick with the default UTF8 volume format. See `afp.conf(5)`."
+msgstr ""
+"もし、あるキャラクターが `mac charset` から選定した `vol charset` への変換が"
+"できない場合、マック上で -50 エラーを受け取るだろう。 *注意*： 可能な限り常"
+"に、デフォルトの UTF8 ボリュームフォーマットにしてください。 `afp.conf(5)` を"
+"参照のこと。"
+
+#. type: Title ###
+#: manual/configuration.md:345
+#, no-wrap
+msgid "AFP authentication basics"
+msgstr "AFP 認証の基本"
+
+#. type: Plain text
+#: manual/configuration.md:353
+msgid ""
+"Apple chose a flexible model called \"User Authentication Modules\" (UAMs) "
+"for authentication purposes between AFP client and server. An AFP client "
+"initially connecting to an AFP server will ask for the list of UAMs which "
+"the server provides, and will choose the one with strongest encryption that "
+"the client supports."
+msgstr ""
+"Apple は AFP クライアントとサーバー間の認証のために \"User Authentication "
+"Modules\" (UAM)  と呼ばれる柔軟なモデルを選んだ。AFP クライアントがまず最初"
+"に AFP サーバーと接続するとき、 サーバーが提供している UAM のリストを問い合わ"
+"せる。そして、クライアントがサポートしている最も強い暗号化の UAM を選ぶ。"
+
+#. type: Plain text
+#: manual/configuration.md:356
+msgid ""
+"Several UAMs have been developed by Apple over the time, some by 3rd-party "
+"developers."
+msgstr ""
+"数個の UAM は時間をかけて Apple が開発してものであり、サードパーティの開発者"
+"によるものもある。"
+
+#. type: Title ###
+#: manual/configuration.md:357
+#, no-wrap
+msgid "UAMs supported by Netatalk"
+msgstr "Netatalk でサポートされている UAM"
+
+#. type: Plain text
+#: manual/configuration.md:360
+msgid "Netatalk supports the following ones by default:"
+msgstr "Netatalk はデフォルトで以下のものをサポートしている："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:363
+msgid "\"No User Authent\" UAM (guest access without authentication)"
+msgstr "\"No User Authent\" UAM（ユーザー認証なしのゲスト接続）"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:366
+msgid "\"Cleartxt Passwrd\" UAM (no password encryption)"
+msgstr "\"Cleartxt Passwrd\" UAM（クリアテキスト(平文)パスワード、暗号化なし）"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:370
+msgid ""
+"\"Randnum exchange\"/\"2-Way Randnum exchange\" UAMs (weak password "
+"encryption, separate password storage)"
+msgstr ""
+"\"Randnum exchange\"、\"2-Way Randnum exchange\" UAM （乱数交換・双方向乱数交"
+"換、弱いパスワード暗号化、パスワードを別途保存する）"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:373
+msgid "\"DHCAST128\" UAM (a.k.a. DHX; stronger password encryption)"
+msgstr "\"DHCAST128\" UAM（より強いパスワード暗号化）"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:375
+msgid "\"DHX2\" UAM (successor of DHCAST128)"
+msgstr "\"DHX2\" UAM（DHCAST128 の後継版）"
+
+#. type: Plain text
+#: manual/configuration.md:377
+msgid "There exist other optional UAMs as well:"
+msgstr "他にもオプションとして以下のような UAM がある："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:381
+msgid ""
+"\"Client Krb v2\" UAM (Kerberos V, suitable for \"Single Sign On\" Scenarios "
+"with macOS clients – see below)"
+msgstr ""
+"\"Client Krb v2\" UAM （Kerberos V、macOS で“シングルサインオン”環境には最も"
+"適当である――下記参照）"
+
+#. type: Plain text
+#: manual/configuration.md:387
+msgid ""
+"You can configure which UAMs should be activated by defining \"`uam list`\" "
+"in `Global` section. `afpd` will log which UAMs it's using and if problems "
+"occur while activating them in either `netatalk.log` or syslog at startup "
+"time. `asip-status(1)` can be used to query the available UAMs of AFP "
+"servers as well."
+msgstr ""
+"\"`uam list`\" を `Global` セクションで定義することによって、どの UAM を有効"
+"化すべきか設定できる。`afpd` はどの UAM を使っているのか、UAM を有効化した時"
+"に問題が起こっているのかどうかを、`netatalk.log` あるいは起動時の syslog にロ"
+"グとして保存する。`asip-status(1)` も AFP サーバーで有効な UAM の問い合わせを"
+"するのに使うことができる。"
+
+#. type: Plain text
+#: manual/configuration.md:392
+msgid ""
+"Having a specific UAM available at the server does not automatically mean "
+"that a client can use it. Client-side support is also necessary.  For older "
+"Macintoshes running Classic Mac OS, DHCAST128 support exists since "
+"AppleShare client 3.8.x."
+msgstr ""
+"ある特定の UAM がサーバー上で有効であるということが、直ちに、 クライアントも"
+"それを使うことができるということを意味するわけではない。クライアント側でのサ"
+"ポートもまた必要である。Classic Mac OS が使われている古い Macintosh では、"
+"DHCAST128 のサポートは AppleShare クライアント 3.8.x 以降には存在している。"
+
+#. type: Plain text
+#: manual/configuration.md:397
+msgid ""
+"On macOS, there exist some client-side techniques to make the AFP-client "
+"more verbose, so one can have a look at what's happening while negotiating "
+"the UAMs to use. Compare with this [hint](https://web.archive.org/web/"
+"20080312054723/http://article.gmane.org/gmane.network.netatalk.devel/7383/)."
+msgstr ""
+"macOS では、AFP クライアントをもっと冗長にするクライアント側のテクニックがい"
+"くつかあるので、使用する UAM と折り合いをつけるまでに何が起こっているのか見る"
+"ことができる。[このヒント](https://web.archive.org/web/20080312054723/http://"
+"article.gmane.org/gmane.network.netatalk.devel/7383/)  と比較してみるとよい。"
+
+#. type: Title ###
+#: manual/configuration.md:398
+#, no-wrap
+msgid "Which UAMs to activate?"
+msgstr "どの UAM を有効にすべきか？"
+
+#. type: Plain text
+#: manual/configuration.md:403
+msgid ""
+"It depends primarily on your needs and on the kind of macOS clients you have "
+"to support. If your network consists of exclusively macOS (Mac OS X) "
+"clients, DHX2 is sufficient, and provides the strongest encryption."
+msgstr ""
+"それは主に、ニーズとサポートする必要がある macOS クライアントの種類に依存す"
+"る。ネットワークが macOS (Mac OS X)  クライアントのみで構成されている場合は、"
+"DHX2 で十分であり、最も強力な暗号化を提供する。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:409
+msgid ""
+"Unless you really have to supply guest access to your server's volumes "
+"ensure that you disable \"No User Authent\" since it might lead accidentally "
+"to unauthorized access. In case you must enable guest access take care that "
+"you enforce this on a per volume base using the access controls."
+msgstr ""
+"サーバーのボリュームに本当にゲストアクセスを供することが必要な場合以外は、"
+"\"No User Authent\" が無効化されているか確認すべきである。さもないと、意図し"
+"ない権限のないアクセスを引き起こすことにもなる。 ゲストアクセスを有効にしなけ"
+"ればならない場合は、アクセスコントロールを使って、 ボリューム各々についてゲス"
+"トアクセスを有効化することを強制するように気を配るべきである。"
+
+#. type: Plain text
+#: manual/configuration.md:412
+#, no-wrap
+msgid ""
+"  Note: \"No User Authent\" is required to use Apple II NetBoot services\n"
+"  (`a2boot(8)`) to boot an Apple //e over AFP.\n"
+msgstr ""
+"  注意：Apple II NetBoot サービス (`a2boot(8)`) を使用して AFP 経由で\n"
+"  Apple //e を起動するには、「ユーザー認証なし」が必要である。\n"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:416
+msgid ""
+"The \"ClearTxt Passwrd\" UAM is as bad as it sounds since passwords go "
+"unencrypted over the wire. Try to avoid it at both the server's side as well "
+"as on the client's."
+msgstr ""
+"\"ClearTxt Passwrd\" UAM ではパスワードがネットワーク上を暗号化されずに伝わっ"
+"ていくので、 字句そのまんまに良くない。クライアント側のみならずサーバー側でも"
+"無効にするよう務めるべきである。"
+
+#. type: Plain text
+#: manual/configuration.md:421
+#, no-wrap
+msgid ""
+"  Note: If you want to provide Mac OS 8/9 clients with NetBoot-services\n"
+"  then you need uams_cleartext.so since the AFP-client integrated into\n"
+"  the Mac's firmware can only deal with this basic form of\n"
+"  authentication.\n"
+msgstr ""
+"  注意：もし NetBoot サービスを使用している Mac OS 8/9\n"
+"  にサービスを提供したい場合、cleartext.so の UAM が必要となる。\n"
+"  これはそういった Mac のファームウエアに組み込まれた AFP\n"
+"  クライアントがこうした基本的な形の認証しか扱わないためである。\n"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:429
+msgid ""
+"Since \"Randnum exchange\"/\"2-Way Randnum exchange\" uses only 56 bit DES "
+"for encryption it should be avoided as well. Another disadvantage is the "
+"fact that the passwords have to be stored in cleartext on the server and "
+"that it doesn't integrate into both PAM scenarios or classic /etc/shadow "
+"(you have to administrate passwords separately by using the `afppasswd(1)` "
+"utility, in order for clients to use these UAMs)"
+msgstr ""
+"\"Randnum exchange\" と \"2-Way Randnum exchange\" は 56 ビット DES 暗号化し"
+"か使わないので、これらもやはり回避すべきである。 そしてなおかつ不利なのは、パ"
+"スワードがサーバーに平文テキストとして保存されなければならないこと、および "
+"PAM 環境とも古典的な /etc/shadow とも統合がとれない （もしクライアントがこれ"
+"らの UAM を使わなければならない場合、`afppasswd(1)` ユーティリティを使って別"
+"途パスワードを管理しなければならない）という点である。"
+
+#. type: Plain text
+#: manual/configuration.md:432
+#, no-wrap
+msgid ""
+"  However, this is the strongest form of authentication that can be used\n"
+"  with Macintosh System Software 7.1 or earlier.\n"
+msgstr "  ただし、これは 漢字Talk 7.1 以前で使用できる最も強力な認証形式である。\n"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:435
+msgid ""
+"\"DHCAST128\" (\"DHX\") or \"DHX2\" should be the sweet spot for most people "
+"since it combines stronger encryption with PAM integration."
+msgstr ""
+"\"DHCAST128\" (\"DHX\") あるいは \"DHX2\" は PAM との統合と強力な暗号化とが組"
+"み合わせられているので、 ほとんどの人々にとって良い妥協案であろう。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:446
+msgid ""
+"Using the Kerberos V (\"Client Krb v2\")  UAM, it's possible to implement "
+"real single sign on scenarios using Kerberos tickets. The password is not "
+"sent over the network. Instead, the user password is used to decrypt a "
+"service ticket for the AppleShare server. The service ticket contains an "
+"encryption key for the client and some encrypted data (which only the "
+"AppleShare server can decrypt). The encrypted portion of the service ticket "
+"is sent to the server and used to authenticate the user. Because of the way "
+"that the afpd service principal detection is implemented, this "
+"authentication method is vulnerable to man-in-the-middle attacks."
+msgstr ""
+"Kerberos V (\"Client Krb v2\") UAM を用いれば、Kerberos チケットを用いて真の"
+"シングルサインオン環境を実装することが可能である。パスワードがネットワークを"
+"通して送られることもない。 その代わり、ユーザーのパスワードは AppleShare サー"
+"バーへのサービスチケットを暗号から復号するのに用いられる。 サービスチケットに"
+"はクライアントの暗号鍵と幾らかの暗号化されたデータが含まれる （それは "
+"AppleShare サーバーだけが復号できる）。サービスチケットの暗号化された部分が"
+"サーバーに送られ、ユーザーを認証するのに使われる。afpd サービスプリンシパル検"
+"知の実装の仕方のために、この認証方法は中間者攻撃に対して脆弱である。"
+
+#. type: Plain text
+#: manual/configuration.md:451
+msgid ""
+"For a more detailed overview over the technical implications of the "
+"different UAMs, please have a look at Apple's [File Server Security](http://"
+"developer.apple.com/library/mac/#documentation/Networking/Conceptual/AFP/"
+"AFPSecurity/AFPSecurity.html#//apple_ref/doc/uid/TP40000854-CH232-SW1)  "
+"pages."
+msgstr ""
+"様々な UAM の技術的実装についてのより詳細な概要については、Apple の [File "
+"Server Security](http://developer.apple.com/library/mac/#documentation/"
+"Networking/Conceptual/AFP/AFPSecurity/AFPSecurity.html#//apple_ref/doc/uid/"
+"TP40000854-CH232-SW1)  ページを見ていただきたい。"
+
+#. type: Title ###
+#: manual/configuration.md:452
+#, no-wrap
+msgid "Using different authentication sources with specific UAMs"
+msgstr "特定の UAM で別の認証ソースを使う"
+
+#. type: Plain text
+#: manual/configuration.md:462
+msgid ""
+"Some UAMs provide the ability to use different authentication \"backends\", "
+"namely `uams_cleartext.so`, `uams_dhx.so` and `uams_dhx2.so`. They can use "
+"either classic UNIX passwords from `/etc/passwd` (`/etc/shadow`) or PAM if "
+"the system supports that.  `uams_cleartext.so` can be symlinked to either "
+"`uams_passwd.so` or `uams_pam.so`, `uams_dhx.so` to `uams_dhx_passwd.so` or "
+"`uams_dhx_pam.so` and `uams_dhx2.so` to `uams_dhx2_passwd.so` or "
+"`uams_dhx2_pam.so`."
+msgstr ""
+"いくつかの UAM は別の認証“バックエンド”を使えるようにしてある。いわゆる "
+"`uams_cleartext.so`、`uams_dhx.so` 及び `uams_dhx2.so`である。これらは `/etc/"
+"passwd` (`/etc/shadow`) からの古典的 UNIX パスワードでも、システムがサポート"
+"していれば PAM でもどちらでも使うことができる。 `uams_cleartext.so` は "
+"`uams_passwd.so` ないしは `uams_pam.so` へのシンボリックリンクとして、 "
+"`uams_dhx.so` は `uams_dhx_passwd.so` ないしは `uams_dhx_pam.so` へのシンボ"
+"リックリンクとして、さらには `uams_dhx2.so` は `uams_dhx2_passwd.so` ないし"
+"は `uams_dhx2_pam.so`へのシンボリックリンクとすることができる。"
+
+#. type: Plain text
+#: manual/configuration.md:465
+msgid ""
+"So, if it looks like this in Netatalk's UAMs folder (per default `/etc/"
+"netatalk/uams/`):"
+msgstr ""
+"なので、もし Netatalk の UAM フォルダー（デフォルトで `/etc/netatalk/uams/`）"
+"が以下のようであれば："
+
+#. type: Plain text
+#: manual/configuration.md:469
+#, no-wrap
+msgid ""
+"    uams_clrtxt.so -> uams_pam.so\n"
+"    uams_dhx.so -> uams_dhx_pam.so\n"
+"    uams_dhx2.so -> uams_dhx2_pam.so\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:477
+msgid ""
+"then you're using PAM, otherwise classic UNIX passwords. The main advantage "
+"of using PAM is that one can integrate Netatalk in centralized "
+"authentication scenarios, e.g. via LDAP, NIS and the like. Please always "
+"keep in mind that the protection of your user's login credentials in such "
+"scenarios also depends on the strength of encryption that the UAM in "
+"question supplies. So think about eliminating weak UAMs like \"ClearTxt "
+"Passwrd\" and \"Randnum exchange\" completely from your network."
+msgstr ""
+"PAM さもなくば古典的な UNIX パスワードを使用しているわけである。PAM を使用す"
+"ることで最も有利なのは、例えば LDAP 経由、あるいは NIS 経由などの集約した認証"
+"環境に Netatalk を統合できることである。そのような環境でのユーザーのログイン"
+"資格情報 (credentials) の保護は、UAM そのものが供している暗号化の強さにもまた"
+"依存している。 ということを常に念頭においていただきたい。なので、\"ClearTxt "
+"Passwrd\" や \"Randnum exchange\" のような弱い UAM をネットワーク上から 完全"
+"に除去することを考えるべきである。"
+
+#. type: Title ###
+#: manual/configuration.md:478
+#, no-wrap
+msgid "Netatalk UAM overview table"
+msgstr "Netatalk UAM を概要表"
+
+#. type: Plain text
+#: manual/configuration.md:481
+msgid "A small overview of the most common used UAMs."
+msgstr "最も一般的に用いられる UAM の概観。"
+
+#. type: Plain text
+#: manual/configuration.md:489
+#, no-wrap
+msgid ""
+"| UAM | No User Authent | Cleartxt Passwrd | (2-Way) Randnum exchange | DHCAST128 | DHX2 | Client Krb v2 |\n"
+"|----|----|----|----|----|----|----|\n"
+"| Password length | guest access | max. 8 characters | max. 8 characters | max. 64 characters | max. 256 characters | Kerberos tickets |\n"
+"| Client support | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 |\n"
+"| Encryption | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit SSL, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted using libgcrypt with CAST 128 in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |\n"
+"| Server support | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |\n"
+"| Password storage method | None | Either /etc/passwd (/etc/shadow) or PAM | Passwords stored in clear text in a separate text file | Either /etc/passwd (/etc/shadow) or PAM | Either /etc/passwd (/etc/shadow) or PAM | At the Kerberos Key Distribution Center\\* |\n"
+msgstr ""
+"|  |  |  |  |  |  |  |\n"
+"|----|----|----|----|----|----|----|\n"
+"| UAM | No User Authent | Cleartxt Passwrd | (2-Way) Randnum exchange | DHCAST128 | DHX2 | Client Krb v2 |\n"
+"| パスワード長 | ゲストアクセス | 最大 8 文字 | 最大 8 文字 | 最大 64 文字 | 最大 256 文字 | Kerberos チケット |\n"
+"| サポートするクライアント | 全ての Mac OS のバージョンで組み込み済 | 10.0 を除く全ての Mac OS のバージョンで組み込み済。 最近のバージョンでは明示的にアクティブ化する必要がある。 | ほとんど全ての Mac OS のバージョンで組み込み済 | AppleShare クライアント 3.8.4 より組み込み済で、3.8.3 では macOS の AFP クライアントに統合したプラグインとしての用意あり。 | Mac OS X 10.2 より組み込み済 | Mac OS X 10.2 より組み込み済 |\n"
+"| 暗号化 | クライアント・サーバー間で認証なくゲストアクセス可能。 | パスワードがネットワーク上を暗号化されずに伝わっていく。 字句そのままに悪いので、可能ならば全面的に使用を回避すべき （注意：NetBoot サービスの提供には ClearTxt UAM が必要） | DES, 56 ビットに相当する 8 バイトの乱数がネットワーク上に送出。オフラインの辞書攻撃に対して脆弱。 パスワードがサーバー上で平文であることが求められる。 | パスワードは 128 ビット SSL で暗号化され、ユーザーはサーバーに認証されるが、“逆もまた真”ではない。 このため中間者攻撃に対して弱い。 | パスワードは libgcrypt の CAST 128、CBC モードを用いて暗号化される。 ユーザーはサーバーに認証されるが、“逆もまた真”ではない。このため中間者攻撃に対して弱い。 | パスワードがネットワークを通して送られることがない。サービスプリンシパル検知の方法が原因で、 この認証方法は中間者攻撃に対して脆弱である。 |\n"
+"| サーバーがサポートする共有オブジェクト | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |\n"
+"| パスワードの保管方法 | なし | /etc/passwd (/etc/shadow) ないしは PAM | パスワードは別のテキストファイルに平文として保存される | /etc/passwd (/etc/shadow) ないしは PAM | /etc/passwd (/etc/shadow) ないしは PAM | Kerberos キー配布センター\\* |\n"
+
+#. type: Plain text
+#: manual/configuration.md:491
+msgid "Netatalk UAM overview"
+msgstr "Netatalk UAM 概観"
+
+#. type: Plain text
+#: manual/configuration.md:494
+msgid ""
+"\\* Have a look at this [Kerberos overview](https://web.archive.org/web/"
+"20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)"
+msgstr ""
+"\\* [Kerberos 概要](https://web.archive.org/web/20070705043002/http://"
+"cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)  も一読のこと"
+
+#. type: Title ###
+#: manual/configuration.md:495
+#, no-wrap
+msgid "SSH tunneling"
+msgstr "SSH トンネリング"
+
+#. type: Plain text
+#: manual/configuration.md:501
+msgid ""
+"Tunneling and VPNs usually have nothing to do with AFP authentication and "
+"UAMs. But since Apple introduced an option called \"Allow Secure Connections "
+"Using SSH\" and many people tend to confuse the two, we'll cover this here."
+msgstr ""
+"トンネリングや VPN のたぐいのもの全ては、AFP 認証や UAM に関してすべきことは"
+"概ね皆無である。 しかしながらアップルが「SSHを用いて安全な接続を可能にする」"
+"というオプションを導入して以来、 多数の人が両者について混乱する傾向にある。以"
+"下ではその点についても述べる。"
+
+#. type: Title ####
+#: manual/configuration.md:502
+#, no-wrap
+msgid "Manually tunneling an AFP session"
+msgstr "手動で AFP セッションをトンネリング"
+
+#. type: Plain text
+#: manual/configuration.md:508
+msgid ""
+"This works since the first AFP servers that spoke \"AFP over TCP\" appeared "
+"in networks. One simply tunnels the remote server's AFP port to a local port "
+"different than 548 and connects locally to this port afterwards. On macOS "
+"this can be done by"
+msgstr ""
+"これは、\"AFP over TCP\" を“話すことができる”最初の AFP サーバーがネットワー"
+"クに登場して以来うまく動作する。リモートサーバーの AFP ポートをローカルの "
+"548 番以外の異なるポートにトンネルし、その後ローカルでこのポートににつなげる"
+"だけである。macOS では以下のようにすればよい。"
+
+#. type: Plain text
+#: manual/configuration.md:510
+#, no-wrap
+msgid "    ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:517
+msgid ""
+"After establishing the tunnel one will use `\"afp://127.0.0.1:10548\"` in "
+"the \"Connect to server\" dialog. All AFP traffic including the initial "
+"connection attempts will be sent encrypted over the wire since the local AFP "
+"client will connect to the Mac's local port 10548 which will be forwarded to "
+"the remote server's AFP port (we used the default 548) over SSH."
+msgstr ""
+"トンネルを確立したならば、“サーバーに接続”ダイアログで `\"afp://"
+"127.0.0.1:10548\"` を使うことができる。ローカルの AFP クライアントは Mac の"
+"ローカル 10548 番ポートに接続し、そのポートは SSH を通してリモートサーバーの "
+"AFP ポート（デフォルトでは 548 番を使う）に転送されているので、端緒の接続試行"
+"も含めて全ての AFP トラフィックがネットワークを暗号化されて送られる。"
+
+#. type: Plain text
+#: manual/configuration.md:523
+msgid ""
+"This sort of tunnel is an ideal solution if you must access an AFP server "
+"through the Internet without having the ability or desire to use a \"real\" "
+"VPN. Note that you can let `ssh` compress the data by using its \"-C\" "
+"switch and that the tunnel endpoints can be different from both AFP client "
+"and server (compare with the SSH documentation for details)."
+msgstr ""
+"この手のトンネルは、もし、“真の” VPN を使えないが、インターネットを通じて、弱"
+"い認証機構しかない AFP サーバーにアクセスしなければならない場合の理想的な解決"
+"手段である。`ssh` の \"-C\" オプションでデータ圧縮が可能であり、トンネルの端"
+"点を AFP クライアント、サーバーどちらとも異なるようにすることが可能である "
+"（詳細については SSH のドキュメントと比較してほしい）という点に留意すべきであ"
+"る。"
+
+#. type: Title ####
+#: manual/configuration.md:524
+#, no-wrap
+msgid "Automatically establishing a tunneled AFP connection"
+msgstr "自動的にトンネル AFP 接続を確立する"
+
+#. type: Plain text
+#: manual/configuration.md:531
+msgid ""
+"From Mac OS X 10.2 to 10.4, Apple added an \"Allow Secure Connections Using "
+"SSH\" checkbox to the \"Connect to Server\" dialog. The idea behind this "
+"was: When the server signals that it can be contacted by SSH then macOS's "
+"AFP client tries to establish the tunnel and automagically send all AFP "
+"traffic through it."
+msgstr ""
+"Apple は Mac OS X 10.2 から 10.4 で、「サーバーに接続」ダイアログに 「SSHを用"
+"いて安全な接続を可能にする」チェックボックスを追加した。この考えの裏にあるの"
+"は：サーバーが SSH で接続できるというサインを出した時、macOS の AFP クライア"
+"ントはトンネルを確立しようとし、自動的に全ての AFP トラフィックをこのトンネル"
+"を通して送る。ということなのである。"
+
+#. type: Plain text
+#: manual/configuration.md:536
+msgid ""
+"But it took until the release of Mac OS X 10.3 that this feature worked the "
+"first time... partly. In case, the SSH tunnel could not be established and "
+"the AFP client **silently** fell back to an unencrypted AFP connection "
+"attempt."
+msgstr ""
+"しかし、この機能が初めて…部分的に、動作するようになるのに Mac OS X 10.3 まで"
+"かかった。SSH トンネルが確立できない時、AFP クライアントは**何の通知もなく**"
+"暗号化していない AFP 接続試行にフォールバックした。"
+
+#. type: Plain text
+#: manual/configuration.md:542
+msgid ""
+"Netatalk's afpd will report that it is capable of handling SSH tunneled AFP "
+"requests, when both \"`advertise ssh`\" and \"`fqdn`\" options are set in "
+"the `Global` section (double check with `asip-status(1)` after you restarted "
+"afpd when you made changes to the settings). But there are a couple of "
+"reasons why you don't want to use this option at all:"
+msgstr ""
+"\"`advertise ssh`\" および \"`fqdn`\" オプション両方を `Global` セクションで"
+"設定（設定を変更したら、afpd を再起動した後 `asip-status(1)` で二重チェックす"
+"るべき）した時は、SSH トンネルした AFP リクエストの扱いが可能であることを "
+"Netatalk の afpd はレポートする。しかし、このオプションを決して使用したくなく"
+"なる２、３の理由がある："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:547
+msgid ""
+"Most users who need such a feature are probably already familiar with using "
+"a VPN; it might be easier for the user to employ the same VPN software in "
+"order to connect to the network on which the AFP server is running, and then "
+"to access the AFP server as normal."
+msgstr ""
+"こう言うような機能を必要とする大部分のユーザーは、 おそらく使い慣れている "
+"VPN はあるとしたら、 通常のVPNを使用して AFP サーバーが実行されているネット"
+"ワークに接続し、 AFP サーバーにアクセスする方が簡単だろう。"
+
+#. type: Plain text
+#: manual/configuration.md:553
+#, no-wrap
+msgid ""
+"  That being said, for the simple case of connecting to one specific AFP\n"
+"  server, a direct SSH connection is likely to perform better than a\n"
+"  general-purpose VPN; contrary to popular belief, tunneling via SSH\n"
+"  does **not** result in what's called \"TCP-over-TCP meltdown\", because\n"
+"  the AFP data that are being tunneled do not encapsulate TCP data.\n"
+msgstr ""
+"  とはいっても、１台の AFP サーバーに接続するという単純なケースでは、\n"
+"  VPN より直接 SSH\n"
+"  接続の方がパフォーマンス的に良いだろう。噂と違って、SSH\n"
+"  経由のトンネリングでは、 いわゆる「TCP-over-TCP\n"
+"  メルトダウン」は発生しない。何故なら、トンネリングされるAFPデータが\n"
+"  TCP データをカプセル化していないためである。\n"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:559
+msgid ""
+"Since this SSH kludge isn't a normal UAM that integrates directly into the "
+"AFP authentication mechanisms but instead uses a single flag signalling "
+"clients whether they can **try** to establish a tunnel or not, it makes life "
+"harder to see what's happening when things go wrong."
+msgstr ""
+"このように SSH でその場をしのぐことは AFP 認証機構に直接統合された通常の UAM "
+"ではないし、 代わりにこの方法では、トンネルの確立を**試行** できるのかどうな"
+"のかのサインをクライアントに送るために、単一のフラグを用いる。 このため、何か"
+"がおかしい時に何が起こっているのかを見ようとする気を失ってしまう。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:563
+msgid ""
+"You cannot control which machines are logged on by Netatalk tools like a "
+"`macusers` since all connection attempts seem to be made from localhost."
+msgstr ""
+"全ての接続試行は localhost から行われているように見えるので、 `macusers` のよ"
+"うな Netatalk ツールによって、 どのマシンがログオンしているのか制御ができな"
+"い。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:568
+msgid ""
+"Indeed, to ensure that all AFP sessions are encrypted via SSH, you need to "
+"limit afpd to connections that originate only from localhost (e.g., by using "
+"Wietse Venema's TCP Wrappers, or by using suitable firewall or packet-"
+"filtering facilities, etc.)."
+msgstr ""
+"実際、AFP セッションが全てが SSH で暗号化されていることを確実にしたい場合は、"
+"afpd へのアクセスを localhost のみ発信される接続に制限する必要がある。たとえ"
+"ば、Wietse Venema の TCP ラッパーを使用するか、適切なファイアウォールやパケッ"
+"トフィルタリング機能を使用するなど。"
+
+#. type: Plain text
+#: manual/configuration.md:574
+#, no-wrap
+msgid ""
+"  Otherwise, when you're using Mac OS X 10.2 through 10.3.3, you get the\n"
+"  opposite of what you'd expect: potentially unencrypted AFP\n"
+"  communications (including login credentials) being sent across the\n"
+"  network without a single notification that establishing the tunnel\n"
+"  failed. Apple fixed that with Mac OS X 10.3.4.\n"
+msgstr ""
+"  そうしなければ、10.2 から 10.3.3 を使っている場合は、予想とは逆に：\n"
+"  トンネルの確立に失敗したという通知一つもなく、ネットワーク上で暗号化されていない\n"
+"  AFP\n"
+"  の通信（ログイン資格情報を含む）が起こりえるということである。Apple は\n"
+"  Mac OS X 10.3.4 になってそれをはじめて修正した。\n"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:580
+msgid ""
+"Encrypting all AFP sessions via SSH can lead to a significantly higher load "
+"on the computer that is running the AFP server, because that computer must "
+"also handle encryption; if the user is connecting through a trusted network, "
+"then such encryption might be an unnecessary overhead."
+msgstr ""
+"SSH 経由で全ての AFP セッションを暗号化するることは、Netatalk サーバーの負荷"
+"の著しい上昇を招く可能性がある。 ユーザーが信頼できるネットワーク経由で接続し"
+"ている場合、そのような暗号化は無駄かもしれない。"
+
+#. type: Title ##
+#: manual/configuration.md:581
+#, no-wrap
+msgid "ACL Support"
+msgstr "ACL のサーポート"
+
+#. type: Plain text
+#: manual/configuration.md:585
+msgid ""
+"ACL support for AFP is implemented for ZFS ACLs on Solaris and derived "
+"platforms and for POSIX 1e ACLs on Linux."
+msgstr ""
+"afp の ACL サポートは Solaris の ZFS ACL、派生したプラットフォーム、そして、"
+"Linux の POSIX 1e ACL で実装されている。"
+
+#. type: Plain text
+#: manual/configuration.md:597
+msgid ""
+"For a basic mode of operation there's nothing to configure. Netatalk reads "
+"ACLs on the fly and calculates effective permissions which are then send to "
+"the AFP client via the so called UARights permission bits. On a Mac, the "
+"Finder uses these bits to adjust permission in Finder windows. Example: a "
+"folder whose UNIX mode is read-only and an ACL giving the user write access, "
+"will display the effective read-write permission. Without the permission "
+"mapping the Finder would display a read-only icon and the user wouldn't be "
+"able to write to the folder."
+msgstr ""
+"基本的な方式で運用するならば設定することは何もない。Netatalk は ACL をオンザ"
+"フライで読み込み、そののちいわゆる UARights パーミションビット経由で AFP クラ"
+"イアントに送られる有効なパーミッションを算出する。 マック上では、これらのビッ"
+"トを Finder ウィンドウ内のパーミッションと調整するために Finder が使用する。"
+"例：UNIX のモードでは書き込み専用だが ACL がユーザーに書き込み権限を与えてい"
+"るフォルダーは有効な読み書き権限を表示する。権限のマッピングなしに Finder は"
+"読み込み専用アイコンを表示するだろうし、ユーザーはそのフォルダーに書き込みは"
+"できないであろう。"
+
+#. type: Plain text
+#: manual/configuration.md:603
+msgid ""
+"By default, the effective permission of the authenticated user are only "
+"mapped to the mentioned UARightspermission structure, not the UNIX mode. You "
+"can adjust this behaviour with the configuration option [map acls]"
+"(#map_acls)."
+msgstr ""
+"デフォルトでは、認証ユーザーに有効なパーミションは UNIX のモードではなく、前"
+"記 UARights の機構のみに対応付けられる。この挙動は設定オプション [map acls]"
+"(#map_acls) で修正することができる。"
+
+#. type: Plain text
+#: manual/configuration.md:613
+msgid ""
+"However, neither in Finder \"Get Info\" windows nor in the Terminal will you "
+"be able to see the ACLs, because of how ACLs in macOS are designed.  If you "
+"want to be able to display ACLs on the client, things get more involved as "
+"you must then setup both client and server to be part on a authentication "
+"domain (directory service, e.g. LDAP, OpenDirectory). The reason is, that in "
+"macOS ACLs are bound to UUIDs, not just uid's or gid's. Therefore afpd must "
+"be able to map every filesystem uid and gid to a UUID so that it can return "
+"the server side ACLs which are bound to UNIX uid and gid mapped to macOS "
+"UUIDs."
+msgstr ""
+"しかしながら、Finder の“情報を見る”ウィンドウでもターミナルでも、ACL を見るこ"
+"とは不可能で、そこで見ているのは OS X で ACL がどのように設計されたのかという"
+"結果である。もしクライアント上でも ACL を表示させたいと思うならば、諸々を認証"
+"ドメイン（ディレクトリサービス、例えば、LDAP やOpenDirectory）の一部と、より"
+"内包されているようにして、クライアント側でもサーバー側でもセットアップをおこ"
+"なうべきである。 その理由は、macOS ACL が ただ、uid と gid だけでなく UUID と"
+"紐付いているためである。このため、afpd は全てのファイルシステムの uid と git "
+"を UUID に紐付けできなければならない。そうすれば、afpd は macOS の UUID に紐"
+"付けた UNIX uid と gid も含めたサーバー側の ACL を返すことができる。"
+
+#. type: Plain text
+#: manual/configuration.md:618
+msgid ""
+"Netatalk can query a directory server using LDAP queries. Either the "
+"directory server already provides an UUID attribute for user and groups "
+"(Active Directory, Open Directory) or you reuse an unused attribute (or add "
+"a new one) to you directory server (e.g. OpenLDAP)."
+msgstr ""
+"Netatalk は LDAP クエリーを使ってディレクトリサーバーに問い合わせができる。"
+"ディレクトリサーバー（Active Directory、Open Directory）が既にユーザーとグ"
+"ループの UUID 属性を提供している。 あるいはディレクトリサーバー（例えば "
+"OpenLDAP）に使用されていない属性を再利用する（あるいは新たに追加する）のいず"
+"れかである。"
+
+#. type: Plain text
+#: manual/configuration.md:620
+msgid "In detail:"
+msgstr "より踏み込むと："
+
+#. type: Bullet: '1.  '
+#: manual/configuration.md:622
+msgid "For Solaris/ZFS: ZFS Volumes"
+msgstr "ZFS を使っている Solarisの ZFS ボリュームごとに対して、"
+
+#. type: Plain text
+#: manual/configuration.md:625
+#, no-wrap
+msgid ""
+"    You should configure a ZFS ACL know for any volume you want to use\n"
+"    with Netatalk:\n"
+msgstr ""
+"    Netatalk を使用したいと思っているあらゆるボリュームを ZFS ACL\n"
+"    がわかるように構成すべきである：\n"
+
+#. type: Plain text
+#: manual/configuration.md:628
+#, no-wrap
+msgid ""
+"        aclinherit = passthrough\n"
+"        aclmode = passthrough\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:631
+#, no-wrap
+msgid ""
+"    For an explanation of what this knob does and how to apply it, check\n"
+"    your hosts ZFS documentation (e.g. man zfs).\n"
+msgstr ""
+"    このひとひねりが何をするのか、どのように適用するのか、についての説明は、ホストの\n"
+"    ZFS ドキュメンテーション（例えば man zfs）を確認のこと。\n"
+
+#. type: Bullet: '2.  '
+#: manual/configuration.md:633
+msgid "Authentication Domain"
+msgstr "認証ドメイン"
+
+#. type: Plain text
+#: manual/configuration.md:640
+#, no-wrap
+msgid ""
+"    Your server and the clients must be part of a security association\n"
+"    where identity data is coming from a common source. ACLs in Darwin\n"
+"    are based on UUIDs and so is the ACL specification in AFP 3.2.\n"
+"    Therefore your source of identity data has to provide an attribute\n"
+"    for every user and group where a UUID is stored as a ASCII string.\n"
+"    In other words:\n"
+msgstr ""
+"    サーバーとクライアントがセキュリティ連携の一部となっていて、ユーザー\n"
+"    id データは共通のソースから出てこなければならない。Darwin の ACL は\n"
+"    UUID に基づいている。なので、AFP 3.2 での ACL の仕様は Darwin の ACL\n"
+"    である。故に id\n"
+"    データのソースは全てのユーザーとグループの属性を提供できなければならない。ここで\n"
+"    UUID は ASCII テキストとして保管されている。言い換えれば：\n"
+
+#. type: Bullet: '    - '
+#: manual/configuration.md:643
+msgid ""
+"you need an Open Directory Server or an LDAP server where you store UUIDs in "
+"some attribute"
+msgstr ""
+"UUID を何らかの属性に保管している場合は Open Directory サーバーないしは LDAP "
+"サーバーが必要である。"
+
+#. type: Bullet: '    - '
+#: manual/configuration.md:645
+msgid "your clients must be configured to use this server"
+msgstr ""
+"クライアントはこのサーバーを使用するように構成されていなければならない。"
+
+#. type: Bullet: '    - '
+#: manual/configuration.md:648
+msgid ""
+"your server should be configured to use this server via nsswitch and PAM"
+msgstr ""
+"サーバーは nsswitch と PAM 経由で使用されるよう構成しなければならない。"
+
+#. type: Bullet: '    - '
+#: manual/configuration.md:653
+msgid ""
+"configure Netatalk via the special [LDAP options for ACLs](#acl_options) in "
+"[afp.conf](#afp.conf.5) so that Netatalk is able to retrieve the UUID for "
+"users and groups via LDAP search queries"
+msgstr ""
+"Netatalk が LDAP 検索クエリでユーザーとグループの UUID を引き出せるように、"
+"[afp.conf](#afp.conf.5) 内で [ACL 専用のオプションを](#acl_options)使って "
+"Netatalk を設定しなければならない。"
+
+#. type: Title ###
+#: manual/configuration.md:654
+#, no-wrap
+msgid "macOS ACLs"
+msgstr "macOS の ACL"
+
+#. type: Plain text
+#: manual/configuration.md:660
+msgid ""
+"With Access Control Lists (ACLs), macOS offers a powerful extension of the "
+"traditional UNIX permissions model. An ACL is an ordered list of Access "
+"Control Entries (ACEs) explicitly granting or denying a set of permissions "
+"to a given user or group."
+msgstr ""
+"アクセス制御リスト (ACL) と共に、macOS は正統的な UNIX のパーミッションモデル"
+"の有力な拡張を提案した。 ACL は、所定のユーザーあるいはグループのパーミッショ"
+"ンのセットを明示的に許可したり拒否するアクセス制御エントリー (ACE) の番号つき"
+"リストである。"
+
+#. type: Plain text
+#: manual/configuration.md:665
+msgid ""
+"Unlike UNIX permissions, which are bound to user or group IDs, ACLs are tied "
+"to UUIDs. For this reason accessing an object's ACL requires server and "
+"client to use a common directory service which translates between UUIDs and "
+"user/group IDs."
+msgstr ""
+"ユーザー ID、またはグループ ID と紐付いている UNIX パーミッションとは異なり、"
+"ACL は UUID と紐付いている。この理由により、あるオブジェクトの ACL にアクセス"
+"すると、サーバーとクライアントは、UUID と ユーザー／グループ ID 間の変換をし"
+"てくれる、共通のディレクトリサービスを使うことを要求される。"
+
+#. type: Plain text
+#: manual/configuration.md:677
+msgid ""
+"ACLs and UNIX permissions interact in a rather simple way. As ACLs are "
+"optional UNIX permissions act as a default mechanism for access control.  "
+"Changing an objects's UNIX permissions will leave its ACL intact and "
+"modifying an ACL will never change the object's UNIX permissions. While "
+"doing access checks, macOS first examines an object's ACL evaluating ACEs in "
+"order until all requested rights have been granted, a requested right has "
+"been explicitly denied by an ACE or the end of the list has been reached. In "
+"case there is no ACL or the permissions granted by the ACL are not "
+"sufficient to fulfill the request, macOS next evaluates the object's UNIX "
+"permissions. Therefore ACLs always have precedence over UNIX permissions."
+msgstr ""
+"ACL と UNIX のパーミションの相互関係は比較的シンプルなものである。ACL はオプ"
+"ションなので、UNIX パーミションはアクセス制御のデフォルトのメカニズムの役割を"
+"する。オブジェクトの UNIX パーミションを変更しても ACL は手付かずのままで、"
+"ACL の修正でもオブジェクトの UNIX パーミションは決して変更されない。アクセス"
+"チェックの間、macOS は最初に以下の順序で ACE の評価をして、オブジェクトの "
+"ACL を検査する： 全てのリクエスト権限が許可されるまで、リクエストされた権限"
+"が ACE によって明示的に拒否された、あるいはリストの最後までたどり着いた。であ"
+"る。ACL がない、あるいは ACL に許可されたパーミションがリクエストを実行するの"
+"に十分でない場合、macOS は次にオブジェクトの UNIX パーミションの評価に入る。 "
+"つまり、ACL は常に UNIX のパーミションより優先順位が上位ということである。"
+
+#. type: Title ###
+#: manual/configuration.md:678
+#, no-wrap
+msgid "ZFS ACLs"
+msgstr "ZFS の ACL"
+
+#. type: Plain text
+#: manual/configuration.md:682
+msgid ""
+"ZFS ACLs closely match macOS ACLs. Both offer mostly identical fine grained "
+"permissions and inheritance settings."
+msgstr ""
+"ZFS の ACL はほぼ macOS の ACL に匹敵するものである。 両者ともほぼ同一の良い"
+"粒度のパーミションと設定の継承が提供されている。"
+
+#. type: Title ###
+#: manual/configuration.md:683
+#, no-wrap
+msgid "POSIX ACLs"
+msgstr "POSIX の ACL"
+
+#. type: Title ####
+#: manual/configuration.md:685
+#, no-wrap
+msgid "Overview"
+msgstr "概要"
+
+#. type: Plain text
+#: manual/configuration.md:691
+msgid ""
+"Compared to macOS or NFSv4 ACLs, POSIX ACLs represent a different, less "
+"versatile approach to overcome the limitations of the traditional UNIX "
+"permissions. Implementations are based on the withdrawn POSIX 1003.1e "
+"standard."
+msgstr ""
+"macOS あるいは NFSv4 の ACL と比較すると、Posix ACL は、伝統的な UNIX パーミ"
+"ションの制限を打開するには異質で汎用性のないアプローチを表現している。実装は "
+"Posix 標準を取り込んだものを基礎としている。"
+
+#. type: Plain text
+#: manual/configuration.md:699
+msgid ""
+"The standard defines two types of ACLs. Files and directories can have "
+"access ACLs which are consulted for access checks. Directories can also have "
+"default ACLs irrelevant to access checks. When a new object is created "
+"inside a directory with a default ACL, the default ACL is applied to the new "
+"object as its access ACL. Subdirectories inherit default ACLs from their "
+"parent. There are no further mechanisms of inheritance control."
+msgstr ""
+"Posix 1003.1e 標準では二つのタイプの ACL を定義している。ファイルとディレクト"
+"リは、 アクセスチェックのために問い合わせを受けるアクセス ACL を保持すること"
+"ができる。 ディレクトリはアクセスチェックには向いていないデフォルトの ACL も"
+"保持することができる。デフォルトの ACL 付きでディレクトリの内側に新規オブジェ"
+"クトが作成された時、デフォルトの ACL はそれがアクセス ACL であるものとして新"
+"規オブジェクトに適用される。サブディレクトリは親ディレクトリのデフォルト ACL "
+"を継承する。 継承制御にそれ以上のメカニズムは何もない。"
+
+#. type: Plain text
+#: manual/configuration.md:702
+msgid ""
+"Architectural differences between POSIX ACLs and macOS ACLs especially "
+"involve:"
+msgstr "設計上、Posix ACL と macOS 間の違いに含まれている特筆すべき点は："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:705
+msgid ""
+"No fine-granular permissions model. Like UNIX permissions POSIX ACLs only "
+"differentiate between read, write and execute permissions."
+msgstr ""
+"パーミションモデルは何も細分化されていない。UNIX のパーミション同様、Posix "
+"ACL は読み込み、書き込み、そして実行権限を区別している。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:707
+msgid "Entries within an ACL are unordered."
+msgstr "ACL 内のエントリーに順序はない。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:710
+msgid ""
+"POSIX ACLs can only grant rights. There is no way to explicitly deny rights "
+"by an entry."
+msgstr ""
+"Posix ACL は権限を許可することしかできない。 エントリーから権限を明示的に拒否"
+"する手立てはない。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:712
+msgid "UNIX permissions are integrated into an ACL as special entries."
+msgstr "UNIX パーミションは特別なエントリーとして ACL に統合されている。"
+
+#. type: Plain text
+#: manual/configuration.md:717
+msgid ""
+"POSIX 1003.1e defines 6 different types of ACL entries. The first three "
+"types are used to integrate standard UNIX permissions. They form a minimal "
+"ACL, their presence is mandatory and only one entry of each type is allowed "
+"within an ACL."
+msgstr ""
+"Posix 1003.1e は 6 つの異なるタイプの ACL エントリーを定義している。前半の 3 "
+"つは標準の UNIX パーミションを統合するのに用いられている。これらは ACL として"
+"最小限の形であり、存在することは必須であり、 そして各々のタイプにつきたった一"
+"つのエントリーだけが ACL 内に許される。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:719
+msgid "ACL_USER_OBJ: the owner's access rights."
+msgstr "ACL_USER_OBJ：所有ユーザー（オーナー）のアクセス権限。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:721
+msgid "ACL_GROUP_OBJ: the owning group's access rights."
+msgstr "ACL_GROUP_OBJ：所有グループ（オーナーグループ）のアクセス権限。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:723
+msgid "ACL_OTHER: everybody's access rights."
+msgstr "ACL_OTHER：あらゆるユーザー・グループに対するアクセス権限。"
+
+#. type: Plain text
+#: manual/configuration.md:725
+msgid "The remaining entry types expand the traditional permissions model:"
+msgstr "残りのエントリーのタイプは伝統的パーミションモデルの拡張である："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:727
+msgid "ACL_USER: grants access rights to a certain user."
+msgstr "ACL_USER：あるユーザーに対するアクセス権を許可する。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:729
+msgid "ACL_GROUP: grants access rights to a certain group."
+msgstr "ACL_GROUP：あるグループに対するアクセス権を許可する。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:735
+msgid ""
+"ACL_MASK: limits the maximum access rights which can be granted by entries "
+"of type ACL_GROUP_OBJ, ACL_USER and ACL_GROUP. As the name suggests, this "
+"entry acts as a mask. Only one ACL_MASK entry is allowed per ACL. If an ACL "
+"contains ACL_USER or ACL_GROUP entries, an ACL_MASK entry must be present "
+"too, otherwise it is optional."
+msgstr ""
+"ACL_MASK：ACL_GROUP_OBJ、ACL_USER および ACL_GROUP タイプのエントリーで許可さ"
+"れうるアクセス権の最大値を制限する。名前の示すように、このエントリーはマスク"
+"として働く。一つの ACL あたり一個だけの ACL_MASK エントリーが許される。もし "
+"ACL に、ACL_USER ないしは ACL_GROUP エントリーが含まれているのであれば、"
+"ACL_MASK エントリーも存在しなければならない。さもなくば、ACL_MASK はオプショ"
+"ンである。"
+
+#. type: Plain text
+#: manual/configuration.md:741
+msgid ""
+"In order to maintain compatibility with applications not aware of ACLs, "
+"POSIX 1003.1e changes the semantics of system calls and utilities which "
+"retrieve or manipulate an object's UNIX permissions. In case an object only "
+"has a minimal ACL, the group permissions bits of the UNIX permissions "
+"correspond to the value of the ACL_GROUP_OBJ entry."
+msgstr ""
+"ACL を意識していないアプリケーションとの互換性を維持のため、Posix 1003.1e "
+"は、オブジェクトの UNIX パーミションを検索したり処理するシステムコールやユー"
+"ティリティーのセマンティクスを変える。オブジェクトが必要最低限の ACL のみ保持"
+"している場合、UNIX パーミションのグループパーミションビットは ACL_GROUP_OBJ "
+"エントリーの値に対応する。"
+
+#. type: Plain text
+#: manual/configuration.md:748
+msgid ""
+"However, if the ACL also contains an ACL_MASK entry, the behavior of those "
+"system calls and utilities is different. The group permissions bits of the "
+"UNIX permissions correspond to the value of the ACL_MASK entry, i. e. "
+"calling \"chmod g-w\" will not only revoke write access for the group, but "
+"for all entities which have been granted write access by ACL_USER or "
+"ACL_GROUP entries."
+msgstr ""
+"しかしながら、もし ACL に ACL_MASK エントリーが含まれている場合、 上記システ"
+"ムコールやユーティリティーの挙動は異なるものとなる。UNIX パーミションのグルー"
+"プパーミションビットは ACL_MASK エントリーの値に対応する、すなわち、\"chmod "
+"g-w\" の呼び出しは、グループに対する書き込みアクセスを無効にするだけでなく、 "
+"ACL_USER ないしは ACL_GROUP エントリーによって許可されていた書き込みアクセス"
+"のエンティティ全てを無効にするのである。"
+
+#. type: Title ####
+#: manual/configuration.md:749
+#, no-wrap
+msgid "Mapping POSIX ACLs to macOS ACLs"
+msgstr "POSIX ACL から macOS の ACL へのマッピング"
+
+#. type: Plain text
+#: manual/configuration.md:757
+msgid ""
+"When a client wants to read an object's ACL, afpd maps its POSIX ACL onto an "
+"equivalent macOS ACL. Writing an object's ACL requires afpd to map an macOS "
+"ACL onto a POSIX ACL. Due to architectural restrictions of POSIX ACLs, it is "
+"usually impossible to find an exact mapping so that the result of the "
+"mapping process will be an approximation of the original ACL's semantic."
+msgstr ""
+"クライアントがオブジェクトの ACL を読み込もうとした時、afpd は Posix ACL から"
+"それに等価な macOS の ACL にマップする。オブジェクトの ACL の書き込みには "
+"afpd が macOS の ACL を Posix ACL にマップすることが要求される。Posix ACL の"
+"設計上の制約から、マッピングを経た結果がオリジナルの ACL のセマンティクスと概"
+"ね同じになるような正確なマッピングを見出すことは通常不可能である。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:760
+msgid ""
+"afpd silently discard entries which deny a set of permissions because they "
+"they can't be represented within the POSIX architecture."
+msgstr ""
+"afpd はパーミション一式を拒否したエントリーを通告なしに破棄する。これは "
+"Posix の設計では表現する手立てがないためである。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:763
+msgid ""
+"As entries within POSIX ACLs are unordered, it is impossible to preserve "
+"order."
+msgstr ""
+"Posix ACL ではエントリーが順序付きではないので、順序を保管するのは不可能であ"
+"る。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:765
+msgid "Inheritance control is subject to severe limitations as well:"
+msgstr "継承制御もまた厳しい制限を受けやすい："
+
+#. type: Bullet: '  - '
+#: manual/configuration.md:768
+msgid ""
+"Entries with the only_inherit flag set will only become part of the "
+"directory's default ACL."
+msgstr ""
+"only_inherit フラグが設定されたエントリーはディレクトリのデフォルト ACL の一"
+"部にしかならない。"
+
+#. type: Bullet: '  - '
+#: manual/configuration.md:773
+msgid ""
+"Entries with at least one of the flags file_inherit, directory_inherit or "
+"limit_inherit set, will become part of the directory's access and default "
+"ACL, but the restrictions they impose on inheritance will be ignored."
+msgstr ""
+"少なくとも file_inherit、directory_inherit ないしは limit_inherit のうち一つ"
+"が設定されたエントリーはディレクトリアクセスとデフォルト ACL の一部分となる。"
+"しかし継承に課せられた制約は無視される。"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:776
+msgid ""
+"The lack of a fine-granular permission model on the POSIX side will normally "
+"result in an increase of granted permissions."
+msgstr ""
+"Posix 側により細分化されたパーミションモデルがないことで、 結果としては通常は"
+"許可されるパーミションが増えるという結果になる。"
+
+#. type: Plain text
+#: manual/configuration.md:790
+msgid ""
+"As macOS clients aren't aware of the POSIX 1003.1e specific relationship "
+"between UNIX permissions and ACL_MASK, afpd does not expose this feature to "
+"the client to avoid compatibility issues and handles \\*unix permissions and "
+"ACLs the same way as Apple's reference implementation of AFP does. When an "
+"object's UNIX permissions are requested, afpd calculates proper group rights "
+"and returns the result together with the owner's and everybody's access "
+"rights to the caller via \"permissions\" and \"ua_permissions\" members of "
+"the FPUnixPrivs structure (see Apple Filing Protocol Reference, page 181). "
+"Changing an object's permissions, afpd always updates ACL_USER_OBJ, "
+"ACL_GROUP_OBJ and ACL_OTHERS. If an ACL_MASK entry is present too, afpd "
+"recalculates its value so that the new group rights become effective and "
+"existing entries of type ACL_USER or ACL_GROUP stay intact."
+msgstr ""
+"macOS クライアントは Posix 1003.1e 特有の UNIX パーミションと ACL_MASK との関"
+"係を意識していないので、afpd は互換性問題を回避するためにこの機能をクライアン"
+"トに公開せず、そして afpd は \\*unix パーミションと ACL をアップルの AFP 用リ"
+"ファレンス実装がするのと同じ方法で扱う。オブジェクトの UNIX パーミションがリ"
+"クエストされた時、afpd は適切なグループ権限を算出し、FPUNIXPrivs 構造の "
+"\"permissions\" と \"ua_permissions\" 要素を介し、オーナーおよび全ての者のア"
+"クセス権限も共に付して、リクエストした側に結果を返す。（Apple Filing "
+"Protocol Reference の 181 ページ参照） オブジェクトのパーミションを変更する"
+"と、afpd は常に ACL_USER_OBJ、ACL_GROUP_OBJ および ACL_OTHERS を更新する。も"
+"し ACL_MASK エントリーも存在すれば、新しいグループの権限が有効になり、かつ、"
+"既存の ACL_USER あるいは ACL_GROUP 型のエントリーは手付かずになるような "
+"ACL_MASK の値の再計算を afpd が行う。"
+
+#. type: Title ##
+#: manual/configuration.md:791
+#, no-wrap
+msgid "Filesystem Change Events"
+msgstr "ファイルシステム変更イベント"
+
+#. type: Plain text
+#: manual/configuration.md:796
+msgid ""
+"Netatalk includes a nifty filesystem change event (FCE) mechanism where afpd "
+"processes notify interested listeners about certain filesystem event by UDP "
+"network datagrams."
+msgstr ""
+"Netatalk には素敵なファイルシステム変更イベント (Filesystem Change Events, "
+"FCE) 機構が含まれている。ここで、afpd プロセスは、なにがしかのファイルシステ"
+"ムイベントについて、関心を寄せているリスナーに、UDP ネットワークデータグラム"
+"経由で通知する。"
+
+#. type: Plain text
+#: manual/configuration.md:800
+msgid ""
+"For the format of the UDP packets and for an example C application that "
+"demonstrates how to use these in a listener, take a look at the Netatalk "
+"source file `bin/misc/fce.c`."
+msgstr ""
+"この UDP パケットのフォーマットについて、また、これらをリスナー内でどのように"
+"使用するかのデモを試してみる C アプリケーションの実例については、Netatalk の"
+"ソースファイル `bin/misc/fce.c` に目を通していただきたい。"
+
+#. type: Plain text
+#: manual/configuration.md:802
+msgid "The currently supported FCE v1 events are:"
+msgstr "現在サポートされているファイルシステム変更イベントは以下である："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:804
+msgid "file modification (fmod)"
+msgstr "ファイル変更：file modification (fmod)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:806
+msgid "file deletion (fdel)"
+msgstr "ファイル削除：file deletion (fdel)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:808
+msgid "directory deletion (ddel)"
+msgstr "ディレクトリ削除：directory deletion (ddel)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:810
+msgid "file creation (fcre)"
+msgstr "ファイル作成：file creation (fcre)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:812
+msgid "directory creation (dcre)"
+msgstr "ディレクトリ削除：directory deletion (ddel)"
+
+#. type: Plain text
+#: manual/configuration.md:814
+msgid "When using FCE v2 you also get:"
+msgstr "FCE v2 の場合はする際には下記イベントも使用可能："
+
+#. type: Bullet: '- '
+#: manual/configuration.md:816
+msgid "file moving (fmov)"
+msgstr "ファイル移動 (fmov)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:818
+msgid "directory moving (dmov)"
+msgstr "ディレクトリー移動 (dmov)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:820
+msgid "user login (login)"
+msgstr "ユーザーログイン (login)"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:822
+msgid "user logout (logout)"
+msgstr "ユーザーログアウト (logout)"
+
+#. type: Plain text
+#: manual/configuration.md:825
+msgid ""
+"For details on the available simple configuration options, take a look at "
+"`afp.conf`."
+msgstr ""
+"利用可能で基本的な設定オプションの詳細については `afp.conf` に目を通していた"
+"だきたい。"
+
+#. type: Title ##
+#: manual/configuration.md:826
+#, no-wrap
+msgid "Spotlight"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:833
+msgid ""
+"Starting with version 3.1 Netatalk supports Spotlight searching.  Netatalk "
+"uses GNOME [Tracker](https://projects.gnome.org/tracker/) or its later "
+"incarnation TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/"
+"localsearch/)  as metadata store, indexer and search engine."
+msgstr ""
+"バージョン 3.1 から、Netatalk は Spotlight 検索をサポートしている。Netatalk "
+"はメタデータの保存、インデックス化およびサーチエンジンに GNOME [Tracker]"
+"(https://projects.gnome.org/tracker/)  またはそれ以降のバージョンである "
+"TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)  "
+"を用いる。"
+
+#. type: Plain text
+#: manual/configuration.md:838
+msgid ""
+"You can enable Spotlight and indexing either globally or on a per volume "
+"basis with the `spotlight` option."
+msgstr ""
+"`spotlight` オプションを使って、グローバルで、あるいは、ボリューム単位ごとに "
+"Spotlight とインデックス化を有効にできる。"
+
+#. type: Plain text
+#: manual/configuration.md:843
+#, no-wrap
+msgid ""
+"> Once Spotlight is enabled for a single volume, all other volumes for\n"
+"which spotlight is disabled won't be searchable at all.\n"
+msgstr ""
+"> 一旦 Spotlight をどこか単一のボリュームで有効にすると、Spotlight\n"
+"が無効にされたことになるその他全てのボリュームでは全く検索できないようになる。\n"
+
+#. type: Plain text
+#: manual/configuration.md:847
+msgid ""
+"The `dbus-daemon` binary has to be installed for Spotlight feature. The path "
+"to dbus-daemon is determined at compile time the dbus-daemon build system "
+"option."
+msgstr ""
+"The `dbus-daemon` バイナリは Spotlight 機能のためにインストールしなければなら"
+"ない。dbus-daemon へのパスは \"configure\" の with-dbus-daemon オプションで決"
+"定する。"
+
+#. type: Plain text
+#: manual/configuration.md:851
+msgid ""
+"In case the `dbus-daemon` binary is installed at the other path, you must "
+"use the global option `dbus daemon` to point to the path, e.g. for Solaris "
+"with Tracker from OpenCSW:"
+msgstr ""
+"`dbus-daemon` バイナリが、他のパスにインストールされている場合、 パスを指示す"
+"るためにグローバルオプション `dbus daemon` を用いなければならない。例えば "
+"Solaris 上で OpenCSW 由来の Tracker を用いている場合は以下のようにする："
+
+#. type: Plain text
+#: manual/configuration.md:853
+#, no-wrap
+msgid "    dbus daemon = /opt/csw/bin/dbus-daemon\n"
+msgstr ""
+
+#. type: Title ####
+#: manual/configuration.md:854
+#, no-wrap
+msgid "Limitations and notes"
+msgstr "制限と注意"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:857
+msgid "Large filesystems"
+msgstr "大きいファイルシステム"
+
+#. type: Plain text
+#: manual/configuration.md:863
+#, no-wrap
+msgid ""
+"  Tracker on Linux uses the inotify Kernel filesystem change event API\n"
+"  for tracking filesystem changes. On large filesystems this may be\n"
+"  problematic since the inotify API doesn't offer recursive directory\n"
+"  watches but instead requires that for every subdirectory watches must\n"
+"  be added individually.\n"
+msgstr ""
+"  Linux 上の Tracker はファイルシステム変更の追跡に inotify\n"
+"  カーネルファイルシステム変更イベント API\n"
+"  を使用する。大きなファイルシステムではこれが問題になりやすい。なぜなら、この\n"
+"  inotofy API は再帰的ディレクトリ監視を提供してはおらず、\n"
+"  代わりにあらゆるサブディレクトリの監視が各々で追加されなければならないということを要求してくるからである。\n"
+
+#. type: Plain text
+#: manual/configuration.md:867
+#, no-wrap
+msgid ""
+"  On Solaris the FEN file event notification system is used. It is\n"
+"  unknown which limitations and resource consumption this Solaris\n"
+"  subsystem may have.\n"
+msgstr ""
+"  Solaris ではファイルイベント通知（FEN: File Event Notification)\n"
+"  が用いられる。この Solaris\n"
+"  のサブシステムではどんな制限とリソース消費があるのか不明である。\n"
+
+#. type: Plain text
+#: manual/configuration.md:872
+#, no-wrap
+msgid ""
+"  We therefore recommend to disable live filesystem monitoring and let\n"
+"  Tracker periodically scan filesystems for changes instead, see the\n"
+"  Tracker configuration options [enable-monitors](#enable-monitors) and\n"
+"  [crawling-interval](#crawling-interval) below.\n"
+msgstr ""
+"  それ故、ライブでのファイルシステム監視は無効にして、その代わりに定期的に\n"
+"  Tracker にファイルシステム変更のスキャンを行わせることを推奨する。下記\n"
+"  Tracker オプション、[enable-monitors](#enable-monitors) および\n"
+"  [crawling-interval](#crawling-interval) を参照のこと。\n"
+
+#. type: Bullet: '- '
+#: manual/configuration.md:874
+msgid "Indexing home directories"
+msgstr "home ディレクトリのインデックスは作成されない"
+
+#. type: Plain text
+#: manual/configuration.md:877
+#, no-wrap
+msgid ""
+"  A known limitation with the current implementation means that shared\n"
+"  volumes in a user's home directory does not get indexed by Spotlight.\n"
+msgstr ""
+"  現在の実装の既知の制限により、ユーザーのhome\n"
+"  ディレクトリ内の共有ボリュームは Spotlight\n"
+"  によってインデックス付けされない。\n"
+
+#. type: Plain text
+#: manual/configuration.md:880
+#, no-wrap
+msgid ""
+"  As a workaround, keep the shared volumes you want to have indexed\n"
+"  elsewhere on the host filesystem.\n"
+msgstr "  回避策として、ファイルシステム別場所に共有ボリュームを設定する。\n"
+
+#. type: Title ###
+#: manual/configuration.md:881
+#, no-wrap
+msgid "Using Tracker commandline tools on the server"
+msgstr "サーバー上での Tracker コマンドラインツールの使用"
+
+#. type: Plain text
+#: manual/configuration.md:885
+msgid ""
+"Netatalk must be running, commands must be executed as root and some "
+"environment variables must be set up."
+msgstr ""
+"Netatalk は動作中でなければならず、コマンドの実行は root 権限で行わなければな"
+"らない。"
+
+#. type: Plain text
+#: manual/configuration.md:891
+msgid ""
+"If the .tracker_profile file does not exist, create it first. If you need to "
+"make the environment variables persistent, source .tracker_profile from /"
+"root/.profile. If needed, adjust PREFIX to point to the base directory "
+"Netatalk is installed to, and replace \"/var\" with the localstate directory "
+"configured at compile time."
+msgstr ""
+"そしていくつかの環境変数を設定されなければならない。必要に応じ"
+"て.tracker_profileを作成し、/root/.profile より source を指定する。PREFIX は "
+"Netatalk をインストールしたベースディレクトリにあわせて読み替える。"
+
+#. type: Plain text
+#: manual/configuration.md:900
+#, no-wrap
+msgid ""
+"    $ su\n"
+"    # cat .tracker_profile\n"
+"    PREFIX=\"/usr/local\"\n"
+"    export XDG_DATA_HOME=\"$PREFIX/var/netatalk/\"\n"
+"    export XDG_CACHE_HOME=\"$PREFIX/var/netatalk/\"\n"
+"    export DBUS_SESSION_BUS_ADDRESS=\"unix:path=$PREFIX/var/netatalk/spotlight.ipc\"\n"
+"    # . .tracker_profile\n"
+"    #\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:902
+msgid "When using Tracker from OpenCSW you must also update your PATH:"
+msgstr "OpenCSW の Tracker を使用していたら PATH も以下のように更新する："
+
+#. type: Plain text
+#: manual/configuration.md:904
+#, no-wrap
+msgid "    # export PATH=/opt/csw/bin:$PATH\n"
+msgstr ""
+
+#. type: Title ####
+#: manual/configuration.md:905
+#, no-wrap
+msgid "Common Tracker commands"
+msgstr "Tracker コマンド"
+
+#. type: Plain text
+#: manual/configuration.md:908
+msgid "Querying Tracker status:"
+msgstr "Tracker の状態の問い合わせ:"
+
+#. type: Plain text
+#: manual/configuration.md:910
+#, no-wrap
+msgid ">     # tracker daemon\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:912
+msgid "Stop Tracker:"
+msgstr "Tracker の停止:"
+
+#. type: Plain text
+#: manual/configuration.md:914
+#, no-wrap
+msgid ">     # tracker daemon -t\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:916
+msgid "Start Tracker:"
+msgstr "Tracker の開始:"
+
+#. type: Plain text
+#: manual/configuration.md:918
+#, no-wrap
+msgid ">     # tracker daemon -s\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:920
+msgid "Reindex directory:"
+msgstr "ディレクトリの再インデックス:"
+
+#. type: Plain text
+#: manual/configuration.md:922
+#, no-wrap
+msgid ">     # tracker index -f PATH\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:924
+msgid "Query Tracker for information about a file or directory:"
+msgstr "Tracker にファイルやディレクトリの情報を問い合わせる:"
+
+#. type: Plain text
+#: manual/configuration.md:926
+#, no-wrap
+msgid ">     # tracker info PATH\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:928
+msgid "Search Tracker:"
+msgstr "Tracker で検索:"
+
+#. type: Plain text
+#: manual/configuration.md:930
+#, no-wrap
+msgid ">     # tracker search QUERY\n"
+msgstr ""
+
+#. type: Title ####
+#: manual/configuration.md:931
+#, no-wrap
+msgid "Advanced Tracker command line configuration"
+msgstr "Tracker コマンドラインのより進んだ設定"
+
+#. type: Plain text
+#: manual/configuration.md:935
+msgid ""
+"Tracker stores its configuration via Gnome dconf backend which can be "
+"modified with the command `gsettings`."
+msgstr ""
+"Tracker はその設定を Gnome dconf バックエンド経由で保管し、これ `gsettings` "
+"コマンドで変更できる。"
+
+#. type: Plain text
+#: manual/configuration.md:941
+msgid ""
+"Gnome dconf settings are per-user settings, so, as Netatalk runs the Tracker "
+"processes as root, the settings are stored in the root user context and "
+"reading or changing these settings must be performed as root and Netatalk "
+"must be running (and again the environment must be set up as shown above)."
+msgstr ""
+"Gnome dconf の設定は各々のユーザーベースである。よって、Netatalk は Tracker "
+"プロセスを root 権限で実行するため、設定は root ユーザーのコンテキストで保管"
+"され、これら設定の読み込み書き込みも root 権限で行われ、Netatalk はこのとき動"
+"作中でなければならない。（そして繰り返しになるが、環境を前記のように設定しな"
+"ければならない）"
+
+#. type: Plain text
+#: manual/configuration.md:945
+#, no-wrap
+msgid ""
+"    # gsettings list-recursively | grep Tracker\n"
+"    org.freedesktop.Tracker.Writeback verbosity 'debug'\n"
+"    ...\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:948
+msgid ""
+"The following list describes some important Tracker options and their "
+"default settings."
+msgstr ""
+"以下のリストで Tracker の一部重要なオプションおよびそのデフォルト設定について"
+"示す。"
+
+#. type: Plain text
+#: manual/configuration.md:950
+msgid "org.freedesktop.Tracker.Miner.Files index-recursive-directories"
+msgstr "org.freedesktop.Tracker.Miner.Files index-recursive-directories"
+
+#. type: Plain text
+#: manual/configuration.md:954
+#, no-wrap
+msgid ""
+"> This option controls which directories Tracker will index. Don't change\n"
+"this option manually as it is automatically set by Netatalk reflecting\n"
+"the setting of the `Spotlight` option of Netatalk volumes.\n"
+msgstr ""
+"> このオプションは Tracker\n"
+"がどのディレクトリをインデックス化するかを制御する。本オプションは\n"
+"Netatalk ボリュームそれぞれの `Spotlight`\n"
+"オプションの設定を反映して自動的に Netatalk\n"
+"によってセットされるので、手動で変更してはならない。\n"
+
+#. type: Plain text
+#: manual/configuration.md:956
+msgid "org.freedesktop.Tracker.Miner.Files enable-monitors `true`"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:963
+#, no-wrap
+msgid ""
+"> The value controls whether Tracker watches all configured paths for\n"
+"modification. Depending on the filesystem modification backend (FAM on\n"
+"Linux, FEN on Solaris), this feature may not work as reliable as one\n"
+"might wish, so it may be safer to disable it and instead rely on\n"
+"periodic crawling of Tracker itself. See also the option\n"
+"`crawling-interval`.\n"
+msgstr ""
+"> この値は Tracker が全ての設定パスの変更を監視するかどうかを制御する。\n"
+"ファイルシステムの変更バックエンド（Linux なら FAM、Solaris なら\n"
+"FEN）に依存しているので、\n"
+"この機能は期待するほどの信頼度をもって動作しないかもしれない。それ故、この機能は無効にして代わりに\n"
+"Tracker 自体の定期的なクローリングに頼るほうが安全であろう。オプション\n"
+"`crawling-interval` も参照のこと。\n"
+
+#. type: Plain text
+#: manual/configuration.md:965
+msgid "org.freedesktop.Tracker.Miner.Files crawling-interval `-1`"
+msgstr ""
+
+#. type: Plain text
+#: manual/configuration.md:970
+#, no-wrap
+msgid ""
+"> Interval in days to check the filesystem is up to date in the database,\n"
+"maximum is 365, default is -1. -2 = crawling is disabled entirely, -1 =\n"
+"crawling \\*may\\* occur on startup (if not cleanly shutdown), 0 =\n"
+"crawling is forced\n"
+msgstr ""
+"> ファイルシステムがデータベース上で最新であるかチェックする間隔（日にち単位）。最大は\n"
+"365 まで、デフォルトでは -1、-2 = クローリングは完全に行われない。-1 =\n"
+"スタートアップ時にクローリングが行われる“はず”（シャットダウンが完全でなかった場合）。0\n"
+"= 強制的にクローリングされる\n"
+
+#. type: Title ###
+#: manual/configuration.md:971
+#, no-wrap
+msgid "Supported metadata attributes"
+msgstr "サポートされているメタデータ属性"
+
+#. type: Plain text
+#: manual/configuration.md:974
+msgid "The following table lists the supported Spotlight metadata attributes"
+msgstr "下記表にサポートされている Spotlight メタデータ属性を挙げる。"
+
+#. type: Plain text
+#: manual/configuration.md:999
+#, no-wrap
+msgid ""
+"| Description | Spotlight Key |\n"
+"|----|----|\n"
+"| Name | kMDItemDisplayName, kMDItemFSName |\n"
+"| Document content (full text search) | kMDItemTextContent |\n"
+"| File type | \\_kMDItemGroupId, kMDItemContentTypeTree |\n"
+"| File modification date | kMDItemFSContentChangeDate, kMDItemContentModificationDate, kMDItemAttributeChangeDate |\n"
+"| Content Creation date | kMDItemContentCreationDate |\n"
+"| The author, or authors, of the contents of the file | kMDItemAuthors, kMDItemCreator |\n"
+"| The name of the country where the item was created | kMDItemCountry |\n"
+"| Duration | kMDItemDurationSeconds |\n"
+"| Number of pages | kMDItemNumberOfPages |\n"
+"| Document title | kMDItemTitle |\n"
+"| The width, in pixels, of the contents. For example, the image width or the video frame width | kMDItemPixelWidth |\n"
+"| The height, in pixels, of the contents. For example, the image height or the video frame height | kMDItemPixelHeight |\n"
+"| The color space model used by the document contents | kMDItemColorSpace |\n"
+"| The number of bits per sample | kMDItemBitsPerSample |\n"
+"| Focal length of the lens, in millimeters | kMDItemFocalLength |\n"
+"| ISO speed | kMDItemISOSpeed |\n"
+"| Orientation of the document. Possible values are 0 (landscape) and 1 (portrait) | kMDItemOrientation |\n"
+"| Resolution width, in DPI | kMDItemResolutionWidthDPI |\n"
+"| Resolution height, in DPI | kMDItemResolutionHeightDPI |\n"
+"| Exposure time, in seconds | kMDItemExposureTimeSeconds |\n"
+"| The composer of the music contained in the audio file | kMDItemComposer |\n"
+"| The musical genre of the song or composition | kMDItemMusicalGenre |\n"
+msgstr ""
+"| 内容 | Spotlight キー |\n"
+"|----|----|\n"
+"| 名前 | kMDItemDisplayName, kMDItemFSName |\n"
+"| ドキュメントの内容（全文検索） | kMDItemTextContent |\n"
+"| ファイルタイプ | \\_kMDItemGroupId, kMDItemContentTypeTree |\n"
+"| ファイル修正日付 | kMDItemFSContentChangeDate, kMDItemContentModificationDate, kMDItemAttributeChangeDate |\n"
+"| ファイルの内容の作成された日付 | kMDItemContentCreationDate |\n"
+"| ファイルの内容の著者・作成者 | kMDItemAuthors, kMDItemCreator |\n"
+"| ファイルが作成された国の名前 | kMDItemCountry |\n"
+"| 期間 | kMDItemDurationSeconds |\n"
+"| 総ページ数 | kMDItemNumberOfPages |\n"
+"| ドキュメントのタイトル | kMDItemTitle |\n"
+"| コンテンツの幅（ピクセル）：例えば、画像ならばピクセル幅、動画ならばフレームの幅 | kMDItemPixelWidth |\n"
+"| コンテンツの高さ（ピクセル）：例えば、画像ならばピクセルでの高さ、動画ならばフレームの高さ | kMDItemPixelHeight |\n"
+"| ドキュメント内コンテンツで使用されている色空間モデル | kMDItemColorSpace |\n"
+"| サンプルあたりのビット値（訳注：分解能、量子化ビット数、色深度など） | kMDItemBitsPerSample |\n"
+"| レンズの焦点距離（ミリメートル） | kMDItemFocalLength |\n"
+"| ISO 感度 | kMDItemISOSpeed |\n"
+"| ドキュメントの向き。許容される値は 0（ランドスケープ：横向き）と 1 （ポートレイト：縦向き） | kMDItemOrientation |\n"
+"| 水平解像度（DPI） | kMDItemResolutionWidthDPI |\n"
+"| 垂直解像度（DPI） | kMDItemResolutionHeightDPI |\n"
+"| シャッタースピード（秒） | kMDItemExposureTimeSeconds |\n"
+"| オーディオファイルに含まれている曲の作曲者 | kMDItemComposer |\n"
+"| 歌あるいは楽曲の音楽ジャンル | kMDItemMusicalGenre |\n"
+
+#. type: Plain text
+#: manual/configuration.md:1001
+msgid "Supported Spotlight metadata attributes"
+msgstr "サポートされている Spotlight メタデータ属性"
+
+#. type: Title ####
+#: manual/configuration.md:1002
+#, no-wrap
+msgid "References"
+msgstr "参考"
+
+#. type: Bullet: '1.  '
+#: manual/configuration.md:1005
+msgid ""
+"[MDItem](https://developer.apple.com/documentation/coreservices/mditemref/)"
+msgstr ""
+
+#. type: Bullet: '2.  '
+#: manual/configuration.md:1006
+msgid "[Tracker](https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/)"
+msgstr ""

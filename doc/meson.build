@@ -1,38 +1,30 @@
-if build_xml_docs
-    if get_option('with-manual') == 'www'
-        input_file = 'html-www.xsl.in'
-        python = find_program('python3', required: false)
-        if python.found()
-            run_command(python, 'generate_compile_docs.py')
-        endif
-    else
-        input_file = 'html.xsl.in'
-    endif
-
-    manpages_stylesheet = configure_file(
-        input: 'man.xsl.in',
-        output: 'man.xsl',
-        configuration: cdata,
-    )
-
-    manual_stylesheet = configure_file(
-        input: input_file,
-        output: 'html.xsl',
-        configuration: cdata,
-    )
-
+if build_man_docs
     subdir('manpages')
-
-    if get_option('with-manual') != 'man_only'
-        subdir('manual')
-
-        if 'ja' in get_option('with-manual-l10n')
-            subdir('ja')
-        endif
-    endif
 endif
 
-if get_option('with-readmes')
+if build_html_docs
+    po4a = find_program('po4a', required: false)
+    if po4a.found() and get_option('with-docs-l10n')
+        run_command(
+            po4a,
+            '--keep', '0',
+            '--option', 'markdown',
+            '--package-name', 'Netatalk',
+            '--package-version', netatalk_version,
+            '--copyright-holder', 'Contributors to the Netatalk Project',
+            'po4a.cfg',
+            check: true,
+        )
+
+        subdir('translated')
+    else
+        warning('po4a is required for localized documentation generation')
+    endif
+
+    subdir('manual')
+endif
+
+if 'readmes' in get_option('with-docs') and cmarkgfm.found()
     readmes = [
         'DEVELOPER',
     ]

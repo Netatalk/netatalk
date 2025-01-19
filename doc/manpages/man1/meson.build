@@ -1,36 +1,38 @@
 manfiles = [
-    'ad.1',
-    'afpldaptest.1',
-    'afppasswd.1',
-    'afpstats.1',
-    'afptest.1',
-    'addump.1',
-    'asip-status.1',
-    'dbd.1',
-    'macusers.1',
+    'ad',
+    'afpldaptest',
+    'afppasswd',
+    'afpstats',
+    'afptest',
+    'addump',
+    'asip-status',
+    'dbd',
+    'macusers',
 ]
 
 if have_appletalk
     manfiles += [
-        'aecho.1',
-        'getzones.1',
-        'nbp.1',
-        'pap.1',
+        'aecho',
+        'getzones',
+        'nbp',
+        'pap',
     ]
 endif
 
 foreach man : manfiles
-    man_xmlfile = configure_file(
-        input: man + '.xml',
-        output: man + '.xml',
-        configuration: cdata,
-    )
-
     custom_target(
-        man,
-        input: man_xmlfile,
-        output: man,
-        command: manpages_command,
+        man + '.1',
+        input: man + '.1.md',
+        output: man + '.1',
+        command: [
+            make_man,
+            cmark_man,
+            '@INPUT@',
+            man.to_upper(),
+            '1',
+            netatalk_version,
+        ],
+        capture: true,
         install: true,
         install_dir: mandir / 'man1',
         build_by_default: true,
@@ -58,5 +60,25 @@ if have_appletalk
 
     foreach man : nbp_staticmans
         install_data('nbp.1', rename: man, install_dir: mandir / 'man1')
+    endforeach
+endif
+
+if get_option('with-website')
+    foreach page : manfiles
+        custom_target(
+            'manual_' + page,
+            input: page + '.1.md',
+            output: page + '.1.html',
+            command: [
+                cmarkgfm,
+                '--smart',
+                '--extension', 'table',
+                '--to', 'html',
+                '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: manual_install_path,
+        )
     endforeach
 endif

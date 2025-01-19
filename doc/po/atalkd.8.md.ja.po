@@ -1,0 +1,352 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Daniel Markstedt, 2024-2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/afptest.1.md:17 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
+#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:54 manpages/man8/afpd.8.md:22
+#: manpages/man8/atalkd.8.md:37 manpages/man8/netatalk.8.md:20
+#: manpages/man8/papd.8.md:40
+msgid "-d"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
+#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
+#: manpages/man1/afptest.1.md:89 manpages/man1/asip-status.1.md:106
+#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
+#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/timelord.8.md:42
+#, no-wrap
+msgid "Author"
+msgstr "著者"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
+#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
+#: manpages/man1/afptest.1.md:91 manpages/man1/asip-status.1.md:108
+#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
+#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
+#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
+msgid ""
+"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
+msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afpldaptest.1.md:16 manpages/man1/afppasswd.1.md:35
+#: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:17
+#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/pap.1.md:29 manpages/man8/a2boot.8.md:32
+#: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
+#: manpages/man8/cnid_dbd.8.md:57 manpages/man8/cnid_metad.8.md:18
+#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:17
+#: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
+#: manpages/man8/timelord.8.md:23
+#, no-wrap
+msgid "Options"
+msgstr "オプション"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
+#: manpages/man1/afpldaptest.1.md:34 manpages/man1/afppasswd.1.md:70
+#: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
+#: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
+#: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
+#: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
+#: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
+#: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
+#: manpages/man8/papstatus.8.md:49
+#, no-wrap
+msgid "See Also"
+msgstr "関連項目"
+
+#. type: Plain text
+#: manpages/man1/dbd.1.md:37 manpages/man8/atalkd.8.md:51
+msgid "-t"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:88
+#: manpages/man8/atalkd.8.md:75 manpages/man8/netatalk.8.md:42
+#: manpages/man8/papd.8.md:100 manpages/man8/papstatus.8.md:43
+#, no-wrap
+msgid "Files"
+msgstr "ファイル"
+
+#. type: Plain text
+#: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
+#: manpages/man8/macipgw.8.md:68 manpages/man8/netatalk.8.md:28
+#: manpages/man8/papd.8.md:58 manpages/man8/timelord.8.md:39
+msgid "-v | -V"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/a2boot.8.md:45 manpages/man8/afpd.8.md:28
+#: manpages/man8/atalkd.8.md:57 manpages/man8/netatalk.8.md:30
+#: manpages/man8/papd.8.md:60 manpages/man8/timelord.8.md:41
+#, no-wrap
+msgid "> Print version information and exit.\n"
+msgstr "> バージョン情報を出力して終了する。\n"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:4
+msgid "atalkd — userland AppleTalk network manager daemon"
+msgstr "atalkd — ユーザーランド AppleTalk ネットワーク マネージャ デーモン"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:8
+msgid "`atalkd [-f configfile] [-P pidfile] [-1] [-2] [-d] [-t]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:10
+msgid "`atalkd [ -v | -V ]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:18
+msgid ""
+"`atalkd` is responsible for all user level AppleTalk network management.  "
+"This includes routing, name registration and lookup, zone lookup, and the "
+"AppleTalk Echo Protocol (similar to `ping(8)`). Specifically, this "
+"corresponds to the RTMP, NBP, ZIP, and AEP protocols in the AppleTalk "
+"protocol family."
+msgstr ""
+"`atalkd` は、すべてのユーザー レベルの AppleTalk ネットワーク管理を担当する。"
+"これには、ルーティング、名前の登録と検索、ゾーン検索、および AppleTalk Echo "
+"プロトコル (`ping(8)` に類似)  が含まれる。具体的には、AppleTalk プロトコル "
+"ファミリの RTMP、NBP、ZIP、および AEP プロトコルに対応する。"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:25
+msgid ""
+"The init system of your OS will typically start the `atalkd` daemon at "
+"bootup. The daemon first reads from its configuration file, `atalkd.conf`. "
+"If there is no configuration file, or if no interfaces have been defined, "
+"`atalkd` will attempt to configure all available interfaces and will create "
+"a configuration file. See `atalkd.conf(5)` for details on the configuration "
+"file format."
+msgstr ""
+"OS の init システムは通常、起動時に `atalkd` デーモンを起動する。デーモンは最"
+"初に構成ファイル `atalkd.conf` を読み取る。構成ファイルがない場合、またはイン"
+"ターフェイスが定義されていない場合、`atalkd` は使用可能なすべてのインターフェ"
+"イスを構成しようとし、構成ファイルを作成する。設定ファイルの形式の詳細につい"
+"ては、`atalkd.conf(5)` を参照してください。"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:29
+msgid "-1"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:31
+#, no-wrap
+msgid "> Forces AppleTalk Phase 1.\n"
+msgstr "> AppleTalk Phase 1 を強制する。\n"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:33
+msgid "-2"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:35
+#, no-wrap
+msgid "> Forces AppleTalk Phase 2.\n"
+msgstr "> AppleTalk Phase 2 を強制する。\n"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:40
+#, no-wrap
+msgid ""
+"> Do not disassociate daemon from terminal. Writes some additional\n"
+"debugging information to stdout.\n"
+msgstr ""
+"> デーモンをターミナルから切り離さないで、追加のデバッグ情報を stdout\n"
+"に書き込む。\n"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:48
+#: manpages/man8/papd.8.md:44
+#, no-wrap
+msgid "-f \\<configfile\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:45
+#, no-wrap
+msgid ""
+"> Consult \\<configfile\\> instead of `atalkd.conf` for the configuration\n"
+"information.\n"
+msgstr ""
+"> 設定情報については、`atalkd.conf` ではなく、\\<configfile\\>\n"
+"を参照する。\n"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:47 manpages/man8/papd.8.md:54
+#, no-wrap
+msgid "-P \\<pidfile\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:49
+#, no-wrap
+msgid "> Specifies the file in which `atalkd` stores its process id.\n"
+msgstr "> `atalkd` がプロセス ID を保存するファイルを指定する。\n"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:53
+#, no-wrap
+msgid "> Turns on transition routing.\n"
+msgstr "> 遷移ルーティングをオンにする。\n"
+
+#. type: Title #
+#: manpages/man8/atalkd.8.md:58
+#, no-wrap
+msgid "Routing"
+msgstr "ルーティング"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:63
+msgid ""
+"If you are connecting an `atalkd` router to an existing AppleTalk network, "
+"you should first contact your local network administrators to obtain "
+"appropriate network addresses."
+msgstr ""
+"既存の AppleTalk ネットワークに `atalkd` ルーターを接続する場合は、まずローカ"
+"ル ネットワーク管理者に連絡して適切なネットワーク アドレスを取得する必要があ"
+"る。"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:71
+msgid ""
+"`atalkd` can provide routing between interfaces by configuring multiple "
+"interfaces. Each interface must be assigned a unique net-range between 1 and "
+"65279 (0 and 65535 are illegal, and addresses between 65280 and 65534 are "
+"reserved for startup). It is best to choose the smallest useful net-range, "
+"i.e.  if you have three machines on a LAN, choose a net-range below 1000. "
+"Each net-range may have an arbitrary list of zones associated with it."
+msgstr ""
+"`atalkd`は、複数のインターフェイスを構成することでインターフェイス間のルー"
+"ティングを提供できる。各インターフェースには、1から 65279 までの一意のネット"
+"範囲 を割り当てる必要がある (0 から 65535 は無効で、65280 から 65534までのア"
+"ドレスは起動用に予約されている)。最も小さい有効なネット範囲を選択するのが最"
+"善。つまり、LAN上に 3 台のマシンがある場合は、1000未満のネット範囲を選択す"
+"る。各ネット範囲には任意のリストを設定できる。"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:74
+msgid ""
+"Note that `atalkd` automatically acts as a router if there is more than one "
+"interface, and no other configurations are present."
+msgstr ""
+"インターフェースが複数あり、他の設定が存在しない場合は、`atalkd` は自動的に"
+"ルーターとして動作することに注意してください。"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:78
+msgid "`atalkd.conf` configuration file"
+msgstr "`atalkd.conf` 設定ファイル"
+
+#. type: Plain text
+#: manpages/man8/atalkd.8.md:82
+msgid "`atalkd.conf(5)`"
+msgstr ""

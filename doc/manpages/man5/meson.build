@@ -1,29 +1,31 @@
 manfiles = [
-    'afp_signature.conf.5',
-    'afp_voluuid.conf.5',
-    'afp.conf.5',
-    'extmap.conf.5',
+    'afp_signature.conf',
+    'afp_voluuid.conf',
+    'afp.conf',
+    'extmap.conf',
 ]
 
 if have_appletalk
     manfiles += [
-        'atalkd.conf.5',
-        'papd.conf.5',
+        'atalkd.conf',
+        'papd.conf',
     ]
 endif
 
 foreach man : manfiles
-    man_xmlfile = configure_file(
-        input: man + '.xml',
-        output: man + '.xml',
-        configuration: cdata,
-    )
-
     custom_target(
-        man,
-        input: man_xmlfile,
-        output: man,
-        command: manpages_command,
+        man + '.5',
+        input: man + '.5.md',
+        output: man + '.5',
+        command: [
+            make_man,
+            cmark_man,
+            '@INPUT@',
+            man.to_upper(),
+            '5',
+            netatalk_version,
+        ],
+        capture: true,
         install: true,
         install_dir: mandir / 'man5',
         build_by_default: true,
@@ -31,3 +33,23 @@ foreach man : manfiles
 endforeach
 
 install_data('macipgw.conf.5', install_dir: mandir / 'man5')
+
+if get_option('with-website')
+    foreach page : manfiles
+        custom_target(
+            'manual_' + page,
+            input: page + '.5.md',
+            output: page + '.5.html',
+            command: [
+                cmarkgfm,
+                '--smart',
+                '--extension', 'table',
+                '--to', 'html',
+                '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: manual_install_path,
+        )
+    endforeach
+endif
