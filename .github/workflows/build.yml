@@ -504,12 +504,12 @@ jobs:
               gcc13 \
               gnome-tracker \
               heimdal \
-              hs-pandoc \
               libcups \
               libevent \
               libgcrypt \
               meson \
               mysql-client \
+              pandoc \
               p5-Net-DBus \
               perl \
               pkg-config \
