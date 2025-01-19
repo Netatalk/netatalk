@@ -588,7 +588,7 @@ jobs:
   build-omnios:
     name: OmniOS
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
