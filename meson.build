@@ -399,17 +399,22 @@ endif
 # Check for 64-bit libraries
 #
 
-run_command(
-    cc,
-    '-c', meson.project_source_root() / 'libatalk/dummy.c',
-    '-o', meson.global_build_root() / 'dummy.o',
-    check: false,
-)
-compiler_64_bit_mode = run_command(
-    '/usr/bin/file',
-    meson.global_build_root() / 'dummy.o',
-    check: true,
-).stdout().strip().contains('ELF 64')
+compiler_64_bit_mode = false
+file = find_program('file', required: false)
+if file.found()
+  run_command(
+      cc,
+      '-c', meson.project_source_root() / 'libatalk/dummy.c',
+      '-o', meson.global_build_root() / 'dummy.o',
+      check: false,
+  )
+
+  compiler_64_bit_mode = run_command(
+      file,
+      meson.global_build_root() / 'dummy.o',
+      check: true,
+  ).stdout().strip().contains('ELF 64')
+endif
 
 #
 # Check whether to enable rpath (the default on Solaris and NetBSD)
