@@ -1,11 +1,10 @@
-manpages_command = [
-    xsltproc,
-    '--stringparam', 'man.output.quietly',
-    '1',
-    '-o', '@OUTPUT@',
-    manpages_stylesheet,
-    '@INPUT@',
-]
+if cmark.found()
+    cmark_man = cmark
+else
+    cmark_man = cmarkgfm
+endif
+
+make_man = find_program('make_man.sh')
 
 subdir('man1')
 subdir('man3')

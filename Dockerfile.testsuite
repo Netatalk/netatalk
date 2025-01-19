@@ -57,9 +57,9 @@ RUN meson setup build \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-path=/etc \
+    -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \
-    -Dwith-manual=none \
     -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \

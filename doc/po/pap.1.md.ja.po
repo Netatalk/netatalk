@@ -1,0 +1,399 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Daniel Markstedt, 2024-2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/afptest.1.md:17 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
+#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
+#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
+#: manpages/man1/afptest.1.md:89 manpages/man1/asip-status.1.md:106
+#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
+#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/timelord.8.md:42
+#, no-wrap
+msgid "Author"
+msgstr "著者"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
+#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
+#: manpages/man1/afptest.1.md:91 manpages/man1/asip-status.1.md:108
+#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
+#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
+#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
+msgid ""
+"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
+msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afpldaptest.1.md:16 manpages/man1/afppasswd.1.md:35
+#: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:17
+#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/pap.1.md:29 manpages/man8/a2boot.8.md:32
+#: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
+#: manpages/man8/cnid_dbd.8.md:57 manpages/man8/cnid_metad.8.md:18
+#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:17
+#: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
+#: manpages/man8/timelord.8.md:23
+#, no-wrap
+msgid "Options"
+msgstr "オプション"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
+#: manpages/man1/afpldaptest.1.md:34 manpages/man1/afppasswd.1.md:70
+#: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
+#: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
+#: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
+#: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
+#: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
+#: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
+#: manpages/man8/papstatus.8.md:49
+#, no-wrap
+msgid "See Also"
+msgstr "関連項目"
+
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:42 manpages/man1/pap.1.md:38
+msgid "`-c`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:39 manpages/man1/pap.1.md:45
+#: manpages/man8/a2boot.8.md:35 manpages/man8/cnid_metad.8.md:21
+#: manpages/man8/papstatus.8.md:27 manpages/man8/timelord.8.md:26
+msgid "`-d`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:41 manpages/man1/pap.1.md:47
+#, no-wrap
+msgid "> Enable debug output.\n"
+msgstr "> デバッグ出力を有効にする。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:4
+msgid "pap — client interface to remote printers using Printer Access Protocol"
+msgstr ""
+"pap — Printer Access Protocol を使用したネットワークプリンターへのクライアン"
+"ト"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:8
+msgid ""
+"`pap [-A address] [-c] [-d] [-e] [-E] [-p nbpname] [-s statusfile] [-w] [-W] "
+"[FILES]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:15
+msgid ""
+"`pap` is used to connect and send files to an AppleTalk connected printer "
+"using the Apple Printer Access Protocol (PAP). When `pap` starts execution, "
+"it tries to open a session with the printer using PAP, and then downloads "
+"the *files* to the printer."
+msgstr ""
+"`pap` は、Apple Printer Access Protocol (PAP) を使用して、AppleTalk に接続さ"
+"れたプリンタに接続し、ファイルを送信するために使用される。 `pap` が実行を開始"
+"すると、PAP を使用してプリンタとのセッションを開こうとし、次にプリンタに *"
+"ファイル* をダウンロードする。"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:18
+msgid ""
+"If no *files* are given on the command line, `pap` begins reading from "
+"standard input."
+msgstr ""
+"コマンド ラインに *ファイル* が指定されていない場合、`pap` は標準入力からの読"
+"み取りを開始する。"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:24
+msgid ""
+"If no printer is specified on the command line, `pap` looks for a file "
+"called `.paprc` in the current working directory and reads it to obtain the "
+"*nbpname* of a printer. Blank lines and lines that begin with a \\`*\\#*' "
+"are ignored. *type* and *zone* default to *LaserWriter* and the zone of the "
+"local host, respectively."
+msgstr ""
+"コマンド ラインにプリンタが指定されていない場合、`pap` は現在の作業ディレクト"
+"リで `.paprc` というファイルを検索し、それを読み取ってプリンタの *nbpname* を"
+"取得する。空白行および \\`*\\#*' で始まる行は無視される。 *type* と *zone* の"
+"デフォルトはそれぞれ *LaserWriter* とローカル ホストのゾーンになる。"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:28
+msgid ""
+"Note that `pap` is designed to be useful as a communication filter for "
+"sending `lpd(8)` spooled print jobs to AppleTalk connected printers. See "
+"`psf(8)` for hints on how to use it this way."
+msgstr ""
+"`pap` は、`lpd(8)` のスプールされた印刷ジョブを AppleTalk 接続プリンタに送信"
+"するための通信フィルタとして役立つように設計されていることに注意してくださ"
+"い。この方法で使用するヒントについては、`psf(8)` を参照してください。"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:32
+#, no-wrap
+msgid "`-A` \\<address\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:36
+#, no-wrap
+msgid ""
+"> Connect to the printer with Appletalk address *address* and do not\n"
+"consult the `.paprc` file to find a printer name. See `atalk_aton(3)`\n"
+"for the syntax of *address*.\n"
+msgstr ""
+"> Appletalk アドレス *address*\n"
+"を使用してプリンタに接続し、プリンタ名を見つけるために `.paprc`\n"
+"ファイルを参照しません。 *address* の構文については、`atalk_aton(3)`\n"
+"を参照してください。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:43
+#, no-wrap
+msgid ""
+"> Take cuts. The PAP protocol specified a simple queuing procedure, such\n"
+"that the clients tell the printer how long they have been waiting to\n"
+"print. This option causes `pap` to lie about how long it has been\n"
+"waiting.\n"
+msgstr ""
+"> カットを実行する。PAP\n"
+"プロトコルでは、クライアントがプリンタに印刷を待機している時間を通知する、単純なキューイング手順が指定されている。このオプションにより、`pap`\n"
+"は待機時間について嘘をつく。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:49
+msgid "`-e`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:52
+#, no-wrap
+msgid ""
+"> Send any message from the printer to stderr instead of stdout. `psf(8)`\n"
+"invokes `pap` with this option.\n"
+msgstr ""
+"> プリンタからのメッセージを stdout ではなく stderr に送信する。\n"
+"`psf(8)` は、このオプションを使用して `pap` を呼び出する。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:54
+msgid "`-E`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:60
+#, no-wrap
+msgid ""
+"> Don't wait for EOF from the printer. This option is useful for printers\n"
+"which don't implement PAP correctly. In a correct implementation, the\n"
+"client side should wait for the printer to return EOF before closing the\n"
+"connection. Some clients don't wait, and hence some printers have\n"
+"related bugs in their implementation.\n"
+msgstr ""
+"> プリンタからの EOF を待機しません。このオプションは、PAP\n"
+"を正しく実装していないプリンタで役立つ。正しい実装では、クライアント側は接続を閉じる前にプリンタが\n"
+"EOF\n"
+"を返すのを待機する必要がある。一部のクライアントは待機しないため、一部のプリンタでは実装に関連するバグがある。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:62
+#, no-wrap
+msgid "`-p` \\<nbpname\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:66
+#, no-wrap
+msgid ""
+"> Connect to the printer named *nbpname* and do not consult the `.paprc`\n"
+"file to find a printer name. See `nbp_name(3)` for the syntax of\n"
+"*nbpname*.\n"
+msgstr ""
+"> *nbpname* という名前のプリンタに接続し、プリンタ名を見つけるために\n"
+"`.paprc` ファイルを参照しません。 *nbpname*\n"
+"の構文については、`nbp_name(3)` を参照してください。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:68
+#, no-wrap
+msgid "`-s` \\<statusfile\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:74
+#, no-wrap
+msgid ""
+"> Update the file called *statusfile* to contain the most recent status\n"
+"message from the printer. `pap` gets the status from the printer when it\n"
+"is waiting for the printer to process input. The *statusfile* will\n"
+"contain a single line terminated with a newline. This is useful when\n"
+"`pap` is invoked by `psf(8)` within *lpd*'s spool directory.\n"
+msgstr ""
+"> *statusfile* というファイルを更新して、プリンタからの最新のステータス\n"
+"メッセージを含める。 `pap`\n"
+"は、プリンタが入力を処理するのを待っているときに、プリンタからステータスを取得する。*statusfile*\n"
+"には、改行で終了する 1 行が含まれる。これは、*lpd* のスプール\n"
+"ディレクトリ内の `psf(8)` によって `pap` が呼び出される場合に便利。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:76
+msgid "`-w`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:80
+#, no-wrap
+msgid ""
+"> Wait for the printer status to contain the word \"waiting\" before sending\n"
+"the job. This is to defeat printer-side spool available on HP IV and V\n"
+"printers.\n"
+msgstr ""
+"> ジョブを送信する前に、プリンタ\n"
+"ステータスに「waiting」という単語が含まれるまで待機する。これは、HP IV\n"
+"および V\n"
+"プリンターで使用可能なプリンター側スプールを無効にするためのものである。\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:82
+msgid "`-W`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:86
+#, no-wrap
+msgid ""
+"> Wait for the printer status to contain the word \"idle\" before sending\n"
+"the job. This is to defeat printer-side spool available on HP IV and V\n"
+"printers.\n"
+msgstr ""
+"> ジョブを送信する前に、プリンターのステータスに「アイドル」という単語が含まれるまで待機する。これは、HP\n"
+"IV および V\n"
+"プリンタで利用可能なプリンタ側スプールを無効にするためのものである。\n"
+
+#. type: Title #
+#: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:88
+#: manpages/man8/atalkd.8.md:75 manpages/man8/netatalk.8.md:42
+#: manpages/man8/papd.8.md:100 manpages/man8/papstatus.8.md:43
+#, no-wrap
+msgid "Files"
+msgstr "ファイル"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:90 manpages/man8/papstatus.8.md:46
+msgid "`.paprc`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:92
+#, no-wrap
+msgid "> file read to obtain printer name if not specified on command line\n"
+msgstr ""
+"> コマンド\n"
+"ラインで指定されていない場合にプリンタ名を取得するために読み取られるファイル\n"
+
+#. type: Plain text
+#: manpages/man1/pap.1.md:96
+msgid "`nbp_name(3)`, `atalk_aton(3)`, `lpd(8)`, `psf(8)`."
+msgstr ""

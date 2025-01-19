@@ -1,0 +1,697 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Eiichirou UDA, 2015-2017
+# HAT, 2015-2017
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:4
+msgid "ad - AppleDouble file utility suite"
+msgstr "ad - AppleDouble ファイルユーティリティ 一式"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:8
+msgid "`ad [ ls | cp | mv | rm | set ] [...]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:10
+msgid "`ad [ -v | --version ]`"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/afptest.1.md:17 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
+#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:18
+msgid ""
+"`ad` is an AppleDouble file utility suite with Netatalk compatibility.  "
+"AppleDouble data (extended attributes of files, .\\_files in same "
+"directories or files in `.AppleDouble` directories) and the CNID databases "
+"are updated as appropriate when files in a shared Netatalk volume are "
+"modified."
+msgstr ""
+"`ad`は、Netatalk 互換の AppleDouble ファイルユーティリティ一式である。"
+"Netatalk 共有ボリューム内の AppleDouble データ (ファイルの拡張属性や、同じ"
+"ディレクトリ内の.\\_fileや、`.AppleDouble`ディレクトリ内のファイル)  とCNID"
+"データベースを適切に更新する。"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:19
+#, no-wrap
+msgid "Available Commands"
+msgstr "有効なコマンド"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:22
+msgid "List files and directories."
+msgstr "List files and directories."
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:24
+#, no-wrap
+msgid "> `ad ls [-dRl[u]] {file|dir [...]}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:26 manpages/man1/ad.1.md:101
+msgid "Copy files and directories."
+msgstr "ファイルやディレクトリをコピーする。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:28
+#, no-wrap
+msgid "> `ad cp [-aipvf] {src_file} {dst_file}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:30
+#, no-wrap
+msgid "> `ad cp -R [-aipvf] {src_file|src_directory ...} {dst_directory}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:32 manpages/man1/ad.1.md:162
+msgid "Move files and directories."
+msgstr "ファイルやディレクトリを移動する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:34
+#, no-wrap
+msgid "> `ad mv [-finv] {src_file} {dst_file}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:36
+#, no-wrap
+msgid "> `ad mv [-finv] {src_file|src_directory ...} {dst_directory}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:38 manpages/man1/ad.1.md:196
+msgid "Remove files and directories."
+msgstr "ファイルやディレクトリを削除する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:40
+#, no-wrap
+msgid "> `ad rm [-Rv] {file|directory}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:42 manpages/man1/ad.1.md:214
+msgid "Set metadata on files."
+msgstr "ファイルにメタデータを設定する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:44
+#, no-wrap
+msgid "> `ad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}`\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:46
+msgid "Show version."
+msgstr "バージョンを表示する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:48
+#, no-wrap
+msgid "> `ad -v|--version`\n"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/ad.1.md:49
+#, no-wrap
+msgid "ad ls"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:52
+msgid "List files and directories. Options:"
+msgstr "ファイルやディレクトリをリストする。 オプション:"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:54 manpages/man8/afpd.8.md:22
+#: manpages/man8/atalkd.8.md:37 manpages/man8/netatalk.8.md:20
+#: manpages/man8/papd.8.md:40
+msgid "-d"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:56
+#, no-wrap
+msgid "> Directories are listed as plain files\n"
+msgstr "> ディレクトリを単純なファイルとしてリストする\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:58 manpages/man1/ad.1.md:146 manpages/man1/ad.1.md:204
+msgid "-R"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:60
+#, no-wrap
+msgid "> list subdirectories recursively\n"
+msgstr "> サブディレクトリを再帰的にリストする\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:62
+msgid "-l"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:64
+#, no-wrap
+msgid "> Long output, list AFP info\n"
+msgstr "> 長い出力。AFP infoをリストする\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:66 manpages/man1/dbd.1.md:41
+msgid "-u"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:68
+#, no-wrap
+msgid "> List UNIX info\n"
+msgstr "> UNIX infoをリストする\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:70
+#, no-wrap
+msgid "*Long output description*\n"
+msgstr "*長い出力の説明*\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:72
+#, no-wrap
+msgid "    <unixinfo> <FinderFlags> <AFP Attributes> <Color> <Type> <Creator> <CNID from AppleDouble> <name>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:74
+#, no-wrap
+msgid "    FinderFlags (valid for (f)iles and/or (d)irectories):\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:86 manpages/man1/ad.1.md:260
+#, no-wrap
+msgid ""
+"      d = On Desktop                      (f/d)\n"
+"      e = Hidden extension                (f/d)\n"
+"      m = Shared (can run multiple times) (f)\n"
+"      n = No INIT resources               (f)\n"
+"      i = Inited                          (f/d)\n"
+"      c = Custom icon                     (f/d)\n"
+"      t = Stationery                      (f)\n"
+"      s = Name locked                     (f/d)\n"
+"      b = Bundle                          (f/d)\n"
+"      v = Invisible                       (f/d)\n"
+"      a = Alias file                      (f/d)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:88 manpages/man1/ad.1.md:262
+#, no-wrap
+msgid "    AFP Attributes:\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:95 manpages/man1/ad.1.md:269
+#, no-wrap
+msgid ""
+"      y = System                          (f/d)\n"
+"      w = No write                        (f)\n"
+"      p = Needs backup                    (f/d)\n"
+"      r = No rename                       (f/d)\n"
+"      l = No delete                       (f/d)\n"
+"      o = No copy                         (f)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:97
+#, no-wrap
+msgid "    Note: any letter appearing in uppercase means the flag is set but it's a directory for which the flag is not allowed.\n"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/ad.1.md:98
+#, no-wrap
+msgid "ad cp"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:107
+msgid ""
+"In the first synopsis form, the cp utility copies the contents of the "
+"src_file to the dst_file. In the second synopsis form, the contents of each "
+"named src_file is copied to the destination dst_directory. The names of the "
+"files themselves are not changed. If cp detects an attempt to copy a file to "
+"itself, the copy will fail."
+msgstr ""
+"上の概要で示した一番目の形式では、cpユーティリティはsrc_fileの内容をdst_file"
+"へコピーする。二番目の形式では、それぞれの名前のsrc_fileの内容は配布先の"
+"dst_directoryにコピーされる。ファイル自身の名前は変更されない。ファイルを自分"
+"自身へコピーしようとしているのをcpが検出したら、コピーは失敗する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:112
+msgid ""
+"When a copy targeting an AFP volume is detected, its CNID database daemon is "
+"connected and all copies will also go through the CNID database. AppleDouble "
+"data are also copied and created as needed when the target is an AFP volume."
+msgstr ""
+"AFPボリュームへのコピーであると検出された場合、CNIDデータベースデーモンに接続"
+"し、全てのコピーはCNIDデータベースの手続きを踏む。ターゲットがAFPボリュームの"
+"場合はAppleDoubleデータもまたコピーされ、必要なら作成される。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:114 manpages/man1/ad.1.md:171
+msgid "Options:"
+msgstr "オプション:"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:116
+msgid "-a"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:118
+#, no-wrap
+msgid "> Archive mode. Same as -Rp.\n"
+msgstr "> アーカイブモード。-Rpと同じ。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:120 manpages/man1/ad.1.md:173
+#: manpages/man1/dbd.1.md:24
+msgid "-f"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:124
+#, no-wrap
+msgid ""
+"> For each existing destination pathname, remove it and create a new file,\n"
+"without prompting for confirmation regardless of its permissions. (The\n"
+"-f option overrides any previous -i or -n options.)\n"
+msgstr "> それぞれの配布先パス名が既に存在している場合、それを削除してから新しいファイルを作成する。パーミッションに関わらず確認プロンプトを出さない。(-fオプションは手前の-iオプションと-nオプションを無効にする。)\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:126 manpages/man1/ad.1.md:178
+msgid "-i"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:131
+#, no-wrap
+msgid ""
+"> Cause cp to write a prompt to the standard error output before copying a\n"
+"file that would overwrite an existing file. If the response from the\n"
+"standard input begins with the character 'y' or 'Y', the file copy is\n"
+"attempted. (The -i option overrides any previous -f or -n options.)\n"
+msgstr "> 存在するファイルに上書きする前に、標準エラー出力にプロンプトを出す。もし標準入力からの返答が'y'または'Y'で始まるならばファイルコピーを試みる。(-iオプションは手前の-fオプションと-nオプションを無効にする。)\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:133 manpages/man1/ad.1.md:185
+msgid "-n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:136 manpages/man1/ad.1.md:188
+#, no-wrap
+msgid ""
+"> Do not overwrite an existing file. (The -n option overrides any previous\n"
+"-f or -i options.)\n"
+msgstr ""
+"> 存在するファイルを上書きしない。\n"
+"(-nオプションは手前の-fオプションと-iオプションを無効にする。)\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:138
+msgid "-p"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:144
+#, no-wrap
+msgid ""
+"> Cause cp to preserve the following attributes of each source file in the\n"
+"copy: modification time, access time, file flags, file mode, user ID,\n"
+"and group ID, as allowed by permissions. If the user ID and group ID\n"
+"cannot be preserved, no error message is displayed and the exit value is\n"
+"not altered.\n"
+msgstr ""
+"> 以下に示すそれぞれのコピー元ファイルの属性を、パーミッションが許す限り維持する:\n"
+"変更時刻、アクセス時刻、ファイルフラグ、ファイルモード、ユーザIDグループID。ユーザIDとグループIDが維持されない場合、エラーメッセージは表示されず、終了コードは変更されない。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:150
+#, no-wrap
+msgid ""
+"> If src_file designates a directory, cp copies the directory and the\n"
+"entire subtree connected at that point. If the src_file ends in a /, the\n"
+"contents of the directory are copied rather than the directory itself.\n"
+msgstr "> もしsrc_fileでディレクトリを指定した場合、cpはそのディレクトリと全体のサブツリーをコピーする。もしsrc_fileが「/」で終わっている場合、ディレクトリ自身ではなく中身をコピーする。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:152 manpages/man1/ad.1.md:190
+#: manpages/man1/ad.1.md:208 manpages/man1/dbd.1.md:45
+#: manpages/man8/afpd.8.md:26
+msgid "-v"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:154
+#, no-wrap
+msgid "> Cause cp to be verbose, showing files as they are copied.\n"
+msgstr "> コピーしたファイルを詳細に表示する。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:156
+msgid "-x"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:158
+#, no-wrap
+msgid "> File system mount points are not traversed.\n"
+msgstr "> ファイルシステムのマウントポイントを横断しない。\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:159
+#, no-wrap
+msgid "ad mv"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:165
+msgid ""
+"Move files around within an AFP volume, updating the CNID database as "
+"needed. If either condition below is true, the files are copied and removed "
+"from the source."
+msgstr ""
+"AFPボリューム内のファイルを移動し、必要に応じてCNIDデータベースを更新する。以"
+"下のどちらかの場合はファイルをコピーしてからコピー元を削除する。"
+
+#. type: Bullet: '- '
+#: manpages/man1/ad.1.md:167
+msgid "source or destination is not an AFP volume"
+msgstr "移動元または移動先がAFPボリュームでない"
+
+#. type: Bullet: '- '
+#: manpages/man1/ad.1.md:169
+msgid "source AFP volume != destination AFP volume"
+msgstr "移動元AFPボリュームと移動先AFPボリュームが異なる"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:176
+#, no-wrap
+msgid ""
+"> Do not prompt for confirmation before overwriting the destination path.\n"
+"(The -f option overrides any previous -i or -n options.)\n"
+msgstr "> 配布先パスに上書きする前に確認プロンプトを出さない。(-fオプションは手前の-iオプションと-nオプションを無効にする。)\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:183
+#, no-wrap
+msgid ""
+"> Cause mv to write a prompt to standard error before moving a file that\n"
+"would overwrite an existing file. If the response from the standard\n"
+"input begins with the character \\`y' or \\`Y', the move is attempted.\n"
+"(The -i option overrides any previous -f or -n options.)\n"
+msgstr "> 存在するファイルに上書きする前に、標準エラー出力にプロンプトを出す。もし標準入力からの返答が'y'または'Y'で始まるならば移動を試みる。(-iオプションは手前の-fオプションと-nオプションを無効にする。)\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:192
+#, no-wrap
+msgid "> Cause mv to be verbose, showing files after they are moved.\n"
+msgstr "> 移動したファイルを詳細に表示する。\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:193
+#, no-wrap
+msgid "ad rm"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:200
+msgid ""
+"The rm utility attempts to remove the non-directory type files specified on "
+"the command line. If the files and directories reside on an AFP volume, the "
+"corresponding CNIDs are deleted from the volumes database."
+msgstr ""
+"rmユーティリティはコマンドラインで指定した非ディレクトリ型のファイルを削除し"
+"ようと試みる。もしファイルやディレクトリがAFPボリューム上にあるなら、対応する"
+"CNIDをボリュームデータベースから削除する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:202 manpages/man1/ad.1.md:218
+msgid "The options are as follows:"
+msgstr ""
+"#-#-#-#-#  ja/manpages/man1/ad.1.md:179 (type Plain text)  #-#-#-#-#\n"
+"オプションは以下のとおり:\n"
+"#-#-#-#-#  ja/manpages/man1/ad.1.md:195 (type: Plain text)  #-#-#-#-#\n"
+"オプションは次の通り。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:206
+#, no-wrap
+msgid "> Attempt to remove the file hierarchy rooted in each file argument.\n"
+msgstr "> それぞれのファイル引数の下のファイル階層を削除しようと試みる。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:210
+#, no-wrap
+msgid "> Be verbose when deleting files, showing them as they are removed.\n"
+msgstr "> ファイルを削除するときに詳細を表示する。\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:211
+#, no-wrap
+msgid "ad set"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:216
+msgid "The set utility alters metadata on files within an AFP volume."
+msgstr ""
+"set ユーティリティは、AFP ボリューム内のファイルのメタデータを変更する。"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:220
+#, no-wrap
+msgid "-t \\<type\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:222
+#, no-wrap
+msgid "> Change a file's four character file type.\n"
+msgstr "> ファイルの 4 文字のファイル タイプを変更する。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:224
+#, no-wrap
+msgid "-c \\<creator\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:226
+#, no-wrap
+msgid "> Change a file's four character creator type.\n"
+msgstr "> ファイルの 4 文字の作成者タイプを変更する。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:228
+#, no-wrap
+msgid "-l \\<label\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:230
+#, no-wrap
+msgid "> Change a file's color label. See list below for available colors.\n"
+msgstr "> ファイルの色ラベルを変更する。使用可能な色については、以下のリストを参照。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:232
+#, no-wrap
+msgid "-f \\<flags\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:235
+#, no-wrap
+msgid ""
+"> Change a file's Finder flags. See list below for available flags.\n"
+"Uppercase letter sets the flag, lowercase removes the flag.\n"
+msgstr ""
+"> ファイルの Finder\n"
+"フラグを変更する。使用可能なフラグについては、以下のリストを参照。大文字はフラグを設定し、小文字はフラグを削除する。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:237
+#, no-wrap
+msgid "-a \\<attributes\\>\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:240
+#, no-wrap
+msgid ""
+"> Change a file's attributes. See list below for available attributes.\n"
+"Uppercase letter sets the flag, lowercase removes the flag.\n"
+msgstr "> ファイルの属性を変更する。使用可能な属性については、以下のリストを参照。大文字はフラグを設定し、小文字はフラグを削除する。\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:242
+#, no-wrap
+msgid "*Flag descriptions*\n"
+msgstr "*旗の説明*\n"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:244
+#, no-wrap
+msgid "    Color Labels:\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:246
+#, no-wrap
+msgid "      none | grey | green | violet | blue | yellow | red | orange\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:248
+#, no-wrap
+msgid "    Finder Flags (valid for (f)iles and/or (d)irectories):\n"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/ad.1.md:270 manpages/man1/afptest.1.md:85
+#: manpages/man1/dbd.1.md:59 manpages/man1/nbp.1.md:46
+#: manpages/man5/afp_signature.conf.5.md:44
+#: manpages/man5/afp_voluuid.conf.5.md:38 manpages/man8/papd.8.md:133
+#, no-wrap
+msgid "See also"
+msgstr "参照"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:273
+msgid "`dbd(1)`, `addump(1)`."
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
+#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
+#: manpages/man1/afptest.1.md:89 manpages/man1/asip-status.1.md:106
+#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
+#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/timelord.8.md:42
+#, no-wrap
+msgid "Author"
+msgstr "著者"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
+#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
+#: manpages/man1/afptest.1.md:91 manpages/man1/asip-status.1.md:108
+#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
+#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
+#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
+msgid ""
+"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
+msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"

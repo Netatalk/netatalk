@@ -1,0 +1,511 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Daniel Markstedt, 2024-2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-22 21:01+0100\n"
+"PO-Revision-Date: 2025-01-22 20:55+0100\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manual/compile.md:1
+#, no-wrap
+msgid "Compile Netatalk from Source"
+msgstr "ソースコードから Netatalk をコンパイルする"
+
+#. type: Plain text
+#: manual/compile.md:6
+msgid ""
+"This appendix describes how to compile Netatalk from source for specific "
+"operating systems.  Before starting, please read through the Installation "
+"chapter first.  You need to have a copy of Netatalk's source code before "
+"proceeding."
+msgstr ""
+"本付録では、以下オペレーティング システムで Netatalk のソースコードをコンパイ"
+"ルする手順が記載されている。開始する前に、まずインストールの章をお読みくださ"
+"い。続行する前に、Netatalk のソース コードのコピーが必要になる。"
+
+#. type: Plain text
+#: manual/compile.md:9
+msgid ""
+"Please note that these guides are automatically generated, and may not be "
+"optimized for your system.  Also, the steps for launching Netatalk are "
+"incomplete for some OSes, because of technical constraints."
+msgstr ""
+"本手順書は自動的に生成されたため、ご使用のシステムに最適化されていない可能性"
+"があるのでご了承ください。また、技術的な制約により、一部の OS では Netatalk "
+"を起動する手順が不完全である。"
+
+#. type: Title ##
+#: manual/compile.md:10
+#, no-wrap
+msgid "Operating Systems"
+msgstr "オペレーティング システム一覧"
+
+#. type: Title ##
+#: manual/compile.md:12
+#, no-wrap
+msgid "Alpine Linux"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:15 manual/compile.md:60 manual/compile.md:105
+#: manual/compile.md:151 manual/compile.md:196 manual/compile.md:256
+msgid "Install dependencies"
+msgstr "必要なパッケージをインストールする"
+
+#. type: Fenced code block
+#: manual/compile.md:16
+#, no-wrap
+msgid "apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:21 manual/compile.md:66 manual/compile.md:112
+#: manual/compile.md:157 manual/compile.md:203 manual/compile.md:264
+msgid "Configure"
+msgstr "コンフィグレーション"
+
+#. type: Fenced code block
+#: manual/compile.md:22
+#, no-wrap
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:27 manual/compile.md:72 manual/compile.md:118
+#: manual/compile.md:163 manual/compile.md:209 manual/compile.md:270
+msgid "Build"
+msgstr "ビルド"
+
+#. type: Fenced code block
+#: manual/compile.md:28 manual/compile.md:73 manual/compile.md:119
+#: manual/compile.md:164 manual/compile.md:210 manual/compile.md:271
+#, no-wrap
+msgid "meson compile -C build\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:33 manual/compile.md:78 manual/compile.md:124
+#: manual/compile.md:169 manual/compile.md:276
+msgid "Run integration tests"
+msgstr "組み込み試験を実行する"
+
+#. type: Fenced code block
+#: manual/compile.md:34 manual/compile.md:79 manual/compile.md:125
+#: manual/compile.md:170 manual/compile.md:277
+#, no-wrap
+msgid "cd build && meson test && cd ..\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:39 manual/compile.md:84 manual/compile.md:130
+#: manual/compile.md:175 manual/compile.md:221 manual/compile.md:282
+msgid "Install"
+msgstr "インストールする"
+
+#. type: Fenced code block
+#: manual/compile.md:40 manual/compile.md:85 manual/compile.md:131
+#, no-wrap
+msgid "meson install -C build\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:45 manual/compile.md:90 manual/compile.md:136
+#: manual/compile.md:181 manual/compile.md:227 manual/compile.md:288
+msgid "Check netatalk capabilities"
+msgstr "netatalk の機能を確認する"
+
+#. type: Fenced code block
+#: manual/compile.md:46 manual/compile.md:91 manual/compile.md:137
+#: manual/compile.md:182 manual/compile.md:228 manual/compile.md:289
+#, no-wrap
+msgid ""
+"netatalk -V\n"
+"afpd -V\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:52 manual/compile.md:97 manual/compile.md:143
+#: manual/compile.md:188 manual/compile.md:248 manual/compile.md:309
+msgid "Uninstall"
+msgstr "アンインストール"
+
+#. type: Fenced code block
+#: manual/compile.md:53 manual/compile.md:98 manual/compile.md:144
+#, no-wrap
+msgid "ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:57
+#, no-wrap
+msgid "Arch Linux"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:61
+#, no-wrap
+msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:67 manual/compile.md:158
+#, no-wrap
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:102
+#, no-wrap
+msgid "Debian Linux"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:106
+#, no-wrap
+msgid ""
+"apt-get update\n"
+"apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:113
+#, no-wrap
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:148
+#, no-wrap
+msgid "Fedora Linux"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:152
+#, no-wrap
+msgid "dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cmark cracklib-devel cups-devel dbus-devel flex glib2-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:176 manual/compile.md:222 manual/compile.md:283
+#, no-wrap
+msgid "sudo meson install -C build\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:189 manual/compile.md:249 manual/compile.md:310
+#, no-wrap
+msgid "sudo ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:193
+#, no-wrap
+msgid "Ubuntu Linux"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:197
+#, no-wrap
+msgid ""
+"sudo apt-get update\n"
+"sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:204
+#, no-wrap
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-manual-l10n=ja -Dwith-tests=true\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:215
+msgid "Run distribution tests"
+msgstr "配布テストを実行"
+
+#. type: Fenced code block
+#: manual/compile.md:216
+#, no-wrap
+msgid "cd build && meson dist && cd ..\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:234 manual/compile.md:295
+msgid "Start netatalk"
+msgstr "netatalk を起動する"
+
+#. type: Fenced code block
+#: manual/compile.md:235
+#, no-wrap
+msgid ""
+"sudo systemctl start netatalk\n"
+"sleep 1\n"
+"asip-status localhost\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:242 manual/compile.md:303
+msgid "Stop netatalk"
+msgstr "netatalk を停止させる"
+
+#. type: Fenced code block
+#: manual/compile.md:243
+#, no-wrap
+msgid "sudo systemctl stop netatalk\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:253
+#, no-wrap
+msgid "macOS"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:257
+#, no-wrap
+msgid ""
+"brew update\n"
+"brew upgrade\n"
+"brew install bison cmark-gfm cracklib dbus mariadb meson openldap talloc tracker\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:265
+#, no-wrap
+msgid "meson setup build -Dbuildtype=release -Dwith-tests=true\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:296
+#, no-wrap
+msgid ""
+"sudo netatalkd start\n"
+"sleep 1\n"
+"asip-status localhost\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:304
+#, no-wrap
+msgid "sudo netatalkd stop\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:314
+#, no-wrap
+msgid "DragonflyBSD"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:317 manual/compile.md:337 manual/compile.md:365
+#: manual/compile.md:393 manual/compile.md:418 manual/compile.md:451
+msgid "Install required packages"
+msgstr "必要なパッケージをインストールする"
+
+#. type: Fenced code block
+#: manual/compile.md:318
+#, no-wrap
+msgid "pkg install -y avahi bison cmark db5 krb5-devel libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/compile.md:323 manual/compile.md:343 manual/compile.md:372
+#: manual/compile.md:399 manual/compile.md:428 manual/compile.md:458
+msgid "Configure and build"
+msgstr "コンフィグレーションとビルド"
+
+#. type: Fenced code block
+#: manual/compile.md:324
+#, no-wrap
+msgid ""
+"set -e\n"
+"meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-tests=true\n"
+"meson compile -C build\n"
+"meson install -C build\n"
+"netatalk -V\n"
+"afpd -V\n"
+"ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:334
+#, no-wrap
+msgid "FreeBSD"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:338
+#, no-wrap
+msgid "pkg install -y avahi bison cmark db5 flex libevent libgcrypt meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc tracker3\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:344
+#, no-wrap
+msgid ""
+"set -e\n"
+"meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true\n"
+"meson compile -C build\n"
+"cd build\n"
+"meson test\n"
+"cd ..\n"
+"meson install -C build\n"
+"netatalk -V\n"
+"afpd -V\n"
+"/usr/local/etc/rc.d/netatalk start\n"
+"sleep 1\n"
+"asip-status localhost\n"
+"/usr/local/etc/rc.d/netatalk stop\n"
+"/usr/local/etc/rc.d/netatalk disable\n"
+"ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:362
+#, no-wrap
+msgid "NetBSD"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:366
+#, no-wrap
+msgid ""
+"export PKG_PATH=\"https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/\"\n"
+"pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:373
+#, no-wrap
+msgid ""
+"set -e\n"
+"meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dtrace=false -Dwith-tests=true\n"
+"meson compile -C build\n"
+"cd build\n"
+"meson test\n"
+"cd ..\n"
+"meson install -C build\n"
+"netatalk -V\n"
+"afpd -V\n"
+"service netatalk onestart\n"
+"sleep 1\n"
+"asip-status localhost\n"
+"service netatalk onestop\n"
+"ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:390
+#, no-wrap
+msgid "OpenBSD"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:394
+#, no-wrap
+msgid "pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 openpam p5-Net-DBus pkgconf tracker3\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:400
+#, no-wrap
+msgid ""
+"set -e\n"
+"meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-tests=true\n"
+"meson compile -C build\n"
+"meson install -C build\n"
+"netatalk -V\n"
+"afpd -V\n"
+"rcctl -d start netatalk\n"
+"sleep 1\n"
+"asip-status localhost\n"
+"rcctl -d stop netatalk\n"
+"rcctl -d disable netatalk\n"
+"ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:415
+#, no-wrap
+msgid "OmniOS"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:419
+#, no-wrap
+msgid ""
+"pkg install build-essential pkg-config\n"
+"curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz\n"
+"tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /\n"
+"export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH\n"
+"pkgin -y install avahi cmark gnome-tracker libevent libgcrypt meson mysql-client talloc\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:429
+#, no-wrap
+msgid ""
+"set -e\n"
+"export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH\n"
+"meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/opt/local/lib/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-ldap-path=/opt/local -Dwith-tests=true\n"
+"meson compile -C build\n"
+"cd build\n"
+"meson test\n"
+"cd ..\n"
+"meson install -C build\n"
+"netatalk -V\n"
+"afpd -V\n"
+"sleep 1\n"
+"svcadm enable svc:/network/netatalk:default\n"
+"sleep 1\n"
+"asip-status localhost\n"
+"svcadm disable svc:/network/netatalk:default\n"
+"ninja -C build uninstall\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/compile.md:448
+#, no-wrap
+msgid "Solaris"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:452
+#, no-wrap
+msgid ""
+"pkg install bison flex gcc libevent libgcrypt ninja pkg-config python/pip\n"
+"pip install meson\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/compile.md:459
+#, no-wrap
+msgid ""
+"set -e\n"
+"export PATH=/opt/local/sbin:/opt/local/bin:$PATH\n"
+"meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
+"meson compile -C build\n"
+"cd build\n"
+"meson test\n"
+"cd ..\n"
+"meson install -C build\n"
+"netatalk -V\n"
+"afpd -V\n"
+"sleep 1\n"
+"svcadm enable svc:/network/netatalk:default\n"
+"sleep 1\n"
+"asip-status localhost\n"
+"svcadm disable svc:/network/netatalk:default\n"
+"ninja -C build uninstall\n"
+msgstr ""

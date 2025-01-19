@@ -1,0 +1,332 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Daniel Markstedt, 2024-2025
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/afptest.1.md:17 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
+#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:270 manpages/man1/afptest.1.md:85
+#: manpages/man1/dbd.1.md:59 manpages/man1/nbp.1.md:46
+#: manpages/man5/afp_signature.conf.5.md:44
+#: manpages/man5/afp_voluuid.conf.5.md:38 manpages/man8/papd.8.md:133
+#, no-wrap
+msgid "See also"
+msgstr "参照"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
+#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
+#: manpages/man1/afptest.1.md:89 manpages/man1/asip-status.1.md:106
+#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
+#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/timelord.8.md:42
+#, no-wrap
+msgid "Author"
+msgstr "著者"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
+#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
+#: manpages/man1/afptest.1.md:91 manpages/man1/asip-status.1.md:108
+#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
+#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
+#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
+msgid ""
+"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
+msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
+
+#. type: Title #
+#: manpages/man1/aecho.1.md:24 manpages/man1/afppasswd.1.md:26
+#: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
+#: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
+#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:82
+#: manpages/man5/extmap.conf.5.md:18 manpages/man5/papd.conf.5.md:91
+#: manpages/man8/macipgw.8.md:79
+#, no-wrap
+msgid "Examples"
+msgstr "例"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:4
+msgid ""
+"afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg — AFP "
+"protocol tests"
+msgstr ""
+"afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg — AFP プロト"
+"コルテスト一式"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:8
+msgid ""
+"`afp_lantest [-34567GgVv] [-h host] [-p port] [-s volume] [-u user] [-w "
+"password] [-n iterations] [-t tests] [-F bigfile]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:10
+msgid ""
+"`afp_logintest [-1234567CmVv] [-h host] [-p port] [-s volume] [-u user] [-w "
+"password]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:12
+msgid ""
+"`afp_spectest [-1234567aCiLlmVvXx] [-h host] [-H host2] [-p port] [-s "
+"volume] [-c path to volume] [-S volume2] [-u user] [-d user2] [-w password] "
+"[-f test]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:14
+msgid ""
+"`afp_speedtest [-1234567aeiLnVvy] [-h host] [-p port] [-s volume] [-S "
+"volume2] [-u user] [-w password] [-n iterations] [-d size] [-q quantum] [-F "
+"file] [-f test]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:16
+msgid ""
+"`afparg [-1234567lVv] [-h host] [-p port] [-s volume] [-u user] [-w "
+"password] [-f command]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:27
+msgid ""
+"All of the tools in the *afptest* family follow the same general usage "
+"pattern and parameters. You set the AFP protocol revision (`-1` through "
+"`-7`), then the address and credentials of the host to test (which can be "
+"localhost). Some tests require a second user and second volume to be define. "
+"Yet another set of tests must be run from localhost, and the local path to "
+"the volume under test to be provided. Single tests or test sections can be "
+"executed with the `-f` option. Available tests can be listed with the `-l` "
+"option."
+msgstr ""
+"*afptest*\n"
+"ファミリーのすべてのツールは、同じ一般的な使用パターンとパラメータに従う。"
+"AFP プロトコル リビジョン (`-1` から `-7`) を設定し、次にテストするホストのア"
+"ドレスと資格情報 (localhost も可) を設定する。一部のテストでは、2番目のユー"
+"ザーと2番目のボリュームを定義する必要がある。さらに別のテスト セットを "
+"localhost から実行し、テスト対象のボリュームへのローカル パスを指定する必要が"
+"ある。 単一のテストまたはテスト セクションは、`-f` オプションで実行できる。使"
+"用可能なテストは、`-l` オプションで一覧表示できる。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:34
+msgid ""
+"`afp_spectest` makes up the core of the AFP specification test suite, with "
+"just over 300 test cases. It is organized into testsets, divided by AFP "
+"commands tested, or by preconditions for testing. For instance, the tier 2 "
+"(T2) tests need to be run on the host with the `-c` option indicating the "
+"path to the shared volume. There are also read-only and sleep tests that "
+"need to be run separately."
+msgstr ""
+"`afp_spectest` は、300 を超えるテスト ケースを含む AFP 仕様テスト スイートの"
+"中核を 構成する。これは、テストする AFP コマンド別、またはテストの前提条件別"
+"に分けられたテストセットに編成されている。 たとえば、Tier 2 (T2) テストは、共"
+"有ボリュームへのパスを示す `-c` オプションを使用してホスト上で 実行する必要が"
+"ある。また、読み取り専用テストとスリープ テストも別々に実行する必要がある。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:37
+msgid ""
+"`afp_logintest` is an AFP login authentication test suite that has its own "
+"runners."
+msgstr ""
+"`afp_logintest` は、独自のランナーを持つ特定の AFP ログイン認証 テストスイー"
+"トである。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:42
+msgid ""
+"`afp_lantest` and `afp_speedtest` are file transfer benchmarks for AFP "
+"servers. The former is inspired by *HELIOS LanTest*, which runs a batch of "
+"varied file transfer patterns. The latter is a simpler tool with a handful "
+"of available test cases."
+msgstr ""
+"`afp_lantest` と `afp_speedtest` は、AFP サーバーのファイル転送ベンチマークで"
+"す。前者は、さまざまなファイル転送パターンのバッチを実行する *HELIOS "
+"LanTest* にヒントを得たものである。後者は、いくつかのテスト ケースが用意され"
+"た、よりシンプルなツールである。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:46
+msgid ""
+"`afparg` is an AFP CLI client that takes a specific command with optional "
+"arguments, and sends a single action to the AFP server. This can be used for "
+"one-off troubleshooting or system administration."
+msgstr ""
+"`afparg` は、オプションの引数を持つ特定のコマンドを受け取り、AFP サーバーに単"
+"一のアクションを送信する AFP CLI クライアントである。これは、1 回限りのトラブ"
+"ルシューティングやシステム管理に使用できる。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:49
+msgid ""
+"Please refer to the helptext of each tool for the precise use of each option."
+msgstr ""
+"各オプションの正確な使用方法については、各ツールのヘルプテキストを参照してく"
+"ださい。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:53
+msgid ""
+"Run the afp_spectest for the \"FPSetForkParms_test\" testset with AFP 3.4."
+msgstr ""
+"afp_spectest の FPSetForkParms_test テストセットを AFP 3.4 で実行する。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:62
+#, no-wrap
+msgid ""
+"    % afp_spectest -h 127.0.0.1 -p 548 -u user1 -d user2 -w passwd -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms_test\n"
+"    ===================\n"
+"    FPSetForkParms_test\n"
+"    -------------------\n"
+"    FPSetForkParms:test62: SetForkParams errors - PASSED\n"
+"    FPSetForkParms:test141: Setforkmode error - PASSED\n"
+"    FPSetForkParms:test217: Setfork size 64 bits - PASSED\n"
+"    FPSetForkParms:test306: set fork size, new size > old size - PASSED\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:64
+msgid "Run the afp_lantest benchmark using AFP 3.0."
+msgstr "AFP 3.0 を使用して afp_lantest ベンチマークを実行する。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:73
+#, no-wrap
+msgid ""
+"    % afp_lantest -h 192.168.0.2 -s testvol1 -u user1 -w passwd -3\n"
+"    Run 0 => Opening, stating and reading 512 bytes from 1000 files   1799 ms\n"
+"    Run 0 => Writing one large file                                     30 ms for 100 MB (avg. 3495 MB/s)\n"
+"    Run 0 => Reading one large file                                      8 ms for 100 MB (avg. 13107 MB/s)\n"
+"    Run 0 => Locking/Unlocking 10000 times each                       1959 ms\n"
+"    Run 0 => Creating dir with 2000 files                             1339 ms\n"
+"    Run 0 => Enumerate dir with 2000 files                             217 ms\n"
+"    Run 0 => Create directory tree with 10^3 dirs                      496 ms\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:76
+#, no-wrap
+msgid ""
+"    Netatalk Lantest Results (averages)\n"
+"    ===================================\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:84
+#, no-wrap
+msgid ""
+"    Opening, stating and reading 512 bytes from 1000 files   1799 ms\n"
+"    Writing one large file                                     30 ms for 100 MB (avg. 3495 MB/s)\n"
+"    Reading one large file                                      8 ms for 100 MB (avg. 13107 MB/s)\n"
+"    Locking/Unlocking 10000 times each                       1959 ms\n"
+"    Creating dir with 2000 files                             1339 ms\n"
+"    Enumerate dir with 2000 files                             217 ms\n"
+"    Create directory tree with 10^3 dirs                      496 ms\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:88
+msgid "`afpd(8)`."
+msgstr ""

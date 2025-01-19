@@ -47,7 +47,7 @@ jobs:
         run: |
           meson setup build \
             -Dwith-appletalk=true \
-            -Dwith-manual=local
+            -Dwith-docs=
       - name: Build
         run: meson compile -C build
       - name: Prepare Pages

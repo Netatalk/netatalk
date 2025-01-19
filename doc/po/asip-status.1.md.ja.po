@@ -1,0 +1,339 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Contributors to the Netatalk Project
+# This file is distributed under the same license as the Netatalk package.
+# Eiichirou UDA, 2015-2017
+# HAT, 2015-2017
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/afptest.1.md:17 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
+#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
+#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
+#: manpages/man1/afptest.1.md:89 manpages/man1/asip-status.1.md:106
+#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
+#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/timelord.8.md:42
+#, no-wrap
+msgid "Author"
+msgstr "著者"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
+#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
+#: manpages/man1/afptest.1.md:91 manpages/man1/asip-status.1.md:108
+#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
+#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
+#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
+msgid ""
+"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
+msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afpldaptest.1.md:16 manpages/man1/afppasswd.1.md:35
+#: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:17
+#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/pap.1.md:29 manpages/man8/a2boot.8.md:32
+#: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
+#: manpages/man8/cnid_dbd.8.md:57 manpages/man8/cnid_metad.8.md:18
+#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:17
+#: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
+#: manpages/man8/timelord.8.md:23
+#, no-wrap
+msgid "Options"
+msgstr "オプション"
+
+#. type: Plain text
+#: manpages/man1/addump.1.md:56 manpages/man1/asip-status.1.md:51
+#: manpages/man1/macusers.1.md:18
+msgid "`-v, -version, --version`"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/aecho.1.md:24 manpages/man1/afppasswd.1.md:26
+#: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
+#: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
+#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:82
+#: manpages/man5/extmap.conf.5.md:18 manpages/man5/papd.conf.5.md:91
+#: manpages/man8/macipgw.8.md:79
+#, no-wrap
+msgid "Examples"
+msgstr "例"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:4
+msgid "asip-status — Queries an AFP server for its capabilities"
+msgstr "asip-status — AFP サーバに機能を問い合わせる"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:8
+msgid "`asip-status [ -4 | -6 ] [-d] [-i] [-x] [HOSTNAME] [PORT]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:10
+msgid "`asip-status [ -4 | -6 ] [-d] [-i] [-x] [ HOSTNAME:PORT ]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:12
+msgid "`asip-status [ -v | -version | --version ]`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:20
+#, no-wrap
+msgid ""
+"`asip-status` sends an FPGetSrvrInfo request to an AFP server at\n"
+"\\<HOSTNAME\\>:\\<PORT\\> and displays the results: \"Machine type\", the\n"
+"server's name, supported AFP versions, UAMs and AFP flags, the \"server\n"
+"signature\" and the network addresses that the server provides AFP\n"
+"services on.\n"
+msgstr ""
+"`asip-status`は、\\<HOSTNAME\\>:\\<PORT\\>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
+"type\"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:23
+#, no-wrap
+msgid ""
+"When you don't supply \\<PORT\\>, then the default AFP port, 548, will be\n"
+"used.\n"
+msgstr "\\<PORT\\>を与えない場合は、デフォルトのAFPポートである548が使われる。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:27
+msgid ""
+"Starting with Netatalk 3.1.9, `asip-status` supports both IPv4 and IPv6.  By "
+"default, your system automatically decides which protocol version to use. "
+"You can use -4 or -6 option to force IPv4 or IPv6, respectively."
+msgstr ""
+"Netatalk 3.1.9以降では、 `asip-status` はIPv4とIPv6の両方をサポートする。どち"
+"らのIPバージョンを利用するかは、あなたのシステムが決定する。利用するIPバー"
+"ジョンを指定するには、-4または-6オプションを使うことができる。"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:31
+msgid "`-4`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:33
+#, no-wrap
+msgid "> Use IPv4 only.\n"
+msgstr "> IPv4のみを使う。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:35
+msgid "`-6`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:37
+#, no-wrap
+msgid "> Use IPv6 only.\n"
+msgstr "> IPv6のみを使う。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:39 manpages/man1/pap.1.md:45
+#: manpages/man8/a2boot.8.md:35 manpages/man8/cnid_metad.8.md:21
+#: manpages/man8/papstatus.8.md:27 manpages/man8/timelord.8.md:26
+msgid "`-d`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:41 manpages/man1/pap.1.md:47
+#, no-wrap
+msgid "> Enable debug output.\n"
+msgstr "> デバッグ出力を有効にする。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:43
+msgid "`-i`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:45
+#, no-wrap
+msgid "> Show icon if it exists.\n"
+msgstr "> もしアイコンがあれば、それを表示する。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:47
+msgid "`-x`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:49
+#, no-wrap
+msgid "> Enable hex dump output.\n"
+msgstr "> 16進ダンプ出力を有効にする。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:53
+#, no-wrap
+msgid "> Show version.\n"
+msgstr "> バージョンを表示する。\n"
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:75
+#, no-wrap
+msgid ""
+"    $ asip-status 192.168.1.15\n"
+"    AFP reply from 192.168.1.15:548 via IPv4\n"
+"    Flags: 1  Cmd: 3  ID: 57005\n"
+"    Reply: DSIGetStatus\n"
+"    Request ID: 57005\n"
+"    Machine type: Macintosh\n"
+"    AFP versions: AFPVersion 1.1,AFPVersion 2.0,AFPVersion 2.1,AFP2.2\n"
+"    UAMs: Cleartxt passwrd,Randnum exchange,2-Way Randnum exchange\n"
+"    Volume Icon & Mask: Yes\n"
+"    Flags:\n"
+"        SupportsCopyFile\n"
+"        SupportsChgPwd\n"
+"        SupportsServerMessages\n"
+"        SupportsServerSignature\n"
+"        SupportsTCP/IP\n"
+"        SupportsSuperClient\n"
+"    Server name: bookchan\n"
+"    Signature:\n"
+"    04 1d 65 23 04 1d 65 23 04 1d 65 23 04 1d 65 23  ..e#..e#..e#..e#\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:78
+#, no-wrap
+msgid ""
+"    Network address: 192.168.1.15:548 (IPv4 address and port)\n"
+"    Network address: 65280.128 (ddp address)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:102
+#, no-wrap
+msgid ""
+"    $ asip-status myserver:10548\n"
+"    AFP reply from myserver:10548 via IPv6\n"
+"    Flags: 1  Cmd: 3  ID: 57005\n"
+"    Reply: DSIGetStatus\n"
+"    Request ID: 57005\n"
+"    Machine type: Netatalk3.1.9\n"
+"    AFP versions: AFP2.2,AFPX03,AFP3.1,AFP3.2,AFP3.3,AFP3.4\n"
+"    UAMs: DHX2,DHCAST128\n"
+"    Volume Icon & Mask: Yes\n"
+"    Flags:\n"
+"        SupportsCopyFile\n"
+"        SupportsServerMessages\n"
+"        SupportsServerSignature\n"
+"        SupportsTCP/IP\n"
+"        SupportsSrvrNotifications\n"
+"        SupportsOpenDirectory\n"
+"        SupportsUTF8Servername\n"
+"        SupportsUUIDs\n"
+"        SupportsExtSleep\n"
+"        SupportsSuperClient\n"
+"    Server name: myserver\n"
+"    Signature:\n"
+"    ea 56 61 0d bf 29 36 31 fa 6a 8a 24 a8 f0 cc 1d  .Va..)61.j.$....\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/asip-status.1.md:105
+#, no-wrap
+msgid ""
+"    Network address: [fd00:0000:0000:0000:0000:0000:0001:0160]:10548 (IPv6 address + port)\n"
+"    UTF8 Servername: myserver\n"
+msgstr ""
