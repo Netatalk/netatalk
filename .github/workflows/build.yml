@@ -608,6 +608,7 @@ jobs:
             pkgin -y install \
               avahi \
               gnome-tracker \
+              hs-pandoc \
               libevent \
               libgcrypt \
               meson \
@@ -655,6 +656,7 @@ jobs:
               bison \
               flex \
               gcc \
+              hs-pandoc \
               libevent \
               libgcrypt \
               ninja \
