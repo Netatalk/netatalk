@@ -71,6 +71,7 @@ jobs:
             ninja \
             openldap-dev \
             openrc \
+            pandoc \
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
@@ -120,6 +121,7 @@ jobs:
             mariadb-clients \
             meson \
             ninja \
+            pandoc \
             perl \
             pkgconfig \
             rpcsvc-proto \
@@ -183,6 +185,7 @@ jobs:
             libwrap0-dev \
             meson \
             ninja-build \
+            pandoc \
             quota \
             systemtap-sdt-dev \
             tcpd \
@@ -241,6 +244,7 @@ jobs:
             ninja-build \
             openldap-devel \
             pam-devel \
+            pandoc \
             perl \
             perl-Net-DBus \
             quota-devel \
@@ -304,6 +308,7 @@ jobs:
             libwrap0-dev \
             meson \
             ninja-build \
+            pandoc \
             quota \
             systemtap-sdt-dev \
             tcpd \
@@ -360,6 +365,7 @@ jobs:
             mariadb \
             meson \
             openldap \
+            pandoc \
             talloc \
             tracker
       - name: Configure
@@ -413,6 +419,7 @@ jobs:
               meson \
               mysql80-client \
               openldap26-client \
+              pandoc \
               perl5 \
               pkgconf \
               py39-gdbm \
@@ -458,6 +465,7 @@ jobs:
               mysql84-client \
               openldap26-client \
               p5-Net-DBus \
+              pandoc \
               perl5 \
               pkgconf \
               talloc \
@@ -511,6 +519,7 @@ jobs:
               meson \
               mysql-client \
               p5-Net-DBus \
+              pandoc \
               perl \
               pkg-config \
               talloc
@@ -564,6 +573,7 @@ jobs:
               openldap-client-2.6.8v0 \
               openpam \
               p5-Net-DBus \
+              pandoc \
               pkgconf \
               tracker3
           run: |
@@ -613,6 +623,7 @@ jobs:
               libgcrypt \
               meson \
               mysql-client \
+              pandoc \
               talloc
           run: |
             set -e
@@ -659,6 +670,7 @@ jobs:
               libevent \
               libgcrypt \
               ninja \
+              pandoc \
               pkg-config \
               python/pip
             pip install meson

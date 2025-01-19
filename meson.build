@@ -196,7 +196,7 @@ endif
 flex = find_program('flex', required: false)
 grep = find_program('grep', required: false)
 uname = find_program('uname', required: false)
-cmark = find_program('cmark', required: false)
+pandoc = find_program('pandoc', required: false)
 cmarkgfm = find_program('cmark-gfm', required: false)
 
 if host_os == 'darwin'
