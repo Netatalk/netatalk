@@ -48,7 +48,6 @@ jobs:
             avahi-dev \
             bison \
             build-base \
-            cmark \
             cracklib \
             cracklib-dev \
             cracklib-words \
@@ -110,7 +109,6 @@ jobs:
           pacman -Sy --noconfirm \
             avahi \
             bison \
-            cmark \
             cmark-gfm \
             cracklib \
             cups \
@@ -161,7 +159,6 @@ jobs:
           apt-get update
           apt-get install --assume-yes --no-install-recommends \
             bison \
-            cmark \
             cmark-gfm \
             cracklib-runtime \
             file \
@@ -228,7 +225,6 @@ jobs:
             avahi-devel \
             bison \
             chkconfig \
-            cmark \
             cracklib-devel \
             cups-devel \
             dbus-devel \
@@ -284,7 +280,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends \
             bison \
-            cmark \
             cmark-gfm \
             cracklib-runtime \
             file \
@@ -358,7 +353,6 @@ jobs:
           brew upgrade
           brew install \
             bison \
-            cmark \
             cmark-gfm \
             cracklib \
             dbus \
@@ -411,15 +405,14 @@ jobs:
             pkg install -y \
               avahi \
               bison \
-              cmark \
               db5 \
+              hs-pandoc \
               krb5-devel \
               libevent \
               libgcrypt \
               meson \
               mysql80-client \
               openldap26-client \
-              pandoc \
               perl5 \
               pkgconf \
               py39-gdbm \
@@ -456,16 +449,15 @@ jobs:
             pkg install -y \
               avahi \
               bison \
-              cmark \
               db5 \
               flex \
+              hs-pandoc \
               libevent \
               libgcrypt \
               meson \
               mysql84-client \
               openldap26-client \
               p5-Net-DBus \
-              pandoc \
               perl5 \
               pkgconf \
               talloc \
@@ -507,19 +499,18 @@ jobs:
             export PKG_PATH="https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
             pkg_add \
               bison \
-              cmark \
               db5 \
               flex \
               gcc13 \
               gnome-tracker \
               heimdal \
+              hs-pandoc \
               libcups \
               libevent \
               libgcrypt \
               meson \
               mysql-client \
               p5-Net-DBus \
-              pandoc \
               perl \
               pkg-config \
               talloc
@@ -560,7 +551,6 @@ jobs:
             pkg_add -I \
               avahi \
               bison \
-              cmark \
               db-4.6.21p7v0 \
               dbus \
               gcc-11.2.0p14 \
@@ -617,13 +607,11 @@ jobs:
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \
               avahi \
-              cmark \
               gnome-tracker \
               libevent \
               libgcrypt \
               meson \
               mysql-client \
-              pandoc \
               talloc
           run: |
             set -e
@@ -670,7 +658,6 @@ jobs:
               libevent \
               libgcrypt \
               ninja \
-              pandoc \
               pkg-config \
               python/pip
             pip install meson
