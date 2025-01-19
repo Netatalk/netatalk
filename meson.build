@@ -1047,12 +1047,12 @@ elif quota.found() and cc.has_function('quota_open')
     have_quota = true
     quota_provider += 'libquota'
     cdata.set('HAVE_LIBQUOTA', 1)
-elif quota.found() and cc.has_function('quota_open', dependencies: [quota, prop])
-    have_libquota = true
-    have_quota = true
-    quota_provider += 'libquota'
-    quota_deps += [quota, prop]
-    cdata.set('HAVE_LIBQUOTA', 1)
+#elif quota.found() and cc.has_function('quota_open', dependencies: [quota, prop])
+#    have_libquota = true
+#    have_quota = true
+#    quota_provider += 'libquota'
+#    quota_deps += [quota, prop]
+#    cdata.set('HAVE_LIBQUOTA', 1)
 elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
     cdata.set('NEED_RQUOTA', 1)
     quota_deps += tirpc
