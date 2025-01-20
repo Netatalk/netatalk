@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <appendix id="compile">
 	<appendixinfo>
-		<pubdate>2025-01-11</pubdate>
+		<pubdate>2025-01-20</pubdate>
 	</appendixinfo>
 	<title>ソースコードから Netatalk をコンパイルする</title>
 	<sect1 id="compile-overview">
@@ -163,48 +163,12 @@ afpd -V
 				<screen>sudo ninja -C build uninstall</screen>
 			</para>
 		</sect2>
-		<sect2 id="build-opensuse">
-			<title>openSUSE Linux</title>
-			<para>Install dependencies</para>
-			<para>
-				<screen>zypper update -y
-zypper install -y bison cracklib-devel dbus-1-devel docbook-xsl-stylesheets file flex gawk gcc krb5-devel libacl-devel libavahi-devel libdb-4_8-devel libevent-devel libgcrypt-devel libmariadb-devel libtalloc-devel libtdb-devel libtracker-sparql-3_0-0 libxslt-tools meson ninja openldap2-devel pam-devel perl pkg-config systemd systemtap-sdt-devel tcpd-devel tracker unicode-ucd
-</screen>
-			</para>
-			<para>Configure</para>
-			<para>
-				<screen>meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docbook-path=/usr/share/xml/docbook/stylesheet/nwalsh/1.79.2 -Dwith-init-hooks=false -Dwith-tests=true
-</screen>
-			</para>
-			<para>Build</para>
-			<para>
-				<screen>meson compile -C build</screen>
-			</para>
-			<para>Run integration tests</para>
-			<para>
-				<screen>cd build &amp;&amp; meson test &amp;&amp; cd ..</screen>
-			</para>
-			<para>Install</para>
-			<para>
-				<screen>meson install -C build</screen>
-			</para>
-			<para>Check netatalk capabilities</para>
-			<para>
-				<screen>netatalk -V
-afpd -V
-</screen>
-			</para>
-			<para>Uninstall</para>
-			<para>
-				<screen>ninja -C build uninstall</screen>
-			</para>
-		</sect2>
 		<sect2 id="build-ubuntu">
 			<title>Ubuntu Linux</title>
 			<para>Install dependencies</para>
 			<para>
 				<screen>sudo apt-get update
-sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime docbook-xsl file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs unicode-data xsltproc
+sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime docbook-xsl file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs xsltproc
 </screen>
 			</para>
 			<para>Configure</para>
@@ -250,7 +214,9 @@ asip-status localhost
 			<title>macOS</title>
 			<para>Install dependencies</para>
 			<para>
-				<screen>brew install berkeley-db@5 bison cmark-gfm dbus docbook-xsl libxslt mariadb meson openldap talloc tracker
+				<screen>brew update
+brew upgrade
+brew install bison cmark-gfm cracklib dbus docbook-xsl mariadb meson openldap talloc tracker
 </screen>
 			</para>
 			<para>Configure</para>
@@ -342,7 +308,7 @@ ninja -C build uninstall
 			<title>NetBSD</title>
 			<para>必要なパッケージをインストールする</para>
 			<para>
-				<screen>export PKG_PATH=http://ftp.netbsd.org/pub/pkgsrc/packages/NetBSD/x86_64/10.1/All/
+				<screen>export PKG_PATH="https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
 pkg_add bison db5 docbook-xsl flex gcc13 gnome-tracker heimdal libcups libevent libgcrypt libxslt meson mysql-client p5-Net-DBus perl pkg-config talloc tex-unicode-data
 </screen>
 			</para>
