@@ -1,3 +1,17 @@
+Changes in 4.1.1
+================
+* NEW: meson: Introduce with-bdb-include-path override option, GitHub #1908
+* FIX: meson: Restore prioritized Berkeley DB detection, GitHub #1877
+       Fixes a regression when building on Arch Linux.
+* FIX: meson: Detect file command dynamically for NixOS, GitHub #1907
+* FIX: meson: Remove libquota check that breaks NetBSD, GitHub #1900
+* FIX: docs: Consolidate redundant CNID and encoding info, GitHub #1880
+* FIX: afpd: Log an error when directory has invalid did, GitHub #1893
+* FIX: macipgw: Don't crash when config file is missing, GitHub #1891
+* FIX: macipgw: Disable default options in macipgw.conf, GitHub #1876
+* UPD: macipgw: Print usage notes for the -f option, GitHub #1898
+* FIX: Prevent a number of illegal null pointer calls, GitHub #1894
+
 Changes in 4.1.0
 ================
 * NEW: afpd: Add native metadata storage for macOS hosts, GitHub #1813
