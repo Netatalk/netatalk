@@ -431,6 +431,7 @@ endif
 #
 
 bdb_path = get_option('with-bdb-path')
+bdb_include_path_override = get_option('with-bdb-include-path')
 bdb_req_version = get_option('with-bdb-version')
 
 have_bdb = false
@@ -495,7 +496,11 @@ endif
 
 foreach dir : bdb_dirs
     foreach subdir : bdb_subdirs
-        bdb_include_path = dir / 'include' / subdir
+        if bdb_include_path_override != ''
+            bdb_include_path = bdb_include_path_override
+        else
+            bdb_include_path = dir / 'include' / subdir
+        endif
         bdb_header = bdb_include_path / 'db.h'
         if fs.exists(bdb_header)
             bdb_includes = include_directories(bdb_include_path)
