@@ -198,15 +198,15 @@ Documentation: Version 2.1 - 3.1
 	HAT <hat@fa2.so-net.ne.jp> (Japanese localization)
 
 
-Version 3.2 - 4.0 (2019 - present)
+Version 3.2 - 4.x (2019 - present)
 
-Developers: Version 3.2 - 4.0
+Developers: Version 3.2 - 4.x
 	Ralph Boehme <slow@samba.org> (2012-2023)
 	Daniel Markstedt <daniel@mindani.net> (2022-)
 	dgsga (2023-2024)
 	NJRoadfan (2023-)
 
-Patches: Version 3.2 - 4.0
+Patches: Version 3.2 - 4.x
 	Andrew Bauer <zonexpertconsulting@outlook.com>
 	Jose Quinteiro <github@quinteiro.org>
 	Arnout Vandecappelle (Essensium/Mind) <arnout@mind.be>
@@ -232,6 +232,7 @@ Patches: Version 3.2 - 4.0
 	Ken McLeod
 	Antonio Pastor
 	Eric Knibbe
+	Eric Helgeson <erichelgeson@gmail.com>
 
 macipgw
 	Stefan Bethke <Stefan.Bethke@Hanse.DE> (1997-2013)
