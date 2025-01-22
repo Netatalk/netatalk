@@ -19,12 +19,16 @@ if use_dbd_backend
 
     cnid_dbd_deps = [iniparser]
 
+    if have_iconv
+        cnid_dbd_deps += iconv
+    endif
+
     if use_mysql_backend
         cnid_dbd_deps += mysqlclient
     endif
 
-    if have_iconv
-        cnid_dbd_deps += iconv
+    if use_sqlite_backend
+        cnid_dbd_deps += sqlite_deps
     endif
 
     cnid_metad_sources = ['cnid_metad.c', 'usockfd.c', 'db_param.c']
