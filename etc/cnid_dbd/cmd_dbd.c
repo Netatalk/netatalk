@@ -263,8 +263,10 @@ int main(int argc, char **argv)
 
     /* open volume */
     if (STRCMP(vol->v_cnidscheme, !=, "dbd")
-            && STRCMP(vol->v_cnidscheme, !=, "mysql")) {
-        dbd_log(LOGSTD, "\"%s\" isn't a \"dbd\" CNID volume", vol->v_path);
+            && STRCMP(vol->v_cnidscheme, !=, "mysql")
+            && STRCMP(vol->v_cnidscheme, !=, "sqlite")
+       ) {
+        dbd_log(LOGSTD, "\"%s\" isn't a compatible CNID volume", vol->v_path);
         exit(EXIT_FAILURE);
     }
 

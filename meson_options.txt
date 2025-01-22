@@ -385,8 +385,9 @@ option(
         'dbd',
         'last',
         'mysql',
+        'sqlite',
     ],
-    value: ['dbd', 'last', 'mysql'],
+    value: ['dbd', 'last', 'mysql', 'sqlite'],
     description: 'Choose the CNID backends to build and install',
 )
 option(
@@ -396,6 +397,7 @@ option(
         'dbd',
         'last',
         'mysql',
+        'sqlite',
     ],
     value: 'dbd',
     description: 'Set default CNID scheme',

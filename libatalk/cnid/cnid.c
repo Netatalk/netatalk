@@ -57,6 +57,16 @@ void cnid_register(struct _cnid_module *module)
     }
 
     LOG(log_info, logtype_afpd, "Registering CNID module [%s]", module->name);
+
+    if (0 == strcmp(module->name, "sqlite")) {
+        LOG(log_warning, logtype_afpd,
+            "CNID module [%s] is considered EXPERIMENTAL and may not work as expected!\n"
+            "Make sure you take backups of your data before proceeding "
+            "and do not use in production deployments (yet).\n"
+            "Please report any issues that you find to the Netatalk developers.",
+            module->name);
+    }
+
     ptr = &(module->db_list);
     list_add_tail(ptr, &modules);
 }
