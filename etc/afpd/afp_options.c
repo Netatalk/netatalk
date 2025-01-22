@@ -77,6 +77,9 @@ static void show_version(void)
 #ifdef CNID_BACKEND_MYSQL
     printf("mysql ");
 #endif
+#ifdef CNID_BACKEND_SQLITE
+    printf("sqlite ");
+#endif
     puts("");
 }
 

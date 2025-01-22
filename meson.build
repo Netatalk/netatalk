@@ -1516,6 +1516,21 @@ if 'mysql' in get_option('with-cnid-backends')
     endif
 endif
 
+# Check for sqlite CNID backend
+
+sqlite_deps = dependency('sqlite3', required: false)
+
+use_sqlite_backend = false
+
+if 'sqlite' in get_option('with-cnid-backends') and sqlite_deps.found()
+    use_sqlite_backend = true
+    if cnid_backends != ''
+        cnid_backends += ' | '
+    endif
+    cnid_backends += 'sqlite'
+    cdata.set('CNID_BACKEND_SQLITE', 1)
+endif
+
 compiled_backends = '"' + cnid_backends + '"'
 cdata.set('compiled_backends', compiled_backends)
 
