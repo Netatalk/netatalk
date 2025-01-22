@@ -44,6 +44,10 @@ extern struct _cnid_module cnid_dbd_module;
 extern struct _cnid_module cnid_mysql_module;
 #endif
 
+#ifdef CNID_BACKEND_SQLITE
+extern struct _cnid_module cnid_sqlite_module;
+#endif
+
 void cnid_init(void)
 {
 #ifdef CNID_BACKEND_LAST
@@ -54,5 +58,8 @@ void cnid_init(void)
 #endif
 #ifdef CNID_BACKEND_MYSQL
     cnid_register(&cnid_mysql_module);
+#endif
+#ifdef CNID_BACKEND_SQLITE
+    cnid_register(&cnid_sqlite_module);
 #endif
 }

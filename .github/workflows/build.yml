@@ -73,6 +73,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
+            sqlite-dev \
             talloc-dev \
             tinysparql-dev
       - name: Configure
@@ -130,6 +131,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto \
+            sqlite \
             talloc \
             tinysparql
       - name: Configure
@@ -191,6 +193,7 @@ jobs:
             libldap2-dev \
             libmariadb-dev \
             libpam0g-dev \
+            libsqlite3-dev \
             libtalloc-dev \
             libtirpc-dev \
             libtracker-sparql-3.0-dev \
@@ -266,6 +269,7 @@ jobs:
             perl \
             perl-Net-DBus \
             quota-devel \
+            sqlite-devel \
             systemd \
             systemtap-sdt-devel \
             tracker \
@@ -391,7 +395,8 @@ jobs:
             iniparser \
             mariadb \
             meson \
-            openldap
+            openldap \
+            sqlite
       - name: Configure
         run: |
           meson setup build \
@@ -448,6 +453,7 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
+              sqlite \
               talloc \
               tracker3
           run: |
@@ -491,6 +497,7 @@ jobs:
               p5-Net-DBus \
               perl5 \
               pkgconf \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -541,6 +548,7 @@ jobs:
               p5-Net-DBus \
               perl \
               pkg-config \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -597,6 +605,7 @@ jobs:
               openldap-client-2.6.9p0v0 \
               p5-Net-DBus \
               pkgconf \
+              sqlite \
               tinysparql-3.8.2
           run: |
             set -e
@@ -646,6 +655,7 @@ jobs:
               libgcrypt \
               meson \
               mysql-client \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -692,7 +702,8 @@ jobs:
               libgcrypt \
               meson \
               ninja \
-              pkg-config
+              pkg-config \
+              sqlite-3
             curl --location -o cmark.tar.gz \
               https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
             curl --location -o iniparser.tar.gz \
