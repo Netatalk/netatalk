@@ -75,6 +75,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
+            sqlite-dev \
             talloc-dev \
             tinysparql-dev \
             unicode-character-database
@@ -126,6 +127,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto \
+            sqlite \
             talloc \
             tinysparql \
             unicode-character-database
@@ -181,6 +183,7 @@ jobs:
             libldap2-dev \
             libmariadb-dev \
             libpam0g-dev \
+            libsqlite3-dev \
             libtalloc-dev \
             libtirpc-dev \
             libtracker-sparql-3.0-dev \
@@ -251,6 +254,7 @@ jobs:
             perl \
             perl-Net-DBus \
             quota-devel \
+            sqlite-devel \
             systemd \
             systemtap-sdt-devel \
             tracker \
@@ -369,6 +373,7 @@ jobs:
             mariadb \
             meson \
             openldap \
+            sqlite \
             talloc \
             tracker
       - name: Configure
@@ -428,6 +433,7 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
+              sqlite \
               talloc \
               tracker3
           run: |
@@ -471,6 +477,7 @@ jobs:
               p5-Net-DBus \
               perl5 \
               pkgconf \
+              sqlite3 \
               talloc \
               tracker3
           run: |
@@ -525,6 +532,7 @@ jobs:
               p5-Net-DBus \
               perl \
               pkg-config \
+              sqlite3 \
               talloc \
               tex-unicode-data
           run: |
@@ -579,6 +587,7 @@ jobs:
               openpam \
               p5-Net-DBus \
               pkgconf \
+              sqlite \
               tracker3
           run: |
             set -e
@@ -628,6 +637,7 @@ jobs:
               libxslt \
               meson \
               mysql-client \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -675,7 +685,8 @@ jobs:
               libgcrypt \
               ninja \
               pkg-config \
-              python/pip
+              python/pip \
+              sqlite-3
             pip install meson
           run: |
             set -e
