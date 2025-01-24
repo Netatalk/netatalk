@@ -19,19 +19,5 @@ custom_target(
 )
 
 if get_option('with-website')
-    custom_target(
-        'manual_' + page,
-        input: manfile + '.4.md',
-        output: manfile + '.4.html',
-        command: [
-            cmarkgfm,
-            '--smart',
-            '--extension', 'table',
-            '--to', 'html',
-            '@INPUT@',
-        ],
-        capture: true,
-        install: true,
-        install_dir: manual_install_path,
-    )
+    install_data(manfile + '.4.md', rename: manfile + '.md', install_dir: manual_install_path + '/en')
 endif

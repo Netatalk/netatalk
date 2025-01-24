@@ -36,20 +36,6 @@ install_data('macipgw.conf.5', install_dir: mandir / 'man5')
 
 if get_option('with-website')
     foreach page : manfiles
-        custom_target(
-            'manual_' + page,
-            input: page + '.5.md',
-            output: page + '.5.html',
-            command: [
-                cmarkgfm,
-                '--smart',
-                '--extension', 'table',
-                '--to', 'html',
-                '@INPUT@',
-            ],
-            capture: true,
-            install: true,
-            install_dir: manual_install_path,
-        )
+        install_data(page + '.5.md', rename: page + '.md', install_dir: manual_install_path + '/en')
     endforeach
 endif

@@ -6,3 +6,4 @@ include/atalk/afp_dtrace.h
 
 # Temporary build files
 build/**
+*.pot

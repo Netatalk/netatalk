@@ -1,0 +1,242 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Daniel Markstedt
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.1.2dev\n"
+"POT-Creation-Date: 2025-01-25 16:47+0100\n"
+"PO-Revision-Date: 2025-01-24 23:25+0100\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Plain text
+#: manual/_Sidebar.md:2
+msgid "[[en]] | [[ja]]"
+msgstr ""
+
+#. type: Plain text
+#: manual/_Sidebar.md:4
+msgid "Manual"
+msgstr "マニュアル"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:9
+msgid "[[Installation]]"
+msgstr "[[インストール]]"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:9
+msgid "[[Configuration]]"
+msgstr "[[セットアップ]]"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:9
+msgid "[[AppleTalk]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:9
+msgid "[[Upgrade]]"
+msgstr "[[アップグレード]]"
+
+#. type: Plain text
+#: manual/_Sidebar.md:11
+msgid "User Tools"
+msgstr "ユーザーツール"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[ad]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[addump]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[aecho]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[afpldaptest]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[afppasswd]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[afpstats]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[afptest]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[asip-status]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[dbd]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[getzones]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[macusers]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[npb]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:25
+msgid "[[pap]]"
+msgstr ""
+
+#. type: Plain text
+#: manual/_Sidebar.md:27
+msgid "Configuration Files"
+msgstr "コンフィグファイル"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:34
+msgid "[[afp_signature.conf]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:34
+msgid "[[afp_voluuid.conf]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:34
+msgid "[[afp.conf]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:34
+msgid "[[atalkd.conf]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:34
+msgid "[[extmap.conf]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:34
+msgid "[[papd.conf]]"
+msgstr ""
+
+#. type: Plain text
+#: manual/_Sidebar.md:36
+msgid "Daemons and Admin Tools"
+msgstr "デーモン及び管理ツール"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[a2boot]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[afpd]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[atalkd]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[cnid_dbd]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[cnid_metad]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[macipgw]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[netatalk]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[papd]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[papstatus]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:47
+msgid "[[timelord]]"
+msgstr ""
+
+#. type: Plain text
+#: manual/_Sidebar.md:49
+msgid "Developer References"
+msgstr "開発者参考資料"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:53
+msgid "[[atalk_aton]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:53
+msgid "[[nbp_name]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:53
+msgid "[[atalk]]"
+msgstr ""
+
+#. type: Plain text
+#: manual/_Sidebar.md:55
+msgid "Appendices"
+msgstr "付録"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:57
+msgid "[[Compilation]]"
+msgstr "[[コンパイル]]"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:57
+msgid "[[License]]"
+msgstr "[[ライセンス]]"

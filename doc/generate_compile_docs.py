@@ -20,7 +20,7 @@ import yaml
 
 linebreak_escape_pattern = r'\\\n\s+'
 
-output_file = "./manual/compile.md"
+output_file = "./manual/Compilation.md"
 
 with open('../.github/workflows/build.yml', 'r') as file:
   workflow = yaml.safe_load(file)
