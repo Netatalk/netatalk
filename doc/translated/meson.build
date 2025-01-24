@@ -1,7 +1,6 @@
 manual_pages = [
     'configuration.ja',
     'install.ja',
-    'intro.ja',
     'upgrade.ja',
 ]
 
@@ -22,6 +21,7 @@ if get_option('with-website')
         'dbd.1.ja',
         'extmap.conf.5.ja',
         'gpl-2.0.ja',
+        'index.ja',
         'macusers.1.ja',
         'netatalk.8.ja',
     ]
