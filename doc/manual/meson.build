@@ -1,7 +1,6 @@
 manual_pages = [
     'configuration',
     'install',
-    'intro',
     'upgrade',
 ]
 
@@ -15,6 +14,7 @@ if get_option('with-website')
     manual_pages += [
         'compile',
         'gpl-2.0',
+        'index',
     ]
 endif
 
