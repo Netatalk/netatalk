@@ -560,6 +560,10 @@ foreach dir : bdb_dirs
 
             foreach name : bdb_libnames
                 libdb = cc.find_library(name, dirs: bdb_libdir, required: false)
+                if not libdb.found()
+                    libdb = cc.find_library(name, dirs: bdb_libdir / subdir, required: false)
+                endif
+
                 if libdb.found()
                     have_bdb = true
                     break
