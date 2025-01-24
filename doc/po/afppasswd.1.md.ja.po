@@ -1,18 +1,17 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Contributors to the Netatalk Project
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT
 # This file is distributed under the same license as the Netatalk package.
-# Eiichirou UDA, 2015-2017
-# HAT, 2015-2017
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Netatalk 4.1.2dev\n"
 "POT-Creation-Date: 2025-01-23 07:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"

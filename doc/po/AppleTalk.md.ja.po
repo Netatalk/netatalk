@@ -1,23 +1,22 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Contributors to the Netatalk Project
+# Copyright (C) 2024-2025 Daniel Markstedt
 # This file is distributed under the same license as the Netatalk package.
-# Daniel Markstedt, 2024-2025
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Netatalk 4.1.2dev\n"
 "POT-Creation-Date: 2025-01-23 09:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/papd.conf.5.md:137 manual/appletalk.md:351
+#: manpages/man5/papd.conf.5.md:137 manual/AppleTalk.md:351
 msgid ""
 "Starting with Netatalk 2.0, direct CUPS integration is available. In this "
 "case, defining only a queue name as `pr` parameter won't invoke the SysV lpd "
@@ -30,19 +29,19 @@ msgstr ""
 "限り、CUPS で構成された PPD は `papd` でも使用される。"
 
 #. type: Title #
-#: manual/appletalk.md:1
+#: manual/AppleTalk.md:1
 #, no-wrap
 msgid "AppleTalk"
 msgstr ""
 
 #. type: Title ##
-#: manual/appletalk.md:3
+#: manual/AppleTalk.md:3
 #, no-wrap
 msgid "AppleTalk Transport Layer"
 msgstr "AppleTalk トランスポート層"
 
 #. type: Plain text
-#: manual/appletalk.md:9
+#: manual/AppleTalk.md:9
 msgid ""
 "AppleTalk is a network protocol family created by Apple which predates TCP/"
 "IP. It contains different protocols for different uses: address resolution, "
@@ -54,7 +53,7 @@ msgstr ""
 "所、接続の確立など、さまざまな用途のさまざまなプロトコルが含まれている。"
 
 #. type: Plain text
-#: manual/appletalk.md:12
+#: manual/AppleTalk.md:12
 msgid ""
 "Netatalk implements the AppleTalk protocols to serve files over AFP and "
 "provide other services to old Mac and Apple II clients."
@@ -63,7 +62,7 @@ msgstr ""
 "トにその他のサービスを提供するために AppleTalk プロトコルを実装している。"
 
 #. type: Plain text
-#: manual/appletalk.md:15
+#: manual/AppleTalk.md:15
 msgid ""
 "A complete overview can be found inside the [developer documentation]"
 "(https://github.com/Netatalk/netatalk/blob/main/doc/README.AppleTalk)."
@@ -72,13 +71,13 @@ msgstr ""
 "blob/main/doc/README.AppleTalk)  にある。"
 
 #. type: Title ###
-#: manual/appletalk.md:16
+#: manual/AppleTalk.md:16
 #, no-wrap
 msgid "To use AppleTalk or not"
 msgstr "AppleTalk を使用するかどうか"
 
 #. type: Plain text
-#: manual/appletalk.md:23
+#: manual/AppleTalk.md:23
 msgid ""
 "You'll need the AppleTalk support built into Netatalk to provide file "
 "services to older AFP clients not capable of using AFP over TCP. It also "
@@ -92,7 +91,7 @@ msgstr ""
 "も有効になる。"
 
 #. type: Plain text
-#: manual/appletalk.md:30
+#: manual/AppleTalk.md:30
 msgid ""
 "In addition, if you are serving Classic Mac OS clients, you might consider "
 "using AppleTalk for service propagation/location, having the ease of use for "
@@ -109,7 +108,7 @@ msgstr ""
 "参照してください)。"
 
 #. type: Plain text
-#: manual/appletalk.md:34
+#: manual/AppleTalk.md:34
 msgid ""
 "To use the different base AppleTalk protocols with Netatalk, one has to use "
 "`atalkd(8)`. It can also be used as an AppleTalk router to connect different "
@@ -120,7 +119,7 @@ msgstr ""
 "ネットワーク セグメントを相互に接続することもできる。"
 
 #. type: Plain text
-#: manual/appletalk.md:39
+#: manual/AppleTalk.md:39
 msgid ""
 "To use AppleTalk/atalkd, your system has to have kernel support for "
 "AppleTalk. If missing, you will be restricted to AFP over TCP, and won't be "
@@ -131,13 +130,13 @@ msgstr ""
 "されている AppleTalk サービスのいずれも使用できなくなる。"
 
 #. type: Plain text
-#: manual/appletalk.md:41
+#: manual/AppleTalk.md:41
 #, no-wrap
 msgid "    appletalk = yes\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:45
+#: manual/AppleTalk.md:45
 msgid ""
 "If Netatalk has been built with AppleTalk support (pass `-Dwith-"
 "appletalk=true` to the build system), this activates AFP over AppleTalk."
@@ -146,13 +145,13 @@ msgstr ""
 "`-Dwith-appletalk=true` を渡す)、AppleTalk 経由の AFP がアクティブになる。"
 
 #. type: Title ###
-#: manual/appletalk.md:46
+#: manual/AppleTalk.md:46
 #, no-wrap
 msgid "No AppleTalk routing"
 msgstr "AppleTalk ルーティングなし"
 
 #. type: Plain text
-#: manual/appletalk.md:53
+#: manual/AppleTalk.md:53
 msgid ""
 "This is the most simple form, you can use AppleTalk with netatalk. In case, "
 "you have only one network interface up and running, you haven't to deal with "
@@ -166,7 +165,7 @@ msgstr ""
 "スを取得し、自動的にネットワークに登録する。"
 
 #. type: Plain text
-#: manual/appletalk.md:56
+#: manual/AppleTalk.md:56
 msgid ""
 "In case, you have more than one active network interface, you have to make a "
 "decision:"
@@ -175,13 +174,13 @@ msgstr ""
 "する必要がある。"
 
 #. type: Title ####
-#: manual/appletalk.md:57
+#: manual/AppleTalk.md:57
 #, no-wrap
 msgid "Using only one interface"
 msgstr "1 つのインターフェイスのみを使用する"
 
 #. type: Plain text
-#: manual/appletalk.md:61
+#: manual/AppleTalk.md:61
 msgid ""
 "Just add the interface name (en1, le0, eth2, ... for example) to atalkd.conf "
 "on a single line. Do only list *one* interface here."
@@ -190,13 +189,13 @@ msgstr ""
 "け。ここでは、*1 つの*インターフェースのみをリストしてください。"
 
 #. type: Plain text
-#: manual/appletalk.md:63
+#: manual/AppleTalk.md:63
 #, no-wrap
 msgid "    eth0\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:66
+#: manual/AppleTalk.md:66
 msgid ""
 "AppleTalk networking should be enabled on eth0 interface. All the necessary "
 "configuration will be fetched from the network"
@@ -205,7 +204,7 @@ msgstr ""
 "ある。必要なすべての構成はネットワークから取得される"
 
 #. type: Plain text
-#: manual/appletalk.md:69
+#: manual/AppleTalk.md:69
 msgid ""
 "At startup time, atalkd will add the real settings (address and network and "
 "eventually a zone) to atalkd.conf on its own"
@@ -214,13 +213,13 @@ msgstr ""
 "atalkd.conf に自動的に追加する"
 
 #. type: Plain text
-#: manual/appletalk.md:71
+#: manual/AppleTalk.md:71
 #, no-wrap
 msgid "    eth0 -phase 2 -net 0-65534 -addr 65280.166\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:77
+#: manual/AppleTalk.md:77
 msgid ""
 "atalkd filled in the AppleTalk settings that apply to this network segment. "
 "A netrange of 0-65534 indicates that there is no AppleTalk router present, "
@@ -235,13 +234,13 @@ msgstr ""
 "～ 255 である。"
 
 #. type: Title ####
-#: manual/appletalk.md:78
+#: manual/AppleTalk.md:78
 #, no-wrap
 msgid "Using several interfaces"
 msgstr "複数のインターフェイスの使用"
 
 #. type: Plain text
-#: manual/appletalk.md:82
+#: manual/AppleTalk.md:82
 msgid ""
 "When using several interfaces you have to add them line by line following "
 "the *-dontroute* switch in atalkd.conf."
@@ -250,13 +249,13 @@ msgstr ""
 "の後に、1 行ずつ追加する必要がある。"
 
 #. type: Plain text
-#: manual/appletalk.md:84
+#: manual/AppleTalk.md:84
 #, no-wrap
 msgid "    eth0 -dontroute eth1 -dontroute eth2 -dontroute\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:88
+#: manual/AppleTalk.md:88
 msgid ""
 "AppleTalk networking should be enabled on all three interfaces, but no "
 "routing should be done between the different segments. Again, all the "
@@ -267,7 +266,7 @@ msgstr ""
 "べての設定は接続されたネットワークから取得される。"
 
 #. type: Plain text
-#: manual/appletalk.md:92
+#: manual/AppleTalk.md:92
 #, no-wrap
 msgid ""
 "    eth0 -dontroute -phase 2 -net 0-65534 -addr 65280.152\n"
@@ -276,7 +275,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:98
+#: manual/AppleTalk.md:98
 msgid ""
 "On eth0 and eth1, there are no other routers present, so atalkd chooses an "
 "address from within the startup range. But on eth2 there lives an already "
@@ -290,7 +289,7 @@ msgstr ""
 "でのネット範囲のアドレスを自身に割り当てるように強制している。"
 
 #. type: Plain text
-#: manual/appletalk.md:103
+#: manual/AppleTalk.md:103
 msgid ""
 "In this case, atalkd will handle each interface as it would be the only "
 "active one. This can have some side effects when it comes to the point where "
@@ -303,7 +302,7 @@ msgstr ""
 "さい。"
 
 #. type: Plain text
-#: manual/appletalk.md:109
+#: manual/AppleTalk.md:109
 msgid ""
 "In case, you have more than one active network interface and do not take "
 "special precautions as outlined above, then autoconfiguration of the "
@@ -317,7 +316,7 @@ msgstr ""
 "接続されている状況で、インターフェイスの自動構成が失敗する可能性がある。"
 
 #. type: Plain text
-#: manual/appletalk.md:112
+#: manual/AppleTalk.md:112
 msgid ""
 "For further information see `atalkd.conf(5)` and the developer documentation."
 msgstr ""
@@ -325,13 +324,13 @@ msgstr ""
 "い。"
 
 #. type: Title ###
-#: manual/appletalk.md:113
+#: manual/AppleTalk.md:113
 #, no-wrap
 msgid "atalkd acting as an AppleTalk router"
 msgstr "AppleTalk ルーターとして機能する atalkd"
 
 #. type: Plain text
-#: manual/appletalk.md:117
+#: manual/AppleTalk.md:117
 msgid ""
 "Several types of AppleTalk routers exist: seed, non-seed and so called soft-"
 "seed routers."
@@ -340,7 +339,7 @@ msgstr ""
 "ルータなど、いくつかの種類がある。"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:120
+#: manual/AppleTalk.md:120
 msgid ""
 "A seed router has its own configuration and publishes this into the network "
 "segments it is configured for."
@@ -349,7 +348,7 @@ msgstr ""
 "トワーク セグメントに公開する。"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:124
+#: manual/AppleTalk.md:124
 msgid ""
 "A non-seed router needs a seed router on the interface to which it is "
 "connected to learn the network configuration. So this type of AppleTalk "
@@ -360,7 +359,7 @@ msgstr ""
 "なしで完全に動作する。"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:129
+#: manual/AppleTalk.md:129
 msgid ""
 "A so called soft-seed router is exactly the same as a non-seed router except "
 "the fact, that it can also remember the configuration of a seed router and "
@@ -371,7 +370,7 @@ msgstr ""
 "とまったく同じ。"
 
 #. type: Plain text
-#: manual/appletalk.md:133
+#: manual/AppleTalk.md:133
 msgid ""
 "Netatalk's atalkd can act as both a seed and a soft-seed router, even in a "
 "mixed mode, where it acts on one interface in this way and on the other in "
@@ -382,7 +381,7 @@ msgstr ""
 "ンターフェイスでは別の方法で動作する。"
 
 #. type: Plain text
-#: manual/appletalk.md:139
+#: manual/AppleTalk.md:139
 msgid ""
 "If you leave your atalkd.conf completely empty or simply add all active "
 "interfaces line by line without using seed settings (atalkd will act "
@@ -397,12 +396,12 @@ msgstr ""
 "スでは失敗する。ルーティング情報を取得する。"
 
 #. type: Plain text
-#: manual/appletalk.md:141
+#: manual/AppleTalk.md:141
 msgid "In this case, other services, that depend on atalkd, might also fail."
 msgstr "この場合、atalkd に依存する他のサービスも失敗する可能性がある。"
 
 #. type: Plain text
-#: manual/appletalk.md:144
+#: manual/AppleTalk.md:144
 msgid ""
 "So you should have atalkd act as a seed router on one or all active "
 "interfaces. A seed router has to supply information about:"
@@ -412,34 +411,34 @@ msgstr ""
 "ある:"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:146
+#: manual/AppleTalk.md:146
 msgid "The specific netrange on this segment"
 msgstr "このセグメントの特定のネット範囲"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:148
+#: manual/AppleTalk.md:148
 msgid "Its own AppleTalk address"
 msgstr "独自の AppleTalk アドレス"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:150
+#: manual/AppleTalk.md:150
 msgid "The zones (one to many) available in this segment"
 msgstr "このセグメントで使用可能なゾーン (1 対多)"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:152
+#: manual/AppleTalk.md:152
 msgid "The so called \"default zone\" for this segment"
 msgstr "このセグメントのいわゆる「デフォルト ゾーン」"
 
 #. type: Plain text
-#: manual/appletalk.md:154 manual/configuration.md:840 manual/install.md:4
-#: manual/upgrade.md:42
+#: manual/AppleTalk.md:154 manual/Configuration.md:840 manual/Installation.md:4
+#: manual/Upgrade.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
 
 #. type: Plain text
-#: manual/appletalk.md:159
+#: manual/AppleTalk.md:159
 #, no-wrap
 msgid ""
 "> Unless you are the network admin yourself, consider asking them before\n"
@@ -452,7 +451,7 @@ msgstr ""
 "AppleTalk ネットワーク クライアントに副作用が生じる可能性がある。\n"
 
 #. type: Plain text
-#: manual/appletalk.md:166
+#: manual/AppleTalk.md:166
 msgid ""
 "In an AppleTalk network netranges have to be unique and must not overlap "
 "each other. Fortunately netatalk's atalkd is polite enough to check whether "
@@ -467,7 +466,7 @@ msgstr ""
 "ださい)。"
 
 #. type: Plain text
-#: manual/appletalk.md:172
+#: manual/AppleTalk.md:172
 msgid ""
 "Netranges, you can use, include pretty small ones, e.g. 42-42, to very large "
 "ones, e.g. 1-65279 - the latter one representing the maximum. In routed "
@@ -480,7 +479,7 @@ msgstr ""
 "数値を使用できる。"
 
 #. type: Plain text
-#: manual/appletalk.md:180
+#: manual/AppleTalk.md:180
 msgid ""
 "The own AppleTalk address consists of a net part and a node part (the former "
 "16 bit, the latter 8 bit, for example 12057.143). Apple recommends using "
@@ -497,7 +496,7 @@ msgstr ""
 "たくないため、142 以上のノード アドレスを使用することをお勧めする。"
 
 #. type: Plain text
-#: manual/appletalk.md:186
+#: manual/AppleTalk.md:186
 msgid ""
 "AppleTalk zones have *nothing* to do with physical networks. They're just a "
 "hint for your client's convenience, letting them locate network resources in "
@@ -512,7 +511,7 @@ msgstr ""
 "らのさまざまな組み合わせも使用できる)。"
 
 #. type: Plain text
-#: manual/appletalk.md:192
+#: manual/AppleTalk.md:192
 msgid ""
 "So all you have to do is to *draw a network chart* containing the physical "
 "segments, the netranges you want to assign to each one, the zone names you "
@@ -526,24 +525,24 @@ msgstr ""
 "む *ネットワーク チャートを描く* ことだけ。"
 
 #. type: Plain text
-#: manual/appletalk.md:195
+#: manual/AppleTalk.md:195
 msgid ""
 "If you finished the steps outlined above, you might want to edit atalkd.conf "
 "to fit your needs."
 msgstr "上記の手順を完了したら、必要に応じて atalkd.conf を編集してください。"
 
 #. type: Plain text
-#: manual/appletalk.md:197
+#: manual/AppleTalk.md:197
 msgid "You'll have to set the following options in atalkd.conf:"
 msgstr "atalkd.conf で次のオプションを設定する必要がある:"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:199
+#: manual/AppleTalk.md:199
 msgid "-net (use reasonable values between 1-65279 for each interface)"
 msgstr "-net (各インターフェースに 1 ～ 65279 の適切な値を使用する)"
 
 #. type: Plain text
-#: manual/appletalk.md:202
+#: manual/AppleTalk.md:202
 #, no-wrap
 msgid ""
 "  In case, this value is suppressed but -addr is present, the netrange\n"
@@ -553,7 +552,7 @@ msgstr ""
 "  netrange が使用される\n"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:205
+#: manual/AppleTalk.md:205
 msgid ""
 "-addr (the net part must match the -net settings if present, the node "
 "address should be between 142 and 255)"
@@ -562,7 +561,7 @@ msgstr ""
 "レスは 142 ～ 255 の範囲である必要がある)"
 
 #. type: Bullet: '- '
-#: manual/appletalk.md:208
+#: manual/AppleTalk.md:208
 msgid ""
 "-zone (can be used multiple times in one single line, the first entry is the "
 "default zone)"
@@ -570,7 +569,7 @@ msgstr ""
 "-zone (1 行に複数回使用できる。最初のエントリはデフォルトのゾーンになる。)"
 
 #. type: Plain text
-#: manual/appletalk.md:216
+#: manual/AppleTalk.md:216
 msgid ""
 "Note that you are able to set up \"zone mapping\", that means publishing "
 "exactly the same zone name on all AppleTalk segments, as well as providing "
@@ -588,7 +587,7 @@ msgstr ""
 "を選択できる。"
 
 #. type: Plain text
-#: manual/appletalk.md:219
+#: manual/AppleTalk.md:219
 #, no-wrap
 msgid ""
 "    eth0 -seed -phase 2 -net 1-1000 -addr 1000.142 -zone \"Printers\" -zone \"Spoolers\"\n"
@@ -596,7 +595,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:229
+#: manual/AppleTalk.md:229
 msgid ""
 "The settings for eth0 force AppleTalk devices within the connected network "
 "to assign themselves an address in the netrange 1-1000. Two zone names are "
@@ -618,7 +617,7 @@ msgstr ""
 "ンを「Macs」に設定して、4 番目のゾーン名「Servers」を発行する。"
 
 #. type: Plain text
-#: manual/appletalk.md:232
+#: manual/AppleTalk.md:232
 #, no-wrap
 msgid ""
 "    eth0 -seed -phase 2 -net 1-1000 -addr 1000.142 -zone \"foo\"\n"
@@ -626,7 +625,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:239
+#: manual/AppleTalk.md:239
 msgid ""
 "We use the same network settings as in the example above but let atalkd "
 "publish the same zone name on both segments. As the same zone name will be "
@@ -643,13 +642,13 @@ msgstr ""
 "ズ 2)  に透過的に接続する。"
 
 #. type: Plain text
-#: manual/appletalk.md:241
+#: manual/AppleTalk.md:241
 #, no-wrap
 msgid "    eth0 eth1 eth2\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:247
+#: manual/AppleTalk.md:247
 msgid ""
 "As we have more than one interface, atalkd will try to act as an AppleTalk "
 "router between both segments. As we don't supply any network configuration "
@@ -663,7 +662,7 @@ msgstr ""
 "つのセグメントにのみ利用可能なシード ルータがない場合、全体が失敗する。"
 
 #. type: Plain text
-#: manual/appletalk.md:251
+#: manual/AppleTalk.md:251
 #, no-wrap
 msgid ""
 "    eth0 -phase 2 -net 10-10 -addr 10.166 -zone \"Parking\"\n"
@@ -672,7 +671,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:260
+#: manual/AppleTalk.md:260
 msgid ""
 "In this case, active seed routers are present in all three connected "
 "networks, so atalkd was able to fetch the network configuration from them "
@@ -692,7 +691,7 @@ msgstr ""
 "め)。"
 
 #. type: Plain text
-#: manual/appletalk.md:263
+#: manual/AppleTalk.md:263
 #, no-wrap
 msgid ""
 "    eth0\n"
@@ -700,7 +699,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:269
+#: manual/AppleTalk.md:269
 msgid ""
 "In case in the network connected to eth0 lives no active seed router or one "
 "with a mismatching configuration (e.g. an overlapping netrange of 1-200) "
@@ -715,7 +714,7 @@ msgstr ""
 "る。"
 
 #. type: Plain text
-#: manual/appletalk.md:275
+#: manual/AppleTalk.md:275
 msgid ""
 "By the way: It is perfectly legal to have more than one seed router "
 "connected to a network segment. But in this case, you should take care that "
@@ -728,13 +727,13 @@ msgstr ""
 "してまったく同じになるように注意する必要がある。"
 
 #. type: Title ##
-#: manual/appletalk.md:276
+#: manual/AppleTalk.md:276
 #, no-wrap
 msgid "Printing"
 msgstr "印刷"
 
 #. type: Plain text
-#: manual/appletalk.md:281
+#: manual/AppleTalk.md:281
 msgid ""
 "Netatalk can act both as a PAP client to access AppleTalk-capable printers, "
 "and as a PAP server. The former by using the `(1)` utility and the latter by "
@@ -745,7 +744,7 @@ msgstr ""
 "は `(8)` サービスを起動することで行う。"
 
 #. type: Plain text
-#: manual/appletalk.md:292
+#: manual/AppleTalk.md:292
 msgid ""
 "The \"Printer Access Protocol\" as part of the AppleTalk protocol suite is a "
 "fully 8 bit aware and bidirectional printing protocol, developed by Apple in "
@@ -768,7 +767,7 @@ msgstr ""
 "LPR などと比べて大きな利点である。"
 
 #. type: Plain text
-#: manual/appletalk.md:303
+#: manual/AppleTalk.md:303
 #, no-wrap
 msgid ""
 "*Bidirectional* means that printing source (usually a Macintosh\n"
@@ -794,13 +793,13 @@ msgstr ""
 "に関する通知を生成することができる。\n"
 
 #. type: Title ###
-#: manual/appletalk.md:304
+#: manual/AppleTalk.md:304
 #, no-wrap
 msgid "Setting up the PAP print server"
 msgstr "PAP 印刷サーバーの設定"
 
 #. type: Plain text
-#: manual/appletalk.md:313
+#: manual/AppleTalk.md:313
 msgid ""
 "Netatalk's `papd` is able to provide AppleTalk printing services for "
 "Macintoshes or, to be more precise, PAP clients in general. Netatalk does "
@@ -816,7 +815,7 @@ msgstr ""
 "SysV lpd、BSD lpr、LPRng、CUPS など。"
 
 #. type: Plain text
-#: manual/appletalk.md:320
+#: manual/AppleTalk.md:320
 msgid ""
 "Since it is so important to answer the client's feature queries correctly, "
 "how does papd achieve this? By parsing the relevant keywords of the assigned "
@@ -831,7 +830,7 @@ msgstr ""
 "ることが印刷を可能にするために重要。"
 
 #. type: Plain text
-#: manual/appletalk.md:330
+#: manual/AppleTalk.md:330
 msgid ""
 "Netatalk formerly had built-in support for System V lpd printing in a way "
 "that papd saved the printed job directly into the spooldir and calls `lpd` "
@@ -853,13 +852,13 @@ msgstr ""
 "ある。"
 
 #. type: Title ####
-#: manual/appletalk.md:331
+#: manual/AppleTalk.md:331
 #, no-wrap
 msgid "Integrating `papd` with SysV lpd"
 msgstr "`papd` と SysV lpd の統合"
 
 #. type: Plain text
-#: manual/appletalk.md:337
+#: manual/AppleTalk.md:337
 msgid ""
 "Unless CUPS support has been compiled in (which is default from Netatalk 2.0 "
 "on) one simply defines the lpd queue in question by setting the `pr` "
@@ -872,13 +871,13 @@ msgstr ""
 "る。"
 
 #. type: Title ####
-#: manual/appletalk.md:338
+#: manual/AppleTalk.md:338
 #, no-wrap
 msgid "Using pipes with `papd`"
 msgstr "`papd` でパイプを使用する"
 
 #. type: Plain text
-#: manual/appletalk.md:343
+#: manual/AppleTalk.md:343
 msgid ""
 "An alternative to the technique outlined above is to direct papd's output "
 "via a pipe into another program. Using this mechanism almost all printing "
@@ -889,13 +888,13 @@ msgstr ""
 "る。"
 
 #. type: Title ####
-#: manual/appletalk.md:344
+#: manual/AppleTalk.md:344
 #, no-wrap
 msgid "Using direct CUPS support"
 msgstr "直接 CUPS サポートを使用する"
 
 #. type: Plain text
-#: manual/appletalk.md:357
+#: manual/AppleTalk.md:357
 msgid ""
 "There exists one special share named *cupsautoadd*. If this is present in "
 "papd.conf, then all available CUPS queues will be served automagically using "
@@ -909,19 +908,19 @@ msgstr ""
 "個々のスプーラのこれらのグローバル設定を上書きできる。"
 
 #. type: Plain text
-#: manual/appletalk.md:359
+#: manual/AppleTalk.md:359
 #, no-wrap
 msgid "    cupsautoadd:op=root:\n"
 msgstr ""
 
 #. type: Title ###
-#: manual/appletalk.md:360
+#: manual/AppleTalk.md:360
 #, no-wrap
 msgid "Using AppleTalk printers"
 msgstr "AppleTalk プリンタの使用"
 
 #. type: Plain text
-#: manual/appletalk.md:364
+#: manual/AppleTalk.md:364
 msgid ""
 "Netatalk's `(8)` can be used to query AppleTalk printers, `(1)` to print to "
 "them."
@@ -930,7 +929,7 @@ msgstr ""
 "に印刷するのに使用できる。"
 
 #. type: Plain text
-#: manual/appletalk.md:368
+#: manual/AppleTalk.md:368
 msgid ""
 "`pap` can be used stand-alone or as part of an output filter or a CUPS "
 "backend (which is the preferred method since one does not have to deal with "
@@ -941,13 +940,13 @@ msgstr ""
 "この方法の方が推奨される)オプション)。"
 
 #. type: Plain text
-#: manual/appletalk.md:370
+#: manual/AppleTalk.md:370
 #, no-wrap
 msgid "    pap -p\"ColorLaserWriter 16/600@*\" /usr/share/doc/gs/examples/tiger.ps\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:374
+#: manual/AppleTalk.md:374
 msgid ""
 "The file `/usr/share/doc/gs/examples/tiger.ps` is sent to a printer called "
 "\"ColorLaserWriter 16/600\" in the standard zone \"\\*\". The device type is "
@@ -958,13 +957,13 @@ msgstr ""
 "\"LaserWriter\" (デフォルトなので省略できる)。"
 
 #. type: Plain text
-#: manual/appletalk.md:376
+#: manual/AppleTalk.md:376
 #, no-wrap
 msgid "    gs -q -dNOPAUSE -sDEVICE=cdjcolor -sOutputFile=test.ps | pap -E\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:384
+#: manual/AppleTalk.md:384
 msgid ""
 "GhostScript is used to convert a PostScript job to PCL3 output suitable for "
 "a Color DeskWriter. Since no file has been supplied on the command line, "
@@ -981,19 +980,19 @@ msgstr ""
 "プリンタからのEOFを待たなくなる。"
 
 #. type: Title ##
-#: manual/appletalk.md:385
+#: manual/AppleTalk.md:385
 #, no-wrap
 msgid "Time Services"
 msgstr "タイム サービス"
 
 #. type: Title ###
-#: manual/appletalk.md:387
+#: manual/AppleTalk.md:387
 #, no-wrap
 msgid "Timelord"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:393
+#: manual/AppleTalk.md:393
 msgid ""
 "`timelord`, an AppleTalk based time server, is useful for automatically "
 "synchronizing the system time on older Macintosh or Apple II clients that do "
@@ -1004,7 +1003,7 @@ msgstr ""
 "役立つ。"
 
 #. type: Plain text
-#: manual/appletalk.md:397
+#: manual/AppleTalk.md:397
 msgid ""
 "Netatalk's `timelord` is compatible with the tardis client for Macintosh "
 "developed at the [University of Melbourne.](https://web.archive.org/web/"
@@ -1015,25 +1014,25 @@ msgstr ""
 "発された Macintosh 用の tardis クライアントと互換性がある。"
 
 #. type: Plain text
-#: manual/appletalk.md:400
+#: manual/AppleTalk.md:400
 msgid ""
 "For further information please have a look at the `timelord(8)` manual page."
 msgstr "詳細については、`timelord(8)` マニュアル ページをご覧ください。"
 
 #. type: Title ##
-#: manual/appletalk.md:401
+#: manual/AppleTalk.md:401
 #, no-wrap
 msgid "NetBoot Services"
 msgstr "ネットブート サービス"
 
 #. type: Title ###
-#: manual/appletalk.md:403
+#: manual/AppleTalk.md:403
 #, no-wrap
 msgid "Apple 2 NetBooting"
 msgstr "Apple 2 ネットブート"
 
 #. type: Plain text
-#: manual/appletalk.md:408
+#: manual/AppleTalk.md:408
 msgid ""
 "`a2boot` is a service that allows you to boot an Apple //e or Apple IIGS "
 "into ProDOS or GS/OS through an AFP volume served by Netatalk."
@@ -1042,7 +1041,7 @@ msgstr ""
 "リュームを介して ProDOS または GS/OS にブートする。"
 
 #. type: Plain text
-#: manual/appletalk.md:411
+#: manual/AppleTalk.md:411
 msgid ""
 "You need to supply the appropriate boot blocks and system files provided by "
 "Apple yourself."
@@ -1051,7 +1050,7 @@ msgstr ""
 "がある。"
 
 #. type: Plain text
-#: manual/appletalk.md:413
+#: manual/AppleTalk.md:413
 msgid ""
 "For further information please have a look at the `a2boot(8)` manual page."
 msgstr "詳細については、`a2boot(8)` マニュアル ページを参照してください。"

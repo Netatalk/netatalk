@@ -25,20 +25,6 @@ endforeach
 
 if get_option('with-website')
     foreach page : manfiles
-        custom_target(
-            'manual_' + page,
-            input: page + '.3.md',
-            output: page + '.3.html',
-            command: [
-                cmarkgfm,
-                '--smart',
-                '--extension', 'table',
-                '--to', 'html',
-                '@INPUT@',
-            ],
-            capture: true,
-            install: true,
-            install_dir: manual_install_path,
-        )
+        install_data(page + '.3.md', rename: page + '.md', install_dir: manual_install_path + '/en')
     endforeach
 endif

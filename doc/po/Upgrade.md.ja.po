@@ -1,54 +1,53 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Contributors to the Netatalk Project
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT
 # This file is distributed under the same license as the Netatalk package.
-# Eiichirou UDA, 2015-2017
-# HAT, 2015-2017
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Netatalk 4.1.2dev\n"
 "POT-Creation-Date: 2025-01-23 08:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
 #: manpages/man8/afpd.8.md:91 manpages/man8/netatalk.8.md:45
-#: manual/upgrade.md:33
+#: manual/Upgrade.md:33
 msgid "`afp.conf`"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:103 manual/upgrade.md:47
+#: manpages/man8/afpd.8.md:103 manual/Upgrade.md:47
 msgid "`extmap.conf`"
 msgstr ""
 
 #. type: Plain text
-#: manual/appletalk.md:154 manual/configuration.md:840 manual/install.md:4
-#: manual/upgrade.md:42
+#: manual/AppleTalk.md:154 manual/Configuration.md:840 manual/Installation.md:4
+#: manual/Upgrade.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
 
 #. type: Title #
-#: manual/upgrade.md:1
+#: manual/Upgrade.md:1
 #, no-wrap
 msgid "Upgrading from prior Netatalk versions"
 msgstr "以前の Netatalk バージョンからのアップグレード"
 
 #. type: Title ##
-#: manual/upgrade.md:3
+#: manual/Upgrade.md:3
 #, no-wrap
 msgid "Upgrading from Netatalk 3"
 msgstr "Netatalk 3 からのアップグレード"
 
 #. type: Plain text
-#: manual/upgrade.md:9
+#: manual/Upgrade.md:9
 msgid ""
 "Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new "
 "version on top of the old one. The primary difference is that Netatalk 4 "
@@ -61,7 +60,7 @@ msgstr ""
 "ルを一部復活させたことである。"
 
 #. type: Plain text
-#: manual/upgrade.md:13
+#: manual/Upgrade.md:13
 msgid ""
 "Notably, the `atalkd` daemon with its `atalkd.conf` configuration file, and "
 "the `papd` daemon with its `papd.conf` configuration file are once more "
@@ -71,18 +70,18 @@ msgstr ""
 "`papd.conf` 設定ファイルが追加された。"
 
 #. type: Title ##
-#: manual/upgrade.md:14
+#: manual/Upgrade.md:14
 #, no-wrap
 msgid "Upgrading from Netatalk 2"
 msgstr "Netatalk 2 からのアップグレード"
 
 #. type: Plain text
-#: manual/upgrade.md:17
+#: manual/Upgrade.md:17
 msgid "There are three major changes between Netatalk 2 and Netatalk 4:"
 msgstr "Netatalk 4 の主要な変更は以下の3点："
 
 #. type: Bullet: '1.  '
-#: manual/upgrade.md:20
+#: manual/Upgrade.md:20
 msgid ""
 "New configuration files that replaces most of the previous ones: `afp.conf` "
 "and `extmap.conf`"
@@ -91,7 +90,7 @@ msgstr ""
 "を変更し、新しい設定ファイルを追加した： `afp.conf` と `extmap.conf`"
 
 #. type: Plain text
-#: manual/upgrade.md:23 manual/upgrade.md:59
+#: manual/Upgrade.md:23 manual/Upgrade.md:59
 msgid ""
 "New AppleDouble backend `appledouble = ea` which stores Mac metadata and "
 "resource forks in extended attributes of the filesystem."
@@ -100,7 +99,7 @@ msgstr ""
 "`appledouble = ea` という新しい AppleDouble のバックエンド。"
 
 #. type: Bullet: '3.  '
-#: manual/upgrade.md:29
+#: manual/Upgrade.md:29
 msgid ""
 "The AppleTalk transport layer is disabled by default. If you want to use "
 "Netatalk with very old Macs, turn it on with the `appletalk = yes` option in "
@@ -113,25 +112,25 @@ msgstr ""
 "上げてください。"
 
 #. type: Title ###
-#: manual/upgrade.md:30
+#: manual/Upgrade.md:30
 #, no-wrap
 msgid "New configuration"
 msgstr "設定まわりの変更点"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:35
+#: manual/Upgrade.md:35
 msgid "ini style syntax (akin to Samba's smb.conf)"
 msgstr "（Samba の smb.conf のような） \"ini\" スタイルの構文"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:37
+#: manual/Upgrade.md:37
 msgid "one to rule them all: configure AFP settings and volumes in one file"
 msgstr ""
 "一つで設定すべてを指示するという点： AFP 及びボリュームの構成を共に一つのファ"
 "イルで設定することになるという点"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:40
+#: manual/Upgrade.md:40
 msgid ""
 "obsoletes `afpd.conf`, `netatalk.conf`, `AppleVolumes.default` and "
 "`afp_ldap.conf`"
@@ -140,7 +139,7 @@ msgstr ""
 "`afp_ldap.conf` の廃止"
 
 #. type: Plain text
-#: manual/upgrade.md:45
+#: manual/Upgrade.md:45
 #, no-wrap
 msgid ""
 "> most option names have changed, read the full manpage\n"
@@ -150,12 +149,12 @@ msgstr ""
 "[afp.conf](#afp.conf.5) の manpage 全体を読むこと\n"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:49
+#: manual/Upgrade.md:49
 msgid "maps file extensions to Classic Mac OS type/creator"
 msgstr "Classic Mac OS type/creator と拡張子の関連付け"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:52
+#: manual/Upgrade.md:52
 msgid ""
 "unlike 2.x, the mappings are disabled by default; uncomment the lines in the "
 "file to enable them"
@@ -164,23 +163,23 @@ msgstr ""
 "ファイル内の行のコメントを解除する"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:54
+#: manual/Upgrade.md:54
 msgid "obsoletes `AppleVolumes.system`"
 msgstr "`AppleVolumes.system` の廃止"
 
 #. type: Title ###
-#: manual/upgrade.md:55
+#: manual/Upgrade.md:55
 #, no-wrap
 msgid "New AppleDouble backend"
 msgstr "新たな AppleDouble バックエンド"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:61
+#: manual/Upgrade.md:61
 msgid "default backend (!)"
 msgstr "デフォルトのバックエンドである（！）"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:64
+#: manual/Upgrade.md:64
 msgid ""
 "requires a filesystem with Extended Attributes, fallback is `appledouble = "
 "v2`"
@@ -189,7 +188,7 @@ msgstr ""
 "ンの使用が代替となる"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:67
+#: manual/Upgrade.md:67
 msgid ""
 "converts filesystems from `appledouble = v2` to `appledouble = ea` on the "
 "fly when accessed (can be disabled)"
@@ -198,17 +197,17 @@ msgstr ""
 "時、その都度行われる（無効にすることも可能）"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:69
+#: manual/Upgrade.md:69
 msgid "`dbd` can be used to do conversion in one shot"
 msgstr "一括で変換する場合 `dbd` を用いることができる"
 
 #. type: Plain text
-#: manual/upgrade.md:71
+#: manual/Upgrade.md:71
 msgid "Implementation details:"
 msgstr "実装の詳細："
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:74
+#: manual/Upgrade.md:74
 msgid ""
 "stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an "
 "Extended Attributed named “`org.netatalk.Metadata`”"
@@ -217,7 +216,7 @@ msgstr ""
 "“`org.netatalk.Metadata`” という名前の拡張属性に保存される。"
 
 #. type: Bullet: '  - '
-#: manual/upgrade.md:78
+#: manual/Upgrade.md:78
 msgid ""
 "Additionally, on macOS hosts running Netatalk 4.1.0 or later, FinderInfo is "
 "natively stored in the file system and appears as an Extended Attribute "
@@ -228,12 +227,12 @@ msgstr ""
 "性として表示される。"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:80
+#: manual/Upgrade.md:80
 msgid "stores Mac ResourceFork either in"
 msgstr "マックのリソースフォークは："
 
 #. type: Bullet: '  - '
-#: manual/upgrade.md:83
+#: manual/Upgrade.md:83
 msgid ""
 "an Extended Attribute named “`org.netatalk.ResourceFork`” on Solaris w. ZFS, "
 "or in"
@@ -242,14 +241,14 @@ msgstr ""
 "される。"
 
 #. type: Bullet: '  - '
-#: manual/upgrade.md:86
+#: manual/Upgrade.md:86
 msgid "an extra AppleDouble file named “`._file`” for a file named “`file`” or"
 msgstr ""
 "ないしは、ファイル名が “`file`” であるものに対して各々、“`._file`” という名の"
 "別の AppleDouble ファイルに保存される。"
 
 #. type: Bullet: '  - '
-#: manual/upgrade.md:89
+#: manual/Upgrade.md:89
 msgid ""
 "natively stored in the resource fork on macOS hosts as of Netatalk 4.1.0."
 msgstr ""
@@ -257,7 +256,7 @@ msgstr ""
 "ている。"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:98
+#: manual/Upgrade.md:98
 msgid ""
 "the format of the .\\_ file is exactly as the Mac’s CIFS client expects it "
 "when accessing the same filesystem via a CIFS server (Samba), thus you can "
@@ -277,13 +276,13 @@ msgstr ""
 "Samba VFS モジュールが必要である（改善中）。"
 
 #. type: Title ###
-#: manual/upgrade.md:99
+#: manual/Upgrade.md:99
 #, no-wrap
 msgid "Other major changes"
 msgstr "そのほかの主要な変更点"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:104
+#: manual/Upgrade.md:104
 msgid ""
 "New service controller daemon [netatalk](#netatalk.8) which is responsible "
 "for starting and restarting the AFP and CNID daemons. All bundled start "
@@ -294,7 +293,7 @@ msgstr ""
 "更新されているため、自分の環境でもアップデートされているか確認する必要あり！"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:107
+#: manual/Upgrade.md:107
 msgid ""
 "All CNID databases are now stored under `$prefix/var/netatalk/CNID/` by "
 "default, rather than in the individual shared volume directories"
@@ -303,7 +302,7 @@ msgstr ""
 "る。以前は各共有ボリュームにて保存されていた。"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:110
+#: manual/Upgrade.md:110
 msgid ""
 "Netatalk 2.x volume options “usedots” and “upriv” now enabled by default"
 msgstr ""
@@ -311,33 +310,33 @@ msgstr ""
 "た。"
 
 #. type: Bullet: '- '
-#: manual/upgrade.md:112
+#: manual/Upgrade.md:112
 msgid "Removed SLP and AFP proxy support"
 msgstr "SLP 及び AFP プロキシのサポート機能は削除。"
 
 #. type: Title ###
-#: manual/upgrade.md:113
+#: manual/Upgrade.md:113
 #, no-wrap
 msgid "Upgrading procedure"
 msgstr "アップグレード手段"
 
 #. type: Bullet: '1.  '
-#: manual/upgrade.md:116
+#: manual/Upgrade.md:116
 msgid "Stop Netatalk 2.x"
 msgstr "Netatalk 2.x を停止する"
 
 #. type: Bullet: '2.  '
-#: manual/upgrade.md:118
+#: manual/Upgrade.md:118
 msgid "Install Netatalk 4"
 msgstr "Netatalk 4 をインストールする"
 
 #. type: Bullet: '3.  '
-#: manual/upgrade.md:120
+#: manual/Upgrade.md:120
 msgid "Manually recreate configurations in `afp.conf` and `extmap.conf`"
 msgstr "設定 `afp.conf` 及び `extmap.conf` を自力で書き換える"
 
 #. type: Bullet: '4.  '
-#: manual/upgrade.md:124
+#: manual/Upgrade.md:124
 msgid ""
 "Update your Netatalk init script to start `netatalk` instead of `afpd` and "
 "`cnid_metad`, or replace it with the appropriate stock init script for your "
@@ -347,7 +346,7 @@ msgstr ""
 "Netatalk 起動スクリプトを更新するか、標準の起動スクリプトに置き換える。"
 
 #. type: Bullet: '5.  '
-#: manual/upgrade.md:128
+#: manual/Upgrade.md:128
 msgid ""
 "Move `afp_voluuid.conf` and `afp_signature.conf` to the localstate directory "
 "(default `$prefix/var/netatalk/`), you can use `afpd -v` in order to find "
@@ -358,18 +357,18 @@ msgstr ""
 "`afpd -v` コマンドが有用"
 
 #. type: Bullet: '6.  '
-#: manual/upgrade.md:130
+#: manual/Upgrade.md:130
 msgid "Start Netatalk 4"
 msgstr "Netatalk 4 を起動する"
 
 #. type: Title ###
-#: manual/upgrade.md:131
+#: manual/Upgrade.md:131
 #, no-wrap
 msgid "Old and new configuration file names"
 msgstr "新旧設定ファイル名"
 
 #. type: Plain text
-#: manual/upgrade.md:145
+#: manual/Upgrade.md:145
 #, no-wrap
 msgid ""
 "| Old File Name | New File Name | Description |\n"
@@ -399,19 +398,19 @@ msgstr ""
 "| `~/.AppleVolumes` | \\- | 廃止 |\n"
 
 #. type: Title ###
-#: manual/upgrade.md:146
+#: manual/Upgrade.md:146
 #, no-wrap
 msgid "Old and new option names"
 msgstr "新旧オプション対応表"
 
 #. type: Plain text
-#: manual/upgrade.md:149
+#: manual/Upgrade.md:149
 #, no-wrap
 msgid "**From netatalk.conf (`/etc/default/netatalk`) to afp.conf**\n"
 msgstr "**netatalk.conf (/etc/default/netatalk) から afp.conf**\n"
 
 #. type: Plain text
-#: manual/upgrade.md:168
+#: manual/Upgrade.md:168
 #, no-wrap
 msgid ""
 "| Old netatalk.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |\n"
@@ -453,13 +452,13 @@ msgstr ""
 "| ATALK_ZONE | ddp zone | \\- | \\- | \\(G\\) | 4.0.0で復活 |\n"
 
 #. type: Plain text
-#: manual/upgrade.md:170
+#: manual/Upgrade.md:170
 #, no-wrap
 msgid "**From afpd.conf to afp.conf**\n"
 msgstr "**afpd.conf から afp.conf**\n"
 
 #. type: Plain text
-#: manual/upgrade.md:234
+#: manual/Upgrade.md:234
 #, no-wrap
 msgid ""
 "| Old afpd.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |\n"
@@ -591,13 +590,13 @@ msgstr ""
 "| -keepsessions | \\- | \\- | \\- | \\- | 廃止。kill -HUP を使用 |\n"
 
 #. type: Plain text
-#: manual/upgrade.md:236
+#: manual/Upgrade.md:236
 #, no-wrap
 msgid "**From afp_ldap.conf to afp.conf**\n"
 msgstr "**from afp_ldap.conf から afp.conf**\n"
 
 #. type: Plain text
-#: manual/upgrade.md:251
+#: manual/Upgrade.md:251
 #, no-wrap
 msgid ""
 "| Old afp_ldap.conf | New afp.conf | Old Default Value | New Defalut Value | Section | Description |\n"
@@ -631,13 +630,13 @@ msgstr ""
 "| ldap_group_attr | ldap group attr | \\- | \\- | \\(G\\) | \\- |\n"
 
 #. type: Plain text
-#: manual/upgrade.md:253
+#: manual/Upgrade.md:253
 #, no-wrap
 msgid "**From AppleVolumes.\\* to afp.conf**\n"
 msgstr "**AppleVolumes.\\* から afp.conf**\n"
 
 #. type: Plain text
-#: manual/upgrade.md:312
+#: manual/Upgrade.md:312
 #, no-wrap
 msgid ""
 "| Old AppleVolumes.\\* | New afp.conf | Old Default Value | New Defalut Value | Section | Description |\n"

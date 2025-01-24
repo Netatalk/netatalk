@@ -1,17 +1,16 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Contributors to the Netatalk Project
+# Copyright (C) 2024-2025 Daniel Markstedt
 # This file is distributed under the same license as the Netatalk package.
-# Daniel Markstedt, 2024-2025
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: Netatalk 4.1.2dev\n"
 "POT-Creation-Date: 2025-01-23 09:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -319,7 +318,7 @@ msgid "> Specifies the file in which `papd` stores its process id.\n"
 msgstr "> `papd` がプロセス ID を保存するファイルを指定する。\n"
 
 #. type: Title ##
-#: manpages/man8/papd.8.md:61 manual/configuration.md:343
+#: manpages/man8/papd.8.md:61 manual/Configuration.md:343
 #, no-wrap
 msgid "Authentication"
 msgstr "認証"
