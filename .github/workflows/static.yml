@@ -36,22 +36,19 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install --assume-yes --no-install-recommends \
-            docbook-xsl \
+            cmark-gfm \
             libdb-dev \
             libevent-dev \
             libgcrypt20-dev \
             meson \
-            ninja-build \
-            xsltproc
+            ninja-build
       - name: Configure
         run: |
           meson setup build \
             -Dwith-appletalk=true \
-            -Dwith-docs=
+            -Dwith-docs=html_manual
       - name: Build
         run: meson compile -C build
-      - name: Prepare Pages
-        run: cp ./doc/manual/netatalk.css ./build/doc/manual/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
