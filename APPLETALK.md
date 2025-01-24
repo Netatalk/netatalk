@@ -1,14 +1,15 @@
 This is a README for using Netatalk with AppleTalk networking.
 
 Platforms Covered:
-A.   Linux
-B.I  NetBSD
-B.II Other BSDs
-C.   Generic
+
+- A.   Linux
+- B.I  NetBSD
+- B.II Other BSDs
+- C.   Generic
 
 ----------------------------------------------------------------
 
-A. Linux
+# A. Linux
 
 Some Linux distributions ship with AppleTalk support out of the box
 (e.g. Debian) others have the kernel module but with a blacklisting
@@ -22,11 +23,17 @@ Classic AFP on GNU/Linux requires that CONFIG_ATALK is compiled
 into the kernel or as a kernel module. To check to see if the kernel
 has support for AppleTalk:
 
+```
 $> dmesg | grep Apple
+```
+
 This just parses the boot messages for any line containing
 'Apple'.
 
+```
 $> lsmod | grep appletalk
+```
+
 This checks if the appletalk kernel module is presently loaded.
 
 If you don't find it, you may have to compile a kernel and turn on
@@ -41,20 +48,17 @@ Note: check your distribution documentation about editing
 /etc/modules.conf.
 
 For more complete information about the Linux kernel see the
-Kernel-HOWTO:
-http://www.linuxdoc.org/HOWTO/Kernel-HOWTO.html
+[Kernel-HOWTO](http://www.linuxdoc.org/HOWTO/Kernel-HOWTO.html).
 
 A note for RedHat users: You may need to install the glibc-devel
 package to be able to compile Netatalk correctly.
 
 ----------------------------------------------------------------
 
-B.I NetBSD
+# B.I NetBSD
 
 Kernel support for AppleTalk appeared in NetBSD 1.3 in April 1997.
-See the release notes:
-
-http://www.netbsd.org/changes/changes-1.3.html
+See the [release notes](http://www.netbsd.org/changes/changes-1.3.html)
 
 The source code for the kernel module is located in
 sys/netatalk of the NetBSD source tree.
@@ -62,7 +66,7 @@ sys/netatalk of the NetBSD source tree.
 As of NetBSD 9.3, the netatalk kernel module is loaded by default,
 and made available to the atalkd daemon when it starts up.
 
-B.II Other BSDs
+# B.II Other BSDs
 
 Kernel support for AppleTalk appears in FreeBSD 2.2-current
 dated after 12 September 1996, as well as OpenBSD 2.2,
@@ -74,7 +78,7 @@ BSD-derived operating system.
 
 ----------------------------------------------------------------
 
-C. Generic
+# C. Generic
 
 If you would like AppleTalk support on another operating system,
 you will need either need a kernel module for your operating system,

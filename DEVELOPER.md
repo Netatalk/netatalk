@@ -15,6 +15,7 @@ PAP, and ASP, while expecting the kernel to supply DDP.
 
 The complete stack looks like this on a BSD-derived system:
 
+```
 AFP                          AFP
  |                            |
 ASP    PAP                   DSI
@@ -30,6 +31,7 @@ ASP    PAP                   DSI
 +-----------------------+---------------------------+
 |                Network-Interface                  |
 +---------------------------------------------------+
+```
 
 * DDP is a socket to socket protocol that all other AppleTalk protocols
   are built on top of.
@@ -54,16 +56,20 @@ of error checking macros in <atalk/errchk.h>. These macros compare the return
 value of statements against 0, NULL, -1 (and maybe more, check it out).
 Every macro comes in four flavours: EC_CHECK, EC_CHECK_LOG, EC_CHECK_LOG_ERR
 and EC_CHECK_CUSTOM:
+
 - EC_CHECK just checks the CHECK
 - EC_CHECK_LOG additionally logs the stringified function call.
 - EC_CHECK_LOG_ERR allows specifying the return value
 - EC_CHECK_CUSTOM allows custom actions
+
 The macros EC_CHECK* unconditionally jump to a cleanup label where the
 necessary cleanup can be done alongside controlling the return value.
 EC_CHECK_CUSTOM doesn't do that, so an extra "goto EC_CLEANUP" may be
 performed as appropriate.
 
 Example:
+
+```
 - stat() without EC macro:
   static int func(const char *name) {
     int ret = 0;
@@ -111,12 +117,14 @@ int func(void)
 EC_CLEANUP:
     EC_EXIT;
 }
+```
 
 Ini Parser
 ==========
 
 The ini parser is taken from <https://github.com/ndevilla/iniparser>.
 It has been slightly modified:
+
 - case-sensitive
 - "include" directive added
 - atalk_iniparser_getstrdup() to complemnt atalk_iniparser_getstring(), it returns allocated
@@ -134,7 +142,7 @@ into separate daemons.
 There is one cnid_dbd daemon per netatalk volume. The underlying database
 structure is based on Berkeley DB.
 
-Advantages:
+## Advantages
 
 - No locking issues or leftover locks due to crashed afpd daemons any
   more. Since there is only one thread of control accessing the
@@ -157,7 +165,7 @@ Advantages:
   no corrective action is necessary. In any case, database consistency
   is assured.
 
-Disadvantages:
+## Disadvantages
 
 - Performance in an environment of processes sharing the database
   (files) is potentially better for two reasons:
@@ -180,7 +188,7 @@ Disadvantages:
   database access.
 
 
-Installation and configuration
+## Installation and configuration
 
 There are two executables that will be built in etc/cnid_dbd and
 installed into the systems binaries directories of netatalk
@@ -197,7 +205,7 @@ cnid_dbd changes to the Berkeley DB directory on startup and sets
 effective UID and GID to owner and group of that directory. Database and
 supporting files should therefore be writeable by that user/group.
 
-Current shortcomings:
+## Current shortcomings:
 
 - The parameter file parsing of db_param is very simpleminded. It is
 easy to cause buffer overruns and the like.
