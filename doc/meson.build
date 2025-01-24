@@ -23,22 +23,3 @@ if build_html_docs
 
     subdir('manual')
 endif
-
-if 'readmes' in get_option('with-docs') and cmarkgfm.found()
-    readmes = [
-        'DEVELOPER',
-    ]
-
-    if have_appletalk
-        readmes += [
-            'README.AppleTalk',
-        ]
-    endif
-
-    foreach file : readmes
-        install_data(
-            file,
-            install_dir: datadir / 'doc/netatalk',
-        )
-    endforeach
-endif

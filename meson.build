@@ -2343,40 +2343,41 @@ build_readme_docs = false
 if 'readmes' in get_option('with-docs') and cmarkgfm.found()
     build_readme_docs = true
 
-    readmes = [
-        'CONTRIBUTORS',
-        'NEWS',
-    ]
-
-    foreach file : readmes
-        install_data(
-            file,
-            install_dir: datadir / 'doc/netatalk',
-        )
-    endforeach
-
     readmes_md = [
+        'CONTRIBUTORS',
+        'DEVELOPER',
         'DOCKER',
         'INSTALL',
+        'NEWS',
         'README',
         'SECURITY',
     ]
 
+    if have_appletalk
+        readmes_md += [
+            'APPLETALK',
+        ]
+    endif
+
     foreach file : readmes_md
-        custom_target(
-            'readmes_' + file,
-            input: file + '.md',
-            output: file + '.txt',
-            command: [
-                cmarkgfm,
-                '--width', '80',
-                '--to', 'plaintext',
-                '@INPUT@',
-            ],
-            capture: true,
-            install: true,
-            install_dir: datadir / 'doc/netatalk',
-        )
+        if get_option('with-website')
+            install_data(file + '.md', install_dir: manual_install_path)
+        else
+            custom_target(
+                'readmes_' + file,
+                input: file + '.md',
+                output: file + '.txt',
+                command: [
+                    cmarkgfm,
+                    '--width', '80',
+                    '--to', 'plaintext',
+                    '@INPUT@',
+                ],
+                capture: true,
+                install: true,
+                install_dir: datadir / 'doc/netatalk',
+            )
+        endif
     endforeach
 else
     warning('cmark-gfm is required for markdown to text conversion of READMEs')
