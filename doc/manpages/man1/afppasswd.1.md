@@ -16,7 +16,7 @@ User Authentication Modules.
 user credentials, or by local system users with no parameters to change
 their own AFP passwords.
 
-> **Note**
+> **NOTE**
 
 > With this utility you can only change the passwords used by these two
 Random Number UAMs. As they provide only weak password encryption, their
@@ -46,7 +46,7 @@ Local user changing their own password:
 
 > Force the current action.
 
-`-p` \<path\>
+`-p` <path\>
 
 > Path to `afppasswd` file.
 
@@ -56,12 +56,12 @@ Local user changing their own password:
 cracklib checking to be disabled, if the superuser does not want to have
 the password run against the cracklib dictionary.
 
-`-u` \<minimum uid\>
+`-u` <minimum uid\>
 
 > This is the minimum *user id* (uid) that `afppasswd` will use when
 creating users.
 
-`-w` \<password string\>
+`-w` <password string\>
 
 > Use string as password, instead of typing it interactively. Please use
 this option only if absolutely necessary, since the password may remain

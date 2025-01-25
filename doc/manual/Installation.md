@@ -3,7 +3,7 @@
 > **WARNING**
 
 > Before upgrading to Netatalk 4 from an earlier version, please read the
-[upgrading](#upgrade) chapter in this manual.
+[[Upgrade]] chapter in this manual.
 
 ## How to obtain Netatalk
 

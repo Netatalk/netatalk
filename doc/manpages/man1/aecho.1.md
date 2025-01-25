@@ -39,7 +39,7 @@ Check to see if a particular host is up and responding to AEP packets:
 
 # Options
 
-`-c` \<count\>
+`-c` <count\>
 
 > Stop after *count* packets.
 

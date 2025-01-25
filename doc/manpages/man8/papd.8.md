@@ -40,17 +40,17 @@ as the NBP name, and all options take their default value.
 
 > Do not fork or disassociate from the terminal.
 
--f \<configfile\>
+-f <configfile\>
 
-> Consult \<configfile\> instead of `papd.conf` for the configuration
+> Consult <configfile\> instead of `papd.conf` for the configuration
 information.
 
--p \<printcap\>
+-p <printcap\>
 
-> Consult \<printcap\> instead of `/etc/printcap` for LPD configuration
+> Consult <printcap\> instead of `/etc/printcap` for LPD configuration
 information.
 
--P \<pidfile\>
+-P <pidfile\>
 
 > Specifies the file in which `papd` stores its process id.
 
@@ -93,7 +93,7 @@ authentication methods. The guest method requires a valid username, but
 not a password. The Cleartext UAM requires both a valid username and the
 correct password.
 
-> **Note**
+> **NOTE**
 
 > Print authentication is only supported on Mac OS 9 and earlier.
 

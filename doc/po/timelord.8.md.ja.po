@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -31,7 +31,8 @@ msgstr ""
 #: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
 #: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
-#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
 #, no-wrap
 msgid "Name"
 msgstr "名前"
@@ -154,7 +155,7 @@ msgstr "> デバッグ モード。つまり、制御 TTY から切り離され�
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:39 manpages/man8/timelord.8.md:35
 #, no-wrap
-msgid "`-n` \\<nbpname\\>\n"
+msgid "`-n` <nbpname\\>\n"
 msgstr ""
 
 #. type: Plain text

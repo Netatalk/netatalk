@@ -243,7 +243,7 @@ msgstr "> 実行中の統計を表示する\n"
 #: manpages/man1/dbd.1.md:43
 #, no-wrap
 msgid "> username for use with AFP volumes using user variable $u\n"
-msgstr "> ユーザ変数\\$uを使うAFPボリュームのユーザ名\n"
+msgstr "> ユーザ変数$uを使うAFPボリュームのユーザ名\n"
 
 #. type: Plain text
 #: manpages/man1/dbd.1.md:47

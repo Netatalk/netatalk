@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -266,23 +266,23 @@ msgstr ""
 #: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:48
 #: manpages/man8/papd.8.md:44
 #, no-wrap
-msgid "-f \\<configfile\\>\n"
+msgid "-f <configfile\\>\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:45
 #, no-wrap
 msgid ""
-"> Consult \\<configfile\\> instead of `atalkd.conf` for the configuration\n"
+"> Consult <configfile\\> instead of `atalkd.conf` for the configuration\n"
 "information.\n"
 msgstr ""
-"> 設定情報については、`atalkd.conf` ではなく、\\<configfile\\>\n"
+"> 設定情報については、`atalkd.conf` ではなく、<configfile\\>\n"
 "を参照する。\n"
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:47 manpages/man8/papd.8.md:54
 #, no-wrap
-msgid "-P \\<pidfile\\>\n"
+msgid "-P <pidfile\\>\n"
 msgstr ""
 
 #. type: Plain text

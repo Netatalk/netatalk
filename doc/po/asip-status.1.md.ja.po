@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -32,7 +32,8 @@ msgstr ""
 #: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
 #: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
-#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
 #, no-wrap
 msgid "Name"
 msgstr "名前"
@@ -177,21 +178,21 @@ msgstr ""
 #, no-wrap
 msgid ""
 "`asip-status` sends an FPGetSrvrInfo request to an AFP server at\n"
-"\\<HOSTNAME\\>:\\<PORT\\> and displays the results: \"Machine type\", the\n"
+"<HOSTNAME\\>:<PORT\\> and displays the results: \"Machine type\", the\n"
 "server's name, supported AFP versions, UAMs and AFP flags, the \"server\n"
 "signature\" and the network addresses that the server provides AFP\n"
 "services on.\n"
 msgstr ""
-"`asip-status`は、\\<HOSTNAME\\>:\\<PORT\\>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
+"`asip-status`は、<HOSTNAME\\>:<PORT\\>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
 "type\"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。\n"
 
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:23
 #, no-wrap
 msgid ""
-"When you don't supply \\<PORT\\>, then the default AFP port, 548, will be\n"
+"When you don't supply <PORT\\>, then the default AFP port, 548, will be\n"
 "used.\n"
-msgstr "\\<PORT\\>を与えない場合は、デフォルトのAFPポートである548が使われる。\n"
+msgstr "<PORT\\>を与えない場合は、デフォルトのAFPポートである548が使われる。\n"
 
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:27

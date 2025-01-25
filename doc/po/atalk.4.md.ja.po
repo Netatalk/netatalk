@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -176,11 +176,11 @@ msgstr "アドレス指定"
 #, no-wrap
 msgid ""
 "AppleTalk addresses are three byte quantities, stored in network byte\n"
-"order. The include file \\<*netatalk/at.h*\\> defines the AppleTalk\n"
+"order. The include file <*netatalk/at.h*\\> defines the AppleTalk\n"
 "address format.\n"
 msgstr ""
 "AppleTalk アドレスは 3 バイトの量で、ネットワーク バイト\n"
-"オーダーで保存される。インクルード ファイル \\<*netatalk/at.h*\\> は\n"
+"オーダーで保存される。インクルード ファイル <*netatalk/at.h*\\> は\n"
 "AppleTalk アドレス形式を定義する。\n"
 
 #. type: Plain text

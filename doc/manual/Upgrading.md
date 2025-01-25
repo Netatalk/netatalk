@@ -134,8 +134,8 @@ Implementation details:
 |----|----|----|
 | \- | `etc/afp.conf` | new ini-style format |
 | \- | `etc/extmap.conf` | starting with netatalk 3.0.2 |
-| `etc/netatalk/afp_signature.conf` | `var/netatalk/afp_signature.conf` | moved to \$localstatedir |
-| `etc/netatalk/afp_voluuid.conf` | `var/netatalk/afp_voluuid.conf` | moved to \$localstatedir |
+| `etc/netatalk/afp_signature.conf` | `var/netatalk/afp_signature.conf` | moved to $localstatedir |
+| `etc/netatalk/afp_voluuid.conf` | `var/netatalk/afp_voluuid.conf` | moved to $localstatedir |
 | `etc/netatalk/netatalk.conf` (`/etc/default/netatalk`) | \- | obsolete |
 | `etc/netatalk/afpd.conf` | \- | obsolete |
 | `etc/netatalk/afp_ldap.conf` | \- | obsolete |
@@ -150,11 +150,11 @@ Implementation details:
 | Old netatalk.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |
 |----|----|----|----|----|----|
 | ATALK_NAME | hostname | \- | \- | \(G\) | use gethostname() by default |
-| ATALK_UNIX_CHARSET | unix charset | **LOCALE** | **UTF8** | \(G\) | \- |
+| ATALK_UNIX_CHARSET | unix charset | LOCALE | UTF8 | \(G\) | \- |
 | ATALK_MAC_CHARSET | mac charset | MAC_ROMAN | MAC_ROMAN | (G)/(V) | \- |
 | CNID_METAD_RUN | \- | yes | \- | \- | controlled by netatalk(8) |
 | AFPD_RUN | \- | yes | \- | \- | controlled by netatalk(8) |
-| AFPD_MAX_CLIENTS | max connections | **20** | **200** | \(G\) | \- |
+| AFPD_MAX_CLIENTS | max connections | 20 | 200 | \(G\) | \- |
 | AFPD_UAMLIST | uam list | -U uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | \(G\) | \- |
 | AFPD_GUEST | guest account | nobody | nobody | \(G\) | \- |
 | CNID_CONFIG | log level | -l log_note | cnid:note | \(G\) | \- |
@@ -186,7 +186,7 @@ Implementation details:
 | -timeout | timeout | 4 | 4 | \(G\) | \- |
 | -sleep | sleep time | 10 | 10 | \(G\) | \- |
 | -dsireadbuf | dsireadbuf | 12 | 12 | \(G\) | \- |
-| -server_quantum | server quantum | **303840** | **1048576** | \(G\) | \- |
+| -server_quantum | server quantum | 303840 | 1048576 | \(G\) | \- |
 | -volnamelen | volnamelen | 80 | 80 | \(G\) | \- |
 | -setuplog | log level | default log_note | default:note | \(G\) | \- |
 | -setuplog | log file | \- | \- | \(G\) | \- |
@@ -194,13 +194,13 @@ Implementation details:
 | -k5service | k5 service | \- | \- | \(G\) | \- |
 | -k5realm | k5 realm | \- | \- | \(G\) | \- |
 | -k5keytab | k5 keytab | \- | \- | \(G\) | \- |
-| -uampath | uam path | **etc/netatalk/uams/** | **lib/netatalk/** | \(G\) | moved to \$libdir |
+| -uampath | uam path | etc/netatalk/uams/ | lib/netatalk/ | \(G\) | moved to $libdir |
 | -ipaddr | afp listen | \- | \- | \(G\) | \- |
 | -cnidserver | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | \- |
 | -port | port | 548 | 548 | \(G\) | \- |
 | -signature | signature | auto | \- | \(G\) | \- |
 | -fqdn | fqdn | \- | \- | \(G\) | \- |
-| -unixcodepage | unix charset | **LOCALE** | **UTF8** | \(G\) | \- |
+| -unixcodepage | unix charset | LOCALE | UTF8 | \(G\) | \- |
 | -maccodepage | mac charset | MAC_ROMAN | MAC_ROMAN | (G)/(V) | \- |
 | -closevol | close vol | \- | no | \(G\) | \- |
 | -ntdomain | nt domain | \- | \- | \(G\) | \- |
@@ -262,14 +262,14 @@ Implementation details:
 | deny: | invalid users | \- | \- | \(V\) | \- |
 | rwlist: | rwlist | \- | \- | \(V\) | \- |
 | rolist: | rolist | \- | \- | \(V\) | \- |
-| volcharset: | vol charset | **UTF8** | **(same as unix charset)** | (G)/(V) | \- |
+| volcharset: | vol charset | UTF8 | (same as unix charset) | (G)/(V) | \- |
 | maccharset: | mac charset | MAC_ROMAN | MAC_ROMAN | (G)/(V) | \- |
 | veto: | veto files | \- | \- | \(V\) | \- |
 | cnidscheme: | cnid scheme | dbd | dbd | \(V\) | \- |
 | casefold: | casefold | \- | \- | \(V\) | \- |
-| adouble: | appledouble | **v2** | **ea** | \(V\) | v1, osx and sfm are obsoleted |
+| adouble: | appledouble | v2 | ea | \(V\) | v1, osx and sfm are obsoleted |
 | cnidserver: | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | \- |
-| dbpath: | vol dbpath | **(volume directory)** | **var/netatalk/CNID/** | \(G\) | moved to \$localstatedir |
+| dbpath: | vol dbpath | (volume directory) | var/netatalk/CNID/ | \(G\) | moved to $localstatedir |
 | umask: | umask | 0000 | 0000 | \(V\) | \- |
 | dperm: | directory perm | 0000 | 0000 | \(V\) | \- |
 | fperm: | file perm | 0000 | 0000 | \(V\) | \- |

@@ -9,7 +9,7 @@ name extension mappings.
 
 The configuration lines are composed like:
 
-`.extension` \<\[ type \[ creator \] \]\>
+`.extension` <\[ type \[ creator \] \]\>
 
 Any line beginning with a hash (“#”) character is ignored. The
 leading-dot lines specify file name extension mappings. The extension

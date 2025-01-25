@@ -8,7 +8,7 @@ afp_signature.conf — Configuration file used by afpd to specify server signatu
 server signature automagically. The configuration lines are composed
 like:
 
-\<"server-name"\> \<hexa-string\>
+<"server-name"\> <hexa-string\>
 
 The first field is server name. Server names must be quoted if they
 contain spaces. The second field is the hexadecimal string of 32
@@ -17,7 +17,7 @@ characters for 16-bytes server signature.
 The leading spaces and tabs are ignored. Blank lines are ignored. The
 lines prefixed with \# are ignored. The illegal lines are ignored.
 
-> **Note**
+> **NOTE**
 
 > Server Signature is unique 16-bytes identifier used to prevent logging
 on to the same server twice.

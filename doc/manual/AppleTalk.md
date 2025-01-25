@@ -11,7 +11,7 @@ Netatalk implements the AppleTalk protocols to serve files over AFP and
 provide other services to old Mac and Apple II clients.
 
 A complete overview can be found inside the [developer
-documentation](https://github.com/Netatalk/netatalk/blob/main/doc/README.AppleTalk).
+documentation](https://netatalk.io/appletalk).
 
 ### To use AppleTalk or not
 
@@ -277,7 +277,7 @@ per segment
 
 Netatalk can act both as a PAP client to
 access AppleTalk-capable printers, and as a PAP server. The former by
-using the `(1)` utility and the latter by starting the `(8)` service.
+using the `pap(1)` utility and the latter by starting the `papd(8)` service.
 
 The "Printer Access Protocol" as part of the AppleTalk protocol suite is
 a fully 8 bit aware and bidirectional printing protocol, developed by
@@ -328,14 +328,14 @@ been implemented: direct interaction with CUPS (Note: when CUPS support
 is compiled in, then the SysV lpd support doesn't work at all). Detailed
 examples can be found in the `papd.conf(5)` manual page.
 
-#### Integrating `papd` with SysV lpd
+#### Integrating papd with SysV lpd
 
 Unless CUPS support has been compiled in (which is default from Netatalk
 2.0 on) one simply defines the lpd queue in question by setting the `pr`
 parameter to the queue name. If no `pr` parameter is set, the default
 printer will be used.
 
-#### Using pipes with `papd`
+#### Using pipes with papd
 
 An alternative to the technique outlined above is to direct papd's
 output via a pipe into another program. Using this mechanism almost all
@@ -359,7 +359,7 @@ settings for individual spoolers.
 
 ### Using AppleTalk printers
 
-Netatalk's `(8)` can be used to query AppleTalk printers, `(1)` to print
+Netatalk's `papstatus(8)` can be used to query AppleTalk printers, `pap(1)` to print
 to them.
 
 `pap` can be used stand-alone or as part of an output filter or a CUPS

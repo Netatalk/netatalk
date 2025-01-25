@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 16:47+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: 2025-01-24 23:25+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -43,7 +43,7 @@ msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:9
-msgid "[[Upgrade]]"
+msgid "[[Upgrading]]"
 msgstr "[[アップグレード]]"
 
 #. type: Plain text
@@ -213,17 +213,17 @@ msgstr "開発者参考資料"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:53
+msgid "[[atalk]]"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:53
 msgid "[[atalk_aton]]"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:53
 msgid "[[nbp_name]]"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:53
-msgid "[[atalk]]"
 msgstr ""
 
 #. type: Plain text

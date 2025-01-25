@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-25 21:35+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -14,6 +14,14 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
+#: manual/AppleTalk.md:154 manual/Configuration.md:838 manual/Installation.md:4
+#: manual/Upgrading.md:42
+#, no-wrap
+msgid "> **WARNING**\n"
+msgstr "> **警告**\n"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:137 manual/AppleTalk.md:351
@@ -65,10 +73,10 @@ msgstr ""
 #: manual/AppleTalk.md:15
 msgid ""
 "A complete overview can be found inside the [developer documentation]"
-"(https://github.com/Netatalk/netatalk/blob/main/doc/README.AppleTalk)."
+"(https://netatalk.io/appletalk)."
 msgstr ""
-"完全な概要は、[開発者向けドキュメント](https://github.com/Netatalk/netatalk/"
-"blob/main/doc/README.AppleTalk)  にある。"
+"完全な概要は、[開発者向けドキュメント](https://netatalk.io/appletalk) にあ"
+"る。"
 
 #. type: Title ###
 #: manual/AppleTalk.md:16
@@ -431,13 +439,6 @@ msgid "The so called \"default zone\" for this segment"
 msgstr "このセグメントのいわゆる「デフォルト ゾーン」"
 
 #. type: Plain text
-#: manual/AppleTalk.md:154 manual/Configuration.md:840 manual/Installation.md:4
-#: manual/Upgrade.md:42
-#, no-wrap
-msgid "> **WARNING**\n"
-msgstr "> **警告**\n"
-
-#. type: Plain text
 #: manual/AppleTalk.md:159
 #, no-wrap
 msgid ""
@@ -736,12 +737,12 @@ msgstr "印刷"
 #: manual/AppleTalk.md:281
 msgid ""
 "Netatalk can act both as a PAP client to access AppleTalk-capable printers, "
-"and as a PAP server. The former by using the `(1)` utility and the latter by "
-"starting the `(8)` service."
+"and as a PAP server. The former by using the `pap(1)` utility and the latter "
+"by starting the `papd(8)` service."
 msgstr ""
 "Netatalk は、AppleTalk 対応プリンタにアクセスするための PAP クライアントとし"
-"ても、PAP サーバとしても機能する。前者は `(1)` ユーティリティを使用し、後者"
-"は `(8)` サービスを起動することで行う。"
+"ても、PAP サーバとしても機能する。前者は `pap(1)` ユーティリティを使用し、後"
+"者は `papd(8)` サービスを起動することで行う。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:292
@@ -854,8 +855,8 @@ msgstr ""
 #. type: Title ####
 #: manual/AppleTalk.md:331
 #, no-wrap
-msgid "Integrating `papd` with SysV lpd"
-msgstr "`papd` と SysV lpd の統合"
+msgid "Integrating papd with SysV lpd"
+msgstr "papd と SysV lpd の統合"
 
 #. type: Plain text
 #: manual/AppleTalk.md:337
@@ -873,8 +874,8 @@ msgstr ""
 #. type: Title ####
 #: manual/AppleTalk.md:338
 #, no-wrap
-msgid "Using pipes with `papd`"
-msgstr "`papd` でパイプを使用する"
+msgid "Using pipes with papd"
+msgstr "papd でパイプを使用する"
 
 #. type: Plain text
 #: manual/AppleTalk.md:343
@@ -922,11 +923,11 @@ msgstr "AppleTalk プリンタの使用"
 #. type: Plain text
 #: manual/AppleTalk.md:364
 msgid ""
-"Netatalk's `(8)` can be used to query AppleTalk printers, `(1)` to print to "
-"them."
+"Netatalk's `papstatus(8)` can be used to query AppleTalk printers, `pap(1)` "
+"to print to them."
 msgstr ""
-"Netatalk の `(8)` は AppleTalk プリンタのクエリに使用でき、 `(1)` はプリンタ"
-"に印刷するのに使用できる。"
+"Netatalk の `papstatus(8)` は AppleTalk プリンタのクエリに使用でき、 "
+"`pap(1)` はプリンタに印刷するのに使用できる。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:368

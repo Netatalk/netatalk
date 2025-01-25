@@ -1,7 +1,7 @@
 manual_pages = [
     'Configuration',
     'Installation',
-    'Upgrade',
+    'Upgrading',
 ]
 
 if have_appletalk

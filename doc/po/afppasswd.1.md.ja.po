@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -32,7 +32,8 @@ msgstr ""
 #: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
 #: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
-#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
 #, no-wrap
 msgid "Name"
 msgstr "名前"
@@ -201,8 +202,9 @@ msgstr ""
 #: manpages/man5/afp.conf.5.md:370 manpages/man5/afp.conf.5.md:722
 #: manpages/man5/afp.conf.5.md:1048 manpages/man5/afp.conf.5.md:1173
 #: manpages/man5/afp.conf.5.md:1211 manpages/man8/papd.8.md:97
+#: manual/Configuration.md:114
 #, no-wrap
-msgid "> **Note**\n"
+msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
 
 #. type: Plain text
@@ -273,8 +275,8 @@ msgstr "> 現在の動作を強制する。\n"
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:50
 #, no-wrap
-msgid "`-p` \\<path\\>\n"
-msgstr "`-p` \\<パス\\>\n"
+msgid "`-p` <path\\>\n"
+msgstr "`-p` <パス\\>\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:52
@@ -299,7 +301,7 @@ msgstr "> もしcracklibサポートが*netatalk*に組み込まれており、c
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:60
 #, no-wrap
-msgid "`-u` \\<minimum uid\\>\n"
+msgid "`-u` <minimum uid\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -315,8 +317,8 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:65
 #, no-wrap
-msgid "`-w` \\<password string\\>\n"
-msgstr "`-w` \\<パスワード文字列\\>\n"
+msgid "`-w` <password string\\>\n"
+msgstr "`-w` <パスワード文字列\\>\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:69

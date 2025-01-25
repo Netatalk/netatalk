@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -175,9 +175,9 @@ msgstr ""
 #: manpages/man1/addump.1.md:28
 #, no-wrap
 msgid ""
-"With no \\<FILE\\>|\\<DIR\\>, or when \\<FILE\\>|\\<DIR\\> is '-', read standard\n"
+"With no <FILE\\>|<DIR\\>, or when <FILE\\>|<DIR\\> is '-', read standard\n"
 "input.\n"
-msgstr "\\<FILE\\>\\|\\<DIR\\>がない、または\\<FILE\\>\\|\\<DIR\\>が「-」であるとき、標準入力を読み込む。\n"
+msgstr "<FILE\\>\\|<DIR\\>がない、または<FILE\\>\\|<DIR\\>が「-」であるとき、標準入力を読み込む。\n"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
@@ -197,55 +197,55 @@ msgstr "オプション"
 #. type: Plain text
 #: manpages/man1/addump.1.md:32
 #, no-wrap
-msgid "`-a` \\[\\<FILE\\>|\\<DIR\\>\\]\n"
+msgid "`-a` \\[<FILE\\>|<DIR\\>\\]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:38
 #, no-wrap
 msgid ""
-"> This is the default. Dump AppleSingle/AppleDouble data for \\<FILE\\> or\n"
-"\\<DIR\\> automatically. If FILE is not in AppleSingle/AppleDouble format,\n"
-"look for extended attributes, \\<.AppleDouble/FILE\\> and \\<.\\_FILE\\>. If\n"
-"\\<DIR\\>, look for extended attributes, \\<DIR/.AppleDouble/.Parent\\> and\n"
-"\\<.\\_DIR\\>.\n"
-msgstr "> これがデフォルトである。\\<FILE\\>または\\<DIR\\>のためのAppleSingle/AppleDoubleデータを自動的にダンプする。もしFILEがAppleSingle/AppleDoubleフォーマットでないなら、拡張属性と\\<.AppleDouble/FILE\\>と\\<.\\_FILE\\>を探する。もし\\<DIR\\>なら、拡張属性と\\<DIR/.AppleDouble/.Parent\\>と\\<.\\_DIR\\>を探する。\n"
+"> This is the default. Dump AppleSingle/AppleDouble data for <FILE\\> or\n"
+"<DIR\\> automatically. If FILE is not in AppleSingle/AppleDouble format,\n"
+"look for extended attributes, <.AppleDouble/FILE\\> and <.\\_FILE\\>. If\n"
+"<DIR\\>, look for extended attributes, <DIR/.AppleDouble/.Parent\\> and\n"
+"<.\\_DIR\\>.\n"
+msgstr "> これがデフォルトである。<FILE\\>または<DIR\\>のためのAppleSingle/AppleDoubleデータを自動的にダンプする。もしFILEがAppleSingle/AppleDoubleフォーマットでないなら、拡張属性と<.AppleDouble/FILE\\>と<.\\_FILE\\>を探する。もし<DIR\\>なら、拡張属性と<DIR/.AppleDouble/.Parent\\>と<.\\_DIR\\>を探する。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:40
 #, no-wrap
-msgid "`-e` \\<FILE\\>|\\<DIR\\>\n"
+msgid "`-e` <FILE\\>|<DIR\\>\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:42
 #, no-wrap
-msgid "> Dump extended attributes of \\<FILE\\> or \\<DIR\\>.\n"
-msgstr "> \\<FILE\\>または\\<DIR\\>の拡張属性をダンプする。\n"
+msgid "> Dump extended attributes of <FILE\\> or <DIR\\>.\n"
+msgstr "> <FILE\\>または<DIR\\>の拡張属性をダンプする。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:44
 #, no-wrap
-msgid "`-f` \\[\\<FILE\\>\\]\n"
+msgid "`-f` \\[<FILE\\>\\]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:46
 #, no-wrap
-msgid "> Dump \\<FILE\\>. Assume FinderInfo to be FileInfo.\n"
-msgstr "> \\<FILE\\>をダンプする。FinderInfoがFileInfoであると仮定する。\n"
+msgid "> Dump <FILE\\>. Assume FinderInfo to be FileInfo.\n"
+msgstr "> <FILE\\>をダンプする。FinderInfoがFileInfoであると仮定する。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:48
 #, no-wrap
-msgid "`-d` \\[\\<FILE\\>\\]\n"
+msgid "`-d` \\[<FILE\\>\\]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:50
 #, no-wrap
-msgid "> Dump \\<FILE\\>. Assume FinderInfo to be DirInfo.\n"
-msgstr "> \\<FILE\\>をダンプする。FinderInfoがDirInfoであると仮定する。\n"
+msgid "> Dump <FILE\\>. Assume FinderInfo to be DirInfo.\n"
+msgstr "> <FILE\\>をダンプする。FinderInfoがDirInfoであると仮定する。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:52 manpages/man1/macusers.1.md:22

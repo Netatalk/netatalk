@@ -5,7 +5,7 @@ Manual
 * [[Installation]]
 * [[Configuration]]
 * [[AppleTalk]]
-* [[Upgrade]]
+* [[Upgrading]]
 
 User Tools
 
@@ -47,9 +47,9 @@ Daemons and Admin Tools
 
 Developer References
 
+* [[atalk]]
 * [[atalk_aton]]
 * [[nbp_name]]
-* [[atalk]]
 
 Appendices
 

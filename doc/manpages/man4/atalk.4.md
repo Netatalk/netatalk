@@ -19,7 +19,7 @@ libraries; and ADSP is planned.
 # Addressing
 
 AppleTalk addresses are three byte quantities, stored in network byte
-order. The include file \<*netatalk/at.h*\> defines the AppleTalk
+order. The include file <*netatalk/at.h*\> defines the AppleTalk
 address format.
 
 Sockets in the AppleTalk protocol family use the following address
