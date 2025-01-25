@@ -691,8 +691,8 @@ sub getAtalkIfs {
 			}
 			if($_ =~ /-dontroute/) {
 				$atalk{atalk_routing} = "-dontroute";
-			} elsif($_ =~ /-route/) {
-				$atalk{atalk_routing} = "-route";
+			} elsif($_ =~ /-router/) {
+				$atalk{atalk_routing} = "-router";
 			} elsif($_ =~ /-seed/) {
 				$atalk{atalk_routing} = "-seed";
 			}
