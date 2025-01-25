@@ -107,6 +107,7 @@ Optional:
   - libpam                           (for PAM support)
   - libtirpc or libquota             (for Quota support)
   - Perl                             (for admin scripts)
+  - po4a                             (for localization of the documentation)
   - tcpwrap                          (for TCP wrapper support)
   - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)                  (for regenerating Unicode lookup tables)
 
