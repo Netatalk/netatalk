@@ -178,6 +178,13 @@ functionality.
   version 5.8 or later. The required Perl modules include
   *IO::Socket::IP* (asip-status) and *Net::DBus* (afpstats).
 
+- po4a
+
+  With the help of po4a, Netatalk's documentation can be translated
+  into other languages. It uses gettext to extract translatable
+  strings from source files and merge them with the translations
+  stored in PO files.
+
 - TCP wrappers
 
   Wietse Venema's network logger, also known as TCPD or LOG_TCP.
