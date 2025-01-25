@@ -11,13 +11,13 @@ Project policy is to support a release series with security patches up to 12 mon
 
 | Version | Supported          | Planned End of Life |
 | ------- | ------------------ | ------------------- |
-| 4.1.x   | :white_check_mark: | Active development  |
-| 4.0.x   | :white_check_mark: | Jan 10, 2026        |
-| 3.2.x   | :white_check_mark: | Sep 28, 2025        |
-| 3.1.x   | :white_check_mark: | May 31, 2025        |
-| 3.0.x   | :x:                | -                   |
-| 2.4.x   | :white_check_mark: | Sep 28, 2025        |
-| < 2.4   | :x:                | -                   |
+| 4.1.x   | ✓                  | Active development  |
+| 4.0.x   | ✓                  | Jan 10, 2026        |
+| 3.2.x   | ✓                  | Sep 28, 2025        |
+| 3.1.x   | ✓                  | May 31, 2025        |
+| 3.0.x   | X                  | -                   |
+| 2.4.x   | ✓                  | Sep 28, 2025        |
+| < 2.4   | X                  | -                   |
 
 ## Reporting a Vulnerability
 
