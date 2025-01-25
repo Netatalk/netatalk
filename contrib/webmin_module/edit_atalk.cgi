@@ -53,7 +53,7 @@ print &ui_table_row($text{'edit_atalk_net'},
 print &ui_table_row($text{'edit_atalk_routing'},
 	&ui_select('atalk_routing', @atalk ? $atalk[$in{index}]{atalk_routing} : '', [
                         [''],
-			['-route', $text{edit_atalk_routing_route}],
+			['-router', $text{edit_atalk_routing_route}],
 			['-seed', $text{edit_atalk_routing_seed}],
 			['-dontroute', $text{edit_atalk_routing_dontroute}]
 		])
