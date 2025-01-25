@@ -35,7 +35,7 @@ markdown = [
   "Please note that these guides are automatically generated, and may not be optimized for your system.",
   "Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.",
   "",
-  "## Operating Systems",
+  "# Operating Systems",
   "",
 ]
 
