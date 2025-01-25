@@ -74,8 +74,8 @@ user can also specify the path a library if it is installed in an unconventional
 location.
 
 Please see `meson_options.txt` for full details of all Netatalk-specific options,
-and https://mesonbuild.com/Builtin-options.html for details of generic Meson
-options.
+and the [Meson documentation](https://mesonbuild.com/Builtin-options.html)
+for details of generic Meson options.
 
 ## External software dependencies
 
@@ -110,5 +110,6 @@ Optional:
   - tcpwrap                          (for TCP wrapper support)
   - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)                  (for regenerating Unicode lookup tables)
 
-More details about dependencies can be found in the documentation at
-https://netatalk.io/stable/htmldocs/installation
+More details about dependencies can be found in the
+[Installation chapter](https://netatalk.io/stable/htmldocs/installation)
+of the Netatalk manual.
