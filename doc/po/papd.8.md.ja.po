@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -157,8 +157,9 @@ msgstr "オプション"
 #: manpages/man5/afp.conf.5.md:370 manpages/man5/afp.conf.5.md:722
 #: manpages/man5/afp.conf.5.md:1048 manpages/man5/afp.conf.5.md:1173
 #: manpages/man5/afp.conf.5.md:1211 manpages/man8/papd.8.md:97
+#: manual/Configuration.md:114
 #, no-wrap
-msgid "> **Note**\n"
+msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
 
 #. type: Title #
@@ -195,13 +196,13 @@ msgstr "> バージョン情報を出力して終了する。\n"
 #: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:48
 #: manpages/man8/papd.8.md:44
 #, no-wrap
-msgid "-f \\<configfile\\>\n"
+msgid "-f <configfile\\>\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:47 manpages/man8/papd.8.md:54
 #, no-wrap
-msgid "-P \\<pidfile\\>\n"
+msgid "-P <pidfile\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -289,26 +290,26 @@ msgstr "> ターミナルからフォークまたは切断しません。\n"
 #: manpages/man8/papd.8.md:47
 #, no-wrap
 msgid ""
-"> Consult \\<configfile\\> instead of `papd.conf` for the configuration\n"
+"> Consult <configfile\\> instead of `papd.conf` for the configuration\n"
 "information.\n"
 msgstr ""
-"> 設定情報については、`papd.conf` ではなく、\\<configfile\\>\n"
+"> 設定情報については、`papd.conf` ではなく、<configfile\\>\n"
 "を参照してください。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:49
 #, no-wrap
-msgid "-p \\<printcap\\>\n"
+msgid "-p <printcap\\>\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:52
 #, no-wrap
 msgid ""
-"> Consult \\<printcap\\> instead of `/etc/printcap` for LPD configuration\n"
+"> Consult <printcap\\> instead of `/etc/printcap` for LPD configuration\n"
 "information.\n"
 msgstr ""
-"> LPD 構成情報については、`/etc/printcap` ではなく、\\<printcap\\>\n"
+"> LPD 構成情報については、`/etc/printcap` ではなく、<printcap\\>\n"
 "を参照してください。\n"
 
 #. type: Plain text

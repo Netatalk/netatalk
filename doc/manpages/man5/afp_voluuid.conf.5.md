@@ -7,7 +7,7 @@ afp_voluuid.conf — Configuration file used by afpd to specify UUID for AFP vol
 `afp_voluuid.conf` is the configuration file used by `afpd` to specify
 UUID of all AFP volumes. The configuration lines are composed like:
 
-\<"volume-name"\> \<uuid-string\>
+<"volume-name"\> <uuid-string\>
 
 The first field is volume name. Volume names must be quoted if they
 contain spaces. The second field is the 36 character hexadecimal ASCII
@@ -16,7 +16,7 @@ string representation of a UUID.
 The leading spaces and tabs are ignored. Blank lines are ignored. The
 lines prefixed with \# are ignored. The illegal lines are ignored.
 
-> **Note**
+> **NOTE**
 
 > This UUID is advertised by Zeroconf in order to provide robust
 disambiguation of Time Machine volumes.

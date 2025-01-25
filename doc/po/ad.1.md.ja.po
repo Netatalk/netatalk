@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -32,7 +32,8 @@ msgstr ""
 #: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
 #: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
-#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
 #, no-wrap
 msgid "Name"
 msgstr "名前"
@@ -186,7 +187,7 @@ msgstr "バージョンを表示する。"
 #. type: Plain text
 #: manpages/man1/ad.1.md:48
 #, no-wrap
-msgid "> `ad -v|--version`\n"
+msgid "> `ad -v | --version`\n"
 msgstr ""
 
 #. type: Title #
@@ -551,7 +552,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/ad.1.md:220
 #, no-wrap
-msgid "-t \\<type\\>\n"
+msgid "-t <type\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -563,7 +564,7 @@ msgstr "> ファイルの 4 文字のファイル タイプを変更する。\n"
 #. type: Plain text
 #: manpages/man1/ad.1.md:224
 #, no-wrap
-msgid "-c \\<creator\\>\n"
+msgid "-c <creator\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -575,7 +576,7 @@ msgstr "> ファイルの 4 文字の作成者タイプを変更する。\n"
 #. type: Plain text
 #: manpages/man1/ad.1.md:228
 #, no-wrap
-msgid "-l \\<label\\>\n"
+msgid "-l <label\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -587,7 +588,7 @@ msgstr "> ファイルの色ラベルを変更する。使用可能な色につ�
 #. type: Plain text
 #: manpages/man1/ad.1.md:232
 #, no-wrap
-msgid "-f \\<flags\\>\n"
+msgid "-f <flags\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -603,7 +604,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/ad.1.md:237
 #, no-wrap
-msgid "-a \\<attributes\\>\n"
+msgid "-a <attributes\\>\n"
 msgstr ""
 
 #. type: Plain text

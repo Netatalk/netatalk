@@ -38,28 +38,28 @@ facility *LOG_DAEMON*.
 
 # Options
 
--d \<debugclass\>
+-d <debugclass\>
 
 > Specifies that the daemon should not fork, and that a trace of all
 actions be written to *stdout*. See the source code for useful values of
 debugclass.
 
--f \<configfile\>
+-f <configfile\>
 
-> Consult \<configfile\> instead of `macipgw.conf` for the configuration
+> Consult <configfile\> instead of `macipgw.conf` for the configuration
 information.
 
--n \<nameserver\>
+-n <nameserver\>
 
 > Specifies the IP address of a DNS name server the AppleTalk devices
 connected through the gateway should use.
 
--u \<unprivileged-user\>
+-u <unprivileged-user\>
 
 > Drop root privileges and change to user unprivileged-user after the
 server has started.
 
--z \<zone\>
+-z <zone\>
 
 > Specifies that `macipgw` should register in zone instead of the default
 zone.
@@ -68,11 +68,11 @@ zone.
 
 > Show version information and exit.
 
-\<network\>
+<network\>
 
 > Specifies the network number to use for the clients.
 
-\<netmask\>
+<netmask\>
 
 > Specifies the netmask for the network.
 
@@ -107,4 +107,4 @@ devices are using the gateway.
 
 # Author
 
-Stefan Bethke \<Stefan.Bethke@Hanse.DE\>
+Stefan Bethke <Stefan.Bethke@Hanse.DE\>

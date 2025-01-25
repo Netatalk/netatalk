@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -223,7 +223,7 @@ msgstr "> デバッグ モードをオンにして、標準エラーに追加情
 #. type: Plain text
 #: manpages/man8/papstatus.8.md:32
 #, no-wrap
-msgid "`-p` \\<printer\\>\n"
+msgid "`-p` <printer\\>\n"
 msgstr ""
 
 #. type: Plain text

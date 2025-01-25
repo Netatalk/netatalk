@@ -5,8 +5,10 @@
 The Netatalk software package as well as this documentation are
 distributed under the GNU General Public License (GPL) version 2. A copy
 of the license is included in this documentation, as well as within the
-Netatalk source distribution. An on-line copy can be found at
-<http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt>
+Netatalk source distribution.
+
+The Free Software Foundation distributes an
+[online copy of the license](http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt).
 
 ## Overview of Netatalk
 

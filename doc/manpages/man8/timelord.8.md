@@ -31,7 +31,7 @@ latter requires tardis 1.4).
 > Return the time zone adjusted localtime of the server. The default
 behavior without this option is GMT.
 
-`-n` \<nbpname\>
+`-n` <nbpname\>
 
 > Register this server as *nbpname*. This defaults to the hostname.
 

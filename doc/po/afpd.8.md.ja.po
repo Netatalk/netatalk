@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 08:10+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -32,7 +32,8 @@ msgstr ""
 #: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
 #: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
-#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
 #, no-wrap
 msgid "Name"
 msgstr "名前"
@@ -242,7 +243,7 @@ msgstr "> ヘルプを表示してから終了する。\n"
 #. type: Plain text
 #: manpages/man8/afpd.8.md:38 manpages/man8/netatalk.8.md:24
 #, no-wrap
-msgid "-F \\<configfile\\>\n"
+msgid "-F <configfile\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -366,7 +367,7 @@ msgstr "> `afpd`プロセスはビルド時に設定したメッセージディ�
 
 #. type: Plain text
 #: manpages/man8/afpd.8.md:91 manpages/man8/netatalk.8.md:45
-#: manual/Upgrade.md:33
+#: manual/Upgrading.md:33
 msgid "`afp.conf`"
 msgstr ""
 
@@ -399,7 +400,7 @@ msgid "> list of UUID for Time Machine volume\n"
 msgstr "> Time MachineボリュームのUUIDのリスト\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:103 manual/Upgrade.md:47
+#: manpages/man8/afpd.8.md:103 manual/Upgrading.md:47
 msgid "`extmap.conf`"
 msgstr ""
 

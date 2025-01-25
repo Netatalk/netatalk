@@ -38,12 +38,12 @@ for details on the configuration file format.
 > Do not disassociate daemon from terminal. Writes some additional
 debugging information to stdout.
 
--f \<configfile\>
+-f <configfile\>
 
-> Consult \<configfile\> instead of `atalkd.conf` for the configuration
+> Consult <configfile\> instead of `atalkd.conf` for the configuration
 information.
 
--P \<pidfile\>
+-P <pidfile\>
 
 > Specifies the file in which `atalkd` stores its process id.
 

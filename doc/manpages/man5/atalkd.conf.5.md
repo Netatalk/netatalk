@@ -11,8 +11,8 @@ Any line not prefixed with *\#* is interpreted. Each interface has be
 configured on an uninterrupted line, with no support for split lines.
 The configuration line format is:
 
-*interface* \[ `-seed` \] \[ `-phase` \<number\> \] \[ `-net`
-\<net-range\> \] \[ `-addr` \<address\> \] \[ `-zone` \<zonename\> \]
+*interface* \[ `-seed` \] \[ `-phase` <number\> \] \[ `-net`
+<net-range\> \] \[ `-addr` <address\> \] \[ `-zone` <zonename\> \]
 ...
 
 The simplest case is to have either no atalkd.conf, or to have one that

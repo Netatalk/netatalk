@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 00:14+0100\n"
+"POT-Creation-Date: 2025-01-25 21:15+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -15,9 +15,29 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+#. type: Plain text
+#: manpages/man1/afppasswd.1.md:20 manpages/man5/afp_signature.conf.5.md:21
+#: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:318
+#: manpages/man5/afp.conf.5.md:342 manpages/man5/afp.conf.5.md:355
+#: manpages/man5/afp.conf.5.md:370 manpages/man5/afp.conf.5.md:722
+#: manpages/man5/afp.conf.5.md:1048 manpages/man5/afp.conf.5.md:1173
+#: manpages/man5/afp.conf.5.md:1211 manpages/man8/papd.8.md:97
+#: manual/Configuration.md:114
+#, no-wrap
+msgid "> **NOTE**\n"
+msgstr "> **注記**\n"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
+#: manual/AppleTalk.md:154 manual/Configuration.md:838 manual/Installation.md:4
+#: manual/Upgrading.md:42
+#, no-wrap
+msgid "> **WARNING**\n"
+msgstr "> **警告**\n"
+
 #. type: Title ###
-#: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:586
-#: manual/Configuration.md:834
+#: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:584
+#: manual/Configuration.md:832
 #, no-wrap
 msgid "Configuration"
 msgstr "設定"
@@ -27,13 +47,6 @@ msgstr "設定"
 #, no-wrap
 msgid "Authentication"
 msgstr "認証"
-
-#. type: Plain text
-#: manual/AppleTalk.md:154 manual/Configuration.md:840 manual/Installation.md:4
-#: manual/Upgrade.md:42
-#, no-wrap
-msgid "> **WARNING**\n"
-msgstr "> **警告**\n"
 
 #. type: Title #
 #: manual/Configuration.md:1
@@ -297,7 +310,7 @@ msgid ""
 "backends are available and can be\n"
 "selected with the `cnid scheme` option in\n"
 "the `afp.conf(5)` configuration file. A CNID backend is basically a\n"
-"database storing ID \\<-\\> name mappings.\n"
+"database storing ID <-\\> name mappings.\n"
 msgstr ""
 "Netatalk はホストのファイルシステム内で ID\n"
 "とファイルあるいはフォルダーのマップ（ID\n"
@@ -306,7 +319,7 @@ msgstr ""
 "バックエンドが用意されていて、`afp.conf(5)`\n"
 "設定ファイル内で `cnid scheme`\n"
 "オプションで選択が可能である。CNID\n"
-"バックエンドは基本的には、ストアされた ID \\<-\\>\n"
+"バックエンドは基本的には、ストアされた ID <-\\>\n"
 "名前を一対一対応させるデータベースである。\n"
 
 #. type: Plain text
@@ -327,12 +340,6 @@ msgid ""
 msgstr ""
 "CNID データベースの検証・修復・再構築のために用いることができる `dbd` という"
 "名のコマンドが用意されていている。"
-
-#. type: Plain text
-#: manual/Configuration.md:114
-#, no-wrap
-msgid "> **NOTE**\n"
-msgstr "> **注記**\n"
 
 #. type: Plain text
 #: manual/Configuration.md:117
@@ -1261,7 +1268,7 @@ msgstr "Netatalk UAM を概要表"
 
 #. type: Plain text
 #: manual/Configuration.md:481
-msgid "A small overview of the most common used UAMs."
+msgid "A small overview of the most commonly used UAMs."
 msgstr "最も一般的に用いられる UAM の概観。"
 
 #. type: Plain text
@@ -1286,12 +1293,7 @@ msgstr ""
 "| パスワードの保管方法 | なし | /etc/passwd (/etc/shadow) ないしは PAM | パスワードは別のテキストファイルに平文として保存される | /etc/passwd (/etc/shadow) ないしは PAM | /etc/passwd (/etc/shadow) ないしは PAM | Kerberos キー配布センター\\* |\n"
 
 #. type: Plain text
-#: manual/Configuration.md:491
-msgid "Netatalk UAM overview"
-msgstr "Netatalk UAM 概観"
-
-#. type: Plain text
-#: manual/Configuration.md:494
+#: manual/Configuration.md:492
 msgid ""
 "\\* Have a look at this [Kerberos overview](https://web.archive.org/web/"
 "20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)"
@@ -1300,13 +1302,13 @@ msgstr ""
 "cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)  も一読のこと"
 
 #. type: Title ###
-#: manual/Configuration.md:495
+#: manual/Configuration.md:493
 #, no-wrap
 msgid "SSH tunneling"
 msgstr "SSH トンネリング"
 
 #. type: Plain text
-#: manual/Configuration.md:501
+#: manual/Configuration.md:499
 msgid ""
 "Tunneling and VPNs usually have nothing to do with AFP authentication and "
 "UAMs. But since Apple introduced an option called \"Allow Secure Connections "
@@ -1318,13 +1320,13 @@ msgstr ""
 "下ではその点についても述べる。"
 
 #. type: Title ####
-#: manual/Configuration.md:502
+#: manual/Configuration.md:500
 #, no-wrap
 msgid "Manually tunneling an AFP session"
 msgstr "手動で AFP セッションをトンネリング"
 
 #. type: Plain text
-#: manual/Configuration.md:508
+#: manual/Configuration.md:506
 msgid ""
 "This works since the first AFP servers that spoke \"AFP over TCP\" appeared "
 "in networks. One simply tunnels the remote server's AFP port to a local port "
@@ -1337,13 +1339,13 @@ msgstr ""
 "だけである。macOS では以下のようにすればよい。"
 
 #. type: Plain text
-#: manual/Configuration.md:510
+#: manual/Configuration.md:508
 #, no-wrap
 msgid "    ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:517
+#: manual/Configuration.md:515
 msgid ""
 "After establishing the tunnel one will use `\"afp://127.0.0.1:10548\"` in "
 "the \"Connect to server\" dialog. All AFP traffic including the initial "
@@ -1358,7 +1360,7 @@ msgstr ""
 "も含めて全ての AFP トラフィックがネットワークを暗号化されて送られる。"
 
 #. type: Plain text
-#: manual/Configuration.md:523
+#: manual/Configuration.md:521
 msgid ""
 "This sort of tunnel is an ideal solution if you must access an AFP server "
 "through the Internet without having the ability or desire to use a \"real\" "
@@ -1374,13 +1376,13 @@ msgstr ""
 "る。"
 
 #. type: Title ####
-#: manual/Configuration.md:524
+#: manual/Configuration.md:522
 #, no-wrap
 msgid "Automatically establishing a tunneled AFP connection"
 msgstr "自動的にトンネル AFP 接続を確立する"
 
 #. type: Plain text
-#: manual/Configuration.md:531
+#: manual/Configuration.md:529
 msgid ""
 "From Mac OS X 10.2 to 10.4, Apple added an \"Allow Secure Connections Using "
 "SSH\" checkbox to the \"Connect to Server\" dialog. The idea behind this "
@@ -1395,7 +1397,7 @@ msgstr ""
 "を通して送る。ということなのである。"
 
 #. type: Plain text
-#: manual/Configuration.md:536
+#: manual/Configuration.md:534
 msgid ""
 "But it took until the release of Mac OS X 10.3 that this feature worked the "
 "first time... partly. In case, the SSH tunnel could not be established and "
@@ -1407,7 +1409,7 @@ msgstr ""
 "暗号化していない AFP 接続試行にフォールバックした。"
 
 #. type: Plain text
-#: manual/Configuration.md:542
+#: manual/Configuration.md:540
 msgid ""
 "Netatalk's afpd will report that it is capable of handling SSH tunneled AFP "
 "requests, when both \"`advertise ssh`\" and \"`fqdn`\" options are set in "
@@ -1422,7 +1424,7 @@ msgstr ""
 "なる２、３の理由がある："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:547
+#: manual/Configuration.md:545
 msgid ""
 "Most users who need such a feature are probably already familiar with using "
 "a VPN; it might be easier for the user to employ the same VPN software in "
@@ -1434,7 +1436,7 @@ msgstr ""
 "ワークに接続し、 AFP サーバーにアクセスする方が簡単だろう。"
 
 #. type: Plain text
-#: manual/Configuration.md:553
+#: manual/Configuration.md:551
 #, no-wrap
 msgid ""
 "  That being said, for the simple case of connecting to one specific AFP\n"
@@ -1451,7 +1453,7 @@ msgstr ""
 "  TCP データをカプセル化していないためである。\n"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:559
+#: manual/Configuration.md:557
 msgid ""
 "Since this SSH kludge isn't a normal UAM that integrates directly into the "
 "AFP authentication mechanisms but instead uses a single flag signalling "
@@ -1464,7 +1466,7 @@ msgstr ""
 "がおかしい時に何が起こっているのかを見ようとする気を失ってしまう。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:563
+#: manual/Configuration.md:561
 msgid ""
 "You cannot control which machines are logged on by Netatalk tools like a "
 "`macusers` since all connection attempts seem to be made from localhost."
@@ -1474,7 +1476,7 @@ msgstr ""
 "い。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:568
+#: manual/Configuration.md:566
 msgid ""
 "Indeed, to ensure that all AFP sessions are encrypted via SSH, you need to "
 "limit afpd to connections that originate only from localhost (e.g., by using "
@@ -1487,7 +1489,7 @@ msgstr ""
 "トフィルタリング機能を使用するなど。"
 
 #. type: Plain text
-#: manual/Configuration.md:574
+#: manual/Configuration.md:572
 #, no-wrap
 msgid ""
 "  Otherwise, when you're using Mac OS X 10.2 through 10.3.3, you get the\n"
@@ -1503,7 +1505,7 @@ msgstr ""
 "  Mac OS X 10.3.4 になってそれをはじめて修正した。\n"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:580
+#: manual/Configuration.md:578
 msgid ""
 "Encrypting all AFP sessions via SSH can lead to a significantly higher load "
 "on the computer that is running the AFP server, because that computer must "
@@ -1515,13 +1517,13 @@ msgstr ""
 "ている場合、そのような暗号化は無駄かもしれない。"
 
 #. type: Title ##
-#: manual/Configuration.md:581
+#: manual/Configuration.md:579
 #, no-wrap
 msgid "ACL Support"
 msgstr "ACL のサーポート"
 
 #. type: Plain text
-#: manual/Configuration.md:585
+#: manual/Configuration.md:583
 msgid ""
 "ACL support for AFP is implemented for ZFS ACLs on Solaris and derived "
 "platforms and for POSIX 1e ACLs on Linux."
@@ -1530,7 +1532,7 @@ msgstr ""
 "Linux の POSIX 1e ACL で実装されている。"
 
 #. type: Plain text
-#: manual/Configuration.md:597
+#: manual/Configuration.md:595
 msgid ""
 "For a basic mode of operation there's nothing to configure. Netatalk reads "
 "ACLs on the fly and calculates effective permissions which are then send to "
@@ -1551,7 +1553,7 @@ msgstr ""
 "できないであろう。"
 
 #. type: Plain text
-#: manual/Configuration.md:603
+#: manual/Configuration.md:601
 msgid ""
 "By default, the effective permission of the authenticated user are only "
 "mapped to the mentioned UARightspermission structure, not the UNIX mode. You "
@@ -1563,7 +1565,7 @@ msgstr ""
 "(#map_acls) で修正することができる。"
 
 #. type: Plain text
-#: manual/Configuration.md:613
+#: manual/Configuration.md:611
 msgid ""
 "However, neither in Finder \"Get Info\" windows nor in the Terminal will you "
 "be able to see the ACLs, because of how ACLs in macOS are designed.  If you "
@@ -1586,7 +1588,7 @@ msgstr ""
 "付けた UNIX uid と gid も含めたサーバー側の ACL を返すことができる。"
 
 #. type: Plain text
-#: manual/Configuration.md:618
+#: manual/Configuration.md:616
 msgid ""
 "Netatalk can query a directory server using LDAP queries. Either the "
 "directory server already provides an UUID attribute for user and groups "
@@ -1600,17 +1602,17 @@ msgstr ""
 "れかである。"
 
 #. type: Plain text
-#: manual/Configuration.md:620
+#: manual/Configuration.md:618
 msgid "In detail:"
 msgstr "より踏み込むと："
 
 #. type: Bullet: '1.  '
-#: manual/Configuration.md:622
+#: manual/Configuration.md:620
 msgid "For Solaris/ZFS: ZFS Volumes"
 msgstr "ZFS を使っている Solarisの ZFS ボリュームごとに対して、"
 
 #. type: Plain text
-#: manual/Configuration.md:625
+#: manual/Configuration.md:623
 #, no-wrap
 msgid ""
 "    You should configure a ZFS ACL know for any volume you want to use\n"
@@ -1620,7 +1622,7 @@ msgstr ""
 "    がわかるように構成すべきである：\n"
 
 #. type: Plain text
-#: manual/Configuration.md:628
+#: manual/Configuration.md:626
 #, no-wrap
 msgid ""
 "        aclinherit = passthrough\n"
@@ -1628,7 +1630,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:631
+#: manual/Configuration.md:629
 #, no-wrap
 msgid ""
 "    For an explanation of what this knob does and how to apply it, check\n"
@@ -1638,12 +1640,12 @@ msgstr ""
 "    ZFS ドキュメンテーション（例えば man zfs）を確認のこと。\n"
 
 #. type: Bullet: '2.  '
-#: manual/Configuration.md:633
+#: manual/Configuration.md:631
 msgid "Authentication Domain"
 msgstr "認証ドメイン"
 
 #. type: Plain text
-#: manual/Configuration.md:640
+#: manual/Configuration.md:638
 #, no-wrap
 msgid ""
 "    Your server and the clients must be part of a security association\n"
@@ -1661,7 +1663,7 @@ msgstr ""
 "    UUID は ASCII テキストとして保管されている。言い換えれば：\n"
 
 #. type: Bullet: '    - '
-#: manual/Configuration.md:643
+#: manual/Configuration.md:641
 msgid ""
 "you need an Open Directory Server or an LDAP server where you store UUIDs in "
 "some attribute"
@@ -1670,20 +1672,20 @@ msgstr ""
 "サーバーが必要である。"
 
 #. type: Bullet: '    - '
-#: manual/Configuration.md:645
+#: manual/Configuration.md:643
 msgid "your clients must be configured to use this server"
 msgstr ""
 "クライアントはこのサーバーを使用するように構成されていなければならない。"
 
 #. type: Bullet: '    - '
-#: manual/Configuration.md:648
+#: manual/Configuration.md:646
 msgid ""
 "your server should be configured to use this server via nsswitch and PAM"
 msgstr ""
 "サーバーは nsswitch と PAM 経由で使用されるよう構成しなければならない。"
 
 #. type: Bullet: '    - '
-#: manual/Configuration.md:653
+#: manual/Configuration.md:651
 msgid ""
 "configure Netatalk via the special [LDAP options for ACLs](#acl_options) in "
 "[afp.conf](#afp.conf.5) so that Netatalk is able to retrieve the UUID for "
@@ -1694,13 +1696,13 @@ msgstr ""
 "Netatalk を設定しなければならない。"
 
 #. type: Title ###
-#: manual/Configuration.md:654
+#: manual/Configuration.md:652
 #, no-wrap
 msgid "macOS ACLs"
 msgstr "macOS の ACL"
 
 #. type: Plain text
-#: manual/Configuration.md:660
+#: manual/Configuration.md:658
 msgid ""
 "With Access Control Lists (ACLs), macOS offers a powerful extension of the "
 "traditional UNIX permissions model. An ACL is an ordered list of Access "
@@ -1713,7 +1715,7 @@ msgstr ""
 "リストである。"
 
 #. type: Plain text
-#: manual/Configuration.md:665
+#: manual/Configuration.md:663
 msgid ""
 "Unlike UNIX permissions, which are bound to user or group IDs, ACLs are tied "
 "to UUIDs. For this reason accessing an object's ACL requires server and "
@@ -1726,7 +1728,7 @@ msgstr ""
 "てくれる、共通のディレクトリサービスを使うことを要求される。"
 
 #. type: Plain text
-#: manual/Configuration.md:677
+#: manual/Configuration.md:675
 msgid ""
 "ACLs and UNIX permissions interact in a rather simple way. As ACLs are "
 "optional UNIX permissions act as a default mechanism for access control.  "
@@ -1751,13 +1753,13 @@ msgstr ""
 "つまり、ACL は常に UNIX のパーミションより優先順位が上位ということである。"
 
 #. type: Title ###
-#: manual/Configuration.md:678
+#: manual/Configuration.md:676
 #, no-wrap
 msgid "ZFS ACLs"
 msgstr "ZFS の ACL"
 
 #. type: Plain text
-#: manual/Configuration.md:682
+#: manual/Configuration.md:680
 msgid ""
 "ZFS ACLs closely match macOS ACLs. Both offer mostly identical fine grained "
 "permissions and inheritance settings."
@@ -1766,19 +1768,19 @@ msgstr ""
 "粒度のパーミションと設定の継承が提供されている。"
 
 #. type: Title ###
-#: manual/Configuration.md:683
+#: manual/Configuration.md:681
 #, no-wrap
 msgid "POSIX ACLs"
 msgstr "POSIX の ACL"
 
 #. type: Title ####
-#: manual/Configuration.md:685
+#: manual/Configuration.md:683
 #, no-wrap
 msgid "Overview"
 msgstr "概要"
 
 #. type: Plain text
-#: manual/Configuration.md:691
+#: manual/Configuration.md:689
 msgid ""
 "Compared to macOS or NFSv4 ACLs, POSIX ACLs represent a different, less "
 "versatile approach to overcome the limitations of the traditional UNIX "
@@ -1790,7 +1792,7 @@ msgstr ""
 "Posix 標準を取り込んだものを基礎としている。"
 
 #. type: Plain text
-#: manual/Configuration.md:699
+#: manual/Configuration.md:697
 msgid ""
 "The standard defines two types of ACLs. Files and directories can have "
 "access ACLs which are consulted for access checks. Directories can also have "
@@ -1808,14 +1810,14 @@ msgstr ""
 "を継承する。 継承制御にそれ以上のメカニズムは何もない。"
 
 #. type: Plain text
-#: manual/Configuration.md:702
+#: manual/Configuration.md:700
 msgid ""
 "Architectural differences between POSIX ACLs and macOS ACLs especially "
 "involve:"
 msgstr "設計上、Posix ACL と macOS 間の違いに含まれている特筆すべき点は："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:705
+#: manual/Configuration.md:703
 msgid ""
 "No fine-granular permissions model. Like UNIX permissions POSIX ACLs only "
 "differentiate between read, write and execute permissions."
@@ -1824,12 +1826,12 @@ msgstr ""
 "ACL は読み込み、書き込み、そして実行権限を区別している。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:707
+#: manual/Configuration.md:705
 msgid "Entries within an ACL are unordered."
 msgstr "ACL 内のエントリーに順序はない。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:710
+#: manual/Configuration.md:708
 msgid ""
 "POSIX ACLs can only grant rights. There is no way to explicitly deny rights "
 "by an entry."
@@ -1838,12 +1840,12 @@ msgstr ""
 "する手立てはない。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:712
+#: manual/Configuration.md:710
 msgid "UNIX permissions are integrated into an ACL as special entries."
 msgstr "UNIX パーミションは特別なエントリーとして ACL に統合されている。"
 
 #. type: Plain text
-#: manual/Configuration.md:717
+#: manual/Configuration.md:715
 msgid ""
 "POSIX 1003.1e defines 6 different types of ACL entries. The first three "
 "types are used to integrate standard UNIX permissions. They form a minimal "
@@ -1856,37 +1858,37 @@ msgstr ""
 "つのエントリーだけが ACL 内に許される。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:719
+#: manual/Configuration.md:717
 msgid "ACL_USER_OBJ: the owner's access rights."
 msgstr "ACL_USER_OBJ：所有ユーザー（オーナー）のアクセス権限。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:721
+#: manual/Configuration.md:719
 msgid "ACL_GROUP_OBJ: the owning group's access rights."
 msgstr "ACL_GROUP_OBJ：所有グループ（オーナーグループ）のアクセス権限。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:723
+#: manual/Configuration.md:721
 msgid "ACL_OTHER: everybody's access rights."
 msgstr "ACL_OTHER：あらゆるユーザー・グループに対するアクセス権限。"
 
 #. type: Plain text
-#: manual/Configuration.md:725
+#: manual/Configuration.md:723
 msgid "The remaining entry types expand the traditional permissions model:"
 msgstr "残りのエントリーのタイプは伝統的パーミションモデルの拡張である："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:727
+#: manual/Configuration.md:725
 msgid "ACL_USER: grants access rights to a certain user."
 msgstr "ACL_USER：あるユーザーに対するアクセス権を許可する。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:729
+#: manual/Configuration.md:727
 msgid "ACL_GROUP: grants access rights to a certain group."
 msgstr "ACL_GROUP：あるグループに対するアクセス権を許可する。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:735
+#: manual/Configuration.md:733
 msgid ""
 "ACL_MASK: limits the maximum access rights which can be granted by entries "
 "of type ACL_GROUP_OBJ, ACL_USER and ACL_GROUP. As the name suggests, this "
@@ -1902,7 +1904,7 @@ msgstr ""
 "ンである。"
 
 #. type: Plain text
-#: manual/Configuration.md:741
+#: manual/Configuration.md:739
 msgid ""
 "In order to maintain compatibility with applications not aware of ACLs, "
 "POSIX 1003.1e changes the semantics of system calls and utilities which "
@@ -1917,7 +1919,7 @@ msgstr ""
 "エントリーの値に対応する。"
 
 #. type: Plain text
-#: manual/Configuration.md:748
+#: manual/Configuration.md:746
 msgid ""
 "However, if the ACL also contains an ACL_MASK entry, the behavior of those "
 "system calls and utilities is different. The group permissions bits of the "
@@ -1934,13 +1936,13 @@ msgstr ""
 "のエンティティ全てを無効にするのである。"
 
 #. type: Title ####
-#: manual/Configuration.md:749
+#: manual/Configuration.md:747
 #, no-wrap
 msgid "Mapping POSIX ACLs to macOS ACLs"
 msgstr "POSIX ACL から macOS の ACL へのマッピング"
 
 #. type: Plain text
-#: manual/Configuration.md:757
+#: manual/Configuration.md:755
 msgid ""
 "When a client wants to read an object's ACL, afpd maps its POSIX ACL onto an "
 "equivalent macOS ACL. Writing an object's ACL requires afpd to map an macOS "
@@ -1955,7 +1957,7 @@ msgstr ""
 "ね同じになるような正確なマッピングを見出すことは通常不可能である。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:760
+#: manual/Configuration.md:758
 msgid ""
 "afpd silently discard entries which deny a set of permissions because they "
 "they can't be represented within the POSIX architecture."
@@ -1964,7 +1966,7 @@ msgstr ""
 "Posix の設計では表現する手立てがないためである。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:763
+#: manual/Configuration.md:761
 msgid ""
 "As entries within POSIX ACLs are unordered, it is impossible to preserve "
 "order."
@@ -1973,12 +1975,12 @@ msgstr ""
 "る。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:765
+#: manual/Configuration.md:763
 msgid "Inheritance control is subject to severe limitations as well:"
 msgstr "継承制御もまた厳しい制限を受けやすい："
 
 #. type: Bullet: '  - '
-#: manual/Configuration.md:768
+#: manual/Configuration.md:766
 msgid ""
 "Entries with the only_inherit flag set will only become part of the "
 "directory's default ACL."
@@ -1987,7 +1989,7 @@ msgstr ""
 "部にしかならない。"
 
 #. type: Bullet: '  - '
-#: manual/Configuration.md:773
+#: manual/Configuration.md:771
 msgid ""
 "Entries with at least one of the flags file_inherit, directory_inherit or "
 "limit_inherit set, will become part of the directory's access and default "
@@ -1998,7 +2000,7 @@ msgstr ""
 "しかし継承に課せられた制約は無視される。"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:776
+#: manual/Configuration.md:774
 msgid ""
 "The lack of a fine-granular permission model on the POSIX side will normally "
 "result in an increase of granted permissions."
@@ -2007,7 +2009,7 @@ msgstr ""
 "許可されるパーミションが増えるという結果になる。"
 
 #. type: Plain text
-#: manual/Configuration.md:790
+#: manual/Configuration.md:788
 msgid ""
 "As macOS clients aren't aware of the POSIX 1003.1e specific relationship "
 "between UNIX permissions and ACL_MASK, afpd does not expose this feature to "
@@ -2036,13 +2038,13 @@ msgstr ""
 "ACL_MASK の値の再計算を afpd が行う。"
 
 #. type: Title ##
-#: manual/Configuration.md:791
+#: manual/Configuration.md:789
 #, no-wrap
 msgid "Filesystem Change Events"
 msgstr "ファイルシステム変更イベント"
 
 #. type: Plain text
-#: manual/Configuration.md:796
+#: manual/Configuration.md:794
 msgid ""
 "Netatalk includes a nifty filesystem change event (FCE) mechanism where afpd "
 "processes notify interested listeners about certain filesystem event by UDP "
@@ -2054,7 +2056,7 @@ msgstr ""
 "経由で通知する。"
 
 #. type: Plain text
-#: manual/Configuration.md:800
+#: manual/Configuration.md:798
 msgid ""
 "For the format of the UDP packets and for an example C application that "
 "demonstrates how to use these in a listener, take a look at the Netatalk "
@@ -2065,62 +2067,62 @@ msgstr ""
 "ソースファイル `bin/misc/fce.c` に目を通していただきたい。"
 
 #. type: Plain text
-#: manual/Configuration.md:802
+#: manual/Configuration.md:800
 msgid "The currently supported FCE v1 events are:"
 msgstr "現在サポートされているファイルシステム変更イベントは以下である："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:804
+#: manual/Configuration.md:802
 msgid "file modification (fmod)"
 msgstr "ファイル変更：file modification (fmod)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:806
+#: manual/Configuration.md:804
 msgid "file deletion (fdel)"
 msgstr "ファイル削除：file deletion (fdel)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:808
+#: manual/Configuration.md:806
 msgid "directory deletion (ddel)"
 msgstr "ディレクトリ削除：directory deletion (ddel)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:810
+#: manual/Configuration.md:808
 msgid "file creation (fcre)"
 msgstr "ファイル作成：file creation (fcre)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:812
+#: manual/Configuration.md:810
 msgid "directory creation (dcre)"
 msgstr "ディレクトリ削除：directory deletion (ddel)"
 
 #. type: Plain text
-#: manual/Configuration.md:814
+#: manual/Configuration.md:812
 msgid "When using FCE v2 you also get:"
 msgstr "FCE v2 の場合はする際には下記イベントも使用可能："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:816
+#: manual/Configuration.md:814
 msgid "file moving (fmov)"
 msgstr "ファイル移動 (fmov)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:818
+#: manual/Configuration.md:816
 msgid "directory moving (dmov)"
 msgstr "ディレクトリー移動 (dmov)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:820
+#: manual/Configuration.md:818
 msgid "user login (login)"
 msgstr "ユーザーログイン (login)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:822
+#: manual/Configuration.md:820
 msgid "user logout (logout)"
 msgstr "ユーザーログアウト (logout)"
 
 #. type: Plain text
-#: manual/Configuration.md:825
+#: manual/Configuration.md:823
 msgid ""
 "For details on the available simple configuration options, take a look at "
 "`afp.conf`."
@@ -2129,13 +2131,13 @@ msgstr ""
 "だきたい。"
 
 #. type: Title ##
-#: manual/Configuration.md:826
+#: manual/Configuration.md:824
 #, no-wrap
 msgid "Spotlight"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:833
+#: manual/Configuration.md:831
 msgid ""
 "Starting with version 3.1 Netatalk supports Spotlight searching.  Netatalk "
 "uses GNOME [Tracker](https://projects.gnome.org/tracker/) or its later "
@@ -2149,7 +2151,7 @@ msgstr ""
 "を用いる。"
 
 #. type: Plain text
-#: manual/Configuration.md:838
+#: manual/Configuration.md:836
 msgid ""
 "You can enable Spotlight and indexing either globally or on a per volume "
 "basis with the `spotlight` option."
@@ -2158,7 +2160,7 @@ msgstr ""
 "Spotlight とインデックス化を有効にできる。"
 
 #. type: Plain text
-#: manual/Configuration.md:843
+#: manual/Configuration.md:841
 #, no-wrap
 msgid ""
 "> Once Spotlight is enabled for a single volume, all other volumes for\n"
@@ -2168,7 +2170,7 @@ msgstr ""
 "が無効にされたことになるその他全てのボリュームでは全く検索できないようになる。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:847
+#: manual/Configuration.md:845
 msgid ""
 "The `dbus-daemon` binary has to be installed for Spotlight feature. The path "
 "to dbus-daemon is determined at compile time the dbus-daemon build system "
@@ -2179,7 +2181,7 @@ msgstr ""
 "定する。"
 
 #. type: Plain text
-#: manual/Configuration.md:851
+#: manual/Configuration.md:849
 msgid ""
 "In case the `dbus-daemon` binary is installed at the other path, you must "
 "use the global option `dbus daemon` to point to the path, e.g. for Solaris "
@@ -2190,24 +2192,24 @@ msgstr ""
 "Solaris 上で OpenCSW 由来の Tracker を用いている場合は以下のようにする："
 
 #. type: Plain text
-#: manual/Configuration.md:853
+#: manual/Configuration.md:851
 #, no-wrap
 msgid "    dbus daemon = /opt/csw/bin/dbus-daemon\n"
 msgstr ""
 
 #. type: Title ####
-#: manual/Configuration.md:854
+#: manual/Configuration.md:852
 #, no-wrap
 msgid "Limitations and notes"
 msgstr "制限と注意"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:857
+#: manual/Configuration.md:855
 msgid "Large filesystems"
 msgstr "大きいファイルシステム"
 
 #. type: Plain text
-#: manual/Configuration.md:863
+#: manual/Configuration.md:861
 #, no-wrap
 msgid ""
 "  Tracker on Linux uses the inotify Kernel filesystem change event API\n"
@@ -2223,7 +2225,7 @@ msgstr ""
 "  代わりにあらゆるサブディレクトリの監視が各々で追加されなければならないということを要求してくるからである。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:867
+#: manual/Configuration.md:865
 #, no-wrap
 msgid ""
 "  On Solaris the FEN file event notification system is used. It is\n"
@@ -2235,7 +2237,7 @@ msgstr ""
 "  のサブシステムではどんな制限とリソース消費があるのか不明である。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:872
+#: manual/Configuration.md:870
 #, no-wrap
 msgid ""
 "  We therefore recommend to disable live filesystem monitoring and let\n"
@@ -2249,12 +2251,12 @@ msgstr ""
 "  [crawling-interval](#crawling-interval) を参照のこと。\n"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:874
+#: manual/Configuration.md:872
 msgid "Indexing home directories"
 msgstr "home ディレクトリのインデックスは作成されない"
 
 #. type: Plain text
-#: manual/Configuration.md:877
+#: manual/Configuration.md:875
 #, no-wrap
 msgid ""
 "  A known limitation with the current implementation means that shared\n"
@@ -2265,7 +2267,7 @@ msgstr ""
 "  によってインデックス付けされない。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:880
+#: manual/Configuration.md:878
 #, no-wrap
 msgid ""
 "  As a workaround, keep the shared volumes you want to have indexed\n"
@@ -2273,13 +2275,13 @@ msgid ""
 msgstr "  回避策として、ファイルシステム別場所に共有ボリュームを設定する。\n"
 
 #. type: Title ###
-#: manual/Configuration.md:881
+#: manual/Configuration.md:879
 #, no-wrap
 msgid "Using Tracker commandline tools on the server"
 msgstr "サーバー上での Tracker コマンドラインツールの使用"
 
 #. type: Plain text
-#: manual/Configuration.md:885
+#: manual/Configuration.md:883
 msgid ""
 "Netatalk must be running, commands must be executed as root and some "
 "environment variables must be set up."
@@ -2288,7 +2290,7 @@ msgstr ""
 "らない。"
 
 #. type: Plain text
-#: manual/Configuration.md:891
+#: manual/Configuration.md:889
 msgid ""
 "If the .tracker_profile file does not exist, create it first. If you need to "
 "make the environment variables persistent, source .tracker_profile from /"
@@ -2301,7 +2303,7 @@ msgstr ""
 "Netatalk をインストールしたベースディレクトリにあわせて読み替える。"
 
 #. type: Plain text
-#: manual/Configuration.md:900
+#: manual/Configuration.md:898
 #, no-wrap
 msgid ""
 "    $ su\n"
@@ -2315,96 +2317,96 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:902
+#: manual/Configuration.md:900
 msgid "When using Tracker from OpenCSW you must also update your PATH:"
 msgstr "OpenCSW の Tracker を使用していたら PATH も以下のように更新する："
 
 #. type: Plain text
-#: manual/Configuration.md:904
+#: manual/Configuration.md:902
 #, no-wrap
 msgid "    # export PATH=/opt/csw/bin:$PATH\n"
 msgstr ""
 
 #. type: Title ####
-#: manual/Configuration.md:905
+#: manual/Configuration.md:903
 #, no-wrap
 msgid "Common Tracker commands"
 msgstr "Tracker コマンド"
 
 #. type: Plain text
-#: manual/Configuration.md:908
+#: manual/Configuration.md:906
 msgid "Querying Tracker status:"
 msgstr "Tracker の状態の問い合わせ:"
 
 #. type: Plain text
-#: manual/Configuration.md:910
+#: manual/Configuration.md:908
 #, no-wrap
 msgid ">     # tracker daemon\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:912
+#: manual/Configuration.md:910
 msgid "Stop Tracker:"
 msgstr "Tracker の停止:"
 
 #. type: Plain text
-#: manual/Configuration.md:914
+#: manual/Configuration.md:912
 #, no-wrap
 msgid ">     # tracker daemon -t\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:916
+#: manual/Configuration.md:914
 msgid "Start Tracker:"
 msgstr "Tracker の開始:"
 
 #. type: Plain text
-#: manual/Configuration.md:918
+#: manual/Configuration.md:916
 #, no-wrap
 msgid ">     # tracker daemon -s\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:920
+#: manual/Configuration.md:918
 msgid "Reindex directory:"
 msgstr "ディレクトリの再インデックス:"
 
 #. type: Plain text
-#: manual/Configuration.md:922
+#: manual/Configuration.md:920
 #, no-wrap
 msgid ">     # tracker index -f PATH\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:924
+#: manual/Configuration.md:922
 msgid "Query Tracker for information about a file or directory:"
 msgstr "Tracker にファイルやディレクトリの情報を問い合わせる:"
 
 #. type: Plain text
-#: manual/Configuration.md:926
+#: manual/Configuration.md:924
 #, no-wrap
 msgid ">     # tracker info PATH\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:928
+#: manual/Configuration.md:926
 msgid "Search Tracker:"
 msgstr "Tracker で検索:"
 
 #. type: Plain text
-#: manual/Configuration.md:930
+#: manual/Configuration.md:928
 #, no-wrap
 msgid ">     # tracker search QUERY\n"
 msgstr ""
 
 #. type: Title ####
-#: manual/Configuration.md:931
+#: manual/Configuration.md:929
 #, no-wrap
 msgid "Advanced Tracker command line configuration"
 msgstr "Tracker コマンドラインのより進んだ設定"
 
 #. type: Plain text
-#: manual/Configuration.md:935
+#: manual/Configuration.md:933
 msgid ""
 "Tracker stores its configuration via Gnome dconf backend which can be "
 "modified with the command `gsettings`."
@@ -2413,7 +2415,7 @@ msgstr ""
 "コマンドで変更できる。"
 
 #. type: Plain text
-#: manual/Configuration.md:941
+#: manual/Configuration.md:939
 msgid ""
 "Gnome dconf settings are per-user settings, so, as Netatalk runs the Tracker "
 "processes as root, the settings are stored in the root user context and "
@@ -2427,7 +2429,7 @@ msgstr ""
 "ければならない）"
 
 #. type: Plain text
-#: manual/Configuration.md:945
+#: manual/Configuration.md:943
 #, no-wrap
 msgid ""
 "    # gsettings list-recursively | grep Tracker\n"
@@ -2436,7 +2438,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:948
+#: manual/Configuration.md:946
 msgid ""
 "The following list describes some important Tracker options and their "
 "default settings."
@@ -2445,12 +2447,12 @@ msgstr ""
 "示す。"
 
 #. type: Plain text
-#: manual/Configuration.md:950
+#: manual/Configuration.md:948
 msgid "org.freedesktop.Tracker.Miner.Files index-recursive-directories"
 msgstr "org.freedesktop.Tracker.Miner.Files index-recursive-directories"
 
 #. type: Plain text
-#: manual/Configuration.md:954
+#: manual/Configuration.md:952
 #, no-wrap
 msgid ""
 "> This option controls which directories Tracker will index. Don't change\n"
@@ -2464,12 +2466,12 @@ msgstr ""
 "によってセットされるので、手動で変更してはならない。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:956
+#: manual/Configuration.md:954
 msgid "org.freedesktop.Tracker.Miner.Files enable-monitors `true`"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:963
+#: manual/Configuration.md:961
 #, no-wrap
 msgid ""
 "> The value controls whether Tracker watches all configured paths for\n"
@@ -2487,12 +2489,12 @@ msgstr ""
 "`crawling-interval` も参照のこと。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:965
+#: manual/Configuration.md:963
 msgid "org.freedesktop.Tracker.Miner.Files crawling-interval `-1`"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:970
+#: manual/Configuration.md:968
 #, no-wrap
 msgid ""
 "> Interval in days to check the filesystem is up to date in the database,\n"
@@ -2506,18 +2508,18 @@ msgstr ""
 "= 強制的にクローリングされる\n"
 
 #. type: Title ###
-#: manual/Configuration.md:971
+#: manual/Configuration.md:969
 #, no-wrap
 msgid "Supported metadata attributes"
 msgstr "サポートされているメタデータ属性"
 
 #. type: Plain text
-#: manual/Configuration.md:974
+#: manual/Configuration.md:972
 msgid "The following table lists the supported Spotlight metadata attributes"
 msgstr "下記表にサポートされている Spotlight メタデータ属性を挙げる。"
 
 #. type: Plain text
-#: manual/Configuration.md:999
+#: manual/Configuration.md:997
 #, no-wrap
 msgid ""
 "| Description | Spotlight Key |\n"
@@ -2570,24 +2572,19 @@ msgstr ""
 "| オーディオファイルに含まれている曲の作曲者 | kMDItemComposer |\n"
 "| 歌あるいは楽曲の音楽ジャンル | kMDItemMusicalGenre |\n"
 
-#. type: Plain text
-#: manual/Configuration.md:1001
-msgid "Supported Spotlight metadata attributes"
-msgstr "サポートされている Spotlight メタデータ属性"
-
 #. type: Title ####
-#: manual/Configuration.md:1002
+#: manual/Configuration.md:998
 #, no-wrap
 msgid "References"
 msgstr "参考"
 
 #. type: Bullet: '1.  '
-#: manual/Configuration.md:1005
+#: manual/Configuration.md:1001
 msgid ""
 "[MDItem](https://developer.apple.com/documentation/coreservices/mditemref/)"
 msgstr ""
 
 #. type: Bullet: '2.  '
-#: manual/Configuration.md:1006
+#: manual/Configuration.md:1002
 msgid "[Tracker](https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/)"
 msgstr ""

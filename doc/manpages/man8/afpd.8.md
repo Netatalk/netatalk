@@ -34,7 +34,7 @@ behavior and configuration of a file server.
 
 > Print help and exit.
 
--F \<configfile\>
+-F <configfile\>
 
 > Specifies the configuration file to use.
 

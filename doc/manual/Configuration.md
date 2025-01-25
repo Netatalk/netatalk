@@ -101,7 +101,7 @@ To achieve this, several different CNID
 backends are available and can be
 selected with the `cnid scheme` option in
 the `afp.conf(5)` configuration file. A CNID backend is basically a
-database storing ID \<-\> name mappings.
+database storing ID <-\> name mappings.
 
 The CNID databases are by default located in
 `$prefix/var/netatalk/CNID`. You can change the location by configuring
@@ -477,7 +477,7 @@ in question supplies. So think about eliminating weak UAMs like
 
 ### Netatalk UAM overview table
 
-A small overview of the most common used UAMs.
+A small overview of the most commonly used UAMs.
 
 | UAM | No User Authent | Cleartxt Passwrd | (2-Way) Randnum exchange | DHCAST128 | DHX2 | Client Krb v2 |
 |----|----|----|----|----|----|----|
@@ -486,8 +486,6 @@ A small overview of the most common used UAMs.
 | Encryption | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit SSL, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted using libgcrypt with CAST 128 in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |
 | Server support | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |
 | Password storage method | None | Either /etc/passwd (/etc/shadow) or PAM | Passwords stored in clear text in a separate text file | Either /etc/passwd (/etc/shadow) or PAM | Either /etc/passwd (/etc/shadow) or PAM | At the Kerberos Key Distribution Center\* |
-
-Netatalk UAM overview
 
 \* Have a look at this [Kerberos
 overview](https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)
@@ -996,8 +994,6 @@ The following table lists the supported Spotlight metadata attributes
 | Exposure time, in seconds | kMDItemExposureTimeSeconds |
 | The composer of the music contained in the audio file | kMDItemComposer |
 | The musical genre of the song or composition | kMDItemMusicalGenre |
-
-Supported Spotlight metadata attributes
 
 #### References
 
