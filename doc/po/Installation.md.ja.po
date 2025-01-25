@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 20:10+0100\n"
+"POT-Creation-Date: 2025-01-25 23:40+0100\n"
 "PO-Revision-Date: 2025-01-25 15:05+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,7 +18,8 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Plain text
-#: manual/AppleTalk.md:154 manual/Configuration.md:840 manual/Installation.md:4
+#: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
+#: manual/AppleTalk.md:154 manual/Configuration.md:838 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -514,11 +515,29 @@ msgstr ""
 
 #. type: Bullet: '- '
 #: manual/Installation.md:182
+msgid "po4a"
+msgstr ""
+
+#. type: Plain text
+#: manual/Installation.md:187
+#, no-wrap
+msgid ""
+"  With the help of po4a, Netatalk's documentation can be translated\n"
+"  into other languages. It uses gettext to extract translatable\n"
+"  strings from source files and merge them with the translations\n"
+"  stored in PO files.\n"
+msgstr ""
+"  po4a の助けを借りて、Netatalk のドキュメントは他の言語に翻訳できる。gettext\n"
+"  を使用して、ソース ファイルから翻訳可能な文字列を抽出し、PO\n"
+"  ファイルに保存されている翻訳と結合する。\n"
+
+#. type: Bullet: '- '
+#: manual/Installation.md:189
 msgid "TCP wrappers"
 msgstr "TCP ラッパー"
 
 #. type: Plain text
-#: manual/Installation.md:184
+#: manual/Installation.md:191
 #, no-wrap
 msgid "  Wietse Venema's network logger, also known as TCPD or LOG_TCP.\n"
 msgstr ""
@@ -526,7 +545,7 @@ msgstr ""
 "  とも呼ばれる。\n"
 
 #. type: Plain text
-#: manual/Installation.md:188
+#: manual/Installation.md:195
 #, no-wrap
 msgid ""
 "  Security options are: access control per host, domain and/or service;\n"
@@ -538,12 +557,12 @@ msgstr ""
 "  アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:190
+#: manual/Installation.md:197
 msgid "Tracker, or TinySPARQL / LocalSearch"
 msgstr "Tracker もしくは TinySPARQL / LocalSearch"
 
 #. type: Plain text
-#: manual/Installation.md:198
+#: manual/Installation.md:205
 #, no-wrap
 msgid ""
 "  Netatalk uses [Tracker](https://tracker.gnome.org) or its later\n"
@@ -563,12 +582,12 @@ msgstr ""
 "  をサポートする最初のバージョンだからである。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:200
+#: manual/Installation.md:207
 msgid "talloc / bison / flex"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:203
+#: manual/Installation.md:210
 #, no-wrap
 msgid ""
 "  Samba's talloc library, a Yacc parser such as bison, and a lexer like\n"
@@ -578,12 +597,12 @@ msgstr ""
 "  パーサー、flex などのレキサーも必要。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:205
+#: manual/Installation.md:212
 msgid "UnicodeData.txt"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:208
+#: manual/Installation.md:215
 #, no-wrap
 msgid ""
 "  The build system uses Perl and the Unicode Character Database to\n"
@@ -594,13 +613,13 @@ msgstr ""
 "  文字変換ソースを生成する。\n"
 
 #. type: Title ###
-#: manual/Installation.md:209
+#: manual/Installation.md:216
 #, no-wrap
 msgid "Configure and build Netatalk"
 msgstr "Netatalk のコンパイル"
 
 #. type: Plain text
-#: manual/Installation.md:215
+#: manual/Installation.md:222
 msgid ""
 "Instructions on how to use the build system to configure and build netatalk "
 "source code are documented in the [INSTALL.md](https://github.com/Netatalk/"
@@ -611,7 +630,7 @@ msgstr ""
 "ください。"
 
 #. type: Plain text
-#: manual/Installation.md:219
+#: manual/Installation.md:226
 msgid ""
 "For examples of concrete steps to compile on specific operating systems, "
 "refer to the [Compile Netatalk from Source](#compile) appendix in this "
@@ -621,13 +640,13 @@ msgstr ""
 "イルする](#compile) 付録を参考してください。"
 
 #. type: Title ##
-#: manual/Installation.md:220
+#: manual/Installation.md:227
 #, no-wrap
 msgid "Starting and stopping Netatalk"
 msgstr "Netatalk の起動と停止"
 
 #. type: Plain text
-#: manual/Installation.md:228
+#: manual/Installation.md:235
 msgid ""
 "The Netatalk distribution comes with several operating system specific "
 "startup script templates that are tailored according to the options given to "
@@ -642,7 +661,7 @@ msgstr ""
 "トフォーム固有のスクリプトに加えて、systemd、openrc 用に提供されている。"
 
 #. type: Plain text
-#: manual/Installation.md:235
+#: manual/Installation.md:242
 msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
@@ -657,7 +676,7 @@ msgstr ""
 "テキストを参照してください。"
 
 #. type: Plain text
-#: manual/Installation.md:240
+#: manual/Installation.md:247
 msgid ""
 "Since new Linux, \\*BSD, and Solaris-like distributions appear at regular "
 "intervals, and the startup procedure for the other systems mentioned above "
@@ -670,7 +689,7 @@ msgstr ""
 "ることをお勧めする。"
 
 #. type: Plain text
-#: manual/Installation.md:245
+#: manual/Installation.md:252
 msgid ""
 "If you use Netatalk as part of a fixed setup, like a Linux distribution, an "
 "RPM or a BSD package, things will probably have been arranged properly for "
@@ -683,7 +702,7 @@ msgstr ""
 "まる。"
 
 #. type: Plain text
-#: manual/Installation.md:248
+#: manual/Installation.md:255
 msgid ""
 "The following daemon need to be started by whatever startup script mechanism "
 "is used:"
@@ -692,12 +711,12 @@ msgstr ""
 "必要がある:"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:250
+#: manual/Installation.md:257
 msgid "netatalk"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:253
+#: manual/Installation.md:260
 msgid ""
 "In the absence of a startup script, you can also launch this daemon directly "
 "(as root), and kill it with SIGTERM when you are done with it."
@@ -706,7 +725,7 @@ msgstr ""
 "し、使い終わったら SIGTERM で終了することもできる。"
 
 #. type: Plain text
-#: manual/Installation.md:257
+#: manual/Installation.md:264
 msgid ""
 "Additionally, make sure that the configuration file `afp.conf` is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
@@ -717,7 +736,7 @@ msgstr ""
 "どうかを問い合わせることができる。"
 
 #. type: Plain text
-#: manual/Installation.md:261
+#: manual/Installation.md:268
 msgid ""
 "If you want to run AppleTalk services, you also need to start the `atalkd` "
 "daemon, plus the optional `papd`, `timelord`, and `a2boot` daemons. See the "
