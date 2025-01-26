@@ -1,7 +1,7 @@
 manual_pages = [
-    'セットアップ',
-    'インストール',
-    'アップグレード',
+    'Configuration',
+    'Installation',
+    'Upgrading',
 ]
 
 if get_option('with-website')
@@ -20,13 +20,13 @@ if get_option('with-website')
         'asip-status',
         'cnid_dbd',
         'cnid_metad',
+        'Compilation',
         'dbd',
         'extmap.conf',
         'index',
+        'License',
         'macusers',
         'netatalk',
-        'コンパイル',
-        'ライセンス',
     ]
 endif
 

@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:35+0100\n"
+"POT-Creation-Date: 2025-01-26 21:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,7 +17,7 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
-#: manual/AppleTalk.md:154 manual/Configuration.md:838 manual/Installation.md:4
+#: manual/AppleTalk.md:154 manual/Configuration.md:837 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -72,11 +72,9 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:15
 msgid ""
-"A complete overview can be found inside the [developer documentation]"
-"(https://netatalk.io/appletalk)."
-msgstr ""
-"完全な概要は、[開発者向けドキュメント](https://netatalk.io/appletalk) にあ"
-"る。"
+"A complete overview can be found inside the [developer documentation](/"
+"appletalk.html)."
+msgstr "完全な概要は、[開発者向けドキュメント](/appletalk.html) にある。"
 
 #. type: Title ###
 #: manual/AppleTalk.md:16

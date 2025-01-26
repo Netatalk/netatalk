@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 20:36+0100\n"
+"POT-Creation-Date: 2025-01-26 21:23+0100\n"
 "PO-Revision-Date: 2025-01-23 08:10+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,7 +18,7 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
-#: manual/AppleTalk.md:154 manual/Configuration.md:838 manual/Installation.md:4
+#: manual/AppleTalk.md:154 manual/Configuration.md:837 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -144,10 +144,10 @@ msgstr ""
 #, no-wrap
 msgid ""
 "> most option names have changed, read the full manpage\n"
-"[afp.conf](#afp.conf.5) for details\n"
+"[afp.conf](afp.conf.html) for details\n"
 msgstr ""
 "> ほとんどのオプション名は変更されたので、 詳細については\n"
-"[afp.conf](#afp.conf.5) の manpage 全体を読むこと\n"
+"[afp.conf](afp.conf.html) の manpage 全体を読むこと\n"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:49
@@ -285,13 +285,14 @@ msgstr "そのほかの主要な変更点"
 #. type: Bullet: '- '
 #: manual/Upgrading.md:104
 msgid ""
-"New service controller daemon [netatalk](#netatalk.8) which is responsible "
+"New service controller daemon [netatalk](netatalk.html) which is responsible "
 "for starting and restarting the AFP and CNID daemons. All bundled start "
 "scripts have been updated, make sure to update yours!"
 msgstr ""
 "AFP 及び CNID デーモンの起動・再起動を担う新しいサービスコントローラデーモン "
-"[netatalk](#netatalk.8) の導入。バンドルされているスタートスクリプトが すべて"
-"更新されているため、自分の環境でもアップデートされているか確認する必要あり！"
+"[netatalk](netatalk.html) の導入。バンドルされているスタートスクリプトが すべ"
+"て更新されているため、自分の環境でもアップデートされているか確認する必要あ"
+"り！"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:107
