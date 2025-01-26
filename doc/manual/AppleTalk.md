@@ -11,7 +11,7 @@ Netatalk implements the AppleTalk protocols to serve files over AFP and
 provide other services to old Mac and Apple II clients.
 
 A complete overview can be found inside the [developer
-documentation](https://netatalk.io/appletalk).
+documentation](/appletalk.html).
 
 ### To use AppleTalk or not
 

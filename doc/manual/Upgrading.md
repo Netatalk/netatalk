@@ -41,7 +41,7 @@ There are three major changes between Netatalk 2 and Netatalk 4:
 > **WARNING**
 
 > most option names have changed, read the full manpage
-[afp.conf](#afp.conf.5) for details
+[afp.conf](afp.conf.html) for details
 
 `extmap.conf`
 
@@ -98,7 +98,7 @@ Implementation details:
 
 ### Other major changes
 
-- New service controller daemon [netatalk](#netatalk.8) which is
+- New service controller daemon [netatalk](netatalk.html) which is
   responsible for starting and restarting the AFP and CNID daemons. All
   bundled start scripts have been updated, make sure to update yours!
 

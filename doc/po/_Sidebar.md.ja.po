@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-26 22:12+0100\n"
 "PO-Revision-Date: 2025-01-24 23:25+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,7 +18,7 @@ msgstr ""
 
 #. type: Plain text
 #: manual/_Sidebar.md:2
-msgid "[[en]] | [[ja]]"
+msgid "[en](/manual/en) | [ja](/manual/ja)"
 msgstr ""
 
 #. type: Plain text
@@ -28,23 +28,23 @@ msgstr "マニュアル"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:9
-msgid "[[Installation]]"
-msgstr "[[インストール]]"
+msgid "[Installation](Installation.html)"
+msgstr "[インストール](Installation.html)"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:9
-msgid "[[Configuration]]"
-msgstr "[[セットアップ]]"
+msgid "[Configuration](Configuration.html)"
+msgstr "[Netatalk のセットアップ](Configuration.html)"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:9
-msgid "[[AppleTalk]]"
+msgid "[AppleTalk](AppleTalk.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:9
-msgid "[[Upgrading]]"
-msgstr "[[アップグレード]]"
+msgid "[Upgrading](Upgrading.html)"
+msgstr "[以前の Netatalk バージョンからのアップグレード](Upgrading.html)"
 
 #. type: Plain text
 #: manual/_Sidebar.md:11
@@ -53,67 +53,67 @@ msgstr "ユーザーツール"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[ad]]"
+msgid "[ad](ad.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[addump]]"
+msgid "[addump](addump.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[aecho]]"
+msgid "[aecho](aecho.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[afpldaptest]]"
+msgid "[afpldaptest](afpldaptest.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[afppasswd]]"
+msgid "[afppasswd](afppasswd.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[afpstats]]"
+msgid "[afpstats](afpstats.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[afptest]]"
+msgid "[afptest](afptest.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[asip-status]]"
+msgid "[asip-status](asip-status.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[dbd]]"
+msgid "[dbd](dbd.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[getzones]]"
+msgid "[getzones](getzones.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[macusers]]"
+msgid "[macusers](macusers.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[nbp]]"
+msgid "[nbp](nbp.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:25
-msgid "[[pap]]"
+msgid "[pap](pap.html)"
 msgstr ""
 
 #. type: Plain text
@@ -123,32 +123,32 @@ msgstr "コンフィグファイル"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:34
-msgid "[[afp_signature.conf]]"
+msgid "[afp_signature.conf](afp_signature.conf.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:34
-msgid "[[afp_voluuid.conf]]"
+msgid "[afp_voluuid.conf](afp_voluuid.conf.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:34
-msgid "[[afp.conf]]"
+msgid "[afp.conf](afp.conf.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:34
-msgid "[[atalkd.conf]]"
+msgid "[atalkd.conf](atalkd.conf.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:34
-msgid "[[extmap.conf]]"
+msgid "[extmap.conf](extmap.conf.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:34
-msgid "[[papd.conf]]"
+msgid "[papd.conf](papd.conf.html)"
 msgstr ""
 
 #. type: Plain text
@@ -158,52 +158,52 @@ msgstr "デーモン及び管理ツール"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[a2boot]]"
+msgid "[a2boot](a2boot.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[afpd]]"
+msgid "[afpd](afpd.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[atalkd]]"
+msgid "[atalkd](atalkd.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[cnid_dbd]]"
+msgid "[cnid_dbd](cnid_dbd.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[cnid_metad]]"
+msgid "[cnid_metad](cnid_metad.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[macipgw]]"
+msgid "[macipgw](macipgw.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[netatalk]]"
+msgid "[netatalk](netatalk.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[papd]]"
+msgid "[papd](papd.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[papstatus]]"
+msgid "[papstatus](papstatus.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:47
-msgid "[[timelord]]"
+msgid "[timelord](timelord.html)"
 msgstr ""
 
 #. type: Plain text
@@ -213,17 +213,17 @@ msgstr "開発者参考資料"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:53
-msgid "[[atalk]]"
+msgid "[atalk](atalk.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:53
-msgid "[[atalk_aton]]"
+msgid "[atalk_aton](atalk_aton.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:53
-msgid "[[nbp_name]]"
+msgid "[nbp_name](nbp_name.html)"
 msgstr ""
 
 #. type: Plain text
@@ -233,10 +233,10 @@ msgstr "付録"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:57
-msgid "[[Compilation]]"
-msgstr "[[コンパイル]]"
+msgid "[Compilation](Compilation.html)"
+msgstr "[ソースコードから Netatalk をコンパイルする](Compilation.html)"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:57
-msgid "[[License]]"
-msgstr "[[ライセンス]]"
+msgid "[License](License.html)"
+msgstr "[ライセンス](License.html)"

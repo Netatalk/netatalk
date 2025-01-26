@@ -11,8 +11,7 @@ Netatalk's `afpd` daemon offers AFP fileservices to Apple clients. The
 configuration is managed through the `afp.conf` file which uses an ini
 style configuration syntax.
 
-Support for [Spotlight](#spotlight) was
-added in Netatalk 3.1.
+Support for [Spotlight](#spotlight) was added in Netatalk 3.1.
 
 Mac OS X 10.5 (Leopard) introduced support for Time Machine backups over
 AFP. Two new functions ensure that backups are written to disk, not just
@@ -597,7 +596,7 @@ By default, the effective permission of the authenticated user are only
 mapped to the mentioned
 UARightspermission structure, not the
 UNIX mode. You can adjust this behaviour with the configuration option
-[map acls](#map_acls).
+[map acls](afp.conf#options-for-acl-handling).
 
 However, neither in Finder "Get Info" windows nor in the Terminal will
 you be able to see the ACLs, because of how ACLs in macOS are designed.
@@ -645,7 +644,7 @@ In detail:
       and PAM
 
     - configure Netatalk via the special [LDAP options for
-      ACLs](#acl_options) in [afp.conf](#afp.conf.5) so that Netatalk is
+      ACLs](afp.conf#options-for-acl-handling) in `afp.conf` so that Netatalk is
       able to retrieve the UUID for users and groups via LDAP search
       queries
 
@@ -865,8 +864,8 @@ Solaris with Tracker from OpenCSW:
 
   We therefore recommend to disable live filesystem monitoring and let
   Tracker periodically scan filesystems for changes instead, see the
-  Tracker configuration options [enable-monitors](#enable-monitors) and
-  [crawling-interval](#crawling-interval) below.
+  [Tracker configuration options](#advanced-tracker-command-line-configuration)
+  enable-monitors and crawling-interval below.
 
 - Indexing home directories
 

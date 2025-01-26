@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 23:40+0100\n"
+"POT-Creation-Date: 2025-01-26 23:23+0100\n"
 "PO-Revision-Date: 2025-01-25 15:05+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
-#: manual/AppleTalk.md:154 manual/Configuration.md:838 manual/Installation.md:4
+#: manual/AppleTalk.md:154 manual/Configuration.md:837 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -36,10 +36,10 @@ msgstr "インストール"
 #, no-wrap
 msgid ""
 "> Before upgrading to Netatalk 4 from an earlier version, please read the\n"
-"[[Upgrade]] chapter in this manual.\n"
+"[Upgrade](Upgrading.html) chapter in this manual.\n"
 msgstr ""
 "> Netatalk 2 または 3 から Netatalk 4\n"
-"にアップグレードする前に、このマニュアルの [[アップグレード]]\n"
+"にアップグレードする前に、このマニュアルの[アップグレード](Upgrading.html)\n"
 "の章を必ずお読みください。\n"
 
 #. type: Title ##
@@ -619,34 +619,32 @@ msgid "Configure and build Netatalk"
 msgstr "Netatalk のコンパイル"
 
 #. type: Plain text
-#: manual/Installation.md:222
+#: manual/Installation.md:221
 msgid ""
 "Instructions on how to use the build system to configure and build netatalk "
-"source code are documented in the [INSTALL.md](https://github.com/Netatalk/"
-"netatalk/blob/main/INSTALL.md)  file in the Netatalk source tree."
+"source code are documented in the [Install Quick Start](/install.html) guide."
 msgstr ""
-"ビルドシステムの使い方、コードのコンフィグ又はビルドの手順書は [INSTALL]"
-"(https://github.com/Netatalk/netatalk/blob/main/INSTALL)  ファイルを参考して"
-"ください。"
+"ビルドシステムの使い方、コードのコンフィグ又はビルドの手順書は [Install "
+"Quick Start](/install.html) というのがあるので、ご参考まで。"
 
 #. type: Plain text
-#: manual/Installation.md:226
+#: manual/Installation.md:225
 msgid ""
 "For examples of concrete steps to compile on specific operating systems, "
-"refer to the [Compile Netatalk from Source](#compile) appendix in this "
-"manual, which is automatically generated from the CI build scripts."
+"refer to the [Compile Netatalk from Source](Compilation.html) appendix in "
+"this manual, which is automatically generated from the CI build scripts."
 msgstr ""
-"特定の OS に対しての具体的なビルド事例は [ Netatalk をソースコードからコンパ"
-"イルする](#compile) 付録を参考してください。"
+"特定の OS に対しての具体的なビルド事例は [Netatalk をソースコードからコンパイ"
+"ルする](Compilation.html) 付録を参考してください。"
 
 #. type: Title ##
-#: manual/Installation.md:227
+#: manual/Installation.md:226
 #, no-wrap
 msgid "Starting and stopping Netatalk"
 msgstr "Netatalk の起動と停止"
 
 #. type: Plain text
-#: manual/Installation.md:235
+#: manual/Installation.md:234
 msgid ""
 "The Netatalk distribution comes with several operating system specific "
 "startup script templates that are tailored according to the options given to "
@@ -661,7 +659,7 @@ msgstr ""
 "トフォーム固有のスクリプトに加えて、systemd、openrc 用に提供されている。"
 
 #. type: Plain text
-#: manual/Installation.md:242
+#: manual/Installation.md:241
 msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
@@ -676,7 +674,7 @@ msgstr ""
 "テキストを参照してください。"
 
 #. type: Plain text
-#: manual/Installation.md:247
+#: manual/Installation.md:246
 msgid ""
 "Since new Linux, \\*BSD, and Solaris-like distributions appear at regular "
 "intervals, and the startup procedure for the other systems mentioned above "
@@ -689,7 +687,7 @@ msgstr ""
 "ることをお勧めする。"
 
 #. type: Plain text
-#: manual/Installation.md:252
+#: manual/Installation.md:251
 msgid ""
 "If you use Netatalk as part of a fixed setup, like a Linux distribution, an "
 "RPM or a BSD package, things will probably have been arranged properly for "
@@ -702,7 +700,7 @@ msgstr ""
 "まる。"
 
 #. type: Plain text
-#: manual/Installation.md:255
+#: manual/Installation.md:254
 msgid ""
 "The following daemon need to be started by whatever startup script mechanism "
 "is used:"
@@ -711,12 +709,12 @@ msgstr ""
 "必要がある:"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:257
+#: manual/Installation.md:256
 msgid "netatalk"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:260
+#: manual/Installation.md:259
 msgid ""
 "In the absence of a startup script, you can also launch this daemon directly "
 "(as root), and kill it with SIGTERM when you are done with it."
@@ -725,7 +723,7 @@ msgstr ""
 "し、使い終わったら SIGTERM で終了することもできる。"
 
 #. type: Plain text
-#: manual/Installation.md:264
+#: manual/Installation.md:263
 msgid ""
 "Additionally, make sure that the configuration file `afp.conf` is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
@@ -736,12 +734,12 @@ msgstr ""
 "どうかを問い合わせることができる。"
 
 #. type: Plain text
-#: manual/Installation.md:268
+#: manual/Installation.md:267
 msgid ""
 "If you want to run AppleTalk services, you also need to start the `atalkd` "
 "daemon, plus the optional `papd`, `timelord`, and `a2boot` daemons. See the "
-"[AppleTalk](#appletalk) chapter in this manual for more information."
+"[AppleTalk](AppleTalk.html) chapter in this manual for more information."
 msgstr ""
 "AppleTalk サービスを実行する場合は、`atalkd` デーモンに加えて、オプションの "
 "`papd`、`timelord`、`a2boot` デーモンも起動する必要がある。詳細については、こ"
-"のマニュアルの [AppleTalk](#appletalk) の章を参照してください。"
+"のマニュアルの [AppleTalk](AppleTalk.html) の章を参照してください。"
