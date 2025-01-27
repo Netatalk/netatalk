@@ -414,7 +414,7 @@ X) clients, DHX2 is sufficient, and provides the strongest encryption.
   as well as on the client's.
 
   Note: If you want to provide Mac OS 8/9 clients with NetBoot-services
-  then you need uams_cleartext.so since the AFP-client integrated into
+  then you need uams_cleartxt.so since the AFP-client integrated into
   the Mac's firmware can only deal with this basic form of
   authentication.
 
@@ -451,10 +451,10 @@ pages.
 ### Using different authentication sources with specific UAMs
 
 Some UAMs provide the ability to use different authentication
-"backends", namely `uams_cleartext.so`, `uams_dhx.so` and
+"backends", namely `uams_cleartxt.so`, `uams_dhx.so` and
 `uams_dhx2.so`. They can use either classic UNIX passwords from
 `/etc/passwd` (`/etc/shadow`) or PAM if the system supports that.
-`uams_cleartext.so` can be symlinked to either `uams_passwd.so` or
+`uams_cleartxt.so` can be symlinked to either `uams_passwd.so` or
 `uams_pam.so`, `uams_dhx.so` to `uams_dhx_passwd.so` or
 `uams_dhx_pam.so` and `uams_dhx2.so` to `uams_dhx2_passwd.so` or
 `uams_dhx2_pam.so`.
