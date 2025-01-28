@@ -4,27 +4,27 @@ macusers — List the users connecting via AFP
 
 # Synopsis
 
-`macusers`
+**macusers**
 
 `macusers [ -v | -version | --version | -h | -help | --help ]`
 
 # Description
 
-`macusers` list the users connecting via AFP.
+**macusers** list the users connecting via AFP.
 
 # Options
 
-`-v, -version, --version`
+**-v**, **-version**, **--version**
 
 > Show version and exit
 
-`-h, -help, --help`
+**-h**, **-help**, **--help**
 
 > Display the help and exit
 
 # See Also
 
-`afpd(8)`
+afpd(8)
 
 # Author
 

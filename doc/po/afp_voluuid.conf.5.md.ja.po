@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 00:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -130,7 +130,7 @@ msgstr "例"
 #: manpages/man5/afp.conf.5.md:370 manpages/man5/afp.conf.5.md:722
 #: manpages/man5/afp.conf.5.md:1048 manpages/man5/afp.conf.5.md:1173
 #: manpages/man5/afp.conf.5.md:1211 manpages/man8/papd.8.md:97
-#: manual/Configuration.md:114
+#: manual/Configuration.md:113
 #, no-wrap
 msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
@@ -156,12 +156,11 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp_voluuid.conf.5.md:9
+#, no-wrap
 msgid ""
-"`afp_voluuid.conf` is the configuration file used by `afpd` to specify UUID "
-"of all AFP volumes. The configuration lines are composed like:"
-msgstr ""
-"`afp_voluuid.conf`は全てのAFPボリュームのUUIDを魔法のように自動的に指定するた"
-"めに`afpd`が利用する設定ファイルである。設定行は以下のように構成される。"
+"**afp_voluuid.conf** is the configuration file used by **afpd** to specify\n"
+"UUID of all AFP volumes. The configuration lines are composed like:\n"
+msgstr "**afp_voluuid.conf** は全てのAFPボリュームのUUIDを魔法のように自動的に指定するために **afpd** が利用する設定ファイルである。設定行は以下のように構成される。\n"
 
 #. type: Plain text
 #: manpages/man5/afp_voluuid.conf.5.md:11
@@ -222,5 +221,5 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp_voluuid.conf.5.md:41
-msgid "`afpd(8)`, `afp.conf(5)`, `avahi-daemon(8)`, `mDNSResponder(8)`"
+msgid "afpd(8), afp.conf(5), avahi-daemon(8), mDNSResponder(8)"
 msgstr ""

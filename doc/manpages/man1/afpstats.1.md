@@ -4,18 +4,18 @@ afpstats — List AFP server statistics
 
 # Synopsis
 
-`afpstats`
+**afpstats**
 
 # Description
 
-`afpstats` list statistics about users connected to the AFP server,
+**afpstats** list statistics about users connected to the AFP server,
 their mounted volumes, etc.
 
 # Note
 
-`afpd` must be built with D-Bus support. Check this with "`afpd -V`".
+**afpd** must be built with D-Bus support. Check this with "**afpd -V**".
 
-Additionally, "`afpstats = yes`" must be set in `afp.conf`.
+Additionally, "**afpstats = yes**" must be set in *afp.conf*.
 
 # Examples
 
@@ -26,7 +26,7 @@ Additionally, "`afpstats = yes`" must be set in `afp.conf`.
 
 # See Also
 
-`afpd(8)`, `afp.conf(5)`, `dbus-daemon(1)`
+afpd(8), afp.conf(5), dbus-daemon(1)
 
 # Author
 

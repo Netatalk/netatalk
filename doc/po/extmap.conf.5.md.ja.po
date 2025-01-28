@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 01:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -70,12 +70,12 @@ msgstr "説明"
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -92,11 +92,11 @@ msgstr "著者"
 #: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -108,7 +108,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -123,7 +123,7 @@ msgstr "関連項目"
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:82
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:80
 #: manpages/man5/extmap.conf.5.md:18 manpages/man5/papd.conf.5.md:91
 #: manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -141,12 +141,11 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/extmap.conf.5.md:9
+#, no-wrap
 msgid ""
-"`extmap.conf` is the configuration file used by `afpd` to specify file name "
-"extension mappings."
-msgstr ""
-"`extmap.conf`はファイル名拡張子マッピングを指定するために`afpd`が利用する設定"
-"ファイルである。"
+"**extmap.conf** is the configuration file used by **afpd** to specify file\n"
+"name extension mappings.\n"
+msgstr "**extmap.conf**はファイル名拡張子マッピングを指定するために**afpd**が利用する設定ファイルである。\n"
 
 #. type: Plain text
 #: manpages/man5/extmap.conf.5.md:11
@@ -155,8 +154,7 @@ msgstr "設定行は以下のように構成される。"
 
 #. type: Plain text
 #: manpages/man5/extmap.conf.5.md:13
-#, no-wrap
-msgid "`.extension` <\\[ type \\[ creator \\] \\]\\>\n"
+msgid "`.extension [ type [ creator ] ]`"
 msgstr ""
 
 #. type: Plain text
@@ -196,5 +194,5 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/extmap.conf.5.md:31
-msgid "`afp.conf(5)`, `afpd(8)`"
+msgid "afp.conf(5), afpd(8)"
 msgstr ""

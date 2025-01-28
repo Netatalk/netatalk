@@ -4,7 +4,7 @@ afp_signature.conf — Configuration file used by afpd to specify server signatu
 
 # Description
 
-`afp_signature.conf` is the configuration file used by `afpd` to specify
+**afp_signature.conf** is the configuration file used by **afpd** to specify
 server signature automagically. The configuration lines are composed
 like:
 
@@ -43,7 +43,7 @@ server. If it wants to set the signature intentionally, use the option
 
 # See also
 
-`afpd(8)`, `afp.conf(5)`, `asip-status(1)`
+afpd(8), afp.conf(5), asip-status(1)
 
 # Author
 

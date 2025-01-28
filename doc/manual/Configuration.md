@@ -7,8 +7,8 @@ for file services. The protocol has evolved over the years.
 The final revision of the protocol, AFP 3.4, was introduced
 with OS X Lion (10.7).
 
-Netatalk's `afpd` daemon offers AFP fileservices to Apple clients. The
-configuration is managed through the `afp.conf` file which uses an ini
+Netatalk's **afpd** daemon offers AFP fileservices to Apple clients. The
+configuration is managed through the *afp.conf* file which uses an ini
 style configuration syntax.
 
 Support for [Spotlight](#spotlight) was added in Netatalk 3.1.
@@ -17,7 +17,7 @@ Mac OS X 10.5 (Leopard) introduced support for Time Machine backups over
 AFP. Two new functions ensure that backups are written to disk, not just
 in the server's cache. Different host operating systems honor this cache
 flushing differently. To make a volume a Time Machine target, use the
-volume option "`time machine = yes`".
+volume option "**time machine = yes**".
 
 Starting with Netatalk 2.1 UNIX symlinks
 can be used on the server. Semantics are the same as for e.g. NFS, i.e.
@@ -27,11 +27,11 @@ inside the clients filesystem view.
 
 ### afp.conf
 
-`afp.conf` is the configuration file used by afpd to determine the
+*afp.conf* is the configuration file used by afpd to determine the
 behaviour and configuration of the AFP file server and the AFP volume
 that it provides.
 
-The `afp.conf` is divided into several sections:
+The *afp.conf* is divided into several sections:
 
 \[Global\]
 
@@ -41,11 +41,11 @@ The `afp.conf` is divided into several sections:
 
 > The homes section defines user home volumes
 
-Any section not called `Global` or `Homes` is interpreted as an AFP
+Any section not called **Global** or **Homes** is interpreted as an AFP
 volume.
 
-For sharing user homes by defining a `Homes` section you must specify
-the option `basedir regex` which can be a simple string with the path to
+For sharing user homes by defining a **Homes** section you must specify
+the option **basedir regex** which can be a simple string with the path to
 the parent directory of all user homes or a regular expression.
 
 Example:
@@ -68,14 +68,14 @@ The following configuration is required:
     [Homes]
     basedir regex = /RAID./.*homes
 
-If `basedir regex` contains a symlink, set the canonicalized absolute
-path. When `/home` links to `/usr/home`:
+If **basedir regex** contains a symlink, set the canonicalized absolute
+path. When */home* links to */usr/home*:
 
     [Homes]
     basedir regex = /usr/home
 
 For a more detailed explanation of the available options, please refer
-to the `afp.conf(5)` man page.
+to the [afp.conf](afp.conf.html) man page.
 
 ## CNID backends
 
@@ -98,15 +98,15 @@ volume. No whining please :-)
 Netatalk needs to map IDs to files and folders in the host filesystem.
 To achieve this, several different CNID
 backends are available and can be
-selected with the `cnid scheme` option in
-the `afp.conf(5)` configuration file. A CNID backend is basically a
+selected with the **cnid scheme** option in
+the *afp.conf* configuration file. A CNID backend is basically a
 database storing ID <-\> name mappings.
 
 The CNID databases are by default located in
-`$prefix/var/netatalk/CNID`. You can change the location by configuring
-`-Dwith-statedir-path=PATH` at compile time.
+*$prefix/var/netatalk/CNID*. You can change the location by configuring
+*-Dwith-statedir-path=PATH* at compile time.
 
-There is a command line utility called `dbd` available which can be used
+There is a command line utility called **dbd** available which can be used
 to verify, repair and rebuild the CNID database.
 
 > **NOTE**
@@ -114,19 +114,19 @@ to verify, repair and rebuild the CNID database.
 > There are some CNID related things you should keep in mind when
 working with netatalk:
 
-> - Don't nest volumes unless "`vol dbnest = yes`" is set.
+> - Don't nest volumes unless "**vol dbnest = yes**" is set.
 
 > - CNID backends are databases, so they turn afpd into a file
 server/database mix.
 
 > - If there's no more space on the filesystem left, the database will
-get corrupted. You can work around this by using the `vol dbpath`
+get corrupted. You can work around this by using the **vol dbpath**
 option and put the database files into another location.
 
 > - Be careful with CNID databases for volumes that are mounted via NFS.
 That is a pretty audacious decision to make anyway, but putting a
 database there as well is really asking for trouble, i.e. database
-corruption. Use the `vol dbpath` directive to put the databases onto
+corruption. Use the **vol dbpath** directive to put the databases onto
 a local disk if you must use NFS mounted volumes.
 
 ### dbd
@@ -145,7 +145,7 @@ with IDs valid only for the current session. Starting with netatalk 3.0,
 it operates in *read only mode*. This backend is useful e.g. for
 mounting CD-ROMs, or for automated testing.
 
-This is basically equivalent to how `afpd` stored CNID data in netatalk
+This is basically equivalent to how **afpd** stored CNID data in netatalk
 1.5 and earlier.
 
 ### mysql
@@ -299,11 +299,10 @@ afpd handles three different character set options:
 unix charset
 
 > This is the codepage used internally by your operating system. If not
-specified, it defaults to `UTF8`. If `LOCALE` is specified and your
+specified, it defaults to **UTF8**. If **LOCALE** is specified and your
 system support UNIX locales, afpd tries to detect the codepage. afpd
 uses this codepage to read its configuration files, so you can use
-extended characters for volume names, login messages, etc. See
-`afp.conf(5)`.
+extended characters for volume names, login messages, etc.
 
 mac charset
 
@@ -312,12 +311,12 @@ to communicate with afpd. However, there is no support for negotiating
 the codepage used by the client in the AFP protocol. If not specified
 otherwise, afpd assumes the *MacRoman* codepage is used. In case your
 clients use another codepage, e.g. *MacCyrillic*, you'll **have** to
-explicitly configure this. See `afp.conf(5)`.
+explicitly configure this.
 
 vol charset
 
 > This defines the charset afpd should use for filenames on disk. By
-default, it is the same as `unix charset`. If you have
+default, it is the same as **unix charset**. If you have
 [iconv](http://www.gnu.org/software/libiconv/)
 installed, you can use any iconv provided charset as well.
 
@@ -327,17 +326,16 @@ filesystem. Earlier versions used the the so called CAP
 encoding. An extended character (\>0x7F)
 would be converted to a :xx hex sequence, e.g. the Apple Logo (MacRoman:
 0xF0) was saved as :f0. Some special characters will be converted as to
-:xx notation as well. '/' will be encoded to :2f, if `usedots` was not
+:xx notation as well. '/' will be encoded to :2f, if **usedots** was not
 specified, a leading dot '.' will be encoded as :2e.
 
-Even though this version now uses `UTF8` as the default encoding for
+Even though this version now uses **UTF8** as the default encoding for
 filenames, '/' will be converted to ':'. For western users another
-useful setting could be `vol charset = ISO-8859-15`.
+useful setting could be **vol charset = ISO-8859-15**.
 
-If a character cannot be converted from the `mac charset` to the
-selected `vol charset`, you'll receive a -50 error on the mac. *Note*:
-Whenever you can, please stick with the default UTF8 volume format. See
-`afp.conf(5)`.
+If a character cannot be converted from the **mac charset** to the
+selected **vol charset**, you'll receive a -50 error on the Mac. *Note*:
+Whenever you can, please stick with the default UTF8 volume format.
 
 ## Authentication
 
@@ -379,9 +377,9 @@ There exist other optional UAMs as well:
   below)
 
 You can configure which UAMs should be activated by defining
-"`uam list`" in `Global` section. `afpd` will log which UAMs it's using
-and if problems occur while activating them in either `netatalk.log` or
-syslog at startup time. `asip-status(1)` can be used to query the
+"**uam list**" in **Global** section. **afpd** will log which UAMs it's using
+and if problems occur while activating them in either **netatalk.log** or
+syslog at startup time. **asip-status** can be used to query the
 available UAMs of AFP servers as well.
 
 Having a specific UAM available at the server does not automatically
@@ -407,7 +405,7 @@ X) clients, DHX2 is sufficient, and provides the strongest encryption.
   access controls.
 
   Note: "No User Authent" is required to use Apple II NetBoot services
-  (`a2boot(8)`) to boot an Apple //e over AFP.
+  (**a2boot**) to boot an Apple //e over AFP.
 
 - The "ClearTxt Passwrd" UAM is as bad as it sounds since passwords go
   unencrypted over the wire. Try to avoid it at both the server's side
@@ -423,7 +421,7 @@ X) clients, DHX2 is sufficient, and provides the strongest encryption.
   the fact that the passwords have to be stored in cleartext on the
   server and that it doesn't integrate into both PAM scenarios or
   classic /etc/shadow (you have to administrate passwords separately by
-  using the `afppasswd(1)` utility, in order for clients to use these
+  using the **afppasswd** utility, in order for clients to use these
   UAMs)
 
   However, this is the strongest form of authentication that can be used
@@ -451,27 +449,27 @@ pages.
 ### Using different authentication sources with specific UAMs
 
 Some UAMs provide the ability to use different authentication
-"backends", namely `uams_cleartxt.so`, `uams_dhx.so` and
-`uams_dhx2.so`. They can use either classic UNIX passwords from
-`/etc/passwd` (`/etc/shadow`) or PAM if the system supports that.
-`uams_cleartxt.so` can be symlinked to either `uams_passwd.so` or
-`uams_pam.so`, `uams_dhx.so` to `uams_dhx_passwd.so` or
-`uams_dhx_pam.so` and `uams_dhx2.so` to `uams_dhx2_passwd.so` or
-`uams_dhx2_pam.so`.
+"backends", namely **uams_cleartxt.so**, **uams_cleartxt.so** and
+**uams_cleartxt.so**. They can use either classic UNIX passwords from
+*/etc/passwd* (*/etc/shadow*) or PAM if the system supports that.
+**uams_cleartxt.so** can be symlinked to either **uams_passwd.so** or
+**uams_pam.so**, **uams_cleartxt.so** to **uams_dhx_passwd.so** or
+**uams_dhx_pam.so** and **uams_cleartxt.so** to **uams_dhx2_passwd.so** or
+**uams_dhx2_pam.so**.
 
 So, if it looks like this in Netatalk's UAMs folder (per default
-`/etc/netatalk/uams/`):
+*/etc/netatalk/uams/*) then you're using PAM, otherwise classic UNIX
+passwords.
 
     uams_clrtxt.so -> uams_pam.so
     uams_dhx.so -> uams_dhx_pam.so
     uams_dhx2.so -> uams_dhx2_pam.so
 
-then you're using PAM, otherwise classic UNIX passwords. The main
-advantage of using PAM is that one can integrate Netatalk in centralized
-authentication scenarios, e.g. via LDAP, NIS and the like. Please always
-keep in mind that the protection of your user's login credentials in
-such scenarios also depends on the strength of encryption that the UAM
-in question supplies. So think about eliminating weak UAMs like
+The main advantage of using PAM is that one can integrate Netatalk in
+centralized authentication scenarios, e.g. via LDAP, NIS and the like.
+Please always keep in mind that the protection of your user's login
+credentials in such scenarios also depends on the strength of encryption
+that the UAM in question supplies. So think about eliminating weak UAMs like
 "ClearTxt Passwrd" and "Randnum exchange" completely from your network.
 
 ### Netatalk UAM overview table
@@ -514,7 +512,7 @@ SSH.
 
 This sort of tunnel is an ideal solution if you must access an AFP
 server through the Internet without having the ability or desire to use
-a "real" VPN. Note that you can let `ssh` compress the data by using its
+a "real" VPN. Note that you can let **ssh** compress the data by using its
 "-C" switch and that the tunnel endpoints can be different from both AFP
 client and server (compare with the SSH documentation for details).
 
@@ -532,8 +530,8 @@ established and the AFP client **silently** fell back to an unencrypted
 AFP connection attempt.
 
 Netatalk's afpd will report that it is capable of handling SSH tunneled
-AFP requests, when both "`advertise ssh`" and "`fqdn`" options are set
-in the `Global` section (double check with `asip-status(1)` after you
+AFP requests, when both "**advertise ssh**" and "**fqdn**" options are set
+in the **Global** section (double check with **asip-status** after you
 restarted afpd when you made changes to the settings). But there are a
 couple of reasons why you don't want to use this option at all:
 
@@ -555,7 +553,7 @@ couple of reasons why you don't want to use this option at all:
   wrong.
 
 - You cannot control which machines are logged on by Netatalk tools like
-  a `macusers` since all connection attempts seem to be made from
+  a **macusers** since all connection attempts seem to be made from
   localhost.
 
 - Indeed, to ensure that all AFP sessions are encrypted via SSH, you
@@ -644,7 +642,7 @@ In detail:
       and PAM
 
     - configure Netatalk via the special [LDAP options for
-      ACLs](afp.conf#options-for-acl-handling) in `afp.conf` so that Netatalk is
+      ACLs](afp.conf.html#options-for-acl-handling) in *afp.conf* so that Netatalk is
       able to retrieve the UUID for users and groups via LDAP search
       queries
 
@@ -817,9 +815,6 @@ When using FCE v2 you also get:
 
 - user logout (logout)
 
-For details on the available simple configuration options, take a look
-at `afp.conf`.
-
 ## Spotlight
 
 Starting with version 3.1 Netatalk supports Spotlight searching.
@@ -831,19 +826,19 @@ as metadata store, indexer and search engine.
 ### Configuration
 
 You can enable Spotlight and indexing either globally or on a per volume
-basis with the `spotlight` option.
+basis with the **spotlight** option.
 
 > **WARNING**
 
 > Once Spotlight is enabled for a single volume, all other volumes for
 which spotlight is disabled won't be searchable at all.
 
-The `dbus-daemon` binary has to be installed for Spotlight feature. The
+The **dbus-daemon** binary has to be installed for Spotlight feature. The
 path to dbus-daemon is determined at compile time the dbus-daemon build
 system option.
 
-In case the `dbus-daemon` binary is installed at the other path, you
-must use the global option `dbus daemon` to point to the path, e.g. for
+In case the **dbus-daemon** binary is installed at the other path, you
+must use the global option **dbus daemon** to point to the path, e.g. for
 Solaris with Tracker from OpenCSW:
 
     dbus daemon = /opt/csw/bin/dbus-daemon
@@ -928,7 +923,7 @@ Search Tracker:
 #### Advanced Tracker command line configuration
 
 Tracker stores its configuration via Gnome dconf backend which can be
-modified with the command `gsettings`.
+modified with the command **gsettings**.
 
 Gnome dconf settings are per-user settings, so, as Netatalk runs the
 Tracker processes as root, the settings are stored in the root user
@@ -947,22 +942,22 @@ org.freedesktop.Tracker.Miner.Files index-recursive-directories
 
 > This option controls which directories Tracker will index. Don't change
 this option manually as it is automatically set by Netatalk reflecting
-the setting of the `Spotlight` option of Netatalk volumes.
+the setting of the **spotlight** option of Netatalk volumes.
 
-org.freedesktop.Tracker.Miner.Files enable-monitors `true`
+org.freedesktop.Tracker.Miner.Files enable-monitors true
 
 > The value controls whether Tracker watches all configured paths for
 modification. Depending on the filesystem modification backend (FAM on
 Linux, FEN on Solaris), this feature may not work as reliable as one
 might wish, so it may be safer to disable it and instead rely on
 periodic crawling of Tracker itself. See also the option
-`crawling-interval`.
+**crawling-interval**.
 
-org.freedesktop.Tracker.Miner.Files crawling-interval `-1`
+org.freedesktop.Tracker.Miner.Files crawling-interval -1
 
 > Interval in days to check the filesystem is up to date in the database,
 maximum is 365, default is -1. -2 = crawling is disabled entirely, -1 =
-crawling \*may\* occur on startup (if not cleanly shutdown), 0 =
+crawling *may* occur on startup (if not cleanly shutdown), 0 =
 crawling is forced
 
 ### Supported metadata attributes

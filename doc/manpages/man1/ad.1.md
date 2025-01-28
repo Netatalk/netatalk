@@ -10,9 +10,9 @@ ad - AppleDouble file utility suite
 
 # Description
 
-`ad` is an AppleDouble file utility suite with Netatalk compatibility.
+**ad** is an AppleDouble file utility suite with Netatalk compatibility.
 AppleDouble data (extended attributes of files, .\_files in same
-directories or files in `.AppleDouble` directories) and the CNID
+directories or files in **.AppleDouble** directories) and the CNID
 databases are updated as appropriate when files in a shared Netatalk
 volume are modified.
 
@@ -50,19 +50,19 @@ Show version.
 
 List files and directories. Options:
 
--d
+**-d**
 
 > Directories are listed as plain files
 
--R
+**-R**
 
 > list subdirectories recursively
 
--l
+**-l**
 
 > Long output, list AFP info
 
--u
+**-u**
 
 > List UNIX info
 
@@ -112,29 +112,29 @@ the target is an AFP volume.
 
 Options:
 
--a
+**-a**
 
-> Archive mode. Same as -Rp.
+> Archive mode. Same as **-Rp**.
 
--f
+**-f**
 
 > For each existing destination pathname, remove it and create a new file,
 without prompting for confirmation regardless of its permissions. (The
--f option overrides any previous -i or -n options.)
+**-f** option overrides any previous **-i** or **-n** options.)
 
--i
+**-i**
 
 > Cause cp to write a prompt to the standard error output before copying a
 file that would overwrite an existing file. If the response from the
 standard input begins with the character 'y' or 'Y', the file copy is
-attempted. (The -i option overrides any previous -f or -n options.)
+attempted. (The **-i** option overrides any previous **-f** or **-n** options.)
 
--n
+**-n**
 
-> Do not overwrite an existing file. (The -n option overrides any previous
--f or -i options.)
+> Do not overwrite an existing file. (The **-n** option overrides any previous
+**-f** or **-i** options.)
 
--p
+**-p**
 
 > Cause cp to preserve the following attributes of each source file in the
 copy: modification time, access time, file flags, file mode, user ID,
@@ -142,17 +142,17 @@ and group ID, as allowed by permissions. If the user ID and group ID
 cannot be preserved, no error message is displayed and the exit value is
 not altered.
 
--R
+**-R**
 
 > If src_file designates a directory, cp copies the directory and the
 entire subtree connected at that point. If the src_file ends in a /, the
 contents of the directory are copied rather than the directory itself.
 
--v
+**-v**
 
 > Cause cp to be verbose, showing files as they are copied.
 
--x
+**-x**
 
 > File system mount points are not traversed.
 
@@ -169,24 +169,24 @@ needed. If either condition below is true, the files are copied and removed from
 
 Options:
 
--f
+**-f**
 
 > Do not prompt for confirmation before overwriting the destination path.
-(The -f option overrides any previous -i or -n options.)
+(The **-f** option overrides any previous **-i** or **-n** options.)
 
--i
+**-i**
 
 > Cause mv to write a prompt to standard error before moving a file that
 would overwrite an existing file. If the response from the standard
 input begins with the character \`y' or \`Y', the move is attempted.
-(The -i option overrides any previous -f or -n options.)
+(The **-i** option overrides any previous **-f** or **-n** options.)
 
--n
+**-n**
 
-> Do not overwrite an existing file. (The -n option overrides any previous
--f or -i options.)
+> Do not overwrite an existing file. (The **-n** option overrides any previous
+**-f** or **-i** options.)
 
--v
+**-v**
 
 > Cause mv to be verbose, showing files after they are moved.
 
@@ -200,11 +200,11 @@ volume, the corresponding CNIDs are deleted from the volumes database.
 
 The options are as follows:
 
--R
+**-R**
 
 > Attempt to remove the file hierarchy rooted in each file argument.
 
--v
+**-v**
 
 > Be verbose when deleting files, showing them as they are removed.
 
@@ -216,24 +216,24 @@ The set utility alters metadata on files within an AFP volume.
 
 The options are as follows:
 
--t <type\>
+**-t** <type\>
 
 > Change a file's four character file type.
 
--c <creator\>
+**-c** <creator\>
 
 > Change a file's four character creator type.
 
--l <label\>
+**-l** <label\>
 
 > Change a file's color label. See list below for available colors.
 
--f <flags\>
+**-f** <flags\>
 
 > Change a file's Finder flags. See list below for available flags.
 Uppercase letter sets the flag, lowercase removes the flag.
 
--a <attributes\>
+**-a** <attributes\>
 
 > Change a file's attributes. See list below for available attributes.
 Uppercase letter sets the flag, lowercase removes the flag.
@@ -269,7 +269,7 @@ Uppercase letter sets the flag, lowercase removes the flag.
 
 # See also
 
-`dbd(1)`, `addump(1)`.
+dbd(1), addump(1)
 
 # Author
 

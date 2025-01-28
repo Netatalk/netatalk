@@ -36,7 +36,7 @@ GitHub](https://github.com/Netatalk/netatalk/releases).
 
 Downloading the Git repository can be done quickly and easily:
 
-1.  Make sure you have Git installed. `which git` should produce a path
+1.  Make sure you have Git installed. **which git** should produce a path
     to git.
 
         $ which git
@@ -50,7 +50,7 @@ Downloading the Git repository can be done quickly and easily:
         ...
         Resolving deltas: 100% (32227/32227), done.
 
-    This will create a local directory called `netatalk-code` containing
+    This will create a local directory called *netatalk-code* containing
     a complete and fresh copy of the whole Netatalk source tree from the
     Git repository.
 
@@ -126,7 +126,7 @@ functionality.
 
 - CrackLib
 
-  When using the Random Number UAMs and netatalk's own `afppasswd`
+  When using the Random Number UAMs and netatalk's own **afppasswd**
   password manager, CrackLib can help protect against setting weak
   passwords for authentication with netatalk.
 
@@ -137,11 +137,11 @@ functionality.
 
   D-Bus provides a mechanism for sending messages between processes,
   used by multiple Netatalk features: Spotlight, Zeroconf with Avahi,
-  and the `afpstats` tool.
+  and the **afpstats** tool.
 
 - GLib and GIO
 
-  Used by the `afpstats` tool to interface with D-Bus.
+  Used by the **afpstats** tool to interface with D-Bus.
 
 - iconv
 
@@ -236,7 +236,7 @@ When building from source, the Netatalk build system will attempt to
 detect which init style is appropriate for your platform. You can also
 configure the build system to install the specific type of startup
 script(s)  you want by specifying the
-`with-init-style` option. For the syntax, please refer to the build
+**with-init-style** option. For the syntax, please refer to the build
 system's help text.
 
 Since new Linux, \*BSD, and Solaris-like distributions appear at regular
@@ -257,11 +257,11 @@ mechanism is used:
 In the absence of a startup script, you can also launch this daemon
 directly (as root), and kill it with SIGTERM when you are done with it.
 
-Additionally, make sure that the configuration file `afp.conf` is in the
+Additionally, make sure that the configuration file *afp.conf* is in the
 right place. You can inquire netatalk where it is expecting the file to
-be by running the `netatalk -V` command.
+be by running the **netatalk -V** command.
 
 If you want to run AppleTalk services, you also need to start the
-`atalkd` daemon, plus the optional `papd`, `timelord`, and `a2boot`
+**atalkd** daemon, plus the optional **papd**, **timelord**, and **a2boot**
 daemons. See the [AppleTalk](AppleTalk.html) chapter in this manual for more
 information.

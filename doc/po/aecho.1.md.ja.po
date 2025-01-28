@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 00:36+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -164,36 +164,34 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:15
+#, no-wrap
 msgid ""
-"`aecho` repeatedly sends an Apple Echo Protocol (AEP) packet to the host "
-"specified by the given AppleTalk `address` or `nbpname` and reports whether "
-"a reply was received. Requests are sent at the rate of one per second."
-msgstr ""
-"`aecho` は、指定された AppleTalk `address` または `nbpname` で指定されたホス"
-"トに Apple Echo Protocol (AEP)  パケットを繰り返し送信し、応答が受信されたか"
-"どうかを報告する。リクエストは 1 秒あたり 1 つの速度で送信される。"
+"**aecho** repeatedly sends an Apple Echo Protocol (AEP) packet to the host\n"
+"specified by the given AppleTalk **address** or **nbpname** and reports\n"
+"whether a reply was received. Requests are sent at the rate of one per\n"
+"second.\n"
+msgstr "**aecho** は、指定された AppleTalk **address** または **nbpname** で指定されたホストに Apple Echo Protocol (AEP) パケットを繰り返し送信し、応答が受信されたかどうかを報告する。リクエストは 1 秒あたり 1 つの速度で送信される。\n"
 
+# no-wrap
 #. type: Plain text
 #: manpages/man1/aecho.1.md:18
+#, no-wrap
 msgid ""
-"`address` is parsed by `atalk_aton(3)`. `nbpname` is parsed by "
-"`nbp_name(3)`. The nbp type defaults to \\`*Workstation*'."
-msgstr ""
-"`address` は、`atalk_aton(3)` によって解析される。 `nbpname` は、"
-"`nbp_name(3)` によって解析される。 nbp タイプのデフォルトは "
-"\\`*Workstation*' である。"
+"**address** is parsed by **atalk_aton**(3). **nbpname** is parsed by\n"
+"**nbp_name**(3). The nbp type defaults to \\`*Workstation*'.\n"
+msgstr "**address** は、**atalk_aton**(3) によって解析される。 **nbpname** は、**nbp_name**(3) によって解析される。 nbp タイプのデフォルトは \\`*Workstation*' である。\n"
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:23
 msgid ""
-"When `aecho` is terminated, it reports the number of packets sent, the "
+"When **aecho** is terminated, it reports the number of packets sent, the "
 "number of responses received, and the percentage of packets lost. If any "
 "responses were received, the minimum, average, and maximum round trip times "
 "are reported."
 msgstr ""
-"`aecho` が終了すると、送信されたパケットの数、受信した応答の数、および失われ"
-"たパケットの割合が報告される。応答が受信された場合、最小、平均、および最大の"
-"往復時間が報告される。"
+"**aecho** が終了すると、送信されたパケットの数、受信した応答の数、および失わ"
+"れたパケットの割合が報告される。応答が受信された場合、最小、平均、および最大"
+"の往復時間が報告される。"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afppasswd.1.md:26
@@ -233,7 +231,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/aecho.1.md:43
 #, no-wrap
-msgid "`-c` <count\\>\n"
+msgid "**-c** <count\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -244,5 +242,5 @@ msgstr "> *count* パケット後に停止する。\n"
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:49
-msgid "`ping(1)`, `atalk_aton(3)`, `nbp_name(3)`, `aep(4)`, `atalkd(8)`."
+msgid "ping(1), atalk_aton(3), nbp_name(3), aep(4), atalkd(8)"
 msgstr ""

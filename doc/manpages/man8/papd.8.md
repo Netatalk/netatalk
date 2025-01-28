@@ -10,59 +10,58 @@ papd — AppleTalk print server daemon
 
 # Description
 
-`papd` is the AppleTalk printer daemon. This daemon accepts print jobs
+**papd** is the AppleTalk printer daemon. This daemon accepts print jobs
 from AppleTalk clients (typically Macintosh computers) using the Printer
-Access Protocol (PAP). When used with System V printing systems, `papd`
-spools jobs directly into an `lpd(8)` spool directory and wakes up `lpd`
+Access Protocol (PAP). When used with System V printing systems, **papd**
+spools jobs directly into an **lpd**(8) spool directory and wakes up **lpd**
 after accepting a job from the network to have it re-examine the
 appropriate spool directory. The actual printing and spooling is handled
-entirely by `lpd`.
+entirely by **lpd**.
 
-`papd` can also pipe the print job to an external program for
+**papd** can also pipe the print job to an external program for
 processing, and this is the preferred method on systems not using CUPS
-to avoid compatibility problems with all the flavours of `lpd` in use.
+to avoid compatibility problems with all the flavours of **lpd** in use.
 
 As of Netatalk 2.0, CUPS is also supported. Simply using *cupsautoadd*
 as the first papd.conf entry will share all CUPS printers automagically.
 It is still possible to overwrite these defaults by individually
-defining printer shares. See `papd.conf(5)` for details on the
+defining printer shares. See **papd.conf**(5) for details on the
 configuration file format.
 
-`papd` is typically started at boot time from system init scripts or
-services. It first reads from its configuration file, `papd.conf`.
+**papd** is typically started at boot time from system init scripts or
+services. It first reads from its configuration file, **papd.conf**.
 
 If no configuration file is given, the hostname of the machine is used
 as the NBP name, and all options take their default value.
 
 # Options
 
--d
+**-d**
 
 > Do not fork or disassociate from the terminal.
 
--f <configfile\>
+**-f** <configfile\>
 
-> Consult <configfile\> instead of `papd.conf` for the configuration
+> Consult <configfile\> instead of **papd.conf** for the configuration
 information.
 
--p <printcap\>
+**-p** <printcap\>
 
-> Consult <printcap\> instead of `/etc/printcap` for LPD configuration
+> Consult <printcap\> instead of */etc/printcap* for LPD configuration
 information.
 
--P <pidfile\>
+**-P** <pidfile\>
 
-> Specifies the file in which `papd` stores its process id.
+> Specifies the file in which **papd** stores its process id.
 
--v | -V
+**-v** | **-V**
 
 > Print version information and exit.
 
 # Authentication
 
-PSSP (Print Server Security Protocol) is
-an authentication protocol carried out
-through postscript printer queries to the print server. Using PSSP
+PSSP (Print Server Security Protocol) is an authentication protocol carried
+out through postscript printer queries to the print server. Using PSSP
 requires LaserWriter 8.6.1 or greater on the client Mac. The user will
 be prompted to enter their username and password before they print. It
 may be necessary to re-setup the printer on each client the first time
@@ -74,14 +73,14 @@ robust than CAP-style authentication, described below.
 CAP-style authentication gets its name
 from the method CAP (Columbia AppleTalk Package) used to authenticate
 its Mac clients' printing. This method requires that a user login to a
-file share before they print. `afpd` records the username in a temporary
+file share before they print. **afpd** records the username in a temporary
 file named after the client's AppleTalk address, and it deletes the
 temporary file when the user disconnects. Therefore CAP style
-authentication will *not* work for clients connected to `afpd` via
-TCP/IP. `papd` gets the username from the file with the same AppleTalk
+authentication will *not* work for clients connected to **afpd** via
+TCP/IP. **papd** gets the username from the file with the same AppleTalk
 address as the machine connecting to it. CAP-style authentication will
 work with any Mac client. If both CAP and PSSP are enabled for a
-particular printer, CAP will be tried first, then `papd` will fall back
+particular printer, CAP will be tried first, then **papd** will fall back
 to PSSP.
 
 The list of UAMs to use for authentication (specified with the 'am'
@@ -99,15 +98,15 @@ correct password.
 
 # Files
 
-`papd.conf`
+*papd.conf*
 
 > Default configuration file.
 
-`/etc/printcap`
+*/etc/printcap*
 
 > Printer capabilities database.
 
-`.ppd`
+*.ppd*
 
 > PostScript Printer Description file. papd answers configuration and font
 queries from printing clients by consulting the configured PPD file.
@@ -117,7 +116,7 @@ answer, possibly causing the client to send excessively large jobs.
 
 # Caveats
 
-`papd` accepts characters with the high bit set (a full 8-bits) from the
+**papd** accepts characters with the high bit set (a full 8-bits) from the
 clients, but some PostScript printers (including Apple's LaserWriter
 family) only accept 7-bit characters on their serial interface by
 default. The same applies for some printers when they're accessed via
@@ -132,7 +131,7 @@ are installed at the client's side, too.
 
 # See also
 
-`lp(1)`, `lpr(1)`, `lprm(1)`, `printcap(5)`, `lpc(8)`, `lpd(8)`, `papd.conf(8)`.
+lp(1), lpr(1), lprm(1), printcap(5), lpc(8), lpd(8), papd.conf(8)
 
 # Author
 

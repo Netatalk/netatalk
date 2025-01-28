@@ -8,11 +8,11 @@ afppasswd — AFP password maintenance utility
 
 # Description
 
-`afppasswd` creates and maintains an afppasswd file, which supplies the
+**afppasswd** creates and maintains an *afppasswd* file, which supplies the
 user credentials for the "Randnum exchange" and "2-Way Randnum exchange"
 User Authentication Modules.
 
-`afppasswd` can either be called by root with parameters to manage all
+**afppasswd** can either be called by root with parameters to manage all
 user credentials, or by local system users with no parameters to change
 their own AFP passwords.
 
@@ -34,34 +34,34 @@ Local user changing their own password:
 
 # Options
 
-`-a`
+**-a**
 
-> Add a new user to the `afppasswd` file.
+> Add a new user to the *afppasswd* file.
 
-`-c`
+**-c**
 
-> Create and/or initialize `afppasswd` file or specific user.
+> Create and/or initialize *afppasswd* file or specific user.
 
-`-f`
+**-f**
 
 > Force the current action.
 
-`-p` <path\>
+**-p** <path\>
 
-> Path to `afppasswd` file.
+> Path to *afppasswd* file.
 
-`-n`
+**-n**
 
 > If cracklib support is built into *netatalk* this option will cause
 cracklib checking to be disabled, if the superuser does not want to have
 the password run against the cracklib dictionary.
 
-`-u` <minimum uid\>
+**-u** <minimum uid\>
 
-> This is the minimum *user id* (uid) that `afppasswd` will use when
+> This is the minimum *user id* (uid) that **afppasswd** will use when
 creating users.
 
-`-w` <password string\>
+**-w** <password string\>
 
 > Use string as password, instead of typing it interactively. Please use
 this option only if absolutely necessary, since the password may remain
@@ -69,7 +69,7 @@ in the terminal history in plain text.
 
 # See Also
 
-`afpd(8)`, `afp.conf(5)`.
+afpd(8), afp.conf(5)
 
 # Author
 

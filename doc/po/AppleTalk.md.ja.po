@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-26 21:23+0100\n"
+"POT-Creation-Date: 2025-01-29 13:17+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -16,8 +16,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
-#: manual/AppleTalk.md:154 manual/Configuration.md:837 manual/Installation.md:4
+#: manpages/man5/afp.conf.5.md:1054 manpages/man5/afp.conf.5.md:1089
+#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -27,14 +27,15 @@ msgstr "> **警告**\n"
 #: manpages/man5/papd.conf.5.md:137 manual/AppleTalk.md:351
 msgid ""
 "Starting with Netatalk 2.0, direct CUPS integration is available. In this "
-"case, defining only a queue name as `pr` parameter won't invoke the SysV lpd "
-"daemon but uses CUPS instead. Unless a specific PPD has been assigned using "
-"the `pd` switch, the PPD configured in CUPS will be used by `papd`, too."
+"case, defining only a queue name as **pr** parameter won't invoke the SysV "
+"lpd daemon but uses CUPS instead. Unless a specific PPD has been assigned "
+"using the **pd** switch, the PPD configured in CUPS will be used by "
+"**papd**, too."
 msgstr ""
 "Netatalk 2.0 以降では、直接 CUPS 統合が使用可能。この場合、キュー名のみを "
-"`pr` パラメータとして定義すると、SysV lpd デーモンは呼び出されず、代わりに "
-"CUPS が使用される。 `pd` スイッチを使用して特定の PPD が割り当てられていない"
-"限り、CUPS で構成された PPD は `papd` でも使用される。"
+"**pr** パラメータとして定義すると、SysV lpd デーモンは呼び出されず、代わりに "
+"CUPS が使用される。 **pd** スイッチを使用して特定の PPD が割り当てられていな"
+"い限り、CUPS で構成された PPD は **papd** でも使用される。"
 
 #. type: Title #
 #: manual/AppleTalk.md:1
@@ -87,14 +88,14 @@ msgstr "AppleTalk を使用するかどうか"
 msgid ""
 "You'll need the AppleTalk support built into Netatalk to provide file "
 "services to older AFP clients not capable of using AFP over TCP. It also "
-"enables printing services via PAP by `papd(8)`, a timeserver `timelord(8)` "
-"for older Mac clients, and NetBoot server `a2boot(8)` for Apple II clients."
+"enables printing services via PAP by **papd**, a timeserver **timelord** for "
+"older Mac clients, and NetBoot server **a2boot** for Apple II clients."
 msgstr ""
 "TCP 経由で AFP を使用できない古い AFP クライアントにファイル サービスを提供す"
-"るには、Netatalk に組み込まれた AppleTalk サポートが必要。また、`papd(8)` に"
-"よる PAP 経由の印刷サービス、古い Mac クライアント用のタイムサーバー "
-"`timelord(8)`、および Apple II クライアント用の NetBoot サーバー `a2boot(8)` "
-"も有効になる。"
+"るには、Netatalk に組み込まれた AppleTalk サポートが必要。また、**papd** によ"
+"る PAP 経由の印刷サービス、古い Mac クライアント用のタイムサーバー "
+"**timelord**、および Apple II クライアント用の NetBoot サーバー **a2boot** も"
+"有効になる。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:30
@@ -117,12 +118,12 @@ msgstr ""
 #: manual/AppleTalk.md:34
 msgid ""
 "To use the different base AppleTalk protocols with Netatalk, one has to use "
-"`atalkd(8)`. It can also be used as an AppleTalk router to connect different "
+"**atalkd**. It can also be used as an AppleTalk router to connect different "
 "independent network segments to each other."
 msgstr ""
-"Netatalk でさまざまな基本 AppleTalk プロトコルを使用するには、`atalkd(8)` を"
-"使用する必要がある。また、AppleTalk ルーターとして使用して、異なる独立した"
-"ネットワーク セグメントを相互に接続することもできる。"
+"Netatalk でさまざまな基本 AppleTalk プロトコルを使用するには、**atalkd** を使"
+"用する必要がある。また、AppleTalk ルーターとして使用して、異なる独立したネッ"
+"トワーク セグメントを相互に接続することもできる。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:39
@@ -144,11 +145,11 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:45
 msgid ""
-"If Netatalk has been built with AppleTalk support (pass `-Dwith-"
-"appletalk=true` to the build system), this activates AFP over AppleTalk."
+"If Netatalk has been built with AppleTalk support (pass *-Dwith-"
+"appletalk=true* to the build system), this activates AFP over AppleTalk."
 msgstr ""
 "Netatalk が AppleTalk サポート付きでビルドされている場合 (ビルド システムに "
-"`-Dwith-appletalk=true` を渡す)、AppleTalk 経由の AFP がアクティブになる。"
+"*-Dwith-appletalk=true* を渡す)、AppleTalk 経由の AFP がアクティブになる。"
 
 #. type: Title ###
 #: manual/AppleTalk.md:46
@@ -167,8 +168,8 @@ msgid ""
 msgstr ""
 "これは最も単純な形式で、AppleTalk を netatalk で使用できる。 稼働中のネット"
 "ワーク インターフェイスが 1 つだけの場合は、atalkd の設定をまったく処理する必"
-"要はありません。atalkd は AppleTalk の自己設定機能を使用して AppleTalk アドレ"
-"スを取得し、自動的にネットワークに登録する。"
+"要はない。atalkd は AppleTalk の自己設定機能を使用して AppleTalk アドレスを取"
+"得し、自動的にネットワークに登録する。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:56
@@ -324,10 +325,11 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:112
 msgid ""
-"For further information see `atalkd.conf(5)` and the developer documentation."
+"For further information see **atalkd.conf**(5) and the developer "
+"documentation."
 msgstr ""
-"詳細については、`atalkd.conf(5)` および開発者向けドキュメントを参照してくださ"
-"い。"
+"詳細については、**atalkd.conf**(5) および開発者向けドキュメントを参照してくだ"
+"さい。"
 
 #. type: Title ###
 #: manual/AppleTalk.md:113
@@ -459,10 +461,10 @@ msgid ""
 "established ones on the net (if in doubt, always check syslog for details)."
 msgstr ""
 "AppleTalk ネットワークでは、ネット範囲は一意である必要があり、互いに重複して"
-"はなりません。幸い、netatalk の atalkd は、設定がネット上の既存の設定と競合し"
-"ていないかどうかをチェックするほど丁寧。そのような場合、設定は破棄され、ネッ"
-"ト上の既存の設定が適応される (疑わしい場合は、常に syslog で詳細を確認してく"
-"ださい)。"
+"はならない。幸い、netatalk の atalkd は、設定がネット上の既存の設定と競合して"
+"いないかどうかをチェックするほど丁寧。そのような場合、設定は破棄され、ネット"
+"上の既存の設定が適応される (疑わしい場合は、常に syslog で詳細を確認してくだ"
+"さい)。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:172
@@ -503,11 +505,11 @@ msgid ""
 "multiple physical segments as well as more than one zone name on a single "
 "segment (and various combinations of this)."
 msgstr ""
-"AppleTalk ゾーンは、物理ネットワークとは *まったく* 関係ありません。クライア"
-"ントの利便性のためのヒントにすぎず、ネットワーク リソースをより快適かつ迅速に"
-"見つけられるようにする。複数の物理セグメントにわたって 1 つのゾーン名を使用す"
-"ることも、1 つのセグメントに複数のゾーン名を使用することもできる (また、これ"
-"らのさまざまな組み合わせも使用できる)。"
+"AppleTalk ゾーンは、物理ネットワークとは *まったく* 関係ない。クライアントの"
+"利便性のためのヒントにすぎず、ネットワーク リソースをより快適かつ迅速に見つけ"
+"られるようにする。複数の物理セグメントにわたって 1 つのゾーン名を使用すること"
+"も、1 つのセグメントに複数のゾーン名を使用することもできる (また、これらのさ"
+"まざまな組み合わせも使用できる)。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:192
@@ -602,7 +604,7 @@ msgid ""
 "zone\", forcing dumb AppleTalk devices like Laser printers to show up "
 "automatically into this zone. AppleTalk printer queues supplied by "
 "netatalk's papd can be registered into the zone \"Spoolers\" simply by "
-"adjusting the settings in `papd.conf(5)`. On eth1 we use the different and "
+"adjusting the settings in **papd.conf**(5). On eth1 we use the different and "
 "non-overlapping netrange 1001-2000, set the default zone to \"Macs\" and "
 "publish a fourth zone name \"Servers\"."
 msgstr ""
@@ -611,9 +613,9 @@ msgstr ""
 "は 2 つのゾーン名が発行される。「Printers」はいわゆる「標準ゾーン」で、レー"
 "ザー プリンタなどの低機能の AppleTalk デバイスがこのゾーンに自動的に表示され"
 "るように強制する。netatalk の papd によって提供される AppleTalk プリンタ "
-"キューは、`papd.conf(5)` の設定を調整するだけで、ゾーン「Spoolers」に登録でき"
-"る。eth1 では、異なる重複しないネット範囲 1001-2000 を使用し、デフォルト ゾー"
-"ンを「Macs」に設定して、4 番目のゾーン名「Servers」を発行する。"
+"キューは、**papd.conf**(5) の設定を調整するだけで、ゾーン「Spoolers」に登録で"
+"きる。eth1 では、異なる重複しないネット範囲 1001-2000 を使用し、デフォルト "
+"ゾーンを「Macs」に設定して、4 番目のゾーン名「Servers」を発行する。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:232
@@ -635,10 +637,10 @@ msgid ""
 msgstr ""
 "上記の例と同じネットワーク設定を使用するが、atalkd が両方のセグメントで同じ"
 "ゾーン名を公開するようにする。AppleTalk ネットワークのすべてのセグメントで同"
-"じゾーン名が使用されるため、ゾーン名はまったく表示されませんが、AppleTalk "
-"ルーティングは引き続きアクティブになる。この場合、いわゆる「非拡張」"
-"LocalTalk ネットワーク (フェーズ 1) を EtherTalk「拡張」ネットワーク (フェー"
-"ズ 2)  に透過的に接続する。"
+"じゾーン名が使用されるため、ゾーン名はまったく表示されないが、AppleTalk ルー"
+"ティングは引き続きアクティブになる。この場合、いわゆる「非拡張」LocalTalk "
+"ネットワーク (フェーズ 1) を EtherTalk「拡張」ネットワーク (フェーズ 2)  に透"
+"過的に接続する。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:241
@@ -721,9 +723,9 @@ msgid ""
 "netranges, published zone names and also the \"standard zone\" per segment"
 msgstr ""
 "ちなみに、1 つのネットワーク セグメントに複数のシード ルーターを接続すること"
-"はまったく問題ありません。ただし、この場合、接続されたすべてのルーターの構成"
-"が、ネット範囲、公開されたゾーン名、およびセグメントごとの「標準ゾーン」に関"
-"してまったく同じになるように注意する必要がある。"
+"はまったく問題ない。ただし、この場合、接続されたすべてのルーターの構成が、"
+"ネット範囲、公開されたゾーン名、およびセグメントごとの「標準ゾーン」に関して"
+"まったく同じになるように注意する必要がある。"
 
 #. type: Title ##
 #: manual/AppleTalk.md:276
@@ -735,12 +737,12 @@ msgstr "印刷"
 #: manual/AppleTalk.md:281
 msgid ""
 "Netatalk can act both as a PAP client to access AppleTalk-capable printers, "
-"and as a PAP server. The former by using the `pap(1)` utility and the latter "
-"by starting the `papd(8)` service."
+"and as a PAP server. The former by using the **pap**(1) utility and the "
+"latter by starting the **papd** service."
 msgstr ""
 "Netatalk は、AppleTalk 対応プリンタにアクセスするための PAP クライアントとし"
-"ても、PAP サーバとしても機能する。前者は `pap(1)` ユーティリティを使用し、後"
-"者は `papd(8)` サービスを起動することで行う。"
+"ても、PAP サーバとしても機能する。前者は **pap**(1) ユーティリティを使用し、"
+"後者は **papd** サービスを起動することで行う。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:292
@@ -800,17 +802,17 @@ msgstr "PAP 印刷サーバーの設定"
 #. type: Plain text
 #: manual/AppleTalk.md:313
 msgid ""
-"Netatalk's `papd` is able to provide AppleTalk printing services for "
+"Netatalk's **papd** is able to provide AppleTalk printing services for "
 "Macintoshes or, to be more precise, PAP clients in general. Netatalk does "
 "not contain a full-blown spooler implementation itself, papd only handles "
 "the bidirectional communication and submittance of printjobs from PAP "
 "clients. So normally one needs to integrate papd with a Unix printing system "
 "like e.g. classic SysV lpd, BSD lpr, LPRng, CUPS or the like."
 msgstr ""
-"Netatalk の `papd` は、Macintosh、またはより正確には一般的な PAP クライアント"
-"に AppleTalk 印刷サービスを提供できる。 Netatalk 自体には本格的なスプーラ実装"
-"は含まれておらず、papd は双方向通信と PAP クライアントからの印刷ジョブの送信"
-"のみを処理する。そのため、通常は、papd を Unix 印刷システム (例:クラシック "
+"Netatalk の **papd** は、Macintosh、またはより正確には一般的な PAP クライアン"
+"トに AppleTalk 印刷サービスを提供できる。 Netatalk 自体には本格的なスプーラ実"
+"装は含まれておらず、papd は双方向通信と PAP クライアントからの印刷ジョブの送"
+"信のみを処理する。そのため、通常は、papd を Unix 印刷システム (例:クラシック "
 "SysV lpd、BSD lpr、LPRng、CUPS など。"
 
 #. type: Plain text
@@ -832,22 +834,22 @@ msgstr ""
 #: manual/AppleTalk.md:330
 msgid ""
 "Netatalk formerly had built-in support for System V lpd printing in a way "
-"that papd saved the printed job directly into the spooldir and calls `lpd` "
+"that papd saved the printed job directly into the spooldir and calls **lpd** "
 "afterwards, to pick up the file and do the rest. Due to incompatibilities "
 "with many lpd implementations the normal behaviour was to print directly "
 "into a pipe instead of specifying a printer by name and using lpd "
 "interaction. As of Netatalk 2.0, another alternative has been implemented: "
 "direct interaction with CUPS (Note: when CUPS support is compiled in, then "
 "the SysV lpd support doesn't work at all). Detailed examples can be found in "
-"the `papd.conf(5)` manual page."
+"the **papd.conf**(5) manual page."
 msgstr ""
 "Netatalk には以前、System V lpd 印刷のサポートが組み込まれていました。papd は"
-"印刷ジョブを spooldir に直接保存し、その後 `lpd` を呼び出してファイルを取得"
+"印刷ジョブを spooldir に直接保存し、その後 **lpd** を呼び出してファイルを取得"
 "し、残りの処理を実行していました。多くの lpd 実装との非互換性のため、通常の動"
 "作では、プリンタを名前で指定して lpd とのやり取りを使用するのではなく、パイプ"
 "に直接印刷していました。Netatalk 2.0 では、別の代替手段が実装された。CUPS と"
 "の直接のやり取り (注: CUPS サポートがコンパイルされている場合、SysV lpd サ"
-"ポートはまったく機能しません)。詳細な例は、`papd.conf(5)` マニュアル ページに"
+"ポートはまったく機能しない)。詳細な例は、**papd.conf**(5) マニュアル ページに"
 "ある。"
 
 #. type: Title ####
@@ -860,14 +862,14 @@ msgstr "papd と SysV lpd の統合"
 #: manual/AppleTalk.md:337
 msgid ""
 "Unless CUPS support has been compiled in (which is default from Netatalk 2.0 "
-"on) one simply defines the lpd queue in question by setting the `pr` "
-"parameter to the queue name. If no `pr` parameter is set, the default "
+"on) one simply defines the lpd queue in question by setting the **pr** "
+"parameter to the queue name. If no **pr** parameter is set, the default "
 "printer will be used."
 msgstr ""
 "CUPS サポートがコンパイルされていない場合 (Netatalk 2.0 以降ではデフォルト)、"
-"`pr` パラメータをキュー名に設定することで、問題の lpd キューを定義するだけで"
-"す。 `pr` パラメータが設定されていない場合は、デフォルトのプリンタが使用され"
-"る。"
+"**pr** パラメータをキュー名に設定することで、問題の lpd キューを定義するだけ"
+"です。 **pr** パラメータが設定されていない場合は、デフォルトのプリンタが使用"
+"される。"
 
 #. type: Title ####
 #: manual/AppleTalk.md:338
@@ -921,22 +923,20 @@ msgstr "AppleTalk プリンタの使用"
 #. type: Plain text
 #: manual/AppleTalk.md:364
 msgid ""
-"Netatalk's `papstatus(8)` can be used to query AppleTalk printers, `pap(1)` "
-"to print to them."
+"Netatalk's **papstatus**(8) can be used to query AppleTalk printers, "
+"**pap**(1) to print to them."
 msgstr ""
-"Netatalk の `papstatus(8)` は AppleTalk プリンタのクエリに使用でき、 "
-"`pap(1)` はプリンタに印刷するのに使用できる。"
+"Netatalk の **papstatus**(8) は AppleTalk プリンタのクエリに使用でき、 "
+"**pap**(1) はプリンタに印刷するのに使用できる。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:368
+#, no-wrap
 msgid ""
-"`pap` can be used stand-alone or as part of an output filter or a CUPS "
-"backend (which is the preferred method since one does not have to deal with "
-"all the options)."
-msgstr ""
-"`pap` はスタンドアロンで使用することも、出力フィルタまたは CUPS バックエンド"
-"の一部として使用することもできる (すべてのプリンタを処理する必要がないため、"
-"この方法の方が推奨される)オプション)。"
+"**pap** can be used stand-alone or as part of an output filter or a CUPS\n"
+"backend (which is the preferred method\n"
+"since one does not have to deal with all the options).\n"
+msgstr "**pap** はスタンドアロンで使用することも、出力フィルタまたは CUPS バックエンドの一部として使用することもできる (すべてのプリンタを処理する必要がないため、この方法の方が推奨される)オプション)。\n"
 
 #. type: Plain text
 #: manual/AppleTalk.md:370
@@ -947,11 +947,11 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:374
 msgid ""
-"The file `/usr/share/doc/gs/examples/tiger.ps` is sent to a printer called "
+"The file */usr/share/doc/gs/examples/tiger.ps* is sent to a printer called "
 "\"ColorLaserWriter 16/600\" in the standard zone \"\\*\". The device type is "
 "\"LaserWriter\" (can be suppressed since it is the default)."
 msgstr ""
-"ファイル `/usr/share/doc/gs/examples/tiger.ps` は、標準ゾーン \"\\*\" にある "
+"ファイル */usr/share/doc/gs/examples/tiger.ps* は、標準ゾーン \"\\*\" にある "
 "\"ColorLaserWriter 16/600\" というプリンタに送信される。デバイス タイプは "
 "\"LaserWriter\" (デフォルトなので省略できる)。"
 
@@ -966,17 +966,17 @@ msgstr ""
 msgid ""
 "GhostScript is used to convert a PostScript job to PCL3 output suitable for "
 "a Color DeskWriter. Since no file has been supplied on the command line, "
-"`pap` reads the data from stdin. The printer's address will be read from the "
-"`.paprc` file in the same directory, `pap` will be called (in our example "
-"simply containing \"Color DeskWriter:DeskWriter@Printers\"). The `-E` switch "
-"forces `pap` to not wait for an EOF from the printer."
+"**pap** reads the data from stdin. The printer's address will be read from "
+"the *.paprc* file in the same directory, **pap** will be called (in our "
+"example simply containing \"Color DeskWriter:DeskWriter@Printers\"). The **-"
+"E** switch forces **pap** to not wait for an EOF from the printer."
 msgstr ""
 "GhostScript は、PostScriptジョブをColor DeskWriterに適したPCL3出力に変換する"
-"ために使用される。コマンド ラインにファイルが指定されていないため、`pap`は"
+"ために使用される。コマンド ラインにファイルが指定されていないため、**pap**は"
 "stdinからデータを読み取る。プリンタのアドレスは、同じディレクトリにある"
-"`.paprc`ファイルから読み取られ、`pap`が呼び出される(この例では、単に「Color "
-"DeskWriter:DeskWriter@Printers」が含まれている)。`-E`スイッチにより、`pap`は"
-"プリンタからのEOFを待たなくなる。"
+"*.paprc*ファイルから読み取られ、**pap**が呼び出される(この例では、単に"
+"「Color DeskWriter:DeskWriter@Printers」が含まれている)。**-E**スイッチによ"
+"り、**pap**はプリンタからのEOFを待たなくなる。"
 
 #. type: Title ##
 #: manual/AppleTalk.md:385
@@ -992,31 +992,30 @@ msgstr ""
 
 #. type: Plain text
 #: manual/AppleTalk.md:393
+#, no-wrap
 msgid ""
-"`timelord`, an AppleTalk based time server, is useful for automatically "
-"synchronizing the system time on older Macintosh or Apple II clients that do "
-"not support NTP."
-msgstr ""
-"`timelord` は AppleTalk ベースのタイム サーバーで、NTP をサポートしていない古"
-"い Macintosh または Apple II クライアントのシステム時間を自動的に同期するのに"
-"役立つ。"
+"**timelord**, an AppleTalk based time\n"
+"server, is useful for automatically synchronizing the system time on\n"
+"older Macintosh or Apple II clients that do not support\n"
+"NTP.\n"
+msgstr "**timelord** は AppleTalk ベースのタイム サーバーで、NTP をサポートしていない古い Macintosh または Apple II クライアントのシステム時間を自動的に同期するのに役立つ。\n"
 
 #. type: Plain text
 #: manual/AppleTalk.md:397
 msgid ""
-"Netatalk's `timelord` is compatible with the tardis client for Macintosh "
+"Netatalk's **timelord** is compatible with the tardis client for Macintosh "
 "developed at the [University of Melbourne.](https://web.archive.org/web/"
 "20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html)"
 msgstr ""
-"Netatalk の `timelord` は [メルボルン大学](https://web.archive.org/web/"
+"Netatalk の **timelord** は [メルボルン大学](https://web.archive.org/web/"
 "20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html)で開"
 "発された Macintosh 用の tardis クライアントと互換性がある。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:400
 msgid ""
-"For further information please have a look at the `timelord(8)` manual page."
-msgstr "詳細については、`timelord(8)` マニュアル ページをご覧ください。"
+"For further information please have a look at the **timelord** manual page."
+msgstr "詳細については、**timelord** マニュアル ページをご覧ください。"
 
 #. type: Title ##
 #: manual/AppleTalk.md:401
@@ -1032,12 +1031,12 @@ msgstr "Apple 2 ネットブート"
 
 #. type: Plain text
 #: manual/AppleTalk.md:408
+#, no-wrap
 msgid ""
-"`a2boot` is a service that allows you to boot an Apple //e or Apple IIGS "
-"into ProDOS or GS/OS through an AFP volume served by Netatalk."
-msgstr ""
-"`a2boot` は、 Apple //e または Apple IIGS を、Netatalk が提供する AFP ボ"
-"リュームを介して ProDOS または GS/OS にブートする。"
+"**a2boot** is a service that allows you to\n"
+"boot an Apple //e or Apple IIGS into ProDOS or GS/OS through an AFP\n"
+"volume served by Netatalk.\n"
+msgstr "**a2boot** は、 Apple //e または Apple IIGS を、Netatalk が提供する AFP ボリュームを介して ProDOS または GS/OS にブートする。\n"
 
 #. type: Plain text
 #: manual/AppleTalk.md:411
@@ -1051,5 +1050,7 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:413
 msgid ""
-"For further information please have a look at the `a2boot(8)` manual page."
-msgstr "詳細については、`a2boot(8)` マニュアル ページを参照してください。"
+"For further information please have a look at the [a2boot](a2boot.html) "
+"manual page."
+msgstr ""
+"詳細については、[a2boot](a2boot.html) マニュアル ページを参照してください。"

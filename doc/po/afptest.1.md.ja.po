@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-29 00:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -190,71 +190,61 @@ msgstr ""
 #: manpages/man1/afptest.1.md:27
 msgid ""
 "All of the tools in the *afptest* family follow the same general usage "
-"pattern and parameters. You set the AFP protocol revision (`-1` through "
-"`-7`), then the address and credentials of the host to test (which can be "
+"pattern and parameters. You set the AFP protocol revision (**-1** through "
+"**-7**), then the address and credentials of the host to test (which can be "
 "localhost). Some tests require a second user and second volume to be define. "
 "Yet another set of tests must be run from localhost, and the local path to "
 "the volume under test to be provided. Single tests or test sections can be "
-"executed with the `-f` option. Available tests can be listed with the `-l` "
-"option."
+"executed with the **-f** option. Available tests can be listed with the **-"
+"l** option."
 msgstr ""
 "*afptest*\n"
 "ファミリーのすべてのツールは、同じ一般的な使用パターンとパラメータに従う。"
-"AFP プロトコル リビジョン (`-1` から `-7`) を設定し、次にテストするホストのア"
-"ドレスと資格情報 (localhost も可) を設定する。一部のテストでは、2番目のユー"
-"ザーと2番目のボリュームを定義する必要がある。さらに別のテスト セットを "
+"AFP プロトコル リビジョン (**-1** から **-7**) を設定し、次にテストするホスト"
+"のアドレスと資格情報 (localhost も可) を設定する。一部のテストでは、2番目の"
+"ユーザーと2番目のボリュームを定義する必要がある。さらに別のテスト セットを "
 "localhost から実行し、テスト対象のボリュームへのローカル パスを指定する必要が"
-"ある。 単一のテストまたはテスト セクションは、`-f` オプションで実行できる。使"
-"用可能なテストは、`-l` オプションで一覧表示できる。"
+"ある。 単一のテストまたはテスト セクションは、**-f** オプションで実行できる。"
+"使用可能なテストは、**-l** オプションで一覧表示できる。"
 
 #. type: Plain text
 #: manpages/man1/afptest.1.md:34
+#, no-wrap
 msgid ""
-"`afp_spectest` makes up the core of the AFP specification test suite, with "
-"just over 300 test cases. It is organized into testsets, divided by AFP "
-"commands tested, or by preconditions for testing. For instance, the tier 2 "
-"(T2) tests need to be run on the host with the `-c` option indicating the "
-"path to the shared volume. There are also read-only and sleep tests that "
-"need to be run separately."
-msgstr ""
-"`afp_spectest` は、300 を超えるテスト ケースを含む AFP 仕様テスト スイートの"
-"中核を 構成する。これは、テストする AFP コマンド別、またはテストの前提条件別"
-"に分けられたテストセットに編成されている。 たとえば、Tier 2 (T2) テストは、共"
-"有ボリュームへのパスを示す `-c` オプションを使用してホスト上で 実行する必要が"
-"ある。また、読み取り専用テストとスリープ テストも別々に実行する必要がある。"
+"**afp_spectest** makes up the core of the AFP specification test suite,\n"
+"with just over 300 test cases. It is organized into testsets, divided by\n"
+"AFP commands tested, or by preconditions for testing. For instance, the\n"
+"tier 2 (T2) tests need to be run on the host with the **-c** option\n"
+"indicating the path to the shared volume. There are also read-only and\n"
+"sleep tests that need to be run separately.\n"
+msgstr "**afp_spectest** は、300 を超えるテスト ケースを含む AFP 仕様テスト スイートの中核を 構成する。これは、テストする AFP コマンド別、またはテストの前提条件別に分けられたテストセットに編成されている。 たとえば、Tier 2 (T2) テストは、共有ボリュームへのパスを示す **-c** オプションを使用してホスト上で 実行する必要がある。また、読み取り専用テストとスリープ テストも別々に実行する必要がある。\n"
 
 #. type: Plain text
 #: manpages/man1/afptest.1.md:37
+#, no-wrap
 msgid ""
-"`afp_logintest` is an AFP login authentication test suite that has its own "
-"runners."
-msgstr ""
-"`afp_logintest` は、独自のランナーを持つ特定の AFP ログイン認証 テストスイー"
-"トである。"
+"**afp_logintest** is an AFP login authentication test suite that has its\n"
+"own runners.\n"
+msgstr "**afp_logintest** は、独自のランナーを持つ特定の AFP ログイン認証 テストスイートである。\n"
 
 #. type: Plain text
 #: manpages/man1/afptest.1.md:42
+#, no-wrap
 msgid ""
-"`afp_lantest` and `afp_speedtest` are file transfer benchmarks for AFP "
-"servers. The former is inspired by *HELIOS LanTest*, which runs a batch of "
-"varied file transfer patterns. The latter is a simpler tool with a handful "
-"of available test cases."
-msgstr ""
-"`afp_lantest` と `afp_speedtest` は、AFP サーバーのファイル転送ベンチマークで"
-"す。前者は、さまざまなファイル転送パターンのバッチを実行する *HELIOS "
-"LanTest* にヒントを得たものである。後者は、いくつかのテスト ケースが用意され"
-"た、よりシンプルなツールである。"
+"**afp_lantest** and **afp_speedtest**` are file transfer benchmarks for AFP\n"
+"servers. The former is inspired by *HELIOS LanTest*, which runs a batch\n"
+"of varied file transfer patterns. The latter is a simpler tool with a\n"
+"handful of available test cases.\n"
+msgstr "**afp_lantest** と **afp_speedtest**` は、AFP サーバーのファイル転送ベンチマークです。前者は、さまざまなファイル転送パターンのバッチを実行する *HELIOS LanTest* にヒントを得たものである。後者は、いくつかのテスト ケースが用意された、よりシンプルなツールである。\n"
 
 #. type: Plain text
 #: manpages/man1/afptest.1.md:46
+#, no-wrap
 msgid ""
-"`afparg` is an AFP CLI client that takes a specific command with optional "
-"arguments, and sends a single action to the AFP server. This can be used for "
-"one-off troubleshooting or system administration."
-msgstr ""
-"`afparg` は、オプションの引数を持つ特定のコマンドを受け取り、AFP サーバーに単"
-"一のアクションを送信する AFP CLI クライアントである。これは、1 回限りのトラブ"
-"ルシューティングやシステム管理に使用できる。"
+"**afparg**` is an AFP CLI client that takes a specific command with\n"
+"optional arguments, and sends a single action to the AFP server. This\n"
+"can be used for one-off troubleshooting or system administration.\n"
+msgstr "**afparg**` は、オプションの引数を持つ特定のコマンドを受け取り、AFP サーバーに単一のアクションを送信する AFP CLI クライアントである。これは、1 回限りのトラブルシューティングやシステム管理に使用できる。\n"
 
 #. type: Plain text
 #: manpages/man1/afptest.1.md:49
@@ -326,6 +316,6 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:88
-msgid "`afpd(8)`."
+#: manpages/man1/afptest.1.md:88 manpages/man1/macusers.1.md:28
+msgid "afpd(8)"
 msgstr ""

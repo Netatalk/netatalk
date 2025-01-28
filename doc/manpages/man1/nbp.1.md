@@ -4,13 +4,13 @@ nbplkup, nbprgstr, nbpunrgstr — tools for accessing the NBP database
 
 # Description
 
-`nbprgstr` registers <nbpname\> with `atalkd(8)`, at the given
-<port\>. `nbpunrgstr` informs *atalkd* that <nbpname\> is no longer to
+**nbprgstr** registers <nbpname\> with **atalkd**(8), at the given
+<port\>. **nbpunrgstr** informs **atalkd** that <nbpname\> is no longer to
 be advertised.
 
-`nbplkup` displays up to <maxresponses\> (default 1000) entities
-registered on the AppleTalk internet. *<nbpname\>* is parsed by
-`nbp_name(3)`. An \`*=*' for the *object* or *type* matches anything,
+**nbplkup** displays up to <maxresponses\> (default 1000) entities
+registered on the AppleTalk internet. <nbpname\> is parsed by
+**nbp_name**(3). An \`*=*' for the *object* or *type* matches anything,
 and an \`*\**' for *zone* means the local zone. The default values are
 taken from the *NBPLKUP* environment variable, parsed as an <nbpname\>.
 
@@ -45,7 +45,7 @@ Find all devices of type *LaserWriter* in the local zone.
 
 # See also
 
-`nbp_name(3)`, `atalkd(8)`.
+nbp_name(3), atalkd(8)
 
 # Author
 

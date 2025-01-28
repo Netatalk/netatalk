@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 13:13+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -84,15 +84,15 @@ msgstr "説明"
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
 #: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
-#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1279
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -106,14 +106,14 @@ msgstr "著者"
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
 #: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
-#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1281
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -125,7 +125,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1274 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -154,16 +154,14 @@ msgid ""
 "The AppleTalk protocol family is a collection of protocols layered above the "
 "Datagram Delivery Protocol (DDP), and using AppleTalk address format. The "
 "AppleTalk family may provide SOCK_STREAM (ADSP), SOCK_DGRAM (DDP), SOCK_RDM "
-"(ATP), and SOCK_SEQPACKET (ASP). Currently, only DDP is implemented in the "
-"kernel; ATP and ASP are implemented in user level libraries; and ADSP is "
-"planned."
+"(ATP), and SOCK_SEQPACKET (ASP). Currently, DDP is implemented in the "
+"kernel; ATP and ASP are implemented in Netatalk user level libraries."
 msgstr ""
 "AppleTalk プロトコル ファミリは、データグラム配信プロトコル (DDP)  の上位層に"
 "あり、AppleTalk アドレス形式を使用するプロトコルのコレクションである。"
 "AppleTalk ファミリは、SOCK_STREAM (ADSP)、SOCK_DGRAM (DDP)、SOCK_RDM (ATP)、"
 "および SOCK_SEQPACKET (ASP) を提供する。現在、DDP のみがカーネルに実装されて"
-"いる。ATP と ASP は、ユーザー レベルのライブラリに実装されている。 ADSP も計"
-"画されている。"
+"いる。ATP と ASP は、Netatalk のユーザー レベルのライブラリに実装されている。"
 
 #. type: Title #
 #: manpages/man4/atalk.4.md:19
@@ -176,11 +174,11 @@ msgstr "アドレス指定"
 #, no-wrap
 msgid ""
 "AppleTalk addresses are three byte quantities, stored in network byte\n"
-"order. The include file <*netatalk/at.h*\\> defines the AppleTalk\n"
+"order. The include file *<netatalk/at.h\\>* defines the AppleTalk\n"
 "address format.\n"
 msgstr ""
 "AppleTalk アドレスは 3 バイトの量で、ネットワーク バイト\n"
-"オーダーで保存される。インクルード ファイル <*netatalk/at.h*\\> は\n"
+"オーダーで保存される。インクルード ファイル *<netatalk/at.h\\>* は\n"
 "AppleTalk アドレス形式を定義する。\n"
 
 #. type: Plain text
@@ -204,25 +202,25 @@ msgstr ""
 #. type: Plain text
 #: manpages/man4/atalk.4.md:44
 msgid ""
-"The port of a socket may be set with `bind(2)`. The node for *bind* must "
-"always be *ATADDR_ANYNODE*: \\`\\`this node.'' The net may be "
-"*ATADDR_ANYNET* or *ATADDR_LATENET*. *ATADDR_ANYNET* corresponds to the "
-"machine's \\`\\`primary'' address (the first configured). *ATADDR_LATENET* "
-"causes the address in outgoing packets to be determined when a packet is "
-"sent, i.e. determined late. *ATADDR_LATENET* is equivalent to opening one "
-"socket for each network interface. The port of a socket and either the "
-"primary address or *ATADDR_LATENET* are returned with `getsockname(2)`."
+"The port of a socket may be set with **bind**(2). The node for *bind* must "
+"always be *ATADDR_ANYNODE*: \"this node.\" The net may be *ATADDR_ANYNET* or "
+"*ATADDR_LATENET*. *ATADDR_ANYNET* corresponds to the machine's \"primary\" "
+"address (the first configured). *ATADDR_LATENET* causes the address in "
+"outgoing packets to be determined when a packet is sent, i.e. determined "
+"late. *ATADDR_LATENET* is equivalent to opening one socket for each network "
+"interface. The port of a socket and either the primary address or "
+"*ATADDR_LATENET* are returned with **getsockname**(2)."
 msgstr ""
-"ソケットのポートは、`bind(2)` で設定できる。 *bind* のノードは、常に "
-"*ATADDR_ANYNODE*: \\`\\`このノード。'' でなければなりません。ネットは、"
-"*ATADDR_ANYNET* または *ATADDR_LATENET* 。 *ATADDR_ANYNET* は、マシンの "
-"\\`\\`プライマリ'' アドレス (最初に構成されたアドレス) に対応する。 "
-"*ATADDR_LATENET* により、送信パケット内のアドレスはパケットの送信時に決定され"
-"る(つまり、遅れて決定される)。*ATADDR_LATENET* は、ネットワーク インターフェ"
-"イスごとに 1 つのソケットを開くことと同じ。ソケットのポートと プライマリ アド"
-"レスまたは *ATADDR_LATENET* のいずれかが、`getsockname(2)` で返される。"
+"ソケットのポートは、**bind**(2) で設定できる。 *bind* のノードは、常に "
+"*ATADDR_ANYNODE*: \"このノード\"でなければならない。ネットは、"
+"*ATADDR_ANYNET* または *ATADDR_LATENET*。 *ATADDR_ANYNET* は、マシンの \"プラ"
+"イマリ\" アドレス (最初に構成されたアドレス) に対応する。 *ATADDR_LATENET* に"
+"より、送信パケット内のアドレスはパケットの送信時に決定される(つまり、遅れて決"
+"定される)。*ATADDR_LATENET* は、ネットワーク インターフェイスごとに 1 つのソ"
+"ケットを開くことと同じ。ソケットのポートと プライマリ アドレスまたは "
+"*ATADDR_LATENET* のいずれかが、**getsockname**(2) で返される。"
 
 #. type: Plain text
 #: manpages/man4/atalk.4.md:48
-msgid "`bind(2)`, `getsockname(2)`, `atalkd(8)`."
+msgid "bind(2), getsockname(2), atalkd(8)"
 msgstr ""

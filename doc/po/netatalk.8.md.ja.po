@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 01:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -78,10 +78,14 @@ msgid "Description"
 msgstr "説明"
 
 #. type: Plain text
-#: manpages/man1/ad.1.md:54 manpages/man8/afpd.8.md:22
-#: manpages/man8/atalkd.8.md:37 manpages/man8/netatalk.8.md:20
-#: manpages/man8/papd.8.md:40
-msgid "-d"
+#: manpages/man1/ad.1.md:54 manpages/man1/asip-status.1.md:39
+#: manpages/man1/pap.1.md:45 manpages/man8/a2boot.8.md:35
+#: manpages/man8/afpd.8.md:22 manpages/man8/atalkd.8.md:37
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/netatalk.8.md:20
+#: manpages/man8/papd.8.md:40 manpages/man8/papstatus.8.md:27
+#: manpages/man8/timelord.8.md:26
+#, no-wrap
+msgid "**-d**\n"
 msgstr ""
 
 #. type: Title #
@@ -95,12 +99,12 @@ msgstr ""
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -117,11 +121,11 @@ msgstr "著者"
 #: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -148,7 +152,7 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -161,16 +165,18 @@ msgstr "関連項目"
 #. type: Title #
 #: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:88
 #: manpages/man8/atalkd.8.md:75 manpages/man8/netatalk.8.md:42
-#: manpages/man8/papd.8.md:100 manpages/man8/papstatus.8.md:43
+#: manpages/man8/papd.8.md:99 manpages/man8/papstatus.8.md:43
 #, no-wrap
 msgid "Files"
 msgstr "ファイル"
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
-#: manpages/man8/macipgw.8.md:68 manpages/man8/netatalk.8.md:28
-#: manpages/man8/papd.8.md:58 manpages/man8/timelord.8.md:39
-msgid "-v | -V"
+#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:68
+#: manpages/man8/netatalk.8.md:28 manpages/man8/papd.8.md:58
+#: manpages/man8/timelord.8.md:39
+#, no-wrap
+msgid "**-v** | **-V**\n"
 msgstr ""
 
 #. type: Plain text
@@ -190,7 +196,7 @@ msgstr "> デーモンをターミナルから切り離さない。\n"
 #. type: Plain text
 #: manpages/man8/afpd.8.md:38 manpages/man8/netatalk.8.md:24
 #, no-wrap
-msgid "-F <configfile\\>\n"
+msgid "**-F** <configfile\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -218,7 +224,8 @@ msgstr ""
 #. type: Plain text
 #: manpages/man8/afpd.8.md:91 manpages/man8/netatalk.8.md:45
 #: manual/Upgrading.md:33
-msgid "`afp.conf`"
+#, no-wrap
+msgid "*afp.conf*\n"
 msgstr ""
 
 #. type: Plain text
@@ -238,13 +245,12 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man8/netatalk.8.md:16
+#, no-wrap
 msgid ""
-"`netatalk` is the service controller daemon responsible for starting and "
-"restarting the AFP daemon `afpd` and the CNID daemon `cnid_metad`. It is "
-"normally started at boot time by an init system."
-msgstr ""
-"`netatalk`は、AFPデーモン`afpd`とCNIDデーモン`cnid_metad`の起動と再起動を請け"
-"負うサービスコントローラデーモンである。"
+"**netatalk** is the service controller daemon responsible for starting and\n"
+"restarting the AFP daemon **afpd** and the CNID daemon **cnid_metad**. It is\n"
+"normally started at boot time by an init system.\n"
+msgstr "**netatalk**は、AFPデーモン**afpd**とCNIDデーモン**cnid_metad**の起動と再起動を請け負うサービスコントローラデーモンである。\n"
 
 #. type: Plain text
 #: manpages/man8/netatalk.8.md:36
@@ -256,17 +262,17 @@ msgstr "> Netatalkサービス、AFPデーモンとCNIDデーモンを停止す�
 #: manpages/man8/netatalk.8.md:41
 #, no-wrap
 msgid ""
-"> Sending a `SIGHUP` will cause the AFP daemon reload its configuration\n"
+"> Sending a *SIGHUP* will cause the AFP daemon reload its configuration\n"
 "file.\n"
-msgstr "> `SIGHUP`を送るとAFPデーモンが設定ファイルを再読み込みする。\n"
+msgstr "> *SIGHUP*を送るとAFPデーモンが設定ファイルを再読み込みする。\n"
 
 #. type: Plain text
 #: manpages/man8/netatalk.8.md:47
 #, no-wrap
-msgid "> configuration file used by `netatalk`(8), `afpd`(8) and `cnid_metad`(8)\n"
-msgstr "> `netatalk`(8)と`afpd`(8)と`cnid_metad`(8)が使う設定ファイル\n"
+msgid "> configuration file used by **netatalk**(8), **afpd**(8) and **cnid_metad**(8)\n"
+msgstr "> **netatalk**(8)と**afpd**(8)と**cnid_metad**(8)が使う設定ファイル\n"
 
 #. type: Plain text
 #: manpages/man8/netatalk.8.md:51
-msgid "`afpd(8)`, `cnid_metad(8)`, `afp.conf(5)`."
+msgid "afpd(8), cnid_metad(8), afp.conf(5)"
 msgstr ""

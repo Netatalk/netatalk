@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 01:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -69,12 +69,12 @@ msgstr "説明"
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -91,11 +91,11 @@ msgstr "著者"
 #: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -107,7 +107,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -122,7 +122,7 @@ msgstr "関連項目"
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:82
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:80
 #: manpages/man5/extmap.conf.5.md:18 manpages/man5/papd.conf.5.md:91
 #: manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -142,10 +142,10 @@ msgstr ""
 #: manpages/man5/atalkd.conf.5.md:9
 #, no-wrap
 msgid ""
-"*atalkd.conf* is the configuration file used by atalkd to configure the\n"
+"**atalkd.conf** is the configuration file used by atalkd to configure the\n"
 "Appletalk interfaces and their behavior\n"
 msgstr ""
-"*atalkd.conf* は、atalkd が Appletalk\n"
+"**atalkd.conf** は、atalkd が Appletalk\n"
 "インターフェイスとその動作を設定するために使用する設定ファイルである\n"
 
 #. type: Plain text
@@ -159,16 +159,13 @@ msgstr ""
 "をサポートせず、中断のない行で設定する必要がある。設定行の形式は次のとおり:"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:17
+#: manpages/man5/atalkd.conf.5.md:15
 #, no-wrap
-msgid ""
-"*interface* \\[ `-seed` \\] \\[ `-phase` <number\\> \\] \\[ `-net`\n"
-"<net-range\\> \\] \\[ `-addr` <address\\> \\] \\[ `-zone` <zonename\\> \\]\n"
-"...\n"
+msgid "`interface [ -seed ] [ -phase <number> ] [ -net <net-range> ] [ -addr <address> ] [ -zone <zonename> ] ...`\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:22
+#: manpages/man5/atalkd.conf.5.md:20
 msgid ""
 "The simplest case is to have either no atalkd.conf, or to have one that has "
 "no active lines. In this case, atalkd will auto-discover the local "
@@ -180,7 +177,7 @@ msgstr ""
 "む。存在しない場合は作成する。"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:25
+#: manpages/man5/atalkd.conf.5.md:23
 msgid ""
 "The interface is the network interface that this to work over, such as "
 "*eth0* for Linux, or *le0* for Solaris."
@@ -189,92 +186,96 @@ msgstr ""
 "場合は *eth0*、Solaris の場合は *le0* など"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:32
 msgid ""
 "Note that all fields except the interface are optional. The loopback "
-"interface is configured automatically. If `-seed` is specified, all other "
-"fields must be present. Also, `atalkd` will exit during startup if a router "
-"disagrees with its seed information. If `-seed` is not given, all other "
-"information may be overridden during auto-configuration. If no `-phase` "
-"option is given, the default phase as given on the command line is used (the "
-"default is 2). If `-addr` is given and `-net` is not, a net-range of one is "
-"assumed."
+"interface is configured automatically. If **-seed** is specified, all other "
+"fields must be present. Also, **atalkd** will exit during startup if a "
+"router disagrees with its seed information. If **-seed** is not given, all "
+"other information may be overridden during auto-configuration. If no **-"
+"phase** option is given, the default phase as given on the command line is "
+"used (the default is 2). If **-addr** is given and **-net** is not, a net-"
+"range of one is assumed."
 msgstr ""
 "インターフェース以外のフィールドはすべてオプションであることに注意してくださ"
-"い。ループバック インターフェースは自動的に構成される。`-seed` が指定されてい"
-"る場合は、他のすべてのフィールドが存在する必要がある。また、ルーターがシード"
-"情報に同意しない場合、`atalkd` は起動時に終了する。`-seed` が指定されていない"
-"場合は、他のすべての情報が自動構成中に上書きされる可能性がある。 `-phase` オ"
-"プションが指定されていない場合は、コマンドラインで指定されたデフォルトの"
-"フェーズが使用される (デフォルトは 2)。`-addr` が指定されていて、`-net` が指"
-"定されていない場合は、net-range が 1 であると想定される。"
+"い。ループバック インターフェースは自動的に構成される。**-seed** が指定されて"
+"いる場合は、他のすべてのフィールドが存在する必要がある。また、ルーターがシー"
+"ド情報に同意しない場合、**atalkd** は起動時に終了する。**-seed** が指定されて"
+"いない場合は、他のすべての情報が自動構成中に上書きされる可能性がある。 **-"
+"phase** オプションが指定されていない場合は、コマンドラインで指定されたデフォ"
+"ルトのフェーズが使用される (デフォルトは 2)。**-addr** が指定されていて、**-"
+"net** が指定されていない場合は、net-range が 1 であると想定される。"
+
+#. type: Plain text
+#: manpages/man5/atalkd.conf.5.md:41
+msgid ""
+"The first -zone directive for each interface is the \"default\" zone.  Under "
+"Phase 1, there is only one zone. Under Phase 2, all routers on the network "
+"are configured with the default zone and must agree. **atalkd** maps \"*\" "
+"to the default zone of the first interface. Note: The default zone for a "
+"machine is determined by the configuration of the local routers; to appear "
+"in a non-default zone, each service, e.g.  **afpd**, must individually "
+"specify the desired zone. See also **nbp_name**(3)."
+msgstr ""
+"各インターフェースの最初の -zone ディレクティブは \"default\" ゾーンです。"
+"フェーズ 1 では、ゾーンは 1 つだけ。フェーズ 2 では、ネットワーク上のすべての"
+"ルーターがデフォルト ゾーンで構成され、一致する必要がある。**atalkd** は "
+"\"*\" を最初のインターフェースのデフォルト ゾーンにマップする。注: マシンのデ"
+"フォルト ゾーンは、ローカル ルーターの構成によって決定される。デフォルト以外"
+"のゾーンに表示されるには、各サービス (例: **afpd**) で、必要なゾーンを個別に"
+"指定する必要がある。 **nbp_name**(3) も参照してください。"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:43
-msgid ""
-"The first -zone directive for each interface is the \\`\\`default'' zone.  "
-"Under Phase 1, there is only one zone. Under Phase 2, all routers on the "
-"network are configured with the default zone and must agree. `atalkd` maps "
-"\\`\\`\\*'' to the default zone of the first interface. Note: The default "
-"zone for a machine is determined by the configuration of the local routers; "
-"to appear in a non-default zone, each service, e.g.  `afpd`, must "
-"individually specify the desired zone. See also `nbp_name(3)`."
-msgstr ""
-"各インターフェースの最初の -zone ディレクティブは \\`\\`default'' ゾーンで"
-"す。フェーズ 1 では、ゾーンは 1 つだけ。フェーズ 2 では、ネットワーク上のすべ"
-"てのルーターがデフォルト ゾーンで構成され、一致する必要がある。`atalkd` は "
-"\\`\\`\\*'' を最初のインターフェースのデフォルト ゾーンにマップする。注: マシ"
-"ンのデフォルト ゾーンは、ローカル ルーターの構成によって決定される。デフォル"
-"ト以外のゾーンに表示されるには、各サービス (例: `afpd`) で、必要なゾーンを個"
-"別に指定する必要がある。 `nbp_name(3)` も参照してください。"
-
-#. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:45
 msgid "The possible options and their meanings are:"
 msgstr "使用可能なオプションとその意味は次のとおり。"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:47
-msgid "`-addr net.node`"
+#: manpages/man5/atalkd.conf.5.md:45
+#, no-wrap
+msgid "**-addr** net.node\n"
 msgstr ""
+
+#. type: Plain text
+#: manpages/man5/atalkd.conf.5.md:48
+#, no-wrap
+msgid ""
+"> Allows specification of the net and node numbers for this interface,\n"
+"specified in AppleTalk numbering format (example: **-addr 66.6**).\n"
+msgstr "このインターフェイスのネット番号とノード番号を指定できる。AppleTalk 番号形式 (例: **-addr 66.6**) で指定する。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:50
 #, no-wrap
-msgid ""
-"> Allows specification of the net and node numbers for this interface,\n"
-"specified in AppleTalk numbering format (example: `-addr 66.6`).\n"
-msgstr "このインターフェイスのネット番号とノード番号を指定できる。AppleTalk 番号形式 (例: `-addr 66.6`) で指定する。\n"
+msgid "**-dontroute**\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:52
-msgid "`-dontroute`"
-msgstr ""
+#, no-wrap
+msgid "> Disables AppleTalk routing. It is the inverse of **-router**.\n"
+msgstr "> AppleTalk ルーティングを無効にする。これは、**-router** の逆。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:54
 #, no-wrap
-msgid "> Disables AppleTalk routing. It is the inverse of `-router`.\n"
-msgstr "> AppleTalk ルーティングを無効にする。これは、`-router` の逆。\n"
-
-#. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:56
-msgid "`-net first[-last]`"
+msgid "**-net** first[-last]\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:58
+#: manpages/man5/atalkd.conf.5.md:56
 #, no-wrap
 msgid "> Allows the available net to be set, optionally as a range.\n"
 msgstr "> 使用可能なネットを、オプションで範囲として設定できる。\n"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:60
-msgid "`-phase ( 1 | 2 )`"
+#: manpages/man5/atalkd.conf.5.md:58
+#, no-wrap
+msgid "**-phase** ( 1 | 2 )\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:63
+#: manpages/man5/atalkd.conf.5.md:61
 #, no-wrap
 msgid ""
 "> Specifies the AppleTalk phase that this interface is to use (either\n"
@@ -282,84 +283,87 @@ msgid ""
 msgstr "> このインターフェイスが使用する AppleTalk フェーズを指定する (フェーズ 1 またはフェーズ 2)。\n"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:65
-msgid "`-router`"
+#: manpages/man5/atalkd.conf.5.md:63
+#, no-wrap
+msgid "**-router**\n"
 msgstr ""
+
+#. type: Plain text
+#: manpages/man5/atalkd.conf.5.md:66
+#, no-wrap
+msgid ""
+"> Seed an AppleTalk router on a single interface. The inverse option is\n"
+"**-dontroute**. Akin to **-seed**, but allows single interface routing.\n"
+msgstr "> 単一のインターフェイスで AppleTalk ルーターをシードする。逆の オプションは**-dontroute**。 **-seed**に似ているが、単一インターフェイス ルーティング。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:68
 #, no-wrap
-msgid ""
-"> Seed an AppleTalk router on a single interface. The inverse option is\n"
-"`-dontroute`. Akin to `-seed`, but allows single interface routing.\n"
-msgstr "> 単一のインターフェイスで AppleTalk ルーターをシードする。逆の オプションは`-dontroute`。 `-seed`に似ているが、単一インターフェイス ルーティング。\n"
+msgid "**-seed**\n"
+msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:70
-msgid "`-seed`"
-msgstr ""
+#: manpages/man5/atalkd.conf.5.md:73
+#, no-wrap
+msgid ""
+"> Seed an AppleTalk router. This requires two or more interfaces to be\n"
+"configured. If you have a single network interface, use **-router**\n"
+"instead. It also causes all missing arguments to be automagically\n"
+"configured from the network.\n"
+msgstr "> AppleTalk ルーターをシードする。これには、2 つ以上のインターフェイスを構成する必要がある。単一のネットワーク インターフェイスがある場合は、代わりに **-router** を使用する。これにより、不足しているすべての引数がネットワークから自動的に構成される。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:75
 #, no-wrap
-msgid ""
-"> Seed an AppleTalk router. This requires two or more interfaces to be\n"
-"configured. If you have a single network interface, use `-route`\n"
-"instead. It also causes all missing arguments to be automagically\n"
-"configured from the network.\n"
-msgstr "> AppleTalk ルーターをシードする。これには、2 つ以上のインターフェイスを構成する必要がある。単一のネットワーク インターフェイスがある場合は、代わりに `-route` を使用する。これにより、不足しているすべての引数がネットワークから自動的に構成される。\n"
-
-#. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:77
-msgid "`-zone zonename`"
+msgid "**-zone** zonename\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:81
+#: manpages/man5/atalkd.conf.5.md:79
 #, no-wrap
 msgid ""
 "> Specifies a specific zone that this interface should appear on (example:\n"
-"`-zone \"Parking Lot\"`). Please note that zones with spaces and other\n"
+"**-zone \"Parking Lot\"**). Please note that zones with spaces and other\n"
 "special characters should be enclosed in quotation marks.\n"
-msgstr "> このインターフェイスが表示される特定のゾーンを指定する (例: `-zone \"Parking Lot\"`)。スペースやその他の特殊文字を含むゾーンは、ダブルクォーテーションで囲む必要があることに注意してください。\n"
+msgstr "> このインターフェイスが表示される特定のゾーンを指定する (例: **-zone** \"Parking Lot\")。スペースやその他の特殊文字を含むゾーンは、ダブルクォーテーションで囲む必要があることに注意してください。\n"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:85
+#: manpages/man5/atalkd.conf.5.md:83
 msgid "Single interface on Solaris with auto-detected parameters."
 msgstr "Solaris 上の単一インターフェイスと自動検出パラメータ。"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:87
+#: manpages/man5/atalkd.conf.5.md:85
 #, no-wrap
 msgid "       le0\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:89
+#: manpages/man5/atalkd.conf.5.md:87
 msgid "The same on Linux."
 msgstr "Linux でも同様。"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:91
+#: manpages/man5/atalkd.conf.5.md:89
 #, no-wrap
 msgid "       eth0\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:96
+#: manpages/man5/atalkd.conf.5.md:94
 msgid ""
 "Below is an example configuration file from a Sun 4/40. The machine has two "
-"interfaces, \\`\\`le0'' and \\`\\`le1''. The \\`\\`le0'' interface is "
-"configured automatically from other routers on the network. The machine is "
-"the only router for the \\`\\`le1'' interface."
+"interfaces, \"le0\" and \"le1\". The \"le0\" interface is configured "
+"automatically from other routers on the network. The machine is the only "
+"router for the \"le1\" interface."
 msgstr ""
-"以下は Sun 4/40 の設定ファイルの例になる。マシンには 2 つのインターフェイス"
+"以下は Sun 4/40 の設定ファイルの例になる。マシンには 2つのインターフェイス"
 "「le0」と「le1」がある。「le0」インターフェイスは、ネットワーク上の他のルー"
-"ターから自動的に設定される。このマシンは、\\`\\`le1'' インターフェースの唯一"
-"のルーターである。"
+"ターから自動的に設定される。このマシンは、「le1」インターフェースの唯一のルー"
+"ターである。"
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:99
+#: manpages/man5/atalkd.conf.5.md:97
 #, no-wrap
 msgid ""
 "       le0\n"
@@ -367,6 +371,6 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/atalkd.conf.5.md:103
-msgid "`atalkd(8)`"
+#: manpages/man5/atalkd.conf.5.md:101
+msgid "atalkd(8)"
 msgstr ""

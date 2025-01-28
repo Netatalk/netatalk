@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-26 23:23+0100\n"
+"POT-Creation-Date: 2025-01-29 18:48+0100\n"
 "PO-Revision-Date: 2025-01-25 15:05+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,8 +18,8 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1053 manpages/man5/afp.conf.5.md:1088
-#: manual/AppleTalk.md:154 manual/Configuration.md:837 manual/Installation.md:4
+#: manpages/man5/afp.conf.5.md:1054 manpages/man5/afp.conf.5.md:1089
+#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -125,10 +125,10 @@ msgstr "Git レポジトリ のダウンロードは迅速で容易である："
 #. type: Bullet: '1.  '
 #: manual/Installation.md:41
 msgid ""
-"Make sure you have Git installed. `which git` should produce a path to git."
+"Make sure you have Git installed. **which git** should produce a path to git."
 msgstr ""
-"Git がインストールしてあることを確認する。`which git` は git のパスを示してく"
-"れるはずである。"
+"Git がインストールしてあることを確認する。**which git** は git のパスを示して"
+"くれるはずである。"
 
 #. type: Plain text
 #: manual/Installation.md:44
@@ -158,12 +158,12 @@ msgstr ""
 #: manual/Installation.md:56
 #, no-wrap
 msgid ""
-"    This will create a local directory called `netatalk-code` containing\n"
+"    This will create a local directory called *netatalk-code* containing\n"
 "    a complete and fresh copy of the whole Netatalk source tree from the\n"
 "    Git repository.\n"
 msgstr ""
 "    上記で Git リポジトリから、Netatalk\n"
-"    のソース全体の完全でまっさらのコピーを含む `netatalk-code`\n"
+"    のソース全体の完全でまっさらのコピーを含む *netatalk-code*\n"
 "    という名前のローカルディレクトリが作成される。\n"
 
 #. type: Bullet: '3.  '
@@ -371,11 +371,11 @@ msgstr ""
 #: manual/Installation.md:132
 #, no-wrap
 msgid ""
-"  When using the Random Number UAMs and netatalk's own `afppasswd`\n"
+"  When using the Random Number UAMs and netatalk's own **afppasswd**\n"
 "  password manager, CrackLib can help protect against setting weak\n"
 "  passwords for authentication with netatalk.\n"
 msgstr ""
-"  Random Number UAM と netatalk 独自の `afppasswd` パスワード\n"
+"  Random Number UAM と netatalk 独自の **afppasswd** パスワード\n"
 "  マネージャを使用する場合、CrackLib は netatalk\n"
 "  での認証に弱いパスワードを設定するのを防ぐのに役立つ。\n"
 
@@ -400,11 +400,11 @@ msgstr ""
 msgid ""
 "  D-Bus provides a mechanism for sending messages between processes,\n"
 "  used by multiple Netatalk features: Spotlight, Zeroconf with Avahi,\n"
-"  and the `afpstats` tool.\n"
+"  and the **afpstats** tool.\n"
 msgstr ""
 "  D-Bus はプロセス間にメッセージを通信するメカニズムを提供し、下記\n"
 "  Netatalk 機能に使われる： Spotlight、Avahi を使用した Zeroconf、および\n"
-"  `afpstats` ツール。\n"
+"  **afpstats** ツール。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:143
@@ -414,8 +414,8 @@ msgstr "GLib および GIO"
 #. type: Plain text
 #: manual/Installation.md:145
 #, no-wrap
-msgid "  Used by the `afpstats` tool to interface with D-Bus.\n"
-msgstr "  D-Bus とのインターフェースとして、`afpstats` ツールに使われる。\n"
+msgid "  Used by the **afpstats** tool to interface with D-Bus.\n"
+msgstr "  D-Bus とのインターフェースとして、**afpstats** ツールに使われる。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:147
@@ -664,11 +664,11 @@ msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
 "the build system to install the specific type of startup script(s)  you want "
-"by specifying the `with-init-style` option. For the syntax, please refer to "
-"the build system's help text."
+"by specifying the **with-init-style** option. For the syntax, please refer "
+"to the build system's help text."
 msgstr ""
 "ソースからビルドする場合、Netatalk ビルド システムは、どの initスタイルがプ"
-"ラットフォームに適しているかを検出しようとする。また、`with-init-style`オプ"
+"ラットフォームに適しているかを検出しようとする。また、**with-init-style**オプ"
 "ションを指定して、必要な特定のタイプの起動スクリプト をインストールするように"
 "ビルドシステムを構成することもできる。構文については、ビルド システムのヘルプ"
 "テキストを参照してください。"
@@ -725,21 +725,22 @@ msgstr ""
 #. type: Plain text
 #: manual/Installation.md:263
 msgid ""
-"Additionally, make sure that the configuration file `afp.conf` is in the "
+"Additionally, make sure that the configuration file *afp.conf* is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
-"by running the `netatalk -V` command."
+"by running the **netatalk -V** command."
 msgstr ""
-"さらに、構成ファイル `afp.conf` が適切な場所にあることを確認してください。 "
-"`netatalk -V` コマンドを実行すると、netatalk がファイルの場所を予測しているか"
-"どうかを問い合わせることができる。"
+"さらに、構成ファイル *afp.conf* が適切な場所にあることを確認してください。 "
+"**netatalk -V** コマンドを実行すると、netatalk がファイルの場所を予測している"
+"かどうかを問い合わせることができる。"
 
 #. type: Plain text
 #: manual/Installation.md:267
 msgid ""
-"If you want to run AppleTalk services, you also need to start the `atalkd` "
-"daemon, plus the optional `papd`, `timelord`, and `a2boot` daemons. See the "
-"[AppleTalk](AppleTalk.html) chapter in this manual for more information."
+"If you want to run AppleTalk services, you also need to start the **atalkd** "
+"daemon, plus the optional **papd**, **timelord**, and **a2boot** daemons. "
+"See the [AppleTalk](AppleTalk.html) chapter in this manual for more "
+"information."
 msgstr ""
-"AppleTalk サービスを実行する場合は、`atalkd` デーモンに加えて、オプションの "
-"`papd`、`timelord`、`a2boot` デーモンも起動する必要がある。詳細については、こ"
-"のマニュアルの [AppleTalk](AppleTalk.html) の章を参照してください。"
+"AppleTalk サービスを実行する場合は、**atalkd** デーモンに加えて、オプション"
+"の **papd**、**timelord**、**a2boot** デーモンも起動する必要がある。詳細につ"
+"いては、このマニュアルの [AppleTalk](AppleTalk.html) の章を参照してください。"

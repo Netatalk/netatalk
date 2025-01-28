@@ -10,7 +10,7 @@ a2boot — Apple II netboot server daemon
 
 # Description
 
-*a2boot* is a netboot server for Apple IIe and IIGS computers. It allows
+**a2boot** is a netboot server for Apple IIe and IIGS computers. It allows
 compatible clients to boot into ProDOS or GS/OS over an AppleTalk
 network. This is functionally comparable to the Apple II netboot
 software included in early versions of AppleShare File Server for
@@ -31,15 +31,15 @@ see the documentation for AppleShare File Server for Macintosh.
 
 # Options
 
-`-d`
+**-d**
 
 > Debug mode, i.e. don't disassociate from controlling TTY.
 
-`-n` <nbpname\>
+**-n** <nbpname\>
 
 > Register this server as *nbpname*. This defaults to the hostname.
 
--v | -V
+**-v** | **-V**
 
 > Print version information and exit.
 

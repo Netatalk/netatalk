@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 01:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -76,6 +76,24 @@ msgstr "概要"
 msgid "Description"
 msgstr "説明"
 
+#. type: Plain text
+#: manpages/man1/ad.1.md:54 manpages/man1/asip-status.1.md:39
+#: manpages/man1/pap.1.md:45 manpages/man8/a2boot.8.md:35
+#: manpages/man8/afpd.8.md:22 manpages/man8/atalkd.8.md:37
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/netatalk.8.md:20
+#: manpages/man8/papd.8.md:40 manpages/man8/papstatus.8.md:27
+#: manpages/man8/timelord.8.md:26
+#, no-wrap
+msgid "**-d**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:62 manpages/man1/getzones.1.md:24
+#: manpages/man8/timelord.8.md:30
+#, no-wrap
+msgid "**-l**\n"
+msgstr ""
+
 #. type: Title #
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
@@ -87,12 +105,12 @@ msgstr "説明"
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -109,11 +127,11 @@ msgstr "著者"
 #: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -135,27 +153,15 @@ msgid "Options"
 msgstr "オプション"
 
 #. type: Plain text
-#: manpages/man1/asip-status.1.md:39 manpages/man1/pap.1.md:45
-#: manpages/man8/a2boot.8.md:35 manpages/man8/cnid_metad.8.md:21
-#: manpages/man8/papstatus.8.md:27 manpages/man8/timelord.8.md:26
-msgid "`-d`"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/getzones.1.md:24 manpages/man8/timelord.8.md:30
-msgid "`-l`"
-msgstr ""
-
-#. type: Plain text
 #: manpages/man8/a2boot.8.md:37 manpages/man8/timelord.8.md:28
 #, no-wrap
 msgid "> Debug mode, i.e. don't disassociate from controlling TTY.\n"
-msgstr "> デバッグ モード。つまり、制御 TTY から切り離されません。\n"
+msgstr "> デバッグ モード。つまり、制御 TTY から切り離されない。\n"
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:39 manpages/man8/timelord.8.md:35
 #, no-wrap
-msgid "`-n` <nbpname\\>\n"
+msgid "**-n** <nbpname\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -168,9 +174,11 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
-#: manpages/man8/macipgw.8.md:68 manpages/man8/netatalk.8.md:28
-#: manpages/man8/papd.8.md:58 manpages/man8/timelord.8.md:39
-msgid "-v | -V"
+#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:68
+#: manpages/man8/netatalk.8.md:28 manpages/man8/papd.8.md:58
+#: manpages/man8/timelord.8.md:39
+#, no-wrap
+msgid "**-v** | **-V**\n"
 msgstr ""
 
 #. type: Plain text
@@ -200,11 +208,11 @@ msgstr ""
 #: manpages/man8/timelord.8.md:16
 #, no-wrap
 msgid ""
-"*timelord* is a simple time server for Macintosh computers that use the\n"
+"**timelord** is a simple time server for Macintosh computers that use the\n"
 "*tardis* client. It has the same capabilities as the \"Timelord\" CDEV for\n"
 "Macintosh.\n"
 msgstr ""
-"*timelord* は、*tardis* クライアントを使用する Macintosh\n"
+"**timelord** は、**tardis** クライアントを使用する Macintosh\n"
 "コンピュータ用のシンプルなタイム サーバーである。Macintosh 用の \"Timelord\"\n"
 "CDEV と同じ機能を備えている。\n"
 
@@ -212,15 +220,15 @@ msgstr ""
 #: manpages/man8/timelord.8.md:22
 #, no-wrap
 msgid ""
-"*tardis* is implemented as a Chooser extension. In the Chooser, choose\n"
-"the *timelord* instance to synchronize the Mac's system time with. Once\n"
-"synchronized, *tardis* will automatically synchronize with the server at\n"
+"**tardis** is implemented as a Chooser extension. In the Chooser, choose\n"
+"the **timelord** instance to synchronize the Mac's system time with. Once\n"
+"synchronized, **tardis** will automatically synchronize with the server at\n"
 "boot, or scheduled at regular intervals while the Mac is running (the\n"
 "latter requires tardis 1.4).\n"
 msgstr ""
-"*tardis* は Chooser 拡張機能として実装されている。Chooser で、Mac\n"
-"のシステム時間を同期する *timelord*\n"
-"インスタンスを選択する。同期されると、*tardis*\n"
+"**tardis** は Chooser 拡張機能として実装されている。Chooser で、Mac\n"
+"のシステム時間を同期する **timelord**\n"
+"インスタンスを選択する。同期されると、**tardis**\n"
 "は起動時に自動的にサーバーと同期するか、Mac\n"
 "の実行中に定期的にスケジュールされて同期する (後者には tardis 1.4\n"
 "が必要)。\n"
