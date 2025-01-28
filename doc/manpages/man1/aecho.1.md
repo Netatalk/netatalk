@@ -8,15 +8,15 @@ aecho - send AppleTalk Echo Protocol packets to network hosts
 
 # Description
 
-`aecho` repeatedly sends an Apple Echo Protocol (AEP) packet to the host
-specified by the given AppleTalk `address` or `nbpname` and reports
+**aecho** repeatedly sends an Apple Echo Protocol (AEP) packet to the host
+specified by the given AppleTalk **address** or **nbpname** and reports
 whether a reply was received. Requests are sent at the rate of one per
 second.
 
-`address` is parsed by `atalk_aton(3)`. `nbpname` is parsed by
-`nbp_name(3)`. The nbp type defaults to \`*Workstation*'.
+**address** is parsed by **atalk_aton**(3). **nbpname** is parsed by
+**nbp_name**(3). The nbp type defaults to \`*Workstation*'.
 
-When `aecho` is terminated, it reports the number of packets sent, the
+When **aecho** is terminated, it reports the number of packets sent, the
 number of responses received, and the percentage of packets lost. If any
 responses were received, the minimum, average, and maximum round trip
 times are reported.
@@ -39,13 +39,13 @@ Check to see if a particular host is up and responding to AEP packets:
 
 # Options
 
-`-c` <count\>
+**-c** <count\>
 
 > Stop after *count* packets.
 
 # See Also
 
-`ping(1)`, `atalk_aton(3)`, `nbp_name(3)`, `aep(4)`, `atalkd(8)`.
+ping(1), atalk_aton(3), nbp_name(3), aep(4), atalkd(8)
 
 # Author
 

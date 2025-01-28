@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 01:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -77,6 +77,17 @@ msgstr "概要"
 msgid "Description"
 msgstr "説明"
 
+#. type: Plain text
+#: manpages/man1/ad.1.md:54 manpages/man1/asip-status.1.md:39
+#: manpages/man1/pap.1.md:45 manpages/man8/a2boot.8.md:35
+#: manpages/man8/afpd.8.md:22 manpages/man8/atalkd.8.md:37
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/netatalk.8.md:20
+#: manpages/man8/papd.8.md:40 manpages/man8/papstatus.8.md:27
+#: manpages/man8/timelord.8.md:26
+#, no-wrap
+msgid "**-d**\n"
+msgstr ""
+
 #. type: Title #
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
@@ -88,12 +99,12 @@ msgstr "説明"
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -110,11 +121,11 @@ msgstr "著者"
 #: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -141,7 +152,7 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -151,16 +162,9 @@ msgstr "オプション"
 msgid "See Also"
 msgstr "関連項目"
 
-#. type: Plain text
-#: manpages/man1/asip-status.1.md:39 manpages/man1/pap.1.md:45
-#: manpages/man8/a2boot.8.md:35 manpages/man8/cnid_metad.8.md:21
-#: manpages/man8/papstatus.8.md:27 manpages/man8/timelord.8.md:26
-msgid "`-d`"
-msgstr ""
-
 #. type: Title #
 #: manpages/man5/papd.conf.5.md:158 manpages/man8/cnid_metad.8.md:34
-#: manpages/man8/papd.8.md:118
+#: manpages/man8/papd.8.md:117
 #, no-wrap
 msgid "Caveats"
 msgstr "注意事項"
@@ -188,30 +192,27 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:17
+#, no-wrap
 msgid ""
-"`cnid_metad` waits for requests from *afpd* to start up instances of the "
-"*cnid_dbd* daemon. It keeps track of the status of a *cnid_dbd* instance "
-"once started and will restart it if necessary. `cnid_metad` is normally "
-"started at boot time by `netatalk`(8) and runs until shutdown."
-msgstr ""
-"`cnid_metad`は*afpd*からの要求を待ち、*cnid_dbd*デーモンのインスタンスを起動"
-"する。一度起動した*cnid_dbd*インスタンスの状態を絶えず把握し、もし必要なら再"
-"起動する。 `cnid_metad`は通常、`netatalk`(8)によってブート時に起動され、"
-"シャットダウンまでずっと動作する。"
+"**cnid_metad** waits for requests from *afpd* to start up instances of the\n"
+"*cnid_dbd* daemon. It keeps track of the status of a *cnid_dbd* instance\n"
+"once started and will restart it if necessary. **cnid_metad** is normally\n"
+"started at boot time by **netatalk**(8) and runs until shutdown.\n"
+msgstr "**cnid_metad**は*afpd*からの要求を待ち、*cnid_dbd*デーモンのインスタンスを起動する。一度起動した*cnid_dbd*インスタンスの状態を絶えず把握し、もし必要なら再起動する。 **cnid_metad**は通常、**netatalk**(8)によってブート時に起動され、シャットダウンまでずっと動作する。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:25
 #, no-wrap
 msgid ""
-"> *cnid_metad will remain in the foreground and* will also leave the\n"
+"> **cnid_metad** will remain in the foreground and will also leave the\n"
 "standard input, standard output and standard error file descriptors\n"
 "open. Useful for debugging.\n"
-msgstr "> *cnid_metadはフォアグラウンドに留まり、*更に標準入力、標準出力、標準エラー出力のファイル記述子を開いたままにする。デバッグに有用。\n"
+msgstr "> **cnid_metad** はフォアグラウンドに留まり、更に標準入力、標準出力、標準エラー出力のファイル記述子を開いたままにする。デバッグに有用。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:27
 #, no-wrap
-msgid "`-F` <configuration file\\>\n"
+msgid "**-F** <configuration file\\>\n"
 msgstr ""
 
 #. type: Plain text
@@ -224,27 +225,24 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:31
-msgid "`-v, -V`"
+#, no-wrap
+msgid "**-v**, **-V**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:43
+#, no-wrap
 msgid ""
-"`cnid_metad` does not block or catch any signals apart from SIGPIPE. It will "
-"therefore exit on most signals received. This will also cause all instances "
-"of *cnid_dbd's* started by that `cnid_metad` to exit gracefully. Since state "
-"about and IPC access to the subprocesses is only maintained in memory by "
-"`cnid_metad` this is desired behaviour. As soon as `cnid_metad` is restarted "
-"*afpd* processes will transparently reconnect."
-msgstr ""
-"`cnid_metad`はSIGPIPEを除くいかなるシグナルもブロックしないし補足もしない。"
-"従って、受け取ったほとんどのシグナルにより終了する。これは、`cnid_metad`によ"
-"り起動した全ての*cnid_dbd*のインスタンスを優雅に終了させる。このような状況に"
-"より、サブプロセスにアクセスするIPCは`cnid_metad`によりメモリ上で維持されるだ"
-"けなので、これは望ましい動作だといえる。`cnid_metad`が再起動したあとすぐ、"
-"*afpd*プロセスは透過的に再接続する。"
+"**cnid_metad** does not block or catch any signals apart from SIGPIPE. It\n"
+"will therefore exit on most signals received. This will also cause all\n"
+"instances of **cnid_dbd** started by that **cnid_metad** to exit\n"
+"gracefully. Since state about and IPC access to the subprocesses is only\n"
+"maintained in memory by **cnid_metad** this is desired behaviour. As soon\n"
+"as **cnid_metad** is restarted **afpd** processes will transparently\n"
+"reconnect.\n"
+msgstr "**cnid_metad**はSIGPIPEを除くいかなるシグナルもブロックしないし補足もしない。従って、受け取ったほとんどのシグナルにより終了する。これは、**cnid_metad**により起動した全ての*cnid_dbd*のインスタンスを優雅に終了させる。このような状況により、サブプロセスにアクセスするIPCは**cnid_metad**によりメモリ上で維持されるだけなので、これは望ましい動作だといえる。**cnid_metad**が再起動したあとすぐ、**afpd**プロセスは透過的に再接続する。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:47
-msgid "`netatalk(8)`, `cnid_dbd(8)`, `afpd(8)`, `dbd(1)`, `afp.conf(5)`"
+msgid "netatalk(8), cnid_dbd(8), afpd(8), dbd(1), afp.conf(5)"
 msgstr ""

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-25 21:15+0100\n"
+"POT-Creation-Date: 2025-01-29 18:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -77,6 +77,30 @@ msgstr "概要"
 msgid "Description"
 msgstr "説明"
 
+#. type: Plain text
+#: manpages/man1/ad.1.md:54 manpages/man1/asip-status.1.md:39
+#: manpages/man1/pap.1.md:45 manpages/man8/a2boot.8.md:35
+#: manpages/man8/afpd.8.md:22 manpages/man8/atalkd.8.md:37
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/netatalk.8.md:20
+#: manpages/man8/papd.8.md:40 manpages/man8/papstatus.8.md:27
+#: manpages/man8/timelord.8.md:26
+#, no-wrap
+msgid "**-d**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:126 manpages/man1/ad.1.md:178
+#: manpages/man1/asip-status.1.md:43
+#, no-wrap
+msgid "**-i**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:156 manpages/man1/asip-status.1.md:47
+#, no-wrap
+msgid "**-x**\n"
+msgstr ""
+
 #. type: Title #
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
@@ -85,15 +109,15 @@ msgstr "説明"
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
 #: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
-#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1279
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -107,14 +131,14 @@ msgstr "著者"
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
 #: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
-#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1281
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -138,7 +162,8 @@ msgstr "オプション"
 #. type: Plain text
 #: manpages/man1/addump.1.md:56 manpages/man1/asip-status.1.md:51
 #: manpages/man1/macusers.1.md:18
-msgid "`-v, -version, --version`"
+#, no-wrap
+msgid "**-v**, **-version**, **--version**\n"
 msgstr ""
 
 #. type: Title #
@@ -146,7 +171,7 @@ msgstr ""
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:82
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:80
 #: manpages/man5/extmap.conf.5.md:18 manpages/man5/papd.conf.5.md:91
 #: manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -177,13 +202,13 @@ msgstr ""
 #: manpages/man1/asip-status.1.md:20
 #, no-wrap
 msgid ""
-"`asip-status` sends an FPGetSrvrInfo request to an AFP server at\n"
+"**asip-status** sends an FPGetSrvrInfo request to an AFP server at\n"
 "<HOSTNAME\\>:<PORT\\> and displays the results: \"Machine type\", the\n"
 "server's name, supported AFP versions, UAMs and AFP flags, the \"server\n"
 "signature\" and the network addresses that the server provides AFP\n"
 "services on.\n"
 msgstr ""
-"`asip-status`は、<HOSTNAME\\>:<PORT\\>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
+"**asip-status**は、<HOSTNAME\\>:<PORT\\>で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
 "type\"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。\n"
 
 #. type: Plain text
@@ -197,17 +222,18 @@ msgstr "<PORT\\>を与えない場合は、デフォルトのAFPポートであ�
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:27
 msgid ""
-"Starting with Netatalk 3.1.9, `asip-status` supports both IPv4 and IPv6.  By "
-"default, your system automatically decides which protocol version to use. "
-"You can use -4 or -6 option to force IPv4 or IPv6, respectively."
+"Starting with Netatalk 3.1.9, **asip-status** supports both IPv4 and IPv6.  "
+"By default, your system automatically decides which protocol version to use. "
+"You can use **-4** or **-6** option to force IPv4 or IPv6, respectively."
 msgstr ""
-"Netatalk 3.1.9以降では、 `asip-status` はIPv4とIPv6の両方をサポートする。どち"
-"らのIPバージョンを利用するかは、あなたのシステムが決定する。利用するIPバー"
+"Netatalk 3.1.9以降では、 **asip-status** はIPv4とIPv6の両方をサポートする。ど"
+"ちらのIPバージョンを利用するかは、あなたのシステムが決定する。利用するIPバー"
 "ジョンを指定するには、-4または-6オプションを使うことができる。"
 
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:31
-msgid "`-4`"
+#, no-wrap
+msgid "**-4**\n"
 msgstr ""
 
 #. type: Plain text
@@ -218,7 +244,8 @@ msgstr "> IPv4のみを使う。\n"
 
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:35
-msgid "`-6`"
+#, no-wrap
+msgid "**-6**\n"
 msgstr ""
 
 #. type: Plain text
@@ -228,33 +255,16 @@ msgid "> Use IPv6 only.\n"
 msgstr "> IPv6のみを使う。\n"
 
 #. type: Plain text
-#: manpages/man1/asip-status.1.md:39 manpages/man1/pap.1.md:45
-#: manpages/man8/a2boot.8.md:35 manpages/man8/cnid_metad.8.md:21
-#: manpages/man8/papstatus.8.md:27 manpages/man8/timelord.8.md:26
-msgid "`-d`"
-msgstr ""
-
-#. type: Plain text
 #: manpages/man1/asip-status.1.md:41 manpages/man1/pap.1.md:47
 #, no-wrap
 msgid "> Enable debug output.\n"
 msgstr "> デバッグ出力を有効にする。\n"
 
 #. type: Plain text
-#: manpages/man1/asip-status.1.md:43
-msgid "`-i`"
-msgstr ""
-
-#. type: Plain text
 #: manpages/man1/asip-status.1.md:45
 #, no-wrap
 msgid "> Show icon if it exists.\n"
 msgstr "> もしアイコンがあれば、それを表示する。\n"
-
-#. type: Plain text
-#: manpages/man1/asip-status.1.md:47
-msgid "`-x`"
-msgstr ""
 
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:49

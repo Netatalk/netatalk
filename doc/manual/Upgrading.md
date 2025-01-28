@@ -7,8 +7,8 @@ version on top of the old one. The primary difference is that Netatalk 4
 brings back essential AppleTalk services, configuration files, and tools
 that were removed between Netatalk 2 and Netatalk 3.
 
-Notably, the `atalkd` daemon with its `atalkd.conf` configuration file,
-and the `papd` daemon with its `papd.conf` configuration file are once
+Notably, the **atalkd** daemon with its **atalkd.conf** configuration file,
+and the **papd** daemon with its **papd.conf** configuration file are once
 more available.
 
 ## Upgrading from Netatalk 2
@@ -16,72 +16,72 @@ more available.
 There are three major changes between Netatalk 2 and Netatalk 4:
 
 1.  New configuration files that replaces most of the previous ones:
-    `afp.conf` and `extmap.conf`
+    *afp.conf* and *extmap.conf*
 
-2.  New AppleDouble backend `appledouble = ea` which stores Mac metadata
+2.  New AppleDouble backend **appledouble = ea** which stores Mac metadata
     and resource forks in extended attributes of the filesystem.
 
 3.  The AppleTalk transport layer is disabled by default. If you want to
     use Netatalk with very old Macs, turn it on with the
-    `appletalk = yes` option in `afp.conf`. Then start the `atalkd`
-    daemon before `netatalk` in order to activate the AppleTalk
+    **appletalk = yes** option in *afp.conf*. Then start the **atalkd**
+    daemon before **netatalk** in order to activate the AppleTalk
     transport layer.
 
 ### New configuration
 
-`afp.conf`
+#### afp.conf
 
 - ini style syntax (akin to Samba's smb.conf)
 
 - one to rule them all: configure AFP settings and volumes in one file
 
-- obsoletes `afpd.conf`, `netatalk.conf`, `AppleVolumes.default` and
-  `afp_ldap.conf`
+- obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and
+  *afp_ldap.conf*
 
 > **WARNING**
 
 > most option names have changed, read the full manpage
 [afp.conf](afp.conf.html) for details
 
-`extmap.conf`
+#### extmap.conf
 
 - maps file extensions to Classic Mac OS type/creator
 
 - unlike 2.x, the mappings are disabled by default; uncomment the lines
   in the file to enable them
 
-- obsoletes `AppleVolumes.system`
+- obsoletes *AppleVolumes.system*
 
 ### New AppleDouble backend
 
-New AppleDouble backend `appledouble = ea` which stores Mac metadata and
+New AppleDouble backend **appledouble = ea** which stores Mac metadata and
 resource forks in extended attributes of the filesystem.
 
 - default backend (!)
 
 - requires a filesystem with Extended Attributes, fallback is
-  `appledouble = v2`
+  **appledouble = v2**
 
-- converts filesystems from `appledouble = v2` to `appledouble = ea` on
+- converts filesystems from **appledouble = v2** to **appledouble = ea** on
   the fly when accessed (can be disabled)
 
-- `dbd` can be used to do conversion in one shot
+- **dbd** can be used to do conversion in one shot
 
 Implementation details:
 
 - stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an
-  Extended Attributed named “`org.netatalk.Metadata`”
+  Extended Attributed named “*org.netatalk.Metadata*”
 
   - Additionally, on macOS hosts running Netatalk 4.1.0 or later,
     FinderInfo is natively stored in the file system and appears as an
-    Extended Attribute named “`com.apple.FinderInfo`”
+    Extended Attribute named “*com.apple.FinderInfo*”
 
 - stores Mac ResourceFork either in
 
-  - an Extended Attribute named “`org.netatalk.ResourceFork`” on
+  - an Extended Attribute named “*org.netatalk.ResourceFork*” on
     Solaris w. ZFS, or in
 
-  - an extra AppleDouble file named “`._file`” for a file named “`file`”
+  - an extra AppleDouble file named “*._file*” for a file named “*file*”
     or
 
   - natively stored in the resource fork on macOS hosts as of Netatalk
@@ -92,7 +92,7 @@ Implementation details:
   you can have parallel access from Macs to the same dataset via AFP and
   CIFS without the risk of loosing data (resources or metadata).
   Accessing the same dataset with CIFS from Windows clients will still
-  break the coupling of “`file`” and “`._file`” on non ZFS filesystems
+  break the coupling of “*file*” and “*._file*” on non ZFS filesystems
   (see above), so for this we still need an enhanced Samba VFS module
   (in the works).
 
@@ -102,10 +102,10 @@ Implementation details:
   responsible for starting and restarting the AFP and CNID daemons. All
   bundled start scripts have been updated, make sure to update yours!
 
-- All CNID databases are now stored under `$prefix/var/netatalk/CNID/`
+- All CNID databases are now stored under *$prefix/var/netatalk/CNID/*
   by default, rather than in the individual shared volume directories
 
-- Netatalk 2.x volume options “usedots” and “upriv” now enabled by
+- Netatalk 2.x volume options “**usedots**” and “**upriv**” now enabled by
   default
 
 - Removed SLP and AFP proxy support
@@ -116,14 +116,14 @@ Implementation details:
 
 2.  Install Netatalk 4
 
-3.  Manually recreate configurations in `afp.conf` and `extmap.conf`
+3.  Manually recreate configurations in *afp.conf* and *extmap.conf*
 
-4.  Update your Netatalk init script to start `netatalk` instead of
-    `afpd` and `cnid_metad`, or replace it with the appropriate stock
+4.  Update your Netatalk init script to start **netatalk** instead of
+    **afpd** and **cnid_metad**, or replace it with the appropriate stock
     init script for your system.
 
-5.  Move `afp_voluuid.conf` and `afp_signature.conf` to the localstate
-    directory (default `$prefix/var/netatalk/`), you can use `afpd -v`
+5.  Move *afp_voluuid.conf* and *afp_signature.conf* to the localstate
+    directory (default *$prefix/var/netatalk/*), you can use **afpd -v**
     in order to find the correct path
 
 6.  Start Netatalk 4

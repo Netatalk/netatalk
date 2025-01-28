@@ -4,7 +4,7 @@ afp_voluuid.conf — Configuration file used by afpd to specify UUID for AFP vol
 
 # Description
 
-`afp_voluuid.conf` is the configuration file used by `afpd` to specify
+**afp_voluuid.conf** is the configuration file used by **afpd** to specify
 UUID of all AFP volumes. The configuration lines are composed like:
 
 <"volume-name"\> <uuid-string\>
@@ -37,7 +37,7 @@ server.
 
 # See also
 
-`afpd(8)`, `afp.conf(5)`, `avahi-daemon(8)`, `mDNSResponder(8)`
+afpd(8), afp.conf(5), avahi-daemon(8), mDNSResponder(8)
 
 # Author
 

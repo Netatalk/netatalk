@@ -14,7 +14,7 @@ atalk_aton — AppleTalk address parsing
 
 # Description
 
-The `atalk_aton()` routine converts an ASCII representation of an
+The **atalk_aton()** routine converts an ASCII representation of an
 AppleTalk address to a format appropriate for system calls. Acceptable
 ASCII representations include both hex and base 10, in triples or
 doubles. For instance, the address \`0x1f6b.77' has a network part of
@@ -24,7 +24,7 @@ and the first digit is one of \`A-F', a leading \`0x' is redundant.
 
 # See Also
 
-`atalk(4)`.
+atalk(4)
 
 # Author
 

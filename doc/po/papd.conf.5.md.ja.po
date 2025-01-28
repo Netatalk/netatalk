@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 09:53+0100\n"
+"POT-Creation-Date: 2025-01-29 12:33+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -66,15 +66,15 @@ msgstr "説明"
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
 #: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
-#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -88,14 +88,14 @@ msgstr "著者"
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
 #: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
-#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -107,7 +107,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -122,7 +122,7 @@ msgstr "関連項目"
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:82
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/atalkd.conf.5.md:80
 #: manpages/man5/extmap.conf.5.md:18 manpages/man5/papd.conf.5.md:91
 #: manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -142,24 +142,24 @@ msgstr ""
 #: manpages/man5/papd.conf.5.md:10
 #, no-wrap
 msgid ""
-"*papd.conf* is the configuration file used by papd to configure the\n"
+"**papd.conf** is the configuration file used by papd to configure the\n"
 "printing services offered by netatalk. *papd* shares the same defaults\n"
 "as lpd on many systems. One notable exception is Solaris.\n"
 msgstr ""
-"*papd.conf* は、netatalk が提供する印刷サービスを設定するために papd\n"
+"**papd.conf** は、netatalk が提供する印刷サービスを設定するために papd\n"
 "が使用する設定ファイルである。 *papd* は、多くのシステムで lpd\n"
 "と同じデフォルトを共有する。注目すべき例外の 1 つは Solaris である。\n"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:14
 msgid ""
-"The format of papd.conf is derived from `printcap(5)` and can contain "
+"The format of papd.conf is derived from **printcap**(5) and can contain "
 "configurations for one or more printers. Any line not prefixed with *\\#* is "
 "interpreted. The configuration lines are composed like this:"
 msgstr ""
-"papd.conf の形式は、`printcap(5)` から派生したもので、1 つ以上のプリンタの設"
-"定を含めることができる。 *\\#* で始まっていない行はすべて解釈される。設定行は"
-"次のように構成される:"
+"papd.conf の形式は、**printcap**(5) から派生したもので、1 つ以上のプリンタの"
+"設定を含めることができる。 *\\#* で始まっていない行はすべて解釈される。設定行"
+"は次のように構成される:"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:16
@@ -172,11 +172,11 @@ msgstr ""
 msgid ""
 "On systems running a System V printing system, the simplest case is to have "
 "either no papd.conf, or to have one that has no active lines. In this case, "
-"*atalkd* should auto-discover the local printers on the machine. Please note "
-"that you can split lines with a *\\\\* (backslash)."
+"**atalkd** should auto-discover the local printers on the machine. Please "
+"note that you can split lines with a *\\\\* (backslash)."
 msgstr ""
 "System V 印刷システムを実行しているシステムでは、最も単純なケースは、"
-"papd.conf がないか、有効な行はないか。この場合、*atalkd* はマシン上のローカ"
+"papd.conf がないか、有効な行はないか。この場合、**atalkd** はマシン上のローカ"
 "ル プリンタを自動検出する。行を *\\\\* (バックスラッシュ) で分割できることに"
 "注意してください。"
 
@@ -228,29 +228,29 @@ msgstr ""
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:40
 #, no-wrap
-msgid "*am=(uams list)*\n"
+msgid "**am=(uams list)**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:46
 #, no-wrap
 msgid ""
-"> The *am* option allows specific UAMs to be specified for a particular\n"
-"printer. It has no effect if the *au* flag is not present. Note:\n"
+"> The **am** option allows specific UAMs to be specified for a particular\n"
+"printer. It has no effect if the **au** flag is not present. Note:\n"
 "possible values are *uams_guest.so* and *uams_clrtxt.so* only. The first\n"
 "method requires a valid username, but no password. The second requires\n"
 "both a valid username and the correct password.\n"
 msgstr ""
-"*am* オプションを使用すると、特定のプリンタに対して特定の UAM\n"
-"を指定できる。*au* フラグが存在しない場合は効果がありません。注:\n"
+"**am** オプションを使用すると、特定のプリンタに対して特定の UAM\n"
+"を指定できる。**au** フラグが存在しない場合は効果がない。注:\n"
 "指定できる値は *uams_guest.so* と *uams_clrtxt.so*\n"
-"のみ。最初の方法では有効なユーザー名が必要だが、パスワードは必要ありません。\n"
+"のみ。最初の方法では有効なユーザー名が必要だが、パスワードは必要ない。\n"
 "2 番目 には、有効なユーザー名と正しいパスワードの両方が必要。\n"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:48
 #, no-wrap
-msgid "*au*\n"
+msgid "**au**\n"
 msgstr ""
 
 #. type: Plain text
@@ -262,7 +262,7 @@ msgstr "> このフラグが存在する場合、プリンタの認証が有効�
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:52
 #, no-wrap
-msgid "*co=(CUPS options)*\n"
+msgid "**co=(CUPS options)**\n"
 msgstr "*co=(CUPS オプション)*\n"
 
 #. type: Plain text
@@ -278,7 +278,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:57
 #, no-wrap
-msgid "*cupsautoadd\\[:type\\]\\[@zone\\]*\n"
+msgid "**cupsautoadd\\[:type\\]\\[@zone\\]**\n"
 msgstr ""
 
 #. type: Plain text
@@ -296,7 +296,7 @@ msgstr "> papd.conf の最初のエントリとして使用すると、papd を�
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:66
 #, no-wrap
-msgid "*fo*\n"
+msgid "**fo**\n"
 msgstr ""
 
 #. type: Plain text
@@ -312,7 +312,7 @@ msgstr "> このフラグが存在する場合、Mac OS X 以前の LaserWriter 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:73
 #, no-wrap
-msgid "*op=(operator)*\n"
+msgid "**op=(operator)**\n"
 msgstr ""
 
 #. type: Plain text
@@ -326,19 +326,19 @@ msgstr "> lpd スプールのオペレータ名を指定する。デフォルト
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:78
 #, no-wrap
-msgid "*pa=(appletalk address)*\n"
+msgid "**pa=(appletalk address)**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:80
 #, no-wrap
 msgid "> Allows specification of AppleTalk addresses. Usually not needed.\n"
-msgstr "> AppleTalk アドレスの指定を許可する。通常は必要ありません。\n"
+msgstr "> AppleTalk アドレスの指定を許可する。通常は必要ない。\n"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:82
 #, no-wrap
-msgid "*pd=(path to ppd file)*\n"
+msgid "**pd=(path to ppd file)**\n"
 msgstr "*pd=(ppd ファイルへのパス)*\n"
 
 #. type: Plain text
@@ -352,7 +352,7 @@ msgstr "> 選択したプリンタに関連付ける特定の PPD (プリンタ�
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:87
 #, no-wrap
-msgid "*pr=(lpd/CUPS printer name or pipe command)*\n"
+msgid "**pr=(lpd/CUPS printer name or pipe command)**\n"
 msgstr "*pr=(lpd/CUPS プリンタ名またはパイプ コマンド)*  \n"
 
 #. type: Plain text
@@ -367,14 +367,14 @@ msgstr "> スプール先の *lpd* または *CUPS* プリンタを設定する�
 #: manpages/man5/papd.conf.5.md:97
 msgid ""
 "Unless CUPS support has been compiled in (which is default from Netatalk 2.0 "
-"on) one simply defines the lpd queue in question by setting the `pr` "
-"parameter to the queue name, in the following example \"ps\". If no `pr` "
+"on) one simply defines the lpd queue in question by setting the **pr** "
+"parameter to the queue name, in the following example \"ps\". If no **pr** "
 "parameter is set, the default printer will be used."
 msgstr ""
 "CUPS サポートがコンパイルされていない場合 (Netatalk 2.0 以降ではデフォルト)、"
-"`pr` パラメータをキュー名に設定することで、問題の lpd キューを定義する (次の"
-"例では「ps」)。`pr` パラメータが設定されていない場合は、デフォルトのプリンタ"
-"が使用される。"
+"**pr** パラメータをキュー名に設定することで、問題の lpd キューを定義する (次"
+"の例では「ps」)。**pr** パラメータが設定されていない場合は、デフォルトのプリ"
+"ンタが使用される。"
 
 #. type: Title ##
 #: manpages/man5/papd.conf.5.md:98
@@ -386,7 +386,7 @@ msgstr "例： papd.conf System V 印刷システムの例"
 #: manpages/man5/papd.conf.5.md:104
 msgid ""
 "The first spooler is known by the AppleTalk name Mac Printer Spooler, and "
-"uses a PPD file located in `/usr/share/lib/ppd`. In addition, the user mcs "
+"uses a PPD file located in */usr/share/lib/ppd*. In addition, the user mcs "
 "will be the owner of all jobs that are spooled. The second spooler is known "
 "as HP Printer and all options are the default."
 msgstr ""
@@ -432,17 +432,17 @@ msgstr "例： パイプを使用した papd.conf の例"
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:124
 msgid ""
-"The first spooler is known as HP 8100. It pipes the print job to `/usr/bin/"
-"lpr` for printing. PSSP authenticated printing is enabled, as is CAP-style "
+"The first spooler is known as HP 8100. It pipes the print job to */usr/bin/"
+"lpr* for printing. PSSP authenticated printing is enabled, as is CAP-style "
 "authenticated printing. Both methods support guest and cleartext "
-"authentication as specified by the '`am`' option. The PPD used is `/etc/"
-"atalk/ppds/hp8100.ppd`."
+"authentication as specified by the '**am**' option. The PPD used is */etc/"
+"atalk/ppds/hp8100.ppd*."
 msgstr ""
-"最初のスプーラは HP 8100 と呼ばれている。印刷ジョブを `/usr/bin/lpr` にパイプ"
+"最初のスプーラは HP 8100 と呼ばれている。印刷ジョブを */usr/bin/lpr* にパイプ"
 "して印刷する。 PSSP 認証印刷が有効になっており、CAP スタイルの認証印刷も有効"
-"になっている。どちらの方法も、'`am`' オプションで指定されたゲスト認証とクリア"
-"テキスト認証をサポートしている。使用される PPD は、`/etc/atalk/ppds/"
-"hp8100.ppd` である。"
+"になっている。どちらの方法も、'**am**' オプションで指定されたゲスト認証とクリ"
+"アテキスト認証をサポートしている。使用される PPD は、*/etc/atalk/ppds/"
+"hp8100.ppd* である。"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:131
@@ -460,14 +460,15 @@ msgstr ""
 #: manpages/man5/papd.conf.5.md:137 manual/AppleTalk.md:351
 msgid ""
 "Starting with Netatalk 2.0, direct CUPS integration is available. In this "
-"case, defining only a queue name as `pr` parameter won't invoke the SysV lpd "
-"daemon but uses CUPS instead. Unless a specific PPD has been assigned using "
-"the `pd` switch, the PPD configured in CUPS will be used by `papd`, too."
+"case, defining only a queue name as **pr** parameter won't invoke the SysV "
+"lpd daemon but uses CUPS instead. Unless a specific PPD has been assigned "
+"using the **pd** switch, the PPD configured in CUPS will be used by "
+"**papd**, too."
 msgstr ""
 "Netatalk 2.0 以降では、直接 CUPS 統合が使用可能。この場合、キュー名のみを "
-"`pr` パラメータとして定義すると、SysV lpd デーモンは呼び出されず、代わりに "
-"CUPS が使用される。 `pd` スイッチを使用して特定の PPD が割り当てられていない"
-"限り、CUPS で構成された PPD は `papd` でも使用される。"
+"**pr** パラメータとして定義すると、SysV lpd デーモンは呼び出されず、代わりに "
+"CUPS が使用される。 **pd** スイッチを使用して特定の PPD が割り当てられていな"
+"い限り、CUPS で構成された PPD は **papd** でも使用される。"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:143
@@ -521,7 +522,7 @@ msgstr ""
 
 #. type: Title #
 #: manpages/man5/papd.conf.5.md:158 manpages/man8/cnid_metad.8.md:34
-#: manpages/man8/papd.8.md:118
+#: manpages/man8/papd.8.md:117
 #, no-wrap
 msgid "Caveats"
 msgstr "注意事項"
@@ -539,5 +540,5 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:167
-msgid "`papd(8)`, `atalkd.conf(5)`, `lpd(8)`, `lpoptions(8)`"
+msgid "papd(8), atalkd.conf(5), lpd(8), lpoptions(8)"
 msgstr ""

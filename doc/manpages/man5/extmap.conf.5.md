@@ -4,12 +4,12 @@ extmap.conf — Configuration file used by afpd to specify file name extension m
 
 # Description
 
-`extmap.conf` is the configuration file used by `afpd` to specify file
+**extmap.conf** is the configuration file used by **afpd** to specify file
 name extension mappings.
 
 The configuration lines are composed like:
 
-`.extension` <\[ type \[ creator \] \]\>
+`.extension [ type [ creator ] ]`
 
 Any line beginning with a hash (“#”) character is ignored. The
 leading-dot lines specify file name extension mappings. The extension
@@ -27,7 +27,7 @@ leading-dot lines specify file name extension mappings. The extension
 
 # See Also
 
-`afp.conf(5)`, `afpd(8)`
+afp.conf(5), afpd(8)
 
 # Author
 

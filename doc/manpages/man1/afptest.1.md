@@ -17,30 +17,30 @@ afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg — AFP protocol
 # Description
 
 All of the tools in the *afptest* family follow the same general usage
-pattern and parameters. You set the AFP protocol revision (`-1` through
-`-7`), then the address and credentials of the host to test (which can
+pattern and parameters. You set the AFP protocol revision (**-1** through
+**-7**), then the address and credentials of the host to test (which can
 be localhost). Some tests require a second user and second volume to be
 define. Yet another set of tests must be run from localhost, and the
 local path to the volume under test to be provided. Single tests or test
-sections can be executed with the `-f` option. Available tests can be
-listed with the `-l` option.
+sections can be executed with the **-f** option. Available tests can be
+listed with the **-l** option.
 
-`afp_spectest` makes up the core of the AFP specification test suite,
+**afp_spectest** makes up the core of the AFP specification test suite,
 with just over 300 test cases. It is organized into testsets, divided by
 AFP commands tested, or by preconditions for testing. For instance, the
-tier 2 (T2) tests need to be run on the host with the `-c` option
+tier 2 (T2) tests need to be run on the host with the **-c** option
 indicating the path to the shared volume. There are also read-only and
 sleep tests that need to be run separately.
 
-`afp_logintest` is an AFP login authentication test suite that has its
+**afp_logintest** is an AFP login authentication test suite that has its
 own runners.
 
-`afp_lantest` and `afp_speedtest` are file transfer benchmarks for AFP
+**afp_lantest** and **afp_speedtest**` are file transfer benchmarks for AFP
 servers. The former is inspired by *HELIOS LanTest*, which runs a batch
 of varied file transfer patterns. The latter is a simpler tool with a
 handful of available test cases.
 
-`afparg` is an AFP CLI client that takes a specific command with
+**afparg**` is an AFP CLI client that takes a specific command with
 optional arguments, and sends a single action to the AFP server. This
 can be used for one-off troubleshooting or system administration.
 
@@ -84,7 +84,7 @@ Run the afp_lantest benchmark using AFP 3.0.
 
 # See also
 
-`afpd(8)`.
+afpd(8)
 
 # Author
 

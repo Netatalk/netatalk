@@ -4,16 +4,14 @@ atalkd.conf — Configuration file used by atalkd to configure the interfaces us
 
 # Description
 
-*atalkd.conf* is the configuration file used by atalkd to configure the
+**atalkd.conf** is the configuration file used by atalkd to configure the
 Appletalk interfaces and their behavior
 
 Any line not prefixed with *\#* is interpreted. Each interface has be
 configured on an uninterrupted line, with no support for split lines.
 The configuration line format is:
 
-*interface* \[ `-seed` \] \[ `-phase` <number\> \] \[ `-net`
-<net-range\> \] \[ `-addr` <address\> \] \[ `-zone` <zonename\> \]
-...
+`interface [ -seed ] [ -phase <number> ] [ -net <net-range> ] [ -addr <address> ] [ -zone <zonename> ] ...`
 
 The simplest case is to have either no atalkd.conf, or to have one that
 has no active lines. In this case, atalkd will auto-discover the local
@@ -24,59 +22,59 @@ The interface is the network interface that this to work over, such as
 *eth0* for Linux, or *le0* for Solaris.
 
 Note that all fields except the interface are optional. The loopback
-interface is configured automatically. If `-seed` is specified, all
-other fields must be present. Also, `atalkd` will exit during startup if
-a router disagrees with its seed information. If `-seed` is not given,
+interface is configured automatically. If **-seed** is specified, all
+other fields must be present. Also, **atalkd** will exit during startup if
+a router disagrees with its seed information. If **-seed** is not given,
 all other information may be overridden during auto-configuration. If no
-`-phase` option is given, the default phase as given on the command line
-is used (the default is 2). If `-addr` is given and `-net` is not, a
+**-phase** option is given, the default phase as given on the command line
+is used (the default is 2). If **-addr** is given and **-net** is not, a
 net-range of one is assumed.
 
-The first -zone directive for each interface is the \`\`default'' zone.
+The first -zone directive for each interface is the "default" zone.
 Under Phase 1, there is only one zone. Under Phase 2, all routers on the
-network are configured with the default zone and must agree. `atalkd`
-maps \`\`\*'' to the default zone of the first interface. Note: The
+network are configured with the default zone and must agree. **atalkd**
+maps "*" to the default zone of the first interface. Note: The
 default zone for a machine is determined by the configuration of the
 local routers; to appear in a non-default zone, each service, e.g.
-`afpd`, must individually specify the desired zone. See also
-`nbp_name(3)`.
+**afpd**, must individually specify the desired zone. See also
+**nbp_name**(3).
 
 The possible options and their meanings are:
 
-`-addr net.node`
+**-addr** net.node
 
 > Allows specification of the net and node numbers for this interface,
-specified in AppleTalk numbering format (example: `-addr 66.6`).
+specified in AppleTalk numbering format (example: **-addr 66.6**).
 
-`-dontroute`
+**-dontroute**
 
-> Disables AppleTalk routing. It is the inverse of `-router`.
+> Disables AppleTalk routing. It is the inverse of **-router**.
 
-`-net first[-last]`
+**-net** first[-last]
 
 > Allows the available net to be set, optionally as a range.
 
-`-phase ( 1 | 2 )`
+**-phase** ( 1 | 2 )
 
 > Specifies the AppleTalk phase that this interface is to use (either
 Phase 1 or Phase 2).
 
-`-router`
+**-router**
 
 > Seed an AppleTalk router on a single interface. The inverse option is
-`-dontroute`. Akin to `-seed`, but allows single interface routing.
+**-dontroute**. Akin to **-seed**, but allows single interface routing.
 
-`-seed`
+**-seed**
 
 > Seed an AppleTalk router. This requires two or more interfaces to be
-configured. If you have a single network interface, use `-route`
+configured. If you have a single network interface, use **-router**
 instead. It also causes all missing arguments to be automagically
 configured from the network.
 
-`-zone zonename`
+**-zone** zonename
 
 > Specifies a specific zone that this interface should appear on (example:
-`-zone "Parking Lot"`). Please note that zones with spaces and other
+**-zone "Parking Lot"**). Please note that zones with spaces and other
 special characters should be enclosed in quotation marks.
 
 # Examples
@@ -90,16 +88,16 @@ The same on Linux.
        eth0
 
 Below is an example configuration file from a Sun 4/40. The machine has
-two interfaces, \`\`le0'' and \`\`le1''. The \`\`le0'' interface is
+two interfaces, "le0" and "le1". The "le0" interface is
 configured automatically from other routers on the network. The machine
-is the only router for the \`\`le1'' interface.
+is the only router for the "le1" interface.
 
        le0
        le1 -seed -net 9461-9471 -zone netatalk -zone Argus
 
 # See Also
 
-`atalkd(8)`
+atalkd(8)
 
 # Author
 

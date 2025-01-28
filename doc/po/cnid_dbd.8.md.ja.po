@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-23 07:41+0100\n"
+"POT-Creation-Date: 2025-01-29 12:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -32,7 +32,8 @@ msgstr ""
 #: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
 #: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
-#: manpages/man8/papstatus.8.md:1 manpages/man8/timelord.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
 #, no-wrap
 msgid "Name"
 msgstr "名前"
@@ -84,15 +85,15 @@ msgstr "説明"
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
 #: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
-#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:49
+#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:137 manpages/man8/papstatus.8.md:53
+#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -106,14 +107,14 @@ msgstr "著者"
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
 #: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
-#: manpages/man3/nbp_name.3.md:46 manpages/man4/atalk.4.md:51
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
-#: manpages/man5/atalkd.conf.5.md:106 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:139
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -140,7 +141,7 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:100
+#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -149,6 +150,15 @@ msgstr "オプション"
 #, no-wrap
 msgid "See Also"
 msgstr "関連項目"
+
+#. type: Plain text
+#: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
+#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:68
+#: manpages/man8/netatalk.8.md:28 manpages/man8/papd.8.md:58
+#: manpages/man8/timelord.8.md:39
+#, no-wrap
+msgid "**-v** | **-V**\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:4
@@ -167,87 +177,65 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:19
+#, no-wrap
 msgid ""
-"`cnid_dbd` provides an interface for storage and retrieval of catalog node "
-"IDs (CNIDs) and related information to the *afpd* daemon. CNIDs are a "
-"component of Macintosh based file systems with semantics that map not easily "
-"onto Unix file systems. This makes separate storage in a database necessary. "
-"`cnid_dbd` is part of the *CNID backend* framework of *afpd* and implements "
-"the *dbd* backend."
-msgstr ""
-"`cnid_dbd`はストレージとカタログノードID (CNID)と関連情報の検索のためのイン"
-"ターフェースを*afpd*デーモンに提供する。CNIDはMacintoshベースのファイルシステ"
-"ムの構成要素であるが、これの動作は単純にはUnixファイルシステム上にマッピング"
-"できない。従って、一つのデータベース内に分離した記憶域が必要となる。"
-"`cnid_dbd`は*afpd*の*CNIDバックエンド*の一つであり、*dbd*バックエンドを実装す"
-"る。"
+"**cnid_dbd** provides an interface for storage and retrieval of catalog\n"
+"node IDs (CNIDs) and related information to the *afpd* daemon. CNIDs are\n"
+"a component of Macintosh based file systems with semantics that map not\n"
+"easily onto Unix file systems. This makes separate storage in a database\n"
+"necessary. **cnid_dbd** is part of the *CNID backend* framework of *afpd*\n"
+"and implements the *dbd* backend.\n"
+msgstr "**cnid_dbd**はストレージとカタログノードID (CNID)と関連情報の検索のためのインターフェースを*afpd*デーモンに提供する。CNIDはMacintoshベースのファイルシステムの構成要素であるが、これの動作は単純にはUnixファイルシステム上にマッピングできない。従って、一つのデータベース内に分離した記憶域が必要となる。**cnid_dbd**は*afpd*の*CNIDバックエンド*の一つであり、*dbd*バックエンドを実装する。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:23
+#, no-wrap
 msgid ""
-"`cnid_dbd` is never started via the command line or system startup scripts "
-"but only by the *cnid_metad* daemon. There is one instance of `cnid_dbd` per "
-"netatalk volume."
-msgstr ""
-"`cnid_dbd`はコマンドラインやシステム起動スクリプトではなく、*cnid_metad*デー"
-"モンによって起動する。netatalkボリューム一つにつき、`cnid_dbd`のインスタンス"
-"が一つである。"
+"**cnid_dbd** is never started via the command line or system startup\n"
+"scripts but only by the *cnid_metad* daemon. There is one instance of\n"
+"**cnid_dbd** per netatalk volume.\n"
+msgstr "**cnid_dbd**はコマンドラインやシステム起動スクリプトではなく、*cnid_metad*デーモンによって起動する。netatalkボリューム一つにつき、**cnid_dbd**のインスタンスが一つである。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:28
+#, no-wrap
 msgid ""
-"`cnid_dbd` uses the *Berkeley DB* database library and uses transactionally "
-"protected updates. The *dbd* backend with transactions will avoid corruption "
-"of the CNID database even if the system crashes unexpectedly."
-msgstr ""
-"`cnid_dbd`は*Berkeley DB*データベースライブラリを用いて、トランザクションで保"
-"護したアップデートを行う。トランザクションによる*dbd*バックエンドは、たとえシ"
-"ステムが不意にクラッシュしても、CNIDデータベースの破損を防ぐだろう。"
+"**cnid_dbd** uses the *Berkeley DB* database library and uses\n"
+"transactionally protected updates. The *dbd* backend with transactions\n"
+"will avoid corruption of the CNID database even if the system crashes\n"
+"unexpectedly.\n"
+msgstr "**cnid_dbd**は*Berkeley DB*データベースライブラリを用いて、トランザクションで保護したアップデートを行う。トランザクションによる*dbd*バックエンドは、たとえシステムが不意にクラッシュしても、CNIDデータベースの破損を防ぐだろう。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:40
+#, no-wrap
 msgid ""
-"`cnid_dbd` inherits the effective userid and groupid from *cnid_metad* on "
-"startup, which is normally caused by *afpd* serving a netatalk volume to a "
-"client. It changes to the *Berkeley DB* database home directory *dbdir* that "
-"is associated with the volume. If the userid inherited from *cnid_metad* is "
-"0 (root), `cnid_dbd` will change userid and groupid to the owner and group "
-"of the database home directory. Otherwise, it will continue to use the "
-"inherited values. `cnid_dbd` will then attempt to open the database and "
-"start serving requests using filedescriptor *clntfd*. Subsequent instances "
-"of *afpd* that want to access the same volume are redirected to the running "
-"`cnid_dbd` process by *cnid_metad* via the filedescriptor *ctrlfd*."
-msgstr ""
-"`cnid_dbd`は起動時に*cnid_metad*からの有効なユーザIDとグループIDを継承する。"
-"普通、この動作はnetatalkボリュームをクライアントへ提供する*afpd*によって生じ"
-"る。それはボリュームに関連付けられた*Berkeley DB*データベースのホームディレク"
-"トリ*dbdir*を変更する。もし*cnid_metad*から継承したユーザIDが0 (root)ならば、"
-"`cnid_dbd`はユーザIDとグループIDをデータベースホームディレクトリの所有者とグ"
-"ループに変更する。そうでない場合は、継承した値を使い続ける。このとき、"
-"`cnid_dbd`はデータベースを開き、ファイル記述子*clntfd*を使って要求されたもの"
-"を提供開始する。同じボリュームへアクセスしようとする次の*afpd*のインスタンス"
-"は、ファイル記述子*ctrlfd*を用いる*cnid_metad*によって、既に動いている"
-"`cnid_dbd`へリダイレクトされる。"
+"**cnid_dbd** inherits the effective userid and groupid from *cnid_metad*\n"
+"on startup, which is normally caused by *afpd* serving a netatalk volume\n"
+"to a client. It changes to the *Berkeley DB* database home directory\n"
+"*dbdir* that is associated with the volume. If the userid inherited from\n"
+"*cnid_metad* is 0 (root), **cnid_dbd** will change userid and groupid to\n"
+"the owner and group of the database home directory. Otherwise, it will\n"
+"continue to use the inherited values. **cnid_dbd** will then attempt to\n"
+"open the database and start serving requests using filedescriptor\n"
+"*clntfd*. Subsequent instances of *afpd* that want to access the same\n"
+"volume are redirected to the running **cnid_dbd** process by *cnid_metad*\n"
+"via the filedescriptor *ctrlfd*.\n"
+msgstr "**cnid_dbd**は起動時に*cnid_metad*からの有効なユーザIDとグループIDを継承する。普通、この動作はnetatalkボリュームをクライアントへ提供する*afpd*によって生じる。それはボリュームに関連付けられた*Berkeley DB*データベースのホームディレクトリ*dbdir*を変更する。もし*cnid_metad*から継承したユーザIDが0 (root)ならば、**cnid_dbd**はユーザIDとグループIDをデータベースホームディレクトリの所有者とグループに変更する。そうでない場合は、継承した値を使い続ける。このとき、**cnid_dbd**はデータベースを開き、ファイル記述子*clntfd*を使って要求されたものを提供開始する。同じボリュームへアクセスしようとする次の*afpd*のインスタンスは、ファイル記述子*ctrlfd*を用いる*cnid_metad*によって、既に動いている**cnid_dbd**へリダイレクトされる。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:49
+#, no-wrap
 msgid ""
-"`cnid_dbd` can be configured to run forever or to exit after a period of "
-"inactivity. If `cnid_dbd` receives a TERM or an INT signal it will exit "
-"cleanly after flushing dirty database buffers to disk and closing *Berkeley "
-"DB* database environments. It is safe to terminate `cnid_dbd` this way, it "
-"will be restarted when necessary. Other signals are not handled and will "
-"cause an immediate exit, possibly leaving the CNID database in an "
-"inconsistent state (no transactions) or losing recent updates during "
-"recovery (transactions)."
-msgstr ""
-"`cnid_dbd`は、永久に動作するか、または不活性期間の後に終了するかを設定でき"
-"る。もし`cnid_dbd`がTERMやINTシグナルを受け取った場合、汚れたデータベースバッ"
-"ファをディスクにフラッシュし、*Berkeley DB*データベース環境を閉じてから、綺麗"
-"に終了する。この方法で`cnid_dbd`を終了するのは安全な事であり、もし必要なら再"
-"起動する。他のシグナルは処理されず、即座に終了するか、もしかすると(トランザク"
-"ションなしのとき)CNIDデータベースを矛盾した状態のままにしておくか、(トランザ"
-"クションありのとき)リカバリ中の直近の更新を失うかするだろう。"
+"**cnid_dbd** can be configured to run forever or to exit after a period of\n"
+"inactivity. If **cnid_dbd** receives a TERM or an INT signal it will exit\n"
+"cleanly after flushing dirty database buffers to disk and closing\n"
+"*Berkeley DB* database environments. It is safe to terminate **cnid_dbd**\n"
+"this way, it will be restarted when necessary. Other signals are not\n"
+"handled and will cause an immediate exit, possibly leaving the CNID\n"
+"database in an inconsistent state (no transactions) or losing recent\n"
+"updates during recovery (transactions).\n"
+msgstr "**cnid_dbd**は、永久に動作するか、または不活性期間の後に終了するかを設定できる。もし**cnid_dbd**がTERMやINTシグナルを受け取った場合、汚れたデータベースバッファをディスクにフラッシュし、*Berkeley DB*データベース環境を閉じてから、綺麗に終了する。この方法で**cnid_dbd**を終了するのは安全な事であり、もし必要なら再起動する。他のシグナルは処理されず、即座に終了するか、もしかすると(トランザクションなしのとき)CNIDデータベースを矛盾した状態のままにしておくか、(トランザクションありのとき)リカバリ中の直近の更新を失うかするだろう。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:56
@@ -255,7 +243,7 @@ msgid ""
 "The *Berkeley DB* database subsystem will create files named log.xxxxxxxxxx "
 "in the database home directory *dbdir*, where xxxxxxxxxx is a monotonically "
 "increasing integer. These files contain the transactional database changes. "
-"They will be removed regularly, unless the *logfile_autoremove* option is "
+"They will be removed regularly, unless the **logfile_autoremove** option is "
 "specified in the *db_param* configuration file (see below) with a value of 0 "
 "(default 1)."
 msgstr ""
@@ -264,13 +252,8 @@ msgstr ""
 "log.xxxxxxxxxxという名前のファイルを作る。ここでxxxxxxxxxxは、単調増加する整"
 "数である。これらのファイルにはトランザクションにおけるデータベースの変更が記"
 "載されている。これらのファイルは、*db_param*設定ファイル(以下を見よ)で"
-"*logfile_autoremove*の値が0(デフォルトは1)に設定されている場合を除いて、定期"
-"的に削除される。"
-
-#. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:60
-msgid "`-v | -V`"
-msgstr ""
+"**logfile_autoremove**の値が0(デフォルトは1)に設定されている場合を除いて、定"
+"期的に削除される。"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:62 manpages/man8/cnid_metad.8.md:33
@@ -279,32 +262,28 @@ msgid "> Show version and exit.\n"
 msgstr "> バージョンを表示してから終了する。\n"
 
 #. type: Title ###
-#: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:586
-#: manual/Configuration.md:834
+#: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:581
+#: manual/Configuration.md:826
 #, no-wrap
 msgid "Configuration"
 msgstr "設定"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:71
+#, no-wrap
 msgid ""
-"`cnid_dbd` reads configuration information from the file *db_param* in the "
-"database directory *dbdir* on startup. If the file does not exist or a "
-"parameter is not listed, suitable default values are used. The format for a "
-"single parameter is the parameter name, followed by one or more spaces, "
-"followed by the parameter value, followed by a newline. The following "
-"parameters are currently recognized:"
-msgstr ""
-"`cnid_dbd`は起動時、データベースディレクトリ*dbdir* の中のファイル*db_param*"
-"から設定情報を読む。ファイルがない場合やパラメータが載っていない場合、適切な"
-"デフォルト値が使われる。ひとつのパラメータのフォーマットは、まずパラメータ"
-"名、それに続く一つ以上のスペース、それに続くパラメータ値、それに続く改行で構"
-"成される。現在以下のパラメータが認識される:"
+"**cnid_dbd** reads configuration information from the file *db_param* in\n"
+"the database directory *dbdir* on startup. If the file does not exist or\n"
+"a parameter is not listed, suitable default values are used. The format\n"
+"for a single parameter is the parameter name, followed by one or more\n"
+"spaces, followed by the parameter value, followed by a newline. The\n"
+"following parameters are currently recognized:\n"
+msgstr "**cnid_dbd**は起動時、データベースディレクトリ*dbdir* の中のファイル*db_param*から設定情報を読む。ファイルがない場合やパラメータが載っていない場合、適切なデフォルト値が使われる。ひとつのパラメータのフォーマットは、まずパラメータ名、それに続く一つ以上のスペース、それに続くパラメータ値、それに続く改行で構成される。現在以下のパラメータが認識される:\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:73
 #, no-wrap
-msgid "*logfile_autoremove*\n"
+msgid "**logfile_autoremove**\n"
 msgstr ""
 
 #. type: Plain text
@@ -312,16 +291,16 @@ msgstr ""
 #, no-wrap
 msgid ""
 "> If set to 0, unused Berkeley DB transactional logfiles (log.xxxxxxxxxx\n"
-"in the database home directory) are not removed on startup of `cnid_dbd`\n"
+"in the database home directory) are not removed on startup of **cnid_dbd**\n"
 "and on a regular basis. Default: 1.\n"
 msgstr ""
-"> もし0を設定した場合、`cnid_dbd`の起動時に未使用のBerkeley\n"
+"> もし0を設定した場合、**cnid_dbd**の起動時に未使用のBerkeley\n"
 "DBトランザクションのログファイル(データベースホームディレクトリの中のlog.xxxxxxxxxx)の定期的な削除が行われない。デフォルトは1。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:79
 #, no-wrap
-msgid "*cachesize*\n"
+msgid "**cachesize**\n"
 msgstr ""
 
 #. type: Plain text
@@ -329,9 +308,9 @@ msgstr ""
 #, no-wrap
 msgid ""
 "> Determines the size of the Berkeley DB cache in kilobytes.\n"
-"Default: 8192. Each `cnid_dbd` process grabs that much memory on top of\n"
+"Default: 8192. Each **cnid_dbd** process grabs that much memory on top of\n"
 "its normal memory footprint. It can be used to tune database\n"
-"performance. The *db_stat* utility with the `-m` option that comes with\n"
+"performance. The *db_stat* utility with the **-m** option that comes with\n"
 "Berkeley DB can help you determine whether you need to change this\n"
 "value. The default is pretty conservative so that a large percentage of\n"
 "requests should be satisfied from the cache directly. If memory is not a\n"
@@ -340,39 +319,39 @@ msgid ""
 "cache size* that gives more detailed information.\n"
 msgstr ""
 "> Berkeley\n"
-"DBのキャッシュサイズをキロバイト単位で決定する。デフォルトは8192。それぞれの`cnid_dbd`プロセスは通常のメモリ占有量に加えて大量のメモリを獲得する。これはデータベースのパフォーマンスを調整するのに使われる。Berkeley\n"
-"DBに附属する*db_stat*ユーティリティに`-m`オプションを付けると、この値を変更すべきかどうかを決定するのに役立つ。デフォルトではキャッシュが要求の大半を丁度良く満たすように極めて保守的な値になっている。メモリがシステムのボトルネックにならないなら、あなたはその値を放置してよい。*Berkeley\n"
+"DBのキャッシュサイズをキロバイト単位で決定する。デフォルトは8192。それぞれの**cnid_dbd**プロセスは通常のメモリ占有量に加えて大量のメモリを獲得する。これはデータベースのパフォーマンスを調整するのに使われる。Berkeley\n"
+"DBに附属する*db_stat*ユーティリティに**-m**オプションを付けると、この値を変更すべきかどうかを決定するのに役立つ。デフォルトではキャッシュが要求の大半を丁度良く満たすように極めて保守的な値になっている。メモリがシステムのボトルネックにならないなら、あなたはその値を放置してよい。*Berkeley\n"
 "DB Tutorial and Reference Guide*には、より詳しい情報を記した*Selecting a\n"
 "cache size*という章がある。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:92
 #, no-wrap
-msgid "*flush_frequency*; *flush_interval*\n"
+msgid "**flush_frequency**; **flush_interval**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:101
 #, no-wrap
 msgid ""
-"> *flush_frequency* (Default: 1000) and *flush_interval* (Default: 1800)\n"
+"> **flush_frequency** (Default: 1000) and **flush_interval** (Default: 1800)\n"
 "control how often changes to the database are checkpointed. Both of\n"
-"these operations are performed if either i) more than *flush_frequency*\n"
-"requests have been received or ii) more than *flush_interval* seconds\n"
+"these operations are performed if either i) more than **flush_frequency**\n"
+"requests have been received or ii) more than **flush_interval** seconds\n"
 "have elapsed since the last save/checkpoint. Be careful to check your\n"
 "hard disk configuration for on disk cache settings. Many IDE disks just\n"
 "cache writes as the default behaviour, so even flushing database files\n"
 "to disk will not have the desired effect.\n"
 msgstr ""
-"> *flush_frequency* (デフォルト: 1000)と*flush_interval* (デフォルト:\n"
+"> **flush_frequency** (デフォルト: 1000)と**flush_interval** (デフォルト:\n"
 "1800)はデータベースへの変更を書き戻す頻度を制御する。これらの両方動作は、i)\n"
-"*flush_frequency*を越える要求を受け取った場合、ii)\n"
-"最後の保存/書き戻しから*flush_interval*秒よりも経過した場合のどちらかで実行される。ディスクキャッシュ設定のため、あなたのハードディスク設定の確認に慎重を期してください。多くのIDEディスクはデフォルト動作では書き込みを単にキャッシュするだけ。従って、たとえデータベースファイルをフラッシュしても期待した効果は得られないでしょう。\n"
+"**flush_frequency**を越える要求を受け取った場合、ii)\n"
+"最後の保存/書き戻しから**flush_interval**秒よりも経過した場合のどちらかで実行される。ディスクキャッシュ設定のため、あなたのハードディスク設定の確認に慎重を期してください。多くのIDEディスクはデフォルト動作では書き込みを単にキャッシュするだけ。従って、たとえデータベースファイルをフラッシュしても期待した効果は得られないでしょう。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:103
 #, no-wrap
-msgid "*fd_table_size*\n"
+msgid "**fd_table_size**\n"
 msgstr ""
 
 #. type: Plain text
@@ -384,26 +363,26 @@ msgid ""
 "is exceeded, one of the existing connections is closed and reused. The\n"
 "affected *afpd* process will transparently reconnect later, which causes\n"
 "slight overhead. On the other hand, setting this parameter too high\n"
-"could affect performance in `cnid_dbd` since all descriptors have to be\n"
+"could affect performance in **cnid_dbd** since all descriptors have to be\n"
 "checked in a `select()` system call, or worse, you might exceed the per\n"
 "process limit of open file descriptors on your system. It is safe to set\n"
 "the value to 1 on volumes where only one *afpd* client process is\n"
 "expected to run, e.g. home directories.\n"
-msgstr "> *afpd*クライアントが*cnid_dbd*で処理するために開く最大の接続数(ファイル記述子数)。デフォルトは512。この値を超えた場合、存在する接続のうち一つを閉じて再利用する。影響を受けた*afpd*プロセスは後に透過的に再接続される。これは僅かなオーバヘッドを生じる。一方、全ての記述子を`select()`システムコールでチェックしなければならないので、このパラメータを極めて高い値に設定すると`cnid_dbd`のパフォーマンスに影響するかもしれないし、更に悪いことにプロセスあたりに開くファイル記述子のシステム上の上限を超えるかもしれない。たった一つの*afpd*クライアントプロセスが動作すると予想されるボリュームでは、この値を1に設定すると安全である。例えばホームディレクトリである。\n"
+msgstr "> *afpd*クライアントが*cnid_dbd*で処理するために開く最大の接続数(ファイル記述子数)。デフォルトは512。この値を超えた場合、存在する接続のうち一つを閉じて再利用する。影響を受けた*afpd*プロセスは後に透過的に再接続される。これは僅かなオーバヘッドを生じる。一方、全ての記述子を`select()`システムコールでチェックしなければならないので、このパラメータを極めて高い値に設定すると**cnid_dbd**のパフォーマンスに影響するかもしれないし、更に悪いことにプロセスあたりに開くファイル記述子のシステム上の上限を超えるかもしれない。たった一つの*afpd*クライアントプロセスが動作すると予想されるボリュームでは、この値を1に設定すると安全である。例えばホームディレクトリである。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:116
 #, no-wrap
-msgid "*idle_timeout*\n"
+msgid "**idle_timeout**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:119
 #, no-wrap
 msgid ""
-"> is the number of seconds of inactivity before an idle `cnid_dbd` exits.\n"
+"> is the number of seconds of inactivity before an idle **cnid_dbd** exits.\n"
 "Default: 600. Set this to 0 to disable the timeout.\n"
-msgstr "> アイドリング中の`cnid_dbd`が終了するまでの静止状態の秒数。デフォルトは600。これを0に設定するとタイムアウトが無効になる。\n"
+msgstr "> アイドリング中の**cnid_dbd**が終了するまでの静止状態の秒数。デフォルトは600。これを0に設定するとタイムアウトが無効になる。\n"
 
 #. type: Title #
 #: manpages/man8/cnid_dbd.8.md:120
@@ -447,8 +426,8 @@ msgstr "これからアップグレードする古いバージョンのNetatalk�
 msgid ""
 "Using the old Berkeley DB utilities run `db_recover -h <path to .AppleDB>`"
 msgstr ""
-"古いBerkeley DBユーティリティを使って、`db_recover -h <.AppleDBのパス>` を実"
-"行する"
+"古いBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBのパス"
+">` を実行する"
 
 #. type: Bullet: '- '
 #: manpages/man8/cnid_dbd.8.md:139
@@ -475,5 +454,5 @@ msgstr "新しいバージョンのNetatalkを起動する"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:148
-msgid "`cnid_metad(8)`, `afpd(8)`, `dbd(1)`"
+msgid "cnid_metad(8), afpd(8), dbd(1)"
 msgstr ""
