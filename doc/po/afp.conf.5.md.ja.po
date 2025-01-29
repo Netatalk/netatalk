@@ -2458,14 +2458,14 @@ msgstr "Netatalk では以下の LDAP オプションが設定されなければ
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:875
 #, no-wrap
-msgid "ldap auth method = <none|simple|sasl\\> **(G)**\n"
+msgid "ldap auth method = <none|simple\\> **(G)**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:877
 #, no-wrap
-msgid "> Authentication method: **none** | **simple | **sasl**\n"
-msgstr "> 認証方式: **none** | **simple | **sasl**\n"
+msgid "> Authentication method: **none** | **simple**\n"
+msgstr "> 認証方式: **none** | **simple**\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:879 manpages/man5/afp.conf.5.md:1085
@@ -2488,17 +2488,6 @@ msgstr ""
 #, no-wrap
 msgid "> simple LDAP bind\n"
 msgstr "> 簡易 LDAP 認証\n"
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:887
-msgid "sasl"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:889
-#, no-wrap
-msgid "> SASL. Not yet supported !\n"
-msgstr "> SASL. まだサポートされていない!\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:891

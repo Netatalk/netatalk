@@ -871,9 +871,9 @@ add a new one) to you directory server (eg OpenLDAP).
 
 The following LDAP options must be configured for Netatalk:
 
-ldap auth method = <none|simple|sasl\> **(G)**
+ldap auth method = <none|simple\> **(G)**
 
-> Authentication method: **none** | **simple | **sasl**
+> Authentication method: **none** | **simple**
 
 none
 
@@ -882,10 +882,6 @@ none
 simple
 
 > simple LDAP bind
-
-sasl
-
-> SASL. Not yet supported !
 
 ldap auth dn = <dn\> **(G)**
 

@@ -63,8 +63,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
                     /* store string as string */
                     *((const char **)(ldap_prefs[i].pref)) = strdup(val);
             } else {
-                /* ok, we have string to int mapping for this pref
-                   e.g. "none", "simple", "sasl" map to 0, 128, 129 */
+                /* ok, we have string to int mapping for this pref */
                 for (j = 0; prefs_array[j].pref != NULL; j++) {
                     if ((strcmp(prefs_array[j].pref, ldap_prefs[i].name) == 0)
                         && (strcmp(prefs_array[j].valuestring, val) == 0)) {
@@ -97,7 +96,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
             LOG(log_debug, logtype_afpd,"LDAP: Using simple bind.");
         else {
             ldap_config_valid = 0;
-            LOG(log_error, logtype_afpd,"LDAP: SASL not yet supported.");
+            LOG(log_error, logtype_afpd,"LDAP: Unsupported authentication method.");
         }
     } else
         LOG(log_info, logtype_afpd,"LDAP: not used");

@@ -84,7 +84,9 @@ struct ldap_pref ldap_prefs[] = {
 struct pref_array prefs_array[] = {
     {"ldap auth method", "none",   LDAP_AUTH_NONE},
     {"ldap auth method", "simple", LDAP_AUTH_SIMPLE},
+#if 0
     {"ldap auth method", "sasl",   LDAP_AUTH_SASL},
+#endif
     {"ldap userscope",   "base",   LDAP_SCOPE_BASE},
     {"ldap userscope",   "one",    LDAP_SCOPE_ONELEVEL},
     {"ldap userscope",   "sub",    LDAP_SCOPE_SUBTREE},

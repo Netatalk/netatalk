@@ -59,7 +59,7 @@ static void parse_ldapconf(void)
                 printf("afp.conf is ok. Using simple bind.\n");
             else {
                 ldap_config_valid = 0;
-                printf("afp.conf wants SASL which is not yet supported.\n");
+                printf("afp.conf defines an unsupported LDAP authentication method.\n");
                 exit(EXIT_FAILURE);
             }
         } else {
