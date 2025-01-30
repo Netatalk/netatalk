@@ -1267,6 +1267,54 @@ unix priv = <BOOLEAN\> (default: *yes*) **(V)**
 > Whether to use AFP3 UNIX privileges. This should be set for OS X
 clients. See also: **file perm**, **directory perm** and `umask`.
 
+# Examples
+
+## Example: Modern Mac clients
+
+This enables Spotlight and AFP stats if Netatalk was built with
+Spotlight and AFP stats support. The **mimic model** option is
+used to make the server look like a Xserve.
+
+The home directory is mounted on **/home/afp-data**.
+
+```
+[Global]
+afpstats = yes
+spotlight = yes
+mimic model = RackMac
+
+[Home]
+basedir regex = /home
+path = afp-data
+```
+
+## Example: Classic Mac clients
+
+This enables AppleTalk if Netatalk was built with AppleTalk support.
+The Random Number and ClearTxt authentication modules are used.
+The **legacy icon** option is used to make the server look like a
+BSD Daemon.
+
+With **legacy volume size** the volume size is limited to 2 GB
+for very old Macs, while **prodos** is used to enable ProDOS
+boot flags on the volume while limiting the volume free space
+to 32 MB.
+
+```
+[Global]
+appletalk = yes
+uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so
+legacy icon = daemon
+
+[Mac Volume]
+path = /srv/mac
+legacy volume size = yes
+
+[Apple II Volume]
+path = /srv/apple2
+prodos = yes
+```
+
 # See Also
 
 afpd(8), afppasswd(5), afp_signature.conf(5), extmap.conf(5),
