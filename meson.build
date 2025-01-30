@@ -588,37 +588,6 @@ else
 endif
 
 #
-# Check for Unicode Character Database
-#
-
-unicode_dirs = [
-    meson.current_source_dir(),
-    '/usr/share/unicode',
-    '/usr/share/unicode/ucd',
-    '/usr/pkg/share/texmf-dist/tex/generic/unicode-data',
-    '/usr/local/share/texmf-dist/tex/generic/unicode-data/',
-]
-
-unicode_data_path = get_option('with-unicode-data-path')
-
-if unicode_data_path == ''
-    foreach dir : unicode_dirs
-        if fs.exists(dir / 'UnicodeData.txt')
-            unicode_data_path = dir
-            break
-        endif
-    endforeach
-elif not fs.is_absolute(unicode_data_path)
-    unicode_data_path = meson.current_source_dir() / unicode_data_path
-endif
-
-unicode_data_file = unicode_data_path / 'UnicodeData.txt'
-
-if fs.exists(unicode_data_file)
-    message('Unicode Character Database found at ' + unicode_data_path)
-endif
-
-#
 # Check for crypt (for DHX authentication)
 #
 

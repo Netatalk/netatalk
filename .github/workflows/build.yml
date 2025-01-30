@@ -726,8 +726,7 @@ jobs:
             meson \
             ninja-build \
             systemtap-sdt-dev \
-            tracker-miner-fs \
-            unicode-data
+            tracker-miner-fs
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v3
       - name: Run build-wrapper

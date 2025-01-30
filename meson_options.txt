@@ -190,6 +190,12 @@ option(
     description: 'Compile the AFP test suite',
 )
 option(
+    'with-unicode-data',
+    type: 'boolean',
+    value: false,
+    description: 'Rebuild the Unicode source files from UnicodeData.txt',
+)
+option(
     'with-webmin',
     type: 'boolean',
     value: false,
