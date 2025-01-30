@@ -1273,9 +1273,9 @@ clients. See also: **file perm**, **directory perm** and `umask`.
 
 This enables Spotlight and AFP stats if Netatalk was built with
 Spotlight and AFP stats support. The **mimic model** option is
-used to make the server look like a Xserve.
+used to make the server look like an Xserve.
 
-The home directory is mounted on **/home/afp-data**.
+The home directory is mounted on */home/{user}/afp-data*.
 
 ```
 [Global]
