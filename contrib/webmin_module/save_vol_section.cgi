@@ -32,7 +32,11 @@ eval {
 	my $afpconfRef = &read_afpconf();
 	modify_afpconf_ref_and_write($afpconfRef, \%in);
 
-	redirect("index.cgi");
+	my $tab = "fileserver";
+	if ($in{'action'} eq "new_volume_preset" || $in{'action'} eq "edit_volume_preset" || $in{'action'} eq "new_homes" || $in{'action'} eq "edit_homes") {
+		$tab = "global";
+	}
+	redirect("index.cgi?tab=".$tab);
 };
 if($@) {
 	my $msg = $@;
@@ -41,7 +45,6 @@ if($@) {
 
 	print "<p>$msg<p>";
 
-	ui_print_footer("index.cgi", $text{'edit_return'});
+	ui_print_footer("index.cgi?tab=".$tab, $text{'edit_return'});
 	exit;
 }
-

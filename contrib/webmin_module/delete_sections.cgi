@@ -31,7 +31,7 @@ eval {
 	my @indices = split(/\0/, $in{'section_index'});
 	delete_sections_in_afpconf_ref_and_write($afpconfRef, @indices);
 
-	redirect("index.cgi");
+	redirect("index.cgi?tab=".$in{'tab'});
 };
 if($@) {
 	# in case the block above has been exited through "die": output error message
