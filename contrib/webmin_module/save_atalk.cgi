@@ -40,4 +40,4 @@ if ($atalkLine ne 0) {
 	addLineToFile($filetoedit, $atalkLine, $lineNumber, $totalLines);
 }
 
-redirect("index.cgi");
+redirect("index.cgi?tab=ddp");
