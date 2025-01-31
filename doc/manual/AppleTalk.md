@@ -78,7 +78,7 @@ following criteria: netrange from inside the so called "startup range"
 #### Using several interfaces
 
 When using several interfaces you have to add them line by line
-following the *-dontroute* switch in atalkd.conf.
+following the **-dontroute** switch in *atalkd.conf*.
 
     eth0 -dontroute eth1 -dontroute eth2 -dontroute
 
@@ -107,7 +107,7 @@ interfaces might fail in a situation where one of your network
 interfaces is connected to a network where *no* other active AppleTalk
 router is present and supplies appropriate routing settings.
 
-For further information see **atalkd.conf**(5) and the developer
+For further information see [atalkd.conf](atalkd.conf.html) and the developer
 documentation.
 
 ### atalkd acting as an AppleTalk router
@@ -195,15 +195,15 @@ atalkd.conf to fit your needs.
 
 You'll have to set the following options in atalkd.conf:
 
-- -net (use reasonable values between 1-65279 for each interface)
+- **-net** (use reasonable values between 1-65279 for each interface)
 
   In case, this value is suppressed but -addr is present, the netrange
   from this specific address will be used
 
-- -addr (the net part must match the -net settings if present, the node
+- **-addr** (the net part must match the -net settings if present, the node
   address should be between 142 and 255)
 
-- -zone (can be used multiple times in one single line, the first entry
+- **-zone** (can be used multiple times in one single line, the first entry
   is the default zone)
 
 Note that you are able to set up "zone mapping", that means publishing
@@ -222,8 +222,8 @@ network to assign themselves an address in the netrange 1-1000. Two zone
 names are published into this segment, "Printers" being the so called
 "standard zone", forcing dumb AppleTalk devices like Laser printers to
 show up automatically into this zone. AppleTalk printer queues supplied
-by netatalk's papd can be registered into the zone "Spoolers" simply by
-adjusting the settings in **papd.conf**(5). On eth1 we use the different
+by netatalk's **papd** can be registered into the zone "Spoolers" simply by
+adjusting the settings in *papd.conf*. On eth1 we use the different
 and non-overlapping netrange 1001-2000, set the default zone to "Macs"
 and publish a fourth zone name "Servers".
 
@@ -277,7 +277,7 @@ per segment
 
 Netatalk can act both as a PAP client to
 access AppleTalk-capable printers, and as a PAP server. The former by
-using the **pap**(1) utility and the latter by starting the **papd** service.
+using the **pap** utility and the latter by starting the **papd** service.
 
 The "Printer Access Protocol" as part of the AppleTalk protocol suite is
 a fully 8 bit aware and bidirectional printing protocol, developed by
@@ -303,7 +303,7 @@ example) on the other.
 
 ### Setting up the PAP print server
 
-Netatalk's **papd** is able to provide AppleTalk printing services for
+Netatalk's [papd](papd.html) is able to provide AppleTalk printing services for
 Macintoshes or, to be more precise, PAP clients in general. Netatalk
 does not contain a full-blown spooler implementation itself, papd only
 handles the bidirectional communication and submittance of printjobs
@@ -326,7 +326,7 @@ to print directly into a pipe instead of specifying a printer by name
 and using lpd interaction. As of Netatalk 2.0, another alternative has
 been implemented: direct interaction with CUPS (Note: when CUPS support
 is compiled in, then the SysV lpd support doesn't work at all). Detailed
-examples can be found in the **papd.conf**(5) manual page.
+examples can be found in the [papd.conf](papd.conf.html) manual page.
 
 #### Integrating papd with SysV lpd
 
@@ -350,7 +350,7 @@ assigned using the **pd** switch, the PPD configured in CUPS will be used
 by **papd**, too.
 
 There exists one special share named *cupsautoadd*. If this is present
-in papd.conf, then all available CUPS queues will be served
+in *papd.conf*, then all available CUPS queues will be served
 automagically using the parameters assigned to this global share. But
 subsequent printer definitions can be used to override these global
 settings for individual spoolers.
@@ -359,44 +359,62 @@ settings for individual spoolers.
 
 ### Using AppleTalk printers
 
-Netatalk's **papstatus**(8) can be used to query AppleTalk printers, **pap**(1) to print
-to them.
+Netatalk's [papstatus](papstatus.html) can be used to query AppleTalk printers,
+[pap](pap.html) to print to them.
 
 **pap** can be used stand-alone or as part of an output filter or a CUPS
 backend (which is the preferred method
 since one does not have to deal with all the options).
 
+#### Using pap stand-alone
+
+In this example, the file */usr/share/doc/gs/examples/tiger.ps* is sent to
+a printer called "ColorLaserWriter 16/600" in the standard zone "\*".
+The device type is "LaserWriter" (can be omitted since it is the default).
+
     pap -p"ColorLaserWriter 16/600@*" /usr/share/doc/gs/examples/tiger.ps
 
-The file */usr/share/doc/gs/examples/tiger.ps* is sent to a printer
-called "ColorLaserWriter 16/600" in the standard zone "\*". The device
-type is "LaserWriter" (can be suppressed since it is the default).
-
-    gs -q -dNOPAUSE -sDEVICE=cdjcolor -sOutputFile=test.ps | pap -E
-
-GhostScript is used to convert a PostScript job to PCL3 output suitable
+Next, GhostScript is used to convert a PostScript job to PCL3 output suitable
 for a Color DeskWriter. Since no file has been supplied on the command
 line, **pap** reads the data from stdin. The printer's address will be
 read from the *.paprc* file in the same directory, **pap** will be called
-(in our example simply containing "Color
-DeskWriter:DeskWriter@Printers"). The **-E** switch forces **pap** to not
-wait for an EOF from the printer.
+(in our example simply containing "Color DeskWriter:DeskWriter@Printers").
+The **-E** switch forces **pap** to not wait for an EOF from the printer.
+
+    gs -q -dNOPAUSE -sDEVICE=cdjcolor -sOutputFile=test.ps | pap -E
+
+#### Using pap as a CUPS backend
+
+Netatalk bundles a CUPS backend that can be used to print to AppleTalk
+printers. The backend is called **pap** and is installed in
+*/usr/lib/cups/backend* or */usr/pkg/libexec/cups/backend* depending on the
+platform.
+
+The backend can be configured by editing the file with printer model
+and a few other options.
+
+In CUPS 1.x, you can configure your AppleTalk printers through the
+"Find New Printers" wizard.
+In CUPS 2.x, however, the backend needs to be configured by
+manually adding the printer URL in the CUPS web interface.
+The URL can be obtained by running the pap backend script directly,
+without any arguments.
+Furthermore, in CUPS 3.x, the custom backend feature has been
+removed altogether, so CUPS is not able to use the pap backend.
 
 ## Time Services
 
 ### Timelord
 
-**timelord**, an AppleTalk based time
-server, is useful for automatically synchronizing the system time on
-older Macintosh or Apple II clients that do not support
-NTP.
+**timelord**, an AppleTalk based time server,
+is useful for automatically synchronizing the system time on
+older Macintosh or Apple II clients that do not support NTP.
 
 Netatalk's **timelord** is compatible with the tardis client for Macintosh
 developed at the [University of
 Melbourne.](https://web.archive.org/web/20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html)
 
-For further information please have a look at the **timelord** manual
-page.
+For further information please have a look at the [timelord](timelord.html) manual page.
 
 ## NetBoot Services
 
