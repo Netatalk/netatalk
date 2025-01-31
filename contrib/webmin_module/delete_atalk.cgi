@@ -44,7 +44,7 @@ eval {
 		}
 	}
 
-	redirect("index.cgi");
+	redirect("index.cgi?tab=ddp");
 };
 if($@) {
 	# in case the block above has been exited through "die": output error message
@@ -52,7 +52,7 @@ if($@) {
 
 	ui_print_header(undef, $text{'error_title'}, "", "configs", 1, 1);
 	print $msg;
-	ui_print_footer("index.cgi", $text{'index_module'});
+	ui_print_footer("index.cgi?tab=ddp", $text{'index_module'});
 
 	exit;
 }

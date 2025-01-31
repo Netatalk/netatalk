@@ -76,7 +76,7 @@ if($@) {
 
 	print "<p>$msg<p>";
 
-	ui_print_footer("index.cgi", $text{'edit_return'});
+	ui_print_footer("index.cgi?tab=".$in{'tab'}, $text{'edit_return'});
 
 	exit;
 }
@@ -94,7 +94,7 @@ if($subject ne 'homes') {
 # preparations done, start outputting page
 ui_print_header(undef, $pageTitle, "", "configs", 1, 1);
 
-print &ui_form_start('save_vol_section.cgi', 'POST', undef, 'name="configform"');
+print &ui_form_start('save_vol_section.cgi?tab='.$in{'tab'}, 'POST', undef, 'name="configform"');
 
 print &ui_hidden('action', $in{'action'});
 print &ui_hidden('reload', 'true');
@@ -394,4 +394,4 @@ print &ui_tabs_end();
 
 print &ui_form_end([[undef, $text{'save_button_title'}, 0, undef]]);
 
-ui_print_footer("index.cgi", $text{'edit_return'});
+ui_print_footer("index.cgi?tab=".$in{'tab'}, $text{'edit_return'});

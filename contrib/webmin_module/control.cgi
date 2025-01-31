@@ -27,4 +27,9 @@ my $command = $config{$action.'_'.$daemon};
 my $rv = system($command.' </dev/null');
 if ($rv) { die &text('init_failed', $command); }
 
-redirect("index.cgi");
+if ($daemon ne 'netatalk') {
+    redirect("index.cgi?tab=ddp");
+}
+else {
+    redirect("index.cgi");
+}

@@ -27,4 +27,4 @@ print &ui_table_row(undef,
 print &ui_table_end();
 print &ui_form_end([[undef, $text{'save_button_title'}]]);
 
-&ui_print_footer("index.cgi", $text{'edit_return'});
+&ui_print_footer("index.cgi?tab=global", $text{'edit_return'});
