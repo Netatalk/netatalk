@@ -20,6 +20,8 @@
 
 require 'netatalk-lib.pl';
 
+my $action = $in{'action'};
+
 eval {
 	&ReadParse();
 
@@ -32,7 +34,13 @@ eval {
 	my $afpconfRef = &read_afpconf();
 	modify_afpconf_ref_and_write($afpconfRef, \%in);
 
-	redirect("index.cgi");
+	if ($action eq "new_volume_preset" || $action eq "edit_volume_preset" || $action eq "new_homes" || $action eq "edit_homes") {
+		ui_print_footer("index.cgi?tab=global", $text{'edit_return'});
+
+	}
+	else {
+		ui_print_footer("index.cgi", $text{'edit_return'});
+	}
 };
 if($@) {
 	my $msg = $@;
@@ -41,7 +49,6 @@ if($@) {
 
 	print "<p>$msg<p>";
 
-	ui_print_footer("index.cgi", $text{'edit_return'});
+	redirect("index.cgi");
 	exit;
 }
-

@@ -44,7 +44,7 @@ eval {
 		}
 	}
 
-	redirect("index.cgi");
+	redirect("index.cgi?tab=ddp");
 };
 if($@) {
 	# in case the block above has been exited through "die": output error message
