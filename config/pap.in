@@ -1,0 +1,335 @@
+#!/bin/bash
+#
+# Copyright 2003-2017 Thomas Kaiser
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+#
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+#############################################################################
+#
+# Usage:     pap job user title copies options [filename]
+#            pap
+#
+# Important: This backend supports device discovery -- just call it without
+#            parameters to see whether it works correctly on your system.
+#
+# Main use:  CUPS backend to drive AppleTalk printers. Tested with CUPS
+#            1.1.14/1.1.15/1.1.19/1.7.5
+#
+# Notes:     Device URIs have to have the following format (special chars
+#            in URL encoding): pap://zone/printername/printertype
+#            Normally you shouldn't care about that since the backend lists
+#            all available devices correctly formatted when asked by the
+#            CUPS scheduler.
+#            Don't forget to adjust $DeviceTypes and $FormFeed to your needs!
+#            When used with Darwin 7.0 (MacOS X 10.3.x) you might want to
+#            change the shell to /bin/bash in the first line due to problems
+#            with the encoding routines for the device uri (perl -e call)
+#
+#############################################################################
+#
+# Customizable settings:
+#
+# The $DeviceTypes variable specifies for which devices to look for (e.g.
+# LaserWriter, DeskWriter, ImageWriter). If you want to lookup more than
+# one device at a time, write them separated with colons, i.e.
+#
+#     DeviceTypes="LaserWriter:DeskWriter"
+#
+# For all DeviceTypes use "=" instead. But be warned: this will also find
+# macs, servers, serial numbers and the like
+
+DeviceTypes="LaserWriter"
+
+# $FormFeed specifies whether or not to send an additional form feed.
+# DeskWriters seem to need this. TRUE means send the form feed.
+
+FormFeed=FALSE
+
+# Set $FullDeviceDiscovery to TRUE to let CUPS guess the correct PPD for the
+# devices by asking them for their "Product" name...
+
+FullDeviceDiscovery=TRUE
+
+NetatalkBinDir=@bindir@
+TimeoutDir=/usr/bin
+
+#############################################################################
+
+main()
+{
+	# Processing the CUPS request. There exist 2 possibilities: Either CUPS
+	# is asking us about device capabilities we can provide or it want us to
+	# handle a print request and send the print job to a specific device
+	
+	CollectAccountingData "$@"
+	PrepareRequest
+
+	# No arguments means show available devices and exit...
+	
+	if test $# = 0; then
+	
+		echo "network ${protocol} \"Unknown\" \"AppleTalk Devices via ${protocol}\""
+		
+		LookupDevices | sort | uniq
+	
+		exit 0
+	
+	fi
+	
+	# Handle the print request. First check whether the device is available
+
+	if PrinterAvailable "${PrinterName}" ; then
+
+		type=`GetAppleTalkType "${PrinterName}"`
+	
+		if test $# = 5; then
+		
+			# Get print file from stdin; copies have already been handled...
+
+			NotifyCUPS "INFO: Sending to ${PrinterName}"
+			cat | PrintAndAccount "${PrinterName}"
+			NotifyCUPS "PAGE: 1 1"    # TO DO: send pagecount queries
+		
+		else
+
+			# Print file is on command-line and we have to handle copies ourselve...
+		
+			SpoolFile=$6
+		
+			while [ ${NeededCopies} -gt 0 ]; do
+
+				ActualCopy=`expr $4 + 1 - ${NeededCopies}`
+				NotifyCUPS "INFO: Sending copy ${ActualCopy} to ${PrinterName}"
+				
+				PrintAndAccount "${PrinterName}" < "${SpoolFile}"
+				NotifyCUPS "PAGE: ${CountOfCopies} $4"    # TO DO: send pagecount queries
+				
+				NeededCopies=`expr ${NeededCopies} - 1`
+				
+			done
+			
+		fi
+	
+		# Eventually send an additional form feed (some DeskWriters seem to
+		# need that)
+	
+		if [ "X${type}" = "XDeskWriter" ]; then
+			test "X${FormFeed}" = "XTRUE" && printf "\f" | PrintAndAccount "${PrinterName}"
+		fi
+
+	else
+
+		NotifyCUPS "ERROR: Unable to get printer status for \"${PrinterName}\""
+		exit 1
+
+	fi
+}
+
+PrepareRequest()
+{
+	# How are we called?
+
+	protocol=`basename $0`
+
+	# Let's have a look whether we are using Netatalk's or Darwin's
+	# AppleTalk implementation
+		
+	case `uname -s` in
+	Darwin)
+		ZoneLookup="/usr/bin/atlookup -z"
+		PrinterAvailable()
+			{
+			/usr/bin/atstatus "$1" >/dev/null
+			}
+		PrintAndAccount()
+			{
+			/usr/bin/atprint "$1"
+			}
+		NBPLookup()
+			{
+			/usr/bin/atlookup -a "$1" | grep -v "^#  Found"
+			}
+		ATPErrMsg="ATPsndreq\:\ Operation\ timed\ out"
+		CheckProductName()
+			{
+			echo "Unknown"
+			}
+		TotalPages()
+			{
+			echo ${CUPS_PrintSettingsPMTotalBeginPages}
+			}
+		;;
+	*)
+		# test the path of ${NetatalkBinDir}
+		if [ ! -x "${NetatalkBinDir}/papstatus" ]; then
+			echo "ERROR: Netatalk tools not found in \"${NetatalkBinDir}\"" >&2
+			exit 1
+		fi
+
+		ZoneLookup="${NetatalkBinDir}/getzones"
+		PrinterAvailable()
+			{
+			${NetatalkBinDir}/papstatus -p "$1" >/dev/null
+			}
+		PrintAndAccount()
+			{
+			${NetatalkBinDir}/pap -p "$1"
+			}
+		NBPLookup()
+			{
+			${NetatalkBinDir}/nbplkup "$1" | \
+			perl -ne 'chomp; next if /^$/; m|^\s+(.+)\s+\d+\.\d+:|; my $entry = $1; $entry =~ s/\s+$//; print "$entry\n"'
+			}
+		ATPErrMsg="atp_rresp\:\ Connection\ timed\ out"
+		CheckProductName()
+			{
+			# We'll try to ask the printer for its so called
+			# "Product name" to let CUPS automatically assign
+			# the right PPD file for the printer
+
+			GuessedDeviceType="Unknown"
+
+			if [ "$2" = "LaserWriter" -a "${FullDeviceDiscovery}" = "TRUE" ]; then
+				if ${NetatalkBinDir}/papstatus -p "$1:$2@$3" >/dev/null 2>&1
+					then
+					DeviceLookup=`echo -e "%%?BeginFeatureQuery: *Product\nstatusdict begin\nproduct print\nend\n%%?EndFeatureQuery: Unknown\n%%EOF" | ${TimeoutDir}/timeout -s HUP 15 ${NetatalkBinDir}/pap -p "$1:$2@$3" | sed -e '$a\' | sed 's|^\"(||;s|)\"$||;'`
+					if [ -n "${DeviceLookup}" ]; then
+						GuessedDeviceType="${DeviceLookup}"
+					fi
+				fi
+			fi
+
+			echo "${GuessedDeviceType}"
+			}
+		TotalPages=1
+		;;
+	esac
+
+	# redefine the internal field separator to parse the zone list
+	# correctly
+	
+IFS="
+"
+}
+
+GetAppleTalkType()
+{
+	echo "$1" | cut -d: -f2 | cut -d@ -f1
+}
+
+LookupDevices()
+{
+	# Fetch the zone list and do a lookup in every single zone for occurences
+	# of type $devicetype
+	
+	zonelist="`GetZoneList`"
+	
+	# get a list of AppleTalk DeviceTypes to look for
+	OIFS=$IFS
+	IFS=":"
+	set ${DeviceTypes}
+	IFS=$OIFS
+
+	for devicetype in $@; do
+		echo "${zonelist}" | while read zone; do
+			NBPLookup "=:${devicetype}@${zone}" | while read nbpentry ; do
+				GetPrinterProperties "${nbpentry}" "${zone}" "${protocol}" &
+			done &
+		done
+	done
+}
+
+GetZoneList()
+{
+	# check whether we have to deal with zones
+	
+	eval ${ZoneLookup} >/dev/null
+	
+	if [ $? -eq 0 ]; then     # okay, zones are available
+		eval ${ZoneLookup} 2>&1 | sed "s|${ATPErrMsg}|*|;"
+	else
+		echo '*'
+	fi
+}
+
+GetPrinterProperties()
+{
+	name=`echo $1 | awk -F: '{print $1}'`
+	type=`echo $1 | awk -F: '{print $2}'`
+	model=`CheckProductName "${name}" "${type}" "$2"`
+	echo -e "network $3://`EncodeDeviceURI "$2"`/`EncodeDeviceURI "${name}"`/`EncodeDeviceURI "${type}"` \"${model}\" \"${name}@${zone} ($3)\""
+}
+
+EncodeDeviceURI()
+{
+	# We'll have to quote the names with an URL encoding (RFC 2396)
+
+	echo "$@" | perl -ple 's|([^\w=\-:@])|sprintf( "%%%02x", ord( $1))|ge'
+}
+
+DecodeDeviceURI()
+{
+	# Decode the Device-URI
+	
+	echo "$@" | awk -F/ '{print $4 ":" $5 "@" $3}' | perl -ple 's/%([0-9A-Fa-f]{2})/chr(hex($1))/eg'
+}
+
+NotifyCUPS ()
+{
+	# sending message on stderr to keep CUPS informed
+	
+	echo -e "$*" >&2
+}
+
+CollectAccountingData ()
+{
+	PrinterName=`DecodeDeviceURI ${DEVICE_URI}`
+        Owner="$2"
+        Title="$3"
+        NeededCopies=$4
+
+	# parse the options passed from CUPS
+	eval ParseCUPSOptions $5
+}
+
+ParseCUPSOptions()
+{
+	# We parse the CUPS options, delete occurences of "com.apple.print" in
+	# their names, prepend the variable names with "CUPS_", define
+	# them as variables and export them
+
+	i="com\.apple\.print\."
+        while [ $# -ge 1 ]; do
+		VarName=`echo $1 | cut -d"=" -f1 | sed "s|^$i||g;s|\.[nb]\.$||g;s|\.||g"`
+		VarValue=`echo $1 | cut -d"=" -f2 | sed "s|\ |\\\\\ |g"`
+		eval CUPS_${VarName}=${VarValue}
+		eval export CUPS_${VarName}
+                shift
+        done
+}
+
+#############################################################################
+#
+# Let's start to process the CUPS requests
+
+main "$@"
+exit 0
