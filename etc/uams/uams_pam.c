@@ -293,7 +293,7 @@ static int pam_changepw(void *obj _U_, char *username,
 
     /* Set these things up for the conv function */
     PAM_username = username;
-    PAM_password = pw;
+    snprintf(PAM_password, sizeof(PAM_password), "%s", pw);
 
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
 			  &lpamh);
@@ -304,10 +304,22 @@ static int pam_changepw(void *obj _U_, char *username,
 
     /* we might need to do this as root */
     uid = geteuid();
-    seteuid(0);
+    if (seteuid(0) < 0) {
+      LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", 0);
+    }
     PAM_error = pam_authenticate(lpamh,0);
     if (PAM_error != PAM_SUCCESS) {
-      seteuid(uid);
+      if (seteuid(uid) < 0) {
+        LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
+      }
+      pam_end(lpamh, PAM_error);
+      return AFPERR_NOTAUTH;
+    }
+    PAM_error = pam_acct_mgmt(lpamh, 0);
+    if (PAM_error != PAM_SUCCESS) {
+      if (seteuid(uid) < 0) {
+        LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
+      }
       pam_end(lpamh, PAM_error);
       return AFPERR_NOTAUTH;
     }
@@ -319,7 +331,9 @@ static int pam_changepw(void *obj _U_, char *username,
 
     /* this really does need to be done as root */
     PAM_error = pam_chauthtok(lpamh, 0);
-    seteuid(uid); /* un-root ourselves. */
+    if (seteuid(uid) < 0) {
+      LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
+    }
     memset(pw, 0, PASSWDLEN);
     memset(ibuf, 0, PASSWDLEN);
     if (PAM_error != PAM_SUCCESS) {
