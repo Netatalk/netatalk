@@ -52,12 +52,12 @@ if($@) {
 	exit;
 }
 
-print &ui_tabs_start(\@tabs, 'mode', defaulttab);
+print &ui_tabs_start(\@tabs, 'mode', $defaulttab);
 print &ui_tabs_start_tab('mode', 'global');
 
 # Volume presets
 print "<h3>$text{index_volume_presets}</h3>\n";
-my @volume_preset_links = ( "<a href=\"edit_vol_section.cgi?action=new_volume_preset\">$text{'index_create_volume_preset_link_name'}</a>" );
+my @volume_preset_links = ( "<a href=\"edit_vol_section.cgi?action=new_volume_preset&tab=global\">$text{'index_create_volume_preset_link_name'}</a>" );
 if(@{$$afpconf{volumePresetSections}}) {
 	# for an explanation of the following links, see above
 	unshift @volume_preset_links, (
@@ -74,7 +74,7 @@ if(@{$$afpconf{volumePresetSections}}) {
 	foreach $volumeSection (@{$$afpconf{volumePresetSections}}) {
 		print &ui_columns_row( [
 				&ui_checkbox('section_index', $$volumeSection{'index'}),
-				"<a href=\"edit_vol_section.cgi?action=edit_volume_preset&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
+				"<a href=\"edit_vol_section.cgi?action=edit_volume_preset&tab=global&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
 				defined $$volumeSection{presetUsedBySectionNames} ? join("<br>", @{$$volumeSection{presetUsedBySectionNames}}) : ""
 		], [ "width='20'" ]);
 	}
@@ -104,7 +104,7 @@ if($$afpconf{sectionsByName}{'Homes'}) {
 	my @home_name = get_parameter_of_section($afpconf, $volumeSection, 'home name');
 	print &ui_columns_row( [
 		"<input type='hidden' name='section_index' value='$$volumeSection{'index'}'>".
-		"<a href=\"edit_vol_section.cgi?action=edit_homes&index=$$volumeSection{'index'}\"><b>".($basedir_regex[0] ne '' ? html_escape($basedir_regex[0]) : $text{'index_value_not_set'})."</b></a>",
+		"<a href=\"edit_vol_section.cgi?action=edit_homes&tab=global&index=$$volumeSection{'index'}\"><b>".($basedir_regex[0] ne '' ? html_escape($basedir_regex[0]) : $text{'index_value_not_set'})."</b></a>",
 		$path[0] ne '' ? html_escape($path[0]) : $text{'index_value_not_set'},
 		$home_name[0] ne '' ? html_escape($home_name[0]) : $text{'index_value_not_set'},
 	] );
@@ -113,7 +113,7 @@ if($$afpconf{sectionsByName}{'Homes'}) {
 } else {
 	print "<b>$text{'index_no_homes'}</b>\n";
 	print "<p>\n";
-	print &ui_links_row( ["<a href=\"edit_vol_section.cgi?action=new_homes\">$text{'index_create_homes_link_name'}</a>"] );
+	print &ui_links_row( ["<a href=\"edit_vol_section.cgi?action=new_homes&tab=global\">$text{'index_create_homes_link_name'}</a>"] );
 }
 
 print"<h3>$text{index_global}</h3>\n";
