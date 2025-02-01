@@ -458,7 +458,6 @@ static int write_ea(const struct ea * restrict ea,
                     size_t attrsize)
 {
     int fd = -1, ret = AFP_OK;
-    struct stat st;
     char *eaname;
 
     if ((eaname = ea_path(ea, attruname, 1)) == NULL) {
@@ -468,19 +467,23 @@ static int write_ea(const struct ea * restrict ea,
 
     LOG(log_maxdebug, logtype_afpd, "write_ea('%s')", eaname);
 
-    /* Check if it exists, remove if yes*/
-    if ((stat(eaname, &st)) == 0) {
-        if ((unlink(eaname)) != 0) {
-            if (errno == EACCES)
-                return AFPERR_ACCESS;
-            else
-                return AFPERR_MISC;
-        }
-    }
-
     if ((fd = open(eaname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
-        LOG(log_error, logtype_afpd, "write_ea: open race condition: %s", eaname);
-        return -1;
+        if (errno == EEXIST) {
+            /* Remove existing file and try again */
+            if (unlink(eaname) != 0) {
+                if (errno == EACCES)
+                    return AFPERR_ACCESS;
+                else
+                    return AFPERR_MISC;
+            }
+            if ((fd = open(eaname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
+                LOG(log_error, logtype_afpd, "write_ea: open race condition: %s", eaname);
+                return -1;
+            }
+        } else {
+            LOG(log_error, logtype_afpd, "write_ea: open failed: %s", eaname);
+            return -1;
+        }
     }
 
     /* lock it */
