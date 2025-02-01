@@ -460,15 +460,15 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 	    char addr_filename[256];
 	    char auth_string[256];
 	    char *username, *afpdpid;
-	    struct stat cap_st;
 	    FILE *cap_file;
+	    int fd;
 
 	    memset( auth_string, 0, 256 );
 	    sprintf(addr_filename, "%s/net%d.%dnode%d",
 		printer->p_authprintdir, addr_net/256, addr_net%256,
 		addr_node);
-	    if (stat(addr_filename, &cap_st) == 0) {
-		if ((cap_file = fopen(addr_filename, "r")) != NULL) {
+	    if ((fd = open(addr_filename, O_RDONLY|O_NOFOLLOW)) >= 0) {
+		if ((cap_file = fdopen(fd, "r")) != NULL) {
 		    if (fgets(auth_string, 256, cap_file) != NULL) {
 			username = auth_string;
 			if ((afpdpid = strrchr( auth_string, ':' )) != NULL) {
@@ -485,7 +485,9 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
 		    } else {
 			LOG(log_info, logtype_papd, "CAP error: could not read username");
 		    }
+		    fclose(cap_file);
 		} else {
+		    close(fd);
 		    LOG(log_info, logtype_papd, "CAP error: %s", strerror(errno));
 		}
 	    } else {
