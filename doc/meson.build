@@ -3,6 +3,8 @@ if build_man_docs
 endif
 
 if build_html_docs
+    subdir('manual')
+
     po4a = find_program('po4a', required: false)
     if po4a.found() and get_option('with-docs-l10n')
         run_command(
@@ -20,6 +22,4 @@ if build_html_docs
     else
         warning('po4a is required for localized documentation generation')
     endif
-
-    subdir('manual')
 endif
