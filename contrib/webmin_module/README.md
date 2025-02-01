@@ -16,6 +16,7 @@ If you don't have it installed already, install Webmin itself by following the i
 1. Install the tarball from within the Webmin UI, or on the CLI:
    * From the dir where Webmin is installed, run `./install-module.pl /path/to/netatalk_webmin-x.y.z.wbm.gz`
    * From within the Webmin UI: Configuration -> Modules -> select the tarball from the local file system
+1. Hit the gear icon next to the module name to configure it. By default, the module will be configured to use systemd init commands and */usr* prefix directories.
 
 ## From source
 
@@ -35,7 +36,7 @@ You can also find the packaged tarball in `build/contrib/webmin_module/netatalk_
 
 # Configuration
 
-The build system will attempt to detect and configure the correct binary and config file paths, as well as init commands, for your system.
+When installed from source, the build system will attempt to detect and configure the correct binary and config file paths, as well as init commands, for your system.
 If needed, you can make manual adjustments in the `config` file or via the Webmin UI, on the Netatalk module's Module Config page.
 
 # See Also
