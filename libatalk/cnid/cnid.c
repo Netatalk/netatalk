@@ -66,31 +66,30 @@ static int cnid_dir(const char *dir, mode_t mask)
    struct stat st, st1;
    char tmp[MAXPATHLEN];
 
-   if (stat(dir, &st) < 0) {
-       if (errno != ENOENT)
-           return -1;
-       if (ad_stat( dir, &st) < 0)
-          return -1;
-
-       LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st.st_uid, st.st_gid);
-       if (setegid(st.st_gid) < 0 || seteuid(st.st_uid) < 0) {
-           LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
-           return -1;
-       }
-
-       if (mkdir(dir, 0777 & ~mask) < 0)
-           return -1;
-   } else {
-       strlcpy(tmp, dir, sizeof(tmp));
-       strlcat(tmp, "/.AppleDB", sizeof(tmp));
-       if (stat(tmp, &st1) < 0) /* use .AppleDB owner, if folder already exists */
-           st1 = st;
-       LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st1.st_uid, st1.st_gid);
-       if (setegid(st1.st_gid) < 0 || seteuid(st1.st_uid) < 0) {
-           LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
-           return -1;
-       }
+   if (ad_stat(dir, &st) < 0) {
+       return -1;
    }
+
+   LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st.st_uid, st.st_gid);
+   if (setegid(st.st_gid) < 0 || seteuid(st.st_uid) < 0) {
+       LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
+       return -1;
+   }
+
+   if (mkdir(dir, 0777 & ~mask) < 0 && errno != EEXIST) {
+       return -1;
+   }
+
+   strlcpy(tmp, dir, sizeof(tmp));
+   strlcat(tmp, "/.AppleDB", sizeof(tmp));
+   if (stat(tmp, &st1) < 0) /* use .AppleDB owner, if folder already exists */
+       st1 = st;
+    LOG(log_info, logtype_cnid, "Setting uid/gid to %d/%d", st1.st_uid, st1.st_gid);
+    if (setegid(st1.st_gid) < 0 || seteuid(st1.st_uid) < 0) {
+        LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
+        return -1;
+    }
+
    return 0;
 }
 
