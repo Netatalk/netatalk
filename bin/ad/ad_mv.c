@@ -282,13 +282,20 @@ static int do_move(const char *from, const char *to)
             SLOG("Couldn't resolve CNID for %s", from);
             return -1;
         }
-
-        if (stat(from, &sb) != 0) {
-            SLOG("Can't stat %s: %s", to, strerror(errno));
+        int srcfd = open(from, O_RDONLY);
+        if (srcfd == -1) {
+            SLOG("Can't open %s: %s", from, strerror(errno));
             return -1;
         }
 
-        if (rename(from, to) != 0) {
+        if (fstat(srcfd, &sb) != 0) {
+            close(srcfd);
+            SLOG("Can't fstat %s: %s", from, strerror(errno));
+            return -1;
+        }
+
+        if (renameat(AT_FDCWD, from, AT_FDCWD, to) != 0) {
+            close(srcfd);
             if (errno == EXDEV) {
                 mustcopy = 1;
                 char path[MAXPATHLEN];
@@ -314,6 +321,7 @@ static int do_move(const char *from, const char *to)
             }
         } /* rename != 0*/
 
+        close(srcfd);
         switch (sb.st_mode & S_IFMT) {
         case S_IFREG:
             if (dvolume.vol->vfs->vfs_renamefile(dvolume.vol, -1, from, to) != 0) {
