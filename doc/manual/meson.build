@@ -17,9 +17,16 @@ if get_option('with-website')
         'index',
         'License',
     ]
-endif
 
-if get_option('with-website')
+    python = find_program('python3', required: false)
+    if python.found()
+        run_command(
+            python,
+            'generate_compile_docs.py',
+            check: true,
+            )
+    endif
+
     foreach page : manual_pages
         install_data(page + '.md', install_dir: manual_install_path + '/en')
     endforeach
