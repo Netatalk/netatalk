@@ -30,6 +30,7 @@
 #include <locale.h>
 #endif
 
+#include <netdb.h>
 #include <netinet/in.h>
 #include <pwd.h>
 #include <regex.h>
@@ -2230,12 +2231,21 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         r = strchr(q, ':');
         if (r)
             *r = '\0';
-        if (gethostbyname(q)) {
+
+        struct addrinfo hints;
+        struct addrinfo *result;
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+        hints.ai_socktype = SOCK_STREAM;
+        hints.ai_flags = AI_CANONNAME;
+
+        if (getaddrinfo(q, NULL, &hints, &result) == 0) {
             if (r)
                 *r = ':';
             EC_NULL_LOG( options->fqdn = strdup(q) );
+            freeaddrinfo(result);
         } else {
-            LOG(log_error, logtype_afpd, "error parsing -fqdn, gethostbyname failed for: %s", q);
+            LOG(log_error, logtype_afpd, "error parsing -fqdn, getaddrinfo failed for: %s", q);
         }
         free(q);
     }
