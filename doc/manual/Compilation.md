@@ -7,7 +7,7 @@ You need to have a copy of Netatalk's source code before proceeding.
 Please note that these guides are automatically generated, and may not be optimized for your system.
 Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.
 
-## Operating Systems
+# Operating Systems
 
 ## Alpine Linux
 
@@ -20,7 +20,7 @@ apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-tests=true
 ```
 
 Build
@@ -59,13 +59,13 @@ ninja -C build uninstall
 Install dependencies
 
 ```
-pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql
+pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc localsearch mariadb-clients meson ninja perl po4a pkgconfig rpcsvc-proto talloc tinysparql
 ```
 
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-tests=true
 ```
 
 Build
@@ -105,13 +105,13 @@ Install dependencies
 
 ```
 apt-get update
-apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs
+apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build po4a quota systemtap-sdt-dev tcpd tracker tracker-miner-fs
 ```
 
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true
 ```
 
 Build
@@ -202,7 +202,7 @@ sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm crackl
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-manual-l10n=ja -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
 ```
 
 Build
@@ -257,13 +257,13 @@ Install dependencies
 ```
 brew update
 brew upgrade
-brew install bison cmark-gfm cracklib dbus mariadb meson openldap talloc tracker
+brew install bison cmark-gfm cracklib dbus mariadb meson openldap po4a talloc tracker
 ```
 
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-docs-l10n=true -Dwith-tests=true
 ```
 
 Build
