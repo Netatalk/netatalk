@@ -16,46 +16,51 @@ int	Bigendian = 0;
 #define kTextEncodingUTF8 0x08000103
 
 /* -------------------------------------------- */
-int OpenClientSocket(char* host,int port)
+int OpenClientSocket(char* host, int port)
 {
-int sock;
-struct sockaddr_in server;
-struct hostent* hp;
-int attr;
+    int sock = -1;
+    struct addrinfo hints;
+    struct addrinfo *res;
+    struct addrinfo *ressave;
+    char portstr[6];
+    int attr;
 
-	server.sin_family=AF_INET;
-	server.sin_port=htons((unsigned short)port);
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
 
-	hp=gethostbyname(host);
- 	if(!hp) {
-    unsigned long int addr=inet_addr(host);
-    	if(addr!= (unsigned)-1)
-       		hp=gethostbyaddr((char*)addr,sizeof(addr),AF_INET);
+    snprintf(portstr, sizeof(portstr), "%d", port);
 
-    	if(!hp) {
-       		fprintf(stdout,"Unknown host '%s' for server \n.",host);
-       		return(-1);
-      	}
-   	}
+    if (getaddrinfo(host, portstr, &hints, &res) != 0) {
+        fprintf(stdout, "Unknown host '%s' for server.\n", host);
+        return -1;
+    }
 
- 	memcpy((char*)&server.sin_addr,(char*)hp->h_addr,sizeof(server.sin_addr));
+    ressave = res;
+    while (res) {
+        sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        if (sock >= 0) {
+            attr = 1;
+            setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &attr, sizeof(attr));
 
- 	sock=socket(PF_INET,SOCK_STREAM,0);
- 	if(sock==-1) {
-    	fprintf(stdout,"Failed to create client sockets.\n");
-    	return(-1);
-   	}
-    attr = 1;
-    setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &attr, sizeof(attr));
+            if (connect(sock, res->ai_addr, res->ai_addrlen) == 0)
+                break;  // Success
 
- 	if(connect(sock ,(struct sockaddr*)&server,sizeof(server))==-1) {
-    	close(sock);
-    	sock=-1;
-    	fprintf(stdout,"Failed to connect socket.\n");
-   	}
+            close(sock);
+            sock = -1;
+        }
+        res = res->ai_next;
+    }
 
-	 return(sock);
+    freeaddrinfo(ressave);
+
+    if (sock < 0) {
+        fprintf(stdout, "Failed to connect socket.\n");
+    }
+
+    return sock;
 }
+
 /* -------------------------------------------- */
 int CloseClientSocket(int fd)
 {
