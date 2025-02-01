@@ -47,6 +47,24 @@ if have_appletalk
     static_conf_files += ['atalkd.conf', 'macipgw.conf', 'papd.conf']
 endif
 
+cups_libdir = ''
+
+if host_os in ['netbsd']
+    cups_libdir = '/usr/pkg/libexec'
+elif host_os in ['linux']
+    cups_libdir = '/usr/lib'
+endif
+
+if have_appletalk and have_cups and cups_libdir != ''
+    configure_file(
+        input: 'pap.in',
+        output: 'pap',
+        configuration: cdata,
+        install: true,
+        install_dir: cups_libdir / 'cups/backend',
+    )
+endif
+
 foreach file : static_conf_files
     if (
         fs.exists(pkgconfdir / file)
