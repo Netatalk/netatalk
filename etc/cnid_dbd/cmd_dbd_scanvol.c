@@ -185,7 +185,8 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
 
     adname = vol->ad_path(fname, adflags);
 
-    if ((ret = access( adname, F_OK)) != 0) {
+    int fd = open(adname, O_RDONLY | O_NOFOLLOW);
+    if (fd == -1) {
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Access error for ad-file '%s/%s': %s",
                     cwdbuf, adname, strerror(errno));
@@ -194,9 +195,11 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         /* Missing. Log and create it */
         dbd_log(LOGSTD, "Missing AppleDouble file '%s/%s'", cwdbuf, adname);
 
-        if (dbd_flags & DBD_FLAGS_SCAN)
+        if (dbd_flags & DBD_FLAGS_SCAN) {
             /* Scan only requested, don't change anything */
+            close(fd);
             return -1;
+        }
 
         /* Create ad file */
         ad_init(&ad, vol);
@@ -204,7 +207,7 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666)) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                      cwdbuf, adname, strerror(errno));
-
+            close(fd);
             return -1;
         }
 
@@ -213,12 +216,12 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         ad_flush(&ad);
         ad_close(&ad, ADFLAGS_HF);
 
-        if (chown(adname, st->st_uid, st->st_gid) < 0)
-            dbd_log(LOGSTD, "Could not chown \"%s\" (%s)", adname, strerror(errno));
-        /* FIXME: should we inherit mode too here ? */
-#if 0
-        chmod(adname, st->st_mode);
-#endif
+        fd = open(adname, O_RDWR | O_NOFOLLOW);
+        if (fd != -1) {
+            if (fchown(fd, st->st_uid, st->st_gid) < 0)
+                dbd_log(LOGSTD, "Could not chown \"%s\" (%s)", adname, strerror(errno));
+            close(fd);
+        }
     } else {
         ad_init(&ad, vol);
         if (ad_open(&ad, fname, adflags | ADFLAGS_RDONLY) != 0) {
@@ -226,6 +229,7 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
             return -1;
         }
         ad_close(&ad, ADFLAGS_HF);
+        close(fd);
     }
     return 0;
 }
