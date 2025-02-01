@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-22 21:01+0100\n"
+"POT-Creation-Date: 2025-02-01 08:11+0100\n"
 "PO-Revision-Date: 2025-01-22 20:55+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -45,7 +45,7 @@ msgstr ""
 "があるのでご了承ください。また、技術的な制約により、一部の OS では Netatalk "
 "を起動する手順が不完全である。"
 
-#. type: Title ##
+#. type: Title #
 #: manual/Compilation.md:10
 #, no-wrap
 msgid "Operating Systems"
@@ -59,7 +59,8 @@ msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:15 manual/Compilation.md:60 manual/Compilation.md:105
-#: manual/Compilation.md:151 manual/Compilation.md:196 manual/Compilation.md:256
+#: manual/Compilation.md:151 manual/Compilation.md:196
+#: manual/Compilation.md:256
 msgid "Install dependencies"
 msgstr "必要なパッケージをインストールする"
 
@@ -71,25 +72,28 @@ msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:21 manual/Compilation.md:66 manual/Compilation.md:112
-#: manual/Compilation.md:157 manual/Compilation.md:203 manual/Compilation.md:264
+#: manual/Compilation.md:157 manual/Compilation.md:203
+#: manual/Compilation.md:264
 msgid "Configure"
 msgstr "コンフィグレーション"
 
 #. type: Fenced code block
 #: manual/Compilation.md:22
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:27 manual/Compilation.md:72 manual/Compilation.md:118
-#: manual/Compilation.md:163 manual/Compilation.md:209 manual/Compilation.md:270
+#: manual/Compilation.md:163 manual/Compilation.md:209
+#: manual/Compilation.md:270
 msgid "Build"
 msgstr "ビルド"
 
 #. type: Fenced code block
 #: manual/Compilation.md:28 manual/Compilation.md:73 manual/Compilation.md:119
-#: manual/Compilation.md:164 manual/Compilation.md:210 manual/Compilation.md:271
+#: manual/Compilation.md:164 manual/Compilation.md:210
+#: manual/Compilation.md:271
 #, no-wrap
 msgid "meson compile -C build\n"
 msgstr ""
@@ -109,7 +113,8 @@ msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:39 manual/Compilation.md:84 manual/Compilation.md:130
-#: manual/Compilation.md:175 manual/Compilation.md:221 manual/Compilation.md:282
+#: manual/Compilation.md:175 manual/Compilation.md:221
+#: manual/Compilation.md:282
 msgid "Install"
 msgstr "インストールする"
 
@@ -121,13 +126,15 @@ msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:45 manual/Compilation.md:90 manual/Compilation.md:136
-#: manual/Compilation.md:181 manual/Compilation.md:227 manual/Compilation.md:288
+#: manual/Compilation.md:181 manual/Compilation.md:227
+#: manual/Compilation.md:288
 msgid "Check netatalk capabilities"
 msgstr "netatalk の機能を確認する"
 
 #. type: Fenced code block
 #: manual/Compilation.md:46 manual/Compilation.md:91 manual/Compilation.md:137
-#: manual/Compilation.md:182 manual/Compilation.md:228 manual/Compilation.md:289
+#: manual/Compilation.md:182 manual/Compilation.md:228
+#: manual/Compilation.md:289
 #, no-wrap
 msgid ""
 "netatalk -V\n"
@@ -136,7 +143,8 @@ msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:52 manual/Compilation.md:97 manual/Compilation.md:143
-#: manual/Compilation.md:188 manual/Compilation.md:248 manual/Compilation.md:309
+#: manual/Compilation.md:188 manual/Compilation.md:248
+#: manual/Compilation.md:309
 msgid "Uninstall"
 msgstr "アンインストール"
 
@@ -155,13 +163,13 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:61
 #, no-wrap
-msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql\n"
+msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc localsearch mariadb-clients meson ninja perl po4a pkgconfig rpcsvc-proto talloc tinysparql\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:67 manual/Compilation.md:158
+#: manual/Compilation.md:67
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Title ##
@@ -175,13 +183,13 @@ msgstr ""
 #, no-wrap
 msgid ""
 "apt-get update\n"
-"apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
+"apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build po4a quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
 msgstr ""
 
 #. type: Fenced code block
 #: manual/Compilation.md:113
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Title ##
@@ -197,13 +205,21 @@ msgid "dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel biso
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:176 manual/Compilation.md:222 manual/Compilation.md:283
+#: manual/Compilation.md:158 manual/Compilation.md:204
+#, no-wrap
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manual/Compilation.md:176 manual/Compilation.md:222
+#: manual/Compilation.md:283
 #, no-wrap
 msgid "sudo meson install -C build\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:189 manual/Compilation.md:249 manual/Compilation.md:310
+#: manual/Compilation.md:189 manual/Compilation.md:249
+#: manual/Compilation.md:310
 #, no-wrap
 msgid "sudo ninja -C build uninstall\n"
 msgstr ""
@@ -220,12 +236,6 @@ msgstr ""
 msgid ""
 "sudo apt-get update\n"
 "sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
-msgstr ""
-
-#. type: Fenced code block
-#: manual/Compilation.md:204
-#, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-manual-l10n=ja -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Plain text
@@ -276,13 +286,13 @@ msgstr ""
 msgid ""
 "brew update\n"
 "brew upgrade\n"
-"brew install bison cmark-gfm cracklib dbus mariadb meson openldap talloc tracker\n"
+"brew install bison cmark-gfm cracklib dbus mariadb meson openldap po4a talloc tracker\n"
 msgstr ""
 
 #. type: Fenced code block
 #: manual/Compilation.md:265
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-docs-l10n=true -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -307,8 +317,9 @@ msgid "DragonflyBSD"
 msgstr ""
 
 #. type: Plain text
-#: manual/Compilation.md:317 manual/Compilation.md:337 manual/Compilation.md:365
-#: manual/Compilation.md:393 manual/Compilation.md:418 manual/Compilation.md:451
+#: manual/Compilation.md:317 manual/Compilation.md:337
+#: manual/Compilation.md:365 manual/Compilation.md:393
+#: manual/Compilation.md:418 manual/Compilation.md:451
 msgid "Install required packages"
 msgstr "必要なパッケージをインストールする"
 
@@ -319,8 +330,9 @@ msgid "pkg install -y avahi bison cmark db5 krb5-devel libevent libgcrypt meson 
 msgstr ""
 
 #. type: Plain text
-#: manual/Compilation.md:323 manual/Compilation.md:343 manual/Compilation.md:372
-#: manual/Compilation.md:399 manual/Compilation.md:428 manual/Compilation.md:458
+#: manual/Compilation.md:323 manual/Compilation.md:343
+#: manual/Compilation.md:372 manual/Compilation.md:399
+#: manual/Compilation.md:428 manual/Compilation.md:458
 msgid "Configure and build"
 msgstr "コンフィグレーションとビルド"
 
