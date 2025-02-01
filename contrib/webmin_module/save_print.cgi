@@ -25,4 +25,4 @@ foreach $p (@printers) {
 	}
 &close_tempfile(PAPD);
 
-&redirect("index.cgi");
+&redirect("index.cgi?tab=global");

@@ -35,7 +35,7 @@ eval {
 	my $afpconfRef = &read_afpconf();
 	modify_afpconf_ref_and_write($afpconfRef, \%in);
 
-	redirect("index.cgi");
+	redirect("index.cgi?tab=global");
 };
 if($@) {
 	my $msg = $@;

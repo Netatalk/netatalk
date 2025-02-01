@@ -394,4 +394,4 @@ print &ui_tabs_end();
 
 print &ui_form_end([[undef, $text{'save_button_title'}, 0, undef]]);
 
-ui_print_footer("index.cgi", $text{'edit_return'});
+ui_print_footer("index.cgi?tab=".$in{'tab'}, $text{'edit_return'});

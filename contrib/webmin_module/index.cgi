@@ -22,14 +22,16 @@
 require 'netatalk-lib.pl';
 use File::Basename;
 
+&ReadParse();
+
 my @tabs = ( [ 'global', $text{'index_tab_global'} ],
              [ 'ddp', $text{'index_tab_ddp'} ],
              [ 'fileserver', $text{'index_tab_fileserver'} ]
             );
 
 my $defaulttab = 'fileserver';
-if $tab {
-	$defaulttab = $tab;
+if (defined($in{'tab'})) {
+	$defaulttab = $in{'tab'};
 }
 
 ui_print_header(&text('index_version', version()), $text{'index_title'}, "", "configs", 1, 1);
