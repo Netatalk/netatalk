@@ -115,22 +115,25 @@ static char *Vol_heap[MAXVOL];
 uint16_t local_openvol(CONN *conn, char *vol)
 {
 uint16_t i;
-struct stat st;
+int fd;
 
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
 		fprintf(stdout,"Open Vol %s \n\n", vol);
 	}
 
-	if (stat(vol, &st)) {
+	fd = open(vol, O_RDONLY | O_DIRECTORY);
+	if (fd < 0) {
 		return 0xffff;
 	}
 
-	for (i= 0; i< MAXVOL; i++) {
+	for (i = 0; i < MAXVOL; i++) {
 		if (Vol_heap[i] == NULL) {
-			if (chdir(vol)) {
+			if (fchdir(fd) < 0) {
+				close(fd);
 				break;
 			}
+			close(fd);
 			Vol_heap[i] = strdup(vol);
 			Dir_heap[i][2] = strdup(vol);
 			return i;
@@ -169,6 +172,7 @@ static int local_chdir(uint16_t vol, int did)
 unsigned int local_createdir(CONN *conn, uint16_t vol, int did , char *name)
 {
 unsigned int i;
+int dirfd;
 
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
@@ -179,14 +183,29 @@ unsigned int i;
 	if (local_chdir(vol, did) < 0) {
 		return 0;
 	}
+
 	for (i= 3; i< MAXDIR; i++) {
 		if (Dir_heap[vol][i] == NULL) {
-			if (mkdir(name, 0777)) {
+			if (mkdir(name, 0777) != 0) {
 				return ntohl(AFPERR_NOOBJ);
 			}
-			if (chdir (name) || NULL ==  getcwd(temp, sizeof(temp))) {
+
+			dirfd = open(name, O_RDONLY | O_DIRECTORY);
+			if (dirfd < 0) {
 				return 0;
 			}
+
+			if (fchdir(dirfd) != 0) {
+				close(dirfd);
+				return 0;
+			}
+
+			if (getcwd(temp, sizeof(temp)) == NULL) {
+				close(dirfd);
+				return 0;
+			}
+
+			close(dirfd);
 			Dir_heap[vol][i] = strdup(temp);
 			return htonl(i);
 		}
