@@ -692,10 +692,22 @@ static int pam_changepw(void *obj, unsigned char *username,
 
     /* we might need to do this as root */
     uid = geteuid();
-    seteuid(0);
+    if (seteuid(0) < 0) {
+      LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", 0);
+    }
     PAM_error = pam_authenticate(lpamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-      seteuid(uid);
+      if (seteuid(uid) < 0) {
+        LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
+      }
+      pam_end(lpamh, PAM_error);
+      return AFPERR_NOTAUTH;
+    }
+    PAM_error = pam_acct_mgmt(lpamh, 0);
+    if (PAM_error != PAM_SUCCESS) {
+      if (seteuid(uid) < 0) {
+        LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
+      }
       pam_end(lpamh, PAM_error);
       return AFPERR_NOTAUTH;
     }
@@ -711,7 +723,9 @@ static int pam_changepw(void *obj, unsigned char *username,
 
     /* this really does need to be done as root */
     PAM_error = pam_chauthtok(lpamh, 0);
-    seteuid(uid); /* un-root ourselves. */
+    if (seteuid(uid) < 0) {
+      LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
+    }
     memset(ibuf, 0, PASSWDLEN);
     if (PAM_error != PAM_SUCCESS) {
       pam_end(lpamh, PAM_error);

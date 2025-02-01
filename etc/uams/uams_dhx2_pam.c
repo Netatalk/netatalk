@@ -856,18 +856,34 @@ static int changepw_3(void *obj _U_,
     uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME, (void *) &hostname, NULL);
     pam_set_item(lpamh, PAM_RHOST, hostname);
     uid = geteuid();
-    seteuid(0);
+    if (seteuid(0) < 0) {
+      LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", 0);
+    }
     PAM_error = pam_authenticate(lpamh,0);
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: error authenticating with PAM");
-        seteuid(uid);
+        if (seteuid(uid) < 0) {
+            LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
+        }
+        pam_end(lpamh, PAM_error);
+        ret = AFPERR_NOTAUTH;
+        goto error_ctx;
+    }
+    PAM_error = pam_acct_mgmt(lpamh, 0);
+    if (PAM_error != PAM_SUCCESS) {
+        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error authenticating with PAM");
+        if (seteuid(uid) < 0) {
+            LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
+        }
         pam_end(lpamh, PAM_error);
         ret = AFPERR_NOTAUTH;
         goto error_ctx;
     }
     PAM_password = ibuf;
     PAM_error = pam_chauthtok(lpamh, 0);
-    seteuid(uid); /* un-root ourselves. */
+    if (seteuid(uid) < 0) {
+      LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
+    }
     memset(ibuf, 0, 512);
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: error changing pw with PAM");
