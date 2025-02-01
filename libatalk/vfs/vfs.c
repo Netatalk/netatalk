@@ -109,15 +109,15 @@ static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 /* ----------------- */
 static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
 {
-    struct stat st;
-    const char *ad_p;
+    const char *ad_p = vol->ad_path(path, ADFLAGS_HF);
 
-    ad_p = vol->ad_path(path, ADFLAGS_HF );
+    if (chown(ad_p, uid, gid) < 0) {
+        if (errno == ENOENT)
+            return 0; /* Ignore if file doesn't exist */
+        return -1;
+    }
 
-    if ( stat( ad_p, &st ) < 0 )
-        return 0; /* ignore */
-
-    return chown( ad_p, uid, gid );
+    return 0;
 }
 
 /* ----------------- */
