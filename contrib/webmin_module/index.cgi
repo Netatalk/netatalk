@@ -27,6 +27,11 @@ my @tabs = ( [ 'global', $text{'index_tab_global'} ],
              [ 'fileserver', $text{'index_tab_fileserver'} ]
             );
 
+my $defaulttab = 'fileserver';
+if $tab {
+	$defaulttab = $tab;
+}
+
 ui_print_header(&text('index_version', version()), $text{'index_title'}, "", "configs", 1, 1);
 
 # check if netatalk daemon's path is configured correctly, if not: print error then exit
@@ -45,7 +50,7 @@ if($@) {
 	exit;
 }
 
-print &ui_tabs_start(\@tabs, 'mode', 'fileserver');
+print &ui_tabs_start(\@tabs, 'mode', defaulttab);
 print &ui_tabs_start_tab('mode', 'global');
 
 # Volume presets
