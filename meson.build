@@ -156,38 +156,22 @@ elif host_os == 'linux'
     brew_prefix = '/home/linuxbrew/.linuxbrew'
 endif
 
+include_dirs = [
+    '.',
+    'include',
+    'sys',
+    'etc/afpd',
+]
+
 if host_os in ['dragonfly', 'freebsd', 'openbsd']
-    root_includes = include_directories(
-        '.',
-        'include',
-        'sys',
-        'etc/afpd',
-        '/usr/local/include',
-    )
+    include_dirs += ['/usr/local/include']
 elif host_os == 'netbsd'
-    root_includes = include_directories(
-        '.',
-        'include',
-        'sys',
-        'etc/afpd',
-        '/usr/pkg/include',
-    )
+    include_dirs += ['/usr/pkg/include']
 elif host_os == 'omnios'
-    root_includes = include_directories(
-        '.',
-        'include',
-        'sys',
-        'etc/afpd',
-        '/opt/local/include',
-    )
-else
-    root_includes = include_directories(
-        '.',
-        'include',
-        'sys',
-        'etc/afpd',
-    )
+    include_dirs += ['/opt/local/include']
 endif
+
+root_includes = include_directories(include_dirs)
 
 #############
 # Libraries #
