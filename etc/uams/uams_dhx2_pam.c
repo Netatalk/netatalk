@@ -558,8 +558,15 @@ static int loginasroot(const char *adminauthuser, const char **hostname, int sta
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, *hostname);
-    if ((PAM_error = pam_authenticate(pamh, 0)) != PAM_SUCCESS)
+    if ((PAM_error = pam_authenticate(pamh, 0)) != PAM_SUCCESS) {
+        LOG(log_info, logtype_uams, "DHX2 loginasroot: error authenticating with PAM");
         goto exit;
+    }
+
+    if ((PAM_error = pam_acct_mgmt(pamh, 0)) != PAM_SUCCESS) {
+        LOG(log_info, logtype_uams, "DHX2 loginasroot: error validating PAM account");
+        goto exit;
+    }
 
     LOG(log_warning, logtype_uams, "DHX2: Authenticated as \"%s\"", adminauthuser);
 
@@ -871,7 +878,7 @@ static int changepw_3(void *obj _U_,
     }
     PAM_error = pam_acct_mgmt(lpamh, 0);
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error authenticating with PAM");
+        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error validating PAM account");
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
         }
