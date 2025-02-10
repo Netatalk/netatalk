@@ -1,3 +1,13 @@
+Changes in 4.1.2
+================
+* UPD: meson: Look for shared Berkeley DB library in versioned subdir too,
+       to detect the library in the MacPorts build system, GitHub #1909
+* FIX: webmin: Redirect back to the originating module index tab
+       when returning from actions, GitHub #1915
+* FIX: webmin: Fix '-router' switch in Webmin atalkd module, GitHub #1943
+* FIX: webmin: Fix a default value helptext string, GitHub #1946
+* UPD: Add GPL v2 license grant to mysql CNID backend code, GitHub #1874
+
 Changes in 4.1.1
 ================
 * NEW: meson: Introduce with-bdb-include-path override option, GitHub #1908
