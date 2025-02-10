@@ -1,7 +1,6 @@
 ARG RUN_DEPS="\
     acl \
     avahi \
-    bash \
     cups \
     db \
     dbus \
