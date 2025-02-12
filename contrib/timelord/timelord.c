@@ -41,9 +41,7 @@
 #include <atalk/logger.h>
 #include <stdio.h>
 #include <string.h>
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
 
 #include <fcntl.h>
 

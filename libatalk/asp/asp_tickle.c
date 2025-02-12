@@ -4,9 +4,7 @@
 
 #include <string.h>
 #include <atalk/logger.h>
-#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
-#endif /* HAVE_SYS_TYPES_H */
 #include <errno.h>
 
 #include <sys/socket.h>

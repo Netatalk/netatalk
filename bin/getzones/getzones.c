@@ -8,9 +8,7 @@
 #include <sys/uio.h>
 #include <sys/time.h>
 #include <unistd.h>
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

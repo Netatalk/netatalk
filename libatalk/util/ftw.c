@@ -37,10 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if HAVE_SYS_PARAM_H
-# include <sys/param.h>
-#endif
-
+#include <sys/param.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

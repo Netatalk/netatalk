@@ -10,12 +10,6 @@
 #include <sys/vfs.h>
 #endif /* HAVE_SYS_VFS_H */
 
-#if defined(HAVE_STATFS_H)
-#include <sys/statfs.h>
-/* this might not be right. */
-#define f_mntfromname f_fname
-#endif /* HAVE_STATFS_H */
-
 #if defined(__svr4__) || defined(__NetBSD__)
 #include <sys/statvfs.h>
 #define statfs statvfs
