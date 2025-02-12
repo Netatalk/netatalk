@@ -80,6 +80,11 @@ Downloading the Git repository can be done quickly and easily:
   The recommended version is 5.3, the final release under the permissive
   Sleepycat license, and therefore the most widely distributed version.
 
+- iniparser
+
+  The iniparser library is used to parse the configuration files.
+  At least version 3.0 is required, while 4.0 or later is recommended.
+
 - libevent
 
   Internal event callbacks in the netatalk service controller daemon are

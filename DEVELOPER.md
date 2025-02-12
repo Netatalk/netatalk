@@ -119,20 +119,6 @@ EC_CLEANUP:
 }
 ```
 
-Ini Parser
-==========
-
-The ini parser is taken from <https://github.com/ndevilla/iniparser>.
-It has been slightly modified:
-
-- case-sensitive
-- "include" directive added
-- atalk_iniparser_getstrdup() to complemnt atalk_iniparser_getstring(), it returns allocated
-  strings which the caller must free as necessary
-- the API has been modified such that all atalk_iniparser_get* funcs take a section and
-  a parameter as separate args instead of one string of the form "section:parameter"
-  in the original library
-
 CNID Database Daemons
 =====================
 

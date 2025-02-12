@@ -11,6 +11,11 @@
 #include <ctype.h>
 #include <errno.h>
 #include <grp.h>
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
 #include <inttypes.h>
 #include <netinet/in.h>
 #include <pwd.h>
@@ -37,7 +42,6 @@
 #include <atalk/fce_api.h>
 #include <atalk/ftw.h>
 #include <atalk/globals.h>
-#include <atalk/iniparser.h>
 
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
@@ -858,7 +862,9 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         }
 
         const char *msg;
-        if ((msg = atalk_iniparser_getstring(obj->iniconfig, volume->v_configname, "login message",  NULL)) != NULL)
+        char option[MAXOPTLEN];
+        snprintf(option, sizeof(option), "%s:login message", volume->v_configname);
+        if ((msg = iniparser_getstring(obj->iniconfig, option,  NULL)) != NULL)
             setmessage(msg);
 
         free(vol_mname);

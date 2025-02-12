@@ -79,37 +79,49 @@ for details of generic Meson options.
 
 ## External software dependencies
 
-Required:
+### Required
 
-  - Berkeley DB version 4.6.0 or later (often packaged as `bdb` or sometimes `db`)
-  - libevent version 2
-  - libgcrypt version 1.2.3 or later
-  - meson version 0.61.2 or later
-  - ninja (often packaged as `ninja-build`)
+| Package      | Details |
+|--------------|---------|
+| Berkeley DB  | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
+| iniparser    | v3.0 or later |
+| libevent     | v2.0 or later |
+| libgcrypt    | v1.2.3 or later |
 
-Required for Spotlight support:
+### Required to Build
 
-  - D-Bus (also used by avahi and afpstats)
-  - talloc
-  - tracker version 0.12 or later; or tinysparql and localsearch version 3.8.0 or later
-  - bison
-  - flex
+| Package | Details |
+|---------|---------|
+| meson   | v0.61.2 or later |
+| ninja   | Often packaged as `ninja-build` |
 
-Optional:
+### Required for Spotlight Support
 
-  - avahi or mDNSresponder           (for Zeroconf support)
-  - cmark or cmark-gfm               (for generating documentation)
-  - cracklib and cracklib dictionary (for password strength check in afppasswd)
-  - GLib 2 and GIO                   (for afpstats support)
-  - Kerberos V                       (for krbV UAM support)
-  - libacl                           (for ACL support)
-  - libldap                          (for LDAP support)
-  - libpam                           (for PAM support)
-  - libtirpc or libquota             (for Quota support)
-  - Perl                             (for admin scripts)
-  - po4a                             (for localization of the documentation)
-  - tcpwrap                          (for TCP wrapper support)
-  - [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)                  (for regenerating Unicode lookup tables)
+| Package    | Details |
+|------------|---------|
+| D-Bus      | Also used by avahi and afpstats |
+| talloc     |  |
+| tracker **OR** localsearch | v0.12 or later|
+| bison      |  |
+| flex       |  |
+
+### Optional
+
+| Package      | Details |
+|--------------|---------|
+| avahi **OR** mDNSresponder | For Zeroconf support |
+| cmark **OR** cmark-gfm     | For generating documentation |
+| cracklib and cracklib dictionary | For password strength check in afppasswd |
+| GLib 2 and GIO             | For afpstats support |
+| Kerberos V                 | For krbV UAM support |
+| libacl                     | For ACL support |
+| libldap                    | For LDAP support |
+| libpam                     | For PAM support |
+| libtirpc **OR** libquota   | For Quota support |
+| Perl                       | For admin scripts |
+| po4a                       | For localization of documentation |
+| tcpwrap                    | For TCP wrapper support |
+| [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | For regenerating Unicode lookup tables |
 
 More details about dependencies can be found in the
 [Installation chapter](https://netatalk.io/stable/htmldocs/installation)

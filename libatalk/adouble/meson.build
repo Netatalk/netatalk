@@ -17,5 +17,6 @@ libadouble = static_library(
     'adouble',
     adouble_sources,
     include_directories: root_includes,
+    dependencies: [iniparser],
     install: false,
 )

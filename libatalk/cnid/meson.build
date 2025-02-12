@@ -1,7 +1,7 @@
 subdir('dbd')
 subdir('last')
 
-libcnid_deps = []
+libcnid_deps = [iniparser]
 libcnid_libs = [libcnid_dbd]
 
 if use_last_backend

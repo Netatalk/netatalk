@@ -56,6 +56,9 @@ if host_os == 'linux' and fs.exists('/etc/os-release')
     message('Linux distro detected: ' + linux_distro)
 endif
 
+uname = find_program('uname', required: false)
+uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
+
 #########
 # Paths #
 #########
@@ -167,30 +170,21 @@ if host_os in ['dragonfly', 'freebsd', 'openbsd']
     include_dirs += ['/usr/local/include']
 elif host_os == 'netbsd'
     include_dirs += ['/usr/pkg/include']
-elif host_os == 'omnios'
+elif uname.found() and uname_stdout.to_lower().contains('omnios')
     include_dirs += ['/opt/local/include']
 endif
-
-root_includes = include_directories(include_dirs)
 
 #############
 # Libraries #
 #############
 
-uname = find_program('uname', required: false)
-
-uname_stdout = run_command(uname, '-a', check: false).stdout().strip()
 libsearch_dirs = []
 
 if host_os in ['dragonfly', 'freebsd', 'openbsd']
     libsearch_dirs += '/usr/local/lib'
-endif
-
-if host_os == 'netbsd'
+elif host_os == 'netbsd'
     libsearch_dirs += '/usr/pkg/lib'
-endif
-
-if uname.found() and uname_stdout.to_lower().contains('omnios')
+elif uname.found() and uname_stdout.to_lower().contains('omnios')
     libsearch_dirs += '/opt/local/lib'
 endif
 
@@ -235,6 +229,7 @@ check_headers = [
     'acl/libacl.h',
     'attr/xattr.h',
     'dlfcn.h',
+    'iniparser/iniparser.h',
     'langinfo.h',
     'linux/dqblk/xfs.h',
     'linux/xqm.h',
@@ -521,6 +516,31 @@ if not have_bdb
         msg = 'Berkeley DB library required but not found!'
     endif
     error(msg, 'Please specify an installation path using the -Dwith-bdb-path= configure option (must include lib and include dirs)')
+endif
+
+#
+# Check for iniparser
+#
+
+iniparser_path = get_option('with-iniparser-path')
+
+if iniparser_path != ''
+    iniparser = cc.find_library(
+        'iniparser',
+        dirs: iniparser_path / 'lib',
+        required: false,
+    )
+    include_dirs += [iniparser_path / 'include']
+else
+    iniparser = dependency('iniparser', required: false)
+
+    if not iniparser.found()
+        iniparser = cc.find_library('iniparser', dirs: libsearch_dirs, required: false)
+    endif
+endif
+
+if not iniparser.found()
+    error('iniparser library required but not found!')
 endif
 
 #
@@ -2310,6 +2330,12 @@ if 'html_manual' in get_option('with-docs')
         warning('cmark-gfm is required to build the html manual')
     endif
 endif
+
+#########################
+# Building the modules  #
+#########################
+
+root_includes = include_directories(include_dirs)
 
 subdir('include')
 subdir('libatalk')

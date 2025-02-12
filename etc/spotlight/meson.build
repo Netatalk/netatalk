@@ -14,7 +14,7 @@ run_command(
 
 srp_sources = ['sparql_map.c', 'sparql_parser.c', 'spotlight_rawquery_lexer.c']
 
-spotlight_deps = []
+spotlight_deps = [iniparser]
 
 if have_iconv
     spotlight_deps += iconv
@@ -47,6 +47,7 @@ libspotlight = static_library(
     spotlight_sources,
     dependencies: [
         glib,
+        iniparser,
         talloc,
         sparql,
     ],

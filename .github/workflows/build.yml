@@ -59,6 +59,7 @@ jobs:
             dbus-dev \
             flex \
             gcc \
+            iniparser-dev \
             krb5-dev \
             libevent-dev \
             libgcrypt-dev \
@@ -116,6 +117,7 @@ jobs:
             db \
             flex \
             gcc \
+            iniparser \
             localsearch \
             mariadb-clients \
             meson \
@@ -174,6 +176,7 @@ jobs:
             libevent-dev \
             libgcrypt20-dev \
             libglib2.0-dev \
+            libiniparser-dev \
             libkrb5-dev \
             libldap2-dev \
             libmariadb-dev \
@@ -234,6 +237,7 @@ jobs:
             dbus-devel \
             flex \
             glib2-devel \
+            iniparser-devel \
             krb5-devel \
             libacl-devel \
             libdb-devel \
@@ -296,6 +300,7 @@ jobs:
             libevent-dev \
             libgcrypt20-dev \
             libglib2.0-dev \
+            libiniparser-dev \
             libkrb5-dev \
             libldap2-dev \
             libmariadb-dev \
@@ -357,6 +362,7 @@ jobs:
             cmark-gfm \
             cracklib \
             dbus \
+            iniparser \
             mariadb \
             meson \
             openldap \
@@ -409,6 +415,7 @@ jobs:
               bison \
               cmark \
               db5 \
+              iniparser \
               krb5-devel \
               libevent \
               libgcrypt \
@@ -454,6 +461,7 @@ jobs:
               cmark \
               db5 \
               flex \
+              iniparser \
               libevent \
               libgcrypt \
               meson \
@@ -507,6 +515,7 @@ jobs:
               gcc13 \
               gnome-tracker \
               heimdal \
+              iniparser \
               libcups \
               libevent \
               libgcrypt \
@@ -558,6 +567,7 @@ jobs:
               dbus \
               gcc-11.2.0p14 \
               heimdal \
+              iniparser \
               libevent \
               libgcrypt \
               libtalloc \
@@ -611,6 +621,7 @@ jobs:
               avahi \
               cmark \
               gnome-tracker \
+              iniparser \
               libevent \
               libgcrypt \
               meson \
@@ -656,6 +667,7 @@ jobs:
           prepare: |
             pkg install \
               bison \
+              cmake \
               flex \
               gcc \
               libevent \
@@ -664,14 +676,23 @@ jobs:
               pkg-config \
               python/pip
             pip install meson
+            curl -O https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
+            tar xzf iniparser-v4.2.5.tar.gz
+            cd iniparser-v4.2.5
+            mkdir build
+            cd build
+            cmake ..
+            make all
+            make install
           run: |
             set -e
-            export PATH=/opt/local/sbin:/opt/local/bin:$PATH
+            export PATH=/usr/local/sbin:/usr/local/bin:$PATH
             meson setup build \
-              --prefix=/opt/local \
+              --prefix=/usr/local \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+              -Dwith-iniparser-path=/usr/local \
               -Dwith-tests=true
             meson compile -C build
             cd build
@@ -681,10 +702,10 @@ jobs:
             netatalk -V
             afpd -V
             sleep 1
-            svcadm enable svc:/network/netatalk:default
+            svcadm -v enable svc:/network/netatalk:default
             sleep 1
             asip-status localhost
-            svcadm disable svc:/network/netatalk:default
+            svcadm -v disable svc:/network/netatalk:default
             ninja -C build uninstall
 
   static_analysis:
@@ -715,6 +736,7 @@ jobs:
             libevent-dev \
             libgcrypt20-dev \
             libglib2.0-dev \
+            libiniparser-dev \
             libkrb5-dev \
             libldap2-dev \
             libmariadb-dev \

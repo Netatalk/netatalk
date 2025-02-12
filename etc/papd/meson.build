@@ -32,7 +32,7 @@ papd_c_args = [
     dversion,
 ]
 
-papd_deps = []
+papd_deps = [iniparser]
 
 if have_iconv
     papd_deps += iconv

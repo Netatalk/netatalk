@@ -17,7 +17,7 @@ if use_dbd_backend
         'pack.c',
     ]
 
-    cnid_dbd_deps = []
+    cnid_dbd_deps = [iniparser]
 
     if use_mysql_backend
         cnid_dbd_deps += mysqlclient

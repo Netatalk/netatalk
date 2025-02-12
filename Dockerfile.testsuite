@@ -4,6 +4,7 @@ ARG RUN_DEPS="\
     cups \
     db \
     dbus \
+    iniparser \
     krb5 \
     libevent \
     libgcrypt \
@@ -23,6 +24,7 @@ ARG BUILD_DEPS="\
     build-base \
     flex \
     gcc \
+    iniparser-dev \
     krb5-dev \
     libevent-dev \
     libgcrypt-dev \

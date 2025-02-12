@@ -256,6 +256,9 @@
 /* Wheter GSS_C_NT_HOSTBASED_SERVICE is in gssapi.h */
 #mesondefine HAVE_GSS_C_NT_HOSTBASED_SERVICE
 
+/* Define to 1 if you have the <iniparser/iniparser.h> header file. */
+#mesondefine HAVE_INIPARSER_INIPARSER_H
+
 /* Define to 1 if you have the <inttypes.h> header file. */
 #mesondefine HAVE_INTTYPES_H
 

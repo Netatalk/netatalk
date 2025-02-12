@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-01 08:11+0100\n"
+"POT-Creation-Date: 2025-02-14 09:31+0100\n"
 "PO-Revision-Date: 2025-01-22 20:55+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -67,7 +67,7 @@ msgstr "必要なパッケージをインストールする"
 #. type: Fenced code block
 #: manual/Compilation.md:16
 #, no-wrap
-msgid "apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev\n"
+msgid "apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc iniparser-dev krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev\n"
 msgstr ""
 
 #. type: Plain text
@@ -163,7 +163,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:61
 #, no-wrap
-msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc localsearch mariadb-clients meson ninja perl po4a pkgconfig rpcsvc-proto talloc tinysparql\n"
+msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser localsearch mariadb-clients meson ninja perl po4a pkgconfig rpcsvc-proto talloc tinysparql\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -183,7 +183,7 @@ msgstr ""
 #, no-wrap
 msgid ""
 "apt-get update\n"
-"apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build po4a quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
+"apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libiniparser-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build po4a quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -201,7 +201,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:152
 #, no-wrap
-msgid "dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cmark cracklib-devel cups-devel dbus-devel flex glib2-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel\n"
+msgid "dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cmark cracklib-devel cups-devel dbus-devel flex glib2-devel iniparser-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -235,7 +235,7 @@ msgstr ""
 #, no-wrap
 msgid ""
 "sudo apt-get update\n"
-"sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
+"sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libiniparser-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs\n"
 msgstr ""
 
 #. type: Plain text
@@ -286,7 +286,7 @@ msgstr ""
 msgid ""
 "brew update\n"
 "brew upgrade\n"
-"brew install bison cmark-gfm cracklib dbus mariadb meson openldap po4a talloc tracker\n"
+"brew install bison cmark-gfm cracklib dbus iniparser mariadb meson openldap po4a talloc tracker\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -326,13 +326,13 @@ msgstr "必要なパッケージをインストールする"
 #. type: Fenced code block
 #: manual/Compilation.md:318
 #, no-wrap
-msgid "pkg install -y avahi bison cmark db5 krb5-devel libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3\n"
+msgid "pkg install -y avahi bison cmark db5 iniparser krb5-devel libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3\n"
 msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:323 manual/Compilation.md:343
 #: manual/Compilation.md:372 manual/Compilation.md:399
-#: manual/Compilation.md:428 manual/Compilation.md:458
+#: manual/Compilation.md:428 manual/Compilation.md:466
 msgid "Configure and build"
 msgstr "コンフィグレーションとビルド"
 
@@ -358,7 +358,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:338
 #, no-wrap
-msgid "pkg install -y avahi bison cmark db5 flex libevent libgcrypt meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc tracker3\n"
+msgid "pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc tracker3\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -393,7 +393,7 @@ msgstr ""
 #, no-wrap
 msgid ""
 "export PKG_PATH=\"https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/\"\n"
-"pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc\n"
+"pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -425,7 +425,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:394
 #, no-wrap
-msgid "pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 openpam p5-Net-DBus pkgconf tracker3\n"
+msgid "pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal iniparser libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 openpam p5-Net-DBus pkgconf tracker3\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -460,7 +460,7 @@ msgid ""
 "curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz\n"
 "tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /\n"
 "export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH\n"
-"pkgin -y install avahi cmark gnome-tracker libevent libgcrypt meson mysql-client talloc\n"
+"pkgin -y install avahi cmark gnome-tracker iniparser libevent libgcrypt meson mysql-client talloc\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -495,17 +495,25 @@ msgstr ""
 #: manual/Compilation.md:452
 #, no-wrap
 msgid ""
-"pkg install bison flex gcc libevent libgcrypt ninja pkg-config python/pip\n"
+"pkg install bison cmake flex gcc libevent libgcrypt ninja pkg-config python/pip\n"
 "pip install meson\n"
+"curl -O https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz\n"
+"tar xzf iniparser-v4.2.5.tar.gz\n"
+"cd iniparser-v4.2.5\n"
+"mkdir build\n"
+"cd build\n"
+"cmake ..\n"
+"make all\n"
+"make install\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:459
+#: manual/Compilation.md:467
 #, no-wrap
 msgid ""
 "set -e\n"
-"export PATH=/opt/local/sbin:/opt/local/bin:$PATH\n"
-"meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
+"export PATH=/usr/local/sbin:/usr/local/bin:$PATH\n"
+"meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true\n"
 "meson compile -C build\n"
 "cd build\n"
 "meson test\n"
@@ -514,9 +522,9 @@ msgid ""
 "netatalk -V\n"
 "afpd -V\n"
 "sleep 1\n"
-"svcadm enable svc:/network/netatalk:default\n"
+"svcadm -v enable svc:/network/netatalk:default\n"
 "sleep 1\n"
 "asip-status localhost\n"
-"svcadm disable svc:/network/netatalk:default\n"
+"svcadm -v disable svc:/network/netatalk:default\n"
 "ninja -C build uninstall\n"
 msgstr ""

@@ -491,7 +491,7 @@ int main(int argc, char *argv[])
 
     (void)setlimits();
 
-    host = atalk_iniparser_getstrdup(obj.iniconfig, INISEC_GLOBAL, "cnid listen", "localhost:4700");
+    host = INIPARSER_GETSTRDUP(obj.iniconfig, "Global:cnid listen", "localhost:4700");
     if ((port = strrchr(host, ':')))
         *port++ = 0;
     else
@@ -500,6 +500,10 @@ int main(int argc, char *argv[])
         daemon_exit(1);
 
     LOG(log_note, logtype_afpd, "CNID Server listening on %s:%s", host, port);
+
+    if (host) {
+        free(host);
+    }
 
     /* switch uid/gid */
     if (uid || gid) {

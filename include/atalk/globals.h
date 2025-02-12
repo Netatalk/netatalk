@@ -7,6 +7,11 @@
 #define AFPD_GLOBALS_H 1
 
 #include <grp.h>
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
 #include <netdb.h>
 #include <stdbool.h>
 #include <sys/param.h>
@@ -15,7 +20,6 @@
 #include <netatalk/at.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
-#include <atalk/iniparser.h>
 #include <atalk/uam.h>
 #include <atalk/unicode.h>
 
@@ -41,6 +45,7 @@
 /* #define HFSPLUSFILELEN 510 */        /* HFS+ spec, 510byte = 255codepoint */
 
 #define MAXUSERLEN 256
+#define MAXOPTLEN 256
 
 #define DEFAULT_MAX_DIRCACHE_SIZE 8192
 
@@ -71,12 +76,21 @@
 #define IS_AFP_SESSION(obj) (((obj)->dsi && (obj)->dsi->serversock == -1) || ((obj)->Type))
 
 /**********************************************************************************************
- * Ini config sections
+ * Ini config manipulation macros
  **********************************************************************************************/
 
 #define INISEC_GLOBAL "Global"
 #define INISEC_HOMES  "Homes"
 
+#define INIPARSER_GETSTRDUP(config, section, default) ({              \
+    const char *_tmp = iniparser_getstring(config, section, default); \
+    _tmp ? strdup(_tmp) : NULL;                                       \
+})
+
+#define CONFIG_ARG_FREE(a) do {                     \
+    free(a);                                        \
+    a = NULL;                                       \
+    } while (0);
 
 struct DSI;
 
