@@ -326,30 +326,30 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
     acl_ldap_readconfig(dsi_obj->iniconfig);
 #endif /* HAVE_LDAP */
 
-    if ((r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce listener", NULL))) {
+    if ((r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce listener", NULL))) {
 		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
 		fce_add_udp_socket(r);
     }
-    if ((r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce coalesce", NULL))) {
+    if ((r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce coalesce", NULL))) {
 		LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
 		fce_set_coalesce(r);
     }
-    if ((r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce events", NULL))) {
+    if ((r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce events", NULL))) {
 		LOG(log_note, logtype_afpd, "Fce events: %s", r);
 		fce_set_events(r);
     }
-    r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
+    r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce version", "1");
     LOG(log_debug, logtype_afpd, "Fce version: %s", r);
     dsi_obj->fce_version = atoi(r);
 
-    if ((r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names", ".DS_Store"))) {
+    if ((r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce ignore names", ".DS_Store"))) {
         dsi_obj->fce_ign_names = strdup(r);
     }
-    if ((r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore directories", NULL))) {
+    if ((r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce ignore directories", NULL))) {
             dsi_obj->fce_ign_directories = strdup(r);
     }
 
-    if ((r = atalk_iniparser_getstring(dsi_obj->iniconfig, INISEC_GLOBAL, "fce notify script", NULL))) {
+    if ((r = iniparser_getstring(dsi_obj->iniconfig, "Global:fce notify script", NULL))) {
         dsi_obj->fce_notify_script = strdup(r);
     }
 

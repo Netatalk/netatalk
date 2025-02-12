@@ -1330,8 +1330,7 @@ int spotlight_init(AFPObj *obj)
     sl_ctx = talloc_zero(NULL, struct sl_ctx);
     obj->sl_ctx = sl_ctx;
 
-    attributes = atalk_iniparser_getstring(obj->iniconfig, INISEC_GLOBAL,
-                                           "spotlight attributes", NULL);
+    attributes = iniparser_getstring(obj->iniconfig, "Global:spotlight attributes", NULL);
     if (attributes) {
         configure_spotlight_attributes(attributes);
     }

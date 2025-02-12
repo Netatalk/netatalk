@@ -8,5 +8,6 @@ libvfs = static_library(
     'vfs',
     vfs_sources,
     include_directories: root_includes,
+    dependencies: [iniparser],
     install: false,
 )

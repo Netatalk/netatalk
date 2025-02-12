@@ -16,6 +16,12 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -28,7 +34,6 @@
 #include <ldap.h>
 #endif
 
-#include <atalk/iniparser.h>
 #include <atalk/ldapconfig.h>
 #include <atalk/logger.h>
 #include <atalk/uuid.h>
@@ -49,7 +54,7 @@ static void parse_ldapconf(void)
 #ifdef HAVE_LDAP
         /* Parse afp.conf */
         printf("Start parsing afp.conf\n");
-        iniconfig = atalk_iniparser_load(_PATH_CONFDIR "afp.conf");
+        iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
         acl_ldap_readconfig(iniconfig);
         printf("Finished parsing afp.conf\n");
         if (ldap_config_valid) {

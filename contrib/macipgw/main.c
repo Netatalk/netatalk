@@ -34,9 +34,13 @@
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
 #include <atalk/globals.h>
-#include <atalk/iniparser.h>
 
 #include <errno.h>
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -171,15 +175,15 @@ macip_options * read_options(const char *conf)
     dictionary *config;
     macip_options *options = (macip_options *)malloc(sizeof(macip_options));
 
-    if ((config = atalk_iniparser_load(conf)) == NULL)
+    if ((config = iniparser_load(conf)) == NULL)
         return NULL;
-    options->network = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "network", "");
-    options->netmask = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "netmask", "");
-    options->nameserver = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "nameserver", "");
-    options->zone = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "zone", "");
-    options->unprivileged_user = atalk_iniparser_getstrdup(config, INISEC_GLOBAL, "unprivileged user", "");
+    options->network = INIPARSER_GETSTRDUP(config, "Global:network", "");
+    options->netmask = INIPARSER_GETSTRDUP(config, "Global:netmask", "");
+    options->nameserver = INIPARSER_GETSTRDUP(config, "Global:nameserver", "");
+    options->zone = INIPARSER_GETSTRDUP(config, "Global:zone", "");
+    options->unprivileged_user = INIPARSER_GETSTRDUP(config, "Global:unprivileged user", "");
 
-	atalk_iniparser_freedict(config);
+	iniparser_freedict(config);
 
     return options;
 }
@@ -324,6 +328,24 @@ int main(int argc, char *argv[])
 		if (setuid(group) == -1) {
 			printf("macipgw: could not drop root privileges (user)\n");
 			die(EX_OSERR);
+		}
+	}
+
+	if (mio != NULL) {
+		if (mio->network) {
+			CONFIG_ARG_FREE(mio->network)
+		}
+		if (mio->netmask) {
+			CONFIG_ARG_FREE(mio->netmask)
+		}
+		if (mio->nameserver) {
+			CONFIG_ARG_FREE(mio->nameserver)
+		}
+		if (mio->zone) {
+			CONFIG_ARG_FREE(mio->zone)
+		}
+		if (mio->unprivileged_user) {
+			CONFIG_ARG_FREE(mio->unprivileged_user)
 		}
 	}
 

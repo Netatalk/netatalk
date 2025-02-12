@@ -3,7 +3,11 @@
 #ifndef LDAPCONFIG_H
 #define LDAPCONFIG_H
 
-#include <atalk/iniparser.h>
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
 
 /* One function does the whole job */
 extern int acl_ldap_readconfig(dictionary *iniconfig);

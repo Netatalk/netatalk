@@ -35,11 +35,11 @@ executable(
     fce_sources,
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: [mysqlclient, misc_deps],
+    dependencies: [iniparser, mysqlclient, misc_deps],
     install: false,
 )
 
-afpldaptest_deps = []
+afpldaptest_deps = [iniparser]
 
 if use_mysql_backend
     afpldaptest_deps += mysqlclient

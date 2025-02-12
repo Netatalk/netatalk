@@ -25,6 +25,7 @@ libutil = static_library(
     'util',
     util_sources,
     include_directories: root_includes,
+    dependencies: [iniparser],
     c_args: [
         confdir,
         messagedir,

@@ -52,11 +52,7 @@ extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
  * echo off means password.
  */
 static int PAM_conv (int num_msg,
-#if !defined(__svr4__)
                      const struct pam_message **msg,
-#else
-                     struct pam_message **msg,
-#endif
                      struct pam_response **resp,
                      void *appdata_ptr _U_)
 {
@@ -293,7 +289,8 @@ static int pam_changepw(void *obj _U_, char *username,
 
     /* Set these things up for the conv function */
     PAM_username = username;
-    snprintf(PAM_password, sizeof(PAM_password), "%s", pw);
+    memcpy(PAM_password, pw, PASSWDLEN);
+    PAM_password[PASSWDLEN] = '\0';
 
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
 			  &lpamh);

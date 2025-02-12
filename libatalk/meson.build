@@ -4,12 +4,11 @@ subdir('bstring')
 subdir('cnid')
 subdir('compat')
 subdir('dsi')
-subdir('iniparser')
 subdir('util')
 subdir('unicode')
 subdir('vfs')
 
-libatalk_deps = []
+libatalk_deps = [iniparser]
 libatalk_libs = [
     libacl,
     libadouble,
@@ -17,7 +16,6 @@ libatalk_libs = [
     libcnid,
     libcompat,
     libdsi,
-    libiniparser,
     libunicode,
     libutil,
     libvfs,
@@ -59,6 +57,8 @@ libatalk = library(
     version: '19.0.0',
     soversion: '19',
     install: true,
+    build_rpath: rpath_libdir,
+    install_rpath: rpath_libdir,
 )
 
 if host_os == 'linux' and get_option('with-install-hooks')
