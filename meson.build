@@ -235,45 +235,23 @@ check_headers = [
     'acl/libacl.h',
     'attr/xattr.h',
     'dlfcn.h',
-    'dns_sd.h',
-    'errno.h',
-    'fcntl.h',
-    'inttypes.h',
     'langinfo.h',
     'linux/dqblk/xfs.h',
-    'linux/xfs/fs.h',
     'linux/xqm.h',
     'locale.h',
     'mntent.h',
-    'netdb.h',
     'pam/pam_appl.h',
-    'poll.h',
     'security/pam_appl.h',
     'sgtty.h',
-    'statfs.h',
-    'stdint.h',
-    'stdio.h',
-    'stdlib.h',
-    'string.h',
-    'strings.h',
     'sys/attr.h',
     'sys/attributes.h',
     'sys/ea.h',
     'sys/extattr.h',
     'sys/mnttab.h',
     'sys/mount.h',
-    'sys/param.h',
-    'sys/stat.h',
-    'sys/statvfs.h',
-    'sys/types.h',
-    'sys/uio.h',
     'sys/vfs.h',
     'sys/xattr.h',
-    'termios.h',
     'ufs/quota.h',
-    'unistd.h',
-    'xfs/libxfs.h',
-    'xfs/xfs/fs.h',
     'xfs/xqm.h',
 ]
 
@@ -291,24 +269,14 @@ check_functions = [
     'asprintf',
     'backtrace_symbols',
     'dirfd',
-    'dlclose',
-    'dlerror',
-    'dlopen',
-    'dlsym',
-    'errno',
-    'getpagesize',
-    'getusershell',
-    'mmap',
     'pread',
     'pselect',
     'pwrite',
-    'setlinebuf',
-    'shl_load',
+    'rresvport',
     'splice',
     'strlcat',
     'strlcpy',
     'strnlen',
-    'utime',
     'vasprintf',
 ]
 
@@ -343,10 +311,6 @@ foreach f : at_functions
         cdata.set('HAVE_ATFUNCS', 1)
     endif
 endforeach
-
-if cc.has_function('rresvport')
-    cdata.set('HAVE_RRESVPORT', 1)
-endif
 
 ##########################
 # Type and member checks #
@@ -1097,7 +1061,6 @@ if host_os == 'sunos'
 elif host_os == 'freebsd'
     have_ea = true
     ea_functions = [
-        'extattr_delete_fd',
         'extattr_delete_file',
         'extattr_delete_link',
         'extattr_get_fd',
@@ -1123,15 +1086,12 @@ elif host_os == 'aix'
     have_ea = true
     ea_functions = [
         'fgetea',
-        'flistea',
-        'fremoveea',
         'fsetea',
         'getea',
         'lgetea',
         'listea',
         'llistea',
         'lremoveea',
-        'lsetea',
         'removeea',
         'setea',
     ]
@@ -1147,7 +1107,6 @@ elif cc.has_function('getxattr', dependencies: attr)
     ea_functions = [
         'fgetxattr',
         'flistxattr',
-        'fremovexattr',
         'fsetxattr',
         'getxattr',
         'lgetxattr',

@@ -14,11 +14,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <grp.h>
-
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
-
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>

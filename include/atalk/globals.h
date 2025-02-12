@@ -7,11 +7,7 @@
 #define AFPD_GLOBALS_H 1
 
 #include <grp.h>
-
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
-
 #include <stdbool.h>
 #include <sys/param.h>
 #include <sys/types.h>

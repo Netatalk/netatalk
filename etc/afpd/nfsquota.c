@@ -44,9 +44,7 @@
 #include <sys/socket.h>
 #include <sys/param.h> /* for DEV_BSIZE */
 #include <sys/time.h>
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
 #include <netinet/in.h>
 #ifndef PORTMAP
 #define PORTMAP 1

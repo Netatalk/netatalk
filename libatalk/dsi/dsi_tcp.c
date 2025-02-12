@@ -13,11 +13,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <net/if.h>
-
-#ifdef HAVE_NETDB_H
 #include <netdb.h>
-#endif /* HAVE_NETDB_H */
-
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <signal.h>
@@ -30,8 +26,6 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
-
-
 
 #include <atalk/logger.h>
 

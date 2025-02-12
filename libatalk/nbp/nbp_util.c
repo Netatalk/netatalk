@@ -7,6 +7,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <netdb.h>
 #include <string.h>
 #include <signal.h>
 
@@ -21,10 +22,6 @@
 #include <atalk/nbp.h>
 #include <atalk/ddp.h>
 #include <atalk/util.h>
-
-#ifdef HAVE_NETDB_H
-#include <netdb.h>
-#endif /* HAVE_NETDB_H */
 
 #include  "nbp_conf.h"
 

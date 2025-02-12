@@ -21,10 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-
-#ifdef HAVE_SYS_STAT_H
 #include <sys/stat.h>
-#endif /* HAVE_SYS_STAT_H */
 
 #include <sys/time.h>
 #include <sys/types.h>
