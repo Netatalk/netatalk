@@ -358,17 +358,13 @@ jobs:
           brew update
           brew upgrade
           brew install \
-            bison \
             cmark-gfm \
             cracklib \
-            dbus \
             iniparser \
             mariadb \
             meson \
             openldap \
-            po4a \
-            talloc \
-            tracker
+            po4a
       - name: Configure
         run: |
           meson setup build \
