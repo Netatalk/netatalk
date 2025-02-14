@@ -1,5 +1,3 @@
-name: Containers
-
 on:
     push:
         branches: [ "main" ]
@@ -26,6 +24,8 @@ env:
     REGISTRY: ghcr.io
     REPO: ${{ github.repository }}
 
+name: Containers
+    
 jobs:
     build-container:
         name: Build Netatalk container
