@@ -2065,9 +2065,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     dictionary *config;
     struct afp_options *options = &AFPObj->options;
     int c _U_;
-    char *p;
-    char *q;
-    char *r;
+    char *p = NULL;
+    char *q = NULL;
+    char *r = NULL;
     char val[MAXVAL];
 
     if (processname != NULL)
