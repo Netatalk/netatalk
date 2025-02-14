@@ -2194,6 +2194,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         if (strlen(p) <= 32)
         {
             options->zone = strdup(p);
+            if (options->zone == NULL) {
+                free(p);
+                EC_FAIL;
+            }
         }
         free(p);
     }
@@ -2201,6 +2205,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
     if ((p = INIPARSER_GETSTRDUP(config, "Global:hostname", NULL))) {
         options->hostname = strdup(p);
+        if (options->hostname == NULL) {
+            free(p);
+            EC_FAIL;
+        }
         free(p);
     } else {
         if (gethostname(val, sizeof(val)) < 0 ) {
@@ -2213,8 +2221,14 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
     if ((p = INIPARSER_GETSTRDUP(config, "Global:k5 keytab", NULL))) {
-        EC_NULL_LOG( options->k5keytab = malloc(strlen(p) + 14) );
-        snprintf(options->k5keytab, strlen(p) + 14, "KRB5_KTNAME=%s", p);
+        size_t len = strlen(p);
+        size_t ktlen = len + 14;
+        options->k5keytab = malloc(ktlen);
+        if (options->k5keytab == NULL) {
+            free(p);
+            EC_FAIL;
+        }
+        snprintf(options->k5keytab, ktlen, "KRB5_KTNAME=%s", p);
         putenv(options->k5keytab);
         free(p);
     }
