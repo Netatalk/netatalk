@@ -2185,10 +2185,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
 #ifndef NO_DDP
-    if ((q = INIPARSER_GETSTRDUP(config, "Global:ddp address", NULL)))
-        atalk_aton(q, &options->ddpaddr);
-    if (q)
-        free(q);
+    if ((p = INIPARSER_GETSTRDUP(config, "Global:ddp address", NULL))) {
+        atalk_aton(p, &options->ddpaddr);
+        free(p);
+    }
 
     if ((p = INIPARSER_GETSTRDUP(config, "Global:ddp zone", NULL))) {
         if (strlen(p) <= 32)
@@ -2271,9 +2271,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         hints.ai_flags = AI_CANONNAME;
 
         if (getaddrinfo(q, NULL, &hints, &result) == 0) {
-            if (r)
+            if (r) {
                 *r = ':';
-            EC_NULL_LOG( options->fqdn = strdup(q) );
+            }
+            options->fqdn = strdup(q);
             freeaddrinfo(result);
         } else {
             LOG(log_error, logtype_afpd, "error parsing -fqdn, getaddrinfo failed for: %s", q);
