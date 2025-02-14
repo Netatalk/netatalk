@@ -192,28 +192,42 @@ void uam_unregister(const int type, const char *name)
 struct passwd *uam_getname(void *private, char *name, const int len)
 {
     AFPObj *obj = private;
-    struct passwd *pwent;
+    struct passwd *pwent = NULL;
+    struct passwd pwent_buf;
     static char username[256];
     static char user[256];
     static char pwname[256];
     char *p;
-    size_t namelen, gecoslen = 0, pwnamelen = 0;
+    size_t namelen;
+    size_t gecoslen = 0;
+    size_t pwnamelen = 0;
 
-    if ((pwent = getpwnam(name)))
+    long bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+    if (bufsize == -1) {
+        bufsize = 16384;
+    }
+    char *buffer = malloc(bufsize);
+    if (buffer == NULL) {
+        free(buffer);
+        return NULL;
+    }
+
+    if (getpwnam_r(name, &pwent_buf, buffer, sizeof(buffer), &pwent) == 0 && pwent != NULL) {
+        free(buffer);
         return pwent;
+    }
 
     /* if we have a NT domain name try with it */
     if (obj->options.addomain || (obj->options.ntdomain && obj->options.ntseparator)) {
-        /* FIXME What about charset ? */
         bstring princ;
         if (obj->options.addomain)
             princ = bformat("%s@%s", name, obj->options.addomain);
         else
             princ = bformat("%s%s%s", obj->options.ntdomain, obj->options.ntseparator, name);
+
         if (bdata(princ) != NULL) {
-            /* squelch compiler complaints re: getpwnam() receiving a NULL argument */
             const char *bdatum = bdata(princ);
-            pwent = getpwnam(bdatum);
+            getpwnam_r(bdatum, &pwent_buf, buffer, sizeof(buffer), &pwent);
         }
         bdestroy(princ);
 
@@ -224,9 +238,13 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             } else {
                 LOG(log_error, logtype_uams, "The name '%s' is longer than %d", pwent->pw_name, MAXUSERLEN);
             }
+            free(buffer);
             return pwent;
         }
     }
+
+    free(buffer);
+
 #if !defined(NO_REAL_USER_NAME)
 
     namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
