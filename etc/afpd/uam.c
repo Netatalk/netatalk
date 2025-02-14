@@ -212,7 +212,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             princ = bformat("%s%s%s", obj->options.ntdomain, obj->options.ntseparator, name);
         if (bdata(princ) != NULL) {
             /* squelch compiler complaints re: getpwnam() receiving a NULL argument */
-            char *bdatum = bdata(princ);
+            const char *bdatum = bdata(princ);
             pwent = getpwnam(bdatum);
         }
         bdestroy(princ);
