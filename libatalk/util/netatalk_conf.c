@@ -2193,14 +2193,14 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     if ((p = INIPARSER_GETSTRDUP(config, "Global:ddp zone", NULL))) {
         if (strlen(p) <= 32)
         {
-            EC_NULL_LOG(options->zone = strdup(p));
+            options->zone = strdup(p);
         }
         free(p);
     }
 #endif
 
     if ((p = INIPARSER_GETSTRDUP(config, "Global:hostname", NULL))) {
-        EC_NULL_LOG( options->hostname = strdup(p) );
+        options->hostname = strdup(p);
         free(p);
     } else {
         if (gethostname(val, sizeof(val)) < 0 ) {
