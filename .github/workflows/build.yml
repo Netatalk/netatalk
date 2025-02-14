@@ -355,20 +355,17 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew upgrade
           brew install \
             cmark-gfm \
             cracklib \
             iniparser \
             mariadb \
             meson \
-            openldap \
-            po4a
+            openldap
       - name: Configure
         run: |
           meson setup build \
             -Dbuildtype=release \
-            -Dwith-docs-l10n=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
