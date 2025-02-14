@@ -40,6 +40,7 @@ jobs:
             libdb-dev \
             libevent-dev \
             libgcrypt20-dev \
+            libiniparser-dev \
             meson \
             ninja-build
       - name: Configure
