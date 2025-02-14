@@ -147,18 +147,6 @@ uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
 # Includes #
 ############
 
-brew_prefix = ''
-find_program('brew', required: false)
-if host_os == 'darwin'
-    if cpu == 'aarch64'
-        brew_prefix += '/opt/homebrew'
-    elif cpu == 'x86_64'
-        brew_prefix += '/usr/local'
-    endif
-elif host_os == 'linux'
-    brew_prefix = '/home/linuxbrew/.linuxbrew'
-endif
-
 include_dirs = [
     '.',
     'include',
@@ -174,6 +162,21 @@ elif uname.found() and uname_stdout.to_lower().contains('omnios')
     include_dirs += ['/opt/local/include']
 endif
 
+# note: the brew app is not visible from within the brew build wrapper iteslf,
+# so rather than checking for brew we apply a blanket prefix
+brew_prefix = ''
+if host_os == 'darwin'
+    if cpu == 'aarch64' and fs.is_dir('/opt/homebrew')
+        brew_prefix += '/opt/homebrew'
+        include_dirs += brew_prefix + '/include'
+    elif cpu == 'x86_64'
+        brew_prefix += '/usr/local'
+    endif
+elif host_os == 'linux' and fs.is_dir('/opt/linuxbrew/.linuxbrew')
+    brew_prefix = '/home/linuxbrew/.linuxbrew'
+    include_dirs += brew_prefix + '/include'
+endif
+
 #############
 # Libraries #
 #############
@@ -186,6 +189,10 @@ elif host_os == 'netbsd'
     libsearch_dirs += '/usr/pkg/lib'
 elif uname.found() and uname_stdout.to_lower().contains('omnios')
     libsearch_dirs += '/opt/local/lib'
+endif
+
+if brew_prefix != ''
+    libsearch_dirs += brew_prefix + '/lib'
 endif
 
 socket = cc.find_library('socket', required: false)
@@ -1926,6 +1933,8 @@ elif fs.is_dir('/usr/pkg/share/cracklib')
     cracklib_dict += '/usr/pkg/share/cracklib/pw_dict'
 elif fs.is_dir('/usr/local/share/cracklib')
     cracklib_dict += '/usr/local/share/cracklib/cracklib-small'
+elif fs.is_dir('/opt/homebrew/share/cracklib')
+    cracklib_dict += '/opt/homebrew/share/cracklib/cracklib-small'
 endif
 
 if not enable_cracklib
