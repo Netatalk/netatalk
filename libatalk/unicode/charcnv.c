@@ -994,9 +994,10 @@ size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_cha
     lazy_initialize_conv();
 
     /* convert from_set to UCS2 */
+    errno = 0;
     if ((size_t)(-1) == ( o_len = pull_charset_flags( from_set, to_set, cap_charset, src, src_len,
                                                       (char *) buffer, sizeof(buffer) -2, flags)) ) {
-        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )", charset_name(from_set));
+        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 ), errno %i, %s", charset_name(from_set), errno, src);
         return (size_t) -1;
     }
 
