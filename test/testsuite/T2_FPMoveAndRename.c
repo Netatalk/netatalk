@@ -174,13 +174,25 @@ int id1;
 
 	id = get_fid(Conn, vol, dir , name1);
 
-	sprintf(temp,"%s/%s/%s", Path, name, name1);
-	sprintf(temp1,"%s/%s/%s", Path, name, name2);
-	if (rename(temp, temp1) < 0) {
-		if (!Quiet) {
-			fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
+	if (adouble == AD_V2) {
+		if (rename_unix_file(Path, name, name1, name2) < 0) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED unable to rename \"%s/%s/%s\" to \"%s\" :%s\n", Path, name, name1, name2, strerror(errno));
+			}
+			test_failed();
+			goto fin;
 		}
-		test_failed();
+	}
+	else {
+		sprintf(temp,"%s/%s/%s", Path, name, name1);
+		sprintf(temp1,"%s/%s/%s", Path, name, name2);
+		if (rename(temp, temp1) < 0) {
+			if (!Quiet) {
+				fprintf(stdout,"\tFAILED unable to rename \"%s\" to \"%s\" :%s\n", temp, temp1, strerror(errno));
+			}
+			test_failed();
+			goto fin;
+		}
 	}
 
 	id1 = get_fid(Conn, vol, dir , name2);
@@ -190,6 +202,7 @@ int id1;
 		}
 		test_failed();
 	}
+fin:
 	FAIL (FPDelete(Conn, vol,  dir , name2))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
 test_exit:
