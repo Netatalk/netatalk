@@ -127,6 +127,7 @@ static int unpack_header(struct ea * restrict ea)
     uint16_t uint16;
     uint32_t uint32;
     char *buf;
+    size_t remaining;
 
     /* Check magic and version */
     buf = ea->ea_data;
@@ -154,6 +155,15 @@ static int unpack_header(struct ea * restrict ea)
     if (ea->ea_count == 0)
         return 0;
 
+    /* Check magic and version */
+    buf = ea->ea_data;
+    remaining = ea->ea_size;
+
+    if (remaining < EA_HEADER_SIZE) {
+        ret = -1;
+        goto exit;
+    }
+
     /* Allocate storage for the ea_entries array */
     ea->ea_entries = malloc(sizeof(struct ea_entry) * ea->ea_count);
     if ( ! ea->ea_entries) {
@@ -162,27 +172,46 @@ static int unpack_header(struct ea * restrict ea)
         goto exit;
     }
 
-    buf = ea->ea_data + EA_HEADER_SIZE;
     while (count < ea->ea_count) {
+        /* Check if we have enough bytes for EA size (4) + at least 1 char for name */
+        if (remaining < 5) {
+            ret = -1;
+            goto cleanup;
+        }
+            
         memcpy(&uint32, buf, 4); /* EA size */
         buf += 4;
+        remaining -= 4;
+
+        /* Validate string length fits in remaining buffer */
+        size_t namelen = strnlen(buf, remaining);
+        if (namelen == remaining) { /* No null terminator found */
+            ret = -1;
+            goto cleanup;
+        }
+
+        /* Rest of the existing code */
         (*(ea->ea_entries))[count].ea_size = ntohl(uint32);
         (*(ea->ea_entries))[count].ea_name = strdup(buf);
         if (! (*(ea->ea_entries))[count].ea_name) {
-            LOG(log_error, logtype_afpd, "unpack_header: OOM");
             ret = -1;
-            goto exit;
+            goto cleanup;
         }
-        (*(ea->ea_entries))[count].ea_namelen = strlen((*(ea->ea_entries))[count].ea_name);
-        buf += (*(ea->ea_entries))[count].ea_namelen + 1;
-
-        LOG(log_maxdebug, logtype_afpd, "unpack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,
-            (*(ea->ea_entries))[count].ea_name,
-            (*(ea->ea_entries))[count].ea_size,
-            (*(ea->ea_entries))[count].ea_namelen);
+            
+        (*(ea->ea_entries))[count].ea_namelen = namelen;
+        buf += namelen + 1;
+        remaining -= namelen + 1;
 
         count++;
     }
+
+cleanup:
+    while (count > 0) {
+        count--;
+        free((*(ea->ea_entries))[count].ea_name);
+    }
+    free(ea->ea_entries);
+    ea->ea_entries = NULL;
 
 exit:
     return ret;
@@ -457,8 +486,11 @@ static int write_ea(const struct ea * restrict ea,
                     const char * restrict ibuf,
                     size_t attrsize)
 {
-    int fd = -1, ret = AFP_OK;
+    int fd = -1;
+    int ret = AFP_OK;
     char *eaname;
+    char *tmp_name;
+    size_t len;
 
     if ((eaname = ea_path(ea, attruname, 1)) == NULL) {
         LOG(log_error, logtype_afpd, "write_ea('%s'): ea_path error", attruname);
@@ -467,41 +499,40 @@ static int write_ea(const struct ea * restrict ea,
 
     LOG(log_maxdebug, logtype_afpd, "write_ea('%s')", eaname);
 
-    if ((fd = open(eaname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
-        if (errno == EEXIST) {
-            /* Remove existing file and try again */
-            if (unlink(eaname) != 0) {
-                if (errno == EACCES)
-                    return AFPERR_ACCESS;
-                else
-                    return AFPERR_MISC;
-            }
-            if ((fd = open(eaname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
-                LOG(log_error, logtype_afpd, "write_ea: open race condition: %s", eaname);
-                return -1;
-            }
-        } else {
-            LOG(log_error, logtype_afpd, "write_ea: open failed: %s", eaname);
-            return -1;
-        }
+    len = strlen(eaname) + 7;
+    tmp_name = malloc(len);
+    if (!tmp_name) {
+        return AFPERR_MISC;
     }
+    snprintf(tmp_name, len, "%s.XXXXXX", eaname);
 
-    /* lock it */
-    if ((write_lock(fd, 0, SEEK_SET, 0)) != 0) {
-        LOG(log_error, logtype_afpd, "write_ea: open race condition: %s", eaname);
-        ret = -1;
-        goto exit;
+    if ((fd = mkstemp(tmp_name)) == -1) {
+        LOG(log_error, logtype_afpd, "write_ea: mkstemp error: %s", strerror(errno));
+        free(tmp_name);
+        return AFPERR_MISC;
     }
 
     if (write(fd, ibuf, attrsize) != (ssize_t)attrsize) {
         LOG(log_error, logtype_afpd, "write_ea('%s'): write: %s", eaname, strerror(errno));
-        ret = -1;
+        ret = AFPERR_MISC;
+        goto exit;
+    }
+
+    if (fchmod(fd, 0666 & ~ea->vol->v_umask) != 0) {
+        ret = AFPERR_MISC;
+        goto exit;
+    }
+
+    if (rename(tmp_name, eaname) != 0) {
+        ret = AFPERR_MISC;
         goto exit;
     }
 
 exit:
     if (fd != -1)
         close(fd); /* and unlock */
+    unlink(tmp_name); /* In case rename failed */
+    free(tmp_name);
     return ret;
 }
 
@@ -668,7 +699,6 @@ int ea_open(const struct vol * restrict vol,
 {
     int ret = 0;
     char *eaname;
-    struct stat st;
 
     /* Enforce usage rules! */
     if ( ! (eaflags & (EA_RDONLY | EA_RDWR))) {
@@ -683,10 +713,6 @@ int ea_open(const struct vol * restrict vol,
     ea->ea_flags = eaflags;
     ea->dirfd = -1;             /* no *at (cf openat) semantics by default */
 
-    /* Dont care for errors, e.g. when removing the file is already gone */
-    if (!stat(uname, &st) && S_ISDIR(st.st_mode))
-        ea->ea_flags |=  EA_DIR;
-
     if ( ! (ea->filename = strdup(uname))) {
         LOG(log_error, logtype_afpd, "ea_open: OOM");
         return -1;
@@ -695,92 +721,45 @@ int ea_open(const struct vol * restrict vol,
     eaname = ea_path(ea, NULL, 0);
     LOG(log_maxdebug, logtype_afpd, "ea_open: ea_path: %s", eaname);
 
-    /* Check if it exists, if not create it if EA_CREATE is in eaflags */
-    if ((stat(eaname, &st)) != 0) {
-        if (errno == ENOENT) {
+    ea->ea_data = malloc(EA_HEADER_SIZE);
+    if (!ea->ea_data) {
+        ret = -1;
+        goto exit;
+    }
 
-            /* It doesnt exist */
-
-            if ( ! (eaflags & EA_CREATE)) {
-                /* creation was not requested, so return with error */
-                ret = -2;
-                goto exit;
-            }
-
-            /* Now create a header file */
-
-            /* malloc buffer for minimal on disk data */
-            ea->ea_data = malloc(EA_HEADER_SIZE);
-            if (! ea->ea_data) {
-                LOG(log_error, logtype_afpd, "ea_open: OOM");
+    if (eaflags & EA_CREATE) {
+        ea->ea_fd = create_ea_header(eaname, ea);
+        if (ea->ea_fd == -1) {
+            if (errno == EEXIST) {
+                /* File exists, open normally */
+                ea->ea_fd = open(eaname,
+                               (eaflags & EA_RDWR) ? O_RDWR : O_RDONLY);
+            } else {
                 ret = -1;
                 goto exit;
             }
-
-            /* create it */
-            ea->ea_fd = create_ea_header(eaname, ea);
-            if (ea->ea_fd == -1) {
-                ret = -1;
-                goto exit;
-            }
-
+        } else {
             return 0;
-
-        } else {/* errno != ENOENT */
-            ret = -1;
-            goto exit;
         }
+    } else {
+        /* Normal open without create */
+        ea->ea_fd = open(eaname,
+                        (eaflags & EA_RDWR) ? O_RDWR : O_RDONLY);
     }
 
-    /* header file exists, so read and parse it */
-
-    /* malloc buffer where we read disk file into */
-    if (st.st_size < EA_HEADER_SIZE) {
-        LOG(log_error, logtype_afpd, "ea_open('%s'): bogus EA header file", eaname);
-        ret = -1;
-        goto exit;
-    }
-    ea->ea_size = st.st_size;
-    ea->ea_data = malloc(st.st_size);
-    if (! ea->ea_data) {
-        LOG(log_error, logtype_afpd, "ea_open: OOM");
-        ret = -1;
+    if (ea->ea_fd == -1) {
+        ret = (errno == ENOENT) ? -2 : -1;
         goto exit;
     }
 
-    /* Now lock, open and read header file from disk */
-    if ((ea->ea_fd = open(eaname, (ea->ea_flags & EA_RDWR) ? O_RDWR : O_RDONLY)) == -1) {
-        LOG(log_error, logtype_afpd, "ea_open('%s'): error: %s", eaname, strerror(errno));
+    if ((eaflags & EA_RDWR) ? write_lock(ea->ea_fd, 0, SEEK_SET, 0)
+                            : read_lock(ea->ea_fd, 0, SEEK_SET, 0)) {
         ret = -1;
         goto exit;
     }
 
-    /* lock it */
-    if (ea->ea_flags & EA_RDONLY) {
-        /* read lock */
-        if ((read_lock(ea->ea_fd, 0, SEEK_SET, 0)) != 0) {
-            LOG(log_error, logtype_afpd, "ea_open: lock error on  header: %s", eaname);
-            ret = -1;
-            goto exit;
-        }
-    } else {  /* EA_RDWR */
-        /* write lock */
-        if ((write_lock(ea->ea_fd, 0, SEEK_SET, 0)) != 0) {
-            LOG(log_error, logtype_afpd, "ea_open: lock error on  header: %s", eaname);
-            ret = -1;
-            goto exit;
-        }
-    }
-
-    /* read it */
-    if (read(ea->ea_fd, ea->ea_data, ea->ea_size) != (ssize_t)ea->ea_size) {
-        LOG(log_error, logtype_afpd, "ea_open: short read on header: %s", eaname);
-        ret = -1;
-        goto exit;
-    }
-
-    if ((unpack_header(ea)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_open: error unpacking header for: %s", eaname);
+    if (read(ea->ea_fd, ea->ea_data, EA_HEADER_SIZE) != EA_HEADER_SIZE
+        || unpack_header(ea) != 0) {
         ret = -1;
         goto exit;
     }
