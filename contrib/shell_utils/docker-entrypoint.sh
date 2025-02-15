@@ -88,7 +88,8 @@ rm -f /run/lock/netatalk /run/lock/atalkd /run/lock/papd
 echo "*** Configuring Netatalk"
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
-[ -n "$VERBOSE" ] && TEST_FLAGS=-v
+TEST_FLAGS=""
+[ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
 [ -n "$INSECURE_AUTH" ] && UAMS="$UAMS uams_clrtxt.so uams_guest.so"
 [ -n "$DISABLE_TIMEMACHINE" ] && TIMEMACHINE="no" || TIMEMACHINE="yes"
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
@@ -97,6 +98,15 @@ if [ -n "$AFP_READONLY" ]; then
     AFP_RWRO="rolist"
 else
     AFP_RWRO="rwlist"
+fi
+
+if [ -n "$AFP_ADOUBLE" ]; then
+    AFP_EA="ad"
+    AFP_AD="v2"
+    TEST_FLAGS="$TEST_FLAGS -a"
+else
+    AFP_EA="sys"
+    AFP_AD="ea"
 fi
 
 if [ -z "$MANUAL_CONFIG" ]; then
@@ -109,12 +119,14 @@ spotlight = yes
 uam list = $UAMS
 zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
-appledouble = ea
+appledouble = $AFP_AD
+ea = $AFP_EA
 path = /mnt/afpshare
 valid users = $AFP_USER $AFP_USER2
 $AFP_RWRO = $AFP_USER $AFP_USER2
 [${SHARE2_NAME:-Time Machine}]
-appledouble = ea
+appledouble = $AFP_AD
+ea = $AFP_EA
 path = /mnt/afpbackup
 time machine = $TIMEMACHINE
 valid users = $AFP_USER $AFP_USER2
@@ -158,22 +170,22 @@ EXT
     sleep 2
     case "$TESTSUITE" in
         spectest)
-            afp_spectest "$TEST_FLAGS" -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME" -c /mnt/afpshare
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME" -c /mnt/afpshare
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
             echo "testfile dos" > /mnt/afpshare/second.txt
             mkdir /mnt/afpshare/third
-            afp_spectest "$TEST_FLAGS" -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
             ;;
         login)
-            afp_logintest "$TEST_FLAGS" -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS"
+            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS"
             ;;
         lan)
-            afp_lantest "$TEST_FLAGS" -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         speed)
-            afp_speedtest "$TEST_FLAGS" -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         *)
             echo "Unknown testsuite: $TESTSUITE"

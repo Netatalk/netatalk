@@ -280,6 +280,52 @@ jobs:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
+    afp-adtest-afp34:
+      name: AFP spec test (adouble v2) - AFP 3.4
+      needs: build-container-testsuite
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_USER2: atalk2
+          AFP_PASS: afpafp
+          AFP_PASS2: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          SHARE_NAME2: test2
+          INSECURE_AUTH: 1
+          DISABLE_TIMEMACHINE: 1
+          VERBOSE: 1
+          AFP_ADOUBLE: 1
+          TESTSUITE: spectest
+          AFP_VERSION: 7
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
+    afp-adtest-afp21:
+      name: AFP spec test (adouble v2) - AFP 2.1
+      needs: build-container-testsuite
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_USER2: atalk2
+          AFP_PASS: afpafp
+          AFP_PASS2: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          SHARE_NAME2: test2
+          INSECURE_AUTH: 1
+          DISABLE_TIMEMACHINE: 1
+          VERBOSE: 1
+          AFP_ADOUBLE: 1
+          TESTSUITE: spectest
+          AFP_VERSION: 1
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
     afp-rotest-afp34:
       name: AFP spec test (Readonly) - AFP 3.4
       needs: build-container-testsuite
