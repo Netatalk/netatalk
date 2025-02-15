@@ -127,6 +127,7 @@ static int unpack_header(struct ea * restrict ea)
     uint16_t uint16;
     uint32_t uint32;
     char *buf;
+    size_t remaining;
 
     /* Check magic and version */
     buf = ea->ea_data;
@@ -162,24 +163,36 @@ static int unpack_header(struct ea * restrict ea)
         goto exit;
     }
 
-    buf = ea->ea_data + EA_HEADER_SIZE;
+    /* Check magic and version */
+    buf = ea->ea_data;
+    remaining = ea->ea_size;
+
+    if (remaining < EA_HEADER_SIZE)
+        return -1;
+
     while (count < ea->ea_count) {
+        /* Check if we have enough bytes for EA size (4) + at least 1 char for name */
+        if (remaining < 5)
+            return -1;
+            
         memcpy(&uint32, buf, 4); /* EA size */
         buf += 4;
+        remaining -= 4;
+
+        /* Validate string length fits in remaining buffer */
+        size_t namelen = strnlen(buf, remaining);
+        if (namelen == remaining) /* No null terminator found */
+            return -1;
+
+        /* Rest of the existing code */
         (*(ea->ea_entries))[count].ea_size = ntohl(uint32);
         (*(ea->ea_entries))[count].ea_name = strdup(buf);
-        if (! (*(ea->ea_entries))[count].ea_name) {
-            LOG(log_error, logtype_afpd, "unpack_header: OOM");
-            ret = -1;
-            goto exit;
-        }
-        (*(ea->ea_entries))[count].ea_namelen = strlen((*(ea->ea_entries))[count].ea_name);
-        buf += (*(ea->ea_entries))[count].ea_namelen + 1;
-
-        LOG(log_maxdebug, logtype_afpd, "unpack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,
-            (*(ea->ea_entries))[count].ea_name,
-            (*(ea->ea_entries))[count].ea_size,
-            (*(ea->ea_entries))[count].ea_namelen);
+        if (! (*(ea->ea_entries))[count].ea_name)
+            return -1;
+            
+        (*(ea->ea_entries))[count].ea_namelen = namelen;
+        buf += namelen + 1;
+        remaining -= namelen + 1;
 
         count++;
     }
@@ -670,7 +683,6 @@ int ea_open(const struct vol * restrict vol,
 {
     int ret = 0;
     char *eaname;
-    struct stat st;
 
     /* Enforce usage rules! */
     if ( ! (eaflags & (EA_RDONLY | EA_RDWR))) {
