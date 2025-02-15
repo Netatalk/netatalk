@@ -155,6 +155,15 @@ static int unpack_header(struct ea * restrict ea)
     if (ea->ea_count == 0)
         return 0;
 
+    /* Check magic and version */
+    buf = ea->ea_data;
+    remaining = ea->ea_size;
+
+    if (remaining < EA_HEADER_SIZE) {
+        ret = -1;
+        goto exit;
+    }
+
     /* Allocate storage for the ea_entries array */
     ea->ea_entries = malloc(sizeof(struct ea_entry) * ea->ea_count);
     if ( ! ea->ea_entries) {
@@ -163,17 +172,12 @@ static int unpack_header(struct ea * restrict ea)
         goto exit;
     }
 
-    /* Check magic and version */
-    buf = ea->ea_data;
-    remaining = ea->ea_size;
-
-    if (remaining < EA_HEADER_SIZE)
-        return -1;
-
     while (count < ea->ea_count) {
         /* Check if we have enough bytes for EA size (4) + at least 1 char for name */
-        if (remaining < 5)
-            return -1;
+        if (remaining < 5) {
+            ret = -1;
+            goto cleanup;
+        }
             
         memcpy(&uint32, buf, 4); /* EA size */
         buf += 4;
@@ -181,14 +185,18 @@ static int unpack_header(struct ea * restrict ea)
 
         /* Validate string length fits in remaining buffer */
         size_t namelen = strnlen(buf, remaining);
-        if (namelen == remaining) /* No null terminator found */
-            return -1;
+        if (namelen == remaining) { /* No null terminator found */
+            ret = -1;
+            goto cleanup;
+        }
 
         /* Rest of the existing code */
         (*(ea->ea_entries))[count].ea_size = ntohl(uint32);
         (*(ea->ea_entries))[count].ea_name = strdup(buf);
-        if (! (*(ea->ea_entries))[count].ea_name)
-            return -1;
+        if (! (*(ea->ea_entries))[count].ea_name) {
+            ret = -1;
+            goto cleanup;
+        }
             
         (*(ea->ea_entries))[count].ea_namelen = namelen;
         buf += namelen + 1;
@@ -196,6 +204,14 @@ static int unpack_header(struct ea * restrict ea)
 
         count++;
     }
+
+cleanup:
+    while (count > 0) {
+        count--;
+        free((*(ea->ea_entries))[count].ea_name);
+    }
+    free(ea->ea_entries);
+    ea->ea_entries = NULL;
 
 exit:
     return ret;
