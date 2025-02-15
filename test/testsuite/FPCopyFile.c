@@ -1019,6 +1019,10 @@ char *attr_name="test416_attribute";
         test_skipped(T_AFP32);
         goto test_exit;
     }
+	if (adouble == AD_V2) {
+		test_skipped(T_ADEA);
+		goto test_exit;
+	}
 
     if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_EXTATTRS)) {
         test_skipped(T_UTF8);
