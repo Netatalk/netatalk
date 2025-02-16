@@ -989,8 +989,13 @@ path = <PATH\> **(V)**
 appledouble = <ea|v2\> **(V)**
 
 > Specify the format of the metadata files, which are used for saving Mac
-resource fork as well. Earlier versions used AppleDouble v2, the new
-default format is **ea**.
+resource forks and extended attributes.
+Earlier versions used AppleDouble **v2**, the new default format is **ea**.
+
+> **WARNING**
+
+> The **v2** option is obsolete and should not be used unless
+absoluteley necessary. It may go away in the future.
 
 vol size limit = <size in MiB\> **(V)**
 
