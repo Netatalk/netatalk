@@ -460,8 +460,6 @@ static int write_ea(const struct ea * restrict ea,
     int fd = -1;
     int ret = AFP_OK;
     char *eaname;
-    char *tmp_name;
-    size_t len;
 
     if ((eaname = ea_path(ea, attruname, 1)) == NULL) {
         LOG(log_error, logtype_afpd, "write_ea('%s'): ea_path error", attruname);
@@ -470,17 +468,21 @@ static int write_ea(const struct ea * restrict ea,
 
     LOG(log_maxdebug, logtype_afpd, "write_ea('%s')", eaname);
 
-    len = strlen(eaname) + 7;
-    tmp_name = malloc(len);
-    if (!tmp_name) {
+    if ((fd = open(eaname, O_RDWR | O_CREAT, 0666 & ~ea->vol->v_umask)) == -1) {
+        LOG(log_error, logtype_afpd, "write_ea: open error: %s", eaname);
         return AFPERR_MISC;
     }
-    snprintf(tmp_name, len, "%s.XXXXXX", eaname);
 
-    if ((fd = mkstemp(tmp_name)) == -1) {
-        LOG(log_error, logtype_afpd, "write_ea: mkstemp error: %s", strerror(errno));
-        free(tmp_name);
-        return AFPERR_MISC;
+    if ((write_lock(fd, 0, SEEK_SET, 0)) != 0) {
+        LOG(log_error, logtype_afpd, "write_ea: lock error: %s", eaname);
+        ret = AFPERR_MISC;
+        goto exit;
+    }
+
+    if (ftruncate(fd, 0) == -1) {
+        LOG(log_error, logtype_afpd, "write_ea('%s'): ftruncate: %s", eaname, strerror(errno));
+        ret = AFPERR_MISC;
+        goto exit;
     }
 
     if (write(fd, ibuf, attrsize) != (ssize_t)attrsize) {
@@ -489,21 +491,10 @@ static int write_ea(const struct ea * restrict ea,
         goto exit;
     }
 
-    if (fchmod(fd, 0666 & ~ea->vol->v_umask) != 0) {
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-
-    if (rename(tmp_name, eaname) != 0) {
-        ret = AFPERR_MISC;
-        goto exit;
-    }
-
 exit:
-    if (fd != -1)
+    if (fd != -1) {
         close(fd); /* and unlock */
-    unlink(tmp_name); /* In case rename failed */
-    free(tmp_name);
+    }
     return ret;
 }
 
