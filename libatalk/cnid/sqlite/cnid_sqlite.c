@@ -476,7 +476,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     EC_INIT;
     CNID_sqlite_private *db;
     cnid_t id = CNID_INVALID;
-    uint32_t lastid;
+    uint64_t lastid;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -542,9 +542,9 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 }
             }
 
-            lastid = (uint32_t) sqlite3_last_insert_rowid(db->cnid_sqlite_con);
+            lastid = sqlite3_last_insert_rowid(db->cnid_sqlite_con);
 
-            if (lastid > 0xffffffff) {
+            if ((uint32_t) lastid > 0xffffffff) {
                 /* CNID set is depleted, restart from scratch */
                 EC_NEG1(cnid_sqlite_execute
                     (db->cnid_sqlite_con,
@@ -571,17 +571,6 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                         sqlite3_errmsg(db->cnid_sqlite_con));
                     EC_FAIL;
                 }
-#if 0 // again, really wrong
-                do {
-                    result =
-                        sqlite_store_result(db->
-                                   cnid_sqlite_con);
-                    if (result)
-                        sqlite_free_result(result);
-                } while (sqlite_next_result
-                     (db->cnid_sqlite_con) == 0);
-                continue;
-#endif
             }
 
             /* Finally assign our result */
