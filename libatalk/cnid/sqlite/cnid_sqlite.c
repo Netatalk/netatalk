@@ -913,10 +913,9 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 3, stamp,
         strlen(stamp), SQLITE_STATIC) );
 
-    sqlite3_step(transient_stmt);
-#if 0 // FIXME: must figure out how to check for failed insert
-    if (sqlite3_step(transient_stmt)) {
-        if (mysql_errno(db->cnid_sqlite_con) != ER_DUP_ENTRY) {
+    ret = sqlite3_step(transient_stmt);
+    if (ret != SQLITE_DONE) {
+        if (ret != SQLITE_CONSTRAINT) {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_open: sqlite query error: %s",
                 sqlite3_errmsg(db->cnid_sqlite_con));
@@ -930,28 +929,29 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      * If that's the case, in cnid_sqlite_add() we'll ignore the CNID
      * "hint" taken from the AppleDouble file.
      */
-    if (cnid_sqlite_execute(db->cnid_sqlite_con,
-                "SELECT Depleted FROM volumes WHERE VolUUID='%s'",
-                db->cnid_sqlite_voluuid_str)) {
+    sqlite3_stmt *check_stmt = NULL;
+    const char *check_sql = "SELECT Depleted FROM volumes WHERE VolUUID=?";
+    if (sqlite3_prepare_v2(db->cnid_sqlite_con, check_sql, -1, &check_stmt, NULL) != SQLITE_OK) {
         LOG(log_error, logtype_cnid, "cnid_sqlite_open: sqlite query error: %s",
             sqlite3_errmsg(db->cnid_sqlite_con));
         EC_FAIL;
     }
-    if ((result = mysql_store_result(db->cnid_sqlite_con)) == NULL) {
-        LOG(log_error, logtype_cnid, "cnid_sqlite_open: sqlite query error: %s",
-            sqlite3_errmsg(db->cnid_sqlite_con));
-        errno = CNID_ERR_DB;
-        EC_FAIL;
-    }
-    if (mysql_num_rows(result)) {
-        row = mysql_fetch_row(result);
-        int depleted = atoi(row[0]);
-        if (depleted)
+
+    // Bind the VolUUID parameter
+    sqlite3_bind_text(check_stmt, 1, db->cnid_sqlite_voluuid_str, -1, SQLITE_STATIC);
+
+    // Execute the query and process the result
+    ret = sqlite3_step(check_stmt);
+    if (ret == SQLITE_ROW) {
+        int depleted = sqlite3_column_int(check_stmt, 0);
+        if (depleted) {
             db->cnid_sqlite_flags |= CNID_SQLITE_FLAG_DEPLETED;
+        }
+    } else if (ret != SQLITE_DONE) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_open: sqlite query error: %s",
+            sqlite3_errmsg(db->cnid_sqlite_con));
+        EC_FAIL;
     }
-    mysql_free_result(result);
-    result = NULL;
-#endif
 
     /* Create volume table */
     if (cnid_sqlite_execute(db->cnid_sqlite_con,
