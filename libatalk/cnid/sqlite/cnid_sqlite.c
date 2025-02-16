@@ -639,15 +639,15 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
     CNID_sqlite_private *db;
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
-        LOG(log_error, logtype_cnid,
-            "cnid_sqlite_get: Parameter error");
+        LOG(log_error, logtype_cnid, "cnid_sqlite_get: Parameter error");
         errno = CNID_ERR_PARAM;
+        *id = CNID_INVALID;
         EC_FAIL;
     }
 
     EC_NEG1(ret = asprintf
             (&sql,
-        "SELECT Did,Name FROM \"%s\" WHERE Id=?",
+        "SELECT Did, Name FROM \"%s\" WHERE Id=?",
         db->cnid_sqlite_voluuid_str) );
 
     EC_ZERO_LOG(sqlite3_prepare_v2
@@ -656,22 +656,27 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
                 1, ntohl(*id) ) );
 
     if (sqlite3_step(transient_stmt) != SQLITE_ROW) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_resolve: No result found for Id: %" PRIu32, ntohl(*id));
+        *id = CNID_INVALID;
         EC_FAIL;
     }
 
-    *id = htonl(sqlite3_column_int64(transient_stmt, 1));
-    strncpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 2), len);
+    *id = htonl(sqlite3_column_int64(transient_stmt, 0));
+    strncpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 1), len - 1);
+    ((char *)buffer)[len - 1] = '\0';
+
 
 EC_CLEANUP:
     if (transient_stmt)
         sqlite3_finalize(transient_stmt);
+    if (sql)
+        free(sql);
 
-#if 0 // FIXME: handle this
     if (ret != 0) {
         *id = CNID_INVALID;
         return NULL;
     }
-#endif
+
     return buffer;
 }
 
