@@ -311,18 +311,6 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
 
         if (sqlite3_step(db->cnid_put_stmt) != SQLITE_ROW) {
             switch (sqlite3_errcode(db->cnid_sqlite_con)) {
-/* Can such a race condition occur in SQLite?
- * Cf. "(15) SQLITE_PROTOCOL" in https://www.sqlite.org/rescode.html
- */
-#if 0
-            case ER_DUP_ENTRY:
-                /*
-                 * Race condition:
-                 * between deletion and insert another process
-                 * may have inserted this entry.
-                 */
-                continue;
-#endif
             default:
                 EC_FAIL;
             }
