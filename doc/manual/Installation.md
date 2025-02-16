@@ -83,7 +83,7 @@ Downloading the Git repository can be done quickly and easily:
 - iniparser
 
   The iniparser library is used to parse the configuration files.
-  At least version 3.0 is required, while 4.0 or later is recommended.
+  At least version 3.1 is required, while 4.0 or later is recommended.
 
 - libevent
 
