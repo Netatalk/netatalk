@@ -84,7 +84,7 @@ for details of generic Meson options.
 | Package      | Details |
 |--------------|---------|
 | Berkeley DB  | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
-| iniparser    | v3.0 or later |
+| iniparser    | v3.1 or later |
 | libevent     | v2.0 or later |
 | libgcrypt    | v1.2.3 or later |
 
