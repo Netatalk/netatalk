@@ -764,7 +764,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
         return -1;
     }
 
-    LOG(log_debug, logtype_cnid, "cnid_dbd_wipe");
+    LOG(log_debug, logtype_cnid, "cnid_sqlite_wipe: Wiping CNID database for volume '%s'", cdb->cnid_db_vol->v_localname);
 
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con,
                     "BEGIN TRANSACTION;"
@@ -785,6 +785,8 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
             sqlite3_errmsg(db->cnid_sqlite_con));
         EC_FAIL;
     }
+
+    LOG(log_debug, logtype_cnid, "cnid_sqlite_wipe: Successfully wiped CNID database for volume '%s'", cdb->cnid_db_vol->v_localname);
 
 EC_CLEANUP:
     EC_EXIT;
@@ -812,9 +814,7 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     cdb->cnid_update = cnid_sqlite_update;
     cdb->cnid_rebuild_add = cnid_sqlite_rebuild_add;
     cdb->cnid_close = cnid_sqlite_close;
-#if 0
     cdb->cnid_wipe = cnid_sqlite_wipe;
-#endif
     return cdb;
 }
 
