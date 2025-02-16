@@ -527,21 +527,20 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
             stmt_param_dev = dev;
             stmt_param_ino = ino;
 
-            ret = sqlite3_step(stmt);
-            if (ret != SQLITE_ROW) {
-                EC_FAIL;
-            }
-#if 0
-                /*
-                 * Race condition:
-                 * between lookup and insert another process may have inserted
-                 * this entry.
-                 */
-                if (db->cnid_sqlite_hint)
+            int ret = sqlite3_step(stmt);
+            if (ret != SQLITE_DONE) {
+                if (ret == SQLITE_CONSTRAINT) {
+                    LOG(log_debug, logtype_cnid,
+                        "cnid_sqlite_add: Unique constraint violation for name: \"%s\"", name);
                     db->cnid_sqlite_hint = CNID_INVALID;
-                continue;
+                    continue;
+                } else {
+                    LOG(log_error, logtype_cnid,
+                        "cnid_sqlite_add: sqlite query error: %s",
+                        sqlite3_errmsg(db->cnid_sqlite_con));
+                    EC_FAIL;
+                }
             }
-#endif
 
             lastid = sqlite3_last_insert_rowid(db->cnid_sqlite_con);
 
