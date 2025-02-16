@@ -697,95 +697,92 @@ int ea_open(const struct vol * restrict vol,
     eaname = ea_path(ea, NULL, 0);
     LOG(log_maxdebug, logtype_afpd, "ea_open: ea_path: %s", eaname);
 
-    /* Check if it exists, if not create it if EA_CREATE is in eaflags */
-    if ((stat(eaname, &st)) != 0) {
-        if (errno == ENOENT) {
+    /* Check if it exists */
+    if ((stat(eaname, &st)) == 0) {
+        /* header file exists, so read and parse it */
 
-            /* It doesnt exist */
+        /* malloc buffer where we read disk file into */
+        if (st.st_size < EA_HEADER_SIZE) {
+            LOG(log_error, logtype_afpd, "ea_open('%s'): bogus EA header file", eaname);
+            ret = -1;
+            goto exit;
+        }
+        ea->ea_size = st.st_size;
+        ea->ea_data = malloc(st.st_size);
+        if (! ea->ea_data) {
+            LOG(log_error, logtype_afpd, "ea_open: OOM");
+            ret = -1;
+            goto exit;
+        }
 
-            if ( ! (eaflags & EA_CREATE)) {
-                /* creation was not requested, so return with error */
-                ret = -2;
-                goto exit;
-            }
+        /* Now open and read header file from disk */
+        if ((ea->ea_fd = open(eaname, (ea->ea_flags & EA_RDWR) ? O_RDWR : O_RDONLY)) == -1) {
+            LOG(log_error, logtype_afpd, "ea_open('%s'): error: %s", eaname, strerror(errno));
+            ret = -1;
+            goto exit;
+        }
 
-            /* Now create a header file */
-
-            /* malloc buffer for minimal on disk data */
-            ea->ea_data = malloc(EA_HEADER_SIZE);
-            if (! ea->ea_data) {
-                LOG(log_error, logtype_afpd, "ea_open: OOM");
+        /* lock it */
+        if (ea->ea_flags & EA_RDONLY) {
+            /* read lock */
+            if ((read_lock(ea->ea_fd, 0, SEEK_SET, 0)) != 0) {
+                LOG(log_error, logtype_afpd, "ea_open: lock error on  header: %s", eaname);
                 ret = -1;
                 goto exit;
             }
-
-            /* create it */
-            ea->ea_fd = create_ea_header(eaname, ea);
-            if (ea->ea_fd == -1) {
+        } else {  /* EA_RDWR */
+            /* write lock */
+            if ((write_lock(ea->ea_fd, 0, SEEK_SET, 0)) != 0) {
+                LOG(log_error, logtype_afpd, "ea_open: lock error on  header: %s", eaname);
                 ret = -1;
                 goto exit;
             }
+        }
 
-            return 0;
-
-        } else {/* errno != ENOENT */
+        /* read it */
+        if (read(ea->ea_fd, ea->ea_data, ea->ea_size) != (ssize_t)ea->ea_size) {
+            LOG(log_error, logtype_afpd, "ea_open: short read on header: %s", eaname);
             ret = -1;
             goto exit;
         }
-    }
 
-    /* header file exists, so read and parse it */
-
-    /* malloc buffer where we read disk file into */
-    if (st.st_size < EA_HEADER_SIZE) {
-        LOG(log_error, logtype_afpd, "ea_open('%s'): bogus EA header file", eaname);
-        ret = -1;
-        goto exit;
-    }
-    ea->ea_size = st.st_size;
-    ea->ea_data = malloc(st.st_size);
-    if (! ea->ea_data) {
-        LOG(log_error, logtype_afpd, "ea_open: OOM");
-        ret = -1;
-        goto exit;
-    }
-
-    /* Now lock, open and read header file from disk */
-    if ((ea->ea_fd = open(eaname, (ea->ea_flags & EA_RDWR) ? O_RDWR : O_RDONLY)) == -1) {
-        LOG(log_error, logtype_afpd, "ea_open('%s'): error: %s", eaname, strerror(errno));
-        ret = -1;
-        goto exit;
-    }
-
-    /* lock it */
-    if (ea->ea_flags & EA_RDONLY) {
-        /* read lock */
-        if ((read_lock(ea->ea_fd, 0, SEEK_SET, 0)) != 0) {
-            LOG(log_error, logtype_afpd, "ea_open: lock error on  header: %s", eaname);
+        if ((unpack_header(ea)) != 0) {
+            LOG(log_error, logtype_afpd, "ea_open: error unpacking header for: %s", eaname);
             ret = -1;
             goto exit;
         }
-    } else {  /* EA_RDWR */
-        /* write lock */
-        if ((write_lock(ea->ea_fd, 0, SEEK_SET, 0)) != 0) {
-            LOG(log_error, logtype_afpd, "ea_open: lock error on  header: %s", eaname);
+
+    } else if (errno == ENOENT) {
+        /* It doesnt exist, create if requested */
+
+        if (!(eaflags & EA_CREATE)) {
+            /* creation was not requested, so return with error */
+            ret = -2;
+            goto exit;
+        }
+
+        /* Now create a header file */
+
+        /* malloc buffer for minimal on disk data */
+        ea->ea_data = malloc(EA_HEADER_SIZE);
+        if (! ea->ea_data) {
+            LOG(log_error, logtype_afpd, "ea_open: OOM");
             ret = -1;
             goto exit;
         }
-    }
 
-    /* read it */
-    if (read(ea->ea_fd, ea->ea_data, ea->ea_size) != (ssize_t)ea->ea_size) {
-        LOG(log_error, logtype_afpd, "ea_open: short read on header: %s", eaname);
+        /* create it */
+        ea->ea_fd = create_ea_header(eaname, ea);
+        if (ea->ea_fd == -1) {
+            ret = -1;
+            goto exit;
+        }
+
+    } else { /* errno != ENOENT */
         ret = -1;
         goto exit;
     }
 
-    if ((unpack_header(ea)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_open: error unpacking header for: %s", eaname);
-        ret = -1;
-        goto exit;
-    }
 
 exit:
     switch (ret) {
