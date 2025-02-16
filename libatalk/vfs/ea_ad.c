@@ -722,10 +722,13 @@ int ea_open(const struct vol * restrict vol,
                 ret = -1;
                 goto exit;
             }
+
             return 0;
+
+        } else {/* errno != ENOENT */
+            ret = -1;
+            goto exit;
         }
-        ret = -1;
-        goto exit;
     }
 
     /* Get file size after we have the fd */
@@ -734,16 +737,16 @@ int ea_open(const struct vol * restrict vol,
         goto exit;
     }
 
+    /* malloc buffer where we read disk file into */
     if (st.st_size < EA_HEADER_SIZE) {
         LOG(log_error, logtype_afpd, "ea_open('%s'): bogus EA header file", eaname);
         ret = -1;
         goto exit;
     }
 
-    /* malloc and read header */
     ea->ea_size = st.st_size;
     ea->ea_data = malloc(st.st_size);
-    if (!ea->ea_data) {
+    if (! ea->ea_data) {
         LOG(log_error, logtype_afpd, "ea_open: OOM");
         ret = -1;
         goto exit;
@@ -756,7 +759,7 @@ int ea_open(const struct vol * restrict vol,
             ret = -1;
             goto exit;
         }
-    } else {
+    } else {  /* EA_RDWR */
         if (write_lock(ea->ea_fd, 0, SEEK_SET, 0) != 0) {
             LOG(log_error, logtype_afpd, "ea_open: lock error on header: %s", eaname);
             ret = -1;
