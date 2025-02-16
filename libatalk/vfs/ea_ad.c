@@ -679,7 +679,9 @@ int ea_open(const struct vol * restrict vol,
         return -1;
     }
 
+    /* Set it all to 0 */
     memset(ea, 0, sizeof(struct ea));
+
     ea->vol = vol;              /* needed for ea_close */
     ea->ea_flags = eaflags;
     ea->dirfd = -1;             /* no openat semantics by default */
@@ -694,65 +696,28 @@ int ea_open(const struct vol * restrict vol,
     eaname = ea_path(ea, NULL, 0);
     LOG(log_maxdebug, logtype_afpd, "ea_open: using ea_path: %s", eaname);
 
-    /* Instead of doing a separate stat(), open the file with proper flags.
-       If creation is requested, use O_CREAT. In this refactor we always use a single open call. */
+    /* Attempt a single open() call.
+    If no EA header exists and EA_CREATE is not requested, return -2. */
     if (eaflags & EA_RDWR)
-        fd = open(eaname, O_RDWR | ((eaflags & EA_CREATE) ? O_CREAT : 0), 0666 & ~vol->v_umask);
+        fd = open(eaname, O_RDWR | ((eaflags & EA_CREATE) ? O_CREAT : 0),
+                0666 & ~vol->v_umask);
     else
         fd = open(eaname, O_RDONLY, 0666 & ~vol->v_umask);
 
     if (fd == -1) {
-        if ((eaflags & EA_CREATE) && errno == ENOENT) {
-            /* If EA_CREATE is specified and the file does not exist, create it in exclusive mode */
-            fd = open(eaname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~vol->v_umask);
-            if (fd == -1) {
-                LOG(log_error, logtype_afpd, "ea_open: open exclusive failed for %s: %s", eaname, strerror(errno));
-                free(ea->filename);
-                ea->filename = NULL;
-                return -1;
-            }
-            /* Lock and initialize a new header */
-            if (write_lock(fd, 0, SEEK_SET, 0) != 0) {
-                LOG(log_error, logtype_afpd, "ea_open: lock error on %s", eaname);
-                close(fd);
-                free(ea->filename);
-                ea->filename = NULL;
-                return -1;
-            }
-            /* allocate header buffer */
-            ea->ea_data = malloc(EA_HEADER_SIZE);
-            if (!ea->ea_data) {
-                LOG(log_error, logtype_afpd, "ea_open: OOM");
-                close(fd);
-                free(ea->filename);
-                ea->filename = NULL;
-                return -1;
-            }
-            /* initialize header values */
-            {
-                char *ptr = ea->ea_data;
-                uint32_t magic = htonl(EA_MAGIC);
-                uint16_t ver  = htons(EA_VERSION);
-                memcpy(ptr, &magic, sizeof(uint32_t));
-                ptr += EA_MAGIC_LEN;
-                memcpy(ptr, &ver, sizeof(uint16_t));
-                ptr += EA_VERSION_LEN;
-                memset(ptr, 0, 2);
-            }
-            ea->ea_size = EA_HEADER_SIZE;
-            ea->ea_inited = EA_INITED;
-            ea->ea_fd = fd;
-            return 0;
+        if (!(eaflags & EA_CREATE) && (errno == ENOENT)) {
+            /* No header exists, caller can interpret this as no EA data */
+            free(ea->filename);
+            ea->filename = NULL;
+            return -2;
         }
         LOG(log_error, logtype_afpd, "ea_open: open error for %s: %s", eaname, strerror(errno));
         free(ea->filename);
         ea->filename = NULL;
         return -1;
     }
-
-    /* File opened once. Lock the file.
-       Use a read lock if EA_RDONLY; else a write lock.
-       (This lock will hold until ea_close() releases it.) */
+    
+    /* Lock the file */
     if (eaflags & EA_RDONLY) {
         if (read_lock(fd, 0, SEEK_SET, 0) != 0) {
             LOG(log_error, logtype_afpd, "ea_open: read lock error on %s", eaname);
@@ -770,8 +735,7 @@ int ea_open(const struct vol * restrict vol,
             return -1;
         }
     }
-
-    /* Get file size from the already-open file descriptor */
+    
     if (fstat(fd, &st) != 0) {
         LOG(log_error, logtype_afpd, "ea_open: fstat error on %s: %s", eaname, strerror(errno));
         close(fd);
@@ -779,19 +743,17 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-
-    /* If the header file exists but is too small, the file is bogus.
-       In that case we return an error. Alternatively, you might reinitialize.
-       Note this check occurs with the file locked. */
+    
+    /* When no header exists the file size may be 0. In that case, we assume no metadata */
     if (st.st_size < EA_HEADER_SIZE) {
-        LOG(log_error, logtype_afpd, "ea_open('%s'): bogus EA header file (size=%lld)", 
+        LOG(log_debug, logtype_afpd, "ea_open('%s'): header file missing or empty (size=%lld)",
             eaname, (long long)st.st_size);
         close(fd);
         free(ea->filename);
         ea->filename = NULL;
-        return -1;
+        return -2;
     }
-
+    
     ea->ea_fd = fd;
     ea->ea_size = st.st_size;
     ea->ea_data = malloc(st.st_size);
@@ -802,8 +764,8 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-
-    if (read(fd, ea->ea_data, st.st_size) != (ssize_t)st.st_size) {
+    
+    if (read(fd, ea->ea_data, st.st_size) != (ssize_t) st.st_size) {
         LOG(log_error, logtype_afpd, "ea_open: short read on header: %s", eaname);
         close(fd);
         free(ea->ea_data);
@@ -812,7 +774,7 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-
+    
     if (unpack_header(ea) != 0) {
         LOG(log_error, logtype_afpd, "ea_open: error unpacking header for: %s", eaname);
         close(fd);
@@ -822,7 +784,7 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-
+    
     ea->ea_inited = EA_INITED;
     return 0;
 }
