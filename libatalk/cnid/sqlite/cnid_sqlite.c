@@ -550,7 +550,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                     (db->cnid_sqlite_con,
                      "BEGIN TRANSACTION;"
                      "UPDATE volumes SET Depleted=1 WHERE VolUUID=\"%s\";"
-                     "TRUNCATE TABLE \"%s\";"
+                     "DELETE FROM \"%s\";"
                      "COMMIT;",
                      db->cnid_sqlite_voluuid_str,
                      db->cnid_sqlite_voluuid_str));
@@ -769,7 +769,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con,
                     "BEGIN TRANSACTION;"
                     "UPDATE volumes SET Depleted=0 WHERE VolUUID=\"%s\";"
-                    "TRUNCATE TABLE \"%s\";",
+                    "DELETE FROM \"%s\";",
                     db->cnid_sqlite_voluuid_str,
                     db->cnid_sqlite_voluuid_str));
     if (cnid_sqlite_execute(db->cnid_sqlite_con,
