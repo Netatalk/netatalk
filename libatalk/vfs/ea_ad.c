@@ -778,17 +778,23 @@ int ea_open(const struct vol * restrict vol,
     }
 
 exit:
-    if (ret != 0) {
+    switch (ret) {
+    case 0:
+        ea->ea_inited = EA_INITED;
+        break;
+    case -1:
+        errno = EFAULT; /* force some errno distinguishable from ENOENT */
+        /* fall through */
+    case -2:
         if (ea->ea_data) {
             free(ea->ea_data);
             ea->ea_data = NULL;
         }
-        if (ea->ea_fd != -1) {
+        if (ea->ea_fd) {
             close(ea->ea_fd);
             ea->ea_fd = -1;
         }
-    } else {
-        ea->ea_inited = EA_INITED;
+        break;
     }
 
     return ret;
