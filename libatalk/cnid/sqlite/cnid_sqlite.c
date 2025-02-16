@@ -476,7 +476,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     EC_INIT;
     CNID_sqlite_private *db;
     cnid_t id = CNID_INVALID;
-    uint64_t lastid;
+    uint32_t lastid;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -542,27 +542,29 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 }
             }
 
-            lastid = sqlite3_last_insert_rowid(db->cnid_sqlite_con);
+            lastid = (uint32_t) sqlite3_last_insert_rowid(db->cnid_sqlite_con);
 
-            if (lastid > 0xffffffff) { /* FIXME: this is wrong */
+            if (lastid > 0xffffffff) {
                 /* CNID set is depleted, restart from scratch */
                 EC_NEG1(cnid_sqlite_execute
                     (db->cnid_sqlite_con,
                      "BEGIN TRANSACTION;"
                      "UPDATE volumes SET Depleted=1 WHERE VolUUID=\"%s\";"
-                     "TRUNCATE TABLE \"%s\";",
+                     "TRUNCATE TABLE \"%s\";"
+                     "COMMIT;",
                      db->cnid_sqlite_voluuid_str,
                      db->cnid_sqlite_voluuid_str));
-                db->cnid_sqlite_flags |=
-                    CNID_SQLITE_FLAG_DEPLETED;
+                db->cnid_sqlite_flags |= CNID_SQLITE_FLAG_DEPLETED;
                 hint = CNID_INVALID;
+
                 if (cnid_sqlite_execute(db->cnid_sqlite_con,
                     "BEGIN TRANSACTION;"
                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";"
                     "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
                     "16 WHERE NOT EXISTS "
                     "(SELECT changes() AS change "
-                    "FROM sqlite_sequence WHERE change <> 0);",
+                    "FROM sqlite_sequence WHERE change <> 0);"
+                    "COMMIT;",
                     db->cnid_sqlite_voluuid_str,
                     db->cnid_sqlite_voluuid_str)) {
                     LOG(log_error, logtype_cnid, "cnid_sqlite_open: sqlite query error: %s",
