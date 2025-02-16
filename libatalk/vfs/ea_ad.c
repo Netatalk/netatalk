@@ -743,20 +743,58 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-    
-    /* When no header exists the file size may be 0. In that case, we assume no metadata */
+
+    /*
+     * If the header file exists but is empty (or too small)
+     * and the caller requested creation (EA_CREATE), then initialize the header.
+     */
     if (st.st_size < EA_HEADER_SIZE) {
-        LOG(log_debug, logtype_afpd, "ea_open('%s'): header file missing or empty (size=%lld)",
-            eaname, (long long)st.st_size);
-        close(fd);
-        free(ea->filename);
-        ea->filename = NULL;
-        return -2;
+        if (eaflags & EA_CREATE) {
+            /* Allocate memory for new header and initialize it */
+            ea->ea_data = malloc(EA_HEADER_SIZE);
+            if (!ea->ea_data) {
+                LOG(log_error, logtype_afpd, "ea_open: OOM");
+                close(fd);
+                free(ea->filename);
+                ea->filename = NULL;
+                return -1;
+            }
+            {
+                char *ptr = ea->ea_data;
+                uint32_t magic = htonl(EA_MAGIC);
+                uint16_t ver  = htons(EA_VERSION);
+                memcpy(ptr, &magic, sizeof(uint32_t));
+                ptr += EA_MAGIC_LEN;
+                memcpy(ptr, &ver, sizeof(uint16_t));
+                ptr += EA_VERSION_LEN;
+                memset(ptr, 0, 2);  /* count set to 0 */
+            }
+            /* Write the header to disk */
+            if (lseek(fd, 0, SEEK_SET) == -1 ||
+                write(fd, ea->ea_data, EA_HEADER_SIZE) != EA_HEADER_SIZE) {
+                LOG(log_error, logtype_afpd, "ea_open: header initialization write error on %s", eaname);
+                free(ea->ea_data);
+                ea->ea_data = NULL;
+                close(fd);
+                free(ea->filename);
+                ea->filename = NULL;
+                return -1;
+            }
+            st.st_size = EA_HEADER_SIZE;
+            LOG(log_debug, logtype_afpd, "ea_open('%s'): initialized new EA header", eaname);
+        } else {
+            LOG(log_debug, logtype_afpd, "ea_open('%s'): header file missing or empty (size=%lld)",
+                eaname, (long long)st.st_size);
+            close(fd);
+            free(ea->filename);
+            ea->filename = NULL;
+            return -2;
+        }
     }
-    
+
     ea->ea_fd = fd;
     ea->ea_size = st.st_size;
-    ea->ea_data = malloc(st.st_size);
+    ea->ea_data = realloc(ea->ea_data, st.st_size);
     if (!ea->ea_data) {
         LOG(log_error, logtype_afpd, "ea_open: OOM for file %s", eaname);
         close(fd);
@@ -764,8 +802,8 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-    
-    if (read(fd, ea->ea_data, st.st_size) != (ssize_t) st.st_size) {
+
+    if (read(fd, ea->ea_data, st.st_size) != (ssize_t)st.st_size) {
         LOG(log_error, logtype_afpd, "ea_open: short read on header: %s", eaname);
         close(fd);
         free(ea->ea_data);
@@ -774,7 +812,7 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-    
+
     if (unpack_header(ea) != 0) {
         LOG(log_error, logtype_afpd, "ea_open: error unpacking header for: %s", eaname);
         close(fd);
@@ -784,7 +822,7 @@ int ea_open(const struct vol * restrict vol,
         ea->filename = NULL;
         return -1;
     }
-    
+
     ea->ea_inited = EA_INITED;
     return 0;
 }
