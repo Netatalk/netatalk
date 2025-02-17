@@ -211,6 +211,10 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
             SLOG("%s: destination pathname too long", *argv);
             rval = 1;
         } else {
+            if (len >= PATH_MAX - baselen) {
+                SLOG("Path component too long");
+                return 1;
+            }
             memmove(endp, p, (size_t)len + 1);
             openvol(obj, *argv, &svolume);
 
@@ -352,6 +356,7 @@ static int do_move(const char *from, const char *to)
         char *name = basename(p);
         if (cnid_update(dvolume.vol->v_cdb, cnid, &sb, newdid, name, strlen(name)) != 0) {
             SLOG("Can't update CNID for: %s", to);
+            free(p);
             return 1;
         }
         free(p);

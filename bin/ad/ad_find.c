@@ -87,7 +87,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
 {
     int c, ret;
     afpvol_t vol;
-    const char *srchvol = getcwdpath();
+    char *srchvol = strdup(getcwdpath());
 
     while ((c = getopt(argc-1, &argv[1], ":v:")) != -1) {
         switch(c) {
@@ -112,8 +112,11 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     set_signal();
     cnid_init();
 
-    if (openvol(obj, srchvol, &vol) != 0)
+    if (openvol(obj, srchvol, &vol) != 0) {
         ERROR("Can't open volume \"%s\"", srchvol);
+    }
+
+    free((void *)srchvol);
 
     uint16_t flags = CONV_TOLOWER;
     char namebuf[MAXPATHLEN + 1];
