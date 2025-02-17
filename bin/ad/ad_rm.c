@@ -65,9 +65,9 @@ static int rm(const char *fpath, const struct stat *sb, int tflag, struct FTW *f
 */
 static const char *check_netatalk_dirs(const char *name)
 {
-    int c;
+    const int max_dirs = 2;
 
-    for (c=0; netatalk_dirs[c]; c++) {
+    for (int c = 0; c < max_dirs && netatalk_dirs[c]; c++) {
         if ((strcmp(name, netatalk_dirs[c])) == 0)
             return netatalk_dirs[c];
     }

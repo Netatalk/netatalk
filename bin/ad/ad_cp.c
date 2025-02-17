@@ -797,16 +797,20 @@ static int ftw_copy_link(const struct FTW *p _U_,
 
     if ((len = readlink(spath, llink, sizeof(llink) - 1)) == -1) {
         SLOG("readlink: %s: %s", spath, strerror(errno));
-        return (1);
+        return 1;
+    }
+    if (len < 0 || len >= sizeof(llink)) {
+        SLOG("readlink: %s: invalid link length", spath);
+        return 1;
     }
     llink[len] = '\0';
     if (exists && unlink(to.p_path)) {
         SLOG("unlink: %s: %s", to.p_path, strerror(errno));
-        return (1);
+        return 1;
     }
     if (symlink(llink, to.p_path)) {
         SLOG("symlink: %s: %s", llink, strerror(errno));
-        return (1);
+        return 1;
     }
     return (pflag ? setfile(sstp, -1) : 0);
 }
