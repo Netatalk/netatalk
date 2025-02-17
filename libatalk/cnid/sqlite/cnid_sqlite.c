@@ -377,7 +377,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     lookup_result_id = sqlite3_column_int64(db->cnid_lookup_stmt, 1);
     lookup_result_did = sqlite3_column_int64(db->cnid_lookup_stmt, 2);
     snprintf(lookup_result_name, MAXPATHLEN-1, (const char *)sqlite3_column_text(db->cnid_lookup_stmt, 3));
-    lookup_result_name_len = strlen(lookup_result_name);
+    lookup_result_name_len = strnlen(lookup_result_name, MAXPATHLEN);
     lookup_result_dev = sqlite3_column_int64(db->cnid_lookup_stmt, 4);
     lookup_result_ino = sqlite3_column_int64(db->cnid_lookup_stmt, 5);
 
