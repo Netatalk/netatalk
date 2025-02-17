@@ -38,11 +38,6 @@ int main(int argc, char **argv)
 {
     int opt;
     uint16_t flags = 0;
-<<<<<<< HEAD
-    char *string, *macName = MACCHARSET;
-    char *f = NULL, *t = NULL;
-    charset_t from, to, mac;
-=======
     char *string;
     char *macName = strdup(MACCHARSET);
     const char *f = NULL;
@@ -50,7 +45,6 @@ int main(int argc, char **argv)
     charset_t from;
     charset_t to;
     charset_t mac;
->>>>>>> 8cfcae1b (bin)
 
     while ((opt = getopt(argc, argv, "m:o:f:t:")) != -1) {
         switch(opt) {
@@ -87,12 +81,12 @@ int main(int argc, char **argv)
 
     if ( (charset_t) -1 == (from = add_charset(f ? f : "UTF8-MAC")) ) {
         fprintf( stderr, "Setting codepage %s as from codepage failed\n", f ? f : "UTF8-MAC");
-        return (-1);
+        return -1;
     }
 
     if ( (charset_t) -1 == (to = add_charset(t ? t : "UTF8")) ) {
         fprintf( stderr, "Setting codepage %s as to codepage failed\n", t ? t : "UTF8");
-        return (-1);
+        return -1;
     }
 
     if ( (charset_t) -1 == (mac = add_charset(macName)) ) {
