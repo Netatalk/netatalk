@@ -102,13 +102,17 @@ static int unpack_fce_packet(unsigned char *buf, struct fce_packet *packet)
 
 int main(int argc, char **argv)
 {
-    int sockfd, rv, c;
-    struct addrinfo hints, *servinfo, *p;
+    int sockfd;
+    int rv;
+    int c;
+    struct addrinfo hints;
+    struct addrinfo *servinfo;
+    struct addrinfo *p;
     int numbytes;
     struct sockaddr_storage their_addr;
     unsigned char buf[MAXBUFLEN];
     socklen_t addr_len;
-    char *host = "localhost";
+    char *host = strdup("localhost");
 
     while ((c = getopt(argc, argv, "h:")) != -1) {
         switch(c) {
@@ -124,6 +128,7 @@ int main(int argc, char **argv)
 
     if ((rv = getaddrinfo(host, FCE_DEFAULT_PORT_STRING, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        free((void *)host);
         return 1;
     }
 
@@ -150,6 +155,7 @@ int main(int argc, char **argv)
     }
 
     freeaddrinfo(servinfo);
+    free((void *)host);
 
     printf("listener: waiting to recvfrom...\n");
 
