@@ -303,7 +303,7 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
              db->cnid_sqlite_voluuid_str, dev, ino));
 
         stmt_param_id = ntohl(id);
-        strncpy(stmt_param_name, name, sizeof(stmt_param_name)-1);
+        strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
         stmt_param_name_len = len;
         stmt_param_did = ntohl(did);
         stmt_param_dev = dev;
@@ -352,7 +352,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         "cnid_sqlite_lookup(did: %" PRIu32 ", name: \"%s\"): START",
          ntohl(did), name);
 
-    strncpy(stmt_param_name, name, sizeof(stmt_param_name)-1);
+    strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
     stmt_param_name_len = len;
     stmt_param_did = ntohl(did);
     stmt_param_dev = dev;
@@ -508,8 +508,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 stmt = db->cnid_put_stmt;
                 stmt_param_id = ntohl(db->cnid_sqlite_hint);
             }
-            strncpy(stmt_param_name, name,
-                sizeof(stmt_param_name)-1);
+            strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
             stmt_param_name_len = len;
             stmt_param_did = ntohl(did);
             stmt_param_dev = dev;
@@ -662,7 +661,7 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
     }
 
     *id = htonl(sqlite3_column_int64(transient_stmt, 0));
-    strncpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 1), len - 1);
+    strlcpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 1), len);
     ((char *)buffer)[len - 1] = '\0';
 
 
@@ -718,7 +717,7 @@ int cnid_sqlite_getstamp(struct _cnid_db *cdb, void *buffer,
         EC_FAIL;
     }
 
-    strncpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 0), len);
+    strlcpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 0), len);
 
 EC_CLEANUP:
     if (transient_stmt)
