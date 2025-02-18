@@ -163,7 +163,7 @@ struct afp_options {
 };
 
 typedef struct AFPObj {
-    const char *cmdlineconfigfile;
+    char *cmdlineconfigfile;
     int cmdlineflags;
     int proto;
     const void *signature;

@@ -486,8 +486,17 @@ int main(int argc, char *argv[])
     if (!debug && daemonize(0, 0) != 0)
         exit(EXITERR_SYS);
 
-    if (afp_config_parse(&obj, "cnid_metad") != 0)
+    if (afp_config_parse(&obj, "cnid_metad") != 0) {
+        if (obj.cmdlineconfigfile != NULL) {
+            free((void *)obj.cmdlineconfigfile);
+        }
         daemon_exit(1);
+    }
+
+    if (obj.cmdlineconfigfile != NULL) {
+        free((void *)obj.cmdlineconfigfile);
+        obj.cmdlineconfigfile = NULL;
+    }
 
     (void)setlimits();
 

@@ -110,9 +110,9 @@ static char *utompath(char *upath)
 */
 static const char *check_netatalk_dirs(const char *name)
 {
-    int c;
+    const int max_dirs = 2;
 
-    for (c=0; netatalk_dirs[c]; c++) {
+    for (int c = 0; c < max_dirs && netatalk_dirs[c]; c++) {
         if ((strcmp(name, netatalk_dirs[c])) == 0)
             return netatalk_dirs[c];
     }
@@ -125,9 +125,9 @@ static const char *check_netatalk_dirs(const char *name)
 */
 static const char *check_special_dirs(const char *name)
 {
-    int c;
+    const int max_dirs = 1;
 
-    for (c=0; special_dirs[c]; c++) {
+    for (int c = 0; c < max_dirs && special_dirs[c]; c++) {
         if ((strcmp(name, special_dirs[c])) == 0)
             return special_dirs[c];
     }

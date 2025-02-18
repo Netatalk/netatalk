@@ -494,18 +494,17 @@ static uid_t uid_from_name(const char *name)
 int main(int argc, char *argv[])
 {
     EC_INIT;
-    int delete_bdb = 0;
     int ctrlfd = -1, clntfd = -1;
     AFPObj obj = { 0 };
     char *volpath = NULL;
     char *username = NULL;
 
-    while (( ret = getopt( argc, argv, ":dF:l:p:t:u:vV")) != -1 ) {
+    while (( ret = getopt( argc, argv, ":F:l:p:t:u:vV")) != -1 ) {
         switch (ret) {
-        case 'd':
-            /* this is now just ignored, as we do it automatically anyway */
-            delete_bdb = 1;
-            break;
+        case 'v':
+        case 'V':
+            printf("cnid_dbd (Netatalk %s)\n", VERSION);
+            return -1;
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
             break;
@@ -521,10 +520,6 @@ int main(int argc, char *argv[])
         case 'u':
             username = strdup(optarg);
             break;
-        case 'v':
-        case 'V':
-            printf("cnid_dbd (Netatalk %s)\n", VERSION);
-            return -1;
         case ':':
             break;
         }
@@ -592,6 +587,16 @@ close_db:
         ret = -1;
 
 EC_CLEANUP:
+    if (obj.cmdlineconfigfile) {
+        free((void *)obj.cmdlineconfigfile);
+    }
+    if (volpath) {
+        free((void *)volpath);
+    }
+    if (username) {
+        free((void *)username);
+    }
+
     if (ret != 0)
         exit(1);
 
