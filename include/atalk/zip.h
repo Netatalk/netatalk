@@ -57,5 +57,7 @@ struct zipreplent {
 #define ZIPGNI_INVALID	0x80
 #define ZIPGNI_ONEZONE	0x20
 
+#define MAX_ZONE_LENGTH 32
+
 #endif  /* NO_DDP */
 #endif

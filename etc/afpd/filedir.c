@@ -272,8 +272,12 @@ static int moveandrename(const AFPObj *obj,
         }
     } else {
         id = sdir->d_did; /* we already have the CNID */
-        if ((oldunixname = strdup(ctoupath( vol, dirlookup(vol, sdir->d_pdid), oldname))) == NULL)
+        if ((oldunixname = strdup(ctoupath( vol, dirlookup(vol, sdir->d_pdid), oldname))) == NULL) {
+            if (oldunixname) {
+                free(oldunixname);
+            }
             return AFPERR_PARAM;
+        }
         adflags = ADFLAGS_DIR;
     }
 
@@ -287,8 +291,10 @@ static int moveandrename(const AFPObj *obj,
      */
 
     if (sdir_fd != -1) {
-        if ((cwd_fd = open(".", O_RDONLY)) == -1)
+        if ((cwd_fd = open(".", O_RDONLY)) == -1) {
+            free(oldunixname);
             return AFPERR_MISC;
+        }
         if (fchdir(sdir_fd) != 0) {
             rc = AFPERR_MISC;
             goto exit;
