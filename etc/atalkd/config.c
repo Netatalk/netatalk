@@ -184,7 +184,7 @@ int writeconf(char *cf)
     if ( stat( path, &st ) == 0 ) {
 	if (( st.st_mode & S_IWUSR ) == 0 ) {
 	    LOG(log_info, logtype_atalkd, "%s not writable, won't rewrite", path );
-	    return( -1 );
+	    return -1;
 	}
 	 mode = st.st_mode;
     }
@@ -196,16 +196,17 @@ int writeconf(char *cf)
     }
     if (( fd = open( newpath, O_WRONLY|O_CREAT|O_TRUNC, mode )) < 0 ) {
 	LOG(log_error, logtype_atalkd, "%s: %s", newpath, strerror(errno) );
-	return( -1 );
+	return -1;
     }
     if (( newconf = fdopen( fd, "w" )) == NULL ) {
 	LOG(log_error, logtype_atalkd, "fdreopen %s: %s", newpath, strerror(errno) );
-	return( -1 );
+	return -1;
     }
 
     if (( conf = fopen( path, "r" )) == NULL && cf ) {
 	LOG(log_error, logtype_atalkd, "%s: %s", path, strerror(errno) );
-	return( -1 );
+	fclose(newconf);
+	return -1;
     }
 
     iface = interfaces->i_next;
@@ -214,7 +215,7 @@ int writeconf(char *cf)
 	if ( conf != NULL && ( argv = at_parseline( line )) == NULL ) {
 	    if ( fputs( line, newconf ) == EOF ) {
 		LOG(log_error, logtype_atalkd, "fputs: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 	    freeline( argv );
 	    continue;
@@ -250,7 +251,8 @@ int writeconf(char *cf)
                     if ( NULL ==
                       (zonename = strdup(((struct ziptab *)l->l_data)->zt_name))) {
 		        LOG(log_error, logtype_atalkd, "malloc: %s",  strerror(errno) );
-		        return( -1 );
+				fclose(newconf);
+		        return -1;
                     }
                     len = ((struct ziptab *)l->l_data)->zt_len;
                 }
@@ -272,7 +274,7 @@ int writeconf(char *cf)
 
     if ( rename( newpath, path ) < 0 ) {
 	LOG(log_error, logtype_atalkd, "rename %s to %s: %s", newpath, path, strerror(errno) );
-	return( -1 );
+	return -1;
     }
     return( 0 );
 }
@@ -314,7 +316,7 @@ int readconf(char *cf)
 	p = cf;
     }
     if (( conf = fopen( p, "r" )) == NULL ) {
-        return( -1 );
+        return -1;
     }
 
 #ifndef __svr4__
@@ -431,7 +433,7 @@ int readconf(char *cf)
     if ( cc >= IFBASE ) {
 	return( 0 );
     } else {
-	return( -1 );
+	return -1;
     }
 
 read_conf_err:
@@ -645,11 +647,13 @@ int zone(struct interface *iface, char **av)
     if ( iface->i_flags & IFACE_SEED ) {
         if ( iface->i_rt == NULL ) {
   	    fprintf( stderr, "Must specify net-range before zones.\n" );
+	    free(zname);
 	    return -1;
         }
 
 	if (( zt = newzt( strlen( zname ), zname )) == NULL ) {
 	    perror( "newzt" );
+	    free(zname);
 	    return -1;
 	}
 	if ( iface->i_czt == NULL ) {

@@ -41,7 +41,10 @@ extern int debug;
 
 void rtmp_delzonemap(struct rtmptab *rtmp)
 {
-    struct list		*lz, *flz, *lr, *flr;
+    struct list		*lz;
+    struct list		*flz;
+    struct list		*lr;
+    struct list		*flr;
     struct ziptab	*zt;
 
     lz = rtmp->rt_zt;
@@ -62,9 +65,6 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
 			} else {
 			    zt->zt_next->zt_prev = zt->zt_prev;
 			}
-			free( zt->zt_bcast );
-			free( zt->zt_name );
-			free( zt );
 		    } else {
 			zt->zt_rt = lr->l_next;
 		    }
@@ -81,6 +81,9 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
 		lr = lr->l_next;
 	    }
 	}
+	free( zt->zt_bcast );
+	free( zt->zt_name );
+	free( zt );
 	flz = lz;
 	lz = lz->l_next;
 	free( flz );
