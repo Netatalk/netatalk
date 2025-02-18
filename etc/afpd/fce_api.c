@@ -271,7 +271,15 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     memcpy(p, &uint16, sizeof(uint16));
     p += sizeof(uint16);
     datalen += sizeof(uint16);
-    memcpy(p, path, pathlen);
+
+    if (pathlen <= MAXIOBUF) {
+        memcpy(p, path, pathlen);
+    } else {
+        memcpy(p, path, MAXIOBUF - 1);
+        p[MAXIOBUF - 1] = '\0';
+
+        fprintf(stderr, "Warning: pathlen (%zu) exceeds buffer size (%d). Data truncated.\n", pathlen, MAXIOBUF);
+    }
     p += pathlen;
     datalen += pathlen;
 

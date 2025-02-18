@@ -32,6 +32,7 @@
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/nbp.h>
+#include <atalk/zip.h>
 
 #ifdef HAVE_LDAP
 #include <atalk/ldapconfig.h>
@@ -132,8 +133,9 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
     {
         ATP atp;
         ASP asp;
-        char* Obj, * Type = "AFPServer", * Zone = "*";
-        char* convname = NULL;
+        char* Obj;
+        char* Type = "AFPServer";
+        char* Zone = strdup("*");
 
         if ((atp = atp_open(ATADDR_ANYPORT, &asp_obj->options.ddpaddr)) == NULL) {
             LOG(log_error, logtype_afpd, "main: atp_open: %s", strerror(errno));
@@ -149,22 +151,22 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         /* register asp server */
         Obj = (char*)asp_obj->options.hostname;
 
-        if (asp_obj->options.zone && (size_t)-1 == (convert_string_allocate(asp_obj->options.unixcharset, asp_obj->options.maccharset,
-            asp_obj->options.zone, strlen(asp_obj->options.zone), &convname))) {
-            if ((convname = strdup(asp_obj->options.zone)) == NULL) {
-                LOG(log_error, logtype_afpd, "malloc: %s", strerror(errno));
-                asp_close(asp);
-                goto serv_free_return;
-            }
-        }
-
         /* set a custom zone if user requested one */
         if (asp_obj->options.zone) {
-            Zone = strdup(convname);
+            size_t zone_len = strnlen(asp_obj->options.zone, MAX_ZONE_LENGTH);
+            if ((size_t)-1 == (convert_string_allocate(asp_obj->options.unixcharset, 
+                asp_obj->options.maccharset,
+                asp_obj->options.zone,
+                zone_len,
+                &Zone))) {
+                if ((Zone = strdup(asp_obj->options.zone)) == NULL) {
+                    LOG(log_error, logtype_afpd, "malloc: %s", strerror(errno));
+                    asp_close(asp);
+                    goto serv_free_return;
+                }
+                LOG(log_debug, logtype_afpd, "Using AppleTalk zone: %s", Zone);
+            }
         }
-
-        if (convname)
-            free(convname);
 
         /* dup Obj, Type and Zone as they get assigned to a single internal
          * buffer by nbp_name */
@@ -214,6 +216,8 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         {
             LOG(log_note, logtype_afpd, "AppleTalk support disabled. Is atalkd running?");
         }
+
+        free((void *)Zone);
 
     }
 #endif /* no afp/asp */

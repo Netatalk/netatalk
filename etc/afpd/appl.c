@@ -54,11 +54,11 @@ static int applopen(struct vol *vol, uint8_t creator[ 4 ], int flags, int mode)
     if (( sa.sdt_fd = open( dtf, flags, ad_mode( dtf, mode ))) < 0 ) {
         if ( errno == ENOENT && ( flags & O_CREAT )) {
             if (( adts = strrchr( dtf, '/' )) == NULL ) {
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
             *adts = '\0';
             if (( adt = strrchr( dtf, '/' )) == NULL ) {
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
             *adt = '\0';
             (void) ad_mkdir( dtf, DIRBITS | 0777 );
@@ -67,10 +67,10 @@ static int applopen(struct vol *vol, uint8_t creator[ 4 ], int flags, int mode)
             *adts = '/';
 
             if (( sa.sdt_fd = open( dtf, flags, ad_mode( dtf, mode ))) < 0 ) {
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
         } else {
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
     memcpy( sa.sdt_creator, creator, sizeof( CreatorType ));
@@ -170,7 +170,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid ))) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -193,16 +193,16 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     }
 
     if ( applopen( vol, creator, O_RDWR|O_CREAT, 0666 ) != AFP_OK ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     if ( lseek( sa.sdt_fd, 0L, SEEK_SET ) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     dtf = dtfile( vol, creator, ".appl.temp" );
     tempfile = obj->oldtmp;
     strcpy( tempfile, dtf );
     if (( tfd = open( tempfile, O_RDWR|O_CREAT, 0666 )) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     mpath = obj->newtmp;
     mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
@@ -215,7 +215,12 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     /* write the new appl entry at start of temporary file */
     p = mp - sizeof( u_short );
     mplen = htons( mplen );
-    memcpy( p, &mplen, sizeof( mplen ));
+    if (p >= mpath && (p + sizeof(mplen)) <= (mpath + AFPOBJ_TMPSIZ)) {
+        memcpy(p, &mplen, sizeof(mplen));
+    } else {
+        close(tfd);
+        return AFPERR_PARAM;
+    }
     mplen = ntohs( mplen );
     p -= sizeof( appltag );
     memcpy(p, appltag, sizeof( appltag ));
@@ -223,7 +228,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     if ( write( tfd, p, cc ) != cc ) {
         close(tfd);
         unlink( tempfile );
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
     close( tfd );
@@ -232,10 +237,10 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
 
     if ( cc < 0 ) {
         unlink( tempfile );
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     if ( rename( tempfile, dtfile( vol, creator, ".appl" )) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     return( AFP_OK );
 }
@@ -258,7 +263,7 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid ))) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -281,13 +286,13 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         return( AFPERR_NOOBJ );
     }
     if ( lseek( sa.sdt_fd, 0L, SEEK_SET ) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     dtf = dtfile( vol, creator, ".appl.temp" );
     tempfile = obj->oldtmp;
     strcpy( tempfile, dtf );
     if (( tfd = open( tempfile, O_RDWR|O_CREAT, 0666 )) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     mpath = obj->newtmp;
     mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
@@ -304,10 +309,10 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
 
     if ( cc < 0 ) {
         unlink( tempfile );
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     if ( rename( tempfile, dtfile( vol, creator, ".appl" )) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     return( AFP_OK );
 }
@@ -335,7 +340,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( creator, ibuf, sizeof( creator ));
@@ -359,7 +364,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     if ( aindex < sa.sdt_index ) {
         if ( lseek( sa.sdt_fd, 0L, SEEK_SET ) < 0 ) {
             *rbuflen = 0;
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         sa.sdt_index = 0;
     }
