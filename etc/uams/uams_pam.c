@@ -347,8 +347,9 @@ static int pam_changepw(void *obj _U_, char *username,
 static int pam_printer(char *start, char *stop, char *username, struct papfile *out)
 {
     int PAM_error;
-    char	*data, *p, *q;
-    char	password[PASSWDLEN + 1] = "\0";
+    char *data;
+    const char *p;
+    const char *q;
     static const char *loginok = "0\r";
     struct passwd *pwd;
 
@@ -387,7 +388,16 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 	free(data);
 	return(-1);
     }
-    memcpy(password, p, MIN(PASSWDLEN, (q - p)) );
+
+    /* Allocate memory for the global PAM_password */
+    PAM_password = (char *)malloc(PASSWDLEN + 1);
+    if (!PAM_password) {
+        LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc failed for password");
+        free(data);
+        return -1;
+    }
+    memset(PAM_password, 0, PASSWDLEN + 1);
+    memcpy(PAM_password, p, MIN(PASSWDLEN, (q - p)));
 
     /* Done copying username and password, clean up */
     free(data);
@@ -395,16 +405,19 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     if (( pwd = uam_getname(NULL, username, strlen(username))) == NULL ) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
             username);
+        free(PAM_password);
+        PAM_password = NULL;
         return(-1);
     }
 
     if (uam_checkuser(pwd) < 0) {
         /* syslog of error happens in uam_checkuser */
+        free(PAM_password);
+        PAM_password = NULL;
         return(-1);
     }
 
     PAM_username = username;
-    PAM_password = password;
 
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
                           &pamh);
@@ -413,6 +426,8 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
+        free(PAM_password);
+        PAM_password = NULL;
         return(-1);
     }
 
@@ -424,6 +439,8 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
+        free(PAM_password);
+        PAM_password = NULL;
         return(-1);
     }
 
@@ -433,6 +450,8 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
+        free(PAM_password);
+        PAM_password = NULL;
         return(-1);
     }
 
@@ -442,6 +461,8 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
 			username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
+        free(PAM_password);
+        PAM_password = NULL;
         return(-1);
     }
 
@@ -452,6 +473,10 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
+
+    /* Before returning, free the allocated password */
+    free(PAM_password);
+    PAM_password = NULL;
 
     return(0);
 }
