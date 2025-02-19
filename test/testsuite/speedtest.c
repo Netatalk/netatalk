@@ -1164,6 +1164,7 @@ void (*fn)(void) = NULL;
 #endif
 
     token = strtok(tp, ",");
+	free(tp);
 
 #ifdef BROKEN_DL
 	fn = test_to_run(token);

@@ -29,9 +29,9 @@ char *ndir = "read only dir";
 char *nfile = "read only file";
 int  ofs =  4 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
-char *file;
-char *file1;
-char *dir;
+char *file = NULL;
+char *file1 = NULL;
+char *dir = NULL;
 int  fid;
 int  did;
 uint16_t bitmap;
@@ -297,6 +297,9 @@ unsigned int ret;
 	ret = FPSetForkParam(Conn, fork, (1<<FILPBIT_RFLEN), 100);
  	check_test(ret);
 fin:
+	free(dir);
+	free(file);
+	free(file1);
 	FAIL (FPCloseVol(Conn,VolID))
 test_exit:
 	exit_test("Readonly:test510: Access files and directories on a read only volume");
