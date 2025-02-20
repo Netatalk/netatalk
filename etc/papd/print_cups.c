@@ -233,10 +233,9 @@ cups_get_printer_ppd ( char * name)
 	 */
 
 	bufsize = sizeof(buffer);
-	if (buffer)
-		*buffer = '\0';
+	buffer[0] = '\0';
 
-	if (!buffer || bufsize < 1)
+	if (bufsize < 1)
 	{
 		LOG(log_error, logtype_papd, "Check buffer failed!\n");
 		LOG(log_error, logtype_papd, strerror(EINVAL));
@@ -438,9 +437,10 @@ cups_get_printer_status (struct printer *pr)
 		int i, count = ippGetCount(attr);
 		for (i = 0; i < count; i++)
 		{
-			strncat(printer_reason, ippGetString(attr, i, NULL), 150 - strlen(printer_reason));
-			if ( i != (count-1))
-				strncat(printer_reason, ", ", 150 - strlen(printer_reason));
+			strlcat(printer_reason, ippGetString(attr, i, NULL), sizeof(printer_reason));
+			if (i != (count-1)) {
+				strlcat(printer_reason, ", ", sizeof(printer_reason));
+			}
 		}
 	}
 	ippDelete(response);

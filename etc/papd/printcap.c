@@ -93,7 +93,9 @@ static	int hopcount;		/* detect infinite loops in termcap, init 0 */
  */
 int getprent( char *cap, char *bp, int bufsize)
 {
-	register int c, skip = 0, i;
+	int c;
+	int skip = 0;
+	int i;
 
 	if (pfp == NULL && (pfp = fopen( cap, "r")) == NULL)
 		return(-1);
@@ -104,11 +106,11 @@ int getprent( char *cap, char *bp, int bufsize)
 		case EOF:
                         if (bp != tbuf) {
 				*bp = '\0';
-				return(1);
+				return 1;
 			}
 			fclose(pfp);
 			pfp = NULL;
-			return(0);
+			return 0;
 		case '\n':
 			if (bp == tbuf) {
 				skip = 0;
@@ -119,7 +121,7 @@ int getprent( char *cap, char *bp, int bufsize)
 				continue;
 			}
 			*bp = '\0';
-			return(1);
+			return 1;
 		case '#':
 			if (bp == tbuf)
 				skip++;
@@ -129,7 +131,7 @@ int getprent( char *cap, char *bp, int bufsize)
 			if (bp >= tbuf + BUFSIZ) {
 				fprintf(stderr, "Termcap entry too long\n");
 				*bp = '\0';
-				return(1);
+				return 1;
 			}
 			*bp++ = c;
 			if (++i >= bufsize) {
@@ -137,7 +139,7 @@ int getprent( char *cap, char *bp, int bufsize)
 				fclose(pfp);
 				pfp = NULL;
 				*bp = '\0';
-				return(1);
+				return 1;
 			}
 		}
 	}
@@ -157,18 +159,15 @@ void endprent(void)
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int tgetent(char *cap, char *bp, char *name)
+int tgetent(char *cap, char *bp, const char *name)
 {
-	register char *cp;
-	register int c;
-	register int i = 0, cnt = 0;
+	char *cp;
+	int c;
+	int i = 0;
+	int cnt = 0;
 	char ibuf[BUFSIZ];
 	int tf;
 	int skip;
-
-	hopcount = 0;
-	tbuf = bp;
-	tf = 0;
 #ifndef V6
 	cp = getenv("TERMCAP");
 	/*
@@ -205,7 +204,7 @@ int tgetent(char *cap, char *bp, char *name)
 				cnt = read(tf, ibuf, BUFSIZ);
 				if (cnt <= 0) {
 					close(tf);
-					return (0);
+					return 0;
 				}
 				i = 0;
 			}
@@ -255,9 +254,13 @@ int tgetent(char *cap, char *bp, char *name)
  */
 int tnchktc( char *cap)
 {
-	register char *p, *q;
+	char *p;
+	char *q;
 	char tcname[16];	/* name of similar terminal */
-	char tcbuf[BUFSIZ];
+	char *tcbuf = calloc(1, BUFSIZ);
+	if (tcbuf == NULL) {
+		return 0;
+	}
 	char *holdtbuf = tbuf;
 	int l;
 
@@ -265,12 +268,15 @@ int tnchktc( char *cap)
 	while (*--p != ':')
 		if (p < tbuf) {
 			fprintf(stderr, "Bad termcap entry\n");
-			return (0);
+			free(tcbuf);
+			return 0;
 		}
 	p++;
 	/* p now points to beginning of last field */
-	if (p[0] != 't' || p[1] != 'c')
-		return(1);
+	if (p[0] != 't' || p[1] != 'c') {
+		free(tcbuf);
+		return 1;
+	}
 	strcpy(tcname,p+3);
 	q = tcname;
 	while (q && *q != ':')
@@ -278,11 +284,14 @@ int tnchktc( char *cap)
 	*q = 0;
 	if (++hopcount > MAXHOP) {
 		fprintf(stderr, "Infinite tc= loop\n");
-		return (0);
+		free(tcbuf);
+		return 0;
 	}
-	if (tgetent( cap, tcbuf, tcname) != 1)
-		return(0);
-	for (q=tcbuf; *q != ':'; q++)
+	if (tgetent( cap, tcbuf, tcname) != 1) {
+		free(tcbuf);
+		return 0;
+	}
+	for (q=tcbuf; q && *q != ':'; q++)
 		;
 	l = p - holdtbuf + strlen(q);
 	if (l > BUFSIZ) {
@@ -290,8 +299,9 @@ int tnchktc( char *cap)
 		q[BUFSIZ - (p - tbuf)] = 0;
 	}
 	strcpy(p, q+1);
+	free(tcbuf);
 	tbuf = holdtbuf;
-	return(1);
+	return 1;
 }
 
 /*
@@ -300,22 +310,23 @@ int tnchktc( char *cap)
  * against each such name.  The normal : terminator after the last
  * name (before the first field) stops us.
  */
-int tnamatch(char *np)
+int tnamatch(const char *np)
 {
-	register char *Np, *Bp;
+	const char *Np;
+	const char *Bp;
 
 	Bp = tbuf;
 	if (*Bp == '#')
-		return(0);
+		return 0;
 	for (;;) {
 		for (Np = np; *Np && *Bp == *Np; Bp++, Np++)
 			continue;
 		if (*Np == 0 && (*Bp == '|' || *Bp == ':' || *Bp == 0))
-			return (1);
+			return 1;
 		while (*Bp && *Bp != ':' && *Bp != '|')
 			Bp++;
 		if (*Bp == 0 || *Bp == ':')
-			return (0);
+			return 0;
 		Bp++;
 	}
 }
@@ -345,8 +356,9 @@ static char *tskip(char *bp)
  */
 int tgetnum(char *id)
 {
-	register int i, base;
-	register char *bp = tbuf;
+	int i;
+	int base;
+	char *bp = tbuf;
 
 	for (;;) {
 		bp = tskip(bp);
@@ -377,17 +389,17 @@ int tgetnum(char *id)
  */
 int tgetflag(char *id)
 {
-	register char *bp = tbuf;
+	char *bp = tbuf;
 
 	for (;;) {
 		bp = tskip(bp);
 		if (!*bp)
-			return (0);
+			return 0;
 		if (*bp++ == id[0] && *bp != 0 && *bp++ == id[1]) {
 			if (!*bp || *bp == ':')
-				return (1);
+				return 1;
 			else if (*bp == '@')
-				return(0);
+				return 0;
 		}
 	}
 }
@@ -399,9 +411,9 @@ int tgetflag(char *id)
 static char *
 tdecode(char *str, char **area)
 {
-	register char *cp;
-	register int c;
-	register char *dp;
+	char *cp;
+	int c;
+	const char *dp;
 	int i;
 
 	cp = *area;
@@ -450,7 +462,7 @@ nextc:
 char *
 tgetstr(char *id, char **area)
 {
-	register char *bp = tbuf;
+	char *bp = tbuf;
 
 	for (;;) {
 		bp = tskip(bp);
@@ -470,9 +482,9 @@ tgetstr(char *id, char **area)
 static char *
 decodename(char *str, char **area, int bufsize)
 {
-	register char *cp;
-	register int c;
-	register char *dp;
+	char *cp;
+	int c;
+	const char *dp;
 	int i;
 
 	cp = *area;
