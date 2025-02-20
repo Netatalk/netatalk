@@ -25,7 +25,7 @@ struct comstate {
     int			cs_flags;
 };
 
-extern struct papd_comment	*commatch();
+extern struct papd_comment  *commatch(char *start, char *end, struct papd_comment *table);
 extern struct comstate		*comstate;
 extern struct papd_comment	magics[];
 extern struct papd_comment	queries[];

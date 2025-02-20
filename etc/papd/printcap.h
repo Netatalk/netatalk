@@ -3,12 +3,12 @@
 
 #include <sys/types.h>
 
-int getprent ( register char *, register char *, register int );
+int getprent ( char *, char *, int );
 int pnchktc ( char * );
 int pgetflag ( char * );
 void endprent ( void );
-int pgetent ( char *, char *, char * );
+int pgetent ( char *, char *, const char * );
 int pgetnum ( char * );
-int pnamatch ( char * );
+int pnamatch ( const char * );
 
 #endif /* PAPD_PRINTCAP_H */
