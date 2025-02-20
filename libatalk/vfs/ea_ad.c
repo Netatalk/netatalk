@@ -531,11 +531,10 @@ static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
         /* search matching EA */
         if ((*ea->ea_entries)[count].ea_name &&
             strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
-            free((*ea->ea_entries)[count].ea_name);
-            (*ea->ea_entries)[count].ea_name = NULL;
-
             LOG(log_debug, logtype_afpd, "ea_delentry('%s'): deleted no %u/%u",
                 attruname, count + 1, ea->ea_count);
+            free((*ea->ea_entries)[count].ea_name);
+            (*ea->ea_entries)[count].ea_name = NULL;
 
             break;
         }

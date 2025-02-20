@@ -159,6 +159,7 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
         result = fcntl(fileno(fp), F_SETLK, &lock);
         if (result != 0) {
             LOG(log_error, logtype_afpd, "Can't lock UUID file %s", obj->options.uuidconf);
+            fclose(fp);
             return NULL;
         }
 
@@ -648,9 +649,9 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_, const char 
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
-static const char *getoption(const dictionary *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
+static char *getoption(const dictionary *conf, const char *vol, const char *opt, const char *defsec, char *defval)
 {
-    const char *result;
+    char *result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
 
@@ -753,7 +754,7 @@ static struct vol *creatvol(AFPObj *obj,
     ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
     char        suffix[6]; /* max is #FFFF */
     uint16_t    flags;
-    const char  *val;
+    char        *val;
     char        *p, *q;
     bstring     dbpath = NULL;
     bstring     global_path_tmp = NULL;
@@ -829,7 +830,9 @@ static struct vol *creatvol(AFPObj *obj,
         if (strcasecmp(val, "UTF-8") == 0) {
             val = strdup("UTF8");
         }
-        EC_NULL( volume->v_volcodepage = strdup(val) );
+        volume->v_volcodepage = strdup(val);
+        free(val);
+        EC_NULL( volume->v_volcodepage );
     }
     else
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
@@ -853,7 +856,7 @@ static struct vol *creatvol(AFPObj *obj,
     if (iniparser_getboolean(obj->iniconfig, "Global:vol dbnest", 0)) {
         EC_NULL( volume->v_dbpath = strdup(path) );
     } else {
-        const char *global_path;
+        char *global_path;
         val = getoption(obj->iniconfig, section, "vol dbpath", preset, NULL);
         if (val == NULL) {
             /* check global option */
