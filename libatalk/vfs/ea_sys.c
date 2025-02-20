@@ -395,6 +395,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
      */
     eabuf = malloc(attrsize + 1);
     if (eabuf == NULL) {
+        free(eabuf);
         return AFPERR_MISC;
     }
     memcpy(eabuf, ibuf, attrsize);

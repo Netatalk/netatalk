@@ -309,9 +309,10 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
                     buf = newp;
                 }
 
-                *((char *) __mempcpy (buf + actsize, d->d_name, this_len))
-                    = '\0';
-                actsize += this_len + 1;
+                if (actsize + this_len < bufsize) {
+                    *((char *) __mempcpy (buf + actsize, d->d_name, this_len)) = '\0';
+                    actsize += this_len + 1;
+                }
             }
 
             /* Terminate the list with an additional NUL byte.  */
@@ -322,7 +323,9 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             if (data->dirstreams[data->actdir]->content == NULL)
             {
                 int save_err = errno;
-                free (buf);
+                if (buf) {
+                    free (buf);
+                }
                 __set_errno (save_err);
                 result = -1;
             }

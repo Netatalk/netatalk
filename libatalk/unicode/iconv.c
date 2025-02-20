@@ -160,11 +160,11 @@ int atalk_register_charset(struct charset_functions *funcs)
 static void lazy_initialize_iconv(void)
 {
 	static int initialized = 0;
-	int i;
+	int charset_count = 2;
 
 	if (!initialized) {
 		initialized = 1;
-		for(i = 0; builtin_functions[i].name; i++)
+		for(int i = 0; i < charset_count && builtin_functions[i].name; i++)
 			atalk_register_charset(&builtin_functions[i]);
 
 		/* register additional charsets */

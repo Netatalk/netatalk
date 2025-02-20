@@ -1069,7 +1069,8 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
             return -1;
         case OPEN_NOFOLLOW_ERRNO:
             ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN+1);
-            if ((lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN)) <= 0) {
+            if ((lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN)) <= 0
+                        || lsz > MAXPATHLEN) {
                 free(ad->ad_data_fork.adf_syml);
                 EC_FAIL;
             }
@@ -1796,11 +1797,17 @@ const char *ad_path( const char *path, int adflags)
 
     if ( adflags & ADFLAGS_DIR ) {
         l = strlcpy( pathbuf, path, sizeof(pathbuf));
+        if (l >= sizeof(pathbuf)) {
+            return NULL;
+        }
 
         if ( l && l < MAXPATHLEN) {
             pathbuf[l++] = '/';
         }
-        strlcpy(pathbuf +l, ".AppleDouble/.Parent", sizeof(pathbuf) -l);
+        if (strlcpy(pathbuf + l, ".AppleDouble/.Parent", sizeof(pathbuf) - l)
+                >= sizeof(pathbuf) - l) {
+            return NULL;
+        }
     } else {
         if (NULL != ( slash = strrchr( path, '/' )) ) {
             slash++;
@@ -1813,8 +1820,16 @@ const char *ad_path( const char *path, int adflags)
             l = 0;
             slash = path;
         }
-        l += strlcpy( pathbuf +l, ".AppleDouble/", sizeof(pathbuf) -l);
-        strlcpy( pathbuf + l, slash, sizeof(pathbuf) -l);
+
+        size_t remaining = sizeof(pathbuf) - l;
+        l += strlcpy(pathbuf + l, ".AppleDouble/", remaining);
+        if (l >= sizeof(pathbuf)) {
+            return NULL;
+        }
+
+        if (strlcpy(pathbuf + l, slash, sizeof(pathbuf) - l) >= sizeof(pathbuf) - l) {
+            return NULL;
+        }
     }
 
     return( pathbuf );

@@ -310,7 +310,7 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
     char *dup2 = NULL;
     char *dup3 = NULL;
     char *dup4 = NULL;
-    const char *name = NULL;
+    char *name = NULL;
     const char *dir = NULL;
 
     struct stat st;
@@ -360,6 +360,7 @@ EC_CLEANUP:
     if (dup2) free(dup2);
     if (dup3) free(dup3);
     if (dup4) free(dup4);
+    if (name) free((void *)name);
 
     EC_EXIT;
 }
