@@ -1366,7 +1366,8 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             }
             strlcpy(tmp, p, MAXPATHLEN);
         } else {
-            strlcpy(tmp, secname, AFPVOL_U8MNAMELEN);
+            p = getoption(obj->iniconfig, secname, "name", NULL, NULL);
+            strlcpy(tmp, p ? p : secname, AFPVOL_U8MNAMELEN);
         }
         if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL)
             continue;
