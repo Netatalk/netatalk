@@ -16,12 +16,12 @@ The file consists of sections and parameters. A section begins with the
 name of the section in square brackets and continues until the next
 section begins. Sections contain parameters of the form:
 
-        name = value
+        option = value
 
 The file is line-based - that is, each newline-terminated line
 represents either a comment, a section name or a parameter.
 
-Section and parameter names are case sensitive.
+Parameter names are case sensitive, while section names are not.
 
 Only the first equals sign in a parameter is significant. Whitespace
 before or after the first equals sign is discarded. Leading, trailing
@@ -38,7 +38,8 @@ customary UNIX fashion.
 The values following the equals sign in parameters are all either a
 string (no quotes needed) or a boolean, which may be given as yes/no,
 1/0 or true/false. Case is not significant in boolean values, but is
-preserved in string values. Some items such as "file perm"s are numeric.
+preserved in string values. Some options such as **file perm** take
+numeric values.
 
 The parameter **include = path** allows you to include one config file
 inside another. The file is included literally, as though typed in
@@ -47,9 +48,8 @@ place. Nested includes are not supported.
 # Section Descriptions
 
 Each section in the configuration file (except for the \[Global\]
-section) describes a shared resource (known as a “volume”). The section
-name is the name of the volume and the parameters within the section
-define the volume attributes and options.
+section) describes a shared resource (known as a “volume”).
+The parameters within the section define the volume attributes and options.
 
 There are two special sections, \[Global\] and \[Homes\], which are
 described under *special sections*. The following notes apply to
@@ -59,6 +59,10 @@ A volume consists of a directory to which access is being given plus a
 description of the access rights which are granted to the user of the
 service. For volumes the **path** option must specify the directory to
 share.
+
+The name of the volume is defined via the **name** option.
+When absent, the volume name is the name of the section, expressed in
+lowercase.
 
 Any volume section without **path** option is considered a *vol preset*
 which can be selected in other volume sections via the **vol preset**
@@ -72,9 +76,10 @@ server does not grant more access than the host system grants.
 
 The following sample section defines an AFP volume. The user has full
 access to the path */foo/bar*. The share is accessed via the share name
-*baz*:
+*Baz Volume*:
 
-     [baz]
+    [baz]
+        name = Baz Volume
         path = /foo/bar
 
 # Special Sections
@@ -87,20 +92,17 @@ denoted by a (G) below are must be set in this section.
 ## The \[Homes\] section
 
 This section enable sharing of the UNIX server user home directories.
-Specifying an optional **path** parameter means that not the whole user
-home will be shared but the subdirectory **path**. It is necessary to
-define the **basedir regex** option. It should be a regex which matches
-the parent directory of the user homes. Parameters denoted by a (H)
-belong to volume sections. The optional parameter **home name** can be
-used to change the AFP volume name which *$u's home* by default. See
-below under VARIABLE SUBSTITUTIONS.
+The one mandatory option is **basedir regex**. It should be set to a path
+which matches the parent directory of the user homes.
 
+Specifying the optional **path** parameter makes it so that only
+the subdirectory **path** is shared, rather than the entire home directory.
 The following example illustrates this. Given all user home directories
 are stored under */home*:
 
-     [Homes]
-          path = afp-data
-          basedir regex = /home
+    [Homes]
+        path = afp-data
+        basedir regex = /home
 
 For a user *john* this results in an AFP home volume with a path of
 */home/john/afp-data*.
@@ -108,8 +110,21 @@ For a user *john* this results in an AFP home volume with a path of
 If **basedir regex** contains symlink, set the canonicalized absolute
 path. When */home* links to */usr/home*:
 
-     [Homes]
-          basedir regex = /usr/home
+    [Homes]
+        basedir regex = /usr/home
+
+The optional parameter **home name** can be used to change
+the Homes volume name, which is *$u's home* by default. See
+below for more information on VARIABLE SUBSTITUTIONS.
+
+    [Homes]
+        home name = The home of $u
+        basedir regex = /home
+
+For the same user *john* this results in an AFP home volume called
+*The home of john*.
+
+Any parameter denoted by a **(H)** below can be used in the Homes section.
 
 # Parameters
 
@@ -1311,11 +1326,13 @@ appletalk = yes
 uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so
 legacy icon = daemon
 
-[Mac Volume]
+[mac]
+name = Mac Volume
 path = /srv/mac
 legacy volume size = yes
 
-[Apple II Volume]
+[apple2]
+name = Apple II Volume
 path = /srv/apple2
 prodos = yes
 ```
