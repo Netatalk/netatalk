@@ -440,10 +440,9 @@ combination but not automatically listen to it.
 
 hostname = <name\> **(G)**
 
-> Use this instead of the result from calling hostname for determining
-which IP address to advertise, therefore the hostname is resolved to an
-IP which is the advertised. This is NOT used for listening and it is
-also overwritten by **afp listen**.
+> Sets a custom AFP server name to be displayed in the client.
+When absent, the fallback server name is the host system's hostname
+up until the first period.
 
 max connections = <number\> **(G)**
 
