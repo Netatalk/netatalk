@@ -79,8 +79,8 @@
  * Ini config manipulation macros
  **********************************************************************************************/
 
-#define INISEC_GLOBAL "Global"
-#define INISEC_HOMES  "Homes"
+#define INISEC_GLOBAL "global"
+#define INISEC_HOMES  "homes"
 
 #define INIPARSER_GETSTRDUP(config, section, default) ({              \
     const char *_tmp = iniparser_getstring(config, section, default); \
