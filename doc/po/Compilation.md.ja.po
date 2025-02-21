@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-14 09:31+0100\n"
+"POT-Creation-Date: 2025-02-21 07:01+0100\n"
 "PO-Revision-Date: 2025-01-22 20:55+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -73,7 +73,7 @@ msgstr ""
 #. type: Plain text
 #: manual/Compilation.md:21 manual/Compilation.md:66 manual/Compilation.md:112
 #: manual/Compilation.md:157 manual/Compilation.md:203
-#: manual/Compilation.md:264
+#: manual/Compilation.md:263
 msgid "Configure"
 msgstr "コンフィグレーション"
 
@@ -86,27 +86,27 @@ msgstr ""
 #. type: Plain text
 #: manual/Compilation.md:27 manual/Compilation.md:72 manual/Compilation.md:118
 #: manual/Compilation.md:163 manual/Compilation.md:209
-#: manual/Compilation.md:270
+#: manual/Compilation.md:269
 msgid "Build"
 msgstr "ビルド"
 
 #. type: Fenced code block
 #: manual/Compilation.md:28 manual/Compilation.md:73 manual/Compilation.md:119
 #: manual/Compilation.md:164 manual/Compilation.md:210
-#: manual/Compilation.md:271
+#: manual/Compilation.md:270
 #, no-wrap
 msgid "meson compile -C build\n"
 msgstr ""
 
 #. type: Plain text
 #: manual/Compilation.md:33 manual/Compilation.md:78 manual/Compilation.md:124
-#: manual/Compilation.md:169 manual/Compilation.md:276
+#: manual/Compilation.md:169 manual/Compilation.md:275
 msgid "Run integration tests"
 msgstr "組み込み試験を実行する"
 
 #. type: Fenced code block
 #: manual/Compilation.md:34 manual/Compilation.md:79 manual/Compilation.md:125
-#: manual/Compilation.md:170 manual/Compilation.md:277
+#: manual/Compilation.md:170 manual/Compilation.md:276
 #, no-wrap
 msgid "cd build && meson test && cd ..\n"
 msgstr ""
@@ -114,7 +114,7 @@ msgstr ""
 #. type: Plain text
 #: manual/Compilation.md:39 manual/Compilation.md:84 manual/Compilation.md:130
 #: manual/Compilation.md:175 manual/Compilation.md:221
-#: manual/Compilation.md:282
+#: manual/Compilation.md:281
 msgid "Install"
 msgstr "インストールする"
 
@@ -127,14 +127,14 @@ msgstr ""
 #. type: Plain text
 #: manual/Compilation.md:45 manual/Compilation.md:90 manual/Compilation.md:136
 #: manual/Compilation.md:181 manual/Compilation.md:227
-#: manual/Compilation.md:288
+#: manual/Compilation.md:287
 msgid "Check netatalk capabilities"
 msgstr "netatalk の機能を確認する"
 
 #. type: Fenced code block
 #: manual/Compilation.md:46 manual/Compilation.md:91 manual/Compilation.md:137
 #: manual/Compilation.md:182 manual/Compilation.md:228
-#: manual/Compilation.md:289
+#: manual/Compilation.md:288
 #, no-wrap
 msgid ""
 "netatalk -V\n"
@@ -144,7 +144,7 @@ msgstr ""
 #. type: Plain text
 #: manual/Compilation.md:52 manual/Compilation.md:97 manual/Compilation.md:143
 #: manual/Compilation.md:188 manual/Compilation.md:248
-#: manual/Compilation.md:309
+#: manual/Compilation.md:308
 msgid "Uninstall"
 msgstr "アンインストール"
 
@@ -212,14 +212,14 @@ msgstr ""
 
 #. type: Fenced code block
 #: manual/Compilation.md:176 manual/Compilation.md:222
-#: manual/Compilation.md:283
+#: manual/Compilation.md:282
 #, no-wrap
 msgid "sudo meson install -C build\n"
 msgstr ""
 
 #. type: Fenced code block
 #: manual/Compilation.md:189 manual/Compilation.md:249
-#: manual/Compilation.md:310
+#: manual/Compilation.md:309
 #, no-wrap
 msgid "sudo ninja -C build uninstall\n"
 msgstr ""
@@ -250,7 +250,7 @@ msgid "cd build && meson dist && cd ..\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Compilation.md:234 manual/Compilation.md:295
+#: manual/Compilation.md:234 manual/Compilation.md:294
 msgid "Start netatalk"
 msgstr "netatalk を起動する"
 
@@ -264,7 +264,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Compilation.md:242 manual/Compilation.md:303
+#: manual/Compilation.md:242 manual/Compilation.md:302
 msgid "Stop netatalk"
 msgstr "netatalk を停止させる"
 
@@ -285,18 +285,17 @@ msgstr ""
 #, no-wrap
 msgid ""
 "brew update\n"
-"brew upgrade\n"
-"brew install bison cmark-gfm cracklib dbus iniparser mariadb meson openldap po4a talloc tracker\n"
+"brew install cmark-gfm cracklib iniparser mariadb meson openldap\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:265
+#: manual/Compilation.md:264
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-docs-l10n=true -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:296
+#: manual/Compilation.md:295
 #, no-wrap
 msgid ""
 "sudo netatalkd start\n"
@@ -305,39 +304,39 @@ msgid ""
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:304
+#: manual/Compilation.md:303
 #, no-wrap
 msgid "sudo netatalkd stop\n"
 msgstr ""
 
 #. type: Title ##
-#: manual/Compilation.md:314
+#: manual/Compilation.md:313
 #, no-wrap
 msgid "DragonflyBSD"
 msgstr ""
 
 #. type: Plain text
-#: manual/Compilation.md:317 manual/Compilation.md:337
-#: manual/Compilation.md:365 manual/Compilation.md:393
-#: manual/Compilation.md:418 manual/Compilation.md:451
+#: manual/Compilation.md:316 manual/Compilation.md:336
+#: manual/Compilation.md:364 manual/Compilation.md:392
+#: manual/Compilation.md:417 manual/Compilation.md:450
 msgid "Install required packages"
 msgstr "必要なパッケージをインストールする"
 
 #. type: Fenced code block
-#: manual/Compilation.md:318
+#: manual/Compilation.md:317
 #, no-wrap
 msgid "pkg install -y avahi bison cmark db5 iniparser krb5-devel libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Compilation.md:323 manual/Compilation.md:343
-#: manual/Compilation.md:372 manual/Compilation.md:399
-#: manual/Compilation.md:428 manual/Compilation.md:466
+#: manual/Compilation.md:322 manual/Compilation.md:342
+#: manual/Compilation.md:371 manual/Compilation.md:398
+#: manual/Compilation.md:427 manual/Compilation.md:465
 msgid "Configure and build"
 msgstr "コンフィグレーションとビルド"
 
 #. type: Fenced code block
-#: manual/Compilation.md:324
+#: manual/Compilation.md:323
 #, no-wrap
 msgid ""
 "set -e\n"
@@ -350,19 +349,19 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manual/Compilation.md:334
+#: manual/Compilation.md:333
 #, no-wrap
 msgid "FreeBSD"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:338
+#: manual/Compilation.md:337
 #, no-wrap
 msgid "pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc tracker3\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:344
+#: manual/Compilation.md:343
 #, no-wrap
 msgid ""
 "set -e\n"
@@ -383,21 +382,21 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manual/Compilation.md:362
+#: manual/Compilation.md:361
 #, no-wrap
 msgid "NetBSD"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:366
+#: manual/Compilation.md:365
 #, no-wrap
 msgid ""
-"export PKG_PATH=\"https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/\"\n"
+"export PKG_PATH=\"http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/\"\n"
 "pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:373
+#: manual/Compilation.md:372
 #, no-wrap
 msgid ""
 "set -e\n"
@@ -417,19 +416,19 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manual/Compilation.md:390
+#: manual/Compilation.md:389
 #, no-wrap
 msgid "OpenBSD"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:394
+#: manual/Compilation.md:393
 #, no-wrap
 msgid "pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal iniparser libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 openpam p5-Net-DBus pkgconf tracker3\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:400
+#: manual/Compilation.md:399
 #, no-wrap
 msgid ""
 "set -e\n"
@@ -447,13 +446,13 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manual/Compilation.md:415
+#: manual/Compilation.md:414
 #, no-wrap
 msgid "OmniOS"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:419
+#: manual/Compilation.md:418
 #, no-wrap
 msgid ""
 "pkg install build-essential pkg-config\n"
@@ -464,7 +463,7 @@ msgid ""
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:429
+#: manual/Compilation.md:428
 #, no-wrap
 msgid ""
 "set -e\n"
@@ -486,13 +485,13 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manual/Compilation.md:448
+#: manual/Compilation.md:447
 #, no-wrap
 msgid "Solaris"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:452
+#: manual/Compilation.md:451
 #, no-wrap
 msgid ""
 "pkg install bison cmake flex gcc libevent libgcrypt ninja pkg-config python/pip\n"
@@ -508,7 +507,7 @@ msgid ""
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:467
+#: manual/Compilation.md:466
 #, no-wrap
 msgid ""
 "set -e\n"

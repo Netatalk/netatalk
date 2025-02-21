@@ -256,14 +256,13 @@ Install dependencies
 
 ```
 brew update
-brew upgrade
-brew install bison cmark-gfm cracklib dbus iniparser mariadb meson openldap po4a talloc tracker
+brew install cmark-gfm cracklib iniparser mariadb meson openldap
 ```
 
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-docs-l10n=true -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-tests=true
 ```
 
 Build
@@ -364,7 +363,7 @@ ninja -C build uninstall
 Install required packages
 
 ```
-export PKG_PATH="https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
+export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
 pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc
 ```
 
