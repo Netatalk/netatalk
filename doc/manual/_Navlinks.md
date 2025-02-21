@@ -1,4 +1,4 @@
-# Table of Contents
+# Netatalk Manual
 
 * [Introduction](index.html)
 * [Installation](Installation.html)
