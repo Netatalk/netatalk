@@ -698,6 +698,33 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
 }
 
 /*!
+ * Get integer option from config, use default value if not set
+ *
+ * @param conf    (r) config handle
+ * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
+ * @param opt     (r) option
+ * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
+ * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ *
+ * @returns       int option from "vol" or "defsec", or "defval" if not found
+ */
+static int getoption_int(const dictionary *conf, const char *vol, const char *opt, const char *defsec, int defval)
+{
+    int result;
+    char option[MAXOPTLEN];
+    snprintf(option, sizeof(option), "%s:%s", vol, opt);
+
+    if (((result = iniparser_getint(conf, option, -1)) == -1) && (defsec != NULL)) {
+        snprintf(option, sizeof(option), "%s:%s", defsec, opt);
+        result = iniparser_getint(conf, option, -1);
+    }
+
+    if (result == -1)
+        result = defval;
+    return result;
+}
+
+/*!
  * Get boolean option from volume, default section or global - use default value if not set
  *
  * Order of precedence: volume -> default section -> global -> default value
@@ -1907,10 +1934,17 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        abspath[MAXPATHLEN + 1];
-    char        volpath[MAXPATHLEN + 1], *realvolpath = NULL;
+    char        volpath[MAXPATHLEN + 1];
+    char       *realvolpath = NULL;
     char        tmpbuf[MAXPATHLEN + 1];
-    const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
-    char *user = NULL, *prw;
+    const char *secname;
+    char *basedir;
+    const char *p = NULL;
+    char *q = NULL;
+    const char *subpath = NULL;
+    char *subpathconfig = NULL;
+    char *user = NULL;
+    char *prw = NULL;
     regmatch_t match[1];
     size_t abspath_len;
 
@@ -1967,7 +2001,11 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
     /* (3) */
-    EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, "Homes:basedir regex", NULL) );
+    basedir = getoption(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL, NULL);
+    if (basedir == NULL) {
+        free(basedir);
+        EC_FAIL_LOG("getvolbypath(\"%s\"): no home basedir regex", path);
+    }
     LOG(log_debug, logtype_afpd, "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
 
     if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
@@ -2018,7 +2056,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (6) */
-    if ((subpathconfig = iniparser_getstring(obj->iniconfig, "Homes:path", NULL))) {
+    if ((subpathconfig = getoption(obj->iniconfig, INISEC_HOMES, "path", NULL, NULL))) {
         /*
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
@@ -2026,8 +2064,8 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         */
         strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
         strlcat(tmpbuf, "/", MAXPATHLEN);
+        free(subpathconfig);
     }
-
 
     /* (7) */
     if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL)
@@ -2048,10 +2086,11 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         path, user, pw->pw_dir, realvolpath);
 
     /* do variable substitution for volume name */
-    p = iniparser_getstring(obj->iniconfig, "Homes:home name", "$u's home");
-    if (strstr(p, "$u") == NULL)
-        p = "$u's home";
-    strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
+    q = getoption(obj->iniconfig, INISEC_HOMES, "home name", NULL, "$u's home");
+    if (strstr(q, "$u") == NULL)
+        q = strdup("$u's home");
+    strlcpy(tmpbuf, q, AFPVOL_U8MNAMELEN);
+    free(q);
     EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, realvolpath, NULL) );
 
     char *preset;
@@ -2185,22 +2224,22 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->cnid_mysql_host = getoption(config, INISEC_GLOBAL, "cnid mysql host", NULL, NULL);
     options->cnid_mysql_user = getoption(config, INISEC_GLOBAL, "cnid mysql user", NULL, NULL);
     options->cnid_mysql_db  = getoption(config, INISEC_GLOBAL, "cnid mysql db",  NULL, NULL);
-    options->connections    = iniparser_getint   (config, "Global:max connections",200);
-    options->passwdminlen   = (unsigned char) iniparser_getint(config, "Global:passwd minlen", 0);
-    options->tickleval      = iniparser_getint   (config, "Global:tickleval",      30);
-    options->timeout        = iniparser_getint   (config, "Global:timeout",        4);
-    options->dsireadbuf     = iniparser_getint   (config, "Global:dsireadbuf",     12);
-    options->server_quantum = iniparser_getint   (config, "Global:server quantum", DSI_SERVQUANT_DEF);
-    options->volnamelen     = iniparser_getint   (config, "Global:volnamelen",     80);
-    options->dircachesize   = iniparser_getint   (config, "Global:dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
-    options->tcp_sndbuf     = iniparser_getint   (config, "Global:tcpsndbuf",      0);
-    options->tcp_rcvbuf     = iniparser_getint   (config, "Global:tcprcvbuf",      0);
-    options->fce_fmodwait   = iniparser_getint   (config, "Global:fce holdfmod",   60);
-    options->fce_sendwait   = iniparser_getint   (config, "Global:fce sendwait",   0);
-    options->sleep          = iniparser_getint   (config, "Global:sleep time",     10);
-    options->disconnected   = iniparser_getint   (config, "Global:disconnect time",24);
-    options->splice_size    = iniparser_getint   (config, "Global:splice size",    64*1024);
-    options->sparql_limit   = iniparser_getint   (config, "Global:sparql results limit", 0);
+    options->connections    = getoption_int(config, INISEC_GLOBAL, "max connections", NULL, 200);
+    options->passwdminlen   = (unsigned char) getoption_int(config, INISEC_GLOBAL, "passwd minlen", NULL, 0);
+    options->tickleval      = getoption_int(config, INISEC_GLOBAL, "tickleval",  NULL, 30);
+    options->timeout        = getoption_int(config, INISEC_GLOBAL, "timeout",    NULL, 4);
+    options->dsireadbuf     = getoption_int(config, INISEC_GLOBAL, "dsireadbuf", NULL, 12);
+    options->server_quantum = getoption_int(config, INISEC_GLOBAL, "server quantum", NULL, DSI_SERVQUANT_DEF);
+    options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen", NULL, 80);
+    options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircachesize", NULL, DEFAULT_MAX_DIRCACHE_SIZE);
+    options->tcp_sndbuf     = getoption_int(config, INISEC_GLOBAL, "tcpsndbuf",  NULL, 0);
+    options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",  NULL, 0);
+    options->fce_fmodwait   = getoption_int(config, INISEC_GLOBAL, "fce holdfmod", NULL, 60);
+    options->fce_sendwait   = getoption_int(config, INISEC_GLOBAL, "fce sendwait", NULL, 0);
+    options->sleep          = getoption_int(config, INISEC_GLOBAL, "sleep time", NULL, 10);
+    options->disconnected   = getoption_int(config, INISEC_GLOBAL, "disconnect time", NULL, 24);
+    options->splice_size    = getoption_int(config, INISEC_GLOBAL, "splice size", NULL, 64*1024);
+    options->sparql_limit   = getoption_int(config, INISEC_GLOBAL, "sparql results limit", NULL, 0);
 
     p = getoption(config, INISEC_GLOBAL, "map acls", NULL, "rights");
     if (STRCMP(p, ==, "rights")) {
