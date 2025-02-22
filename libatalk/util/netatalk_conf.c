@@ -2203,10 +2203,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->sparql_limit   = iniparser_getint   (config, "Global:sparql results limit", 0);
 
     p = getoption(config, INISEC_GLOBAL, "map acls", NULL, "rights");
-    if (STRCMP(p, ==, "rights"))
+    if (STRCMP(p, ==, "rights")) {
         options->flags |= OPTION_ACL2MACCESS;
-    else if (STRCMP(p, ==, "mode"))
+    }
+    else if (STRCMP(p, ==, "mode")) {
         options->flags |= OPTION_ACL2MODE | OPTION_ACL2MACCESS;
+    }
     else {
         if (STRCMP(p, !=, "none")) {
             LOG(log_error, logtype_afpd, "bad ACL mapping option: %s, defaulting to 'rights'", p);
@@ -2214,14 +2216,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
     }
 
-    if (p) {
-        free(p);
-    }
-
 #ifndef NO_DDP
     if ((p = getoption(config, INISEC_GLOBAL, "ddp address", NULL, NULL))) {
         atalk_aton(p, &options->ddpaddr);
-        free(p);
     }
 
     if ((p = getoption(config, INISEC_GLOBAL, "ddp zone", NULL, NULL))) {
@@ -2229,22 +2226,13 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         {
             options->zone = strdup(p);
             if (options->zone == NULL) {
-                free(p);
                 EC_FAIL;
             }
         }
-        free(p);
     }
 #endif
 
-    if ((p = getoption(config, INISEC_GLOBAL, "hostname", NULL, NULL))) {
-        options->hostname = strdup(p);
-        if (options->hostname == NULL) {
-            free(p);
-            EC_FAIL;
-        }
-        free(p);
-    } else {
+    if ((options->hostname = getoption(config, INISEC_GLOBAL, "hostname", NULL, NULL)) == NULL) {
         if (gethostname(val, sizeof(val)) < 0 ) {
             perror( "gethostname" );
             EC_FAIL;
@@ -2259,19 +2247,16 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         size_t ktlen = len + 14;
         options->k5keytab = malloc(ktlen);
         if (options->k5keytab == NULL) {
-            free(p);
             EC_FAIL;
         }
         snprintf(options->k5keytab, ktlen, "KRB5_KTNAME=%s", p);
         putenv(options->k5keytab);
-        free(p);
     }
 
     if ((p = getoption(config, INISEC_GLOBAL, "admin group", NULL, NULL))) {
         struct group *gr = getgrnam(p);
         if (gr != NULL)
             options->admingid = gr->gr_gid;
-        free(p);
     }
 
     if ((p = getoption(config, INISEC_GLOBAL, "force user", NULL, NULL))) {
@@ -2280,7 +2265,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             options->force_uid = pw->pw_uid;
             options->force_user = true;
         }
-        free(p);
     }
 
     if ((p = getoption(config, INISEC_GLOBAL, "force group", NULL, NULL))) {
@@ -2289,21 +2273,23 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             options->force_gid = gr->gr_gid;
             options->force_group = true;
         }
-        free(p);
     }
 
     q = getoption(config, INISEC_GLOBAL, "cnid server", NULL, "localhost:4700");
     r = strrchr(q, ':');
-    if (r)
-        *r = 0;
-    options->Cnid_srv = strdup(q);
-    if (r)
+    if (r) {
+        size_t hostname_length = r - q;
+        options->Cnid_srv = (char *)malloc(hostname_length + 1);
+        if (options->Cnid_srv) {
+            strncpy(options->Cnid_srv, q, hostname_length);
+            (options->Cnid_srv)[hostname_length] = '\0';
+        }
         options->Cnid_port = strdup(r + 1);
-    else
+    } else {
+        LOG(log_debug, logtype_afpd, "CNID Server: no port number detected, so falling back to default 4700");
         options->Cnid_port = strdup("4700");
+    }
     LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", options->Cnid_srv, options->Cnid_port);
-    if (q)
-        free(q);
 
     if ((q = getoption(config, INISEC_GLOBAL, "fqdn", NULL, NULL))) {
         /* do a little checking for the domain name. */
@@ -2327,7 +2313,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         } else {
             LOG(log_error, logtype_afpd, "error parsing -fqdn, getaddrinfo failed for: %s", q);
         }
-        free(q);
     }
 
     /* Charset Options */
@@ -2356,7 +2341,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
         options->unixcodepage = strdup(charset);
         set_charset_name(CH_UNIX, charset);
-        free(p);
     }
     options->unixcharset = CH_UNIX;
     LOG(log_debug, logtype_afpd, "Global unix charset is %s", options->unixcodepage);
@@ -2373,7 +2357,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             charset = p;
         }
         options->volcodepage = strdup(charset);
-        free(p);
     }
     LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
 
@@ -2387,7 +2370,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
         options->maccodepage = strdup(p);
         set_charset_name(CH_MAC, p);
-        free(p);
     }
     options->maccharset = CH_MAC;
     LOG(log_debug, logtype_afpd, "Global mac charset is %s", options->maccodepage);
@@ -2414,6 +2396,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->volnamelen = 255; /* AFP3 spec */
 
 EC_CLEANUP:
+    if (p) {
+        free(p);
+    }
+    if (q) {
+        free(q);
+    }
     EC_EXIT;
 }
 
