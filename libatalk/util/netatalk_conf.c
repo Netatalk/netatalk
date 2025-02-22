@@ -649,9 +649,9 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_, const char 
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
-static char *getoption(const dictionary *conf, const char *vol, const char *opt, const char *defsec, char *defval)
+static const char *getoption_str(const dictionary *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
 {
-    char *result;
+    const char *result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
 
@@ -662,6 +662,39 @@ static char *getoption(const dictionary *conf, const char *vol, const char *opt,
 
     if (result == NULL)
         result = defval;
+    return result;
+}
+
+/*!
+ * Get option string from config, use default value if not set
+ * Returns a dynamically allocated string which caller must free
+ *
+ * @param conf    (r) config handle
+ * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
+ * @param opt     (r) option
+ * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
+ * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ *
+ * @returns       dynamically allocated option string from "vol" or "defsec", or "defval" if not found
+ */
+static char *getoption_strdup(const dictionary *conf, const char *vol, const char *opt, const char *defsec, const char *defval)
+{
+    char *result;
+    char option[MAXOPTLEN];
+    const char *tmp;
+
+    snprintf(option, sizeof(option), "%s:%s", vol, opt);
+    tmp = iniparser_getstring(conf, option, NULL);
+    result = tmp ? strdup(tmp) : NULL;
+
+    if (!result && defsec != NULL) {
+        snprintf(option, sizeof(option), "%s:%s", defsec, opt);
+        tmp = iniparser_getstring(conf, option, NULL);
+        result = tmp ? strdup(tmp) : NULL;
+    }
+
+    if (result == NULL && defval != NULL)
+        result = strdup(defval);
     return result;
 }
 
@@ -685,6 +718,33 @@ static int getoption_bool(const dictionary *conf, const char *vol, const char *o
     if (((result = iniparser_getboolean(conf, option, -1)) == -1) && (defsec != NULL)) {
         snprintf(option, sizeof(option), "%s:%s", defsec, opt);
         result = iniparser_getboolean(conf, option, -1);
+    }
+
+    if (result == -1)
+        result = defval;
+    return result;
+}
+
+/*!
+ * Get integer option from config, use default value if not set
+ *
+ * @param conf    (r) config handle
+ * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
+ * @param opt     (r) option
+ * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
+ * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ *
+ * @returns       int option from "vol" or "defsec", or "defval" if not found
+ */
+static int getoption_int(const dictionary *conf, const char *vol, const char *opt, const char *defsec, int defval)
+{
+    int result;
+    char option[MAXOPTLEN];
+    snprintf(option, sizeof(option), "%s:%s", vol, opt);
+
+    if (((result = iniparser_getint(conf, option, -1)) == -1) && (defsec != NULL)) {
+        snprintf(option, sizeof(option), "%s:%s", defsec, opt);
+        result = iniparser_getint(conf, option, -1);
     }
 
     if (result == -1)
@@ -721,7 +781,7 @@ static int vdgoption_bool(const dictionary *conf, const char *vol, const char *o
     }
 
     if (result == -1) {
-        snprintf(option, sizeof(option), "Global:%s", opt);
+        snprintf(option, sizeof(option), "%s:%s", INISEC_GLOBAL, opt);
         result = iniparser_getboolean(conf, option, defval);
     }
 
@@ -751,11 +811,13 @@ static struct vol *creatvol(AFPObj *obj,
     int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
     char        tmpname[AFPVOL_U8MNAMELEN+1];
     char        path[MAXPATHLEN + 1];
-    ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2], mactmpname[(AFPVOL_MACNAMELEN+1)*2];
+    ucs2_t      u8mtmpname[(AFPVOL_U8MNAMELEN+1)*2];
+    ucs2_t      mactmpname[(AFPVOL_MACNAMELEN+1)*2];
     char        suffix[6]; /* max is #FFFF */
     uint16_t    flags;
-    char        *val;
-    char        *p, *q;
+    const char  *val;
+    char        *p;
+    char        *q;
     bstring     dbpath = NULL;
     bstring     global_path_tmp = NULL;
 
@@ -802,13 +864,13 @@ static struct vol *creatvol(AFPObj *obj,
      * deny -> either no list (-1), or not in list (0)
      */
     if (pwd) {
-        if (accessvol(obj, getoption(obj->iniconfig, section, "invalid users", preset, NULL), pwd->pw_name) == 1)
+        if (accessvol(obj, getoption_str(obj->iniconfig, section, "invalid users", preset, NULL), pwd->pw_name) == 1)
             goto EC_CLEANUP;
-        if (accessvol(obj, getoption(obj->iniconfig, section, "valid users", preset, NULL), pwd->pw_name) == 0)
+        if (accessvol(obj, getoption_str(obj->iniconfig, section, "valid users", preset, NULL), pwd->pw_name) == 0)
             goto EC_CLEANUP;
-        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "hosts deny", preset, NULL)) == 1)
+        if (hostaccessvol(obj, section, getoption_str(obj->iniconfig, section, "hosts deny", preset, NULL)) == 1)
             goto EC_CLEANUP;
-        if (hostaccessvol(obj, section, getoption(obj->iniconfig, section, "hosts allow", preset, NULL)) == 0)
+        if (hostaccessvol(obj, section, getoption_str(obj->iniconfig, section, "hosts allow", preset, NULL)) == 0)
             goto EC_CLEANUP;
     }
 
@@ -819,26 +881,25 @@ static struct vol *creatvol(AFPObj *obj,
     volume->v_vfs_ea = AFPVOL_EA_AUTO;
     volume->v_umask = obj->options.umask;
 
-    if ((val = getoption(obj->iniconfig, section, "password", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "password", preset, NULL)))
         EC_NULL( volume->v_password = strdup(val) );
 
-    if ((val = getoption(obj->iniconfig, section, "veto files", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "veto files", preset, NULL)))
         EC_NULL( volume->v_veto = strdup(val) );
 
     /* vol charset is in [G] and [V] */
-    if ((val = getoption(obj->iniconfig, section, "vol charset", preset, NULL))) {
+    if ((val = getoption_str(obj->iniconfig, section, "vol charset", preset, NULL))) {
         if (strcasecmp(val, "UTF-8") == 0) {
             val = strdup("UTF8");
         }
         volume->v_volcodepage = strdup(val);
-        free(val);
         EC_NULL( volume->v_volcodepage );
     }
     else
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
 
     /* mac charset is in [G] and [V] */
-    if ((val = getoption(obj->iniconfig, section, "mac charset", preset, NULL))) {
+    if ((val = getoption_str(obj->iniconfig, section, "mac charset", preset, NULL))) {
         if (strncasecmp(val, "MAC", 3) != 0) {
             LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", val);
         }
@@ -853,16 +914,14 @@ static struct vol *creatvol(AFPObj *obj,
         if(tmpname[i] == '/') tmpname[i] = ':';
 
 
-    if (iniparser_getboolean(obj->iniconfig, "Global:vol dbnest", 0)) {
+    if (getoption_bool(obj->iniconfig, INISEC_GLOBAL, "vol dbnest", NULL, 0)) {
         EC_NULL( volume->v_dbpath = strdup(path) );
     } else {
-        char *global_path;
-        val = getoption(obj->iniconfig, section, "vol dbpath", preset, NULL);
+        const char *global_path;
+        val = getoption_str(obj->iniconfig, section, "vol dbpath", preset, NULL);
         if (val == NULL) {
             /* check global option */
-            global_path = iniparser_getstring(obj->iniconfig,
-                                                    "Global:vol dbpath",
-                                                    NULL);
+            global_path = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol dbpath", NULL, NULL);
             if (global_path) {
                 /* check for pre 3.1.1 behaviour without variable */
                 if (strchr(global_path, '$') == NULL) {
@@ -883,30 +942,30 @@ static struct vol *creatvol(AFPObj *obj,
                                              cfrombstr(dbpath), pwd, NULL, tmpname) );
     }
 
-    if ((val = getoption(obj->iniconfig, section, "cnid scheme", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "cnid scheme", preset, NULL)))
         EC_NULL( volume->v_cnidscheme = strdup(val) );
     else
         volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
 
-    if ((val = getoption(obj->iniconfig, section, "umask", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "umask", preset, NULL)))
         volume->v_umask = (int)strtol(val, NULL, 8);
 
-    if ((val = getoption(obj->iniconfig, section, "directory perm", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "directory perm", preset, NULL)))
         volume->v_dperm = (int)strtol(val, NULL, 8);
 
-    if ((val = getoption(obj->iniconfig, section, "file perm", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "file perm", preset, NULL)))
         volume->v_fperm = (int)strtol(val, NULL, 8);
 
-    if ((val = getoption(obj->iniconfig, section, "vol size limit", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "vol size limit", preset, NULL)))
         volume->v_limitsize = (uint32_t)strtoul(val, NULL, 10);
 
-    if ((val = getoption(obj->iniconfig, section, "preexec", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "preexec", preset, NULL)))
         EC_NULL( volume->v_preexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if ((val = getoption(obj->iniconfig, section, "postexec", preset, NULL)))
+    if ((val = getoption_str(obj->iniconfig, section, "postexec", preset, NULL)))
         EC_NULL( volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if ((val = getoption(obj->iniconfig, section, "appledouble", preset, NULL))) {
+    if ((val = getoption_str(obj->iniconfig, section, "appledouble", preset, NULL))) {
         if (strcmp(val, "v2") == 0)
             volume->v_adouble = AD_VERSION2;
         else if (strcmp(val, "ea") == 0)
@@ -915,7 +974,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_adouble = AD_VERSION;
     }
 
-    if ((val = getoption(obj->iniconfig, section, "cnid server", preset, NULL))) {
+    if ((val = getoption_str(obj->iniconfig, section, "cnid server", preset, NULL))) {
         EC_NULL( p = strdup(val) );
         volume->v_cnidserver = p;
         if ((q = strrchr(val, ':'))) {
@@ -930,7 +989,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_cnidport = strdup(obj->options.Cnid_port);
     }
 
-    if ((val = getoption(obj->iniconfig, section, "ea", preset, NULL))) {
+    if ((val = getoption_str(obj->iniconfig, section, "ea", preset, NULL))) {
         if (strcasecmp(val, "ad") == 0)
             volume->v_vfs_ea = AFPVOL_EA_AD;
         else if (strcasecmp(val, "sys") == 0)
@@ -943,7 +1002,7 @@ static struct vol *creatvol(AFPObj *obj,
 	}
     }
 
-    if ((val = getoption(obj->iniconfig, section, "casefold", preset, NULL))) {
+    if ((val = getoption_str(obj->iniconfig, section, "casefold", preset, NULL))) {
         if (strcasecmp(val, "tolower") == 0)
             volume->v_casefold = AFPVOL_UMLOWER;
         else if (strcasecmp(val, "toupper") == 0)
@@ -998,7 +1057,7 @@ static struct vol *creatvol(AFPObj *obj,
     if (vdgoption_bool(obj->iniconfig, section, "force xattr with sticky bit", preset, 0))
         volume->v_flags |= AFPVOL_FORCE_STICKY_XATTR;
 
-    if ((val = getoption(obj->iniconfig, section, "ignored attributes", preset, obj->options.ignored_attr))) {
+    if ((val = getoption_str(obj->iniconfig, section, "ignored attributes", preset, obj->options.ignored_attr))) {
         if (strstr(val, "all")) {
             volume->v_ignattr |= ATTRBIT_NOWRITE | ATTRBIT_NORENAME | ATTRBIT_NODELETE;
         }
@@ -1013,9 +1072,9 @@ static struct vol *creatvol(AFPObj *obj,
         }
     }
 
-    val = getoption(obj->iniconfig, section, "chmod request", preset, NULL);
+    val = getoption_str(obj->iniconfig, section, "chmod request", preset, NULL);
     if (val == NULL) {
-        val = iniparser_getstring(obj->iniconfig, "Global:chmod request", "preserve");
+        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "chmod request", NULL, "preserve");
     }
     if (strcasecmp(val, "ignore") == 0) {
         volume->v_flags |= AFPVOL_CHMOD_IGNORE;
@@ -1033,10 +1092,11 @@ static struct vol *creatvol(AFPObj *obj,
      * 3) rwlist exists -> ro unless user is in it.
      * 4) cnid scheme = last -> ro forcibly.
      */
-    if (pwd) {
-        if (accessvol(obj, getoption(obj->iniconfig, section, "rolist", preset, NULL), pwd->pw_name) == 1
-            || accessvol(obj, getoption(obj->iniconfig, section, "rwlist", preset, NULL), pwd->pw_name) == 0)
-            volume->v_flags |= AFPVOL_RO;
+    if (pwd &&
+            (accessvol(obj, getoption_str(obj->iniconfig, section, "rolist", preset, NULL), pwd->pw_name) == 1
+            || accessvol(obj, getoption_str(obj->iniconfig, section, "rwlist", preset, NULL), pwd->pw_name) == 0)
+        ) {
+        volume->v_flags |= AFPVOL_RO;
     }
 #ifndef WITH_TESTS
     if (0 == strcmp(volume->v_cnidscheme, "last"))
@@ -1241,7 +1301,7 @@ static int volfile_changed(AFPObj *obj)
         return 1;
     }
 
-    includefile = iniparser_getstring(obj->iniconfig, "Global:include", NULL);
+    includefile = getoption_str(obj->iniconfig, INISEC_GLOBAL, "include", NULL, NULL);
     if (includefile) {
         result = stat(includefile, &st);
         if (result != 0) {
@@ -1290,7 +1350,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
     LOG(log_debug, logtype_afpd, "readvolfile: sections: %d", secnum);
     const char *secname;
 
-    if ((default_preset = iniparser_getstring(obj->iniconfig, "Global:vol preset", NULL))) {
+    if ((default_preset = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL, NULL))) {
         LOG(log_debug, logtype_afpd, "readvolfile: default_preset: %s", default_preset);
     }
 
@@ -1318,7 +1378,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             LOG(log_debug, logtype_afpd, "readvolfile: realpath pwent->pw_dir: '%s'", tmp);
 
             /* check if user home matches our "basedir regex" */
-            if ((basedir = iniparser_getstring(obj->iniconfig, "Homes:basedir regex", NULL)) == NULL) {
+            if ((basedir = getoption_str(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL, NULL)) == NULL) {
                 LOG(log_error, logtype_afpd, "\"basedir regex =\" must be defined in [Homes] section");
                 continue;
             }
@@ -1337,15 +1397,13 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
                 continue;
             }
 
-            if ((p = iniparser_getstring(obj->iniconfig, "Homes:path", NULL))) {
+            if ((p = getoption_str(obj->iniconfig, INISEC_HOMES, "path", NULL, NULL))) {
                 strlcat(tmp, "/", MAXPATHLEN);
                 strlcat(tmp, p, MAXPATHLEN);
             }
         } else {
-            char option[MAXOPTLEN];
-            snprintf(option, sizeof(option), "%s:path", secname);
             /* Get path */
-            if ((p = iniparser_getstring(obj->iniconfig, option, NULL)) == NULL)
+            if ((p = getoption_str(obj->iniconfig, secname, "path", NULL, NULL)) == NULL)
                 continue;
             strlcpy(tmp, p, MAXPATHLEN);
         }
@@ -1355,7 +1413,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 
         /* do variable substitution for volume name */
         if (STRCMP(secname, ==, INISEC_HOMES)) {
-            p = iniparser_getstring(obj->iniconfig, "Homes:home name", "$u's home");
+            p = getoption_str(obj->iniconfig, INISEC_HOMES, "home name", NULL, "$u's home");
             if (strstr(p, "$u") == NULL) {
                 LOG(log_warning, logtype_afpd, "home name must contain $u.");
                 p = "$u's home";
@@ -1366,15 +1424,13 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
             }
             strlcpy(tmp, p, MAXPATHLEN);
         } else {
-            p = getoption(obj->iniconfig, secname, "name", NULL, NULL);
+            p = getoption_str(obj->iniconfig, secname, "name", NULL, NULL);
             strlcpy(tmp, p ? p : secname, AFPVOL_U8MNAMELEN);
         }
         if (volxlate(obj, volname, sizeof(volname) - 1, tmp, pwent, path, NULL) == NULL)
             continue;
 
-        char option[MAXOPTLEN];
-        snprintf(option, sizeof(option), "%s:vol preset", secname);
-        preset = iniparser_getstring(obj->iniconfig, option, NULL);
+        preset = getoption_str(obj->iniconfig, secname, "vol preset", NULL, NULL);
 
         if ((realvolpath = realpath_safe(path)) == NULL)
             continue;
@@ -1678,7 +1734,7 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         EC_ZERO_LOG( lstat(obj->options.configfile, &st) );
         obj->options.volfile.mtime = st.st_mtime;
 
-        includefile = iniparser_getstring(obj->iniconfig, "Global:include", NULL);
+        includefile = getoption_str(obj->iniconfig, INISEC_GLOBAL, "include", NULL, NULL);
         if (includefile) {
             EC_ZERO_LOG( stat(includefile, &st) );
             obj->options.includefile.mtime = st.st_mtime;
@@ -1942,7 +1998,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
 
     /* (3) */
-    EC_NULL_LOG( basedir = iniparser_getstring(obj->iniconfig, "Homes:basedir regex", NULL) );
+    EC_NULL_LOG( basedir = getoption_str(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL, NULL) );
     LOG(log_debug, logtype_afpd, "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
 
     if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
@@ -1993,7 +2049,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
     /* (6) */
-    if ((subpathconfig = iniparser_getstring(obj->iniconfig, "Homes:path", NULL))) {
+    if ((subpathconfig = getoption_str(obj->iniconfig, INISEC_HOMES, "path", NULL, NULL))) {
         /*
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
@@ -2023,15 +2079,15 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         path, user, pw->pw_dir, realvolpath);
 
     /* do variable substitution for volume name */
-    p = iniparser_getstring(obj->iniconfig, "Homes:home name", "$u's home");
+    p = getoption_str(obj->iniconfig, INISEC_HOMES, "home name", NULL, "$u's home");
     if (strstr(p, "$u") == NULL)
         p = "$u's home";
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
     EC_NULL_LOG( volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, realvolpath, NULL) );
 
     const char  *preset, *default_preset;
-    default_preset = iniparser_getstring(obj->iniconfig, "Global:vol preset", NULL);
-    preset = iniparser_getstring(obj->iniconfig, "Homes:vol preset", NULL);
+    default_preset = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL, NULL);
+    preset = getoption_str(obj->iniconfig, INISEC_HOMES, "vol preset", NULL, NULL);
 
     vol = creatvol(obj, pw, INISEC_HOMES, volname, realvolpath, preset ? preset : default_preset ? default_preset : NULL);
 
@@ -2093,90 +2149,92 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     AFPObj->iniconfig = config;
 
     /* [Global] */
-    options->logconfig = INIPARSER_GETSTRDUP(config, "Global:log level", "default:note");
-    options->logfile = INIPARSER_GETSTRDUP(config, "Global:log file", NULL);
-    options->log_us_timestamp = iniparser_getboolean(config, "Global:log microseconds", 1);
+    options->logconfig = getoption_strdup(config, INISEC_GLOBAL, "log level", NULL, "default:note");
+    options->logfile = getoption_strdup(config, INISEC_GLOBAL, "log file", NULL, NULL);
+    options->log_us_timestamp = getoption_bool(config, INISEC_GLOBAL, "log microseconds", NULL, 1);
 
     setuplog(options->logconfig, options->logfile, options->log_us_timestamp);
 
     /* "server options" boolean options */
-    if (!iniparser_getboolean(config, "Global:zeroconf", 1))
+    if (!getoption_bool(config, INISEC_GLOBAL, "zeroconf", NULL, 1))
         options->flags |= OPTION_NOZEROCONF;
-    if (iniparser_getboolean(config, "Global:advertise ssh", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "advertise ssh", NULL, 0))
         options->flags |= OPTION_ANNOUNCESSH;
-    if (iniparser_getboolean(config, "Global:close vol", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "close vol", NULL, 0))
         options->flags |= OPTION_CLOSEVOL;
-    if (!iniparser_getboolean(config, "Global:client polling", 0))
+    if (!getoption_bool(config, INISEC_GLOBAL, "client polling", NULL, 0))
         options->flags |= OPTION_SERVERNOTIF;
-    if (!iniparser_getboolean(config, "Global:use sendfile", 1))
+    if (!getoption_bool(config, INISEC_GLOBAL, "use sendfile", NULL, 1))
         options->flags |= OPTION_NOSENDFILE;
-    if (iniparser_getboolean(config, "Global:recvfile", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "recvfile", NULL, 0))
         options->flags |= OPTION_RECVFILE;
-    if (iniparser_getboolean(config, "Global:solaris share reservations", 1))
+    if (getoption_bool(config, INISEC_GLOBAL, "solaris share reservations", NULL, 1))
         options->flags |= OPTION_SHARE_RESERV;
-    if (iniparser_getboolean(config, "Global:afpstats", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "afpstats", NULL, 0))
         options->flags |= OPTION_DBUS_AFPSTATS;
-    if (iniparser_getboolean(config, "Global:afp read locks", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "afp read locks", NULL, 0))
         options->flags |= OPTION_AFP_READ_LOCK;
-    if (iniparser_getboolean(config, "Global:spotlight", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "spotlight", NULL, 0))
         options->flags |= OPTION_SPOTLIGHT_VOL;
-    if (iniparser_getboolean(config, "Global:veto message", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "veto message", NULL, 0))
         options->flags |= OPTION_VETOMSG;
-    if (!iniparser_getboolean(config, "Global:save password", 1))
+    if (!getoption_bool(config, INISEC_GLOBAL, "save password", NULL, 1))
         options->passwdbits |= PASSWD_NOSAVE;
-    if (iniparser_getboolean(config, "Global:set password", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "set password", NULL, 0))
         options->passwdbits |= PASSWD_SET;
-    if (iniparser_getboolean(config, "Global:spotlight expr", 1))
+    if (getoption_bool(config, INISEC_GLOBAL, "spotlight expr", NULL, 1))
         options->flags |= OPTION_SPOTLIGHT_EXPR;
-    if (iniparser_getboolean(config, "Global:appletalk", 0))
+    if (getoption_bool(config, INISEC_GLOBAL, "appletalk", NULL, 0))
         options->flags |= OPTION_DDP;
 
     /* figure out options w values */
-    options->loginmesg      = INIPARSER_GETSTRDUP(config, "Global:login message",  NULL);
-    options->guest          = INIPARSER_GETSTRDUP(config, "Global:guest account",  "nobody");
-    options->extmapfile     = INIPARSER_GETSTRDUP(config, "Global:extmap file",    _PATH_CONFDIR "extmap.conf");
-    options->passwdfile     = INIPARSER_GETSTRDUP(config, "Global:passwd file",    _PATH_AFPDPWFILE);
-    options->uampath        = INIPARSER_GETSTRDUP(config, "Global:uam path",       _PATH_AFPDUAMPATH);
-    options->uamlist        = INIPARSER_GETSTRDUP(config, "Global:uam list",       "uams_dhx.so uams_dhx2.so");
-    options->port           = INIPARSER_GETSTRDUP(config, "Global:afp port",       "548");
-    options->signatureopt   = INIPARSER_GETSTRDUP(config, "Global:signature",      "");
-    options->k5service      = INIPARSER_GETSTRDUP(config, "Global:k5 service",     NULL);
-    options->k5realm        = INIPARSER_GETSTRDUP(config, "Global:k5 realm",       NULL);
-    options->listen         = INIPARSER_GETSTRDUP(config, "Global:afp listen",     NULL);
-    options->interfaces     = INIPARSER_GETSTRDUP(config, "Global:afp interfaces", NULL);
-    options->ntdomain       = INIPARSER_GETSTRDUP(config, "Global:nt domain",      NULL);
-    options->addomain       = INIPARSER_GETSTRDUP(config, "Global:ad domain",      NULL);
-    options->ntseparator    = INIPARSER_GETSTRDUP(config, "Global:nt separator",   NULL);
-    options->legacyicon     = INIPARSER_GETSTRDUP(config, "Global:legacy icon",    "");
-    options->mimicmodel     = INIPARSER_GETSTRDUP(config, "Global:mimic model",    NULL);
-    options->zeroconfname   = INIPARSER_GETSTRDUP(config, "Global:zeroconf name",  NULL);
-    options->adminauthuser  = INIPARSER_GETSTRDUP(config, "Global:admin auth user", NULL);
-    options->ignored_attr   = INIPARSER_GETSTRDUP(config, "Global:ignored attributes", NULL);
-    options->cnid_mysql_host = INIPARSER_GETSTRDUP(config, "Global:cnid mysql host", NULL);
-    options->cnid_mysql_user = INIPARSER_GETSTRDUP(config, "Global:cnid mysql user", NULL);
-    options->cnid_mysql_db  = INIPARSER_GETSTRDUP(config, "Global:cnid mysql db",  NULL);
-    options->connections    = iniparser_getint   (config, "Global:max connections",200);
-    options->passwdminlen   = (unsigned char) iniparser_getint(config, "Global:passwd minlen", 0);
-    options->tickleval      = iniparser_getint   (config, "Global:tickleval",      30);
-    options->timeout        = iniparser_getint   (config, "Global:timeout",        4);
-    options->dsireadbuf     = iniparser_getint   (config, "Global:dsireadbuf",     12);
-    options->server_quantum = iniparser_getint   (config, "Global:server quantum", DSI_SERVQUANT_DEF);
-    options->volnamelen     = iniparser_getint   (config, "Global:volnamelen",     80);
-    options->dircachesize   = iniparser_getint   (config, "Global:dircachesize",   DEFAULT_MAX_DIRCACHE_SIZE);
-    options->tcp_sndbuf     = iniparser_getint   (config, "Global:tcpsndbuf",      0);
-    options->tcp_rcvbuf     = iniparser_getint   (config, "Global:tcprcvbuf",      0);
-    options->fce_fmodwait   = iniparser_getint   (config, "Global:fce holdfmod",   60);
-    options->fce_sendwait   = iniparser_getint   (config, "Global:fce sendwait",   0);
-    options->sleep          = iniparser_getint   (config, "Global:sleep time",     10);
-    options->disconnected   = iniparser_getint   (config, "Global:disconnect time",24);
-    options->splice_size    = iniparser_getint   (config, "Global:splice size",    64*1024);
-    options->sparql_limit   = iniparser_getint   (config, "Global:sparql results limit", 0);
+    options->loginmesg      = getoption_strdup(config, INISEC_GLOBAL, "login message",  NULL, NULL);
+    options->guest          = getoption_strdup(config, INISEC_GLOBAL, "guest account",  NULL, "nobody");
+    options->extmapfile     = getoption_strdup(config, INISEC_GLOBAL, "extmap file",    NULL, _PATH_CONFDIR "extmap.conf");
+    options->passwdfile     = getoption_strdup(config, INISEC_GLOBAL, "passwd file",    NULL, _PATH_AFPDPWFILE);
+    options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",       NULL, _PATH_AFPDUAMPATH);
+    options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",       NULL, "uams_dhx.so uams_dhx2.so");
+    options->port           = getoption_strdup(config, INISEC_GLOBAL, "afp port",       NULL, "548");
+    options->signatureopt   = getoption_strdup(config, INISEC_GLOBAL, "signature",      NULL, "");
+    options->k5service      = getoption_strdup(config, INISEC_GLOBAL, "k5 service",     NULL, NULL);
+    options->k5realm        = getoption_strdup(config, INISEC_GLOBAL, "k5 realm",       NULL, NULL);
+    options->listen         = getoption_strdup(config, INISEC_GLOBAL, "afp listen",     NULL, NULL);
+    options->interfaces     = getoption_strdup(config, INISEC_GLOBAL, "afp interfaces", NULL, NULL);
+    options->ntdomain       = getoption_strdup(config, INISEC_GLOBAL, "nt domain",      NULL, NULL);
+    options->addomain       = getoption_strdup(config, INISEC_GLOBAL, "ad domain",      NULL, NULL);
+    options->ntseparator    = getoption_strdup(config, INISEC_GLOBAL, "nt separator",   NULL, NULL);
+    options->legacyicon     = getoption_strdup(config, INISEC_GLOBAL, "legacy icon",    NULL, "");
+    options->mimicmodel     = getoption_strdup(config, INISEC_GLOBAL, "mimic model",    NULL, NULL);
+    options->zeroconfname   = getoption_strdup(config, INISEC_GLOBAL, "zeroconf name",  NULL, NULL);
+    options->adminauthuser  = getoption_strdup(config, INISEC_GLOBAL, "admin auth user", NULL, NULL);
+    options->ignored_attr   = getoption_strdup(config, INISEC_GLOBAL, "ignored attributes", NULL, NULL);
+    options->cnid_mysql_host = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql host", NULL, NULL);
+    options->cnid_mysql_user = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql user", NULL, NULL);
+    options->cnid_mysql_db  = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql db",  NULL, NULL);
+    options->connections    = getoption_int(config, INISEC_GLOBAL, "max connections", NULL, 200);
+    options->passwdminlen   = (unsigned char) getoption_int(config, INISEC_GLOBAL, "passwd minlen", NULL, 0);
+    options->tickleval      = getoption_int(config, INISEC_GLOBAL, "tickleval",  NULL, 30);
+    options->timeout        = getoption_int(config, INISEC_GLOBAL, "timeout",    NULL, 4);
+    options->dsireadbuf     = getoption_int(config, INISEC_GLOBAL, "dsireadbuf", NULL, 12);
+    options->server_quantum = getoption_int(config, INISEC_GLOBAL, "server quantum", NULL, DSI_SERVQUANT_DEF);
+    options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen", NULL, 80);
+    options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircachesize", NULL, DEFAULT_MAX_DIRCACHE_SIZE);
+    options->tcp_sndbuf     = getoption_int(config, INISEC_GLOBAL, "tcpsndbuf",  NULL, 0);
+    options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",  NULL, 0);
+    options->fce_fmodwait   = getoption_int(config, INISEC_GLOBAL, "fce holdfmod", NULL, 60);
+    options->fce_sendwait   = getoption_int(config, INISEC_GLOBAL, "fce sendwait", NULL, 0);
+    options->sleep          = getoption_int(config, INISEC_GLOBAL, "sleep time", NULL, 10);
+    options->disconnected   = getoption_int(config, INISEC_GLOBAL, "disconnect time", NULL, 24);
+    options->splice_size    = getoption_int(config, INISEC_GLOBAL, "splice size", NULL, 64*1024);
+    options->sparql_limit   = getoption_int(config, INISEC_GLOBAL, "sparql results limit", NULL, 0);
 
-    p = INIPARSER_GETSTRDUP(config, "Global:map acls", "rights");
-    if (STRCMP(p, ==, "rights"))
+    p = getoption_strdup(config, INISEC_GLOBAL, "map acls", NULL, "rights");
+    if (STRCMP(p, ==, "rights")) {
         options->flags |= OPTION_ACL2MACCESS;
-    else if (STRCMP(p, ==, "mode"))
+    }
+    else if (STRCMP(p, ==, "mode")) {
         options->flags |= OPTION_ACL2MODE | OPTION_ACL2MACCESS;
+    }
     else {
         if (STRCMP(p, !=, "none")) {
             LOG(log_error, logtype_afpd, "bad ACL mapping option: %s, defaulting to 'rights'", p);
@@ -2189,12 +2247,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
 #ifndef NO_DDP
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:ddp address", NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "ddp address", NULL, NULL))) {
         atalk_aton(p, &options->ddpaddr);
         free(p);
     }
 
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:ddp zone", NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "ddp zone", NULL, NULL))) {
         if (strlen(p) <= 32)
         {
             options->zone = strdup(p);
@@ -2207,7 +2265,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 #endif
 
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:hostname", NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "hostname", NULL, NULL))) {
         options->hostname = strdup(p);
         if (options->hostname == NULL) {
             free(p);
@@ -2224,7 +2282,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->hostname = strdup(val);
     }
 
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:k5 keytab", NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "k5 keytab", NULL, NULL))) {
         size_t len = strlen(p);
         size_t ktlen = len + 14;
         options->k5keytab = malloc(ktlen);
@@ -2237,14 +2295,14 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         free(p);
     }
 
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:admin group",  NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "admin group", NULL, NULL))) {
         struct group *gr = getgrnam(p);
         if (gr != NULL)
             options->admingid = gr->gr_gid;
         free(p);
     }
 
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:force user",  NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "force user", NULL, NULL))) {
         struct passwd *pw = getpwnam(p);
         if (pw != NULL) {
             options->force_uid = pw->pw_uid;
@@ -2253,7 +2311,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         free(p);
     }
 
-    if ((p = INIPARSER_GETSTRDUP(config, "Global:force group",  NULL))) {
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "force group", NULL, NULL))) {
         struct group *gr = getgrnam(p);
         if (gr != NULL) {
             options->force_gid = gr->gr_gid;
@@ -2262,20 +2320,24 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         free(p);
     }
 
-    q = INIPARSER_GETSTRDUP(config, "Global:cnid server", "localhost:4700");
+    q = getoption_strdup(config, INISEC_GLOBAL, "cnid server", NULL, "localhost:4700");
     r = strrchr(q, ':');
-    if (r)
-        *r = 0;
-    options->Cnid_srv = strdup(q);
-    if (r)
+    if (r) {
+        size_t hostname_length = r - q;
+        options->Cnid_srv = (char *)malloc(hostname_length + 1);
+        if (options->Cnid_srv) {
+            strlcpy(options->Cnid_srv, q, hostname_length + 1);
+        }
         options->Cnid_port = strdup(r + 1);
-    else
+    } else {
+        LOG(log_debug, logtype_afpd, "CNID Server: no port number detected, so falling back to default 4700");
         options->Cnid_port = strdup("4700");
+    }
     LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", options->Cnid_srv, options->Cnid_port);
     if (q)
         free(q);
 
-    if ((q = INIPARSER_GETSTRDUP(config, "Global:fqdn", NULL))) {
+    if ((q = getoption_strdup(config, INISEC_GLOBAL, "fqdn", NULL, NULL))) {
         /* do a little checking for the domain name. */
         r = strchr(q, ':');
         if (r)
@@ -2303,7 +2365,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     /* Charset Options */
 
     /* unix charset is in [G] only */
-    if (!(p = INIPARSER_GETSTRDUP(config, "Global:unix charset", NULL))) {
+    if (!(p = getoption_strdup(config, INISEC_GLOBAL, "unix charset", NULL, NULL))) {
         options->unixcodepage = strdup("UTF8");
         set_charset_name(CH_UNIX, "UTF8");
     } else {
@@ -2332,7 +2394,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     LOG(log_debug, logtype_afpd, "Global unix charset is %s", options->unixcodepage);
 
     /* vol charset is in [G] and [V] */
-    if (!(p = INIPARSER_GETSTRDUP(config, "Global:vol charset", NULL))) {
+    if (!(p = getoption_strdup(config, INISEC_GLOBAL, "vol charset", NULL, NULL))) {
         options->volcodepage = strdup(options->unixcodepage);
     } else {
         const char *charset;
@@ -2348,7 +2410,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     LOG(log_debug, logtype_afpd, "Global vol charset is %s", options->volcodepage);
 
     /* mac charset is in [G] and [V] */
-    if (!(p = INIPARSER_GETSTRDUP(config, "Global:mac charset", NULL))) {
+    if (!(p = getoption_strdup(config, INISEC_GLOBAL, "mac charset", NULL, NULL))) {
         options->maccodepage = strdup("MAC_ROMAN");
         set_charset_name(CH_MAC, "MAC_ROMAN");
     } else {
