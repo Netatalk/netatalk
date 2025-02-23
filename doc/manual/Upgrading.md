@@ -170,7 +170,7 @@ Implementation details:
 
 | Old afpd.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |
 |----|----|----|----|----|----|
-| 1st field ("-" or "server name") | hostname | \- | \- | \(G\) | use gethostname() by default |
+| 1st field ("-" or "server name") | server name | \- | \- | \(G\) | new in 4.2.0; use value of hostname by default |
 | -uamlist | uam list | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | \(G\) | \- |
 | -nozeroconf | zeroconf | \- | yes (if supported) | \(G\) | \- |
 | -advertise_ssh | advertise ssh | \- | no | \(G\) | \- |

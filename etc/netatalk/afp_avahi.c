@@ -93,14 +93,14 @@ static void register_stuff(void) {
 
         LOG(log_info, logtype_afpd, "hostname: %s", ctx->obj->options.hostname);
 
-        if (ctx->obj->options.zeroconfname) {
+        if (ctx->obj->options.servername) {
             if (convert_string(ctx->obj->options.unixcharset,
                                CH_UTF8,
-                               ctx->obj->options.zeroconfname,
+                               ctx->obj->options.servername,
                                -1,
                                name,
                                MAXINSTANCENAMELEN) <= 0) {
-                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.zeroconfname);
+                LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", ctx->obj->options.servername);
                 goto fail;
             }
         } else {
