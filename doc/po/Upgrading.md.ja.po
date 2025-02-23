@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-29 18:48+0100\n"
+"POT-Creation-Date: 2025-02-23 14:00+0100\n"
 "PO-Revision-Date: 2025-01-23 08:10+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,9 +17,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1054 manpages/man5/afp.conf.5.md:1089
-#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
-#: manual/Upgrading.md:42
+#: manpages/man5/afp.conf.5.md:1011 manpages/man5/afp.conf.5.md:1070
+#: manpages/man5/afp.conf.5.md:1105 manual/AppleTalk.md:154
+#: manual/Configuration.md:832 manual/Installation.md:4 manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -467,7 +467,7 @@ msgstr "**afpd.conf から afp.conf**\n"
 msgid ""
 "| Old afpd.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |\n"
 "|----|----|----|----|----|----|\n"
-"| 1st field (\"-\" or \"server name\") | hostname | \\- | \\- | \\(G\\) | use gethostname() by default |\n"
+"| 1st field (\"-\" or \"server name\") | server name | \\- | \\- | \\(G\\) | new in 4.2.0; use value of hostname by default |\n"
 "| -uamlist | uam list | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | \\(G\\) | \\- |\n"
 "| -nozeroconf | zeroconf | \\- | yes (if supported) | \\(G\\) | \\- |\n"
 "| -advertise_ssh | advertise ssh | \\- | no | \\(G\\) | \\- |\n"
@@ -531,7 +531,7 @@ msgid ""
 msgstr ""
 "| 旧 afpd.conf | 新 afp.conf | 旧デフォルト値 | 新デフォルト値 | セクション | 詳細 |\n"
 "|----|----|----|----|----|----|\n"
-"| 一番目のフィールド（\"-\" あるいは“サーバー名”) | hostname | \\- | \\- | \\(G\\) | デフォルトでは gethostname() を使用 |\n"
+"| 一番目のフィールド（\"-\" あるいは“サーバー名”) | hostname | \\- | \\- | \\(G\\) | 4.2.0で新規追加、デフォルトでは hostname を使用 |\n"
 "| -uamlist | uam list | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | \\(G\\) | \\- |\n"
 "| -nozeroconf | zeroconf | \\- | （サポートされていれば） yes | \\(G\\) | \\- |\n"
 "| -advertise_ssh | advertise ssh | \\- | no | \\(G\\) | \\- |\n"
