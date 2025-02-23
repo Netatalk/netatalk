@@ -1245,6 +1245,12 @@ legacy volume size = <BOOLEAN\> (default: *no*) **(V)**
 for older Macintoshes running System 7.1 or earlier and using newer
 AppleShare clients.
 
+name = <STRING\> (default: section name in lowercase) **(V)**
+
+> The name option specifies the name of the shared AFP volume.
+It defaults to the name of the ini file section where the volume is defined,
+converted to lowercase.
+
 network ids = <BOOLEAN\> (default: *yes*) **(V)**
 
 > Whether the server support network ids. Setting this to *no* will result
