@@ -82,8 +82,16 @@
 #define INISEC_GLOBAL "global"
 #define INISEC_HOMES  "homes"
 
-#define INIPARSER_GETSTRDUP(config, section, default) ({              \
-    const char *_tmp = iniparser_getstring(config, section, default); \
+#define INIPARSER_GETSTR(config, section, key, default) ({            \
+    char _option[MAXOPTLEN];                                          \
+    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
+    iniparser_getstring(config, _option, default);                    \
+})
+
+#define INIPARSER_GETSTRDUP(config, section, key, default) ({         \
+    char _option[MAXOPTLEN];                                          \
+    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
+    const char *_tmp = iniparser_getstring(config, _option, default); \
     _tmp ? strdup(_tmp) : NULL;                                       \
 })
 

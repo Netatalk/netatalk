@@ -177,11 +177,11 @@ macip_options * read_options(const char *conf)
 
     if ((config = iniparser_load(conf)) == NULL)
         return NULL;
-    options->network = INIPARSER_GETSTRDUP(config, "Global:network", "");
-    options->netmask = INIPARSER_GETSTRDUP(config, "Global:netmask", "");
-    options->nameserver = INIPARSER_GETSTRDUP(config, "Global:nameserver", "");
-    options->zone = INIPARSER_GETSTRDUP(config, "Global:zone", "");
-    options->unprivileged_user = INIPARSER_GETSTRDUP(config, "Global:unprivileged user", "");
+    options->network = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "network", "");
+    options->netmask = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "netmask", "");
+    options->nameserver = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "nameserver", "");
+    options->zone = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "zone", "");
+    options->unprivileged_user = INIPARSER_GETSTRDUP(config, INISEC_GLOBAL, "unprivileged user", "");
 
 	iniparser_freedict(config);
 

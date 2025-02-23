@@ -56,7 +56,7 @@ int acl_ldap_readconfig(dictionary *iniconfig)
     /* now see if its a correct pref */
     for (i = 0; ldap_prefs[i].name != NULL; i++) {
         char option[MAXOPTLEN];
-        snprintf(option, sizeof(option), "Global:%s", ldap_prefs[i].name);
+        snprintf(option, sizeof(option), "%s:%s", INISEC_GLOBAL, ldap_prefs[i].name);
         if ((val = iniparser_getstring(iniconfig, option, NULL))) {
             /* check if we have pre-defined values */
             if (ldap_prefs[i].intfromarray == 0) {
