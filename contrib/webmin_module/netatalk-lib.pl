@@ -304,7 +304,11 @@ sub modify_afpconf_ref_and_write {
 	my @modlist = ();
 
 	my $index = trim($$paramRef{'index'});
-	my $name = $$paramRef{'p_volume name'};
+	if (exists $in{preset_name}) {
+		my $name = trim($$paramRef{'preset_name'});
+	} else {
+		my $name = $$paramRef{'p_volume name'};
+	}
 
 	die "Volume/Volume preset name must not be empty.\n" unless($name);
 

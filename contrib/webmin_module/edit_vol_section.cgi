@@ -136,6 +136,12 @@ if($subject eq 'homes') {
 		&ui_textbox('p_path', (get_parameter_of_section($afpconfRef, $sectionRef, 'path', \%in))[0], 40)
 	);
 }
+elsif($subject eq 'volume_preset') {
+	print &ui_table_row(
+		$text{'edit_vol_section_volume_preset_name'},
+		&ui_textbox('preset_name', exists $in{name} ? $in{name} : ($sectionRef ? $$sectionRef{preset_name} : ''), 40, undef, undef, "required")
+	);
+}
 else {
 	print &ui_table_row(
 		$text{'edit_vol_section_volume_name'},

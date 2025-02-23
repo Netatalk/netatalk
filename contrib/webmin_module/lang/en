@@ -97,6 +97,7 @@ edit_vol_section_vol_preset=Volume preset
 edit_vol_section_vol_no_preset=No preset
 edit_vol_section_vol_preset_note=Note: Changing the preset will reload this form
 edit_vol_section_volume_name=Volume Name
+edit_vol_section_volume_preset_name=Preset Name
 edit_vol_section_path=Path
 edit_vol_section_path_note=Open the File Manager in a new tab
 edit_vol_section_home_name=Home name
