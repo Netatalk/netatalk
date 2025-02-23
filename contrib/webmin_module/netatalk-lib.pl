@@ -40,6 +40,7 @@ our %netatalkParameterDefaults = (
 	'cnid dev'					=> 'yes',
 	'cnid listen'				=> 'localhost:4700',
 	'cnid scheme'				=> 'dbd',
+	'cnid server'				=> 'localhost:4700',
 	'convert appledouble'		=> 'yes',
 	'ddp address'			=> '0.0',
 	'delete veto files'			=> 'no',
@@ -303,7 +304,7 @@ sub modify_afpconf_ref_and_write {
 	my @modlist = ();
 
 	my $index = trim($$paramRef{'index'});
-	my $name = trim($$paramRef{'name'});
+	my $name = $$paramRef{'p_volume name'};
 
 	die "Volume/Volume preset name must not be empty.\n" unless($name);
 

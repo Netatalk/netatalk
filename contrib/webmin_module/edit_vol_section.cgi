@@ -138,8 +138,8 @@ if($subject eq 'homes') {
 }
 else {
 	print &ui_table_row(
-		$text{'edit_vol_section_name'},
-		&ui_textbox('name', exists $in{name} ? $in{name} : ($sectionRef ? $$sectionRef{name} : ''), 40, undef, undef, "required")
+		$text{'edit_vol_section_volume_name'},
+		&ui_textbox('p_volume name', (get_parameter_of_section($afpconfRef, $sectionRef, 'volume name', \%in))[0], 40, undef, undef, "required")
 	);
 }
 
