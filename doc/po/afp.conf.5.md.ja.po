@@ -3528,7 +3528,7 @@ msgstr "name = <STRING\\> (デフォルト: 小文字のセクション名) **(V
 #: manpages/man5/afp.conf.5.md:1256
 #, no-wrap
 msgid ""
-"> The name option specifies the name of the shared AFP volume.\n"
+"> The volume name option specifies the name of the shared AFP volume.\n"
 "It defaults to the name of the ini file section where the volume is defined,\n"
 "converted to lowercase.\n"
 msgstr "> ボリュームの名前を指定する。デフォルトでは、ボリュームが定義されている ini ファイルの小文字に変換されたセクション名となる。\n"
