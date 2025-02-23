@@ -248,7 +248,7 @@ if(@{$$afpconf{volumeSections}}) {
 	foreach $volumeSection (@{$$afpconf{volumeSections}}) {
 		print &ui_columns_row( [
 				&ui_checkbox('section_index', $$volumeSection{'index'}),
-				"<a href=\"edit_vol_section.cgi?action=edit_volume&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
+				"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
 				$$volumeSection{parameters}{'path'}{value},
 				$$volumeSection{parameters}{'vol preset'}{value}
 		], [ "width='20'" ]);

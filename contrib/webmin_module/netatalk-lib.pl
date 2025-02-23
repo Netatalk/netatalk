@@ -32,7 +32,6 @@ our %netatalkParameterDefaults = (
 	'afp port'					=> '548',
 	'afp read locks'			=> 'no',
 	'afpstats'					=> 'no',
-	'appledouble'				=> 'ea',
 	'appletalk'				=> 'no',
 	'case sensitive'			=> 'yes',
 	'chmod request'				=> 'preserve',
@@ -40,6 +39,7 @@ our %netatalkParameterDefaults = (
 	'cnid dev'					=> 'yes',
 	'cnid listen'				=> 'localhost:4700',
 	'cnid scheme'				=> 'dbd',
+	'cnid server'				=> 'localhost:4700',
 	'convert appledouble'		=> 'yes',
 	'ddp address'			=> '0.0',
 	'delete veto files'			=> 'no',
@@ -303,9 +303,16 @@ sub modify_afpconf_ref_and_write {
 	my @modlist = ();
 
 	my $index = trim($$paramRef{'index'});
-	my $name = trim($$paramRef{'name'});
-
-	die "Volume/Volume preset name must not be empty.\n" unless($name);
+	my $name;
+	if($$paramRef{'name'}) {
+		$name = trim($$paramRef{'name'});
+	} elsif($$paramRef{'p_volume name'}) {
+		$name = $$paramRef{'p_volume name'};
+	} elsif($$paramRef{'p_preset name'}) {
+		$name = $$paramRef{'p_preset name'};
+	} else {
+		die "Volume/Volume preset name must not be empty.\n" unless($name);
+	}
 
 	my $parametersOfSectionRef = {};
 	my $insertWhere = scalar(@{$$afpconfRef{lines}});			# default to appending at end

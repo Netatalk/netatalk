@@ -19,9 +19,18 @@
 #
 
 require 'netatalk-lib.pl';
+my $tab;
 
 eval {
 	&ReadParse();
+
+	if (exists $in{'tab'}) {
+		$tab = $in{'tab'};
+	} elsif ($in{'action'} eq "new_volume_preset" || $in{'action'} eq "edit_volume_preset" || $in{'action'} eq "new_homes" || $in{'action'} eq "edit_homes") {
+		$tab = "global";
+	} else {
+		$tab = "fileserver";
+	}
 
 	# rejoin parameters that have been split for the user interface
 	$in{'p_valid users'} = join_users_and_groups(defined $in{'pu_valid_users'} ? $in{'pu_valid_users'} : '', defined $in{'pg_valid_users'} ? $in{'pg_valid_users'} : '');
@@ -32,10 +41,6 @@ eval {
 	my $afpconfRef = &read_afpconf();
 	modify_afpconf_ref_and_write($afpconfRef, \%in);
 
-	my $tab = "fileserver";
-	if ($in{'action'} eq "new_volume_preset" || $in{'action'} eq "edit_volume_preset" || $in{'action'} eq "new_homes" || $in{'action'} eq "edit_homes") {
-		$tab = "global";
-	}
 	redirect("index.cgi?tab=".$tab);
 };
 if($@) {

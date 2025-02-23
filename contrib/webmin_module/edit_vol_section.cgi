@@ -33,6 +33,14 @@ my $subject; # what it is, we are going to edit: volume | volume_preset | homes
 my $pageTitle = $text{'errmsg_title'};
 my $afpconfRef;
 my $sectionRef;
+
+my $tab;
+if (exists $in{'tab'}) {
+	$tab = $in{'tab'};
+} else {
+	$tab = "fileserver";
+}
+
 eval {
 	&ReadParse();
 
@@ -76,7 +84,7 @@ if($@) {
 
 	print "<p>$msg<p>";
 
-	ui_print_footer("index.cgi?tab=".$in{'tab'}, $text{'edit_return'});
+	ui_print_footer("index.cgi?tab=".$tab, $text{'edit_return'});
 
 	exit;
 }
@@ -94,7 +102,7 @@ if($subject ne 'homes') {
 # preparations done, start outputting page
 ui_print_header(undef, $pageTitle, "", "configs", 1, 1);
 
-print &ui_form_start('save_vol_section.cgi?tab='.$in{'tab'}, 'POST', undef, 'name="configform"');
+print &ui_form_start('save_vol_section.cgi?tab='.$tab, 'POST', undef, 'name="configform"');
 
 print &ui_hidden('action', $in{'action'});
 print &ui_hidden('reload', 'true');
@@ -136,13 +144,25 @@ if($subject eq 'homes') {
 		&ui_textbox('p_path', (get_parameter_of_section($afpconfRef, $sectionRef, 'path', \%in))[0], 40)
 	);
 }
-else {
+elsif($subject eq 'volume_preset') {
+	my $preset_name = (get_parameter_of_section($afpconfRef, $sectionRef, 'preset name', \%in))[0];
 	print &ui_table_row(
-		$text{'edit_vol_section_name'},
-		&ui_textbox('name', exists $in{name} ? $in{name} : ($sectionRef ? $$sectionRef{name} : ''), 40, undef, undef, "required")
+		$text{'edit_vol_section_volume_preset_name'},
+		&ui_textbox('p_preset name', $preset_name ? $preset_name : $$sectionRef{'name'}, 40, undef, undef, "required")
+	);
+}
+else {
+	my $volume_name = (get_parameter_of_section($afpconfRef, $sectionRef, 'volume name', \%in))[0];
+	print &ui_table_row(
+		$text{'edit_vol_section_volume_name'},
+		&ui_textbox('p_volume name', $volume_name ? $volume_name : $$sectionRef{'name'}, 40, undef, undef, "required")
 	);
 }
 
+
+if($subject ne 'homes') {
+	print &ui_hidden('name', $$sectionRef{'name'});
+}
 if($subject eq 'volume') {
 	print &ui_table_row($text{'edit_vol_section_path'},
 		&ui_filebox('p_path', exists $in{p_path} ? $in{p_path} : (exists $$sectionRef{parameters}{'path'} ? $$sectionRef{parameters}{'path'}{value} : ''), 40, undef, undef, "required", 1) .
@@ -170,7 +190,7 @@ if($subject ne 'homes') {
 }
 
 print &ui_table_row($text{'edit_vol_section_ea'},
-	&build_select($afpconfRef, $sectionRef, \%in, 'ea', $text{'edit_undefined'}, 'auto', 'auto', 'sys', 'sys - '.$text{'edit_vol_section_ea_sys'}, 'samba', 'samba - '.$text{'edit_vol_section_ea_samba'}, 'ad', 'ad - '.$text{'edit_vol_section_ea_ad'}, 'none', 'none')
+	&build_select($afpconfRef, $sectionRef, \%in, 'ea', $text{'edit_undefined'}, 'sys', 'sys - '.$text{'edit_vol_section_ea_sys'}, 'samba', 'samba - '.$text{'edit_vol_section_ea_samba'}, 'ad', 'ad - '.$text{'edit_vol_section_ea_ad'}, 'none', 'none')
 );
 print &ui_table_row($text{'edit_vol_section_read_only'},
 	&build_select($afpconfRef, $sectionRef, \%in, 'read only', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')
@@ -297,11 +317,6 @@ if($subject ne 'homes') {
 
 	print &ui_table_start($text{'edit_vol_section_title_table'}, 'width="100%"', 2);
 
-	@values = get_parameter_of_section($afpconfRef, $sectionRef, 'appledouble', \%in);
-	print &ui_table_row($text{'edit_vol_section_appledouble'},
-		&build_select($afpconfRef, $sectionRef, \%in, 'appledouble', $text{'edit_undefined'}, 'ea', 'ea - '.$text{'edit_vol_section_appledouble_ea'}, 'v2', 'v2 - '.$text{'edit_vol_section_appledouble_v2'})
-	);
-
 	@values = get_parameter_of_section($afpconfRef, $sectionRef, 'convert appledouble', \%in);
 	print &ui_table_row($text{'edit_vol_section_convert_appledouble'},
 		&build_select($afpconfRef, $sectionRef, \%in, 'convert appledouble', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')
@@ -394,4 +409,4 @@ print &ui_tabs_end();
 
 print &ui_form_end([[undef, $text{'save_button_title'}, 0, undef]]);
 
-ui_print_footer("index.cgi?tab=".$in{'tab'}, $text{'edit_return'});
+ui_print_footer("index.cgi?tab=".$tab, $text{'edit_return'});
