@@ -113,16 +113,19 @@ if [ -z "$MANUAL_CONFIG" ]; then
     cat <<EOF > /usr/local/etc/afp.conf
 [Global]
 appletalk = yes
+legacy icon = $AFP_LEGACY_ICON
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
+mimic model = $AFP_MIMIC_MODEL
+server name = ${SERVER_NAME:-Netatalk File Server}
 spotlight = yes
 uam list = $UAMS
-zeroconf name = ${SERVER_NAME:-Netatalk File Server}
 [${SHARE_NAME:-File Sharing}]
 appledouble = $AFP_AD
 ea = $AFP_EA
 path = /mnt/afpshare
 valid users = $AFP_USER $AFP_USER2
+volume name =${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_USER $AFP_USER2
 [${SHARE2_NAME:-Time Machine}]
 appledouble = $AFP_AD
@@ -130,6 +133,7 @@ ea = $AFP_EA
 path = /mnt/afpbackup
 time machine = $TIMEMACHINE
 valid users = $AFP_USER $AFP_USER2
+volume name =${SHARE2_NAME:-Time Machine}
 $AFP_RWRO = $AFP_USER $AFP_USER2
 EOF
 fi
