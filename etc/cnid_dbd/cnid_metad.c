@@ -500,7 +500,7 @@ int main(int argc, char *argv[])
 
     (void)setlimits();
 
-    host = INIPARSER_GETSTRDUP(obj.iniconfig, "Global:cnid listen", "localhost:4700");
+    host = INIPARSER_GETSTRDUP(obj.iniconfig, INISEC_GLOBAL, "cnid listen", "localhost:4700");
     if ((port = strrchr(host, ':')))
         *port++ = 0;
     else

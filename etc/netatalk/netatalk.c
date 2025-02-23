@@ -487,7 +487,7 @@ int main(int argc, char **argv)
         setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
 
-        dbus_path = iniparser_getstring(obj.iniconfig, "Global:dbus daemon", DBUS_DAEMON_PATH);
+        dbus_path = INIPARSER_GETSTR(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
         LOG(log_note, logtype_default, "Starting dbus: %s", dbus_path);
         if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
