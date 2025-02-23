@@ -123,7 +123,8 @@ struct afp_options {
     unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
     int dsireadbuf; /* scale factor for sizefof(dsi->buffer) = server_quantum * dsireadbuf */
-    char* hostname, *zone;
+    char *hostname;
+    char *zone;
 #ifndef NO_DDP
     struct at_addr ddpaddr;
 #endif
@@ -157,7 +158,7 @@ struct afp_options {
     bool log_us_timestamp;
     char *legacyicon;
     char *mimicmodel;
-    char *zeroconfname;
+    char *servername;
     char *adminauthuser;
     char *ignored_attr;
     int  splice_size;

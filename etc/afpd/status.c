@@ -368,16 +368,18 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     size_t len;
     char *begin = data;
     uint16_t offset;
+    const char *server_name;
 
     memcpy(&offset, data + *nameoffset, sizeof(offset));
     offset = ntohs(offset);
     data += offset;
+    server_name = options->servername ? options->servername : options->hostname;
 
-    LOG(log_info, logtype_afpd, "servername: %s", options->hostname);
+    LOG(log_info, logtype_afpd, "servername: %s", server_name);
     if (dsi) {
         if ((len = convert_string(options->unixcharset,
             CH_UTF8_MAC,
-            options->hostname,
+            server_name,
             -1,
             data + sizeof(namelen),
             maxstatuslen - offset)) == (size_t)-1) {
@@ -405,7 +407,6 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
     /* return length of buffer */
     return (data - begin);
-
 }
 
 /* returns actual offset to signature */
@@ -495,7 +496,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
                  1,
                  options->flags);
     /* returns offset to signature offset */
-    c = status_server(status, options->hostname, options);
+    c = status_server(status, options->servername ? options->servername : options->hostname, options);
     status_machine(status);
     status_versions(status,
 #ifndef NO_DDP
@@ -569,7 +570,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
             0,
             options->flags);
         /* returns offset to signature offset */
-        c = status_server(aspstatus, options->hostname, options);
+        c = status_server(aspstatus, options->servername ? options->servername : options->hostname, options);
         status_machine(aspstatus);
         status_versions(aspstatus,
             asp,

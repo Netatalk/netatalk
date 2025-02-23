@@ -440,9 +440,10 @@ combination but not automatically listen to it.
 
 hostname = <name\> **(G)**
 
-> Sets a custom AFP server name to be displayed in the client.
-When absent, the fallback server name is the host system's hostname
-up until the first period.
+> Use this instead of the result from calling hostname for determining
+which IP address to advertise, therefore the hostname is resolved to an
+IP which is the advertised. This is NOT used for listening and can be
+overridden by **afp listen**.
 
 max connections = <number\> **(G)**
 
@@ -631,9 +632,16 @@ with Zeroconf. Examples:
 - **Tower**
 
 A complete set of supported model codes by a macOS client can be found
-by inspecting
-*/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist* (as
-of macOS 14 Sonoma).
+by inspecting system properties files, such as
+*/System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist*
+on macOS 15 Sequoia.
+
+server name = <name\> **(G)**
+
+> Specifies a human-readable name that uniquely describes the AFP server.
+Defaults to the value of **hostname** up until the first period.
+When netatalk is built with Zeroconf support, this is also registered as
+the service name and advertised as UTF-8, up to 63 octets (bytes) in length.
 
 signature = <STRING\> **(G)**
 
@@ -705,13 +713,6 @@ vol preset = <name\> **(G)**/**(V)**
 > Use section <name\> as option preset for all volumes (when set in the
 \[Global\] section) or for one volume (when set in that volume's
 section).
-
-zeroconf name = <name\> **(G)**
-
-> Specifies a human-readable name that uniquely describes registered
-services. The zeroconf name is advertised as UTF-8, up to 63 octets
-(bytes) in length. Defaults to hostname. Note that netatalk must support
-Zeroconf.
 
 ## Logging Options
 

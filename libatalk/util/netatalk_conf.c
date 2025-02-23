@@ -492,7 +492,11 @@ static char *volxlate(const AFPObj *obj,
                 q = getip_string((struct sockaddr*)&dsi->client);
             }
         } else if (IS_VAR(p, "$s")) {
-            q = obj->options.hostname;
+            if (obj->options.servername) {
+                q = obj->options.servername;
+            } else {
+                q = obj->options.hostname;
+            }
         } else if (obj->username[0] && IS_VAR(p, "$u")) {
             char* sep = NULL;
             if ( obj->options.ntseparator && (sep = strchr(obj->username, obj->options.ntseparator[0])) != NULL)
@@ -2205,7 +2209,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->ntseparator    = getoption_strdup(config, INISEC_GLOBAL, "nt separator",   NULL, NULL);
     options->legacyicon     = getoption_strdup(config, INISEC_GLOBAL, "legacy icon",    NULL, "");
     options->mimicmodel     = getoption_strdup(config, INISEC_GLOBAL, "mimic model",    NULL, NULL);
-    options->zeroconfname   = getoption_strdup(config, INISEC_GLOBAL, "zeroconf name",  NULL, NULL);
+    options->servername     = getoption_strdup(config, INISEC_GLOBAL, "server name",    NULL, NULL);
     options->adminauthuser  = getoption_strdup(config, INISEC_GLOBAL, "admin auth user", NULL, NULL);
     options->ignored_attr   = getoption_strdup(config, INISEC_GLOBAL, "ignored attributes", NULL, NULL);
     options->cnid_mysql_host = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql host", NULL, NULL);
@@ -2498,8 +2502,8 @@ void afp_config_free(AFPObj *obj)
         CONFIG_ARG_FREE(obj->options.legacyicon);
     if (obj->options.mimicmodel)
         CONFIG_ARG_FREE(obj->options.mimicmodel);
-    if (obj->options.zeroconfname)
-        CONFIG_ARG_FREE(obj->options.zeroconfname);
+    if (obj->options.servername)
+        CONFIG_ARG_FREE(obj->options.servername);
     if (obj->options.adminauthuser)
         CONFIG_ARG_FREE(obj->options.adminauthuser);
     if (obj->options.hostname)

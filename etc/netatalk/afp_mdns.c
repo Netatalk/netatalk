@@ -213,14 +213,14 @@ static void register_stuff(const AFPObj *obj) {
 
     port = atoi(obj->options.port);
 
-    if (obj->options.zeroconfname) {
+    if (obj->options.servername) {
         if (convert_string(obj->options.unixcharset,
                             CH_UTF8,
-                            obj->options.zeroconfname,
+                            obj->options.servername,
                             -1,
                             name,
                             MAXINSTANCENAMELEN) <= 0) {
-            LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", obj->options.zeroconfname);
+            LOG(log_error, logtype_afpd, "Could not set Zeroconf instance name: %s", obj->options.servername);
             goto fail;
         }
     } else {
