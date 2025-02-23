@@ -94,10 +94,13 @@ These are required to set the credentials used to authenticate with the file ser
 | `AFP_GID`       | Specify group id of `AFP_GROUP`                                |
 | `AFP_USER2`     | Username for the secondary user                                |
 | `AFP_PASS2`     | Password for the secondary user                                |
-| `SERVER_NAME`   | The name of the server reported to Zeroconf                    |
+| `SERVER_NAME`   | The name of the server (AFP and Zeroconf)                      |
 | `SHARE_NAME`    | The name of the primary shared volume                          |
 | `SHARE2_NAME`   | The name of the secondary shared (Time Machine) volume         |
 | `AFP_LOGLEVEL`  | The verbosity of logs; default is "info"                       |
+| `AFP_MIMIC_MODEL` | Use a custom modern AFP icon, such as `Tower` or `Laptop`    |
+| `AFP_LEGACY_ICON` | Use a custom legacy AFP icon, such as `daemon` or `sdcard`   |
 | `INSECURE_AUTH` | When non-zero, enable the "ClearTxt" and "Guest" UAMs          |
 | `DISABLE_TIMEMACHINE` | When non-zero, the secondary shared volume is a regular volume |
 | `MANUAL_CONFIG` | When non-zero, enable manual management of config files        |
+| `ATALKD_OPTIONS` | A string with options to append to atalkd.conf        |
