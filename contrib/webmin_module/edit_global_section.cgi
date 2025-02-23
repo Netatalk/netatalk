@@ -70,10 +70,10 @@ print &ui_tabs_start_tab('mode', 'common');
 
 print &ui_table_start($text{'edit_global_section_title_table'}, 'width="100%"', 2);
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'hostname', \%in);
-print &ui_table_row($text{'edit_global_section_hostname'},
-	&ui_textbox('p_hostname', $values[0], 30)
-	." ".$text{'edit_global_section_hostname_default'}
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'server name', \%in);
+print &ui_table_row($text{'edit_global_section_server_name'},
+	&ui_textbox('p_server_name', $values[0], 30)
+	." ".$text{'edit_global_section_server_name_default'}
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'login message', \%in);
@@ -112,11 +112,6 @@ print &ui_table_row($text{'edit_global_section_log_level'},
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'zeroconf', \%in);
 print &ui_table_row($text{'edit_global_section_zeroconf'},
 	&build_select($afpconfRef, $sectionRef, \%in, 'zeroconf', $text{'edit_undefined'}, 'yes', 'yes', 'no', 'no')
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'zeroconf name', \%in);
-print &ui_table_row($text{'edit_global_section_zeroconf_name'},
-	&ui_textbox('p_zeroconf_name', $values[0], 30)
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'appletalk', \%in);
@@ -350,6 +345,12 @@ print &ui_table_row($text{'edit_global_section_max_connections'},
 	." ".($values[2] ? html_escape($values[2]).": ".html_escape($values[1]) : '')."\n"
 );
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'hostname', \%in);
+print &ui_table_row($text{'edit_global_section_hostname'},
+	&ui_textbox('p_hostname', $values[0], 30)
+	." ".$text{'edit_global_section_hostname_default'}
+);
+
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'server quantum', \%in);
 print &ui_table_row($text{'edit_global_section_server_quantum'},
 	"<input name='p_server quantum' type='number' value='".$values[0]."'>"
@@ -494,7 +495,13 @@ print &ui_table_row($text{'edit_global_section_vol_dbpath'},
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid listen', \%in);
 print &ui_table_row($text{'edit_global_section_cnid_listen'},
-	&ui_textbox('p_cnid listen', $values[0], 40)
+	&ui_textbox('p_cnid listen', $values[0], 20)
+	." ".($values[2] ? html_escape($values[2]).": ".html_escape($values[1]) : '')."\n"
+);
+
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid server', \%in);
+print &ui_table_row($text{'edit_global_section_cnid_server'},
+	&ui_textbox('p_cnid server', $values[0], 20)
 	." ".($values[2] ? html_escape($values[2]).": ".html_escape($values[1]) : '')."\n"
 );
 
@@ -521,11 +528,6 @@ print &ui_table_row($text{'edit_global_section_cnid_mysql_pw'},
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid mysql db', \%in);
 print &ui_table_row($text{'edit_global_section_cnid_mysql_db'},
 	&ui_textbox('p_cnid mysql db', $values[0], 40)
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid server', \%in);
-print &ui_table_row($text{'edit_global_section_cnid_server'},
-	&ui_textbox('p_cnid server', $values[0], 40)
 );
 
 
