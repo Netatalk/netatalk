@@ -399,8 +399,9 @@ operating system supports the AppleTalk networking protocol.
 
 cnid listen = <ip address\[:port\] \[ip address\[:port\] ...\]\> **(G)**
 
-> Specifies the IP address that the CNID server should listen on. The
-default is **localhost:4700**.
+> Specifies the IP address and port that the CNID server should listen on.
+This should match the address and port of the **cnid server** option
+for most deployments. The default is **localhost:4700**.
 
 ddp address = <ddp address\> **(G)**
 
@@ -547,10 +548,12 @@ privileges.
 
 cnid server = <ipaddress\[:port\]\> **(G)**/**(V)**
 
-> Specifies the IP address and port of a cnid_metad server, required for
-CNID dbd backend. Defaults to localhost:4700. The network address may be
-specified either in dotted-decimal format for IPv4 or in hexadecimal
-format for IPv6.-
+> Specifies the IP address and port of a cnid_metad server, required
+for the CNID dbd backend. This should match the address and port of the
+**cnid listen** option for most deployments. Defaults to localhost:4700.
+
+> The network address may be specified either in dotted-decimal format
+for IPv4 or in hexadecimal format for IPv6.
 
 dbus daemon = <path\> **(G)**
 
