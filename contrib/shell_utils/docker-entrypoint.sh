@@ -146,8 +146,6 @@ if [ -n "$ATALKD_INTERFACE" ]; then
     echo "*** Starting DDP services"
     cupsd
     atalkd
-    nbprgstr -p 4 "$ATALK_NAME:Workstation"
-    nbprgstr -p 4 "$ATALK_NAME:netatalk"
     papd
     timelord -l
     a2boot
