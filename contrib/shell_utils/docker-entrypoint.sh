@@ -51,8 +51,8 @@ addgroup "$AFP_USER" "$AFP_GROUP"
 echo "$AFP_USER:$AFP_PASS" | chpasswd
 
 # Creating credentials for the RandNum UAM
-if [ -f "/usr/local/etc/netatalk/afppasswd" ]; then
-    rm -f /usr/local/etc/netatalk/afppasswd
+if [ -f "/usr/local/etc/afppasswd" ]; then
+    rm -f /usr/local/etc/afppasswd
 fi
 afppasswd -c
 if ! afppasswd -a -f -w "$AFP_PASS" "$AFP_USER"; then
