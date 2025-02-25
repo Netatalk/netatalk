@@ -149,7 +149,14 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         }
 
         /* register asp server */
-        Obj = (char*)asp_obj->options.hostname;
+        Obj = asp_obj->options.servername ? asp_obj->options.servername : asp_obj->options.hostname;
+        char tmpnam[32];
+        convert_string(asp_obj->options.unixcharset,
+                        asp_obj->options.maccharset,
+                        Obj, strnlen(Obj, PATH_MAX),
+                        tmpnam, sizeof(tmpnam)-1);
+        tmpnam[31] = '\0';
+        Obj = tmpnam;
 
         /* set a custom zone if user requested one */
         if (asp_obj->options.zone) {
