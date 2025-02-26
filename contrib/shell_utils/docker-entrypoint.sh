@@ -2,7 +2,7 @@
 
 # Entry point script for netatalk docker container.
 # Copyright (C) 2023  Eric Harmon
-# Copyright (C) 2024  Daniel Markstedt
+# Copyright (C) 2024-2025  Daniel Markstedt
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -62,7 +62,9 @@ if ! afppasswd -a -f -w "$AFP_PASS" "$AFP_USER"; then
 fi
 
 # Optional second user
-if [ -n "$AFP_USER2" ]; then
+if [ -n "$AFP_DROPBOX" ]; then
+    addgroup nobody "$AFP_GROUP"
+elif [ -n "$AFP_USER2" ]; then
     adduser --no-create-home --disabled-password "$AFP_USER2" 2>/dev/null || true
     addgroup "$AFP_USER2" "$AFP_GROUP"
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd
@@ -76,11 +78,20 @@ echo "*** Configuring shared volume"
 [ -d /mnt/afpbackup ] || mkdir /mnt/afpbackup
 
 echo "*** Fixing permissions"
-chmod 2775 /mnt/afpshare /mnt/afpbackup
+if [ -n "$AFP_DROPBOX" ]; then
+    chmod 2755 /mnt/afpshare
+    chmod 2775 /mnt/afpbackup
+else
+    chmod 2775 /mnt/afpshare /mnt/afpbackup
+fi
 if [ -n "$AFP_UID" ] && [ -n "$AFP_GID" ]; then
     chown "$AFP_UID:$AFP_GID" /mnt/afpshare /mnt/afpbackup
 else
     chown "$AFP_USER:$AFP_GROUP" /mnt/afpshare /mnt/afpbackup
+fi
+
+if [ -n "$AFP_DROPBOX" ] && [ -z "$SHARE2_NAME" ]; then
+    SHARE2_NAME="Dropbox"
 fi
 
 echo "*** Removing residual lock files"
@@ -90,11 +101,19 @@ rm -f /run/lock/netatalk /run/lock/atalkd /run/lock/papd
 echo "*** Configuring Netatalk"
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
+ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 TEST_FLAGS=""
 [ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
-[ -n "$INSECURE_AUTH" ] && UAMS="$UAMS uams_clrtxt.so uams_guest.so"
-[ -n "$DISABLE_TIMEMACHINE" ] && TIMEMACHINE="no" || TIMEMACHINE="yes"
-ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
+
+if [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; then
+    UAMS="$UAMS uams_clrtxt.so uams_guest.so"
+fi
+
+if [ -n "$DISABLE_TIMEMACHINE" ] || [ -n "$AFP_DROPBOX" ]; then
+    TIMEMACHINE="no"
+else
+    TIMEMACHINE="yes"
+fi
 
 if [ -n "$AFP_READONLY" ]; then
     AFP_RWRO="rolist"
@@ -109,6 +128,14 @@ if [ -n "$AFP_ADOUBLE" ]; then
 else
     AFP_EA="sys"
     AFP_AD="ea"
+fi
+
+if [ -n "$AFP_DROPBOX" ]; then
+    AFP_VALIDUSERS1="$AFP_USER"
+    AFP_VALIDUSERS2="$AFP_USER nobody"
+else
+    AFP_VALIDUSERS1="$AFP_USER $AFP_USER2"
+    AFP_VALIDUSERS2="$AFP_USER $AFP_USER2"
 fi
 
 if [ -z "$MANUAL_CONFIG" ]; then
@@ -126,17 +153,17 @@ uam list = $UAMS
 appledouble = $AFP_AD
 ea = $AFP_EA
 path = /mnt/afpshare
-valid users = $AFP_USER $AFP_USER2
-volume name =${SHARE_NAME:-File Sharing}
-$AFP_RWRO = $AFP_USER $AFP_USER2
+valid users = $AFP_VALIDUSERS1
+volume name = ${SHARE_NAME:-File Sharing}
+$AFP_RWRO = $AFP_VALIDUSERS1
 [${SHARE2_NAME:-Time Machine}]
 appledouble = $AFP_AD
 ea = $AFP_EA
 path = /mnt/afpbackup
 time machine = $TIMEMACHINE
-valid users = $AFP_USER $AFP_USER2
-volume name =${SHARE2_NAME:-Time Machine}
-$AFP_RWRO = $AFP_USER $AFP_USER2
+valid users = $AFP_VALIDUSERS2
+volume name = ${SHARE2_NAME:-Time Machine}
+$AFP_RWRO = $AFP_VALIDUSERS2
 EOF
 fi
 
