@@ -20,6 +20,8 @@
 
 set -e
 
+[ -n "$DEBUG_ENTRY_SCRIPT" ] && set -x
+
 echo "*** Setting up users and groups"
 
 if [ -z "$AFP_USER" ]; then
