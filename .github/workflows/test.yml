@@ -11,9 +11,8 @@ on:
       - "contrib/**"
       - "distrib/**"
       - "doc/**"
-      - "COPYING"
       - "COPYRIGHT"
-      - "Dockerfile*"
+      - "*Dockerfile"
   pull_request:
     branches:
       - main
@@ -30,9 +29,8 @@ on:
         - "contrib/**"
         - "distrib/**"
         - "doc/**"
-        - "COPYING"
         - "COPYRIGHT"
-        - "Dockerfile*"
+        - "*Dockerfile"
 
 name: Tests
 
