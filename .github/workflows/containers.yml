@@ -6,9 +6,7 @@ on:
           - "**/COPYING"
           - "**/README*"
           - "contrib/webmin_module/**"
-          - "CONTRIBUTORS"
           - "COPYRIGHT"
-          - "NEWS"
     pull_request:
         branches: [ "main" ]
         paths-ignore:
@@ -16,9 +14,7 @@ on:
           - "**/COPYING"
           - "**/README*"
           - "contrib/webmin_module/**"
-          - "CONTRIBUTORS"
           - "COPYRIGHT"
-          - "NEWS"
 
 env:
     REGISTRY: ghcr.io
@@ -101,7 +97,7 @@ jobs:
               uses: docker/build-push-action@v5
               with:
                 context: .
-                file: Dockerfile.testsuite
+                file: testsuite.Dockerfile
                 push: true
                 labels: ${{ steps.metadata.outputs.labels }}
                 tags: ${{ steps.metadata.outputs.tags }}

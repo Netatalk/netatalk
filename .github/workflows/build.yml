@@ -8,9 +8,8 @@ on:
       - "**/COPYING"
       - "**/README*"
       - "contrib/webmin_module/**"
-      - "COPYING"
       - "COPYRIGHT"
-      - "Dockerfile*"
+      - "*Dockerfile"
   pull_request:
     branches:
       - main
@@ -24,9 +23,8 @@ on:
       - "**/COPYING"
       - "**/README*"
       - "contrib/webmin_module/**"
-      - "COPYING"
       - "COPYRIGHT"
-      - "Dockerfile*"
+      - "*Dockerfile"
 
 name: Builds
 
