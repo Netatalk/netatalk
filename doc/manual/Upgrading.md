@@ -18,8 +18,8 @@ There are three major changes between Netatalk 2 and Netatalk 4:
 1.  New configuration files that replaces most of the previous ones:
     *afp.conf* and *extmap.conf*
 
-2.  New AppleDouble backend **appledouble = ea** which stores Mac metadata
-    and resource forks in extended attributes of the filesystem.
+2.  New backend for file metadata which stores metadata in extended attributes
+    of the filesystem.
 
 3.  The AppleTalk transport layer is disabled by default. If you want to
     use Netatalk with very old Macs, turn it on with the
@@ -52,18 +52,18 @@ There are three major changes between Netatalk 2 and Netatalk 4:
 
 - obsoletes *AppleVolumes.system*
 
-### New AppleDouble backend
+### New metadata backend
 
-New AppleDouble backend **appledouble = ea** which stores Mac metadata and
-resource forks in extended attributes of the filesystem.
+New file metadata backend **ea = sys** which stores macOS extended attributes
+and Classic Mac OS resource forks in extended attributes of the filesystem.
 
 - default backend (!)
 
-- requires a filesystem with Extended Attributes, fallback is
-  **appledouble = v2**
+- requires a filesystem with Extended Attributes, fallback is AppleDouble v2
+  which is enabled with **ea = ad**
 
-- converts filesystems from **appledouble = v2** to **appledouble = ea** on
-  the fly when accessed (can be disabled)
+- converts filesystems from AppleDouble v2 to Extended Attributes on
+  the fly when accessed by clients (can be disabled with **convert appledouble**)
 
 - **dbd** can be used to do conversion in one shot
 
@@ -267,16 +267,16 @@ Implementation details:
 | veto: | veto files | \- | \- | \(V\) | \- |
 | cnidscheme: | cnid scheme | dbd | dbd | \(V\) | \- |
 | casefold: | casefold | \- | \- | \(V\) | \- |
-| adouble: | appledouble | v2 | ea | \(V\) | v1, osx and sfm are obsoleted |
+| adouble: | \- | v2 | \- | \- | removed in 4.2.0 |
 | cnidserver: | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | \- |
 | dbpath: | vol dbpath | (volume directory) | var/netatalk/CNID/ | \(G\) | moved to $localstatedir |
 | umask: | umask | 0000 | 0000 | \(V\) | \- |
 | dperm: | directory perm | 0000 | 0000 | \(V\) | \- |
 | fperm: | file perm | 0000 | 0000 | \(V\) | \- |
 | password: | password | \- | \- | \(V\) | \- |
-| root_preexec: | \- | \- | \- | \- | obsoleted in 4.1.0 |
+| root_preexec: | \- | \- | \- | \- | removed in 4.1.0 |
 | preexec: | preexec | \- | \- | \(V\) | \- |
-| root_postexec: | \- | \- | \- | \- | obsoleted in 4.1.0 |
+| root_postexec: | \- | \- | \- | \- | removed in 4.1.0 |
 | postexec: | postexec | \- | \- | \(V\) | \- |
 | allowed_hosts: | hosts allow | \- | \- | \(V\) | \- |
 | denied_hosts: | hosts deny | \- | \- | \(V\) | \- |
@@ -289,7 +289,7 @@ Implementation details:
 | options:invisibledots | invisible dots | \- | no | \(V\) | \- |
 | options:nostat | stat vol | \- | yes | \(V\) | \- |
 | options:preexec_close | preexec close | \- | no | \(V\) | \- |
-| options:root_preexec_close | \- | \- | \- | \- | obsoleted in 4.1.0 |
+| options:root_preexec_close | \- | \- | \- | \- | removed in 4.1.0 |
 | options:upriv | unix priv | \- | yes | \(V\) | \- |
 | options:nodev | cnid dev | \- | yes | \(V\) | \- |
 | options:illegalseq | illegal seq | \- | no | \(V\) | \- |

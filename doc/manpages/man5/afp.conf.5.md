@@ -1004,17 +1004,6 @@ path = <PATH\> **(V)**
 
 > The path name must be a fully qualified path name.
 
-appledouble = <ea|v2\> **(V)**
-
-> Specify the format of the metadata files, which are used for saving Mac
-resource forks and extended attributes.
-Earlier versions used AppleDouble **v2**, the new default format is **ea**.
-
-> **WARNING**
-
-> The **v2** option is obsolete and should not be used unless
-absoluteley necessary. It may go away in the future.
-
 vol size limit = <size in MiB\> **(V)**
 
 > Useful for Time Machine: limits the reported volume size, thus
@@ -1075,17 +1064,16 @@ MySQL database instance for use with netatalk.
 heavily on a persistent ID database. Aliases will likely not work and
 filename mangling is not supported.
 
-ea = <none|auto|sys|ad|samba\> **(V)**
+ea = <sys|samba|ad|none\> (default: auto detect) **(V)**
 
-> Specify how Extended Attributes are
-stored. **auto** is the default.
+> Specify how Extended Attributes and Classic Mac OS resource forks are
+stored.
 
-auto
-
-> Try **sys** (by setting an EA on the shared directory itself), fallback to
-**ad**. Requires writable volume for performing test. "**read only = yes**"
-overwrites **auto** with **none**. Use explicit "**ea = sys|ad**" for
-read-only volumes where appropriate.
+By default, we attempt to enable **sys** with a fallback to **ad**.
+For the auto detection to work, the volume needs to be writable
+because we attempt to set an EA on the shared directory itself.
+If **read only = yes** is set, we fallback to **sys**.
+Use explicit "**ea = ad|none**" for read-only volumes where appropriate.
 
 sys
 
@@ -1098,7 +1086,9 @@ order to be compatible with Samba's vfs_streams_xattr.
 
 ad
 
-> Use files in *.AppleDouble* directories.
+> Use AppleDouble v2 metadata stored as files in *.AppleDouble* directories.
+This should only be used when the host's filesystem does not support
+Extended Attributes.
 
 none
 
@@ -1202,11 +1192,11 @@ device number is not constant across a reboot, e.g. cluster, ...
 
 convert appledouble = <BOOLEAN\> (default: *yes*) **(V)**
 
-> Whether automatic conversion from **appledouble = v2** to
-**appledouble = ea** is performed when accessing filesystems from clients.
+> Whether automatic conversion from AppleDouble v2 to Extended Attributes
+is performed when accessing filesystems from clients.
 This is generally useful, but costs some performance. It's recommendable
 to run **dbd** on volumes and do the conversion with that. Then this
-option can be set to no.
+option can be set to *no*.
 
 delete veto files = <BOOLEAN\> (default: *no*) **(V)**
 

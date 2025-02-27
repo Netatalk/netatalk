@@ -327,7 +327,7 @@ void usage( char * av0 )
 {
     fprintf( stdout, "usage:\t%s [-1234567aCiLlmnVvXx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
 	"[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0 );
-    fprintf( stdout,"\t-a\tvolume is appledouble = v2 instead of default appledouble = ea\n");
+    fprintf( stdout,"\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf( stdout,"\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf( stdout,"\t-m\tserver is a Mac\n");
     fprintf( stdout,"\t-h\tserver host name (default localhost)\n");

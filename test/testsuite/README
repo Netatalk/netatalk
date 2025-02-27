@@ -69,12 +69,12 @@ afp.conf:
 uam list = uams_clrtxt.so uams_guest.so
 
 [volume1]
-appledouble = ea
+ea = sys
 path = /tmp/afptest1
 valid users = @afpusers
 
 [volume2]
-appledouble = ea
+ea = sys
 path = /tmp/afptest2
 valid users = @afpusers
 #<<<<<<<<

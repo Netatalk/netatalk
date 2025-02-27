@@ -281,9 +281,8 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
 
 /*
   Check if the underlying filesystem supports EAs.
-  If not, switch to ea:ad.
-  As we can't check (requires write access) on ro-volumes, we switch ea:auto
-  volumes that are options:ro to ea:none.
+  If not, switch to ea=ad.
+  As we can't check (requires write access) on ro-volumes, we assume ea=sys.
 */
 #define EABUFSZ 4
 static int do_check_ea_support(const struct vol *vol)
@@ -293,8 +292,9 @@ static int do_check_ea_support(const struct vol *vol)
     const char *eacontent = "yes";
     char buf[EABUFSZ];
 
-    if (sys_lgetxattr(vol->v_path, eaname, buf, EABUFSZ) != -1)
+    if (sys_lgetxattr(vol->v_path, eaname, buf, EABUFSZ) != -1) {
         return 1;
+    }
 
     if (vol->v_flags & AFPVOL_RO) {
         LOG(log_debug, logtype_afpd, "read-only volume '%s', can't test for EA support, assuming yes", vol->v_localname);
@@ -326,7 +326,7 @@ static void check_ea_support(struct vol *vol)
         if (haseas)
             vol->v_vfs_ea = AFPVOL_EA_SYS;
         else
-            vol->v_vfs_ea = AFPVOL_EA_NONE;
+            vol->v_vfs_ea = AFPVOL_EA_AD;
     }
 
     if (vol->v_adouble == AD_VERSION_EA) {
@@ -883,6 +883,7 @@ static struct vol *creatvol(AFPObj *obj,
     EC_NULL( volume->v_configname = strdup(section));
 
     volume->v_vfs_ea = AFPVOL_EA_AUTO;
+    volume->v_adouble = AD_VERSION;
     volume->v_umask = obj->options.umask;
 
     if ((val = getoption_str(obj->iniconfig, section, "password", preset, NULL)))
@@ -969,15 +970,6 @@ static struct vol *creatvol(AFPObj *obj,
     if ((val = getoption_str(obj->iniconfig, section, "postexec", preset, NULL)))
         EC_NULL( volume->v_postexec = volxlate(obj, NULL, MAXPATHLEN, val, pwd, path, name) );
 
-    if ((val = getoption_str(obj->iniconfig, section, "appledouble", preset, NULL))) {
-        if (strcmp(val, "v2") == 0)
-            volume->v_adouble = AD_VERSION2;
-        else if (strcmp(val, "ea") == 0)
-            volume->v_adouble = AD_VERSION_EA;
-    } else {
-        volume->v_adouble = AD_VERSION;
-    }
-
     if ((val = getoption_str(obj->iniconfig, section, "cnid server", preset, NULL))) {
         EC_NULL( p = strdup(val) );
         volume->v_cnidserver = p;
@@ -994,16 +986,22 @@ static struct vol *creatvol(AFPObj *obj,
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "ea", preset, NULL))) {
-        if (strcasecmp(val, "ad") == 0)
-            volume->v_vfs_ea = AFPVOL_EA_AD;
-        else if (strcasecmp(val, "sys") == 0)
+        if (strcasecmp(val, "sys") == 0) {
+            volume->v_adouble = AD_VERSION_EA;
             volume->v_vfs_ea = AFPVOL_EA_SYS;
-        else if (strcasecmp(val, "none") == 0)
-            volume->v_vfs_ea = AFPVOL_EA_NONE;
+        }
         else if (strcasecmp(val, "samba") == 0) {
+            volume->v_adouble = AD_VERSION_EA;
             volume->v_vfs_ea = AFPVOL_EA_SYS;
             volume->v_flags |= AFPVOL_EA_SAMBA;
-	}
+        }
+        else if (strcasecmp(val, "ad") == 0) {
+            volume->v_adouble = AD_VERSION2;
+            volume->v_vfs_ea = AFPVOL_EA_AD;
+        }
+        else if (strcasecmp(val, "none") == 0) {
+            volume->v_vfs_ea = AFPVOL_EA_NONE;
+        }
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "casefold", preset, NULL))) {
