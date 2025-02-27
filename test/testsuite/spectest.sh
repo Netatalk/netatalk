@@ -22,7 +22,7 @@ USER1=
 USER2=
 PASSWD=
 
-# *** volumes configured with appledouble = ea
+# *** volumes configured with ea = sys
 VOLUME1=
 VOLUME2=
 

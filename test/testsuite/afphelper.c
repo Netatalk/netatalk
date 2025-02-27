@@ -870,10 +870,10 @@ void test_skipped(int why)
 		s = "volume with extendend attribute support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3+ and volume with 'appledouble = ea'";
+		s = "Netatalk 3+ and volume with EA metadata";
 		break;
 	case T_ADV2:
-		s = "volume with 'appledouble = v2'";
+		s = "volume with AppleDouble metadata";
 		break;
 	case T_NOSYML:
 		s = "volume without option 'follow symlinks'";

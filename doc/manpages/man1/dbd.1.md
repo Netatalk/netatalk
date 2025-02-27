@@ -12,13 +12,13 @@ dbd — CNID database maintenance
 
 **dbd** scans all file and directories of AFP volumes, updating the CNID
 database of the volume. It must be run with appropriate permissions i.e.
-as root..
+as root.
 
 # Options
 
 **-c**
 
-> convert from "**appledouble = v2**" to "**appledouble = ea**"
+> convert from *AppleDouble v2* to *EA* filesystem metadata
 
 **-f**
 

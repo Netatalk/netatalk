@@ -123,11 +123,9 @@ fi
 
 if [ -n "$AFP_ADOUBLE" ]; then
     AFP_EA="ad"
-    AFP_AD="v2"
     TEST_FLAGS="$TEST_FLAGS -a"
 else
     AFP_EA="sys"
-    AFP_AD="ea"
 fi
 
 if [ -n "$AFP_DROPBOX" ]; then
@@ -150,14 +148,12 @@ server name = ${SERVER_NAME:-Netatalk File Server}
 spotlight = yes
 uam list = $UAMS
 [${SHARE_NAME:-File Sharing}]
-appledouble = $AFP_AD
 ea = $AFP_EA
 path = /mnt/afpshare
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
 [${SHARE2_NAME:-Time Machine}]
-appledouble = $AFP_AD
 ea = $AFP_EA
 path = /mnt/afpbackup
 time machine = $TIMEMACHINE
