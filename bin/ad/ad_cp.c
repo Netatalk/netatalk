@@ -64,7 +64,7 @@
 #include <atalk/adouble.h>
 #include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
-#include <atalk/ftw.h>
+#include <ftw.h>
 #include <atalk/queue.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
@@ -93,7 +93,7 @@ static enum op type;
 static int Rflag;
 static volatile sig_atomic_t alarmed;
 static int badcp, rval;
-static int ftw_options = FTW_MOUNT | FTW_PHYS | FTW_ACTIONRETVAL;
+static int ftw_options = FTW_MOUNT | FTW_PHYS /*| FTW_ACTIONRETVAL*/;
 
 /* Forward declarations */
 static int copy(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
@@ -335,7 +335,7 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
         /* Load .volinfo file for source */
         openvol(obj, argv[i], &svolume);
 
-        if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
+        if (nftw(argv[i], copy, /*upfunc,*/ 20, ftw_options) == -1) {
             if (alarmed) {
                 SLOG("...break");
             } else {
@@ -373,8 +373,10 @@ static int copy(const char *path,
         dir = path;
     else
         dir++;
+#if 0
     if (!dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir))
         return FTW_SKIP_SUBTREE;
+#endif
 
     /*
      * If we are in case (2) above, we need to append the
@@ -435,9 +437,11 @@ static int copy(const char *path,
             to_stat.st_ino == statp->st_ino) {
             SLOG("%s and %s are identical (not copied).", to.p_path, path);
             badcp = rval = 1;
+#if 0
             if (S_ISDIR(statp->st_mode))
                 /* without using glibc extension FTW_ACTIONRETVAL cant handle this */
                 return FTW_SKIP_SUBTREE;
+#endif
             return 0;
         }
         if (!S_ISDIR(statp->st_mode) &&

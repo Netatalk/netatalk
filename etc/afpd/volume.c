@@ -40,7 +40,7 @@
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
 #include <atalk/fce_api.h>
-#include <atalk/ftw.h>
+#include <ftw.h>
 #include <atalk/globals.h>
 
 #ifdef HAVE_LDAP

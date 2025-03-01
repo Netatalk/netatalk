@@ -17,10 +17,6 @@ util_sources = [
     'unix.c',
 ]
 
-if have_atfuncs
-    util_sources += 'ftw.c'
-endif
-
 libutil = static_library(
     'util',
     util_sources,

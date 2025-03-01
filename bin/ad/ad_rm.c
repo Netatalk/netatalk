@@ -29,7 +29,7 @@
 #include <atalk/adouble.h>
 #include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
-#include <atalk/ftw.h>
+#include <ftw.h>
 #include <atalk/queue.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
@@ -167,7 +167,7 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
         /* Load .volinfo file for source */
         openvol(obj, argv[i], &volume);
 
-        if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) == -1) {
+        if (nftw(argv[i], rm, /*upfunc,*/ 20, FTW_DEPTH | FTW_PHYS) == -1) {
             if (alarmed) {
                 SLOG("...break");
             } else {
@@ -194,8 +194,10 @@ static int rm(const char *path,
         dir = path;
     else
         dir++;
+#if 0
     if (check_netatalk_dirs(dir) != NULL)
         return FTW_SKIP_SUBTREE;
+#endif
 
     switch (statp->st_mode & S_IFMT) {
 
@@ -231,7 +233,9 @@ static int rm(const char *path,
     case S_IFDIR:
         if (!Rflag) {
             SLOG("%s is a directory", path);
+#if 0
             return FTW_SKIP_SUBTREE;
+#endif
         }
 
         if (volume.vol->v_path) {
