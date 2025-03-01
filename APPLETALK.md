@@ -1,4 +1,18 @@
-This is a README for using Netatalk with AppleTalk networking.
+# Introduction
+
+This document describes using Netatalk with AppleTalk networking.
+
+Netatalk supplies two different types of AFP servers and both
+can run at the same time. Classic AFP requires running both **afpd** and
+**atalkd**, while AFP over TCP only requires running **afpd**.
+
+Classic AFP (or AFP over DDP) depends on an AppleTalk network stack
+provided by the OS kernel. At the time of writing, Linux and NetBSD
+maintain such a module.
+
+Userland AppleTalk networking is considered feasible
+and is known to have been prototyped,
+but no complete implementation exists at the time of writing.
 
 Platforms Covered:
 
@@ -15,11 +29,7 @@ Some Linux distributions ship with AppleTalk support out of the box
 (e.g. Debian) others have the kernel module but with a blacklisting
 in effect that has to be deactivated before you can use it (e.g. Fedora.)
 
-Netatalk supplies two different types of AFP servers and both
-can run at the same time. Classic AFP requires afpd and
-atalkd. AFP over TCP only requires afpd.
-
-Classic AFP on GNU/Linux requires that CONFIG_ATALK is compiled
+Classic AFP on Linux requires that CONFIG_ATALK is compiled
 into the kernel or as a kernel module. To check to see if the kernel
 has support for AppleTalk:
 
@@ -85,8 +95,8 @@ you will need either need a kernel module for your operating system,
 or a userland AppleTalk stack.
 
 Look at the Solaris STREAMS module if your operating system supports
-that framework. This module used to distributed with Netatalk until
-version 2.3 (sys/solaris).
+that framework. This module used to be distributed with Netatalk until
+version 2.3 (find the code under `sys/solaris`).
 
 Otherwise, look at the ddp code in NetBSD if your operating system
 is BSDish in nature.
