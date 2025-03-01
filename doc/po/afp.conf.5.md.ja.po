@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-23 15:03+0100\n"
+"POT-Creation-Date: 2025-03-01 10:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -66,7 +66,7 @@ msgstr "概要"
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1354
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1344
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
@@ -88,7 +88,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1356
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1346
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
@@ -105,7 +105,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1349 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1339 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -120,7 +120,7 @@ msgstr "関連項目"
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:50
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1299
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1289
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -132,8 +132,8 @@ msgstr "例"
 #: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:334
 #: manpages/man5/afp.conf.5.md:358 manpages/man5/afp.conf.5.md:371
 #: manpages/man5/afp.conf.5.md:386 manpages/man5/afp.conf.5.md:741
-#: manpages/man5/afp.conf.5.md:1068 manpages/man5/afp.conf.5.md:1193
-#: manpages/man5/afp.conf.5.md:1231 manpages/man8/papd.8.md:96
+#: manpages/man5/afp.conf.5.md:1057 manpages/man5/afp.conf.5.md:1183
+#: manpages/man5/afp.conf.5.md:1221 manpages/man8/papd.8.md:96
 #: manual/Configuration.md:113
 #, no-wrap
 msgid "> **NOTE**\n"
@@ -2522,7 +2522,7 @@ msgid "> Authentication method: **none** | **simple**\n"
 msgstr "> 認証方式: **none** | **simple**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:897 manpages/man5/afp.conf.5.md:1104
+#: manpages/man5/afp.conf.5.md:897 manpages/man5/afp.conf.5.md:1094
 msgid "none"
 msgstr ""
 
@@ -2836,45 +2836,11 @@ msgstr "> パス名は完全修飾パス名でなければならない。\n"
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1008
 #, no-wrap
-msgid "appledouble = <ea|v2\\> **(V)**\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1012
-#, no-wrap
-msgid ""
-"> Specify the format of the metadata files, which are used for saving Mac\n"
-"resource forks and extended attributes.\n"
-"Earlier versions used AppleDouble **v2**, the new default format is **ea**.\n"
-msgstr ""
-"> メタデータファイルのフォーマットを指定する。これは Mac\n"
-"のリソースフォーク若しくは拡張属性の保存にも用いられる。初期のバージョンでは AppleDouble\n"
-"v2 が用いられ、新しいデフォルトのフォーマットは **ea** である。\n"
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1014 manpages/man5/afp.conf.5.md:1073
-#: manpages/man5/afp.conf.5.md:1108 manual/AppleTalk.md:154
-#: manual/Configuration.md:832 manual/Installation.md:4 manual/Upgrading.md:42
-#, no-wrap
-msgid "> **WARNING**\n"
-msgstr "> **警告**\n"
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1017
-#, no-wrap
-msgid ""
-"> The **v2** option is obsolete and should not be used unless\n"
-"absoluteley necessary. It may go away in the future.\n"
-msgstr "> このオプションは廃止予定であり、絶対に必要な場合を除き使用しないでください。将来のリリースでは削除される可能性がある。\n"
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1019
-#, no-wrap
 msgid "vol size limit = <size in MiB\\> **(V)**\n"
 msgstr "vol size limit = <MiB 単位でのサイズ\\> **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1024
+#: manpages/man5/afp.conf.5.md:1013
 #, no-wrap
 msgid ""
 "> Useful for Time Machine: limits the reported volume size, thus\n"
@@ -2889,13 +2855,13 @@ msgstr ""
 "に制限する。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1026
+#: manpages/man5/afp.conf.5.md:1015
 #, no-wrap
 msgid "> **IMPORTANT**\n"
 msgstr "> **重要**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1034
+#: manpages/man5/afp.conf.5.md:1023
 #, no-wrap
 msgid ""
 "> This is an approximated calculation taking into\n"
@@ -2915,13 +2881,13 @@ msgstr ""
 "を読む、そしてお互いの乗算をする。ことによって行われる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1036
+#: manpages/man5/afp.conf.5.md:1025
 #, no-wrap
 msgid "valid users = <user @group\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1040
+#: manpages/man5/afp.conf.5.md:1029
 #, no-wrap
 msgid ""
 "> The allow option allows the users and groups that access a share to be\n"
@@ -2932,19 +2898,19 @@ msgstr ""
 "@ プレフィックスで明示する。例:\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1042
+#: manpages/man5/afp.conf.5.md:1031
 #, no-wrap
 msgid "    valid users = user @group\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1044
+#: manpages/man5/afp.conf.5.md:1033
 #, no-wrap
 msgid "invalid users = <users/groups\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1047
+#: manpages/man5/afp.conf.5.md:1036
 #, no-wrap
 msgid ""
 "> The deny option specifies users and groups who are not allowed access to\n"
@@ -2954,13 +2920,13 @@ msgstr ""
 "\"valid users\" オプションと同じフォーマットである。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1049
+#: manpages/man5/afp.conf.5.md:1038
 #, no-wrap
 msgid "hosts allow = <IP host address/IP netmask bits \\[ ... \\]\\> **(V)**\n"
 msgstr "hosts allow = <IPホストアドレス/IPマスクビット \\[ ... \\]\\> **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1053
+#: manpages/man5/afp.conf.5.md:1042
 #, no-wrap
 msgid ""
 "> Only listed hosts and networks are allowed, all others are rejected. The\n"
@@ -2972,35 +2938,35 @@ msgstr ""
 "のドット区切りフォーマット、IPv6の16進数フォーマットのどちらでもよい。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1055
+#: manpages/man5/afp.conf.5.md:1044
 msgid "Example: hosts allow = 10.1.0.0/16 10.2.1.100 2001:0db8:1234::/48"
 msgstr "例: hosts allow = 10.1.0.0/16 10.2.1.100 2001:0db8:1234::/48"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1057
+#: manpages/man5/afp.conf.5.md:1046
 #, no-wrap
 msgid "hosts deny = <IP host address/IP netmask bits \\[ ... \\]\\> **(V)**\n"
 msgstr "hosts deny = <IPホストアドレス/IPマスクビット \\[ ... \\]\\> **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1059
+#: manpages/man5/afp.conf.5.md:1048
 #, no-wrap
 msgid "> Listed hosts and nets are rejected, all others are allowed.\n"
 msgstr "> 列挙されたホストとネットのみが拒否され、ほかの全ては許可される。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1061
+#: manpages/man5/afp.conf.5.md:1050
 msgid "Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab"
 msgstr "例: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1063
+#: manpages/man5/afp.conf.5.md:1052
 #, no-wrap
 msgid "cnid scheme = <backend\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1066
+#: manpages/man5/afp.conf.5.md:1055
 #, no-wrap
 msgid ""
 "> set the CNID backend to be used for the volume, default is\n"
@@ -3012,7 +2978,7 @@ msgstr ""
 "\\[@compiled_backends@\\] である。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1071
+#: manpages/man5/afp.conf.5.md:1060
 #, no-wrap
 msgid ""
 "> The \"mysql\" backend requires the system administrator to configure a\n"
@@ -3022,7 +2988,15 @@ msgstr ""
 "MySQL データベース インスタンスを構成する必要がある。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1077
+#: manpages/man5/afp.conf.5.md:1062 manpages/man5/afp.conf.5.md:1098
+#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
+#: manual/Upgrading.md:42
+#, no-wrap
+msgid "> **WARNING**\n"
+msgstr "> **警告**\n"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1066
 #, no-wrap
 msgid ""
 "> Do *NOT* use the \"last\" backend for volumes, because **afpd** relies\n"
@@ -3033,60 +3007,47 @@ msgstr ""
 "データベースに重く依存しているので、このバックエンドをボリュームに使用するのは推奨*されていない*。エイリアスはおそらく機能しないだろうし、ファイル名のマングリングもサポートされていない。\n"
 
 #. type: Plain text
+#: manpages/man5/afp.conf.5.md:1068
+#, no-wrap
+msgid "ea = <sys|samba|ad|none\\> (default: auto detect) **(V)**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1071
+#, no-wrap
+msgid ""
+"> Specify how Extended Attributes and Classic Mac OS resource forks are\n"
+"stored.\n"
+msgstr "> 拡張属性およびリソースフォークをどのように保存するか指定する。\n"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1077
+msgid ""
+"By default, we attempt to enable **sys** with a fallback to **ad**.  For the "
+"auto detection to work, the volume needs to be writable because we attempt "
+"to set an EA on the shared directory itself.  If **read only = yes** is set, "
+"we fallback to **sys**.  Use explicit \"**ea = ad|none**\" for read-only "
+"volumes where appropriate."
+msgstr ""
+
+#. type: Plain text
 #: manpages/man5/afp.conf.5.md:1079
-#, no-wrap
-msgid "ea = <none|auto|sys|ad|samba\\> **(V)**\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1082
-#, no-wrap
-msgid ""
-"> Specify how Extended Attributes are\n"
-"stored. **auto** is the default.\n"
-msgstr ""
-"> 拡張属性をどのように保存するか指定する。**auto**\n"
-"がデフォルトである。\n"
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1084
-msgid "auto"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1089
-#, no-wrap
-msgid ""
-"> Try **sys** (by setting an EA on the shared directory itself), fallback to\n"
-"**ad**. Requires writable volume for performing test. \"**read only = yes**\"\n"
-"overwrites **auto** with **none**. Use explicit \"**ea = sys|ad**\" for\n"
-"read-only volumes where appropriate.\n"
-msgstr ""
-"> （共有ディレクトリ自体に EA を設定することにより） **sys**\n"
-"を試行して、フォールバックすると **ad**\n"
-"になる。試行を実行するためにはボリュームが書き込み可能であることが必要である。\"**read only = yes**\"\n"
-"ならば **auto** は **none**\n"
-"で上書きされる。書き込み専用のボリュームには必要に応じて明確に\n"
-"\"**ea = sys|ad**\" を使ってください。\n"
-
-#. type: Plain text
-#: manpages/man5/afp.conf.5.md:1091
 msgid "sys"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1093
+#: manpages/man5/afp.conf.5.md:1081
 #, no-wrap
 msgid "> Use filesystem Extended Attributes.\n"
 msgstr "> ファイルシステムの拡張属性を使う。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1095
+#: manpages/man5/afp.conf.5.md:1083
 msgid "samba"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1098
+#: manpages/man5/afp.conf.5.md:1086
 #, no-wrap
 msgid ""
 "> Use filesystem Extended Attributes, but append a 0 byte to each xattr in\n"
@@ -3094,24 +3055,27 @@ msgid ""
 msgstr "> ファイルシステムの拡張属性を使うが、Sambaのvfs_streams_xattrとの互換性の目的で、それぞれの拡張属性に値がゼロの1バイトを追加する。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1100
+#: manpages/man5/afp.conf.5.md:1088
 msgid "ad"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1102
+#: manpages/man5/afp.conf.5.md:1092
 #, no-wrap
-msgid "> Use files in *.AppleDouble* directories.\n"
-msgstr "> *.AppleDouble* ディレクトリ内のファイルを使う。\n"
+msgid ""
+"> Use AppleDouble v2 metadata stored as files in *.AppleDouble* directories.\n"
+"This should only be used when the host's filesystem does not support\n"
+"Extended Attributes.\n"
+msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1106
+#: manpages/man5/afp.conf.5.md:1096
 #, no-wrap
 msgid "> No Extended Attributes support.\n"
 msgstr "> 拡張属性をサポートしない。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1111
+#: manpages/man5/afp.conf.5.md:1101
 #, no-wrap
 msgid ""
 "> The **samba** option should not be used on a volume that was previously\n"
@@ -3121,13 +3085,13 @@ msgstr ""
 "に設定されたボリュームでは使用しないでください。これにより、データが失われる可能性がある。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1113
+#: manpages/man5/afp.conf.5.md:1103
 #, no-wrap
 msgid "mac charset = <charset\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1118
+#: manpages/man5/afp.conf.5.md:1108
 #, no-wrap
 msgid ""
 "> specifies the Mac client charset for this Volume, e.g. *MAC_ROMAN*,\n"
@@ -3141,13 +3105,13 @@ msgstr ""
 "セクションで全体的にセットしたキャラクターセットと異なるというボリュームを必要とする時のみ必須である。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1120
+#: manpages/man5/afp.conf.5.md:1110
 #, no-wrap
 msgid "casefold = <option\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1123
+#: manpages/man5/afp.conf.5.md:1113
 #, no-wrap
 msgid ""
 "> The casefold option handles, if the case of filenames should be changed.\n"
@@ -3157,37 +3121,37 @@ msgstr ""
 "オプションが処理する。有効なオプションは:\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1125
+#: manpages/man5/afp.conf.5.md:1115
 #, no-wrap
 msgid "**tolower** - Lowercases names in both directions.\n"
 msgstr "**tolower** - 双方向で名前を小文字に変換する。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1127
+#: manpages/man5/afp.conf.5.md:1117
 #, no-wrap
 msgid "**toupper** - Uppercases names in both directions.\n"
 msgstr "**toupper** - 双方向で名前を大文字に変換する。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1129
+#: manpages/man5/afp.conf.5.md:1119
 #, no-wrap
 msgid "**xlatelower** - Client sees lowercase, server sees uppercase.\n"
 msgstr "**xlatelower** - クライアントでは小文字に見えて、サーバでは大文字に見える。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1131
+#: manpages/man5/afp.conf.5.md:1121
 #, no-wrap
 msgid "**xlateupper** - Client sees uppercase, server sees lowercase.\n"
 msgstr "**xlateupper** - クライアントでは大文字に見えて、サーバでは小文字にみえる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1133
+#: manpages/man5/afp.conf.5.md:1123
 #, no-wrap
 msgid "password = <password\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1137
+#: manpages/man5/afp.conf.5.md:1127
 #, no-wrap
 msgid ""
 "> This option allows you to set a volume password, which can be a maximum\n"
@@ -3198,13 +3162,13 @@ msgstr ""
 "8 文字の長さ（これを記入するときには ASCII を強く推奨）\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1139
+#: manpages/man5/afp.conf.5.md:1129
 #, no-wrap
 msgid "file perm = <mode\\> **(V)**; directory perm = <mode\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1143
+#: manpages/man5/afp.conf.5.md:1133
 #, no-wrap
 msgid ""
 "> Add(or) with the client requested permissions: **file perm** is for files\n"
@@ -3216,13 +3180,13 @@ msgstr ""
 "\"**unix priv = no**\" と共に用いてはならない。\n"
 
 #. type: Title ##
-#: manpages/man5/afp.conf.5.md:1144
+#: manpages/man5/afp.conf.5.md:1134
 #, no-wrap
 msgid "Example: Volume for a collaborative workgroup"
 msgstr "例：共同作業グループ向けのボリューム"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1148
+#: manpages/man5/afp.conf.5.md:1138
 #, no-wrap
 msgid ""
 "    file perm = 0660\n"
@@ -3230,49 +3194,49 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1150
+#: manpages/man5/afp.conf.5.md:1140
 #, no-wrap
 msgid "umask = <mode\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1152
+#: manpages/man5/afp.conf.5.md:1142
 #, no-wrap
 msgid "> set perm mask. Don't use with \"**unix priv = no**\".\n"
 msgstr "> 権限のマスクを設定する。\"**unix priv = no**\" と共に用いてはならない。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1154
+#: manpages/man5/afp.conf.5.md:1144
 #, no-wrap
 msgid "preexec = <command\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1156
+#: manpages/man5/afp.conf.5.md:1146
 #, no-wrap
 msgid "> command to be run when the volume is mounted\n"
 msgstr "> ボリュームがマウントされる時に実行されるコマンド\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1158
+#: manpages/man5/afp.conf.5.md:1148
 #, no-wrap
 msgid "postexec = <command\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1160
+#: manpages/man5/afp.conf.5.md:1150
 #, no-wrap
 msgid "> command to be run when the volume is closed\n"
 msgstr "> ボリュームが閉じられる時に実行されるコマンド\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1162
+#: manpages/man5/afp.conf.5.md:1152
 #, no-wrap
 msgid "rolist = <users/groups\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1165
+#: manpages/man5/afp.conf.5.md:1155
 #, no-wrap
 msgid ""
 "> Allows certain users and groups to have read-only access to a share.\n"
@@ -3282,13 +3246,13 @@ msgstr ""
 "allow オプションに準ずる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1167
+#: manpages/man5/afp.conf.5.md:1157
 #, no-wrap
 msgid "rwlist = <users/groups\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1170
+#: manpages/man5/afp.conf.5.md:1160
 #, no-wrap
 msgid ""
 "> Allows certain users and groups to have read/write access to a share.\n"
@@ -3298,13 +3262,13 @@ msgstr ""
 "allow オプションに準ずる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1172
+#: manpages/man5/afp.conf.5.md:1162
 #, no-wrap
 msgid "veto files = <vetoed names\\> **(V)**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1176
+#: manpages/man5/afp.conf.5.md:1166
 #, no-wrap
 msgid ""
 "> hide files and directories,where the path matches one of the '/'\n"
@@ -3317,24 +3281,24 @@ msgstr ""
 "= veto1/veto2/\"。\n"
 
 #. type: Title ##
-#: manpages/man5/afp.conf.5.md:1177
+#: manpages/man5/afp.conf.5.md:1167
 #, no-wrap
 msgid "Volume options"
 msgstr "ボリュームオプション"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1180
+#: manpages/man5/afp.conf.5.md:1170
 msgid "Boolean volume options."
 msgstr "ブーリアン型のボリュームオプション。"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1182
+#: manpages/man5/afp.conf.5.md:1172
 #, no-wrap
 msgid "acls = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "acls = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1185
+#: manpages/man5/afp.conf.5.md:1175
 #, no-wrap
 msgid ""
 "> Whether to flag volumes as supporting ACLs. If ACL support is compiled\n"
@@ -3344,13 +3308,13 @@ msgstr ""
 "サポートでコンパイルしていれば、これはデフォルトで yes。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1187
+#: manpages/man5/afp.conf.5.md:1177
 #, no-wrap
 msgid "case sensitive = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "case sensitive = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1191
+#: manpages/man5/afp.conf.5.md:1181
 #, no-wrap
 msgid ""
 "> Whether to flag volumes as supporting case-sensitive filenames. If the\n"
@@ -3362,7 +3326,7 @@ msgstr ""
 "を設定せよ。しかしながらこれは完全には確かめられていない。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1197
+#: manpages/man5/afp.conf.5.md:1187
 #, no-wrap
 msgid ""
 "> In spite of being case sensitive as a matter of fact, netatalk 3.1.3 and\n"
@@ -3375,13 +3339,13 @@ msgstr ""
 "からはデフォルトで正しく通知される。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1199
+#: manpages/man5/afp.conf.5.md:1189
 #, no-wrap
 msgid "cnid dev = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "cnid dev = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1202
+#: manpages/man5/afp.conf.5.md:1192
 #, no-wrap
 msgid ""
 "> Whether to use the device number in the CNID backends. Helps when the\n"
@@ -3391,35 +3355,34 @@ msgstr ""
 "例えばクラスターなどでリブートを経るとデバイス番号が固定ではない時有用。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1204
+#: manpages/man5/afp.conf.5.md:1194
 #, no-wrap
 msgid "convert appledouble = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "convert appledouble = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1210
+#: manpages/man5/afp.conf.5.md:1200
 #, no-wrap
 msgid ""
-"> Whether automatic conversion from **appledouble = v2** to\n"
-"**appledouble = ea** is performed when accessing filesystems from clients.\n"
+"> Whether automatic conversion from AppleDouble v2 to Extended Attributes\n"
+"is performed when accessing filesystems from clients.\n"
 "This is generally useful, but costs some performance. It's recommendable\n"
 "to run **dbd** on volumes and do the conversion with that. Then this\n"
-"option can be set to no.\n"
+"option can be set to *no*.\n"
 msgstr ""
-"> クライアントからのファイルシステムへのアクセス時、**appledouble = v2**\n"
-"から **appledouble = ea**\n"
-"への自動的な変換を行うかどうか。これは概して有用であるがいくらかパフォーマンスが犠牲となる。ボリューム上で\n"
+"> クライアントからのファイルシステムへのアクセス時、AppleTalk v2\n"
+"から拡張属性への自動的な変換を行うかどうか。これは概して有用であるがいくらかパフォーマンスが犠牲となる。ボリューム上で\n"
 "**dbd** を実行しそれで変換をするのが推奨される。その後このオプションを no\n"
 "に設定することもできる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1212
+#: manpages/man5/afp.conf.5.md:1202
 #, no-wrap
 msgid "delete veto files = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "delete veto files = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1218
+#: manpages/man5/afp.conf.5.md:1208
 #, no-wrap
 msgid ""
 "> This option is used when Netatalk is attempting to delete a directory\n"
@@ -3435,7 +3398,7 @@ msgstr ""
 "ファイルないしはディレクトリを含んでいたら、ディレクトリの削除は失敗するであろう。これは通常あなたの望むところの動作である。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1221
+#: manpages/man5/afp.conf.5.md:1211
 msgid ""
 "If this option is set to yes, then Netatalk will attempt to recursively "
 "delete any files and directories within the vetoed directory."
@@ -3445,13 +3408,13 @@ msgstr ""
 "するであろう。"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1223
+#: manpages/man5/afp.conf.5.md:1213
 #, no-wrap
 msgid "follow symlinks = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "follow symlinks = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1229
+#: manpages/man5/afp.conf.5.md:1219
 #, no-wrap
 msgid ""
 "> The default setting is false thus symlinks are not followed on the\n"
@@ -3467,7 +3430,7 @@ msgstr ""
 "ボリューム以外を指しているかもしれない。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1234
+#: manpages/man5/afp.conf.5.md:1224
 #, no-wrap
 msgid ""
 "> This option will subtly break when the symlinks point across filesystem\n"
@@ -3475,13 +3438,13 @@ msgid ""
 msgstr "> シンボリックリンクがファイルシステムの境界をまたいで張られている時、このオプションは巧妙に断ち切る。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1236
+#: manpages/man5/afp.conf.5.md:1226
 #, no-wrap
 msgid "invisible dots = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "invisible dots = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1244
+#: manpages/man5/afp.conf.5.md:1234
 #, no-wrap
 msgid ""
 "> make dot files invisible. WARNING: enabling this option will lead to\n"
@@ -3501,13 +3464,13 @@ msgstr ""
 "でもターミナルでもドットではじまるファイルはいずれにしても隠しファイルなので、完全に無駄である。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1246
+#: manpages/man5/afp.conf.5.md:1236
 #, no-wrap
 msgid "legacy volume size = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "legacy volume size = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1250
+#: manpages/man5/afp.conf.5.md:1240
 #, no-wrap
 msgid ""
 "> Limit disk size reporting to 2GB for legacy clients. This can be used\n"
@@ -3519,13 +3482,13 @@ msgstr ""
 "クライアントを使用している古い Macintosh で使用できる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1252
+#: manpages/man5/afp.conf.5.md:1242
 #, no-wrap
-msgid "name = <STRING\\> (default: section name in lowercase) **(V)**\n"
-msgstr "name = <STRING\\> (デフォルト: 小文字のセクション名) **(V)**\n"
+msgid "volume name = <STRING\\> (default: section name in lowercase) **(V)**\n"
+msgstr "volume name = <STRING\\> (デフォルト: 小文字のセクション名) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1256
+#: manpages/man5/afp.conf.5.md:1246
 #, no-wrap
 msgid ""
 "> The volume name option specifies the name of the shared AFP volume.\n"
@@ -3534,13 +3497,13 @@ msgid ""
 msgstr "> ボリュームの名前を指定する。デフォルトでは、ボリュームが定義されている ini ファイルの小文字に変換されたセクション名となる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1258
+#: manpages/man5/afp.conf.5.md:1248
 #, no-wrap
 msgid "network ids = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "network ids = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1261
+#: manpages/man5/afp.conf.5.md:1251
 #, no-wrap
 msgid ""
 "> Whether the server support network ids. Setting this to *no* will result\n"
@@ -3550,13 +3513,13 @@ msgstr ""
 "に設定すると結果としてクライアントは ACL AFP 機能を使わなくなる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1263
+#: manpages/man5/afp.conf.5.md:1253
 #, no-wrap
 msgid "preexec close = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "preexec close = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1266
+#: manpages/man5/afp.conf.5.md:1256
 #, no-wrap
 msgid ""
 "> A non-zero return code from preexec close the volume being immediately,\n"
@@ -3566,13 +3529,13 @@ msgstr ""
 "以外のリターンコードで、クライアントがボリュームをマウントする／見ることを防ぐために当該ボリュームを即座に閉じる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1268
+#: manpages/man5/afp.conf.5.md:1258
 #, no-wrap
 msgid "prodos = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "prodos = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1272
+#: manpages/man5/afp.conf.5.md:1262
 #, no-wrap
 msgid ""
 "> Enable ProDOS support. This option should only be enabled for volumes\n"
@@ -3585,13 +3548,13 @@ msgstr ""
 "に制限する。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1274
+#: manpages/man5/afp.conf.5.md:1264
 #, no-wrap
 msgid "read only = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "read only = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1277
+#: manpages/man5/afp.conf.5.md:1267
 #, no-wrap
 msgid ""
 "> Specifies the share as being read only for all users. Overwrites\n"
@@ -3601,13 +3564,13 @@ msgstr ""
 "**ea = none** で上書きされる。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1279
+#: manpages/man5/afp.conf.5.md:1269
 #, no-wrap
 msgid "search db = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "search db = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1284
+#: manpages/man5/afp.conf.5.md:1274
 #, no-wrap
 msgid ""
 "> Use fast CNID database namesearch instead of slow recursive filesystem\n"
@@ -3622,13 +3585,13 @@ msgstr ""
 "CNID db のボリュームのみで動作する。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1286
+#: manpages/man5/afp.conf.5.md:1276
 #, no-wrap
 msgid "stat vol = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "stat vol = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1289
+#: manpages/man5/afp.conf.5.md:1279
 #, no-wrap
 msgid ""
 "> Whether to stat volume path when enumerating volumes list, useful for\n"
@@ -3639,25 +3602,25 @@ msgstr ""
 "スクリプトで作成されたボリュームに有用である。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1291
+#: manpages/man5/afp.conf.5.md:1281
 #, no-wrap
 msgid "time machine = <BOOLEAN\\> (default: *no*) **(V)**\n"
 msgstr "time machine = <BOOLEAN\\> (デフォルト: *no*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1293
+#: manpages/man5/afp.conf.5.md:1283
 #, no-wrap
 msgid "> Whether to enable Time Machine support for this volume.\n"
 msgstr "> このボリュームの Time Machine サポートを有効にするかどうか。\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1295
+#: manpages/man5/afp.conf.5.md:1285
 #, no-wrap
 msgid "unix priv = <BOOLEAN\\> (default: *yes*) **(V)**\n"
 msgstr "unix priv = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1298
+#: manpages/man5/afp.conf.5.md:1288
 #, no-wrap
 msgid ""
 "> Whether to use AFP3 UNIX privileges. This should be set for OS X\n"
@@ -3668,13 +3631,13 @@ msgstr ""
 "及び `umask` も参照。\n"
 
 #. type: Title ##
-#: manpages/man5/afp.conf.5.md:1301
+#: manpages/man5/afp.conf.5.md:1291
 #, no-wrap
 msgid "Example: Modern Mac clients"
 msgstr "例：現代の Mac クライアント"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1306
+#: manpages/man5/afp.conf.5.md:1296
 msgid ""
 "This enables Spotlight and AFP stats if Netatalk was built with Spotlight "
 "and AFP stats support. The **mimic model** option is used to make the server "
@@ -3685,12 +3648,12 @@ msgstr ""
 "る。"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1308
+#: manpages/man5/afp.conf.5.md:1298
 msgid "The home directory is mounted on */home/{user}/afp-data*."
 msgstr "ホームディレクトリは */home/{user}/afp-data* にマウントされる。"
 
 #. type: Fenced code block
-#: manpages/man5/afp.conf.5.md:1309
+#: manpages/man5/afp.conf.5.md:1299
 #, no-wrap
 msgid ""
 "[Global]\n"
@@ -3704,13 +3667,13 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manpages/man5/afp.conf.5.md:1320
+#: manpages/man5/afp.conf.5.md:1310
 #, no-wrap
 msgid "Example: Classic Mac clients"
 msgstr "例：レトロ Mac クライアント"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1326
+#: manpages/man5/afp.conf.5.md:1316
 msgid ""
 "This enables AppleTalk if Netatalk was built with AppleTalk support.  The "
 "Random Number and ClearTxt authentication modules are used.  The **legacy "
@@ -3721,7 +3684,7 @@ msgstr ""
 "ションはサーバーを BSD デーモンのように見せるために使われる。"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1331
+#: manpages/man5/afp.conf.5.md:1321
 msgid ""
 "With **legacy volume size** the volume size is limited to 2 GB for very old "
 "Macs, while **prodos** is used to enable ProDOS boot flags on the volume "
@@ -3732,7 +3695,7 @@ msgstr ""
 "制限される。"
 
 #. type: Fenced code block
-#: manpages/man5/afp.conf.5.md:1332
+#: manpages/man5/afp.conf.5.md:1322
 #, no-wrap
 msgid ""
 "[Global]\n"
@@ -3752,7 +3715,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1353
+#: manpages/man5/afp.conf.5.md:1343
 msgid ""
 "afpd(8), afppasswd(5), afp_signature.conf(5), extmap.conf(5), cnid_metad(8)"
 msgstr ""

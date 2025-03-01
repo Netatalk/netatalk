@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-23 14:00+0100\n"
+"POT-Creation-Date: 2025-03-01 10:52+0100\n"
 "PO-Revision-Date: 2025-01-23 08:10+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,9 +17,9 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1011 manpages/man5/afp.conf.5.md:1070
-#: manpages/man5/afp.conf.5.md:1105 manual/AppleTalk.md:154
-#: manual/Configuration.md:832 manual/Installation.md:4 manual/Upgrading.md:42
+#: manpages/man5/afp.conf.5.md:1062 manpages/man5/afp.conf.5.md:1098
+#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
+#: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -85,14 +85,13 @@ msgstr ""
 "これまでの AFP 設定ファイルすべてが廃止され、AFP に関してのほぼ全オプション名"
 "を変更し、新しい設定ファイルを追加した： *afp.conf* と *extmap.conf*"
 
-#. type: Plain text
-#: manual/Upgrading.md:23 manual/Upgrading.md:59
+#. type: Bullet: '2.  '
+#: manual/Upgrading.md:23
 msgid ""
-"New AppleDouble backend **appledouble = ea** which stores Mac metadata and "
-"resource forks in extended attributes of the filesystem."
+"New backend for file metadata which stores metadata in extended attributes "
+"of the filesystem."
 msgstr ""
-"マックのメタデータとリソースフォークをファイルシステムの拡張属性に保存する "
-"**appledouble = ea** という新しい AppleDouble のバックエンド。"
+"ファイルメタデータをファイルシステムの拡張属性に保存する新しいバックエンド。"
 
 #. type: Bullet: '3.  '
 #: manual/Upgrading.md:29
@@ -172,8 +171,18 @@ msgstr "*AppleVolumes.system* の廃止"
 #. type: Title ###
 #: manual/Upgrading.md:55
 #, no-wrap
-msgid "New AppleDouble backend"
-msgstr "新たな AppleDouble バックエンド"
+msgid "New metadata backend"
+msgstr "新たなメタデータバックエンド"
+
+#. type: Plain text
+#: manual/Upgrading.md:59
+msgid ""
+"New file metadata backend **ea = sys** which stores macOS extended "
+"attributes and Classic Mac OS resource forks in extended attributes of the "
+"filesystem."
+msgstr ""
+"macOS拡張属性およびClassic Mac OS リソースフォークをファイルシステムの拡張属"
+"性に保存する **ea = sys** という新しいバックエンド。"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:61
@@ -183,20 +192,20 @@ msgstr "デフォルトのバックエンドである（！）"
 #. type: Bullet: '- '
 #: manual/Upgrading.md:64
 msgid ""
-"requires a filesystem with Extended Attributes, fallback is **appledouble = "
-"v2**"
+"requires a filesystem with Extended Attributes, fallback is AppleDouble v2 "
+"which is enabled with **ea = ad**"
 msgstr ""
-"拡張属性のあるファイルシステムが必須。 さもなくば **appledouble = v2** オプ"
-"ションの使用が代替となる"
+"拡張属性のあるファイルシステムが必須。 さもなくば **ea = ad** オプションの使"
+"用が代替となる"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:67
 msgid ""
-"converts filesystems from **appledouble = v2** to **appledouble = ea** on "
-"the fly when accessed (can be disabled)"
+"converts filesystems from AppleDouble v2 to Extended Attributes on the fly "
+"when accessed by clients (can be disabled with **convert appledouble**)"
 msgstr ""
-"**appledouble = v2** から **appledouble = ea** ファイルシステムへの変換はアク"
-"セス時、その都度行われる（無効にすることも可能）"
+"ファイルシステムを AppleDouble v2 から拡張属性への変換はアクセス時、その都度"
+"行われる（**convert appledouble** オプションを無効にすることも可能）"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:69
@@ -659,16 +668,16 @@ msgid ""
 "| veto: | veto files | \\- | \\- | \\(V\\) | \\- |\n"
 "| cnidscheme: | cnid scheme | dbd | dbd | \\(V\\) | \\- |\n"
 "| casefold: | casefold | \\- | \\- | \\(V\\) | \\- |\n"
-"| adouble: | appledouble | v2 | ea | \\(V\\) | v1, osx and sfm are obsoleted |\n"
+"| adouble: | \\- | v2 | \\- | \\- | removed in 4.2.0 |\n"
 "| cnidserver: | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | \\- |\n"
 "| dbpath: | vol dbpath | (volume directory) | var/netatalk/CNID/ | \\(G\\) | moved to $localstatedir |\n"
 "| umask: | umask | 0000 | 0000 | \\(V\\) | \\- |\n"
 "| dperm: | directory perm | 0000 | 0000 | \\(V\\) | \\- |\n"
 "| fperm: | file perm | 0000 | 0000 | \\(V\\) | \\- |\n"
 "| password: | password | \\- | \\- | \\(V\\) | \\- |\n"
-"| root_preexec: | \\- | \\- | \\- | \\- | obsoleted in 4.1.0 |\n"
+"| root_preexec: | \\- | \\- | \\- | \\- | removed in 4.1.0 |\n"
 "| preexec: | preexec | \\- | \\- | \\(V\\) | \\- |\n"
-"| root_postexec: | \\- | \\- | \\- | \\- | obsoleted in 4.1.0 |\n"
+"| root_postexec: | \\- | \\- | \\- | \\- | removed in 4.1.0 |\n"
 "| postexec: | postexec | \\- | \\- | \\(V\\) | \\- |\n"
 "| allowed_hosts: | hosts allow | \\- | \\- | \\(V\\) | \\- |\n"
 "| denied_hosts: | hosts deny | \\- | \\- | \\(V\\) | \\- |\n"
@@ -681,7 +690,7 @@ msgid ""
 "| options:invisibledots | invisible dots | \\- | no | \\(V\\) | \\- |\n"
 "| options:nostat | stat vol | \\- | yes | \\(V\\) | \\- |\n"
 "| options:preexec_close | preexec close | \\- | no | \\(V\\) | \\- |\n"
-"| options:root_preexec_close | \\- | \\- | \\- | \\- | obsoleted in 4.1.0 |\n"
+"| options:root_preexec_close | \\- | \\- | \\- | \\- | removed in 4.1.0 |\n"
 "| options:upriv | unix priv | \\- | yes | \\(V\\) | \\- |\n"
 "| options:nodev | cnid dev | \\- | yes | \\(V\\) | \\- |\n"
 "| options:illegalseq | illegal seq | \\- | no | \\(V\\) | \\- |\n"
@@ -719,7 +728,7 @@ msgstr ""
 "| veto: | veto files | \\- | \\- | \\(V\\) | \\- |\n"
 "| cnidscheme: | cnid scheme | dbd | dbd | \\(V\\) | \\- |\n"
 "| casefold: | casefold | \\- | \\- | \\(V\\) | \\- |\n"
-"| adouble: | appledouble | v2 | ea | \\(V\\) | v1、osx 及び sfm は廃止 |\n"
+"| adouble: | appledouble | v2 | ea | \\(V\\) | 4.2.0で廃止 |\n"
 "| cnidserver: | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | \\- |\n"
 "| dbpath: | vol dbpath | （ボリュームディレクトリ） | $prefix/var/netatalk/CNID/ | \\(G\\) | 厳密には $localstatedir に移動 |\n"
 "| umask: | umask | 0000 | 0000 | \\(V\\) | \\- |\n"

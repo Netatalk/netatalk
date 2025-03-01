@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-14 09:31+0100\n"
+"POT-Creation-Date: 2025-03-01 10:52+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -117,7 +117,7 @@ msgstr "参照"
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1323
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1344
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
@@ -139,7 +139,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1325
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1346
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
@@ -193,14 +193,14 @@ msgstr ""
 msgid ""
 "**dbd** scans all file and directories of AFP volumes, updating the CNID\n"
 "database of the volume. It must be run with appropriate permissions i.e.\n"
-"as root..\n"
+"as root.\n"
 msgstr "**dbd**は、AFPボリューム上の全てのファイルとディレクトリをスキャンし、そのボリュームのCNIDデータベースをアップデートする。適切なパーミッションすなわちrootとして実行しなければならない。\n"
 
 #. type: Plain text
 #: manpages/man1/dbd.1.md:22
 #, no-wrap
-msgid "> convert from \"**appledouble = v2**\" to \"**appledouble = ea**\"\n"
-msgstr "> 「**appledouble = v2**」から「**appledouble = ea**」へ変換する\n"
+msgid "> convert from *AppleDouble v2* to *EA* filesystem metadata\n"
+msgstr "> *AppleDouble v2*から*拡張属性*へ変換する\n"
 
 #. type: Plain text
 #: manpages/man1/dbd.1.md:26
