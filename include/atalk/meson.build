@@ -20,7 +20,6 @@ headers = [
     'pap.h',
     'queue.h',
     'rtmp.h',
-    'standards.h',
     'uam.h',
     'unicode.h',
     'unix.h',

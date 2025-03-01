@@ -42,7 +42,6 @@
 #include <unistd.h>
 
 #include <atalk/bstrlib.h>
-#include <atalk/standards.h>
 
 /* version info */
 #define AD_VERSION2     0x00020000

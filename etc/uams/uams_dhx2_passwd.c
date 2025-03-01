@@ -30,7 +30,6 @@
 
 #include <atalk/afp.h>
 #include <atalk/logger.h>
-#include <atalk/standards.h>
 #include <atalk/uam.h>
 
 /* Number of bits for p which we generate. Everybode out there uses 512, so we beet them */

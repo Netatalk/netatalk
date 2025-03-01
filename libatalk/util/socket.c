@@ -37,7 +37,6 @@
 
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
-#include <atalk/standards.h>
 #include <atalk/util.h>
 
 static char ipv4mapprefix[] = {0,0,0,0,0,0,0,0,0,0,0xff,0xff};
