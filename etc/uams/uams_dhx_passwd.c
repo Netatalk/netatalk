@@ -30,7 +30,6 @@
 
 #include <atalk/afp.h>
 #include <atalk/logger.h>
-#include <atalk/standards.h>
 #include <atalk/uam.h>
 
 #define KEYSIZE 16

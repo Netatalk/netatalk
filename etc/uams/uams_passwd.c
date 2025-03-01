@@ -29,7 +29,6 @@
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/logger.h>
-#include <atalk/standards.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
 

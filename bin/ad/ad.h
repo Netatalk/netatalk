@@ -24,7 +24,6 @@
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
 #include <atalk/ftw.h>
-#include <atalk/standards.h>
 #include <atalk/volume.h>
 
 #define DIR_DOT_OR_DOTDOT(a) \
