@@ -298,8 +298,16 @@ int i;
 		return NULL;
 	}
 
-	if (len > 0) bstr__memcpy (b->data, blk, (size_t) len);
-	b->data[len] = (unsigned char) '\0';
+	if (len > 0) {
+		bstr__memcpy (b->data, blk, (size_t) len);
+	}
+
+	if (b->mlen > len) {
+		b->data[len] = (unsigned char) '\0';
+	} else {
+		bstr__free (b);
+		return NULL;
+	}
 
 	return b;
 }
@@ -2432,7 +2440,7 @@ int i, c, v;
  *  NULL is returned, otherwise a bstring with the correct result is returned.
  */
 bstring bjoin (const struct bstrList * bl, const_bstring sep) {
-	if (sep != NULL && (sep->slen < 0 || sep->data == NULL)) return NULL;
+	if (sep == NULL || sep->slen < 0 || sep->data == NULL) return NULL;
 	return bjoinblk (bl, sep->data, sep->slen);
 }
 
@@ -2543,6 +2551,7 @@ int i, p, ret;
 			}
 			buff->slen = 0;
 		}
+		bdestroy (buff);
 		return BSTR_OK;
 	} else {
 		ret = p = i = 0;
