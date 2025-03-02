@@ -471,20 +471,33 @@ int main(int argc, char *argv[])
             debug = 1;
             break;
         case 'F':
+            if (obj.cmdlineconfigfile != NULL) {
+                free((void *)obj.cmdlineconfigfile);
+            }
             obj.cmdlineconfigfile = strdup(optarg);
             break;
         case 'v':
         case 'V':
             printf("cnid_metad (Netatalk %s)\n", VERSION);
+            if (obj.cmdlineconfigfile != NULL) {
+                free((void *)obj.cmdlineconfigfile);
+            }
             return -1;
         default:
             printf("cnid_metad [-dvV] [-F alternate configfile ]\n");
+            if (obj.cmdlineconfigfile != NULL) {
+                free((void *)obj.cmdlineconfigfile);
+            }
             return -1;
         }
     }
 
-    if (!debug && daemonize(0, 0) != 0)
+    if (!debug && daemonize(0, 0) != 0) {
+        if (obj.cmdlineconfigfile != NULL) {
+            free((void *)obj.cmdlineconfigfile);
+        }
         exit(EXITERR_SYS);
+    }
 
     if (afp_config_parse(&obj, "cnid_metad") != 0) {
         if (obj.cmdlineconfigfile != NULL) {

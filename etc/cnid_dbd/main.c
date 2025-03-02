@@ -504,11 +504,20 @@ int main(int argc, char *argv[])
         case 'v':
         case 'V':
             printf("cnid_dbd (Netatalk %s)\n", VERSION);
+            if (username) {
+                free((void *)username);
+            }
+            if (volpath) {
+                free((void *)volpath);
+            }
             return -1;
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
             break;
         case 'p':
+            if (volpath) {
+                free((void *)volpath);
+            }
             volpath = strdup(optarg);
             break;
         case 'l':
@@ -518,6 +527,9 @@ int main(int argc, char *argv[])
             ctrlfd = atoi(optarg);
             break;
         case 'u':
+            if (username) {
+                free((void *)username);
+            }
             username = strdup(optarg);
             break;
         case ':':
@@ -527,6 +539,15 @@ int main(int argc, char *argv[])
 
     if (ctrlfd == -1 || clntfd == -1 || !volpath) {
         LOG(log_error, logtype_cnid, "main: bad IPC fds");
+        if (obj.cmdlineconfigfile) {
+            free((void *)obj.cmdlineconfigfile);
+        }
+        if (volpath) {
+            free((void *)volpath);
+        }
+        if (username) {
+            free((void *)username);
+        }
         exit(EXIT_FAILURE);
     }
 
