@@ -10,6 +10,8 @@ if have_appletalk
         'atalkd.conf',
         'papd.conf',
     ]
+
+    install_data('macipgw.conf.5', install_dir: mandir / 'man5')
 endif
 
 foreach man : manfiles
@@ -31,8 +33,6 @@ foreach man : manfiles
         build_by_default: true,
     )
 endforeach
-
-install_data('macipgw.conf.5', install_dir: mandir / 'man5')
 
 if get_option('with-website')
     foreach page : manfiles
