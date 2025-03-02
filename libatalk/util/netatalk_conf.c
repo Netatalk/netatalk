@@ -895,10 +895,11 @@ static struct vol *creatvol(AFPObj *obj,
     /* vol charset is in [G] and [V] */
     if ((val = getoption_str(obj->iniconfig, section, "vol charset", preset, NULL))) {
         if (strcasecmp(val, "UTF-8") == 0) {
-            val = strdup("UTF8");
+            EC_NULL( volume->v_volcodepage = strdup("UTF8") );
         }
-        volume->v_volcodepage = strdup(val);
-        EC_NULL( volume->v_volcodepage );
+        else {
+            EC_NULL( volume->v_volcodepage = strdup(val) );
+        }
     }
     else
         EC_NULL( volume->v_volcodepage = strdup(obj->options.volcodepage) );
