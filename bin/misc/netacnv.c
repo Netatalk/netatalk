@@ -34,14 +34,24 @@ struct flag_map flag_map[] = {
 
 char buffer[MAXPATHLEN +2];
 
+static void usage(void)
+{
+    printf("Usage: netacnv [-o <conversion option> [...]] [-f <from charset>] [-t <to charset>] [-m legacy Mac charset] <string>\n");
+    printf("Defaults: -f: UTF8-MAC, -t: UTF8, -m MAC_ROMAN\n");
+    printf("Available conversion options:\n");
+    for (int i = 0; i < (sizeof(flag_map)/sizeof(struct flag_map) - 1); i++) {
+        printf("%s\n", flag_map[i].flagname);
+    }
+}
+
 int main(int argc, char **argv)
 {
     int opt;
     uint16_t flags = 0;
     char *string;
     char *macName = strdup(MACCHARSET);
-    const char *f = NULL;
-    const char *t = NULL;
+    char *f = NULL;
+    char *t = NULL;
     charset_t from;
     charset_t to;
     charset_t mac;
@@ -62,16 +72,21 @@ int main(int argc, char **argv)
         case 't':
             t = strdup(optarg);
             break;
+        case '?':
+        default:
+            usage();
+            free((void *)macName);
+            if (f) free((void *)f);
+            if (t) free((void *)t);
+            return 1;
         }
     }
 
     if ((optind + 1) != argc) {
-        printf("Usage: test [-o <conversion option> [...]] [-f <from charset>] [-t <to charset>] [-m legacy Mac charset] <string>\n");
-        printf("Defaults: -f: UTF8-MAC, -t: UTF8, -m MAC_ROMAN\n");
-        printf("Available conversion options:\n");
-        for (int i = 0; i < (sizeof(flag_map)/sizeof(struct flag_map) - 1); i++) {
-            printf("%s\n", flag_map[i].flagname);
-        }
+        usage();
+        free((void *)macName);
+        if (f) free((void *)f);
+        if (t) free((void *)t);
         return 1;
     }
     string = argv[optind];
