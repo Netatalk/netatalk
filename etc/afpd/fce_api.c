@@ -272,7 +272,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     p += sizeof(uint16);
     datalen += sizeof(uint16);
 
-    if (pathlen <= MAXIOBUF) {
+    if (pathlen < MAXIOBUF) {
         memcpy(p, path, pathlen);
     } else {
         memcpy(p, path, MAXIOBUF - 1);
@@ -532,7 +532,8 @@ static void fce_init_ign_directories(const char *ignores)
     for (i = 0, p = strtok(names, ","); p ; p = strtok(NULL, ",")) {
         char *tmp = strdup("/");
         skip_directories[i++] = strdup(strcat(strcat(tmp,p), "/"));
-     }
+        free(tmp);
+    }
 
     free(names);
 }
@@ -573,19 +574,25 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
         first_event = false;
 	}
 
-	/* handle files which should not cause events (.DS_Store atc. ) */
+	/* handle files which should not cause events (.DS_Store etc. ) */
     bname = basename_safe(path);
     dirname = realpath_safe(path);
 
-    for (int i = 0; skip_files[i] != NULL; i++) {
-        if (strcmp(bname, skip_files[i]) == 0)
-			return AFP_OK;
-	}
-	if (skip_directories != NULL){
-	   for (int i = 0; skip_directories[i] != NULL; i++) {
-		    if (strstr(dirname, skip_directories[i]))
-		 	   return AFP_OK;
-       }
+    if (skip_files != NULL) {
+        for (int i = 0; skip_files[i] != NULL; i++) {
+            if (strcmp(bname, skip_files[i]) == 0) {
+                LOG(log_debug, logtype_fce, "Skipped registering event for file <%s>", skip_files[i]);
+                return AFP_OK;
+            }
+        }
+    }
+    if (skip_directories != NULL) {
+        for (int i = 0; skip_directories[i] != NULL; i++) {
+            if (strstr(dirname, skip_directories[i]) == dirname) {
+                LOG(log_debug, logtype_fce, "Skipped registering event for directory <%s>", skip_directories[i]);
+                return AFP_OK;
+            }
+        }
     }
 
 	/* Can we ignore this event based on type or history? */

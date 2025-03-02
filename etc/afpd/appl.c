@@ -215,14 +215,17 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     /* write the new appl entry at start of temporary file */
     p = mp - sizeof( u_short );
     mplen = htons( mplen );
-    if (p >= mpath && (p + sizeof(mplen)) <= (mpath + AFPOBJ_TMPSIZ)) {
-        memcpy(p, &mplen, sizeof(mplen));
-    } else {
+    if (p < mpath || (p + sizeof(mplen)) > (mpath + AFPOBJ_TMPSIZ)) {
         close(tfd);
         return AFPERR_PARAM;
     }
+    memcpy( p, &mplen, sizeof( mplen ));
     mplen = ntohs( mplen );
     p -= sizeof( appltag );
+    if (p < mpath || (p + sizeof(appltag)) > (mpath + AFPOBJ_TMPSIZ)) {
+        close(tfd);
+        return AFPERR_PARAM;
+    }
     memcpy(p, appltag, sizeof( appltag ));
     cc = mpath + AFPOBJ_TMPSIZ - p;
     if ( write( tfd, p, cc ) != cc ) {
