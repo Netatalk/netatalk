@@ -117,8 +117,14 @@ int main(int argc, char **argv)
     while ((c = getopt(argc, argv, "h:")) != -1) {
         switch(c) {
         case 'h':
+            free((void *)host);
             host = strdup(optarg);
             break;
+        case '?':
+        default:
+            fprintf(stderr, "Usage: %s [-h hostname]\n", argv[0]);
+            free((void *)host);
+            return 1;
         }
     }
 
@@ -151,6 +157,7 @@ int main(int argc, char **argv)
 
     if (p == NULL) {
         fprintf(stderr, "listener: failed to bind socket\n");
+        free((void *)host);
         return 2;
     }
 
