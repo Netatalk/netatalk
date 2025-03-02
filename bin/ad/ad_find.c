@@ -92,12 +92,14 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     while ((c = getopt(argc-1, &argv[1], ":v:")) != -1) {
         switch(c) {
         case 'v':
+            free((void *)srchvol);
             srchvol = strdup(optarg);
             break;
         case ':':
         case '?':
             usage_find();
-            return -1;
+            free((void *)srchvol);
+            exit(1);
             break;
         }
 
@@ -106,6 +108,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
 
     if ((argc - optind) != 1) {
         usage_find();
+        free((void *)srchvol);
         exit(1);
     }
 
