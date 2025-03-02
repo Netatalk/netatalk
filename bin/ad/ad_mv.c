@@ -119,13 +119,13 @@ static void usage_mv(void)
 
 int ad_mv(int argc, char *argv[], AFPObj *obj)
 {
-    size_t baselen, len;
+    size_t baselen;
+    size_t len;
     int rval;
-    char *p, *endp;
+    char *endp;
     struct stat sb;
     int ch;
     char path[MAXPATHLEN];
-
 
     pdid = htonl(1);
     did = htonl(2);
@@ -198,30 +198,40 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
 
     for (rval = 0; --argc; ++argv) {
         /*
-         * Find the last component of the source pathname.  It
-         * may have trailing slashes.
+         * Find the last component of the source pathname using basename
          */
-        p = *argv + strlen(*argv);
-        while (p != *argv && p[-1] == '/')
-            --p;
-        while (p != *argv && p[-1] != '/')
-            --p;
+        char *src_copy = strdup(*argv);
+        if (src_copy == NULL) {
+            SLOG("Memory allocation error");
+            rval = 1;
+            continue;
+        }
 
-        if ((baselen + (len = strlen(p))) >= PATH_MAX) {
+        const char *base_name = basename(src_copy);
+        len = strnlen(base_name, PATH_MAX);
+        if ((baselen + len) >= PATH_MAX) {
+            SLOG("%s: base name too long", base_name);
+            return 1;
+        }
+        
+        if ((baselen + len) >= PATH_MAX) {
             SLOG("%s: destination pathname too long", *argv);
             rval = 1;
         } else {
-            if (len >= PATH_MAX - baselen) {
-                SLOG("Path component too long");
-                return 1;
-            }
-            memmove(endp, p, (size_t)len + 1);
-            openvol(obj, *argv, &svolume);
-
-            if (do_move(*argv, path))
+            /* Copy safely with bounds checking */
+            if (strlcpy(endp, base_name, PATH_MAX - baselen) >= (PATH_MAX - baselen)) {
+                SLOG("%s: destination pathname too long", *argv);
                 rval = 1;
-            closevol(&svolume);
+            } else {
+                openvol(obj, *argv, &svolume);
+                
+                if (do_move(*argv, path))
+                    rval = 1;
+                closevol(&svolume);
+            }
         }
+        
+        free(src_copy);
     }
 
     closevol(&dvolume);
