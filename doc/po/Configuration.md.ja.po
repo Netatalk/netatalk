@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-29 18:48+0100\n"
+"POT-Creation-Date: 2025-03-02 09:47+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,18 +17,18 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:20 manpages/man5/afp_signature.conf.5.md:21
-#: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:319
-#: manpages/man5/afp.conf.5.md:343 manpages/man5/afp.conf.5.md:356
-#: manpages/man5/afp.conf.5.md:371 manpages/man5/afp.conf.5.md:723
-#: manpages/man5/afp.conf.5.md:1049 manpages/man5/afp.conf.5.md:1174
-#: manpages/man5/afp.conf.5.md:1212 manpages/man8/papd.8.md:96
+#: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:334
+#: manpages/man5/afp.conf.5.md:358 manpages/man5/afp.conf.5.md:371
+#: manpages/man5/afp.conf.5.md:386 manpages/man5/afp.conf.5.md:741
+#: manpages/man5/afp.conf.5.md:1057 manpages/man5/afp.conf.5.md:1183
+#: manpages/man5/afp.conf.5.md:1221 manpages/man8/papd.8.md:96
 #: manual/Configuration.md:113
 #, no-wrap
 msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1054 manpages/man5/afp.conf.5.md:1089
+#: manpages/man5/afp.conf.5.md:1062 manpages/man5/afp.conf.5.md:1098
 #: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
@@ -1204,22 +1204,21 @@ msgstr "特定の UAM で別の認証ソースを使う"
 #: manual/Configuration.md:459
 msgid ""
 "Some UAMs provide the ability to use different authentication \"backends\", "
-"namely **uams_cleartxt.so**, **uams_cleartxt.so** and **uams_cleartxt.so**. "
-"They can use either classic UNIX passwords from */etc/passwd* (*/etc/"
-"shadow*) or PAM if the system supports that.  **uams_cleartxt.so** can be "
-"symlinked to either **uams_passwd.so** or **uams_pam.so**, "
-"**uams_cleartxt.so** to **uams_dhx_passwd.so** or **uams_dhx_pam.so** and "
-"**uams_cleartxt.so** to **uams_dhx2_passwd.so** or **uams_dhx2_pam.so**."
+"namely **uams_clrtxt.so**, **uams_dhx.so** and **uams_dhx2.so**. They can "
+"use either classic UNIX passwords from */etc/passwd* (*/etc/shadow*) or PAM "
+"if the system supports that.  **uams_clrtxt.so** can be symlinked to either "
+"**uams_passwd.so** or **uams_pam.so**, **uams_dhx.so** to "
+"**uams_dhx_passwd.so** or **uams_dhx_pam.so** and **uams_dhx2.so** to "
+"**uams_dhx2_passwd.so** or **uams_dhx2_pam.so**."
 msgstr ""
-"いくつかの UAM は別の認証“バックエンド”を使えるようにしてある。いわゆる "
-"**uams_cleartxt.so**、**uams_cleartxt.so** 及び **uams_cleartxt.so**である。"
-"これらは */etc/passwd* (*/etc/shadow*) からの古典的 UNIX パスワードでも、シス"
-"テムがサポートしていれば PAM でもどちらでも使うことができる。 "
-"**uams_cleartxt.so** は **uams_passwd.so** ないしは **uams_pam.so** へのシン"
-"ボリックリンクとして、 **uams_cleartxt.so** は **uams_dhx_passwd.so** ないし"
-"は **uams_dhx_pam.so** へのシンボリックリンクとして、さらには "
-"**uams_cleartxt.so** は **uams_dhx2_passwd.so** ないしは **uams_dhx2_pam.so**"
-"へのシンボリックリンクとすることができる。"
+"いくつかの UAM は別の認証バックエンドを使えるようにしてある。いわゆる "
+"**uams_clrtxt.so**、**uams_dhx.so** 及び **uams_dhx2.so** である。これらは */"
+"etc/passwd* (*/etc/shadow*) からの古典的 UNIX パスワードでも、システムがサ"
+"ポートしていれば PAM でもどちらでも使うことができる。 **uams_clrtxt.so** は "
+"**uams_passwd.so** ないしは **uams_pam.so** へのシンボリックリンクとして、 "
+"**uams_dhx.so** は **uams_dhx_passwd.so** ないしは **uams_dhx_pam.so** へのシ"
+"ンボリックリンクとして、さらには **uams_dhx2.so** は **uams_dhx2_passwd.so** "
+"ないしは **uams_dhx2_pam.so**へのシンボリックリンクとすることができる。"
 
 #. type: Plain text
 #: manual/Configuration.md:463

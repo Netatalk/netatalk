@@ -3067,6 +3067,8 @@ msgid ""
 "This should only be used when the host's filesystem does not support\n"
 "Extended Attributes.\n"
 msgstr ""
+"> *.AppleDouble* ディレクトリ内のファイルとして格納された AppleDouble v2 メタデータを使用する。\n"
+"ファイルシステムが拡張属性をサポートしていない場合にのみ使用するべき。\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1096

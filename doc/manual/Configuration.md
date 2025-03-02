@@ -449,12 +449,12 @@ pages.
 ### Using different authentication sources with specific UAMs
 
 Some UAMs provide the ability to use different authentication
-"backends", namely **uams_cleartxt.so**, **uams_cleartxt.so** and
-**uams_cleartxt.so**. They can use either classic UNIX passwords from
+"backends", namely **uams_clrtxt.so**, **uams_dhx.so** and
+**uams_dhx2.so**. They can use either classic UNIX passwords from
 */etc/passwd* (*/etc/shadow*) or PAM if the system supports that.
-**uams_cleartxt.so** can be symlinked to either **uams_passwd.so** or
-**uams_pam.so**, **uams_cleartxt.so** to **uams_dhx_passwd.so** or
-**uams_dhx_pam.so** and **uams_cleartxt.so** to **uams_dhx2_passwd.so** or
+**uams_clrtxt.so** can be symlinked to either **uams_passwd.so** or
+**uams_pam.so**, **uams_dhx.so** to **uams_dhx_passwd.so** or
+**uams_dhx_pam.so** and **uams_dhx2.so** to **uams_dhx2_passwd.so** or
 **uams_dhx2_pam.so**.
 
 So, if it looks like this in Netatalk's UAMs folder (per default
