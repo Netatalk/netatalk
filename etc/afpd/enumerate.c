@@ -52,30 +52,36 @@ struct savedir {
 static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 {
     struct savedir *sd = data;
-    char *start, *end;
-    int  len,lenm;
+    char *start;
+    const char *end;
+    int len;
+    int lenm;
 
     end = sd->sd_buf + sd->sd_buflen;
     len = strlen(de->d_name);
-    lenm = 0; /* strlen(mname); */
-
-    if (sd->sd_last + len + lenm + 1 > end) {
+    *(sd->sd_last)++ = len;
+    lenm = 0; /* strlen(mname);*/
+    if ( sd->sd_last + len + lenm + 4 > end ) {
         char *buf;
-        int new_size = sd->sd_buflen + SDBUFBRK;
 
         start = sd->sd_buf;
-        if (!(buf = realloc(sd->sd_buf, new_size))) {
-            LOG(log_error, logtype_afpd, "afp_enumerate: realloc: %s", strerror(errno));
+        if (!(buf = realloc( sd->sd_buf, sd->sd_buflen +SDBUFBRK )) ) {
+            LOG(log_error, logtype_afpd, "afp_enumerate: realloc: %s",
+                        strerror(errno) );
             errno = ENOMEM;
             return -1;
         }
         sd->sd_buf = buf;
-        sd->sd_buflen = new_size;
+        sd->sd_buflen += SDBUFBRK;
         sd->sd_last = ( sd->sd_last - start ) + sd->sd_buf;
         end = sd->sd_buf + sd->sd_buflen;
     }
 
-    *(sd->sd_last)++ = len;
+    if (len > MAXPATHLEN) {
+        LOG(log_error, logtype_afpd, "afp_enumerate: filename too long: %d bytes", len);
+        errno = ENAMETOOLONG;
+        return -1;
+    }
     memcpy( sd->sd_last, de->d_name, len + 1 );
     sd->sd_last += len + 1;
     return 0;
