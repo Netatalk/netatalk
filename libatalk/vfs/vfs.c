@@ -329,7 +329,7 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
 
         /* build src path to AppleDouble file*/
         EC_NULL(dup1 = strdup(src));
-        EC_NULL(name = basename(strdup(dup1)));
+        EC_NULL(name = basename(dup1));
 
         EC_NULL(dup2 = strdup(src));
         EC_NULL(dir = dirname(dup2));
