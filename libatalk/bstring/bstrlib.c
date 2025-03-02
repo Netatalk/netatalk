@@ -1076,11 +1076,12 @@ int bdelete (bstring b, int pos, int len) {
  *  been bdestroyed is undefined.
  */
 int bdestroy (bstring b) {
-	if (b == NULL || b->slen < 0 || b->mlen <= 0 || b->mlen < b->slen ||
-	    b->data == NULL)
+	if (b == NULL) {
 		return BSTR_ERR;
-
-	bstr__free (b->data);
+	}
+	if (b->data != NULL) {
+		bstr__free (b->data);
+	}
 
 	/* In case there is any stale usage, there is one more chance to
 	   notice this error. */
