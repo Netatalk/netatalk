@@ -59,9 +59,15 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
 
     end = sd->sd_buf + sd->sd_buflen;
     len = strlen(de->d_name);
+    if (len > MAXPATHLEN) {
+        LOG(log_error, logtype_afpd, "afp_enumerate: filename too long: %d bytes", len);
+        errno = ENAMETOOLONG;
+        return -1;
+    }
     *(sd->sd_last)++ = len;
     lenm = 0; /* strlen(mname);*/
-    if ( sd->sd_last + len + lenm + 4 > end ) {
+    if (len > SIZE_MAX - (sd->sd_last - sd->sd_buf) - lenm - 4 ||
+                sd->sd_last + len + lenm + 4 > end) {
         char *buf;
 
         start = sd->sd_buf;
@@ -77,11 +83,6 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
         end = sd->sd_buf + sd->sd_buflen;
     }
 
-    if (len > MAXPATHLEN) {
-        LOG(log_error, logtype_afpd, "afp_enumerate: filename too long: %d bytes", len);
-        errno = ENAMETOOLONG;
-        return -1;
-    }
     memcpy( sd->sd_last, de->d_name, len + 1 );
     sd->sd_last += len + 1;
     return 0;
