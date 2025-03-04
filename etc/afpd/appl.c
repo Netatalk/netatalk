@@ -131,15 +131,22 @@ static char *
 makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, char *path)
 {
     char	*p;
+    int     reserved_space = sizeof(uint16_t) + sizeof(unsigned char[4]); /* u_short + appltag */
 
     p = mpath + mpathlen;
     p -= strlen( path );
+    if (p < mpath + reserved_space) {
+        LOG(log_error, logtype_afpd, "makemacpath: filename '%s' too long", path);
+        return NULL;
+    }
+
     memcpy( p, path, strlen( path ));
 
     while ( dir->d_did != DIRDID_ROOT ) {
         p -= blength(dir->d_m_name) + 1;
-        if (p < mpath) {
-            /* FIXME: pathname too long */
+        if (p < mpath + reserved_space) {
+            LOG(log_error, logtype_afpd, "makemacpath: path too long with '%s'",
+                bdata(dir->d_m_name));
             return NULL;
         }
         memcpy(p, cfrombstr(dir->d_m_name), blength(dir->d_m_name) + 1);
@@ -155,14 +162,19 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
 {
     struct vol		*vol;
     struct dir		*dir;
-    int			tfd, cc;
+    int			tfd;
+    int			cc;
     uint32_t           did;
-    uint16_t		vid, mplen;
+    uint16_t		vid;
+    uint16_t        mplen;
     struct path         *path;
-    char                *dtf, *p, *mp;
+    const char          *dtf;
+    char                *p;
+    char                *mp;
     unsigned char		creator[ 4 ];
     unsigned char		appltag[ 4 ];
-    char		*mpath, *tempfile;
+    char		*mpath;
+    char		*tempfile;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -210,22 +222,19 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         close(tfd);
         return AFPERR_PARAM;
     }
+    if (mp - mpath < sizeof(u_short) + sizeof(appltag)) {
+        LOG(log_error, logtype_afpd, "afp_addappl: buffer too small for headers");
+        close(tfd);
+        return AFPERR_PARAM;
+    }
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
 
     /* write the new appl entry at start of temporary file */
     p = mp - sizeof( u_short );
     mplen = htons( mplen );
-    if (p < mpath || (p + sizeof(mplen)) > (mpath + AFPOBJ_TMPSIZ)) {
-        close(tfd);
-        return AFPERR_PARAM;
-    }
     memcpy( p, &mplen, sizeof( mplen ));
     mplen = ntohs( mplen );
     p -= sizeof( appltag );
-    if (p < mpath || (p + sizeof(appltag)) > (mpath + AFPOBJ_TMPSIZ)) {
-        close(tfd);
-        return AFPERR_PARAM;
-    }
     memcpy(p, appltag, sizeof( appltag ));
     cc = mpath + AFPOBJ_TMPSIZ - p;
     if ( write( tfd, p, cc ) != cc ) {
