@@ -512,6 +512,9 @@ int main(int argc, char *argv[])
             }
             return -1;
         case 'F':
+            if (obj.cmdlineconfigfile) {
+                free((void *)obj.cmdlineconfigfile);
+            }
             obj.cmdlineconfigfile = strdup(optarg);
             break;
         case 'p':
