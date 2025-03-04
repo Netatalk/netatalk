@@ -501,16 +501,6 @@ int main(int argc, char *argv[])
 
     while (( ret = getopt( argc, argv, ":F:l:p:t:u:vV")) != -1 ) {
         switch (ret) {
-        case 'v':
-        case 'V':
-            printf("cnid_dbd (Netatalk %s)\n", VERSION);
-            if (username) {
-                free((void *)username);
-            }
-            if (volpath) {
-                free((void *)volpath);
-            }
-            return -1;
         case 'F':
             if (obj.cmdlineconfigfile) {
                 free((void *)obj.cmdlineconfigfile);
@@ -535,6 +525,19 @@ int main(int argc, char *argv[])
             }
             username = strdup(optarg);
             break;
+        case 'v':
+        case 'V':
+            if (obj.cmdlineconfigfile) {
+                free((void *)obj.cmdlineconfigfile);
+            }
+            if (volpath) {
+                free((void *)volpath);
+            }
+            if (username) {
+                free((void *)username);
+            }
+            printf("cnid_dbd (Netatalk %s)\n", VERSION);
+            return -1;
         case ':':
             break;
         }
