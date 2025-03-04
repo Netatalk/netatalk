@@ -330,8 +330,8 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
         /* build src path to AppleDouble file*/
         strlcpy(src_name, src, sizeof(src_name));
         strlcpy(src_dir, src, sizeof(src_dir));
-        name = basename(src_name);
-        dir = dirname(src_dir);
+        EC_NULL(name = basename(src_name));
+        EC_NULL(dir = dirname(src_dir));
 
         EC_NULL(s = bfromcstr(dir));
         EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
@@ -340,8 +340,8 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
         /* build dst path to AppleDouble file*/
         strlcpy(dst_name, dst, sizeof(dst_name));
         strlcpy(dst_dir, dst, sizeof(dst_dir));
-        name = basename(dst_name);
-        dir = dirname(dst_dir);
+        EC_NULL(name = basename(dst_name));
+        EC_NULL(dir = dirname(dst_dir));
 
         EC_NULL(d = bfromcstr(dir));
         EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
@@ -553,22 +553,23 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 #endif
 
     EC_INIT;
-    bstring s = NULL, d = NULL;
-    char *dup1 = NULL;
-    char *dup2 = NULL;
-    char *dup3 = NULL;
-    char *dup4 = NULL;
+    bstring s = NULL;
+    bstring d = NULL;
+    char src_name[MAXPATHLEN + 1];
+    char dst_name[MAXPATHLEN + 1];
+    char src_dir[MAXPATHLEN + 1];
+    char dst_dir[MAXPATHLEN + 1];
     const char *name = NULL;
     const char *dir = NULL;
 
     /* get basename */
 
     /* build src path to ._ file*/
-    EC_NULL(dup1 = strdup(src));
-    EC_NULL(name = basename(strdup(dup1)));
+    strlcpy(src_name, src, sizeof(src_name));
+    strlcpy(src_dir, src, sizeof(src_dir));
 
-    EC_NULL(dup2 = strdup(src));
-    EC_NULL(dir = dirname(dup2));
+    EC_NULL(name = basename(src_name));
+    EC_NULL(dir = dirname(src_dir));
     EC_NULL(s = bfromcstr(dir));
 #ifdef __APPLE__
     EC_ZERO(bcatcstr(s, "/"));
@@ -580,11 +581,11 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 #endif
 
     /* build dst path to ._file*/
-    EC_NULL(dup4 = strdup(dst));
-    EC_NULL(name = basename(strdup(dup4)));
+    strlcpy(dst_name, dst, sizeof(dst_name));
+    strlcpy(dst_dir, dst, sizeof(dst_dir));
 
-    EC_NULL(dup3 = strdup(dst));
-    EC_NULL(dir = dirname(dup3));
+    EC_NULL(name = basename(dst_name));
+    EC_NULL(dir = dirname(dst_dir));
     EC_NULL(d = bfromcstr(dir));
 #ifdef __APPLE__
     EC_ZERO(bcatcstr(d, "/"));
@@ -610,10 +611,6 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
 EC_CLEANUP:
     bdestroy(s);
     bdestroy(d);
-    free(dup1);
-    free(dup2);
-    free(dup3);
-    free(dup4);
     EC_EXIT;
 }
 
