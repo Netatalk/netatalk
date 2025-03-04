@@ -341,43 +341,54 @@ static int check_eafiles(const char *fname)
 */
 static int check_addir(int volroot _U_)
 {
-    int addir_ok, adpar_ok;
+    int addir_fd = -1;
+    int parent_fd = -1;
     struct stat st;
     struct adouble ad;
     char *mname = NULL;
+    const char *ad_parent_path;
 
     if (vol->v_adouble == AD_VERSION_EA)
         return 0;
 
     /* Check for ad-dir */
-    if ( (addir_ok = access(ADv2_DIRNAME, F_OK)) != 0) {
+    addir_fd = open(ADv2_DIRNAME, O_RDONLY);
+    if (addir_fd == -1) {
         if (errno != ENOENT) {
-            dbd_log(LOGSTD, "Access error in directory %s: %s", cwdbuf, strerror(errno));
+            dbd_log(LOGSTD, "Open error for directory %s/%s: %s", cwdbuf, ADv2_DIRNAME, strerror(errno));
             return -1;
         }
         dbd_log(LOGSTD, "Missing %s for '%s'", ADv2_DIRNAME, cwdbuf);
     }
 
     /* Check for ".Parent" */
-    if ( (adpar_ok = access(vol->ad_path(".", ADFLAGS_DIR), F_OK)) != 0) {
+    ad_parent_path = vol->ad_path(".", ADFLAGS_DIR);
+    parent_fd = open(ad_parent_path, O_RDONLY);
+    if (parent_fd == -1) {
         if (errno != ENOENT) {
-            dbd_log(LOGSTD, "Access error on '%s/%s': %s",
-                    cwdbuf, vol->ad_path(".", ADFLAGS_DIR), strerror(errno));
+            dbd_log(LOGSTD, "Open error on '%s/%s': %s",
+                    cwdbuf, ad_parent_path, strerror(errno));
+            if (addir_fd != -1)
+                close(addir_fd);
             return -1;
         }
         dbd_log(LOGSTD, "Missing .AppleDouble/.Parent for '%s'", cwdbuf);
     }
 
     /* Is one missing ? */
-    if ((addir_ok != 0) || (adpar_ok != 0)) {
+    if ((addir_fd == -1) || (parent_fd == -1)) {
         /* Yes, but are we only scanning ? */
         if (dbd_flags & DBD_FLAGS_SCAN) {
             /* Yes:  missing .Parent is not a problem, but missing ad-dir
                causes later checking of ad-files to fail. So we have to return appropriately */
-            if (addir_ok != 0)
+            if (addir_fd == -1) {
+                if (parent_fd != -1)
+                    close(parent_fd);
                 return -1;
-            else  /* (adpar_ok != 0) */
+            } else { /* (parent_fd == -1) */
+                close(addir_fd);
                 return 0;
+            }
         }
 
         /* Create ad dir and set name */
@@ -385,6 +396,10 @@ static int check_addir(int volroot _U_)
 
         if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
             dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
+            if (addir_fd != -1)
+                close(addir_fd);
+            if (parent_fd != -1)
+                close(parent_fd);
             return -1;
         }
 
@@ -399,13 +414,39 @@ static int check_addir(int volroot _U_)
         /* Inherit owner/group from "." to ".AppleDouble" and ".Parent" */
         if ((lstat(".", &st)) != 0) {
             dbd_log( LOGSTD, "Couldn't stat %s: %s", cwdbuf, strerror(errno));
+            if (addir_fd != -1)
+                close(addir_fd);
+            if (parent_fd != -1)
+                close(parent_fd);
             return -1;
         }
-        if (chown(ADv2_DIRNAME, st.st_uid, st.st_gid) < 0)
-            dbd_log(LOGSTD, "chown failed: \"%s\"", ADv2_DIRNAME);
-        if (chown(vol->ad_path(".", ADFLAGS_DIR), st.st_uid, st.st_gid) < 0)
-            dbd_log(LOGSTD, "chown failed: \"%s\"", vol->ad_path(".", ADFLAGS_DIR));
+
+        /* If directories were created, we need their new file descriptors */
+        if (addir_fd == -1) {
+            addir_fd = open(ADv2_DIRNAME, O_RDONLY);
+            if (addir_fd != -1) {
+                if (fchown(addir_fd, st.st_uid, st.st_gid) < 0)
+                    dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
+            } else {
+                dbd_log(LOGSTD, "Couldn't open newly created directory \"%s\"", ADv2_DIRNAME);
+            }
+        }
+
+        if (parent_fd == -1) {
+            parent_fd = open(ad_parent_path, O_RDONLY);
+            if (parent_fd != -1) {
+                if (fchown(parent_fd, st.st_uid, st.st_gid) < 0)
+                    dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ad_parent_path);
+            } else {
+                dbd_log(LOGSTD, "Couldn't open newly created file \"%s\"", ad_parent_path);
+            }
+        }
     }
+
+    if (addir_fd != -1)
+        close(addir_fd);
+    if (parent_fd != -1)
+        close(parent_fd);
 
     return 0;
 }
