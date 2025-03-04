@@ -211,6 +211,7 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
         len = strnlen(base_name, PATH_MAX);
         if ((baselen + len) >= PATH_MAX) {
             SLOG("%s: base name too long", base_name);
+            free(src_copy);
             return 1;
         }
         
