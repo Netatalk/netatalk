@@ -302,15 +302,15 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
 }
 
 static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
-/* const struct vol *vol, int sfd, const char *src, const char *dst */
 {
     EC_INIT;
-    bstring s = NULL, d = NULL;
-    char *dup1 = NULL;
-    char *dup2 = NULL;
-    char *dup3 = NULL;
-    char *dup4 = NULL;
-    char *name = NULL;
+    bstring s = NULL;
+    bstring d = NULL;
+    char src_name[MAXPATHLEN + 1];
+    char dst_name[MAXPATHLEN + 1];
+    char src_dir[MAXPATHLEN + 1];
+    char dst_dir[MAXPATHLEN + 1];
+    const char *name = NULL;
     const char *dir = NULL;
 
     struct stat st;
@@ -328,21 +328,21 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
         /* get basename */
 
         /* build src path to AppleDouble file*/
-        EC_NULL(dup1 = strdup(src));
-        EC_NULL(name = basename(dup1));
+        strlcpy(src_name, src, sizeof(src_name));
+        strlcpy(src_dir, src, sizeof(src_dir));
+        name = basename(src_name);
+        dir = dirname(src_dir);
 
-        EC_NULL(dup2 = strdup(src));
-        EC_NULL(dir = dirname(dup2));
         EC_NULL(s = bfromcstr(dir));
         EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
         EC_ZERO(bcatcstr(s, name));
 
         /* build dst path to AppleDouble file*/
-        EC_NULL(dup4 = strdup(dst));
-        EC_NULL(name = basename(strdup(dup4)));
+        strlcpy(dst_name, dst, sizeof(dst_name));
+        strlcpy(dst_dir, dst, sizeof(dst_dir));
+        name = basename(dst_name);
+        dir = dirname(dst_dir);
 
-        EC_NULL(dup3 = strdup(dst));
-        EC_NULL(dir = dirname(dup3));
         EC_NULL(d = bfromcstr(dir));
         EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
         EC_ZERO(bcatcstr(d, name));
@@ -356,12 +356,6 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
 EC_CLEANUP:
     bdestroy(s);
     bdestroy(d);
-    if (dup1) free(dup1);
-    if (dup2) free(dup2);
-    if (dup3) free(dup3);
-    if (dup4) free(dup4);
-    if (name) free((void *)name);
-
     EC_EXIT;
 }
 
