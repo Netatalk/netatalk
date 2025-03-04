@@ -55,10 +55,12 @@ int main(int argc, char **argv)
     charset_t from;
     charset_t to;
     charset_t mac;
+    int ret = 0;
 
     while ((opt = getopt(argc, argv, "m:o:f:t:")) != -1) {
         switch(opt) {
         case 'm':
+            if (macName) free((void *)macName);
             macName = strdup(optarg);
             break;
         case 'o':
@@ -67,27 +69,25 @@ int main(int argc, char **argv)
                     flags |= flag_map[i].flag;
             break;
         case 'f':
+            if (f) free((void *)f);
             f = strdup(optarg);
             break;
         case 't':
+            if (t) free((void *)t);
             t = strdup(optarg);
             break;
         case '?':
         default:
             usage();
-            free((void *)macName);
-            if (f) free((void *)f);
-            if (t) free((void *)t);
-            return 1;
+            ret = 1;
+            goto cleanup;
         }
     }
 
     if ((optind + 1) != argc) {
         usage();
-        free((void *)macName);
-        if (f) free((void *)f);
-        if (t) free((void *)t);
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
     string = argv[optind];
 
@@ -96,30 +96,38 @@ int main(int argc, char **argv)
 
     if ( (charset_t) -1 == (from = add_charset(f ? f : "UTF8-MAC")) ) {
         fprintf( stderr, "Setting codepage %s as from codepage failed\n", f ? f : "UTF8-MAC");
-        return -1;
+        ret = -1;
+        goto cleanup;
     }
 
     if ( (charset_t) -1 == (to = add_charset(t ? t : "UTF8")) ) {
         fprintf( stderr, "Setting codepage %s as to codepage failed\n", t ? t : "UTF8");
-        return -1;
+        ret = -1;
+        goto cleanup;
     }
 
     if ( (charset_t) -1 == (mac = add_charset(macName)) ) {
         fprintf( stderr, "Setting codepage %s as Mac codepage failed\n", MACCHARSET);
-        return -1;
+        ret = -1;
+        goto cleanup;
     }
-
-    free((void *)macName);
 
     if ((size_t)-1 == (convert_charset(from, to, mac,
                                        string, strlen(string),
                                        buffer, MAXPATHLEN,
                                        &flags)) ) {
         perror("Conversion error");
-        return 1;
+        ret = 1;
+        goto cleanup;
     }
 
     printf("from: %s\nto: %s\n", string, buffer);
 
-    return 0;
+cleanup:
+
+    if (f) free((void *)f);
+    if (t) free((void *)t);
+    free((void *)macName);
+
+    return ret;
 }
