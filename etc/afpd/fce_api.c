@@ -193,100 +193,116 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     unsigned char *p = iobuf;
     size_t pathlen;
     ssize_t datalen = 0;
+    size_t remaining = MAXIOBUF;
     uint16_t uint16;
     uint32_t uint32;
     uint64_t uint64;
     uint8_t packet_info = fce_ev_info;
 
     /* FCE magic */
+    if (remaining < 8) return -1;
     memcpy(p, FCE_PACKET_MAGIC, 8);
     p += 8;
     datalen += 8;
+    remaining -= 8;
 
     /* version */
+    if (remaining < 1) return -1;
     *p = obj->fce_version;
     p += 1;
     datalen += 1;
+    remaining -= 1;
 
     /* optional: options */
     if (obj->fce_version > 1) {
+        if (remaining < 1) return -1;
         if (oldpath)
             packet_info |= FCE_EV_INFO_SRCPATH;
         *p = packet_info;
         p += 1;
         datalen += 1;
+        remaining -= 1;
     }
 
     /* event */
+    if (remaining < 1) return -1;
     *p = event;
     p += 1;
     datalen += 1;
+    remaining -= 1;
 
     /* optional: padding */
     if (obj->fce_version > 1) {
+        if (remaining < 1) return -1;
         *p = 0;
         p += 1;
         datalen += 1;
+        remaining -= 1;
     }
 
     /* optional: reserved */
     if (obj->fce_version > 1) {
+        if (remaining < 8) return -1;
         memset(p, 0, 8);
         p += 8;
         datalen += 8;
+        remaining -= 8;
     }
 
     /* event ID */
+    if (remaining < sizeof(uint32)) return -1;
     uint32 = htonl(event_id);
     memcpy(p, &uint32, sizeof(uint32));
     p += sizeof(uint32);
     datalen += sizeof(uint32);
+    remaining -= sizeof(uint32);
 
     /* optional: pid */
     if (packet_info & FCE_EV_INFO_PID) {
+        if (remaining < sizeof(uint64)) return -1;
         uint64 = pid;
         uint64 = hton64(uint64);
         memcpy(p, &uint64, sizeof(uint64));
         p += sizeof(uint64);
         datalen += sizeof(uint64);
+        remaining -= sizeof(uint64);
     }
 
     /* optional: username */
     if (packet_info & FCE_EV_INFO_USER) {
-        uint16 = strlen(user);
-        uint16 = htons(uint16);
+        size_t userlen = strnlen(user, MAXPATHLEN);
+        if (userlen >= MAXPATHLEN)
+            userlen = MAXPATHLEN - 1;
+        if (remaining < sizeof(uint16) + userlen) return -1;
+        uint16 = htons((uint16_t)userlen);
         memcpy(p, &uint16, sizeof(uint16));
         p += sizeof(uint16);
         datalen += sizeof(uint16);
-        memcpy(p, user, strlen(user));
-        p += strlen(user);
-        datalen += strlen(user);
+        memcpy(p, user, userlen);
+        p += userlen;
+        datalen += userlen;
+        remaining -= userlen;
     }
 
     /* path */
     if ((pathlen = strlen(path)) >= MAXPATHLEN)
         pathlen = MAXPATHLEN - 1;
+    if (remaining < sizeof(uint16) + pathlen) return -1;
     uint16 = pathlen;
     uint16 = htons(uint16);
     memcpy(p, &uint16, sizeof(uint16));
     p += sizeof(uint16);
     datalen += sizeof(uint16);
-
-    if (pathlen < MAXIOBUF) {
-        memcpy(p, path, pathlen);
-    } else {
-        memcpy(p, path, MAXIOBUF - 1);
-        p[MAXIOBUF - 1] = '\0';
-
-        fprintf(stderr, "Warning: pathlen (%zu) exceeds buffer size (%d). Data truncated.\n", pathlen, MAXIOBUF);
-    }
+    memcpy(p, path, pathlen);
     p += pathlen;
     datalen += pathlen;
+    remaining -= pathlen;
 
     /* optional: source path */
-    if (packet_info & FCE_EV_INFO_SRCPATH) {
+    if (oldpath && packet_info & FCE_EV_INFO_SRCPATH) {
         if ((pathlen = strlen(oldpath)) >= MAXPATHLEN)
             pathlen = MAXPATHLEN - 1;
+        if (remaining < sizeof(uint16) + pathlen) return -1;
         uint16 = pathlen;
         uint16 = htons(uint16);
         memcpy(p, &uint16, sizeof(uint16));
@@ -491,21 +507,20 @@ static void fce_init_ign_names(const char *ignores)
 {
     int count = 0;
     char *names = strdup(ignores);
+    char *count_names = strdup(ignores);
     char *p;
+    char *saveptr1 = NULL;
+    char *saveptr2 = NULL;
     int i = 0;
 
-    while (names[i]) {
+    for (p = strtok_r(count_names, "/", &saveptr1); p != NULL; p = strtok_r(NULL, "/", &saveptr1)) {
         count++;
-        for (; names[i] && names[i] != '/'; i++)
-            ;
-        if (!names[i])
-            break;
-        i++;
     }
+    free(count_names);
 
     skip_files = calloc(count + 1, sizeof(char *));
 
-    for (i = 0, p = strtok(names, "/"); p ; p = strtok(NULL, "/"))
+    for (p = strtok_r(names, "/", &saveptr2); p; p = strtok_r(NULL, "/", &saveptr2))
         skip_files[i++] = strdup(p);
 
     free(names);
@@ -515,21 +530,20 @@ static void fce_init_ign_directories(const char *ignores)
 {
     int count = 0;
     char *names = strdup(ignores);
+    char *count_names = strdup(ignores);
     char *p;
+    char *saveptr1 = NULL;
+    char *saveptr2 = NULL;
     int i = 0;
 
-    while (names[i]) {
+    for (p = strtok_r(count_names, ",", &saveptr1); p != NULL; p = strtok_r(NULL, ",", &saveptr1)) {
         count++;
-        for (; names[i] && names[i] != ','; i++)
-            ;
-        if (!names[i])
-            break;
-        i++;
     }
+    free(count_names);
 
     skip_directories = calloc(count + 1, sizeof(char *));
 
-    for (i = 0, p = strtok(names, ","); p ; p = strtok(NULL, ",")) {
+    for (p = strtok_r(names, ",", &saveptr2); p ; p = strtok_r(NULL, ",", &saveptr2)) {
         char *tmp = strdup("/");
         skip_directories[i++] = strdup(strcat(strcat(tmp,p), "/"));
         free(tmp);
