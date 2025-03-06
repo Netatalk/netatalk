@@ -15,8 +15,10 @@ Alternatively, pull a pre-built Docker image from [Docker Hub](https://hub.docke
 ## How to Run
 
 Once you have the netatalk image on your machine with Docker Engine, run it with `docker run` or `docker compose`.
-When running, expose either port 548 for AFP, or use the `host` network driver.
-The former option is more secure, but you will have to manually specify the IP address in the client when connecting to the file server.
+
+To enable full functionality including Zeroconf service discovery and AppleTalk, use the `host` network driver.
+
+For a hardened deployment, use the `bridge` network driver and expose port 548 for AFP. However, this means that you will have to manually specify the IP address in the client when connecting to the file server.
 
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
