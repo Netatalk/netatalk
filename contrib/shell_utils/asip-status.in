@@ -4,10 +4,18 @@
 #               ASIP, aka AFP over TCP port 548).  A returned UAM of
 #               "No User Authen" means that the server supports guest access.
 #
-# author: James W. Abendschan  <jwa@jammed.com>
-# license: GPL - http://www.gnu.org/copyleft/gpl.html
-# url: http://www.jammed.com/~jwa/hacks/security/asip/
-# Date: 7 May 1997 (v1.0) - original version
+# (c) 1997-2001 James W. Abendschan <jwa@jammed.com>
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
 # see also:
 #   - http://developer.apple.com/techpubs/macos8/NetworkCommSvcs/AppleShare/
 #   - http://www2.opendoor.com/asip/   (excellent Mac sharing / security site)
