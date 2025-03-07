@@ -503,50 +503,41 @@ static void save_close_event(const AFPObj *obj, const char *path)
     strncpy(last_close_event.path, path, MAXPATHLEN);
 }
 
-static void fce_init_ign_names(const char *ignores)
+static void fce_init_ign_paths(const char *ignores,
+                              const char ***dest_array,
+                              bool is_directory)
 {
-    int count = 0;
     char *names = strdup(ignores);
-    char *count_names = strdup(ignores);
-    char *p;
-    char *saveptr1 = NULL;
-    char *saveptr2 = NULL;
+    char *saveptr = NULL;
+    int capacity = 10;  // Initial capacity, will grow if needed
     int i = 0;
 
-    for (p = strtok_r(count_names, "/", &saveptr1); p != NULL; p = strtok_r(NULL, "/", &saveptr1)) {
-        count++;
+    *dest_array = calloc(capacity + 1, sizeof(char *));
+
+    for (const char *p = strtok_r(names, ",", &saveptr); p;
+         p = strtok_r(NULL, ",", &saveptr)) {
+
+        if (i >= capacity) {
+            capacity *= 2;
+            *dest_array = realloc(*dest_array, (capacity + 1) * sizeof(char *));
+            memset(*dest_array + i, 0, (capacity + 1 - i) * sizeof(char *));
+        }
+
+        if (is_directory) {
+            size_t pathlen = strnlen(p, MAXPATHLEN);
+            char *dirpath = malloc(pathlen + 1);
+            if (dirpath) {
+                strlcpy(dirpath, p, pathlen + 1);
+                (*dest_array)[i++] = dirpath;
+            }
+        } else {
+            (*dest_array)[i++] = strdup(p);
+        }
     }
-    free(count_names);
 
-    skip_files = calloc(count + 1, sizeof(char *));
-
-    for (p = strtok_r(names, "/", &saveptr2); p; p = strtok_r(NULL, "/", &saveptr2))
-        skip_files[i++] = strdup(p);
-
-    free(names);
-}
-
-static void fce_init_ign_directories(const char *ignores)
-{
-    int count = 0;
-    char *names = strdup(ignores);
-    char *count_names = strdup(ignores);
-    char *p;
-    char *saveptr1 = NULL;
-    char *saveptr2 = NULL;
-    int i = 0;
-
-    for (p = strtok_r(count_names, ",", &saveptr1); p != NULL; p = strtok_r(NULL, ",", &saveptr1)) {
-        count++;
-    }
-    free(count_names);
-
-    skip_directories = calloc(count + 1, sizeof(char *));
-
-    for (p = strtok_r(names, ",", &saveptr2); p ; p = strtok_r(NULL, ",", &saveptr2)) {
-        char *tmp = strdup("/");
-        skip_directories[i++] = strdup(strcat(strcat(tmp,p), "/"));
-        free(tmp);
+    (*dest_array)[i] = NULL;
+    if (i < capacity) {
+        *dest_array = realloc(*dest_array, (i + 1) * sizeof(char *));
     }
 
     free(names);
@@ -581,29 +572,31 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
 	/* do some initialization on the fly the first time */
 	if (first_event) {
 		fce_initialize_history();
-        fce_init_ign_names(obj->fce_ign_names);
+        if (obj->fce_ign_names != NULL){
+            fce_init_ign_paths(obj->fce_ign_names, &skip_files, false);
+        }
         if (obj->fce_ign_directories != NULL){
-            fce_init_ign_directories(obj->fce_ign_directories);
+            fce_init_ign_paths(obj->fce_ign_directories, &skip_directories, true);
         }
         first_event = false;
 	}
 
-	/* handle files which should not cause events (.DS_Store etc. ) */
+	/* handle files or dirs which should not cause events (.DS_Store etc. ) */
     bname = basename_safe(path);
     dirname = realpath_safe(path);
 
-    if (skip_files != NULL) {
+    if (bname && skip_files != NULL) {
         for (int i = 0; skip_files[i] != NULL; i++) {
             if (strcmp(bname, skip_files[i]) == 0) {
-                LOG(log_debug, logtype_fce, "Skipped registering event for file <%s>", skip_files[i]);
+                LOG(log_debug, logtype_fce, "Skip file change event for file <%s>", skip_files[i]);
                 return AFP_OK;
             }
         }
     }
-    if (skip_directories != NULL) {
+    if (dirname && skip_directories != NULL) {
         for (int i = 0; skip_directories[i] != NULL; i++) {
             if (strstr(dirname, skip_directories[i]) == dirname) {
-                LOG(log_debug, logtype_fce, "Skipped registering event for directory <%s>", skip_directories[i]);
+                LOG(log_debug, logtype_fce, "Skip file change event for directory <%s>", skip_directories[i]);
                 return AFP_OK;
             }
         }
