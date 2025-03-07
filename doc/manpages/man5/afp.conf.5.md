@@ -811,15 +811,16 @@ such an operation triggers can lead to UDP buffer overflow and
 subsequently to packet loss. Has to be a number between 0 and 999.
 Default: 0 milliseconds.
 
-fce ignore names = <NAME\[/NAME2/...\]\> **(G)**
+fce ignore names = <NAME\[,NAME2,...\]\> **(G)**
 
-> Slash delimited list of filenames for which FCE events shall not be
-generated. Default: .DS_Store.
+> Comma-delimited list of filenames for which FCE events shall not be
+generated. Default: `.DS_Store`
 
-fce ignore directories = <NAME\[,NAME2,...\]\> **(G)**
+fce ignore directories = <PATH\[,PATH2,...\]\> **(G)**
 
-> Comma delimited list of directories for which FCE events shall not be
-generated. Default: empty.
+> Comma-delimited list of paths to directories for which FCE events
+shall not be generated. Has to be an absolute path on the host file system.
+Must not end with a slash. Default: empty
 
 fce notify script = <PATH\> **(G)**
 
