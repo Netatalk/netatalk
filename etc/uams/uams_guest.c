@@ -1,6 +1,6 @@
 /*
- *
- * (c) 2001 (see COPYING)
+ * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * All Rights Reserved.  See COPYRIGHT.
  */
 
 #ifdef HAVE_CONFIG_H
