@@ -17,6 +17,7 @@ support
 - Leland Wallace
 - Gerry Tomlinson <Gerry.Tomlinson@newcastle.ac.uk>:
 original afile/achfile/acleandir implementation
+- Marsha Jackson: reverse engineered the Apple II boot protocol
 
 # Community Contributors
 
@@ -62,7 +63,7 @@ original afile/achfile/acleandir implementation
 - Sven Mosimann/EcoLogic <sven.mosimann@ecologic.ch>
 - Steffan Cline <steffan@hldns.com>
 - Ralph Boehme <slow@samba.org> (3.x version)
-- Daniel Markstedt <daniel@mindani.net> (2.x and 4.x versions)
+- Daniel Markstedt <daniel@mindani.net> (4.x version)
 
 ## Test Suite
 
@@ -75,12 +76,14 @@ original afile/achfile/acleandir implementation
 
 ## Package Maintainers and Contributors
 
-- Arvid Norlander (Arch Linux)
+- Arvid Norlander (Arch Linux, version 2.x)
 - Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
 - Jonas Smedegaard <dr@jones.dk> (Debian GNU/Linux)
 - Daniel Markstedt <daniel@mindani.net> (Debian GNU/Linux)
 - Andrew Bauer <zonexpertconsulting@outlook.com> (Fedora)
 - Joe Clarke <marcus@FreeBSD.org> (FreeBSD)
+- Eric Knibbe (Homebrew)
+- Blake Garner (MacPorts)
 - David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)
 - Hauke Fath <hf@spg.tu-darmstadt.de> (NetBSD)
 - Antonio Pastor (OpenWrt)
@@ -247,10 +250,10 @@ Our gratitude goes out to all package maintainers not listed here, too!
 
 ### macipgw
 
-- Stefan Bethke <Stefan.Bethke@Hanse.DE> (1997-2013)
-- Jason King (2015-2017)
-- Adam Seering (2016)
-- Christopher Kobayashi (2020)
+- Stefan Bethke <Stefan.Bethke@Hanse.DE>: original author
+- Jason King
+- Adam Seering
+- Christopher Kobayashi
 
 And thanks to everyone on the netatalk-devel and netatalk-docs
 lists. And in recent years, the TinkerDifferent, 68kmla, E-Maculation,
