@@ -35,7 +35,6 @@
 #include <atalk/byteorder.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
-#include <atalk/unicode.h>
 
 /* Given a trailing UTF-8 byte, get the contribution from it to
  * the Unicode scalar value for a particular bit shift amount
