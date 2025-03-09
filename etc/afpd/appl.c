@@ -230,13 +230,17 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     /* write the new appl entry at start of temporary file */
     p = mp - sizeof( u_short );
     mplen = htons( mplen );
-    if (p < mpath || (p + sizeof(mplen)) > (mpath + AFPOBJ_TMPSIZ)) {
+
+    if (p < mpath || p + sizeof(mplen) > mpath + AFPOBJ_TMPSIZ) {
+        LOG(log_error, logtype_afpd, "afp_addappl: buffer overflow prevented when copying mplen");
         goto cleanup;
     }
     memcpy( p, &mplen, sizeof( mplen ));
     mplen = ntohs( mplen );
     p -= sizeof( appltag );
-    if (p < mpath || (p + sizeof(appltag)) > (mpath + AFPOBJ_TMPSIZ)) {
+
+    if (p < mpath || p + sizeof(appltag) > mpath + AFPOBJ_TMPSIZ) {
+        LOG(log_error, logtype_afpd, "afp_addappl: buffer overflow prevented when copying appltag");
         goto cleanup;
     }
     memcpy(p, appltag, sizeof( appltag ));
