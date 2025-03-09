@@ -34,7 +34,6 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <search.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -298,24 +297,7 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
                 {
                     char *newp;
                     bufsize += MAX (1024, 2 * this_len);
-                    size_t new_size;
-
-                    if (this_len > SIZE_MAX/2 - 1024) {
-                        /* this_len is too large to safely allocate memory */
-                        int save_err = ENOMEM;
-                        free (buf);
-                        __set_errno (save_err);
-                        return -1;
-                    }
-                    new_size = bufsize + MAX (1024, 2 * this_len);
-                    if (new_size <= bufsize) {
-                        int save_err = ENOMEM;
-                        free (buf);
-                        __set_errno (save_err);
-                        return -1;
-                    }
-
-                    newp = (char *) realloc (buf, new_size);
+                    newp = (char *) realloc (buf, bufsize);
                     if (newp == NULL)
                     {
                         /* No more memory.  */
@@ -325,7 +307,6 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
                         return -1;
                     }
                     buf = newp;
-                    bufsize = new_size;
                 }
 
                 if (actsize + this_len < bufsize) {
@@ -342,7 +323,7 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             if (data->dirstreams[data->actdir]->content == NULL)
             {
                 int save_err = errno;
-                if (actsize > 0) {
+                if (buf && actsize > 0) {
                     free (buf);
                 }
                 __set_errno (save_err);
