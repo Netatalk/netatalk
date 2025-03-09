@@ -34,11 +34,6 @@
 
 #define PASSWDLEN 8
 
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif /* MIN */
-
-
 /*XXX in etc/papd/file.h */
 struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);

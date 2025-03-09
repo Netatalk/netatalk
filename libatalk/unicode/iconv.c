@@ -45,6 +45,7 @@
 #include <atalk/byteorder.h>
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
+#include <atalk/util.h>
 
 /**
  * @file

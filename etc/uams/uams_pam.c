@@ -30,11 +30,6 @@
 
 #define PASSWDLEN 8
 
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif /* MIN */
-
-
 /* Static variables used to communicate between the conversation function
  * and the server_login function
  */

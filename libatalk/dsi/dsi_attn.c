@@ -16,10 +16,7 @@
 
 #include <atalk/afp.h>
 #include <atalk/dsi.h>
-
-#ifndef MIN
-#define MIN(a,b) ((a) < (b) ? (a) : (b))
-#endif /* MIN */
+#include <atalk/util.h>
 
 /* send an attention. this may get called at any time, so we can't use
  * DSI buffers to send one.
