@@ -315,32 +315,30 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
                 }
             }
 
-            if (actsize == 0) {
-                int save_err = errno;
-                free (buf);
-                __set_errno (save_err);
+            /* Terminate the list with an additional NUL byte.  */
+            buf[actsize++] = '\0';
+
+            /* Shrink the buffer to what we actually need.  */
+            char *new_buf = malloc(actsize);
+            if (new_buf != NULL) {
+                memcpy(new_buf, buf, MIN(actsize, bufsize));
+                free(buf);
+                data->dirstreams[data->actdir]->content = new_buf;
+            } else {
+                data->dirstreams[data->actdir]->content = NULL;
+                free(buf);
                 result = -1;
             }
-            else {
-                /* Terminate the list with an additional NUL byte.  */
-                buf[actsize++] = '\0';
-
-                /* Shrink the buffer to what we actually need.  */
-                data->dirstreams[data->actdir]->content = realloc (buf, actsize);
-                if (data->dirstreams[data->actdir]->content == NULL)
-                {
-                    int save_err = errno;
-                    free (buf);
-                    __set_errno (save_err);
-                    result = -1;
-                }
-                else
-                {
-                    __closedir (st);
-                    data->dirstreams[data->actdir]->stream = NULL;
-                    data->dirstreams[data->actdir]->streamfd = -1;
-                    data->dirstreams[data->actdir] = NULL;
-                }
+            if (data->dirstreams[data->actdir]->content == NULL)
+            {
+                result = -1;
+            }
+            else
+            {
+                __closedir (st);
+                data->dirstreams[data->actdir]->stream = NULL;
+                data->dirstreams[data->actdir]->streamfd = -1;
+                data->dirstreams[data->actdir] = NULL;
             }
         }
     }
