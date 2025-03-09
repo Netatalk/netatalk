@@ -60,7 +60,7 @@ description of the access rights which are granted to the user of the
 service. For volumes the **path** option must specify the directory to
 share.
 
-The name of the volume is defined via the **name** option.
+The name of the volume is defined via the **volume name** option.
 When absent, the volume name is the name of the section, expressed in
 lowercase.
 
@@ -76,10 +76,10 @@ server does not grant more access than the host system grants.
 
 The following sample section defines an AFP volume. The user has full
 access to the path */foo/bar*. The share is accessed via the share name
-*Baz Volume*:
+*Baz*:
 
     [baz]
-        name = Baz Volume
+        volume name = Baz
         path = /foo/bar
 
 # Special Sections
@@ -1326,12 +1326,12 @@ uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so
 legacy icon = daemon
 
 [mac]
-name = Mac Volume
+volume name = Mac Files
 path = /srv/mac
 legacy volume size = yes
 
 [apple2]
-name = Apple II Volume
+volume name = Apple II Files
 path = /srv/apple2
 prodos = yes
 ```
