@@ -58,7 +58,7 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
     int bytes_needed;
 
     end = sd->sd_buf + sd->sd_buflen;
-    len = (int) strnlen(de->d_name, NAME_MAX);
+    len = (int) strnlen(de->d_name, UTF8FILELEN_EARLY);
     bytes_needed = 1 + len + 1;
     *(sd->sd_last)++ = len;
 
