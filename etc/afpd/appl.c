@@ -162,7 +162,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
 {
     struct vol		*vol;
     struct dir		*dir;
-    int			tfd;
+    int			tfd = 0;
     int			cc;
     uint32_t           did;
     uint16_t		vid;
@@ -198,10 +198,10 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     ibuf += sizeof( appltag );
 
     if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
-        return get_afp_errno(AFPERR_PARAM);
+        return AFPERR_PARAM;
     }
     if ( path_isadir(path) ) {
-        return( AFPERR_BADTYPE );
+        return AFPERR_BADTYPE;
     }
 
     if ( applopen( vol, creator, O_RDWR|O_CREAT, 0666 ) != AFP_OK ) {
@@ -219,13 +219,11 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     mpath = obj->newtmp;
     mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     if (!mp) {
-        close(tfd);
-        return AFPERR_PARAM;
+        goto cleanup;
     }
     if (mp - mpath < sizeof(u_short) + sizeof(appltag)) {
         LOG(log_error, logtype_afpd, "afp_addappl: buffer too small for headers");
-        close(tfd);
-        return AFPERR_PARAM;
+        goto cleanup;
     }
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
 
@@ -233,36 +231,35 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     p = mp - sizeof( u_short );
     mplen = htons( mplen );
     if (p < mpath || (p + sizeof(mplen)) > (mpath + AFPOBJ_TMPSIZ)) {
-        close(tfd);
-        return AFPERR_PARAM;
+        goto cleanup;
     }
     memcpy( p, &mplen, sizeof( mplen ));
     mplen = ntohs( mplen );
     p -= sizeof( appltag );
     if (p < mpath || (p + sizeof(appltag)) > (mpath + AFPOBJ_TMPSIZ)) {
-        close(tfd);
-        return AFPERR_PARAM;
+        goto cleanup;
     }
     memcpy(p, appltag, sizeof( appltag ));
     cc = mpath + AFPOBJ_TMPSIZ - p;
     if ( write( tfd, p, cc ) != cc ) {
-        close(tfd);
-        unlink( tempfile );
-        return AFPERR_PARAM;
+        goto cleanup;
     }
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
     close( tfd );
     close( sa.sdt_fd );
     sa.sdt_fd = -1;
 
-    if ( cc < 0 ) {
-        unlink( tempfile );
-        return AFPERR_PARAM;
+    if ( cc < 0 && rename( tempfile, dtfile( vol, creator, ".appl" )) < 0 ) {
+        goto cleanup;
     }
-    if ( rename( tempfile, dtfile( vol, creator, ".appl" )) < 0 ) {
-        return AFPERR_PARAM;
+    return AFP_OK;
+
+cleanup:
+    if (tfd > 0) {
+        close(tfd);
     }
-    return( AFP_OK );
+    unlink(tempfile);
+    return AFPERR_PARAM;
 }
 
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
