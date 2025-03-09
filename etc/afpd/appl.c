@@ -89,28 +89,70 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
     uint16_t	len;
     unsigned char	appltag[ 4 ];
     char	buf[ MAXPATHLEN ];
+    size_t	remaining;
+    size_t	entry_size;
 
-    while (( cc = read( sfd, buf, sizeof(appltag) + sizeof( u_short ))) > 0 ) {
+    while (( cc = (int) read( sfd, buf, sizeof(appltag) + sizeof( u_short ))) > 0 ) {
+        /* Verify we read the expected header length */
+        if (cc < (int)(sizeof(appltag) + sizeof( u_short ))) {
+            cc = -1;
+            errno = EIO;
+            break;
+        }
+        
+        /* Get the length field */
         p = buf + sizeof(appltag);
         memcpy( &len, p, sizeof(len));
         len = ntohs( len );
+        
+        /* Check if the length is reasonable and will fit in our buffer */
         if (len > MAXPATHLEN - (sizeof(appltag) + sizeof(len))) {
             errno = EINVAL;
             cc = -1;
             break;
         }
+        
+        /* Calculate remaining buffer space */
         p += sizeof( len );
-        if (( cc = read( sa.sdt_fd, p, len )) < len ) {
+        remaining = buf + MAXPATHLEN - p;
+        
+        /* Make sure we have enough space for the path */
+        if (remaining < len) {
+            errno = EOVERFLOW;
+            cc = -1;
             break;
         }
+        
+        /* Read the path data, using sfd */
+        if (( cc = (int) read( sfd, p, len )) < len ) {
+            /* Short read - error */
+            if (cc >= 0) {
+                errno = EIO;
+                cc = -1;
+            }
+            break;
+        }
+        
+        /* If this isn't the path we're removing, copy it to the destination */
         if ( pathcmp( mpath, mplen, p, len ) != 0 ) {
             p += len;
-            if ( write( dfd, buf, p - buf ) != p - buf ) {
+            entry_size = p - buf;
+            
+            /* Sanity check the total entry size */
+            if (entry_size > MAXPATHLEN) {
+                errno = EOVERFLOW;
+                cc = -1;
+                break;
+            }
+            
+            /* Write the entry to the destination file */
+            if ( write( dfd, buf, entry_size ) != (ssize_t)entry_size ) {
                 cc = -1;
                 break;
             }
         }
     }
+
     return( cc );
 }
 
@@ -175,6 +217,11 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     char		*mpath;
     char		*tempfile;
 
+    unsigned char entry_buffer[MAXPATHLEN + sizeof(appltag) + sizeof(uint16_t)];
+    unsigned char *buf_ptr = entry_buffer;
+    size_t remaining_space = sizeof(entry_buffer);
+    size_t total_size = 0;
+
     *rbuflen = 0;
     ibuf += 2;
 
@@ -223,16 +270,10 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     }
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
 
-    /* Write the new appl entry to a temporary buffer */
-    unsigned char entry_buffer[MAXPATHLEN + sizeof(appltag) + sizeof(uint16_t)];
-    unsigned char *buf_ptr = entry_buffer;
-    size_t remaining_space = sizeof(entry_buffer);
-    size_t total_size = 0;
-
     /* First add the appltag */
     if (remaining_space < sizeof(appltag)) {
         close(tfd);
-        unlink( tempfile );
+        unlink(tempfile);
         return AFPERR_PARAM;
     }
     memcpy(buf_ptr, appltag, sizeof(appltag));
@@ -264,12 +305,12 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     /* Write the complete buffer to the file */
     if (write(tfd, entry_buffer, total_size) != total_size) {
         close(tfd);
-        unlink(tempfile);
+        unlink( tempfile );
         return AFPERR_PARAM;
     }
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
     close( tfd );
-    close( sa.sdt_fd );
+    close(sa.sdt_fd);
     sa.sdt_fd = -1;
 
     if ( cc < 0 ) {
@@ -286,13 +327,17 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
 {
     struct vol		*vol;
     struct dir		*dir;
-    int			tfd, cc;
-    uint32_t           did;
-    uint16_t		vid, mplen;
+    int			tfd;
+    int			cc;
+    uint32_t        did;
+    uint16_t		vid;
+    uint16_t		mplen;
     struct path    	*path;
-    char                *dtf, *mp;
-    unsigned char		creator[ 4 ];
-    char                *tempfile, *mpath;
+    const char      *dtf;
+    char            *mp;
+    unsigned char	creator[ 4 ];
+    char            *tempfile;
+    char            *mpath;
 
     *rbuflen = 0;
     ibuf += 2;
@@ -325,20 +370,36 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     if ( lseek( sa.sdt_fd, 0L, SEEK_SET ) < 0 ) {
         return AFPERR_PARAM;
     }
+
     dtf = dtfile( vol, creator, ".appl.temp" );
+
+    /* Use existing tempfile buffers but check if the path fits */
     tempfile = obj->oldtmp;
-    strcpy( tempfile, dtf );
-    if (( tfd = open( tempfile, O_RDWR|O_CREAT, 0666 )) < 0 ) {
+    if ( strnlen(dtf, AFPOBJ_TMPSIZ) >= AFPOBJ_TMPSIZ ) {
+        close( sa.sdt_fd );
+        sa.sdt_fd = -1;
         return AFPERR_PARAM;
     }
+    strcpy( tempfile, dtf );
+
+    if (( tfd = open( tempfile, O_RDWR|O_CREAT, 0666 )) < 0 ) {
+        close( sa.sdt_fd );
+        sa.sdt_fd = -1;
+        return AFPERR_PARAM;
+    }
+
+    /* Use existing buffer for mpath */
     mpath = obj->newtmp;
     mp = makemacpath( vol, mpath, AFPOBJ_TMPSIZ, curdir, path->m_name );
     if (!mp) {
         close(tfd);
-        return AFPERR_PARAM ;
+        close(sa.sdt_fd);
+        sa.sdt_fd = -1;
+        return AFPERR_PARAM;
     }
 
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
+
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
     close( tfd );
     close( sa.sdt_fd );
@@ -348,9 +409,13 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         unlink( tempfile );
         return AFPERR_PARAM;
     }
-    if ( rename( tempfile, dtfile( vol, creator, ".appl" )) < 0 ) {
+
+    dtf = dtfile( vol, creator, ".appl" );
+    if ( rename( tempfile, dtf ) < 0 ) {
+        unlink(tempfile);
         return AFPERR_PARAM;
     }
+
     return( AFP_OK );
 }
 
