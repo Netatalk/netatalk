@@ -169,7 +169,6 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     uint16_t        mplen;
     struct path         *path;
     const char          *dtf;
-    char                *p;
     char                *mp;
     unsigned char		creator[ 4 ];
     unsigned char		appltag[ 4 ];
@@ -222,32 +221,50 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         close(tfd);
         return AFPERR_PARAM;
     }
-    if (mp - mpath < sizeof(u_short) + sizeof(appltag)) {
-        LOG(log_error, logtype_afpd, "afp_addappl: buffer too small for headers");
-        close(tfd);
-        return AFPERR_PARAM;
-    }
     mplen =  mpath + AFPOBJ_TMPSIZ - mp;
 
-    /* write the new appl entry at start of temporary file */
-    p = mp - sizeof( u_short );
-    mplen = htons( mplen );
-    if (p < mpath || (p + sizeof(mplen)) > (mpath + AFPOBJ_TMPSIZ)) {
-        close(tfd);
-        return AFPERR_PARAM;
-    }
-    memcpy( p, &mplen, sizeof( mplen ));
-    mplen = ntohs( mplen );
-    p -= sizeof( appltag );
-    if (p < mpath || (p + sizeof(appltag)) > (mpath + AFPOBJ_TMPSIZ)) {
-        close(tfd);
-        return AFPERR_PARAM;
-    }
-    memcpy(p, appltag, sizeof( appltag ));
-    cc = mpath + AFPOBJ_TMPSIZ - p;
-    if ( write( tfd, p, cc ) != cc ) {
+    /* Write the new appl entry to a temporary buffer */
+    unsigned char entry_buffer[MAXPATHLEN + sizeof(appltag) + sizeof(uint16_t)];
+    unsigned char *buf_ptr = entry_buffer;
+    size_t remaining_space = sizeof(entry_buffer);
+    size_t total_size = 0;
+
+    /* First add the appltag */
+    if (remaining_space < sizeof(appltag)) {
         close(tfd);
         unlink( tempfile );
+        return AFPERR_PARAM;
+    }
+    memcpy(buf_ptr, appltag, sizeof(appltag));
+    buf_ptr += sizeof(appltag);
+    remaining_space -= sizeof(appltag);
+    total_size += sizeof(appltag);
+
+    /* Then add the length */
+    uint16_t net_mplen = htons(mplen);
+    if (remaining_space < sizeof(net_mplen)) {
+        close(tfd);
+        unlink(tempfile);
+        return AFPERR_PARAM;
+    }
+    memcpy(buf_ptr, &net_mplen, sizeof(net_mplen));
+    buf_ptr += sizeof(net_mplen);
+    remaining_space -= sizeof(net_mplen);
+    total_size += sizeof(net_mplen);
+
+    /* Finally add the path */
+    if (remaining_space < mplen) {
+        close(tfd);
+        unlink(tempfile);
+        return AFPERR_PARAM;
+    }
+    memcpy(buf_ptr, mp, mplen);
+    total_size += mplen;
+
+    /* Write the complete buffer to the file */
+    if (write(tfd, entry_buffer, total_size) != total_size) {
+        close(tfd);
+        unlink(tempfile);
         return AFPERR_PARAM;
     }
     cc = copyapplfile( sa.sdt_fd, tfd, mp, mplen );
