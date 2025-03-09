@@ -28,6 +28,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/server_child.h>
+#include <atalk/util.h>
 
 #include "asp_child.h"
 
@@ -37,10 +38,6 @@
 #ifndef WIFEXITED
 #define WIFEXITED(stat_val) (((stat_val) & 255) == 0)
 #endif /* ! WIFEXITED */
-
-#ifndef MIN
-#define MIN(a,b)     ((a)<(b)?(a):(b))
-#endif /* ! MIN */
 
 static ASP server_asp;
 static server_child_t *children = NULL;

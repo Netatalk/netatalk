@@ -7,14 +7,6 @@
 
 #define ucs2_t uint16_t
 
-#ifndef MIN
-#define MIN(a,b)     ((a)<(b)?(a):(b))
-#endif /* ! MIN */
-
-#ifndef MAX
-#define MAX(a,b)     ((a)>(b)?(a):(b))
-#endif /* ! MIN */
-
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
 
 #ifndef EILSEQ

@@ -21,8 +21,4 @@
 #include <netatalk/endian.h>
 #include <netatalk/ddp.h>
 #include <atalk/netddp.h>
-
-#ifndef MAX
-#define MAX(a, b)  ((a) < (b) ? (b) : (a))
-#endif /* ! MAX */
 #endif /* no ddp */

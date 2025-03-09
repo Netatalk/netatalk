@@ -76,8 +76,6 @@
 # define internal_function /* empty */
 # undef dirent64
 # define dirent64 dirent
-# undef MAX
-# define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
 #ifndef __set_errno
