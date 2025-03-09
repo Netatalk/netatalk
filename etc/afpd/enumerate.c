@@ -55,25 +55,22 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
     char *start;
     const char *end;
     int len;
-    int lenm;
+    int bytes_needed;
 
     end = sd->sd_buf + sd->sd_buflen;
-    len = strlen(de->d_name);
-    if (len > MAXPATHLEN) {
-        LOG(log_error, logtype_afpd, "afp_enumerate: filename too long: %d bytes", len);
-        errno = ENAMETOOLONG;
-        return -1;
-    }
+    len = (int) strnlen(de->d_name, NAME_MAX);
+    bytes_needed = 1 + len + 1;
     *(sd->sd_last)++ = len;
-    lenm = 0; /* strlen(mname);*/
-    if (len > SIZE_MAX - (sd->sd_last - sd->sd_buf) - lenm - 4 ||
-                sd->sd_last + len + lenm + 4 > end) {
+
+    if (sd->sd_last + bytes_needed > end) {
+        start = sd->sd_buf;
         char *buf;
 
-        start = sd->sd_buf;
         if (!(buf = realloc( sd->sd_buf, sd->sd_buflen +SDBUFBRK )) ) {
             LOG(log_error, logtype_afpd, "afp_enumerate: realloc: %s",
                         strerror(errno) );
+            /* Restore position to avoid invalid data */
+            sd->sd_last--;
             errno = ENOMEM;
             return -1;
         }
