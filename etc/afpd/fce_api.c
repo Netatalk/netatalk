@@ -149,6 +149,7 @@ void fce_init_udp(void)
         if (p == NULL) {
             LOG(log_error, logtype_fce, "fce_init_udp: no socket for %s:%s",
                 udp_entry->addr, udp_entry->port);
+            continue;
         }
         udp_entry->addrinfo = *p;
         memcpy(&udp_entry->addrinfo, p, sizeof(struct addrinfo));

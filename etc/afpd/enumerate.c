@@ -317,6 +317,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         sd.sd_last = sd.sd_buf;
     }
     while ( sd.sd_sindex < sindex ) {
+        if (sd.sd_last == NULL) {
+            sd.sd_did = 0;
+            return AFPERR_MISC;
+        }
         len = (unsigned char)*(sd.sd_last)++;
         if ( len == 0 ) {
             sd.sd_did = 0;	/* invalidate sd struct to force re-read */
