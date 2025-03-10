@@ -1869,7 +1869,7 @@ setdirparam_done:
     }
 
 setprivdone:
-    if (change_parent_mdate && dir->d_did != DIRDID_ROOT
+    if (change_parent_mdate && dir && dir->d_did != DIRDID_ROOT
         && gettimeofday(&tv, NULL) == 0) {
         if (movecwd(vol, dirlookup(vol, dir->d_pdid)) == 0) {
             newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
