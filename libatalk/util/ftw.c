@@ -42,6 +42,7 @@
 #include <unistd.h>
 
 #include <atalk/ftw.h>
+#include <atalk/globals.h>
 #include <atalk/util.h>
 
 #ifndef HAVE_MEMPCPY
@@ -288,14 +289,13 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             DIR *st = data->dirstreams[data->actdir]->stream;
             struct dirent64 *d;
             size_t actsize = 0;
-            const size_t MAX_ENTRY_SIZE = 4096; /* Reasonable max for filename length */
             const size_t MAX_BUFFER_SIZE = 1024 * 1024; /* 1MB buffer limit */
 
             while ((d = __readdir64 (st)) != NULL)
             {
                 size_t this_len = NAMLEN (d);
-                if (this_len > MAX_ENTRY_SIZE) {
-                    this_len = MAX_ENTRY_SIZE;
+                if (this_len > UTF8FILELEN_EARLY) {
+                    this_len = UTF8FILELEN_EARLY;
                 }
 
                 /* Check if we need more space with overflow protection */
