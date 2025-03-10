@@ -163,7 +163,25 @@ static void rtmp_delinuse(struct rtmptab *rtmp)
 {
     struct rtmptab	*irt;
 
+    if (rtmp == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL rtmp pointer");
+        return;
+    }
+    if (rtmp->rt_gate == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL rtmp->rt_gate pointer");
+        return;
+    }
+    if (rtmp->rt_gate->g_iface == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL rtmp->rt_gate->g_iface pointer");
+        return;
+    }
+
     irt = rtmp->rt_gate->g_iface->i_rt;
+    if (irt == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL i_rt pointer");
+        return;
+    }
+
     if ( irt->rt_inext == rtmp ) {			/* first */
 	if ( rtmp->rt_iprev == rtmp ) {			/* only */
 	    irt->rt_inext = NULL;
@@ -197,9 +215,27 @@ static void rtmp_addinuse( struct rtmptab *rtmp)
 {
     struct rtmptab	*irt;
 
+    if (rtmp == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL rtmp pointer");
+        return;
+    }
+    if (rtmp->rt_gate == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL rtmp->rt_gate pointer");
+        return;
+    }
+    if (rtmp->rt_gate->g_iface == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL rtmp->rt_gate->g_iface pointer");
+        return;
+    }
+
     gateroute( RTMP_ADD, rtmp );
 
     irt = rtmp->rt_gate->g_iface->i_rt;
+    if (irt == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL i_rt pointer");
+        return;
+    }
+
     if ( irt->rt_inext == NULL ) {	/* empty list */
 	rtmp->rt_inext = NULL;
 	rtmp->rt_iprev = rtmp;
@@ -224,13 +260,31 @@ static int rtmp_copyzones( struct rtmptab *to,struct rtmptab *from)
 {
     struct list		*lz, *lr;
 
+    if (to == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL 'to' pointer");
+        return -1;
+    }
+
+    if (from == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL 'from' pointer");
+        return -1;
+    }
+
     to->rt_zt = from->rt_zt;
     from->rt_zt = NULL;
     if ( from->rt_flags & RTMPTAB_HASZONES ) {
 	to->rt_flags |= RTMPTAB_HASZONES;
     }
     for ( lz = to->rt_zt; lz; lz = lz->l_next ) {
+	if (lz->l_data == NULL) {
+		LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL lz->l_data");
+		return -1;
+	}
 	for ( lr = ((struct ziptab *)lz->l_data)->zt_rt; lr; lr = lr->l_next ) {
+		if (lr->l_data == NULL) {
+			LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL lr->l_data");
+			return -1;
+		}
 	    if ( (struct rtmptab *)lr->l_data == from ) {
 		lr->l_data = (void *)to;	/* cast BS */
 		break;
@@ -293,14 +347,27 @@ int rtmp_replace(struct rtmptab *replace)
     struct gate		*gate;
     struct rtmptab	*rtmp, *found = NULL;
 
+    if (replace == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_replace: NULL replace pointer");
+        return -1;
+    }
+
     LOG(log_info, logtype_atalkd, "rtmp_replace %u-%u", ntohs(replace->rt_firstnet),
 	   ntohs(replace->rt_lastnet));
     for ( iface = interfaces; iface; iface = iface->i_next ) {
         if ((replace->rt_iface != iface) &&
-	    ((iface->i_flags & IFACE_ISROUTER) == 0))
-	  continue;
+				((iface->i_flags & IFACE_ISROUTER) == 0)) {
+			continue;
+		}
+
+	if (iface->i_gate == NULL) {
+		continue;
+	}
 
 	for ( gate = iface->i_gate; gate; gate = gate->g_next ) {
+		if (gate->g_rt == NULL) {
+			continue;
+		}
 	    for ( rtmp = gate->g_rt; rtmp; rtmp = rtmp->rt_next ) {
 		if ( rtmp->rt_firstnet == replace->rt_firstnet &&
 			rtmp->rt_lastnet == replace->rt_lastnet ) {
@@ -314,6 +381,10 @@ int rtmp_replace(struct rtmptab *replace)
     }
 
     if ( found != replace ) {
+	if (found == NULL) {
+		LOG(log_info, logtype_atalkd, "rtmp_replace: no replacement found");
+		return -1;
+	}
 	if (rtmp_copyzones( found, replace ) < 0)
 	  return -1;
 	rtmp_delinuse( replace );
@@ -915,11 +986,21 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
     struct sockaddr_at	dst, gate;
     unsigned short	net;
 
+    if (rtmp == NULL) {
+        LOG(log_error, logtype_atalkd, "gateroute: NULL rtmp pointer");
+        return -1;
+    }
+
     if ( command == RTMP_DEL && ( rtmp->rt_flags & RTMPTAB_ROUTE ) == 0 ) {
 	return( -1 );
     }
     if ( command == RTMP_ADD && ( rtmp->rt_flags & RTMPTAB_ROUTE )) {
 	return( -1 );
+    }
+
+    if (rtmp->rt_gate == NULL) {
+        LOG(log_error, logtype_atalkd, "gateroute: NULL rtmp->rt_gate pointer");
+        return -1;
     }
 
     net = ntohs( rtmp->rt_firstnet );
