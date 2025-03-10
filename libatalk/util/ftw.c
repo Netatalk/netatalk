@@ -290,15 +290,39 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             DIR *st = data->dirstreams[data->actdir]->stream;
             struct dirent64 *d;
             size_t actsize = 0;
+            const size_t MAX_ENTRY_SIZE = 4096; /* Reasonable max for filename length */
+            const size_t MAX_BUFFER_SIZE = 1024 * 1024; /* 1MB buffer limit */
 
             while ((d = __readdir64 (st)) != NULL)
             {
                 size_t this_len = NAMLEN (d);
-                if (actsize + this_len + 2 >= bufsize)
+                if (this_len > MAX_ENTRY_SIZE) {
+                    this_len = MAX_ENTRY_SIZE;
+                }
+
+                /* Check if we need more space with overflow protection */
+                if (actsize > bufsize - this_len - 2)
                 {
+                    size_t new_bufsize;
                     char *newp;
-                    bufsize += MAX (1024, 2 * this_len);
-                    newp = (char *) realloc (buf, bufsize);
+
+                    /* Protection against overflow in size calculation */
+                    if (bufsize > MAX_BUFFER_SIZE / 2) {
+                        new_bufsize = MAX_BUFFER_SIZE;
+                    } else {
+                        new_bufsize = bufsize + MIN(MAX(1024, 2 * this_len),
+                                                   MAX_BUFFER_SIZE - bufsize);
+                    }
+
+                    if (new_bufsize > MAX_BUFFER_SIZE) {
+                        new_bufsize = MAX_BUFFER_SIZE;
+                    }
+
+                    if (actsize > new_bufsize - this_len - 2) {
+                        continue;
+                    }
+
+                    newp = (char *) realloc (buf, new_bufsize);
                     if (newp == NULL)
                     {
                         /* No more memory.  */
@@ -308,28 +332,36 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
                         return -1;
                     }
                     buf = newp;
+                    bufsize = new_bufsize;
                 }
 
-                if (actsize + this_len < bufsize) {
+                /* Consistent boundary check that accounts for NULL terminator */
+                if (actsize <= bufsize - this_len - 1) {
                     *((char *) __mempcpy (buf + actsize, d->d_name, this_len)) = '\0';
                     actsize += this_len + 1;
                 }
             }
 
-            /* Terminate the list with an additional NUL byte.  */
-            buf[actsize++] = '\0';
+            /* Terminate the list with an additional NULL byte.  */
+            if (actsize < bufsize) {
+                buf[actsize++] = '\0';
 
-            /* Shrink the buffer to what we actually need.  */
-            char *new_buf = malloc(actsize);
-            if (new_buf != NULL) {
-                memcpy(new_buf, buf, MIN(actsize, bufsize));
-                free(buf);
-                data->dirstreams[data->actdir]->content = new_buf;
+                /* Shrink the buffer to what we actually need.  */
+                char *new_buf = malloc(actsize);
+                if (new_buf != NULL) {
+                    memcpy(new_buf, buf, actsize);
+                    free(buf);
+                    data->dirstreams[data->actdir]->content = new_buf;
+                } else {
+                    data->dirstreams[data->actdir]->content = NULL;
+                    free(buf);
+                    result = -1;
+                }
             } else {
-                data->dirstreams[data->actdir]->content = NULL;
                 free(buf);
                 result = -1;
             }
+
             if (data->dirstreams[data->actdir]->content == NULL)
             {
                 result = -1;
