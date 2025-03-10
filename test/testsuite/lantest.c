@@ -153,7 +153,10 @@ static void displayresults(void)
         for (i=0, sum=0; i < Iterations_save; i++)
             sum += (*results)[i][test];
         avg = sum / (Iterations_save - divsub);
-        fprintf(stderr, "%s%6llu ms", resultstrings[test], avg);
+        if (avg < 1) {
+            fprintf(stderr, "\tFATAL ERROR: invalid result\n");
+            exit(1);
+        }
         if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
             thrput = (rwsize / 1000) / avg;
             fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), thrput);
