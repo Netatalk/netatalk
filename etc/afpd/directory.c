@@ -504,14 +504,12 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
                 ret = NULL;
                 goto exit;
             default:
-                ret = ret;
                 goto exit;
             }
             /* DEADC0DE */
             ret = NULL;
             goto exit;
         }
-        ret = ret;
         goto exit;
     }
 
@@ -2280,7 +2278,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         *rbuf++ = len;
         *rbuflen += 1;
     }
-    if ( len > 0 ) {
+    if ( name && len > 0 ) {
         memcpy( rbuf, name, len );
     }
     *rbuflen += len;

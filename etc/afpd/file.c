@@ -1472,7 +1472,7 @@ int copyfile(struct vol *s_vol,
         return AFPERR_EXIST;
     }
     size_t copybuf_len = 0;
-    uint8_t* copybuf;
+    uint8_t* copybuf = NULL;
 
     if (s_vol->v_obj->proto == AFPPROTO_DSI)
     {
@@ -2244,7 +2244,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
 
     if (AD_META_OPEN(adsp) || AD_META_OPEN(addp)) {
         struct adouble adtmp;
-        bool opened_ads, opened_add;
+        bool opened_ads = false;
+        bool opened_add = false;
 
         ad_init(&adtmp, vol);
         ad_init_offsets(&adtmp);

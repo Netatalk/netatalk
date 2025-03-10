@@ -776,8 +776,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
 {
     DSI *dsi;
     struct ofork *ofork;
-    off_t        offset, saveoff, reqcount, savereqcount, size;
-    ssize_t      cc, err;
+    off_t        offset;
+    off_t        saveoff = 0;
+    off_t        reqcount = 0;
+    off_t        savereqcount = 0;
+    off_t        size;
+    ssize_t      cc;
+    ssize_t      err;
     int          eid;
     uint16_t     ofrefnum;
 
@@ -1146,12 +1151,18 @@ static ssize_t write_file(struct ofork *ofork, int eid,
 static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen, int is64)
 {
     struct ofork    *ofork;
-    off_t           offset, saveoff, reqcount, oldsize, newsize;
-    int             endflag, eid, err = AFP_OK;
+    off_t           offset;
+    off_t           saveoff;
+    off_t           reqcount;
+    off_t           oldsize;
+    off_t           newsize;
+    int             endflag;
+    int             eid;
+    int             err = AFP_OK;
     uint16_t        ofrefnum;
     DSI* dsi = obj->dsi;
-    char* rcvbuf;
-        size_t          rcvbuflen;
+    char* rcvbuf = NULL;
+    size_t          rcvbuflen;
     ssize_t         cc;
 
     if (dsi)
