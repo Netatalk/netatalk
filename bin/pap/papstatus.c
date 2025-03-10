@@ -98,7 +98,7 @@ static char			*printer = NULL;
 static char			cbuf[ 8 ];
 static struct nbpnve		nn;
 
-static void * print_status(char status, char mask, char * message){
+static void print_status(char status, char mask, char * message){
         printf("%s", message);
     if( status & mask){
             printf("True\n");
