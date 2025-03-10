@@ -115,7 +115,7 @@ int delete_unix_file(char *path, char *name, char *file)
 	return rc;
 }
 
-/* Rename a file and it's resource fork */
+/* Rename a file and its resource fork */
 int rename_unix_file(char *path, char *dir, char *src, char *dst)
 {
     sprintf(temp, "%s/%s/%s", Path, dir, src);
@@ -142,6 +142,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
                 fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
             }
             test_failed();
+            return -1;
         }
     } else {
 #ifndef HAVE_EAFD
@@ -155,10 +156,13 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
                 fprintf(stdout,"\tFAILED unable to rename %s to %s :%s\n", temp, temp1, strerror(errno));
             }
             test_failed();
+            return -1;
         }
 
 #endif
     }
+
+    return 0;
 }
 
 /* unlink file only, dont care about adouble file */
