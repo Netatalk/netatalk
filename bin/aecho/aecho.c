@@ -213,6 +213,7 @@ int main(int ac, char **av)
 
     for (;;) {
 	satlen = sizeof( struct sockaddr_at );
+	memset(&sat, 0, sizeof(struct sockaddr_at));
 	if (( cc = netddp_recvfrom( sock, buf, sizeof( buf ), 0,
 				    (struct sockaddr *) &sat,
 				    &satlen )) < 0 ) {
