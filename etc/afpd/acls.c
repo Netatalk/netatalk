@@ -982,7 +982,7 @@ EC_CLEANUP:
  */
 static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 {
-    int mapped_aces;
+    int mapped_aces = 0;
 
     LOG(log_debug9, logtype_afpd, "map_acl: BEGIN");
 
@@ -1648,7 +1648,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 {
     struct vol      *vol;
     struct dir      *dir;
-    int         ret;
+    int         ret = AFP_OK;
     uint32_t            did;
     uint16_t        vid, bitmap;
     struct path         *s_path;
