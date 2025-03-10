@@ -288,6 +288,10 @@ static void as_timer(int sig _U_)
 	    end = packet + sizeof( packet );
 
 	    sat = gate->g_sat;
+	    if (zap == NULL) {
+			LOG(log_error, logtype_atalkd, "as_timer: No ZIP port available for interface %s", iface->i_name);
+			continue;
+	    }
 	    sat.sat_port = zap->ap_port;
 
 	    /*
@@ -489,6 +493,10 @@ static void as_timer(int sig _U_)
 	    sat.sat_family = AF_APPLETALK;
 	    sat.sat_addr.s_net = ATADDR_ANYNET;
 	    sat.sat_addr.s_node = ATADDR_BCAST;
+		if (rap == NULL) {
+			LOG(log_error, logtype_atalkd, "as_timer: No RTMP port available for interface %s", iface->i_name);
+			continue;
+		}
 	    sat.sat_port = rap->ap_port;
 
 	    data = packet;
