@@ -328,11 +328,19 @@ int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 #ifndef NO_DDP
     struct iovec	iov[2];
 #endif
-    uint8_t		fcreator[4], imh[12], irh[12], * p;
-    int			itype, cc = AFP_OK, iovcnt = 0;
+    uint8_t		fcreator[4];
+    uint8_t		imh[12];
+    uint8_t		irh[12];
+    uint8_t		* p;
+    int			itype;
+    int         cc = AFP_OK;
+    int         iovcnt = 0;
     size_t 		buflen;
-    uint32_t           ftype, itag;
-    uint16_t		bsize, rsize, vid;
+    uint32_t    ftype;
+    uint32_t    itag;
+    uint16_t		bsize = 0;
+    uint16_t		rsize;
+    uint16_t		vid;
 
     buflen = *rbuflen;
     *rbuflen = 0;

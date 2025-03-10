@@ -137,6 +137,8 @@ static int sl_pack_float(double d, char *buf, int offset)
         uint64_t w;
     } ieee_fp_union;
 
+    ieee_fp_union.d = d;
+
     EC_ZERO( slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_FLOAT, 2, 1)) );
     EC_ZERO( slvalc(buf, offset + 8, MAX_SLQ_DAT, ieee_fp_union.w) );
 

@@ -413,10 +413,18 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
 
 hnode_t *hash_scan_next(hscan_t *scan)
 {
-    hnode_t *next = scan->next;     /* 1 */
-    hash_t *hash = scan->table;
-    hash_val_t chain = scan->chain + 1;
-    hash_val_t nchains = hash->nchains;
+    hnode_t *next;
+    hash_t *hash;
+    hash_val_t chain;
+    hash_val_t nchains;
+
+    if (scan == NULL || scan->table == NULL || scan->next == NULL)
+        return NULL;
+
+    next = scan->next;     /* 1 */
+    hash = scan->table;
+    chain = scan->chain + 1;
+    nchains = (hash_val_t) hash->nchains;
 
     assert (hash_val_t_bit != 0);   /* 2 */
 

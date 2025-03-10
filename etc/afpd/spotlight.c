@@ -826,7 +826,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     DALLOC_CTX *reqinfo;
     sl_array_t *array;
     sl_cnids_t *cnids;
-    slq_t *slq;
+    slq_t *slq = NULL;
     char slq_host[MAXPATHLEN + 1];
     uint16_t convflags = v->v_mtou_flags;
     uint64_t result;
@@ -958,7 +958,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     slq_add(slq);
 
 EC_CLEANUP:
-    if (ret != 0) {
+    if (ret != 0 && slq != NULL) {
         slq_destroy(slq);
         result = UINT64_MAX;
         ret = 0;
