@@ -367,7 +367,7 @@ int offset;
 int quantum;
 struct sigaction action;
 struct itimerval    it;
-CONN *myconn;
+CONN *myconn = { 0 };
 
 	dsi = &Conn->dsi;
 	sock = -1;
@@ -507,12 +507,15 @@ fin:
 		test_failed();
 		sleep(5);
 	}
-	else {
+	else if (myconn) {
 		if (fork1) FPCloseFork(myconn,fork1);
 		if (fork) FPCloseFork(myconn,fork);
 	}
-	free(myconn);
-	myconn = NULL;
+
+	if (myconn) {
+		free(myconn);
+		myconn = NULL;
+	}
 
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name1))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))

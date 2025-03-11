@@ -147,6 +147,7 @@ DSI *dsi;
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 0;
@@ -157,6 +158,7 @@ DSI *dsi;
 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
+fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("FPResolveID:test310: Resolve ID after rename");
@@ -194,6 +196,7 @@ DSI *dsi;
 
 	if (FPGetFileDirParams(Conn, vol,  dir , name, bitmap,0)) {
 		test_failed();
+		goto fin;
 	}
 	else {
 		filedir.isdir = 0;
@@ -204,6 +207,7 @@ DSI *dsi;
 	FAIL (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
 	FAIL (FPResolveID(Conn, vol, filedir.did, bitmap))
 
+fin:
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
 test_exit:
 	exit_test("FPResolveID:test311: Resolve ID after rename");
@@ -218,7 +222,7 @@ char *name = "t362 Resolve ID file";
 char *name1 = "t362 Resolve ID dir";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 uint16_t vol2;
 DSI *dsi2;
