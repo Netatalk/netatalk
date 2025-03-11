@@ -19,6 +19,9 @@
 /* whether the MySQL CNID module is available */
 #mesondefine CNID_BACKEND_MYSQL
 
+/* whether the SQLite CNID module is available */
+#mesondefine CNID_BACKEND_SQLITE
+
 /* Path to dbus-daemon */
 #mesondefine DBUS_DAEMON_PATH
 
