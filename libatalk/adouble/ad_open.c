@@ -753,8 +753,7 @@ EC_CLEANUP:
 static int ad_header_read_ea(const char *path, struct adouble *ad, const struct stat *hst _U_)
 {
     EC_INIT;
-    uint16_t nentries;
-    int      len _U_;
+    uint16_t nentries = 0;
     ssize_t  header_len;
     char     *buf = ad->ad_data;
 
