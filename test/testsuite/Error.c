@@ -928,7 +928,7 @@ char *name1 = "newtest170.txt";
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 int fork;
-int dir;
+int dir = DIRDID_ROOT_PARENT;
 unsigned int ret;
 uint16_t vol = VolID;
 DSI *dsi;
@@ -1085,7 +1085,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 int tdir = DIRDID_ROOT_PARENT;
 int fork;
-int dir;
+int dir = DIRDID_ROOT_PARENT;
 unsigned int ret;
 uint16_t vol = VolID;
 DSI *dsi;
@@ -1223,7 +1223,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 int tdir = 0;
 int fork;
-int dir;
+int dir = DIRDID_ROOT_PARENT;
 unsigned int ret;
 uint16_t vol = VolID;
 DSI *dsi;
@@ -1367,7 +1367,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 int tdir;
 int fork;
-int dir;
+int dir = DIRDID_ROOT_PARENT;
 uint16_t vol2;
 unsigned int ret;
 uint16_t vol = VolID;
@@ -1545,7 +1545,7 @@ void Error_test()
 	test102();
 	test103();
 	test105();
-// FIXME: Because of an afpd crash, test data cleanup fails
+/* causes afpd crash in dircache_search_by_did() */
 #if 0
 	test170();
 	test171();
