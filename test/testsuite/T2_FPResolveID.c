@@ -730,7 +730,8 @@ char *tp = "t418_temp";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
 struct afp_filedir_parms filedir = { 0 };
-int fid1 = 0, fid2 = 0;
+int fid1 = 0;
+int fid2 = 0;
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
