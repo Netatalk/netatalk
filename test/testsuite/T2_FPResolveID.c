@@ -18,7 +18,7 @@ char *name = "t129 Resolve ID file";
 char *name1 = "t129 Resolve ID dir";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
@@ -82,7 +82,7 @@ char *name = "t130 Delete ID file";
 char *name1 = "t130 Delete ID dir";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 int ret;
 
@@ -153,7 +153,7 @@ char *name = "t131 Delete ID file";
 char *name1 = "t131 Delete ID dir";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
@@ -218,7 +218,7 @@ char *name2 = "t331 file new name";
 char *name1 = "t331 dir";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 int fid = 0;
 DSI *dsi = &Conn->dsi;
 
@@ -363,7 +363,7 @@ char *name1 = "t360 dir";
 char *name3 = "t360 open file";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 int fid = 0;
 int fork = 0;
 DSI *dsi = &Conn->dsi;
@@ -481,7 +481,7 @@ uint16_t vol = VolID;
 char *name = "t397 Resolve ID file";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
@@ -535,7 +535,7 @@ char *ndir1 = "t412 dir";
 char *ndir2 = "t412 dir dest";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 int fid = 0;
 DSI *dsi = &Conn->dsi;
 
@@ -625,13 +625,14 @@ test_exit:
 STATIC void test413()
 {
 uint16_t vol = VolID;
-int  dir,dir2;
+int  dir;
+int  dir2;
 char *name  = "t413 file";
 char *name1 = "t413 dir";
 char *name2 = "t413 dir dest";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 int fid = 0;
 DSI *dsi = &Conn->dsi;
 
@@ -728,8 +729,8 @@ char *dir1 = "t418_dir";
 char *tp = "t418_temp";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<DIRPBIT_FINFO);
-struct afp_filedir_parms filedir;
-int fid1 = 0, fid2;
+struct afp_filedir_parms filedir = { 0 };
+int fid1 = 0, fid2 = 0;
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST

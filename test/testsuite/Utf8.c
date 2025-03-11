@@ -46,7 +46,7 @@ char nfile[8];
 uint16_t bitmap;
 uint16_t vol = VolID;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
@@ -107,7 +107,7 @@ char nfile[8];
 uint16_t bitmap;
 uint16_t vol = VolID;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
@@ -332,7 +332,7 @@ char *name = "t234 file\314\201";
 uint16_t vol = VolID;
 DSI *dsi;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
@@ -383,7 +383,7 @@ char *name = "t312-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94.mp3";
 uint16_t vol = VolID;
 DSI *dsi;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
@@ -521,7 +521,7 @@ char *name = "\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94 test 337.mp3";
 uint16_t vol = VolID;
 DSI *dsi;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 uint16_t bitmap = 0;
 
 	dsi = &Conn->dsi;
@@ -586,7 +586,7 @@ char nfile[8];
 uint16_t bitmap;
 uint16_t vol = VolID;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
@@ -645,7 +645,7 @@ char nfile[8];
 uint16_t bitmap;
 uint16_t vol = VolID;
 int  ofs =  3 * sizeof( uint16_t );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST

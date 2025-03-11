@@ -5,7 +5,7 @@
 /* ------------------------- */
 STATIC void test98()
 {
-int  dir;
+int  dir = 0;
 char *name = "t98 error setfildirparams";
 char *name1 = "t98 error setfildirparams file";
 char *ndir = "t98 no access";

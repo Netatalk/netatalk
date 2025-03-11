@@ -8,8 +8,8 @@ static char w_buf[BUF_S];
 
 STATIC void test148()
 {
-int fork;
-int fork1;
+int fork = 0;
+int fork1 = 0;
 uint16_t bitmap = 0;
 char *name = "t148 test";
 char *dir = "t148 dir";
