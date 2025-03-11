@@ -537,7 +537,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
 {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
-    struct cnid_dbd_rply rply;
+    struct cnid_dbd_rply rply = { 0 };
     cnid_t id;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
