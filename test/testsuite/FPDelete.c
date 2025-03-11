@@ -151,7 +151,7 @@ int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 int tdir;
 int fork;
-int dir;
+int dir = 0;
 unsigned int ret;
 uint16_t vol = VolID;
 DSI *dsi;
@@ -381,7 +381,7 @@ STATIC void test368()
 {
 int fork;
 uint16_t bitmap = 0;
-uint16_t vol2;
+uint16_t vol2 = 0;
 char *name = "t368 Delete File 2 users";
 char *name3 = "t368 new name";
 char *name2 = "t368 dir";
@@ -441,7 +441,7 @@ STATIC void test369()
 {
 int fork;
 uint16_t bitmap = 0;
-uint16_t vol2;
+uint16_t vol2 = 0;
 char *name = "t369 Delete File 2 users";
 char *name2 = "t369 dir";
 int type = OPENFORK_DATA;

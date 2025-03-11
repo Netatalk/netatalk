@@ -12,7 +12,7 @@ char *name3  = "t53 --rwx-- dir";
 int pdir;
 int dir;
 int ret;
-int dt;
+int dt = 0;
 uint16_t vol = VolID;
 uint16_t vol2;
 DSI *dsi2;

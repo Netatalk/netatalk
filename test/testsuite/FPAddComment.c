@@ -18,7 +18,7 @@ uint16_t vol2;
 DSI *dsi2;
 DSI *dsi = &Conn->dsi;
 char *cmt;
-int  dt;
+int  dt = 0;
 
 	ENTER_TEST
 	if (!Conn2) {
@@ -98,7 +98,7 @@ fin:
 	if (rdir) {
 		delete_folder(vol, DIRDID_ROOT, name2);
 	}
-	FAIL (FPCloseDT(Conn, dt))
+	FAIL (dt && FPCloseDT(Conn, dt))
 test_exit:
 	exit_test("FPAddComment:test55: add comment");
 }

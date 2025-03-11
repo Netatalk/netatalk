@@ -160,15 +160,17 @@ test_exit:
 STATIC void test338()
 {
 char *name = "t338 file";
-uint16_t vol, vol2;
+uint16_t vol = 0;
 unsigned int ret;
 char *token = NULL;
 uint32_t len;
 CONN *loc_conn1 = NULL;
 CONN *loc_conn2 = NULL;
-DSI *loc_dsi1, *loc_dsi2;
-int sock1, sock2;
-int fork = 0, fork1;
+DSI *loc_dsi1;
+DSI *loc_dsi2;
+int sock1;
+int sock2;
+int fork = 0;
 struct sigaction action;
 char *id0="testsuite-test338-0";
 char *id1="testsuite-test338-1";
@@ -296,7 +298,7 @@ char *name = "t339 file";
 char *ndir = "t339 dir";
 char *no_user_uam = "No User Authent";
 
-uint16_t vol1, vol2;
+uint16_t vol1;
 unsigned int ret;
 char *token = NULL;
 uint32_t len;
@@ -471,8 +473,10 @@ uint32_t len;
 CONN *loc_conn1 = NULL;
 CONN *loc_conn2 = NULL;
 DSI *dsi;
-DSI *loc_dsi1, *loc_dsi2;
-int sock1, sock2;
+DSI *loc_dsi1;
+DSI *loc_dsi2;
+int sock1;
+int sock2;
 int fork = 0;
 struct sigaction action;
 char *id0="testsuite-test370-0";

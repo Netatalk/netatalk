@@ -6,7 +6,7 @@
 STATIC void test214()
 {
 uint16_t vol = VolID;
-uint16_t dt;
+uint16_t dt = 0;
 unsigned int ret;
 char *file = "t214 file";
 char *name = "t214 dir";
@@ -61,7 +61,7 @@ int dir;
 fin:
 	FAIL (dir && FPDelete(Conn, vol,  dir , ""))
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , file))
-	FAIL (FPCloseDT(Conn,dt))
+	FAIL (dt && FPCloseDT(Conn,dt))
 test_exit:
 	exit_test("FPAddAPPL:test214: test appl");
 }
