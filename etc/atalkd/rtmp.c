@@ -468,12 +468,14 @@ static int rtmp_new(struct rtmptab *rtmp)
 int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
 {
     struct rtmp_head	rh;
-    struct rtmp_tuple	rt, xrt;
+    struct rtmp_tuple	rt;
+    struct rtmp_tuple	xrt = { 0 };
     struct gate		*gate;
     struct interface	*iface;
     struct interface 	*iface2;
     struct rtmptab	*rtmp;
-    char		*end, packet[ ATP_BUFSIZ ];
+    const char	*end;
+    char		packet[ ATP_BUFSIZ ];
     int                 cc;
 
     end = data + len;
