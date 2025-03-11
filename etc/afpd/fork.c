@@ -1265,6 +1265,10 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, s
 #endif /* no afp/asp */
     case AFPPROTO_DSI:
     {
+        if (dsi == NULL) {
+            *rbuflen = 0;
+            return AFPERR_MISC;
+        }
         /* find out what we have already */
         if ((cc = dsi_writeinit(dsi, rcvbuf, rcvbuflen)) > 0) {
             ssize_t written;
