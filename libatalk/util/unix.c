@@ -487,10 +487,16 @@ char *strtok_quote(char *s, const char *delim)
     if (s == NULL)
         s = olds;
 
+    /* Return NULL if no string to parse */
+    if (s == NULL)
+        return NULL;
+
     /* Scan leading delimiters.  */
     s += strspn (s, delim);
-    if (*s == '\0')
+    if (*s == '\0') {
+        olds = NULL;
         return NULL;
+    }
 
     /* Find the end of the token.  */
     token = s;
