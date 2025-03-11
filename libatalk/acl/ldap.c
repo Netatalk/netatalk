@@ -286,6 +286,9 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
 #define LDAP_BIN_UUID_LEN 49 /* LDAP Binary Notation is \XX * 16 bytes of UUID + terminator = 49 */
     char ldap_bytes[LDAP_BIN_UUID_LEN];
 
+    memset(stripped, '0', sizeof(stripped));
+    stripped[MAX_FILTER_SIZE-1] = '\0';
+
     if (ldap_uuid_encoding == LDAP_UUID_ENCODING_MSGUID) {
         /* Convert to LDAP-safe binary encoding for direct query of AD objectGUID attribute */
         int i = 0, s = 0;
