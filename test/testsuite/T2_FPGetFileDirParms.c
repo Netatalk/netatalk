@@ -15,7 +15,8 @@ STATIC void test32()
 {
 char *name = "t32 dir";
 char *name1 = "t32 file";
-int  dir,dir1;
+int  dir;
+int  dir1;
 int  ret;
 uint16_t vol = VolID;
 
@@ -120,7 +121,8 @@ STATIC void test33()
 {
 char *name = "t33 dir";
 char *name1 = "t33 file";
-int  dir,dir1;
+int  dir;
+int  dir1;
 uint16_t vol = VolID;
 int ret;
 
@@ -222,7 +224,8 @@ STATIC void test42()
 {
 char *name = "t42 dir";
 char *name1 = "t42 dir1";
-int  dir,dir1;
+int  dir;
+int  dir1;
 uint16_t vol = VolID;
 
 	ENTER_TEST
@@ -326,7 +329,10 @@ char *name5 = "t104 file";
 char *name6 = "t104 dir2_1";
 uint16_t vol = VolID;
 DSI *dsi = &Conn->dsi;
-unsigned int  dir1, dir2, dir3, dir4;
+unsigned int dir1 = 0;
+unsigned int dir2 = 0;
+unsigned int dir3 = 0;
+unsigned int dir4 = 0;
 int  ofs =  3 * sizeof( uint16_t );
 struct afp_filedir_parms filedir;
 uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);

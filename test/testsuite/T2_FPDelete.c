@@ -133,7 +133,7 @@ char *name = "t507 Resolve ID file";
 char *name1 = "t507 Resolve ID dir";
 int  ofs =  3 * sizeof( uint16_t );
 uint16_t bitmap = (1<<FILPBIT_FNUM );
-struct afp_filedir_parms filedir;
+struct afp_filedir_parms filedir = { 0 };
 DSI *dsi = &Conn->dsi;
 
 	ENTER_TEST
