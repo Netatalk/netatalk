@@ -301,7 +301,7 @@ int cnid_mysql_update(struct _cnid_db *cdb,
 {
     EC_INIT;
     CNID_mysql_private *db;
-    cnid_t update_id;
+    cnid_t update_id = 0;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !id || !st || !name) {
         LOG(log_error, logtype_cnid, "cnid_update: Parameter error");
