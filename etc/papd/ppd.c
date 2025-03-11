@@ -69,7 +69,7 @@ static void ppd_init(void)
    ppd files with Mac line ending */
 static char* my_fgets(char *buf, size_t bufsize, FILE *stream)
 {
-    int p;           /* uninitialized, OK 310105 */
+    int p = 0;
     size_t count = 0;
 
     while (count < (bufsize - 1) && EOF != (p=fgetc(stream))) {
