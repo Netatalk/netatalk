@@ -127,6 +127,10 @@ static int get_lock(int cmd, const char *dbpath)
     case LOCK_EXCL:
     case LOCK_SHRD:
         if (lockfd == -1) {
+            if (dbpath == NULL) {
+                LOG(log_error, logtype_cnid, "get_lock: dbpath is NULL");
+                return -1;
+            }
             if ( (strlen(dbpath) + strlen(&LOCKFILENAME[1])) > (PATH_MAX - 1) ) {
                 LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
                 return -1;
@@ -434,6 +438,11 @@ static int loop(struct db_param *dbp)
 static void switch_to_user(char *dir)
 {
     struct stat st;
+
+    if (dir == NULL) {
+        LOG(log_error, logtype_cnid, "switch_to_user: dir is NULL");
+        exit(1);
+    }
 
     if (chdir(dir) < 0) {
         LOG(log_error, logtype_cnid, "chdir to %s failed: %s", dir, strerror(errno));
