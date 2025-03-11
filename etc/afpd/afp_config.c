@@ -133,7 +133,7 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
     {
         ATP atp;
         ASP asp;
-        char* Obj;
+        char* Obj = NULL;
         char* Type = "AFPServer";
         char* Zone = strdup("*");
 
