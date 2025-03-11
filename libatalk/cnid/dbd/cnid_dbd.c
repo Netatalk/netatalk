@@ -1000,7 +1000,7 @@ int cnid_dbd_wipe(struct _cnid_db *cdb)
 {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
-    struct cnid_dbd_rply rply;
+    struct cnid_dbd_rply rply = { 0 };
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
