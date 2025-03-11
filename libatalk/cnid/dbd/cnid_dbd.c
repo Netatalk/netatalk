@@ -63,7 +63,7 @@ static int tsock_getfd(const char *host, const char *port)
     int attr;
     int err;
     struct addrinfo hints, *servinfo, *p;
-    int optval;
+    int optval = ECONNREFUSED;
     socklen_t optlen = sizeof(optval);
 
     /* Prepare hint for getaddrinfo */
