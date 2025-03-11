@@ -965,7 +965,7 @@ endif
 enable_quota = get_option('with-quota')
 
 if host_os == 'netbsd'
-    have_quota = false
+    enable_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
     warning('quota is broken on NetBSD, see https://github.com/Netatalk/netatalk/issues/1225')
 endif
