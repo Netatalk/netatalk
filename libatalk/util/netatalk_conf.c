@@ -1941,10 +1941,16 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     struct passwd *pw;
     char        volname[AFPVOL_U8MNAMELEN + 1];
     char        abspath[MAXPATHLEN + 1];
-    char        volpath[MAXPATHLEN + 1], *realvolpath = NULL;
+    char        volpath[MAXPATHLEN + 1];
+    char        *realvolpath = NULL;
     char        tmpbuf[MAXPATHLEN + 1];
-    const char *secname, *basedir, *p = NULL, *subpath = NULL, *subpathconfig;
-    char *user = NULL, *prw;
+    const char *secname = NULL;
+    const char *basedir = NULL;
+    const char *p = NULL;
+    const char *subpath = NULL;
+    const char *subpathconfig;
+    char *user = NULL;
+    char *prw;
     regmatch_t match[1];
     size_t abspath_len;
 
@@ -1987,7 +1993,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     }
 
     if (!have_uservol) /* (2) */
-        EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
+        EC_FAIL_LOG("getvolbypath(\"%s\"): no user home share defined in configuration", path);
 
     int secnum = iniparser_getnsec(obj->iniconfig);
 
@@ -1997,8 +2003,11 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
             break;
     }
 
+    if (secname == NULL)
+        EC_FAIL_LOG("getvolbypath(\"%s\"): could not find user home section in configuration", path);
     if (STRCMP(secname, !=, INISEC_HOMES))
-        EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
+        EC_FAIL_LOG("getvolbypath(\"%s\"): could not find user home section in configuration (last section: \"%s\")", 
+                path, secname);
 
     /* (3) */
     EC_NULL_LOG( basedir = getoption_str(obj->iniconfig, INISEC_HOMES, "basedir regex", NULL, NULL) );
@@ -2012,7 +2021,7 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     }
 
     if (regexec(&reg, path, 1, match, 0) == REG_NOMATCH)
-        EC_FAIL_LOG("getvolbypath(\"%s\"): no volume for path", path);
+        EC_FAIL_LOG("getvolbypath(\"%s\"): path does not match basedir regex \"%s\"", path, basedir);
 
     if (match[0].rm_eo - match[0].rm_so > MAXPATHLEN)
         EC_FAIL_LOG("getvolbypath(\"%s\"): path too long", path);
