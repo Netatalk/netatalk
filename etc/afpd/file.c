@@ -619,8 +619,8 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct pat
 {
     struct adouble	ad, *adp;
     int                 opened = 0;
-    int rc;
-    int flags; /* uninitialized ok */
+    int rc = AFP_OK;
+    int flags = 0;
 
     LOG(log_debug, logtype_afpd, "getfilparams(\"%s\")", path->u_name);
 

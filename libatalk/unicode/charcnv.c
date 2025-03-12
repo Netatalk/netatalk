@@ -709,7 +709,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
     char* outbuf = dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
-    char escch;                 /* 150210: uninitialized OK, depends on j */
+    char escch = 0;
 
     if (srclen == (size_t)-1)
         srclen = strlen(src) + 1;
