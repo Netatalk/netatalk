@@ -245,8 +245,6 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
     free(buffer);
 
-#if !defined(NO_REAL_USER_NAME)
-
     namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
                             CH_UCS2, name, -1, username, sizeof(username));
     if (namelen == -1)
@@ -275,7 +273,6 @@ struct passwd *uam_getname(void *private, char *name, const int len)
         }
     }
     endpwent();
-#endif /* ! NO_REAL_USER_NAME */
 
     /* os x server doesn't keep anything useful if we do getpwent */
     return pwent ? getpwnam(name) : NULL;

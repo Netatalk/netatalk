@@ -183,7 +183,6 @@ struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
   if ((pwent = getpwnam(name)))
     return pwent;
 
-#ifndef NO_REAL_USER_NAME
   for (i = 0; i < len; i++)
     name[i] = tolower(name[i]);
 
@@ -201,7 +200,6 @@ struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
     }
   }
   endpwent();
-#endif /* NO_REAL_USER_NAME */
 
   /* os x server doesn't keep anything useful if we do getpwent */
   return pwent ? getpwnam(name) : NULL;
