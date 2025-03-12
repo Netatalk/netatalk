@@ -1,11 +1,11 @@
 # About Netatalk
 
-#### CI:
+#### Continuous Integration:
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/build.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/build.yml)
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/test.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/test.yml)
 [![Container Status](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml)
 
-#### Install:
+#### Get Netatalk:
 [![Project releases](https://img.shields.io/github/release/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/releases)
 [![Downloads](https://img.shields.io/github/downloads/Netatalk/netatalk/total)](https://github.com/Netatalk/netatalk/releases)
 [![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
