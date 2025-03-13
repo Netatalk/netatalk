@@ -141,56 +141,56 @@ specified in a volume specific section.
 You can use variables in volume names. The use of variables in paths is
 limited to $u.
 
-1.  if you specify an unknown variable, it will not get converted.
+1. if you specify an unknown variable, it will not get converted.
 
-2.  if you specify a known variable, but that variable doesn't have a
-    value, it will get ignored.
+2. if you specify a known variable, but that variable doesn't have a
+value, it will get ignored.
 
 The variables which can be used for substitutions are:
 
-$b
+> $b
 
-> basename
+> > basename
 
-$c
+> $c
 
-> client's ip address
+> > client's ip address
 
-$d
+> $d
 
-> volume pathname on server
+> > volume pathname on server
 
-$f
+> $f
 
-> full name (contents of the gecos field in the passwd file)
+> > full name (contents of the gecos field in the passwd file)
 
-$g
+> $g
 
-> group name
+> > group name
 
-$h
+> $h
 
-> hostname
+> > hostname
 
-$i
+> $i
 
-> client's ip, without port
+> > client's ip, without port
 
-$s
+> $s
 
-> server name (this can be the hostname)
+> > server name (this can be the hostname)
 
-$u
+> $u
 
-> user name (if guest, it is the user that guest is running as)
+> > user name (if guest, it is the user that guest is running as)
 
-$v
+> $v
 
-> volume name
+> > volume name
 
-$$
+> $$
 
-> prints dollar sign ($)
+> > prints dollar sign ($)
 
 # Explanation of Global Parameters
 
@@ -254,36 +254,36 @@ uams_dhx2.so").
 
 The most commonly used UAMs are:
 
-uams_guest.so
+> uams_guest.so
 
-> allows guest logins
+> > allows guest logins
 
-uams_clrtxt.so
+> uams_clrtxt.so
 
-> (uams_pam.so or uams_passwd.so) Allow logins with passwords transmitted
+> > (uams_pam.so or uams_passwd.so) Allow logins with passwords transmitted
 in the clear. Compatible with Mac OS 9 and earlier.
 
-uams_randnum.so
+> uams_randnum.so
 
-> allows Random Number and Two-Way Random Number Exchange for
+> > allows Random Number and Two-Way Random Number Exchange for
 authentication (requires a separate file containing the passwords,
 either the default *afppasswd* file or the one specified via
 "**passwd file**"). See **afppasswd**(1) for details.
 Compatible with Mac OS 9 and earlier.
 
-uams_dhx.so
+> uams_dhx.so
 
-> (uams_dhx_pam.so or uams_dhx_passwd.so) Allow Diffie-Hellman eXchange
+> > (uams_dhx_pam.so or uams_dhx_passwd.so) Allow Diffie-Hellman eXchange
 (DHX) for authentication.
 
-uams_dhx2.so
+> uams_dhx2.so
 
-> (uams_dhx2_pam.so or uams_dhx2_passwd.so) Allow Diffie-Hellman eXchange
-2 (DHX2) for authentication.
+> > (uams_dhx2_pam.so or uams_dhx2_passwd.so) Allow Diffie-Hellman eXchange 2
+(DHX2) for authentication.
 
-uam_gss.so
+> uam_gss.so
 
-> Allow Kerberos V for authentication (optional)
+> > Allow Kerberos V for authentication (optional)
 
 uam path = <path\> **(G)**
 
@@ -515,14 +515,14 @@ chmod request = <preserve (default) | ignore | simple\> **(G)**/**(V)**
 
 > Advanced permission control that deals with ACLs.
 
-- **ignore** - UNIX chmod() requests are completely ignored, use this
-  option to allow the parent directory's ACL inheritance full control
-  over new items.
+> - **ignore** - UNIX chmod() requests are completely ignored, use this
+option to allow the parent directory's ACL inheritance full control
+over new items.
 
-- **preserve** - preserve ZFS ACEs for named users and groups or POSIX ACL
-  group mask
+> - **preserve** - preserve ZFS ACEs for named users and groups or POSIX ACL
+group mask
 
-- **simple** - just to a chmod() as requested without any extra steps
+> - **simple** - just to a chmod() as requested without any extra steps
 
 close vol = <BOOLEAN\> (default: *no*) **(G)**
 
@@ -567,7 +567,7 @@ dircachesize = <number\> **(G)**
 directories and files. It is used to cache the full path to directories
 and CNIDs which considerably speeds up directory enumeration.
 
-Default size is 8192, maximum size is 131072. Given value is rounded up
+> Default size is 8192, maximum size is 131072. Given value is rounded up
 to nearest power of 2. Each entry takes about 100 bytes, which is not
 much, but remember that every afpd child process for every connected
 user has its cache.
@@ -583,7 +583,7 @@ force xattr with sticky bit = <BOOLEAN\> (default: *no*) `(G/V)`
 even though we may have write access to a directory, because if the
 sticky bit is set only the owner is allowed to write xattrs.
 
-By enabling this option Netatalk will write the metadata xattr as root.
+> By enabling this option Netatalk will write the metadata xattr as root.
 
 guest account = <name\> **(G)**
 
@@ -600,7 +600,7 @@ ignored attributes = <all | nowrite | nodelete | norename\> **(G)**/**(V)**
 > Specify a set of file and directory attributes that shall be ignored by
 the server, `all` includes all the other options.
 
-In OS X when the Finder sets a lock on a file/directory or you set the
+> In OS X when the Finder sets a lock on a file/directory or you set the
 BSD uchg flag in the Terminal, all three attributes are used. Thus in
 order to ignore the Finder lock/BSD uchg flag, add set *ignored
 attributes = all*.
@@ -611,11 +611,9 @@ legacy icon = <icon\> **(G)**
 Note that some versions of Classic Mac OS ignores this icon. Examples of
 valid icon styles:
 
-- **daemon**
-
-- **globe**
-
-- **sdcard**
+> - **daemon**
+> - **globe**
+> - **sdcard**
 
 login message = <message\> **(G)**/**(V)**
 
@@ -628,13 +626,11 @@ mimic model = <model\> **(G)**
 clients. Default is to let macOS choose. Requires netatalk to be built
 with Zeroconf. Examples:
 
-- **Laptop**
+> - **Laptop**
+> - **RackMount**
+> - **Tower**
 
-- **RackMount**
-
-- **Tower**
-
-A complete set of supported model codes by a macOS client can be found
+> A complete set of supported model codes by a macOS client can be found
 by inspecting system properties files, such as
 */System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist*
 on macOS 15 Sequoia.
@@ -708,7 +704,7 @@ especially sensitive to this.
     80: limit of Mac OS X 10.4/10.5 (default)
     255: limit of recent Mac OS X
 
-Mac OS 9 and earlier are not influenced by this, because Maccharset
+> Mac OS 9 and earlier are not influenced by this, because Maccharset
 volume name is always limited to 27 bytes.
 
 vol preset = <name\> **(G)**/**(V)**
@@ -729,12 +725,12 @@ log level = <type:level \[type:level ...\]\> **(G)**; log level = <type:level,\[
 > Specify that any message of a loglevel up to the given **log level**
 should be logged.
 
-By default afpd logs to syslog with a default logging setup equivalent
+> By default afpd logs to syslog with a default logging setup equivalent
 to **default:note**
 
-logtypes: default, afpdaemon, logger, uamsdaemon
+> logtypes: default, afpdaemon, logger, uamsdaemon
 
-loglevels: severe, error, warn, note, info, debug, debug6, debug7,
+> loglevels: severe, error, warn, note, info, debug, debug6, debug7,
 debug8, debug9, maxdebug
 
 > **NOTE**
@@ -849,7 +845,7 @@ seconds to detect changes in opened server windows. *Note*: Depending on
 the number of simultaneously connected clients and the network's speed,
 this can lead to a significant higher load on your network!
 
-Do not use this option any longer as present Netatalk correctly supports
+> Do not use this option any longer as present Netatalk correctly supports
 server notifications, allowing connected clients to update folder
 listings in case another client changed the contents.
 
@@ -864,16 +860,16 @@ map acls = <none|rights|mode\> **(G)**
 
 > none
 
-> no mapping of ACLs
+> > no mapping of ACLs
 
-rights
+> rights
 
-> effective permissions are mapped to UARights structure. This is the
+> > effective permissions are mapped to UARights structure. This is the
 default.
 
-mode
+> mode
 
-> ACLs are additionally mapped to the UNIX mode of the filesystem object.
+> > ACLs are additionally mapped to the UNIX mode of the filesystem object.
 
 If you want to be able to display ACLs on the client, you must setup
 both client and server as part on a authentication domain (directory
@@ -892,15 +888,13 @@ The following LDAP options must be configured for Netatalk:
 
 ldap auth method = <none|simple\> **(G)**
 
-> Authentication method: **none** | **simple**
+> none
 
-none
+> > anonymous LDAP bind
 
-> anonymous LDAP bind
+> simple
 
-simple
-
-> simple LDAP bind
+> > simple LDAP bind
 
 ldap auth dn = <dn\> **(G)**
 
@@ -917,7 +911,7 @@ be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or TLS
 respectively (if supported by the LDAP library). This is only needed for
 explicit ACL support in order to be able to query LDAP for UUIDs.
 
-You can use **afpldaptest**(1) to syntactically check your config.
+> You can use **afpldaptest**(1) to syntactically check your config.
 
 ldap userbase = <base dn\> **(G)**
 
@@ -939,7 +933,7 @@ ldap uuid attr = <dn\> **(G)**
 
 > Name of the LDAP attribute with the UUIDs.
 
-Note: this is used both for users and groups.
+> Note: this is used both for users and groups.
 
 ldap name attr = <dn\> **(G)**
 
@@ -954,7 +948,7 @@ ldap uuid string = <STRING\> **(G)**
 > Format of the uuid string in the directory. A series of x and -, where
 every x denotes a value 0-9a-f and every - is a separator.
 
-Default: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+> Default: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 ldap uuid encoding = <string | ms-guid (default: string)\> **(G)**
 
@@ -965,15 +959,15 @@ LDAP stores. If set to ms-guid, the internal UUID representation is
 converted to and from the binary format used in the objectGUID attribute
 found on objects in Active Directory when interacting with the server.
 
-See also the options **ldap user filter** and **ldap group filter**.
+> See also the options **ldap user filter** and **ldap group filter**.
 
-string
+> string
 
-> UUID is a string, use with e.g. OpenDirectory.
+> > UUID is a string, use with e.g. OpenDirectory.
 
-ms-guid
+> ms-guid
 
-> Binary objectGUID from Active Directory
+> > Binary objectGUID from Active Directory
 
 ldap user filter = <STRING (default: unused)\> **(G)**
 
@@ -981,7 +975,7 @@ ldap user filter = <STRING (default: unused)\> **(G)**
 Active Directory environments where users and groups are stored in the
 same directory subtree.
 
-Recommended setting for Active Directory: **objectClass=user**.
+> Recommended setting for Active Directory: **objectClass=user**.
 
 ldap group filter = <STRING (default: unused)\> **(G)**
 
@@ -989,7 +983,7 @@ ldap group filter = <STRING (default: unused)\> **(G)**
 Active Directory environments where users and groups are stored in the
 same directory subtree.
 
-Recommended setting for Active Directory: **objectClass=group**.
+> Recommended setting for Active Directory: **objectClass=group**.
 
 # Explanation of Volume Parameters
 
@@ -1041,13 +1035,13 @@ hosts allow = <IP host address/IP netmask bits \[ ... \]\> **(V)**
 network address may be specified either in dotted-decimal format for
 IPv4 or in hexadecimal format for IPv6.
 
-Example: hosts allow = 10.1.0.0/16 10.2.1.100 2001:0db8:1234::/48
+> Example: hosts allow = 10.1.0.0/16 10.2.1.100 2001:0db8:1234::/48
 
 hosts deny = <IP host address/IP netmask bits \[ ... \]\> **(V)**
 
 > Listed hosts and nets are rejected, all others are allowed.
 
-Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
+> Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
 
 cnid scheme = <backend\> **(V)**
 
@@ -1070,30 +1064,30 @@ ea = <sys|samba|ad|none\> (default: auto detect) **(V)**
 > Specify how Extended Attributes and Classic Mac OS resource forks are
 stored.
 
-By default, we attempt to enable **sys** with a fallback to **ad**.
+> By default, we attempt to enable **sys** with a fallback to **ad**.
 For the auto detection to work, the volume needs to be writable
 because we attempt to set an EA on the shared directory itself.
 If **read only = yes** is set, we fallback to **sys**.
 Use explicit "**ea = ad|none**" for read-only volumes where appropriate.
 
-sys
+> sys
 
-> Use filesystem Extended Attributes.
+> > Use filesystem Extended Attributes.
 
-samba
+> samba
 
-> Use filesystem Extended Attributes, but append a 0 byte to each xattr in
+> > Use filesystem Extended Attributes, but append a 0 byte to each xattr in
 order to be compatible with Samba's vfs_streams_xattr.
 
-ad
+> ad
 
-> Use AppleDouble v2 metadata stored as files in *.AppleDouble* directories.
+> > Use AppleDouble v2 metadata stored as files in *.AppleDouble* directories.
 This should only be used when the host's filesystem does not support
 Extended Attributes.
 
-none
+> none
 
-> No Extended Attributes support.
+> > No Extended Attributes support.
 
 > **WARNING**
 
@@ -1112,13 +1106,13 @@ casefold = <option\> **(V)**
 > The casefold option handles, if the case of filenames should be changed.
 The available options are:
 
-**tolower** - Lowercases names in both directions.
+> **tolower** - Lowercases names in both directions.
 
-**toupper** - Uppercases names in both directions.
+> **toupper** - Uppercases names in both directions.
 
-**xlatelower** - Client sees lowercase, server sees uppercase.
+> **xlatelower** - Client sees lowercase, server sees uppercase.
 
-**xlateupper** - Client sees uppercase, server sees lowercase.
+> **xlateupper** - Client sees uppercase, server sees lowercase.
 
 password = <password\> **(V)**
 
@@ -1132,7 +1126,7 @@ file perm = <mode\> **(V)**; directory perm = <mode\> **(V)**
 only, **directory perm** is for directories only. Don't use with
 "**unix priv = no**".
 
-## Example: Volume for a collaborative workgroup
+> **Example**: Volume for a collaborative workgroup
 
     file perm = 0660
     directory perm = 0770
@@ -1207,7 +1201,7 @@ files option). If this option is set to no (the default) then if a
 directory contains any non-vetoed files or directories then the
 directory delete will fail. This is usually what you want.
 
-If this option is set to yes, then Netatalk will attempt to recursively
+> If this option is set to yes, then Netatalk will attempt to recursively
 delete any files and directories within the vetoed directory.
 
 follow symlinks = <BOOLEAN\> (default: *no*) **(V)**

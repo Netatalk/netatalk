@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-21 07:01+0100\n"
+"POT-Creation-Date: 2025-03-13 21:12+0100\n"
 "PO-Revision-Date: 2025-01-25 15:05+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,9 +18,9 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1011 manpages/man5/afp.conf.5.md:1070
-#: manpages/man5/afp.conf.5.md:1105 manual/AppleTalk.md:154
-#: manual/Configuration.md:832 manual/Installation.md:4 manual/Upgrading.md:42
+#: manpages/man5/afp.conf.5.md:1061 manpages/man5/afp.conf.5.md:1097
+#: manual/AppleTalk.md:154 manual/Configuration.md:827 manual/Installation.md:4
+#: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -221,20 +221,20 @@ msgstr ""
 #: manual/Installation.md:79
 #, no-wrap
 msgid ""
-"  The default dbd CNID backend for netatalk uses Berkeley DB to store\n"
-"  unique file identifiers. At the time of writing you need at least\n"
-"  version 4.6.\n"
-msgstr "  書き込みの時に最低でもバージョン 4.6 が必要となる。\n"
+"    The default dbd CNID backend for netatalk uses Berkeley DB to store\n"
+"    unique file identifiers. At the time of writing you need at least\n"
+"    version 4.6.\n"
+msgstr "    デフォルトのdbd CNIDバックエンドは、Berkeley DBを使用して一意のファイル識別子を保存します。書き込みの時に最低でもバージョン 4.6 が必要となる。\n"
 
 #. type: Plain text
 #: manual/Installation.md:82
 #, no-wrap
 msgid ""
-"  The recommended version is 5.3, the final release under the permissive\n"
-"  Sleepycat license, and therefore the most widely distributed version.\n"
+"    The recommended version is 5.3, the final release under the permissive\n"
+"    Sleepycat license, and therefore the most widely distributed version.\n"
 msgstr ""
-"  推奨バージョンは 5.3 である Sleepycat\n"
-"  ライセンスで提供された最終リリースである。\n"
+"    推奨バージョンは 5.3 である Sleepycat\n"
+"    ライセンスで提供された最終リリースである。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:84
@@ -245,11 +245,11 @@ msgstr ""
 #: manual/Installation.md:87
 #, no-wrap
 msgid ""
-"  The iniparser library is used to parse the configuration files.\n"
-"  At least version 3.1 is required, while 4.0 or later is recommended.\n"
+"    The iniparser library is used to parse the configuration files.\n"
+"    At least version 3.1 is required, while 4.0 or later is recommended.\n"
 msgstr ""
-"  iniparser ライブラリは設定ファイルを解析するために使用される。\n"
-"  最低でもバージョン 3.1 が必要であり、4.0 以降が推奨される。\n"
+"    iniparser ライブラリは設定ファイルを解析するために使用される。\n"
+"    最低でもバージョン 3.1 が必要であり、4.0 以降が推奨される。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:89
@@ -260,11 +260,11 @@ msgstr ""
 #: manual/Installation.md:92
 #, no-wrap
 msgid ""
-"  Internal event callbacks in the netatalk service controller daemon are\n"
-"  built on libevent version 2.\n"
+"    Internal event callbacks in the netatalk service controller daemon are\n"
+"    built on libevent version 2.\n"
 msgstr ""
-"  netatalk サービス コントローラー デーモンの内部イベント\n"
-"  コールバックは、 libevent バージョン 2 に基づいて構築されている。\n"
+"    netatalk サービス コントローラー デーモンの内部イベント\n"
+"    コールバックは、 libevent バージョン 2 に基づいて構築されている。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:94
@@ -275,14 +275,14 @@ msgstr ""
 #: manual/Installation.md:98
 #, no-wrap
 msgid ""
-"  The [Libgcrypt](https://gnupg.org/software/libgcrypt/) library\n"
-"  supplies the encryption for the standard User Authentication Modules\n"
-"  (UAMs). They are: DHX2, DHCAST128 (a.k.a. DHX) and RandNum.\n"
+"    The [Libgcrypt](https://gnupg.org/software/libgcrypt/) library\n"
+"    supplies the encryption for the standard User Authentication Modules\n"
+"    (UAMs). They are: DHX2, DHCAST128 (a.k.a. DHX) and RandNum.\n"
 msgstr ""
-"  [Libgcrypt](https://gnupg.org/software/libgcrypt/)\n"
-"  ライブラリは、標準のユーザー認証モジュール (UAM)\n"
-"  の暗号化を提供する。これらは、DHX2、DHCAST128 (別名 DHX)、および\n"
-"  RandNum である。\n"
+"    [Libgcrypt](https://gnupg.org/software/libgcrypt/)\n"
+"    ライブラリは、標準のユーザー認証モジュール (UAM)\n"
+"    の暗号化を提供する。これらは、DHX2、DHCAST128 (別名 DHX)、および\n"
+"    RandNum である。\n"
 
 #. type: Title ####
 #: manual/Installation.md:99
@@ -308,18 +308,17 @@ msgstr "ACL と LDAP"
 #: manual/Installation.md:111
 #, no-wrap
 msgid ""
-"  LDAP is an open and industry-standard user directory protocol that\n"
-"  works in tandem with the advanced permissions scheme of ACL. On some\n"
-"  operating systems ACL and LDAP libraries are built in to the system,\n"
-"  while on others you have to install supporting packages to enable this\n"
-"  functionality.\n"
+"    LDAP is an open and industry-standard user directory protocol that\n"
+"    works in tandem with the advanced permissions scheme of ACL. On some\n"
+"    operating systems ACL and LDAP libraries are built in to the system,\n"
+"    while on others you have to install supporting packages to enable this\n"
+"    functionality.\n"
 msgstr ""
-"  LDAP は、ACL\n"
-"  の高度な権限スキームと連携して動作するオープンで業界標準のユーザー\n"
-"  ディレクトリ プロトコルである。一部のオペレーティング システムでは ACL\n"
-"  と LDAP ライブラリがシステムに組み込まれているが、他のオペレーティング\n"
-"  システムではこの機能を有効にするためにサポート\n"
-"  パッケージをインストールする必要がある。\n"
+"    LDAPは、ACLの高度な権限スキームと連携して動作するオープンで業界標準のユーザー\n"
+"    ディレクトリ プロトコルである。一部のオペレーティング システムではACL\n"
+"    とLDAPライブラリがシステムに組み込まれているが、他のオペレーティング\n"
+"    システムではこの機能を有効にするためにサポート\n"
+"    パッケージをインストールする必要がある。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:113
@@ -330,23 +329,23 @@ msgstr "Bonjour 用の Avahi または mDNSresponder"
 #: manual/Installation.md:117
 #, no-wrap
 msgid ""
-"  Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf) for automatic\n"
-"  service discovery. Netatalk can advertise AFP file sharing and Time\n"
-"  Machine volumes by using Avahi or mDNSResponder.\n"
+"    Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf) for automatic\n"
+"    service discovery. Netatalk can advertise AFP file sharing and Time\n"
+"    Machine volumes by using Avahi or mDNSResponder.\n"
 msgstr ""
-"  Mac OS X 10.2 以降では、自動サービス検出に Bonjour (別名 Zeroconf)\n"
-"  を使用する。 Netatalk は、Avahi または mDNSResponder を使用して AFP\n"
-"  ファイル共有と Time Machine ボリュームをアドバタイズできる。\n"
+"    Mac OS X 10.2 以降では、自動サービス検出に Bonjour (別名 Zeroconf)\n"
+"    を使用する。 Netatalk は、Avahi または mDNSResponder を使用して AFP\n"
+"    ファイル共有と Time Machine ボリュームをアドバタイズできる。\n"
 
 #. type: Plain text
 #: manual/Installation.md:120
 #, no-wrap
 msgid ""
-"  When using Avahi, D-Bus is also required, and the Avahi library must\n"
-"  have been built with D-Bus support.\n"
+"    When using Avahi, D-Bus is also required, and the Avahi library must\n"
+"    have been built with D-Bus support.\n"
 msgstr ""
-"  Avahi を使用する場合は、D-Bus または D-Bus サポートを有効になっている\n"
-"  Avahi ライブラリは必要になる。\n"
+"    Avahi を使用する場合は、D-Bus または D-Bus サポートを有効になっている\n"
+"    Avahi ライブラリは必要になる。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:122
@@ -357,25 +356,25 @@ msgstr "cmark もしくは cmark-gfm"
 #: manual/Installation.md:127
 #, no-wrap
 msgid ""
-"  Netatalk's documentation is authored in Markdown format.\n"
-"  The man page sources consist of standards-compliant CommonMark,\n"
-"  while the rest of the documentation is authored in GitHub-Flavored\n"
-"  Markdown.\n"
+"    Netatalk's documentation is authored in Markdown format.\n"
+"    The man page sources consist of standards-compliant CommonMark,\n"
+"    while the rest of the documentation is authored in GitHub-Flavored\n"
+"    Markdown.\n"
 msgstr ""
-"  Netatalk のドキュメントは Markdown 形式で作成されている。\n"
-"  マニュアル ページのソースは標準に準拠した CommonMark で構成され、\n"
-"  ドキュメントの残りの部分は GitHub 風の Markdown (gfm) で作成されている。\n"
+"    Netatalk のドキュメントは Markdown 形式で作成されている。\n"
+"    マニュアル ページのソースは標準に準拠した CommonMark で構成され、\n"
+"    ドキュメントの残りの部分は GitHub 風の Markdown (gfm) で作成されている。\n"
 
 #. type: Plain text
 #: manual/Installation.md:131
 #, no-wrap
 msgid ""
-"  You can use cmark to generate roff man pages from the Markdown sources,\n"
-"  and cmark-gfm to generate all documentation, including HTML pages.\n"
-"  If you have access to the latter, you don't need the former.\n"
+"    You can use cmark to generate roff man pages from the Markdown sources,\n"
+"    and cmark-gfm to generate all documentation, including HTML pages.\n"
+"    If you have access to the latter, you don't need the former.\n"
 msgstr ""
-"cmark を使用して Markdown ソースから roff マニュアル ページを生成し、cmark-gfm を使用して HTML ページを含むすべてのドキュメントを生成できる。\n"
-"後者は利用可能な場合は、前者は必要ない。\n"
+"    cmark を使用して Markdown ソースから roff マニュアル ページを生成し、cmark-gfm を使用して HTML ページを含むすべてのドキュメントを生成できる。\n"
+"    後者は利用可能な場合は、前者は必要ない。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:133
@@ -386,23 +385,23 @@ msgstr ""
 #: manual/Installation.md:137
 #, no-wrap
 msgid ""
-"  When using the Random Number UAMs and netatalk's own **afppasswd**\n"
-"  password manager, CrackLib can help protect against setting weak\n"
-"  passwords for authentication with netatalk.\n"
+"    When using the Random Number UAMs and netatalk's own **afppasswd**\n"
+"    password manager, CrackLib can help protect against setting weak\n"
+"    passwords for authentication with netatalk.\n"
 msgstr ""
-"  Random Number UAM と netatalk 独自の **afppasswd** パスワード\n"
-"  マネージャを使用する場合、CrackLib は netatalk\n"
-"  での認証に弱いパスワードを設定するのを防ぐのに役立つ。\n"
+"    Random Number UAM と netatalk 独自の **afppasswd** パスワード\n"
+"    マネージャを使用する場合、CrackLib は netatalk\n"
+"    での認証に弱いパスワードを設定するのを防ぐのに役立つ。\n"
 
 #. type: Plain text
 #: manual/Installation.md:140
 #, no-wrap
 msgid ""
-"  The CrackLib dictionary, which is sometimes distributed separately in\n"
-"  a runtime package, is also a requirement.\n"
+"    The CrackLib dictionary, which is sometimes distributed separately in\n"
+"    a runtime package, is also a requirement.\n"
 msgstr ""
-"  ランタイム パッケージで別途配布されることもある CrackLib\n"
-"  辞書も必須である。\n"
+"    ランタイム パッケージで別途配布されることもある CrackLib\n"
+"    辞書も必須である。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:142
@@ -413,13 +412,13 @@ msgstr ""
 #: manual/Installation.md:146
 #, no-wrap
 msgid ""
-"  D-Bus provides a mechanism for sending messages between processes,\n"
-"  used by multiple Netatalk features: Spotlight, Zeroconf with Avahi,\n"
-"  and the **afpstats** tool.\n"
+"    D-Bus provides a mechanism for sending messages between processes,\n"
+"    used by multiple Netatalk features: Spotlight, Zeroconf with Avahi,\n"
+"    and the **afpstats** tool.\n"
 msgstr ""
-"  D-Bus はプロセス間にメッセージを通信するメカニズムを提供し、下記\n"
-"  Netatalk 機能に使われる： Spotlight、Avahi を使用した Zeroconf、および\n"
-"  **afpstats** ツール。\n"
+"    D-Bus はプロセス間にメッセージを通信するメカニズムを提供し、下記\n"
+"    Netatalk 機能に使われる： Spotlight、Avahi を使用した Zeroconf、および\n"
+"    **afpstats** ツール。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:148
@@ -429,8 +428,8 @@ msgstr "GLib および GIO"
 #. type: Plain text
 #: manual/Installation.md:150
 #, no-wrap
-msgid "  Used by the **afpstats** tool to interface with D-Bus.\n"
-msgstr "  D-Bus とのインターフェースとして、**afpstats** ツールに使われる。\n"
+msgid "    Used by the **afpstats** tool to interface with D-Bus.\n"
+msgstr "    D-Bus とのインターフェースとして、**afpstats** ツールに使われる。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:152
@@ -441,17 +440,17 @@ msgstr ""
 #: manual/Installation.md:158
 #, no-wrap
 msgid ""
-"  iconv provides conversion routines for many character encodings.\n"
-"  Netatalk uses it to provide charsets it does not have built in\n"
-"  conversions for, like ISO-8859-1. On glibc systems, Netatalk can use\n"
-"  the glibc provided iconv implementation. Otherwise you can use the GNU\n"
-"  libiconv implementation.\n"
+"    iconv provides conversion routines for many character encodings.\n"
+"    Netatalk uses it to provide charsets it does not have built in\n"
+"    conversions for, like ISO-8859-1. On glibc systems, Netatalk can use\n"
+"    the glibc provided iconv implementation. Otherwise you can use the GNU\n"
+"    libiconv implementation.\n"
 msgstr ""
-"  iconv は、多くの文字エンコードの変換ルーチンを提供する。Netatalk\n"
-"  は、ISO-8859-1\n"
-"  など、組み込みの変換がない文字セットを提供するためにこれを使用する。glibc\n"
-"  システムでは、Netatalk は glibc が提供する iconv\n"
-"  実装を使用できる。それ以外の場合は、GNU libiconv 実装を使用できる。\n"
+"    iconv は、多くの文字エンコードの変換ルーチンを提供する。Netatalk\n"
+"    は、ISO-8859-1\n"
+"    など、組み込みの変換がない文字セットを提供するためにこれを使用する。glibc\n"
+"    システムでは、Netatalk は glibc が提供する iconv\n"
+"    実装を使用できる。それ以外の場合は、GNU libiconv 実装を使用できる。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:160
@@ -462,15 +461,15 @@ msgstr ""
 #: manual/Installation.md:165
 #, no-wrap
 msgid ""
-"  Kerberos v5 is a client-server based authentication protocol invented\n"
-"  at the Massachusetts Institute of Technology. With the Kerberos\n"
-"  library, netatalk can produce the GSS UAM library for authentication\n"
-"  with existing Kerberos infrastructure.\n"
+"    Kerberos v5 is a client-server based authentication protocol invented\n"
+"    at the Massachusetts Institute of Technology. With the Kerberos\n"
+"    library, netatalk can produce the GSS UAM library for authentication\n"
+"    with existing Kerberos infrastructure.\n"
 msgstr ""
-"  Kerberos v5 は、マサチューセッツ工科大学で発明されたクライアント\n"
-"  サーバー ベースの認証プロトコルである。Kerberos\n"
-"  ライブラリを使用すると、netatalk は既存の Kerberos\n"
-"  インフラストラクチャでの認証用に GSS UAM ライブラリを作成できる。\n"
+"    Kerberos v5 は、マサチューセッツ工科大学で発明されたクライアント\n"
+"    サーバー ベースの認証プロトコルである。Kerberos\n"
+"    ライブラリを使用すると、netatalk は既存の Kerberos\n"
+"    インフラストラクチャでの認証用に GSS UAM ライブラリを作成できる。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:167
@@ -481,15 +480,15 @@ msgstr "MySQL または MariaDB"
 #: manual/Installation.md:172
 #, no-wrap
 msgid ""
-"  By leveraging a MySQL-compatible client library, netatalk can be built\n"
-"  with a MySQL CNID backend that is highly scalable and reliable. The\n"
-"  administrator has to provide a separate database instance for use with\n"
-"  this backend.\n"
+"    By leveraging a MySQL-compatible client library, netatalk can be built\n"
+"    with a MySQL CNID backend that is highly scalable and reliable. The\n"
+"    administrator has to provide a separate database instance for use with\n"
+"    this backend.\n"
 msgstr ""
-"  MySQL 互換のクライアント ライブラリを活用することで、netatalk\n"
-"  は、スケーラビリティと信頼性に優れた MySQL CNID\n"
-"  バックエンドを使用して構築できる。管理者は、このバックエンドで使用するために別のデータベース\n"
-"  インスタンスを用意する必要がある。\n"
+"    MySQL 互換のクライアント ライブラリを活用することで、netatalk\n"
+"    は、スケーラビリティと信頼性に優れた MySQL CNID\n"
+"    バックエンドを使用して構築できる。管理者は、このバックエンドで使用するために別のデータベース\n"
+"    インスタンスを用意する必要がある。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:174
@@ -500,16 +499,16 @@ msgstr ""
 #: manual/Installation.md:179
 #, no-wrap
 msgid ""
-"  PAM provides a flexible mechanism for authenticating users. PAM was\n"
-"  invented by SUN Microsystems. Linux-PAM\n"
-"  is a suite of shared libraries that enable the local system\n"
-"  administrator to choose how applications authenticate users.\n"
+"    PAM provides a flexible mechanism for authenticating users. PAM was\n"
+"    invented by SUN Microsystems. Linux-PAM\n"
+"    is a suite of shared libraries that enable the local system\n"
+"    administrator to choose how applications authenticate users.\n"
 msgstr ""
-"  PAM は、ユーザーを認証するための柔軟なメカニズムを提供する。 PAM は\n"
-"  SUN Microsystems\n"
-"  によって発明された。Linux-PAM は、ローカル\n"
-"  システム管理者がアプリケーションによるユーザー認証方法を選択できるようにする共有ライブラリ\n"
-"  スイートである。\n"
+"    PAM は、ユーザーを認証するための柔軟なメカニズムを提供する。 PAM は\n"
+"    SUN Microsystems\n"
+"    によって発明された。Linux-PAM は、ローカル\n"
+"    システム管理者がアプリケーションによるユーザー認証方法を選択できるようにする共有ライブラリ\n"
+"    スイートである。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:181
@@ -520,13 +519,13 @@ msgstr ""
 #: manual/Installation.md:185
 #, no-wrap
 msgid ""
-"  Netatalk's administrative utility scripts rely on the Perl runtime,\n"
-"  version 5.8 or later. The required Perl modules include\n"
-"  *IO::Socket::IP* (asip-status) and *Net::DBus* (afpstats).\n"
+"    Netatalk's administrative utility scripts rely on the Perl runtime,\n"
+"    version 5.8 or later. The required Perl modules include\n"
+"    *IO::Socket::IP* (asip-status) and *Net::DBus* (afpstats).\n"
 msgstr ""
-"  Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン\n"
-"  5.8 以降に依存する。必須 Perl モジュールは以下： *IO::Socket::IP*\n"
-"  (asip-status) 又は *Net::DBus* (afpstats)。\n"
+"    Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン\n"
+"    5.8 以降に依存する。必須 Perl モジュールは以下： *IO::Socket::IP*\n"
+"    (asip-status) 又は *Net::DBus* (afpstats)。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:187
@@ -537,14 +536,14 @@ msgstr ""
 #: manual/Installation.md:192
 #, no-wrap
 msgid ""
-"  With the help of po4a, Netatalk's documentation can be translated\n"
-"  into other languages. It uses gettext to extract translatable\n"
-"  strings from source files and merge them with the translations\n"
-"  stored in PO files.\n"
+"    With the help of po4a, Netatalk's documentation can be translated\n"
+"    into other languages. It uses gettext to extract translatable\n"
+"    strings from source files and merge them with the translations\n"
+"    stored in PO files.\n"
 msgstr ""
-"  po4a の助けを借りて、Netatalk のドキュメントは他の言語に翻訳できる。gettext\n"
-"  を使用して、ソース ファイルから翻訳可能な文字列を抽出し、PO\n"
-"  ファイルに保存されている翻訳と結合する。\n"
+"    po4a の助けを借りて、Netatalk のドキュメントは他の言語に翻訳できる。gettext\n"
+"    を使用して、ソース ファイルから翻訳可能な文字列を抽出し、PO\n"
+"    ファイルに保存されている翻訳と結合する。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:194
@@ -554,22 +553,19 @@ msgstr "TCP ラッパー"
 #. type: Plain text
 #: manual/Installation.md:196
 #, no-wrap
-msgid "  Wietse Venema's network logger, also known as TCPD or LOG_TCP.\n"
-msgstr ""
-"  Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP\n"
-"  とも呼ばれる。\n"
+msgid "    Wietse Venema's network logger, also known as TCPD or LOG_TCP.\n"
+msgstr "    Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP とも呼ばれる。\n"
 
 #. type: Plain text
 #: manual/Installation.md:200
 #, no-wrap
 msgid ""
-"  Security options are: access control per host, domain and/or service;\n"
-"  detection of host name spoofing or host address spoofing; booby traps\n"
-"  to implement an early-warning system.\n"
+"    Security options are: access control per host, domain and/or service;\n"
+"    detection of host name spoofing or host address spoofing; booby traps\n"
+"    to implement an early-warning system.\n"
 msgstr ""
-"  セキュリティ\n"
-"  オプションは次のとおり。ホスト、ドメイン、および/またはサービスごとのアクセス制御、ホスト名のスプーフィングまたはホスト\n"
-"  アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装する。\n"
+"    セキュリティオプションは次のとおり。ホスト、ドメイン、および/またはサービスごとのアクセス制御、ホスト名のスプーフィングまたはホスト\n"
+"    アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装する。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:202
@@ -580,21 +576,20 @@ msgstr "Tracker もしくは TinySPARQL / LocalSearch"
 #: manual/Installation.md:210
 #, no-wrap
 msgid ""
-"  Netatalk uses [Tracker](https://tracker.gnome.org) or its later\n"
-"  incarnation\n"
-"  TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)\n"
-"  as the metadata backend for Spotlight\n"
-"  search indexing. The minimum required version is 0.7 as this was the\n"
-"  first version to support\n"
-"  [SPARQL](https://gnome.pages.gitlab.gnome.org/tracker/).\n"
+"    Netatalk uses [Tracker](https://tracker.gnome.org) or its later\n"
+"    incarnation\n"
+"    TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)\n"
+"    as the metadata backend for Spotlight\n"
+"    search indexing. The minimum required version is 0.7 as this was the\n"
+"    first version to support\n"
+"    [SPARQL](https://gnome.pages.gitlab.gnome.org/tracker/).\n"
 msgstr ""
-"  Netatalk は、Spotlight\n"
-"  検索インデックスのメタデータ バックエンドとして\n"
-"  [Tracker](https://tracker.gnome.org) またはそれ以降のバージョンである\n"
-"  TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)\n"
-"  を使用する。必要な最小限のバージョンは 0.7 である。これは\n"
-"  [SPARQL](https://gnome.pages.gitlab.gnome.org/tracker/)\n"
-"  をサポートする最初のバージョンだからである。\n"
+"    Netatalkは、Spotlight検索インデックスのメタデータ バックエンドとして\n"
+"    [Tracker](https://tracker.gnome.org) またはそれ以降のバージョンである\n"
+"    TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)\n"
+"    を使用する。必要な最小限のバージョンは 0.7 である。これは\n"
+"    [SPARQL](https://gnome.pages.gitlab.gnome.org/tracker/)\n"
+"    をサポートする最初のバージョンだからである。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:212
@@ -605,11 +600,11 @@ msgstr ""
 #: manual/Installation.md:215
 #, no-wrap
 msgid ""
-"  Samba's talloc library, a Yacc parser such as bison, and a lexer like\n"
-"  flex are also required for Spotlight.\n"
+"    Samba's talloc library, a Yacc parser such as bison, and a lexer like\n"
+"    flex are also required for Spotlight.\n"
 msgstr ""
-"  Spotlight には、Samba の talloc ライブラリ、bison などの Yacc\n"
-"  パーサー、flex などのレキサーも必要。\n"
+"    Spotlight には、Samba の talloc ライブラリ、bison などの Yacc\n"
+"    パーサー、flex などのレキサーも必要。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:217
@@ -620,12 +615,11 @@ msgstr ""
 #: manual/Installation.md:220
 #, no-wrap
 msgid ""
-"  The build system uses Perl and the Unicode Character Database to\n"
-"  generate Netatalk's Unicode character conversion sources.\n"
+"    The build system uses Perl and the Unicode Character Database to\n"
+"    generate Netatalk's Unicode character conversion sources.\n"
 msgstr ""
-"  ビルド システムは、Perl と Unicode\n"
-"  文字データベースを使用して、Netatalk の Unicode\n"
-"  文字変換ソースを生成する。\n"
+"    ビルド システムは、Perl と Unicode 文字データベースを使用して、NetatalkのUnicode\n"
+"    文字変換ソースを生成する。\n"
 
 #. type: Title ###
 #: manual/Installation.md:221
@@ -674,12 +668,12 @@ msgstr ""
 "トフォーム固有のスクリプトに加えて、systemd、openrc 用に提供されている。"
 
 #. type: Plain text
-#: manual/Installation.md:246
+#: manual/Installation.md:245
 msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
-"the build system to install the specific type of startup script(s)  you want "
-"by specifying the **with-init-style** option. For the syntax, please refer "
+"the build system to install the specific type of startup script(s) you want "
+"by specifying the **with-init-style** option.  For the syntax, please refer "
 "to the build system's help text."
 msgstr ""
 "ソースからビルドする場合、Netatalk ビルド システムは、どの initスタイルがプ"
@@ -689,7 +683,7 @@ msgstr ""
 "テキストを参照してください。"
 
 #. type: Plain text
-#: manual/Installation.md:251
+#: manual/Installation.md:250
 msgid ""
 "Since new Linux, \\*BSD, and Solaris-like distributions appear at regular "
 "intervals, and the startup procedure for the other systems mentioned above "
@@ -702,7 +696,7 @@ msgstr ""
 "ることをお勧めする。"
 
 #. type: Plain text
-#: manual/Installation.md:256
+#: manual/Installation.md:255
 msgid ""
 "If you use Netatalk as part of a fixed setup, like a Linux distribution, an "
 "RPM or a BSD package, things will probably have been arranged properly for "
@@ -715,7 +709,7 @@ msgstr ""
 "まる。"
 
 #. type: Plain text
-#: manual/Installation.md:259
+#: manual/Installation.md:258
 msgid ""
 "The following daemon need to be started by whatever startup script mechanism "
 "is used:"
@@ -724,12 +718,12 @@ msgstr ""
 "必要がある:"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:261
+#: manual/Installation.md:260
 msgid "netatalk"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:264
+#: manual/Installation.md:263
 msgid ""
 "In the absence of a startup script, you can also launch this daemon directly "
 "(as root), and kill it with SIGTERM when you are done with it."
@@ -738,7 +732,7 @@ msgstr ""
 "し、使い終わったら SIGTERM で終了することもできる。"
 
 #. type: Plain text
-#: manual/Installation.md:268
+#: manual/Installation.md:267
 msgid ""
 "Additionally, make sure that the configuration file *afp.conf* is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
@@ -749,7 +743,7 @@ msgstr ""
 "かどうかを問い合わせることができる。"
 
 #. type: Plain text
-#: manual/Installation.md:272
+#: manual/Installation.md:271
 msgid ""
 "If you want to run AppleTalk services, you also need to start the **atalkd** "
 "daemon, plus the optional **papd**, **timelord**, and **a2boot** daemons. "

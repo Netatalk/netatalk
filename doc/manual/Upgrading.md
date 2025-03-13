@@ -36,7 +36,7 @@ There are three major changes between Netatalk 2 and Netatalk 4:
 - one to rule them all: configure AFP settings and volumes in one file
 
 - obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and
-  *afp_ldap.conf*
+*afp_ldap.conf*
 
 > **WARNING**
 
@@ -48,7 +48,7 @@ There are three major changes between Netatalk 2 and Netatalk 4:
 - maps file extensions to Classic Mac OS type/creator
 
 - unlike 2.x, the mappings are disabled by default; uncomment the lines
-  in the file to enable them
+in the file to enable them
 
 - obsoletes *AppleVolumes.system*
 
@@ -60,53 +60,53 @@ and Classic Mac OS resource forks in extended attributes of the filesystem.
 - default backend (!)
 
 - requires a filesystem with Extended Attributes, fallback is AppleDouble v2
-  which is enabled with **ea = ad**
+which is enabled with **ea = ad**
 
 - converts filesystems from AppleDouble v2 to Extended Attributes on
-  the fly when accessed by clients (can be disabled with **convert appledouble**)
+the fly when accessed by clients (can be disabled with **convert appledouble**)
 
 - **dbd** can be used to do conversion in one shot
 
 Implementation details:
 
 - stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an
-  Extended Attributed named “*org.netatalk.Metadata*”
+Extended Attributed named “*org.netatalk.Metadata*”
 
-  - Additionally, on macOS hosts running Netatalk 4.1.0 or later,
+    - Additionally, on macOS hosts running Netatalk 4.1.0 or later,
     FinderInfo is natively stored in the file system and appears as an
     Extended Attribute named “*com.apple.FinderInfo*”
 
 - stores Mac ResourceFork either in
 
-  - an Extended Attribute named “*org.netatalk.ResourceFork*” on
+    - an Extended Attribute named “*org.netatalk.ResourceFork*” on
     Solaris w. ZFS, or in
 
-  - an extra AppleDouble file named “*._file*” for a file named “*file*”
+    - an extra AppleDouble file named “*._file*” for a file named “*file*”,
     or
 
-  - natively stored in the resource fork on macOS hosts as of Netatalk
+    - natively stored in the resource fork on macOS hosts as of Netatalk
     4.1.0.
 
 - the format of the .\_ file is exactly as the Mac’s CIFS client expects
-  it when accessing the same filesystem via a CIFS server (Samba), thus
-  you can have parallel access from Macs to the same dataset via AFP and
-  CIFS without the risk of loosing data (resources or metadata).
-  Accessing the same dataset with CIFS from Windows clients will still
-  break the coupling of “*file*” and “*._file*” on non ZFS filesystems
-  (see above), so for this we still need an enhanced Samba VFS module
-  (in the works).
+it when accessing the same filesystem via a CIFS server (Samba), thus
+you can have parallel access from Macs to the same dataset via AFP and
+CIFS without the risk of loosing data (resources or metadata).
+Accessing the same dataset with CIFS from Windows clients will still
+break the coupling of “*file*” and “*._file*” on non ZFS filesystems
+(see above), so for this we still need an enhanced Samba VFS module
+(in the works).
 
 ### Other major changes
 
 - New service controller daemon [netatalk](netatalk.html) which is
-  responsible for starting and restarting the AFP and CNID daemons. All
-  bundled start scripts have been updated, make sure to update yours!
+responsible for starting and restarting the AFP and CNID daemons. All
+bundled start scripts have been updated, make sure to update yours!
 
 - All CNID databases are now stored under *$prefix/var/netatalk/CNID/*
-  by default, rather than in the individual shared volume directories
+by default, rather than in the individual shared volume directories
 
 - Netatalk 2.x volume options “**usedots**” and “**upriv**” now enabled by
-  default
+default
 
 - Removed SLP and AFP proxy support
 

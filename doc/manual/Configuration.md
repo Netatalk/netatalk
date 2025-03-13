@@ -355,26 +355,21 @@ Several UAMs have been developed by Apple over the time, some by
 
 Netatalk supports the following ones by default:
 
-- "No User Authent" UAM (guest access
-  without authentication)
+- "No User Authent" UAM (guest access without authentication)
 
-- "Cleartxt Passwrd" UAM (no password
-  encryption)
+- "Cleartxt Passwrd" UAM (no password encryption)
 
-- "Randnum exchange"/"2-Way Randnum
-  exchange" UAMs (weak password
-  encryption, separate password storage)
+- "Randnum exchange"/"2-Way Randnum exchange" UAMs (weak password
+encryption, separate password storage)
 
-- "DHCAST128" UAM (a.k.a. DHX; stronger
-  password encryption)
+- "DHCAST128" UAM (a.k.a. DHX; stronger password encryption)
 
 - "DHX2" UAM (successor of DHCAST128)
 
 There exist other optional UAMs as well:
 
-- "Client Krb v2" UAM (Kerberos V,
-  suitable for "Single Sign On" Scenarios with macOS clients – see
-  below)
+- "Client Krb v2" UAM (Kerberos V, suitable for "Single Sign On" Scenarios
+with macOS clients – see below)
 
 You can configure which UAMs should be activated by defining
 "**uam list**" in **Global** section. **afpd** will log which UAMs it's using
@@ -399,47 +394,47 @@ have to support. If your network consists of exclusively macOS (Mac OS
 X) clients, DHX2 is sufficient, and provides the strongest encryption.
 
 - Unless you really have to supply guest access to your server's volumes
-  ensure that you disable "No User Authent" since it might lead
-  accidentally to unauthorized access. In case you must enable guest
-  access take care that you enforce this on a per volume base using the
-  access controls.
+ensure that you disable "No User Authent" since it might lead
+accidentally to unauthorized access. In case you must enable guest
+access take care that you enforce this on a per volume base using the
+access controls.
 
-  Note: "No User Authent" is required to use Apple II NetBoot services
-  (**a2boot**) to boot an Apple //e over AFP.
+    Note: "No User Authent" is required to use Apple II NetBoot services
+    (**a2boot**) to boot an Apple //e over AFP.
 
 - The "ClearTxt Passwrd" UAM is as bad as it sounds since passwords go
-  unencrypted over the wire. Try to avoid it at both the server's side
-  as well as on the client's.
+unencrypted over the wire. Try to avoid it at both the server's side
+as well as on the client's.
 
-  Note: If you want to provide Mac OS 8/9 clients with NetBoot-services
-  then you need uams_cleartxt.so since the AFP-client integrated into
-  the Mac's firmware can only deal with this basic form of
-  authentication.
+    Note: If you want to provide Mac OS 8/9 clients with NetBoot-services
+    then you need uams_cleartxt.so since the AFP-client integrated into
+    the Mac's firmware can only deal with this basic form of
+    authentication.
 
 - Since "Randnum exchange"/"2-Way Randnum exchange" uses only 56 bit DES
-  for encryption it should be avoided as well. Another disadvantage is
-  the fact that the passwords have to be stored in cleartext on the
-  server and that it doesn't integrate into both PAM scenarios or
-  classic /etc/shadow (you have to administrate passwords separately by
-  using the **afppasswd** utility, in order for clients to use these
-  UAMs)
+for encryption it should be avoided as well. Another disadvantage is
+the fact that the passwords have to be stored in cleartext on the
+server and that it doesn't integrate into both PAM scenarios or
+classic /etc/shadow (you have to administrate passwords separately by
+using the **afppasswd** utility, in order for clients to use these
+UAMs)
 
-  However, this is the strongest form of authentication that can be used
-  with Macintosh System Software 7.1 or earlier.
+    However, this is the strongest form of authentication that can be used
+    with Macintosh System Software 7.1 or earlier.
 
 - "DHCAST128" ("DHX") or "DHX2" should be the sweet spot for most people
-  since it combines stronger encryption with PAM integration.
+since it combines stronger encryption with PAM integration.
 
 - Using the Kerberos V ("Client Krb v2")
-  UAM, it's possible to implement real single sign on scenarios using
-  Kerberos tickets. The password is not sent over the network. Instead,
-  the user password is used to decrypt a service ticket for the
-  AppleShare server. The service ticket contains an encryption key for
-  the client and some encrypted data (which only the AppleShare server
-  can decrypt). The encrypted portion of the service ticket is sent to
-  the server and used to authenticate the user. Because of the way that
-  the afpd service principal detection is implemented, this
-  authentication method is vulnerable to man-in-the-middle attacks.
+UAM, it's possible to implement real single sign on scenarios using
+Kerberos tickets. The password is not sent over the network. Instead,
+the user password is used to decrypt a service ticket for the
+AppleShare server. The service ticket contains an encryption key for
+the client and some encrypted data (which only the AppleShare server
+can decrypt). The encrypted portion of the service ticket is sent to
+the server and used to authenticate the user. Because of the way that
+the afpd service principal detection is implemented, this
+authentication method is vulnerable to man-in-the-middle attacks.
 
 For a more detailed overview over the technical implications of the
 different UAMs, please have a look at Apple's [File Server
@@ -536,42 +531,42 @@ restarted afpd when you made changes to the settings). But there are a
 couple of reasons why you don't want to use this option at all:
 
 - Most users who need such a feature are probably already familiar with
-  using a VPN; it might be easier for the user to employ the same VPN
-  software in order to connect to the network on which the AFP server is
-  running, and then to access the AFP server as normal.
+using a VPN; it might be easier for the user to employ the same VPN
+software in order to connect to the network on which the AFP server is
+running, and then to access the AFP server as normal.
 
-  That being said, for the simple case of connecting to one specific AFP
-  server, a direct SSH connection is likely to perform better than a
-  general-purpose VPN; contrary to popular belief, tunneling via SSH
-  does **not** result in what's called "TCP-over-TCP meltdown", because
-  the AFP data that are being tunneled do not encapsulate TCP data.
+    That being said, for the simple case of connecting to one specific AFP
+    server, a direct SSH connection is likely to perform better than a
+    general-purpose VPN; contrary to popular belief, tunneling via SSH
+    does **not** result in what's called "TCP-over-TCP meltdown", because
+    the AFP data that are being tunneled do not encapsulate TCP data.
 
 - Since this SSH kludge isn't a normal UAM that integrates directly into
-  the AFP authentication mechanisms but instead uses a single flag
-  signalling clients whether they can **try** to establish a tunnel or
-  not, it makes life harder to see what's happening when things go
-  wrong.
+the AFP authentication mechanisms but instead uses a single flag
+signalling clients whether they can **try** to establish a tunnel or
+not, it makes life harder to see what's happening when things go
+wrong.
 
 - You cannot control which machines are logged on by Netatalk tools like
-  a **macusers** since all connection attempts seem to be made from
-  localhost.
+a **macusers** since all connection attempts seem to be made from
+localhost.
 
 - Indeed, to ensure that all AFP sessions are encrypted via SSH, you
-  need to limit afpd to connections that originate only from localhost
-  (e.g., by using Wietse Venema's TCP Wrappers, or by using suitable
-  firewall or packet-filtering facilities, etc.).
+need to limit afpd to connections that originate only from localhost
+(e.g., by using Wietse Venema's TCP Wrappers, or by using suitable
+firewall or packet-filtering facilities, etc.).
 
-  Otherwise, when you're using Mac OS X 10.2 through 10.3.3, you get the
-  opposite of what you'd expect: potentially unencrypted AFP
-  communications (including login credentials) being sent across the
-  network without a single notification that establishing the tunnel
-  failed. Apple fixed that with Mac OS X 10.3.4.
+    Otherwise, when you're using Mac OS X 10.2 through 10.3.3, you get the
+    opposite of what you'd expect: potentially unencrypted AFP
+    communications (including login credentials) being sent across the
+    network without a single notification that establishing the tunnel
+    failed. Apple fixed that with Mac OS X 10.3.4.
 
 - Encrypting all AFP sessions via SSH can lead to a significantly higher
-  load on the computer that is running the AFP server, because that
-  computer must also handle encryption; if the user is connecting
-  through a trusted network, then such encryption might be an
-  unnecessary overhead.
+load on the computer that is running the AFP server, because that
+computer must also handle encryption; if the user is connecting
+through a trusted network, then such encryption might be an
+unnecessary overhead.
 
 ## ACL Support
 
@@ -696,12 +691,12 @@ Architectural differences between POSIX ACLs and macOS ACLs especially
 involve:
 
 - No fine-granular permissions model. Like UNIX permissions POSIX ACLs
-  only differentiate between read, write and execute permissions.
+only differentiate between read, write and execute permissions.
 
 - Entries within an ACL are unordered.
 
 - POSIX ACLs can only grant rights. There is no way to explicitly deny
-  rights by an entry.
+rights by an entry.
 
 - UNIX permissions are integrated into an ACL as special entries.
 
@@ -723,10 +718,10 @@ The remaining entry types expand the traditional permissions model:
 - ACL_GROUP: grants access rights to a certain group.
 
 - ACL_MASK: limits the maximum access rights which can be granted by
-  entries of type ACL_GROUP_OBJ, ACL_USER and ACL_GROUP. As the name
-  suggests, this entry acts as a mask. Only one ACL_MASK entry is
-  allowed per ACL. If an ACL contains ACL_USER or ACL_GROUP entries, an
-  ACL_MASK entry must be present too, otherwise it is optional.
+entries of type ACL_GROUP_OBJ, ACL_USER and ACL_GROUP. As the name
+suggests, this entry acts as a mask. Only one ACL_MASK entry is
+allowed per ACL. If an ACL contains ACL_USER or ACL_GROUP entries, an
+ACL_MASK entry must be present too, otherwise it is optional.
 
 In order to maintain compatibility with applications not aware of ACLs,
 POSIX 1003.1e changes the semantics of system calls and utilities which
@@ -751,10 +746,10 @@ the result of the mapping process will be an approximation of the
 original ACL's semantic.
 
 - afpd silently discard entries which deny a set of permissions because
-  they they can't be represented within the POSIX architecture.
+they they can't be represented within the POSIX architecture.
 
 - As entries within POSIX ACLs are unordered, it is impossible to
-  preserve order.
+preserve order.
 
 - Inheritance control is subject to severe limitations as well:
 
@@ -767,7 +762,7 @@ original ACL's semantic.
     on inheritance will be ignored.
 
 - The lack of a fine-granular permission model on the POSIX side will
-  normally result in an increase of granted permissions.
+normally result in an increase of granted permissions.
 
 As macOS clients aren't aware of the POSIX 1003.1e specific relationship
 between UNIX permissions and ACL_MASK, afpd does not expose this feature
@@ -847,28 +842,28 @@ Solaris with Tracker from OpenCSW:
 
 - Large filesystems
 
-  Tracker on Linux uses the inotify Kernel filesystem change event API
-  for tracking filesystem changes. On large filesystems this may be
-  problematic since the inotify API doesn't offer recursive directory
-  watches but instead requires that for every subdirectory watches must
-  be added individually.
+    Tracker on Linux uses the inotify Kernel filesystem change event API
+    for tracking filesystem changes. On large filesystems this may be
+    problematic since the inotify API doesn't offer recursive directory
+    watches but instead requires that for every subdirectory watches must
+    be added individually.
 
-  On Solaris the FEN file event notification system is used. It is
-  unknown which limitations and resource consumption this Solaris
-  subsystem may have.
+    On Solaris the FEN file event notification system is used. It is
+    unknown which limitations and resource consumption this Solaris
+    subsystem may have.
 
-  We therefore recommend to disable live filesystem monitoring and let
-  Tracker periodically scan filesystems for changes instead, see the
-  [Tracker configuration options](#advanced-tracker-command-line-configuration)
-  enable-monitors and crawling-interval below.
+    We therefore recommend to disable live filesystem monitoring and let
+    Tracker periodically scan filesystems for changes instead, see the
+    [Tracker configuration options](#advanced-tracker-command-line-configuration)
+    enable-monitors and crawling-interval below.
 
 - Indexing home directories
 
-  A known limitation with the current implementation means that shared
-  volumes in a user's home directory does not get indexed by Spotlight.
+    A known limitation with the current implementation means that shared
+    volumes in a user's home directory does not get indexed by Spotlight.
 
-  As a workaround, keep the shared volumes you want to have indexed
-  elsewhere on the host filesystem.
+    As a workaround, keep the shared volumes you want to have indexed
+    elsewhere on the host filesystem.
 
 ### Using Tracker commandline tools on the server
 

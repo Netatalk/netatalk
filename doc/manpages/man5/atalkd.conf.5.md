@@ -81,19 +81,19 @@ special characters should be enclosed in quotation marks.
 
 Single interface on Solaris with auto-detected parameters.
 
-       le0
+      le0
 
 The same on Linux.
 
-       eth0
+      eth0
 
 Below is an example configuration file from a Sun 4/40. The machine has
 two interfaces, "le0" and "le1". The "le0" interface is
 configured automatically from other routers on the network. The machine
 is the only router for the "le1" interface.
 
-       le0
-       le1 -seed -net 9461-9471 -zone netatalk -zone Argus
+      le0
+      le1 -seed -net 9461-9471 -zone netatalk -zone Argus
 
 # See Also
 

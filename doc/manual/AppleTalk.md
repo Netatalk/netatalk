@@ -116,16 +116,16 @@ Several types of AppleTalk routers exist: seed, non-seed and so called
 soft-seed routers.
 
 - A seed router has its own configuration and publishes this into the
-  network segments it is configured for.
+    network segments it is configured for.
 
 - A non-seed router needs a seed router on the interface to which it is
-  connected to learn the network configuration. So this type of
-  AppleTalk router can work completely without manual configuration.
+    connected to learn the network configuration. So this type of
+    AppleTalk router can work completely without manual configuration.
 
 - A so called soft-seed router is exactly the same as a non-seed router
-  except the fact, that it can also remember the configuration of a seed
-  router and act as a replacement in case, the real seed router
-  disappears from the net.
+    except the fact, that it can also remember the configuration of a seed
+    router and act as a replacement in case, the real seed router
+    disappears from the net.
 
 Netatalk's atalkd can act as both a seed and a soft-seed router, even in
 a mixed mode, where it acts on one interface in this way and on the
@@ -197,14 +197,14 @@ You'll have to set the following options in atalkd.conf:
 
 - **-net** (use reasonable values between 1-65279 for each interface)
 
-  In case, this value is suppressed but -addr is present, the netrange
-  from this specific address will be used
+    In case, this value is suppressed but -addr is present, the netrange
+    from this specific address will be used
 
 - **-addr** (the net part must match the -net settings if present, the node
-  address should be between 142 and 255)
+    address should be between 142 and 255)
 
 - **-zone** (can be used multiple times in one single line, the first entry
-  is the default zone)
+    is the default zone)
 
 Note that you are able to set up "zone mapping", that means publishing
 exactly the same zone name on all AppleTalk segments, as well as

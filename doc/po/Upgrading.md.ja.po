@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-01 10:52+0100\n"
+"POT-Creation-Date: 2025-03-13 21:32+0100\n"
 "PO-Revision-Date: 2025-01-23 08:10+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,8 +17,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1062 manpages/man5/afp.conf.5.md:1098
-#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
+#: manpages/man5/afp.conf.5.md:1055 manpages/man5/afp.conf.5.md:1091
+#: manual/AppleTalk.md:154 manual/Configuration.md:827 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -124,13 +124,13 @@ msgstr ""
 "一つで設定すべてを指示するという点： AFP 及びボリュームの構成を共に一つのファ"
 "イルで設定することになるという点"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:40
 msgid ""
-"obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and "
+"- obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and "
 "*afp_ldap.conf*"
 msgstr ""
-"*afpd.conf*、 *netatalk.conf*、 *AppleVolumes.default* 及び、 "
+"- *afpd.conf*、 *netatalk.conf*、 *AppleVolumes.default* 及び、 "
 "*afp_ldap.conf* の廃止"
 
 #. type: Plain text
@@ -154,13 +154,13 @@ msgstr ""
 msgid "maps file extensions to Classic Mac OS type/creator"
 msgstr "Classic Mac OS type/creator と拡張子の関連付け"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:52
 msgid ""
-"unlike 2.x, the mappings are disabled by default; uncomment the lines in the "
-"file to enable them"
+"- unlike 2.x, the mappings are disabled by default; uncomment the lines in "
+"the file to enable them"
 msgstr ""
-"2.x とは異なり、マッピングはデフォルトで無効になっている。有効にするには、"
+"- 2.x とは異なり、マッピングはデフォルトで無効になっている。有効にするには、"
 "ファイル内の行のコメントを解除する"
 
 #. type: Bullet: '- '
@@ -189,23 +189,23 @@ msgstr ""
 msgid "default backend (!)"
 msgstr "デフォルトのバックエンドである（！）"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:64
 msgid ""
-"requires a filesystem with Extended Attributes, fallback is AppleDouble v2 "
+"- requires a filesystem with Extended Attributes, fallback is AppleDouble v2 "
 "which is enabled with **ea = ad**"
 msgstr ""
-"拡張属性のあるファイルシステムが必須。 さもなくば **ea = ad** オプションの使"
-"用が代替となる"
+"- 拡張属性のあるファイルシステムが必須。 さもなくば **ea = ad** オプションの"
+"使用が代替となる"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:67
 msgid ""
-"converts filesystems from AppleDouble v2 to Extended Attributes on the fly "
+"- converts filesystems from AppleDouble v2 to Extended Attributes on the fly "
 "when accessed by clients (can be disabled with **convert appledouble**)"
 msgstr ""
-"ファイルシステムを AppleDouble v2 から拡張属性への変換はアクセス時、その都度"
-"行われる（**convert appledouble** オプションを無効にすることも可能）"
+"- ファイルシステムを AppleDouble v2 から拡張属性への変換はアクセス時、その都"
+"度行われる（**convert appledouble** オプションを無効にすることも可能）"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:69
@@ -217,59 +217,57 @@ msgstr "一括で変換する場合 **dbd** を用いることができる"
 msgid "Implementation details:"
 msgstr "実装の詳細："
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:74
 msgid ""
-"stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an "
+"- stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an "
 "Extended Attributed named “*org.netatalk.Metadata*”"
 msgstr ""
-"Mac のメタデータ（すなわち FinderInfo、AFP フラグ、コメント、CNID）は "
+"- Mac のメタデータ（すなわち FinderInfo、AFP フラグ、コメント、CNID）は "
 "“*org.netatalk.Metadata*” という名前の拡張属性に保存される。"
 
-#. type: Bullet: '  - '
+#. type: Plain text
 #: manual/Upgrading.md:78
+#, no-wrap
 msgid ""
-"Additionally, on macOS hosts running Netatalk 4.1.0 or later, FinderInfo is "
-"natively stored in the file system and appears as an Extended Attribute "
-"named “*com.apple.FinderInfo*”"
-msgstr ""
-"さらに、Netatalk 4.1.0以降を実行しているmacOSホストでは、FinderInfo はファイ"
-"ルシステムにネイティブに保存され、\"com.apple.FinderInfo\" という名前の拡張属"
-"性として表示される。"
+"    - Additionally, on macOS hosts running Netatalk 4.1.0 or later,\n"
+"    FinderInfo is natively stored in the file system and appears as an\n"
+"    Extended Attribute named “*com.apple.FinderInfo*”\n"
+msgstr "- さらに、Netatalk 4.1.0以降を実行しているmacOSホストでは、FinderInfo はファイルシステムにネイティブに保存され、\"com.apple.FinderInfo\" という名前の拡張属性として表示される。\n"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:80
 msgid "stores Mac ResourceFork either in"
 msgstr "マックのリソースフォークは："
 
-#. type: Bullet: '  - '
+#. type: Plain text
 #: manual/Upgrading.md:83
+#, no-wrap
 msgid ""
-"an Extended Attribute named “*org.netatalk.ResourceFork*” on Solaris w. ZFS, "
-"or in"
-msgstr ""
-"ZFS を用いた Solaris では “*org.netatalk.ResourceFork*” という拡張属性に保存"
-"される。"
+"    - an Extended Attribute named “*org.netatalk.ResourceFork*” on\n"
+"    Solaris w. ZFS, or in\n"
+msgstr "- ZFS を用いた Solaris では “*org.netatalk.ResourceFork*” という拡張属性に保存される。\n"
 
-#. type: Bullet: '  - '
+#. type: Plain text
 #: manual/Upgrading.md:86
-msgid "an extra AppleDouble file named “*._file*” for a file named “*file*” or"
-msgstr ""
-"ないしは、ファイル名が “*file*” であるものに対して各々、“*._file*” という名の"
-"別の AppleDouble ファイルに保存される。"
-
-#. type: Bullet: '  - '
-#: manual/Upgrading.md:89
+#, no-wrap
 msgid ""
-"natively stored in the resource fork on macOS hosts as of Netatalk 4.1.0."
-msgstr ""
-"Netatalk 4.1.0 以降、macOS ホスト上のリソース フォークにネイティブに保存され"
-"ている。"
+"    - an extra AppleDouble file named “*._file*” for a file named “*file*”,\n"
+"    or\n"
+msgstr "- ないしは、ファイル名が “*file*” であるものに対して各々、“*._file*” という名の別の AppleDouble ファイルに保存される。\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
+#: manual/Upgrading.md:89
+#, no-wrap
+msgid ""
+"    - natively stored in the resource fork on macOS hosts as of Netatalk\n"
+"    4.1.0.\n"
+msgstr "- Netatalk 4.1.0 以降、macOS ホスト上のリソース フォークにネイティブに保存されている。\n"
+
+#. type: Plain text
 #: manual/Upgrading.md:98
 msgid ""
-"the format of the .\\_ file is exactly as the Mac’s CIFS client expects it "
+"- the format of the .\\_ file is exactly as the Mac’s CIFS client expects it "
 "when accessing the same filesystem via a CIFS server (Samba), thus you can "
 "have parallel access from Macs to the same dataset via AFP and CIFS without "
 "the risk of loosing data (resources or metadata).  Accessing the same "
@@ -277,7 +275,7 @@ msgid ""
 "“*file*” and “*._file*” on non ZFS filesystems (see above), so for this we "
 "still need an enhanced Samba VFS module (in the works)."
 msgstr ""
-"\".\\_\" ファイルのフォーマットは、 たとえそのファイルシステムに CIFS サー"
+"- \".\\_\" ファイルのフォーマットは、 たとえそのファイルシステムに CIFS サー"
 "バー (Samba) 経由でアクセスした場合でも、 マックの CIFS クライアントが想定し"
 "ているフォーマットと全く同じである。 なので、データを失う危険性（リソースもメ"
 "タデータも）なく、 マックから同じデータセットに AFP 経由と CIFS 経由と並行し"
@@ -292,35 +290,35 @@ msgstr ""
 msgid "Other major changes"
 msgstr "そのほかの主要な変更点"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:104
 msgid ""
-"New service controller daemon [netatalk](netatalk.html) which is responsible "
-"for starting and restarting the AFP and CNID daemons. All bundled start "
-"scripts have been updated, make sure to update yours!"
+"- New service controller daemon [netatalk](netatalk.html) which is "
+"responsible for starting and restarting the AFP and CNID daemons. All "
+"bundled start scripts have been updated, make sure to update yours!"
 msgstr ""
-"AFP 及び CNID デーモンの起動・再起動を担う新しいサービスコントローラデーモン "
-"[netatalk](netatalk.html) の導入。バンドルされているスタートスクリプトが すべ"
-"て更新されているため、自分の環境でもアップデートされているか確認する必要あ"
-"り！"
+"- AFP 及び CNID デーモンの起動・再起動を担う新しいサービスコントローラデーモ"
+"ン [netatalk](netatalk.html) の導入。バンドルされているスタートスクリプトが "
+"すべて更新されているため、自分の環境でもアップデートされているか確認する必要"
+"あり！"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:107
 msgid ""
-"All CNID databases are now stored under *$prefix/var/netatalk/CNID/* by "
+"- All CNID databases are now stored under *$prefix/var/netatalk/CNID/* by "
 "default, rather than in the individual shared volume directories"
 msgstr ""
-"CNID データベースはデフォルトで *$prefix/var/netatalk/CNID/* 以下に保存され"
+"- CNID データベースはデフォルトで *$prefix/var/netatalk/CNID/* 以下に保存され"
 "る。以前は各共有ボリュームにて保存されていた。"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/Upgrading.md:110
 msgid ""
-"Netatalk 2.x volume options “**usedots**” and “**upriv**” now enabled by "
+"- Netatalk 2.x volume options “**usedots**” and “**upriv**” now enabled by "
 "default"
 msgstr ""
-"Netatalk 2.x のボリュームオプション “**usedots**” 及び “**upriv**” はデフォル"
-"トとなった。"
+"- Netatalk 2.x のボリュームオプション “**usedots**” 及び “**upriv**” はデフォ"
+"ルトとなった。"
 
 #. type: Bullet: '- '
 #: manual/Upgrading.md:112
