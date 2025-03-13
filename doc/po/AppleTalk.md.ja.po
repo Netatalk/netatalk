@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-01 19:55+0100\n"
+"POT-Creation-Date: 2025-03-13 21:12+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -16,8 +16,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1050 manpages/man5/afp.conf.5.md:1085
-#: manual/AppleTalk.md:154 manual/Configuration.md:832 manual/Installation.md:4
+#: manpages/man5/afp.conf.5.md:1061 manpages/man5/afp.conf.5.md:1097
+#: manual/AppleTalk.md:154 manual/Configuration.md:827 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -346,36 +346,32 @@ msgstr ""
 "AppleTalk ルータには、シード ルータ、非シード ルータ、いわゆるソフト シード "
 "ルータなど、いくつかの種類がある。"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/AppleTalk.md:120
+#, no-wrap
 msgid ""
-"A seed router has its own configuration and publishes this into the network "
-"segments it is configured for."
-msgstr ""
-"シード ルータには独自の構成があり、その構成を、そのルータが構成されているネッ"
-"トワーク セグメントに公開する。"
+"- A seed router has its own configuration and publishes this into the\n"
+"    network segments it is configured for.\n"
+msgstr "- シード ルータには独自の構成があり、その構成を、そのルータが構成されているネットワーク セグメントに公開する。\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/AppleTalk.md:124
+#, no-wrap
 msgid ""
-"A non-seed router needs a seed router on the interface to which it is "
-"connected to learn the network configuration. So this type of AppleTalk "
-"router can work completely without manual configuration."
-msgstr ""
-"非シード ルータは、ネットワーク構成を学習するために、接続先のインターフェイス"
-"にシード ルータが必要。したがって、このタイプの AppleTalk ルータは、手動設定"
-"なしで完全に動作する。"
+"- A non-seed router needs a seed router on the interface to which it is\n"
+"    connected to learn the network configuration. So this type of\n"
+"    AppleTalk router can work completely without manual configuration.\n"
+msgstr "- 非シード ルータは、ネットワーク構成を学習するために、接続先のインターフェイスにシード ルータが必要。したがって、このタイプの AppleTalk ルータは、手動設定なしで完全に動作する。\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/AppleTalk.md:129
+#, no-wrap
 msgid ""
-"A so called soft-seed router is exactly the same as a non-seed router except "
-"the fact, that it can also remember the configuration of a seed router and "
-"act as a replacement in case, the real seed router disappears from the net."
-msgstr ""
-"いわゆるソフトシード ルータは、シード ルータの設定を記憶し、実際のシード ルー"
-"タがネットから消えた場合に代わりとして動作できることを除けば、非シード ルータ"
-"とまったく同じ。"
+"- A so called soft-seed router is exactly the same as a non-seed router\n"
+"    except the fact, that it can also remember the configuration of a seed\n"
+"    router and act as a replacement in case, the real seed router\n"
+"    disappears from the net.\n"
+msgstr "- いわゆるソフトシード ルータは、シード ルータの設定を記憶し、実際のシード ルータがネットから消えた場合に代わりとして動作できることを除けば、非シード ルータとまったく同じ。\n"
 
 #. type: Plain text
 #: manual/AppleTalk.md:133
@@ -546,28 +542,25 @@ msgstr "**-net** (各インターフェースに 1 ～ 65279 の適切な値を�
 #: manual/AppleTalk.md:202
 #, no-wrap
 msgid ""
-"  In case, this value is suppressed but -addr is present, the netrange\n"
-"  from this specific address will be used\n"
-msgstr ""
-"  この値が抑制されていても -addr が存在する場合は、この特定のアドレスの\n"
-"  netrange が使用される\n"
+"    In case, this value is suppressed but -addr is present, the netrange\n"
+"    from this specific address will be used\n"
+msgstr "    この値が抑制されていても -addr が存在する場合は、この特定のアドレスのnetrangeが使用される\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/AppleTalk.md:205
+#, no-wrap
 msgid ""
-"**-addr** (the net part must match the -net settings if present, the node "
-"address should be between 142 and 255)"
-msgstr ""
-"**-addr** (net 部分は -net 設定 (存在する場合)  と一致する必要がある。ノード "
-"アドレスは 142 ～ 255 の範囲である必要がある)"
+"- **-addr** (the net part must match the -net settings if present, the node\n"
+"    address should be between 142 and 255)\n"
+msgstr "- **-addr** (net 部分は -net 設定 (存在する場合) と一致する必要がある。ノード アドレスは 142 ～ 255 の範囲である必要がある)\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manual/AppleTalk.md:208
+#, no-wrap
 msgid ""
-"**-zone** (can be used multiple times in one single line, the first entry is "
-"the default zone)"
-msgstr ""
-"**-zone** (1行に複数回使用できる。最初のエントリはデフォルトのゾーンになる。)"
+"- **-zone** (can be used multiple times in one single line, the first entry\n"
+"    is the default zone)\n"
+msgstr "- **-zone** (1行に複数回使用できる。最初のエントリはデフォルトのゾーンになる。)\n"
 
 #. type: Plain text
 #: manual/AppleTalk.md:216

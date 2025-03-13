@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-01-29 12:40+0100\n"
+"POT-Creation-Date: 2025-03-13 21:12+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -87,7 +87,7 @@ msgstr "説明"
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1278
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1343
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
@@ -109,7 +109,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1280
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1345
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
@@ -141,7 +141,7 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1273 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1338 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
@@ -262,8 +262,8 @@ msgid "> Show version and exit.\n"
 msgstr "> バージョンを表示してから終了する。\n"
 
 #. type: Title ###
-#: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:581
-#: manual/Configuration.md:826
+#: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:576
+#: manual/Configuration.md:821
 #, no-wrap
 msgid "Configuration"
 msgstr "設定"
@@ -421,31 +421,29 @@ msgstr ""
 msgid "Stop the to be upgraded old version of Netatalk"
 msgstr "これからアップグレードする古いバージョンのNetatalkを停止する"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:136
+#, no-wrap
 msgid ""
-"Using the old Berkeley DB utilities run `db_recover -h <path to .AppleDB>`"
-msgstr ""
-"古いBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBのパス"
-">` を実行する"
+"- Using the old Berkeley DB utilities run\n"
+"`db_recover -h <path to .AppleDB>`\n"
+msgstr "- 古いBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBのパス>` を実行する\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:139
+#, no-wrap
 msgid ""
-"Using the new Berkeley DB utilities run `db_upgrade -v -h <path to .AppleDB> "
-"-f cnid2.db`"
-msgstr ""
-"新しいBerkeley DBユーティリティを使って、`db_upgrade -v -h <.AppleDBのパス> "
-"-f cnid2.db` を実行する"
+"- Using the new Berkeley DB utilities run\n"
+"`db_upgrade -v -h <path to .AppleDB> -f cnid2.db`\n"
+msgstr "- 新しいBerkeley DBユーティリティを使って、`db_upgrade -v -h <.AppleDBのパス> -f cnid2.db` を実行する\n"
 
-#. type: Bullet: '- '
+#. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:142
+#, no-wrap
 msgid ""
-"Again using the new Berkeley DB utilities run `db_checkpoint -1 -h <path "
-"to .AppleDB>`"
-msgstr ""
-"再び新しいBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBの"
-"パス>` を実行する"
+"- Again using the new Berkeley DB utilities run\n"
+"`db_checkpoint -1 -h <path to .AppleDB>`\n"
+msgstr "- 再び新しいBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBのパス>` を実行する\n"
 
 #. type: Bullet: '- '
 #: manpages/man8/cnid_dbd.8.md:144
