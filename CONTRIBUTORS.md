@@ -30,7 +30,7 @@ original afile/achfile/acleandir implementation
 
 - Alain Richard <alain.richard@equation.fr>
 - David R Bosso <dbosso@ltsc.ucsb.edu>
-- Joe Clarke <marcus@marcuscom.com>
+- Joe Clarke <jclarke@marcuscom.com>
 - Jonathan Newman <jnewman@mudpup.com>
 - Lance Levsen <l.levsen@printwest.com>
 - Matthew Keller <kellermg@potsdam.edu>
@@ -81,7 +81,7 @@ original afile/achfile/acleandir implementation
 - Jonas Smedegaard <dr@jones.dk> (Debian GNU/Linux)
 - Daniel Markstedt <daniel@mindani.net> (Debian GNU/Linux)
 - Andrew Bauer <zonexpertconsulting@outlook.com> (Fedora)
-- Joe Clarke <marcus@FreeBSD.org> (FreeBSD)
+- Joe Clarke <jclarke@marcuscom.com> (FreeBSD)
 - Eric Knibbe (Homebrew)
 - Blake Garner (MacPorts)
 - David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)

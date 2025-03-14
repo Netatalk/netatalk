@@ -6,7 +6,7 @@ use File::Basename;
 use vars qw($MAIN_PID $NETATALK_PROCESS $AFPD_PROCESS $PS_STR $MATCH_STR $ASIP_PORT_NO $ASIP_PORT $LSOF);
 
 # Written for linux; may have to be modified for your brand of Unix.
-# Support for FreeBSD added by Joe Clarke <marcus@marcuscom.com>.
+# Support for FreeBSD added by Joe Clarke <jclarke@marcuscom.com>.
 # Support Solaris added by Frank Lahm <franklahm@googlemail.com>.
 # Support has also been added for 16 character usernames.
 
