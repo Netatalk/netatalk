@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Joe Marcus Clarke (marcus@marcuscom.com)
+ * Copyright (c) 2002 Joe Marcus Clarke (jclarke@marcuscom.com)
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.

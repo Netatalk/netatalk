@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002 Joe Marcus Clarke (marcus@marcuscom.com)
+ * Copyright (c) 2002 Joe Marcus Clarke (jclarke@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
  *
  * mangle, demangle (filename):
