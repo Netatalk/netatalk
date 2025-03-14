@@ -227,6 +227,11 @@ force group = <group\> **(G)**
 > This specifies a UNIX group name that will be assigned as the default
 primary group for all users connecting to this server.
 
+guest account = <name\> **(G)**
+
+> Specifies the user that guests should use (default is **nobody**). The name
+must be a valid user on the host system.
+
 k5 keytab = <path\> **(G)**; k5 service = <service\> **(G)**; k5 realm = <realm\> **(G)**
 
 > These are required if the server supports the Kerberos 5 authentication
@@ -379,7 +384,7 @@ but to listen for any incoming request. The network address may be
 specified either in dotted-decimal format for IPv4 or in hexadecimal
 format for IPv6.
 
-IPv6 address + port combination must use URL the format using square
+> IPv6 address + port combination must use URL the format using square
 brackets \[IPv6\]:port
 
 > **NOTE**
@@ -392,28 +397,17 @@ afp port = <port number\> **(G)**
 sets the default port applied when none specified in an **afp listen**
 option.
 
-appletalk = <BOOLEAN\> (default: *no*) **(G)**
+afp read locks = <BOOLEAN\> (default: *no*) **(G)**
 
-> Enables support for AFP-over-Appletalk. This option requires that your
-operating system supports the AppleTalk networking protocol.
+> Whether to apply locks to the byte region read in FPRead calls. The AFP
+spec mandates this, but it's not really in line with UNIX semantics and
+is a performance hog.
 
 cnid listen = <ip address\[:port\] \[ip address\[:port\] ...\]\> **(G)**
 
 > Specifies the IP address and port that the CNID server should listen on.
 This should match the address and port of the **cnid server** option
 for most deployments. The default is **localhost:4700**.
-
-ddp address = <ddp address\> **(G)**
-
-> Specifies the DDP address of the server. The default is to auto-assign
-an address (0.0). This is only useful if you are running AppleTalk on
-more than one interface.
-
-ddp zone = <ddp zone\> **(G)**
-
-> Specifies the AppleTalk zone to register the server in. The default is
-to register the server in the default zone of the last interface
-configured by the system.
 
 disconnect time = <number\> **(G)**
 
@@ -491,43 +485,13 @@ zeroconf = <BOOLEAN\> (default: *yes*) **(G)**
 > Whether to use automatic Zeroconf service
 registration if Avahi or mDNSResponder were compiled in.
 
-## Miscellaneous Options
+## CNID Database Backend Options
 
-afp read locks = <BOOLEAN\> (default: *no*) **(G)**
+Global configurations specific to the CNID database backend, which
+controls how the database is stored and accessed.
 
-> Whether to apply locks to the byte region read in FPRead calls. The AFP
-spec mandates this, but it's not really in line with UNIX semantics and
-is a performance hug.
-
-afpstats = <BOOLEAN\> (default: *no*) **(G)**
-
-> Whether to provide AFP runtime statistics (connected users, open
-volumes) via dbus.
-
-basedir regex = <regex\> **(H)**
-
-> Regular expression which matches the parent directory of the user homes.
-If **basedir regex** contains symlink, you must set the canonicalized
-absolute path. In the simple case this is just a path i.e.
-**basedir regex = /home**
-
-chmod request = <preserve (default) | ignore | simple\> **(G)**/**(V)**
-
-> Advanced permission control that deals with ACLs.
-
-> - **ignore** - UNIX chmod() requests are completely ignored, use this
-option to allow the parent directory's ACL inheritance full control
-over new items.
-
-> - **preserve** - preserve ZFS ACEs for named users and groups or POSIX ACL
-group mask
-
-> - **simple** - just to a chmod() as requested without any extra steps
-
-close vol = <BOOLEAN\> (default: *no*) **(G)**
-
-> Whether to close volumes possibly opened by clients when they're removed
-from the configuration and the configuration is reloaded.
+For granular control over the CNID database backend, see the Volume Parameters
+section below.
 
 cnid mysql host = <MySQL server address\> **(G)**
 
@@ -555,11 +519,28 @@ for the CNID dbd backend. This should match the address and port of the
 > The network address may be specified either in dotted-decimal format
 for IPv4 or in hexadecimal format for IPv6.
 
-dbus daemon = <path\> **(G)**
+vol dbpath = <path\> **(G)**/**(V)**
 
-> Sets the path to dbus-daemon binary used by the Spotlight feature. Can
-be used when the compile-time default path does not match the runtime
-environment.
+> Sets the path where the database information will be stored. You have to
+specify a writable location, even if the volume is read only.
+
+vol dbnest = <BOOLEAN\> (default: *no*) **(G)**
+
+> Setting this option to true brings back Netatalk 2 behaviour of storing
+the CNID database in a folder called .AppleDB inside the volume root of
+each share.
+
+## Miscellaneous Options
+
+afpstats = <BOOLEAN\> (default: *no*) **(G)**
+
+> Whether to provide AFP runtime statistics (connected users, open
+volumes) via dbus.
+
+close vol = <BOOLEAN\> (default: *no*) **(G)**
+
+> Whether to close volumes possibly opened by clients when they're removed
+from the configuration and the configuration is reloaded.
 
 dircachesize = <number\> **(G)**
 
@@ -585,16 +566,6 @@ sticky bit is set only the owner is allowed to write xattrs.
 
 > By enabling this option Netatalk will write the metadata xattr as root.
 
-guest account = <name\> **(G)**
-
-> Specifies the user that guests should use (default is nobody). The name
-must be a valid user on the host system.
-
-home name = <name\> **(H)**
-
-> AFP user home volume name. The default is *$u's home*. The name must
-contain "*$u*".
-
 ignored attributes = <all | nowrite | nodelete | norename\> **(G)**/**(V)**
 
 > Specify a set of file and directory attributes that shall be ignored by
@@ -605,24 +576,9 @@ BSD uchg flag in the Terminal, all three attributes are used. Thus in
 order to ignore the Finder lock/BSD uchg flag, add set *ignored
 attributes = all*.
 
-legacy icon = <icon\> **(G)**
-
-> Sets the shared volume icon displayed in the Finder in Classic Mac OS.
-Note that some versions of Classic Mac OS ignores this icon. Examples of
-valid icon styles:
-
-> - **daemon**
-> - **globe**
-> - **sdcard**
-
-login message = <message\> **(G)**/**(V)**
-
-> Sets a message to be displayed when clients logon to the server. The
-message should be in **unix charset**. Extended characters are allowed.
-
 mimic model = <model\> **(G)**
 
-> Specifies a custom icon for the mounted AFP volume on macOS / Mac OS X
+> Specifies a custom icon for the mounted AFP volume on macOS (Mac OS X)
 clients. Default is to let macOS choose. Requires netatalk to be built
 with Zeroconf. Examples:
 
@@ -655,6 +611,40 @@ solaris share reservations = <BOOLEAN\> (default: *yes*) **(G)**
 > Use share reservations on Solaris. Solaris CIFS server uses this too, so
 this makes a lock coherent multi protocol server.
 
+veto message = <BOOLEAN\> (default: *no*) **(G)**
+
+> Send optional AFP messages for vetoed files. Then whenever a client
+tries to access any file or directory with a vetoed name, it will be
+sent an AFP message indicating the name and the directory.
+
+volnamelen = <number\> **(G)**
+
+> Max length of UTF8-MAC volume name for Mac OS X. Note that Hangul is
+especially sensitive to this.
+
+    73: limit of Mac OS X 10.1
+    80: limit of Mac OS X 10.4/10.5 (default)
+    255: limit of recent Mac OS X
+
+> Mac OS 9 and earlier are not influenced by this, because Maccharset
+volume name is always limited to 27 bytes.
+
+vol preset = <name\> **(G)**/**(V)**
+
+> Use section <name\> as option preset for all volumes (when set in the
+\[Global\] section) or for one volume (when set in that volume's
+section).
+
+## Spotlight Options
+
+Configure Netatalk's Spotlight compatibility layer.
+
+dbus daemon = <path\> **(G)**
+
+> Sets the path to dbus-daemon binary used by the Spotlight feature. Can
+be used when the compile-time default path does not match the runtime
+environment.
+
 sparql results limit = <NUMBER\> (default: *UNLIMITED*) **(G)**
 
 > Impose a limit on the number of results queried from Tracker or
@@ -678,42 +668,9 @@ spotlight expr = <BOOLEAN\> (default: *yes*) **(G)**
 
 > Whether to allow the use of logic expression in searches.
 
-veto message = <BOOLEAN\> (default: *no*) **(G)**
-
-> Send optional AFP messages for vetoed files. Then whenever a client
-tries to access any file or directory with a vetoed name, it will be
-sent an AFP message indicating the name and the directory.
-
-vol dbpath = <path\> **(G)**/**(V)**
-
-> Sets the path where the database information will be stored. You have to
-specify a writable location, even if the volume is read only.
-
-vol dbnest = <BOOLEAN\> (default: *no*) **(G)**
-
-> Setting this option to true brings back Netatalk 2 behaviour of storing
-the CNID database in a folder called .AppleDB inside the volume root of
-each share.
-
-volnamelen = <number\> **(G)**
-
-> Max length of UTF8-MAC volume name for Mac OS X. Note that Hangul is
-especially sensitive to this.
-
-    73: limit of Mac OS X 10.1
-    80: limit of Mac OS X 10.4/10.5 (default)
-    255: limit of recent Mac OS X
-
-> Mac OS 9 and earlier are not influenced by this, because Maccharset
-volume name is always limited to 27 bytes.
-
-vol preset = <name\> **(G)**/**(V)**
-
-> Use section <name\> as option preset for all volumes (when set in the
-\[Global\] section) or for one volume (when set in that volume's
-section).
-
 ## Logging Options
+
+Control what kinds of messages are logged, and where they are logged.
 
 log file = <logfile\> **(G)**
 
@@ -824,37 +781,25 @@ fce notify script = <PATH\> **(G)**
 contrib/shell_utils/fce_ev_script.sh from the Netatalk sources for an
 example script.
 
-## Debug Parameters
-
-These options are useful for debugging only.
-
-tickleval = <number\> **(G)**
-
-> Sets the tickle timeout interval (in seconds). Defaults to 30.
-
-timeout = <number\> **(G)**
-
-> Specify the number of tickles to send before timing out a connection.
-The default is 4, therefore a connection will timeout after 2 minutes.
-
-client polling = <BOOLEAN\> (default: *no*) **(G)**
-
-> With this option enabled, afpd won't advertise that it is capable of
-server notifications, so that connected clients poll the server every 10
-seconds to detect changes in opened server windows. *Note*: Depending on
-the number of simultaneously connected clients and the network's speed,
-this can lead to a significant higher load on your network!
-
-> Do not use this option any longer as present Netatalk correctly supports
-server notifications, allowing connected clients to update folder
-listings in case another client changed the contents.
-
 ## Options for ACL handling
 
 By default, the effective permission of the authenticated user are only
 mapped to the mentioned UARights permission structure, not the UNIX
 mode. You can adjust this behaviour with the configuration option
 **map acls**:
+
+chmod request = <preserve (default) | ignore | simple\> **(G)**/**(V)**
+
+> Advanced permission control that deals with ACLs.
+
+> - **ignore** - UNIX chmod() requests are completely ignored, use this
+option to allow the parent directory's ACL inheritance full control
+over new items.
+
+> - **preserve** - preserve ZFS ACEs for named users and groups or POSIX ACL
+group mask
+
+> - **simple** - just to a chmod() as requested without any extra steps
 
 map acls = <none|rights|mode\> **(G)**
 
@@ -985,19 +930,115 @@ same directory subtree.
 
 > Recommended setting for Active Directory: **objectClass=group**.
 
+## Classic Options
+
+Enable Netatalk features that are only relevant for Classic Mac OS or Apple II
+clients. See also the Charset options elsewhere in this manual.
+
+appletalk = <BOOLEAN\> (default: *no*) **(G)**
+
+> Enables support for AFP-over-Appletalk. This option requires that your
+operating system supports the AppleTalk networking protocol.
+
+ddp address = <ddp address\> **(G)**
+
+> Specifies the DDP address of the server. The default is to auto-assign
+an address (0.0). This is only useful if you are running AppleTalk on
+more than one interface.
+
+ddp zone = <ddp zone\> **(G)**
+
+> Specifies the AppleTalk zone to register the server in. The default is
+to register the server in the default zone of the last interface
+configured by the system.
+
+legacy icon = <icon\> **(G)**
+
+> Sets the shared volume icon displayed in the Finder in Classic Mac OS.
+Note that some versions of Classic Mac OS ignores this icon. Examples of
+valid icon styles:
+
+> - **daemon**
+> - **globe**
+> - **sdcard**
+
+legacy volume size = <BOOLEAN\> (default: *no*) **(V)**
+
+> Limit disk size reporting to 2GB for legacy clients. This can be used
+for older Macintoshes running System 7.1 or earlier and using newer
+AppleShare clients.
+
+login message = <message\> **(G)**/**(V)**
+
+> Sets a message to be displayed when Classic Mac OS clients
+log on to the server.
+The message should be in **unix charset**.
+Extended characters are allowed.
+
+prodos = <BOOLEAN\> (default: *no*) **(V)**
+
+> Enable ProDOS support. This option should only be enabled for volumes
+you expect to netboot an Apple II from. In addition to setting the boot
+flag on the volume, it restricts the volume free space reported to the client
+to 32MB.
+
+## Debug Parameters
+
+These options are useful for debugging only. Do **NOT** enable them in
+production environments!
+
+tickleval = <number\> **(G)**
+
+> Sets the tickle timeout interval (in seconds). Defaults to 30.
+
+timeout = <number\> **(G)**
+
+> Specify the number of tickles to send before timing out a connection.
+The default is 4, therefore a connection will timeout after 2 minutes.
+
+client polling = <BOOLEAN\> (default: *no*) **(G)**
+
+> With this option enabled, afpd won't advertise that it is capable of
+server notifications, so that connected clients poll the server every 10
+seconds to detect changes in opened server windows.
+
 # Explanation of Volume Parameters
 
-## Parameters
+## Home Section Parameters
 
-The section name defines the volume name. No two volumes may have the
-same name. The volume name cannot contain the ':' character. The volume
-name is mangled if it is very long. Mac charset volume name is limited
-to 27 characters. UTF8-MAC volume name is limited to volnamelen
-parameter.
+Special parameters that only apply to the home volume.
+
+basedir regex = <regex\> **(H)**
+
+> Regular expression which matches the parent directory of the user homes.
+If **basedir regex** contains symlink, you must set the canonicalized
+absolute path. In the simple case this is just a path i.e.
+**basedir regex = /home**
+
+home name = <name\> **(H)**
+
+> AFP user home volume name. The default is *$u's home*. The name must
+contain "*$u*".
+
+## Volume Sections Parameters
+
+Each volume should at least define **path** and **volume name**.
 
 path = <PATH\> **(V)**
 
 > The path name must be a fully qualified path name.
+
+volume name = <STRING\> (default: section name in lowercase) **(V)**
+
+> The volume name option specifies the name of the shared AFP volume.
+When not set, this defaults to the name of the ini file section
+where the volume is defined, converted to lowercase.
+
+> No two volumes may have the same name.
+The volume name cannot contain the ':' character.
+The volume name is mangled if it is very long.
+Mac charset volume name is limited to 27 characters.
+UTF8-MAC volume name is limited to volnamelen parameter.
 
 vol size limit = <size in MiB\> **(V)**
 
@@ -1227,18 +1268,6 @@ this option is useful for is making files that start with a dot
 invisible on Mac OS 9. It's completely useless on Mac OS X, as both in
 Finder and in Terminal files starting with a dot are hidden anyway.
 
-legacy volume size = <BOOLEAN\> (default: *no*) **(V)**
-
-> Limit disk size reporting to 2GB for legacy clients. This can be used
-for older Macintoshes running System 7.1 or earlier and using newer
-AppleShare clients.
-
-volume name = <STRING\> (default: section name in lowercase) **(V)**
-
-> The volume name option specifies the name of the shared AFP volume.
-It defaults to the name of the ini file section where the volume is defined,
-converted to lowercase.
-
 network ids = <BOOLEAN\> (default: *yes*) **(V)**
 
 > Whether the server support network ids. Setting this to *no* will result
@@ -1249,16 +1278,10 @@ preexec close = <BOOLEAN\> (default: *no*) **(V)**
 > A non-zero return code from preexec close the volume being immediately,
 preventing clients to mount/see the volume in question.
 
-prodos = <BOOLEAN\> (default: *no*) **(V)**
-
-> Enable ProDOS support. This option should only be enabled for volumes
-you expect to netboot an Apple II from. In addition to setting the boot
-flag on the volume, it restricts the volume free space shown to 32MB.
-
 read only = <BOOLEAN\> (default: *no*) **(V)**
 
-> Specifies the share as being read only for all users. Overwrites
-**ea = auto** with **ea = none**
+> Specifies the share as being read only for all users.
+Forces **ea = sys**.
 
 search db = <BOOLEAN\> (default: *no*) **(V)**
 
