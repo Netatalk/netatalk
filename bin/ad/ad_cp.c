@@ -316,6 +316,10 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
          */
         type = FILE_TO_DIR;
 
+    if (type != FILE_TO_FILE && type != FILE_TO_DIR && type != DIR_TO_DNE) {
+        ERROR("Invalid operation type");
+    }
+
     /*
      * Keep an inverted copy of the umask, for use in correcting
      * permissions on created directories when not using -p.
@@ -354,6 +358,7 @@ static int copy(const char *path,
                 struct FTW *ftw)
 {
     static int base = 0;
+    enum op local_type = type;
 
     struct stat to_stat;
     int dne;
@@ -380,7 +385,7 @@ static int copy(const char *path,
      * If we are in case (2) above, we need to append the
      * source name to the target name.
      */
-    if (type != FILE_TO_FILE) {
+    if (local_type != FILE_TO_FILE) {
         /*
          * Need to remember the roots of traversals to create
          * correct pathnames.  If there's a directory being
