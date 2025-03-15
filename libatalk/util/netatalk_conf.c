@@ -2141,6 +2141,14 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     char *q = NULL;
     char *r = NULL;
     char val[MAXVAL];
+    char *configfiles = NULL;
+    char *token = NULL;
+    char *saveptr = NULL;
+    FILE *combined_file = NULL;
+    char temp_filename[MAXPATHLEN] = {0};
+    char buffer[4096];
+    FILE *current_file = NULL;
+    size_t bytes_read;
 
     if (processname != NULL)
         set_processname(processname);
@@ -2153,11 +2161,69 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
 
-    become_root();
-    config = iniparser_load(AFPObj->options.configfile);
-    unbecome_root();
-    if (config == NULL)
-        return -1;
+    if (strchr(options->configfile, ',') != NULL) {
+        snprintf(temp_filename, sizeof(temp_filename), "%s/afp_combined_XXXXXX", tmpdir());
+        int temp_fd = mkstemp(temp_filename);
+        if (temp_fd == -1) {
+            LOG(log_error, logtype_afpd, "Failed to create temporary file: %s", strerror(errno));
+            EC_FAIL;
+        }
+
+        combined_file = fdopen(temp_fd, "w");
+        if (!combined_file) {
+            close(temp_fd);
+            unlink(temp_filename);
+            LOG(log_error, logtype_afpd, "Failed to open temporary file: %s", strerror(errno));
+            EC_FAIL;
+        }
+
+        EC_NULL_LOG( configfiles = strdup(options->configfile) );
+        token = strtok_r(configfiles, ",", &saveptr);
+        while (token != NULL) {
+            /* Trim whitespace */
+            while (*token && isspace(*token))
+                token++;
+
+            LOG(log_debug, logtype_afpd, "Processing config file: %s", token);
+
+            become_root();
+            current_file = fopen(token, "r");
+            unbecome_root();
+
+            if (current_file == NULL) {
+                LOG(log_error, logtype_afpd, "Failed to open config file %s: %s",
+                    token, strerror(errno));
+                token = strtok_r(NULL, ",", &saveptr);
+                continue;
+            }
+
+            fprintf(combined_file, "\n# Begin included file: %s\n", token);
+
+            /* Copy the content of the current file to the combined file */
+            while ((bytes_read = fread(buffer, 1, sizeof(buffer), current_file)) > 0) {
+                fwrite(buffer, 1, bytes_read, combined_file);
+            }
+
+            fprintf(combined_file, "\n# End included file: %s\n", token);
+
+            fclose(current_file);
+            token = strtok_r(NULL, ",", &saveptr);
+        }
+
+        fclose(combined_file);
+        become_root();
+        config = iniparser_load(temp_filename);
+        unbecome_root();
+        unlink(temp_filename);
+    } else {
+        become_root();
+        config = iniparser_load(options->configfile);
+        unbecome_root();
+    }
+
+    if (config == NULL) {
+        EC_FAIL_LOG("Failed to load configuration file(s): %s", options->configfile);
+    }
     AFPObj->iniconfig = config;
 
     /* [Global] */

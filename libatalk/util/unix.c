@@ -229,6 +229,20 @@ char *stripped_slashes_basename(char *p)
     return (strrchr(p, '/') ? strrchr(p, '/') + 1 : p);
 }
 
+/****************************************************************************
+ Find a suitable temporary directory. The result should be copied immediately
+  as it may be overwritten by a subsequent call.
+****************************************************************************/
+
+const char *tmpdir(void)
+{
+    char *p;
+
+    if ((p = getenv("TMPDIR")))
+        return p;
+    return "/tmp";
+}
+
 /*********************************************************************************
  * chdir(), chmod(), chown(), stat() wrappers taking an additional option.
  * Currently the only used options are O_NOFOLLOW, used to switch between symlink

@@ -46,20 +46,7 @@
 #endif
 
 #include <atalk/logger.h>
-
-/****************************************************************************
- Find a suitable temporary directory. The result should be copied immediately
-  as it may be overwritten by a subsequent call.
-****************************************************************************/
-
-static const char *tmpdir(void)
-{
-    char *p;
-
-    if ((p = getenv("TMPDIR")))
-        return p;
-    return "/tmp";
-}
+#include <atalk/util.h>
 
 /****************************************************************************
 This is a utility function of afprun().
