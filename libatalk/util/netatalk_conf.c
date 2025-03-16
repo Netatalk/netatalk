@@ -819,7 +819,7 @@ dictionary *parse_config_files(const char *configfile)
         become_root();
         config = iniparser_load(configfile);
         unbecome_root();
-        EC_EXIT_STATUS(config);
+        return config;
     }
 
     /* Multiple config files, need to combine them */
@@ -880,7 +880,7 @@ dictionary *parse_config_files(const char *configfile)
 EC_CLEANUP:
     if (configfiles)
         free(configfiles);
-    EC_EXIT;
+    return config;
 }
 
 /*!
