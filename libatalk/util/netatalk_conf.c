@@ -793,6 +793,97 @@ static int vdgoption_bool(const dictionary *conf, const char *vol, const char *o
 }
 
 /*!
+ * Load and parse configuration file(s)
+ *
+ * Handles multiple configuration files separated by commas
+ * by combining them into a temporary file before parsing
+ *
+ * @param configfile  (r) path to configuration file(s), comma-separated
+ * @returns           dictionary pointer on success, NULL on error
+ */
+dictionary *parse_config_files(const char *configfile)
+{
+    EC_INIT;
+    dictionary *config = NULL;
+    char *configfiles = NULL;
+    char *token = NULL;
+    char *saveptr = NULL;
+    FILE *combined_file = NULL;
+    char temp_filename[MAXPATHLEN] = {0};
+    char buffer[4096];
+    FILE *current_file = NULL;
+    size_t bytes_read;
+
+    if (strchr(configfile, ',') == NULL) {
+        /* Single config file, load directly */
+        become_root();
+        config = iniparser_load(configfile);
+        unbecome_root();
+        EC_EXIT_STATUS(config);
+    }
+
+    /* Multiple config files, need to combine them */
+    snprintf(temp_filename, sizeof(temp_filename), "%s/afp_combined_XXXXXX", tmpdir());
+    int temp_fd = mkstemp(temp_filename);
+    if (temp_fd == -1) {
+        LOG(log_error, logtype_afpd, "Failed to create temporary file: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    combined_file = fdopen(temp_fd, "w");
+    if (!combined_file) {
+        close(temp_fd);
+        unlink(temp_filename);
+        LOG(log_error, logtype_afpd, "Failed to open temporary file: %s", strerror(errno));
+        EC_FAIL;
+    }
+
+    EC_NULL_LOG( configfiles = strdup(configfile) );
+    token = strtok_r(configfiles, ",", &saveptr);
+    while (token != NULL) {
+        /* Trim whitespace */
+        while (*token && isspace(*token))
+            token++;
+
+        LOG(log_debug, logtype_afpd, "Processing config file: %s", token);
+
+        become_root();
+        current_file = fopen(token, "r");
+        unbecome_root();
+
+        if (current_file == NULL) {
+            LOG(log_error, logtype_afpd, "Failed to open config file %s: %s",
+                token, strerror(errno));
+            token = strtok_r(NULL, ",", &saveptr);
+            continue;
+        }
+
+        fprintf(combined_file, "\n# Begin included file: %s\n", token);
+
+        /* Copy the content of the current file to the combined file */
+        while ((bytes_read = fread(buffer, 1, sizeof(buffer), current_file)) > 0) {
+            fwrite(buffer, 1, bytes_read, combined_file);
+        }
+
+        fprintf(combined_file, "\n# End included file: %s\n", token);
+
+        fclose(current_file);
+        token = strtok_r(NULL, ",", &saveptr);
+    }
+
+    fclose(combined_file);
+    become_root();
+    config = iniparser_load(temp_filename);
+    unbecome_root();
+    unlink(temp_filename);
+
+EC_CLEANUP:
+    if (configfiles)
+        free(configfiles);
+    EC_EXIT;
+}
+
+/*!
  * Create volume struct
  *
  * @param obj      (r) handle
@@ -1705,36 +1796,13 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         }
     } else {
         LOG(log_debug, logtype_afpd, "load_volumes: no volumes yet");
-        EC_ZERO_LOG( lstat(obj->options.configfile, &st) );
         obj->options.volfile.mtime = st.st_mtime;
-    }
-
-    /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
-
-    become_root();
-    fd = open(obj->options.configfile, O_RDONLY);
-    unbecome_root();
-
-    while (retries < 2) {
-        if ((read_lock(fd, 0, SEEK_SET, 0)) != 0) {
-            retries++;
-            if (!retries) {
-                LOG(log_error, logtype_afpd, "readvolfile: can't lock configfile \"%s\"",
-                    obj->options.configfile);
-                EC_FAIL;
-            }
-            sleep(1);
-            continue;
-        }
-        break;
     }
 
     if (obj->iniconfig)
         iniparser_freedict(obj->iniconfig);
     LOG(log_debug, logtype_afpd, "load_volumes: loading: %s", obj->options.configfile);
-    become_root();
-    obj->iniconfig = iniparser_load(obj->options.configfile);
-    unbecome_root();
+    obj->iniconfig = parse_config_files(obj->options.configfile);
 
     EC_ZERO_LOG( readvolfile(obj, pwresult) );
 
@@ -2099,21 +2167,13 @@ struct vol *getvolbyname(const char *name)
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
     EC_INIT;
-    dictionary *config;
+    dictionary *config = NULL;
     struct afp_options *options = &AFPObj->options;
     int c _U_;
     char *p = NULL;
     char *q = NULL;
     char *r = NULL;
     char val[MAXVAL];
-    char *configfiles = NULL;
-    char *token = NULL;
-    char *saveptr = NULL;
-    FILE *combined_file = NULL;
-    char temp_filename[MAXPATHLEN] = {0};
-    char buffer[4096];
-    FILE *current_file = NULL;
-    size_t bytes_read;
 
     if (processname != NULL)
         set_processname(processname);
@@ -2126,66 +2186,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
 
-    if (strchr(options->configfile, ',') != NULL) {
-        snprintf(temp_filename, sizeof(temp_filename), "%s/afp_combined_XXXXXX", tmpdir());
-        int temp_fd = mkstemp(temp_filename);
-        if (temp_fd == -1) {
-            LOG(log_error, logtype_afpd, "Failed to create temporary file: %s", strerror(errno));
-            EC_FAIL;
-        }
-
-        combined_file = fdopen(temp_fd, "w");
-        if (!combined_file) {
-            close(temp_fd);
-            unlink(temp_filename);
-            LOG(log_error, logtype_afpd, "Failed to open temporary file: %s", strerror(errno));
-            EC_FAIL;
-        }
-
-        EC_NULL_LOG( configfiles = strdup(options->configfile) );
-        token = strtok_r(configfiles, ",", &saveptr);
-        while (token != NULL) {
-            /* Trim whitespace */
-            while (*token && isspace(*token))
-                token++;
-
-            LOG(log_debug, logtype_afpd, "Processing config file: %s", token);
-
-            become_root();
-            current_file = fopen(token, "r");
-            unbecome_root();
-
-            if (current_file == NULL) {
-                LOG(log_error, logtype_afpd, "Failed to open config file %s: %s",
-                    token, strerror(errno));
-                token = strtok_r(NULL, ",", &saveptr);
-                continue;
-            }
-
-            fprintf(combined_file, "\n# Begin included file: %s\n", token);
-
-            /* Copy the content of the current file to the combined file */
-            while ((bytes_read = fread(buffer, 1, sizeof(buffer), current_file)) > 0) {
-                fwrite(buffer, 1, bytes_read, combined_file);
-            }
-
-            fprintf(combined_file, "\n# End included file: %s\n", token);
-
-            fclose(current_file);
-            token = strtok_r(NULL, ",", &saveptr);
-        }
-
-        fclose(combined_file);
-        become_root();
-        config = iniparser_load(temp_filename);
-        unbecome_root();
-        unlink(temp_filename);
-    } else {
-        become_root();
-        config = iniparser_load(options->configfile);
-        unbecome_root();
-    }
-
+    config = parse_config_files(options->configfile);
     if (config == NULL) {
         EC_FAIL_LOG("Failed to load configuration file(s): %s", options->configfile);
     }
