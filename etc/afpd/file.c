@@ -1283,10 +1283,13 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
 {
     struct vol	*s_vol, *d_vol;
     struct dir	*dir;
-    char	*newname, *p, *upath;
+    char	*newname;
+    char	*p;
+    char	*upath = NULL;
     struct path *s_path;
     uint32_t	sdid, ddid;
-    int         err, retvalue = AFP_OK;
+    int         err = AFP_OK;
+    int         retvalue = AFP_OK;
     uint16_t	svid, dvid;
 
     struct adouble ad, *adp;
@@ -1407,6 +1410,9 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     setvoltime(obj, d_vol );
 
 copy_exit:
+    if (upath && err == AFP_OK) {
+        fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+    }
     ad_close( adp, ADFLAGS_DF |ADFLAGS_HF | ADFLAGS_SETSHRMD);
     return( retvalue );
 }
