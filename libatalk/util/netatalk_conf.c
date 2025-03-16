@@ -858,14 +858,14 @@ dictionary *parse_config_files(const char *configfile)
             continue;
         }
 
-        fprintf(combined_file, "\n# Begin included file: %s\n", token);
+        fprintf(combined_file, "\n; Begin included file: %s\n", token);
 
         /* Copy the content of the current file to the combined file */
         while ((bytes_read = fread(buffer, 1, sizeof(buffer), current_file)) > 0) {
             fwrite(buffer, 1, bytes_read, combined_file);
         }
 
-        fprintf(combined_file, "\n# End included file: %s\n", token);
+        fprintf(combined_file, "\n; End included file: %s\n", token);
 
         fclose(current_file);
         token = strtok_r(NULL, ",", &saveptr);
