@@ -167,7 +167,6 @@ struct afp_options {
     char *cnid_mysql_pw;
     char *cnid_mysql_db;
     struct afp_volume_name volfile;
-    struct afp_volume_name includefile;
     uint64_t sparql_limit;
 };
 
