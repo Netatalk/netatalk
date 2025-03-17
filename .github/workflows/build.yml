@@ -406,7 +406,6 @@ jobs:
               cmark \
               db5 \
               iniparser \
-              krb5-devel \
               libevent \
               libgcrypt \
               meson \
