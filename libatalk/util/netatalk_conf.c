@@ -1286,7 +1286,6 @@ static int volfile_changed(AFPObj *obj)
     struct stat st;
     struct afp_options *p = &obj->options;
     int result;
-    const char *includefile;
 
     result = stat(p->configfile, &st);
     if (result != 0) {
@@ -1302,21 +1301,6 @@ static int volfile_changed(AFPObj *obj)
     if (st.st_mtime > p->volfile.mtime) {
         p->volfile.mtime = st.st_mtime;
         return 1;
-    }
-
-    includefile = getoption_str(obj->iniconfig, INISEC_GLOBAL, "include", NULL, NULL);
-    if (includefile) {
-        result = stat(includefile, &st);
-        if (result != 0) {
-            LOG(log_debug, logtype_afpd, "where is the include file %s ?",
-                includefile);
-            return 1;
-        }
-
-        if (st.st_mtime > p->includefile.mtime) {
-            p->includefile.mtime = st.st_mtime;
-            return 1;
-        }
     }
 
     return 0;
@@ -1696,7 +1680,6 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     struct stat         st;
     int                 retries = 0;
     struct vol         *vol;
-    const char         *includefile;
 
     LOG(log_debug, logtype_afpd, "load_volumes: BEGIN");
 
@@ -1736,12 +1719,6 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
         LOG(log_debug, logtype_afpd, "load_volumes: no volumes yet");
         EC_ZERO_LOG( lstat(obj->options.configfile, &st) );
         obj->options.volfile.mtime = st.st_mtime;
-
-        includefile = getoption_str(obj->iniconfig, INISEC_GLOBAL, "include", NULL, NULL);
-        if (includefile) {
-            EC_ZERO_LOG( stat(includefile, &st) );
-            obj->options.includefile.mtime = st.st_mtime;
-        }
     }
 
     /* try putting a read lock on the volume file twice, sleep 1 second if first attempt fails */
