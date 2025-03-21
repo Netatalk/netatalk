@@ -3,6 +3,7 @@ util_sources = [
     'bprint.c',
     'cnid.c',
     'fault.c',
+    'ftw.c',
     'getiface.c',
     'gettok.c',
     'locking.c',
@@ -16,10 +17,6 @@ util_sources = [
     'strdicasecmp.c',
     'unix.c',
 ]
-
-if have_atfuncs
-    util_sources += 'ftw.c'
-endif
 
 libutil = static_library(
     'util',

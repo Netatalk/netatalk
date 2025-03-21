@@ -59,19 +59,15 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat
 /*
  * @brief system rmdir with afp error code.
  *
- * Supports *at semantics (cf openat) if HAVE_ATFUNCS. Pass dirfd=-1 to ignore this.
+ * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
  */
 int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 {
     int err;
 
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     err = unlinkat(dirfd, name, AT_REMOVEDIR);
-#else
-    err = rmdir(name);
-#endif
 
     if (err < 0) {
         switch ( errno ) {
@@ -95,7 +91,7 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 /*
  * @brief System rmdir with afp error code, but ENOENT is not an error.
  *
- * Supports *at semantics (cf openat) if HAVE_ATFUNCS. Pass dirfd=-1 to ignore this.
+ * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
  */
 int netatalk_rmdir(int dirfd, const char *name)
 {
@@ -164,7 +160,7 @@ EC_CLEANUP:
 }
 
 /*
- * Supports *at semantics if HAVE_ATFUNCS, pass dirfd=-1 to ignore this
+ * Supports *at semantics, pass dirfd=-1 to ignore this
  */
 int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
 {
@@ -172,13 +168,10 @@ int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
     int    sfd = -1;
     int    dfd = -1;
 
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     sfd = openat(dirfd, src, O_RDONLY);
-#else
-    sfd = open(src, O_RDONLY);
-#endif
+
     if (sfd < 0) {
         LOG(log_info, logtype_afpd, "copy_file('%s'/'%s'): open '%s' error: %s",
             src, dst, src, strerror(errno));
@@ -216,7 +209,7 @@ exit:
 /*!
  * Copy an EA from one file to another
  *
- * Supports *at semantics if HAVE_ATFUNCS, pass dirfd=-1 to ignore this
+ * Supports *at semantics, pass dirfd=-1 to ignore this
  */
 int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst, mode_t mode)
 {
@@ -226,13 +219,9 @@ int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst, mod
     size_t easize;
     char   *eabuf = NULL;
 
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     EC_NEG1_LOG( sfd = openat(dirfd, src, O_RDONLY) );
-#else
-    EC_NEG1_LOG( sfd = open(src, O_RDONLY) );
-#endif
     EC_NEG1_LOG( dfd = open(dst, O_WRONLY, mode) );
 
     if ((easize = sys_fgetxattr(sfd, ea, NULL, 0)) > 0) {
@@ -255,7 +244,6 @@ EC_CLEANUP:
  */
 int netatalk_unlinkat(int dirfd _U_, const char *name)
 {
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
 
@@ -273,28 +261,20 @@ int netatalk_unlinkat(int dirfd _U_, const char *name)
         }
     }
     return AFP_OK;
-#else
-    return netatalk_unlink(name);
-#endif
-
-    /* DEADC0DE */
-    return 0;
 }
 
 /*
  * @brief This is equivalent of unix rename()
  *
- * unix_rename mulitplexes rename and renameat. If we don't HAVE_ATFUNCS, sfd and dfd
- * are ignored.
+ * unix_rename mulitplexes rename and renameat.
  *
- * @param sfd        (r) if we HAVE_ATFUNCS, -1 gives AT_FDCWD
+ * @param sfd        (r) -1 gives AT_FDCWD
  * @param oldpath    (r) guess what
  * @param dfd        (r) same as sfd
  * @param newpath    (r) guess what
  */
 int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_, const char *newpath)
 {
-#ifdef HAVE_ATFUNCS
     if (sfd == -1)
         sfd = AT_FDCWD;
     if (dfd == -1)
@@ -302,10 +282,6 @@ int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_, const char *newpa
 
     if (renameat(sfd, oldpath, dfd, newpath) < 0)
         return -1;
-#else
-    if (rename(oldpath, newpath) < 0)
-        return -1;
-#endif  /* HAVE_ATFUNCS */
 
     return 0;
 }
@@ -313,24 +289,17 @@ int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_, const char *newpa
 /*
  * @brief stat/fsstatat multiplexer
  *
- * statat mulitplexes stat and fstatat. If we don't HAVE_ATFUNCS, dirfd is ignored.
+ * statat mulitplexes stat and fstatat.
  *
- * @param dirfd   (r) Only used if HAVE_ATFUNCS, ignored else, -1 gives AT_FDCWD
+ * @param dirfd   (r) -1 gives AT_FDCWD
  * @param path    (r) pathname
  * @param st      (rw) pointer to struct stat
  */
 int statat(int dirfd _U_, const char *path, struct stat *st)
 {
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     return (fstatat(dirfd, path, st, 0));
-#else
-    return (stat(path, st));
-#endif
-
-    /* DEADC0DE */
-    return -1;
 }
 
 /*

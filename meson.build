@@ -303,14 +303,9 @@ at_functions = [
     'unlinkat',
 ]
 
-have_atfuncs = false
-
 foreach f : at_functions
-    if cc.has_function(f)
-        have_atfuncs = true
-        cdata.set('HAVE_' + f.underscorify().to_upper(), 1)
-        cdata.set('_ATFILE_SOURCE', 1)
-        cdata.set('HAVE_ATFUNCS', 1)
+    if not cc.has_function(f)
+        error('Standard C library function @0@ is required'.format(f))
     endif
 endforeach
 

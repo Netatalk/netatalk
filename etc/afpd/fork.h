@@ -69,11 +69,8 @@ extern int          of_closefork (const AFPObj *obj, struct ofork *ofork);
 extern void         of_closevol  (const AFPObj *obj, const struct vol *vol);
 extern void         of_close_all_forks(const AFPObj *obj);
 extern struct adouble *of_ad     (const struct vol *, struct path *, struct adouble *);
-
-#ifdef HAVE_ATFUNCS
 extern struct ofork *of_findnameat(int dirfd, struct path *path);
 extern int of_fstatat(int dirfd, struct path *path);
-#endif  /* HAVE_ATFUNCS */
 
 
 /* in fork.c */
