@@ -393,24 +393,17 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 /*
  * @brief ostat/fsstatat multiplexer
  *
- * ostatat mulitplexes ostat and fstatat. If we don't HAVE_ATFUNCS, dirfd is ignored.
+ * ostatat mulitplexes ostat and fstatat.
  *
- * @param dirfd   (r) Only used if HAVE_ATFUNCS, ignored else, -1 gives AT_FDCWD
+ * @param dirfd   (r) -1 gives AT_FDCWD
  * @param path    (r) pathname
  * @param st      (rw) pointer to struct stat
  */
 int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
 {
-#ifdef HAVE_ATFUNCS
     if (dirfd == -1)
         dirfd = AT_FDCWD;
     return fstatat(dirfd, path, st, (options & O_NOFOLLOW) ? AT_SYMLINK_NOFOLLOW : 0);
-#else
-    return ostat(path, st, options);
-#endif
-
-    /* DEADC0DE */
-    return -1;
 }
 
 /*!

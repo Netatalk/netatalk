@@ -76,9 +76,6 @@
 /* set if struct at_addr is called atalk_addr */
 #mesondefine HAVE_ATALK_ADDR
 
-/* whether at funcs are available */
-#mesondefine HAVE_ATFUNCS
-
 /* Define to 1 if you have the `attr_get' function. */
 #mesondefine HAVE_ATTR_GET
 
@@ -220,9 +217,6 @@
 /* Define to 1 if the system has the type `fshare_t'. */
 #mesondefine HAVE_FSHARE_T
 
-/* Define to 1 if you have the `fstatat' function. */
-#mesondefine HAVE_FSTATAT
-
 /* Define to 1 if you have the `getea' function. */
 #mesondefine HAVE_GETEA
 
@@ -358,9 +352,6 @@
 /* Whether NFSv4 ACLs are available */
 #mesondefine HAVE_NFSV4_ACLS
 
-/* Define to 1 if you have the `openat' function. */
-#mesondefine HAVE_OPENAT
-
 /* Define to 1 if you have the <pam/pam_appl.h> header file. */
 #mesondefine HAVE_PAM_PAM_APPL_H
 
@@ -387,9 +378,6 @@
 
 /* Define to 1 if you have the `removexattr' function. */
 #mesondefine HAVE_REMOVEXATTR
-
-/* Define to 1 if you have the `renameat' function. */
-#mesondefine HAVE_RENAMEAT
 
 /* Define to 1 if you have the <rpcsvc/rquota.h> header file. */
 #mesondefine HAVE_RPCSVC_RQUOTA_H
@@ -522,9 +510,6 @@
 
 /* Define to 1 if you have the <ufs/quota.h> header file. */
 #mesondefine HAVE_UFS_QUOTA_H
-
-/* Define to 1 if you have the `unlinkat' function. */
-#mesondefine HAVE_UNLINKAT
 
 /* Whether to use native iconv */
 #mesondefine HAVE_USABLE_ICONV
@@ -682,9 +667,6 @@
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
    `char[]'. */
 #mesondefine YYTEXT_POINTER
-
-/* AT file source */
-#mesondefine _ATFILE_SOURCE
 
 /* _FILE_OFFSET_BITS (for LARGEFILE support) */
 #mesondefine _FILE_OFFSET_BITS
