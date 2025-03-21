@@ -229,6 +229,107 @@ char *stripped_slashes_basename(char *p)
     return (strrchr(p, '/') ? strrchr(p, '/') + 1 : p);
 }
 
+/****************************************************************************
+ * Find a suitable temporary directory for Netatalk.
+ * Creates a subdirectory for current gid if it doesn't exist.
+ * The result should be copied immediately
+ * as it may be overwritten by a subsequent call.
+ ****************************************************************************/
+
+const char *tmpdir(void)
+{
+    static char netatalk_tmpdir[MAXPATHLEN + 1];
+    char *systmp;
+    struct stat st;
+    mode_t oldmask;
+    int tmpfd, dirfd;
+    char dirname[64];
+
+    if ((systmp = getenv("TMPDIR")))
+        ;
+    else
+        systmp = "/tmp";
+
+    if ((tmpfd = open(systmp, O_RDONLY | O_DIRECTORY)) == -1) {
+        LOG(log_error, logtype_default, "tmpdir: cannot open %s: %s",
+            systmp, strerror(errno));
+        return systmp;
+    }
+
+    snprintf(dirname, sizeof(dirname), "netatalk-%u", getpid());
+    snprintf(netatalk_tmpdir, MAXPATHLEN, "%s/%s", systmp, dirname);
+
+    oldmask = umask(0077);
+
+    if (mkdirat(tmpfd, dirname, 0700) != 0) {
+        if (errno != EEXIST) {
+            LOG(log_error, logtype_default, "tmpdir: failed to create %s: %s",
+                netatalk_tmpdir, strerror(errno));
+            umask(oldmask);
+            close(tmpfd);
+            return systmp;
+        }
+    } else {
+        LOG(log_debug, logtype_default, "tmpdir: created directory %s", netatalk_tmpdir);
+        umask(oldmask);
+        close(tmpfd);
+        return netatalk_tmpdir;
+    }
+
+    if (fstatat(tmpfd, dirname, &st, 0) != 0) {
+        LOG(log_error, logtype_default, "tmpdir: error accessing %s: %s",
+            netatalk_tmpdir, strerror(errno));
+        umask(oldmask);
+        close(tmpfd);
+        return systmp;
+    }
+
+    umask(oldmask);
+
+    if ((dirfd = openat(tmpfd, dirname, O_RDONLY | O_DIRECTORY)) == -1) {
+        LOG(log_error, logtype_default, "tmpdir: cannot open %s: %s",
+            netatalk_tmpdir, strerror(errno));
+        close(tmpfd);
+        return systmp;
+    }
+
+    if (fstat(dirfd, &st) != 0) {
+        LOG(log_error, logtype_default, "tmpdir: fstat failed on %s: %s",
+            netatalk_tmpdir, strerror(errno));
+        close(dirfd);
+        close(tmpfd);
+        return systmp;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+        LOG(log_error, logtype_default, "tmpdir: %s exists but is not a directory",
+            netatalk_tmpdir);
+        close(dirfd);
+        close(tmpfd);
+        return systmp;
+    }
+
+    if ((st.st_mode & 0777) != 0700) {
+        LOG(log_warning, logtype_default, "tmpdir: fixing permissions on %s", netatalk_tmpdir);
+        if (fchmod(dirfd, 0700) != 0) {
+            LOG(log_error, logtype_default, "tmpdir: failed to chmod %s: %s",
+                netatalk_tmpdir, strerror(errno));
+        }
+    }
+
+    if (st.st_uid != getuid()) {
+        LOG(log_warning, logtype_default, "tmpdir: %s not owned by current user",
+            netatalk_tmpdir);
+        close(dirfd);
+        close(tmpfd);
+        return systmp;
+    }
+
+    close(dirfd);
+    close(tmpfd);
+    return netatalk_tmpdir;
+}
+
 /*********************************************************************************
  * chdir(), chmod(), chown(), stat() wrappers taking an additional option.
  * Currently the only used options are O_NOFOLLOW, used to switch between symlink

@@ -211,6 +211,7 @@ extern int run_cmd(const char *cmd, char **cmd_argv);
 extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
 extern char *strtok_quote (char *s, const char *delim);
+extern const char *tmpdir(void);
 
 extern int ochdir(const char *dir, int options);
 extern int ostat(const char *path, struct stat *buf, int options);
