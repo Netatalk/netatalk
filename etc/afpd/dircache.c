@@ -624,7 +624,7 @@ void log_dircache_stat(void)
  */
 void dircache_dump(void)
 {
-    char tmpnam[64];
+    char tmpnam[MAXPATHLEN + 1];
     FILE *dump;
     qnode_t *n = index_queue->next;
     hnode_t *hn;
@@ -634,7 +634,7 @@ void dircache_dump(void)
 
     LOG(log_warning, logtype_afpd, "Dumping directory cache...");
 
-    sprintf(tmpnam, "/tmp/dircache.%u", getpid());
+    snprintf(tmpnam, sizeof(tmpnam)-1, "%s/dircache.%u", tmpdir(), getpid());
     if ((dump = fopen(tmpnam, "w+")) == NULL) {
         LOG(log_error, logtype_afpd, "dircache_dump: %s", strerror(errno));
         return;

@@ -683,12 +683,12 @@ as_debug(int sig _U_)
     struct gate		*gate;
     struct rtmptab	*rt;
     FILE		*rtmpdebug;
+    char path_atalkdebug[MAXPATHLEN + 1];
 
-    if (_PATH_ATALKDEBUG != NULL) {
-        rtmpdebug = fopen(_PATH_ATALKDEBUG, "w");
-        if (rtmpdebug == NULL) {
-            LOG(log_error, logtype_atalkd, "rtmp: %s", strerror(errno));
-        }
+    snprintf(path_atalkdebug, sizeof(path_atalkdebug)-1, "%s/atalkd.%u.debug", tmpdir(), getpid());
+    rtmpdebug = fopen(path_atalkdebug, "w");
+    if (rtmpdebug == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp: %s", strerror(errno));
     }
 
 	if (rtmpdebug) {

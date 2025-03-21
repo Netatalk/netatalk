@@ -1,7 +1,6 @@
 #ifndef ATALKD_MAIN_H
 #define ATALKD_MAIN_H
 
-#define _PATH_ATALKDEBUG	"/tmp/atalkd.debug"
 #define _PATH_ATALKDTMP		"atalkd.tmp"
 
 #include <sys/types.h>
