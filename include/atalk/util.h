@@ -129,11 +129,7 @@ extern void mod_close    (void *);
 #define mod_open(a)      dlopen(a, RTLD_NOW)
 #endif /* __NetBSD__ */
 
-#ifndef DLSYM_PREPEND_UNDERSCORE
 #define mod_symbol(a, b) dlsym(a, b)
-#else /* ! DLSYM_PREPEND_UNDERSCORE */
-extern void *mod_symbol  (void *, const char *);
-#endif /* ! DLSYM_PREPEND_UNDERSCORE */
 #define mod_error()      dlerror()
 #define mod_close(a)     dlclose(a)
 #endif /* ! HAVE_DLFCN_H */
