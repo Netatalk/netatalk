@@ -234,6 +234,7 @@ endif
 check_headers = [
     'acl/libacl.h',
     'attr/xattr.h',
+    'crypt.h',
     'dlfcn.h',
     'iniparser/iniparser.h',
     'langinfo.h',
@@ -1642,38 +1643,18 @@ else
 endif
 
 #
-# Check for crypt (passwd authentication)
+# Check for passwd and shadow authentication support
 #
 
-crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
-if crypt.found()
-    cdata.set('HAVE_CRYPT_H', 1)
-endif
+crypt = cc.find_library('crypt', required: false)
 
-#
-# Check for optional shadow password support
-#
-
-enable_shadow = get_option('with-shadow')
-
-if host_os in ['darwin', 'dragonfly', 'freebsd', 'netbsd', 'openbsd']
-    have_shadow = false
-elif not enable_shadow
-    have_shadow = false
-else
-    have_shadow = (cc.has_header('shadow.h'))
-    if have_shadow
-        cdata.set('SHADOWPW', 1)
-    else
-        have_shadow = false
-        warning('Shadow password support requested but required header not found')
-    endif
-endif
-
-if have_shadow
+if cc.has_header('shadow.h')
+    cdata.set('SHADOWPW', 1)
     uams_options += 'shadow'
-else
+elif crypt.found()
     uams_options += 'passwd'
+else
+    warning('Neither shadow nor crypt library found. Only PAM authentication is available')
 endif
 
 #
