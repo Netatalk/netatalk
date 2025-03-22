@@ -57,7 +57,7 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
     return sendfile(tofd, fromfd, offset, count);
 }
 
-#elif defined(SENDFILE_FLAVOR_BSD )
+#elif defined(SENDFILE_FLAVOR_FREEBSD )
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/uio.h>

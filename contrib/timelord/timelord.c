@@ -94,7 +94,7 @@ int main( int ac, char **av )
     struct atp_block	atpb;
     struct timeval	tv;
     struct iovec	iov;
-    struct tm		*tm;
+    struct tm		tm;
     char		hostname[ MAXHOSTNAMELEN ];
     char		*p;
     int			c;
@@ -233,21 +233,20 @@ int main( int ac, char **av )
 	    }
 
         if ( lflag == 1 ) {
-            if (( tm = localtime( &tv.tv_sec )) == 0 ) {
-            perror( "localtime" );
-            exit( 1 );
+            if (localtime_r(&tv.tv_sec, &tm) == NULL) {
+                LOG(log_error, logtype_default, "main: localtime_r: %s", strerror(errno));
+                exit(1);
             }
-
-#if defined (NO_STRUCT_TM_GMTOFF)
-	mtime = tv.tv_sec + EPOCH - timezone;
-#else /* NO_STRUCT_TM_GMTOFF */
-	mtime = tv.tv_sec + EPOCH + tm->tm_gmtoff;
-#endif /* NO_STRUCT_TM_GMTOFF */
+#if defined (HAVE_STRUCT_TM_TM_GMTOFF)
+            mtime = tv.tv_sec + EPOCH + tm.tm_gmtoff;
+#else /* HAVE_STRUCT_TM_TM_GMTOFF */
+            mtime = tv.tv_sec + EPOCH - timezone;
+#endif /* HAVE_STRUCT_TM_TM_GMTOFF */
         }
         else {
-            if (( tm = gmtime( &tv.tv_sec )) == 0 ) {
-            perror( "gmtime" );
-            exit( 1 );
+            if (gmtime_r(&tv.tv_sec, &tm) == NULL) {
+                LOG(log_error, logtype_default, "main: gmtime_r: %s", strerror(errno));
+                exit(1);
             }
 
             mtime = tv.tv_sec + EPOCH;

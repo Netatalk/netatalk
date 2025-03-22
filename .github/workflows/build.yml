@@ -80,7 +80,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-            -Dwith-docs-l10n=true \
             -Dwith-tests=true
       - name: Build
         run: meson compile -C build
@@ -120,7 +119,6 @@ jobs:
             meson \
             ninja \
             perl \
-            po4a \
             pkgconfig \
             rpcsvc-proto \
             talloc \
@@ -131,7 +129,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-            -Dwith-docs-l10n=true \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
       - name: Build
