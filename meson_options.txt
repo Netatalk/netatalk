@@ -154,12 +154,6 @@ option(
     description: 'Enable sendfile syscall',
 )
 option(
-    'with-shadow',
-    type: 'boolean',
-    value: true,
-    description: 'Enable shadow password support',
-)
-option(
     'with-shell-check',
     type: 'boolean',
     value: true,
