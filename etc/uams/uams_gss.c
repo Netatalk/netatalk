@@ -19,7 +19,7 @@
 /* Kerberos includes */
 #ifdef HAVE_GSSAPI_GSSAPI_H
 #include <gssapi/gssapi.h>
-#else
+#elif HAVE_GSSAPI_H
 #include <gssapi.h>
 #endif // HAVE_GSSAPI_GSSAPI_H
 

@@ -212,7 +212,6 @@ endif
 
 dl = cc.find_library('dl', required: false)
 if dl.found()
-    cdata.set('HAVE_LIBDL', 1)
     netatalk_common_link_args += '-ldl'
 endif
 
@@ -546,6 +545,55 @@ if not iniparser.found()
 endif
 
 #
+# Check for POSIX threads
+#
+
+threads = dependency('threads', required: true)
+
+#
+# Check for libevent
+#
+
+libevent = dependency(
+    'libevent',
+    required: true,
+    not_found_message: 'Libevent library required but not found! Please install the libevent devel package',
+)
+
+#
+# Check for libgcrypt
+#
+
+libgcrypt_path = get_option('with-libgcrypt-path')
+
+libgcrypt_link_args = []
+
+if libgcrypt_path != ''
+    libgcrypt_link_args += ['-L' + libgcrypt_path / 'lib', '-lgcrypt']
+    libgcrypt = declare_dependency(
+        link_args: libgcrypt_link_args,
+        include_directories: include_directories(libgcrypt_path / 'include'),
+    )
+else
+    libgcrypt = dependency('libgcrypt', version: '>=1.2.3', required: false)
+    if not libgcrypt.found()
+        libgcrypt = cc.find_library(
+            'libgcrypt',
+            dirs: libsearch_dirs,
+            required: false,
+        )
+    endif
+endif
+
+have_libgcrypt = libgcrypt.found()
+
+if not have_libgcrypt
+    error(
+        'Libgcrypt library required for encrypted user auth! Please install version 1.2.3 or later',
+    )
+endif
+
+#
 # Check for Perl
 #
 
@@ -555,16 +603,6 @@ if perl_path == ''
     perl = find_program('perl', required: false)
 else
     perl = find_program(perl_path / 'perl', required: false)
-endif
-
-#
-# Check for crypt (for DHX authentication)
-#
-
-crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
-if crypt.found()
-    cdata.set('HAVE_CRYPT_H', 1)
-    cdata.set('HAVE_LIBCRYPT', 1)
 endif
 
 #
@@ -589,8 +627,6 @@ else
     gssapi_includes = []
     gssapi_headers = [
         'gssapi.h',
-        'gssapi/gssapi_generic.h',
-        'gssapi/gssapi_krb5.h',
         'gssapi/gssapi.h',
     ]
 
@@ -634,10 +670,6 @@ else
         if have_gssapi
             gss_libs += gss
             cdata.set('HAVE_GSSAPI', 1)
-            # Heimdal/MIT compatibility fix
-            if cc.has_header_symbol('gssapi.h', 'GSS_C_NT_HOSTBASED_SERVICE')
-                cdata.set('HAVE_GSS_C_NT_HOSTBASED_SERVICE', 1)
-            endif
         else
             have_gssapi = false
             warning('GSSAPI support requested but gssapi libraries not found')
@@ -654,7 +686,6 @@ else
     kerberos_includes = []
     kerberos_c_args = []
     kerberos_headers = [
-        'kerberosv5/krb5.h',
         'krb5.h',
         'krb5/krb5.h',
     ]
@@ -767,9 +798,6 @@ if enable_zeroconf
         have_zeroconf = true
         cdata.set('USE_ZEROCONF', 1)
         cdata.set('HAVE_AVAHI', 1)
-        if avahi.version() >= '0.6.4'
-            cdata.set('HAVE_AVAHI_THREADED_POLL', 1)
-        endif
         cdata.set('freebsd_zeroconf', 'avahi_daemon')
         zeroconf_provider += 'Avahi'
     elif have_dns
@@ -878,20 +906,15 @@ if get_option('with-spotlight')
             or tracker_control.found()
             or localsearch.found()
         )
-        if not indexer_found
-            warning('Tracker or LocalSearch not found (required for Spotlight support)')
-        else
+        if indexer_found
             cdata.set('INDEXER_COMMAND', '"' + indexer_command + '"')
-
-            # Check for talloc
-
-            if talloc.found()
-                cdata.set('HAVE_TALLOC', 1)
-            else
-                warning(
-                    'talloc library not found (required for Spotlight support)',
-                )
-            endif
+        else
+            warning('Tracker or LocalSearch not found (required for Spotlight support)')
+        endif
+        if not talloc.found()
+            warning(
+                'talloc library not found (required for Spotlight support)',
+            )
         endif
     endif
 
@@ -907,16 +930,6 @@ endif
 if have_spotlight
     cdata.set('WITH_SPOTLIGHT', 1)
 endif
-
-#
-# Check for libevent
-#
-
-libevent = dependency(
-    'libevent',
-    required: true,
-    not_found_message: 'Libevent library required but not found! Please install the libevent devel package',
-)
 
 #
 # Check for CUPS
@@ -950,7 +963,6 @@ if get_option('with-cups') and get_option('with-appletalk')
 else
     have_cups = false
     spooldir_required = false
-    cdata.set('DISABLE_SPOOL', 1)
 endif
 
 #
@@ -974,23 +986,11 @@ quota_deps = []
 quota_provider = ''
 have_libquota = false
 
-rpc_headers = [
-    'rpc/rpc.h',
-    'rpc/pmap_prot.h',
-    'rpcsvc/rquota.h',
-]
-
 rpc_headers_ok = (
     cc.has_header('rpc/rpc.h')
     and cc.has_header('rpc/pmap_prot.h')
     and cc.has_header('rpcsvc/rquota.h')
 )
-
-if rpc_headers_ok
-    foreach header : rpc_headers
-        cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
-    endforeach
-endif
 
 if not enable_quota
     have_quota = false
@@ -1041,39 +1041,6 @@ if enable_quota and not have_quota
 endif
 
 #
-# Check for libgcrypt
-#
-
-libgcrypt_path = get_option('with-libgcrypt-path')
-
-libgcrypt_link_args = []
-
-if libgcrypt_path != ''
-    libgcrypt_link_args += ['-L' + libgcrypt_path / 'lib', '-lgcrypt']
-    libgcrypt = declare_dependency(
-        link_args: libgcrypt_link_args,
-        include_directories: include_directories(libgcrypt_path / 'include'),
-    )
-else
-    libgcrypt = dependency('libgcrypt', version: '>=1.2.3', required: false)
-    if not libgcrypt.found()
-        libgcrypt = cc.find_library(
-            'libgcrypt',
-            dirs: libsearch_dirs,
-            required: false,
-        )
-    endif
-endif
-
-have_libgcrypt = libgcrypt.found()
-
-if not have_libgcrypt
-    error(
-        'Libgcrypt library required for encrypted user auth! Please install version 1.2.3 or later',
-    )
-endif
-
-#
 # Check for Extended Attributes support
 #
 
@@ -1109,7 +1076,6 @@ elif host_os == 'freebsd'
     endforeach
 elif host_os == 'dragonfly'
     have_ea = false
-    cdata.set('BROKEN_EXTATTR', 1)
 elif host_os == 'aix'
     have_ea = true
     ea_functions = [
@@ -1134,7 +1100,6 @@ elif cc.has_function('getxattr', dependencies: attr)
     have_ea = true
     ea_functions = [
         'fgetxattr',
-        'flistxattr',
         'fsetxattr',
         'getxattr',
         'lgetxattr',
@@ -1273,7 +1238,6 @@ elif host_os == 'freebsd'
         acl_deps += sunacl
         cdata.set('HAVE_ACLS', 1)
         cdata.set('HAVE_FREEBSD_SUNACL', 1)
-        cdata.set('HAVE_LIBSUNACL', 1)
         cdata.set('HAVE_NFSV4_ACLS', 1)
     else
         have_acls = false
@@ -1555,7 +1519,7 @@ elif default_backend == 'mysql' and not use_mysql_backend
 endif
 
 #
-# Test for PAM support
+# Check for PAM support
 #
 
 enable_pam = get_option('with-pam')
@@ -1678,6 +1642,15 @@ else
 endif
 
 #
+# Check for crypt (passwd authentication)
+#
+
+crypt = cc.find_library('crypt', has_headers: 'crypt.h', required: false)
+if crypt.found()
+    cdata.set('HAVE_CRYPT_H', 1)
+endif
+
+#
 # Check for optional shadow password support
 #
 
@@ -1757,13 +1730,7 @@ large_files_test = cc.sizeof('off_t') == 8
 
 have_largefile = file_offset_bits_test or large_files_test
 if have_largefile
-    if file_offset_bits_test
-        cdata.set('_FILE_OFFSET_BITS', 64)
-    else
-        if large_files_test
-            cdata.set('_LARGE_FILES', 1)
-        endif
-    endif
+    cdata.set('_FILE_OFFSET_BITS', 64)
 else
     error('Largefile support required but not available on this platform')
 endif
@@ -1841,30 +1808,6 @@ else
     else
         have_dtrace = false
         warning('Dtrace probe support requested but dtrace not found')
-    endif
-endif
-
-#
-# Check for POSIX threads
-#
-
-threads = dependency('threads', required: true)
-if threads.found()
-    have_threads = true
-    cdata.set('HAVE_PTHREAD', 1)
-
-    # Check for PTHREAD_PRIO_INHERIT
-
-    if cc.compiles(
-        '''
-    #include <pthread.h>
-    int main(void) {
-    int i = PTHREAD_PRIO_INHERIT;
-      return i;
-    }
-    ''',
-    )
-        cdata.set('HAVE_PTHREAD_PRIO_INHERIT', 1)
     endif
 endif
 
@@ -2089,7 +2032,6 @@ elif host_os.contains('sunos')
     cdata.set('__svr4__', 1)
     cdata.set('_ISOC9X_SOURCE', 1)
     cdata.set('_XOPEN_SOURCE', 600)
-    cdata.set('NO_STRUCT_TM_GMTOFF', 1)
     cdata.set('SOLARIS', 1)
 elif host_os.contains('darwin')
     cdata.set('HAVE_BROKEN_DBTOB', 1)

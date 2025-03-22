@@ -8,7 +8,11 @@ subdir('util')
 subdir('unicode')
 subdir('vfs')
 
-libatalk_deps = [iniparser]
+libatalk_deps = [
+    iniparser,
+    threads,
+]
+
 libatalk_libs = [
     libacl,
     libadouble,
@@ -24,10 +28,6 @@ libatalk_sources = []
 
 if have_acls
     libatalk_deps += acl_deps
-endif
-
-if have_threads
-    libatalk_deps += threads
 endif
 
 if have_appletalk
