@@ -72,6 +72,7 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
+            sqlite-dev \
             talloc-dev \
             tinysparql-dev
       - name: Configure
@@ -123,6 +124,7 @@ jobs:
             po4a \
             pkgconfig \
             rpcsvc-proto \
+            sqlite \
             talloc \
             tinysparql
       - name: Configure
@@ -178,6 +180,7 @@ jobs:
             libldap2-dev \
             libmariadb-dev \
             libpam0g-dev \
+            libsqlite3-dev \
             libtalloc-dev \
             libtirpc-dev \
             libtracker-sparql-3.0-dev \
@@ -248,6 +251,7 @@ jobs:
             perl \
             perl-Net-DBus \
             quota-devel \
+            sqlite-devel \
             systemd \
             systemtap-sdt-devel \
             tracker \
@@ -359,7 +363,8 @@ jobs:
             iniparser \
             mariadb \
             meson \
-            openldap
+            openldap \
+            sqlite
       - name: Configure
         run: |
           meson setup build \
@@ -416,6 +421,7 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
+              sqlite \
               talloc \
               tracker3
           run: |
@@ -459,6 +465,7 @@ jobs:
               p5-Net-DBus \
               perl5 \
               pkgconf \
+              sqlite3 \
               talloc \
               tracker3
           run: |
@@ -513,6 +520,7 @@ jobs:
               p5-Net-DBus \
               perl \
               pkg-config \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -566,6 +574,7 @@ jobs:
               openpam \
               p5-Net-DBus \
               pkgconf \
+              sqlite \
               tracker3
           run: |
             set -e
@@ -615,6 +624,7 @@ jobs:
               libgcrypt \
               meson \
               mysql-client \
+              sqlite3 \
               talloc
           run: |
             set -e
@@ -663,7 +673,8 @@ jobs:
               libgcrypt \
               ninja \
               pkg-config \
-              python/pip
+              python/pip \
+              sqlite-3
             pip install meson
             curl -O https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
             tar xzf iniparser-v4.2.5.tar.gz
