@@ -1648,14 +1648,29 @@ endif
 #
 
 crypt = cc.find_library('crypt', required: false)
+if crypt.found()
+    have_crypt = cc.has_function('crypt', dependencies: crypt)
+    have_crypt_checkpass = cc.has_function('crypt_checkpass', dependencies: crypt)
+else
+    have_crypt = cc.has_function('crypt')
+    have_crypt_checkpass = cc.has_function('crypt_checkpass')
+endif
 
-if cc.has_header('shadow.h')
+if have_crypt_checkpass
+    cdata.set('HAVE_CRYPT_CHECKPASS', 1)
+endif
+
+if host_os == 'darwin'
+    warning('non-PAM authentication currently not supported on macOS')
+elif cc.has_header('shadow.h')
     cdata.set('SHADOWPW', 1)
     uams_options += 'shadow'
-elif crypt.found()
+elif have_crypt or have_crypt_checkpass
     uams_options += 'passwd'
-else
-    warning('Neither shadow nor crypt library found. Only PAM authentication is available')
+endif
+
+if not have_crypt and not have_crypt_checkpass
+    warning('crypt functions not found; only PAM authentication is possible')
 endif
 
 #

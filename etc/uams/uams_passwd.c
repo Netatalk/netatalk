@@ -87,12 +87,17 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 
     *uam_pwd = pwd;
 
-    p = crypt( ibuf, pwd->pw_passwd );
-    if ( strcmp( p, pwd->pw_passwd ) == 0 )
+#ifdef HAVE_CRYPT_CHECKPASS
+    if (crypt_checkpass(ibuf, pwd->pw_passwd) == 0) {
+#else
+    p = crypt(ibuf, pwd->pw_passwd);
+    if (strcmp(p, pwd->pw_passwd) == 0) {
+#endif
+        memset(ibuf, 0, PASSWDLEN);
         return AFP_OK;
+    }
 
     return AFPERR_NOTAUTH;
-
 }
 
 /* cleartxt login */
@@ -253,10 +258,15 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
         return(-1);
     }
 
+#ifdef HAVE_CRYPT_CHECKPASS
+    if (crypt_checkpass(password, pwd->pw_passwd) == 0) {
+#else
     p = crypt(password, pwd->pw_passwd);
     if (strcmp(p, pwd->pw_passwd) != 0) {
+#endif
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: bad password", username);
-        return(-1);
+        memset(password, 0, PASSWDLEN);
+        return -1;
     }
 
     /* Login successful */

@@ -10,6 +10,11 @@ else
     lib_suffix = []
 endif
 
+passwd_deps = []
+if crypt.found()
+    passwd_deps += crypt
+endif
+
 uams_guest_sources = ['uams_guest.c']
 
 library(
@@ -29,7 +34,7 @@ library(
     'uams_passwd',
     uams_passwd_sources,
     include_directories: root_includes,
-    dependencies: crypt,
+    dependencies: passwd_deps,
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -58,7 +63,7 @@ if have_libgcrypt
         'uams_dhx_passwd',
         uams_dhx_passwd_sources,
         include_directories: root_includes,
-        dependencies: [libgcrypt, crypt],
+        dependencies: [passwd_deps, libgcrypt],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -70,7 +75,7 @@ if have_libgcrypt
         'uams_dhx2_passwd',
         uams_dhx2_passwd_sources,
         include_directories: root_includes,
-        dependencies: [libgcrypt, crypt],
+        dependencies: [passwd_deps, libgcrypt],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
