@@ -445,7 +445,12 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress, const ch
 
     if (!address) {
         hints.ai_flags |= AI_PASSIVE;
+#if defined(__OpenBSD__)
+        /* IPv6 sockets only accept IPv6 connections on OpenBSD */
+        hints.ai_family = AF_INET;
+#else
         hints.ai_family = AF_INET6;
+#endif
     } else {
         hints.ai_flags |= AI_NUMERICHOST;
         hints.ai_family = AF_UNSPEC;
