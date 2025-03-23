@@ -163,6 +163,9 @@
 /* Define to 1 if you have the `getifaddrs' function. */
 #mesondefine HAVE_GETIFADDRS
 
+/* Define to 1 if you have the `getpwnam_shadow' function. */
+#mesondefine HAVE_GETPWNAM_SHADOW
+
 /* Define to 1 if you have the `getxattr' function. */
 #mesondefine HAVE_GETXATTR
 

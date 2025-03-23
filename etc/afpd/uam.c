@@ -212,10 +212,16 @@ struct passwd *uam_getname(void *private, char *name, const int len)
         return NULL;
     }
 
+#ifdef HAVE_GETPWNAM_SHADOW
+    if (pwent = getpwnam_shadow(name)) {
+        return pwent;
+    }
+#else
     if (getpwnam_r(name, &pwent_buf, buffer, sizeof(buffer), &pwent) == 0 && pwent != NULL) {
         free(buffer);
         return pwent;
     }
+#endif
 
     /* if we have a NT domain name try with it */
     if (obj->options.addomain || (obj->options.ntdomain && obj->options.ntseparator)) {
@@ -227,7 +233,11 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
         if (bdata(princ) != NULL) {
             const char *bdatum = bdata(princ);
+#ifdef HAVE_GETPWNAM_SHADOW
+            getpwnam_shadow(bdatum);
+#else
             getpwnam_r(bdatum, &pwent_buf, buffer, sizeof(buffer), &pwent);
+#endif
         }
         bdestroy(princ);
 

@@ -271,6 +271,7 @@ check_functions = [
     'asprintf',
     'backtrace_symbols',
     'dirfd',
+    'getpwnam_shadow',
     'pread',
     'pselect',
     'pwrite',
