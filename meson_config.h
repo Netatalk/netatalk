@@ -88,6 +88,9 @@
 /* Define to 1 if dbtob implementation is broken. */
 #mesondefine HAVE_BROKEN_DBTOB
 
+/* Define to 1 if you have the `crypt_checkpass' function. */
+#mesondefine HAVE_CRYPT_CHECKPASS
+
 /* Define to 1 if you have the <crypt.h> header file. */
 #mesondefine HAVE_CRYPT_H
 

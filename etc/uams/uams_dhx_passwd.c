@@ -345,12 +345,16 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     gcry_mpi_release(bn3);
 
     rbuf[PASSWDLEN] = '\0';
-    p = crypt( rbuf, dhxpwd->pw_passwd );
-    memset(rbuf, 0, PASSWDLEN);
-    if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
-      *uam_pwd = dhxpwd;
-      err = AFP_OK;
+#ifdef HAVE_CRYPT_CHECKPASS
+    if (crypt_checkpass(rbuf, dhxpwd->pw_passwd) == 0) {
+#else
+    p = crypt(rbuf, dhxpwd->pw_passwd);
+    if (strcmp(p, dhxpwd->pw_passwd) == 0) {
+#endif
+        *uam_pwd = dhxpwd;
+        err = AFP_OK;
     }
+    memset(rbuf, 0, PASSWDLEN);
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
 	LOG(log_info, logtype_uams, "no shadow passwd entry for %s", dhxpwd->pw_name);

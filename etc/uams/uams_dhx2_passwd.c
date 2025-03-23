@@ -32,6 +32,8 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
+#define PASSWDLEN 255
+
 /* Number of bits for p which we generate. Everybode out there uses 512, so we beet them */
 #define PRIMEBITS 1024
 
@@ -543,12 +545,16 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     /* ---- Start authentication --- */
     ret = AFPERR_NOTAUTH;
 
-    p = crypt( ibuf, dhxpwd->pw_passwd );
-    memset(ibuf, 0, 255);
-    if ( strcmp( p, dhxpwd->pw_passwd ) == 0 ) {
+#ifdef HAVE_CRYPT_CHECKPASS
+    if (crypt_checkpass(ibuf, dhxpwd->pw_passwd) == 0) {
+#else
+    p = crypt(ibuf, dhxpwd->pw_passwd);
+    if (strcmp(p, dhxpwd->pw_passwd) == 0) {
+#endif
         *uam_pwd = dhxpwd;
         ret = AFP_OK;
     }
+    memset(ibuf, 0, PASSWDLEN);
 
 #ifdef SHADOWPW
     if (( sp = getspnam( dhxpwd->pw_name )) == NULL ) {
