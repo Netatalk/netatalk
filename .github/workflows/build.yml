@@ -560,7 +560,6 @@ jobs:
               mariadb-client \
               meson \
               openldap-client-2.6.8v0 \
-              openpam \
               p5-Net-DBus \
               pkgconf \
               tracker3
@@ -571,6 +570,7 @@ jobs:
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-gssapi-path=/usr/local/heimdal \
               -Dwith-kerberos-path=/usr/local/heimdal \
+              -Dwith-pam=false \
               -Dwith-tests=true
             meson compile -C build
             meson install -C build
