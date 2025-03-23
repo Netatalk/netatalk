@@ -44,7 +44,6 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 {
     char  *p;
     struct passwd *pwd;
-    int err = AFP_OK;
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
@@ -76,8 +75,8 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
         time_t now = time(NULL) / (60*60*24);
         int32_t expire_days = sp->sp_lstchg - now + sp->sp_max;
         if ( expire_days < 0 ) {
-                LOG(log_info, logtype_uams, "Password for user %s expired", username);
-		err = AFPERR_PWDEXPR;
+            LOG(log_info, logtype_uams, "Password for user %s expired", username);
+            return AFPERR_PWDEXPR;
         }
     }
 #endif /* SHADOWPW */
@@ -90,7 +89,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 
     p = crypt( ibuf, pwd->pw_passwd );
     if ( strcmp( p, pwd->pw_passwd ) == 0 )
-        return err;
+        return AFP_OK;
 
     return AFPERR_NOTAUTH;
 
