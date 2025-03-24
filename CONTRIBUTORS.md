@@ -86,6 +86,7 @@ original afile/achfile/acleandir implementation
 - Blake Garner (MacPorts)
 - David Rankin <drankin@bohemians.lexington.ky.us> (NetBSD)
 - Hauke Fath <hf@spg.tu-darmstadt.de> (NetBSD)
+- Antoine Jacoutot <ajacoutot@openbsd.org> (OpenBSD)
 - Antonio Pastor (OpenWrt)
 
 > **NOTE:** This list of package maintainers is nowhere near complete,
@@ -247,6 +248,10 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Antonio Pastor
 - Eric Knibbe
 - Eric Helgeson <erichelgeson@gmail.com>
+- Nils Frohberg
+- Johan Huldtgren
+- Stuart Henderson
+- Antoine Jacoutot <ajacoutot@openbsd.org>
 
 ### macipgw
 
