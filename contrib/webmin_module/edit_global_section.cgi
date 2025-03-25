@@ -92,6 +92,7 @@ print &ui_table_row($text{'edit_global_section_uam_list'},
 	&ui_checkbox('p_uam list', 'uams_dhx2.so', 'DHX2 UAM', $values[0] =~ /uams_dhx2.so/ ? 1 : 0)
 	.&ui_checkbox('p_uam list', 'uams_dhx.so', 'DHX UAM', $values[0] =~ /uams_dhx.so/ ? 1 : 0)
 	.&ui_checkbox('p_uam list', 'uams_clrtxt.so', 'Cleartext UAM', $values[0] =~ /uams_clrtxt.so/ ? 1 : 0)
+        .&ui_checkbox('p_uam list', 'uams_randnum.so', 'RandNum UAM', $values[0] =~ /uams_randnum.so/ ? 1 : 0)
 	.&ui_checkbox('p_uam list', 'uams_guest.so', 'Guest UAM', $values[0] =~ /uams_guest.so/ ? 1 : 0)
 	.&ui_checkbox('p_uam list', 'uams_gss.so', 'Kerberos UAM', $values[0] =~ /uams_gss.so/ ? 1 : 0)
 	."<br>".$text{'edit_global_section_uam_list_other'}." ".&ui_textbox('p_uam list', $nonstandardUAMs, 40)
