@@ -483,9 +483,9 @@ static int ad_ls_r(char *path, afpvol_t *vol)
     if ( first)
         cwdpath[0] = 0;
     else
-        strcat(cwdpath, "/");
+        strlcat(cwdpath, "/", sizeof(cwdpath));
 
-    strcat(cwdpath, path);
+    strlcat(cwdpath, path, sizeof(cwdpath));
     first = 0;
 
     if (lstat(path, &st) < 0) {

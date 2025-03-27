@@ -42,14 +42,14 @@ static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
         len = strlen(dir);
         if (len + 1 + strlen(fn) > maxlen)
             return -1;
-        strcpy(path, dir);
+        strlcpy(path, dir, maxlen);
         if (path[len - 1] != '/')
-            strcat(path, "/");
-        strcat(path, fn);
+            strlcat(path, "/", maxlen);
+        strlcat(path, fn, maxlen);
     } else {
         if (strlen(fn) > maxlen)
             return -1;
-        strcpy(path, fn);
+        strlcpy(path, fn, maxlen);
     }
     return 0;
 }

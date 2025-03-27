@@ -185,10 +185,17 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
     }
 
     /* It's a directory, move each file into it. */
-    if (strlen(argv[argc - 1]) > sizeof(path) - 1)
-        ERROR("%s: destination pathname too long", *argv);
+    if (strlen(argv[argc - 1]) >= sizeof(path)) {
+        SLOG("%s: destination pathname too long", argv[argc - 1]);
+        return 1;
+    }
 
-    (void)strcpy(path, argv[argc - 1]);
+    size_t copied = strlcpy(path, argv[argc - 1], sizeof(path));
+    if (copied >= sizeof(path)) {
+        SLOG("%s: destination pathname too long", argv[argc - 1]);
+        return 1;
+    }
+
     baselen = strlen(path);
     endp = &path[baselen];
     if (!baselen || *(endp - 1) != '/') {

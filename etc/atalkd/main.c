@@ -1361,7 +1361,7 @@ int ifconfig( const char *iname, unsigned long cmd, struct sockaddr_at *sa)
     int			s;
 
     memset(&ifr, 0, sizeof(ifr));
-    strcpy( ifr.ifr_name, iname );
+    strlcpy(ifr.ifr_name, iname, sizeof(ifr.ifr_name));
     ifr.ifr_addr = *(struct sockaddr *)sa;
 
     if (( s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
