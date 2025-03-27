@@ -192,7 +192,7 @@ int writeconf(char *cf)
     if (( p = strrchr( path, '/' )) == NULL ) {
 	strcpy( newpath, _PATH_ATALKDTMP );
     } else {
-	sprintf( newpath, "%.*s/%s", (int)(p - path), path, _PATH_ATALKDTMP );
+	snprintf( newpath, sizeof(newpath), "%.*s/%s", (int)(p - path), path, _PATH_ATALKDTMP );
     }
     if (( fd = open( newpath, O_WRONLY|O_CREAT|O_TRUNC, mode )) < 0 ) {
 	LOG(log_error, logtype_atalkd, "%s: %s", newpath, strerror(errno) );

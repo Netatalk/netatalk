@@ -3,7 +3,7 @@ afppasswd_sources = [
 ]
 
 afppasswd_deps = []
-afppasswd_libs = []
+afppasswd_libs = [libatalk]
 
 if have_cracklib
     afppasswd_deps += crack

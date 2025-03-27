@@ -128,21 +128,21 @@ int main(int ac, char **av)
 	    perror( "malloc" );
 	    exit( 1 );
 	}
-	strcpy( name, Obj );
+	strlcpy( name, Obj, sizeof(name));
 	Obj = name;
 
 	if (( name = (char *)malloc( strlen( Type ) + 1 )) == NULL ) {
 	    perror( "malloc" );
 	    exit( 1 );
 	}
-	strcpy( name, Type );
+	strlcpy( name, Type, sizeof(name));
 	Type = name;
 
 	if (( name = (char *)malloc( strlen( Zone ) + 1 )) == NULL ) {
 	    perror( "malloc" );
 	    exit( 1 );
 	}
-	strcpy( name, Zone );
+	strlcpy( name, Zone, sizeof(name));
 	Zone = name;
 
     }

@@ -258,8 +258,8 @@ static struct server *test_usockfn(const char *path)
             }
         }
 
-        sprintf(buf1, "%i", sv[1]);
-        sprintf(buf2, "%i", rqstfd);
+        snprintf(buf1, sizeof(buf1), "%i", sv[1]);
+        snprintf(buf2, sizeof(buf2), "%i", rqstfd);
 
         if (up->count == MAXSPAWN) {
             /* there's a pb with the db inform child, it will delete the db */

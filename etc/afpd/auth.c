@@ -1041,9 +1041,9 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
     if ((p = strtok_r(buf, ", ", &last)) == NULL)
         return -1;
 
-    strcpy(name, path);
+    strlcpy(name, path, sizeof(name));
     if (name[len - 1] != '/') {
-        strcat(name, "/");
+        strlcat(name, "/", sizeof(name));
         len++;
     }
 

@@ -564,7 +564,7 @@ static int read_addir(void)
             continue;
 
         /* Check for data file */
-        strcpy(pname + 3, ep->d_name);
+        strlcpy(pname + 3, ep->d_name, sizeof(pname) - 3);
         if ((access( pname, F_OK)) != 0) {
             if (errno != ENOENT) {
                 dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
@@ -825,8 +825,8 @@ static int dbd_readdir(int volroot, cnid_t did)
           Recursion
         **************************************************************************/
         if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we can't enter recursion */
-            strcat(cwdbuf, "/");
-            strcat(cwdbuf, name);
+            strlcat(cwdbuf, "/", sizeof(cwdbuf));
+            strlcat(cwdbuf, name, sizeof(cwdbuf));
             dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
             if (-1 == (cwd = open(".", O_RDONLY))) {
                 dbd_log( LOGSTD, "Can't open directory '%s': %s", cwdbuf, strerror(errno));
@@ -898,7 +898,7 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
         EC_EXIT_STATUS(0); /* Got signal, jump from dbd_readdir */
     }
 
-    strcpy(cwdbuf, vol->v_path);
+    strlcpy(cwdbuf, vol->v_path, sizeof(cwdbuf));
     chdir(vol->v_path);
 
     if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {

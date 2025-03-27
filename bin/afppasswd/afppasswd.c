@@ -37,6 +37,8 @@
 
 #include <gcrypt.h>
 
+#include <atalk/compat.h>
+
 #ifndef DES_KEY_SZ
 #define DES_KEY_SZ 8
 #endif
@@ -127,9 +129,9 @@ static int update_passwd(const char *path, const char *name, int flags, const ch
   }
 
   /* open the key file if it exists */
-  strcpy(buf, path);
+  strlcpy(buf, path, sizeof(buf));
   if (strlen(path) < sizeof(buf) - 5) {
-    strcat(buf, ".key");
+    strlcat(buf, ".key", sizeof(buf));
     keyfd = open(buf, O_RDONLY);
   }
 
@@ -153,8 +155,8 @@ static int update_passwd(const char *path, const char *name, int flags, const ch
   }
 
   if (flags & OPT_ADDUSER) {
-    strcpy(buf, name);
-    strcat(buf, FORMAT);
+    strlcpy(buf, name, sizeof(buf));
+    strlcat(buf, FORMAT, sizeof(buf));
     p = strchr(buf, ':') + 1;
     fwrite(buf, strlen(buf), 1, fp);
   } else {
@@ -264,8 +266,8 @@ static int create_file(const char *path, uid_t minuid)
     /* a little paranoia */
     if (strlen(pwd->pw_name) + FORMAT_LEN > sizeof(buf) - 1)
       continue;
-    strcpy(buf, pwd->pw_name);
-    strcat(buf, FORMAT);
+    strlcpy(buf, pwd->pw_name, sizeof(buf));
+    strlcat(buf, FORMAT, sizeof(buf));
     len = strlen(buf);
     if (write(fd, buf, len) != len) {
       fprintf(stderr, "afppasswd: problem writing to %s: %s\n", path,
