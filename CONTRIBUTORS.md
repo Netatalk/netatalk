@@ -252,8 +252,12 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Johan Huldtgren
 - Stuart Henderson
 - Antoine Jacoutot <ajacoutot@openbsd.org>
+- Rob Mitchelmore
 
 ### macipgw
+
+Contributors to the original macipgw project and forks,
+at the time the codebase was merged into netatalk.
 
 - Stefan Bethke <Stefan.Bethke@Hanse.DE>: original author
 - Jason King
