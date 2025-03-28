@@ -91,7 +91,7 @@ int main( int argc, char *argv[])
 	}
     }
 
-    if (( ah = atp_open( ATADDR_ANYPORT, &saddr.sat_addr )) == NULL ) {
+    if (( ah = atp_open( ATADDR_ANYPORT, NULL )) == NULL ) {
 	perror( "atp_open" );
 	exit( 1 );
     }
