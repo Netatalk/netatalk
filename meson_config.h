@@ -55,27 +55,6 @@
 /* set if struct at_addr is called atalk_addr */
 #mesondefine HAVE_ATALK_ADDR
 
-/* Define to 1 if you have the `attr_get' function. */
-#mesondefine HAVE_ATTR_GET
-
-/* Define to 1 if you have the `attr_getf' function. */
-#mesondefine HAVE_ATTR_GETF
-
-/* Define to 1 if you have the `attr_list' function. */
-#mesondefine HAVE_ATTR_LIST
-
-/* Define to 1 if you have the `attr_remove' function. */
-#mesondefine HAVE_ATTR_REMOVE
-
-/* Define to 1 if you have the `attr_removef' function. */
-#mesondefine HAVE_ATTR_REMOVEF
-
-/* Define to 1 if you have the `attr_set' function. */
-#mesondefine HAVE_ATTR_SET
-
-/* Define to 1 if you have the `attr_setf' function. */
-#mesondefine HAVE_ATTR_SETF
-
 /* Define to 1 if you have the <attr/xattr.h> header file. */
 #mesondefine HAVE_ATTR_XATTR_H
 
@@ -315,9 +294,6 @@
 
 /* Define to 1 if `tm_gmtoff' is a member of `struct tm'. */
 #mesondefine HAVE_STRUCT_TM_TM_GMTOFF
-
-/* Define to 1 if you have the <sys/attributes.h> header file. */
-#mesondefine HAVE_SYS_ATTRIBUTES_H
 
 /* Define to 1 if you have the <sys/attr.h> header file. */
 #mesondefine HAVE_SYS_ATTR_H

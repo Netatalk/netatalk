@@ -75,8 +75,7 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
 #endif
 
 /**************************************************************************
- Wrappers for extented attribute calls. Based on the Linux package with
- support for (Net|Free)BSD also. Expand as other systems have them.
+ Wrappers for extented attribute calls. Based on the Linux package.
 ****************************************************************************/
 static char attr_name[256 +5] = "user.";
 
@@ -154,16 +153,6 @@ ssize_t sys_getxattr (const char *path, const char *uname, void *value, size_t s
 
 	LOG(log_maxdebug, logtype_default, "sys_getxattr: extattr_get_file() failed with: %s\n", strerror(errno));
 	return -1;
-#elif defined(HAVE_ATTR_GET)
-	int retval, flags = 0;
-	int valuelength = (int)size;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
-
-	return retval ? retval : valuelength;
 #elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrfd = solaris_attropen(path, name, O_RDONLY, 0);
@@ -218,16 +207,6 @@ ssize_t sys_fgetxattr (int filedes, const char *uname, void *value, size_t size)
 
     LOG(log_debug, logtype_default, "sys_fgetxattr: extattr_get_fd(): %s", strerror(errno));
     return -1;
-#elif defined(HAVE_ATTR_GETF)
-    int retval, flags = 0;
-    int valuelength = (int)size;
-    char *attrname = strchr(name,'.') + 1;
-
-    if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-    retval = attr_getf(filedes, attrname, (char *)value, &valuelength, flags);
-
-    return retval ? retval : valuelength;
 #elif defined(SOLARIS)
     ssize_t ret = -1;
     int attrfd = solaris_openat(filedes, name, O_RDONLY|O_XATTR, 0);
@@ -275,17 +254,6 @@ ssize_t sys_lgetxattr (const char *path, const char *uname, void *value, size_t 
         return -1;
     }
     return extattr_get_link(path, EXTATTR_NAMESPACE_USER, uname, value, size);
-
-#elif defined(HAVE_ATTR_GET)
-	int retval, flags = ATTR_DONTFOLLOW;
-	int valuelength = (int)size;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	retval = attr_get(path, attrname, (char *)value, &valuelength, flags);
-
-	return retval ? retval : valuelength;
 #elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrfd = solaris_attropen(path, name, O_RDONLY | O_NOFOLLOW, 0);
@@ -384,74 +352,6 @@ static ssize_t bsd_attr_list (int type, extattr_arg arg, char *list, size_t size
 
 #endif
 
-#if defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
-static char attr_buffer[ATTR_MAX_VALUELEN];
-
-static ssize_t irix_attr_list(const char *path, int filedes, char *list, size_t size, int flags)
-{
-	int retval = 0, index;
-	attrlist_cursor_t *cursor = 0;
-	int total_size = 0;
-	attrlist_t * al = (attrlist_t *)attr_buffer;
-	attrlist_ent_t *ae;
-	size_t ent_size, left = size;
-	char *bp = list;
-
-	while (True) {
-	    if (filedes)
-		retval = attr_listf(filedes, attr_buffer, ATTR_MAX_VALUELEN, flags, cursor);
-	    else
-		retval = attr_list(path, attr_buffer, ATTR_MAX_VALUELEN, flags, cursor);
-	    if (retval) break;
-	    for (index = 0; index < al->al_count; index++) {
-		ae = ATTR_ENTRY(attr_buffer, index);
-		ent_size = strlen(ae->a_name) + sizeof("user.");
-		if (left >= ent_size) {
-		    strncpy(bp, "user.", sizeof("user."));
-		    strncat(bp, ae->a_name, ent_size - sizeof("user."));
-		    bp += ent_size;
-		    left -= ent_size;
-		} else if (size) {
-		    errno = ERANGE;
-		    retval = -1;
-		    break;
-		}
-		total_size += ent_size;
-	    }
-	    if (al->al_more == 0) break;
-	}
-	if (retval == 0) {
-	    flags |= ATTR_ROOT;
-	    cursor = 0;
-	    while (True) {
-		if (filedes)
-		    retval = attr_listf(filedes, attr_buffer, ATTR_MAX_VALUELEN, flags, cursor);
-		else
-		    retval = attr_list(path, attr_buffer, ATTR_MAX_VALUELEN, flags, cursor);
-		if (retval) break;
-		for (index = 0; index < al->al_count; index++) {
-		    ae = ATTR_ENTRY(attr_buffer, index);
-		    ent_size = strlen(ae->a_name) + sizeof("system.");
-		    if (left >= ent_size) {
-			strncpy(bp, "system.", sizeof("system."));
-			strncat(bp, ae->a_name, ent_size - sizeof("system."));
-			bp += ent_size;
-			left -= ent_size;
-		    } else if (size) {
-			errno = ERANGE;
-			retval = -1;
-			break;
-		    }
-		    total_size += ent_size;
-		}
-		if (al->al_more == 0) break;
-	    }
-	}
-	return (ssize_t)(retval ? retval : total_size);
-}
-
-#endif
-
 #if defined(HAVE_LISTXATTR)
 static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 {
@@ -502,8 +402,6 @@ ssize_t sys_listxattr (const char *path, char *list, size_t size)
 	extattr_arg arg;
 	arg.path = path;
 	return bsd_attr_list(0, arg, list, size);
-#elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
-	return irix_attr_list(path, 0, list, size, 0);
 #elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
@@ -537,8 +435,6 @@ ssize_t sys_flistxattr (int filedes _U_, const char *path, char *list, size_t si
 	extattr_arg arg;
 	arg.path = path;
 	return bsd_attr_list(0, arg, list, size);
-#elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
-	return irix_attr_list(path, 0, list, size, 0);
 #elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrdirfd = solaris_attropenat(filedes, path, ".", O_RDONLY, 0);
@@ -573,8 +469,6 @@ ssize_t sys_llistxattr (const char *path, char *list, size_t size)
 	extattr_arg arg;
 	arg.path = path;
 	return bsd_attr_list(1, arg, list, size);
-#elif defined(HAVE_ATTR_LIST) && defined(HAVE_SYS_ATTRIBUTES_H)
-	return irix_attr_list(path, 0, list, size, ATTR_DONTFOLLOW);
 #elif defined(SOLARIS)
 	ssize_t ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY | O_NOFOLLOW, 0);
@@ -603,13 +497,6 @@ int sys_removexattr (const char *path, const char *uname)
 	return removeea(path, name);
 #elif defined(HAVE_EXTATTR_DELETE_FILE)
 	return extattr_delete_file(path, EXTATTR_NAMESPACE_USER, uname);
-#elif defined(HAVE_ATTR_REMOVE)
-	int flags = 0;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	return attr_remove(path, attrname, flags);
 #elif defined(SOLARIS)
 	int ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY, 0);
@@ -638,13 +525,6 @@ int sys_fremovexattr (int filedes _U_, const char *path, const char *uname)
 	return removeea(path, name);
 #elif defined(HAVE_EXTATTR_DELETE_FILE)
 	return extattr_delete_file(path, EXTATTR_NAMESPACE_USER, uname);
-#elif defined(HAVE_ATTR_REMOVE)
-	int flags = 0;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	return attr_remove(path, attrname, flags);
 #elif defined(SOLARIS)
 	int ret = -1;
 	int attrdirfd = solaris_attropenat(filedes, path, ".", O_RDONLY, 0);
@@ -671,13 +551,6 @@ int sys_lremovexattr (const char *path, const char *uname)
 	return lremoveea(path, name);
 #elif defined(HAVE_EXTATTR_DELETE_LINK)
 	return extattr_delete_link(path, EXTATTR_NAMESPACE_USER, uname);
-#elif defined(HAVE_ATTR_REMOVE)
-	int flags = ATTR_DONTFOLLOW;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) flags |= ATTR_ROOT;
-
-	return attr_remove(path, attrname, flags);
 #elif defined(SOLARIS)
 	int ret = -1;
 	int attrdirfd = solaris_attropen(path, ".", O_RDONLY | O_NOFOLLOW, 0);
@@ -726,15 +599,6 @@ int sys_setxattr (const char *path, const char *uname, const void *value, size_t
 	}
 	retval = extattr_set_file(path, EXTATTR_NAMESPACE_USER, uname, value, size);
 	return (retval < 0) ? -1 : 0;
-#elif defined(HAVE_ATTR_SET)
-	int myflags = 0;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
-	if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
-	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
-
-	return attr_set(path, attrname, (const char *)value, size, myflags);
 #elif defined(SOLARIS)
 	int ret = -1;
 	int myflags = O_RDWR;
@@ -791,15 +655,6 @@ int sys_fsetxattr (int filedes, const char *uname, const void *value, size_t siz
     }
     retval = extattr_set_fd(filedes, attrnamespace, attrname, value, size);
     return (retval < 0) ? -1 : 0;
-#elif defined(HAVE_ATTR_SETF)
-    int myflags = 0;
-    char *attrname = strchr(name,'.') + 1;
-
-    if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
-    if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
-    if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
-
-    return attr_setf(filedes, attrname, (const char *)value, size, myflags);
 #elif defined(SOLARIS)
     int ret = -1;
     int myflags = O_RDWR | O_XATTR;
@@ -852,15 +707,6 @@ int sys_lsetxattr (const char *path, const char *uname, const void *value, size_
 
 	retval = extattr_set_link(path, EXTATTR_NAMESPACE_USER, uname, value, size);
 	return (retval < 0) ? -1 : 0;
-#elif defined(HAVE_ATTR_SET)
-	int myflags = ATTR_DONTFOLLOW;
-	char *attrname = strchr(name,'.') + 1;
-
-	if (strncmp(name, "system", 6) == 0) myflags |= ATTR_ROOT;
-	if (flags & XATTR_CREATE) myflags |= ATTR_CREATE;
-	if (flags & XATTR_REPLACE) myflags |= ATTR_REPLACE;
-
-	return attr_set(path, attrname, (const char *)value, size, myflags);
 #elif defined(SOLARIS)
 	int ret = -1;
 	int myflags = O_RDWR | O_NOFOLLOW;
