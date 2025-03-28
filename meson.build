@@ -246,7 +246,6 @@ check_headers = [
     'security/pam_appl.h',
     'sgtty.h',
     'sys/attr.h',
-    'sys/attributes.h',
     'sys/ea.h',
     'sys/extattr.h',
     'sys/mnttab.h',
@@ -1076,8 +1075,6 @@ elif host_os == 'freebsd'
             cdata.set(define, 1)
         endif
     endforeach
-elif host_os == 'dragonfly'
-    have_ea = false
 elif host_os == 'aix'
     have_ea = true
     ea_functions = [
@@ -1097,7 +1094,6 @@ elif host_os == 'aix'
             cdata.set(define, 1)
         endif
     endforeach
-
 elif cc.has_function('getxattr', dependencies: attr)
     have_ea = true
     ea_functions = [

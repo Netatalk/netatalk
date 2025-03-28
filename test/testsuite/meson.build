@@ -17,14 +17,13 @@ libafptest_sources = [
     'afpcmd.c',
     'afphelper.c',
     'adoublehelper.c',
-    'extattr.c',
-    'compat.c',
 ]
 
 libafptest = static_library(
     'afptest',
     libafptest_sources,
     include_directories: root_includes,
+    link_with: libatalk,
 )
 
 afparg_sources = [
