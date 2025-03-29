@@ -492,7 +492,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!debug && daemonize(0, 0) != 0) {
+    if (!debug && daemonize() != 0) {
         if (obj.cmdlineconfigfile != NULL) {
             free((void *)obj.cmdlineconfigfile);
         }
