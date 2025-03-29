@@ -275,8 +275,8 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  *
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
- * We hide the adouble:ea extended attributes here, but we currently
- * allow reading, writing and deleteting them.
+ * We hide the adouble:ea extended attributes here, we do not
+ * allow reading, writing and deleting them.
  */
 int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 {
@@ -385,9 +385,9 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
         return AFPERR_ACCESS;
 #endif
 
-    /* Protect special attributes set by Netatalk server */
+    /* Protect special attributes set by Netatalk server. Silently fail in order for file copies to work */
     if (!strncmp(attruname, AD_EA_META, AD_EA_META_LEN))
-        return AFPERR_ACCESS;
+        return AFP_OK;
 
     /*
      * Buffer for a copy of the xattr plus one byte in case
@@ -489,6 +489,10 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
         return AFPERR_ACCESS;
 #endif
 
+    /* Protect special attributes set by Netatalk server */
+    if (!strncmp(attruname, AD_EA_META, AD_EA_META_LEN))
+	return AFPERR_ACCESS;
+	
     /* PBaranski fix */
     if ( fd != -1) {
 	LOG(log_debug, logtype_afpd, "sys_remove_ea(%s): file is already opened", uname);
