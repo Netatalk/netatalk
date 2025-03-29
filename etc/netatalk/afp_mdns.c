@@ -113,7 +113,7 @@ static void *polling_thread(void *arg _U_) {
             }
         }
     }
-    return(NULL);
+    return NULL;
 }
 
 /*

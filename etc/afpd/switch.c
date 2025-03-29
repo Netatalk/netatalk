@@ -52,7 +52,7 @@ static int afp_null(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf 
 {
     LOG(log_info, logtype_afpd, "afp_null handle %d", *ibuf );
     *rbuflen = 0;
-    return( AFPERR_NOOP );
+    return AFPERR_NOOP;
 }
 
 /*

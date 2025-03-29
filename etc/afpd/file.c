@@ -594,7 +594,7 @@ int getmetadata(const AFPObj *obj,
             break;
 
         default :
-            return( AFPERR_BITMAP );
+            return AFPERR_BITMAP;
         }
         bitmap = bitmap>>1;
         bit++;
@@ -610,7 +610,7 @@ int getmetadata(const AFPObj *obj,
         data = set_name(vol, data, dir->d_did, path->m_name, id, utf8);
     }
     *buflen = data - buf;
-    return (AFP_OK);
+    return AFP_OK;
 }
 
 /* ----------------------- */
@@ -660,7 +660,7 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap, struct pat
     if (opened)
         ad_close(adp, ADFLAGS_HF | flags);
 
-    return( rc );
+    return rc;
 }
 
 /* ----------------------------- */
@@ -683,7 +683,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     ibuf += sizeof( vid );
 
     if (NULL == ( vol = getvolbyvid( vid )) )
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
 
     if (vol->v_flags & AFPVOL_RO)
         return AFPERR_VLOCK;
@@ -697,7 +697,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     if (NULL == ( s_path = cname( vol, dir, &ibuf )) )
         return get_afp_errno(AFPERR_PARAM);
     if ( *s_path->m_name == '\0' )
-        return( AFPERR_BADTYPE );
+        return AFPERR_BADTYPE;
 
     upath = s_path->u_name;
     ad_init(&ad, vol);
@@ -722,17 +722,17 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
         case EROFS:
             return AFPERR_VLOCK;
         case ENOENT : /* we were already in 'did folder' so chdir() didn't fail */
-            return ( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
         case EEXIST :
-            return( AFPERR_EXIST );
+            return AFPERR_EXIST;
         case EACCES :
-            return( AFPERR_ACCESS );
+            return AFPERR_ACCESS;
         case EDQUOT:
         case ENOSPC :
 	    LOG(log_info, logtype_afpd, "afp_createfile: DISK FULL");
-            return( AFPERR_DFULL );
+            return AFPERR_DFULL;
         default :
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
     if ( ad_meta_fileno( &ad ) == -1 ) { /* Hard META / HF */
@@ -770,7 +770,7 @@ createfile_iderr:
     curdir->d_offcnt++;
     setvoltime(obj, vol );
 
-    return (retvalue);
+    return retvalue;
 }
 
 int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
@@ -787,7 +787,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     memcpy(&vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -808,11 +808,11 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     }
 
     if (path_isadir(s_path)) {
-        return( AFPERR_BADTYPE ); /* it's a directory */
+        return AFPERR_BADTYPE; /* it's a directory */
     }
 
     if ( s_path->st_errno != 0 ) {
-        return( AFPERR_NOOBJ );
+        return AFPERR_NOOBJ;
     }
 
     if ((intptr_t)ibuf & 1 ) {
@@ -823,7 +823,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
         setvoltime(obj, vol );
     }
 
-    return( rc );
+    return rc;
 }
 
 /*
@@ -1149,10 +1149,10 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *
     if ( unix_rename( sdir_fd, src, -1, dst ) < 0 ) {
         switch ( errno ) {
         case ENOENT :
-            return( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
         case EPERM:
         case EACCES :
-            return( AFPERR_ACCESS );
+            return AFPERR_ACCESS;
         case EROFS:
             return AFPERR_VLOCK;
         case EXDEV :			/* Cross device move -- try copy */
@@ -1166,11 +1166,11 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *
     	    }
             if (AFP_OK != ( rc = copyfile(vol, vol, ddir, sdir_fd, src, dst, newname, NULL )) ) {
                 /* on error copyfile delete dest */
-                return( rc );
+                return rc;
             }
             return deletefile(vol, sdir_fd, src, 0);
         default :
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
 
@@ -1205,7 +1205,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src, char *
         ad_close( adp, ADFLAGS_HF );
     }
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ----------------
@@ -1301,7 +1301,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     memcpy(&svid, ibuf, sizeof( svid ));
     ibuf += sizeof( svid );
     if (NULL == ( s_vol = getvolbyvid( svid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy(&sdid, ibuf, sizeof( sdid ));
@@ -1319,7 +1319,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
         return get_afp_errno(AFPERR_PARAM);
     }
     if ( path_isadir(s_path) ) {
-        return( AFPERR_BADTYPE );
+        return AFPERR_BADTYPE;
     }
 
     /* don't allow copies when the file is open.
@@ -1414,7 +1414,7 @@ copy_exit:
         fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
     }
     ad_close( adp, ADFLAGS_DF |ADFLAGS_HF | ADFLAGS_SETSHRMD);
-    return( retvalue );
+    return retvalue;
 }
 
 /* ----------------------------------
@@ -1696,7 +1696,7 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     ibuf += sizeof(vid);
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM);
+        return AFPERR_PARAM;
     }
 
     if (vol->v_cdb == NULL || !(vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
@@ -1718,7 +1718,7 @@ int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
     }
 
     if ( path_isadir(s_path) ) {
-        return( AFPERR_BADTYPE );
+        return AFPERR_BADTYPE;
     }
 
     upath = s_path->u_name;
@@ -1835,7 +1835,7 @@ int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     ibuf += sizeof(vid);
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM);
+        return AFPERR_PARAM;
     }
 
     if (vol->v_cdb == NULL || !(vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
@@ -1943,7 +1943,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     ibuf += sizeof(vid);
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM);
+        return AFPERR_PARAM;
     }
 
     if (vol->v_cdb == NULL || !(vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
@@ -1969,7 +1969,7 @@ int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
             err = AFPERR_NOOBJ;
             goto delete;
         }
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     err = AFP_OK;
@@ -2089,7 +2089,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     ibuf += sizeof(vid);
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM);
+        return AFPERR_PARAM;
     }
 
     if ((vol->v_flags & AFPVOL_RO))

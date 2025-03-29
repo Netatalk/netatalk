@@ -48,7 +48,7 @@ static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
     int			cztcnt, ztcnt;
 
     if (( iface->i_flags & IFACE_SEED ) == 0 ) {
-	return( 0 );
+	return 0;
     }
 
     for ( cztcnt = 0, czt = iface->i_czt; czt; czt = czt->zt_next, cztcnt++ ) {
@@ -62,7 +62,7 @@ static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 	if ( l == NULL ) {
 	    LOG(log_error, logtype_atalkd, "zonecheck: %.*s not in zone list", czt->zt_len,
 		    czt->zt_name );
-	    return( -1 );	/* configured zone not found in net zones */
+	    return -1;	/* configured zone not found in net zones */
 	}
     }
 
@@ -72,10 +72,10 @@ static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
     if ( cztcnt != ztcnt ) {
 	LOG(log_error, logtype_atalkd, "zonecheck: %d configured zones, %d zones found",
 		cztcnt, ztcnt );
-	return( -1 );		/* more net zones than configured zones */
+	return -1;		/* more net zones than configured zones */
     }
 
-    return( 0 );
+    return 0;
 }
 
 
@@ -945,17 +945,17 @@ struct ziptab *newzt(const int len, const char *name)
     struct ziptab	*zt;
 
     if (( zt = (struct ziptab *)calloc(1, sizeof( struct ziptab ))) == NULL ) {
-	return( NULL );
+	return NULL;
     }
 
     zt->zt_len = len;
     if (( zt->zt_name = (char *)malloc( len )) == NULL ) {
 	free(zt);
-	return( NULL );
+	return NULL;
     }
 
     memcpy( zt->zt_name, name, len );
-    return( zt );
+    return zt;
 }
 
 
@@ -969,7 +969,7 @@ static int add_list(struct list **head, void *data)
 
     for ( l = *head; l; l = l->l_next ) {
 	if ( l->l_data == data ) {
-	    return( 1 );
+	    return 1;
 	}
     }
     if (( l = (struct list *)malloc( sizeof( struct list ))) == NULL ) {
@@ -989,7 +989,7 @@ static int add_list(struct list **head, void *data)
 	l->l_prev = l2;
 	l2->l_next = l;
     }
-    return( 0 );
+    return 0;
 }
 
 int addzone(struct rtmptab *rt, int len, char *zone)

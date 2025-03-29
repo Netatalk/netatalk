@@ -42,7 +42,7 @@ int asp_shutdown(ASP asp)
 
     if ( atp_sreq( asp->asp_atp, &atpb, 1, ATP_XO ) < 0 ) {
 	asp->asp_sat.sat_port = oport;
-	return( -1 );
+	return -1;
     }
 
     iov.iov_base = asp->commands;
@@ -52,9 +52,9 @@ int asp_shutdown(ASP asp)
 
     if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
 	asp->asp_sat.sat_port = oport;
-	return( -1 );
+	return -1;
     }
     asp->asp_sat.sat_port = oport;
 
-    return( 0 );
+    return 0;
 }

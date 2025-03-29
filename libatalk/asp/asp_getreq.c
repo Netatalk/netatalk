@@ -46,7 +46,7 @@ int asp_getrequest(ASP asp)
     atpb.atp_rreqdlen = sizeof(asp->cmdbuf);
 
     if ( atp_rreq( asp->asp_atp, &atpb ) < 0 ) {
-	return( -1 );
+	return -1;
     }
 
     asp->cmdlen = atpb.atp_rreqdlen - 4;
@@ -55,11 +55,11 @@ int asp_getrequest(ASP asp)
     seq = ntohs( seq );
 
     if ((asp->cmdbuf[0] != ASPFUNC_CLOSE) && (seq != asp->asp_seq)) {
-	return( -2 );
+	return -2;
     }
     if ( asp->cmdbuf[1] != asp->asp_sid ) {
-	return( -3 );
+	return -3;
     }
 
-    return( asp->cmdbuf[0] ); /* the command */
+    return asp->cmdbuf[0]; /* the command */
 }

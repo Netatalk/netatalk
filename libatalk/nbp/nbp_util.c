@@ -38,7 +38,7 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
     data += SZ_NBPTUPLE;
     len -= SZ_NBPTUPLE;
     if ( len < 0 ) {
-	return( -1 );
+	return -1;
     }
 
 #ifdef BSD4_4
@@ -52,10 +52,10 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
     nn->nn_objlen = *data++;
     len -= nn->nn_objlen + 1;
     if ( len < 0 ) {
-	return( -1 );
+	return -1;
     }
     if ( nn->nn_objlen > NBPSTRLEN ) {
-	return( -1 );
+	return -1;
     }
     memcpy( nn->nn_obj, data, nn->nn_objlen );
     data += nn->nn_objlen;
@@ -63,10 +63,10 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
     nn->nn_typelen = *data++;
     len -= nn->nn_typelen + 1;
     if ( len < 0 ) {
-	return( -1 );
+	return -1;
     }
     if ( nn->nn_typelen > NBPSTRLEN ) {
-	return( 1 );
+	return 1;
     }
     memcpy( nn->nn_type, data, nn->nn_typelen );
 
@@ -74,14 +74,14 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
     nn->nn_zonelen = *data++;
     len -= nn->nn_zonelen + 1;
     if ( len < 0 ) {
-	return( -1 );
+	return -1;
     }
     if ( nn->nn_zonelen > NBPSTRLEN ) {
-	return( 1 );
+	return 1;
     }
     memcpy( nn->nn_zone, data, nn->nn_zonelen );
 
-    return( len );
+    return len;
 }
 
 #define NBPM_OBJ	(1<<1)
@@ -108,23 +108,23 @@ int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
     if ( !( match & NBPM_OBJ )) {
 	if ( n1->nn_objlen != n2->nn_objlen ||
 		strndiacasecmp( n1->nn_obj, n2->nn_obj, n1->nn_objlen )) {
-	    return( 0 );
+	    return 0;
 	}
     }
     if ( !( match & NBPM_TYPE )) {
 	if ( n1->nn_typelen != n2->nn_typelen ||
 		strndiacasecmp( n1->nn_type, n2->nn_type, n1->nn_typelen )) {
-	    return( 0 );
+	    return 0;
 	}
     }
     if ( !( match & NBPM_ZONE )) {
 	if ( n1->nn_zonelen != n2->nn_zonelen ||
 		strndiacasecmp( n1->nn_zone, n2->nn_zone, n1->nn_zonelen )) {
-	    return( 0 );
+	    return 0;
 	}
     }
 
-    return( 1 );
+    return 1;
 }
 
 int nbp_name(const char  *name, char **objp,char **typep,char **zonep)
@@ -134,7 +134,7 @@ int nbp_name(const char  *name, char **objp,char **typep,char **zonep)
 
     if ( name ) {
 	if ( strlen( name ) + 1 > sizeof( buf )) {
-	    return( -1 );
+	    return -1;
 	}
 	strcpy( buf, name );
 
@@ -151,5 +151,5 @@ int nbp_name(const char  *name, char **objp,char **typep,char **zonep)
 	}
     }
 
-    return( 0 );
+    return 0;
 }

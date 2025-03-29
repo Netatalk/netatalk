@@ -321,7 +321,7 @@ atalk_cksum( unsigned char *data, int len)
 	cksum = 0x0000ffff;
     }
 
-    return( (uint16_t) cksum );
+    return (uint16_t) cksum;
 }
 
 /*

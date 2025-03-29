@@ -93,8 +93,8 @@ ssize_t ad_read( struct adouble *ad, const uint32_t eid, off_t off, char *buf, c
         }
 
         if (( cc = adf_pread( &ad->ad_resource_fork, buf, buflen, r_off )) < 0 )
-            return( -1 );
+            return -1;
     }
 
-    return( cc );
+    return cc;
 }

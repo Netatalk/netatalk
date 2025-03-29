@@ -408,12 +408,12 @@ mountp( char *file, int *nfs)
     static struct mnttab	mnt;
 
     if (stat(file, &sb) < 0) {
-        return( NULL );
+        return NULL;
     }
     devno = sb.st_dev;
 
     if (( mtab = fopen( "/etc/mnttab", "r" )) == NULL ) {
-        return( NULL );
+        return NULL;
     }
 
     while ( getmntent( mtab, &mnt ) == 0 ) {
@@ -432,7 +432,7 @@ mountp( char *file, int *nfs)
     }
 
     fclose( mtab );
-    return( NULL );
+    return NULL;
 }
 
 #else /* __svr4__ */
@@ -444,13 +444,13 @@ special(char *file, int *nfs)
     static struct statfs	sfs;
 
     if ( statfs( file, &sfs ) < 0 ) {
-        return( NULL );
+        return NULL;
     }
 
     /* XXX: make sure this really detects an nfs mounted fs */
     if (strchr(sfs.f_mntfromname, ':'))
         *nfs = 1;
-    return( sfs.f_mntfromname );
+    return sfs.f_mntfromname;
 }
 
 #else /* BSD4_4 */
@@ -465,12 +465,12 @@ special(char *file, int *nfs)
     int 		found=0;
 
     if (stat(file, &sb) < 0 ) {
-        return( NULL );
+        return NULL;
     }
     devno = sb.st_dev;
 
     if (( mtab = setmntent( "/etc/mtab", "r" )) == NULL ) {
-        return( NULL );
+        return NULL;
     }
 
     while (( mnt = getmntent( mtab )) != NULL ) {
@@ -493,13 +493,13 @@ special(char *file, int *nfs)
     endmntent( mtab );
 
     if (!found)
-	return (NULL);
+	return NULL;
 #ifdef __linux__
     if (strcmp(mnt->mnt_type, "xfs") == 0)
 	is_xfs = 1;
 #endif
 
-    return( mnt->mnt_fsname );
+    return mnt->mnt_fsname;
 }
 
 #endif /* BSD4_4 */
@@ -525,7 +525,7 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
     qc.uid = uid;
     qc.addr = (caddr_t)dq;
     if ( ioctl( vol->v_qfd, Q_QUOTACTL, &qc ) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
 #else /* __svr4__ */
@@ -549,7 +549,7 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid, struct 
             if ( quotactl(vol->v_path, QCMD(Q_GETQUOTA, GRPQUOTA),
                             obj->groups[0], (char *) &dqg) != 0 ) {
                 unbecome_root();
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
         }
     }
@@ -616,7 +616,7 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq, const 
     if ( vol->v_qfd == -1 && vol->v_gvs == NULL) {
         if (( p = mountp( vol->v_path, &vol->v_nfs)) == NULL ) {
             LOG(log_info, logtype_afpd, "getquota: mountp %s fails", vol->v_path );
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
 
         if (vol->v_nfs) {
@@ -630,7 +630,7 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq, const 
             sprintf( buf, "%s/quotas", p );
             if (( vol->v_qfd = open( buf, O_RDONLY, 0 )) < 0 ) {
                 LOG(log_info, logtype_afpd, "open %s: %s", buf, strerror(errno) );
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
         }
 
@@ -639,7 +639,7 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq, const 
     if ( vol->v_gvs == NULL ) {
         if (( p = special( vol->v_path, &vol->v_nfs )) == NULL ) {
             LOG(log_info, logtype_afpd, "getquota: special %s fails", vol->v_path );
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
 
         if (( vol->v_gvs = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
@@ -660,21 +660,21 @@ static int overquota( struct dqblk *dqblk)
 
     if ( dqblk->dqb_curblocks > dqblk->dqb_bhardlimit &&
          dqblk->dqb_bhardlimit != 0 ) {
-        return( 1 );
+        return 1;
     }
 
     if ( dqblk->dqb_curblocks < dqblk->dqb_bsoftlimit ||
          dqblk->dqb_bsoftlimit == 0 ) {
-        return( 0 );
+        return 0;
     }
     if ( gettimeofday( &tv, NULL ) < 0 ) {
         LOG(log_error, logtype_afpd, "overquota: gettimeofday: %s", strerror(errno) );
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     if ( dqblk->dqb_btimelimit && dqblk->dqb_btimelimit > tv.tv_sec ) {
-        return( 0 );
+        return 0;
     }
-    return( 1 );
+    return 1;
 }
 
 /*
@@ -711,7 +711,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
 	this_bsize = bsize;
 
 	if (getquota(obj, vol, &dqblk, bsize) != 0 ) {
-		return( AFPERR_PARAM );
+		return AFPERR_PARAM;
 	}
 
 #ifdef __linux__
@@ -737,7 +737,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree, VolS
                  	  tobytes( dqblk.dqb_curblocks, this_bsize );
     	}
 
-	return( AFP_OK );
+	return AFP_OK;
 }
 #endif /* HAVE_LIBQUOTA */
 #endif

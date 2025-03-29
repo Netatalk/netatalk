@@ -62,14 +62,14 @@ resend_request(ATP ah)
 	    ah->atph_reqpkt->atpbuf_dlen, 0,
 	    (struct sockaddr *) &ah->atph_reqpkt->atpbuf_addr,
 	    sizeof( struct sockaddr_at )) != ah->atph_reqpkt->atpbuf_dlen ) {
-	return( -1 );
+	return -1;
     }
 
     if ( ah->atph_reqtries > 0 ) {
 	--(ah->atph_reqtries);
     }
 
-    return( 0 );
+    return 0;
 }
 
 int
@@ -102,11 +102,11 @@ atp_rsel(
 	/*
 	 * we already have a complete atp response; just return
 	 */
-	return( ATP_TRESP );
+	return ATP_TRESP;
     }
 
     if (( abuf = atp_alloc_buf()) == NULL ) {
-	return( -1 );
+	return -1;
     }
 
     if ( requesting ) {
@@ -117,7 +117,7 @@ atp_rsel(
 	if ( tv.tv_sec - ah->atph_reqtv.tv_sec > ah->atph_reqto ) {
 	    if ( resend_request( ah ) < 0 ) {
 		atp_free_buf( abuf );
-		return( -1 );
+		return -1;
 	    }
 	}
     }
@@ -132,7 +132,7 @@ atp_rsel(
 	    if (( c = select( ah->atph_socket + 1, &fds, NULL, NULL,
 		    &tv )) < 0 ) {
 		atp_free_buf( abuf );
-		return( -1 );
+		return -1;
 	    }
 	    if ( c == 0 || FD_ISSET( ah->atph_socket, &fds ) == 0 ) {
 		recvlen = -1;
@@ -169,7 +169,7 @@ timeout :
 
     if ( recvlen <= 0 ) {	/* error */
 	atp_free_buf( abuf );
-	return( recvlen );
+	return recvlen;
     }
 
 #ifdef EBUG
@@ -256,10 +256,10 @@ timeout :
 	    memcpy( faddr, &saddr, sizeof( struct sockaddr_at ));
 	    abuf->atpbuf_next = ah->atph_queue;
 	    ah->atph_queue = abuf;
-	    return( ATP_TREQ );
+	    return ATP_TREQ;
 	} else {
 	    atp_free_buf( abuf );
-	    return( 0 );
+	    return 0;
 	}
     }
 
@@ -304,7 +304,7 @@ timeout :
 		    sizeof( struct sockaddr_at )) !=
 		    ah->atph_reqpkt->atpbuf_dlen ) {
 		atp_free_buf( abuf );
-		return( -1 );
+		return -1;
 	    }
 	}
     } else {
@@ -350,13 +350,13 @@ timeout :
     if ( ah->atph_rbitmap != 0 ) {
 	if ( ah->atph_reqtries > 0
 		|| ah->atph_reqtries == ATP_TRIES_INFINITE ) {
-	    return( 0 );
+	    return 0;
 	} else {
 	    errno = ETIMEDOUT;
-	    return( -1 );
+	    return -1;
 	}
     }
 
     memcpy( faddr, &saddr, sizeof( struct sockaddr_at ));
-    return( ATP_TRESP );
+    return ATP_TRESP;
 }

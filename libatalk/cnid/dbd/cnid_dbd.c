@@ -175,7 +175,7 @@ static int tsock_getfd(const char *host, const char *port)
         return -1;
     }
 
-    return(sock);
+    return sock;
 }
 
 /*!

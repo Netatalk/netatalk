@@ -299,7 +299,7 @@ int statat(int dirfd _U_, const char *path, struct stat *st)
 {
     if (dirfd == -1)
         dirfd = AT_FDCWD;
-    return (fstatat(dirfd, path, st, 0));
+    return fstatat(dirfd, path, st, 0);
 }
 
 /*

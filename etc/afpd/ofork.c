@@ -89,7 +89,7 @@ int of_flush(const struct vol *vol)
             LOG(log_error, logtype_afpd, "of_flush: %s", strerror(errno) );
         }
     }
-    return( 0 );
+    return 0;
 }
 
 int of_rename(const struct vol *vol,
@@ -179,7 +179,7 @@ of_alloc(struct vol *vol,
     lastrefnum = refnum;
     if ( i == nforks ) {
         LOG(log_error, logtype_afpd, "of_alloc: maximum number of forks exceeded.");
-        return( NULL );
+        return NULL;
     }
 
     of_refnum = refnum % nforks;
@@ -230,7 +230,7 @@ of_alloc(struct vol *vol,
         of->of_flags = AFPFORK_RSRC;
 
     of_hash(of);
-    return( of );
+    return of;
 }
 
 struct ofork *of_find(const uint16_t ofrefnum )
@@ -238,7 +238,7 @@ struct ofork *of_find(const uint16_t ofrefnum )
     if (!oforks || !nforks)
         return NULL;
 
-    return( oforks[ ofrefnum % nforks ] );
+    return oforks[ ofrefnum % nforks ];
 }
 
 /* -------------------------- */

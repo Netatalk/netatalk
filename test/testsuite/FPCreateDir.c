@@ -158,7 +158,7 @@ DSI *dsi2;
 	}
 	FAIL (FPCloseVol(Conn2,vol2))
 
-	return(tdir);
+	return tdir;
 }
 
 /* ----------- */

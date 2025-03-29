@@ -185,7 +185,7 @@ char *utompath(const struct vol *vol, const char *upath)
         return NULL;
     }
 
-    return(m);
+    return m;
 }
 
 

@@ -41,7 +41,7 @@ ASP asp_init(ATP atp)
     ASP		asp;
 
     if (( asp = (struct ASP *)calloc(1, sizeof( struct ASP ))) == NULL ) {
-	return( NULL );
+	return NULL;
     }
 
     asp->asp_atp = atp;
@@ -60,7 +60,7 @@ ASP asp_init(ATP atp)
     asp->read_count = asp->write_count = 0;
     asp->commands = asp->cmdbuf + 4;
 
-    return( asp );
+    return asp;
 }
 
 void asp_setstatus(ASP asp, char *status, const int slen)

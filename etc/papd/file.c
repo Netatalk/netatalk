@@ -20,7 +20,7 @@ int markline( struct papfile *pf, char **start, int *linelength, int *crlflength
     char		*p;
 
     if ( pf->pf_datalen == 0 && ( pf->pf_state & PF_EOF )) {
-	return( 0 );
+	return 0;
     }
 
     *start = pf->pf_data;
@@ -37,7 +37,7 @@ int markline( struct papfile *pf, char **start, int *linelength, int *crlflength
 	if ( pf->pf_state & PF_EOF ) {
 	    append( pf, "\n", 1 );
 	} else {
-	    return( -1 );
+	    return -1;
 	}
     }
 
@@ -53,12 +53,12 @@ int markline( struct papfile *pf, char **start, int *linelength, int *crlflength
     if (!*crlflength) {
         // line is way too long, something fishy is going on, give up
         LOG(log_error, logtype_papd, "markline: no crlf in comment, give up" );
-        return( -2 );
+        return -2;
     }
     */
 
     /* success, return 1 */
-    return( 1 );
+    return 1;
 }
 
 void morespace(struct papfile *pf, const char *data, int len)

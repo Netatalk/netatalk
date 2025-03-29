@@ -1529,23 +1529,23 @@ struct extmap *getextmap(const char *path)
     struct extmap *em;
 
     if (!Extmap_cnt || NULL == ( p = strrchr( path, '.' )) ) {
-        return( Defextmap );
+        return Defextmap;
     }
     p++;
     if (!*p) {
-        return( Defextmap );
+        return Defextmap;
     }
     em = bsearch(p, Extmap, Extmap_cnt, sizeof(struct extmap), ext_cmp_key);
     if (em) {
-        return( em );
+        return em;
     } else {
-        return( Defextmap );
+        return Defextmap;
     }
 }
 
 struct extmap *getdefextmap(void)
 {
-    return( Defextmap );
+    return Defextmap;
 }
 
 static int readextmap(const char *file)
@@ -1828,10 +1828,10 @@ struct vol *getvolbyvid(const uint16_t vid )
         }
     }
     if ( vol == NULL || ( vol->v_flags & AFPVOL_OPEN ) == 0 ) {
-        return( NULL );
+        return NULL;
     }
 
-    return( vol );
+    return vol;
 }
 
 /*

@@ -214,7 +214,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
     len = (unsigned char) *ibuf++;
     if ( len > ulen ) {
-	return( AFPERR_PARAM );
+	return AFPERR_PARAM;
     }
 
     memcpy(username, ibuf, len );
@@ -224,7 +224,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 
     if ((unsigned long) ibuf & 1)  /* pad character */
       ++ibuf;
-    return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* ----------------------------- */
@@ -248,12 +248,12 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     len = ntohs(temp16);
 
     if (!len || len > ulen ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
 
-    return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* logout */
@@ -351,7 +351,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     data = (char *)malloc(stop - start + 1);
     if (!data) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc");
-	return(-1);
+	return -1;
     }
 
     strlcpy(data, start, stop - start + 1);
@@ -366,13 +366,13 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     if ((p = strchr(data, '(' )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: username not found in string");
 	free(data);
-	return(-1);
+	return -1;
     }
     p++;
     if ((q = strstr(p, ") (" )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: username not found in string");
 	free(data);
-	return(-1);
+	return -1;
     }
     memcpy(username, p, MIN(UAM_USERNAMELEN, q - p) );
 
@@ -381,7 +381,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     if ((q = strrchr(p, ')' )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: password not found in string");
 	free(data);
-	return(-1);
+	return -1;
     }
 
     /* Allocate memory for the global PAM_password */
@@ -402,14 +402,14 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
             username);
         free(PAM_password);
         PAM_password = NULL;
-        return(-1);
+        return -1;
     }
 
     if (uam_checkuser(pwd) < 0) {
         /* syslog of error happens in uam_checkuser */
         free(PAM_password);
         PAM_password = NULL;
-        return(-1);
+        return -1;
     }
 
     PAM_username = username;
@@ -423,7 +423,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
         pamh = NULL;
         free(PAM_password);
         PAM_password = NULL;
-        return(-1);
+        return -1;
     }
 
     pam_set_item(pamh, PAM_TTY, "papd");
@@ -436,7 +436,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
         pamh = NULL;
         free(PAM_password);
         PAM_password = NULL;
-        return(-1);
+        return -1;
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
@@ -447,7 +447,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
         pamh = NULL;
         free(PAM_password);
         PAM_password = NULL;
-        return(-1);
+        return -1;
     }
 
     PAM_error = pam_open_session(pamh, 0);
@@ -458,7 +458,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
         pamh = NULL;
         free(PAM_password);
         PAM_password = NULL;
-        return(-1);
+        return -1;
     }
 
     /* Login successful, but no need to hang onto it,
@@ -473,7 +473,7 @@ static int pam_printer(char *start, char *stop, char *username, struct papfile *
     free(PAM_password);
     PAM_password = NULL;
 
-    return(0);
+    return 0;
 }
 
 

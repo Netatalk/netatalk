@@ -50,7 +50,7 @@ static size_t mac_korean_char_push(uint8_t* out, const ucs2_t* in, size_t* size)
   if ((wc & ~7) == 0xf860) {
     wc = cjk_compose_seq(in, size, mac_korean_compose,
 			 sizeof(mac_korean_compose) / sizeof(uint32_t));
-    if (!wc) return (size_t)-1;
+    if (!wc) return (size_t) -1;
   } else if ((wc & 0xf000) == 0xe000) {
     *size = 1;
     return 0;
@@ -103,11 +103,11 @@ static size_t mac_korean_char_pull(ucs2_t* out, const uint8_t* in, size_t* size)
 	c = (c << 8) + c2;
       } else {
 	errno = EILSEQ;
-	return (size_t)-1;
+	return (size_t) -1;
       }
     } else {
       errno = EINVAL;
-      return (size_t)-1;
+      return (size_t) -1;
     }
   } else {
     *size = 1;

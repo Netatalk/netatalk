@@ -54,14 +54,14 @@ int ps( struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat
 		continue;
 
 	    case CH_MORE :
-		return( CH_MORE );
+		return CH_MORE;
 
 	    case CH_ERROR :
 	        parser_error(outfile);
-		return( 0 );
+		return 0;
 
 	    default :
-		return( CH_ERROR );
+		return CH_ERROR;
 	    }
 	} else {
 	    switch ( markline( infile, &start, &linelength, &crlflength )) {
@@ -69,15 +69,15 @@ int ps( struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat
 		/* eof on infile */
 		outfile->pf_state |= PF_EOF;
 		lp_close();
-		return( 0 );
+		return 0;
 
 	    case -2:
 	        parser_error(outfile);
-		return( 0 );
+		return 0;
 
 	    case -1 :
 		spoolreply( outfile, "Processing..." );
-		return( 0 );
+		return 0;
 	    }
 
 	    if ( infile->pf_state & PF_BOT ) {
@@ -119,21 +119,21 @@ int cm_psquery( struct papfile *in, struct papfile *out, struct sockaddr_at *sat
 	{
 	    /* handle eof at end of query job */
 	    compop();
-	    return (CH_DONE);
+	    return CH_DONE;
 	}
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
 	    /* eof on infile */
 	    out->pf_state |= PF_EOF;
 	    compop();
-	    return( CH_DONE );
+	    return CH_DONE;
 
 	case -1 :
 	    spoolreply( out, "Processing..." );
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 
 	if ( in->pf_state & PF_BOT ) {
@@ -141,7 +141,7 @@ int cm_psquery( struct papfile *in, struct papfile *out, struct sockaddr_at *sat
 	} else {
 	    if (( comment = commatch( start, start+linelength, queries )) != NULL ) {
 		compush( comment );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	}
 
@@ -161,13 +161,13 @@ int cm_psadobe( struct papfile *in, struct papfile *out, struct sockaddr_at *sat
 	    /* eof on infile */
 	    out->pf_state |= PF_EOF;
 	    compop();
-	    return( CH_DONE );
+	    return CH_DONE;
 
 	case -1 :
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 	if ( in->pf_state & PF_BOT ) {
 	    in->pf_state &= ~PF_BOT;
@@ -180,7 +180,7 @@ int cm_psadobe( struct papfile *in, struct papfile *out, struct sockaddr_at *sat
 	} else {
 	    if (( comment = commatch( start, start + linelength, headers )) != NULL ) {
 		compush( comment );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	}
 
@@ -206,13 +206,13 @@ int cm_psswitch(struct papfile *in, struct papfile *out, struct sockaddr_at *sat
 	/* eof on infile */
 	out->pf_state |= PF_EOF;
 	compop();
-	return( 0 );
+	return 0;
 
     case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     stop = start + linelength;
@@ -239,7 +239,7 @@ int cm_psswitch(struct papfile *in, struct papfile *out, struct sockaddr_at *sat
 	    exit( 1 );
 	}
     }
-    return( CH_DONE );
+    return CH_DONE;
 }
 
 

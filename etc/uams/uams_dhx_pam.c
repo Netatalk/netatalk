@@ -352,7 +352,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
     if ((unsigned long) ibuf & 1) /* pad to even boundary */
       ++ibuf;
 
-    return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* ----------------------------- */
@@ -388,7 +388,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
 
-    return (login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* -------------------------------- */

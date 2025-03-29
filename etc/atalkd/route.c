@@ -28,7 +28,7 @@ int route( int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
     rtent.rt_dst = *dst;
     rtent.rt_gateway = *gate;
     rtent.rt_flags = flags;
-    return( ioctl( rtfd, message, &rtent ));
+    return ioctl( rtfd, message, &rtent );
 }
 
 #else /* BSD4_4 */
@@ -72,8 +72,8 @@ int route( int message, struct sockaddr_at	*dst, struct sockaddr_at *gate, int f
     rtma.rtma_gate = *gate;
     if (( rc = write( rtfd, &rtma, rtma.rtma_rtm.rtm_msglen )) !=
 	    rtma.rtma_rtm.rtm_msglen ) {
-	return( -1 );
+	return -1;
     }
-    return( 0 );
+    return 0;
 }
 #endif /* BSD4_4 */

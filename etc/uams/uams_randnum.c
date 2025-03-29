@@ -485,7 +485,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
     if (err)
       return err;
 
-  return( AFP_OK );
+  return AFP_OK;
 }
 
 /* randnum login */
@@ -503,13 +503,13 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
 
     if (ibuflen < 2) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     len = (unsigned char) *ibuf++;
     ibuflen--;
     if (!len || len > ibuflen || len > ulen ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     memcpy(username, ibuf, len );
     ibuf += len;
@@ -520,7 +520,7 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
         ++ibuf;
         ibuflen--;
     }
-    return (rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* randnum login ext */
@@ -544,11 +544,11 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     memcpy(&temp16, uname, sizeof(temp16));
     len = ntohs(temp16);
     if (!len || len > ulen ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
-    return (rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 static int uam_setup(void *obj, const char *path)

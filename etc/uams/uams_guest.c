@@ -47,18 +47,18 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
     if ((pwent = getpwnam(guest)) == NULL) {
 	LOG(log_error, logtype_uams, "noauth_login: getpwnam( %s ): %s",
 		guest, strerror(errno) );
-	return( AFPERR_BADUAM );
+	return AFPERR_BADUAM;
     }
 
     *uam_pwd = pwent;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
                      char *rbuf, size_t *rbuflen)
 {
-        return ( noauth_login (obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+        return noauth_login (obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 
@@ -71,7 +71,7 @@ static int noauth_printer(char *start, char *stop, char *username, struct papfil
     data = (char *)malloc(stop - start + 1);
     if (!data) {
 	LOG(log_info, logtype_uams,"Bad Login NoAuthUAM: malloc");
-	return(-1);
+	return -1;
     }
 
     strlcpy(data, start, stop - start + 1);
@@ -85,13 +85,13 @@ static int noauth_printer(char *start, char *stop, char *username, struct papfil
     if ((p = strchr(data, '(' )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login NoAuthUAM: username not found in string");
 	free(data);
-	return(-1);
+	return -1;
     }
     p++;
     if ((q = strchr(p, ')' )) == NULL) {
 	LOG(log_info, logtype_uams,"Bad Login NoAuthUAM: username not found in string");
 	free(data);
-	return(-1);
+	return -1;
     }
     memcpy(username, p,  MIN( UAM_USERNAMELEN, q - p ));
 
@@ -101,13 +101,13 @@ static int noauth_printer(char *start, char *stop, char *username, struct papfil
     if (getpwnam(username) == NULL) {
 	LOG(log_info, logtype_uams, "Bad Login NoAuthUAM: %s: %s",
 	       username, strerror(errno) );
-	return(-1);
+	return -1;
     }
 
     /* Login successful */
     append(out, loginok, strlen(loginok));
     LOG(log_info, logtype_uams, "Login NoAuthUAM: %s", username);
-    return(0);
+    return 0;
 }
 
 

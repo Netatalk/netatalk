@@ -1365,17 +1365,17 @@ int ifconfig( const char *iname, unsigned long cmd, struct sockaddr_at *sa)
     ifr.ifr_addr = *(struct sockaddr *)sa;
 
     if (( s = socket( AF_APPLETALK, SOCK_DGRAM, 0 )) < 0 ) {
-	return( 1 );
+	return 1;
     }
     if ( ioctl( s, cmd, &ifr ) < 0 ) {
 	close(s);
-	return( 1 );
+	return 1;
     }
     close( s );
     if ( cmd == SIOCGIFADDR ) {
 	*(struct sockaddr *)sa = ifr.ifr_addr;
     }
-    return( 0 );
+    return 0;
 }
 
 void dumpconfig( struct interface *iface)

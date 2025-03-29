@@ -88,7 +88,7 @@ atp_sreq( ATP ah, struct atp_block *atpb, int respcount, uint8_t flags )
     /* allocate a new buffer and build request packet
     */
     if (( req_buf = atp_alloc_buf()) == NULL ) {
-	return( -1 );
+	return -1;
     }
     atp_build_req_packet( req_buf, ah->atph_tid++, flags | ATP_TREQ, atpb );
     memcpy( &req_buf->atpbuf_addr, atpb->atp_saddr,
@@ -112,7 +112,7 @@ if (( random() % 3 ) != 2 ) {
 	    req_buf->atpbuf_dlen, 0, (struct sockaddr *) atpb->atp_saddr,
 	    sizeof( struct sockaddr_at )) != req_buf->atpbuf_dlen ) {
 	atp_free_buf( req_buf );
-	return( -1 );
+	return -1;
     }
 #ifdef DROPPACKETS
 } else printf( "<%d> atp_sreq: dropped request\n", getpid() );
@@ -137,5 +137,5 @@ if (( random() % 3 ) != 2 ) {
 	ah->atph_rrespcount = 0;
     }
 
-    return( 0 );
+    return 0;
 }

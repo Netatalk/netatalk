@@ -101,7 +101,7 @@ static char *utompath(char *upath)
         return NULL;
     }
 
-    return(m);
+    return m;
 }
 
 /*

@@ -308,7 +308,7 @@ static int ad_flush_hf(struct adouble *ad)
             if (adf_pwrite(ad->ad_mdp, ad->ad_data, len, 0) != len) {
                 if (errno == 0)
                     errno = EIO;
-                return( -1 );
+                return -1;
             }
             break;
         case AD_VERSION_EA:

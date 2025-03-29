@@ -41,7 +41,7 @@ parseline(int len, char *token)
     for (;;) {
         if ( l_curr > l_end ) {			/* end of line */
             *token = '\0';
-            return( -1 );
+            return -1;
         }
 
         switch ( *l_curr ) {
@@ -59,7 +59,7 @@ parseline(int len, char *token)
         case ' ' :
             if ( state == ST_WORD ) {
                 *p = '\0';
-                return( p - token );
+                return p - token;
             }
             if ( state != ST_QUOTE ) {
                 break;
@@ -72,7 +72,7 @@ parseline(int len, char *token)
             }
             if ( p > e ) {			/* end of token */
                 *token = '\0';
-                return( -1 );
+                return -1;
             }
             *p++ = *l_curr;
             break;

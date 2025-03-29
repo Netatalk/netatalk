@@ -85,7 +85,7 @@ int session(ATP atp, struct sockaddr_at *sat)
     atpb.atp_sreqtries = -1;		/* infinite retries */
     if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
 	LOG(log_error, logtype_papd, "atp_sreq: %s", strerror(errno) );
-	return( -1 );
+	return -1;
     }
 
     for (;;) {
@@ -108,13 +108,13 @@ int session(ATP atp, struct sockaddr_at *sat)
 
 	if ( cc < 0 ) {
 	  LOG(log_error, logtype_papd, "select: Error is unrecoverable" );
-	  return( -1 );
+	  return -1;
 	}
 	if ( cc == 0 ) {
 	    if ( timeout++ > 2 ) {
 		LOG(log_error, logtype_papd, "connection timed out" );
 		lp_cancel();
-		return( -1 );
+		return -1;
 	    }
 
 	    /*
@@ -130,7 +130,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    atpb.atp_sreqtries = 1;		/* try once */
 	    if ( atp_sreq( atp, &atpb, 0, 0 )) {
 		LOG(log_error, logtype_papd, "atp_sreq: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 	    continue;
 	} else {
@@ -145,7 +145,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    atpb.atp_rreqdlen = sizeof( cbuf );
 	    if ( atp_rreq( atp, &atpb ) < 0 ) {
 		LOG(log_error, logtype_papd, "atp_rreq: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 	    /* sanity */
 	    if ( (unsigned char)cbuf[ 0 ] != connid ) {
@@ -193,7 +193,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 		    LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
 		    exit( 1 );
 		}
-		return( 0 );
+		return 0;
 		break;
 
 	    case PAP_TICKLE :
@@ -213,7 +213,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    atpb.atp_rresiovcnt = oquantum;
 	    if ( atp_rresp( atp, &atpb ) < 0 ) {
 		LOG(log_error, logtype_papd, "atp_rresp: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 
 	    /* sanity */
@@ -235,7 +235,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    /* move data */
 	    if ( ps( &infile, &outfile, sat ) < 0 ) {
 		LOG(log_error, logtype_papd, "parse: bad return" );
-		return( -1 );	/* really?  close? */
+		return -1;	/* really?  close? */
 	    }
 
 	    /*
@@ -253,7 +253,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    atpb.atp_sreqtries = -1;		/* infinite retries */
 	    if ( atp_sreq( atp, &atpb, oquantum, ATP_XO )) {
 		LOG(log_error, logtype_papd, "atp_sreq: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 	    break;
 
@@ -262,7 +262,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 
 	default :
 	    LOG(log_error, logtype_papd, "atp_rsel: %s", strerror(errno) );
-	    return( -1 );
+	    return -1;
 	}
 
 	/* send any data that we have */
@@ -303,7 +303,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    atpb.atp_sresiovcnt = i;	/* reported by stevebn@pc1.eos.co.uk */
 	    if ( atp_sresp( atp, &atpb ) < 0 ) {
 		LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 	    readpending = 0;
 	    }
@@ -339,7 +339,7 @@ int session(ATP atp, struct sockaddr_at *sat)
 	    atpb.atp_sresiovcnt = i;	/* reported by stevebn@pc1.eos.co.uk */
 	    if ( atp_sresp( atp, &atpb ) < 0 ) {
 		LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
-		return( -1 );
+		return -1;
 	    }
 	    readpending = 0;
 	}

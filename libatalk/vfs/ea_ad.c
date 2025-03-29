@@ -85,7 +85,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
         return NULL;
 
     if ( *mpath == '\0' ) {
-        return( "." );
+        return ".";
     }
 
     m = mpath;
@@ -101,7 +101,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
         return NULL;
     }
 
-    return( upath );
+    return upath;
 }
 
 

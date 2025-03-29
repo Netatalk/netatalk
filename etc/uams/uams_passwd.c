@@ -49,7 +49,7 @@ static int pwd_login(void *obj, char *username, int ulen, struct passwd **uam_pw
 #endif /* SHADOWPW */
 
     if (ibuflen < PASSWDLEN) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     ibuf[ PASSWDLEN ] = '\0';
 
@@ -115,13 +115,13 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
 
     if (ibuflen < 2) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     len = (unsigned char) *ibuf++;
     ibuflen--;
     if (!len || len > ibuflen || len > ulen ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     memcpy(username, ibuf, len );
     ibuf += len;
@@ -132,7 +132,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         ++ibuf;
         ibuflen--;
     }
-    return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 
 }
 
@@ -162,11 +162,11 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     memcpy(&temp16, uname, sizeof(temp16));
     len = ntohs(temp16);
     if (!len || len > ulen ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     memcpy(username, uname +2, len );
     username[ len ] = '\0';
-    return (pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen));
+    return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* Printer ClearTxtUAM login */
@@ -184,7 +184,7 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     data = (char *)malloc(stop - start + 1);
     if (!data) {
 	LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: malloc");
-	return(-1);
+	return -1;
     }
     strlcpy(data, start, stop - start + 1);
 
@@ -198,13 +198,13 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     if ((p = strchr(data, '(' )) == NULL) {
         LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: username not found in string");
         free(data);
-        return(-1);
+        return -1;
     }
     p++;
     if ((q = strstr(p, ") (" )) == NULL) {
         LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: username not found in string");
         free(data);
-        return(-1);
+        return -1;
     }
     memcpy(username, p,  MIN( UAM_USERNAMELEN, q - p ));
 
@@ -213,7 +213,7 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     if ((q = strrchr(p , ')' )) == NULL) {
         LOG(log_info, logtype_uams,"Bad Login ClearTxtUAM: password not found in string");
         free(data);
-        return(-1);
+        return -1;
     }
     memcpy(password, p, MIN(PASSWDLEN, q - p) );
 
@@ -225,19 +225,19 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     if (( pwd = uam_getname(NULL, username, ulen)) == NULL ) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
             username);
-        return(-1);
+        return -1;
     }
 
     if (uam_checkuser(pwd) < 0) {
         /* syslog of error happens in uam_checkuser */
-        return(-1);
+        return -1;
     }
 
 #ifdef SHADOWPW
     if (( sp = getspnam( pwd->pw_name )) == NULL ) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: no shadow passwd entry for %s",
             username);
-        return(-1);
+        return -1;
     }
     pwd->pw_passwd = sp->sp_pwdp;
 
@@ -246,7 +246,7 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
         int32_t expire_days = sp->sp_lstchg - now + sp->sp_max;
         if ( expire_days < 0 ) {
                 LOG(log_info, logtype_uams, "Password for user %s expired", username);
-		return (-1);
+		return -1;
         }
     }
 
@@ -255,7 +255,7 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     if (!pwd->pw_passwd) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: no password for %s",
             username);
-        return(-1);
+        return -1;
     }
 
 #ifdef HAVE_CRYPT_CHECKPASS
@@ -272,7 +272,7 @@ static int passwd_printer(char	*start, char *stop, char *username, struct papfil
     /* Login successful */
     append(out, loginok, strlen(loginok));
     LOG(log_info, logtype_uams, "Login ClearTxtUAM: %s", username);
-    return(0);
+    return 0;
 }
 
 static int uam_setup(void *obj, const char *path)

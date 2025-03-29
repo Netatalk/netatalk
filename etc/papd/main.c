@@ -563,12 +563,12 @@ int getstatus(struct printer *pr, rbuf_t *buf)
     if ( pr->p_flags & P_PIPED ) {
 	buf->buf_len = strlen(cannedstatus);
 	snprintf(buf->buf, 255, "%s", cannedstatus);
-	return (buf->buf_len + 1);
+	return buf->buf_len + 1;
     } else {
 	cups_get_printer_status( pr );
 	buf->buf_len = strlen(pr->p_status);
 	snprintf(buf->buf, 255, "%s", pr->p_status);
-	return (buf->buf_len + 1);
+	return buf->buf_len + 1;
     }
 #else
     char path[MAXPATHLEN];
@@ -585,7 +585,7 @@ int getstatus(struct printer *pr, rbuf_t *buf)
     if ((pr->p_flags & P_PIPED) || (fd == NULL)) {
 	buf->buf_len = strlen(cannedstatus);
 	snprintf(buf->buf, 255, "%s", cannedstatus);
-	return (buf->buf_len + 1);
+	return buf->buf_len + 1;
     } else {
 	rc = fread(getstatus_buffer, 255, sizeof(unsigned char), fd);
 	fclose(fd);
@@ -601,7 +601,7 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 		buf->buf_len = 0;
 	}
 
-	return (buf->buf_len + 1);
+	return buf->buf_len + 1;
     }
 #endif /* HAVE_CUPS */
 }
@@ -807,7 +807,7 @@ int rprintcap( struct printer *pr)
     if ( pr->p_flags & P_SPOOLED && !(pr->p_flags & P_CUPS_AUTOADDED) ) { /* Skip check if autoadded */
 	if ( cups_printername_ok ( pr->p_printer ) != 1) {
 	    LOG(log_error, logtype_papd, "No such CUPS printer: '%s'", pr->p_printer );
-	    return( -1 );
+	    return -1;
 	}
     }
 
@@ -839,7 +839,7 @@ int rprintcap( struct printer *pr)
     if ( pr->p_flags & P_SPOOLED ) {
 	if ( pgetent( printcap, buf, pr->p_printer ) != 1 ) {
 	    LOG(log_error, logtype_papd, "No such printer: %s", pr->p_printer );
-	    return( -1 );
+	    return -1;
 	}
 
 	/*
@@ -938,5 +938,5 @@ int rprintcap( struct printer *pr)
     }
 #endif /* HAVE_CUPS */
 
-    return( 0 );
+    return 0;
 }

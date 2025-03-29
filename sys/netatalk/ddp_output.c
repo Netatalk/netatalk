@@ -52,7 +52,7 @@ ddp_output( ddp, m )
     MGET( m, M_WAIT, MT_HEADER );
     if ( m == 0 ) {
 	m_freem( m0 );
-	return( ENOBUFS );
+	return ENOBUFS;
     }
     m->m_next = m0;
 #endif /* BSD4_4 */
@@ -91,7 +91,7 @@ ddp_output( ddp, m )
     }
     deh->deh_bytes = htonl( deh->deh_bytes );
 
-    return( ddp_route( m, &ddp->ddp_route ));
+    return ddp_route( m, &ddp->ddp_route );
 }
 
     unsigned short
@@ -120,7 +120,7 @@ at_cksum( m, skip )
     if ( cksum == 0 ) {
 	cksum = 0x0000ffff;
     }
-    return( (unsigned short)cksum );
+    return (unsigned short)cksum;
 }
 
 ddp_route( m, ro )
@@ -151,7 +151,7 @@ ddp_route( m, ro )
     }
     if ( aa == NULL ) {
 	m_freem( m );
-	return( EINVAL );
+	return EINVAL;
     }
 
     /*
@@ -165,14 +165,14 @@ ddp_route( m, ro )
 	    mlen += m0->m_len;
 	}
 	if (( m = m_pullup( m, MIN( MLEN, mlen ))) == 0 ) {
-	    return( ENOBUFS );
+	    return ENOBUFS;
 	}
     } else {
 # ifdef notdef
 #ifdef BSD4_4
 	M_PREPEND( m, SZ_ELAPHDR, M_DONTWAIT );
 	if ( m == NULL ) {
-	    return( ENOBUFS );
+	    return ENOBUFS;
 	}
 #else /* BSD4_4 */
 	m->m_off -= SZ_ELAPHDR;
@@ -183,7 +183,7 @@ ddp_route( m, ro )
 	MGET( m0, M_WAIT, MT_HEADER );
 	if ( m0 == 0 ) {
 	    m_freem( m );
-	    return( ENOBUFS );
+	    return ENOBUFS;
 	}
 	m0->m_next = m;
 	m0->m_off = MMINOFF + align( sizeof( struct ether_header ));
@@ -222,5 +222,5 @@ ddp_route( m, ro )
     ro->ro_rt->rt_use++;
 
 
-    return((*ifp->if_output)( ifp, m, &gate ));
+    return (*ifp->if_output)( ifp, m, &gate );
 }

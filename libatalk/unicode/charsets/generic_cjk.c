@@ -125,7 +125,7 @@ size_t cjk_char_push(uint16_t c, uint8_t *out)
   if (!c) return 0;
   if (c == (uint16_t)-1) {
     errno = EILSEQ;
-    return (size_t)-1;
+    return (size_t) -1;
   }
   if (c <= 0xff) {
     out[0] = (uint8_t)c;

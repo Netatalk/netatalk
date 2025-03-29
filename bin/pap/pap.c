@@ -69,7 +69,7 @@ paprc(void)
 
     if (( f = fopen( _PATH_PAPRC, "r" )) == NULL ) {
 	if ( errno == ENOENT ) {
-	    return( NULL );
+	    return NULL;
 	} else {
 	    perror( _PATH_PAPRC );
 	    exit( 2 );
@@ -84,7 +84,7 @@ paprc(void)
 	break;
     }
     fclose( f );
-    return( name );
+    return name;
 }
 
 static char			*printer = NULL;
@@ -696,7 +696,7 @@ static int send_file( int fd, ATP atp, int lastfile, int is_imagewriter)
 
 	if(debug){ printf( "< DATA (eof)\n" ), fflush( stdout );}
 
-		    return( 0 );
+		    return 0;
 		}
 
 	if(debug){ printf( "< DATA\n" ), fflush( stdout );}
@@ -774,7 +774,7 @@ static int send_file( int fd, ATP atp, int lastfile, int is_imagewriter)
 	     * EOF before closing.
 	     */
 	    if ( eof && noeof && lastfile ) {
-		return( 0 );
+		return 0;
 	    }
 	} else {
 	    /*

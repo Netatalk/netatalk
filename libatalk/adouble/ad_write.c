@@ -65,7 +65,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
     if ( eid == ADEID_DFORK ) {
         if ( end ) {
             if ( fstat( ad_data_fileno(ad), &st ) < 0 ) {
-                return( -1 );
+                return -1;
             }
             off = st.st_size - off;
         }
@@ -73,7 +73,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
     } else if ( eid == ADEID_RFORK ) {
         if (end) {
             if (fstat( ad_reso_fileno(ad), &st ) < 0)
-                return(-1);
+                return -1;
             off = st.st_size - off - ad_getentryoff(ad, eid);
         }
         if (ad->ad_vers == AD_VERSION_EA) {
@@ -95,7 +95,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end, const cha
 
     if (ret != 0)
         return ret;
-    return( cc );
+    return cc;
 }
 
 /*

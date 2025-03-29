@@ -244,7 +244,7 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
          ? 0x7fffffffL : 0xffffffffL);
 
     if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
-        return( rc );
+        return rc;
     }
 
 #ifndef NO_QUOTA_SUPPORT
@@ -274,7 +274,7 @@ getvolspace_done:
 
     *bfree = MIN(*xbfree, maxsize);
     *btotal = MIN(*xbtotal, maxsize);
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* -----------------------
@@ -355,7 +355,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
             if ( isad ) {
                 ad_close( &ad, ADFLAGS_HF );
             }
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
 
@@ -484,7 +484,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
             if ( isad ) {
                 ad_close( &ad, ADFLAGS_HF );
             }
-            return( AFPERR_BITMAP );
+            return AFPERR_BITMAP;
         }
         bitmap = bitmap>>1;
         bit++;
@@ -506,7 +506,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
         ad_close(&ad, ADFLAGS_HF);
     }
     *buflen = data - buf;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ------------------------- */
@@ -518,7 +518,7 @@ static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol, char *r
 
     if ( stat( vol->v_path, &st ) < 0 ) {
         *rbuflen = 0;
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
     /* save the volume device number */
     vol->v_dev = st.st_dev;
@@ -527,12 +527,12 @@ static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol, char *r
     if (( ret = getvolparams(obj, bitmap, vol, &st,
                               rbuf + sizeof( bitmap ), &buflen )) != AFP_OK ) {
         *rbuflen = 0;
-        return( ret );
+        return ret;
     }
     *rbuflen = buflen + sizeof( bitmap );
     bitmap = htons( bitmap );
     memcpy(rbuf, &bitmap, sizeof( bitmap ));
-    return( AFP_OK );
+    return AFP_OK;
 
 }
 
@@ -616,7 +616,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     memcpy(data, &aint, sizeof( uint32_t));
     data += sizeof( uint32_t);
     *data = vcnt;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ------------------------- */
@@ -868,7 +868,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
         free(vol_mname);
         server_ipc_volumes(obj);
-        return( AFP_OK );
+        return AFP_OK;
     }
 
 openvol_err:
@@ -931,7 +931,7 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     ibuf += 2;
     memcpy(&vid, ibuf, sizeof( vid ));
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     (void)chdir("/");
@@ -939,7 +939,7 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     closevol(obj, vol);
     server_ipc_volumes(obj);
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* --------------------------
@@ -1029,7 +1029,7 @@ int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,char *rbuf, siz
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     return stat_vol(obj, bitmap, vol, rbuf, rbuflen);
@@ -1053,7 +1053,7 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     ibuf += sizeof(bitmap);
 
     if (( vol = getvolbyvid( vid )) == NULL ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if ((vol->v_flags & AFPVOL_RO))
@@ -1075,5 +1075,5 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
     ad_setdate(&ad, AD_DATE_BACKUP, aint);
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
-    return( AFP_OK );
+    return AFP_OK;
 }

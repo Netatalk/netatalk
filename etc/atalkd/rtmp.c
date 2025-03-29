@@ -392,12 +392,12 @@ int rtmp_replace(struct rtmptab *replace)
 	if ( replace->rt_state == RTMPTAB_BAD ) {
 	    rtmp_free( replace );
 	}
-	return( 0 );
+	return 0;
     } else {
 	if ( replace->rt_hops == RTMPHOPS_POISON ) {
 	    gateroute( RTMP_DEL, replace );
 	}
-	return( 1 );
+	return 1;
     }
 }
 
@@ -964,14 +964,14 @@ int looproute(struct interface *iface, unsigned int cmd)
 		(struct sockaddr *) &dst,
 		(struct sockaddr *) &loop,
 		RTF_UP | RTF_HOST ) ) {
-	return( 1 );
+	return 1;
     }
 #else /* ! BSD4_4 */
     if ( route( cmd,
 	    	(struct sockaddr_at *) &dst,
 		(struct sockaddr_at *) &loop,
 		RTF_UP | RTF_HOST ) ) {
-	return ( 1);
+		return 1;
     }
 #endif /* BSD4_4 */
     if ( cmd == RTMP_ADD ) {
@@ -980,7 +980,7 @@ int looproute(struct interface *iface, unsigned int cmd)
     if ( cmd == RTMP_DEL ) {
 	iface->i_flags &= ~IFACE_LOOP;
     }
-    return( 0 );
+    return 0;
 }
 
 int gateroute(unsigned int command, struct rtmptab *rtmp)
@@ -994,10 +994,10 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
     }
 
     if ( command == RTMP_DEL && ( rtmp->rt_flags & RTMPTAB_ROUTE ) == 0 ) {
-	return( -1 );
+	return -1;
     }
     if ( command == RTMP_ADD && ( rtmp->rt_flags & RTMPTAB_ROUTE )) {
-	return( -1 );
+	return -1;
     }
 
     if (rtmp->rt_gate == NULL) {
@@ -1061,7 +1061,7 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
 	rtmp->rt_flags &= ~RTMPTAB_ROUTE;
     }
 
-    return( 0 );
+    return 0;
 }
 
     struct rtmptab *
@@ -1070,9 +1070,9 @@ newrt(const struct interface *iface)
     struct rtmptab	*rtmp;
 
     if (( rtmp = (struct rtmptab *)calloc(1, sizeof(struct rtmptab))) == NULL ) {
-	return( NULL );
+	return NULL;
     }
 
     rtmp->rt_iface = iface;
-    return( rtmp );
+    return rtmp;
 }

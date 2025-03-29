@@ -307,7 +307,7 @@ const char *getip_string(const struct sockaddr *sa)
 
         /* Deal with IPv6 mapped IPv4 addresses*/
         if ((memcmp(sai6->sin6_addr.s6_addr, ipv4mapprefix, sizeof(ipv4mapprefix))) == 0)
-            return (strrchr(ip6, ':') + 1);
+            return strrchr(ip6, ':') + 1;
         return ip6;
     }
     default:
