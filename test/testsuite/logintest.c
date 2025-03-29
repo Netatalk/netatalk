@@ -20,7 +20,7 @@ char Data[300000] = "";
 char    *Server = "localhost";
 char    *Server2;
 int     Proto = 0;
-int     Port = 548;
+int     Port = DSI_AFPOVERTCP_PORT;
 char    *Password = "";
 char    *Vol = "";
 char    *User;
@@ -45,7 +45,6 @@ DSI *dsi;
         	test_nottested();
 	    	exit(ExitCode);
         }
-     	dsi->protocol = DSI_TCPIP;
 	    dsi->socket = sock;
     }
 }

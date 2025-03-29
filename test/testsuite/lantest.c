@@ -56,7 +56,7 @@ static uint16_t vol;
 static DSI *dsi;
 static char    *Server = "localhost";
 static int     Proto = 0;
-static int     Port = 548;
+static int     Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 static int     Iterations = 1;
 static int     Iterations_save;
@@ -806,7 +806,6 @@ int main(int ac, char **av)
         if ( sock < 0) {
             return 2;
         }
-        dsi->protocol = DSI_TCPIP;
         dsi->socket = sock;
     }
     Conn->afp_version = Version;

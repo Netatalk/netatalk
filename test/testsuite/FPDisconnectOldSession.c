@@ -58,7 +58,6 @@ struct sigaction action;
     	test_nottested();
 		goto test_exit;
     }
-    dsi3->protocol = DSI_TCPIP;
 	dsi3->socket = sock;
 	ret = FPopenLoginExt(conn2, vers, uam, User, Password);
 	if (ret) {
@@ -202,7 +201,6 @@ uint32_t time= 12345;
         test_nottested();
 		goto test_exit;
     }
-    loc_dsi1->protocol = DSI_TCPIP;
     loc_dsi1->socket = sock1;
     ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
     if (ret) {
@@ -259,7 +257,6 @@ uint32_t time= 12345;
         goto fin;
     }
 
-    loc_dsi2->protocol = DSI_TCPIP;
     loc_dsi2->socket = sock2;
     ret = FPopenLoginExt(loc_conn2, vers, uam, User, Password);
     if (ret) {
@@ -343,7 +340,6 @@ struct afp_filedir_parms filedir;
 		goto test_exit;
     }
 
-    loc_dsi1->protocol = DSI_TCPIP;
     loc_dsi1->socket = sock1;
     ret = FPopenLoginExt(loc_conn1, vers, no_user_uam, "", "");
     if (ret) {
@@ -413,7 +409,6 @@ struct afp_filedir_parms filedir;
         goto fin;
     }
 
-    loc_dsi2->protocol = DSI_TCPIP;
     loc_dsi2->socket = sock2;
     ret = FPopenLoginExt(loc_conn2, vers, no_user_uam, "", "");
     if (ret) {
@@ -514,7 +509,6 @@ struct afp_filedir_parms filedir;
 		goto test_exit;
     }
 
-    loc_dsi1->protocol = DSI_TCPIP;
     loc_dsi1->socket = sock1;
     ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
     if (ret) {
@@ -584,7 +578,6 @@ struct afp_filedir_parms filedir;
         goto fin;
     }
 
-    loc_dsi2->protocol = DSI_TCPIP;
     loc_dsi2->socket = sock2;
     ret = FPopenLoginExt(loc_conn2, vers, no_user_uam, "", "");
     if (ret) {

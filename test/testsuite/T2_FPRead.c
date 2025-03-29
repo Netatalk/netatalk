@@ -1,5 +1,4 @@
 #include "specs.h"
-#include "ea.h"
 #include "adoublehelper.h"
 
 /* ------------------------- */

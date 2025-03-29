@@ -32,14 +32,6 @@
    CONVENTION: anything with a dsi_ prefix is kept in network byte order.
 */
 
-/* these need to be kept in sync w/ AFPTRANS_* in <atalk/afp.h>.
- * convention: AFPTRANS_* = (1 << DSI_*) */
-typedef enum {
-    DSI_MIN = 1,
-    DSI_TCPIP = 1,
-    DSI_MAX = 1
-} dsi_proto;
-
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
     uint8_t dsi_flags;       /* packet type: request or reply */

@@ -414,7 +414,6 @@ CONN *myconn = { 0 };
     	test_nottested();
     	goto fin;
     }
-    dsi2->protocol = DSI_TCPIP;
 	dsi2->socket = sock;
 	ret = FPopenLogin(myconn, vers, uam, User, Password);
 	if (ret) {

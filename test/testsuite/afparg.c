@@ -39,7 +39,7 @@ DSI        *Dsi;
 /* Default values for options */
 char    *Server = "localhost";
 int     Proto = 0;
-int     Port = 548;
+int     Port = DSI_AFPOVERTCP_PORT;
 char    *Password = "";
 char    *Vol = "";
 char    *User;
@@ -235,7 +235,6 @@ int ret;
         if ( sock < 0) {
 	    	return 2;
         }
-     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {

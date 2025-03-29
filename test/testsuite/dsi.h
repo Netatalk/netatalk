@@ -8,15 +8,11 @@
 #ifndef _ATALK_DSI_H
 #define _ATALK_DSI_H
 
-#if HAVE_SYS_CDEFS_H
-#include <sys/cdefs.h>
-#endif
 #include <sys/types.h>
 #include <sys/time.h>
 #include <signal.h>
 
 #include <netinet/in.h>
-#include "afp.h"
 
 /* What a DSI packet looks like:
  0                               32
@@ -33,14 +29,6 @@
  CONVENTION: anything with a dsi_ prefix is kept in network byte order.
 */
 
-/* these need to be kept in sync w/ AFPTRANS_* in <atalk/afp.h>.
- * convention: AFPTRANS_* = (1 << DSI_*) */
-typedef enum {
-  DSI_MIN = 1,
-  DSI_TCPIP = 1,
-  DSI_MAX = 1
-} dsi_proto;
-
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
   uint8_t dsi_flags;       /* packet type: request or reply */
@@ -56,7 +44,6 @@ struct dsi_block {
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
-  dsi_proto protocol;
   struct dsi_block header;
   struct sockaddr_in server, client;
   sigset_t sigblockset;
@@ -122,7 +109,7 @@ typedef struct DSI {
 #define DSI_AFPOVERTCP_PORT 548
 
 /* basic initialization: dsi_init.c */
-extern DSI *dsi_init (const dsi_proto /*protocol*/,
+extern DSI *dsi_init (
 			  const char * /*program*/,
 			  const char * /*host*/, const char * /*address*/,
 			  const int /*port*/, const int /*proxy*/,
@@ -131,16 +118,6 @@ extern void dsi_setstatus (DSI *, uint8_t *, const int);
 
 /* in dsi_getsess.c */
 extern void dsi_kill (int);
-
-
-/* DSI Commands: individual files */
-extern void dsi_opensession (DSI *);
-extern int  dsi_attention (DSI *, AFPUserBytes);
-extern int  dsi_cmdreply (DSI *, const int);
-extern int dsi_tickle (DSI *);
-extern void dsi_getstatus (DSI *);
-extern void dsi_close (DSI *);
-extern void dsi_sleep (DSI *, const int );
 
 /* low-level stream commands -- in dsi_stream.c */
 extern size_t dsi_stream_write (DSI *, void *, const size_t);
