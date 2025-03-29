@@ -9,6 +9,7 @@
 #endif
 
 #include <errno.h>
+#include <sys/socket.h>
 #include <net/if.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
@@ -17,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
 
 #ifdef __svr4__
 #include <sys/sockio.h>
