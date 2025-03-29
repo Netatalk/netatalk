@@ -818,7 +818,7 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 		if (!(filedir.attr & what)) {
 			test_failed();
 		}
-		if ((filedir.attr & nowhat)) {
+		if (filedir.attr & nowhat) {
 			test_failed();
 		}
 	}
@@ -836,7 +836,7 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 		if (!(filedir.attr & what)) {
 			test_failed();
 		}
-		if ((filedir.attr & nowhat)) {
+		if (filedir.attr & nowhat) {
 			test_failed();
 		}
 	}
@@ -851,7 +851,7 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 		if (!(filedir.attr & what)) {
 			test_failed();
 		}
-		if ((filedir.attr & nowhat)) {
+		if (filedir.attr & nowhat) {
 			test_failed();
 		}
 	}
@@ -863,10 +863,10 @@ int nowhat = (type == OPENFORK_DATA)?ATTRBIT_ROPEN:ATTRBIT_DOPEN;
 	else {
 		filedir.isdir = 0;
 		afp_filedir_unpack(&filedir, dsi2->data +ofs, bitmap, 0);
-		if ((filedir.attr & what)) {
+		if (filedir.attr & what) {
 			test_failed();
 		}
-		if ((filedir.attr & nowhat)) {
+		if (filedir.attr & nowhat) {
 			test_failed();
 		}
 	}

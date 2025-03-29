@@ -420,7 +420,7 @@ struct afp_filedir_parms filedir;
     action.sa_handler = pipe_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
 		goto fin;
     }
@@ -438,7 +438,7 @@ struct afp_filedir_parms filedir;
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
     }
 fin:
@@ -589,7 +589,7 @@ struct afp_filedir_parms filedir;
     action.sa_handler = pipe_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
 		goto fin;
     }
@@ -599,7 +599,7 @@ struct afp_filedir_parms filedir;
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
     }
 

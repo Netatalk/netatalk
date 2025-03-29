@@ -179,7 +179,7 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 /* ------------------- */
 static void block_signal(uint32_t flags)
 {
-    if ((flags & CNID_FLAG_BLOCK)) {
+    if (flags & CNID_FLAG_BLOCK) {
         pthread_sigmask(SIG_BLOCK, &sigblockset, NULL);
     }
 }
@@ -187,7 +187,7 @@ static void block_signal(uint32_t flags)
 /* ------------------- */
 static void unblock_signal(uint32_t flags)
 {
-    if ((flags & CNID_FLAG_BLOCK)) {
+    if (flags & CNID_FLAG_BLOCK) {
         pthread_sigmask(SIG_UNBLOCK, &sigblockset, NULL);
     }
 }

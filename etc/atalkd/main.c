@@ -200,7 +200,7 @@ static void as_timer(int sig _U_)
 		iface->i_time++;
 	    } else {
 		iface->i_flags |= IFACE_NOROUTER;
-		if ((iface->i_flags & IFACE_ISROUTER)) {
+		if (iface->i_flags & IFACE_ISROUTER) {
 		    if (( iface->i_flags & IFACE_SEED ) == 0 ) {
 			/*
 			 * No seed info, and we've got multiple interfaces.
@@ -486,7 +486,7 @@ static void as_timer(int sig _U_)
 	 * Send RTMP broadcasts if we have multiple interfaces or our
 	 * interface is configured as a router.
 	 */
-	if ((iface->i_flags & IFACE_ISROUTER)) {
+	if (iface->i_flags & IFACE_ISROUTER) {
 #ifdef BSD4_4
 	    sat.sat_len = sizeof( struct sockaddr_at );
 #endif /* BSD4_4 */

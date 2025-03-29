@@ -36,7 +36,7 @@ void bprint( char *data, int len )
 	    aout[ i ] = '.';
 	}
 
-	xout[ (i*3) ] = hexdig[ ( *data & 0xf0 ) >> 4 ];
+	xout[ i*3 ] = hexdig[ ( *data & 0xf0 ) >> 4 ];
 	xout[ (i*3) + 1 ] = hexdig[ *data & 0x0f ];
 	xout[ (i*3) + 2 ] = ' ';
     }

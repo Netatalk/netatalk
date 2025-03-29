@@ -614,7 +614,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
                                               dbd->db_txn,
                                               dbd->db_table[DBIF_IDX_DIDNAME].db,
                                               didname,
-                                              (reindex) ? DB_CREATE : 0))
+                                              reindex ? DB_CREATE : 0))
          != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate didname database: %s",db_strerror(ret));
         return -1;
@@ -628,7 +628,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
                                               dbd->db_txn,
                                               dbd->db_table[DBIF_IDX_DEVINO].db,
                                               devino,
-                                              (reindex) ? DB_CREATE : 0))
+                                              reindex ? DB_CREATE : 0))
         != 0) {
         LOG(log_error, logtype_cnid, "Failed to associate devino database: %s",db_strerror(ret));
         return -1;

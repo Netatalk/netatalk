@@ -154,7 +154,7 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid, int
         return ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_NONE, 1, ofrefnum);
     }
 
-    if ((access & (OPENACC_RD | OPENACC_DRD))) {
+    if (access & (OPENACC_RD | OPENACC_DRD)) {
         if ((readset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_RD)) <0)
             return readset;
         if ((denyreadset = ad_testlock(adp, eid, AD_FILELOCK_DENY_RD)) <0)
@@ -171,19 +171,19 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid, int
         /* boolean logic is not enough, because getforkmode is not always telling the
          * true
          */
-        if ((access & OPENACC_RD)) {
+        if (access & OPENACC_RD) {
             ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_RD, 1, ofrefnum);
             if (ret)
                 return ret;
         }
-        if ((access & OPENACC_DRD)) {
+        if (access & OPENACC_DRD) {
             ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_DENY_RD, 1, ofrefnum);
             if (ret)
                 return ret;
         }
     }
     /* ------------same for writing -------------- */
-    if ((access & (OPENACC_WR | OPENACC_DWR))) {
+    if (access & (OPENACC_WR | OPENACC_DWR)) {
         if ((writeset = ad_testlock(adp, eid, AD_FILELOCK_OPEN_WR)) <0)
             return writeset;
         if ((denywriteset = ad_testlock(adp, eid, AD_FILELOCK_DENY_WR)) <0)
@@ -197,12 +197,12 @@ static int fork_setmode(const AFPObj *obj _U_, struct adouble *adp, int eid, int
             errno = EACCES;
             return -1;
         }
-        if ((access & OPENACC_WR)) {
+        if (access & OPENACC_WR) {
             ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_OPEN_WR, 1, ofrefnum);
             if (ret)
                 return ret;
         }
-        if ((access & OPENACC_DWR)) {
+        if (access & OPENACC_DWR) {
             ret = ad_lock(adp, eid, ADLOCK_RD | ADLOCK_FILELOCK, AD_FILELOCK_DENY_WR, 1, ofrefnum);
             if (ret)
                 return ret;
@@ -482,11 +482,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, si
                 return AFPERR_PARAM;
             }
         }
-        if ((access & OPENACC_WR))
+        if (access & OPENACC_WR)
             ofork->of_flags |= AFPFORK_ACCWR;
     }
     /* the file may be open read only without resource fork */
-    if ((access & OPENACC_RD))
+    if (access & OPENACC_RD)
         ofork->of_flags |= AFPFORK_ACCRD;
 
     LOG(log_debug, logtype_afpd, "afp_openfork(\"%s\"): fork: %" PRIu16,
@@ -561,7 +561,7 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_, s
     }
 
     is64 = 0;
-    if ((bitmap & ( (1<<FILPBIT_EXTDFLEN) | (1<<FILPBIT_EXTRFLEN) ))) {
+    if (bitmap & ( (1<<FILPBIT_EXTDFLEN) | (1<<FILPBIT_EXTRFLEN) )) {
         if (obj->afp_version >= 30) {
             is64 = 4;
         }

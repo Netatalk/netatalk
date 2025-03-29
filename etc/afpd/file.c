@@ -303,7 +303,7 @@ int getmetadata(const AFPObj *obj,
     data = buf;
 
     if ( ((bitmap & ( (1 << FILPBIT_FINFO)|(1 << FILPBIT_LNAME)|(1 <<FILPBIT_PDINFO) ) ) && !path->m_name)
-         || (bitmap & ( (1 << FILPBIT_LNAME) ) && utf8_encoding(obj)) /* FIXME should be m_name utf8 filename */
+         || (bitmap & (1 << FILPBIT_LNAME) && utf8_encoding(obj)) /* FIXME should be m_name utf8 filename */
          || (bitmap & (1 << FILPBIT_FNUM))) {
         if (!path->id) {
             bstring fullpath;
@@ -405,7 +405,7 @@ int getmetadata(const AFPObj *obj,
 
         case FILPBIT_MDATE :
             if ( adp && (ad_getdate(adp, AD_DATE_MODIFY, &aint) == 0)) {
-                if ((st->st_mtime > AD_DATE_TO_UNIX(aint))) {
+                if (st->st_mtime > AD_DATE_TO_UNIX(aint)) {
                    aint = AD_DATE_FROM_UNIX(st->st_mtime);
                 }
             } else {
@@ -953,7 +953,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             memcpy( &upriv, buf, sizeof( upriv ));
             buf += sizeof( upriv );
             upriv = ntohl (upriv);
-            if ((upriv & S_IWUSR)) {
+            if (upriv & S_IWUSR) {
             	setfilunixmode(vol, path, upriv);
             }
             else {
@@ -1005,7 +1005,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
         }
         LOG(log_debug, logtype_afpd, "setfilparams: no adouble perms, but only FILPBIT_MDATE and/or FILPBIT_UNIXPR");
         isad = 0;
-    } else if ((ad_get_MD_flags( adp ) & O_CREAT) ) {
+    } else if (ad_get_MD_flags( adp ) & O_CREAT ) {
         ad_setname(adp, path->m_name);
         cnid_t id;
         if ((id = get_id(vol, adp, &path->st, curdir->d_did, upath, strlen(upath))) == CNID_INVALID) {
@@ -1577,7 +1577,7 @@ uint16_t   bshort = 0;
 	if (!(vol->v_ignattr & ATTRBIT_NODELETE) && (bshort & htons(ATTRBIT_NODELETE))) {
 		return AFPERR_OLOCK;
 	}
-     if ((bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN))) {
+     if (bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN)) {
     	return AFPERR_BUSY;
 	}
 	return 0;
@@ -2092,7 +2092,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
         return AFPERR_PARAM;
     }
 
-    if ((vol->v_flags & AFPVOL_RO))
+    if (vol->v_flags & AFPVOL_RO)
         return AFPERR_VLOCK;
 
     /* source and destination dids */

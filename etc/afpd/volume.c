@@ -658,7 +658,7 @@ static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
 {
     int flags = 0;
 
-    if ((volume->v_flags & AFPVOL_NODEV)) {
+    if (volume->v_flags & AFPVOL_NODEV) {
         flags |= CNID_FLAG_NODEV;
     }
 
@@ -762,7 +762,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return AFPERR_ACCESS;
     }
 
-    if (( volume->v_flags & AFPVOL_OPEN  ) ) {
+    if ( volume->v_flags & AFPVOL_OPEN ) {
         /* the volume is already open */
         return stat_vol(obj, bitmap, volume, rbuf, rbuflen);
     }
@@ -848,7 +848,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
          * fixing the trash at DID 17.
          * FIXME (RL): should it be done inside a CNID backend ? (always returning Trash DID when asked) ?
          */
-        if ((volume->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
+        if (volume->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT) {
 
             /* FIXME find db time stamp */
             if (cnid_getstamp(volume->v_cdb, volume->v_stamp, sizeof(volume->v_stamp)) < 0) {
@@ -914,7 +914,7 @@ void close_all_vol(const AFPObj *obj)
     struct vol  *ovol;
     curdir = NULL;
     for ( ovol = getvolumes(); ovol; ovol = ovol->v_next ) {
-        if ( (ovol->v_flags & AFPVOL_OPEN) ) {
+        if ( ovol->v_flags & AFPVOL_OPEN ) {
             ovol->v_flags &= ~AFPVOL_OPEN;
             closevol(obj, ovol);
         }
@@ -1056,7 +1056,7 @@ int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf
         return AFPERR_PARAM;
     }
 
-    if ((vol->v_flags & AFPVOL_RO))
+    if (vol->v_flags & AFPVOL_RO)
         return AFPERR_VLOCK;
 
     /* we can only set the backup date. */

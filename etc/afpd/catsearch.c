@@ -199,7 +199,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path, struct adoub
 		adp = &ad;
 	}
 
-    if ( ad_metadata( path->u_name, ((isdir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
+    if ( ad_metadata( path->u_name, (isdir ? ADFLAGS_DIR : 0), adp) < 0 ) {
         adp = NULL; /* FIXME without resource fork adl_lkup will be call again */
     }
 
@@ -291,11 +291,11 @@ static int crit_check(struct vol *vol, struct path *path) {
 	 */
 
 	/* Check for filename */
-	if ((c1.rbitmap & (1U<<DIRPBIT_LNAME))) {
+	if (c1.rbitmap & (1U<<DIRPBIT_LNAME)) {
 		if ( (size_t)(-1) == (len = convert_string(vol->v_maccharset, CH_UCS2, path->m_name, -1, convbuf, 512)) )
 			goto crit_check_ret;
 
-		if ((c1.rbitmap & (1U<<CATPBIT_PARTIAL))) {
+		if (c1.rbitmap & (1U<<CATPBIT_PARTIAL)) {
 			if (strcasestr_w( (ucs2_t*) convbuf, (ucs2_t*) c1.lname) == NULL)
 				goto crit_check_ret;
 		} else
@@ -303,7 +303,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 				goto crit_check_ret;
 	}
 
-	if ((c1.rbitmap & (1U<<FILPBIT_PDINFO))) {
+	if (c1.rbitmap & (1U<<FILPBIT_PDINFO)) {
 		if ( (size_t)(-1) == (len = convert_charset( CH_UTF8_MAC, CH_UCS2, CH_UTF8, path->m_name, strlen(path->m_name), convbuf, 512, &flags))) {
 			goto crit_check_ret;
 		}
@@ -326,13 +326,13 @@ static int crit_check(struct vol *vol, struct path *path) {
 		c2.bdate = 0x7fffffff;
 
 	/* Check for modification date */
-	if ((c1.rbitmap & (1U<<DIRPBIT_MDATE))) {
+	if (c1.rbitmap & (1U<<DIRPBIT_MDATE)) {
 		if (path->st.st_mtime < c1.mdate || path->st.st_mtime > c2.mdate)
 			goto crit_check_ret;
 	}
 
 	/* Check for creation date... */
-	if ((c1.rbitmap & (1U<<DIRPBIT_CDATE))) {
+	if (c1.rbitmap & (1U<<DIRPBIT_CDATE)) {
 		c_date = path->st.st_mtime;
 		adp = adl_lkup(vol, path, adp);
 		if (adp && ad_getdate(adp, AD_DATE_CREATE, &ac_date) >= 0)
@@ -343,7 +343,7 @@ static int crit_check(struct vol *vol, struct path *path) {
 	}
 
 	/* Check for backup date... */
-	if ((c1.rbitmap & (1U<<DIRPBIT_BDATE))) {
+	if (c1.rbitmap & (1U<<DIRPBIT_BDATE)) {
 		b_date = path->st.st_mtime;
 		adp = adl_lkup(vol, path, adp);
 		if (adp && ad_getdate(adp, AD_DATE_BACKUP, &ab_date) >= 0)
@@ -442,7 +442,7 @@ static int rslt_add (const AFPObj *obj, struct vol *vol, struct path *path, char
 		return 0;
 
 	/* Make sure entry length is even */
-	if ((tbuf & 1)) {
+	if (tbuf & 1) {
 	   *p++ = 0;
 	   tbuf++;
 	}
@@ -636,7 +636,7 @@ static int catsearch(const AFPObj *obj,
 			ccr = crit_check(vol, &path);
 
 			/* bit 0 means that criteria has been met */
-			if ((ccr & 1)) {
+			if (ccr & 1) {
 				r = rslt_add (obj, vol, &path, &rrbuf, ext);
 
 				if (r == 0) {
@@ -807,7 +807,7 @@ static int catsearch_db(const AFPObj *obj,
 
         /* At last we can check the search criteria */
         ccr = crit_check(vol, &path);
-        if ((ccr & 1)) {
+        if (ccr & 1) {
             LOG(log_debug, logtype_afpd,"catsearch_db: match: %s/%s",
                 getcwdpath(), path.u_name);
             /* bit 1 means that criteria has been met */

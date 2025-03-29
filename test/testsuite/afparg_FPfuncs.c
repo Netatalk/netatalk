@@ -82,7 +82,7 @@ void FPLockrw_arg(char **argv)
 
     action.sa_handler = handler;
     sigemptyset(&action.sa_mask);
-    if ((sigaction(SIGINT, &action, NULL) < 0)) {
+    if (sigaction(SIGINT, &action, NULL) < 0) {
 		test_nottested();
 		goto test_exit;
     }
@@ -124,7 +124,7 @@ void FPLockw_arg(char **argv)
 
     action.sa_handler = handler;
     sigemptyset(&action.sa_mask);
-    if ((sigaction(SIGINT, &action, NULL) < 0)) {
+    if (sigaction(SIGINT, &action, NULL) < 0) {
 		test_nottested();
 		goto test_exit;
     }

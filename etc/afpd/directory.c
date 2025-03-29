@@ -514,7 +514,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     utf8 = utf8_encoding(vol->v_obj);
-    maxpath = (utf8) ? MAXPATHLEN - 7 : 255;
+    maxpath = utf8 ? MAXPATHLEN - 7 : 255;
 
     /* Get it from the database */
     cnid = did;
@@ -1257,11 +1257,11 @@ int getdirparams(const AFPObj *obj,
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
 
-    if ((bitmap & ((1 << DIRPBIT_ATTR)  |
+    if (bitmap & ((1 << DIRPBIT_ATTR)  |
                    (1 << DIRPBIT_CDATE) |
                    (1 << DIRPBIT_MDATE) |
                    (1 << DIRPBIT_BDATE) |
-                   (1 << DIRPBIT_FINFO)))) {
+                   (1 << DIRPBIT_FINFO))) {
 
         ad_init(&ad, vol);
         if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
@@ -1678,7 +1678,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
             LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x): need adouble", path->u_name, d_bitmap);
             return AFPERR_ACCESS;
         }
-        if ((ad_get_MD_flags(&ad) & O_CREAT)) {
+        if (ad_get_MD_flags(&ad) & O_CREAT) {
             ad_setname(&ad, cfrombstr(curdir->d_m_name));
         }
         isad = 1;

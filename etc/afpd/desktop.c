@@ -779,7 +779,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     inplen = strlen(m);
     outlen = MAXPATHLEN;
 
-    if ((size_t)-1 == (outlen = convert_charset ( (utf8)?CH_UTF8_MAC:vol->v_maccharset, vol->v_volcharset, vol->v_maccharset, m, inplen, u, outlen, &flags)) ) {
+    if ((size_t)-1 == (outlen = convert_charset ( utf8?CH_UTF8_MAC:vol->v_maccharset, vol->v_volcharset, vol->v_maccharset, m, inplen, u, outlen, &flags)) ) {
         LOG(log_error, logtype_afpd, "conversion from %s to %s for %s failed.", (utf8)?"UTF8-MAC":vol->v_maccodepage, vol->v_volcodepage, mpath);
 	    return NULL;
     }
@@ -806,7 +806,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
     u = upath;
 
     /* convert charsets */
-    if ((size_t)-1 == ( outlen = convert_charset ( vol->v_volcharset, (utf8)?CH_UTF8_MAC:vol->v_maccharset, vol->v_maccharset, u, outlen, mpath, MAXPATHLEN, &flags)) ) {
+    if ((size_t)-1 == ( outlen = convert_charset ( vol->v_volcharset, utf8?CH_UTF8_MAC:vol->v_maccharset, vol->v_maccharset, u, outlen, mpath, MAXPATHLEN, &flags)) ) {
         LOG(log_error, logtype_afpd, "Conversion from %s to %s for %s (%u) failed.", vol->v_volcodepage, vol->v_maccodepage, u, ntohl(id));
 	goto utompath_error;
     }
@@ -823,7 +823,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
 
 utompath_error:
     u = "???";
-    m = mangle(vol, u, strlen(u), upath, id, (utf8)?3:1);
+    m = mangle(vol, u, strlen(u), upath, id, utf8?3:1);
     return m;
 }
 
@@ -852,13 +852,13 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, 
         adp = of->of_ad;
 
     if (ad_open(adp, upath,
-                ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0) | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                ADFLAGS_HF | ( isadir ? ADFLAGS_DIR : 0) | ADFLAGS_CREATE | ADFLAGS_RDWR,
                 0666) < 0 ) {
         return AFPERR_ACCESS;
     }
 
     if (ad_getentryoff(adp, ADEID_COMMENT) && ad_entry(adp, ADEID_COMMENT)) {
-        if ( (ad_get_MD_flags( adp ) & O_CREAT) ) {
+        if ( ad_get_MD_flags( adp ) & O_CREAT ) {
             if ( *path->m_name == '\0' ) {
                 name = (char *)curdir->d_m_name->data;
             } else {
@@ -926,7 +926,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     } else
         adp = of->of_ad;
 
-    if ( ad_metadata( upath, ((isadir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
+    if ( ad_metadata( upath, (isadir ? ADFLAGS_DIR : 0), adp) < 0 ) {
         return AFPERR_NOITEM;
     }
 
@@ -1003,7 +1003,7 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
     } else
         adp = of->of_ad;
 
-    if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ((isadir) ? ADFLAGS_DIR : 0)) < 0 ) {
+    if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | (isadir ? ADFLAGS_DIR : 0)) < 0 ) {
         switch ( errno ) {
         case ENOENT :
             return AFPERR_NOITEM;

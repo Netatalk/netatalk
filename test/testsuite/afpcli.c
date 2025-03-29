@@ -958,7 +958,7 @@ DSI *dsi;
 		ofs += sizeof(result);
 		result = ntohs(result);
 		/* XXXX need to fully parse this stuff */
-		if ((result & (1<<VOLPBIT_ATTR))) {
+		if (result & (1<<VOLPBIT_ATTR)) {
 		    /* volume attribute  */
 		    memcpy(&result, dsi->commands, sizeof(result));
 		    ofs += sizeof(result);
@@ -1160,7 +1160,7 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b, uin
 	unsigned char *beg = b;
 
     isdir = filedir->isdir;
-	bitmap = (isdir)?rdbitmap:rfbitmap;
+	bitmap = isdir?rdbitmap:rfbitmap;
 	while (bitmap != 0) {
 		while (( bitmap & 1 ) == 0 ) {
 			bitmap = bitmap>>1;
@@ -1289,7 +1289,7 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir, uint16
 	unsigned char *u_ofs = NULL;
 
     isdir = filedir->isdir;
-	bitmap = (isdir)?rdbitmap:rfbitmap;
+	bitmap = isdir?rdbitmap:rfbitmap;
 	while (bitmap != 0) {
 		while (( bitmap & 1 ) == 0 ) {
 			bitmap = bitmap>>1;
@@ -1790,7 +1790,7 @@ DSI *dsi;
 	ofs += sizeof(did);
 
     ofs = FPset_name(conn, ofs, name);
-	if ((ofs & 1))
+	if (ofs & 1)
 	    ofs++;
 	len = strlen(cmt);
 	dsi->commands[ofs++] = len;

@@ -506,7 +506,7 @@ int dt;
 	}
 
 	/* FIXME afp_errno in file.c */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, DIRDID_ROOT, name1);
 		if (ret != ntohl(AFPERR_NOOBJ)) {
 			test_failed();
@@ -594,7 +594,7 @@ int  dt;
 
 	FAIL (ntohl(AFPERR_ACCESS) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name1, "", name))
 
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, DIRDID_ROOT, name1);
 		if (ret != ntohl(AFPERR_ACCESS)) {
 			test_failed();
@@ -703,7 +703,7 @@ int  dt;
 	}
 
 	FAIL (ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name1, "", name))
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		FAIL (ntohl(AFPERR_BADTYPE) != FPCreateID(Conn,vol, DIRDID_ROOT, name1))
 	}
 
@@ -799,7 +799,7 @@ int  dt;
 		test_failed();
 	}
 
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		FAIL (ntohl(AFPERR_BADTYPE) != FPCreateID(Conn,vol, dir, ""))
 	}
 
@@ -901,7 +901,7 @@ int  dt;
 	FAIL (err != FPCopyFile(Conn, vol, dir, vol, DIRDID_ROOT, name1, "", name))
 
 	/* FIXME afp_errno in file.c */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		if (err != FPCreateID(Conn,vol, dir, name1)) {
 			test_failed();
 		}
@@ -975,7 +975,7 @@ int  dt;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	/* -------------------- */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, DIRDID_ROOT_PARENT, "");
 		FAIL (htonl(AFPERR_NOOBJ) != ret && htonl(AFPERR_PARAM) != ret )
 	}
@@ -1130,7 +1130,7 @@ int  dt;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	/* -------------------- */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, tdir, tname);
 		if (htonl(AFPERR_NOOBJ) != ret && htonl(AFPERR_PARAM) != ret ) {
 			test_failed();
@@ -1268,7 +1268,7 @@ int  dt;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	/* -------------------- */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, tdir, tname);
 		FAIL (htonl(AFPERR_PARAM) != ret)
 	}
@@ -1439,7 +1439,7 @@ int  dt;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	/* -------------------- */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, tdir, tname);
 		if (htonl(AFPERR_NOOBJ) != ret && htonl(AFPERR_PARAM) != ret ) {
 			test_failed();

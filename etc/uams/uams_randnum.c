@@ -56,7 +56,7 @@ static  int home_passwd(const struct passwd *pwd,
   struct stat st;
   int fd, i;
 
-  if ( (fd = open(path, (set) ? O_WRONLY : O_RDONLY)) < 0 ) {
+  if ( (fd = open(path, set ? O_WRONLY : O_RDONLY)) < 0 ) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }
@@ -141,7 +141,7 @@ static int afppasswd(const struct passwd *pwd,
       return AFPERR_MISC;
   }
 
-  if ((fp = fopen(path, (set) ? "r+" : "r")) == NULL) {
+  if ((fp = fopen(path, set ? "r+" : "r")) == NULL) {
     LOG(log_error, logtype_uams, "Failed to open %s", path);
     return AFPERR_ACCESS;
   }

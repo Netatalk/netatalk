@@ -426,7 +426,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     }
 
     /* Somone has used write_fork, we assume file was changed, register it to file change event api */
-    if ((ofork->of_flags & AFPFORK_MODIFIED) && (forkpath)) {
+    if ((ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
         fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
     }
 

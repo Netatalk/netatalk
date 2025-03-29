@@ -82,12 +82,12 @@ static char *utompath(char *upath)
     u = upath;
     outlen = strlen(upath);
 
-    if ((vol->v_casefold & AFPVOL_UTOMUPPER))
+    if (vol->v_casefold & AFPVOL_UTOMUPPER)
         flags |= CONV_TOUPPER;
-    else if ((vol->v_casefold & AFPVOL_UTOMLOWER))
+    else if (vol->v_casefold & AFPVOL_UTOMLOWER)
         flags |= CONV_TOLOWER;
 
-    if ((vol->v_flags & AFPVOL_EILSEQ)) {
+    if (vol->v_flags & AFPVOL_EILSEQ) {
         flags |= CONV__EILSEQ;
     }
 

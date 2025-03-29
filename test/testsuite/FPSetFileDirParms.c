@@ -593,7 +593,7 @@ DSI *dsi;
 
 	ENTER_TEST
 
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV) {
 		test_skipped(T_NO_UNIX_PREV);
 		goto test_exit;
 	}

@@ -730,52 +730,52 @@ static char temp[4096];
 static char temp1[4096];
 
 	temp[0] = 0;
-	if ((BITERR_NOOBJ & bitmap)) {
+	if (BITERR_NOOBJ & bitmap) {
 	    sprintf(temp, "%d %s ", AFPERR_NOOBJ, afp_error(htonl(AFPERR_NOOBJ)));
 	}
-	if ((BITERR_NODIR & bitmap)) {
+	if (BITERR_NODIR & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_NODIR, afp_error(htonl(AFPERR_NODIR)));
 		strcat(temp, temp1);
 	}
 
-	if ((BITERR_PARAM & bitmap)) {
+	if (BITERR_PARAM & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_PARAM, afp_error(htonl(AFPERR_PARAM)));
 		strcat(temp, temp1);
 	}
 
-	if ((BITERR_BUSY & bitmap)) {
+	if (BITERR_BUSY & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_BUSY, afp_error(htonl(AFPERR_BUSY)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_BADTYPE & bitmap)) {
+	if (BITERR_BADTYPE & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_BADTYPE, afp_error(htonl(AFPERR_BADTYPE)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_NOITEM & bitmap)) {
+	if (BITERR_NOITEM & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_NOITEM, afp_error(htonl(AFPERR_NOITEM)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_DENYCONF & bitmap)) {
+	if (BITERR_DENYCONF & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_DENYCONF, afp_error(htonl(AFPERR_DENYCONF)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_NFILE & bitmap)) {
+	if (BITERR_NFILE & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_NFILE, afp_error(htonl(AFPERR_NFILE)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_ACCESS & bitmap)) {
+	if (BITERR_ACCESS & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_ACCESS, afp_error(htonl(AFPERR_ACCESS)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_NOID & bitmap)) {
+	if (BITERR_NOID & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_NOID, afp_error(htonl(AFPERR_NOID)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_BITMAP & bitmap)) {
+	if (BITERR_BITMAP & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_BITMAP, afp_error(htonl(AFPERR_BITMAP)));
 		strcat(temp, temp1);
 	}
-	if ((BITERR_MISC & bitmap)) {
+	if (BITERR_MISC & bitmap) {
 	    sprintf(temp1, "%d %s ", AFPERR_MISC, afp_error(htonl(AFPERR_MISC)));
 		strcat(temp, temp1);
 	}

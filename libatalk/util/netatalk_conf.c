@@ -1106,35 +1106,35 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_RO;
 #endif
 
-    if ((volume->v_flags & AFPVOL_NODEV))
+    if (volume->v_flags & AFPVOL_NODEV)
         volume->v_ad_options |= ADVOL_NODEV;
-    if ((volume->v_flags & AFPVOL_UNIX_PRIV))
+    if (volume->v_flags & AFPVOL_UNIX_PRIV)
         volume->v_ad_options |= ADVOL_UNIXPRIV;
-    if ((volume->v_flags & AFPVOL_INV_DOTS))
+    if (volume->v_flags & AFPVOL_INV_DOTS)
         volume->v_ad_options |= ADVOL_INVDOTS;
-    if ((volume->v_flags & AFPVOL_FOLLOWSYM))
+    if (volume->v_flags & AFPVOL_FOLLOWSYM)
         volume->v_ad_options |= ADVOL_FOLLO_SYML;
-    if ((volume->v_flags & AFPVOL_RO))
+    if (volume->v_flags & AFPVOL_RO)
         volume->v_ad_options |= ADVOL_RO;
-    if ((volume->v_flags & AFPVOL_FORCE_STICKY_XATTR))
+    if (volume->v_flags & AFPVOL_FORCE_STICKY_XATTR)
         volume->v_ad_options |= ADVOL_FORCE_STICKY_XATTR;
 
     /* Mac to Unix conversion flags*/
-    if ((volume->v_flags & AFPVOL_EILSEQ))
+    if (volume->v_flags & AFPVOL_EILSEQ)
         volume->v_mtou_flags |= CONV__EILSEQ;
 
-    if ((volume->v_casefold & AFPVOL_MTOUUPPER))
+    if (volume->v_casefold & AFPVOL_MTOUUPPER)
         volume->v_mtou_flags |= CONV_TOUPPER;
-    else if ((volume->v_casefold & AFPVOL_MTOULOWER))
+    else if (volume->v_casefold & AFPVOL_MTOULOWER)
         volume->v_mtou_flags |= CONV_TOLOWER;
 
     /* Unix to Mac conversion flags*/
     volume->v_utom_flags = CONV_IGNORE;
-    if ((volume->v_casefold & AFPVOL_UTOMUPPER))
+    if (volume->v_casefold & AFPVOL_UTOMUPPER)
         volume->v_utom_flags |= CONV_TOUPPER;
-    else if ((volume->v_casefold & AFPVOL_UTOMLOWER))
+    else if (volume->v_casefold & AFPVOL_UTOMLOWER)
         volume->v_utom_flags |= CONV_TOLOWER;
-    if ((volume->v_flags & AFPVOL_EILSEQ))
+    if (volume->v_flags & AFPVOL_EILSEQ)
         volume->v_utom_flags |= CONV__EILSEQ;
 
     /* suffix for mangling use (lastvid + 1)   */
