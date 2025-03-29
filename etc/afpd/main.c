@@ -221,7 +221,7 @@ int main(int ac, char **av)
     /* Parse argv args and initialize default options */
     afp_options_parse_cmdline(&dsi_obj, ac, av);
 
-    if (!(dsi_obj.cmdlineflags & OPTION_DEBUG) && (daemonize(0, 0) != 0))
+    if (!(dsi_obj.cmdlineflags & OPTION_DEBUG) && (daemonize() != 0))
         exit(EXITERR_SYS);
 
     /* Log SIGBUS/SIGSEGV SBT */

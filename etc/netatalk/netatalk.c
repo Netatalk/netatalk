@@ -424,7 +424,7 @@ int main(int argc, char **argv)
     if (check_lockfile("netatalk", PATH_NETATALK_LOCK) != 0)
         exit(EXITERR_SYS);
 
-    if (!debug && daemonize(0, 0) != 0)
+    if (!debug && daemonize() != 0)
         exit(EXITERR_SYS);
 
     if (create_lockfile("netatalk", PATH_NETATALK_LOCK) != 0)

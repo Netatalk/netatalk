@@ -107,12 +107,12 @@ EC_CLEANUP:
 /*!
  * Daemonize
  *
- * Fork, exit parent, setsid(), optionally chdir("/"), optionally close all fds
+ * Fork, exit parent, setsid(), chdir("/"), close all fds
  *
  * returns -1 on failure, but you can't do much except exit in that case
  * since we may already have forked
  */
-int daemonize(int nochdir, int noclose)
+int daemonize(void)
 {
     switch (fork()) {
     case 0:
@@ -135,17 +135,15 @@ int daemonize(int nochdir, int noclose)
         _exit(0);
     }
 
-    if (!nochdir && chdir("/") < 0) {
+    if (chdir("/") < 0) {
         LOG(log_error, logtype_default, "Can't chdir(/): %s", strerror(errno));
         return -1;
     }
 
-    if (!noclose) {
-        closeall(0);
-        open("/dev/null",O_RDWR);
-        dup(0);
-        dup(0);
-    }
+    closeall(0);
+    open("/dev/null",O_RDWR);
+    dup(0);
+    dup(0);
 
     return 0;
 }
