@@ -135,8 +135,10 @@ int daemonize(int nochdir, int noclose)
         _exit(0);
     }
 
-    if (!nochdir)
-        chdir("/");
+    if (!nochdir && chdir("/") < 0) {
+        LOG(log_error, logtype_default, "Can't chdir(/): %s", strerror(errno));
+        return -1;
+    }
 
     if (!noclose) {
         closeall(0);

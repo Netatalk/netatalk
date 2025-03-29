@@ -235,7 +235,9 @@ static int delete_db(void)
 
 EC_CLEANUP:
     if (cwd != -1) {
-        fchdir(cwd);
+        if (fchdir(cwd) < 0) {
+            LOG(log_error, logtype_default, "Can't fchdir(%d): %s", cwd, strerror(errno));
+        }
         close(cwd);
     }
     EC_EXIT;

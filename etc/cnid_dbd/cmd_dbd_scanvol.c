@@ -899,7 +899,10 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
     }
 
     strlcpy(cwdbuf, vol->v_path, sizeof(cwdbuf));
-    chdir(vol->v_path);
+    if (chdir(vol->v_path) < 0) {
+        dbd_log(LOGSTD, "Can't chdir to '%s': %s", vol->v_path, strerror(errno));
+        EC_FAIL;
+    }
 
     if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
         if (lstat(".", &st) != 0)
