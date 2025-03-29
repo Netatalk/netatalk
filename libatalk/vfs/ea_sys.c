@@ -599,9 +599,6 @@ int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 		if (!*name)
 			continue;
 
-        if (STRCMP(name, ==, AD_EA_META))
-            continue;
-
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
         /* Skip special attributes set by NFS server */
         if (!strcmp(name, VIEW_READONLY) || !strcmp(name, VIEW_READWRITE))
