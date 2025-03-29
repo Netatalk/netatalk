@@ -465,7 +465,7 @@ DSI *dsi = &conn->dsi;
 
 	volID = AFPOpenVol(conn,vol, bitmap);
 	dump_header(dsi);
-	return(!dsi->header.dsi_code?volID:0xffff);
+	return !dsi->header.dsi_code?volID:0xffff;
 }
 
 /* ------------------ */
@@ -487,7 +487,7 @@ DSI *dsi;
 
 	ret  = AFPCloseVol(conn,vol);
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -531,7 +531,7 @@ DSI *dsi;
 			fprintf(stdout,"Desktop ID %d\n", id);
 		}
 	}
-	return(id);
+	return id;
 }
 
 /* ------------------------------- */
@@ -833,7 +833,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -904,7 +904,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 
@@ -979,7 +979,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -1028,7 +1028,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -1068,7 +1068,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -1106,7 +1106,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -1148,7 +1148,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 /* -------------------------------
 */
@@ -1222,7 +1222,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -1298,7 +1298,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1382,7 +1382,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 
@@ -1505,7 +1505,7 @@ DSI *dsi;
 			fprintf(stdout,"directory ID 0x%x\n", ntohl(dir));
 		}
 	}
-	return(dir);
+	return dir;
 }
 
 /* -------------------------------- */
@@ -1523,7 +1523,7 @@ DSI *dsi;
 	dir = AFPCreateDir(conn,vol, did , name);
 
 	dump_header(dsi);
-	return(dir);
+	return dir;
 }
 
 /* -------------------------------
@@ -1912,7 +1912,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1957,7 +1957,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -2003,7 +2003,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 /* ------------------------------- */
 unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src, char *dst)
@@ -2043,7 +2043,7 @@ DSI *dsi;
 	my_dsi_data_receive(dsi);
 
 	dump_header(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */

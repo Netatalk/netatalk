@@ -157,7 +157,7 @@ static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
                           char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
-    return( AFPERR_NOOP );
+    return AFPERR_NOOP;
 }
 
 static int set_auth_switch(const AFPObj *obj, int expired)
@@ -303,7 +303,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
     /* Send FCE login event */
     fce_register(obj, FCE_LOGIN, "", NULL);
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ---------------------- */

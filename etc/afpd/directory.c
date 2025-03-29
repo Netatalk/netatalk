@@ -116,19 +116,19 @@ static int netatalk_mkdir(const struct vol *vol, const char *name)
     if (ret < 0) {
         switch ( errno ) {
         case ENOENT :
-            return( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
         case EROFS :
-            return( AFPERR_VLOCK );
+            return AFPERR_VLOCK;
         case EPERM:
         case EACCES :
-            return( AFPERR_ACCESS );
+            return AFPERR_ACCESS;
         case EEXIST :
-            return( AFPERR_EXIST );
+            return AFPERR_EXIST;
         case ENOSPC :
         case EDQUOT :
-            return( AFPERR_DFULL );
+            return AFPERR_DFULL;
         default :
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
     return AFP_OK;
@@ -816,7 +816,7 @@ exit:
             ntohl(cdir->d_did), cfrombstr(cdir->d_fullpath));
     }
 
-    return(cdir);
+    return cdir;
 }
 
 /*!
@@ -936,7 +936,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         /* else it's an error */
     default:
         afp_errno = AFPERR_PARAM;
-        return( NULL );
+        return NULL;
     }
     *cpath += len + size;
 
@@ -1164,11 +1164,11 @@ int movecwd(const struct vol *vol, struct dir *dir)
         default:
             afp_errno = AFPERR_NOOBJ;
         }
-        return( -1 );
+        return -1;
     }
 
     curdir = dir;
-    return( 0 );
+    return 0;
 }
 
 /*
@@ -1462,7 +1462,7 @@ int getdirparams(const AFPObj *obj,
             if ( isad ) {
                 ad_close(&ad, ADFLAGS_HF);
             }
-            return( AFPERR_BITMAP );
+            return AFPERR_BITMAP;
         }
         bitmap = bitmap>>1;
         bit++;
@@ -1481,7 +1481,7 @@ int getdirparams(const AFPObj *obj,
         ad_close(&ad, ADFLAGS_HF);
     }
     *buflen = data - buf;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ----------------------------- */
@@ -1514,7 +1514,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     ibuf += sizeof( vid );
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -1552,7 +1552,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     if (AFP_OK == ( rc = setdirparams(vol, path, bitmap, ibuf )) ) {
         setvoltime(obj, vol );
     }
-    return( rc );
+    return rc;
 }
 
 /*
@@ -1897,7 +1897,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == (vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -1919,7 +1919,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         }
 
         if (movecwd( vol, dir ) < 0 )
-            return ( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
 
         /*
          * Assuming only OSens that have dirfd also may require fsyncing directories
@@ -1930,11 +1930,11 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         if (NULL == ( dp = opendir( "." )) ) {
             switch( errno ) {
             case ENOENT :
-                return( AFPERR_NOOBJ );
+                return AFPERR_NOOBJ;
             case EACCES :
-                return( AFPERR_ACCESS );
+                return AFPERR_ACCESS;
             default :
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
         }
 
@@ -1950,11 +1950,11 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         if ( -1 == (dfd = open(vol->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
             switch( errno ) {
             case ENOENT:
-                return( AFPERR_NOOBJ );
+                return AFPERR_NOOBJ;
             case EACCES:
-                return( AFPERR_ACCESS );
+                return AFPERR_ACCESS;
             default:
-                return( AFPERR_PARAM );
+                return AFPERR_PARAM;
             }
         }
 
@@ -1967,7 +1967,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         close(dfd);
     }
 
-    return ( AFP_OK );
+    return AFP_OK;
 }
 
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
@@ -1987,7 +1987,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -2027,12 +2027,12 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     }
 
     if ( movecwd( vol, dir ) < 0 ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     ad_init(&ad, vol);
     if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) < 0)  {
-        return( AFPERR_ACCESS );
+        return AFPERR_ACCESS;
     }
     ad_setname(&ad, s_path->m_name);
     ad_setid( &ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did, vol->v_stamp);
@@ -2045,7 +2045,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     memcpy( rbuf, &dir->d_did, sizeof( uint32_t ));
     *rbuflen = sizeof( uint32_t );
     setvoltime(obj, vol );
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /*
@@ -2068,9 +2068,9 @@ int renamedir(struct vol *vol,
     if ( unix_rename(dirfd, src, -1, dst ) < 0 ) {
         switch ( errno ) {
         case ENOENT :
-            return( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
         case EACCES :
-            return( AFPERR_ACCESS );
+            return AFPERR_ACCESS;
         case EROFS:
             return AFPERR_VLOCK;
         case EINVAL:
@@ -2087,7 +2087,7 @@ int renamedir(struct vol *vol,
                 return err;
             break;
         default :
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
 
@@ -2101,7 +2101,7 @@ int renamedir(struct vol *vol,
         ad_close(&ad, ADFLAGS_HF);
     }
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* delete an empty directory */
@@ -2113,7 +2113,7 @@ int deletecurdir(struct vol *vol)
     int err;
 
     if ((pdir = dirlookup(vol, curdir->d_pdid)) == NULL) {
-        return( AFPERR_ACCESS );
+        return AFPERR_ACCESS;
     }
 
     fdir = curdir;
@@ -2185,7 +2185,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
 
     if (sfunc >= 3 && sfunc <= 6) {
         if (obj->afp_version < 30) {
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         utf8 = 1;
     }
@@ -2197,7 +2197,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         id = ntohl(id);
         if ( id != 0 ) {
             if (( pw = getpwuid( id )) == NULL ) {
-                return( AFPERR_NOITEM );
+                return AFPERR_NOITEM;
             }
             len = convert_string_allocate( obj->options.unixcharset, ((!utf8)?obj->options.maccharset:CH_UTF8_MAC),
                                            pw->pw_name, -1, &name);
@@ -2212,7 +2212,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         id = ntohl(id);
         if ( id != 0 ) {
             if (NULL == ( gr = (struct group *)getgrgid( id ))) {
-                return( AFPERR_NOITEM );
+                return AFPERR_NOITEM;
             }
             len = convert_string_allocate( obj->options.unixcharset, (!utf8)?obj->options.maccharset:CH_UTF8_MAC,
                                            gr->gr_name, -1, &name);
@@ -2234,7 +2234,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         switch (type) {
         case UUID_USER:
             if (( pw = getpwnam( name )) == NULL )
-                return( AFPERR_NOITEM );
+                return AFPERR_NOITEM;
             LOG(log_debug, logtype_afpd, "afp_mapid: name:%s -> uid:%d", name, pw->pw_uid);
             id = htonl(UUID_USER);
             memcpy( rbuf, &id, sizeof( id ));
@@ -2246,7 +2246,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
             break;
         case UUID_GROUP:
             if (( gr = getgrnam( name )) == NULL )
-                return( AFPERR_NOITEM );
+                return AFPERR_NOITEM;
             LOG(log_debug, logtype_afpd, "afp_mapid: group:%s -> gid:%d", name, gr->gr_gid);
             id = htonl(UUID_GROUP);
             memcpy( rbuf, &id, sizeof( id ));
@@ -2262,7 +2262,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
         break;
 
     default :
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (name)
@@ -2284,7 +2284,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     *rbuflen += len;
     if (name)
         free(name);
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
@@ -2303,7 +2303,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     case 1 :
     case 2 : /* unicode */
         if (obj->afp_version < 30) {
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);
@@ -2323,7 +2323,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         ibuf += 2;
         break;
     default :
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (len >= ibuflen - 1)
@@ -2338,7 +2338,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         case 1 : /* unicode */
         case 3 :
             if (NULL == ( pw = (struct passwd *)getpwnam( ibuf )) ) {
-                return( AFPERR_NOITEM );
+                return AFPERR_NOITEM;
             }
             id = pw->pw_uid;
             id = htonl(id);
@@ -2350,7 +2350,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         case 4 :
             LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s",ibuf);
             if (NULL == ( gr = (struct group *)getgrnam( ibuf ))) {
-                return( AFPERR_NOITEM );
+                return AFPERR_NOITEM;
             }
             id = gr->gr_gid;
             LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s -> id: %d",ibuf, id);
@@ -2372,7 +2372,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
             break;
         }
     }
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ------------------------------------
@@ -2404,7 +2404,7 @@ int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf, si
     ibuf += sizeof( vid );
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -2423,10 +2423,10 @@ int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf, si
     }
 
     if ( !path->st_valid && of_stat(vol, path) < 0 ) {
-        return( AFPERR_NOOBJ );
+        return AFPERR_NOOBJ;
     }
     if ( path->st_errno ) {
-        return( AFPERR_NOOBJ );
+        return AFPERR_NOOBJ;
     }
 
     memcpy(rbuf, &curdir->d_did, sizeof(curdir->d_did));

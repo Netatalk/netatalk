@@ -226,7 +226,7 @@ char *stripped_slashes_basename(char *p)
     int i = strlen(p) - 1;
     while (i > 0 && p[i] == '/')
         p[i--] = 0;
-    return (strrchr(p, '/') ? strrchr(p, '/') + 1 : p);
+    return strrchr(p, '/') ? strrchr(p, '/') + 1 : p;
 }
 
 /****************************************************************************
@@ -520,10 +520,10 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
 
     for ( i = 0; i < ngroups; i++ ) {
         if ( groups[ i ] == gid ) {
-            return( 1 );
+            return 1;
         }
     }
-    return( 0 );
+    return 0;
 }
 
 /*

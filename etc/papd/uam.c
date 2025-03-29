@@ -169,7 +169,7 @@ void uam_unregister(const int type, const char *name)
 int uam_afpserver_option(void *private _U_, const int what _U_, void *option _U_,
                          size_t *len _U_)
 {
-	return(0);
+	return 0;
 }
 
 /* --- helper functions for plugin uams --- */

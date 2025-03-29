@@ -79,7 +79,7 @@ paprc(void)
     FILE	*f;
 
     if (( f = fopen( _PATH_PAPRC, "r" )) == NULL ) {
-	return( NULL );
+	return NULL;
     }
     while ( fgets( s, sizeof( s ), f ) != NULL ) {
 	s[ strlen( s ) - 1 ] = '\0';	/* remove trailing newline */
@@ -90,7 +90,7 @@ paprc(void)
 	break;
     }
     fclose( f );
-    return( name );
+    return name;
 }
 
 static char			*printer = NULL;

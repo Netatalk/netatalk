@@ -73,9 +73,9 @@ int asp_cmdreply(ASP asp, int result)
     atpb.atp_sresiov = iov;
     atpb.atp_sresiovcnt = iovcnt;
     if ( atp_sresp( asp->asp_atp, &atpb ) < 0 ) {
-	return( -1 );
+	return -1;
     }
     asp->asp_seq++;
 
-    return( 0 );
+    return 0;
 }

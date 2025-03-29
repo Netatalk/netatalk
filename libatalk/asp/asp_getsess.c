@@ -165,7 +165,7 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
       if ( errno == EINTR || errno == EAGAIN ) {
 	continue;
       }
-      return( NULL );
+      return NULL;
     }
 
     switch ( asp->cmdbuf[ 0 ] ) {

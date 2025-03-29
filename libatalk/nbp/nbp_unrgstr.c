@@ -58,7 +58,7 @@ int nbp_unrgstr(const char *obj,const char *type,const char  *zone, const struct
     data += SZ_NBPTUPLE;
 
     if ( obj ) {
-	if (( cc = strlen( obj )) > NBPSTRLEN ) return( -1 );
+	if (( cc = strlen( obj )) > NBPSTRLEN ) return -1;
 	*data++ = cc;
 	memcpy( data, obj, cc );
 	data += cc;
@@ -67,7 +67,7 @@ int nbp_unrgstr(const char *obj,const char *type,const char  *zone, const struct
     }
 
     if ( type ) {
-	if (( cc = strlen( type )) > NBPSTRLEN ) return( -1 );
+	if (( cc = strlen( type )) > NBPSTRLEN ) return -1;
 	*data++ = cc;
 	memcpy( data, type, cc );
 	data += cc;
@@ -76,7 +76,7 @@ int nbp_unrgstr(const char *obj,const char *type,const char  *zone, const struct
     }
 
     if ( zone ) {
-	if (( cc = strlen( zone )) > NBPSTRLEN ) return( -1 );
+	if (( cc = strlen( zone )) > NBPSTRLEN ) return -1;
 	*data++ = cc;
 	memcpy( data, zone, cc );
 	data += cc;
@@ -128,13 +128,13 @@ int nbp_unrgstr(const char *obj,const char *type,const char  *zone, const struct
 
     data = nbp_recv;
     if ( *data++ != DDPTYPE_NBP ) {
-	return( -1 );
+	return -1;
     }
     memcpy( &nh, data, SZ_NBPHDR );
     if ( nh.nh_op != NBPOP_OK ) {
-	return( -1 );
+	return -1;
     }
-    return( 0 );
+    return 0;
 
 unregister_err:
     netddp_close(s);

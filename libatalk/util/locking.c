@@ -92,5 +92,5 @@ int lock_reg(int fd, int cmd, int type, off_t offset, int whence, off_t len)
     lock.l_whence = whence;
     lock.l_len = len;
 
-    return (fcntl(fd, cmd, &lock));
+    return fcntl(fd, cmd, &lock);
 }

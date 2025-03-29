@@ -135,7 +135,7 @@ charset_t add_charset(const char* name)
 
     for (c1=0; c1<=max_charset_t;c1++) {
         if ( strcasecmp(name, charset_name(c1)) == 0)
-            return (c1);
+            return c1;
     }
 
     if ( cur_charset_t >= MAX_CHARSETS )  {
@@ -169,7 +169,7 @@ charset_t add_charset(const char* name)
     max_charset_t++;
 
     LOG(log_debug9, logtype_default, "Added charset %s with handle %u", name, cur_charset_t);
-    return (cur_charset_t);
+    return cur_charset_t;
 }
 
 /**
@@ -221,7 +221,7 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
         buf[len]   = 0;
     else {
         errno = E2BIG;
-        return (size_t)(-1);
+        return (size_t) -1;
     }
 
     return len;
@@ -283,7 +283,7 @@ static size_t convert_string_internal(charset_t from, charset_t to,
             break;
         }
         LOG(log_debug, logtype_default,"Conversion error: %s",reason);
-        return (size_t)-1;
+        return (size_t) -1;
     }
 
     /* Terminate the string */
@@ -312,11 +312,11 @@ size_t convert_string(charset_t from, charset_t to,
     u = buffer2;
     if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED) ) {
         if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)-1;
+            return (size_t) -1;
     }
     else if (!charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED)) {
         if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)-1;
+            return (size_t) -1;
     }
     else {
         u = buffer;
@@ -355,7 +355,7 @@ static size_t convert_string_allocate_internal(charset_t from, charset_t to,
     *dest = NULL;
 
     if (src == NULL || srclen == (size_t)-1)
-        return (size_t)-1;
+        return (size_t) -1;
 
     lazy_initialize_conv();
 
@@ -374,7 +374,7 @@ convert:
     if (!outbuf) {
         LOG(log_debug, logtype_default,"convert_string_allocate: realloc failed!");
         SAFE_FREE(ob);
-        return (size_t)-1;
+        return (size_t) -1;
     } else {
         ob = outbuf;
     }
@@ -398,7 +398,7 @@ convert:
         }
         LOG(log_debug, logtype_default,"Conversion error: %s(%s)",reason,inbuf);
         SAFE_FREE(ob);
-        return (size_t)-1;
+        return (size_t) -1;
     }
 
 
@@ -421,7 +421,7 @@ convert:
     if (destlen && !*dest) {
         LOG(log_debug, logtype_default, "convert_string_allocate: out of memory!");
         SAFE_FREE(ob);
-        return (size_t)-1;
+        return (size_t) -1;
     }
 
     return destlen;
@@ -451,11 +451,11 @@ size_t convert_string_allocate(charset_t from, charset_t to,
     u = buffer2;
     if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED) ) {
         if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)-1;
+            return (size_t) -1;
     }
     else if ( !charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED) ) {
         if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)-1;
+            return (size_t) -1;
     }
     else {
         u = buffer;
@@ -617,16 +617,16 @@ size_t charset_precompose ( charset_t ch, char * src, size_t inlen, char * dst, 
 
     if ( (size_t)-1 == (ilen = precompose_w((ucs2_t *)buffer, len, u, &ilen)) ) {
         free (buffer);
-        return (size_t)(-1);
+        return (size_t) -1;
     }
 
     if ((size_t)(-1) == (len = convert_string_internal( CH_UCS2, ch, (char*)u, ilen, dst, outlen)) ) {
         free (buffer);
-        return (size_t)(-1);
+        return (size_t) -1;
     }
 
     free(buffer);
-    return (len);
+    return len;
 }
 
 size_t charset_decompose ( charset_t ch, char * src, size_t inlen, char * dst, size_t outlen)
@@ -643,16 +643,16 @@ size_t charset_decompose ( charset_t ch, char * src, size_t inlen, char * dst, s
 
     if ( (size_t)-1 == (ilen = decompose_w((ucs2_t *)buffer, len, u, &ilen)) ) {
         free (buffer);
-        return (size_t)(-1);
+        return (size_t) -1;
     }
 
     if ((size_t)(-1) == (len = convert_string_internal( CH_UCS2, ch, (char*)u, ilen, dst, outlen)) ) {
         free (buffer);
-        return (size_t)(-1);
+        return (size_t) -1;
     }
 
     free(buffer);
-    return (len);
+    return len;
 }
 
 size_t utf8_precompose ( char * src, size_t inlen, char * dst, size_t outlen)
@@ -719,7 +719,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
 
     if (descriptor == (atalk_iconv_t)-1 || descriptor == (atalk_iconv_t)0) {
         errno = EINVAL;
-        return (size_t)-1;
+        return (size_t) -1;
     }
 
     i_len=srclen;
@@ -1009,11 +1009,11 @@ size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_cha
     u = buffer2;
     if (CHECK_FLAGS(flags, CONV_DECOMPOSE) || (charsets[to_set] && (charsets[to_set]->flags & CHARSET_DECOMPOSED)) ) {
         if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
+            return (size_t) -1;
     }
     else if (CHECK_FLAGS(flags, CONV_PRECOMPOSE) || !charsets[from_set] || (charsets[from_set]->flags & CHARSET_DECOMPOSED)) {
         if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
-            return (size_t)(-1);
+            return (size_t) -1;
     }
     else {
         u = buffer;

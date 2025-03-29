@@ -276,7 +276,7 @@ int writeconf(char *cf)
 	LOG(log_error, logtype_atalkd, "rename %s to %s: %s", newpath, path, strerror(errno) );
 	return -1;
     }
-    return( 0 );
+    return 0;
 }
 
 /*
@@ -431,7 +431,7 @@ int readconf(char *cf)
     for ( iface = interfaces, cc = 0; iface; iface = iface->i_next, cc++ )
 	;
     if ( cc >= IFBASE ) {
-	return( 0 );
+	return 0;
     } else {
 	return -1;
     }
@@ -463,7 +463,7 @@ int router(struct interface *iface, char **av _U_)
 
     /* -router also implies -seed */
     iface->i_flags |= IFACE_RSEED | IFACE_SEED | IFACE_ISROUTER;
-    return( 1 );
+    return 1;
 }
 
 /*ARGSUSED*/
@@ -476,7 +476,7 @@ int dontroute(struct interface *iface, char **av _U_)
     }
 
     iface->i_flags |= IFACE_DONTROUTE;
-    return( 1 );
+    return 1;
 }
 
 /*ARGSUSED*/
@@ -493,7 +493,7 @@ int seed( struct interface *iface, char **av _U_)
     }
 
     iface->i_flags |= IFACE_SEED;
-    return( 1 );
+    return 1;
 }
 
 int phase(struct interface *iface, char **av)
@@ -519,7 +519,7 @@ int phase(struct interface *iface, char **av)
 	fprintf( stderr, "No phase %d.\n", n );
 	return -1;
     }
-    return( 2 );
+    return 2;
 }
 
 int net(struct interface *iface, char **av)
@@ -587,7 +587,7 @@ int net(struct interface *iface, char **av)
 	fprintf( stderr, "Must specify phase before networks.\n" );
 	return -1;
     }
-    return( 2 );
+    return 2;
 }
 
 int addr(struct interface *iface, char **av)
@@ -621,7 +621,7 @@ int addr(struct interface *iface, char **av)
 		iface->i_caddr.sat_addr.s_net;
     }
 
-    return( 2 );
+    return 2;
 }
 
 int zone(struct interface *iface, char **av)
@@ -665,7 +665,7 @@ int zone(struct interface *iface, char **av)
     }
     free(zname);
 
-    return( 2 );
+    return 2;
 }
 
 /*
@@ -744,7 +744,7 @@ int getifconf(void)
     }
     freeifacelist(start);
     (void)close( s );
-    return( 0 );
+    return 0;
 }
 
 /*
@@ -758,7 +758,7 @@ struct interface *newiface( const char *name)
 
     if (( niface = (struct interface *)calloc(1, sizeof( struct interface )))
 	    == NULL ) {
-	return( NULL );
+	return NULL;
     }
     strlcpy( niface->i_name, name, sizeof(niface->i_name));
 #ifdef BSD4_4
@@ -767,7 +767,7 @@ struct interface *newiface( const char *name)
 #endif /* BSD4_4 */
     niface->i_addr.sat_family = AF_APPLETALK;
     niface->i_caddr.sat_family = AF_APPLETALK;
-    return( niface );
+    return niface;
 }
 
 #ifdef __svr4__
@@ -829,6 +829,6 @@ int plumb(void)
     close(fd);
     }
 
-    return( 0 );
+    return 0;
 }
 #endif /* __svr4__ */

@@ -58,7 +58,7 @@ atp_rresp(
     */
     if ( atpb->atp_rresiovcnt <= 0 || atpb->atp_rresiovcnt > 8 ) {
 	errno = EINVAL;
-	return( -1 );
+	return -1;
     }
 
     while (( rc = atp_rsel( ah, atpb->atp_saddr, ATP_TRESP )) == 0 ) {
@@ -66,7 +66,7 @@ atp_rresp(
     }
 
     if ( rc != ATP_TRESP ) {
-	return( rc );
+	return rc;
     }
 
     for ( i = 0; i < 8; ++i ) {
@@ -77,7 +77,7 @@ atp_rresp(
 	if ( i > atpb->atp_rresiovcnt - 1 ||
 		len > atpb->atp_rresiov[ i ].iov_len ) {
 	    errno = EMSGSIZE;
-	    return( -1 );
+	    return -1;
 	}
 #ifdef EBUG
 	fprintf( stderr, "atp_rresp copying %ld bytes packet %d\n",
@@ -94,5 +94,5 @@ atp_rresp(
     }
     atpb->atp_rresiovcnt = i;
 
-    return( 0 );
+    return 0;
 }

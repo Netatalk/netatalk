@@ -261,14 +261,14 @@ static int do_move(const char *from, const char *to)
         /* prompt only if source exist */
         if (lstat(from, &sb) == -1) {
             SLOG("%s: %s", from, strerror(errno));
-            return (1);
+            return 1;
         }
 
         ask = 0;
         if (nflg) {
             if (vflg)
                 printf("%s not overwritten\n", to);
-            return (0);
+            return 0;
         } else if (iflg) {
             (void)fprintf(stderr, "overwrite %s? (y/n [n]) ", to);
             ask = 1;
@@ -282,7 +282,7 @@ static int do_move(const char *from, const char *to)
                 ch = getchar();
             if (first != 'y' && first != 'Y') {
                 (void)fprintf(stderr, "not overwritten\n");
-                return (0);
+                return 0;
             }
         }
     }
@@ -328,18 +328,18 @@ static int do_move(const char *from, const char *to)
                  */
                 if (lstat(from, &sb) == -1) {
                     SLOG("%s: %s", from, strerror(errno));
-                    return (-1);
+                    return -1;
                 }
                 if (!S_ISLNK(sb.st_mode)) {
                     /* Can't mv(1) a mount point. */
                     if (realpath(from, path) == NULL) {
                         SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
-                        return (1);
+                        return 1;
                     }
                 }
             } else { /* != EXDEV */
                 SLOG("rename %s to %s: %s", from, to, strerror(errno));
-                return (1);
+                return 1;
             }
         } /* rename != 0*/
 
@@ -391,7 +391,7 @@ static int do_move(const char *from, const char *to)
 
         if (vflg)
             printf("%s -> %s\n", from, to);
-        return (0);
+        return 0;
     }
 
     if (mustcopy)
@@ -411,17 +411,17 @@ static int copy(const char *from, const char *to)
         if (S_ISDIR(sb.st_mode)) {
             if (rmdir(to) != 0) {
                 SLOG("rmdir %s: %s", to, strerror(errno));
-                return (1);
+                return 1;
             }
         } else {
             if (unlink(to) != 0) {
                 SLOG("unlink %s: %s", to, strerror(errno));
-                return (1);
+                return 1;
             }
         }
     } else if (errno != ENOENT) {
         SLOG("%s: %s", to, strerror(errno));
-        return (1);
+        return 1;
     }
 
     /* Copy source to destination. */
@@ -433,11 +433,11 @@ static int copy(const char *from, const char *to)
         if (errno == EINTR)
             continue;
         SLOG("%s cp -R %s %s: waitpid: %s", _PATH_AD, from, to, strerror(errno));
-        return (1);
+        return 1;
     }
     if (!WIFEXITED(status)) {
         SLOG("%s cp -R %s %s: did not terminate normally", _PATH_AD, from, to);
-        return (1);
+        return 1;
     }
     switch (WEXITSTATUS(status)) {
     case 0:
@@ -445,7 +445,7 @@ static int copy(const char *from, const char *to)
     default:
         SLOG("%s cp -R %s %s: terminated with %d (non-zero) status",
              _PATH_AD, from, to, WEXITSTATUS(status));
-        return (1);
+        return 1;
     }
 
     /* Delete the source. */
@@ -457,11 +457,11 @@ static int copy(const char *from, const char *to)
         if (errno == EINTR)
             continue;
         SLOG("%s rm -R %s: waitpid: %s", _PATH_AD, from, strerror(errno));
-        return (1);
+        return 1;
     }
     if (!WIFEXITED(status)) {
         SLOG("%s rm -R %s: did not terminate normally", _PATH_AD, from);
-        return (1);
+        return 1;
     }
     switch (WEXITSTATUS(status)) {
     case 0:
@@ -469,7 +469,7 @@ static int copy(const char *from, const char *to)
     default:
         SLOG("%s rm -R %s: terminated with %d (non-zero) status",
               _PATH_AD, from, WEXITSTATUS(status));
-        return (1);
+        return 1;
     }
     return 0;
 }

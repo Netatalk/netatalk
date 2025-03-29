@@ -43,7 +43,7 @@ int getuamnames(const int type, char *uamnames)
     struct uam_obj *prev, *start;
 
     if (!(start = UAM_LIST(type)))
-        return(-1);
+        return -1;
 
     prev = start;
 
@@ -53,7 +53,7 @@ int getuamnames(const int type, char *uamnames)
     }
 
     strcat(uamnames, "*\n");
-    return(0);
+    return 0;
 }
 
 

@@ -96,7 +96,7 @@ int main(int ac, char **av)
     memset(&addr, 0, sizeof(addr));
     memcpy(&addr.sat_addr, &ataddr, sizeof(addr.sat_addr));
     if ((s = netddp_open(&addr, NULL)) < 0)
-	return( -1 );
+	return -1;
 
     if ( port ) {
 	addr.sat_port = port;

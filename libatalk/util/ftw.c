@@ -202,7 +202,7 @@ static void mytdestroy (void *vroot, __free_fn_t freefct)
 static char *mystpcpy(char *a, const char *b)
 {
     strcpy(a, b);
-    return (a + strlen(a));
+    return a + strlen(a);
 }
 
 static char *xgetcwd(void)

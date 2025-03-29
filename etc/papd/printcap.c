@@ -98,7 +98,7 @@ int getprent( char *cap, char *bp, int bufsize)
 	int i;
 
 	if (pfp == NULL && (pfp = fopen( cap, "r")) == NULL)
-		return(-1);
+		return -1;
 	tbuf = bp;
 	i = 0;
 	for (;;) {
@@ -182,7 +182,7 @@ int tgetent(char *cap, char *bp, const char *name)
 			cp2 = getenv("TERM");
 			if (cp2==(char *) 0 || strcmp(name,cp2)==0) {
 				strcpy(bp,cp);
-				return(tnchktc(cap));
+				return tnchktc(cap);
 			} else {
 				tf = open(cap, 0);
 			}
@@ -195,7 +195,7 @@ int tgetent(char *cap, char *bp, const char *name)
 	tf = open(cap, 0);
 #endif /* V6 */
 	if (tf < 0)
-		return (-1);
+		return -1;
 	for (;;) {
 		cp = bp;
 		skip = 0;
@@ -237,7 +237,7 @@ int tgetent(char *cap, char *bp, const char *name)
 		 */
 		if (tnamatch(name)) {
 			close(tf);
-			return(tnchktc(cap));
+			return tnchktc(cap);
 		}
 	}
 }
@@ -343,7 +343,7 @@ static char *tskip(char *bp)
 		bp++;
 	while (*bp && *bp == ':')
 		bp++;
-	return (bp);
+	return bp;
 }
 
 /*
@@ -363,11 +363,11 @@ int tgetnum(char *id)
 	for (;;) {
 		bp = tskip(bp);
 		if (*bp == 0)
-			return (-1);
+			return -1;
 		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
 			continue;
 		if (*bp == '@')
-			return(-1);
+			return -1;
 		if (*bp != '#')
 			continue;
 		bp++;
@@ -377,7 +377,7 @@ int tgetnum(char *id)
 		i = 0;
 		while (isdigit(*bp))
 			i *= base, i += *bp++ - '0';
-		return (i);
+		return i;
 	}
 }
 
@@ -448,7 +448,7 @@ nextc:
 	*cp++ = 0;
 	str = *area;
 	*area = cp;
-	return (str);
+	return str;
 }
 
 /*
@@ -467,15 +467,15 @@ tgetstr(char *id, char **area)
 	for (;;) {
 		bp = tskip(bp);
 		if (!*bp)
-			return (NULL);
+			return NULL;
 		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
 			continue;
 		if (*bp == '@')
-			return(NULL);
+			return NULL;
 		if (*bp != '=')
 			continue;
 		bp++;
-		return (tdecode(bp, area));
+		return tdecode(bp, area);
 	}
 }
 
@@ -519,11 +519,11 @@ nextc:
 	*cp++ = 0;
 	str = *area;
 	*area = cp;
-	return (str);
+	return str;
 }
 
 char *
 getpname(char **area, int bufsize)
 {
-	return( decodename( tbuf, area, bufsize));
+	return decodename( tbuf, area, bufsize);
 }

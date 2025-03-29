@@ -96,7 +96,7 @@ static int is_power_of_two(hash_val_t arg)
         return 0;
     while ((arg & 1) == 0)
         arg >>= 1;
-    return (arg == 1);
+    return arg == 1;
 }
 
 /*

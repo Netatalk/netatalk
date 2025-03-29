@@ -76,7 +76,7 @@ callaurpc(struct vol *vol,
         int socket = RPC_ANYSOCK;
 
         if ((hp = gethostbyname(vol->v_gvs)) == NULL)
-            return ((int) RPC_UNKNOWNHOST);
+            return (int) RPC_UNKNOWNHOST;
         timeout.tv_usec = 0;
         timeout.tv_sec = 6;
         memcpy(&server_addr.sin_addr, hp->h_addr, hp->h_length);
@@ -86,7 +86,7 @@ callaurpc(struct vol *vol,
         if ((vol->v_nfsclient = (void *)
                                 clntudp_create(&server_addr, prognum, versnum,
                                                timeout, &socket)) == NULL)
-            return ((int) rpc_createerr.cf_stat);
+            return (int) rpc_createerr.cf_stat;
 
         ((CLIENT *) vol->v_nfsclient)->cl_auth = authunix_create_default();
     }
@@ -95,7 +95,7 @@ callaurpc(struct vol *vol,
     tottimeout.tv_usec = 0;
     clnt_stat = clnt_call((CLIENT *) vol->v_nfsclient, procnum,
                           inproc, in, outproc, out, tottimeout);
-    return ((int) clnt_stat);
+    return (int) clnt_stat;
 }
 
 

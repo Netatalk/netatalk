@@ -85,13 +85,13 @@ int ch_for( struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-        return( 0 );
+        return 0;
 
     case -1 :
-        return( CH_MORE );
+        return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     cmt = get_text(start, linelength);
@@ -106,7 +106,7 @@ int ch_for( struct papfile *in, struct papfile *out _U_)
     in->pf_state &= ~PF_TRANSLATE;
     compop();
     CONSUME( in, linelength + crlflength );
-    return( CH_DONE );
+    return CH_DONE;
 }
 
 int ch_title( struct papfile *in, struct papfile *out _U_)
@@ -116,13 +116,13 @@ int ch_title( struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-	return( 0 );
+	return 0;
 
     case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     LOG(log_debug9, logtype_papd, "Parsing %%Title");
@@ -139,7 +139,7 @@ int ch_title( struct papfile *in, struct papfile *out _U_)
     in->pf_state &= ~PF_TRANSLATE;
     compop();
     CONSUME( in, linelength + crlflength );
-    return( CH_DONE );
+    return CH_DONE;
 }
 
 static int guess_creator ( char *creator )
@@ -160,13 +160,13 @@ int ch_creator( struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-	return( 0 );
+	return 0;
 
     case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     cmt = get_text(start, linelength);
@@ -182,7 +182,7 @@ int ch_creator( struct papfile *in, struct papfile *out _U_)
     in->pf_state &= ~PF_TRANSLATE;
     compop();
     CONSUME( in, linelength + crlflength );
-    return( CH_DONE );
+    return CH_DONE;
 }
 
 int ch_endcomm( struct papfile *in, struct papfile *out _U_)
@@ -196,13 +196,13 @@ int ch_endcomm( struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-	return( 0 );
+	return 0;
 
     case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     in->pf_state |= PF_TRANSLATE;
@@ -210,7 +210,7 @@ int ch_endcomm( struct papfile *in, struct papfile *out _U_)
     in->pf_state &= ~PF_TRANSLATE;
     compop();
     CONSUME( in, linelength + crlflength );
-    return ( CH_DONE);
+    return CH_DONE;
 }
 
 int ch_starttranslate( struct papfile *in, struct papfile *out _U_)
@@ -222,20 +222,20 @@ int ch_starttranslate( struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-        return( 0 );
+        return 0;
 
     case -1 :
-        return( CH_MORE );
+        return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     in->pf_state |= PF_TRANSLATE;
     lp_write( in, start, linelength + crlflength );
     compop();
     CONSUME( in, linelength + crlflength );
-    return ( CH_DONE);
+    return CH_DONE;
 }
 
 int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
@@ -247,20 +247,20 @@ int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-        return( 0 );
+        return 0;
 
     case -1 :
-        return( CH_MORE );
+        return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     lp_write( in, start, linelength + crlflength );
     in->pf_state &= ~PF_TRANSLATE;
     compop();
     CONSUME( in, linelength + crlflength );
-    return ( CH_DONE);
+    return CH_DONE;
 }
 
 int ch_translateone( struct papfile *in, struct papfile *out _U_)
@@ -272,13 +272,13 @@ int ch_translateone( struct papfile *in, struct papfile *out _U_)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-        return( 0 );
+        return 0;
 
     case -1 :
-        return( CH_MORE );
+        return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     in->pf_state |= PF_TRANSLATE;
@@ -286,7 +286,7 @@ int ch_translateone( struct papfile *in, struct papfile *out _U_)
     in->pf_state &= ~PF_TRANSLATE;
     compop();
     CONSUME( in, linelength + crlflength );
-    return ( CH_DONE);
+    return CH_DONE;
 }
 
 

@@ -143,7 +143,7 @@ static uint16_t cksum(char *buffer, int len)
 	}
 	sum = (sum & 0xffff) + ((sum >> 16) & 0xffff);
 	sum = sum > 65535 ? sum - 65535 : sum;
-	return (~sum & 0xffff);
+	return ~sum & 0xffff;
 }
 
 

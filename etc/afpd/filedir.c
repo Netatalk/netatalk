@@ -57,7 +57,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
         /* was AFPERR_PARAM but it helps OS 10.3 when a volume has been removed
          * from the list.
          */
-        return( AFPERR_ACCESS );
+        return AFPERR_ACCESS;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -93,7 +93,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     }
     if ( s_path->st_errno != 0 ) {
         if (afp_errno != AFPERR_ACCESS) {
-            return( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
         }
     }
 
@@ -108,14 +108,14 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
             ret = getdirparams(obj, vol, dbitmap, s_path, dir,
                                rbuf + 3 * sizeof( uint16_t ), &buflen );
             if (ret != AFP_OK )
-                return( ret );
+                return ret;
         }
         /* this is a directory */
         *(rbuf + 2 * sizeof( uint16_t )) = (char) FILDIRBIT_ISDIR;
     } else {
         if (fbitmap && AFP_OK != (ret = getfilparams(obj, vol, fbitmap, s_path, curdir,
                                                      rbuf + 3 * sizeof( uint16_t ), &buflen, 0)) ) {
-            return( ret );
+            return ret;
         }
         /* this is a file */
         *(rbuf + 2 * sizeof( uint16_t )) = FILDIRBIT_ISFILE;
@@ -129,7 +129,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *r
     rbuf += sizeof( dbitmap ) + sizeof( uint8_t );
     *rbuf = 0;
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
@@ -147,7 +147,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
     ibuf += sizeof( vid );
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -178,7 +178,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
 
     if ( path->st_errno != 0 ) {
         if (afp_errno != AFPERR_ACCESS)
-            return( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
     }
     /*
      * If ibuf is odd, make it even.
@@ -196,7 +196,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf 
         setvoltime(obj, vol );
     }
 
-    return( rc );
+    return rc;
 }
 
 /* --------------------------------------------
@@ -420,7 +420,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -450,7 +450,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     }
     else {
         if ( sdir->d_did == DIRDID_ROOT ) { /* root directory */
-            return( AFPERR_NORENAME );
+            return AFPERR_NORENAME;
         }
         /* move to destination dir */
         if ( movecwd( vol, dirlookup(vol, sdir->d_pdid) ) < 0 ) {
@@ -461,7 +461,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
 
     /* another place where we know about the path type */
     if ((plen = copy_path_name(vol, newname, ibuf)) < 0) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (!plen) {
@@ -473,7 +473,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         setvoltime(obj, vol );
     }
 
-    return( rc );
+    return rc;
 }
 
 /*
@@ -570,7 +570,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -662,7 +662,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size
         setvoltime(obj, vol );
     }
 
-    return( rc );
+    return rc;
 }
 /* ------------------------ */
 char *absupath(const struct vol *vol, struct dir *dir, char *u)
@@ -689,7 +689,7 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
     strncpy(pathbuf, cfrombstr(path), blength(path) + 1);
     bdestroy(path);
 
-    return(pathbuf);
+    return pathbuf;
 }
 
 char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
@@ -721,7 +721,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if (vol->v_flags & AFPVOL_RO)
@@ -810,7 +810,7 @@ exit:
     if (sdir_fd != -1)
         close(sdir_fd);
 
-    return( rc );
+    return rc;
 }
 
 int veto_file(const char*veto_str, const char*path)

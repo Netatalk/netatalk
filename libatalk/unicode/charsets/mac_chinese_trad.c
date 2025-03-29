@@ -99,11 +99,11 @@ static size_t mac_chinese_trad_char_pull(ucs2_t* out, const uint8_t* in, size_t*
 	c = (c << 8) + c2;
       } else {
 	errno = EILSEQ;
-	return (size_t)-1;
+	return (size_t) -1;
       }
     } else {
       errno = EINVAL;
-      return (size_t)-1;
+      return (size_t) -1;
     }
   } else {
     *size = 1;

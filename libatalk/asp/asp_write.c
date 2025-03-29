@@ -67,7 +67,7 @@ int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
 
     if ( atp_sreq( asp->asp_atp, &atpb, iovcnt, ATP_XO ) < 0 ) {
 	asp->asp_sat.sat_port = oport;
-	return( -1 );
+	return -1;
     }
     asp->write_count += atpb.atp_sreqdlen;
 
@@ -75,7 +75,7 @@ int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
     atpb.atp_rresiovcnt = iovcnt;
     if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
 	asp->asp_sat.sat_port = oport;
-	return( -1 );
+	return -1;
     }
 
     asp->asp_sat.sat_port = oport;

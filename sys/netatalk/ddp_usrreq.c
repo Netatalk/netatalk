@@ -41,8 +41,8 @@ ddp_usrreq( so, req, m, addr, rights )
     ddp = sotoddpcb( so );
 
     if ( req == PRU_CONTROL ) {
-	return( at_control( (int) m, (caddr_t) addr,
-		(struct ifnet *) rights ));
+	return at_control( (int) m, (caddr_t) addr,
+		(struct ifnet *) rights );
     }
 
     if ( rights && rights->m_len ) {
@@ -155,14 +155,14 @@ ddp_usrreq( so, req, m, addr, rights )
 	/*
 	 * Don't mfree. Good architecture...
 	 */
-	return( EOPNOTSUPP );
+	return EOPNOTSUPP;
 
     case PRU_SENSE:
 	/*
 	 * 1. Don't return block size.
 	 * 2. Don't mfree.
 	 */
-	return( 0 );
+	return 0;
 
     default:
 	error = EOPNOTSUPP;
@@ -172,7 +172,7 @@ release:
     if ( m != NULL ) {
 	m_freem( m );
     }
-    return( error );
+    return error;
 }
 
 at_sockaddr( ddp, addr )
@@ -195,16 +195,16 @@ at_pcbsetaddr( ddp, addr )
     struct ddpcb	*ddpp;
 
     if ( ddp->ddp_lsat.sat_port != ATADDR_ANYPORT ) { /* shouldn't be bound */
-	return( EINVAL );
+	return EINVAL;
     }
 
     if ( addr != 0 ) {			/* validate passed address */
 	sat = mtod( addr, struct sockaddr_at *);
 	if ( addr->m_len != sizeof( *sat )) {
-	    return( EINVAL );
+	    return EINVAL;
 	}
 	if ( sat->sat_family != AF_APPLETALK ) {
-	    return( EAFNOSUPPORT );
+	    return EAFNOSUPPORT;
 	}
 
 	if ( sat->sat_addr.s_node != ATADDR_ANYNODE ||
@@ -216,23 +216,23 @@ at_pcbsetaddr( ddp, addr )
 		}
 	    }
 	    if ( !aa ) {
-		return( EADDRNOTAVAIL );
+		return EADDRNOTAVAIL;
 	    }
 	}
 
 	if ( sat->sat_port != ATADDR_ANYPORT ) {
 	    if ( sat->sat_port < ATPORT_FIRST ||
 		    sat->sat_port >= ATPORT_LAST ) {
-		return( EINVAL );
+		return EINVAL;
 	    }
 #ifdef BSD4_4
 	    if ( sat->sat_port < ATPORT_RESERVED &&
 		    suser( u.u_cred, &u.u_acflag )) {
-		return( EACCES );
+		return EACCES;
 	    }
 #else /* BSD4_4 */
 	    if ( sat->sat_port < ATPORT_RESERVED && ( !suser())) {
-		return( EACCES );
+		return EACCES;
 	    }
 #endif /* BSD4_4 */
 	}
@@ -245,7 +245,7 @@ at_pcbsetaddr( ddp, addr )
     if ( sat->sat_addr.s_node == ATADDR_ANYNODE &&
 	    sat->sat_addr.s_net == ATADDR_ANYNET ) {
 	if ( at_ifaddr == NULL ) {
-	    return( EADDRNOTAVAIL );
+	    return EADDRNOTAVAIL;
 	}
 	sat->sat_addr = AA_SAT( at_ifaddr )->sat_addr;
     }
@@ -262,7 +262,7 @@ at_pcbsetaddr( ddp, addr )
 	    }
 	}
 	if ( sat->sat_port == ATPORT_LAST ) {
-	    return( EADDRNOTAVAIL );
+	    return EADDRNOTAVAIL;
 	}
 	ddp->ddp_lsat.sat_port = sat->sat_port;
 	ddp_ports[ sat->sat_port - 1 ] = ddp;
@@ -275,7 +275,7 @@ at_pcbsetaddr( ddp, addr )
 	    }
 	}
 	if ( ddpp != NULL ) {
-	    return( EADDRINUSE );
+	    return EADDRINUSE;
 	}
 	ddp->ddp_pnext = ddp_ports[ sat->sat_port - 1 ];
 	ddp_ports[ sat->sat_port - 1 ] = ddp;
@@ -284,7 +284,7 @@ at_pcbsetaddr( ddp, addr )
 	}
     }
 
-    return( 0 );
+    return 0;
 }
 
 at_pcbconnect( ddp, addr )
@@ -298,9 +298,9 @@ at_pcbconnect( ddp, addr )
     unsigned short		hintnet = 0, net;
 
     if ( addr->m_len != sizeof( *sat ))
-	return( EINVAL );
+	return EINVAL;
     if ( sat->sat_family != AF_APPLETALK ) {
-	return( EAFNOSUPPORT );
+	return EAFNOSUPPORT;
     }
 
     /*
@@ -310,7 +310,7 @@ at_pcbconnect( ddp, addr )
      */
     if ( sat->sat_addr.s_net == 0 && sat->sat_addr.s_node != ATADDR_ANYNODE ) {
 	if ( ddp->ddp_lsat.sat_port == ATADDR_ANYPORT ) {
-	    return( EADDRNOTAVAIL );
+	    return EADDRNOTAVAIL;
 	}
 	hintnet = ddp->ddp_lsat.sat_addr.s_net;
     }
@@ -376,14 +376,14 @@ at_pcbconnect( ddp, addr )
 	}
     }
     if ( aa == 0 ) {
-	return( ENETUNREACH );
+	return ENETUNREACH;
     }
 
     ddp->ddp_fsat = *sat;
     if ( ddp->ddp_lsat.sat_port == ATADDR_ANYPORT ) {
-	return( at_pcbsetaddr( ddp, (struct mbuf *)0 ));
+	return at_pcbsetaddr( ddp, (struct mbuf *)0 );
     }
-    return( 0 );
+    return 0;
 }
 
 at_pcbdisconnect( ddp )
@@ -415,7 +415,7 @@ at_pcballoc( so )
 
     ddp->ddp_socket = so;
     so->so_pcb = (caddr_t)ddp;
-    return( 0 );
+    return 0;
 }
 
 at_pcbdetach( so, ddp )
@@ -472,7 +472,7 @@ ddp_search( from, to, aa )
      * Check for bad ports.
      */
     if ( to->sat_port < ATPORT_FIRST || to->sat_port >= ATPORT_LAST ) {
-	return( NULL );
+	return NULL;
     }
 
     /*
@@ -505,7 +505,7 @@ ddp_search( from, to, aa )
 	    break;
 	}
     }
-    return( ddp );
+    return ddp;
 }
 
 ddp_init()

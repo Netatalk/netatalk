@@ -56,10 +56,10 @@ int atalk_netmatch(struct sockaddr_at *sat1, struct sockaddr_at *sat2)
 	}
     }
     if ( aa ) {
-	return( ntohs( aa->aa_firstnet ) <= ntohs( sat2->sat_addr.s_net ) &&
-		ntohs( aa->aa_lastnet ) >= ntohs( sat2->sat_addr.s_net ));
+	return ntohs( aa->aa_firstnet ) <= ntohs( sat2->sat_addr.s_net ) &&
+		ntohs( aa->aa_lastnet ) >= ntohs( sat2->sat_addr.s_net );
     }
-    return( sat1->sat_addr.s_net == sat2->sat_addr.s_net );
+    return sat1->sat_addr.s_net == sat2->sat_addr.s_net;
 }
 #endif /* BSD4_4 */
 
@@ -98,7 +98,7 @@ at_control( cmd, data, ifp )
 	    }
 	}
 	if ( cmd == SIOCDIFADDR && aa == 0 ) {
-	    return( EADDRNOTAVAIL );
+	    return EADDRNOTAVAIL;
 	}
 	/*FALLTHROUGH*/
 #endif /* BSD4_4 */
@@ -110,11 +110,11 @@ at_control( cmd, data, ifp )
 	 * the return...
 	 */
 	if ( suser( u.u_cred, &u.u_acflag )) {
-	    return( EPERM );
+	    return EPERM;
 	}
 #else /* BSD4_4 */
 	if ( !suser()) {
-	    return( EPERM );
+	    return EPERM;
 	}
 #endif /* BSD4_4 */
 
@@ -141,7 +141,7 @@ at_control( cmd, data, ifp )
 	if ( aa == (struct at_ifaddr *) 0 ) {
 	    m = m_getclr( M_WAIT, MT_IFADDR );
 	    if ( m == (struct mbuf *)NULL ) {
-		return( ENOBUFS );
+		return ENOBUFS;
 	    }
 
 	    if (( aa = at_ifaddr ) != NULL ) {
@@ -212,7 +212,7 @@ at_control( cmd, data, ifp )
 	}
 
 	if ( aa == (struct at_ifaddr *) 0 )
-	    return( EADDRNOTAVAIL );
+	    return EADDRNOTAVAIL;
 	break;
     }
 
@@ -226,14 +226,14 @@ at_control( cmd, data, ifp )
 	break;
 
     case SIOCSIFADDR:
-	return( at_ifinit( ifp, aa, (struct sockaddr_at *)&ifr->ifr_addr ));
+	return at_ifinit( ifp, aa, (struct sockaddr_at *)&ifr->ifr_addr );
 
 #ifdef BSD4_4
     case SIOCAIFADDR:
 	if ( sateqaddr( &ifra->ifra_addr, &aa->aa_addr )) {
-	    return( 0 );
+	    return 0;
 	}
-	return( at_ifinit( ifp, aa, (struct sockaddr_at *)&ifr->ifr_addr ));
+	return at_ifinit( ifp, aa, (struct sockaddr_at *)&ifr->ifr_addr );
 
     case SIOCDIFADDR:
 	at_scrub( ifp, aa );
@@ -269,10 +269,10 @@ at_control( cmd, data, ifp )
 
     default:
 	if ( ifp == 0 || ifp->if_ioctl == 0 )
-	    return( EOPNOTSUPP );
-	return( (*ifp->if_ioctl)( ifp, cmd, data ));
+	    return EOPNOTSUPP;
+	return (*ifp->if_ioctl)( ifp, cmd, data );
     }
-    return( 0 );
+    return 0;
 }
 
 at_scrub( ifp, aa )
@@ -289,7 +289,7 @@ at_scrub( ifp, aa )
 #ifdef BSD4_4
 	if (( error = rtinit( &(aa->aa_ifa), RTM_DELETE,
 		( ifp->if_flags & IFF_LOOPBACK ) ? RTF_HOST : 0 )) != 0 ) {
-	    return( error );
+	    return error;
 	}
 	aa->aa_ifa.ifa_flags &= ~IFA_ROUTE;
 #else /* BSD4_4 */
@@ -321,7 +321,7 @@ at_scrub( ifp, aa )
 #endif /* BSD4_4 */
 	aa->aa_flags &= ~AFA_ROUTE;
     }
-    return( 0 );
+    return 0;
 }
 
 extern struct timeval	time;
@@ -380,7 +380,7 @@ at_ifinit( ifp, aa, sat )
 		    aa->aa_addr = oldaddr;
 		    aa->aa_firstnet = onr.nr_firstnet;
 		    aa->aa_lastnet = onr.nr_lastnet;
-		    return( EINVAL );
+		    return EINVAL;
 		}
 		net = ntohs( sat->sat_addr.s_net );
 	    }
@@ -412,7 +412,7 @@ at_ifinit( ifp, aa, sat )
 		    aa->aa_addr = oldaddr;
 		    aa->aa_firstnet = onr.nr_firstnet;
 		    aa->aa_lastnet = onr.nr_lastnet;
-		    return( EINTR );
+		    return EINTR;
 		}
 		s = splimp();
 		if (( aa->aa_flags & AFA_PROBING ) == 0 ) {
@@ -431,7 +431,7 @@ at_ifinit( ifp, aa, sat )
 	    aa->aa_firstnet = onr.nr_firstnet;
 	    aa->aa_lastnet = onr.nr_lastnet;
 	    splx( s );
-	    return( EADDRINUSE );
+	    return EADDRINUSE;
 	}
     }
 
@@ -441,7 +441,7 @@ at_ifinit( ifp, aa, sat )
 	aa->aa_addr = oldaddr;
 	aa->aa_firstnet = onr.nr_firstnet;
 	aa->aa_lastnet = onr.nr_lastnet;
-	return( error );
+	return error;
     }
 
 #ifdef BSD4_4
@@ -513,7 +513,7 @@ at_ifinit( ifp, aa, sat )
 	aa->aa_firstnet = onr.nr_firstnet;
 	aa->aa_lastnet = onr.nr_lastnet;
 	splx( s );
-	return( error );
+	return error;
     }
 
 #ifdef BSD4_4
@@ -521,7 +521,7 @@ at_ifinit( ifp, aa, sat )
 #endif /* BSD4_4 */
     aa->aa_flags |= AFA_ROUTE;
     splx( s );
-    return( 0 );
+    return 0;
 }
 
 at_broadcast( sat )
@@ -530,20 +530,20 @@ at_broadcast( sat )
     struct at_ifaddr	*aa;
 
     if ( sat->sat_addr.s_node != ATADDR_BCAST ) {
-	return( 0 );
+	return 0;
     }
     if ( sat->sat_addr.s_net == 0 ) {
-	return( 1 );
+	return 1;
     } else {
 	for ( aa = at_ifaddr; aa; aa = aa->aa_next ) {
 	    if (( aa->aa_ifp->if_flags & IFF_BROADCAST ) &&
 		 ( ntohs( sat->sat_addr.s_net ) >= ntohs( aa->aa_firstnet ) &&
 		 ntohs( sat->sat_addr.s_net ) <= ntohs( aa->aa_lastnet ))) {
-		return( 1 );
+		return 1;
 	    }
 	}
     }
-    return( 0 );
+    return 0;
 }
 
 aa_clean()

@@ -102,12 +102,12 @@ determine if a character is lowercase
 
 int islower_w(ucs2_t c)
 {
-	return ( c == tolower_w(c));
+	return c == tolower_w(c);
 }
 
 int islower_sp(uint32_t c_sp)
 {
-	return ( c_sp == tolower_sp(c_sp));
+	return c_sp == tolower_sp(c_sp);
 }
 
 /*******************************************************************
@@ -118,12 +118,12 @@ determine if a character is uppercase
 
 int isupper_w(ucs2_t c)
 {
-	return ( c == toupper_w(c));
+	return c == toupper_w(c);
 }
 
 int isupper_sp(uint32_t c_sp)
 {
-	return ( c_sp == toupper_sp(c_sp));
+	return c_sp == toupper_sp(c_sp);
 }
 
 /*******************************************************************
@@ -207,7 +207,7 @@ wide strcmp()
 int strcmp_w(const ucs2_t *a, const ucs2_t *b)
 {
 	while (*b && *a == *b) { a++; b++; }
-	return (*a - *b);
+	return *a - *b;
 	/* warning: if *a != *b and both are not 0 we retrun a random
 	   greater or lesser than 0 number not realted to which
 	   string is longer */
@@ -558,7 +558,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	size_t o_len = *outlen;
 
 	if (!inplen || (inplen & 1) || inplen > o_len)
-		return (size_t)-1;
+		return (size_t) -1;
 
 	i = 0;
 	in  = name;
@@ -619,7 +619,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 
 				if (*outlen <= 2) {
 					errno = E2BIG;
-					return (size_t)-1;
+					return (size_t) -1;
 				}
 
 				*out = base_sp & 0xFFFF;
@@ -653,7 +653,7 @@ size_t precompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	}
 
 	errno = E2BIG;
-	return (size_t)-1;
+	return (size_t) -1;
 }
 
 /* --------------- */
@@ -670,7 +670,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 	size_t o_len = *outlen;
 
 	if (!inplen || (inplen & 1))
-		return (size_t)-1;
+		return (size_t) -1;
 	i = 0;
 	in  = name;
 	out = comp;
@@ -715,7 +715,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 
 				if (*outlen < (comblen + 1) << 1) {
 					errno = E2BIG;
-					return (size_t)-1;
+					return (size_t) -1;
 				}
 
 				*out = base_sp >> 16;   /* hi */
@@ -741,7 +741,7 @@ size_t decompose_w (ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 
 		if (*outlen < (comblen + 1) << 1) {
 			errno = E2BIG;
-			return (size_t)-1;
+			return (size_t) -1;
 		}
 
 		*out = base;
@@ -774,21 +774,21 @@ size_t utf8_charlen ( char* utf8 )
 	p = (unsigned char*) utf8;
 
 	if ( *p < 0x80 )
-		return (1);
+		return 1;
 	else if ( *p > 0xC1 && *p < 0xe0 && *(p+1) > 0x7f && *(p+1) < 0xC0)
-		return (2);
+		return 2;
 	else if ( *p == 0xe0 && *(p+1) > 0x9f && *(p+1) < 0xc0 && *(p+2) > 0x7f && *(p+2) < 0xc0)
-		return (3);
+		return 3;
 	else if ( *p > 0xe0  && *p < 0xf0 && *(p+1) > 0x7f && *(p+1) < 0xc0 && *(p+2) > 0x7f && *(p+2) < 0xc0)
-		return (3);
+		return 3;
 	else if ( *p == 0xf0 && *(p+1) > 0x8f && *(p+1) < 0xc0 && *(p+2) > 0x7f && *(p+2) < 0xc0 && *(p+3) > 0x7f && *(p+3) < 0xc0 )
-		return (4);
+		return 4;
 	else if ( *p > 0xf0 && *p < 0xf4 && *(p+1) > 0x7f && *(p+1) < 0xc0 && *(p+2) > 0x7f && *(p+2) < 0xc0 && *(p+3) > 0x7f && *(p+3) < 0xc0 )
-		return (4);
+		return 4;
 	else if ( *p == 0xf4 && *(p+1) > 0x7f && *(p+1) < 0x90 && *(p+2) > 0x7f && *(p+2) < 0xc0 && *(p+3) > 0x7f && *(p+3) < 0xc0 )
-		return (4);
+		return 4;
 	else
-		return ((size_t) -1);
+		return (size_t) -1;
 }
 
 
@@ -826,10 +826,10 @@ size_t utf8_strlen_validate ( char * utf8 )
 			p += 4;
 
 		else
-			return ((size_t) -1);
+			return (size_t) -1;
 
 		len++;
 	}
 
-	return (len);
+	return len;
 }

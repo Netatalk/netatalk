@@ -70,7 +70,7 @@ int atp_rreq(
 #ifdef EBUG
 	printf( "<%d> atp_rreq: atp_rsel returns err %d\n", getpid(), rc );
 #endif /* EBUG */
-	return( rc );
+	return rc;
     }
 
     /* allocate a buffer for receiving request
@@ -111,5 +111,5 @@ int atp_rreq(
 	    recvlen - ATP_HDRSIZE );
     atpb->atp_bitmap = req_hdr.atphd_bitmap;
     atp_free_buf( req_buf );
-    return( 0 );
+    return 0;
 }

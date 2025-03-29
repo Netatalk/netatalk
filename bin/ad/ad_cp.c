@@ -640,7 +640,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 
     if ((from_fd = open(spath, O_RDONLY, 0)) == -1) {
         SLOG("%s: %s", spath, strerror(errno));
-        return (1);
+        return 1;
     }
 
     /*
@@ -657,7 +657,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             if (vflag)
                 printf("%s not overwritten\n", to.p_path);
             (void)close(from_fd);
-            return (0);
+            return 0;
         } else if (iflag) {
             (void)fprintf(stderr, "overwrite %s? %s",
                           to.p_path, YESNO);
@@ -667,7 +667,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             if (checkch != 'y' && checkch != 'Y') {
                 (void)close(from_fd);
                 (void)fprintf(stderr, "not overwritten\n");
-                return (1);
+                return 1;
             }
         }
 
@@ -690,7 +690,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     if (to_fd == -1) {
         SLOG("%s: %s", to.p_path, strerror(errno));
         (void)close(from_fd);
-        return (1);
+        return 1;
     }
 
     rval = 0;
@@ -784,7 +784,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 
     (void)close(from_fd);
 
-    return (rval);
+    return rval;
 }
 
 static int ftw_copy_link(const struct FTW *p _U_,
@@ -881,7 +881,7 @@ static int setfile(const struct stat *fs, int fd)
         }
 #endif
 
-    return (rval);
+    return rval;
 }
 
 static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
@@ -897,7 +897,7 @@ static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
         acl_type = ACL_TYPE_NFS4;
     } else if (ret < 0 && errno != EINVAL) {
         warn("fpathconf(..., _PC_ACL_NFS4) failed for %s", to.p_path);
-        return (1);
+        return 1;
     }
     if (acl_supported == 0) {
         ret = fpathconf(source_fd, _PC_ACL_EXTENDED);
@@ -907,34 +907,34 @@ static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
         } else if (ret < 0 && errno != EINVAL) {
             warn("fpathconf(..., _PC_ACL_EXTENDED) failed for %s",
                  to.p_path);
-            return (1);
+            return 1;
         }
     }
     if (acl_supported == 0)
-        return (0);
+        return 0;
 
     acl = acl_get_fd_np(source_fd, acl_type);
     if (acl == NULL) {
         warn("failed to get acl entries while setting %s", to.p_path);
-        return (1);
+        return 1;
     }
     if (acl_is_trivial_np(acl, &trivial)) {
         warn("acl_is_trivial() failed for %s", to.p_path);
         acl_free(acl);
-        return (1);
+        return 1;
     }
     if (trivial) {
         acl_free(acl);
-        return (0);
+        return 0;
     }
     if (acl_set_fd_np(dest_fd, acl, acl_type) < 0) {
         warn("failed to set acl entries for %s", to.p_path);
         acl_free(acl);
-        return (1);
+        return 1;
     }
     acl_free(acl);
 #endif
-    return (0);
+    return 0;
 }
 
 #if 0
@@ -953,7 +953,7 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
         acl_type = ACL_TYPE_NFS4;
     } else if (ret < 0 && errno != EINVAL) {
         warn("fpathconf(..., _PC_ACL_NFS4) failed for %s", source_dir);
-        return (1);
+        return 1;
     }
     if (acl_supported == 0) {
         ret = pathconf(source_dir, _PC_ACL_EXTENDED);
@@ -963,11 +963,11 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
         } else if (ret < 0 && errno != EINVAL) {
             warn("fpathconf(..., _PC_ACL_EXTENDED) failed for %s",
                  source_dir);
-            return (1);
+            return 1;
         }
     }
     if (acl_supported == 0)
-        return (0);
+        return 0;
 
     /*
      * If the file is a link we will not follow it
@@ -989,7 +989,7 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
         if (acl == NULL) {
             warn("failed to get default acl entries on %s",
                  source_dir);
-            return (1);
+            return 1;
         }
         aclp = &acl->ats_acl;
         if (aclp->acl_cnt != 0 && aclsetf(dest_dir,
@@ -997,30 +997,30 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
             warn("failed to set default acl entries on %s",
                  dest_dir);
             acl_free(acl);
-            return (1);
+            return 1;
         }
         acl_free(acl);
     }
     acl = aclgetf(source_dir, acl_type);
     if (acl == NULL) {
         warn("failed to get acl entries on %s", source_dir);
-        return (1);
+        return 1;
     }
     if (acl_is_trivial_np(acl, &trivial)) {
         warn("acl_is_trivial() failed on %s", source_dir);
         acl_free(acl);
-        return (1);
+        return 1;
     }
     if (trivial) {
         acl_free(acl);
-        return (0);
+        return 0;
     }
     if (aclsetf(dest_dir, acl_type, acl) < 0) {
         warn("failed to set acl entries on %s", dest_dir);
         acl_free(acl);
-        return (1);
+        return 1;
     }
     acl_free(acl);
-    return (0);
+    return 0;
 }
 #endif

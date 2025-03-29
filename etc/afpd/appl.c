@@ -43,7 +43,7 @@ static int applopen(struct vol *vol, uint8_t creator[ 4 ], int flags, int mode)
         if ( !(flags & ( O_RDWR | O_WRONLY )) &&
                 memcmp( sa.sdt_creator, creator, sizeof( CreatorType )) == 0 &&
                 sa.sdt_vid == vol->v_vid ) {
-            return( AFP_OK );
+            return AFP_OK;
         }
         close( sa.sdt_fd );
         sa.sdt_fd = -1;
@@ -76,7 +76,7 @@ static int applopen(struct vol *vol, uint8_t creator[ 4 ], int flags, int mode)
     memcpy( sa.sdt_creator, creator, sizeof( CreatorType ));
     sa.sdt_vid = vol->v_vid;
     sa.sdt_index = 0;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /*
@@ -153,7 +153,7 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
         }
     }
 
-    return( cc );
+    return cc;
 }
 
 /*
@@ -195,7 +195,7 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir, c
         if ((dir = dirlookup(vol, dir->d_pdid)) == NULL)
             return NULL;
     }
-    return( p );
+    return p;
 
 }
 
@@ -247,7 +247,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         return get_afp_errno(AFPERR_PARAM);
     }
     if ( path_isadir(path) ) {
-        return( AFPERR_BADTYPE );
+        return AFPERR_BADTYPE;
     }
 
     if ( applopen( vol, creator, O_RDWR|O_CREAT, 0666 ) != AFP_OK ) {
@@ -320,7 +320,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
     if ( rename( tempfile, dtfile( vol, creator, ".appl" )) < 0 ) {
         return AFPERR_PARAM;
     }
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
@@ -361,11 +361,11 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         return get_afp_errno(AFPERR_PARAM);
     }
     if ( path_isadir(path) ) {
-        return( AFPERR_BADTYPE );
+        return AFPERR_BADTYPE;
     }
 
     if ( applopen( vol, creator, O_RDWR, 0666 ) != AFP_OK ) {
-        return( AFPERR_NOOBJ );
+        return AFPERR_NOOBJ;
     }
     if ( lseek( sa.sdt_fd, 0L, SEEK_SET ) < 0 ) {
         return AFPERR_PARAM;
@@ -416,7 +416,7 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, siz
         return AFPERR_PARAM;
     }
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
@@ -461,7 +461,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
     if ( applopen( vol, creator, O_RDONLY, 0666 ) != AFP_OK ) {
         *rbuflen = 0;
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
     if ( aindex < sa.sdt_index ) {
         if ( lseek( sa.sdt_fd, 0L, SEEK_SET ) < 0 ) {
@@ -481,7 +481,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         p += sizeof( u_short );
         if ( len > sizeof(obj->oldtmp) - (p - buf) ) {
             *rbuflen = 0;
-            return( AFPERR_NOITEM );
+            return AFPERR_NOITEM;
         }
         if (( cc = read( sa.sdt_fd, p, len )) < len ) {
             break;
@@ -493,7 +493,7 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
     if ( cc <= 0 || sa.sdt_index != aindex ) {
         *rbuflen = 0;
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
     sa.sdt_index++;
 
@@ -541,18 +541,18 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
     if (( path = cname( vol, vol->v_root, &q )) == NULL ) {
         *rbuflen = 0;
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
 
     if ( path_isadir(path) || path->st_errno ) {
         *rbuflen = 0;
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
     buflen = *rbuflen - sizeof( bitmap ) - sizeof( appltag );
     if ( getfilparams(obj, vol, bitmap, path, curdir, rbuf + sizeof( bitmap ) +
                       sizeof( appltag ), &buflen, 0) != AFP_OK ) {
         *rbuflen = 0;
-        return( AFPERR_BITMAP );
+        return AFPERR_BITMAP;
     }
 
     *rbuflen = buflen + sizeof( bitmap ) + sizeof( appltag );
@@ -561,5 +561,5 @@ int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     rbuf += sizeof( bitmap );
     memcpy( rbuf, appltag, sizeof( appltag ));
     rbuf += sizeof( appltag );
-    return( AFP_OK );
+    return AFP_OK;
 }

@@ -31,48 +31,48 @@
 bool_t xdr_getquota_args(XDR *xdrs, getquota_args *objp)
 {
 	if (!xdr_string(xdrs, &objp->gqa_pathp, RQ_PATHLEN)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_int(xdrs, &objp->gqa_uid)) {
-		return (FALSE);
+		return FALSE;
 	}
-	return (TRUE);
+	return TRUE;
 }
 
 
 bool_t xdr_rquota(XDR *xdrs, rquota *objp)
 {
 	if (!xdr_int(xdrs, &objp->rq_bsize)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_bool(xdrs, &objp->rq_active)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_bhardlimit)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_bsoftlimit)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_curblocks)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_fhardlimit)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_fsoftlimit)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_curfiles)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_btimeleft)) {
-		return (FALSE);
+		return FALSE;
 	}
 	if (!xdr_u_int(xdrs, &objp->rq_ftimeleft)) {
-		return (FALSE);
+		return FALSE;
 	}
-	return (TRUE);
+	return TRUE;
 }
 
 
@@ -84,21 +84,21 @@ bool_t xdr_gqr_status(XDR *xdrs, gqr_status *objp)
 #endif
 {
 	if (!xdr_enum(xdrs, (enum_t *)objp)) {
-		return (FALSE);
+		return FALSE;
 	}
-	return (TRUE);
+	return TRUE;
 }
 
 
 bool_t xdr_getquota_rslt(XDR *xdrs, getquota_rslt *objp)
 {
 	if (!xdr_gqr_status(xdrs, &objp->status)) {
-		return (FALSE);
+		return FALSE;
 	}
 	switch (objp->status) {
 	case Q_OK:
 		if (!xdr_rquota(xdrs, &objp->getquota_rslt_u.gqr_rquota)) {
-			return (FALSE);
+			return FALSE;
 		}
 		break;
 	case Q_NOQUOTA:
@@ -106,8 +106,8 @@ bool_t xdr_getquota_rslt(XDR *xdrs, getquota_rslt *objp)
 	case Q_EPERM:
 		break;
 	default:
-		return (FALSE);
+		return FALSE;
 	}
-	return (TRUE);
+	return TRUE;
 }
 #endif

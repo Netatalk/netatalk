@@ -62,7 +62,7 @@ int len;
        out already. */
     len = strlen((char *)skey->data + CNID_DID_LEN);
     skey->size = CNID_DID_LEN + len + 1;
-    return (0);
+    return 0;
 }
 
 /* --------------- */
@@ -71,7 +71,7 @@ int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DEVINO_OFS;
     skey->size = CNID_DEVINO_LEN;
-    return (0);
+    return 0;
 }
 
 /* --------------- */
@@ -94,7 +94,7 @@ int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 
     skey->data = buffer;
     skey->size = strlen(skey->data);
-    return (0);
+    return 0;
 }
 
 void pack_setvol(const struct vol *vol)

@@ -321,7 +321,7 @@ static size_t status_netaddress(char *data, int *servoffset,
     memcpy(begin + *servoffset, &offset, sizeof(offset));
 
     /* return length of buffer */
-    return (data - begin);
+    return data - begin;
 }
 
 
@@ -357,7 +357,7 @@ static size_t status_directorynames(char *data,
     memcpy(begin + *diroffset, &offset, sizeof(uint16_t));
 
     /* return length of buffer */
-    return (data - begin);
+    return data - begin;
 }
 
 static size_t status_utf8servername(char *data, int *nameoffset,
@@ -406,7 +406,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
     }
 
     /* return length of buffer */
-    return (data - begin);
+    return data - begin;
 }
 
 /* returns actual offset to signature */

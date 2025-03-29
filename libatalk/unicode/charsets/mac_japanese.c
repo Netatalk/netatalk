@@ -62,7 +62,7 @@ static size_t mac_japanese_char_push(uint8_t* out, const ucs2_t* in, size_t* siz
   } else if ((wc & ~7) == 0xf860) {
     wc = cjk_compose_seq(in, size, mac_japanese_compose,
 			 sizeof(mac_japanese_compose) / sizeof(uint32_t));
-    if (!wc) return (size_t)-1;
+    if (!wc) return (size_t) -1;
   } else if (*size >= 2 && ((in[1] & ~15) == 0xf870 || in[1] == 0x20dd)) {
     ucs2_t comp = cjk_compose(wc, in[1], mac_japanese_compose,
 			      sizeof(mac_japanese_compose) / sizeof(uint32_t));
@@ -107,11 +107,11 @@ static size_t mac_japanese_char_pull(ucs2_t* out, const uint8_t* in, size_t* siz
 	c = (c << 8) + c2;
       } else {
 	errno = EILSEQ;
-	return (size_t)-1;
+	return (size_t) -1;
       }
     } else {
       errno = EINVAL;
-      return (size_t)-1;
+      return (size_t) -1;
     }
   } else {
     *size = 1;

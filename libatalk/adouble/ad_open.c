@@ -1831,7 +1831,7 @@ const char *ad_path( const char *path, int adflags)
         }
     }
 
-    return( pathbuf );
+    return pathbuf;
 }
 
 /* -------------------------

@@ -44,7 +44,7 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal
 
     if ( statfs( vol->v_path, &sfs ) < 0 ) {
         LOG(log_error, logtype_afpd, "ustatfs_getvolspace unable to stat %s", vol->v_path);
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     *bfree = (VolSpace) sfs.f_bavail;
@@ -65,7 +65,7 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree, VolSpace *btotal
         *btotal *= *bsize;
     }
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 static int utombits(mode_t bits)
@@ -79,7 +79,7 @@ static int utombits(mode_t bits)
     /* Do we really need this? */
     mbits |= ( bits & ( S_IEXEC >> 6) ) ? AR_USEARCH : 0;
 
-    return( mbits );
+    return mbits;
 }
 
 /* --------------------------------
@@ -162,7 +162,7 @@ static mode_t mtoubits(uint8_t bits)
     /* I don't think there's a way to set the SEARCH bit by itself on a Mac
         mode |= ( bits & AR_USEARCH ) ? ( S_IEXEC >> 6 ) : 0; */
 
-    return( mode );
+    return mode;
 }
 
 /* ----------------------------------
@@ -183,7 +183,7 @@ mode_t mtoumode(struct maccess *ma)
 
     mode |= mtoubits( ma->ma_world );
 
-    return( mode );
+    return mode;
 }
 
 /* --------------------- */
@@ -267,5 +267,5 @@ int setdirowner(const struct vol *vol, const char *name, const uid_t uid, const 
     if (vol->vfs->vfs_setdirowner(vol, name, uid, gid) < 0)
         return -1;
 
-    return( 0 );
+    return 0;
 }

@@ -58,13 +58,13 @@ int cq_default( struct papfile *in, struct papfile *out)
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
-	    return( 0 );
+	    return 0;
 
 	case -1 :
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 
 	stop = start+linelength;
@@ -75,7 +75,7 @@ int cq_default( struct papfile *in, struct papfile *out)
 	    } else {
 		compop();
 		CONSUME( in, linelength + crlflength );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	} else {
 	    /* return default */
@@ -95,7 +95,7 @@ int cq_default( struct papfile *in, struct papfile *out)
 		append( out, p, stop - p + crlflength );
 		compop();
 		CONSUME( in, linelength + crlflength );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	}
 
@@ -107,9 +107,9 @@ int gq_true( struct papfile *out)
 {
     if ( printer->p_flags & P_SPOOLED ) {
 	append( out, "true\n", 5 );
-	return( 0 );
+	return 0;
     } else {
-	return( -1 );
+	return -1;
     }
 }
 
@@ -128,10 +128,10 @@ int gq_pagecost( struct papfile *out)
 	sprintf( cost, "%d", printer->p_pagecost );
 	append( out, cost, strlen( cost ));
     } else {
-	return( -1 );
+	return -1;
     }
     append( out, "\n", 1 );
-    return( 0 );
+    return 0;
 }
 
 #ifdef ABS_PRINT
@@ -140,11 +140,11 @@ int gq_balance( struct papfile *out)
     char		balance[ 60 ];
 
     if ( lp_pagecost() != 0 ) {
-	return( -1 );
+	return -1;
     }
     sprintf( balance, "$%1.2f\n", printer->p_balance );
     append( out, balance, strlen( balance ));
-    return( 0 );
+    return 0;
 }
 #endif /* ABS_PRINT */
 
@@ -158,7 +158,7 @@ static const char *spoolerid = "(PAPD Spooler) 1.0 (" VERSION ")\n";
 int gq_rbispoolerid( struct papfile *out)
 {
     append( out, spoolerid, strlen( spoolerid ));
-    return(0);
+    return 0;
 }
 
 
@@ -176,14 +176,14 @@ int gq_rbiuamlist( struct papfile *out)
     if (printer->p_flags & P_AUTH_PSSP) {
 	if (getuamnames(UAM_SERVER_PRINTAUTH, uamnames) < 0) {
 	    append(out, nouams, strlen(nouams));
-	    return(0);
+	    return 0;
 	} else {
 	    append(out, uamnames, strlen(uamnames));
-	    return(0);
+	    return 0;
 	}
     } else {
 	append(out, nouams, strlen(nouams));
-	return(0);
+	return 0;
     }
 }
 
@@ -193,7 +193,7 @@ int gq_product( struct papfile *out)
     pdprod = ppd_feature( "*Product\n", strlen( "*Product\n" ));
     append( out, pdprod->pd_value, strlen( pdprod->pd_value ));
     append( out, "\r", 1 );
-    return(0);
+    return 0;
 }
 
 
@@ -225,13 +225,13 @@ int cq_query( struct papfile *in, struct papfile *out)
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
-	    return( 0 );
+	    return 0;
 
 	case -1 :
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 
 	stop = start+linelength;
@@ -269,13 +269,13 @@ int cq_query( struct papfile *in, struct papfile *out)
 		    LOG(log_error, logtype_papd, "cq_feature: can't find default!" );
 		    exit( 1 );
 		}
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	} else {
 	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
 		compop();
 		CONSUME( in, linelength + crlflength );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	}
 
@@ -328,13 +328,13 @@ int cq_fontlist(struct papfile *in, struct papfile *out)
     for (;;){
         switch ( markline( in, &start, &linelength, &crlflength )) {
         case 0 :
-	return( 0 );
+	return 0;
 
         case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
         case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
         }
 	if ( comgetflags() == 0 ) {
 	    comsetflags( 1 );
@@ -381,7 +381,7 @@ int cq_fontlist(struct papfile *in, struct papfile *out)
 	    if ( comcmp( start, start+linelength, comment->c_end, 0 ) == 0 ) {
 		compop();
 		CONSUME( in, linelength + crlflength );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 
         }
@@ -399,13 +399,13 @@ int cq_font(struct papfile *in, struct papfile *out)
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
-	    return( 0 );
+	    return 0;
 
 	case -1 :
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 
 	stop = start + linelength;
@@ -442,7 +442,7 @@ int cq_font(struct papfile *in, struct papfile *out)
 		    append( out, "*\n", 2 );
 		    compop();
 		    CONSUME( in, linelength + crlflength );
-		    return( CH_DONE );
+		    return CH_DONE;
 		}
 	    }
 	}
@@ -461,13 +461,13 @@ int cq_feature( struct papfile *in, struct papfile *out)
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
-	    return( 0 );
+	    return 0;
 
 	case -1 :
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 
 	stop = start + linelength;
@@ -499,7 +499,7 @@ int cq_feature( struct papfile *in, struct papfile *out)
 		    LOG(log_error, logtype_papd, "cq_feature: can't find default!" );
 		    exit( 1 );
 		}
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 
 	    append( out, pfe->pd_value, strlen( pfe->pd_value ));
@@ -508,7 +508,7 @@ int cq_feature( struct papfile *in, struct papfile *out)
 	    if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
 		compop();
 		CONSUME( in, linelength + crlflength );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	}
 
@@ -529,13 +529,13 @@ int cq_printer(struct papfile *in, struct papfile *out)
     for (;;) {
 	switch ( markline( in, &start, &linelength, &crlflength )) {
 	case 0 :
-	    return( 0 );
+	    return 0;
 
 	case -1 :
-	    return( CH_MORE );
+	    return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
 	}
 
 	if ( comgetflags() == 0 ) {
@@ -546,7 +546,7 @@ int cq_printer(struct papfile *in, struct papfile *out)
 		    LOG(log_error, logtype_papd, "cq_printer: can't find default!" );
 		    exit( 1 );
 		}
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 
 	    for ( p = pdpsver->pd_value; *p != '\0'; p++ ) {
@@ -560,7 +560,7 @@ int cq_printer(struct papfile *in, struct papfile *out)
 		    LOG(log_error, logtype_papd, "cq_printer: can't find default!" );
 		    exit( 1 );
 		}
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 
 	    if (( pdprod = ppd_feature( prod, strlen( prod ))) == NULL ) {
@@ -568,7 +568,7 @@ int cq_printer(struct papfile *in, struct papfile *out)
 		    LOG(log_error, logtype_papd, "cq_printer: can't find default!" );
 		    exit( 1 );
 		}
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 
 	    /* revision */
@@ -586,7 +586,7 @@ int cq_printer(struct papfile *in, struct papfile *out)
 	    if ( comcmp( start, start+linelength, comment->c_end, 0 ) == 0 ) {
 		compop();
 		CONSUME( in, linelength + crlflength );
-		return( CH_DONE );
+		return CH_DONE;
 	    }
 	}
 
@@ -607,13 +607,13 @@ int cq_rmjob( struct papfile *in, struct papfile *out)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-	return( 0 );
+	return 0;
 
     case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     stop = start + linelength;
@@ -639,7 +639,7 @@ int cq_rmjob( struct papfile *in, struct papfile *out)
 
     compop();
     CONSUME( in, linelength + crlflength );
-    return( CH_DONE );
+    return CH_DONE;
 }
 
 int cq_listq( struct papfile *in, struct papfile *out)
@@ -649,13 +649,13 @@ int cq_listq( struct papfile *in, struct papfile *out)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-	return( 0 );
+	return 0;
 
     case -1 :
-	return( CH_MORE );
+	return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
 
     if ( lp_queue( out )) {
@@ -664,7 +664,7 @@ int cq_listq( struct papfile *in, struct papfile *out)
 
     compop();
     CONSUME( in, linelength + crlflength );
-    return( CH_DONE );
+    return CH_DONE;
 }
 #endif /* HAVE_CUPS */
 
@@ -692,13 +692,13 @@ int cq_rbilogin( struct papfile *in, struct papfile *out)
     for (;;) {
         switch ( markline( in, &start, &linelength, &crlflength )) {
         case 0 :
-            return( 0 );
+            return 0;
 
         case -1 :
-            return( CH_MORE );
+            return CH_MORE;
 
         case -2 :
-            return( CH_ERROR );
+            return CH_ERROR;
         }
 
 	stop = start + linelength;
@@ -735,7 +735,7 @@ int cq_rbilogin( struct papfile *in, struct papfile *out)
         } else {
             if ( comcmp( start, stop, comment->c_end, 0 ) == 0 ) {
                 compop();
-                return( CH_DONE );
+                return CH_DONE;
             }
         }
 
@@ -750,18 +750,18 @@ int cq_end( struct papfile *in, struct papfile *out)
 
     switch ( markline( in, &start, &linelength, &crlflength )) {
     case 0 :
-        return( 0 );
+        return 0;
 
     case -1 :
-        return( CH_MORE );
+        return CH_MORE;
 
     case -2 :
-        return( CH_ERROR );
+        return CH_ERROR;
     }
     in->pf_state |= PF_QUERY;
     compop();
     CONSUME( in, linelength + crlflength );
-    return ( CH_DONE );
+    return CH_DONE ;
 }
 
 /*

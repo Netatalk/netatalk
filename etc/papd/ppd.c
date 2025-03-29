@@ -119,7 +119,7 @@ static struct ppdent *getppdent( FILE *stream)
 	if ( *p == '\n' ) {
 	    *p = '\0';
 	    ppdent.pe_option = ppdent.pe_translation = ppdent.pe_value = NULL;
-	    return( &ppdent );
+	    return &ppdent;
 	}
 
 	if ( *p != ':' ) {	/* option key word */
@@ -168,10 +168,10 @@ static struct ppdent *getppdent( FILE *stream)
 	*p = '\0';
 	ppdent.pe_value = q;
 
-	return( &ppdent );
+	return &ppdent;
     }
 
-    return( NULL );
+    return NULL;
 }
 
 int read_ppd(char *file, int fcnt)
@@ -183,12 +183,12 @@ int read_ppd(char *file, int fcnt)
 
     if ( fcnt > 20 ) {
 	LOG(log_error, logtype_papd, "read_ppd: %s: Too many files!", file );
-	return( -1 );
+	return -1;
     }
 
     if (( ppdfile = fopen( file, "r" )) == NULL ) {
 	LOG(log_error, logtype_papd, "read_ppd %s: %s", file, strerror(errno) );
-	return( -1 );
+	return -1;
     }
 
     while (( pe = getppdent( ppdfile )) != NULL ) {
@@ -245,7 +245,7 @@ int read_ppd(char *file, int fcnt)
     }
 
     fclose( ppdfile );
-    return( 0 );
+    return 0;
 }
 
 struct ppd_font *ppd_font( char *font)
@@ -260,10 +260,10 @@ struct ppd_font *ppd_font( char *font)
 
     for ( pfo = ppd_fonts; pfo; pfo = pfo->pd_next ) {
 	if ( strcmp( pfo->pd_font, font ) == 0 ) {
-	    return( pfo );
+	    return pfo;
 	}
     }
-    return( NULL );
+    return NULL;
 }
 
 struct ppd_feature *ppd_feature( const char *feature, int len)
@@ -280,22 +280,22 @@ struct ppd_feature *ppd_feature( const char *feature, int len)
 #endif /* SHOWPPD */
 
     if (len > sizeof(ppd_feature_main) -1)
-        return( NULL );
+        return NULL;
 
     for ( end = feature + len, p = feature, q = ppd_feature_main;
 	    (p <= end) && (*p != '\n') && (*p != '\r'); p++, q++ ) {
 	*q = *p;
     }
     if ( p > end ) {
-	return( NULL );
+	return NULL;
     }
     *q = '\0';
 
     for ( pfe = ppd_features; pfe->pd_name; pfe++ ) {
 	if ( (strcmp( pfe->pd_name, ppd_feature_main ) == 0) && pfe->pd_value ) {
-	    return( pfe );
+	    return pfe;
 	}
     }
 
-    return( NULL );
+    return NULL;
 }

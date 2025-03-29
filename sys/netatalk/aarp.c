@@ -113,7 +113,7 @@ struct ifaddr *at_ifawithnet(struct sockaddr_at *sat, struct ifaddr *ifa)
 	}
 #endif /* BSD4_4 */
     }
-    return( ifa );
+    return ifa;
 }
 
 void aarpwhohas(struct arpcom *ac, struct sockaddr_at *sat)
@@ -216,7 +216,7 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, 
 	if (( aa = (struct at_ifaddr *)at_ifawithnet( destsat,
 		((struct ifnet *)ac)->if_addrlist )) == NULL ) {
 	    m_freem( m );
-	    return( 0 );
+	    return 0;
 	}
 	if ( aa->aa_flags & AFA_PHASE2 ) {
 	    bcopy( (caddr_t)atmulticastaddr, (caddr_t)desten,
@@ -225,7 +225,7 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, 
 	    bcopy( (caddr_t)etherbroadcastaddr, (caddr_t)desten,
 		    sizeof( etherbroadcastaddr ));
 	}
-	return( 1 );
+	return 1;
     }
 
     s = splimp();
@@ -238,7 +238,7 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, 
 	aat->aat_hold = m;
 	aarpwhohas( ac, destsat );
 	splx( s );
-	return( 0 );
+	return 0;
     }
     /* found an entry */
     aat->aat_timer = 0;
@@ -246,7 +246,7 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, 
 	bcopy( (caddr_t)aat->aat_enaddr, (caddr_t)desten,
 		sizeof( aat->aat_enaddr ));
 	splx( s );
-	return( 1 );
+	return 1;
     }
     /* entry has not completed */
     if ( aat->aat_hold ) {
@@ -255,7 +255,7 @@ int aarpresolve(struct arpcom *ac, struct mbuf *m, struct sockaddr_at *destsat, 
     aat->aat_hold = m;
     aarpwhohas( ac, destsat );
     splx( s );
-    return( 0 );
+    return 0;
 }
 
 void aarpinput(struct arpcom *ac, struct mbuf *m)
@@ -528,13 +528,13 @@ struct aarptab *aarptnew(struct at_addr *addr)
 	}
     }
     if ( aato == NULL )
-	return( NULL );
+	return NULL;
     aat = aato;
     aarptfree( aat );
 out:
     aat->aat_ataddr = *addr;
     aat->aat_flags = ATF_INUSE;
-    return( aat );
+    return aat;
 }
 
 void aarpprobe(struct arpcom *ac)

@@ -82,7 +82,7 @@ cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method, const c
  /*
   * Always return NULL to indicate that no password is available...
   */
-  return (NULL);
+  return NULL;
 }
 
 
@@ -114,16 +114,16 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 	{
 		LOG(log_error, logtype_papd,
 		    "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
-		return (0);
+		return 0;
 	}
 	if ((http = cupsConnectDest(dest, CUPS_DEST_FLAGS_NONE, 30000, NULL, NULL, 0, NULL, NULL)) == NULL)
 	{
 		LOG(log_error, logtype_papd,
 		    "Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
-		return (0);
+		return 0;
 	}
 
-	return (1);
+	return 1;
 }
 
 const char *
@@ -156,7 +156,7 @@ cups_get_printer_ppd ( char * name)
 	{
 		LOG(log_error, logtype_papd, "Unable to get destination \"%s\": %s\n", name, cupsLastErrorString());
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	const char* make_model = cupsGetOption("printer-make-and-model", dest->num_options, dest->options);
@@ -174,7 +174,7 @@ cups_get_printer_ppd ( char * name)
 	{
 		LOG(log_error, logtype_papd, "Unable to connect to destination \"%s\": %s\n", dest->name, cupsLastErrorString());
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	const char* uri = cupsGetOption("device-uri", dest->num_options, dest->options);
@@ -215,7 +215,7 @@ cups_get_printer_ppd ( char * name)
 				ippErrorString(cupsLastError()));
 		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	if (ippGetStatusCode(response) >= IPP_STATUS_OK_CONFLICTING)
@@ -225,7 +225,7 @@ cups_get_printer_ppd ( char * name)
 		ippDelete(response);
 		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	/*
@@ -242,7 +242,7 @@ cups_get_printer_ppd ( char * name)
 		ippDelete(response);
 		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	if (!response)
@@ -251,7 +251,7 @@ cups_get_printer_ppd ( char * name)
 		ippDelete(response);
 		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	/*
@@ -264,7 +264,7 @@ cups_get_printer_ppd ( char * name)
 		ippDelete(response);
 		httpClose(http);
 		cupsFreeDests(num_dests,dests);
-		return (0);
+		return 0;
 	}
 
 	/*
@@ -319,7 +319,7 @@ cups_get_printer_ppd ( char * name)
 	ippDelete(response);
 	cupsFileClose(fp);
 	cupsFreeDests(num_dests,dests);
-	return (buffer);
+	return buffer;
 }
 
 int
@@ -351,7 +351,7 @@ cups_get_printer_status (struct printer *pr)
 		LOG(log_error, logtype_papd,
 			"Unable to get destination \"%s\": %s", pr->p_printer, cupsLastErrorString());
 		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
-		return (0);
+		return 0;
 	}
 
 	/*
@@ -372,7 +372,7 @@ cups_get_printer_status (struct printer *pr)
 			"Unable to connect to destination \"%s\": %s", dest->name, cupsLastErrorString());
 		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.", pr->p_printer);
 		cupsFreeDests(1, dest);
-		return (0);
+		return 0;
 	}
 	ipp_t	* request,       /* IPP Request */
 		* response;      /* IPP Response */
@@ -419,7 +419,7 @@ cups_get_printer_status (struct printer *pr)
 		snprintf(pr->p_status, 255, "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
 		httpClose(http);
 		cupsFreeDests(1, dest);
-		return (1);
+		return 1;
 	}
 	if ((attr = ippFindAttribute(response, "printer-state",
 		IPP_TAG_ENUM)) != NULL)
@@ -471,7 +471,7 @@ cups_get_printer_status (struct printer *pr)
 	 */
 
 	cupsFreeDests(1, dest);
-	return (status);
+	return status;
 }
 
 
@@ -510,7 +510,7 @@ int cups_print_job ( char * name, const char *filename, char *job, char *usernam
 		LOG(log_error, logtype_papd,
 		    "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
 		cupsFreeDests(1,dest);
-		return (0);
+		return 0;
 	}
 
 	info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
@@ -570,7 +570,7 @@ int cups_print_job ( char * name, const char *filename, char *job, char *usernam
 
 	cupsFreeOptions(num_options, options);
 	cupsFreeDests(1, dest);
-	return (jobid);
+	return jobid;
 }
 
 
@@ -682,9 +682,9 @@ static int cups_mangle_printer_name ( struct printer *pr, struct printer *printe
 	}
 
 	if ( count > 99)
-		return (2);
+		return 2;
 
-	return (0);
+	return 0;
 }
 
 /*------------------------------------------------------------------------*/
@@ -714,7 +714,7 @@ to_ascii ( char  *inptr, char **outptr)
 	}
 	*out = '\0';
 	*outptr = osav;
-	return ( strlen (osav) );
+	return strlen (osav);
 }
 
 
@@ -759,7 +759,7 @@ static int convert_to_mac_name ( const char * encoding, char * inptr, char * out
 	}
 	*soptr = '\0';
 	free (outbuf);
-	return (i);
+	return i;
 }
 
 
@@ -784,9 +784,9 @@ int cups_check_printer ( struct printer *pr, struct printer *printers, int repla
 		if ( strcasecmp (pr->p_name, listptr->p_name) == 0) {
 			if ( pr->p_flags & P_CUPS_AUTOADDED ) {  /* Check if printer has been autoadded */
 				if ( listptr->p_flags & P_CUPS_AUTOADDED )
-					return (-1);		 /* Conflicting Cups Auto Printer (mangling issue?) */
+					return -1;		 /* Conflicting Cups Auto Printer (mangling issue?) */
 				else
-					return (1);		 /* Never replace a hand edited printer with auto one */
+					return 1;		 /* Never replace a hand edited printer with auto one */
 			}
 
 			if ( replace ) {
@@ -802,12 +802,12 @@ int cups_check_printer ( struct printer *pr, struct printer *printers, int repla
 					cups_free_printer (listptr);
 				}
 			}
-			return (1);  /* Conflicting Printers */
+			return 1;  /* Conflicting Printers */
 		}
 		listprev = listptr;
 		listptr = listptr->p_next;
 	}
-	return (0);	/* No conflict */
+	return 0;	/* No conflict */
 }
 
 

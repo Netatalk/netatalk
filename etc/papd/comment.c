@@ -56,11 +56,11 @@ int comswitch(struct papd_comment *comments, int (*handler)())
     }
     if ( comment == NULL || comment->c_handler != handler ) {
 	LOG(log_error, logtype_papd, "comswitch: can't find handler!" );
-	return( -1 );
+	return -1;
     }
     compop();
     compush( comment );
-    return( 0 );
+    return 0;
 }
 
 int comcmp( char *start, char *stop, char *str,int how)
@@ -71,15 +71,15 @@ int comcmp( char *start, char *stop, char *str,int how)
     cc = strlen( str );
     if ( how & C_FULL ) {
 	if ( (cc == len) && (strncmp( str, start, cc ) == 0) ) {
-	    return( 0 );
+	    return 0;
 	}
     } else {
 	if ( (cc <= len) && (strncmp( str, start, cc ) == 0) ) {
-	    return( 0 );
+	    return 0;
 	}
     }
 
-    return( 1 );
+    return 1;
 }
 
 struct papd_comment *commatch( char *start, char *stop, struct papd_comment comments[])
@@ -92,8 +92,8 @@ struct papd_comment *commatch( char *start, char *stop, struct papd_comment comm
 	}
     }
     if ( comment->c_begin ) {
-	return( comment );
+	return comment;
     } else {
-	return( NULL );
+	return NULL;
     }
 }

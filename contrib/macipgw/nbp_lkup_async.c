@@ -92,7 +92,7 @@ int nbp_lookup_req(int s, char *name, char *type, char *zone)
 
 	i = sizeof(struct sockaddr_at);
 	if (getsockname(s, (struct sockaddr *) &addr, &i) < 0) {
-		return (-1);
+		return -1;
 	}
 
 	*p++ = DDPTYPE_NBP;
@@ -124,7 +124,7 @@ int nbp_lookup_req(int s, char *name, char *type, char *zone)
 
 	if (sendto(s, buffer, p - buffer, 0, (struct sockaddr *) &addr,
 		   sizeof(struct sockaddr_at)) < 0) {
-		return (-1);
+		return -1;
 	}
 	return 0;
 }

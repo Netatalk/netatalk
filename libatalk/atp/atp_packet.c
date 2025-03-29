@@ -211,7 +211,7 @@ atp_recv_atp( ATP ah,
 	    pq->atpbuf_next = cq->atpbuf_next;
 	}
 	atp_free_buf( cq );
-	return( dlen );
+	return dlen;
     }
 
     /* we need to get it the net -- call on ddp to receive a packet
@@ -299,12 +299,12 @@ atp_recv_atp( ATP ah,
 	    }
 	}
 	if ( !wait && dlen < 0 ) {
-	    return( 0 );
+	    return 0;
 	}
 
     } while ( dlen < 0 );
 
-    return( dlen );
+    return dlen;
 }
 
 

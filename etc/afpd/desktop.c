@@ -59,7 +59,7 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
         return -1 ;
     }
     if ( getcwd( wd , MAXPATHLEN) == NULL ) {
-        return( -1 );
+        return -1;
     }
 
     bstring dtpath = bfromcstr(vol->v_dbpath);
@@ -152,7 +152,7 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
     DIR			*desk, *sub;
 
     if ( getcwd( wd, MAXPATHLEN ) == NULL ) {
-        return( -1 );
+        return -1;
     }
 
     bstring dtpath = bfromcstr(vol->v_dbpath);
@@ -254,20 +254,20 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size
     memcpy( &vid, ibuf, sizeof(vid));
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     create_appledesktop_folder(vol);
 
     memcpy( rbuf, &vid, sizeof(vid));
     *rbuflen = sizeof(vid);
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 static struct savedt	si = { { 0, 0, 0, 0 }, -1, 0, 0 };
@@ -437,7 +437,7 @@ addicon_err:
     case AFPPROTO_ASP:
         buflen = bsize;
         if ((asp_wrtcont(obj->handle, rbuf, &buflen) < 0) || buflen != bsize)
-            return(AFPERR_PARAM);
+            return AFPERR_PARAM;
 
         /*
          * We're at the end of the file, add the headers, etc.  */
@@ -460,7 +460,7 @@ addicon_err:
 
         if (writev(si.sdt_fd, iov, iovcnt) < 0) {
             LOG(log_error, logtype_afpd, "afp_addicon(%s): writev: %s", icon_dtfile(vol, fcreator), strerror(errno));
-            return(AFPERR_PARAM);
+            return AFPERR_PARAM;
         }
         break;
 #endif /* no afp/asp */
@@ -496,7 +496,7 @@ addicon_err:
 
     close( si.sdt_fd );
     si.sdt_fd = -1;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 static const uint8_t	utag[] = { 0, 0, 0, 0 };
@@ -517,7 +517,7 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( fcreator, ibuf, sizeof( fcreator ));
@@ -527,7 +527,7 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     if ( memcmp( fcreator, ucreator, sizeof( ucreator )) == 0 ) {
         if ( iindex > 1 ) {
-            return( AFPERR_NOITEM );
+            return AFPERR_NOITEM;
         }
         memcpy( ih, utag, sizeof( utag ));
         memcpy( ih + sizeof( utag ), utype, sizeof( utype ));
@@ -537,16 +537,16 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 sizeof( usize ));
         memcpy( rbuf, ih, sizeof( ih ));
         *rbuflen = sizeof( ih );
-        return( AFP_OK );
+        return AFP_OK;
     }
 
     if ( iconopen( vol, fcreator, O_RDONLY, 0 ) < 0) {
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
 
     if ( iindex < si.sdt_index ) {
         if ( lseek( si.sdt_fd, (off_t) 0L, SEEK_SET ) < 0 ) {
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         si.sdt_index = 1;
     }
@@ -558,18 +558,18 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         if ( read( si.sdt_fd, ih, sizeof( ih )) != sizeof( ih )) {
             close( si.sdt_fd );
             si.sdt_fd = -1;
-            return( AFPERR_NOITEM );
+            return AFPERR_NOITEM;
         }
         memcpy( &bsize, ih + 10, sizeof( bsize ));
         bsize = ntohs(bsize);
         if ( lseek( si.sdt_fd, (off_t) bsize, SEEK_CUR ) < 0 ) {
             LOG(log_error, logtype_afpd, "afp_iconinfo(%s): lseek: %s", icon_dtfile(vol, fcreator), strerror(errno) );
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         if ( si.sdt_index == iindex ) {
             memcpy( rbuf, ih, sizeof( ih ));
             *rbuflen = sizeof( ih );
-            return( AFP_OK );
+            return AFP_OK;
         }
         si.sdt_index++;
     }
@@ -591,7 +591,7 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( fcreator, ibuf, sizeof( fcreator ));
@@ -605,14 +605,14 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
 
 
     if ( iconopen( vol, fcreator, O_RDONLY, 0 ) < 0) {
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
 
     if ( lseek( si.sdt_fd, (off_t) 0L, SEEK_SET ) < 0 ) {
         close(si.sdt_fd);
         si.sdt_fd = -1;
         LOG(log_error, logtype_afpd, "afp_geticon(%s): lseek: %s", icon_dtfile(vol, fcreator), strerror(errno));
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     si.sdt_index = 1;
@@ -628,18 +628,18 @@ int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         rsize = ntohs( rsize );
         if ( lseek( si.sdt_fd, (off_t) rsize, SEEK_CUR ) < 0 ) {
             LOG(log_error, logtype_afpd, "afp_geticon(%s): lseek: %s", icon_dtfile(vol, fcreator), strerror(errno) );
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         offset += rsize;
     }
 
     if ( rc < 0 ) {
         LOG(log_error, logtype_afpd, "afp_geticon(%s): read: %s", icon_dtfile(vol, fcreator), strerror(errno));
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     if ( rc == 0 ) {
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
 
     memcpy( &rsize, ih + 10, sizeof( rsize ));
@@ -704,7 +704,7 @@ geticon_exit:
 
     } else {
         if ( read( si.sdt_fd, rbuf, rc ) < rc ) {
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
         *rbuflen = rc;
     }
@@ -744,7 +744,7 @@ char *dtfile(const struct vol *vol, uint8_t creator[], char *ext )
     *p = '\0';
     strcat( path, ext );
 
-    return( path );
+    return path;
 }
 
 /* ---------------------------
@@ -785,7 +785,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     }
 
     LOG(log_debug9, logtype_afpd, "mtoupath: '%s':'%s'", mpath, upath);
-    return( upath );
+    return upath;
 }
 
 /* ---------------
@@ -819,12 +819,12 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
     m = mangle(vol, mpath, outlen, upath, id, flags);
 
     LOG(log_debug9, logtype_afpd, "utompath: '%s':'%s':'%2.2X'", upath, m, ntohl(id));
-    return(m);
+    return m;
 
 utompath_error:
     u = "???";
     m = mangle(vol, u, strlen(u), upath, id, (utf8)?3:1);
-    return(m);
+    return m;
 }
 
 /* ------------------------- */
@@ -854,7 +854,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, 
     if (ad_open(adp, upath,
                 ADFLAGS_HF | ( (isadir) ? ADFLAGS_DIR : 0) | ADFLAGS_CREATE | ADFLAGS_RDWR,
                 0666) < 0 ) {
-        return( AFPERR_ACCESS );
+        return AFPERR_ACCESS;
     }
 
     if (ad_getentryoff(adp, ADEID_COMMENT) && ad_entry(adp, ADEID_COMMENT)) {
@@ -871,7 +871,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path, 
         ad_flush( adp );
     }
     ad_close(adp, ADFLAGS_HF);
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ----------------------------- */
@@ -889,7 +889,7 @@ int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -927,7 +927,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
         adp = of->of_ad;
 
     if ( ad_metadata( upath, ((isadir) ? ADFLAGS_DIR : 0), adp) < 0 ) {
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
 
     if (!ad_getentryoff(adp, ADEID_COMMENT) || !ad_entry(adp, ADEID_COMMENT)) {
@@ -940,7 +940,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     if ( ad_getentrylen( adp, ADEID_COMMENT ) <= 0 ||
             ad_getentrylen( adp, ADEID_COMMENT ) > 199 ) {
         ad_close(adp, ADFLAGS_HF);
-        return( AFPERR_NOITEM );
+        return AFPERR_NOITEM;
     }
 
     clen = min( ad_getentrylen( adp, ADEID_COMMENT ), 128 ); /* OSX only use 128, greater kill Adobe CS2 */
@@ -949,7 +949,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf, size_t 
     *rbuflen = clen + 1;
     ad_close(adp, ADFLAGS_HF);
 
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* -------------------- */
@@ -967,7 +967,7 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -1006,11 +1006,11 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
     if ( ad_open(adp, upath, ADFLAGS_HF | ADFLAGS_RDWR | ((isadir) ? ADFLAGS_DIR : 0)) < 0 ) {
         switch ( errno ) {
         case ENOENT :
-            return( AFPERR_NOITEM );
+            return AFPERR_NOITEM;
         case EACCES :
-            return( AFPERR_ACCESS );
+            return AFPERR_ACCESS;
         default :
-            return( AFPERR_PARAM );
+            return AFPERR_PARAM;
         }
     }
 
@@ -1019,7 +1019,7 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
         ad_flush( adp );
     }
     ad_close(adp, ADFLAGS_HF);
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ----------------------- */
@@ -1037,7 +1037,7 @@ int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     memcpy( &vid, ibuf, sizeof( vid ));
     ibuf += sizeof( vid );
     if (NULL == ( vol = getvolbyvid( vid )) ) {
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));

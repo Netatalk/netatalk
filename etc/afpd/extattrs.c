@@ -113,7 +113,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         of_statdir(vol, s_path);
     }
     if (s_path->st_errno != 0) {
-        return(AFPERR_NOOBJ);
+        return AFPERR_NOOBJ;
     }
 
     uname = s_path->u_name;

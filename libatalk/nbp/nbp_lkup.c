@@ -199,7 +199,7 @@ int nbp_lookup( const char *obj, const char *type, const char *zone, struct nbpn
 
     netddp_close(s);
     errno = 0;
-    return( cnt );
+    return cnt;
 
 lookup_err:
     netddp_close(s);

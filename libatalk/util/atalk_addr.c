@@ -62,14 +62,14 @@ int atalk_aton(char* cp, struct at_addr* addr)
 		}
 
 		if (c != '.' && c != '\0') {
-			return (0);
+			return 0;
 		}
 
 		switch (n) {
 		case 0:
 			if (addr) {
 				if (val > 65535) {
-					return (0);
+					return 0;
 				}
 				addr->s_net = val;
 			}
@@ -84,7 +84,7 @@ int atalk_aton(char* cp, struct at_addr* addr)
 		case 2:
 			if (addr) {
 				if (addr->s_net > 255) {
-					return (0);
+					return 0;
 				}
 				addr->s_net <<= 8;
 				addr->s_net += addr->s_node;
@@ -92,7 +92,7 @@ int atalk_aton(char* cp, struct at_addr* addr)
 		/*FALLTHROUGH*/ case 1:
 			if (addr) {
 				if (val > 255) {
-					return (0);
+					return 0;
 				}
 				addr->s_node = val;
 			}
@@ -105,18 +105,18 @@ int atalk_aton(char* cp, struct at_addr* addr)
 			continue;
 
 		default:
-			return (0);
+			return 0;
 		}
 		break;
 	}
 
 	if (n < 1) {
-		return (0);
+		return 0;
 	}
 	if (addr) {
 		addr->s_net = htons(addr->s_net);
 	}
-	return (1);
+	return 1;
 }
 
 #endif  /* NO_DDP */

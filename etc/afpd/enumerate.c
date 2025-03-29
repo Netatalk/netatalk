@@ -193,7 +193,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     if (NULL == ( vol = getvolbyvid( vid )) ) {
         *rbuflen = 0;
-        return( AFPERR_PARAM );
+        return AFPERR_PARAM;
     }
 
     memcpy( &did, ibuf, sizeof( did ));
@@ -324,7 +324,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         len = (unsigned char)*(sd.sd_last)++;
         if ( len == 0 ) {
             sd.sd_did = 0;	/* invalidate sd struct to force re-read */
-            return( AFPERR_NOOBJ );
+            return AFPERR_NOOBJ;
         }
         sd.sd_last += len + 1;
         sd.sd_sindex++;
@@ -403,7 +403,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 }
             }
             if ((ret = getdirparams(obj, vol, dbitmap, &s_path, dir, data + header , &esz)) != AFP_OK)
-                return( ret );
+                return ret;
 
         } else {
             if ( fbitmap == 0 ) {
@@ -412,7 +412,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             /* files are added to the dircache in getfilparams() -> getmetadata() */
             if (AFP_OK != ( ret = getfilparams(obj, vol, fbitmap, &s_path, curdir,
                                                data + header, &esz, 1)) ) {
-                return( ret );
+                return ret;
             }
         }
 
@@ -469,7 +469,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         if (vol->v_adouble == AD_VERSION_EA && ! (vol->v_flags & AFPVOL_NOV2TOEACONV))
             (void)rmdir(".AppleDouble");
 
-        return( AFPERR_NOOBJ );
+        return AFPERR_NOOBJ;
     }
     sd.sd_sindex = sindex + actcnt;
 
@@ -486,7 +486,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     memcpy( rbuf, &actcnt, sizeof( actcnt ));
     rbuf += sizeof( actcnt );
     *rbuflen = sz;
-    return( AFP_OK );
+    return AFP_OK;
 }
 
 /* ----------------------------- */

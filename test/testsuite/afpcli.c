@@ -386,7 +386,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -----------------------------------------------
@@ -518,7 +518,7 @@ DSI *dsi = &conn->dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ---------------------------- */
@@ -593,7 +593,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* --------------------------- */
@@ -642,7 +642,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 /* ------------------------------- */
 int AFPLogOut(CONN *conn)
@@ -655,7 +655,7 @@ int AFPLogOut(CONN *conn)
 	ret = my_dsi_full_receive(dsi, dsi->commands, DSI_CMDSIZ);
     DSICloseSession(conn);
 
-    return (dsi->header.dsi_code);
+    return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -680,7 +680,7 @@ int AFPzzz(CONN *conn, int flag)
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -691,7 +691,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmd(dsi,AFP_GETSRVINFO);
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -702,7 +702,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmd(dsi,AFP_GETSRVPARAM);
 	my_dsi_data_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -730,7 +730,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------  */
@@ -741,7 +741,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmdWithU16(dsi, AFP_CLOSEVOL, vol);
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------  */
@@ -752,7 +752,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmdWithU16(dsi, AFP_CLOSEDT, vol);
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -763,7 +763,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmdWithU16(dsi, AFP_CLOSEFORK, fork);
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -795,7 +795,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ---------------------------- */
@@ -865,7 +865,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -906,7 +906,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmdWithU16(dsi, AFP_FLUSH, vol);
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------  */
@@ -917,7 +917,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 	SendCmdWithU16(dsi, AFP_FLUSHFORK, vol);
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------  */
@@ -967,7 +967,7 @@ DSI *dsi;
 		memcpy(&result, dsi->commands +ofs, sizeof(result));
 		volID = result;
 	}
-	return(volID);
+	return volID;
 }
 
 /* -------------------------------  */
@@ -1143,7 +1143,7 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms, uint16_t b
         bitmap = bitmap>>1;
         bit++;
     }
-    return (b -beg);
+    return b -beg;
 }
 
 /* -------------------------------------- */
@@ -1410,7 +1410,7 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir, uint16
         	b += sizeof(tp);
         }
     }
-    return (b -beg);
+    return b -beg;
 }
 
 /* -------------------------------  */
@@ -1438,7 +1438,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------  */
@@ -1468,7 +1468,7 @@ uint16_t tp;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ---------------------
@@ -1553,7 +1553,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1803,7 +1803,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 
 }
 
@@ -1842,7 +1842,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1874,7 +1874,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1905,7 +1905,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1932,7 +1932,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -1972,7 +1972,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -2000,7 +2000,7 @@ DSI *dsi;
 	/* ------------------ */
 	my_dsi_cmd_receive(dsi);
 
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* ------------------------------- */
@@ -2165,7 +2165,7 @@ DSI *dsi;
 			fprintf(stdout,"directory ID 0x%x\n", ntohl(dir));
 		}
 	}
-	return(dir);
+	return dir;
 }
 
 /* ------------------------------- */
@@ -2230,7 +2230,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -2265,7 +2265,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -2298,7 +2298,7 @@ DSI *dsi;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -2358,7 +2358,7 @@ uint16_t bitmap;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -2421,7 +2421,7 @@ uint16_t i;
    	my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 	/* ------------------ */
 	my_dsi_data_receive(dsi);
-	return(dsi->header.dsi_code);
+	return dsi->header.dsi_code;
 }
 
 /* -------------------------------
@@ -2458,7 +2458,7 @@ DSI *dsi;
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         /* ------------------ */
         my_dsi_data_receive(dsi);
-        return(dsi->header.dsi_code);
+        return dsi->header.dsi_code;
 }
 
 /* --------------------------------
@@ -2520,7 +2520,7 @@ uint16_t len;
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         /* ------------------ */
         my_dsi_data_receive(dsi);
-        return(dsi->header.dsi_code);
+        return dsi->header.dsi_code;
 }
 
 
@@ -2564,7 +2564,7 @@ DSI *dsi;
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         /* ------------------ */
         my_dsi_data_receive(dsi);
-        return(dsi->header.dsi_code);
+        return dsi->header.dsi_code;
 }
 
 /* --------------------------------
@@ -2625,7 +2625,7 @@ uint32_t datalen;
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         /* ------------------ */
         my_dsi_data_receive(dsi);
-        return(dsi->header.dsi_code);
+        return dsi->header.dsi_code;
 }
 
 int AFPRemoveExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char* pathname, char* attrname)
@@ -2670,5 +2670,5 @@ uint16_t len;
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         /* ------------------ */
         my_dsi_data_receive(dsi);
-        return(dsi->header.dsi_code);
+        return dsi->header.dsi_code;
 }
