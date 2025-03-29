@@ -67,7 +67,6 @@ uint32_t time= 12345;
             test_nottested();
             goto fin;
         }
-        Conn->dsi.protocol = DSI_TCPIP;
         if (Conn->afp_version < 30)
             ret = FPopenLogin(Conn, vers, uam, User, Password);
         else
@@ -156,7 +155,6 @@ uint32_t time= 12345;
             test_nottested();
             goto fin;
         }
-        Conn->dsi.protocol = DSI_TCPIP;
         if (Conn->afp_version < 30)
             ret = FPopenLogin(Conn, vers, uam, User, Password);
         else

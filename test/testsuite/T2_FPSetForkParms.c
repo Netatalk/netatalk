@@ -1,5 +1,4 @@
 #include "specs.h"
-#include "ea.h"
 
 /* -------------------------- */
 STATIC void test9()

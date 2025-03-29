@@ -2,7 +2,6 @@
 */
 #include "specs.h"
 #include "adoublehelper.h"
-#include "ea.h"
 
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];

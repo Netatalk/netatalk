@@ -305,7 +305,7 @@ char Data[300000] = "";
 char    *Server = "localhost";
 char    *Server2;
 int     Proto = 0;
-int     Port = 548;
+int     Port = DSI_AFPOVERTCP_PORT;
 char    *Password = "";
 char    *Vol = "";
 char    *Vol2 = "";
@@ -505,7 +505,6 @@ int ret;
         if ( sock < 0) {
 	    	return 2;
         }
-     	Dsi->protocol = DSI_TCPIP;
 	    Dsi->socket = sock;
     }
     else {
@@ -543,7 +542,6 @@ int ret;
 	        if ( sock < 0) {
 		    	return 1;
         	}
-	     	Dsi2->protocol = DSI_TCPIP;
 		    Dsi2->socket = sock;
 	    }
     	else {

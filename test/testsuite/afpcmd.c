@@ -151,8 +151,8 @@ const char *AfpNum2name(int num)
     case AFP_GETACL        : return "AFP_GETACL        ";   /* 73 */
     case AFP_GETEXTATTR    : return "AFP_GETEXTATTR    ";   /* 69 */
     case AFP_SETEXTATTR    : return "AFP_SETEXTATTR    ";   /* 69 */
-    case AFP_REMOVEEXTATTR : return "AFP_REMOVEEXTATTR ";   /* 70 */
-    case AFP_LISTEXTATTRS  : return "AFP_LISTEXTATTRA  ";   /* 72 */
+    case AFP_REMOVEATTR : return "AFP_REMOVEATTR ";   /* 70 */
+    case AFP_LISTEXTATTR  : return "AFP_LISTEXTATTRA  ";   /* 72 */
 
 
 	case AFP_ADDICON       : return "AFP_ADDICON";       	/* 192 */

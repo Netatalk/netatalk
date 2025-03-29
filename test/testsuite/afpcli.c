@@ -38,7 +38,7 @@ int OpenClientSocket(char* host, int port)
 
     ressave = res;
     while (res) {
-        sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+        sock = socket(res->ai_family, res->ai_socktype, 0);
         if (sock >= 0) {
             attr = 1;
             setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &attr, sizeof(attr));
@@ -2535,7 +2535,7 @@ DSI *dsi;
 
 	SendInit(dsi);
 	ofs = 0;
-	dsi->commands[ofs++] = AFP_LISTEXTATTRS;
+	dsi->commands[ofs++] = AFP_LISTEXTATTR;
 	dsi->commands[ofs++] = 0;
 
         memcpy(dsi->commands +ofs, &vol, sizeof(vol));
@@ -2638,7 +2638,7 @@ uint16_t len;
 
 	SendInit(dsi);
 	ofs = 0;
-	dsi->commands[ofs++] = AFP_REMOVEEXTATTR;
+	dsi->commands[ofs++] = AFP_REMOVEATTR;
 	dsi->commands[ofs++] = 0;
 
         memcpy(dsi->commands +ofs, &vol, sizeof(vol));

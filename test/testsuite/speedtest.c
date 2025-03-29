@@ -33,7 +33,7 @@ struct timeval Timer_end;
 /* ------------------------------- */
 static char    *Server = "localhost";
 static int     Proto = 0;
-static int     Port = 548;
+static int     Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 char    *Vol = "";
 char    *Vol2 = "";
@@ -1463,7 +1463,6 @@ int cc;
         	if ( sock < 0) {
 	    		return 2;
 	        }
-    	 	Dsi->protocol = DSI_TCPIP;
 	    	Dsi->socket = sock;
 	    }
 

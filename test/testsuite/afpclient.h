@@ -28,15 +28,6 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
-#if 0
-#include <netatalk/endian.h>
-#include <netatalk/at.h>
-#include <atalk/compat.h>
-#include <atalk/dsi.h>
-#include <atalk/atp.h>
-#include <atalk/asp.h>
-#include <atalk/afp.h>
-#endif
 
 #ifndef SA_ONESHOT
 #define SA_ONESHOT SA_RESETHAND

@@ -26,37 +26,6 @@
 
 #include <sys/types.h>
 
-typedef uint16_t AFPUserBytes;
-
-/* protocols */
-#define AFPPROTO_ASP           1
-#define AFPPROTO_DSI           2
-
-/* actual transports. the DSI ones (tcp right now) need to be
- * kept in sync w/ <atalk/dsi.h>.
- * convention: AFPTRANS_* = (1 << DSI_*)
- */
-#define AFPTRANS_NONE          0
-#define AFPTRANS_DDP          (1 << 0)
-#define AFPTRANS_TCP          (1 << 1)
-#define AFPTRANS_ALL          (AFPTRANS_DDP | AFPTRANS_TCP)
-
-/* server flags */
-#define AFPSRVRINFO_COPY	 (1<<0)  /* supports copyfile */
-#define AFPSRVRINFO_PASSWD	 (1<<1)	 /* supports change password */
-#define AFPSRVRINFO_NOSAVEPASSWD (1<<2)  /* don't allow save password */
-#define AFPSRVRINFO_SRVMSGS      (1<<3)  /* supports server messages */
-#define AFPSRVRINFO_SRVSIGNATURE (1<<4)  /* supports server signature */
-#define AFPSRVRINFO_TCPIP        (1<<5)  /* supports tcpip */
-#define AFPSRVRINFO_SRVNOTIFY    (1<<6)  /* supports server notifications */
-
-#define AFPSRVRINFO_SRVRECONNECT (1<<7)  /* supports server reconnect */
-#define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */
-
-#define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */
-
-#define AFPSRVRINFO_FASTBOZO	 (1<<15) /* fast copying */
-
 #define AFP_OK		0
 #define AFPERR_DID1     -4000   /* not an afp error DID is 1*/
 #define AFPERR_ACCESS	-5000   /* permission denied */
@@ -122,24 +91,6 @@ typedef uint16_t AFPUserBytes;
 #define BITERR_NOID      (1 << 9)
 #define BITERR_BITMAP    (1 << 10)
 #define BITERR_MISC      (1 << 11)
-
-/* AFP Attention Codes -- 4 bits */
-#define AFPATTN_SHUTDOWN     (1 << 15)            /* shutdown/disconnect */
-#define AFPATTN_CRASH        (1 << 14)            /* server crashed */
-#define AFPATTN_MESG         (1 << 13)            /* server has message */
-#define AFPATTN_NORECONNECT  (1 << 12)            /* don't reconnect */
-/* server notification */
-#define AFPATTN_NOTIFY       (AFPATTN_MESG | AFPATTN_NORECONNECT)
-
-/* extended bitmap -- 12 bits. volchanged is only useful w/ a server
- * notification, and time is only useful for shutdown. */
-#define AFPATTN_VOLCHANGED   (1 << 0)             /* volume has changed */
-#define AFPATTN_TIME(x)      ((x) & 0xfff)        /* time in minutes */
-
-typedef enum {
-  AFPMESG_LOGIN = 0,
-  AFPMESG_SERVER = 1
-} afpmessage_t;
 
 /* AFP functions */
 #define AFP_BYTELOCK	     1
@@ -211,18 +162,18 @@ typedef enum {
 
 /* version 3.1 */
 #define AFP_ENUMERATE_EXT2      68
+#define AFP_SPOTLIGHT_PRIVATE   76
+#define AFP_SYNCDIR             78
+#define AFP_SYNCFORK            79
 #define AFP_ZZZ                 122
 
 /* version 3.2 */
-#define AFP_GETEXTATTR		69
-#define AFP_SETEXTATTR		70
-#define AFP_REMOVEEXTATTR	71
-#define AFP_LISTEXTATTRS	72
-#define AFP_GETACL		73
-#define AFP_SETACL          74
-#define AFP_ACCESS          75
-#define AFP_SPOTLIGHT_PRIVATE 76
-#define AFP_SYNCDIR         78
-#define AFP_SYNCFORK        79
+#define AFP_GETEXTATTR          69
+#define AFP_SETEXTATTR          70
+#define AFP_REMOVEATTR          71
+#define AFP_LISTEXTATTR         72
+#define AFP_GETACL              73
+#define AFP_SETACL              74
+#define AFP_ACCESS              75
 
 #endif
