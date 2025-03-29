@@ -126,7 +126,9 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
 EC_CLEANUP:
     if (dname) free(dname);
     if (cwd != -1) {
-        fchdir(cwd);
+        if (fchdir(cwd) < 0) {
+            LOG(log_error, logtype_default, "Can't fchdir(%d): %s", cwd, strerror(errno));
+        }
         close(cwd);
     }
     if (ret != 0)
