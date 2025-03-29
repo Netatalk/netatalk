@@ -756,11 +756,11 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
             atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t)-1) {
             if (errno == EILSEQ || errno == EINVAL) {
                 errno = EILSEQ;
-                if ((option & CONV_IGNORE)) {
+                if (option & CONV_IGNORE) {
                     *flags |= CONV_REQMANGLE;
                     return destlen - o_len;
                 }
-                if ((option & CONV__EILSEQ)) {
+                if (option & CONV__EILSEQ) {
                     if (o_len < 2) {
                         errno = E2BIG;
                         goto end;
@@ -782,7 +782,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
             i_len = j, j = 0;
 
             if (escch == ':') {
-                if ((option & CONV_UNESCAPEHEX)) {
+                if (option & CONV_UNESCAPEHEX) {
                     /* treat it as a CAP hex encoded char */
                     char h[MAXPATHLEN];
                     size_t hlen = 0;
@@ -807,7 +807,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
                     } else {
                         /* We have an invalid :xx sequence */
                         errno = EILSEQ;
-                        if ((option & CONV_IGNORE)) {
+                        if (option & CONV_IGNORE) {
                             *flags |= CONV_REQMANGLE;
                             return destlen - o_len;
                         }
@@ -928,11 +928,11 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
         while (i_len > 0 &&
                atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t)-1) {
             if (errno == EILSEQ) {
-                if ((option & CONV_IGNORE)) {
+                if (option & CONV_IGNORE) {
                     *flags |= CONV_REQMANGLE;
                     return destlen - o_len;
                 }
-                if ((option & CONV_ESCAPEHEX)) {
+                if (option & CONV_ESCAPEHEX) {
                     const size_t bufsiz = o_len / 3 + 1;
                     char *buf = malloc(bufsiz);
                     size_t buflen;

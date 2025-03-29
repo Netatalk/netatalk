@@ -197,7 +197,7 @@ static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
     int sleepsecs;
 
     while (1) {
-        if (((len = writev(fd, iov, vecs)) == -1 && errno == EINTR))
+        if ((len = writev(fd, iov, vecs)) == -1 && errno == EINTR)
             continue;
 
         if ((! slept) && len == -1 && errno == EAGAIN) {

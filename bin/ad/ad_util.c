@@ -122,7 +122,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS)
         ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
 
-    if ((vol->vol->v_flags & AFPVOL_NODEV))
+    if (vol->vol->v_flags & AFPVOL_NODEV)
         flags |= CNID_FLAG_NODEV;
 
     if ((vol->vol->v_cdb = cnid_open(vol->vol,
@@ -166,12 +166,12 @@ char *utompath(const struct vol *vol, const char *upath)
     u = upath;
     outlen = strlen(upath);
 
-    if ((vol->v_casefold & AFPVOL_UTOMUPPER))
+    if (vol->v_casefold & AFPVOL_UTOMUPPER)
         flags |= CONV_TOUPPER;
-    else if ((vol->v_casefold & AFPVOL_UTOMLOWER))
+    else if (vol->v_casefold & AFPVOL_UTOMLOWER)
         flags |= CONV_TOLOWER;
 
-    if ((vol->v_flags & AFPVOL_EILSEQ)) {
+    if (vol->v_flags & AFPVOL_EILSEQ) {
         flags |= CONV__EILSEQ;
     }
 

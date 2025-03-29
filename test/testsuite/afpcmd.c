@@ -1559,7 +1559,7 @@ DSI *dsi;
 	dsi = &conn->dsi;
 
 	if (!Quiet) {
-		fprintf(stdout,"[%s] Create File %s Vol %d did : 0x%x <%s>\n", __func__, (type )?"HARD":"SOFT", vol, ntohl(did), name);
+		fprintf(stdout,"[%s] Create File %s Vol %d did : 0x%x <%s>\n", __func__, type?"HARD":"SOFT", vol, ntohl(did), name);
 	}
 	ret = AFPCreateFile(conn,vol, type, did , name);
 	dump_header(dsi);
@@ -1679,7 +1679,7 @@ DSI *dsi;
 	ofs += sizeof(bitmap);
 
 	ofs = FPset_name(conn, ofs, name);
-	if ((ofs & 1)) {
+	if (ofs & 1) {
 		ofs++;
 	}
 	ofs +=afp_filedir_pack(dsi->commands +ofs, dir, 0, bitmap);
@@ -1728,7 +1728,7 @@ DSI *dsi;
 	ofs += sizeof(bitmap);
 
 	ofs = FPset_name(conn, ofs, name);
-	if ((ofs & 1)) {
+	if (ofs & 1) {
 		ofs++;
 	}
 	ofs +=afp_filedir_pack(dsi->commands +ofs, fil, bitmap,0);
@@ -1849,7 +1849,7 @@ DSI *dsi;
 	ofs += sizeof(bitmap);
 
 	ofs = FPset_name(conn, ofs, name);
-	if ((ofs & 1)) {
+	if (ofs & 1) {
 		ofs++;
 	}
 	ofs +=afp_filedir_pack(dsi->commands +ofs, fil, bitmap,bitmap);

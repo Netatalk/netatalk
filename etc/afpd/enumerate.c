@@ -252,7 +252,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         ibuf += sizeof( temp16 );
     }
 
-    header = (ext)?4:2;
+    header = ext?4:2;
     header *=sizeof( uint8_t );
 
     maxsz = min(maxsz, *rbuflen - REPLY_PARAM_MAXLEN);

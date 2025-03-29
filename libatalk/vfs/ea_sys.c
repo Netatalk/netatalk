@@ -73,7 +73,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 	LOG(log_debug, logtype_afpd, "sys_get_easize(%s): file is already opened", uname);
 	ret = sys_fgetxattr(fd, attruname, rbuf +4, 0);
     } else {
-	if ((oflag & O_NOFOLLOW) ) {
+	if (oflag & O_NOFOLLOW ) {
     	    ret = sys_lgetxattr(uname, attruname, rbuf +4, 0);
 	}
 	else {
@@ -201,7 +201,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 	LOG(log_debug, logtype_afpd, "sys_get_eacontent(%s): file is already opened", uname);
 	ret = sys_fgetxattr(fd, attruname, rbuf +4, maxreply + extra);
     } else {
-	if ((oflag & O_NOFOLLOW) ) {
+	if (oflag & O_NOFOLLOW ) {
     	    ret = sys_lgetxattr(uname, attruname, rbuf +4, maxreply + extra);
 	}
 	else {
@@ -295,7 +295,7 @@ int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
 	LOG(log_debug, logtype_afpd, "sys_list_eas(%s): file is already opened", uname);
 	ret = sys_flistxattr(fd, uname, buf, ATTRNAMEBUFSIZ);
     } else {
-	if ((oflag & O_NOFOLLOW)) {
+	if (oflag & O_NOFOLLOW) {
     	    ret = sys_llistxattr(uname, buf, ATTRNAMEBUFSIZ);
 	}
 	else {
@@ -401,9 +401,9 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     eabuf[attrsize] = 0;
 
     attr_flag = 0;
-    if ((oflag & O_CREAT) )
+    if (oflag & O_CREAT)
         attr_flag |= XATTR_CREATE;
-    else if ((oflag & O_TRUNC) )
+    else if (oflag & O_TRUNC)
         attr_flag |= XATTR_REPLACE;
 
     if (vol->v_flags & AFPVOL_EA_SAMBA) {
@@ -415,7 +415,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
 	LOG(log_debug, logtype_afpd, "sys_set_ea(%s): file is already opened", uname);
 	ret = sys_fsetxattr(fd, attruname, eabuf, attrsize, attr_flag);
     } else {
-	if ((oflag & O_NOFOLLOW) ) {
+	if (oflag & O_NOFOLLOW) {
    	    ret = sys_lsetxattr(uname, attruname, eabuf, attrsize,attr_flag);
 	}
 	else {
@@ -494,7 +494,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 	LOG(log_debug, logtype_afpd, "sys_remove_ea(%s): file is already opened", uname);
 	ret = sys_fremovexattr(fd, uname, attruname);
     } else {
-	if ((oflag & O_NOFOLLOW) ) {
+	if (oflag & O_NOFOLLOW) {
     	    ret = sys_lremovexattr(uname, attruname);
 	}
 	else {

@@ -207,7 +207,7 @@ int dt;
 	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
 
 	/* -------------------- */
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) ) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
 		ret = FPCreateID(Conn,vol, tdir, tname);
 		if (htonl(AFPERR_NOOBJ) != ret && htonl(AFPERR_PARAM) != ret ) {
 			test_failed();

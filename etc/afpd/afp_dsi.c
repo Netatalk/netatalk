@@ -279,7 +279,7 @@ static void alarm_handler(int sig _U_)
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
 
     /* we got some traffic from the client since the previous timer tick. */
-    if ((dsi->flags & DSI_DATA)) {
+    if (dsi->flags & DSI_DATA) {
         dsi->flags &= ~DSI_DATA;
         return;
     }
@@ -589,7 +589,7 @@ void afp_over_dsi(AFPObj *obj)
             dsi->flags &= ~DSI_DATA; /* thats no data in the sense we use it in alarm_handler */
             LOG(log_debug, logtype_afpd, "DSI: client tickle");
             /* timer is not every 30 seconds anymore, so we don't get killed on the client side. */
-            if ((dsi->flags & DSI_DIE))
+            if (dsi->flags & DSI_DIE)
                 dsi_tickle(dsi);
             break;
 

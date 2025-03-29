@@ -106,7 +106,7 @@ int  ofs =  3 * sizeof( uint16_t );
 int pdir = 0;
 int rdir = 0;
 struct afp_filedir_parms filedir;
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
+uint16_t bitmap = DIRPBIT_ATTR | (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 uint16_t vol = VolID;
@@ -515,7 +515,7 @@ DSI *dsi;
 
 	ENTER_TEST
 
-	if ((get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV) {
         test_skipped(T_NO_UNIX_PREV);
 		goto test_exit;
 	}

@@ -525,7 +525,7 @@ fin:
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGALRM, &action, NULL) < 0)) {
+    if (sigaction(SIGALRM, &action, NULL) < 0) {
 		test_nottested();
     }
 	sleep(1);

@@ -90,7 +90,7 @@ static char *demangle_checks(const struct vol *vol, char* uname, char * mfilenam
     /* if we only checked if "prefix" number of characters match */
     /* we get a false postive in above case			     */
 
-    if ( (flags & CONV_REQMANGLE) ) {
+    if ( flags & CONV_REQMANGLE ) {
         if (len) {
             /* convert the buffer to UTF8_MAC ... */
             if ((size_t) -1 == (len = convert_charset(vol->v_maccharset, CH_UTF8_MAC, 0,

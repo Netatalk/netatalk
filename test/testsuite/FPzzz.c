@@ -44,7 +44,7 @@ uint32_t time= 12345;
     action.sa_handler = pipe_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
 		goto test_exit;
     }
@@ -97,7 +97,7 @@ fin:
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
     }
 test_exit:
@@ -133,7 +133,7 @@ uint32_t time= 12345;
     action.sa_handler = pipe_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
 		goto test_exit;
     }
@@ -183,7 +183,7 @@ fin:
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
     }
 test_exit:
@@ -219,7 +219,7 @@ int sock;
     action.sa_handler = pipe_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
 		goto test_exit;
     }
@@ -234,7 +234,7 @@ fin:
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
-    if ((sigaction(SIGPIPE, &action, NULL) < 0)) {
+    if (sigaction(SIGPIPE, &action, NULL) < 0) {
 		test_nottested();
     }
 test_exit:

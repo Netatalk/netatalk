@@ -164,12 +164,12 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, siz
         if ( (size_t)-1 == (outlen = convert_string(obj->options.unixcharset, utf8?CH_UTF8_MAC:obj->options.maccharset,
                                                     message, msglen, localized_message, msgsize)) )
         {
-    	    memcpy(rbuf+((utf8)?2:1), message, msglen); /*FIXME*/
+    	    memcpy(rbuf+(utf8?2:1), message, msglen); /*FIXME*/
 	    outlen = msglen;
         }
         else
         {
-	    memcpy(rbuf+((utf8)?2:1), localized_message, outlen);
+	    memcpy(rbuf+(utf8?2:1), localized_message, outlen);
         }
     }
 

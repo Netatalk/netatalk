@@ -259,7 +259,7 @@ int fd;
 
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
-		fprintf(stdout,"Create File %s Vol %d did : 0x%x <%s>\n\n", (type )?"HARD":"SOFT", vol, ntohl(did), name);
+		fprintf(stdout,"Create File %s Vol %d did : 0x%x <%s>\n\n", type?"HARD":"SOFT", vol, ntohl(did), name);
 	}
 	did = ntohl(did);
 	if (local_chdir(vol, did) < 0) {

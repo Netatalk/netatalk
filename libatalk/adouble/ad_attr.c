@@ -128,7 +128,7 @@ int ad_setid (struct adouble *adp, const dev_t dev, const ino_t ino , const uint
         EC_FAIL;
     }
 
-    if ((adp->ad_options & ADVOL_NODEV)) {
+    if (adp->ad_options & ADVOL_NODEV) {
         memset(ade, 0, sizeof(dev_t));
     } else {
         memcpy(ade, &dev, sizeof(dev_t));

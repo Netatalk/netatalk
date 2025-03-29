@@ -594,7 +594,7 @@ static int create_trash(CONN *conn, uint16_t vol)
 {
 char *trash = "Network Trash Folder";
 int  ofs =  3 * sizeof( uint16_t );
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
+uint16_t bitmap = DIRPBIT_ATTR | (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 DSI *dsi;
@@ -664,7 +664,7 @@ int fork;
 static int set_perm(CONN *conn, uint16_t vol, int dir)
 {
 int  ofs =  3 * sizeof( uint16_t );
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
+uint16_t bitmap = DIRPBIT_ATTR | (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 DSI *dsi;
@@ -697,7 +697,7 @@ struct afp_filedir_parms filedir;
 static int write_access(CONN *conn, uint16_t  vol, int dir)
 {
 int  ofs =  3 * sizeof( uint16_t );
-uint16_t bitmap = (DIRPBIT_ATTR)| (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
+uint16_t bitmap = DIRPBIT_ATTR | (1<<DIRPBIT_FINFO)| (1<<DIRPBIT_CDATE) |
 					(1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE)| (1<<DIRPBIT_UID) |
 	    			(1 << DIRPBIT_GID) |(1 << DIRPBIT_ACCESS);
 DSI *dsi;

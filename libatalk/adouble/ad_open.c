@@ -892,7 +892,7 @@ static int ad_chown(const char *path, struct stat *stbuf)
 
     if (default_uid != (uid_t)-1) {
         /* we are root (admin) */
-        id = (default_uid)?default_uid:stbuf->st_uid;
+        id = default_uid?default_uid:stbuf->st_uid;
         ret = lchown( path, id, stbuf->st_gid );
     }
 #endif
@@ -1046,9 +1046,9 @@ static int ad_open_df(const char *path, int adflags, mode_t mode, struct adouble
     oflags = ad2openflags(ad, ADFLAGS_DF, adflags);
 
     admode = mode;
-    if ((adflags & ADFLAGS_CREATE)) {
+    if (adflags & ADFLAGS_CREATE) {
         st_invalid = ad_mode_st(path, &admode, &st_dir);
-        if ((ad->ad_options & ADVOL_UNIXPRIV))
+        if (ad->ad_options & ADVOL_UNIXPRIV)
             admode = mode;
     }
 
@@ -1165,14 +1165,14 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
             admode = mode;
             errno = 0;
             st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
-            if ((ad->ad_options & ADVOL_UNIXPRIV))
+            if (ad->ad_options & ADVOL_UNIXPRIV)
                 admode = mode;
             admode = ad_hf_mode(admode);
             if (errno == ENOENT) {
                 EC_NEG1_LOG( ad->ad_ops->ad_mkrf(ad_p) );
                 admode = mode;
                 st_invalid = ad_mode_st(ad_p, &admode, &st_dir);
-                if ((ad->ad_options & ADVOL_UNIXPRIV))
+                if (ad->ad_options & ADVOL_UNIXPRIV)
                     admode = mode;
                 admode = ad_hf_mode(admode);
             }
@@ -1206,7 +1206,7 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode, struct adou
     adf_lock_init(ad->ad_mdp);
     ad->ad_mdp->adf_refcount = 1;
 
-    if ((ad->ad_mdp->adf_flags & ( O_TRUNC | O_CREAT ))) {
+    if (ad->ad_mdp->adf_flags & ( O_TRUNC | O_CREAT )) {
         /* This is a new adouble header file, create it */
         EC_NEG1_LOG( new_ad_header(ad, path, pst, adflags) );
         ad_flush(ad);
@@ -2268,19 +2268,19 @@ mode_t ad_hf_mode(mode_t mode)
 {
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
     /* fnctl lock need write access */
-    if ((mode & S_IRUSR))
+    if (mode & S_IRUSR)
         mode |= S_IWUSR;
-    if ((mode & S_IRGRP))
+    if (mode & S_IRGRP)
         mode |= S_IWGRP;
-    if ((mode & S_IROTH))
+    if (mode & S_IROTH)
         mode |= S_IWOTH;
 
     /* if write mode set add read mode */
-    if ((mode & S_IWUSR))
+    if (mode & S_IWUSR)
         mode |= S_IRUSR;
-    if ((mode & S_IWGRP))
+    if (mode & S_IWGRP)
         mode |= S_IRGRP;
-    if ((mode & S_IWOTH))
+    if (mode & S_IWOTH)
         mode |= S_IROTH;
 
     return mode;

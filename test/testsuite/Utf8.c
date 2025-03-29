@@ -877,7 +877,7 @@ uint16_t vol = VolID;
 		goto test_exit;
 	}
 
-	if ( (get_vol_attrib(vol) & VOLPBIT_ATTR_UTF8)) {
+	if (get_vol_attrib(vol) & VOLPBIT_ATTR_UTF8) {
 		test_failed();
 	}
 

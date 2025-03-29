@@ -281,7 +281,7 @@ cups_get_printer_ppd ( char * name)
 	cupsFilePuts(fp, "*FileSystem: False\n");
 	cupsFilePuts(fp, "*PCFileName: \"ippeve.ppd\"\n");
 
-	if ((dests != NULL))
+	if (dests != NULL)
 		strcpy(make, make_model);
 	else
 		strcpy(make, "Unknown Printer");

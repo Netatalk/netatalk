@@ -399,7 +399,7 @@ static int ad_flush_rf(struct adouble *ad)
 
     LOG(log_debug, logtype_ad, "ad_flush_rf(%s)", adflags2logstr(ad->ad_adflags));
 
-    if ((ad->ad_rfp->adf_flags & O_RDWR)) {
+    if (ad->ad_rfp->adf_flags & O_RDWR) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
             if (ad->ad_rlen > 0xffffffff)
                 ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
