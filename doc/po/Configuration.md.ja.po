@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-13 21:12+0100\n"
+"POT-Creation-Date: 2025-03-30 22:49+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,19 +17,19 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:20 manpages/man5/afp_signature.conf.5.md:21
-#: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:334
-#: manpages/man5/afp.conf.5.md:358 manpages/man5/afp.conf.5.md:371
-#: manpages/man5/afp.conf.5.md:386 manpages/man5/afp.conf.5.md:741
-#: manpages/man5/afp.conf.5.md:1056 manpages/man5/afp.conf.5.md:1182
-#: manpages/man5/afp.conf.5.md:1220 manpages/man8/papd.8.md:96
+#: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:339
+#: manpages/man5/afp.conf.5.md:363 manpages/man5/afp.conf.5.md:376
+#: manpages/man5/afp.conf.5.md:391 manpages/man5/afp.conf.5.md:694
+#: manpages/man5/afp.conf.5.md:1093 manpages/man5/afp.conf.5.md:1219
+#: manpages/man5/afp.conf.5.md:1257 manpages/man8/papd.8.md:96
 #: manual/Configuration.md:113
 #, no-wrap
 msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1061 manpages/man5/afp.conf.5.md:1097
-#: manual/AppleTalk.md:154 manual/Configuration.md:827 manual/Installation.md:4
+#: manpages/man5/afp.conf.5.md:1098 manpages/man5/afp.conf.5.md:1134
+#: manual/AppleTalk.md:154 manual/Configuration.md:836 manual/Installation.md:4
 #: manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
@@ -37,7 +37,7 @@ msgstr "> **警告**\n"
 
 #. type: Title ###
 #: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:576
-#: manual/Configuration.md:821
+#: manual/Configuration.md:830
 #, no-wrap
 msgid "Configuration"
 msgstr "設定"
@@ -2040,7 +2040,7 @@ msgstr "ファイルシステム変更イベント"
 #: manual/Configuration.md:786
 msgid ""
 "Netatalk includes a nifty filesystem change event (FCE) mechanism where afpd "
-"processes notify interested listeners about certain filesystem event by UDP "
+"processes notify interested listeners about certain filesystem events by UDP "
 "network datagrams."
 msgstr ""
 "Netatalk には素敵なファイルシステム変更イベント (Filesystem Change Events, "
@@ -2051,77 +2051,106 @@ msgstr ""
 #. type: Plain text
 #: manual/Configuration.md:790
 msgid ""
-"For the format of the UDP packets and for an example C application that "
-"demonstrates how to use these in a listener, take a look at the Netatalk "
-"source file `bin/misc/fce.c`."
+"This feature is disabled by default. To enable it, set the **fce listener** "
+"option in afp.conf to the hostname or IP address of the host that should "
+"listen for FCE events."
 msgstr ""
-"この UDP パケットのフォーマットについて、また、これらをリスナー内でどのように"
-"使用するかのデモを試してみる C アプリケーションの実例については、Netatalk の"
-"ソースファイル `bin/misc/fce.c` に目を通していただきたい。"
+"この機能はデフォルトでは無効になっている。有効にするには、afp.conf の **fce "
+"listener** オプションを、FCE イベントを受け取るべきホストのホスト名または IP "
+"アドレスに設定する。"
 
 #. type: Plain text
-#: manual/Configuration.md:792
+#: manual/Configuration.md:794
+msgid ""
+"Netatalk distributes a simple FCE listener application called "
+"**fce_listen**.  It will print out any UDP datagrams received from the AFP "
+"server.  Its source code also serves as documentation for the format of the "
+"UDP packets."
+msgstr ""
+"Netatalk には、UDP データグラムを受信した AFP サーバーについての情報を出力す"
+"る簡単な FCE リスナーアプリケーション **fce_listen** が含まれている。このアプ"
+"リケーションのソースコードは、UDP パケットのフォーマットについてのドキュメン"
+"トとしても役立つ。"
+
+#. type: Title ###
+#: manual/Configuration.md:795
+#, no-wrap
+msgid "FCE v1"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:798
 msgid "The currently supported FCE v1 events are:"
 msgstr "現在サポートされているファイルシステム変更イベントは以下である："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:794
+#: manual/Configuration.md:800
 msgid "file modification (fmod)"
 msgstr "ファイル変更：file modification (fmod)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:796
+#: manual/Configuration.md:802
 msgid "file deletion (fdel)"
 msgstr "ファイル削除：file deletion (fdel)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:798
+#: manual/Configuration.md:804
 msgid "directory deletion (ddel)"
 msgstr "ディレクトリ削除：directory deletion (ddel)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:800
+#: manual/Configuration.md:806
 msgid "file creation (fcre)"
 msgstr "ファイル作成：file creation (fcre)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:802
+#: manual/Configuration.md:808
 msgid "directory creation (dcre)"
 msgstr "ディレクトリ削除：directory deletion (ddel)"
 
+#. type: Title ###
+#: manual/Configuration.md:809
+#, no-wrap
+msgid "FCE v2"
+msgstr ""
+
 #. type: Plain text
-#: manual/Configuration.md:804
-msgid "When using FCE v2 you also get:"
-msgstr "FCE v2 の場合はする際には下記イベントも使用可能："
+#: manual/Configuration.md:813
+msgid ""
+"FCE v2 events provide additional context such as the user who performed the "
+"action. When using FCE v2 you also get the following events:"
+msgstr ""
+"FCE v2 イベントは、アクションを実行したユーザーなどの追加のコンテキストを提供"
+"する。FCE v2 を使用する場合は、以下のイベントも取得できる："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:806
+#: manual/Configuration.md:815
 msgid "file moving (fmov)"
 msgstr "ファイル移動 (fmov)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:808
+#: manual/Configuration.md:817
 msgid "directory moving (dmov)"
 msgstr "ディレクトリー移動 (dmov)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:810
+#: manual/Configuration.md:819
 msgid "user login (login)"
 msgstr "ユーザーログイン (login)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:812
+#: manual/Configuration.md:821
 msgid "user logout (logout)"
 msgstr "ユーザーログアウト (logout)"
 
 #. type: Title ##
-#: manual/Configuration.md:813
+#: manual/Configuration.md:822
 #, no-wrap
 msgid "Spotlight"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:820
+#: manual/Configuration.md:829
 msgid ""
 "Starting with version 3.1 Netatalk supports Spotlight searching.  Netatalk "
 "uses GNOME [Tracker](https://projects.gnome.org/tracker/) or its later "
@@ -2135,7 +2164,7 @@ msgstr ""
 "を用いる。"
 
 #. type: Plain text
-#: manual/Configuration.md:825
+#: manual/Configuration.md:834
 msgid ""
 "You can enable Spotlight and indexing either globally or on a per volume "
 "basis with the **spotlight** option."
@@ -2144,7 +2173,7 @@ msgstr ""
 "に Spotlight とインデックス化を有効にできる。"
 
 #. type: Plain text
-#: manual/Configuration.md:830
+#: manual/Configuration.md:839
 #, no-wrap
 msgid ""
 "> Once Spotlight is enabled for a single volume, all other volumes for\n"
@@ -2154,7 +2183,7 @@ msgstr ""
 "が無効にされたことになるその他全てのボリュームでは全く検索できないようになる。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:834
+#: manual/Configuration.md:843
 msgid ""
 "The **dbus-daemon** binary has to be installed for Spotlight feature. The "
 "path to dbus-daemon is determined at compile time the dbus-daemon build "
@@ -2165,7 +2194,7 @@ msgstr ""
 "決定する。"
 
 #. type: Plain text
-#: manual/Configuration.md:838
+#: manual/Configuration.md:847
 msgid ""
 "In case the **dbus-daemon** binary is installed at the other path, you must "
 "use the global option **dbus daemon** to point to the path, e.g. for Solaris "
@@ -2176,24 +2205,24 @@ msgstr ""
 "ば Solaris 上で OpenCSW 由来の Tracker を用いている場合は以下のようにする："
 
 #. type: Plain text
-#: manual/Configuration.md:840
+#: manual/Configuration.md:849
 #, no-wrap
 msgid "    dbus daemon = /opt/csw/bin/dbus-daemon\n"
 msgstr ""
 
 #. type: Title ####
-#: manual/Configuration.md:841
+#: manual/Configuration.md:850
 #, no-wrap
 msgid "Limitations and notes"
 msgstr "制限と注意"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:844
+#: manual/Configuration.md:853
 msgid "Large filesystems"
 msgstr "大きいファイルシステム"
 
 #. type: Plain text
-#: manual/Configuration.md:850
+#: manual/Configuration.md:859
 #, no-wrap
 msgid ""
 "    Tracker on Linux uses the inotify Kernel filesystem change event API\n"
@@ -2209,7 +2238,7 @@ msgstr ""
 "    代わりにあらゆるサブディレクトリの監視が各々で追加されなければならないということを要求してくるからである。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:854
+#: manual/Configuration.md:863
 #, no-wrap
 msgid ""
 "    On Solaris the FEN file event notification system is used. It is\n"
@@ -2220,7 +2249,7 @@ msgstr ""
 "    が用いられる。このSolarisのサブシステムではどんな制限とリソース消費があるのか不明である。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:859
+#: manual/Configuration.md:868
 #, no-wrap
 msgid ""
 "    We therefore recommend to disable live filesystem monitoring and let\n"
@@ -2234,12 +2263,12 @@ msgstr ""
 "    crawling-interval を参照のこと。\n"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:861
+#: manual/Configuration.md:870
 msgid "Indexing home directories"
 msgstr "home ディレクトリのインデックスは作成されない"
 
 #. type: Plain text
-#: manual/Configuration.md:864
+#: manual/Configuration.md:873
 #, no-wrap
 msgid ""
 "    A known limitation with the current implementation means that shared\n"
@@ -2249,7 +2278,7 @@ msgstr ""
 "    によってインデックス付けされない。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:867
+#: manual/Configuration.md:876
 #, no-wrap
 msgid ""
 "    As a workaround, keep the shared volumes you want to have indexed\n"
@@ -2257,13 +2286,13 @@ msgid ""
 msgstr "    回避策として、ファイルシステム別場所に共有ボリュームを設定する。\n"
 
 #. type: Title ###
-#: manual/Configuration.md:868
+#: manual/Configuration.md:877
 #, no-wrap
 msgid "Using Tracker commandline tools on the server"
 msgstr "サーバー上での Tracker コマンドラインツールの使用"
 
 #. type: Plain text
-#: manual/Configuration.md:872
+#: manual/Configuration.md:881
 msgid ""
 "Netatalk must be running, commands must be executed as root and some "
 "environment variables must be set up."
@@ -2272,7 +2301,7 @@ msgstr ""
 "らない。"
 
 #. type: Plain text
-#: manual/Configuration.md:878
+#: manual/Configuration.md:887
 msgid ""
 "If the .tracker_profile file does not exist, create it first. If you need to "
 "make the environment variables persistent, source .tracker_profile from /"
@@ -2285,7 +2314,7 @@ msgstr ""
 "Netatalk をインストールしたベースディレクトリにあわせて読み替える。"
 
 #. type: Plain text
-#: manual/Configuration.md:887
+#: manual/Configuration.md:896
 #, no-wrap
 msgid ""
 "    $ su\n"
@@ -2299,96 +2328,96 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:889
+#: manual/Configuration.md:898
 msgid "When using Tracker from OpenCSW you must also update your PATH:"
 msgstr "OpenCSW の Tracker を使用していたら PATH も以下のように更新する："
 
 #. type: Plain text
-#: manual/Configuration.md:891
+#: manual/Configuration.md:900
 #, no-wrap
 msgid "    # export PATH=/opt/csw/bin:$PATH\n"
 msgstr ""
 
 #. type: Title ####
-#: manual/Configuration.md:892
+#: manual/Configuration.md:901
 #, no-wrap
 msgid "Common Tracker commands"
 msgstr "Tracker コマンド"
 
 #. type: Plain text
-#: manual/Configuration.md:895
+#: manual/Configuration.md:904
 msgid "Querying Tracker status:"
 msgstr "Tracker の状態の問い合わせ:"
 
 #. type: Plain text
-#: manual/Configuration.md:897
+#: manual/Configuration.md:906
 #, no-wrap
 msgid ">     # tracker daemon\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:899
+#: manual/Configuration.md:908
 msgid "Stop Tracker:"
 msgstr "Tracker の停止:"
 
 #. type: Plain text
-#: manual/Configuration.md:901
+#: manual/Configuration.md:910
 #, no-wrap
 msgid ">     # tracker daemon -t\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:903
+#: manual/Configuration.md:912
 msgid "Start Tracker:"
 msgstr "Tracker の開始:"
 
 #. type: Plain text
-#: manual/Configuration.md:905
+#: manual/Configuration.md:914
 #, no-wrap
 msgid ">     # tracker daemon -s\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:907
+#: manual/Configuration.md:916
 msgid "Reindex directory:"
 msgstr "ディレクトリの再インデックス:"
 
 #. type: Plain text
-#: manual/Configuration.md:909
+#: manual/Configuration.md:918
 #, no-wrap
 msgid ">     # tracker index -f PATH\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:911
+#: manual/Configuration.md:920
 msgid "Query Tracker for information about a file or directory:"
 msgstr "Tracker にファイルやディレクトリの情報を問い合わせる:"
 
 #. type: Plain text
-#: manual/Configuration.md:913
+#: manual/Configuration.md:922
 #, no-wrap
 msgid ">     # tracker info PATH\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:915
+#: manual/Configuration.md:924
 msgid "Search Tracker:"
 msgstr "Tracker で検索:"
 
 #. type: Plain text
-#: manual/Configuration.md:917
+#: manual/Configuration.md:926
 #, no-wrap
 msgid ">     # tracker search QUERY\n"
 msgstr ""
 
 #. type: Title ####
-#: manual/Configuration.md:918
+#: manual/Configuration.md:927
 #, no-wrap
 msgid "Advanced Tracker command line configuration"
 msgstr "Tracker コマンドラインのより進んだ設定"
 
 #. type: Plain text
-#: manual/Configuration.md:922
+#: manual/Configuration.md:931
 msgid ""
 "Tracker stores its configuration via Gnome dconf backend which can be "
 "modified with the command **gsettings**."
@@ -2397,7 +2426,7 @@ msgstr ""
 "**gsettings** コマンドで変更できる。"
 
 #. type: Plain text
-#: manual/Configuration.md:928
+#: manual/Configuration.md:937
 msgid ""
 "Gnome dconf settings are per-user settings, so, as Netatalk runs the Tracker "
 "processes as root, the settings are stored in the root user context and "
@@ -2411,7 +2440,7 @@ msgstr ""
 "ければならない）"
 
 #. type: Plain text
-#: manual/Configuration.md:932
+#: manual/Configuration.md:941
 #, no-wrap
 msgid ""
 "    # gsettings list-recursively | grep Tracker\n"
@@ -2420,7 +2449,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:935
+#: manual/Configuration.md:944
 msgid ""
 "The following list describes some important Tracker options and their "
 "default settings."
@@ -2429,12 +2458,12 @@ msgstr ""
 "示す。"
 
 #. type: Plain text
-#: manual/Configuration.md:937
+#: manual/Configuration.md:946
 msgid "org.freedesktop.Tracker.Miner.Files index-recursive-directories"
 msgstr "org.freedesktop.Tracker.Miner.Files index-recursive-directories"
 
 #. type: Plain text
-#: manual/Configuration.md:941
+#: manual/Configuration.md:950
 #, no-wrap
 msgid ""
 "> This option controls which directories Tracker will index. Don't change\n"
@@ -2448,12 +2477,12 @@ msgstr ""
 "によってセットされるので、手動で変更してはならない。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:943
+#: manual/Configuration.md:952
 msgid "org.freedesktop.Tracker.Miner.Files enable-monitors true"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:950
+#: manual/Configuration.md:959
 #, no-wrap
 msgid ""
 "> The value controls whether Tracker watches all configured paths for\n"
@@ -2471,12 +2500,12 @@ msgstr ""
 "**crawling-interval** も参照のこと。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:952
+#: manual/Configuration.md:961
 msgid "org.freedesktop.Tracker.Miner.Files crawling-interval -1"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:957
+#: manual/Configuration.md:966
 #, no-wrap
 msgid ""
 "> Interval in days to check the filesystem is up to date in the database,\n"
@@ -2490,18 +2519,18 @@ msgstr ""
 "= 強制的にクローリングされる\n"
 
 #. type: Title ###
-#: manual/Configuration.md:958
+#: manual/Configuration.md:967
 #, no-wrap
 msgid "Supported metadata attributes"
 msgstr "サポートされているメタデータ属性"
 
 #. type: Plain text
-#: manual/Configuration.md:961
+#: manual/Configuration.md:970
 msgid "The following table lists the supported Spotlight metadata attributes"
 msgstr "下記表にサポートされている Spotlight メタデータ属性を挙げる。"
 
 #. type: Plain text
-#: manual/Configuration.md:986
+#: manual/Configuration.md:995
 #, no-wrap
 msgid ""
 "| Description | Spotlight Key |\n"
@@ -2555,18 +2584,18 @@ msgstr ""
 "| 歌あるいは楽曲の音楽ジャンル | kMDItemMusicalGenre |\n"
 
 #. type: Title ####
-#: manual/Configuration.md:987
+#: manual/Configuration.md:996
 #, no-wrap
 msgid "References"
 msgstr "参考"
 
 #. type: Bullet: '1.  '
-#: manual/Configuration.md:990
+#: manual/Configuration.md:999
 msgid ""
 "[MDItem](https://developer.apple.com/documentation/coreservices/mditemref/)"
 msgstr ""
 
 #. type: Bullet: '2.  '
-#: manual/Configuration.md:991
+#: manual/Configuration.md:1000
 msgid "[Tracker](https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/)"
 msgstr ""

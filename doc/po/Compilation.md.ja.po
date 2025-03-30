@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-02-21 07:01+0100\n"
+"POT-Creation-Date: 2025-03-30 22:49+0200\n"
 "PO-Revision-Date: 2025-01-22 20:55+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -80,7 +80,7 @@ msgstr "コンフィグレーション"
 #. type: Fenced code block
 #: manual/Compilation.md:22
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Plain text
@@ -163,13 +163,13 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:61
 #, no-wrap
-msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser localsearch mariadb-clients meson ninja perl po4a pkgconfig rpcsvc-proto talloc tinysparql\n"
+msgid "pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql\n"
 msgstr ""
 
 #. type: Fenced code block
-#: manual/Compilation.md:67
+#: manual/Compilation.md:67 manual/Compilation.md:158 manual/Compilation.md:204
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Title ##
@@ -202,12 +202,6 @@ msgstr ""
 #: manual/Compilation.md:152
 #, no-wrap
 msgid "dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cmark cracklib-devel cups-devel dbus-devel flex glib2-devel iniparser-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel\n"
-msgstr ""
-
-#. type: Fenced code block
-#: manual/Compilation.md:158 manual/Compilation.md:204
-#, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -325,7 +319,7 @@ msgstr "必要なパッケージをインストールする"
 #. type: Fenced code block
 #: manual/Compilation.md:317
 #, no-wrap
-msgid "pkg install -y avahi bison cmark db5 iniparser krb5-devel libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3\n"
+msgid "pkg install -y avahi bison cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3\n"
 msgstr ""
 
 #. type: Plain text
@@ -424,7 +418,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:393
 #, no-wrap
-msgid "pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal iniparser libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 openpam p5-Net-DBus pkgconf tracker3\n"
+msgid "pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal iniparser libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 p5-Net-DBus pkgconf tracker3\n"
 msgstr ""
 
 #. type: Fenced code block
@@ -432,7 +426,7 @@ msgstr ""
 #, no-wrap
 msgid ""
 "set -e\n"
-"meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-tests=true\n"
+"meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-pam=false -Dwith-tests=true\n"
 "meson compile -C build\n"
 "meson install -C build\n"
 "netatalk -V\n"
