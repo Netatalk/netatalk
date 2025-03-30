@@ -26,7 +26,7 @@ name: Containers
     
 jobs:
     build-container:
-        name: Build Netatalk container
+        name: Build production container
         runs-on: ubuntu-latest
         timeout-minutes: 5
         if: ${{ !github.event.pull_request.head.repo.fork }}
@@ -66,7 +66,7 @@ jobs:
 
 
     build-container-testsuite:
-        name: Build Netatalk testsuite container
+        name: Build Alpine testsuite container
         runs-on: ubuntu-latest
         timeout-minutes: 5
         if: ${{ !github.event.pull_request.head.repo.fork }}
@@ -99,14 +99,54 @@ jobs:
               uses: docker/build-push-action@v5
               with:
                 context: .
-                file: testsuite.Dockerfile
+                file: testsuite_alp.Dockerfile
+                push: true
+                labels: ${{ steps.metadata.outputs.labels }}
+                tags: ${{ steps.metadata.outputs.tags }}
+
+
+    build-container-testsuite-debian:
+        name: Build Debian testsuite container
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        if: ${{ !github.event.pull_request.head.repo.fork }}
+        permissions:
+            contents: read
+            packages: write
+        steps:
+            - name: Checkout repo
+              uses: actions/checkout@v4
+            - name: Create image name
+              run: |
+                echo "IMAGE_NAME=${REPO,,}-testsuite-debian" >> ${GITHUB_ENV}
+            - name: Login to container registry
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Extract metadata
+              id: metadata
+              uses: docker/metadata-action@v5
+              with:
+                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+                tags: |
+                  type=ref,event=branch
+                  type=ref,event=tag
+                  type=raw,value=latest
+                  type=sha
+            - name: Build and push container image
+              uses: docker/build-push-action@v5
+              with:
+                context: .
+                file: testsuite_alp.Dockerfile
                 push: true
                 labels: ${{ steps.metadata.outputs.labels }}
                 tags: ${{ steps.metadata.outputs.tags }}
 
 
     check-container:
-        name: Netatalk container dry run
+        name: Production container dry run
         needs: build-container
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -125,7 +165,7 @@ jobs:
 
 
     afp-spectest-afp34:
-        name: AFP spec test - AFP 3.4
+        name: AFP spec test (ea) AFP 3.4 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -146,8 +186,76 @@ jobs:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
+    afp-spectest-afp34-debian:
+        name: AFP spec test (ea) AFP 3.4 - Debian
+        needs: build-container-testsuite-debian
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: afpafp
+            AFP_PASS2: afpafp
+            AFP_GROUP: afpusers
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest
+            AFP_VERSION: 7
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
+
+
+    afp-adtest-afp34:
+      name: AFP spec test (adouble v2) AFP 3.4 - Alpine
+      needs: build-container-testsuite
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_USER2: atalk2
+          AFP_PASS: afpafp
+          AFP_PASS2: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          SHARE_NAME2: test2
+          INSECURE_AUTH: 1
+          DISABLE_TIMEMACHINE: 1
+          VERBOSE: 1
+          AFP_ADOUBLE: 1
+          TESTSUITE: spectest
+          AFP_VERSION: 7
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+
+    afp-adtest-afp34-debian:
+      name: AFP spec test (adouble v2) AFP 3.4 - Debian
+      needs: build-container-testsuite-debian
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_USER2: atalk2
+          AFP_PASS: afpafp
+          AFP_PASS2: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          SHARE_NAME2: test2
+          INSECURE_AUTH: 1
+          DISABLE_TIMEMACHINE: 1
+          VERBOSE: 1
+          AFP_ADOUBLE: 1
+          TESTSUITE: spectest
+          AFP_VERSION: 7
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
+
+
     afp-spectest-afp33:
-        name: AFP spec test - AFP 3.3
+        name: AFP spec test (ea) AFP 3.3 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -169,7 +277,7 @@ jobs:
 
 
     afp-spectest-afp32:
-        name: AFP spec test - AFP 3.2
+        name: AFP spec test (ea) AFP 3.2 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -191,7 +299,7 @@ jobs:
 
 
     afp-spectest-afp31:
-        name: AFP spec test - AFP 3.1
+        name: AFP spec test (ea) AFP 3.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -213,7 +321,7 @@ jobs:
 
 
     afp-spectest-afp30:
-        name: AFP spec test - AFP 3.0
+        name: AFP spec test (ea) AFP 3.0 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -234,8 +342,30 @@ jobs:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
+    afp-spectest-afp30-debian:
+        name: AFP spec test (ea) AFP 3.0 - Debian
+        needs: build-container-testsuite-debian
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: afpafp
+            AFP_PASS2: afpafp
+            AFP_GROUP: afpusers
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest
+            AFP_VERSION: 3
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
+
+
     afp-spectest-afp22:
-        name: AFP spec test - AFP 2.2
+        name: AFP spec test (ea) AFP 2.2 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -257,7 +387,7 @@ jobs:
   
 
     afp-spectest-afp21:
-        name: AFP spec test - AFP 2.1
+        name: AFP spec test (ea) AFP 2.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
@@ -277,32 +407,31 @@ jobs:
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
-
-    afp-adtest-afp34:
-      name: AFP spec test (adouble v2) - AFP 3.4
-      needs: build-container-testsuite
-      runs-on: ubuntu-latest
-      timeout-minutes: 5
-      env:
-          AFP_USER: atalk1
-          AFP_USER2: atalk2
-          AFP_PASS: afpafp
-          AFP_PASS2: afpafp
-          AFP_GROUP: afpusers
-          SHARE_NAME: test1
-          SHARE_NAME2: test2
-          INSECURE_AUTH: 1
-          DISABLE_TIMEMACHINE: 1
-          VERBOSE: 1
-          AFP_ADOUBLE: 1
-          TESTSUITE: spectest
-          AFP_VERSION: 7
-      steps:
-          - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+  
+    afp-spectest-afp21-debian:
+        name: AFP spec test (ea) AFP 2.1 - Debian
+        needs: build-container-testsuite-debian
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: afpafp
+            AFP_PASS2: afpafp
+            AFP_GROUP: afpusers
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest
+            AFP_VERSION: 1
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 
 
     afp-adtest-afp21:
-      name: AFP spec test (adouble v2) - AFP 2.1
+      name: AFP spec test (adouble v2) AFP 2.1 - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -324,8 +453,31 @@ jobs:
           - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
 
+    afp-adtest-afp21-debian:
+      name: AFP spec test (adouble v2) AFP 2.1 - Debian
+      needs: build-container-testsuite-debian
+      runs-on: ubuntu-latest
+      timeout-minutes: 5
+      env:
+          AFP_USER: atalk1
+          AFP_USER2: atalk2
+          AFP_PASS: afpafp
+          AFP_PASS2: afpafp
+          AFP_GROUP: afpusers
+          SHARE_NAME: test1
+          SHARE_NAME2: test2
+          INSECURE_AUTH: 1
+          DISABLE_TIMEMACHINE: 1
+          VERBOSE: 1
+          AFP_ADOUBLE: 1
+          TESTSUITE: spectest
+          AFP_VERSION: 1
+      steps:
+          - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
+
+
     afp-rotest-afp34:
-      name: AFP spec test (Readonly) - AFP 3.4
+      name: AFP spec test (readonly) AFP 3.4 - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -344,7 +496,7 @@ jobs:
 
 
     afp-rotest-afp21:
-      name: AFP spec test (Readonly) - AFP 2.1
+      name: AFP spec test (readonly) AFP 2.1 - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -363,7 +515,7 @@ jobs:
 
 
     afp-logintest-afp34:
-      name: AFP login test - AFP 3.4
+      name: AFP login test AFP 3.4 - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -380,7 +532,7 @@ jobs:
 
 
     afp-logintest-afp21:
-      name: AFP login test - AFP 2.1
+      name: AFP login test AFP 2.1 - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -397,7 +549,7 @@ jobs:
 
 
     afp-lantest:
-      name: AFP lantest
+      name: AFP lantest - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
@@ -415,7 +567,7 @@ jobs:
 
 
     afp-speedtest:
-      name: AFP speedtest
+      name: AFP speedtest - Alpine
       needs: build-container-testsuite
       runs-on: ubuntu-latest
       timeout-minutes: 5
