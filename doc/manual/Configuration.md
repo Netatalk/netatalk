@@ -782,11 +782,17 @@ or ACL_GROUP stay intact.
 
 Netatalk includes a nifty filesystem change event (FCE) mechanism where
 afpd processes notify interested listeners about certain filesystem
-event by UDP network datagrams.
+events by UDP network datagrams.
 
-For the format of the UDP packets and for an example C application that
-demonstrates how to use these in a listener, take a look at the Netatalk
-source file `bin/misc/fce.c`.
+This feature is disabled by default. To enable it, set the **fce listener**
+option in afp.conf to the hostname or IP address of the host that should
+listen for FCE events.
+
+Netatalk distributes a simple FCE listener application called **fce_listen**.
+It will print out any UDP datagrams received from the AFP server.
+Its source code also serves as documentation for the format of the UDP packets.
+
+### FCE v1
 
 The currently supported FCE v1 events are:
 
@@ -800,7 +806,10 @@ The currently supported FCE v1 events are:
 
 - directory creation (dcre)
 
-When using FCE v2 you also get:
+### FCE v2
+
+FCE v2 events provide additional context such as the user who performed the
+action. When using FCE v2 you also get the following events:
 
 - file moving (fmov)
 
