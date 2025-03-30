@@ -100,7 +100,7 @@ static void usage_mv(void)
         "Move files around within an AFP volume, updating the CNID\n"
         "database as needed. If either:\n"
         " - source or destination is not an AFP volume\n"
-        " - source volume != destinatio volume\n"
+        " - source volume != destination volume\n"
         "the files are copied and removed from the source.\n\n"
         "The following options are available:\n\n"
         "   -f   Do not prompt for confirmation before overwriting the destination\n"

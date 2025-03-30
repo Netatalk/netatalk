@@ -269,6 +269,7 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
 
     EC_NULL(rpath = rel_path_in_vol(path, vol->vol->v_path));
     EC_NULL(statpath = bfromcstr(vol->vol->v_path));
+    EC_ZERO(bconchar(statpath, '/'));
 
     l = bsplit(rpath, '/');
     if (l->qty == 1)
