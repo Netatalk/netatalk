@@ -5,6 +5,7 @@ on:
           - "**.md"
           - "**/COPYING"
           - "**/README*"
+          - ".github/workflows/build.yml"
           - "contrib/webmin_module/**"
           - "COPYRIGHT"
     pull_request:
@@ -13,6 +14,7 @@ on:
           - "**.md"
           - "**/COPYING"
           - "**/README*"
+          - ".github/workflows/build.yml"
           - "contrib/webmin_module/**"
           - "COPYRIGHT"
 
