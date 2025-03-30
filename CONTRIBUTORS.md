@@ -253,6 +253,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Stuart Henderson
 - Antoine Jacoutot <ajacoutot@openbsd.org>
 - Rob Mitchelmore
+- Sergey Fedorov <vital.had@gmail.com>
 
 ### macipgw
 
