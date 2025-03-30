@@ -437,7 +437,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1.1.8
+        uses: vmactions/freebsd-vm@v1.1.9
         with:
           copyback: false
           prepare: |
