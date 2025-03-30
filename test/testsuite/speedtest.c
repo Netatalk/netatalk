@@ -63,6 +63,8 @@ int PassCount = 0;
 int FailCount = 0;
 int SkipCount = 0;
 int NotTestedCount = 0;
+char FailedTests[1024][256] = {{0}};
+char NotTestedTests[1024][256] = {{0}};
 
 struct vfs {
 	unsigned int (*getfiledirparams)(CONN *, uint16_t , int , char *, uint16_t, uint16_t);

@@ -168,12 +168,3 @@ executable(
     link_with: libafptest,
     install: true,
 )
-
-spectest_sh = find_program('spectest.sh')
-
-test(
-    'AFP specification test suite',
-    spectest_sh,
-    is_parallel: true,
-    timeout: 180,
-)

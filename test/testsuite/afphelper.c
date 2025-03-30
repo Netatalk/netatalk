@@ -942,7 +942,7 @@ void exit_test(char *name)
 
 	switch (CurTestResult) {
 	case 0:
-		PassCount += 1;
+		PassCount++;
 		if (Color) {
 			s = ANSI_BGREEN "PASSED" ANSI_NORMAL;
 		} else {
@@ -950,7 +950,9 @@ void exit_test(char *name)
 		}
 		break;
 	case 1:
-		FailCount += 1;
+		strlcpy(FailedTests[FailCount], name, 255);
+		FailedTests[FailCount][255] = '\0';
+		FailCount++;
 		if (Color) {
 			s = ANSI_BRED "FAILED" ANSI_NORMAL;
 		} else {
@@ -961,7 +963,9 @@ void exit_test(char *name)
         fflush(stdout);
 		return;
 	case 2:
-		NotTestedCount += 1;
+		strlcpy(NotTestedTests[NotTestedCount], name, 255);
+		NotTestedTests[NotTestedCount][255] = '\0';
+		NotTestedCount++;
 		if (Color) {
 			s = ANSI_BYELLOW "NOT TESTED" ANSI_NORMAL;
 		} else {
@@ -969,7 +973,7 @@ void exit_test(char *name)
 		}
 		break;
 	case 3:
-		SkipCount += 1;
+		SkipCount++;
 		s = skipped_msg_buf;
 		break;
 	}
