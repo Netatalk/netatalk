@@ -1045,8 +1045,7 @@ endif
 # Check for Extended Attributes support
 #
 
-netatalk_ea = '"ad'
-ea_summary = 'AppleDouble'
+netatalk_ea = 'ad'
 attr = cc.find_library('attr', required: false)
 
 if host_os == 'sunos'
@@ -1122,13 +1121,10 @@ else
 endif
 
 if have_ea
-    netatalk_ea += ' | sys"'
-    ea_summary += ', filesystem EA'
-else
-    netatalk_ea += '"'
+    netatalk_ea += ' | sys'
 endif
 
-cdata.set('EA_MODULES', netatalk_ea)
+cdata.set('EA_MODULES', '"' + netatalk_ea + '"')
 
 # Do xattr functions take additional options like on Darwin?
 
@@ -1466,7 +1462,10 @@ if not get_option('with-cnid-last-backend')
     use_last_backend = false
 else
     use_last_backend = true
-    cnid_backends += ' last'
+    if cnid_backends != ''
+        cnid_backends += ' | '
+    endif
+    cnid_backends += 'last'
     cdata.set('CNID_BACKEND_LAST', 1)
 endif
 
@@ -1491,7 +1490,10 @@ if get_option('with-cnid-mysql-backend')
         )
     endif
     if use_mysql_backend
-        cnid_backends += ' mysql'
+        if cnid_backends != ''
+            cnid_backends += ' | '
+        endif
+        cnid_backends += 'mysql'
         cdata.set('CNID_BACKEND_MYSQL', 1)
     endif
 endif
@@ -1571,7 +1573,7 @@ else
     )
 
     if have_pam
-        uams_options += 'PAM '
+        uams_options += 'pam'
         # Debian/SuSE
         if fs.exists(pam_d_dir / 'common-auth')
             cdata.set('PAM_DIRECTIVE', 'include')
@@ -1660,8 +1662,14 @@ if host_os == 'darwin'
     warning('non-PAM authentication currently not supported on macOS')
 elif cc.has_header('shadow.h')
     cdata.set('SHADOWPW', 1)
+    if uams_options != ''
+        uams_options += ' | '
+    endif
     uams_options += 'shadow'
 elif have_crypt or have_crypt_checkpass
+    if uams_options != ''
+        uams_options += ' | '
+    endif
     uams_options += 'passwd'
 endif
 
@@ -2338,7 +2346,7 @@ summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:
 summary_info = {
     '  Access control': uams_options,
     '  CNID backends': summary_backends,
-    '  Extended Attributes': ea_summary,
+    '  Extended Attributes': netatalk_ea,
     '  Init script style': init_style,
 }
 summary(summary_info, bool_yn: true, section: '  Options:')
