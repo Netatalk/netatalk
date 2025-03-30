@@ -16,6 +16,8 @@ int FailCount = 0;
 int SkipCount = 0;
 int NotTestedCount = 0;
 
+char FailedTests[1024][256] = {{0}};
+char NotTestedTests[1024][256] = {{0}};
 
 #define FN(a) a ## _test
 #define EXT_FN(a) extern void FN(a) (void)
@@ -574,13 +576,26 @@ int ret;
 		FPLogOut(Conn2);
 	}
 
-    fprintf(stdout,"===================\n");
-    fprintf(stdout,"TEST RESULT SUMMARY\n");
-    fprintf(stdout,"-------------------\n");
+    fprintf(stdout, "=====================\n");
+    fprintf(stdout, " TEST RESULT SUMMARY\n");
+    fprintf(stdout, "---------------------\n");
 	fprintf(stdout, "  Passed:     %d\n", PassCount);
 	fprintf(stdout, "  Failed:     %d\n", FailCount);
 	fprintf(stdout, "  Skipped:    %d\n", SkipCount);
 	fprintf(stdout, "  Not tested: %d\n", NotTestedCount);
+
+	if (FailCount) {
+		fprintf(stdout, "\n  Failed tests:\n");
+		for (int i = 0; i < FailCount; i++) {
+			fprintf(stdout, "    %s\n", FailedTests[i]);
+		}
+	}
+	if (NotTestedCount) {
+		fprintf(stdout, "\n  Not tested tests:\n");
+		for (int i = 0; i < NotTestedCount; i++) {
+			fprintf(stdout, "    %s\n", NotTestedTests[i]);
+		}
+	}
 
 	return ExitCode;
 }

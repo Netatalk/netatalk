@@ -79,19 +79,9 @@ path = /tmp/afptest2
 valid users = @afpusers
 #<<<<<<<<
 
-For testing with a Mac, same config (user1 or user2 are not owner)
-
-meson test
-----------
-
-You can also run the complete spectest (one user, two users, local access) with
-`meson test`. To do so, run:
-- `cd build && meson test` once in order to generate a boilerplate config file "spectest.conf"
-- edit "build/test/testsuite/spectest.conf" to suit your needs
-- run `meson test` again
-
 Return Codes
 ------------
+
 0 PASSED
 1 FAILED
 2 NOT TESTED - a test setup step or precondition check failed
@@ -102,12 +92,11 @@ Note that SKIPPED is treated as an overall return code 0 for the purpose of test
 Spectest and logintest shall return the same results whether they are run
 on a Mac server or afpd.
 
-Example:
---------
+Example
+-------
+
 Run tier 1 spec tests on server 192.168.2.123
 afp_spectest -h 192.168.2.123 -u user1 -d user2 -s volume1 -S volume2 -w toto
-Same but on a Mac
-afp_spectest -m -h 192.168.2.64 -u user1 -d user2 -s volume1 -w toto
 
 Run tier 2 T2FPMoveAndRename tests with AFP 3.0, running locally on the host.
 afp_spectest -f T2FPMoveAndRename_test -3 -h 127.0.0.1 -u user1 -d user2 -w toto -s volume1 -S volume2 -c /tmp/afptest1
