@@ -1,3 +1,69 @@
+Changes in 4.2.0
+================
+* NEW: Link with shared iniparser library instead of vendored one, GitHub #1948
+       - Makes iniparser a mandatory dependency
+       - Our own hacked iniparser is now removed, which has a few side effects
+       - Volume section names are now case insensitive, forced to lower case
+       - The include directive is no longer supported (for now)
+* NEW: afpd: Introduce apf.conf 'volume name' Volume option, GitHub #1976
+* NEW: afpd: Introduce 'server name' Global option in afp.conf, GitHub #1974
+* NEW: docs: Convert documentation from XML to Markdown format,
+       introducing cmark dependency instead of docbook-xsl, GitHub #1905
+* NEW: docs: Generate local html manual with only core pages, GitHub #1969
+* NEW: docker: Introduce dropbox mode option for guest access, GitHub #1981
+* NEW: docker: New and improved env variable options including debug mode,
+       GitHub #1977, #1979
+* UPD: Control metadata settings with 'ea' solely,
+       removing 'appledouble' option, GitHub #1983
+* UPD: afpd: Use servername for ASP connections with hostname fallback,
+       GitHub #1978
+* UPD: afpd: Refactor FCE file skip logic, make comma the standard delineator,
+       GitHub #1997
+* UPD: libatalk: Use getaddrinfo() instead of deprecated gethostbyname(),
+       GitHub #1934
+* UPD: meson: Introduce with-unicode-data option to build case tables,
+       GitHub #1928
+* UPD: meson: Clean up obsoleted compatibility macros, GitHub #2035
+* UPD: meson: Cross-platform crypt library detection, GitHub #2036
+* UPD: Improve and harden the FCE listener app,
+       rename it to fce_listen and install with Meson, GitHub #2063
+* FIX: afpd: Register FCE file creation event when copying files, GitHub #2027
+* FIX: afpd: Use getpwnam_shadow() for basic auth on OpenBSD, GitHub #2040
+* FIX: libatalk: Use unspecified network stack by default on OpenBSD,
+       GitHub #2044
+* FIX: uams: Support for OpenBSD flavor crypt_checkpass()
+       for password validation, GitHub #2037
+* FIX: Fix ad cp loss of FinderInfo, GitHub #2058
+* FIX: Fix for CNID error with ad mv utility, GitHub #2060
+* FIX: Apply additional hardening to the Netatalk Metadata EA handling,
+       GitHub #2059
+* FIX: Avoid TOCTOU race conditions in libatalk code, GitHub #1938, #1936
+* FIX: Fix high severity memory safety bugs, GitHub #1966
+* FIX: Protect against memory leaks and out of bounds array access,
+       GitHub #1989
+* FIX: bstrlib: Protect against buffer overflow, null pointer dereference,
+       GitHub #1987
+* FIX: libatalk: Refactor vfs write_ea() to avoid TOCTOU race condition,
+       GitHub #1965
+* FIX: libatalk: Refactor vfs ea_open() to avoid TOCTOU race condition,
+       GitHub #1964
+* FIX: uams: Check account validity after calling pam_authenticate(),
+       GitHub #1935
+* FIX: uams: Validate PAM account after root auth in DHX2 UAM, GitHub #1937
+* FIX: uams: Return properly when ClearTxt shadow password has expired,
+       GitHub #2041
+* FIX: getzones: do not attempt to bind to the address we're also sending to,
+       GitHub #2051
+* FIX: libatalk: Improved logging when charset conversion fails,
+       GitHub #1952
+* FIX: webmin: Add RandNum UAM option to Global config, GitHub #2047
+* REM: Remove traces of unsupported LDAP SASL auth, GitHub #1925
+* REM: Remove standards.h with macros that are defined by the build system,
+       GitHub #1988
+* REM: Eliminate obsoleted NO_REAL_USER_NAME capability flag macro,
+       GitHub #2018
+* REM: meson: Remove legacy IRIX XFS extended attributes API, GitHub #2052
+
 Changes in 4.1.2
 ================
 * UPD: meson: Look for shared Berkeley DB library in versioned subdir too,
