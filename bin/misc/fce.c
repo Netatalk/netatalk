@@ -34,67 +34,119 @@ static char *fce_ev_names[] = {
     "FCE_LOGOUT"
 };
 
-static int unpack_fce_packet(unsigned char *buf, struct fce_packet *packet)
+static int unpack_fce_packet(unsigned char *buf, size_t buflen, struct fce_packet *packet)
 {
-    unsigned char *p = buf;
-    uint16_t uint16 _U_;
-    uint32_t uint32 _U_;
-    uint64_t uint64 _U_;
+    const unsigned char *p = buf;
+    const unsigned char *end = buf + buflen;
 
+    /* Check if we have enough data for the magic number */
+    if (p + sizeof(packet->fcep_magic) > end)
+        return -1;
     memcpy(&packet->fcep_magic[0], p, sizeof(packet->fcep_magic));
     p += sizeof(packet->fcep_magic);
 
+    /* Check if we have enough data for the version */
+    if (p + 1 > end)
+        return -1;
     packet->fcep_version = *p++;
 
-    if (packet->fcep_version > 1)
+    if (packet->fcep_version > 1) {
+        /* Check if we have enough data for options */
+        if (p + 1 > end)
+            return -1;
         packet->fcep_options = *p++;
+    } else {
+        packet->fcep_options = 0;
+    }
 
+    /* Check if we have enough data for the event */
+    if (p + 1 > end)
+        return -1;
     packet->fcep_event = *p++;
 
-    if (packet->fcep_version > 1)
+    if (packet->fcep_version > 1) {
         /* padding */
+        if (p + 1 > end)
+            return -1;
         p++;
 
-    if (packet->fcep_version > 1)
         /* reserved */
+        if (p + 8 > end)
+            return -1;
         p += 8;
+    }
 
+    /* Check if we have enough data for event_id */
+    if (p + sizeof(packet->fcep_event_id) > end)
+        return -1;
     memcpy(&packet->fcep_event_id, p, sizeof(packet->fcep_event_id));
     p += sizeof(packet->fcep_event_id);
     packet->fcep_event_id = ntohl(packet->fcep_event_id);
 
     if (packet->fcep_options & FCE_EV_INFO_PID) {
+        /* Check if we have enough data for pid */
+        if (p + sizeof(packet->fcep_pid) > end)
+            return -1;
         memcpy(&packet->fcep_pid, p, sizeof(packet->fcep_pid));
         packet->fcep_pid = hton64(packet->fcep_pid);
         p += sizeof(packet->fcep_pid);
     }
 
     if (packet->fcep_options & FCE_EV_INFO_USER) {
+        /* Check if we have enough data for userlen */
+        if (p + sizeof(packet->fcep_userlen) > end)
+            return -1;
         memcpy(&packet->fcep_userlen, p, sizeof(packet->fcep_userlen));
         packet->fcep_userlen = ntohs(packet->fcep_userlen);
         p += sizeof(packet->fcep_userlen);
 
+        /* Validate userlen to prevent overflow */
+        if (packet->fcep_userlen >= sizeof(packet->fcep_user))
+            return -1;
+
+        /* Check if we have enough data for user */
+        if (p + packet->fcep_userlen > end)
+            return -1;
         memcpy(&packet->fcep_user[0], p, packet->fcep_userlen);
         packet->fcep_user[packet->fcep_userlen] = 0; /* 0 terminate strings */
         p += packet->fcep_userlen;
     }
 
-    /* path */
+    /* Check if we have enough data for pathlen1 */
+    if (p + sizeof(packet->fcep_pathlen1) > end)
+        return -1;
     memcpy(&packet->fcep_pathlen1, p, sizeof(packet->fcep_pathlen1));
     p += sizeof(packet->fcep_pathlen1);
     packet->fcep_pathlen1 = ntohs(packet->fcep_pathlen1);
 
+    /* Validate pathlen1 to prevent overflow */
+    if (packet->fcep_pathlen1 >= sizeof(packet->fcep_path1))
+        return -1;
+
+    /* Check if we have enough data for path1 */
+    if (p + packet->fcep_pathlen1 > end)
+        return -1;
     memcpy(&packet->fcep_path1[0], p, packet->fcep_pathlen1);
     packet->fcep_path1[packet->fcep_pathlen1] = 0; /* 0 terminate strings */
     p += packet->fcep_pathlen1;
 
     if (packet->fcep_options & FCE_EV_INFO_SRCPATH) {
+        /* Check if we have enough data for pathlen2 */
+        if (p + sizeof(packet->fcep_pathlen2) > end)
+            return -1;
         memcpy(&packet->fcep_pathlen2, p, sizeof(packet->fcep_pathlen2));
         p += sizeof(packet->fcep_pathlen2);
         packet->fcep_pathlen2 = ntohs(packet->fcep_pathlen2);
+
+        /* Validate pathlen2 to prevent overflow */
+        if (packet->fcep_pathlen2 >= sizeof(packet->fcep_path2))
+            return -1;
+
+        /* Check if we have enough data for path2 */
+        if (p + packet->fcep_pathlen2 > end)
+            return -1;
         memcpy(&packet->fcep_path2[0], p, packet->fcep_pathlen2);
         packet->fcep_path2[packet->fcep_pathlen2] = 0; /* 0 terminate strings */
-        p += packet->fcep_pathlen2;
     }
 
     return 0;
@@ -108,22 +160,32 @@ int main(int argc, char **argv)
     struct addrinfo hints;
     struct addrinfo *servinfo;
     struct addrinfo *p;
-    int numbytes;
+    ssize_t numbytes;
     struct sockaddr_storage their_addr;
     unsigned char buf[MAXBUFLEN];
     socklen_t addr_len;
     char *host = strdup("localhost");
+    char *port = strdup(FCE_DEFAULT_PORT_STRING);
 
-    while ((c = getopt(argc, argv, "h:")) != -1) {
+    while ((c = getopt(argc, argv, "h:p:")) != -1) {
         switch(c) {
         case 'h':
-            free((void *)host);
+            if (host)
+                free((void *)host);
             host = strdup(optarg);
+            break;
+        case 'p':
+            if (port)
+                free((void *)port);
+            port = strdup(optarg);
             break;
         case '?':
         default:
-            fprintf(stderr, "Usage: %s [-h hostname]\n", argv[0]);
-            free((void *)host);
+            fprintf(stderr, "Usage: %s [-h hostname] [-p port]\n", argv[0]);
+            if (host)
+                free((void *)host);
+            if (port)
+                free((void *)port);
             return 1;
         }
     }
@@ -132,9 +194,10 @@ int main(int argc, char **argv)
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
     hints.ai_socktype = SOCK_DGRAM;
 
-    if ((rv = getaddrinfo(host, FCE_DEFAULT_PORT_STRING, &hints, &servinfo)) != 0) {
+    if ((rv = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
         free((void *)host);
+        free((void *)port);
         return 1;
     }
 
@@ -158,13 +221,15 @@ int main(int argc, char **argv)
     if (p == NULL) {
         fprintf(stderr, "listener: failed to bind socket\n");
         free((void *)host);
+        free((void *)port);
         return 2;
     }
 
+    printf("Listening for Netatalk FCE datagrams on %s:%s...\n", host, port);
+
     freeaddrinfo(servinfo);
     free((void *)host);
-
-    printf("listener: waiting to recvfrom...\n");
+    free((void *)port);
 
     addr_len = sizeof their_addr;
 
@@ -180,7 +245,10 @@ int main(int argc, char **argv)
             exit(1);
         }
 
-        unpack_fce_packet((unsigned char *)buf, &packet);
+        if (unpack_fce_packet((unsigned char *)buf, numbytes, &packet) < 0) {
+            fprintf(stderr, "Invalid FCE packet received\n");
+            continue;
+        }
 
         if (memcmp(packet.fcep_magic, FCE_PACKET_MAGIC, sizeof(packet.fcep_magic)) == 0) {
 

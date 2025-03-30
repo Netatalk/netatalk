@@ -45,6 +45,7 @@ afptest_staticmans = [
     'afp_spectest.1',
     'afp_speedtest.1',
     'afparg.1',
+    'fce_listen.1',
 ]
 
 foreach man : afptest_staticmans

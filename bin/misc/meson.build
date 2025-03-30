@@ -31,12 +31,12 @@ executable(
 )
 
 executable(
-    'fce',
+    'fce_listen',
     fce_sources,
     include_directories: root_includes,
     link_with: libatalk,
     dependencies: [iniparser, mysqlclient, misc_deps],
-    install: false,
+    install: true,
 )
 
 afpldaptest_deps = [iniparser]

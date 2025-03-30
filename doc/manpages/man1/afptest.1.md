@@ -1,6 +1,6 @@
 # Name
 
-afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg — AFP protocol tests
+afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg, fce_listen — AFP protocol tests
 
 # Synopsis
 
@@ -13,6 +13,8 @@ afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg — AFP protocol
 `afp_speedtest [-1234567aeiLnVvy] [-h host] [-p port] [-s volume] [-S volume2] [-u user] [-w password] [-n iterations] [-d size] [-q quantum] [-F file] [-f test]`
 
 `afparg [-1234567lVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-f command]`
+
+`fce_listen [-h host] [-p port]`
 
 # Description
 
@@ -43,6 +45,10 @@ handful of available test cases.
 **afparg**` is an AFP CLI client that takes a specific command with
 optional arguments, and sends a single action to the AFP server. This
 can be used for one-off troubleshooting or system administration.
+
+**fce_listen** is a simple listener for Netatalk's Filesystem Change Event
+(FCE) protocol. It will print out any UDP datagrams received from the AFP
+server.
 
 Please refer to the helptext of each tool for the precise use of each
 option.
