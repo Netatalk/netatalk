@@ -18,9 +18,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+echo "*** Setting up environment"
+
 set -e
 
 [ -n "$DEBUG_ENTRY_SCRIPT" ] && set -x
+
+DISTRO="unknown"
+if [ -f /etc/os-release ]; then
+    DISTRO=`grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"'`
+    echo "Detected Linux distribution: $DISTRO"
+else
+    echo "WARNING: /etc/os-release not found; are we running on Linux?"
+fi
 
 echo "*** Setting up users and groups"
 
@@ -37,18 +47,32 @@ if [ -z "$AFP_GROUP" ]; then
     exit 1
 fi
 
-uidcmd=""
-gidcmd=""
-if [ -n "$AFP_UID" ]; then
-    uidcmd="-u $AFP_UID"
-fi
-if [ -n "$AFP_GID" ]; then
-    gidcmd="-g $AFP_GID"
-fi
 
-adduser $uidcmd --no-create-home --disabled-password "$AFP_USER" 2>/dev/null || true
-addgroup $gidcmd "$AFP_GROUP" 2>/dev/null || true
-addgroup "$AFP_USER" "$AFP_GROUP"
+if [ "$DISTRO" = "alpine" ]; then
+    uidcmd=""
+    gidcmd=""
+    if [ -n "$AFP_UID" ]; then
+        uidcmd="-u $AFP_UID"
+    fi
+    if [ -n "$AFP_GID" ]; then
+        gidcmd="-g $AFP_GID"
+    fi
+    adduser $uidcmd --no-create-home --disabled-password "$AFP_USER" 2>/dev/null || true
+    addgroup $gidcmd "$AFP_GROUP" 2>/dev/null || true
+    addgroup "$AFP_USER" "$AFP_GROUP"
+else
+    cmd=""
+    if [ ! -z "$AFP_UID" ]; then
+        cmd="$cmd --uid $AFP_UID"
+    fi
+    if [ ! -z "$AFP_GID" ]; then
+        cmd="$cmd --gid $AFP_GID"
+        groupadd --gid $AFP_GID $AFP_USER 2> /dev/null || true
+    fi
+    adduser $cmd --no-create-home --disabled-password --gecos '' "$AFP_USER" 2> /dev/null || true
+    groupadd $AFP_GROUP 2> /dev/null || true
+    usermod -aG $AFP_GROUP $AFP_USER 2> /dev/null || true
+fi
 
 echo "$AFP_USER:$AFP_PASS" | chpasswd
 
@@ -63,10 +87,19 @@ fi
 
 # Optional second user
 if [ -n "$AFP_DROPBOX" ]; then
-    addgroup nobody "$AFP_GROUP"
+    if [ "$DISTRO" = "alpine" ]; then
+        addgroup nobody "$AFP_GROUP"
+    else
+        usermod -aG $AFP_GROUP nobody 2> /dev/null || true
+    fi
 elif [ -n "$AFP_USER2" ]; then
-    adduser --no-create-home --disabled-password "$AFP_USER2" 2>/dev/null || true
-    addgroup "$AFP_USER2" "$AFP_GROUP"
+    if [ "$DISTRO" = "alpine" ]; then
+        adduser --no-create-home --disabled-password "$AFP_USER2" 2>/dev/null || true
+        addgroup "$AFP_USER2" "$AFP_GROUP"
+    else
+        adduser --no-create-home --disabled-password --gecos '' "$AFP_USER2" 2> /dev/null || true
+        usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
+    fi
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd
     if ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2"; then
         echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
@@ -95,8 +128,13 @@ if [ -n "$AFP_DROPBOX" ] && [ -z "$SHARE2_NAME" ]; then
 fi
 
 echo "*** Removing residual lock files"
-mkdir -p /run/lock
-rm -f /run/lock/netatalk /run/lock/atalkd /run/lock/papd
+
+if [ "$DISTRO" = "alpine" ]; then
+    mkdir -p /run/lock
+    rm -f /run/lock/netatalk /run/lock/atalkd /run/lock/papd
+else
+    rm -f /var/lock/netatalk /var/lock/atalkd /var/lock/papd
+fi
 
 echo "*** Configuring Netatalk"
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
