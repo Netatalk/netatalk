@@ -248,6 +248,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Antonio Pastor
 - Eric Knibbe
 - Eric Helgeson <erichelgeson@gmail.com>
+- sqrmax
 - Nils Frohberg
 - Johan Huldtgren
 - Stuart Henderson
