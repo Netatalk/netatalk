@@ -72,7 +72,7 @@ print &ui_table_start($text{'edit_global_section_title_table'}, 'width="100%"', 
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'server name', \%in);
 print &ui_table_row($text{'edit_global_section_server_name'},
-	&ui_textbox('p_server_name', $values[0], 30)
+	&ui_textbox('p_server name', $values[0], 30)
 	." ".$text{'edit_global_section_server_name_default'}
 );
 
