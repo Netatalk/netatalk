@@ -9,10 +9,14 @@ The reporter of an accepted and patched vulnerability will be given credit in th
 This table indicates the Netatalk release series that are currently guaranteed to get security patches.
 Project policy is to support a release series with security patches up to 12 months after a superseding stable release.
 
+We actively support up to the two latest minor feature release versions in a major release series.
+For instance, if 4.0 and 4.1 are supported, and we release 4.2, then support for 4.0 is stopped.
+
 | Version | Supported          | Planned End of Life |
 | ------- | ------------------ | ------------------- |
-| 4.1.x   | ✓                  | Active development  |
-| 4.0.x   | ✓                  | Jan 10, 2026        |
+| 4.2.x   | ✓                  | Active development  |
+| 4.1.x   | ✓                  | Mar 31, 2026        |
+| 4.0.x   | X                  | -                   |
 | 3.2.x   | ✓                  | Sep 28, 2025        |
 | 3.1.x   | ✓                  | May 31, 2025        |
 | 3.0.x   | X                  | -                   |
