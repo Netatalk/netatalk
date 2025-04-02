@@ -8,9 +8,11 @@
 [Homes]
 basedir regex = @homedir@
 
-; [My AFP Volume]
+; [my volume]
 ; path = /path/to/volume
+; volume name = My AFP Volume
 
-; [My Time Machine Volume]
+; [my backup]
 ; path = /path/to/backup
 ; time machine = yes
+; volume name = My Backup Volume
