@@ -8,7 +8,6 @@ headers = [
     'bstrlib.h',
     'cnid.h',
     'ddp.h',
-    'dictionary.h',
     'ea.h',
     'globals.h',
     'hash.h',
