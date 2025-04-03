@@ -49,13 +49,15 @@ endif
 
 cups_libdir = ''
 
-if host_os in ['netbsd']
+if get_option('with-cups-libdir-path') != ''
+    cups_libdir = get_option('with-cups-libdir-path')
+elif host_os in ['netbsd']
     cups_libdir = '/usr/pkg/libexec'
-elif host_os in ['linux']
+else
     cups_libdir = '/usr/lib'
 endif
 
-if have_appletalk and have_cups and cups_libdir != ''
+if have_appletalk and have_cups and get_option('with-cups-pap-backend')
     configure_file(
         input: 'pap.in',
         output: 'pap',
