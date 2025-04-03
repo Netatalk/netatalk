@@ -51,6 +51,7 @@ index_volumes=Volumes
 index_create_volume_link_name=Create new volume
 index_delete_volumes_button_title=Delete selected volumes
 index_no_volumes=No volumes defined
+index_col_title_vol_section=Volume ID
 index_col_title_vol_name=Volume name
 index_col_title_path=Path
 index_col_title_uses_preset=Uses preset
