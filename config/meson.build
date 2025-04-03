@@ -89,7 +89,9 @@ if (
     )
 endif
 
-install_data('README', install_dir: localstatedir / 'netatalk/CNID')
+if get_option('with-statedir-creation')
+    install_data('README', install_dir: localstatedir / 'netatalk/CNID')
+endif
 
 if have_pam
     subdir('pam')
