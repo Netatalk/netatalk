@@ -46,6 +46,12 @@ option(
     description: 'Enable CUPS support',
 )
 option(
+    'with-cups-pap-backend',
+    type: 'boolean',
+    value: true,
+    description: 'Install the pap backend for CUPS',
+)
+option(
     'with-appletalk',
     type: 'boolean',
     value: false,
@@ -236,6 +242,12 @@ option(
     type: 'string',
     value: '',
     description: 'Set location of cracklib dictionary',
+)
+option(
+    'with-cups-libdir-path',
+    type: 'string',
+    value: '',
+    description: 'Set path to the prefix of the CUPS library directory',
 )
 option(
     'with-dbus-daemon-path',
