@@ -71,7 +71,7 @@ if(@{$$afpconf{volumePresetSections}}) {
 			$text{'index_col_title_used_by'}
 		], undef, 0, undef, undef
 	);
-	foreach $volumeSection (@{$$afpconf{volumePresetSections}}) {
+	foreach $volumeSection (sort {lc($a->{name}) cmp lc($b->{name})} @{$$afpconf{volumePresetSections}}) {
 		print &ui_columns_row( [
 				&ui_checkbox('section_index', $$volumeSection{'index'}),
 				"<a href=\"edit_vol_section.cgi?action=edit_volume_preset&tab=global&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
@@ -158,7 +158,7 @@ if (@atalk_ifs) {
 			$text{'show_atalk_zone'}
 		], undef, 0, undef, undef);
         my $index = 0;
-	foreach $if (@atalk_ifs) {
+	foreach $if (sort {lc($a->{atalk_iface}) cmp lc($b->{atalk_iface})} @atalk_ifs) {
 		print &ui_columns_row([
 			&ui_checkbox('section_index', $if->{atalk_iface}),
 			"<a href=\"edit_atalk.cgi?action=edit&index=".$index."\">"
@@ -246,7 +246,7 @@ if(@{$$afpconf{volumeSections}}) {
 			$text{'index_col_title_uses_preset'}
 		], undef, 0, undef, undef
 	);
-	foreach $volumeSection (@{$$afpconf{volumeSections}}) {
+	foreach $volumeSection (sort {lc($a->{name}) cmp lc($b->{name})} @{$$afpconf{volumeSections}}) {
 		print &ui_columns_row( [
 				&ui_checkbox('section_index', $$volumeSection{'index'}),
 				"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
