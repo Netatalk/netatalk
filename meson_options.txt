@@ -166,6 +166,12 @@ option(
     description: 'Enable Spotlight support',
 )
 option(
+    'with-statedir-creation',
+    type: 'boolean',
+    value: true,
+    description: 'Create the Netatalk state directories if they do not exist',
+)
+option(
     'with-tcp-wrappers',
     type: 'boolean',
     value: true,
