@@ -35,14 +35,15 @@ my $afpconfRef;
 my $sectionRef;
 
 my $tab;
-if (exists $in{'tab'}) {
-	$tab = $in{'tab'};
-} else {
-	$tab = "fileserver";
-}
 
 eval {
 	&ReadParse();
+
+	if (exists $in{'tab'}) {
+		$tab = $in{'tab'};
+	} else {
+		$tab = "fileserver";
+	}
 
 	# read afp.conf and check parameters
 	$afpconfRef = &read_afpconf();
