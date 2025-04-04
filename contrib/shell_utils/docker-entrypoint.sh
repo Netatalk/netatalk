@@ -203,10 +203,10 @@ fi
 
 # Configuring AppleTalk if enabled
 if [ -n "$ATALKD_INTERFACE" ]; then
-    echo "*** Configuring DDP"
+    echo "*** Configuring DDP services"
     echo "$ATALKD_INTERFACE $ATALKD_OPTIONS" > /usr/local/etc/atalkd.conf
     echo "cupsautoadd:op=root:" > /usr/local/etc/papd.conf
-    echo "*** Starting DDP services"
+    echo "*** Starting DDP services (this will take a minute)"
     cupsd
     atalkd
     papd
