@@ -237,7 +237,7 @@ if(@{$$afpconf{volumeSections}}) {
 		&select_all_link('section_index', $current_formindex),
 		&select_invert_link('section_index', $current_formindex)
 	) if(@{$$afpconf{volumeSections}} > 1);
-	print &ui_form_start('delete_sections.cgi', 'post', undef, "id='volumes'");
+	print &ui_form_start('delete_sections.cgi?tab=fileserver', 'post', undef, "id='volumes'");
 	print &ui_columns_start( [
 			'',
 			$text{'index_col_title_vol_section'},
