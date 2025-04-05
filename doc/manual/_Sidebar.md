@@ -6,6 +6,8 @@ Manual
 * [Configuration](Configuration.html)
 * [AppleTalk](AppleTalk.html)
 * [Upgrading](Upgrading.html)
+* [Compilation](Compilation.html)
+* [License](License.html)
 
 User Tools
 
@@ -50,8 +52,3 @@ Developer References
 * [atalk](atalk.html)
 * [atalk_aton](atalk_aton.html)
 * [nbp_name](nbp_name.html)
-
-Appendices
-
-* [Compilation](Compilation.html)
-* [License](License.html)
