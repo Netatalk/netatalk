@@ -108,8 +108,10 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
 
     memset(vol, 0, sizeof(afpvol_t));
 
+    become_root();
     if ((vol->vol = getvolbypath(obj, path)) == NULL)
         return -1;
+    unbecome_root();
 
     if (STRCMP(vol->vol->v_cnidscheme, != , "dbd"))
         ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->vol->v_path);
