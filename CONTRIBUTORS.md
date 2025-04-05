@@ -204,6 +204,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Dave Horlick
 - Ruben Kerkhof
 - Michael Witten
+- Jason
 
 ### Documentation: Version 2.1 - 3.1
 
