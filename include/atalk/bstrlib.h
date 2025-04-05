@@ -172,7 +172,7 @@ typedef size_t (* bNread) (void *buff, size_t elsize, size_t nelem, void *parm);
 /* Input functions */
 extern bstring bgetstream (bNgetc getcPtr, void * parm, char terminator);
 extern bstring bread (bNread readPtr, void * parm);
-extern int bgetsa (bstring b, bNgetc getcPtr, void * parm, char terminator);
+extern int bgetstreama (bstring b, bNgetc getcPtr, void * parm, char terminator);
 extern int bassigngets (bstring b, bNgetc getcPtr, void * parm, char terminator);
 extern int breada (bstring b, bNread readPtr, void * parm);
 

@@ -1973,7 +1973,7 @@ int c, d, e;
 	return d == 0 && c < 0;
 }
 
-/*  int bgetsa (bstring b, bNgetc getcPtr, void * parm, char terminator)
+/*  int bgetstreama (bstring b, bNgetc getcPtr, void * parm, char terminator)
  *
  *  Use an fgetc-like single character stream reading function (getcPtr) to
  *  obtain a sequence of characters which are concatenated to the end of the
@@ -1986,7 +1986,7 @@ int c, d, e;
  *  an empty partial result, 1 is returned.  If no characters are read, or
  *  there is some other detectable error, BSTR_ERR is returned.
  */
-int bgetsa (bstring b, bNgetc getcPtr, void * parm, char terminator) {
+int bgetstreama (bstring b, bNgetc getcPtr, void * parm, char terminator) {
 int c, d, e;
 
 	if (b == NULL || b->mlen <= 0 || b->slen < 0 || b->mlen < b->slen ||
@@ -2025,7 +2025,7 @@ int c, d, e;
 bstring bgetstream (bNgetc getcPtr, void * parm, char terminator) {
 bstring buff;
 
-	if (0 > bgetsa (buff = bfromcstr (""), getcPtr, parm, terminator) ||
+	if (0 > bgetstreama (buff = bfromcstr (""), getcPtr, parm, terminator) ||
 	    0 >= buff->slen) {
 		bdestroy (buff);
 		buff = NULL;
