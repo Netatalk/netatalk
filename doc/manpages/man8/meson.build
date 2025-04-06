@@ -38,6 +38,6 @@ endforeach
 
 if get_option('with-website')
     foreach page : manfiles
-        install_data(page + '.8.md', rename: page + '.md', install_dir: manual_install_path + '/en')
+        install_data(page + '.8.md', install_dir: manual_install_path + '/en')
     endforeach
 endif
