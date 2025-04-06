@@ -1,8 +1,8 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
-# Copyright (C) 2015-2017 HAT
-# Copyright (C) 2024-2025 Daniel Markstedt
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
