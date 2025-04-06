@@ -4,7 +4,7 @@
 #    Netatalk Webmin Module
 #    Copyright (C) 2000 Sven Mosimann/EcoLogic <sven.mosimann@ecologic.ch>
 #    Copyright (C) 2013 Ralph Boehme <sloowfranklin@gmail.com>
-#    Copyright (C) 2024 Daniel Markstedt <daniel@mindani>
+#    Copyright (C) 2024 Daniel Markstedt <daniel@mindani.net>
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by

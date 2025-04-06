@@ -2,7 +2,7 @@
 
 # Entry point script for netatalk docker container.
 # Copyright (C) 2023  Eric Harmon
-# Copyright (C) 2024-2025  Daniel Markstedt
+# Copyright (C) 2024-2025  Daniel Markstedt <daniel@mindani.net>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
