@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-05 19:29+0200\n"
+"POT-Creation-Date: 2025-04-06 12:31+0200\n"
 "PO-Revision-Date: 2025-01-24 23:25+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -63,67 +63,67 @@ msgstr "ユーザーツール"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[ad](ad.html)"
+msgid "[ad](ad.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[addump](addump.html)"
+msgid "[addump](addump.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[aecho](aecho.html)"
+msgid "[aecho](aecho.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[afpldaptest](afpldaptest.html)"
+msgid "[afpldaptest](afpldaptest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[afppasswd](afppasswd.html)"
+msgid "[afppasswd](afppasswd.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[afpstats](afpstats.html)"
+msgid "[afpstats](afpstats.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[afptest](afptest.html)"
+msgid "[afptest](afptest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[asip-status](asip-status.html)"
+msgid "[asip-status](asip-status.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[dbd](dbd.html)"
+msgid "[dbd](dbd.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[getzones](getzones.html)"
+msgid "[getzones](getzones.1.html)"
+msgstr "[ライセンス](License.html)"
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:27
+msgid "[macusers](macusers.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[macusers](macusers.html)"
+msgid "[nbp](nbp.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
-msgid "[nbp](nbp.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:27
-msgid "[pap](pap.html)"
+msgid "[pap](pap.1.html)"
 msgstr ""
 
 #. type: Plain text
@@ -133,32 +133,32 @@ msgstr "コンフィグファイル"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:36
-msgid "[afp_signature.conf](afp_signature.conf.html)"
+msgid "[afp_signature.conf](afp_signature.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:36
-msgid "[afp_voluuid.conf](afp_voluuid.conf.html)"
+msgid "[afp_voluuid.conf](afp_voluuid.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:36
-msgid "[afp.conf](afp.conf.html)"
+msgid "[afp.conf](afp.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:36
-msgid "[atalkd.conf](atalkd.conf.html)"
+msgid "[atalkd.conf](atalkd.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:36
-msgid "[extmap.conf](extmap.conf.html)"
+msgid "[extmap.conf](extmap.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:36
-msgid "[papd.conf](papd.conf.html)"
+msgid "[papd.conf](papd.conf.5.html)"
 msgstr ""
 
 #. type: Plain text
@@ -168,52 +168,52 @@ msgstr "デーモン及び管理ツール"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[a2boot](a2boot.html)"
+msgid "[a2boot](a2boot.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[afpd](afpd.html)"
+msgid "[afpd](afpd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[atalkd](atalkd.html)"
+msgid "[atalkd](atalkd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[cnid_dbd](cnid_dbd.html)"
+msgid "[cnid_dbd](cnid_dbd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[cnid_metad](cnid_metad.html)"
+msgid "[cnid_metad](cnid_metad.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[macipgw](macipgw.html)"
+msgid "[macipgw](macipgw.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[netatalk](netatalk.html)"
+msgid "[netatalk](netatalk.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[papd](papd.html)"
+msgid "[papd](papd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[papstatus](papstatus.html)"
+msgid "[papstatus](papstatus.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:49
-msgid "[timelord](timelord.html)"
+msgid "[timelord](timelord.8.html)"
 msgstr ""
 
 #. type: Plain text
@@ -223,15 +223,15 @@ msgstr "開発者参考資料"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:54
-msgid "[atalk](atalk.html)"
+msgid "[atalk](atalk.4.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:54
-msgid "[atalk_aton](atalk_aton.html)"
+msgid "[atalk_aton](atalk_aton.3.html)"
 msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:54
-msgid "[nbp_name](nbp_name.html)"
+msgid "[nbp_name](nbp_name.3.html)"
 msgstr ""
