@@ -4,17 +4,17 @@ afp_voluuid.conf — Configuration file used by afpd to specify UUID for AFP vol
 
 # Description
 
-**afp_voluuid.conf** is the configuration file used by **afpd** to specify
+**afp_voluuid.conf** is the configuration file used by **afpd** to store
 UUID of all AFP volumes. The configuration lines are composed like:
 
-<"volume-name"\> <uuid-string\>
+    "volume-name" "uuid-string"
 
-The first field is volume name. Volume names must be quoted if they
+The first field is the volume name. Volume names must be quoted if they
 contain spaces. The second field is the 36 character hexadecimal ASCII
 string representation of a UUID.
 
-The leading spaces and tabs are ignored. Blank lines are ignored. The
-lines prefixed with \# are ignored. The illegal lines are ignored.
+All leading spaces and tabs are ignored. Blank lines are ignored. The
+lines prefixed with \# are ignored. Any illegal lines are ignored.
 
 > **NOTE**
 
@@ -23,7 +23,7 @@ disambiguation of Time Machine volumes.
 
 > It is also used by the MySQL CNID backend.
 
-> This file should not be thoughtlessly edited and be copied onto another
+> This file should not be thoughtlessly edited or copied onto another
 server.
 
 # Examples
