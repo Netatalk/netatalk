@@ -437,7 +437,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1.1.9
+        uses: vmactions/freebsd-vm@v1.2.0
         with:
           copyback: false
           prepare: |
@@ -450,14 +450,14 @@ jobs:
               iniparser \
               libevent \
               libgcrypt \
+              localsearch \
               meson \
               mysql84-client \
               openldap26-client \
               p5-Net-DBus \
               perl5 \
               pkgconf \
-              talloc \
-              tracker3
+              talloc
           run: |
             set -e
             meson setup build \
