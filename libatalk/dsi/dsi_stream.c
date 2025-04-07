@@ -626,6 +626,10 @@ int dsi_stream_receive(DSI *dsi)
   dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), dsi->server_quantum);
   dsi->header.dsi_data.dsi_doff = MIN(dsi->header.dsi_data.dsi_doff, dsi->server_quantum);
 
+  /* Work around bug in ASC 3.7.x when client sends a zero byte AFPWrite() */
+  if (dsi->header.dsi_command == DSIFUNC_WRITE && !(dsi->header.dsi_data.dsi_doff))
+    dsi->header.dsi_data.dsi_doff = 12;
+
   /* Receiving DSIWrite data is done in AFP function, not here */
   if (dsi->header.dsi_data.dsi_doff) {
       LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: write request");
