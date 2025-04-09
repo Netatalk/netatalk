@@ -44,7 +44,6 @@ test_exit:
 
 
 /* ------------------------- */
-// FIXME: Broken as of at least 3.1.12
 STATIC void test399()
 {
 uint16_t vol = VolID;
@@ -52,6 +51,7 @@ uint16_t bitmap;
 DSI *dsi;
 char *file="test399_file";
 char *attr_name="test399_attribute";
+int remerror = AFPERR_NOITEM;
 
     dsi = &Conn->dsi;
 
@@ -69,6 +69,10 @@ char *attr_name="test399_attribute";
     if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_EXTATTRS)) {
         test_skipped(T_UTF8);
         goto test_exit;
+    }
+    /* AFP 3.4 sends AFPERR_NOITEM instead of AFPERR_MISC */
+    if (Conn->afp_version < 34) {
+        remerror = AFPERR_MISC;
     }
 
     bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
@@ -90,7 +94,7 @@ char *attr_name="test399_attribute";
 	FAIL(FPSetExtAttr(Conn, vol, DIRDID_ROOT, 4, file, attr_name, "test399_newdata"))
 	FAIL(FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name))
 	FAIL(FPRemoveExtAttr(Conn,vol, DIRDID_ROOT , 0, file, attr_name))
-	if (ntohl(AFPERR_MISC) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name)) {
+	if (ntohl(remerror) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name)) {
 		test_failed();
 	}
 	if (ntohl(AFPERR_MISC) != FPRemoveExtAttr(Conn,vol, DIRDID_ROOT , 0, file, attr_name))
@@ -175,8 +179,6 @@ void FPGetACL_test()
     ENTER_TESTSET
 
     test398();
-#if 0
     test399();
-#endif
     test432();
 }
