@@ -392,7 +392,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/dragonflybsd-vm@v1.1.0
+        uses: vmactions/dragonflybsd-vm@v1
         with:
           copyback: false
           usesh: true
@@ -437,7 +437,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1.2.0
+        uses: vmactions/freebsd-vm@v1
         with:
           copyback: false
           prepare: |
@@ -488,7 +488,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/netbsd-vm@v1.1.7
+        uses: vmactions/netbsd-vm@v1
         with:
           copyback: false
           prepare: |
@@ -541,7 +541,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/openbsd-vm@v1.1.6
+        uses: vmactions/openbsd-vm@v1
         with:
           copyback: false
           prepare: |
@@ -593,7 +593,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/omnios-vm@v1.0.8
+        uses: vmactions/omnios-vm@v1
         with:
           copyback: false
           prepare: |
@@ -647,7 +647,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Build on VM
-        uses: vmactions/solaris-vm@v1.0.7
+        uses: vmactions/solaris-vm@v1
         with:
           copyback: false
           prepare: |
