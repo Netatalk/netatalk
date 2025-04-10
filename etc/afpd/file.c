@@ -113,7 +113,9 @@ void *get_finderinfo(const struct vol *vol, const char *upath, struct adouble *a
         if (ad_open_native_finderinfo(upath, NativeFinderInfo))
         {
             memcpy(data, NativeFinderInfo, ADEDLEN_FINDERI);
-            chk_ext = 0;
+            /* default type ? */
+            if (!(default_type(data)))
+                chk_ext = 0;
         }
     }
 #endif
