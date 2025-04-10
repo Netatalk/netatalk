@@ -32,7 +32,7 @@ jobs:
   build-alpine:
     name: Alpine Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     container:
       image: alpine:latest
     steps:
@@ -97,7 +97,7 @@ jobs:
   build-archlinux:
     name: Arch Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     container:
       image: archlinux:latest
     steps:
@@ -147,7 +147,7 @@ jobs:
   build-debian:
     name: Debian Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     container:
       image: debian:latest
     steps:
@@ -214,7 +214,7 @@ jobs:
   build-fedora:
     name: Fedora Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     container:
       image: fedora:latest
     steps:
@@ -273,7 +273,7 @@ jobs:
   build-ubuntu:
     name: Ubuntu Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -341,7 +341,7 @@ jobs:
   build-macos:
     name: macOS
     runs-on: macos-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
@@ -385,7 +385,7 @@ jobs:
   build-dflybsd:
     name: DragonflyBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -430,7 +430,7 @@ jobs:
   build-freebsd:
     name: FreeBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -481,7 +481,7 @@ jobs:
   build-netbsd:
     name: NetBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -534,7 +534,7 @@ jobs:
   build-openbsd:
     name: OpenBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -586,7 +586,7 @@ jobs:
   build-omnios:
     name: OmniOS
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
@@ -640,7 +640,7 @@ jobs:
   build-solaris:
     name: Solaris
     runs-on: ubuntu-latest
-    timeout-minutes: 9
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
