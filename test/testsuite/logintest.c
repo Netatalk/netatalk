@@ -35,7 +35,7 @@ int     Mac = 0;
 char    *Test;
 static char  *vers = "AFP3.4";
 
-static void connect_server(CONN *conn)
+STATIC void connect_server(CONN *conn)
 {
 DSI *dsi;
 
@@ -53,7 +53,7 @@ DSI *dsi;
 }
 
 /* ------------------------- */
-static void test1(void)
+STATIC void test1(void)
 {
 	ENTER_TEST
 
@@ -72,7 +72,7 @@ static void test1(void)
 }
 
 /* ------------------------- */
-static void test2(void)
+STATIC void test2(void)
 {
 	ENTER_TEST
 
@@ -109,7 +109,7 @@ test_exit:
 }
 
 /* ------------------------- */
-static void test3(void)
+STATIC void test3(void)
 {
 static char *uam = "No User Authent";
 int ret;
@@ -149,7 +149,7 @@ test_exit:
 /* ------------------------- */
 // FIXME: when max connections is exceeded the server still returns
 // code DSIERR_OK and not DSIERR_TOOMANY (Netatalk 4.0.3, 3.1.12)
-static void test4(void)
+STATIC void test4(void)
 {
 CONN conn[50];
 int  i;
@@ -198,7 +198,7 @@ test_exit:
 }
 
 /* ------------------------- */
-static void test5(void)
+STATIC void test5(void)
 {
 static char *uam = "Cleartxt Passwrd";
 int ret;
@@ -229,7 +229,7 @@ test_exit:
 }
 
 /* ------------------------- */
-static void test6(void)
+STATIC void test6(void)
 {
 DSI *dsi;
 uint32_t i = 0;
