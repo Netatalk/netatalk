@@ -234,7 +234,7 @@ uint32_t i = 0;
 */
 unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
 {
-int ret;
+unsigned int ret;
 struct passwd *p = NULL;
 DSI *dsi;
 
@@ -258,7 +258,7 @@ DSI *dsi;
 */
 unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
 {
-int ret;
+unsigned int ret;
 struct passwd *p = NULL;
 DSI *dsi;
 
@@ -286,7 +286,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPLogOut(CONN *conn)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -301,7 +301,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPzzz(CONN *conn, int flag)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -316,7 +316,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -331,7 +331,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -346,7 +346,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPMapID(CONN *conn, char fn, int id)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -361,7 +361,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPMapName(CONN *conn, char fn, char *name )
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -376,7 +376,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPBadPacket(CONN *conn, char fn, char *name )
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -391,7 +391,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -407,7 +407,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetSrvrInfo(CONN *conn)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -422,7 +422,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetSrvrParms(CONN *conn)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -437,7 +437,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -477,7 +477,6 @@ uint16_t FPOpenVol(CONN *conn, char *vol)
 /* ------------------------------- */
 unsigned int FPCloseVol(CONN *conn, uint16_t vol)
 {
-int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -485,7 +484,7 @@ DSI *dsi;
 		fprintf(stdout,"[%s] Close Vol %d\n", __func__, vol);
 	}
 
-	ret  = AFPCloseVol(conn,vol);
+	AFPCloseVol(conn,vol);
 	dump_header(dsi);
 	return dsi->header.dsi_code;
 }
@@ -677,7 +676,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -693,7 +692,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap, struct afp_volume_parms *parms)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -709,7 +708,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPCloseDT(CONN *conn, uint16_t vol)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -724,7 +723,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPCloseFork(CONN *conn, uint16_t vol)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -739,7 +738,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPFlush(CONN *conn, uint16_t vol)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -754,7 +753,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPByteLock(CONN *conn, uint16_t fork, int end, int mode, int offset, int size )
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -771,7 +770,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode, off_t offset, off_t size )
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -788,7 +787,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPFlushFork(CONN *conn, uint16_t vol)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1390,7 +1389,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 */
 unsigned int FPDelete(CONN *conn, uint16_t vol, int did , char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1408,7 +1407,7 @@ DSI *dsi;
 */
 unsigned int FPGetComment(CONN *conn, uint16_t vol, int did , char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1426,7 +1425,7 @@ DSI *dsi;
 */
 unsigned int FPRemoveComment(CONN *conn, uint16_t vol, int did , char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1444,7 +1443,7 @@ DSI *dsi;
 */
 unsigned int FPAddComment(CONN *conn, uint16_t vol, int did , char *name, char *cmt)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1553,7 +1552,7 @@ DSI *dsi;
 /* ------------------------- */
 unsigned int FPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1569,7 +1568,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1585,7 +1584,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPGetAppl(CONN *conn, uint16_t dt, char *name, uint16_t index, uint16_t bitmap)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1601,7 +1600,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator, uint32_t tag, char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1617,7 +1616,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator, char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1633,7 +1632,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap, off_t size)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1786,7 +1785,7 @@ unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
 unsigned int FPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos, uint16_t f_bitmap, uint16_t d_bitmap,
                                 uint32_t rbitmap, struct afp_filedir_parms *filedir, struct afp_filedir_parms *filedir2)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -1803,7 +1802,7 @@ DSI *dsi;
 unsigned int FPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos, uint16_t f_bitmap, uint16_t d_bitmap,
                                 uint32_t rbitmap, struct afp_filedir_parms *filedir, struct afp_filedir_parms *filedir2)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2049,7 +2048,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size, char *data)
 {
-int ret;
+unsigned int ret;
 
 	if (!Quiet) {
 		fprintf(stdout,"[%s] send read header fork %d  offset %d size %d\n", __func__, fork , offset, size);
@@ -2063,7 +2062,7 @@ int ret;
 /* ------------------------------- */
 unsigned int FPReadFooter(DSI *dsi, uint16_t fork, int offset, int size, char *data)
 {
-int ret;
+unsigned int ret;
 
 	if (!Quiet) {
 		fprintf(stdout,"[%s] get read reply fork %d  offset %d size %d\n", __func__, fork , offset, size);
@@ -2078,7 +2077,7 @@ int ret;
 /* ------------------------------- */
 unsigned int FPRead(CONN *conn, uint16_t fork, long long offset, int size, char *data)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2096,7 +2095,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPRead_ext (CONN *conn, uint16_t fork, off_t offset, off_t size, char *data)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2114,7 +2113,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t size, char *data)
 {
-    int ret;
+    unsigned int ret;
     DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2132,7 +2131,7 @@ unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t siz
 /* ------------------------------- */
 unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size, char *data, char whence)
 {
-int ret;
+unsigned int ret;
 
 	if (!Quiet) {
 		fprintf(stdout,"[%s] send write header fork %d  offset %d size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
@@ -2146,7 +2145,7 @@ int ret;
 /* ------------------------------- */
 unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size, char *data, char whence)
 {
-int ret;
+unsigned int ret;
 
 	if (!Quiet) {
 		fprintf(stdout,"[%s] get write footer fork %d  offset %d size %d from 0x%x\n", __func__, fork , offset, size, (unsigned)whence);
@@ -2160,7 +2159,7 @@ int ret;
 /* ------------------------------- */
 unsigned int FPWrite(CONN *conn, uint16_t fork, long long offset, int size, char *data, char whence)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2177,8 +2176,8 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPWrite_ext(CONN *conn, uint16_t fork, off_t  offset, off_t size, char *data, char whence)
 {
-int ret;
-DSI *dsi;
+    unsigned int ret;
+    DSI *dsi;
 
 	dsi = &conn->dsi;
 
@@ -2194,7 +2193,7 @@ DSI *dsi;
 /* ------------------------------- */
 unsigned int FPWrite_ext_async(CONN *conn, uint16_t fork, off_t  offset, off_t size, char *data, char whence)
 {
-    int ret;
+    unsigned int ret;
     DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2209,7 +2208,7 @@ unsigned int FPWrite_ext_async(CONN *conn, uint16_t fork, off_t  offset, off_t s
 
 unsigned int FPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char *name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2225,7 +2224,7 @@ DSI *dsi;
 
 unsigned int FPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, uint16_t maxsize, char *name, char *attr)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2241,7 +2240,7 @@ DSI *dsi;
 
 unsigned int FPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, int maxsize, char* name)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2257,7 +2256,7 @@ DSI *dsi;
 
 unsigned int FPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char* name, char* attr, char* data)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;
@@ -2274,7 +2273,7 @@ DSI *dsi;
 
 unsigned int FPRemoveExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char* name, char* attr)
 {
-int ret;
+unsigned int ret;
 DSI *dsi;
 
 	dsi = &conn->dsi;

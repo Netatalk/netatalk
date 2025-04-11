@@ -5,7 +5,6 @@ extern unsigned int FPzzz(CONN *conn, int);
 extern unsigned int FPLogOut(CONN *conn);
 extern unsigned int FPMapID(CONN *conn, char fn, int id);
 extern unsigned int FPMapName(CONN *conn, char fn, char *name );
-extern unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did , char *name);
 extern unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token);
 extern unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token);
 
