@@ -232,7 +232,7 @@ uint32_t i = 0;
 	string UAM          uam
 
 */
-unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
+int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
 {
 int ret;
 struct passwd *p = NULL;
@@ -256,7 +256,7 @@ DSI *dsi;
 
 /* -------------
 */
-unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
+int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr, char *pwd)
 {
 int ret;
 struct passwd *p = NULL;
@@ -284,7 +284,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPLogOut(CONN *conn)
+int FPLogOut(CONN *conn)
 {
 int ret;
 DSI *dsi;
@@ -299,7 +299,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPzzz(CONN *conn, int flag)
+int FPzzz(CONN *conn, int flag)
 {
 int ret;
 DSI *dsi;
@@ -314,7 +314,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token)
+int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token)
 {
 int ret;
 DSI *dsi;
@@ -329,7 +329,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token)
+int FPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token)
 {
 int ret;
 DSI *dsi;
@@ -344,7 +344,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPMapID(CONN *conn, char fn, int id)
+int FPMapID(CONN *conn, char fn, int id)
 {
 int ret;
 DSI *dsi;
@@ -359,7 +359,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPMapName(CONN *conn, char fn, char *name )
+int FPMapName(CONN *conn, char fn, char *name )
 {
 int ret;
 DSI *dsi;
@@ -405,7 +405,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPGetSrvrInfo(CONN *conn)
+int FPGetSrvrInfo(CONN *conn)
 {
 int ret;
 DSI *dsi;
@@ -420,7 +420,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPGetSrvrParms(CONN *conn)
+int FPGetSrvrParms(CONN *conn)
 {
 int ret;
 DSI *dsi;
@@ -435,7 +435,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
+int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
 {
 int ret;
 DSI *dsi;
@@ -475,7 +475,7 @@ uint16_t FPOpenVol(CONN *conn, char *vol)
 }
 
 /* ------------------------------- */
-unsigned int FPCloseVol(CONN *conn, uint16_t vol)
+int FPCloseVol(CONN *conn, uint16_t vol)
 {
 int ret;
 DSI *dsi;
@@ -707,7 +707,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPCloseDT(CONN *conn, uint16_t vol)
+int FPCloseDT(CONN *conn, uint16_t vol)
 {
 int ret;
 DSI *dsi;
@@ -752,7 +752,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPByteLock(CONN *conn, uint16_t fork, int end, int mode, int offset, int size )
+int FPByteLock(CONN *conn, uint16_t fork, int end, int mode, int offset, int size )
 {
 int ret;
 DSI *dsi;
@@ -769,7 +769,7 @@ DSI *dsi;
 }
 
 /* ------------------------------- */
-unsigned int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode, off_t offset, off_t size )
+int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode, off_t offset, off_t size )
 {
 int ret;
 DSI *dsi;
@@ -802,7 +802,7 @@ DSI *dsi;
 
 /* -------------------------------
 */
-unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did)
+uint32_t FPCloseDir(CONN *conn, uint16_t vol, int did)
 {
 int ofs;
 DSI *dsi;
@@ -1509,7 +1509,7 @@ DSI *dsi;
 }
 
 /* -------------------------------- */
-unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did , char *name)
+int FPCreateDir(CONN *conn, uint16_t vol, int did , char *name)
 {
 int dir = 0;
 DSI *dsi;

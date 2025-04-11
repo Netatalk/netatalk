@@ -1528,7 +1528,7 @@ DSI *dsi;
 }
 
 /* ------------------------- */
-unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name)
+uint32_t AFPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name)
 {
 int ofs;
 DSI *dsi;

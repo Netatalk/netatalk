@@ -1,27 +1,26 @@
 /* -------------------------------- */
-extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd);
-extern unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr, char *pwd);
-extern unsigned int FPzzz(CONN *conn, int);
-extern unsigned int FPLogOut(CONN *conn);
-extern unsigned int FPMapID(CONN *conn, char fn, int id);
-extern unsigned int FPMapName(CONN *conn, char fn, char *name );
-extern unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did , char *name);
-extern unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token);
-extern unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token);
+extern int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd);
+extern int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr, char *pwd);
+extern int FPzzz(CONN *conn, int);
+extern int FPLogOut(CONN *conn);
+extern int FPMapID(CONN *conn, char fn, int id);
+extern int FPMapName(CONN *conn, char fn, char *name );
+extern int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token);
+extern int FPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token);
 
-extern unsigned int FPGetSrvrInfo(CONN *conn);
-extern unsigned int FPGetSrvrParms(CONN *conn);
-extern unsigned int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap);
+extern int FPGetSrvrInfo(CONN *conn);
+extern int FPGetSrvrParms(CONN *conn);
+extern int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap);
 
-extern uint16_t    FPOpenVol(CONN *conn, char *vol);
-extern uint16_t FPOpenVolFull(CONN *conn, char *vol, uint16_t  bitmap);
-extern unsigned int FPCloseVol(CONN *conn, uint16_t vol);
-extern uint16_t    FPOpenDT(CONN *conn, uint16_t vol);
-extern unsigned int FPCloseDT(CONN *conn, uint16_t vol);
-extern unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did);
+extern uint16_t FPOpenVol(CONN *conn, char *vol);
+extern uint16_t FPOpenVolFull(CONN *conn, char *vol, uint16_t bitmap);
+extern int FPCloseVol(CONN *conn, uint16_t vol);
+extern uint16_t FPOpenDT(CONN *conn, uint16_t vol);
+extern int FPCloseDT(CONN *conn, uint16_t vol);
+extern uint32_t FPCloseDir(CONN *conn, uint16_t vol, int did);
 
-extern unsigned int FPByteLock(CONN *conn, uint16_t fork, int end, int mode, int offset, int size );
-extern unsigned int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode, off_t offset, off_t size );
+extern int FPByteLock(CONN *conn, uint16_t fork, int end, int mode, int offset, int size );
+extern int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode, off_t offset, off_t size );
 
 extern unsigned int FPCloseFork(CONN *conn, uint16_t vol);
 
@@ -37,7 +36,7 @@ extern unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did , char *n
 extern unsigned int FPEnumerateExt2Full(CONN *conn, uint16_t vol, uint32_t did, char *name, uint16_t f_bitmap, uint16_t d_bitmap, uint32_t startindex, uint16_t reqcount);
 extern unsigned int FPDelete(CONN *conn, uint16_t vol, int did , char *name);
 extern unsigned int FPOpenDir(CONN *conn, uint16_t vol, int did , char *name);
-extern unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did , char *name);
+extern int FPCreateDir(CONN *conn, uint16_t vol, int did , char *name);
 extern uint16_t    FPOpenFork(CONN *conn, uint16_t vol, int type, uint16_t bitmap, int did , char *name, int access);
 extern unsigned int FPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name);
 extern unsigned int FPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap);

@@ -301,7 +301,7 @@ uint16_t AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap, int d
 int AFPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap);
 int AFPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap, struct afp_volume_parms *parms);
 
-unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name);
+uint32_t AFPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name);
 int  AFPCreateDir(CONN *conn, uint16_t vol, int did , char *name);
 
 int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size, char *data, char whence);
