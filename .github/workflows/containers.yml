@@ -152,7 +152,7 @@ jobs:
         timeout-minutes: 5
         env:
             AFP_USER: atalk1
-            AFP_PASS: afpafp
+            AFP_PASS: qx9z4thi
             AFP_GROUP: afpusers
             ATALKD_INTERFACE: eth0
             TZ: Europe/Stockholm
@@ -172,8 +172,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -194,8 +194,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -216,8 +216,8 @@ jobs:
       env:
           AFP_USER: atalk1
           AFP_USER2: atalk2
-          AFP_PASS: afpafp
-          AFP_PASS2: afpafp
+          AFP_PASS: qx9z4thi
+          AFP_PASS2: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           SHARE_NAME2: test2
@@ -239,8 +239,8 @@ jobs:
       env:
           AFP_USER: atalk1
           AFP_USER2: atalk2
-          AFP_PASS: afpafp
-          AFP_PASS2: afpafp
+          AFP_PASS: qx9z4thi
+          AFP_PASS2: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           SHARE_NAME2: test2
@@ -262,8 +262,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -284,8 +284,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -306,8 +306,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -328,8 +328,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -350,8 +350,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -372,8 +372,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -394,8 +394,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -416,8 +416,8 @@ jobs:
         env:
             AFP_USER: atalk1
             AFP_USER2: atalk2
-            AFP_PASS: afpafp
-            AFP_PASS2: afpafp
+            AFP_PASS: qx9z4thi
+            AFP_PASS2: qx9z4thi
             AFP_GROUP: afpusers
             SHARE_NAME: test1
             SHARE_NAME2: test2
@@ -438,8 +438,8 @@ jobs:
       env:
           AFP_USER: atalk1
           AFP_USER2: atalk2
-          AFP_PASS: afpafp
-          AFP_PASS2: afpafp
+          AFP_PASS: qx9z4thi
+          AFP_PASS2: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           SHARE_NAME2: test2
@@ -461,8 +461,8 @@ jobs:
       env:
           AFP_USER: atalk1
           AFP_USER2: atalk2
-          AFP_PASS: afpafp
-          AFP_PASS2: afpafp
+          AFP_PASS: qx9z4thi
+          AFP_PASS2: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           SHARE_NAME2: test2
@@ -483,7 +483,7 @@ jobs:
       timeout-minutes: 5
       env:
           AFP_USER: atalk1
-          AFP_PASS: afpafp
+          AFP_PASS: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           INSECURE_AUTH: 1
@@ -502,7 +502,7 @@ jobs:
       timeout-minutes: 5
       env:
           AFP_USER: atalk1
-          AFP_PASS: afpafp
+          AFP_PASS: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           INSECURE_AUTH: 1
@@ -521,7 +521,7 @@ jobs:
       timeout-minutes: 5
       env:
           AFP_USER: atalk1
-          AFP_PASS: afpafp
+          AFP_PASS: qx9z4thi
           AFP_GROUP: afpusers
           INSECURE_AUTH: 1
           VERBOSE: 1
@@ -538,7 +538,7 @@ jobs:
       timeout-minutes: 5
       env:
           AFP_USER: atalk1
-          AFP_PASS: afpafp
+          AFP_PASS: qx9z4thi
           AFP_GROUP: afpusers
           INSECURE_AUTH: 1
           VERBOSE: 1
@@ -555,7 +555,7 @@ jobs:
       timeout-minutes: 5
       env:
           AFP_USER: atalk1
-          AFP_PASS: afpafp
+          AFP_PASS: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           INSECURE_AUTH: 1
@@ -573,7 +573,7 @@ jobs:
       timeout-minutes: 5
       env:
           AFP_USER: atalk1
-          AFP_PASS: afpafp
+          AFP_PASS: qx9z4thi
           AFP_GROUP: afpusers
           SHARE_NAME: test1
           INSECURE_AUTH: 1
