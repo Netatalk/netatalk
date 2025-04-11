@@ -83,8 +83,8 @@ test_exit:
 STATIC void test221()
 {
 	ENTER_TEST
-	if (Conn->afp_version <= 31) {
-		test_skipped(T_AFP32);
+	if (Conn->afp_version < 31) {
+		test_skipped(T_AFP31);
 		goto test_exit;
 	}
 
