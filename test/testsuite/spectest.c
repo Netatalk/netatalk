@@ -18,6 +18,7 @@ int NotTestedCount = 0;
 
 char FailedTests[1024][256] = {{0}};
 char NotTestedTests[1024][256] = {{0}};
+char SkippedTests[1024][256] = {{0}};
 
 #define FN(a) a ## _test
 #define EXT_FN(a) extern void FN(a) (void)
@@ -580,10 +581,16 @@ int ret;
     fprintf(stdout, " TEST RESULT SUMMARY\n");
     fprintf(stdout, "---------------------\n");
 	fprintf(stdout, "  Passed:     %d\n", PassCount);
-	fprintf(stdout, "  Failed:     %d\n", FailCount);
 	fprintf(stdout, "  Skipped:    %d\n", SkipCount);
+	fprintf(stdout, "  Failed:     %d\n", FailCount);
 	fprintf(stdout, "  Not tested: %d\n", NotTestedCount);
 
+	if (SkipCount) {
+		fprintf(stdout, "\n  Skipped tests (precondition not met):\n");
+		for (int i = 0; i < SkipCount; i++) {
+			fprintf(stdout, "    %s\n", SkippedTests[i]);
+		}
+	}
 	if (FailCount) {
 		fprintf(stdout, "\n  Failed tests:\n");
 		for (int i = 0; i < FailCount; i++) {
@@ -591,7 +598,7 @@ int ret;
 		}
 	}
 	if (NotTestedCount) {
-		fprintf(stdout, "\n  Not tested tests:\n");
+		fprintf(stdout, "\n  Not tested tests (setup step failed):\n");
 		for (int i = 0; i < NotTestedCount; i++) {
 			fprintf(stdout, "    %s\n", NotTestedTests[i]);
 		}
