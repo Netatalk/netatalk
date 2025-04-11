@@ -75,7 +75,6 @@ RUN meson setup build \
     -Dwith-init-style=none \
     -Dwith-krbV-uam=true \
     -Dwith-pam-config-path=/etc/pam.d \
-    -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-rpath=false \
     -Dwith-spooldir=/var/spool/netatalk \
     -Dwith-tcp-wrappers=false \
