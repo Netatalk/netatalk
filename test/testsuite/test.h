@@ -126,6 +126,7 @@ extern CONN *Conn, *Conn2;
 extern char Data[];
 extern char FailedTests[1024][256];
 extern char NotTestedTests[1024][256];
+extern char SkippedTests[1024][256];
 
 extern char *Vol;
 extern char *Vol2;

@@ -973,6 +973,8 @@ void exit_test(char *name)
 		}
 		break;
 	case 3:
+		strlcpy(SkippedTests[SkipCount], name, 255);
+		SkippedTests[SkipCount][255] = '\0';
 		SkipCount++;
 		s = skipped_msg_buf;
 		break;

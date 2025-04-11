@@ -60,6 +60,7 @@ int SkipCount = 0;
 int NotTestedCount = 0;
 char FailedTests[1024][256] = {{0}};
 char NotTestedTests[1024][256] = {{0}};
+char SkippedTests[1024][256] = {{0}};
 
 /* =============================== */
 static void list_tests(void)
