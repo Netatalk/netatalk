@@ -27,15 +27,6 @@
         test_failed(); \
     }
 
-#define EXPECT_FAIL(a, b) do { \
-    int _experr = (a); \
-    if (htonl(_experr) != (b)) { \
-        if (!Quiet) \
-            fprintf(stderr, "EXPECT_FAIL: got %d, expected %d\n", htonl(_experr), (b)); \
-        test_failed(); \
-    } \
-} while(0);
-
 #define FAILEXIT(a, label) if ((a)) { test_failed(); goto label;}
 #define STATIC
 
