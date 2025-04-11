@@ -69,7 +69,7 @@ char SkippedTests[1024][256] = {{0}};
 
 struct vfs {
 	unsigned int (*getfiledirparams)(CONN *, uint16_t , int , char *, uint16_t, uint16_t);
-	unsigned int (*createdir)(CONN *, uint16_t , int , char *);
+	int (*createdir)(CONN *, uint16_t , int , char *);
 	unsigned int (*createfile)(CONN *, uint16_t , char , int , char *);
 	uint16_t    (*openfork)(CONN *, uint16_t, int, uint16_t , int , char *, int );
 	unsigned int (*writeheader)(DSI *, uint16_t , int , int , char *, char );
@@ -84,7 +84,7 @@ struct vfs {
 	unsigned int (*readfooter)(DSI *, uint16_t , int , int , char *);
 	unsigned int (*copyfile)(CONN *, uint16_t , int , uint16_t , int , char *, char *, char *);
 	uint16_t    (*openvol)(CONN *, char *);
-	unsigned int (*closevol)(CONN *conn, uint16_t vol);
+	int (*closevol)(CONN *conn, uint16_t vol);
 };
 
 struct vfs VFS = {
@@ -146,7 +146,7 @@ int fd;
 }
 
 /* ------------------------------- */
-unsigned int local_closevol(CONN *conn, uint16_t vol)
+int local_closevol(CONN *conn, uint16_t vol)
 {
 	if (!Quiet) {
 		fprintf(stdout,"---------------------\n");
@@ -172,7 +172,7 @@ static int local_chdir(uint16_t vol, int did)
 }
 
 /* ------------- */
-unsigned int local_createdir(CONN *conn, uint16_t vol, int did , char *name)
+int local_createdir(CONN *conn, uint16_t vol, int did , char *name)
 {
 unsigned int i;
 int dirfd;
