@@ -139,7 +139,7 @@ jobs:
               uses: docker/build-push-action@v5
               with:
                 context: .
-                file: testsuite_alp.Dockerfile
+                file: testsuite_deb.Dockerfile
                 push: true
                 labels: ${{ steps.metadata.outputs.labels }}
                 tags: ${{ steps.metadata.outputs.tags }}
