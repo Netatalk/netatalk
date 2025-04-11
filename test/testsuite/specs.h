@@ -15,6 +15,14 @@
 #include "test.h"
 
 /* Defines */
+
+/* Use static test functions for release builds */
+#ifdef EBUG
+#define STATIC
+#else
+#define STATIC static
+#endif
+
 #define FAIL(a) \
     if ((a)) { \
         if (!Quiet) { \
@@ -37,7 +45,6 @@
 } while(0);
 
 #define FAILEXIT(a, label) if ((a)) { test_failed(); goto label;}
-#define STATIC
 
 #define ENTER_TESTSET \
     fprintf(stdout,"===================\n"); \
