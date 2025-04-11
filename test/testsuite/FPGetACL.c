@@ -153,10 +153,10 @@ STATIC void test432()
 	 * be possible to get just the first byte of an xattr by
 	 * specifying an req_count of 7.
 	 */
-	EXPECT_FAIL( FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 1, file, attr_name), AFPERR_PARAM );
-	EXPECT_FAIL( FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 6, file, attr_name), AFPERR_PARAM );
-	EXPECT_FAIL( FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 7, file, attr_name), AFPERR_PARAM );
-	EXPECT_FAIL( FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 15, file, attr_name), AFPERR_PARAM );
+	FAIL ( htonl(AFPERR_PARAM) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 1, file, attr_name));
+	FAIL ( htonl(AFPERR_PARAM) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 6, file, attr_name));
+	FAIL ( htonl(AFPERR_PARAM) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 7, file, attr_name));
+	FAIL ( htonl(AFPERR_PARAM) != FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 15, file, attr_name));
 
 	FAIL( FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 16, file, attr_name) );
 
