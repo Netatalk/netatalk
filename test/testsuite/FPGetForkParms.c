@@ -19,7 +19,7 @@ uint32_t flen;
 }
 
 /* ------------- */
-static void test_21(uint16_t vol, char *name, int type)
+STATIC void test_21(uint16_t vol, char *name, int type)
 {
 
 int fork = 0;
