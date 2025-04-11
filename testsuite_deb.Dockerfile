@@ -1,17 +1,21 @@
 ARG RUN_DEPS="\
     cracklib-runtime \
+    libacl1 \
     libavahi-client3 \
     libdb5.3t64 \
+    libcups2t64 \
     libevent-2.1-7 \
     libgcrypt20 \
     libglib2.0-0 \
     libiniparser4 \
+    libkrb5-3 \
     libldap2 \
     libmariadb3 \
     libpam0g \
     libssl3 \
     libtalloc2 \
     libtinysparql-3.0-0 \
+    libtirpc3t64 \
     libwrap0 \
     localsearch \
     mariadb-client \
