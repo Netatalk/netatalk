@@ -36,7 +36,7 @@ static char *extascii[24] = {
  * On today's systems this encoding doesn't exist in practice.
  * So, this test tests the equivalent Unicode character instead.
 */
-static void test_western()
+STATIC void test_western()
 {
 uint16_t vol = VolID;
 uint16_t f_bitmap;
