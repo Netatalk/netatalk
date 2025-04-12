@@ -1105,11 +1105,10 @@ ea = <sys|samba|ad|none\> (default: auto detect) **(V)**
 > Specify how Extended Attributes and Classic Mac OS resource forks are
 stored.
 
-> By default, we attempt to enable **sys** with a fallback to **ad**.
+> By default, we attempt to enable **sys** with a fallback to **none**.
 For the auto detection to work, the volume needs to be writable
 because we attempt to set an EA on the shared directory itself.
-If **read only = yes** is set, we fallback to **sys**.
-Use explicit "**ea = ad|none**" for read-only volumes where appropriate.
+For read-only volumes, set this option explicitly.
 
 > sys
 
