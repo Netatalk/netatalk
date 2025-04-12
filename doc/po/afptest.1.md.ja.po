@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-30 22:49+0200\n"
+"POT-Creation-Date: 2025-04-12 14:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -77,9 +77,9 @@ msgid "Description"
 msgstr "説明"
 
 #. type: Title #
-#: manpages/man1/ad.1.md:270 manpages/man1/afptest.1.md:91
+#: manpages/man1/ad.1.md:270 manpages/man1/afptest.1.md:175
 #: manpages/man1/dbd.1.md:59 manpages/man1/nbp.1.md:46
-#: manpages/man5/afp_signature.conf.5.md:44
+#: manpages/man5/afp_signature.conf.5.md:46
 #: manpages/man5/afp_voluuid.conf.5.md:38 manpages/man8/papd.8.md:132
 #, no-wrap
 msgid "See also"
@@ -89,12 +89,12 @@ msgstr "参照"
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
 #: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
-#: manpages/man1/afptest.1.md:95 manpages/man1/asip-status.1.md:106
+#: manpages/man1/afptest.1.md:179 manpages/man1/asip-status.1.md:106
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
 #: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
-#: manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1362
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
@@ -111,12 +111,12 @@ msgstr "著者"
 #: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
 #: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
 #: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
-#: manpages/man1/afptest.1.md:97 manpages/man1/asip-status.1.md:108
+#: manpages/man1/afptest.1.md:181 manpages/man1/asip-status.1.md:108
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
 #: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
-#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_signature.conf.5.md:52
 #: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1364
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
@@ -130,9 +130,9 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afppasswd.1.md:26
-#: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:56
+#: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:103
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
-#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:39
 #: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1307
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:79
@@ -192,9 +192,18 @@ msgid "`fce_listen [-h host] [-p port]`"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:29
+#: manpages/man1/afptest.1.md:23
 msgid ""
-"All of the tools in the *afptest* family follow the same general usage "
+"The AFP testsuite contains several utilities aimed at testing AFP servers.  "
+"They're broadly divided into conformance tests, benchmarking, and helpers."
+msgstr ""
+"AFP testsuiteは、AFP サーバーをテストするためのいくつかのユーティリティを提供"
+"している。適合性テスト、ベンチマーク、ヘルパーに大別される。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:32
+msgid ""
+"Most of the tools in the *afptest* family follow the same general usage "
 "pattern and parameters. You set the AFP protocol revision (**-1** through "
 "**-7**), then the address and credentials of the host to test (which can be "
 "localhost). Some tests require a second user and second volume to be define. "
@@ -204,55 +213,138 @@ msgid ""
 "l** option."
 msgstr ""
 "*afptest*\n"
-"ファミリーのすべてのツールは、同じ一般的な使用パターンとパラメータに従う。"
-"AFP プロトコル リビジョン (**-1** から **-7**) を設定し、次にテストするホスト"
-"のアドレスと資格情報 (localhost も可) を設定する。一部のテストでは、2番目の"
-"ユーザーと2番目のボリュームを定義する必要がある。さらに別のテスト セットを "
-"localhost から実行し、テスト対象のボリュームへのローカル パスを指定する必要が"
-"ある。 単一のテストまたはテスト セクションは、**-f** オプションで実行できる。"
-"使用可能なテストは、**-l** オプションで一覧表示できる。"
+"ツール群は大体同じ一般的な使用パターンとパラメータに従う。AFP プロトコル リビ"
+"ジョン (**-1** から **-7**) を設定し、次にテストするホストのアドレスと資格情"
+"報 (localhost も可) を設定する。一部のテストでは、2番目のユーザーと2番目のボ"
+"リュームを定義する必要がある。さらに別のテスト セットを localhost から実行"
+"し、テスト対象のボリュームへのローカル パスを指定する必要がある。 単一のテス"
+"トまたはテスト セクションは、**-f** オプションで実行できる。使用可能なテスト"
+"は、**-l** オプションで一覧表示できる。"
 
 #. type: Plain text
+#: manpages/man1/afptest.1.md:35
+msgid ""
+"Please refer to the helptext of each tool for the precise use of each option."
+msgstr ""
+"各オプションの正確な使用方法については、各ツールのヘルプテキストを参照してく"
+"ださい。"
+
+#. type: Title ##
 #: manpages/man1/afptest.1.md:36
 #, no-wrap
-msgid ""
-"**afp_spectest** makes up the core of the AFP specification test suite,\n"
-"with just over 300 test cases. It is organized into testsets, divided by\n"
-"AFP commands tested, or by preconditions for testing. For instance, the\n"
-"tier 2 (T2) tests need to be run on the host with the **-c** option\n"
-"indicating the path to the shared volume. There are also read-only and\n"
-"sleep tests that need to be run separately.\n"
-msgstr "**afp_spectest** は、300 を超えるテスト ケースを含む AFP 仕様テスト スイートの中核を 構成する。これは、テストする AFP コマンド別、またはテストの前提条件別に分けられたテストセットに編成されている。 たとえば、Tier 2 (T2) テストは、共有ボリュームへのパスを示す **-c** オプションを使用してホスト上で 実行する必要がある。また、読み取り専用テストとスリープ テストも別々に実行する必要がある。\n"
+msgid "Return codes"
+msgstr "復帰コード"
 
 #. type: Plain text
 #: manpages/man1/afptest.1.md:39
-#, no-wrap
-msgid ""
-"**afp_logintest** is an AFP login authentication test suite that has its\n"
-"own runners.\n"
-msgstr "**afp_logintest** は、独自のランナーを持つ特定の AFP ログイン認証 テストスイートである。\n"
+msgid "Each test within a testsuite returns one of the following return codes:"
+msgstr "テストスイート内の各テストは、次の復帰コードのいずれかを返す。"
 
-#. type: Plain text
+#. type: Bullet: '- '
 #: manpages/man1/afptest.1.md:44
-#, no-wrap
-msgid ""
-"**afp_lantest** and **afp_speedtest**` are file transfer benchmarks for AFP\n"
-"servers. The former is inspired by *HELIOS LanTest*, which runs a batch\n"
-"of varied file transfer patterns. The latter is a simpler tool with a\n"
-"handful of available test cases.\n"
-msgstr "**afp_lantest** と **afp_speedtest**` は、AFP サーバーのファイル転送ベンチマークです。前者は、さまざまなファイル転送パターンのバッチを実行する *HELIOS LanTest* にヒントを得たものである。後者は、いくつかのテスト ケースが用意された、よりシンプルなツールである。\n"
+msgid "0 PASSED"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:44
+msgid "1 FAILED"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:44
+msgid "2 NOT TESTED - a test setup step or precondition check failed"
+msgstr "2 NOT TESTED - テストの準備または前提条件チェックに失敗した"
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:44
+msgid "3 SKIPPED - unmet requirements for testing"
+msgstr "3 SKIPPED - テストの前提条件が満たされていない"
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:48
-#, no-wrap
+#: manpages/man1/afptest.1.md:47
 msgid ""
-"**afparg**` is an AFP CLI client that takes a specific command with\n"
-"optional arguments, and sends a single action to the AFP server. This\n"
-"can be used for one-off troubleshooting or system administration.\n"
-msgstr "**afparg**` は、オプションの引数を持つ特定のコマンドを受け取り、AFP サーバーに単一のアクションを送信する AFP CLI クライアントである。これは、1 回限りのトラブルシューティングやシステム管理に使用できる。\n"
+"Note that a NOT TESTED result is treated as a failure of the entire test "
+"run, but SKIPPED is not."
+msgstr ""
+"NOT TESTED の結果はテスト実施全体の失敗として扱われるが、SKIPPED はそうではな"
+"い。"
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:52
+#: manpages/man1/afptest.1.md:50
+msgid ""
+"The spectest and logintest shall return the same results whether they are "
+"run against a Mac AFP server or Netatalk."
+msgstr ""
+"テスト対象 AFP サーバーは Mac か Netatalk のどちらでもよく、spectest と "
+"logintest の結果は同じでなければならない。"
+
+#. type: Title ##
+#: manpages/man1/afptest.1.md:51
+#, no-wrap
+msgid "Conformance tests"
+msgstr "適合性テスト"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:59
+#, no-wrap
+msgid ""
+"**afp_spectest** makes up the core of the AFP specification test suite,\n"
+"with several hundred test cases. It is organized into testsets, divided by\n"
+"the AFP commands tested, or by preconditions for testing. For instance, the\n"
+"tier 2 (T2) tests need to be run on the host with the **-c** option\n"
+"indicating the path to the shared volume. There are also read-only and\n"
+"sleep tests that need to be run separately.\n"
+msgstr "**afp_spectest** は、数百個のテスト項目を含む AFP 仕様テスト スイートの中核を 構成する。これは、テストする AFP コマンド別、またはテストの前提条件別に分けられたテストセットに編成されている。 たとえば、Tier 2 (T2) テストは、共有ボリュームへのパスを示す **-c** オプションを使用してホスト上で 実行する必要がある。また、読み取り専用テストとスリープ テストも別々に実行する必要がある。\n"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:61
+#, no-wrap
+msgid "**afp_logintest** is a testsuite for DSI sessions and authentication.\n"
+msgstr "**afp_logintest** は、DSI セッションと認証のテスト スイートである。\n"
+
+#. type: Title ##
+#: manpages/man1/afptest.1.md:62
+#, no-wrap
+msgid "Benchmarking"
+msgstr "ベンチマーク"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:67
+#, no-wrap
+msgid ""
+"**afp_lantest** is a file transfer benchmarking tool for AFP\n"
+"servers, inspired by *HELIOS LanTest*, which runs a batch\n"
+"of varied file transfer patterns.\n"
+msgstr "**afp_lantest**は、AFP サーバーのファイル転送ベンチマークです。さまざまなファイル転送パターンのバッチを実行する *HELIOS LanTest* にヒントを得たものである。\n"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:71
+msgid ""
+"The **afp_speedtest** is a benchmark testsuite for read, write and copy "
+"operations. It can be run using either AFP commands or POSIX syscalls, in "
+"order to test netatalk speeds against other file transfer protocols."
+msgstr ""
+"**afp_speedtest**は、読み•書き•コピー操作のベンチマークツールである。他のファ"
+"イル転送プロトコルとの比較テストを行うために、AFP コマンドまたは POSIX システ"
+"ムコールを使用して実行できる。"
+
+#. type: Title ##
+#: manpages/man1/afptest.1.md:72
+#, no-wrap
+msgid "Helpers"
+msgstr "ヘルパー"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:77
+#, no-wrap
+msgid ""
+"**afparg** is an interactive AFP client that takes an AFP command with\n"
+"optional arguments. This can be used for troubleshooting or system\n"
+"administration. Run `afparg -l` to list available commands.\n"
+msgstr "**afparg** は、オプションの引数を持つ特定のコマンドを受け取り、AFP サーバーにアクションを送信する対話型 AFP クライアントである。サーバの問題検討やシステム管理などに活用できる。`afparg -l` を実行して利用可能なコマンドを一覧表示する。\n"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:81
 #, no-wrap
 msgid ""
 "**fce_listen** is a simple listener for Netatalk's Filesystem Change Event\n"
@@ -260,23 +352,166 @@ msgid ""
 "server.\n"
 msgstr "**fce_listen** は、Netatalk のファイルシステム変更イベント (FCE) プロトコルのシンプルなリスナーである。これは、AFP サーバーから受信した UDP データグラムを出力する。\n"
 
-#. type: Plain text
-#: manpages/man1/afptest.1.md:55
-msgid ""
-"Please refer to the helptext of each tool for the precise use of each option."
-msgstr ""
-"各オプションの正確な使用方法については、各ツールのヘルプテキストを参照してく"
-"ださい。"
+#. type: Title ##
+#: manpages/man1/afptest.1.md:82
+#, no-wrap
+msgid "Testing a Mac AFP server"
+msgstr "Mac AFP サーバーのテスト"
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:59
+#: manpages/man1/afptest.1.md:87
+msgid ""
+"This suite of tools were designed primarily to test Netatalk AFP servers, "
+"however they can also be used to test a native Mac OS AFP server hosted by "
+"an older Mac OS X or Classic Mac OS system."
+msgstr ""
+"このツール群は、主に Netatalk AFP サーバーをテストするために設計されている"
+"が、古い Mac OS X または Classic Mac OS システムでホストされている Mac OS "
+"AFP サーバーをテストするためにも使用できる。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:91
+msgid ""
+"Launch the test runner with the `-m` option when testing a Mac AFP server.  "
+"When running in Mac mode, the test runner will report tests with known "
+"current or historical differences between Mac and Netatalk."
+msgstr ""
+"Mac AFP サーバーをテストする場合は、`-m` オプションを使用してテストランナーを"
+"起動する。Mac モードで実行すると、テストランナーは、Mac と Netatalk の間の既"
+"知の現在または過去の相違点を持つテストを報告する。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:93
+msgid "If Mac and Netatalk differ, or if Mac results differ between versions:"
+msgstr ""
+"Mac と Netatalk が異なる場合、または Mac の結果がバージョン間で異なる場合:"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:97
+#, no-wrap
+msgid ""
+"    header.dsi_code       -5000     AFPERR_ACCESS\n"
+"    MAC RESULT: -5019 AFPERR_PARAM    -5010 AFPERR_BUSY\n"
+"    Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:100
+msgid ""
+"When Mac and Netatalk previously returned different results but now behave "
+"the same way:"
+msgstr ""
+"Mac と Netatalk が以前は異なる結果を返していたが、現在は同じように動作する場"
+"合:"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:102
+#, no-wrap
+msgid "    Warning MAC and Netatalk now same RESULT!\n"
+msgstr ""
+
+#. type: Title ##
+#: manpages/man1/afptest.1.md:105
+#, no-wrap
+msgid "Configure environment"
+msgstr "環境設定"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:108
+msgid "Below is a sample configuration for running the APF spec tests."
+msgstr "以下は、APF 仕様テストを実行するためのサンプル設定です。"
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:114
+msgid "2 users: <user1> <user2> with the same password"
+msgstr "2人のユーザー: <user1> <user2> は同じパスワードを持つ。"
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:114
+msgid "1 group: <afpusers>"
+msgstr "1つのグループ: <afpusers>"
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:114
+msgid "user1, user2 assigned to afpusers group"
+msgstr "user1, user2 は afpusers グループに割り当てられる。"
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:114
+msgid "clear text UAM + guest UAM"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afptest.1.md:114
+msgid "two empty volumes:"
+msgstr "2つの空のボリューム:"
+
+#. type: Fenced code block
+#: manpages/man1/afptest.1.md:115
+#, no-wrap
+msgid ""
+"drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest1\n"
+"drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest2\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:122
+#, no-wrap
+msgid ""
+"*Note:* Some tests will fail if there are residual files\n"
+"in the test volumes.\n"
+msgstr "*注意:* テストボリュームに残ったファイルがあると、いくつかのテストが失敗する。\n"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:124
+msgid "Set afp.conf as follows:"
+msgstr "afp.confオプションは次の通り。"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:127
+#, no-wrap
+msgid ""
+"    [Global]\n"
+"    uam list = uams_clrtxt.so uams_guest.so\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:133
+#, no-wrap
+msgid ""
+"    [testvol1]\n"
+"    ea = sys\n"
+"    path = /tmp/afptest1\n"
+"    valid users = @afpusers\n"
+"    volume name = testvol1\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:139
+#, no-wrap
+msgid ""
+"    [testvol2]\n"
+"    ea = sys\n"
+"    path = /tmp/afptest2\n"
+"    valid users = @afpusers\n"
+"    volume name = testvol2\n"
+msgstr ""
+
+#. type: Title ##
+#: manpages/man1/afptest.1.md:140
+#, no-wrap
+msgid "Running tests"
+msgstr "テストを実行する"
+
+#. type: Plain text
+#: manpages/man1/afptest.1.md:143
 msgid ""
 "Run the afp_spectest for the \"FPSetForkParms_test\" testset with AFP 3.4."
 msgstr ""
 "afp_spectest の FPSetForkParms_test テストセットを AFP 3.4 で実行する。"
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:68
+#: manpages/man1/afptest.1.md:152
 #, no-wrap
 msgid ""
 "    % afp_spectest -h 127.0.0.1 -p 548 -u user1 -d user2 -w passwd -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms_test\n"
@@ -290,12 +525,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:70
+#: manpages/man1/afptest.1.md:154
 msgid "Run the afp_lantest benchmark using AFP 3.0."
 msgstr "AFP 3.0 を使用して afp_lantest ベンチマークを実行する。"
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:79
+#: manpages/man1/afptest.1.md:163
 #, no-wrap
 msgid ""
 "    % afp_lantest -h 192.168.0.2 -s testvol1 -u user1 -w passwd -3\n"
@@ -309,7 +544,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:82
+#: manpages/man1/afptest.1.md:166
 #, no-wrap
 msgid ""
 "    Netatalk Lantest Results (averages)\n"
@@ -317,7 +552,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:90
+#: manpages/man1/afptest.1.md:174
 #, no-wrap
 msgid ""
 "    Opening, stating and reading 512 bytes from 1000 files   1799 ms\n"
@@ -330,6 +565,6 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afptest.1.md:94 manpages/man1/macusers.1.md:28
+#: manpages/man1/afptest.1.md:178 manpages/man1/macusers.1.md:28
 msgid "afpd(8)"
 msgstr ""
