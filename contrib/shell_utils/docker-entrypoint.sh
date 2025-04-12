@@ -235,7 +235,7 @@ EXT
     sleep 2
     case "$TESTSUITE" in
         spectest)
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME" -c /mnt/afpshare
+            afp_spectest -"$AFP_VERSION" -V -C -h 127.0.0.1 -p 548 -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME"
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
