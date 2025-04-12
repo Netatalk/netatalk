@@ -106,9 +106,9 @@ but now behave the same way:
 
 Below is a sample configuration for running the APF spec tests.
 
-- 2 users: <user1> <user2> with the same password
-- 1 group: <afpusers>
-- user1, user2 assigned to afpusers group
+- 2 users: `user1`, `user2` with the same password
+- 1 group: `afpusers`
+- `user1`, `user2` assigned to `afpusers` group
 - clear text UAM + guest UAM
 - two empty volumes:
 

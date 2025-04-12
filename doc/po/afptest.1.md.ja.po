@@ -423,18 +423,18 @@ msgstr "以下は、APF 仕様テストを実行するためのサンプル設�
 
 #. type: Bullet: '- '
 #: manpages/man1/afptest.1.md:114
-msgid "2 users: <user1> <user2> with the same password"
-msgstr "2人のユーザー: <user1> <user2> は同じパスワードを持つ。"
+msgid "2 users: `user1`, `user2` with the same password"
+msgstr "2人のユーザー: `user1`, `user2` は同じパスワードを持つ。"
 
 #. type: Bullet: '- '
 #: manpages/man1/afptest.1.md:114
-msgid "1 group: <afpusers>"
-msgstr "1つのグループ: <afpusers>"
+msgid "1 group: `afpusers`"
+msgstr "1つのグループ: `afpusers`"
 
 #. type: Bullet: '- '
 #: manpages/man1/afptest.1.md:114
-msgid "user1, user2 assigned to afpusers group"
-msgstr "user1, user2 は afpusers グループに割り当てられる。"
+msgid "`user1`, `user2` assigned to `afpusers` group"
+msgstr "`user1`, `user2` は `afpusers` グループに割り当てられる。"
 
 #. type: Bullet: '- '
 #: manpages/man1/afptest.1.md:114

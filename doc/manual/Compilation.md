@@ -20,7 +20,7 @@ apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true
 ```
 
 Build
@@ -65,7 +65,7 @@ pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
 ```
 
 Build
@@ -111,7 +111,7 @@ apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-ru
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true
 ```
 
 Build
@@ -156,7 +156,7 @@ dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkco
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
 ```
 
 Build
@@ -202,7 +202,7 @@ sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm crackl
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
 ```
 
 Build
@@ -371,7 +371,7 @@ Configure and build
 
 ```
 set -e
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dtrace=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true
 meson compile -C build
 cd build
 meson test

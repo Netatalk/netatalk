@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-12 12:51+0200\n"
+"POT-Creation-Date: 2025-04-12 18:19+0200\n"
 "PO-Revision-Date: 2025-01-22 20:55+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -80,7 +80,7 @@ msgstr "コンフィグレーション"
 #. type: Fenced code block
 #: manual/Compilation.md:22
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Plain text
@@ -169,7 +169,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:67 manual/Compilation.md:158 manual/Compilation.md:204
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Title ##
@@ -189,7 +189,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:113
 #, no-wrap
-msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true\n"
+msgid "meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true\n"
 msgstr ""
 
 #. type: Title ##
@@ -394,7 +394,7 @@ msgstr ""
 #, no-wrap
 msgid ""
 "set -e\n"
-"meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-dtrace=false -Dwith-tests=true\n"
+"meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true\n"
 "meson compile -C build\n"
 "cd build\n"
 "meson test\n"
