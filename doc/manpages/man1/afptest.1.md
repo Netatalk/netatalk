@@ -18,7 +18,10 @@ afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg, fce_listen — 
 
 # Description
 
-All of the tools in the *afptest* family follow the same general usage
+The AFP testsuite contains several utilities aimed at testing AFP servers.
+They're broadly divided into conformance tests, benchmarking, and helpers.
+
+Most of the tools in the *afptest* family follow the same general usage
 pattern and parameters. You set the AFP protocol revision (**-1** through
 **-7**), then the address and credentials of the host to test (which can
 be localhost). Some tests require a second user and second volume to be
@@ -27,33 +30,114 @@ local path to the volume under test to be provided. Single tests or test
 sections can be executed with the **-f** option. Available tests can be
 listed with the **-l** option.
 
+Please refer to the helptext of each tool for the precise use of each
+option.
+
+## Return codes
+
+Each test within a testsuite returns one of the following return codes:
+
+- 0 PASSED
+- 1 FAILED
+- 2 NOT TESTED - a test setup step or precondition check failed
+- 3 SKIPPED - unmet requirements for testing
+
+Note that a NOT TESTED result is treated as a failure of the entire test run,
+but SKIPPED is not.
+
+The spectest and logintest shall return the same results whether they are run
+against a Mac AFP server or Netatalk.
+
+## Conformance tests
+
 **afp_spectest** makes up the core of the AFP specification test suite,
-with just over 300 test cases. It is organized into testsets, divided by
-AFP commands tested, or by preconditions for testing. For instance, the
+with several hundred test cases. It is organized into testsets, divided by
+the AFP commands tested, or by preconditions for testing. For instance, the
 tier 2 (T2) tests need to be run on the host with the **-c** option
 indicating the path to the shared volume. There are also read-only and
 sleep tests that need to be run separately.
 
-**afp_logintest** is an AFP login authentication test suite that has its
-own runners.
+**afp_logintest** is a testsuite for DSI sessions and authentication.
 
-**afp_lantest** and **afp_speedtest**` are file transfer benchmarks for AFP
-servers. The former is inspired by *HELIOS LanTest*, which runs a batch
-of varied file transfer patterns. The latter is a simpler tool with a
-handful of available test cases.
+## Benchmarking
 
-**afparg**` is an AFP CLI client that takes a specific command with
-optional arguments, and sends a single action to the AFP server. This
-can be used for one-off troubleshooting or system administration.
+**afp_lantest** is a file transfer benchmarking tool for AFP
+servers, inspired by *HELIOS LanTest*, which runs a batch
+of varied file transfer patterns.
+
+The **afp_speedtest** is a benchmark testsuite for read, write and copy
+operations. It can be run using either AFP commands or POSIX syscalls,
+in order to test netatalk speeds against other file transfer protocols.
+
+## Helpers
+
+**afparg** is an interactive AFP client that takes an AFP command with
+optional arguments. This can be used for troubleshooting or system
+administration. Run `afparg -l` to list available commands.
 
 **fce_listen** is a simple listener for Netatalk's Filesystem Change Event
 (FCE) protocol. It will print out any UDP datagrams received from the AFP
 server.
 
-Please refer to the helptext of each tool for the precise use of each
-option.
+## Testing a Mac AFP server
+
+This suite of tools were designed primarily to test Netatalk AFP servers,
+however they can also be used to test a native Mac OS AFP server hosted
+by an older Mac OS X or Classic Mac OS system.
+
+Launch the test runner with the `-m` option when testing a Mac AFP server.
+When running in Mac mode, the test runner will report tests with known current
+or historical differences between Mac and Netatalk.
+
+If Mac and Netatalk differ, or if Mac results differ between versions:
+
+    header.dsi_code       -5000     AFPERR_ACCESS
+    MAC RESULT: -5019 AFPERR_PARAM    -5010 AFPERR_BUSY
+    Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY
+
+When Mac and Netatalk previously returned different results
+but now behave the same way:
+
+    Warning MAC and Netatalk now same RESULT!
 
 # Examples
+
+## Configure environment
+
+Below is a sample configuration for running the APF spec tests.
+
+- 2 users: <user1> <user2> with the same password
+- 1 group: <afpusers>
+- user1, user2 assigned to afpusers group
+- clear text UAM + guest UAM
+- two empty volumes:
+
+```
+drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest1
+drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest2
+```
+
+*Note:* Some tests will fail if there are residual files
+in the test volumes.
+
+Set afp.conf as follows:
+
+    [Global]
+    uam list = uams_clrtxt.so uams_guest.so
+
+    [testvol1]
+    ea = sys
+    path = /tmp/afptest1
+    valid users = @afpusers
+    volume name = testvol1
+
+    [testvol2]
+    ea = sys
+    path = /tmp/afptest2
+    valid users = @afpusers
+    volume name = testvol2
+
+## Running tests
 
 Run the afp_spectest for the "FPSetForkParms_test" testset with AFP 3.4.
 
