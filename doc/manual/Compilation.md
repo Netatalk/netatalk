@@ -335,7 +335,7 @@ ninja -C build uninstall
 Install required packages
 
 ```
-pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc tracker3
+pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc
 ```
 
 Configure and build

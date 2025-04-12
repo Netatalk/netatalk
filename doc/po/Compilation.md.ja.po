@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-30 22:49+0200\n"
+"POT-Creation-Date: 2025-04-12 12:51+0200\n"
 "PO-Revision-Date: 2025-01-22 20:55+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -351,7 +351,7 @@ msgstr ""
 #. type: Fenced code block
 #: manual/Compilation.md:337
 #, no-wrap
-msgid "pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc tracker3\n"
+msgid "pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc\n"
 msgstr ""
 
 #. type: Fenced code block
