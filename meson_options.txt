@@ -48,7 +48,7 @@ option(
 option(
     'with-cups-pap-backend',
     type: 'boolean',
-    value: true,
+    value: false,
     description: 'Install the pap backend for CUPS',
 )
 option(

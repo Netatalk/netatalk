@@ -79,6 +79,7 @@ jobs:
           meson setup build \
             -Dbuildtype=release \
             -Dwith-appletalk=true \
+            -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-tests=true
       - name: Build
@@ -128,6 +129,7 @@ jobs:
           meson setup build \
             -Dbuildtype=release \
             -Dwith-appletalk=true \
+            -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
@@ -192,6 +194,7 @@ jobs:
           meson setup build \
             -Dbuildtype=release \
             -Dwith-appletalk=true \
+            -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-docs-l10n=true \
             -Dwith-init-hooks=false \
@@ -254,6 +257,7 @@ jobs:
           meson setup build \
             -Dbuildtype=release \
             -Dwith-appletalk=true \
+            -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
@@ -315,6 +319,7 @@ jobs:
           meson setup build \
             -Dbuildtype=release \
             -Dwith-appletalk=true \
+            -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
@@ -516,6 +521,7 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dwith-appletalk=true \
+              -Dwith-cups-pap-backend=true \
               -Dwith-dtrace=false \
               -Dwith-tests=true
             meson compile -C build
