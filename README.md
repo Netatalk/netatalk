@@ -34,22 +34,25 @@ A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing 
 
 # Why Should I Use Netatalk?
 
-If you have a local network macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
-running a Netatalk AppleShare server allows you to share, collaborate on, and back up files comfortably.
-The latest macOS at the time of writing (macOS 15 Sequoia) ships with an AFP client,
+If you have a local network of macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
+running a Netatalk AFP server allows you to share, collaborate on, and back up files comfortably.
+The latest macOS at the time of writing (macOS 15 Sequoia) comes with a built-in AFP client,
 so Netatalk can act as a seamless bridge between new and old Macs.
 
 Compared to cross-platform file sharing protocols like NFS and FTP, Netatalk delivers a Mac-like user experience,
-with seamless integration of Mac filesystem metadata (such as resource forks on Classic Mac OS)
-and modern macOS services such as Bonjour, Time Machine, and Spotlight.
+with seamless integration of Mac filesystem metadata - including Extended Attributes on macOS and resource forks on Classic Mac OS -
+and compatibility with modern macOS features such as Bonjour, Time Machine, and Spotlight.
 
 Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster transfer speeds](https://netatalk.io/docs/Benchmarks),
-as well as stronger backwards compatibility with OS X 10.8 Mountain Lion clients, and earlier.
+as well as stronger backwards compatibility with OS X 10.8 Mountain Lion clients and earlier.
 
 # AppleTalk
 
 Netatalk supports the [AppleTalk](https://en.wikipedia.org/wiki/AppleTalk) family of protocols,
-allowing it to provide AFP file sharing and other services with very old Macs or Apple II computers.
+including the DDP transport layer for AFP file sharing with very old Macs or Apple II computers.
+
+In addition, a print server, time server, MacIP gateway bridge, and Apple II netboot server
+are also provided.
 
 All versions of Netatalk except the 3.x release series can speak AppleTalk.
 
@@ -74,11 +77,17 @@ While these lists aren't as active as they used to be, the archives are a verita
 
 # Installation
 
-See [INSTALL.md](https://github.com/Netatalk/netatalk/blob/main/INSTALL.md)
+Most OS distributions and package repositories ship a version of Netatalk.
+If you want a pre-built binary package, try your package manager first.
+
+To get started with building Netatalk from source code, the [install readme](https://netatalk.io/install)
+is a good starting point.
 
 # Container deployments
 
-See [DOCKER.md](https://github.com/Netatalk/netatalk/blob/main/DOCKER.md)
+Netatalk runs well in a containerized environment.
+
+Read the [container readme](https://netatalk.io/docker) for more information.
 
 # Webmin module
 
