@@ -34,7 +34,7 @@ msgstr "[インストール](Installation.html)"
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:11
 msgid "[Configuration](Configuration.html)"
-msgstr "[Netatalk のセットアップ](Configuration.html)"
+msgstr "[セットアップ](Configuration.html)"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:11
@@ -44,12 +44,12 @@ msgstr ""
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:11
 msgid "[Upgrading](Upgrading.html)"
-msgstr "[以前の Netatalk バージョンからのアップグレード](Upgrading.html)"
+msgstr "[アップグレード](Upgrading.html)"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:11
 msgid "[Compilation](Compilation.html)"
-msgstr "[ソースコードから Netatalk をコンパイルする](Compilation.html)"
+msgstr "[コンパイル](Compilation.html)"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:11
@@ -109,7 +109,7 @@ msgstr ""
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
 msgid "[getzones](getzones.1.html)"
-msgstr "[ライセンス](License.html)"
+msgstr ""
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:27
