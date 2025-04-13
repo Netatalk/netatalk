@@ -1,20 +1,24 @@
-# Quick start
+# Netatalk Installation Quick Start
 
-Netatalk uses the Meson build system with Ninja as the backend.
+This guide covers installing Netatalk from source on UNIX-like operating systems.
+
+Netatalk uses the [Meson](https://mesonbuild.com/) build system with
+[Ninja](https://ninja-build.org/) as the backend.
 
 Meson only supports out-of-tree builds, and must be passed a directory to put
 built and generated sources into. We'll call that directory "build" here. It's
 recommended to create a separate build directory for each configuration you
 might want to use.
 
-To build from a release tarball:
+To build from a release tarball, download and unpack the tarball.
 
 ```
 tar xjf netatalk-*.tar.xz                               # unpack the sources
 cd netatalk-*                                           # change to the toplevel directory
 ```
 
-To build from the Netatalk GitHub repo:
+To build from the Netatalk GitHub repo, make sure you have Git installed,
+then clone the source tree.
 
 ```
 git clone https://github.com/netatalk/netatalk.git      # clone the repository
