@@ -670,6 +670,10 @@ int main(int ac, char **av)
     static char *vers = "AFP3.4";
     static char *uam = "Cleartxt Passwrd";
 
+    if (ac == 1) {
+        usage(av[0]);
+    }
+
     while (( cc = getopt( ac, av, "1234567bGgVvF:f:h:n:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '3':

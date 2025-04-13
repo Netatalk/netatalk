@@ -136,6 +136,10 @@ int main( int ac, char **av )
 int cc;
 int ret;
 
+    if (ac == 1) {
+        usage(av[0]);
+    }
+
     while (( cc = getopt( ac, av, "1234567lVvf:h:p:s:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
