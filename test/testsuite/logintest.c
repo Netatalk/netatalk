@@ -300,6 +300,10 @@ int main( int ac, char **av )
 {
 int cc;
 
+    if (ac == 1) {
+        usage(av[0]);
+    }
+
     while (( cc = getopt( ac, av, "1234567CmVvh:p:u:w:" )) != EOF ) {
         switch ( cc ) {
         case '1':
