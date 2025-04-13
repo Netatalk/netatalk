@@ -69,7 +69,7 @@ for key, value in workflow["jobs"].items():
             step["with"]["prepare"].rstrip("\n"),
             "```",
             "",
-            "Configure and build",
+            "Configure, compile, install, run, and uninstall",
             "",
             "```",
             step["with"]["run"].rstrip("\n"),
