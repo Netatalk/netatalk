@@ -1002,60 +1002,6 @@ char *name1 = "t409 new file name";
 }
 
 /* ------------------------- */
-STATIC void test416()
-{
-uint16_t vol = VolID;
-uint16_t bitmap;
-DSI *dsi;
-char *file="test416_file";
-char *file1="test416 new file";
-char *attr_name="test416_attribute";
-
-    dsi = &Conn->dsi;
-
-	ENTER_TEST
-
-    if (Conn->afp_version < 32) {
-        test_skipped(T_AFP32);
-        goto test_exit;
-    }
-	if (adouble == AD_V2) {
-		test_skipped(T_ADEA);
-		goto test_exit;
-	}
-
-    if ( !(get_vol_attrib(vol) & VOLPBIT_ATTR_EXTATTRS)) {
-        test_skipped(T_UTF8);
-        goto test_exit;
-    }
-
-    bitmap = (1<< FILPBIT_PDID) | (1<<FILPBIT_LNAME) | (1<<FILPBIT_FNUM ) | (1<<FILPBIT_RFLEN);
-
-    if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
-    	test_nottested();
-        goto test_exit;
-    }
-
-	FAIL(FPSetExtAttr(Conn,vol, DIRDID_ROOT, 2, file, attr_name, "test416_data"))
-	FAIL(FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name))
-
-	FAIL (FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, file, "", file1))
-
-	FAIL(FPListExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file))
-
-	FAIL(FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file, attr_name))
-	FAIL(FPGetExtAttr(Conn,vol, DIRDID_ROOT , 0, 4096, file1, attr_name))
-
-	FAIL(FPRemoveExtAttr(Conn,vol, DIRDID_ROOT , 0, file1, attr_name))
-
-    FAIL(FPDelete(Conn, vol,  DIRDID_ROOT , file))
-    FAIL(FPDelete(Conn, vol,  DIRDID_ROOT , file1))
-
-test_exit:
-	exit_test("FPCopyFile:test416: copy xattr");
-}
-
-/* ------------------------- */
 STATIC void test414()
 {
 int dir;
@@ -1159,7 +1105,6 @@ void FPCopyFile_test()
 	test407();
 	test408();
 	test409();
-	test416();
 	test414();
 	test424();
 }

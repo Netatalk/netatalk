@@ -48,6 +48,7 @@ EXT_FN(FPFlushFork);
 EXT_FN(FPGetACL);
 EXT_FN(FPGetAPPL);
 EXT_FN(FPGetComment);
+EXT_FN(FPGetExtAttr);
 EXT_FN(FPGetFileDirParms);
 EXT_FN(FPGetSessionToken);
 EXT_FN(FPGetSrvrInfo);
@@ -136,6 +137,7 @@ FN_N(FPFlushFork)
 FN_N(FPGetACL)
 FN_N(FPGetAPPL)
 FN_N(FPGetComment)
+FN_N(FPGetExtAttr)
 FN_N(FPGetFileDirParms)
 FN_N(FPGetForkParms)
 FN_N(FPGetIcon)

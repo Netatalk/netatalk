@@ -811,7 +811,7 @@ void test_skipped(int why)
 		s = "second user";
 		break;
 	case T_PATH:
-		s = "volume path";
+		s = "has to be run on localhost with -c volume path";
 		break;
 	case T_AFP2:
 		s = "AFP 2.x";
@@ -831,11 +831,6 @@ void test_skipped(int why)
 	case T_AFP32:
 		s = "AFP 3.2 or higher";
 		break;
-/*
-	case T_MAC_PATH:
-		s = "Mac OS server or volume path";
-		break;
-*/
 	case T_UNIX_PREV:
 		s ="volume with UNIX privileges";
 		break;
@@ -867,13 +862,13 @@ void test_skipped(int why)
 		s = "volume with ACL support";
 		break;
 	case T_EA:
-		s = "volume with extendend attribute support";
+		s = "volume with filesystem Extended Attributes support";
 		break;
 	case T_ADEA:
-		s = "Netatalk 3+ and volume with EA metadata";
+		s = "volume must not use AppleDouble metadata";
 		break;
 	case T_ADV2:
-		s = "volume with AppleDouble metadata";
+		s = "volume must use AppleDouble metadata";
 		break;
 	case T_NOSYML:
 		s = "volume without option 'follow symlinks'";
