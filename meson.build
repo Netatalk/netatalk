@@ -2229,6 +2229,7 @@ if 'readmes' in get_option('with-docs') and cmarkgfm.found()
     build_readme_docs = true
 
     readmes_md = [
+        'COMPILATION',
         'CONTRIBUTORS',
         'DEVELOPER',
         'DOCKER',
