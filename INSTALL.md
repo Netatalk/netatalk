@@ -10,6 +10,8 @@ built and generated sources into. We'll call that directory "build" here. It's
 recommended to create a separate build directory for each configuration you
 might want to use.
 
+## Get the source code
+
 To build from a release tarball, download and unpack the tarball.
 
 ```
@@ -25,11 +27,57 @@ git clone https://github.com/netatalk/netatalk.git      # clone the repository
 cd netatalk                                             # change to the repo directory
 ```
 
-Install required software dependencies:
+## External software dependencies
 
-See the following section of this file for a list of required and optional software dependencies.
+Install software dependencies using your operating system's package manager.
 
-Then:
+### Required
+
+| Package      | Details |
+|--------------|---------|
+| Berkeley DB  | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
+| iniparser    | v3.1 or later |
+| libevent     | v2.0 or later |
+| libgcrypt    | v1.2.3 or later |
+
+### Required to Build
+
+| Package | Details |
+|---------|---------|
+| meson   | v0.61.2 or later |
+| ninja   | Often packaged as `ninja-build` |
+
+### Required for Spotlight Support
+
+| Package    | Details |
+|------------|---------|
+| D-Bus      | Also used by avahi and afpstats |
+| talloc     |  |
+| tracker **OR** localsearch | v0.12 or later|
+| bison      |  |
+| flex       |  |
+
+### Optional
+
+| Package      | Details |
+|--------------|---------|
+| avahi **OR** mDNSresponder | For Zeroconf support |
+| cmark **OR** cmark-gfm     | For generating documentation |
+| cracklib and cracklib dictionary | For password strength check in afppasswd |
+| GLib 2 and GIO             | For afpstats support |
+| Kerberos V                 | For krbV UAM support |
+| libacl                     | For ACL support |
+| libldap                    | For LDAP support |
+| libpam                     | For PAM support |
+| libtirpc **OR** libquota   | For Quota support |
+| Perl                       | For admin scripts |
+| po4a                       | For localization of documentation |
+| tcpwrap                    | For TCP wrapper support |
+| [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | For regenerating Unicode lookup tables |
+
+## Build the software
+
+Use the `meson` command to compile and install Netatalk.
 
 ```
 meson setup build                                       # configure the build
@@ -81,52 +129,6 @@ Please see [meson_options.txt](https://github.com/Netatalk/netatalk/blob/main/me
 for full details of all Netatalk-specific options,
 and the [Meson documentation](https://mesonbuild.com/Builtin-options.html)
 for details of generic Meson options.
-
-## External software dependencies
-
-### Required
-
-| Package      | Details |
-|--------------|---------|
-| Berkeley DB  | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
-| iniparser    | v3.1 or later |
-| libevent     | v2.0 or later |
-| libgcrypt    | v1.2.3 or later |
-
-### Required to Build
-
-| Package | Details |
-|---------|---------|
-| meson   | v0.61.2 or later |
-| ninja   | Often packaged as `ninja-build` |
-
-### Required for Spotlight Support
-
-| Package    | Details |
-|------------|---------|
-| D-Bus      | Also used by avahi and afpstats |
-| talloc     |  |
-| tracker **OR** localsearch | v0.12 or later|
-| bison      |  |
-| flex       |  |
-
-### Optional
-
-| Package      | Details |
-|--------------|---------|
-| avahi **OR** mDNSresponder | For Zeroconf support |
-| cmark **OR** cmark-gfm     | For generating documentation |
-| cracklib and cracklib dictionary | For password strength check in afppasswd |
-| GLib 2 and GIO             | For afpstats support |
-| Kerberos V                 | For krbV UAM support |
-| libacl                     | For ACL support |
-| libldap                    | For LDAP support |
-| libpam                     | For PAM support |
-| libtirpc **OR** libquota   | For Quota support |
-| Perl                       | For admin scripts |
-| po4a                       | For localization of documentation |
-| tcpwrap                    | For TCP wrapper support |
-| [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | For regenerating Unicode lookup tables |
 
 # See also
 
