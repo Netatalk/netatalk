@@ -1,3 +1,35 @@
+Changes in 4.2.1
+================
+
+* NEW: meson: Introduce option to control state dir creation, GitHub #2070
+       Introduces the with-statedir-creation boolean option, true by default
+* NEW: meson: Option for controlling CUPS backend installation, GitHub #2071
+       Introduces with-cups-pap-backend (boolean, default false)
+       and with-cups-libdir-path (string)
+* FIX: meson: Generate Unicode lookup table sources before use, GitHub #2072
+* FIX: libatalk: Work around DSIWrite() bug in AppleShare Client 3.7.x,
+       GitHub #2085
+* FIX: libatalk: Restore cnid mysql pw option that had fallen off
+       which makes the mysql backend usable again, GitHub #2112
+* FIX: afpd: Don't lose extension mapping on macOS hosts, GitHub #2092
+* FIX: afpd: Fall back to ea = none rather than ea = ad when
+       the filesystem EA support check fails, GitHub #2103
+* UPD: webmin: Print volume name + section name in volumes list, GitHub #2073
+* FIX: webmin: Sort lists of index page items in alphabetical order,
+       GitHub #2074
+* FIX: webmin: Return to the correct index tab from other actions, GitHub #2075
+* UPD: testsuite: Print a detailed test summary after spectest run, GitHub #2095
+* UPD: testsuite: Break out separate FPGetExtAttr test module, GitHub #2104
+* UPD: testsuite: Print usage helptext when running test binaries
+       without params, GitHub #2111
+* UPD: docs: Major additions to the afptest man page, GitHub #2100
+* NEW: docs: bstring README with redistribution notes and LICENSE,
+       GitHub #2077
+* FIX: docs: Improve verbiage in signature and UUID man pages, GitHub #2084
+* UPD: docs: Transition Compilation from manual chapter to readme, GitHub #2106
+* UPD: docs: Reduce overlap between install chapter and install readme,
+       GitHub #2107
+
 Changes in 4.2.0
 ================
 
