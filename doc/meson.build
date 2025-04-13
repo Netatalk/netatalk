@@ -23,3 +23,14 @@ if build_html_docs
         endif
     endif
 endif
+
+if get_option('with-website')
+    python = find_program('python3', required: false)
+    if python.found()
+        run_command(
+            python,
+            'generate_compile_docs.py',
+            check: true,
+        )
+    endif
+endif

@@ -20,7 +20,6 @@ if get_option('with-website')
         'asip-status.1',
         'cnid_dbd.8',
         'cnid_metad.8',
-        'Compilation',
         'dbd.1',
         'extmap.conf.5',
         'index',
