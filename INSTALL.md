@@ -129,4 +129,4 @@ for details of generic Meson options.
 The Netatalk manual has further resources to aid building and installation.
 
 - [Installation chapter](https://netatalk.io/manual/en/Installation): detailed descriptions of each dependency
-- [Compilation chapter](https://netatalk.io/manual/en/Compilation): concrete build steps for each supported operating system
+- [Compilation chapter](https://netatalk.io/compilation): concrete build steps for each supported operating system

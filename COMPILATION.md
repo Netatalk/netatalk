@@ -1,13 +1,11 @@
 # Compile Netatalk from Source
 
-This appendix describes how to compile Netatalk from source for specific operating systems.
-Before starting, please read through the Installation chapter first.
-You need to have a copy of Netatalk's source code before proceeding.
+Below are instructions on how to compile Netatalk from source for specific operating systems.
+Before starting, please read through the [Install Quick Start](https://netatalk.io/install) guide first.
+You need to have a local clone of Netatalk's source code before proceeding.
 
-Please note that these guides are automatically generated, and may not be optimized for your system.
-Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.
-
-# Operating Systems
+Please note that these steps are automatically generated from the CI jobs,
+and may not always be optimized for standalone execution.
 
 ## Alpine Linux
 
@@ -318,7 +316,7 @@ Install required packages
 pkg install -y avahi bison cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3
 ```
 
-Configure and build
+Configure, compile, install, run, and uninstall
 
 ```
 set -e
@@ -338,7 +336,7 @@ Install required packages
 pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc
 ```
 
-Configure and build
+Configure, compile, install, run, and uninstall
 
 ```
 set -e
@@ -367,7 +365,7 @@ export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(
 pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc
 ```
 
-Configure and build
+Configure, compile, install, run, and uninstall
 
 ```
 set -e
@@ -394,7 +392,7 @@ Install required packages
 pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal iniparser libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 p5-Net-DBus pkgconf tracker3
 ```
 
-Configure and build
+Configure, compile, install, run, and uninstall
 
 ```
 set -e
@@ -423,7 +421,7 @@ export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin
 pkgin -y install avahi cmark gnome-tracker iniparser libevent libgcrypt meson mysql-client talloc
 ```
 
-Configure and build
+Configure, compile, install, run, and uninstall
 
 ```
 set -e
@@ -461,7 +459,7 @@ make all
 make install
 ```
 
-Configure and build
+Configure, compile, install, run, and uninstall
 
 ```
 set -e

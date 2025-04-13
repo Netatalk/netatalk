@@ -211,7 +211,7 @@ option(
     'with-website',
     type: 'boolean',
     value: false,
-    description: 'Refresh and build the Netatalk website (admin use)',
+    description: 'Build documentation for the Netatalk website (admin use only)',
 )
 option(
     'with-zeroconf',

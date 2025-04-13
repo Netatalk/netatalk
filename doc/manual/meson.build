@@ -1,5 +1,4 @@
 manual_pages = [
-    'Compilation',
     'Configuration',
     'Installation',
     'License',
@@ -17,15 +16,6 @@ if get_option('with-website')
     manual_pages += [
         '_Sidebar',
     ]
-
-    python = find_program('python3', required: false)
-    if python.found()
-        run_command(
-            python,
-            'generate_compile_docs.py',
-            check: true,
-            )
-    endif
 
     foreach page : manual_pages
         install_data(page + '.md', install_dir: manual_install_path + '/en')

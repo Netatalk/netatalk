@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# This script generates the compile.md manual page from the GitHub build.yml file.
+# This script generates the compilation readme from the GitHub build.yml file.
 #
 # (c) 2024-2025 Daniel Markstedt <daniel@mindani.net>
 #
@@ -20,22 +20,20 @@ import yaml
 
 linebreak_escape_pattern = r'\\\n\s+'
 
-output_file = "Compilation.md"
+output_file = "../COMPILATION.md"
 
-with open('../../.github/workflows/build.yml', 'r') as file:
+with open('../.github/workflows/build.yml', 'r') as file:
   workflow = yaml.safe_load(file)
 
 markdown = [
   "# Compile Netatalk from Source",
   "",
-  "This appendix describes how to compile Netatalk from source for specific operating systems.",
-  "Before starting, please read through the Installation chapter first.",
-  "You need to have a copy of Netatalk's source code before proceeding.",
+  "Below are instructions on how to compile Netatalk from source for specific operating systems.",
+  "Before starting, please read through the [Install Quick Start](https://netatalk.io/install) guide first.",
+  "You need to have a local clone of Netatalk's source code before proceeding.",
   "",
-  "Please note that these guides are automatically generated, and may not be optimized for your system.",
-  "Also, the steps for launching Netatalk are incomplete for some OSes, because of technical constraints.",
-  "",
-  "# Operating Systems",
+  "Please note that these steps are automatically generated from the CI jobs,",
+  "and may not always be optimized for standalone execution.",
   "",
 ]
 
