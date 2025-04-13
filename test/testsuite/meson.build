@@ -105,6 +105,7 @@ spectest_sources = [
     'FPGetSrvrMsg.c',
     'FPGetSrvrParms.c',
     'FPGetComment.c',
+    'FPGetExtAttr.c',
     'FPGetForkParms.c',
     'FPGetFileDirParms.c',
     'FPGetVolParms.c',
