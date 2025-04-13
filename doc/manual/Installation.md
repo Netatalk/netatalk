@@ -18,6 +18,9 @@ some Linux, BSD, and Solaris-like distributions. Installing Netatalk
 through this channel will give you the most seamless experience, with
 managed updates when new package versions are available.
 
+See the [Netatalk page on Repology](https://repology.org/project/netatalk/versions)
+for a living list of known Netatalk packages.
+
 You might also want to have a look at 3rd party package repositories for
 your operating system, such as [rpmfind](https://rpmfind.net/) for Red
 Hat based Linux distributions, [OpenCSW](https://www.opencsw.org/) for
@@ -26,50 +29,24 @@ Solaris and its descendants, and [Homebrew](https://brew.sh/) or
 
 ### Source packages
 
-#### Tarballs
-
 Prepackaged tarballs with stable releases of the Netatalk source code
 are available on the [Netatalk releases page on
 GitHub](https://github.com/Netatalk/netatalk/releases).
 
-#### Git
+The source code is also available from the [Netatalk Git
+repository](https://github.com/Netatalk/netatalk).
 
-Downloading the Git repository can be done quickly and easily:
+See the [Installation Quick Start](https://netatalk.io/install) guide
+for instructions on how to build Netatalk from source.
 
-1.  Make sure you have Git installed. **which git** should produce a path
-    to git.
+## Prerequisites
 
-        $ which git
-        /usr/bin/git
+Netatalk depends on a number of third-party libraries and utilities.
+There are a handful of mandatory packages that must be installed before
+attempting to build Netatalk. In addition, there are a number of optional
+packages that can be installed to enhance Netatalk's functionality.
 
-2.  Now get the source:
-
-        $ git clone https://github.com/Netatalk/netatalk.git netatalk-code
-        Cloning into 'netatalk-code'...
-        remote: Enumerating objects: 41592, done.
-        ...
-        Resolving deltas: 100% (32227/32227), done.
-
-    This will create a local directory called *netatalk-code* containing
-    a complete and fresh copy of the whole Netatalk source tree from the
-    Git repository.
-
-3.  If you don't specify a branch or tag, you will get the bleeding edge
-    development code. In order to get the latest stable Netatalk 3.1
-    code, for instance, check out the branch named
-    "branch-netatalk-3-1":
-
-        $ git checkout branch-netatalk-3-1
-
-4.  In order to keep your repository copy updated, occasionally run:
-
-        $ git pull
-
-## Compiling Netatalk
-
-### Prerequisites
-
-#### Required third-party software
+### Required third-party software
 
 - Berkeley DB
 
@@ -96,7 +73,7 @@ Downloading the Git repository can be done quickly and easily:
     supplies the encryption for the standard User Authentication Modules
     (UAMs). They are: DHX2, DHCAST128 (a.k.a. DHX) and RandNum.
 
-#### Optional third-party software
+### Optional third-party software
 
 Netatalk can use the following third-party software to enhance its
 functionality.
@@ -136,7 +113,7 @@ functionality.
     passwords for authentication with netatalk.
 
     The CrackLib dictionary, which is sometimes distributed separately in
-    a runtime package, is also a requirement.
+    a runtime package, is also a requirement both at compile and run time.
 
 - D-Bus
 
@@ -204,7 +181,7 @@ functionality.
     incarnation
     TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)
     as the metadata backend for Spotlight
-    search indexing. The minimum required version is 0.7 as this was the
+    search indexing. The minimum required version is 0.12 as this was the
     first version to support
     [SPARQL](https://gnome.pages.gitlab.gnome.org/tracker/).
 
@@ -215,18 +192,11 @@ functionality.
 
 - UnicodeData.txt
 
-    The build system uses Perl and the Unicode Character Database to
-    generate Netatalk's Unicode character conversion sources.
+    The [Unicode Character Database](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)
+    is required to regenerate Netatalk's Unicode character conversion tables.
 
-### Configure and build Netatalk
-
-Instructions on how to use the build system to configure and build
-netatalk source code are documented in the
-[Install Quick Start](/install.html) guide.
-
-For examples of concrete steps to compile on specific operating systems,
-refer to the [Compile Netatalk from Source](Compilation.html) appendix in this
-manual, which is automatically generated from the CI build scripts.
+    This is mostly relevant for developers or package managers who want to regenerate
+    the Unicode source files.
 
 ## Starting and stopping Netatalk
 
