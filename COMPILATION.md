@@ -18,7 +18,7 @@ apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -63,7 +63,7 @@ pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -109,7 +109,7 @@ apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-ru
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-docs-l10n=true -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -154,7 +154,7 @@ dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkco
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -200,7 +200,7 @@ sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm crackl
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -260,7 +260,7 @@ brew install cmark-gfm cracklib iniparser mariadb meson openldap
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -320,7 +320,7 @@ Configure, compile, install, run, and uninstall
 
 ```
 set -e
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 meson install -C build
 netatalk -V
@@ -333,14 +333,14 @@ ninja -C build uninstall
 Install required packages
 
 ```
-pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql84-client openldap26-client p5-Net-DBus perl5 pkgconf talloc
+pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql91-client openldap26-client p5-Net-DBus perl5 pkgconf talloc
 ```
 
 Configure, compile, install, run, and uninstall
 
 ```
 set -e
-meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 cd build
 meson test
@@ -369,7 +369,7 @@ Configure, compile, install, run, and uninstall
 
 ```
 set -e
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 cd build
 meson test
@@ -396,7 +396,7 @@ Configure, compile, install, run, and uninstall
 
 ```
 set -e
-meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-pam=false -Dwith-tests=true
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-pam=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 meson install -C build
 netatalk -V
@@ -426,7 +426,7 @@ Configure, compile, install, run, and uninstall
 ```
 set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
-meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/opt/local/lib/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-ldap-path=/opt/local -Dwith-tests=true
+meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/opt/local/lib/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-ldap-path=/opt/local -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 cd build
 meson test
@@ -464,7 +464,7 @@ Configure, compile, install, run, and uninstall
 ```
 set -e
 export PATH=/usr/local/sbin:/usr/local/bin:$PATH
-meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true
+meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 cd build
 meson test
