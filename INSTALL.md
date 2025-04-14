@@ -91,7 +91,7 @@ sudo meson install -C build                             # install Netatalk
 To uninstall Netatalk:
 
 ```
-sudo ninja -C build uninstall                           # install Netatalk
+sudo ninja -C build uninstall                           # uninstall Netatalk
 ```
 
 To test (requires the `-Dwith-tests=true` flag at configure time):
