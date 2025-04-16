@@ -45,6 +45,26 @@ ASP    PAP                   DSI
 * "papd" allows Macs to spool to "lpd", and "pap" allows Unix
   machines to print to AppleTalk connected printers.
 
+When built without AppleTalk support, the network stack looks something like this:
+
+```
+          AFP
+           |
+          DSI
+           |
+           | (port:548)
+           |
+   -+---------------------------+- (kernel boundary)
+    |         Socket            |
+    +------------+--------------+
+    |     TCP    |    UDP       |
+    +------------+--------------+
+    |       IP v4 or v6         |
+    +---------------------------+
+    |     Network Interface     |
+    +---------------------------+
+```
+
 Error checking and logging
 ==========================
 
