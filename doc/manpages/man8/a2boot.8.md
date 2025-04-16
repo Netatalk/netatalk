@@ -4,9 +4,9 @@ a2boot — Apple II netboot server daemon
 
 # Synopsis
 
-`a2boot [-d] [-n nbpname]`
+**a2boot** [-d] [-n nbpname]
 
-`a2boot [ -v | -V ]`
+**a2boot** [ -v | -V ]
 
 # Description
 

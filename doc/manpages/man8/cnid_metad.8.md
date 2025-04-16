@@ -4,9 +4,9 @@ cnid_metad — daemon for starting cnid_dbd daemons on demand
 
 # Synopsis
 
-`cnid_metad [-d] [-F configuration file]`
+**cnid_metad** [-d] [-F configuration file]
 
-`cnid_metad [ -v | -V ]`
+**cnid_metad** [ -v | -V ]
 
 # Description
 

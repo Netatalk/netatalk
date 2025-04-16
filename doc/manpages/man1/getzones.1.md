@@ -4,7 +4,7 @@ getzones — list AppleTalk zone names
 
 # Synopsis
 
-`getzones [ -m | -l ] [address]`
+**getzones** [ -m | -l ] [address]
 
 # Description
 

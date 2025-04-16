@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-12 20:52+0200\n"
+"POT-Creation-Date: 2025-04-16 08:12+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -45,14 +45,15 @@ msgstr "名前"
 #: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
 #: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
 #: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
-#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
-#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
-#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
-#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
-#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
-#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
-#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
-#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:5 manpages/man3/atalk_aton.3.md:5
+#: manpages/man3/nbp_name.3.md:5 manpages/man4/atalk.4.md:5
+#: manpages/man5/afp.conf.5.md:5 manpages/man8/a2boot.8.md:5
+#: manpages/man8/afpd.8.md:5 manpages/man8/atalkd.8.md:5
+#: manpages/man8/cnid_dbd.8.md:5 manpages/man8/cnid_metad.8.md:5
+#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
+#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
+#: manpages/man8/timelord.8.md:5
 #, no-wrap
 msgid "Synopsis"
 msgstr "概要"
@@ -61,17 +62,17 @@ msgstr "概要"
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
 #: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
-#: manpages/man1/afptest.1.md:179 manpages/man1/asip-status.1.md:106
+#: manpages/man1/afptest.1.md:176 manpages/man1/asip-status.1.md:106
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
-#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:58
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1361
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1357
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
-#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
 #: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
@@ -83,17 +84,17 @@ msgstr "著者"
 #: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
 #: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
 #: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
-#: manpages/man1/afptest.1.md:181 manpages/man1/asip-status.1.md:108
+#: manpages/man1/afptest.1.md:178 manpages/man1/asip-status.1.md:108
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
-#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:60
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1363
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1359
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
-#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/cnid_dbd.8.md:147 manpages/man8/cnid_metad.8.md:50
 #: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
@@ -106,10 +107,10 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1356 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1352 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
-#: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
+#: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
 #: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
 #: manpages/man8/papstatus.8.md:49
 #, no-wrap
@@ -119,7 +120,7 @@ msgstr "関連項目"
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afppasswd.1.md:26
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:103
-#: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:31
+#: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:39
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:39
 #: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1306
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
@@ -1614,8 +1615,8 @@ msgstr "> ファイル拡張子とタイプ/クリエータのマッピングを
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:562
 #, no-wrap
-msgid "force xattr with sticky bit = <BOOLEAN\\> (default: *no*) `(G/V)`\n"
-msgstr "force xattr with sticky bit = <BOOLEAN\\> (デフォルト: *no*) `(G/V)`\n"
+msgid "force xattr with sticky bit = <BOOLEAN\\> (default: *no*) **(G)**/**(V)**\n"
+msgstr "force xattr with sticky bit = <BOOLEAN\\> (デフォルト: *no*) **(G)**/**(V)**\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:566
@@ -1643,8 +1644,8 @@ msgstr ""
 #, no-wrap
 msgid ""
 "> Specify a set of file and directory attributes that shall be ignored by\n"
-"the server, `all` includes all the other options.\n"
-msgstr "> サーバが無視すべきファイルとディレクトリの属性を設定する。`all`はオプション全部という意味である。\n"
+"the server, *all* includes all the other options.\n"
+msgstr "> サーバが無視すべきファイルとディレクトリの属性を設定する。*all*はオプション全部という意味である。\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:578
@@ -2181,10 +2182,10 @@ msgstr ""
 #, no-wrap
 msgid ""
 "> Comma-delimited list of filenames for which FCE events shall not be\n"
-"generated. Default: `.DS_Store`\n"
+"generated. Default: *.DS_Store*\n"
 msgstr ""
 "> FCEイベントを生成すべきでないファイル名をカンマ区切りのリスト。デフォルトでは\n"
-"`.DS_Store`\n"
+"*.DS_Store*\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:773
@@ -3693,11 +3694,11 @@ msgstr "unix priv = <BOOLEAN\\> (デフォルト: *yes*) **(V)**\n"
 #, no-wrap
 msgid ""
 "> Whether to use AFP3 UNIX privileges. This should be set for OS X\n"
-"clients. See also: **file perm**, **directory perm** and `umask`.\n"
+"clients. See also: **file perm**, **directory perm**, and **umask**.\n"
 msgstr ""
 "> AFP3 UNIX 権限を使うかどうか。これは OS X\n"
 "クライアントに対しては設定すべきである。**file perm**、**directory perm**\n"
-"及び `umask` も参照。\n"
+"及び **umask** も参照。\n"
 
 #. type: Title ##
 #: manpages/man5/afp.conf.5.md:1308
@@ -3721,28 +3722,33 @@ msgstr ""
 msgid "The home directory is mounted on */home/{user}/afp-data*."
 msgstr "ホームディレクトリは */home/{user}/afp-data* にマウントされる。"
 
-#. type: Fenced code block
-#: manpages/man5/afp.conf.5.md:1316
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1320
 #, no-wrap
 msgid ""
-"[Global]\n"
-"afpstats = yes\n"
-"spotlight = yes\n"
-"mimic model = RackMac\n"
-"\n"
-"[Home]\n"
-"basedir regex = /home\n"
-"path = afp-data\n"
+"    [Global]\n"
+"    afpstats = yes\n"
+"    spotlight = yes\n"
+"    mimic model = RackMac\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1324
+#, no-wrap
+msgid ""
+"    [Home]\n"
+"    basedir regex = /home\n"
+"    path = afp-data\n"
 msgstr ""
 
 #. type: Title ##
-#: manpages/man5/afp.conf.5.md:1327
+#: manpages/man5/afp.conf.5.md:1325
 #, no-wrap
 msgid "Example: Classic Mac clients"
 msgstr "例：レトロ Mac クライアント"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1333
+#: manpages/man5/afp.conf.5.md:1331
 msgid ""
 "This enables AppleTalk if Netatalk was built with AppleTalk support.  The "
 "Random Number and ClearTxt authentication modules are used.  The **legacy "
@@ -3753,7 +3759,7 @@ msgstr ""
 "ションはサーバーを BSD デーモンのように見せるために使われる。"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1338
+#: manpages/man5/afp.conf.5.md:1336
 msgid ""
 "With **legacy volume size** the volume size is limited to 2 GB for very old "
 "Macs, while **prodos** is used to enable ProDOS boot flags on the volume "
@@ -3763,28 +3769,38 @@ msgstr ""
 "ボリュームに ProDOS ブートフラグを設定する上、ボリュームの空き領域は 32 MB に"
 "制限される。"
 
-#. type: Fenced code block
-#: manpages/man5/afp.conf.5.md:1339
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1341
 #, no-wrap
 msgid ""
-"[Global]\n"
-"appletalk = yes\n"
-"uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so\n"
-"legacy icon = daemon\n"
-"\n"
-"[mac]\n"
-"volume name = Mac Files\n"
-"path = /srv/mac\n"
-"legacy volume size = yes\n"
-"\n"
-"[apple2]\n"
-"volume name = Apple II Files\n"
-"path = /srv/apple2\n"
-"prodos = yes\n"
+"    [Global]\n"
+"    appletalk = yes\n"
+"    uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so\n"
+"    legacy icon = daemon\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1360
+#: manpages/man5/afp.conf.5.md:1346
+#, no-wrap
+msgid ""
+"    [mac]\n"
+"    volume name = Mac Files\n"
+"    path = /srv/mac\n"
+"    legacy volume size = yes\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1351
+#, no-wrap
+msgid ""
+"    [apple2]\n"
+"    volume name = Apple II Files\n"
+"    path = /srv/apple2\n"
+"    prodos = yes\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:1356
 msgid ""
 "afpd(8), afppasswd(5), afp_signature.conf(5), extmap.conf(5), cnid_metad(8)"
 msgstr ""

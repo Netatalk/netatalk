@@ -4,9 +4,9 @@ netatalk — Netatalk AFP server service controller daemon
 
 # Synopsis
 
-`netatalk [-F configfile]`
+**netatalk** [-F configfile]
 
-`netatalk [ -v | -V ]`
+**netatalk** [ -v | -V ]
 
 # Description
 

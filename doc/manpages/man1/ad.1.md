@@ -4,9 +4,9 @@ ad - AppleDouble file utility suite
 
 # Synopsis
 
-`ad [ ls | cp | mv | rm | set ] [...]`
+**ad** [ ls | cp | mv | rm | set ] [...]
 
-`ad [ -v | --version ]`
+**ad** [ -v | --version ]
 
 # Description
 
@@ -20,31 +20,31 @@ volume are modified.
 
 List files and directories.
 
-> `ad ls [-dRl[u]] {file|dir [...]}`
+> ad ls [-dRl[u]] {file|dir [...]}
 
 Copy files and directories.
 
-> `ad cp [-aipvf] {src_file} {dst_file}`
+> ad cp [-aipvf] {src_file} {dst_file}
 
-> `ad cp -R [-aipvf] {src_file|src_directory ...} {dst_directory}`
+> ad cp -R [-aipvf] {src_file|src_directory ...} {dst_directory}
 
 Move files and directories.
 
-> `ad mv [-finv] {src_file} {dst_file}`
+> ad mv [-finv] {src_file} {dst_file}
 
-> `ad mv [-finv] {src_file|src_directory ...} {dst_directory}`
+> ad mv [-finv] {src_file|src_directory ...} {dst_directory}
 
 Remove files and directories.
 
-> `ad rm [-Rv] {file|directory}`
+> ad rm [-Rv] {file|directory}
 
 Set metadata on files.
 
-> `ad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}`
+> ad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}
 
 Show version.
 
-> `ad -v | --version`
+> ad -v | --version
 
 # ad ls
 

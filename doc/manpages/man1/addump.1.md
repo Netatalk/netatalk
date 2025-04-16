@@ -4,17 +4,17 @@ addump - Dump AppleSingle/AppleDouble format data
 
 # Synopsis
 
-`addump [-a] [ FILE | DIR ]`
+**addump** [-a] [ FILE | DIR ]
 
-`addump [-e] [ FILE | DIR ]`
+**addump** [-e] [ FILE | DIR ]
 
-`addump [-f] [FILE]`
+**addump** [-f] [FILE]
 
-`addump [-d] [FILE]`
+**addump** [-d] [FILE]
 
-`addump [ -h | -help | --help ]`
+**addump** [ -h | -help | --help ]
 
-`addump [ -v | -version | --version ]`
+**addump** [ -v | -version | --version ]
 
 # Description
 

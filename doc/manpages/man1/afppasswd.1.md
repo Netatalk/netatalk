@@ -4,7 +4,7 @@ afppasswd — AFP password maintenance utility
 
 # Synopsis
 
-`afppasswd [-acfn] [-p afppasswd file] [-u minimum uid] [-w password string]`
+**afppasswd** [-acfn] [-p afppasswd file] [-u minimum uid] [-w password string]
 
 # Description
 

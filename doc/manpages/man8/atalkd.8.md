@@ -4,9 +4,9 @@ atalkd — userland AppleTalk network manager daemon
 
 # Synopsis
 
-`atalkd [-f configfile] [-P pidfile] [-1] [-2] [-d] [-t]`
+**atalkd** [-f configfile] [-P pidfile] [-1] [-2] [-d] [-t]
 
-`atalkd [ -v | -V ]`
+**atalkd** [ -v | -V ]
 
 # Description
 
