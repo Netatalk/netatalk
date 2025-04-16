@@ -4,7 +4,7 @@ papstatus — get the status of an AppleTalk-connected printer
 
 # Synopsis
 
-`papstatus [-d] [-p printer] [retrytime]`
+**papstatus** [-d] [-p printer] [retrytime]
 
 # Description
 

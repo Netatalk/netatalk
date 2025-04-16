@@ -4,9 +4,9 @@ cnid_dbd — CNID database access daemon
 
 # Synopsis
 
-`cnid_dbd`
+**cnid_dbd**
 
-`cnid_dbd [ -v | -V ]`
+**cnid_dbd** [ -v | -V ]
 
 # Description
 
@@ -107,7 +107,7 @@ is exceeded, one of the existing connections is closed and reused. The
 affected *afpd* process will transparently reconnect later, which causes
 slight overhead. On the other hand, setting this parameter too high
 could affect performance in **cnid_dbd** since all descriptors have to be
-checked in a `select()` system call, or worse, you might exceed the per
+checked in a *select()* system call, or worse, you might exceed the per
 process limit of open file descriptors on your system. It is safe to set
 the value to 1 on volumes where only one *afpd* client process is
 expected to run, e.g. home directories.
@@ -119,26 +119,22 @@ Default: 600. Set this to 0 to disable the timeout.
 
 # Updating
 
-Note that the first version to appear *after* Netatalk 2.1 i.e. Netatalk
-2.1.1, will support Berkeley DB updates on the fly without manual
-intervention. In other words Netatalk 2.1 does contain code to prepare
-the Berkeley DB database for upgrades and to upgrade it in case it has
-been prepared before. That means it can't upgrade a 2.0.x version
-because that one didn't prepare the database.
+Starting with Netatalk 2.1.1, automatic Berkeley DB updates are supported,
+as long as Netatalk 2.1.0 or later was used to create the database.
 
 In order to update between older Netatalk releases using different
-Berkeley DB library versions, follow this steps:
+Berkeley DB library versions, follow these steps:
 
 - Stop the to be upgraded old version of Netatalk
 
 - Using the old Berkeley DB utilities run
-`db_recover -h <path to .AppleDB>`
+*db_recover -h <path to .AppleDB>*
 
 - Using the new Berkeley DB utilities run
-`db_upgrade -v -h <path to .AppleDB> -f cnid2.db`
+*db_upgrade -v -h <path to .AppleDB> -f cnid2.db*
 
 - Again using the new Berkeley DB utilities run
-`db_checkpoint -1 -h <path to .AppleDB>`
+*db_checkpoint -1 -h <path to .AppleDB>*
 
 - Start the the new version of Netatalk
 

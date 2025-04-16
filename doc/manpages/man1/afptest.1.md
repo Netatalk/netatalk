@@ -4,17 +4,17 @@ afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg, fce_listen — 
 
 # Synopsis
 
-`afp_lantest [-34567GgVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-n iterations] [-t tests] [-F bigfile]`
+**afp_lantest** [-34567GgVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-n iterations] [-t tests] [-F bigfile]
 
-`afp_logintest [-1234567CmVv] [-h host] [-p port] [-s volume] [-u user] [-w password]`
+**afp_logintest** [-1234567CmVv] [-h host] [-p port] [-s volume] [-u user] [-w password]
 
-`afp_spectest [-1234567aCiLlmVvXx] [-h host] [-H host2] [-p port] [-s volume] [-c path to volume] [-S volume2] [-u user] [-d user2] [-w password] [-f test]`
+**afp_spectest** [-1234567aCiLlmVvXx] [-h host] [-H host2] [-p port] [-s volume] [-c path to volume] [-S volume2] [-u user] [-d user2] [-w password] [-f test]
 
-`afp_speedtest [-1234567aeiLnVvy] [-h host] [-p port] [-s volume] [-S volume2] [-u user] [-w password] [-n iterations] [-d size] [-q quantum] [-F file] [-f test]`
+**afp_speedtest** [-1234567aeiLnVvy] [-h host] [-p port] [-s volume] [-S volume2] [-u user] [-w password] [-n iterations] [-d size] [-q quantum] [-F file] [-f test]
 
-`afparg [-1234567lVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-f command]`
+**afparg** [-1234567lVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-f command]
 
-`fce_listen [-h host] [-p port]`
+**fce_listen** [-h host] [-p port]
 
 # Description
 
@@ -73,7 +73,7 @@ in order to test netatalk speeds against other file transfer protocols.
 
 **afparg** is an interactive AFP client that takes an AFP command with
 optional arguments. This can be used for troubleshooting or system
-administration. Run `afparg -l` to list available commands.
+administration. Run *afparg -l* to list available commands.
 
 **fce_listen** is a simple listener for Netatalk's Filesystem Change Event
 (FCE) protocol. It will print out any UDP datagrams received from the AFP
@@ -85,7 +85,7 @@ This suite of tools were designed primarily to test Netatalk AFP servers,
 however they can also be used to test a native Mac OS AFP server hosted
 by an older Mac OS X or Classic Mac OS system.
 
-Launch the test runner with the `-m` option when testing a Mac AFP server.
+Launch the test runner with the **-m** option when testing a Mac AFP server.
 When running in Mac mode, the test runner will report tests with known current
 or historical differences between Mac and Netatalk.
 
@@ -106,19 +106,16 @@ but now behave the same way:
 
 Below is a sample configuration for running the APF spec tests.
 
-- 2 users: `user1`, `user2` with the same password
-- 1 group: `afpusers`
-- `user1`, `user2` assigned to `afpusers` group
+- 2 users: user1, user2 with the same password
+- 1 group: afpusers
+- user1, user2 assigned to afpusers group
 - clear text UAM + guest UAM
-- two empty volumes:
 
-```
-drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest1
-drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest2
-```
+Arrange two *empty* directories. Some tests will fail if there are
+residual files in the test directories.
 
-*Note:* Some tests will fail if there are residual files
-in the test volumes.
+    drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest1
+    drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest2
 
 Set afp.conf as follows:
 

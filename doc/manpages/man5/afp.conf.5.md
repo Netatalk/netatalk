@@ -558,7 +558,7 @@ extmap file = <path\> **(G)**
 > Sets the path to the file which defines file extension type/creator
 mappings.
 
-force xattr with sticky bit = <BOOLEAN\> (default: *no*) `(G/V)`
+force xattr with sticky bit = <BOOLEAN\> (default: *no*) **(G)**/**(V)**
 
 > Writing metadata xattr on directories with the sticky bit set may fail
 even though we may have write access to a directory, because if the
@@ -569,7 +569,7 @@ sticky bit is set only the owner is allowed to write xattrs.
 ignored attributes = <all | nowrite | nodelete | norename\> **(G)**/**(V)**
 
 > Specify a set of file and directory attributes that shall be ignored by
-the server, `all` includes all the other options.
+the server, *all* includes all the other options.
 
 > In OS X when the Finder sets a lock on a file/directory or you set the
 BSD uchg flag in the Terminal, all three attributes are used. Thus in
@@ -767,7 +767,7 @@ Default: 0 milliseconds.
 fce ignore names = <NAME\[,NAME2,...\]\> **(G)**
 
 > Comma-delimited list of filenames for which FCE events shall not be
-generated. Default: `.DS_Store`
+generated. Default: *.DS_Store*
 
 fce ignore directories = <PATH\[,PATH2,...\]\> **(G)**
 
@@ -1301,7 +1301,7 @@ time machine = <BOOLEAN\> (default: *no*) **(V)**
 unix priv = <BOOLEAN\> (default: *yes*) **(V)**
 
 > Whether to use AFP3 UNIX privileges. This should be set for OS X
-clients. See also: **file perm**, **directory perm** and `umask`.
+clients. See also: **file perm**, **directory perm**, and **umask**.
 
 # Examples
 
@@ -1313,16 +1313,14 @@ used to make the server look like an Xserve.
 
 The home directory is mounted on */home/{user}/afp-data*.
 
-```
-[Global]
-afpstats = yes
-spotlight = yes
-mimic model = RackMac
+    [Global]
+    afpstats = yes
+    spotlight = yes
+    mimic model = RackMac
 
-[Home]
-basedir regex = /home
-path = afp-data
-```
+    [Home]
+    basedir regex = /home
+    path = afp-data
 
 ## Example: Classic Mac clients
 
@@ -1336,22 +1334,20 @@ for very old Macs, while **prodos** is used to enable ProDOS
 boot flags on the volume while limiting the volume free space
 to 32 MB.
 
-```
-[Global]
-appletalk = yes
-uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so
-legacy icon = daemon
+    [Global]
+    appletalk = yes
+    uam list = uams_dhx.so uams_dhx2.so uams_randnum.so uams_clrtxt.so
+    legacy icon = daemon
 
-[mac]
-volume name = Mac Files
-path = /srv/mac
-legacy volume size = yes
+    [mac]
+    volume name = Mac Files
+    path = /srv/mac
+    legacy volume size = yes
 
-[apple2]
-volume name = Apple II Files
-path = /srv/apple2
-prodos = yes
-```
+    [apple2]
+    volume name = Apple II Files
+    path = /srv/apple2
+    prodos = yes
 
 # See Also
 

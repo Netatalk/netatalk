@@ -4,9 +4,9 @@ papd — AppleTalk print server daemon
 
 # Synopsis
 
-`papd [-d] [-f configfile] [-p printcap] [-P pidfile]`
+**papd** [-d] [-f configfile] [-p printcap] [-P pidfile]
 
-`papd [ -v | -V ]`
+**papd** [ -v | -V ]
 
 # Description
 

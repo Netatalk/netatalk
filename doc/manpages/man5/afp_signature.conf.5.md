@@ -23,7 +23,7 @@ lines prefixed with \# are ignored. Any illegal lines are ignored.
 users from logging on to the same server twice.
 
 > Netatalk 2.0 and earlier generated a server signature by using
-`gethostid()`. This led to a problem where multiple servers could end up with
+*gethostid()*. This led to a problem where multiple servers could end up with
 the same signature because the hostid is not unique enough.
 
 > Current netatalk generates the signature from random numbers and saves

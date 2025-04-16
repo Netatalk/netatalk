@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-13 21:12+0100\n"
+"POT-Creation-Date: 2025-04-16 08:12+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -45,14 +45,15 @@ msgstr "名前"
 #: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
 #: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
 #: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
-#: manpages/man1/macusers.1.md:5 manpages/man1/pap.1.md:5
-#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
-#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
-#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
-#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
-#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
-#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
-#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/nbp.1.md:5
+#: manpages/man1/pap.1.md:5 manpages/man3/atalk_aton.3.md:5
+#: manpages/man3/nbp_name.3.md:5 manpages/man4/atalk.4.md:5
+#: manpages/man5/afp.conf.5.md:5 manpages/man8/a2boot.8.md:5
+#: manpages/man8/afpd.8.md:5 manpages/man8/atalkd.8.md:5
+#: manpages/man8/cnid_dbd.8.md:5 manpages/man8/cnid_metad.8.md:5
+#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
+#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
+#: manpages/man8/timelord.8.md:5
 #, no-wrap
 msgid "Synopsis"
 msgstr "概要"
@@ -61,9 +62,9 @@ msgstr "概要"
 #: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
 #: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
 #: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
-#: manpages/man1/afptest.1.md:17 manpages/man1/asip-status.1.md:13
+#: manpages/man1/afptest.1.md:19 manpages/man1/asip-status.1.md:13
 #: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
-#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:5
+#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:13
 #: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
 #: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
 #: manpages/man5/afp_signature.conf.5.md:5
@@ -82,17 +83,17 @@ msgstr "説明"
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
 #: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
-#: manpages/man1/afptest.1.md:89 manpages/man1/asip-status.1.md:106
+#: manpages/man1/afptest.1.md:176 manpages/man1/asip-status.1.md:106
 #: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
-#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:50
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:58
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
-#: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1343
+#: manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1357
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
-#: manpages/man8/cnid_dbd.8.md:149 manpages/man8/cnid_metad.8.md:48
+#: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
 #: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
@@ -104,17 +105,17 @@ msgstr "著者"
 #: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
 #: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
 #: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
-#: manpages/man1/afptest.1.md:91 manpages/man1/asip-status.1.md:108
+#: manpages/man1/afptest.1.md:178 manpages/man1/asip-status.1.md:108
 #: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
-#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:52
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:60
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
-#: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1345
+#: manpages/man5/afp_signature.conf.5.md:52
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1359
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
-#: manpages/man8/cnid_dbd.8.md:151 manpages/man8/cnid_metad.8.md:50
+#: manpages/man8/cnid_dbd.8.md:147 manpages/man8/cnid_metad.8.md:50
 #: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
@@ -142,10 +143,10 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1338 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1352 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
-#: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:44
+#: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
 #: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
 #: manpages/man8/papstatus.8.md:49
 #, no-wrap
@@ -168,12 +169,14 @@ msgstr "cnid_dbd — CNID データベースへのアクセスデーモン"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:8
-msgid "`cnid_dbd`"
+#, no-wrap
+msgid "**cnid_dbd**\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:10
-msgid "`cnid_dbd [ -v | -V ]`"
+#, no-wrap
+msgid "**cnid_dbd** [ -v | -V ]\n"
 msgstr ""
 
 #. type: Plain text
@@ -264,7 +267,7 @@ msgstr "> バージョンを表示してから終了する。\n"
 
 #. type: Title ###
 #: manpages/man8/cnid_dbd.8.md:63 manual/Configuration.md:576
-#: manual/Configuration.md:821
+#: manual/Configuration.md:830
 #, no-wrap
 msgid "Configuration"
 msgstr "設定"
@@ -365,11 +368,11 @@ msgid ""
 "affected *afpd* process will transparently reconnect later, which causes\n"
 "slight overhead. On the other hand, setting this parameter too high\n"
 "could affect performance in **cnid_dbd** since all descriptors have to be\n"
-"checked in a `select()` system call, or worse, you might exceed the per\n"
+"checked in a *select()* system call, or worse, you might exceed the per\n"
 "process limit of open file descriptors on your system. It is safe to set\n"
 "the value to 1 on volumes where only one *afpd* client process is\n"
 "expected to run, e.g. home directories.\n"
-msgstr "> *afpd*クライアントが*cnid_dbd*で処理するために開く最大の接続数(ファイル記述子数)。デフォルトは512。この値を超えた場合、存在する接続のうち一つを閉じて再利用する。影響を受けた*afpd*プロセスは後に透過的に再接続される。これは僅かなオーバヘッドを生じる。一方、全ての記述子を`select()`システムコールでチェックしなければならないので、このパラメータを極めて高い値に設定すると**cnid_dbd**のパフォーマンスに影響するかもしれないし、更に悪いことにプロセスあたりに開くファイル記述子のシステム上の上限を超えるかもしれない。たった一つの*afpd*クライアントプロセスが動作すると予想されるボリュームでは、この値を1に設定すると安全である。例えばホームディレクトリである。\n"
+msgstr "> *afpd*クライアントが*cnid_dbd*で処理するために開く最大の接続数(ファイル記述子数)。デフォルトは512。この値を超えた場合、存在する接続のうち一つを閉じて再利用する。影響を受けた*afpd*プロセスは後に透過的に再接続される。これは僅かなオーバヘッドを生じる。一方、全ての記述子を*select()*システムコールでチェックしなければならないので、このパラメータを極めて高い値に設定すると**cnid_dbd**のパフォーマンスに影響するかもしれないし、更に悪いことにプロセスあたりに開くファイル記述子のシステム上の上限を超えるかもしれない。たった一つの*afpd*クライアントプロセスが動作すると予想されるボリュームでは、この値を1に設定すると安全である。例えばホームディレクトリである。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:116
@@ -392,66 +395,58 @@ msgid "Updating"
 msgstr "アップデート"
 
 #. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:128
+#: manpages/man8/cnid_dbd.8.md:124
 msgid ""
-"Note that the first version to appear *after* Netatalk 2.1 i.e. Netatalk "
-"2.1.1, will support Berkeley DB updates on the fly without manual "
-"intervention. In other words Netatalk 2.1 does contain code to prepare the "
-"Berkeley DB database for upgrades and to upgrade it in case it has been "
-"prepared before. That means it can't upgrade a 2.0.x version because that "
-"one didn't prepare the database."
+"Starting with Netatalk 2.1.1, automatic Berkeley DB updates are supported, "
+"as long as Netatalk 2.1.0 or later was used to create the database."
 msgstr ""
-"Netatalk 2.1の*後*に出た最初のバージョン、すなわちNetatalk 2.1.1は、手動操作"
-"なしに自動的にBerkeley DBアップデートをサポートすることに注意せよ。言い換える"
-"と、Netatalk 2.1はBerkeley DBデータベースのアップグレードを準備するコードと、"
-"既に準備されている場合にそれをアップグレードするコードを含んでいる。これは"
-"バージョン2.0.xからはアップグレードできないことを意味する。なぜならデータベー"
-"スの準備をしていないからである。"
+"Netatalk 2.1.0 以降を使ってデータベースを作成した場合、自動的なBerkeley DBの"
+"アップデートがサポートされる。"
 
 #. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:131
+#: manpages/man8/cnid_dbd.8.md:127
 msgid ""
 "In order to update between older Netatalk releases using different Berkeley "
-"DB library versions, follow this steps:"
+"DB library versions, follow these steps:"
 msgstr ""
 "異なるバージョンのBerkeley DBライブラリを使っている古いNetatalkをアップデート"
 "するためには、以下の手順をとる:"
 
 #. type: Bullet: '- '
-#: manpages/man8/cnid_dbd.8.md:133
+#: manpages/man8/cnid_dbd.8.md:129
 msgid "Stop the to be upgraded old version of Netatalk"
 msgstr "これからアップグレードする古いバージョンのNetatalkを停止する"
 
 #. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:136
+#: manpages/man8/cnid_dbd.8.md:132
 #, no-wrap
 msgid ""
 "- Using the old Berkeley DB utilities run\n"
-"`db_recover -h <path to .AppleDB>`\n"
-msgstr "- 古いBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBのパス>` を実行する\n"
+"*db_recover -h <path to .AppleDB>*\n"
+msgstr "- 古いBerkeley DBユーティリティを使って、*db_checkpoint -1 -h <.AppleDBのパス>* を実行する\n"
 
 #. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:139
+#: manpages/man8/cnid_dbd.8.md:135
 #, no-wrap
 msgid ""
 "- Using the new Berkeley DB utilities run\n"
-"`db_upgrade -v -h <path to .AppleDB> -f cnid2.db`\n"
-msgstr "- 新しいBerkeley DBユーティリティを使って、`db_upgrade -v -h <.AppleDBのパス> -f cnid2.db` を実行する\n"
+"*db_upgrade -v -h <path to .AppleDB> -f cnid2.db*\n"
+msgstr "- 新しいBerkeley DBユーティリティを使って、*db_upgrade -v -h <.AppleDBのパス> -f cnid2.db* を実行する\n"
 
 #. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:142
+#: manpages/man8/cnid_dbd.8.md:138
 #, no-wrap
 msgid ""
 "- Again using the new Berkeley DB utilities run\n"
-"`db_checkpoint -1 -h <path to .AppleDB>`\n"
-msgstr "- 再び新しいBerkeley DBユーティリティを使って、`db_checkpoint -1 -h <.AppleDBのパス>` を実行する\n"
+"*db_checkpoint -1 -h <path to .AppleDB>*\n"
+msgstr "- 再び新しいBerkeley DBユーティリティを使って、*db_checkpoint -1 -h <.AppleDBのパス>* を実行する\n"
 
 #. type: Bullet: '- '
-#: manpages/man8/cnid_dbd.8.md:144
+#: manpages/man8/cnid_dbd.8.md:140
 msgid "Start the the new version of Netatalk"
 msgstr "新しいバージョンのNetatalkを起動する"
 
 #. type: Plain text
-#: manpages/man8/cnid_dbd.8.md:148
+#: manpages/man8/cnid_dbd.8.md:144
 msgid "cnid_metad(8), afpd(8), dbd(1)"
 msgstr ""

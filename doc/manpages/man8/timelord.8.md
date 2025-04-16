@@ -4,9 +4,9 @@ timelord — Macintosh time server daemon
 
 # Synopsis
 
-`timelord [-d] [-l] [-n nbpname]`
+**timelord** [-d] [-l] [-n nbpname]
 
-`timelord [ -v | -V ]`
+**timelord** [ -v | -V ]
 
 # Description
 

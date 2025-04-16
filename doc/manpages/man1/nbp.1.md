@@ -2,6 +2,14 @@
 
 nbplkup, nbprgstr, nbpunrgstr — tools for accessing the NBP database
 
+# Synopsis
+
+**nbplkup**
+
+**nbprgstr** [ -A address ] [ -m Mac charset ] [ -p port ] obj:type@zone
+
+**nbpunrgstr** [ -A address ] [ -m Mac charset ] obj:type@zone
+
 # Description
 
 **nbprgstr** registers <nbpname\> with **atalkd**(8), at the given

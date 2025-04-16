@@ -4,7 +4,7 @@ aecho - send AppleTalk Echo Protocol packets to network hosts
 
 # Synopsis
 
-`aecho [-c count] [ address | nbpname ]`
+**aecho** [-c count] [ address | nbpname ]
 
 # Description
 
