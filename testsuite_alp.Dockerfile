@@ -10,6 +10,8 @@ ARG RUN_DEPS="\
     libgcrypt \
     linux-pam \
     localsearch \
+    mariadb-client \
+    mariadb-connector-c \
     openldap \
     talloc \
     tinysparql \
@@ -29,6 +31,7 @@ ARG BUILD_DEPS="\
     libevent-dev \
     libgcrypt-dev \
     linux-pam-dev \
+    mariadb-dev \
     meson \
     ninja \
     openldap-dev \
