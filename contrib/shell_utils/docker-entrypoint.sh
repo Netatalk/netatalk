@@ -140,7 +140,7 @@ echo "*** Configuring Netatalk"
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
-TEST_FLAGS=""
+TEST_FLAGS="-h 127.0.0.1 -p 548"
 [ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
 
 if [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; then
@@ -174,10 +174,29 @@ else
     AFP_VALIDUSERS2="$AFP_USER $AFP_USER2"
 fi
 
+if [ $AFP_CNID_BACKEND = "mysql" ]; then
+    TEST_FLAGS="$TEST_FLAGS -x"
+    if [ -z $AFP_CNID_SQL_HOST ]; then
+        AFP_CNID_SQL_HOST="localhost"
+    fi
+    if [ -z $AFP_CNID_SQL_USER ]; then
+        AFP_CNID_SQL_USER="root"
+    fi
+    if [ -z $AFP_CNID_SQL_DB ]; then
+        AFP_CNID_SQL_DB="cnid"
+    fi
+elif [ $TESTSUITE = "spectest" ]; then
+    TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
+fi
+
 if [ -z "$MANUAL_CONFIG" ]; then
     cat <<EOF > /usr/local/etc/afp.conf
 [Global]
 appletalk = yes
+cnid mysql host = $AFP_CNID_SQL_HOST
+cnid mysql user = $AFP_CNID_SQL_USER
+cnid mysql pw = $AFP_CNID_SQL_PASS
+cnid mysql db = $AFP_CNID_SQL_DB
 legacy icon = $AFP_LEGACY_ICON
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
@@ -186,12 +205,14 @@ server name = ${SERVER_NAME:-Netatalk File Server}
 spotlight = yes
 uam list = $UAMS
 [${SHARE_NAME:-File Sharing}]
+cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
 path = /mnt/afpshare
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
 [${SHARE2_NAME:-Time Machine}]
+cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
 path = /mnt/afpbackup
 time machine = $TIMEMACHINE
@@ -235,22 +256,22 @@ EXT
     sleep 2
     case "$TESTSUITE" in
         spectest)
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME" -c /mnt/afpshare
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME"
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
             echo "testfile dos" > /mnt/afpshare/second.txt
             mkdir /mnt/afpshare/third
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
             ;;
         login)
-            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS"
+            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS"
             ;;
         lan)
-            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         speed)
-            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h 127.0.0.1 -p 548 -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         *)
             echo "Unknown testsuite: $TESTSUITE"
