@@ -843,6 +843,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
     struct vol *vol = args->cnid_args_vol;
+    MYSQL *temp_conn = NULL;
 
     EC_NULL( cdb = cnid_mysql_new(vol) );
     EC_NULL( db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)) );
@@ -858,6 +859,58 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     EC_ZERO( mysql_options(db->cnid_mysql_con, MYSQL_OPT_CONNECT_TIMEOUT, &my_timeout) );
 
     const AFPObj *obj = vol->v_obj;
+
+    temp_conn = mysql_init(NULL);
+    if (temp_conn == NULL) {
+        LOG(log_error, logtype_cnid, "Failed to initialize MySQL connection");
+        EC_FAIL;
+    }
+
+    if (mysql_real_connect(temp_conn,
+                          obj->options.cnid_mysql_host,
+                          obj->options.cnid_mysql_user,
+                          obj->options.cnid_mysql_pw,
+                          NULL, 0, NULL, 0) == NULL) {
+        LOG(log_error, logtype_cnid, "Failed to connect to MySQL server: %s", 
+            mysql_error(temp_conn));
+        mysql_close(temp_conn);
+        EC_FAIL;
+    }
+
+    if (cnid_mysql_execute(temp_conn, 
+                          "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '%s'",
+                          obj->options.cnid_mysql_db)) {
+        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(temp_conn));
+        mysql_close(temp_conn);
+        EC_FAIL;
+    }
+
+    result = mysql_store_result(temp_conn);
+    if (result == NULL) {
+        LOG(log_error, logtype_cnid, "MySQL result error: %s", mysql_error(temp_conn));
+        mysql_close(temp_conn);
+        EC_FAIL;
+    }
+
+    if (mysql_num_rows(result) == 0) {
+        LOG(log_info, logtype_cnid, "MySQL database '%s' doesn't exist; creating it",
+            obj->options.cnid_mysql_db);
+        mysql_free_result(result);
+        result = NULL;
+
+        if (cnid_mysql_execute(temp_conn, "CREATE DATABASE `%s`", obj->options.cnid_mysql_db)) {
+            LOG(log_error, logtype_cnid, "Failed to create MySQL database '%s': %s",
+                obj->options.cnid_mysql_db, mysql_error(temp_conn));
+            mysql_close(temp_conn);
+            EC_FAIL;
+        }
+    } else {
+        mysql_free_result(result);
+        result = NULL;
+    }
+
+    mysql_close(temp_conn);
+    temp_conn = NULL;
 
     EC_NULL( mysql_real_connect(db->cnid_mysql_con,
                                 obj->options.cnid_mysql_host,
