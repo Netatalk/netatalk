@@ -170,9 +170,9 @@ These are required to set the credentials used to authenticate with the file ser
 | `DISABLE_TIMEMACHINE` | When non-zero, the secondary shared volume is a regular volume |
 | `MANUAL_CONFIG` | When non-zero, enable manual management of config files        |
 | `ATALKD_OPTIONS` | A string with options to append to atalkd.conf                |
-| `AFP_DROPBOX` |  Enable dropbox mode; turns secondary user into guest with read only access to the second shared volume |
-| `$AFP_CNID_BACKEND` | The backend to use for the CNID database; valid values are `bdb` and `mysql` |
-| `$AFP_CNID_SQL_HOST` | The hostname or IP address of the CNID SQL server         |
-| `$AFP_CNID_SQL_USER` | The username to use when connecting to the CNID SQL server |
-| `$AFP_CNID_SQL_PASS` | The password to use when connecting to the CNID SQL server |
-| `$AFP_CNID_SQL_DB` | The name of the designated database in the SQL server |
+| `AFP_DROPBOX`   | Enable dropbox mode; turns secondary user into guest with read only access to the second shared volume |
+| `AFP_CNID_BACKEND` | The backend to use for the CNID database; valid values are `bdb` and `mysql` |
+| `AFP_CNID_SQL_HOST` | The hostname or IP address of the CNID SQL server          |
+| `AFP_CNID_SQL_USER` | The username to use when connecting to the CNID SQL server |
+| `AFP_CNID_SQL_PASS` | The password to use when connecting to the CNID SQL server |
+| `AFP_CNID_SQL_DB` | The name of the designated database in the SQL server        |

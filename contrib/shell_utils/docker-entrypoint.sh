@@ -140,8 +140,16 @@ echo "*** Configuring Netatalk"
 UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
-TEST_FLAGS="-h 127.0.0.1 -p 548"
+
 [ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
+
+if [ -z "$AFP_HOST" ]; then
+    AFP_HOST="127.0.0.1"
+fi
+
+if [ -z "$AFP_PORT" ]; then
+    AFP_PORT="548"
+fi
 
 if [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; then
     UAMS="$UAMS uams_clrtxt.so uams_guest.so"
@@ -175,7 +183,6 @@ else
 fi
 
 if [ $AFP_CNID_BACKEND = "mysql" ]; then
-    TEST_FLAGS="$TEST_FLAGS -x"
     if [ -z $AFP_CNID_SQL_HOST ]; then
         AFP_CNID_SQL_HOST="localhost"
     fi
@@ -185,8 +192,14 @@ if [ $AFP_CNID_BACKEND = "mysql" ]; then
     if [ -z $AFP_CNID_SQL_DB ]; then
         AFP_CNID_SQL_DB="cnid"
     fi
-elif [ $TESTSUITE = "spectest" ]; then
-    TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
+fi
+
+if [ "$TESTSUITE" = "spectest" ]; then
+    if [ -z "$AFP_REMOTE" ]; then
+        TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
+    else
+        TEST_FLAGS="$TEST_FLAGS -x"
+    fi
 fi
 
 if [ -z "$MANUAL_CONFIG" ]; then
@@ -239,10 +252,10 @@ fi
 
 echo "*** Starting AFP server"
 if [ -z "$TESTSUITE" ]; then
-    if [ -z "$AFP_DRYRUN" ]; then
-        netatalk -d
-    else
+    if [ -n "$AFP_DRYRUN" ]; then
         netatalk -V
+    else
+        netatalk -d
     fi
 else
     if [ "$TESTSUITE" = "spectest" ]; then
@@ -256,22 +269,22 @@ EXT
     sleep 2
     case "$TESTSUITE" in
         spectest)
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME"
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME"
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
             echo "testfile dos" > /mnt/afpshare/second.txt
             mkdir /mnt/afpshare/third
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
             ;;
         login)
-            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS"
+            afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS"
             ;;
         lan)
-            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         speed)
-            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         *)
             echo "Unknown testsuite: $TESTSUITE"
