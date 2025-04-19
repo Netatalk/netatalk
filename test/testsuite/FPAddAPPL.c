@@ -17,6 +17,11 @@ int dir;
 
 	ENTER_TEST
 
+	// Not supported with the mysql backend
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
 	if (!Conn2) {
 		test_skipped(T_CONN2);
 		goto test_exit;

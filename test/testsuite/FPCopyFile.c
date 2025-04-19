@@ -946,6 +946,13 @@ char *name1= "new t407 file.pdf";
 uint16_t vol2;
 
 	ENTER_TEST
+
+	// Not supported with the mysql backend
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	if (!*Vol2) {
 		test_skipped(T_VOL2);
 		goto test_exit;
@@ -970,6 +977,13 @@ char *name1 = "t408 new file name";
 uint16_t vol2;
 
 	ENTER_TEST
+
+	// Not supported with the mysql backend
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	if (!*Vol2) {
 		test_skipped(T_VOL2);
 		goto test_exit;

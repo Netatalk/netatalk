@@ -14,12 +14,18 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 
 	ENTER_TEST
 
+	// Not supported with the mysql backend
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	dt = FPOpenDT(Conn,vol);
 
 	ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1);
 	if (ret == htonl(AFPERR_NOITEM)) {
 		FAIL (FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256 ))
-		goto test_exit;
+		goto fin;
 	}
 
 	FAIL (FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1))
@@ -31,19 +37,20 @@ u_char   u_null[] = { 0, 0, 0, 0 };
 		if (ret == htonl(AFPERR_NOITEM)) {
 			FAIL (FPGetIconInfo(Conn,  dt, u_null, 1 ))
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, u_null, 2 ))
-			goto test_exit;
+			goto fin;
 		}
 		else if (ret) {
 			test_failed();
-			goto test_exit;
+			goto fin;
 		}
 		else {
 			FAIL (htonl(AFPERR_NOITEM) != FPGetIconInfo(Conn,  dt, (unsigned char *) "UNIX", 2 ))
 		}
 	}
 
-test_exit:
+fin:
 	FPCloseDT(Conn,dt);
+test_exit:
 	exit_test("FPGetIconInfo:test213: get Icon Info call");
 }
 
