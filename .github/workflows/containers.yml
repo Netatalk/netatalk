@@ -145,45 +145,70 @@ jobs:
                 tags: ${{ steps.metadata.outputs.tags }}
 
 
-    check-container:
-        name: Production container dry run
-        needs: build-container
+    afp-spectest-afp34-prod:
+        name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)
+        needs:
+            - build-container
+            - build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            ATALKD_INTERFACE: eth0
-            TZ: Europe/Stockholm
-            AFP_DRYRUN: 1
-        steps:
-            - uses: docker://ghcr.io/netatalk/netatalk:latest
-              with:
-                entrypoint: /usr/local/sbin/netatalk
-                args: -V
-
-
-    afp-spectest-mysql-afp34:
-        name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
         steps:
             - name: Create Docker network
               run: |
                 docker network create afp_network
-            - name: Start MariaDB container
+            - name: Run Netatalk
               run: |
-                docker run -d --name mariadb --network afp_network \
+                docker run --detach --name afp_server --network afp_network \
+                    -e AFP_USER=atalk1 \
+                    -e AFP_USER2=atalk2 \
+                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+                    -e AFP_GROUP=afpusers \
+                    -e SHARE_NAME=test1 \
+                    -e SHARE_NAME2=test2 \
+                    -e INSECURE_AUTH=1 \
+                    -e DISABLE_TIMEMACHINE=1 \
+                    ghcr.io/netatalk/netatalk:latest
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm --network afp_network \
+                    -e AFP_USER=atalk1 \
+                    -e AFP_USER2=atalk2 \
+                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+                    -e AFP_GROUP=afpusers \
+                    -e SHARE_NAME=test1 \
+                    -e SHARE_NAME2=test2 \
+                    -e VERBOSE=1 \
+                    -e TESTSUITE=spectest \
+                    -e AFP_VERSION=7 \
+                    -e AFP_REMOTE=1 \
+                    -e AFP_HOST=afp_server \
+                    ghcr.io/netatalk/netatalk-testsuite:latest
+
+
+    afp-spectest-mysql-afp34-prod:
+        name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Prod)
+        needs:
+            - build-container
+            - build-container-testsuite
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Create container network
+              run: |
+                docker network create afp_network
+            - name: Start MariaDB
+              run: |
+                docker run --detach --name mariadb --network afp_network \
                     -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     mariadb:latest
             - name: Wait for MariaDB to initialize
               run: |
                 sleep 4
-            - name: Run Netatalk testsuite
+            - name: Start Netatalk
               run: |
-                docker run --rm --network afp_network \
+                docker run --detach --name afp_server --network afp_network \
                     -e AFP_USER=atalk1 \
                     -e AFP_USER2=atalk2 \
                     -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
@@ -194,9 +219,24 @@ jobs:
                     -e SHARE_NAME2=test2 \
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
+                    -e AFP_CNID_SQL_HOST=mariadb \
+                    -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+                    ghcr.io/netatalk/netatalk:latest
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm --network afp_network \
+                    -e AFP_USER=atalk1 \
+                    -e AFP_USER2=atalk2 \
+                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+                    -e AFP_GROUP=afpusers \
+                    -e SHARE_NAME=test1 \
+                    -e SHARE_NAME2=test2 \
                     -e VERBOSE=1 \
                     -e TESTSUITE=spectest \
                     -e AFP_VERSION=7 \
+                    -e AFP_REMOTE=1 \
+                    -e AFP_HOST=afp_server \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ghcr.io/netatalk/netatalk-testsuite:latest
@@ -208,12 +248,12 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         steps:
-            - name: Create Docker network
+            - name: Create container network
               run: |
                 docker network create afp_network
             - name: Start MariaDB container
               run: |
-                docker run -d --name mariadb --network afp_network \
+                docker run --detach --name mariadb --network afp_network \
                     -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     mariadb:latest
             - name: Wait for MariaDB to initialize
@@ -235,6 +275,7 @@ jobs:
                     -e VERBOSE=1 \
                     -e TESTSUITE=spectest \
                     -e AFP_VERSION=7 \
+                    -e AFP_REMOTE=1 \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ghcr.io/netatalk/netatalk-testsuite-debian:latest
