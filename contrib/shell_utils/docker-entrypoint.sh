@@ -194,12 +194,12 @@ if [ $AFP_CNID_BACKEND = "mysql" ]; then
     fi
 fi
 
-if [ "$TESTSUITE" = "spectest" ]; then
-    if [ -z "$AFP_REMOTE" ]; then
-        TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
-    else
-        TEST_FLAGS="$TEST_FLAGS -x"
-    fi
+if [ "$TESTSUITE" = "spectest" ] && [ -z "$AFP_REMOTE" ]; then
+    TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
+fi
+
+if [ -n "$AFP_EXCLUDE_TESTS" ]; then
+    TEST_FLAGS="$TEST_FLAGS -x"
 fi
 
 if [ -z "$MANUAL_CONFIG" ]; then
