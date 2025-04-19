@@ -12,6 +12,12 @@ int dir;
 
 	ENTER_TEST
 
+	// Not supported with the mysql backend
+	if (Exclude) {
+		test_skipped(T_EXCLUDE);
+		goto test_exit;
+	}
+
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)) {
 		test_nottested();
 		goto test_exit;
