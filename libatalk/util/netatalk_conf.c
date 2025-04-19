@@ -2199,7 +2199,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->ignored_attr   = getoption_strdup(config, INISEC_GLOBAL, "ignored attributes", NULL, NULL);
     options->cnid_mysql_host = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql host", NULL, NULL);
     options->cnid_mysql_user = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql user", NULL, NULL);
-    options->cnid_mysql_pw  = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql pw", NULL, NULL);
     options->cnid_mysql_db  = getoption_strdup(config, INISEC_GLOBAL, "cnid mysql db",  NULL, NULL);
     options->connections    = getoption_int(config, INISEC_GLOBAL, "max connections", NULL, 200);
     options->passwdminlen   = (unsigned char) getoption_int(config, INISEC_GLOBAL, "passwd minlen", NULL, 0);
