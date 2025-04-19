@@ -168,6 +168,7 @@ jobs:
                     -e SHARE_NAME2=test2 \
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
+                    -e AFP_EXTMAP=1 \
                     ghcr.io/netatalk/netatalk:latest
             - name: Run Netatalk testsuite
               run: |
@@ -219,6 +220,7 @@ jobs:
                     -e SHARE_NAME2=test2 \
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
+                    -e AFP_EXTMAP=1 \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ghcr.io/netatalk/netatalk:latest
@@ -276,6 +278,7 @@ jobs:
                     -e TESTSUITE=spectest \
                     -e AFP_VERSION=7 \
                     -e AFP_REMOTE=1 \
+                    -e AFP_EXTMAP=1 \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ghcr.io/netatalk/netatalk-testsuite-debian:latest
@@ -299,6 +302,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 7
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -321,6 +325,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 7
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 
@@ -344,6 +349,7 @@ jobs:
             AFP_ADOUBLE: 1
             TESTSUITE: spectest
             AFP_VERSION: 7
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -367,6 +373,7 @@ jobs:
             AFP_ADOUBLE: 1
             TESTSUITE: spectest
             AFP_VERSION: 7
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 
@@ -389,6 +396,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 6
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -411,6 +419,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 5
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -433,6 +442,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 4
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -455,6 +465,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 3
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -477,6 +488,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 3
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 
@@ -499,6 +511,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 2
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
   
@@ -521,6 +534,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 1
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -543,6 +557,7 @@ jobs:
             VERBOSE: 1
             TESTSUITE: spectest
             AFP_VERSION: 1
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 
@@ -566,6 +581,7 @@ jobs:
             AFP_ADOUBLE: 1
             TESTSUITE: spectest
             AFP_VERSION: 1
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
 
@@ -589,6 +605,7 @@ jobs:
             AFP_ADOUBLE: 1
             TESTSUITE: spectest
             AFP_VERSION: 1
+            AFP_EXTMAP: 1
         steps:
             - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 

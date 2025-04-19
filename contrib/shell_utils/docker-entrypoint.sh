@@ -235,6 +235,10 @@ $AFP_RWRO = $AFP_VALIDUSERS2
 EOF
 fi
 
+if [ -n "$AFP_EXTMAP" ]; then
+    sed -i 's/^#\./\./' /usr/local/etc/extmap.conf
+fi
+
 # Configuring AppleTalk if enabled
 if [ -n "$ATALKD_INTERFACE" ]; then
     echo "*** Configuring DDP services"
@@ -252,19 +256,8 @@ fi
 
 echo "*** Starting AFP server"
 if [ -z "$TESTSUITE" ]; then
-    if [ -n "$AFP_DRYRUN" ]; then
-        netatalk -V
-    else
-        netatalk -d
-    fi
+    netatalk -d
 else
-    if [ "$TESTSUITE" = "spectest" ]; then
-    cat <<EXT > /usr/local/etc/extmap.conf
-.         "????"  "????"      Unix Binary                    Unix                      application/octet-stream
-.doc      "WDBN"  "MSWD"      Word Document                  Microsoft Word            application/msword
-.pdf      "PDF "  "CARO"      Portable Document Format       Acrobat Reader            application/pdf
-EXT
-    fi
     netatalk
     sleep 2
     case "$TESTSUITE" in

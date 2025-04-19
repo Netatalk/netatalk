@@ -971,10 +971,6 @@ uint16_t bitmap;
 
 	ENTER_TEST
 
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
@@ -1038,10 +1034,6 @@ uint16_t bitmap1 =  (1<<FILPBIT_ATTR) | (1<<FILPBIT_FINFO)| (1<<FILPBIT_CDATE) |
 
 	ENTER_TEST
 
-	if (Exclude) {
-		test_skipped(T_EXCLUDE);
-		goto test_exit;
-	}
 	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
