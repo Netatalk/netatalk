@@ -308,8 +308,6 @@ sub modify_afpconf_ref_and_write {
 		$name = trim($$paramRef{'name'});
 	} elsif($$paramRef{'p_volume name'}) {
 		$name = $$paramRef{'p_volume name'};
-	} elsif($$paramRef{'p_preset name'}) {
-		$name = $$paramRef{'p_preset name'};
 	} else {
 		die "Volume/Volume preset name must not be empty.\n" unless($name);
 	}
