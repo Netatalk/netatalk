@@ -4,6 +4,7 @@ papd_d=@sbindir@/papd
 timelord_d=@sbindir@/timelord
 a2boot_d=@sbindir@/a2boot
 afp_conf=@pkgconfdir@/afp.conf
+extmap_c=@pkgconfdir@/extmap.conf
 atalk_c=@pkgconfdir@/atalkd.conf
 papd_c=@pkgconfdir@/papd.conf
 start_netatalk=@init_netatalk_start@

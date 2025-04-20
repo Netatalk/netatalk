@@ -22,7 +22,7 @@ delete_failed=Could not delete file
 not_valid_path=Not Valid Path
 no_path=No Path
 
-index_tab_global=Global Settings
+index_tab_general=General Settings
 index_tab_ddp=DDP Services
 index_tab_fileserver=File Sharing Services
 
@@ -72,13 +72,16 @@ index_col_title_home_path=Relative path in home
 index_col_title_home_name=Home volume name
 index_value_not_set=<i>not set</i>
 
-index_icon_text_server=Edit Server Options
-index_print=Manage Print Server
-index_icon_text_print=Edit Print Server Configuration
+index_icon_text_server=File Server Options
+index_icon_text_extmap=File Server Extension Mapping
+index_icon_text_print=Print Server Configuration
 index_icon_text_users=Manage Connected Users
 index_icon_text_capabilities=Show Server Status
 
 edit_return=index page
+
+edit_title_extmap=Edit Extension Mapping
+edit_title_print=Edit Print Server Configuration
 
 edit_vol_section_title_edit_volume=Edit Volume
 edit_vol_section_title_edit_volume_preset=Edit Volume Preset

@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# Display a form for editing PAP print server settings
+# Display a form for editing afpd's extension mapping file
 
 #    Netatalk Webmin Module
 #    Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
@@ -18,12 +18,12 @@ require 'netatalk-lib.pl';
 
 &ReadParse();
 
-&ui_print_header(undef, $text{'edit_title_print'}, "", "print", 1);
+&ui_print_header(undef, $text{'edit_title_extmap'}, "", "extmap", 1);
 
-print &ui_form_start("save_print.cgi", "post");
+print &ui_form_start("save_extmap.cgi", "post");
 print &ui_table_start(undef, undef, 2);
 print &ui_table_row(undef,
-	&ui_textarea("papd", &read_file_contents($config{'papd_c'}), 24, 80), 2);
+	&ui_textarea("extmap", &read_file_contents($config{'extmap_c'}), 24, 80), 2);
 print &ui_table_end();
 print &ui_form_end([[undef, $text{'save_button_title'}]]);
 

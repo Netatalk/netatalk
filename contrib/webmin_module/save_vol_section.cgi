@@ -27,7 +27,7 @@ eval {
 	if (exists $in{'tab'}) {
 		$tab = $in{'tab'};
 	} elsif ($in{'action'} eq "new_volume_preset" || $in{'action'} eq "edit_volume_preset" || $in{'action'} eq "new_homes" || $in{'action'} eq "edit_homes") {
-		$tab = "global";
+		$tab = "general";
 	} else {
 		$tab = "fileserver";
 	}
