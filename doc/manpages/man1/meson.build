@@ -26,7 +26,7 @@ foreach man : manfiles
         output: man + '.1',
         command: [
             make_man,
-            cmark_man,
+            transcoder,
             '@INPUT@',
             man.to_upper(),
             '1',

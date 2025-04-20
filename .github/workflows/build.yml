@@ -45,7 +45,6 @@ jobs:
             avahi-dev \
             bison \
             build-base \
-            cmark \
             cracklib \
             cracklib-dev \
             cracklib-words \
@@ -69,6 +68,7 @@ jobs:
             ninja \
             openldap-dev \
             openrc \
+            pandoc \
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
@@ -231,7 +231,6 @@ jobs:
             avahi-devel \
             bison \
             chkconfig \
-            cmark \
             cracklib-devel \
             cups-devel \
             dbus-devel \
@@ -248,6 +247,7 @@ jobs:
             ninja-build \
             openldap-devel \
             pam-devel \
+            pandoc \
             perl \
             perl-Net-DBus \
             quota-devel \

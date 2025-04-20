@@ -23,19 +23,36 @@ if get_option('with-website')
 endif
 
 foreach page : manual_pages
-    custom_target(
-        'manual_' + page,
-        input: ['_Navlinks.md', page + '.md'],
-        output: page + '.html',
-        command: [
-            cmarkgfm,
-            '--smart',
-            '--extension', 'table',
-            '--to', 'html',
-            '@INPUT@',
-        ],
-        capture: true,
-        install: true,
-        install_dir: manual_install_path,
-    )
+    if pandoc.found()
+        custom_target(
+            'manual_' + page,
+            input: ['_Navlinks.md', page + '.md'],
+            output: page + '.html',
+            command: [
+                transcoder,
+                '--from', 'gfm',
+                '--to', 'html',
+                '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: manual_install_path,
+        )
+    else
+        custom_target(
+            'manual_' + page,
+            input: ['_Navlinks.md', page + '.md'],
+            output: page + '.html',
+            command: [
+                transcoder,
+                '--smart',
+                '--extension', 'table',
+                '--to', 'html',
+                '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: manual_install_path,
+        )
+    endif
 endforeach

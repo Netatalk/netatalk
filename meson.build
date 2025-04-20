@@ -2220,12 +2220,13 @@ configure_file(
 
 cmark = find_program('cmark', required: false)
 cmarkgfm = find_program('cmark-gfm', required: false)
+pandoc = find_program('pandoc', required: false)
 
 build_man_docs = false
 build_html_docs = false
 build_readme_docs = false
 
-if 'readmes' in get_option('with-docs') and cmarkgfm.found()
+if 'readmes' in get_option('with-docs')
     build_readme_docs = true
 
     readmes_md = [
@@ -2249,39 +2250,57 @@ if 'readmes' in get_option('with-docs') and cmarkgfm.found()
         if get_option('with-website')
             install_data(file + '.md', install_dir: manual_install_path)
         else
-            custom_target(
-                'readmes_' + file,
-                input: file + '.md',
-                output: file + '.txt',
-                command: [
-                    cmarkgfm,
-                    '--width', '80',
-                    '--to', 'plaintext',
-                    '@INPUT@',
-                ],
-                capture: true,
-                install: true,
-                install_dir: datadir / 'doc/netatalk',
-            )
+            if pandoc.found()
+                custom_target(
+                    'readmes_' + file,
+                    input: file + '.md',
+                    output: file + '.txt',
+                    command: [
+                        pandoc,
+                        '--from', 'commonmark',
+                        '--to', 'plain',
+                        '@INPUT@',
+                    ],
+                    capture: true,
+                    install: true,
+                    install_dir: datadir / 'doc/netatalk',
+                )
+            elif cmarkgfm.found()
+                custom_target(
+                    'readmes_' + file,
+                    input: file + '.md',
+                    output: file + '.txt',
+                    command: [
+                        cmarkgfm,
+                        '--width', '80',
+                        '--to', 'plaintext',
+                        '@INPUT@',
+                    ],
+                    capture: true,
+                    install: true,
+                    install_dir: datadir / 'doc/netatalk',
+                )
+            else
+                warning('cmark-gfm or pandoc is required for markdown to plain text conversion of READMEs')
+                install_data(file + '.md', install_dir: datadir / 'doc/netatalk')
+            endif
         endif
     endforeach
-else
-    warning('cmark-gfm is required for markdown to text conversion of READMEs')
 endif
 
 if 'man' in get_option('with-docs')
-    if cmark.found() or cmarkgfm.found()
+    if cmark.found() or cmarkgfm.found() or pandoc.found()
         build_man_docs = true
     else
-        warning('cmark or cmark-gfm is required to build man pages')
+        warning('cmark, cmark-gfm, or pandoc is required to build man pages')
     endif
 endif
 
 if 'html_manual' in get_option('with-docs')
-    if cmarkgfm.found()
+    if cmarkgfm.found() or pandoc.found()
         build_html_docs = true
     else
-        warning('cmark-gfm is required to build the html manual')
+        warning('cmark-gfm or pandoc is required to build the html manual')
     endif
 endif
 
