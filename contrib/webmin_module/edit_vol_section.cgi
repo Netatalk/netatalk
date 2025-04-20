@@ -146,10 +146,9 @@ if($subject eq 'homes') {
 	);
 }
 elsif($subject eq 'volume_preset') {
-	my $preset_name = (get_parameter_of_section($afpconfRef, $sectionRef, 'preset name', \%in))[0];
 	print &ui_table_row(
 		$text{'edit_vol_section_volume_preset_name'},
-		&ui_textbox('p_preset name', $preset_name ? $preset_name : $$sectionRef{'name'}, 40, undef, undef, "required")
+		&ui_textbox('name', exists $in{name} ? $in{name} : ($sectionRef ? $$sectionRef{name} : ''), 40, undef, undef, "required")
 	);
 }
 else {
@@ -160,11 +159,8 @@ else {
 	);
 }
 
-
-if($subject ne 'homes') {
-	print &ui_hidden('name', $$sectionRef{'name'});
-}
 if($subject eq 'volume') {
+	print &ui_hidden('name', $$sectionRef{'name'});
 	print &ui_table_row($text{'edit_vol_section_path'},
 		&ui_filebox('p_path', exists $in{p_path} ? $in{p_path} : (exists $$sectionRef{parameters}{'path'} ? $$sectionRef{parameters}{'path'}{value} : ''), 40, undef, undef, "required", 1) .
 		"<br /><a href=\"/filemin\" target=\"_blank\">$text{'edit_vol_section_path_note'}</a>"

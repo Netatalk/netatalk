@@ -243,7 +243,6 @@ if(@{$$afpconf{volumeSections}}) {
 	print &ui_form_start('delete_sections.cgi?tab=fileserver', 'post', undef, "id='volumes'");
 	print &ui_columns_start( [
 			'',
-			$text{'index_col_title_vol_section'},
 			$text{'index_col_title_vol_name'},
 			$text{'index_col_title_path'},
 			$text{'index_col_title_uses_preset'}
@@ -252,8 +251,7 @@ if(@{$$afpconf{volumeSections}}) {
 	foreach $volumeSection (sort {lc($a->{name}) cmp lc($b->{name})} @{$$afpconf{volumeSections}}) {
 		print &ui_columns_row( [
 				&ui_checkbox('section_index', $$volumeSection{'index'}),
-				"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
-				$$volumeSection{parameters}{'volume name'}{value},
+				"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{parameters}{'volume name'}{value}</b></a>",
 				$$volumeSection{parameters}{'path'}{value},
 				$$volumeSection{parameters}{'vol preset'}{value}
 		], [ "width='20'" ]);
