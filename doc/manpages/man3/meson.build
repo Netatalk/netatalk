@@ -10,7 +10,7 @@ foreach man : manfiles
         output: man + '.3',
         command: [
             make_man,
-            cmark_man,
+            transcoder,
             '@INPUT@',
             man.to_upper(),
             '3',

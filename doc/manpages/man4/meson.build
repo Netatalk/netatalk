@@ -6,7 +6,7 @@ custom_target(
     output: manfile + '.4',
     command: [
         make_man,
-        cmark_man,
+        transcoder,
         '@INPUT@',
         manfile.to_upper(),
         '4',
