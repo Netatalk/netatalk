@@ -161,6 +161,12 @@ else
     TIMEMACHINE="yes"
 fi
 
+if [ -n "$DISABLE_SPOTLIGHT" ]; then
+    AFP_SPOTLIGHT="no"
+else
+    AFP_SPOTLIGHT="yes"
+fi
+
 if [ -n "$AFP_READONLY" ]; then
     AFP_RWRO="rolist"
 else
@@ -172,6 +178,12 @@ if [ -n "$AFP_ADOUBLE" ]; then
     TEST_FLAGS="$TEST_FLAGS -a"
 else
     AFP_EA="sys"
+fi
+
+if [ -n "$ATALKD_INTERFACE" ]; then
+    AFP_DDP="yes"
+else
+    AFP_DDP="no"
 fi
 
 if [ -n "$AFP_DROPBOX" ]; then
@@ -210,7 +222,7 @@ fi
 if [ -z "$MANUAL_CONFIG" ]; then
     cat <<EOF > /etc/netatalk/afp.conf
 [Global]
-appletalk = yes
+appletalk = $AFP_DDP
 cnid mysql host = $AFP_CNID_SQL_HOST
 cnid mysql user = $AFP_CNID_SQL_USER
 cnid mysql pw = $AFP_CNID_SQL_PASS
@@ -220,7 +232,7 @@ log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 mimic model = $AFP_MIMIC_MODEL
 server name = ${SERVER_NAME:-Netatalk File Server}
-spotlight = yes
+spotlight = $AFP_SPOTLIGHT
 uam list = $UAMS
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
