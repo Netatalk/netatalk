@@ -39,5 +39,21 @@ You can also find the packaged tarball in `build/contrib/webmin_module/netatalk_
 When installed from source, the build system will attempt to detect and configure the correct binary and config file paths, as well as init commands, for your system.
 If needed, you can make manual adjustments in the `config` file or via the Webmin UI, on the Netatalk module's Module Config page.
 
+# Authors and License
+
+The original Webmin module was written by Matthew Keller and Sven Mosimann.
+Later additions by Frank Lahm and Steffan Cline.
+Rewritten for Netatalk 3.0 by Ralph Boehme.
+Adapted for Netatalk 4.0 by Daniel Markstedt.
+
+The source code is distributed under the GNU GPLv2 license.
+See `COPYING` in the root of the Netatalk source tree for the full text of the license.
+
+Bitmap images under `images/`, with the exception of `icon.gif` (the Netatalk logo),
+are borrowed from the [Webmin Authentic Theme](https://github.com/webmin/authentic-theme).
+The Authentic Theme is created by Ilia Rostovtsev, licensed under the MIT license.
+See `images/LICENSE` for the full text of the license.
+
+
 # See Also
 - https://netatalk.io/docs/Webmin-Module

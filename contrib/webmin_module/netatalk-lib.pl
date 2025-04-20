@@ -4,7 +4,7 @@
 # Copyright (C) 2000 Matthew Keller <kellermg@potsdam.edu>
 # Copyright (C) 2000 Sven Mosimann/EcoLogic <sven.mosimann@ecologic.ch>
 # Copyright (C) 2013 Ralph Boehme <sloowfranklin@gmail.com>
-# Copyright (C) 2023-4 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2023-2025 Daniel Markstedt <daniel@mindani.net>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

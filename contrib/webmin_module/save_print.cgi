@@ -2,7 +2,7 @@
 # Save papd.conf
 
 #    Netatalk Webmin Module
-#    Copyright (C) 2024 Daniel Markstedt <daniel@mindani.net>
+#    Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
 #
 #    This program is free software; you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -25,4 +25,4 @@ foreach $p (@printers) {
 	}
 &close_tempfile(PAPD);
 
-&redirect("index.cgi?tab=global");
+&redirect("index.cgi?tab=general");

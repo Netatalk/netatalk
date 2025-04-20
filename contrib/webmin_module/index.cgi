@@ -2,7 +2,7 @@
 #
 # Netatalk Webmin Module
 # Copyright (C) 2013 Ralph Boehme <sloowfranklin@gmail.com>
-# Copyright (C) 2023-4 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2023-2025 Daniel Markstedt <daniel@mindani.net>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@ use File::Basename;
 
 &ReadParse();
 
-my @tabs = ( [ 'global', $text{'index_tab_global'} ],
+my @tabs = ( [ 'general', $text{'index_tab_general'} ],
              [ 'ddp', $text{'index_tab_ddp'} ],
              [ 'fileserver', $text{'index_tab_fileserver'} ]
             );
@@ -53,18 +53,18 @@ if($@) {
 }
 
 print &ui_tabs_start(\@tabs, 'mode', $defaulttab);
-print &ui_tabs_start_tab('mode', 'global');
+print &ui_tabs_start_tab('mode', 'general');
 
 # Volume presets
 print "<h3>$text{index_volume_presets}</h3>\n";
-my @volume_preset_links = ( "<a href=\"edit_vol_section.cgi?action=new_volume_preset&tab=global\">$text{'index_create_volume_preset_link_name'}</a>" );
+my @volume_preset_links = ( "<a href=\"edit_vol_section.cgi?action=new_volume_preset&tab=general\">$text{'index_create_volume_preset_link_name'}</a>" );
 if(@{$$afpconf{volumePresetSections}}) {
 	# for an explanation of the following links, see above
 	unshift @volume_preset_links, (
 		&select_all_link('section_index', $current_formindex),
 		&select_invert_link('section_index', $current_formindex)
 	) if(@{$$afpconf{volumePresetSections}} > 1);
-	print &ui_form_start('delete_sections.cgi?tab=global', 'post', undef, "id='volume_presets'");
+	print &ui_form_start('delete_sections.cgi?tab=general', 'post', undef, "id='volume_presets'");
 	print &ui_columns_start( [
 			'',
 			$text{'index_col_title_preset_name'},
@@ -74,7 +74,7 @@ if(@{$$afpconf{volumePresetSections}}) {
 	foreach $volumeSection (sort {lc($a->{name}) cmp lc($b->{name})} @{$$afpconf{volumePresetSections}}) {
 		print &ui_columns_row( [
 				&ui_checkbox('section_index', $$volumeSection{'index'}),
-				"<a href=\"edit_vol_section.cgi?action=edit_volume_preset&tab=global&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
+				"<a href=\"edit_vol_section.cgi?action=edit_volume_preset&tab=general&index=$$volumeSection{'index'}\"><b>$$volumeSection{name}</b></a>",
 				defined $$volumeSection{presetUsedBySectionNames} ? join("<br>", @{$$volumeSection{presetUsedBySectionNames}}) : ""
 		], [ "width='20'" ]);
 	}
@@ -92,7 +92,7 @@ print &ui_hr();
 # Homes
 print "<h3>$text{index_homes}</h3>\n";
 if($$afpconf{sectionsByName}{'Homes'}) {
-	print &ui_form_start('delete_sections.cgi?tab=global', 'post', undef, "id='homes'");
+	print &ui_form_start('delete_sections.cgi?tab=general', 'post', undef, "id='homes'");
 	print &ui_columns_start( [
 		$text{'index_col_title_basedir_regex'},
 		$text{'index_col_title_home_path'},
@@ -104,7 +104,7 @@ if($$afpconf{sectionsByName}{'Homes'}) {
 	my @home_name = get_parameter_of_section($afpconf, $volumeSection, 'home name');
 	print &ui_columns_row( [
 		"<input type='hidden' name='section_index' value='$$volumeSection{'index'}'>".
-		"<a href=\"edit_vol_section.cgi?action=edit_homes&tab=global&index=$$volumeSection{'index'}\"><b>".($basedir_regex[0] ne '' ? html_escape($basedir_regex[0]) : $text{'index_value_not_set'})."</b></a>",
+		"<a href=\"edit_vol_section.cgi?action=edit_homes&tab=general&index=$$volumeSection{'index'}\"><b>".($basedir_regex[0] ne '' ? html_escape($basedir_regex[0]) : $text{'index_value_not_set'})."</b></a>",
 		$path[0] ne '' ? html_escape($path[0]) : $text{'index_value_not_set'},
 		$home_name[0] ne '' ? html_escape($home_name[0]) : $text{'index_value_not_set'},
 	] );
@@ -113,26 +113,29 @@ if($$afpconf{sectionsByName}{'Homes'}) {
 } else {
 	print "<b>$text{'index_no_homes'}</b>\n";
 	print "<p>\n";
-	print &ui_links_row( ["<a href=\"edit_vol_section.cgi?action=new_homes&tab=global\">$text{'index_create_homes_link_name'}</a>"] );
+	print &ui_links_row( ["<a href=\"edit_vol_section.cgi?action=new_homes&tab=general\">$text{'index_create_homes_link_name'}</a>"] );
 }
 
 print"<h3>$text{index_global}</h3>\n";
 
 my @links_g = (
 	"edit_global_section.cgi",
+	"edit_extmap.cgi",
 	"edit_print.cgi"
 );
 my @titles_g = (
 	$text{'index_icon_text_server'},
+	$text{'index_icon_text_extmap'},
 	$text{'index_icon_text_print'}
 );
 my @icons_g = (
 	"images/server.gif",
+	"images/digest.gif",
 	"images/printer.gif"
 );
 icons_table(\@links_g, \@titles_g, \@icons_g);
 
-print &ui_tabs_end_tab('mode', 'global');
+print &ui_tabs_end_tab('mode', 'general');
 
 print &ui_tabs_start_tab('mode', 'ddp');
 
