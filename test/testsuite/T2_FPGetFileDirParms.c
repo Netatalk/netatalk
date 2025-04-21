@@ -781,7 +781,14 @@ struct afp_filedir_parms filedir;
 	if (Path) {
 	    struct stat st;
 
-		sprintf(temp1, "%s/%s/%s", Path, ndir, temp);
+		strlcpy(temp1, Path, sizeof(temp1));
+		strlcat(temp1, "/", sizeof(temp1));
+		strlcat(temp1, ndir, sizeof(temp1));
+		strlcat(temp1, "/", sizeof(temp1));
+		strlcat(temp1, temp, sizeof(temp1));
+		if (strlcat(temp1, temp, sizeof(temp1)) >= sizeof(temp1) && !Quiet) {
+			fprintf(stdout, "\tWARNING: Path too long, truncated to: %s\n", temp1);
+		}
 		if (stat(temp1, &st)) {
 			if (!Quiet) {
 				fprintf(stdout,"\tFAILED stat( %s ) %s\n", temp1, strerror(errno));
