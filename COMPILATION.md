@@ -12,7 +12,7 @@ and may not always be optimized for standalone execution.
 Install dependencies
 
 ```
-apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cmark cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc iniparser-dev krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev
+apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc iniparser-dev krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc pandoc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev
 ```
 
 Configure
@@ -148,7 +148,7 @@ ninja -C build uninstall
 Install dependencies
 
 ```
-dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cmark cracklib-devel cups-devel dbus-devel flex glib2-devel iniparser-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel
+dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cracklib-devel cups-devel dbus-devel flex glib2-devel iniparser-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel pandoc perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel
 ```
 
 Configure
