@@ -53,7 +53,6 @@ RUN apk update \
 
 WORKDIR /netatalk-code
 COPY . .
-RUN rm -rf build
 
 RUN meson setup build \
     -Dbuildtype=release \
@@ -64,6 +63,7 @@ RUN meson setup build \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \
+    -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \
 &&  meson compile -C build
@@ -76,13 +76,14 @@ ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
 
 COPY --from=build /staging/ /
+COPY --from=build /netatalk-code/contrib/shell_utils/config_watch.sh /config_watch.sh
 
 RUN apk update \
 &&  apk add --no-cache $RUN_DEPS
 
 RUN ln -sf /dev/stdout /var/log/afpd.log
 
-COPY /contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
+COPY /contrib/shell_utils/netatalk_container_entrypoint.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548

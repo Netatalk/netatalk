@@ -64,6 +64,7 @@ RUN meson setup build \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \
+    -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-quota=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \
@@ -81,7 +82,7 @@ COPY --from=build /staging/ /
 RUN apk update \
 &&  apk add --no-cache $RUN_DEPS
 
-COPY /contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
+COPY /contrib/shell_utils/netatalk_container_entrypoint.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Entry point script for netatalk docker container.
+# Entry point script for the netatalk container.
 # Copyright (C) 2023  Eric Harmon
 # Copyright (C) 2024-2025  Daniel Markstedt <daniel@mindani.net>
 #
@@ -35,15 +35,15 @@ fi
 echo "*** Setting up users and groups"
 
 if [ -z "$AFP_USER" ]; then
-    echo "ERROR: AFP_USER needs to be set to use this Docker container."
+    echo "ERROR: AFP_USER needs to be set to use this container."
     exit 1
 fi
 if [ -z "$AFP_PASS" ]; then
-    echo "ERROR: AFP_PASS needs to be set to use this Docker container."
+    echo "ERROR: AFP_PASS needs to be set to use this container."
     exit 1
 fi
 if [ -z "$AFP_GROUP" ]; then
-    echo "ERROR: AFP_GROUP needs to be set to use this Docker container."
+    echo "ERROR: AFP_GROUP needs to be set to use this container."
     exit 1
 fi
 
@@ -77,8 +77,8 @@ fi
 echo "$AFP_USER:$AFP_PASS" | chpasswd
 
 # Creating credentials for the RandNum UAM
-if [ -f "/usr/local/etc/afppasswd" ]; then
-    rm -f /usr/local/etc/afppasswd
+if [ -f "/etc/netatalk/afppasswd" ]; then
+    rm -f /etc/netatalk/afppasswd
 fi
 afppasswd -c
 if ! afppasswd -a -f -w "$AFP_PASS" "$AFP_USER"; then
@@ -182,7 +182,7 @@ else
     AFP_VALIDUSERS2="$AFP_USER $AFP_USER2"
 fi
 
-if [ $AFP_CNID_BACKEND = "mysql" ]; then
+if [ "$AFP_CNID_BACKEND" = "mysql" ]; then
     if [ -z $AFP_CNID_SQL_HOST ]; then
         AFP_CNID_SQL_HOST="localhost"
     fi
@@ -202,8 +202,13 @@ if [ -n "$AFP_EXCLUDE_TESTS" ]; then
     TEST_FLAGS="$TEST_FLAGS -x"
 fi
 
+if [ -n "$AFP_CONFIG_POLLING" ]; then
+    echo "*** Starting config file polling"
+    /config_watch.sh /etc/netatalk/afp.conf "$AFP_CONFIG_POLLING" &
+fi
+
 if [ -z "$MANUAL_CONFIG" ]; then
-    cat <<EOF > /usr/local/etc/afp.conf
+    cat <<EOF > /etc/netatalk/afp.conf
 [Global]
 appletalk = yes
 cnid mysql host = $AFP_CNID_SQL_HOST
@@ -236,14 +241,14 @@ EOF
 fi
 
 if [ -n "$AFP_EXTMAP" ]; then
-    sed -i 's/^#\./\./' /usr/local/etc/extmap.conf
+    sed -i 's/^#\./\./' /etc/netatalk/extmap.conf
 fi
 
 # Configuring AppleTalk if enabled
 if [ -n "$ATALKD_INTERFACE" ]; then
     echo "*** Configuring DDP services"
-    echo "$ATALKD_INTERFACE $ATALKD_OPTIONS" > /usr/local/etc/atalkd.conf
-    echo "cupsautoadd:op=root:" > /usr/local/etc/papd.conf
+    echo "$ATALKD_INTERFACE $ATALKD_OPTIONS" > /etc/netatalk/atalkd.conf
+    echo "cupsautoadd:op=root:" > /etc/netatalk/papd.conf
     echo "*** Starting DDP services (this will take a minute)"
     cupsd
     atalkd
