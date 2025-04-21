@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-13 17:06+0200\n"
+"POT-Creation-Date: 2025-04-21 21:07+0200\n"
 "PO-Revision-Date: 2025-01-25 15:05+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -19,9 +19,8 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1098 manpages/man5/afp.conf.5.md:1133
-#: manual/AppleTalk.md:154 manual/Configuration.md:836 manual/Installation.md:4
-#: manual/Upgrading.md:42
+#: manpages/man5/afp.conf.5.md:1129 manual/AppleTalk.md:154
+#: manual/Configuration.md:836 manual/Installation.md:4 manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -295,8 +294,8 @@ msgstr ""
 
 #. type: Bullet: '- '
 #: manual/Installation.md:99
-msgid "cmark or cmark-gfm"
-msgstr "cmark もしくは cmark-gfm"
+msgid "cmark, cmark-gfm, or pandoc"
+msgstr "cmark、cmark-gfm、またはpandoc"
 
 #. type: Plain text
 #: manual/Installation.md:104
@@ -305,30 +304,32 @@ msgid ""
 "    Netatalk's documentation is authored in Markdown format.\n"
 "    The man page sources consist of standards-compliant CommonMark,\n"
 "    while the rest of the documentation is authored in GitHub-Flavored\n"
-"    Markdown.\n"
+"    Markdown (gfm).\n"
 msgstr ""
-"    Netatalk のドキュメントは Markdown 形式で作成されている。\n"
-"    マニュアル ページのソースは標準に準拠した CommonMark で構成され、\n"
-"    ドキュメントの残りの部分は GitHub 風の Markdown (gfm) で作成されている。\n"
+"    Netatalk のドキュメントはMarkdown形式で作成されている。\n"
+"    マニュアルページのソースは標準に準拠したCommonMarkで構成され、\n"
+"    ドキュメントの残りの部分はGitHub風の Markdown (gfm)で作成されている。\n"
 
 #. type: Plain text
-#: manual/Installation.md:108
+#: manual/Installation.md:109
 #, no-wrap
 msgid ""
-"    You can use cmark to generate roff man pages from the Markdown sources,\n"
-"    and cmark-gfm to generate all documentation, including HTML pages.\n"
-"    If you have access to the latter, you don't need the former.\n"
+"    The pandoc library generates the nicest output, but is\n"
+"    significantly more resource intensive than the other two options.\n"
+"    The cmark reference implementation is the most widely distributed,\n"
+"    but cmark-gfm handles GitHub extensions like tables better.\n"
 msgstr ""
-"    cmark を使用して Markdown ソースから roff マニュアル ページを生成し、cmark-gfm を使用して HTML ページを含むすべてのドキュメントを生成できる。\n"
-"    後者は利用可能な場合は、前者は必要ない。\n"
+"    pandocライブラリは最もきれいな出力を生成するが、他の2つのオプション\n"
+"    よりもはるかにリソースを消費する。cmarkのリファレンス実装が最も広く配布\n"
+"    されているが、cmark-gfm はテーブルのようなGitHub拡張機能をよりよく扱う。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:110
+#: manual/Installation.md:111
 msgid "CrackLib"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:114
+#: manual/Installation.md:115
 #, no-wrap
 msgid ""
 "    When using the Random Number UAMs and netatalk's own **afppasswd**\n"
@@ -340,7 +341,7 @@ msgstr ""
 "    での認証に弱いパスワードを設定するのを防ぐのに役立つ。\n"
 
 #. type: Plain text
-#: manual/Installation.md:117
+#: manual/Installation.md:118
 #, no-wrap
 msgid ""
 "    The CrackLib dictionary, which is sometimes distributed separately in\n"
@@ -350,12 +351,12 @@ msgstr ""
 "    もコンパイル時にも実行時にも必須である。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:119
+#: manual/Installation.md:120
 msgid "D-Bus"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:123
+#: manual/Installation.md:124
 #, no-wrap
 msgid ""
 "    D-Bus provides a mechanism for sending messages between processes,\n"
@@ -367,23 +368,23 @@ msgstr ""
 "    **afpstats** ツール。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:125
+#: manual/Installation.md:126
 msgid "GLib and GIO"
 msgstr "GLib および GIO"
 
 #. type: Plain text
-#: manual/Installation.md:127
+#: manual/Installation.md:128
 #, no-wrap
 msgid "    Used by the **afpstats** tool to interface with D-Bus.\n"
 msgstr "    D-Bus とのインターフェースとして、**afpstats** ツールに使われる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:129
+#: manual/Installation.md:130
 msgid "iconv"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:135
+#: manual/Installation.md:136
 #, no-wrap
 msgid ""
 "    iconv provides conversion routines for many character encodings.\n"
@@ -399,12 +400,12 @@ msgstr ""
 "    実装を使用できる。それ以外の場合は、GNU libiconv 実装を使用できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:137
+#: manual/Installation.md:138
 msgid "Kerberos V"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:142
+#: manual/Installation.md:143
 #, no-wrap
 msgid ""
 "    Kerberos v5 is a client-server based authentication protocol invented\n"
@@ -418,12 +419,12 @@ msgstr ""
 "    インフラストラクチャでの認証用に GSS UAM ライブラリを作成できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:144
+#: manual/Installation.md:145
 msgid "MySQL or MariaDB"
 msgstr "MySQL または MariaDB"
 
 #. type: Plain text
-#: manual/Installation.md:149
+#: manual/Installation.md:150
 #, no-wrap
 msgid ""
 "    By leveraging a MySQL-compatible client library, netatalk can be built\n"
@@ -437,12 +438,12 @@ msgstr ""
 "    インスタンスを用意する必要がある。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:151
+#: manual/Installation.md:152
 msgid "PAM"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:156
+#: manual/Installation.md:157
 #, no-wrap
 msgid ""
 "    PAM provides a flexible mechanism for authenticating users. PAM was\n"
@@ -457,12 +458,12 @@ msgstr ""
 "    スイートである。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:158
+#: manual/Installation.md:159
 msgid "Perl"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:162
+#: manual/Installation.md:163
 #, no-wrap
 msgid ""
 "    Netatalk's administrative utility scripts rely on the Perl runtime,\n"
@@ -474,12 +475,12 @@ msgstr ""
 "    (asip-status) 又は *Net::DBus* (afpstats)。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:164
+#: manual/Installation.md:165
 msgid "po4a"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:169
+#: manual/Installation.md:170
 #, no-wrap
 msgid ""
 "    With the help of po4a, Netatalk's documentation can be translated\n"
@@ -492,18 +493,18 @@ msgstr ""
 "    ファイルに保存されている翻訳と結合する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:171
+#: manual/Installation.md:172
 msgid "TCP wrappers"
 msgstr "TCP ラッパー"
 
 #. type: Plain text
-#: manual/Installation.md:173
+#: manual/Installation.md:174
 #, no-wrap
 msgid "    Wietse Venema's network logger, also known as TCPD or LOG_TCP.\n"
 msgstr "    Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP とも呼ばれる。\n"
 
 #. type: Plain text
-#: manual/Installation.md:177
+#: manual/Installation.md:178
 #, no-wrap
 msgid ""
 "    Security options are: access control per host, domain and/or service;\n"
@@ -514,12 +515,12 @@ msgstr ""
 "    アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:179
+#: manual/Installation.md:180
 msgid "Tracker, or TinySPARQL / LocalSearch"
 msgstr "Tracker もしくは TinySPARQL / LocalSearch"
 
 #. type: Plain text
-#: manual/Installation.md:187
+#: manual/Installation.md:188
 #, no-wrap
 msgid ""
 "    Netatalk uses [Tracker](https://tracker.gnome.org) or its later\n"
@@ -538,12 +539,12 @@ msgstr ""
 "    をサポートする最初のバージョンだからである。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:189
+#: manual/Installation.md:190
 msgid "talloc / bison / flex"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:192
+#: manual/Installation.md:193
 #, no-wrap
 msgid ""
 "    Samba's talloc library, a Yacc parser such as bison, and a lexer like\n"
@@ -553,12 +554,12 @@ msgstr ""
 "    パーサー、flex などのレキサーも必要。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:194
+#: manual/Installation.md:195
 msgid "UnicodeData.txt"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:197
+#: manual/Installation.md:198
 #, no-wrap
 msgid ""
 "    The [Unicode Character Database](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)\n"
@@ -568,7 +569,7 @@ msgstr ""
 "    が必要である。\n"
 
 #. type: Plain text
-#: manual/Installation.md:200
+#: manual/Installation.md:201
 #, no-wrap
 msgid ""
 "    This is mostly relevant for developers or package managers who want to regenerate\n"
@@ -576,13 +577,13 @@ msgid ""
 msgstr "    これは、開発者やパッケージ マネージャーが Netatalk の Unicode 文字変換テーブルを再生成したい場合に関連する。\n"
 
 #. type: Title ##
-#: manual/Installation.md:201
+#: manual/Installation.md:202
 #, no-wrap
 msgid "Starting and stopping Netatalk"
 msgstr "Netatalk の起動と停止"
 
 #. type: Plain text
-#: manual/Installation.md:209
+#: manual/Installation.md:210
 msgid ""
 "The Netatalk distribution comes with several operating system specific "
 "startup script templates that are tailored according to the options given to "
@@ -597,7 +598,7 @@ msgstr ""
 "トフォーム固有のスクリプトに加えて、systemd、openrc 用に提供されている。"
 
 #. type: Plain text
-#: manual/Installation.md:215
+#: manual/Installation.md:216
 msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
@@ -612,7 +613,7 @@ msgstr ""
 "テキストを参照してください。"
 
 #. type: Plain text
-#: manual/Installation.md:220
+#: manual/Installation.md:221
 msgid ""
 "Since new Linux, \\*BSD, and Solaris-like distributions appear at regular "
 "intervals, and the startup procedure for the other systems mentioned above "
@@ -625,7 +626,7 @@ msgstr ""
 "ることをお勧めする。"
 
 #. type: Plain text
-#: manual/Installation.md:225
+#: manual/Installation.md:226
 msgid ""
 "If you use Netatalk as part of a fixed setup, like a Linux distribution, an "
 "RPM or a BSD package, things will probably have been arranged properly for "
@@ -638,7 +639,7 @@ msgstr ""
 "まる。"
 
 #. type: Plain text
-#: manual/Installation.md:228
+#: manual/Installation.md:229
 msgid ""
 "The following daemon need to be started by whatever startup script mechanism "
 "is used:"
@@ -647,12 +648,12 @@ msgstr ""
 "必要がある:"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:230
+#: manual/Installation.md:231
 msgid "netatalk"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:233
+#: manual/Installation.md:234
 msgid ""
 "In the absence of a startup script, you can also launch this daemon directly "
 "(as root), and kill it with SIGTERM when you are done with it."
@@ -661,7 +662,7 @@ msgstr ""
 "し、使い終わったら SIGTERM で終了することもできる。"
 
 #. type: Plain text
-#: manual/Installation.md:237
+#: manual/Installation.md:238
 msgid ""
 "Additionally, make sure that the configuration file *afp.conf* is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
@@ -672,7 +673,7 @@ msgstr ""
 "かどうかを問い合わせることができる。"
 
 #. type: Plain text
-#: manual/Installation.md:241
+#: manual/Installation.md:242
 msgid ""
 "If you want to run AppleTalk services, you also need to start the **atalkd** "
 "daemon, plus the optional **papd**, **timelord**, and **a2boot** daemons. "

@@ -469,15 +469,15 @@ that the UAM in question supplies. So think about eliminating weak UAMs like
 
 ### Netatalk UAM overview table
 
-A small overview of the most commonly used UAMs.
+A small overview of the officially supported UAMs.
 
-| UAM | No User Authent | Cleartxt Passwrd | (2-Way) Randnum exchange | DHCAST128 | DHX2 | Client Krb v2 |
-|----|----|----|----|----|----|----|
+| UAM | No User Auth | Cleartxt Passwrd | RandNum Exchange | DHCAST128 | DHX2 | Kerberos V |
+|-----|--------------|------------------|------------------|-----------|------|------------|
 | Password length | guest access | max. 8 characters | max. 8 characters | max. 64 characters | max. 256 characters | Kerberos tickets |
 | Client support | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 |
 | Encryption | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit SSL, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted using libgcrypt with CAST 128 in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |
 | Server support | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |
-| Password storage method | None | Either /etc/passwd (/etc/shadow) or PAM | Passwords stored in clear text in a separate text file | Either /etc/passwd (/etc/shadow) or PAM | Either /etc/passwd (/etc/shadow) or PAM | At the Kerberos Key Distribution Center\* |
+| Password storage method | None | Either system auth or PAM | Passwords stored in clear text in a separate text file | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center\* |
 
 \* Have a look at this [Kerberos
 overview](https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)
@@ -969,7 +969,7 @@ crawling is forced
 The following table lists the supported Spotlight metadata attributes
 
 | Description | Spotlight Key |
-|----|----|
+|-------------|---------------|
 | Name | kMDItemDisplayName, kMDItemFSName |
 | Document content (full text search) | kMDItemTextContent |
 | File type | \_kMDItemGroupId, kMDItemContentTypeTree |

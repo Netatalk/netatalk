@@ -95,16 +95,17 @@ functionality.
     When using Avahi, D-Bus is also required, and the Avahi library must
     have been built with D-Bus support.
 
-- cmark or cmark-gfm
+- cmark, cmark-gfm, or pandoc
 
     Netatalk's documentation is authored in Markdown format.
     The man page sources consist of standards-compliant CommonMark,
     while the rest of the documentation is authored in GitHub-Flavored
-    Markdown.
+    Markdown (gfm).
 
-    You can use cmark to generate roff man pages from the Markdown sources,
-    and cmark-gfm to generate all documentation, including HTML pages.
-    If you have access to the latter, you don't need the former.
+    The pandoc library generates the nicest output, but is
+    significantly more resource intensive than the other two options.
+    The cmark reference implementation is the most widely distributed,
+    but cmark-gfm handles GitHub extensions like tables better.
 
 - CrackLib
 

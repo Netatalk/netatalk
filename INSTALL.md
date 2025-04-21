@@ -27,9 +27,15 @@ git clone https://github.com/netatalk/netatalk.git      # clone the repository
 cd netatalk                                             # change to the repo directory
 ```
 
-## External software dependencies
+## Install software dependencies
 
-Install software dependencies using your operating system's package manager.
+At this point, you need to install the software dependencies for building
+and running Netatalk.
+
+This list is not exhaustive, and you may need to install additional software
+depending on your platform and configuration. See the
+[Compilation](https://netatalk.io/compilation)
+documentation for more details.
 
 ### Required
 
@@ -62,7 +68,7 @@ Install software dependencies using your operating system's package manager.
 | Package      | Details |
 |--------------|---------|
 | avahi **OR** mDNSresponder | For Zeroconf support |
-| cmark **OR** cmark-gfm     | For generating documentation |
+| cmark **OR** cmark-gfm **OR** pandoc | For generating documentation |
 | cracklib and cracklib dictionary | For password strength check in afppasswd |
 | GLib 2 and GIO             | For afpstats support |
 | Kerberos V                 | For krbV UAM support |
