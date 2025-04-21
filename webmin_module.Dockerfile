@@ -46,7 +46,8 @@ RUN apt-get update \
 WORKDIR /netatalk-code
 COPY . .
 
-RUN meson setup build \
+RUN sed -i 's/hide_service_controls=0/hide_service_controls=1/' /netatalk-code/contrib/webmin_module/config.in \
+&&  meson setup build \
     -Dbuildtype=release \
     -Dwith-afpstats=false \
     -Dwith-appletalk=true \
@@ -59,14 +60,13 @@ RUN meson setup build \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=false \
     -Dwith-webmin=true \
-&&  meson compile -C build
-
-RUN meson install -C build \
+&&  meson compile -C build \
+&&  meson install -C build \
 &&  apt-get remove --yes --auto-remove --purge $BUILD_DEPS \
 &&  apt-get --quiet --yes autoclean \
 &&  apt-get --quiet --yes autoremove \
-&&  apt-get --quiet --yes clean
-RUN rm -rf \
+&&  apt-get --quiet --yes clean \
+&&  rm -rf \
     /netatalk-code \
     /usr/include/netatalk \
     /usr/share/man \

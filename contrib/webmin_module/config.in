@@ -22,3 +22,4 @@ restart_timelord=@init_timelord_restart@
 start_a2boot=@init_a2boot_start@
 stop_a2boot=@init_a2boot_stop@
 restart_a2boot=@init_a2boot_restart@
+hide_service_controls=0

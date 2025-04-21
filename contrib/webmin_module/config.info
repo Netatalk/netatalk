@@ -25,3 +25,5 @@ restart_timelord=Restart timelord,0
 start_a2boot=Start a2boot,0
 stop_a2boot=Stop a2boot,0
 restart_a2boot=Restart a2boot,0
+general_options=General options,11
+hide_service_controls=Hide service controls,1,1-Enabled,0-Disabled
