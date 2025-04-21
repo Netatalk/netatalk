@@ -182,48 +182,51 @@ if (@atalk_ifs) {
 	print &ui_links_row(\@atalk_links);
 }
 
-my @daemons = (
-	{basename($config{atalkd_d}) => $text{index_process_atalkd}},
-	{basename($config{papd_d}) => $text{index_process_papd}},
-	{basename($config{timelord_d}) => $text{index_process_timelord}},
-	{basename($config{a2boot_d}) => $text{index_process_a2boot}}
-);
+if (!$config{hide_service_controls}) {
+	print &ui_hr();
+	my @daemons = (
+		{basename($config{atalkd_d}) => $text{index_process_atalkd}},
+		{basename($config{papd_d}) => $text{index_process_papd}},
+		{basename($config{timelord_d}) => $text{index_process_timelord}},
+		{basename($config{a2boot_d}) => $text{index_process_a2boot}}
+	);
 
-print "<h3>$text{'index_appletalk_services'}</h3>\n";
-print "<p>$text{'index_appletalk_services_notice'}</p>";
+	print "<h3>$text{'index_appletalk_services'}</h3>\n";
+	print "<p>$text{'index_appletalk_services_notice'}</p>";
 
-foreach my $daemon (@daemons) {
-	foreach my $d (keys %$daemon) {
-		if (-x $config{$d.'_d'}) {
-			if (&find_byname($config{$d.'_d'})) {
-				print "<h3>".&text('index_running_service', $daemon->{$d})."</h3>\n";
-				print &ui_buttons_start();
-				print &ui_buttons_row(
-					'control.cgi?action=restart&daemon='.$d,
-					&text('running_restart_daemon', $daemon->{$d}),
-					&text('index_process_control_restart_daemon', $d)
-				);
-				print &ui_buttons_row(
-					'control.cgi?action=stop&daemon='.$d,
-					&text('running_stop_daemon', $daemon->{$d}),
-					&text('index_process_control_stop_daemon', $d)
-				);
-				print &ui_buttons_end();
-				$current_formindex += 2;
-			} else {
-				print "<h3>".&text('index_not_running', $daemon->{$d})."</h3>\n";
-				print &ui_buttons_start();
-				print &ui_buttons_row(
-					'control.cgi?action=start&daemon='.$d,
-					&text('running_start_daemon', $daemon->{$d}),
-					&text('index_process_control_start_daemon', $d)
-				);
-				print &ui_buttons_end();
-				$current_formindex += 1;
+	foreach my $daemon (@daemons) {
+		foreach my $d (keys %$daemon) {
+			if (-x $config{$d.'_d'}) {
+				if (&find_byname($config{$d.'_d'})) {
+					print "<h3>".&text('index_running_service', $daemon->{$d})."</h3>\n";
+					print &ui_buttons_start();
+					print &ui_buttons_row(
+						'control.cgi?action=restart&daemon='.$d,
+						&text('running_restart_daemon', $daemon->{$d}),
+						&text('index_process_control_restart_daemon', $d)
+					);
+					print &ui_buttons_row(
+						'control.cgi?action=stop&daemon='.$d,
+						&text('running_stop_daemon', $daemon->{$d}),
+						&text('index_process_control_stop_daemon', $d)
+					);
+					print &ui_buttons_end();
+					$current_formindex += 2;
+				} else {
+					print "<h3>".&text('index_not_running', $daemon->{$d})."</h3>\n";
+					print &ui_buttons_start();
+					print &ui_buttons_row(
+						'control.cgi?action=start&daemon='.$d,
+						&text('running_start_daemon', $daemon->{$d}),
+						&text('index_process_control_start_daemon', $d)
+					);
+					print &ui_buttons_end();
+					$current_formindex += 1;
+				}
 			}
-		}
-		else {
-			print "<p>".&text('index_daemon_not_found', $d)."</p>";
+			else {
+				print "<p>".&text('index_daemon_not_found', $d)."</p>";
+			}
 		}
 	}
 }
@@ -265,53 +268,56 @@ if(@{$$afpconf{volumeSections}}) {
 	print "<p>\n";
 	print &ui_links_row(\@volume_links);
 }
-print &ui_hr();
 
-# since we are using a different number of forms, depending on the status of the service,
-# we are keeping a running index while outputting the forms
-my $current_formindex = 0;
+if (!$config{hide_service_controls}) {
+	print &ui_hr();
 
-print "<h3>$text{'index_filesharing_services'}</h3>\n";
+	# since we are using a different number of forms, depending on the status of the service,
+	# we are keeping a running index while outputting the forms
+	my $current_formindex = 0;
 
-# Process control Buttons
-if(&find_byname($config{'netatalk_d'})) {
-	print &ui_buttons_start();
-	print &ui_buttons_row(
-		'control.cgi?action=restart&daemon='.basename($config{netatalk_d}),
-		$text{'running_restart'},
-		&text('index_process_control_restart_daemon', basename($config{netatalk_d}))
+	print "<h3>$text{'index_filesharing_services'}</h3>\n";
+
+	# Process control Buttons
+	if(&find_byname($config{'netatalk_d'})) {
+		print &ui_buttons_start();
+		print &ui_buttons_row(
+			'control.cgi?action=restart&daemon='.basename($config{netatalk_d}),
+			$text{'running_restart'},
+			&text('index_process_control_restart_daemon', basename($config{netatalk_d}))
+		);
+		print &ui_buttons_row(
+			'control.cgi?action=stop&daemon='.basename($config{netatalk_d}),
+			$text{'running_stop'},
+			&text('index_process_control_stop_daemon', basename($config{netatalk_d}))
+		);
+		print &ui_buttons_end();
+		$current_formindex += 2;
+	} else {
+		print &ui_buttons_start();
+		print &ui_buttons_row(
+			'control.cgi?action=start&daemon='.basename($config{netatalk_d}),
+			$text{'running_start'},
+			&text('index_process_control_start_daemon', basename($config{netatalk_d}))
+		);
+		print &ui_buttons_end();
+		$current_formindex += 1;
+	}
+
+	my @links_f = (
+		"server_status.cgi",
+		"show_users.cgi"
 	);
-	print &ui_buttons_row(
-		'control.cgi?action=stop&daemon='.basename($config{netatalk_d}),
-		$text{'running_stop'},
-		&text('index_process_control_stop_daemon', basename($config{netatalk_d}))
+	my @titles_f = (
+		$text{'index_icon_text_capabilities'},
+		$text{'index_icon_text_users'}
 	);
-	print &ui_buttons_end();
-	$current_formindex += 2;
-} else {
-	print &ui_buttons_start();
-	print &ui_buttons_row(
-		'control.cgi?action=start&daemon='.basename($config{netatalk_d}),
-		$text{'running_start'},
-		&text('index_process_control_start_daemon', basename($config{netatalk_d}))
+	my @icons_f = (
+		"images/inspect.gif",
+		"images/users.gif"
 	);
-	print &ui_buttons_end();
-	$current_formindex += 1;
+	icons_table(\@links_f, \@titles_f, \@icons_f);
 }
-
-my @links_f = (
-	"server_status.cgi",
-	"show_users.cgi"
-);
-my @titles_f = (
-	$text{'index_icon_text_capabilities'},
-	$text{'index_icon_text_users'}
-);
-my @icons_f = (
-	"images/inspect.gif",
-	"images/users.gif"
-);
-icons_table(\@links_f, \@titles_f, \@icons_f);
 
 print &ui_tabs_end_tab('mode', 'fileserver');
 print &ui_tabs_end();
