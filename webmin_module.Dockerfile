@@ -6,6 +6,7 @@ ARG RUN_DEPS="\
     libdb5.3 \
     libevent-2.1-7 \
     libgcrypt20 \
+    libiniparser1 \
     libpam0g \
     sudo \
     systemtap \
