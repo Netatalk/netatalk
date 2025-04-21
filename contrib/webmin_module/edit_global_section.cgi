@@ -83,7 +83,7 @@ print &ui_table_row($text{'edit_global_section_login_message'},
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'uam list', \%in);
 my $nonstandardUAMs = @values[0];
-$nonstandardUAMs =~ s/uams_dhx2?.so|uams_clrtxt.so|uams_guest.so|uams_gss.so//g;
+$nonstandardUAMs =~ s/uams_dhx2?.so|uams_clrtxt.so|uams_guest.so|uams_gss.so|uams_randnum.so//g;
 $nonstandardUAMs =~ s/^[ ,]+//;
 $nonstandardUAMs =~ s/[ ,]+$//;
 $nonstandardUAMs =~ s/[ ,]+/ /g;
