@@ -79,6 +79,7 @@ RUN meson setup build \
     -Dwith-init-style=none \
     -Dwith-krbV-uam=true \
     -Dwith-pam-config-path=/etc/pam.d \
+    -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-rpath=false \
     -Dwith-spooldir=/var/spool/netatalk \
     -Dwith-tcp-wrappers=false \
@@ -99,7 +100,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends $RUN_DEPS
 
-COPY /contrib/shell_utils/docker-entrypoint.sh /entrypoint.sh
+COPY /contrib/shell_utils/netatalk_container_entrypoint.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548
