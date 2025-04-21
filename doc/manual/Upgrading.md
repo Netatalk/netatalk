@@ -131,7 +131,7 @@ default
 ### Old and new configuration file names
 
 | Old File Name | New File Name | Description |
-|----|----|----|
+|---------------|---------------|-------------|
 | \- | `etc/afp.conf` | new ini-style format |
 | \- | `etc/extmap.conf` | starting with netatalk 3.0.2 |
 | `etc/netatalk/afp_signature.conf` | `var/netatalk/afp_signature.conf` | moved to $localstatedir |
@@ -148,7 +148,7 @@ default
 **From netatalk.conf (`/etc/default/netatalk`) to afp.conf**
 
 | Old netatalk.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |
-|----|----|----|----|----|----|
+|-------------------|--------------|-------------------|-------------------|---------|-------------|
 | ATALK_NAME | hostname | \- | \- | \(G\) | use gethostname() by default |
 | ATALK_UNIX_CHARSET | unix charset | LOCALE | UTF8 | \(G\) | \- |
 | ATALK_MAC_CHARSET | mac charset | MAC_ROMAN | MAC_ROMAN | (G)/(V) | \- |
@@ -169,8 +169,8 @@ default
 **From afpd.conf to afp.conf**
 
 | Old afpd.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |
-|----|----|----|----|----|----|
-| 1st field ("-" or "server name") | server name | \- | \- | \(G\) | new in 4.2.0; use value of hostname by default |
+|---------------|--------------|-------------------|-------------------|---------|-------------|
+| 1st field ("-" or "server name") | server name | \- | \- | \(G\) | new in 4.2.0; default is the value of hostname |
 | -uamlist | uam list | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | \(G\) | \- |
 | -nozeroconf | zeroconf | \- | yes (if supported) | \(G\) | \- |
 | -advertise_ssh | advertise ssh | \- | no | \(G\) | \- |
@@ -234,8 +234,8 @@ default
 
 **From afp_ldap.conf to afp.conf**
 
-| Old afp_ldap.conf | New afp.conf | Old Default Value | New Defalut Value | Section | Description |
-|----|----|----|----|----|----|
+| Old afp_ldap.conf | New afp.conf | Old Default Value | New Default Value | Section | Description |
+|-------------------|--------------|-------------------|-------------------|---------|-------------|
 | ldap_server | ldap server | \- | \- | \(G\) | \- |
 | ldap_auth_method | ldap auth method | \- | \- | \(G\) | \- |
 | ldap_auth_dn | ldap auth dn | \- | \- | \(G\) | \- |
@@ -252,7 +252,7 @@ default
 **From AppleVolumes.\* to afp.conf**
 
 | Old AppleVolumes.\* | New afp.conf | Old Default Value | New Defalut Value | Section | Description |
-|----|----|----|----|----|----|
+|--------------------|--------------|-------------------|-------------------|---------|-------------|
 | (leading-dot lines) | \- | \- | \- | \- | moved to extmap.conf |
 | :DEFAULT: | \- | options:upriv,usedots | \- | \- | use "vol preset" |
 | 1st field ("~") | \- | \- | \- | \- | use \[Homes\] section |

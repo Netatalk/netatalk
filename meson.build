@@ -2281,7 +2281,6 @@ if 'readmes' in get_option('with-docs')
                     install_dir: datadir / 'doc/netatalk',
                 )
             else
-                warning('cmark-gfm or pandoc is required for markdown to plain text conversion of READMEs')
                 install_data(file + '.md', install_dir: datadir / 'doc/netatalk')
             endif
         endif
@@ -2297,10 +2296,10 @@ if 'man' in get_option('with-docs')
 endif
 
 if 'html_manual' in get_option('with-docs')
-    if cmarkgfm.found() or pandoc.found()
+    if cmark.found() or cmarkgfm.found() or pandoc.found()
         build_html_docs = true
     else
-        warning('cmark-gfm or pandoc is required to build the html manual')
+        warning('cmark, cmark-gfm or pandoc is required to build the html manual')
     endif
 endif
 

@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-30 22:49+0200\n"
+"POT-Creation-Date: 2025-04-21 19:03+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -22,17 +22,15 @@ msgstr ""
 #: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:339
 #: manpages/man5/afp.conf.5.md:363 manpages/man5/afp.conf.5.md:376
 #: manpages/man5/afp.conf.5.md:391 manpages/man5/afp.conf.5.md:694
-#: manpages/man5/afp.conf.5.md:1093 manpages/man5/afp.conf.5.md:1219
-#: manpages/man5/afp.conf.5.md:1257 manpages/man8/papd.8.md:96
-#: manual/Configuration.md:113
+#: manpages/man5/afp.conf.5.md:1214 manpages/man5/afp.conf.5.md:1252
+#: manpages/man8/papd.8.md:96 manual/Configuration.md:113
 #, no-wrap
 msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1098 manpages/man5/afp.conf.5.md:1134
-#: manual/AppleTalk.md:154 manual/Configuration.md:836 manual/Installation.md:4
-#: manual/Upgrading.md:42
+#: manpages/man5/afp.conf.5.md:1129 manual/AppleTalk.md:154
+#: manual/Configuration.md:836 manual/Installation.md:4 manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -1266,29 +1264,28 @@ msgstr "Netatalk UAM を概要表"
 
 #. type: Plain text
 #: manual/Configuration.md:473
-msgid "A small overview of the most commonly used UAMs."
-msgstr "最も一般的に用いられる UAM の概観。"
+msgid "A small overview of the officially supported UAMs."
+msgstr "公式にサポートされているUAMの概観。"
 
 #. type: Plain text
 #: manual/Configuration.md:481
 #, no-wrap
 msgid ""
-"| UAM | No User Authent | Cleartxt Passwrd | (2-Way) Randnum exchange | DHCAST128 | DHX2 | Client Krb v2 |\n"
-"|----|----|----|----|----|----|----|\n"
+"| UAM | No User Auth | Cleartxt Passwrd | RandNum Exchange | DHCAST128 | DHX2 | Kerberos V |\n"
+"|-----|--------------|------------------|------------------|-----------|------|------------|\n"
 "| Password length | guest access | max. 8 characters | max. 8 characters | max. 64 characters | max. 256 characters | Kerberos tickets |\n"
 "| Client support | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 |\n"
 "| Encryption | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit SSL, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted using libgcrypt with CAST 128 in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |\n"
 "| Server support | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |\n"
-"| Password storage method | None | Either /etc/passwd (/etc/shadow) or PAM | Passwords stored in clear text in a separate text file | Either /etc/passwd (/etc/shadow) or PAM | Either /etc/passwd (/etc/shadow) or PAM | At the Kerberos Key Distribution Center\\* |\n"
+"| Password storage method | None | Either system auth or PAM | Passwords stored in clear text in a separate text file | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center\\* |\n"
 msgstr ""
-"|  |  |  |  |  |  |  |\n"
-"|----|----|----|----|----|----|----|\n"
-"| UAM | No User Authent | Cleartxt Passwrd | (2-Way) Randnum exchange | DHCAST128 | DHX2 | Client Krb v2 |\n"
+"| UAM | No User Auth | Cleartxt Passwrd | RandNum Exchange | DHCAST128 | DHX2 | Kerberos V |\n"
+"|-----|--------------|------------------|------------------|-----------|------|------------|\n"
 "| パスワード長 | ゲストアクセス | 最大 8 文字 | 最大 8 文字 | 最大 64 文字 | 最大 256 文字 | Kerberos チケット |\n"
 "| サポートするクライアント | 全ての Mac OS のバージョンで組み込み済 | 10.0 を除く全ての Mac OS のバージョンで組み込み済。 最近のバージョンでは明示的にアクティブ化する必要がある。 | ほとんど全ての Mac OS のバージョンで組み込み済 | AppleShare クライアント 3.8.4 より組み込み済で、3.8.3 では macOS の AFP クライアントに統合したプラグインとしての用意あり。 | Mac OS X 10.2 より組み込み済 | Mac OS X 10.2 より組み込み済 |\n"
 "| 暗号化 | クライアント・サーバー間で認証なくゲストアクセス可能。 | パスワードがネットワーク上を暗号化されずに伝わっていく。 字句そのままに悪いので、可能ならば全面的に使用を回避すべき （注意：NetBoot サービスの提供には ClearTxt UAM が必要） | DES, 56 ビットに相当する 8 バイトの乱数がネットワーク上に送出。オフラインの辞書攻撃に対して脆弱。 パスワードがサーバー上で平文であることが求められる。 | パスワードは 128 ビット SSL で暗号化され、ユーザーはサーバーに認証されるが、“逆もまた真”ではない。 このため中間者攻撃に対して弱い。 | パスワードは libgcrypt の CAST 128、CBC モードを用いて暗号化される。 ユーザーはサーバーに認証されるが、“逆もまた真”ではない。このため中間者攻撃に対して弱い。 | パスワードがネットワークを通して送られることがない。サービスプリンシパル検知の方法が原因で、 この認証方法は中間者攻撃に対して脆弱である。 |\n"
 "| サーバーがサポートする共有オブジェクト | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |\n"
-"| パスワードの保管方法 | なし | /etc/passwd (/etc/shadow) ないしは PAM | パスワードは別のテキストファイルに平文として保存される | /etc/passwd (/etc/shadow) ないしは PAM | /etc/passwd (/etc/shadow) ないしは PAM | Kerberos キー配布センター\\* |\n"
+"| パスワードの保管方法 | なし | システム認証ないしはPAM | パスワードは別のテキストファイルに平文として保存される | システム認証ないしはPAM | システム認証ないしはPAM | Kerberosキー配布センター\\* |\n"
 
 #. type: Plain text
 #: manual/Configuration.md:484
@@ -2536,7 +2533,7 @@ msgstr "下記表にサポートされている Spotlight メタデータ属性�
 #, no-wrap
 msgid ""
 "| Description | Spotlight Key |\n"
-"|----|----|\n"
+"|-------------|---------------|\n"
 "| Name | kMDItemDisplayName, kMDItemFSName |\n"
 "| Document content (full text search) | kMDItemTextContent |\n"
 "| File type | \\_kMDItemGroupId, kMDItemContentTypeTree |\n"
@@ -2561,7 +2558,7 @@ msgid ""
 "| The musical genre of the song or composition | kMDItemMusicalGenre |\n"
 msgstr ""
 "| 内容 | Spotlight キー |\n"
-"|----|----|\n"
+"|----|--------------|\n"
 "| 名前 | kMDItemDisplayName, kMDItemFSName |\n"
 "| ドキュメントの内容（全文検索） | kMDItemTextContent |\n"
 "| ファイルタイプ | \\_kMDItemGroupId, kMDItemContentTypeTree |\n"

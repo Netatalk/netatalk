@@ -1,13 +1,3 @@
-if pandoc.found()
-    transcoder = pandoc
-elif cmarkgfm.found()
-    transcoder = cmarkgfm
-elif cmark.found()
-    transcoder = cmark
-else
-    warning('No supported Markdown parser found')
-endif
-
 if build_man_docs
     subdir('manpages')
 endif

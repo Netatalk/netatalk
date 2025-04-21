@@ -29,7 +29,7 @@ foreach page : manual_pages
             input: ['_Navlinks.md', page + '.md'],
             output: page + '.html',
             command: [
-                transcoder,
+                pandoc,
                 '--from', 'gfm',
                 '--to', 'html',
                 '@INPUT@',
@@ -38,17 +38,31 @@ foreach page : manual_pages
             install: true,
             install_dir: manual_install_path,
         )
-    else
+    elif cmarkgfm.found()
         custom_target(
             'manual_' + page,
             input: ['_Navlinks.md', page + '.md'],
             output: page + '.html',
             command: [
-                transcoder,
+                cmarkgfm,
                 '--smart',
                 '--extension', 'table',
                 '--to', 'html',
                 '@INPUT@',
+            ],
+            capture: true,
+            install: true,
+            install_dir: manual_install_path,
+        )
+    elif cmark.found()
+        custom_target(
+            'manual_' + page,
+            input: ['_Navlinks.md', page + '.md'],
+            output: page + '.html',
+            command: [
+                'sh', '-c',
+                cmark.full_path() + ' --to html "$1" "$2" | sed -e "s#<p>|#<pre>|#g" -e "s#|</p>#|</pre>#g"',
+                'sh', '@INPUT@'
             ],
             capture: true,
             install: true,
