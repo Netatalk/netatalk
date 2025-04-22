@@ -1,6 +1,8 @@
 manual_pages = [
     'Configuration',
+    'index',
     'Installation',
+    'License',
     'Upgrading',
 ]
 
@@ -22,8 +24,6 @@ if get_option('with-website')
         'cnid_metad.8',
         'dbd.1',
         'extmap.conf.5',
-        'index',
-        'License',
         'macusers.1',
         'netatalk.8',
     ]
@@ -61,20 +61,51 @@ if get_option('with-website')
     endforeach
 else
     foreach page : manual_pages
-        custom_target(
-            'manual_' + page,
-            input: page + '.md',
-            output: page + '.html',
-            command: [
-                cmarkgfm,
-                '--smart',
-                '--extension', 'table',
-                '--to', 'html',
-                '@INPUT@',
-            ],
-            capture: true,
-            install: true,
-            install_dir: manual_install_path + '/ja',
-        )
+        if pandoc.found()
+            custom_target(
+                'manual_' + page,
+                input: [navlinks, page + '.md'],
+                output: page + '.html',
+                command: [
+                    pandoc,
+                    '--from', 'gfm',
+                    '--to', 'html',
+                    '@INPUT@',
+                ],
+                capture: true,
+                install: true,
+                install_dir: manual_install_path + '/ja',
+            )
+        elif cmarkgfm.found()
+            custom_target(
+                'manual_' + page,
+                input: [navlinks, page + '.md'],
+                output: page + '.html',
+                command: [
+                    cmarkgfm,
+                    '--smart',
+                    '--extension', 'table',
+                    '--to', 'html',
+                    '@INPUT@',
+                ],
+                capture: true,
+                install: true,
+                install_dir: manual_install_path + '/ja',
+            )
+        elif cmark.found()
+            custom_target(
+                'manual_' + page,
+                input: [navlinks, page + '.md'],
+                output: page + '.html',
+                command: [
+                    'sh', '-c',
+                    cmark.full_path() + ' --to html "$1" "$2" | sed -e "s#<p>|#<pre>|#g" -e "s#|</p>#|</pre>#g"',
+                    'sh', '@INPUT@'
+                ],
+                capture: true,
+                install: true,
+                install_dir: manual_install_path + '/ja',
+            )
+        endif
     endforeach
 endif

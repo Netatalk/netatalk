@@ -26,7 +26,7 @@ foreach page : manual_pages
     if pandoc.found()
         custom_target(
             'manual_' + page,
-            input: ['_Navlinks.md', page + '.md'],
+            input: [navlinks, page + '.md'],
             output: page + '.html',
             command: [
                 pandoc,
@@ -41,7 +41,7 @@ foreach page : manual_pages
     elif cmarkgfm.found()
         custom_target(
             'manual_' + page,
-            input: ['_Navlinks.md', page + '.md'],
+            input: [navlinks, page + '.md'],
             output: page + '.html',
             command: [
                 cmarkgfm,
@@ -57,7 +57,7 @@ foreach page : manual_pages
     elif cmark.found()
         custom_target(
             'manual_' + page,
-            input: ['_Navlinks.md', page + '.md'],
+            input: [navlinks, page + '.md'],
             output: page + '.html',
             command: [
                 'sh', '-c',
