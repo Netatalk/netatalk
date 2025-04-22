@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-13 14:34+0200\n"
+"POT-Creation-Date: 2025-04-22 22:06+0200\n"
 "PO-Revision-Date: 2025-01-24 23:25+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -15,6 +15,36 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Introduction](index.html)"
+msgstr "[序説](index.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Installation](Installation.html)"
+msgstr "[インストール](Installation.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Configuration](Configuration.html)"
+msgstr "[セットアップ](Configuration.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Upgrading](Upgrading.html)"
+msgstr "[アップグレード](Upgrading.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[License](License.html)"
+msgstr "[ライセンス](License.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[AppleTalk](AppleTalk.html)"
+msgstr ""
 
 #. type: Plain text
 #: manual/_Sidebar.md:2
@@ -25,36 +55,6 @@ msgstr ""
 #: manual/_Sidebar.md:4
 msgid "Manual"
 msgstr "マニュアル"
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:11
-msgid "[Introduction](index.html)"
-msgstr "[序説](index.html)"
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:11
-msgid "[Installation](Installation.html)"
-msgstr "[インストール](Installation.html)"
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:11
-msgid "[Configuration](Configuration.html)"
-msgstr "[セットアップ](Configuration.html)"
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:11
-msgid "[AppleTalk](AppleTalk.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:11
-msgid "[Upgrading](Upgrading.html)"
-msgstr "[アップグレード](Upgrading.html)"
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:11
-msgid "[License](License.html)"
-msgstr "[ライセンス](License.html)"
 
 #. type: Plain text
 #: manual/_Sidebar.md:13

@@ -1,0 +1,48 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.2.2dev\n"
+"POT-Creation-Date: 2025-04-22 22:06+0200\n"
+"PO-Revision-Date: 2025-04-22 21:52+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manual/_Navlinks.md:1 manual/_Navlinks_atalk.md:1
+#, no-wrap
+msgid "Netatalk Manual"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Introduction](index.html)"
+msgstr "[序説](index.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Installation](Installation.html)"
+msgstr "[インストール](Installation.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Configuration](Configuration.html)"
+msgstr "[セットアップ](Configuration.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[Upgrading](Upgrading.html)"
+msgstr "[アップグレード](Upgrading.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+msgid "[License](License.html)"
+msgstr "[ライセンス](License.html)"
