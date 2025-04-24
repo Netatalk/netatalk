@@ -52,12 +52,14 @@ jobs:
             -Dwith-docs-l10n=true
       - name: Build
         run: meson compile -C build
+      - name: Install
+        run: sudo meson install -C build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './build/doc/manual'
+          path: '/usr/local/share/doc/netatalk/htmldocs'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
