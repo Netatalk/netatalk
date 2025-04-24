@@ -42,12 +42,14 @@ jobs:
             libgcrypt20-dev \
             libiniparser-dev \
             meson \
-            ninja-build
+            ninja-build \
+            po4a
       - name: Configure
         run: |
           meson setup build \
             -Dwith-appletalk=true \
-            -Dwith-docs=html_manual
+            -Dwith-docs=html_manual \
+            -Dwith-docs-l10n=true
       - name: Build
         run: meson compile -C build
       - name: Setup Pages

@@ -185,7 +185,6 @@ jobs:
             libwrap0-dev \
             meson \
             ninja-build \
-            po4a \
             quota \
             systemtap-sdt-dev \
             tcpd \
@@ -198,7 +197,6 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
-            -Dwith-docs-l10n=true \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-sysv,systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
