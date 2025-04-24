@@ -650,7 +650,7 @@ msgstr "**AppleVolumes.\\* から afp.conf**\n"
 #: manual/Upgrading.md:312
 #, no-wrap
 msgid ""
-"| Old AppleVolumes.\\* | New afp.conf | Old Default Value | New Defalut Value | Section | Description |\n"
+"| Old AppleVolumes.\\* | New afp.conf | Old Default Value | New Default Value | Section | Description |\n"
 "|--------------------|--------------|-------------------|-------------------|---------|-------------|\n"
 "| (leading-dot lines) | \\- | \\- | \\- | \\- | moved to extmap.conf |\n"
 "| :DEFAULT: | \\- | options:upriv,usedots | \\- | \\- | use \"vol preset\" |\n"

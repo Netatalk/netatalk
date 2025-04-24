@@ -251,7 +251,7 @@ default
 
 **From AppleVolumes.\* to afp.conf**
 
-| Old AppleVolumes.\* | New afp.conf | Old Default Value | New Defalut Value | Section | Description |
+| Old AppleVolumes.\* | New afp.conf | Old Default Value | New Default Value | Section | Description |
 |--------------------|--------------|-------------------|-------------------|---------|-------------|
 | (leading-dot lines) | \- | \- | \- | \- | moved to extmap.conf |
 | :DEFAULT: | \- | options:upriv,usedots | \- | \- | use "vol preset" |
