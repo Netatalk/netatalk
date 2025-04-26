@@ -68,7 +68,7 @@ else
                 output: page + '.html',
                 command: [
                     pandoc,
-                    '--from', 'gfm',
+                    '--from', 'gfm+pipe_tables',
                     '--to', 'html',
                     '@INPUT@',
                 ],
