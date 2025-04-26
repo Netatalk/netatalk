@@ -2267,7 +2267,7 @@ if 'readmes' in get_option('with-docs')
                     output: file + '.txt',
                     command: [
                         pandoc,
-                        '--from', 'commonmark',
+                        '--from', 'gfm+pipe_tables',
                         '--to', 'plain',
                         '@INPUT@',
                     ],
