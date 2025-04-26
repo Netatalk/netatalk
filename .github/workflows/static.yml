@@ -29,13 +29,16 @@ jobs:
       name: html-manual
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    container:
+      image: debian:trixie
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --assume-yes --no-install-recommends \
+          apt-get update
+          apt-get install --assume-yes --no-install-recommends \
+            build-essential \
             cmark-gfm \
             libdb-dev \
             libevent-dev \
@@ -43,6 +46,7 @@ jobs:
             libiniparser-dev \
             meson \
             ninja-build \
+            pkgconf \
             po4a
       - name: Configure
         run: |
@@ -53,7 +57,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Install
-        run: sudo meson install -C build
+        run: meson install -C build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
