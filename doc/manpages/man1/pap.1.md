@@ -4,7 +4,7 @@ pap — client interface to remote printers using Printer Access Protocol
 
 # Synopsis
 
-**pap** [-A address] [-c] [-d] [-e] [-E] [-p nbpname] [-s statusfile] [-w] [-W] [FILES]
+**pap** [-A *address*] [-c] [-d] [-e] [-E] [-p *nbpname*] [-s *statusfile*] [-w] [-W] [*FILES*]
 
 # Description
 
@@ -28,7 +28,7 @@ sending **lpd**(8) spooled print jobs to AppleTalk connected printers. See
 
 # Options
 
-**-A** <address\>
+**-A** *address*
 
 > Connect to the printer with Appletalk address *address* and do not
 consult the *.paprc* file to find a printer name. See **atalk_aton**(3)
@@ -58,13 +58,13 @@ client side should wait for the printer to return EOF before closing the
 connection. Some clients don't wait, and hence some printers have
 related bugs in their implementation.
 
-**-p** <nbpname\>
+**-p** *nbpname*
 
 > Connect to the printer named *nbpname* and do not consult the *.paprc*
 file to find a printer name. See **nbp_name**(3) for the syntax of
 *nbpname*.
 
-**-s** <statusfile\>
+**-s** *statusfile*
 
 > Update the file called *statusfile* to contain the most recent status
 message from the printer. **pap** gets the status from the printer when it

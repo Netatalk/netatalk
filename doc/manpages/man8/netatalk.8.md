@@ -4,9 +4,9 @@ netatalk — Netatalk AFP server service controller daemon
 
 # Synopsis
 
-**netatalk** [-F configfile]
+**netatalk** [-F *configfile*]
 
-**netatalk** [ -v | -V ]
+**netatalk** [-v | -V]
 
 # Description
 
@@ -20,7 +20,7 @@ normally started at boot time by an init system.
 
 > Do not disassociate daemon from terminal.
 
-**-F** <configfile\>
+**-F** *configfile*
 
 > Specifies the configuration file to use.
 

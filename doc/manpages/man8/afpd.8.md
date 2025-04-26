@@ -4,9 +4,9 @@ afpd — Apple Filing Protocol daemon
 
 # Synopsis
 
-**afpd** [-d] [-F configfile]
+**afpd** [-d] [-F *configfile*]
 
-**afpd** [ -v | -V | -h ]
+**afpd** [-v | -V | -h]
 
 # Description
 
@@ -34,7 +34,7 @@ behavior and configuration of a file server.
 
 > Print help and exit.
 
-**-F** <configfile\>
+**-F** *configfile*
 
 > Specifies the configuration file to use.
 

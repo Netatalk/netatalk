@@ -4,9 +4,9 @@ a2boot — Apple II netboot server daemon
 
 # Synopsis
 
-**a2boot** [-d] [-n nbpname]
+**a2boot** [-d] [-n *nbpname*]
 
-**a2boot** [ -v | -V ]
+**a2boot** [-v | -V]
 
 # Description
 
@@ -35,7 +35,7 @@ see the documentation for AppleShare File Server for Macintosh.
 
 > Debug mode, i.e. don't disassociate from controlling TTY.
 
-**-n** <nbpname\>
+**-n** *nbpname*
 
 > Register this server as *nbpname*. This defaults to the hostname.
 

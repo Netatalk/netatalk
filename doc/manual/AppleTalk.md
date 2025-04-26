@@ -107,8 +107,8 @@ interfaces might fail in a situation where one of your network
 interfaces is connected to a network where *no* other active AppleTalk
 router is present and supplies appropriate routing settings.
 
-For further information see [atalkd.conf](atalkd.conf.html) and the developer
-documentation.
+For further information see [atalkd.conf](atalkd.conf.5.html)
+and the developer documentation.
 
 ### atalkd acting as an AppleTalk router
 
@@ -303,7 +303,7 @@ example) on the other.
 
 ### Setting up the PAP print server
 
-Netatalk's [papd](papd.html) is able to provide AppleTalk printing services for
+Netatalk's [papd](papd.8.html) is able to provide AppleTalk printing services for
 Macintoshes or, to be more precise, PAP clients in general. Netatalk
 does not contain a full-blown spooler implementation itself, papd only
 handles the bidirectional communication and submittance of printjobs
@@ -326,7 +326,7 @@ to print directly into a pipe instead of specifying a printer by name
 and using lpd interaction. As of Netatalk 2.0, another alternative has
 been implemented: direct interaction with CUPS (Note: when CUPS support
 is compiled in, then the SysV lpd support doesn't work at all). Detailed
-examples can be found in the [papd.conf](papd.conf.html) manual page.
+examples can be found in the [papd.conf](papd.conf.5.html) manual page.
 
 #### Integrating papd with SysV lpd
 
@@ -359,8 +359,8 @@ settings for individual spoolers.
 
 ### Using AppleTalk printers
 
-Netatalk's [papstatus](papstatus.html) can be used to query AppleTalk printers,
-[pap](pap.html) to print to them.
+Netatalk's [papstatus](papstatus.8.html) can be used to query AppleTalk printers,
+[pap](pap.1.html) to print to them.
 
 **pap** can be used stand-alone or as part of an output filter or a CUPS
 backend (which is the preferred method
@@ -414,7 +414,7 @@ Netatalk's **timelord** is compatible with the tardis client for Macintosh
 developed at the [University of
 Melbourne.](https://web.archive.org/web/20010303220117/http://www.cs.mu.oz.au/appletalk/readmes/TMLD.README.html)
 
-For further information please have a look at the [timelord](timelord.html) manual page.
+For further information please have a look at the [timelord](timelord.8.html) manual page.
 
 ## NetBoot Services
 
@@ -427,5 +427,5 @@ volume served by Netatalk.
 You need to supply the appropriate boot blocks and system files provided
 by Apple yourself.
 
-For further information please have a look at the [a2boot](a2boot.html) manual
+For further information please have a look at the [a2boot](a2boot.8.html) manual
 page.

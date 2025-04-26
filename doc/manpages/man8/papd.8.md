@@ -4,9 +4,9 @@ papd — AppleTalk print server daemon
 
 # Synopsis
 
-**papd** [-d] [-f configfile] [-p printcap] [-P pidfile]
+**papd** [-d] [-f *configfile*] [-p *printcap*] [-P *pidfile*]
 
-**papd** [ -v | -V ]
+**papd** [-v | -V]
 
 # Description
 
@@ -40,17 +40,17 @@ as the NBP name, and all options take their default value.
 
 > Do not fork or disassociate from the terminal.
 
-**-f** <configfile\>
+**-f** *configfile*
 
-> Consult <configfile\> instead of **papd.conf** for the configuration
+> Consult *configfile* instead of **papd.conf** for the configuration
 information.
 
-**-p** <printcap\>
+**-p** *printcap*
 
-> Consult <printcap\> instead of */etc/printcap* for LPD configuration
+> Consult *printcap* instead of */etc/printcap* for LPD configuration
 information.
 
-**-P** <pidfile\>
+**-P** *pidfile*
 
 > Specifies the file in which **papd** stores its process id.
 

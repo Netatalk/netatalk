@@ -12,7 +12,7 @@ The format of papd.conf is derived from **printcap**(5) and can contain
 configurations for one or more printers. Any line not prefixed with *\#*
 is interpreted. The configuration lines are composed like this:
 
-*printername:\[options\]*
+*printername:[options]*
 
 On systems running a System V printing system, the simplest case is to
 have either no papd.conf, or to have one that has no active lines. In
@@ -53,7 +53,7 @@ both a valid username and the correct password.
 > The *co* option allows options to be passed through to CUPS (e.g.
 *co="protocol=TBCP"* or *co="raw"*).
 
-**cupsautoadd\[:type\]\[@zone\]**
+**cupsautoadd[:type][@zone]**
 
 > If used as the first entry in papd.conf this will share all CUPS
 printers via papd. type/zone settings as well as other parameters

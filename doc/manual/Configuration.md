@@ -11,19 +11,20 @@ Netatalk's **afpd** daemon offers AFP fileservices to Apple clients. The
 configuration is managed through the *afp.conf* file which uses an ini
 style configuration syntax.
 
-Support for [Spotlight](#spotlight) was added in Netatalk 3.1.
+Netatalk provides compatibility with Time Machine for remote backups,
+and Spotlight for indexed searching.
 
-Mac OS X 10.5 (Leopard) introduced support for Time Machine backups over
-AFP. Two new functions ensure that backups are written to disk, not just
-in the server's cache. Different host operating systems honor this cache
-flushing differently. To make a volume a Time Machine target, use the
-volume option "**time machine = yes**".
+To make a volume a Time Machine target, use the
+volume option **time machine = yes**.
 
-Starting with Netatalk 2.1 UNIX symlinks
-can be used on the server. Semantics are the same as for e.g. NFS, i.e.
-they are not resolved on the server side but instead it's completely up
-to the client to resolve them, resulting in links that point somewhere
-inside the clients filesystem view.
+To enable Spotlight indexing globally or for a volume,
+set the option **spotlight = yes** where appropriate.
+
+Starting with Netatalk 2.1, UNIX symlinks can be used on the server.
+Semantics are the same as for e.g. NFS, i.e. they are not resolved
+on the server side but instead it's completely up to the client
+to resolve them, resulting in links that point somewhere inside
+the client's filesystem view.
 
 ### afp.conf
 
@@ -33,11 +34,11 @@ that it provides.
 
 The *afp.conf* is divided into several sections:
 
-\[Global\]
+[Global]
 
 > The global section defines general server options
 
-\[Homes\]
+[Homes]
 
 > The homes section defines user home volumes
 
@@ -75,7 +76,7 @@ path. When */home* links to */usr/home*:
     basedir regex = /usr/home
 
 For a more detailed explanation of the available options, please refer
-to the [afp.conf](afp.conf.html) man page.
+to the [afp.conf](afp.conf.5.html) man page.
 
 ## CNID backends
 
@@ -250,19 +251,17 @@ charset.
 
 To complicate things, Unicode defines several
 *[normalization](http://www.unicode.org/reports/tr15/index.html)* forms.
-While [samba](http://www.samba.org) uses
-*precomposed* Unicode, which most UNIX
-tools prefer as well, Apple decided to use the
+While [samba](http://www.samba.org) uses *precomposed* Unicode,
+which most UNIX tools prefer as well, Apple decided to use the
 *decomposed* normalization.
 
-For example lets take the German character 'ä'. Using the precomposed
-normalization, Unicode maps this character to 0xE4. In decomposed
-normalization, 'ä' is actually mapped to two characters, 0x61 and 0x308.
+For example lets take the character 'ä' (lowercase a with diaeresis).
+Using the precomposed normalization, Unicode maps this character to 0xE4.
+In decomposed normalization, 'ä' is actually mapped to two characters,
 0x61 is the mapping for an 'a', 0x308 is the mapping for a *COMBINING
 DIAERESIS*.
 
-Netatalk refers to precomposed UTF-8 as
-*UTF8* and to decomposed UTF-8 as
+Netatalk refers to precomposed UTF-8 as *UTF8* and to decomposed UTF-8 as
 *UTF8-MAC*.
 
 ### afpd and character sets
@@ -471,16 +470,13 @@ that the UAM in question supplies. So think about eliminating weak UAMs like
 
 A small overview of the officially supported UAMs.
 
-| UAM | No User Auth | Cleartxt Passwrd | RandNum Exchange | DHCAST128 | DHX2 | Kerberos V |
-|-----|--------------|------------------|------------------|-----------|------|------------|
-| Password length | guest access | max. 8 characters | max. 8 characters | max. 64 characters | max. 256 characters | Kerberos tickets |
-| Client support | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 |
-| Encryption | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit SSL, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted using libgcrypt with CAST 128 in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |
-| Server support | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so |
-| Password storage method | None | Either system auth or PAM | Passwords stored in clear text in a separate text file | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center\* |
-
-\* Have a look at this [Kerberos
-overview](https://web.archive.org/web/20070705043002/http://cryptnet.net/fdp/admin/kerby-infra/en/kerby-infra.html)
+| UAM             | No User Auth | Cleartxt Passwrd | RandNum Exchange | DHCAST128    | DHX2          | Kerberos V       |
+|-----------------|--------------|------------------|------------------|--------------|---------------|------------------|
+| Password length | guest access | max 8 chars      | max 8 chars      | max 64 chars | max 256 chars | Kerberos tickets |
+| Client support  | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 |
+| Encryption      | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit SSL, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted using libgcrypt with CAST 128 in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |
+| Server support | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so   | uams_dhx2.so   | uams_gss.so     |
+| Password storage method | None | Either system auth or PAM | Passwords stored in clear text in a separate text file | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center |
 
 ### SSH tunneling
 
@@ -586,9 +582,8 @@ permission mapping the Finder would display a read-only icon and the
 user wouldn't be able to write to the folder.
 
 By default, the effective permission of the authenticated user are only
-mapped to the mentioned
-UARightspermission structure, not the
-UNIX mode. You can adjust this behaviour with the configuration option
+mapped to the mentioned UARightspermission structure, not the UNIX mode.
+You can adjust this behaviour with the configuration option
 [map acls](afp.conf#options-for-acl-handling).
 
 However, neither in Finder "Get Info" windows nor in the Terminal will
@@ -819,18 +814,10 @@ action. When using FCE v2 you also get the following events:
 
 - user logout (logout)
 
-## Spotlight
+## Spotlight Compatible Search
 
-Starting with version 3.1 Netatalk supports Spotlight searching.
-Netatalk uses GNOME [Tracker](https://projects.gnome.org/tracker/) or
-its later incarnation
-TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)
-as metadata store, indexer and search engine.
-
-### Configuration
-
-You can enable Spotlight and indexing either globally or on a per volume
-basis with the **spotlight** option.
+You can enable Netatalk's Spotlight compatible search and indexing
+either globally or on a per volume basis with the **spotlight** option.
 
 > **WARNING**
 
@@ -846,155 +833,3 @@ must use the global option **dbus daemon** to point to the path, e.g. for
 Solaris with Tracker from OpenCSW:
 
     dbus daemon = /opt/csw/bin/dbus-daemon
-
-#### Limitations and notes
-
-- Large filesystems
-
-    Tracker on Linux uses the inotify Kernel filesystem change event API
-    for tracking filesystem changes. On large filesystems this may be
-    problematic since the inotify API doesn't offer recursive directory
-    watches but instead requires that for every subdirectory watches must
-    be added individually.
-
-    On Solaris the FEN file event notification system is used. It is
-    unknown which limitations and resource consumption this Solaris
-    subsystem may have.
-
-    We therefore recommend to disable live filesystem monitoring and let
-    Tracker periodically scan filesystems for changes instead, see the
-    [Tracker configuration options](#advanced-tracker-command-line-configuration)
-    enable-monitors and crawling-interval below.
-
-- Indexing home directories
-
-    A known limitation with the current implementation means that shared
-    volumes in a user's home directory does not get indexed by Spotlight.
-
-    As a workaround, keep the shared volumes you want to have indexed
-    elsewhere on the host filesystem.
-
-### Using Tracker commandline tools on the server
-
-Netatalk must be running, commands must be executed as root and some
-environment variables must be set up.
-
-If the .tracker_profile file does not exist, create it first. If you
-need to make the environment variables persistent, source
-.tracker_profile from /root/.profile. If needed, adjust PREFIX to point
-to the base directory Netatalk is installed to, and replace "/var" with
-the localstate directory configured at compile time.
-
-    $ su
-    # cat .tracker_profile
-    PREFIX="/usr/local"
-    export XDG_DATA_HOME="$PREFIX/var/netatalk/"
-    export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
-    export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
-    # . .tracker_profile
-    #
-
-When using Tracker from OpenCSW you must also update your PATH:
-
-    # export PATH=/opt/csw/bin:$PATH
-
-#### Common Tracker commands
-
-Querying Tracker status:
-
->     # tracker daemon
-
-Stop Tracker:
-
->     # tracker daemon -t
-
-Start Tracker:
-
->     # tracker daemon -s
-
-Reindex directory:
-
->     # tracker index -f PATH
-
-Query Tracker for information about a file or directory:
-
->     # tracker info PATH
-
-Search Tracker:
-
->     # tracker search QUERY
-
-#### Advanced Tracker command line configuration
-
-Tracker stores its configuration via Gnome dconf backend which can be
-modified with the command **gsettings**.
-
-Gnome dconf settings are per-user settings, so, as Netatalk runs the
-Tracker processes as root, the settings are stored in the root user
-context and reading or changing these settings must be performed as root
-and Netatalk must be running (and again the environment must be set up
-as shown above).
-
-    # gsettings list-recursively | grep Tracker
-    org.freedesktop.Tracker.Writeback verbosity 'debug'
-    ...
-
-The following list describes some important Tracker options and their
-default settings.
-
-org.freedesktop.Tracker.Miner.Files index-recursive-directories
-
-> This option controls which directories Tracker will index. Don't change
-this option manually as it is automatically set by Netatalk reflecting
-the setting of the **spotlight** option of Netatalk volumes.
-
-org.freedesktop.Tracker.Miner.Files enable-monitors true
-
-> The value controls whether Tracker watches all configured paths for
-modification. Depending on the filesystem modification backend (FAM on
-Linux, FEN on Solaris), this feature may not work as reliable as one
-might wish, so it may be safer to disable it and instead rely on
-periodic crawling of Tracker itself. See also the option
-**crawling-interval**.
-
-org.freedesktop.Tracker.Miner.Files crawling-interval -1
-
-> Interval in days to check the filesystem is up to date in the database,
-maximum is 365, default is -1. -2 = crawling is disabled entirely, -1 =
-crawling *may* occur on startup (if not cleanly shutdown), 0 =
-crawling is forced
-
-### Supported metadata attributes
-
-The following table lists the supported Spotlight metadata attributes
-
-| Description | Spotlight Key |
-|-------------|---------------|
-| Name | kMDItemDisplayName, kMDItemFSName |
-| Document content (full text search) | kMDItemTextContent |
-| File type | \_kMDItemGroupId, kMDItemContentTypeTree |
-| File modification date | kMDItemFSContentChangeDate, kMDItemContentModificationDate, kMDItemAttributeChangeDate |
-| Content Creation date | kMDItemContentCreationDate |
-| The author, or authors, of the contents of the file | kMDItemAuthors, kMDItemCreator |
-| The name of the country where the item was created | kMDItemCountry |
-| Duration | kMDItemDurationSeconds |
-| Number of pages | kMDItemNumberOfPages |
-| Document title | kMDItemTitle |
-| The width, in pixels, of the contents. For example, the image width or the video frame width | kMDItemPixelWidth |
-| The height, in pixels, of the contents. For example, the image height or the video frame height | kMDItemPixelHeight |
-| The color space model used by the document contents | kMDItemColorSpace |
-| The number of bits per sample | kMDItemBitsPerSample |
-| Focal length of the lens, in millimeters | kMDItemFocalLength |
-| ISO speed | kMDItemISOSpeed |
-| Orientation of the document. Possible values are 0 (landscape) and 1 (portrait) | kMDItemOrientation |
-| Resolution width, in DPI | kMDItemResolutionWidthDPI |
-| Resolution height, in DPI | kMDItemResolutionHeightDPI |
-| Exposure time, in seconds | kMDItemExposureTimeSeconds |
-| The composer of the music contained in the audio file | kMDItemComposer |
-| The musical genre of the song or composition | kMDItemMusicalGenre |
-
-#### References
-
-1.  [MDItem](https://developer.apple.com/documentation/coreservices/mditemref/)
-
-2.  [Tracker](https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/)

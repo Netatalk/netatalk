@@ -4,9 +4,9 @@ cnid_metad — daemon for starting cnid_dbd daemons on demand
 
 # Synopsis
 
-**cnid_metad** [-d] [-F configuration file]
+**cnid_metad** [-d] [-F *configuration file*]
 
-**cnid_metad** [ -v | -V ]
+**cnid_metad** [-v | -V]
 
 # Description
 
@@ -23,7 +23,7 @@ started at boot time by **netatalk**(8) and runs until shutdown.
 standard input, standard output and standard error file descriptors
 open. Useful for debugging.
 
-**-F** <configuration file\>
+**-F** *configuration file*
 
 > Use *configuration file* as the configuration file.
 

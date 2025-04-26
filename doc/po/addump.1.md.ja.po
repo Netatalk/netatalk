@@ -7,8 +7,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-16 08:12+0200\n"
+"Project-Id-Version: Netatalk 4.2.2dev\n"
+"POT-Creation-Date: 2025-04-27 08:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -89,7 +89,7 @@ msgstr "説明"
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1357
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
@@ -111,7 +111,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1359
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1355
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
@@ -130,37 +130,37 @@ msgstr "addump - AppleSingle/AppleDouble フォーマットのデータをダン
 #. type: Plain text
 #: manpages/man1/addump.1.md:8
 #, no-wrap
-msgid "**addump** [-a] [ FILE | DIR ]\n"
+msgid "**addump** [-a] [*FILE* | *DIR*]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:10
 #, no-wrap
-msgid "**addump** [-e] [ FILE | DIR ]\n"
+msgid "**addump** [-e] [*FILE* | *DIR*]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:12
 #, no-wrap
-msgid "**addump** [-f] [FILE]\n"
+msgid "**addump** [-f] [*FILE*]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:14
 #, no-wrap
-msgid "**addump** [-d] [FILE]\n"
+msgid "**addump** [-d] [*FILE*]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:16
 #, no-wrap
-msgid "**addump** [ -h | -help | --help ]\n"
+msgid "**addump** [-h | -help | --help]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:18
 #, no-wrap
-msgid "**addump** [ -v | -version | --version ]\n"
+msgid "**addump** [-v | -version | --version]\n"
 msgstr ""
 
 #. type: Plain text
@@ -180,11 +180,11 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:28
-#, no-wrap
 msgid ""
-"With no <FILE\\>|<DIR\\>, or when <FILE\\>|<DIR\\> is '-', read standard\n"
-"input.\n"
-msgstr "<FILE\\>\\|<DIR\\>がない、または<FILE\\>\\|<DIR\\>が「-」であるとき、標準入力を読み込む。\n"
+"With no *FILE* | *DIR*, or when *FILE* | *DIR* is '-', read standard input."
+msgstr ""
+"*FILE*\\ | *DIR*がない、または*FILE*\\ | *DIR*が「-」であるとき、標準入力を読"
+"み込む。"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
@@ -204,55 +204,55 @@ msgstr "オプション"
 #. type: Plain text
 #: manpages/man1/addump.1.md:32
 #, no-wrap
-msgid "**-a** \\[<FILE\\>|<DIR\\>\\]\n"
+msgid "**-a** *FILE* | *DIR*\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:38
 #, no-wrap
 msgid ""
-"> This is the default. Dump AppleSingle/AppleDouble data for <FILE\\> or\n"
-"<DIR\\> automatically. If FILE is not in AppleSingle/AppleDouble format,\n"
-"look for extended attributes, <.AppleDouble/FILE\\> and <.\\_FILE\\>. If\n"
-"<DIR\\>, look for extended attributes, <DIR/.AppleDouble/.Parent\\> and\n"
-"<.\\_DIR\\>.\n"
-msgstr "> これがデフォルトである。<FILE\\>または<DIR\\>のためのAppleSingle/AppleDoubleデータを自動的にダンプする。もしFILEがAppleSingle/AppleDoubleフォーマットでないなら、拡張属性と<.AppleDouble/FILE\\>と<.\\_FILE\\>を探する。もし<DIR\\>なら、拡張属性と<DIR/.AppleDouble/.Parent\\>と<.\\_DIR\\>を探する。\n"
+"> This is the default. Dump AppleSingle/AppleDouble data for *FILE* or\n"
+"*DIR* automatically. If *FILE* is not in AppleSingle/AppleDouble format,\n"
+"look for extended attributes, *.AppleDouble/FILE* and *.\\_FILE*. If\n"
+"*DIR*, look for extended attributes, *DIR/.AppleDouble/.Parent* and\n"
+"*.\\_DIR*.\n"
+msgstr "> これがデフォルトである。*FILE*または*DIR*のためのAppleSingle/AppleDoubleデータを自動的にダンプする。もし*FILE*がAppleSingle/AppleDoubleフォーマットでないなら、拡張属性と*.AppleDouble/FILE*と*.\\_FILE*を探す。もし*DIR*なら、拡張属性と*DIR/.AppleDouble/.Parent*と*.\\_DIR*を探す。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:40
 #, no-wrap
-msgid "**-e** <FILE\\>|<DIR\\>\n"
+msgid "**-e** *FILE* | *DIR*\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:42
 #, no-wrap
-msgid "> Dump extended attributes of <FILE\\> or <DIR\\>.\n"
-msgstr "> <FILE\\>または<DIR\\>の拡張属性をダンプする。\n"
+msgid "> Dump extended attributes of *FILE* or *DIR*.\n"
+msgstr "> *FILE*または*DIR*の拡張属性をダンプする。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:44
 #, no-wrap
-msgid "**-f** \\[<FILE\\>\\]\n"
+msgid "**-f** *FILE*\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:46
 #, no-wrap
-msgid "> Dump <FILE\\>. Assume FinderInfo to be FileInfo.\n"
-msgstr "> <FILE\\>をダンプする。FinderInfoがFileInfoであると仮定する。\n"
+msgid "> Dump *FILE*. Assume FinderInfo to be FileInfo.\n"
+msgstr "> *FILE*をダンプする。FinderInfoがFileInfoであると仮定する。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:48
 #, no-wrap
-msgid "**-d** \\[<FILE\\>\\]\n"
+msgid "**-d** *FILE*\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:50
 #, no-wrap
-msgid "> Dump <FILE\\>. Assume FinderInfo to be DirInfo.\n"
-msgstr "> <FILE\\>をダンプする。FinderInfoがDirInfoであると仮定する。\n"
+msgid "> Dump *FILE*. Assume FinderInfo to be DirInfo.\n"
+msgstr "> *FILE*をダンプする。FinderInfoがDirInfoであると仮定する。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:52 manpages/man1/macusers.1.md:22
@@ -311,7 +311,7 @@ msgstr ""
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1352 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1348 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
