@@ -2227,6 +2227,7 @@ build_html_docs = false
 build_readme_docs = false
 
 if 'readmes' in get_option('with-docs')
+    make_compile_doc = find_program('contrib/shell_utils/make_compile_docs.pl', required: false)
     build_readme_docs = true
 
     readmes_md = [
@@ -2248,6 +2249,15 @@ if 'readmes' in get_option('with-docs')
 
     foreach file : readmes_md
         if get_option('with-website')
+            if perl.found() and make_compile_doc.found()
+                run_command(
+                    make_compile_doc,
+                    '.github/workflows/build.yml',
+                    'COMPILATION.md',
+                    check: true,
+                )
+            endif
+
             install_data(file + '.md', install_dir: manual_install_path)
         else
             if pandoc.found()
