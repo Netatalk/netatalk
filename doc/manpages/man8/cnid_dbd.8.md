@@ -6,7 +6,7 @@ cnid_dbd — CNID database access daemon
 
 **cnid_dbd**
 
-**cnid_dbd** [ -v | -V ]
+**cnid_dbd** [-v | -V]
 
 # Description
 
@@ -128,13 +128,13 @@ Berkeley DB library versions, follow these steps:
 - Stop the to be upgraded old version of Netatalk
 
 - Using the old Berkeley DB utilities run
-*db_recover -h <path to .AppleDB>*
+*db_recover -h path/to/.AppleDB*
 
 - Using the new Berkeley DB utilities run
-*db_upgrade -v -h <path to .AppleDB> -f cnid2.db*
+*db_upgrade -v -h path/to/.AppleDB -f cnid2.db*
 
 - Again using the new Berkeley DB utilities run
-*db_checkpoint -1 -h <path to .AppleDB>*
+*db_checkpoint -1 -h path/to/.AppleDB*
 
 - Start the the new version of Netatalk
 

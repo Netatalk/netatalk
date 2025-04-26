@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-16 08:12+0200\n"
+"Project-Id-Version: Netatalk 4.2.2dev\n"
+"POT-Creation-Date: 2025-04-27 08:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -87,7 +87,7 @@ msgstr "説明"
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1357
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
@@ -109,7 +109,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1359
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1355
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
@@ -141,7 +141,7 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1352 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1348 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
@@ -161,7 +161,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/aecho.1.md:8
 #, no-wrap
-msgid "**aecho** [-c count] [ address | nbpname ]\n"
+msgid "**aecho** [-c *count*] [*address* | *nbpname*]\n"
 msgstr ""
 
 #. type: Plain text
@@ -169,19 +169,25 @@ msgstr ""
 #, no-wrap
 msgid ""
 "**aecho** repeatedly sends an Apple Echo Protocol (AEP) packet to the host\n"
-"specified by the given AppleTalk **address** or **nbpname** and reports\n"
+"specified by the given AppleTalk *address* or *nbpname* and reports\n"
 "whether a reply was received. Requests are sent at the rate of one per\n"
 "second.\n"
-msgstr "**aecho** は、指定された AppleTalk **address** または **nbpname** で指定されたホストに Apple Echo Protocol (AEP) パケットを繰り返し送信し、応答が受信されたかどうかを報告する。リクエストは 1 秒あたり 1 つの速度で送信される。\n"
+msgstr ""
+"**aecho** は、指定された AppleTalk *address* または *nbpname* で指定されたホストに\n"
+"Apple Echo Protocol (AEP) パケットを繰り返し送信し、応答が受信されたかどうかを報告する。\n"
+"リクエストは1秒あたり1つの速度で送信される。\n"
 
 # no-wrap
 #. type: Plain text
 #: manpages/man1/aecho.1.md:18
 #, no-wrap
 msgid ""
-"**address** is parsed by **atalk_aton**(3). **nbpname** is parsed by\n"
+"*address* is parsed by **atalk_aton**(3). *nbpname* is parsed by\n"
 "**nbp_name**(3). The nbp type defaults to \\`*Workstation*'.\n"
-msgstr "**address** は、**atalk_aton**(3) によって解析される。 **nbpname** は、**nbp_name**(3) によって解析される。 nbp タイプのデフォルトは \\`*Workstation*' である。\n"
+msgstr ""
+"*address* は、**atalk_aton**(3) によって解析される。\n"
+"*nbpname* は、**nbp_name**(3) によって解析される。\n"
+"nbp タイプのデフォルトは \\`*Workstation*' である。\n"
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:23
@@ -200,7 +206,7 @@ msgstr ""
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:103
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:39
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:39
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1306
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1302
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -233,7 +239,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/aecho.1.md:43
 #, no-wrap
-msgid "**-c** <count\\>\n"
+msgid "**-c** *count*\n"
 msgstr ""
 
 #. type: Plain text

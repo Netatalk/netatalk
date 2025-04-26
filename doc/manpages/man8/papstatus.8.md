@@ -4,7 +4,7 @@ papstatus — get the status of an AppleTalk-connected printer
 
 # Synopsis
 
-**papstatus** [-d] [-p printer] [retrytime]
+**papstatus** [-d] [-p *printer*] [*retrytime*]
 
 # Description
 
@@ -28,7 +28,7 @@ local host, respectively.
 > Turns on a debugging mode that prints some extra information to standard
 error.
 
-**-p** <printer\>
+**-p** *printer*
 
 > Get status from *printer* (do not consult any *.paprc* files to find a
 printer name). The syntax for *printer* is the same as discussed above

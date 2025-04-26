@@ -7,8 +7,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-16 08:12+0200\n"
+"Project-Id-Version: Netatalk 4.2.2dev\n"
+"POT-Creation-Date: 2025-04-26 22:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -109,10 +109,10 @@ msgstr ""
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1357
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
-#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:82
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:48
 #: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
 #: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
@@ -131,10 +131,10 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1359
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1355
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
-#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:84
 #: manpages/man8/cnid_dbd.8.md:147 manpages/man8/cnid_metad.8.md:50
 #: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
@@ -163,9 +163,9 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1352 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1348 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
-#: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
+#: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:78
 #: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
 #: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
 #: manpages/man8/papstatus.8.md:49
@@ -178,7 +178,7 @@ msgstr "関連項目"
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:103
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:39
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:39
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1306
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1302
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:79
 #, no-wrap
@@ -193,7 +193,7 @@ msgstr "afppasswd — AFP パスワード保守ユーティリティ"
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:8
 #, no-wrap
-msgid "**afppasswd** [-acfn] [-p afppasswd file] [-u minimum uid] [-w password string]\n"
+msgid "**afppasswd** [-acfn] [-p *afppasswd file*] [-u *minimum uid*] [-w *password string*]\n"
 msgstr ""
 
 #. type: Plain text
@@ -219,9 +219,8 @@ msgstr "**afppasswd**は、rootがパラメータ付きで呼び出すことも�
 #: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:339
 #: manpages/man5/afp.conf.5.md:363 manpages/man5/afp.conf.5.md:376
 #: manpages/man5/afp.conf.5.md:391 manpages/man5/afp.conf.5.md:694
-#: manpages/man5/afp.conf.5.md:1093 manpages/man5/afp.conf.5.md:1218
-#: manpages/man5/afp.conf.5.md:1256 manpages/man8/papd.8.md:96
-#: manual/Configuration.md:113
+#: manpages/man5/afp.conf.5.md:1214 manpages/man5/afp.conf.5.md:1252
+#: manpages/man8/papd.8.md:96 manual/Configuration.md:114
 #, no-wrap
 msgid "> **NOTE**\n"
 msgstr "> **注記**\n"
@@ -286,8 +285,8 @@ msgstr "> 現在の動作を強制する。\n"
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:50
 #, no-wrap
-msgid "**-p** <path\\>\n"
-msgstr "**-p** <パス\\>\n"
+msgid "**-p** *path*\n"
+msgstr "**-p** *パス*\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:52
@@ -307,7 +306,7 @@ msgstr "> もしcracklibサポートが*netatalk*に組み込まれており、c
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:60
 #, no-wrap
-msgid "**-u** <minimum uid\\>\n"
+msgid "**-u** *minimum uid*\n"
 msgstr ""
 
 #. type: Plain text
@@ -323,8 +322,8 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:65
 #, no-wrap
-msgid "**-w** <password string\\>\n"
-msgstr "**-w** <パスワード文字列\\>\n"
+msgid "**-w** *password string*\n"
+msgstr "**-w** *パスワード文字列*\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:69

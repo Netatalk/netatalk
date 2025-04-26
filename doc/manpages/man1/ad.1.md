@@ -4,9 +4,9 @@ ad - AppleDouble file utility suite
 
 # Synopsis
 
-**ad** [ ls | cp | mv | rm | set ] [...]
+**ad** [ls | cp | mv | rm | set] [...]
 
-**ad** [ -v | --version ]
+**ad** [-v | --version]
 
 # Description
 
@@ -216,29 +216,29 @@ The set utility alters metadata on files within an AFP volume.
 
 The options are as follows:
 
-**-t** <type\>
+**-t** *type*
 
 > Change a file's four character file type.
 
-**-c** <creator\>
+**-c** *creator*
 
 > Change a file's four character creator type.
 
-**-l** <label\>
+**-l** *label*
 
 > Change a file's color label. See list below for available colors.
 
-**-f** <flags\>
+**-f** *flags*
 
 > Change a file's Finder flags. See list below for available flags.
 Uppercase letter sets the flag, lowercase removes the flag.
 
-**-a** <attributes\>
+**-a** *attributes*
 
 > Change a file's attributes. See list below for available attributes.
 Uppercase letter sets the flag, lowercase removes the flag.
 
-*Flag descriptions*
+## Flag descriptions
 
     Color Labels:
 

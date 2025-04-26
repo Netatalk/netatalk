@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-04-16 08:12+0200\n"
+"Project-Id-Version: Netatalk 4.2.2dev\n"
+"POT-Creation-Date: 2025-04-27 07:37+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -98,7 +98,7 @@ msgstr ""
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1357
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
@@ -120,7 +120,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1359
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1355
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
@@ -152,7 +152,7 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1352 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1348 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
 #: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
@@ -201,13 +201,13 @@ msgstr "atalkd — ユーザーランド AppleTalk ネットワーク マネー�
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:8
 #, no-wrap
-msgid "**atalkd** [-f configfile] [-P pidfile] [-1] [-2] [-d] [-t]\n"
+msgid "**atalkd** [-f *configfile*] [-P *pidfile*] [-1] [-2] [-d] [-t]\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:10
 #, no-wrap
-msgid "**atalkd** [ -v | -V ]\n"
+msgid "**atalkd** [-v | -V]\n"
 msgstr ""
 
 #. type: Plain text
@@ -275,23 +275,23 @@ msgstr ""
 #: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:48
 #: manpages/man8/papd.8.md:44
 #, no-wrap
-msgid "**-f** <configfile\\>\n"
+msgid "**-f** *configfile*\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:45
 #, no-wrap
 msgid ""
-"> Consult <configfile\\> instead of **atalkd.conf** for the configuration\n"
+"> Consult *configfile* instead of **atalkd.conf** for the configuration\n"
 "information.\n"
 msgstr ""
-"> 設定情報については、**atalkd.conf** ではなく、<configfile\\>\n"
-"を参照する。\n"
+"> 設定情報については、**atalkd.conf**ではなく、*configfile*\n"
+"を参照してください。\n"
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:47 manpages/man8/papd.8.md:54
 #, no-wrap
-msgid "**-P** <pidfile\\>\n"
+msgid "**-P** *pidfile*\n"
 msgstr ""
 
 #. type: Plain text

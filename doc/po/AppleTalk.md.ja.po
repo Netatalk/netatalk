@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.1.2dev\n"
-"POT-Creation-Date: 2025-03-13 21:12+0100\n"
+"Project-Id-Version: Netatalk 4.2.2dev\n"
+"POT-Creation-Date: 2025-04-26 23:33+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -16,9 +16,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Plain text
-#: manpages/man5/afp.conf.5.md:1061 manpages/man5/afp.conf.5.md:1097
-#: manual/AppleTalk.md:154 manual/Configuration.md:827 manual/Installation.md:4
-#: manual/Upgrading.md:42
+#: manpages/man5/afp.conf.5.md:1129 manual/AppleTalk.md:154
+#: manual/Configuration.md:823 manual/Installation.md:4 manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -325,11 +324,11 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:112
 msgid ""
-"For further information see [atalkd.conf](atalkd.conf.html) and the "
+"For further information see [atalkd.conf](atalkd.conf.5.html)  and the "
 "developer documentation."
 msgstr ""
-"詳細については、[atalkd.conf](atalkd.conf.html) および開発者向けドキュメント"
-"を参照してください。"
+"詳細については、[atalkd.conf](atalkd.conf.5.html) および開発者向けドキュメン"
+"トを参照してください。"
 
 #. type: Title ###
 #: manual/AppleTalk.md:113
@@ -795,18 +794,18 @@ msgstr "PAP 印刷サーバーの設定"
 #. type: Plain text
 #: manual/AppleTalk.md:313
 msgid ""
-"Netatalk's [papd](papd.html) is able to provide AppleTalk printing services "
-"for Macintoshes or, to be more precise, PAP clients in general. Netatalk "
-"does not contain a full-blown spooler implementation itself, papd only "
-"handles the bidirectional communication and submittance of printjobs from "
-"PAP clients. So normally one needs to integrate papd with a Unix printing "
-"system like e.g. classic SysV lpd, BSD lpr, LPRng, CUPS or the like."
+"Netatalk's [papd](papd.8.html) is able to provide AppleTalk printing "
+"services for Macintoshes or, to be more precise, PAP clients in general. "
+"Netatalk does not contain a full-blown spooler implementation itself, papd "
+"only handles the bidirectional communication and submittance of printjobs "
+"from PAP clients. So normally one needs to integrate papd with a Unix "
+"printing system like e.g. classic SysV lpd, BSD lpr, LPRng, CUPS or the like."
 msgstr ""
-"Netatalk の [papd](papd.html) は、Macintosh、またはより正確には一般的な PAP "
-"クライアントに AppleTalk 印刷サービスを提供できる。 Netatalk 自体には本格的な"
-"スプーラ実装は含まれておらず、papd は双方向通信と PAP クライアントからの印刷"
-"ジョブの送信のみを処理する。そのため、通常は、papd を Unix 印刷システム (例:"
-"クラシック SysV lpd、BSD lpr、LPRng、CUPS など。"
+"Netatalk の [papd](papd.8.html) は、Macintosh、またはより正確には一般的な "
+"PAP クライアントに AppleTalk 印刷サービスを提供できる。 Netatalk 自体には本格"
+"的なスプーラ実装は含まれておらず、papd は双方向通信と PAP クライアントからの"
+"印刷ジョブの送信のみを処理する。そのため、通常は、papd を Unix 印刷システム "
+"(例:クラシック SysV lpd、BSD lpr、LPRng、CUPS など。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:320
@@ -834,7 +833,7 @@ msgid ""
 "interaction. As of Netatalk 2.0, another alternative has been implemented: "
 "direct interaction with CUPS (Note: when CUPS support is compiled in, then "
 "the SysV lpd support doesn't work at all). Detailed examples can be found in "
-"the [papd.conf](papd.conf.html) manual page."
+"the [papd.conf](papd.conf.5.html) manual page."
 msgstr ""
 "Netatalk には以前、System V lpd 印刷のサポートが組み込まれていました。papd は"
 "印刷ジョブを spooldir に直接保存し、その後 **lpd** を呼び出してファイルを取得"
@@ -842,8 +841,8 @@ msgstr ""
 "作では、プリンタを名前で指定して lpd とのやり取りを使用するのではなく、パイプ"
 "に直接印刷していました。Netatalk 2.0 では、別の代替手段が実装された。CUPS と"
 "の直接のやり取り (注: CUPS サポートがコンパイルされている場合、SysV lpd サ"
-"ポートはまったく機能しない)。詳細な例は、[papd.conf](papd.conf.html) マニュア"
-"ル ページにある。"
+"ポートはまったく機能しない)。詳細な例は、[papd.conf](papd.conf.5.html) マニュ"
+"アル ページにある。"
 
 #. type: Title ####
 #: manual/AppleTalk.md:331
@@ -916,11 +915,11 @@ msgstr "AppleTalk プリンタの使用"
 #. type: Plain text
 #: manual/AppleTalk.md:364
 msgid ""
-"Netatalk's [papstatus](papstatus.html) can be used to query AppleTalk "
-"printers, [pap](pap.html) to print to them."
+"Netatalk's [papstatus](papstatus.8.html) can be used to query AppleTalk "
+"printers, [pap](pap.1.html) to print to them."
 msgstr ""
-"Netatalk の [papstatus](papstatus.html) は AppleTalk プリンタのクエリに使用で"
-"き、 [pap](pap.html) はプリンタに印刷するのに使用できる。"
+"Netatalk の [papstatus](papstatus.8.html) は AppleTalk プリンタのクエリに使用"
+"でき、 [pap](pap.1.html) はプリンタに印刷するのに使用できる。"
 
 #. type: Plain text
 #: manual/AppleTalk.md:368
@@ -1056,10 +1055,10 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:418
 msgid ""
-"For further information please have a look at the [timelord](timelord.html) "
-"manual page."
+"For further information please have a look at the [timelord]"
+"(timelord.8.html) manual page."
 msgstr ""
-"詳細については、[timelord](timelord.html) マニュアル ページをご覧ください。"
+"詳細については、[timelord](timelord.8.html) マニュアル ページをご覧ください。"
 
 #. type: Title ##
 #: manual/AppleTalk.md:419
@@ -1094,7 +1093,7 @@ msgstr ""
 #. type: Plain text
 #: manual/AppleTalk.md:431
 msgid ""
-"For further information please have a look at the [a2boot](a2boot.html) "
+"For further information please have a look at the [a2boot](a2boot.8.html) "
 "manual page."
 msgstr ""
-"詳細については、[a2boot](a2boot.html) マニュアル ページを参照してください。"
+"詳細については、[a2boot](a2boot.8.html) マニュアル ページを参照してください。"

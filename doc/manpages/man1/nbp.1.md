@@ -6,21 +6,21 @@ nbplkup, nbprgstr, nbpunrgstr — tools for accessing the NBP database
 
 **nbplkup**
 
-**nbprgstr** [ -A address ] [ -m Mac charset ] [ -p port ] obj:type@zone
+**nbprgstr** [-A *address*] [-m *Mac charset*] [-p *port*] *obj:type@zone*
 
-**nbpunrgstr** [ -A address ] [ -m Mac charset ] obj:type@zone
+**nbpunrgstr** [-A *address*] [-m *Mac charset*] *obj:type@zone*
 
 # Description
 
-**nbprgstr** registers <nbpname\> with **atalkd**(8), at the given
-<port\>. **nbpunrgstr** informs **atalkd** that <nbpname\> is no longer to
+**nbprgstr** registers *nbpname* with **atalkd**(8), at the given
+*port*. **nbpunrgstr** informs **atalkd** that *nbpname* is no longer to
 be advertised.
 
-**nbplkup** displays up to <maxresponses\> (default 1000) entities
-registered on the AppleTalk internet. <nbpname\> is parsed by
+**nbplkup** displays up to *maxresponses* (default 1000) entities
+registered on the AppleTalk internet. *nbpname* is parsed by
 **nbp_name**(3). An \`*=*' for the *object* or *type* matches anything,
 and an \`*\**' for *zone* means the local zone. The default values are
-taken from the *NBPLKUP* environment variable, parsed as an <nbpname\>.
+taken from the NBPLKUP environment variable, parsed as an *nbpname*.
 
 # Environment Variables
 

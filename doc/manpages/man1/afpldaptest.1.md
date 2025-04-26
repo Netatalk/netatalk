@@ -4,9 +4,9 @@ afpldaptest — Syntactically check LDAP parameters in afp.conf
 
 # Synopsis
 
-**afpldaptest** [ -u USER | -g GROUP | -i UUID ]
+**afpldaptest** [-u *user* | -g *group* | -i *uuid*]
 
-**afpldaptest** [ -h | -? | -: ]
+**afpldaptest** [-h | -? | -:]
 
 # Description
 
@@ -15,17 +15,17 @@ in afp.conf.
 
 # Options
 
-**-u** <user\>
+**-u** *user*
 
-> Show uuid for <user\>.
+> Show uuid for *user*.
 
-**-g** <group\>
+**-g** *group*
 
-> Show uuid for <group\>.
+> Show uuid for *group*.
 
-**-i** <uuid\>
+**-i** *uuid*
 
-> Show user, group or local-uuid for <uuid\>.
+> Show user, group or local-uuid for *uuid*.
 
 **-h**, **-?**, **-:**
 

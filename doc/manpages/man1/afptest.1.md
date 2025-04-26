@@ -4,17 +4,17 @@ afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg, fce_listen — 
 
 # Synopsis
 
-**afp_lantest** [-34567GgVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-n iterations] [-t tests] [-F bigfile]
+**afp_lantest** [-34567GgVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-n *iterations*] [-t *tests*] [-F *bigfile*]
 
-**afp_logintest** [-1234567CmVv] [-h host] [-p port] [-s volume] [-u user] [-w password]
+**afp_logintest** [-1234567CmVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
 
-**afp_spectest** [-1234567aCiLlmVvXx] [-h host] [-H host2] [-p port] [-s volume] [-c path to volume] [-S volume2] [-u user] [-d user2] [-w password] [-f test]
+**afp_spectest** [-1234567aCiLlmVvXx] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*] [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
 
-**afp_speedtest** [-1234567aeiLnVvy] [-h host] [-p port] [-s volume] [-S volume2] [-u user] [-w password] [-n iterations] [-d size] [-q quantum] [-F file] [-f test]
+**afp_speedtest** [-1234567aeiLnVvy] [-h *host*] [-p *port*] [-s *volume*] [-S *volume2*] [-u *user*] [-w *password*] [-n *iterations*] [-d *size*] [-q *quantum*] [-F *file*] [-f *test*]
 
-**afparg** [-1234567lVv] [-h host] [-p port] [-s volume] [-u user] [-w password] [-f command]
+**afparg** [-1234567lVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-f *command*]
 
-**fce_listen** [-h host] [-p port]
+**fce_listen** [-h *host*] [-p *port*]
 
 # Description
 

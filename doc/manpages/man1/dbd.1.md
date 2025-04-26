@@ -4,7 +4,7 @@ dbd — CNID database maintenance
 
 # Synopsis
 
-**dbd** [-cfFstuv] [volumepath]
+**dbd** [-cfFstuv] [*volumepath*]
 
 **dbd** [-V]
 
