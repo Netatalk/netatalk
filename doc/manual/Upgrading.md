@@ -146,90 +146,90 @@ default
 Mappings from netatalk.conf (Debian: */etc/default/netatalk*) to afp.conf or
 to the means of invocation
 
-| Old netatalk.conf  | New afp.conf    | Old Default Value | New Default Value | Section | Remarks                       |
-|--------------------|-----------------|-------------------|-------------------|---------|-------------------------------|
-| ATALK_NAME         | hostname        | -                 | -                 | (G)     | use gethostname() by default  |
-| ATALK_UNIX_CHARSET | unix charset    | LOCALE            | UTF8              | (G)     | -                             |
-| ATALK_MAC_CHARSET  | mac charset     | MAC_ROMAN         | MAC_ROMAN         | (G)/(V) | -                             |
-| CNID_METAD_RUN     | -               | yes               | -                 | -       | controlled by netatalk(8)     |
-| AFPD_RUN           | -               | yes               | -                 | -       | controlled by netatalk(8)     |
-| AFPD_MAX_CLIENTS   | max connections | 20                | 200               | (G)     | -                             |
-| AFPD_UAMLIST       | uam list        | -U uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | (G) | -                |
-| AFPD_GUEST         | guest account   | nobody            | nobody            | (G)     | -                             |
-| CNID_CONFIG        | log level       | -l log_note       | cnid:note         | (G)     | -                             |
-| CNID_CONFIG        | log file        | -                 | -                 | (G)     | -                             |
-| ATALKD_RUN         | -               | no                | -                 | -       | controlled by the init system |
-| PAPD_RUN           | -               | no                | -                 | -       | controlled by the init system |
-| TIMELORD_RUN       | -               | no                | -                 | -       | controlled by the init system |
-| A2BOOT_RUN         | -               | no                | -                 | -       | controlled by the init system |
-| ATALK_BGROUND      | -               | no                | -                 | -       | obsolete                      |
-| ATALK_ZONE         | ddp zone        | -                 | -                 | (G)     | introduced in 4.0.0           |
+| Old netatalk.conf  | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                       |
+|--------------------|-----------------|--------------------------|--------------------------|---------|-------------------------------|
+| ATALK_NAME         | hostname        | -                        | -                        | (G)     | use gethostname() by default  |
+| ATALK_UNIX_CHARSET | unix charset    | LOCALE                   | UTF8                     | (G)     | -                             |
+| ATALK_MAC_CHARSET  | mac charset     | MAC_ROMAN                | MAC_ROMAN                | (G)/(V) | -                             |
+| CNID_METAD_RUN     | -               | yes                      | -                        | -       | controlled by netatalk(8)     |
+| AFPD_RUN           | -               | yes                      | -                        | -       | controlled by netatalk(8)     |
+| AFPD_MAX_CLIENTS   | max connections | 20                       | 200                      | (G)     | -                             |
+| AFPD_UAMLIST       | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | (G)     | -                             |
+| AFPD_GUEST         | guest account   | nobody                   | nobody                   | (G)     | -                             |
+| CNID_CONFIG        | log level       | log_note                 | cnid:note                | (G)     | -                             |
+| CNID_CONFIG        | log file        | -                        | -                        | (G)     | -                             |
+| ATALKD_RUN         | -               | no                       | -                        | -       | controlled by the init system |
+| PAPD_RUN           | -               | no                       | -                        | -       | controlled by the init system |
+| TIMELORD_RUN       | -               | no                       | -                        | -       | controlled by the init system |
+| A2BOOT_RUN         | -               | no                       | -                        | -       | controlled by the init system |
+| ATALK_BGROUND      | -               | no                       | -                        | -       | obsolete                      |
+| ATALK_ZONE         | ddp zone        | -                        | -                        | (G)     | introduced in 4.0.0           |
 
 Mappings from afpd.conf to afp.conf
 
-| Old afpd.conf      | New afp.conf    | Old Default Value    | New Default Value  | Section | Remarks |
-|--------------------|-----------------|----------------------|--------------------|---------|---------|
-| - or "server name" | server name     | -                    | -                  | (G)     | new in 4.2.0; default is *hostname* |
-| -uamlist           | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | (G) | - |
-| -nozeroconf        | zeroconf        | -                    | yes (if supported) | (G)     | -       |
-| -advertise_ssh     | advertise ssh   | -                    | no                 | (G)     | -       |
-| -[no]savepassword  | save password   | -savepassword        | yes                | (G)     | -       |
-| -[no]setpassword   | set password    | -nosetpassword       | no                 | (G)     | -       |
-| -client_polling    | client polling  | -                    | no                 | (G)     | -       |
-| -hostname          | hostname        | -                    | -                  | (G)     | use gethostname() by default |
-| -loginmesg         | login message   | -                    | -                  | (G)/(V) | -       |
-| -guestname         | guest account   | nobody               | nobody             | (G)     | -       |
-| -passwdfile        | passwd file     | afppasswd            | afppasswd          | (G)     | -       |
-| -passwdminlen      | passwd minlen   | -                    | -                  | (G)     | -       |
-| -tickleval         | tickleval       | 30                   | 30                 | (G)     | -       |
-| -timeout           | timeout         | 4                    | 4                  | (G)     | -       |
-| -sleep             | sleep time      | 10                   | 10                 | (G)     | -       |
-| -dsireadbuf        | dsireadbuf      | 12                   | 12                 | (G)     | -       |
-| -server_quantum    | server quantum  | 303840               | 1048576            | (G)     | -       |
-| -volnamelen        | volnamelen      | 80                   | 80                 | (G)     | -       |
-| -setuplog          | log level       | default log_note     | default:note       | (G)     | -       |
-| -setuplog          | log file        | -                    | -                  | (G)     | -       |
-| -admingroup        | admingroup      | -                    | -                  | (G)     | -       |
-| -k5service         | k5 service      | -                    | -                  | (G)     | -       |
-| -k5realm           | k5 realm        | -                    | -                  | (G)     | -       |
-| -k5keytab          | k5 keytab       | -                    | -                  | (G)     | -       |
-| -uampath           | uam path        | etc/netatalk/uams    | lib/netatalk       | (G)     | moved to $libdir |
-| -ipaddr            | afp listen      | -                    | -                  | (G)     | -       |
-| -cnidserver        | cnid server     | localhost:4700       | localhost:4700     | (G)/(V) | -       |
-| -port              | port            | 548                  | 548                | (G)     | -       |
-| -signature         | signature       | auto                 | -                  | (G)     | -       |
-| -fqdn              | fqdn            | -                    | -                  | (G)     | -       |
-| -unixcodepage      | unix charset    | LOCALE               | UTF8               | (G)     | -       |
-| -maccodepage       | mac charset     | MAC_ROMAN            | MAC_ROMAN          | (G)/(V) | -       |
-| -closevol          | close vol       | -                    | no                 | (G)     | -       |
-| -ntdomain          | nt domain       | -                    | -                  | (G)     | -       |
-| -ntseparator       | nt separator    | -                    | -                  | (G)     | -       |
-| -dircachesize      | dircachesize    | 8192                 | 8192               | (G)     | -       |
-| -tcpsndbuf         | tcpsndbuf       | -                    | -                  | (G)     | OS default |
-| -tcprcvbuf         | tcprcvbuf       | -                    | -                  | (G)     | OS default |
-| -fcelistener       | fce listener    | -                    | -                  | (G)     | -       |
-| -fcecoalesce       | fce coalesce    | -                    | -                  | (G)     | -       |
-| -fceevents         | fce events      | -                    | -                  | (G)     | -       |
-| -fceholdfmod       | fce holdfmod    | 60                   | 60                 | (G)     | -       |
-| -mimicmodel        | mimic model     | -                    | -                  | (G)     | -       |
-| -adminauthuser     | admin auth user | -                    | -                  | (G)     | -       |
-| -noacl2maccess     | map acls        | -                    | rights             | (G)     | -       |
-| -[no]tcp           | -               | -tcp                 | -                  | -       | TCP transport layer is always active |
-| -[no]ddp           | appletalk       | -ddp                 | no                 | (G)     | introduced in 4.0.0 |
-| -[no]transall      | -               | -transall            | -                  | -       | TCP transport layer is always active |
-| -nodebug           | -               | -                    | -                  | -       | obsolete |
-| -[no]slp           | -               | -noslp               | -                  | -       | SLP support is obsoleted |
-| -[no]uservolfirst  | -               | -nouservolfirst      | -                  | -       | uservol is obsoleted |
-| -[no]uservol       | -               | -uservol             | -                  | -       | uservol is obsoleted |
-| -proxy             | -               | -                    | -                  | -       | obsolete |
-| -defaultvol        | -               | AppleVolumes.default | -                  | -       | afp.conf only |
-| -systemvol         | -               | AppleVolumes.system  | -                  | -       | extmap.conf only |
-| -loginmaxfail      | -               | -                    | -                  | -       | obsolete |
-| -unsetuplog        | -               | -                    | -                  | -       | obsolete |
-| -authprintdir      | -               | -                    | -                  | -       | CAP style auth is obsoleted |
-| -ddpaddr           | ddp address     | 0.0                  | 0.0                | (G)     | introduced in 4.0.0 |
-| -[no]icon          | legacy icon     | -noicon              | -                  | (G)     | introduced in 4.0.2 |
-| -keepsessions      | -               | -                    | -                  | -       | obsolete; Use kill -HUP |
+| Old afpd.conf      | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                              |
+|--------------------|-----------------|--------------------------|--------------------------|---------|--------------------------------------|
+| - or "server name" | server name     | -                        | -                        | (G)     | new in 4.2.0; default is *hostname*    |
+| -uamlist           | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | (G)     | -                                    |
+| -nozeroconf        | zeroconf        | -                        | yes (if supported)       | (G)     | -                                    |
+| -advertise_ssh     | advertise ssh   | -                        | no                       | (G)     | -                                    |
+| -[no]savepassword  | save password   | -savepassword            | yes                      | (G)     | -                                    |
+| -[no]setpassword   | set password    | -nosetpassword           | no                       | (G)     | -                                    |
+| -client_polling    | client polling  | -                        | no                       | (G)     | -                                    |
+| -hostname          | hostname        | -                        | -                        | (G)     | use gethostname() by default         |
+| -loginmesg         | login message   | -                        | -                        | (G)/(V) | -                                    |
+| -guestname         | guest account   | nobody                   | nobody                   | (G)     | -                                    |
+| -passwdfile        | passwd file     | afppasswd                | afppasswd                | (G)     | -                                    |
+| -passwdminlen      | passwd minlen   | -                        | -                        | (G)     | -                                    |
+| -tickleval         | tickleval       | 30                       | 30                       | (G)     | -                                    |
+| -timeout           | timeout         | 4                        | 4                        | (G)     | -                                    |
+| -sleep             | sleep time      | 10                       | 10                       | (G)     | -                                    |
+| -dsireadbuf        | dsireadbuf      | 12                       | 12                       | (G)     | -                                    |
+| -server_quantum    | server quantum  | 303840                   | 1048576                  | (G)     | -                                    |
+| -volnamelen        | volnamelen      | 80                       | 80                       | (G)     | -                                    |
+| -setuplog          | log level       | default log_note         | default:note             | (G)     | -                                    |
+| -setuplog          | log file        | -                        | -                        | (G)     | -                                    |
+| -admingroup        | admingroup      | -                        | -                        | (G)     | -                                    |
+| -k5service         | k5 service      | -                        | -                        | (G)     | -                                    |
+| -k5realm           | k5 realm        | -                        | -                        | (G)     | -                                    |
+| -k5keytab          | k5 keytab       | -                        | -                        | (G)     | -                                    |
+| -uampath           | uam path        | etc/netatalk/uams        | lib/netatalk             | (G)     | moved to $libdir                     |
+| -ipaddr            | afp listen      | -                        | -                        | (G)     | -                                    |
+| -cnidserver        | cnid server     | localhost:4700           | localhost:4700           | (G)/(V) | -                                    |
+| -port              | port            | 548                      | 548                      | (G)     | -                                    |
+| -signature         | signature       | auto                     | -                        | (G)     | -                                    |
+| -fqdn              | fqdn            | -                        | -                        | (G)     | -                                    |
+| -unixcodepage      | unix charset    | LOCALE                   | UTF8                     | (G)     | -                                    |
+| -maccodepage       | mac charset     | MAC_ROMAN                | MAC_ROMAN                | (G)/(V) | -                                    |
+| -closevol          | close vol       | -                        | no                       | (G)     | -                                    |
+| -ntdomain          | nt domain       | -                        | -                        | (G)     | -                                    |
+| -ntseparator       | nt separator    | -                        | -                        | (G)     | -                                    |
+| -dircachesize      | dircachesize    | 8192                     | 8192                     | (G)     | -                                    |
+| -tcpsndbuf         | tcpsndbuf       | -                        | -                        | (G)     | OS default                           |
+| -tcprcvbuf         | tcprcvbuf       | -                        | -                        | (G)     | OS default                           |
+| -fcelistener       | fce listener    | -                        | -                        | (G)     | -                                    |
+| -fcecoalesce       | fce coalesce    | -                        | -                        | (G)     | -                                    |
+| -fceevents         | fce events      | -                        | -                        | (G)     | -                                    |
+| -fceholdfmod       | fce holdfmod    | 60                       | 60                       | (G)     | -                                    |
+| -mimicmodel        | mimic model     | -                        | -                        | (G)     | -                                    |
+| -adminauthuser     | admin auth user | -                        | -                        | (G)     | -                                    |
+| -noacl2maccess     | map acls        | -                        | rights                   | (G)     | -                                    |
+| -[no]tcp           | -               | -tcp                     | -                        | -       | TCP transport layer is always active |
+| -[no]ddp           | appletalk       | -ddp                     | no                       | (G)     | introduced in 4.0.0                  |
+| -[no]transall      | -               | -transall                | -                        | -       | TCP transport layer is always active |
+| -nodebug           | -               | -                        | -                        | -       | obsolete                             |
+| -[no]slp           | -               | -noslp                   | -                        | -       | SLP support is obsoleted             |
+| -[no]uservolfirst  | -               | -nouservolfirst          | -                        | -       | uservol is obsoleted                 |
+| -[no]uservol       | -               | -uservol                 | -                        | -       | uservol is obsoleted                 |
+| -proxy             | -               | -                        | -                        | -       | obsolete                             |
+| -defaultvol        | -               | AppleVolumes.default     | -                        | -       | afp.conf only                        |
+| -systemvol         | -               | AppleVolumes.system      | -                        | -       | extmap.conf only                     |
+| -loginmaxfail      | -               | -                        | -                        | -       | obsolete                             |
+| -unsetuplog        | -               | -                        | -                        | -       | obsolete                             |
+| -authprintdir      | -               | -                        | -                        | -       | CAP style auth is obsoleted          |
+| -ddpaddr           | ddp address     | 0.0                      | 0.0                      | (G)     | introduced in 4.0.0                  |
+| -[no]icon          | legacy icon     | -noicon                  | -                        | (G)     | introduced in 4.0.2                  |
+| -keepsessions      | -               | -                        | -                        | -       | obsolete; Use kill -HUP              |
 
 Mappings from afp_ldap.conf to afp.conf
 
@@ -250,61 +250,61 @@ Mappings from afp_ldap.conf to afp.conf
 
 Mappings from AppleVolumes.\* to afp.conf
 
-| Old AppleVolumes.\*         | New afp.conf       | Old Default Value     | New Default Value | Section | Remarks |
-|----------------------------|--------------------|-----------------------|-------------------|---------|---------|
-| (leading-dot lines)        | -                  | -                     | -                 | -       | moved to extmap.conf |
-| :DEFAULT:                  | -                  | options:upriv,usedots | -                 | -       | use *vol preset* |
-| 1st field ("~")            | -                  | -                     | -                 | -       | use [Homes] section |
-| 1st field ("/path")        | path               | -                     | -                 | (V)     | -       |
-| 2nd field                  | volume name        | -                     | *section name*      | (V)     | introduced in 4.2.0 |
-| allow:                     | valid users        | -                     | -                 | (V)     | -       |
-| deny:                      | invalid users      | -                     | -                 | (V)     | -       |
-| rwlist:                    | rwlist             | -                     | -                 | (V)     | -       |
-| rolist:                    | rolist             | -                     | -                 | (V)     | -       |
-| volcharset:                | vol charset        | UTF8                  | *unix charset*      | (G)/(V) | -       |
-| maccharset:                | mac charset        | MAC_ROMAN             | MAC_ROMAN         | (G)/(V) | -       |
-| veto:                      | veto files         | -                     | -                 | (V)     | -       |
-| cnidscheme:                | cnid scheme        | dbd                   | dbd               | (V)     | -       |
-| casefold:                  | casefold           | -                     | -                 | (V)     | -       |
-| adouble:                   | -                  | v2                    | -                 | -       | removed in 4.2.0 |
-| cnidserver:                | cnid server        | localhost:4700        | localhost:4700    | (G)/(V) | -       |
-| dbpath:                    | vol dbpath         | (volume directory)    | var/netatalk/CNID | (G)     | moved to $localstatedir |
-| umask:                     | umask              | 0000                  | 0000              | (V)     | -       |
-| dperm:                     | directory perm     | 0000                  | 0000              | (V)     | -       |
-| fperm:                     | file perm          | 0000                  | 0000              | (V)     | -       |
-| password:                  | password           | -                     | -                 | (V)     | -       |
-| root_preexec:              | -                  | -                     | -                 | -       | removed in 4.1.0 |
-| preexec:                   | preexec            | -                     | -                 | (V)     | -       |
-| postexec:                  | postexec           | -                     | -                 | (V)     | -       |
-| allowed_hosts:             | hosts allow        | -                     | -                 | (V)     | -       |
-| denied_hosts:              | hosts deny         | -                     | -                 | (V)     | -       |
-| ea:                        | ea                 | auto                  | *auto detection*    | (V)     | leave empty for auto detection |
-| volsizelimit:              | vol size limit     | -                     | -                 | (V)     | -       |
+| Old AppleVolumes.\*         | New afp.conf       | Old Default Value     | New Default Value | Section | Remarks                          |
+|----------------------------|--------------------|-----------------------|-------------------|---------|----------------------------------|
+| (leading-dot lines)        | -                  | -                     | -                 | -       | moved to extmap.conf             |
+| :DEFAULT:                  | -                  | options:upriv,usedots | -                 | -       | use *vol preset*                   |
+| 1st field ("~")            | -                  | -                     | -                 | -       | use [Homes] section              |
+| 1st field ("/path")        | path               | -                     | -                 | (V)     | -                                |
+| 2nd field                  | volume name        | -                     | *section name*      | (V)     | introduced in 4.2.0              |
+| allow:                     | valid users        | -                     | -                 | (V)     | -                                |
+| deny:                      | invalid users      | -                     | -                 | (V)     | -                                |
+| rwlist:                    | rwlist             | -                     | -                 | (V)     | -                                |
+| rolist:                    | rolist             | -                     | -                 | (V)     | -                                |
+| volcharset:                | vol charset        | UTF8                  | *unix charset*      | (G)/(V) | -                                |
+| maccharset:                | mac charset        | MAC_ROMAN             | MAC_ROMAN         | (G)/(V) | -                                |
+| veto:                      | veto files         | -                     | -                 | (V)     | -                                |
+| cnidscheme:                | cnid scheme        | dbd                   | dbd               | (V)     | -                                |
+| casefold:                  | casefold           | -                     | -                 | (V)     | -                                |
+| adouble:                   | -                  | v2                    | -                 | -       | removed in 4.2.0                 |
+| cnidserver:                | cnid server        | localhost:4700        | localhost:4700    | (G)/(V) | -                                |
+| dbpath:                    | vol dbpath         | (volume directory)    | var/netatalk/CNID | (G)     | moved to $localstatedir          |
+| umask:                     | umask              | 0000                  | 0000              | (V)     | -                                |
+| dperm:                     | directory perm     | 0000                  | 0000              | (V)     | -                                |
+| fperm:                     | file perm          | 0000                  | 0000              | (V)     | -                                |
+| password:                  | password           | -                     | -                 | (V)     | -                                |
+| root_preexec:              | -                  | -                     | -                 | -       | removed in 4.1.0                 |
+| preexec:                   | preexec            | -                     | -                 | (V)     | -                                |
+| postexec:                  | postexec           | -                     | -                 | (V)     | -                                |
+| allowed_hosts:             | hosts allow        | -                     | -                 | (V)     | -                                |
+| denied_hosts:              | hosts deny         | -                     | -                 | (V)     | -                                |
+| ea:                        | ea                 | auto                  | *auto detection*    | (V)     | leave empty for auto detection   |
+| volsizelimit:              | vol size limit     | -                     | -                 | (V)     | -                                |
 | perm:                      | -                  | -                     | -                 | -       | Use *directory perm* and *file perm* |
-| forceuid:                  | -                  | -                     | -                 | -       | obsolete |
-| forcegid:                  | -                  | -                     | -                 | -       | obsolete |
-| options:ro                 | read only          | -                     | no                | (V)     | -       |
-| options:invisibledots      | invisible dots     | -                     | no                | (V)     | -       |
-| options:nostat             | stat vol           | -                     | yes               | (V)     | -       |
-| options:preexec_close      | preexec close      | -                     | no                | (V)     | -       |
-| options:root_preexec_close | -                  | -                     | -                 | -       | removed in 4.1.0 |
-| options:upriv              | unix priv          | -                     | yes               | (V)     | -       |
-| options:nodev              | cnid dev           | -                     | yes               | (V)     | -       |
-| options:illegalseq         | illegal seq        | -                     | no                | (V)     | -       |
-| options:tm                 | time machine       | -                     | no                | (V)     | -       |
-| options:searchdb           | search db          | -                     | no                | (V)     | -       |
-| options:nonetids           | network ids        | -                     | yes               | (V)     | -       |
-| options:noacls             | acls               | -                     | yes               | (V)     | -       |
-| options:followsymlinks     | follow symlinks    | -                     | no                | (V)     | -       |
-| options:nohex              | -                  | -                     | -                 | -       | auto-convert from ":2f" to ":" |
-| options:usedots            | -                  | -                     | -                 | -       | auto-convert from ":2e" to "." |
-| options:nofileid           | -                  | -                     | -                 | -       | obsolete |
-| options:prodos             | prodos             | -                     | no                | (V)     | introduced in 4.0.0 |
-| options:mswindows          | -                  | -                     | -                 | -       | obsolete |
-| options:crlf               | -                  | -                     | -                 | -       | obsolete |
-| options:noadouble          | -                  | -                     | -                 | -       | obsolete |
-| options:limitsize          | legacy volume size | -                     | no                | (V)     | introduced in 4.0.0 |
-| options:dropbox            | -                  | -                     | -                 | -       | obsolete |
-| options:dropkludge         | -                  | -                     | -                 | -       | obsolete |
-| options:nocnidcache        | -                  | -                     | -                 | -       | obsolete |
-| options:caseinsensitive    | -                  | -                     | -                 | -       | obsolete |
+| forceuid:                  | -                  | -                     | -                 | -       | obsolete                         |
+| forcegid:                  | -                  | -                     | -                 | -       | obsolete                         |
+| options:ro                 | read only          | -                     | no                | (V)     | -                                |
+| options:invisibledots      | invisible dots     | -                     | no                | (V)     | -                                |
+| options:nostat             | stat vol           | -                     | yes               | (V)     | -                                |
+| options:preexec_close      | preexec close      | -                     | no                | (V)     | -                                |
+| options:root_preexec_close | -                  | -                     | -                 | -       | removed in 4.1.0                 |
+| options:upriv              | unix priv          | -                     | yes               | (V)     | -                                |
+| options:nodev              | cnid dev           | -                     | yes               | (V)     | -                                |
+| options:illegalseq         | illegal seq        | -                     | no                | (V)     | -                                |
+| options:tm                 | time machine       | -                     | no                | (V)     | -                                |
+| options:searchdb           | search db          | -                     | no                | (V)     | -                                |
+| options:nonetids           | network ids        | -                     | yes               | (V)     | -                                |
+| options:noacls             | acls               | -                     | yes               | (V)     | -                                |
+| options:followsymlinks     | follow symlinks    | -                     | no                | (V)     | -                                |
+| options:nohex              | -                  | -                     | -                 | -       | auto-convert from ":2f" to ":"   |
+| options:usedots            | -                  | -                     | -                 | -       | auto-convert from ":2e" to "."   |
+| options:nofileid           | -                  | -                     | -                 | -       | obsolete                         |
+| options:prodos             | prodos             | -                     | no                | (V)     | introduced in 4.0.0              |
+| options:mswindows          | -                  | -                     | -                 | -       | obsolete                         |
+| options:crlf               | -                  | -                     | -                 | -       | obsolete                         |
+| options:noadouble          | -                  | -                     | -                 | -       | obsolete                         |
+| options:limitsize          | legacy volume size | -                     | no                | (V)     | introduced in 4.0.0              |
+| options:dropbox            | -                  | -                     | -                 | -       | obsolete                         |
+| options:dropkludge         | -                  | -                     | -                 | -       | obsolete                         |
+| options:nocnidcache        | -                  | -                     | -                 | -       | obsolete                         |
+| options:caseinsensitive    | -                  | -                     | -                 | -       | obsolete                         |
