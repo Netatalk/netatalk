@@ -234,6 +234,7 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     static bstring strdot = NULL;
     static bstring strcolon = NULL;
     char *newadpath = NULL;
+    const char *path_data = NULL;
 
     if (str2e == NULL) {
         str2e = bfromcstr(":2e");
@@ -265,11 +266,13 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     rename(path, bdata(newpath));
     unbecome_root();
 
-    if (bdata(newpath) == NULL) {
+    path_data = bdata(newpath);
+    if (path_data != NULL) {
+        strlcpy(buf, path_data, sizeof(buf));
+        *newpathp = buf;
+    } else {
         EC_FAIL;
     }
-    strlcpy(buf, bdata(newpath), sizeof(buf));
-    *newpathp = buf;
 
 EC_CLEANUP:
     if (newpath)
