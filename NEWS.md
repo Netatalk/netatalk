@@ -1,3 +1,21 @@
+Changes in 4.2.2
+================
+
+* NEW: cnid: Create MySQL database automatically if needed, GitHub #2119
+* UPD: meson: Use pandoc to build documentation when available, GitHub #2127
+* UPD: meson: Generate the html manual with plain cmark, GitHub #2134
+* NEW: docker: Support for the mysql CNID backend in container, GitHub #2116
+* NEW: docker: Containerized netatalk webmin module, GitHub #1463
+* NEW: docker: Introduce option to enable extension mapping, GitHub #2125
+* NEW: docker: Introduce option for disabling Spotlight, GitHub #2128
+* NEW: webmin: UI for editing of the extmap.conf file, GitHub #2129
+* NEW: webmin: Introduce option for hiding service controls, GitHub #2133
+* FIX: webmin: Correct handling of volume and preset names, GitHub #2130
+* FIX: webmin: Treat uams_randnum.so as a standard UAM, GitHub #2131
+* FIX: docs: More portable man page markdown source syntax, GitHub #2114
+* FIX: docs: Properly build the localized html manual, GitHub #2136
+* FIX: docs: Overhauled markdown styles of whole manual, GitHub #2138
+
 Changes in 4.2.1
 ================
 
