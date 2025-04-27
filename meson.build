@@ -2282,6 +2282,7 @@ if 'readmes' in get_option('with-docs')
                     output: file + '.txt',
                     command: [
                         cmarkgfm,
+                        '--extension', 'table',
                         '--width', '80',
                         '--to', 'plaintext',
                         '@INPUT@',
