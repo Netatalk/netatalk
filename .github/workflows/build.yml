@@ -666,6 +666,7 @@ jobs:
         with:
           copyback: false
           prepare: |
+            set -e
             pkg install \
               bison \
               cmake \
@@ -677,8 +678,19 @@ jobs:
               pkg-config \
               python/pip
             pip install meson
-            curl -O https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
-            tar xzf iniparser-v4.2.5.tar.gz
+            curl --location -o cmark.tar.gz \
+              https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
+            curl --location -o iniparser.tar.gz \
+              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
+            set +e # tar on Solaris is too old to handle git tarballs cleanly
+            tar xzf cmark.tar.gz
+            tar xzf iniparser.tar.gz
+            set -e
+            cd cmark-0.31.1
+            cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr
+            cmake --build build
+            cmake --install build
+            cd ..
             cd iniparser-v4.2.5
             mkdir build
             cd build
