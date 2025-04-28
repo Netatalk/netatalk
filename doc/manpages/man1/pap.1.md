@@ -4,7 +4,7 @@ pap — client interface to remote printers using Printer Access Protocol
 
 # Synopsis
 
-**pap** [-A *address*] [-c] [-d] [-e] [-E] [-p *nbpname*] [-s *statusfile*] [-w] [-W] [*FILES*]
+**pap** [-A *address*] [-c] [-d] [-e] [-E] [-p *nbpname*] [-s *statusfile*] [-w] [-W] [*files*]
 
 # Description
 
