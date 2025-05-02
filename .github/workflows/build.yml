@@ -564,18 +564,19 @@ jobs:
               cmark \
               db-4.6.21p7v0 \
               dbus \
-              gcc-11.2.0p14 \
+              gcc-11.2.0p15 \
               heimdal \
               iniparser \
               libevent \
               libgcrypt \
               libtalloc \
+              localsearch-3.8.2p0 \
               mariadb-client \
               meson \
-              openldap-client-2.6.8v0 \
+              openldap-client-2.6.9p0v0 \
               p5-Net-DBus \
               pkgconf \
-              tracker3
+              tinysparql-3.8.2
           run: |
             set -e
             meson setup build \
