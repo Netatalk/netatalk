@@ -108,23 +108,18 @@ jobs:
         run: |
           pacman -Sy --noconfirm \
             avahi \
-            bison \
             cmark-gfm \
             cracklib \
             cups \
             db \
-            flex \
             gcc \
             iniparser \
-            localsearch \
             mariadb-clients \
             meson \
             ninja \
             perl \
             pkgconfig \
-            rpcsvc-proto \
-            talloc \
-            tinysparql
+            rpcsvc-proto
       - name: Configure
         run: |
           meson setup build \
