@@ -236,7 +236,7 @@ static int cnid_mysql_execute(MYSQL *con, char *fmt, ...)
     rv = mysql_query(con, sql);
 
     if (rv) {
-        LOG(log_info, logtype_cnid, "MySQL query \"%s\", error: %s", sql, mysql_error(con));
+        LOG(log_debug, logtype_cnid, "MySQL query \"%s\", error: %s", sql, mysql_error(con));
         errno = CNID_ERR_DB;
     }
     free(sql);
@@ -939,7 +939,9 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            db->cnid_mysql_voluuid_str,
                            vol->v_path,
                            blob)) {
-        if (mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
+        if (mysql_errno(db->cnid_mysql_con) == ER_DUP_ENTRY) {
+            LOG(log_debug, logtype_cnid, "Volume '%s' already registered in database", vol->v_path);
+        } else {
             LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
             EC_FAIL;
         }
