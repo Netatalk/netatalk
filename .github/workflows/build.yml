@@ -81,6 +81,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+            -Dwith-statedir-path=/var/lib \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build

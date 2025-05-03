@@ -18,7 +18,7 @@ apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib crack
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-tests=true -Dwith-testsuite=true
+meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-statedir-path=/var/lib -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -57,7 +57,7 @@ ninja -C build uninstall
 Install dependencies
 
 ```
-pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql
+pacman -Sy --noconfirm avahi cmark-gfm cracklib cups db gcc iniparser mariadb-clients meson ninja perl pkgconfig rpcsvc-proto
 ```
 
 Configure
@@ -389,7 +389,7 @@ ninja -C build uninstall
 Install required packages
 
 ```
-pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p14 heimdal iniparser libevent libgcrypt libtalloc mariadb-client meson openldap-client-2.6.8v0 p5-Net-DBus pkgconf tracker3
+pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p15 heimdal iniparser libevent libgcrypt libtalloc localsearch-3.8.2p0 mariadb-client meson openldap-client-2.6.9p0v0 p5-Net-DBus pkgconf tinysparql-3.8.2
 ```
 
 Configure, compile, install, run, and uninstall
