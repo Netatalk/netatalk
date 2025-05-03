@@ -1,4 +1,3 @@
-subdir('macusers')
 subdir('shell_utils')
 
 if have_appletalk
