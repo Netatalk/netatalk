@@ -17,11 +17,18 @@ if perl.found() and grep.found()
         configuration: cdata,
     )
 
+    macusers_script = configure_file(
+        input: 'macusers.in',
+        output: 'macusers',
+        configuration: cdata,
+    )
+
     install_data(
         [
             afpstats_script,
             addump_script,
             asipstatus_script,
+            macusers_script,
         ],
         install_dir: bindir,
         install_mode: 'rwxr-xr-x',
