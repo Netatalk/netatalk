@@ -87,13 +87,18 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
-        run: cd build && meson test && cd ..
+        run: meson test -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
           afpd -V
+          atalkd -V
+          a2boot -V
+          macipgw -V
+          papd -V
+          timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -134,13 +139,18 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
-        run: cd build && meson test && cd ..
+        run: meson test -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
           afpd -V
+          atalkd -V
+          a2boot -V
+          macipgw -V
+          papd -V
+          timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -201,13 +211,18 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
-        run: cd build && meson test && cd ..
+        run: meson test -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
           afpd -V
+          atalkd -V
+          a2boot -V
+          macipgw -V
+          papd -V
+          timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
 
@@ -262,13 +277,18 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
-        run: cd build && meson test && cd ..
+        run: meson test -C build
       - name: Install
         run: sudo meson install -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
           afpd -V
+          atalkd -V
+          a2boot -V
+          macipgw -V
+          papd -V
+          timelord -V
       - name: Uninstall
         run: sudo ninja -C build uninstall
 
@@ -325,13 +345,18 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run distribution tests
-        run: cd build && meson dist && cd ..
+        run: meson dist -C build
       - name: Install
         run: sudo meson install -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
           afpd -V
+          atalkd -V
+          a2boot -V
+          macipgw -V
+          papd -V
+          timelord -V
       - name: Start netatalk
         run: |
           sudo systemctl start netatalk
@@ -370,7 +395,7 @@ jobs:
       - name: Build
         run: meson compile -C build
       - name: Run integration tests
-        run: cd build && meson test && cd ..
+        run: meson test -C build
       - name: Install
         run: sudo meson install -C build
       - name: Check netatalk capabilities
@@ -472,9 +497,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            cd build
-            meson test
-            cd ..
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
@@ -528,12 +551,15 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            cd build
-            meson test
-            cd ..
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
+            atalkd -V
+            a2boot -V
+            macipgw -V
+            papd -V
+            timelord -V
             service netatalk onestart
             sleep 1
             asip-status localhost
@@ -636,9 +662,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            cd build
-            meson test
-            cd ..
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
@@ -706,9 +730,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            cd build
-            meson test
-            cd ..
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
