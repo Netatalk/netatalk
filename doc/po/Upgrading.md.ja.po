@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.2.2dev\n"
-"POT-Creation-Date: 2025-04-27 09:40+0200\n"
+"POT-Creation-Date: 2025-05-03 13:03+0200\n"
 "PO-Revision-Date: 2025-01-23 08:10+0100\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1129 manual/AppleTalk.md:154
-#: manual/Configuration.md:823 manual/Installation.md:4 manual/Upgrading.md:42
+#: manual/Configuration.md:824 manual/Installation.md:4 manual/Upgrading.md:42
 #, no-wrap
 msgid "> **WARNING**\n"
 msgstr "> **警告**\n"
@@ -293,26 +293,28 @@ msgstr "そのほかの主要な変更点"
 #. type: Plain text
 #: manual/Upgrading.md:103
 msgid ""
-"- New service controller daemon [netatalk](netatalk.html) which is "
+"- New service controller daemon [netatalk](netatalk.8.html) which is "
 "responsible for starting and restarting the AFP and CNID daemons. All "
 "bundled start scripts have been updated, make sure to update yours!"
 msgstr ""
 "- AFP 及び CNID デーモンの起動・再起動を担う新しいサービスコントローラデーモ"
-"ン [netatalk](netatalk.html) の導入。バンドルされているスタートスクリプトが "
-"すべて更新されているため、自分の環境でもアップデートされているか確認する必要"
-"あり！"
+"ン [netatalk](netatalk.8.html) の導入。バンドルされているスタートスクリプト"
+"が すべて更新されているため、自分の環境でもアップデートされているか確認する必"
+"要あり！"
 
 #. type: Plain text
-#: manual/Upgrading.md:106
+#: manual/Upgrading.md:107
 msgid ""
-"- All CNID databases are now stored under *$prefix/var/netatalk/CNID/* by "
-"default, rather than in the individual shared volume directories"
+"- All CNID databases are now stored in a *netatalk/CNID* subdirectory of "
+"your system's state directory path, e.g. */var/lib*, rather than in the "
+"individual shared volume directories"
 msgstr ""
-"- CNID データベースはデフォルトで *$prefix/var/netatalk/CNID/* 以下に保存され"
-"る。以前は各共有ボリュームにて保存されていた。"
+"- CNID データベースはデフォルトではシステムの状態ディレクトリパス（例：*/var/"
+"lib*）の下にある *netatalk/CNID* サブディレクトリに保存されるようになった。以"
+"前は各共有ボリュームにて保存されていた。"
 
 #. type: Plain text
-#: manual/Upgrading.md:109
+#: manual/Upgrading.md:110
 msgid ""
 "- Netatalk 2.x volume options **usedots** and **upriv** now enabled by "
 "default"
@@ -321,33 +323,33 @@ msgstr ""
 "なった。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:111
+#: manual/Upgrading.md:112
 msgid "Removed SLP and AFP proxy support"
 msgstr "SLP 及び AFP プロキシのサポート機能は削除。"
 
 #. type: Title ###
-#: manual/Upgrading.md:112
+#: manual/Upgrading.md:113
 #, no-wrap
 msgid "Upgrading procedure"
 msgstr "アップグレード手段"
 
 #. type: Bullet: '1.  '
-#: manual/Upgrading.md:115
+#: manual/Upgrading.md:116
 msgid "Stop Netatalk 2.x"
 msgstr "Netatalk 2.x を停止する"
 
 #. type: Bullet: '2.  '
-#: manual/Upgrading.md:117
+#: manual/Upgrading.md:118
 msgid "Install Netatalk 4"
 msgstr "Netatalk 4 をインストールする"
 
 #. type: Bullet: '3.  '
-#: manual/Upgrading.md:119
+#: manual/Upgrading.md:120
 msgid "Manually recreate configurations in *afp.conf* and *extmap.conf*"
 msgstr "設定 *afp.conf* 及び *extmap.conf* を自力で書き換える"
 
 #. type: Bullet: '4.  '
-#: manual/Upgrading.md:123
+#: manual/Upgrading.md:124
 msgid ""
 "Update your Netatalk init script to start **netatalk** instead of **afpd** "
 "and **cnid_metad**, or replace it with the appropriate stock init script for "
@@ -357,7 +359,7 @@ msgstr ""
 "Netatalk 起動スクリプトを更新するか、標準の起動スクリプトに置き換える。"
 
 #. type: Bullet: '5.  '
-#: manual/Upgrading.md:127
+#: manual/Upgrading.md:128
 msgid ""
 "Move *afp_voluuid.conf* and *afp_signature.conf* to the localstate directory "
 "(default *$prefix/var/netatalk/*), you can use **afpd -v** in order to find "
@@ -368,18 +370,18 @@ msgstr ""
 "**afpd -v** コマンドが有用"
 
 #. type: Bullet: '6.  '
-#: manual/Upgrading.md:129
+#: manual/Upgrading.md:130
 msgid "Start Netatalk 4"
 msgstr "Netatalk 4 を起動する"
 
 #. type: Title ###
-#: manual/Upgrading.md:130
+#: manual/Upgrading.md:131
 #, no-wrap
 msgid "Old and new configuration file names"
 msgstr "新旧設定ファイル名"
 
 #. type: Plain text
-#: manual/Upgrading.md:143
+#: manual/Upgrading.md:144
 #, no-wrap
 msgid ""
 "| Old File Name        | New File Name      | Remarks                       |\n"
@@ -407,13 +409,13 @@ msgstr ""
 "| ~/.AppleVolumes | - | 廃止 |\n"
 
 #. type: Title ###
-#: manual/Upgrading.md:144
+#: manual/Upgrading.md:145
 #, no-wrap
 msgid "Old and new option names"
 msgstr "新旧オプション対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:148
+#: manual/Upgrading.md:149
 msgid ""
 "Mappings from netatalk.conf (Debian: */etc/default/netatalk*) to afp.conf or "
 "to the means of invocation"
@@ -422,7 +424,7 @@ msgstr ""
 "表、および起動手段の対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:167
+#: manual/Upgrading.md:168
 #, no-wrap
 msgid ""
 "| Old netatalk.conf  | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                       |\n"
@@ -464,12 +466,12 @@ msgstr ""
 "| ATALK_ZONE | ddp zone | - | - | (G) | 4.0.0で復活 |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:169
+#: manual/Upgrading.md:170
 msgid "Mappings from afpd.conf to afp.conf"
 msgstr "afpd.conf から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:233
+#: manual/Upgrading.md:234
 #, no-wrap
 msgid ""
 "| Old afpd.conf      | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                              |\n"
@@ -601,12 +603,12 @@ msgstr ""
 "| -keepsessions | - | - | - | - | 廃止。kill -HUP を使用 |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:235
+#: manual/Upgrading.md:236
 msgid "Mappings from afp_ldap.conf to afp.conf"
 msgstr "afp_ldap.conf から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:250
+#: manual/Upgrading.md:251
 #, no-wrap
 msgid ""
 "| Old afp_ldap.conf | New afp.conf     | Old Default Value | New Default Value | Section | Remarks |\n"
@@ -640,12 +642,12 @@ msgstr ""
 "| ldap_group_attr | ldap group attr | - | - | (G) | - |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:252
+#: manual/Upgrading.md:253
 msgid "Mappings from AppleVolumes.\\* to afp.conf"
 msgstr "AppleVolumes.\\* から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:310
+#: manual/Upgrading.md:311
 #, no-wrap
 msgid ""
 "| Old AppleVolumes.\\*         | New afp.conf       | Old Default Value     | New Default Value | Section | Remarks                          |\n"

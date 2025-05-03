@@ -103,9 +103,10 @@ selected with the **cnid scheme** option in
 the *afp.conf* configuration file. A CNID backend is basically a
 database storing ID <-\> name mappings.
 
-The CNID databases are by default located in
-*$prefix/var/netatalk/CNID*. You can change the location by configuring
-*-Dwith-statedir-path=PATH* at compile time.
+The CNID databases are by default located in a *netatalk/CNID* subdirectory
+of your system's state directory path, e.g. */var/lib*.
+You can change the state directory path with *-Dwith-statedir-path=PATH*
+at compile time.
 
 There is a command line utility called **dbd** available which can be used
 to verify, repair and rebuild the CNID database.
