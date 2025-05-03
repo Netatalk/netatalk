@@ -197,42 +197,51 @@ You may have to restart papd (or the entire container) after adding a CUPS print
 
 These are required to set the credentials used to authenticate with the file server.
 
-| Variable | Description |
-| --- | --- |
-| `AFP_USER` | Primary user of the shared volumes |
-| `AFP_PASS` | Password to authenticate with the primary user |
-| `AFP_GROUP` | Group that owns the shared volume dirs |
+| Variable  | Description                                    |
+|-----------|------------------------------------------------|
+| AFP_USER  | Primary user of the shared volumes             |
+| AFP_PASS  | Password to authenticate with the primary user |
+| AFP_GROUP | Group that owns the shared volume dirs         |
 
 ### Mandatory for AppleTalk
 
-| Variable | Description |
-| --- | --- |
-| `ATALKD_INTERFACE` | The network interface to use for AppleTalk |
-| `TZ` | The timezone to use for the container; must be a [IANA time zone ID](https://nodatime.org/TimeZones) |
+| Variable         | Description                                |
+|------------------|--------------------------------------------|
+| ATALKD_INTERFACE | The network interface to use for AppleTalk |
 
 ### Optional
 
-| Variable        | Description                                                    |
-|-----------------|----------------------------------------------------------------|
-| `AFP_UID`       | Specify user id of `AFP_USER`                                  |
-| `AFP_GID`       | Specify group id of `AFP_GROUP`                                |
-| `AFP_USER2`     | Username for the secondary user                                |
-| `AFP_PASS2`     | Password for the secondary user                                |
-| `SERVER_NAME`   | The name of the server (AFP and Zeroconf)                      |
-| `SHARE_NAME`    | The name of the primary shared volume                          |
-| `SHARE2_NAME`   | The name of the secondary shared (Time Machine) volume         |
-| `AFP_LOGLEVEL`  | The verbosity of logs; default is "info"                       |
-| `AFP_MIMIC_MODEL` | Use a custom modern AFP icon, such as `Tower` or `RackMount` |
-| `AFP_LEGACY_ICON` | Use a custom legacy AFP icon, such as `daemon` or `sdcard`   |
-| `INSECURE_AUTH` | When non-zero, enable the "ClearTxt" and "Guest" UAMs          |
-| `DISABLE_TIMEMACHINE` | When non-zero, the secondary shared volume is a regular volume |
-| `DISABLE_SPOTLIGHT` | When non-zero, Spotlight compatible indexing is disabled   |
-| `MANUAL_CONFIG` | When non-zero, enable manual management of config files        |
-| `ATALKD_OPTIONS` | A string with options to append to atalkd.conf                |
-| `AFP_DROPBOX`   | Enable dropbox mode; turns secondary user into guest with read only access to the second shared volume |
-| `AFP_EXTMAP`    | Enable filename extension to Classic Mac OS type/creator mapping |
-| `AFP_CNID_BACKEND` | The backend to use for the CNID database; valid values are `bdb` and `mysql` |
-| `AFP_CNID_SQL_HOST` | The hostname or IP address of the CNID SQL server          |
-| `AFP_CNID_SQL_USER` | The username to use when connecting to the CNID SQL server |
-| `AFP_CNID_SQL_PASS` | The password to use when connecting to the CNID SQL server |
-| `AFP_CNID_SQL_DB` | The name of the designated database in the SQL server        |
+#### String
+
+| Variable          | Description                                                            |
+|-------------------|------------------------------------------------------------------------|
+| AFP_UID           | Specify user id of AFP_USER                                            |
+| AFP_GID           | Specify group id of AFP_GROUP                                          |
+| AFP_USER2         | Username for the secondary user                                        |
+| AFP_PASS2         | Password for the secondary user                                        |
+| SERVER_NAME       | The name of the server (AFP and Zeroconf)                              |
+| SHARE_NAME        | The name of the primary shared volume                                  |
+| SHARE2_NAME       | The name of the secondary shared (Time Machine) volume                 |
+| AFP_LOGLEVEL      | The verbosity of logs; default is "info"                               |
+| AFP_MIMIC_MODEL   | Use a custom modern AFP icon, such as `Tower` or `RackMount`           |
+| AFP_LEGACY_ICON   | Use a custom legacy AFP icon, such as `daemon` or `sdcard`             |
+| ATALKD_OPTIONS    | A string with options to append to atalkd.conf                         |
+| AFP_CNID_BACKEND  | The backend to use for the CNID database: `bdb` or `mysql`             |
+| AFP_CNID_SQL_HOST | The hostname or IP address of the CNID SQL server                      |
+| AFP_CNID_SQL_USER | The username to use when connecting to the CNID SQL server             |
+| AFP_CNID_SQL_PASS | The password to use when connecting to the CNID SQL server             |
+| AFP_CNID_SQL_DB   | The name of the designated database in the SQL server                  |
+| TZ                | The [timezone](https://nodatime.org/TimeZones) to use in the container |
+
+#### Boolean
+
+Set this environment variable to a non-zero value to enable, ex. "1"
+
+| Variable            | Description                                                                                    |
+|---------------------|------------------------------------------------------------------------------------------------|
+| AFP_DROPBOX         | Enable dropbox mode; secondary user is guest with read only access to the second shared volume |
+| AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
+| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs                                                         |
+| DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
+| DISABLE_SPOTLIGHT   | Spotlight compatible indexing is disabled                                                      |
+| MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |
