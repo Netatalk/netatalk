@@ -97,12 +97,13 @@ break the coupling of *file* and *._file* on non ZFS filesystems
 
 ### Other major changes
 
-- New service controller daemon [netatalk](netatalk.html) which is
+- New service controller daemon [netatalk](netatalk.8.html) which is
 responsible for starting and restarting the AFP and CNID daemons. All
 bundled start scripts have been updated, make sure to update yours!
 
-- All CNID databases are now stored under *$prefix/var/netatalk/CNID/*
-by default, rather than in the individual shared volume directories
+- All CNID databases are now stored in a *netatalk/CNID* subdirectory
+of your system's state directory path, e.g. */var/lib*,
+rather than in the individual shared volume directories
 
 - Netatalk 2.x volume options **usedots** and **upriv** now enabled by
 default
