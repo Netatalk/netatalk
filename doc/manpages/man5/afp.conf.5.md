@@ -937,8 +937,9 @@ clients. See also the Charset options elsewhere in this manual.
 
 appletalk = *BOOLEAN* (default: *no*) **(G)**
 
-> Enables support for AFP-over-Appletalk. This option requires that your
-operating system supports the AppleTalk networking protocol.
+> Enables support for AFP-over-AppleTalk. This option requires that your
+operating system supports the AppleTalk networking protocol,
+and that Netatalk was built with AppleTalk support.
 
 ddp address = *ddp address* **(G)**
 
