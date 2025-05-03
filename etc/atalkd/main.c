@@ -858,7 +858,7 @@ int main( int ac, char **av)
 	case 'V' :
 	case 'v' :	/* version */
 	    printf( "atalkd %s - AppleTalk Network Manager Daemon\n", version );
-	    exit ( 1 );
+	    exit(0);
 	    break;
 
 	default :

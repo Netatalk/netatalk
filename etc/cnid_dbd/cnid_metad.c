@@ -482,7 +482,7 @@ int main(int argc, char *argv[])
             if (obj.cmdlineconfigfile != NULL) {
                 free((void *)obj.cmdlineconfigfile);
             }
-            return -1;
+            return 0;
         default:
             printf("cnid_metad [-dvV] [-F alternate configfile ]\n");
             if (obj.cmdlineconfigfile != NULL) {

@@ -231,7 +231,7 @@ int main(int argc, char *argv[])
                "Copyright (c) 1990, 1996 Regents of The University of Michigan.\n"
                "\tAll Rights Reserved.\n"
                "See the file COPYRIGHT for further information.\n", version);
-            exit(1);
+            exit(0);
 			break;
 		case 'u':
 			pwd = get_user(optarg);
