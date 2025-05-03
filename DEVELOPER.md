@@ -225,10 +225,8 @@ Spotlight Compatible Indexing
 =============================
 
 Starting with version 3.1 Netatalk supports Spotlight searching.
-Netatalk uses GNOME [Tracker](https://projects.gnome.org/tracker/) or
-its later incarnation
-TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)
-as metadata store, indexer and search engine.
+Netatalk uses GNOME TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)
+(previously known as Tracker) as metadata store, indexer and search engine.
 
 ## Limitations and notes
 
@@ -256,100 +254,11 @@ as metadata store, indexer and search engine.
     As a workaround, keep the shared volumes you want to have indexed
     elsewhere on the host filesystem.
 
+## Supported metadata attributes
 
-### Using Tracker commandline tools on the server
-
-Netatalk must be running, commands must be executed as root and some
-environment variables must be set up.
-
-If the .tracker_profile file does not exist, create it first. If you
-need to make the environment variables persistent, source
-.tracker_profile from /root/.profile. If needed, adjust PREFIX to point
-to the base directory Netatalk is installed to, and replace "/var" with
-the localstate directory configured at compile time.
-
-    $ su
-    # cat .tracker_profile
-    PREFIX="/usr/local"
-    export XDG_DATA_HOME="$PREFIX/var/netatalk/"
-    export XDG_CACHE_HOME="$PREFIX/var/netatalk/"
-    export DBUS_SESSION_BUS_ADDRESS="unix:path=$PREFIX/var/netatalk/spotlight.ipc"
-    # . .tracker_profile
-    #
-
-When using Tracker from OpenCSW you must also update your PATH:
-
-    # export PATH=/opt/csw/bin:$PATH
-
-#### Common Tracker commands
-
-Querying Tracker status:
-
->     # tracker daemon
-
-Stop Tracker:
-
->     # tracker daemon -t
-
-Start Tracker:
-
->     # tracker daemon -s
-
-Reindex directory:
-
->     # tracker index -f PATH
-
-Query Tracker for information about a file or directory:
-
->     # tracker info PATH
-
-Search Tracker:
-
->     # tracker search QUERY
-
-#### Advanced Tracker command line configuration
-
-Tracker stores its configuration via Gnome dconf backend which can be
-modified with the command **gsettings**.
-
-Gnome dconf settings are per-user settings, so, as Netatalk runs the
-Tracker processes as root, the settings are stored in the root user
-context and reading or changing these settings must be performed as root
-and Netatalk must be running (and again the environment must be set up
-as shown above).
-
-    # gsettings list-recursively | grep Tracker
-    org.freedesktop.Tracker.Writeback verbosity 'debug'
-    ...
-
-The following list describes some important Tracker options and their
-default settings.
-
-org.freedesktop.Tracker.Miner.Files index-recursive-directories
-
-> This option controls which directories Tracker will index. Don't change
-this option manually as it is automatically set by Netatalk reflecting
-the setting of the **spotlight** option of Netatalk volumes.
-
-org.freedesktop.Tracker.Miner.Files enable-monitors true
-
-> The value controls whether Tracker watches all configured paths for
-modification. Depending on the filesystem modification backend (FAM on
-Linux, FEN on Solaris), this feature may not work as reliable as one
-might wish, so it may be safer to disable it and instead rely on
-periodic crawling of Tracker itself. See also the option
-**crawling-interval**.
-
-org.freedesktop.Tracker.Miner.Files crawling-interval -1
-
-> Interval in days to check the filesystem is up to date in the database,
-maximum is 365, default is -1. -2 = crawling is disabled entirely, -1 =
-crawling *may* occur on startup (if not cleanly shutdown), 0 =
-crawling is forced
-
-### Supported metadata attributes
-
-The following table lists the supported Spotlight metadata attributes
+The following table lists the supported Spotlight metadata attributes,
+based on Apple's [MDItem object](https://developer.apple.com/documentation/coreservices/mditemref/)
+Core Services file metadata standard.
 
 | Description | Spotlight Key |
 |-------------|---------------|
@@ -375,9 +284,3 @@ The following table lists the supported Spotlight metadata attributes
 | Exposure time, in seconds | kMDItemExposureTimeSeconds |
 | The composer of the music contained in the audio file | kMDItemComposer |
 | The musical genre of the song or composition | kMDItemMusicalGenre |
-
-## References
-
-1.  [MDItem](https://developer.apple.com/documentation/coreservices/mditemref/)
-
-2.  [Tracker](https://gnome.pages.gitlab.gnome.org/tracker/docs/developer/)
