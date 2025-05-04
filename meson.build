@@ -1417,7 +1417,7 @@ else
             cdata.set('ICONV_CONST', 'const')
         endif
 
-        if not meson.is_cross_build()
+        if meson.can_run_host_binaries()
                 if cc.run(
                     '''
                 #include <iconv.h>
