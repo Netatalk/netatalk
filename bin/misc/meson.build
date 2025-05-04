@@ -1,10 +1,13 @@
+misc_deps = []
+
 if have_iconv
+    misc_deps += iconv
     executable(
         'netacnv',
         ['netacnv.c'],
         include_directories: root_includes,
         link_with: libatalk,
-        dependencies: [iconv],
+        dependencies: [misc_deps],
         install: false,
     )
 endif
@@ -14,6 +17,7 @@ executable(
     ['logger_test.c'],
     include_directories: root_includes,
     link_with: libatalk,
+    dependencies: [misc_deps],
     install: false,
 )
 
@@ -22,7 +26,7 @@ executable(
     ['fce.c'],
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: [iniparser],
+    dependencies: [iniparser, misc_deps],
     install: true,
 )
 
@@ -38,7 +42,7 @@ if have_ldap
         ['uuidtest.c'],
         include_directories: root_includes,
         link_with: libatalk,
-        dependencies: [afpldaptest_deps],
+        dependencies: [afpldaptest_deps, misc_deps],
         c_args: confdir,
         install: true,
         build_rpath: rpath_libdir,
