@@ -195,6 +195,7 @@ static void show_usage(void)
 void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
 {
     int c, err = 0;
+    optind = 1;
 
     while (EOF != ( c = getopt( ac, av, "dF:vVh" )) ) {
         switch ( c ) {
