@@ -45,69 +45,68 @@ static char *Zone = "*";
 
 static void Usage(char *av0)
 {
-    char	*p;
+    char *p;
 
-    if (( p = strrchr( av0, '/' )) == NULL ) {
-	p = av0;
+    if ((p = strrchr(av0, '/')) == NULL) {
+        p = av0;
     } else {
-	p++;
+        p++;
     }
 
-    printf( "Usage:\t%s [ -A address ] [ -r responses] [-m Mac charset] [ obj:type@zone ]\n", p );
-    exit( 1 );
+    printf("Usage:\t%s [-A address] [-r responses] [-m Mac charset] [obj:type@zone]\n", p);
+    exit(1);
 }
 
 int main(int ac, char **av)
 {
-    struct nbpnve	*nn;
-    char		*name;
-    int			i, c, nresp = 1000;
-    struct at_addr      addr;
-    char		*obj = NULL;
-    size_t		obj_len;
-    charset_t		chMac = CH_MAC;
-    char *		convname;
+    struct nbpnve *nn;
+    char *name;
+    int i, c, nresp = 1000;
+    struct at_addr addr;
+    char *obj = NULL;
+    size_t obj_len;
+    charset_t chMac = CH_MAC;
+    char * convname;
 
-    extern char		*optarg;
-    extern int		optind;
+    extern char *optarg;
+    extern int optind;
 
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
 
     memset(&addr, 0, sizeof(addr));
-    while (( c = getopt( ac, av, "r:A:m:" )) != EOF ) {
-	switch ( c ) {
-	case 'A':
-  	    if (!atalk_aton(optarg, &addr)) {
-	        fprintf(stderr, "Bad address.\n");
-		exit(1);
-	    }
-	    break;
-	case 'r' :
-	    nresp = atoi( optarg );
-	    break;
+    while ((c = getopt(ac, av, "r:A:m:")) != EOF) {
+        switch (c) {
+        case 'A':
+            if (!atalk_aton(optarg, &addr)) {
+                fprintf(stderr, "Bad address.\n");
+                exit(1);
+            }
+            break;
+        case 'r' :
+            nresp = atoi(optarg);
+            break;
         case 'm':
-            if ((charset_t)-1 == (chMac = add_charset(optarg)) ) {
-	        fprintf(stderr, "Invalid Mac charset.\n");
-		exit(1);
-	    }
+            if ((charset_t)-1 == (chMac = add_charset(optarg))) {
+                fprintf(stderr, "Invalid Mac charset.\n");
+                exit(1);
+            }
             break;
 
-	default :
-	    Usage( av[ 0 ] );
-	    exit( 1 );
-	}
+        default:
+            Usage(av[0]);
+            exit(1);
+        }
     }
 
-    if (( nn = (struct nbpnve *)malloc( nresp * sizeof( struct nbpnve )))
-	    == NULL ) {
-	perror( "malloc" );
-	exit( 1 );
+    if ((nn = (struct nbpnve *)malloc(nresp * sizeof(struct nbpnve))) == NULL) {
+        perror("malloc");
+        exit(1);
     }
 
-    if ( ac - optind > 1 ) {
-	Usage( av[ 0 ] );
-	exit( 1 );
+    if (ac - optind > 1) {
+        Usage(av[0]);
+        exit(1);
     }
 
     /*
@@ -116,71 +115,71 @@ int main(int ac, char **av)
      * in static space, and we'll clobber them when we call it again
      * later.
      */
-    if (( name = getenv( "NBPLKUP" )) != NULL ) {
-	if ( nbp_name( name, &Obj, &Type, &Zone )) {
-	    fprintf( stderr,
-		    "Environment variable syntax error: NBPLKUP = %s\n",
-		    name );
-	    exit( 1 );
-	}
-
-	if (( name = (char *)malloc( strlen( Obj ) + 1 )) == NULL ) {
-	    perror( "malloc" );
-	    exit( 1 );
-	}
-	strlcpy( name, Obj, sizeof(name));
-	Obj = name;
-
-	if (( name = (char *)malloc( strlen( Type ) + 1 )) == NULL ) {
-	    perror( "malloc" );
-	    exit( 1 );
-	}
-	strlcpy( name, Type, sizeof(name));
-	Type = name;
-
-	if (( name = (char *)malloc( strlen( Zone ) + 1 )) == NULL ) {
-	    perror( "malloc" );
-	    exit( 1 );
-	}
-	strlcpy( name, Zone, sizeof(name));
-	Zone = name;
-
-    }
-
-    if ( ac - optind == 1 ) {
-	if ((size_t)(-1) == convert_string_allocate( CH_UNIX, chMac,
-                           av[ optind ], -1, &convname))
-            convname = av[ optind ];
-
-	if ( nbp_name( convname, &Obj, &Type, &Zone )) {
-	    Usage( av[ 0 ] );
-	    exit( 1 );
-	}
-    }
-
-    if (( c = nbp_lookup( Obj, Type, Zone, nn, nresp, &addr)) < 0 ) {
-	perror( "nbp_lookup" );
-	exit( -1 );
-    }
-    for ( i = 0; i < c; i++ ) {
-
-	if ((size_t)(-1) == (obj_len = convert_string_allocate( chMac,
-                       CH_UNIX, nn[ i ].nn_obj, nn[ i ].nn_objlen, &obj)) ) {
-            obj_len = nn[ i ].nn_objlen;
-            if (( obj = strdup(nn[ i ].nn_obj)) == NULL ) {
-	        perror( "strdup" );
-	        exit( 1 );
-	    }
+    if ((name = getenv("NBPLKUP")) != NULL) {
+        if (nbp_name(name, &Obj, &Type, &Zone)) {
+            fprintf(stderr,
+                "Environment variable syntax error: NBPLKUP = %s\n",
+                name);
+            exit(1);
         }
 
-	printf( "%31.*s:%-34.*s %u.%u:%u\n",
-		(int)obj_len, obj,
-		nn[ i ].nn_typelen, nn[ i ].nn_type,
-		ntohs( nn[ i ].nn_sat.sat_addr.s_net ),
-		nn[ i ].nn_sat.sat_addr.s_node,
-		nn[ i ].nn_sat.sat_port );
+        if ((name = (char *)malloc(strlen(Obj) + 1)) == NULL) {
+            perror("malloc");
+            exit(1);
+        }
+        strlcpy(name, Obj, sizeof(name));
+        Obj = name;
 
-	free(obj);
+        if ((name = (char *)malloc(strlen(Type) + 1)) == NULL) {
+            perror("malloc");
+            exit(1);
+        }
+        strlcpy(name, Type, sizeof(name));
+        Type = name;
+
+        if ((name = (char *)malloc(strlen(Zone) + 1)) == NULL) {
+            perror("malloc");
+            exit(1);
+        }
+        strlcpy(name, Zone, sizeof(name));
+        Zone = name;
+    }
+
+    if (ac - optind == 1) {
+        if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
+            av[optind], -1, &convname)) {
+            convname = av[optind];
+        }
+
+        if (nbp_name(convname, &Obj, &Type, &Zone)) {
+            Usage(av[0]);
+            exit(1);
+        }
+    }
+
+    if ((c = nbp_lookup(Obj, Type, Zone, nn, nresp, &addr)) < 0) {
+        perror("nbp_lookup");
+        exit(-1);
+    }
+    
+    for (i = 0; i < c; i++) {
+        if ((size_t)(-1) == (obj_len = convert_string_allocate(chMac,
+            CH_UNIX, nn[i].nn_obj, nn[i].nn_objlen, &obj))) {
+            obj_len = nn[i].nn_objlen;
+            if ((obj = strdup(nn[i].nn_obj)) == NULL) {
+                perror("strdup");
+                exit(1);
+            }
+        }
+
+        printf("%31.*s:%-34.*s %u.%u:%u\n",
+            (int)obj_len, obj,
+            nn[i].nn_typelen, nn[i].nn_type,
+            ntohs(nn[i].nn_sat.sat_addr.s_net),
+            nn[i].nn_sat.sat_addr.s_node,
+            nn[i].nn_sat.sat_port);
+
+        free(obj);
     }
 
     free(nn);
