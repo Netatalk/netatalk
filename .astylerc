@@ -1,0 +1,22 @@
+# astyle base ruleset: One True Brace Style
+--style=1tbs
+
+# See the async docs for descriptions of individual rules:
+# https://astyle.sourceforge.net/astyle.html
+--add-braces
+--align-pointer=name
+--align-reference=name
+--break-blocks
+--delete-empty-lines
+--exclude=build
+--exclude=builddir
+--ignore-exclude-errors-x
+--indent=spaces=4
+--max-code-length=80
+--pad-comma
+--pad-header
+--pad-include
+--pad-oper
+--suffix=none
+--unpad-brackets
+--unpad-paren
