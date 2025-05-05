@@ -45,9 +45,9 @@ static char *Zone = "*";
 
 static void Usage(char *av0)
 {
-    char *p;
+    char *p = strrchr(av0, '/');
 
-    if ((p = strrchr(av0, '/')) == NULL) {
+    if (p == NULL) {
         p = av0;
     } else {
         p++;
@@ -87,7 +87,8 @@ int main(int ac, char **av)
             nresp = atoi(optarg);
             break;
         case 'm':
-            if ((charset_t)-1 == (chMac = add_charset(optarg))) {
+            chMac = add_charset(optarg);
+            if ((charset_t)-1 == chMac) {
                 fprintf(stderr, "Invalid Mac charset.\n");
                 exit(1);
             }
@@ -99,7 +100,8 @@ int main(int ac, char **av)
         }
     }
 
-    if ((nn = (struct nbpnve *)malloc(nresp * sizeof(struct nbpnve))) == NULL) {
+    nn = (struct nbpnve *)malloc(nresp * sizeof(struct nbpnve));
+    if (nn == NULL) {
         perror("malloc");
         exit(1);
     }
@@ -123,21 +125,24 @@ int main(int ac, char **av)
             exit(1);
         }
 
-        if ((name = (char *)malloc(strlen(Obj) + 1)) == NULL) {
+        name = (char *)malloc(strlen(Obj) + 1);
+        if (name == NULL) {
             perror("malloc");
             exit(1);
         }
         strlcpy(name, Obj, sizeof(name));
         Obj = name;
 
-        if ((name = (char *)malloc(strlen(Type) + 1)) == NULL) {
+        name = (char *)malloc(strlen(Type) + 1);
+        if (name == NULL) {
             perror("malloc");
             exit(1);
         }
         strlcpy(name, Type, sizeof(name));
         Type = name;
 
-        if ((name = (char *)malloc(strlen(Zone) + 1)) == NULL) {
+        name = (char *)malloc(strlen(Zone) + 1);
+        if (name == NULL) {
             perror("malloc");
             exit(1);
         }
@@ -157,16 +162,20 @@ int main(int ac, char **av)
         }
     }
 
-    if ((c = nbp_lookup(Obj, Type, Zone, nn, nresp, &addr)) < 0) {
+    c = nbp_lookup(Obj, Type, Zone, nn, nresp, &addr);
+    if (c < 0) {
         perror("nbp_lookup");
         exit(-1);
     }
     
     for (i = 0; i < c; i++) {
-        if ((size_t)(-1) == (obj_len = convert_string_allocate(chMac,
-            CH_UNIX, nn[i].nn_obj, nn[i].nn_objlen, &obj))) {
+        obj_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_obj, 
+            nn[i].nn_objlen, &obj);
+        
+        if ((size_t)(-1) == obj_len) {
             obj_len = nn[i].nn_objlen;
-            if ((obj = strdup(nn[i].nn_obj)) == NULL) {
+            obj = strdup(nn[i].nn_obj);
+            if (obj == NULL) {
                 perror("strdup");
                 exit(1);
             }
