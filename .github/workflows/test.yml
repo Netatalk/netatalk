@@ -35,6 +35,28 @@ on:
 name: Tests
 
 jobs:
+    formatting:
+        name: Formatting
+        runs-on: macos-latest
+        env:
+          HOMEBREW_NO_INSTALL_CLEANUP: 1
+          HOMEBREW_NO_AUTO_UPDATE: 1
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - name: Install dependencies
+          run: |
+              brew update
+              brew install \
+                astyle \
+                muon
+        - name: Check formatting
+          run: |
+              ./contrib/shell_utils/codefmt.sh -v -s C
+              ./contrib/shell_utils/codefmt.sh -v -s meson
+
     static_analysis:
         name: Static Analysis
         runs-on: ubuntu-latest
