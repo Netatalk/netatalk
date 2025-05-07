@@ -1,3 +1,14 @@
+Changes in 4.2.3
+================
+
+* FIX: Properly read from afp.conf file passed with -F parameter, GitHub #2150
+* FIX: Read the appletalk option only when built with DDP, GitHub #2149
+* UPD: Consistently return exit code 0 after daemon version info, GitHub #2151
+* UPD: libatalk: MySQL query error log level is dropped to debug, GitHub #2143
+* UPD: initscripts: Improvements to netatalk OpenRC init script, GitHub #2148
+* FIX: meson: enhance iconv detection when cross compiling, GitHub #1921
+* UPD: docs: Cross-platform friendly docs for CNID statedir, GitHub #2146
+
 Changes in 4.2.2
 ================
 
