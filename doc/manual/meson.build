@@ -60,9 +60,11 @@ foreach page : manual_pages
             input: [navlinks, page + '.md'],
             output: page + '.html',
             command: [
-                'sh', '-c',
-                cmark.full_path() + ' --to html "$1" "$2" | sed -e "s#<p>|#<pre>|#g" -e "s#|</p>#|</pre>#g"',
-                'sh', '@INPUT@'
+                'sh',
+                '-c', cmark.full_path()
+                + ' --to html "$1" "$2" | sed -e "s#<p>|#<pre>|#g" -e "s#|</p>#|</pre>#g"',
+                'sh',
+                '@INPUT@',
             ],
             capture: true,
             install: true,
