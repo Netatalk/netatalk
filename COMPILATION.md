@@ -30,7 +30,7 @@ meson compile -C build
 Run integration tests
 
 ```
-cd build && meson test && cd ..
+meson test -C build
 ```
 
 Install
@@ -44,6 +44,11 @@ Check netatalk capabilities
 ```
 netatalk -V
 afpd -V
+atalkd -V
+a2boot -V
+macipgw -V
+papd -V
+timelord -V
 ```
 
 Uninstall
@@ -57,7 +62,7 @@ ninja -C build uninstall
 Install dependencies
 
 ```
-pacman -Sy --noconfirm avahi cmark-gfm cracklib cups db gcc iniparser mariadb-clients meson ninja perl pkgconfig rpcsvc-proto
+pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql
 ```
 
 Configure
@@ -75,7 +80,7 @@ meson compile -C build
 Run integration tests
 
 ```
-cd build && meson test && cd ..
+meson test -C build
 ```
 
 Install
@@ -89,6 +94,11 @@ Check netatalk capabilities
 ```
 netatalk -V
 afpd -V
+atalkd -V
+a2boot -V
+macipgw -V
+papd -V
+timelord -V
 ```
 
 Uninstall
@@ -121,7 +131,7 @@ meson compile -C build
 Run integration tests
 
 ```
-cd build && meson test && cd ..
+meson test -C build
 ```
 
 Install
@@ -135,6 +145,11 @@ Check netatalk capabilities
 ```
 netatalk -V
 afpd -V
+atalkd -V
+a2boot -V
+macipgw -V
+papd -V
+timelord -V
 ```
 
 Uninstall
@@ -166,7 +181,7 @@ meson compile -C build
 Run integration tests
 
 ```
-cd build && meson test && cd ..
+meson test -C build
 ```
 
 Install
@@ -180,6 +195,11 @@ Check netatalk capabilities
 ```
 netatalk -V
 afpd -V
+atalkd -V
+a2boot -V
+macipgw -V
+papd -V
+timelord -V
 ```
 
 Uninstall
@@ -212,7 +232,7 @@ meson compile -C build
 Run distribution tests
 
 ```
-cd build && meson dist && cd ..
+meson dist -C build
 ```
 
 Install
@@ -226,6 +246,11 @@ Check netatalk capabilities
 ```
 netatalk -V
 afpd -V
+atalkd -V
+a2boot -V
+macipgw -V
+papd -V
+timelord -V
 ```
 
 Start netatalk
@@ -272,7 +297,7 @@ meson compile -C build
 Run integration tests
 
 ```
-cd build && meson test && cd ..
+meson test -C build
 ```
 
 Install
@@ -342,9 +367,7 @@ Configure, compile, install, run, and uninstall
 set -e
 meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-cd build
-meson test
-cd ..
+meson test -C build
 meson install -C build
 netatalk -V
 afpd -V
@@ -371,12 +394,15 @@ Configure, compile, install, run, and uninstall
 set -e
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-cd build
-meson test
-cd ..
+meson test -C build
 meson install -C build
 netatalk -V
 afpd -V
+atalkd -V
+a2boot -V
+macipgw -V
+papd -V
+timelord -V
 service netatalk onestart
 sleep 1
 asip-status localhost
@@ -428,9 +454,7 @@ set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
 meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/opt/local/lib/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-ldap-path=/opt/local -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-cd build
-meson test
-cd ..
+meson test -C build
 meson install -C build
 netatalk -V
 afpd -V
@@ -476,9 +500,7 @@ set -e
 export PATH=/usr/local/sbin:/usr/local/bin:$PATH
 meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-cd build
-meson test
-cd ..
+meson test -C build
 meson install -C build
 netatalk -V
 afpd -V
