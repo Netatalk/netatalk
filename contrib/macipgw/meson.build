@@ -5,13 +5,13 @@ if have_iconv
 endif
 
 macipgw_sources = [
-	'atp_input.c',
-	'macip.c',
-	'main.c',
-	'nbp_lkup_async.c',
-	'tunnel_bsd.c',
-	'tunnel_linux.c',
-	'util.c',
+    'atp_input.c',
+    'macip.c',
+    'main.c',
+    'nbp_lkup_async.c',
+    'tunnel_bsd.c',
+    'tunnel_linux.c',
+    'util.c',
 ]
 
 macipgw_includes = include_directories('../../libatalk/atp')
