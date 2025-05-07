@@ -256,6 +256,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Antoine Jacoutot <ajacoutot@openbsd.org>
 - Rob Mitchelmore
 - Sergey Fedorov <vital.had@gmail.com>
+- Jakub Jirutka <jakub@jirutka.cz>
 
 ### macipgw
 
