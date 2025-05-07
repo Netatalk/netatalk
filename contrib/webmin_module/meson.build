@@ -47,10 +47,8 @@ configure_file(
 
 meson.add_install_script(
     tar,
-    '-czf',
-    webmin_tarball,
-    '-C',
-    meson.current_build_dir(),
+    '-czf', webmin_tarball,
+    '-C', meson.current_build_dir(),
     'netatalk',
     install_tag: 'webmin',
 )

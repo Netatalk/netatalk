@@ -5,9 +5,7 @@ if have_iconv
 endif
 
 a2boot_c_args = [
-    '-D_PATH_A_GS_BLOCKS="'
-    + pkgconfdir
-    + '/a2boot/ProDOS16 Boot Blocks"',
+    '-D_PATH_A_GS_BLOCKS="' + pkgconfdir + '/a2boot/ProDOS16 Boot Blocks"',
     '-D_PATH_A_2E_BLOCKS="'
     + pkgconfdir
     + '/a2boot/Apple :2f:2fe Boot Blocks"',

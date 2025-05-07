@@ -4,10 +4,7 @@ afp_conf = configure_file(
     configuration: cdata,
 )
 
-if (
-    fs.exists(pkgconfdir / 'afp.conf')
-    and not get_option('with-overwrite')
-)
+if (fs.exists(pkgconfdir / 'afp.conf') and not get_option('with-overwrite'))
     message('will not replace existing', pkgconfdir / 'afp.conf')
 else
     install_data(afp_conf, install_dir: pkgconfdir)
@@ -35,7 +32,10 @@ if have_afpstats
         fs.exists(dbus_sysconfpath / 'netatalk-dbus.conf')
         and not get_option('with-overwrite')
     )
-        message('will not replace existing', dbus_sysconfpath / 'netatalk-dbus.conf')
+        message(
+            'will not replace existing',
+            dbus_sysconfpath / 'netatalk-dbus.conf',
+        )
     else
         install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
     endif
@@ -51,7 +51,7 @@ cups_libdir = ''
 
 if get_option('with-cups-libdir-path') != ''
     cups_libdir = get_option('with-cups-libdir-path')
-elif host_os in ['netbsd']
+elif host_os == 'netbsd'
     cups_libdir = '/usr/pkg/libexec'
 else
     cups_libdir = '/usr/lib'
@@ -68,20 +68,14 @@ if have_appletalk and have_cups and get_option('with-cups-pap-backend')
 endif
 
 foreach file : static_conf_files
-    if (
-        fs.exists(pkgconfdir / file)
-        and not get_option('with-overwrite')
-    )
+    if (fs.exists(pkgconfdir / file) and not get_option('with-overwrite'))
         message('will not replace existing', pkgconfdir / file)
     else
         install_data(file, install_dir: pkgconfdir)
     endif
 endforeach
 
-if (
-    fs.exists('/etc/ld.so.conf.d')
-    and get_option('with-ldsoconf')
-)
+if (fs.exists('/etc/ld.so.conf.d') and get_option('with-ldsoconf'))
     configure_file(
         input: 'libatalk.conf.in',
         output: 'libatalk.conf',

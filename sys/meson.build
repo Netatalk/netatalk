@@ -1,3 +1,3 @@
 if have_appletalk
-		subdir('netatalk')
+    subdir('netatalk')
 endif
