@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.2.2dev\n"
-"POT-Creation-Date: 2025-04-26 22:52+0200\n"
+"POT-Creation-Date: 2025-05-09 08:00+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -108,12 +108,12 @@ msgstr ""
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1354
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
-#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:82
+#: manpages/man8/afpd.8.md:119 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:48
-#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/macipgw.8.md:107 manpages/man8/netatalk.8.md:52
 #: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
@@ -130,10 +130,10 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
 #: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
 #: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1355
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1356
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
-#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:84
+#: manpages/man8/afpd.8.md:121 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:147 manpages/man8/cnid_metad.8.md:50
 #: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
@@ -149,7 +149,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/pap.1.md:29 manpages/man8/a2boot.8.md:32
 #: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
 #: manpages/man8/cnid_dbd.8.md:57 manpages/man8/cnid_metad.8.md:18
-#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:17
+#: manpages/man8/macipgw.8.md:38 manpages/man8/netatalk.8.md:17
 #: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
 #: manpages/man8/timelord.8.md:23
 #, no-wrap
@@ -162,11 +162,11 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1348 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1349 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
-#: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:78
+#: manpages/man8/afpd.8.md:113 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
-#: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
+#: manpages/man8/macipgw.8.md:98 manpages/man8/netatalk.8.md:48
 #: manpages/man8/papstatus.8.md:49
 #, no-wrap
 msgid "See Also"
@@ -179,8 +179,8 @@ msgid "**-V**\n"
 msgstr ""
 
 #. type: Title #
-#: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:88
-#: manpages/man8/atalkd.8.md:74 manpages/man8/netatalk.8.md:42
+#: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:91
+#: manpages/man8/atalkd.8.md:75 manpages/man8/netatalk.8.md:42
 #: manpages/man8/papd.8.md:99 manpages/man8/papstatus.8.md:43
 #, no-wrap
 msgid "Files"
@@ -188,7 +188,7 @@ msgstr "ファイル"
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:45 manpages/man8/afpd.8.md:28
-#: manpages/man8/atalkd.8.md:56 manpages/man8/netatalk.8.md:30
+#: manpages/man8/atalkd.8.md:57 manpages/man8/netatalk.8.md:30
 #: manpages/man8/papd.8.md:60 manpages/man8/timelord.8.md:41
 #, no-wrap
 msgid "> Print version information and exit.\n"
@@ -285,43 +285,44 @@ msgstr ""
 #. type: Plain text
 #: manpages/man8/afpd.8.md:51
 msgid ""
-"SIGTERM and SIGUSR1 signals that are sent to the main **afpd** process are "
-"propagated to the children, so all will be affected."
+"SIGTERM and SIGUSR1 signals that are sent to the parent **afpd** process are "
+"propagated to the children, so all processes will be affected."
 msgstr ""
-"メインの**afpd**プロセスにSIGTERMやSIGUSR1を送れば子プロセスに伝わるので、全"
-"部に作用するだろう。"
+"親**afpd**プロセスにSIGTERMやSIGUSR1を送れば子プロセスに伝わるので、全部に作"
+"用するだろう。"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:53 manpages/man8/netatalk.8.md:34
+#: manpages/man8/afpd.8.md:54 manpages/man8/netatalk.8.md:34
 msgid "SIGTERM"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:55
+#: manpages/man8/afpd.8.md:56
 #, no-wrap
-msgid "> Clean exit. Propagates from master to childs.\n"
-msgstr "> きれいに終了する。マスタプロセスから子プロセスに伝わる。\n"
+msgid "> Clean exit. Propagates from parent to children.\n"
+msgstr "> きれいに終了する。親プロセスから子プロセスに伝わる。\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:57
+#: manpages/man8/afpd.8.md:58
 msgid "SIGQUIT"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:60
+#: manpages/man8/afpd.8.md:62
 #, no-wrap
 msgid ""
-"> Send this to the master **afpd**, it will exit leaving all children\n"
-"running! Can be used to implement AFP service without downtime.\n"
-msgstr "> マスタ**afpd**にこれを送ると全ての子プロセスを終了する。休止時間なしでAFPサービスを実施するのに使われる。\n"
+"> Sending this to the parent **afpd** will cause it to exit,\n"
+"but leaving all children running!\n"
+"This can be used to implement an AFP service without downtime.\n"
+msgstr "> 親**afpd**にこれを送ると全ての子プロセスを終了する。休止時間なしでAFPサービスを実施するのに使われる。\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:62 manpages/man8/netatalk.8.md:38
+#: manpages/man8/afpd.8.md:64 manpages/man8/netatalk.8.md:38
 msgid "SIGHUP"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:65
+#: manpages/man8/afpd.8.md:67
 #, no-wrap
 msgid ""
 "> Sending a *SIGHUP* to afpd will cause it to reload its configuration\n"
@@ -329,26 +330,29 @@ msgid ""
 msgstr "> afpdに*SIGHUP*を送ると設定ファイルを再読み込みする。\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:67
+#: manpages/man8/afpd.8.md:69
 msgid "SIGINT"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:71
+#: manpages/man8/afpd.8.md:74
 #, no-wrap
 msgid ""
 "> Sending a *SIGINT* to a child **afpd** enables *max_debug* logging for\n"
-"this process. The log is sent to the file */tmp/afpd.PID.XXXXXX*.\n"
+"this process.\n"
+"The log is sent to the file *afpd.PID.XXXXXX* in the system tmp directory.\n"
 "Sending another *SIGINT* will revert to the original log settings.\n"
-msgstr "> 子プロセスの**afpd**に*SIGINT*を送ると、このプロセスの*max_debug*ログを有効にする。ログは*/tmp/afpd.PID.XXXXXX*に送られる。更に*SIGINT*を送ると元のログ設定に戻る。\n"
+msgstr ""
+"> 子プロセスの**afpd**に*SIGINT*を送ると、このプロセスの*max_debug*ログを有効にする。\n"
+"ログはシステムのtmpディレクトリ下の*afpd.PID.XXXXXX*に送られる。更に*SIGINT*を送ると元のログ設定に戻る。\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:73
+#: manpages/man8/afpd.8.md:76
 msgid "SIGUSR1"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:79
+#: manpages/man8/afpd.8.md:82
 #, no-wrap
 msgid ""
 "> The **afpd** process will send the message \"The server is going down for\n"
@@ -361,12 +365,12 @@ msgstr ""
 "maintenance.」というメッセージを送り、5分後に自身を終了する。新規接続を許さない。子プロセスのafpdにこれを送った場合、他の子プロセスには影響しない。それでもメインプロセスは終了するだろうし、全ての新規接続は無効になる。\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:81
+#: manpages/man8/afpd.8.md:84
 msgid "SIGUSR2"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:87
+#: manpages/man8/afpd.8.md:90
 #, no-wrap
 msgid ""
 "> The **afpd** process will look in the message directory configured at\n"
@@ -377,67 +381,67 @@ msgid ""
 msgstr "> **afpd**プロセスはビルド時に設定したメッセージディレクトリの下のmessage.pidという名前のファイルを探する。発見したプロセスについて、その内容をメッセージとして対応するAFPクライアントに送る。メッセージを送った後にファイルは削除される。このシグナルは子プロセスの**afpd**にのみ送るべき。\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:91 manpages/man8/netatalk.8.md:45
+#: manpages/man8/afpd.8.md:94 manpages/man8/netatalk.8.md:45
 #, no-wrap
 msgid "*afp.conf*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:93
+#: manpages/man8/afpd.8.md:96
 #, no-wrap
 msgid "> configuration file used by afpd\n"
 msgstr "> afpdが使う設定ファイル\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:95
-#, no-wrap
-msgid "*afp_signature.conf*\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man8/afpd.8.md:97
-#, no-wrap
-msgid "> list of server signature\n"
-msgstr "> サーバシグネチャのリスト\n"
-
-#. type: Plain text
-#: manpages/man8/afpd.8.md:99
-#, no-wrap
-msgid "*afp_voluuid.conf*\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man8/afpd.8.md:101
-#, no-wrap
-msgid "> list of UUID for Time Machine volume\n"
-msgstr "> Time MachineボリュームのUUIDのリスト\n"
-
-#. type: Plain text
-#: manpages/man8/afpd.8.md:103
+#: manpages/man8/afpd.8.md:98
 #, no-wrap
 msgid "*extmap.conf*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:105
+#: manpages/man8/afpd.8.md:100
 #, no-wrap
 msgid "> file name extension mapping\n"
 msgstr "> ファイル名拡張子マッピング\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:107
+#: manpages/man8/afpd.8.md:102
+#, no-wrap
+msgid "*afp_signature.conf*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/afpd.8.md:104
+#, no-wrap
+msgid "> list of server signatures\n"
+msgstr "> サーバシグネチャのリスト\n"
+
+#. type: Plain text
+#: manpages/man8/afpd.8.md:106
+#, no-wrap
+msgid "*afp_voluuid.conf*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man8/afpd.8.md:108
+#, no-wrap
+msgid "> list of UUIDs for Time Machine volumes\n"
+msgstr "> Time MachineボリュームのUUIDのリスト\n"
+
+#. type: Plain text
+#: manpages/man8/afpd.8.md:110
 #, no-wrap
 msgid "*message.pid*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:109
+#: manpages/man8/afpd.8.md:112
 #, no-wrap
-msgid "> contains messages to be sent to users.\n"
-msgstr "> ユーザへ送るメッセージの内容。\n"
+msgid "> contains messages to be sent to users\n"
+msgstr "> ユーザへ送るメッセージの内容\n"
 
 #. type: Plain text
-#: manpages/man8/afpd.8.md:115
+#: manpages/man8/afpd.8.md:118
 msgid ""
 "netatalk(8), hosts_access(5), afp.conf(5), afp_signature.conf(5), "
 "afp_voluuid.conf(5), extmap.conf(5), dbd(1)"

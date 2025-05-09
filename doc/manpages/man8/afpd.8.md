@@ -46,17 +46,18 @@ the CNID database in an inconsistent state. The safe way to terminate an
 **afpd** is to send it a *SIGTERM (-15)* signal and wait for it to die on
 its own.
 
-SIGTERM and SIGUSR1 signals that are sent to the main **afpd** process are
-propagated to the children, so all will be affected.
+SIGTERM and SIGUSR1 signals that are sent to the parent **afpd** process
+are propagated to the children, so all processes will be affected.
 
 SIGTERM
 
-> Clean exit. Propagates from master to childs.
+> Clean exit. Propagates from parent to children.
 
 SIGQUIT
 
-> Send this to the master **afpd**, it will exit leaving all children
-running! Can be used to implement AFP service without downtime.
+> Sending this to the parent **afpd** will cause it to exit,
+but leaving all children running!
+This can be used to implement an AFP service without downtime.
 
 SIGHUP
 
@@ -66,7 +67,8 @@ files.
 SIGINT
 
 > Sending a *SIGINT* to a child **afpd** enables *max_debug* logging for
-this process. The log is sent to the file */tmp/afpd.PID.XXXXXX*.
+this process.
+The log is sent to the file *afpd.PID.XXXXXX* in the system tmp directory.
 Sending another *SIGINT* will revert to the original log settings.
 
 SIGUSR1
@@ -91,21 +93,21 @@ child **afpd**.
 
 > configuration file used by afpd
 
-*afp_signature.conf*
-
-> list of server signature
-
-*afp_voluuid.conf*
-
-> list of UUID for Time Machine volume
-
 *extmap.conf*
 
 > file name extension mapping
 
+*afp_signature.conf*
+
+> list of server signatures
+
+*afp_voluuid.conf*
+
+> list of UUIDs for Time Machine volumes
+
 *message.pid*
 
-> contains messages to be sent to users.
+> contains messages to be sent to users
 
 # See Also
 

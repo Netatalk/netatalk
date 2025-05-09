@@ -28,10 +28,9 @@ operate, and does not use proxy-ARP for the addresses registered. The
 gateway will always use the first address in the network for the local
 address, i.e. 192.168.1.1 for the network 192.168.1.0/24.
 
-If present, **macipgw** reads configuration options from
-*/usr/etc/macipgw.conf* (or equivalent pkgconf path.) Command line
-options will take precedence over configuration file options. See below
-for an example.
+If present, **macipgw** reads configuration options from the *macipgw.conf*
+file located in the sysconf path. Command line options will take precedence
+over configuration file options. See below for an example.
 
 **macipgw** will log operational messages through **syslog**(3) under the
 facility *LOG_DAEMON*.
