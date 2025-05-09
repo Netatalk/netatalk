@@ -199,6 +199,9 @@
 /* define if you have libquota */
 #mesondefine HAVE_LIBQUOTA
 
+/* Define to 1 if you have the <list.h> header file. */
+#mesondefine HAVE_LIST_H
+
 /* Define to 1 if you have the `listea' function. */
 #mesondefine HAVE_LISTEA
 

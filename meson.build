@@ -240,6 +240,7 @@ check_headers = [
     'langinfo.h',
     'linux/dqblk/xfs.h',
     'linux/xqm.h',
+    'list.h',
     'locale.h',
     'mntent.h',
     'pam/pam_appl.h',

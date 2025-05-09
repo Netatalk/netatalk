@@ -29,7 +29,6 @@
 #include <stdlib.h>
 
 #include <atalk/cnid.h>
-#include <atalk/list.h>
 #include <atalk/logger.h>
 
 #ifdef CNID_BACKEND_LAST

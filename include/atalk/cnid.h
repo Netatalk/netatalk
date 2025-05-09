@@ -27,7 +27,11 @@
 #define _ATALK_CNID__H 1
 
 #include <atalk/adouble.h>
+#if HAVE_LIST_H
+#include <list.h>
+#else
 #include <atalk/list.h>
+#endif
 #include <atalk/uuid.h>
 
 /* CNID object flags */

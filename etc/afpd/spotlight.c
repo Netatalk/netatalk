@@ -35,7 +35,11 @@
 #include <atalk/compat.h>
 #include <atalk/dalloc.h>
 #include <atalk/errchk.h>
+#if HAVE_LIST_H
+#include <list.h>
+#else
 #include <atalk/list.h>
+#endif
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/spotlight.h>

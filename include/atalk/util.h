@@ -138,6 +138,14 @@ extern void mod_close    (void *);
 #define strequal(a,b) (strcmp((a),(b)) == 0)
 #endif
 
+#ifndef ATALK_LIST_HEAD
+#define ATALK_LIST_HEAD LIST_HEAD
+#endif
+
+#ifndef ATALK_LIST_HEAD_INIT
+#define ATALK_LIST_HEAD_INIT LIST_HEAD_INIT
+#endif
+
 /******************************************************************
  * locking.c
  ******************************************************************/

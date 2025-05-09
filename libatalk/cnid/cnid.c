@@ -31,7 +31,11 @@
 
 #include <atalk/cnid.h>
 #include <atalk/compat.h>
+#if HAVE_LIST_H
+#include <list.h>
+#else
 #include <atalk/list.h>
+#endif
 #include <atalk/logger.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
