@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.2.2dev\n"
-"POT-Creation-Date: 2025-04-27 07:37+0200\n"
+"POT-Creation-Date: 2025-05-09 07:22+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -87,12 +87,12 @@ msgstr "説明"
 #: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
 #: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
 #: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1354
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
-#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:48
-#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
+#: manpages/man8/macipgw.8.md:107 manpages/man8/netatalk.8.md:52
 #: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
@@ -107,7 +107,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:29 manpages/man8/a2boot.8.md:32
 #: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
 #: manpages/man8/cnid_dbd.8.md:57 manpages/man8/cnid_metad.8.md:18
-#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:17
+#: manpages/man8/macipgw.8.md:38 manpages/man8/netatalk.8.md:17
 #: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
 #: manpages/man8/timelord.8.md:23
 #, no-wrap
@@ -120,11 +120,11 @@ msgstr "オプション"
 #: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:33
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:45
-#: manpages/man5/afp.conf.5.md:1348 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1349 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:164
-#: manpages/man8/afpd.8.md:110 manpages/man8/atalkd.8.md:79
+#: manpages/man8/afpd.8.md:112 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:141 manpages/man8/cnid_metad.8.md:44
-#: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:48
+#: manpages/man8/macipgw.8.md:98 manpages/man8/netatalk.8.md:48
 #: manpages/man8/papstatus.8.md:49
 #, no-wrap
 msgid "See Also"
@@ -135,22 +135,22 @@ msgstr "関連項目"
 #: manpages/man1/afpstats.1.md:20 manpages/man1/afptest.1.md:103
 #: manpages/man1/asip-status.1.md:54 manpages/man1/nbp.1.md:39
 #: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:39
-#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1302
+#: manpages/man5/afp_voluuid.conf.5.md:29 manpages/man5/afp.conf.5.md:1303
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
-#: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:79
+#: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
 #, no-wrap
 msgid "Examples"
 msgstr "例"
 
 #. type: Title #
-#: manpages/man3/nbp_name.3.md:37 manpages/man8/macipgw.8.md:103
+#: manpages/man3/nbp_name.3.md:37 manpages/man8/macipgw.8.md:102
 #, no-wrap
 msgid "Bugs"
 msgstr "バグ"
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
-#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:68
+#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:67
 #: manpages/man8/netatalk.8.md:28 manpages/man8/papd.8.md:58
 #: manpages/man8/timelord.8.md:39
 #, no-wrap
@@ -158,7 +158,7 @@ msgid "**-v** | **-V**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:48
+#: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:47
 #: manpages/man8/papd.8.md:44
 #, no-wrap
 msgid "**-f** *configfile*\n"
@@ -223,18 +223,18 @@ msgstr ""
 "使用する。つまり、ネットワーク 192.168.1.0/24 の場合は 192.168.1.1 になる。"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:35
+#: manpages/man8/macipgw.8.md:34
 msgid ""
-"If present, **macipgw** reads configuration options from */usr/etc/"
-"macipgw.conf* (or equivalent pkgconf path.) Command line options will take "
-"precedence over configuration file options. See below for an example."
+"If present, **macipgw** reads configuration options from the *macipgw.conf* "
+"file located in the sysconf path. Command line options will take precedence "
+"over configuration file options. See below for an example."
 msgstr ""
-"存在する場合、**macipgw** は */usr/etc/macipgw.conf* (または同等の pkgconf パ"
-"ス) から構成オプションを読み取る。コマンド ライン オプションは、構成ファイル "
-"オプションよりも優先される。例については以下を参照してください。"
+"存在する場合、**macipgw**はsysconfパス下の*macipgw.conf*から構成オプションを"
+"読み取る。コマンドラインオプションは、構成ファイルオプションよりも優先され"
+"る。例については以下を参照してください。"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:38
+#: manpages/man8/macipgw.8.md:37
 #, no-wrap
 msgid ""
 "**macipgw** will log operational messages through **syslog**(3) under the\n"
@@ -242,13 +242,13 @@ msgid ""
 msgstr "**macipgw** は、*LOG_DAEMON* 機能の下で、**syslog**(3) を介して操作メッセージをログに記録する。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:42
+#: manpages/man8/macipgw.8.md:41
 #, no-wrap
 msgid "**-d** *debugclass*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:46
+#: manpages/man8/macipgw.8.md:45
 #, no-wrap
 msgid ""
 "> Specifies that the daemon should not fork, and that a trace of all\n"
@@ -260,7 +260,7 @@ msgstr ""
 "コードを参照してください。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:51
+#: manpages/man8/macipgw.8.md:50
 #, no-wrap
 msgid ""
 "> Consult *configfile* instead of *macipgw.conf* for the configuration\n"
@@ -268,13 +268,13 @@ msgid ""
 msgstr "> 設定情報については、*macipgw.conf*ではなく、*configfile*を参照する。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:53
+#: manpages/man8/macipgw.8.md:52
 #, no-wrap
 msgid "**-n** *nameserver*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:56
+#: manpages/man8/macipgw.8.md:55
 #, no-wrap
 msgid ""
 "> Specifies the IP address of a DNS name server the AppleTalk devices\n"
@@ -284,13 +284,13 @@ msgstr ""
 "サーバーの IP アドレスを指定する。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:58
+#: manpages/man8/macipgw.8.md:57
 #, no-wrap
 msgid "**-u** *unprivileged-user*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:61
+#: manpages/man8/macipgw.8.md:60
 #, no-wrap
 msgid ""
 "> Drop root privileges and change to user *unprivileged-user* after the\n"
@@ -298,13 +298,13 @@ msgid ""
 msgstr "> サーバーの起動後に、ルート権限を削除してユーザー *unprivileged-user* に変更する。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:63
+#: manpages/man8/macipgw.8.md:62
 #, no-wrap
 msgid "**-z** *zone*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:66
+#: manpages/man8/macipgw.8.md:65
 #, no-wrap
 msgid ""
 "> Specifies that **macipgw** should register in *zone* instead of the default\n"
@@ -314,49 +314,49 @@ msgstr ""
 "は、デフォルトのゾーンではなく、*zone*に登録する必要がある。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:70
+#: manpages/man8/macipgw.8.md:69
 #, no-wrap
 msgid "> Show version information and exit.\n"
 msgstr "> バージョン情報を表示して終了する。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:72
+#: manpages/man8/macipgw.8.md:71
 #, no-wrap
 msgid "*network*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:74
+#: manpages/man8/macipgw.8.md:73
 #, no-wrap
 msgid "> Specifies the network number to use for the clients.\n"
 msgstr "> クライアントに使用するネットワーク番号を指定する。\n"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:76
+#: manpages/man8/macipgw.8.md:75
 #, no-wrap
 msgid "*netmask*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:78
+#: manpages/man8/macipgw.8.md:77
 #, no-wrap
 msgid "> Specifies the netmask for the network.\n"
 msgstr "> ネットワークのネットマスクを指定する。\n"
 
 #. type: Title ##
-#: manpages/man8/macipgw.8.md:81
+#: manpages/man8/macipgw.8.md:80
 #, no-wrap
 msgid "Example: macipgw invocation"
 msgstr "例： macipgw 呼び出し"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:84
+#: manpages/man8/macipgw.8.md:83
 #, no-wrap
 msgid "    /usr/local/libexec/macipgw -n 192.168.1.1 -z \"Remote Users\" 192.168.1.0 255.255.255.0\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:89
+#: manpages/man8/macipgw.8.md:88
 msgid ""
 "Starts **macipgw**, assigning the Class C network 192.168.1.0 for devices "
 "connected through the gateway, specifying that the system **macipgw** is "
@@ -369,13 +369,13 @@ msgstr ""
 "る。"
 
 #. type: Title ##
-#: manpages/man8/macipgw.8.md:90
+#: manpages/man8/macipgw.8.md:89
 #, no-wrap
 msgid "Example: macipgw.conf configuration file"
 msgstr "例： macipgw.conf 構成ファイル"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:98
+#: manpages/man8/macipgw.8.md:97
 #, no-wrap
 msgid ""
 "    [Global]\n"
@@ -387,12 +387,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:102
+#: manpages/man8/macipgw.8.md:101
 msgid "tun(4), ip(4), atalkd(8), syslog(3), syslogd(8)"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:107
+#: manpages/man8/macipgw.8.md:106
 msgid ""
 "No information besides the log messages is available on which AppleTalk "
 "devices are using the gateway."
@@ -401,7 +401,7 @@ msgstr ""
 "に関する情報はない。"
 
 #. type: Plain text
-#: manpages/man8/macipgw.8.md:110
+#: manpages/man8/macipgw.8.md:109
 #, no-wrap
 msgid "Stefan Bethke <Stefan.Bethke@Hanse.DE\\>\n"
 msgstr ""
