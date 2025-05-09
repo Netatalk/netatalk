@@ -64,7 +64,9 @@ int main(int ac, char **av)
     int i, c, nresp = 1000;
     struct at_addr addr;
     char *obj = NULL;
+    char *type = NULL;
     size_t obj_len;
+    size_t type_len;
     charset_t chMac = CH_MAC;
     char * convname;
 
@@ -169,8 +171,10 @@ int main(int ac, char **av)
     }
     
     for (i = 0; i < c; i++) {
-        obj_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_obj, 
+        obj_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_obj,
             nn[i].nn_objlen, &obj);
+        type_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_type,
+            nn[i].nn_typelen, &type);
         
         if ((size_t)(-1) == obj_len) {
             obj_len = nn[i].nn_objlen;
@@ -183,12 +187,13 @@ int main(int ac, char **av)
 
         printf("%31.*s:%-34.*s %u.%u:%u\n",
             (int)obj_len, obj,
-            nn[i].nn_typelen, nn[i].nn_type,
+            (int)type_len, type,
             ntohs(nn[i].nn_sat.sat_addr.s_net),
             nn[i].nn_sat.sat_addr.s_node,
             nn[i].nn_sat.sat_port);
 
         free(obj);
+        free(type);
     }
 
     free(nn);
