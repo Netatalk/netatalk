@@ -31,6 +31,7 @@
 #include <atalk/nbp.h>
 #include <atalk/util.h>
 #include <string.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,7 +54,7 @@ static void Usage(char *av0)
         p++;
     }
 
-    printf("Usage:\t%s [-A address] [-r responses] [-m Mac charset] [obj:type@zone]\n", p);
+    printf("Usage:\t%s [-A address] [-r responses] [-m Mac charset] [-s] [obj:type@zone]\n", p);
     exit(1);
 }
 
@@ -69,6 +70,7 @@ int main(int ac, char **av)
     size_t type_len;
     charset_t chMac = CH_MAC;
     char * convname;
+    bool script_friendly_output = false;
 
     extern char *optarg;
     extern int optind;
@@ -77,7 +79,7 @@ int main(int ac, char **av)
     set_charset_name(CH_MAC, MACCHARSET);
 
     memset(&addr, 0, sizeof(addr));
-    while ((c = getopt(ac, av, "r:A:m:")) != EOF) {
+    while ((c = getopt(ac, av, "sA:m:r:")) != EOF) {
         switch (c) {
         case 'A':
             if (!atalk_aton(optarg, &addr)) {
@@ -94,6 +96,9 @@ int main(int ac, char **av)
                 fprintf(stderr, "Invalid Mac charset.\n");
                 exit(1);
             }
+            break;
+        case 's':
+            script_friendly_output = true;
             break;
 
         default:
@@ -185,12 +190,20 @@ int main(int ac, char **av)
             }
         }
 
-        printf("%31.*s:%-34.*s %u.%u:%u\n",
-            (int)obj_len, obj,
-            (int)type_len, type,
-            ntohs(nn[i].nn_sat.sat_addr.s_net),
-            nn[i].nn_sat.sat_addr.s_node,
-            nn[i].nn_sat.sat_port);
+        if (script_friendly_output) {
+            printf("%u.%u:%u %s:%s\n",
+                ntohs(nn[i].nn_sat.sat_addr.s_net),
+                nn[i].nn_sat.sat_addr.s_node,
+                nn[i].nn_sat.sat_port,
+                obj, type);
+        } else {
+            printf("%31.*s:%-34.*s %u.%u:%u\n",
+                (int)obj_len, obj,
+                (int)type_len, type,
+                ntohs(nn[i].nn_sat.sat_addr.s_net),
+                nn[i].nn_sat.sat_addr.s_node,
+                nn[i].nn_sat.sat_port);
+        }
 
         free(obj);
         free(type);

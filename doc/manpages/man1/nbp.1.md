@@ -8,7 +8,7 @@ nbplkup, nbprgstr, nbpunrgstr — tools for accessing the NBP database
 
 **nbprgstr** [-A *address*] [-m *Mac charset*] [-p *port*] *obj:type@zone*
 
-**nbpunrgstr** [-A *address*] [-m *Mac charset*] *obj:type@zone*
+**nbpunrgstr** [-A *address*] [-m *Mac charset*] [-s] *obj:type@zone*
 
 # Description
 
@@ -21,6 +21,10 @@ registered on the AppleTalk internet. *nbpname* is parsed by
 **nbp_name**(3). An \`*=*' for the *object* or *type* matches anything,
 and an \`*\**' for *zone* means the local zone. The default values are
 taken from the NBPLKUP environment variable, parsed as an *nbpname*.
+
+If -s is specified, output is printed in a script-friendly format: for each
+response, first the address is printed, followed by a single space, followed 
+by the name and type, followed by a linefeed.
 
 # Environment Variables
 
@@ -49,6 +53,15 @@ Find all devices of type *LaserWriter* in the local zone.
          Evil DEC from Hell:LaserWriter        7942.2:130
                   Hamtramck:LaserWriter        7942.2:134
              Iron Mountain :LaserWriter        7942.128:250
+    example%
+    
+Find all devices of type *netatalk* in the local zone, providing script-friendly
+output.
+
+    example% nbplkup -s :netatalk
+    5.42:4 netatalk-build:netatalk
+    4.162:4 prometheus:netatalk
+    8.31:4 Tiryns:netatalk
     example%
 
 # See also
