@@ -52,26 +52,38 @@
 #define DIRF_CNID	   (1<<5) /* renumerate id */
 
 struct dir {
-    bstring     d_fullpath;          /* complete unix path to dir (or file) */
-    bstring     d_m_name;            /* mac name */
-    bstring     d_u_name;            /* unix name                                          */
-                                     /* be careful here! if d_m_name == d_u_name, d_u_name */
-                                     /* will just point to the same storage as d_m_name !! */
-    ucs2_t      *d_m_name_ucs2;       /* mac name as UCS2 */
-    qnode_t     *qidx_node;           /* pointer to position in queue index */
-    time_t      d_ctime;                /* inode ctime, used and modified by reenumeration */
-
-    int         d_flags;              /* directory flags */
-    cnid_t      d_pdid;               /* CNID of parent directory */
-    cnid_t      d_did;                /* CNID of directory */
-    uint32_t    d_offcnt;             /* offspring count */
-    uint16_t    d_vid;                /* only needed in the dircache, because
-                                         we put all directories in one cache. */
-    uint32_t    d_rights_cache;       /* cached rights combinded from mode and possible ACL */
-
+    /* complete unix path to dir (or file) */
+    bstring d_fullpath;
+    /* mac name */
+    bstring d_m_name;
+    /* unix name                                          */
+    /* be careful here! if d_m_name == d_u_name, d_u_name */
+    /* will just point to the same storage as d_m_name !! */
+    bstring d_u_name;
+    /* mac name as UCS2 */
+    ucs2_t *d_m_name_ucs2;
+    /* pointer to position in queue index */
+    qnode_t *qidx_node;
+    /* inode ctime, used and modified by reenumeration */
+    time_t d_ctime;
+    /* directory flags */
+    int d_flags;
+    /* CNID of parent directory */
+    cnid_t d_pdid;
+    /* CNID of directory */
+    cnid_t d_did;
+    /* offspring count */
+    uint32_t d_offcnt;
+    /* only needed in the dircache, because
+       we put all directories in one cache. */
+    uint16_t d_vid;
+    /* cached rights combinded from mode and possible ACL */
+    uint32_t d_rights_cache;
     /* Stuff used in the dircache */
-    time_t      dcache_ctime;         /* inode ctime, used and modified by dircache */
-    ino_t       dcache_ino;           /* inode number, used to detect changes in the dircache */
+    /* inode ctime, used and modified by dircache */
+    time_t dcache_ctime;
+    /* inode number, used to detect changes in the dircache */
+    ino_t dcache_ino;
 };
 
 struct path {
@@ -91,7 +103,8 @@ static inline int path_isadir(struct path *o_path)
 #if 0
     return o_path->m_name == '\0' || /* we are in a it */
            !o_path->st_valid ||      /* in cache but we can't chdir in it */
-           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
+           /* not in cache and can't chdir */
+           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode));
 #endif
 }
 

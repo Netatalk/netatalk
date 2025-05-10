@@ -67,9 +67,11 @@ extern int ad_find(int argc, char **argv, AFPObj *obj);
 /* ad_util.c */
 extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
-extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path, cnid_t *did);
+extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path,
+                                    cnid_t *did);
 extern char *utompath(const struct vol *, const char *);
-extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen);
+extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
+                                 char *path, size_t buflen);
 
 typedef struct {
     char *p_end;/* pointer to NULL at end of path */

@@ -44,49 +44,56 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     int ace_count = -1;
     ace_t *aces;
     struct stat st;
-
     *retAces = NULL;
+
     /* Only call acl() for regular files and directories, otherwise just return 0 */
     if (lstat(name, &st) != 0) {
-        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name, strerror(errno));
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): %s", getcwdpath(), name,
+            strerror(errno));
         return -1;
     }
 
     if (S_ISLNK(st.st_mode))
         /* sorry, no ACLs for symlinks */
+    {
         return 0;
+    }
 
-    if ( ! (S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))) {
-        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): special", getcwdpath(), name);
+    if (!(S_ISREG(st.st_mode) || S_ISDIR(st.st_mode))) {
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): special", getcwdpath(),
+            name);
         return 0;
     }
 
     if ((ace_count = acl(name, ACE_GETACLCNT, 0, NULL)) == 0) {
-        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): 0 ACEs", getcwdpath(), name);
+        LOG(log_debug, logtype_afpd, "get_nfsv4_acl(\"%s/%s\"): 0 ACEs", getcwdpath(),
+            name);
         return 0;
     }
 
     if (ace_count == -1) {
-        LOG(log_debug, logtype_afpd, "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
+        LOG(log_debug, logtype_afpd,
+            "get_nfsv4_acl: acl('%s/%s', ACE_GETACLCNT): ace_count %i, error: %s",
             getcwdpath(), name, ace_count, strerror(errno));
         return -1;
     }
 
     aces = malloc(ace_count * sizeof(ace_t));
+
     if (aces == NULL) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
-	return -1;
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: malloc error");
+        return -1;
     }
 
-    if ( (acl(name, ACE_GETACL, ace_count, aces)) == -1 ) {
-	LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
-	free(aces);
-	return -1;
+    if ((acl(name, ACE_GETACL, ace_count, aces)) == -1) {
+        LOG(log_error, logtype_afpd, "get_nfsv4_acl: acl(ACE_GETACL) error");
+        free(aces);
+        return -1;
     }
 
-    LOG(log_debug9, logtype_afpd, "get_nfsv4_acl: file: %s -> No. of ACEs: %d", name, ace_count);
+    LOG(log_debug9, logtype_afpd, "get_nfsv4_acl: file: %s -> No. of ACEs: %d",
+        name, ace_count);
     *retAces = aces;
-
     return ace_count;
 }
 
@@ -105,7 +112,7 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
     }
 
     /* Copy ACEs from buf1 */
-    for (i=0; i < ace1count; ) {
+    for (i = 0; i < ace1count;) {
         memcpy(&new_aces[i], &aces1[i], sizeof(ace_t));
         i++;
     }
@@ -113,11 +120,12 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
     j = i;
 
     /* Copy ACEs from buf2 */
-    for (i=0; i < ace2count; ) {
+    for (i = 0; i < ace2count;) {
         memcpy(&new_aces[j], &aces2[i], sizeof(ace_t));
         i++;
         j++;
     }
+
     return new_aces;
 }
 
@@ -126,20 +134,24 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 */
 int strip_trivial_aces(ace_t **saces, int sacecount)
 {
-    int i,j;
+    int i, j;
     int nontrivaces = 0;
     ace_t *aces = *saces;
     ace_t *new_aces;
 
-    if (aces == NULL || sacecount <= 0)
+    if (aces == NULL || sacecount <= 0) {
         return 0;
+    }
 
     /* Count non-trivial ACEs */
-    for (i=0; i < sacecount; ) {
-        if ( ! (aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)))
+    for (i = 0; i < sacecount;) {
+        if (!(aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
             nontrivaces++;
+        }
+
         i++;
     }
+
     /* malloc buffer for new ACL */
     if ((new_aces = malloc(nontrivaces * sizeof(ace_t))) == NULL) {
         LOG(log_error, logtype_afpd, "strip_trivial_aces: malloc %s", strerror(errno));
@@ -147,19 +159,19 @@ int strip_trivial_aces(ace_t **saces, int sacecount)
     }
 
     /* Copy non-trivial ACEs */
-    for (i=0, j=0; i < sacecount; ) {
-        if ( ! (aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
+    for (i = 0, j = 0; i < sacecount;) {
+        if (!(aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
             memcpy(&new_aces[j], &aces[i], sizeof(ace_t));
             j++;
         }
+
         i++;
     }
 
     free(aces);
     *saces = new_aces;
-
-    LOG(log_debug7, logtype_afpd, "strip_trivial_aces: non-trivial ACEs: %d", nontrivaces);
-
+    LOG(log_debug7, logtype_afpd, "strip_trivial_aces: non-trivial ACEs: %d",
+        nontrivaces);
     return nontrivaces;
 }
 
@@ -168,37 +180,42 @@ int strip_trivial_aces(ace_t **saces, int sacecount)
 */
 int strip_nontrivial_aces(ace_t **saces, int sacecount)
 {
-    int i,j;
+    int i, j;
     int trivaces = 0;
     ace_t *aces = *saces;
     ace_t *new_aces;
 
     /* Count trivial ACEs */
-    for (i=0; i < sacecount; ) {
-        if ((aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)))
+    for (i = 0; i < sacecount;) {
+        if ((aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
             trivaces++;
+        }
+
         i++;
     }
+
     /* malloc buffer for new ACL */
     if ((new_aces = malloc(trivaces * sizeof(ace_t))) == NULL) {
-        LOG(log_error, logtype_afpd, "strip_nontrivial_aces: malloc %s", strerror(errno));
+        LOG(log_error, logtype_afpd, "strip_nontrivial_aces: malloc %s",
+            strerror(errno));
         return -1;
     }
 
     /* Copy trivial ACEs */
-    for (i=0, j=0; i < sacecount; ) {
+    for (i = 0, j = 0; i < sacecount;) {
         if ((aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))) {
             memcpy(&new_aces[j], &aces[i], sizeof(ace_t));
             j++;
         }
+
         i++;
     }
+
     /* Free old ACEs */
     free(aces);
     *saces = new_aces;
-
-    LOG(log_debug7, logtype_afpd, "strip_nontrivial_aces: trivial ACEs: %d", trivaces);
-
+    LOG(log_debug7, logtype_afpd, "strip_nontrivial_aces: trivial ACEs: %d",
+        trivaces);
     return trivaces;
 }
 
@@ -222,57 +239,77 @@ int nfsv4_chmod(char *name, mode_t mode)
     int ret = -1;
     int noaces, nnaces;
     ace_t *oacl = NULL, *nacl = NULL, *cacl = NULL;
-
     LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o)",
         getcwdpath(), name, mode);
 
-    if ((noaces = get_nfsv4_acl(name, &oacl)) < 1) /* (1) */
+    if ((noaces = get_nfsv4_acl(name, &oacl)) < 1) { /* (1) */
         return chmod(name, mode);
+    }
 
-    if ((noaces = strip_trivial_aces(&oacl, noaces)) == -1) /* (2) */
+    if ((noaces = strip_trivial_aces(&oacl, noaces)) == -1) { /* (2) */
         goto exit;
+    }
 
-    if (chmod(name, mode) != 0) /* (3) */
+    if (chmod(name, mode) != 0) { /* (3) */
         goto exit;
+    }
 
     if ((nnaces = get_nfsv4_acl(name, &nacl)) == -1) {/* (4) */
-        if (errno != EACCES)
+        if (errno != EACCES) {
             goto exit;
+        }
+
         become_root();
         nnaces = get_nfsv4_acl(name, &nacl);
         unbecome_root();
-        if (nnaces == -1)
+
+        if (nnaces == -1) {
             goto exit;
+        }
     }
 
-    if ((nnaces = strip_nontrivial_aces(&nacl, nnaces)) == -1) /* (5) */
+    if ((nnaces = strip_nontrivial_aces(&nacl, nnaces)) == -1) { /* (5) */
         goto exit;
+    }
 
-    if ((cacl = concat_aces(oacl, noaces, nacl, nnaces)) == NULL) /* (6) */
+    if ((cacl = concat_aces(oacl, noaces, nacl, nnaces)) == NULL) { /* (6) */
         goto exit;
+    }
 
     if ((ret = acl(name, ACE_SETACL, noaces + nnaces, cacl)) != 0) {
         if (errno != EACCES) {
-            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s",
+                strerror(errno));
             goto exit;
         }
+
         become_root();
         ret = acl(name, ACE_SETACL, noaces + nnaces, cacl);
         unbecome_root();
+
         if (ret != 0) {
-            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s", strerror(errno));
+            LOG(log_error, logtype_afpd, "nfsv4_chmod: error setting acl: %s",
+                strerror(errno));
             goto exit;
         }
     }
 
 exit:
-    if (oacl) free(oacl);
-    if (nacl) free(nacl);
-    if (cacl) free(cacl);
+
+    if (oacl) {
+        free(oacl);
+    }
+
+    if (nacl) {
+        free(nacl);
+    }
+
+    if (cacl) {
+        free(cacl);
+    }
 
     LOG(log_debug, logtype_afpd, "nfsv4_chmod(\"%s/%s\", %04o): result: %d",
         getcwdpath(), name, mode, ret);
-
     return ret;
 }
 
@@ -293,18 +330,17 @@ exit:
 #define SEARCH_GROUP_OBJ 0x01
 #define SEARCH_MASK 0x02
 
-int posix_chmod(const char *name, mode_t mode) {
+int posix_chmod(const char *name, mode_t mode)
+{
     int ret = 0;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t entry;
     acl_entry_t group_entry;
     acl_tag_t tag;
     acl_t acl;
-    uint8_t not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
-
+    uint8_t not_found = (SEARCH_GROUP_OBJ | SEARCH_MASK); /* used as flags */
     LOG(log_maxdebug, logtype_afpd, "posix_chmod(\"%s\", mode: %04o) BEGIN",
         fullpathname(name), mode);
-
     /* Call chmod() first because there might be some special bits to be set which
      * aren't related to access control.
      */
@@ -318,8 +354,9 @@ int posix_chmod(const char *name, mode_t mode) {
 #endif
     ret = chmod(name, mode);
 
-    if (ret)
-	goto done;
+    if (ret) {
+        goto done;
+    }
 
     /* Check if the underlying filesystem supports ACLs. */
     acl = acl_get_file(name, ACL_TYPE_ACCESS);
@@ -328,59 +365,64 @@ int posix_chmod(const char *name, mode_t mode) {
         /* There is no need to keep iterating once we have found ACL_GROUP_OBJ and ACL_MASK. */
         while ((acl_get_entry(acl, entry_id, &entry) == 1) && not_found) {
             entry_id = ACL_NEXT_ENTRY;
-
             ret = acl_get_tag_type(entry, &tag);
 
-	    if (ret) {
+            if (ret) {
                 LOG(log_error, logtype_afpd, "posix_chmod: Failed to get tag type.");
                 goto cleanup;
-	    }
+            }
 
             switch (tag) {
-                case ACL_GROUP_OBJ:
-                    group_entry = entry;
-                    not_found &= ~SEARCH_GROUP_OBJ;
-                    break;
+            case ACL_GROUP_OBJ:
+                group_entry = entry;
+                not_found &= ~SEARCH_GROUP_OBJ;
+                break;
 
-                case ACL_MASK:
-                    not_found &= ~SEARCH_MASK;
-                    break;
+            case ACL_MASK:
+                not_found &= ~SEARCH_MASK;
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
         }
+
         if (!not_found) {
             /* The filesystem object has extented ACLs. We have to update ACL_GROUP_OBJ
              * with the group permissions.
              */
-	    acl_permset_t permset;
+            acl_permset_t permset;
             acl_perm_t perm = 0;
-
             ret = acl_get_permset(group_entry, &permset);
 
             if (ret) {
                 LOG(log_error, logtype_afpd, "posix_chmod: Can't get permset.");
                 goto cleanup;
             }
+
             ret = acl_clear_perms(permset);
 
-            if (ret)
+            if (ret) {
                 goto cleanup;
+            }
 
-            if (mode & S_IXGRP)
+            if (mode & S_IXGRP) {
                 perm |= ACL_EXECUTE;
+            }
 
-            if (mode & S_IWGRP)
+            if (mode & S_IWGRP) {
                 perm |= ACL_WRITE;
+            }
 
-            if (mode & S_IRGRP)
+            if (mode & S_IRGRP) {
                 perm |= ACL_READ;
+            }
 
             ret = acl_add_perm(permset, perm);
 
-            if (ret)
+            if (ret) {
                 goto cleanup;
+            }
 
             ret = acl_set_permset(group_entry, permset);
 
@@ -388,18 +430,22 @@ int posix_chmod(const char *name, mode_t mode) {
                 LOG(log_error, logtype_afpd, "posix_chmod: Can't set permset.");
                 goto cleanup;
             }
+
             /* also update ACL_MASK */
             ret = acl_calc_mask(&acl);
 
-	    if (ret) {
+            if (ret) {
                 LOG(log_error, logtype_afpd, "posix_chmod: acl_calc_mask failed.");
-	        goto cleanup;
+                goto cleanup;
             }
-	    ret = acl_set_file(name, ACL_TYPE_ACCESS, acl);
+
+            ret = acl_set_file(name, ACL_TYPE_ACCESS, acl);
         }
+
 cleanup:
         acl_free(acl);
     }
+
 done:
     LOG(log_maxdebug, logtype_afpd, "posix_chmod(\"%s\", mode: %04o): END: %d",
         fullpathname(name), mode, ret);
@@ -410,22 +456,23 @@ done:
  * posix_fchmod() accepts the same arguments as fchmod() and returns 0 in case of
  * success or -1 in case something went wrong.
  */
-int posix_fchmod(int fd, mode_t mode) {
+int posix_fchmod(int fd, mode_t mode)
+{
     int ret = 0;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t entry;
     acl_entry_t group_entry;
     acl_tag_t tag;
     acl_t acl;
-    uint8_t not_found = (SEARCH_GROUP_OBJ|SEARCH_MASK); /* used as flags */
-
+    uint8_t not_found = (SEARCH_GROUP_OBJ | SEARCH_MASK); /* used as flags */
     /* Call chmod() first because there might be some special bits to be set which
      * aren't related to access control.
      */
     ret = fchmod(fd, mode);
 
-    if (ret)
+    if (ret) {
         goto done;
+    }
 
     /* Check if the underlying filesystem supports ACLs. */
     acl = acl_get_fd(fd);
@@ -434,7 +481,6 @@ int posix_fchmod(int fd, mode_t mode) {
         /* There is no need to keep iterating once we have found ACL_GROUP_OBJ and ACL_MASK. */
         while ((acl_get_entry(acl, entry_id, &entry) == 1) && not_found) {
             entry_id = ACL_NEXT_ENTRY;
-
             ret = acl_get_tag_type(entry, &tag);
 
             if (ret) {
@@ -443,50 +489,56 @@ int posix_fchmod(int fd, mode_t mode) {
             }
 
             switch (tag) {
-                case ACL_GROUP_OBJ:
-                    group_entry = entry;
-                    not_found &= ~SEARCH_GROUP_OBJ;
-                    break;
+            case ACL_GROUP_OBJ:
+                group_entry = entry;
+                not_found &= ~SEARCH_GROUP_OBJ;
+                break;
 
-                case ACL_MASK:
-                    not_found &= ~SEARCH_MASK;
-                    break;
+            case ACL_MASK:
+                not_found &= ~SEARCH_MASK;
+                break;
 
-                default:
-                    break;
+            default:
+                break;
             }
         }
+
         if (!not_found) {
             /* The filesystem object has extented ACLs. We have to update ACL_GROUP_OBJ
              * with the group permissions.
              */
             acl_permset_t permset;
             acl_perm_t perm = 0;
-
             ret = acl_get_permset(group_entry, &permset);
 
             if (ret) {
                 LOG(log_error, logtype_afpd, "posix_fchmod: Can't get permset.");
                 goto cleanup;
             }
+
             ret = acl_clear_perms(permset);
 
-            if (ret)
+            if (ret) {
                 goto cleanup;
+            }
 
-            if (mode & S_IXGRP)
+            if (mode & S_IXGRP) {
                 perm |= ACL_EXECUTE;
+            }
 
-            if (mode & S_IWGRP)
+            if (mode & S_IWGRP) {
                 perm |= ACL_WRITE;
+            }
 
-            if (mode & S_IRGRP)
+            if (mode & S_IRGRP) {
                 perm |= ACL_READ;
+            }
 
             ret = acl_add_perm(permset, perm);
 
-            if (ret)
+            if (ret) {
                 goto cleanup;
+            }
 
             ret = acl_set_permset(group_entry, permset);
 
@@ -494,6 +546,7 @@ int posix_fchmod(int fd, mode_t mode) {
                 LOG(log_error, logtype_afpd, "posix_fchmod: Can't set permset.");
                 goto cleanup;
             }
+
             /* also update ACL_MASK */
             ret = acl_calc_mask(&acl);
 
@@ -501,11 +554,14 @@ int posix_fchmod(int fd, mode_t mode) {
                 LOG(log_error, logtype_afpd, "posix_fchmod: acl_calc_mask failed.");
                 goto cleanup;
             }
+
             ret = acl_set_fd(fd, acl);
         }
+
 cleanup:
         acl_free(acl);
     }
+
 done:
     return ret;
 }

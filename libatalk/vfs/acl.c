@@ -35,19 +35,22 @@
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
 int remove_acl_vfs(const char *name)
 {
-    int ret,i, ace_count, trivial_aces, new_aces_count;
+    int ret, i, ace_count, trivial_aces, new_aces_count;
     ace_t *old_aces = NULL;
     ace_t *new_aces = NULL;
-
     LOG(log_debug9, logtype_afpd, "remove_acl: BEGIN");
 
     /* Get existing ACL and count trivial ACEs */
-    if ((ace_count = get_nfsv4_acl(name, &old_aces)) == -1)
+    if ((ace_count = get_nfsv4_acl(name, &old_aces)) == -1) {
         return AFPERR_MISC;
+    }
+
     trivial_aces = 0;
-    for ( i=0; i < ace_count; i++) {
-        if (old_aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE))
+
+    for (i = 0; i < ace_count; i++) {
+        if (old_aces[i].a_flags & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)) {
             trivial_aces++;
+        }
     }
 
     /* malloc buffer for new ACL */
@@ -59,29 +62,31 @@ int remove_acl_vfs(const char *name)
 
     /* Now copy the trivial ACEs */
     new_aces_count = 0;
-    for (i=0; i < ace_count; i++) {
+
+    for (i = 0; i < ace_count; i++) {
         if (old_aces[i].a_flags  & (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)) {
             memcpy(&new_aces[new_aces_count], &old_aces[i], sizeof(ace_t));
             new_aces_count++;
         }
     }
 
-    if ( (acl(name, ACE_SETACL, trivial_aces, new_aces)) == 0)
+    if ((acl(name, ACE_SETACL, trivial_aces, new_aces)) == 0) {
         ret = AFP_OK;
-    else {
+    } else {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
-        if (errno == (EACCES | EPERM))
+
+        if (errno == (EACCES | EPERM)) {
             ret = AFPERR_ACCESS;
-        else if (errno == ENOENT)
+        } else if (errno == ENOENT) {
             ret = AFPERR_NOITEM;
-        else
+        } else {
             ret = AFPERR_MISC;
+        }
     }
 
 exit:
     free(old_aces);
     free(new_aces);
-
     LOG(log_debug9, logtype_afpd, "remove_acl: END");
     return ret;
 }
@@ -99,16 +104,14 @@ exit:
 int remove_acl_vfs(const char *name)
 {
     EC_INIT;
-
     struct stat st;
     acl_t acl = NULL;
     acl_entry_t e;
     acl_tag_t tag;
     int entry_id = ACL_FIRST_ENTRY;
-
-
     /* Remove default ACL if it's a dir */
     EC_ZERO_ERR(stat(name, &st), AFPERR_MISC);
+
     if (S_ISDIR(st.st_mode)) {
         EC_NULL_LOG_ERR(acl = acl_init(0), AFPERR_MISC);
         EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, acl), AFPERR_MISC);
@@ -120,17 +123,26 @@ int remove_acl_vfs(const char *name)
      * the ACL again. acl_calc_mask() must not be called because there is no need
      * for an ACL_MASK entry in a basic ACL. */
     EC_NULL_LOG_ERR(acl = acl_get_file(name, ACL_TYPE_ACCESS), AFPERR_MISC);
-    for ( ; acl_get_entry(acl, entry_id, &e) == 1; entry_id = ACL_NEXT_ENTRY) {
+
+    for (; acl_get_entry(acl, entry_id, &e) == 1; entry_id = ACL_NEXT_ENTRY) {
         EC_ZERO_LOG_ERR(acl_get_tag_type(e, &tag), AFPERR_MISC);
-        if (tag == ACL_USER || tag == ACL_GROUP || tag == ACL_MASK)
+
+        if (tag == ACL_USER || tag == ACL_GROUP || tag == ACL_MASK) {
             EC_ZERO_LOG_ERR(acl_delete_entry(acl, e), AFPERR_MISC);
+        }
     }
+
     EC_ZERO_LOG_ERR(acl_valid(acl), AFPERR_MISC);
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, acl), AFPERR_MISC);
-
 EC_CLEANUP:
-    if (errno == ENOENT) EC_STATUS(0);
-    if (acl) acl_free(acl);
+
+    if (errno == ENOENT) {
+        EC_STATUS(0);
+    }
+
+    if (acl) {
+        acl_free(acl);
+    }
 
     EC_EXIT;
 }

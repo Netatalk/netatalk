@@ -15,9 +15,9 @@
 union aapa {
     unsigned char		ap_pa[4];
     struct ap_node {
-	unsigned char		an_zero;
-	unsigned char		an_net[2];
-	unsigned char		an_node;
+        unsigned char		an_zero;
+        unsigned char		an_net[2];
+        unsigned char		an_node;
     } ap_node;
 };
 
@@ -42,7 +42,7 @@ struct ether_aarp {
 
 struct aarptab {
     struct at_addr	aat_ataddr;
-    unsigned char		aat_enaddr[ 6 ];
+    unsigned char		aat_enaddr[6];
     unsigned char		aat_timer;
     unsigned char		aat_flags;
     struct mbuf		*aat_hold;

@@ -34,7 +34,8 @@ extern int        dircache_init(int reqsize);
 extern int        dircache_add(const struct vol *, struct dir *);
 extern void       dircache_remove(const struct vol *, struct dir *, int flag);
 extern struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did);
-extern struct dir *dircache_search_by_name(const struct vol *, const struct dir *dir, char *name, int len);
+extern struct dir *dircache_search_by_name(const struct vol *,
+        const struct dir *dir, char *name, int len);
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);
 #endif /* DIRCACHE_H */

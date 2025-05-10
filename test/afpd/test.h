@@ -43,10 +43,14 @@
 static inline void alignok(int len)
 {
     int i = 1;
-    if (len < 80)
+
+    if (len < 80) {
         i = 80 - len;
-    while (i--)
+    }
+
+    while (i--) {
         printf(" ");
+    }
 }
 
 #define TEST(a) \

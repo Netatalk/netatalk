@@ -35,47 +35,48 @@
 
 int asp_cmdreply(ASP asp, int result)
 {
-    struct iovec	iov[ ASP_MAXPACKETS ];
+    struct iovec	iov[ASP_MAXPACKETS];
     struct atp_block	atpb;
     int			iovcnt, buflen;
     char                *buf;
-
     /* unpack data into a format that atp likes. it needs to get
      * 4-byte headers prepended before each ASP_CMDSIZ chunk. */
     buf = (char *) asp->data;
     buflen = asp->datalen;
     asp->write_count += buflen;
     result = htonl(result);
-
     iovcnt = 0;
+
     do {
-	iov[ iovcnt ].iov_base = buf;
-	memmove(buf + ASP_HDRSIZ, buf, buflen);
+        iov[iovcnt].iov_base = buf;
+        memmove(buf + ASP_HDRSIZ, buf, buflen);
 
-	if ( iovcnt == 0 ) {
-	    memcpy( iov[ iovcnt ].iov_base, &result, ASP_HDRSIZ );
-	} else {
-	    memset( iov[ iovcnt ].iov_base, 0, ASP_HDRSIZ );
-	}
+        if (iovcnt == 0) {
+            memcpy(iov[iovcnt].iov_base, &result, ASP_HDRSIZ);
+        } else {
+            memset(iov[iovcnt].iov_base, 0, ASP_HDRSIZ);
+        }
 
-	if ( buflen > ASP_CMDSIZ ) {
-	  buf += ASP_CMDMAXSIZ;
-	  buflen -= ASP_CMDSIZ;
-	  iov[ iovcnt ].iov_len = ASP_CMDMAXSIZ;
-	} else {
-	  iov[ iovcnt ].iov_len = buflen + ASP_HDRSIZ;
-	  buflen = 0;
-	}
-	iovcnt++;
-    } while ( buflen > 0 );
+        if (buflen > ASP_CMDSIZ) {
+            buf += ASP_CMDMAXSIZ;
+            buflen -= ASP_CMDSIZ;
+            iov[iovcnt].iov_len = ASP_CMDMAXSIZ;
+        } else {
+            iov[iovcnt].iov_len = buflen + ASP_HDRSIZ;
+            buflen = 0;
+        }
+
+        iovcnt++;
+    } while (buflen > 0);
 
     atpb.atp_saddr = &asp->asp_sat;
     atpb.atp_sresiov = iov;
     atpb.atp_sresiovcnt = iovcnt;
-    if ( atp_sresp( asp->asp_atp, &atpb ) < 0 ) {
-	return -1;
-    }
-    asp->asp_seq++;
 
+    if (atp_sresp(asp->asp_atp, &atpb) < 0) {
+        return -1;
+    }
+
+    asp->asp_seq++;
     return 0;
 }

@@ -43,14 +43,15 @@ static void Usage(char *av0)
 {
     char	*p;
 
-    if (( p = strrchr( av0, '/' )) == NULL ) {
-	p = av0;
+    if ((p = strrchr(av0, '/')) == NULL) {
+        p = av0;
     } else {
-	p++;
+        p++;
     }
 
-    fprintf( stderr, "Usage: %s [ -A address ] [ -m Mac charset] obj:type@zone\n", p );
-    exit( 1 );
+    fprintf(stderr, "Usage: %s [ -A address ] [ -m Mac charset] obj:type@zone\n",
+            p);
+    exit(1);
 }
 
 int main(int ac, char **av)
@@ -60,55 +61,57 @@ int main(int ac, char **av)
     struct at_addr      addr;
     int                 c;
     charset_t		chMac = CH_MAC;
-
     extern char		*optarg;
     extern int		optind;
-
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
-
     memset(&addr, 0, sizeof(addr));
-    while ((c = getopt(ac, av, "A:m:")) != EOF) {
-      switch (c) {
-      case 'A':
-	if (!atalk_aton(optarg, &addr)) {
-	  fprintf(stderr, "Bad address.\n");
-	  exit(1);
-	}
-	break;
-      case 'm':
-        if ((charset_t)-1 == (chMac = add_charset(optarg)) ) {
-          fprintf(stderr, "Invalid Mac charset.\n");
-          exit(1);
-        }
-        break;
 
-      default:
-	Usage(av[0]);
-	break;
-      }
+    while ((c = getopt(ac, av, "A:m:")) != EOF) {
+        switch (c) {
+        case 'A':
+            if (!atalk_aton(optarg, &addr)) {
+                fprintf(stderr, "Bad address.\n");
+                exit(1);
+            }
+
+            break;
+
+        case 'm':
+            if ((charset_t) -1 == (chMac = add_charset(optarg))) {
+                fprintf(stderr, "Invalid Mac charset.\n");
+                exit(1);
+            }
+
+            break;
+
+        default:
+            Usage(av[0]);
+            break;
+        }
     }
 
     if (ac - optind != 1) {
-	Usage( av[ 0 ] );
+        Usage(av[0]);
     }
 
     /* Convert the name */
     if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
-                        av[optind], -1, &convname))
+            av[optind], -1, &convname)) {
         convname = av[optind];
+    }
 
     /*
      * Get the name. If Type or Obj aren't specified, error.
      */
-    if ( nbp_name( convname, &Obj, &Type, &Zone ) || !Obj || !Type ) {
-	Usage( av[ 0 ] );
+    if (nbp_name(convname, &Obj, &Type, &Zone) || !Obj || !Type) {
+        Usage(av[0]);
     }
 
-    if ( nbp_unrgstr( Obj, Type, Zone, &addr ) < 0 ) {
-	fprintf( stderr, "Can't unregister %s:%s@%s\n", Obj, Type,
-		Zone ? Zone : "*" );
-	exit( 1 );
+    if (nbp_unrgstr(Obj, Type, Zone, &addr) < 0) {
+        fprintf(stderr, "Can't unregister %s:%s@%s\n", Obj, Type,
+                Zone ? Zone : "*");
+        exit(1);
     }
 
     return 0;

@@ -74,30 +74,31 @@ static inline mode_t ea_mode(mode_t mode)
 */
 static char *mtoupath(const struct vol *vol, const char *mpath)
 {
-    static char  upath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
+    /* for convert_charset dest_len parameter +2 */
+    static char  upath[MAXPATHLEN + 2];
     const char   *m;
     char         *u;
     size_t       inplen;
     size_t       outlen;
     uint16_t     flags = CONV_ESCAPEHEX;
 
-    if (!mpath)
+    if (!mpath) {
         return NULL;
+    }
 
-    if ( *mpath == '\0' ) {
+    if (*mpath == '\0') {
         return ".";
     }
 
     m = mpath;
     u = upath;
-
     inplen = strlen(m);
     outlen = MAXPATHLEN;
 
-    if ((size_t)-1 == (outlen = convert_charset(CH_UTF8_MAC,
-                                                vol->v_volcharset,
-                                                vol->v_maccharset,
-                                                m, inplen, u, outlen, &flags)) ) {
+    if ((size_t) -1 == (outlen = convert_charset(CH_UTF8_MAC,
+                                 vol->v_volcharset,
+                                 vol->v_maccharset,
+                                 m, inplen, u, outlen, &flags))) {
         return NULL;
     }
 
@@ -127,60 +128,67 @@ static int unpack_header(struct ea * restrict ea)
     uint16_t uint16;
     uint32_t uint32;
     char *buf;
-
     /* Check magic and version */
     buf = ea->ea_data;
     memcpy(&uint32, buf, sizeof(uint32_t));
+
     if (uint32 != htonl(EA_MAGIC)) {
         LOG(log_error, logtype_afpd, "unpack_header: wrong magic 0x%08x", uint32);
         ret = -1;
         goto exit;
     }
+
     buf += 4;
     memcpy(&uint16, buf, sizeof(uint16_t));
+
     if (uint16 != htons(EA_VERSION)) {
         LOG(log_error, logtype_afpd, "unpack_header: wrong version 0x%04x", uint16);
         ret = -1;
         goto exit;
     }
-    buf += 2;
 
+    buf += 2;
     /* Get EA count */
     memcpy(&uint16, buf, sizeof(uint16_t));
     ea->ea_count = ntohs(uint16);
     LOG(log_debug, logtype_afpd, "unpack_header: number of EAs: %u", ea->ea_count);
     buf += 2;
 
-    if (ea->ea_count == 0)
+    if (ea->ea_count == 0) {
         return 0;
+    }
 
     /* Allocate storage for the ea_entries array */
     ea->ea_entries = malloc(sizeof(struct ea_entry) * ea->ea_count);
-    if ( ! ea->ea_entries) {
+
+    if (! ea->ea_entries) {
         LOG(log_error, logtype_afpd, "unpack_header: OOM");
         ret = -1;
         goto exit;
     }
 
     buf = ea->ea_data + EA_HEADER_SIZE;
+
     while (count < ea->ea_count) {
         memcpy(&uint32, buf, 4); /* EA size */
         buf += 4;
         (*(ea->ea_entries))[count].ea_size = ntohl(uint32);
         (*(ea->ea_entries))[count].ea_name = strdup(buf);
-        if (! (*(ea->ea_entries))[count].ea_name) {
+
+        if (!(*(ea->ea_entries))[count].ea_name) {
             LOG(log_error, logtype_afpd, "unpack_header: OOM");
             ret = -1;
             goto exit;
         }
-        (*(ea->ea_entries))[count].ea_namelen = strlen((*(ea->ea_entries))[count].ea_name);
-        buf += (*(ea->ea_entries))[count].ea_namelen + 1;
 
-        LOG(log_maxdebug, logtype_afpd, "unpack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,
+        (*(ea->ea_entries))[count].ea_namelen = strlen((*
+                                                (ea->ea_entries))[count].ea_name);
+        buf += (*(ea->ea_entries))[count].ea_namelen + 1;
+        LOG(log_maxdebug, logtype_afpd,
+            "unpack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,
             (*(ea->ea_entries))[count].ea_name,
             (*(ea->ea_entries))[count].ea_size,
             (*(ea->ea_entries))[count].ea_namelen);
-
         count++;
     }
 
@@ -209,19 +217,19 @@ static int pack_header(struct ea * restrict ea)
     uint16_t uint16;
     uint32_t uint32;
     size_t bufsize = EA_HEADER_SIZE;
-
     char *buf = ea->ea_data + EA_HEADER_SIZE;
-
     LOG(log_debug, logtype_afpd, "pack_header('%s'): ea_count: %u, ea_size: %u",
         ea->filename, ea->ea_count, ea->ea_size);
 
     if (ea->ea_count == 0)
         /* nothing to do, magic, version and count are still valid in buffer */
+    {
         return 0;
+    }
 
-    while(count < ea->ea_count) { /* the names */
+    while (count < ea->ea_count) { /* the names */
         /* Check if its a deleted entry */
-        if ( ! ((*ea->ea_entries)[count].ea_name)) {
+        if (!((*ea->ea_entries)[count].ea_name)) {
             count++;
             continue;
         }
@@ -232,25 +240,27 @@ static int pack_header(struct ea * restrict ea)
     }
 
     bufsize += (eacount * 4); /* header + ea_size for each EA */
+
     if (bufsize > ea->ea_size) {
         /* we must realloc */
-        if ( ! (buf = realloc(ea->ea_data, bufsize)) ) {
+        if (!(buf = realloc(ea->ea_data, bufsize))) {
             LOG(log_error, logtype_afpd, "pack_header: OOM");
             return -1;
         }
+
         ea->ea_data = buf;
     }
-    ea->ea_size = bufsize;
 
+    ea->ea_size = bufsize;
     /* copy count */
     uint16 = htons(eacount);
     memcpy(ea->ea_data + EA_COUNT_OFF, &uint16, 2);
-
     count = 0;
     buf = ea->ea_data + EA_HEADER_SIZE;
+
     while (count < ea->ea_count) {
         /* Check if its a deleted entry */
-        if ( ! ((*ea->ea_entries)[count].ea_name)) {
+        if (!((*ea->ea_entries)[count].ea_name)) {
             count++;
             continue;
         }
@@ -259,24 +269,20 @@ static int pack_header(struct ea * restrict ea)
         uint32 = htonl((*(ea->ea_entries))[count].ea_size);
         memcpy(buf, &uint32, 4);
         buf += 4;
-
         /* Second: EA name as C-string */
         strcpy(buf, (*(ea->ea_entries))[count].ea_name);
         buf += (*(ea->ea_entries))[count].ea_namelen + 1;
-
-        LOG(log_maxdebug, logtype_afpd, "pack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,
+        LOG(log_maxdebug, logtype_afpd,
+            "pack_header: entry no:%u,\"%s\", size: %u, namelen: %u", count,
             (*(ea->ea_entries))[count].ea_name,
             (*(ea->ea_entries))[count].ea_size,
             (*(ea->ea_entries))[count].ea_namelen);
-
         count++;
     }
 
     ea->ea_count = eacount;
-
     LOG(log_debug, logtype_afpd, "pack_header('%s'): ea_count: %u, ea_size: %u",
         ea->filename, ea->ea_count, ea->ea_size);
-
     return 0;
 }
 
@@ -300,7 +306,7 @@ static int pack_header(struct ea * restrict ea)
  * Otherwise realloc and put entry at the end. Increments ea->ea_count.
  */
 static int ea_addentry(struct ea * restrict ea,
-                       const char * restrict attruname,
+                       const char *restrict attruname,
                        size_t attrsize,
                        int bitmap)
 {
@@ -313,54 +319,68 @@ static int ea_addentry(struct ea * restrict ea,
         while (count < ea->ea_count) {
             if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
                 ea_existed = 1;
-                LOG(log_debug, logtype_afpd, "ea_addentry('%s', bitmap:0x%x): exists", attruname, bitmap);
+                LOG(log_debug, logtype_afpd, "ea_addentry('%s', bitmap:0x%x): exists",
+                    attruname, bitmap);
+
                 if (bitmap & kXAttrCreate)
                     /* its like O_CREAT|O_EXCL -> fail */
+                {
                     return -1;
+                }
+
                 (*(ea->ea_entries))[count].ea_size = attrsize;
                 return 0;
             }
+
             count++;
         }
     }
 
     if ((bitmap & kXAttrReplace) && ! ea_existed)
         /* replace was requested, but EA didn't exist */
+    {
         return -1;
+    }
 
     if (ea->ea_count == 0) {
         ea->ea_entries = malloc(sizeof(struct ea_entry));
-        if ( ! ea->ea_entries) {
+
+        if (! ea->ea_entries) {
             LOG(log_error, logtype_afpd, "ea_addentry: OOM");
             return -1;
         }
     } else if (! ea_existed) {
-        tmprealloc = realloc(ea->ea_entries, sizeof(struct ea_entry) * (ea->ea_count + 1));
-        if ( ! tmprealloc) {
+        tmprealloc = realloc(ea->ea_entries,
+                             sizeof(struct ea_entry) * (ea->ea_count + 1));
+
+        if (! tmprealloc) {
             LOG(log_error, logtype_afpd, "ea_addentry: OOM");
             return -1;
         }
+
         ea->ea_entries = tmprealloc;
     }
 
     /* We've grown the array, now store the entry */
     (*(ea->ea_entries))[ea->ea_count].ea_size = attrsize;
     (*(ea->ea_entries))[ea->ea_count].ea_name = strdup(attruname);
-    if ( ! (*(ea->ea_entries))[ea->ea_count].ea_name) {
+
+    if (!(*(ea->ea_entries))[ea->ea_count].ea_name) {
         LOG(log_error, logtype_afpd, "ea_addentry: OOM");
         goto error;
     }
-    (*(ea->ea_entries))[ea->ea_count].ea_namelen = strlen(attruname);
 
+    (*(ea->ea_entries))[ea->ea_count].ea_namelen = strlen(attruname);
     ea->ea_count++;
     return ea->ea_count;
-
 error:
+
     if (ea->ea_count == 0 && ea->ea_entries) {
         /* We just allocated storage but had an error somewhere -> free storage*/
         free(ea->ea_entries);
         ea->ea_entries = NULL;
     }
+
     ea->ea_count = 0;
     return -1;
 }
@@ -398,14 +418,17 @@ static int create_ea_header(const char * restrict uname,
     uint16_t uint16;
     uint32_t uint32;
 
-    if ((fd = open(uname, O_RDWR | O_CREAT | O_EXCL, 0666 & ~ea->vol->v_umask)) == -1) {
-        LOG(log_error, logtype_afpd, "ea_create: open race condition with ea header for file: %s", uname);
+    if ((fd = open(uname, O_RDWR | O_CREAT | O_EXCL,
+                   0666 & ~ea->vol->v_umask)) == -1) {
+        LOG(log_error, logtype_afpd,
+            "ea_create: open race condition with ea header for file: %s", uname);
         return -1;
     }
 
     /* lock it */
     if ((write_lock(fd, 0, SEEK_SET, 0)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_create: lock race condition with ea header for file: %s", uname);
+        LOG(log_error, logtype_afpd,
+            "ea_create: lock race condition with ea header for file: %s", uname);
         err = -1;
         goto exit;
     }
@@ -415,21 +438,19 @@ static int create_ea_header(const char * restrict uname,
     uint32 = htonl(EA_MAGIC);
     memcpy(ptr, &uint32, sizeof(uint32_t));
     ptr += EA_MAGIC_LEN;
-
     uint16 = htons(EA_VERSION);
     memcpy(ptr, &uint16, sizeof(uint16_t));
     ptr += EA_VERSION_LEN;
-
     memset(ptr, 0, 2);          /* count */
-
     ea->ea_size = EA_HEADER_SIZE;
     ea->ea_inited = EA_INITED;
-
 exit:
+
     if (err != 0) {
         close(fd);
         fd = -1;
     }
+
     return fd;
 }
 
@@ -453,8 +474,8 @@ exit:
  *
  */
 static int write_ea(const struct ea * restrict ea,
-                    const char * restrict attruname,
-                    const char * restrict ibuf,
+                    const char *restrict attruname,
+                    const char *restrict ibuf,
                     size_t attrsize)
 {
     int fd = -1;
@@ -480,21 +501,25 @@ static int write_ea(const struct ea * restrict ea,
     }
 
     if (ftruncate(fd, 0) == -1) {
-        LOG(log_error, logtype_afpd, "write_ea('%s'): ftruncate: %s", eaname, strerror(errno));
+        LOG(log_error, logtype_afpd, "write_ea('%s'): ftruncate: %s", eaname,
+            strerror(errno));
         ret = AFPERR_MISC;
         goto exit;
     }
 
     if (write(fd, ibuf, attrsize) != (ssize_t)attrsize) {
-        LOG(log_error, logtype_afpd, "write_ea('%s'): write: %s", eaname, strerror(errno));
+        LOG(log_error, logtype_afpd, "write_ea('%s'): write: %s", eaname,
+            strerror(errno));
         ret = AFPERR_MISC;
         goto exit;
     }
 
 exit:
+
     if (fd != -1) {
         close(fd); /* and unlock */
     }
+
     return ret;
 }
 
@@ -522,7 +547,8 @@ static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
     unsigned int count = 0;
 
     if (ea->ea_count == 0) {
-        LOG(log_error, logtype_afpd, "ea_delentry('%s'): illegal ea_count of 0 on deletion",
+        LOG(log_error, logtype_afpd,
+            "ea_delentry('%s'): illegal ea_count of 0 on deletion",
             attruname);
         return -1;
     }
@@ -530,14 +556,14 @@ static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
     while (count < ea->ea_count) {
         /* search matching EA */
         if ((*ea->ea_entries)[count].ea_name &&
-            strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
+                strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
             LOG(log_debug, logtype_afpd, "ea_delentry('%s'): deleted no %u/%u",
                 attruname, count + 1, ea->ea_count);
             free((*ea->ea_entries)[count].ea_name);
             (*ea->ea_entries)[count].ea_name = NULL;
-
             break;
         }
+
         count++;
     }
 
@@ -573,8 +599,9 @@ static int delete_ea_file(const struct ea * restrict ea, const char *eaname)
             LOG(log_error, logtype_afpd, "delete_ea_file('%s'): unlink: %s",
                 eafile, strerror(errno));
             ret = -1;
-        } else
+        } else {
             LOG(log_debug, logtype_afpd, "delete_ea_file('%s'): success", eafile);
+        }
     }
 
     return ret;
@@ -604,13 +631,14 @@ static int delete_ea_file(const struct ea * restrict ea, const char *eaname)
  * Dirs: "dir" -> "dir/.AppleDouble/.Parent::EA"
  * "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
  */
-char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int macname)
+char *ea_path(const struct ea * restrict ea, const char * restrict eaname,
+              int macname)
 {
     const char *adname;
     static char pathbuf[MAXPATHLEN + 1];
-
     /* get name of a adouble file from uname */
-    adname = ea->vol->ad_path(ea->filename, (ea->ea_flags & EA_DIR) ? ADFLAGS_DIR : 0);
+    adname = ea->vol->ad_path(ea->filename,
+                              (ea->ea_flags & EA_DIR) ? ADFLAGS_DIR : 0);
     /* copy it so we can work with it */
     strlcpy(pathbuf, adname, MAXPATHLEN + 1);
     /* append "::EA" */
@@ -618,9 +646,12 @@ char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int m
 
     if (eaname) {
         strlcat(pathbuf, "::", MAXPATHLEN + 1);
+
         if (macname)
-            if ((eaname = mtoupath(ea->vol, eaname)) == NULL)
+            if ((eaname = mtoupath(ea->vol, eaname)) == NULL) {
                 return NULL;
+            }
+
         strlcat(pathbuf, eaname, MAXPATHLEN + 1);
     }
 
@@ -654,7 +685,7 @@ char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int m
  * When you're done with struct ea you must call ea_close on it.
  */
 int ea_open(const struct vol * restrict vol,
-            const char * restrict uname,
+            const char *restrict uname,
             eaflags_t eaflags,
             struct ea * restrict ea)
 {
@@ -664,20 +695,21 @@ int ea_open(const struct vol * restrict vol,
 
     /* Enforce usage rules! */
     if (!(eaflags & (EA_RDONLY | EA_RDWR))) {
-        LOG(log_error, logtype_afpd, "ea_open: called without EA_RDONLY | EA_RDWR", uname);
+        LOG(log_error, logtype_afpd, "ea_open: called without EA_RDONLY | EA_RDWR",
+            uname);
         return -1;
     }
 
     /* Set it all to 0 */
     memset(ea, 0, sizeof(struct ea));
-
     ea->vol = vol;              /* ea_close needs it */
     ea->ea_flags = eaflags;
     ea->dirfd = -1;             /* no *at (cf openat) semantics by default */
 
     /* Don't care for errors, e.g. when removing the file is already gone */
-    if (!stat(uname, &st) && S_ISDIR(st.st_mode))
+    if (!stat(uname, &st) && S_ISDIR(st.st_mode)) {
         ea->ea_flags |= EA_DIR;
+    }
 
     if (!(ea->filename = strdup(uname))) {
         LOG(log_error, logtype_afpd, "ea_open: OOM");
@@ -686,21 +718,24 @@ int ea_open(const struct vol * restrict vol,
 
     eaname = ea_path(ea, NULL, 0);
     LOG(log_maxdebug, logtype_afpd, "ea_open: ea_path: %s", eaname);
-
     /* Open the file, create if it doesn't exist and EA_CREATE is in eaflags */
     int open_flags = (ea->ea_flags & EA_RDWR) ? O_RDWR : O_RDONLY;
+
     if (eaflags & EA_CREATE) {
         open_flags |= O_CREAT;
     }
 
     ea->ea_fd = open(eaname, open_flags, 0666 & ~ea->vol->v_umask);
+
     if (ea->ea_fd == -1) {
         if (errno == ENOENT && !(eaflags & EA_CREATE)) {
             ret = -2;
         } else {
-            LOG(log_error, logtype_afpd, "ea_open('%s'): error: %s", eaname, strerror(errno));
+            LOG(log_error, logtype_afpd, "ea_open('%s'): error: %s", eaname,
+                strerror(errno));
             ret = -1;
         }
+
         goto exit;
     }
 
@@ -723,7 +758,8 @@ int ea_open(const struct vol * restrict vol,
 
     /* Check if the file is newly created */
     if (fstat(ea->ea_fd, &st) == -1) {
-        LOG(log_error, logtype_afpd, "ea_open('%s'): fstat error: %s", eaname, strerror(errno));
+        LOG(log_error, logtype_afpd, "ea_open('%s'): fstat error: %s", eaname,
+            strerror(errno));
         ret = -1;
         goto exit;
     }
@@ -731,11 +767,13 @@ int ea_open(const struct vol * restrict vol,
     if (st.st_size == 0) {
         /* Initialize a new header */
         ea->ea_data = malloc(EA_HEADER_SIZE);
+
         if (!ea->ea_data) {
             LOG(log_error, logtype_afpd, "ea_open: OOM");
             ret = -1;
             goto exit;
         }
+
         ea->ea_size = EA_HEADER_SIZE;
         ea->ea_inited = EA_INITED;
         memset(ea->ea_data, 0, EA_HEADER_SIZE);
@@ -747,6 +785,7 @@ int ea_open(const struct vol * restrict vol,
         /* Read and parse existing header */
         ea->ea_size = st.st_size;
         ea->ea_data = malloc(st.st_size);
+
         if (!ea->ea_data) {
             LOG(log_error, logtype_afpd, "ea_open: OOM");
             ret = -1;
@@ -767,22 +806,27 @@ int ea_open(const struct vol * restrict vol,
     }
 
 exit:
+
     switch (ret) {
     case 0:
         ea->ea_inited = EA_INITED;
         break;
+
     case -1:
         errno = EFAULT; /* force some errno distinguishable from ENOENT */
-        /* fall through */
+
+    /* fall through */
     case -2:
         if (ea->ea_data) {
             free(ea->ea_data);
             ea->ea_data = NULL;
         }
+
         if (ea->ea_fd != -1) {
             close(ea->ea_fd);
             ea->ea_fd = -1;
         }
+
         break;
     }
 
@@ -818,7 +862,7 @@ exit:
  */
 int ea_openat(const struct vol * restrict vol,
               int dirfd,
-              const char * restrict uname,
+              const char *restrict uname,
               eaflags_t eaflags,
               struct ea * restrict ea)
 {
@@ -842,13 +886,13 @@ int ea_openat(const struct vol * restrict vol,
         }
     }
 
-
 exit:
-    if (cwdfd != -1)
+
+    if (cwdfd != -1) {
         close(cwdfd);
+    }
 
     return ret;
-
 }
 
 /*
@@ -873,11 +917,11 @@ int ea_close(struct ea * restrict ea)
     unsigned int count = 0;
     char *eaname;
     struct stat st;
-
     LOG(log_debug, logtype_afpd, "ea_close('%s')", ea->filename);
 
     if (ea->ea_inited != EA_INITED) {
-        LOG(log_warning, logtype_afpd, "ea_close('%s'): non initialized ea", ea->filename);
+        LOG(log_warning, logtype_afpd, "ea_close('%s'): non initialized ea",
+            ea->filename);
         return 0;
     }
 
@@ -890,14 +934,15 @@ int ea_close(struct ea * restrict ea)
             if (ea->ea_count == 0) {
                 /* Check if EA header exists and remove it */
                 eaname = ea_path(ea, NULL, 0);
+
                 if ((statat(ea->dirfd, eaname, &st)) == 0) {
                     if ((netatalk_unlinkat(ea->dirfd, eaname)) != 0) {
                         LOG(log_error, logtype_afpd, "ea_close('%s'): unlink: %s",
                             eaname, strerror(errno));
                         ret = -1;
-                    }
-                    else
+                    } else {
                         LOG(log_debug, logtype_afpd, "ea_close(unlink '%s'): success", eaname);
+                    }
                 } else {
                     /* stat error */
                     if (errno != ENOENT) {
@@ -928,14 +973,17 @@ int ea_close(struct ea * restrict ea)
     }
 
 exit:
+
     /* free names */
-    while(count < ea->ea_count) {
-        if ( (*ea->ea_entries)[count].ea_name ) {
+    while (count < ea->ea_count) {
+        if ((*ea->ea_entries)[count].ea_name) {
             free((*ea->ea_entries)[count].ea_name);
             (*ea->ea_entries)[count].ea_name = NULL;
         }
+
         count++;
     }
+
     ea->ea_count = 0;
 
     if (ea->filename) {
@@ -952,6 +1000,7 @@ exit:
         free(ea->ea_data);
         ea->ea_data = NULL;
     }
+
     if (ea->ea_fd != -1) {
         close(ea->ea_fd);       /* also releases the fcntl lock */
         ea->ea_fd = -1;
@@ -992,12 +1041,13 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     unsigned int count = 0;
     uint32_t uint32;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "get_easize: file: %s", uname);
 
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
-        if (errno != ENOENT)
-            LOG(log_error, logtype_afpd, "get_easize: error calling ea_open for file: %s", uname);
+        if (errno != ENOENT) {
+            LOG(log_error, logtype_afpd, "get_easize: error calling ea_open for file: %s",
+                uname);
+        }
 
         memset(rbuf, 0, 4);
         *rbuflen += 4;
@@ -1010,16 +1060,17 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
             memcpy(rbuf, &uint32, 4);
             *rbuflen += 4;
             ret = AFP_OK;
-
             LOG(log_debug, logtype_afpd, "get_easize(\"%s\"): size: %u",
                 attruname, (*ea.ea_entries)[count].ea_size);
             break;
         }
+
         count++;
     }
 
     if ((ea_close(&ea)) != 0) {
-        LOG(log_error, logtype_afpd, "get_easize: error closing ea handle for file: %s", uname);
+        LOG(log_error, logtype_afpd, "get_easize: error closing ea handle for file: %s",
+            uname);
         return AFPERR_MISC;
     }
 
@@ -1055,12 +1106,13 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     size_t toread;
     struct ea ea;
     char *eafile;
-
     LOG(log_debug, logtype_afpd, "get_eacontent('%s/%s')", uname, attruname);
 
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
-        if (errno != ENOENT)
+        if (errno != ENOENT) {
             LOG(log_error, logtype_afpd, "get_eacontent('%s'): ea_open error", uname);
+        }
+
         memset(rbuf, 0, 4);
         *rbuflen += 4;
         return ret;
@@ -1068,24 +1120,29 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 
     while (count < ea.ea_count) {
         if (strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
-            if ( (eafile = ea_path(&ea, attruname, 1)) == NULL) {
+            if ((eafile = ea_path(&ea, attruname, 1)) == NULL) {
                 ret = AFPERR_MISC;
                 break;
             }
 
             if ((fd = open(eafile, O_RDONLY)) == -1) {
-                LOG(log_error, logtype_afpd, "get_eacontent('%s'): open error: %s", uname, strerror(errno));
+                LOG(log_error, logtype_afpd, "get_eacontent('%s'): open error: %s", uname,
+                    strerror(errno));
                 ret = AFPERR_MISC;
                 break;
             }
 
             /* Check how much the client wants, give him what we think is right */
             maxreply -= MAX_REPLY_EXTRA_BYTES;
-            if (maxreply > MAX_EA_SIZE)
-                maxreply = MAX_EA_SIZE;
-            toread = (maxreply < (*ea.ea_entries)[count].ea_size) ? maxreply : (*ea.ea_entries)[count].ea_size;
-            LOG(log_debug, logtype_afpd, "get_eacontent('%s'): sending %u bytes", attruname, toread);
 
+            if (maxreply > MAX_EA_SIZE) {
+                maxreply = MAX_EA_SIZE;
+            }
+
+            toread = (maxreply < (*ea.ea_entries)[count].ea_size) ? maxreply :
+                     (*ea.ea_entries)[count].ea_size;
+            LOG(log_debug, logtype_afpd, "get_eacontent('%s'): sending %u bytes", attruname,
+                toread);
             /* Put length of EA data in reply buffer */
             uint32 = htonl(toread);
             memcpy(rbuf, &uint32, 4);
@@ -1093,27 +1150,29 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
             *rbuflen += 4;
 
             if (read(fd, rbuf, toread) != (ssize_t)toread) {
-                LOG(log_error, logtype_afpd, "get_eacontent('%s/%s'): short read", uname, attruname);
+                LOG(log_error, logtype_afpd, "get_eacontent('%s/%s'): short read", uname,
+                    attruname);
                 close(fd);
                 ret = AFPERR_MISC;
                 break;
             }
+
             *rbuflen += toread;
             close(fd);
-
             ret = AFP_OK;
             break;
         }
+
         count++;
     }
 
     if ((ea_close(&ea)) != 0) {
-        LOG(log_error, logtype_afpd, "get_eacontent('%s'): error closing ea handle", uname);
+        LOG(log_error, logtype_afpd, "get_eacontent('%s'): error closing ea handle",
+            uname);
         return AFPERR_MISC;
     }
 
     return ret;
-
 }
 
 /*
@@ -1142,46 +1201,51 @@ int list_eas(VFS_FUNC_ARGS_EA_LIST)
     int attrbuflen = *buflen, ret = AFP_OK, len;
     char *buf = attrnamebuf;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "list_eas: file: %s", uname);
 
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
         if (errno != ENOENT) {
-            LOG(log_error, logtype_afpd, "list_eas: error calling ea_open for file: %s", uname);
+            LOG(log_error, logtype_afpd, "list_eas: error calling ea_open for file: %s",
+                uname);
             return AFPERR_MISC;
-        }
-        else
+        } else {
             return AFP_OK;
+        }
     }
 
     while (count < ea.ea_count) {
         /* Convert name to CH_UTF8_MAC and directly store in in the reply buffer */
-        if ( ( len = convert_string(vol->v_volcharset,
-                                    CH_UTF8_MAC,
-                                    (*ea.ea_entries)[count].ea_name,
-                                    (*ea.ea_entries)[count].ea_namelen,
-                                    buf + attrbuflen,
-                                    255))
-             <= 0 ) {
+        if ((len = convert_string(vol->v_volcharset,
+                                  CH_UTF8_MAC,
+                                  (*ea.ea_entries)[count].ea_name,
+                                  (*ea.ea_entries)[count].ea_namelen,
+                                  buf + attrbuflen,
+                                  255))
+                <= 0) {
             ret = AFPERR_MISC;
             goto exit;
         }
+
         if (len == 255)
             /* convert_string didn't 0-terminate */
+        {
             attrnamebuf[attrbuflen + 255] = 0;
+        }
 
         LOG(log_debug7, logtype_afpd, "list_eas(%s): EA: %s",
             uname, (*ea.ea_entries)[count].ea_name);
-
         attrbuflen += len + 1;
+
         if (attrbuflen > (ATTRNAMEBUFSIZ - 256)) {
             /* Next EA name could overflow, so bail out with error.
                FIXME: evantually malloc/memcpy/realloc whatever.
                Is it worth it ? */
-            LOG(log_warning, logtype_afpd, "list_eas(%s): running out of buffer for EA names", uname);
+            LOG(log_warning, logtype_afpd,
+                "list_eas(%s): running out of buffer for EA names", uname);
             ret = AFPERR_MISC;
             goto exit;
         }
+
         count++;
     }
 
@@ -1189,7 +1253,8 @@ exit:
     *buflen = attrbuflen;
 
     if ((ea_close(&ea)) != 0) {
-        LOG(log_error, logtype_afpd, "list_eas: error closing ea handle for file: %s", uname);
+        LOG(log_error, logtype_afpd, "list_eas: error closing ea handle for file: %s",
+            uname);
         return AFPERR_MISC;
     }
 
@@ -1221,7 +1286,6 @@ int set_ea(VFS_FUNC_ARGS_EA_SET)
 {
     int ret = AFP_OK;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "set_ea: file: %s", uname);
 
     if ((ea_open(vol, uname, EA_CREATE | EA_RDWR, &ea)) != 0) {
@@ -1242,6 +1306,7 @@ int set_ea(VFS_FUNC_ARGS_EA_SET)
     }
 
 exit:
+
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): ea_close error", uname);
         ret = AFPERR_MISC;
@@ -1273,7 +1338,6 @@ int remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
     int ret = AFP_OK;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "remove_ea('%s/%s')", uname, attruname);
 
     if ((ea_open(vol, uname, EA_RDWR, &ea)) != 0) {
@@ -1294,6 +1358,7 @@ int remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
     }
 
 exit:
+
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "remove_ea('%s'): ea_close error", uname);
         ret = AFPERR_MISC;
@@ -1313,16 +1378,17 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
     int ret = AFP_OK;
     int cwd = -1;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "ea_deletefile('%s')", file);
 
     /* Open EA stuff */
     if ((ea_openat(vol, dirfd, file, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
+        {
             return AFP_OK;
-        else {
-            LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error calling ea_open", file);
+        } else {
+            LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error calling ea_open",
+                file);
             return AFPERR_MISC;
         }
     }
@@ -1339,6 +1405,7 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
             ret = AFPERR_MISC;
             continue;
         }
+
         free((*ea.ea_entries)[count].ea_name);
         (*ea.ea_entries)[count].ea_name = NULL;
         count++;
@@ -1346,7 +1413,8 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
 
     /* ea_close removes the EA header file for us because all names are NULL */
     if ((ea_close(&ea)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error closing ea handle", file);
+        LOG(log_error, logtype_afpd, "ea_deletefile('%s'): error closing ea handle",
+            file);
         ret = AFPERR_MISC;
     }
 
@@ -1356,8 +1424,10 @@ int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
     }
 
 exit:
-    if (cwd != -1)
+
+    if (cwd != -1) {
         close(cwd);
+    }
 
     return ret;
 }
@@ -1367,23 +1437,23 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
     unsigned int count = 0;
     int    ret = AFP_OK;
     size_t easize;
-    char   srceapath[ MAXPATHLEN + 1];
+    char   srceapath[MAXPATHLEN + 1];
     char   *eapath;
     char   *eaname;
     struct ea srcea;
     struct ea dstea;
     struct adouble ad;
-
     LOG(log_debug, logtype_afpd, "ea_renamefile('%s'/'%s')", src, dst);
-
 
     /* Open EA stuff */
     if ((ea_openat(vol, dirfd, src, EA_RDWR, &srcea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
+        {
             return AFP_OK;
-        else {
-            LOG(log_error, logtype_afpd, "ea_renamefile('%s'/'%s'): ea_open error: '%s'", src, dst, src);
+        } else {
+            LOG(log_error, logtype_afpd, "ea_renamefile('%s'/'%s'): ea_open error: '%s'",
+                src, dst, src);
             return AFPERR_MISC;
         }
     }
@@ -1392,12 +1462,17 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
             ad_init(&ad, vol);
-            if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666)) != 0) {
-                LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): ad_open error: '%s'", src, dst, dst);
+
+            if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                         0666)) != 0) {
+                LOG(log_error, logtype_afpd, "ea_renamefile('%s/%s'): ad_open error: '%s'", src,
+                    dst, dst);
                 ret = AFPERR_MISC;
                 goto exit;
             }
+
             ad_close(&ad, ADFLAGS_HF);
+
             if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
                 ret = AFPERR_MISC;
                 goto exit;
@@ -1416,13 +1491,16 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
             ret = AFPERR_MISC;
             goto exit;
         }
+
         strcpy(srceapath, eapath);
+
         if ((eapath = ea_path(&dstea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
 
-        LOG(log_maxdebug, logtype_afpd, "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
+        LOG(log_maxdebug, logtype_afpd,
+            "ea_renamefile('%s/%s'): moving EA '%s' to '%s'",
             src, dst, srceapath, eapath);
 
         /* Add EA to dstea */
@@ -1453,11 +1531,10 @@ int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
         count++;
     }
 
-
 exit:
     ea_close(&srcea);
     ea_close(&dstea);
-	return ret;
+    return ret;
 }
 
 /*
@@ -1483,22 +1560,23 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
     unsigned int count = 0;
     int    ret = AFP_OK;
     size_t easize;
-    char   srceapath[ MAXPATHLEN + 1];
+    char   srceapath[MAXPATHLEN + 1];
     char   *eapath;
     char   *eaname;
     struct ea srcea;
     struct ea dstea;
     struct adouble ad;
-
     LOG(log_debug, logtype_afpd, "ea_copyfile('%s'/'%s')", src, dst);
 
     /* Open EA stuff */
     if ((ea_openat(vol, sfd, src, EA_RDWR, &srcea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
+        {
             return AFP_OK;
-        else {
-            LOG(log_error, logtype_afpd, "ea_copyfile('%s'/'%s'): ea_open error: '%s'", src, dst, src);
+        } else {
+            LOG(log_error, logtype_afpd, "ea_copyfile('%s'/'%s'): ea_open error: '%s'", src,
+                dst, src);
             return AFPERR_MISC;
         }
     }
@@ -1507,12 +1585,17 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
         if (errno == ENOENT) {
             /* Possibly the .AppleDouble folder didn't exist, we create it and try again */
             ad_init(&ad, vol);
-            if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666)) != 0) {
-                LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): ad_open error: '%s'", src, dst, dst);
+
+            if ((ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                         0666)) != 0) {
+                LOG(log_error, logtype_afpd, "ea_copyfile('%s/%s'): ad_open error: '%s'", src,
+                    dst, dst);
                 ret = AFPERR_MISC;
                 goto exit;
             }
+
             ad_close(&ad, ADFLAGS_HF);
+
             if ((ea_open(vol, dst, EA_RDWR | EA_CREATE, &dstea)) != 0) {
                 ret = AFPERR_MISC;
                 goto exit;
@@ -1531,7 +1614,9 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
             ret = AFPERR_MISC;
             goto exit;
         }
+
         strcpy(srceapath, eapath);
+
         if ((eapath = ea_path(&dstea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
@@ -1562,24 +1647,24 @@ int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 exit:
     ea_close(&srcea);
     ea_close(&dstea);
-	return ret;
+    return ret;
 }
 
 int ea_chown(VFS_FUNC_ARGS_CHOWN)
 {
-
     unsigned int count = 0;
     int ret = AFP_OK;
     char *eaname;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "ea_chown('%s')", path);
+
     /* Open EA stuff */
     if ((ea_open(vol, path, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
+        {
             return AFP_OK;
-        else {
+        } else {
             LOG(log_error, logtype_afpd, "ea_chown('%s'): error calling ea_open", path);
             return AFPERR_MISC;
         }
@@ -1591,6 +1676,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
         case EACCES:
             ret = AFPERR_ACCESS;
             goto exit;
+
         default:
             ret = AFPERR_MISC;
             goto exit;
@@ -1602,16 +1688,19 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
             ret = AFPERR_MISC;
             goto exit;
         }
+
         if ((ochown(eaname, uid, gid, vol_syml_opt(vol))) != 0) {
             switch (errno) {
             case EPERM:
             case EACCES:
                 ret = AFPERR_ACCESS;
                 goto exit;
+
             default:
                 ret = AFPERR_MISC;
                 goto exit;
             }
+
             continue;
         }
 
@@ -1619,6 +1708,7 @@ int ea_chown(VFS_FUNC_ARGS_CHOWN)
     }
 
 exit:
+
     if ((ea_close(&ea)) != 0) {
         LOG(log_error, logtype_afpd, "ea_chown('%s'): error closing ea handle", path);
         return AFPERR_MISC;
@@ -1629,30 +1719,34 @@ exit:
 
 int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
 {
-
     unsigned int count = 0;
     int ret = AFP_OK;
     const char *eaname;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "ea_chmod_file('%s')", name);
+
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
         if (errno == ENOENT)
             /* no EA files, nothing to do */
+        {
             return AFP_OK;
-        else
+        } else {
             return AFPERR_MISC;
+        }
     }
 
     /* Set mode on EA header file */
     if ((setfilmode(vol, ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL, 0), strerror(errno));
+        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", ea_path(&ea, NULL, 0),
+            strerror(errno));
+
         switch (errno) {
         case EPERM:
         case EACCES:
             ret = AFPERR_ACCESS;
             goto exit;
+
         default:
             ret = AFPERR_MISC;
             goto exit;
@@ -1665,17 +1759,22 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
             ret = AFPERR_MISC;
             goto exit;
         }
+
         if ((setfilmode(vol, eaname, ea_mode(mode), NULL)) != 0) {
-            LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", eaname, strerror(errno));
+            LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): %s", eaname,
+                strerror(errno));
+
             switch (errno) {
             case EPERM:
             case EACCES:
                 ret = AFPERR_ACCESS;
                 goto exit;
+
             default:
                 ret = AFPERR_MISC;
                 goto exit;
             }
+
             continue;
         }
 
@@ -1683,8 +1782,10 @@ int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
     }
 
 exit:
+
     if ((ea_close(&ea)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): error closing ea handle", name);
+        LOG(log_error, logtype_afpd, "ea_chmod_file('%s'): error closing ea handle",
+            name);
         return AFPERR_MISC;
     }
 
@@ -1693,13 +1794,11 @@ exit:
 
 int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-
     int ret = AFP_OK;
     unsigned int count = 0;
     const char *eaname;
     const char *eaname_safe = NULL;
     struct ea ea;
-
     LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
     /* .AppleDouble already might be inaccesible, so we must run as id 0 */
     become_root();
@@ -1707,20 +1806,25 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     /* Open EA stuff */
     if ((ea_open(vol, name, EA_RDWR, &ea)) != 0) {
         /* ENOENT --> no EA files, nothing to do */
-        if (errno != ENOENT)
+        if (errno != ENOENT) {
             ret = AFPERR_MISC;
+        }
+
         unbecome_root();
         return ret;
     }
 
     /* Set mode on EA header */
     if ((setfilmode(vol, ea_path(&ea, NULL, 0), ea_header_mode(mode), NULL)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", ea_path(&ea, NULL, 0), strerror(errno));
+        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", ea_path(&ea, NULL, 0),
+            strerror(errno));
+
         switch (errno) {
         case EPERM:
         case EACCES:
             ret = AFPERR_ACCESS;
             goto exit;
+
         default:
             ret = AFPERR_MISC;
             goto exit;
@@ -1730,6 +1834,7 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
     /* Set mode on EA files */
     while (count < ea.ea_count) {
         eaname = (*ea.ea_entries)[count].ea_name;
+
         /*
          * Be careful with EA names from the EA header!
          * E.g. NFS users might have access to them, can inject paths using ../ or /.....
@@ -1740,21 +1845,26 @@ int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
             LOG(log_warning, logtype_afpd, "ea_chmod_dir('%s'): contains a slash", eaname);
             eaname = eaname_safe;
         }
+
         if ((eaname = ea_path(&ea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
             goto exit;
         }
+
         if ((setfilmode(vol, eaname, ea_mode(mode), NULL)) != 0) {
             LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): %s", eaname, strerror(errno));
+
             switch (errno) {
             case EPERM:
             case EACCES:
                 ret = AFPERR_ACCESS;
                 goto exit;
+
             default:
                 ret = AFPERR_MISC;
                 goto exit;
             }
+
             continue;
         }
 
@@ -1765,7 +1875,8 @@ exit:
     unbecome_root();
 
     if ((ea_close(&ea)) != 0) {
-        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): error closing ea handle", name);
+        LOG(log_error, logtype_afpd, "ea_chmod_dir('%s'): error closing ea handle",
+            name);
         return AFPERR_MISC;
     }
 

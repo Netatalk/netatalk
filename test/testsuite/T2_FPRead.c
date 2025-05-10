@@ -11,39 +11,39 @@ STATIC void test109()
     int size;
     DSI *dsi;
     struct stat st;
+    dsi = &Conn->dsi;
+    ENTER_TEST
 
-	dsi = &Conn->dsi;
+    if (Path[0] == '\0') {
+        test_skipped(T_PATH);
+        goto test_exit;
+    }
 
-	ENTER_TEST
+    if (adouble == AD_EA) {
+        test_skipped(T_ADV2);
+        goto test_exit;
+    }
 
-	if (Path[0] == '\0') {
-		test_skipped(T_PATH);
-		goto test_exit;
-	}
-
-	if (adouble == AD_EA) {
-		test_skipped(T_ADV2);
-		goto test_exit;
-	}
-
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
-		test_nottested();
-		goto test_exit;
-	}
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
 
     strcpy(Data, "hello");
+    /* ----------------- */
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
 
-	/* ----------------- */
-	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
-	if (!fork) {
-		test_failed();
-		goto fin;
-	}
+    if (!fork) {
+        test_failed();
+        goto fin;
+    }
 
-	if (FPWrite(Conn, fork, 0, 5, Data, 0 )) {
-		test_failed();
-	}
-    FPCloseFork(Conn,fork);
+    if (FPWrite(Conn, fork, 0, 5, Data, 0)) {
+        test_failed();
+    }
+
+    FPCloseFork(Conn, fork);
     fork = 0;
 
     /* ----------------- */
@@ -51,33 +51,44 @@ STATIC void test109()
         test_failed();
         goto fin;
     }
-	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_RD);
-	if (!fork) {
-		test_failed();
-		goto fin;
-	}
-	if (FPRead(Conn, fork, 0, 5, Data)) {
-		test_failed();
-        goto fin;
-	}
-    if (strcmp(Data, "hello") != 0) {
-		test_failed();
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_failed();
         goto fin;
     }
-    FPCloseFork(Conn,fork);
+
+    if (FPRead(Conn, fork, 0, 5, Data)) {
+        test_failed();
+        goto fin;
+    }
+
+    if (strcmp(Data, "hello") != 0) {
+        test_failed();
+        goto fin;
+    }
+
+    FPCloseFork(Conn, fork);
 
     /* ----------------- */
     if (chmod_unix_rfork(Path, "", name, 0000) != 0) {
         test_failed();
         goto fin;
     }
-	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name, OPENACC_RD);
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
     if (ntohl(AFPERR_ACCESS) != dsi->header.dsi_code) {
-        if (fork)
-            FPCloseFork(Conn,fork);
-		test_failed();
-		goto fin;
-	}
+        if (fork) {
+            FPCloseFork(Conn, fork);
+        }
+
+        test_failed();
+        goto fin;
+    }
 
     /* ----------------- */
     if (chmod_unix_rfork(Path, "", name, 0600) != 0) {
@@ -86,40 +97,46 @@ STATIC void test109()
     }
 
     if (delete_unix_md(Path, "", name) != 0) {
-		test_failed();
+        test_failed();
         goto fin;
-	}
+    }
 
-	fork = FPOpenFork(Conn, vol, OPENFORK_RSCS , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
-	if (!fork) {
-		test_failed();
-		goto fin;
-	}
-	if (FPWrite(Conn, fork, 0, 5, Data, 0 )) {
-		test_failed();
-	}
-	if (FPRead(Conn, fork, 0, 5, Data)) {
-		test_failed();
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        test_failed();
         goto fin;
-	}
+    }
+
+    if (FPWrite(Conn, fork, 0, 5, Data, 0)) {
+        test_failed();
+    }
+
+    if (FPRead(Conn, fork, 0, 5, Data)) {
+        test_failed();
+        goto fin;
+    }
+
     if (strcmp(Data, "hello") != 0) {
-		test_failed();
+        test_failed();
         goto fin;
     }
 
 fin:
-	if (fork)
-        FPCloseFork(Conn,fork);
 
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name))
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
 
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
-	exit_test("FPread:test109: read resource fork that is ro (0400), inaccessible (0000) or without metadata EA");
+    exit_test("FPread:test109: read resource fork that is ro (0400), inaccessible (0000) or without metadata EA");
 }
 
 /* ----------- */
 void T2FPRead_test()
 {
     ENTER_TESTSET
-	test109();
+    test109();
 }

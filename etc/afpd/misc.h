@@ -5,7 +5,8 @@
 
 /* FP functions */
 /* messages.c */
-int	afp_getsrvrmesg (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                    size_t *rbuflen);
 
 #define afp_getdiracl	NULL
 #define afp_setdiracl	NULL

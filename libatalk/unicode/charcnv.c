@@ -66,8 +66,8 @@
 #define CHECK_FLAGS(a,b) (((a)!=NULL) ? (*(a) & (b)) : 0 )
 
 static atalk_iconv_t conv_handles[MAX_CHARSETS][MAX_CHARSETS];
-static char* charset_names[MAX_CHARSETS];
-static struct charset_functions* charsets[MAX_CHARSETS];
+static char *charset_names[MAX_CHARSETS];
+static struct charset_functions *charsets[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 
@@ -79,17 +79,25 @@ static const char *charset_name(charset_t ch)
 {
     const char *ret = NULL;
 
-    if (ch == CH_UCS2) ret = "UCS-2";
-    else if (ch == CH_UTF8) ret = "UTF8";
-    else if (ch == CH_UTF8_MAC) ret = "UTF8-MAC";
-    else ret = charset_names[ch];
+    if (ch == CH_UCS2) {
+        ret = "UCS-2";
+    } else if (ch == CH_UTF8) {
+        ret = "UTF8";
+    } else if (ch == CH_UTF8_MAC) {
+        ret = "UTF8-MAC";
+    } else {
+        ret = charset_names[ch];
+    }
+
     return ret;
 }
 
 int set_charset_name(charset_t ch, const char *name)
 {
-    if (ch >= NUM_CHARSETS)
+    if (ch >= NUM_CHARSETS) {
         return -1;
+    }
+
     charset_names[ch] = strdup(name);
     return 0;
 }
@@ -104,13 +112,13 @@ void free_charset_names(void)
     }
 }
 
-static struct charset_functions* get_charset_functions (charset_t ch)
+static struct charset_functions *get_charset_functions(charset_t ch)
 {
-    if (charsets[ch] != NULL)
+    if (charsets[ch] != NULL) {
         return charsets[ch];
+    }
 
     charsets[ch] = find_charset_functions(charset_name(ch));
-
     return charsets[ch];
 }
 
@@ -127,36 +135,42 @@ static void lazy_initialize_conv(void)
 
 charset_t add_charset(const char* name)
 {
-    static charset_t max_charset_t = NUM_CHARSETS-1;
-    charset_t cur_charset_t = max_charset_t+1;
+    static charset_t max_charset_t = NUM_CHARSETS - 1;
+    charset_t cur_charset_t = max_charset_t + 1;
     unsigned int c1;
-
     lazy_initialize_conv();
 
-    for (c1=0; c1<=max_charset_t;c1++) {
-        if ( strcasecmp(name, charset_name(c1)) == 0)
+    for (c1 = 0; c1 <= max_charset_t; c1++) {
+        if (strcasecmp(name, charset_name(c1)) == 0) {
             return c1;
+        }
     }
 
-    if ( cur_charset_t >= MAX_CHARSETS )  {
-        LOG (log_debug, logtype_default, "Adding charset %s failed, too many charsets (max. %u allowed)",
-             name, MAX_CHARSETS);
+    if (cur_charset_t >= MAX_CHARSETS)  {
+        LOG(log_debug, logtype_default,
+            "Adding charset %s failed, too many charsets (max. %u allowed)",
+            name, MAX_CHARSETS);
         return (charset_t) -1;
     }
 
     /* First try to setup the required conversions */
+    conv_handles[cur_charset_t][CH_UCS2] = atalk_iconv_open(charset_name(CH_UCS2),
+                                           name);
 
-    conv_handles[cur_charset_t][CH_UCS2] = atalk_iconv_open( charset_name(CH_UCS2), name);
-    if (conv_handles[cur_charset_t][CH_UCS2] == (atalk_iconv_t)-1) {
-        LOG(log_error, logtype_default, "Required conversion from %s to %s not supported",
+    if (conv_handles[cur_charset_t][CH_UCS2] == (atalk_iconv_t) -1) {
+        LOG(log_error, logtype_default,
+            "Required conversion from %s to %s not supported",
             name,  charset_name(CH_UCS2));
         conv_handles[cur_charset_t][CH_UCS2] = NULL;
         return (charset_t) -1;
     }
 
-    conv_handles[CH_UCS2][cur_charset_t] = atalk_iconv_open( name, charset_name(CH_UCS2));
-    if (conv_handles[CH_UCS2][cur_charset_t] == (atalk_iconv_t)-1) {
-        LOG(log_error, logtype_default, "Required conversion from %s to %s not supported",
+    conv_handles[CH_UCS2][cur_charset_t] = atalk_iconv_open(name,
+                                           charset_name(CH_UCS2));
+
+    if (conv_handles[CH_UCS2][cur_charset_t] == (atalk_iconv_t) -1) {
+        LOG(log_error, logtype_default,
+            "Required conversion from %s to %s not supported",
             charset_name(CH_UCS2), name);
         conv_handles[CH_UCS2][cur_charset_t] = NULL;
         return (charset_t) -1;
@@ -164,11 +178,10 @@ charset_t add_charset(const char* name)
 
     /* register the new charset_t name */
     charset_names[cur_charset_t] = strdup(name);
-
-    charsets[cur_charset_t] = get_charset_functions (cur_charset_t);
+    charsets[cur_charset_t] = get_charset_functions(cur_charset_t);
     max_charset_t++;
-
-    LOG(log_debug9, logtype_default, "Added charset %s with handle %u", name, cur_charset_t);
+    LOG(log_debug9, logtype_default, "Added charset %s with handle %u", name,
+        cur_charset_t);
     return cur_charset_t;
 }
 
@@ -183,26 +196,29 @@ void init_iconv(void)
 {
     int c1;
 
-    for (c1=0;c1<NUM_CHARSETS;c1++) {
+    for (c1 = 0; c1 < NUM_CHARSETS; c1++) {
         const char *name = charset_name((charset_t)c1);
+        conv_handles[c1][CH_UCS2] = atalk_iconv_open(charset_name(CH_UCS2), name);
 
-        conv_handles[c1][CH_UCS2] = atalk_iconv_open( charset_name(CH_UCS2), name);
-        if (conv_handles[c1][CH_UCS2] == (atalk_iconv_t)-1) {
-            LOG(log_error, logtype_default, "Required conversion from %s to %s not supported",
+        if (conv_handles[c1][CH_UCS2] == (atalk_iconv_t) -1) {
+            LOG(log_error, logtype_default,
+                "Required conversion from %s to %s not supported",
                 name,  charset_name(CH_UCS2));
             conv_handles[c1][CH_UCS2] = NULL;
         }
 
         if (c1 != CH_UCS2) { /* avoid lost memory, make valgrind happy */
-            conv_handles[CH_UCS2][c1] = atalk_iconv_open( name, charset_name(CH_UCS2));
-            if (conv_handles[CH_UCS2][c1] == (atalk_iconv_t)-1) {
-                LOG(log_error, logtype_default, "Required conversion from %s to %s not supported",
+            conv_handles[CH_UCS2][c1] = atalk_iconv_open(name, charset_name(CH_UCS2));
+
+            if (conv_handles[CH_UCS2][c1] == (atalk_iconv_t) -1) {
+                LOG(log_error, logtype_default,
+                    "Required conversion from %s to %s not supported",
                     charset_name(CH_UCS2), name);
                 conv_handles[CH_UCS2][c1] = NULL;
             }
         }
 
-        charsets[c1] = get_charset_functions (c1);
+        charsets[c1] = get_charset_functions(c1);
     }
 }
 
@@ -214,12 +230,10 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
     /* Terminate the string */
     if (to == CH_UCS2 && bytesleft >= 2) {
         buf[len]   = 0;
-        buf[len+1] = 0;
-
-    }
-    else if ( to != CH_UCS2 && bytesleft > 0 )
+        buf[len + 1] = 0;
+    } else if (to != CH_UCS2 && bytesleft > 0) {
         buf[len]   = 0;
-    else {
+    } else {
         errno = E2BIG;
         return (size_t) -1;
     }
@@ -243,13 +257,13 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 {
     size_t i_len, o_len;
     size_t retval;
-    const char* inbuf = (const char*)src;
-    char* outbuf = (char*)dest;
-    char* o_save = outbuf;
+    const char *inbuf = (const char*)src;
+    char *outbuf = (char*)dest;
+    char *o_save = outbuf;
     atalk_iconv_t descriptor;
 
     /* Fixed based on Samba 3.0.6 */
-    if (srclen == (size_t)-1) {
+    if (srclen == (size_t) -1) {
         if (from == CH_UCS2) {
             srclen = (strlen_w((const ucs2_t *)src)) * 2;
         } else {
@@ -257,37 +271,40 @@ static size_t convert_string_internal(charset_t from, charset_t to,
         }
     }
 
-
     lazy_initialize_conv();
-
     descriptor = conv_handles[from][to];
 
-    if (descriptor == (atalk_iconv_t)-1 || descriptor == (atalk_iconv_t)0) {
+    if (descriptor == (atalk_iconv_t) -1 || descriptor == (atalk_iconv_t) 0) {
         return (size_t) -1;
     }
 
-    i_len=srclen;
-    o_len=destlen;
+    i_len = srclen;
+    o_len = destlen;
     retval = atalk_iconv(descriptor,  &inbuf, &i_len, &outbuf, &o_len);
-    if(retval==(size_t)-1) {
-        const char *reason="unknown error";
-        switch(errno) {
+
+    if (retval == (size_t) -1) {
+        const char *reason = "unknown error";
+
+        switch (errno) {
         case EINVAL:
-            reason="Incomplete multibyte sequence";
+            reason = "Incomplete multibyte sequence";
             break;
+
         case E2BIG:
-            reason="No more room";
+            reason = "No more room";
             break;
+
         case EILSEQ:
-            reason="Illegal multibyte sequence";
+            reason = "Illegal multibyte sequence";
             break;
         }
-        LOG(log_debug, logtype_default,"Conversion error: %s",reason);
+
+        LOG(log_debug, logtype_default, "Conversion error: %s", reason);
         return (size_t) -1;
     }
 
     /* Terminate the string */
-    return add_null( to, o_save, o_len, destlen -o_len);
+    return add_null(to, o_save, o_len, destlen - o_len);
 }
 
 
@@ -301,30 +318,35 @@ size_t convert_string(charset_t from, charset_t to,
     ucs2_t buffer2[MAXPATHLEN];
 
     /* convert from_set to UCS2 */
-    if ((size_t)-1 == ( o_len = convert_string_internal( from, CH_UCS2, src, srclen,
-                                                           (char*) buffer, sizeof(buffer))) ) {
-        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )", charset_name(from));
+    if ((size_t) -1 == (o_len = convert_string_internal(from, CH_UCS2, src, srclen,
+                                (char *) buffer, sizeof(buffer)))) {
+        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )",
+            charset_name(from));
         return (size_t) -1;
     }
 
     /* Do pre/decomposition */
     i_len = sizeof(buffer2);
     u = buffer2;
-    if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED) ) {
-        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
+
+    if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED)) {
+        if ((size_t) -1 == (i_len = decompose_w(buffer, o_len, u, &i_len))) {
             return (size_t) -1;
-    }
-    else if (!charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED)) {
-        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
+        }
+    } else if (!charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED)) {
+        if ((size_t) -1 == (i_len = precompose_w(buffer, o_len, u, &i_len))) {
             return (size_t) -1;
-    }
-    else {
+        }
+    } else {
         u = buffer;
         i_len = o_len;
     }
+
     /* Convert UCS2 to to_set */
-    if ((size_t)(-1) == ( o_len = convert_string_internal( CH_UCS2, to, (char*) u, i_len, dest, destlen)) ) {
-        LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s", charset_name(to), strerror(errno));
+    if ((size_t)(-1) == (o_len = convert_string_internal(CH_UCS2, to, (char *) u,
+                                 i_len, dest, destlen))) {
+        LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s",
+            charset_name(to), strerror(errno));
         return (size_t) -1;
     }
 
@@ -344,26 +366,26 @@ size_t convert_string(charset_t from, charset_t to,
  **/
 
 static size_t convert_string_allocate_internal(charset_t from, charset_t to,
-                                               void const *src, size_t srclen, char **dest)
+        void const *src, size_t srclen, char **dest)
 {
     size_t i_len, o_len, destlen;
     size_t retval;
     const char *inbuf = (const char *)src;
     char *outbuf = NULL, *ob = NULL;
     atalk_iconv_t descriptor;
-
     *dest = NULL;
 
-    if (src == NULL || srclen == (size_t)-1)
+    if (src == NULL || srclen == (size_t) -1) {
         return (size_t) -1;
+    }
 
     lazy_initialize_conv();
-
     descriptor = conv_handles[from][to];
 
-    if (descriptor == (atalk_iconv_t)-1 || descriptor == (atalk_iconv_t)0) {
+    if (descriptor == (atalk_iconv_t) -1 || descriptor == (atalk_iconv_t) 0) {
         /* conversion not supported, return -1*/
-        LOG(log_debug, logtype_default, "convert_string_allocate: conversion not supported!");
+        LOG(log_debug, logtype_default,
+            "convert_string_allocate: conversion not supported!");
         return -1;
     }
 
@@ -371,50 +393,54 @@ static size_t convert_string_allocate_internal(charset_t from, charset_t to,
 convert:
     destlen = destlen * 2;
     outbuf = (char *)realloc(ob, destlen);
+
     if (!outbuf) {
-        LOG(log_debug, logtype_default,"convert_string_allocate: realloc failed!");
+        LOG(log_debug, logtype_default, "convert_string_allocate: realloc failed!");
         SAFE_FREE(ob);
         return (size_t) -1;
     } else {
         ob = outbuf;
     }
+
     inbuf = src;   /* this restarts the whole conversion if buffer needed to be increased */
     i_len = srclen;
     o_len = destlen;
     retval = atalk_iconv(descriptor,
                          &inbuf, &i_len,
                          &outbuf, &o_len);
-    if(retval == (size_t)-1)        {
-        const char *reason="unknown error";
-        switch(errno) {
+
+    if (retval == (size_t) -1)        {
+        const char *reason = "unknown error";
+
+        switch (errno) {
         case EINVAL:
-            reason="Incomplete multibyte sequence";
+            reason = "Incomplete multibyte sequence";
             break;
+
         case E2BIG:
             goto convert;
+
         case EILSEQ:
-            reason="Illegal multibyte sequence";
+            reason = "Illegal multibyte sequence";
             break;
         }
-        LOG(log_debug, logtype_default,"Conversion error: %s(%s)",reason,inbuf);
+
+        LOG(log_debug, logtype_default, "Conversion error: %s(%s)", reason, inbuf);
         SAFE_FREE(ob);
         return (size_t) -1;
     }
-
 
     destlen = destlen - o_len;
 
     /* Terminate the string */
     if (to == CH_UCS2 && o_len >= 2) {
         ob[destlen] = 0;
-        ob[destlen+1] = 0;
-        *dest = (char *)realloc(ob,destlen+2);
-    }
-    else if ( to != CH_UCS2 && o_len > 0 ) {
+        ob[destlen + 1] = 0;
+        *dest = (char *)realloc(ob, destlen + 2);
+    } else if (to != CH_UCS2 && o_len > 0) {
         ob[destlen] = 0;
-        *dest = (char *)realloc(ob,destlen+1);
-    }
-    else {
+        *dest = (char *)realloc(ob, destlen + 1);
+    } else {
         goto convert; /* realloc */
     }
 
@@ -430,57 +456,62 @@ convert:
 
 size_t convert_string_allocate(charset_t from, charset_t to,
                                void const *src, size_t srclen,
-                               char ** dest)
+                               char **dest)
 {
     size_t i_len, o_len;
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN];
     ucs2_t buffer2[MAXPATHLEN];
-
     *dest = NULL;
 
     /* convert from_set to UCS2 */
-    if ((size_t)(-1) == ( o_len = convert_string_internal( from, CH_UCS2, src, srclen,
-                                                           buffer, sizeof(buffer))) ) {
-        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )", charset_name(from));
+    if ((size_t)(-1) == (o_len = convert_string_internal(from, CH_UCS2, src, srclen,
+                                 buffer, sizeof(buffer)))) {
+        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 )",
+            charset_name(from));
         return (size_t) -1;
     }
 
     /* Do pre/decomposition */
     i_len = sizeof(buffer2);
     u = buffer2;
-    if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED) ) {
-        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
+
+    if (charsets[to] && (charsets[to]->flags & CHARSET_DECOMPOSED)) {
+        if ((size_t) -1 == (i_len = decompose_w(buffer, o_len, u, &i_len))) {
             return (size_t) -1;
-    }
-    else if ( !charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED) ) {
-        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
+        }
+    } else if (!charsets[from] || (charsets[from]->flags & CHARSET_DECOMPOSED)) {
+        if ((size_t) -1 == (i_len = precompose_w(buffer, o_len, u, &i_len))) {
             return (size_t) -1;
-    }
-    else {
+        }
+    } else {
         u = buffer;
         i_len = o_len;
     }
 
     /* Convert UCS2 to to_set */
-    if ((size_t)-1 == ( o_len = convert_string_allocate_internal( CH_UCS2, to, (char*)u, i_len, dest)) )
-        LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s", charset_name(to), strerror(errno));
+    if ((size_t) -1 == (o_len = convert_string_allocate_internal(CH_UCS2, to,
+                                (char *)u, i_len, dest))) {
+        LOG(log_error, logtype_default, "Conversion failed (CH_UCS2 to %s):%s",
+            charset_name(to), strerror(errno));
+    }
 
     return o_len;
-
 }
 
-size_t charset_strupper(charset_t ch, const char *src, size_t srclen, char *dest, size_t destlen)
+size_t charset_strupper(charset_t ch, const char *src, size_t srclen,
+                        char *dest, size_t destlen)
 {
     size_t size;
     char *buffer;
-
     size = convert_string_allocate_internal(ch, CH_UCS2, src, srclen,
                                             (char**) &buffer);
-    if (size == (size_t)-1) {
+
+    if (size == (size_t) -1) {
         SAFE_FREE(buffer);
         return size;
     }
+
     if (!strupper_w((ucs2_t *)buffer) && (dest == src)) {
         free(buffer);
         return srclen;
@@ -491,17 +522,19 @@ size_t charset_strupper(charset_t ch, const char *src, size_t srclen, char *dest
     return size;
 }
 
-size_t charset_strlower(charset_t ch, const char *src, size_t srclen, char *dest, size_t destlen)
+size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
+                        char *dest, size_t destlen)
 {
     size_t size;
     char *buffer;
-
     size = convert_string_allocate_internal(ch, CH_UCS2, src, srclen,
                                             (char **) &buffer);
-    if (size == (size_t)-1) {
+
+    if (size == (size_t) -1) {
         SAFE_FREE(buffer);
         return size;
     }
+
     if (!strlower_w((ucs2_t *)buffer) && (dest == src)) {
         free(buffer);
         return srclen;
@@ -515,22 +548,22 @@ size_t charset_strlower(charset_t ch, const char *src, size_t srclen, char *dest
 
 size_t unix_strupper(const char *src, size_t srclen, char *dest, size_t destlen)
 {
-    return charset_strupper( CH_UNIX, src, srclen, dest, destlen);
+    return charset_strupper(CH_UNIX, src, srclen, dest, destlen);
 }
 
 size_t unix_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
 {
-    return charset_strlower( CH_UNIX, src, srclen, dest, destlen);
+    return charset_strlower(CH_UNIX, src, srclen, dest, destlen);
 }
 
 size_t utf8_strupper(const char *src, size_t srclen, char *dest, size_t destlen)
 {
-    return charset_strupper( CH_UTF8, src, srclen, dest, destlen);
+    return charset_strupper(CH_UTF8, src, srclen, dest, destlen);
 }
 
 size_t utf8_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
 {
-    return charset_strlower( CH_UTF8, src, srclen, dest, destlen);
+    return charset_strlower(CH_UTF8, src, srclen, dest, destlen);
 }
 
 /**
@@ -545,7 +578,6 @@ size_t utf8_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
 size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src)
 {
     size_t src_len = strlen(src);
-
     *dest = NULL;
     return convert_string_allocate(ch, CH_UCS2, src, src_len, (char**) dest);
 }
@@ -561,7 +593,6 @@ size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src)
 size_t charset_to_utf8_allocate(charset_t ch, char **dest, const char *src)
 {
     size_t src_len = strlen(src);
-
     *dest = NULL;
     return convert_string_allocate(ch, CH_UTF8, src, src_len, dest);
 }
@@ -574,7 +605,8 @@ size_t charset_to_utf8_allocate(charset_t ch, char **dest, const char *src)
  * @returns The number of bytes occupied by the string in the destination
  **/
 
-size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest, size_t destlen)
+size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
+                       size_t destlen)
 {
     size_t src_len = (strlen_w(src)) * sizeof(ucs2_t);
     return convert_string(CH_UCS2, ch, src, src_len, dest, destlen);
@@ -603,25 +635,29 @@ size_t utf8_to_charset_allocate(charset_t ch, char **dest, const char *src)
     return convert_string_allocate(CH_UTF8, ch, src, src_len, dest);
 }
 
-size_t charset_precompose ( charset_t ch, char * src, size_t inlen, char * dst, size_t outlen)
+size_t charset_precompose(charset_t ch, char * src, size_t inlen, char * dst,
+                          size_t outlen)
 {
     char *buffer;
     ucs2_t u[MAXPATHLEN];
     size_t len;
     size_t ilen;
 
-    if ((size_t)(-1) == (len = convert_string_allocate_internal(ch, CH_UCS2, src, inlen, &buffer)) )
+    if ((size_t)(-1) == (len = convert_string_allocate_internal(ch, CH_UCS2, src,
+                               inlen, &buffer))) {
         return len;
+    }
 
-    ilen=sizeof(u);
+    ilen = sizeof(u);
 
-    if ( (size_t)-1 == (ilen = precompose_w((ucs2_t *)buffer, len, u, &ilen)) ) {
-        free (buffer);
+    if ((size_t) -1 == (ilen = precompose_w((ucs2_t *)buffer, len, u, &ilen))) {
+        free(buffer);
         return (size_t) -1;
     }
 
-    if ((size_t)(-1) == (len = convert_string_internal( CH_UCS2, ch, (char*)u, ilen, dst, outlen)) ) {
-        free (buffer);
+    if ((size_t)(-1) == (len = convert_string_internal(CH_UCS2, ch, (char *)u, ilen,
+                               dst, outlen))) {
+        free(buffer);
         return (size_t) -1;
     }
 
@@ -629,25 +665,29 @@ size_t charset_precompose ( charset_t ch, char * src, size_t inlen, char * dst, 
     return len;
 }
 
-size_t charset_decompose ( charset_t ch, char * src, size_t inlen, char * dst, size_t outlen)
+size_t charset_decompose(charset_t ch, char * src, size_t inlen, char * dst,
+                         size_t outlen)
 {
     char *buffer;
     ucs2_t u[MAXPATHLEN];
     size_t len;
     size_t ilen;
 
-    if ((size_t)(-1) == (len = convert_string_allocate_internal(ch, CH_UCS2, src, inlen, &buffer)) )
+    if ((size_t)(-1) == (len = convert_string_allocate_internal(ch, CH_UCS2, src,
+                               inlen, &buffer))) {
         return len;
+    }
 
-    ilen=sizeof(u);
+    ilen = sizeof(u);
 
-    if ( (size_t)-1 == (ilen = decompose_w((ucs2_t *)buffer, len, u, &ilen)) ) {
-        free (buffer);
+    if ((size_t) -1 == (ilen = decompose_w((ucs2_t *)buffer, len, u, &ilen))) {
+        free(buffer);
         return (size_t) -1;
     }
 
-    if ((size_t)(-1) == (len = convert_string_internal( CH_UCS2, ch, (char*)u, ilen, dst, outlen)) ) {
-        free (buffer);
+    if ((size_t)(-1) == (len = convert_string_internal(CH_UCS2, ch, (char *)u, ilen,
+                               dst, outlen))) {
+        free(buffer);
         return (size_t) -1;
     }
 
@@ -655,34 +695,33 @@ size_t charset_decompose ( charset_t ch, char * src, size_t inlen, char * dst, s
     return len;
 }
 
-size_t utf8_precompose ( char * src, size_t inlen, char * dst, size_t outlen)
+size_t utf8_precompose(char * src, size_t inlen, char * dst, size_t outlen)
 {
-    return charset_precompose ( CH_UTF8, src, inlen, dst, outlen);
+    return charset_precompose(CH_UTF8, src, inlen, dst, outlen);
 }
 
-size_t utf8_decompose ( char * src, size_t inlen, char * dst, size_t outlen)
+size_t utf8_decompose(char * src, size_t inlen, char * dst, size_t outlen)
 {
-    return charset_decompose ( CH_UTF8, src, inlen, dst, outlen);
+    return charset_decompose(CH_UTF8, src, inlen, dst, outlen);
 }
 
 #if 0
-static char  debugbuf[ MAXPATHLEN +1 ];
-char * debug_out ( char * seq, size_t len)
+static char  debugbuf[MAXPATHLEN + 1];
+char *debug_out(char * seq, size_t len)
 {
     size_t i = 0;
     unsigned char *p;
     char *q;
-
     p = (unsigned char*) seq;
     q = debugbuf;
 
-    for ( i = 0; i<=(len-1); i++)
-    {
+    for (i = 0; i <= (len - 1); i++) {
         sprintf(q, "%2.2x.", *p);
         q += 3;
         p++;
     }
-    *q=0;
+
+    *q = 0;
     q = debugbuf;
     return q;
 }
@@ -700,36 +739,40 @@ char * debug_out ( char * seq, size_t len)
  *      for e.g. HFS cdroms.
  */
 
-static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_t cap_set, const char *src, size_t srclen, char* dest, size_t destlen, uint16_t *flags)
+static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
+                                 charset_t cap_set, const char *src, size_t srclen, char *dest, size_t destlen,
+                                 uint16_t *flags)
 {
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len;
     size_t j = 0;
-    const char* inbuf = (const char*)src;
-    char* outbuf = dest;
+    const char *inbuf = (const char*)src;
+    char *outbuf = dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
     char escch = 0;
 
-    if (srclen == (size_t)-1)
+    if (srclen == (size_t) -1) {
         srclen = strlen(src) + 1;
+    }
 
     descriptor = conv_handles[from_set][CH_UCS2];
     descriptor_cap = conv_handles[cap_set][CH_UCS2];
 
-    if (descriptor == (atalk_iconv_t)-1 || descriptor == (atalk_iconv_t)0) {
+    if (descriptor == (atalk_iconv_t) -1 || descriptor == (atalk_iconv_t) 0) {
         errno = EINVAL;
         return (size_t) -1;
     }
 
-    i_len=srclen;
-    o_len=destlen;
+    i_len = srclen;
+    o_len = destlen;
 
     if ((option & CONV_ESCAPEDOTS) && i_len >= 2 && inbuf[0] == '.') {
         if (o_len < 6) {
             errno = E2BIG;
             goto end;
         }
+
         ucs2_t ucs2 = ':';
         memcpy(outbuf, &ucs2, sizeof(ucs2_t));
         ucs2 = '2';
@@ -749,22 +792,26 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
                 escch = inbuf[j];
                 break;
             }
+
         j = i_len - j;
         i_len -= j;
 
         if (i_len > 0 &&
-            atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t)-1) {
+                atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t) -1) {
             if (errno == EILSEQ || errno == EINVAL) {
                 errno = EILSEQ;
+
                 if (option & CONV_IGNORE) {
                     *flags |= CONV_REQMANGLE;
                     return destlen - o_len;
                 }
+
                 if (option & CONV__EILSEQ) {
                     if (o_len < 2) {
                         errno = E2BIG;
                         goto end;
                     }
+
                     *((ucs2_t *)outbuf) = (ucs2_t) IGNORE_CHAR; /**inbuf */
                     inbuf++;
                     i_len--;
@@ -774,6 +821,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
                     continue;
                 }
             }
+
             goto end;
         }
 
@@ -788,29 +836,36 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
                     size_t hlen = 0;
 
                     while (i_len >= 3 && inbuf[0] == ':' &&
-                           isxdigit(inbuf[1]) && isxdigit(inbuf[2])) {
+                            isxdigit(inbuf[1]) && isxdigit(inbuf[2])) {
                         h[hlen++] = (hextoint(inbuf[1]) << 4) | hextoint(inbuf[2]);
                         inbuf += 3;
                         i_len -= 3;
                     }
+
                     if (hlen) {
                         const char *h_buf = h;
-                        if (atalk_iconv(descriptor_cap, &h_buf, &hlen, &outbuf, &o_len) == (size_t)-1) {
+
+                        if (atalk_iconv(descriptor_cap, &h_buf, &hlen, &outbuf,
+                                        &o_len) == (size_t) -1) {
                             i_len += hlen * 3;
                             inbuf -= hlen * 3;
+
                             if (errno == EILSEQ && (option & CONV_IGNORE)) {
                                 *flags |= CONV_REQMANGLE;
                                 return destlen - o_len;
                             }
+
                             goto end;
                         }
                     } else {
                         /* We have an invalid :xx sequence */
                         errno = EILSEQ;
+
                         if (option & CONV_IGNORE) {
                             *flags |= CONV_REQMANGLE;
                             return destlen - o_len;
                         }
+
                         goto end;
                     }
                 } else if (option & CONV_ESCAPEHEX) {
@@ -818,6 +873,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
                         errno = E2BIG;
                         goto end;
                     }
+
                     ucs2_t ucs2 = ':';
                     memcpy(outbuf, &ucs2, sizeof(ucs2_t));
                     ucs2 = '3';
@@ -852,6 +908,7 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
                         errno = E2BIG;
                         goto end;
                     }
+
                     ucs2_t ucs2 = ':';
                     memcpy(outbuf, &ucs2, sizeof(ucs2_t));
                     ucs2 = '2';
@@ -883,8 +940,10 @@ static size_t pull_charset_flags (charset_t from_set, charset_t to_set, charset_
             }
         }
     }
+
 end:
-    return (i_len + j == 0 || (option & CONV_FORCE)) ? destlen - o_len : (size_t)-1;
+    return (i_len + j == 0
+            || (option & CONV_FORCE)) ? destlen - o_len : (size_t) -1;
 }
 
 /*
@@ -903,47 +962,52 @@ end:
  */
 
 
-static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src, size_t srclen, char* dest, size_t destlen, uint16_t *flags)
+static size_t push_charset_flags(charset_t to_set, charset_t cap_set, char* src,
+                                 size_t srclen, char *dest, size_t destlen, uint16_t *flags)
 {
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len, i;
     size_t j = 0;
-    const char* inbuf = (const char*)src;
-    char* outbuf = (char*)dest;
+    const char *inbuf = (const char*)src;
+    char *outbuf = (char*)dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
-
     descriptor = conv_handles[CH_UCS2][to_set];
     descriptor_cap = conv_handles[CH_UCS2][cap_set];
 
-    if (descriptor == (atalk_iconv_t)-1 || descriptor == (atalk_iconv_t)0) {
+    if (descriptor == (atalk_iconv_t) -1 || descriptor == (atalk_iconv_t) 0) {
         errno = EINVAL;
         return (size_t) -1;
     }
 
-    i_len=srclen;
-    o_len=destlen;
+    i_len = srclen;
+    o_len = destlen;
 
     while (i_len >= 2) {
         while (i_len > 0 &&
-               atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t)-1) {
+                atalk_iconv(descriptor, &inbuf, &i_len, &outbuf, &o_len) == (size_t) -1) {
             if (errno == EILSEQ) {
                 if (option & CONV_IGNORE) {
                     *flags |= CONV_REQMANGLE;
                     return destlen - o_len;
                 }
+
                 if (option & CONV_ESCAPEHEX) {
                     const size_t bufsiz = o_len / 3 + 1;
                     char *buf = malloc(bufsiz);
                     size_t buflen;
 
-                    if (!buf)
+                    if (!buf) {
                         goto end;
+                    }
+
                     i = i_len;
+
                     for (buflen = 1; buflen <= bufsiz; ++buflen) {
                         char *b = buf;
                         size_t o = buflen;
-                        if (atalk_iconv(descriptor_cap, &inbuf, &i, &b, &o) != (size_t)-1) {
+
+                        if (atalk_iconv(descriptor_cap, &inbuf, &i, &b, &o) != (size_t) -1) {
                             buflen -= o;
                             break;
                         } else if (errno != E2BIG) {
@@ -954,92 +1018,110 @@ static size_t push_charset_flags (charset_t to_set, charset_t cap_set, char* src
                             break;
                         }
                     }
+
                     if (o_len < buflen * 3) {
                         SAFE_FREE(buf);
                         errno = E2BIG;
                         goto end;
                     }
+
                     o_len -= buflen * 3;
                     i_len = i;
+
                     for (i = 0; i < buflen; ++i) {
                         *outbuf++ = ':';
                         *outbuf++ = hexdig[(buf[i] >> 4) & 0x0f];
                         *outbuf++ = hexdig[buf[i] & 0x0f];
                     }
+
                     SAFE_FREE(buf);
                     *flags |= CONV_REQESCAPE;
                     continue;
                 }
             }
+
             goto end;
         }
     } /* while (i_len >= 2) */
 
-    if (i_len > 0) errno = EINVAL;
+    if (i_len > 0) {
+        errno = EINVAL;
+    }
+
 end:
-    return (i_len + j == 0 || (option & CONV_FORCE)) ? destlen - o_len : (size_t)-1;
+    return (i_len + j == 0
+            || (option & CONV_FORCE)) ? destlen - o_len : (size_t) -1;
 }
 
 /*
  * FIXME the size is a mess we really need a malloc/free logic
  *`dest size must be dest_len +2
  */
-size_t convert_charset ( charset_t from_set, charset_t to_set, charset_t cap_charset, const char *src, size_t src_len, char *dest, size_t dest_len, uint16_t *flags)
+size_t convert_charset(charset_t from_set, charset_t to_set,
+                       charset_t cap_charset, const char *src, size_t src_len, char *dest,
+                       size_t dest_len, uint16_t *flags)
 {
     size_t i_len, o_len;
     ucs2_t *u;
-    ucs2_t buffer[MAXPATHLEN +2];
-    ucs2_t buffer2[MAXPATHLEN +2];
-
+    ucs2_t buffer[MAXPATHLEN + 2];
+    ucs2_t buffer2[MAXPATHLEN + 2];
     lazy_initialize_conv();
-
     /* convert from_set to UCS2 */
     errno = 0;
-    if ((size_t)(-1) == ( o_len = pull_charset_flags( from_set, to_set, cap_charset, src, src_len,
-                                                      (char *) buffer, sizeof(buffer) -2, flags)) ) {
-        LOG(log_error, logtype_default, "Conversion failed ( %s to CH_UCS2 ), errno %i, %s", charset_name(from_set), errno, src);
+
+    if ((size_t)(-1) == (o_len = pull_charset_flags(from_set, to_set, cap_charset,
+                                 src, src_len,
+                                 (char *) buffer, sizeof(buffer) -2, flags))) {
+        LOG(log_error, logtype_default,
+            "Conversion failed ( %s to CH_UCS2 ), errno %i, %s", charset_name(from_set),
+            errno, src);
         return (size_t) -1;
     }
 
-    if ( o_len == 0)
+    if (o_len == 0) {
         return o_len;
+    }
 
     /* Do pre/decomposition */
     i_len = sizeof(buffer2) -2;
     u = buffer2;
-    if (CHECK_FLAGS(flags, CONV_DECOMPOSE) || (charsets[to_set] && (charsets[to_set]->flags & CHARSET_DECOMPOSED)) ) {
-        if ( (size_t)-1 == (i_len = decompose_w(buffer, o_len, u, &i_len)) )
+
+    if (CHECK_FLAGS(flags, CONV_DECOMPOSE) || (charsets[to_set]
+            && (charsets[to_set]->flags & CHARSET_DECOMPOSED))) {
+        if ((size_t) -1 == (i_len = decompose_w(buffer, o_len, u, &i_len))) {
             return (size_t) -1;
-    }
-    else if (CHECK_FLAGS(flags, CONV_PRECOMPOSE) || !charsets[from_set] || (charsets[from_set]->flags & CHARSET_DECOMPOSED)) {
-        if ( (size_t)-1 == (i_len = precompose_w(buffer, o_len, u, &i_len)) )
+        }
+    } else if (CHECK_FLAGS(flags, CONV_PRECOMPOSE) || !charsets[from_set]
+               || (charsets[from_set]->flags & CHARSET_DECOMPOSED)) {
+        if ((size_t) -1 == (i_len = precompose_w(buffer, o_len, u, &i_len))) {
             return (size_t) -1;
-    }
-    else {
+        }
+    } else {
         u = buffer;
         i_len = o_len;
     }
+
     /* null terminate */
     u[i_len] = 0;
-    u[i_len +1] = 0;
+    u[i_len + 1] = 0;
 
     /* Do case conversions */
     if (CHECK_FLAGS(flags, CONV_TOUPPER)) {
         strupper_w(u);
-    }
-    else if (CHECK_FLAGS(flags, CONV_TOLOWER)) {
+    } else if (CHECK_FLAGS(flags, CONV_TOLOWER)) {
         strlower_w(u);
     }
 
     /* Convert UCS2 to to_set */
-    if ((size_t)(-1) == ( o_len = push_charset_flags( to_set, cap_charset, (char *)u, i_len, dest, dest_len, flags )) ) {
+    if ((size_t)(-1) == (o_len = push_charset_flags(to_set, cap_charset, (char *)u,
+                                 i_len, dest, dest_len, flags))) {
         LOG(log_error, logtype_default,
             "Conversion failed (CH_UCS2 to %s):%s", charset_name(to_set), strerror(errno));
         return (size_t) -1;
     }
+
     /* null terminate */
     dest[o_len] = 0;
-    dest[o_len +1] = 0;
-
+    dest[o_len + 1] = 0;
     return o_len;
 }

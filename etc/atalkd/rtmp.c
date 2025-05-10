@@ -46,49 +46,56 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
     struct list		*lr;
     struct list		*flr;
     struct ziptab	*zt;
-
     lz = rtmp->rt_zt;
-    while ( lz ) {					/* for each zone */
-	zt = (struct ziptab *)lz->l_data;
-	lr = zt->zt_rt;
-	while ( lr ) {					/* for each route */
-	    if ( (struct rtmptab *)lr->l_data == rtmp ) {
-		if ( lr->l_prev == NULL ) {		/* head */
-		    if ( lr->l_next == NULL ) {		/* last route in zone */
-			if ( zt->zt_prev == NULL ) {
-			    ziptab = zt->zt_next;
-			} else {
-			    zt->zt_prev->zt_next = zt->zt_next;
-			}
-			if ( zt->zt_next == NULL ) {
-			    ziplast = zt->zt_prev;
-			} else {
-			    zt->zt_next->zt_prev = zt->zt_prev;
-			}
-			free( zt->zt_bcast );
-			free( zt->zt_name );
-			free( zt );
-			break;
-		    } else {
-			zt->zt_rt = lr->l_next;
-		    }
-		} else {
-		    lr->l_prev->l_next = lr->l_next;
-		}
-		if ( lr->l_next != NULL ) {
-		    lr->l_next->l_prev = lr->l_prev;
-		}
-		flr = lr;
-		lr = lr->l_next;
-		free( flr );
-	    } else {
-		lr = lr->l_next;
-	    }
-	}
-	flz = lz;
-	lz = lz->l_next;
-	free( flz );
+
+    while (lz) {					/* for each zone */
+        zt = (struct ziptab *)lz->l_data;
+        lr = zt->zt_rt;
+
+        while (lr) {					/* for each route */
+            if ((struct rtmptab *)lr->l_data == rtmp) {
+                if (lr->l_prev == NULL) {		/* head */
+                    if (lr->l_next == NULL) {		/* last route in zone */
+                        if (zt->zt_prev == NULL) {
+                            ziptab = zt->zt_next;
+                        } else {
+                            zt->zt_prev->zt_next = zt->zt_next;
+                        }
+
+                        if (zt->zt_next == NULL) {
+                            ziplast = zt->zt_prev;
+                        } else {
+                            zt->zt_next->zt_prev = zt->zt_prev;
+                        }
+
+                        free(zt->zt_bcast);
+                        free(zt->zt_name);
+                        free(zt);
+                        break;
+                    } else {
+                        zt->zt_rt = lr->l_next;
+                    }
+                } else {
+                    lr->l_prev->l_next = lr->l_next;
+                }
+
+                if (lr->l_next != NULL) {
+                    lr->l_next->l_prev = lr->l_prev;
+                }
+
+                flr = lr;
+                lr = lr->l_next;
+                free(flr);
+            } else {
+                lr = lr->l_next;
+            }
+        }
+
+        flz = lz;
+        lz = lz->l_next;
+        free(flz);
     }
+
     rtmp->rt_zt = NULL;
 }
 
@@ -96,7 +103,7 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
 /*
  * Complete configuration for phase 1 interface using RTMP information.
  */
-static int rtmp_config( struct rtmp_head *rh, struct interface *iface)
+static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
 {
     extern int		stabletimer;
     int cc;
@@ -105,51 +112,52 @@ static int rtmp_config( struct rtmp_head *rh, struct interface *iface)
      * If we're configuring a phase 2 interface, don't complete
      * configuration with RTMP.
      */
-    if ( iface->i_flags & IFACE_PHASE2 ) {
-	LOG(log_info, logtype_atalkd, "rtmp_config ignoring data" );
-	return 0;
+    if (iface->i_flags & IFACE_PHASE2) {
+        LOG(log_info, logtype_atalkd, "rtmp_config ignoring data");
+        return 0;
     }
 
     /*
      * Check our seed information, and reconfigure.
      */
-    if ( rh->rh_net != iface->i_addr.sat_addr.s_net ) {
-	if (( iface->i_flags & IFACE_SEED ) &&
-		rh->rh_net != iface->i_caddr.sat_addr.s_net) {
-	    LOG(log_error, logtype_atalkd, "rtmp_config net mismatch %u != %u",
-		    ntohs( rh->rh_net ),
-		    ntohs( iface->i_addr.sat_addr.s_net ));
-	    return 1;
-	}
-	iface->i_addr.sat_addr.s_net = rh->rh_net;
+    if (rh->rh_net != iface->i_addr.sat_addr.s_net) {
+        if ((iface->i_flags & IFACE_SEED) &&
+                rh->rh_net != iface->i_caddr.sat_addr.s_net) {
+            LOG(log_error, logtype_atalkd, "rtmp_config net mismatch %u != %u",
+                ntohs(rh->rh_net),
+                ntohs(iface->i_addr.sat_addr.s_net));
+            return 1;
+        }
 
-	/*
-	 * It is possible that we will corrupt our route database
-	 * by just forcing this change.  XXX
-	 */
-	iface->i_rt->rt_firstnet = iface->i_rt->rt_lastnet = rh->rh_net;
-
-	setaddr( iface, IFACE_PHASE1, iface->i_addr.sat_addr.s_net,
-		iface->i_addr.sat_addr.s_node, rh->rh_net, rh->rh_net );
-	stabletimer = UNSTABLE;
+        iface->i_addr.sat_addr.s_net = rh->rh_net;
+        /*
+         * It is possible that we will corrupt our route database
+         * by just forcing this change.  XXX
+         */
+        iface->i_rt->rt_firstnet = iface->i_rt->rt_lastnet = rh->rh_net;
+        setaddr(iface, IFACE_PHASE1, iface->i_addr.sat_addr.s_net,
+                iface->i_addr.sat_addr.s_node, rh->rh_net, rh->rh_net);
+        stabletimer = UNSTABLE;
     }
 
     /* add addr to loopback route */
-    if ((cc = looproute( iface, RTMP_ADD )) < 0 )
-      return -1;
-
-    if (cc) {
-	LOG(log_error, logtype_atalkd, "rtmp_config: can't route %u.%u to loopback: %s",
-		ntohs( iface->i_addr.sat_addr.s_net ),
-		iface->i_addr.sat_addr.s_node,
-		strerror(errno) );
+    if ((cc = looproute(iface, RTMP_ADD)) < 0) {
+        return -1;
     }
 
-    LOG(log_info, logtype_atalkd, "rtmp_config configured %s", iface->i_name );
+    if (cc) {
+        LOG(log_error, logtype_atalkd, "rtmp_config: can't route %u.%u to loopback: %s",
+            ntohs(iface->i_addr.sat_addr.s_net),
+            iface->i_addr.sat_addr.s_node,
+            strerror(errno));
+    }
+
+    LOG(log_info, logtype_atalkd, "rtmp_config configured %s", iface->i_name);
     iface->i_flags |= IFACE_CONFIG;
-    if ( iface == ciface ) {
-	ciface = ciface->i_next;
-	bootaddr( ciface );
+
+    if (iface == ciface) {
+        ciface = ciface->i_next;
+        bootaddr(ciface);
     }
 
     return 0;
@@ -167,51 +175,54 @@ static void rtmp_delinuse(struct rtmptab *rtmp)
         LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL rtmp pointer");
         return;
     }
+
     if (rtmp->rt_gate == NULL) {
         LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL rtmp->rt_gate pointer");
         return;
     }
+
     if (rtmp->rt_gate->g_iface == NULL) {
-        LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL rtmp->rt_gate->g_iface pointer");
+        LOG(log_error, logtype_atalkd,
+            "rtmp_delinuse: NULL rtmp->rt_gate->g_iface pointer");
         return;
     }
 
     irt = rtmp->rt_gate->g_iface->i_rt;
+
     if (irt == NULL) {
         LOG(log_error, logtype_atalkd, "rtmp_delinuse: NULL i_rt pointer");
         return;
     }
 
-    if ( irt->rt_inext == rtmp ) {			/* first */
-	if ( rtmp->rt_iprev == rtmp ) {			/* only */
-	    irt->rt_inext = NULL;
-	} else {
-	    irt->rt_inext = rtmp->rt_inext;
-	    rtmp->rt_inext->rt_iprev = rtmp->rt_iprev;
-	}
+    if (irt->rt_inext == rtmp) {			/* first */
+        if (rtmp->rt_iprev == rtmp) {			/* only */
+            irt->rt_inext = NULL;
+        } else {
+            irt->rt_inext = rtmp->rt_inext;
+            rtmp->rt_inext->rt_iprev = rtmp->rt_iprev;
+        }
     } else {
-	if ( rtmp->rt_inext == NULL ) {			/* last */
-	    rtmp->rt_iprev->rt_inext = NULL;
-	    irt->rt_inext->rt_iprev = rtmp->rt_iprev;
-	} else {
-	    rtmp->rt_iprev->rt_inext = rtmp->rt_inext;
-	    rtmp->rt_inext->rt_iprev = rtmp->rt_iprev;
-	}
+        if (rtmp->rt_inext == NULL) {			/* last */
+            rtmp->rt_iprev->rt_inext = NULL;
+            irt->rt_inext->rt_iprev = rtmp->rt_iprev;
+        } else {
+            rtmp->rt_iprev->rt_inext = rtmp->rt_inext;
+            rtmp->rt_inext->rt_iprev = rtmp->rt_iprev;
+        }
     }
+
     rtmp->rt_iprev = NULL;
     rtmp->rt_inext = NULL;
-
     /* remove zone map */
     rtmp_delzonemap(rtmp);
-
     /* remove old route */
-    gateroute( RTMP_DEL, rtmp );
+    gateroute(RTMP_DEL, rtmp);
 }
 
 /*
  * Add rtmp to the per-interface in-use table.  No verification is done...
  */
-static void rtmp_addinuse( struct rtmptab *rtmp)
+static void rtmp_addinuse(struct rtmptab *rtmp)
 {
     struct rtmptab	*irt;
 
@@ -219,32 +230,35 @@ static void rtmp_addinuse( struct rtmptab *rtmp)
         LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL rtmp pointer");
         return;
     }
+
     if (rtmp->rt_gate == NULL) {
         LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL rtmp->rt_gate pointer");
         return;
     }
+
     if (rtmp->rt_gate->g_iface == NULL) {
-        LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL rtmp->rt_gate->g_iface pointer");
+        LOG(log_error, logtype_atalkd,
+            "rtmp_addinuse: NULL rtmp->rt_gate->g_iface pointer");
         return;
     }
 
-    gateroute( RTMP_ADD, rtmp );
-
+    gateroute(RTMP_ADD, rtmp);
     irt = rtmp->rt_gate->g_iface->i_rt;
+
     if (irt == NULL) {
         LOG(log_error, logtype_atalkd, "rtmp_addinuse: NULL i_rt pointer");
         return;
     }
 
-    if ( irt->rt_inext == NULL ) {	/* empty list */
-	rtmp->rt_inext = NULL;
-	rtmp->rt_iprev = rtmp;
-	irt->rt_inext = rtmp;
+    if (irt->rt_inext == NULL) {	/* empty list */
+        rtmp->rt_inext = NULL;
+        rtmp->rt_iprev = rtmp;
+        irt->rt_inext = rtmp;
     } else {
-	rtmp->rt_inext = irt->rt_inext;
-	rtmp->rt_iprev = irt->rt_inext->rt_iprev;
-	irt->rt_inext->rt_iprev = rtmp;
-	irt->rt_inext = rtmp;
+        rtmp->rt_inext = irt->rt_inext;
+        rtmp->rt_iprev = irt->rt_inext->rt_iprev;
+        irt->rt_inext->rt_iprev = rtmp;
+        irt->rt_inext = rtmp;
     }
 }
 
@@ -256,7 +270,7 @@ static void rtmp_addinuse( struct rtmptab *rtmp)
  * at this point?  What do we do if we get several copies of a route in
  * an RTMP packet?
  */
-static int rtmp_copyzones( struct rtmptab *to,struct rtmptab *from)
+static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
 {
     struct list		*lz, *lr;
 
@@ -272,28 +286,33 @@ static int rtmp_copyzones( struct rtmptab *to,struct rtmptab *from)
 
     to->rt_zt = from->rt_zt;
     from->rt_zt = NULL;
-    if ( from->rt_flags & RTMPTAB_HASZONES ) {
-	to->rt_flags |= RTMPTAB_HASZONES;
+
+    if (from->rt_flags & RTMPTAB_HASZONES) {
+        to->rt_flags |= RTMPTAB_HASZONES;
     }
-    for ( lz = to->rt_zt; lz; lz = lz->l_next ) {
-	if (lz->l_data == NULL) {
-		LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL lz->l_data");
-		return -1;
-	}
-	for ( lr = ((struct ziptab *)lz->l_data)->zt_rt; lr; lr = lr->l_next ) {
-		if (lr->l_data == NULL) {
-			LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL lr->l_data");
-			return -1;
-		}
-	    if ( (struct rtmptab *)lr->l_data == from ) {
-		lr->l_data = (void *)to;	/* cast BS */
-		break;
-	    }
-	}
-	if ( lr == NULL ) {
-	    LOG(log_error, logtype_atalkd, "rtmp_copyzones z -> r without r -> z, abort" );
-	    return -1;
-	}
+
+    for (lz = to->rt_zt; lz; lz = lz->l_next) {
+        if (lz->l_data == NULL) {
+            LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL lz->l_data");
+            return -1;
+        }
+
+        for (lr = ((struct ziptab *)lz->l_data)->zt_rt; lr; lr = lr->l_next) {
+            if (lr->l_data == NULL) {
+                LOG(log_error, logtype_atalkd, "rtmp_copyzones: NULL lr->l_data");
+                return -1;
+            }
+
+            if ((struct rtmptab *)lr->l_data == from) {
+                lr->l_data = (void *)to;	/* cast BS */
+                break;
+            }
+        }
+
+        if (lr == NULL) {
+            LOG(log_error, logtype_atalkd, "rtmp_copyzones z -> r without r -> z, abort");
+            return -1;
+        }
     }
 
     return 0;
@@ -304,36 +323,37 @@ static int rtmp_copyzones( struct rtmptab *to,struct rtmptab *from)
  * Remove rtmp from the in-use table and the per-gate table.
  * Free any associated space.
  */
-void rtmp_free( struct rtmptab *rtmp)
+void rtmp_free(struct rtmptab *rtmp)
 {
     struct gate		*gate;
-
     LOG(log_info, logtype_atalkd, "rtmp_free: %u-%u", ntohs(rtmp->rt_firstnet),
-	   ntohs(rtmp->rt_lastnet));
-    if ( rtmp->rt_iprev ) {
-	rtmp_delinuse( rtmp );
+        ntohs(rtmp->rt_lastnet));
+
+    if (rtmp->rt_iprev) {
+        rtmp_delinuse(rtmp);
     }
 
     /* remove from per-gate */
     gate = rtmp->rt_gate;
-    if ( gate->g_rt == rtmp ) {				/* first */
-	if ( rtmp->rt_prev == rtmp ) {			/* only */
-	    gate->g_rt = NULL;
-	} else {
-	    gate->g_rt = rtmp->rt_next;
-	    rtmp->rt_next->rt_prev = rtmp->rt_prev;
-	}
+
+    if (gate->g_rt == rtmp) {				/* first */
+        if (rtmp->rt_prev == rtmp) {			/* only */
+            gate->g_rt = NULL;
+        } else {
+            gate->g_rt = rtmp->rt_next;
+            rtmp->rt_next->rt_prev = rtmp->rt_prev;
+        }
     } else {
-	if ( rtmp->rt_next == NULL ) {			/* last */
-	    rtmp->rt_prev->rt_next = NULL;
-	    gate->g_rt->rt_prev = rtmp->rt_prev;
-	} else {
-	    rtmp->rt_prev->rt_next = rtmp->rt_next;
-	    rtmp->rt_next->rt_prev = rtmp->rt_prev;
-	}
+        if (rtmp->rt_next == NULL) {			/* last */
+            rtmp->rt_prev->rt_next = NULL;
+            gate->g_rt->rt_prev = rtmp->rt_prev;
+        } else {
+            rtmp->rt_prev->rt_next = rtmp->rt_next;
+            rtmp->rt_next->rt_prev = rtmp->rt_prev;
+        }
     }
 
-    free( rtmp );
+    free(rtmp);
 }
 
 
@@ -353,51 +373,60 @@ int rtmp_replace(struct rtmptab *replace)
     }
 
     LOG(log_info, logtype_atalkd, "rtmp_replace %u-%u", ntohs(replace->rt_firstnet),
-	   ntohs(replace->rt_lastnet));
-    for ( iface = interfaces; iface; iface = iface->i_next ) {
+        ntohs(replace->rt_lastnet));
+
+    for (iface = interfaces; iface; iface = iface->i_next) {
         if ((replace->rt_iface != iface) &&
-				((iface->i_flags & IFACE_ISROUTER) == 0)) {
-			continue;
-		}
+                ((iface->i_flags & IFACE_ISROUTER) == 0)) {
+            continue;
+        }
 
-	if (iface->i_gate == NULL) {
-		continue;
-	}
+        if (iface->i_gate == NULL) {
+            continue;
+        }
 
-	for ( gate = iface->i_gate; gate; gate = gate->g_next ) {
-		if (gate->g_rt == NULL) {
-			continue;
-		}
-	    for ( rtmp = gate->g_rt; rtmp; rtmp = rtmp->rt_next ) {
-		if ( rtmp->rt_firstnet == replace->rt_firstnet &&
-			rtmp->rt_lastnet == replace->rt_lastnet ) {
-		    if ( found == NULL || rtmp->rt_hops < found->rt_hops ) {
-			found = rtmp;
-		    }
-		    break;
-		}
-	    }
-	}
+        for (gate = iface->i_gate; gate; gate = gate->g_next) {
+            if (gate->g_rt == NULL) {
+                continue;
+            }
+
+            for (rtmp = gate->g_rt; rtmp; rtmp = rtmp->rt_next) {
+                if (rtmp->rt_firstnet == replace->rt_firstnet &&
+                        rtmp->rt_lastnet == replace->rt_lastnet) {
+                    if (found == NULL || rtmp->rt_hops < found->rt_hops) {
+                        found = rtmp;
+                    }
+
+                    break;
+                }
+            }
+        }
     }
 
-    if ( found != replace ) {
-	if (found == NULL) {
-		LOG(log_info, logtype_atalkd, "rtmp_replace: no replacement found");
-		return -1;
-	}
-	if (rtmp_copyzones( found, replace ) < 0)
-	  return -1;
-	rtmp_delinuse( replace );
-	rtmp_addinuse( found );
-	if ( replace->rt_state == RTMPTAB_BAD ) {
-	    rtmp_free( replace );
-	}
-	return 0;
+    if (found != replace) {
+        if (found == NULL) {
+            LOG(log_info, logtype_atalkd, "rtmp_replace: no replacement found");
+            return -1;
+        }
+
+        if (rtmp_copyzones(found, replace) < 0) {
+            return -1;
+        }
+
+        rtmp_delinuse(replace);
+        rtmp_addinuse(found);
+
+        if (replace->rt_state == RTMPTAB_BAD) {
+            rtmp_free(replace);
+        }
+
+        return 0;
     } else {
-	if ( replace->rt_hops == RTMPHOPS_POISON ) {
-	    gateroute( RTMP_DEL, replace );
-	}
-	return 1;
+        if (replace->rt_hops == RTMPHOPS_POISON) {
+            gateroute(RTMP_DEL, replace);
+        }
+
+        return 1;
     }
 }
 
@@ -407,65 +436,70 @@ static int rtmp_new(struct rtmptab *rtmp)
     struct interface	*i;
     struct rtmptab	*r;
     extern int		newrtmpdata;
-
     newrtmpdata = 1;
 
     /*
      * Do we already have a gateway for this route?
      */
-    for ( i = interfaces; i; i = i->i_next ) {
+    for (i = interfaces; i; i = i->i_next) {
         if ((rtmp->rt_iface != i) &&
-	    ((i->i_flags & IFACE_ISROUTER) == 0))
-	  continue;
+                ((i->i_flags & IFACE_ISROUTER) == 0)) {
+            continue;
+        }
 
-	for ( r = i->i_rt; r; r = r->rt_inext ) {
-	    /* Should check RTMPTAB_EXTENDED here. XXX */
-	    if (( ntohs( r->rt_firstnet ) <= ntohs( rtmp->rt_firstnet ) &&
-		    ntohs( r->rt_lastnet ) >= ntohs( rtmp->rt_firstnet )) ||
-		    ( ntohs( r->rt_firstnet ) <= ntohs( rtmp->rt_lastnet ) &&
-		    ntohs( r->rt_lastnet ) >= ntohs( rtmp->rt_lastnet ))) {
-		break;
-	    }
-	}
-	if ( r ) {
-	    break;
-	}
+        for (r = i->i_rt; r; r = r->rt_inext) {
+            /* Should check RTMPTAB_EXTENDED here. XXX */
+            if ((ntohs(r->rt_firstnet) <= ntohs(rtmp->rt_firstnet) &&
+                    ntohs(r->rt_lastnet) >= ntohs(rtmp->rt_firstnet)) ||
+                    (ntohs(r->rt_firstnet) <= ntohs(rtmp->rt_lastnet) &&
+                     ntohs(r->rt_lastnet) >= ntohs(rtmp->rt_lastnet))) {
+                break;
+            }
+        }
+
+        if (r) {
+            break;
+        }
     }
 
     /*
      * This part of this routine is almost never run.
      */
-    if ( i ) {	/* can we get here without r being set? */
-	if ( r->rt_firstnet != rtmp->rt_firstnet ||
-		r->rt_lastnet != rtmp->rt_lastnet ) {
-	    LOG(log_info, logtype_atalkd, "rtmp_new netrange mismatch %u-%u != %u-%u",
-		    ntohs( r->rt_firstnet ), ntohs( r->rt_lastnet ),
-		    ntohs( rtmp->rt_firstnet ), ntohs( rtmp->rt_lastnet ));
-	    return 1;
-	}
+    if (i) {
+        /* can we get here without r being set? */
+        if (r->rt_firstnet != rtmp->rt_firstnet ||
+                r->rt_lastnet != rtmp->rt_lastnet) {
+            LOG(log_info, logtype_atalkd, "rtmp_new netrange mismatch %u-%u != %u-%u",
+                ntohs(r->rt_firstnet), ntohs(r->rt_lastnet),
+                ntohs(rtmp->rt_firstnet), ntohs(rtmp->rt_lastnet));
+            return 1;
+        }
 
-	/*
-	 * Note that our whole methodology is wrong, if we want to do
-	 * route "load balancing."  This entails changing our route
-	 * each time we receive a tuple of equal value.  In fact, we can't
-	 * do this, using our method, since we only check against in-use
-	 * routes when a tuple is new from a router.
-	 */
-	if ( r->rt_hops < rtmp->rt_hops ) {
-	    return 1;
-	}
+        /*
+         * Note that our whole methodology is wrong, if we want to do
+         * route "load balancing."  This entails changing our route
+         * each time we receive a tuple of equal value.  In fact, we can't
+         * do this, using our method, since we only check against in-use
+         * routes when a tuple is new from a router.
+         */
+        if (r->rt_hops < rtmp->rt_hops) {
+            return 1;
+        }
 
-	if (rtmp_copyzones( rtmp, r ) < 0)
-	  return -1;
-	rtmp_delinuse( r );
+        if (rtmp_copyzones(rtmp, r) < 0) {
+            return -1;
+        }
+
+        rtmp_delinuse(r);
     }
 
-    rtmp_addinuse( rtmp );
+    rtmp_addinuse(rtmp);
     return 0;
 }
 
 
-int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
+int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
+                int len)
 {
     struct rtmp_head	rh;
     struct rtmp_tuple	rt;
@@ -475,14 +509,13 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
     struct interface 	*iface2;
     struct rtmptab	*rtmp;
     const char	*end;
-    char		packet[ ATP_BUFSIZ ];
+    char		packet[ATP_BUFSIZ];
     int                 cc;
-
     end = data + len;
 
-    if ( data >= end ) {
-	LOG(log_info, logtype_atalkd, "rtmp_packet no data" );
-	return 1;
+    if (data >= end) {
+        LOG(log_info, logtype_atalkd, "rtmp_packet no data");
+        return 1;
     }
 
     iface = ap->ap_iface;
@@ -493,439 +526,470 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len
        Note: now a misconfigured or plugged router can broadcast
        a wrong route
     */
-    for ( iface2 = interfaces; iface2; iface2 = iface2->i_next ) {
-        if ( iface2->i_rt && from->sat_addr.s_net >= iface2->i_rt->rt_firstnet &&
-                from->sat_addr.s_net <= iface2->i_rt->rt_lastnet)
-        {
-              iface = iface2;
+    for (iface2 = interfaces; iface2; iface2 = iface2->i_next) {
+        if (iface2->i_rt && from->sat_addr.s_net >= iface2->i_rt->rt_firstnet &&
+                from->sat_addr.s_net <= iface2->i_rt->rt_lastnet) {
+            iface = iface2;
         }
     }
+
     /* end of linux 2.6 workaround */
 
     /* ignore our own packets */
-    if ( from->sat_addr.s_net == iface->i_addr.sat_addr.s_net &&
-	    from->sat_addr.s_node == iface->i_addr.sat_addr.s_node  ) {
-	return 0;
+    if (from->sat_addr.s_net == iface->i_addr.sat_addr.s_net &&
+            from->sat_addr.s_node == iface->i_addr.sat_addr.s_node) {
+        return 0;
     }
 
-    switch( *data++ ) {
+    switch (*data++) {
     case DDPTYPE_RTMPRD :
-	/*
-	 * Response and Data.
-	 */
-	if ( data + sizeof( struct rtmprdhdr ) > end ) {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet no data header" );
-	    return 1;
-	}
-	memcpy( &rh, data, sizeof( struct rtmprdhdr ));
-	data += sizeof( struct rtmprdhdr );
 
-	/* check rh address against from address */
-	if ( rh.rh_nodelen != 8 ) {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet bad node len (%d)", rh.rh_nodelen );
-	    return 1;
-	}
-	if (( from->sat_addr.s_net != 0 &&
-	      from->sat_addr.s_net != rh.rh_net ) ||
-	      from->sat_addr.s_node != rh.rh_node ) {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet address mismatch" );
-	    return 1;
-	}
+        /*
+         * Response and Data.
+         */
+        if (data + sizeof(struct rtmprdhdr) > end) {
+            LOG(log_info, logtype_atalkd, "rtmp_packet no data header");
+            return 1;
+        }
 
-	if (( iface->i_flags & ( IFACE_ADDR|IFACE_CONFIG )) == IFACE_ADDR ) {
-	    if ( iface->i_flags & IFACE_NOROUTER ) {
-		/* remove addr to loopback route */
-  	        if ((cc = looproute( iface, RTMP_DEL )) < 0) {
-		  LOG(log_error, logtype_atalkd, "rtmp_packet: looproute");
-		  return -1;
-	        }
+        memcpy(&rh, data, sizeof(struct rtmprdhdr));
+        data += sizeof(struct rtmprdhdr);
 
-		if (cc)
-		  LOG(log_error, logtype_atalkd, "rtmp_packet: can't remove loopback: %s",
-			  strerror(errno) );
+        /* check rh address against from address */
+        if (rh.rh_nodelen != 8) {
+            LOG(log_info, logtype_atalkd, "rtmp_packet bad node len (%d)", rh.rh_nodelen);
+            return 1;
+        }
 
-		iface->i_flags &= ~IFACE_NOROUTER;
-		iface->i_time = 0;
-		LOG(log_info, logtype_atalkd, "rtmp_packet router has become available" );
-	    }
-	    if ( iface->i_flags & IFACE_PHASE1 ) {
-	      if (rtmp_config( &rh, iface ) < 0) {
-		  LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_config");
-		  return -1;
-	      }
-	    } else if (zip_getnetinfo( iface ) < 0) {
-	      LOG(log_error, logtype_atalkd, "rtmp_packet: zip_getnetinfo");
-	      return -1;
-	    }
-	    return 0;
-	}
+        if ((from->sat_addr.s_net != 0 &&
+                from->sat_addr.s_net != rh.rh_net) ||
+                from->sat_addr.s_node != rh.rh_node) {
+            LOG(log_info, logtype_atalkd, "rtmp_packet address mismatch");
+            return 1;
+        }
 
-	if (( iface->i_flags & IFACE_CONFIG ) == 0 ) {
-	    return 0;
-	}
+        if ((iface->i_flags & (IFACE_ADDR | IFACE_CONFIG)) == IFACE_ADDR) {
+            if (iface->i_flags & IFACE_NOROUTER) {
+                /* remove addr to loopback route */
+                if ((cc = looproute(iface, RTMP_DEL)) < 0) {
+                    LOG(log_error, logtype_atalkd, "rtmp_packet: looproute");
+                    return -1;
+                }
 
-	/*
-	 * Parse first tuple.  For phase 2, verify that net is correct.
-	 */
-	if ( data + SZ_RTMPTUPLE > end ) {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet missing first tuple" );
-	    return 1;
-	}
-	memcpy( &rt, data, SZ_RTMPTUPLE );
-	data += SZ_RTMPTUPLE;
+                if (cc)
+                    LOG(log_error, logtype_atalkd, "rtmp_packet: can't remove loopback: %s",
+                        strerror(errno));
 
-	if ( rt.rt_net == 0 ) {
-	    if ( rt.rt_dist != 0x82 ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet bad phase 1 version" );
-		return 1;
-	    }
+                iface->i_flags &= ~IFACE_NOROUTER;
+                iface->i_time = 0;
+                LOG(log_info, logtype_atalkd, "rtmp_packet router has become available");
+            }
 
-	    /*
-	     * Grab the next tuple, since we don't want to pass the version
-	     * number to the parsing code.  We're assuming that there are
-	     * no extended tuples in this packet.
-	     */
-	    if ( data + SZ_RTMPTUPLE > end ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet missing second tuple" );
-		return 1;
-	    }
-	    memcpy( &rt, data, SZ_RTMPTUPLE );
-	    data += SZ_RTMPTUPLE;
-	} else if ( rt.rt_dist & 0x80 ) {
-	    if ( data + SZ_RTMPTUPLE > end ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet missing first range-end" );
-		return 1;
-	    }
-	    memcpy( &xrt, data, SZ_RTMPTUPLE );
-	    data += SZ_RTMPTUPLE;
+            if (iface->i_flags & IFACE_PHASE1) {
+                if (rtmp_config(&rh, iface) < 0) {
+                    LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_config");
+                    return -1;
+                }
+            } else if (zip_getnetinfo(iface) < 0) {
+                LOG(log_error, logtype_atalkd, "rtmp_packet: zip_getnetinfo");
+                return -1;
+            }
 
-	    if ( xrt.rt_dist != 0x82 ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet bad phase 2 version" );
-		return 1;
-	    }
+            return 0;
+        }
 
-	    /*
-	     * Check for net range conflict.
-	     */
-	    if ( rt.rt_net != iface->i_rt->rt_firstnet ||
-		    xrt.rt_net != iface->i_rt->rt_lastnet ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet interface mismatch" );
-		return 1;
-	    }
-	} else {
+        if ((iface->i_flags & IFACE_CONFIG) == 0) {
+            return 0;
+        }
+
+        /*
+         * Parse first tuple.  For phase 2, verify that net is correct.
+         */
+        if (data + SZ_RTMPTUPLE > end) {
+            LOG(log_info, logtype_atalkd, "rtmp_packet missing first tuple");
+            return 1;
+        }
+
+        memcpy(&rt, data, SZ_RTMPTUPLE);
+        data += SZ_RTMPTUPLE;
+
+        if (rt.rt_net == 0) {
+            if (rt.rt_dist != 0x82) {
+                LOG(log_info, logtype_atalkd, "rtmp_packet bad phase 1 version");
+                return 1;
+            }
+
+            /*
+             * Grab the next tuple, since we don't want to pass the version
+             * number to the parsing code.  We're assuming that there are
+             * no extended tuples in this packet.
+             */
+            if (data + SZ_RTMPTUPLE > end) {
+                LOG(log_info, logtype_atalkd, "rtmp_packet missing second tuple");
+                return 1;
+            }
+
+            memcpy(&rt, data, SZ_RTMPTUPLE);
+            data += SZ_RTMPTUPLE;
+        } else if (rt.rt_dist & 0x80) {
+            if (data + SZ_RTMPTUPLE > end) {
+                LOG(log_info, logtype_atalkd, "rtmp_packet missing first range-end");
+                return 1;
+            }
+
+            memcpy(&xrt, data, SZ_RTMPTUPLE);
+            data += SZ_RTMPTUPLE;
+
+            if (xrt.rt_dist != 0x82) {
+                LOG(log_info, logtype_atalkd, "rtmp_packet bad phase 2 version");
+                return 1;
+            }
+
+            /*
+             * Check for net range conflict.
+             */
+            if (rt.rt_net != iface->i_rt->rt_firstnet ||
+                    xrt.rt_net != iface->i_rt->rt_lastnet) {
+                LOG(log_info, logtype_atalkd, "rtmp_packet interface mismatch");
+                return 1;
+            }
+        } else {
 #ifdef PHASE1NET
-	    /*
-	     * Gatorboxes put a net number in the first tuple, even on
-	     * phase 1 nets.  This is wrong, but since we've got it, we
-	     * might just as well check it.
-	    if ( rt.rt_net != iface->i_rt->rt_firstnet ||
-		    rt.rt_net != iface->i_rt->rt_lastnet ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet phase 1 interface mismatch" );
-		return 1;
-	    }
-	     */
+            /*
+             * Gatorboxes put a net number in the first tuple, even on
+             * phase 1 nets.  This is wrong, but since we've got it, we
+             * might just as well check it.
+            if ( rt.rt_net != iface->i_rt->rt_firstnet ||
+                rt.rt_net != iface->i_rt->rt_lastnet ) {
+            LOG(log_info, logtype_atalkd, "rtmp_packet phase 1 interface mismatch" );
+            return 1;
+            }
+             */
 #else /* PHASE1NET */
-	    LOG(log_info, logtype_atalkd, "rtmp_packet bad first tuple" );
-	    return 1;
+            LOG(log_info, logtype_atalkd, "rtmp_packet bad first tuple");
+            return 1;
 #endif /* PHASE1NET */
-	}
+        }
 
-	/*
-	 * Find gateway.
-	 */
-	for ( gate = iface->i_gate; gate; gate = gate->g_next ) {
-	    if ( gate->g_sat.sat_addr.s_net == from->sat_addr.s_net &&
-		    gate->g_sat.sat_addr.s_node == from->sat_addr.s_node ) {
-		break;
-	    }
-	}
-	if ( !gate ) {	/* new gateway */
-	    if (( gate = (struct gate *)malloc( sizeof( struct gate ))) == NULL ) {
-		LOG(log_error, logtype_atalkd, "rtmp_packet: malloc: %s", strerror(errno) );
-		return -1;
-	    }
-	    gate->g_next = iface->i_gate;
-	    gate->g_prev = NULL;
-	    gate->g_rt = NULL;
-	    gate->g_iface = iface;	/* need this? */
-	    gate->g_sat = *from;
-	    if ( iface->i_gate ) {
-		iface->i_gate->g_prev = gate;
-	    }
-	    iface->i_gate = gate;
-	    LOG(log_info, logtype_atalkd, "rtmp_packet gateway %u.%u up",
-		    ntohs( gate->g_sat.sat_addr.s_net ),
-		    gate->g_sat.sat_addr.s_node );
-	}
+        /*
+         * Find gateway.
+         */
+        for (gate = iface->i_gate; gate; gate = gate->g_next) {
+            if (gate->g_sat.sat_addr.s_net == from->sat_addr.s_net &&
+                    gate->g_sat.sat_addr.s_node == from->sat_addr.s_node) {
+                break;
+            }
+        }
 
-	/*
-	 * Reset the timeout on this gateway.  We'll remove the gateway
-	 * entry, if the timeout gets to RTMPTAB_BAD.
-	 */
-	gate->g_state = RTMPTAB_GOOD;
+        if (!gate) {	/* new gateway */
+            if ((gate = (struct gate *)malloc(sizeof(struct gate))) == NULL) {
+                LOG(log_error, logtype_atalkd, "rtmp_packet: malloc: %s", strerror(errno));
+                return -1;
+            }
 
-	/*
-	 * Parse remaining tuples.
-	 */
-	for (;;) {
-	    /*
-	     * Is route on this gateway?
-	     */
-	    for ( rtmp = gate->g_rt; rtmp; rtmp = rtmp->rt_next ) {
-		if ( ntohs( rtmp->rt_firstnet ) <= ntohs( rt.rt_net ) &&
-			ntohs( rtmp->rt_lastnet ) >= ntohs( rt.rt_net )) {
-		    break;
-		}
-		if (( rt.rt_dist & 0x80 ) &&
-			ntohs( rtmp->rt_firstnet ) <= ntohs( xrt.rt_net ) &&
-			ntohs( rtmp->rt_lastnet ) >= ntohs( xrt.rt_net )) {
-		    break;
-		}
-	    }
+            gate->g_next = iface->i_gate;
+            gate->g_prev = NULL;
+            gate->g_rt = NULL;
+            gate->g_iface = iface;	/* need this? */
+            gate->g_sat = *from;
 
-	    if ( rtmp ) {	/* found it */
-		/*
-		 * Check for range conflicts.  (This is getting a little
-		 * ugly.)
-		 */
-		if ( rtmp->rt_firstnet != rt.rt_net ) {
-		    LOG(log_info, logtype_atalkd, "rtmp_packet firstnet mismatch %u!=%u",
-			    ntohs( rtmp->rt_firstnet ), ntohs( rt.rt_net ));
-		    return 1;
-		}
-		if ( rt.rt_dist & 0x80 ) {
-		    if (( rtmp->rt_flags & RTMPTAB_EXTENDED ) == 0 ) {
-			LOG(log_info, logtype_atalkd, "rtmp_packet extended mismatch %u",
-				ntohs( rtmp->rt_firstnet ));
-			return 1;
-		    }
-		    if ( rtmp->rt_lastnet != xrt.rt_net ) {
-			LOG(log_info, logtype_atalkd, "rtmp_packet lastnet mismatch %u!=%u",
-			    ntohs( rtmp->rt_lastnet ), ntohs( xrt.rt_net ));
-			return 1;
-		    }
-		} else {
-		    if ( rtmp->rt_flags & RTMPTAB_EXTENDED ) {
-			LOG(log_info, logtype_atalkd, "rtmp_packet !extended mismatch %u",
-				ntohs( rtmp->rt_firstnet ));
-			return 1;
-		    }
-		    if ( rtmp->rt_lastnet != rt.rt_net ) {
-			LOG(log_info, logtype_atalkd, "rtmp_packet lastnet mismatch %u!=%u",
-			    ntohs( rtmp->rt_lastnet ), ntohs( rt.rt_net ));
-			return 1;
-		    }
-		}
+            if (iface->i_gate) {
+                iface->i_gate->g_prev = gate;
+            }
 
-		rtmp->rt_state = RTMPTAB_GOOD;
+            iface->i_gate = gate;
+            LOG(log_info, logtype_atalkd, "rtmp_packet gateway %u.%u up",
+                ntohs(gate->g_sat.sat_addr.s_net),
+                gate->g_sat.sat_addr.s_node);
+        }
 
-		/*
-		 * Check hop count.  If the count has changed, update
-		 * the routing database.
-		 */
-		if (( rtmp->rt_hops != ( rt.rt_dist & 0x7f ) + 1 ) &&
-			( rtmp->rt_hops != RTMPHOPS_POISON ||
-			( rt.rt_dist & 0x7f ) + 1 <= RTMPHOPS_MAX )) {
-		    if ( rtmp->rt_iprev ) {	/* route is in use */
-			if ( rtmp->rt_hops > ( rt.rt_dist & 0x7f ) + 1 ) {
-			    /*
-			     * If this was POISON, we've deleted it from
-			     * the kernel.  Add it back in.
-			     */
-			    if ( rtmp->rt_hops == RTMPHOPS_POISON ) {
-				gateroute( RTMP_ADD, rtmp );
-			    }
-			    rtmp->rt_hops = ( rt.rt_dist & 0x7f ) + 1;
-			} else {
-			    /*
-			     * Hop count has gone up for this route.
-			     * Search for a new best route.  If we can't
-			     * find one, just keep this route.  "poison"
-			     * route are deleted in as_timer().
-			     */
-			    if (( rt.rt_dist & 0x7f ) + 1 > RTMPHOPS_MAX ) {
-				rtmp->rt_hops = RTMPHOPS_POISON;
-			    } else {
-				rtmp->rt_hops = ( rt.rt_dist & 0x7f ) + 1;
-			    }
-			    if (rtmp_replace( rtmp ) < 0) {
-			      LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_replace");
-			      return -1;
-			    }
-			}
-		    } else {			/* route not in use */
-			rtmp->rt_hops = ( rt.rt_dist & 0x7f ) + 1;
-			if ( rtmp->rt_hops > ( rt.rt_dist & 0x7f ) + 1 ) {
-			  if (rtmp_new( rtmp ) < 0) {
-			      LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_new");
-			      return -1;
-			  }
-			}
-		    }
-		}
+        /*
+         * Reset the timeout on this gateway.  We'll remove the gateway
+         * entry, if the timeout gets to RTMPTAB_BAD.
+         */
+        gate->g_state = RTMPTAB_GOOD;
 
-		/*
-		 * Make the *next* node the head, since
-		 * we're not likely to be asked for the same tuple twice
-		 * in a row.
-		 */
-		if ( rtmp->rt_next != NULL ) {
-		    gate->g_rt->rt_prev->rt_next = gate->g_rt;
-		    gate->g_rt = rtmp->rt_next;
-		    rtmp->rt_next = NULL;
-		}
-	    } else if (( rt.rt_dist & 0x7f ) + 1 > RTMPHOPS_MAX ) {
-		LOG(log_info, logtype_atalkd, "rtmp_packet bad hop count from %u.%u for %u",
-			ntohs( from->sat_addr.s_net ), from->sat_addr.s_node,
-			ntohs( rt.rt_net ));
-	    } else {		/* new for router */
-		if (( rtmp = newrt(iface)) == NULL ) {
-		    LOG(log_error, logtype_atalkd, "rtmp_packet: newrt: %s", strerror(errno) );
-		    return -1;
-		}
-		rtmp->rt_firstnet = rt.rt_net;
-		if ( rt.rt_dist & 0x80 ) {
-		    rtmp->rt_lastnet = xrt.rt_net;
-		    rtmp->rt_flags = RTMPTAB_EXTENDED;
-		} else {
-		    rtmp->rt_lastnet = rt.rt_net;
-		}
-		rtmp->rt_hops = ( rt.rt_dist & 0x7f ) + 1;
-		rtmp->rt_state = RTMPTAB_GOOD;
-		rtmp->rt_gate = gate;
+        /*
+         * Parse remaining tuples.
+         */
+        for (;;) {
+            /*
+             * Is route on this gateway?
+             */
+            for (rtmp = gate->g_rt; rtmp; rtmp = rtmp->rt_next) {
+                if (ntohs(rtmp->rt_firstnet) <= ntohs(rt.rt_net) &&
+                        ntohs(rtmp->rt_lastnet) >= ntohs(rt.rt_net)) {
+                    break;
+                }
 
-		/*
-		 * Add rtmptab entry to end of list (leave head alone).
-		 */
-		if ( gate->g_rt == NULL ) {
-		    rtmp->rt_prev = rtmp;
-		    gate->g_rt = rtmp;
-		} else {
-		    rtmp->rt_prev = gate->g_rt->rt_prev;
-		    gate->g_rt->rt_prev->rt_next = rtmp;
-		    gate->g_rt->rt_prev = rtmp;
-		}
+                if ((rt.rt_dist & 0x80) &&
+                        ntohs(rtmp->rt_firstnet) <= ntohs(xrt.rt_net) &&
+                        ntohs(rtmp->rt_lastnet) >= ntohs(xrt.rt_net)) {
+                    break;
+                }
+            }
 
-		if (rtmp_new( rtmp ) < 0) {
-		    LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_new");
-		    return -1;
-		}
-	    }
+            if (rtmp) {	/* found it */
+                /*
+                 * Check for range conflicts.  (This is getting a little
+                 * ugly.)
+                 */
+                if (rtmp->rt_firstnet != rt.rt_net) {
+                    LOG(log_info, logtype_atalkd, "rtmp_packet firstnet mismatch %u!=%u",
+                        ntohs(rtmp->rt_firstnet), ntohs(rt.rt_net));
+                    return 1;
+                }
 
-	    if ( data + SZ_RTMPTUPLE > end ) {
-		break;
-	    }
-	    memcpy( &rt, data, SZ_RTMPTUPLE );
-	    data += SZ_RTMPTUPLE;
-	    if ( rt.rt_dist & 0x80 ) {
-		if ( data + SZ_RTMPTUPLE > end ) {
-		    LOG(log_info, logtype_atalkd, "rtmp_packet missing range-end" );
-		    return 1;
-		}
-		memcpy( &xrt, data, SZ_RTMPTUPLE );
-		data += SZ_RTMPTUPLE;
-	    }
-	}
+                if (rt.rt_dist & 0x80) {
+                    if ((rtmp->rt_flags & RTMPTAB_EXTENDED) == 0) {
+                        LOG(log_info, logtype_atalkd, "rtmp_packet extended mismatch %u",
+                            ntohs(rtmp->rt_firstnet));
+                        return 1;
+                    }
 
-	/*
-	 * Make sure we've processed the whole packet.
-	 */
-	if ( data != end ) {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet length and count mismatch" );
-	}
-	break;
+                    if (rtmp->rt_lastnet != xrt.rt_net) {
+                        LOG(log_info, logtype_atalkd, "rtmp_packet lastnet mismatch %u!=%u",
+                            ntohs(rtmp->rt_lastnet), ntohs(xrt.rt_net));
+                        return 1;
+                    }
+                } else {
+                    if (rtmp->rt_flags & RTMPTAB_EXTENDED) {
+                        LOG(log_info, logtype_atalkd, "rtmp_packet !extended mismatch %u",
+                            ntohs(rtmp->rt_firstnet));
+                        return 1;
+                    }
+
+                    if (rtmp->rt_lastnet != rt.rt_net) {
+                        LOG(log_info, logtype_atalkd, "rtmp_packet lastnet mismatch %u!=%u",
+                            ntohs(rtmp->rt_lastnet), ntohs(rt.rt_net));
+                        return 1;
+                    }
+                }
+
+                rtmp->rt_state = RTMPTAB_GOOD;
+
+                /*
+                 * Check hop count.  If the count has changed, update
+                 * the routing database.
+                 */
+                if ((rtmp->rt_hops != (rt.rt_dist & 0x7f) + 1) &&
+                        (rtmp->rt_hops != RTMPHOPS_POISON ||
+                         (rt.rt_dist & 0x7f) + 1 <= RTMPHOPS_MAX)) {
+                    if (rtmp->rt_iprev) {	/* route is in use */
+                        if (rtmp->rt_hops > (rt.rt_dist & 0x7f) + 1) {
+                            /*
+                             * If this was POISON, we've deleted it from
+                             * the kernel.  Add it back in.
+                             */
+                            if (rtmp->rt_hops == RTMPHOPS_POISON) {
+                                gateroute(RTMP_ADD, rtmp);
+                            }
+
+                            rtmp->rt_hops = (rt.rt_dist & 0x7f) + 1;
+                        } else {
+                            /*
+                             * Hop count has gone up for this route.
+                             * Search for a new best route.  If we can't
+                             * find one, just keep this route.  "poison"
+                             * route are deleted in as_timer().
+                             */
+                            if ((rt.rt_dist & 0x7f) + 1 > RTMPHOPS_MAX) {
+                                rtmp->rt_hops = RTMPHOPS_POISON;
+                            } else {
+                                rtmp->rt_hops = (rt.rt_dist & 0x7f) + 1;
+                            }
+
+                            if (rtmp_replace(rtmp) < 0) {
+                                LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_replace");
+                                return -1;
+                            }
+                        }
+                    } else {
+                        /* route not in use */
+                        rtmp->rt_hops = (rt.rt_dist & 0x7f) + 1;
+
+                        if (rtmp->rt_hops > (rt.rt_dist & 0x7f) + 1) {
+                            if (rtmp_new(rtmp) < 0) {
+                                LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_new");
+                                return -1;
+                            }
+                        }
+                    }
+                }
+
+                /*
+                 * Make the *next* node the head, since
+                 * we're not likely to be asked for the same tuple twice
+                 * in a row.
+                 */
+                if (rtmp->rt_next != NULL) {
+                    gate->g_rt->rt_prev->rt_next = gate->g_rt;
+                    gate->g_rt = rtmp->rt_next;
+                    rtmp->rt_next = NULL;
+                }
+            } else if ((rt.rt_dist & 0x7f) + 1 > RTMPHOPS_MAX) {
+                LOG(log_info, logtype_atalkd, "rtmp_packet bad hop count from %u.%u for %u",
+                    ntohs(from->sat_addr.s_net), from->sat_addr.s_node,
+                    ntohs(rt.rt_net));
+            } else {		/* new for router */
+                if ((rtmp = newrt(iface)) == NULL) {
+                    LOG(log_error, logtype_atalkd, "rtmp_packet: newrt: %s", strerror(errno));
+                    return -1;
+                }
+
+                rtmp->rt_firstnet = rt.rt_net;
+
+                if (rt.rt_dist & 0x80) {
+                    rtmp->rt_lastnet = xrt.rt_net;
+                    rtmp->rt_flags = RTMPTAB_EXTENDED;
+                } else {
+                    rtmp->rt_lastnet = rt.rt_net;
+                }
+
+                rtmp->rt_hops = (rt.rt_dist & 0x7f) + 1;
+                rtmp->rt_state = RTMPTAB_GOOD;
+                rtmp->rt_gate = gate;
+
+                /*
+                 * Add rtmptab entry to end of list (leave head alone).
+                 */
+                if (gate->g_rt == NULL) {
+                    rtmp->rt_prev = rtmp;
+                    gate->g_rt = rtmp;
+                } else {
+                    rtmp->rt_prev = gate->g_rt->rt_prev;
+                    gate->g_rt->rt_prev->rt_next = rtmp;
+                    gate->g_rt->rt_prev = rtmp;
+                }
+
+                if (rtmp_new(rtmp) < 0) {
+                    LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_new");
+                    return -1;
+                }
+            }
+
+            if (data + SZ_RTMPTUPLE > end) {
+                break;
+            }
+
+            memcpy(&rt, data, SZ_RTMPTUPLE);
+            data += SZ_RTMPTUPLE;
+
+            if (rt.rt_dist & 0x80) {
+                if (data + SZ_RTMPTUPLE > end) {
+                    LOG(log_info, logtype_atalkd, "rtmp_packet missing range-end");
+                    return 1;
+                }
+
+                memcpy(&xrt, data, SZ_RTMPTUPLE);
+                data += SZ_RTMPTUPLE;
+            }
+        }
+
+        /*
+         * Make sure we've processed the whole packet.
+         */
+        if (data != end) {
+            LOG(log_info, logtype_atalkd, "rtmp_packet length and count mismatch");
+        }
+
+        break;
 
     case DDPTYPE_RTMPR :
-	/*
-	 * Request and RDR.
-	 */
+
+        /*
+         * Request and RDR.
+         */
         if (((iface->i_flags & IFACE_ISROUTER) == 0) ||
-	    iface->i_rt->rt_zt == NULL ||
-	    ( iface->i_flags & IFACE_CONFIG ) == 0 ) {
-	    return 0;
-	}
-	if ( *data == 1 ) {
-	    data = packet;
-	    *data++ = DDPTYPE_RTMPRD;
-	    rh.rh_net = iface->i_addr.sat_addr.s_net;
-	    rh.rh_nodelen = 8;
-	    rh.rh_node = iface->i_addr.sat_addr.s_node;
-	    memcpy( data, &rh, sizeof( struct rtmp_head ));
-	    data += sizeof( struct rtmp_head );
+                iface->i_rt->rt_zt == NULL ||
+                (iface->i_flags & IFACE_CONFIG) == 0) {
+            return 0;
+        }
 
-	    if ( iface->i_flags & IFACE_PHASE2 ) {
-		rt.rt_net = iface->i_rt->rt_firstnet;
-		rt.rt_dist = 0x80;
-		memcpy( data, &rt, SZ_RTMPTUPLE );
-		data += SZ_RTMPTUPLE;
+        if (*data == 1) {
+            data = packet;
+            *data++ = DDPTYPE_RTMPRD;
+            rh.rh_net = iface->i_addr.sat_addr.s_net;
+            rh.rh_nodelen = 8;
+            rh.rh_node = iface->i_addr.sat_addr.s_node;
+            memcpy(data, &rh, sizeof(struct rtmp_head));
+            data += sizeof(struct rtmp_head);
 
-		rt.rt_net = iface->i_rt->rt_lastnet;
-		rt.rt_dist = 0x82;
-		memcpy( data, &rt, SZ_RTMPTUPLE );
-		data += SZ_RTMPTUPLE;
-	    }
-	    if ( sendto( ap->ap_fd, packet, data - packet, 0,
-		    (struct sockaddr *)from,
-		    sizeof( struct sockaddr_at )) < 0 ) {
-		LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno) );
-	    }
-	} else if ( *data == 2 || *data == 3 ) {
+            if (iface->i_flags & IFACE_PHASE2) {
+                rt.rt_net = iface->i_rt->rt_firstnet;
+                rt.rt_dist = 0x80;
+                memcpy(data, &rt, SZ_RTMPTUPLE);
+                data += SZ_RTMPTUPLE;
+                rt.rt_net = iface->i_rt->rt_lastnet;
+                rt.rt_dist = 0x82;
+                memcpy(data, &rt, SZ_RTMPTUPLE);
+                data += SZ_RTMPTUPLE;
+            }
+
+            if (sendto(ap->ap_fd, packet, data - packet, 0,
+                       (struct sockaddr *)from,
+                       sizeof(struct sockaddr_at)) < 0) {
+                LOG(log_error, logtype_atalkd, "as_timer sendto: %s", strerror(errno));
+            }
+        } else if (*data == 2 || *data == 3) {
             LOG(log_debug, logtype_atalkd, "rtmp_packet rdr (%d) from %u.%u\n",
-		    *data, ntohs( from->sat_addr.s_net ),
-		    from->sat_addr.s_node );
-	} else {
-	    LOG(log_info, logtype_atalkd, "rtmp_packet unknown request from %u.%u",
-		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
-	}
-	break;
+                *data, ntohs(from->sat_addr.s_net),
+                from->sat_addr.s_node);
+        } else {
+            LOG(log_info, logtype_atalkd, "rtmp_packet unknown request from %u.%u",
+                ntohs(from->sat_addr.s_net), from->sat_addr.s_node);
+        }
+
+        break;
 
     default :
-	LOG(log_info, logtype_atalkd, "rtmp_packet bad ddp type from %u.%u",
-		    ntohs( from->sat_addr.s_net ), from->sat_addr.s_node );
-	return 0;
+        LOG(log_info, logtype_atalkd, "rtmp_packet bad ddp type from %u.%u",
+            ntohs(from->sat_addr.s_net), from->sat_addr.s_node);
+        return 0;
     }
 
     return 0;
 }
 
-int rtmp_request( struct interface *iface)
+int rtmp_request(struct interface *iface)
 {
     struct sockaddr_at	sat;
     struct atport	*ap;
-    char		*data, packet[ 2 ];
+    char		*data, packet[2];
+    LOG(log_info, logtype_atalkd, "rtmp_request for %s", iface->i_name);
 
-    LOG(log_info, logtype_atalkd, "rtmp_request for %s", iface->i_name );
-
-    for ( ap = iface->i_ports; ap; ap = ap->ap_next ) {
-	if ( ap->ap_packet == rtmp_packet ) {
-	    break;
-	}
+    for (ap = iface->i_ports; ap; ap = ap->ap_next) {
+        if (ap->ap_packet == rtmp_packet) {
+            break;
+        }
     }
-    if ( ap == NULL ) {
-	LOG(log_error, logtype_atalkd, "rtmp_request can't find rtmp socket!" );
-	return -1;
+
+    if (ap == NULL) {
+        LOG(log_error, logtype_atalkd, "rtmp_request can't find rtmp socket!");
+        return -1;
     }
 
     data = packet;
     *data++ = DDPTYPE_RTMPR;
     *data++ = RTMPROP_REQUEST;
-
     /*
      * There is a problem with the net zero "hint" hack.
      */
-    memset( &sat, 0, sizeof( struct sockaddr_at ));
+    memset(&sat, 0, sizeof(struct sockaddr_at));
 #ifdef BSD4_4
-    sat.sat_len = sizeof( struct sockaddr_at );
+    sat.sat_len = sizeof(struct sockaddr_at);
 #endif /* BSD4_4 */
     sat.sat_family = AF_APPLETALK;
     sat.sat_addr.s_net = iface->i_addr.sat_addr.s_net;
     sat.sat_addr.s_node = ATADDR_BCAST;
     sat.sat_port = ap->ap_port;
-    if ( sendto( ap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
-	    sizeof( struct sockaddr_at )) < 0 ) {
-	LOG(log_error, logtype_atalkd, "rtmp_request sendto: %s", strerror(errno) );
-	return -1;
+
+    if (sendto(ap->ap_fd, packet, data - packet, 0, (struct sockaddr *)&sat,
+               sizeof(struct sockaddr_at)) < 0) {
+        LOG(log_error, logtype_atalkd, "rtmp_request sendto: %s", strerror(errno));
+        return -1;
     }
+
     return 0;
 }
 
@@ -934,52 +998,58 @@ int looproute(struct interface *iface, unsigned int cmd)
 {
     struct sockaddr_at	dst, loop;
 
-    if ( cmd == RTMP_DEL && ( iface->i_flags & IFACE_LOOP ) == 0 ) {
-	LOG(log_error, logtype_atalkd, "looproute panic no route" );
-	return -1;
+    if (cmd == RTMP_DEL && (iface->i_flags & IFACE_LOOP) == 0) {
+        LOG(log_error, logtype_atalkd, "looproute panic no route");
+        return -1;
     }
 
-    if ( cmd == RTMP_ADD && ( iface->i_flags & IFACE_LOOP )) {
-	LOG(log_error, logtype_atalkd, "looproute panic two routes" );
-	return -1;
+    if (cmd == RTMP_ADD && (iface->i_flags & IFACE_LOOP)) {
+        LOG(log_error, logtype_atalkd, "looproute panic two routes");
+        return -1;
     }
 
-    memset( &dst, 0, sizeof( struct sockaddr_at ));
+    memset(&dst, 0, sizeof(struct sockaddr_at));
 #ifdef BSD4_4
-    dst.sat_len = sizeof( struct sockaddr_at );
+    dst.sat_len = sizeof(struct sockaddr_at);
 #endif /* BSD4_4 */
     dst.sat_family = AF_APPLETALK;
     dst.sat_addr.s_net = iface->i_addr.sat_addr.s_net;
     dst.sat_addr.s_node = iface->i_addr.sat_addr.s_node;
-    memset( &loop, 0, sizeof( struct sockaddr_at ));
+    memset(&loop, 0, sizeof(struct sockaddr_at));
 #ifdef BSD4_4
-    loop.sat_len = sizeof( struct sockaddr_at );
+    loop.sat_len = sizeof(struct sockaddr_at);
 #endif /* BSD4_4 */
     loop.sat_family = AF_APPLETALK;
-    loop.sat_addr.s_net = htons( ATADDR_ANYNET );
+    loop.sat_addr.s_net = htons(ATADDR_ANYNET);
     loop.sat_addr.s_node = ATADDR_ANYNODE;
-
 #ifndef BSD4_4
-    if ( route( cmd,
-		(struct sockaddr *) &dst,
-		(struct sockaddr *) &loop,
-		RTF_UP | RTF_HOST ) ) {
-	return 1;
+
+    if (route(cmd,
+              (struct sockaddr *) &dst,
+              (struct sockaddr *) &loop,
+              RTF_UP | RTF_HOST)) {
+        return 1;
     }
+
 #else /* ! BSD4_4 */
-    if ( route( cmd,
-	    	(struct sockaddr_at *) &dst,
-		(struct sockaddr_at *) &loop,
-		RTF_UP | RTF_HOST ) ) {
-		return 1;
+
+    if (route(cmd,
+              (struct sockaddr_at *) &dst,
+              (struct sockaddr_at *) &loop,
+              RTF_UP | RTF_HOST)) {
+        return 1;
     }
+
 #endif /* BSD4_4 */
-    if ( cmd == RTMP_ADD ) {
-	iface->i_flags |= IFACE_LOOP;
+
+    if (cmd == RTMP_ADD) {
+        iface->i_flags |= IFACE_LOOP;
     }
-    if ( cmd == RTMP_DEL ) {
-	iface->i_flags &= ~IFACE_LOOP;
+
+    if (cmd == RTMP_DEL) {
+        iface->i_flags &= ~IFACE_LOOP;
     }
+
     return 0;
 }
 
@@ -993,11 +1063,12 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
         return -1;
     }
 
-    if ( command == RTMP_DEL && ( rtmp->rt_flags & RTMPTAB_ROUTE ) == 0 ) {
-	return -1;
+    if (command == RTMP_DEL && (rtmp->rt_flags & RTMPTAB_ROUTE) == 0) {
+        return -1;
     }
-    if ( command == RTMP_ADD && ( rtmp->rt_flags & RTMPTAB_ROUTE )) {
-	return -1;
+
+    if (command == RTMP_ADD && (rtmp->rt_flags & RTMPTAB_ROUTE)) {
+        return -1;
     }
 
     if (rtmp->rt_gate == NULL) {
@@ -1005,72 +1076,78 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
         return -1;
     }
 
-    net = ntohs( rtmp->rt_firstnet );
+    net = ntohs(rtmp->rt_firstnet);
     /*
      * Since we will accept routes from gateways who advertise their
      * address as 0.YY, we must munge the gateway address we give to
      * the kernel.  Otherwise, we'll get a bunch of routes to the loop
      * back interface, and who wants that?
      */
-    memset( &gate, 0, sizeof( struct sockaddr_at ));
+    memset(&gate, 0, sizeof(struct sockaddr_at));
 #ifdef BSD4_4
-    gate.sat_len = sizeof( struct sockaddr_at );
+    gate.sat_len = sizeof(struct sockaddr_at);
 #endif /* BSD4_4 */
     gate.sat_family = AF_APPLETALK;
     gate.sat_addr.s_net = rtmp->rt_gate->g_sat.sat_addr.s_net;
     gate.sat_addr.s_node = rtmp->rt_gate->g_sat.sat_addr.s_node;
-    if ( gate.sat_addr.s_net == 0 ) {
-	gate.sat_addr.s_net = net;
+
+    if (gate.sat_addr.s_net == 0) {
+        gate.sat_addr.s_net = net;
     }
 
-    memset( &dst, 0, sizeof( struct sockaddr_at ));
+    memset(&dst, 0, sizeof(struct sockaddr_at));
 #ifdef BSD4_4
-    dst.sat_len = sizeof( struct sockaddr_at );
+    dst.sat_len = sizeof(struct sockaddr_at);
 #endif /* BSD4_4 */
     dst.sat_family = AF_APPLETALK;
     dst.sat_addr.s_node = ATADDR_ANYNODE;
 
     do {
-	dst.sat_addr.s_net = htons( net );
+        dst.sat_addr.s_net = htons(net);
 #ifndef BSD4_4
-	if ( route( command,
-		    (struct sockaddr *) &dst,
-		    (struct sockaddr *) &gate,
-		    RTF_UP | RTF_GATEWAY )) {
-	    LOG(log_error, logtype_atalkd, "route: %u -> %u.%u: %s", net,
-		    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node,
-		    strerror(errno) );
-	    continue;
-	}
-#else /* ! BSD4_4 */
-	if ( route( command,
-		    (struct sockaddr_at *) &dst,
-		    (struct sockaddr_at *) &gate,
-		    RTF_UP | RTF_GATEWAY )) {
-	    LOG(log_error, logtype_atalkd, "route: %u -> %u.%u: %s", net,
-	    	    ntohs( gate.sat_addr.s_net ), gate.sat_addr.s_node, strerror(errno) );
-	    continue;
-	}
-#endif /* ! BSD4_4 */
-    } while ( net++ < ntohs( rtmp->rt_lastnet ));
 
-    if ( command == RTMP_ADD ) {
-	rtmp->rt_flags |= RTMPTAB_ROUTE;
+        if (route(command,
+                  (struct sockaddr *) &dst,
+                  (struct sockaddr *) &gate,
+                  RTF_UP | RTF_GATEWAY)) {
+            LOG(log_error, logtype_atalkd, "route: %u -> %u.%u: %s", net,
+                ntohs(gate.sat_addr.s_net), gate.sat_addr.s_node,
+                strerror(errno));
+            continue;
+        }
+
+#else /* ! BSD4_4 */
+
+        if (route(command,
+                  (struct sockaddr_at *) &dst,
+                  (struct sockaddr_at *) &gate,
+                  RTF_UP | RTF_GATEWAY)) {
+            LOG(log_error, logtype_atalkd, "route: %u -> %u.%u: %s", net,
+                ntohs(gate.sat_addr.s_net), gate.sat_addr.s_node, strerror(errno));
+            continue;
+        }
+
+#endif /* ! BSD4_4 */
+    } while (net++ < ntohs(rtmp->rt_lastnet));
+
+    if (command == RTMP_ADD) {
+        rtmp->rt_flags |= RTMPTAB_ROUTE;
     }
-    if ( command == RTMP_DEL ) {
-	rtmp->rt_flags &= ~RTMPTAB_ROUTE;
+
+    if (command == RTMP_DEL) {
+        rtmp->rt_flags &= ~RTMPTAB_ROUTE;
     }
 
     return 0;
 }
 
-    struct rtmptab *
+struct rtmptab *
 newrt(const struct interface *iface)
 {
     struct rtmptab	*rtmp;
 
-    if (( rtmp = (struct rtmptab *)calloc(1, sizeof(struct rtmptab))) == NULL ) {
-	return NULL;
+    if ((rtmp = (struct rtmptab *)calloc(1, sizeof(struct rtmptab))) == NULL) {
+        return NULL;
     }
 
     rtmp->rt_iface = iface;

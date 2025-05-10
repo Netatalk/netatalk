@@ -45,10 +45,11 @@
 
 extern char **cnamewrap(const char *name);
 
-extern int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
+extern int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did,
+                           const char *name);
 extern int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
-extern int delete(AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
+extern int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name);
 extern int enumerate(AFPObj *obj, uint16_t vid, cnid_t did);
 extern uint16_t openvol(AFPObj *obj, const char *name);
 

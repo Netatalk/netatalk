@@ -55,12 +55,14 @@
 
 /* This maps to TReq and TResp, per "Inside AppleTalk" 10-13 */
 
-typedef struct __attribute__((__packed__)) {
-	uint8_t user_bytes[4];
-	uint8_t data_bytes[4];
-	uint8_t buf_len;
-	char buf[255];
-} rbuf_t;
+typedef struct __attribute__((__packed__))
+{
+    uint8_t user_bytes[4];
+    uint8_t data_bytes[4];
+    uint8_t buf_len;
+    char buf[255];
+}
+rbuf_t;
 
 static rbuf_t r_buf;
 
@@ -80,17 +82,17 @@ char		*uamlist;
 char		*uampath = _PATH_PAPDUAMPATH;
 
 /* Prototypes for locally used functions */
-int getstatus( struct printer *pr, rbuf_t *buf );
-int rprintcap( struct printer *pr );
-static void getprinters( char *cf );
+int getstatus(struct printer *pr, rbuf_t *buf);
+int rprintcap(struct printer *pr);
+static void getprinters(char *cf);
 
 
 /* this only needs to be used by the server process */
 static void papd_exit(const int i)
 {
-  server_unlock(pidfile);
-  auth_unload();
-  exit(i);
+    server_unlock(pidfile);
+    auth_unload();
+    exit(i);
 }
 
 static void
@@ -98,28 +100,32 @@ die(int n)
 {
     struct printer	*pr;
     struct at_addr	addr;
-
     memset(&addr, 0, sizeof(addr));
 
-    for ( pr = printers; pr; pr = pr->p_next ) {
-	if ( pr->p_flags & P_REGISTERED ) {
-	    if ( nbp_unrgstr( pr->p_name, pr->p_type, pr->p_zone, &addr ) < 0 ) {
-		LOG(log_error, logtype_papd, "can't unregister %s:%s@%s", pr->p_name,
-			pr->p_type, pr->p_zone );
-		papd_exit( n + 1 );
-	    }
-	    LOG(log_info, logtype_papd, "unregister %s:%s@%s", pr->p_name, pr->p_type,
-		    pr->p_zone );
-	}
-#ifdef HAVE_CUPS
-	if ( pr->p_flags & P_SPOOLED && pr->p_flags & P_CUPS_PPD ) {
-		LOG(log_info, logtype_papd, "Deleting CUPS temp PPD file for %s (%s)", pr->p_name, pr->p_ppdfile);
-		unlink (pr->p_ppdfile);
-	}
-#endif /* HAVE_CUPS */
+    for (pr = printers; pr; pr = pr->p_next) {
+        if (pr->p_flags & P_REGISTERED) {
+            if (nbp_unrgstr(pr->p_name, pr->p_type, pr->p_zone, &addr) < 0) {
+                LOG(log_error, logtype_papd, "can't unregister %s:%s@%s", pr->p_name,
+                    pr->p_type, pr->p_zone);
+                papd_exit(n + 1);
+            }
 
+            LOG(log_info, logtype_papd, "unregister %s:%s@%s", pr->p_name, pr->p_type,
+                pr->p_zone);
+        }
+
+#ifdef HAVE_CUPS
+
+        if (pr->p_flags & P_SPOOLED && pr->p_flags & P_CUPS_PPD) {
+            LOG(log_info, logtype_papd, "Deleting CUPS temp PPD file for %s (%s)",
+                pr->p_name, pr->p_ppdfile);
+            unlink(pr->p_ppdfile);
+        }
+
+#endif /* HAVE_CUPS */
     }
-    papd_exit( n );
+
+    papd_exit(n);
 }
 
 static void
@@ -128,30 +134,30 @@ reap(int sig _U_)
     int		status;
     int		pid;
 
-    while (( pid = wait3( &status, WNOHANG, NULL )) > 0 ) {
-	if ( WIFEXITED( status )) {
-	    if ( WEXITSTATUS( status )) {
-		LOG(log_error, logtype_papd, "child %d exited with %d", pid,
-			WEXITSTATUS( status ));
-	    } else {
-		LOG(log_info, logtype_papd, "child %d done", pid );
-	    }
-	} else {
-	    if ( WIFSIGNALED( status )) {
-		LOG(log_error, logtype_papd, "child %d killed with %d", pid,
-			WTERMSIG( status ));
-	    } else {
-		LOG(log_error, logtype_papd, "child %d died", pid );
-	    }
-	}
+    while ((pid = wait3(&status, WNOHANG, NULL)) > 0) {
+        if (WIFEXITED(status)) {
+            if (WEXITSTATUS(status)) {
+                LOG(log_error, logtype_papd, "child %d exited with %d", pid,
+                    WEXITSTATUS(status));
+            } else {
+                LOG(log_info, logtype_papd, "child %d done", pid);
+            }
+        } else {
+            if (WIFSIGNALED(status)) {
+                LOG(log_error, logtype_papd, "child %d killed with %d", pid,
+                    WTERMSIG(status));
+            } else {
+                LOG(log_error, logtype_papd, "child %d died", pid);
+            }
+        }
     }
+
     return;
 }
 
 int main(int ac, char **av)
 {
     extern char         *optarg;
-
     ATP			atp;
     struct atp_block	atpb;
     struct sockaddr_at	sat;
@@ -159,29 +165,31 @@ int main(int ac, char **av)
     struct iovec	iov;
     fd_set		fdset;
     struct printer	*pr;
-    char		*p, hostname[ MAXHOSTNAMELEN ];
-    char		cbuf[ 8 ];
+    char		*p, hostname[MAXHOSTNAMELEN];
+    char		cbuf[8];
     int			c;
     char 		*atname;
-    char* string, * macName = MACCHARSET;
-
+    char *string, *macName = MACCHARSET;
     /* Set codepages here since it is no longer auto-initialzed anymore*/
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
 
-    if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
-	perror( "gethostname" );
-	exit( 1 );
+    if (gethostname(hostname, sizeof(hostname)) < 0) {
+        perror("gethostname");
+        exit(1);
     }
-    if (( p = strchr( hostname, '.' )) != NULL ) {
-	*p = '\0';
+
+    if ((p = strchr(hostname, '.')) != NULL) {
+        *p = '\0';
     }
-    if (( defprinter.p_name = (char *)malloc( strlen( hostname ) + 1 ))
-	    == NULL ) {
-	perror( "malloc" );
-	exit( 1 );
+
+    if ((defprinter.p_name = (char *)malloc(strlen(hostname) + 1))
+            == NULL) {
+        perror("malloc");
+        exit(1);
     }
-    strcpy( defprinter.p_name, hostname );
+
+    strcpy(defprinter.p_name, hostname);
     defprinter.p_type = "LaserWriter";
     defprinter.p_zone = "*";
     memset(&defprinter.p_addr, 0, sizeof(defprinter.p_addr));
@@ -202,354 +210,378 @@ int main(int ac, char **av)
     defprinter.p_pagecost_msg = NULL;
     defprinter.p_lock = "lock";
 
-    while (( c = getopt( ac, av, "adVvf:p:P:" )) != EOF ) {
-	switch ( c ) {
-	case 'a' :		/* for compatibility with old papd */
-	    break;
+    while ((c = getopt(ac, av, "adVvf:p:P:")) != EOF) {
+        switch (c) {
+        case 'a' :		/* for compatibility with old papd */
+            break;
 
-	case 'd' :		/* debug */
-	    debug++;
-	    break;
+        case 'd' :		/* debug */
+            debug++;
+            break;
 
-	case 'f' :		/* conffile */
-	    conffile = optarg;
-	    break;
+        case 'f' :		/* conffile */
+            conffile = optarg;
+            break;
 
-	case 'p' :		/* printcap */
-	    printcap = optarg;
-	    break;
+        case 'p' :		/* printcap */
+            printcap = optarg;
+            break;
 
-	case 'P' :
-	    pidfile = optarg;
-	    break;
+        case 'P' :
+            pidfile = optarg;
+            break;
 
-	case 'V' :
-	case 'v' :		/* version */
-	    printf( "papd %s - Printer Access Protocol Daemon\n", version );
-	    exit(0);
-	    break;
+        case 'V' :
+        case 'v' :		/* version */
+            printf("papd %s - Printer Access Protocol Daemon\n", version);
+            exit(0);
+            break;
 
-	default :
-	    fprintf( stderr,
-		    "Usage:\t%s [ -d ] [ -f conffile ] [ -p printcap ]\n",
-		    *av );
-	    exit( 1 );
-	}
+        default :
+            fprintf(stderr,
+                    "Usage:\t%s [ -d ] [ -f conffile ] [ -p printcap ]\n",
+                    *av);
+            exit(1);
+        }
     }
-
 
     switch (server_lock("papd", pidfile, debug)) {
     case 0: /* open a couple things again in the child */
-      if (!debug && (c = open("/", O_RDONLY)) >= 0) {
-	dup2(c, 1);
-	dup2(c, 2);
-      }
-      break;
+        if (!debug && (c = open("/", O_RDONLY)) >= 0) {
+            dup2(c, 1);
+            dup2(c, 2);
+        }
+
+        break;
+
     case -1:
-      exit(1);
+        exit(1);
+
     default:
-      exit(0);
+        exit(0);
     }
 
-    if ( debug )
-	fault_setup(NULL);
+    if (debug) {
+        fault_setup(NULL);
+    }
 
     /*
      * Start logging.
      */
-    if (( p = strrchr( av[ 0 ], '/' )) == NULL ) {
-	p = av[ 0 ];
+    if ((p = strrchr(av[0], '/')) == NULL) {
+        p = av[0];
     } else {
-	p++;
+        p++;
     }
+
     set_processname(p);
     syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid |
-               debug ? logoption_perror : 0, logfacility_lpr );
-
-    LOG(log_info, logtype_papd, "restart (%s)", version );
+                 debug ? logoption_perror : 0, logfacility_lpr);
+    LOG(log_info, logtype_papd, "restart (%s)", version);
 #ifdef HAVE_CUPS
-    LOG(log_info, logtype_papd, "CUPS support enabled (%s)", CUPS_API_VERSION );
+    LOG(log_info, logtype_papd, "CUPS support enabled (%s)", CUPS_API_VERSION);
 #endif
+    getprinters(conffile);
 
-    getprinters( conffile );
+    for (pr = printers; pr; pr = pr->p_next) {
+        if ((pr->p_flags & P_SPOOLED) && rprintcap(pr) < 0) {
+            LOG(log_error, logtype_papd, "printcap problem: %s", pr->p_printer);
+        }
 
-    for ( pr = printers; pr; pr = pr->p_next ) {
-	if (( pr->p_flags & P_SPOOLED ) && rprintcap( pr ) < 0 ) {
-	    LOG(log_error, logtype_papd, "printcap problem: %s", pr->p_printer );
-	}
+        if (!(pr->p_flags & P_CUPS)) {
+            if ((size_t) -1 != convert_string_allocate(CH_UNIX, CH_MAC, pr->p_name, -1,
+                    &atname)) {
+                pr->p_u_name = pr->p_name;
+                pr->p_name = atname;
+            }
+        }
 
-	if (!(pr->p_flags & P_CUPS)) {
-		if ((size_t)-1 != convert_string_allocate(CH_UNIX, CH_MAC, pr->p_name, -1, &atname)) {
-			pr->p_u_name = pr->p_name;
-			pr->p_name = atname;
-		}
-	}
+        if ((pr->p_atp = atp_open(ATADDR_ANYPORT, &pr->p_addr)) == NULL) {
+            LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno));
+            papd_exit(1);
+        }
 
-	if (( pr->p_atp = atp_open( ATADDR_ANYPORT, &pr->p_addr )) == NULL ) {
-	    LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
-	    papd_exit( 1 );
-	}
-	if ( nbp_rgstr( atp_sockaddr( pr->p_atp ), pr->p_name, pr->p_type,
-		pr->p_zone ) < 0 ) {
-	    LOG(log_error, logtype_papd, "can't register %s:%s@%s", pr->p_u_name, pr->p_type,
-		    pr->p_zone );
-	    die( 1 );
-	}
-	if ( pr->p_flags & P_AUTH ) {
-		LOG(log_info, logtype_papd, "Authentication enabled: %s", pr->p_u_name );
-	}
-	else {
-		LOG(log_info, logtype_papd, "Authentication disabled: %s", pr->p_u_name );
-	}
-	LOG(log_info, logtype_papd, "register %s:%s@%s", pr->p_u_name, pr->p_type,
-		pr->p_zone );
-	pr->p_flags |= P_REGISTERED;
+        if (nbp_rgstr(atp_sockaddr(pr->p_atp), pr->p_name, pr->p_type,
+                      pr->p_zone) < 0) {
+            LOG(log_error, logtype_papd, "can't register %s:%s@%s", pr->p_u_name,
+                pr->p_type,
+                pr->p_zone);
+            die(1);
+        }
+
+        if (pr->p_flags & P_AUTH) {
+            LOG(log_info, logtype_papd, "Authentication enabled: %s", pr->p_u_name);
+        } else {
+            LOG(log_info, logtype_papd, "Authentication disabled: %s", pr->p_u_name);
+        }
+
+        LOG(log_info, logtype_papd, "register %s:%s@%s", pr->p_u_name, pr->p_type,
+            pr->p_zone);
+        pr->p_flags |= P_REGISTERED;
     }
 
     memset(&sv, 0, sizeof(sv));
     sv.sa_handler = die;
-    sigemptyset( &sv.sa_mask );
+    sigemptyset(&sv.sa_mask);
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
-	LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
-	papd_exit( 1 );
+
+    if (sigaction(SIGTERM, &sv, NULL) < 0) {
+        LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno));
+        papd_exit(1);
     }
 
     sv.sa_handler = reap;
-    sigemptyset( &sv.sa_mask );
+    sigemptyset(&sv.sa_mask);
     sv.sa_flags = SA_RESTART;
-    if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
-	LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
-	papd_exit( 1 );
+
+    if (sigaction(SIGCHLD, &sv, NULL) < 0) {
+        LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno));
+        papd_exit(1);
     }
 
     /*
      * Load UAMS
      */
     auth_load(uampath, uamlist);
-
     /*
      * Begin accepting connections.
      */
-    FD_ZERO( &fdset );
+    FD_ZERO(&fdset);
+
     for (;;) {
-	for ( pr = printers; pr; pr = pr->p_next ) {
-	    FD_SET( atp_fileno( pr->p_atp ), &fdset );
-	}
-	if (( c = select( FD_SETSIZE, &fdset, NULL, NULL, NULL )) < 0 ) {
-	    if ( errno == EINTR ) {
-		continue;
-	    }
-	    LOG(log_error, logtype_papd, "select: %s", strerror(errno) );
-	    papd_exit( 1 );
-	}
+        for (pr = printers; pr; pr = pr->p_next) {
+            FD_SET(atp_fileno(pr->p_atp), &fdset);
+        }
 
-	for ( pr = printers; pr; pr = pr->p_next ) {
-	    if ( FD_ISSET( atp_fileno( pr->p_atp ), &fdset )) {
-		int		err = 0;
+        if ((c = select(FD_SETSIZE, &fdset, NULL, NULL, NULL)) < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
 
-		memset( &sat, 0, sizeof( struct sockaddr_at ));
+            LOG(log_error, logtype_papd, "select: %s", strerror(errno));
+            papd_exit(1);
+        }
+
+        for (pr = printers; pr; pr = pr->p_next) {
+            if (FD_ISSET(atp_fileno(pr->p_atp), &fdset)) {
+                int		err = 0;
+                memset(&sat, 0, sizeof(struct sockaddr_at));
 #ifdef BSD4_4
-		sat.sat_len = sizeof( struct sockaddr_at );
+                sat.sat_len = sizeof(struct sockaddr_at);
 #endif /* BSD4_4 */
-		sat.sat_family = AF_APPLETALK;
-		sat.sat_addr.s_net = ATADDR_ANYNET;
-		sat.sat_addr.s_node = ATADDR_ANYNODE;
-		sat.sat_port = ATADDR_ANYPORT;
-		/* do an atp_rsel(), to prevent hangs */
-		if (( c = atp_rsel( pr->p_atp, &sat, ATP_TREQ )) != ATP_TREQ ) {
-		    continue;
-		}
-		atpb.atp_saddr = &sat;
-		atpb.atp_rreqdata = cbuf;
-		atpb.atp_rreqdlen = sizeof( cbuf );
-		if ( atp_rreq( pr->p_atp, &atpb ) < 0 ) {
-		    LOG(log_error, logtype_papd, "atp_rreq: %s", strerror(errno) );
-		    continue;
-		}
+                sat.sat_family = AF_APPLETALK;
+                sat.sat_addr.s_net = ATADDR_ANYNET;
+                sat.sat_addr.s_node = ATADDR_ANYNODE;
+                sat.sat_port = ATADDR_ANYPORT;
 
-		/* should check length of req buf */
+                /* do an atp_rsel(), to prevent hangs */
+                if ((c = atp_rsel(pr->p_atp, &sat, ATP_TREQ)) != ATP_TREQ) {
+                    continue;
+                }
 
-		switch( cbuf[ 1 ] ) {
-		case PAP_OPEN :
-		    connid = (unsigned char)cbuf[ 0 ];
-		    sock = (unsigned char)cbuf[ 4 ];
-		    quantum = (unsigned char)cbuf[ 5 ];
-		    r_buf.user_bytes[0] = connid;
-		    r_buf.user_bytes[1] = PAP_OPENREPLY;
-		    r_buf.user_bytes[2] = 0;
-		    r_buf.user_bytes[3] = 0;
+                atpb.atp_saddr = &sat;
+                atpb.atp_rreqdata = cbuf;
+                atpb.atp_rreqdlen = sizeof(cbuf);
 
-		    if (( pr->p_flags & P_SPOOLED ) && rprintcap( pr ) != 0 ) {
-			LOG(log_error, logtype_papd, "printcap problem: %s",
-				pr->p_printer );
-			/* "IAT", 10-16 */
-			r_buf.user_bytes[2] = 0xff;
-			r_buf.user_bytes[3] = 0xff;
-			err = 1;
-		    }
+                if (atp_rreq(pr->p_atp, &atpb) < 0) {
+                    LOG(log_error, logtype_papd, "atp_rreq: %s", strerror(errno));
+                    continue;
+                }
 
-#ifdef HAVE_CUPS
-		   /*
-		    * If cups is not accepting jobs, we return
-		    * 0xffff to indicate we're busy
-		    */
-		    LOG(log_debug9, logtype_papd, "CUPS: PAP_OPEN");
+                /* should check length of req buf */
 
-		    if ( (pr->p_flags & P_SPOOLED) && (cups_get_printer_status ( pr ) == 0)) {
-                        LOG(log_error, logtype_papd, "CUPS_PAP_OPEN: %s is not accepting jobs",
-                                pr->p_printer );
-			r_buf.user_bytes[2] = 0xff;
-			r_buf.user_bytes[3] = 0xff;
+                switch (cbuf[1]) {
+                case PAP_OPEN :
+                    connid = (unsigned char)cbuf[0];
+                    sock = (unsigned char)cbuf[4];
+                    quantum = (unsigned char)cbuf[5];
+                    r_buf.user_bytes[0] = connid;
+                    r_buf.user_bytes[1] = PAP_OPENREPLY;
+                    r_buf.user_bytes[2] = 0;
+                    r_buf.user_bytes[3] = 0;
+
+                    if ((pr->p_flags & P_SPOOLED) && rprintcap(pr) != 0) {
+                        LOG(log_error, logtype_papd, "printcap problem: %s",
+                            pr->p_printer);
+                        /* "IAT", 10-16 */
+                        r_buf.user_bytes[2] = 0xff;
+                        r_buf.user_bytes[3] = 0xff;
                         err = 1;
                     }
+
+#ifdef HAVE_CUPS
+                    /*
+                     * If cups is not accepting jobs, we return
+                     * 0xffff to indicate we're busy
+                     */
+                    LOG(log_debug9, logtype_papd, "CUPS: PAP_OPEN");
+
+                    if ((pr->p_flags & P_SPOOLED) && (cups_get_printer_status(pr) == 0)) {
+                        LOG(log_error, logtype_papd, "CUPS_PAP_OPEN: %s is not accepting jobs",
+                            pr->p_printer);
+                        r_buf.user_bytes[2] = 0xff;
+                        r_buf.user_bytes[3] = 0xff;
+                        err = 1;
+                    }
+
 #endif /* HAVE_CUPS */
 
-		    /*
-		     * If this fails, we've run out of sockets. Rather than
-		     * just die(), let's try to continue. Maybe some sockets
-		     * will close, and we can continue;
-		     */
-		    if (( atp = atp_open( ATADDR_ANYPORT,
-					  &pr->p_addr)) == NULL ) {
-			LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno) );
-			r_buf.user_bytes[2] = 0xff;
-			r_buf.user_bytes[3] = 0xff;
-			/* FIXME is it right? */
-			r_buf.data_bytes[0] = 0x00;
-			err = 1;
-		    }
-		    else {
-		       r_buf.data_bytes[0] = atp_sockaddr( atp )->sat_port;
+                    /*
+                     * If this fails, we've run out of sockets. Rather than
+                     * just die(), let's try to continue. Maybe some sockets
+                     * will close, and we can continue;
+                     */
+                    if ((atp = atp_open(ATADDR_ANYPORT,
+                                        &pr->p_addr)) == NULL) {
+                        LOG(log_error, logtype_papd, "atp_open: %s", strerror(errno));
+                        r_buf.user_bytes[2] = 0xff;
+                        r_buf.user_bytes[3] = 0xff;
+                        /* FIXME is it right? */
+                        r_buf.data_bytes[0] = 0x00;
+                        err = 1;
+                    } else {
+                        r_buf.data_bytes[0] = atp_sockaddr(atp)->sat_port;
                     }
-		    r_buf.data_bytes[1] = oquantum;
-		    r_buf.data_bytes[2] = 0;
-		    r_buf.data_bytes[3] = 0;
 
-		    iov.iov_base = &r_buf;
-		    iov.iov_len = 8 + getstatus( pr, &r_buf );
-		    atpb.atp_sresiov = &iov;
-		    atpb.atp_sresiovcnt = 1;
-		    /*
-		     * This may error out if we lose a route, so we won't die().
-		     */
-		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-			LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
-			err = 1;
-		    }
+                    r_buf.data_bytes[1] = oquantum;
+                    r_buf.data_bytes[2] = 0;
+                    r_buf.data_bytes[3] = 0;
+                    iov.iov_base = &r_buf;
+                    iov.iov_len = 8 + getstatus(pr, &r_buf);
+                    atpb.atp_sresiov = &iov;
+                    atpb.atp_sresiovcnt = 1;
 
-		    if ( err ) {
-			if (atp) {
-			   atp_close(atp);
+                    /*
+                     * This may error out if we lose a route, so we won't die().
+                     */
+                    if (atp_sresp(pr->p_atp, &atpb) < 0) {
+                        LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno));
+                        err = 1;
+                    }
+
+                    if (err) {
+                        if (atp) {
+                            atp_close(atp);
                         }
-			continue;
-		    }
 
-		    switch ( c = fork()) {
-		    case -1 :
-			LOG(log_error, logtype_papd, "fork: %s", strerror(errno) );
+                        continue;
+                    }
+
+                    switch (c = fork()) {
+                    case -1 :
+                        LOG(log_error, logtype_papd, "fork: %s", strerror(errno));
                         atp_close(atp);
-			continue;
+                        continue;
 
-		    case 0 : /* child */
-			printer = pr;
+                    case 0 : /* child */
+                        printer = pr;
+#ifndef HAVE_CUPS
 
-			#ifndef HAVE_CUPS
-			if (( printer->p_flags & P_SPOOLED ) &&
-				chdir( printer->p_spool ) < 0 ) {
-			    LOG(log_error, logtype_papd, "chdir %s: %s", printer->p_spool, strerror(errno) );
-			    exit( 1 );
-			}
-			#else
-			if (( printer->p_flags & P_SPOOLED ) &&
-				chdir( SPOOLDIR ) < 0 ) {
-			    LOG(log_error, logtype_papd, "chdir %s: %s", SPOOLDIR, strerror(errno) );
-			    exit( 1 );
-			}
-
-			#endif
-
-			sv.sa_handler = SIG_DFL;
-			sigemptyset( &sv.sa_mask );
-			sv.sa_flags = SA_RESTART;
-			if ( sigaction( SIGTERM, &sv, NULL ) < 0 ) {
-			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
-			    exit( 1 );
-			}
-
-			if ( sigaction( SIGCHLD, &sv, NULL ) < 0 ) {
-			    LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno) );
-			    exit( 1 );
+                        if ((printer->p_flags & P_SPOOLED) &&
+                                chdir(printer->p_spool) < 0) {
+                            LOG(log_error, logtype_papd, "chdir %s: %s", printer->p_spool, strerror(errno));
+                            exit(1);
                         }
 
-			for ( pr = printers; pr; pr = pr->p_next ) {
-			    atp_close( pr->p_atp );
-			}
-			sat.sat_port = sock;
-			if ( session( atp, &sat ) < 0 ) {
-			    LOG(log_error, logtype_papd, "bad session" );
-			    exit( 1 );
-			}
-			exit( 0 );
-			break;
+#else
 
-		    default : /* parent */
-			LOG(log_info, logtype_papd, "child %d for \"%s\" from %u.%u",
-				c, pr->p_name, ntohs( sat.sat_addr.s_net ),
-				sat.sat_addr.s_node);
-			atp_close( atp );
-		    }
-		    break;
+                        if ((printer->p_flags & P_SPOOLED) &&
+                                chdir(SPOOLDIR) < 0) {
+                            LOG(log_error, logtype_papd, "chdir %s: %s", SPOOLDIR, strerror(errno));
+                            exit(1);
+                        }
 
-		case PAP_SENDSTATUS :
-		    r_buf.user_bytes[0] = 0;
-		    r_buf.user_bytes[1] = PAP_STATUS;
-		    r_buf.user_bytes[2] = 0;
-		    r_buf.user_bytes[3] = 0;
-		    r_buf.data_bytes[0] = 0;
-		    r_buf.data_bytes[1] = 0;
-		    r_buf.data_bytes[2] = 0;
-		    r_buf.data_bytes[3] = 0;
+#endif
+                        sv.sa_handler = SIG_DFL;
+                        sigemptyset(&sv.sa_mask);
+                        sv.sa_flags = SA_RESTART;
 
-		    iov.iov_base = &r_buf;
-		    iov.iov_len = 8 + getstatus( pr, &r_buf );
-		    atpb.atp_sresiov = &iov;
-		    atpb.atp_sresiovcnt = 1;
-		    /*
-		     * This may error out if we lose a route, so we won't die().
-		     */
-		    if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-			LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
-		    }
-		    break;
+                        if (sigaction(SIGTERM, &sv, NULL) < 0) {
+                            LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno));
+                            exit(1);
+                        }
 
-		default :
-		    LOG(log_error, logtype_papd, "Bad request from %u.%u!",
-			    ntohs( sat.sat_addr.s_net ), sat.sat_addr.s_node );
-		    continue;
-		    break;
-		}
+                        if (sigaction(SIGCHLD, &sv, NULL) < 0) {
+                            LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno));
+                            exit(1);
+                        }
+
+                        for (pr = printers; pr; pr = pr->p_next) {
+                            atp_close(pr->p_atp);
+                        }
+
+                        sat.sat_port = sock;
+
+                        if (session(atp, &sat) < 0) {
+                            LOG(log_error, logtype_papd, "bad session");
+                            exit(1);
+                        }
+
+                        exit(0);
+                        break;
+
+                    default : /* parent */
+                        LOG(log_info, logtype_papd, "child %d for \"%s\" from %u.%u",
+                            c, pr->p_name, ntohs(sat.sat_addr.s_net),
+                            sat.sat_addr.s_node);
+                        atp_close(atp);
+                    }
+
+                    break;
+
+                case PAP_SENDSTATUS :
+                    r_buf.user_bytes[0] = 0;
+                    r_buf.user_bytes[1] = PAP_STATUS;
+                    r_buf.user_bytes[2] = 0;
+                    r_buf.user_bytes[3] = 0;
+                    r_buf.data_bytes[0] = 0;
+                    r_buf.data_bytes[1] = 0;
+                    r_buf.data_bytes[2] = 0;
+                    r_buf.data_bytes[3] = 0;
+                    iov.iov_base = &r_buf;
+                    iov.iov_len = 8 + getstatus(pr, &r_buf);
+                    atpb.atp_sresiov = &iov;
+                    atpb.atp_sresiovcnt = 1;
+
+                    /*
+                     * This may error out if we lose a route, so we won't die().
+                     */
+                    if (atp_sresp(pr->p_atp, &atpb) < 0) {
+                        LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno));
+                    }
+
+                    break;
+
+                default :
+                    LOG(log_error, logtype_papd, "Bad request from %u.%u!",
+                        ntohs(sat.sat_addr.s_net), sat.sat_addr.s_node);
+                    continue;
+                    break;
+                }
 
 #ifdef notdef
-		/*
-		 * Sometimes the child process will send its first READ
-		 * before the parent has sent the OPEN REPLY.  Moving this
-		 * code into the OPEN/STATUS switch fixes this problem.
-		 */
-		iov.iov_base = rbuf;
-		iov.iov_len = 8 + getstatus( pr, &rbuf[ 8 ] );
-		atpb.atp_sresiov = &iov;
-		atpb.atp_sresiovcnt = 1;
-		/*
-		 * This may error out if we lose a route, so we won't die().
-		 */
-		if ( atp_sresp( pr->p_atp, &atpb ) < 0 ) {
-		    LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno) );
-		}
+                /*
+                 * Sometimes the child process will send its first READ
+                 * before the parent has sent the OPEN REPLY.  Moving this
+                 * code into the OPEN/STATUS switch fixes this problem.
+                 */
+                iov.iov_base = rbuf;
+                iov.iov_len = 8 + getstatus(pr, &rbuf[8]);
+                atpb.atp_sresiov = &iov;
+                atpb.atp_sresiovcnt = 1;
+
+                /*
+                 * This may error out if we lose a route, so we won't die().
+                 */
+                if (atp_sresp(pr->p_atp, &atpb) < 0) {
+                    LOG(log_error, logtype_papd, "atp_sresp: %s", strerror(errno));
+                }
+
 #endif /* notdef */
-	    }
-	}
+            }
+        }
     }
+
     return 0;
 }
 
@@ -560,16 +592,18 @@ int main(int ac, char **av)
 int getstatus(struct printer *pr, rbuf_t *buf)
 {
 #ifdef HAVE_CUPS
-    if ( pr->p_flags & P_PIPED ) {
-	buf->buf_len = strlen(cannedstatus);
-	snprintf(buf->buf, 255, "%s", cannedstatus);
-	return buf->buf_len + 1;
+
+    if (pr->p_flags & P_PIPED) {
+        buf->buf_len = strlen(cannedstatus);
+        snprintf(buf->buf, 255, "%s", cannedstatus);
+        return buf->buf_len + 1;
     } else {
-	cups_get_printer_status( pr );
-	buf->buf_len = strlen(pr->p_status);
-	snprintf(buf->buf, 255, "%s", pr->p_status);
-	return buf->buf_len + 1;
+        cups_get_printer_status(pr);
+        buf->buf_len = strlen(pr->p_status);
+        snprintf(buf->buf, 255, "%s", pr->p_status);
+        return buf->buf_len + 1;
     }
+
 #else
     char path[MAXPATHLEN];
     char getstatus_buffer[255];
@@ -577,32 +611,33 @@ int getstatus(struct printer *pr, rbuf_t *buf)
     FILE *fd = NULL;
     int rc;
 
-    if ( pr->p_flags & P_SPOOLED && ( pr->p_spool != NULL )) {
-	snprintf(path, MAXPATHLEN - 1, "%s/status", pr->p_spool);
-	fd = fopen(path, O_RDONLY);
+    if (pr->p_flags & P_SPOOLED && (pr->p_spool != NULL)) {
+        snprintf(path, MAXPATHLEN - 1, "%s/status", pr->p_spool);
+        fd = fopen(path, O_RDONLY);
     }
 
     if ((pr->p_flags & P_PIPED) || (fd == NULL)) {
-	buf->buf_len = strlen(cannedstatus);
-	snprintf(buf->buf, 255, "%s", cannedstatus);
-	return buf->buf_len + 1;
+        buf->buf_len = strlen(cannedstatus);
+        snprintf(buf->buf, 255, "%s", cannedstatus);
+        return buf->buf_len + 1;
     } else {
-	rc = fread(getstatus_buffer, 255, sizeof(unsigned char), fd);
-	fclose(fd);
+        rc = fread(getstatus_buffer, 255, sizeof(unsigned char), fd);
+        fclose(fd);
 
-	if (rc > 0) {
-		if (temp != NULL) {
-			temp[strcspn(temp, "\n")] = '\0';
-			snprintf(buf->buf, 255, "%s", temp);
-			buf->buf_len = strlen(buf->buf);
-		}
-	} else {
-		snprintf(buf->buf, 255, "%s", "thisisanemptystring");
-		buf->buf_len = 0;
-	}
+        if (rc > 0) {
+            if (temp != NULL) {
+                temp[strcspn(temp, "\n")] = '\0';
+                snprintf(buf->buf, 255, "%s", temp);
+                buf->buf_len = strlen(buf->buf);
+            }
+        } else {
+            snprintf(buf->buf, 255, "%s", "thisisanemptystring");
+            buf->buf_len = 0;
+        }
 
-	return buf->buf_len + 1;
+        return buf->buf_len + 1;
     }
+
 #endif /* HAVE_CUPS */
 }
 
@@ -611,332 +646,367 @@ char	*getpname(char **area, int bufsize);
 
 #define PF_CONFBUFFER	1024
 
-static void getprinters( char *cf)
+static void getprinters(char *cf)
 {
-    char		buf[ PF_CONFBUFFER ], area[ PF_CONFBUFFER ], *a, *p, *name, *type, *zone;
+    char		buf[PF_CONFBUFFER], area[PF_CONFBUFFER], *a, *p, *name, *type, *zone;
     struct printer	*pr;
     int			c;
 
-    while (( c = getprent( cf, buf, PF_CONFBUFFER )) > 0 ) {
-	a = area;
-	/*
-	 * Get the printer's nbp name.
-	 */
-	if (( p = getpname( &a, PF_CONFBUFFER )) == NULL ) {
-	    fprintf( stderr, "No printer name\n" );
-	    exit( 1 );
-	}
+    while ((c = getprent(cf, buf, PF_CONFBUFFER)) > 0) {
+        a = area;
 
-	if (( pr = (struct printer *)malloc( sizeof( struct printer )))
-		== NULL ) {
-	    perror( "malloc" );
-	    exit( 1 );
-	}
-	memset( pr, 0, sizeof( struct printer ));
+        /*
+         * Get the printer's nbp name.
+         */
+        if ((p = getpname(&a, PF_CONFBUFFER)) == NULL) {
+            fprintf(stderr, "No printer name\n");
+            exit(1);
+        }
 
-	name = defprinter.p_name;
-	type = defprinter.p_type;
-	zone = defprinter.p_zone;
-	if ( nbp_name( p, &name, &type, &zone )) {
-	    fprintf( stderr, "Can't parse \"%s\"\n", name );
-	    exit( 1 );
-	}
-	if ( name != defprinter.p_name ) {
-	    if (( pr->p_name = (char *)malloc( strlen( name ) + 1 )) == NULL ) {
-		perror( "malloc" );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_name, name );
-	} else {
-	    pr->p_name = name;
-	}
-	if ( type != defprinter.p_type ) {
-	    if (( pr->p_type = (char *)malloc( strlen( type ) + 1 )) == NULL ) {
-		perror( "malloc" );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_type, type );
-	} else {
-	    pr->p_type = type;
-	}
-	if ( zone != defprinter.p_zone ) {
-	    if (( pr->p_zone = (char *)malloc( strlen( zone ) + 1 )) == NULL ) {
-		perror( "malloc" );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_zone, zone );
-	} else {
-	    pr->p_zone = zone;
-	}
+        if ((pr = (struct printer *)malloc(sizeof(struct printer)))
+                == NULL) {
+            perror("malloc");
+            exit(1);
+        }
 
-	if ( pnchktc( cf ) != 1 ) {
-	    fprintf( stderr, "Bad papcap entry\n" );
-	    exit( 1 );
-	}
+        memset(pr, 0, sizeof(struct printer));
+        name = defprinter.p_name;
+        type = defprinter.p_type;
+        zone = defprinter.p_zone;
 
-	/*
-	 * Get PPD file.
-	 */
-	if (( p = pgetstr( "pd", &a ) )) {
-	    if (( pr->p_ppdfile = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		perror( "malloc" );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_ppdfile, p );
-	}
+        if (nbp_name(p, &name, &type, &zone)) {
+            fprintf(stderr, "Can't parse \"%s\"\n", name);
+            exit(1);
+        }
 
-	/*
-	 * Get lpd printer name.
-	 */
-	if (( p = pgetstr( "pr", &a )) == NULL ) {
-	    pr->p_printer = defprinter.p_printer;
-	    pr->p_flags = defprinter.p_flags;
-	} else {
-	    if ( *p == '|' ) {
-		p++;
-		pr->p_flags = P_PIPED;
-	    } else {
-		pr->p_flags = P_SPOOLED;
-	    }
-	    if (( pr->p_printer = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		perror( "malloc" );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_printer, p );
-	}
+        if (name != defprinter.p_name) {
+            if ((pr->p_name = (char *)malloc(strlen(name) + 1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
 
-	/*
-	 * Do we want authenticated printing?
-	 */
-	if ((p = pgetstr( "ca", &a )) != NULL ) {
-	    if ((pr->p_authprintdir = (char *)malloc(strlen(p)+1)) == NULL) {
-		perror( "malloc" );
-		exit(1);
-	    }
-	    strcpy( pr->p_authprintdir, p );
-	    pr->p_flags |= P_AUTH;
-	    pr->p_flags |= P_AUTH_CAP;
-	} else { pr->p_authprintdir = NULL; }
+            strcpy(pr->p_name, name);
+        } else {
+            pr->p_name = name;
+        }
 
-	if ( pgetflag( "sp" ) == 1 ) {
-	    pr->p_flags |= P_AUTH;
-	    pr->p_flags |= P_AUTH_PSSP;
-	}
+        if (type != defprinter.p_type) {
+            if ((pr->p_type = (char *)malloc(strlen(type) + 1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
 
-	if ((p = pgetstr("am", &a)) != NULL ) {
-		if ((uamlist = (char *)malloc(strlen(p)+1)) == NULL ) {
-			perror("malloc");
-			exit(1);
-		}
-		strcpy(uamlist, p);
-	}
+            strcpy(pr->p_type, type);
+        } else {
+            pr->p_type = type;
+        }
 
-	if ( pr->p_flags & P_SPOOLED ) {
-	    /*
-	     * Get operator name.
-	     */
-	    if (( p = pgetstr( "op", &a )) == NULL ) {
-		pr->p_operator = defprinter.p_operator;
-	    } else {
-		if (( pr->p_operator = (char *)malloc( strlen( p ) + 1 ))
-			== NULL ) {
-		    perror( "malloc" );
-		    exit( 1 );
-		}
-		strcpy( pr->p_operator, p );
-	    }
-	}
+        if (zone != defprinter.p_zone) {
+            if ((pr->p_zone = (char *)malloc(strlen(zone) + 1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
 
-	/* get printer's appletalk address. */
-	if (( p = pgetstr( "pa", &a )) == NULL )
-	    memcpy(&pr->p_addr, &defprinter.p_addr, sizeof(pr->p_addr));
-	else
-	    atalk_aton(p, &pr->p_addr);
+            strcpy(pr->p_zone, zone);
+        } else {
+            pr->p_zone = zone;
+        }
+
+        if (pnchktc(cf) != 1) {
+            fprintf(stderr, "Bad papcap entry\n");
+            exit(1);
+        }
+
+        /*
+         * Get PPD file.
+         */
+        if ((p = pgetstr("pd", &a))) {
+            if ((pr->p_ppdfile = (char *)malloc(strlen(p) + 1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
+
+            strcpy(pr->p_ppdfile, p);
+        }
+
+        /*
+         * Get lpd printer name.
+         */
+        if ((p = pgetstr("pr", &a)) == NULL) {
+            pr->p_printer = defprinter.p_printer;
+            pr->p_flags = defprinter.p_flags;
+        } else {
+            if (*p == '|') {
+                p++;
+                pr->p_flags = P_PIPED;
+            } else {
+                pr->p_flags = P_SPOOLED;
+            }
+
+            if ((pr->p_printer = (char *)malloc(strlen(p) + 1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
+
+            strcpy(pr->p_printer, p);
+        }
+
+        /*
+         * Do we want authenticated printing?
+         */
+        if ((p = pgetstr("ca", &a)) != NULL) {
+            if ((pr->p_authprintdir = (char *)malloc(strlen(p) +1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
+
+            strcpy(pr->p_authprintdir, p);
+            pr->p_flags |= P_AUTH;
+            pr->p_flags |= P_AUTH_CAP;
+        } else {
+            pr->p_authprintdir = NULL;
+        }
+
+        if (pgetflag("sp") == 1) {
+            pr->p_flags |= P_AUTH;
+            pr->p_flags |= P_AUTH_PSSP;
+        }
+
+        if ((p = pgetstr("am", &a)) != NULL) {
+            if ((uamlist = (char *)malloc(strlen(p) +1)) == NULL) {
+                perror("malloc");
+                exit(1);
+            }
+
+            strcpy(uamlist, p);
+        }
+
+        if (pr->p_flags & P_SPOOLED) {
+            /*
+             * Get operator name.
+             */
+            if ((p = pgetstr("op", &a)) == NULL) {
+                pr->p_operator = defprinter.p_operator;
+            } else {
+                if ((pr->p_operator = (char *)malloc(strlen(p) + 1))
+                        == NULL) {
+                    perror("malloc");
+                    exit(1);
+                }
+
+                strcpy(pr->p_operator, p);
+            }
+        }
+
+        /* get printer's appletalk address. */
+        if ((p = pgetstr("pa", &a)) == NULL) {
+            memcpy(&pr->p_addr, &defprinter.p_addr, sizeof(pr->p_addr));
+        } else {
+            atalk_aton(p, &pr->p_addr);
+        }
 
 #ifdef HAVE_CUPS
-	if ((p = pgetstr("co", &a)) != NULL ) {
+
+        if ((p = pgetstr("co", &a)) != NULL) {
             pr->p_cupsoptions = strdup(p);
-            LOG (log_error, logtype_papd, "enabling cups-options for %s: %s", pr->p_name, pr->p_cupsoptions);
-	}
+            LOG(log_error, logtype_papd, "enabling cups-options for %s: %s", pr->p_name,
+                pr->p_cupsoptions);
+        }
+
 #endif
 
-	/* convert line endings for setup sections.
+        /* convert line endings for setup sections.
            real ugly work around for foomatic deficiencies,
-	   need to get rid of this */
-	if ( pgetflag("fo") == 1 ) {
+           need to get rid of this */
+        if (pgetflag("fo") == 1) {
             pr->p_flags |= P_FOOMATIC_HACK;
-            LOG (log_error, logtype_papd, "enabling foomatic hack for %s", pr->p_name);
-	}
+            LOG(log_error, logtype_papd, "enabling foomatic hack for %s", pr->p_name);
+        }
 
-	if (strncasecmp (pr->p_name, "cupsautoadd", 11) == 0)
-	{
+        if (strncasecmp(pr->p_name, "cupsautoadd", 11) == 0) {
 #ifdef HAVE_CUPS
-		pr = cups_autoadd_printers (pr, printers);
-		printers = pr;
+            pr = cups_autoadd_printers(pr, printers);
+            printers = pr;
 #else
-		LOG (log_error, logtype_papd, "cupsautoadd: Cups support not compiled in");
+            LOG(log_error, logtype_papd, "cupsautoadd: Cups support not compiled in");
 #endif /* HAVE_CUPS */
-	}
-	else {
+        } else {
 #ifdef HAVE_CUPS
-		if ( cups_check_printer ( pr, printers, 1) == 0)
-		{
-			pr->p_next = printers;
-			printers = pr;
-		}
+
+            if (cups_check_printer(pr, printers, 1) == 0) {
+                pr->p_next = printers;
+                printers = pr;
+            }
+
 #else
-		pr->p_next = printers;
-		printers = pr;
+            pr->p_next = printers;
+            printers = pr;
 #endif /* HAVE_CUPS */
-	}
+        }
     }
-    if ( c == 0 ) {
-	endprent();
-    } else {			/* No capability file, do default */
-	printers = &defprinter;
+
+    if (c == 0) {
+        endprent();
+    } else {
+        /* No capability file, do default */
+        printers = &defprinter;
     }
 }
 
-int rprintcap( struct printer *pr)
+int rprintcap(struct printer *pr)
 {
-
 #ifdef HAVE_CUPS
-
     char		*p;
 
-    if ( pr->p_flags & P_SPOOLED && !(pr->p_flags & P_CUPS_AUTOADDED) ) { /* Skip check if autoadded */
-	if ( cups_printername_ok ( pr->p_printer ) != 1) {
-	    LOG(log_error, logtype_papd, "No such CUPS printer: '%s'", pr->p_printer );
-	    return -1;
-	}
+    /* Skip check if autoadded */
+    if (pr->p_flags & P_SPOOLED && !(pr->p_flags & P_CUPS_AUTOADDED)) {
+        if (cups_printername_ok(pr->p_printer) != 1) {
+            LOG(log_error, logtype_papd, "No such CUPS printer: '%s'", pr->p_printer);
+            return -1;
+        }
     }
 
     /*
      * Check for ppd file, moved here because of cups_autoadd we cannot check at the usual location
      */
 
-    if ( pr->p_ppdfile == NULL ) {
-	if ( (p = (char *) cups_get_printer_ppd ( pr->p_printer )) != NULL ) {
-	    if (( pr->p_ppdfile = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-	    	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_ppdfile, p );
-	    pr->p_flags |= P_CUPS_PPD;
-	    LOG(log_info, logtype_papd, "PPD File for %s set to %s", pr->p_printer, pr->p_ppdfile );
-	}
+    if (pr->p_ppdfile == NULL) {
+        if ((p = (char *) cups_get_printer_ppd(pr->p_printer)) != NULL) {
+            if ((pr->p_ppdfile = (char *)malloc(strlen(p) + 1)) == NULL) {
+                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
+                exit(1);
+            }
+
+            strcpy(pr->p_ppdfile, p);
+            pr->p_flags |= P_CUPS_PPD;
+            LOG(log_info, logtype_papd, "PPD File for %s set to %s", pr->p_printer,
+                pr->p_ppdfile);
+        }
     }
 
-
 #else
-
-    char		buf[ 1024 ], area[ 1024 ], *a, *p;
+    char		buf[1024], area[1024], *a, *p;
     int			c;
 
     /*
      * Spool directory from printcap file.
      */
-    if ( pr->p_flags & P_SPOOLED ) {
-	if ( pgetent( printcap, buf, pr->p_printer ) != 1 ) {
-	    LOG(log_error, logtype_papd, "No such printer: %s", pr->p_printer );
-	    return -1;
-	}
+    if (pr->p_flags & P_SPOOLED) {
+        if (pgetent(printcap, buf, pr->p_printer) != 1) {
+            LOG(log_error, logtype_papd, "No such printer: %s", pr->p_printer);
+            return -1;
+        }
 
-	/*
-	 * Spool directory.
-	 */
-	if ( pr->p_spool != NULL && pr->p_spool != defprinter.p_spool ) {
-	    free( pr->p_spool );
-	}
-	a = area;
-	if (( p = pgetstr( "sd", &a )) == NULL ) {
-	    pr->p_spool = defprinter.p_spool;
-	} else {
-	    if (( pr->p_spool = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_spool, p );
-	}
+        /*
+         * Spool directory.
+         */
+        if (pr->p_spool != NULL && pr->p_spool != defprinter.p_spool) {
+            free(pr->p_spool);
+        }
 
-	/*
-	 * Is accounting on?
-	 */
-	a = area;
-	if ( pgetstr( "af", &a ) == NULL ) {
-	    pr->p_flags &= ~P_ACCOUNT;
-	} else {
-	    pr->p_flags |= P_ACCOUNT;
+        a = area;
+
+        if ((p = pgetstr("sd", &a)) == NULL) {
+            pr->p_spool = defprinter.p_spool;
+        } else {
+            if ((pr->p_spool = (char *)malloc(strlen(p) + 1)) == NULL) {
+                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
+                exit(1);
+            }
+
+            strcpy(pr->p_spool, p);
+        }
+
+        /*
+         * Is accounting on?
+         */
+        a = area;
+
+        if (pgetstr("af", &a) == NULL) {
+            pr->p_flags &= ~P_ACCOUNT;
+        } else {
+            pr->p_flags |= P_ACCOUNT;
 #ifdef ABS_PRINT
-	    if ( pr->p_role != NULL && pr->p_role != defprinter.p_role ) {
-		free( pr->p_role );
-	    }
-	    a = area;
-	    if (( p = pgetstr( "ro", &a )) == NULL ) {
-		pr->p_role = defprinter.p_role;
-	    } else {
-		if (( pr->p_role =
-			(char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		    LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
-		    exit( 1 );
-		}
-		strcpy( pr->p_role, p );
-	    }
 
-	    if (( c = pgetnum( "si" )) < 0 ) {
-		pr->p_srvid = defprinter.p_srvid;
-	    } else {
-		pr->p_srvid = c;
-	    }
+            if (pr->p_role != NULL && pr->p_role != defprinter.p_role) {
+                free(pr->p_role);
+            }
+
+            a = area;
+
+            if ((p = pgetstr("ro", &a)) == NULL) {
+                pr->p_role = defprinter.p_role;
+            } else {
+                if ((pr->p_role =
+                            (char *)malloc(strlen(p) + 1)) == NULL) {
+                    LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
+                    exit(1);
+                }
+
+                strcpy(pr->p_role, p);
+            }
+
+            if ((c = pgetnum("si")) < 0) {
+                pr->p_srvid = defprinter.p_srvid;
+            } else {
+                pr->p_srvid = c;
+            }
+
 #endif /* ABS_PRINT */
-	}
+        }
 
+        /*
+         * Cost of printer.
+         */
+        if (pr->p_pagecost_msg != NULL &&
+                pr->p_pagecost_msg != defprinter.p_pagecost_msg) {
+            free(pr->p_pagecost_msg);
+        }
 
-	/*
-	 * Cost of printer.
-	 */
-	if ( pr->p_pagecost_msg != NULL &&
-		pr->p_pagecost_msg != defprinter.p_pagecost_msg ) {
-	    free( pr->p_pagecost_msg );
-	}
-	a = area;
-	if (( p = pgetstr( "pc", &a )) != NULL ) {
-	    if (( pr->p_pagecost_msg =
-		    (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_pagecost_msg, p );
-	    pr->p_pagecost = 0;
-	} else if ( pr->p_flags & P_ACCOUNT ) {
-	    if (( c = pgetnum( "pc" )) < 0 ) {
-		pr->p_pagecost = defprinter.p_pagecost;
-	    } else {
-		pr->p_pagecost = c;
-	    }
-	    pr->p_pagecost_msg = NULL;
-	}
+        a = area;
 
-	/*
-	 * Get lpd lock file.
-	 */
-	if ( pr->p_lock != NULL && pr->p_lock != defprinter.p_lock ) {
-	    free( pr->p_lock );
-	}
-	a = area;
-	if (( p = pgetstr( "lo", &a )) == NULL ) {
-	    pr->p_lock = defprinter.p_lock;
-	} else {
-	    if (( pr->p_lock = (char *)malloc( strlen( p ) + 1 )) == NULL ) {
-		LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
-		exit( 1 );
-	    }
-	    strcpy( pr->p_lock, p );
-	}
+        if ((p = pgetstr("pc", &a)) != NULL) {
+            if ((pr->p_pagecost_msg =
+                        (char *)malloc(strlen(p) + 1)) == NULL) {
+                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
+                exit(1);
+            }
 
-	endprent();
+            strcpy(pr->p_pagecost_msg, p);
+            pr->p_pagecost = 0;
+        } else if (pr->p_flags & P_ACCOUNT) {
+            if ((c = pgetnum("pc")) < 0) {
+                pr->p_pagecost = defprinter.p_pagecost;
+            } else {
+                pr->p_pagecost = c;
+            }
+
+            pr->p_pagecost_msg = NULL;
+        }
+
+        /*
+         * Get lpd lock file.
+         */
+        if (pr->p_lock != NULL && pr->p_lock != defprinter.p_lock) {
+            free(pr->p_lock);
+        }
+
+        a = area;
+
+        if ((p = pgetstr("lo", &a)) == NULL) {
+            pr->p_lock = defprinter.p_lock;
+        } else {
+            if ((pr->p_lock = (char *)malloc(strlen(p) + 1)) == NULL) {
+                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
+                exit(1);
+            }
+
+            strcpy(pr->p_lock, p);
+        }
+
+        endprent();
     }
-#endif /* HAVE_CUPS */
 
+#endif /* HAVE_CUPS */
     return 0;
 }

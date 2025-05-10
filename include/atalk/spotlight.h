@@ -71,14 +71,14 @@ typedef struct {
 
 /* query state */
 typedef enum {
-	SLQ_STATE_NEW,            /* Query received from client           */
-	SLQ_STATE_RUNNING,        /* Query dispatched to Tracker          */
-	SLQ_STATE_RESULTS,        /* Async Tracker query read             */
-	SLQ_STATE_FULL,           /* result queue is full                 */
-	SLQ_STATE_DONE,           /* Got all results from Tracker         */
+    SLQ_STATE_NEW,            /* Query received from client           */
+    SLQ_STATE_RUNNING,        /* Query dispatched to Tracker          */
+    SLQ_STATE_RESULTS,        /* Async Tracker query read             */
+    SLQ_STATE_FULL,           /* result queue is full                 */
+    SLQ_STATE_DONE,           /* Got all results from Tracker         */
     SLQ_STATE_CANCEL_PENDING, /* a cancel op for the query is pending */
     SLQ_STATE_CANCELLED,      /* the query has been cancelled         */
-	SLQ_STATE_ERROR	          /* an error happended somewhere         */
+    SLQ_STATE_ERROR	          /* an error happended somewhere         */
 } slq_state_t;
 
 /* Handle for query results */

@@ -31,51 +31,55 @@
 /* uam_load. uams must have a uam_setup function. */
 struct uam_mod *uam_load(const char *path, const char *name)
 {
-  char buf[MAXPATHLEN + 1], *p;
-  struct uam_mod *mod;
-  void *module;
+    char buf[MAXPATHLEN + 1], *p;
+    struct uam_mod *mod;
+    void *module;
 
-  if ((module = mod_open(path)) == NULL) {
-    LOG(log_error, logtype_papd, "uam_load(%s): failed to load: %s", name, mod_error());
-    return NULL;
-  }
+    if ((module = mod_open(path)) == NULL) {
+        LOG(log_error, logtype_papd, "uam_load(%s): failed to load: %s", name,
+            mod_error());
+        return NULL;
+    }
 
-  if ((mod = (struct uam_mod *) malloc(sizeof(struct uam_mod))) == NULL) {
-    LOG(log_error, logtype_papd, "uam_load(%s): malloc failed", name);
-    goto uam_load_fail;
-  }
+    if ((mod = (struct uam_mod *) malloc(sizeof(struct uam_mod))) == NULL) {
+        LOG(log_error, logtype_papd, "uam_load(%s): malloc failed", name);
+        goto uam_load_fail;
+    }
 
-  strlcpy(buf, name, sizeof(buf));
-  if ((p = strchr(buf, '.')))
-    *p = '\0';
-  if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
-    goto uam_load_err;
-  }
+    strlcpy(buf, name, sizeof(buf));
 
-  if (mod->uam_fcn->uam_type != UAM_MODULE_SERVER) {
-    LOG(log_error, logtype_papd, "uam_load(%s): attempted to load a non-server module",
-	   name);
-    goto uam_load_err;
-  }
+    if ((p = strchr(buf, '.'))) {
+        *p = '\0';
+    }
 
-  /* version check would go here */
+    if ((mod->uam_fcn = mod_symbol(module, buf)) == NULL) {
+        goto uam_load_err;
+    }
 
-  /* TODO: Temporary hack below to get this to compile with 3.x, we really should be passing an AFPObj as the first parameter */
+    if (mod->uam_fcn->uam_type != UAM_MODULE_SERVER) {
+        LOG(log_error, logtype_papd,
+            "uam_load(%s): attempted to load a non-server module",
+            name);
+        goto uam_load_err;
+    }
 
-  if (!mod->uam_fcn->uam_setup ||
-      ((*mod->uam_fcn->uam_setup)(NULL,name) < 0)) {
-    LOG(log_error, logtype_papd, "uam_load(%s): uam_setup failed", name);
-    goto uam_load_err;
-  }
+    /* version check would go here */
 
-  mod->uam_module = module;
-  return mod;
+    /* TODO: Temporary hack below to get this to compile with 3.x, we really should be passing an AFPObj as the first parameter */
 
+    if (!mod->uam_fcn->uam_setup ||
+            ((*mod->uam_fcn->uam_setup)(NULL, name) < 0)) {
+        LOG(log_error, logtype_papd, "uam_load(%s): uam_setup failed", name);
+        goto uam_load_err;
+    }
+
+    mod->uam_module = module;
+    return mod;
 uam_load_err:
-  free(mod);
+    free(mod);
 uam_load_fail:
-  mod_close(module);
-  return NULL;
+    mod_close(module);
+    return NULL;
 }
 
 /* unload the module. we check for a cleanup function, but we don't
@@ -83,10 +87,12 @@ uam_load_fail:
  */
 void uam_unload(struct uam_mod *mod)
 {
-  if (mod->uam_fcn->uam_cleanup)
-    (*mod->uam_fcn->uam_cleanup)();
-  mod_close(mod->uam_module);
-  free(mod);
+    if (mod->uam_fcn->uam_cleanup) {
+        (*mod->uam_fcn->uam_cleanup)();
+    }
+
+    mod_close(mod->uam_module);
+    free(mod);
 }
 
 /* -- client-side uam functions -- */
@@ -94,139 +100,162 @@ void uam_unload(struct uam_mod *mod)
 /* set up stuff for this uam. */
 int uam_register(const int type, const char *path, const char *name, ...)
 {
-  va_list ap;
-  struct uam_obj *uam;
-  int ret;
+    va_list ap;
+    struct uam_obj *uam;
+    int ret;
 
-  if (!name)
-    return -1;
-
-  /* see if it already exists. */
-  if ((uam = auth_uamfind(type, name, strlen(name)))) {
-    if (strcmp(uam->uam_path, path)) {
-      /* it exists, but it's not the same module. */
-      LOG(log_error, logtype_papd, "uam_register: \"%s\" already loaded by %s",
-	     name, path);
-      return -1;
+    if (!name) {
+        return -1;
     }
+
+    /* see if it already exists. */
+    if ((uam = auth_uamfind(type, name, strlen(name)))) {
+        if (strcmp(uam->uam_path, path)) {
+            /* it exists, but it's not the same module. */
+            LOG(log_error, logtype_papd, "uam_register: \"%s\" already loaded by %s",
+                name, path);
+            return -1;
+        }
+
+        uam->uam_count++;
+        return 0;
+    }
+
+    /* allocate space for uam */
+    if ((uam = calloc(1, sizeof(struct uam_obj))) == NULL) {
+        return -1;
+    }
+
+    uam->uam_name = name;
+    uam->uam_path = strdup(path);
     uam->uam_count++;
-    return 0;
-  }
+    va_start(ap, name);
 
-  /* allocate space for uam */
-  if ((uam = calloc(1, sizeof(struct uam_obj))) == NULL)
-    return -1;
+    switch (type) {
+    case UAM_SERVER_LOGIN:
+        /* expect three arguments */
+        uam->u.uam_login.login = va_arg(ap, void *);
+        uam->u.uam_login.logincont = va_arg(ap, void *);
+        uam->u.uam_login.logout = va_arg(ap, void *);
+        break;
 
-  uam->uam_name = name;
-  uam->uam_path = strdup(path);
-  uam->uam_count++;
+    case UAM_SERVER_CHANGEPW:
+        /* one argument */
+        uam->u.uam_changepw = va_arg(ap, void *);
+        break;
 
-  va_start(ap, name);
-  switch (type) {
-  case UAM_SERVER_LOGIN: /* expect three arguments */
-    uam->u.uam_login.login = va_arg(ap, void *);
-    uam->u.uam_login.logincont = va_arg(ap, void *);
-    uam->u.uam_login.logout = va_arg(ap, void *);
-    break;
-  case UAM_SERVER_CHANGEPW: /* one argument */
-    uam->u.uam_changepw = va_arg(ap, void *);
-    break;
-  case UAM_SERVER_PRINTAUTH: /* x arguments */
-    uam->u.uam_printer = va_arg(ap, void *);
-    break;
-  default:
-    break;
-  }
-  va_end(ap);
+    case UAM_SERVER_PRINTAUTH:
+        /* x arguments */
+        uam->u.uam_printer = va_arg(ap, void *);
+        break;
 
-  /* attach to other uams */
-  ret = auth_register(type, uam);
-  if (ret) {
-    free(uam->uam_path);
-    free(uam);
-  }
+    default:
+        break;
+    }
 
-  return ret;
+    va_end(ap);
+    /* attach to other uams */
+    ret = auth_register(type, uam);
+
+    if (ret) {
+        free(uam->uam_path);
+        free(uam);
+    }
+
+    return ret;
 }
 
 void uam_unregister(const int type, const char *name)
 {
-  struct uam_obj *uam;
+    struct uam_obj *uam;
 
-  if (!name)
-    return;
+    if (!name) {
+        return;
+    }
 
-  uam = auth_uamfind(type, name, strlen(name));
-  if (!uam || --uam->uam_count > 0)
-    return;
+    uam = auth_uamfind(type, name, strlen(name));
 
-  auth_unregister(uam);
-  free(uam->uam_path);
-  free(uam);
+    if (!uam || --uam->uam_count > 0) {
+        return;
+    }
+
+    auth_unregister(uam);
+    free(uam->uam_path);
+    free(uam);
 }
 
 /* Crap to support uams which call this afpd function */
-int uam_afpserver_option(void *private _U_, const int what _U_, void *option _U_,
-                         size_t *len _U_)
+int uam_afpserver_option(void *private _U_, const int what _U_,
+                         void *option _U_, size_t *len _U_)
 {
-	return 0;
+    return 0;
 }
 
 /* --- helper functions for plugin uams --- */
 
 struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
 {
-  struct passwd *pwent;
-  char *user;
-  int i;
+    struct passwd *pwent;
+    char *user;
+    int i;
 
-  if ((pwent = getpwnam(name)))
-    return pwent;
-
-  for (i = 0; i < len; i++)
-    name[i] = tolower(name[i]);
-
-  setpwent();
-  while ((pwent = getpwent())) {
-    if ((user = strchr(pwent->pw_gecos, ','))) *user = '\0';
-    user = pwent->pw_gecos;
-
-    /* check against both the gecos and the name fields. the user
-     * might have just used a different capitalization. */
-    if ((strncasecmp(user, name, len) == 0) ||
-        (strncasecmp(pwent->pw_name, name, len) == 0)) {
-      strncpy(name, pwent->pw_name, len);
-      break;
+    if ((pwent = getpwnam(name))) {
+        return pwent;
     }
-  }
-  endpwent();
 
-  /* os x server doesn't keep anything useful if we do getpwent */
-  return pwent ? getpwnam(name) : NULL;
+    for (i = 0; i < len; i++) {
+        name[i] = tolower(name[i]);
+    }
+
+    setpwent();
+
+    while ((pwent = getpwent())) {
+        if ((user = strchr(pwent->pw_gecos, ','))) {
+            *user = '\0';
+        }
+
+        user = pwent->pw_gecos;
+
+        /* check against both the gecos and the name fields. the user
+         * might have just used a different capitalization. */
+        if ((strncasecmp(user, name, len) == 0) ||
+                (strncasecmp(pwent->pw_name, name, len) == 0)) {
+            strncpy(name, pwent->pw_name, len);
+            break;
+        }
+    }
+
+    endpwent();
+    /* os x server doesn't keep anything useful if we do getpwent */
+    return pwent ? getpwnam(name) : NULL;
 }
 
 
 int uam_checkuser(const struct passwd *pwd)
 {
-  char *p;
+    char *p;
 
-  if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0'))
-    return -1;
+    if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0')) {
+        return -1;
+    }
 
-  while ((p = getusershell())) {
-    if ( strcmp( p, pwd->pw_shell ) == 0 )
-      break;
-  }
-  endusershell();
+    while ((p = getusershell())) {
+        if (strcmp(p, pwd->pw_shell) == 0) {
+            break;
+        }
+    }
 
+    endusershell();
 #ifndef DISABLE_SHELLCHECK
-  if (!p) {
-    LOG(log_info, logtype_papd, "illegal shell %s for %s",pwd->pw_shell,pwd->pw_name);
-    return -1;
-  }
-#endif /* DISABLE_SHELLCHECK */
 
-  return 0;
+    if (!p) {
+        LOG(log_info, logtype_papd, "illegal shell %s for %s", pwd->pw_shell,
+            pwd->pw_name);
+        return -1;
+    }
+
+#endif /* DISABLE_SHELLCHECK */
+    return 0;
 }
 
 

@@ -176,12 +176,12 @@ typedef struct AFPObj {
     int proto;
     const void *signature;
     struct DSI *dsi;
-    void* handle;
-    #ifndef NO_DDP
+    void *handle;
+#ifndef NO_DDP
     int fd;
     int statuslen;
     char aspstatus[1400];
-    #endif /* NO_DDP */
+#endif /* NO_DDP */
     struct afp_options options;
     char *Obj, *Type, *Zone;
     dictionary *iniconfig;
@@ -210,7 +210,8 @@ typedef struct AFPObj {
 } AFPObj;
 
 /* typedef for AFP functions handlers */
-typedef int (*AFPCmd)(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+typedef int (*AFPCmd)(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                      size_t *rbuflen);
 
 /* Global variables */
 extern AFPObj             *AFPobj;
@@ -230,7 +231,7 @@ extern int setmessage (const char *);
 extern void readmessage (AFPObj *);
 
 /* afp_util.c */
-extern const char *AfpNum2name (int );
+extern const char *AfpNum2name (int);
 extern const char *AfpErr2name(int err);
 
 /* directory.c */

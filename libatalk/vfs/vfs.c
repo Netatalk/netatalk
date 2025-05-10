@@ -49,49 +49,57 @@ struct perm {
     gid_t gid;
 };
 
-typedef int (*rf_loop)(const struct vol *, struct dirent *, char *, void *, int);
+typedef int (*rf_loop)(const struct vol *, struct dirent *, char *, void *,
+                       int);
 
 /* ----------------------------- */
 static int
-for_each_adouble(const char *from, const char *name, rf_loop fn, const struct vol *vol, void *data, int flag)
+for_each_adouble(const char *from, const char *name, rf_loop fn,
+                 const struct vol *vol, void *data, int flag)
 {
-    char            buf[ MAXPATHLEN + 1];
+    char            buf[MAXPATHLEN + 1];
     char            *m;
     DIR             *dp;
     struct dirent   *de;
     int             ret;
 
-
-    if (NULL == ( dp = opendir( name)) ) {
+    if (NULL == (dp = opendir(name))) {
         if (!flag) {
-            LOG(log_error, logtype_afpd, "%s: opendir %s: %s", from, fullpathname(name),strerror(errno) );
+            LOG(log_error, logtype_afpd, "%s: opendir %s: %s", from, fullpathname(name),
+                strerror(errno));
             return -1;
         }
+
         return 0;
     }
-    strlcpy( buf, name, sizeof(buf));
-    strlcat( buf, "/", sizeof(buf) );
-    m = strchr( buf, '\0' );
+
+    strlcpy(buf, name, sizeof(buf));
+    strlcat(buf, "/", sizeof(buf));
+    m = strchr(buf, '\0');
     ret = 0;
+
     while ((de = readdir(dp))) {
         if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
-                continue;
+            continue;
         }
 
         strlcat(buf, de->d_name, sizeof(buf));
+
         if (fn && (ret = fn(vol, de, buf, data, flag))) {
-           closedir(dp);
-           return ret;
+            closedir(dp);
+            return ret;
         }
+
         *m = 0;
     }
+
     closedir(dp);
     return ret;
 }
 
 static int netatalk_name(const char *name)
 {
-    return strcmp(name,".AppleDB") && strcmp(name,".AppleDesktop");
+    return strcmp(name, ".AppleDB") && strcmp(name, ".AppleDesktop");
 }
 
 /*******************************************************************************
@@ -100,10 +108,12 @@ static int netatalk_name(const char *name)
 
 static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 {
-    if (name[0] != '.')
+    if (name[0] != '.') {
         return 1;
+    }
 
-    return netatalk_name(name) && strcmp(name,".AppleDouble") && strcasecmp(name,".Parent");
+    return netatalk_name(name) && strcmp(name, ".AppleDouble")
+           && strcasecmp(name, ".Parent");
 }
 
 /* ----------------- */
@@ -112,8 +122,11 @@ static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
     const char *ad_p = vol->ad_path(path, ADFLAGS_HF);
 
     if (chown(ad_p, uid, gid) < 0) {
-        if (errno == ENOENT)
-            return 0; /* Ignore if file doesn't exist */
+        if (errno == ENOENT) {
+            /* Ignore if file doesn't exist */
+            return 0;
+        }
+
         return -1;
     }
 
@@ -127,7 +140,8 @@ static int RF_renamedir_adouble(VFS_FUNC_ARGS_RENAMEDIR)
 }
 
 /* ----------------- */
-static int deletecurdir_adouble_loop(const struct vol *vol _U_, struct dirent *de, char *name, void *data _U_, int flag _U_)
+static int deletecurdir_adouble_loop(const struct vol *vol _U_,
+                                     struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
     struct stat st;
     int         err;
@@ -135,11 +149,13 @@ static int deletecurdir_adouble_loop(const struct vol *vol _U_, struct dirent *d
     /* bail if the file exists in the current directory.
      * note: this will not fail with dangling symlinks */
 
-    if (lstat(de->d_name, &st) == 0)
+    if (lstat(de->d_name, &st) == 0) {
         return AFPERR_DIRNEMPT;
+    }
 
-    if ((err = netatalk_unlink(name)))
+    if ((err = netatalk_unlink(name))) {
         return err;
+    }
 
     return 0;
 }
@@ -150,73 +166,84 @@ static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
 
     /* delete stray .AppleDouble files. this happens to get .Parent files
        as well. */
-    if ((err = for_each_adouble("deletecurdir", ".AppleDouble", deletecurdir_adouble_loop, vol, NULL, 1)))
+    if ((err = for_each_adouble("deletecurdir", ".AppleDouble",
+                                deletecurdir_adouble_loop, vol, NULL, 1))) {
         return err;
-    return netatalk_rmdir(-1, ".AppleDouble" );
+    }
+
+    return netatalk_rmdir(-1, ".AppleDouble");
 }
 
 /* ----------------- */
-static int adouble_setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
+static int adouble_setfilmode(const struct vol *vol, const char *name,
+                              mode_t mode, struct stat *st)
 {
     return setfilmode(vol, name, ad_hf_mode(mode), st);
 }
 
 static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
 {
-    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF ), mode, st);
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
 }
 
 /* ----------------- */
 static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 {
-    const char *adouble = vol->ad_path(name, ADFLAGS_DIR );
+    const char *adouble = vol->ad_path(name, ADFLAGS_DIR);
 
     if (dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
                    (DIRBITS | mode) & ~vol->v_umask,
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
-                ) < 0)
+                  ) < 0) {
             return -1;
+        }
     }
 
-    if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR ), mode, st) < 0)
+    if (adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_DIR), mode, st) < 0) {
         return -1;
+    }
 
     if (!dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
                    (DIRBITS | mode) & ~vol->v_umask,
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
-                ) < 0)
+                  ) < 0) {
             return  -1 ;
+        }
     }
+
     return 0;
 }
 
 /* ----------------- */
-static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_, char *name, void *data, int flag)
+static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
+                                   char *name, void *data, int flag)
 {
     mode_t hf_mode = *(mode_t *)data;
     struct stat st;
 
-    if (ostat(name, &st, vol_syml_opt(vol)) < 0 ) {
-        if (flag)
+    if (ostat(name, &st, vol_syml_opt(vol)) < 0) {
+        if (flag) {
             return 0;
-        LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s", name, strerror(errno) );
-    }
-    else if (!S_ISDIR(st.st_mode)) {
+        }
+
+        LOG(log_error, logtype_afpd, "setdirmode: stat %s: %s", name, strerror(errno));
+    } else if (!S_ISDIR(st.st_mode)) {
         if (setfilmode(vol, name, hf_mode, &st) < 0) {
-               /* FIXME what do we do then? */
+            /* FIXME what do we do then? */
         }
     }
+
     return 0;
 }
 
 static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
 {
     mode_t hf_mode = ad_hf_mode(mode);
-    const char  *adouble = vol->ad_path(name, ADFLAGS_DIR );
+    const char  *adouble = vol->ad_path(name, ADFLAGS_DIR);
     const char  *adouble_p = ad_dir(adouble);
 
     if (dir_rx_set(mode)) {
@@ -224,55 +251,63 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
                    (DIRBITS | mode) & ~vol->v_umask,
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
-                ) < 0)
+                  ) < 0) {
             return -1;
+        }
     }
 
-    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, vol, &hf_mode, 0))
+    if (for_each_adouble("setdirmode", adouble_p, setdirmode_adouble_loop, vol,
+                         &hf_mode, 0)) {
         return -1;
+    }
 
     if (!dir_rx_set(mode)) {
         if (ochmod(ad_dir(adouble),
                    (DIRBITS | mode) & ~vol->v_umask,
                    st,
                    vol_syml_opt(vol) | vol_chmod_opt(vol)
-                ) < 0)
+                  ) < 0) {
             return  -1 ;
+        }
     }
+
     return 0;
 }
 
 static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 {
-    if (lchown(".AppleDouble", uid, gid) < 0 && errno != EPERM ) {
+    if (lchown(".AppleDouble", uid, gid) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
-            uid, gid,fullpathname(".AppleDouble"), strerror(errno));
+            uid, gid, fullpathname(".AppleDouble"), strerror(errno));
     }
+
     return 0;
 }
 
 /* ----------------- */
 static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE)
 {
-	return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
+    return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 }
 
 /* ----------------- */
 static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
 {
-    char  adsrc[ MAXPATHLEN + 1];
+    char  adsrc[MAXPATHLEN + 1];
     int   err = 0;
+    strcpy(adsrc, vol->ad_path(src, 0));
 
-    strcpy( adsrc, vol->ad_path(src, 0 ));
-    if (unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) < 0) {
+    if (unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0)) < 0) {
         struct stat st;
-
         err = errno;
-        if (errno == ENOENT) {
-	        struct adouble    ad;
 
-            if (ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no resource fork, */
+        if (errno == ENOENT) {
+            struct adouble    ad;
+
+            /* source has no resource fork */
+            if (ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) {
                 return 0;
+            }
 
             /* We are here  because :
              * -there's no dest folder.
@@ -282,23 +317,28 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
              * use a diff one, it's not a pb,ie it's not the same file, yet.
              */
             ad_init(&ad, vol);
+
             if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) == 0) {
-            	ad_close(&ad, ADFLAGS_HF);
-    	        if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) )
-                   err = 0;
-                else
-                   err = errno;
+                ad_close(&ad, ADFLAGS_HF);
+
+                if (!unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0))) {
+                    err = 0;
+                } else {
+                    err = errno;
+                }
+            } else {
+                /* it's something else, bail out */
+                err = errno;
             }
-            else { /* it's something else, bail out */
-	            err = errno;
-	        }
-	    }
-	}
-	if (err) {
-		errno = err;
-		return -1;
-	}
-	return 0;
+        }
+    }
+
+    if (err) {
+        errno = err;
+        return -1;
+    }
+
+    return 0;
 }
 
 static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
@@ -312,7 +352,6 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
     char dst_dir[MAXPATHLEN + 1];
     const char *name = NULL;
     const char *dir = NULL;
-
     struct stat st;
     EC_ZERO(stat(dst, &st));
 
@@ -320,29 +359,24 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
         /* build src path to AppleDouble file*/
         EC_NULL(s = bfromcstr(src));
         EC_ZERO(bcatcstr(s, "/.AppleDouble/.Parent"));
-
         /* build dst path to AppleDouble file*/
         EC_NULL(d = bfromcstr(dst));
         EC_ZERO(bcatcstr(d, "/.AppleDouble/.Parent"));
     } else {
         /* get basename */
-
         /* build src path to AppleDouble file*/
         strlcpy(src_name, src, sizeof(src_name));
         strlcpy(src_dir, src, sizeof(src_dir));
         EC_NULL(name = basename(src_name));
         EC_NULL(dir = dirname(src_dir));
-
         EC_NULL(s = bfromcstr(dir));
         EC_ZERO(bcatcstr(s, "/.AppleDouble/"));
         EC_ZERO(bcatcstr(s, name));
-
         /* build dst path to AppleDouble file*/
         strlcpy(dst_name, dst, sizeof(dst_name));
         strlcpy(dst_dir, dst, sizeof(dst_dir));
         EC_NULL(name = basename(dst_name));
         EC_NULL(dir = dirname(dst_dir));
-
         EC_NULL(d = bfromcstr(dir));
         EC_ZERO(bcatcstr(d, "/.AppleDouble/"));
         EC_ZERO(bcatcstr(d, name));
@@ -350,8 +384,9 @@ static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
 
     /* ignore errors */
     if (copy_file(sfd, cfrombstr(s), cfrombstr(d), 0666) != 0)
-        if (errno != ENOENT)
+        if (errno != ENOENT) {
             EC_FAIL;
+        }
 
 EC_CLEANUP:
     bdestroy(s);
@@ -362,36 +397,44 @@ EC_CLEANUP:
 #ifdef HAVE_NFSV4_ACLS
 static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
 {
-    static char buf[ MAXPATHLEN + 1];
+    static char buf[MAXPATHLEN + 1];
     struct stat st;
     int len;
 
     if ((stat(path, &st)) != 0) {
-        if (errno == ENOENT)
+        if (errno == ENOENT) {
             return AFP_OK;
+        }
+
         return AFPERR_MISC;
     }
+
     if (!S_ISDIR(st.st_mode)) {
         /* set ACL on resource fork */
-        if ((acl(vol->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0)
+        if ((acl(vol->ad_path(path, ADFLAGS_HF), cmd, count, aces)) != 0) {
             return AFPERR_MISC;
+        }
     }
+
     return AFP_OK;
 }
 
 static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 {
     int ret;
-    static char buf[ MAXPATHLEN + 1];
+    static char buf[MAXPATHLEN + 1];
     int len;
 
-    if (dir)
+    if (dir) {
         return AFP_OK;
+    }
 
     /* remove ACL from resource fork */
     if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK) {
-        if (errno == ENOENT)
+        if (errno == ENOENT) {
             return AFP_OK;
+        }
+
         return ret;
     }
 
@@ -405,17 +448,22 @@ static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
     EC_INIT;
     struct stat st;
 
-    if (stat(path, &st) == -1)
+    if (stat(path, &st) == -1) {
         EC_FAIL;
+    }
 
     if (!S_ISDIR(st.st_mode)) {
         /* set ACL on resource fork */
-        EC_ZERO_ERR( acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl), AFPERR_MISC );
+        EC_ZERO_ERR(acl_set_file(vol->ad_path(path, ADFLAGS_HF), type, acl),
+                    AFPERR_MISC);
     }
 
 EC_CLEANUP:
-    if (errno == ENOENT)
+
+    if (errno == ENOENT) {
         EC_STATUS(AFP_OK);
+    }
+
     EC_EXIT;
 }
 
@@ -423,15 +471,18 @@ static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 {
     EC_INIT;
 
-    if (dir)
+    if (dir) {
         EC_EXIT_STATUS(AFP_OK);
+    }
 
     /* remove ACL from resource fork */
-    EC_ZERO_ERR( remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC );
-
+    EC_ZERO_ERR(remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC);
 EC_CLEANUP:
-    if (errno == ENOENT)
+
+    if (errno == ENOENT) {
         EC_STATUS(AFP_OK);
+    }
+
     EC_EXIT;
 }
 #endif
@@ -441,12 +492,16 @@ EC_CLEANUP:
  ************************************************************************/
 static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 {
-    if (name[0] != '.')
+    if (name[0] != '.') {
         return 1;
+    }
 
 #ifndef HAVE_EAFD
-    if (name[1] == '_')
+
+    if (name[1] == '_') {
         return ad_valid_header_osx(name);
+    }
+
 #endif
     return netatalk_name(name);
 }
@@ -455,7 +510,7 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
 {
 #ifndef HAVE_EAFD
-    return chown(vol->ad_path(path, ADFLAGS_HF ), uid, gid);
+    return chown(vol->ad_path(path, ADFLAGS_HF), uid, gid);
 #endif
     return 0;
 }
@@ -467,25 +522,31 @@ static int RF_renamedir_ea(VFS_FUNC_ARGS_RENAMEDIR)
 }
 
 /* Returns 1 if the entry is NOT an ._ file */
-static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol, struct dirent *de, char *name, void *data _U_, int flag _U_)
+static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol,
+        struct dirent *de, char *name, void *data _U_, int flag _U_)
 {
-    if (de->d_name[0] != '.' || de->d_name[0] == '_')
+    if (de->d_name[0] != '.' || de->d_name[0] == '_') {
         return 1;
+    }
 
     return 0;
 }
 
-static int deletecurdir_ea_osx_loop(const struct vol *vol _U_, struct dirent *de _U_, char *name, void *data _U_, int flag _U_)
+static int deletecurdir_ea_osx_loop(const struct vol *vol _U_,
+                                    struct dirent *de _U_, char *name, void *data _U_, int flag _U_)
 {
     int ret;
     struct stat sb;
 
     if (strncmp(name, "._", strlen("._")) == 0) {
-        if (lstat(name, &sb) != 0)
+        if (lstat(name, &sb) != 0) {
             return -1;
+        }
+
         if (S_ISREG(sb.st_mode))
-            if ((ret = netatalk_unlink(name)) != 0)
+            if ((ret = netatalk_unlink(name)) != 0) {
                 return ret;
+            }
     }
 
     return 0;
@@ -496,11 +557,13 @@ static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
 {
 #ifndef HAVE_EAFD
     int err;
+
     /* delete stray ._AppleDouble files */
     if ((err = for_each_adouble("deletecurdir_ea_osx", ".",
                                 deletecurdir_ea_osx_loop,
-                                vol, NULL, 0)) != 0)
+                                vol, NULL, 0)) != 0) {
         return err;
+    }
 
 #endif
     return 0;
@@ -517,7 +580,7 @@ static int RF_setdirunixmode_ea(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
 {
 #ifndef HAVE_EAFD
-    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF ), mode, st);
+    return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
 #endif
     return 0;
 }
@@ -535,13 +598,13 @@ static int RF_setdirowner_ea(VFS_FUNC_ARGS_SETDIROWNER)
 {
 #ifndef HAVE_EAFD
 #endif
-	return 0;
+    return 0;
 }
 
 static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
 {
 #ifndef HAVE_EAFD
-	return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
+    return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 #endif
     return 0;
 }
@@ -551,7 +614,6 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
     /* the EA VFS module does this all for us */
     return 0;
 #endif
-
     EC_INIT;
     bstring s = NULL;
     bstring d = NULL;
@@ -561,13 +623,10 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
     char dst_dir[MAXPATHLEN + 1];
     const char *name = NULL;
     const char *dir = NULL;
-
     /* get basename */
-
     /* build src path to ._ file*/
     strlcpy(src_name, src, sizeof(src_name));
     strlcpy(src_dir, src, sizeof(src_dir));
-
     EC_NULL(name = basename(src_name));
     EC_NULL(dir = dirname(src_dir));
     EC_NULL(s = bfromcstr(dir));
@@ -579,11 +638,9 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
     EC_ZERO(bcatcstr(s, "/._"));
     EC_ZERO(bcatcstr(s, name));
 #endif
-
     /* build dst path to ._file*/
     strlcpy(dst_name, dst, sizeof(dst_name));
     strlcpy(dst_dir, dst, sizeof(dst_dir));
-
     EC_NULL(name = basename(dst_name));
     EC_NULL(dir = dirname(dst_dir));
     EC_NULL(d = bfromcstr(dir));
@@ -600,11 +657,11 @@ static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
         switch (errno) {
         case ENOENT:
             break;
+
         default:
             LOG(log_error, logtype_afpd, "[VFS] copyfile(\"%s\" -> \"%s\"): %s",
                 cfrombstr(s), cfrombstr(d), strerror(errno));
             EC_FAIL;
-
         }
     }
 
@@ -618,20 +675,23 @@ EC_CLEANUP:
 static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
 {
 #ifndef HAVE_EAFD
-    char  adsrc[ MAXPATHLEN + 1];
+    char  adsrc[MAXPATHLEN + 1];
     int   err = 0;
+    strcpy(adsrc, vol->ad_path(src, 0));
 
-    strcpy( adsrc, vol->ad_path(src, 0 ));
-
-    if (unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0 )) < 0) {
+    if (unix_rename(dirfd, adsrc, -1, vol->ad_path(dst, 0)) < 0) {
         struct stat st;
-
         err = errno;
-        if (errno == ENOENT && ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) /* source has no resource fork, */
+
+        /* source has no resource fork */
+        if (errno == ENOENT && ostatat(dirfd, adsrc, &st, vol_syml_opt(vol))) {
             return 0;
+        }
+
         errno = err;
         return -1;
     }
+
     return 0;
 #endif
     return 0;
@@ -676,7 +736,8 @@ VFS_MFUNC(renamedir, VFS_FUNC_ARGS_RENAMEDIR, VFS_FUNC_VARS_RENAMEDIR)
 VFS_MFUNC(deletecurdir, VFS_FUNC_ARGS_DELETECURDIR, VFS_FUNC_VARS_DELETECURDIR)
 VFS_MFUNC(setfilmode, VFS_FUNC_ARGS_SETFILEMODE, VFS_FUNC_VARS_SETFILEMODE)
 VFS_MFUNC(setdirmode, VFS_FUNC_ARGS_SETDIRMODE, VFS_FUNC_VARS_SETDIRMODE)
-VFS_MFUNC(setdirunixmode, VFS_FUNC_ARGS_SETDIRUNIXMODE, VFS_FUNC_VARS_SETDIRUNIXMODE)
+VFS_MFUNC(setdirunixmode, VFS_FUNC_ARGS_SETDIRUNIXMODE,
+          VFS_FUNC_VARS_SETDIRUNIXMODE)
 VFS_MFUNC(setdirowner, VFS_FUNC_ARGS_SETDIROWNER, VFS_FUNC_VARS_SETDIROWNER)
 VFS_MFUNC(deletefile, VFS_FUNC_ARGS_DELETEFILE, VFS_FUNC_VARS_DELETEFILE)
 VFS_MFUNC(renamefile, VFS_FUNC_ARGS_RENAMEFILE, VFS_FUNC_VARS_RENAMEFILE)
@@ -686,7 +747,8 @@ VFS_MFUNC(acl, VFS_FUNC_ARGS_ACL, VFS_FUNC_VARS_ACL)
 VFS_MFUNC(remove_acl, VFS_FUNC_ARGS_REMOVE_ACL, VFS_FUNC_VARS_REMOVE_ACL)
 #endif
 VFS_MFUNC(ea_getsize, VFS_FUNC_ARGS_EA_GETSIZE, VFS_FUNC_VARS_EA_GETSIZE)
-VFS_MFUNC(ea_getcontent, VFS_FUNC_ARGS_EA_GETCONTENT, VFS_FUNC_VARS_EA_GETCONTENT)
+VFS_MFUNC(ea_getcontent, VFS_FUNC_ARGS_EA_GETCONTENT,
+          VFS_FUNC_VARS_EA_GETCONTENT)
 VFS_MFUNC(ea_list, VFS_FUNC_ARGS_EA_LIST, VFS_FUNC_VARS_EA_LIST)
 VFS_MFUNC(ea_set, VFS_FUNC_ARGS_EA_SET, VFS_FUNC_VARS_EA_SET)
 VFS_MFUNC(ea_remove, VFS_FUNC_ARGS_EA_REMOVE, VFS_FUNC_VARS_EA_REMOVE)
@@ -877,10 +939,12 @@ void initvol_vfs(struct vol *vol)
 
     /* Extended Attributes */
     if (vol->v_vfs_ea == AFPVOL_EA_SYS) {
-        LOG(log_debug, logtype_afpd, "initvol_vfs: enabling EA support with native EAs");
+        LOG(log_debug, logtype_afpd,
+            "initvol_vfs: enabling EA support with native EAs");
         vol->vfs_modules[1] = &netatalk_ea_sys;
     } else if (vol->v_vfs_ea == AFPVOL_EA_AD) {
-        LOG(log_debug, logtype_afpd, "initvol_vfs: enabling EA support with adouble files");
+        LOG(log_debug, logtype_afpd,
+            "initvol_vfs: enabling EA support with adouble files");
         vol->vfs_modules[1] = &netatalk_ea_adouble;
     } else {
         LOG(log_debug, logtype_afpd, "initvol_vfs: volume without EA support");
@@ -893,5 +957,4 @@ void initvol_vfs(struct vol *vol)
 #ifdef HAVE_POSIX_ACLS
     vol->vfs_modules[2] = &netatalk_posix_acl_adouble;
 #endif
-
 }

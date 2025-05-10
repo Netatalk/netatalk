@@ -18,7 +18,7 @@
 #include <sys/socket.h>
 #include <netatalk/at.h>
 
-extern int netddp_open   (struct sockaddr_at *, struct sockaddr_at *);
+extern int netddp_open(struct sockaddr_at *, struct sockaddr_at *);
 
 #include <unistd.h>
 #include <sys/types.h>

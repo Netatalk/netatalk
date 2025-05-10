@@ -50,49 +50,52 @@ atp_rresp(
 {
     int		i, rc;
     size_t	len;
-
 #ifdef EBUG
-    atp_print_bufuse( ah, "atp_rresp" );
+    atp_print_bufuse(ah, "atp_rresp");
 #endif /* EBUG */
+
     /* check parameters
     */
-    if ( atpb->atp_rresiovcnt <= 0 || atpb->atp_rresiovcnt > 8 ) {
-	errno = EINVAL;
-	return -1;
+    if (atpb->atp_rresiovcnt <= 0 || atpb->atp_rresiovcnt > 8) {
+        errno = EINVAL;
+        return -1;
     }
 
-    while (( rc = atp_rsel( ah, atpb->atp_saddr, ATP_TRESP )) == 0 ) {
-	;
+    while ((rc = atp_rsel(ah, atpb->atp_saddr, ATP_TRESP)) == 0) {
+        ;
     }
 
-    if ( rc != ATP_TRESP ) {
-	return rc;
+    if (rc != ATP_TRESP) {
+        return rc;
     }
 
-    for ( i = 0; i < 8; ++i ) {
-	if ( ah->atph_resppkt[ i ] == NULL ) {
-	    break;
-	}
-	len = ah->atph_resppkt[ i ]->atpbuf_dlen - ATP_HDRSIZE;
-	if ( i > atpb->atp_rresiovcnt - 1 ||
-		len > atpb->atp_rresiov[ i ].iov_len ) {
-	    errno = EMSGSIZE;
-	    return -1;
-	}
+    for (i = 0; i < 8; ++i) {
+        if (ah->atph_resppkt[i] == NULL) {
+            break;
+        }
+
+        len = ah->atph_resppkt[i]->atpbuf_dlen - ATP_HDRSIZE;
+
+        if (i > atpb->atp_rresiovcnt - 1 ||
+                len > atpb->atp_rresiov[i].iov_len) {
+            errno = EMSGSIZE;
+            return -1;
+        }
+
 #ifdef EBUG
-	fprintf( stderr, "atp_rresp copying %ld bytes packet %d\n",
-		len, i );
-	bprint( (char *)ah->atph_resppkt[ i ]->atpbuf_info.atpbuf_data,
-		len + ATP_HDRSIZE );
+        fprintf(stderr, "atp_rresp copying %ld bytes packet %d\n",
+                len, i);
+        bprint((char *)ah->atph_resppkt[i]->atpbuf_info.atpbuf_data,
+               len + ATP_HDRSIZE);
 #endif /* EBUG */
-	memcpy(atpb->atp_rresiov[ i ].iov_base,
-	       ah->atph_resppkt[ i ]->atpbuf_info.atpbuf_data + ATP_HDRSIZE,
-	       len );
-	atpb->atp_rresiov[ i ].iov_len = len;
-	atp_free_buf( ah->atph_resppkt[ i ] );
-	ah->atph_resppkt[ i ] = NULL;
+        memcpy(atpb->atp_rresiov[i].iov_base,
+               ah->atph_resppkt[i]->atpbuf_info.atpbuf_data + ATP_HDRSIZE,
+               len);
+        atpb->atp_rresiov[i].iov_len = len;
+        atp_free_buf(ah->atph_resppkt[i]);
+        ah->atph_resppkt[i] = NULL;
     }
-    atpb->atp_rresiovcnt = i;
 
+    atpb->atp_rresiovcnt = i;
     return 0;
 }

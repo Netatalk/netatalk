@@ -60,14 +60,14 @@ extern int hash_val_t_bit;
  */
 
 typedef struct hnode_t {
-    #if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)	/* 1 */
+#if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)	/* 1 */
     struct hnode_t *hash_next;		/* 2 */
     const void *hash_key;		/* 3 */
     void *hash_data;			/* 4 */
     hash_val_t hash_hkey;		/* 5 */
-    #else
+#else
     int hash_dummy;
-    #endif
+#endif
 } hnode_t;
 
 /*
@@ -136,7 +136,7 @@ typedef void (*hnode_free_t)(hnode_t *, void *);
  */
 
 typedef struct hash_t {
-    #if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)
+#if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)
     struct hnode_t **hash_table;		/* 1 */
     hashcount_t hash_nchains;			/* 2 */
     hashcount_t hash_nodecount;			/* 3 */
@@ -150,9 +150,9 @@ typedef struct hash_t {
     void *hash_context;
     hash_val_t hash_mask;			/* 9 */
     int hash_dynamic;				/* 10 */
-    #else
+#else
     int hash_dummy;
-    #endif
+#endif
 } hash_t;
 
 /*
@@ -166,13 +166,13 @@ typedef struct hash_t {
  */
 
 typedef struct hscan_t {
-    #if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)
+#if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)
     hash_t *hash_table;		/* 1 */
     hash_val_t hash_chain;	/* 2 */
     hnode_t *hash_next;		/* 3 */
-    #else
+#else
     int hash_dummy;
-    #endif
+#endif
 } hscan_t;
 
 

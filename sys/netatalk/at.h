@@ -96,21 +96,22 @@ struct sockaddr_at {
     struct at_addr	sat_addr;
 #ifdef notdef
     struct {
-	unsigned char		sh_type;
+        unsigned char		sh_type;
 # define SATHINT_NONE	0
 # define SATHINT_CONFIG	1
 # define SATHINT_IFACE	2
-	union {
-	    char		su_zero[ 7 ];	/* XXX check size */
-	    struct {
-		unsigned char		sr_phase;
-		unsigned short		sr_firstnet, sr_lastnet;
-	    } su_range;
-	    unsigned short		su_interface;
-	} sh_un;
+        union {
+            /* XXX check size */
+            char		su_zero[7];
+            struct {
+                unsigned char		sr_phase;
+                unsigned short		sr_firstnet, sr_lastnet;
+            } su_range;
+            unsigned short		su_interface;
+        } sh_un;
     } sat_hints;
 #else /* notdef */
-    char		sat_zero[ 8 ];
+    char		sat_zero[8];
 #endif /* notdef */
 };
 

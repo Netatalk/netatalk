@@ -29,30 +29,40 @@ int gDebug;
 
 char *iptoa(uint32_t ip)
 {
-	static char s[16];
-
-	sprintf(s, "%u.%u.%u.%u",
-		(ip >> 24) & 0xff, (ip >> 16) & 0xff,
-		(ip >> 8) & 0xff, ip & 0xff);
-	return s;
+    static char s[16];
+    sprintf(s, "%u.%u.%u.%u",
+            (ip >> 24) & 0xff, (ip >> 16) & 0xff,
+            (ip >> 8) & 0xff, ip & 0xff);
+    return s;
 }
 
 
 uint32_t atoip(char *s)
 {
-	uint32_t ip;
+    uint32_t ip;
+    ip = (uint32_t) strtol(s, &s, 0);
 
-	ip = (uint32_t) strtol(s, &s, 0);
-	if (*s++ != '.')
-		return 0;
-	ip = (ip << 8) | (uint32_t) strtol(s, &s, 0);
-	if (*s++ != '.')
-		return 0;
-	ip = (ip << 8) | (uint32_t) strtol(s, &s, 0);
-	if (*s++ != '.')
-		return 0;
-	ip = (ip << 8) | (uint32_t) strtol(s, &s, 0);
-	if (*s != 0)
-		return 0;
-	return ip;
+    if (*s++ != '.') {
+        return 0;
+    }
+
+    ip = (ip << 8) | (uint32_t) strtol(s, &s, 0);
+
+    if (*s++ != '.') {
+        return 0;
+    }
+
+    ip = (ip << 8) | (uint32_t) strtol(s, &s, 0);
+
+    if (*s++ != '.') {
+        return 0;
+    }
+
+    ip = (ip << 8) | (uint32_t) strtol(s, &s, 0);
+
+    if (*s != 0) {
+        return 0;
+    }
+
+    return ip;
 }

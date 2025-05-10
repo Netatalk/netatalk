@@ -39,23 +39,23 @@
 int asp_close(ASP asp)
 {
     struct atp_block	atpb;
-    struct iovec	iov[ 1 ];
+    struct iovec	iov[1];
     int err = 0;
-
     memset(asp->commands, 0, sizeof(uint32_t));
-
     atpb.atp_saddr = &asp->asp_sat;
-    iov[ 0 ].iov_base = asp->commands;
-    iov[ 0 ].iov_len = sizeof(uint32_t);
+    iov[0].iov_base = asp->commands;
+    iov[0].iov_len = sizeof(uint32_t);
     atpb.atp_sresiov = iov;
     atpb.atp_sresiovcnt = 1;
 
-    if (atp_sresp( asp->asp_atp, &atpb ) < 0)
-      err = -1;
+    if (atp_sresp(asp->asp_atp, &atpb) < 0) {
+        err = -1;
+    }
 
-    if (atp_close( asp->asp_atp ) < 0)
-      err = -1;
+    if (atp_close(asp->asp_atp) < 0) {
+        err = -1;
+    }
 
-    free( asp );
+    free(asp);
     return err;
 }

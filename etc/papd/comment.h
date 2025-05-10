@@ -11,7 +11,7 @@
 struct papd_comment {
     char		*c_begin;
     char		*c_end;
-    int			(*c_handler)();
+    int	(*c_handler)();
     int			c_flags;
 };
 
@@ -25,7 +25,8 @@ struct comstate {
     int			cs_flags;
 };
 
-extern struct papd_comment  *commatch(char *start, char *end, struct papd_comment *table);
+extern struct papd_comment  *commatch(char *start, char *end,
+                                      struct papd_comment *table);
 extern struct comstate		*comstate;
 extern struct papd_comment	magics[];
 extern struct papd_comment	queries[];
@@ -52,11 +53,11 @@ extern char			*comcont;
  */
 #define CM_NOPRINT	(1<<16)				/* or print */
 
-void compop ( void );
-void compush ( struct papd_comment * );
-int comswitch ( struct papd_comment *, int (*)() );
-int comcmp ( char *, char *, char *, int );
-struct papd_comment *commatch ( char *, char *, struct papd_comment * );
-char *comtoken ( char *, char *, char *, char * );
+void compop(void);
+void compush(struct papd_comment *);
+int comswitch(struct papd_comment *, int (*)());
+int comcmp(char *, char *, char *, int);
+struct papd_comment *commatch(char *, char *, struct papd_comment *);
+char *comtoken(char *, char *, char *, char *);
 
 #endif /* PAPD_COMMENT_H */

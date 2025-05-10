@@ -18,5 +18,5 @@
  */
 #include <atalk/nbp.h>
 
-extern int nbp_lookup_req (int s, char *name, char *type, char *zone);
-extern struct nbpnve *nbp_parse_lkup_repl (char *buffer, int len);
+extern int nbp_lookup_req(int s, char *name, char *type, char *zone);
+extern struct nbpnve *nbp_parse_lkup_repl(char *buffer, int len);

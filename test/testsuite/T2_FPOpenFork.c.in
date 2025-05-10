@@ -29,7 +29,7 @@ STATIC void test3()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)){
 		test_nottested();
 		goto test_exit;
 	}
@@ -63,7 +63,7 @@ STATIC void test3()
 	FAIL (FPCloseFork(Conn, fork1))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
 	exit_test("FPOpenFork:test3: open data fork without metadata twice, close once, then read");
 }
@@ -86,7 +86,7 @@ STATIC void test4()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)){
 		test_nottested();
 		goto test_exit;
 	}
@@ -122,7 +122,7 @@ STATIC void test4()
 	FAIL (FPCloseFork(Conn, fork1))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
 	exit_test("FPOpenFork:test4: open reso fork without metadata twice, close once, then read");
 }
@@ -145,7 +145,7 @@ STATIC void test7()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)){
 		test_nottested();
 		goto test_exit;
 	}
@@ -179,7 +179,7 @@ STATIC void test7()
 	FAIL (FPCloseFork(Conn, fork1))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
 	exit_test("FPOpenFork:test7: open data fork without metadata, then open and close resource fork");
 }
@@ -387,7 +387,7 @@ int dir;
 		test_nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol,  0, dir , file)){
+	if (FPCreateFile(Conn, vol, 0, dir, file)){
 		test_nottested();
 		goto fin;
 	}
@@ -425,8 +425,8 @@ int dir;
 		fprintf(stdout,"\tResource fork there!\n");
 	}
 fin:
-	FAIL (FPDelete(Conn, vol,  dir , file))
-	FAIL (FPDelete(Conn, vol,  dir , ""))
+	FAIL (FPDelete(Conn, vol, dir, file))
+	FAIL (FPDelete(Conn, vol, dir, ""))
 test_exit:
 	exit_test("FPOpenFork:test49: open read-write file without resource fork in a read-write folder");
 }
@@ -493,7 +493,7 @@ uint16_t vol = VolID;
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)){
 		test_nottested();
 		goto test_exit;
 	}
@@ -513,7 +513,7 @@ uint16_t vol = VolID;
 
 	FAIL (FPCloseFork(Conn, fork))
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
 	exit_test("FPOpenFork:test153: open data fork without resource fork");
 }
@@ -533,7 +533,7 @@ STATIC void test157()
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)){
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)){
 		test_nottested();
 		goto test_exit;
 	}
@@ -554,7 +554,7 @@ STATIC void test157()
 
 	FAIL (FPCloseFork(Conn, fork))
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, name))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
 	exit_test("FPOpenFork:test157: open not existing resource fork read-only");
 }
@@ -624,7 +624,7 @@ int fd;
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , file)){
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , file)){
 		test_nottested();
 		goto test_exit;
 	}
@@ -678,7 +678,7 @@ int fd;
 	}
 
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT, file))
+	FAIL (FPDelete(Conn, vol, DIRDID_ROOT, file))
 test_exit:
 	exit_test("FPOpenFork:test321: Bogus (empty) resource fork");
 }
@@ -703,7 +703,7 @@ int fd;
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -711,7 +711,7 @@ int fd;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		     (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID);
 
-	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, bitmap,0)) {
 		test_failed();
 		goto fin;
 	}
@@ -721,7 +721,7 @@ int fd;
 		memcpy(filedir.finder_info, "TEXTttxt", 8);
 
  		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
-	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
+	    FAIL (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
@@ -771,7 +771,7 @@ int fd;
 fin1:
 	FAIL (FPCloseFork(Conn,fork))
 fin:
-	FPDelete(Conn, vol,  DIRDID_ROOT , name);
+	FPDelete(Conn, vol, DIRDID_ROOT , name);
 test_exit:
 	exit_test("FPRead:test372: no crlf convertion for TEXT file");
 }
@@ -796,7 +796,7 @@ int fd;
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -804,7 +804,7 @@ int fd;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		     (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID);
 
-	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, bitmap,0)) {
 		test_failed();
 		goto fin;
 	}
@@ -814,7 +814,7 @@ int fd;
 		memcpy(filedir.finder_info, "TEXTttxt", 8);
 
  		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
-	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
+	    FAIL (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
@@ -864,7 +864,7 @@ int fd;
 fin1:
 	FAIL (FPCloseFork(Conn,fork))
 fin:
-	FPDelete(Conn, vol,  DIRDID_ROOT , name);
+	FPDelete(Conn, vol, DIRDID_ROOT , name);
 test_exit:
 	exit_test("FPRead:test388: crlf convertion for TEXT file (not default type)");
 }
@@ -889,7 +889,7 @@ int fd;
 		goto test_exit;
 	}
 
-	if (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name)) {
+	if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT , name)) {
 		test_nottested();
 		goto fin;
 	}
@@ -897,7 +897,7 @@ int fd;
 	         (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_MDATE) |
 		     (1<< DIRPBIT_LNAME) | (1<< DIRPBIT_PDID);
 
-	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0)) {
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, bitmap,0)) {
 		test_failed();
 		goto fin;
 	}
@@ -907,7 +907,7 @@ int fd;
 		memcpy(filedir.finder_info, "PDF CARO", 8);
 
  		FAIL (FPSetFileParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), &filedir))
-	    FAIL (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, bitmap,0))
+	    FAIL (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, bitmap,0))
 	}
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap ,DIRDID_ROOT, name,OPENACC_WR | OPENACC_RD);
 	if (!fork) {
@@ -957,7 +957,7 @@ int fd;
 fin1:
 	FAIL (FPCloseFork(Conn,fork))
 fin:
-	FPDelete(Conn, vol,  DIRDID_ROOT , name);
+	FPDelete(Conn, vol, DIRDID_ROOT , name);
 test_exit:
 	exit_test("FPRead:test392: no crlf convertion for no TEXT file");
 }
@@ -983,7 +983,7 @@ int dir;
 		test_nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol,  0, dir , file)){
+	if (FPCreateFile(Conn, vol, 0, dir, file)){
 		test_nottested();
 		goto fin;
 	}
@@ -1007,8 +1007,8 @@ int dir;
 	}
 
 fin:
-	FAIL (FPDelete(Conn, vol,  dir , file))
-	FAIL (FPDelete(Conn, vol,  dir , ""))
+	FAIL (FPDelete(Conn, vol, dir, file))
+	FAIL (FPDelete(Conn, vol, dir, ""))
 test_exit:
 	exit_test("FPOpenFork:test411: open read-only a file without resource fork");
 
@@ -1038,7 +1038,7 @@ int dir;
 		test_nottested();
 		goto test_exit;
 	}
-	if (FPCreateFile(Conn, vol,  0, dir , file)){
+	if (FPCreateFile(Conn, vol, 0, dir, file)){
 		test_nottested();
 		goto fin;
 	}
@@ -1069,8 +1069,8 @@ fin1:
 	FAIL (FPCloseFork(Conn,fork))
 
 fin:
-	FAIL (FPDelete(Conn, vol,  dir , file))
-	FAIL (FPDelete(Conn, vol,  dir , ""))
+	FAIL (FPDelete(Conn, vol, dir, file))
+	FAIL (FPDelete(Conn, vol, dir, ""))
 test_exit:
 	exit_test("FPOpenFork:test415: don't set the name again in the resource fork if file open twice");
 }
@@ -1116,12 +1116,12 @@ STATIC void test236()
 	}
 
     /* make sure the server has "etc" in the dircache */
-	if (FPGetFileDirParams(Conn, vol,  etcdir, "", 0, (1<< DIRPBIT_DID))) {
+	if (FPGetFileDirParams(Conn, vol, etcdir, "", 0, (1<< DIRPBIT_DID))) {
 		test_failed();
 	}
 
     /* make sure the server's curdir is *not* etc */
-	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT, "", 0, (1<< DIRPBIT_DID))) {
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, (1<< DIRPBIT_DID))) {
 		test_failed();
 	}
 
@@ -1141,7 +1141,7 @@ STATIC void test236()
 	fork = FPOpenFork(Conn, vol, OPENFORK_DATA , bitmap, etcdir, name4, OPENACC_RD);
 	if (fork) {
         /* Check if the volume uses option 'followsymlinks' */
-        if (FPGetFileDirParams(Conn, vol,  etcdir, "", 1 << FILPBIT_UNIXPR, 0))
+        if (FPGetFileDirParams(Conn, vol, etcdir, "", 1 << FILPBIT_UNIXPR, 0))
             test_failed();
         afp_filedir_unpack(&filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
         if (!(S_ISLNK(filedir.unix_priv))) {
@@ -1156,7 +1156,7 @@ STATIC void test236()
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
     FAIL (unlink_unix_file(Path, name1, name2))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
+	FAIL (testdir && FPDelete(Conn, vol, testdir, ""))
 test_exit:
 	exit_test("FPOpenFork:test236: symlink attack: try reading /etc/passwd");
 }
@@ -1234,7 +1234,7 @@ STATIC void test237()
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
     FAIL (unlink_unix_file(Path, name1, name2))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
+	FAIL (testdir && FPDelete(Conn, vol, testdir, ""))
 test_exit:
 	exit_test("FPOpenFork:test237: symlink reading and attack: try reading /etc/passwd");
 }
@@ -1320,8 +1320,8 @@ STATIC void test238()
 fin:
 	FAIL (fork && FPCloseFork(Conn,fork))
     FAIL (unlink_unix_file(Path, name1, name2))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, verylonglinkname))
-	FAIL (testdir && FPDelete(Conn, vol,  testdir, ""))
+	FAIL (testdir && FPDelete(Conn, vol, testdir, verylonglinkname))
+	FAIL (testdir && FPDelete(Conn, vol, testdir, ""))
 test_exit:
 	exit_test("FPOpenFork:test238: symlink reading with short reqcount");
 }
@@ -1408,7 +1408,7 @@ STATIC void test431()
     }
 
     /* Enumerating should convert it */
-	if (FPEnumerate_ext2(Conn, vol,  DIRDID_ROOT , "",
+	if (FPEnumerate_ext2(Conn, vol, DIRDID_ROOT , "",
                          (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN),
                          (1 << DIRPBIT_PDINFO ) | (1 << DIRPBIT_OFFCNT))) {
 		test_failed();
@@ -1430,7 +1430,7 @@ STATIC void test431()
 		goto fin;
     }
 
-	if (FPGetFileDirParams(Conn, vol,  DIRDID_ROOT , name, (1<<FILPBIT_FINFO), 0)) {
+	if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT , name, (1<<FILPBIT_FINFO), 0)) {
 		test_failed();
 	}
 

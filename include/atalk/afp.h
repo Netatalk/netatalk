@@ -116,8 +116,8 @@ typedef uint16_t AFPUserBytes;
 #define AFPATTN_TIME(x)      ((x) & 0xfff)        /* time in minutes */
 
 typedef enum {
-  AFPMESG_LOGIN = 0,
-  AFPMESG_SERVER = 1
+    AFPMESG_LOGIN = 0,
+    AFPMESG_SERVER = 1
 } afpmessage_t;
 
 /* extended sleep flag */

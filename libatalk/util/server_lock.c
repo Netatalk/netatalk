@@ -33,70 +33,76 @@ static struct itimerval itimer;
 pid_t server_lock(char *program, char *pidfile, int debug)
 {
 #ifndef SOLARIS
-  char buf[10];
-  FILE *pf;
-  pid_t pid;
-  int mask;
+    char buf[10];
+    FILE *pf;
+    pid_t pid;
+    int mask;
 
-  if ( !debug ) {
-  mask = umask(022);
-  /* check for pid. this can get fooled by stale pid's. */
-  if ((pf = fopen(pidfile, "r"))) {
-    if (fgets(buf, sizeof(buf), pf) && !kill(pid = atol(buf), 0)) {
-      fprintf( stderr, "%s is already running (pid = %d), or the lock file is stale.\n",
-	       program, pid);
-      fclose(pf);
-      return -1;
-    }
-    fclose(pf);
-  }
+    if (!debug) {
+        mask = umask(022);
 
-  if ((pf = fopen(pidfile, "w")) == NULL) {
-    fprintf(stderr, "%s: can't open lock file, \"%s\"\n", program,
-	    pidfile);
-    return -1;
-  }
-  umask(mask);
+        /* check for pid. this can get fooled by stale pid's. */
+        if ((pf = fopen(pidfile, "r"))) {
+            if (fgets(buf, sizeof(buf), pf) && !kill(pid = atol(buf), 0)) {
+                fprintf(stderr,
+                        "%s is already running (pid = %d), or the lock file is stale.\n",
+                        program, pid);
+                fclose(pf);
+                return -1;
+            }
 
-  /*
-   * Disassociate from controlling tty.
-   */
+            fclose(pf);
+        }
 
-    int		i _U_;
+        if ((pf = fopen(pidfile, "w")) == NULL) {
+            fprintf(stderr, "%s: can't open lock file, \"%s\"\n", program,
+                    pidfile);
+            return -1;
+        }
 
-    getitimer(ITIMER_PROF, &itimer);
-    switch (pid = fork()) {
-    case 0 :
-      setitimer(ITIMER_PROF, &itimer, NULL);
-      fclose(stdin);
-      fclose(stdout);
-      fclose(stderr);
-      i = open( "/dev/null", O_RDWR );
-      i = open( "/dev/null", O_RDWR );
-      i = open( "/dev/null", O_RDWR );
+        umask(mask);
+        /*
+         * Disassociate from controlling tty.
+         */
+        int		i _U_;
+        getitimer(ITIMER_PROF, &itimer);
 
+        switch (pid = fork()) {
+        case 0 :
+            setitimer(ITIMER_PROF, &itimer, NULL);
+            fclose(stdin);
+            fclose(stdout);
+            fclose(stderr);
+            i = open("/dev/null", O_RDWR);
+            i = open("/dev/null", O_RDWR);
+            i = open("/dev/null", O_RDWR);
 #ifdef TIOCNOTTY
-      if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
-	(void)ioctl( i, TIOCNOTTY, 0 );
-	setpgid( 0, getpid());
-	(void) close(i);
-      }
+
+            if ((i = open("/dev/tty", O_RDWR)) >= 0) {
+                (void)ioctl(i, TIOCNOTTY, 0);
+                setpgid(0, getpid());
+                (void) close(i);
+            }
+
 #else
-      setpgid( 0, getpid());
+            setpgid(0, getpid());
 #endif
-      break;
-    case -1 :  /* error */
-      perror( "fork" );
-    default :  /* server */
-      fclose(pf);
-      return pid;
+            break;
+
+        case -1 :  /* error */
+            perror("fork");
+
+        default :  /* server */
+            fclose(pf);
+            return pid;
+        }
+
+        fprintf(pf, "%d\n", getpid());
+        fclose(pf);
     }
 
-  fprintf(pf, "%d\n", getpid());
-  fclose(pf);
-  }
 #endif
-  return 0;
+    return 0;
 }
 
 /*!
@@ -112,13 +118,16 @@ int check_lockfile(const char *program, const char *pidfile)
     /* check for pid. this can get fooled by stale pid's. */
     if ((pf = fopen(pidfile, "r"))) {
         if (fgets(buf, sizeof(buf), pf) && !kill(pid = atol(buf), 0)) {
-            fprintf(stderr, "%s is already running (pid = %d), or the lock file is stale.\n",
+            fprintf(stderr,
+                    "%s is already running (pid = %d), or the lock file is stale.\n",
                     program, pid);
             fclose(pf);
             return -1;
         }
+
         fclose(pf);
     }
+
 #endif
     return 0;
 }
@@ -132,16 +141,19 @@ int create_lockfile(const char *program, const char *pidfile)
     FILE *pf;
     int mask;
 
-    if (check_lockfile(program, pidfile) != 0)
+    if (check_lockfile(program, pidfile) != 0) {
         return -1;
+    }
 
     /* Write PID to pidfile */
     mask = umask(022);
+
     if ((pf = fopen(pidfile, "w")) == NULL) {
         fprintf(stderr, "%s: can't open lock file, \"%s\"\n", program,
                 pidfile);
         return -1;
     }
+
     umask(mask);
     fprintf(pf, "%d\n", getpid());
     fclose(pf);

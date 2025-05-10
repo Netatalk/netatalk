@@ -91,8 +91,8 @@ struct atpbuf {
     size_t		atpbuf_dlen;		/* data length <= ATP_BUFSIZ */
     struct sockaddr_at	atpbuf_addr;		/* net address sent/recvd */
     union {
-	char		atpbuf_data[ ATP_BUFSIZ ];	/* the data */
-	struct atpxobuf	atpbuf_xo;			/* for XO requests */
+        char		atpbuf_data[ATP_BUFSIZ];	/* the data */
+        struct atpxobuf	atpbuf_xo;			/* for XO requests */
     } atpbuf_info;
 };
 
@@ -144,21 +144,21 @@ struct sres_st {
 struct atp_block {
     struct sockaddr_at	*atp_saddr;		/* from/to address */
     union {
-	struct sreq_st	sreqdata;
+        struct sreq_st	sreqdata;
 #define atp_sreqdata	atp_data.sreqdata.atpd_data
 #define atp_sreqdlen	atp_data.sreqdata.atpd_dlen
 #define atp_sreqtries	atp_data.sreqdata.atpd_tries
 #define atp_sreqto	atp_data.sreqdata.atpd_to
 
-	struct rres_st	rresdata;
+        struct rres_st	rresdata;
 #define atp_rresiov	atp_data.rresdata.atpd_iov
 #define atp_rresiovcnt	atp_data.rresdata.atpd_iovcnt
 
-	struct rreq_st	rreqdata;
+        struct rreq_st	rreqdata;
 #define atp_rreqdata	atp_data.rreqdata.atpd_data
 #define atp_rreqdlen	atp_data.rreqdata.atpd_dlen
 
-	struct sres_st	sresdata;
+        struct sres_st	sresdata;
 #define atp_sresiov	atp_data.sresdata.atpd_iov
 #define atp_sresiovcnt	atp_data.sresdata.atpd_iovcnt
     } atp_data;
@@ -180,11 +180,9 @@ struct atp_block {
 #define ATP_TRESP	(2<<6)		/* Trans. RESPonse */
 #define ATP_TREL	(3<<6)		/* Trans. RELease */
 
-extern ATP		atp_open  (uint8_t,
-				       const struct at_addr *);
+extern ATP		atp_open  (uint8_t, const struct at_addr *);
 extern int		atp_close (ATP);
-extern int		atp_sreq  (ATP, struct atp_block *, int,
-				       uint8_t);
+extern int		atp_sreq  (ATP, struct atp_block *, int, uint8_t);
 extern int		atp_rresp (ATP, struct atp_block *);
 extern int		atp_rsel  (ATP, struct sockaddr_at *, int);
 extern int		atp_rreq  (ATP, struct atp_block *);

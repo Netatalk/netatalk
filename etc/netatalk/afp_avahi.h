@@ -23,13 +23,13 @@
 #include <atalk/logger.h>
 
 struct context {
-	/* Avahi stuff */
-  int               thread_running;
-  AvahiThreadedPoll *threaded_poll;
-  AvahiClient       *client;
-  AvahiEntryGroup   *group;
-	/* Netatalk stuff */
-	const AFPObj      *obj;
+    /* Avahi stuff */
+    int               thread_running;
+    AvahiThreadedPoll *threaded_poll;
+    AvahiClient       *client;
+    AvahiEntryGroup   *group;
+    /* Netatalk stuff */
+    const AFPObj      *obj;
 };
 
 /* prototype definitions */

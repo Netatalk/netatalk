@@ -97,9 +97,11 @@ static int rqstfd;
 static volatile sig_atomic_t sigchild = 0;
 static uint maxvol;
 
-#define MAXSPAWN   3                   /* Max times respawned in.. */
-#define TESTTIME   10                  /* this much seconds apfd client tries to  *
-                                        * to reconnect every 5 secondes, catch it */
+/* Max times respawned in.. */
+#define MAXSPAWN   3
+/* this much seconds apfd client tries to  *
+ * to reconnect every 5 secondes, catch it */
+#define TESTTIME   10
 #define MAXVOLS    4096
 #define DEFAULTHOST  "localhost"
 #define DEFAULTPORT  "4700"
@@ -107,9 +109,12 @@ static uint maxvol;
 struct server {
     char *v_path;
     pid_t pid;
-    time_t tm;                    /* When respawned last */
-    unsigned int count;           /* Times respawned in the last TESTTIME secondes */
-    int control_fd;               /* file descriptor to child cnid_dbd process */
+    /* When respawned last */
+    time_t tm;
+    /* Times respawned in the last TESTTIME secondes */
+    unsigned int count;
+    /* file descriptor to child cnid_dbd process */
+    int control_fd;
 };
 
 static struct server srv[MAXVOLS];
@@ -122,15 +127,17 @@ static void daemon_exit(int i)
 /* ------------------ */
 static void sig_handler(int sig)
 {
-    switch( sig ) {
+    switch (sig) {
     case SIGTERM:
     case SIGQUIT:
         LOG(log_note, logtype_afpd, "shutting down on %s",
             sig == SIGTERM ? "SIGTERM" : "SIGQUIT");
         break;
+
     default :
         LOG(log_error, logtype_afpd, "unexpected signal: %d", sig);
     }
+
     daemon_exit(0);
 }
 
@@ -139,8 +146,9 @@ static struct server *test_usockfn(const char *path)
     int i;
 
     for (i = 0; i < maxvol; i++) {
-        if (srv[i].v_path && STRCMP(path, ==, srv[i].v_path))
+        if (srv[i].v_path && STRCMP(path, ==, srv[i].v_path)) {
             return &srv[i];
+        }
     }
 
     return NULL;
@@ -156,7 +164,8 @@ static struct server *test_usockfn(const char *path)
  *
  * @return 0 on success, -1 on error
  **/
- int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath, const char *username)
+int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath,
+                    const char *username)
 {
     pid_t pid;
     struct server *up;
@@ -166,39 +175,50 @@ static struct server *test_usockfn(const char *path)
     char buf1[8];
     char buf2[8];
     int ret;
-
     LOG(log_debug, logtype_cnid, "maybe_start_dbd(\"%s\"): BEGIN", volpath);
-
     up = test_usockfn(volpath);
+
     if (up && up->pid) {
         /* we already have a process, send our fd */
-        LOG(log_debug, logtype_cnid, "maybe_start_dbd: cnid_dbd[%d] already serving", up->pid);
+        LOG(log_debug, logtype_cnid, "maybe_start_dbd: cnid_dbd[%d] already serving",
+            up->pid);
+
         if (send_fd(up->control_fd, rqstfd) < 0) {
             /* FIXME */
             return -1;
         }
+
         return 0;
     }
 
     LOG(log_debug, logtype_cnid, "maybe_start_dbd: no cnid_dbd serving yet");
-
     time(&t);
+
     if (!up) {
         /* find an empty slot (i < maxvol) or the first free slot (i == maxvol)*/
         for (i = 0; i <= maxvol && i < MAXVOLS; i++) {
             if (srv[i].v_path == NULL) {
                 up = &srv[i];
-                if ((up->v_path = strdup(volpath)) == NULL)
+
+                if ((up->v_path = strdup(volpath)) == NULL) {
                     return -1;
+                }
+
                 up->tm = t;
                 up->count = 0;
-                if (i == maxvol)
+
+                if (i == maxvol) {
                     maxvol++;
+                }
+
                 break;
             }
         }
+
         if (!up) {
-            LOG(log_error, logtype_cnid, "no free slot for cnid_dbd child. Configured maximum: %d. Do you have so many volumes?", MAXVOLS);
+            LOG(log_error, logtype_cnid,
+                "no free slot for cnid_dbd child. Configured maximum: %d. Do you have so many volumes?",
+                MAXVOLS);
             return -1;
         }
     } else {
@@ -218,14 +238,17 @@ static struct server *test_usockfn(const char *path)
                 up->count = 0;
             }
         }
+
         up->count++;
         up->tm = t;
-        LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn count: %u", up->count);
+        LOG(log_maxdebug, logtype_cnid, "maybe_start_dbd: respawn count: %u",
+            up->count);
+
         if (up->count > MAXSPAWN) {
             /* We spawned too fast. From now until the first time we tried + TESTTIME seconds
                we will just return -1 above */
             LOG(log_info, logtype_cnid, "maybe_start_dbd: reached MAXSPAWN threshold");
-       }
+        }
     }
 
     /*
@@ -242,13 +265,13 @@ static struct server *test_usockfn(const char *path)
         LOG(log_error, logtype_cnid, "error in fork: %s", strerror(errno));
         return -1;
     }
+
     if (pid == 0) {
         /*
          *  Child. Close descriptors and start the daemon. If it fails
          *  just log it. The client process will fail connecting
          *  afterwards anyway.
          */
-
         close(srvfd);
         close(sv[0]);
 
@@ -282,12 +305,14 @@ static struct server *test_usockfn(const char *path)
                          "-u", username,
                          NULL);
         }
+
         if (ret) {
             /* Yikes! We're still here, so exec failed... */
             LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
             daemon_exit(0);
         }
     }
+
     /*
      *  Parent.
      */
@@ -304,32 +329,33 @@ static int set_dbdir(const char *dbdir, const char *vpath)
     struct stat st;
     bstring oldpath, newpath = NULL;
     char *cmd_argv[4];
-
-    LOG(log_debug, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath, dbdir);
-
-    EC_NULL_LOG( oldpath = bformat("%s/%s/", vpath, DBHOME) );
-    EC_NULL_LOG( newpath = bformat("%s/%s/", dbdir, DBHOME) );
+    LOG(log_debug, logtype_cnid, "set_dbdir: volume: %s, db path: %s", vpath,
+        dbdir);
+    EC_NULL_LOG(oldpath = bformat("%s/%s/", vpath, DBHOME));
+    EC_NULL_LOG(newpath = bformat("%s/%s/", dbdir, DBHOME));
 
     if (lstat(dbdir, &st) < 0 && mkdir(dbdir, 0755) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", dbdir);
         EC_FAIL;
     }
 
-    if (lstat(cfrombstr(oldpath), &st) == 0 && lstat(cfrombstr(newpath), &st) != 0 && errno == ENOENT) {
+    if (lstat(cfrombstr(oldpath), &st) == 0 && lstat(cfrombstr(newpath), &st) != 0
+            && errno == ENOENT) {
         /* There's an .AppleDB in the volume root, we move it */
         cmd_argv[0] = "mv";
         cmd_argv[1] = bdata(oldpath);
         cmd_argv[2] = (char *)dbdir;
         cmd_argv[3] = NULL;
+
         if (run_cmd("mv", cmd_argv) != 0) {
-            LOG(log_error, logtype_cnid, "set_dbdir: moving CNID db from \"%s\" to \"%s\" failed",
+            LOG(log_error, logtype_cnid,
+                "set_dbdir: moving CNID db from \"%s\" to \"%s\" failed",
                 bdata(oldpath), dbdir);
             EC_FAIL;
         }
-
     }
 
-    if (lstat(cfrombstr(newpath), &st) < 0 && mkdir(cfrombstr(newpath), 0755 ) < 0) {
+    if (lstat(cfrombstr(newpath), &st) < 0 && mkdir(cfrombstr(newpath), 0755) < 0) {
         LOG(log_error, logtype_cnid, "set_dbdir: mkdir failed for %s", bdata(newpath));
         EC_FAIL;
     }
@@ -351,13 +377,12 @@ static void set_signal(void)
 {
     struct sigaction sv;
     sigset_t set;
-
     memset(&sv, 0, sizeof(sv));
-
     /* Catch SIGCHLD */
     sv.sa_handler = catch_child;
     sv.sa_flags = SA_NOCLDSTOP;
     sigemptyset(&sv.sa_mask);
+
     if (sigaction(SIGCHLD, &sv, NULL) < 0) {
         LOG(log_error, logtype_cnid, "cnid_metad: sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
@@ -365,45 +390,56 @@ static void set_signal(void)
 
     /* Catch SIGTERM and SIGQUIT */
     sv.sa_handler = sig_handler;
-    sigfillset(&sv.sa_mask );
-    if (sigaction(SIGTERM, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+    sigfillset(&sv.sa_mask);
+
+    if (sigaction(SIGTERM, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
-    if (sigaction(SIGQUIT, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+
+    if (sigaction(SIGQUIT, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
 
     /* Ignore the rest */
     sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask );
-    if (sigaction(SIGALRM, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+    sigemptyset(&sv.sa_mask);
+
+    if (sigaction(SIGALRM, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
+
     sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask );
-    if (sigaction(SIGHUP, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+    sigemptyset(&sv.sa_mask);
+
+    if (sigaction(SIGHUP, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
+
     sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask );
-    if (sigaction(SIGUSR1, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+    sigemptyset(&sv.sa_mask);
+
+    if (sigaction(SIGUSR1, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
+
     sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask );
-    if (sigaction(SIGUSR2, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+    sigemptyset(&sv.sa_mask);
+
+    if (sigaction(SIGUSR2, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
+
     sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask );
-    if (sigaction(SIGPIPE, &sv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno) );
+    sigemptyset(&sv.sa_mask);
+
+    if (sigaction(SIGPIPE, &sv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "sigaction: %s", strerror(errno));
         daemon_exit(EXITERR_SYS);
     }
 
@@ -421,25 +457,32 @@ static int setlimits(void)
         LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
         exit(1);
     }
+
     if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < RLIM_MAX) {
         rlim.rlim_cur = RLIM_MAX;
-        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < RLIM_MAX)
+
+        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < RLIM_MAX) {
             rlim.rlim_max = RLIM_MAX;
+        }
+
         if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
             LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
             exit(1);
         }
     }
+
     return 0;
 }
 
 static uid_t uid_from_name(const char *name)
 {
     struct passwd *pwd;
-
     pwd = getpwnam(name);
-    if (pwd == NULL)
+
+    if (pwd == NULL) {
         return 0;
+    }
+
     return pwd->pw_uid;
 }
 
@@ -465,29 +508,37 @@ int main(int argc, char *argv[])
     AFPObj obj = { 0 };
     struct vol *vol;
 
-    while (( cc = getopt( argc, argv, "dF:vV")) != -1 ) {
+    while ((cc = getopt(argc, argv, "dF:vV")) != -1) {
         switch (cc) {
         case 'd':
             debug = 1;
             break;
+
         case 'F':
             if (obj.cmdlineconfigfile != NULL) {
                 free((void *)obj.cmdlineconfigfile);
             }
+
             obj.cmdlineconfigfile = strdup(optarg);
             break;
+
         case 'v':
         case 'V':
             printf("cnid_metad (Netatalk %s)\n", VERSION);
+
             if (obj.cmdlineconfigfile != NULL) {
                 free((void *)obj.cmdlineconfigfile);
             }
+
             return 0;
+
         default:
             printf("cnid_metad [-dvV] [-F alternate configfile ]\n");
+
             if (obj.cmdlineconfigfile != NULL) {
                 free((void *)obj.cmdlineconfigfile);
             }
+
             return -1;
         }
     }
@@ -496,6 +547,7 @@ int main(int argc, char *argv[])
         if (obj.cmdlineconfigfile != NULL) {
             free((void *)obj.cmdlineconfigfile);
         }
+
         exit(EXITERR_SYS);
     }
 
@@ -503,6 +555,7 @@ int main(int argc, char *argv[])
         if (obj.cmdlineconfigfile != NULL) {
             free((void *)obj.cmdlineconfigfile);
         }
+
         daemon_exit(1);
     }
 
@@ -512,14 +565,18 @@ int main(int argc, char *argv[])
     }
 
     (void)setlimits();
+    host = INIPARSER_GETSTRDUP(obj.iniconfig, INISEC_GLOBAL, "cnid listen",
+                               "localhost:4700");
 
-    host = INIPARSER_GETSTRDUP(obj.iniconfig, INISEC_GLOBAL, "cnid listen", "localhost:4700");
-    if ((port = strrchr(host, ':')))
+    if ((port = strrchr(host, ':'))) {
         *port++ = 0;
-    else
+    } else {
         port = DEFAULTPORT;
-    if ((srvfd = tsockfd_create(host, port, 10)) < 0)
+    }
+
+    if ((srvfd = tsockfd_create(host, port, 10)) < 0) {
         daemon_exit(1);
+    }
 
     LOG(log_note, logtype_afpd, "CNID Server listening on %s:%s", host, port);
 
@@ -530,12 +587,14 @@ int main(int argc, char *argv[])
     /* switch uid/gid */
     if (uid || gid) {
         LOG(log_debug, logtype_cnid, "Setting uid/gid to %i/%i", uid, gid);
+
         if (gid) {
             if (SWITCH_TO_GID(gid) < 0) {
                 LOG(log_info, logtype_cnid, "unable to switch to group %d", gid);
                 daemon_exit(1);
             }
         }
+
         if (uid) {
             if (SWITCH_TO_UID(uid) < 0) {
                 LOG(log_info, logtype_cnid, "unable to switch to user %d", uid);
@@ -545,50 +604,53 @@ int main(int argc, char *argv[])
     }
 
     set_signal();
-
     sigemptyset(&set);
     sigprocmask(SIG_SETMASK, NULL, &set);
     sigdelset(&set, SIGCHLD);
 
     while (1) {
         rqstfd = usockfd_check(srvfd, &set);
+
         /* Collect zombie processes and log what happened to them */
         if (sigchild) while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-            for (i = 0; i < maxvol; i++) {
-                if (srv[i].pid == pid) {
-                    srv[i].pid = 0;
-                    close(srv[i].control_fd);
-                    break;
+                for (i = 0; i < maxvol; i++) {
+                    if (srv[i].pid == pid) {
+                        srv[i].pid = 0;
+                        close(srv[i].control_fd);
+                        break;
+                    }
                 }
+
+                if (WIFEXITED(status)) {
+                    LOG(log_info, logtype_cnid, "cnid_dbd[%i] exited with exit code %i",
+                        pid, WEXITSTATUS(status));
+                } else {
+                    /* cnid_dbd did a clean exit probably on idle timeout, reset bookkeeping */
+                    srv[i].tm = 0;
+                    srv[i].count = 0;
+                }
+
+                if (WIFSIGNALED(status)) {
+                    LOG(log_info, logtype_cnid, "cnid_dbd[%i] got signal %i",
+                        pid, WTERMSIG(status));
+                }
+
+                sigchild = 0;
             }
-            if (WIFEXITED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd[%i] exited with exit code %i",
-                    pid, WEXITSTATUS(status));
-            } else {
-                /* cnid_dbd did a clean exit probably on idle timeout, reset bookkeeping */
-                srv[i].tm = 0;
-                srv[i].count = 0;
-            }
-            if (WIFSIGNALED(status)) {
-                LOG(log_info, logtype_cnid, "cnid_dbd[%i] got signal %i",
-                    pid, WTERMSIG(status));
-            }
-            sigchild = 0;
-        }
-        if (rqstfd <= 0)
+
+        if (rqstfd <= 0) {
             continue;
+        }
 
         ret = readt(rqstfd, &len[0], sizeof(int) * DBD_NUM_OPEN_ARGS, 1, 4);
 
         if (!ret) {
             /* already close */
             goto loop_end;
-        }
-        else if (ret < 0) {
+        } else if (ret < 0) {
             LOG(log_severe, logtype_cnid, "error read: %s", strerror(errno));
             goto loop_end;
-        }
-        else if (ret != DBD_NUM_OPEN_ARGS * sizeof(int)) {
+        } else if (ret != DBD_NUM_OPEN_ARGS * sizeof(int)) {
             LOG(log_error, logtype_cnid, "short read: got %d", ret);
             goto loop_end;
         }
@@ -598,27 +660,32 @@ int main(int argc, char *argv[])
          *  before handing the dir path over but who trusts clients?
          */
         if (!len[0] || !len[1]) {
-            LOG(log_error, logtype_cnid, "wrong len parameter: len[0]: %d, len[1]: %d", len[0], len[1]);
+            LOG(log_error, logtype_cnid, "wrong len parameter: len[0]: %d, len[1]: %d",
+                len[0], len[1]);
             goto loop_end;
         }
 
         volname = malloc(len[0]);
         volpath = malloc(len[1]);
+
         if (len[2]) {
             username = malloc(len[2]);
         }
+
         if (!volname || !volpath || (len[2] && !username)) {
             LOG(log_severe, logtype_cnid, "malloc: %s", strerror(errno));
             goto loop_end;
         }
 
         actual_len = readt(rqstfd, volname, len[0], 1, 5);
+
         if (actual_len != len[0]) {
             LOG(log_severe, logtype_cnid, "readt: %s", strerror(errno));
             goto loop_end;
         }
 
         actual_len = readt(rqstfd, volpath, len[1], 1, 5);
+
         if (actual_len != len[1]) {
             LOG(log_severe, logtype_cnid, "readt: %s", strerror(errno));
             goto loop_end;
@@ -626,14 +693,18 @@ int main(int argc, char *argv[])
 
         if (len[2]) {
             actual_len = readt(rqstfd, username, len[2], 1, 5);
+
             if (actual_len != len[2]) {
                 LOG(log_severe, logtype_cnid, "readt: %s", strerror(errno));
                 goto loop_end;
             }
+
             strlcpy(obj.username, username, MAXUSERLEN);
             obj.uid = uid_from_name(username);
-            if (!obj.uid)
+
+            if (!obj.uid) {
                 goto loop_end;
+            }
         } else {
             obj.username[0] = 0;
         }
@@ -658,8 +729,7 @@ int main(int argc, char *argv[])
         }
 
         maybe_start_dbd(&obj, dbdpn, vol->v_path, username);
-
-    loop_end:
+loop_end:
         close(rqstfd);
         unload_volumes(&obj);
         SAFE_FREE(volname);

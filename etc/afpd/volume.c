@@ -81,28 +81,37 @@ static long long int get_tm_bandsize(const char *path)
     FILE *file = NULL;
     char buf[512];
     long long int bandsize = -1;
-
-    EC_NULL_LOGSTR( file = fopen(path, "r"),
-                    "get_tm_bandsize(\"%s\"): %s",
-                    path, strerror(errno) );
+    EC_NULL_LOGSTR(file = fopen(path, "r"),
+                   "get_tm_bandsize(\"%s\"): %s",
+                   path, strerror(errno));
 
     while (fgets(buf, sizeof(buf), file) != NULL) {
-        if (strstr(buf, "band-size") == NULL)
+        if (strstr(buf, "band-size") == NULL) {
             continue;
+        }
 
         if (fscanf(file, " <integer>%lld</integer>", &bandsize) != 1) {
-            LOG(log_error, logtype_afpd, "get_tm_bandsize(\"%s\"): can't parse band-size", path);
+            LOG(log_error, logtype_afpd, "get_tm_bandsize(\"%s\"): can't parse band-size",
+                path);
             EC_FAIL;
         }
+
         break;
     }
 
 EC_CLEANUP:
-    if (file)
+
+    if (file) {
         fclose(file);
-    LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path, bandsize);
-    if (ret != 0)
+    }
+
+    LOG(log_debug, logtype_afpd, "get_tm_bandsize(\"%s\"): bandsize: %lld", path,
+        bandsize);
+
+    if (ret != 0) {
         return -1;
+    }
+
     return bandsize;
 }
 
@@ -118,18 +127,25 @@ static long long int get_tm_bands(const char *path)
     long long int count = 0;
     DIR *dir = NULL;
     const struct dirent *entry;
+    EC_NULL(dir = opendir(path));
 
-    EC_NULL( dir = opendir(path) );
-
-    while ((entry = readdir(dir)) != NULL)
+    while ((entry = readdir(dir)) != NULL) {
         count++;
-    count -= 2; /* All OSens I'm aware of return "." and "..", so just substract them, avoiding string comparison in loop */
+    }
 
+    /* All OSens I'm aware of return "." and "..", so just substract them,
+     * avoiding string comparison in loop */
+    count -= 2;
 EC_CLEANUP:
-    if (dir)
+
+    if (dir) {
         closedir(dir);
-    if (ret != 0)
+    }
+
+    if (ret != 0) {
         return -1;
+    }
+
     return count;
 }
 
@@ -170,9 +186,11 @@ static int get_tm_used(struct vol * restrict vol)
     time_t now = time(NULL);
 
     if (vol->v_tm_cachetime
-        && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
-        if (vol->v_tm_used == -1)
+            && ((vol->v_tm_cachetime + TM_USED_CACHETIME) >= now)) {
+        if (vol->v_tm_used == -1) {
             EC_FAIL;
+        }
+
         vol->v_tm_used += vol->v_appended;
         vol->v_appended = 0;
         LOG(log_debug, logtype_afpd, "getused(\"%s\"): cached: %" PRIu64 " bytes",
@@ -181,14 +199,13 @@ static int get_tm_used(struct vol * restrict vol)
     }
 
     vol->v_tm_cachetime = now;
-
-    EC_NULL( dir = opendir(vol->v_path) );
+    EC_NULL(dir = opendir(vol->v_path));
 
     while ((entry = readdir(dir)) != NULL) {
         if (((p = strstr(entry->d_name, "sparsebundle")) != NULL)
-            && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
-
-            EC_NULL_LOG( infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name, "Info.plist") );
+                && (strlen(entry->d_name) == (p + strlen("sparsebundle") - entry->d_name))) {
+            EC_NULL_LOG(infoplist = bformat("%s/%s/%s", vol->v_path, entry->d_name,
+                                            "Info.plist"));
 
             if ((bandsize = get_tm_bandsize(cfrombstr(infoplist))) == -1) {
                 bdestroy(infoplist);
@@ -196,7 +213,8 @@ static int get_tm_used(struct vol * restrict vol)
                 continue;
             }
 
-            EC_NULL_LOG( bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name, "bands") );
+            EC_NULL_LOG(bandsdir = bformat("%s/%s/%s/", vol->v_path, entry->d_name,
+                                           "bands"));
 
             if ((links = get_tm_bands(cfrombstr(bandsdir))) == -1) {
                 bdestroy(infoplist);
@@ -213,17 +231,22 @@ static int get_tm_used(struct vol * restrict vol)
     }
 
     vol->v_tm_used = used;
-
 EC_CLEANUP:
-    if (infoplist)
+
+    if (infoplist) {
         bdestroy(infoplist);
-    if (bandsdir)
+    }
+
+    if (bandsdir) {
         bdestroy(bandsdir);
-    if (dir)
+    }
+
+    if (dir) {
         closedir(dir);
+    }
 
-    LOG(log_debug, logtype_afpd, "getused(\"%s\"): %" PRIu64 " bytes", vol->v_path, vol->v_tm_used);
-
+    LOG(log_debug, logtype_afpd, "getused(\"%s\"): %" PRIu64 " bytes", vol->v_path,
+        vol->v_tm_used);
     EC_EXIT;
 }
 
@@ -237,36 +260,38 @@ static int getvolspace(const AFPObj *obj, struct vol *vol,
     VolSpace    qfree, qtotal;
     int         spaceflag = AFPVOL_GVSMASK & vol->v_flags;
 #endif
-
     /* report up to 2GB if afp version is < 2.2 (4GB if not) */
     maxsize = (vol->v_flags & AFPVOL_A2VOL) ? 0x01fffe00 :
-        (((obj->afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
-         ? 0x7fffffffL : 0xffffffffL);
+              (((obj->afp_version < 22) || (vol->v_flags & AFPVOL_LIMITSIZE))
+               ? 0x7fffffffL : 0xffffffffL);
 
-    if (( rc = ustatfs_getvolspace( vol, xbfree, xbtotal, bsize)) != AFP_OK ) {
+    if ((rc = ustatfs_getvolspace(vol, xbfree, xbtotal, bsize)) != AFP_OK) {
         return rc;
     }
 
 #ifndef NO_QUOTA_SUPPORT
-    if ( spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA ) {
-        if ( uquota_getvolspace(obj, vol, &qfree, &qtotal, *bsize ) == AFP_OK ) {
-            vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_UQUOTA;
+
+    if (spaceflag == AFPVOL_NONE || spaceflag == AFPVOL_UQUOTA) {
+        if (uquota_getvolspace(obj, vol, &qfree, &qtotal, *bsize) == AFP_OK) {
+            vol->v_flags = (~AFPVOL_GVSMASK & vol->v_flags) | AFPVOL_UQUOTA;
             *xbfree = MIN(*xbfree, qfree);
             *xbtotal = MIN(*xbtotal, qtotal);
             goto getvolspace_done;
         }
     }
-#endif
-    vol->v_flags = ( ~AFPVOL_GVSMASK & vol->v_flags ) | AFPVOL_USTATFS;
 
+#endif
+    vol->v_flags = (~AFPVOL_GVSMASK & vol->v_flags) | AFPVOL_USTATFS;
 getvolspace_done:
+
     if (vol->v_limitsize) {
-        if (get_tm_used(vol) != 0)
+        if (get_tm_used(vol) != 0) {
             return AFPERR_MISC;
+        }
 
         *xbtotal = MIN(*xbtotal, (vol->v_limitsize * 1024 * 1024));
-        *xbfree = MIN(*xbfree, *xbtotal < vol->v_tm_used ? 0 : *xbtotal - vol->v_tm_used);
-
+        *xbfree = MIN(*xbfree, *xbtotal < vol->v_tm_used ? 0 : *xbtotal -
+                      vol->v_tm_used);
         LOG(log_debug, logtype_afpd,
             "volparams: total: %" PRIu64 ", used: %" PRIu64 ", free: %" PRIu64 " bytes",
             *xbtotal, vol->v_tm_used, *xbfree);
@@ -286,21 +311,22 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
     struct vol  *volume;
     struct vol  *vol = getvolumes();
 
-    for ( volume = getvolumes(); volume; volume = volume->v_next ) {
+    for (volume = getvolumes(); volume; volume = volume->v_next) {
         if (volume->v_vid == id) {
             vol = volume;
-        }
-        else if ((time_t)(AD_DATE_FROM_UNIX(date)) == volume->v_ctime) {
-            date = date+1;
+        } else if ((time_t)(AD_DATE_FROM_UNIX(date)) == volume->v_ctime) {
+            date = date + 1;
             volume = getvolumes(); /* restart */
         }
     }
+
     vol->v_ctime = AD_DATE_FROM_UNIX(date);
     ad_setdate(adp, AD_DATE_CREATE | AD_DATE_UNIX, date);
 }
 
 /* ----------------------- */
-static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, struct stat *st, char *buf, size_t *buflen)
+static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
+                        struct stat *st, char *buf, size_t *buflen)
 {
     struct adouble  ad;
     int bit = 0, isad = 1;
@@ -312,166 +338,192 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
     char *nameoff = NULL;
     const char *slash = NULL;
     char *ade = NULL;
-
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
-
     /* courtesy of jallison@whistle.com:
      * For MacOS8.x support we need to create the
      * .Parent file here if it doesn't exist. */
-
     /* Convert adouble:v2 to adouble:ea on the fly */
     (void)ad_convert(vol->v_path, st, vol, NULL);
-
     ad_init(&ad, vol);
-    if (ad_open(&ad, vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0 ) {
+
+    if (ad_open(&ad, vol->v_path,
+                ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
         isad = 0;
         vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
+    } else if (ad_get_MD_flags(&ad) & O_CREAT) {
+        slash = strrchr(vol->v_path, '/');
 
-    } else if (ad_get_MD_flags( &ad ) & O_CREAT) {
-        slash = strrchr( vol->v_path, '/' );
-        if(slash)
+        if (slash) {
             slash++;
-        else
+        } else {
             slash = vol->v_path;
-        if (ad_getentryoff(&ad, ADEID_NAME) && (ade = ad_entry(&ad, ADEID_NAME)) != NULL) {
-            ad_setentrylen( &ad, ADEID_NAME, strlen( slash ));
-            memcpy(ade, slash, ad_getentrylen( &ad, ADEID_NAME ));
         }
+
+        if (ad_getentryoff(&ad, ADEID_NAME)
+                && (ade = ad_entry(&ad, ADEID_NAME)) != NULL) {
+            ad_setentrylen(&ad, ADEID_NAME, strlen(slash));
+            memcpy(ade, slash, ad_getentrylen(&ad, ADEID_NAME));
+        }
+
         vol_setdate(vol->v_vid, &ad, st->st_mtime);
         ad_flush(&ad);
-    }
-    else {
-        if (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0)
+    } else {
+        if (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0) {
             vol->v_ctime = AD_DATE_FROM_UNIX(st->st_mtime);
-        else
+        } else {
             vol->v_ctime = aint;
+        }
     }
 
-    if (( bitmap & ( (1<<VOLPBIT_BFREE)|(1<<VOLPBIT_BTOTAL) |
-                     (1<<VOLPBIT_XBFREE)|(1<<VOLPBIT_XBTOTAL) |
-                     (1<<VOLPBIT_BSIZE)) ) != 0 ) {
-        if ( getvolspace(obj, vol, &bfree, &btotal, &xbfree, &xbtotal,
-                          &bsize) != AFP_OK ) {
-            if ( isad ) {
-                ad_close( &ad, ADFLAGS_HF );
+    if ((bitmap & ((1 << VOLPBIT_BFREE) | (1 << VOLPBIT_BTOTAL) |
+                   (1 << VOLPBIT_XBFREE) | (1 << VOLPBIT_XBTOTAL) |
+                   (1 << VOLPBIT_BSIZE))) != 0) {
+        if (getvolspace(obj, vol, &bfree, &btotal, &xbfree, &xbtotal,
+                        &bsize) != AFP_OK) {
+            if (isad) {
+                ad_close(&ad, ADFLAGS_HF);
             }
+
             return AFPERR_PARAM;
         }
     }
 
     data = buf;
-    while ( bitmap != 0 ) {
-        while (( bitmap & 1 ) == 0 ) {
-            bitmap = bitmap>>1;
+
+    while (bitmap != 0) {
+        while ((bitmap & 1) == 0) {
+            bitmap = bitmap >> 1;
             bit++;
         }
 
-        switch ( bit ) {
+        switch (bit) {
         case VOLPBIT_ATTR :
             ashort = 0;
+
             /* check for read-only.
              * NOTE: we don't actually set the read-only flag unless
              *       it's passed in that way as it's possible to mount
              *       a read-write filesystem under a read-only one. */
             if ((vol->v_flags & AFPVOL_RO) ||
-                ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
+                    ((utime(vol->v_path, NULL) < 0) && (errno == EROFS))) {
                 ashort |= VOLPBIT_ATTR_RO;
             }
+
             /* prior 2.1 only VOLPBIT_ATTR_RO is defined */
             if (obj->afp_version > 20) {
-                if (vol->v_cdb != NULL && (vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT))
+                if (vol->v_cdb != NULL && (vol->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT)) {
                     ashort |= VOLPBIT_ATTR_FILEID;
+                }
+
                 ashort |= VOLPBIT_ATTR_CATSEARCH;
 
                 if (obj->afp_version >= 30) {
                     ashort |= VOLPBIT_ATTR_UTF8;
-                    if (vol->v_flags & AFPVOL_UNIX_PRIV)
+
+                    if (vol->v_flags & AFPVOL_UNIX_PRIV) {
                         ashort |= VOLPBIT_ATTR_UNIXPRIV;
-                    if (vol->v_flags & AFPVOL_TM)
+                    }
+
+                    if (vol->v_flags & AFPVOL_TM) {
                         ashort |= VOLPBIT_ATTR_TM;
+                    }
+
 #ifdef HAVE_LDAP
-                    if (!ldap_config_valid || vol->v_flags & AFPVOL_NONETIDS)
+
+                    if (!ldap_config_valid || vol->v_flags & AFPVOL_NONETIDS) {
                         ashort |= VOLPBIT_ATTR_NONETIDS;
+                    }
+
 #else
                     ashort |= VOLPBIT_ATTR_NONETIDS;
 #endif
+
                     if (obj->afp_version >= 32) {
-                        if (vol->v_vfs_ea)
+                        if (vol->v_vfs_ea) {
                             ashort |= VOLPBIT_ATTR_EXT_ATTRS;
-                        if (vol->v_flags & AFPVOL_ACLS)
+                        }
+
+                        if (vol->v_flags & AFPVOL_ACLS) {
                             ashort |= VOLPBIT_ATTR_ACLS;
-                        if (vol->v_casefold & AFPVOL_CASESENS)
+                        }
+
+                        if (vol->v_casefold & AFPVOL_CASESENS) {
                             ashort |= VOLPBIT_ATTR_CASESENS;
+                        }
                     }
                 }
             }
+
             ashort = htons(ashort);
-            memcpy(data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
+            memcpy(data, &ashort, sizeof(ashort));
+            data += sizeof(ashort);
             break;
 
         case VOLPBIT_SIG :
-            ashort = htons( AFPVOLSIG_DEFAULT );
-            memcpy(data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
+            ashort = htons(AFPVOLSIG_DEFAULT);
+            memcpy(data, &ashort, sizeof(ashort));
+            data += sizeof(ashort);
             break;
 
         case VOLPBIT_CDATE :
             aint = vol->v_ctime;
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case VOLPBIT_MDATE :
-            if ( st->st_mtime > vol->v_mtime ) {
+            if (st->st_mtime > vol->v_mtime) {
                 vol->v_mtime = st->st_mtime;
             }
+
             aint = AD_DATE_FROM_UNIX(vol->v_mtime);
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case VOLPBIT_BDATE :
-            if (!isad ||  (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0))
+            if (!isad || (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0)) {
                 aint = AD_DATE_START;
-            memcpy(data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            }
+
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case VOLPBIT_VID :
-            memcpy(data, &vol->v_vid, sizeof( vol->v_vid ));
-            data += sizeof( vol->v_vid );
+            memcpy(data, &vol->v_vid, sizeof(vol->v_vid));
+            data += sizeof(vol->v_vid);
             break;
 
         case VOLPBIT_BFREE :
-            bfree = htonl( bfree );
-            memcpy(data, &bfree, sizeof( bfree ));
-            data += sizeof( bfree );
+            bfree = htonl(bfree);
+            memcpy(data, &bfree, sizeof(bfree));
+            data += sizeof(bfree);
             break;
 
         case VOLPBIT_BTOTAL :
-            btotal = htonl( btotal );
-            memcpy(data, &btotal, sizeof( btotal ));
-            data += sizeof( btotal );
+            btotal = htonl(btotal);
+            memcpy(data, &btotal, sizeof(btotal));
+            data += sizeof(btotal);
             break;
-
 #ifndef NO_LARGE_VOL_SUPPORT
+
         case VOLPBIT_XBFREE :
-            xbfree = hton64( xbfree );
-            memcpy(data, &xbfree, sizeof( xbfree ));
-            data += sizeof( xbfree );
+            xbfree = hton64(xbfree);
+            memcpy(data, &xbfree, sizeof(xbfree));
+            data += sizeof(xbfree);
             break;
 
         case VOLPBIT_XBTOTAL :
-            xbtotal = hton64( xbtotal );
-            memcpy(data, &xbtotal, sizeof( xbtotal ));
-            data += sizeof( xbfree );
+            xbtotal = hton64(xbtotal);
+            memcpy(data, &xbtotal, sizeof(xbtotal));
+            data += sizeof(xbfree);
             break;
 #endif /* ! NO_LARGE_VOL_SUPPORT */
 
         case VOLPBIT_NAME :
             nameoff = data;
-            data += sizeof( uint16_t );
+            data += sizeof(uint16_t);
             break;
 
         case VOLPBIT_BSIZE:  /* block size */
@@ -481,20 +533,25 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
             break;
 
         default :
-            if ( isad ) {
-                ad_close( &ad, ADFLAGS_HF );
+            if (isad) {
+                ad_close(&ad, ADFLAGS_HF);
             }
+
             return AFPERR_BITMAP;
         }
-        bitmap = bitmap>>1;
+
+        bitmap = bitmap >> 1;
         bit++;
     }
-    if ( nameoff ) {
-        ashort = htons( data - buf );
-        memcpy(nameoff, &ashort, sizeof( ashort ));
+
+    if (nameoff) {
+        ashort = htons(data - buf);
+        memcpy(nameoff, &ashort, sizeof(ashort));
         /* name is always in mac charset */
-        aint = ucs2_to_charset( vol->v_maccharset, vol->v_macname, data+1, AFPVOL_MACNAMELEN + 1);
-        if ( aint <= 0 ) {
+        aint = ucs2_to_charset(vol->v_maccharset, vol->v_macname, data + 1,
+                               AFPVOL_MACNAMELEN + 1);
+
+        if (aint <= 0) {
             *buflen = 0;
             return AFPERR_MISC;
         }
@@ -502,42 +559,47 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol, str
         *data++ = aint;
         data += aint;
     }
-    if ( isad ) {
+
+    if (isad) {
         ad_close(&ad, ADFLAGS_HF);
     }
+
     *buflen = data - buf;
     return AFP_OK;
 }
 
 /* ------------------------- */
-static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol, char *rbuf, size_t *rbuflen)
+static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
+                    char *rbuf, size_t *rbuflen)
 {
     struct stat st;
     int     ret;
     size_t  buflen;
 
-    if ( stat( vol->v_path, &st ) < 0 ) {
+    if (stat(vol->v_path, &st) < 0) {
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
+
     /* save the volume device number */
     vol->v_dev = st.st_dev;
+    buflen = *rbuflen - sizeof(bitmap);
 
-    buflen = *rbuflen - sizeof( bitmap );
-    if (( ret = getvolparams(obj, bitmap, vol, &st,
-                              rbuf + sizeof( bitmap ), &buflen )) != AFP_OK ) {
+    if ((ret = getvolparams(obj, bitmap, vol, &st,
+                            rbuf + sizeof(bitmap), &buflen)) != AFP_OK) {
         *rbuflen = 0;
         return ret;
     }
-    *rbuflen = buflen + sizeof( bitmap );
-    bitmap = htons( bitmap );
-    memcpy(rbuf, &bitmap, sizeof( bitmap ));
-    return AFP_OK;
 
+    *rbuflen = buflen + sizeof(bitmap);
+    bitmap = htons(bitmap);
+    memcpy(rbuf, &bitmap, sizeof(bitmap));
+    return AFP_OK;
 }
 
 /* ------------------------------- */
-int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
+                     char *rbuf, size_t *rbuflen)
 {
     struct timeval  tv;
     struct stat     st;
@@ -547,23 +609,26 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
     int         vcnt;
     size_t      len;
     uint32_t    aint;
-
     load_volumes(obj, LV_DEFAULT);
-
     data = rbuf + 5;
-    for ( vcnt = 0, volume = getvolumes(); volume && vcnt < 255; volume = volume->v_next ) {
+
+    for (vcnt = 0, volume = getvolumes(); volume
+            && vcnt < 255; volume = volume->v_next) {
         if (!(volume->v_flags & AFPVOL_NOSTAT)) {
             struct maccess ma;
 
-            if ( stat( volume->v_path, &st ) < 0 ) {
+            if (stat(volume->v_path, &st) < 0) {
                 LOG(log_info, logtype_afpd, "afp_getsrvrparms(%s): stat: %s",
-                    volume->v_path, strerror(errno) );
+                    volume->v_path, strerror(errno));
                 continue;       /* can't access directory */
             }
+
             if (!S_ISDIR(st.st_mode)) {
                 continue;       /* not a dir */
             }
+
             accessmode(obj, volume, volume->v_path, &ma, NULL, &st);
+
             if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
                 continue;   /* no r-x access */
             }
@@ -572,23 +637,25 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
         if (utf8_encoding(obj)) {
             len = ucs2_to_charset_allocate(CH_UTF8_MAC, &namebuf, volume->v_u8mname);
         } else {
-            len = ucs2_to_charset_allocate(obj->options.maccharset, &namebuf, volume->v_macname);
+            len = ucs2_to_charset_allocate(obj->options.maccharset, &namebuf,
+                                           volume->v_macname);
         }
 
-        if (len == (size_t)-1)
+        if (len == (size_t) -1) {
             continue;
+        }
 
         /*
          * There seems to be an undocumented limit on how big our reply can get
          * before the client chokes and closes the connection.
          * Testing with 10.8.4 found the limit at ~4600 bytes. Go figure.
          */
-        if (((data + len + 3) - rbuf) > 4600)
+        if (((data + len + 3) - rbuf) > 4600) {
             break;
+        }
 
         /* set password bit if there's a volume password */
         *data = (volume->v_password) ? (char) AFPSRVR_PASSWD : 0;
-
         /* Apple 2 clients running ProDOS-8 expect one volume to have
            bit 0 of this byte set.  They will not recognize anything
            on the server unless this is the case.  I have not
@@ -596,9 +663,10 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
            from the server.  Support for that function is a ways
            off.. <shirsch@ibm.net> */
         *data |= (volume->v_flags & AFPVOL_A2VOL) ? AFPSRVR_CONFIGINFO : 0;
-        *data++ |= 0; /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
+        /* UNIX PRIVS BIT ..., OSX doesn't seem to use it, so we don't either */
+        *data++ |= 0;
         *data++ = len;
-        memcpy(data, namebuf, len );
+        memcpy(data, namebuf, len);
         data += len;
         free(namebuf);
         vcnt++;
@@ -606,15 +674,17 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
 
     *rbuflen = data - rbuf;
     data = rbuf;
-    if ( gettimeofday( &tv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "afp_getsrvrparms: gettimeofday: %s", strerror(errno) );
+
+    if (gettimeofday(&tv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "afp_getsrvrparms: gettimeofday: %s",
+            strerror(errno));
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
 
     aint = AD_DATE_FROM_UNIX(tv.tv_sec);
-    memcpy(data, &aint, sizeof( uint32_t));
-    data += sizeof( uint32_t);
+    memcpy(data, &aint, sizeof(uint32_t));
+    data += sizeof(uint32_t);
     *data = vcnt;
     return AFP_OK;
 }
@@ -625,30 +695,42 @@ static int volume_codepage(AFPObj *obj, struct vol *volume)
     struct charset_functions *charset;
     /* Codepages */
 
-    if (!volume->v_volcodepage)
+    if (!volume->v_volcodepage) {
         volume->v_volcodepage = strdup("UTF8");
+    }
 
-    if ( (charset_t) -1 == ( volume->v_volcharset = add_charset(volume->v_volcodepage)) ) {
-        LOG (log_error, logtype_afpd, "Setting codepage %s as volume codepage failed", volume->v_volcodepage);
+    if ((charset_t) -1 == (volume->v_volcharset = add_charset(
+                               volume->v_volcodepage))) {
+        LOG(log_error, logtype_afpd, "Setting codepage %s as volume codepage failed",
+            volume->v_volcodepage);
         return -1;
     }
 
-    if ( NULL == (charset = find_charset_functions(volume->v_volcodepage)) || charset->flags & CHARSET_ICONV ) {
-        LOG (log_warning, logtype_afpd, "WARNING: volume encoding %s is *not* supported by netatalk, expect problems !!!!", volume->v_volcodepage);
+    if (NULL == (charset = find_charset_functions(volume->v_volcodepage))
+            || charset->flags & CHARSET_ICONV) {
+        LOG(log_warning, logtype_afpd,
+            "WARNING: volume encoding %s is *not* supported by netatalk, expect problems !!!!",
+            volume->v_volcodepage);
     }
 
-    if (!volume->v_maccodepage)
+    if (!volume->v_maccodepage) {
         volume->v_maccodepage = strdup(obj->options.maccodepage);
+    }
 
-    if ( (charset_t) -1 == ( volume->v_maccharset = add_charset(volume->v_maccodepage)) ) {
-        LOG (log_error, logtype_afpd, "Setting codepage %s as mac codepage failed", volume->v_maccodepage);
+    if ((charset_t) -1 == (volume->v_maccharset = add_charset(
+                               volume->v_maccodepage))) {
+        LOG(log_error, logtype_afpd, "Setting codepage %s as mac codepage failed",
+            volume->v_maccodepage);
         return -1;
     }
 
-    if ( NULL == ( charset = find_charset_functions(volume->v_maccodepage)) || ! (charset->flags & CHARSET_CLIENT) ) {
-        LOG (log_error, logtype_afpd, "Fatal error: mac charset %s not supported", volume->v_maccodepage);
+    if (NULL == (charset = find_charset_functions(volume->v_maccodepage))
+            || !(charset->flags & CHARSET_CLIENT)) {
+        LOG(log_error, logtype_afpd, "Fatal error: mac charset %s not supported",
+            volume->v_maccodepage);
         return -1;
     }
+
     volume->v_kTextEncoding = htonl(charset->kTextEncoding);
     return 0;
 }
@@ -664,13 +746,13 @@ static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
 
     volume->v_cdb = cnid_open(volume, volume->v_cnidscheme, flags);
 
-    if ( ! volume->v_cdb ) {
+    if (! volume->v_cdb) {
         LOG(log_error, logtype_afpd, "Can't open volume \"%s\" CNID backend \"%s\" ",
             volume->v_path, volume->v_cnidscheme);
         return -1;
     }
 
-    return (!volume->v_cdb)?-1:0;
+    return (!volume->v_cdb) ? -1 : 0;
 }
 
 /*
@@ -685,27 +767,31 @@ static void server_ipc_volumes(AFPObj *obj)
 
     while (volume) {
         if (volume->v_flags & AFPVOL_OPEN) {
-            if (!firstvol)
+            if (!firstvol) {
                 bcatcstr(openvolnames, ", ");
-            else
+            } else {
                 firstvol = false;
+            }
+
             bcatcstr(openvolnames, volume->v_localname);
         }
+
         volume = volume->v_next;
     }
 
-    ipc_child_write(obj->ipc_fd, IPC_VOLUMES, blength(openvolnames), bdata(openvolnames));
+    ipc_child_write(obj->ipc_fd, IPC_VOLUMES, blength(openvolnames),
+                    bdata(openvolnames));
     bdestroy(openvolnames);
 }
 
 /* -------------------------
  * we are the user here
  */
-int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                size_t *rbuflen)
 {
     struct stat st;
     char    *volname;
-
     struct vol  *volume;
     struct dir  *dir;
     int     len, ret;
@@ -714,46 +800,51 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     char        *vol_uname;
     char        *vol_mname = NULL;
     char        *volname_tmp;
-
     ibuf += 2;
-    memcpy(&bitmap, ibuf, sizeof( bitmap ));
-    bitmap = ntohs( bitmap );
-    ibuf += sizeof( bitmap );
-
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
+    ibuf += sizeof(bitmap);
     *rbuflen = 0;
-    if (( bitmap & (1<<VOLPBIT_VID)) == 0 ) {
+
+    if ((bitmap & (1 << VOLPBIT_VID)) == 0) {
         return AFPERR_BITMAP;
     }
 
-    len = (unsigned char)*ibuf++;
+    len = (unsigned char) * ibuf++;
     volname = obj->oldtmp;
 
-    if ((volname_tmp = strchr(volname,'+')) != NULL)
-        volname = volname_tmp+1;
-
-    if (utf8_encoding(obj)) {
-        namelen = convert_string(CH_UTF8_MAC, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
-    } else {
-        namelen = convert_string(obj->options.maccharset, CH_UCS2, ibuf, len, volname, sizeof(obj->oldtmp));
+    if ((volname_tmp = strchr(volname, '+')) != NULL) {
+        volname = volname_tmp + 1;
     }
 
-    if ( namelen <= 0) {
+    if (utf8_encoding(obj)) {
+        namelen = convert_string(CH_UTF8_MAC, CH_UCS2, ibuf, len, volname,
+                                 sizeof(obj->oldtmp));
+    } else {
+        namelen = convert_string(obj->options.maccharset, CH_UCS2, ibuf, len, volname,
+                                 sizeof(obj->oldtmp));
+    }
+
+    if (namelen <= 0) {
         return AFPERR_PARAM;
     }
 
     ibuf += len;
-    if ((len + 1) & 1) /* pad to an even boundary */
+
+    /* pad to an even boundary */
+    if ((len + 1) & 1) {
         ibuf++;
+    }
 
     load_volumes(obj, LV_DEFAULT);
 
-    for ( volume = getvolumes(); volume; volume = volume->v_next ) {
-        if ( strcasecmp_w( (ucs2_t*) volname, volume->v_name ) == 0 ) {
+    for (volume = getvolumes(); volume; volume = volume->v_next) {
+        if (strcasecmp_w((ucs2_t *) volname, volume->v_name) == 0) {
             break;
         }
     }
 
-    if ( volume == NULL ) {
+    if (volume == NULL) {
         return AFPERR_NOOBJ;
     }
 
@@ -762,23 +853,24 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         return AFPERR_ACCESS;
     }
 
-    if ( volume->v_flags & AFPVOL_OPEN ) {
+    if (volume->v_flags & AFPVOL_OPEN) {
         /* the volume is already open */
         return stat_vol(obj, bitmap, volume, rbuf, rbuflen);
     }
 
     if (volume->v_preexec) {
         if ((ret = afprun(volume->v_preexec, NULL)) && volume->v_preexec_close) {
-            LOG(log_error, logtype_afpd, "afp_openvol(%s): preexec : %d", volume->v_path, ret );
+            LOG(log_error, logtype_afpd, "afp_openvol(%s): preexec : %d", volume->v_path,
+                ret);
             return AFPERR_MISC;
         }
     }
 
-    if ( stat( volume->v_path, &st ) < 0 ) {
+    if (stat(volume->v_path, &st) < 0) {
         return AFPERR_PARAM;
     }
 
-    if ( chdir( volume->v_path ) < 0 ) {
+    if (chdir(volume->v_path) < 0) {
         return AFPERR_PARAM;
     }
 
@@ -792,8 +884,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
      */
     if (utf8_encoding(obj)) {
         volume->max_filename = UTF8FILELEN_EARLY;
-    }
-    else {
+    } else {
         volume->max_filename = MACFILELEN;
     }
 
@@ -801,19 +892,23 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     volume->v_cdb = NULL;
 
     if (utf8_encoding(obj)) {
-        len = convert_string_allocate(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, namelen, &vol_mname);
+        len = convert_string_allocate(CH_UCS2, CH_UTF8_MAC, volume->v_u8mname, namelen,
+                                      &vol_mname);
     } else {
-        len = convert_string_allocate(CH_UCS2, obj->options.maccharset, volume->v_macname, namelen, &vol_mname);
+        len = convert_string_allocate(CH_UCS2, obj->options.maccharset,
+                                      volume->v_macname, namelen, &vol_mname);
     }
-    if ( !vol_mname || len <= 0) {
+
+    if (!vol_mname || len <= 0) {
         ret = AFPERR_MISC;
         goto openvol_err;
     }
 
-    if ((vol_uname = strrchr(volume->v_path, '/')) == NULL)
+    if ((vol_uname = strrchr(volume->v_path, '/')) == NULL) {
         vol_uname = volume->v_path;
-    else if (vol_uname[1] != '\0')
+    } else if (vol_uname[1] != '\0') {
         vol_uname++;
+    }
 
     if ((dir = dir_new(vol_mname,
                        vol_uname,
@@ -822,16 +917,19 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
                        DIRDID_ROOT,
                        bfromcstr(volume->v_path),
                        &st)
-            ) == NULL) {
-        LOG(log_error, logtype_afpd, "afp_openvol(%s): malloc: %s", volume->v_path, strerror(errno) );
+        ) == NULL) {
+        LOG(log_error, logtype_afpd, "afp_openvol(%s): malloc: %s", volume->v_path,
+            strerror(errno));
         ret = AFPERR_MISC;
         goto openvol_err;
     }
+
     volume->v_root = dir;
     curdir = dir;
 
     if (volume_openDB(obj, volume) < 0) {
-        LOG(log_error, logtype_afpd, "Fatal error: cannot open CNID or invalid CNID backend for %s: %s",
+        LOG(log_error, logtype_afpd,
+            "Fatal error: cannot open CNID or invalid CNID backend for %s: %s",
             volume->v_path, volume->v_cnidscheme);
         ret = AFPERR_MISC;
         goto openvol_err;
@@ -849,12 +947,12 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
          * FIXME (RL): should it be done inside a CNID backend ? (always returning Trash DID when asked) ?
          */
         if (volume->v_cdb->cnid_db_flags & CNID_FLAG_PERSISTENT) {
-
             /* FIXME find db time stamp */
-            if (cnid_getstamp(volume->v_cdb, volume->v_stamp, sizeof(volume->v_stamp)) < 0) {
-                LOG (log_error, logtype_afpd,
-                     "afp_openvol(%s): Fatal error: Unable to get stamp value from CNID backend",
-                     volume->v_path);
+            if (cnid_getstamp(volume->v_cdb, volume->v_stamp,
+                              sizeof(volume->v_stamp)) < 0) {
+                LOG(log_error, logtype_afpd,
+                    "afp_openvol(%s): Fatal error: Unable to get stamp value from CNID backend",
+                    volume->v_path);
                 ret = AFPERR_MISC;
                 goto openvol_err;
             }
@@ -863,8 +961,10 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
         const char *msg;
         char option[MAXOPTLEN];
         snprintf(option, sizeof(option), "%s:login message", volume->v_configname);
-        if ((msg = iniparser_getstring(obj->iniconfig, option,  NULL)) != NULL)
+
+        if ((msg = iniparser_getstring(obj->iniconfig, option,  NULL)) != NULL) {
             setmessage(msg);
+        }
 
         free(vol_mname);
         server_ipc_volumes(obj);
@@ -872,16 +972,19 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t 
     }
 
 openvol_err:
+
     if (volume->v_root) {
-        dir_free( volume->v_root );
+        dir_free(volume->v_root);
         volume->v_root = NULL;
     }
 
     volume->v_flags &= ~AFPVOL_OPEN;
+
     if (volume->v_cdb != NULL) {
         cnid_close(volume->v_cdb);
         volume->v_cdb = NULL;
     }
+
     free(vol_mname);
     *rbuflen = 0;
     return ret;
@@ -889,15 +992,15 @@ openvol_err:
 
 void closevol(const AFPObj *obj, struct vol *vol)
 {
-    if (!vol)
+    if (!vol) {
         return;
+    }
 
     vol->v_flags &= ~AFPVOL_OPEN;
-
     of_closevol(obj, vol);
-
-    dir_free( vol->v_root );
+    dir_free(vol->v_root);
     vol->v_root = NULL;
+
     if (vol->v_cdb != NULL) {
         cnid_close(vol->v_cdb);
         vol->v_cdb = NULL;
@@ -913,8 +1016,9 @@ void close_all_vol(const AFPObj *obj)
 {
     struct vol  *ovol;
     curdir = NULL;
-    for ( ovol = getvolumes(); ovol; ovol = ovol->v_next ) {
-        if ( ovol->v_flags & AFPVOL_OPEN ) {
+
+    for (ovol = getvolumes(); ovol; ovol = ovol->v_next) {
+        if (ovol->v_flags & AFPVOL_OPEN) {
             ovol->v_flags &= ~AFPVOL_OPEN;
             closevol(obj, ovol);
         }
@@ -922,15 +1026,16 @@ void close_all_vol(const AFPObj *obj)
 }
 
 /* ------------------------- */
-int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
+                 size_t *rbuflen)
 {
     struct vol  *vol;
     uint16_t   vid;
-
     *rbuflen = 0;
     ibuf += 2;
-    memcpy(&vid, ibuf, sizeof( vid ));
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
+    memcpy(&vid, ibuf, sizeof(vid));
+
+    if (NULL == (vol = getvolbyvid(vid))) {
         return AFPERR_PARAM;
     }
 
@@ -938,7 +1043,6 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, si
     curdir = NULL;
     closevol(obj, vol);
     server_ipc_volumes(obj);
-
     return AFP_OK;
 }
 
@@ -960,27 +1064,33 @@ int  pollvoltime(AFPObj *obj)
     struct vol       *vol;
     struct timeval   tv;
     struct stat      st;
-    if (obj->proto == AFPPROTO_DSI)
-    {
+
+    if (obj->proto == AFPPROTO_DSI) {
         obj->handle = obj->dsi;
     }
 
-    if (!(obj->afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF))
+    if (!(obj->afp_version > 21 && obj->options.flags & OPTION_SERVERNOTIF)) {
         return 0;
+    }
 
-    if ( gettimeofday( &tv, NULL ) < 0 )
+    if (gettimeofday(&tv, NULL) < 0) {
         return 0;
+    }
 
-    for ( vol = getvolumes(); vol; vol = vol->v_next ) {
-        if ( (vol->v_flags & AFPVOL_OPEN)  && vol->v_mtime + 30 < tv.tv_sec) {
-            if ( !stat( vol->v_path, &st ) && vol->v_mtime != st.st_mtime ) {
+    for (vol = getvolumes(); vol; vol = vol->v_next) {
+        if ((vol->v_flags & AFPVOL_OPEN)  && vol->v_mtime + 30 < tv.tv_sec) {
+            if (!stat(vol->v_path, &st) && vol->v_mtime != st.st_mtime) {
                 vol->v_mtime = st.st_mtime;
-                if (!obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED))
+
+                if (!obj->attention(obj->handle, AFPATTN_NOTIFY | AFPATTN_VOLCHANGED)) {
                     return -1;
+                }
+
                 return 1;
             }
         }
     }
+
     return 0;
 }
 
@@ -988,16 +1098,18 @@ int  pollvoltime(AFPObj *obj)
 void setvoltime(AFPObj *obj, struct vol *vol)
 {
     struct timeval  tv;
-    if (obj->proto == AFPPROTO_DSI)
-    {
+
+    if (obj->proto == AFPPROTO_DSI) {
         obj->handle = obj->dsi;
     }
 
-    if ( gettimeofday( &tv, NULL ) < 0 ) {
-        LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path, strerror(errno) );
+    if (gettimeofday(&tv, NULL) < 0) {
+        LOG(log_error, logtype_afpd, "setvoltime(%s): gettimeofday: %s", vol->v_path,
+            strerror(errno));
         return;
     }
-    if( utime( vol->v_path, NULL ) < 0 ) {
+
+    if (utime(vol->v_path, NULL) < 0) {
         /* write of time failed ... probably a read only filesys,
          * where no other users can interfere, so there's no issue here
          */
@@ -1006,6 +1118,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
     /* a little granularity */
     if (vol->v_mtime < tv.tv_sec) {
         vol->v_mtime = tv.tv_sec;
+
         /* or finder doesn't update free space
          * AFP 3.2 and above clients seem to be ok without so many notification
          */
@@ -1016,18 +1129,18 @@ void setvoltime(AFPObj *obj, struct vol *vol)
 }
 
 /* ------------------------- */
-int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,char *rbuf, size_t *rbuflen)
+int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                     size_t *rbuflen)
 {
     struct vol  *vol;
     uint16_t   vid, bitmap;
-
     ibuf += 2;
-    memcpy(&vid, ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
-    memcpy(&bitmap, ibuf, sizeof( bitmap ));
-    bitmap = ntohs( bitmap );
+    memcpy(&vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
 
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
+    if (NULL == (vol = getvolbyvid(vid))) {
         *rbuflen = 0;
         return AFPERR_PARAM;
     }
@@ -1036,37 +1149,40 @@ int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,char *rbuf, siz
 }
 
 /* ------------------------- */
-int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,  size_t *rbuflen)
+int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+                     char *rbuf _U_,  size_t *rbuflen)
 {
     struct adouble ad;
     struct vol  *vol;
     uint16_t   vid, bitmap;
     uint32_t   aint;
-
     ibuf += 2;
     *rbuflen = 0;
-
-    memcpy(&vid, ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
-    memcpy(&bitmap, ibuf, sizeof( bitmap ));
-    bitmap = ntohs( bitmap );
+    memcpy(&vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
     ibuf += sizeof(bitmap);
 
-    if (( vol = getvolbyvid( vid )) == NULL ) {
+    if ((vol = getvolbyvid(vid)) == NULL) {
         return AFPERR_PARAM;
     }
 
-    if (vol->v_flags & AFPVOL_RO)
+    if (vol->v_flags & AFPVOL_RO) {
         return AFPERR_VLOCK;
+    }
 
     /* we can only set the backup date. */
-    if (bitmap != (1 << VOLPBIT_BDATE))
+    if (bitmap != (1 << VOLPBIT_BDATE)) {
         return AFPERR_BITMAP;
+    }
 
     ad_init(&ad, vol);
-    if ( ad_open(&ad,  vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) < 0 ) {
-        if (errno == EROFS)
+
+    if (ad_open(&ad,  vol->v_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) < 0) {
+        if (errno == EROFS) {
             return AFPERR_VLOCK;
+        }
 
         return AFPERR_ACCESS;
     }

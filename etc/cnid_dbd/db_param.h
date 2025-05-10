@@ -33,7 +33,7 @@ struct db_param {
     int max_vols;
 };
 
-struct db_param *db_param_read  (char *);
+struct db_param *db_param_read(char *);
 
 #endif /* CNID_DBD_DB_PARAM_H */
 

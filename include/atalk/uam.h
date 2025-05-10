@@ -58,36 +58,42 @@
 /* i'm doing things this way because os x server's dynamic linker
  * support is braindead. it also allows me to do a little versioning. */
 struct uam_export {
-  int uam_type, uam_version;
-  int (*uam_setup)(void *, const char *);
-  void (*uam_cleanup)(void);
+    int uam_type, uam_version;
+    int (*uam_setup)(void *, const char *);
+    void (*uam_cleanup)(void);
 };
 
 #define SESSIONKEY_LEN  64
 #define SESSIONTOKEN_LEN 8
 
 struct session_info {
-  void    *sessionkey;          /* random session key */
-  size_t  sessionkey_len;
-  void    *cryptedkey;		/* kerberos/gssapi crypted key */
-  size_t  cryptedkey_len;
-  void    *sessiontoken;        /* session token sent to the client on FPGetSessionToken*/
-  size_t  sessiontoken_len;
-  void    *clientid;          /* whole buffer cotaining e.g. idlen, id and boottime */
-  size_t  clientid_len;
+    /* random session key */
+    void    *sessionkey;
+    size_t  sessionkey_len;
+    /* kerberos/gssapi crypted key */
+    void    *cryptedkey;
+    size_t  cryptedkey_len;
+    /* session token sent to the client on FPGetSessionToken*/
+    void    *sessiontoken;
+    size_t  sessiontoken_len;
+    /* whole buffer cotaining e.g. idlen, id and boottime */
+    void    *clientid;
+    size_t  clientid_len;
 };
 
 /* register and unregister uams with these functions */
-extern UAM_MODULE_EXPORT int uam_register (const int, const char *, const char *, ...);
-extern UAM_MODULE_EXPORT void uam_unregister (const int, const char *);
+extern UAM_MODULE_EXPORT int uam_register(const int, const char *, const char *,
+        ...);
+extern UAM_MODULE_EXPORT void uam_unregister(const int, const char *);
 
 /* helper functions */
-extern UAM_MODULE_EXPORT struct passwd *uam_getname (void*, char *, const int);
-extern UAM_MODULE_EXPORT int uam_checkuser (const struct passwd *);
+extern UAM_MODULE_EXPORT struct passwd *uam_getname(void*, char *, const int);
+extern UAM_MODULE_EXPORT int uam_checkuser(const struct passwd *);
 
 /* afp helper functions */
-extern UAM_MODULE_EXPORT int uam_afp_read (void *, char *, size_t *,
-			     int (*)(void *, void *, const int));
-extern UAM_MODULE_EXPORT int uam_afpserver_option (void *, const int, void *, size_t *);
+extern UAM_MODULE_EXPORT int uam_afp_read(void *, char *, size_t *,
+        int (*)(void *, void *, const int));
+extern UAM_MODULE_EXPORT int uam_afpserver_option(void *, const int, void *,
+        size_t *);
 
 #endif

@@ -24,51 +24,52 @@ int atp_close(ATP ah)
 {
     struct atpbuf	*cq;
     int			i;
-
     /* remove from list of open atp sockets & discard queued data
     */
 #ifdef EBUG
-    atp_print_bufuse( ah, "atp_close");
+    atp_print_bufuse(ah, "atp_close");
 #endif /* EBUG */
 
-    while ( ah->atph_queue != NULL ) {
-	cq = ah->atph_queue;
-	ah->atph_queue = cq->atpbuf_next;
-	atp_free_buf( cq );
+    while (ah->atph_queue != NULL) {
+        cq = ah->atph_queue;
+        ah->atph_queue = cq->atpbuf_next;
+        atp_free_buf(cq);
     }
 
-    while ( ah->atph_sent != NULL ) {
-	cq = ah->atph_sent;
-	for ( i = 0; i < 8; ++i ) {
-	    if ( cq->atpbuf_info.atpbuf_xo.atpxo_packet[ i ] != NULL ) {
-		atp_free_buf( cq->atpbuf_info.atpbuf_xo.atpxo_packet[ i ] );
-	    }
-	}
-	ah->atph_sent = cq->atpbuf_next;
-	atp_free_buf( cq );
+    while (ah->atph_sent != NULL) {
+        cq = ah->atph_sent;
+
+        for (i = 0; i < 8; ++i) {
+            if (cq->atpbuf_info.atpbuf_xo.atpxo_packet[i] != NULL) {
+                atp_free_buf(cq->atpbuf_info.atpbuf_xo.atpxo_packet[i]);
+            }
+        }
+
+        ah->atph_sent = cq->atpbuf_next;
+        atp_free_buf(cq);
     }
 
-    if ( ah->atph_reqpkt != NULL ) {
-	atp_free_buf( ah->atph_reqpkt );
-	ah->atph_reqpkt = NULL;
+    if (ah->atph_reqpkt != NULL) {
+        atp_free_buf(ah->atph_reqpkt);
+        ah->atph_reqpkt = NULL;
     }
 
-    for ( i = 0; i < 8; ++i ) {
-	if ( ah->atph_resppkt[ i ] != NULL ) {
-	    atp_free_buf( ah->atph_resppkt[ i ] );
-	    ah->atph_resppkt[ i ] = NULL;
-	}
+    for (i = 0; i < 8; ++i) {
+        if (ah->atph_resppkt[i] != NULL) {
+            atp_free_buf(ah->atph_resppkt[i]);
+            ah->atph_resppkt[i] = NULL;
+        }
     }
 
 #ifdef EBUG
-    atp_print_bufuse( ah, "atp_close end");
+    atp_print_bufuse(ah, "atp_close end");
 #endif /* EBUG */
-
     i = ah->atph_socket;
-    atp_free_buf( (struct atpbuf *) ah );
+    atp_free_buf((struct atpbuf *) ah);
 
-    if (netddp_close(i) < 0)
-      return -1;
+    if (netddp_close(i) < 0) {
+        return -1;
+    }
 
     return 0;
 }

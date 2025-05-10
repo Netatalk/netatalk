@@ -40,17 +40,26 @@ static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
 
     if (fn[0] != '/') {
         len = strlen(dir);
-        if (len + 1 + strlen(fn) > maxlen)
+
+        if (len + 1 + strlen(fn) > maxlen) {
             return -1;
+        }
+
         strlcpy(path, dir, maxlen);
-        if (path[len - 1] != '/')
+
+        if (path[len - 1] != '/') {
             strlcat(path, "/", maxlen);
+        }
+
         strlcat(path, fn, maxlen);
     } else {
-        if (strlen(fn) > maxlen)
+        if (strlen(fn) > maxlen) {
             return -1;
+        }
+
         strlcpy(path, fn, maxlen);
     }
+
     return 0;
 }
 
@@ -62,15 +71,20 @@ static void default_params(struct db_param *dbp, char *dir)
     dbp->maxlockobjs         = DEFAULT_MAXLOCKOBJS;
     dbp->flush_frequency     = DEFAULT_FLUSH_FREQUENCY;
     dbp->flush_interval      = DEFAULT_FLUSH_INTERVAL;
-    if (make_pathname(dbp->usock_file, dir, DEFAULT_USOCK_FILE, usock_maxlen()) < 0) {
+
+    if (make_pathname(dbp->usock_file, dir, DEFAULT_USOCK_FILE,
+                      usock_maxlen()) < 0) {
         /* Not an error yet, it might be set in the config file */
         dbp->usock_file[0] = '\0';
     }
-    dbp->fd_table_size       = DEFAULT_FD_TABLE_SIZE;
-    if ( dbp->fd_table_size > FD_SETSIZE -1)
-        dbp->fd_table_size = FD_SETSIZE -1;
-    dbp->idle_timeout        = DEFAULT_IDLE_TIMEOUT;
 
+    dbp->fd_table_size       = DEFAULT_FD_TABLE_SIZE;
+
+    if (dbp->fd_table_size > FD_SETSIZE - 1) {
+        dbp->fd_table_size = FD_SETSIZE - 1;
+    }
+
+    dbp->idle_timeout        = DEFAULT_IDLE_TIMEOUT;
     return;
 }
 
@@ -78,12 +92,13 @@ static int parse_int(char *val)
 {
     char *tmp;
     int   result = 0;
-
     result = strtol(val, &tmp, 10);
+
     if (tmp[0] != '\0') {
         LOG(log_error, logtype_cnid, "invalid characters in token %s", val);
         parse_err++;
     }
+
     return result;
 }
 
@@ -94,7 +109,6 @@ struct db_param *db_param_read(char *dir)
     static char val[MAXPATHLEN + 1];
     static char pfn[MAXPATHLEN + 1];
     int    items;
-
     default_params(&params, dir);
     params.dir = dir;
 
@@ -116,6 +130,7 @@ struct db_param *db_param_read(char *dir)
             return NULL;
         }
     }
+
     parse_err = 0;
 
     while ((items = fscanf(fp, " %64s %1024s", key, val)) != EOF) {
@@ -130,38 +145,50 @@ struct db_param *db_param_read(char *dir)
             if (make_pathname(params.usock_file, dir, val, usock_maxlen()) < 0) {
                 LOG(log_error, logtype_cnid, "usock filename %s too long", val);
                 parse_err++;
-            } else
-                LOG(log_info, logtype_cnid, "db_param: setting UNIX domain socket filename to %s", params.usock_file);
+            } else {
+                LOG(log_info, logtype_cnid,
+                    "db_param: setting UNIX domain socket filename to %s", params.usock_file);
+            }
         }
 
         if (! strcmp(key, "fd_table_size")) {
             params.fd_table_size = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting max number of concurrent afpd connections per volume (fd_table_size) to %d", params.fd_table_size);
+            LOG(log_info, logtype_cnid,
+                "db_param: setting max number of concurrent afpd connections per volume (fd_table_size) to %d",
+                params.fd_table_size);
         } else if (! strcmp(key, "logfile_autoremove")) {
             params.logfile_autoremove = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting logfile_autoremove to %d", params.logfile_autoremove);
+            LOG(log_info, logtype_cnid, "db_param: setting logfile_autoremove to %d",
+                params.logfile_autoremove);
         } else if (! strcmp(key, "cachesize")) {
             params.cachesize = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting cachesize to %d", params.cachesize);
+            LOG(log_info, logtype_cnid, "db_param: setting cachesize to %d",
+                params.cachesize);
         } else if (! strcmp(key, "maxlocks")) {
             params.maxlocks = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting maxlocks to %d", params.maxlocks);
+            LOG(log_info, logtype_cnid, "db_param: setting maxlocks to %d",
+                params.maxlocks);
         } else if (! strcmp(key, "maxlockobjs")) {
             params.maxlockobjs = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting maxlockobjs to %d", params.maxlockobjs);
+            LOG(log_info, logtype_cnid, "db_param: setting maxlockobjs to %d",
+                params.maxlockobjs);
         } else if (! strcmp(key, "flush_frequency")) {
             params.flush_frequency = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting flush_frequency to %d", params.flush_frequency);
+            LOG(log_info, logtype_cnid, "db_param: setting flush_frequency to %d",
+                params.flush_frequency);
         } else if (! strcmp(key, "flush_interval")) {
             params.flush_interval = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting flush_interval to %d", params.flush_interval);
+            LOG(log_info, logtype_cnid, "db_param: setting flush_interval to %d",
+                params.flush_interval);
         } else if (! strcmp(key, "idle_timeout")) {
             params.idle_timeout = parse_int(val);
-            LOG(log_info, logtype_cnid, "db_param: setting idle timeout to %d", params.idle_timeout);
+            LOG(log_info, logtype_cnid, "db_param: setting idle timeout to %d",
+                params.idle_timeout);
         }
 
-        if (parse_err)
+        if (parse_err) {
             break;
+        }
     }
 
     if (strlen(params.usock_file) == 0) {
@@ -170,24 +197,29 @@ struct db_param *db_param_read(char *dir)
     }
 
     fclose(fp);
+
     if (! parse_err) {
         /* sanity checks */
-        if (params.flush_frequency <= 0)
+        if (params.flush_frequency <= 0) {
             params.flush_frequency = 86400;
+        }
 
-        if (params.flush_interval <= 0)
+        if (params.flush_interval <= 0) {
             params.flush_interval = 1000000;
+        }
 
-        if (params.fd_table_size <= 2)
+        if (params.fd_table_size <= 2) {
             params.fd_table_size = 32;
+        }
 
-        if (params.idle_timeout <= 0)
+        if (params.idle_timeout <= 0) {
             params.idle_timeout = 86400;
+        }
 
         return &params;
-    }
-    else
+    } else {
         return NULL;
+    }
 }
 
 

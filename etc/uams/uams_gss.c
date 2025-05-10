@@ -53,44 +53,57 @@ static void log_status(char *s,
     OM_uint32 maj_ctx = 0, min_ctx = 0;
 
     while (1) {
-        maj_status = gss_display_status( &min_status, major_status,
-                                         GSS_C_GSS_CODE, GSS_C_NULL_OID,
-                                         &maj_ctx, &msg );
+        maj_status = gss_display_status(&min_status, major_status,
+                                        GSS_C_GSS_CODE, GSS_C_NULL_OID,
+                                        &maj_ctx, &msg);
         LOG_UAMS(log_error, "%s %.*s (error %s)",
                  s, msg.length, msg.value, strerror(errno));
         gss_release_buffer(&min_status, &msg);
 
-        if (!maj_ctx)
+        if (!maj_ctx) {
             break;
+        }
     }
 
     while (1) {
-        maj_status = gss_display_status( &min_status, minor_status,
-                                         GSS_C_MECH_CODE, GSS_C_NULL_OID,
-                                         &min_ctx, &msg );
+        maj_status = gss_display_status(&min_status, minor_status,
+                                        GSS_C_MECH_CODE, GSS_C_NULL_OID,
+                                        &min_ctx, &msg);
         LOG_UAMS(log_error, "%s %.*s (error %s)",
                  s, msg.length, msg.value, strerror(errno));
         gss_release_buffer(&min_status, &msg);
 
-        if (!min_ctx)
+        if (!min_ctx) {
             break;
+        }
     }
 }
 
 static void log_ctx_flags(OM_uint32 flags)
 {
-    if (flags & GSS_C_DELEG_FLAG)
+    if (flags & GSS_C_DELEG_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_DELEG_FLAG");
-    if (flags & GSS_C_MUTUAL_FLAG)
+    }
+
+    if (flags & GSS_C_MUTUAL_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_MUTUAL_FLAG");
-    if (flags & GSS_C_REPLAY_FLAG)
+    }
+
+    if (flags & GSS_C_REPLAY_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_REPLAY_FLAG");
-    if (flags & GSS_C_SEQUENCE_FLAG)
+    }
+
+    if (flags & GSS_C_SEQUENCE_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_SEQUENCE_FLAG");
-    if (flags & GSS_C_CONF_FLAG)
+    }
+
+    if (flags & GSS_C_CONF_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_CONF_FLAG");
-    if (flags & GSS_C_INTEG_FLAG)
+    }
+
+    if (flags & GSS_C_INTEG_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_INTEG_FLAG");
+    }
 }
 
 static void log_service_name(gss_ctx_id_t context)
@@ -98,7 +111,6 @@ static void log_service_name(gss_ctx_id_t context)
     OM_uint32 major_status = 0, minor_status = 0;
     gss_name_t service_name;
     gss_buffer_desc service_name_buffer;
-
     major_status = gss_inquire_context(&minor_status,
                                        context,
                                        NULL,
@@ -108,6 +120,7 @@ static void log_service_name(gss_ctx_id_t context)
                                        NULL,
                                        NULL,
                                        NULL);
+
     if (major_status != GSS_S_COMPLETE) {
         log_status("gss_inquire_context", major_status, minor_status);
         return;
@@ -117,14 +130,15 @@ static void log_service_name(gss_ctx_id_t context)
                                     service_name,
                                     &service_name_buffer,
                                     NULL);
+
     if (major_status == GSS_S_COMPLETE) {
         LOG_LOGINCONT(log_debug,
                       "service principal is `%s'",
                       service_name_buffer.value);
-
         gss_release_buffer(&minor_status, &service_name_buffer);
-    } else
+    } else {
         log_status("gss_display_name", major_status, minor_status);
+    }
 
     gss_release_name(&minor_status, &service_name);
 }
@@ -137,7 +151,6 @@ static int get_client_username(char *username,
     gss_buffer_desc client_name_buffer;
     char *p;
     int ret = 0;
-
     /*
      * To extract the unix username, use gss_display_name on client_name.
      * We do rely on gss_display_name returning a zero terminated string.
@@ -145,11 +158,11 @@ static int get_client_username(char *username,
      * We only want the username for afpd, so we have to strip those from
      * the username before copying it to afpd's buffer.
      */
-
     major_status = gss_display_name(&minor_status,
                                     *client_name,
                                     &client_name_buffer,
                                     NULL);
+
     if (major_status != GSS_S_COMPLETE) {
         log_status("gss_display_name", major_status, minor_status);
         return 1;
@@ -158,18 +171,23 @@ static int get_client_username(char *username,
     LOG_LOGINCONT(log_debug,
                   "user principal is `%s'",
                   client_name_buffer.value);
-
     /* chop off realm */
     p = strchr(client_name_buffer.value, '@');
-    if (p)
+
+    if (p) {
         *p = 0;
+    }
+
     /* FIXME: chop off instance? */
     p = strchr(client_name_buffer.value, '/');
-    if (p)
+
+    if (p) {
         *p = 0;
+    }
 
     /* check if this username fits into afpd's username buffer */
     size_t cnblen = strlen(client_name_buffer.value);
+
     if (cnblen >= ulen) {
         /* The username is too long for afpd's buffer, bail out */
         LOG_LOGINCONT(log_info,
@@ -182,7 +200,6 @@ static int get_client_username(char *username,
     }
 
     gss_release_buffer(&minor_status, &client_name_buffer);
-
     return ret;
 }
 
@@ -192,7 +209,6 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
     OM_uint32 major_status = 0, minor_status = 0;
     gss_buffer_desc sesskey_buff, wrap_buff;
     int ret = 0;
-
     /*
      * gss_wrap afpd's session_key.
      * This is needed fo OS X 10.3 clients. They request this information
@@ -201,7 +217,6 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
      */
     sesskey_buff.value = sinfo->sessionkey;
     sesskey_buff.length = sinfo->sessionkey_len;
-
     /* gss_wrap the session key with the default mechanism.
        Require both confidentiality and integrity services */
     major_status = gss_wrap(&minor_status,
@@ -231,7 +246,6 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 
     /* we're done with buffer, release */
     gss_release_buffer(&minor_status, &wrap_buff);
-
     return ret;
 }
 
@@ -241,15 +255,12 @@ static int accept_sec_context(gss_ctx_id_t *context,
                               gss_buffer_desc *authenticator_buff)
 {
     OM_uint32 major_status = 0, minor_status = 0, flags = 0;
-
     /* Initialize autheticator buffer. */
     authenticator_buff->length = 0;
     authenticator_buff->value = NULL;
-
     LOG_LOGINCONT(log_debug,
                   "accepting context (ticketlen: %u)",
                   ticket_buffer->length);
-
     /*
      * Try to accept the secondary context using the token in ticket_buffer.
      * We don't care about the principals or mechanisms used, nor for the time.
@@ -280,14 +291,13 @@ static int do_gss_auth(void *obj _U_,
                        char *ibuf, size_t ibuflen,
                        char *rbuf, int *rbuflen,
                        char *username, size_t ulen,
-                       struct session_info *sinfo )
+                       struct session_info *sinfo)
 {
     OM_uint32 status = 0;
     gss_name_t client_name;
     gss_ctx_id_t context = GSS_C_NO_CONTEXT;
     gss_buffer_desc ticket_buffer, authenticator_buff;
     int ret = 0;
-
     /*
      * Try to accept the secondary context, using the ticket/token the
      * client sent us. Ticket is stored at current ibuf position.
@@ -299,17 +309,21 @@ static int do_gss_auth(void *obj _U_,
     if ((ret = accept_sec_context(&context,
                                   &ticket_buffer,
                                   &client_name,
-                                  &authenticator_buff)))
+                                  &authenticator_buff))) {
         return ret;
+    }
+
     log_service_name(context);
 
     /* We succesfully acquired the secondary context, now get the
        username for afpd and gss_wrap the sessionkey */
-    if ((ret = get_client_username(username, ulen, &client_name)))
+    if ((ret = get_client_username(username, ulen, &client_name))) {
         goto cleanup_client_name;
+    }
 
-    if ((ret = wrap_sessionkey(context, sinfo)))
+    if ((ret = wrap_sessionkey(context, sinfo))) {
         goto cleanup_client_name;
+    }
 
     /* Authenticated, construct the reply using:
      * authenticator length (uint16_t)
@@ -320,16 +334,13 @@ static int do_gss_auth(void *obj _U_,
     memcpy(rbuf, &auth_len, sizeof(auth_len));
     *rbuflen += sizeof(auth_len);
     rbuf += sizeof(auth_len);
-
     /* copy the authenticator value into the reply buffer */
     memcpy(rbuf, authenticator_buff.value, authenticator_buff.length);
     *rbuflen += authenticator_buff.length;
-
 cleanup_client_name:
     gss_release_name(&status, &client_name);
     gss_release_buffer(&status, &authenticator_buff);
     gss_delete_sec_context(&status, &context, NULL);
-
     return ret;
 }
 
@@ -346,14 +357,12 @@ static int gss_login(void *obj _U_,
                      char *rbuf, size_t *rbuflen)
 {
     *rbuflen = 0;
-
     /* The reply contains a two-byte ID value - note
      * that Apple's implementation seems to always return 1 as well
      */
     uint16_t temp16 = htons(1);
     memcpy(rbuf, &temp16, sizeof(temp16));
     *rbuflen += sizeof(temp16);
-
     return AFPERR_AUTHCONT;
 }
 
@@ -370,7 +379,6 @@ static int gss_logincont(void *obj,
     int rblen;
     size_t userlen;
     struct session_info *sinfo;
-
     /* Apple's AFP 3.1 documentation specifies that this command
      * takes the following format:
      * pad (byte)
@@ -380,7 +388,6 @@ static int gss_logincont(void *obj,
      * ticket length (uint16_t)
      * ticket
      */
-
     /* Observation of AFP clients in the wild indicate that the actual
      * format of this request is as follows:
      * pad (byte) [consumed before login_ext is called]
@@ -395,27 +402,28 @@ static int gss_logincont(void *obj,
      * ticket length (uint16_t)
      * ticket
      */
-
     rblen = *rbuflen = 0;
 
-    if (ibuflen < 1 +sizeof(login_id)) {
+    if (ibuflen < 1 + sizeof(login_id)) {
         LOG_LOGINCONT(log_info, "received incomplete packet");
         return AFPERR_PARAM;
     }
-    ibuf++, ibuflen--; /* ?? */
 
+    ibuf++, ibuflen--; /* ?? */
     /* 2 byte ID from LoginExt -- always '00 01' in this implementation */
     memcpy(&login_id, ibuf, sizeof(login_id));
     ibuf += sizeof(login_id), ibuflen -= sizeof(login_id);
     login_id = ntohs(login_id);
 
     /* get the username buffer from apfd */
-    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, &username, &userlen) < 0)
+    if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, &username, &userlen) < 0) {
         return AFPERR_MISC;
+    }
 
     /* get the session_info structure from afpd. We need the session key */
-    if (uam_afpserver_option(obj, UAM_OPTION_SESSIONINFO, &sinfo, NULL) < 0)
+    if (uam_afpserver_option(obj, UAM_OPTION_SESSIONINFO, &sinfo, NULL) < 0) {
         return AFPERR_MISC;
+    }
 
     if (sinfo->sessionkey == NULL || sinfo->sessionkey_len == 0) {
         /* Should never happen. Most likely way too old afpd version */
@@ -425,7 +433,11 @@ static int gss_logincont(void *obj,
 
     /* We skip past the 'username' parameter because all that matters is the ticket */
     p = ibuf;
-    while ( *ibuf && ibuflen ) { ibuf++, ibuflen--; }
+
+    while (*ibuf && ibuflen) {
+        ibuf++, ibuflen--;
+    }
+
     if (ibuflen < 4) {
         LOG_LOGINCONT(log_info, "user is %s, no ticket", p);
         return AFPERR_PARAM;
@@ -433,13 +445,16 @@ static int gss_logincont(void *obj,
 
     ibuf++, ibuflen--; /* null termination */
 
-    if ((ibuf - p + 1) % 2) ibuf++, ibuflen--; /* deal with potential padding */
+    if ((ibuf - p + 1) % 2) {
+        /* deal with potential padding */
+        ibuf++, ibuflen--;
+    }
 
     LOG_LOGINCONT(log_debug, "client thinks user is %s", p);
-
     /* get the length of the ticket the client sends us */
     memcpy(&ticket_len, ibuf, sizeof(ticket_len));
-    ibuf += sizeof(ticket_len); ibuflen -= sizeof(ticket_len);
+    ibuf += sizeof(ticket_len);
+    ibuflen -= sizeof(ticket_len);
     ticket_len = ntohs(ticket_len);
 
     /* a little bounds checking */
@@ -451,8 +466,9 @@ static int gss_logincont(void *obj,
     }
 
     /* now try to authenticate */
-    if (do_gss_auth(obj, ibuf, ticket_len, rbuf, &rblen, username, userlen, sinfo)) {
-        LOG_LOGINCONT(log_info, "do_gss_auth() failed" );
+    if (do_gss_auth(obj, ibuf, ticket_len, rbuf, &rblen, username, userlen,
+                    sinfo)) {
+        LOG_LOGINCONT(log_info, "do_gss_auth() failed");
         *rbuflen = 0;
         return AFPERR_MISC;
     }
@@ -461,10 +477,11 @@ static int gss_logincont(void *obj,
        Should we compare this to the username the client sent in the clear?
        We know the character encoding of the cleartext username (UTF8), what
        encoding is the gssapi name in? */
-    if ((pwd = uam_getname( obj, username, userlen )) == NULL) {
+    if ((pwd = uam_getname(obj, username, userlen)) == NULL) {
         LOG_LOGINCONT(log_info, "uam_getname() failed for %s", username);
         return AFPERR_NOTAUTH;
     }
+
     if (uam_checkuser(pwd) < 0) {
         LOG_LOGINCONT(log_info, "`%s'' not a valid user", username);
         return AFPERR_NOTAUTH;
@@ -494,7 +511,8 @@ static int set_principal(AFPObj *obj, char *principal)
     size_t len = strlen(principal);
 
     if (len > 255) {
-        LOG(log_error, logtype_afpd, "set_principal: principal '%s' too long (max=255)", principal, len);
+        LOG(log_error, logtype_afpd, "set_principal: principal '%s' too long (max=255)",
+            principal, len);
         return -1;
     }
 
@@ -504,13 +522,12 @@ static int set_principal(AFPObj *obj, char *principal)
         return -1;
     }
 
-    LOG(log_info, logtype_afpd, "Using AFP Kerberos service principal name: %s", principal);
-
+    LOG(log_info, logtype_afpd, "Using AFP Kerberos service principal name: %s",
+        principal);
     obj->options.k5principal[0] = 1;
     obj->options.k5principal[1] = (unsigned char)len;
     obj->options.k5principal_buflen = len + 2;
     strncpy(obj->options.k5principal + 2, principal, len);
-
     return 0;
 }
 
@@ -528,14 +545,18 @@ static int gss_create_principal(AFPObj *obj)
     krb5_kt_cursor cursor;
 
     if (krb5_init_context(&context)) {
-        LOG(log_error, logtype_afpd, "gss_create_principal: failed to initialize a krb5_context");
+        LOG(log_error, logtype_afpd,
+            "gss_create_principal: failed to initialize a krb5_context");
         goto exit;
     }
-    if ((ret = krb5_kt_default(context, &keytab)))
+
+    if ((ret = krb5_kt_default(context, &keytab))) {
         goto krb5_error;
+    }
 
     if (obj->options.k5service && obj->options.fqdn && obj->options.k5realm) {
-        LOG(log_debug, logtype_afpd, "gss_create_principal: using service principal specified in options");
+        LOG(log_debug, logtype_afpd,
+            "gss_create_principal: using service principal specified in options");
 
         if ((ret = krb5_build_principal(context,
                                         &service_principal,
@@ -543,8 +564,9 @@ static int gss_create_principal(AFPObj *obj)
                                         obj->options.k5realm,
                                         obj->options.k5service,
                                         obj->options.fqdn,
-                                        NULL)))
+                                        NULL))) {
             goto krb5_error;
+        }
 
         if ((ret = krb5_kt_get_entry(context,
                                      keytab,
@@ -553,7 +575,9 @@ static int gss_create_principal(AFPObj *obj)
                                      0, // enctype - wildcard
                                      &entry)) == KRB5_KT_NOTFOUND) {
             krb5_unparse_name(context, service_principal, &principal);
-            LOG(log_error, logtype_afpd, "gss_create_principal: specified service principal '%s' not found in keytab", principal);
+            LOG(log_error, logtype_afpd,
+                "gss_create_principal: specified service principal '%s' not found in keytab",
+                principal);
 #ifdef HAVE_KRB5_FREE_UNPARSED_NAME
             krb5_free_unparsed_name(context, principal);
 #else
@@ -561,17 +585,26 @@ static int gss_create_principal(AFPObj *obj)
 #endif
             goto krb5_cleanup;
         }
+
         krb5_free_principal(context, service_principal);
-        if (ret)
+
+        if (ret) {
             goto krb5_error;
+        }
     } else {
-        LOG(log_debug, logtype_afpd, "gss_create_principal: using first entry from keytab as service principal");
-        if ((ret = krb5_kt_start_seq_get(context, keytab, &cursor)))
+        LOG(log_debug, logtype_afpd,
+            "gss_create_principal: using first entry from keytab as service principal");
+
+        if ((ret = krb5_kt_start_seq_get(context, keytab, &cursor))) {
             goto krb5_error;
+        }
+
         ret = krb5_kt_next_entry(context, keytab, &entry, &cursor);
         krb5_kt_end_seq_get(context, keytab, &cursor);
-        if (ret)
+
+        if (ret) {
             goto krb5_error;
+        }
     }
 
     krb5_unparse_name(context, entry.principal, &principal);
@@ -584,8 +617,8 @@ static int gss_create_principal(AFPObj *obj)
     free(principal);
     rv = 0;
     goto krb5_cleanup;
-
 krb5_error:
+
     if (ret) {
         error_msg = krb5_get_error_message(context, ret);
         LOG(log_note, logtype_afpd, "Can't get principal from default keytab: %s",
@@ -600,18 +633,18 @@ krb5_error:
 krb5_cleanup:
     krb5_kt_close(context, keytab);
     krb5_free_context(context);
-
 #else /* ! HAVE_KERBEROS */
-    if (!obj->options.k5service || !obj->options.fqdn || !obj->options.k5realm)
+
+    if (!obj->options.k5service || !obj->options.fqdn || !obj->options.k5realm) {
         goto exit;
+    }
 
     char principal[255];
     size_t len _U_ = snprintf(principal, sizeof(principal), "%s/%s@%s",
-                          obj->options.k5service, obj->options.fqdn, obj->options.k5realm);
+                              obj->options.k5service, obj->options.fqdn, obj->options.k5realm);
     (void)set_principal(obj, principal);
     rv = 0;
 #endif /* HAVE_KERBEROS */
-
 exit:
     return rv;
 }
@@ -619,8 +652,10 @@ exit:
 static int uam_setup(void *handle, const char *path)
 {
     AFPObj *obj = (AFPObj *)handle;
-    if (gss_create_principal(obj) != 0)
+
+    if (gss_create_principal(obj) != 0) {
         return -1;
+    }
 
     return uam_register(UAM_SERVER_LOGIN_EXT, path, "Client Krb v2",
                         gss_login, gss_logincont, gss_logout, gss_login_ext);

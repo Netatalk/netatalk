@@ -44,8 +44,8 @@
 #include "ad_lock.h"
 
 static const uint32_t set_eid[] = {
-    0,1,2,3,4,5,6,7,8,
-    9,10,11,12,13,14,15,
+    0, 1, 2, 3, 4, 5, 6, 7, 8,
+    9, 10, 11, 12, 13, 14, 15,
     AD_DEV, AD_INO, AD_SYN, AD_ID
 };
 
@@ -60,42 +60,37 @@ int ad_rebuild_adouble_header_v2(struct adouble *ad)
     uint32_t       temp;
     uint16_t       nent;
     char        *buf, *nentp;
-
     LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_v2");
-
     buf = ad->ad_data;
-
-    temp = htonl( ad->ad_magic );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
-    temp = htonl( ad->ad_version );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
-    buf += sizeof( ad->ad_filler );
-
+    temp = htonl(ad->ad_magic);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
+    temp = htonl(ad->ad_version);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
+    buf += sizeof(ad->ad_filler);
     nentp = buf;
-    buf += sizeof( nent );
-    for ( eid = 0, nent = 0; eid < ADEID_MAX; eid++ ) {
-        if (ad->ad_eid[ eid ].ade_off == 0)
+    buf += sizeof(nent);
+
+    for (eid = 0, nent = 0; eid < ADEID_MAX; eid++) {
+        if (ad->ad_eid[eid].ade_off == 0) {
             continue;
-        temp = htonl( EID_DISK(eid) );
-        memcpy(buf, &temp, sizeof( temp ));
-        buf += sizeof( temp );
+        }
 
-        temp = htonl( ad->ad_eid[ eid ].ade_off );
-        memcpy(buf, &temp, sizeof( temp ));
-        buf += sizeof( temp );
-
-        temp = htonl( ad->ad_eid[ eid ].ade_len );
-        memcpy(buf, &temp, sizeof( temp ));
-        buf += sizeof( temp );
+        temp = htonl(EID_DISK(eid));
+        memcpy(buf, &temp, sizeof(temp));
+        buf += sizeof(temp);
+        temp = htonl(ad->ad_eid[eid].ade_off);
+        memcpy(buf, &temp, sizeof(temp));
+        buf += sizeof(temp);
+        temp = htonl(ad->ad_eid[eid].ade_len);
+        memcpy(buf, &temp, sizeof(temp));
+        buf += sizeof(temp);
         nent++;
     }
-    nent = htons( nent );
-    memcpy(nentp, &nent, sizeof( nent ));
 
+    nent = htons(nent);
+    memcpy(nentp, &nent, sizeof(nent));
     return ad_getentryoff(ad, ADEID_RFORK);
 }
 
@@ -105,42 +100,37 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
     uint32_t       temp;
     uint16_t       nent;
     char        *buf, *nentp;
-
     LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_ea");
-
     buf = ad->ad_data;
-
-    temp = htonl( ad->ad_magic );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
-    temp = htonl( ad->ad_version );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
-    buf += sizeof( ad->ad_filler );
-
+    temp = htonl(ad->ad_magic);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
+    temp = htonl(ad->ad_version);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
+    buf += sizeof(ad->ad_filler);
     nentp = buf;
-    buf += sizeof( nent );
-    for ( eid = 0, nent = 0; eid < ADEID_MAX; eid++ ) {
-        if ((ad->ad_eid[ eid ].ade_off == 0) || (eid == ADEID_RFORK))
+    buf += sizeof(nent);
+
+    for (eid = 0, nent = 0; eid < ADEID_MAX; eid++) {
+        if ((ad->ad_eid[eid].ade_off == 0) || (eid == ADEID_RFORK)) {
             continue;
-        temp = htonl( EID_DISK(eid) );
-        memcpy(buf, &temp, sizeof( temp ));
-        buf += sizeof( temp );
+        }
 
-        temp = htonl( ad->ad_eid[ eid ].ade_off );
-        memcpy(buf, &temp, sizeof( temp ));
-        buf += sizeof( temp );
-
-        temp = htonl( ad->ad_eid[ eid ].ade_len );
-        memcpy(buf, &temp, sizeof( temp ));
-        buf += sizeof( temp );
+        temp = htonl(EID_DISK(eid));
+        memcpy(buf, &temp, sizeof(temp));
+        buf += sizeof(temp);
+        temp = htonl(ad->ad_eid[eid].ade_off);
+        memcpy(buf, &temp, sizeof(temp));
+        buf += sizeof(temp);
+        temp = htonl(ad->ad_eid[eid].ade_len);
+        memcpy(buf, &temp, sizeof(temp));
+        buf += sizeof(temp);
         nent++;
     }
-    nent = htons( nent );
-    memcpy(nentp, &nent, sizeof( nent ));
 
+    nent = htons(nent);
+    memcpy(nentp, &nent, sizeof(nent));
     return AD_DATASZ_EA;
 }
 
@@ -153,59 +143,48 @@ int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
     uint16_t       nent;
     char           *buf;
     char           *ade = NULL;
-
     LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_osx");
-
     buf = &adbuf[0];
-
-    temp = htonl( ad->ad_magic );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
-    temp = htonl( ad->ad_version );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
+    temp = htonl(ad->ad_magic);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
+    temp = htonl(ad->ad_version);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
     memcpy(buf, AD_FILLER_NETATALK, strlen(AD_FILLER_NETATALK));
-    buf += sizeof( ad->ad_filler );
-
+    buf += sizeof(ad->ad_filler);
     nent = htons(ADEID_NUM_OSX);
-    memcpy(buf, &nent, sizeof( nent ));
-    buf += sizeof( nent );
-
+    memcpy(buf, &nent, sizeof(nent));
+    buf += sizeof(nent);
     /* FinderInfo */
     temp = htonl(EID_DISK(ADEID_FINDERI));
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
     temp = htonl(ADEDOFF_FINDERI_OSX);
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
     temp = htonl(ADEDLEN_FINDERI);
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
     ade = ad_entry(ad, ADEID_FINDERI);
+
     if (ade != NULL) {
         memcpy(adbuf + ADEDOFF_FINDERI_OSX, ade, ADEDLEN_FINDERI);
     } else {
-        LOG(log_debug, logtype_ad, "ad_rebuild_adouble_header_osx(%s): invalid FinderInfo", ad->ad_name);
+        LOG(log_debug, logtype_ad,
+            "ad_rebuild_adouble_header_osx(%s): invalid FinderInfo", ad->ad_name);
     }
 
     /* rfork */
-    temp = htonl( EID_DISK(ADEID_RFORK) );
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
+    temp = htonl(EID_DISK(ADEID_RFORK));
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
     temp = htonl(ADEDOFF_RFORK_OSX);
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
-    temp = htonl( ad->ad_rlen);
-    memcpy(buf, &temp, sizeof( temp ));
-    buf += sizeof( temp );
-
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
+    temp = htonl(ad->ad_rlen);
+    memcpy(buf, &temp, sizeof(temp));
+    buf += sizeof(temp);
     return AD_DATASZ_OSX;
 }
 
@@ -222,44 +201,55 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     char *dst = NULL;
 
     if (add->valid_data_len == 0) {
-        LOG(log_error, logtype_ad, "ad_copy_header(%s): dst invalid valid_data_len", add->ad_name);
+        LOG(log_error, logtype_ad, "ad_copy_header(%s): dst invalid valid_data_len",
+            add->ad_name);
         return -1;
     }
-    for ( eid = 0; eid < ADEID_MAX; eid++ ) {
+
+    for (eid = 0; eid < ADEID_MAX; eid++) {
         src = dst = NULL;
 
-        if ( ads->ad_eid[ eid ].ade_off == 0 || add->ad_eid[ eid ].ade_off == 0 )
+        if (ads->ad_eid[eid].ade_off == 0 || add->ad_eid[eid].ade_off == 0) {
             continue;
+        }
 
-        len = ads->ad_eid[ eid ].ade_len;
-        if (len == 0)
+        len = ads->ad_eid[eid].ade_len;
+
+        if (len == 0) {
             continue;
+        }
 
         switch (eid) {
         case ADEID_COMMENT:
         case ADEID_RFORK:
             continue;
+
         default:
             if ((src = ad_entry(ads, eid)) == NULL) {
-                LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid src eid[%d]", ads->ad_name, eid);
+                LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid src eid[%d]",
+                    ads->ad_name, eid);
                 continue;
             }
+
             if ((dst = ad_entry(add, eid)) == NULL) {
-                LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid dst eid[%d]", add->ad_name, eid);
+                LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid dst eid[%d]",
+                    add->ad_name, eid);
                 continue;
             }
-            ad_setentrylen( add, eid, len );
-            memcpy( dst, src, len );
+
+            ad_setentrylen(add, eid, len);
+            memcpy(dst, src, len);
         }
     }
+
     add->ad_rlen = ads->ad_rlen;
 
     if (((ads->ad_vers == AD_VERSION2) && (add->ad_vers == AD_VERSION_EA))
-        || ((ads->ad_vers == AD_VERSION_EA) && (add->ad_vers == AD_VERSION2))) {
+            || ((ads->ad_vers == AD_VERSION_EA) && (add->ad_vers == AD_VERSION2))) {
         src = dst = NULL;
         cnid_t id;
-
         dst = ad_entry(add, ADEID_PRIVID);
+
         if (dst != NULL) {
             memcpy(&id, dst, sizeof(cnid_t));
             id = htonl(id);
@@ -268,6 +258,7 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
             LOG(log_debug, logtype_ad, "ad_copy_header(%s): invalid PRIVID", add->ad_name);
         }
     }
+
     return 0;
 }
 
@@ -276,64 +267,76 @@ static int ad_flush_hf(struct adouble *ad)
     EC_INIT;
     int len;
     int cwd = -1;
-
     LOG(log_debug, logtype_ad, "ad_flush_hf(%s)", adflags2logstr(ad->ad_adflags));
-
     struct ad_fd *adf;
 
     switch (ad->ad_vers) {
     case AD_VERSION2:
         adf = ad->ad_mdp;
         break;
+
     case AD_VERSION_EA:
         adf = &ad->ad_data_fork;
         break;
+
     default:
         LOG(log_error, logtype_ad, "ad_flush: unexpected adouble version");
         return -1;
     }
 
     if ((adf->adf_flags & O_RDWR)
-        || ((ad->ad_adflags & ADFLAGS_DIR) && (ad->ad_adflags & ADFLAGS_RDWR))) {
+            || ((ad->ad_adflags & ADFLAGS_DIR) && (ad->ad_adflags & ADFLAGS_RDWR))) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
-            if (ad->ad_rlen > 0xffffffff)
+            if (ad->ad_rlen > 0xffffffff) {
                 ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
-            else
+            } else {
                 ad_setentrylen(ad, ADEID_RFORK, ad->ad_rlen);
+            }
         }
+
         len = ad->ad_ops->ad_rebuild_header(ad);
 
         switch (ad->ad_vers) {
         case AD_VERSION2:
             if (adf_pwrite(ad->ad_mdp, ad->ad_data, len, 0) != len) {
-                if (errno == 0)
+                if (errno == 0) {
                     errno = EIO;
+                }
+
                 return -1;
             }
+
             break;
+
         case AD_VERSION_EA:
             if (AD_META_OPEN(ad)) {
 #ifdef __APPLE__
-                char * FinderInfo;
-                char NativeFinderInfo[ADEDLEN_FINDERI]={'\0'};
+                char *FinderInfo;
+                char NativeFinderInfo[ADEDLEN_FINDERI] = {'\0'};
                 FinderInfo = ad_entry(ad, ADEID_FINDERI);
-                memcpy(NativeFinderInfo, FinderInfo,ADEDLEN_FINDERI);
+                memcpy(NativeFinderInfo, FinderInfo, ADEDLEN_FINDERI);
 #endif
-                if (ad->ad_adflags & ADFLAGS_DIR) {
-                    EC_NEG1_LOG( cwd = open(".", O_RDONLY) );
-                    EC_NEG1_LOG( fchdir(ad_data_fileno(ad)) );
 
+                if (ad->ad_adflags & ADFLAGS_DIR) {
+                    EC_NEG1_LOG(cwd = open(".", O_RDONLY));
+                    EC_NEG1_LOG(fchdir(ad_data_fileno(ad)));
                     ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
 #ifdef __APPLE__
-                    if (!(ad->ad_mdp->adf_flags & O_CREAT))
-                        sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
-#endif
-                    if (ret != 0) {
-                        if (errno != EPERM)
-                            EC_FAIL;
 
-                        if (!(ad->ad_options & ADVOL_FORCE_STICKY_XATTR))
+                    if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
+                        sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
+                    }
+
+#endif
+
+                    if (ret != 0) {
+                        if (errno != EPERM) {
                             EC_FAIL;
+                        }
+
+                        if (!(ad->ad_options & ADVOL_FORCE_STICKY_XATTR)) {
+                            EC_FAIL;
+                        }
 
                         /*
                          * This may be a directory with a sticky bit
@@ -341,12 +344,14 @@ static int ad_flush_hf(struct adouble *ad)
                          * write access to the directory, only the
                          * owner is allowed to write xattrs
                          */
-
                         become_root();
                         ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
 #ifdef __APPLE__
-                        if (!(ad->ad_mdp->adf_flags & O_CREAT))
+
+                        if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
                             sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
+                        }
+
 #endif
                         unbecome_root();
 
@@ -356,19 +361,26 @@ static int ad_flush_hf(struct adouble *ad)
                         }
                     }
 
-                    EC_NEG1_LOG( fchdir(cwd) );
-                    EC_NEG1_LOG( close(cwd) );
+                    EC_NEG1_LOG(fchdir(cwd));
+                    EC_NEG1_LOG(close(cwd));
                     cwd = -1;
                 } else {
-                    EC_ZERO_LOG( sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0) );
+                    EC_ZERO_LOG(sys_fsetxattr(ad_data_fileno(ad), AD_EA_META, ad->ad_data,
+                                              AD_DATASZ_EA, 0));
 #ifdef __APPLE__
+
                     /* write back finderinfo to macos native ea, but only if we aren't creating a new adouble ea for netatalk */
-                    if (!(ad->ad_mdp->adf_flags & O_CREAT))
-                        EC_ZERO_LOG( sys_fsetxattr(ad_data_fileno(ad), EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0) );
+                    if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
+                        EC_ZERO_LOG(sys_fsetxattr(ad_data_fileno(ad), EA_FINFO, NativeFinderInfo,
+                                                  ADEDLEN_FINDERI, 0));
+                    }
+
 #endif
                 }
             }
+
             break;
+
         default:
             LOG(log_error, logtype_ad, "ad_flush: unexpected adouble version");
             return -1;
@@ -376,12 +388,15 @@ static int ad_flush_hf(struct adouble *ad)
     }
 
 EC_CLEANUP:
+
     if (cwd != -1) {
         if (fchdir(cwd) != 0) {
             AFP_PANIC("ad_flush: can't fchdir");
         }
+
         close(cwd);
     }
+
     EC_EXIT;
 }
 
@@ -390,45 +405,50 @@ static int ad_flush_rf(struct adouble *ad)
 {
     ssize_t len;
     char    adbuf[AD_DATASZ_OSX];
-
 #ifdef HAVE_EAFD
     return 0;
 #endif
-    if (ad->ad_vers != AD_VERSION_EA)
+
+    if (ad->ad_vers != AD_VERSION_EA) {
         return 0;
+    }
 
     LOG(log_debug, logtype_ad, "ad_flush_rf(%s)", adflags2logstr(ad->ad_adflags));
 
     if (ad->ad_rfp->adf_flags & O_RDWR) {
         if (ad_getentryoff(ad, ADEID_RFORK)) {
-            if (ad->ad_rlen > 0xffffffff)
+            if (ad->ad_rlen > 0xffffffff) {
                 ad_setentrylen(ad, ADEID_RFORK, 0xffffffff);
-            else
+            } else {
                 ad_setentrylen(ad, ADEID_RFORK, ad->ad_rlen);
+            }
         }
+
         len = ad_rebuild_adouble_header_osx(ad, &adbuf[0]);
 
         if (adf_pwrite(ad->ad_rfp, adbuf, len, 0) != len) {
-            if (errno == 0)
+            if (errno == 0) {
                 errno = EIO;
+            }
+
             return -1;
         }
     }
+
     return 0;
 }
 
 int ad_flush(struct adouble *ad)
 {
     EC_INIT;
-
     LOG(log_debug, logtype_ad, "ad_flush(%s)", adflags2logstr(ad->ad_adflags));
 
     if (AD_META_OPEN(ad)) {
-        EC_ZERO( ad_flush_hf(ad) );
+        EC_ZERO(ad_flush_hf(ad));
     }
 
     if (AD_RSRC_OPEN(ad)) {
-        EC_ZERO( ad_flush_rf(ad) );
+        EC_ZERO(ad_flush_rf(ad));
     }
 
 EC_CLEANUP:
@@ -443,9 +463,11 @@ static int ad_data_closefd(struct adouble *ad)
         free(ad->ad_data_fork.adf_syml);
         ad->ad_data_fork.adf_syml = NULL;
     } else {
-        if (close(ad_data_fileno(ad)) < 0)
+        if (close(ad_data_fileno(ad)) < 0) {
             ret = -1;
+        }
     }
+
     ad_data_fileno(ad) = -1;
     return ret;
 }
@@ -457,9 +479,9 @@ int ad_close(struct adouble *ad, int adflags)
 {
     int err = 0;
 
-    if (ad == NULL)
+    if (ad == NULL) {
         return err;
-
+    }
 
     LOG(log_debug, logtype_ad,
         "ad_close(%s): BEGIN: {d: %d, m: %d, r: %d} "
@@ -475,25 +497,34 @@ int ad_close(struct adouble *ad, int adflags)
         adflags |= ADFLAGS_DF;
     }
 
-    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF))
+    if ((ad->ad_vers == AD_VERSION2) && (adflags & ADFLAGS_RF)) {
         adflags |= ADFLAGS_HF;
+    }
 
-    if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0 || ad_data_fileno(ad) == AD_SYMLINK)) {
+    if ((adflags & ADFLAGS_DF) && (ad_data_fileno(ad) >= 0
+                                   || ad_data_fileno(ad) == AD_SYMLINK)) {
         if (ad->ad_data_refcount)
-            if (--ad->ad_data_refcount == 0)
+            if (--ad->ad_data_refcount == 0) {
                 adf_lock_free(&ad->ad_data_fork);
+            }
+
         if (--ad->ad_data_fork.adf_refcount == 0) {
-            if (ad_data_closefd(ad) < 0)
+            if (ad_data_closefd(ad) < 0) {
                 err = -1;
+            }
         }
     }
 
     if ((adflags & ADFLAGS_HF) && (ad_meta_fileno(ad) != -1)) {
-        if (ad->ad_meta_refcount)
+        if (ad->ad_meta_refcount) {
             ad->ad_meta_refcount--;
+        }
+
         if (!(--ad->ad_mdp->adf_refcount)) {
-            if (close( ad_meta_fileno(ad)) < 0)
+            if (close(ad_meta_fileno(ad)) < 0) {
                 err = -1;
+            }
+
             ad_meta_fileno(ad) = -1;
         }
     }
@@ -501,23 +532,31 @@ int ad_close(struct adouble *ad, int adflags)
     if (adflags & ADFLAGS_RF) {
         /* HF is automatically opened when opening an RF, close it. */
         if ((ad->ad_vers == AD_VERSION2) && (ad_meta_fileno(ad) != -1)) {
-            if (ad->ad_meta_refcount)
+            if (ad->ad_meta_refcount) {
                 ad->ad_meta_refcount--;
+            }
+
             if (!(--ad->ad_mdp->adf_refcount)) {
-                if (close( ad_meta_fileno(ad)) < 0)
+                if (close(ad_meta_fileno(ad)) < 0) {
                     err = -1;
+                }
+
                 ad_meta_fileno(ad) = -1;
             }
         }
 
         if (ad->ad_reso_refcount)
-            if (--ad->ad_reso_refcount == 0)
+            if (--ad->ad_reso_refcount == 0) {
                 adf_lock_free(ad->ad_rfp);
+            }
+
         if (ad->ad_vers == AD_VERSION_EA) {
             if ((ad_reso_fileno(ad) != -1)
-                && !(--ad->ad_rfp->adf_refcount)) {
-                if (close(ad->ad_rfp->adf_fd) < 0)
+                    && !(--ad->ad_rfp->adf_refcount)) {
+                if (close(ad->ad_rfp->adf_fd) < 0) {
                     err = -1;
+                }
+
                 ad->ad_rlen = 0;
                 ad_reso_fileno(ad) = -1;
             }
@@ -532,6 +571,5 @@ int ad_close(struct adouble *ad, int adflags)
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
-
     return err;
 }

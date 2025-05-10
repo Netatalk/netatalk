@@ -29,14 +29,12 @@
 #include "afpstats_obj.h"
 #include "afpstats.h"
 
-struct AFPStatsObj
-{
-  GObject parent;
+struct AFPStatsObj {
+    GObject parent;
 };
 
-struct AFPStatsObjClass
-{
-  GObjectClass parent;
+struct AFPStatsObjClass {
+    GObjectClass parent;
 };
 
 static void afpstats_obj_init(AFPStatsObj *obj _U_)
@@ -51,28 +49,31 @@ static gpointer afpstats_obj_parent_class = NULL;
 
 static void afpstats_obj_class_intern_init(gpointer klass)
 {
-	afpstats_obj_parent_class = g_type_class_peek_parent(klass);
-	afpstats_obj_class_init((AFPStatsObjClass *)klass);
+    afpstats_obj_parent_class = g_type_class_peek_parent(klass);
+    afpstats_obj_class_init((AFPStatsObjClass *)klass);
 }
 
 GType afpstats_obj_get_type(void)
 {
-	static volatile gsize g_define_type_id__volatile = 0;
-	if (g_once_init_enter((gsize *)&g_define_type_id__volatile)) {
-		GType g_define_type_id = g_type_register_static_simple(
-            G_TYPE_OBJECT,
-            g_intern_static_string("AFPStatsObj"),
-            sizeof(AFPStatsObjClass),
-            (GClassInitFunc)afpstats_obj_class_intern_init,
-			sizeof(AFPStatsObj),
-			(GInstanceInitFunc)afpstats_obj_init,
-			(GTypeFlags)0);
-		g_once_init_leave(&g_define_type_id__volatile, g_define_type_id);
-	}
-	return g_define_type_id__volatile;
+    static volatile gsize g_define_type_id__volatile = 0;
+
+    if (g_once_init_enter((gsize *)&g_define_type_id__volatile)) {
+        GType g_define_type_id = g_type_register_static_simple(
+                                     G_TYPE_OBJECT,
+                                     g_intern_static_string("AFPStatsObj"),
+                                     sizeof(AFPStatsObjClass),
+                                     (GClassInitFunc)afpstats_obj_class_intern_init,
+                                     sizeof(AFPStatsObj),
+                                     (GInstanceInitFunc)afpstats_obj_init,
+                                     (GTypeFlags)0);
+        g_once_init_leave(&g_define_type_id__volatile, g_define_type_id);
+    }
+
+    return g_define_type_id__volatile;
 }
 
-gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret, GError **error _U_)
+gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret,
+                                GError **error _U_)
 {
     gchar **names;
     server_child_t *childs = afpstats_get_and_lock_childs();
@@ -80,31 +81,32 @@ gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret, GError **err
     struct passwd *pw;
     int i = 0, j;
     char buf[256];
-
     names = g_new(char *, childs->servch_count + 1);
 
     for (j = 0; j < CHILD_HASHSIZE && i < childs->servch_count; j++) {
         child = childs->servch_table[j];
+
         while (child) {
             if (child->afpch_valid && (pw = getpwuid(child->afpch_uid))) {
                 time_t time = child->afpch_logintime;
                 strftime(buf, sizeof(buf), "%b %d %H:%M:%S", localtime(&time));
-                names[i++] = g_strdup_printf("name: %s, pid: %d, logintime: %s, state: %s, volumes: %s",
-                                             pw->pw_name, child->afpch_pid, buf,
-                                             child->afpch_state == DSI_RUNNING ? "active" :
-                                             child->afpch_state == DSI_SLEEPING ? "sleeping" :
-                                             child->afpch_state == DSI_EXTSLEEP ? "sleeping" :
-                                             child->afpch_state == DSI_DISCONNECTED ? "disconnected" :
-                                             "unknown",
-                                             child->afpch_volumes ? child->afpch_volumes : "-");
+                names[i++] =
+                    g_strdup_printf("name: %s, pid: %d, logintime: %s, state: %s, volumes: %s",
+                                    pw->pw_name, child->afpch_pid, buf,
+                                    child->afpch_state == DSI_RUNNING ? "active" :
+                                    child->afpch_state == DSI_SLEEPING ? "sleeping" :
+                                    child->afpch_state == DSI_EXTSLEEP ? "sleeping" :
+                                    child->afpch_state == DSI_DISCONNECTED ? "disconnected" :
+                                    "unknown",
+                                    child->afpch_volumes ? child->afpch_volumes : "-");
             }
+
             child = child->afpch_next;
         }
     }
+
     names[i] = NULL;
     *ret = names;
-
     afpstats_unlock_childs();
-
     return TRUE;
 }

@@ -51,47 +51,66 @@
 static int afp_version_index;
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
 static struct uam_obj uam_login = {"", "", 0, {{NULL, NULL, NULL, NULL }}, &uam_login,
-                                   &uam_login};
+    &uam_login
+};
 static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &uam_changepw,
-                                      &uam_changepw};
+    &uam_changepw
+};
 
 static struct uam_obj *afp_uam = NULL;
 
 
-void status_versions( char *data,
+void status_versions(char *data,
 #ifndef NO_DDP
-                      const ASP asp,
+                     const ASP asp,
 #endif
-                      const DSI *dsi)
+                     const DSI *dsi)
 {
     char                *start = data;
     uint16_t           status;
     int         len, num, i, count = 0;
-
     memcpy(&status, start + AFPSTATUS_VERSOFF, sizeof(status));
-    num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
+    num = sizeof(afp_versions) / sizeof(afp_versions[0]);
 
-    for ( i = 0; i < num; i++ ) {
+    for (i = 0; i < num; i++) {
 #ifndef NO_DDP
-        if (!asp && (afp_versions[i].av_number <= 21)) continue;
+
+        if (!asp && (afp_versions[i].av_number <= 21)) {
+            continue;
+        }
+
 #endif /* ! NO_DDP */
-        if ( !dsi && (afp_versions[ i ].av_number > 22)) continue;
+
+        if (!dsi && (afp_versions[i].av_number > 22)) {
+            continue;
+        }
+
         count++;
     }
-    data += ntohs( status );
+
+    data += ntohs(status);
     *data++ = count;
 
-    for ( i = 0; i < num; i++ ) {
+    for (i = 0; i < num; i++) {
 #ifndef NO_DDP
-        if (!asp && (afp_versions[i].av_number <= 21)) continue;
+
+        if (!asp && (afp_versions[i].av_number <= 21)) {
+            continue;
+        }
+
 #endif /* ! NO_DDP */
-        if ( !dsi && (afp_versions[ i ].av_number > 22)) continue;
-        len = strlen( afp_versions[ i ].av_name );
+
+        if (!dsi && (afp_versions[i].av_number > 22)) {
+            continue;
+        }
+
+        len = strlen(afp_versions[i].av_name);
         *data++ = len;
-        memcpy( data, afp_versions[ i ].av_name , len );
+        memcpy(data, afp_versions[i].av_name, len);
         data += len;
     }
-    status = htons( data - start );
+
+    status = htons(data - start);
     memcpy(start + AFPSTATUS_UAMSOFF, &status, sizeof(status));
 }
 
@@ -101,22 +120,24 @@ void status_uams(char *data, const char *authlist)
     uint16_t           status;
     struct uam_obj      *uams;
     int         len, num = 0;
-
     memcpy(&status, start + AFPSTATUS_UAMSOFF, sizeof(status));
     uams = &uam_login;
+
     while ((uams = uams->uam_prev) != &uam_login) {
-        if (strstr(authlist, uams->uam_path))
+        if (strstr(authlist, uams->uam_path)) {
             num++;
+        }
     }
 
-    data += ntohs( status );
+    data += ntohs(status);
     *data++ = num;
+
     while ((uams = uams->uam_prev) != &uam_login) {
         if (strstr(authlist, uams->uam_path)) {
             LOG(log_info, logtype_afpd, "uam: \"%s\" available", uams->uam_name);
-            len = strlen( uams->uam_name);
+            len = strlen(uams->uam_name);
             *data++ = len;
-            memcpy( data, uams->uam_name, len );
+            memcpy(data, uams->uam_name, len);
             data += len;
         }
     }
@@ -130,23 +151,22 @@ void status_uams(char *data, const char *authlist)
  * by the afp_* functions. */
 static int send_reply(const AFPObj *obj, const int err)
 {
-    if ((err == AFP_OK) || (err == AFPERR_AUTHCONT))
+    if ((err == AFP_OK) || (err == AFPERR_AUTHCONT)) {
         return err;
-
-    if (obj->proto == AFPPROTO_DSI)
-    {
-        obj->reply(obj->dsi, err);
     }
-    else
-    {
+
+    if (obj->proto == AFPPROTO_DSI) {
+        obj->reply(obj->dsi, err);
+    } else {
         obj->reply(obj->handle, err);
     }
-    obj->exit(0);
 
+    obj->exit(0);
     return AFP_OK;
 }
 
-static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
+static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_,
+                             size_t ibuflen _U_,
                              char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
@@ -166,8 +186,8 @@ static int set_auth_switch(const AFPObj *obj, int expired)
 
     if (!expired) {
         afp_switch = postauth_switch;
-        switch (obj->afp_version) {
 
+        switch (obj->afp_version) {
         case 34:
         case 33:
         case 32:
@@ -176,29 +196,42 @@ static int set_auth_switch(const AFPObj *obj, int expired)
             uam_afpserver_action(AFP_SETACL, UAM_AFPSERVER_POSTAUTH, afp_setacl, NULL);
             uam_afpserver_action(AFP_ACCESS, UAM_AFPSERVER_POSTAUTH, afp_access, NULL);
 #endif /* HAVE_ACLS */
-            uam_afpserver_action(AFP_GETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_getextattr, NULL);
-            uam_afpserver_action(AFP_SETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_setextattr, NULL);
-            uam_afpserver_action(AFP_REMOVEATTR, UAM_AFPSERVER_POSTAUTH, afp_remextattr, NULL);
-            uam_afpserver_action(AFP_LISTEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_listextattr, NULL);
+            uam_afpserver_action(AFP_GETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_getextattr,
+                                 NULL);
+            uam_afpserver_action(AFP_SETEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_setextattr,
+                                 NULL);
+            uam_afpserver_action(AFP_REMOVEATTR, UAM_AFPSERVER_POSTAUTH, afp_remextattr,
+                                 NULL);
+            uam_afpserver_action(AFP_LISTEXTATTR, UAM_AFPSERVER_POSTAUTH, afp_listextattr,
+                                 NULL);
 
         case 31:
             uam_afpserver_action(AFP_SYNCDIR, UAM_AFPSERVER_POSTAUTH, afp_syncdir, NULL);
             uam_afpserver_action(AFP_SYNCFORK, UAM_AFPSERVER_POSTAUTH, afp_syncfork, NULL);
 #ifdef WITH_SPOTLIGHT
-            uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE, UAM_AFPSERVER_POSTAUTH, afp_spotlight_rpc, NULL);
+            uam_afpserver_action(AFP_SPOTLIGHT_PRIVATE, UAM_AFPSERVER_POSTAUTH,
+                                 afp_spotlight_rpc, NULL);
 #endif
-            uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext2, NULL);
+            uam_afpserver_action(AFP_ENUMERATE_EXT2, UAM_AFPSERVER_POSTAUTH,
+                                 afp_enumerate_ext2, NULL);
 
         case 30:
-            uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH, afp_enumerate_ext, NULL);
-            uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH, afp_bytelock_ext, NULL);
+            uam_afpserver_action(AFP_ENUMERATE_EXT, UAM_AFPSERVER_POSTAUTH,
+                                 afp_enumerate_ext, NULL);
+            uam_afpserver_action(AFP_BYTELOCK_EXT,  UAM_AFPSERVER_POSTAUTH,
+                                 afp_bytelock_ext, NULL);
             /* catsearch_ext uses the same packet as catsearch FIXME double check this, it wasn't true for enue
                enumerate_ext */
-            uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH, afp_catsearch_ext, NULL);
-            uam_afpserver_action(AFP_GETSESSTOKEN,  UAM_AFPSERVER_POSTAUTH, afp_getsession, NULL);
-            uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext, NULL);
-            uam_afpserver_action(AFP_WRITE_EXT,     UAM_AFPSERVER_POSTAUTH, afp_write_ext, NULL);
-            uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect, NULL);
+            uam_afpserver_action(AFP_CATSEARCH_EXT, UAM_AFPSERVER_POSTAUTH,
+                                 afp_catsearch_ext, NULL);
+            uam_afpserver_action(AFP_GETSESSTOKEN,  UAM_AFPSERVER_POSTAUTH, afp_getsession,
+                                 NULL);
+            uam_afpserver_action(AFP_READ_EXT,      UAM_AFPSERVER_POSTAUTH, afp_read_ext,
+                                 NULL);
+            uam_afpserver_action(AFP_WRITE_EXT,     UAM_AFPSERVER_POSTAUTH, afp_write_ext,
+                                 NULL);
+            uam_afpserver_action(AFP_DISCTOLDSESS,  UAM_AFPSERVER_POSTAUTH, afp_disconnect,
+                                 NULL);
 
         case 22:
             /*
@@ -216,10 +249,10 @@ static int set_auth_switch(const AFPObj *obj, int expired)
          * away with an AFPERR_PWDEXPR error. (thanks to Leland Wallace from Apple
          * for clarifying this)
          */
-
-        for (i=0; i<=0xff; i++) {
+        for (i = 0; i <= 0xff; i++) {
             uam_afpserver_action(i, UAM_AFPSERVER_PREAUTH, afp_errpwdexpired, NULL);
         }
+
         uam_afpserver_action(AFP_LOGOUT, UAM_AFPSERVER_PREAUTH, afp_logout, NULL);
         uam_afpserver_action(AFP_CHANGEPW, UAM_AFPSERVER_PREAUTH, afp_changepw, NULL);
     }
@@ -227,28 +260,33 @@ static int set_auth_switch(const AFPObj *obj, int expired)
     return AFP_OK;
 }
 
-static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expired)
+static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
+                 int expired)
 {
     bool admin = false;
     int i;
 
-    if ( pwd->pw_uid == 0 ) {   /* don't allow root login */
-        LOG(log_error, logtype_afpd, "login: root login denied!" );
+    /* don't allow root login */
+    if (pwd->pw_uid == 0) {
+        LOG(log_error, logtype_afpd, "login: root login denied!");
         return AFPERR_NOTAUTH;
     }
 
     if (obj->cnx_cnt > obj->cnx_max) {
-        LOG(log_error, logtype_dsi, "login: too many connections, limit: %d", obj->cnx_max);
+        LOG(log_error, logtype_dsi, "login: too many connections, limit: %d",
+            obj->cnx_max);
         return AFPERR_MAXSESS;
     }
 
     LOG(log_note, logtype_afpd, "Login by %s (%s)",
         pwd->pw_name, afp_versions[afp_version_index].av_name);
 
-    if (set_groups(obj, pwd) != 0)
+    if (set_groups(obj, pwd) != 0) {
         return AFPERR_BADUAM;
+    }
 
-    LOG(log_debug, logtype_afpd, "obj->options.admingid == %d", obj->options.admingid);
+    LOG(log_debug, logtype_afpd, "obj->options.admingid == %d",
+        obj->options.admingid);
 
     if (obj->options.admingid != 0) {
         for (i = 0; i < obj->ngroups; i++) {
@@ -257,12 +295,13 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
             }
         }
     }
+
     if (admin) {
         ad_setfuid(0);
-        LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name );
+        LOG(log_info, logtype_afpd, "admin login -- %s", pwd->pw_name);
     } else {
-        if (setegid( pwd->pw_gid ) < 0 || seteuid( pwd->pw_uid ) < 0) {
-            LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno) );
+        if (setegid(pwd->pw_gid) < 0 || seteuid(pwd->pw_uid) < 0) {
+            LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno));
             return AFPERR_BADUAM;
         }
     }
@@ -272,7 +311,9 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
             LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno));
             return AFPERR_BADUAM;
         }
-        LOG(log_info, logtype_afpd, "login: force uid: %ju", (uintmax_t)obj->options.force_uid);
+
+        LOG(log_info, logtype_afpd, "login: force uid: %ju",
+            (uintmax_t)obj->options.force_uid);
     }
 
     if (obj->options.force_group) {
@@ -280,44 +321,46 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void), int expi
             LOG(log_error, logtype_afpd, "login: %s %s", pwd->pw_name, strerror(errno));
             return AFPERR_BADUAM;
         }
-        LOG(log_info, logtype_afpd, "login: force gid: %ju", (uintmax_t)obj->options.force_gid);
+
+        LOG(log_info, logtype_afpd, "login: force gid: %ju",
+            (uintmax_t)obj->options.force_gid);
     }
 
-    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s", print_groups(obj->ngroups, obj->groups));
-
+    LOG(log_debug, logtype_afpd, "login: supplementary groups: %s",
+        print_groups(obj->ngroups, obj->groups));
     set_auth_switch(obj, expired);
     obj->logout = logout;
     obj->uid = pwd->pw_uid;
     obj->euid = geteuid();
-
     /* report to parent */
     ipc_child_write(obj->ipc_fd, IPC_LOGINDONE, 0, "");
-
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
 
     /* Some PAM module might have reset our signal handlers and timer, so we need to reestablish them */
-    if (obj->proto == AFPPROTO_DSI)
+    if (obj->proto == AFPPROTO_DSI) {
         afp_over_dsi_sighandlers(obj);
+    }
 
     /* Send FCE login event */
     fce_register(obj, FCE_LOGIN, "", NULL);
-
     return AFP_OK;
 }
 
 /* ---------------------- */
-int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
+int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+            size_t *rbuflen)
 {
     uint32_t data;
     DSI *dsi = (DSI *)AFPobj->dsi;
-
     *rbuflen = 0;
     ibuf += 2;
     ibuflen -= 2;
 
-    if (ibuflen < 4)
+    if (ibuflen < 4) {
         return AFPERR_MISC;
+    }
+
     memcpy(&data, ibuf, 4); /* flag */
     data = ntohl(data);
 
@@ -337,6 +380,7 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen
     } else {
         /* sleep request */
         dsi->flags |= DSI_SLEEPING;
+
         if (data & AFPZZZ_EXT_SLEEP) {
             LOG(log_note, logtype_afpd, "afp_zzz: entering extended sleep");
             dsi->flags |= DSI_EXTSLEEP;
@@ -353,14 +397,15 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen
      * the server is keeping the sessino (ie max sleeptime).
      */
     data = obj->options.sleep / 120; /* hours */
+
     if (!data) {
         data = 1;
     }
+
     *rbuflen = sizeof(data);
     data = htonl(data);
     memcpy(rbuf, &data, sizeof(data));
     rbuf += sizeof(data);
-
     return AFP_OK;
 }
 
@@ -370,19 +415,19 @@ static int create_session_token(AFPObj *obj)
     pid_t pid;
 
     /* use 8 bytes for token as OSX, don't know if it helps */
-    if ( sizeof(pid_t) > SESSIONTOKEN_LEN) {
-        LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u", SESSIONTOKEN_LEN );
+    if (sizeof(pid_t) > SESSIONTOKEN_LEN) {
+        LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u", SESSIONTOKEN_LEN);
         return AFPERR_MISC;
     }
 
-    if ( NULL == (obj->sinfo.sessiontoken = malloc(SESSIONTOKEN_LEN)) )
+    if (NULL == (obj->sinfo.sessiontoken = malloc(SESSIONTOKEN_LEN))) {
         return AFPERR_MISC;
+    }
 
     memset(obj->sinfo.sessiontoken, 0, SESSIONTOKEN_LEN);
     obj->sinfo.sessiontoken_len = SESSIONTOKEN_LEN;
     pid = getpid();
     memcpy(obj->sinfo.sessiontoken, &pid, sizeof(pid_t));
-
     return 0;
 }
 
@@ -390,11 +435,14 @@ static int create_session_key(AFPObj *obj)
 {
     /* create session key */
     if (obj->sinfo.sessionkey == NULL) {
-        if (NULL == (obj->sinfo.sessionkey = malloc(SESSIONKEY_LEN)) )
+        if (NULL == (obj->sinfo.sessionkey = malloc(SESSIONKEY_LEN))) {
             return AFPERR_MISC;
+        }
+
         uam_random_string(obj, obj->sinfo.sessionkey, SESSIONKEY_LEN);
         obj->sinfo.sessionkey_len = SESSIONKEY_LEN;
     }
+
     return AFP_OK;
 }
 
@@ -411,7 +459,6 @@ int afp_getsession(
     uint32_t           tklen, tp;
     char                *token;
     char                *p;
-
     *rbuflen = 0;
     tklen = 0;
 
@@ -421,15 +468,15 @@ int afp_getsession(
 
     ibuf += 2;
     ibuflen -= 2;
-
     memcpy(&type, ibuf, sizeof(type));
     type = ntohs(type);
     ibuf += sizeof(type);
     ibuflen -= sizeof(type);
 
-    if ( obj->sinfo.sessiontoken == NULL ) {
-        if ( create_session_token( obj ) )
+    if (obj->sinfo.sessiontoken == NULL) {
+        if (create_session_token(obj)) {
             return AFPERR_MISC;
+        }
     }
 
     /*
@@ -440,6 +487,7 @@ int afp_getsession(
         tklen = obj->sinfo.sessiontoken_len;
         token = obj->sinfo.sessiontoken;
         break;
+
     case 1: /* disconnect */
     case 2: /* reconnect update id */
         if (ibuflen >= sizeof(idlen)) {
@@ -447,101 +495,112 @@ int afp_getsession(
             idlen = ntohl(idlen);
             ibuf += sizeof(idlen);
             ibuflen -= sizeof(idlen);
+
             if (ibuflen < idlen) {
                 return AFPERR_PARAM;
             }
+
             /* memcpy (id, ibuf, idlen) */
             tklen = obj->sinfo.sessiontoken_len;
             token = obj->sinfo.sessiontoken;
         }
+
         break;
+
     case 3:
     case 4:
-        if (ibuflen >= 8 ) {
+        if (ibuflen >= 8) {
             p = ibuf;
-            memcpy( &idlen, ibuf, sizeof(idlen));
+            memcpy(&idlen, ibuf, sizeof(idlen));
             idlen = ntohl(idlen);
             ibuf += sizeof(idlen);
             ibuflen -= sizeof(idlen);
             ibuf += sizeof(boottime);
             ibuflen -= sizeof(boottime);
-            if (ibuflen < idlen || idlen > (90-10)) {
+
+            if (ibuflen < idlen || idlen > (90 - 10)) {
                 return AFPERR_PARAM;
             }
+
             if (!obj->sinfo.clientid) {
                 obj->sinfo.clientid = malloc(idlen + 8);
                 memcpy(obj->sinfo.clientid, p, idlen + 8);
                 obj->sinfo.clientid_len = idlen + 8;
             }
-            if (ipc_child_write(obj->ipc_fd, IPC_GETSESSION, idlen+8, p) != 0)
+
+            if (ipc_child_write(obj->ipc_fd, IPC_GETSESSION, idlen + 8, p) != 0) {
                 return AFPERR_MISC;
+            }
+
             tklen = obj->sinfo.sessiontoken_len;
             token = obj->sinfo.sessiontoken;
         }
+
         break;
+
     case 8: /* Panther Kerberos Token */
         tklen = obj->sinfo.cryptedkey_len;
         token = obj->sinfo.cryptedkey;
         break;
+
     default:
         return AFPERR_NOOP;
         break;
-
     }
 
-    if (tklen == 0)
+    if (tklen == 0) {
         return AFPERR_MISC;
+    }
 
     tp = htonl(tklen);
     memcpy(rbuf, &tp, sizeof(tklen));
     rbuf += sizeof(tklen);
     *rbuflen += sizeof(tklen);
-
     memcpy(rbuf, token, tklen);
     *rbuflen += tklen;
-
     return AFP_OK;
 }
 
 /* ---------------------- */
-int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
+                   size_t *rbuflen)
 {
     DSI                 *dsi = (DSI *)obj->dsi;
     uint16_t           type;
     uint32_t           tklen;
     pid_t               token;
     int                 i;
-
     *rbuflen = 0;
     ibuf += 2;
-
 #if 0
+
     /* check for guest user */
-    if ( 0 == (strcasecmp(obj->username, obj->options.guest)) ) {
+    if (0 == (strcasecmp(obj->username, obj->options.guest))) {
         return AFPERR_MISC;
     }
-#endif
 
+#endif
     memcpy(&type, ibuf, sizeof(type));
     type = ntohs(type);
     ibuf += sizeof(type);
-
     memcpy(&tklen, ibuf, sizeof(tklen));
     tklen = ntohl(tklen);
     ibuf += sizeof(tklen);
 
-    if ( sizeof(pid_t) > SESSIONTOKEN_LEN) {
-        LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u", SESSIONTOKEN_LEN );
+    if (sizeof(pid_t) > SESSIONTOKEN_LEN) {
+        LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u", SESSIONTOKEN_LEN);
         return AFPERR_MISC;
     }
+
     if (tklen != SESSIONTOKEN_LEN) {
         return AFPERR_MISC;
     }
+
     tklen = sizeof(pid_t);
     memcpy(&token, ibuf, tklen);
-
     /* our stuff is pid + zero pad */
     ibuf += tklen;
+
     for (i = tklen; i < SESSIONTOKEN_LEN; i++, ibuf++) {
         if (*ibuf != 0) {
             return AFPERR_MISC;
@@ -550,22 +609,26 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 
     LOG(log_note, logtype_afpd, "afp_disconnect: trying primary reconnect");
     dsi->flags |= DSI_RECONINPROG;
-
     /* Deactivate tickle timer */
     const struct itimerval none = {{0, 0}, {0, 0}};
     setitimer(ITIMER_REAL, &none, NULL);
 
     /* check for old session, possibly transferring session from here to there */
-    if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) != 0)
+    if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) != 0) {
         goto exit;
+    }
+
     /* write uint16_t DSI request ID */
     if (writet(obj->ipc_fd, &dsi->header.dsi_requestID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_afpd, "afp_disconnect: couldn't send DSI request ID");
         goto exit;
     }
+
     /* now send our connected AFP client socket */
-    if (send_fd(obj->ipc_fd, dsi->socket) != 0)
+    if (send_fd(obj->ipc_fd, dsi->socket) != 0) {
         goto exit;
+    }
+
     /* Now see what happens: either afpd master sends us SIGTERM because our session */
     /* has been transferred to a old disconnected session, or we continue    */
     sleep(5);
@@ -580,7 +643,6 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, 
 exit:
     /* Reinstall tickle timer */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
-
     LOG(log_error, logtype_afpd, "afp_disconnect: primary reconnect failed");
     return AFPERR_MISC;
 }
@@ -588,87 +650,103 @@ exit:
 /* ---------------------- */
 static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
 {
-    int num,i;
+    int num, i;
 
-    if (!len || len > ibuflen)
+    if (!len || len > ibuflen) {
         return AFPERR_BADVERS;
+    }
 
-    num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ]);
-    for ( i = 0; i < num; i++ ) {
-        if ( strncmp( ibuf, afp_versions[ i ].av_name , len ) == 0 ) {
-            obj->afp_version = afp_versions[ i ].av_number;
+    num = sizeof(afp_versions) / sizeof(afp_versions[0]);
+
+    for (i = 0; i < num; i++) {
+        if (strncmp(ibuf, afp_versions[i].av_name, len) == 0) {
+            obj->afp_version = afp_versions[i].av_number;
             afp_version_index = i;
             break;
         }
     }
-    if ( i == num )                 /* An inappropo version */
-        return AFPERR_BADVERS ;
+
+    /* An inappropo version */
+    if (i == num) {
+        return AFPERR_BADVERS;
+    }
 
     /* FIXME Hack */
     if (obj->afp_version >= 30 && sizeof(off_t) != 8) {
-        LOG(log_error, logtype_afpd, "get_version: no LARGE_FILE support recompile!" );
-        return AFPERR_BADVERS ;
+        LOG(log_error, logtype_afpd, "get_version: no LARGE_FILE support recompile!");
+        return AFPERR_BADVERS;
     }
 
     return 0;
 }
 
 /* ---------------------- */
-int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
+int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen)
 {
     struct passwd *pwd = NULL;
     size_t len;
     int     i;
-
     *rbuflen = 0;
 
-    if ( nologin & 1)
-        return send_reply(obj, AFPERR_SHUTDOWN );
+    if (nologin & 1) {
+        return send_reply(obj, AFPERR_SHUTDOWN);
+    }
 
-    if (ibuflen < 2)
-        return send_reply(obj, AFPERR_BADVERS );
+    if (ibuflen < 2) {
+        return send_reply(obj, AFPERR_BADVERS);
+    }
 
-    if (ibuf == NULL)
+    if (ibuf == NULL) {
         return send_reply(obj, AFPERR_PARAM);
+    }
 
     ibuf++;
-    len = (unsigned char) *ibuf++;
+    len = (unsigned char) * ibuf++;
     ibuflen -= 2;
-
     i = get_version(obj, ibuf, ibuflen, len);
-    if (i)
-        return send_reply(obj, i );
 
-    if (ibuflen <= len)
+    if (i) {
+        return send_reply(obj, i);
+    }
+
+    if (ibuflen <= len) {
         return send_reply(obj, AFPERR_BADUAM);
+    }
 
     ibuf += len;
     ibuflen -= len;
-
-    len = (unsigned char) *ibuf++;
+    len = (unsigned char) * ibuf++;
     ibuflen--;
 
-    if (!len || len > ibuflen)
+    if (!len || len > ibuflen) {
         return send_reply(obj, AFPERR_BADUAM);
+    }
 
-    if (NULL == (afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len)) )
+    if (NULL == (afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len))) {
         return send_reply(obj, AFPERR_BADUAM);
+    }
+
     ibuf += len;
     ibuflen -= len;
 
-    if (AFP_OK != (i = create_session_key(obj)) )
+    if (AFP_OK != (i = create_session_key(obj))) {
         return send_reply(obj, i);
+    }
 
     i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
 
-    if (!pwd || ( i != AFP_OK && i != AFPERR_PWDEXPR))
+    if (!pwd || (i != AFP_OK && i != AFPERR_PWDEXPR)) {
         return send_reply(obj, i);
+    }
 
-    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout, ((i==AFPERR_PWDEXPR)?1:0)));
+    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout,
+                                 ((i == AFPERR_PWDEXPR) ? 1 : 0)));
 }
 
 /* ---------------------- */
-int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
+int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen)
 {
     struct passwd *pwd = NULL;
     size_t  len;
@@ -676,109 +754,138 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
     char        type;
     uint16_t   len16;
     char        *username;
-
     *rbuflen = 0;
 
-    if ( nologin & 1)
-        return send_reply(obj, AFPERR_SHUTDOWN );
+    if (nologin & 1) {
+        return send_reply(obj, AFPERR_SHUTDOWN);
+    }
 
-    if (ibuflen < 5)
-        return send_reply(obj, AFPERR_BADVERS );
+    if (ibuflen < 5) {
+        return send_reply(obj, AFPERR_BADVERS);
+    }
 
-    if (ibuf == NULL)
+    if (ibuf == NULL) {
         return send_reply(obj, AFPERR_PARAM);
+    }
 
     ibuf++;
     ibuf++;     /* pad  */
-    ibuf +=2;   /* flag */
-
-    len = (unsigned char) *ibuf;
+    ibuf += 2;  /* flag */
+    len = (unsigned char) * ibuf;
     ibuf++;
     ibuflen -= 5;
-
     i = get_version(obj, ibuf, ibuflen, len);
-    if (i)
-        return send_reply(obj, i );
 
-    if (ibuflen <= len)
+    if (i) {
+        return send_reply(obj, i);
+    }
+
+    if (ibuflen <= len) {
         return send_reply(obj, AFPERR_BADUAM);
+    }
 
     ibuf    += len;
     ibuflen -= len;
-
-    len = (unsigned char) *ibuf;
+    len = (unsigned char) * ibuf;
     ibuf++;
     ibuflen--;
 
-    if (!len || len > ibuflen)
+    if (!len || len > ibuflen) {
         return send_reply(obj, AFPERR_BADUAM);
+    }
 
-    if ((afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len)) == NULL)
+    if ((afp_uam = auth_uamfind(UAM_SERVER_LOGIN, ibuf, len)) == NULL) {
         return send_reply(obj, AFPERR_BADUAM);
+    }
+
     ibuf    += len;
     ibuflen -= len;
 
     if (!afp_uam->u.uam_login.login_ext) {
-        LOG(log_error, logtype_afpd, "login_ext: uam %s not AFP 3 ready!", afp_uam->uam_name );
+        LOG(log_error, logtype_afpd, "login_ext: uam %s not AFP 3 ready!",
+            afp_uam->uam_name);
         return send_reply(obj, AFPERR_BADUAM);
     }
+
     /* user name */
-    if (ibuflen <= 1 +sizeof(len16))
+    if (ibuflen <= 1 + sizeof(len16)) {
         return send_reply(obj, AFPERR_PARAM);
+    }
+
     type = *ibuf;
     username = ibuf;
     ibuf++;
     ibuflen--;
-    if (type != 3)
+
+    if (type != 3) {
         return send_reply(obj, AFPERR_PARAM);
+    }
 
     memcpy(&len16, ibuf, sizeof(len16));
     ibuf += sizeof(len16);
     ibuflen -= sizeof(len16);
     len = ntohs(len16);
-    if (len > ibuflen)
+
+    if (len > ibuflen) {
         return send_reply(obj, AFPERR_PARAM);
+    }
+
     ibuf += len;
     ibuflen -= len;
 
     /* directory service name */
-    if (!ibuflen)
+    if (!ibuflen) {
         return send_reply(obj, AFPERR_PARAM);
+    }
+
     type = *ibuf;
     ibuf++;
     ibuflen--;
 
-    switch(type) {
+    switch (type) {
     case 1:
     case 2:
-        if (!ibuflen)
+        if (!ibuflen) {
             return send_reply(obj, AFPERR_PARAM);
-        len = (unsigned char) *ibuf;
+        }
+
+        len = (unsigned char) * ibuf;
         ibuf++;
         ibuflen--;
         break;
+
     case 3:
+
         /* With "No User Authen" it is equal */
-        if (ibuflen < sizeof(len16))
+        if (ibuflen < sizeof(len16)) {
             return send_reply(obj, AFPERR_PARAM);
+        }
+
         memcpy(&len16, ibuf, sizeof(len16));
         ibuf += sizeof(len16);
         ibuflen -= sizeof(len16);
         len = ntohs(len16);
         break;
+
     default:
         return send_reply(obj, AFPERR_PARAM);
     }
+
 #if 0
+
     if (len != 0) {
-        LOG(log_error, logtype_afpd, "login_ext: directory service path not null!" );
+        LOG(log_error, logtype_afpd, "login_ext: directory service path not null!");
         return send_reply(obj, AFPERR_PARAM);
     }
+
 #endif
+
     if (ibuflen < len) {
-        LOG(log_error, logtype_afpd, "login_ext: Login failed. Invalid directory service name!" );
+        LOG(log_error, logtype_afpd,
+            "login_ext: Login failed. Invalid directory service name!");
         return send_reply(obj, AFPERR_PARAM);
     }
+
     ibuf += len;
     ibuflen -= len;
 
@@ -788,55 +895,63 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *r
         ibuflen--;
     }
 
-    if (AFP_OK != (i = create_session_key(obj)) ) {
+    if (AFP_OK != (i = create_session_key(obj))) {
         return send_reply(obj, i);
     }
 
     /* FIXME user name are in UTF8 */
-    i = afp_uam->u.uam_login.login_ext(obj, username, &pwd, ibuf, ibuflen, rbuf, rbuflen);
+    i = afp_uam->u.uam_login.login_ext(obj, username, &pwd, ibuf, ibuflen, rbuf,
+                                       rbuflen);
 
-    if (!pwd || ( i != AFP_OK && i != AFPERR_PWDEXPR))
+    if (!pwd || (i != AFP_OK && i != AFPERR_PWDEXPR)) {
         return send_reply(obj, i);
+    }
 
-    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout, ((i==AFPERR_PWDEXPR)?1:0)));
+    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout,
+                                 ((i == AFPERR_PWDEXPR) ? 1 : 0)));
 }
 
 /* ---------------------- */
-int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
+int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen)
 {
     struct passwd *pwd = NULL;
     int err;
 
-    if ( afp_uam == NULL || afp_uam->u.uam_login.logincont == NULL || ibuflen < 2 ) {
+    if (afp_uam == NULL || afp_uam->u.uam_login.logincont == NULL || ibuflen < 2) {
         *rbuflen = 0;
-        return send_reply(obj, AFPERR_NOTAUTH );
+        return send_reply(obj, AFPERR_NOTAUTH);
     }
 
-    ibuf += 2; ibuflen -= 2;
+    ibuf += 2;
+    ibuflen -= 2;
     err = afp_uam->u.uam_login.logincont(obj, &pwd, ibuf, ibuflen,
                                          rbuf, rbuflen);
-    if (!pwd || ( err != AFP_OK && err != AFPERR_PWDEXPR))
-        return send_reply(obj, err);
 
-    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout, ((err==AFPERR_PWDEXPR)?1:0)));
+    if (!pwd || (err != AFP_OK && err != AFPERR_PWDEXPR)) {
+        return send_reply(obj, err);
+    }
+
+    return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout,
+                                 ((err == AFPERR_PWDEXPR) ? 1 : 0)));
 }
 
 
-int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_, size_t *rbuflen)
+int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
+               char *rbuf  _U_, size_t *rbuflen)
 {
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
     of_close_all_forks(obj);
     close_all_vol(obj);
-    if (obj->proto == AFPPROTO_DSI)
-    {
+
+    if (obj->proto == AFPPROTO_DSI) {
         DSI* dsi = (DSI*)(obj->dsi);
         dsi->flags = DSI_AFP_LOGGED_OUT;
     }
-    *rbuflen = 0;
 
+    *rbuflen = 0;
     /* Send FCE login event */
     fce_register(obj, FCE_LOGOUT, "", NULL);
-
     return AFP_OK;
 }
 
@@ -847,61 +962,73 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_, char *rbuf  _U_
  *       to work. this also does a little pre-processing before it hands
  *       it off to the uam.
  */
-int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
+int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen)
 {
     char username[MAXUSERLEN], *start = ibuf;
     struct uam_obj *uam;
     struct passwd *pwd;
     size_t len;
     int    ret;
-
     *rbuflen = 0;
     ibuf += 2;
 
     /* check if password change is allowed, OS-X ignores the flag.
      * we shouldn't trust the client on this anyway.
      * not sure about the "right" error code, NOOP for now */
-    if (!(obj->options.passwdbits & PASSWD_SET))
+    if (!(obj->options.passwdbits & PASSWD_SET)) {
         return AFPERR_NOOP;
+    }
 
     /* make sure we can deal w/ this uam */
-    len = (unsigned char) *ibuf++;
-    if ((uam = auth_uamfind(UAM_SERVER_CHANGEPW, ibuf, len)) == NULL)
+    len = (unsigned char) * ibuf++;
+
+    if ((uam = auth_uamfind(UAM_SERVER_CHANGEPW, ibuf, len)) == NULL) {
         return AFPERR_BADUAM;
+    }
 
     ibuf += len;
-    if ((len + 1) & 1) /* pad byte */
+
+    if ((len + 1) & 1) { /* pad byte */
         ibuf++;
+    }
 
     if (obj->afp_version < 30) {
-        len = (unsigned char) *ibuf++;
-        if ( len > sizeof(username) - 1) {
+        len = (unsigned char) * ibuf++;
+
+        if (len > sizeof(username) - 1) {
             return AFPERR_PARAM;
         }
+
         memcpy(username, ibuf, len);
-        username[ len ] = '\0';
+        username[len] = '\0';
         ibuf += len;
-        if ((len + 1) & 1) /* pad byte */
+
+        if ((len + 1) & 1) { /* pad byte */
             ibuf++;
+        }
     } else {
         /* AFP > 3.0 doesn't pass the username, APF 3.1 specs page 124 */
-        if ( ibuf[0] != '\0' || ibuf[1] != '\0')
+        if (ibuf[0] != '\0' || ibuf[1] != '\0') {
             return AFPERR_PARAM;
+        }
+
         ibuf += 2;
         len = MIN(sizeof(username) - 1, strlen(obj->username));
         memcpy(username, obj->username, len);
-        username[ len ] = '\0';
+        username[len] = '\0';
     }
-
 
     LOG(log_info, logtype_afpd, "changing password for <%s>", username);
 
-    if (( pwd = uam_getname( obj, username, sizeof(username))) == NULL )
+    if ((pwd = uam_getname(obj, username, sizeof(username))) == NULL) {
         return AFPERR_PARAM;
+    }
 
     /* send it off to the uam. we really don't use ibuflen right now. */
-    if (ibuflen < (size_t)(ibuf - start))
+    if (ibuflen < (size_t)(ibuf - start)) {
         return AFPERR_PARAM;
+    }
 
     ibuflen -= (ibuf - start);
     ret = uam->u.uam_changepw(obj, username, pwd, ibuf, ibuflen,
@@ -909,23 +1036,24 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf, size_t *rb
     LOG(log_info, logtype_afpd, "password change %s.",
         (ret == AFPERR_AUTHCONT) ? "continued" :
         (ret ? "failed" : "succeeded"));
-    if ( ret == AFP_OK )
+
+    if (ret == AFP_OK) {
         set_auth_switch(obj, 0);
+    }
 
     return ret;
 }
 
 
 /* FPGetUserInfo */
-int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                    size_t *rbuflen)
 {
     uint8_t  thisuser;
     uint32_t id;
     uint16_t bitmap;
     char *bitmapp;
-
     LOG(log_debug, logtype_afpd, "begin afp_getuserinfo:");
-
     *rbuflen = 0;
     ibuf++;
     thisuser = *ibuf++;
@@ -936,10 +1064,13 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     /* deal with error cases. we don't have to worry about
      * AFPERR_ACCESS or AFPERR_NOITEM as geteuid and getegid always
      * succeed. */
-    if (!thisuser)
+    if (!thisuser) {
         return AFPERR_PARAM;
-    if ((bitmap & USERIBIT_ALL) != bitmap)
+    }
+
+    if ((bitmap & USERIBIT_ALL) != bitmap) {
         return AFPERR_BITMAP;
+    }
 
     /* remember place where we store the possibly modified bitmap later */
     memcpy(rbuf, ibuf, sizeof(bitmap));
@@ -963,21 +1094,24 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     if (bitmap & USERIBIT_UUID) {
-        if ( ! (obj->options.flags & OPTION_UUID)) {
+        if (!(obj->options.flags & OPTION_UUID)) {
             bitmap &= ~USERIBIT_UUID;
             bitmap = htons(bitmap);
             memcpy(bitmapp, &bitmap, sizeof(bitmap));
         } else {
-            LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'", obj->username);
+            LOG(log_debug, logtype_afpd, "afp_getuserinfo: get UUID for \'%s\'",
+                obj->username);
             int ret;
             atalk_uuid_t uuid;
-            ret = getuuidfromname( obj->username, UUID_USER, uuid);
+            ret = getuuidfromname(obj->username, UUID_USER, uuid);
+
             if (ret != 0) {
                 LOG(log_info, logtype_afpd, "afp_getuserinfo: error getting UUID !");
                 return AFPERR_NOITEM;
             }
-            LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s", uuid_bin2string(uuid));
 
+            LOG(log_debug, logtype_afpd, "afp_getuserinfo: got UUID: %s",
+                uuid_bin2string(uuid));
             memcpy(rbuf, uuid, UUID_BINSIZE);
             rbuf += UUID_BINSIZE;
             *rbuflen += UUID_BINSIZE;
@@ -999,13 +1133,16 @@ struct uam_obj *auth_uamfind(const int type, const char *name,
 {
     struct uam_obj *prev, *start;
 
-    if (!name || !(start = UAM_LIST(type)))
+    if (!name || !(start = UAM_LIST(type))) {
         return NULL;
+    }
 
     prev = start;
+
     while ((prev = prev->uam_prev) != start)
-        if (strndiacasecmp(prev->uam_name, name, len) == 0)
+        if (strndiacasecmp(prev->uam_name, name, len) == 0) {
             return prev;
+        }
 
     return NULL;
 }
@@ -1014,11 +1151,13 @@ int auth_register(const int type, struct uam_obj *uam)
 {
     struct uam_obj *start;
 
-    if (!uam || !uam->uam_name || (*uam->uam_name == '\0'))
+    if (!uam || !uam->uam_name || (*uam->uam_name == '\0')) {
         return -1;
+    }
 
-    if (!(start = UAM_LIST(type)))
-        return 1; /* we don't know what to do with it, caller must free it */
+    if (!(start = UAM_LIST(type))) {
+        return 1;    /* we don't know what to do with it, caller must free it */
+    }
 
     uam_attach(start, uam);
     return 0;
@@ -1032,16 +1171,19 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
     struct stat st;
     size_t len;
 
-    if (!path || !*path || !list || (len = strlen(path)) > sizeof(name) - 2)
+    if (!path || !*path || !list || (len = strlen(path)) > sizeof(name) - 2) {
         return -1;
+    }
 
     LOG(log_debug, logtype_afpd, "auth_load: %s, %s", path, list);
-
     strlcpy(buf, list, sizeof(buf));
-    if ((p = strtok_r(buf, ", ", &last)) == NULL)
+
+    if ((p = strtok_r(buf, ", ", &last)) == NULL) {
         return -1;
+    }
 
     strlcpy(name, path, sizeof(name));
+
     if (name[len - 1] != '/') {
         strlcat(name, "/", sizeof(name));
         len++;
@@ -1050,6 +1192,7 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
     while (p) {
         strlcpy(name + len, p, sizeof(name) - len);
         LOG(log_debug, logtype_afpd, "uam: loading (%s)", name);
+
         /*
           if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
         */
@@ -1058,11 +1201,12 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
                 uam_attach(&uam_modules, mod);
                 LOG(log_debug, logtype_afpd, "uam: %s loaded", p);
             } else {
-                LOG(log_error, logtype_afpd, "uam: %s load failure",p);
+                LOG(log_error, logtype_afpd, "uam: %s load failure", p);
             }
         } else {
             LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
         }
+
         p = strtok_r(NULL, ", ", &last);
     }
 
@@ -1073,8 +1217,8 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
 void auth_unload(void)
 {
     struct uam_mod *mod, *prev, *start = &uam_modules;
-
     prev = start->uam_prev;
+
     while ((mod = prev) != start) {
         prev = prev->uam_prev;
         uam_detach(mod);

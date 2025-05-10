@@ -17,10 +17,11 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-extern int  macip_open (char *zone, uint32_t net, uint32_t mask, uint32_t ns, outputfunc_t o);
-extern void macip_close (void);
-extern void macip_idle (void);
+extern int  macip_open(char *zone, uint32_t net, uint32_t mask, uint32_t ns,
+                       outputfunc_t o);
+extern void macip_close(void);
+extern void macip_idle(void);
 
-extern void macip_output (char *buffer, int len);
-extern void macip_input (void);
+extern void macip_output(char *buffer, int len);
+extern void macip_input(void);
 

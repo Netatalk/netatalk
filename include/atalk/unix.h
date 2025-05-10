@@ -40,12 +40,15 @@ extern DIR *opendirat(int dirfd, const char *path);
 extern int netatalk_rmdir(int dirfd, const char *name);
 extern int netatalk_rmdir_all_errors(int dirfd, const char *name);
 
-extern int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st);
+extern int setfilmode(const struct vol *vol, const char *name, mode_t mode,
+                      struct stat *st);
 extern int dir_rx_set(mode_t mode);
-extern int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath);
+extern int unix_rename(int sfd, const char *oldpath, int dfd,
+                       const char *newpath);
 extern int copy_file(int sfd, const char *src, const char *dst, mode_t mode);
 extern int copy_file_fd(int sfd, int dfd);
-extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst, mode_t mode);
+extern int copy_ea(const char *ea, int sfd, const char *src, const char *dst,
+                   mode_t mode);
 
 extern void become_root(void);
 extern void unbecome_root(void);

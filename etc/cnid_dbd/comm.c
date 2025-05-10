@@ -55,14 +55,16 @@ static void invalidate_fd(int fd)
 {
     int i;
 
-    if (fd == control_fd)
+    if (fd == control_fd) {
         return;
+    }
+
     for (i = 0; i != fds_in_use; i++)
-        if (fd_table[i].fd == fd)
+        if (fd_table[i].fd == fd) {
             break;
+        }
 
     assert(i < fds_in_use);
-
     fds_in_use--;
     fd_table[i] = fd_table[fds_in_use];
     fd_table[fds_in_use].fd = -1;
@@ -89,40 +91,47 @@ static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
     int i;
     int maxfd = control_fd;
     time_t t;
-
     FD_ZERO(&readfds);
     FD_SET(control_fd, &readfds);
 
     for (i = 0; i != fds_in_use; i++) {
         FD_SET(fd_table[i].fd, &readfds);
-        if (maxfd < fd_table[i].fd)
+
+        if (maxfd < fd_table[i].fd) {
             maxfd = fd_table[i].fd;
+        }
     }
 
     tv.tv_nsec = 0;
     tv.tv_sec  = timeout;
+
     if ((ret = pselect(maxfd + 1, &readfds, NULL, NULL, &tv, sigmask)) < 0) {
-        if (errno == EINTR)
+        if (errno == EINTR) {
             return 0;
-        LOG(log_error, logtype_cnid, "error in select: %s",strerror(errno));
+        }
+
+        LOG(log_error, logtype_cnid, "error in select: %s", strerror(errno));
         return -1;
     }
 
     time(&t);
-    if (now)
+
+    if (now) {
         *now = t;
+    }
 
-    if (!ret)
+    if (!ret) {
         return 0;
-
+    }
 
     if (FD_ISSET(control_fd, &readfds)) {
         int    l = 0;
-
         fd = recv_fd(control_fd, 0);
+
         if (fd < 0) {
             return -1;
         }
+
         if (fds_in_use < fd_table_size) {
             fd_table[fds_in_use].fd = fd;
             fd_table[fds_in_use].tm = t;
@@ -136,10 +145,12 @@ static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
                     l = i;
                 }
             }
+
             close(fd_table[l].fd);
             fd_table[l].fd = fd;
             fd_table[l].tm = t;
         }
+
         return 0;
     }
 
@@ -149,6 +160,7 @@ static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
             return fd_table[i].fd;
         }
     }
+
     /* We should never get here */
     return 0;
 }
@@ -156,7 +168,6 @@ static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
 int comm_init(struct db_param *dbp, int ctrlfd, int clntfd)
 {
     int i;
-
     fds_in_use = 0;
     fd_table_size = dbp->fd_table_size;
 
@@ -164,22 +175,26 @@ int comm_init(struct db_param *dbp, int ctrlfd, int clntfd)
         LOG(log_error, logtype_cnid, "Out of memory");
         return -1;
     }
-    for (i = 0; i != fd_table_size; i++)
+
+    for (i = 0; i != fd_table_size; i++) {
         fd_table[i].fd = -1;
+    }
+
     /* from dup2 */
     control_fd = ctrlfd;
 #if 0
     int b = 1;
+
     /* this one dump core in recvmsg, great */
-    if ( setsockopt(control_fd, SOL_SOCKET, SO_PASSCRED, &b, sizeof (b)) < 0) {
+    if (setsockopt(control_fd, SOL_SOCKET, SO_PASSCRED, &b, sizeof(b)) < 0) {
         LOG(log_error, logtype_cnid, "setsockopt SO_PASSCRED %s",  strerror(errno));
         return -1;
     }
+
 #endif
     /* push the first client fd */
     fd_table[fds_in_use].fd = clntfd;
     fds_in_use++;
-
     return 0;
 }
 
@@ -192,16 +207,19 @@ int comm_nbe(void)
 }
 
 /* ------------ */
-int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask, time_t *now)
+int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout,
+             const sigset_t *sigmask, time_t *now)
 {
     char *nametmp;
     int b;
 
-    if ((cur_fd = check_fd(timeout, sigmask, now)) < 0)
+    if ((cur_fd = check_fd(timeout, sigmask, now)) < 0) {
         return -1;
+    }
 
-    if (!cur_fd)
+    if (!cur_fd) {
         return 0;
+    }
 
     LOG(log_maxdebug, logtype_cnid, "comm_rcv: got data on fd %u", cur_fd);
 
@@ -211,27 +229,33 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout, const sigset_t *sigmask
     }
 
     nametmp = (char *)rqst->name;
+
     if ((b = readt(cur_fd, rqst, sizeof(struct cnid_dbd_rqst), 1, CNID_DBD_TIMEOUT))
-        != sizeof(struct cnid_dbd_rqst)) {
-        if (b)
-            LOG(log_error, logtype_cnid, "error reading message header: %s", strerror(errno));
+            != sizeof(struct cnid_dbd_rqst)) {
+        if (b) {
+            LOG(log_error, logtype_cnid, "error reading message header: %s",
+                strerror(errno));
+        }
+
         invalidate_fd(cur_fd);
         rqst->name = nametmp;
         return 0;
     }
+
     rqst->name = nametmp;
-    if (rqst->namelen && readt(cur_fd, (char *)rqst->name, rqst->namelen, 1, CNID_DBD_TIMEOUT)
-        != rqst->namelen) {
+
+    if (rqst->namelen
+            && readt(cur_fd, (char *)rqst->name, rqst->namelen, 1, CNID_DBD_TIMEOUT)
+            != rqst->namelen) {
         LOG(log_error, logtype_cnid, "error reading message name: %s", strerror(errno));
         invalidate_fd(cur_fd);
         return 0;
     }
+
     /* We set this to make life easier for logging. None of the other stuff
        needs zero terminated strings. */
     ((char *)(rqst->name))[rqst->namelen] = '\0';
-
     LOG(log_maxdebug, logtype_cnid, "comm_rcv: got %u bytes", b + rqst->namelen);
-
     return 1;
 }
 
@@ -245,37 +269,46 @@ int comm_snd(struct cnid_dbd_rply *rply)
 #endif
 
     if (!rply->namelen) {
-        if (write(cur_fd, rply, sizeof(struct cnid_dbd_rply)) != sizeof(struct cnid_dbd_rply)) {
-            LOG(log_error, logtype_cnid, "error writing message header: %s", strerror(errno));
+        if (write(cur_fd, rply, sizeof(struct cnid_dbd_rply)) != sizeof(
+                    struct cnid_dbd_rply)) {
+            LOG(log_error, logtype_cnid, "error writing message header: %s",
+                strerror(errno));
             invalidate_fd(cur_fd);
             return 0;
         }
+
         return 1;
     }
-#ifdef USE_WRITEV
 
+#ifdef USE_WRITEV
     iov[0].iov_base = rply;
     iov[0].iov_len = sizeof(struct cnid_dbd_rply);
     iov[1].iov_base = rply->name;
     iov[1].iov_len = rply->namelen;
-    towrite = sizeof(struct cnid_dbd_rply) +rply->namelen;
+    towrite = sizeof(struct cnid_dbd_rply) + rply->namelen;
 
     if (writev(cur_fd, iov, 2) != towrite) {
         LOG(log_error, logtype_cnid, "error writing message : %s", strerror(errno));
         invalidate_fd(cur_fd);
         return 0;
     }
+
 #else
-    if (write(cur_fd, rply, sizeof(struct cnid_dbd_rply)) != sizeof(struct cnid_dbd_rply)) {
-        LOG(log_error, logtype_cnid, "error writing message header: %s", strerror(errno));
+
+    if (write(cur_fd, rply, sizeof(struct cnid_dbd_rply)) != sizeof(
+                struct cnid_dbd_rply)) {
+        LOG(log_error, logtype_cnid, "error writing message header: %s",
+            strerror(errno));
         invalidate_fd(cur_fd);
         return 0;
     }
+
     if (write(cur_fd, rply->name, rply->namelen) != rply->namelen) {
         LOG(log_error, logtype_cnid, "error writing message name: %s", strerror(errno));
         invalidate_fd(cur_fd);
         return 0;
     }
+
 #endif
     return 1;
 }

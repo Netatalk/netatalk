@@ -28,4 +28,4 @@ typedef struct {
     char *unprivileged_user;
 } macip_options;
 
-macip_options * read_options (const char *);
+macip_options *read_options (const char *);

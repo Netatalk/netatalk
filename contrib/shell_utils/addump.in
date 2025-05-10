@@ -759,7 +759,7 @@ sub bedump  {
     for ( $i=0 ; $i < $len ; $i++ ) {
         read(INFILE,$buf,1);
         $bytedata[$i] = unpack("C", $buf );
-          $value += $bytedata[$i] << (($len - $i -1) * 8) ;
+          $value += $bytedata[$i] << (($len - $i - 1) * 8) ;
     }
 
     for ( $i=0 ; $i < $len ; $i++ ) {

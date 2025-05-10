@@ -10,7 +10,7 @@
 
 struct interface {
     struct interface	*i_next;
-    char		i_name[ IFNAMSIZ ];
+    char		i_name[IFNAMSIZ];
     int			i_flags;
     int			i_time;
     int                 i_group; /* for isolated appletalk domains */
@@ -51,6 +51,6 @@ struct interface {
 
 extern struct interface	*interfaces;
 extern struct interface	*ciface;
-struct interface	*newiface (const char *);
+struct interface	*newiface(const char *);
 
 #endif /* ATALKD_INTERFACE_H */

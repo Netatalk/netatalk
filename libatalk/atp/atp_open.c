@@ -52,36 +52,35 @@ ATP atp_open(uint8_t port, const struct at_addr *saddr)
     ATP			atp;
     struct timeval	tv;
     int			pid;
-
 #ifdef EBUG
-    printf( "<%d> atp_open\n", getpid());
+    printf("<%d> atp_open\n", getpid());
 #endif /* EBUG */
-
     memset(&addr, 0, sizeof(addr));
     addr.sat_port = port;
-    if (saddr)
-      memcpy(&addr.sat_addr, saddr, sizeof(struct at_addr));
-    if ((s = netddp_open(&addr, NULL)) < 0)
-        return NULL;
 
-    if (( atp = (ATP) atp_alloc_buf()) == NULL ) {
+    if (saddr) {
+        memcpy(&addr.sat_addr, saddr, sizeof(struct at_addr));
+    }
+
+    if ((s = netddp_open(&addr, NULL)) < 0) {
+        return NULL;
+    }
+
+    if ((atp = (ATP) atp_alloc_buf()) == NULL) {
         netddp_close(s);
-	return NULL;
+        return NULL;
     }
 
     /* initialize the atp handle */
-    memset(atp, 0, sizeof( struct atp_handle ));
+    memset(atp, 0, sizeof(struct atp_handle));
     memcpy(&atp->atph_saddr, &addr, sizeof(addr));
-
     atp->atph_socket = s;
     atp->atph_reqto = -1;
-    gettimeofday( &tv, (struct timezone *) 0 );
+    gettimeofday(&tv, (struct timezone *) 0);
     pid = getpid();
-    atp->atph_tid = tv.tv_sec ^ ((( pid << 8 ) & 0xff00 ) | ( pid >> 8 ));
-
+    atp->atph_tid = tv.tv_sec ^ (((pid << 8) & 0xff00) | (pid >> 8));
 #ifdef EBUG
-srandom( tv.tv_sec );
+    srandom(tv.tv_sec);
 #endif /* EBUG */
-
     return atp;
 }

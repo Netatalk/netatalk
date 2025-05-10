@@ -20,23 +20,22 @@ struct comstate	*comstate;
 
 char	*comcont = "%%+";
 
-void compop( void )
+void compop(void)
 {
     struct comstate	*cs;
-
     cs = comstate;
     comstate = cs->cs_prev;
-    free( cs );
+    free(cs);
 }
 
 void compush(struct papd_comment *comment)
 {
     struct comstate	*cs;
 
-    if (( cs = (struct comstate *)malloc( sizeof( struct comstate ))) ==
-	    NULL ) {
-	LOG(log_error, logtype_papd, "malloc: %s", strerror(errno) );
-	exit( 1 );
+    if ((cs = (struct comstate *)malloc(sizeof(struct comstate))) ==
+            NULL) {
+        LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
+        exit(1);
     }
 
     cs->cs_comment = comment;
@@ -49,51 +48,55 @@ int comswitch(struct papd_comment *comments, int (*handler)())
 {
     struct papd_comment	*c, *comment = NULL;
 
-    for ( c = comments; c->c_begin; c++ ) {
-	if ( c->c_handler == handler ) {
-	    comment = c;
-	}
+    for (c = comments; c->c_begin; c++) {
+        if (c->c_handler == handler) {
+            comment = c;
+        }
     }
-    if ( comment == NULL || comment->c_handler != handler ) {
-	LOG(log_error, logtype_papd, "comswitch: can't find handler!" );
-	return -1;
+
+    if (comment == NULL || comment->c_handler != handler) {
+        LOG(log_error, logtype_papd, "comswitch: can't find handler!");
+        return -1;
     }
+
     compop();
-    compush( comment );
+    compush(comment);
     return 0;
 }
 
-int comcmp( char *start, char *stop, char *str,int how)
+int comcmp(char *start, char *stop, char *str, int how)
 {
     int		cc, len;
-
     len = stop - start;
-    cc = strlen( str );
-    if ( how & C_FULL ) {
-	if ( (cc == len) && (strncmp( str, start, cc ) == 0) ) {
-	    return 0;
-	}
+    cc = strlen(str);
+
+    if (how & C_FULL) {
+        if ((cc == len) && (strncmp(str, start, cc) == 0)) {
+            return 0;
+        }
     } else {
-	if ( (cc <= len) && (strncmp( str, start, cc ) == 0) ) {
-	    return 0;
-	}
+        if ((cc <= len) && (strncmp(str, start, cc) == 0)) {
+            return 0;
+        }
     }
 
     return 1;
 }
 
-struct papd_comment *commatch( char *start, char *stop, struct papd_comment comments[])
+struct papd_comment *commatch(char *start, char *stop,
+                              struct papd_comment comments[])
 {
     struct papd_comment	*comment;
 
-    for ( comment = comments; comment->c_begin; comment++ ) {
-	if ( comcmp( start, stop, comment->c_begin, comment->c_flags ) == 0 ) {
-	    break;
-	}
+    for (comment = comments; comment->c_begin; comment++) {
+        if (comcmp(start, stop, comment->c_begin, comment->c_flags) == 0) {
+            break;
+        }
     }
-    if ( comment->c_begin ) {
-	return comment;
+
+    if (comment->c_begin) {
+        return comment;
     } else {
-	return NULL;
+        return NULL;
     }
 }

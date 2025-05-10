@@ -93,21 +93,26 @@ enum {
 /****************************************************************************************
  * Wrappers for native EA functions taken from Samba
  ****************************************************************************************/
-ssize_t sys_getxattr (const char *path, const char *name, void *value, size_t size);
-ssize_t sys_lgetxattr (const char *path, const char *name, void *value, size_t size);
-ssize_t sys_fgetxattr (int filedes, const char *name, void *value, size_t size);
-ssize_t sys_listxattr (const char *path, char *list, size_t size);
-ssize_t sys_llistxattr (const char *path, char *list, size_t size);
+ssize_t sys_getxattr(const char *path, const char *name, void *value,
+                     size_t size);
+ssize_t sys_lgetxattr(const char *path, const char *name, void *value,
+                      size_t size);
+ssize_t sys_fgetxattr(int filedes, const char *name, void *value, size_t size);
+ssize_t sys_listxattr(const char *path, char *list, size_t size);
+ssize_t sys_llistxattr(const char *path, char *list, size_t size);
 /* ssize_t sys_flistxattr (int filedes, char *list, size_t size); */
-ssize_t sys_flistxattr (int filedes, const char *path, char *list, size_t size);
-int sys_removexattr (const char *path, const char *name);
-int sys_lremovexattr (const char *path, const char *name);
+ssize_t sys_flistxattr(int filedes, const char *path, char *list, size_t size);
+int sys_removexattr(const char *path, const char *name);
+int sys_lremovexattr(const char *path, const char *name);
 /* int sys_fremovexattr (int filedes, const char *name); */
-int sys_fremovexattr (int filedes, const char *path, const char *name);
-int sys_setxattr (const char *path, const char *name, const void *value, size_t size, int flags);
-int sys_lsetxattr (const char *path, const char *name, const void *value, size_t size, int flags);
-int sys_fsetxattr (int filedes, const char *name, const void *value, size_t size, int flags);
-int sys_copyxattr (const char *src, const char *dst);
+int sys_fremovexattr(int filedes, const char *path, const char *name);
+int sys_setxattr(const char *path, const char *name, const void *value,
+                 size_t size, int flags);
+int sys_lsetxattr(const char *path, const char *name, const void *value,
+                  size_t size, int flags);
+int sys_fsetxattr(int filedes, const char *name, const void *value, size_t size,
+                  int flags);
+int sys_copyxattr(const char *src, const char *dst);
 int sys_getxattrfd(int fd, const char *uname, int oflag, ...);
 
 /****************************************************************************************
@@ -121,11 +126,11 @@ int sys_getxattrfd(int fd, const char *uname, int oflag, ...);
 
 typedef enum {
     /* ea_open flags */
-    EA_CREATE    = (1<<1),      /* create if not existing on ea_open */
-    EA_RDONLY    = (1<<2),      /* open read only */
-    EA_RDWR      = (1<<3),      /* open read/write */
+    EA_CREATE    = (1 << 1),    /* create if not existing on ea_open */
+    EA_RDONLY    = (1 << 2),    /* open read only */
+    EA_RDWR      = (1 << 3),    /* open read/write */
     /* ea_open internal flags */
-    EA_DIR       = (1<<4)       /* ea header file is for a dir, ea_open adds it as appropriate */
+    EA_DIR       = (1 << 4)     /* ea header file is for a dir, ea_open adds it as appropriate */
 } eaflags_t;
 
 #define EA_MAGIC_OFF   0
@@ -143,24 +148,37 @@ typedef enum {
  */
 
 struct ea_entry {
-    size_t       ea_namelen; /* len of ea_name without terminating 0 i.e. strlen(ea_name)*/
-    size_t       ea_size;    /* size of EA*/
-    char         *ea_name;   /* name of the EA */
+    /* len of ea_name without terminating 0 i.e. strlen(ea_name)*/
+    size_t ea_namelen;
+    /* size of EA */
+    size_t ea_size;
+    /* name of the EA */
+    char *ea_name;
 };
 
 /* We read the on-disk data into *ea_data and parse it into this*/
 struct ea {
-    uint32_t             ea_inited;       /* needed for interfacing ea_open w. ea_close */
-    const struct vol     *vol;            /* vol handle, ea_close needs it */
-    int                  dirfd;           /* for *at (cf openat) semantics, -1 means ignore */
-    char                 *filename;       /* name of file, needed by ea_close too */
-    unsigned int         ea_count;        /* number of EAs in ea_entries array */
-    struct ea_entry      (*ea_entries)[]; /* malloced and realloced as needed by ea_count*/
-    int                  ea_fd;           /* open fd for ea_data */
-    eaflags_t            ea_flags;        /* flags */
-    size_t               ea_size;         /* size of header file = size of ea_data buffer */
-    char                 *ea_data;        /* pointer to buffer into that we actually *
-                                           * read the disc file into                 */
+    /* needed for interfacing ea_open w. ea_close */
+    uint32_t ea_inited;
+    /* vol handle, ea_close needs it */
+    const struct vol *vol;
+    /* for *at (cf openat) semantics, -1 means ignore */
+    int dirfd;
+    /* name of file, needed by ea_close too */
+    char *filename;
+    /* number of EAs in ea_entries array */
+    unsigned int ea_count;
+    /* malloced and realloced as needed by ea_count*/
+    struct ea_entry(*ea_entries)[];
+    /* open fd for ea_data */
+    int ea_fd;
+    /* flags */
+    eaflags_t ea_flags;
+    /* size of header file = size of ea_data buffer */
+    size_t ea_size;
+    /* pointer to buffer into that we actually *
+     * read the disc file into                 */
+    char *ea_data;
 };
 
 /* On-disk format, just for reference ! */
@@ -205,15 +223,16 @@ extern int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE);
 
 /* dbd needs access to these */
 extern int ea_open(const struct vol * restrict vol,
-                   const char * restrict uname,
+                   const char *restrict uname,
                    eaflags_t eaflags,
                    struct ea * restrict ea);
 extern int ea_openat(const struct vol * restrict vol,
                      int dirfd,
-                     const char * restrict uname,
+                     const char *restrict uname,
                      eaflags_t eaflags,
                      struct ea * restrict ea);
 extern int ea_close(struct ea * restrict ea);
-extern char *ea_path(const struct ea * restrict ea, const char * restrict eaname, int macname);
+extern char *ea_path(const struct ea * restrict ea,
+                     const char *restrict eaname, int macname);
 
 #endif /* ATALK_EA_H */

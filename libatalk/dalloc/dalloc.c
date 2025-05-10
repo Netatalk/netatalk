@@ -29,7 +29,7 @@
 
 
   Create an dalloc object and add elementes of different type
- 
+
   Allocate a new talloc context
     TALLOC_CTX *mem_ctx = talloc_new(NULL);
   Create a new dalloc object
@@ -125,7 +125,8 @@
 #include <atalk/dalloc.h>
 
 /* Use dalloc_add_copy() macro, not this function */
-int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_t size)
+int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
+                            size_t size)
 {
     if (talloc_chunk) {
         /* Called from dalloc_add_copy() macro */
@@ -134,7 +135,8 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_
                                              void *,
                                              talloc_array_length(dd->dd_talloc_array) + 1);
         memcpy(talloc_chunk, obj, size);
-        dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = talloc_chunk;
+        dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] =
+            talloc_chunk;
     } else {
         /* Called from dalloc_add() macro */
         dd->dd_talloc_array = talloc_realloc(dd,
@@ -142,8 +144,8 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj, size_
                                              void *,
                                              talloc_array_length(dd->dd_talloc_array) + 1);
         dd->dd_talloc_array[talloc_array_length(dd->dd_talloc_array) - 1] = obj;
-
     }
+
     return 0;
 }
 
@@ -161,22 +163,24 @@ void *dalloc_get(const DALLOC_CTX *d, ...)
     va_list args;
     const char *type;
     int elem;
-
     va_start(args, d);
     type = va_arg(args, const char *);
 
     while (STRCMP(type, ==, "DALLOC_CTX")) {
         elem = va_arg(args, int);
+
         if (elem >= talloc_array_length(d->dd_talloc_array)) {
             LOG(log_error, logtype_sl, "dalloc_get(%s): bound check error: %d >= %d",
                 type, elem >= talloc_array_length(d->dd_talloc_array));
             EC_FAIL;
         }
+
         d = d->dd_talloc_array[elem];
         type = va_arg(args, const char *);
     }
 
     elem = va_arg(args, int);
+
     if (elem >= talloc_array_length(d->dd_talloc_array)) {
         LOG(log_error, logtype_sl, "dalloc_get(%s): bound check error: %d >= %d",
             type, elem,  talloc_array_length(d->dd_talloc_array));
@@ -189,10 +193,12 @@ void *dalloc_get(const DALLOC_CTX *d, ...)
     }
 
     va_end(args);
-
 EC_CLEANUP:
-    if (ret != 0)
+
+    if (ret != 0) {
         p = NULL;
+    }
+
     return p;
 }
 
@@ -203,7 +209,6 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
     va_list args;
     const char *type = NULL;
     int elem;
-
     va_start(args, d);
     type = va_arg(args, const char *);
 
@@ -220,25 +225,30 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
                 talloc_get_name(d->dd_talloc_array[elem]));
             EC_FAIL;
         }
+
         if (STRCMP((char *)d->dd_talloc_array[elem], ==, type)) {
             p = d->dd_talloc_array[elem + 1];
             break;
         }
     }
+
     if (p == NULL) {
         EC_FAIL;
     }
 
     type = va_arg(args, const char *);
+
     if (STRCMP(talloc_get_name(p), !=, type)) {
         p = NULL;
     }
 
-
 EC_CLEANUP:
     va_end(args);
-    if (ret != 0)
+
+    if (ret != 0) {
         p = NULL;
+    }
+
     return p;
 }
 
@@ -246,16 +256,18 @@ char *dalloc_strdup(const void *ctx, const char *string)
 {
     EC_INIT;
     char *p;
-
-    EC_NULL( p = talloc_strdup(ctx, string) );
+    EC_NULL(p = talloc_strdup(ctx, string));
     talloc_set_name(p, "char *");
-
 EC_CLEANUP:
+
     if (ret != 0) {
-        if (p)
+        if (p) {
             talloc_free(p);
+        }
+
         p = NULL;
     }
+
     return p;
 }
 
@@ -263,15 +275,17 @@ char *dalloc_strndup(const void *ctx, const char *string, size_t n)
 {
     EC_INIT;
     char *p;
-
-    EC_NULL( p = talloc_strndup(ctx, string, n) );
+    EC_NULL(p = talloc_strndup(ctx, string, n));
     talloc_set_name(p, "char *");
-
 EC_CLEANUP:
+
     if (ret != 0) {
-        if (p)
+        if (p) {
             talloc_free(p);
+        }
+
         p = NULL;
     }
+
     return p;
 }

@@ -91,64 +91,79 @@ static	int hopcount;		/* detect infinite loops in termcap, init 0 */
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int getprent( char *cap, char *bp, int bufsize)
+int getprent(char *cap, char *bp, int bufsize)
 {
-	int c;
-	int skip = 0;
-	int i;
+    int c;
+    int skip = 0;
+    int i;
 
-	if (pfp == NULL && (pfp = fopen( cap, "r")) == NULL)
-		return -1;
-	tbuf = bp;
-	i = 0;
-	for (;;) {
-		switch (c = getc(pfp)) {
-		case EOF:
-                        if (bp != tbuf) {
-				*bp = '\0';
-				return 1;
-			}
-			fclose(pfp);
-			pfp = NULL;
-			return 0;
-		case '\n':
-			if (bp == tbuf) {
-				skip = 0;
-				continue;
-			}
-			if (bp[-1] == '\\') {
-				bp--;
-				continue;
-			}
-			*bp = '\0';
-			return 1;
-		case '#':
-			if (bp == tbuf)
-				skip++;
-		default:
-			if (skip)
-				continue;
-			if (bp >= tbuf + BUFSIZ) {
-				fprintf(stderr, "Termcap entry too long\n");
-				*bp = '\0';
-				return 1;
-			}
-			*bp++ = c;
-			if (++i >= bufsize) {
-				fprintf(stderr, "config file too large\n");
-				fclose(pfp);
-				pfp = NULL;
-				*bp = '\0';
-				return 1;
-			}
-		}
-	}
+    if (pfp == NULL && (pfp = fopen(cap, "r")) == NULL) {
+        return -1;
+    }
+
+    tbuf = bp;
+    i = 0;
+
+    for (;;) {
+        switch (c = getc(pfp)) {
+        case EOF:
+            if (bp != tbuf) {
+                *bp = '\0';
+                return 1;
+            }
+
+            fclose(pfp);
+            pfp = NULL;
+            return 0;
+
+        case '\n':
+            if (bp == tbuf) {
+                skip = 0;
+                continue;
+            }
+
+            if (bp[-1] == '\\') {
+                bp--;
+                continue;
+            }
+
+            *bp = '\0';
+            return 1;
+
+        case '#':
+            if (bp == tbuf) {
+                skip++;
+            }
+
+        default:
+            if (skip) {
+                continue;
+            }
+
+            if (bp >= tbuf + BUFSIZ) {
+                fprintf(stderr, "Termcap entry too long\n");
+                *bp = '\0';
+                return 1;
+            }
+
+            *bp++ = c;
+
+            if (++i >= bufsize) {
+                fprintf(stderr, "config file too large\n");
+                fclose(pfp);
+                pfp = NULL;
+                *bp = '\0';
+                return 1;
+            }
+        }
+    }
 }
 
 void endprent(void)
 {
-	if (pfp != NULL)
-		fclose(pfp);
+    if (pfp != NULL) {
+        fclose(pfp);
+    }
 }
 
 /*
@@ -161,85 +176,109 @@ void endprent(void)
  */
 int tgetent(char *cap, char *bp, const char *name)
 {
-	char *cp;
-	int c;
-	int i = 0;
-	int cnt = 0;
-	char ibuf[BUFSIZ];
-	int tf;
-	int skip;
+    char *cp;
+    int c;
+    int i = 0;
+    int cnt = 0;
+    char ibuf[BUFSIZ];
+    int tf;
+    int skip;
 #ifndef V6
-	cp = getenv("TERMCAP");
-	/*
-	 * TERMCAP can have one of two things in it. It can be the
-	 * name of a file to use instead of /etc/termcap. In this
-	 * case it better start with a "/". Or it can be an entry to
-	 * use so we don't have to read the file. In this case it
-	 * has to already have the newlines crunched out.
-	 */
-	if (cp && *cp) {
-		if (*cp!='/') {
-			cp2 = getenv("TERM");
-			if (cp2==(char *) 0 || strcmp(name,cp2)==0) {
-				strcpy(bp,cp);
-				return tnchktc(cap);
-			} else {
-				tf = open(cap, 0);
-			}
-		} else
-			tf = open(cp, 0);
-	}
-	if (tf==0)
-		tf = open(cap, 0);
-#else /* V6 */
-	tf = open(cap, 0);
-#endif /* V6 */
-	if (tf < 0)
-		return -1;
-	for (;;) {
-		cp = bp;
-		skip = 0;
-		for (;;) {
-			if (i == cnt) {
-				cnt = read(tf, ibuf, BUFSIZ);
-				if (cnt <= 0) {
-					close(tf);
-					return 0;
-				}
-				i = 0;
-			}
-			c = ibuf[i++];
-			if (c == '\n') {
-				if (!skip && cp > bp && cp[-1] == '\\') {
-					cp--;
-					continue;
-				}
-				skip = 0;
-				if (cp == bp)
-					continue;
-				else
-					break;
-			}
-			if (c == '#' && cp == bp)
-				skip++;
-			if (skip)
-				continue;
-			if (cp >= bp + BUFSIZ) {
-				fprintf(stderr, "Termcap entry too long\n");
-				break;
-			} else
-				*cp++ = c;
-		}
-		*cp = 0;
+    cp = getenv("TERMCAP");
 
-		/*
-		 * The real work for the match.
-		 */
-		if (tnamatch(name)) {
-			close(tf);
-			return tnchktc(cap);
-		}
-	}
+    /*
+     * TERMCAP can have one of two things in it. It can be the
+     * name of a file to use instead of /etc/termcap. In this
+     * case it better start with a "/". Or it can be an entry to
+     * use so we don't have to read the file. In this case it
+     * has to already have the newlines crunched out.
+     */
+    if (cp && *cp) {
+        if (*cp != '/') {
+            cp2 = getenv("TERM");
+
+            if (cp2 == (char *) 0 || strcmp(name, cp2) == 0) {
+                strcpy(bp, cp);
+                return tnchktc(cap);
+            } else {
+                tf = open(cap, 0);
+            }
+        } else {
+            tf = open(cp, 0);
+        }
+    }
+
+    if (tf == 0) {
+        tf = open(cap, 0);
+    }
+
+#else /* V6 */
+    tf = open(cap, 0);
+#endif /* V6 */
+
+    if (tf < 0) {
+        return -1;
+    }
+
+    for (;;) {
+        cp = bp;
+        skip = 0;
+
+        for (;;) {
+            if (i == cnt) {
+                cnt = read(tf, ibuf, BUFSIZ);
+
+                if (cnt <= 0) {
+                    close(tf);
+                    return 0;
+                }
+
+                i = 0;
+            }
+
+            c = ibuf[i++];
+
+            if (c == '\n') {
+                if (!skip && cp > bp && cp[-1] == '\\') {
+                    cp--;
+                    continue;
+                }
+
+                skip = 0;
+
+                if (cp == bp) {
+                    continue;
+                } else {
+                    break;
+                }
+            }
+
+            if (c == '#' && cp == bp) {
+                skip++;
+            }
+
+            if (skip) {
+                continue;
+            }
+
+            if (cp >= bp + BUFSIZ) {
+                fprintf(stderr, "Termcap entry too long\n");
+                break;
+            } else {
+                *cp++ = c;
+            }
+        }
+
+        *cp = 0;
+
+        /*
+         * The real work for the match.
+         */
+        if (tnamatch(name)) {
+            close(tf);
+            return tnchktc(cap);
+        }
+    }
 }
 
 /*
@@ -252,56 +291,72 @@ int tgetent(char *cap, char *bp, const char *name)
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int tnchktc( char *cap)
+int tnchktc(char *cap)
 {
-	char *p;
-	char *q;
-	char tcname[16];	/* name of similar terminal */
-	char *tcbuf = calloc(1, BUFSIZ);
-	if (tcbuf == NULL) {
-		return 0;
-	}
-	char *holdtbuf = tbuf;
-	int l;
+    char *p;
+    char *q;
+    /* name of similar terminal */
+    char tcname[16];
+    char *tcbuf = calloc(1, BUFSIZ);
 
-	p = tbuf + strlen(tbuf) - 2;	/* before the last colon */
-	while (*--p != ':')
-		if (p < tbuf) {
-			fprintf(stderr, "Bad termcap entry\n");
-			free(tcbuf);
-			return 0;
-		}
-	p++;
-	/* p now points to beginning of last field */
-	if (p[0] != 't' || p[1] != 'c') {
-		free(tcbuf);
-		return 1;
-	}
-	strcpy(tcname,p+3);
-	q = tcname;
-	while (q && *q != ':')
-		q++;
-	*q = 0;
-	if (++hopcount > MAXHOP) {
-		fprintf(stderr, "Infinite tc= loop\n");
-		free(tcbuf);
-		return 0;
-	}
-	if (tgetent( cap, tcbuf, tcname) != 1) {
-		free(tcbuf);
-		return 0;
-	}
-	for (q=tcbuf; q && *q != ':'; q++)
-		;
-	l = p - holdtbuf + strlen(q);
-	if (l > BUFSIZ) {
-		fprintf(stderr, "Termcap entry too long\n");
-		q[BUFSIZ - (p - tbuf)] = 0;
-	}
-	strcpy(p, q+1);
-	free(tcbuf);
-	tbuf = holdtbuf;
-	return 1;
+    if (tcbuf == NULL) {
+        return 0;
+    }
+
+    char *holdtbuf = tbuf;
+    int l;
+    /* before the last colon */
+    p = tbuf + strlen(tbuf) - 2;
+
+    while (*--p != ':')
+        if (p < tbuf) {
+            fprintf(stderr, "Bad termcap entry\n");
+            free(tcbuf);
+            return 0;
+        }
+
+    p++;
+
+    /* p now points to beginning of last field */
+    if (p[0] != 't' || p[1] != 'c') {
+        free(tcbuf);
+        return 1;
+    }
+
+    strcpy(tcname, p + 3);
+    q = tcname;
+
+    while (q && *q != ':') {
+        q++;
+    }
+
+    *q = 0;
+
+    if (++hopcount > MAXHOP) {
+        fprintf(stderr, "Infinite tc= loop\n");
+        free(tcbuf);
+        return 0;
+    }
+
+    if (tgetent(cap, tcbuf, tcname) != 1) {
+        free(tcbuf);
+        return 0;
+    }
+
+    for (q = tcbuf; q && *q != ':'; q++)
+        ;
+
+    l = p - holdtbuf + strlen(q);
+
+    if (l > BUFSIZ) {
+        fprintf(stderr, "Termcap entry too long\n");
+        q[BUFSIZ - (p - tbuf)] = 0;
+    }
+
+    strcpy(p, q + 1);
+    free(tcbuf);
+    tbuf = holdtbuf;
+    return 1;
 }
 
 /*
@@ -312,23 +367,33 @@ int tnchktc( char *cap)
  */
 int tnamatch(const char *np)
 {
-	const char *Np;
-	const char *Bp;
+    const char *Np;
+    const char *Bp;
+    Bp = tbuf;
 
-	Bp = tbuf;
-	if (*Bp == '#')
-		return 0;
-	for (;;) {
-		for (Np = np; *Np && *Bp == *Np; Bp++, Np++)
-			continue;
-		if (*Np == 0 && (*Bp == '|' || *Bp == ':' || *Bp == 0))
-			return 1;
-		while (*Bp && *Bp != ':' && *Bp != '|')
-			Bp++;
-		if (*Bp == 0 || *Bp == ':')
-			return 0;
-		Bp++;
-	}
+    if (*Bp == '#') {
+        return 0;
+    }
+
+    for (;;) {
+        for (Np = np; *Np && *Bp == *Np; Bp++, Np++) {
+            continue;
+        }
+
+        if (*Np == 0 && (*Bp == '|' || *Bp == ':' || *Bp == 0)) {
+            return 1;
+        }
+
+        while (*Bp && *Bp != ':' && *Bp != '|') {
+            Bp++;
+        }
+
+        if (*Bp == 0 || *Bp == ':') {
+            return 0;
+        }
+
+        Bp++;
+    }
 }
 
 /*
@@ -338,12 +403,15 @@ int tnamatch(const char *np)
  */
 static char *tskip(char *bp)
 {
+    while (*bp && *bp != ':') {
+        bp++;
+    }
 
-	while (*bp && *bp != ':')
-		bp++;
-	while (*bp && *bp == ':')
-		bp++;
-	return bp;
+    while (*bp && *bp == ':') {
+        bp++;
+    }
+
+    return bp;
 }
 
 /*
@@ -356,29 +424,44 @@ static char *tskip(char *bp)
  */
 int tgetnum(char *id)
 {
-	int i;
-	int base;
-	char *bp = tbuf;
+    int i;
+    int base;
+    char *bp = tbuf;
 
-	for (;;) {
-		bp = tskip(bp);
-		if (*bp == 0)
-			return -1;
-		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
-			continue;
-		if (*bp == '@')
-			return -1;
-		if (*bp != '#')
-			continue;
-		bp++;
-		base = 10;
-		if (*bp == '0')
-			base = 8;
-		i = 0;
-		while (isdigit(*bp))
-			i *= base, i += *bp++ - '0';
-		return i;
-	}
+    for (;;) {
+        bp = tskip(bp);
+
+        if (*bp == 0) {
+            return -1;
+        }
+
+        if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1]) {
+            continue;
+        }
+
+        if (*bp == '@') {
+            return -1;
+        }
+
+        if (*bp != '#') {
+            continue;
+        }
+
+        bp++;
+        base = 10;
+
+        if (*bp == '0') {
+            base = 8;
+        }
+
+        i = 0;
+
+        while (isdigit(*bp)) {
+            i *= base, i += *bp++ - '0';
+        }
+
+        return i;
+    }
 }
 
 /*
@@ -389,19 +472,23 @@ int tgetnum(char *id)
  */
 int tgetflag(char *id)
 {
-	char *bp = tbuf;
+    char *bp = tbuf;
 
-	for (;;) {
-		bp = tskip(bp);
-		if (!*bp)
-			return 0;
-		if (*bp++ == id[0] && *bp != 0 && *bp++ == id[1]) {
-			if (!*bp || *bp == ':')
-				return 1;
-			else if (*bp == '@')
-				return 0;
-		}
-	}
+    for (;;) {
+        bp = tskip(bp);
+
+        if (!*bp) {
+            return 0;
+        }
+
+        if (*bp++ == id[0] && *bp != 0 && *bp++ == id[1]) {
+            if (!*bp || *bp == ':') {
+                return 1;
+            } else if (*bp == '@') {
+                return 0;
+            }
+        }
+    }
 }
 
 /*
@@ -411,44 +498,52 @@ int tgetflag(char *id)
 static char *
 tdecode(char *str, char **area)
 {
-	char *cp;
-	int c;
-	const char *dp;
-	int i;
+    char *cp;
+    int c;
+    const char *dp;
+    int i;
+    cp = *area;
 
-	cp = *area;
-	while ((c = *str++) && c != ':') {
-		switch (c) {
+    while ((c = *str++) && c != ':') {
+        switch (c) {
+        case '^':
+            c = *str++ & 037;
+            break;
 
-		case '^':
-			c = *str++ & 037;
-			break;
-
-		case '\\':
-			dp = "E\033^^\\\\::n\nr\rt\tb\bf\f";
-			c = *str++;
+        case '\\':
+            dp = "E\033^^\\\\::n\nr\rt\tb\bf\f";
+            c = *str++;
 nextc:
-			if (*dp++ == c) {
-				c = *dp++;
-				break;
-			}
-			dp++;
-			if (*dp)
-				goto nextc;
-			if (isdigit(c)) {
-				c -= '0', i = 2;
-				do
-					c <<= 3, c |= *str++ - '0';
-				while (--i && isdigit(*str));
-			}
-			break;
-		}
-		*cp++ = c;
-	}
-	*cp++ = 0;
-	str = *area;
-	*area = cp;
-	return str;
+
+            if (*dp++ == c) {
+                c = *dp++;
+                break;
+            }
+
+            dp++;
+
+            if (*dp) {
+                goto nextc;
+            }
+
+            if (isdigit(c)) {
+                c -= '0', i = 2;
+
+                do {
+                    c <<= 3, c |= *str++ - '0';
+                } while (--i && isdigit(*str));
+            }
+
+            break;
+        }
+
+        *cp++ = c;
+    }
+
+    *cp++ = 0;
+    str = *area;
+    *area = cp;
+    return str;
 }
 
 /*
@@ -462,68 +557,85 @@ nextc:
 char *
 tgetstr(char *id, char **area)
 {
-	char *bp = tbuf;
+    char *bp = tbuf;
 
-	for (;;) {
-		bp = tskip(bp);
-		if (!*bp)
-			return NULL;
-		if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1])
-			continue;
-		if (*bp == '@')
-			return NULL;
-		if (*bp != '=')
-			continue;
-		bp++;
-		return tdecode(bp, area);
-	}
+    for (;;) {
+        bp = tskip(bp);
+
+        if (!*bp) {
+            return NULL;
+        }
+
+        if (*bp++ != id[0] || *bp == 0 || *bp++ != id[1]) {
+            continue;
+        }
+
+        if (*bp == '@') {
+            return NULL;
+        }
+
+        if (*bp != '=') {
+            continue;
+        }
+
+        bp++;
+        return tdecode(bp, area);
+    }
 }
 
 static char *
 decodename(char *str, char **area, int bufsize)
 {
-	char *cp;
-	int c;
-	const char *dp;
-	int i;
+    char *cp;
+    int c;
+    const char *dp;
+    int i;
+    cp = *area;
 
-	cp = *area;
-	while ((c = *str++) && --bufsize && c != ':' && c != '|' ) {
-		switch (c) {
+    while ((c = *str++) && --bufsize && c != ':' && c != '|') {
+        switch (c) {
+        case '^':
+            c = *str++ & 037;
+            break;
 
-		case '^':
-			c = *str++ & 037;
-			break;
-
-		case '\\':
-			dp = "E\033^^\\\\::n\nr\rt\tb\bf\f";
-			c = *str++;
+        case '\\':
+            dp = "E\033^^\\\\::n\nr\rt\tb\bf\f";
+            c = *str++;
 nextc:
-			if (*dp++ == c) {
-				c = *dp++;
-				break;
-			}
-			dp++;
-			if (*dp)
-				goto nextc;
-			if (isdigit(c)) {
-				c -= '0', i = 2;
-				do
-					c <<= 3, c |= *str++ - '0';
-				while (--i && isdigit(*str));
-			}
-			break;
-		}
-		*cp++ = c;
-	}
-	*cp++ = 0;
-	str = *area;
-	*area = cp;
-	return str;
+
+            if (*dp++ == c) {
+                c = *dp++;
+                break;
+            }
+
+            dp++;
+
+            if (*dp) {
+                goto nextc;
+            }
+
+            if (isdigit(c)) {
+                c -= '0', i = 2;
+
+                do {
+                    c <<= 3, c |= *str++ - '0';
+                } while (--i && isdigit(*str));
+            }
+
+            break;
+        }
+
+        *cp++ = c;
+    }
+
+    *cp++ = 0;
+    str = *area;
+    *area = cp;
+    return str;
 }
 
 char *
 getpname(char **area, int bufsize)
 {
-	return decodename( tbuf, area, bufsize);
+    return decodename(tbuf, area, bufsize);
 }

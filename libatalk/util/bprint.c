@@ -14,35 +14,35 @@ static const char	hexdig[] = "0123456789ABCDEF";
 #define BPXLEN	50
 #define BPALEN	18
 
-void bprint( char *data, int len )
+void bprint(char *data, int len)
 {
-    char	xout[ BPXLEN ], aout[ BPALEN ];
+    char	xout[BPXLEN], aout[BPALEN];
     int         i;
+    memset(xout, 0, BPXLEN);
+    memset(aout, 0, BPALEN);
 
-    memset( xout, 0, BPXLEN );
-    memset( aout, 0, BPALEN );
+    for (i = 0; len; len--, data++, i++) {
+        if (i == 16) {
+            printf("%-48s\t%-16s\n", xout, aout);
+            memset(xout, 0, BPXLEN);
+            memset(aout, 0, BPALEN);
+            i = 0;
+        }
 
-    for ( i = 0; len; len--, data++, i++ ) {
-	if ( i == 16 ) {
-	    printf( "%-48s\t%-16s\n", xout, aout );
-	    memset( xout, 0, BPXLEN );
-	    memset( aout, 0, BPALEN );
-	    i = 0;
-	}
+        if (isprint((unsigned char) * data)) {
+            aout[i] = *data;
+        } else {
+            aout[i] = '.';
+        }
 
-	if (isprint( (unsigned char)*data )) {
-	    aout[ i ] = *data;
-	} else {
-	    aout[ i ] = '.';
-	}
-
-	xout[ i*3 ] = hexdig[ ( *data & 0xf0 ) >> 4 ];
-	xout[ (i*3) + 1 ] = hexdig[ *data & 0x0f ];
-	xout[ (i*3) + 2 ] = ' ';
+        xout[i * 3] = hexdig[(*data & 0xf0) >> 4];
+        xout[(i * 3) + 1] = hexdig[*data & 0x0f];
+        xout[(i * 3) + 2] = ' ';
     }
 
-    if ( i )
-	printf( "%-48s\t%-16s\n", xout, aout );
+    if (i) {
+        printf("%-48s\t%-16s\n", xout, aout);
+    }
 
     printf("(end)\n");
 }

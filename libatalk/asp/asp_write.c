@@ -35,26 +35,25 @@
 
 int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
 {
-    struct iovec	iov[ ASP_MAXPACKETS ];
+    struct iovec	iov[ASP_MAXPACKETS];
     struct atp_block	atpb;
     char	        *p;
     int			iovcnt = ASP_MAXPACKETS;
     uint16_t		blen, seq;
     uint8_t		oport;
-
     p = buf;
     *p++ = ASPFUNC_WRTCONT;
     *p++ = asp->asp_sid;
-    seq = htons( asp->asp_seq );
-    memcpy( p, &seq, sizeof(seq));
+    seq = htons(asp->asp_seq);
+    memcpy(p, &seq, sizeof(seq));
     p += sizeof(seq);
     blen = htons(*buflen);
-    memcpy( p, &blen, sizeof(blen));
+    memcpy(p, &blen, sizeof(blen));
     p += sizeof(blen);
 
-    for ( iovcnt = 0; iovcnt < ASP_MAXPACKETS; iovcnt++ ) {
-        iov[iovcnt].iov_base = buf + iovcnt*ASP_CMDMAXSIZ;
-	iov[ iovcnt ].iov_len = ASP_CMDMAXSIZ;
+    for (iovcnt = 0; iovcnt < ASP_MAXPACKETS; iovcnt++) {
+        iov[iovcnt].iov_base = buf + iovcnt * ASP_CMDMAXSIZ;
+        iov[iovcnt].iov_len = ASP_CMDMAXSIZ;
     }
 
     oport = asp->asp_sat.sat_port;
@@ -65,27 +64,28 @@ int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
     atpb.atp_sreqto = 2;
     atpb.atp_sreqtries = 5;
 
-    if ( atp_sreq( asp->asp_atp, &atpb, iovcnt, ATP_XO ) < 0 ) {
-	asp->asp_sat.sat_port = oport;
-	return -1;
+    if (atp_sreq(asp->asp_atp, &atpb, iovcnt, ATP_XO) < 0) {
+        asp->asp_sat.sat_port = oport;
+        return -1;
     }
-    asp->write_count += atpb.atp_sreqdlen;
 
+    asp->write_count += atpb.atp_sreqdlen;
     atpb.atp_rresiov = iov;
     atpb.atp_rresiovcnt = iovcnt;
-    if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
-	asp->asp_sat.sat_port = oport;
-	return -1;
+
+    if (atp_rresp(asp->asp_atp, &atpb) < 0) {
+        asp->asp_sat.sat_port = oport;
+        return -1;
     }
 
     asp->asp_sat.sat_port = oport;
-
     /* get rid of the 4-byte headers */
     p = buf;
-    for ( iovcnt = 0; iovcnt < atpb.atp_rresiovcnt; iovcnt++ ) {
-   	memmove(p, (char *) iov[ iovcnt ].iov_base + ASP_HDRSIZ,
-		iov[ iovcnt ].iov_len - ASP_HDRSIZ );
-	p += ( iov[ iovcnt ].iov_len - ASP_HDRSIZ );
+
+    for (iovcnt = 0; iovcnt < atpb.atp_rresiovcnt; iovcnt++) {
+        memmove(p, (char *) iov[iovcnt].iov_base + ASP_HDRSIZ,
+                iov[iovcnt].iov_len - ASP_HDRSIZ);
+        p += (iov[iovcnt].iov_len - ASP_HDRSIZ);
     }
 
     *buflen = p - buf;
