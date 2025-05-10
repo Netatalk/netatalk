@@ -22,16 +22,16 @@ The AFP testsuite contains several utilities aimed at testing AFP servers.
 They're broadly divided into conformance tests, benchmarking, and helpers.
 
 Most of the tools in the *afptest* family follow the same general usage
-pattern and parameters. You set the AFP protocol revision (**-1** through
+pattern and parameters. You set the AFP protocol version (**-1** through
 **-7**), then the address and credentials of the host to test (which can
 be localhost). Some tests require a second user and second volume to be
-define. Yet another set of tests must be run from localhost, and the
+defined. Yet another set of tests must be run from localhost, and the
 local path to the volume under test to be provided. Single tests or test
 sections can be executed with the **-f** option. Available tests can be
 listed with the **-l** option.
 
-Please refer to the helptext of each tool for the precise use of each
-option.
+Please refer to the helptext of each tool for the precise use of its
+options.
 
 ## Return codes
 
@@ -65,9 +65,9 @@ sleep tests that need to be run separately.
 servers, inspired by *HELIOS LanTest*, which runs a batch
 of varied file transfer patterns.
 
-The **afp_speedtest** is a benchmark testsuite for read, write and copy
+**afp_speedtest** is a benchmark testsuite for read, write and copy
 operations. It can be run using either AFP commands or POSIX syscalls,
-in order to test netatalk speeds against other file transfer protocols.
+handy for comparing netatalk speeds against other file transfer protocols.
 
 ## Helpers
 
@@ -95,7 +95,7 @@ If Mac and Netatalk differ, or if Mac results differ between versions:
     MAC RESULT: -5019 AFPERR_PARAM    -5010 AFPERR_BUSY
     Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY
 
-When Mac and Netatalk previously returned different results
+When Mac and Netatalk historically returned different results
 but now behave the same way:
 
     Warning MAC and Netatalk now same RESULT!
@@ -104,7 +104,7 @@ but now behave the same way:
 
 ## Configure environment
 
-Below is a sample configuration for running the APF spec tests.
+Below is a sample configuration for running the AFP spec tests.
 
 - 2 users: user1, user2 with the same password
 - 1 group: afpusers
