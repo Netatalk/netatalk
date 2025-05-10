@@ -83,7 +83,8 @@
 #endif
 
 #ifdef WITH_SENDFILE
-extern ssize_t sys_sendfile (int __out_fd, int __in_fd, off_t *__offset,size_t __count);
+extern ssize_t sys_sendfile(int __out_fd, int __in_fd, off_t *__offset,
+                            size_t __count);
 #endif
 
 extern const int _diacasemap[], _dialowermap[];
@@ -96,20 +97,20 @@ extern void freeifacelist(char **);
 #ifndef NO_DDP
 extern int atalk_aton(char*, struct at_addr*);
 #endif
-extern void bprint        (char *, int);
-extern int strdiacasecmp  (const char *, const char *);
-extern int strndiacasecmp (const char *, const char *, size_t);
-extern pid_t server_lock  (char * /*program*/, char * /*file*/, int /*debug*/);
-extern int check_lockfile (const char *program, const char *pidfile);
+extern void bprint(char *, int);
+extern int strdiacasecmp(const char *, const char *);
+extern int strndiacasecmp(const char *, const char *, size_t);
+extern pid_t server_lock(char * /*program*/, char * /*file*/, int /*debug*/);
+extern int check_lockfile(const char *program, const char *pidfile);
 extern int create_lockfile(const char *program, const char *pidfile);
-extern void fault_setup	  (void (*fn)(void *));
+extern void fault_setup(void (*fn)(void *));
 extern void netatalk_panic(const char *why);
 #define server_unlock(x)  (unlink(x))
 
 #ifndef HAVE_DLFCN_H
-extern void *mod_open    (const char *);
-extern void *mod_symbol  (void *, const char *);
-extern void mod_close    (void *);
+extern void *mod_open(const char *);
+extern void *mod_symbol(void *, const char *);
+extern void mod_close(void *);
 #define mod_error()      ""
 #else /* ! HAVE_DLFCN_H */
 #include <dlfcn.h>
@@ -142,7 +143,8 @@ extern void mod_close    (void *);
  * locking.c
  ******************************************************************/
 
-extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t len);
+extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence,
+                    off_t len);
 #define read_lock(fd, offset, whence, len) \
     lock_reg((fd), F_SETLK, F_RDLCK, (offset), (whence), (len))
 #define write_lock(fd, offset, whence, len) \
@@ -155,8 +157,10 @@ extern int lock_reg(int fd, int cmd, int type, off_t offest, int whence, off_t l
  ******************************************************************/
 
 extern int setnonblock(int fd, int cmd);
-extern ssize_t readt(int socket, void *data, const size_t length, int setnonblocking, int timeout);
-extern ssize_t writet(int socket, void *data, const size_t length, int setnonblocking, int timeout);
+extern ssize_t readt(int socket, void *data, const size_t length,
+                     int setnonblocking, int timeout);
+extern ssize_t writet(int socket, void *data, const size_t length,
+                      int setnonblocking, int timeout);
 extern const char *getip_string(const struct sockaddr *sa);
 extern unsigned int getip_port(const struct sockaddr *sa);
 extern void apply_ip_mask(struct sockaddr *ai, int maskbits);
@@ -188,7 +192,8 @@ struct asev {
 };
 
 extern struct asev *asev_init(int max);
-extern bool asev_add_fd(struct asev *sev, int fd, enum asev_fdtype fdtype, void *private, int protocol);
+extern bool asev_add_fd(struct asev *sev, int fd, enum asev_fdtype fdtype,
+                        void *private, int protocol);
 extern bool asev_del_fd(struct asev *sev, int fd);
 
 extern int send_fd(int socket, int fd);
@@ -206,7 +211,7 @@ extern int daemonize(void);
 extern int run_cmd(const char *cmd, char **cmd_argv);
 extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
-extern char *strtok_quote (char *s, const char *delim);
+extern char *strtok_quote(char *s, const char *delim);
 extern const char *tmpdir(void);
 
 extern int ochdir(const char *dir, int options);
@@ -220,13 +225,14 @@ extern int ochmod(char *path, mode_t mode, const struct stat *st, int options);
  *****************************************************************/
 
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
-extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath, const char *path, cnid_t *did);
+extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath,
+                            const char *path, cnid_t *did);
 
 /******************************************************************
  * cnid.c
  *****************************************************************/
 
-extern void initline   (int, char *);
-extern int  parseline  (int, char *);
+extern void initline(int, char *);
+extern int  parseline(int, char *);
 
 #endif  /* _ATALK_UTIL_H */

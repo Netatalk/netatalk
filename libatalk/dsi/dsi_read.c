@@ -23,20 +23,22 @@
  * it will send off the header plus whatever is in its command
  * buffer. it returns the amount of stuff still to be read
  * (constrained by the buffer size). */
-ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen, const size_t size, const int err)
+ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
+                     const size_t size, const int err)
 {
-    LOG(log_maxdebug, logtype_dsi, "dsi_readinit: sending %zd bytes from buffer, total size: %zd",
+    LOG(log_maxdebug, logtype_dsi,
+        "dsi_readinit: sending %zd bytes from buffer, total size: %zd",
         buflen, size);
-
     dsi->flags |= DSI_NOREPLY; /* we will handle our own replies */
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_len = htonl(size);
     dsi->header.dsi_data.dsi_code = htonl(err);
-
     dsi->in_write++;
+
     if (dsi_stream_send(dsi, buf, buflen)) {
         dsi->datasize = size - buflen;
-        LOG(log_maxdebug, logtype_dsi, "dsi_readinit: remaining data for sendfile: %zd", dsi->datasize);
+        LOG(log_maxdebug, logtype_dsi, "dsi_readinit: remaining data for sendfile: %zd",
+            dsi->datasize);
         return MIN(dsi->datasize, buflen);
     }
 
@@ -52,7 +54,6 @@ void dsi_readdone(DSI *dsi)
 ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 {
     size_t len;
-
     len  = dsi_stream_write(dsi, buf, buflen, 0);
 
     if (len == buflen) {

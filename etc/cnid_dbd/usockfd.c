@@ -32,14 +32,14 @@ int tsockfd_create(char *host, char *port, int backlog)
 {
     int sockfd, flag, ret;
     struct addrinfo hints, *servinfo, *p;
-
     /* Prepare hint for getaddrinfo */
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
     if ((ret = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
-        LOG(log_error, logtype_cnid, "tsockfd_create: getaddrinfo: %s\n", gai_strerror(ret));
+        LOG(log_error, logtype_cnid, "tsockfd_create: getaddrinfo: %s\n",
+            gai_strerror(ret));
         return -1;
     }
 
@@ -60,7 +60,6 @@ int tsockfd_create(char *host, char *port, int backlog)
         flag = 1;
         setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 #endif
-
 #ifdef USE_TCP_NODELAY
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
@@ -86,7 +85,8 @@ int tsockfd_create(char *host, char *port, int backlog)
     }
 
     if (p == NULL)  {
-        LOG(log_error, logtype_cnid, "tsockfd_create: no suitable network config %s:%s", host, port);
+        LOG(log_error, logtype_cnid, "tsockfd_create: no suitable network config %s:%s",
+            host, port);
         freeaddrinfo(servinfo);
         return -1;
     }
@@ -102,13 +102,14 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
     socklen_t size;
     fd_set readfds;
     int ret;
-
     FD_ZERO(&readfds);
     FD_SET(sockfd, &readfds);
 
     if ((ret = pselect(sockfd + 1, &readfds, NULL, NULL, NULL, sigset)) < 0) {
-        if (errno == EINTR)
+        if (errno == EINTR) {
             return 0;
+        }
+
         LOG(log_error, logtype_cnid, "error in select: %s",
             strerror(errno));
         return -1;
@@ -116,14 +117,19 @@ int usockfd_check(int sockfd, const sigset_t *sigset)
 
     if (ret) {
         size = 0;
+
         if ((fd = accept(sockfd, NULL, &size)) < 0) {
-            if (errno == EINTR)
+            if (errno == EINTR) {
                 return 0;
+            }
+
             LOG(log_error, logtype_cnid, "error in accept: %s",
                 strerror(errno));
             return -1;
         }
+
         return fd;
-    } else
+    } else {
         return 0;
+    }
 }

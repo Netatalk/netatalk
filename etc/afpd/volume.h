@@ -14,18 +14,23 @@
 #include <atalk/unicode.h>
 #include <atalk/volume.h>
 
-extern int              ustatfs_getvolspace (const struct vol *,
-                                             VolSpace *, VolSpace *,
-                                             uint32_t *);
-extern void             setvoltime (AFPObj *, struct vol *);
-extern int              pollvoltime (AFPObj *);
+extern int              ustatfs_getvolspace(const struct vol *,
+        VolSpace *, VolSpace *,
+        uint32_t *);
+extern void             setvoltime(AFPObj *, struct vol *);
+extern int              pollvoltime(AFPObj *);
 
 /* FP functions */
-int afp_openvol      (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getvolparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_setvolparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getsrvrparms (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_closevol     (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
+int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                     size_t *rbuflen);
+int afp_setvolparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                     size_t *rbuflen);
+int afp_getsrvrparms(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                     size_t *rbuflen);
+int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
 
 /* netatalk functions */
 extern void close_all_vol(const AFPObj *obj);

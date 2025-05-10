@@ -31,9 +31,12 @@
  * Interface
  ********************************************************/
 
-extern int search_cachebyname( const char *name, uuidtype_t *type, unsigned char *uuid);
-extern int add_cachebyname( const char *inname, const uuidp_t inuuid, const uuidtype_t type, const unsigned long uid);
-extern int search_cachebyuuid( uuidp_t uuidp, char **name, uuidtype_t *type);
-extern int add_cachebyuuid( uuidp_t inuuid, const char *inname, uuidtype_t type, const unsigned long uid);
+extern int search_cachebyname(const char *name, uuidtype_t *type,
+                              unsigned char *uuid);
+extern int add_cachebyname(const char *inname, const uuidp_t inuuid,
+                           const uuidtype_t type, const unsigned long uid);
+extern int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type);
+extern int add_cachebyuuid(uuidp_t inuuid, const char *inname, uuidtype_t type,
+                           const unsigned long uid);
 
 #endif /* LDAPCACHE_H */

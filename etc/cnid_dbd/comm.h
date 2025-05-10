@@ -12,9 +12,9 @@
 #include <atalk/cnid_bdb_private.h>
 
 
-int      comm_init  (struct db_param *, int, int);
-int      comm_rcv  (struct cnid_dbd_rqst *,  time_t, const sigset_t *, time_t *);
-int      comm_snd  (struct cnid_dbd_rply *);
-int      comm_nbe  (void);
+int      comm_init(struct db_param *, int, int);
+int      comm_rcv(struct cnid_dbd_rqst *,  time_t, const sigset_t *, time_t *);
+int      comm_snd(struct cnid_dbd_rply *);
+int      comm_nbe(void);
 
 #endif /* CNID_DBD_COMM_H */

@@ -65,13 +65,13 @@ ssize_t sys_sendfile(int tofd, int fromfd, off_t *offset, size_t count)
 {
     off_t len;
     int ret;
-
     ret = sendfile(fromfd, tofd, *offset, count, NULL, &len, 0);
-
     *offset += len;
 
-    if (ret != 0)
+    if (ret != 0) {
         return -1;
+    }
+
     return len;
 }
 
@@ -87,21 +87,22 @@ ssize_t sys_sendfile(int out_fd, int in_fd, off_t *_offset, size_t count)
 
 /* ------------------------------- */
 int ad_readfile_init(const struct adouble *ad,
-				       const int eid, off_t *off,
-				       const int end)
+                     const int eid, off_t *off,
+                     const int end)
 {
-  int fd;
+    int fd;
 
-  if (end)
-    *off = ad_size(ad, eid) - *off;
+    if (end) {
+        *off = ad_size(ad, eid) - *off;
+    }
 
-  if (eid == ADEID_DFORK) {
-    fd = ad_data_fileno(ad);
-  } else {
-    *off += ad_getentryoff(ad, eid);
-    fd = ad_reso_fileno(ad);
-  }
+    if (eid == ADEID_DFORK) {
+        fd = ad_data_fileno(ad);
+    } else {
+        *off += ad_getentryoff(ad, eid);
+        fd = ad_reso_fileno(ad);
+    }
 
-  return fd;
+    return fd;
 }
 #endif

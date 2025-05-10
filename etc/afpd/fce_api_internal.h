@@ -32,13 +32,13 @@ struct udp_entry {
 
 struct fce_history {
     fce_ev_t       fce_h_event;
-	char           fce_h_path[MAXPATHLEN + 1];
-	struct timeval fce_h_tv;
+    char           fce_h_path[MAXPATHLEN + 1];
+    struct timeval fce_h_tv;
 };
 
 struct fce_close_event {
     time_t time;
-	char path[MAXPATHLEN + 1];
+    char path[MAXPATHLEN + 1];
 };
 
 #define PACKET_HDR_LEN (sizeof(struct fce_packet) - FCE_MAX_PATH_LEN)

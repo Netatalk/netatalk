@@ -102,35 +102,43 @@ static int netatalk_mkdir(const struct vol *vol, const char *name)
     struct stat st;
 
     if (vol->v_flags & AFPVOL_UNIX_PRIV) {
-        if (lstat(".", &st) < 0)
+        if (lstat(".", &st) < 0) {
             return AFPERR_MISC;
-        int mode = (DIRBITS & (~S_ISGID & st.st_mode)) | (0777 & ~vol->v_umask);
-        LOG(log_maxdebug, logtype_afpd, "netatalk_mkdir(\"%s\") {parent mode: %04o, vol umask: %04o}",
-            name, st.st_mode, vol->v_umask);
+        }
 
+        int mode = (DIRBITS & (~S_ISGID & st.st_mode)) | (0777 & ~vol->v_umask);
+        LOG(log_maxdebug, logtype_afpd,
+            "netatalk_mkdir(\"%s\") {parent mode: %04o, vol umask: %04o}",
+            name, st.st_mode, vol->v_umask);
         ret = mkdir(name, mode);
     } else {
         ret = ad_mkdir(name, DIRBITS | 0777);
     }
 
     if (ret < 0) {
-        switch ( errno ) {
+        switch (errno) {
         case ENOENT :
             return AFPERR_NOOBJ;
+
         case EROFS :
             return AFPERR_VLOCK;
+
         case EPERM:
         case EACCES :
             return AFPERR_ACCESS;
+
         case EEXIST :
             return AFPERR_EXIST;
+
         case ENOSPC :
         case EDQUOT :
             return AFPERR_DFULL;
+
         default :
             return AFPERR_PARAM;
         }
     }
+
     return AFP_OK;
 }
 
@@ -145,35 +153,43 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
     int err = AFP_OK;
     size_t remain;
 
-    if ((len = strlen(dir)) +2 > sizeof(path))
+    if ((len = strlen(dir)) + 2 > sizeof(path)) {
         return AFPERR_PARAM;
+    }
 
     /* already gone */
-    if ((dp = opendirat(dirfd, dir)) == NULL)
+    if ((dp = opendirat(dirfd, dir)) == NULL) {
         return AFP_OK;
+    }
 
     snprintf(path, MAXPATHLEN, "%s/", dir);
     len++;
-    remain = strlen(path) -len -1;
+    remain = strlen(path) - len - 1;
+
     while ((de = readdir(dp)) && err == AFP_OK) {
         /* skip this and previous directory */
-        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
             continue;
+        }
 
         if (strlen(de->d_name) > remain) {
             err = AFPERR_PARAM;
             break;
         }
+
         strcpy(path + len, de->d_name);
+
         if (ostatat(dirfd, path, &st, vol_syml_opt(vol))) {
             continue;
         }
+
         if (S_ISDIR(st.st_mode)) {
             err = deletedir(vol, dirfd, path);
         } else {
             err = netatalk_unlinkat(dirfd, path);
         }
     }
+
     closedir(dp);
 
     /* okay. the directory is empty. delete it. note: we already got rid
@@ -181,11 +197,13 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
     if (err == AFP_OK) {
         err = netatalk_rmdir(dirfd, dir);
     }
+
     return err;
 }
 
 /* do a recursive copy. */
-static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src, char *dst)
+static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src,
+                   char *dst)
 {
     char spath[MAXPATHLEN + 1], dpath[MAXPATHLEN + 1];
     DIR *dp;
@@ -198,12 +216,13 @@ static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src, char
 
     /* doesn't exist or the path is too long. */
     if (((slen = strlen(src)) > sizeof(spath) - 2) ||
-        ((dlen = strlen(dst)) > sizeof(dpath) - 2) ||
-        ((dp = opendirat(dirfd, src)) == NULL))
+            ((dlen = strlen(dst)) > sizeof(dpath) - 2) ||
+            ((dp = opendirat(dirfd, src)) == NULL)) {
         return AFPERR_PARAM;
+    }
 
     /* try to create the destination directory */
-    if (AFP_OK != (err = netatalk_mkdir(vol, dst)) ) {
+    if (AFP_OK != (err = netatalk_mkdir(vol, dst))) {
         closedir(dp);
         return err;
     }
@@ -211,22 +230,23 @@ static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src, char
     /* set things up to copy */
     snprintf(spath, MAXPATHLEN, "%s/", src);
     slen++;
-    srem = strlen(spath) - slen -1;
-
+    srem = strlen(spath) - slen - 1;
     snprintf(dpath, MAXPATHLEN, "%s/", dst);
     dlen++;
-    drem = strlen(dpath) - dlen -1;
-
+    drem = strlen(dpath) - dlen - 1;
     err = AFP_OK;
+
     while ((de = readdir(dp))) {
         /* skip this and previous directory */
-        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
             continue;
+        }
 
         if (strlen(de->d_name) > srem) {
             err = AFPERR_PARAM;
             break;
         }
+
         strcpy(spath + slen, de->d_name);
 
         if (ostatat(dirfd, spath, &st, vol_syml_opt(vol)) == 0) {
@@ -234,14 +254,16 @@ static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src, char
                 err = AFPERR_PARAM;
                 break;
             }
+
             strcpy(dpath + dlen, de->d_name);
 
             if (S_ISDIR(st.st_mode)) {
-                if (AFP_OK != (err = copydir(vol, ddir, dirfd, spath, dpath)))
+                if (AFP_OK != (err = copydir(vol, ddir, dirfd, spath, dpath))) {
                     goto copydir_done;
-            } else if (AFP_OK != (err = copyfile(vol, vol, ddir, dirfd, spath, dpath, NULL, NULL))) {
+                }
+            } else if (AFP_OK != (err = copyfile(vol, vol, ddir, dirfd, spath, dpath, NULL,
+                                                 NULL))) {
                 goto copydir_done;
-
             } else {
                 /* keep the same time stamp. */
                 ut.actime = ut.modtime = st.st_mtime;
@@ -272,20 +294,24 @@ static int diroffcnt(struct dir *dir, struct stat *st)
 /* --------------------- */
 static int invisible_dots(const struct vol *vol, const char *name)
 {
-    return vol_inv_dots(vol) && *name  == '.' && strcmp(name, ".") && strcmp(name, "..");
+    return vol_inv_dots(vol) && *name  == '.' && strcmp(name, ".")
+           && strcmp(name, "..");
 }
 
 /* ------------------ */
 static int set_dir_errors(struct path *path, const char *where, int err)
 {
-    switch ( err ) {
+    switch (err) {
     case EPERM :
     case EACCES :
         return AFPERR_ACCESS;
+
     case EROFS :
         return AFPERR_VLOCK;
     }
-    LOG(log_error, logtype_afpd, "setdirparam(%s): %s: %s", fullpathname(path->u_name), where, strerror(err) );
+
+    LOG(log_error, logtype_afpd, "setdirparam(%s): %s: %s",
+        fullpathname(path->u_name), where, strerror(err));
     return AFPERR_PARAM;
 }
 
@@ -299,9 +325,10 @@ static int set_dir_errors(struct path *path, const char *where, int err)
  *
  * @note If the passed ret->m_name is mangled, we'll demangle it
  */
-static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *ret, int toUTF8)
+static int cname_mtouname(const struct vol *vol, struct dir *dir,
+                          struct path *ret, int toUTF8)
 {
-    static char temp[ MAXPATHLEN + 1];
+    static char temp[MAXPATHLEN + 1];
     char *t;
     cnid_t fileid = 0;
 
@@ -315,14 +342,18 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *r
                  * strcmp can match.
                  */
                 ucs2_to_charset(vol->v_maccharset, vol->v_macname, temp, AFPVOL_MACNAMELEN + 1);
-                if (strcasecmp(ret->m_name, temp) == 0)
+
+                if (strcasecmp(ret->m_name, temp) == 0) {
                     ucs2_to_charset(CH_UTF8_MAC, vol->v_u8mname, ret->m_name, AFPVOL_U8MNAMELEN);
+                }
             } else {
                 /* toUTF8 */
-                if (mtoUTF8(vol, ret->m_name, strlen(ret->m_name), temp, MAXPATHLEN) == (size_t)-1) {
+                if (mtoUTF8(vol, ret->m_name, strlen(ret->m_name), temp,
+                            MAXPATHLEN) == (size_t) -1) {
                     afp_errno = AFPERR_PARAM;
                     return -1;
                 }
+
                 strcpy(ret->m_name, temp);
             }
         }
@@ -335,15 +366,17 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *r
             movecwd(vol, dir);
         }
 
-        LOG(log_maxdebug, logtype_afpd, "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
+        LOG(log_maxdebug, logtype_afpd,
+            "cname_mtouname('%s',did:%u) {demangled:'%s', fileid:%u}",
             ret->m_name, ntohl(dir->d_did), t, ntohl(fileid));
 
         if (t != ret->m_name) {
             ret->u_name = t;
+
             /* duplicate work but we can't reuse all convert_char we did in demangle_osx
              * flags weren't the same
              */
-            if ( (t = utompath(vol, ret->u_name, fileid, utf8_encoding(vol->v_obj))) ) {
+            if ((t = utompath(vol, ret->u_name, fileid, utf8_encoding(vol->v_obj)))) {
                 /* at last got our view of mac name */
                 strcpy(ret->m_name, t);
             }
@@ -352,7 +385,8 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *r
 
     /* If we haven't got it by now, get it */
     if (ret->u_name == NULL) {
-        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did, utf8_encoding(vol->v_obj))) == NULL) {
+        if ((ret->u_name = mtoupath(vol, ret->m_name, dir->d_did,
+                                    utf8_encoding(vol->v_obj))) == NULL) {
             afp_errno = AFPERR_PARAM;
             return -1;
         }
@@ -373,18 +407,22 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir, struct path *r
  *                  4. indicate there's no dir for this path
  *                  5. remove the dir
  */
-static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path *ret)
+static struct path *path_from_dir(struct vol *vol, struct dir *dir,
+                                  struct path *ret)
 {
-    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
+    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT) {
         return NULL;
+    }
 
     switch (afp_errno) {
-
     case AFPERR_ACCESS:
-        if (movecwd( vol, dirlookup(vol, dir->d_pdid)) < 0 ) /* 1 */
+        if (movecwd(vol, dirlookup(vol, dir->d_pdid)) < 0) { /* 1 */
             return NULL;
+        }
 
-        memcpy(ret->m_name, cfrombstr(dir->d_m_name), blength(dir->d_m_name) + 1); /* 3 */
+        memcpy(ret->m_name, cfrombstr(dir->d_m_name),
+               blength(dir->d_m_name) + 1); /* 3 */
+
         if (dir->d_m_name == dir->d_u_name) {
             ret->u_name = ret->m_name;
         } else {
@@ -393,19 +431,20 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
         }
 
         ret->d_dir = dir;
-
-        LOG(log_debug, logtype_afpd, "cname('%s') {path-from-dir: AFPERR_ACCESS. curdir:'%s', path:'%s'}",
+        LOG(log_debug, logtype_afpd,
+            "cname('%s') {path-from-dir: AFPERR_ACCESS. curdir:'%s', path:'%s'}",
             cfrombstr(dir->d_fullpath),
             cfrombstr(curdir->d_fullpath),
             ret->u_name);
-
         return ret;
 
     case AFPERR_NOOBJ:
-        if (movecwd(vol, dirlookup(vol, dir->d_pdid)) < 0 ) /* 1 */
+        if (movecwd(vol, dirlookup(vol, dir->d_pdid)) < 0) { /* 1 */
             return NULL;
+        }
 
         memcpy(ret->m_name, cfrombstr(dir->d_m_name), blength(dir->d_m_name) + 1);
+
         if (dir->d_m_name == dir->d_u_name) {
             ret->u_name = ret->m_name;
         } else {
@@ -432,8 +471,10 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir, struct path 
 
 int get_afp_errno(const int param)
 {
-    if (afp_errno != AFPERR_DID1)
+    if (afp_errno != AFPERR_DID1) {
         return afp_errno;
+    }
+
     return param;
 }
 
@@ -467,7 +508,6 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     int          buflen = 12 + MAXPATHLEN + 1;
     int          utf8;
     int          err = 0;
-
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u): START", ntohl(did));
 
     /* check for did 0, 1 and 2 */
@@ -491,50 +531,57 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             ret = NULL;
             goto exit;
         }
+
         if (lstat(cfrombstr(ret->d_fullpath), &st) != 0) {
             LOG(log_debug, logtype_afpd, "dirlookup(did: %u, path: \"%s\"): lstat: %s",
                 ntohl(did), cfrombstr(ret->d_fullpath), strerror(errno));
+
             switch (errno) {
             case ENOENT:
             case ENOTDIR:
                 /* It's not there anymore, so remove it */
-                LOG(log_debug, logtype_afpd, "dirlookup(did: %u): calling dir_remove", ntohl(did));
+                LOG(log_debug, logtype_afpd, "dirlookup(did: %u): calling dir_remove",
+                    ntohl(did));
                 dir_remove(vol, ret);
                 afp_errno = AFPERR_NOOBJ;
                 ret = NULL;
                 goto exit;
+
             default:
                 goto exit;
             }
+
             /* DEADC0DE */
             ret = NULL;
             goto exit;
         }
+
         goto exit;
     }
 
     utf8 = utf8_encoding(vol->v_obj);
     maxpath = utf8 ? MAXPATHLEN - 7 : 255;
-
     /* Get it from the database */
     cnid = did;
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): querying CNID database", ntohl(did));
-
+    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): querying CNID database",
+        ntohl(did));
     AFP_CNID_START("cnid_resolve");
     upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen);
     AFP_CNID_DONE();
+
     if (upath == NULL) {
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
+
     if ((upath = strdup(upath)) == NULL) { /* 3 */
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
-    pdid = cnid;
 
+    pdid = cnid;
     /*
      * Recurse up the tree, terminates in dirlookup when either
      * - DIRDID_ROOT is hit
@@ -542,6 +589,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
      */
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u): recursion for did: %u",
         ntohl(did), ntohl(pdid));
+
     if ((pdir = dirlookup(vol, pdid)) == NULL) {
         err = 1;
         goto exit;
@@ -549,8 +597,8 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
     /* build the fullpath */
     if ((fullpath = bstrcpy(pdir->d_fullpath)) == NULL
-        || bconchar(fullpath, '/') != BSTR_OK
-        || bcatcstr(fullpath, upath) != BSTR_OK) {
+            || bconchar(fullpath, '/') != BSTR_OK
+            || bcatcstr(fullpath, upath) != BSTR_OK) {
         err = 1;
         goto exit;
     }
@@ -565,17 +613,19 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             afp_errno = AFPERR_NOOBJ;
             err = 1;
             goto exit;
+
         case EPERM:
             afp_errno = AFPERR_ACCESS;
             err = 1;
             goto exit;
+
         default:
             afp_errno = AFPERR_MISC;
             err = 1;
             goto exit;
         }
     } else {
-        if ( ! S_ISDIR(st.st_mode)) { /* 5b */
+        if (! S_ISDIR(st.st_mode)) {  /* 5b */
             afp_errno = AFPERR_BADTYPE;
             err = 1;
             goto exit;
@@ -583,15 +633,17 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* Get macname from unix name */
-    if ( (mpath = utompath(vol, upath, did, utf8)) == NULL ) {
+    if ((mpath = utompath(vol, upath, did, utf8)) == NULL) {
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
 
     /* Create struct dir */
-    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath, &st)) == NULL) { /* 6 */
-        LOG(log_error, logtype_afpd, "dirlookup(did: %u) {%s, %s}: %s", ntohl(did), mpath, upath, strerror(errno));
+    if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath,
+                       &st)) == NULL) { /* 6 */
+        LOG(log_error, logtype_afpd, "dirlookup(did: %u) {%s, %s}: %s", ntohl(did),
+            mpath, upath, strerror(errno));
         err = 1;
         goto exit;
     }
@@ -603,19 +655,28 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
 exit:
-    if (upath) free(upath);
+
+    if (upath) {
+        free(upath);
+    }
+
     if (err) {
         LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {exit_error: %s}",
             ntohl(did), AfpErr2name(afp_errno));
-        if (fullpath)
+
+        if (fullpath) {
             bdestroy(fullpath);
+        }
+
         if (ret) {
             dir_free(ret);
             ret = NULL;
         }
     }
+
     if (ret)
-        LOG(log_debug, logtype_afpd, "dirlookup(did: %u): RESULT: pdid: %u, path: \"%s\"",
+        LOG(log_debug, logtype_afpd,
+            "dirlookup(did: %u): RESULT: pdid: %u, path: \"%s\"",
             ntohl(ret->d_did), ntohl(ret->d_pdid), cfrombstr(ret->d_fullpath));
 
     return ret;
@@ -648,28 +709,31 @@ struct dir *dir_new(const char *m_name,
                     struct stat *st)
 {
     struct dir *dir;
+    dir = (struct dir *) calloc(1, sizeof(struct dir));
 
-    dir = (struct dir *) calloc(1, sizeof( struct dir ));
-    if (!dir)
+    if (!dir) {
         return NULL;
+    }
 
     if ((dir->d_m_name = bfromcstr(m_name)) == NULL) {
         free(dir);
         return NULL;
     }
 
-    if (convert_string_allocate( (utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC : vol->v_maccharset,
-                                 CH_UCS2,
-                                 m_name,
-                                 -1, (char **)&dir->d_m_name_ucs2) == (size_t)-1 ) {
-        LOG(log_error, logtype_afpd, "dir_new(did: %u) {%s, %s}: couldn't set UCS2 name", ntohl(did), m_name, u_name);
+    if (convert_string_allocate((utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC :
+                                vol->v_maccharset,
+                                CH_UCS2,
+                                m_name,
+                                -1, (char **)&dir->d_m_name_ucs2) == (size_t) -1) {
+        LOG(log_error, logtype_afpd,
+            "dir_new(did: %u) {%s, %s}: couldn't set UCS2 name", ntohl(did), m_name,
+            u_name);
         dir->d_m_name_ucs2 = NULL;
     }
 
     if (m_name == u_name || !strcmp(m_name, u_name)) {
         dir->d_u_name = dir->d_m_name;
-    }
-    else if ((dir->d_u_name = bfromcstr(u_name)) == NULL) {
+    } else if ((dir->d_u_name = bfromcstr(u_name)) == NULL) {
         bdestroy(dir->d_m_name);
         free(dir);
         return NULL;
@@ -681,8 +745,11 @@ struct dir *dir_new(const char *m_name,
     dir->d_fullpath = path;
     dir->dcache_ctime = st->st_ctime;
     dir->dcache_ino = st->st_ino;
-    if (!S_ISDIR(st->st_mode))
+
+    if (!S_ISDIR(st->st_mode)) {
         dir->d_flags = DIRF_ISFILE;
+    }
+
     dir->d_rights_cache = 0xffffffff;
     return dir;
 }
@@ -697,8 +764,11 @@ void dir_free(struct dir *dir)
     if (dir->d_u_name != dir->d_m_name) {
         bdestroy(dir->d_u_name);
     }
-    if (dir->d_m_name_ucs2)
+
+    if (dir->d_m_name_ucs2) {
         free(dir->d_m_name_ucs2);
+    }
+
     bdestroy(dir->d_m_name);
     bdestroy(dir->d_fullpath);
     free(dir);
@@ -723,7 +793,8 @@ void dir_free(struct dir *dir)
  *
  * @note Function also assigns path->m_name from path->u_name.
  */
-struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, int len)
+struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
+                    int len)
 {
     int err = 0;
     struct dir  *cdir = NULL;
@@ -731,17 +802,19 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     struct adouble  ad;
     struct adouble *adp = NULL;
     bstring fullpath = NULL;
-
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
     AFP_ASSERT(path);
     AFP_ASSERT(len > 0);
 
-    if ((cdir = dircache_search_by_name(vol, dir, path->u_name, strlen(path->u_name))) != NULL) {
+    if ((cdir = dircache_search_by_name(vol, dir, path->u_name,
+                                        strlen(path->u_name))) != NULL) {
         /* there's a stray entry in the dircache */
-        LOG(log_debug, logtype_afpd, "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
+        LOG(log_debug, logtype_afpd,
+            "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
             ntohl(cdir->d_did), cfrombstr(dir->d_fullpath));
+
         if (dir_remove(vol, cdir) != 0) {
             dircache_dump();
             AFP_PANIC("dir_add");
@@ -750,32 +823,39 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
 
     /* get_id needs adp for reading CNID from adouble file */
     ad_init(&ad, vol);
-    if ((ad_open(&ad, path->u_name, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY)) == 0) /* 1 */
+
+    if ((ad_open(&ad, path->u_name,
+                 ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDONLY)) == 0) { /* 1 */
         adp = &ad;
+    }
 
     /* Get CNID */
-    if ((id = get_id(vol, adp, &path->st, dir->d_did, path->u_name, len)) == CNID_INVALID) { /* 2 */
+    if ((id = get_id(vol, adp, &path->st, dir->d_did, path->u_name,
+                     len)) == CNID_INVALID) { /* 2 */
         err = 1;
         goto exit;
     }
 
-    if (adp)
+    if (adp) {
         ad_close(adp, ADFLAGS_HF);
+    }
 
     /* Get macname from unixname */
     if (path->m_name == NULL) {
-        if ((path->m_name = utompath(vol, path->u_name, id, utf8_encoding(vol->v_obj))) == NULL) {
-            LOG(log_error, logtype_afpd, "dir_add(\"%s\"): can't assign macname", path->u_name);
+        if ((path->m_name = utompath(vol, path->u_name, id,
+                                     utf8_encoding(vol->v_obj))) == NULL) {
+            LOG(log_error, logtype_afpd, "dir_add(\"%s\"): can't assign macname",
+                path->u_name);
             err = 2;
             goto exit;
         }
     }
 
     /* Build fullpath */
-    if ( ((fullpath = bstrcpy(dir->d_fullpath)) == NULL) /* 3 */
-         || (bconchar(fullpath, '/') != BSTR_OK)
-         || (bcatcstr(fullpath, path->u_name)) != BSTR_OK) {
-        LOG(log_error, logtype_afpd, "dir_add: fullpath: %s", strerror(errno) );
+    if (((fullpath = bstrcpy(dir->d_fullpath)) == NULL)  /* 3 */
+            || (bconchar(fullpath, '/') != BSTR_OK)
+            || (bcatcstr(fullpath, path->u_name)) != BSTR_OK) {
+        LOG(log_error, logtype_afpd, "dir_add: fullpath: %s", strerror(errno));
         err = 3;
         goto exit;
     }
@@ -793,21 +873,29 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path, i
     }
 
     if ((dircache_add(vol, cdir)) != 0) { /* 4 */
-        LOG(log_error, logtype_afpd, "dir_add: fatal dircache error: %s", cfrombstr(fullpath));
+        LOG(log_error, logtype_afpd, "dir_add: fatal dircache error: %s",
+            cfrombstr(fullpath));
         exit(EXITERR_SYS);
     }
 
 exit:
+
     if (err != 0) {
         LOG(log_debug, logtype_afpd, "dir_add('%s/%s'): error: %u",
             cfrombstr(dir->d_u_name), path->u_name, err);
 
-        if (adp)
+        if (adp) {
             ad_close(adp, ADFLAGS_HF);
-        if (!cdir && fullpath)
+        }
+
+        if (!cdir && fullpath) {
             bdestroy(fullpath);
-        if (cdir)
+        }
+
+        if (cdir) {
             dir_free(cdir);
+        }
+
         cdir = NULL;
     } else {
         /* no error */
@@ -827,8 +915,10 @@ exit:
 void dir_free_invalid_q(void)
 {
     struct dir *dir;
-    while ((dir = (struct dir *)dequeue(invalid_dircache_entries)))
+
+    while ((dir = (struct dir *)dequeue(invalid_dircache_entries))) {
         dir_free(dir);
+    }
 }
 
 /*!
@@ -848,20 +938,20 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
 
-    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT)
+    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT) {
         return 0;
+    }
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
-
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     enqueue(invalid_dircache_entries, dir); /* 3 */
 
-    if (curdir == dir)                      /* 4 */
+    if (curdir == dir) {                    /* 4 */
         curdir = NULL;
+    }
 
     dir->d_did = CNID_INVALID;              /* 5 */
-
     return 0;
 }
 
@@ -893,9 +983,8 @@ int dir_remove(const struct vol *vol, struct dir *dir)
  */
 struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 {
-    static char        path[ MAXPATHLEN + 1];
+    static char        path[MAXPATHLEN + 1];
     static struct path ret;
-
     struct dir  *cdir;
     char        *data, *p;
     int         len;
@@ -903,81 +992,92 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     uint16_t   len16;
     int         size = 0;
     int         toUTF8 = 0;
-
-    LOG(log_maxdebug, logtype_afpd, "cname('%s'): {start}", cfrombstr(dir->d_fullpath));
-
+    LOG(log_maxdebug, logtype_afpd, "cname('%s'): {start}",
+        cfrombstr(dir->d_fullpath));
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
     memset(&ret, 0, sizeof(ret));
 
     switch (ret.m_type = *data) { /* 1 */
-    case 2:
-        data++;
-        len = (unsigned char) *data++;
+case 2:
+            data++;
+        len = (unsigned char) * data++;
         size = 2;
+
         if (vol->v_obj->afp_version >= 30) {
             ret.m_type = 3;
             toUTF8 = 1;
         }
-        break;
-    case 3:
-        if (vol->v_obj->afp_version >= 30) {
-            data++;
-            memcpy(&hint, data, sizeof(hint));
-            hint = ntohl(hint);
-            data += sizeof(hint);
 
-            memcpy(&len16, data, sizeof(len16));
-            len = ntohs(len16);
-            data += 2;
-            size = 7;
-            break;
-        }
-        /* else it's an error */
-    default:
-        afp_errno = AFPERR_PARAM;
+        break;
+
+case 3:
+            if (vol->v_obj->afp_version >= 30) {
+                data++;
+                memcpy(&hint, data, sizeof(hint));
+                hint = ntohl(hint);
+                data += sizeof(hint);
+                memcpy(&len16, data, sizeof(len16));
+                len = ntohs(len16);
+                data += 2;
+                size = 7;
+                break;
+            }
+
+    /* else it's an error */
+default:
+            afp_errno = AFPERR_PARAM;
         return NULL;
     }
-    *cpath += len + size;
 
+    *cpath += len + size;
     path[0] = 0;
     ret.m_name = path;
 
-    if (movecwd(vol, dir) < 0 ) {
+    if (movecwd(vol, dir) < 0) {
         LOG(log_debug, logtype_afpd, "cname(did:%u): failed to chdir to '%s'",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
-        if (len == 0)
+
+        if (len == 0) {
             return path_from_dir(vol, dir, &ret);
-        else
+        } else {
             return NULL;
+        }
     }
 
     while (len) {         /* 3 */
         if (*data == 0) { /* 4 or 5 */
             data++;
             len--;
+
             while (len > 0 && *data == 0) { /* 5 */
                 /* chdir to parrent dir */
-                if ((dir = dirlookup(vol, dir->d_pdid)) == NULL)
+                if ((dir = dirlookup(vol, dir->d_pdid)) == NULL) {
                     return NULL;
-                if (movecwd( vol, dir ) < 0 ) {
+                }
+
+                if (movecwd(vol, dir) < 0) {
                     dir_remove(vol, dir);
                     return NULL;
                 }
+
                 data++;
                 len--;
             }
+
             continue;
         }
 
         /* 6*/
-        for ( p = path; *data != 0 && len > 0; len-- ) {
+        for (p = path; *data != 0 && len > 0; len--) {
             *p++ = *data++;
+
             if (p > &path[UTF8FILELEN_EARLY]) {   /* FIXME safeguard, limit of early Mac OS X */
                 afp_errno = AFPERR_PARAM;
                 return NULL;
             }
         }
+
         *p = 0;            /* Terminate string */
         ret.u_name = NULL;
 
@@ -986,21 +1086,29 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             return NULL;
         }
 
-        LOG(log_maxdebug, logtype_afpd, "cname('%s'): {node: '%s}", cfrombstr(dir->d_fullpath), ret.u_name);
+        LOG(log_maxdebug, logtype_afpd, "cname('%s'): {node: '%s}",
+            cfrombstr(dir->d_fullpath), ret.u_name);
 
         /* Prevent access to our special folders like .AppleDouble */
         if (check_name(vol, ret.u_name)) {
             /* the name is illegal */
             LOG(log_info, logtype_afpd, "cname: illegal path: '%s'", ret.u_name);
             afp_errno = AFPERR_PARAM;
+
             if (vol->v_obj->options.flags & OPTION_VETOMSG) {
-                bstring message = bformat("Attempt to access vetoed file or directory \"%s\" in directory \"%s\"",
-                                          ret.u_name, bdata(dir->d_u_name));
+                bstring message =
+                    bformat("Attempt to access vetoed file or directory \"%s\" in directory \"%s\"",
+                            ret.u_name, bdata(dir->d_u_name));
+
                 if (setmessage(bdata(message)) == 0)
                     /* Client may make multiple attempts, only send the message the first time */
+                {
                     kill(getpid(), SIGUSR2);
+                }
+
                 bdestroy(message);
             }
+
             return NULL;
         }
 
@@ -1010,10 +1118,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
              * root parent (did 1) has one child: the volume. Requests for did=1 with
              * some <name> must check against the volume name.
              */
-            if ((strcmp(cfrombstr(vol->v_root->d_m_name), ret.m_name)) == 0)
+            if ((strcmp(cfrombstr(vol->v_root->d_m_name), ret.m_name)) == 0) {
                 cdir = vol->v_root;
-            else
+            } else {
                 return NULL;
+            }
         } else {
             /*
              * CNID != 1, e.g. most of the times we take this way.
@@ -1033,11 +1142,13 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                     afp_errno = AFPERR_NOOBJ;
                     return NULL;
                 }
+
                 /*
                  * this will terminate clean in while (1) because len == 0,
                  * probably afp_createfile|dir
                  */
-                LOG(log_maxdebug, logtype_afpd, "cname('%s'): {leave-cnode ENOENT (probably create request): '%s'}",
+                LOG(log_maxdebug, logtype_afpd,
+                    "cname('%s'): {leave-cnode ENOENT (probably create request): '%s'}",
                     cfrombstr(dir->d_fullpath), ret.u_name);
                 continue; /* 10 */
             }
@@ -1046,24 +1157,31 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             case S_IFREG: /* 11 */
                 LOG(log_debug, logtype_afpd, "cname('%s'): {file: '%s'}",
                     cfrombstr(dir->d_fullpath), ret.u_name);
+
                 if (len > 0) {
                     /* it wasn't the last part, so we have a bogus path request */
                     afp_errno = AFPERR_PARAM;
                     return NULL;
                 }
+
                 continue; /* continues while loop */
+
             case S_IFLNK: /* 12 */
                 LOG(log_debug, logtype_afpd, "cname('%s'): {link: '%s'}",
                     cfrombstr(dir->d_fullpath), ret.u_name);
+
                 if (len > 0) {
                     LOG(log_warning, logtype_afpd, "cname('%s'): {symlinked dir: '%s'}",
                         cfrombstr(dir->d_fullpath), ret.u_name);
                     afp_errno = AFPERR_PARAM;
                     return NULL;
                 }
+
                 continue; /* continues while loop */
+
             case S_IFDIR: /* 13 */
                 break;
+
             default:
                 LOG(log_info, logtype_afpd, "cname: special file: '%s'", ret.u_name);
                 afp_errno = AFPERR_NODIR;
@@ -1073,10 +1191,12 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             /* Search the cache */
             int unamelen = strlen(ret.u_name);
             cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen); /* 14 */
+
             if (cdir == NULL) {
                 /* Not in cache, create one */
                 if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) { /* 15 */
-                    LOG(log_error, logtype_afpd, "cname(did:%u, name:'%s', cwd:'%s'): failed to add dir",
+                    LOG(log_error, logtype_afpd,
+                        "cname(did:%u, name:'%s', cwd:'%s'): failed to add dir",
                         ntohl(dir->d_did), ret.u_name, getcwdpath());
                     return NULL;
                 }
@@ -1084,16 +1204,21 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         } /* if/else cnid==1 */
 
         /* Now chdir to the evaluated dir */
-        if (movecwd( vol, cdir ) < 0 ) { /* 16 */
-            LOG(log_debug, logtype_afpd, "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
+        if (movecwd(vol, cdir) < 0) {    /* 16 */
+            LOG(log_debug, logtype_afpd,
+                "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
                 cfrombstr(curdir->d_fullpath), cfrombstr(cdir->d_fullpath), strerror(errno));
-            if (len == 0)
+
+            if (len == 0) {
                 return path_from_dir(vol, cdir, &ret);
-            else
+            } else {
                 return NULL;
+            }
         }
+
         dir = cdir;
-        ret.m_name[0] = 0;      /* 17, so we later know last token was a dir */
+        /* 17, so we later know last token was a dir */
+        ret.m_name[0] = 0;
     } /* while (len) */
 
     if (curdir->d_did == DIRDID_ROOT_PARENT) {
@@ -1103,7 +1228,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
     if (ret.m_name[0] == 0) {
         /* Last part was a dir */
-        ret.u_name = mtoupath(vol, ret.m_name, 0, 1); /* Force "." into a useable static buffer */
+        /* Force "." into a useable static buffer */
+        ret.u_name = mtoupath(vol, ret.m_name, 0, 1);
         ret.d_dir = dir;
     }
 
@@ -1111,7 +1237,6 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         cfrombstr(dir->d_fullpath),
         cfrombstr(curdir->d_fullpath),
         ret.u_name);
-
     return &ret;
 }
 
@@ -1126,10 +1251,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 int movecwd(const struct vol *vol, struct dir *dir)
 {
     int ret;
-
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
-
     LOG(log_maxdebug, logtype_afpd, "movecwd: from: curdir:\"%s\", cwd:\"%s\"",
         curdir ? cfrombstr(curdir->d_fullpath) : "INVALID", getcwdpath());
 
@@ -1141,17 +1264,20 @@ int movecwd(const struct vol *vol, struct dir *dir)
     LOG(log_debug, logtype_afpd, "movecwd(to: did: %u, \"%s\")",
         ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
 
-    if ((ret = ochdir(cfrombstr(dir->d_fullpath), vol_syml_opt(vol))) != 0 ) {
+    if ((ret = ochdir(cfrombstr(dir->d_fullpath), vol_syml_opt(vol))) != 0) {
         LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): %s",
             cfrombstr(dir->d_fullpath), strerror(errno));
+
         if (ret == 1) {
             /* p is a symlink or getcwd failed */
             afp_errno = AFPERR_BADTYPE;
 
-            if (chdir(vol->v_path ) < 0) {
-                LOG(log_error, logtype_afpd, "can't chdir back'%s': %s", vol->v_path, strerror(errno));
+            if (chdir(vol->v_path) < 0) {
+                LOG(log_error, logtype_afpd, "can't chdir back'%s': %s", vol->v_path,
+                    strerror(errno));
                 /* XXX what do we do here? */
             }
+
             curdir = vol->v_root;
             return -1;
         }
@@ -1161,9 +1287,11 @@ int movecwd(const struct vol *vol, struct dir *dir)
         case EPERM:
             afp_errno = AFPERR_ACCESS;
             break;
+
         default:
             afp_errno = AFPERR_NOOBJ;
         }
+
         return -1;
     }
 
@@ -1180,16 +1308,21 @@ int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 {
     struct maccess ma;
     char *p;
-
     p = ad_dir(path);
-    if (!p)
+
+    if (!p) {
         return -1;
+    }
 
     accessmode(obj, vol, p, &ma, curdir, NULL);
-    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE))
+
+    if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE)) {
         return -1;
-    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD))
+    }
+
+    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD)) {
         return -1;
+    }
 
     return 0;
 }
@@ -1198,22 +1331,23 @@ int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 {
     struct maccess ma;
-
     accessmode(obj, vol, path->u_name, &ma, curdir, &path->st);
-
     LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
         path->u_name, ma.ma_user);
 
     if ((mode & OPENACC_WR) && !(ma.ma_user & AR_UWRITE)) {
-        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): write access denied", path->u_name);
+        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): write access denied",
+            path->u_name);
         return -1;
     }
-    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD)) {
-        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): read access denied", path->u_name);
-        return -1;
-    }
-    return 0;
 
+    if ((mode & OPENACC_RD) && !(ma.ma_user & AR_UREAD)) {
+        LOG(log_debug, logtype_afpd, "file_access(\"%s\"): read access denied",
+            path->u_name);
+        return -1;
+    }
+
+    return 0;
 }
 
 /* --------------------- */
@@ -1242,7 +1376,7 @@ int getdirparams(const AFPObj *obj,
                  const struct vol *vol,
                  uint16_t bitmap, struct path *s_path,
                  struct dir *dir,
-                 char *buf, size_t *buflen )
+                 char *buf, size_t *buflen)
 {
     struct maccess  ma;
     struct adouble  ad;
@@ -1258,14 +1392,15 @@ int getdirparams(const AFPObj *obj,
     char *upath = s_path->u_name;
 
     if (bitmap & ((1 << DIRPBIT_ATTR)  |
-                   (1 << DIRPBIT_CDATE) |
-                   (1 << DIRPBIT_MDATE) |
-                   (1 << DIRPBIT_BDATE) |
-                   (1 << DIRPBIT_FINFO))) {
-
+                  (1 << DIRPBIT_CDATE) |
+                  (1 << DIRPBIT_MDATE) |
+                  (1 << DIRPBIT_BDATE) |
+                  (1 << DIRPBIT_FINFO))) {
         ad_init(&ad, vol);
-        if ( !ad_metadata( upath, ADFLAGS_DIR, &ad) ) {
+
+        if (!ad_metadata(upath, ADFLAGS_DIR, &ad)) {
             isad = 1;
+
             if (ad.ad_mdp->adf_flags & O_CREAT) {
                 /* We just created it */
                 if (s_path->m_name == NULL) {
@@ -1279,179 +1414,196 @@ int getdirparams(const AFPObj *obj,
                         return AFPERR_MISC;
                     }
                 }
+
                 ad_setname(&ad, s_path->m_name);
-                ad_setid( &ad,
-                          s_path->st.st_dev,
-                          s_path->st.st_ino,
-                          dir->d_did,
-                          dir->d_pdid,
-                          vol->v_stamp);
-                ad_flush( &ad);
+                ad_setid(&ad,
+                         s_path->st.st_dev,
+                         s_path->st.st_ino,
+                         dir->d_did,
+                         dir->d_pdid,
+                         vol->v_stamp);
+                ad_flush(&ad);
             }
         }
     }
 
     pdid = dir->d_pdid;
-
     data = buf;
-    while ( bitmap != 0 ) {
-        while (( bitmap & 1 ) == 0 ) {
-            bitmap = bitmap>>1;
+
+    while (bitmap != 0) {
+        while ((bitmap & 1) == 0) {
+            bitmap = bitmap >> 1;
             bit++;
         }
 
-        switch ( bit ) {
+        switch (bit) {
         case DIRPBIT_ATTR :
-            if ( isad ) {
+            if (isad) {
                 ad_getattr(&ad, &ashort);
             } else if (invisible_dots(vol, cfrombstr(dir->d_u_name))) {
                 ashort = htons(ATTRBIT_INVISIBLE);
-            } else
+            } else {
                 ashort = 0;
+            }
+
             ashort &= ~htons(vol->v_ignattr);
-            memcpy( data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
+            memcpy(data, &ashort, sizeof(ashort));
+            data += sizeof(ashort);
             break;
 
         case DIRPBIT_PDID :
-            memcpy( data, &pdid, sizeof( pdid ));
-            data += sizeof( pdid );
+            memcpy(data, &pdid, sizeof(pdid));
+            data += sizeof(pdid);
             LOG(log_debug, logtype_afpd, "metadata('%s'):     Parent DID: %u",
                 s_path->u_name, ntohl(pdid));
             break;
 
         case DIRPBIT_CDATE :
-            if (!isad || (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0))
+            if (!isad || (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0)) {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            }
+
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case DIRPBIT_MDATE :
             aint = AD_DATE_FROM_UNIX(st->st_mtime);
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case DIRPBIT_BDATE :
-            if (!isad || (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0))
+            if (!isad || (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0)) {
                 aint = AD_DATE_START;
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            }
+
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case DIRPBIT_FINFO :
-            if ( isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
-                memcpy( data, ade, 32 );
+            if (isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
+                memcpy(data, ade, 32);
             } else { /* no appledouble */
-                memset( data, 0, 32 );
+                memset(data, 0, 32);
+
                 /* dot files are by default visible */
                 if (invisible_dots(vol, cfrombstr(dir->d_u_name))) {
                     ashort = htons(FINDERINFO_INVISIBLE);
                     memcpy(data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
                 }
             }
+
             data += 32;
             break;
 
         case DIRPBIT_LNAME :
-            if (dir->d_m_name) /* root of parent can have a null name */
+
+            /* root of parent can have a null name */
+            if (dir->d_m_name) {
                 l_nameoff = data;
-            else
+            } else {
                 memset(data, 0, sizeof(uint16_t));
-            data += sizeof( uint16_t );
+            }
+
+            data += sizeof(uint16_t);
             break;
 
         case DIRPBIT_SNAME :
             memset(data, 0, sizeof(uint16_t));
-            data += sizeof( uint16_t );
+            data += sizeof(uint16_t);
             break;
 
         case DIRPBIT_DID :
-            memcpy( data, &dir->d_did, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &dir->d_did, sizeof(aint));
+            data += sizeof(aint);
             LOG(log_debug, logtype_afpd, "metadata('%s'):            DID: %u",
                 s_path->u_name, ntohl(dir->d_did));
             break;
 
         case DIRPBIT_OFFCNT :
             ashort = 0;
+
             /* this needs to handle current directory access rights */
             if (diroffcnt(dir, st)) {
-                ashort = (dir->d_offcnt > 0xffff)?0xffff:dir->d_offcnt;
-            }
-            else if ((ret = for_each_dirent(vol, upath, NULL,NULL)) >= 0) {
+                ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
+            } else if ((ret = for_each_dirent(vol, upath, NULL, NULL)) >= 0) {
                 setdiroffcnt(dir, st,  ret);
-                ashort = (dir->d_offcnt > 0xffff)?0xffff:dir->d_offcnt;
+                ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
             }
-            ashort = htons( ashort );
-            memcpy( data, &ashort, sizeof( ashort ));
-            data += sizeof( ashort );
+
+            ashort = htons(ashort);
+            memcpy(data, &ashort, sizeof(ashort));
+            data += sizeof(ashort);
             break;
 
         case DIRPBIT_UID :
             aint = htonl(st->st_uid);
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case DIRPBIT_GID :
             aint = htonl(st->st_gid);
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             break;
 
         case DIRPBIT_ACCESS :
-            accessmode(obj, vol, upath, &ma, dir , st);
-
+            accessmode(obj, vol, upath, &ma, dir, st);
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
             *data++ = ma.ma_group;
             *data++ = ma.ma_owner;
             break;
 
-            /* Client has requested the ProDOS information block.
-               Just pass back the same basic block for all
-               directories. <shirsch@ibm.net> */
+        /* Client has requested the ProDOS information block.
+           Just pass back the same basic block for all
+           directories. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
-            if (obj->afp_version >= 30) { /* UTF8 name */
+            if (obj->afp_version >= 30) {
+                /* UTF8 name */
                 utf8 = kTextEncodingUTF8;
-                if (dir->d_m_name) /* root of parent can have a null name */
+
+                /* root of parent can have a null name */
+                if (dir->d_m_name) {
                     utf_nameoff = data;
-                else
+                } else {
                     memset(data, 0, sizeof(uint16_t));
-                data += sizeof( uint16_t );
+                }
+
+                data += sizeof(uint16_t);
                 aint = 0;
-                memcpy(data, &aint, sizeof( aint ));
-                data += sizeof( aint );
-            }
-            else { /* ProDOS Info Block */
+                memcpy(data, &aint, sizeof(aint));
+                data += sizeof(aint);
+            } else {
+                /* ProDOS Info Block */
                 *data++ = 0x0f;
                 *data++ = 0;
-                ashort = htons( 0x0200 );
-                memcpy( data, &ashort, sizeof( ashort ));
-                data += sizeof( ashort );
-                memset( data, 0, sizeof( ashort ));
-                data += sizeof( ashort );
+                ashort = htons(0x0200);
+                memcpy(data, &ashort, sizeof(ashort));
+                data += sizeof(ashort);
+                memset(data, 0, sizeof(ashort));
+                data += sizeof(ashort);
             }
+
             break;
 
         case DIRPBIT_UNIXPR :
             /* accessmode may change st_mode with ACLs */
             accessmode(obj, vol, upath, &ma, dir, st);
-
             aint = htonl(st->st_uid);
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             aint = htonl(st->st_gid);
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             aint = st->st_mode;
-            aint = htonl ( aint & ~S_ISGID );  /* Remove SGID, OSX doesn't like it ... */
-            memcpy( data, &aint, sizeof( aint ));
-            data += sizeof( aint );
-
+            /* Remove SGID, OSX doesn't like it ... */
+            aint = htonl(aint & ~S_ISGID);
+            memcpy(data, &aint, sizeof(aint));
+            data += sizeof(aint);
             *data++ = ma.ma_user;
             *data++ = ma.ma_world;
             *data++ = ma.ma_group;
@@ -1459,27 +1611,33 @@ int getdirparams(const AFPObj *obj,
             break;
 
         default :
-            if ( isad ) {
+            if (isad) {
                 ad_close(&ad, ADFLAGS_HF);
             }
+
             return AFPERR_BITMAP;
         }
-        bitmap = bitmap>>1;
+
+        bitmap = bitmap >> 1;
         bit++;
     }
-    if ( l_nameoff ) {
-        ashort = htons( data - buf );
-        memcpy( l_nameoff, &ashort, sizeof( ashort ));
+
+    if (l_nameoff) {
+        ashort = htons(data - buf);
+        memcpy(l_nameoff, &ashort, sizeof(ashort));
         data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, 0);
     }
-    if ( utf_nameoff ) {
-        ashort = htons( data - buf );
-        memcpy( utf_nameoff, &ashort, sizeof( ashort ));
+
+    if (utf_nameoff) {
+        ashort = htons(data - buf);
+        memcpy(utf_nameoff, &ashort, sizeof(ashort));
         data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, utf8);
     }
-    if ( isad ) {
+
+    if (isad) {
         ad_close(&ad, ADFLAGS_HF);
     }
+
     *buflen = data - buf;
     return AFP_OK;
 }
@@ -1487,19 +1645,24 @@ int getdirparams(const AFPObj *obj,
 /* ----------------------------- */
 int path_error(struct path *path, int error)
 {
-/* - a dir with access error
- * - no error it's a file
- * - file not found
- */
-    if (path_isadir(path))
+    /* - a dir with access error
+     * - no error it's a file
+     * - file not found
+     */
+    if (path_isadir(path)) {
         return afp_errno;
-    if (path->st_valid && path->st_errno)
+    }
+
+    if (path->st_valid && path->st_errno) {
         return error;
+    }
+
     return AFPERR_BADTYPE ;
 }
 
 /* ----------------------------- */
-int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
+                     char *rbuf _U_, size_t *rbuflen)
 {
     struct vol  *vol;
     struct dir  *dir;
@@ -1507,64 +1670,67 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_
     uint16_t   vid, bitmap;
     uint32_t   did;
     int     rc;
-
     *rbuflen = 0;
     ibuf += 2;
-    memcpy( &vid, ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
+    memcpy(&vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
 
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
+    if (NULL == (vol = getvolbyvid(vid))) {
         return AFPERR_PARAM;
     }
 
-    if (vol->v_flags & AFPVOL_RO)
+    if (vol->v_flags & AFPVOL_RO) {
         return AFPERR_VLOCK;
+    }
 
-    memcpy( &did, ibuf, sizeof( did ));
-    ibuf += sizeof( int );
+    memcpy(&did, ibuf, sizeof(did));
+    ibuf += sizeof(int);
 
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
+    if (NULL == (dir = dirlookup(vol, did))) {
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, sizeof( bitmap ));
-    bitmap = ntohs( bitmap );
-    ibuf += sizeof( bitmap );
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
+    ibuf += sizeof(bitmap);
 
-    if (NULL == ( path = cname( vol, dir, &ibuf )) ) {
+    if (NULL == (path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_NOOBJ);
     }
 
-    if ( *path->m_name != '\0' ) {
+    if (*path->m_name != '\0') {
         rc = path_error(path, AFPERR_NOOBJ);
+
         /* maybe we are trying to set perms back */
-        if (rc != AFPERR_ACCESS)
+        if (rc != AFPERR_ACCESS) {
             return rc;
+        }
     }
 
     /*
      * If ibuf is odd, make it even.
      */
-    if ((intptr_t)ibuf & 1 ) {
+    if ((intptr_t)ibuf & 1) {
         ibuf++;
     }
 
-    if (AFP_OK == ( rc = setdirparams(vol, path, bitmap, ibuf )) ) {
-        setvoltime(obj, vol );
+    if (AFP_OK == (rc = setdirparams(vol, path, bitmap, ibuf))) {
+        setvoltime(obj, vol);
     }
+
     return rc;
 }
 
 /*
  * assume path == '\0' e.g. it's a directory in canonical form
  */
-int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *buf )
+int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
+                 char *buf)
 {
     struct maccess  ma;
     struct adouble  ad;
     struct utimbuf      ut;
     struct timeval      tv;
-
     char                *upath;
     char                *ade = NULL;
     struct dir          *dir;
@@ -1581,51 +1747,59 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
     uint32_t       upriv;
     mode_t              mpriv = 0;
     bool                set_upriv = false, set_maccess = false;
-
-    LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x)", path->u_name, bitmap);
-
+    LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x)", path->u_name,
+        bitmap);
     bit = 0;
     upath = path->u_name;
     dir   = path->d_dir;
-    while ( bitmap != 0 ) {
-        while (( bitmap & 1 ) == 0 ) {
-            bitmap = bitmap>>1;
+
+    while (bitmap != 0) {
+        while ((bitmap & 1) == 0) {
+            bitmap = bitmap >> 1;
             bit++;
         }
 
-        switch( bit ) {
+        switch (bit) {
         case DIRPBIT_ATTR :
             change_mdate = 1;
-            memcpy( &ashort, buf, sizeof( ashort ));
-            buf += sizeof( ashort );
+            memcpy(&ashort, buf, sizeof(ashort));
+            buf += sizeof(ashort);
             break;
+
         case DIRPBIT_CDATE :
             change_mdate = 1;
             memcpy(&cdate, buf, sizeof(cdate));
-            buf += sizeof( cdate );
+            buf += sizeof(cdate);
             break;
+
         case DIRPBIT_MDATE :
             memcpy(&newdate, buf, sizeof(newdate));
-            buf += sizeof( newdate );
+            buf += sizeof(newdate);
             break;
+
         case DIRPBIT_BDATE :
             change_mdate = 1;
             memcpy(&bdate, buf, sizeof(bdate));
-            buf += sizeof( bdate );
+            buf += sizeof(bdate);
             break;
+
         case DIRPBIT_FINFO :
             change_mdate = 1;
-            memcpy( finder_buf, buf, 32 );
+            memcpy(finder_buf, buf, 32);
             buf += 32;
             break;
-        case DIRPBIT_UID :  /* What kind of loser mounts as root? */
-            memcpy( &owner, buf, sizeof(owner));
-            buf += sizeof( owner );
+
+        case DIRPBIT_UID :
+            /* What kind of loser mounts as root? */
+            memcpy(&owner, buf, sizeof(owner));
+            buf += sizeof(owner);
             break;
+
         case DIRPBIT_GID :
-            memcpy( &group, buf, sizeof( group ));
-            buf += sizeof( group );
+            memcpy(&group, buf, sizeof(group));
+            buf += sizeof(group);
             break;
+
         case DIRPBIT_ACCESS :
             set_maccess = true;
             change_mdate = 1;
@@ -1633,93 +1807,114 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
             ma.ma_world = *buf++;
             ma.ma_group = *buf++;
             ma.ma_owner = *buf++;
-            mpriv = mtoumode( &ma ) | vol->v_dperm;
+            mpriv = mtoumode(&ma) | vol->v_dperm;
             break;
-            /* Ignore what the client thinks we should do to the
-               ProDOS information block.  Skip over the data and
-               report nothing amiss. <shirsch@ibm.net> */
+
+        /* Ignore what the client thinks we should do to the
+           ProDOS information block.  Skip over the data and
+           report nothing amiss. <shirsch@ibm.net> */
         case DIRPBIT_PDINFO :
             if (vol->v_obj->afp_version < 30) {
                 buf += 6;
-            }
-            else {
+            } else {
                 err = AFPERR_BITMAP;
                 bitmap = 0;
             }
+
             break;
+
         case DIRPBIT_UNIXPR :
             if (vol_unix_priv(vol)) {
                 set_upriv = true;
-                memcpy( &owner, buf, sizeof(owner)); /* FIXME need to change owner too? */
-                buf += sizeof( owner );
-                memcpy( &group, buf, sizeof( group ));
-                buf += sizeof( group );
-
+                memcpy(&owner, buf, sizeof(owner));  /* FIXME need to change owner too? */
+                buf += sizeof(owner);
+                memcpy(&group, buf, sizeof(group));
+                buf += sizeof(group);
                 change_mdate = 1;
-                memcpy( &upriv, buf, sizeof( upriv ));
-                buf += sizeof( upriv );
-                upriv = ntohl (upriv) | vol->v_dperm;
+                memcpy(&upriv, buf, sizeof(upriv));
+                buf += sizeof(upriv);
+                upriv = ntohl(upriv) | vol->v_dperm;
                 break;
             }
-            /* fall through */
+
+        /* fall through */
         default :
             err = AFPERR_BITMAP;
             bitmap = 0;
             break;
         }
 
-        bitmap = bitmap>>1;
+        bitmap = bitmap >> 1;
         bit++;
     }
 
-    if (d_bitmap & ((1<<DIRPBIT_ATTR) | (1<<DIRPBIT_CDATE) | (1<<DIRPBIT_BDATE) | (1<<DIRPBIT_FINFO))) {
+    if (d_bitmap & ((1 << DIRPBIT_ATTR) | (1 << DIRPBIT_CDATE) |
+                    (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_FINFO))) {
         ad_init(&ad, vol);
-        if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
-            LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x): need adouble", path->u_name, d_bitmap);
+
+        if (ad_open(&ad, upath, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE |
+                    ADFLAGS_RDWR, 0777) != 0) {
+            LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x): need adouble",
+                path->u_name, d_bitmap);
             return AFPERR_ACCESS;
         }
+
         if (ad_get_MD_flags(&ad) & O_CREAT) {
             ad_setname(&ad, cfrombstr(curdir->d_m_name));
         }
+
         isad = 1;
     }
 
     bit = 0;
     bitmap = d_bitmap;
-    while ( bitmap != 0 ) {
-        while (( bitmap & 1 ) == 0 ) {
-            bitmap = bitmap>>1;
+
+    while (bitmap != 0) {
+        while ((bitmap & 1) == 0) {
+            bitmap = bitmap >> 1;
             bit++;
         }
 
-        switch( bit ) {
+        switch (bit) {
         case DIRPBIT_ATTR :
             if (isad) {
                 ad_getattr(&ad, &bshort);
                 oshort = bshort;
-                if ( ntohs( ashort ) & ATTRBIT_SETCLR ) {
+
+                if (ntohs(ashort) & ATTRBIT_SETCLR) {
                     ashort &= ~htons(vol->v_ignattr);
-                    bshort |= htons( ntohs( ashort ) & ~ATTRBIT_SETCLR );
+                    bshort |= htons(ntohs(ashort) & ~ATTRBIT_SETCLR);
                 } else {
                     bshort &= ~ashort;
                 }
-                if ((bshort & htons(ATTRBIT_INVISIBLE)) != (oshort & htons(ATTRBIT_INVISIBLE)))
+
+                if ((bshort & htons(ATTRBIT_INVISIBLE)) != (oshort & htons(
+                            ATTRBIT_INVISIBLE))) {
                     change_parent_mdate = 1;
+                }
+
                 ad_setattr(&ad, bshort);
             }
+
             break;
+
         case DIRPBIT_CDATE :
             if (isad) {
                 ad_setdate(&ad, AD_DATE_CREATE, cdate);
             }
+
             break;
+
         case DIRPBIT_MDATE :
             break;
+
         case DIRPBIT_BDATE :
             if (isad) {
                 ad_setdate(&ad, AD_DATE_BACKUP, bdate);
             }
+
             break;
+
         case DIRPBIT_FINFO :
             if (isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
                 /* Fixes #2802236 */
@@ -1727,9 +1922,10 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
                 memcpy(&fflags, finder_buf + FINDERINFO_FRFLAGOFF, sizeof(uint16_t));
                 fflags &= htons(~FINDERINFO_ISHARED);
                 memcpy(finder_buf + FINDERINFO_FRFLAGOFF, &fflags, sizeof(uint16_t));
+
                 /* #2802236 end */
 
-                if (  dir->d_did == DIRDID_ROOT ) {
+                if (dir->d_did == DIRDID_ROOT) {
                     /*
                      * Alright, we admit it, this is *really* sick!
                      * The 4 bytes that we don't copy, when we're dealing
@@ -1738,68 +1934,87 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap, char *bu
                      * behavior one sees when mounting above another mount
                      * point.
                      */
-                    memcpy( ade, finder_buf, 10 );
-                    memcpy( ade + 14, finder_buf + 14, 18 );
+                    memcpy(ade, finder_buf, 10);
+                    memcpy(ade + 14, finder_buf + 14, 18);
                 } else {
-                    memcpy( ade, finder_buf, 32 );
+                    memcpy(ade, finder_buf, 32);
                 }
             }
+
             break;
-        case DIRPBIT_UID :  /* What kind of loser mounts as root? */
-            if ( (dir->d_did == DIRDID_ROOT) &&
-                 (setdeskowner(vol, ntohl(owner), -1 ) < 0)) {
+
+        /* What kind of loser mounts as root? */
+        case DIRPBIT_UID :
+            if ((dir->d_did == DIRDID_ROOT) &&
+                    (setdeskowner(vol, ntohl(owner), -1) < 0)) {
                 err = set_dir_errors(path, "setdeskowner", errno);
+
                 if (isad && err == AFPERR_PARAM) {
                     err = AFP_OK; /* ???*/
-                }
-                else {
+                } else {
                     goto setdirparam_done;
                 }
             }
-            if ( setdirowner(vol, upath, ntohl(owner), -1 ) < 0 ) {
+
+            if (setdirowner(vol, upath, ntohl(owner), -1) < 0) {
                 err = set_dir_errors(path, "setdirowner", errno);
                 goto setdirparam_done;
             }
+
             break;
+
         case DIRPBIT_GID :
-            if (dir->d_did == DIRDID_ROOT)
-                setdeskowner(vol, -1, ntohl(group) );
-            if ( setdirowner(vol, upath, -1, ntohl(group) ) < 0 ) {
+            if (dir->d_did == DIRDID_ROOT) {
+                setdeskowner(vol, -1, ntohl(group));
+            }
+
+            if (setdirowner(vol, upath, -1, ntohl(group)) < 0) {
                 err = set_dir_errors(path, "setdirowner", errno);
                 goto setdirparam_done;
             }
+
             break;
+
         case DIRPBIT_ACCESS :
             break;
+
         case DIRPBIT_PDINFO :
             if (vol->v_obj->afp_version >= 30) {
                 err = AFPERR_BITMAP;
                 goto setdirparam_done;
             }
+
             break;
+
         case DIRPBIT_UNIXPR :
             if (!vol_unix_priv(vol)) {
                 err = AFPERR_BITMAP;
                 goto setdirparam_done;
             }
+
             break;
+
         default :
             err = AFPERR_BITMAP;
             goto setdirparam_done;
             break;
         }
 
-        bitmap = bitmap>>1;
+        bitmap = bitmap >> 1;
         bit++;
     }
 
 setdirparam_done:
+
     if (change_mdate && newdate == 0 && gettimeofday(&tv, NULL) == 0) {
         newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
     }
+
     if (newdate) {
-        if (isad)
+        if (isad) {
             ad_setdate(&ad, AD_DATE_MODIFY, newdate);
+        }
+
         ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
         utime(upath, &ut);
     }
@@ -1807,20 +2022,24 @@ setdirparam_done:
     if (isad) {
         if (path->st_valid && !path->st_errno) {
             struct stat *st = &path->st;
+
             if (dir && dir->d_pdid) {
                 ad_setid(&ad, st->st_dev, st->st_ino,  dir->d_did, dir->d_pdid, vol->v_stamp);
             }
         }
+
         if (ad_flush(&ad) != 0) {
             switch (errno) {
             case EACCES:
                 err = AFPERR_ACCESS;
                 break;
+
             default:
                 err = AFPERR_MISC;
                 break;
-           }
+            }
         }
+
         ad_close(&ad, ADFLAGS_HF);
     }
 
@@ -1828,18 +2047,21 @@ setdirparam_done:
         if (set_maccess == true) {
             if (dir->d_did == DIRDID_ROOT) {
                 setdeskmode(vol, mpriv);
+
                 if (!dir_rx_set(mpriv)) {
                     /* we can't remove read and search for owner on volume root */
                     err = AFPERR_ACCESS;
                     goto setprivdone;
                 }
             }
+
             if (setdirunixmode(vol, upath, mpriv) < 0) {
                 LOG(log_info, logtype_afpd, "setdirparams(\"%s\"): setdirunixmode: %s",
                     fullpathname(upath), strerror(errno));
                 err = set_dir_errors(path, "setdirmode", errno);
             }
         }
+
         if ((set_upriv == true) && vol_unix_priv(vol)) {
             if (dir->d_did == DIRDID_ROOT) {
                 if (!dir_rx_set(upriv)) {
@@ -1847,6 +2069,7 @@ setdirparam_done:
                     err = AFPERR_ACCESS;
                     goto setprivdone;
                 }
+
                 setdeskowner(vol, -1, ntohl(group));
                 setdeskmode(vol, upriv);
             }
@@ -1867,20 +2090,23 @@ setdirparam_done:
     }
 
 setprivdone:
+
     if (change_parent_mdate && dir && dir->d_did != DIRDID_ROOT
-        && gettimeofday(&tv, NULL) == 0) {
+            && gettimeofday(&tv, NULL) == 0) {
         if (movecwd(vol, dirlookup(vol, dir->d_pdid)) == 0) {
             newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
             /* be careful with bitmap because now dir is null */
-            bitmap = 1<<DIRPBIT_MDATE;
+            bitmap = 1 << DIRPBIT_MDATE;
             setdirparams(vol, &Cur_Path, bitmap, (char *)&newdate);
             /* should we reset curdir ?*/
         }
     }
+
     return err;
 }
 
-int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
+                size_t *rbuflen)
 {
 #ifdef HAVE_DIRFD
     DIR                  *dp;
@@ -1890,18 +2116,17 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     struct dir           *dir;
     uint32_t            did;
     uint16_t            vid;
-
     *rbuflen = 0;
     ibuf += 2;
+    memcpy(&vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
 
-    memcpy( &vid, ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
-    if (NULL == (vol = getvolbyvid( vid )) ) {
+    if (NULL == (vol = getvolbyvid(vid))) {
         return AFPERR_PARAM;
     }
 
-    memcpy( &did, ibuf, sizeof( did ));
-    ibuf += sizeof( did );
+    memcpy(&did, ibuf, sizeof(did));
+    ibuf += sizeof(did);
 
     /*
      * Here's the deal:
@@ -1911,66 +2136,74 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
      * ever going to see here is probably CNID 2. Anyway, we' prepared.
      */
 
-    if ( ntohl(did) == 2 ) {
+    if (ntohl(did) == 2) {
         sync();
     } else {
-        if (NULL == ( dir = dirlookup( vol, did )) ) {
+        if (NULL == (dir = dirlookup(vol, did))) {
             return afp_errno; /* was AFPERR_NOOBJ */
         }
 
-        if (movecwd( vol, dir ) < 0 )
+        if (movecwd(vol, dir) < 0) {
             return AFPERR_NOOBJ;
+        }
 
         /*
          * Assuming only OSens that have dirfd also may require fsyncing directories
          * in order to flush metadata e.g. Linux.
          */
-
 #ifdef HAVE_DIRFD
-        if (NULL == ( dp = opendir( "." )) ) {
-            switch( errno ) {
+
+        if (NULL == (dp = opendir("."))) {
+            switch (errno) {
             case ENOENT :
                 return AFPERR_NOOBJ;
+
             case EACCES :
                 return AFPERR_ACCESS;
+
             default :
                 return AFPERR_PARAM;
             }
         }
 
         LOG(log_debug, logtype_afpd, "afp_syncdir: dir: '%s'", dir->d_u_name);
+        dfd = dirfd(dp);
 
-        dfd = dirfd( dp );
-        if ( fsync ( dfd ) < 0 )
+        if (fsync(dfd) < 0)
             LOG(log_error, logtype_afpd, "afp_syncdir(%s):  %s",
-                dir->d_u_name, strerror(errno) );
+                dir->d_u_name, strerror(errno));
+
         closedir(dp); /* closes dfd too */
 #endif
 
-        if ( -1 == (dfd = open(vol->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
-            switch( errno ) {
+        if (-1 == (dfd = open(vol->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
+            switch (errno) {
             case ENOENT:
                 return AFPERR_NOOBJ;
+
             case EACCES:
                 return AFPERR_ACCESS;
+
             default:
                 return AFPERR_PARAM;
             }
         }
 
         LOG(log_debug, logtype_afpd, "afp_syncdir: ad-file: '%s'",
-            vol->ad_path(".", ADFLAGS_DIR) );
+            vol->ad_path(".", ADFLAGS_DIR));
 
-        if ( fsync(dfd) < 0 )
+        if (fsync(dfd) < 0)
             LOG(log_error, logtype_afpd, "afp_syncdir(%s): %s",
-                vol->ad_path(cfrombstr(dir->d_u_name), ADFLAGS_DIR), strerror(errno) );
+                vol->ad_path(cfrombstr(dir->d_u_name), ADFLAGS_DIR), strerror(errno));
+
         close(dfd);
     }
 
     return AFP_OK;
 }
 
-int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                  size_t *rbuflen)
 {
     struct adouble  ad;
     struct vol      *vol;
@@ -1980,35 +2213,39 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
     uint32_t       did;
     uint16_t       vid;
     int                 err;
-
     *rbuflen = 0;
     ibuf += 2;
+    memcpy(&vid, ibuf, sizeof(vid));
+    ibuf += sizeof(vid);
 
-    memcpy( &vid, ibuf, sizeof( vid ));
-    ibuf += sizeof( vid );
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
+    if (NULL == (vol = getvolbyvid(vid))) {
         return AFPERR_PARAM;
     }
 
-    if (vol->v_flags & AFPVOL_RO)
+    if (vol->v_flags & AFPVOL_RO) {
         return AFPERR_VLOCK;
+    }
 
-    memcpy( &did, ibuf, sizeof( did ));
-    ibuf += sizeof( did );
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
+    memcpy(&did, ibuf, sizeof(did));
+    ibuf += sizeof(did);
+
+    if (NULL == (dir = dirlookup(vol, did))) {
         return afp_errno; /* was AFPERR_NOOBJ */
     }
+
     /* for concurrent access we need to be sure we are not in the
      * folder we want to create...
      */
     movecwd(vol, dir);
 
-    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
+    if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_PARAM);
     }
+
     /* cname was able to move curdir to it! */
-    if (*s_path->m_name == '\0')
+    if (*s_path->m_name == '\0') {
         return AFPERR_EXIST;
+    }
 
     upath = s_path->u_name;
 
@@ -2026,25 +2263,26 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_
         return AFPERR_MISC;
     }
 
-    if ( movecwd( vol, dir ) < 0 ) {
+    if (movecwd(vol, dir) < 0) {
         return AFPERR_PARAM;
     }
 
     ad_init(&ad, vol);
-    if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) < 0)  {
+
+    if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                0777) < 0)  {
         return AFPERR_ACCESS;
     }
+
     ad_setname(&ad, s_path->m_name);
-    ad_setid( &ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did, vol->v_stamp);
-
+    ad_setid(&ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did,
+             vol->v_stamp);
     fce_register(obj, FCE_DIR_CREATE, bdata(curdir->d_fullpath), NULL);
-
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
-
-    memcpy( rbuf, &dir->d_did, sizeof( uint32_t ));
-    *rbuflen = sizeof( uint32_t );
-    setvoltime(obj, vol );
+    memcpy(rbuf, &dir->d_did, sizeof(uint32_t));
+    *rbuflen = sizeof(uint32_t);
+    setvoltime(obj, vol);
     return AFP_OK;
 }
 
@@ -2065,34 +2303,42 @@ int renamedir(struct vol *vol,
     int             err;
 
     /* existence check moved to afp_moveandrename */
-    if ( unix_rename(dirfd, src, -1, dst ) < 0 ) {
-        switch ( errno ) {
+    if (unix_rename(dirfd, src, -1, dst) < 0) {
+        switch (errno) {
         case ENOENT :
             return AFPERR_NOOBJ;
+
         case EACCES :
             return AFPERR_ACCESS;
+
         case EROFS:
             return AFPERR_VLOCK;
+
         case EINVAL:
             /* tried to move directory into a subdirectory of itself */
             return AFPERR_CANTMOVE;
+
         case EXDEV:
+
             /* this needs to copy and delete. bleah. that means we have
              * to deal with entire directory hierarchies. */
             if ((err = copydir(vol, newparent, dirfd, src, dst)) < 0) {
                 deletedir(vol, -1, dst);
                 return err;
             }
-            if ((err = deletedir(vol, dirfd, src)) < 0)
+
+            if ((err = deletedir(vol, dirfd, src)) < 0) {
                 return err;
+            }
+
             break;
+
         default :
             return AFPERR_PARAM;
         }
     }
 
     vol->vfs->vfs_renamedir(vol, dirfd, src, dst);
-
     ad_init(&ad, vol);
 
     if (ad_open(&ad, dst, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR) == 0) {
@@ -2117,20 +2363,24 @@ int deletecurdir(struct vol *vol)
     }
 
     fdir = curdir;
-
     ad_init(&ad, vol);
-    /* we never want to create a resource fork here, we are going to delete it */
-    if ( ad_metadata( ".", ADFLAGS_DIR, &ad) == 0 ) {
 
+    /* we never want to create a resource fork here, we are going to delete it */
+    if (ad_metadata(".", ADFLAGS_DIR, &ad) == 0) {
         ad_getattr(&ad, &ashort);
         ad_close(&ad, ADFLAGS_HF);
-        if (!(vol->v_ignattr & ATTRBIT_NODELETE) && (ashort & htons(ATTRBIT_NODELETE))) {
+
+        if (!(vol->v_ignattr & ATTRBIT_NODELETE)
+                && (ashort & htons(ATTRBIT_NODELETE))) {
             return  AFPERR_OLOCK;
         }
     }
+
     err = vol->vfs->vfs_deletecurdir(vol);
+
     if (err) {
-        LOG(log_error, logtype_afpd, "deletecurdir: error deleting AppleDouble files in \"%s\"",
+        LOG(log_error, logtype_afpd,
+            "deletecurdir: error deleting AppleDouble files in \"%s\"",
             cfrombstr(curdir->d_fullpath));
         return err;
     }
@@ -2142,20 +2392,24 @@ int deletecurdir(struct vol *vol)
 
     LOG(log_debug, logtype_afpd, "deletecurdir: moved to \"%s\"",
         cfrombstr(curdir->d_fullpath));
-
     err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
 
     switch (err) {
     case AFP_OK:
     case AFPERR_NOOBJ:
         break;
+
     case AFPERR_DIRNEMPT:
-        if (delete_vetoed_files(vol, bdata(fdir->d_u_name), false) != 0)
+        if (delete_vetoed_files(vol, bdata(fdir->d_u_name), false) != 0) {
             goto delete_done;
+        }
+
         err = AFP_OK;
         break;
+
     default:
-        LOG(log_error, logtype_afpd, "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
+        LOG(log_error, logtype_afpd,
+            "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
             cfrombstr(curdir->d_fullpath));
         goto delete_done;
     }
@@ -2163,14 +2417,13 @@ int deletecurdir(struct vol *vol)
     AFP_CNID_START("cnid_delete");
     cnid_delete(vol->v_cdb, fdir->d_did);
     AFP_CNID_DONE();
-
-    dir_remove( vol, fdir );
-
+    dir_remove(vol, fdir);
 delete_done:
     return err;
 }
 
-int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+              size_t *rbuflen)
 {
     struct passwd   *pw;
     struct group    *gr;
@@ -2178,210 +2431,257 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *r
     uint32_t           id;
     int         len, sfunc;
     int         utf8 = 0;
-
     ibuf++;
-    sfunc = (unsigned char) *ibuf++;
+    sfunc = (unsigned char) * ibuf++;
     *rbuflen = 0;
 
     if (sfunc >= 3 && sfunc <= 6) {
         if (obj->afp_version < 30) {
             return AFPERR_PARAM;
         }
+
         utf8 = 1;
     }
 
-    switch ( sfunc ) {
+    switch (sfunc) {
     case 1 :
     case 3 :/* unicode */
-        memcpy( &id, ibuf, sizeof( id ));
+        memcpy(&id, ibuf, sizeof(id));
         id = ntohl(id);
-        if ( id != 0 ) {
-            if (( pw = getpwuid( id )) == NULL ) {
+
+        if (id != 0) {
+            if ((pw = getpwuid(id)) == NULL) {
                 return AFPERR_NOITEM;
             }
-            len = convert_string_allocate( obj->options.unixcharset, ((!utf8)?obj->options.maccharset:CH_UTF8_MAC),
-                                           pw->pw_name, -1, &name);
+
+            len = convert_string_allocate(obj->options.unixcharset,
+                                          ((!utf8) ? obj->options.maccharset : CH_UTF8_MAC),
+                                          pw->pw_name, -1, &name);
         } else {
             len = 0;
             name = NULL;
         }
+
         break;
+
     case 2 :
     case 4 : /* unicode */
-        memcpy( &id, ibuf, sizeof( id ));
+        memcpy(&id, ibuf, sizeof(id));
         id = ntohl(id);
-        if ( id != 0 ) {
-            if (NULL == ( gr = (struct group *)getgrgid( id ))) {
+
+        if (id != 0) {
+            if (NULL == (gr = (struct group *)getgrgid(id))) {
                 return AFPERR_NOITEM;
             }
-            len = convert_string_allocate( obj->options.unixcharset, (!utf8)?obj->options.maccharset:CH_UTF8_MAC,
-                                           gr->gr_name, -1, &name);
+
+            len = convert_string_allocate(obj->options.unixcharset,
+                                          (!utf8) ? obj->options.maccharset : CH_UTF8_MAC,
+                                          gr->gr_name, -1, &name);
         } else {
             len = 0;
             name = NULL;
         }
+
         break;
 
     case 5 : /* UUID -> username */
     case 6 : /* UUID -> groupname */
-        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID)) {
             return AFPERR_PARAM;
+        }
+
         LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
         uuidtype_t type;
         len = getnamefromuuid((unsigned char*) ibuf, &name, &type);
-        if (len != 0)       /* its a error code, not len */
+
+        if (len != 0) {     /* its a error code, not len */
             return AFPERR_NOITEM;
+        }
+
         switch (type) {
         case UUID_USER:
-            if (( pw = getpwnam( name )) == NULL )
+            if ((pw = getpwnam(name)) == NULL) {
                 return AFPERR_NOITEM;
+            }
+
             LOG(log_debug, logtype_afpd, "afp_mapid: name:%s -> uid:%d", name, pw->pw_uid);
             id = htonl(UUID_USER);
-            memcpy( rbuf, &id, sizeof( id ));
-            id = htonl( pw->pw_uid);
-            rbuf += sizeof( id );
-            memcpy( rbuf, &id, sizeof( id ));
-            rbuf += sizeof( id );
-            *rbuflen = 2 * sizeof( id );
+            memcpy(rbuf, &id, sizeof(id));
+            id = htonl(pw->pw_uid);
+            rbuf += sizeof(id);
+            memcpy(rbuf, &id, sizeof(id));
+            rbuf += sizeof(id);
+            *rbuflen = 2 * sizeof(id);
             break;
+
         case UUID_GROUP:
-            if (( gr = getgrnam( name )) == NULL )
+            if ((gr = getgrnam(name)) == NULL) {
                 return AFPERR_NOITEM;
+            }
+
             LOG(log_debug, logtype_afpd, "afp_mapid: group:%s -> gid:%d", name, gr->gr_gid);
             id = htonl(UUID_GROUP);
-            memcpy( rbuf, &id, sizeof( id ));
-            rbuf += sizeof( id );
-            id = htonl( gr->gr_gid);
-            memcpy( rbuf, &id, sizeof( id ));
-            rbuf += sizeof( id );
-            *rbuflen = 2 * sizeof( id );
+            memcpy(rbuf, &id, sizeof(id));
+            rbuf += sizeof(id);
+            id = htonl(gr->gr_gid);
+            memcpy(rbuf, &id, sizeof(id));
+            rbuf += sizeof(id);
+            *rbuflen = 2 * sizeof(id);
             break;
+
         default:
             return AFPERR_MISC;
         }
+
         break;
 
     default :
         return AFPERR_PARAM;
     }
 
-    if (name)
-        len = strlen( name );
+    if (name) {
+        len = strlen(name);
+    }
 
     if (utf8) {
         uint16_t tp = htons(len);
         memcpy(rbuf, &tp, sizeof(tp));
         rbuf += sizeof(tp);
         *rbuflen += 2;
-    }
-    else {
+    } else {
         *rbuf++ = len;
         *rbuflen += 1;
     }
-    if ( name && len > 0 ) {
-        memcpy( rbuf, name, len );
+
+    if (name && len > 0) {
+        memcpy(rbuf, name, len);
     }
+
     *rbuflen += len;
-    if (name)
+
+    if (name) {
         free(name);
+    }
+
     return AFP_OK;
 }
 
-int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                size_t *rbuflen)
 {
     struct passwd   *pw;
     struct group    *gr;
     int             len, sfunc;
     uint32_t       id;
     uint16_t       ulen;
-
     ibuf++;
-    sfunc = (unsigned char) *ibuf++;
+    sfunc = (unsigned char) * ibuf++;
     *rbuflen = 0;
     LOG(log_debug, logtype_afpd, "afp_mapname: sfunc: %d", sfunc);
-    switch ( sfunc ) {
+
+    switch (sfunc) {
     case 1 :
     case 2 : /* unicode */
         if (obj->afp_version < 30) {
             return AFPERR_PARAM;
         }
+
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);
         ibuf += 2;
         LOG(log_debug, logtype_afpd, "afp_mapname: alive");
         break;
+
     case 3 :
     case 4 :
-        len = (unsigned char) *ibuf++;
+        len = (unsigned char) * ibuf++;
         break;
+
     case 5 : /* username -> UUID  */
     case 6 : /* groupname -> UUID */
-        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID ))
+        if ((obj->afp_version < 32) || !(obj->options.flags & OPTION_UUID)) {
             return AFPERR_PARAM;
+        }
+
         memcpy(&ulen, ibuf, sizeof(ulen));
         len = ntohs(ulen);
         ibuf += 2;
         break;
+
     default :
         return AFPERR_PARAM;
     }
 
-    if (len >= ibuflen - 1)
+    if (len >= ibuflen - 1) {
         return AFPERR_PARAM;
+    }
 
-    ibuf[ len ] = '\0';
+    ibuf[len] = '\0';
 
-    if ( len == 0 )
+    if (len == 0) {
         return AFPERR_PARAM;
-    else {
-        switch ( sfunc ) {
+    } else {
+        switch (sfunc) {
         case 1 : /* unicode */
         case 3 :
-            if (NULL == ( pw = (struct passwd *)getpwnam( ibuf )) ) {
+            if (NULL == (pw = (struct passwd *)getpwnam(ibuf))) {
                 return AFPERR_NOITEM;
             }
+
             id = pw->pw_uid;
             id = htonl(id);
-            memcpy( rbuf, &id, sizeof( id ));
-            *rbuflen = sizeof( id );
+            memcpy(rbuf, &id, sizeof(id));
+            *rbuflen = sizeof(id);
             break;
 
         case 2 : /* unicode */
         case 4 :
-            LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s",ibuf);
-            if (NULL == ( gr = (struct group *)getgrnam( ibuf ))) {
+            LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s", ibuf);
+
+            if (NULL == (gr = (struct group *)getgrnam(ibuf))) {
                 return AFPERR_NOITEM;
             }
+
             id = gr->gr_gid;
-            LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s -> id: %d",ibuf, id);
+            LOG(log_debug, logtype_afpd, "afp_mapname: getgrnam for name: %s -> id: %d",
+                ibuf, id);
             id = htonl(id);
-            memcpy( rbuf, &id, sizeof( id ));
-            *rbuflen = sizeof( id );
+            memcpy(rbuf, &id, sizeof(id));
+            *rbuflen = sizeof(id);
             break;
+
         case 5 :        /* username -> UUID */
-            LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);
-            if (0 != getuuidfromname(ibuf, UUID_USER, (unsigned char *)rbuf))
+            LOG(log_debug, logtype_afpd, "afp_mapname: name: %s", ibuf);
+
+            if (0 != getuuidfromname(ibuf, UUID_USER, (unsigned char *)rbuf)) {
                 return AFPERR_NOITEM;
+            }
+
             *rbuflen = UUID_BINSIZE;
             break;
+
         case 6 :        /* groupname -> UUID */
-            LOG(log_debug, logtype_afpd, "afp_mapname: name: %s",ibuf);
-            if (0 != getuuidfromname(ibuf, UUID_GROUP, (unsigned char *)rbuf))
+            LOG(log_debug, logtype_afpd, "afp_mapname: name: %s", ibuf);
+
+            if (0 != getuuidfromname(ibuf, UUID_GROUP, (unsigned char *)rbuf)) {
                 return AFPERR_NOITEM;
+            }
+
             *rbuflen = UUID_BINSIZE;
             break;
         }
     }
+
     return AFP_OK;
 }
 
 /* ------------------------------------
    variable DID support
 */
-int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
+                 char *rbuf _U_, size_t *rbuflen)
 {
     *rbuflen = 0;
-
     /* do nothing as dids are static for the life of the process. */
     return AFP_OK;
 }
@@ -2389,43 +2689,43 @@ int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_, char *rbuf
 /* did creation gets done automatically
  * there's a pb again with case but move it to cname
  */
-int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf, size_t *rbuflen)
+int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf,
+                size_t *rbuflen)
 {
     struct vol      *vol;
     struct dir      *parentdir;
     struct path     *path;
     uint32_t       did;
     uint16_t       vid;
-
     *rbuflen = 0;
     ibuf += 2;
-
     memcpy(&vid, ibuf, sizeof(vid));
-    ibuf += sizeof( vid );
+    ibuf += sizeof(vid);
 
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
+    if (NULL == (vol = getvolbyvid(vid))) {
         return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == ( parentdir = dirlookup( vol, did )) ) {
+    if (NULL == (parentdir = dirlookup(vol, did))) {
         return afp_errno;
     }
 
-    if (NULL == ( path = cname( vol, parentdir, &ibuf )) ) {
+    if (NULL == (path = cname(vol, parentdir, &ibuf))) {
         return get_afp_errno(AFPERR_PARAM);
     }
 
-    if ( *path->m_name != '\0' ) {
+    if (*path->m_name != '\0') {
         return path_error(path, AFPERR_NOOBJ);
     }
 
-    if ( !path->st_valid && of_stat(vol, path) < 0 ) {
+    if (!path->st_valid && of_stat(vol, path) < 0) {
         return AFPERR_NOOBJ;
     }
-    if ( path->st_errno ) {
+
+    if (path->st_errno) {
         return AFPERR_NOOBJ;
     }
 

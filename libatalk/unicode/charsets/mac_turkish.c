@@ -35,31 +35,32 @@
 #include "mac_turkish.h"
 #include "generic_mb.h"
 
-static size_t   mac_turkish_pull(void *,char **, size_t *, char **, size_t *);
-static size_t   mac_turkish_push(void *,char **, size_t *, char **, size_t *);
+static size_t   mac_turkish_pull(void *, char **, size_t *, char **, size_t *);
+static size_t   mac_turkish_push(void *, char **, size_t *, char **, size_t *);
 
-struct charset_functions charset_mac_turkish =
-{
-	"MAC_TURKISH",
-	35,
-	mac_turkish_pull,
-	mac_turkish_push,
-	CHARSET_CLIENT | CHARSET_MULTIBYTE,
-	NULL,
-	NULL, NULL
+struct charset_functions charset_mac_turkish = {
+    "MAC_TURKISH",
+    35,
+    mac_turkish_pull,
+    mac_turkish_push,
+    CHARSET_CLIENT | CHARSET_MULTIBYTE,
+    NULL,
+    NULL,
+    NULL
 };
 
-static size_t mac_turkish_push( void *cd, char **inbuf, size_t *inbytesleft,
-                         char **outbuf, size_t *outbytesleft)
+static size_t mac_turkish_push(void *cd, char **inbuf, size_t *inbytesleft,
+                               char **outbuf, size_t *outbytesleft)
 {
-	return (size_t) mb_generic_push( char_ucs2_to_mac_turkish, cd, inbuf, inbytesleft, outbuf, outbytesleft);
+    return (size_t) mb_generic_push(char_ucs2_to_mac_turkish, cd, inbuf,
+                                    inbytesleft, outbuf, outbytesleft);
 }
 
 /* ------------------------ */
 
-static size_t mac_turkish_pull ( void *cd, char **inbuf, size_t *inbytesleft,
-                         char **outbuf, size_t *outbytesleft)
+static size_t mac_turkish_pull(void *cd, char **inbuf, size_t *inbytesleft,
+                               char **outbuf, size_t *outbytesleft)
 {
-	return (size_t) mb_generic_pull( char_mac_turkish_to_ucs2, cd, inbuf, inbytesleft, outbuf, outbytesleft);
-
+    return (size_t) mb_generic_pull(char_mac_turkish_to_ucs2, cd, inbuf,
+                                    inbytesleft, outbuf, outbytesleft);
 }

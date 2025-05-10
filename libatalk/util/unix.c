@@ -51,8 +51,9 @@ static void closeall(int fd)
 {
     int fdlimit = sysconf(_SC_OPEN_MAX);
 
-    while (fd < fdlimit)
+    while (fd < fdlimit) {
         close(fd++);
+    }
 }
 
 /*!
@@ -63,8 +64,7 @@ int run_cmd(const char *cmd, char **cmd_argv)
     EC_INIT;
     pid_t pid, wpid;
     sigset_t sigs, oldsigs;
-	int status = 0;
-
+    int status = 0;
     sigfillset(&sigs);
     pthread_sigmask(SIG_SETMASK, &sigs, &oldsigs);
 
@@ -80,26 +80,32 @@ int run_cmd(const char *cmd, char **cmd_argv)
     }
 
     /* parent */
-	while ((wpid = waitpid(pid, &status, 0)) < 0) {
-	    if (errno == EINTR)
+    while ((wpid = waitpid(pid, &status, 0)) < 0) {
+        if (errno == EINTR) {
             continue;
-	    break;
-	}
-	if (wpid != pid) {
-	    LOG(log_error, logtype_default, "waitpid(%d): %s", (int)pid, strerror(errno));
-        EC_FAIL;
-	}
+        }
 
-    if (WIFEXITED(status))
+        break;
+    }
+
+    if (wpid != pid) {
+        LOG(log_error, logtype_default, "waitpid(%d): %s", (int)pid, strerror(errno));
+        EC_FAIL;
+    }
+
+    if (WIFEXITED(status)) {
         status = WEXITSTATUS(status);
-    else if (WIFSIGNALED(status))
+    } else if (WIFSIGNALED(status)) {
         status = WTERMSIG(status);
+    }
 
     LOG(log_note, logtype_default, "run_cmd(\"%s\"): status: %d", cmd, status);
-
 EC_CLEANUP:
-    if (status != 0)
+
+    if (status != 0) {
         ret = status;
+    }
+
     pthread_sigmask(SIG_SETMASK, &oldsigs, NULL);
     EC_EXIT;
 }
@@ -117,20 +123,25 @@ int daemonize(void)
     switch (fork()) {
     case 0:
         break;
+
     case -1:
         return -1;
+
     default:
         _exit(0);
     }
 
-    if (setsid() < 0)
+    if (setsid() < 0) {
         return -1;
+    }
 
     switch (fork()) {
     case 0:
         break;
+
     case -1:
         return -1;
+
     default:
         _exit(0);
     }
@@ -141,10 +152,9 @@ int daemonize(void)
     }
 
     closeall(0);
-    open("/dev/null",O_RDWR);
+    open("/dev/null", O_RDWR);
     dup(0);
     dup(0);
-
     return 0;
 }
 
@@ -157,16 +167,20 @@ void become_root(void)
 {
     if (getuid() == 0) {
         saved_uid = geteuid();
-        if (seteuid(0) != 0)
+
+        if (seteuid(0) != 0) {
             AFP_PANIC("Can't seteuid(0)");
+        }
     }
 }
 
 void unbecome_root(void)
 {
     if (getuid() == 0) {
-        if (saved_uid == -1 || seteuid(saved_uid) < 0)
+        if (saved_uid == -1 || seteuid(saved_uid) < 0) {
             AFP_PANIC("Can't seteuid back");
+        }
+
         saved_uid = -1;
     }
 }
@@ -181,10 +195,11 @@ const char *getcwdpath(void)
     static char cwd[MAXPATHLEN + 1];
     char *p;
 
-    if ((p = getcwd(cwd, MAXPATHLEN)) != NULL)
+    if ((p = getcwd(cwd, MAXPATHLEN)) != NULL) {
         return p;
-    else
+    } else {
         return strerror(errno);
+    }
 }
 
 /*!
@@ -196,10 +211,11 @@ const char *fullpathname(const char *name)
 {
     static char wd[MAXPATHLEN + 1];
 
-    if (name[0] == '/')
+    if (name[0] == '/') {
         return name;
+    }
 
-    if (getcwd(wd , MAXPATHLEN)) {
+    if (getcwd(wd, MAXPATHLEN)) {
         strlcat(wd, "/", MAXPATHLEN);
         strlcat(wd, name, MAXPATHLEN);
     } else {
@@ -224,8 +240,11 @@ const char *fullpathname(const char *name)
 char *stripped_slashes_basename(char *p)
 {
     int i = strlen(p) - 1;
-    while (i > 0 && p[i] == '/')
+
+    while (i > 0 && p[i] == '/') {
         p[i--] = 0;
+    }
+
     return strrchr(p, '/') ? strrchr(p, '/') + 1 : p;
 }
 
@@ -247,8 +266,9 @@ const char *tmpdir(void)
 
     if ((systmp = getenv("TMPDIR")))
         ;
-    else
+    else {
         systmp = "/tmp";
+    }
 
     if ((tmpfd = open(systmp, O_RDONLY | O_DIRECTORY)) == -1) {
         LOG(log_error, logtype_default, "tmpdir: cannot open %s: %s",
@@ -258,7 +278,6 @@ const char *tmpdir(void)
 
     snprintf(dirname, sizeof(dirname), "netatalk-%u", getpid());
     snprintf(netatalk_tmpdir, MAXPATHLEN, "%s/%s", systmp, dirname);
-
     oldmask = umask(0077);
 
     if (mkdirat(tmpfd, dirname, 0700) != 0) {
@@ -270,7 +289,8 @@ const char *tmpdir(void)
             return systmp;
         }
     } else {
-        LOG(log_debug, logtype_default, "tmpdir: created directory %s", netatalk_tmpdir);
+        LOG(log_debug, logtype_default, "tmpdir: created directory %s",
+            netatalk_tmpdir);
         umask(oldmask);
         close(tmpfd);
         return netatalk_tmpdir;
@@ -310,7 +330,9 @@ const char *tmpdir(void)
     }
 
     if ((st.st_mode & 0777) != 0700) {
-        LOG(log_warning, logtype_default, "tmpdir: fixing permissions on %s", netatalk_tmpdir);
+        LOG(log_warning, logtype_default, "tmpdir: fixing permissions on %s",
+            netatalk_tmpdir);
+
         if (fchmod(dirfd, 0700) != 0) {
             LOG(log_error, logtype_default, "tmpdir: failed to chmod %s: %s",
                 netatalk_tmpdir, strerror(errno));
@@ -339,18 +361,20 @@ const char *tmpdir(void)
 
 int ostat(const char *path, struct stat *buf, int options)
 {
-    if (options & O_NOFOLLOW)
+    if (options & O_NOFOLLOW) {
         return lstat(path, buf);
-    else
+    } else {
         return stat(path, buf);
+    }
 }
 
 int ochown(const char *path, uid_t owner, gid_t group, int options)
 {
-    if (options & O_NOFOLLOW)
+    if (options & O_NOFOLLOW) {
         return lchown(path, owner, group);
-    else
+    } else {
         return chown(path, owner, group);
+    }
 }
 
 /*!
@@ -370,18 +394,22 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 {
     struct stat sb;
 
-    if (options & O_IGNORE)
+    if (options & O_IGNORE) {
         return 0;
+    }
 
     if (!st) {
-        if (lstat(path, &sb) != 0)
+        if (lstat(path, &sb) != 0) {
             return -1;
+        }
+
         st = &sb;
     }
 
     if (options & O_NOFOLLOW)
-        if (S_ISLNK(st->st_mode))
+        if (S_ISLNK(st->st_mode)) {
             return 0;
+        }
 
     if (options & O_NETATALK_ACL) {
         return chmod_acl(path, mode);
@@ -401,9 +429,12 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
  */
 int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
 {
-    if (dirfd == -1)
+    if (dirfd == -1) {
         dirfd = AT_FDCWD;
-    return fstatat(dirfd, path, st, (options & O_NOFOLLOW) ? AT_SYMLINK_NOFOLLOW : 0);
+    }
+
+    return fstatat(dirfd, path, st,
+                   (options & O_NOFOLLOW) ? AT_SYMLINK_NOFOLLOW : 0);
 }
 
 /*!
@@ -416,25 +447,30 @@ int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
  */
 int ochdir(const char *dir, int options)
 {
-    char buf[MAXPATHLEN+1];
-    char cwd[MAXPATHLEN+1];
+    char buf[MAXPATHLEN + 1];
+    char cwd[MAXPATHLEN + 1];
     char *test;
     int  i;
 
-    if (!(options & O_NOFOLLOW))
+    if (!(options & O_NOFOLLOW)) {
         return chdir(dir);
+    }
 
     /*
      dir is a canonical path (without "../" "./" "//" )
      but may end with a /
     */
     *cwd = 0;
+
     if (*dir != '/') {
-        if (getcwd(cwd, MAXPATHLEN) == NULL)
+        if (getcwd(cwd, MAXPATHLEN) == NULL) {
             return -1;
+        }
     }
-    if (chdir(dir) != 0)
+
+    if (chdir(dir) != 0) {
         return -1;
+    }
 
     /*
      * Cases:
@@ -445,41 +481,53 @@ int ochdir(const char *dir, int options)
      * /a/b/.          | /c              | 1
      * /a/b/.          | /c/d/e/f        | 1
      */
-    if (getcwd(buf, MAXPATHLEN) == NULL)
+    if (getcwd(buf, MAXPATHLEN) == NULL) {
         return 1;
+    }
 
     i = 0;
+
     if (*cwd) {
         /* relative path requested,
          * Same directory?
         */
         for (; cwd[i]; i++) {
-            if (buf[i] != cwd[i])
+            if (buf[i] != cwd[i]) {
                 return 1;
+            }
         }
+
         if (buf[i]) {
-            if (buf[i] != '/')
+            if (buf[i] != '/') {
                 return 1;
+            }
+
             i++;
         }
     }
 
     test = &buf[i];
+
     for (i = 0; test[i]; i++) {
         if (test[i] != dir[i]) {
             return 1;
         }
     }
-    /* trailing '/' ? */
-    if (!dir[i])
-        return 0;
 
-    if (dir[i] != '/')
+    /* trailing '/' ? */
+    if (!dir[i]) {
+        return 0;
+    }
+
+    if (dir[i] != '/') {
         return 1;
+    }
 
     i++;
-    if (dir[i])
+
+    if (dir[i]) {
         return 1;
+    }
 
     return 0;
 }
@@ -507,8 +555,10 @@ void randombytes(void *buf, int n)
     if (fd == -1) {
         gettimeofday(&tv, NULL);
         srandom((unsigned int)tv.tv_usec);
-        for (i=0 ; i < n ; i++)
+
+        for (i = 0 ; i < n ; i++) {
             p[i] = random() & 0xFF;
+        }
     }
 
     return;
@@ -518,11 +568,12 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
 {
     int		i;
 
-    for ( i = 0; i < ngroups; i++ ) {
-        if ( groups[ i ] == gid ) {
+    for (i = 0; i < ngroups; i++) {
+        if (groups[i] == gid) {
             return 1;
         }
     }
+
     return 0;
 }
 
@@ -532,27 +583,34 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
 char *realpath_safe(const char *path)
 {
     char *resolved_path;
-
 #ifdef REALPATH_TAKES_NULL
+
     if ((resolved_path = realpath(path, NULL)) == NULL) {
         LOG(log_warning, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
         return NULL;
     }
+
     return resolved_path;
 #else
-    if ((resolved_path = malloc(MAXPATHLEN+1)) == NULL)
+
+    if ((resolved_path = malloc(MAXPATHLEN + 1)) == NULL) {
         return NULL;
+    }
+
     if (realpath(path, resolved_path) == NULL) {
         free(resolved_path);
         LOG(log_warning, logtype_afpd, "realpath() cannot resolve path \"%s\"", path);
         return NULL;
     }
+
     /* Safe some memory */
     char *tmp;
+
     if ((tmp = strdup(resolved_path)) == NULL) {
         free(resolved_path);
         return NULL;
     }
+
     free(resolved_path);
     resolved_path = tmp;
     return resolved_path;
@@ -564,7 +622,7 @@ char *realpath_safe(const char *path)
  **/
 const char *basename_safe(const char *path)
 {
-    static char buf[MAXPATHLEN+1];
+    static char buf[MAXPATHLEN + 1];
     strlcpy(buf, path, MAXPATHLEN);
     return basename(buf);
 }
@@ -578,15 +636,18 @@ char *strtok_quote(char *s, const char *delim)
     static char *olds = NULL;
     char *token;
 
-    if (s == NULL)
+    if (s == NULL) {
         s = olds;
+    }
 
     /* Return NULL if no string to parse */
-    if (s == NULL)
+    if (s == NULL) {
         return NULL;
+    }
 
     /* Scan leading delimiters.  */
-    s += strspn (s, delim);
+    s += strspn(s, delim);
+
     if (*s == '\0') {
         olds = NULL;
         return NULL;
@@ -597,41 +658,48 @@ char *strtok_quote(char *s, const char *delim)
 
     if (token[0] == '\"') {
         token++;
-        s = strpbrk (token, "\"");
+        s = strpbrk(token, "\"");
     } else {
-        s = strpbrk (token, delim);
+        s = strpbrk(token, delim);
     }
 
     if (s == NULL) {
         /* This token finishes the string.  */
-        olds = strchr (token, '\0');
+        olds = strchr(token, '\0');
     } else {
         /* Terminate the token and make OLDS point past it.  */
         *s = '\0';
         olds = s + 1;
     }
+
     return token;
 }
 
 int set_groups(AFPObj *obj, struct passwd *pwd)
 {
-    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0)
-        LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name, pwd->pw_gid, strerror(errno));
+    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
+        LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name,
+            pwd->pw_gid, strerror(errno));
+    }
 
     if ((obj->ngroups = getgroups(0, NULL)) < 0) {
-        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno));
+        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name,
+            strerror(errno));
         return -1;
     }
 
-    if (obj->groups)
+    if (obj->groups) {
         free(obj->groups);
-    if (NULL == (obj->groups = calloc(obj->ngroups, sizeof(gid_t))) ) {
+    }
+
+    if (NULL == (obj->groups = calloc(obj->ngroups, sizeof(gid_t)))) {
         LOG(log_error, logtype_afpd, "login: %s calloc: %d", obj->ngroups);
         return -1;
     }
 
-    if ((obj->ngroups = getgroups(obj->ngroups, obj->groups)) < 0 ) {
-        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name, strerror(errno));
+    if ((obj->ngroups = getgroups(obj->ngroups, obj->groups)) < 0) {
+        LOG(log_error, logtype_afpd, "login: %s getgroups: %s", pwd->pw_name,
+            strerror(errno));
         return -1;
     }
 
@@ -645,8 +713,9 @@ const char *print_groups(int ngroups, gid_t *groups)
     int i;
     char *s = groupsstr;
 
-    if (ngroups == 0)
+    if (ngroups == 0) {
         return "-";
+    }
 
     for (i = 0; (i < ngroups) && (s < &groupsstr[GROUPSTR_BUFSIZE]); i++) {
         s += snprintf(s, &groupsstr[GROUPSTR_BUFSIZE] - s, " %u", groups[i]);

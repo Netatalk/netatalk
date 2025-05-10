@@ -26,13 +26,11 @@ int asp_attention(ASP asp, AFPUserBytes flags)
     char cmds[ASP_HDRSIZ], data[ASP_HDRSIZ];
     struct sockaddr_at  sat;
     struct atp_block	atpb;
-    struct iovec	iov[ 1 ];
-
+    struct iovec	iov[1];
     cmds[0] = ASPFUNC_ATTN;
     cmds[1] = asp->asp_sid;
     flags = htons(flags);
     memcpy(cmds + 2, &flags, sizeof(flags));
-
     sat = asp->asp_sat;
     sat.sat_port = asp->asp_wss;
     atpb.atp_saddr = &sat;
@@ -41,18 +39,19 @@ int asp_attention(ASP asp, AFPUserBytes flags)
     atpb.atp_sreqto = 2;
     atpb.atp_sreqtries = 5;
 
-    if ( atp_sreq( asp->asp_atp, &atpb, 1, 0 ) < 0 ) {
-	LOG(log_error, logtype_default, "atp_sreq: %s", strerror(errno) );
-	return 0;
+    if (atp_sreq(asp->asp_atp, &atpb, 1, 0) < 0) {
+        LOG(log_error, logtype_default, "atp_sreq: %s", strerror(errno));
+        return 0;
     }
 
-    iov[ 0 ].iov_base = data;
-    iov[ 0 ].iov_len = sizeof( data );
+    iov[0].iov_base = data;
+    iov[0].iov_len = sizeof(data);
     atpb.atp_rresiov = iov;
-    atpb.atp_rresiovcnt = sizeof( iov )/sizeof( iov[ 0 ] );
-    if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
-	LOG(log_error, logtype_default, "atp_rresp: %s", strerror(errno) );
-	return 0;
+    atpb.atp_rresiovcnt = sizeof(iov) / sizeof(iov[0]);
+
+    if (atp_rresp(asp->asp_atp, &atpb) < 0) {
+        LOG(log_error, logtype_default, "atp_rresp: %s", strerror(errno));
+        return 0;
     }
 
     return 1;

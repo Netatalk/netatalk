@@ -23,13 +23,10 @@ int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
     DBT key;
     int results;
     static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
-
     LOG(log_debug, logtype_cnid, "dbd_search(\"%s\"):", rqst->name);
-
     memset(&key, 0, sizeof(key));
     rply->name = resbuf;
     rply->namelen = 0;
-
     key.data = (char *)rqst->name;
     key.size = rqst->namelen;
 
@@ -38,8 +35,10 @@ int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
         rply->result = CNID_DBD_RES_ERR_DB;
         return -1;
     }
+
     if (results) {
-        LOG(log_debug, logtype_cnid, "dbd_search(\"%s\"): %d matches", rqst->name, results);
+        LOG(log_debug, logtype_cnid, "dbd_search(\"%s\"): %d matches", rqst->name,
+            results);
         rply->namelen = results * sizeof(cnid_t);
         rply->result = CNID_DBD_RES_OK;
     } else {

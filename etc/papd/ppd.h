@@ -18,8 +18,8 @@ struct ppd_feature {
     char	*pd_value;
 };
 
-struct ppd_feature	*ppd_feature (const char *, int);
-struct ppd_font		*ppd_font (char *);
-int read_ppd (char *, int);
+struct ppd_feature	*ppd_feature(const char *, int);
+struct ppd_font		*ppd_font(char *);
+int read_ppd(char *, int);
 
 #endif /* PAPD_PPD_H */

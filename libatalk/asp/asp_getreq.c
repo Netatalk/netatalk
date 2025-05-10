@@ -39,26 +39,26 @@ int asp_getrequest(ASP asp)
 {
     struct atp_block	atpb;
     uint16_t		seq;
-
     asp->asp_sat.sat_port = ATADDR_ANYPORT;
     atpb.atp_saddr = &asp->asp_sat;
     atpb.atp_rreqdata = asp->cmdbuf;
     atpb.atp_rreqdlen = sizeof(asp->cmdbuf);
 
-    if ( atp_rreq( asp->asp_atp, &atpb ) < 0 ) {
-	return -1;
+    if (atp_rreq(asp->asp_atp, &atpb) < 0) {
+        return -1;
     }
 
     asp->cmdlen = atpb.atp_rreqdlen - 4;
     asp->read_count += asp->cmdlen;
-    memcpy( &seq, asp->cmdbuf + 2, sizeof(seq));
-    seq = ntohs( seq );
+    memcpy(&seq, asp->cmdbuf + 2, sizeof(seq));
+    seq = ntohs(seq);
 
     if ((asp->cmdbuf[0] != ASPFUNC_CLOSE) && (seq != asp->asp_seq)) {
-	return -2;
+        return -2;
     }
-    if ( asp->cmdbuf[1] != asp->asp_sid ) {
-	return -3;
+
+    if (asp->cmdbuf[1] != asp->asp_sid) {
+        return -3;
     }
 
     return asp->cmdbuf[0]; /* the command */

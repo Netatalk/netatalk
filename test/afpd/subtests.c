@@ -44,13 +44,19 @@ int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 {
     struct dir *dir;
     char dirname[20];
+
     while (start++ < end) {
         sprintf(dirname, "dir%04u", start);
-        dir = dir_new(dirname, dirname, vol, DIRDID_ROOT, htonl(start), bfromcstr(vol->v_path), 0);
-        if (dir == NULL)
+        dir = dir_new(dirname, dirname, vol, DIRDID_ROOT, htonl(start),
+                      bfromcstr(vol->v_path), 0);
+
+        if (dir == NULL) {
             return -1;
-        if (dircache_add(vol, dir) != 0)
+        }
+
+        if (dircache_add(vol, dir) != 0) {
             return -1;
+        }
     }
 
     return 0;
@@ -59,10 +65,12 @@ int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 int test002_rem_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 {
     struct dir *dir;
+
     while (start++ < end) {
         if ((dir = dircache_search_by_did(vol, htonl(start))))
-            if (dir_remove(vol, dir) != 0)
+            if (dir_remove(vol, dir) != 0) {
                 return -1;
+            }
     }
 
     return 0;

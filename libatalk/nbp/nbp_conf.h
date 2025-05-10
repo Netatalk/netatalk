@@ -27,13 +27,13 @@
 #include <sys/types.h>
 #include <atalk/nbp.h>
 
-extern char		nbp_send[ 1024 ];
-extern char		nbp_recv[ 1024 ];
+extern char		nbp_send[1024];
+extern char		nbp_recv[1024];
 extern unsigned char		nbp_port;
 extern unsigned char    nbp_id;
 
 
-int nbp_parse (char *, struct nbpnve *, int);
-int nbp_match (struct nbpnve *, struct nbpnve *, int);
+int nbp_parse(char *, struct nbpnve *, int);
+int nbp_match(struct nbpnve *, struct nbpnve *, int);
 
 #endif /* NBP_CONF_H */

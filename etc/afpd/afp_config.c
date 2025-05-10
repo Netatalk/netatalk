@@ -57,25 +57,26 @@
 void configfree(AFPObj *obj, DSI *dsi)
 {
 #ifndef NO_DDP
+
     /* just free the asp only resources and get out */
-    if (obj->proto == AFPPROTO_ASP)
-    {
+    if (obj->proto == AFPPROTO_ASP) {
         obj->Obj = NULL;
         obj->Type = NULL;
         obj->Zone = NULL;
         free(obj->Obj);
         free(obj->Type);
         free(obj->Zone);
-	if (obj->handle)
-        {
-            atp_close(((ASP) (obj->handle))->asp_atp);
+
+        if (obj->handle) {
+            atp_close(((ASP)(obj->handle))->asp_atp);
             free(obj->handle);
             obj->handle = NULL;
         }
+
         return;
     }
-#endif /* no afp/asp */
 
+#endif /* no afp/asp */
     DSI *p, *q;
 
     if (!dsi) {
@@ -88,11 +89,15 @@ void configfree(AFPObj *obj, DSI *dsi)
     /* Master and child releasing unneeded DSI handles */
     for (p = obj->dsi; p; p = q) {
         q = p->next;
-        if (p == dsi)
+
+        if (p == dsi) {
             continue;
+        }
+
         dsi_free(p);
         free(p);
     }
+
     obj->dsi = NULL;
 
     /* afpd session child passes dsi handle to obj handle */
@@ -116,26 +121,23 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
     struct ifaddrs *ifaddr _U_, *ifa _U_;
     int family _U_, s _U_;
     static char interfaddr[NI_MAXHOST] _U_;
-
     auth_load(dsi_obj, dsi_obj->options.uampath, dsi_obj->options.uamlist);
     set_signature(&dsi_obj->options);
     dsi_obj->proto = AFPPROTO_DSI;
-
 #ifdef HAVE_LDAP
     acl_ldap_freeconfig();
 #endif /* HAVE_LDAP */
-
 #ifndef NO_DDP
     /* make sure the asp socket doesn't get opened if init isn't successful */
     asp_obj->fd = -1;
+
     /* if appletalk is enabled, set it up first */
-    if (asp_obj->options.flags & OPTION_DDP)
-    {
+    if (asp_obj->options.flags & OPTION_DDP) {
         ATP atp;
         ASP asp;
-        char* Obj = NULL;
-        char* Type = "AFPServer";
-        char* Zone = strdup("*");
+        char *Obj = NULL;
+        char *Type = "AFPServer";
+        char *Zone = strdup("*");
 
         if ((atp = atp_open(ATADDR_ANYPORT, &asp_obj->options.ddpaddr)) == NULL) {
             LOG(log_error, logtype_afpd, "main: atp_open: %s", strerror(errno));
@@ -149,28 +151,31 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         }
 
         /* register asp server */
-        Obj = asp_obj->options.servername ? asp_obj->options.servername : asp_obj->options.hostname;
+        Obj = asp_obj->options.servername ? asp_obj->options.servername :
+              asp_obj->options.hostname;
         char tmpnam[32];
         convert_string(asp_obj->options.unixcharset,
-                        asp_obj->options.maccharset,
-                        Obj, strnlen(Obj, PATH_MAX),
-                        tmpnam, sizeof(tmpnam)-1);
+                       asp_obj->options.maccharset,
+                       Obj, strnlen(Obj, PATH_MAX),
+                       tmpnam, sizeof(tmpnam) - 1);
         tmpnam[31] = '\0';
         Obj = tmpnam;
 
         /* set a custom zone if user requested one */
         if (asp_obj->options.zone) {
             size_t zone_len = strnlen(asp_obj->options.zone, MAX_ZONE_LENGTH);
-            if ((size_t)-1 == (convert_string_allocate(asp_obj->options.unixcharset, 
-                asp_obj->options.maccharset,
-                asp_obj->options.zone,
-                zone_len,
-                &Zone))) {
+
+            if ((size_t) -1 == (convert_string_allocate(asp_obj->options.unixcharset,
+                                asp_obj->options.maccharset,
+                                asp_obj->options.zone,
+                                zone_len,
+                                &Zone))) {
                 if ((Zone = strdup(asp_obj->options.zone)) == NULL) {
                     LOG(log_error, logtype_afpd, "malloc: %s", strerror(errno));
                     asp_close(asp);
                     goto serv_free_return;
                 }
+
                 LOG(log_debug, logtype_afpd, "Using AppleTalk zone: %s", Zone);
             }
         }
@@ -197,6 +202,7 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 
         /* make sure we're not registered */
         nbp_unrgstr(Obj, Type, Zone, &asp_obj->options.ddpaddr);
+
         if (nbp_rgstr(atp_sockaddr(atp), Obj, Type, Zone) < 0) {
             LOG(log_error, logtype_afpd, "Can't register %s:%s@%s", Obj, Type, Zone);
             free(asp_obj->Obj);
@@ -210,26 +216,24 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
         asp_obj->proto = AFPPROTO_ASP;
         asp_obj->fd = atp_fileno(atp);
         asp_obj->handle = asp;
+serv_free_return:
 
-    serv_free_return:
-        if (asp_obj->handle)
-        {
-            LOG(log_note, logtype_afpd, "%s:%s@%s started on %u.%u:%u (%s)", Obj, Type, Zone,
+        if (asp_obj->handle) {
+            LOG(log_note, logtype_afpd, "%s:%s@%s started on %u.%u:%u (%s)", Obj, Type,
+                Zone,
                 ntohs(atp_sockaddr(atp)->sat_addr.s_net),
                 atp_sockaddr(atp)->sat_addr.s_node,
                 atp_sockaddr(atp)->sat_port, VERSION);
-        }
-        else
-        {
+        } else {
             LOG(log_note, logtype_afpd, "AppleTalk support disabled. Is atalkd running?");
         }
 
         free((void *)Zone);
-
     }
-#endif /* no afp/asp */
 
-    LOG(log_debug, logtype_afpd, "DSIConfigInit: hostname: %s, listen: %s, interfaces: %s, port: %s",
+#endif /* no afp/asp */
+    LOG(log_debug, logtype_afpd,
+        "DSIConfigInit: hostname: %s, listen: %s, interfaces: %s, port: %s",
         dsi_obj->options.hostname,
         dsi_obj->options.listen ? dsi_obj->options.listen : "-",
         dsi_obj->options.interfaces ? dsi_obj->options.interfaces : "-",
@@ -239,77 +243,91 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
      * Setup addresses we listen on from hostname and/or "afp listen" option
      */
     if (dsi_obj->options.listen) {
-        EC_NULL( q = p = strdup(dsi_obj->options.listen) );
-        EC_NULL( p = strtok_r(p, ", ", &savep) );
+        EC_NULL(q = p = strdup(dsi_obj->options.listen));
+        EC_NULL(p = strtok_r(p, ", ", &savep));
+
         while (p) {
-            if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, p, dsi_obj->options.port)) == NULL)
+            if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, p,
+                                dsi_obj->options.port)) == NULL) {
                 break;
+            }
 
             status_init(dsi_obj, asp_obj, dsi);
             *next = dsi;
             next = &dsi->next;
             dsi->AFPobj = dsi_obj;
-
             LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
                 getip_string((struct sockaddr *)&dsi->server),
                 getip_port((struct sockaddr *)&dsi->server));
-
             p = strtok_r(NULL, ", ", &savep);
         }
+
         if (q) {
             free(q);
             q = NULL;
         }
     }
 
-   /*
-    * Setup addresses we listen on from "afp interfaces".
-    * We use getifaddrs() instead of if_nameindex() because the latter appears still
-    * to be unable to return ipv4 addresses
-    */
+    /*
+     * Setup addresses we listen on from "afp interfaces".
+     * We use getifaddrs() instead of if_nameindex() because the latter appears still
+     * to be unable to return ipv4 addresses
+     */
     if (dsi_obj->options.interfaces) {
 #ifndef HAVE_GETIFADDRS
         LOG(log_error, logtype_afpd, "option \"afp interfaces\" not supported");
 #else
+
         if (getifaddrs(&ifaddr) == -1) {
-            LOG(log_error, logtype_afpd, "getinterfaddr: getifaddrs() failed: %s", strerror(errno));
+            LOG(log_error, logtype_afpd, "getinterfaddr: getifaddrs() failed: %s",
+                strerror(errno));
             EC_FAIL;
         }
 
-        EC_NULL( q = p = strdup(dsi_obj->options.interfaces) );
-        EC_NULL( p = strtok_r(p, ", ", &savep) );
+        EC_NULL(q = p = strdup(dsi_obj->options.interfaces));
+        EC_NULL(p = strtok_r(p, ", ", &savep));
+
         while (p) {
             for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-                if (ifa->ifa_addr == NULL)
+                if (ifa->ifa_addr == NULL) {
                     continue;
-                if (STRCMP(ifa->ifa_name, !=, p))
+                }
+
+                if (STRCMP(ifa->ifa_name, !=, p)) {
                     continue;
+                }
 
                 family = ifa->ifa_addr->sa_family;
+
                 if (family == AF_INET || family == AF_INET6) {
                     if (getnameinfo(ifa->ifa_addr,
                                     (family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
                                     interfaddr, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) != 0) {
-                        LOG(log_error, logtype_afpd, "getinterfaddr: getnameinfo() failed %s", gai_strerror(errno));
+                        LOG(log_error, logtype_afpd, "getinterfaddr: getnameinfo() failed %s",
+                            gai_strerror(errno));
                         continue;
                     }
 
-                    if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, interfaddr, dsi_obj->options.port)) == NULL)
+                    if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, interfaddr,
+                                        dsi_obj->options.port)) == NULL) {
                         continue;
+                    }
 
                     status_init(dsi_obj, asp_obj, dsi);
                     *next = dsi;
                     next = &dsi->next;
                     dsi->AFPobj = dsi_obj;
-
-                    LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on interface %s with address %s:%d",
+                    LOG(log_note, logtype_afpd,
+                        "Netatalk AFP/TCP listening on interface %s with address %s:%d",
                         p,
                         getip_string((struct sockaddr *)&dsi->server),
                         getip_port((struct sockaddr *)&dsi->server));
                 } /* if (family == AF_INET || family == AF_INET6) */
             } /* for (ifa != NULL) */
+
             p = strtok_r(NULL, ", ", &savep);
         }
+
         freeifaddrs(ifaddr);
 #endif
     }
@@ -320,13 +338,16 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
      * network interaces for determining an IP we can advertise in DSIStatus
      */
     if (dsi == NULL) {
-        if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, NULL, dsi_obj->options.port)) == NULL)
-            EC_FAIL_LOG("no suitable network address found, use \"afp listen\" or \"afp interfaces\"", 0);
+        if ((dsi = dsi_init(dsi_obj, dsi_obj->options.hostname, NULL,
+                            dsi_obj->options.port)) == NULL) {
+            EC_FAIL_LOG("no suitable network address found, use \"afp listen\" or \"afp interfaces\"",
+                        0);
+        }
+
         status_init(dsi_obj, asp_obj, dsi);
         *next = dsi;
         next = &dsi->next;
         dsi->AFPobj = dsi_obj;
-
         LOG(log_note, logtype_afpd, "Netatalk AFP/TCP listening on %s:%d",
             getip_string((struct sockaddr *)&dsi->server),
             getip_port((struct sockaddr *)&dsi->server));
@@ -337,36 +358,48 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
     acl_ldap_readconfig(dsi_obj->iniconfig);
 #endif /* HAVE_LDAP */
 
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce listener", NULL))) {
-		LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
-		fce_add_udp_socket(r);
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce listener",
+                              NULL))) {
+        LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
+        fce_add_udp_socket(r);
     }
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce coalesce", NULL))) {
-		LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
-		fce_set_coalesce(r);
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce coalesce",
+                              NULL))) {
+        LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
+        fce_set_coalesce(r);
     }
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce events", NULL))) {
-		LOG(log_note, logtype_afpd, "Fce events: %s", r);
-		fce_set_events(r);
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce events",
+                              NULL))) {
+        LOG(log_note, logtype_afpd, "Fce events: %s", r);
+        fce_set_events(r);
     }
+
     r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
     LOG(log_debug, logtype_afpd, "Fce version: %s", r);
     dsi_obj->fce_version = atoi(r);
 
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names", ".DS_Store"))) {
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names",
+                              ".DS_Store"))) {
         dsi_obj->fce_ign_names = strdup(r);
     }
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore directories", NULL))) {
-            dsi_obj->fce_ign_directories = strdup(r);
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                              "fce ignore directories", NULL))) {
+        dsi_obj->fce_ign_directories = strdup(r);
     }
 
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce notify script", NULL))) {
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                              "fce notify script", NULL))) {
         dsi_obj->fce_notify_script = strdup(r);
     }
 
-
 EC_CLEANUP:
-    if (q)
+
+    if (q) {
         free(q);
+    }
+
     EC_EXIT;
 }

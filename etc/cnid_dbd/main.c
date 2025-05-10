@@ -58,14 +58,16 @@ static void sig_exit(int signo)
 static void block_sigs_onoff(int block)
 {
     sigset_t set;
-
     sigemptyset(&set);
     sigaddset(&set, SIGINT);
     sigaddset(&set, SIGTERM);
-    if (block)
+
+    if (block) {
         sigprocmask(SIG_BLOCK, &set, NULL);
-    else
+    } else {
         sigprocmask(SIG_UNBLOCK, &set, NULL);
+    }
+
     return;
 }
 
@@ -103,7 +105,6 @@ static int get_lock(int cmd, const char *dbpath)
     int ret;
     char lockpath[PATH_MAX];
     struct stat st;
-
     LOG(log_debug, logtype_cnid, "get_lock(%s, \"%s\")",
         cmd == LOCK_EXCL ? "LOCK_EXCL" :
         cmd == LOCK_SHRD ? "LOCK_SHRD" :
@@ -113,15 +114,19 @@ static int get_lock(int cmd, const char *dbpath)
 
     switch (cmd) {
     case LOCK_FREE:
-        if (lockfd == -1)
+        if (lockfd == -1) {
             return -1;
+        }
+
         close(lockfd);
         lockfd = -1;
         return 0;
 
     case LOCK_UNLOCK:
-        if (lockfd == -1)
+        if (lockfd == -1) {
             return -1;
+        }
+
         return unlock(lockfd, 0, SEEK_SET, 0);
 
     case LOCK_EXCL:
@@ -131,10 +136,12 @@ static int get_lock(int cmd, const char *dbpath)
                 LOG(log_error, logtype_cnid, "get_lock: dbpath is NULL");
                 return -1;
             }
-            if ( (strlen(dbpath) + strlen(&LOCKFILENAME[1])) > (PATH_MAX - 1) ) {
+
+            if ((strlen(dbpath) + strlen(&LOCKFILENAME[1])) > (PATH_MAX - 1)) {
                 LOG(log_error, logtype_cnid, ".AppleDB pathname too long");
                 return -1;
             }
+
             strncpy(lockpath, dbpath, PATH_MAX - 1);
             strcat(lockpath, "/");
             strcat(lockpath, LOCKFILENAME);
@@ -151,19 +158,22 @@ static int get_lock(int cmd, const char *dbpath)
 
             if ((chown(lockpath, st.st_uid, st.st_gid)) != 0) {
                 LOG(log_error, logtype_cnid, "Error inheriting lockfile permissions: %s",
-                         strerror(errno));
+                    strerror(errno));
                 return -1;
             }
         }
 
-        if (cmd == LOCK_EXCL)
+        if (cmd == LOCK_EXCL) {
             ret = write_lock(lockfd, 0, SEEK_SET, 0);
-        else
+        } else {
             ret = read_lock(lockfd, 0, SEEK_SET, 0);
+        }
 
         if (ret != 0) {
-            if (cmd == LOCK_SHRD)
+            if (cmd == LOCK_SHRD) {
                 LOG(log_error, logtype_cnid, "Volume CNID db is locked, try again...");
+            }
+
             return 0;
         }
 
@@ -189,21 +199,24 @@ static int open_db(void)
         EC_FAIL;
     }
 
-    if (NULL == (dbd = dbif_init(bdata(dbpath), "cnid2.db")))
+    if (NULL == (dbd = dbif_init(bdata(dbpath), "cnid2.db"))) {
         EC_FAIL;
+    }
 
     /* Only recover if we got the lock */
-    if (dbif_env_open(dbd, dbp, DBOPTIONS | DB_RECOVER) < 0)
+    if (dbif_env_open(dbd, dbp, DBOPTIONS | DB_RECOVER) < 0) {
         EC_FAIL;
+    }
 
     LOG(log_debug, logtype_cnid, "Finished initializing BerkeleyDB environment");
 
-    if (dbif_open(dbd, dbp, 0) < 0)
+    if (dbif_open(dbd, dbp, 0) < 0) {
         EC_FAIL;
+    }
 
     LOG(log_debug, logtype_cnid, "Finished opening BerkeleyDB databases");
-
 EC_CLEANUP:
+
     if (ret != 0) {
         if (dbd) {
             (void)dbif_close(dbd);
@@ -218,28 +231,35 @@ static int delete_db(void)
 {
     EC_INIT;
     int cwd = -1;
+    EC_ZERO(get_lock(LOCK_FREE, bdata(dbpath)));
+    EC_NEG1(cwd = open(".", O_RDONLY));
 
-    EC_ZERO( get_lock(LOCK_FREE, bdata(dbpath)) );
-    EC_NEG1( cwd = open(".", O_RDONLY) );
-    if (chdir(cfrombstr(dbpath)) < 0)
-        LOG(log_error, logtype_cnid, "delete_db: could not chdir to \"%s\"", dbpath, strerror(errno));
-    if (system("rm -f cnid2.db lock log.* __db.*") < 0)
+    if (chdir(cfrombstr(dbpath)) < 0) {
+        LOG(log_error, logtype_cnid, "delete_db: could not chdir to \"%s\"", dbpath,
+            strerror(errno));
+    }
+
+    if (system("rm -f cnid2.db lock log.* __db.*") < 0) {
         LOG(log_error, logtype_cnid, "delete_db: could not rm things");
+    }
 
     if ((db_locked = get_lock(LOCK_EXCL, bdata(dbpath))) != LOCK_EXCL) {
         LOG(log_error, logtype_cnid, "main: fatal db lock error");
         EC_FAIL;
     }
 
-    LOG(log_warning, logtype_cnid, "Recreated CNID BerkeleyDB databases of volume \"%s\"", vol->v_localname);
-
+    LOG(log_warning, logtype_cnid,
+        "Recreated CNID BerkeleyDB databases of volume \"%s\"", vol->v_localname);
 EC_CLEANUP:
+
     if (cwd != -1) {
         if (fchdir(cwd) < 0) {
             LOG(log_error, logtype_default, "Can't fchdir(%d): %s", cwd, strerror(errno));
         }
+
         close(cwd);
     }
+
     EC_EXIT;
 }
 
@@ -259,21 +279,22 @@ static int reinit_db(void)
     if (dbd) {
         memset(&key, 0, sizeof(key));
         memset(&data, 0, sizeof(data));
-
         key.data = ROOTINFO_KEY;
         key.size = ROOTINFO_KEYLEN;
 
         if (dbif_get(dbd, DBIF_CNID, &key, &data, 0) <= 0) {
-            LOG(log_error, logtype_cnid, "dbif_copy_rootinfokey: Error getting rootinfo record");
+            LOG(log_error, logtype_cnid,
+                "dbif_copy_rootinfokey: Error getting rootinfo record");
             copyRootInfo = false;
         } else {
             copyRootInfo = true;
         }
+
         (void)dbif_close(dbd);
     }
 
-    EC_ZERO_LOG( delete_db() );
-    EC_ZERO_LOG( open_db() );
+    EC_ZERO_LOG(delete_db());
+    EC_ZERO_LOG(open_db());
 
     if (copyRootInfo == true) {
         memset(&key, 0, sizeof(key));
@@ -281,7 +302,8 @@ static int reinit_db(void)
         key.size = ROOTINFO_KEYLEN;
 
         if (dbif_put(dbd, DBIF_CNID, &key, &data, 0) != 0) {
-            LOG(log_error, logtype_cnid, "dbif_copy_rootinfokey: Error writing rootinfo key");
+            LOG(log_error, logtype_cnid,
+                "dbif_copy_rootinfokey: Error writing rootinfo key");
             EC_FAIL;
         }
     }
@@ -301,32 +323,32 @@ static int loop(struct db_param *dbp)
     char timebuf[64];
     static char namebuf[MAXPATHLEN + 1];
     sigset_t set;
-
     sigemptyset(&set);
     sigprocmask(SIG_SETMASK, NULL, &set);
     sigdelset(&set, SIGINT);
     sigdelset(&set, SIGTERM);
-
     count = 0;
     now = time(NULL);
     time_next_flush = now + dbp->flush_interval;
     time_last_rqst = now;
-
     rqst.name = namebuf;
-
-    strftime(timebuf, 63, "%b %d %H:%M:%S.",localtime(&time_next_flush));
-    LOG(log_debug, logtype_cnid, "Checkpoint interval: %d seconds. Next checkpoint: %s",
+    strftime(timebuf, 63, "%b %d %H:%M:%S.", localtime(&time_next_flush));
+    LOG(log_debug, logtype_cnid,
+        "Checkpoint interval: %d seconds. Next checkpoint: %s",
         dbp->flush_interval, timebuf);
 
     while (1) {
         timeout = MIN(time_next_flush, time_last_rqst + dbp->idle_timeout);
-        if (timeout > now)
-            timeout -= now;
-        else
-            timeout = 1;
 
-        if ((cret = comm_rcv(&rqst, timeout, &set, &now)) < 0)
+        if (timeout > now) {
+            timeout -= now;
+        } else {
+            timeout = 1;
+        }
+
+        if ((cret = comm_rcv(&rqst, timeout, &set, &now)) < 0) {
             return -1;
+        }
 
         if (cret == 0) {
             /* comm_rcv returned from select without receiving anything. */
@@ -334,55 +356,68 @@ static int loop(struct db_param *dbp)
                 /* Received signal (TERM|INT) */
                 return 0;
             }
+
             if (now - time_last_rqst >= dbp->idle_timeout && comm_nbe() <= 0) {
                 /* Idle timeout */
                 return 0;
             }
+
             /* still active connections, reset time_last_rqst */
             time_last_rqst = now;
         } else {
             /* We got a request */
             time_last_rqst = now;
-
             memset(&rply, 0, sizeof(rply));
-            switch(rqst.op) {
-                /* ret gets set here */
+
+            switch (rqst.op) {
+            /* ret gets set here */
             case CNID_DBD_OP_OPEN:
             case CNID_DBD_OP_CLOSE:
                 /* open/close are noops for now. */
                 rply.namelen = 0;
                 ret = 1;
                 break;
+
             case CNID_DBD_OP_ADD:
                 ret = dbd_add(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_GET:
                 ret = dbd_get(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_RESOLVE:
                 ret = dbd_resolve(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_LOOKUP:
                 ret = dbd_lookup(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_UPDATE:
                 ret = dbd_update(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_DELETE:
                 ret = dbd_delete(dbd, &rqst, &rply, DBIF_CNID);
                 break;
+
             case CNID_DBD_OP_GETSTAMP:
                 ret = dbd_getstamp(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_REBUILD_ADD:
                 ret = dbd_rebuild_add(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_SEARCH:
                 ret = dbd_search(dbd, &rqst, &rply);
                 break;
+
             case CNID_DBD_OP_WIPE:
                 ret = reinit_db();
                 break;
+
             default:
                 LOG(log_error, logtype_cnid, "loop: unknown op %d", rqst.op);
                 ret = -1;
@@ -395,15 +430,19 @@ static int loop(struct db_param *dbp)
             }
 
             if (ret == 0 || cret == 0) {
-                if (dbif_txn_abort(dbd) < 0)
+                if (dbif_txn_abort(dbd) < 0) {
                     return -1;
+                }
             } else {
                 ret = dbif_txn_commit(dbd);
-                if (  ret < 0)
+
+                if (ret < 0) {
                     return -1;
-                else if ( ret > 0 )
+                } else if (ret > 0)
                     /* We had a designated txn because we wrote to the db */
+                {
                     count++;
+                }
             }
         } /* got a request */
 
@@ -412,14 +451,18 @@ static int loop(struct db_param *dbp)
           "flush_interval" seconds passed ?
         */
         if (now >= time_next_flush) {
-            LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB for volume '%s'", dbp->dir);
-            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0)
+            LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB for volume '%s'",
+                dbp->dir);
+
+            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
                 return -1;
+            }
+
             count = 0;
             time_next_flush = now + dbp->flush_interval;
-
-            strftime(timebuf, 63, "%b %d %H:%M:%S.",localtime(&time_next_flush));
-            LOG(log_debug, logtype_cnid, "Checkpoint interval: %d seconds. Next checkpoint: %s",
+            strftime(timebuf, 63, "%b %d %H:%M:%S.", localtime(&time_next_flush));
+            LOG(log_debug, logtype_cnid,
+                "Checkpoint interval: %d seconds. Next checkpoint: %s",
                 dbp->flush_interval, timebuf);
         }
 
@@ -428,9 +471,13 @@ static int loop(struct db_param *dbp)
            Have we commited "count" more changes than "flush_frequency" ?
         */
         if (count > dbp->flush_frequency) {
-            LOG(log_info, logtype_cnid, "Checkpointing BerkeleyDB after %d writes for volume '%s'", count, dbp->dir);
-            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0)
+            LOG(log_info, logtype_cnid,
+                "Checkpointing BerkeleyDB after %d writes for volume '%s'", count, dbp->dir);
+
+            if (dbif_txn_checkpoint(dbd, 0, 0, 0) < 0) {
                 return -1;
+            }
+
             count = 0;
         }
     } /* while(1) */
@@ -455,12 +502,15 @@ static void switch_to_user(char *dir)
         LOG(log_error, logtype_cnid, "error in stat for %s: %s", dir, strerror(errno));
         exit(1);
     }
+
     if (setgroups(0, NULL) < 0) {
         LOG(log_error, logtype_cnid, "error in setgroups: %s", strerror(errno));
         exit(1);
     }
+
     if (!getuid()) {
         LOG(log_debug, logtype_cnid, "Setting uid/gid to %i/%i", st.st_uid, st.st_gid);
+
         if (setgid(st.st_gid) < 0 || setuid(st.st_uid) < 0) {
             LOG(log_error, logtype_cnid, "uid/gid: %s", strerror(errno));
             exit(1);
@@ -473,18 +523,20 @@ static void switch_to_user(char *dir)
 static void set_signal(void)
 {
     struct sigaction sv;
-
     sv.sa_handler = sig_exit;
     sv.sa_flags = 0;
     sigemptyset(&sv.sa_mask);
     sigaddset(&sv.sa_mask, SIGINT);
     sigaddset(&sv.sa_mask, SIGTERM);
+
     if (sigaction(SIGINT, &sv, NULL) < 0 || sigaction(SIGTERM, &sv, NULL) < 0) {
         LOG(log_error, logtype_cnid, "main: sigaction: %s", strerror(errno));
         exit(1);
     }
+
     sv.sa_handler = SIG_IGN;
     sigemptyset(&sv.sa_mask);
+
     if (sigaction(SIGPIPE, &sv, NULL) < 0) {
         LOG(log_error, logtype_cnid, "main: sigaction: %s", strerror(errno));
         exit(1);
@@ -494,10 +546,12 @@ static void set_signal(void)
 static uid_t uid_from_name(const char *name)
 {
     struct passwd *pwd;
-
     pwd = getpwnam(name);
-    if (pwd == NULL)
+
+    if (pwd == NULL) {
         return 0;
+    }
+
     return pwd->pw_uid;
 }
 
@@ -510,45 +564,57 @@ int main(int argc, char *argv[])
     char *volpath = NULL;
     char *username = NULL;
 
-    while (( ret = getopt( argc, argv, ":F:l:p:t:u:vV")) != -1 ) {
+    while ((ret = getopt(argc, argv, ":F:l:p:t:u:vV")) != -1) {
         switch (ret) {
         case 'F':
             if (obj.cmdlineconfigfile) {
                 free((void *)obj.cmdlineconfigfile);
             }
+
             obj.cmdlineconfigfile = strdup(optarg);
             break;
+
         case 'p':
             if (volpath) {
                 free((void *)volpath);
             }
+
             volpath = strdup(optarg);
             break;
+
         case 'l':
             clntfd = atoi(optarg);
             break;
+
         case 't':
             ctrlfd = atoi(optarg);
             break;
+
         case 'u':
             if (username) {
                 free((void *)username);
             }
+
             username = strdup(optarg);
             break;
+
         case 'v':
         case 'V':
             if (obj.cmdlineconfigfile) {
                 free((void *)obj.cmdlineconfigfile);
             }
+
             if (volpath) {
                 free((void *)volpath);
             }
+
             if (username) {
                 free((void *)username);
             }
+
             printf("cnid_dbd (Netatalk %s)\n", VERSION);
             return -1;
+
         case ':':
             break;
         }
@@ -556,23 +622,28 @@ int main(int argc, char *argv[])
 
     if (ctrlfd == -1 || clntfd == -1 || !volpath) {
         LOG(log_error, logtype_cnid, "main: bad IPC fds");
+
         if (obj.cmdlineconfigfile) {
             free((void *)obj.cmdlineconfigfile);
         }
+
         if (volpath) {
             free((void *)volpath);
         }
+
         if (username) {
             free((void *)username);
         }
+
         exit(EXIT_FAILURE);
     }
 
-    EC_ZERO( afp_config_parse(&obj, "cnid_dbd") );
+    EC_ZERO(afp_config_parse(&obj, "cnid_dbd"));
 
     if (username) {
         strlcpy(obj.username, username, MAXUSERLEN);
         obj.uid = uid_from_name(username);
+
         if (!obj.uid) {
             EC_FAIL_LOG("unknown user: '%s'", username);
         }
@@ -580,31 +651,28 @@ int main(int argc, char *argv[])
 
     LOG(log_debug, logtype_cnid, "user: %s, path %s",
         username ? username : "-", volpath);
-
-    EC_ZERO( load_volumes(&obj, LV_ALL) );
-    EC_NULL( vol = getvolbypath(&obj, volpath) );
-    EC_ZERO( load_charset(vol) );
+    EC_ZERO(load_volumes(&obj, LV_ALL));
+    EC_NULL(vol = getvolbypath(&obj, volpath));
+    EC_ZERO(load_charset(vol));
     pack_setvol(vol);
-
-    EC_NULL( dbpath = bfromcstr(vol->v_dbpath) );
-    EC_ZERO( bcatcstr(dbpath, "/.AppleDB") );
-
+    EC_NULL(dbpath = bfromcstr(vol->v_dbpath));
+    EC_ZERO(bcatcstr(dbpath, "/.AppleDB"));
     LOG(log_debug, logtype_cnid, "db dir: \"%s\"", bdata(dbpath));
-
     switch_to_user(bdata(dbpath));
-
     set_signal();
-
     /* SIGINT and SIGTERM are always off, unless we are in pselect */
     block_sigs_onoff(1);
 
-    if ((dbp = db_param_read(bdata(dbpath))) == NULL)
+    if ((dbp = db_param_read(bdata(dbpath))) == NULL) {
         EC_FAIL;
+    }
+
     LOG(log_maxdebug, logtype_cnid, "Finished parsing db_param config file");
 
     if (open_db() != 0) {
-        LOG(log_error, logtype_cnid, "Failed to open CNID database for volume \"%s\"", vol->v_localname);
-        EC_ZERO_LOG( reinit_db() );
+        LOG(log_error, logtype_cnid, "Failed to open CNID database for volume \"%s\"",
+            vol->v_localname);
+        EC_ZERO_LOG(reinit_db());
     }
 
     if (comm_init(dbp, ctrlfd, clntfd) < 0) {
@@ -618,30 +686,38 @@ int main(int argc, char *argv[])
     }
 
 close_db:
-    if (dbif_close(dbd) < 0)
-        ret = -1;
 
-    if (dbif_env_remove(bdata(dbpath)) < 0)
+    if (dbif_close(dbd) < 0) {
         ret = -1;
+    }
+
+    if (dbif_env_remove(bdata(dbpath)) < 0) {
+        ret = -1;
+    }
 
 EC_CLEANUP:
+
     if (obj.cmdlineconfigfile) {
         free((void *)obj.cmdlineconfigfile);
     }
+
     if (volpath) {
         free((void *)volpath);
     }
+
     if (username) {
         free((void *)username);
     }
 
-    if (ret != 0)
+    if (ret != 0) {
         exit(1);
+    }
 
-    if (exit_sig)
+    if (exit_sig) {
         LOG(log_info, logtype_cnid, "main: Exiting on signal %i", exit_sig);
-    else
+    } else {
         LOG(log_info, logtype_cnid, "main: Idle timeout, exiting");
+    }
 
     EC_EXIT;
 }

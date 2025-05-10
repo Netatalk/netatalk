@@ -17,4 +17,5 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-extern int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen);
+extern int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf,
+                     int recvlen);

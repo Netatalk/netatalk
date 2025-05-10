@@ -53,7 +53,7 @@ struct ace_rights_map nfsv4_to_darwin_rights[] = {
     {ACE_READ_ACL,          DARWIN_ACE_READ_SECURITY},
     {ACE_WRITE_ACL,         DARWIN_ACE_WRITE_SECURITY},
     {ACE_WRITE_OWNER,       DARWIN_ACE_TAKE_OWNERSHIP},
-    {0,0}
+    {0, 0}
 };
 
 struct ace_rights_map darwin_to_nfsv4_rights[] = {
@@ -70,7 +70,7 @@ struct ace_rights_map darwin_to_nfsv4_rights[] = {
     {DARWIN_ACE_READ_SECURITY,       ACE_READ_ACL},
     {DARWIN_ACE_WRITE_SECURITY,      ACE_WRITE_ACL},
     {DARWIN_ACE_TAKE_OWNERSHIP,      ACE_WRITE_OWNER},
-    {0,0}
+    {0, 0}
 };
 
 struct nfsv4_to_darwin_flags_map {
@@ -84,7 +84,7 @@ struct nfsv4_to_darwin_flags_map nfsv4_to_darwin_flags[] = {
     {ACE_NO_PROPAGATE_INHERIT_ACE, DARWIN_ACE_FLAGS_LIMIT_INHERIT},
     {ACE_INHERIT_ONLY_ACE,         DARWIN_ACE_FLAGS_ONLY_INHERIT},
     {ACE_INHERITED_ACE,            DARWIN_ACE_FLAGS_INHERITED},
-    {0,0}
+    {0, 0}
 };
 
 struct darwin_to_nfsv4_flags_map {
@@ -98,7 +98,7 @@ struct darwin_to_nfsv4_flags_map darwin_to_nfsv4_flags[] = {
     {DARWIN_ACE_FLAGS_LIMIT_INHERIT,     ACE_NO_PROPAGATE_INHERIT_ACE},
     {DARWIN_ACE_FLAGS_ONLY_INHERIT,      ACE_INHERIT_ONLY_ACE},
     {DARWIN_ACE_FLAGS_INHERITED,         ACE_INHERITED_ACE},
-    {0,0}
+    {0, 0}
 };
 #endif /* HAVE_SOLARIS_ACLS || HAVE_FREEBSD_SUNACL */
 

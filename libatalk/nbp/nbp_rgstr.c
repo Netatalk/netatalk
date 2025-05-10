@@ -23,14 +23,15 @@
 #include <atalk/ddp.h>
 #include <atalk/netddp.h>
 
-#include  "nbp_conf.h"
+#include "nbp_conf.h"
 
 /* FIXME/SOCKLEN_T: socklen_t is a unix98 feature. */
 #ifndef SOCKLEN_T
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
-int nbp_rgstr( struct sockaddr_at *sat, const char *obj, const char *type, const char *zone)
+int nbp_rgstr(struct sockaddr_at *sat, const char *obj, const char *type,
+              const char *zone)
 {
     struct sockaddr_at	to;
     struct nbpnve	nn;
@@ -43,104 +44,119 @@ int nbp_rgstr( struct sockaddr_at *sat, const char *obj, const char *type, const
     int			s, cc;
     SOCKLEN_T		namelen;
 
-    if ( nbp_lookup( obj, type, zone, &nn, 1, &sat->sat_addr ) > 0 ) {
+    if (nbp_lookup(obj, type, zone, &nn, 1, &sat->sat_addr) > 0) {
         errno = EADDRINUSE;
-	return -1;
+        return -1;
     }
 
     memset(&to, 0, sizeof(to));
-    if ((s = netddp_open(&to, NULL)) < 0)
+
+    if ((s = netddp_open(&to, NULL)) < 0) {
         return -1;
+    }
 
     data = nbp_send;
     *data++ = DDPTYPE_NBP;
     nh.nh_op = NBPOP_RGSTR;
     nh.nh_cnt = 1;
     nh.nh_id = ++nbp_id;
-    memcpy( data, &nh, SZ_NBPHDR );
+    memcpy(data, &nh, SZ_NBPHDR);
     data += SZ_NBPHDR;
-
     memset(&nt, 0, sizeof(nt));
     nt.nt_net = sat->sat_addr.s_net;
     nt.nt_node = sat->sat_addr.s_node;
     nt.nt_port = sat->sat_port;
-    memcpy( data, &nt, SZ_NBPTUPLE);
+    memcpy(data, &nt, SZ_NBPTUPLE);
     data += SZ_NBPTUPLE;
 
-    if ( obj ) {
-	if (( cc = strlen( obj )) > NBPSTRLEN ) return -1;
-	*data++ = cc;
-	memcpy( data, obj, cc );
-	data += cc;
+    if (obj) {
+        if ((cc = strlen(obj)) > NBPSTRLEN) {
+            return -1;
+        }
+
+        *data++ = cc;
+        memcpy(data, obj, cc);
+        data += cc;
     } else {
-	*data++ = 0;
+        *data++ = 0;
     }
 
-    if ( type ) {
-	if (( cc = strlen( type )) > NBPSTRLEN ) return -1;
-	*data++ = cc;
-	memcpy( data, type, cc );
-	data += cc;
+    if (type) {
+        if ((cc = strlen(type)) > NBPSTRLEN) {
+            return -1;
+        }
+
+        *data++ = cc;
+        memcpy(data, type, cc);
+        data += cc;
     } else {
-	*data++ = 0;
+        *data++ = 0;
     }
 
-    if ( zone ) {
-	if (( cc = strlen( zone )) > NBPSTRLEN ) return -1;
-	*data++ = cc;
-	memcpy( data, zone, cc );
-	data += cc;
+    if (zone) {
+        if ((cc = strlen(zone)) > NBPSTRLEN) {
+            return -1;
+        }
+
+        *data++ = cc;
+        memcpy(data, zone, cc);
+        data += cc;
     } else {
-	*data++ = 1;
-	*data++ = '*'; /* default zone */
+        *data++ = 1;
+        *data++ = '*'; /* default zone */
     }
 
-
-    if ( nbp_port == 0 ) {
-	if (( se = getservbyname( "nbp", "ddp" )) == NULL ) {
-	    nbp_port = 2;
-	} else {
-	    nbp_port = ntohs( se->s_port );
-	}
+    if (nbp_port == 0) {
+        if ((se = getservbyname("nbp", "ddp")) == NULL) {
+            nbp_port = 2;
+        } else {
+            nbp_port = ntohs(se->s_port);
+        }
     }
+
     to.sat_port = nbp_port;
 
-    if ( netddp_sendto( s, nbp_send, data - nbp_send, 0,
-			(struct sockaddr *)&to,
-			sizeof( struct sockaddr_at )) < 0 ) {
+    if (netddp_sendto(s, nbp_send, data - nbp_send, 0,
+                      (struct sockaddr *)&to,
+                      sizeof(struct sockaddr_at)) < 0) {
         goto register_err;
     }
 
-    FD_ZERO( &readfd );
-    FD_SET( s, &readfd );
+    FD_ZERO(&readfd);
+    FD_SET(s, &readfd);
     timeout.tv_sec = 2;
     timeout.tv_usec = 0;
-    if (( cc = select( s + 1, &readfd, NULL, NULL, &timeout )) < 0 ) {
-        goto register_err;
-    }
-    if ( cc == 0 ) {
-	errno = ETIMEDOUT;
-	goto register_err;
-    }
 
-    namelen = sizeof( struct sockaddr_at );
-    if (( cc = netddp_recvfrom( s, nbp_recv, sizeof( nbp_recv ), 0,
-			(struct sockaddr *)&to, &namelen )) < 0 ) {
+    if ((cc = select(s + 1, &readfd, NULL, NULL, &timeout)) < 0) {
         goto register_err;
     }
 
-    netddp_close( s );
+    if (cc == 0) {
+        errno = ETIMEDOUT;
+        goto register_err;
+    }
 
+    namelen = sizeof(struct sockaddr_at);
+
+    if ((cc = netddp_recvfrom(s, nbp_recv, sizeof(nbp_recv), 0,
+                              (struct sockaddr *)&to, &namelen)) < 0) {
+        goto register_err;
+    }
+
+    netddp_close(s);
     data = nbp_recv;
-    if ( *data++ != DDPTYPE_NBP ) {
-	return -1;
-    }
-    memcpy( &nh, data, SZ_NBPHDR );
-    if ( nh.nh_op != NBPOP_OK ) {
+
+    if (*data++ != DDPTYPE_NBP) {
         return -1;
     }
-    return 0;
 
+    memcpy(&nh, data, SZ_NBPHDR);
+
+    if (nh.nh_op != NBPOP_OK) {
+        return -1;
+    }
+
+    return 0;
 register_err:
     netddp_close(s);
     return -1;

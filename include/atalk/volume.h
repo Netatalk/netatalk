@@ -38,46 +38,65 @@ struct vol {
 
     charset_t       v_volcharset;
     charset_t       v_maccharset;
-    uint16_t        v_mtou_flags;    /* flags for convert_charset in mtoupath */
+    /* flags for convert_charset in mtoupath */
+    uint16_t        v_mtou_flags;
     uint16_t        v_utom_flags;
-    long            v_kTextEncoding; /* mac charset encoding in network order
-                                      * FIXME: should be a u_int32_t ? */
+    /* mac charset encoding in network order
+     * FIXME: should be a u_int32_t ? */
+    long            v_kTextEncoding;
     size_t          max_filename;
     char            *v_veto;
-    int             v_adouble;    /* adouble format: v1, v2, sfm ... */
-    int             v_ad_options; /* adouble option NODEV, NOCACHE, etc.. */
+    /* adouble format: v1, v2, sfm ... */
+    int             v_adouble;
+    /* adouble option NODEV, NOCACHE, etc.. */
+    int             v_ad_options;
     const char      *(*ad_path)(const char *, int);
     struct _cnid_db *v_cdb;
     char            v_stamp[ADEDLEN_PRIVSYN];
-    VolSpace        v_limitsize; /* Size limit, if any, in MiB */
+    /* Size limit, if any, in MiB */
+    VolSpace        v_limitsize;
     mode_t          v_umask;
-    mode_t          v_dperm; /* default directories permission value OR with requested perm*/
-    mode_t          v_fperm; /* default files permission value OR with requested perm*/
-    ucs2_t          *v_u8mname;     /* converted to utf8-mac in ucs2 */
-    ucs2_t          *v_macname;     /* mangled to legacy longname in ucs2 */
-    ucs2_t          *v_name;        /* either v_u8mname or v_macname */
+    /* default directories permission value OR with requested perm*/
+    mode_t          v_dperm;
+    /* default files permission value OR with requested perm*/
+    mode_t          v_fperm;
+    /* converted to utf8-mac in ucs2 */
+    ucs2_t          *v_u8mname;
+    /* mangled to legacy longname in ucs2 */
+    ucs2_t          *v_macname;
+    /* either v_u8mname or v_macname */
+    ucs2_t          *v_name;
 
     /* get/set volparams */
-    time_t          v_ctime;  /* volume creation date, not unix ctime */
-    dev_t           v_dev;    /* Unix volume device, Set but not used */
+    /* volume creation date, not unix ctime */
+    time_t          v_ctime;
+    /* Unix volume device, Set but not used */
+    dev_t           v_dev;
 
     /* adouble VFS indirection */
-    struct vfs_ops  *vfs;   /* pointer to vfs_master_funcs for chaining */
+    /* pointer to vfs_master_funcs for chaining */
+    struct vfs_ops  *vfs;
     const struct vfs_ops *vfs_modules[4];
-    int             v_vfs_ea;       /* The AFPVOL_EA_xx flag */
+    /* The AFPVOL_EA_xx flag */
+    int             v_vfs_ea;
 
     /* misc */
     char            *v_gvs;
     void            *v_nfsclient;
     int             v_nfs;
-    VolSpace        v_tm_used;  /* used bytes on a TM volume */
-    time_t          v_tm_cachetime; /* time at which v_tm_used was calculated last */
-    VolSpace        v_appended; /* amount of data appended to files */
+    /* used bytes on a TM volume */
+    VolSpace        v_tm_used;
+    /* time at which v_tm_used was calculated last */
+    time_t          v_tm_cachetime;
+    /* amount of data appended to files */
+    VolSpace        v_appended;
 
     /* only when opening/closing volumes or in error */
     int             v_casefold;
-    char            *v_configname;   /* as defined in afpc.conf */
-    char            *v_localname;    /* as defined in afp.conf but with vars expanded */
+    /* as defined in afpc.conf */
+    char            *v_configname;
+    /* as defined in afp.conf but with vars expanded */
+    char            *v_localname;
     char            *v_volcodepage;
     char            *v_maccodepage;
     char            *v_password;
@@ -86,10 +105,13 @@ struct vol {
     char            *v_cnidserver;
     char            *v_cnidport;
 #if 0
-    int             v_hide;       /* new volume wait until old volume is closed */
-    int             v_new;        /* volume deleted but there's a new one with the same name */
+    /* new volume wait until old volume is closed */
+    int             v_hide;
+    /* volume deleted but there's a new one with the same name */
+    int             v_new;
 #endif
-    int             v_deleted;    /* volume open but deleted in new config file */
+    /* volume open but deleted in new config file */
+    int             v_deleted;
 #if 0
     char            *v_root_preexec;
 #endif
@@ -102,16 +124,20 @@ struct vol {
     int             v_root_preexec_close;
 #endif
     int             v_preexec_close;
-    char            *v_uuid;    /* For TimeMachine zeroconf record */
+    /* For TimeMachine zeroconf record */
+    char            *v_uuid;
     int             v_qfd;
-    uint32_t        v_ignattr;  /* AFP attributes that shall be ignored */
+    /* AFP attributes that shall be ignored */
+    uint32_t        v_ignattr;
 };
 
 /* load_volumes() flags */
 typedef enum {
     LV_DEFAULT = 0,
-    LV_ALL = 1,      /* Skip access checks */
-    LV_FORCE = 2     /* Reload even if unchanged */
+    /* Skip access checks */
+    LV_ALL = 1,
+    /* Reload even if unchanged */
+    LV_FORCE = 2
 } lv_flags_t;
 
 /* volume flags */

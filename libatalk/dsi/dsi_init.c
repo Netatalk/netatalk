@@ -14,12 +14,14 @@
 
 #include <atalk/dsi.h>
 
-DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address, const char *port)
+DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,
+              const char *port)
 {
     DSI		*dsi;
 
-    if ((dsi = (DSI *)calloc(1, sizeof(DSI))) == NULL)
+    if ((dsi = (DSI *)calloc(1, sizeof(DSI))) == NULL) {
         return NULL;
+    }
 
     dsi->attn_quantum = DSI_DEFQUANT;
     dsi->server_quantum = obj->options.server_quantum;

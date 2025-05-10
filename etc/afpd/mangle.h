@@ -23,8 +23,9 @@
 #define MANGLE_LENGTH  9 /* #ffffffff This really can't be changed. */
 #define MAX_LENGTH MACFILELEN
 
-extern char *mangle (const struct vol *, char *, size_t, char *, cnid_t, int);
-extern char *demangle (const struct vol *, char *, cnid_t did);
-extern char *demangle_osx (const struct vol *, char *, cnid_t did, cnid_t *fileid);
+extern char *mangle(const struct vol *, char *, size_t, char *, cnid_t, int);
+extern char *demangle(const struct vol *, char *, cnid_t did);
+extern char *demangle_osx(const struct vol *, char *, cnid_t did,
+                          cnid_t *fileid);
 
 #endif /* AFPD_MANGLE_H */

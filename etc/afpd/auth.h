@@ -40,14 +40,23 @@ extern gid_t	*groups;
 extern int	ngroups;
 
 /* FP functions */
-int afp_login (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_login_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_logincont (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_changepw (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_logout (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getuserinfo (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getsession (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_disconnect (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_zzz (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen);
+int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
+int afp_logout(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+               size_t *rbuflen);
+int afp_getuserinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                    size_t *rbuflen);
+int afp_getsession(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                   size_t *rbuflen);
+int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                   size_t *rbuflen);
+int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+            size_t *rbuflen);
 
 #endif /* auth.h */

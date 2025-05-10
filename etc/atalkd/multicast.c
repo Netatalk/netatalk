@@ -29,11 +29,11 @@
 #include "multicast.h"
 
 
-static const unsigned char	ethermulti[ 6 ] = {
+static const unsigned char	ethermulti[6] = {
     0x09, 0x00, 0x07, 0xff, 0xff, 0xff,
 };
 
-static const unsigned char	ethermultitab[ 253 ][ 6 ] = {
+static const unsigned char	ethermultitab[253][6] = {
     { 0x09, 0x00, 0x07, 0x00, 0x00, 0x00, },
     { 0x09, 0x00, 0x07, 0x00, 0x00, 0x01, },
     { 0x09, 0x00, 0x07, 0x00, 0x00, 0x02, },
@@ -294,31 +294,34 @@ static const unsigned char	ethermultitab[ 253 ][ 6 ] = {
 int addmulti(const char *name, const unsigned char *data)
 {
     struct sockaddr sa;
-
     memset(&sa, 0, sizeof(sa));
     memcpy(sa.sa_data, data ? data : ethermulti, sizeof(ethermulti));
-    if (ifconfig(name, SIOCADDMULTI, (struct sockaddr_at *)&sa))
-      return -1;
+
+    if (ifconfig(name, SIOCADDMULTI, (struct sockaddr_at *)&sa)) {
+        return -1;
+    }
 
     return 0;
 }
 
 static uint16_t
-atalk_cksum( unsigned char *data, int len)
+atalk_cksum(unsigned char *data, int len)
 {
     unsigned char	*end;
     uint32_t	cksum = 0;
 
-    for ( end = data + len; data < end; data++ ) {
-	cksum = ( cksum + *data ) << 1;
-	if ( cksum & 0x00010000 ) {
-	    cksum++;
-	}
-	cksum &= 0x0000ffff;
+    for (end = data + len; data < end; data++) {
+        cksum = (cksum + *data) << 1;
+
+        if (cksum & 0x00010000) {
+            cksum++;
+        }
+
+        cksum &= 0x0000ffff;
     }
 
-    if ( cksum == 0 ) {
-	cksum = 0x0000ffff;
+    if (cksum == 0) {
+        cksum = 0x0000ffff;
     }
 
     return (uint16_t) cksum;
@@ -331,24 +334,25 @@ atalk_cksum( unsigned char *data, int len)
  * alike.)
  */
 int
-zone_bcast( struct ziptab *zt)
+zone_bcast(struct ziptab *zt)
 {
-    unsigned char		uname[ 32 ];
+    unsigned char		uname[32];
     uint16_t		cksum;
     int			i;
 
     if (!zt->zt_bcast &&
-	(zt->zt_bcast = (unsigned char *) malloc(sizeof( ethermulti ))) == NULL) {
-       LOG(log_error, logtype_atalkd, "zone_bcast malloc: %s", strerror(errno) );
-       return -1;
-     }
-
-    for ( i = 0; i < zt->zt_len; i++ ) {
-	uname[ i ] = diatoupper((int) zt->zt_name[ i ]);
+            (zt->zt_bcast = (unsigned char *) malloc(sizeof(ethermulti))) == NULL) {
+        LOG(log_error, logtype_atalkd, "zone_bcast malloc: %s", strerror(errno));
+        return -1;
     }
-    cksum = atalk_cksum( uname, zt->zt_len );
+
+    for (i = 0; i < zt->zt_len; i++) {
+        uname[i] = diatoupper((int) zt->zt_name[i]);
+    }
+
+    cksum = atalk_cksum(uname, zt->zt_len);
 #define elements(a)   (sizeof(a)/sizeof((a)[0]))
-    memcpy(zt->zt_bcast, ethermultitab[ cksum % elements( ethermultitab ) ],
-	   sizeof( ethermulti ));
+    memcpy(zt->zt_bcast, ethermultitab[cksum % elements(ethermultitab)],
+           sizeof(ethermulti));
     return 0;
 }

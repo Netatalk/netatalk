@@ -47,11 +47,11 @@
 
 /* FPGet|Set Bitmap */
 enum {
-    kFileSec_UUID      = (1<<0),
-    kFileSec_GRPUUID   = (1<<1),
-    kFileSec_ACL       = (1<<2),
-    kFileSec_REMOVEACL = (1<<3),
-    kFileSec_Inherit   = (1<<4)
+    kFileSec_UUID      = (1 << 0),
+    kFileSec_GRPUUID   = (1 << 1),
+    kFileSec_ACL       = (1 << 2),
+    kFileSec_REMOVEACL = (1 << 3),
+    kFileSec_Inherit   = (1 << 4)
 };
 
 /* ACL Flags */
@@ -111,10 +111,14 @@ typedef struct {
 } darwin_acl_header_t;
 
 /* FP functions */
-int afp_access (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_access (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
+int afp_getacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
+int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
 
 /* Misc funcs */
-extern int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path, struct stat *st, struct maccess *ma);
+extern int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path,
+                          struct stat *st, struct maccess *ma);
 #endif

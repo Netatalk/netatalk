@@ -26,19 +26,20 @@ int aep_packet(
     int			len)
 {
     char		*end;
-
     end = data + len;
-    if ( data + 2 > end || *data != DDPTYPE_AEP ||
-	    *( data + 1 ) != AEPOP_REQUEST ) {
-	LOG(log_info, logtype_atalkd, "aep_packet malformed packet" );
-	return 1;
+
+    if (data + 2 > end || *data != DDPTYPE_AEP ||
+            *(data + 1) != AEPOP_REQUEST) {
+        LOG(log_info, logtype_atalkd, "aep_packet malformed packet");
+        return 1;
     }
 
-    *( data + 1 ) = AEPOP_REPLY;
-    if ( sendto( ap->ap_fd, data, len, 0, (struct sockaddr *)from,
-	    sizeof( struct sockaddr_at )) < 0 ) {
-	LOG(log_error, logtype_atalkd, "aep sendto: %s", strerror(errno) );
-	return 1;
+    *(data + 1) = AEPOP_REPLY;
+
+    if (sendto(ap->ap_fd, data, len, 0, (struct sockaddr *)from,
+               sizeof(struct sockaddr_at)) < 0) {
+        LOG(log_error, logtype_atalkd, "aep sendto: %s", strerror(errno));
+        return 1;
     }
 
     return 0;

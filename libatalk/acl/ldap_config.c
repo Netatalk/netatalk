@@ -43,6 +43,7 @@ void acl_ldap_freeconfig(void)
             free(*((char **)(ldap_prefs[i].pref)));
             *((char **)(ldap_prefs[i].pref)) = NULL;
         }
+
         ldap_prefs[i].valid = ldap_prefs[i].valid_save;
     }
 }
@@ -51,28 +52,33 @@ int acl_ldap_readconfig(dictionary *iniconfig)
 {
     int i, j;
     const char *val;
-
     i = 0;
+
     /* now see if its a correct pref */
     for (i = 0; ldap_prefs[i].name != NULL; i++) {
         char option[MAXOPTLEN];
         snprintf(option, sizeof(option), "%s:%s", INISEC_GLOBAL, ldap_prefs[i].name);
+
         if ((val = iniparser_getstring(iniconfig, option, NULL))) {
             /* check if we have pre-defined values */
             if (ldap_prefs[i].intfromarray == 0) {
                 /* no, its just a string */
                 ldap_prefs[i].valid = 0;
+
                 if (ldap_prefs[i].strorint)
                     /* store as int */
+                {
                     *((int *)(ldap_prefs[i].pref)) = atoi(val);
-                else
+                } else
                     /* store string as string */
+                {
                     *((const char **)(ldap_prefs[i].pref)) = strdup(val);
+                }
             } else {
                 /* ok, we have string to int mapping for this pref */
                 for (j = 0; prefs_array[j].pref != NULL; j++) {
                     if ((strcmp(prefs_array[j].pref, ldap_prefs[i].name) == 0)
-                        && (strcmp(prefs_array[j].valuestring, val) == 0)) {
+                            && (strcmp(prefs_array[j].valuestring, val) == 0)) {
                         ldap_prefs[i].valid = 0;
                         *((int *)(ldap_prefs[i].pref)) = prefs_array[j].value;
                         break;
@@ -86,26 +92,30 @@ int acl_ldap_readconfig(dictionary *iniconfig)
     i = 0;
     ldap_config_valid = 1;
 
-    while(ldap_prefs[i].pref != NULL) {
-        if ( ldap_prefs[i].valid != 0) {
-            LOG(log_debug, logtype_afpd,"LDAP: Missing option: \"%s\"", ldap_prefs[i].name);
+    while (ldap_prefs[i].pref != NULL) {
+        if (ldap_prefs[i].valid != 0) {
+            LOG(log_debug, logtype_afpd, "LDAP: Missing option: \"%s\"",
+                ldap_prefs[i].name);
             ldap_config_valid = 0;
             break;
         }
+
         i++;
     }
 
     if (ldap_config_valid) {
-        if (ldap_auth_method == LDAP_AUTH_NONE)
-            LOG(log_debug, logtype_afpd,"LDAP: Using anonymous bind.");
-        else if (ldap_auth_method == LDAP_AUTH_SIMPLE)
-            LOG(log_debug, logtype_afpd,"LDAP: Using simple bind.");
-        else {
+        if (ldap_auth_method == LDAP_AUTH_NONE) {
+            LOG(log_debug, logtype_afpd, "LDAP: Using anonymous bind.");
+        } else if (ldap_auth_method == LDAP_AUTH_SIMPLE) {
+            LOG(log_debug, logtype_afpd, "LDAP: Using simple bind.");
+        } else {
             ldap_config_valid = 0;
-            LOG(log_error, logtype_afpd,"LDAP: Unsupported authentication method.");
+            LOG(log_error, logtype_afpd, "LDAP: Unsupported authentication method.");
         }
-    } else
-        LOG(log_info, logtype_afpd,"LDAP: not used");
+    } else {
+        LOG(log_info, logtype_afpd, "LDAP: not used");
+    }
+
     return 0;
 }
 #endif /* HAVE_LDAP */

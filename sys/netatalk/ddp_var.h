@@ -32,7 +32,7 @@ struct ddpstat {
 };
 
 #ifdef KERNEL
-struct ddpcb		*ddp_ports[ ATPORT_LAST ];
+struct ddpcb		*ddp_ports[ATPORT_LAST];
 struct ddpcb		*ddpcb;
 struct ddpstat		ddpstat;
 struct ddpcb		*ddp_search();

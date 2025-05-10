@@ -54,22 +54,21 @@ This is a utility function of afprun().
 
 static int setup_out_fd(void)
 {
-	int fd;
-	char path[MAXPATHLEN +1];
+    int fd;
+    char path[MAXPATHLEN + 1];
+    snprintf(path, sizeof(path) -1, "%s/afp.XXXXXX", tmpdir());
+    /* now create the file */
+    fd = mkstemp(path);
 
-	snprintf(path, sizeof(path)-1, "%s/afp.XXXXXX", tmpdir());
+    if (fd == -1) {
+        LOG(log_error, logtype_afpd, "setup_out_fd: Failed to create file %s. (%s)",
+            path, strerror(errno));
+        return -1;
+    }
 
-	/* now create the file */
-	fd = mkstemp(path);
-
-	if (fd == -1) {
-		LOG(log_error, logtype_afpd, "setup_out_fd: Failed to create file %s. (%s)",path, strerror(errno) );
-		return -1;
-	}
-
-	/* Ensure file only kept around by open fd. */
-	unlink(path);
-	return fd;
+    /* Ensure file only kept around by open fd. */
+    unlink(path);
+    return fd;
 }
 
 /****************************************************************************
@@ -78,8 +77,9 @@ static int setup_out_fd(void)
 ****************************************************************************/
 static void gain_root_privilege(void)
 {
-	if (seteuid(0) < 0)
-		LOG(log_error, logtype_afpd, "gain_root_privilege: could not seteuid(%i)", 0);
+    if (seteuid(0) < 0) {
+        LOG(log_error, logtype_afpd, "gain_root_privilege: could not seteuid(%i)", 0);
+    }
 }
 
 /****************************************************************************
@@ -88,8 +88,10 @@ static void gain_root_privilege(void)
 ****************************************************************************/
 static void gain_root_group_privilege(void)
 {
-	if (setegid(0) < 0)
-		LOG(log_error, logtype_afpd, "gain_root_group_privilege: could not setegid(%i)", 0);
+    if (setegid(0) < 0) {
+        LOG(log_error, logtype_afpd, "gain_root_group_privilege: could not setegid(%i)",
+            0);
+    }
 }
 
 /****************************************************************************
@@ -99,129 +101,162 @@ static void gain_root_group_privilege(void)
 static int become_user_permanently(uid_t uid, gid_t gid)
 {
     int ret;
-
     /*
      * First - gain root privilege. We do this to ensure
      * we can lose it again.
      */
-
     gain_root_privilege();
     gain_root_group_privilege();
     ret = setgroups(0, NULL);
+
     if (ret != 0) {
         return -1;
     }
 
 #if USE_SETRESUID
-    ret = setresgid(gid,gid,gid);
+    ret = setresgid(gid, gid, gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setresgid(%i, %i, %i)",
-              gid, gid, gid);
+            gid, gid, gid);
         return -1;
     }
+
     ret = setgid(gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
-    ret = setresuid(uid,uid,uid);
+
+    ret = setresuid(uid, uid, uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setresuid(%i, %i, %i)",
-              uid, uid, uid);
+            uid, uid, uid);
         return -1;
     }
+
     ret = setuid(uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
-#endif
 
+#endif
 #if USE_SETREUID
-    ret = setregid(gid,gid);
+    ret = setregid(gid, gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setresgid(%i, %i)", gid, gid);
         return -1;
     }
+
     ret = setgid(gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
-    ret = setreuid(uid,uid);
+
+    ret = setreuid(uid, uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setreuid(%i, %i)", uid, uid);
         return -1;
     }
+
     ret = setuid(uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
-#endif
 
+#endif
 #if USE_SETEUID
     ret = setegid(gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setegid(%i)", gid);
         return -1;
     }
+
     ret = setgid(gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
+
     ret = setuid(uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
+
     ret = seteuid(uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not seteuid(%i)", uid);
         return -1;
     }
+
     ret = setuid(uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
-#endif
 
+#endif
 #if USE_SETUIDX
     ret = setgidx(ID_REAL, gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setgidx(%i, %i)", ID_REAL, gid);
         return -1;
     }
+
     ret = setgidx(ID_EFFECTIVE, gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setgidx(%i, %i)",
-              ID_EFFECTIVE, gid);
+            ID_EFFECTIVE, gid);
         return -1;
     }
+
     ret = setgid(gid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setgid(%i)", gid);
         return -1;
     }
+
     ret = setuidx(ID_REAL, uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuidx(%i, %i)", ID_REAL, uid);
         return -1;
     }
+
     ret = setuidx(ID_EFFECTIVE, uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuidx(%i, %i)",
-              ID_EFFECTIVE, uid);
+            ID_EFFECTIVE, uid);
         return -1;
     }
 
     ret = setuid(uid);
+
     if (ret != 0) {
         LOG(log_error, logtype_afpd, "could not setuid(%i)", uid);
         return -1;
     }
+
 #endif
     return 0;
 }
@@ -241,51 +276,62 @@ int afprun(char *cmd, int *outfd)
     if (outfd && ((*outfd = setup_out_fd()) == -1)) {
         return -1;
     }
+
     LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, uid);
     /* in this method we will exec /bin/sh with the correct
        arguments, after first setting stdout to point at the file */
 
-    if ((pid=fork()) < 0) {
-        LOG(log_error, logtype_afpd, "afprun: fork failed with error %s", strerror(errno) );
-	if (outfd) {
-	    close(*outfd);
-	    *outfd = -1;
-	}
-	return errno;
+    if ((pid = fork()) < 0) {
+        LOG(log_error, logtype_afpd, "afprun: fork failed with error %s",
+            strerror(errno));
+
+        if (outfd) {
+            close(*outfd);
+            *outfd = -1;
+        }
+
+        return errno;
     }
 
     if (pid) {
         /*
-	 * Parent.
-	 */
-	int status=0;
-	pid_t wpid;
+         * Parent.
+         */
+        int status = 0;
+        pid_t wpid;
 
-	/* the parent just waits for the child to exit */
-	while((wpid = waitpid(pid,&status,0)) < 0) {
-	    if (errno == EINTR) {
-	        errno = 0;
-		continue;
-	    }
-	    break;
-	}
-	if (wpid != pid) {
-	    LOG(log_error, logtype_afpd, "waitpid(%d) : %s",(int)pid, strerror(errno) );
-	    if (outfd) {
-	        close(*outfd);
-	        *outfd = -1;
-	    }
-	    return -1;
-	}
-	/* Reset the seek pointer. */
-	if (outfd) {
-	    lseek(*outfd, 0, SEEK_SET);
-	}
+        /* the parent just waits for the child to exit */
+        while ((wpid = waitpid(pid, &status, 0)) < 0) {
+            if (errno == EINTR) {
+                errno = 0;
+                continue;
+            }
+
+            break;
+        }
+
+        if (wpid != pid) {
+            LOG(log_error, logtype_afpd, "waitpid(%d) : %s", (int)pid, strerror(errno));
+
+            if (outfd) {
+                close(*outfd);
+                *outfd = -1;
+            }
+
+            return -1;
+        }
+
+        /* Reset the seek pointer. */
+        if (outfd) {
+            lseek(*outfd, 0, SEEK_SET);
+        }
 
 #if defined(WIFEXITED) && defined(WEXITSTATUS)
+
         if (WIFEXITED(status)) {
             return WEXITSTATUS(status);
         }
+
 #endif
         return status;
     }
@@ -297,15 +343,17 @@ int afprun(char *cmd, int *outfd)
     /* point our stdout at the file we want output to go into */
     if (outfd) {
         close(1);
-	if (dup2(*outfd,1) != 1) {
-	    LOG(log_error, logtype_afpd, "Failed to create stdout file descriptor");
-	    close(*outfd);
-	    exit(80);
-	}
+
+        if (dup2(*outfd, 1) != 1) {
+            LOG(log_error, logtype_afpd, "Failed to create stdout file descriptor");
+            close(*outfd);
+            exit(80);
+        }
     }
 
     if (chdir("/") < 0) {
-        LOG(log_error, logtype_afpd, "afprun: can't change directory to \"/\" %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afprun: can't change directory to \"/\" %s",
+            strerror(errno));
         exit(83);
     }
 
@@ -315,19 +363,23 @@ int afprun(char *cmd, int *outfd)
     if (become_user_permanently(uid, gid) != 0) {
         exit(82);
     }
-    if (getuid() != uid || geteuid() != uid || getgid() != gid || getegid() != gid) {
+
+    if (getuid() != uid || geteuid() != uid || getgid() != gid
+            || getegid() != gid) {
         /* we failed to lose our privileges - do not execute the command */
-	exit(81); /* we can't print stuff at this stage, instead use exit codes for debugging */
+        exit(81); /* we can't print stuff at this stage, instead use exit codes for debugging */
     }
 
     /* close all other file descriptors, leaving only 0, 1 and 2. 0 and
        2 point to /dev/null from the startup code */
     {
-	int fd;
-	for (fd=3;fd<256;fd++) close(fd);
-    }
+        int fd;
 
-    execl("/bin/sh","sh","-c",cmd,NULL);
+        for (fd = 3; fd < 256; fd++) {
+            close(fd);
+        }
+    }
+    execl("/bin/sh", "sh", "-c", cmd, NULL);
     /* not reached */
     exit(82);
     return 1;
@@ -343,27 +395,30 @@ int afprun_bg(char *cmd)
     uid_t uid = geteuid();
     gid_t gid = getegid();
     int fd, fdlimit = sysconf(_SC_OPEN_MAX);
-
     LOG(log_debug, logtype_afpd, "running %s as user %d", cmd, uid);
 
     /* in this method we will exec /bin/sh with the correct
        arguments, after first setting stdout to point at the file */
 
     if ((pid = fork()) < 0) {
-        LOG(log_error, logtype_afpd, "afprun: fork failed with error %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afprun: fork failed with error %s",
+            strerror(errno));
         return errno;
     }
 
     if (pid)
         /* parent, just return */
+    {
         return 0;
+    }
 
     /* we are in the child. we exec /bin/sh to do the work for us. we
        don't directly exec the command we want because it may be a
        pipeline or anything else the config file specifies */
 
     if (chdir("/") < 0) {
-        LOG(log_error, logtype_afpd, "afprun: can't change directory to \"/\" %s", strerror(errno) );
+        LOG(log_error, logtype_afpd, "afprun: can't change directory to \"/\" %s",
+            strerror(errno));
         exit(83);
     }
 
@@ -374,17 +429,19 @@ int afprun_bg(char *cmd)
         exit(82);
     }
 
-    if (getuid() != uid || geteuid() != uid || getgid() != gid || getegid() != gid) {
+    if (getuid() != uid || geteuid() != uid || getgid() != gid
+            || getegid() != gid) {
         /* we failed to lose our privileges - do not execute the command */
         exit(81);
     }
 
     fd = 3;
-    while (fd < fdlimit)
+
+    while (fd < fdlimit) {
         close(fd++);
+    }
 
-    execl("/bin/sh","sh","-c", cmd, NULL);
-
+    execl("/bin/sh", "sh", "-c", cmd, NULL);
     /* not reached */
     exit(82);
     return 1;

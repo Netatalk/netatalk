@@ -33,26 +33,32 @@ int dir_rx_set(mode_t mode)
 }
 
 /* --------------------- */
-int setfilmode(const struct vol *vol, const char *name, mode_t mode, struct stat *st)
+int setfilmode(const struct vol *vol, const char *name, mode_t mode,
+               struct stat *st)
 {
     struct stat sb;
-    mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;  /* rwx for owner group and other, by default */
+    /* rwx for owner group and other, by default */
+    mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;
 
     if (!st) {
-        if (lstat(name, &sb) != 0)
+        if (lstat(name, &sb) != 0) {
             return -1;
+        }
+
         st = &sb;
     }
 
-    mode |= st->st_mode & ~mask; /* keep other bits from previous mode */
+    /* keep other bits from previous mode */
+    mode |= st->st_mode & ~mask;
 
     if (ochmod((char *)name,
                mode & ~vol->v_umask,
                st,
                vol_syml_opt(vol) | vol_chmod_opt(vol)
-            ) < 0 && errno != EPERM ) {
+              ) < 0 && errno != EPERM) {
         return -1;
     }
+
     return 0;
 }
 
@@ -65,26 +71,33 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 {
     int err;
 
-    if (dirfd == -1)
+    if (dirfd == -1) {
         dirfd = AT_FDCWD;
+    }
+
     err = unlinkat(dirfd, name, AT_REMOVEDIR);
 
     if (err < 0) {
-        switch ( errno ) {
+        switch (errno) {
         case ENOENT :
             return AFPERR_NOOBJ;
+
         case ENOTEMPTY :
         case EEXIST:
             return AFPERR_DIRNEMPT;
+
         case EPERM:
         case EACCES :
             return AFPERR_ACCESS;
+
         case EROFS:
             return AFPERR_VLOCK;
+
         default :
             return AFPERR_PARAM;
         }
     }
+
     return AFP_OK;
 }
 
@@ -96,8 +109,11 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 int netatalk_rmdir(int dirfd, const char *name)
 {
     int ret = netatalk_rmdir_all_errors(dirfd, name);
-    if (ret == AFPERR_NOOBJ)
+
+    if (ret == AFPERR_NOOBJ) {
         return AFP_OK;
+    }
+
     return ret;
 }
 
@@ -111,15 +127,19 @@ int netatalk_unlink(const char *name)
         switch (errno) {
         case ENOENT :
             break;
+
         case EROFS:
             return AFPERR_VLOCK;
+
         case EPERM:
         case EACCES :
             return AFPERR_ACCESS;
+
         default :
             return AFPERR_PARAM;
         }
     }
+
     return AFP_OK;
 }
 
@@ -137,20 +157,26 @@ int copy_file_fd(int sfd, int dfd)
 
     while ((cc = read(sfd, filebuf, sizeof(filebuf)))) {
         if (cc < 0) {
-            if (errno == EINTR)
+            if (errno == EINTR) {
                 continue;
+            }
+
             LOG(log_error, logtype_afpd, "copy_file_fd: %s", strerror(errno));
             EC_FAIL;
         }
 
         buflen = cc;
+
         while (buflen > 0) {
             if ((cc = write(dfd, filebuf, buflen)) < 0) {
-                if (errno == EINTR)
+                if (errno == EINTR) {
                     continue;
+                }
+
                 LOG(log_error, logtype_afpd, "copy_file_fd: %s", strerror(errno));
                 EC_FAIL;
             }
+
             buflen -= cc;
         }
     }
@@ -168,8 +194,10 @@ int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
     int    sfd = -1;
     int    dfd = -1;
 
-    if (dirfd == -1)
+    if (dirfd == -1) {
         dirfd = AT_FDCWD;
+    }
+
     sfd = openat(dirfd, src, O_RDONLY);
 
     if (sfd < 0) {
@@ -186,15 +214,16 @@ int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
     }
 
     ret = copy_file_fd(sfd, dfd);
-
 exit:
-    if (sfd != -1)
+
+    if (sfd != -1) {
         close(sfd);
+    }
 
     if (dfd != -1) {
         int err;
-
         err = close(dfd);
+
         if (!ret && err) {
             /* don't bother to report an error if there's already one */
             LOG(log_error, logtype_afpd, "copy_file('%s'/'%s'): close '%s' error: %s",
@@ -211,7 +240,8 @@ exit:
  *
  * Supports *at semantics, pass dirfd=-1 to ignore this
  */
-int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst, mode_t mode)
+int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst,
+            mode_t mode)
 {
     EC_INIT;
     int    sfd = -1;
@@ -219,22 +249,29 @@ int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst, mod
     size_t easize;
     char   *eabuf = NULL;
 
-    if (dirfd == -1)
+    if (dirfd == -1) {
         dirfd = AT_FDCWD;
-    EC_NEG1_LOG( sfd = openat(dirfd, src, O_RDONLY) );
-    EC_NEG1_LOG( dfd = open(dst, O_WRONLY, mode) );
+    }
+
+    EC_NEG1_LOG(sfd = openat(dirfd, src, O_RDONLY));
+    EC_NEG1_LOG(dfd = open(dst, O_WRONLY, mode));
 
     if ((easize = sys_fgetxattr(sfd, ea, NULL, 0)) > 0) {
-        EC_NULL_LOG( eabuf = malloc(easize));
-        EC_NEG1_LOG( easize = sys_fgetxattr(sfd, ea, eabuf, easize) );
-        EC_NEG1_LOG( easize = sys_fsetxattr(dfd, ea, eabuf, easize, 0) );
+        EC_NULL_LOG(eabuf = malloc(easize));
+        EC_NEG1_LOG(easize = sys_fgetxattr(sfd, ea, eabuf, easize));
+        EC_NEG1_LOG(easize = sys_fsetxattr(dfd, ea, eabuf, easize, 0));
     }
 
 EC_CLEANUP:
-    if (sfd != -1)
+
+    if (sfd != -1) {
         close(sfd);
-    if (dfd != -1)
+    }
+
+    if (dfd != -1) {
         close(dfd);
+    }
+
     free(eabuf);
     EC_EXIT;
 }
@@ -244,22 +281,27 @@ EC_CLEANUP:
  */
 int netatalk_unlinkat(int dirfd _U_, const char *name)
 {
-    if (dirfd == -1)
+    if (dirfd == -1) {
         dirfd = AT_FDCWD;
+    }
 
     if (unlinkat(dirfd, name, 0) < 0) {
         switch (errno) {
         case ENOENT :
             break;
+
         case EROFS:
             return AFPERR_VLOCK;
+
         case EPERM:
         case EACCES :
             return AFPERR_ACCESS;
+
         default :
             return AFPERR_PARAM;
         }
     }
+
     return AFP_OK;
 }
 
@@ -273,15 +315,20 @@ int netatalk_unlinkat(int dirfd _U_, const char *name)
  * @param dfd        (r) same as sfd
  * @param newpath    (r) guess what
  */
-int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_, const char *newpath)
+int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_,
+                const char *newpath)
 {
-    if (sfd == -1)
+    if (sfd == -1) {
         sfd = AT_FDCWD;
-    if (dfd == -1)
-        dfd = AT_FDCWD;
+    }
 
-    if (renameat(sfd, oldpath, dfd, newpath) < 0)
+    if (dfd == -1) {
+        dfd = AT_FDCWD;
+    }
+
+    if (renameat(sfd, oldpath, dfd, newpath) < 0) {
         return -1;
+    }
 
     return 0;
 }
@@ -297,8 +344,10 @@ int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_, const char *newpa
  */
 int statat(int dirfd _U_, const char *path, struct stat *st)
 {
-    if (dirfd == -1)
+    if (dirfd == -1) {
         dirfd = AT_FDCWD;
+    }
+
     return fstatat(dirfd, path, st, 0);
 }
 
@@ -330,8 +379,10 @@ DIR *opendirat(int dirfd, const char *path)
     }
 
 exit:
-    if (cwd != -1)
+
+    if (cwd != -1) {
         close(cwd);
+    }
 
     return ret;
 }

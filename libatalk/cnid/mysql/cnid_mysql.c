@@ -1,7 +1,7 @@
 /*
  * Copyright (C) Ralph Boehme 2013
  * All Rights Reserved.  See COPYING.
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or
@@ -72,56 +72,48 @@ static int init_prepared_stmt_lookup(CNID_mysql_private *db)
 {
     EC_INIT;
     char *sql = NULL;
-
     lookup_param[0].buffer_type    = MYSQL_TYPE_STRING;
     lookup_param[0].buffer         = &stmt_param_name;
     lookup_param[0].buffer_length  = sizeof(stmt_param_name);
     lookup_param[0].length         = &stmt_param_name_len;
-
     lookup_param[1].buffer_type    = MYSQL_TYPE_LONGLONG;
     lookup_param[1].buffer         = &stmt_param_did;
     lookup_param[1].is_unsigned    = true;
-
     lookup_param[2].buffer_type    = MYSQL_TYPE_LONGLONG;
     lookup_param[2].buffer         = &stmt_param_dev;
     lookup_param[2].is_unsigned    = true;
-
     lookup_param[3].buffer_type    = MYSQL_TYPE_LONGLONG;
     lookup_param[3].buffer         = &stmt_param_ino;
     lookup_param[3].is_unsigned    = true;
-
     lookup_result[0].buffer_type   = MYSQL_TYPE_LONGLONG;
     lookup_result[0].buffer        = &lookup_result_id;
     lookup_result[0].is_unsigned   = true;
-
     lookup_result[1].buffer_type   = MYSQL_TYPE_LONGLONG;
     lookup_result[1].buffer        = &lookup_result_did;
     lookup_result[1].is_unsigned   = true;
-
     lookup_result[2].buffer_type   = MYSQL_TYPE_STRING;
     lookup_result[2].buffer        = &lookup_result_name;
     lookup_result[2].buffer_length = sizeof(lookup_result_name);
     lookup_result[2].length        = &lookup_result_name_len;
-
     lookup_result[3].buffer_type   = MYSQL_TYPE_LONGLONG;
     lookup_result[3].buffer        = &lookup_result_dev;
     lookup_result[3].is_unsigned   = true;
-
     lookup_result[4].buffer_type   = MYSQL_TYPE_LONGLONG;
     lookup_result[4].buffer        = &lookup_result_ino;
     lookup_result[4].is_unsigned   = true;
-
-    EC_NULL( db->cnid_lookup_stmt = mysql_stmt_init(db->cnid_mysql_con) );
-    EC_NEG1( asprintf(&sql,
-                      "SELECT Id,Did,Name,DevNo,InodeNo FROM `%s` "
-                      "WHERE (Name=? AND Did=?) OR (DevNo=? AND InodeNo=?)",
-                      db->cnid_mysql_voluuid_str) );
-    EC_ZERO_LOG( mysql_stmt_prepare(db->cnid_lookup_stmt, sql, strlen(sql)) );
-    EC_ZERO_LOG( mysql_stmt_bind_param(db->cnid_lookup_stmt, lookup_param) );
-
+    EC_NULL(db->cnid_lookup_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id,Did,Name,DevNo,InodeNo FROM `%s` "
+                     "WHERE (Name=? AND Did=?) OR (DevNo=? AND InodeNo=?)",
+                     db->cnid_mysql_voluuid_str));
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_lookup_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_lookup_stmt, lookup_param));
 EC_CLEANUP:
-    if (sql)
+
+    if (sql) {
         free(sql);
+    }
+
     EC_EXIT;
 }
 
@@ -129,35 +121,31 @@ static int init_prepared_stmt_add(CNID_mysql_private *db)
 {
     EC_INIT;
     char *sql = NULL;
-
-    EC_NULL( db->cnid_add_stmt = mysql_stmt_init(db->cnid_mysql_con) );
-    EC_NEG1( asprintf(&sql,
-                      "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) VALUES(?,?,?,?)",
-                      db->cnid_mysql_voluuid_str) );
-
+    EC_NULL(db->cnid_add_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "INSERT INTO `%s` (Name,Did,DevNo,InodeNo) VALUES(?,?,?,?)",
+                     db->cnid_mysql_voluuid_str));
     add_param[0].buffer_type    = MYSQL_TYPE_STRING;
     add_param[0].buffer         = &stmt_param_name;
     add_param[0].buffer_length  = sizeof(stmt_param_name);
     add_param[0].length         = &stmt_param_name_len;
-
     add_param[1].buffer_type    = MYSQL_TYPE_LONGLONG;
     add_param[1].buffer         = &stmt_param_did;
     add_param[1].is_unsigned    = true;
-
     add_param[2].buffer_type    = MYSQL_TYPE_LONGLONG;
     add_param[2].buffer         = &stmt_param_dev;
     add_param[2].is_unsigned    = true;
-
     add_param[3].buffer_type    = MYSQL_TYPE_LONGLONG;
     add_param[3].buffer         = &stmt_param_ino;
     add_param[3].is_unsigned    = true;
-
-    EC_ZERO_LOG( mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)) );
-    EC_ZERO_LOG( mysql_stmt_bind_param(db->cnid_add_stmt, add_param) );
-
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_add_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_add_stmt, add_param));
 EC_CLEANUP:
-    if (sql)
+
+    if (sql) {
         free(sql);
+    }
+
     EC_EXIT;
 }
 
@@ -165,50 +153,43 @@ static int init_prepared_stmt_put(CNID_mysql_private *db)
 {
     EC_INIT;
     char *sql = NULL;
-
-    EC_NULL( db->cnid_put_stmt = mysql_stmt_init(db->cnid_mysql_con) );
-    EC_NEG1( asprintf(&sql,
-                      "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) VALUES(?,?,?,?,?)",
-                      db->cnid_mysql_voluuid_str) );
-
+    EC_NULL(db->cnid_put_stmt = mysql_stmt_init(db->cnid_mysql_con));
+    EC_NEG1(asprintf(&sql,
+                     "INSERT INTO `%s` (Id,Name,Did,DevNo,InodeNo) VALUES(?,?,?,?,?)",
+                     db->cnid_mysql_voluuid_str));
     put_param[0].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[0].buffer         = &stmt_param_id;
     put_param[0].is_unsigned    = true;
-
     put_param[1].buffer_type    = MYSQL_TYPE_STRING;
     put_param[1].buffer         = &stmt_param_name;
     put_param[1].buffer_length  = sizeof(stmt_param_name);
     put_param[1].length         = &stmt_param_name_len;
-
     put_param[2].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[2].buffer         = &stmt_param_did;
     put_param[2].is_unsigned    = true;
-
     put_param[3].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[3].buffer         = &stmt_param_dev;
     put_param[3].is_unsigned    = true;
-
     put_param[4].buffer_type    = MYSQL_TYPE_LONGLONG;
     put_param[4].buffer         = &stmt_param_ino;
     put_param[4].is_unsigned    = true;
-
-    EC_ZERO_LOG( mysql_stmt_prepare(db->cnid_put_stmt, sql, strlen(sql)) );
-    EC_ZERO_LOG( mysql_stmt_bind_param(db->cnid_put_stmt, put_param) );
-
+    EC_ZERO_LOG(mysql_stmt_prepare(db->cnid_put_stmt, sql, strlen(sql)));
+    EC_ZERO_LOG(mysql_stmt_bind_param(db->cnid_put_stmt, put_param));
 EC_CLEANUP:
-    if (sql)
+
+    if (sql) {
         free(sql);
+    }
+
     EC_EXIT;
 }
 
 static int init_prepared_stmt(CNID_mysql_private *db)
 {
     EC_INIT;
-
-    EC_ZERO( init_prepared_stmt_lookup(db) );
-    EC_ZERO( init_prepared_stmt_add(db) );
-    EC_ZERO( init_prepared_stmt_put(db) );
-
+    EC_ZERO(init_prepared_stmt_lookup(db));
+    EC_ZERO(init_prepared_stmt_add(db));
+    EC_ZERO(init_prepared_stmt_put(db));
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -225,20 +206,22 @@ static int cnid_mysql_execute(MYSQL *con, char *fmt, ...)
     char *sql = NULL;
     va_list ap;
     int rv;
-
     va_start(ap, fmt);
-    if (vasprintf(&sql, fmt, ap) == -1)
+
+    if (vasprintf(&sql, fmt, ap) == -1) {
         return -1;
+    }
+
     va_end(ap);
-
     LOG(log_maxdebug, logtype_cnid, "SQL: %s", sql);
-
     rv = mysql_query(con, sql);
 
     if (rv) {
-        LOG(log_debug, logtype_cnid, "MySQL query \"%s\", error: %s", sql, mysql_error(con));
+        LOG(log_debug, logtype_cnid, "MySQL query \"%s\", error: %s", sql,
+            mysql_error(con));
         errno = CNID_ERR_DB;
     }
+
     free(sql);
     return rv;
 }
@@ -254,15 +237,13 @@ int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
         EC_FAIL;
     }
 
-    LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): BEGIN", ntohl(id));
-
-    EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                "DELETE FROM `%s` WHERE Id=%" PRIu32,
-                                db->cnid_mysql_voluuid_str,
-                                ntohl(id)) );
-
+    LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): BEGIN",
+        ntohl(id));
+    EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con,
+                               "DELETE FROM `%s` WHERE Id=%" PRIu32,
+                               db->cnid_mysql_voluuid_str,
+                               ntohl(id)));
     LOG(log_debug, logtype_cnid, "cnid_mysql_delete(%" PRIu32 "): END", ntohl(id));
-
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -279,18 +260,17 @@ void cnid_mysql_close(struct _cnid_db *cdb)
     if ((db = cdb->cnid_db_private) != NULL) {
         LOG(log_debug, logtype_cnid, "closing database connection for volume '%s'",
             cdb->cnid_db_vol->v_localname);
-
         free(db->cnid_mysql_voluuid_str);
-
         close_prepared_stmt(db);
 
-        if (db->cnid_mysql_con)
+        if (db->cnid_mysql_con) {
             mysql_close(db->cnid_mysql_con);
+        }
+
         free(db);
     }
 
     free(cdb);
-
     return;
 }
 
@@ -321,17 +301,16 @@ int cnid_mysql_update(struct _cnid_db *cdb,
     uint64_t ino = st->st_ino;
 
     do {
-        EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                    "DELETE FROM `%s` WHERE Id=%" PRIu32,
-                                    db->cnid_mysql_voluuid_str,
-                                    ntohl(id)) );
-        EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                    "DELETE FROM `%s` WHERE Did=%" PRIu32 " AND Name='%s'",
-                                    db->cnid_mysql_voluuid_str, ntohl(did), name) );
-        EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                    "DELETE FROM `%s` WHERE DevNo=%" PRIu64 " AND InodeNo=%" PRIu64,
-                                    db->cnid_mysql_voluuid_str, dev, ino) );
-
+        EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con,
+                                   "DELETE FROM `%s` WHERE Id=%" PRIu32,
+                                   db->cnid_mysql_voluuid_str,
+                                   ntohl(id)));
+        EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con,
+                                   "DELETE FROM `%s` WHERE Did=%" PRIu32 " AND Name='%s'",
+                                   db->cnid_mysql_voluuid_str, ntohl(did), name));
+        EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con,
+                                   "DELETE FROM `%s` WHERE DevNo=%" PRIu64 " AND InodeNo=%" PRIu64,
+                                   db->cnid_mysql_voluuid_str, dev, ino));
         stmt_param_id = ntohl(id);
         strncpy(stmt_param_name, name, sizeof(stmt_param_name));
         stmt_param_name_len = len;
@@ -348,14 +327,17 @@ int cnid_mysql_update(struct _cnid_db *cdb,
                  * this entry.
                  */
                 continue;
+
             case CR_SERVER_LOST:
                 close_prepared_stmt(db);
-                EC_ZERO( init_prepared_stmt(db) );
+                EC_ZERO(init_prepared_stmt(db));
                 continue;
+
             default:
                 EC_FAIL;
             }
         }
+
         update_id = mysql_stmt_insert_id(db->cnid_put_stmt);
     } while (update_id != ntohl(id));
 
@@ -389,58 +371,61 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
     uint64_t dev = st->st_dev;
     uint64_t ino = st->st_ino;
     cnid_t hint = db->cnid_mysql_hint;
-
-    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_lookup(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): START",
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_mysql_lookup(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): START",
         ntohl(did), name, ntohl(hint));
-
     strncpy(stmt_param_name, name, sizeof(stmt_param_name));
     stmt_param_name_len = len;
     stmt_param_did = ntohl(did);
     stmt_param_dev = dev;
     stmt_param_ino = ino;
-
 exec_stmt:
+
     if (mysql_stmt_execute(db->cnid_lookup_stmt)) {
         switch (mysql_stmt_errno(db->cnid_lookup_stmt)) {
         case CR_SERVER_LOST:
             close_prepared_stmt(db);
-            EC_ZERO( init_prepared_stmt(db) );
+            EC_ZERO(init_prepared_stmt(db));
             goto exec_stmt;
+
         default:
             EC_FAIL;
         }
     }
-    EC_ZERO_LOG( mysql_stmt_store_result(db->cnid_lookup_stmt) );
-    have_result = true;
-    EC_ZERO_LOG( mysql_stmt_bind_result(db->cnid_lookup_stmt, lookup_result) );
 
+    EC_ZERO_LOG(mysql_stmt_store_result(db->cnid_lookup_stmt));
+    have_result = true;
+    EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_lookup_stmt, lookup_result));
     uint64_t retdev, retino;
     cnid_t retid, retdid;
     char *retname;
 
     switch (mysql_stmt_num_rows(db->cnid_lookup_stmt)) {
-
     case 0:
         /* not found */
-        LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: name: '%s', did: %u is not in the CNID database",
+        LOG(log_debug, logtype_cnid,
+            "cnid_mysql_lookup: name: '%s', did: %u is not in the CNID database",
             name, ntohl(did));
         errno = CNID_DBD_RES_NOTFOUND;
         EC_FAIL;
 
     case 1:
         /* either both OR clauses matched the same id or only one matched, handled below */
-        EC_ZERO( mysql_stmt_fetch(db->cnid_lookup_stmt) );
+        EC_ZERO(mysql_stmt_fetch(db->cnid_lookup_stmt));
         break;
 
     case 2:
+
         /* a mismatch, delete both and return not found */
         while (mysql_stmt_fetch(db->cnid_lookup_stmt) == 0) {
             if (cnid_mysql_delete(cdb, htonl((cnid_t)lookup_result_id))) {
-                LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+                LOG(log_error, logtype_cnid, "MySQL query error: %s",
+                    mysql_error(db->cnid_mysql_con));
                 errno = CNID_ERR_DB;
                 EC_FAIL;
             }
         }
+
         errno = CNID_DBD_RES_NOTFOUND;
         EC_FAIL;
 
@@ -457,32 +442,45 @@ exec_stmt:
 
     if (retdid != did || STRCMP(retname, !=, name)) {
         LOG(log_debug, logtype_cnid,
-            "cnid_mysql_lookup(CNID hint: %" PRIu32 ", DID: %" PRIu32 ", name: \"%s\"): server side mv oder reused inode",
+            "cnid_mysql_lookup(CNID hint: %" PRIu32 ", DID: %" PRIu32
+            ", name: \"%s\"): server side mv oder reused inode",
             ntohl(hint), ntohl(did), name);
+
         if (hint != retid) {
             if (cnid_mysql_delete(cdb, retid) != 0) {
-                LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+                LOG(log_error, logtype_cnid, "MySQL query error: %s",
+                    mysql_error(db->cnid_mysql_con));
                 errno = CNID_ERR_DB;
                 EC_FAIL;
             }
+
             errno = CNID_DBD_RES_NOTFOUND;
             EC_FAIL;
         }
-        LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: server side mv, got hint, updating");
+
+        LOG(log_debug, logtype_cnid,
+            "cnid_mysql_lookup: server side mv, got hint, updating");
+
         if (cnid_mysql_update(cdb, retid, st, did, name, len) != 0) {
-            LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+            LOG(log_error, logtype_cnid, "MySQL query error: %s",
+                mysql_error(db->cnid_mysql_con));
             errno = CNID_ERR_DB;
             EC_FAIL;
         }
+
         id = retid;
     } else if (retdev != dev || retino != ino) {
-        LOG(log_debug, logtype_cnid, "cnid_mysql_lookup(DID:%u, name: \"%s\"): changed dev/ino",
+        LOG(log_debug, logtype_cnid,
+            "cnid_mysql_lookup(DID:%u, name: \"%s\"): changed dev/ino",
             ntohl(did), name);
+
         if (cnid_mysql_delete(cdb, retid) != 0) {
-            LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+            LOG(log_error, logtype_cnid, "MySQL query error: %s",
+                mysql_error(db->cnid_mysql_con));
             errno = CNID_ERR_DB;
             EC_FAIL;
         }
+
         errno = CNID_DBD_RES_NOTFOUND;
         EC_FAIL;
     } else {
@@ -492,10 +490,15 @@ exec_stmt:
 
 EC_CLEANUP:
     LOG(log_debug, logtype_cnid, "cnid_mysql_lookup: id: %" PRIu32, ntohl(id));
-    if (have_result)
+
+    if (have_result) {
         mysql_stmt_free_result(db->cnid_lookup_stmt);
-    if (ret != 0)
+    }
+
+    if (ret != 0) {
         id = CNID_INVALID;
+    }
+
     return id;
 }
 
@@ -528,14 +531,16 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
     uint64_t dev = st->st_dev;
     uint64_t ino = st->st_ino;
     db->cnid_mysql_hint = hint;
-
-    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_add(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): START",
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_mysql_add(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): START",
         ntohl(did), name, ntohl(hint));
 
     do {
         if ((id = cnid_mysql_lookup(cdb, st, did, name, len)) == CNID_INVALID) {
-            if (errno == CNID_ERR_DB)
+            if (errno == CNID_ERR_DB) {
                 EC_FAIL;
+            }
+
             /*
              * If the CNID set overflowed before (CNID_MYSQL_FLAG_DEPLETED)
              * ignore the CNID "hint" taken from the AppleDouble file
@@ -546,6 +551,7 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                 stmt = db->cnid_put_stmt;
                 stmt_param_id = ntohl(db->cnid_mysql_hint);
             }
+
             strncpy(stmt_param_name, name, sizeof(stmt_param_name));
             stmt_param_name_len = len;
             stmt_param_did = ntohl(did);
@@ -556,20 +562,25 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                 switch (mysql_stmt_errno(stmt)) {
                 case ER_DUP_ENTRY:
                     break;
+
                 case CR_SERVER_LOST:
                     close_prepared_stmt(db);
-                    EC_ZERO( init_prepared_stmt(db) );
+                    EC_ZERO(init_prepared_stmt(db));
                     continue;
+
                 default:
                     EC_FAIL;
                 }
+
                 /*
                  * Race condition:
                  * between lookup and insert another process may have inserted
                  * this entry.
                  */
-                if (db->cnid_mysql_hint)
+                if (db->cnid_mysql_hint) {
                     db->cnid_mysql_hint = CNID_INVALID;
+                }
+
                 continue;
             }
 
@@ -577,22 +588,26 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 
             if (lastid > 0xffffffff) {
                 /* CNID set ist depleted, restart from scratch */
-                EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                            "START TRANSACTION;"
-                                            "UPDATE volumes SET Depleted=1 WHERE VolUUID='%s';"
-                                            "TRUNCATE TABLE %s;"
-                                            "ALTER TABLE %s AUTO_INCREMENT = 17;"
-                                            "COMMIT;",
-                                            db->cnid_mysql_voluuid_str,
-                                            db->cnid_mysql_voluuid_str,
-                                            db->cnid_mysql_voluuid_str) );
+                EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con,
+                                           "START TRANSACTION;"
+                                           "UPDATE volumes SET Depleted=1 WHERE VolUUID='%s';"
+                                           "TRUNCATE TABLE %s;"
+                                           "ALTER TABLE %s AUTO_INCREMENT = 17;"
+                                           "COMMIT;",
+                                           db->cnid_mysql_voluuid_str,
+                                           db->cnid_mysql_voluuid_str,
+                                           db->cnid_mysql_voluuid_str));
                 db->cnid_mysql_flags |= CNID_MYSQL_FLAG_DEPLETED;
                 hint = CNID_INVALID;
+
                 do {
                     result = mysql_store_result(db->cnid_mysql_con);
-                    if (result)
+
+                    if (result) {
                         mysql_free_result(result);
+                    }
                 } while (mysql_next_result(db->cnid_mysql_con) == 0);
+
                 continue;
             }
 
@@ -604,12 +619,15 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 EC_CLEANUP:
     LOG(log_debug, logtype_cnid, "cnid_mysql_add: id: %" PRIu32, ntohl(id));
 
-    if (result)
+    if (result) {
         mysql_free_result(result);
+    }
+
     return id;
 }
 
-cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t len)
+cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name,
+                      size_t len)
 {
     EC_INIT;
     CNID_mysql_private *db;
@@ -629,18 +647,19 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t
         return CNID_INVALID;
     }
 
-    LOG(log_debug, logtype_cnid, "cnid_mysql_get(did: %" PRIu32 ", name: \"%s\"): START",
-        ntohl(did),name);
-
-    EC_NEG1( cnid_mysql_execute(db->cnid_mysql_con,
-                                "SELECT Id FROM `%s` "
-                                "WHERE Name='%s' AND Did=%" PRIu32,
-                                db->cnid_mysql_voluuid_str,
-                                name,
-                                ntohl(did)) );
+    LOG(log_debug, logtype_cnid,
+        "cnid_mysql_get(did: %" PRIu32 ", name: \"%s\"): START",
+        ntohl(did), name);
+    EC_NEG1(cnid_mysql_execute(db->cnid_mysql_con,
+                               "SELECT Id FROM `%s` "
+                               "WHERE Name='%s' AND Did=%" PRIu32,
+                               db->cnid_mysql_voluuid_str,
+                               name,
+                               ntohl(did)));
 
     if ((result = mysql_store_result(db->cnid_mysql_con)) == NULL) {
-        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
         errno = CNID_ERR_DB;
         EC_FAIL;
     }
@@ -653,13 +672,15 @@ cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name, size_t
 EC_CLEANUP:
     LOG(log_debug, logtype_cnid, "cnid_mysql_get: id: %" PRIu32, ntohl(id));
 
-    if (result)
+    if (result) {
         mysql_free_result(result);
+    }
 
     return id;
 }
 
-char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
+char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
+                         size_t len)
 {
     EC_INIT;
     CNID_mysql_private *db;
@@ -672,29 +693,30 @@ char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t 
         EC_FAIL;
     }
 
-    EC_NEG1( cnid_mysql_execute(
-                 db->cnid_mysql_con,
-                 "SELECT Did,Name FROM `%s` WHERE Id=%" PRIu32,
-                 db->cnid_mysql_voluuid_str, ntohl(*id)) );
+    EC_NEG1(cnid_mysql_execute(
+                db->cnid_mysql_con,
+                "SELECT Did,Name FROM `%s` WHERE Id=%" PRIu32,
+                db->cnid_mysql_voluuid_str, ntohl(*id)));
+    EC_NULL(result = mysql_store_result(db->cnid_mysql_con));
 
-    EC_NULL( result = mysql_store_result(db->cnid_mysql_con) );
-
-    if (mysql_num_rows(result) != 1)
+    if (mysql_num_rows(result) != 1) {
         EC_FAIL;
+    }
 
     row = mysql_fetch_row(result);
-
     *id = htonl(atoi(row[0]));
     strncpy(buffer, row[1], len);
-
 EC_CLEANUP:
-    if (result)
+
+    if (result) {
         mysql_free_result(result);
+    }
 
     if (ret != 0) {
         *id = CNID_INVALID;
         return NULL;
     }
+
     return buffer;
 }
 
@@ -714,45 +736,55 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
         return CNID_INVALID;
     }
 
-    if (!buffer)
+    if (!buffer) {
         EC_EXIT_STATUS(0);
+    }
 
     if (cnid_mysql_execute(db->cnid_mysql_con,
                            "SELECT Stamp FROM volumes WHERE VolPath='%s'",
                            cdb->cnid_db_vol->v_path)) {
         if (mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
-            LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+            LOG(log_error, logtype_cnid, "MySQL query error: %s",
+                mysql_error(db->cnid_mysql_con));
             EC_FAIL;
         }
     }
 
     if ((result = mysql_store_result(db->cnid_mysql_con)) == NULL) {
-        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
         errno = CNID_ERR_DB;
         EC_FAIL;
     }
+
     if (!mysql_num_rows(result)) {
-        LOG(log_error, logtype_cnid, "Can't get DB stamp for volumes \"%s\"", cdb->cnid_db_vol->v_path);
+        LOG(log_error, logtype_cnid, "Can't get DB stamp for volumes \"%s\"",
+            cdb->cnid_db_vol->v_path);
         EC_FAIL;
     }
+
     row = mysql_fetch_row(result);
     memcpy(buffer, row[0], len);
-
 EC_CLEANUP:
-    if (result)
+
+    if (result) {
         mysql_free_result(result);
+    }
+
     EC_EXIT;
 }
 
 
-int cnid_mysql_find(struct _cnid_db *cdb _U_, const char *name, size_t namelen _U_, void *buffer _U_, size_t buflen _U_)
+int cnid_mysql_find(struct _cnid_db *cdb _U_, const char *name,
+                    size_t namelen _U_, void *buffer _U_, size_t buflen _U_)
 {
     LOG(log_error, logtype_cnid,
         "cnid_mysql_find(\"%s\"): not supported with MySQL CNID backend", name);
     return -1;
 }
 
-cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb _U_, const struct stat *st _U_,
+cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb _U_,
+                              const struct stat *st _U_,
                               cnid_t did _U_, const char *name, size_t len _U_, cnid_t hint _U_)
 {
     LOG(log_error, logtype_cnid,
@@ -773,22 +805,23 @@ int cnid_mysql_wipe(struct _cnid_db *cdb)
     }
 
     LOG(log_debug, logtype_cnid, "cnid_dbd_wipe");
-
-    EC_NEG1( cnid_mysql_execute(
-                 db->cnid_mysql_con,
-                 "START TRANSACTION;"
-                 "UPDATE volumes SET Depleted=0 WHERE VolUUID='%s';"
-                 "TRUNCATE TABLE `%s`;"
-                 "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
-                 "COMMIT;",
-                 db->cnid_mysql_voluuid_str,
-                 db->cnid_mysql_voluuid_str,
-                 db->cnid_mysql_voluuid_str) );
+    EC_NEG1(cnid_mysql_execute(
+                db->cnid_mysql_con,
+                "START TRANSACTION;"
+                "UPDATE volumes SET Depleted=0 WHERE VolUUID='%s';"
+                "TRUNCATE TABLE `%s`;"
+                "ALTER TABLE `%s` AUTO_INCREMENT = 17;"
+                "COMMIT;",
+                db->cnid_mysql_voluuid_str,
+                db->cnid_mysql_voluuid_str,
+                db->cnid_mysql_voluuid_str));
 
     do {
         result = mysql_store_result(db->cnid_mysql_con);
-        if (result)
+
+        if (result) {
             mysql_free_result(result);
+        }
     } while (mysql_next_result(db->cnid_mysql_con) == 0);
 
 EC_CLEANUP:
@@ -799,8 +832,9 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
 {
     struct _cnid_db *cdb;
 
-    if ((cdb = (struct _cnid_db *)calloc(1, sizeof(struct _cnid_db))) == NULL)
+    if ((cdb = (struct _cnid_db *)calloc(1, sizeof(struct _cnid_db))) == NULL) {
         return NULL;
+    }
 
     cdb->cnid_db_vol = vol;
     cdb->cnid_db_flags = CNID_FLAG_PERSISTENT | CNID_FLAG_LAZY_INIT;
@@ -820,7 +854,8 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
 }
 
 /* Return allocated UUID string with dashes stripped */
-static char *uuid_strip_dashes(const char *uuid) {
+static char *uuid_strip_dashes(const char *uuid)
+{
     static char stripped[33];
     int i = 0;
 
@@ -828,8 +863,10 @@ static char *uuid_strip_dashes(const char *uuid) {
         if (*uuid != '-') {
             stripped[i++] = *uuid;
         }
+
         uuid++;
     }
+
     stripped[i] = 0;
     return strdup(stripped);
 }
@@ -844,48 +881,46 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     MYSQL_ROW row;
     struct vol *vol = args->cnid_args_vol;
     MYSQL *temp_conn = NULL;
-
-    EC_NULL( cdb = cnid_mysql_new(vol) );
-    EC_NULL( db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)) );
+    EC_NULL(cdb = cnid_mysql_new(vol));
+    EC_NULL(db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)));
     cdb->cnid_db_private = db;
-
-    EC_NULL( db->cnid_mysql_voluuid_str = uuid_strip_dashes(vol->v_uuid) );
-
+    EC_NULL(db->cnid_mysql_voluuid_str = uuid_strip_dashes(vol->v_uuid));
     /* Initialize and connect to MySQL server */
-    EC_NULL( db->cnid_mysql_con = mysql_init(NULL) );
+    EC_NULL(db->cnid_mysql_con = mysql_init(NULL));
     bool my_recon = true;
-    EC_ZERO( mysql_options(db->cnid_mysql_con, MYSQL_OPT_RECONNECT, &my_recon) );
+    EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_OPT_RECONNECT, &my_recon));
     int my_timeout = 600;
-    EC_ZERO( mysql_options(db->cnid_mysql_con, MYSQL_OPT_CONNECT_TIMEOUT, &my_timeout) );
-
+    EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_OPT_CONNECT_TIMEOUT,
+                          &my_timeout));
     const AFPObj *obj = vol->v_obj;
-
     temp_conn = mysql_init(NULL);
+
     if (temp_conn == NULL) {
         LOG(log_error, logtype_cnid, "Failed to initialize MySQL connection");
         EC_FAIL;
     }
 
     if (mysql_real_connect(temp_conn,
-                          obj->options.cnid_mysql_host,
-                          obj->options.cnid_mysql_user,
-                          obj->options.cnid_mysql_pw,
-                          NULL, 0, NULL, 0) == NULL) {
-        LOG(log_error, logtype_cnid, "Failed to connect to MySQL server: %s", 
+                           obj->options.cnid_mysql_host,
+                           obj->options.cnid_mysql_user,
+                           obj->options.cnid_mysql_pw,
+                           NULL, 0, NULL, 0) == NULL) {
+        LOG(log_error, logtype_cnid, "Failed to connect to MySQL server: %s",
             mysql_error(temp_conn));
         mysql_close(temp_conn);
         EC_FAIL;
     }
 
-    if (cnid_mysql_execute(temp_conn, 
-                          "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '%s'",
-                          obj->options.cnid_mysql_db)) {
+    if (cnid_mysql_execute(temp_conn,
+                           "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '%s'",
+                           obj->options.cnid_mysql_db)) {
         LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(temp_conn));
         mysql_close(temp_conn);
         EC_FAIL;
     }
 
     result = mysql_store_result(temp_conn);
+
     if (result == NULL) {
         LOG(log_error, logtype_cnid, "MySQL result error: %s", mysql_error(temp_conn));
         mysql_close(temp_conn);
@@ -898,7 +933,8 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
         mysql_free_result(result);
         result = NULL;
 
-        if (cnid_mysql_execute(temp_conn, "CREATE DATABASE `%s`", obj->options.cnid_mysql_db)) {
+        if (cnid_mysql_execute(temp_conn, "CREATE DATABASE `%s`",
+                               obj->options.cnid_mysql_db)) {
             LOG(log_error, logtype_cnid, "Failed to create MySQL database '%s': %s",
                 obj->options.cnid_mysql_db, mysql_error(temp_conn));
             mysql_close(temp_conn);
@@ -911,26 +947,27 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     mysql_close(temp_conn);
     temp_conn = NULL;
-
-    EC_NULL( mysql_real_connect(db->cnid_mysql_con,
-                                obj->options.cnid_mysql_host,
-                                obj->options.cnid_mysql_user,
-                                obj->options.cnid_mysql_pw,
-                                obj->options.cnid_mysql_db,
-                                0, NULL, CLIENT_MULTI_STATEMENTS));
+    EC_NULL(mysql_real_connect(db->cnid_mysql_con,
+                               obj->options.cnid_mysql_host,
+                               obj->options.cnid_mysql_user,
+                               obj->options.cnid_mysql_pw,
+                               obj->options.cnid_mysql_db,
+                               0, NULL, CLIENT_MULTI_STATEMENTS));
 
     /* Add volume to volume table */
     if (cnid_mysql_execute(db->cnid_mysql_con,
                            "CREATE TABLE IF NOT EXISTS volumes"
                            "(VolUUID CHAR(32) PRIMARY KEY,VolPath TEXT(4096),Stamp BINARY(8),Depleted INT, INDEX(VolPath(64)))")) {
-        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
         EC_FAIL;
     }
+
     time_t now = time(NULL);
     char stamp[8];
     memset(stamp, 0, 8);
     memcpy(stamp, &now, sizeof(time_t));
-    char blob[16+1];
+    char blob[16 + 1];
     mysql_real_escape_string(db->cnid_mysql_con, blob, stamp, 8);
 
     if (cnid_mysql_execute(db->cnid_mysql_con,
@@ -940,9 +977,11 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            vol->v_path,
                            blob)) {
         if (mysql_errno(db->cnid_mysql_con) == ER_DUP_ENTRY) {
-            LOG(log_debug, logtype_cnid, "Volume '%s' already registered in database", vol->v_path);
+            LOG(log_debug, logtype_cnid, "Volume '%s' already registered in database",
+                vol->v_path);
         } else {
-            LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+            LOG(log_error, logtype_cnid, "MySQL query error: %s",
+                mysql_error(db->cnid_mysql_con));
             EC_FAIL;
         }
     }
@@ -955,20 +994,27 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     if (cnid_mysql_execute(db->cnid_mysql_con,
                            "SELECT Depleted FROM volumes WHERE VolUUID='%s'",
                            db->cnid_mysql_voluuid_str)) {
-        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
         EC_FAIL;
     }
+
     if ((result = mysql_store_result(db->cnid_mysql_con)) == NULL) {
-        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
         errno = CNID_ERR_DB;
         EC_FAIL;
     }
+
     if (mysql_num_rows(result)) {
         row = mysql_fetch_row(result);
         int depleted = atoi(row[0]);
-        if (depleted)
+
+        if (depleted) {
             db->cnid_mysql_flags |= CNID_MYSQL_FLAG_DEPLETED;
+        }
     }
+
     mysql_free_result(result);
     result = NULL;
 
@@ -983,25 +1029,33 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                            "UNIQUE DidName(Did, Name), UNIQUE DevIno(DevNo, InodeNo)) "
                            "AUTO_INCREMENT=17",
                            db->cnid_mysql_voluuid_str)) {
-        LOG(log_error, logtype_cnid, "MySQL query error: %s", mysql_error(db->cnid_mysql_con));
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
         EC_FAIL;
     }
 
-    EC_ZERO( init_prepared_stmt(db) );
-
-    LOG(log_debug, logtype_cnid, "Finished initializing MySQL CNID module for volume '%s'",
+    EC_ZERO(init_prepared_stmt(db));
+    LOG(log_debug, logtype_cnid,
+        "Finished initializing MySQL CNID module for volume '%s'",
         vol->v_path);
-
 EC_CLEANUP:
-    if (result)
+
+    if (result) {
         mysql_free_result(result);
-    if (ret != 0) {
-        if (cdb)
-            free(cdb);
-        cdb = NULL;
-        if (db)
-            free(db);
     }
+
+    if (ret != 0) {
+        if (cdb) {
+            free(cdb);
+        }
+
+        cdb = NULL;
+
+        if (db) {
+            free(db);
+        }
+    }
+
     return cdb;
 }
 

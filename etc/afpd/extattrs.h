@@ -16,9 +16,13 @@
 #define AFPD_EXT_ATTRS_H
 
 /* AFP funcs */
-int afp_listextattr (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getextattr (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_listextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                    size_t *rbuflen);
+int afp_getextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                   size_t *rbuflen);
+int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                   size_t *rbuflen);
+int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                   size_t *rbuflen);
 
 #endif /* AFPD_EXT_ATTRS_H */

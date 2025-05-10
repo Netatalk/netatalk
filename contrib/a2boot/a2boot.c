@@ -55,24 +55,25 @@
 
 int	debug = 0;
 char	*bad = "Bad request!";
-char	buf[ 4624 ];
+char	buf[4624];
 char	*server;
 int32_t fileoff;
 static char	*version = VERSION;
 
 long a2bootreq(char *fname);
 
-void usage( char *p )
+void usage(char *p)
 {
     char	*s;
 
-    if (( s = rindex( p, '/' )) == NULL ) {
-	s = p;
+    if ((s = rindex(p, '/')) == NULL) {
+        s = p;
     } else {
-	s++;
+        s++;
     }
-    fprintf( stderr, "Usage:\t%s -d -n nbpname\n", s );
-    exit( 1 );
+
+    fprintf(stderr, "Usage:\t%s -d -n nbpname\n", s);
+    exit(1);
 }
 
 /*
@@ -82,24 +83,27 @@ void
 goaway(int signal)
 {
     int regerr;
-    regerr = nbp_unrgstr( server, "Apple //gs", "*", NULL );
-    regerr += nbp_unrgstr( server, "Apple //e Boot", "*", NULL );
-    regerr += nbp_unrgstr( server, "ProDOS16 Image", "*", NULL );
-    if ( regerr < 0 ) {
-	LOG(log_error, logtype_default, "Can't unregister Apple II boot files %s", server );
-	exit( 1 );
+    regerr = nbp_unrgstr(server, "Apple //gs", "*", NULL);
+    regerr += nbp_unrgstr(server, "Apple //e Boot", "*", NULL);
+    regerr += nbp_unrgstr(server, "ProDOS16 Image", "*", NULL);
+
+    if (regerr < 0) {
+        LOG(log_error, logtype_default, "Can't unregister Apple II boot files %s",
+            server);
+        exit(1);
     }
-    LOG(log_info, logtype_default, "going down" );
-    exit( 0 );
+
+    LOG(log_info, logtype_default, "going down");
+    exit(0);
 }
 
-int main( int ac, char **av )
+int main(int ac, char **av)
 {
     ATP		atp;
     struct sockaddr_at	sat;
     struct atp_block	atpb;
     struct iovec	iov;
-    char	hostname[ MAXHOSTNAMELEN ];
+    char	hostname[MAXHOSTNAMELEN];
     char	*p;
     int		c;
     int32_t	req, resp;
@@ -107,203 +111,211 @@ int main( int ac, char **av )
     extern char	*optarg;
     extern int		optind;
 
+    if (gethostname(hostname, sizeof(hostname)) < 0) {
+        perror("gethostname");
+        exit(1);
+    }
 
-    if ( gethostname( hostname, sizeof( hostname )) < 0 ) {
-	perror( "gethostname" );
-	exit( 1 );
+    if ((server = index(hostname, '.')) != 0) {
+        *server = '\0';
     }
-    if (( server = index( hostname, '.' )) != 0 ) {
-	*server = '\0';
-    }
+
     server = hostname;
 
-    while (( c = getopt( ac, av, "dVvn:" )) != EOF ) {
-	switch ( c ) {
-	case 'd' :
-	    debug++;
-	    break;
-	case 'n' :
-	    server = optarg;
-	    break;
-    case 'V' :
-    case 'v' :
-        fprintf(stdout, "a2boot %s - Apple2 Netboot Daemon\n"
-               "Copyright (c) 1990,1992 Regents of The University of Michigan.\n"
-               "\tAll Rights Reserved.\n"
-               "Copyright (c) 1990, The University of Melbourne.\n", version );
-        exit(0);
-        break;
-	default :
-	    fprintf( stderr, "Unknown option -- '%c'\n", c );
-	    usage( *av );
-	}
+    while ((c = getopt(ac, av, "dVvn:")) != EOF) {
+        switch (c) {
+        case 'd' :
+            debug++;
+            break;
+
+        case 'n' :
+            server = optarg;
+            break;
+
+        case 'V' :
+        case 'v' :
+            fprintf(stdout, "a2boot %s - Apple2 Netboot Daemon\n"
+                            "Copyright (c) 1990,1992 Regents of The University of Michigan.\n"
+                            "\tAll Rights Reserved.\n"
+                            "Copyright (c) 1990, The University of Melbourne.\n", version);
+            exit(0);
+            break;
+
+        default :
+            fprintf(stderr, "Unknown option -- '%c'\n", c);
+            usage(*av);
+        }
     }
 
     /*
      * Disassociate from controlling tty.
      */
-    if ( !debug ) {
-	int		i, dt;
+    if (!debug) {
+        int		i, dt;
 
-	switch ( fork()) {
-	case 0 :
-	    dt = getdtablesize();
-	    for ( i = 0; i < dt; i++ ) {
-		(void)close( i );
-	    }
-	    if (( i = open( "/dev/tty", O_RDWR )) >= 0 ) {
-		(void)ioctl( i, TIOCNOTTY, 0 );
-		setpgid( 0, getpid());
-		(void)close( i );
-	    }
-	    break;
-	case -1 :
-	    perror( "fork" );
-	    exit( 1 );
-	default :
-	    exit( 0 );
-	}
+        switch (fork()) {
+        case 0 :
+            dt = getdtablesize();
+
+            for (i = 0; i < dt; i++) {
+                (void)close(i);
+            }
+
+            if ((i = open("/dev/tty", O_RDWR)) >= 0) {
+                (void)ioctl(i, TIOCNOTTY, 0);
+                setpgid(0, getpid());
+                (void)close(i);
+            }
+
+            break;
+
+        case -1 :
+            perror("fork");
+            exit(1);
+
+        default :
+            exit(0);
+        }
     }
 
-    if (( p = rindex( *av, '/' )) == NULL ) {
-	p = *av;
+    if ((p = rindex(*av, '/')) == NULL) {
+        p = *av;
     } else {
-	p++;
+        p++;
     }
 
     set_processname(p);
-    syslog_setup(log_debug, logtype_default, logoption_ndelay|logoption_pid, logfacility_daemon );
-
+    syslog_setup(log_debug, logtype_default, logoption_ndelay | logoption_pid,
+                 logfacility_daemon);
     /* allocate memory */
-    memset (&sat.sat_addr, 0, sizeof (sat.sat_addr));
+    memset(&sat.sat_addr, 0, sizeof(sat.sat_addr));
 
-/*
-	force port 3 as the semi-official ATP access port        MJ 2002
-*/
-    if (( atp = atp_open( (uint8_t)3, &sat.sat_addr )) == NULL ) {
-	LOG(log_error, logtype_default, "main: atp_open: %s", strerror( errno ) );
-	exit( 1 );
+    /*
+    	force port 3 as the semi-official ATP access port        MJ 2002
+    */
+    if ((atp = atp_open((uint8_t)3, &sat.sat_addr)) == NULL) {
+        LOG(log_error, logtype_default, "main: atp_open: %s", strerror(errno));
+        exit(1);
     }
 
-    regerr = nbp_rgstr( atp_sockaddr( atp ), server, "Apple //gs", "*" );
-    regerr += nbp_rgstr( atp_sockaddr( atp ), server, "Apple //e Boot", "*" );
-    regerr += nbp_rgstr( atp_sockaddr( atp ), server, "ProDOS16 Image", "*" );
-    if ( regerr < 0 ) {
-	LOG(log_error, logtype_default, "Can't register Apple II boot files %s", server );
-	exit( 1 );
+    regerr = nbp_rgstr(atp_sockaddr(atp), server, "Apple //gs", "*");
+    regerr += nbp_rgstr(atp_sockaddr(atp), server, "Apple //e Boot", "*");
+    regerr += nbp_rgstr(atp_sockaddr(atp), server, "ProDOS16 Image", "*");
+
+    if (regerr < 0) {
+        LOG(log_error, logtype_default, "Can't register Apple II boot files %s",
+            server);
+        exit(1);
     }
 
-    LOG(log_info, logtype_default, "%s:Apple 2 Boot started", server );
-
-	signal(SIGHUP, goaway);
-	signal(SIGTERM, goaway);
+    LOG(log_info, logtype_default, "%s:Apple 2 Boot started", server);
+    signal(SIGHUP, goaway);
+    signal(SIGTERM, goaway);
 
     for (;;) {
-	/*
-	 * Something seriously wrong with atp, since these assigns must
-	 * be in the loop...
-	 */
-	atpb.atp_saddr = &sat;
-	atpb.atp_rreqdata = buf;
-	bzero( &sat, sizeof( struct sockaddr_at ));
-	atpb.atp_rreqdlen = sizeof( buf );
+        /*
+         * Something seriously wrong with atp, since these assigns must
+         * be in the loop...
+         */
+        atpb.atp_saddr = &sat;
+        atpb.atp_rreqdata = buf;
+        bzero(&sat, sizeof(struct sockaddr_at));
+        atpb.atp_rreqdlen = sizeof(buf);
 
-	if ( atp_rreq( atp, &atpb ) < 0 ) {
-	LOG(log_error, logtype_default, "main: atp_rreq: %s", strerror( errno ) );
-	    exit( 1 );
-	}
+        if (atp_rreq(atp, &atpb) < 0) {
+            LOG(log_error, logtype_default, "main: atp_rreq: %s", strerror(errno));
+            exit(1);
+        }
 
-	p = buf;
-	bcopy( p, &req, sizeof( int32_t ));
-	req = ntohl( req );
-	p += sizeof( int32_t );
+        p = buf;
+        bcopy(p, &req, sizeof(int32_t));
+        req = ntohl(req);
+        p += sizeof(int32_t);
+        /*
+            LOG(log_info, logtype_default, "req = %08lx",(long)req );
+        */
+        /* Byte-swap and multiply by 0x200. Converts block number to
+           file offset. */
+        fileoff = ((req & 0x00ff0000) >> 7) | ((req & 0x0000ff00) << 9);
+        req &= 0xff000000;
 
-/*
-    LOG(log_info, logtype_default, "req = %08lx",(long)req );
-*/
-	/* Byte-swap and multiply by 0x200. Converts block number to
-	   file offset. */
-	fileoff = (( req & 0x00ff0000 ) >> 7 ) | (( req & 0x0000ff00 ) << 9 );
-	req &= 0xff000000;
+        /*
+            LOG(log_info, logtype_default, "       reqblklo = %02x",(int)reqblklo );
+            LOG(log_info, logtype_default, "       reqblkhi = %02x",(int)reqblkhi );
+            LOG(log_info, logtype_default, "       req now = %08lx",(long)req );
+        */
 
-/*
-    LOG(log_info, logtype_default, "       reqblklo = %02x",(int)reqblklo );
-    LOG(log_info, logtype_default, "       reqblkhi = %02x",(int)reqblkhi );
-    LOG(log_info, logtype_default, "       req now = %08lx",(long)req );
-*/
+        switch (req) {
+        case 0x01000000 :	/* Apple IIgs both ROM 1 and ROM 3 */
+            /*    LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks" ); */
+            resp = a2bootreq(_PATH_A_GS_BLOCKS);
+            break;
 
-	switch( req ) {
-	case 0x01000000 :	/* Apple IIgs both ROM 1 and ROM 3 */
-/*    LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks" ); */
-		resp = a2bootreq(_PATH_A_GS_BLOCKS);
-	    break;
+        case 0x02000000 :	/* Apple 2 Workstation card  */
+            /*    LOG(log_info, logtype_default, "          Req Apple //e Boot" );  */
+            resp = a2bootreq(_PATH_A_2E_BLOCKS);
+            break;
 
-	case 0x02000000 :	/* Apple 2 Workstation card  */
-/*    LOG(log_info, logtype_default, "          Req Apple //e Boot" );  */
-	    	resp = a2bootreq(_PATH_A_2E_BLOCKS);
-	    break;
+        case 0x03000000 :	/* Apple IIgs both ROM 1 and ROM 3 */
+            /*    LOG(log_info, logtype_default, "          Req ProDOS16 Image" );    */
+            resp = a2bootreq(_PATH_P16_IMAGE);
+            break;
 
-	case 0x03000000 :	/* Apple IIgs both ROM 1 and ROM 3 */
-/*    LOG(log_info, logtype_default, "          Req ProDOS16 Image" );    */
-		resp = a2bootreq(_PATH_P16_IMAGE);
-	    break;
+        default :
+            LOG(log_error, logtype_default, bad);
+            resp = TL_EOF;
+            *(buf + sizeof(int32_t)) = (unsigned char)strlen(bad);
+            strcpy(buf + 1 + sizeof(int32_t), bad);
+            break;
+        }
 
-	default :
-	    LOG(log_error, logtype_default, bad );
+        bcopy(&resp, buf, sizeof(int32_t));
+        iov.iov_len = sizeof(int32_t) + 512;
+        iov.iov_base = buf;
+        atpb.atp_sresiov = &iov;
+        atpb.atp_sresiovcnt = 1;
 
-	    resp = TL_EOF;
-	    *( buf + sizeof( int32_t ) ) = (unsigned char)strlen( bad );
-	    strcpy( buf + 1 + sizeof( int32_t ), bad );
-
-	    break;
-	}
-
-	bcopy( &resp, buf, sizeof( int32_t ));
-
-	iov.iov_len = sizeof( int32_t ) + 512;
-	iov.iov_base = buf;
-	atpb.atp_sresiov = &iov;
-	atpb.atp_sresiovcnt = 1;
-
-	if ( atp_sresp( atp, &atpb ) < 0 ) {
-	    LOG(log_error, logtype_default, "main: atp_sresp: %s", strerror( errno ) );
-	    exit( 1 );
-	}
+        if (atp_sresp(atp, &atpb) < 0) {
+            LOG(log_error, logtype_default, "main: atp_sresp: %s", strerror(errno));
+            exit(1);
+        }
     }
 }
 
 
 /* below MJ 2002 (initially borrowed from aep_packet */
 long a2bootreq(fname)
-	char	*fname;
+char	*fname;
 {
-	int f;
-	int32_t readlen;
-/*
-    LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );
-*/
-	f=open(fname,O_RDONLY );
-	if(f==EOF) {
-	LOG(log_error, logtype_default, "a2boot open error on %s",fname);
-		return close(f);
-	}
+    int f;
+    int32_t readlen;
+    /*
+        LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );
+    */
+    f = open(fname, O_RDONLY);
 
-/*
-    LOG(log_info, logtype_default, "would lseek to %08lx",fileoff);
-*/
-	lseek(f,fileoff,0);
-	readlen=read(f, buf + sizeof( int32_t ), 512 );
+    if (f == EOF) {
+        LOG(log_error, logtype_default, "a2boot open error on %s", fname);
+        return close(f);
+    }
 
-/*
-    LOG(log_info, logtype_default, "length is %08lx", readlen);
-*/
+    /*
+        LOG(log_info, logtype_default, "would lseek to %08lx",fileoff);
+    */
+    lseek(f, fileoff, 0);
+    readlen = read(f, buf + sizeof(int32_t), 512);
 
-	if(readlen < 0x200) {
-/*    LOG(log_info, logtype_default, "Read to EOF");  */
-		close(f);
-		return TL_EOF;
-	}
-	close(f);
-	return  TL_OK;
+    /*
+        LOG(log_info, logtype_default, "length is %08lx", readlen);
+    */
+
+    if (readlen < 0x200) {
+        /*    LOG(log_info, logtype_default, "Read to EOF");  */
+        close(f);
+        return TL_EOF;
+    }
+
+    close(f);
+    return  TL_OK;
 }
 

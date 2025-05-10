@@ -109,27 +109,25 @@ void configure_spotlight_attributes(const char *attributes_in)
     char *attr, *attributes;
     int i;
 
-    for (i = 0; spotlight_sparql_map[i].ssm_spotlight_attr != NULL; i++)
+    for (i = 0; spotlight_sparql_map[i].ssm_spotlight_attr != NULL; i++) {
         spotlight_sparql_map[i].ssm_enabled = false;
+    }
 
     /*
      * Go through the attribute map and for every element scan
      * attributes_in with strtok(). If it's contained, keep it
      * enabled, otherwise disable it.
      */
-
     attributes = strdup(attributes_in);
 
     for (attr = strtok(attributes, ","); attr; attr = strtok(NULL, ",")) {
-
         for (i = 0; spotlight_sparql_map[i].ssm_spotlight_attr != NULL; i++)
-
             if (strcmp(attr, spotlight_sparql_map[i].ssm_spotlight_attr) == 0) {
                 LOG(log_info, logtype_sl, "Enabling Spotlight attribute: %s",
                     spotlight_sparql_map[i].ssm_spotlight_attr);
                 spotlight_sparql_map[i].ssm_enabled = true;
                 break;
-        }
+            }
     }
 
     free(attributes);

@@ -82,12 +82,11 @@ void _log(enum logtype lt, char *fmt, ...)
     static char logbuffer[1024];
     va_list args;
 
-    if ( (lt == STD) || (log_verbose == 1)) {
+    if ((lt == STD) || (log_verbose == 1)) {
         va_start(args, fmt);
         len = vsnprintf(logbuffer, 1023, fmt, args);
         va_end(args);
         logbuffer[1023] = 0;
-
         printf("%s\n", logbuffer);
     }
 }
@@ -105,35 +104,39 @@ void _log(enum logtype lt, char *fmt, ...)
 int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
 {
     int flags = 0;
-
     memset(vol, 0, sizeof(afpvol_t));
 
-    if ((vol->vol = getvolbypath(obj, path)) == NULL)
+    if ((vol->vol = getvolbypath(obj, path)) == NULL) {
         return -1;
+    }
 
-    if (STRCMP(vol->vol->v_cnidscheme, != , "dbd"))
+    if (STRCMP(vol->vol->v_cnidscheme, !=, "dbd")) {
         ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->vol->v_path);
+    }
 
     /* Sanity checks to ensure we can touch this volume */
     if (vol->vol->v_adouble != AD_VERSION2
-        && vol->vol->v_adouble != AD_VERSION_EA)
+            && vol->vol->v_adouble != AD_VERSION_EA) {
         ERROR("Unsupported adouble versions: %u", vol->vol->v_adouble);
+    }
 
-    if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS)
+    if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS) {
         ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
+    }
 
-    if (vol->vol->v_flags & AFPVOL_NODEV)
+    if (vol->vol->v_flags & AFPVOL_NODEV) {
         flags |= CNID_FLAG_NODEV;
+    }
 
     if ((vol->vol->v_cdb = cnid_open(vol->vol,
                                      "dbd",
-                                     flags)) == NULL)
+                                     flags)) == NULL) {
         ERROR("Can't initialize CNID database connection for %s", vol->vol->v_path);
+    }
 
     cnid_getstamp(vol->vol->v_cdb,
                   vol->db_stamp,
                   sizeof(vol->db_stamp));
-
     return 0;
 }
 
@@ -145,41 +148,45 @@ void closevol(afpvol_t *vol)
             vol->vol->v_cdb = NULL;
         }
     }
+
     memset(vol, 0, sizeof(afpvol_t));
 }
 
 /*
-  Taken form afpd/desktop.c
+  Taken from afpd/desktop.c
 */
 char *utompath(const struct vol *vol, const char *upath)
 {
-    static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
+    /* for convert_charset dest_len parameter +2 */
+    static char  mpath[MAXPATHLEN + 2];
     char         *m;
     const char   *u;
     uint16_t     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
     size_t       outlen;
 
-    if (!upath)
+    if (!upath) {
         return NULL;
+    }
 
     m = mpath;
     u = upath;
     outlen = strlen(upath);
 
-    if (vol->v_casefold & AFPVOL_UTOMUPPER)
+    if (vol->v_casefold & AFPVOL_UTOMUPPER) {
         flags |= CONV_TOUPPER;
-    else if (vol->v_casefold & AFPVOL_UTOMLOWER)
+    } else if (vol->v_casefold & AFPVOL_UTOMLOWER) {
         flags |= CONV_TOLOWER;
+    }
 
     if (vol->v_flags & AFPVOL_EILSEQ) {
         flags |= CONV__EILSEQ;
     }
 
     /* convert charsets */
-    if ((size_t)-1 == ( outlen = convert_charset(vol->v_volcharset,
-                                                 CH_UTF8_MAC,
-                                                 vol->v_maccharset,
-                                                 u, outlen, mpath, MAXPATHLEN, &flags)) ) {
+    if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
+                                 CH_UTF8_MAC,
+                                 vol->v_maccharset,
+                                 u, outlen, mpath, MAXPATHLEN, &flags))) {
         SLOG("Conversion from %s to %s for %s failed.",
              vol->v_volcodepage, vol->v_maccodepage, u);
         return NULL;
@@ -199,23 +206,26 @@ char *utompath(const struct vol *vol, const char *upath)
  * @param svol   (r)  source volume
  * @param dvol   (r)  destinatio volume
  * @param path   (rw) path to convert _in place_
- * @param buflen (r)  size of path buffer (max strlen == buflen -1)
+ * @param buflen (r)  size of path buffer (max strlen == buflen - 1)
  *
  * @returns 0 on sucess, -1 on error
  */
-int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path, size_t buflen _U_)
+int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
+                          char *path, size_t buflen _U_)
 {
     static charset_t from = (charset_t) -1;
-    static char buf[MAXPATHLEN+2];
+    static char buf[MAXPATHLEN + 2];
     char *bname = stripped_slashes_basename(path);
     int pos = bname - path;
     uint16_t flags = 0;
 
-    if ( ! svol->vol->v_path) {
+    if (! svol->vol->v_path) {
         /* no source volume: escape special chars (eg ':') */
         from = dvol->vol->v_volcharset; /* src = dst charset */
-        if (dvol->vol->v_adouble == AD_VERSION2)
+
+        if (dvol->vol->v_adouble == AD_VERSION2) {
             flags |= CONV_ESCAPEHEX;
+        }
     } else {
         from = svol->vol->v_volcharset;
     }
@@ -226,11 +236,15 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol, char *path
                               bname, strlen(bname),
                               buf, MAXPATHLEN,
                               &flags);
-    if (len == -1)
-        return -1;
 
-    if (strlcpy(bname, buf, MAXPATHLEN - pos) > MAXPATHLEN - pos)
+    if (len == -1) {
         return -1;
+    }
+
+    if (strlcpy(bname, buf, MAXPATHLEN - pos) > MAXPATHLEN - pos) {
+        return -1;
+    }
+
     return 0;
 }
 
@@ -257,24 +271,24 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                              cnid_t *did)
 {
     EC_INIT;
-
     cnid_t cnid;
     bstring rpath = NULL;
     bstring statpath = NULL;
     struct bstrList *l = NULL;
     struct stat st;
-
     *did = htonl(1);
     cnid = htonl(2);
-
     EC_NULL(rpath = rel_path_in_vol(path, vol->vol->v_path));
     EC_NULL(statpath = bfromcstr(vol->vol->v_path));
     EC_ZERO(bconchar(statpath, '/'));
-
     l = bsplit(rpath, '/');
+
     if (l->qty == 1)
         /* only one path element, means parent dir cnid is volume root = 2 */
+    {
         goto EC_CLEANUP;
+    }
+
     for (int i = 0; i < (l->qty - 1); i++) {
         *did = cnid;
         EC_ZERO(bconcat(statpath, l->entry[i]));
@@ -291,6 +305,7 @@ cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                              0)) == CNID_INVALID) {
             EC_FAIL;
         }
+
         EC_ZERO(bcatcstr(statpath, "/"));
     }
 
@@ -298,8 +313,10 @@ EC_CLEANUP:
     bdestroy(rpath);
     bstrListDestroy(l);
     bdestroy(statpath);
-    if (ret != 0)
+
+    if (ret != 0) {
         return CNID_INVALID;
+    }
 
     return cnid;
 }

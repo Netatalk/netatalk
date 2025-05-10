@@ -4,7 +4,6 @@
  */
 
 struct list {
-    void	*l_data;
-    struct list	*l_next,
-		*l_prev;
+    void *l_data;
+    struct list *l_next, *l_prev;
 };

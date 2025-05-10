@@ -74,41 +74,44 @@
  * This is usefull if a well know code path uses string, often doing strlen on string.
  * By converting to bstring which carries the strlen, the repeated computation can be avoided.
  */
-bstring brefcstr (char *str) {
+bstring brefcstr(char *str)
+{
     bstring b;
     size_t j;
 
-	if (str == NULL)
+    if (str == NULL) {
         return NULL;
-	j = strlen(str);
+    }
 
-	b = (bstring)bstr__alloc(sizeof(struct tagbstring));
-	if (NULL == b)
+    j = strlen(str);
+    b = (bstring)bstr__alloc(sizeof(struct tagbstring));
+
+    if (NULL == b) {
         return NULL;
+    }
 
-	b->slen = (int) j;
+    b->slen = (int) j;
     b->mlen = -1;
     b->data = (unsigned char *)str;
-
-	return b;
+    return b;
 }
 
 /*!
  * @brief Free up the bstring, WITHOUT freeing the pointed to c-string!
  */
-int bunrefcstr (bstring b) {
-	if (b == NULL || b->slen < 0 || b->mlen > 0 || b->data == NULL)
-		return BSTR_ERR;
+int bunrefcstr(bstring b)
+{
+    if (b == NULL || b->slen < 0 || b->mlen > 0 || b->data == NULL) {
+        return BSTR_ERR;
+    }
 
-	/* In case there is any stale usage, there is one more chance to
-	   notice this error. */
-
-	b->slen = -1;
-	b->mlen = -__LINE__;
-	b->data = NULL;
-
-	bstr__free (b);
-	return BSTR_OK;
+    /* In case there is any stale usage, there is one more chance to
+       notice this error. */
+    b->slen = -1;
+    b->mlen = -__LINE__;
+    b->data = NULL;
+    bstr__free(b);
+    return BSTR_OK;
 }
 
 /*************************************************************************
@@ -122,8 +125,9 @@ struct bstrList *bstrListCreateMin(int min)
 {
     struct bstrList *sl = NULL;
 
-    if ((sl = bstrListCreate()) == NULL)
+    if ((sl = bstrListCreate()) == NULL) {
         return NULL;
+    }
 
     if ((bstrListAlloc(sl, min)) != BSTR_OK) {
         bstrListDestroy(sl);
@@ -139,8 +143,9 @@ struct bstrList *bstrListCreateMin(int min)
 int bstrListPush(struct bstrList *sl, bstring bs)
 {
     if (sl->qty == sl->mlen) {
-        if ((bstrListAlloc(sl, sl->qty + 1)) != BSTR_OK)
+        if ((bstrListAlloc(sl, sl->qty + 1)) != BSTR_OK) {
             return BSTR_ERR;
+        }
     }
 
     sl->entry[sl->qty] = bs;
@@ -159,48 +164,64 @@ bstring bstrListPop(struct bstrList *sl _U_)
 /*!
  * @brief Inverse bjoin
  */
-bstring bjoinInv(const struct bstrList * bl, const_bstring sep) {
+bstring bjoinInv(const struct bstrList * bl, const_bstring sep)
+{
     bstring b;
     int i, j, c, v;
 
-    if (bl == NULL || bl->qty < 0)
+    if (bl == NULL || bl->qty < 0) {
         return NULL;
-    if (sep != NULL && (sep->slen < 0 || sep->data == NULL))
+    }
+
+    if (sep != NULL && (sep->slen < 0 || sep->data == NULL)) {
         return NULL;
+    }
 
     for (i = 0, c = 1; i < bl->qty; i++) {
         v = bl->entry[i]->slen;
-        if (v < 0)
-            return NULL;/* Invalid input */
+
+        if (v < 0) {
+            return NULL;    /* Invalid input */
+        }
+
         c += v;
-        if (c < 0)
-            return NULL;/* Wrap around ?? */
+
+        if (c < 0) {
+            return NULL;    /* Wrap around ?? */
+        }
     }
 
-    if (sep != NULL)
+    if (sep != NULL) {
         c += (bl->qty - 1) * sep->slen;
+    }
 
-    b = (bstring) bstr__alloc (sizeof (struct tagbstring));
-    if (NULL == b)
-        return NULL; /* Out of memory */
-    b->data = (unsigned char *) bstr__alloc (c);
+    b = (bstring) bstr__alloc(sizeof(struct tagbstring));
+
+    if (NULL == b) {
+        return NULL;    /* Out of memory */
+    }
+
+    b->data = (unsigned char *) bstr__alloc(c);
+
     if (b->data == NULL) {
-        bstr__free (b);
+        bstr__free(b);
         return NULL;
     }
 
     b->mlen = c;
-    b->slen = c-1;
+    b->slen = c - 1;
 
     for (i = bl->qty - 1, c = 0, j = 0; i >= 0; i--, j++) {
         if (j > 0 && sep != NULL) {
-            bstr__memcpy (b->data + c, sep->data, sep->slen);
+            bstr__memcpy(b->data + c, sep->data, sep->slen);
             c += sep->slen;
         }
+
         v = bl->entry[i]->slen;
-        bstr__memcpy (b->data + c, bl->entry[i]->data, v);
+        bstr__memcpy(b->data + c, bl->entry[i]->data, v);
         c += v;
     }
+
     b->data[c] = (unsigned char) '\0';
     return b;
 }

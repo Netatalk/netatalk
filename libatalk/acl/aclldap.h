@@ -21,7 +21,9 @@
  * Interface
  ********************************************************/
 
-extern int ldap_getuuidfromname( const char *name, uuidtype_t type, char **uuid_string);
-extern int ldap_getnamefromuuid( const char *uuidstr, char **name, uuidtype_t *type);
+extern int ldap_getuuidfromname(const char *name, uuidtype_t type,
+                                char **uuid_string);
+extern int ldap_getnamefromuuid(const char *uuidstr, char **name,
+                                uuidtype_t *type);
 
 #endif /* ACLLDAP_H */

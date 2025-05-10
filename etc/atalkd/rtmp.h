@@ -28,10 +28,8 @@
 #include <sys/types.h>
 
 struct rtmptab {
-    struct rtmptab	*rt_next,
-			*rt_prev;
-    struct rtmptab	*rt_inext,
-			*rt_iprev;
+    struct rtmptab	*rt_next, *rt_prev;
+    struct rtmptab	*rt_inext, *rt_iprev;
     unsigned short		rt_firstnet, rt_lastnet;
     unsigned char		rt_hops;
     unsigned char		rt_state;
@@ -84,17 +82,18 @@ struct rtmp_tuple {
 #endif
 
 extern int	rtfd;
-struct rtmptab	*newrt (const struct interface *);
-void rtmp_delzonemap  (struct rtmptab *);
+struct rtmptab	*newrt(const struct interface *);
+void rtmp_delzonemap(struct rtmptab *);
 
-int rtmp_request ( struct interface * );
-void rtmp_free ( struct rtmptab * );
-int rtmp_replace ( struct rtmptab * );
-int looproute ( struct interface *, unsigned int );
-int gateroute ( unsigned int, struct rtmptab * );
+int rtmp_request(struct interface *);
+void rtmp_free(struct rtmptab *);
+int rtmp_replace(struct rtmptab *);
+int looproute(struct interface *, unsigned int);
+int gateroute(unsigned int, struct rtmptab *);
 
 struct atport;
 
-int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len);
+int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
+                int len);
 
 #endif /* atalkd/rtmp.h */

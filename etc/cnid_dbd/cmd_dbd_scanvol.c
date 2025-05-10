@@ -47,7 +47,7 @@
 #define ADFILE_OK (adfile_ok == 0)
 
 
-static char           cwdbuf[MAXPATHLEN+1];
+static char           cwdbuf[MAXPATHLEN + 1];
 static struct vol     *vol;
 static dbd_flags_t    dbd_flags;
 static char           stamp[CNID_DEV_LEN];
@@ -70,34 +70,37 @@ static char pname[MAXPATHLEN] = "../";
 */
 static char *utompath(char *upath)
 {
-    static char  mpath[ MAXPATHLEN + 2]; /* for convert_charset dest_len parameter +2 */
+    /* for convert_charset dest_len parameter +2 */
+    static char  mpath[MAXPATHLEN + 2];
     char         *m, *u;
     uint16_t     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
     size_t       outlen;
 
-    if (!upath)
+    if (!upath) {
         return NULL;
+    }
 
     m = mpath;
     u = upath;
     outlen = strlen(upath);
 
-    if (vol->v_casefold & AFPVOL_UTOMUPPER)
+    if (vol->v_casefold & AFPVOL_UTOMUPPER) {
         flags |= CONV_TOUPPER;
-    else if (vol->v_casefold & AFPVOL_UTOMLOWER)
+    } else if (vol->v_casefold & AFPVOL_UTOMLOWER) {
         flags |= CONV_TOLOWER;
+    }
 
     if (vol->v_flags & AFPVOL_EILSEQ) {
         flags |= CONV__EILSEQ;
     }
 
     /* convert charsets */
-    if ((size_t)-1 == ( outlen = convert_charset(vol->v_volcharset,
-                                                 CH_UTF8_MAC,
-                                                 vol->v_maccharset,
-                                                 u, outlen, mpath, MAXPATHLEN, &flags)) ) {
-        dbd_log( LOGSTD, "Conversion from %s to %s for %s failed.",
-                 vol->v_volcodepage, vol->v_maccodepage, u);
+    if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
+                                 CH_UTF8_MAC,
+                                 vol->v_maccharset,
+                                 u, outlen, mpath, MAXPATHLEN, &flags))) {
+        dbd_log(LOGSTD, "Conversion from %s to %s for %s failed.",
+                vol->v_volcodepage, vol->v_maccodepage, u);
         return NULL;
     }
 
@@ -113,9 +116,11 @@ static const char *check_netatalk_dirs(const char *name)
     const int max_dirs = 2;
 
     for (int c = 0; c < max_dirs && netatalk_dirs[c]; c++) {
-        if ((strcmp(name, netatalk_dirs[c])) == 0)
+        if ((strcmp(name, netatalk_dirs[c])) == 0) {
             return netatalk_dirs[c];
+        }
     }
+
     return NULL;
 }
 
@@ -128,27 +133,35 @@ static const char *check_special_dirs(const char *name)
     const int max_dirs = 1;
 
     for (int c = 0; c < max_dirs && special_dirs[c]; c++) {
-        if ((strcmp(name, special_dirs[c])) == 0)
+        if ((strcmp(name, special_dirs[c])) == 0) {
             return special_dirs[c];
+        }
     }
+
     return NULL;
 }
 
 /*
  * We unCAPed a name, update CNID db
  */
-static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname, const char *newname)
+static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
+                       const char *newname)
 {
     cnid_t id;
 
     /* Query the database */
-    if ((id = cnid_lookup(vol->v_cdb, sp, did, (char *)oldname, strlen(oldname))) == CNID_INVALID)
+    if ((id = cnid_lookup(vol->v_cdb, sp, did, (char *)oldname,
+                          strlen(oldname))) == CNID_INVALID)
         /* not in db, no need to update */
+    {
         return 0;
+    }
 
     /* Update the database */
-    if (cnid_update(vol->v_cdb, id, sp, did, (char *)newname, strlen(newname)) < 0)
+    if (cnid_update(vol->v_cdb, id, sp, did, (char *)newname,
+                    strlen(newname)) < 0) {
         return -1;
+    }
 
     return 0;
 }
@@ -156,42 +169,49 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname, c
 /*
   Check for .AppleDouble file, create if missing
 */
-static int check_adfile(const char *fname, const struct stat *st, const char **newname)
+static int check_adfile(const char *fname, const struct stat *st,
+                        const char **newname)
 {
     int ret;
     int adflags = ADFLAGS_HF;
     struct adouble ad;
     const char *adname;
-
     *newname = NULL;
 
     if (vol->v_adouble == AD_VERSION_EA) {
-        if (!(dbd_flags & DBD_FLAGS_V2TOEA))
+        if (!(dbd_flags & DBD_FLAGS_V2TOEA)) {
             return 0;
+        }
+
         if (ad_convert(fname, st, vol, newname) != 0) {
             switch (errno) {
             case ENOENT:
                 break;
+
             default:
-                dbd_log(LOGSTD, "Conversion error for \"%s/%s\": %s", cwdbuf, fname, strerror(errno));
+                dbd_log(LOGSTD, "Conversion error for \"%s/%s\": %s", cwdbuf, fname,
+                        strerror(errno));
                 break;
             }
         }
+
         return 0;
     }
 
-    if (S_ISDIR(st->st_mode))
+    if (S_ISDIR(st->st_mode)) {
         adflags |= ADFLAGS_DIR;
+    }
 
     adname = vol->ad_path(fname, adflags);
-
     int fd = open(adname, O_RDONLY | O_NOFOLLOW);
+
     if (fd == -1) {
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Access error for ad-file '%s/%s': %s",
                     cwdbuf, adname, strerror(errno));
             return -1;
         }
+
         /* Missing. Log and create it */
         dbd_log(LOGSTD, "Missing AppleDouble file '%s/%s'", cwdbuf, adname);
 
@@ -204,9 +224,10 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         /* Create ad file */
         ad_init(&ad, vol);
 
-        if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666)) != 0) {
-            dbd_log( LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
-                     cwdbuf, adname, strerror(errno));
+        if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                           0666)) != 0) {
+            dbd_log(LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
+                    cwdbuf, adname, strerror(errno));
             close(fd);
             return -1;
         }
@@ -215,22 +236,27 @@ static int check_adfile(const char *fname, const struct stat *st, const char **n
         ad_setname(&ad, utompath((char *)fname));
         ad_flush(&ad);
         ad_close(&ad, ADFLAGS_HF);
-
         fd = open(adname, O_RDWR | O_NOFOLLOW);
+
         if (fd != -1) {
-            if (fchown(fd, st->st_uid, st->st_gid) < 0)
+            if (fchown(fd, st->st_uid, st->st_gid) < 0) {
                 dbd_log(LOGSTD, "Could not chown \"%s\" (%s)", adname, strerror(errno));
+            }
+
             close(fd);
         }
     } else {
         ad_init(&ad, vol);
+
         if (ad_open(&ad, fname, adflags | ADFLAGS_RDONLY) != 0) {
-            dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
+            dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s'", cwdbuf, fname);
             return -1;
         }
+
         ad_close(&ad, ADFLAGS_HF);
         close(fd);
     }
+
     return 0;
 }
 
@@ -242,8 +268,8 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
     DIR *dp = NULL;
     struct dirent *ep;
     char eaname[MAXPATHLEN];
-
     strlcpy(eaname, name, sizeof(eaname));
+
     if (strlcat(eaname, "::EA", sizeof(eaname)) >= sizeof(eaname)) {
         dbd_log(LOGSTD, "name too long: '%s/%s/%s'", cwdbuf, ADv2_DIRNAME, name);
         return;
@@ -265,6 +291,7 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
         if (strstr(ep->d_name, eaname) != NULL) {
             dbd_log(LOGSTD, "Removing EA file: '%s/%s/%s'",
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
+
             if ((unlink(ep->d_name)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking EA file '%s/%s/%s': %s",
                         cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
@@ -273,12 +300,16 @@ static void remove_eafiles(const char *name, struct ea *ea _U_)
     } /* while */
 
 exit:
-    if (dp)
+
+    if (dp) {
         closedir(dp);
+    }
+
     if ((chdir("..")) != 0) {
         dbd_log(LOGSTD, "Couldn't chdir to '%s': %s", cwdbuf, strerror(errno));
         /* we can't proceed */
-        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+        /* this jumps back to cmd_dbd_scanvol() */
+        longjmp(jmp, 1);
     }
 }
 
@@ -294,11 +325,17 @@ static int check_eafiles(const char *fname)
     char *eaname;
 
     if ((ret = ea_open(vol, fname, EA_RDWR, &ea)) != 0) {
-        if (errno == ENOENT)
+        if (errno == ENOENT) {
             return 0;
-        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files", cwdbuf, fname);
-        if ( ! (dbd_flags & DBD_FLAGS_SCAN))
+        }
+
+        dbd_log(LOGSTD, "Error calling ea_open for file: %s/%s, removing EA files",
+                cwdbuf, fname);
+
+        if (!(dbd_flags & DBD_FLAGS_SCAN)) {
             remove_eafiles(fname, &ea);
+        }
+
         return -1;
     }
 
@@ -306,18 +343,20 @@ static int check_eafiles(const char *fname)
     while (count < ea.ea_count) {
         dbd_log(LOGDEBUG, "EA: %s", (*ea.ea_entries)[count].ea_name);
         remove = 0;
-
         eaname = ea_path(&ea, (*ea.ea_entries)[count].ea_name, 0);
 
         if (lstat(eaname, &st) != 0) {
-            if (errno == ENOENT)
+            if (errno == ENOENT) {
                 dbd_log(LOGSTD, "Missing EA: %s/%s", cwdbuf, eaname);
-            else
+            } else {
                 dbd_log(LOGSTD, "Bogus EA: %s/%s", cwdbuf, eaname);
+            }
+
             remove = 1;
         } else if (st.st_size != (*ea.ea_entries)[count].ea_size) {
             dbd_log(LOGSTD, "Bogus EA: %s/%s, removing it...", cwdbuf, eaname);
             remove = 1;
+
             if ((unlink(eaname)) != 0)
                 dbd_log(LOGSTD, "Error removing EA file '%s/%s': %s",
                         cwdbuf, eaname, strerror(errno));
@@ -348,30 +387,39 @@ static int check_addir(int volroot _U_)
     char *mname = NULL;
     const char *ad_parent_path;
 
-    if (vol->v_adouble == AD_VERSION_EA)
+    if (vol->v_adouble == AD_VERSION_EA) {
         return 0;
+    }
 
     /* Check for ad-dir */
     addir_fd = open(ADv2_DIRNAME, O_RDONLY);
+
     if (addir_fd == -1) {
         if (errno != ENOENT) {
-            dbd_log(LOGSTD, "Open error for directory %s/%s: %s", cwdbuf, ADv2_DIRNAME, strerror(errno));
+            dbd_log(LOGSTD, "Open error for directory %s/%s: %s", cwdbuf, ADv2_DIRNAME,
+                    strerror(errno));
             return -1;
         }
+
         dbd_log(LOGSTD, "Missing %s for '%s'", ADv2_DIRNAME, cwdbuf);
     }
 
     /* Check for ".Parent" */
     ad_parent_path = vol->ad_path(".", ADFLAGS_DIR);
     parent_fd = open(ad_parent_path, O_RDONLY);
+
     if (parent_fd == -1) {
         if (errno != ENOENT) {
             dbd_log(LOGSTD, "Open error on '%s/%s': %s",
                     cwdbuf, ad_parent_path, strerror(errno));
-            if (addir_fd != -1)
+
+            if (addir_fd != -1) {
                 close(addir_fd);
+            }
+
             return -1;
         }
+
         dbd_log(LOGSTD, "Missing .AppleDouble/.Parent for '%s'", cwdbuf);
     }
 
@@ -382,8 +430,10 @@ static int check_addir(int volroot _U_)
             /* Yes:  missing .Parent is not a problem, but missing ad-dir
                causes later checking of ad-files to fail. So we have to return appropriately */
             if (addir_fd == -1) {
-                if (parent_fd != -1)
+                if (parent_fd != -1) {
                     close(parent_fd);
+                }
+
                 return -1;
             } else { /* (parent_fd == -1) */
                 close(addir_fd);
@@ -394,18 +444,24 @@ static int check_addir(int volroot _U_)
         /* Create ad dir and set name */
         ad_init(&ad, vol);
 
-        if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR, 0777) != 0) {
-            dbd_log( LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf, strerror(errno));
-            if (addir_fd != -1)
+        if (ad_open(&ad, ".", ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                    0777) != 0) {
+            dbd_log(LOGSTD, "Error creating AppleDouble dir in %s: %s", cwdbuf,
+                    strerror(errno));
+
+            if (addir_fd != -1) {
                 close(addir_fd);
-            if (parent_fd != -1)
+            }
+
+            if (parent_fd != -1) {
                 close(parent_fd);
+            }
+
             return -1;
         }
 
         /* Get basename of cwd from cwdbuf */
         mname = utompath(strrchr(cwdbuf, '/') + 1);
-
         /* Update name in ad file */
         ad_setname(&ad, mname);
         ad_flush(&ad);
@@ -413,20 +469,27 @@ static int check_addir(int volroot _U_)
 
         /* Inherit owner/group from "." to ".AppleDouble" and ".Parent" */
         if ((lstat(".", &st)) != 0) {
-            dbd_log( LOGSTD, "Couldn't stat %s: %s", cwdbuf, strerror(errno));
-            if (addir_fd != -1)
+            dbd_log(LOGSTD, "Couldn't stat %s: %s", cwdbuf, strerror(errno));
+
+            if (addir_fd != -1) {
                 close(addir_fd);
-            if (parent_fd != -1)
+            }
+
+            if (parent_fd != -1) {
                 close(parent_fd);
+            }
+
             return -1;
         }
 
         /* If directories were created, we need their new file descriptors */
         if (addir_fd == -1) {
             addir_fd = open(ADv2_DIRNAME, O_RDONLY);
+
             if (addir_fd != -1) {
-                if (fchown(addir_fd, st.st_uid, st.st_gid) < 0)
+                if (fchown(addir_fd, st.st_uid, st.st_gid) < 0) {
                     dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ADv2_DIRNAME);
+                }
             } else {
                 dbd_log(LOGSTD, "Couldn't open newly created directory \"%s\"", ADv2_DIRNAME);
             }
@@ -434,19 +497,24 @@ static int check_addir(int volroot _U_)
 
         if (parent_fd == -1) {
             parent_fd = open(ad_parent_path, O_RDONLY);
+
             if (parent_fd != -1) {
-                if (fchown(parent_fd, st.st_uid, st.st_gid) < 0)
+                if (fchown(parent_fd, st.st_uid, st.st_gid) < 0) {
                     dbd_log(LOGSTD, "fchown failed on fd for \"%s\"", ad_parent_path);
+                }
             } else {
                 dbd_log(LOGSTD, "Couldn't open newly created file \"%s\"", ad_parent_path);
             }
         }
     }
 
-    if (addir_fd != -1)
+    if (addir_fd != -1) {
         close(addir_fd);
-    if (parent_fd != -1)
+    }
+
+    if (parent_fd != -1) {
         close(parent_fd);
+    }
 
     return 0;
 }
@@ -467,21 +535,22 @@ static int check_eafile_in_adouble(const char *name)
     if (vol->v_vfs_ea == AFPVOL_EA_AD) {
         /* Does the filename contain "::EA" ? */
         namedup = strdup(name);
+
         if ((namep = strstr(namedup, "::EA")) == NULL) {
             ret = 0;
             goto ea_check_done;
         } else {
             /* File contains "::EA" so it's an EA file. Check for data file  */
-
             /* Get string before "::EA" from EA filename */
             namep[0] = 0;
             strlcpy(pname + 3, namedup, strlen(pname)); /* Prepends "../" */
 
-            if ((access( pname, F_OK)) == 0) {
+            if ((access(pname, F_OK)) == 0) {
                 ret = 1;
                 goto ea_check_done;
             } else {
                 ret = -1;
+
                 if (errno != ENOENT) {
                     dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
                             cwdbuf, name, strerror(errno));
@@ -494,7 +563,9 @@ static int check_eafile_in_adouble(const char *name)
 
                 if (dbd_flags & DBD_FLAGS_SCAN)
                     /* Scan only requested, don't change anything */
+                {
                     goto ea_check_done;
+                }
 
                 if ((unlink(name)) != 0) {
                     dbd_log(LOGSTD, "Error unlinking orphaned Extended Attribute file '%s/%s/%s'",
@@ -505,8 +576,10 @@ static int check_eafile_in_adouble(const char *name)
     } /* if AFPVOL_EA_AD */
 
 ea_check_done:
-    if (namedup)
+
+    if (namedup) {
         free(namedup);
+    }
 
     return ret;
 }
@@ -526,6 +599,7 @@ static int read_addir(void)
         if (vol->v_adouble == AD_VERSION_EA) {
             return 0;
         }
+
         dbd_log(LOGSTD, "Couldn't chdir to '%s/%s': %s",
                 cwdbuf, ADv2_DIRNAME, strerror(errno));
         return -1;
@@ -539,50 +613,57 @@ static int read_addir(void)
 
     while ((ep = readdir(dp))) {
         /* Check if its "." or ".." */
-        if (DIR_DOT_OR_DOTDOT(ep->d_name))
+        if (DIR_DOT_OR_DOTDOT(ep->d_name)) {
             continue;
+        }
 
         /* Skip ".Parent" */
-        if (STRCMP(ep->d_name, ==, ".Parent"))
+        if (STRCMP(ep->d_name, ==, ".Parent")) {
             continue;
+        }
 
         if ((lstat(ep->d_name, &st)) < 0) {
-            dbd_log( LOGSTD, "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
-                     cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
+            dbd_log(LOGSTD,
+                    "Lost file or dir while enumeratin dir '%s/%s/%s', probably removed: %s",
+                    cwdbuf, ADv2_DIRNAME, ep->d_name, strerror(errno));
             continue;
         }
 
         /* Check for dirs */
         if (S_ISDIR(st.st_mode)) {
-            dbd_log( LOGSTD, "Unexpected directory '%s' in AppleDouble dir '%s/%s'",
-                     ep->d_name, cwdbuf, ADv2_DIRNAME);
+            dbd_log(LOGSTD, "Unexpected directory '%s' in AppleDouble dir '%s/%s'",
+                    ep->d_name, cwdbuf, ADv2_DIRNAME);
             continue;
         }
 
         /* Check if for orphaned and corrupt Extended Attributes file */
-        if (check_eafile_in_adouble(ep->d_name) != 0)
+        if (check_eafile_in_adouble(ep->d_name) != 0) {
             continue;
+        }
 
         /* Check for data file */
         strlcpy(pname + 3, ep->d_name, sizeof(pname) - 3);
-        if ((access( pname, F_OK)) != 0) {
+
+        if ((access(pname, F_OK)) != 0) {
             if (errno != ENOENT) {
                 dbd_log(LOGSTD, "Access error for file '%s/%s': %s",
                         cwdbuf, pname, strerror(errno));
                 continue;
             }
+
             /* Orphaned ad-file*/
             dbd_log(LOGSTD, "Orphaned AppleDoube file '%s/%s/%s'",
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
 
             if (dbd_flags & DBD_FLAGS_SCAN)
                 /* Scan only requested, don't change anything */
-                continue;;
+            {
+                continue;
+            };
 
             if ((unlink(ep->d_name)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking orphaned AppleDoube file '%s/%s/%s'",
                         cwdbuf, ADv2_DIRNAME, ep->d_name);
-
             }
         }
     }
@@ -591,11 +672,11 @@ static int read_addir(void)
         dbd_log(LOGSTD, "Couldn't chdir back to '%s' from AppleDouble dir: %s",
                 cwdbuf, strerror(errno));
         /* This really is EOT! */
-        longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+        /* this jumps back to cmd_dbd_scanvol() */
+        longjmp(jmp, 1);
     }
 
     closedir(dp);
-
     return 0;
 }
 
@@ -605,40 +686,48 @@ static int read_addir(void)
 
   @return Correct CNID of object or CNID_INVALID (ie 0) on error
 */
-static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfile_ok)
+static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
+                         int adfile_ok)
 {
     int adflags = ADFLAGS_HF;
     int err;
     cnid_t db_cnid, ad_cnid;
     struct adouble ad;
-
     adflags = ADFLAGS_HF | (S_ISDIR(st->st_mode) ? ADFLAGS_DIR : 0);
-
     /* Get CNID from ad-file */
     ad_cnid = CNID_INVALID;
+
     if (ADFILE_OK) {
         ad_init(&ad, vol);
-        if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
 
+        if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
             if (vol->v_adouble != AD_VERSION_EA) {
-                dbd_log( LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name, strerror(errno));
+                dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s", cwdbuf, name,
+                        strerror(errno));
                 return CNID_INVALID;
             }
-            dbd_log( LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
+
+            dbd_log(LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
             adfile_ok = 1;
         } else {
             ad_cnid = ad_getid(&ad, st->st_dev, st->st_ino, 0, stamp);
-            if (ad_cnid == CNID_INVALID)
-                dbd_log( LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);
-            else
-                dbd_log( LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name, ntohl(ad_cnid));
+
+            if (ad_cnid == CNID_INVALID) {
+                dbd_log(LOGSTD, "Bad CNID in adouble file of '%s/%s'", cwdbuf, name);
+            } else {
+                dbd_log(LOGDEBUG, "CNID from .AppleDouble file for '%s/%s': %u", cwdbuf, name,
+                        ntohl(ad_cnid));
+            }
+
             ad_close(&ad, ADFLAGS_HF);
         }
     }
 
     /* Get CNID from database */
-    if ((db_cnid = cnid_add(vol->v_cdb, st, did, (char *)name, strlen(name), ad_cnid)) == CNID_INVALID)
+    if ((db_cnid = cnid_add(vol->v_cdb, st, did, (char *)name, strlen(name),
+                            ad_cnid)) == CNID_INVALID) {
         return CNID_INVALID;
+    }
 
     /* Compare CNID from db and adouble file */
     if (ad_cnid != db_cnid && adfile_ok == 0) {
@@ -646,18 +735,22 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st, int adfi
         dbd_log(LOGSTD, "CNID mismatch for '%s/%s', CNID db: %u, ad-file: %u",
                 cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
         ad_init(&ad, vol);
+
         if (ad_open(&ad, name, adflags | ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
             dbd_log(LOGSTD, "Error opening AppleDouble file for '%s/%s': %s",
                     cwdbuf, name, strerror(errno));
             return CNID_INVALID;
         }
-        err = ad_setid( &ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+
+        err = ad_setid(&ad, st->st_dev, st->st_ino, db_cnid, did, stamp);
+
         if (err == -1) {
             dbd_log(LOGSTD, "Error setting new CNID, malformed adouble: '%s/%s'",
                     cwdbuf, name);
             ad_close(&ad, ADFLAGS_HF);
             return CNID_INVALID;
         }
+
         ad_flush(&ad);
         ad_close(&ad, ADFLAGS_HF);
     }
@@ -670,8 +763,9 @@ static int check_orphaned(const char *name)
     int rc;
     struct stat sb;
 
-    if (strlen(name) < 3)
+    if (strlen(name) < 3) {
         return 0;
+    }
 
     rc = lstat(&name[2], &sb);
 
@@ -680,6 +774,7 @@ static int check_orphaned(const char *name)
         unlink(name);
         return 1;
     }
+
     return 0;
 }
 
@@ -700,35 +795,44 @@ static int dbd_readdir(int volroot, cnid_t did)
 
     /* Check again for .AppleDouble folder, check_adfile also checks/creates it */
     if ((addir_ok = check_addir(volroot)) != 0)
-        if ( ! (dbd_flags & DBD_FLAGS_SCAN))
+        if (!(dbd_flags & DBD_FLAGS_SCAN))
             /* Fatal on rebuild run, continue if only scanning ! */
+        {
             return -1;
+        }
 
     /* Check AppleDouble files in AppleDouble folder, but only if it exists or could be created */
     if (ADDIR_OK)
         if ((read_addir()) != 0)
-            if ( ! (dbd_flags & DBD_FLAGS_SCAN))
+            if (!(dbd_flags & DBD_FLAGS_SCAN))
                 /* Fatal on rebuild run, continue if only scanning ! */
+            {
                 return -1;
+            }
 
-    if ((dp = opendir (".")) == NULL) {
-        dbd_log(LOGSTD, "Couldn't open the directory: %s",strerror(errno));
+    if ((dp = opendir(".")) == NULL) {
+        dbd_log(LOGSTD, "Couldn't open the directory: %s", strerror(errno));
         return -1;
     }
 
-    while ((ep = readdir (dp))) {
+    while ((ep = readdir(dp))) {
         /* Check if we got a termination signal */
-        if (alarmed)
-            longjmp(jmp, 1); /* this jumps back to cmd_dbd_scanvol() */
+        if (alarmed) {
+            /* this jumps back to cmd_dbd_scanvol() */
+            longjmp(jmp, 1);
+        }
 
         /* Check if its "." or ".." */
-        if (DIR_DOT_OR_DOTDOT(ep->d_name))
+        if (DIR_DOT_OR_DOTDOT(ep->d_name)) {
             continue;
+        }
 
         /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
         if ((name = check_netatalk_dirs(ep->d_name)) != NULL) {
-            if (! volroot)
+            if (! volroot) {
                 dbd_log(LOGSTD, "Nested %s in %s", name, cwdbuf);
+            }
+
             continue;
         }
 
@@ -741,8 +845,9 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
 
         /* Skip .AppleDouble dir in this loop */
-        if (STRCMP(ep->d_name, == , ADv2_DIRNAME))
+        if (STRCMP(ep->d_name, ==, ADv2_DIRNAME)) {
             continue;
+        }
 
         if (!vol->vfs->vfs_validupath(vol, ep->d_name)) {
             dbd_log(LOGDEBUG, "Ignoring \"%s\"", ep->d_name);
@@ -750,8 +855,8 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
 
         if ((ret = lstat(ep->d_name, &st)) < 0) {
-            dbd_log( LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s",
-                     cwdbuf, ep->d_name, strerror(errno));
+            dbd_log(LOGSTD, "Lost file while reading dir '%s/%s', probably removed: %s",
+                    cwdbuf, ep->d_name, strerror(errno));
             continue;
         }
 
@@ -760,13 +865,17 @@ static int dbd_readdir(int volroot, cnid_t did)
         case S_IFDIR:
         case S_IFLNK:
             break;
+
         default:
             dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
-            if ( ! (dbd_flags & DBD_FLAGS_SCAN)) {
+
+            if (!(dbd_flags & DBD_FLAGS_SCAN)) {
                 if ((unlink(ep->d_name)) != 0) {
-                    dbd_log(LOGSTD, "Error removing: %s/%s: %s", cwdbuf, ep->d_name, strerror(errno));
+                    dbd_log(LOGSTD, "Error removing: %s/%s: %s", cwdbuf, ep->d_name,
+                            strerror(errno));
                 }
             }
+
             continue;
         }
 
@@ -776,10 +885,12 @@ static int dbd_readdir(int volroot, cnid_t did)
         static unsigned long long statcount = 0;
         static time_t t = 0;
 
-        if (t == 0)
+        if (t == 0) {
             t = time(NULL);
+        }
 
         statcount++;
+
         if ((statcount % 10000) == 0) {
             if (dbd_flags & DBD_FLAGS_STATS)
                 dbd_log(LOGSTD, "Scanned: %10llu, time: %10llu s",
@@ -792,8 +903,10 @@ static int dbd_readdir(int volroot, cnid_t did)
 
         /* Check for invalid names and orphaned ._ files */
         if (S_ISREG(st.st_mode) && (strncmp(ep->d_name, "._", strlen("._")) == 0)) {
-            if (check_orphaned(ep->d_name))
+            if (check_orphaned(ep->d_name)) {
                 continue;
+            }
+
             if (vol->vfs->vfs_validupath(vol, ep->d_name)) {
                 dbd_log(LOGSTD, "Bad AppleDouble \"%s/%s\"", cwdbuf, ep->d_name);
                 continue;
@@ -803,8 +916,10 @@ static int dbd_readdir(int volroot, cnid_t did)
         /* Check for appledouble file, create if missing, but only if we have addir */
         const char *name = NULL;
         adfile_ok = -1;
-        if (ADDIR_OK)
+
+        if (ADDIR_OK) {
             adfile_ok = check_adfile(ep->d_name, &st, &name);
+        }
 
         if (!S_ISLNK(st.st_mode)) {
             if (name == NULL) {
@@ -817,35 +932,43 @@ static int dbd_readdir(int volroot, cnid_t did)
             cnid = check_cnid(name, did, &st, adfile_ok);
 
             /* Check EA files */
-            if (vol->v_vfs_ea == AFPVOL_EA_AD)
+            if (vol->v_vfs_ea == AFPVOL_EA_AD) {
                 check_eafiles(name);
+            }
         }
 
         /**************************************************************************
           Recursion
         **************************************************************************/
-        if (S_ISDIR(st.st_mode) && cnid) { /* If we have no cnid for it we can't enter recursion */
+        /* If we have no cnid for it we can't enter recursion */
+        if (S_ISDIR(st.st_mode) && cnid) {
             strlcat(cwdbuf, "/", sizeof(cwdbuf));
             strlcat(cwdbuf, name, sizeof(cwdbuf));
-            dbd_log( LOGDEBUG, "Entering directory: %s", cwdbuf);
+            dbd_log(LOGDEBUG, "Entering directory: %s", cwdbuf);
+
             if (-1 == (cwd = open(".", O_RDONLY))) {
-                dbd_log( LOGSTD, "Can't open directory '%s': %s", cwdbuf, strerror(errno));
+                dbd_log(LOGSTD, "Can't open directory '%s': %s", cwdbuf, strerror(errno));
                 continue;
             }
+
             if (0 != chdir(name)) {
-                dbd_log( LOGSTD, "Can't chdir to directory '%s': %s", cwdbuf, strerror(errno));
+                dbd_log(LOGSTD, "Can't chdir to directory '%s': %s", cwdbuf, strerror(errno));
                 close(cwd);
                 continue;
             }
 
             ret = dbd_readdir(0, cnid);
 
-            if (fchdir(cwd) < 0)
+            if (fchdir(cwd) < 0) {
                 dbd_log(LOGSTD, "Cant chdir to directory '%i': %s", cwd, strerror(errno));
+            }
+
             close(cwd);
             *(strrchr(cwdbuf, '/')) = 0;
-            if (ret < 0)
+
+            if (ret < 0) {
                 return -1;
+            }
         }
     }
 
@@ -857,12 +980,15 @@ static int dbd_readdir(int volroot, cnid_t did)
             switch (errno) {
             case ENOENT:
                 break;
+
             default:
-                dbd_log(LOGSTD, "Error removing adouble dir \"%s/%s\": %s", cwdbuf, ADv2_DIRNAME, strerror(errno));
+                dbd_log(LOGSTD, "Error removing adouble dir \"%s/%s\": %s", cwdbuf,
+                        ADv2_DIRNAME, strerror(errno));
                 break;
             }
         }
     }
+
     closedir(dp);
     return ret;
 }
@@ -874,17 +1000,16 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
 {
     EC_INIT;
     struct stat st;
-
     /* Run with umask 0 */
     umask(0);
-
     /* Make vol accessible for all funcs */
     vol = vol_in;
     dbd_flags = flags;
 
     /* We only support unicode volumes ! */
     if (vol->v_volcharset != CH_UTF8) {
-        dbd_log(LOGSTD, "Not a Unicode volume: %s, %u != %u", vol->v_volcodepage, vol->v_volcharset, CH_UTF8);
+        dbd_log(LOGSTD, "Not a Unicode volume: %s, %u != %u", vol->v_volcodepage,
+                vol->v_volcharset, CH_UTF8);
         EC_FAIL;
     }
 
@@ -899,28 +1024,32 @@ int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
     }
 
     strlcpy(cwdbuf, vol->v_path, sizeof(cwdbuf));
+
     if (chdir(vol->v_path) < 0) {
         dbd_log(LOGSTD, "Can't chdir to '%s': %s", vol->v_path, strerror(errno));
         EC_FAIL;
     }
 
     if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
-        if (lstat(".", &st) != 0)
+        if (lstat(".", &st) != 0) {
             EC_FAIL;
+        }
+
         if (ad_convert(".", &st, vol, NULL) != 0) {
             switch (errno) {
             case ENOENT:
                 break;
+
             default:
-                dbd_log(LOGSTD, "Conversion error for \"%s\": %s", vol->v_path, strerror(errno));
+                dbd_log(LOGSTD, "Conversion error for \"%s\": %s", vol->v_path,
+                        strerror(errno));
                 break;
             }
         }
     }
 
     /* Start recursion */
-    EC_NEG1( dbd_readdir(1, htonl(2)) );  /* 2 = volumeroot CNID */
-
+    EC_NEG1(dbd_readdir(1, htonl(2)));    /* 2 = volumeroot CNID */
 EC_CLEANUP:
     EC_EXIT;
 }

@@ -23,15 +23,12 @@ int asp_shutdown(ASP asp)
     char		*p;
     uint16_t		seq;
     uint8_t		oport;
-
-
     p = asp->commands;
     *p++ = ASPFUNC_CLOSE;
     *p++ = asp->asp_sid;
     seq = 0;
-    memcpy( p, &seq, sizeof(seq));
+    memcpy(p, &seq, sizeof(seq));
     p += sizeof(seq);
-
     oport = asp->asp_sat.sat_port;
     atpb.atp_saddr = &asp->asp_sat;
     atpb.atp_saddr->sat_port = asp->asp_wss;
@@ -40,9 +37,9 @@ int asp_shutdown(ASP asp)
     atpb.atp_sreqto = 2;
     atpb.atp_sreqtries = 5;
 
-    if ( atp_sreq( asp->asp_atp, &atpb, 1, ATP_XO ) < 0 ) {
-	asp->asp_sat.sat_port = oport;
-	return -1;
+    if (atp_sreq(asp->asp_atp, &atpb, 1, ATP_XO) < 0) {
+        asp->asp_sat.sat_port = oport;
+        return -1;
     }
 
     iov.iov_base = asp->commands;
@@ -50,11 +47,11 @@ int asp_shutdown(ASP asp)
     atpb.atp_rresiov = &iov;
     atpb.atp_rresiovcnt = 1;
 
-    if ( atp_rresp( asp->asp_atp, &atpb ) < 0 ) {
-	asp->asp_sat.sat_port = oport;
-	return -1;
+    if (atp_rresp(asp->asp_atp, &atpb) < 0) {
+        asp->asp_sat.sat_port = oport;
+        return -1;
     }
-    asp->asp_sat.sat_port = oport;
 
+    asp->asp_sat.sat_port = oport;
     return 0;
 }

@@ -28,10 +28,12 @@
 static qnode_t *alloc_init_node(void *data)
 {
     qnode_t *node;
-    if ((node = malloc(sizeof(qnode_t))) == NULL)
-        return NULL;
-    node->data = data;
 
+    if ((node = malloc(sizeof(qnode_t))) == NULL) {
+        return NULL;
+    }
+
+    node->data = data;
     return node;
 }
 
@@ -43,8 +45,9 @@ q_t *queue_init(void)
 {
     q_t *queue;
 
-    if ((queue = alloc_init_node(NULL)) == NULL)
+    if ((queue = alloc_init_node(NULL)) == NULL) {
         return NULL;
+    }
 
     queue->prev = queue->next = queue;
     return queue;
@@ -55,15 +58,15 @@ qnode_t *enqueue(q_t *q, void *data)
 {
     qnode_t *node;
 
-    if ((node = alloc_init_node(data)) == NULL)
+    if ((node = alloc_init_node(data)) == NULL) {
         return NULL;
+    }
 
     /* insert at tail */
     node->next = q;
     node->prev = q->prev;
     q->prev->next = node;
     q->prev = node;
-
     return node;
 }
 
@@ -72,15 +75,15 @@ qnode_t *prequeue(q_t *q, void *data)
 {
     qnode_t *node;
 
-    if ((node = alloc_init_node(data)) == NULL)
+    if ((node = alloc_init_node(data)) == NULL) {
         return NULL;
+    }
 
     /* insert at head */
     q->next->prev = node;
     node->next = q->next;
     node->prev = q;
     q->next = node;
-
     return node;
 }
 
@@ -90,8 +93,9 @@ void *dequeue(q_t *q)
     qnode_t *node;
     void *data;
 
-    if (q == NULL || q->next == q)
+    if (q == NULL || q->next == q) {
         return NULL;
+    }
 
     /* take first node from head */
     node = q->next;
@@ -99,7 +103,6 @@ void *dequeue(q_t *q)
     q->next = node->next;
     node->next->prev = node->prev;
     free(node);
-
     return data;
 }
 
@@ -107,8 +110,9 @@ void queue_destroy(q_t *q, void (*callback)(void *))
 {
     void *p;
 
-    while ((p = dequeue(q)) != NULL)
+    while ((p = dequeue(q)) != NULL) {
         callback(p);
+    }
 
     free(q);
     q = NULL;

@@ -116,8 +116,9 @@ void fce_init_udp(void)
     int rv;
     struct addrinfo hints, *servinfo, *p;
 
-    if (udp_initialized == true)
+    if (udp_initialized == true) {
         return;
+    }
 
     memset(&hints, 0, sizeof hints);
     hints.ai_family = AF_UNSPEC;
@@ -127,10 +128,12 @@ void fce_init_udp(void)
         struct udp_entry *udp_entry = udp_socket_list + i;
 
         /* Close any pending sockets */
-        if (udp_entry->sock != -1)
+        if (udp_entry->sock != -1) {
             close(udp_entry->sock);
+        }
 
-        if ((rv = getaddrinfo(udp_entry->addr, udp_entry->port, &hints, &servinfo)) != 0) {
+        if ((rv = getaddrinfo(udp_entry->addr, udp_entry->port, &hints,
+                              &servinfo)) != 0) {
             LOG(log_error, logtype_fce, "fce_init_udp: getaddrinfo(%s:%s): %s",
                 udp_entry->addr, udp_entry->port, gai_strerror(rv));
             continue;
@@ -138,11 +141,13 @@ void fce_init_udp(void)
 
         /* loop through all the results and make a socket */
         for (p = servinfo; p != NULL; p = p->ai_next) {
-            if ((udp_entry->sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
+            if ((udp_entry->sock = socket(p->ai_family, p->ai_socktype,
+                                          p->ai_protocol)) == -1) {
                 LOG(log_error, logtype_fce, "fce_init_udp: socket(%s:%s): %s",
                     udp_entry->addr, udp_entry->port, strerror(errno));
                 continue;
             }
+
             break;
         }
 
@@ -151,6 +156,7 @@ void fce_init_udp(void)
                 udp_entry->addr, udp_entry->port);
             continue;
         }
+
         udp_entry->addrinfo = *p;
         memcpy(&udp_entry->addrinfo, p, sizeof(struct addrinfo));
         memcpy(&udp_entry->sockaddr, p->ai_addr, sizeof(struct sockaddr_storage));
@@ -162,20 +168,20 @@ void fce_init_udp(void)
 
 void fce_cleanup(void)
 {
-    if (udp_initialized == false )
+    if (udp_initialized == false) {
         return;
+    }
 
-    for (int i = 0; i < udp_sockets; i++)
-    {
+    for (int i = 0; i < udp_sockets; i++) {
         struct udp_entry *udp_entry = udp_socket_list + i;
 
         /* Close any pending sockets */
-        if (udp_entry->sock != -1)
-        {
-            close( udp_entry->sock );
+        if (udp_entry->sock != -1) {
+            close(udp_entry->sock);
             udp_entry->sock = -1;
         }
     }
+
     udp_initialized = false;
 }
 
@@ -201,14 +207,20 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     uint8_t packet_info = fce_ev_info;
 
     /* FCE magic */
-    if (remaining < 8) return -1;
+    if (remaining < 8) {
+        return -1;
+    }
+
     memcpy(p, FCE_PACKET_MAGIC, 8);
     p += 8;
     datalen += 8;
     remaining -= 8;
 
     /* version */
-    if (remaining < 1) return -1;
+    if (remaining < 1) {
+        return -1;
+    }
+
     *p = obj->fce_version;
     p += 1;
     datalen += 1;
@@ -216,9 +228,14 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 
     /* optional: options */
     if (obj->fce_version > 1) {
-        if (remaining < 1) return -1;
-        if (oldpath)
+        if (remaining < 1) {
+            return -1;
+        }
+
+        if (oldpath) {
             packet_info |= FCE_EV_INFO_SRCPATH;
+        }
+
         *p = packet_info;
         p += 1;
         datalen += 1;
@@ -226,7 +243,10 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     }
 
     /* event */
-    if (remaining < 1) return -1;
+    if (remaining < 1) {
+        return -1;
+    }
+
     *p = event;
     p += 1;
     datalen += 1;
@@ -234,7 +254,10 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 
     /* optional: padding */
     if (obj->fce_version > 1) {
-        if (remaining < 1) return -1;
+        if (remaining < 1) {
+            return -1;
+        }
+
         *p = 0;
         p += 1;
         datalen += 1;
@@ -243,7 +266,10 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 
     /* optional: reserved */
     if (obj->fce_version > 1) {
-        if (remaining < 8) return -1;
+        if (remaining < 8) {
+            return -1;
+        }
+
         memset(p, 0, 8);
         p += 8;
         datalen += 8;
@@ -251,7 +277,10 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     }
 
     /* event ID */
-    if (remaining < sizeof(uint32)) return -1;
+    if (remaining < sizeof(uint32)) {
+        return -1;
+    }
+
     uint32 = htonl(event_id);
     memcpy(p, &uint32, sizeof(uint32));
     p += sizeof(uint32);
@@ -260,7 +289,10 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 
     /* optional: pid */
     if (packet_info & FCE_EV_INFO_PID) {
-        if (remaining < sizeof(uint64)) return -1;
+        if (remaining < sizeof(uint64)) {
+            return -1;
+        }
+
         uint64 = pid;
         uint64 = hton64(uint64);
         memcpy(p, &uint64, sizeof(uint64));
@@ -272,9 +304,15 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     /* optional: username */
     if (packet_info & FCE_EV_INFO_USER) {
         size_t userlen = strnlen(user, MAXPATHLEN);
-        if (userlen >= MAXPATHLEN)
+
+        if (userlen >= MAXPATHLEN) {
             userlen = MAXPATHLEN - 1;
-        if (remaining < sizeof(uint16) + userlen) return -1;
+        }
+
+        if (remaining < sizeof(uint16) + userlen) {
+            return -1;
+        }
+
         uint16 = htons((uint16_t)userlen);
         memcpy(p, &uint16, sizeof(uint16));
         p += sizeof(uint16);
@@ -286,9 +324,14 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     }
 
     /* path */
-    if ((pathlen = strlen(path)) >= MAXPATHLEN)
+    if ((pathlen = strlen(path)) >= MAXPATHLEN) {
         pathlen = MAXPATHLEN - 1;
-    if (remaining < sizeof(uint16) + pathlen) return -1;
+    }
+
+    if (remaining < sizeof(uint16) + pathlen) {
+        return -1;
+    }
+
     uint16 = pathlen;
     uint16 = htons(uint16);
     memcpy(p, &uint16, sizeof(uint16));
@@ -301,9 +344,14 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 
     /* optional: source path */
     if (oldpath && packet_info & FCE_EV_INFO_SRCPATH) {
-        if ((pathlen = strlen(oldpath)) >= MAXPATHLEN)
+        if ((pathlen = strlen(oldpath)) >= MAXPATHLEN) {
             pathlen = MAXPATHLEN - 1;
-        if (remaining < sizeof(uint16) + pathlen) return -1;
+        }
+
+        if (remaining < sizeof(uint16) + pathlen) {
+            return -1;
+        }
+
         uint16 = pathlen;
         uint16 = htons(uint16);
         memcpy(p, &uint16, sizeof(uint16));
@@ -321,11 +369,14 @@ static ssize_t build_fce_packet(const AFPObj *obj,
 /*
  * Send the fce information to all (connected) listeners
  * We don't give return code because all errors are handled internally (I hope..)
- * */
-static void send_fce_event(const AFPObj *obj, int event, const char *path, const char *oldpath)
+ */
+static void send_fce_event(const AFPObj *obj, int event, const char *path,
+                           const char *oldpath)
 {
     static bool first_event = true;
-    static uint32_t event_id = 0; /* the unique packet couter to detect packet/data loss. Going from 0xFFFFFFFF to 0x0 is a valid increment */
+    /* the unique packet couter to detect packet/data loss.
+     * Going from 0xFFFFFFFF to 0x0 is a valid increment */
+    static uint32_t event_id = 0;
     static char *user;
     time_t now = time(NULL);
     ssize_t data_len;
@@ -333,7 +384,6 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
     /* initialized ? */
     if (first_event == true) {
         first_event = false;
-
         struct passwd *pwd = getpwuid(obj->uid);
         user = strdup(pwd->pw_name);
 
@@ -341,12 +391,15 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         case 1:
             /* fce_ev_info unused */
             break;
+
         case 2:
             fce_ev_info = FCE_EV_INFO_PID | FCE_EV_INFO_USER;
             break;
+
         default:
             fce_ev_info = 0;
-            LOG(log_error, logtype_fce, "Unsupported FCE protocol version %d", obj->fce_version);
+            LOG(log_error, logtype_fce, "Unsupported FCE protocol version %d",
+                obj->fce_version);
             break;
         }
 
@@ -382,10 +435,15 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             bformata(cmd, " -P '%s'", bdata(bpath));
             bdestroy(bpath);
         }
-        if (fce_ev_info | FCE_EV_INFO_PID)
+
+        if (fce_ev_info | FCE_EV_INFO_PID) {
             bformata(cmd, " -p %" PRIu64 "", (uint64_t)getpid());
-        if (fce_ev_info | FCE_EV_INFO_USER)
+        }
+
+        if (fce_ev_info | FCE_EV_INFO_USER) {
             bformata(cmd, " -u %s", user);
+        }
+
         if (oldpath) {
             bstring boldpath = bfromcstr(oldpath);
             bfindreplace(boldpath, slash, slashrep, 0);
@@ -393,15 +451,17 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
             bformata(cmd, " -S '%s'", bdata(boldpath));
             bdestroy(boldpath);
         }
+
         (void)afprun_bg(bdata(cmd));
         bdestroy(cmd);
     }
 
     if (obj->options.fce_sendwait > 0 && obj->options.fce_sendwait < 1000) {
-	struct timespec t;
-	t.tv_sec  = 0;
-	t.tv_nsec = 1000 * 1000 * obj->options.fce_sendwait;
-	while(nanosleep(&t, NULL));
+        struct timespec t;
+        t.tv_sec  = 0;
+        t.tv_nsec = 1000 * 1000 * obj->options.fce_sendwait;
+
+        while (nanosleep(&t, NULL));
     }
 
     for (int i = 0; i < udp_sockets; i++) {
@@ -411,8 +471,9 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         /* we had a problem earlier ? */
         if (udp_entry->sock == -1) {
             /* We still have to wait ?*/
-            if (now < udp_entry->next_try_on_error)
+            if (now < udp_entry->next_try_on_error) {
                 continue;
+            }
 
             /* Reopen socket */
             udp_entry->sock = socket(udp_entry->addrinfo.ai_family,
@@ -421,17 +482,16 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
 
             if (udp_entry->sock == -1) {
                 /* failed again, so go to rest again */
-                LOG(log_error, logtype_fce, "Cannot recreate socket for fce UDP connection: errno %d", errno  );
-
+                LOG(log_error, logtype_fce,
+                    "Cannot recreate socket for fce UDP connection: errno %d", errno);
                 udp_entry->next_try_on_error = now + FCE_SOCKET_RETRY_DELAY_S;
                 continue;
             }
 
             udp_entry->next_try_on_error = 0;
-
             /* Okay, we have a running socket again, send server that we had a problem on our side*/
-            data_len = build_fce_packet(obj, iobuf, FCE_CONN_BROKEN, "", NULL, getpid(), user, 0);
-
+            data_len = build_fce_packet(obj, iobuf, FCE_CONN_BROKEN, "", NULL, getpid(),
+                                        user, 0);
             sendto(udp_entry->sock,
                    iobuf,
                    data_len,
@@ -441,8 +501,8 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         }
 
         /* build our data packet */
-        data_len = build_fce_packet(obj, iobuf, event, path, oldpath, getpid(), user, event_id);
-
+        data_len = build_fce_packet(obj, iobuf, event, path, oldpath, getpid(), user,
+                                    event_id);
         sent_data = sendto(udp_entry->sock,
                            iobuf,
                            data_len,
@@ -453,10 +513,10 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
         /* Problems ? */
         if (sent_data != data_len) {
             /* Argh, socket broke, we close and retry later */
-            LOG(log_error, logtype_fce, "send_fce_event: error sending packet to %s:%s, transferred %d of %d: %s",
+            LOG(log_error, logtype_fce,
+                "send_fce_event: error sending packet to %s:%s, transferred %d of %d: %s",
                 udp_entry->addr, udp_entry->port, sent_data, data_len, strerror(errno));
-
-            close( udp_entry->sock );
+            close(udp_entry->sock);
             udp_entry->sock = -1;
             udp_entry->next_try_on_error = now + FCE_SOCKET_RETRY_DELAY_S;
         }
@@ -465,13 +525,15 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path, const
     event_id++;
 }
 
-static int add_udp_socket(const char *target_ip, const char *target_port )
+static int add_udp_socket(const char *target_ip, const char *target_port)
 {
-    if (target_port == NULL)
+    if (target_port == NULL) {
         target_port = FCE_DEFAULT_PORT_STRING;
+    }
 
     if (udp_sockets >= FCE_MAX_UDP_SOCKS) {
-        LOG(log_error, logtype_fce, "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS );
+        LOG(log_error, logtype_fce,
+            "Too many file change api UDP connections (max %d allowed)", FCE_MAX_UDP_SOCKS);
         return AFPERR_PARAM;
     }
 
@@ -479,11 +541,10 @@ static int add_udp_socket(const char *target_ip, const char *target_port )
     udp_socket_list[udp_sockets].port = strdup(target_port);
     udp_socket_list[udp_sockets].sock = -1;
     memset(&udp_socket_list[udp_sockets].addrinfo, 0, sizeof(struct addrinfo));
-    memset(&udp_socket_list[udp_sockets].sockaddr, 0, sizeof(struct sockaddr_storage));
+    memset(&udp_socket_list[udp_sockets].sockaddr, 0,
+           sizeof(struct sockaddr_storage));
     udp_socket_list[udp_sockets].next_try_on_error = 0;
-
     udp_sockets++;
-
     return AFP_OK;
 }
 
@@ -493,31 +554,28 @@ static void save_close_event(const AFPObj *obj, const char *path)
 
     /* Check if it's a close for the same event as the last one */
     if (last_close_event.time   /* is there any saved event ? */
-        && (strcmp(path, last_close_event.path) != 0)) {
+            && (strcmp(path, last_close_event.path) != 0)) {
         /* no, so send the saved event out now */
-        send_fce_event(obj, FCE_FILE_MODIFY,last_close_event.path, NULL);
+        send_fce_event(obj, FCE_FILE_MODIFY, last_close_event.path, NULL);
     }
 
     LOG(log_debug, logtype_fce, "save_close_event: %s", path);
-
     last_close_event.time = now;
     strncpy(last_close_event.path, path, MAXPATHLEN);
 }
 
 static void fce_init_ign_paths(const char *ignores,
-                              const char ***dest_array,
-                              bool is_directory)
+                               const char ***dest_array,
+                               bool is_directory)
 {
     char *names = strdup(ignores);
     char *saveptr = NULL;
     int capacity = 10;  // Initial capacity, will grow if needed
     int i = 0;
-
     *dest_array = calloc(capacity + 1, sizeof(char *));
 
     for (const char *p = strtok_r(names, ",", &saveptr); p;
-         p = strtok_r(NULL, ",", &saveptr)) {
-
+            p = strtok_r(NULL, ",", &saveptr)) {
         if (i >= capacity) {
             capacity *= 2;
             *dest_array = realloc(*dest_array, (capacity + 1) * sizeof(char *));
@@ -527,6 +585,7 @@ static void fce_init_ign_paths(const char *ignores,
         if (is_directory) {
             size_t pathlen = strnlen(p, MAXPATHLEN);
             char *dirpath = malloc(pathlen + 1);
+
             if (dirpath) {
                 strlcpy(dirpath, p, pathlen + 1);
                 (*dest_array)[i++] = dirpath;
@@ -537,6 +596,7 @@ static void fce_init_ign_paths(const char *ignores,
     }
 
     (*dest_array)[i] = NULL;
+
     if (i < capacity) {
         *dest_array = realloc(*dest_array, (i + 1) * sizeof(char *));
     }
@@ -550,18 +610,19 @@ static void fce_init_ign_paths(const char *ignores,
  * Dispatcher for all incoming file change events
  *
  * */
-int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char *oldpath)
+int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
+                 const char *oldpath)
 {
     static bool first_event = true;
     const char *bname;
     const char *dirname;
 
-    if (!(fce_ev_enabled & (1 << event)))
+    if (!(fce_ev_enabled & (1 << event))) {
         return AFP_OK;
+    }
 
     AFP_ASSERT(event >= FCE_FIRST_EVENT && event <= FCE_LAST_EVENT);
     AFP_ASSERT(path);
-
     LOG(log_debug, logtype_fce, "register_fce(path: %s, event: %s)",
         path, fce_event_names[event]);
 
@@ -570,53 +631,61 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char
         return AFP_OK;
     }
 
-	/* do some initialization on the fly the first time */
-	if (first_event) {
-		fce_initialize_history();
-        if (obj->fce_ign_names != NULL){
+    /* do some initialization on the fly the first time */
+    if (first_event) {
+        fce_initialize_history();
+
+        if (obj->fce_ign_names != NULL) {
             fce_init_ign_paths(obj->fce_ign_names, &skip_files, false);
         }
-        if (obj->fce_ign_directories != NULL){
+
+        if (obj->fce_ign_directories != NULL) {
             fce_init_ign_paths(obj->fce_ign_directories, &skip_directories, true);
         }
-        first_event = false;
-	}
 
-	/* handle files or dirs which should not cause events (.DS_Store etc. ) */
+        first_event = false;
+    }
+
+    /* handle files or dirs which should not cause events (.DS_Store etc. ) */
     bname = basename_safe(path);
     dirname = realpath_safe(path);
 
     if (bname && skip_files != NULL) {
         for (int i = 0; skip_files[i] != NULL; i++) {
             if (strcmp(bname, skip_files[i]) == 0) {
-                LOG(log_debug, logtype_fce, "Skip file change event for file <%s>", skip_files[i]);
+                LOG(log_debug, logtype_fce, "Skip file change event for file <%s>",
+                    skip_files[i]);
                 return AFP_OK;
             }
         }
     }
+
     if (dirname && skip_directories != NULL) {
         for (int i = 0; skip_directories[i] != NULL; i++) {
             if (strstr(dirname, skip_directories[i]) == dirname) {
-                LOG(log_debug, logtype_fce, "Skip file change event for directory <%s>", skip_directories[i]);
+                LOG(log_debug, logtype_fce, "Skip file change event for directory <%s>",
+                    skip_directories[i]);
                 return AFP_OK;
             }
         }
     }
 
-	/* Can we ignore this event based on type or history? */
-	if (fce_handle_coalescation(event, path)) {
-		LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", event, path);
-		return AFP_OK;
-	}
+    /* Can we ignore this event based on type or history? */
+    if (fce_handle_coalescation(event, path)) {
+        LOG(log_debug9, logtype_fce, "Coalesced fc event <%d> for <%s>", event, path);
+        return AFP_OK;
+    }
 
     switch (event) {
     case FCE_FILE_MODIFY:
-        if (obj->options.fce_fmodwait != 0){
+        if (obj->options.fce_fmodwait != 0) {
             save_close_event(obj, path);
         } else {
             send_fce_event(obj, event, path, oldpath);
         }
+
         break;
+
     default:
         send_fce_event(obj, event, path, oldpath);
         break;
@@ -630,8 +699,10 @@ static void check_saved_close_events(const AFPObj *obj)
     time_t now = time(NULL);
 
     /* check if configured holdclose time has passed */
-    if (last_close_event.time && ((last_close_event.time + obj->options.fce_fmodwait) < now)) {
-        LOG(log_debug, logtype_fce, "check_saved_close_events: sending event: %s", last_close_event.path);
+    if (last_close_event.time
+            && ((last_close_event.time + obj->options.fce_fmodwait) < now)) {
+        LOG(log_debug, logtype_fce, "check_saved_close_events: sending event: %s",
+            last_close_event.path);
         /* yes, send event */
         send_fce_event(obj, FCE_FILE_MODIFY, &last_close_event.path[0], NULL);
         last_close_event.path[0] = 0;
@@ -646,8 +717,10 @@ static void check_saved_close_events(const AFPObj *obj)
  * */
 void fce_pending_events(const AFPObj *obj)
 {
-    if (!udp_sockets)
+    if (!udp_sockets) {
         return;
+    }
+
     check_saved_close_events(obj);
 }
 
@@ -658,17 +731,17 @@ void fce_pending_events(const AFPObj *obj)
  * */
 int fce_add_udp_socket(const char *target)
 {
-	const char *port = FCE_DEFAULT_PORT_STRING;
-	char target_ip[256] = {""};
+    const char *port = FCE_DEFAULT_PORT_STRING;
+    char target_ip[256] = {""};
+    strncpy(target_ip, target, sizeof(target_ip) - 1);
+    char *port_delim = strchr(target_ip, ':');
 
-	strncpy(target_ip, target, sizeof(target_ip) -1);
+    if (port_delim) {
+        *port_delim = 0;
+        port = port_delim + 1;
+    }
 
-	char *port_delim = strchr( target_ip, ':' );
-	if (port_delim) {
-		*port_delim = 0;
-		port = port_delim + 1;
-	}
-	return add_udp_socket(target_ip, port);
+    return add_udp_socket(target_ip, port);
 }
 
 int fce_set_events(const char *events)
@@ -676,11 +749,11 @@ int fce_set_events(const char *events)
     char *e;
     char *p;
 
-    if (events == NULL)
+    if (events == NULL) {
         return AFPERR_PARAM;
+    }
 
     e = strdup(events);
-
     fce_ev_enabled = 0;
 
     for (p = strtok(e, ", "); p; p = strtok(NULL, ", ")) {
@@ -706,6 +779,5 @@ int fce_set_events(const char *events)
     }
 
     free(e);
-
     return AFP_OK;
 }

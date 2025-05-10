@@ -41,146 +41,132 @@
  * Show version information about afpd.
  * Used by "afp -v".
  */
-static void show_version( void )
+static void show_version(void)
 {
-	int num, i;
+    int num, i;
+    printf("afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION);
+    puts("This program is free software; you can redistribute it and/or modify it under");
+    puts("the terms of the GNU General Public License as published by the Free Software");
+    puts("Foundation; either version 2 of the License, or (at your option) any later");
+    puts("version. Please see the file COPYING for further information and details.\n");
+    puts("afpd has been compiled with support for these features:\n");
+    num = sizeof(afp_versions) / sizeof(afp_versions[0]);
+    printf("          AFP versions:\t");
 
-	printf( "afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION );
+    for (i = 0; i < num; i++) {
+        printf("%d.%d ", afp_versions[i].av_number / 10,
+               afp_versions[i].av_number % 10);
+    }
 
-	puts( "This program is free software; you can redistribute it and/or modify it under" );
-	puts( "the terms of the GNU General Public License as published by the Free Software" );
-	puts( "Foundation; either version 2 of the License, or (at your option) any later" );
-	puts( "version. Please see the file COPYING for further information and details.\n" );
-
-	puts( "afpd has been compiled with support for these features:\n" );
-
-	num = sizeof( afp_versions ) / sizeof( afp_versions[ 0 ] );
-	printf( "          AFP versions:\t" );
-	for ( i = 0; i < num; i++ ) {
-		printf( "%d.%d ", afp_versions[ i ].av_number/10, afp_versions[ i ].av_number%10);
-	}
-	puts( "" );
-	printf("        TCP/IP Support:\t");
-	puts("Yes");
-
-	printf("     AppleTalk Support:\t");
+    puts("");
+    printf("        TCP/IP Support:\t");
+    puts("Yes");
+    printf("     AppleTalk Support:\t");
 #ifdef NO_DDP
-	puts("No");
+    puts("No");
 #else
-	puts("Yes");
+    puts("Yes");
 #endif
-	printf( "         CNID backends:\t" );
+    printf("         CNID backends:\t");
 #ifdef CNID_BACKEND_DBD
-	printf( "dbd " );
+    printf("dbd ");
 #endif
 #ifdef CNID_BACKEND_LAST
-	printf( "last " );
+    printf("last ");
 #endif
 #ifdef CNID_BACKEND_MYSQL
-	printf( "mysql " );
+    printf("mysql ");
 #endif
-	puts( "" );
+    puts("");
 }
 
 /*
  * Show extended version information about afpd and Netatalk.
  * Used by "afp -V".
  */
-static void show_version_extended(void )
+static void show_version_extended(void)
 {
-	show_version( );
-
-	printf( "      Zeroconf support:\t" );
+    show_version();
+    printf("      Zeroconf support:\t");
 #if defined (HAVE_MDNS)
-	puts( "mDNSResponder" );
+    puts("mDNSResponder");
 #elif defined (HAVE_AVAHI)
-	puts( "Avahi" );
+    puts("Avahi");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "  TCP wrappers support:\t" );
+    printf("  TCP wrappers support:\t");
 #ifdef TCPWRAP
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "         Quota support:\t" );
+    printf("         Quota support:\t");
 #ifndef NO_QUOTA_SUPPORT
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "   Admin group support:\t" );
-	puts( "Yes" );
-
-	printf( "    Valid shell checks:\t" );
+    printf("   Admin group support:\t");
+    puts("Yes");
+    printf("    Valid shell checks:\t");
 #ifndef DISABLE_SHELLCHECK
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "      cracklib support:\t" );
+    printf("      cracklib support:\t");
 #ifdef USE_CRACKLIB
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "            EA support:\t" );
-	puts( EA_MODULES );
-
-	printf( "           ACL support:\t" );
+    printf("            EA support:\t");
+    puts(EA_MODULES);
+    printf("           ACL support:\t");
 #ifdef HAVE_ACLS
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "          LDAP support:\t" );
+    printf("          LDAP support:\t");
 #ifdef HAVE_LDAP
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "         D-Bus support:\t" );
+    printf("         D-Bus support:\t");
 #ifdef HAVE_DBUS_GLIB
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "     Spotlight support:\t" );
+    printf("     Spotlight support:\t");
 #ifdef WITH_SPOTLIGHT
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "         DTrace probes:\t" );
+    printf("         DTrace probes:\t");
 #ifdef WITH_DTRACE
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
 }
 
 /*
  * Display compiled-in default paths
  */
-static void show_paths( void )
+static void show_paths(void)
 {
-	printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
-	printf( "           extmap.conf:\t%s\n", _PATH_CONFDIR "extmap.conf");
-	printf( "       state directory:\t%s\n", _PATH_STATEDIR);
-	printf( "    afp_signature.conf:\t%s\n", _PATH_STATEDIR "afp_signature.conf");
-	printf( "      afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");
-	printf( "       UAM search path:\t%s\n", _PATH_AFPDUAMPATH );
-	printf( "  Server messages path:\t%s\n", SERVERTEXT);
+    printf("              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+    printf("           extmap.conf:\t%s\n", _PATH_CONFDIR "extmap.conf");
+    printf("       state directory:\t%s\n", _PATH_STATEDIR);
+    printf("    afp_signature.conf:\t%s\n", _PATH_STATEDIR "afp_signature.conf");
+    printf("      afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");
+    printf("       UAM search path:\t%s\n", _PATH_AFPDUAMPATH);
+    printf("  Server messages path:\t%s\n", SERVERTEXT);
 }
 
 /*
@@ -188,8 +174,8 @@ static void show_paths( void )
  */
 static void show_usage(void)
 {
-	fprintf( stderr, "Usage:\tafpd [-d] [-F configfile]\n");
-	fprintf( stderr, "\tafpd -h|-v|-V\n");
+    fprintf(stderr, "Usage:\tafpd [-d] [-F configfile]\n");
+    fprintf(stderr, "\tafpd -h|-v|-V\n");
 }
 
 void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
@@ -197,35 +183,45 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
     int c, err = 0;
     optind = 1;
 
-    while (EOF != ( c = getopt( ac, av, "dF:vVh" )) ) {
-        switch ( c ) {
+    while (EOF != (c = getopt(ac, av, "dF:vVh"))) {
+        switch (c) {
         case 'd':
             obj->cmdlineflags |= OPTION_DEBUG;
             break;
+
         case 'F':
             obj->cmdlineconfigfile = strdup(optarg);
             break;
+
         case 'v':	/* version */
-            show_version( ); puts( "" );
-            show_paths( ); puts( "" );
-            exit( 0 );
+            show_version();
+            puts("");
+            show_paths();
+            puts("");
+            exit(0);
             break;
+
         case 'V':	/* extended version */
-            show_version_extended( ); puts( "" );
-            show_paths( ); puts( "" );
-            exit( 0 );
+            show_version_extended();
+            puts("");
+            show_paths();
+            puts("");
+            exit(0);
             break;
+
         case 'h':	/* usage */
             show_usage();
-            exit( 0 );
+            exit(0);
             break;
+
         default :
             err++;
         }
     }
-    if ( err || optind != ac ) {
+
+    if (err || optind != ac) {
         show_usage();
-        exit( 2 );
+        exit(2);
     }
 
     return;

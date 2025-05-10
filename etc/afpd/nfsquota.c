@@ -62,9 +62,9 @@
 /* lifted (with modifications) from the bsd quota program */
 static int
 callaurpc(struct vol *vol,
-    u_long prognum, u_long versnum, u_long procnum,
-    xdrproc_t inproc, char *in,
-    xdrproc_t outproc, char *out)
+          u_long prognum, u_long versnum, u_long procnum,
+          xdrproc_t inproc, char *in,
+          xdrproc_t outproc, char *out)
 {
     enum clnt_stat clnt_stat;
     struct timeval tottimeout;
@@ -75,8 +75,10 @@ callaurpc(struct vol *vol,
         struct timeval timeout;
         int socket = RPC_ANYSOCK;
 
-        if ((hp = gethostbyname(vol->v_gvs)) == NULL)
+        if ((hp = gethostbyname(vol->v_gvs)) == NULL) {
             return (int) RPC_UNKNOWNHOST;
+        }
+
         timeout.tv_usec = 0;
         timeout.tv_sec = 6;
         memcpy(&server_addr.sin_addr, hp->h_addr, hp->h_length);
@@ -85,8 +87,9 @@ callaurpc(struct vol *vol,
 
         if ((vol->v_nfsclient = (void *)
                                 clntudp_create(&server_addr, prognum, versnum,
-                                               timeout, &socket)) == NULL)
+                                               timeout, &socket)) == NULL) {
             return (int) rpc_createerr.cf_stat;
+        }
 
         ((CLIENT *) vol->v_nfsclient)->cl_auth = authunix_create_default();
     }
@@ -105,7 +108,6 @@ callaurpc(struct vol *vol,
 int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
                 struct dqblk *dqp)
 {
-
     struct getquota_args gq_args;
     struct getquota_rslt gq_rslt;
     struct timeval tv;
@@ -117,18 +119,18 @@ int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
         return AFPERR_PARAM;
     }
 
-    if (*(hostpath + 1) != '/')
+    if (*(hostpath + 1) != '/') {
         return AFPERR_PARAM;
+    }
 
     /* separate host from hostpath */
     *hostpath = '\0';
-
     gq_args.gqa_pathp = hostpath + 1;
     gq_args.gqa_uid = uid;
 
-    if(callaurpc(vol, RQUOTAPROG, RQUOTAVERS, RQUOTAPROC_GETQUOTA,
-                 (xdrproc_t) xdr_getquota_args, (char *) &gq_args,
-                 (xdrproc_t) xdr_getquota_rslt, (char *) &gq_rslt) != 0) {
+    if (callaurpc(vol, RQUOTAPROG, RQUOTAVERS, RQUOTAPROC_GETQUOTA,
+                  (xdrproc_t) xdr_getquota_args, (char *) &gq_args,
+                  (xdrproc_t) xdr_getquota_rslt, (char *) &gq_rslt) != 0) {
         LOG(log_info, logtype_afpd, "nfsquota: can't retrieve nfs quota information. \
             make sure that rpc.rquotad is running on %s.", vol->v_gvs);
         *hostpath = ':';
@@ -146,26 +148,23 @@ int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
 
     case Q_OK: /* we only copy the bits that we need. */
         gettimeofday(&tv, NULL);
-
 #if defined(__svr4__)
         /* why doesn't using bsize work? */
 #define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / DEV_BSIZE
 #else /* __svr4__ */
         /* NOTE: linux' rquotad program doesn't currently report the
         * correct rq_bsize. */
-	/* NOTE: This is integer division and can introduce rounding errors */
+        /* NOTE: This is integer division and can introduce rounding errors */
 #define NFS_BSIZE gq_rslt.GQR_RQUOTA.rq_bsize / bsize
 #endif /* __svr4__ */
-
         dqp->dqb_bhardlimit =
-            gq_rslt.GQR_RQUOTA.rq_bhardlimit*NFS_BSIZE;
+            gq_rslt.GQR_RQUOTA.rq_bhardlimit * NFS_BSIZE;
         dqp->dqb_bsoftlimit =
-            gq_rslt.GQR_RQUOTA.rq_bsoftlimit*NFS_BSIZE;
+            gq_rslt.GQR_RQUOTA.rq_bsoftlimit * NFS_BSIZE;
         dqp->dqb_curblocks =
-            gq_rslt.GQR_RQUOTA.rq_curblocks*NFS_BSIZE;
+            gq_rslt.GQR_RQUOTA.rq_curblocks * NFS_BSIZE;
         dqp->dqb_btimelimit =
             tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
-
         *hostpath = ':';
         return AFP_OK;
         break;

@@ -18,20 +18,20 @@ struct printer {
     int			p_flags;
     struct at_addr      p_addr;
     union {
-	struct {
-	    char		*pr_printer;
-	    char		*pr_operator;
-	    char		*pr_spool;
+        struct {
+            char		*pr_printer;
+            char		*pr_operator;
+            char		*pr_spool;
 #ifdef ABS_PRINT
-	    char		*pr_role;
-	    double		pr_balance;
-	    int			pr_srvid;
+            char		*pr_role;
+            double		pr_balance;
+            int			pr_srvid;
 #endif /* ABS_PRINT */
-	    int			pr_pagecost;
-	    char		*pr_pagecost_msg;
-	    char		*pr_lock;
-	} pu_pr;
-	char		*pu_cmd;
+            int			pr_pagecost;
+            char		*pr_pagecost_msg;
+            char		*pr_lock;
+        } pu_pr;
+        char		*pu_cmd;
     } p_un;
     ATP			p_atp;
 #ifdef HAVE_CUPS

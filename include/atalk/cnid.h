@@ -53,25 +53,34 @@
  * This is instance of CNID database object.
  */
 typedef struct _cnid_db {
-    uint32_t      cnid_db_flags;     /* Flags describing some CNID backend aspects. */
+    /* Flags describing some CNID backend aspects. */
+    uint32_t      cnid_db_flags;
     struct vol   *cnid_db_vol;
-    void         *cnid_db_private;   /* back-end speficic data */
+    /* back-end speficic data */
+    void         *cnid_db_private;
 
-    cnid_t (*cnid_add)         (struct _cnid_db *cdb, const struct stat *st, cnid_t did,
+    cnid_t (*cnid_add)         (struct _cnid_db *cdb, const struct stat *st,
+                                cnid_t did,
                                 const char *name, size_t, cnid_t hint);
     int    (*cnid_delete)      (struct _cnid_db *cdb, cnid_t id);
-    cnid_t (*cnid_get)         (struct _cnid_db *cdb, cnid_t did, const char *name, size_t);
-    cnid_t (*cnid_lookup)      (struct _cnid_db *cdb, const struct stat *st, cnid_t did,
+    cnid_t (*cnid_get)         (struct _cnid_db *cdb, cnid_t did, const char *name,
+                                size_t);
+    cnid_t (*cnid_lookup)      (struct _cnid_db *cdb, const struct stat *st,
+                                cnid_t did,
                                 const char *name, size_t);
     cnid_t (*cnid_nextid)      (struct _cnid_db *cdb);
-    char * (*cnid_resolve)     (struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len);
-    int    (*cnid_update)      (struct _cnid_db *cdb, cnid_t id, const struct stat *st,
+    char *(*cnid_resolve)     (struct _cnid_db *cdb, cnid_t *id, void *buffer,
+                               size_t len);
+    int    (*cnid_update)      (struct _cnid_db *cdb, cnid_t id,
+                                const struct stat *st,
                                 cnid_t did, const char *name, size_t len);
     void   (*cnid_close)       (struct _cnid_db *cdb);
-    int    (*cnid_getstamp)    (struct _cnid_db *cdb, void *buffer, const size_t len);
+    int    (*cnid_getstamp)    (struct _cnid_db *cdb, void *buffer,
+                                const size_t len);
     cnid_t (*cnid_rebuild_add) (struct _cnid_db *, const struct stat *, cnid_t,
                                 const char *, size_t, cnid_t);
-    int    (*cnid_find)        (struct _cnid_db *cdb, const char *name, size_t namelen,
+    int    (*cnid_find)        (struct _cnid_db *cdb, const char *name,
+                                size_t namelen,
                                 void *buffer, size_t buflen);
     int    (*cnid_wipe)        (struct _cnid_db *cdb);
 } cnid_db;
@@ -90,11 +99,13 @@ struct cnid_open_args {
  */
 struct _cnid_module {
     char *name;
-    struct list_head db_list;   /* CNID modules are also stored on a bidirectional list. */
+    /* CNID modules are also stored on a bidirectional list. */
+    struct list_head db_list;
     struct _cnid_db *(*cnid_open)(struct cnid_open_args *args);
-    uint32_t flags;            /* Flags describing some CNID backend aspects. */
-
+    /* Flags describing some CNID backend aspects. */
+    uint32_t flags;
 };
+
 typedef struct _cnid_module cnid_module;
 
 /* Inititalize the CNID backends */
@@ -105,17 +116,23 @@ void cnid_register(struct _cnid_module *module);
 
 /* This function opens a CNID database for selected volume. */
 struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags);
-cnid_t cnid_add        (struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
+cnid_t cnid_add        (struct _cnid_db *cdb, const struct stat *st,
+                        const cnid_t did,
                         const char *name, const size_t len, cnid_t hint);
 int    cnid_delete     (struct _cnid_db *cdb, cnid_t id);
-cnid_t cnid_get        (struct _cnid_db *cdb, const cnid_t did, char *name,const size_t len);
+cnid_t cnid_get        (struct _cnid_db *cdb, const cnid_t did, char *name,
+                        const size_t len);
 int    cnid_getstamp   (struct _cnid_db *cdb, void *buffer, const size_t len);
-cnid_t cnid_lookup     (struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
+cnid_t cnid_lookup     (struct _cnid_db *cdb, const struct stat *st,
+                        const cnid_t did,
                         char *name, const size_t len);
-char  *cnid_resolve    (struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len);
-int    cnid_update     (struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
+char  *cnid_resolve    (struct _cnid_db *cdb, cnid_t *id, void *buffer,
+                        size_t len);
+int    cnid_update     (struct _cnid_db *cdb, const cnid_t id,
+                        const struct stat *st,
                         const cnid_t did, char *name, const size_t len);
-cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
+cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
+                        const cnid_t did,
                         char *name, const size_t len, cnid_t hint);
 int    cnid_find       (struct _cnid_db *cdb, const char *name, size_t namelen,
                         void *buffer, size_t buflen);

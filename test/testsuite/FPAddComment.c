@@ -4,108 +4,123 @@
 /* -------------------------- */
 STATIC void test55()
 {
-int fork;
-char *name  = "t55 dir no access";
-char *name1 = "t55 file.txt";
-char *name2 = "t55 ro dir";
-char *name3  = "t55 --rwx-- dir";
-int pdir = 0;
-int rdir = 0;
-int dir;
-int ret;
-uint16_t vol = VolID;
-uint16_t vol2;
-DSI *dsi2;
-DSI *dsi = &Conn->dsi;
-char *cmt;
-int  dt = 0;
+    int fork;
+    char *name  = "t55 dir no access";
+    char *name1 = "t55 file.txt";
+    char *name2 = "t55 ro dir";
+    char *name3  = "t55 --rwx-- dir";
+    int pdir = 0;
+    int rdir = 0;
+    int dir;
+    int ret;
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    DSI *dsi2;
+    DSI *dsi = &Conn->dsi;
+    char *cmt;
+    int  dt = 0;
+    ENTER_TEST
 
-	ENTER_TEST
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!(rdir = read_only_folder(vol, DIRDID_ROOT, name2) ) ) {
-		test_nottested();
-		goto test_exit;
-	}
-	if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name)) && !Quiet) {
-		fprintf(stdout,"\tWARNING folder without access failed\n");
-	}
-	dsi2 = &Conn2->dsi;
-	vol2  = FPOpenVol(Conn2, Vol);
-	if (vol2 == 0xffff) {
-		test_nottested();
-		goto fin;
-	}
-	if (!(dir = FPCreateDir(Conn2,vol2, DIRDID_ROOT , name3))) {
-		test_nottested();
-		goto fin;
-	}
+    if (!(rdir = read_only_folder(vol, DIRDID_ROOT, name2))) {
+        test_nottested();
+        goto test_exit;
+    }
 
-	FAIL (FPCreateFile(Conn, vol,  0, DIRDID_ROOT , name1))
-	dt = FPOpenDT(Conn,vol);
+    if (!(pdir = no_access_folder(vol, DIRDID_ROOT, name)) && !Quiet) {
+        fprintf(stdout, "\tWARNING folder without access failed\n");
+    }
 
-	cmt = "essai";
-	ret = FPAddComment(Conn, vol,  DIRDID_ROOT , name, cmt);
-	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-		test_failed();
-	}
+    dsi2 = &Conn2->dsi;
+    vol2  = FPOpenVol(Conn2, Vol);
 
-	ret = FPAddComment(Conn, vol,  DIRDID_ROOT , name2, cmt);
-	if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
-		test_failed();
-	}
-	if (!ret) {
-		ret = FPGetComment(Conn, vol,  DIRDID_ROOT , name2);
-		if (ret || memcmp(cmt, dsi->commands +1, strlen(cmt))) {
-			test_failed();
-		}
-	}
+    if (vol2 == 0xffff) {
+        test_nottested();
+        goto fin;
+    }
 
-	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name1, "Comment for toto.txt"))
+    if (!(dir = FPCreateDir(Conn2, vol2, DIRDID_ROOT, name3))) {
+        test_nottested();
+        goto fin;
+    }
 
-	if (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "Comment for test folder")) {
-		test_failed();
-	}
-	if (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3)) {
-		test_failed();
-	}
+    FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
+    dt = FPOpenDT(Conn, vol);
+    cmt = "essai";
+    ret = FPAddComment(Conn, vol, DIRDID_ROOT, name, cmt);
 
-	fork = FPOpenFork(Conn, vol, OPENFORK_DATA  , 0 ,DIRDID_ROOT, name1,OPENACC_RD );
-	if (!fork) {
-		test_failed();
-		goto fin;
-	}
+    if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
+        test_failed();
+    }
 
-	FAIL (FPAddComment(Conn, vol,  DIRDID_ROOT , name3, "Comment"))
-	FAIL (FPGetComment(Conn, vol,  DIRDID_ROOT , name3))
-	FAIL (FPRemoveComment(Conn, vol,  DIRDID_ROOT , name3))
-	FAIL (FPCloseFork(Conn,fork))
+    ret = FPAddComment(Conn, vol, DIRDID_ROOT, name2, cmt);
+
+    if (not_valid(ret, /* MAC */0, AFPERR_ACCESS)) {
+        test_failed();
+    }
+
+    if (!ret) {
+        ret = FPGetComment(Conn, vol, DIRDID_ROOT, name2);
+
+        if (ret || memcmp(cmt, dsi->commands + 1, strlen(cmt))) {
+            test_failed();
+        }
+    }
+
+    FAIL(FPAddComment(Conn, vol, DIRDID_ROOT, name1, "Comment for toto.txt"))
+
+    if (FPAddComment(Conn, vol, DIRDID_ROOT, name3, "Comment for test folder")) {
+        test_failed();
+    }
+
+    if (FPRemoveComment(Conn, vol, DIRDID_ROOT, name3)) {
+        test_failed();
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name1, OPENACC_RD);
+
+    if (!fork) {
+        test_failed();
+        goto fin;
+    }
+
+    FAIL(FPAddComment(Conn, vol, DIRDID_ROOT, name3, "Comment"))
+    FAIL(FPGetComment(Conn, vol, DIRDID_ROOT, name3))
+    FAIL(FPRemoveComment(Conn, vol, DIRDID_ROOT, name3))
+    FAIL(FPCloseFork(Conn, fork))
 #if 0
-	if (ntohl(AFPERR_ACCESS) != FPAddComment(Conn, vol,  DIRDID_ROOT , "bogus folder","essai")) {
-		fprintf(stdout,"\tFAILED\n");
-		return;
-	}
+
+    if (ntohl(AFPERR_ACCESS) != FPAddComment(Conn, vol, DIRDID_ROOT,
+            "bogus folder", "essai")) {
+        fprintf(stdout, "\tFAILED\n");
+        return;
+    }
+
 #endif
 fin:
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name1))
-	FAIL (FPDelete(Conn, vol,  DIRDID_ROOT , name3))
-	if (pdir) {
-		delete_folder(vol, DIRDID_ROOT, name);
-	}
-	if (rdir) {
-		delete_folder(vol, DIRDID_ROOT, name2);
-	}
-	FAIL (dt && FPCloseDT(Conn, dt))
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name3))
+
+    if (pdir) {
+        delete_folder(vol, DIRDID_ROOT, name);
+    }
+
+    if (rdir) {
+        delete_folder(vol, DIRDID_ROOT, name2);
+    }
+
+    FAIL(dt && FPCloseDT(Conn, dt))
 test_exit:
-	exit_test("FPAddComment:test55: add comment");
+    exit_test("FPAddComment:test55: add comment");
 }
 
 /* ----------- */
 void FPAddComment_test()
 {
     ENTER_TESTSET
-	test55();
+    test55();
 }
