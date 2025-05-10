@@ -102,14 +102,16 @@ static int  log_src_linenumber;
 
 /* Array to store text to list given a log type */
 static const char *arr_logtype_strings[] =  LOGTYPE_STRING_IDENTIFIERS;
-static const unsigned int num_logtype_strings = COUNT_ARRAY(arr_logtype_strings);
+static const unsigned int num_logtype_strings = COUNT_ARRAY(
+        arr_logtype_strings);
 
 /* Array for charachters representing log severity in the log file */
-static const char arr_loglevel_chars[] = {'-','S', 'E', 'W', 'N', 'I', 'D'};
+static const char arr_loglevel_chars[] = {'-', 'S', 'E', 'W', 'N', 'I', 'D'};
 static const unsigned int num_loglevel_chars = COUNT_ARRAY(arr_loglevel_chars);
 
 static const char *arr_loglevel_strings[] = LOGLEVEL_STRING_IDENTIFIERS;
-static const unsigned int num_loglevel_strings = COUNT_ARRAY(arr_loglevel_strings);
+static const unsigned int num_loglevel_strings = COUNT_ARRAY(
+        arr_loglevel_strings);
 
 /* =========================================================================
    Internal function definitions
@@ -127,11 +129,11 @@ static int generate_message(char **message_details_buffer,
     struct timeval tv;
     pid_t  pid;
     char buf[256];
-
     gettimeofday(&tv, NULL);
     strftime(buf, sizeof(buf), "%b %d %H:%M:%S", localtime(&tv.tv_sec));
     pid = getpid();
     const char *basename = strrchr(log_src_filename, '/');
+
     if (basename) {
         basename++;
     } else {
@@ -140,61 +142,68 @@ static int generate_message(char **message_details_buffer,
 
     if (log_us_timestamp) {
         len = asprintf(&details,
-                    "%s.%06u %s[%d] {%s:%d} (%s:%s): %s\n",
-                    buf,
-                    (int)tv.tv_usec,
-                    log_config.processname,
-                    pid,
-                    basename,
-                    log_src_linenumber,
-                    arr_loglevel_strings[loglevel],
-                    arr_logtype_strings[logtype],
-                    user_message);
+                       "%s.%06u %s[%d] {%s:%d} (%s:%s): %s\n",
+                       buf,
+                       (int)tv.tv_usec,
+                       log_config.processname,
+                       pid,
+                       basename,
+                       log_src_linenumber,
+                       arr_loglevel_strings[loglevel],
+                       arr_logtype_strings[logtype],
+                       user_message);
     } else {
         len = asprintf(&details,
-                    "%s %s[%d] {%s:%d} (%s:%s): %s\n",
-                    buf,
-                    log_config.processname,
-                    pid,
-                    basename,
-                    log_src_linenumber,
-                    arr_loglevel_strings[loglevel],
-                    arr_logtype_strings[logtype],
-                    user_message);
+                       "%s %s[%d] {%s:%d} (%s:%s): %s\n",
+                       buf,
+                       log_config.processname,
+                       pid,
+                       basename,
+                       log_src_linenumber,
+                       arr_loglevel_strings[loglevel],
+                       arr_logtype_strings[logtype],
+                       user_message);
     }
+
     if (len == -1) {
         *message_details_buffer = "";
         return -1;
     }
+
     *message_details_buffer = details;
     return len;
 }
 
 static int get_syslog_equivalent(enum loglevels loglevel)
 {
-    switch (loglevel)
-    {
-        /* The question is we know how bad it is for us,
-           but how should that translate in the syslogs?  */
+    switch (loglevel) {
+    /* The question is we know how bad it is for us,
+       but how should that translate in the syslogs?  */
     case 1: /* severe */
         return LOG_ERR;
+
     case 2: /* error */
         return LOG_ERR;
+
     case 3: /* warning */
         return LOG_WARNING;
+
     case 4: /* note */
         return LOG_NOTICE;
+
     case 5: /* information */
         return LOG_INFO;
+
     default: /* debug */
         return LOG_DEBUG;
     }
 }
 
 /* Called by the LOG macro for syslog messages */
-static void make_syslog_entry(enum loglevels loglevel, enum logtypes logtype _U_, char *message)
+static void make_syslog_entry(enum loglevels loglevel,
+                              enum logtypes logtype _U_, char *message)
 {
-    if ( !log_config.syslog_opened ) {
+    if (!log_config.syslog_opened) {
         openlog(log_config.processname,
                 log_config.syslog_display_options,
                 log_config.syslog_facility);
@@ -212,13 +221,16 @@ static void log_init(void)
                  logfacility_daemon);
 }
 
-static void log_setup(const char *filename, enum loglevels loglevel, enum logtypes logtype, const bool log_us_timestamp)
+static void log_setup(const char *filename, enum loglevels loglevel,
+                      enum logtypes logtype, const bool log_us_timestamp)
 {
     if (loglevel == 0) {
         /* Disable */
         if (type_configs[logtype].set) {
-            if (type_configs[logtype].fd != -1)
+            if (type_configs[logtype].fd != -1) {
                 close(type_configs[logtype].fd);
+            }
+
             type_configs[logtype].fd = -1;
             type_configs[logtype].level = -1;
             type_configs[logtype].set = false;
@@ -226,23 +238,29 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
             /* if disabling default also set all "default using" levels to 0 */
             if (logtype == logtype_default) {
                 while (logtype != logtype_end_of_list_marker) {
-                    if ( ! (type_configs[logtype].set))
+                    if (!(type_configs[logtype].set)) {
                         type_configs[logtype].level = -1;
+                    }
+
                     logtype++;
                 }
             }
         }
+
         return;
     }
 
     /* Safety check */
-    if (NULL == filename)
+    if (NULL == filename) {
         return;
+    }
 
     /* Resetting existing config ? */
     if (type_configs[logtype].set) {
-        if (type_configs[logtype].fd != -1)
+        if (type_configs[logtype].fd != -1) {
             close(type_configs[logtype].fd);
+        }
+
         type_configs[logtype].fd = -1;
         type_configs[logtype].level = -1;
         type_configs[logtype].set = false;
@@ -251,11 +269,13 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
         /* Reset configs using default */
         if (logtype == logtype_default) {
             int typeiter = 0;
+
             while (typeiter != logtype_end_of_list_marker) {
                 if (type_configs[typeiter].set == false) {
                     type_configs[typeiter].level = -1;
                     type_configs[typeiter].syslog = false;
                 }
+
                 typeiter++;
             }
         }
@@ -269,13 +289,11 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
     /* Is it /dev/tty ? */
     if (strcmp(filename, "/dev/tty") == 0) {
         type_configs[logtype].fd = 1; /* stdout */
-
-    /* Does it end in "XXXXXX" ? debug reguest via SIGINT */
+        /* Does it end in "XXXXXX" ? debug reguest via SIGINT */
     } else if (strcmp(filename + strlen(filename) - 6, "XXXXXX") == 0) {
         char *tmp = strdup(filename);
         type_configs[logtype].fd = mkstemp(tmp);
         free(tmp);
-
     } else {
         become_root();
         type_configs[logtype].fd = open(filename,
@@ -304,21 +322,26 @@ static void log_setup(const char *filename, enum loglevels loglevel, enum logtyp
 
     if (logtype == logtype_default) {
         int typeiter = 0;
+
         while (typeiter != logtype_end_of_list_marker) {
-            if ( ! (type_configs[typeiter].set)) {
+            if (!(type_configs[typeiter].set)) {
                 type_configs[typeiter].level = loglevel;
                 type_configs[typeiter].timestamp_us = log_us_timestamp;
             }
+
             typeiter++;
         }
     }
 
-    LOG(log_debug, logtype_logger, "Setup file logging: type: %s, level: %s, file: %s, timestamp_us: %d",
-        arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], filename, log_us_timestamp);
+    LOG(log_debug, logtype_logger,
+        "Setup file logging: type: %s, level: %s, file: %s, timestamp_us: %d",
+        arr_logtype_strings[logtype], arr_loglevel_strings[loglevel], filename,
+        log_us_timestamp);
 }
 
 /* Setup syslog logging */
-void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility)
+void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
+                  int facility)
 {
     /*
      * FIXME:
@@ -326,7 +349,6 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int 
      * Fortunately currently there's no way a user could trigger this as afpd.conf
      * is not re-read on SIGHUP.
      */
-
     type_configs[logtype].level = loglevel;
     type_configs[logtype].set = true;
     type_configs[logtype].syslog = true;
@@ -336,17 +358,18 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int 
     /* Setting default logging? Then set all logtype not set individually */
     if (logtype == logtype_default) {
         int typeiter = 0;
+
         while (typeiter != logtype_end_of_list_marker) {
-            if ( ! (type_configs[typeiter].set)) {
+            if (!(type_configs[typeiter].set)) {
                 type_configs[typeiter].level = loglevel;
                 type_configs[typeiter].syslog = true;
             }
+
             typeiter++;
         }
     }
 
     log_config.inited = 1;
-
     LOG(log_info, logtype_logger, "Set syslog logging to level: %s",
         arr_loglevel_strings[loglevel]);
 }
@@ -360,15 +383,18 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int 
  *    else
  *       set to default logging
  */
-static void setuplog_internal(const char *loglevel, const char *logtype, const char *filename, const bool log_us_timestamp)
+static void setuplog_internal(const char *loglevel, const char *logtype,
+                              const char *filename, const bool log_us_timestamp)
 {
     unsigned int typenum, levelnum;
 
     /* Parse logtype */
-    for( typenum=0; typenum < num_logtype_strings; typenum++) {
-        if (strcasecmp(logtype, arr_logtype_strings[typenum]) == 0)
+    for (typenum = 0; typenum < num_logtype_strings; typenum++) {
+        if (strcasecmp(logtype, arr_logtype_strings[typenum]) == 0) {
             break;
+        }
     }
+
     if (typenum >= num_logtype_strings) {
         return;
     }
@@ -377,10 +403,12 @@ static void setuplog_internal(const char *loglevel, const char *logtype, const c
     if (loglevel == NULL) {
         levelnum = 0;
     } else {
-        for(levelnum=1; levelnum < num_loglevel_strings; levelnum++) {
-            if (strcasecmp(loglevel, arr_loglevel_strings[levelnum]) == 0)
+        for (levelnum = 1; levelnum < num_loglevel_strings; levelnum++) {
+            if (strcasecmp(loglevel, arr_loglevel_strings[levelnum]) == 0) {
                 break;
+            }
         }
+
         if (levelnum >= num_loglevel_strings) {
             return;
         }
@@ -428,13 +456,14 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     char *user_message, *log_message;
     va_list args;
 
-    if (inlog)
+    if (inlog) {
         return;
+    }
 
     inlog = 1;
 
     if (!log_config.inited) {
-      log_init();
+        log_init();
     }
 
     if (type_configs[logtype].syslog) {
@@ -443,18 +472,20 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
             va_start(args, message);
             len = vasprintf(&user_message, message, args);
             va_end(args);
+
             if (len == -1) {
                 return;
             }
+
             make_syslog_entry(loglevel, logtype, user_message);
             free(user_message);
         }
+
         inlog = 0;
         return;
     }
 
     /* logging to a file */
-
     log_src_filename = file;
     log_src_linenumber = line;
 
@@ -475,58 +506,66 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     /* Initialise the Messages */
     va_start(args, message);
     len = vasprintf(&user_message, message, args);
+
     if (len == -1) {
         goto exit;
     }
-    va_end(args);
 
+    va_end(args);
     len = generate_message(&log_message,
                            user_message,
                            type_configs[logtype].set ?
                            type_configs[logtype].display_options :
                            type_configs[logtype_default].display_options,
                            loglevel, logtype, log_us_timestamp);
+
     if (len == -1) {
         goto exit;
     }
+
     write(fd, log_message, len);
     free(log_message);
     free(user_message);
-
 exit:
     inlog = 0;
 }
 
-void setuplog(const char *logstr, const char *logfile, const bool log_us_timestamp)
+void setuplog(const char *logstr, const char *logfile,
+              const bool log_us_timestamp)
 {
     char *ptr, *save;
     char *logtype, *loglevel;
     char c;
-
     save = ptr = strdup(logstr);
-
     ptr = strtok(ptr, ", ");
 
     while (ptr) {
         while (*ptr) {
-            while (*ptr && isspace(*ptr))
+            while (*ptr && isspace(*ptr)) {
                 ptr++;
+            }
 
             logtype = ptr;
             ptr = strpbrk(ptr, ":");
-            if (!ptr)
-                break;
-            *ptr = 0;
 
+            if (!ptr) {
+                break;
+            }
+
+            *ptr = 0;
             ptr++;
             loglevel = ptr;
-            while (*ptr && !isspace(*ptr))
+
+            while (*ptr && !isspace(*ptr)) {
                 ptr++;
+            }
+
             c = *ptr;
             *ptr = 0;
             setuplog_internal(loglevel, logtype, logfile, log_us_timestamp);
             *ptr = c;
         }
+
         ptr = strtok(NULL, ", ");
     }
 

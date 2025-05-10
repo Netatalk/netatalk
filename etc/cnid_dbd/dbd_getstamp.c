@@ -22,17 +22,14 @@
 
 /* Return the unique stamp associated with this database */
 
-int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *rqst _U_, struct cnid_dbd_rply *rply)
+int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *rqst _U_,
+                 struct cnid_dbd_rply *rply)
 {
     DBT key, data;
     int rc;
-
-
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));
-
     rply->namelen = 0;
-
     key.data = ROOTINFO_KEY;
     key.size = ROOTINFO_KEYLEN;
 
@@ -43,7 +40,7 @@ int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *rqst _U_, struct cnid_dbd_rply 
     }
 
     if (rc == 0) {
-	LOG(log_error, logtype_cnid, "dbd_getstamp: No rootinfo record found");
+        LOG(log_error, logtype_cnid, "dbd_getstamp: No rootinfo record found");
         rply->result = CNID_DBD_RES_NOTFOUND;
         return 1;
     }

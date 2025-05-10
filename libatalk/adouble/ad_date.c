@@ -12,23 +12,27 @@ int ad_setdate(struct adouble *ad,
 {
     int xlate = (dateoff & AD_DATE_UNIX);
     char *ade = NULL;
-
     dateoff &= AD_DATE_MASK;
-    if (xlate)
+
+    if (xlate) {
         date = AD_DATE_FROM_UNIX(date);
+    }
 
-    if (!ad_getentryoff(ad, ADEID_FILEDATESI) || !ad_entry(ad, ADEID_FILEDATESI))
+    if (!ad_getentryoff(ad, ADEID_FILEDATESI) || !ad_entry(ad, ADEID_FILEDATESI)) {
         return -1;
+    }
 
-    if (dateoff > AD_DATE_ACCESS)
+    if (dateoff > AD_DATE_ACCESS) {
         return -1;
+    }
 
     ade = ad_entry(ad, ADEID_FILEDATESI);
+
     if (ade == NULL) {
         return -1;
     }
-    memcpy(ade + dateoff, &date, sizeof(date));
 
+    memcpy(ade + dateoff, &date, sizeof(date));
     return 0;
 }
 
@@ -37,22 +41,27 @@ int ad_getdate(const struct adouble *ad,
 {
     int xlate = (dateoff & AD_DATE_UNIX);
     char *ade = NULL;
-
     dateoff &= AD_DATE_MASK;
-    if (!ad_getentryoff(ad, ADEID_FILEDATESI) || !ad_entry(ad, ADEID_FILEDATESI))
-        return -1;
 
-    if (dateoff > AD_DATE_ACCESS)
+    if (!ad_getentryoff(ad, ADEID_FILEDATESI) || !ad_entry(ad, ADEID_FILEDATESI)) {
         return -1;
+    }
 
+    if (dateoff > AD_DATE_ACCESS) {
+        return -1;
+    }
 
     ade = ad_entry(ad, ADEID_FILEDATESI);
+
     if (ade == NULL) {
         return -1;
     }
+
     memcpy(date, ade + dateoff, sizeof(uint32_t));
 
-    if (xlate)
+    if (xlate) {
         *date = AD_DATE_TO_UNIX(*date);
+    }
+
     return 0;
 }

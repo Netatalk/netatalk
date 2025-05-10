@@ -6,5 +6,5 @@
 struct list {
     void	*l_data;
     struct list	*l_next,
-		*l_prev;
+               *l_prev;
 };

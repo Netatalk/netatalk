@@ -10,7 +10,7 @@
 
 struct ziptab {
     struct ziptab	*zt_next,
-			*zt_prev;
+                 *zt_prev;
     unsigned char		zt_len;
     char		*zt_name;
     unsigned char		*zt_bcast;
@@ -18,10 +18,11 @@ struct ziptab {
 };
 
 extern struct ziptab	*ziptab, *ziplast;
-struct ziptab	*newzt (const int, const char *);
+struct ziptab	*newzt(const int, const char *);
 
-int addzone ( struct rtmptab *, int, char * );
-int zip_getnetinfo ( struct interface * );
-int zip_packet(struct atport *ap,struct sockaddr_at *from, char *data, int len);
+int addzone(struct rtmptab *, int, char *);
+int zip_getnetinfo(struct interface *);
+int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data,
+               int len);
 
 #endif /* atalkd/zip.h */

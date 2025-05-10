@@ -96,9 +96,12 @@ static int badcp, rval;
 static int ftw_options = FTW_MOUNT | FTW_PHYS | FTW_ACTIONRETVAL;
 
 /* Forward declarations */
-static int copy(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
-static int ftw_copy_file(const struct FTW *, const char *, const struct stat *, int);
-static int ftw_copy_link(const struct FTW *, const char *, const struct stat *, int);
+static int copy(const char *fpath, const struct stat *sb, int tflag,
+                struct FTW *ftwbuf);
+static int ftw_copy_file(const struct FTW *, const char *, const struct stat *,
+                         int);
+static int ftw_copy_link(const struct FTW *, const char *, const struct stat *,
+                         int);
 static int setfile(const struct stat *, int);
 // static int preserve_dir_acls(const struct stat *, char *, char *);
 static int preserve_fd_acls(int, int);
@@ -123,28 +126,33 @@ static void sig_handler(int signo _U_)
 static void set_signal(void)
 {
     struct sigaction sv;
-
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
     sigemptyset(&sv.sa_mask);
-    if (sigaction(SIGTERM, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
 
-    if (sigaction(SIGINT, &sv, NULL) < 0)
+    if (sigaction(SIGTERM, &sv, NULL) < 0) {
+        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
+    }
+
+    if (sigaction(SIGINT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGINT): %s", strerror(errno));
+    }
 
     memset(&sv, 0, sizeof(struct sigaction));
     sv.sa_handler = SIG_IGN;
     sigemptyset(&sv.sa_mask);
 
-    if (sigaction(SIGABRT, &sv, NULL) < 0)
+    if (sigaction(SIGABRT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
+    }
 
-    if (sigaction(SIGHUP, &sv, NULL) < 0)
+    if (sigaction(SIGHUP, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
+    }
 
-    if (sigaction(SIGQUIT, &sv, NULL) < 0)
+    if (sigaction(SIGQUIT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
+    }
 }
 
 static void usage_cp(void)
@@ -185,7 +193,7 @@ static void usage_cp(void)
         "           the directory itself.\n\n"
         "     -v    Cause cp to be verbose, showing files as they are copied.\n\n"
         "     -x    File system mount points are not traversed.\n\n"
-        );
+    );
     exit(EXIT_FAILURE);
 }
 
@@ -198,7 +206,6 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
     afpvol_t srcvol;
     afpvol_t dstvol;
 #endif
-
     ppdid = pdid = htonl(1);
     did = htonl(2);
 
@@ -208,61 +215,75 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
             pflag = 1;
             Rflag = 1;
             break;
+
         case 'f':
             fflag = 1;
             iflag = nflag = 0;
             break;
+
         case 'i':
             iflag = 1;
             fflag = nflag = 0;
             break;
+
         case 'n':
             nflag = 1;
             fflag = iflag = 0;
             break;
+
         case 'p':
             pflag = 1;
             break;
+
         case 'R':
             Rflag = 1;
             break;
+
         case 'v':
             vflag = 1;
             break;
+
         case 'x':
             ftw_options |= FTW_MOUNT;
             break;
+
         default:
             usage_cp();
             break;
         }
+
     argc -= optind;
     argv += optind;
 
-    if (argc < 2)
+    if (argc < 2) {
         usage_cp();
+    }
 
     set_signal();
     cnid_init();
-
     /* Save the target base in "to". */
     target = argv[--argc];
-    if ((strlcpy(to.p_path, target, PATH_MAX)) >= PATH_MAX)
+
+    if ((strlcpy(to.p_path, target, PATH_MAX)) >= PATH_MAX) {
         ERROR("%s: name too long", target);
+    }
 
     to.p_end = to.p_path + strlen(to.p_path);
+
     if (to.p_path == to.p_end) {
         *to.p_end++ = '.';
         *to.p_end = 0;
     }
-    have_trailing_slash = (to.p_end[-1] == '/');
-    if (have_trailing_slash)
-        STRIP_TRAILING_SLASH(to);
-    to.target_end = to.p_end;
 
+    have_trailing_slash = (to.p_end[-1] == '/');
+
+    if (have_trailing_slash) {
+        STRIP_TRAILING_SLASH(to);
+    }
+
+    to.target_end = to.p_end;
     /* Set end of argument list */
     argv[argc] = NULL;
-
     /*
      * Cp has two distinct cases:
      *
@@ -278,14 +299,18 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
      * In (2), the real target is not directory, but "directory/source".
      */
     r = stat(to.p_path, &to_stat);
-    if (r == -1 && errno != ENOENT)
+
+    if (r == -1 && errno != ENOENT) {
         ERROR("%s", to.p_path);
+    }
+
     if (r == -1 || !S_ISDIR(to_stat.st_mode)) {
         /*
          * Case (1).  Target is not a directory.
          */
-        if (argc > 1)
+        if (argc > 1) {
             ERROR("%s is not a directory", to.p_path);
+        }
 
         /*
          * Need to detect the case:
@@ -297,24 +322,29 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
         if (r == -1) {
             lstat(*argv, &tmp_stat);
 
-            if (S_ISDIR(tmp_stat.st_mode) && Rflag)
+            if (S_ISDIR(tmp_stat.st_mode) && Rflag) {
                 type = DIR_TO_DNE;
-            else
+            } else {
                 type = FILE_TO_FILE;
-        } else
+            }
+        } else {
             type = FILE_TO_FILE;
+        }
 
         if (have_trailing_slash && type == FILE_TO_FILE) {
-            if (r == -1)
+            if (r == -1) {
                 ERROR("directory %s does not exist", to.p_path);
-            else
+            } else {
                 ERROR("%s is not a directory", to.p_path);
+            }
         }
     } else
         /*
          * Case (2).  Target is a directory.
          */
+    {
         type = FILE_TO_DIR;
+    }
 
     /*
      * Keep an inverted copy of the umask, for use in correcting
@@ -322,12 +352,10 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
      */
     mask = ~umask(0777);
     umask(~mask);
-
 #if 0
     /* Inhereting perms in ad_mkdir etc requires this */
     ad_setfuid(0);
 #endif
-
     /* Load .volinfo file for destination*/
     openvol(obj, to.p_path, &dvolume);
 
@@ -341,10 +369,12 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
             } else {
                 SLOG("Error: %s: %s", argv[i], strerror(errno));
             }
+
             closevol(&svolume);
             closevol(&dvolume);
         }
     }
+
     return rval;
 }
 
@@ -354,27 +384,32 @@ static int copy(const char *path,
                 struct FTW *ftw)
 {
     static int base = 0;
-
     struct stat to_stat;
     int dne;
     size_t nlen;
     const char *p;
     char *target_mid;
 
-    if (alarmed)
+    if (alarmed) {
         return -1;
+    }
 
     /* This currently doesn't work with "." */
     if (strcmp(path, ".") == 0) {
         ERROR("\".\" not supported");
     }
+
     const char *dir = strrchr(path, '/');
-    if (dir == NULL)
+
+    if (dir == NULL) {
         dir = path;
-    else
+    } else {
         dir++;
-    if (!dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir))
+    }
+
+    if (!dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir)) {
         return FTW_SKIP_SUBTREE;
+    }
 
     /*
      * If we are in case (2) above, we need to append the
@@ -404,23 +439,30 @@ static int copy(const char *path,
             if (type != DIR_TO_DNE) {
                 base = ftw->base;
 
-                if (strcmp(&path[base], "..") == 0)
+                if (strcmp(&path[base], "..") == 0) {
                     base += 1;
-            } else
+                }
+            } else {
                 base = strlen(path);
+            }
         }
 
         p = &path[base];
         nlen = strlen(path) - base;
         target_mid = to.target_end;
-        if (*p != '/' && target_mid[-1] != '/')
+
+        if (*p != '/' && target_mid[-1] != '/') {
             *target_mid++ = '/';
+        }
+
         *target_mid = 0;
+
         if (target_mid - to.p_path + nlen >= PATH_MAX) {
             SLOG("%s%s: name too long (not copied)", to.p_path, p);
             badcp = rval = 1;
             return 0;
         }
+
         (void)strncat(target_mid, p, nlen);
         to.p_end = target_mid + nlen;
         *to.p_end = 0;
@@ -428,26 +470,32 @@ static int copy(const char *path,
     }
 
     /* Not an error but need to remember it happened */
-    if (stat(to.p_path, &to_stat) == -1)
+    if (stat(to.p_path, &to_stat) == -1) {
         dne = 1;
-    else {
+    } else {
         if (to_stat.st_dev == statp->st_dev &&
-            to_stat.st_ino == statp->st_ino) {
+                to_stat.st_ino == statp->st_ino) {
             SLOG("%s and %s are identical (not copied).", to.p_path, path);
             badcp = rval = 1;
+
             if (S_ISDIR(statp->st_mode))
                 /* without using glibc extension FTW_ACTIONRETVAL cant handle this */
+            {
                 return FTW_SKIP_SUBTREE;
+            }
+
             return 0;
         }
+
         if (!S_ISDIR(statp->st_mode) &&
-            S_ISDIR(to_stat.st_mode)) {
+                S_ISDIR(to_stat.st_mode)) {
             SLOG("cannot overwrite directory %s with "
                  "non-directory %s",
                  to.p_path, path);
             badcp = rval = 1;
             return 0;
         }
+
         dne = 0;
     }
 
@@ -462,15 +510,19 @@ static int copy(const char *path,
 
     switch (statp->st_mode & S_IFMT) {
     case S_IFLNK:
-        if (ftw_copy_link(ftw, path, statp, !dne))
+        if (ftw_copy_link(ftw, path, statp, !dne)) {
             badcp = rval = 1;
+        }
+
         break;
+
     case S_IFDIR:
         if (!Rflag) {
             SLOG("%s is a directory", path);
             badcp = rval = 1;
             return -1;
         }
+
         /*
          * If the directory doesn't exist, create the new
          * one with the from file mode plus owner RWX bits,
@@ -480,8 +532,9 @@ static int copy(const char *path,
          * umask blocks owner writes, we fail..
          */
         if (dne) {
-            if (mkdir(to.p_path, statp->st_mode | S_IRWXU) < 0)
+            if (mkdir(to.p_path, statp->st_mode | S_IRWXU) < 0) {
                 ERROR("mkdir: %s: %s", to.p_path, strerror(errno));
+            }
         } else if (!S_ISDIR(to_stat.st_mode)) {
             errno = ENOTDIR;
             ERROR("%s", to.p_path);
@@ -490,6 +543,7 @@ static int copy(const char *path,
         /* Create ad dir and copy ".Parent" */
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
             mode_t omask = umask(0);
+
             if (dvolume.vol->v_adouble == AD_VERSION2) {
                 /* Create ".AppleDouble" dir */
                 bstring addir = bfromcstr(to.p_path);
@@ -509,62 +563,82 @@ static int copy(const char *path,
 
             /* Get CNID of Parent and add new childir to CNID database */
             ppdid = pdid;
-            if ((did = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path, &pdid)) == CNID_INVALID) {
+
+            if ((did = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path,
+                                     &pdid)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;
             }
 
             struct adouble ad;
+
             struct stat st;
+
             if (lstat(to.p_path, &st) != 0) {
                 badcp = rval = 1;
                 break;
             }
+
             ad_init(&ad, dvolume.vol);
-            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
+
+            if (ad_open(&ad, to.p_path,
+                        ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
-            ad_setid( &ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
-            if (dvolume.vol->v_adouble == AD_VERSION2)
+
+            ad_setid(&ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
+
+            if (dvolume.vol->v_adouble == AD_VERSION2) {
                 ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
+            }
+
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close(&ad, ADFLAGS_HF);
-
             umask(omask);
         }
 
         if (pflag) {
-            if (setfile(statp, -1))
+            if (setfile(statp, -1)) {
                 rval = 1;
+            }
+
 #if 0
-            if (preserve_dir_acls(statp, curr->fts_accpath, to.p_path) != 0)
+
+            if (preserve_dir_acls(statp, curr->fts_accpath, to.p_path) != 0) {
                 rval = 1;
+            }
+
 #endif
         }
+
         break;
 
     case S_IFBLK:
     case S_IFCHR:
         SLOG("%s is a device file (not copied).", path);
         break;
+
     case S_IFSOCK:
         SLOG("%s is a socket (not copied).", path);
         break;
+
     case S_IFIFO:
         SLOG("%s is a FIFO (not copied).", path);
         break;
+
     default:
-        if (ftw_copy_file(ftw, path, statp, dne))
+        if (ftw_copy_file(ftw, path, statp, dne)) {
             badcp = rval = 1;
+        }
 
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
-
             mode_t omask = umask(0);
+
             if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)) {
                 /* copy ad-file */
                 if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
@@ -577,25 +651,36 @@ static int copy(const char *path,
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
             cnid_t cnid;
-            if ((cnid = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path, &did)) == CNID_INVALID) {
+
+            if ((cnid = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path,
+                                      &did)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;
             }
 
             struct adouble ad;
+
             struct stat st;
+
             if (lstat(to.p_path, &st) != 0) {
                 badcp = rval = 1;
                 break;
             }
+
             ad_init(&ad, dvolume.vol);
-            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
+
+            if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                        0666) != 0) {
                 ERROR("Error opening adouble for: %s", to.p_path);
             }
-            ad_setid( &ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
-            if (dvolume.vol->v_adouble == AD_VERSION2)
+
+            ad_setid(&ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
+
+            if (dvolume.vol->v_adouble == AD_VERSION2) {
                 ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
+            }
+
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
             ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
@@ -604,10 +689,13 @@ static int copy(const char *path,
             ad_close(&ad, ADFLAGS_HF);
             umask(omask);
         }
+
         break;
     }
-    if (vflag && !badcp)
+
+    if (vflag && !badcp) {
         (void)printf("%s -> %s\n", path, to.p_path);
+    }
 
     return 0;
 }
@@ -620,7 +708,7 @@ static int copy(const char *path,
 
 /* Small (default) buffer size in bytes. It's inefficient for this to be smaller than MAXPHYS */
 #if ! defined __APPLE__ && ! defined __FreeBSD__
-    #define MAXPHYS (64 * 1024)
+#define MAXPHYS (64 * 1024)
 #endif
 #define BUFSIZE_SMALL (MAXPHYS)
 
@@ -653,17 +741,23 @@ static int ftw_copy_file(const struct FTW *entp _U_,
      */
     if (!dne) {
 #define YESNO "(y/n [n]) "
+
         if (nflag) {
-            if (vflag)
+            if (vflag) {
                 printf("%s not overwritten\n", to.p_path);
+            }
+
             (void)close(from_fd);
             return 0;
         } else if (iflag) {
             (void)fprintf(stderr, "overwrite %s? %s",
                           to.p_path, YESNO);
             checkch = ch = getchar();
-            while (ch != '\n' && ch != EOF)
+
+            while (ch != '\n' && ch != EOF) {
                 ch = getchar();
+            }
+
             if (checkch != 'y' && checkch != 'Y') {
                 (void)close(from_fd);
                 (void)fprintf(stderr, "not overwritten\n");
@@ -704,23 +798,31 @@ static int ftw_copy_file(const struct FTW *entp _U_,
      */
 
     if (S_ISREG(sp->st_mode) && sp->st_size > 0 &&
-        sp->st_size <= 8 * 1024 * 1024 &&
-        (p = mmap(NULL, (size_t)sp->st_size, PROT_READ,
-                  MAP_SHARED, from_fd, (off_t)0)) != MAP_FAILED) {
+            sp->st_size <= 8 * 1024 * 1024 &&
+            (p = mmap(NULL, (size_t)sp->st_size, PROT_READ,
+                      MAP_SHARED, from_fd, (off_t)0)) != MAP_FAILED) {
         wtotal = 0;
+
         for (bufp = p, wresid = sp->st_size; ;
-             bufp += wcount, wresid -= (size_t)wcount) {
+                bufp += wcount, wresid -= (size_t)wcount) {
             wcount = write(to_fd, bufp, wresid);
-            if (wcount <= 0)
+
+            if (wcount <= 0) {
                 break;
+            }
+
             wtotal += wcount;
-            if (wcount >= (ssize_t)wresid)
+
+            if (wcount >= (ssize_t)wresid) {
                 break;
+            }
         }
+
         if (wcount != (ssize_t)wresid) {
             SLOG("%s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
+
         /* Some systems don't unmap on close(2). */
         if (munmap(p, sp->st_size) < 0) {
             SLOG("%s: %s", spath, strerror(errno));
@@ -734,32 +836,44 @@ static int ftw_copy_file(const struct FTW *entp _U_,
              * and not copy only some files.
              */
             if (sysconf(_SC_PHYS_PAGES) >
-                PHYSPAGES_THRESHOLD)
+                    PHYSPAGES_THRESHOLD) {
                 bufsize = MIN(BUFSIZE_MAX, MAXPHYS * 8);
-            else
+            } else {
                 bufsize = BUFSIZE_SMALL;
-            buf = malloc(bufsize);
-            if (buf == NULL)
-                ERROR("Not enough memory");
+            }
 
+            buf = malloc(bufsize);
+
+            if (buf == NULL) {
+                ERROR("Not enough memory");
+            }
         }
+
         wtotal = 0;
+
         while ((rcount = read(from_fd, buf, bufsize)) > 0) {
             for (bufp = buf, wresid = rcount; ;
-                 bufp += wcount, wresid -= wcount) {
+                    bufp += wcount, wresid -= wcount) {
                 wcount = write(to_fd, bufp, wresid);
-                if (wcount <= 0)
+
+                if (wcount <= 0) {
                     break;
+                }
+
                 wtotal += wcount;
-                if (wcount >= (ssize_t)wresid)
+
+                if (wcount >= (ssize_t)wresid) {
                     break;
+                }
             }
+
             if (wcount != (ssize_t)wresid) {
                 SLOG("%s: %s", to.p_path, strerror(errno));
                 rval = 1;
                 break;
             }
         }
+
         if (rcount < 0) {
             SLOG("%s: %s", spath, strerror(errno));
             rval = 1;
@@ -773,17 +887,20 @@ static int ftw_copy_file(const struct FTW *entp _U_,
      * to remove it if we created it and its length is 0.
      */
 
-    if (pflag && setfile(sp, to_fd))
+    if (pflag && setfile(sp, to_fd)) {
         rval = 1;
-    if (pflag && preserve_fd_acls(from_fd, to_fd) != 0)
+    }
+
+    if (pflag && preserve_fd_acls(from_fd, to_fd) != 0) {
         rval = 1;
+    }
+
     if (close(to_fd)) {
         SLOG("%s: %s", to.p_path, strerror(errno));
         rval = 1;
     }
 
     (void)close(from_fd);
-
     return rval;
 }
 
@@ -799,19 +916,24 @@ static int ftw_copy_link(const struct FTW *p _U_,
         SLOG("readlink: %s: %s", spath, strerror(errno));
         return 1;
     }
+
     if (len < 0 || len >= sizeof(llink)) {
         SLOG("readlink: %s: invalid link length", spath);
         return 1;
     }
+
     llink[len] = '\0';
+
     if (exists && unlink(to.p_path)) {
         SLOG("unlink: %s: %s", to.p_path, strerror(errno));
         return 1;
     }
+
     if (symlink(llink, to.p_path)) {
         SLOG("symlink: %s: %s", llink, strerror(errno));
         return 1;
     }
+
     return (pflag ? setfile(sstp, -1) : 0);
 }
 
@@ -821,12 +943,11 @@ static int setfile(const struct stat *fs, int fd)
     struct stat ts;
     int rval, gotstat, islink, fdval;
     mode_t mode;
-
     rval = 0;
     fdval = fd != -1;
     islink = !fdval && S_ISLNK(fs->st_mode);
-    mode = fs->st_mode & (S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG | S_IRWXO);
-
+    mode = fs->st_mode & (S_ISUID | S_ISGID | S_ISVTX | S_IRWXU | S_IRWXG |
+                          S_IRWXO);
 #if defined(__FreeBSD__) || defined(__APPLE__)
     TIMESPEC_TO_TIMEVAL(&tv[0], &fs->st_atimespec);
     TIMESPEC_TO_TIMEVAL(&tv[1], &fs->st_mtimespec);
@@ -839,14 +960,16 @@ static int setfile(const struct stat *fs, int fd)
         SLOG("utimes: %s", to.p_path);
         rval = 1;
     }
+
     if (fdval ? fstat(fd, &ts) :
-        (islink ? lstat(to.p_path, &ts) : stat(to.p_path, &ts)))
+            (islink ? lstat(to.p_path, &ts) : stat(to.p_path, &ts))) {
         gotstat = 0;
-    else {
+    } else {
         gotstat = 1;
         ts.st_mode &= S_ISUID | S_ISGID | S_ISVTX |
-            S_IRWXU | S_IRWXG | S_IRWXO;
+                      S_IRWXU | S_IRWXG | S_IRWXO;
     }
+
     /*
      * Changing the ownership probably won't succeed, unless we're root
      * or POSIX_CHOWN_RESTRICTED is not set.  Set uid/gid before setting
@@ -855,12 +978,13 @@ static int setfile(const struct stat *fs, int fd)
      */
     if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid)
         if (fdval ? fchown(fd, fs->st_uid, fs->st_gid) :
-            (islink ? lchown(to.p_path, fs->st_uid, fs->st_gid) :
-             chown(to.p_path, fs->st_uid, fs->st_gid))) {
+                (islink ? lchown(to.p_path, fs->st_uid, fs->st_gid) :
+                 chown(to.p_path, fs->st_uid, fs->st_gid))) {
             if (errno != EPERM) {
                 SLOG("chown: %s: %s", to.p_path, strerror(errno));
                 rval = 1;
             }
+
             mode &= ~(S_ISUID | S_ISGID);
         }
 
@@ -871,16 +995,17 @@ static int setfile(const struct stat *fs, int fd)
         }
 
 #ifdef HAVE_ST_FLAGS
+
     if (!gotstat || fs->st_flags != ts.st_flags)
         if (fdval ?
-            fchflags(fd, fs->st_flags) :
-            (islink ? lchflags(to.p_path, fs->st_flags) :
-             chflags(to.p_path, fs->st_flags))) {
+                fchflags(fd, fs->st_flags) :
+                (islink ? lchflags(to.p_path, fs->st_flags) :
+                 chflags(to.p_path, fs->st_flags))) {
             SLOG("chflags: %s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
-#endif
 
+#endif
     return rval;
 }
 
@@ -890,18 +1015,20 @@ static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
     acl_t acl;
     acl_type_t acl_type;
     int acl_supported = 0, ret, trivial;
-
     ret = fpathconf(source_fd, _PC_ACL_NFS4);
-    if (ret > 0 ) {
+
+    if (ret > 0) {
         acl_supported = 1;
         acl_type = ACL_TYPE_NFS4;
     } else if (ret < 0 && errno != EINVAL) {
         warn("fpathconf(..., _PC_ACL_NFS4) failed for %s", to.p_path);
         return 1;
     }
+
     if (acl_supported == 0) {
         ret = fpathconf(source_fd, _PC_ACL_EXTENDED);
-        if (ret > 0 ) {
+
+        if (ret > 0) {
             acl_supported = 1;
             acl_type = ACL_TYPE_ACCESS;
         } else if (ret < 0 && errno != EINVAL) {
@@ -910,35 +1037,43 @@ static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
             return 1;
         }
     }
-    if (acl_supported == 0)
+
+    if (acl_supported == 0) {
         return 0;
+    }
 
     acl = acl_get_fd_np(source_fd, acl_type);
+
     if (acl == NULL) {
         warn("failed to get acl entries while setting %s", to.p_path);
         return 1;
     }
+
     if (acl_is_trivial_np(acl, &trivial)) {
         warn("acl_is_trivial() failed for %s", to.p_path);
         acl_free(acl);
         return 1;
     }
+
     if (trivial) {
         acl_free(acl);
         return 0;
     }
+
     if (acl_set_fd_np(dest_fd, acl, acl_type) < 0) {
         warn("failed to set acl entries for %s", to.p_path);
         acl_free(acl);
         return 1;
     }
+
     acl_free(acl);
 #endif
     return 0;
 }
 
 #if 0
-static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest_dir)
+static int preserve_dir_acls(const struct stat *fs, char *source_dir,
+                             char *dest_dir)
 {
     acl_t (*aclgetf)(const char *, acl_type_t);
     int (*aclsetf)(const char *, acl_type_t, acl_t);
@@ -946,8 +1081,8 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
     acl_t acl;
     acl_type_t acl_type;
     int acl_supported = 0, ret, trivial;
-
     ret = pathconf(source_dir, _PC_ACL_NFS4);
+
     if (ret > 0) {
         acl_supported = 1;
         acl_type = ACL_TYPE_NFS4;
@@ -955,8 +1090,10 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
         warn("fpathconf(..., _PC_ACL_NFS4) failed for %s", source_dir);
         return 1;
     }
+
     if (acl_supported == 0) {
         ret = pathconf(source_dir, _PC_ACL_EXTENDED);
+
         if (ret > 0) {
             acl_supported = 1;
             acl_type = ACL_TYPE_ACCESS;
@@ -966,8 +1103,10 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
             return 1;
         }
     }
-    if (acl_supported == 0)
+
+    if (acl_supported == 0) {
         return 0;
+    }
 
     /*
      * If the file is a link we will not follow it
@@ -979,6 +1118,7 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
         aclgetf = acl_get_file;
         aclsetf = acl_set_file;
     }
+
     if (acl_type == ACL_TYPE_ACCESS) {
         /*
          * Even if there is no ACL_TYPE_DEFAULT entry here, a zero
@@ -986,12 +1126,15 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
          * check the pointer to see if the default ACL is present.
          */
         acl = aclgetf(source_dir, ACL_TYPE_DEFAULT);
+
         if (acl == NULL) {
             warn("failed to get default acl entries on %s",
                  source_dir);
             return 1;
         }
+
         aclp = &acl->ats_acl;
+
         if (aclp->acl_cnt != 0 && aclsetf(dest_dir,
                                           ACL_TYPE_DEFAULT, acl) < 0) {
             warn("failed to set default acl entries on %s",
@@ -999,27 +1142,34 @@ static int preserve_dir_acls(const struct stat *fs, char *source_dir, char *dest
             acl_free(acl);
             return 1;
         }
+
         acl_free(acl);
     }
+
     acl = aclgetf(source_dir, acl_type);
+
     if (acl == NULL) {
         warn("failed to get acl entries on %s", source_dir);
         return 1;
     }
+
     if (acl_is_trivial_np(acl, &trivial)) {
         warn("acl_is_trivial() failed on %s", source_dir);
         acl_free(acl);
         return 1;
     }
+
     if (trivial) {
         acl_free(acl);
         return 0;
     }
+
     if (aclsetf(dest_dir, acl_type, acl) < 0) {
         warn("failed to set acl entries on %s", dest_dir);
         acl_free(acl);
         return 1;
     }
+
     acl_free(acl);
     return 0;
 }

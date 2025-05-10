@@ -76,11 +76,12 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
     char *dname = NULL;
     struct stat st;
 
-    if (path == NULL || volpath == NULL)
+    if (path == NULL || volpath == NULL) {
         return NULL;
+    }
 
     EC_NEG1_LOG(cwd = open(".", O_RDONLY));
-    EC_ZERO( lstat(path, &st) );
+    EC_ZERO(lstat(path, &st));
 
     if (path[0] == '/') {
         EC_NULL(fpath = bfromcstr(path));
@@ -89,7 +90,8 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
         case S_IFREG:
         case S_IFLNK:
             EC_NULL_LOG(dname = strdup(path));
-            EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname, strerror(errno));
+            EC_ZERO_LOGSTR(chdir(dirname(dname)), "chdir(%s): %s", dirname,
+                           strerror(errno));
             free(dname);
             dname = NULL;
             EC_NULL(fpath = bfromcstr(getcwdpath()));
@@ -110,7 +112,6 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
     }
 
     BSTRING_STRIP_SLASH(fpath);
-
     /*
      * Now we have e.g.:
      *   fpath:   /Volume/netatalk/dir/bla
@@ -118,21 +119,32 @@ bstring rel_path_in_vol(const char *path, const char *volpath)
      * we want: "dir/bla"
      */
     int len = strlen(volpath);
-    if (volpath[len-1] != '/')
-        /* in case volpath has no trailing slash */
-        len ++;
-    EC_ZERO(bdelete(fpath, 0, len));
 
+    if (volpath[len - 1] != '/')
+        /* in case volpath has no trailing slash */
+    {
+        len ++;
+    }
+
+    EC_ZERO(bdelete(fpath, 0, len));
 EC_CLEANUP:
-    if (dname) free(dname);
+
+    if (dname) {
+        free(dname);
+    }
+
     if (cwd != -1) {
         if (fchdir(cwd) < 0) {
             LOG(log_error, logtype_default, "Can't fchdir(%d): %s", cwd, strerror(errno));
         }
+
         close(cwd);
     }
-    if (ret != 0)
+
+    if (ret != 0) {
         return NULL;
+    }
+
     return fpath;
 }
 
@@ -161,25 +173,21 @@ cnid_t cnid_for_path(struct _cnid_db *cdb,
                      cnid_t *did)
 {
     EC_INIT;
-
     cnid_t cnid;
     bstring rpath = NULL;
     bstring statpath = NULL;
     struct bstrList *l = NULL;
     struct stat st;
-
     cnid = htonl(2);
-
     EC_NULL(rpath = rel_path_in_vol(path, volpath));
     EC_NULL(statpath = bfromcstr(volpath));
     EC_ZERO(bcatcstr(statpath, "/"));
-
     l = bsplit(rpath, '/');
+
     for (int i = 0; i < l->qty ; i++) {
         *did = cnid;
-
-        EC_ZERO( bconcat(statpath, l->entry[i]) );
-        EC_ZERO( lstat(cfrombstr(statpath), &st) );
+        EC_ZERO(bconcat(statpath, l->entry[i]));
+        EC_ZERO(lstat(cfrombstr(statpath), &st));
 
         if ((cnid = cnid_add(cdb,
                              &st,
@@ -189,6 +197,7 @@ cnid_t cnid_for_path(struct _cnid_db *cdb,
                              0)) == CNID_INVALID) {
             EC_FAIL;
         }
+
         EC_ZERO(bcatcstr(statpath, "/"));
     }
 
@@ -196,8 +205,10 @@ EC_CLEANUP:
     bdestroy(rpath);
     bstrListDestroy(l);
     bdestroy(statpath);
-    if (ret != 0)
+
+    if (ret != 0) {
         return CNID_INVALID;
+    }
 
     return cnid;
 }

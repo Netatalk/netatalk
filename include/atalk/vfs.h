@@ -96,30 +96,30 @@
 struct vol;
 
 struct vfs_ops {
-    int (*vfs_validupath)    (VFS_FUNC_ARGS_VALIDUPATH);
-    int (*vfs_chown)         (VFS_FUNC_ARGS_CHOWN);
-    int (*vfs_renamedir)     (VFS_FUNC_ARGS_RENAMEDIR);
-    int (*vfs_deletecurdir)  (VFS_FUNC_ARGS_DELETECURDIR);
-    int (*vfs_setfilmode)    (VFS_FUNC_ARGS_SETFILEMODE);
-    int (*vfs_setdirmode)    (VFS_FUNC_ARGS_SETDIRMODE);
+    int (*vfs_validupath)(VFS_FUNC_ARGS_VALIDUPATH);
+    int (*vfs_chown)(VFS_FUNC_ARGS_CHOWN);
+    int (*vfs_renamedir)(VFS_FUNC_ARGS_RENAMEDIR);
+    int (*vfs_deletecurdir)(VFS_FUNC_ARGS_DELETECURDIR);
+    int (*vfs_setfilmode)(VFS_FUNC_ARGS_SETFILEMODE);
+    int (*vfs_setdirmode)(VFS_FUNC_ARGS_SETDIRMODE);
     int (*vfs_setdirunixmode)(VFS_FUNC_ARGS_SETDIRUNIXMODE);
-    int (*vfs_setdirowner)   (VFS_FUNC_ARGS_SETDIROWNER);
-    int (*vfs_deletefile)    (VFS_FUNC_ARGS_DELETEFILE);
-    int (*vfs_renamefile)    (VFS_FUNC_ARGS_RENAMEFILE);
-    int (*vfs_copyfile)      (VFS_FUNC_ARGS_COPYFILE);
+    int (*vfs_setdirowner)(VFS_FUNC_ARGS_SETDIROWNER);
+    int (*vfs_deletefile)(VFS_FUNC_ARGS_DELETEFILE);
+    int (*vfs_renamefile)(VFS_FUNC_ARGS_RENAMEFILE);
+    int (*vfs_copyfile)(VFS_FUNC_ARGS_COPYFILE);
 
 #ifdef HAVE_ACLS
     /* ACLs */
-    int (*vfs_acl)           (VFS_FUNC_ARGS_ACL);
-    int (*vfs_remove_acl)    (VFS_FUNC_ARGS_REMOVE_ACL);
+    int (*vfs_acl)(VFS_FUNC_ARGS_ACL);
+    int (*vfs_remove_acl)(VFS_FUNC_ARGS_REMOVE_ACL);
 #endif
 
     /* Extended Attributes */
-    int (*vfs_ea_getsize)    (VFS_FUNC_ARGS_EA_GETSIZE);
-    int (*vfs_ea_getcontent) (VFS_FUNC_ARGS_EA_GETCONTENT);
-    int (*vfs_ea_list)       (VFS_FUNC_ARGS_EA_LIST);
-    int (*vfs_ea_set)        (VFS_FUNC_ARGS_EA_SET);
-    int (*vfs_ea_remove)     (VFS_FUNC_ARGS_EA_REMOVE);
+    int (*vfs_ea_getsize)(VFS_FUNC_ARGS_EA_GETSIZE);
+    int (*vfs_ea_getcontent)(VFS_FUNC_ARGS_EA_GETCONTENT);
+    int (*vfs_ea_list)(VFS_FUNC_ARGS_EA_LIST);
+    int (*vfs_ea_set)(VFS_FUNC_ARGS_EA_SET);
+    int (*vfs_ea_remove)(VFS_FUNC_ARGS_EA_REMOVE);
 };
 
 extern void initvol_vfs(struct vol * restrict vol);

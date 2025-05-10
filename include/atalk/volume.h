@@ -51,8 +51,10 @@ struct vol {
     char            v_stamp[ADEDLEN_PRIVSYN];
     VolSpace        v_limitsize; /* Size limit, if any, in MiB */
     mode_t          v_umask;
-    mode_t          v_dperm; /* default directories permission value OR with requested perm*/
-    mode_t          v_fperm; /* default files permission value OR with requested perm*/
+    mode_t
+    v_dperm; /* default directories permission value OR with requested perm*/
+    mode_t
+    v_fperm; /* default files permission value OR with requested perm*/
     ucs2_t          *v_u8mname;     /* converted to utf8-mac in ucs2 */
     ucs2_t          *v_macname;     /* mangled to legacy longname in ucs2 */
     ucs2_t          *v_name;        /* either v_u8mname or v_macname */
@@ -71,13 +73,15 @@ struct vol {
     void            *v_nfsclient;
     int             v_nfs;
     VolSpace        v_tm_used;  /* used bytes on a TM volume */
-    time_t          v_tm_cachetime; /* time at which v_tm_used was calculated last */
+    time_t
+    v_tm_cachetime; /* time at which v_tm_used was calculated last */
     VolSpace        v_appended; /* amount of data appended to files */
 
     /* only when opening/closing volumes or in error */
     int             v_casefold;
     char            *v_configname;   /* as defined in afpc.conf */
-    char            *v_localname;    /* as defined in afp.conf but with vars expanded */
+    char
+    *v_localname;    /* as defined in afp.conf but with vars expanded */
     char            *v_volcodepage;
     char            *v_maccodepage;
     char            *v_password;
@@ -87,7 +91,8 @@ struct vol {
     char            *v_cnidport;
 #if 0
     int             v_hide;       /* new volume wait until old volume is closed */
-    int             v_new;        /* volume deleted but there's a new one with the same name */
+    int
+    v_new;        /* volume deleted but there's a new one with the same name */
 #endif
     int             v_deleted;    /* volume open but deleted in new config file */
 #if 0

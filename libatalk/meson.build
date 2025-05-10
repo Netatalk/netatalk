@@ -67,7 +67,9 @@ if host_os == 'linux' and get_option('with-install-hooks')
         if run_command(ldconfig, '-N', '-X', check: false).returncode() == 0
             meson.add_install_script(ldconfig, '-v', skip_if_destdir: true)
         else
-            warning('You may have to run ldconfig manually for netatalk to find the libatalk shared library.')
+            warning(
+                'You may have to run ldconfig manually for netatalk to find the libatalk shared library.',
+            )
         endif
     endif
- endif
+endif

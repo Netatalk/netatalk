@@ -1,0 +1,16 @@
+# Run `astyle -h' for an explanation of these options
+--style=1tbs
+--indent=spaces=4
+--align-pointer=name
+--pad-oper
+--pad-comma
+--align-reference=name
+--unpad-paren
+--pad-header
+--break-blocks
+--delete-empty-lines
+--max-code-length=80
+--exclude=build
+--exclude=builddir
+--ignore-exclude-errors
+--suffix=none

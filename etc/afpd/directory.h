@@ -82,53 +82,74 @@ extern q_t *invalid_dircache_entries;
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
 extern void        dir_free_invalid_q(void);
-extern struct dir  *dir_new(const char *mname, const char *uname, const struct vol *,
+extern struct dir  *dir_new(const char *mname, const char *uname,
+                            const struct vol *,
                             cnid_t pdid, cnid_t did, bstring fullpath, struct stat *);
-extern void        dir_free (struct dir *);
-extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *, int);
-extern int         dir_modify(const struct vol *vol, struct dir *dir, cnid_t pdid, cnid_t did,
+extern void        dir_free(struct dir *);
+extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
+                            int);
+extern int         dir_modify(const struct vol *vol, struct dir *dir,
+                              cnid_t pdid, cnid_t did,
                               const char *new_mname, const char *new_uname, bstring pdir_fullpath);
 extern int         dir_remove(const struct vol *vol, struct dir *dir);
-extern struct dir  *dirlookup (const struct vol *, cnid_t);
+extern struct dir  *dirlookup(const struct vol *, cnid_t);
 extern struct dir *dirlookup_bypath(const struct vol *vol, const char *path);
 
-extern int         movecwd (const struct vol *, struct dir *);
-extern struct path *cname (struct vol *, struct dir *, char **);
+extern int         movecwd(const struct vol *, struct dir *);
+extern struct path *cname(struct vol *, struct dir *, char **);
 
-extern int         deletecurdir (struct vol *);
-extern mode_t      mtoumode (struct maccess *);
-extern int         getdirparams (const AFPObj *obj, const struct vol *, uint16_t, struct path *,
-                                 struct dir *, char *, size_t *);
+extern int         deletecurdir(struct vol *);
+extern mode_t      mtoumode(struct maccess *);
+extern int         getdirparams(const AFPObj *obj, const struct vol *, uint16_t,
+                                struct path *,
+                                struct dir *, char *, size_t *);
 
 extern int         setdirparams(struct vol *, struct path *, uint16_t, char *);
-extern int         renamedir(struct vol *, int, char *, char *, struct dir *, char *);
+extern int         renamedir(struct vol *, int, char *, char *, struct dir *,
+                             char *);
 extern int         path_error(struct path *, int error);
-extern void        setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count);
+extern void        setdiroffcnt(struct dir *dir, struct stat *st,
+                                uint32_t count);
 extern int         dirreenumerate(struct dir *dir, struct stat *st);
-extern int         for_each_dirent(const struct vol *, char *, dir_loop , void *);
-extern int         check_access(const AFPObj *obj, struct vol *, char *name , int mode);
-extern int         file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode);
-extern int         netatalk_unlink (const char *name);
+extern int         for_each_dirent(const struct vol *, char *, dir_loop,
+                                   void *);
+extern int         check_access(const AFPObj *obj, struct vol *, char *name,
+                                int mode);
+extern int         file_access(const AFPObj *obj, struct vol *vol,
+                               struct path *path, int mode);
+extern int         netatalk_unlink(const char *name);
 
 /* from enumerate.c */
-extern char        *check_dirent (const struct vol *, char *);
+extern char        *check_dirent(const struct vol *, char *);
 
 /* FP functions */
-int afp_createdir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_opendir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_setdirparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_closedir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_mapid (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_mapname (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_syncdir (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_opendir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
+int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                     size_t *rbuflen);
+int afp_closedir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
+int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen);
+int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
+int afp_syncdir(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                size_t *rbuflen);
 
 /* from enumerate.c */
-int afp_enumerate (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_enumerate_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_enumerate_ext2 (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                      size_t *rbuflen);
+int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                       size_t *rbuflen);
 
 /* from catsearch.c */
-int afp_catsearch (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_catsearch_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                      size_t *rbuflen);
 
 #endif

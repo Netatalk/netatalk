@@ -48,11 +48,11 @@ typedef struct ASP {
     uint8_t	        asp_wss;
     uint8_t            asp_sid;
     union {
-	struct {
-	    char			*as_status;
-	    int				as_slen;
-	}			asu_status;
-	uint16_t		asu_seq;
+        struct {
+            char			*as_status;
+            int				as_slen;
+        }			asu_status;
+        uint16_t		asu_seq;
     }			asp_u;
 #define asp_status	asp_u.asu_status.as_status
 #define asp_slen	asp_u.asu_status.as_slen

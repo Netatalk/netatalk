@@ -31,11 +31,11 @@ struct at_ifaddr {
 
 #ifdef BSD4_4
 struct at_aliasreq {
-	char	ifra_name[IFNAMSIZ];		/* if name, e.g. "en0" */
-	struct	sockaddr_at ifra_addr;
-	struct	sockaddr_at ifra_broadaddr;
+    char	ifra_name[IFNAMSIZ];		/* if name, e.g. "en0" */
+    struct	sockaddr_at ifra_addr;
+    struct	sockaddr_at ifra_broadaddr;
 #define ifra_dstaddr ifra_broadaddr
-	struct	sockaddr_at ifra_mask;
+    struct	sockaddr_at ifra_mask;
 };
 #endif /* BSD4_4 */
 

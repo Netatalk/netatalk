@@ -34,16 +34,17 @@
 /* AFPSTATUS_MACHLEN is the number of characters for the MachineType. */
 #define AFPSTATUS_MACHLEN     16
 
-extern void status_versions (char * /*status*/,
+extern void status_versions(char * /*status*/,
 #ifndef NO_DDP
-	                         const ASP,
+                            const ASP,
 #endif
-	                         const DSI *);
-extern void status_uams (char * /*status*/, const char * /*authlist*/);
-extern void status_init (AFPObj *, AFPObj *, DSI *dsi);
+                            const DSI *);
+extern void status_uams(char * /*status*/, const char * /*authlist*/);
+extern void status_init(AFPObj *, AFPObj *, DSI *dsi);
 extern void set_signature(struct afp_options *);
 
 /* FP functions */
-int afp_getsrvrinfo (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_getsrvrinfo(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                    size_t *rbuflen);
 
 #endif

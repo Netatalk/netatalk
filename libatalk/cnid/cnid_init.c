@@ -49,11 +49,9 @@ void cnid_init(void)
 #ifdef CNID_BACKEND_LAST
     cnid_register(&cnid_last_module);
 #endif
-
 #ifdef CNID_BACKEND_DBD
     cnid_register(&cnid_dbd_module);
 #endif
-
 #ifdef CNID_BACKEND_MYSQL
     cnid_register(&cnid_mysql_module);
 #endif

@@ -39,12 +39,12 @@
 struct nbphdr {
 #if BYTE_ORDER == BIG_ENDIAN
     uint32_t	nh_op : 4,
-    		nh_cnt : 4,
+                nh_cnt : 4,
 #else /* BYTE_ORDER != BIG_ENDIAN */
     uint32_t	nh_cnt : 4,
-    		nh_op : 4,
+                nh_op : 4,
 #endif /* BYTE_ORDER */
-    		nh_id : 8;
+                nh_id : 8;
 };
 
 #define SZ_NBPHDR	2
@@ -93,14 +93,14 @@ struct nbpnve {
 #define NBPMATCH_NOGLOB	(1<<1)
 #define NBPMATCH_NOZONE	(1<<2)
 
-extern int nbp_name (const char *, char **, char **, char **);
-extern int nbp_lookup (const char *, const char *, const char *,
-			   struct nbpnve *, const int,
-			   const struct at_addr *);
-extern int nbp_rgstr (struct sockaddr_at *,
-			  const char *, const char *, const char *);
-extern int nbp_unrgstr (const char *, const char *, const char *,
-			    const struct at_addr *);
+extern int nbp_name(const char *, char **, char **, char **);
+extern int nbp_lookup(const char *, const char *, const char *,
+                      struct nbpnve *, const int,
+                      const struct at_addr *);
+extern int nbp_rgstr(struct sockaddr_at *,
+                     const char *, const char *, const char *);
+extern int nbp_unrgstr(const char *, const char *, const char *,
+                       const struct at_addr *);
 
 #endif  /* NO_DDP */
 #endif

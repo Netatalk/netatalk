@@ -57,7 +57,8 @@ static char           *netatalk_dirs[] = {
 };
 
 /* Forward declarations */
-static int rm(const char *fpath, const struct stat *sb, int tflag, struct FTW *ftwbuf);
+static int rm(const char *fpath, const struct stat *sb, int tflag,
+              struct FTW *ftwbuf);
 
 /*
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
@@ -68,9 +69,11 @@ static const char *check_netatalk_dirs(const char *name)
     const int max_dirs = 2;
 
     for (int c = 0; c < max_dirs && netatalk_dirs[c]; c++) {
-        if ((strcmp(name, netatalk_dirs[c])) == 0)
+        if ((strcmp(name, netatalk_dirs[c])) == 0) {
             return netatalk_dirs[c];
+        }
     }
+
     return NULL;
 }
 
@@ -93,28 +96,33 @@ static void sig_handler(int signo _U_)
 static void set_signal(void)
 {
     struct sigaction sv;
-
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
     sigemptyset(&sv.sa_mask);
-    if (sigaction(SIGTERM, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
 
-    if (sigaction(SIGINT, &sv, NULL) < 0)
+    if (sigaction(SIGTERM, &sv, NULL) < 0) {
+        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
+    }
+
+    if (sigaction(SIGINT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGINT): %s", strerror(errno));
+    }
 
     memset(&sv, 0, sizeof(struct sigaction));
     sv.sa_handler = SIG_IGN;
     sigemptyset(&sv.sa_mask);
 
-    if (sigaction(SIGABRT, &sv, NULL) < 0)
+    if (sigaction(SIGABRT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
+    }
 
-    if (sigaction(SIGHUP, &sv, NULL) < 0)
+    if (sigaction(SIGHUP, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
+    }
 
-    if (sigaction(SIGQUIT, &sv, NULL) < 0)
+    if (sigaction(SIGQUIT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
+    }
 }
 
 static void usage_rm(void)
@@ -128,14 +136,13 @@ static void usage_rm(void)
         "The options are as follows:\n\n"
         "   -R   Attempt to remove the file hierarchy rooted in each file argument.\n"
         "   -v   Be verbose when deleting files, showing them as they are removed.\n"
-        );
+    );
     exit(EXIT_FAILURE);
 }
 
 int ad_rm(int argc, char *argv[], AFPObj *obj)
 {
     int ch;
-
     pdid = htonl(1);
     did = htonl(2);
 
@@ -144,22 +151,25 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
         case 'R':
             Rflag = 1;
             break;
+
         case 'v':
             vflag = 1;
             break;
+
         default:
             usage_rm();
             break;
         }
+
     argc -= optind;
     argv += optind;
 
-    if (argc < 1)
+    if (argc < 1) {
         usage_rm();
+    }
 
     set_signal();
     cnid_init();
-
     /* Set end of argument list */
     argv[argc] = NULL;
 
@@ -173,9 +183,11 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
             } else {
                 SLOG("Error: %s", argv[i]);
             }
+
             closevol(&volume);
         }
     }
+
     return rval;
 }
 
@@ -186,35 +198,44 @@ static int rm(const char *path,
 {
     cnid_t cnid;
 
-    if (alarmed)
+    if (alarmed) {
         return -1;
+    }
 
     const char *dir = strrchr(path, '/');
-    if (dir == NULL)
+
+    if (dir == NULL) {
         dir = path;
-    else
+    } else {
         dir++;
-    if (check_netatalk_dirs(dir) != NULL)
+    }
+
+    if (check_netatalk_dirs(dir) != NULL) {
         return FTW_SKIP_SUBTREE;
+    }
 
     switch (statp->st_mode & S_IFMT) {
-
     case S_IFLNK:
         if (volume.vol->v_path) {
             if ((volume.vol->v_adouble == AD_VERSION2)
-                && (strstr(path, ".AppleDouble") != NULL)) {
+                    && (strstr(path, ".AppleDouble") != NULL)) {
                 /* symlink inside adouble dir */
-                if (unlink(path) != 0)
+                if (unlink(path) != 0) {
                     badrm = rval = 1;
+                }
+
                 break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
-            if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path, &did)) == CNID_INVALID) {
+
+            if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
+                                      &did)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", path);
                 return -1;
             }
+
             if (cnid_delete(volume.vol->v_cdb, cnid) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
@@ -236,21 +257,24 @@ static int rm(const char *path,
 
         if (volume.vol->v_path) {
             if ((volume.vol->v_adouble == AD_VERSION2)
-                && (strstr(path, ".AppleDouble") != NULL)) {
+                    && (strstr(path, ".AppleDouble") != NULL)) {
                 /* should be adouble dir itself */
                 if (rmdir(path) != 0) {
                     SLOG("Error removing dir \"%s\": %s", path, strerror(errno));
                     badrm = rval = 1;
                     return -1;
                 }
+
                 break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
-            if ((did = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path, &pdid)) == CNID_INVALID) {
+            if ((did = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
+                                     &pdid)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", path);
                 return -1;
             }
+
             if (cnid_delete(volume.vol->v_cdb, did) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(did), path);
                 return -1;
@@ -284,19 +308,24 @@ static int rm(const char *path,
     default:
         if (volume.vol->v_path) {
             if ((volume.vol->v_adouble == AD_VERSION2)
-                && (strstr(path, ".AppleDouble") != NULL)) {
+                    && (strstr(path, ".AppleDouble") != NULL)) {
                 /* file in adouble dir */
-                if (unlink(path) != 0)
+                if (unlink(path) != 0) {
                     badrm = rval = 1;
+                }
+
                 break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
             pdid = did;
-            if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path, &did)) == CNID_INVALID) {
+
+            if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
+                                      &did)) == CNID_INVALID) {
                 SLOG("Error resolving CNID for %s", path);
                 return -1;
             }
+
             if (cnid_delete(volume.vol->v_cdb, cnid) != 0) {
                 SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
@@ -314,8 +343,9 @@ static int rm(const char *path,
         break;
     }
 
-    if (vflag && !badrm)
+    if (vflag && !badrm) {
         (void)printf("%s\n", path);
+    }
 
     return 0;
 }

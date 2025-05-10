@@ -32,8 +32,8 @@ extern AFPCmd	postauth_switch[];
 #define UAM_AFPSERVER_PREAUTH  (0)
 #define UAM_AFPSERVER_POSTAUTH (1 << 0)
 
-extern int uam_afpserver_action (const int /*id*/, const int /*switch*/,
-				     AFPCmd new_table, AFPCmd *old);
+extern int uam_afpserver_action(const int /*id*/, const int /*switch*/,
+                                AFPCmd new_table, AFPCmd *old);
 
 
 #endif

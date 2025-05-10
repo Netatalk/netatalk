@@ -331,18 +331,18 @@ endif
 compiler_64_bit_mode = false
 file = find_program('file', required: false)
 if file.found()
-  run_command(
-      cc,
-      '-c', meson.project_source_root() / 'libatalk/dummy.c',
-      '-o', meson.global_build_root() / 'dummy.o',
-      check: false,
-  )
+    run_command(
+        cc,
+        '-c', meson.project_source_root() / 'libatalk/dummy.c',
+        '-o', meson.global_build_root() / 'dummy.o',
+        check: false,
+    )
 
-  compiler_64_bit_mode = run_command(
-      file,
-      meson.global_build_root() / 'dummy.o',
-      check: true,
-  ).stdout().strip().contains('ELF 64')
+    compiler_64_bit_mode = run_command(
+        file,
+        meson.global_build_root() / 'dummy.o',
+        check: true,
+    ).stdout().strip().contains('ELF 64')
 endif
 
 #
@@ -375,7 +375,7 @@ bdb_version = ''
 bdb_dirs = []
 
 if bdb_path != ''
-    bdb_dirs += [ bdb_path ]
+    bdb_dirs += [bdb_path]
 else
     if brew_prefix != ''
         bdb_dirs += [
@@ -442,7 +442,10 @@ foreach dir : bdb_dirs
                 check: false,
             )
             if grep_result.returncode() != 0
-                warning('Unable to determine Berkeley DB major version from header', bdb_header)
+                warning(
+                    'Unable to determine Berkeley DB major version from header',
+                    bdb_header,
+                )
                 continue
             endif
             bdb_major_version = grep_result.stdout().strip().substring(25)
@@ -454,7 +457,10 @@ foreach dir : bdb_dirs
                 check: false,
             )
             if grep_result.returncode() != 0
-                warning('Unable to determine Berkeley DB minor version from header', bdb_header)
+                warning(
+                    'Unable to determine Berkeley DB minor version from header',
+                    bdb_header,
+                )
                 continue
             endif
             bdb_minor_version = grep_result.stdout().strip().substring(25)
@@ -481,10 +487,10 @@ foreach dir : bdb_dirs
             # Guess lib name starting from more specific ones
             bdb_libnames = [
                 'db-' + bdb_major_version + '.' + bdb_minor_version,
-                'db'  + bdb_major_version + '.' + bdb_minor_version,
-                'db'  + bdb_major_version + bdb_minor_version,
+                'db' + bdb_major_version + '.' + bdb_minor_version,
+                'db' + bdb_major_version + bdb_minor_version,
                 'db-' + bdb_major_version,
-                'db'  + bdb_major_version,
+                'db' + bdb_major_version,
                 'db',
             ]
 
@@ -517,7 +523,10 @@ if not have_bdb
     else
         msg = 'Berkeley DB library required but not found!'
     endif
-    error(msg, 'Please specify an installation path using the -Dwith-bdb-path= configure option (must include lib and include dirs)')
+    error(
+        msg,
+        'Please specify an installation path using the -Dwith-bdb-path= configure option (must include lib and include dirs)',
+    )
 endif
 
 #
@@ -714,7 +723,7 @@ else
             header,
             include_directories: include_directories(
                 [kerberos_path / 'include', header_dir],
-            )
+            ),
         )
             cdata.set('HAVE_' + header.underscorify().to_upper(), 1)
             break
@@ -841,11 +850,7 @@ if get_option('with-spotlight')
 
     # Check for SPARQL
 
-    sparql_versions = [
-        'tracker-sparql-3.0',
-        'tracker-sparql-2.0',
-        'tracker-sparql-1.0'
-    ]
+    sparql_versions = ['tracker-sparql-3.0', 'tracker-sparql-2.0', 'tracker-sparql-1.0']
 
     foreach sparql_version : sparql_versions
         sparql = dependency(sparql_version, required: false)
@@ -855,7 +860,9 @@ if get_option('with-spotlight')
     endforeach
 
     if not sparql.found()
-        warning('Tracker SPARQL or TinySPARQL not found (required for Spotlight support)')
+        warning(
+            'Tracker SPARQL or TinySPARQL not found (required for Spotlight support)',
+        )
     else
         sparql_prefix = sparql.get_variable(pkgconfig: 'prefix')
 
@@ -910,7 +917,9 @@ if get_option('with-spotlight')
         if indexer_found
             cdata.set('INDEXER_COMMAND', '"' + indexer_command + '"')
         else
-            warning('Tracker or LocalSearch not found (required for Spotlight support)')
+            warning(
+                'Tracker or LocalSearch not found (required for Spotlight support)',
+            )
         endif
         if not talloc.found()
             warning(
@@ -959,7 +968,9 @@ if get_option('with-cups') and get_option('with-appletalk')
         ).stdout().strip()
         cdata.set('CUPS_API_VERSION', '"' + cups_api_version + '"')
     else
-        warning('CUPS not found, you might need to specify the path to cups-config')
+        warning(
+            'CUPS not found, you might need to specify the path to cups-config',
+        )
     endif
 else
     have_cups = false
@@ -975,7 +986,9 @@ enable_quota = get_option('with-quota')
 if host_os == 'netbsd'
     enable_quota = false
     cdata.set('NO_QUOTA_SUPPORT', 1)
-    warning('quota is broken on NetBSD, see https://github.com/Netatalk/netatalk/issues/1225')
+    warning(
+        'quota is broken on NetBSD, see https://github.com/Netatalk/netatalk/issues/1225',
+    )
 endif
 
 prop = cc.find_library('prop', required: false)
@@ -1002,12 +1015,12 @@ elif quota.found() and cc.has_function('quota_open')
     have_quota = true
     quota_provider += 'libquota'
     cdata.set('HAVE_LIBQUOTA', 1)
-#elif quota.found() and cc.has_function('quota_open', dependencies: [quota, prop])
-#    have_libquota = true
-#    have_quota = true
-#    quota_provider += 'libquota'
-#    quota_deps += [quota, prop]
-#    cdata.set('HAVE_LIBQUOTA', 1)
+    #elif quota.found() and cc.has_function('quota_open', dependencies: [quota, prop])
+    #    have_libquota = true
+    #    have_quota = true
+    #    quota_provider += 'libquota'
+    #    quota_deps += [quota, prop]
+    #    cdata.set('HAVE_LIBQUOTA', 1)
 elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
     cdata.set('NEED_RQUOTA', 1)
     quota_deps += tirpc
@@ -1022,7 +1035,7 @@ elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
         }
         ''',
         dependencies: tirpc,
-        )
+    )
         cdata.set('HAVE_RQUOTA_H_QR_STATUS', 1)
     endif
     have_quota = true
@@ -1146,7 +1159,6 @@ endif
 #
 
 enable_afpstats = get_option('with-afpstats')
-
 
 dbus = dependency('dbus-1', required: false)
 glib = dependency('glib-2.0', required: false)
@@ -1418,8 +1430,8 @@ else
         endif
 
         if meson.can_run_host_binaries()
-                if cc.run(
-                    '''
+            if cc.run(
+                '''
                 #include <iconv.h>
                 int main(void) {
                     iconv_t cd = iconv_open("ASCII", "UCS-2-INTERNAL");
@@ -1427,9 +1439,9 @@ else
                     return 0;
                 }
                 ''',
-                ).returncode() == 0
-                    cdata.set('HAVE_UCS2INTERNAL', 1)
-                endif
+            ).returncode() == 0
+                cdata.set('HAVE_UCS2INTERNAL', 1)
+            endif
         endif
     else
         have_iconv = false
@@ -1702,16 +1714,13 @@ endif
 
 cdata.set(
     'PATH_ATALKD_LOCK',
-    '"' + lockfile_path + '/atalkd' + lockfile_suffix + '"'
+    '"' + lockfile_path + '/atalkd' + lockfile_suffix + '"',
 )
 cdata.set(
     'PATH_NETATALK_LOCK',
-    '"' + lockfile_path + '/netatalk' + lockfile_suffix + '"'
+    '"' + lockfile_path + '/netatalk' + lockfile_suffix + '"',
 )
-cdata.set(
-    'PATH_PAPD_LOCK',
-    '"' + lockfile_path + '/papd' + lockfile_suffix + '"'
-)
+cdata.set('PATH_PAPD_LOCK', '"' + lockfile_path + '/papd' + lockfile_suffix + '"')
 
 #
 # Check for largefle support
@@ -1933,7 +1942,7 @@ int main(void) {
     # *BSD have tcpwrappers support in libc
     have_tcpwrap = wrap.found() and cc.links(tcpwrap_code)
     if not have_tcpwrap
-	have_tcpwrap = wrap.found() and cc.links(tcpwrap_code, args: '-lwrap')
+        have_tcpwrap = wrap.found() and cc.links(tcpwrap_code, args: '-lwrap')
     endif
     if not have_tcpwrap
         have_tcpwrap = cc.links(tcpwrap_code, args: ['-lwrap', '-lnsl'])
@@ -1985,7 +1994,9 @@ if with_webmin
         endif
     endforeach
     if not install_webmin
-        warning('Webmin module will be generated but not installed, because Webmin could not be found')
+        warning(
+            'Webmin module will be generated but not installed, because Webmin could not be found',
+        )
     endif
 endif
 
@@ -1996,11 +2007,11 @@ endif
 cdata.set('OPEN_NOFOLLOW_ERRNO', 'ELOOP')
 use_glibc_at_header = false
 
-if host_os.contains('freebsd')
+if host_os == 'freebsd'
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
-elif host_os.contains('linux')
+elif host_os == 'linux'
     use_glibc_at_header = cc.has_header('netatalk/at.h')
     cdata.set('_GNU_SOURCE', 1)
     if cc.compiles(
@@ -2022,19 +2033,19 @@ int main (void){
     endif
     cdata.set('HAVE_BROKEN_DBTOB', 1)
     cdata.set('LINUX', 1)
-elif host_os.contains('netbsd')
+elif host_os == 'netbsd'
     cdata.set('BSD4_4', 1)
     cdata.set('NETBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EFTYPE')
-elif host_os.contains('openbsd')
+elif host_os == 'openbsd'
     cdata.set('BSD4_4', 1)
-elif host_os.contains('sunos')
+elif host_os == 'sunos'
     cdata.set('__EXTENSIONS__', 1)
     cdata.set('__svr4__', 1)
     cdata.set('_ISOC9X_SOURCE', 1)
     cdata.set('_XOPEN_SOURCE', 600)
     cdata.set('SOLARIS', 1)
-elif host_os.contains('darwin')
+elif host_os == 'darwin'
     cdata.set('HAVE_BROKEN_DBTOB', 1)
 endif
 

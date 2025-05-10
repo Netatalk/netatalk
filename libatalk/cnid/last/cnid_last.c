@@ -23,10 +23,8 @@
 cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
                      cnid_t did _U_, const char *name _U_, size_t len _U_, cnid_t hint _U_)
 {
-
     /* FIXME: it relies on fact, that this is never called twice for the same file/dir. */
     /* Propably we should look through DID tree. */
-
     /*
      * First thing:  DID and FNUMs are
      * in the same space for purposes of enumerate (and several
@@ -50,18 +48,19 @@ cnid_t cnid_last_add(struct _cnid_db *cdb, const struct stat *st,
      *
      * it should be okay to use lstat to deal with symlinks.
      */
-
     struct _cnid_last_private *priv;
 
-    if (!cdb || !(cdb->cnid_db_private))
+    if (!cdb || !(cdb->cnid_db_private)) {
         return CNID_INVALID;
+    }
 
-    priv = (struct _cnid_last_private *) (cdb->cnid_db_private);
+    priv = (struct _cnid_last_private *)(cdb->cnid_db_private);
 
-    if (S_ISDIR(st->st_mode))
+    if (S_ISDIR(st->st_mode)) {
         return htonl(priv->last_did++);
-    else
+    } else {
         return htonl((st->st_dev << 16) | (st->st_ino & 0x0000ffff));
+    }
 }
 
 
@@ -81,7 +80,8 @@ int cnid_last_delete(struct _cnid_db *cdb _U_, const cnid_t id _U_)
 
 
 /* Return CNID for a given did/name. */
-cnid_t cnid_last_get(struct _cnid_db *cdb _U_, cnid_t did _U_, const char *name _U_, size_t len _U_)
+cnid_t cnid_last_get(struct _cnid_db *cdb _U_, cnid_t did _U_,
+                     const char *name _U_, size_t len _U_)
 {
     /* FIXME: it relies on fact, that this is never called twice for the same file/dir. */
     /* Propably we should look through DID tree. */
@@ -90,7 +90,8 @@ cnid_t cnid_last_get(struct _cnid_db *cdb _U_, cnid_t did _U_, const char *name 
 
 
 /* */
-cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_, cnid_t did _U_,
+cnid_t cnid_last_lookup(struct _cnid_db *cdb _U_, const struct stat *st _U_,
+                        cnid_t did _U_,
                         const char *name _U_, size_t len _U_)
 {
     /* FIXME: this function doesn't work in [last] scheme ! */
@@ -104,18 +105,19 @@ static struct _cnid_db *cnid_last_new(struct vol *vol _U_)
     struct _cnid_db *cdb;
     struct _cnid_last_private *priv;
 
-    if ((cdb = (struct _cnid_db *) calloc(1, sizeof(struct _cnid_db))) == NULL)
+    if ((cdb = (struct _cnid_db *) calloc(1, sizeof(struct _cnid_db))) == NULL) {
         return NULL;
+    }
 
-    if ((cdb->cnid_db_private = calloc(1, sizeof(struct _cnid_last_private))) == NULL) {
+    if ((cdb->cnid_db_private = calloc(1,
+                                       sizeof(struct _cnid_last_private))) == NULL) {
         free(cdb);
         return NULL;
     }
 
     /* Set up private state */
-    priv = (struct _cnid_last_private *) (cdb->cnid_db_private);
+    priv = (struct _cnid_last_private *)(cdb->cnid_db_private);
     priv->last_did = 17;
-
     /* Set up standard fields */
     cdb->cnid_db_flags = 0;
     cdb->cnid_add = cnid_last_add;
@@ -127,7 +129,6 @@ static struct _cnid_db *cnid_last_new(struct vol *vol _U_)
     cdb->cnid_update = cnid_last_update;
     cdb->cnid_close = cnid_last_close;
     cdb->cnid_wipe = NULL;
-
     return cdb;
 }
 
@@ -136,7 +137,8 @@ struct _cnid_db *cnid_last_open(struct cnid_open_args *args)
     struct _cnid_db *cdb;
 
     if ((cdb = cnid_last_new(args->cnid_args_vol)) == NULL) {
-        LOG(log_error, logtype_default, "cnid_open: Unable to allocate memory for database");
+        LOG(log_error, logtype_default,
+            "cnid_open: Unable to allocate memory for database");
         return NULL;
     }
 
@@ -151,14 +153,16 @@ struct _cnid_module cnid_last_module = {
 };
 
 /* Return the did/name pair corresponding to a CNID. */
-char *cnid_last_resolve(struct _cnid_db *cdb _U_, cnid_t * id _U_, void *buffer _U_, size_t len _U_)
+char *cnid_last_resolve(struct _cnid_db *cdb _U_, cnid_t * id _U_,
+                        void *buffer _U_, size_t len _U_)
 {
     /* FIXME: frankly, it does not work. As get, add and other functions. */
     return NULL;
 }
 
 
-int cnid_last_update(struct _cnid_db *cdb _U_, cnid_t id _U_, const struct stat *st _U_,
+int cnid_last_update(struct _cnid_db *cdb _U_, cnid_t id _U_,
+                     const struct stat *st _U_,
                      cnid_t did  _U_, const char *name  _U_, size_t len _U_)
 {
     return 0;

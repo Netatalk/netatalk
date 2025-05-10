@@ -51,6 +51,6 @@ struct interface {
 
 extern struct interface	*interfaces;
 extern struct interface	*ciface;
-struct interface	*newiface (const char *);
+struct interface	*newiface(const char *);
 
 #endif /* ATALKD_INTERFACE_H */

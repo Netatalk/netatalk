@@ -31,18 +31,18 @@ enum loglevels {
 
 /* this is the enum specifying all availiable logtypes */
 enum logtypes {
-  logtype_default,
-  logtype_logger,
-  logtype_cnid,
-  logtype_afpd,
-  logtype_dsi,
-  logtype_atalkd,
-  logtype_papd,
-  logtype_uams,
-  logtype_fce,
-  logtype_ad,
-  logtype_sl,
-  logtype_end_of_list_marker  /* don't put any logtypes after this */
+    logtype_default,
+    logtype_logger,
+    logtype_cnid,
+    logtype_afpd,
+    logtype_dsi,
+    logtype_atalkd,
+    logtype_papd,
+    logtype_uams,
+    logtype_fce,
+    logtype_ad,
+    logtype_sl,
+    logtype_end_of_list_marker  /* don't put any logtypes after this */
 };
 
 
@@ -78,7 +78,8 @@ enum logtypes {
 typedef struct {
     bool           inited;                 /* file log config initialized ? */
     bool           syslog_opened;          /* syslog opened ? */
-    bool           console;                /* if logging to console from a cli util */
+    bool
+    console;                /* if logging to console from a cli util */
     char           processname[16];
     int            syslog_facility;
     int            syslog_display_options;
@@ -103,20 +104,25 @@ typedef struct {
 /* Make config accessible for LOG macro */
 extern log_config_t log_config;
 
-extern UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker];
+extern UAM_MODULE_EXPORT logtype_conf_t
+type_configs[logtype_end_of_list_marker];
 
 /* =========================================================================
     Global function decarations
    ========================================================================= */
 
-void setuplog(const char *loglevel, const char *logfile, const bool log_us_timestamp);
+void setuplog(const char *loglevel, const char *logfile,
+              const bool log_us_timestamp);
 void set_processname(const char *processname);
 
 /* Setup the level and type of log that will be logged to syslog. */
-void syslog_setup(int loglevel, enum logtypes logtype, int display_options, int facility);
+void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
+                  int facility);
 
 /* LOG macro func no.1: log the message to file */
-UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel, enum logtypes logtype, const char *file, const bool log_us_timestamp, int line, char *message, ...);
+UAM_MODULE_EXPORT  void make_log_entry(enum loglevels loglevel,
+                                       enum logtypes logtype, const char *file, const bool log_us_timestamp, int line,
+                                       char *message, ...);
 
 /*
  * How to write a LOG macro:

@@ -48,9 +48,10 @@
 #include "status.h"
 #include "switch.h"
 
-static int afp_null(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,  size_t *rbuflen)
+static int afp_null(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+                    char *rbuf _U_,  size_t *rbuflen)
 {
-    LOG(log_info, logtype_afpd, "afp_null handle %d", *ibuf );
+    LOG(log_info, logtype_afpd, "afp_null handle %d", *ibuf);
     *rbuflen = 0;
     return AFPERR_NOOP;
 }
@@ -205,17 +206,27 @@ int uam_afpserver_action(const int id, const int which,
 {
     switch (which) {
     case UAM_AFPSERVER_PREAUTH:
-        if (old)
+        if (old) {
             *old = preauth_switch[id];
-        if (new_table)
+        }
+
+        if (new_table) {
             preauth_switch[id] = new_table;
+        }
+
         break;
+
     case UAM_AFPSERVER_POSTAUTH:
-        if (old)
+        if (old) {
             *old = postauth_switch[id];
-        if (new_table)
+        }
+
+        if (new_table) {
             postauth_switch[id] = new_table;
+        }
+
         break;
+
     default:
         LOG(log_debug, logtype_afpd, "uam_afpserver_action: unknown switch %d[%d]",
             which, id);

@@ -57,12 +57,13 @@ static void parse_ldapconf(void)
         iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
         acl_ldap_readconfig(iniconfig);
         printf("Finished parsing afp.conf\n");
+
         if (ldap_config_valid) {
-            if (ldap_auth_method == LDAP_AUTH_NONE)
+            if (ldap_auth_method == LDAP_AUTH_NONE) {
                 printf("afp.conf is ok. Using anonymous bind.\n");
-            else if (ldap_auth_method == LDAP_AUTH_SIMPLE)
+            } else if (ldap_auth_method == LDAP_AUTH_SIMPLE) {
                 printf("afp.conf is ok. Using simple bind.\n");
-            else {
+            } else {
                 ldap_config_valid = 0;
                 printf("afp.conf defines an unsupported LDAP authentication method.\n");
                 exit(EXIT_FAILURE);
@@ -70,6 +71,7 @@ static void parse_ldapconf(void)
         } else {
             printf("afp.conf is not ok, not using LDAP. Only local UUID testing available.\n");
         }
+
 #else
         printf("Built without LDAP support, only local UUID testing available.\n");
 #endif
@@ -77,7 +79,7 @@ static void parse_ldapconf(void)
     }
 }
 
-int main( int argc, char **argv)
+int main(int argc, char **argv)
 {
     int ret, c;
     int verbose = 0;
@@ -87,65 +89,80 @@ int main( int argc, char **argv)
     char *name = NULL;
 
     while ((c = getopt(argc, argv, ":vu:g:i:")) != -1) {
-        switch(c) {
-
+        switch (c) {
         case 'v':
             if (! verbose) {
                 verbose = 1;
                 setuplog("default:maxdebug", "/dev/tty", true);
                 logsetup = 1;
             }
+
             break;
 
         case 'u':
-            if (! logsetup)
+            if (! logsetup) {
                 setuplog("default:info", "/dev/tty", true);
+            }
+
             parse_ldapconf();
             printf("Searching user: %s\n", optarg);
-            ret = getuuidfromname( optarg, UUID_USER, uuid);
+            ret = getuuidfromname(optarg, UUID_USER, uuid);
+
             if (ret == 0) {
                 printf("User: %s ==> UUID: %s\n", optarg, uuid_bin2string(uuid));
             } else {
                 printf("User %s not found.\n", optarg);
             }
+
             break;
 
         case 'g':
-            if (! logsetup)
+            if (! logsetup) {
                 setuplog("default:info", "/dev/tty", true);
+            }
+
             parse_ldapconf();
             printf("Searching group: %s\n", optarg);
-            ret = getuuidfromname( optarg, UUID_GROUP, uuid);
+            ret = getuuidfromname(optarg, UUID_GROUP, uuid);
+
             if (ret == 0) {
                 printf("Group: %s ==> UUID: %s\n", optarg, uuid_bin2string(uuid));
             } else {
                 printf("Group %s not found.\n", optarg);
             }
+
             break;
 
         case 'i':
-            if (! logsetup)
+            if (! logsetup) {
                 setuplog("default:info", "/dev/tty", true);
+            }
+
             parse_ldapconf();
             printf("Searching uuid: %s\n", optarg);
             uuid_string2bin(optarg, uuid);
-            ret = getnamefromuuid( uuid, &name, &type);
+            ret = getnamefromuuid(uuid, &name, &type);
+
             if (ret == 0) {
                 switch (type) {
                 case UUID_USER:
                     printf("UUID: %s ==> User: %s\n", optarg, name);
                     break;
+
                 case UUID_GROUP:
                     printf("UUID: %s ==> Group: %s\n", optarg, name);
                     break;
+
                 default:
                     printf("???: %s\n", optarg);
                     break;
                 }
+
                 free(name);
             } else {
                 printf("UUID: %s not found.\n", optarg);
             }
+
             break;
 
         case ':':

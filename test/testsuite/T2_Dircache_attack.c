@@ -133,61 +133,65 @@ STATIC void test500()
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
+    }
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
-
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1));
     /* Enumerate with first connection, does it crash or similar ? */
-    FAIL (FPEnumerate(Conn, vol1, subdir2_id, "", (1<<FILPBIT_FNUM), (1<< DIRPBIT_PDID)) );
-
+    FAIL(FPEnumerate(Conn, vol1, subdir2_id, "", (1 << FILPBIT_FNUM),
+                     (1 << DIRPBIT_PDID)));
     /* Manually check name and CNID */
-	FAIL (FPGetFileDirParams(Conn, vol1, subdir2_id, renamedsubdir1, 0, bitmap) );
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, renamedsubdir1, 0, bitmap));
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	filedir.isdir = 1;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-
-	if (filedir.did != subdir1_id) {
+    if (filedir.did != subdir1_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir1_id);
         }
-        test_failed();
-	}
-	if (strcmp(filedir.lname, renamedsubdir1)) {
-        if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
-        }
-        test_failed();
-	}
 
+        test_failed();
+    }
+
+    if (strcmp(filedir.lname, renamedsubdir1)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED %s should be %s\n", filedir.lname, renamedsubdir1);
+        }
+
+        test_failed();
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test500: move and rename dir, enumerate new parent, stat renamed dir");
+    exit_test("Dircache:test500: move and rename dir, enumerate new parent, stat renamed dir");
 }
 
 /* move and rename dir, then stat it */
@@ -203,58 +207,62 @@ STATIC void test501()
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
+    }
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
-
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1));
     /* Manually check name and CNID */
-	FAIL (FPGetFileDirParams(Conn, vol1, subdir2_id, renamedsubdir1, 0, bitmap) );
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, renamedsubdir1, 0, bitmap));
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	filedir.isdir = 1;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-
-	if (filedir.did != subdir1_id) {
+    if (filedir.did != subdir1_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir1_id);
         }
-        test_failed();
-	}
-	if (strcmp(filedir.lname, renamedsubdir1)) {
-        if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
-        }
-        test_failed();
-	}
 
+        test_failed();
+    }
+
+    if (strcmp(filedir.lname, renamedsubdir1)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED %s should be %s\n", filedir.lname, renamedsubdir1);
+        }
+
+        test_failed();
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test501: move and rename dir, then stat it");
+    exit_test("Dircache:test501: move and rename dir, then stat it");
 }
 
 /* move and rename dir, enumerate renamed dir */
@@ -270,63 +278,68 @@ STATIC void test502()
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    FAIL (FPCreateFile(Conn, vol1,  0, subdir1_id, "file1"))
-    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
+    }
+
+    FAIL(FPCreateFile(Conn, vol1,  0, subdir1_id, "file1"))
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
-
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1));
     /* Enumerate with first connection, does it crash or similar ? */
-	FAIL( FPEnumerate(Conn, vol1, subdir1_id, "", (1<<FILPBIT_FNUM), (1<< DIRPBIT_PDID)) );
-
+    FAIL(FPEnumerate(Conn, vol1, subdir1_id, "", (1 << FILPBIT_FNUM),
+                     (1 << DIRPBIT_PDID)));
     /* Manually check name and CNID */
-	FAIL( FPGetFileDirParams(Conn, vol1, subdir1_id, "", 0, bitmap) );
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir1_id, "", 0, bitmap));
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	filedir.isdir = 1;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-
-	if (filedir.did != subdir1_id) {
+    if (filedir.did != subdir1_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir1_id);
         }
-        test_failed();
-	}
-	if (strcmp(filedir.lname, renamedsubdir1)) {
-        if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
-        }
-        test_failed();
-	}
 
+        test_failed();
+    }
+
+    if (strcmp(filedir.lname, renamedsubdir1)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED %s should be %s\n", filedir.lname, renamedsubdir1);
+        }
+
+        test_failed();
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "file1"))
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, "file1"))
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test502: move and rename dir, enumerate renamed dir");
+    exit_test("Dircache:test502: move and rename dir, enumerate renamed dir");
 }
 
 /* move and rename dir, stat renamed dir */
@@ -342,58 +355,62 @@ STATIC void test503()
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0)
+    }
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, dir_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1) );
-
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, subdir2_id, subdir1, renamedsubdir1));
     /* Manually check name and CNID */
-	FAIL( FPGetFileDirParams(Conn, vol1, subdir1_id, "", 0, bitmap) );
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir1_id, "", 0, bitmap));
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	filedir.isdir = 1;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-
-	if (filedir.did != subdir1_id) {
+    if (filedir.did != subdir1_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir1_id);
         }
-        test_failed();
-	}
-	if (strcmp(filedir.lname, renamedsubdir1)) {
-        if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, renamedsubdir1);
-        }
-        test_failed();
-	}
 
+        test_failed();
+    }
+
+    if (strcmp(filedir.lname, renamedsubdir1)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED %s should be %s\n", filedir.lname, renamedsubdir1);
+        }
+
+        test_failed();
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test503: move and rename dir, enumerate renamed dir");
+    exit_test("Dircache:test503: move and rename dir, enumerate renamed dir");
 }
 
 /* rename topdir, stat file in subdir of renamed topdir */
@@ -409,58 +426,61 @@ STATIC void test504()
     uint32_t dir_id, subdir1_id, subdir2_id, file_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0)
+    }
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Create file and get CNID */
-    FAIL( FPCreateFile(Conn, vol1,  0, subdir2_id, "file1") );
-	FAIL( FPGetFileDirParams(Conn, vol1, subdir2_id, "file1", 0, bitmap) );
-	filedir.isdir = 0;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    FAIL(FPCreateFile(Conn, vol1,  0, subdir2_id, "file1"));
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "file1", 0, bitmap));
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
     file_id = filedir.did;
-
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1) );
-
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1));
     /* check CNID */
-	FAIL( FPGetFileDirParams(Conn, vol1, subdir2_id, "file1", 0, bitmap) );
-	filedir.isdir = 0;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "file1", 0, bitmap));
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	if (filedir.did != file_id) {
+    if (filedir.did != file_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir1_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir1_id);
         }
+
         test_failed();
-	}
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "file1"))
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, "file1"))
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test504: rename topdir, stat file in subdir of renamed topdir");
+    exit_test("Dircache:test504: rename topdir, stat file in subdir of renamed topdir");
 }
 
 /* rename dir, stat subdir in renamed dir */
@@ -476,59 +496,63 @@ STATIC void test505()
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0)
+    }
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1) );
-
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1));
     /* Manually check name and CNID */
-	FAIL( FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap) );
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap));
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	filedir.isdir = 1;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-
-	if (filedir.did != subdir2_id) {
+    if (filedir.did != subdir2_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir2_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir2_id);
         }
-        test_failed();
-	}
-	if (strcmp(filedir.lname, subdir2
-)) {
-        if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, subdir2);
-        }
-        test_failed();
-	}
 
+        test_failed();
+    }
+
+    if (strcmp(filedir.lname, subdir2
+              )) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED %s should be %s\n", filedir.lname, subdir2);
+        }
+
+        test_failed();
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test505: rename dir, stat subdir in renamed dir");
+    exit_test("Dircache:test505: rename dir, stat subdir in renamed dir");
 }
 
 /* stat subdir in poisened path */
@@ -544,63 +568,70 @@ STATIC void test506()
     uint32_t dir_id, subdir1_id, subdir2_id, poisondir_id;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    uint16_t bitmap = (1<< DIRPBIT_DID)|(1<< DIRPBIT_LNAME);
+    uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
+    ENTER_TEST
 
-	ENTER_TEST
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
 
-	if (!Conn2) {
-		test_skipped(T_CONN2);
-		goto test_exit;
-	}
-	if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
+    if ((vol2 = FPOpenVol(Conn2, Vol)) == 0xffff) {
         test_failed();
         goto test_exit;
     }
 
     /* Create directories with first connection */
-    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0)
+    if ((dir_id = FPCreateDir(Conn, vol1, DIRDID_ROOT, dir)) == 0) {
         test_failed();
-    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0)
+    }
+
+    if ((subdir1_id = FPCreateDir(Conn, vol1, dir_id, subdir1)) == 0) {
         test_failed();
-    if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0)
+    }
+
+    if ((subdir2_id = FPCreateDir(Conn, vol1, subdir1_id, subdir2)) == 0) {
         test_failed();
+    }
 
     /* Move and rename dir with second connection */
-    FAIL( FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1) );
+    FAIL(FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1));
+
     /* Re-create renamed directory */
-    if ((poisondir_id = FPCreateDir(Conn2, vol2, dir_id, subdir1)) == 0)
+    if ((poisondir_id = FPCreateDir(Conn2, vol2, dir_id, subdir1)) == 0) {
         test_failed();
+    }
 
     /* Manually check name and CNID */
-	FAIL( FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap) );
+    FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap));
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
 
-	filedir.isdir = 1;
-	afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-
-	if (filedir.did != subdir2_id) {
+    if (filedir.did != subdir2_id) {
         if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %x should be %x\n",filedir.did, subdir2_id);
+            fprintf(stdout, "\tFAILED %x should be %x\n", filedir.did, subdir2_id);
         }
-        test_failed();
-	}
-	if (strcmp(filedir.lname, subdir2
-)) {
-        if (!Quiet) {
-    		fprintf(stdout,"\tFAILED %s should be %s\n",filedir.lname, subdir2);
-        }
-        test_failed();
-	}
 
+        test_failed();
+    }
+
+    if (strcmp(filedir.lname, subdir2
+              )) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED %s should be %s\n", filedir.lname, subdir2);
+        }
+
+        test_failed();
+    }
 
 fin:
-	FAIL( FPCloseVol(Conn2, vol2) );
-    FAIL( FPDelete(Conn, vol1, subdir2_id, "") );
-    FAIL( FPDelete(Conn, vol1, subdir1_id, "") );
-    FAIL( FPDelete(Conn, vol1, poisondir_id, "") );
-    FAIL( FPDelete(Conn, vol1, dir_id, "") );
-
+    FAIL(FPCloseVol(Conn2, vol2));
+    FAIL(FPDelete(Conn, vol1, subdir2_id, ""));
+    FAIL(FPDelete(Conn, vol1, subdir1_id, ""));
+    FAIL(FPDelete(Conn, vol1, poisondir_id, ""));
+    FAIL(FPDelete(Conn, vol1, dir_id, ""));
 test_exit:
-	exit_test("Dircache:test506: stat subdir in poisoned path");
+    exit_test("Dircache:test506: stat subdir in poisoned path");
 }
 
 void Dircache_attack_test()

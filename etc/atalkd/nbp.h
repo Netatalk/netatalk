@@ -14,6 +14,7 @@ struct nbptab {
 
 extern struct nbptab	*nbptab;
 
-int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len);
+int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
+               int len);
 
 #endif

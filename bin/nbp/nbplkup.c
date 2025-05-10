@@ -54,7 +54,8 @@ static void Usage(char *av0)
         p++;
     }
 
-    printf("Usage:\t%s [-A address] [-r responses] [-m Mac charset] [-s] [obj:type@zone]\n", p);
+    printf("Usage:\t%s [-A address] [-r responses] [-m Mac charset] [-s] [obj:type@zone]\n",
+           p);
     exit(1);
 }
 
@@ -69,16 +70,14 @@ int main(int ac, char **av)
     size_t obj_len;
     size_t type_len;
     charset_t chMac = CH_MAC;
-    char * convname;
+    char *convname;
     bool script_friendly_output = false;
-
     extern char *optarg;
     extern int optind;
-
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
-
     memset(&addr, 0, sizeof(addr));
+
     while ((c = getopt(ac, av, "sA:m:r:")) != EOF) {
         switch (c) {
         case 'A':
@@ -86,17 +85,23 @@ int main(int ac, char **av)
                 fprintf(stderr, "Bad address.\n");
                 exit(1);
             }
+
             break;
+
         case 'r' :
             nresp = atoi(optarg);
             break;
+
         case 'm':
             chMac = add_charset(optarg);
-            if ((charset_t)-1 == chMac) {
+
+            if ((charset_t) -1 == chMac) {
                 fprintf(stderr, "Invalid Mac charset.\n");
                 exit(1);
             }
+
             break;
+
         case 's':
             script_friendly_output = true;
             break;
@@ -108,6 +113,7 @@ int main(int ac, char **av)
     }
 
     nn = (struct nbpnve *)malloc(nresp * sizeof(struct nbpnve));
+
     if (nn == NULL) {
         perror("malloc");
         exit(1);
@@ -127,24 +133,27 @@ int main(int ac, char **av)
     if ((name = getenv("NBPLKUP")) != NULL) {
         if (nbp_name(name, &Obj, &Type, &Zone)) {
             fprintf(stderr,
-                "Environment variable syntax error: NBPLKUP = %s\n",
-                name);
+                    "Environment variable syntax error: NBPLKUP = %s\n",
+                    name);
             exit(1);
         }
 
         Obj = strndup(Obj, 32);
+
         if (Obj == NULL) {
             perror("strndup(Obj)");
             exit(1);
         }
 
         Type = strndup(Type, 32);
+
         if (Type == NULL) {
             perror("strndup(Type)");
             exit(1);
         }
 
         Zone = strndup(Zone, 32);
+
         if (Type == NULL) {
             perror("strndup(Zone)");
             exit(1);
@@ -153,7 +162,7 @@ int main(int ac, char **av)
 
     if (ac - optind == 1) {
         if ((size_t)(-1) == convert_string_allocate(CH_UNIX, chMac,
-            av[optind], -1, &convname)) {
+                av[optind], -1, &convname)) {
             convname = av[optind];
         }
 
@@ -164,20 +173,22 @@ int main(int ac, char **av)
     }
 
     c = nbp_lookup(Obj, Type, Zone, nn, nresp, &addr);
+
     if (c < 0) {
         perror("nbp_lookup");
         exit(-1);
     }
-    
+
     for (i = 0; i < c; i++) {
         obj_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_obj,
-            nn[i].nn_objlen, &obj);
+                                          nn[i].nn_objlen, &obj);
         type_len = convert_string_allocate(chMac, CH_UNIX, nn[i].nn_type,
-            nn[i].nn_typelen, &type);
-        
+                                           nn[i].nn_typelen, &type);
+
         if ((size_t)(-1) == obj_len) {
             obj_len = nn[i].nn_objlen;
             obj = strdup(nn[i].nn_obj);
+
             if (obj == NULL) {
                 perror("strdup");
                 exit(1);
@@ -186,17 +197,17 @@ int main(int ac, char **av)
 
         if (script_friendly_output) {
             printf("%u.%u:%u %s:%s\n",
-                ntohs(nn[i].nn_sat.sat_addr.s_net),
-                nn[i].nn_sat.sat_addr.s_node,
-                nn[i].nn_sat.sat_port,
-                obj, type);
+                   ntohs(nn[i].nn_sat.sat_addr.s_net),
+                   nn[i].nn_sat.sat_addr.s_node,
+                   nn[i].nn_sat.sat_port,
+                   obj, type);
         } else {
             printf("%31.*s:%-34.*s %u.%u:%u\n",
-                (int)obj_len, obj,
-                (int)type_len, type,
-                ntohs(nn[i].nn_sat.sat_addr.s_net),
-                nn[i].nn_sat.sat_addr.s_node,
-                nn[i].nn_sat.sat_port);
+                   (int)obj_len, obj,
+                   (int)type_len, type,
+                   ntohs(nn[i].nn_sat.sat_addr.s_net),
+                   nn[i].nn_sat.sat_addr.s_node,
+                   nn[i].nn_sat.sat_port);
         }
 
         free(obj);

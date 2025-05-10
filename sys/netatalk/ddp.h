@@ -59,24 +59,24 @@ struct elaphdr {
  */
 struct ddpehdr {
     union {
-	struct {
+        struct {
 #if BYTE_ORDER == BIG_ENDIAN
-    unsigned		dub_pad:2;
-    unsigned		dub_hops:4;
-    unsigned		dub_len:10;
-    unsigned		dub_sum:16;
+            unsigned		dub_pad: 2;
+            unsigned		dub_hops: 4;
+            unsigned		dub_len: 10;
+            unsigned		dub_sum: 16;
 #else /* BYTE_ORDER == BIG_ENDIAN */
 #if BYTE_ORDER == LITTLE_ENDIAN
-    unsigned		dub_sum:16;
-    unsigned		dub_len:10;
-    unsigned		dub_hops:4;
-    unsigned		dub_pad:2;
+            unsigned		dub_sum: 16;
+            unsigned		dub_len: 10;
+            unsigned		dub_hops: 4;
+            unsigned		dub_pad: 2;
 #else /* BYTE_ORDER == LITTLE_ENDIAN */
-    OOPS!
+            OOPS!
 #endif /* BYTE_ORDER == LITTLE_ENDIAN */
 #endif /* BYTE_ORDER == BIG_ENDIAN */
-	} du_bits;
-	unsigned	du_bytes;
+        } du_bits;
+        unsigned	du_bytes;
     } deh_u;
 #define deh_pad		deh_u.du_bits.dub_pad
 #define deh_hops	deh_u.du_bits.dub_hops
@@ -97,21 +97,21 @@ struct ddpehdr {
 
 struct ddpshdr {
     union {
-	struct {
+        struct {
 #if BYTE_ORDER == BIG_ENDIAN
-    unsigned		dub_pad:6;
-    unsigned		dub_len:10;
-    unsigned		dub_dport:8;
-    unsigned		dub_sport:8;
+            unsigned		dub_pad: 6;
+            unsigned		dub_len: 10;
+            unsigned		dub_dport: 8;
+            unsigned		dub_sport: 8;
 #endif /* BYTE_ORDER == BIG_ENDIAN */
 #if BYTE_ORDER == LITTLE_ENDIAN
-    unsigned		dub_sport:8;
-    unsigned		dub_dport:8;
-    unsigned		dub_len:10;
-    unsigned		dub_pad:6;
+            unsigned		dub_sport: 8;
+            unsigned		dub_dport: 8;
+            unsigned		dub_len: 10;
+            unsigned		dub_pad: 6;
 #endif /* BYTE_ORDER == LITTLE_ENDIAN */
-	} du_bits;
-	unsigned	du_bytes;
+        } du_bits;
+        unsigned	du_bytes;
     } dsh_u;
 #define dsh_pad		dsh_u.du_bits.dub_pad
 #define dsh_len		dsh_u.du_bits.dub_len

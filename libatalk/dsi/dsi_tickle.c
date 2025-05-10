@@ -19,20 +19,19 @@
  * we don't need to block signals. */
 int dsi_tickle(DSI *dsi)
 {
-  char block[DSI_BLOCKSIZ];
-  uint16_t id;
+    char block[DSI_BLOCKSIZ];
+    uint16_t id;
 
-  if ((dsi->flags & DSI_SLEEPING) || dsi->in_write)
-      return 1;
+    if ((dsi->flags & DSI_SLEEPING) || dsi->in_write) {
+        return 1;
+    }
 
-  id = htons(dsi_serverID(dsi));
-
-  memset(block, 0, sizeof(block));
-  block[0] = DSIFL_REQUEST;
-  block[1] = DSIFUNC_TICKLE;
-  memcpy(block + 2, &id, sizeof(id));
-  /* code = len = reserved = 0 */
-
-  return dsi_stream_write(dsi, block, DSI_BLOCKSIZ, DSI_NOWAIT);
+    id = htons(dsi_serverID(dsi));
+    memset(block, 0, sizeof(block));
+    block[0] = DSIFL_REQUEST;
+    block[1] = DSIFUNC_TICKLE;
+    memcpy(block + 2, &id, sizeof(id));
+    /* code = len = reserved = 0 */
+    return dsi_stream_write(dsi, block, DSI_BLOCKSIZ, DSI_NOWAIT);
 }
 

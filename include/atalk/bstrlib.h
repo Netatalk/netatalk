@@ -33,8 +33,8 @@ extern "C" {
 #define BSTR_OK (0)
 #define BSTR_BS_BUFF_LENGTH_GET (0)
 
-typedef struct tagbstring * bstring;
-typedef const struct tagbstring * const_bstring;
+typedef struct tagbstring *bstring;
+typedef const struct tagbstring *const_bstring;
 
 /* Version */
 #define BSTR_VER_MAJOR  1
@@ -47,7 +47,7 @@ extern bstring bfromcstr (const char * str);
 extern bstring bfromcstralloc (int mlen, const char * str);
 extern bstring bfromcstrrangealloc (int minl, int maxl, const char* str);
 extern bstring blk2bstr (const void * blk, int len);
-extern char * bstr2cstr (const_bstring s, char z);
+extern char *bstr2cstr (const_bstring s, char z);
 extern int bcstrfree (char * s);
 extern bstring bstrcpy (const_bstring b1);
 extern int bassign (bstring a, const_bstring b);
@@ -71,9 +71,11 @@ extern int bconchar (bstring b0, char c);
 extern int bcatcstr (bstring b, const char * s);
 extern int bcatblk (bstring b, const void * s, int len);
 extern int binsert (bstring s1, int pos, const_bstring s2, unsigned char fill);
-extern int binsertblk (bstring s1, int pos, const void * s2, int len, unsigned char fill);
+extern int binsertblk (bstring s1, int pos, const void * s2, int len,
+                       unsigned char fill);
 extern int binsertch (bstring s1, int pos, int len, unsigned char fill);
-extern int breplace (bstring b1, int pos, int len, const_bstring b2, unsigned char fill);
+extern int breplace (bstring b1, int pos, int len, const_bstring b2,
+                     unsigned char fill);
 extern int bdelete (bstring s1, int pos, int len);
 extern int bsetstr (bstring b0, int pos, const_bstring b1, unsigned char fill);
 extern int btrunc (bstring b, int n);
@@ -103,31 +105,33 @@ extern int binchr (const_bstring b0, int pos, const_bstring b1);
 extern int binchrr (const_bstring b0, int pos, const_bstring b1);
 extern int bninchr (const_bstring b0, int pos, const_bstring b1);
 extern int bninchrr (const_bstring b0, int pos, const_bstring b1);
-extern int bfindreplace (bstring b, const_bstring find, const_bstring repl, int pos);
-extern int bfindreplacecaseless (bstring b, const_bstring find, const_bstring repl, int pos);
+extern int bfindreplace (bstring b, const_bstring find, const_bstring repl,
+                         int pos);
+extern int bfindreplacecaseless (bstring b, const_bstring find,
+                                 const_bstring repl, int pos);
 
 /* List of string container functions */
 struct bstrList {
     int qty, mlen;
-    bstring * entry;
+    bstring *entry;
 };
-extern struct bstrList * bstrListCreate (void);
+extern struct bstrList *bstrListCreate (void);
 extern int bstrListDestroy (struct bstrList * sl);
 extern int bstrListAlloc (struct bstrList * sl, int msz);
 extern int bstrListAllocMin (struct bstrList * sl, int msz);
 
 /* String split and join functions */
-extern struct bstrList * bsplit (const_bstring str, unsigned char splitChar);
-extern struct bstrList * bsplits (const_bstring str, const_bstring splitStr);
-extern struct bstrList * bsplitstr (const_bstring str, const_bstring splitStr);
+extern struct bstrList *bsplit (const_bstring str, unsigned char splitChar);
+extern struct bstrList *bsplits (const_bstring str, const_bstring splitStr);
+extern struct bstrList *bsplitstr (const_bstring str, const_bstring splitStr);
 extern bstring bjoin (const struct bstrList * bl, const_bstring sep);
 extern bstring bjoinblk (const struct bstrList * bl, const void * s, int len);
 extern int bsplitcb (const_bstring str, unsigned char splitChar, int pos,
-	int (* cb) (void * parm, int ofs, int len), void * parm);
+                     int (* cb) (void * parm, int ofs, int len), void * parm);
 extern int bsplitscb (const_bstring str, const_bstring splitStr, int pos,
-	int (* cb) (void * parm, int ofs, int len), void * parm);
+                      int (* cb) (void * parm, int ofs, int len), void * parm);
 extern int bsplitstrcb (const_bstring str, const_bstring splitStr, int pos,
-	int (* cb) (void * parm, int ofs, int len), void * parm);
+                        int (* cb) (void * parm, int ofs, int len), void * parm);
 
 /* Miscellaneous functions */
 extern int bpattern (bstring b, int len);
@@ -172,13 +176,15 @@ typedef size_t (* bNread) (void *buff, size_t elsize, size_t nelem, void *parm);
 /* Input functions */
 extern bstring bgetstream (bNgetc getcPtr, void * parm, char terminator);
 extern bstring bread (bNread readPtr, void * parm);
-extern int bgetstreama (bstring b, bNgetc getcPtr, void * parm, char terminator);
-extern int bassigngets (bstring b, bNgetc getcPtr, void * parm, char terminator);
+extern int bgetstreama (bstring b, bNgetc getcPtr, void * parm,
+                        char terminator);
+extern int bassigngets (bstring b, bNgetc getcPtr, void * parm,
+                        char terminator);
 extern int breada (bstring b, bNread readPtr, void * parm);
 
 /* Stream functions */
-extern struct bStream * bsopen (bNread readPtr, void * parm);
-extern void * bsclose (struct bStream * s);
+extern struct bStream *bsopen (bNread readPtr, void * parm);
+extern void *bsclose (struct bStream * s);
 extern int bsbufflength (struct bStream * s, int sz);
 extern int bsreadln (bstring b, struct bStream * s, char terminator);
 extern int bsreadlns (bstring r, struct bStream * s, const_bstring term);
@@ -189,15 +195,15 @@ extern int bsreada (bstring b, struct bStream * s, int n);
 extern int bsunread (struct bStream * s, const_bstring b);
 extern int bspeek (bstring r, const struct bStream * s);
 extern int bssplitscb (struct bStream * s, const_bstring splitStr,
-	int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
+                       int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
 extern int bssplitstrcb (struct bStream * s, const_bstring splitStr,
-	int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
+                         int (* cb) (void * parm, int ofs, const_bstring entry), void * parm);
 extern int bseof (const struct bStream * s);
 
 struct tagbstring {
-	int mlen;
-	int slen;
-	unsigned char * data;
+    int mlen;
+    int slen;
+    unsigned char *data;
 };
 
 /* Accessor macros */

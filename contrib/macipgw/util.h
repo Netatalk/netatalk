@@ -33,5 +33,5 @@ extern int gDebug;
 #define DEBUG_TUNDEV	(0)
 #endif
 
-extern char *iptoa (uint32_t ip);
-extern uint32_t atoip (char *s);
+extern char *iptoa(uint32_t ip);
+extern uint32_t atoip(char *s);

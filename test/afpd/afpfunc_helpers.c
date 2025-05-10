@@ -66,17 +66,19 @@ static int push_path(char **bufp, const char *name)
     int len = 0;
     int slen = strlen(name);
     char *p = *bufp;
-
     PUSHVAL(p, uint8_t, 3, len); /* path type */
     PUSHVAL(p, uint32_t, kTextEncodingUTF8, len); /* text encoding hint */
     PUSHVAL(p, uint16_t, htons(slen), len);
+
     if (slen) {
         for (int i = 0; i < slen; i++) {
-            if (name[i] == '/')
+            if (name[i] == '/') {
                 p[i] = 0;
-            else
+            } else {
                 p[i] = name[i];
+            }
         }
+
         len += slen;
     }
 
@@ -93,12 +95,10 @@ char **cnamewrap(const char *name)
     static char buf[256];
     static char *p = buf;
     int len = 0;
-
     PUSHVAL(p, uint8_t, 3, len); /* path type */
     PUSHVAL(p, uint32_t, kTextEncodingUTF8, len); /* text encoding hint */
     PUSHVAL(p, uint16_t, ntohs(strlen(name)), len);
     strcpy(p, name);
-
     p = buf;
     return &p;
 }
@@ -109,16 +109,12 @@ int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     char buf[bufsize];
     char *p = buf;
     int len = 0;
-
-    ADD(p, len , 2);
-
+    ADD(p, len, 2);
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
     PUSHVAL(p, uint16_t, htons(FILPBIT_FNUM | FILPBIT_PDINFO), len);
     PUSHVAL(p, uint16_t, htons(DIRPBIT_DID | DIRPBIT_PDINFO), len);
-
     len += push_path(&p, name);
-
     return afp_getfildirparams(obj, buf, len, rbuf, &rbuflen);
 }
 
@@ -128,13 +124,10 @@ int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     char buf[bufsize];
     char *p = buf;
     int len = 0;
-
-    ADD(p, len , 2);
-
+    ADD(p, len, 2);
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
     len += push_path(&p, name);
-
     return afp_createdir(obj, buf, len, rbuf, &rbuflen);
 }
 
@@ -144,27 +137,23 @@ int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     char buf[bufsize];
     char *p = buf;
     int len = 0;
-
     PUSHVAL(p, uint16_t, htons(128), len); /* hard create */
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
     len += push_path(&p, name);
-
     return afp_createfile(obj, buf, len, rbuf, &rbuflen);
 }
 
-int delete(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
+int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 {
     const int bufsize = 256;
     char buf[bufsize];
     char *p = buf;
     int len = 0;
-
     PUSHVAL(p, uint16_t, htons(128), len); /* hard create */
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
     len += push_path(&p, name);
-
     return afp_delete(obj, buf, len, rbuf, &rbuflen);
 }
 
@@ -175,9 +164,7 @@ int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
     char *p = buf;
     int len = 0;
     int ret;
-
-    ADD(p, len , 2);
-
+    ADD(p, len, 2);
     PUSHVAL(p, uint16_t, vid, len);
     PUSHVAL(p, cnid_t, did, len);
     PUSHVAL(p, uint16_t, htons(FILPBIT_PDID | FILPBIT_FNUM | FILPBIT_PDINFO), len);
@@ -185,13 +172,13 @@ int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
     PUSHVAL(p, uint16_t, htons(20), len);       /* reqcount */
     PUSHVAL(p, uint32_t, htonl(1), len);        /* startindex */
     PUSHVAL(p, uint32_t, htonl(rbufsize), len); /* max replysize */
-
     len += push_path(&p, "");
-
     ret = afp_enumerate_ext2(obj, buf, len, rbuf, &rbuflen);
 
-    if (ret != AFPERR_NOOBJ && ret != AFP_OK)
+    if (ret != AFPERR_NOOBJ && ret != AFP_OK) {
         return -1;
+    }
+
     return 0;
 }
 
@@ -204,35 +191,37 @@ uint16_t openvol(AFPObj *obj, const char *name)
     char buf[bufsize];
     char *p = buf;
     char len = strlen(name);
-
     memset(p, 0, bufsize);
     p += 2;
-
     /* bitmap */
-    bitmap = htons(1<<VOLPBIT_VID);
+    bitmap = htons(1 << VOLPBIT_VID);
     memcpy(p, &bitmap, 2);
     p += 2;
-
     /* name */
     *p = len;
     p++;
     memcpy(p, name, len);
     p += len;
-
     len += 2 + 2 + 1; /* (command+pad) + bitmap + len */
-    if (len & 1)
+
+    if (len & 1) {
         len++;
+    }
 
     rbuflen = 0;
-    if ((ret = afp_openvol(obj, buf, len, rbuf, &rbuflen)) != AFP_OK)
+
+    if ((ret = afp_openvol(obj, buf, len, rbuf, &rbuflen)) != AFP_OK) {
         return 0;
+    }
 
     p = rbuf;
     memcpy(&bitmap, p, 2);
     p += 2;
     bitmap = ntohs(bitmap);
-    if ( ! (bitmap & 1<<VOLPBIT_VID))
+
+    if (!(bitmap & 1 << VOLPBIT_VID)) {
         return 0;
+    }
 
     memcpy(&vid, p, 2);
     return vid;

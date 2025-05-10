@@ -32,11 +32,11 @@
 #define IPC_MAXMSGSIZE 90
 
 typedef struct ipc_header {
-	uint16_t command;
+    uint16_t command;
     pid_t	 child_pid;
     uid_t    uid;
     uint32_t len;
-	char 	 *msg;
+    char 	 *msg;
     int      afp_socket;
     uint16_t DSI_requestID;
 } ipc_header_t;
@@ -45,7 +45,8 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
                                "IPC_GETSESSION",
                                "IPC_STATE",
                                "IPC_VOLUMES",
-                               "IPC_LOGINDONE"};
+                               "IPC_LOGINDONE"
+                             };
 
 /*
  * Pass afp_socket to old disconnected session if one has a matching token (token = pid)
@@ -58,9 +59,9 @@ static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
     if (ipc->len != sizeof(pid_t)) {
         return -1;
     }
+
     /* assume signals SA_RESTART set */
     memcpy (&pid, ipc->msg, sizeof(pid_t));
-
     return server_child_transfer_session(children,
                                          pid,
                                          ipc->uid,
@@ -75,48 +76,46 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
     uint32_t idlen;
     char     *clientid, *p;
 
-
-    if (ipc->len < (sizeof(idlen) + sizeof(boottime)) )
+    if (ipc->len < (sizeof(idlen) + sizeof(boottime))) {
         return -1;
+    }
 
     p = ipc->msg;
     memcpy (&idlen, p, sizeof(idlen));
     idlen = ntohl (idlen);
     p += sizeof(idlen);
-
     memcpy (&boottime, p, sizeof(boottime));
     p += sizeof(boottime);
 
-    if (ipc->len < idlen + sizeof(idlen) + sizeof(boottime))
+    if (ipc->len < idlen + sizeof(idlen) + sizeof(boottime)) {
         return -1;
+    }
 
-    if (NULL == (clientid = (char*) malloc(idlen)) )
+    if (NULL == (clientid = (char *) malloc(idlen))) {
         return -1;
+    }
+
     memcpy (clientid, p, idlen);
-
     LOG(log_debug, logtype_afpd, "ipc_get_session(pid: %u, uid: %u, time: 0x%08x)",
         ipc->child_pid, ipc->uid, boottime);
-
     server_child_kill_one_by_id(children,
                                 ipc->child_pid,
                                 ipc->uid,
                                 idlen,
                                 clientid,
                                 boottime);
-
     return 0;
 }
 
 /* ----------------- */
-static int ipc_login_done(const struct ipc_header *ipc, server_child_t *children)
+static int ipc_login_done(const struct ipc_header *ipc,
+                          server_child_t *children)
 {
     LOG(log_debug, logtype_afpd, "ipc_login_done(pid: %u, uid: %u)",
         ipc->child_pid, ipc->uid);
-
     server_child_login_done(children,
                             ipc->child_pid,
                             ipc->uid);
-
     return 0;
 }
 
@@ -124,14 +123,13 @@ static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
 {
     EC_INIT;
     afp_child_t *child;
-
     pthread_mutex_lock(&children->servch_lock);
 
-    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL)
+    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL) {
         EC_FAIL;
+    }
 
     memcpy(&child->afpch_state, ipc->msg, sizeof(uint16_t));
-
 EC_CLEANUP:
     pthread_mutex_unlock(&children->servch_lock);
     EC_EXIT;
@@ -141,18 +139,20 @@ static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
 {
     EC_INIT;
     afp_child_t *child;
-
     pthread_mutex_lock(&children->servch_lock);
 
-    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL)
+    if ((child = server_child_resolve(children, ipc->child_pid)) == NULL) {
         EC_FAIL;
+    }
 
     if (child->afpch_volumes) {
         free(child->afpch_volumes);
         child->afpch_volumes = NULL;
     }
-    if (ipc->len)
+
+    if (ipc->len) {
         child->afpch_volumes = strdup(ipc->msg);
+    }
 
 EC_CLEANUP:
     pthread_mutex_unlock(&children->servch_lock);
@@ -189,25 +189,25 @@ int ipc_server_read(server_child_t *children, int fd)
 
     if ((ret = read(fd, buf, IPC_HEADERLEN)) != IPC_HEADERLEN) {
         if (ret != 0) {
-            if (errno == EAGAIN)
+            if (errno == EAGAIN) {
                 return 0;
-            LOG(log_error, logtype_afpd, "Reading IPC header failed (%i of %u bytes read): %s",
+            }
+
+            LOG(log_error, logtype_afpd,
+                "Reading IPC header failed (%i of %u bytes read): %s",
                 ret, IPC_HEADERLEN, strerror(errno));
         }
+
         return -1;
     }
 
     p = buf;
-
     memcpy(&ipc.command, p, sizeof(ipc.command));
     p += sizeof(ipc.command);
-
     memcpy(&ipc.child_pid, p, sizeof(ipc.child_pid));
     p += sizeof(ipc.child_pid);
-
     memcpy(&ipc.uid, p, sizeof(ipc.uid));
     p += sizeof(ipc.uid);
-
     memcpy(&ipc.len, p, sizeof(ipc.len));
 
     /* This should never happen */
@@ -217,63 +217,77 @@ int ipc_server_read(server_child_t *children, int fd)
     }
 
     memset (buf, 0, IPC_MAXMSGSIZE);
-    if ( ipc.len != 0) {
-	    if ((ret = read(fd, buf, ipc.len)) != (int) ipc.len) {
-            LOG(log_info, logtype_afpd, "Reading IPC message failed (%u of %u  bytes read): %s",
+
+    if (ipc.len != 0) {
+        if ((ret = read(fd, buf, ipc.len)) != (int) ipc.len) {
+            LOG(log_info, logtype_afpd,
+                "Reading IPC message failed (%u of %u  bytes read): %s",
                 ret, ipc.len, strerror(errno));
             return -1;
-    	}
+        }
     }
-    ipc.msg = buf;
 
+    ipc.msg = buf;
     LOG(log_debug, logtype_afpd, "ipc_server_read(%s): pid: %u",
         ipc_cmd_str[ipc.command], ipc.child_pid);
 
     switch (ipc.command) {
-
-	case IPC_DISCOLDSESSION:
+    case IPC_DISCOLDSESSION:
         if (readt(fd, &ipc.DSI_requestID, 2, 0, 2) != 2) {
-            LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): couldn't read DSI id: %s",
+            LOG (log_error, logtype_afpd,
+                 "ipc_read(%s:child[%u]): couldn't read DSI id: %s",
                  ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
             return -1;
         }
+
         if ((ipc.afp_socket = recv_fd(fd, 1)) == -1) {
             LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): recv_fd: %s",
                  ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
             return -1;
         }
-		if (ipc_kill_token(&ipc, children) == 1) {
+
+        if (ipc_kill_token(&ipc, children) == 1) {
             /* Transfered session (ie afp_socket) to old disconnected child, now kill the new one */
-            LOG(log_note, logtype_afpd, "Reconnect: killing new session child[%u] after transfer",
+            LOG(log_note, logtype_afpd,
+                "Reconnect: killing new session child[%u] after transfer",
                 ipc.child_pid);
             kill(ipc.child_pid, SIGTERM);
         }
+
         close(ipc.afp_socket);
         break;
 
-	case IPC_GETSESSION:
-		if (ipc_get_session(&ipc, children) != 0)
+    case IPC_GETSESSION:
+        if (ipc_get_session(&ipc, children) != 0) {
             return -1;
+        }
+
         break;
 
     case IPC_STATE:
-        if (ipc_set_state(&ipc, children) != 0)
+        if (ipc_set_state(&ipc, children) != 0) {
             return -1;
+        }
+
         break;
 
     case IPC_VOLUMES:
-        if (ipc_set_volumes(&ipc, children) != 0)
+        if (ipc_set_volumes(&ipc, children) != 0) {
             return -1;
+        }
+
         break;
 
     case IPC_LOGINDONE:
-		if (ipc_login_done(&ipc, children) != 0)
+        if (ipc_login_done(&ipc, children) != 0) {
             return -1;
+        }
+
         break;
 
-	default:
-		LOG (log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
-		return -1;
+    default:
+        LOG (log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
+        return -1;
     }
 
     return 0;
@@ -282,45 +296,41 @@ int ipc_server_read(server_child_t *children, int fd)
 /* ----------------- */
 int ipc_child_write(int fd, uint16_t command, int len, void *msg)
 {
-   char block[IPC_MAXMSGSIZE], *p;
-   pid_t pid;
-   uid_t uid;
-   ssize_t ret;
+    char block[IPC_MAXMSGSIZE], *p;
+    pid_t pid;
+    uid_t uid;
+    ssize_t ret;
+    p = block;
+    memset (p, 0, IPC_MAXMSGSIZE);
 
-   p = block;
+    if (len + IPC_HEADERLEN > IPC_MAXMSGSIZE) {
+        return -1;
+    }
 
-   memset ( p, 0 , IPC_MAXMSGSIZE);
-   if (len + IPC_HEADERLEN > IPC_MAXMSGSIZE)
-       return -1;
+    memcpy(p, &command, sizeof(command));
+    p   += sizeof(command);
+    pid = getpid();
+    memcpy(p, &pid, sizeof(pid_t));
+    p += sizeof(pid_t);
+    /* FIXME
+     * using uid is wrong. It will not disconnect if the new connection
+     * is with a different user.
+     * But we really don't want a remote kill command.
+    */
+    uid = geteuid();
+    memcpy(p, &uid, sizeof(uid_t));
+    p += sizeof(uid_t);
+    memcpy(p, &len, 4);
+    p += 4;
+    memcpy(p, msg, len);
+    LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
 
-   memcpy(p, &command, sizeof(command));
-   p   += sizeof(command);
+    if ((ret = writet(fd, block, len + IPC_HEADERLEN, 0,
+                      1)) != len + IPC_HEADERLEN) {
+        return -1;
+    }
 
-   pid = getpid();
-   memcpy(p, &pid, sizeof(pid_t));
-   p += sizeof(pid_t);
-
-   /* FIXME
-    * using uid is wrong. It will not disconnect if the new connection
-    * is with a different user.
-    * But we really don't want a remote kill command.
-   */
-   uid = geteuid();
-   memcpy(p, &uid, sizeof(uid_t));
-   p += sizeof(uid_t);
-
-   memcpy(p, &len, 4);
-   p += 4;
-
-   memcpy(p, msg, len);
-
-   LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
-
-   if ((ret = writet(fd, block, len+IPC_HEADERLEN, 0, 1)) != len + IPC_HEADERLEN) {
-       return -1;
-   }
-
-   return 0;
+    return 0;
 }
 
 int ipc_child_state(AFPObj *obj, uint16_t state)

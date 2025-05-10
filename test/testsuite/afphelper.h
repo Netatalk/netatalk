@@ -30,19 +30,28 @@
 #define AFP_LOG_CRITICAL 4
 #define AFP_LOG_MAX      5
 
-extern void afp_printf(int level, int loglevel, int color, const char* fmt, ...);
+extern void afp_printf(int level, int loglevel, int color, const char* fmt,
+                       ...);
 
 #define AFP_PRINTF(level, fmt, ...)  afp_printf(level, Loglevel, Color, fmt, ##__VA_ARGS__)
 
 /* functions */
-extern void assert_equal(intmax_t expect, intmax_t real, const char *file, int line, void (*fn)(), int log_level);
-extern void assert_equal_u(uintmax_t expect, uintmax_t real, const char *file, int line, void (*fn)(), int log_level);
-extern void assert_not_equal(intmax_t expect, intmax_t real, const char *file, int line, void (*fn)(), int log_level);
-extern void assert_not_equal_u(uintmax_t expect, intmax_t real, const char *file, int line, void (*fn)(), int log_level);
-extern void assert_null(const void *real, const char *file, int line, void (*fn)(), int log_level);
-extern void assert_not_null(const void *real, char *file, int line, void (*fn)(), int log_level);
-extern void assert_true(int real, char *file, int line, void (*fn)(), int log_level);
-extern void assert_false(int real, char *file, int line, void (*fn)(), int log_level);
+extern void assert_equal(intmax_t expect, intmax_t real, const char *file,
+                         int line, void (*fn)(), int log_level);
+extern void assert_equal_u(uintmax_t expect, uintmax_t real, const char *file,
+                           int line, void (*fn)(), int log_level);
+extern void assert_not_equal(intmax_t expect, intmax_t real, const char *file,
+                             int line, void (*fn)(), int log_level);
+extern void assert_not_equal_u(uintmax_t expect, intmax_t real,
+                               const char *file, int line, void (*fn)(), int log_level);
+extern void assert_null(const void *real, const char *file, int line,
+                        void (*fn)(), int log_level);
+extern void assert_not_null(const void *real, char *file, int line,
+                            void (*fn)(), int log_level);
+extern void assert_true(int real, char *file, int line, void (*fn)(),
+                        int log_level);
+extern void assert_false(int real, char *file, int line, void (*fn)(),
+                         int log_level);
 
 #define ASSERT_TRUE(a) \
     assert_true(a, __FILE__, __LINE__, test_failed, AFP_LOG_ERROR)
