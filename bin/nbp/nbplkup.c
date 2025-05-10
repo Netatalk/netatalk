@@ -132,29 +132,23 @@ int main(int ac, char **av)
             exit(1);
         }
 
-        name = (char *)malloc(strlen(Obj) + 1);
-        if (name == NULL) {
-            perror("malloc");
+        Obj = strndup(Obj, 32);
+        if (Obj == NULL) {
+            perror("strndup(Obj)");
             exit(1);
         }
-        strlcpy(name, Obj, sizeof(name));
-        Obj = name;
 
-        name = (char *)malloc(strlen(Type) + 1);
-        if (name == NULL) {
-            perror("malloc");
+        Type = strndup(Type, 32);
+        if (Type == NULL) {
+            perror("strndup(Type)");
             exit(1);
         }
-        strlcpy(name, Type, sizeof(name));
-        Type = name;
 
-        name = (char *)malloc(strlen(Zone) + 1);
-        if (name == NULL) {
-            perror("malloc");
+        Zone = strndup(Zone, 32);
+        if (Type == NULL) {
+            perror("strndup(Zone)");
             exit(1);
         }
-        strlcpy(name, Zone, sizeof(name));
-        Zone = name;
     }
 
     if (ac - optind == 1) {
