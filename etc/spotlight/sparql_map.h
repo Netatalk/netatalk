@@ -42,8 +42,10 @@ struct spotlight_sparql_map {
 };
 
 struct MDTypeMap {
-    const char *mdtm_value;     /* MD query value of attributes '_kMDItemGroupId' and 'kMDItemContentTypeTree' */
-    enum kMDTypeMap mdtm_type;   /* whether SPARQL query must search attribute rdf:type or nie:mime_Type */
+    const char
+    *mdtm_value;     /* MD query value of attributes '_kMDItemGroupId' and 'kMDItemContentTypeTree' */
+    enum kMDTypeMap
+    mdtm_type;   /* whether SPARQL query must search attribute rdf:type or nie:mime_Type */
     const char *mdtm_sparql;    /* the SPARQL query match string */
 };
 

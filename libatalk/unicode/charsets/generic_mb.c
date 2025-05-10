@@ -43,71 +43,67 @@
 
 /* ------------------------ */
 
-size_t mb_generic_push( int (*char_func)(unsigned char *, ucs2_t), void *cd _U_, char **inbuf,
-			size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
+size_t mb_generic_push(int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
+                       char **inbuf,
+                       size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 {
-        int len = 0;
-	unsigned char *tmpptr = (unsigned char *) *outbuf;
-	ucs2_t inval;
+    int len = 0;
+    unsigned char *tmpptr = (unsigned char *) *outbuf;
+    ucs2_t inval;
 
-        while (*inbytesleft >= 2 && *outbytesleft >= 1) {
+    while (*inbytesleft >= 2 && *outbytesleft >= 1) {
+        inval = SVAL((*inbuf), 0);
 
-		inval = SVAL((*inbuf),0);
-		if ( (char_func)( tmpptr, inval)) {
-			(*inbuf) += 2;
-			tmpptr++;
-			len++;
-			(*inbytesleft)  -= 2;
-			(*outbytesleft) -= 1;
-		}
-		else
-		{
-			errno = EILSEQ;
-			return (size_t) -1;
-		}
+        if ((char_func)(tmpptr, inval)) {
+            (*inbuf) += 2;
+            tmpptr++;
+            len++;
+            (*inbytesleft)  -= 2;
+            (*outbytesleft) -= 1;
+        } else {
+            errno = EILSEQ;
+            return (size_t) -1;
         }
+    }
 
-        if (*inbytesleft > 0) {
-                errno = E2BIG;
-                return -1;
-        }
+    if (*inbytesleft > 0) {
+        errno = E2BIG;
+        return -1;
+    }
 
-        return len;
+    return len;
 }
 
 /* ------------------------ */
 
-size_t mb_generic_pull ( int (*char_func)(ucs2_t *, const unsigned char *), void *cd _U_,
-			char **inbuf, size_t *inbytesleft,char **outbuf, size_t *outbytesleft)
+size_t mb_generic_pull(int (*char_func)(ucs2_t *, const unsigned char *),
+                       void *cd _U_,
+                       char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
 {
-	ucs2_t 		temp;
-	unsigned char	*inptr;
-        size_t  len = 0;
+    ucs2_t 		temp;
+    unsigned char	*inptr;
+    size_t  len = 0;
 
-        while (*inbytesleft >= 1 && *outbytesleft >= 2) {
+    while (*inbytesleft >= 1 && *outbytesleft >= 2) {
+        inptr = (unsigned char *) *inbuf;
 
-		inptr = (unsigned char *) *inbuf;
-		if (char_func ( &temp, inptr)) {
-			SSVAL((*outbuf), 0, temp);
-			(*inbuf)        +=1;
-			(*outbuf)       +=2;
-			(*inbytesleft) -=1;
-			(*outbytesleft)-=2;
-			len++;
-
-		}
-		else
-		{
-			errno = EILSEQ;
-			return (size_t) -1;
-		}
+        if (char_func(&temp, inptr)) {
+            SSVAL((*outbuf), 0, temp);
+            (*inbuf)        += 1;
+            (*outbuf)       += 2;
+            (*inbytesleft) -= 1;
+            (*outbytesleft) -= 2;
+            len++;
+        } else {
+            errno = EILSEQ;
+            return (size_t) -1;
         }
+    }
 
-        if (*inbytesleft > 0) {
-                errno = E2BIG;
-                return (size_t) -1;
-        }
+    if (*inbytesleft > 0) {
+        errno = E2BIG;
+        return (size_t) -1;
+    }
 
-        return len;
-
+    return len;
 }

@@ -49,7 +49,8 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
   EA names, secondly it wants these names. In order to avoid scanning EAs twice
   we cache them in a static buffer.
 */
-int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                    size_t *rbuflen)
 {
     int                 ret, oflag = 0, adflags = 0, fd = -1;
     uint16_t            vid;
@@ -66,30 +67,30 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     size_t              attrbuflen = 0;
     bool                close_ad = false;
     char                attrnamebuf[ATTRNAMEBUFSIZ];
-
     *rbuflen = 0;
     ibuf += 2;
-
     /* Get Bitmap and MaxReplySize first */
-    memcpy(&bitmap, ibuf +6, sizeof(bitmap));
+    memcpy(&bitmap, ibuf + 6, sizeof(bitmap));
     bitmap = ntohs(bitmap);
-
-    memcpy(&maxreply, ibuf + 14, sizeof (maxreply));
+    memcpy(&maxreply, ibuf + 14, sizeof(maxreply));
     maxreply = ntohl(maxreply);
-
     memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
     vol = getvolbyvid(vid);
+
     if (vol == NULL) {
-        LOG(log_debug, logtype_afpd, "afp_listextattr: getvolbyvid error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_listextattr: getvolbyvid error: %s",
+            strerror(errno));
         return AFPERR_ACCESS;
     }
 
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
     dir = dirlookup(vol, did);
+
     if (dir == NULL) {
-        LOG(log_debug, logtype_afpd, "afp_listextattr: dirlookup error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_listextattr: dirlookup error: %s",
+            strerror(errno));
         return afp_errno;
     }
 
@@ -99,89 +100,101 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     /* Skip Bitmap, ReqCount, StartIndex and maxreply*/
     ibuf += 12;
-
     /* get name */
     s_path = cname(vol, dir, &ibuf);
+
     if (s_path == NULL) {
-        LOG(log_debug, logtype_afpd, "afp_listextattr: cname error: %s", strerror(errno));
+        LOG(log_debug, logtype_afpd, "afp_listextattr: cname error: %s",
+            strerror(errno));
         return AFPERR_NOOBJ;
     }
 
     st = &s_path->st;
+
     if (!s_path->st_valid) {
         /* it's a dir in our cache, we didn't stat it, do it now */
         of_statdir(vol, s_path);
     }
+
     if (s_path->st_errno != 0) {
         return AFPERR_NOOBJ;
     }
 
     uname = s_path->u_name;
-
     /*
      * We have to check the FinderInfo for the file, because if they
      * aren't all 0 we must return the synthetic attribute
      * "com.apple.FinderInfo".  Note: the client will never (never
      * seen in traces) request that attribute via FPGetExtAttr !
     */
-
     adp = &ad;
     ad_init(adp, vol);
     ad_init_offsets(adp);
 
     if (path_isadir(s_path)) {
-	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
+        LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
         adflags = ADFLAGS_DIR;
-	} else {
-	    LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a file", uname);
-	    opened = of_findname(vol, s_path);
-	    if (opened) {
+    } else {
+        LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a file", uname);
+        opened = of_findname(vol, s_path);
+
+        if (opened) {
             adp = opened->of_ad;
             fd = ad_meta_fileno(adp);
-	    }
-	}
+        }
+    }
 
-    if (ad_metadata(uname, adflags, adp) != 0 ) {
+    if (ad_metadata(uname, adflags, adp) != 0) {
         switch (errno) {
         case ENOENT:
             break;
+
         case EACCES:
-            LOG(log_error, logtype_afpd, "afp_listextattr(%s): %s: check resource fork permission?",
+            LOG(log_error, logtype_afpd,
+                "afp_listextattr(%s): %s: check resource fork permission?",
                 uname, strerror(errno));
             return AFPERR_ACCESS;
+
         default:
-            LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s", uname, strerror(errno));
+            LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s",
+                uname, strerror(errno));
             return AFPERR_MISC;
         }
     } else {
         close_ad = true;
         FinderInfo = ad_entry(adp, ADEID_FINDERI);
+
         /* Check if FinderInfo equals default and empty FinderInfo*/
         if (FinderInfo && memcmp(FinderInfo, emptyFinderInfo, 32) != 0) {
             /* FinderInfo contains some non 0 bytes -> include "com.apple.FinderInfo" */
             strcpy(attrnamebuf, ea_finderinfo);
             attrbuflen += strlen(ea_finderinfo) + 1;
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
+            LOG(log_debug7, logtype_afpd,
+                "afp_listextattr(%s): sending com.apple.FinderInfo", uname);
         }
 
         /* Now check for Resource fork and add virtual EA "com.apple.ResourceFork" if size > 0 */
-        LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Resource fork size: %llu", uname, adp->ad_rlen);
+        LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): Resource fork size: %llu",
+            uname, adp->ad_rlen);
 
         if (adp->ad_rlen > 0) {
-            LOG(log_debug7, logtype_afpd, "afp_listextattr(%s): sending com.apple.ResourceFork.", uname);
+            LOG(log_debug7, logtype_afpd,
+                "afp_listextattr(%s): sending com.apple.ResourceFork.", uname);
             strcpy(attrnamebuf + attrbuflen, ea_resourcefork);
             attrbuflen += strlen(ea_resourcefork) + 1;
         }
     }
 
     ret = vol->vfs->vfs_ea_list(vol, attrnamebuf, &attrbuflen, uname, oflag, fd);
+
     if (ret != AFP_OK) {
         attrbuflen = 0;
 
         switch (ret) {
         case AFPERR_BADTYPE:
             /* its a symlink and client requested O_NOFOLLOW */
-            LOG(log_debug, logtype_afpd, "afp_listextattr(%s): encountered symlink with kXAttrNoFollow", uname);
+            LOG(log_debug, logtype_afpd,
+                "afp_listextattr(%s): encountered symlink with kXAttrNoFollow", uname);
             ret = AFP_OK;
             break;
 
@@ -192,17 +205,16 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
 exit:
     bitmap = htons(bitmap);
-    memcpy( rbuf, &bitmap, sizeof(bitmap));
+    memcpy(rbuf, &bitmap, sizeof(bitmap));
     rbuf += sizeof(bitmap);
     *rbuflen += sizeof(bitmap);
-
     tmpattr = htonl(attrbuflen);
-    memcpy( rbuf, &tmpattr, sizeof(tmpattr));
+    memcpy(rbuf, &tmpattr, sizeof(tmpattr));
     rbuf += sizeof(tmpattr);
     *rbuflen += sizeof(tmpattr);
 
     if (maxreply > 0) {
-        memcpy( rbuf, attrnamebuf, attrbuflen);
+        memcpy(rbuf, attrnamebuf, attrbuflen);
         *rbuflen += attrbuflen;
     }
 
@@ -215,18 +227,21 @@ exit:
 
 static char *to_stringz(char *ibuf, uint16_t len)
 {
-static char attrmname[256];
+    static char attrmname[256];
 
     if (len > 255)
         /* don't fool with us */
+    {
         len = 255;
+    }
 
     /* we must copy the name as its not 0-terminated and I DONT WANT TO WRITE to ibuf */
     strlcpy(attrmname, ibuf, len + 1);
     return attrmname;
 }
 
-int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, size_t *rbuflen)
+int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
+                   size_t *rbuflen)
 {
     int                 ret, oflag = 0, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
@@ -237,59 +252,64 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     struct path         *s_path;
     struct adouble	ad _U_, *adp = NULL;
     struct ofork	*opened = NULL;
-
-
     *rbuflen = 0;
     ibuf += 2;
-
-    memcpy( &vid, ibuf, sizeof(vid));
+    memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
-        LOG(log_debug, logtype_afpd, "afp_getextattr: getvolbyvid error: %s", strerror(errno));
+
+    if (NULL == (vol = getvolbyvid(vid))) {
+        LOG(log_debug, logtype_afpd, "afp_getextattr: getvolbyvid error: %s",
+            strerror(errno));
         return AFPERR_ACCESS;
     }
 
-    memcpy( &did, ibuf, sizeof(did));
+    memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
-        LOG(log_debug, logtype_afpd, "afp_getextattr: dirlookup error: %s", strerror(errno));
+
+    if (NULL == (dir = dirlookup(vol, did))) {
+        LOG(log_debug, logtype_afpd, "afp_getextattr: dirlookup error: %s",
+            strerror(errno));
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, sizeof(bitmap));
-    bitmap = ntohs( bitmap );
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
     ibuf += sizeof(bitmap);
 
-    if (bitmap & kXAttrNoFollow)
+    if (bitmap & kXAttrNoFollow) {
         oflag = O_NOFOLLOW;
+    }
 
     /* Skip Offset and ReqCount */
     ibuf += 16;
-
     /* Get MaxReply */
     memcpy(&maxreply, ibuf, sizeof(maxreply));
     maxreply = ntohl(maxreply);
     ibuf += sizeof(maxreply);
 
     /* get name */
-    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_debug, logtype_afpd, "afp_getextattr: cname error: %s", strerror(errno));
+    if (NULL == (s_path = cname(vol, dir, &ibuf))) {
+        LOG(log_debug, logtype_afpd, "afp_getextattr: cname error: %s",
+            strerror(errno));
         return AFPERR_NOOBJ;
     }
 
-    if ((unsigned long)ibuf & 1)
+    if ((unsigned long)ibuf & 1) {
         ibuf++;
+    }
 
     /* get length of EA name */
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
     ibuf += sizeof(attrnamelen);
-
-    LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name, to_stringz(ibuf, attrnamelen));
+    LOG(log_debug, logtype_afpd, "afp_getextattr(%s): EA: %s", s_path->u_name,
+        to_stringz(ibuf, attrnamelen));
 
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf, attrnamelen, attruname, 256) )
+    if (0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf,
+                            attrnamelen, attruname, 256)) {
         return AFPERR_MISC;
+    }
 
     /* write bitmap now */
     bitmap = htons(bitmap);
@@ -298,14 +318,15 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
     *rbuflen += sizeof(bitmap);
 
     if (path_isadir(s_path)) {
-	LOG(log_debug, logtype_afpd, "afp_getextattr(%s): is a dir", s_path->u_name);
+        LOG(log_debug, logtype_afpd, "afp_getextattr(%s): is a dir", s_path->u_name);
     } else {
-	LOG(log_debug, logtype_afpd, "afp_getextattr(%s): is a file", s_path->u_name);
-	opened = of_findname(vol, s_path);
-	if (opened) {
-	    adp = opened->of_ad;
-	    fd = ad_meta_fileno(adp);
-	}
+        LOG(log_debug, logtype_afpd, "afp_getextattr(%s): is a file", s_path->u_name);
+        opened = of_findname(vol, s_path);
+
+        if (opened) {
+            adp = opened->of_ad;
+            fd = ad_meta_fileno(adp);
+        }
     }
 
     /*
@@ -313,15 +334,19 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf, 
       if its 0 we must return the size of the requested attribute,
       if its non 0 we must return the attribute.
     */
-    if (maxreply == 0)
-        ret = vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, fd);
-    else
-        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name, oflag, attruname, maxreply, fd);
+    if (maxreply == 0) {
+        ret = vol->vfs->vfs_ea_getsize(vol, rbuf, rbuflen, s_path->u_name, oflag,
+                                       attruname, fd);
+    } else {
+        ret = vol->vfs->vfs_ea_getcontent(vol, rbuf, rbuflen, s_path->u_name, oflag,
+                                          attruname, maxreply, fd);
+    }
 
     return ret;
 }
 
-int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+                   char *rbuf _U_, size_t *rbuflen)
 {
     int                 oflag = 0, ret, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
@@ -333,89 +358,104 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct path         *s_path;
     struct adouble	ad _U_, *adp = NULL;
     struct ofork	*opened = NULL;
-
     *rbuflen = 0;
     ibuf += 2;
-
-    memcpy( &vid, ibuf, sizeof(vid));
+    memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
-        LOG(log_debug, logtype_afpd, "afp_setextattr: getvolbyvid error: %s", strerror(errno));
+
+    if (NULL == (vol = getvolbyvid(vid))) {
+        LOG(log_debug, logtype_afpd, "afp_setextattr: getvolbyvid error: %s",
+            strerror(errno));
         return AFPERR_ACCESS;
     }
 
-    memcpy( &did, ibuf, sizeof(did));
+    memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
-        LOG(log_debug, logtype_afpd, "afp_setextattr: dirlookup error: %s", strerror(errno));
+
+    if (NULL == (dir = dirlookup(vol, did))) {
+        LOG(log_debug, logtype_afpd, "afp_setextattr: dirlookup error: %s",
+            strerror(errno));
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, sizeof(bitmap));
-    bitmap = ntohs( bitmap );
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
     ibuf += sizeof(bitmap);
 
-    if (bitmap & kXAttrNoFollow)
+    if (bitmap & kXAttrNoFollow) {
         oflag |= O_NOFOLLOW;
+    }
 
-    if (bitmap & kXAttrCreate)
+    if (bitmap & kXAttrCreate) {
         oflag |= O_CREAT;
-    else if (bitmap & kXAttrReplace)
+    } else if (bitmap & kXAttrReplace) {
         oflag |= O_TRUNC;
+    }
 
     /* Skip Offset */
     ibuf += 8;
 
     /* get name */
-    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_debug, logtype_afpd, "afp_setextattr: cname error: %s", strerror(errno));
+    if (NULL == (s_path = cname(vol, dir, &ibuf))) {
+        LOG(log_debug, logtype_afpd, "afp_setextattr: cname error: %s",
+            strerror(errno));
         return AFPERR_NOOBJ;
     }
 
     if (path_isadir(s_path)) {
-	LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a dir", s_path->u_name);
+        LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a dir", s_path->u_name);
     } else {
-	LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a file", s_path->u_name);
-	opened = of_findname(vol, s_path);
-	if (opened) {
-	    adp = opened->of_ad;
-	    fd = ad_meta_fileno(adp);
-	}
+        LOG(log_debug, logtype_afpd, "afp_setextattr(%s): is a file", s_path->u_name);
+        opened = of_findname(vol, s_path);
+
+        if (opened) {
+            adp = opened->of_ad;
+            fd = ad_meta_fileno(adp);
+        }
     }
 
-
-    if ((unsigned long)ibuf & 1)
+    if ((unsigned long)ibuf & 1) {
         ibuf++;
+    }
 
     /* get length of EA name */
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
     ibuf += sizeof(attrnamelen);
-    if (attrnamelen > 255)
+
+    if (attrnamelen > 255) {
         return AFPERR_PARAM;
+    }
 
     attrmname = ibuf;
+
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, attrmname, attrnamelen, attruname, 256))
+    if (0 >= convert_string(CH_UTF8_MAC, obj->options.unixcharset, attrmname,
+                            attrnamelen, attruname, 256)) {
         return AFPERR_MISC;
+    }
 
     ibuf += attrnamelen;
     /* get EA size */
     memcpy(&attrsize, ibuf, sizeof(attrsize));
     attrsize = ntohl(attrsize);
     ibuf += sizeof(attrsize);
+
     if (attrsize > MAX_EA_SIZE)
         /* we arbitrarily make this fatal */
+    {
         return AFPERR_PARAM;
+    }
 
-    LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u", s_path->u_name, to_stringz(attrmname, attrnamelen), attrsize);
-
-    ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize, oflag, fd);
-
+    LOG(log_debug, logtype_afpd, "afp_setextattr(%s): EA: %s, size: %u",
+        s_path->u_name, to_stringz(attrmname, attrnamelen), attrsize);
+    ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize,
+                               oflag, fd);
     return ret;
 }
 
-int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen)
+int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+                   char *rbuf _U_, size_t *rbuflen)
 {
     int                 oflag = 0, ret, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
@@ -426,65 +466,74 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _
     struct path         *s_path;
     struct adouble	ad _U_, *adp = NULL;
     struct ofork	*opened = NULL;
-
     *rbuflen = 0;
     ibuf += 2;
-
-    memcpy( &vid, ibuf, sizeof(vid));
+    memcpy(&vid, ibuf, sizeof(vid));
     ibuf += sizeof(vid);
-    if (NULL == ( vol = getvolbyvid( vid )) ) {
-        LOG(log_debug, logtype_afpd, "afp_remextattr: getvolbyvid error: %s", strerror(errno));
+
+    if (NULL == (vol = getvolbyvid(vid))) {
+        LOG(log_debug, logtype_afpd, "afp_remextattr: getvolbyvid error: %s",
+            strerror(errno));
         return AFPERR_ACCESS;
     }
 
-    memcpy( &did, ibuf, sizeof(did));
+    memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
-    if (NULL == ( dir = dirlookup( vol, did )) ) {
-        LOG(log_debug, logtype_afpd, "afp_remextattr: dirlookup error: %s", strerror(errno));
+
+    if (NULL == (dir = dirlookup(vol, did))) {
+        LOG(log_debug, logtype_afpd, "afp_remextattr: dirlookup error: %s",
+            strerror(errno));
         return afp_errno;
     }
 
-    memcpy( &bitmap, ibuf, sizeof(bitmap));
-    bitmap = ntohs( bitmap );
+    memcpy(&bitmap, ibuf, sizeof(bitmap));
+    bitmap = ntohs(bitmap);
     ibuf += sizeof(bitmap);
 
-    if (bitmap & kXAttrNoFollow)
+    if (bitmap & kXAttrNoFollow) {
         oflag |= O_NOFOLLOW;
+    }
 
     /* get name */
-    if (NULL == ( s_path = cname( vol, dir, &ibuf )) ) {
-        LOG(log_debug, logtype_afpd, "afp_remextattr: cname error: %s", strerror(errno));
+    if (NULL == (s_path = cname(vol, dir, &ibuf))) {
+        LOG(log_debug, logtype_afpd, "afp_remextattr: cname error: %s",
+            strerror(errno));
         return AFPERR_NOOBJ;
     }
 
     if (path_isadir(s_path)) {
-	LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a dir", s_path->u_name);
+        LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a dir", s_path->u_name);
     } else {
-	LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a file", s_path->u_name);
-	opened = of_findname(vol, s_path);
-	if (opened) {
-	    adp = opened->of_ad;
-	    fd = ad_meta_fileno(adp);
-	}
+        LOG(log_debug, logtype_afpd, "afp_remextattr(%s): is a file", s_path->u_name);
+        opened = of_findname(vol, s_path);
+
+        if (opened) {
+            adp = opened->of_ad;
+            fd = ad_meta_fileno(adp);
+        }
     }
 
-    if ((unsigned long)ibuf & 1)
+    if ((unsigned long)ibuf & 1) {
         ibuf++;
+    }
 
     /* get length of EA name */
     memcpy(&attrnamelen, ibuf, sizeof(attrnamelen));
     attrnamelen = ntohs(attrnamelen);
     ibuf += sizeof(attrnamelen);
-    if (attrnamelen > 255)
+
+    if (attrnamelen > 255) {
         return AFPERR_PARAM;
+    }
 
     /* Convert EA name in utf8 to unix charset */
-    if ( 0 >= (convert_string(CH_UTF8_MAC, obj->options.unixcharset,ibuf, attrnamelen, attruname, 256)) )
+    if (0 >= (convert_string(CH_UTF8_MAC, obj->options.unixcharset, ibuf,
+                             attrnamelen, attruname, 256))) {
         return AFPERR_MISC;
+    }
 
-    LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name, to_stringz(ibuf, attrnamelen));
-
+    LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name,
+        to_stringz(ibuf, attrnamelen));
     ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag, fd);
-
     return ret;
 }

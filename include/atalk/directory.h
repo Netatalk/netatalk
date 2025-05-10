@@ -54,12 +54,14 @@
 struct dir {
     bstring     d_fullpath;          /* complete unix path to dir (or file) */
     bstring     d_m_name;            /* mac name */
-    bstring     d_u_name;            /* unix name                                          */
-                                     /* be careful here! if d_m_name == d_u_name, d_u_name */
-                                     /* will just point to the same storage as d_m_name !! */
+    bstring
+    d_u_name;            /* unix name                                          */
+    /* be careful here! if d_m_name == d_u_name, d_u_name */
+    /* will just point to the same storage as d_m_name !! */
     ucs2_t      *d_m_name_ucs2;       /* mac name as UCS2 */
     qnode_t     *qidx_node;           /* pointer to position in queue index */
-    time_t      d_ctime;                /* inode ctime, used and modified by reenumeration */
+    time_t
+    d_ctime;                /* inode ctime, used and modified by reenumeration */
 
     int         d_flags;              /* directory flags */
     cnid_t      d_pdid;               /* CNID of parent directory */
@@ -67,11 +69,14 @@ struct dir {
     uint32_t    d_offcnt;             /* offspring count */
     uint16_t    d_vid;                /* only needed in the dircache, because
                                          we put all directories in one cache. */
-    uint32_t    d_rights_cache;       /* cached rights combinded from mode and possible ACL */
+    uint32_t
+    d_rights_cache;       /* cached rights combinded from mode and possible ACL */
 
     /* Stuff used in the dircache */
-    time_t      dcache_ctime;         /* inode ctime, used and modified by dircache */
-    ino_t       dcache_ino;           /* inode number, used to detect changes in the dircache */
+    time_t
+    dcache_ctime;         /* inode ctime, used and modified by dircache */
+    ino_t
+    dcache_ino;           /* inode number, used to detect changes in the dircache */
 };
 
 struct path {
@@ -91,7 +96,8 @@ static inline int path_isadir(struct path *o_path)
 #if 0
     return o_path->m_name == '\0' || /* we are in a it */
            !o_path->st_valid ||      /* in cache but we can't chdir in it */
-           (!o_path->st_errno && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
+           (!o_path->st_errno
+            && S_ISDIR(o_path->st.st_mode)); /* not in cache an can't chdir */
 #endif
 }
 

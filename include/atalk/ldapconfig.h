@@ -30,8 +30,8 @@ extern char *ldap_groupfilter;
 extern int  ldap_uuid_encoding;
 
 typedef enum {
-	LDAP_UUID_ENCODING_STRING = 0, /* Plain ASCII string */
-	LDAP_UUID_ENCODING_MSGUID = 1  /* Raw byte array, from Active Directory objectGUID */
+    LDAP_UUID_ENCODING_STRING = 0, /* Plain ASCII string */
+    LDAP_UUID_ENCODING_MSGUID = 1  /* Raw byte array, from Active Directory objectGUID */
 } ldap_uuid_encoding_type;
 
 struct ldap_pref {
@@ -44,7 +44,8 @@ struct ldap_pref {
 };
 
 struct pref_array {
-    const char *pref;         /* name of pref from ldap_prefs[] to which this value corresponds */
+    const char
+    *pref;         /* name of pref from ldap_prefs[] to which this value corresponds */
     char *valuestring;  /* config string */
     int  value;         /* corresponding value */
 };

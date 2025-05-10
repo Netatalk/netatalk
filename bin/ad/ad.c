@@ -54,35 +54,35 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (afp_config_parse(&obj, "ad") != 0)
+    if (afp_config_parse(&obj, "ad") != 0) {
         return 1;
+    }
 
     setuplog("default:note", "/dev/tty", true);
 
-    if (load_volumes(&obj, LV_DEFAULT) != 0)
+    if (load_volumes(&obj, LV_DEFAULT) != 0) {
         return 1;
+    }
 
-    if (STRCMP(argv[1], ==, "ls"))
+    if (STRCMP(argv[1], ==, "ls")) {
         return ad_ls(argc - 1, argv + 1, &obj);
-    else if (STRCMP(argv[1], ==, "cp"))
+    } else if (STRCMP(argv[1], ==, "cp")) {
         return ad_cp(argc - 1, argv + 1, &obj);
-    else if (STRCMP(argv[1], ==, "rm"))
+    } else if (STRCMP(argv[1], ==, "rm")) {
         return ad_rm(argc - 1, argv + 1, &obj);
-    else if (STRCMP(argv[1], ==, "mv"))
+    } else if (STRCMP(argv[1], ==, "mv")) {
         return ad_mv(argc, argv, &obj);
-    else if (STRCMP(argv[1], ==, "set"))
+    } else if (STRCMP(argv[1], ==, "set")) {
         return ad_set(argc - 1, argv + 1, &obj);
-    else if (STRCMP(argv[1], ==, "find"))
+    } else if (STRCMP(argv[1], ==, "find")) {
         return ad_find(argc, argv, &obj);
-    else if (STRCMP(argv[1], ==, "-v")) {
+    } else if (STRCMP(argv[1], ==, "-v")) {
         show_version();
         return 1;
-    }
-    else if  (STRCMP(argv[1], ==, "--version")) {
+    } else if (STRCMP(argv[1], ==, "--version")) {
         show_version();
         return 1;
-    }
-    else {
+    } else {
         usage_main();
         return 1;
     }

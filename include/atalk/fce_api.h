@@ -130,9 +130,10 @@ struct path;
 struct ofork;
 
 void fce_pending_events(const AFPObj *obj);
-int fce_register(const AFPObj *obj, fce_ev_t event, const char *path, const char *oldpath);
-int fce_add_udp_socket(const char *target );  // IP or IP:Port
-int fce_set_coalesce(const char *coalesce_opt ); // all|delete|create
+int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
+                 const char *oldpath);
+int fce_add_udp_socket(const char *target);   // IP or IP:Port
+int fce_set_coalesce(const char *coalesce_opt);  // all|delete|create
 int fce_set_events(const char *events);     /* fmod,fdel,ddel,fcre,dcre */
 
 #define FCE_DEFAULT_PORT 12250

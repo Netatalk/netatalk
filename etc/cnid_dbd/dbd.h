@@ -21,7 +21,8 @@ int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 int dbd_get(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 int dbd_resolve(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 int dbd_update(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
-int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *, int idx);
+int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *,
+               int idx);
 int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 int dbd_rebuild_add(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);
 int dbd_search(DBD *dbd, struct cnid_dbd_rqst *, struct cnid_dbd_rply *);

@@ -31,30 +31,42 @@ static const struct vol *volume;
  */
 static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino)
 {
-    buf[CNID_DEV_LEN - 1] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 2] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 3] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 4] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 5] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 6] = dev; dev >>= 8;
-    buf[CNID_DEV_LEN - 7] = dev; dev >>= 8;
+    buf[CNID_DEV_LEN - 1] = dev;
+    dev >>= 8;
+    buf[CNID_DEV_LEN - 2] = dev;
+    dev >>= 8;
+    buf[CNID_DEV_LEN - 3] = dev;
+    dev >>= 8;
+    buf[CNID_DEV_LEN - 4] = dev;
+    dev >>= 8;
+    buf[CNID_DEV_LEN - 5] = dev;
+    dev >>= 8;
+    buf[CNID_DEV_LEN - 6] = dev;
+    dev >>= 8;
+    buf[CNID_DEV_LEN - 7] = dev;
+    dev >>= 8;
     buf[CNID_DEV_LEN - 8] = dev;
-
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 1] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 2] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 3] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 4] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 5] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 6] = ino; ino >>= 8;
-    buf[CNID_DEV_LEN + CNID_INO_LEN - 7] = ino; ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 1] = ino;
+    ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 2] = ino;
+    ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 3] = ino;
+    ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 4] = ino;
+    ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 5] = ino;
+    ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 6] = ino;
+    ino >>= 8;
+    buf[CNID_DEV_LEN + CNID_INO_LEN - 7] = ino;
+    ino >>= 8;
     buf[CNID_DEV_LEN + CNID_INO_LEN - 8] = ino;
 }
 
 /* --------------- */
 int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 {
-int len;
-
+    int len;
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DID_OFS;
     /* FIXME: At least DB 4.0.14 and 4.1.25 pass in the correct length of
@@ -77,7 +89,7 @@ int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 /* --------------- */
 int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 {
-    static char buffer[MAXPATHLEN +2];
+    static char buffer[MAXPATHLEN + 2];
     uint16_t flags = CONV_TOLOWER;
     memset(skey, 0, sizeof(DBT));
 
@@ -88,7 +100,7 @@ int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
                         strlen((char *)pdata->data + CNID_NAME_OFS),
                         buffer,
                         MAXPATHLEN,
-                        &flags) == (size_t)-1) {
+                        &flags) == (size_t) -1) {
         LOG(log_error, logtype_cnid, "idxname: conversion error");
     }
 
@@ -109,22 +121,18 @@ void pack_setvol(const struct vol *vol)
 unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst)
 {
     static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
-    unsigned char *buf = start +CNID_LEN;
+    unsigned char *buf = start + CNID_LEN;
     u_int32_t i;
-
     pack_devino(buf, rqst->dev, rqst->ino);
     buf += CNID_DEVINO_LEN;
-
     i = htonl(rqst->type);
     memcpy(buf, &i, sizeof(i));
     buf += sizeof(i);
-
     /* did is already in network byte order */
     buf = memcpy(buf, &rqst->did, sizeof(rqst->did));
     buf += sizeof(rqst->did);
     buf = memcpy(buf, rqst->name, rqst->namelen);
     *(buf + rqst->namelen) = '\0';
-
     return start;
 }
 

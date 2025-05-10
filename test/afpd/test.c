@@ -56,50 +56,39 @@ int main()
     struct vol *vol;
     struct dir *retdir;
     struct path *path;
-
     /* initialize */
     printf("Initializing\n============\n");
     TEST(setuplog("default:note", "/dev/tty", true));
-
-    TEST( afp_options_parse_cmdline(&obj, 3, &args[0]) );
-
-    TEST_int( afp_config_parse(&obj, NULL), 0);
-    TEST_int( configinit(&obj, &aspobj), 0);
-    TEST( cnid_init() );
-    TEST( load_volumes(&obj, LV_ALL) );
-    TEST_int( dircache_init(8192), 0);
+    TEST(afp_options_parse_cmdline(&obj, 3, &args[0]));
+    TEST_int(afp_config_parse(&obj, NULL), 0);
+    TEST_int(configinit(&obj, &aspobj), 0);
+    TEST(cnid_init());
+    TEST(load_volumes(&obj, LV_ALL));
+    TEST_int(dircache_init(8192), 0);
     obj.afp_version = 34;
-
     printf("\n");
-
     /* now run tests */
     printf("Running tests\n=============\n");
-
     TEST_expr(vid = openvol(&obj, "test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
-
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL);
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT), retdir != NULL);
-    TEST_expr(path = cname(vol, retdir, cnamewrap("Network Trash Folder")), path != NULL);
-
+    TEST_expr(path = cname(vol, retdir, cnamewrap("Network Trash Folder")),
+              path != NULL);
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT), retdir != NULL);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "test"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, ""), 0);
-
     TEST_expr(reti = createdir(&obj, vid, DIRDID_ROOT, "dir1"),
               reti == 0 || reti == AFPERR_EXIST);
-
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "dir1"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "\000\000"), 0);
     TEST_int(createfile(&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
-    TEST_int(delete(&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
-    TEST_int(delete(&obj, vid, DIRDID_ROOT, "dir1"), 0);
-
+    TEST_int(delete (&obj, vid, DIRDID_ROOT, "dir1/file1"), 0);
+    TEST_int(delete (&obj, vid, DIRDID_ROOT, "dir1"), 0);
     TEST_int(createfile(&obj, vid, DIRDID_ROOT, "file1"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, "file1"), 0);
-    TEST_int(delete(&obj, vid, DIRDID_ROOT, "file1"), 0);
-
+    TEST_int(delete (&obj, vid, DIRDID_ROOT, "file1"), 0);
     /* test enumerate.c stuff */
     TEST_int(enumerate(&obj, vid, DIRDID_ROOT), 0);
 }

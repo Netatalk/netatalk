@@ -15,9 +15,9 @@
 union aapa {
     unsigned char		ap_pa[4];
     struct ap_node {
-	unsigned char		an_zero;
-	unsigned char		an_net[2];
-	unsigned char		an_node;
+        unsigned char		an_zero;
+        unsigned char		an_net[2];
+        unsigned char		an_node;
     } ap_node;
 };
 

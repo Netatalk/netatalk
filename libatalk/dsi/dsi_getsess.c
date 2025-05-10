@@ -31,94 +31,92 @@
  * @param childp    (w) after fork: parent return pointer to child, child returns NULL
  * @returns             0 on sucess, any other value denotes failure
  */
-int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval, afp_child_t **childp)
+int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
+                   afp_child_t **childp)
 {
-  pid_t pid;
-  int ipc_fds[2];
-  afp_child_t *child;
+    pid_t pid;
+    int ipc_fds[2];
+    afp_child_t *child;
 
-  if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
-      LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
-      return -1;
-  }
-
-  if (setnonblock(ipc_fds[0], 1) != 0 || setnonblock(ipc_fds[1], 1) != 0) {
-      LOG(log_error, logtype_dsi, "dsi_getsess: setnonblock: %s", strerror(errno));
-      return -1;
-  }
-
-  switch (pid = dsi->proto_open(dsi)) { /* in libatalk/dsi/dsi_tcp.c */
-  case -1:
-    /* if we fail, just return. it might work later */
-    LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
-    return -1;
-
-  case 0: /* child. mostly handled below. */
-    break;
-
-  default: /* parent */
-    /* using SIGKILL is hokey, but the child might not have
-     * re-established its signal handler for SIGTERM yet. */
-    close(ipc_fds[1]);
-    if ((child = server_child_add(serv_children, pid, ipc_fds[0])) ==  NULL) {
-      LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
-      close(ipc_fds[0]);
-      dsi->header.dsi_flags = DSIFL_REPLY;
-      dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
-      dsi_send(dsi);
-      dsi->header.dsi_data.dsi_code = DSIERR_OK;
-      kill(pid, SIGKILL);
+    if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
+        LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+        return -1;
     }
-    dsi->proto_close(dsi);
-    *childp = child;
-    return 0;
-  }
 
-  /* Save number of existing and maximum connections */
-  dsi->AFPobj->cnx_cnt = serv_children->servch_count;
-  dsi->AFPobj->cnx_max = serv_children->servch_nsessions;
+    if (setnonblock(ipc_fds[0], 1) != 0 || setnonblock(ipc_fds[1], 1) != 0) {
+        LOG(log_error, logtype_dsi, "dsi_getsess: setnonblock: %s", strerror(errno));
+        return -1;
+    }
 
-  /* get rid of some stuff */
-  dsi->AFPobj->ipc_fd = ipc_fds[1];
-  close(ipc_fds[0]);
-  close(dsi->serversock);
-  dsi->serversock = -1;
-  server_child_free(serv_children);
+    switch (pid = dsi->proto_open(dsi)) { /* in libatalk/dsi/dsi_tcp.c */
+    case -1:
+        /* if we fail, just return. it might work later */
+        LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+        return -1;
 
-  switch (dsi->header.dsi_command) {
-  case DSIFUNC_STAT: /* send off status and return */
-    {
-      /* OpenTransport 1.1.2 bug workaround:
-       *
-       * OT code doesn't currently handle close sockets well. urk.
-       * the workaround: wait for the client to close its
-       * side. timeouts prevent indefinite resource use.
-       */
+    case 0: /* child. mostly handled below. */
+        break;
 
-      static struct timeval timeout = {120, 0};
-      fd_set readfds;
+    default: /* parent */
+        /* using SIGKILL is hokey, but the child might not have
+         * re-established its signal handler for SIGTERM yet. */
+        close(ipc_fds[1]);
 
-      dsi_getstatus(dsi);
+        if ((child = server_child_add(serv_children, pid, ipc_fds[0])) ==  NULL) {
+            LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+            close(ipc_fds[0]);
+            dsi->header.dsi_flags = DSIFL_REPLY;
+            dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
+            dsi_send(dsi);
+            dsi->header.dsi_data.dsi_code = DSIERR_OK;
+            kill(pid, SIGKILL);
+        }
 
-      FD_ZERO(&readfds);
-      FD_SET(dsi->socket, &readfds);
-      free(dsi);
-      select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);
-      exit(0);
+        dsi->proto_close(dsi);
+        *childp = child;
+        return 0;
+    }
+
+    /* Save number of existing and maximum connections */
+    dsi->AFPobj->cnx_cnt = serv_children->servch_count;
+    dsi->AFPobj->cnx_max = serv_children->servch_nsessions;
+    /* get rid of some stuff */
+    dsi->AFPobj->ipc_fd = ipc_fds[1];
+    close(ipc_fds[0]);
+    close(dsi->serversock);
+    dsi->serversock = -1;
+    server_child_free(serv_children);
+
+    switch (dsi->header.dsi_command) {
+    case DSIFUNC_STAT: { /* send off status and return */
+        /* OpenTransport 1.1.2 bug workaround:
+         *
+         * OT code doesn't currently handle close sockets well. urk.
+         * the workaround: wait for the client to close its
+         * side. timeouts prevent indefinite resource use.
+         */
+        static struct timeval timeout = {120, 0};
+        fd_set readfds;
+        dsi_getstatus(dsi);
+        FD_ZERO(&readfds);
+        FD_SET(dsi->socket, &readfds);
+        free(dsi);
+        select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);
+        exit(0);
     }
     break;
 
-  case DSIFUNC_OPEN: /* setup session */
-    /* set up the tickle timer */
-    dsi->timer.it_interval.tv_sec = dsi->timer.it_value.tv_sec = tickleval;
-    dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
-    dsi_opensession(dsi);
-    *childp = NULL;
-    return 0;
+    case DSIFUNC_OPEN: /* setup session */
+        /* set up the tickle timer */
+        dsi->timer.it_interval.tv_sec = dsi->timer.it_value.tv_sec = tickleval;
+        dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
+        dsi_opensession(dsi);
+        *childp = NULL;
+        return 0;
 
-  default: /* just close */
-    LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);
-    dsi->proto_close(dsi);
-    exit(EXITERR_CLNT);
-  }
+    default: /* just close */
+        LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);
+        dsi->proto_close(dsi);
+        exit(EXITERR_CLNT);
+    }
 }

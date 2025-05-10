@@ -43,17 +43,20 @@
 
 #include "ad_lock.h"
 
-static char emptyfilad[32] = {0,0,0,0,0,0,0,0,
-                              0,0,0,0,0,0,0,0,
-                              0,0,0,0,0,0,0,0,
-                              0,0,0,0,0,0,0,0};
+static char emptyfilad[32] = {0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0
+                             };
 
-static char emptydirad[32] = {0,0,0,0,0,0,0,0,
-                              0,0,0,0,0,0,1,0,
-                              0,0,0,0,0,0,0,0,
-                              0,0,0,0,0,0,0,0};
+static char emptydirad[32] = {0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 1, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0,
+                              0, 0, 0, 0, 0, 0, 0, 0
+                             };
 
-static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struct vol *vol)
+static int ad_conv_v22ea_hf(const char *path, const struct stat *sp,
+                            const struct vol *vol)
 {
     EC_INIT;
     struct adouble adv2;
@@ -61,123 +64,134 @@ static int ad_conv_v22ea_hf(const char *path, const struct stat *sp, const struc
     int adflags;
     uint32_t ctime, mtime, afpinfo = 0;
     char *emptyad;
-
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): BEGIN", fullpathname(path));
+    LOG(log_debug, logtype_ad, "ad_conv_v22ea_hf(\"%s\"): BEGIN",
+        fullpathname(path));
 
     switch (S_IFMT & sp->st_mode) {
     case S_IFREG:
     case S_IFDIR:
         break;
+
     default:
         return 0;
     }
 
     ad_init(&adea, vol);
     ad_init_old(&adv2, AD_VERSION2, adea.ad_options);
-
     adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
-
     /* Open and lock adouble:v2 file */
-    EC_ZERO( ad_open(&adv2, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR) );
-
-    EC_NEG1_LOG( ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) );
-    EC_NEG1_LOG( adv2.ad_ops->ad_header_read(path, &adv2, sp) );
+    EC_ZERO(ad_open(&adv2, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR));
+    EC_NEG1_LOG(ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0,
+                           0));
+    EC_NEG1_LOG(adv2.ad_ops->ad_header_read(path, &adv2, sp));
 
     /* Check if it's a non-empty header */
-    if (S_ISREG(sp->st_mode))
+    if (S_ISREG(sp->st_mode)) {
         emptyad = &emptyfilad[0];
-    else
+    } else {
         emptyad = &emptydirad[0];
+    }
 
-    if (ad_getentrylen(&adv2, ADEID_COMMENT) != 0)
+    if (ad_getentrylen(&adv2, ADEID_COMMENT) != 0) {
         goto copy;
+    }
+
     if (ad_getentryoff(&adv2, ADEID_FINDERI)
-        && (ad_getentrylen(&adv2, ADEID_FINDERI) == ADEDLEN_FINDERI)
-        && (ad_entry(&adv2, ADEID_FINDERI) != NULL)
-        && (memcmp(ad_entry(&adv2, ADEID_FINDERI), emptyad, ADEDLEN_FINDERI) != 0))
+            && (ad_getentrylen(&adv2, ADEID_FINDERI) == ADEDLEN_FINDERI)
+            && (ad_entry(&adv2, ADEID_FINDERI) != NULL)
+            && (memcmp(ad_entry(&adv2, ADEID_FINDERI), emptyad, ADEDLEN_FINDERI) != 0)) {
         goto copy;
+    }
+
     if (ad_getentryoff(&adv2, ADEID_FILEDATESI)) {
-        EC_ZERO_LOG( ad_getdate(&adv2, AD_DATE_CREATE | AD_DATE_UNIX, &ctime) );
-        EC_ZERO_LOG( ad_getdate(&adv2, AD_DATE_MODIFY | AD_DATE_UNIX, &mtime) );
-        if ((ctime != mtime) || (mtime != sp->st_mtime))
+        EC_ZERO_LOG(ad_getdate(&adv2, AD_DATE_CREATE | AD_DATE_UNIX, &ctime));
+        EC_ZERO_LOG(ad_getdate(&adv2, AD_DATE_MODIFY | AD_DATE_UNIX, &mtime));
+
+        if ((ctime != mtime) || (mtime != sp->st_mtime)) {
             goto copy;
-    }
-    if (ad_getentryoff(&adv2, ADEID_AFPFILEI) && (ad_entry(&adv2, ADEID_AFPFILEI) != NULL)) {
-        if (memcmp(ad_entry(&adv2, ADEID_AFPFILEI), &afpinfo, ADEDLEN_AFPFILEI) != 0)
-            goto copy;
+        }
     }
 
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): default adouble", fullpathname(path), ret);
+    if (ad_getentryoff(&adv2, ADEID_AFPFILEI)
+            && (ad_entry(&adv2, ADEID_AFPFILEI) != NULL)) {
+        if (memcmp(ad_entry(&adv2, ADEID_AFPFILEI), &afpinfo, ADEDLEN_AFPFILEI) != 0) {
+            goto copy;
+        }
+    }
+
+    LOG(log_debug, logtype_ad, "ad_conv_v22ea_hf(\"%s\"): default adouble",
+        fullpathname(path), ret);
     goto EC_CLEANUP;
-
 copy:
     /* Create a adouble:ea meta EA */
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): copying adouble", fullpathname(path), ret);
+    LOG(log_debug, logtype_ad, "ad_conv_v22ea_hf(\"%s\"): copying adouble",
+        fullpathname(path), ret);
 #ifdef __APPLE__
     /* Create macOS native FinderInfo EA */
-    char * FinderInfo;
-    char NativeFinderInfo[ADEDLEN_FINDERI]={'\0'};
+    char *FinderInfo;
+    char NativeFinderInfo[ADEDLEN_FINDERI] = {'\0'};
     FinderInfo = ad_entry(&adv2, ADEID_FINDERI);
     memcpy(NativeFinderInfo, FinderInfo, ADEDLEN_FINDERI);
-    EC_ZERO_LOG( sys_setxattr(path, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0) );
+    EC_ZERO_LOG(sys_setxattr(path, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0));
 #endif
-    EC_ZERO_LOGSTR( ad_open(&adea, path, adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE),
-                    "ad_conv_v22ea_hf(\"%s\"): error creating metadata EA: %s",
-                    fullpathname(path), strerror(errno));
+    EC_ZERO_LOGSTR(ad_open(&adea, path,
+                           adflags | ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE),
+                   "ad_conv_v22ea_hf(\"%s\"): error creating metadata EA: %s",
+                   fullpathname(path), strerror(errno));
     AFP_ASSERT(ad_refresh(path, &adea) == 0);
-    EC_ZERO_LOG( ad_copy_header(&adea, &adv2) );
+    EC_ZERO_LOG(ad_copy_header(&adea, &adv2));
     ad_flush(&adea);
-
 EC_CLEANUP:
-    EC_ZERO_LOG( ad_close(&adv2, ADFLAGS_HF | ADFLAGS_SETSHRMD) );
-    EC_ZERO_LOG( ad_close(&adea, ADFLAGS_HF | ADFLAGS_SETSHRMD) );
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): END: %d", fullpathname(path), ret);
+    EC_ZERO_LOG(ad_close(&adv2, ADFLAGS_HF | ADFLAGS_SETSHRMD));
+    EC_ZERO_LOG(ad_close(&adea, ADFLAGS_HF | ADFLAGS_SETSHRMD));
+    LOG(log_debug, logtype_ad, "ad_conv_v22ea_hf(\"%s\"): END: %d",
+        fullpathname(path), ret);
     EC_EXIT;
 }
 
-static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struct vol *vol)
+static int ad_conv_v22ea_rf(const char *path, const struct stat *sp,
+                            const struct vol *vol)
 {
     EC_INIT;
     struct adouble adv2;
     struct adouble adea;
-
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_rf(\"%s\"): BEGIN", fullpathname(path));
+    LOG(log_debug, logtype_ad, "ad_conv_v22ea_rf(\"%s\"): BEGIN",
+        fullpathname(path));
 
     switch (S_IFMT & sp->st_mode) {
     case S_IFREG:
         break;
+
     default:
         return 0;
     }
 
-    if (S_ISDIR(sp->st_mode))
+    if (S_ISDIR(sp->st_mode)) {
         return 0;
+    }
 
     ad_init(&adea, vol);
     ad_init_old(&adv2, AD_VERSION2, adea.ad_options);
-
     size_t copybuf_len = 0;
-    uint8_t* copybuf = NULL;
+    uint8_t *copybuf = NULL;
 
-    if (vol->v_obj->proto == AFPPROTO_DSI)
-    {
+    if (vol->v_obj->proto == AFPPROTO_DSI) {
         copybuf = vol->v_obj->dsi->commands;
         copybuf_len = vol->v_obj->dsi->server_quantum;
     }
 
     /* Open and lock adouble:v2 file */
-    EC_ZERO( ad_open(&adv2, path, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR) );
+    EC_ZERO(ad_open(&adv2, path, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR));
 
     if (adv2.ad_rlen > 0) {
-        EC_NEG1_LOG( ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) );
-
+        EC_NEG1_LOG(ad_tmplock(&adv2, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0,
+                               0));
         /* Create a adouble:ea resource fork */
-        EC_ZERO_LOG( ad_open(&adea, path, ADFLAGS_RF|ADFLAGS_RDWR|ADFLAGS_CREATE|ADFLAGS_SETSHRMD, 0666) );
-
-        EC_ZERO_LOG( copy_fork(ADEID_RFORK, &adea, &adv2,
-			       copybuf,
-			       copybuf_len) );
-
+        EC_ZERO_LOG(ad_open(&adea, path,
+                            ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE | ADFLAGS_SETSHRMD, 0666));
+        EC_ZERO_LOG(copy_fork(ADEID_RFORK, &adea, &adv2,
+                              copybuf,
+                              copybuf_len));
         adea.ad_rlen = adv2.ad_rlen;
         ad_flush(&adea);
         fchmod(ad_reso_fileno(&adea), sp->st_mode & 0666);
@@ -185,45 +199,50 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp, const struc
     }
 
 EC_CLEANUP:
-    EC_ZERO_LOG( ad_close(&adv2, ADFLAGS_HF | ADFLAGS_RF) );
-    EC_ZERO_LOG( ad_close(&adea, ADFLAGS_HF | ADFLAGS_RF) );
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_rf(\"%s\"): END: %d", fullpathname(path), ret);
+    EC_ZERO_LOG(ad_close(&adv2, ADFLAGS_HF | ADFLAGS_RF));
+    EC_ZERO_LOG(ad_close(&adea, ADFLAGS_HF | ADFLAGS_RF));
+    LOG(log_debug, logtype_ad, "ad_conv_v22ea_rf(\"%s\"): END: %d",
+        fullpathname(path), ret);
     EC_EXIT;
 }
 
-static int ad_conv_v22ea(const char *path, const struct stat *sp, const struct vol *vol)
+static int ad_conv_v22ea(const char *path, const struct stat *sp,
+                         const struct vol *vol)
 {
     EC_INIT;
     const char *adpath;
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
-
     become_root();
 
-    if (ad_conv_v22ea_hf(path, sp, vol) != 0)
+    if (ad_conv_v22ea_hf(path, sp, vol) != 0) {
         goto delete;
-    if (ad_conv_v22ea_rf(path, sp, vol) != 0)
+    }
+
+    if (ad_conv_v22ea_rf(path, sp, vol) != 0) {
         goto delete;
+    }
 
 delete:
-    EC_NULL( adpath = ad_path(path, adflags) );
-    LOG(log_debug, logtype_ad,"ad_conv_v22ea_hf(\"%s\"): deleting adouble:v2 file: \"%s\"",
+    EC_NULL(adpath = ad_path(path, adflags));
+    LOG(log_debug, logtype_ad,
+        "ad_conv_v22ea_hf(\"%s\"): deleting adouble:v2 file: \"%s\"",
         path, fullpathname(adpath));
-
     unlink(adpath);
-
 EC_CLEANUP:
-    if (errno == ENOENT)
+
+    if (errno == ENOENT) {
         EC_STATUS(0);
+    }
 
     unbecome_root();
-
     EC_EXIT;
 }
 
 /*!
  * Remove hexencoded dots and slashes (":2e" and ":2f")
  */
-static int ad_conv_dehex(const char *path, const struct stat *sp, const struct vol *vol, const char **newpathp)
+static int ad_conv_dehex(const char *path, const struct stat *sp,
+                         const struct vol *vol, const char **newpathp)
 {
     EC_INIT;
     static char buf[MAXPATHLEN];
@@ -243,30 +262,31 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
         strcolon = bfromcstr(":");
     }
 
-    LOG(log_debug, logtype_ad,"ad_conv_dehex(\"%s\"): BEGIN", fullpathname(path));
-
+    LOG(log_debug, logtype_ad, "ad_conv_dehex(\"%s\"): BEGIN", fullpathname(path));
     *newpathp = NULL;
 
-    if (((strstr(path, ":2e")) == NULL) && ((strstr(path, ":2f")) == NULL) )
+    if (((strstr(path, ":2e")) == NULL) && ((strstr(path, ":2f")) == NULL)) {
         goto EC_CLEANUP;
+    }
 
-    EC_NULL( newpath = bfromcstr(path) );
-
-    EC_ZERO( bfindreplace(newpath, str2e, strdot, 0) );
-    EC_ZERO( bfindreplace(newpath, str2f, strcolon, 0) );
-
+    EC_NULL(newpath = bfromcstr(path));
+    EC_ZERO(bfindreplace(newpath, str2e, strdot, 0));
+    EC_ZERO(bfindreplace(newpath, str2f, strcolon, 0));
     become_root();
+
     if (adflags != ADFLAGS_DIR) {
         if ((newadpath = strdup(vol->ad_path(bdata(newpath), 0))) == NULL) {
             unbecome_root();
             EC_FAIL;
         }
+
         rename(vol->ad_path(path, 0), newadpath);
     }
+
     rename(path, bdata(newpath));
     unbecome_root();
-
     path_data = bdata(newpath);
+
     if (path_data != NULL) {
         strlcpy(buf, path_data, sizeof(buf));
         *newpathp = buf;
@@ -275,10 +295,15 @@ static int ad_conv_dehex(const char *path, const struct stat *sp, const struct v
     }
 
 EC_CLEANUP:
-    if (newpath)
+
+    if (newpath) {
         bdestroy(newpath);
-    if (newadpath)
+    }
+
+    if (newadpath) {
         free(newadpath);
+    }
+
     EC_EXIT;
 }
 
@@ -293,30 +318,37 @@ EC_CLEANUP:
  * @returns         -1 on internal error, otherwise 0. newpath is NULL if no character conversion was done,
  *                  otherwise newpath points to a static string with the converted name
  */
-int ad_convert(const char *path, const struct stat *sp, const struct vol *vol, const char **newpath)
+int ad_convert(const char *path, const struct stat *sp, const struct vol *vol,
+               const char **newpath)
 {
     EC_INIT;
     const char *p;
+    LOG(log_debug, logtype_ad, "ad_convert(\"%s\"): BEGIN", fullpathname(path));
 
-    LOG(log_debug, logtype_ad,"ad_convert(\"%s\"): BEGIN", fullpathname(path));
-
-    if (newpath)
+    if (newpath) {
         *newpath = NULL;
+    }
 
-    if (vol->v_flags & AFPVOL_RO)
+    if (vol->v_flags & AFPVOL_RO) {
         EC_EXIT_STATUS(0);
+    }
 
-    if ((vol->v_adouble == AD_VERSION_EA) && !(vol->v_flags & AFPVOL_NOV2TOEACONV))
-        EC_ZERO( ad_conv_v22ea(path, sp, vol) );
+    if ((vol->v_adouble == AD_VERSION_EA)
+            && !(vol->v_flags & AFPVOL_NOV2TOEACONV)) {
+        EC_ZERO(ad_conv_v22ea(path, sp, vol));
+    }
 
     if (vol->v_adouble == AD_VERSION_EA) {
-        EC_ZERO( ad_conv_dehex(path, sp, vol, &p) );
-        if (p && newpath)
+        EC_ZERO(ad_conv_dehex(path, sp, vol, &p));
+
+        if (p && newpath) {
             *newpath = p;
+        }
     }
 
 EC_CLEANUP:
-    LOG(log_debug, logtype_ad,"ad_convert(\"%s\"): END: %d", fullpathname(path), ret);
+    LOG(log_debug, logtype_ad, "ad_convert(\"%s\"): END: %d", fullpathname(path),
+        ret);
     EC_EXIT;
 }
 

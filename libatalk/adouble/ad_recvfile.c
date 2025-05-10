@@ -76,19 +76,21 @@ static ssize_t default_sys_recvfile(int fromfd,
         return 0;
     }
 
-    LOG(log_maxdebug, logtype_dsi, "default_recvfile: from = %d, to = %d, offset = %.0f, count = %lu\n",
+    LOG(log_maxdebug, logtype_dsi,
+        "default_recvfile: from = %d, to = %d, offset = %.0f, count = %lu\n",
         fromfd, tofd, (double)offset, (unsigned long)count);
 
-    if ((buffer = malloc(bufsize)) == NULL)
+    if ((buffer = malloc(bufsize)) == NULL) {
         return -1;
+    }
 
     while (total < count) {
         size_t num_written = 0;
         ssize_t read_ret;
-        size_t toread = MIN(bufsize,count - total);
-
+        size_t toread = MIN(bufsize, count - total);
         /* Read from socket - ignore EINTR. */
         read_ret = read(fromfd, buffer, toread);
+
         if (read_ret <= 0) {
             /* EOF or socket error. */
             free(buffer);
@@ -105,6 +107,7 @@ static ssize_t default_sys_recvfile(int fromfd,
             } else {
                 /* Write to file - ignore EINTR. */
                 write_ret = pwrite(tofd, buffer + num_written, read_ret - num_written, offset);
+
                 if (write_ret <= 0) {
                     /* write error - stop writing. */
                     tofd = -1;
@@ -112,17 +115,21 @@ static ssize_t default_sys_recvfile(int fromfd,
                     continue;
                 }
             }
+
             num_written += (size_t)write_ret;
             total_written += (size_t)write_ret;
         }
+
         total += read_ret;
     }
 
     free(buffer);
+
     if (saved_errno) {
         /* Return the correct write error. */
         errno = saved_errno;
     }
+
     return (ssize_t)total_written;
 }
 
@@ -132,24 +139,28 @@ static int waitfordata(int socket)
     fd_set readfds;
     int maxfd = socket + 1;
     int ret;
-
     FD_ZERO(&readfds);
 
     while (1) {
         FD_ZERO(&readfds);
         FD_SET(socket, &readfds);
+
         if ((ret = select(maxfd, &readfds, NULL, NULL, NULL)) <= 0) {
-            if (ret == -1 && errno == EINTR)
+            if (ret == -1 && errno == EINTR) {
                 continue;
+            }
+
             LOG(log_error, logtype_dsi, "waitfordata: unexpected select return: %d %s",
                 ret, ret < 0 ? strerror(errno) : "");
             return -1;
         }
-        if (FD_ISSET(socket, &readfds))
+
+        if (FD_ISSET(socket, &readfds)) {
             return 0;
+        }
+
         return -1;
     }
-
 }
 
 /*
@@ -159,18 +170,20 @@ static int waitfordata(int socket)
  * actually written. We always read count bytes
  * from the network in the case of return != -1.
  */
-static ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count, int splice_size)
+static ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count,
+                            int splice_size)
 {
     static int pipefd[2] = { -1, -1 };
     static bool try_splice_call = true;
     size_t total_written = 0;
     loff_t splice_offset = offset;
-
-    LOG(log_debug, logtype_dsi, "sys_recvfile: from = %d, to = %d, offset = %.0f, count = %lu",
+    LOG(log_debug, logtype_dsi,
+        "sys_recvfile: from = %d, to = %d, offset = %.0f, count = %lu",
         fromfd, tofd, (double)offset, (unsigned long)count);
 
-    if (count == 0)
+    if (count == 0) {
         return 0;
+    }
 
     /*
      * Older Linux kernels have splice for sendfile,
@@ -192,32 +205,43 @@ static ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count, in
 
     while (count > 0) {
         int nread, to_write;
-
-        nread = splice(fromfd, NULL, pipefd[1], NULL, MIN(count, splice_size), SPLICE_F_MOVE | SPLICE_F_NONBLOCK);
+        nread = splice(fromfd, NULL, pipefd[1], NULL, MIN(count, splice_size),
+                       SPLICE_F_MOVE | SPLICE_F_NONBLOCK);
 
         if (nread == -1) {
-            if (errno == EINTR)
+            if (errno == EINTR) {
                 continue;
+            }
+
             if (errno == EAGAIN) {
-                if (waitfordata(fromfd) != -1)
+                if (waitfordata(fromfd) != -1) {
                     continue;
+                }
+
                 return -1;
             }
+
             if (total_written == 0 && (errno == EBADF || errno == EINVAL)) {
                 LOG(log_warning, logtype_dsi, "splice() doesn't work for recvfile");
                 try_splice_call = false;
                 errno = ENOSYS;
                 return -1;
             }
+
             break;
         }
 
         to_write = nread;
+
         while (to_write > 0) {
             int thistime;
-            thistime = splice(pipefd[0], NULL, tofd, &splice_offset, to_write, SPLICE_F_MOVE);
-            if (thistime == -1)
+            thistime = splice(pipefd[0], NULL, tofd, &splice_offset, to_write,
+                              SPLICE_F_MOVE);
+
+            if (thistime == -1) {
                 return -1;
+            }
+
             to_write -= thistime;
         }
 
@@ -226,8 +250,8 @@ static ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count, in
     }
 
 done:
-    LOG(log_maxdebug, logtype_dsi, "sys_recvfile: total_written: %zu", total_written);
-
+    LOG(log_maxdebug, logtype_dsi, "sys_recvfile: total_written: %zu",
+        total_written);
     return total_written;
 }
 #else
@@ -243,18 +267,21 @@ ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count)
 #endif
 
 /* read from a socket and write to an adouble file */
-ssize_t ad_recvfile(struct adouble *ad, int eid, int sock, off_t off, size_t len, int splice_size)
+ssize_t ad_recvfile(struct adouble *ad, int eid, int sock, off_t off,
+                    size_t len, int splice_size)
 {
     ssize_t cc;
     int fd;
     off_t off_fork = off;
-
     fd = ad_recvfile_init(ad, eid, &off_fork);
-    if ((cc = sys_recvfile(sock, fd, off_fork, len, splice_size)) != len)
-        return -1;
 
-    if ((eid != ADEID_DFORK) && (off > ad_getentrylen(ad, eid)))
+    if ((cc = sys_recvfile(sock, fd, off_fork, len, splice_size)) != len) {
+        return -1;
+    }
+
+    if ((eid != ADEID_DFORK) && (off > ad_getentrylen(ad, eid))) {
         ad_setentrylen(ad, eid, off);
+    }
 
     return cc;
 }

@@ -9,7 +9,7 @@
 #include <sys/types.h>
 #include "zip.h"
 
-int addmulti (const char *, const unsigned char *);
-int zone_bcast (struct ziptab *);
+int addmulti(const char *, const unsigned char *);
+int zone_bcast(struct ziptab *);
 
 #endif /* atalkd/multicast.h */

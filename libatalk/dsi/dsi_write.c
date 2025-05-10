@@ -34,12 +34,14 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
         memmove(buf, dsi->start, MIN(buflen, bytes));
         dsi->start += bytes;
         dsi->datasize -= bytes;
-        if (dsi->start >= dsi->eof)
+
+        if (dsi->start >= dsi->eof) {
             dsi->start = dsi->eof = dsi->buffer;
+        }
     }
 
-    LOG(log_maxdebug, logtype_dsi, "dsi_writeinit: remaining DSI datasize: %jd", (intmax_t)dsi->datasize);
-
+    LOG(log_maxdebug, logtype_dsi, "dsi_writeinit: remaining DSI datasize: %jd",
+        (intmax_t)dsi->datasize);
     return bytes;
 }
 
@@ -49,31 +51,34 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
  * during the transfer to avoid sending unnecessary tickles. */
 size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
 {
-  size_t length;
+    size_t length;
+    LOG(log_maxdebug, logtype_dsi, "dsi_write: remaining DSI datasize: %jd",
+        (intmax_t)dsi->datasize);
 
-  LOG(log_maxdebug, logtype_dsi, "dsi_write: remaining DSI datasize: %jd", (intmax_t)dsi->datasize);
+    if ((length = MIN(buflen, dsi->datasize)) > 0) {
+        if ((length = dsi_stream_read(dsi, buf, length)) > 0) {
+            LOG(log_maxdebug, logtype_dsi, "dsi_write: received: %ju", (intmax_t)length);
+            dsi->datasize -= length;
+            return length;
+        }
+    }
 
-  if ((length = MIN(buflen, dsi->datasize)) > 0) {
-      if ((length = dsi_stream_read(dsi, buf, length)) > 0) {
-          LOG(log_maxdebug, logtype_dsi, "dsi_write: received: %ju", (intmax_t)length);
-          dsi->datasize -= length;
-          return length;
-      }
-  }
-  return 0;
+    return 0;
 }
 
 /* flush any unread buffers. */
 void dsi_writeflush(DSI *dsi)
 {
-  size_t length;
+    size_t length;
 
-  while (dsi->datasize > 0) {
-    length = dsi_stream_read(dsi, dsi->data,
-			     MIN(sizeof(dsi->data), dsi->datasize));
-    if (length > 0)
-      dsi->datasize -= length;
-    else
-      break;
-  }
+    while (dsi->datasize > 0) {
+        length = dsi_stream_read(dsi, dsi->data,
+                                 MIN(sizeof(dsi->data), dsi->datasize));
+
+        if (length > 0) {
+            dsi->datasize -= length;
+        } else {
+            break;
+        }
+    }
 }

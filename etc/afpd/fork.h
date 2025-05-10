@@ -50,45 +50,59 @@ struct ofork {
 
 #define of_name(a) (a)->of_ad->ad_name
 /* in ofork.c */
-extern struct ofork *of_alloc    (struct vol *, struct dir *,
-                                                      char *, uint16_t *, const int,
-                                                      struct adouble *,
-                                                      struct stat *);
-extern void         of_dealloc   (struct ofork *);
-extern struct ofork *of_find     (const uint16_t);
-extern struct ofork *of_findname (const struct vol *vol, struct path *);
-extern int          of_rename    (const struct vol *,
-                                          struct ofork *,
-                                          struct dir *, const char *,
-                                          struct dir *, const char *);
-extern int          of_flush     (const struct vol *);
-extern void         of_pforkdesc (FILE *);
-extern int          of_stat      (const struct vol *vol, struct path *);
-extern int          of_statdir   (struct vol *vol, struct path *);
-extern int          of_closefork (const AFPObj *obj, struct ofork *ofork);
-extern void         of_closevol  (const AFPObj *obj, const struct vol *vol);
+extern struct ofork *of_alloc(struct vol *, struct dir *,
+                              char *, uint16_t *, const int,
+                              struct adouble *,
+                              struct stat *);
+extern void         of_dealloc(struct ofork *);
+extern struct ofork *of_find(const uint16_t);
+extern struct ofork *of_findname(const struct vol *vol, struct path *);
+extern int          of_rename(const struct vol *,
+                              struct ofork *,
+                              struct dir *, const char *,
+                              struct dir *, const char *);
+extern int          of_flush(const struct vol *);
+extern void         of_pforkdesc(FILE *);
+extern int          of_stat(const struct vol *vol, struct path *);
+extern int          of_statdir(struct vol *vol, struct path *);
+extern int          of_closefork(const AFPObj *obj, struct ofork *ofork);
+extern void         of_closevol(const AFPObj *obj, const struct vol *vol);
 extern void         of_close_all_forks(const AFPObj *obj);
-extern struct adouble *of_ad     (const struct vol *, struct path *, struct adouble *);
+extern struct adouble *of_ad(const struct vol *, struct path *,
+                             struct adouble *);
 extern struct ofork *of_findnameat(int dirfd, struct path *path);
 extern int of_fstatat(int dirfd, struct path *path);
 
 
 /* in fork.c */
-extern int          flushfork    (struct ofork *);
+extern int          flushfork(struct ofork *);
 
 /* FP functions */
-int afp_openfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_bytelock (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_getforkparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_setforkparams (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_read (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_write (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_flushfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_flush (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_closefork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_openfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
+int afp_bytelock(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
+int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                      size_t *rbuflen);
+int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                      size_t *rbuflen);
+int afp_read(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+             size_t *rbuflen);
+int afp_write(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen);
+int afp_flushfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_flush(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+              size_t *rbuflen);
+int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
 
-int afp_bytelock_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_read_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_write_ext (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
-int afp_syncfork (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,  size_t *rbuflen);
+int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                     size_t *rbuflen);
+int afp_read_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
+int afp_write_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                  size_t *rbuflen);
+int afp_syncfork(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+                 size_t *rbuflen);
 #endif

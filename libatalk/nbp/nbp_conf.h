@@ -33,7 +33,7 @@ extern unsigned char		nbp_port;
 extern unsigned char    nbp_id;
 
 
-int nbp_parse (char *, struct nbpnve *, int);
-int nbp_match (struct nbpnve *, struct nbpnve *, int);
+int nbp_parse(char *, struct nbpnve *, int);
+int nbp_match(struct nbpnve *, struct nbpnve *, int);
 
 #endif /* NBP_CONF_H */

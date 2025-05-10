@@ -31,12 +31,12 @@
 
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
-  uint8_t dsi_flags;       /* packet type: request or reply */
-  uint8_t dsi_command;     /* command */
-  uint16_t dsi_requestID;  /* request ID */
-  uint32_t dsi_code;       /* error code or data offset */
-  uint32_t dsi_len;        /* total data length */
-  uint32_t dsi_reserved;   /* reserved field */
+    uint8_t dsi_flags;       /* packet type: request or reply */
+    uint8_t dsi_command;     /* command */
+    uint16_t dsi_requestID;  /* request ID */
+    uint32_t dsi_code;       /* error code or data offset */
+    uint32_t dsi_len;        /* total data length */
+    uint32_t dsi_reserved;   /* reserved field */
 };
 
 #define DSI_CMDSIZ        800
@@ -44,27 +44,27 @@ struct dsi_block {
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
-  struct dsi_block header;
-  struct sockaddr_in server, client;
-  sigset_t sigblockset;
-  struct itimerval timer, savetimer;
-  uint32_t attn_quantum, datasize, server_quantum;
-  uint16_t serverID, clientID;
-  uint8_t *status, commands[DSI_CMDSIZ], data[DSI_DATASIZ];
-  int statuslen;
-  size_t datalen, cmdlen;
-  size_t read_count, write_count;
-  int asleep; /* client won't reply AFP 0x7a ? */
-  /* inited = initialized?, child = a child?, noreply = send reply? */
-  char child, inited, noreply;
-  const char *program;
-  int socket, serversock;
+    struct dsi_block header;
+    struct sockaddr_in server, client;
+    sigset_t sigblockset;
+    struct itimerval timer, savetimer;
+    uint32_t attn_quantum, datasize, server_quantum;
+    uint16_t serverID, clientID;
+    uint8_t *status, commands[DSI_CMDSIZ], data[DSI_DATASIZ];
+    int statuslen;
+    size_t datalen, cmdlen;
+    size_t read_count, write_count;
+    int asleep; /* client won't reply AFP 0x7a ? */
+    /* inited = initialized?, child = a child?, noreply = send reply? */
+    char child, inited, noreply;
+    const char *program;
+    int socket, serversock;
 
-  /* protocol specific open/close, send/receive
-   * send/receive fill in the header and use dsi->commands.
-   * write/read just write/read data */
-  pid_t  (*proto_open)(struct DSI *);
-  void   (*proto_close)(struct DSI *);
+    /* protocol specific open/close, send/receive
+     * send/receive fill in the header and use dsi->commands.
+     * write/read just write/read data */
+    pid_t  (*proto_open)(struct DSI *);
+    void   (*proto_close)(struct DSI *);
 } DSI;
 
 /* DSI flags */
@@ -110,10 +110,10 @@ typedef struct DSI {
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init (
-			  const char * /*program*/,
-			  const char * /*host*/, const char * /*address*/,
-			  const int /*port*/, const int /*proxy*/,
-			  const uint32_t /* server quantum */);
+    const char * /*program*/,
+    const char * /*host*/, const char * /*address*/,
+    const int /*port*/, const int /*proxy*/,
+    const uint32_t /* server quantum */);
 extern void dsi_setstatus (DSI *, uint8_t *, const int);
 
 /* in dsi_getsess.c */
@@ -133,7 +133,7 @@ extern void   dsi_writeflush (DSI *);
 
 /* client reads -- dsi_read.c */
 extern ssize_t dsi_readinit (DSI *, void *, const size_t, const size_t,
-				 const int);
+                             const int);
 extern ssize_t dsi_read (DSI *, void *, const size_t);
 extern void dsi_readdone (DSI *);
 

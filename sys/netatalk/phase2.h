@@ -27,29 +27,29 @@
  */
 
 struct llc {
-	unsigned char	llc_dsap;
-	unsigned char	llc_ssap;
-	union {
-	    struct {
-		unsigned char control;
-		unsigned char format_id;
-		unsigned char class;
-		unsigned char window_x2;
-	    } type_u;
-	    struct {
-		unsigned char num_snd_x2;
-		unsigned char num_rcv_x2;
-	    } type_i;
-	    struct {
-		unsigned char control;
-		unsigned char num_rcv_x2;
-	    } type_s;
-	    struct {
-		unsigned char control;
-		unsigned char org_code[3];
-		unsigned short ether_type;
-	    } type_snap;
-	} llc_un;
+    unsigned char	llc_dsap;
+    unsigned char	llc_ssap;
+    union {
+        struct {
+            unsigned char control;
+            unsigned char format_id;
+            unsigned char class;
+            unsigned char window_x2;
+        } type_u;
+        struct {
+            unsigned char num_snd_x2;
+            unsigned char num_rcv_x2;
+        } type_i;
+        struct {
+            unsigned char control;
+            unsigned char num_rcv_x2;
+        } type_s;
+        struct {
+            unsigned char control;
+            unsigned char org_code[3];
+            unsigned short ether_type;
+        } type_snap;
+    } llc_un;
 };
 #define llc_control llc_un.type_u.control
 #define llc_fid llc_un.type_u.format_id

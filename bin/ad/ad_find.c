@@ -52,35 +52,40 @@ static void sig_handler(int signo _U_)
 static void set_signal(void)
 {
     struct sigaction sv;
-
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
     sigemptyset(&sv.sa_mask);
-    if (sigaction(SIGTERM, &sv, NULL) < 0)
-        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
 
-    if (sigaction(SIGINT, &sv, NULL) < 0)
+    if (sigaction(SIGTERM, &sv, NULL) < 0) {
+        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
+    }
+
+    if (sigaction(SIGINT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGINT): %s", strerror(errno));
+    }
 
     memset(&sv, 0, sizeof(struct sigaction));
     sv.sa_handler = SIG_IGN;
     sigemptyset(&sv.sa_mask);
 
-    if (sigaction(SIGABRT, &sv, NULL) < 0)
+    if (sigaction(SIGABRT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
+    }
 
-    if (sigaction(SIGHUP, &sv, NULL) < 0)
+    if (sigaction(SIGHUP, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
+    }
 
-    if (sigaction(SIGQUIT, &sv, NULL) < 0)
+    if (sigaction(SIGQUIT, &sv, NULL) < 0) {
         ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
+    }
 }
 
 static void usage_find(void)
 {
     printf(
         "Usage: ad find [-v VOLUME_PATH] NAME\n"
-        );
+    );
 }
 
 int ad_find(int argc, char **argv, AFPObj *obj)
@@ -89,12 +94,13 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     afpvol_t vol;
     char *srchvol = strdup(getcwdpath());
 
-    while ((c = getopt(argc-1, &argv[1], ":v:")) != -1) {
-        switch(c) {
+    while ((c = getopt(argc - 1, &argv[1], ":v:")) != -1) {
+        switch (c) {
         case 'v':
             free((void *)srchvol);
             srchvol = strdup(optarg);
             break;
+
         case ':':
         case '?':
             usage_find();
@@ -102,8 +108,8 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             exit(1);
             break;
         }
-
     }
+
     optind++;
 
     if ((argc - optind) != 1) {
@@ -120,9 +126,9 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     }
 
     free((void *)srchvol);
-
     uint16_t flags = CONV_TOLOWER;
     char namebuf[MAXPATHLEN + 1];
+
     if (convert_charset(CH_UNIX,
                         CH_UNIX,
                         vol.vol->v_maccharset,
@@ -130,12 +136,13 @@ int ad_find(int argc, char **argv, AFPObj *obj)
                         strlen(argv[optind]),
                         namebuf,
                         MAXPATHLEN,
-                        &flags) == (size_t)-1) {
+                        &flags) == (size_t) -1) {
         ERROR("conversion error");
     }
 
     int count;
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
+
     if ((count = cnid_find(vol.vol->v_cdb,
                            namebuf,
                            strlen(namebuf),
@@ -147,10 +154,10 @@ int ad_find(int argc, char **argv, AFPObj *obj)
         cnid_t cnid;
         char *bufp = resbuf;
         bstring sep = bfromcstr("/");
+
         while (count--) {
             memcpy(&cnid, bufp, sizeof(cnid_t));
             bufp += sizeof(cnid_t);
-
             bstring path = NULL;
             bstring volpath = bfromcstr(vol.vol->v_path);
             BSTRING_STRIP_SLASH(volpath);
@@ -161,23 +168,24 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             struct bstrList *pathlist = bstrListCreateMin(32);
 
             while (did != DIRDID_ROOT) {
-                if ((name = cnid_resolve(vol.vol->v_cdb, &did, buffer, buflen)) == NULL)
+                if ((name = cnid_resolve(vol.vol->v_cdb, &did, buffer, buflen)) == NULL) {
                     goto next;
+                }
+
                 bstrListPush(pathlist, bfromcstr(name));
             }
+
             bstrListPush(pathlist, volpath);
             path = bjoinInv(pathlist, sep);
-
             printf("%s\n", cfrombstr(path));
-
-        next:
+next:
             bstrListDestroy(pathlist);
             bdestroy(path);
         }
+
         bdestroy(sep);
     }
 
     closevol(&vol);
-
     return ret;
 }

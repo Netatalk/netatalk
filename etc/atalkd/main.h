@@ -9,10 +9,10 @@
 extern int transition;
 extern int stabletimer, newrtmpdata;
 
-int ifconfig ( const char *, unsigned long, struct sockaddr_at * );
-void setaddr ( struct interface *, uint8_t, uint16_t,
-        uint8_t, uint16_t, uint16_t );
-void bootaddr ( struct interface * );
-void dumpconfig ( struct interface * );
+int ifconfig(const char *, unsigned long, struct sockaddr_at *);
+void setaddr(struct interface *, uint8_t, uint16_t,
+             uint8_t, uint16_t, uint16_t);
+void bootaddr(struct interface *);
+void dumpconfig(struct interface *);
 
 #endif /* ATALKD_MAIN_H */

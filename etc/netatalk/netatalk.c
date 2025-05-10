@@ -75,8 +75,10 @@ static const char *dbus_path _U_;
 
 static bool service_running(pid_t pid)
 {
-    if ((pid != NETATALK_SRV_NEEDED) && (pid != NETATALK_SRV_OPTIONAL))
+    if ((pid != NETATALK_SRV_NEEDED) && (pid != NETATALK_SRV_OPTIONAL)) {
         return true;
+    }
+
     return false;
 }
 
@@ -88,8 +90,7 @@ static int set_sl_volumes(void)
     struct bstrList *vollist = bstrListCreate();
     bstring sep = bfromcstr(", ");
     bstring volnamelist = NULL, cmd = NULL;
-
-    EC_NULL_LOG( volumes = getvolumes() );
+    EC_NULL_LOG(volumes = getvolumes());
 
     for (vol = volumes; vol; vol = vol->v_next) {
         if (vol->v_flags & AFPVOL_SPOTLIGHT) {
@@ -103,19 +104,26 @@ static int set_sl_volumes(void)
                   bdata(volnamelist) ? bdata(volnamelist) : "");
     LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
     system(bdata(cmd));
-
     /* Disable default root user home indexing */
     system("gsettings set org.freedesktop.Tracker.Miner.Files index-single-directories \"[]\"");
-
 EC_CLEANUP:
-    if (cmd)
+
+    if (cmd) {
         bdestroy(cmd);
-    if (sep)
+    }
+
+    if (sep) {
         bdestroy(sep);
-    if (vollist)
+    }
+
+    if (vollist) {
         bstrListDestroy(vollist);
-    if (volnamelist)
+    }
+
+    if (volnamelist) {
         bdestroy(volnamelist);
+    }
+
     EC_EXIT;
 }
 
@@ -130,15 +138,19 @@ static void libevent_logmsg_cb(int severity, const char *msg)
     case _EVENT_LOG_DEBUG:
         LOG(log_debug, logtype_default, "libevent: %s", msg);
         break;
+
     case _EVENT_LOG_MSG:
         LOG(log_info, logtype_default, "libevent: %s", msg);
         break;
+
     case _EVENT_LOG_WARN:
         LOG(log_warning, logtype_default, "libevent: %s", msg);
         break;
+
     case _EVENT_LOG_ERR:
         LOG(log_error, logtype_default, "libevent: %s", msg);
         break;
+
     default:
         LOG(log_error, logtype_default, "libevent: %s", msg);
         break; /* never reached */
@@ -154,18 +166,17 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     sigset_t sigs;
     struct timeval tv;
-
     LOG(log_info, logtype_afpd, "Exiting on SIGTERM");
 
-    if (in_shutdown)
+    if (in_shutdown) {
         return;
-    in_shutdown = 1;
+    }
 
+    in_shutdown = 1;
     /* block any signal but SIGCHLD */
     sigfillset(&sigs);
     sigdelset(&sigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &sigs, NULL);
-
     /* add 10 sec timeout timer, remove all events but SIGCHLD */
     tv.tv_sec = KILL_GRACETIME;
     tv.tv_usec = 0;
@@ -174,7 +185,6 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     event_del(sigquit_ev);
     event_del(sighup_ev);
     event_del(timer_ev);
-
 #ifdef WITH_SPOTLIGHT
     system(INDEXER_COMMAND " -t");
 #endif
@@ -194,8 +204,8 @@ static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 /* SIGHUP callback */
 static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
-    LOG(log_note, logtype_afpd, "Received SIGHUP, sending all processes signal to reload config");
-
+    LOG(log_note, logtype_afpd,
+        "Received SIGHUP, sending all processes signal to reload config");
     load_volumes(&obj, LV_ALL);
 
     if (!(obj.options.flags & OPTION_NOZEROCONF)) {
@@ -215,31 +225,36 @@ static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         if (WIFEXITED(status)) {
-            if (WEXITSTATUS(status))
-                LOG(log_info, logtype_default, "child[%d]: exited %d", pid, WEXITSTATUS(status));
-            else
+            if (WEXITSTATUS(status)) {
+                LOG(log_info, logtype_default, "child[%d]: exited %d", pid,
+                    WEXITSTATUS(status));
+            } else {
                 LOG(log_info, logtype_default, "child[%d]: done", pid);
+            }
         } else {
-            if (WIFSIGNALED(status))
-                LOG(log_info, logtype_default, "child[%d]: killed by signal %d", pid, WTERMSIG(status));
-            else
+            if (WIFSIGNALED(status)) {
+                LOG(log_info, logtype_default, "child[%d]: killed by signal %d", pid,
+                    WTERMSIG(status));
+            } else {
                 LOG(log_info, logtype_default, "child[%d]: died", pid);
+            }
         }
 
-        if (pid == afpd_pid)
+        if (pid == afpd_pid) {
             afpd_pid = NETATALK_SRV_ERROR;
-        else if (pid == cnid_metad_pid)
+        } else if (pid == cnid_metad_pid) {
             cnid_metad_pid = NETATALK_SRV_ERROR;
-        else if (pid == dbus_pid)
+        } else if (pid == dbus_pid) {
             dbus_pid = NETATALK_SRV_ERROR;
-        else
+        } else {
             LOG(log_error, logtype_afpd, "Bad pid: %d", pid);
+        }
     }
 
     if (in_shutdown
-        && !service_running(afpd_pid)
-        && !service_running(cnid_metad_pid)
-        && !service_running(dbus_pid)) {
+            && !service_running(afpd_pid)
+            && !service_running(cnid_metad_pid)
+            && !service_running(dbus_pid)) {
         event_base_loopbreak(base);
     }
 }
@@ -247,33 +262,43 @@ static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 /* timer callback */
 static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
-    if (in_shutdown)
+    if (in_shutdown) {
         return;
+    }
 
     if (afpd_pid == NETATALK_SRV_NEEDED) {
         afpd_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'afpd' (restarts: %u)", afpd_restarts);
-        if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
+
+        if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile,
+                                    NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting 'afpd'");
         }
     }
 
     if (cnid_metad_pid == NETATALK_SRV_NEEDED) {
         cnid_metad_restarts++;
-        LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)", cnid_metad_restarts);
-        if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == -1) {
+        LOG(log_note, logtype_afpd, "Restarting 'cnid_metad' (restarts: %u)",
+            cnid_metad_restarts);
+
+        if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
+                                          obj.options.configfile, NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting 'cnid_metad'");
         }
     }
 
 #ifdef WITH_SPOTLIGHT
+
     if (dbus_pid == NETATALK_SRV_NEEDED) {
         dbus_restarts++;
         LOG(log_note, logtype_afpd, "Restarting 'dbus' (restarts: %u)", dbus_restarts);
-        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
+
+        if ((dbus_pid = run_process(dbus_path,
+                                    "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == -1) {
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
         }
     }
+
 #endif
 }
 
@@ -286,14 +311,16 @@ static void kill_childs(int sig, ...)
 {
     va_list args;
     pid_t *pid;
-
     va_start(args, sig);
 
     while ((pid = va_arg(args, pid_t *)) != NULL) {
-        if (*pid == NETATALK_SRV_ERROR || *pid == NETATALK_SRV_OPTIONAL)
+        if (*pid == NETATALK_SRV_ERROR || *pid == NETATALK_SRV_OPTIONAL) {
             continue;
+        }
+
         kill(*pid, sig);
     }
+
     va_end(args);
 }
 
@@ -321,68 +348,62 @@ static pid_t run_process(const char *path, ...)
     if (pid == 0) {
         myargv[i++] = (char *)path;
         va_start(args, path);
+
         while (i < MYARVSIZE) {
-            if ((myargv[i++] = va_arg(args, char *)) == NULL)
+            if ((myargv[i++] = va_arg(args, char *)) == NULL) {
                 break;
+            }
         }
+
         va_end(args);
-
         (void)execv(path, myargv);
-
         /* Yikes! We're still here, so exec failed... */
         LOG(log_error, logtype_cnid, "Fatal error in exec: %s", strerror(errno));
         exit(1);
     }
+
     return pid;
 }
 
-static void show_netatalk_version( void )
+static void show_netatalk_version(void)
 {
-	int num _U_, i _U_;
-
-	printf( "netatalk %s - Netatalk AFP server service controller daemon\n\n", VERSION );
-
-	puts( "This program is free software; you can redistribute it and/or modify it under" );
-	puts( "the terms of the GNU General Public License as published by the Free Software" );
-	puts( "Foundation; either version 2 of the License, or (at your option) any later" );
-	puts( "version. Please see the file COPYING for further information and details.\n" );
-
-	puts( "netatalk has been compiled with support for these features:\n" );
-
-	printf( "      Zeroconf support:\t" );
+    int num _U_, i _U_;
+    printf("netatalk %s - Netatalk AFP server service controller daemon\n\n",
+           VERSION);
+    puts("This program is free software; you can redistribute it and/or modify it under");
+    puts("the terms of the GNU General Public License as published by the Free Software");
+    puts("Foundation; either version 2 of the License, or (at your option) any later");
+    puts("version. Please see the file COPYING for further information and details.\n");
+    puts("netatalk has been compiled with support for these features:\n");
+    printf("      Zeroconf support:\t");
 #if defined (HAVE_MDNS)
-	puts( "mDNSResponder" );
+    puts("mDNSResponder");
 #elif defined (HAVE_AVAHI)
-	puts( "Avahi" );
+    puts("Avahi");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
-	printf( "     Spotlight support:\t" );
+    printf("     Spotlight support:\t");
 #ifdef WITH_SPOTLIGHT
-	puts( "Yes" );
+    puts("Yes");
 #else
-	puts( "No" );
+    puts("No");
 #endif
-
 }
 
-static void show_netatalk_paths( void )
+static void show_netatalk_paths(void)
 {
-  printf( "              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
-  printf( "                  afpd:\t%s\n", _PATH_AFPD);
-  printf( "            cnid_metad:\t%s\n", _PATH_CNID_METAD);
-
+    printf("              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+    printf("                  afpd:\t%s\n", _PATH_AFPD);
+    printf("            cnid_metad:\t%s\n", _PATH_CNID_METAD);
 #ifdef WITH_SPOTLIGHT
-  printf( "           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
-  printf( "     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
-  printf( "       indexer manager:\t%s\n", INDEXER_COMMAND);
+    printf("           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
+    printf("     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
+    printf("       indexer manager:\t%s\n", INDEXER_COMMAND);
 #endif
-
 #ifndef SOLARIS
-	printf( "    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
+    printf("    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
 #endif
-
 }
 
 static void usage(void)
@@ -397,58 +418,66 @@ int main(int argc, char **argv)
     int c, ret, debug = 0;
     sigset_t blocksigs;
     struct timeval tv;
-
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
     while ((c = getopt(argc, argv, ":dF:vV")) != -1) {
-        switch(c) {
+        switch (c) {
         case 'd':
             debug = 1;
             break;
+
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
             break;
+
         case 'v':       /* version */
         case 'V':       /* version */
-            show_netatalk_version( ); puts( "" );
-            show_netatalk_paths( ); puts( "" );
-            exit( 0 );
+            show_netatalk_version();
+            puts("");
+            show_netatalk_paths();
+            puts("");
+            exit(0);
             break;
+
         default:
             usage();
             exit(EXIT_FAILURE);
         }
     }
 
-    if (check_lockfile("netatalk", PATH_NETATALK_LOCK) != 0)
+    if (check_lockfile("netatalk", PATH_NETATALK_LOCK) != 0) {
         exit(EXITERR_SYS);
+    }
 
-    if (!debug && daemonize() != 0)
+    if (!debug && daemonize() != 0) {
         exit(EXITERR_SYS);
+    }
 
-    if (create_lockfile("netatalk", PATH_NETATALK_LOCK) != 0)
+    if (create_lockfile("netatalk", PATH_NETATALK_LOCK) != 0) {
         exit(EXITERR_SYS);
+    }
 
     sigfillset(&blocksigs);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 
-    if (afp_config_parse(&obj, "netatalk") != 0)
+    if (afp_config_parse(&obj, "netatalk") != 0) {
         netatalk_exit(EXITERR_CONF);
+    }
 
     load_volumes(&obj, LV_ALL);
-
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);
-
     LOG(log_note, logtype_default, "Netatalk AFP server starting");
 
-    if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
+    if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile,
+                                NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'afpd'");
         netatalk_exit(EXITERR_CONF);
     }
 
-    if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F", obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
+    if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
+                                      obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
         netatalk_exit(EXITERR_CONF);
     }
@@ -463,49 +492,49 @@ int main(int argc, char **argv)
     sighup_ev = event_new(base, SIGHUP,  EV_SIGNAL | EV_PERSIST, sighup_cb, NULL);
     sigchld_ev = event_new(base, SIGCHLD, EV_SIGNAL | EV_PERSIST, sigchld_cb, NULL);
     timer_ev = event_new(base, -1, EV_PERSIST, timer_cb, NULL);
-
     tv.tv_sec = 1;
     tv.tv_usec = 0;
-
     event_add(sigterm_ev, NULL);
     event_add(sigquit_ev, NULL);
     event_add(sigchld_ev, NULL);
     event_add(sighup_ev, NULL);
     event_add(timer_ev, &tv);
-
     sigfillset(&blocksigs);
     sigdelset(&blocksigs, SIGTERM);
     sigdelset(&blocksigs, SIGQUIT);
     sigdelset(&blocksigs, SIGCHLD);
     sigdelset(&blocksigs, SIGHUP);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
-
 #ifdef WITH_SPOTLIGHT
+
     if (obj.options.flags & OPTION_SPOTLIGHT) {
-        setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc", 1);
+        setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",
+               1);
         setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
         setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
-
-        dbus_path = INIPARSER_GETSTR(obj.iniconfig, INISEC_GLOBAL, "dbus daemon", DBUS_DAEMON_PATH);
+        dbus_path = INIPARSER_GETSTR(obj.iniconfig, INISEC_GLOBAL, "dbus daemon",
+                                     DBUS_DAEMON_PATH);
         LOG(log_note, logtype_default, "Starting dbus: %s", dbus_path);
-        if ((dbus_pid = run_process(dbus_path, "--config-file=" _PATH_CONFDIR "dbus-session.conf", NULL)) == NETATALK_SRV_ERROR) {
+
+        if ((dbus_pid = run_process(dbus_path,
+                                    "--config-file=" _PATH_CONFDIR "dbus-session.conf",
+                                    NULL)) == NETATALK_SRV_ERROR) {
             LOG(log_error, logtype_default, "Error starting '%s'", dbus_path);
             netatalk_exit(EXITERR_CONF);
         }
 
         /* Allow dbus some time to start up */
         sleep(1);
-
         set_sl_volumes();
-
         LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
         system(INDEXER_COMMAND " -s");
     }
+
 #endif
 
     /* Now register with zeroconf, we also need the volumes for that */
-    if (! (obj.options.flags & OPTION_NOZEROCONF)) {
+    if (!(obj.options.flags & OPTION_NOZEROCONF)) {
         zeroconf_register(&obj);
         LOG(log_note, logtype_default, "Registered with Zeroconf");
     }
@@ -513,17 +542,24 @@ int main(int argc, char **argv)
     /* run the event loop */
     ret = event_base_dispatch(base);
 
-    if (service_running(afpd_pid) || service_running(cnid_metad_pid) || service_running(dbus_pid)) {
-        if (service_running(afpd_pid))
+    if (service_running(afpd_pid) || service_running(cnid_metad_pid)
+            || service_running(dbus_pid)) {
+        if (service_running(afpd_pid)) {
             LOG(log_error, logtype_afpd, "AFP service did not shutdown, killing it");
-        if (service_running(cnid_metad_pid))
-            LOG(log_error, logtype_afpd, "CNID database service did not shutdown, killing it");
-        if (service_running(dbus_pid))
+        }
+
+        if (service_running(cnid_metad_pid)) {
+            LOG(log_error, logtype_afpd,
+                "CNID database service did not shutdown, killing it");
+        }
+
+        if (service_running(dbus_pid)) {
             LOG(log_error, logtype_afpd, "DBUS session daemon still running, killing it");
+        }
+
         kill_childs(SIGKILL, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
     }
 
     LOG(log_note, logtype_afpd, "Netatalk AFP server exiting");
-
     netatalk_exit(ret);
 }

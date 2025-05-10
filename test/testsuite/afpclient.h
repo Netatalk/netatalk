@@ -187,12 +187,12 @@
 #endif
 
 typedef struct CONN {
-	DSI	dsi;
+    DSI	dsi;
 #if 0
-	ASP asp;
+    ASP asp;
 #endif
-	int type;
-	int afp_version;
+    int type;
+    int afp_version;
 } CONN;
 
 #define min(a,b)  ((a) < (b) ? (a) : (b))
@@ -248,20 +248,24 @@ struct afp_volume_parms {
     char *utf8_name;
 };
 
-void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b, uint16_t rbitmap);
+void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
+                       uint16_t rbitmap);
 
-void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b, uint16_t rfbitmap, uint16_t rdbitmap);
-int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir, uint16_t rfbitmap, uint16_t rdbitmap);
+void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
+                        uint16_t rfbitmap, uint16_t rdbitmap);
+int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
+                     uint16_t rfbitmap, uint16_t rdbitmap);
 
 /*
  afpcli.c
 */
-int OpenClientSocket(char* host,int port);
+int OpenClientSocket(char* host, int port);
 int CloseClientSocket(int fd);
 
 
 size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length);
-int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength, size_t *rlength);
+int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
+                          size_t *rlength);
 size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length);
 int my_dsi_stream_send(DSI *dsi, void *buf, size_t length);
 uint16_t my_dsi_cmd_nwriterply_async(CONN *conn, uint64_t n);
@@ -270,10 +274,13 @@ unsigned int DSIOpenSession(CONN *conn);
 unsigned int DSIGetStatus(CONN *conn);
 unsigned int DSICloseSession(CONN *conn);
 
-unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr, char *pwd);
-unsigned int AFPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr, char *pwd);
+unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
+                          char *pwd);
+unsigned int AFPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
+                             char *pwd);
 unsigned int AFPLogOut(CONN *conn);
-unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd, char *pwd);
+unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
+                         char *pwd);
 
 unsigned int AFPzzz(CONN *conn, int);
 
@@ -284,66 +291,97 @@ unsigned int AFPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap);
 unsigned int AFPCloseVol(CONN *conn, uint16_t vol);
 unsigned int AFPCloseDT(CONN *conn, uint16_t vol);
 
-unsigned int AFPByteLock(CONN *conn, uint16_t fork, int end, int mode, int offset, int size );
-unsigned int AFPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode, off_t offset, off_t size );
+unsigned int AFPByteLock(CONN *conn, uint16_t fork, int end, int mode,
+                         int offset, int size);
+unsigned int AFPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode,
+                             off_t offset, off_t size);
 unsigned int AFPCloseFork(CONN *conn, uint16_t fork);
 unsigned int AFPFlush(CONN *conn, uint16_t vol);
 unsigned int AFPFlushFork(CONN *conn, uint16_t fork);
-unsigned int AFPDelete(CONN *conn, uint16_t vol, int did , char *name);
+unsigned int AFPDelete(CONN *conn, uint16_t vol, int did, char *name);
 
-unsigned int AFPGetComment(CONN *conn, uint16_t vol, int did , char *name);
-unsigned int AFPRemoveComment(CONN *conn, uint16_t vol, int did , char *name);
-unsigned int AFPAddComment(CONN *conn, uint16_t vol, int did , char *name, char *cmt);
+unsigned int AFPGetComment(CONN *conn, uint16_t vol, int did, char *name);
+unsigned int AFPRemoveComment(CONN *conn, uint16_t vol, int did, char *name);
+unsigned int AFPAddComment(CONN *conn, uint16_t vol, int did, char *name,
+                           char *cmt);
 
 uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap);
-uint16_t AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap, int did , char *name,uint16_t access);
+uint16_t AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap,
+                     int did, char *name, uint16_t access);
 
 unsigned int AFPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap);
-unsigned int AFPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap, struct afp_volume_parms *parms);
+unsigned int AFPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap,
+                            struct afp_volume_parms *parms);
 
-unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did , char *name);
-unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did , char *name);
+unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did,
+                            char *name);
+unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name);
 
-unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size, char *data, char whence);
-unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size, char *data, char whence);
-unsigned int AFPWrite(CONN *conn, uint16_t fork, int offset, int size, char *data, char whence);
-unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size, char *data, char whence);
-unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t size, char *data, char whence);
+unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
+                            char *data, char whence);
+unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
+                            char *data, char whence);
+unsigned int AFPWrite(CONN *conn, uint16_t fork, int offset, int size,
+                      char *data, char whence);
+unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
+                          char *data, char whence);
+unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
+                                off_t size, char *data, char whence);
 
-unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size, char *data);
-unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, int offset, int size, char *data);
-unsigned int AFPRead(CONN *conn, uint16_t fork, int offset, int size, char *data);
-unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size, char *data);
-unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset, off_t size, char *data);
+unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
+                           char *data);
+unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
+                           char *data);
+unsigned int AFPRead(CONN *conn, uint16_t fork, int offset, int size,
+                     char *data);
+unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
+                         char *data);
+unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
+                               off_t size, char *data);
 
 unsigned int AFPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap);
 
-unsigned int AFPGetSessionToken(CONN *conn, int type, uint32_t time, int len, char *token);
-unsigned int AFPDisconnectOldSession(CONN *conn, uint16_t type, int len, char *token);
+unsigned int AFPGetSessionToken(CONN *conn, int type, uint32_t time, int len,
+                                char *token);
+unsigned int AFPDisconnectOldSession(CONN *conn, uint16_t type, int len,
+                                     char *token);
 
 unsigned int AFPMapID(CONN *conn, char fn, int id);
-unsigned int AFPMapName(CONN *conn, char fn, char *name );
+unsigned int AFPMapName(CONN *conn, char fn, char *name);
 
-unsigned int AFPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator, uint32_t tag, char *name);
-unsigned int AFPGetAPPL(CONN *conn, uint16_t dt, char *name, uint16_t index, uint16_t f_bitmap);
-unsigned int AFPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator, char *name);
+unsigned int AFPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator,
+                        uint32_t tag, char *name);
+unsigned int AFPGetAPPL(CONN *conn, uint16_t dt, char *name, uint16_t index,
+                        uint16_t f_bitmap);
+unsigned int AFPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
+                           char *name);
 
 unsigned int AFPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap);
-unsigned int AFPBadPacket(CONN *conn, char fn, char *name );
+unsigned int AFPBadPacket(CONN *conn, char fn, char *name);
 
-unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos, uint16_t f_bitmap,uint16_t d_bitmap,
-        uint32_t rbitmap, struct afp_filedir_parms *filedir, struct afp_filedir_parms *filedir2);
+unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
+                          uint16_t f_bitmap, uint16_t d_bitmap,
+                          uint32_t rbitmap, struct afp_filedir_parms *filedir,
+                          struct afp_filedir_parms *filedir2);
 
-unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos, uint16_t f_bitmap,uint16_t d_bitmap,
-        uint32_t rbitmap, struct afp_filedir_parms *filedir, struct afp_filedir_parms *filedir2);
+unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
+                             uint16_t f_bitmap, uint16_t d_bitmap,
+                             uint32_t rbitmap, struct afp_filedir_parms *filedir,
+                             struct afp_filedir_parms *filedir2);
 
-unsigned int AFPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap, off_t size);
+unsigned int AFPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
+                             off_t size);
 
-unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char *name);
-unsigned int AFPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, int maxsize, char* pathname);
-unsigned int AFPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, int maxsize, char* pathname, char* attrname);
-unsigned int AFPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char* pathname, char* attrname, char* data);
-unsigned int AFPRemoveExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap, char* pathname, char* attrname);
+unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
+                       char *name);
+unsigned int AFPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
+                            int maxsize, char *pathname);
+unsigned int AFPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
+                           int maxsize, char *pathname, char *attrname);
+unsigned int AFPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
+                           char *pathname, char *attrname, char *data);
+unsigned int AFPRemoveExtAttr(CONN *conn, uint16_t vol, int did,
+                              uint16_t bitmap, char *pathname, char *attrname);
 
 int FPset_name(CONN *conn, int ofs, char *name);
 void u2mac(uint8_t *dst, char *name, int len);

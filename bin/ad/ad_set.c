@@ -87,168 +87,223 @@ static void usage_set(void)
         "     Uppercase letter sets the flag, lowercase removes the flag\n"
         "     f = valid for files\n"
         "     d = valid for directories\n"
-
-        );
+    );
 }
 
-static void change_type(char *path _U_, afpvol_t *vol _U_, const struct stat *st _U_, struct adouble *ad, char *new_type)
+static void change_type(char *path _U_, afpvol_t *vol _U_,
+                        const struct stat *st _U_, struct adouble *ad, char *new_type)
 {
     char *FinderInfo;
 
-    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)))
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI))) {
         memcpy(FinderInfo, new_type, 4);
+    }
 }
 
-static void change_creator(char *path _U_, afpvol_t *vol _U_, const struct stat *st _U_, struct adouble *ad, char *new_creator)
+static void change_creator(char *path _U_, afpvol_t *vol _U_,
+                           const struct stat *st _U_, struct adouble *ad, char *new_creator)
 {
     char *FinderInfo;
 
-    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)))
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI))) {
         memcpy(FinderInfo + 4, new_creator, 4);
-
+    }
 }
 
-static void change_label(char *path _U_, afpvol_t *vol _U_, const struct stat *st _U_, struct adouble *ad, char *new_label)
+static void change_label(char *path _U_, afpvol_t *vol _U_,
+                         const struct stat *st _U_, struct adouble *ad, char *new_label)
 {
     char *FinderInfo;
     const char **color = &labels[0];
     uint16_t FinderFlags;
     unsigned char color_count = 0;
 
-    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)) == NULL)
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)) == NULL) {
         return;
+    }
 
     while (*color) {
         if (strcasecmp(*color, new_label) == 0) {
             /* get flags */
             memcpy(&FinderFlags, FinderInfo + 8, 2);
             FinderFlags = ntohs(FinderFlags);
-
             /* change value */
             FinderFlags &= ~FINDERINFO_COLOR;
             FinderFlags |= color_count << 1;
-
             /* copy it back */
             FinderFlags = ntohs(FinderFlags);
             memcpy(FinderInfo + 8, &FinderFlags, 2);
-
             break;
         }
+
         color++;
         color_count++;
     }
 }
 
-static void change_attributes(char *path _U_, afpvol_t *vol _U_, const struct stat *st, struct adouble *ad, char *new_attributes)
+static void change_attributes(char *path _U_, afpvol_t *vol _U_,
+                              const struct stat *st, struct adouble *ad, char *new_attributes)
 {
     uint16_t AFPattributes;
-
     ad_getattr(ad, &AFPattributes);
     AFPattributes = ntohs(AFPattributes);
 
     if (S_ISREG(st->st_mode)) {
-        if (strchr(new_attributes, 'W'))
+        if (strchr(new_attributes, 'W')) {
             AFPattributes |= ATTRBIT_NOWRITE;
-        if (strchr(new_attributes, 'w'))
-            AFPattributes &= ~ATTRBIT_NOWRITE;
+        }
 
-        if (strchr(new_attributes, 'O'))
+        if (strchr(new_attributes, 'w')) {
+            AFPattributes &= ~ATTRBIT_NOWRITE;
+        }
+
+        if (strchr(new_attributes, 'O')) {
             AFPattributes |= ATTRBIT_NOCOPY;
-        if (strchr(new_attributes, 'o'))
+        }
+
+        if (strchr(new_attributes, 'o')) {
             AFPattributes &= ~ATTRBIT_NOCOPY;
+        }
     }
 
-    if (strchr(new_attributes, 'Y'))
+    if (strchr(new_attributes, 'Y')) {
         AFPattributes |= ATTRBIT_SYSTEM;
-    if (strchr(new_attributes, 'y'))
+    }
+
+    if (strchr(new_attributes, 'y')) {
         AFPattributes &= ~ATTRBIT_SYSTEM;
+    }
 
-    if (strchr(new_attributes, 'P'))
+    if (strchr(new_attributes, 'P')) {
         AFPattributes |= ATTRBIT_BACKUP;
-    if (strchr(new_attributes, 'p'))
+    }
+
+    if (strchr(new_attributes, 'p')) {
         AFPattributes &= ~ATTRBIT_BACKUP;
+    }
 
-    if (strchr(new_attributes, 'R'))
+    if (strchr(new_attributes, 'R')) {
         AFPattributes |= ATTRBIT_NORENAME;
-    if (strchr(new_attributes, 'r'))
-        AFPattributes &= ~ATTRBIT_NORENAME;
+    }
 
-    if (strchr(new_attributes, 'L'))
+    if (strchr(new_attributes, 'r')) {
+        AFPattributes &= ~ATTRBIT_NORENAME;
+    }
+
+    if (strchr(new_attributes, 'L')) {
         AFPattributes |= ATTRBIT_NODELETE;
-    if (strchr(new_attributes, 'l'))
+    }
+
+    if (strchr(new_attributes, 'l')) {
         AFPattributes &= ~ATTRBIT_NODELETE;
+    }
 
     AFPattributes = ntohs(AFPattributes);
     ad_setattr(ad, AFPattributes);
 }
 
-static void change_flags(char *path _U_, afpvol_t *vol _U_, const struct stat *st, struct adouble *ad, char *new_flags)
+static void change_flags(char *path _U_, afpvol_t *vol _U_,
+                         const struct stat *st, struct adouble *ad, char *new_flags)
 {
     char *FinderInfo;
     uint16_t FinderFlags;
 
-    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)) == NULL)
+    if ((FinderInfo = ad_entry(ad, ADEID_FINDERI)) == NULL) {
         return;
+    }
 
     memcpy(&FinderFlags, FinderInfo + 8, 2);
     FinderFlags = ntohs(FinderFlags);
 
     if (S_ISREG(st->st_mode)) {
-        if (strchr(new_flags, 'M'))
+        if (strchr(new_flags, 'M')) {
             FinderFlags |= FINDERINFO_ISHARED;
-        if (strchr(new_flags, 'm'))
+        }
+
+        if (strchr(new_flags, 'm')) {
             FinderFlags &= ~FINDERINFO_ISHARED;
+        }
 
-        if (strchr(new_flags, 'N'))
+        if (strchr(new_flags, 'N')) {
             FinderFlags |= FINDERINFO_HASNOINITS;
-        if (strchr(new_flags, 'n'))
-            FinderFlags &= ~FINDERINFO_HASNOINITS;
+        }
 
-        if (strchr(new_flags, 'T'))
+        if (strchr(new_flags, 'n')) {
+            FinderFlags &= ~FINDERINFO_HASNOINITS;
+        }
+
+        if (strchr(new_flags, 'T')) {
             FinderFlags |= FINDERINFO_ISSTATIONNERY;
-        if (strchr(new_flags, 't'))
+        }
+
+        if (strchr(new_flags, 't')) {
             FinderFlags &= ~FINDERINFO_ISSTATIONNERY;
+        }
     }
 
-    if (strchr(new_flags, 'D'))
+    if (strchr(new_flags, 'D')) {
         FinderFlags |= FINDERINFO_ISONDESK;
-    if (strchr(new_flags, 'd'))
+    }
+
+    if (strchr(new_flags, 'd')) {
         FinderFlags &= ~FINDERINFO_ISONDESK;
+    }
 
-    if (strchr(new_flags, 'E'))
+    if (strchr(new_flags, 'E')) {
         FinderFlags |= FINDERINFO_HIDEEXT;
-    if (strchr(new_flags, 'e'))
+    }
+
+    if (strchr(new_flags, 'e')) {
         FinderFlags &= ~FINDERINFO_HIDEEXT;
+    }
 
-    if (strchr(new_flags, 'I'))
+    if (strchr(new_flags, 'I')) {
         FinderFlags |= FINDERINFO_HASBEENINITED;
-    if (strchr(new_flags, 'i'))
+    }
+
+    if (strchr(new_flags, 'i')) {
         FinderFlags &= ~FINDERINFO_HASBEENINITED;
+    }
 
-    if (strchr(new_flags, 'C'))
+    if (strchr(new_flags, 'C')) {
         FinderFlags |= FINDERINFO_HASCUSTOMICON;
-    if (strchr(new_flags, 'c'))
+    }
+
+    if (strchr(new_flags, 'c')) {
         FinderFlags &= ~FINDERINFO_HASCUSTOMICON;
+    }
 
-    if (strchr(new_flags, 'S'))
+    if (strchr(new_flags, 'S')) {
         FinderFlags |= FINDERINFO_NAMELOCKED;
-    if (strchr(new_flags, 's'))
+    }
+
+    if (strchr(new_flags, 's')) {
         FinderFlags &= ~FINDERINFO_NAMELOCKED;
+    }
 
-    if (strchr(new_flags, 'B'))
+    if (strchr(new_flags, 'B')) {
         FinderFlags |= FINDERINFO_HASBUNDLE;
-    if (strchr(new_flags, 'b'))
+    }
+
+    if (strchr(new_flags, 'b')) {
         FinderFlags &= ~FINDERINFO_HASBUNDLE;
+    }
 
-    if (strchr(new_flags, 'V'))
+    if (strchr(new_flags, 'V')) {
         FinderFlags |= FINDERINFO_INVISIBLE;
-    if (strchr(new_flags, 'v'))
-        FinderFlags &= ~FINDERINFO_INVISIBLE;
+    }
 
-    if (strchr(new_flags, 'A'))
+    if (strchr(new_flags, 'v')) {
+        FinderFlags &= ~FINDERINFO_INVISIBLE;
+    }
+
+    if (strchr(new_flags, 'A')) {
         FinderFlags |= FINDERINFO_ISALIAS;
-    if (strchr(new_flags, 'a'))
+    }
+
+    if (strchr(new_flags, 'a')) {
         FinderFlags &= ~FINDERINFO_ISALIAS;
+    }
 
     FinderFlags = ntohs(FinderFlags);
     memcpy(FinderInfo + 8, &FinderFlags, 2);
@@ -263,69 +318,85 @@ int ad_set(int argc, char **argv, AFPObj *obj)
     struct adouble ad;
 
     while ((c = getopt(argc, argv, ":l:t:c:f:a:")) != -1) {
-        switch(c) {
+        switch (c) {
         case 'l':
             new_label = strdup(optarg);
             break;
+
         case 't':
             new_type = strdup(optarg);
             break;
+
         case 'c':
             new_creator = strdup(optarg);
             break;
+
         case 'f':
             new_flags = strdup(optarg);
             break;
+
         case 'a':
             new_attributes = strdup(optarg);
             break;
+
         case ':':
         case '?':
             usage_set();
             return -1;
             break;
         }
-
     }
 
-    if (argc <= optind)
+    if (argc <= optind) {
         exit(1);
+    }
 
     cnid_init();
-
     openvol(obj, argv[optind], &vol);
-    if (vol.vol == NULL || vol.vol->v_path == NULL)
+
+    if (vol.vol == NULL || vol.vol->v_path == NULL) {
         exit(1);
+    }
 
     if (stat(argv[optind], &st) != 0) {
         perror("stat");
         exit(1);
     }
 
-    if (S_ISDIR(st.st_mode))
+    if (S_ISDIR(st.st_mode)) {
         adflags = ADFLAGS_DIR;
+    }
 
     ad_init(&ad, vol.vol);
 
-    if (ad_open(&ad, argv[optind], adflags | ADFLAGS_HF | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666) < 0)
+    if (ad_open(&ad, argv[optind],
+                adflags | ADFLAGS_HF | ADFLAGS_CREATE | ADFLAGS_RDWR, 0666) < 0) {
         goto exit;
+    }
 
-    if (new_label)
+    if (new_label) {
         change_label(argv[optind], &vol, &st, &ad, new_label);
-    if (new_type)
+    }
+
+    if (new_type) {
         change_type(argv[optind], &vol, &st, &ad, new_type);
-    if (new_creator)
+    }
+
+    if (new_creator) {
         change_creator(argv[optind], &vol, &st, &ad, new_creator);
-    if (new_flags)
+    }
+
+    if (new_flags) {
         change_flags(argv[optind], &vol, &st, &ad, new_flags);
-    if (new_attributes)
+    }
+
+    if (new_attributes) {
         change_attributes(argv[optind], &vol, &st, &ad, new_attributes);
+    }
 
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_HF);
-
 exit:
     closevol(&vol);
-
     return 0;
 }

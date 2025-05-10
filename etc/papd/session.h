@@ -3,6 +3,6 @@
 
 #include <atalk/atp.h>
 
-int session( ATP atp, struct sockaddr_at *sat );
+int session(ATP atp, struct sockaddr_at *sat);
 
 #endif /* PAPD_SESSION_H */
