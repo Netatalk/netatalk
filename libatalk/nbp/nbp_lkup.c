@@ -33,7 +33,13 @@
 #endif /* ! SOCKLEN_T */
 
 int nbp_lookup(const char *obj, const char *type, const char *zone, struct nbpnve *nn,
-                int nncnt, const struct at_addr *ataddr) {
+               int nncnt, const struct at_addr *ataddr) {
+
+    return nbp_do_lookup_op(obj, type, zone, nn, nncnt, ataddr, NBPOP_BRRQ);
+}
+
+int nbp_do_lookup_op(const char *obj, const char *type, const char *zone, struct nbpnve *nn,
+                     int nncnt, const struct at_addr *ataddr, uint8_t op) {
     struct sockaddr_at addr, from;
     struct timeval tv, tv_begin, tv_end;
     fd_set fds;
@@ -55,7 +61,7 @@ int nbp_lookup(const char *obj, const char *type, const char *zone, struct nbpnv
     }
 
     *data++ = DDPTYPE_NBP;
-    nh.nh_op = NBPOP_BRRQ;
+    nh.nh_op = op;
 
     nh.nh_cnt = 1;
     nh.nh_id = ++nbp_id;
