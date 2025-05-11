@@ -100,6 +100,9 @@ int main(int ac, char **av)
                 exit(1);
             }
             break;
+        case 's':
+            script_friendly_output = true;
+            break;
         case 'A':
             if (!atalk_aton(optarg, &addr)) {
                 fprintf(stderr, "Bad address.\n");
@@ -113,9 +116,6 @@ int main(int ac, char **av)
                 exit(1);
             }
             break;
-        case 'r' :
-            nresp = atoi(optarg);
-            break;
         case 'm':
             chMac = add_charset(optarg);
             if ((charset_t)-1 == chMac) {
@@ -123,8 +123,8 @@ int main(int ac, char **av)
                 exit(1);
             }
             break;
-        case 's':
-            script_friendly_output = true;
+        case 'r' :
+            nresp = atoi(optarg);
             break;
 
         default:
