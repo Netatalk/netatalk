@@ -35,12 +35,16 @@
 int nbp_lookup(const char *obj, const char *type, const char *zone, struct nbpnve *nn,
                int nncnt, const struct at_addr *ataddr) {
 
-    return nbp_do_lookup_op(obj, type, zone, nn, nncnt, ataddr, NBPOP_BRRQ);
+    return nbp_do_lookup_op(obj, type, zone, nn, nncnt, ataddr, NULL, NBPOP_BRRQ);
 }
 
-int nbp_do_lookup_op(const char *obj, const char *type, const char *zone, struct nbpnve *nn,
-                     int nncnt, const struct at_addr *ataddr, uint8_t op) {
-    struct sockaddr_at addr, from;
+int nbp_do_lookup_op(const char *obj, const char *type, const char *zone, 
+                     struct nbpnve *nn, int nncnt, const struct at_addr *srcaddr, 
+                     const struct at_addr *dstaddr, uint8_t op) {
+    
+    struct sockaddr_at addr = { 0 };
+    struct sockaddr_at dest = { 0 };
+    struct sockaddr_at from = { 0 };
     struct timeval tv, tv_begin, tv_end;
     fd_set fds;
     struct nbpnve nve;
@@ -51,13 +55,23 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone, struct
     SOCKLEN_T namelen;
     int s, cnt, tries, sc, cc, i, c;
 
-    memset(&addr, 0, sizeof(addr));
-    memset(&from, 0, sizeof(from));
-    if (ataddr) {
-        memcpy(&addr.sat_addr, ataddr, sizeof(struct at_addr));
+    if (srcaddr) {
+        memcpy(&addr.sat_addr, srcaddr, sizeof(struct at_addr));
     }
-    if ((s = netddp_open(&addr, &from)) < 0) {
+    if (dstaddr) {
+        memcpy(&dest.sat_addr, dstaddr, sizeof(struct at_addr));
+        dest.sat_family = AF_APPLETALK;
+    } 
+    if ((s = netddp_open(&addr, NULL)) < 0) {
         return -1;
+    }
+    
+    if (!dstaddr) {
+        // Without a destination address, we assume we're doing loopback, so copy
+        // the source address to the destination.  We have to do this here, after
+        // netddp_open, because netddp_open mutates addr after binding to it, to
+        // set the address family and "real" address.
+        memcpy(&dest, &addr, sizeof(struct sockaddr_at));        
     }
 
     *data++ = DDPTYPE_NBP;
@@ -120,13 +134,13 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone, struct
         }
     }
 
-    addr.sat_port = nbp_port;
+    dest.sat_port = nbp_port;
 
     cnt = 0;
     tries = 3;
     sc = data - nbp_send;
     while ( tries > 0 ) {
-        if ( netddp_sendto( s, nbp_send, sc, 0, (struct sockaddr *)&addr,
+        if ( netddp_sendto( s, nbp_send, sc, 0, (struct sockaddr *)&dest,
                             sizeof( struct sockaddr_at )) < 0 ) {
             goto lookup_err;
         }
