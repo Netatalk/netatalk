@@ -31,15 +31,15 @@ static void usage(char *s)
 
 int main(int argc, char *argv[])
 {
-    struct atp_handle	*ah;
-    struct atp_block	atpb;
-    struct sockaddr_at	saddr;
-    struct servent	*se;
-    char		reqdata[4], buf[ATP_MAXDATA];
-    struct iovec	iov;
-    short		temp, index = 0;
-    int			c, myzoneflg = 0, localzonesflg = 0, errflg = 0;
-    extern int		optind;
+    struct atp_handle *ah;
+    struct atp_block atpb;
+    struct sockaddr_at saddr;
+    struct servent *se;
+    char reqdata[4], buf[ATP_MAXDATA];
+    struct iovec iov;
+    short temp, index = 0;
+    int c, myzoneflg = 0, localzonesflg = 0, errflg = 0;
+    extern int optind;
     reqdata[0] = ZIPOP_GETZONELIST;
 
     while ((c = getopt(argc, argv, "ml")) != EOF) {
