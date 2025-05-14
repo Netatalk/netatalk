@@ -23,8 +23,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define FUCKED
-
 #define _PATH_PAPRC	".paprc"
 
 #define IMAGEWRITER "ImageWriter"
@@ -172,8 +170,6 @@ int main(int ac, char	**av)
 
     while ((c = getopt(ac, av, "dWwcep:s:EA:")) != EOF) {
         switch (c) {
-#ifdef FUCKED
-
         case 'w' :
             waitforprinter = 1;
             break;
@@ -181,7 +177,6 @@ int main(int ac, char	**av)
         case 'W' :
             waitforidle = 1;
             break;
-#endif /* FUCKED */
 
         /* enable debugging */
         case 'd' :
@@ -932,8 +927,6 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
                 printf("< STATUS\n"), fflush(stdout);
             }
 
-#ifdef FUCKED
-
             if (waitforprinter) {
                 char	st_buf[1024];	/* XXX too big */
                 memcpy(st_buf, (char *) rniov[0].iov_base + 9,
@@ -945,7 +938,6 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
                 }
             }
 
-#endif /* FUCKED */
             updatestatus((char *) rniov[0].iov_base + 9,
                          ((char *)rniov[0].iov_base)[8]);
         }
