@@ -161,11 +161,10 @@ static void grow_table(hash_t *hash)
         hash_val_t mask = (hash->mask << 1) | 1;
         /* 6 */
         hash_val_t exposed_bit = mask ^ hash->mask;
-        hash_val_t chain;
         assert(mask != hash->mask);
 
         /* 7 */
-        for (chain = 0; chain < hash->nchains; chain++) {
+        for (hash_val_t chain = 0; chain < hash->nchains; chain++) {
             hnode_t *low_chain = NULL, *high_chain = NULL, *hptr, *next;
 
             for (hptr = newtable[chain]; hptr != NULL; hptr = next) {
@@ -228,7 +227,8 @@ static void grow_table(hash_t *hash)
 
 static void shrink_table(hash_t *hash)
 {
-    hash_val_t chain, nchains;
+    hash_val_t chain;
+    hash_val_t nchains;
     hnode_t **newtable, *low_tail, *low_chain, *high_chain;
     /* 1 */
     assert(hash->nchains >= 2);
@@ -509,7 +509,8 @@ hnode_t *hash_scan_next(hscan_t *scan)
 
 void hash_insert(hash_t *hash, hnode_t *node, const void *key)
 {
-    hash_val_t hkey, chain;
+    hash_val_t hkey;
+    hash_val_t chain;
     assert(hash_val_t_bit != 0);
     assert(node->next == NULL);
     /* 1 */
@@ -549,15 +550,15 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
 
 hnode_t *hash_lookup(hash_t *hash, const void *key)
 {
-    hash_val_t hkey, chain;
-    hnode_t *nptr;
+    hash_val_t hkey;
+    hash_val_t chain;
     /* 1 */
     hkey = hash->function(key);
     /* 2 */
     chain = hkey & hash->mask;
 
     /* 3 */
-    for (nptr = hash->table[chain]; nptr; nptr = nptr->next) {
+    for (hnode_t *nptr = hash->table[chain]; nptr; nptr = nptr->next) {
         if (nptr->hkey == hkey && hash->compare(nptr->key, key) == 0) {
             return nptr;
         }
@@ -694,7 +695,6 @@ void hash_scan_delfree(hash_t *hash, hnode_t *node)
 int hash_verify(hash_t *hash)
 {
     hashcount_t count = 0;
-    hash_val_t chain;
     hnode_t *hptr;
 
     /* 1 */
@@ -713,7 +713,7 @@ int hash_verify(hash_t *hash)
     }
 
     /* 2 */
-    for (chain = 0; chain < hash->nchains; chain++) {
+    for (hash_val_t chain = 0; chain < hash->nchains; chain++) {
         for (hptr = hash->table[chain]; hptr != NULL; hptr = hptr->next) {
             if ((hptr->hkey & hash->mask) != chain) {
                 return 0;
