@@ -41,8 +41,7 @@ extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 static int pwd_login(void *obj, char *username, int ulen,
                      struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
-                     char *rbuf _U_, size_t *rbuflen _U_)
-{
+                     char *rbuf _U_, size_t *rbuflen _U_) {
     char  *p;
     struct passwd *pwd;
 #ifdef SHADOWPW
@@ -110,8 +109,7 @@ static int pwd_login(void *obj, char *username, int ulen,
 /* cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
-                        char *rbuf, size_t *rbuflen)
-{
+                        char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     *rbuflen = 0;
@@ -153,8 +151,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
-                            char *rbuf, size_t *rbuflen)
-{
+                            char *rbuf, size_t *rbuflen) {
     char       *username;
     size_t     len, ulen;
     uint16_t  temp16;
@@ -184,8 +181,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 /* Printer ClearTxtUAM login */
 static int passwd_printer(char	*start, char *stop, char *username,
-                          struct papfile *out)
-{
+                          struct papfile *out) {
     struct passwd *pwd;
 #ifdef SHADOWPW
     struct spwd *sp;
@@ -302,8 +298,7 @@ static int passwd_printer(char	*start, char *stop, char *username,
     return 0;
 }
 
-static int uam_setup(void *obj, const char *path)
-{
+static int uam_setup(void *obj, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
                      passwd_login, NULL, NULL, passwd_login_ext) < 0) {
         return -1;
@@ -317,8 +312,7 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
     uam_unregister(UAM_SERVER_PRINTAUTH, "ClearTxtUAM");
 }

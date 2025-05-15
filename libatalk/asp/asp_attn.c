@@ -21,8 +21,7 @@
 
 /* attentions can get sent at any time. as a consequence, we don't
  * want to touch anything that might be used elsewhere. */
-int asp_attention(ASP asp, AFPUserBytes flags)
-{
+int asp_attention(ASP asp, AFPUserBytes flags) {
     char cmds[ASP_HDRSIZ], data[ASP_HDRSIZ];
     struct sockaddr_at  sat;
     struct atp_block	atpb;

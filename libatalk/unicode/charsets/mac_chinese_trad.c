@@ -47,8 +47,7 @@ struct charset_functions charset_mac_chinese_trad = {
 };
 
 static size_t mac_chinese_trad_char_push(uint8_t* out, const ucs2_t* in,
-        size_t *size)
-{
+        size_t *size) {
     ucs2_t wc = in[0];
 
     if (wc <= 0x7f) {
@@ -83,15 +82,13 @@ static size_t mac_chinese_trad_char_push(uint8_t* out, const ucs2_t* in,
 }
 
 static size_t mac_chinese_trad_push(void *cd, char **inbuf, size_t *inbytesleft,
-                                    char **outbuf, size_t *outbytesleft)
-{
+                                    char **outbuf, size_t *outbytesleft) {
     return cjk_generic_push(mac_chinese_trad_char_push,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
 static size_t mac_chinese_trad_char_pull(ucs2_t* out, const uint8_t* in,
-        size_t *size)
-{
+        size_t *size) {
     uint16_t c = in[0];
 
     if (c <= 0x7f) {
@@ -123,8 +120,7 @@ static size_t mac_chinese_trad_char_pull(ucs2_t* out, const uint8_t* in,
 }
 
 static size_t mac_chinese_trad_pull(void *cd, char **inbuf, size_t *inbytesleft,
-                                    char **outbuf, size_t *outbytesleft)
-{
+                                    char **outbuf, size_t *outbytesleft) {
     return cjk_generic_pull(mac_chinese_trad_char_pull,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }

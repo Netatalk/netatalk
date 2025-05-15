@@ -35,8 +35,7 @@ static char *fce_ev_names[] = {
 };
 
 static int unpack_fce_packet(unsigned char *buf, size_t buflen,
-                             struct fce_packet *packet)
-{
+                             struct fce_packet *packet) {
     const unsigned char *p = buf;
     const unsigned char *end = buf + buflen;
 
@@ -184,8 +183,7 @@ static int unpack_fce_packet(unsigned char *buf, size_t buflen,
     return 0;
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int sockfd;
     int rv;
     int c;

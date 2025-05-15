@@ -175,8 +175,7 @@ typedef struct node_t {
     unsigned int red: 1;
 } *node;
 
-static void tdestroy_recurse (node root, __free_fn_t freefct)
-{
+static void tdestroy_recurse (node root, __free_fn_t freefct) {
     if (root->left != NULL) {
         tdestroy_recurse (root->left, freefct);
     }
@@ -190,8 +189,7 @@ static void tdestroy_recurse (node root, __free_fn_t freefct)
     free (root);
 }
 
-static void mytdestroy (void *vroot, __free_fn_t freefct)
-{
+static void mytdestroy (void *vroot, __free_fn_t freefct) {
     node root = (node) vroot;
 
     if (root != NULL) {
@@ -199,14 +197,12 @@ static void mytdestroy (void *vroot, __free_fn_t freefct)
     }
 }
 
-static char *mystpcpy(char *a, const char *b)
-{
+static char *mystpcpy(char *a, const char *b) {
     strcpy(a, b);
     return a + strlen(a);
 }
 
-static char *xgetcwd(void)
-{
+static char *xgetcwd(void) {
     char *cwd;
     char *ret;
     unsigned path_max;
@@ -233,8 +229,7 @@ static char *xgetcwd(void)
 }
 
 static int
-object_compare (const void *p1, const void *p2)
-{
+object_compare (const void *p1, const void *p2) {
     /* We don't need a sophisticated and useful comparison.  We are only
        interested in equality.  However, we must be careful not to
        accidentally compare `holes' in the structure.  */
@@ -251,8 +246,7 @@ object_compare (const void *p1, const void *p2)
 
 
 static int
-add_object (struct ftw_data *data, struct STAT *st)
-{
+add_object (struct ftw_data *data, struct STAT *st) {
     struct known_object *newp = malloc (sizeof (struct known_object));
 
     if (newp == NULL) {
@@ -266,8 +260,7 @@ add_object (struct ftw_data *data, struct STAT *st)
 
 
 static inline int
-find_object (struct ftw_data *data, struct STAT *st)
-{
+find_object (struct ftw_data *data, struct STAT *st) {
     struct known_object obj;
     obj.dev = st->st_dev;
     obj.ino = st->st_ino;
@@ -276,8 +269,7 @@ find_object (struct ftw_data *data, struct STAT *st)
 
 
 static inline int
-open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
-{
+open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp) {
     int result = 0;
 
     if (data->dirstreams[data->actdir] != NULL) {
@@ -421,8 +413,7 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 
 static int
 process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
-               size_t namlen)
-{
+               size_t namlen) {
     struct STAT st;
     int result = 0;
     int flag = 0;
@@ -519,8 +510,7 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 
 
 static int
-ftw_dir (struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
-{
+ftw_dir (struct ftw_data *data, struct STAT *st, struct dir_data *old_dir) {
     struct dir_data dir;
     struct dirent64 *d;
     int previous_base = data->ftw.base;
@@ -672,8 +662,7 @@ static int ftw_startup (const char *dir,
                         nftw_func_t func,
                         dir_notification_func_t up,
                         int descriptors,
-                        int flags)
-{
+                        int flags) {
     struct ftw_data data;
     struct STAT st;
     int result = 0;
@@ -859,8 +848,7 @@ int NFTW_NAME(const char *path,
               NFTW_FUNC_T func,
               dir_notification_func_t up,
               int descriptors,
-              int flags)
-{
+              int flags) {
     return ftw_startup (path, 1, func, up, descriptors, flags);
 }
 

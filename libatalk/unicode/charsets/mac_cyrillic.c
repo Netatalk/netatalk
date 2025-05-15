@@ -53,8 +53,7 @@ struct charset_functions charset_mac_cyrillic = {
 /* ------------------------ */
 
 static size_t mac_cyrillic_push(void *cd, char **inbuf, size_t *inbytesleft,
-                                char **outbuf, size_t *outbytesleft)
-{
+                                char **outbuf, size_t *outbytesleft) {
     return (size_t) mb_generic_push(char_ucs2_to_mac_cyrillic, cd, inbuf,
                                     inbytesleft, outbuf, outbytesleft);
 }
@@ -62,8 +61,7 @@ static size_t mac_cyrillic_push(void *cd, char **inbuf, size_t *inbytesleft,
 /* ------------------------ */
 
 static size_t mac_cyrillic_pull(void *cd, char **inbuf, size_t *inbytesleft,
-                                char **outbuf, size_t *outbytesleft)
-{
+                                char **outbuf, size_t *outbytesleft) {
     return (size_t) mb_generic_pull(char_mac_cyrillic_to_ucs2, cd, inbuf,
                                     inbytesleft, outbuf, outbytesleft);
 }

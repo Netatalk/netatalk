@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test169()
-{
+STATIC void test169() {
     uint16_t vol = VolID;
     uint16_t dt;
     char *file = "t169 file";
@@ -43,8 +42,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetAPPL_test()
-{
+void FPGetAPPL_test() {
     ENTER_TESTSET
     test169();
 }

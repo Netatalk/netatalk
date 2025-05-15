@@ -68,8 +68,7 @@ static char buf[MAXPATHLEN + 1];
 /* if newpwd is null, convert buf from hex to binary. if newpwd isn't
  * null, convert newpwd to hex and save it in buf. */
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
-static void convert_passwd(char *buf, char *newpwd, const int keyfd)
-{
+static void convert_passwd(char *buf, char *newpwd, const int keyfd) {
     uint8_t key[HEXPASSWDLEN];
     unsigned int i, j;
     gcry_cipher_hd_t ctx;
@@ -129,8 +128,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 
 /* this matches the code in uam_randnum.c */
 static int update_passwd(const char *path, const char *name, int flags,
-                         const char *pass)
-{
+                         const char *pass) {
     char password[PASSWDLEN + 1], *p, *passwd = "";
     FILE *fp;
     off_t pos;
@@ -275,8 +273,7 @@ update_done:
 
 
 /* creates a file with all the password entries */
-static int create_file(const char *path, uid_t minuid)
-{
+static int create_file(const char *path, uid_t minuid) {
     struct passwd *pwd;
     int fd, len, err = 0;
 
@@ -315,8 +312,7 @@ static int create_file(const char *path, uid_t minuid)
 }
 
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     struct stat st;
     int flags;
     uid_t uid_min = UID_START, uid;

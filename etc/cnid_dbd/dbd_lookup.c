@@ -130,8 +130,8 @@ to be safe we must assign new CNIDs to both files.
  *  up the database if there's a problem.
  */
 
-int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
-{
+int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst,
+               struct cnid_dbd_rply *rply) {
     unsigned char *buf;
     DBT key, devdata, diddata;
     int devino = 1, didname = 1;

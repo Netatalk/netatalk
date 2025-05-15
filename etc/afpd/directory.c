@@ -96,8 +96,7 @@ q_t *invalid_dircache_entries;
 /* -------------------------
    appledouble mkdir afp error code.
 */
-static int netatalk_mkdir(const struct vol *vol, const char *name)
-{
+static int netatalk_mkdir(const struct vol *vol, const char *name) {
     int ret;
     struct stat st;
 
@@ -143,8 +142,7 @@ static int netatalk_mkdir(const struct vol *vol, const char *name)
 }
 
 /* ------------------- */
-static int deletedir(const struct vol *vol, int dirfd, char *dir)
-{
+static int deletedir(const struct vol *vol, int dirfd, char *dir) {
     char path[MAXPATHLEN + 1];
     DIR *dp;
     struct dirent   *de;
@@ -203,8 +201,7 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
 
 /* do a recursive copy. */
 static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src,
-                   char *dst)
-{
+                   char *dst) {
     char spath[MAXPATHLEN + 1], dpath[MAXPATHLEN + 1];
     DIR *dp;
     struct dirent   *de;
@@ -286,21 +283,18 @@ copydir_done:
 /* ---------------------
  * is our cached offspring count valid?
  */
-static int diroffcnt(struct dir *dir, struct stat *st)
-{
+static int diroffcnt(struct dir *dir, struct stat *st) {
     return st->st_ctime == dir->d_ctime;
 }
 
 /* --------------------- */
-static int invisible_dots(const struct vol *vol, const char *name)
-{
+static int invisible_dots(const struct vol *vol, const char *name) {
     return vol_inv_dots(vol) && *name  == '.' && strcmp(name, ".")
            && strcmp(name, "..");
 }
 
 /* ------------------ */
-static int set_dir_errors(struct path *path, const char *where, int err)
-{
+static int set_dir_errors(struct path *path, const char *where, int err) {
     switch (err) {
     case EPERM :
     case EACCES :
@@ -326,8 +320,7 @@ static int set_dir_errors(struct path *path, const char *where, int err)
  * @note If the passed ret->m_name is mangled, we'll demangle it
  */
 static int cname_mtouname(const struct vol *vol, struct dir *dir,
-                          struct path *ret, int toUTF8)
-{
+                          struct path *ret, int toUTF8) {
     static char temp[MAXPATHLEN + 1];
     char *t;
     cnid_t fileid = 0;
@@ -408,8 +401,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
  *                  5. remove the dir
  */
 static struct path *path_from_dir(struct vol *vol, struct dir *dir,
-                                  struct path *ret)
-{
+                                  struct path *ret) {
     if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT) {
         return NULL;
     }
@@ -469,8 +461,7 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir,
  * Interface
  ********************************************************************************************/
 
-int get_afp_errno(const int param)
-{
+int get_afp_errno(const int param) {
     if (afp_errno != AFPERR_DID1) {
         return afp_errno;
     }
@@ -496,8 +487,7 @@ int get_afp_errno(const int param)
  *
  * @returns pointer to struct dir
  */
-struct dir *dirlookup(const struct vol *vol, cnid_t did)
-{
+struct dir *dirlookup(const struct vol *vol, cnid_t did) {
     static char  buffer[12 + MAXPATHLEN + 1];
     struct stat  st;
     struct dir   *ret = NULL, *pdir;
@@ -706,8 +696,7 @@ struct dir *dir_new(const char *m_name,
                     cnid_t pdid,
                     cnid_t did,
                     bstring path,
-                    struct stat *st)
-{
+                    struct stat *st) {
     struct dir *dir;
     dir = (struct dir *) calloc(1, sizeof(struct dir));
 
@@ -759,8 +748,7 @@ struct dir *dir_new(const char *m_name,
  *
  * @param (rw) pointer to struct dir
  */
-void dir_free(struct dir *dir)
-{
+void dir_free(struct dir *dir) {
     if (dir->d_u_name != dir->d_m_name) {
         bdestroy(dir->d_u_name);
     }
@@ -794,8 +782,7 @@ void dir_free(struct dir *dir)
  * @note Function also assigns path->m_name from path->u_name.
  */
 struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
-                    int len)
-{
+                    int len) {
     int err = 0;
     struct dir  *cdir = NULL;
     cnid_t      id;
@@ -912,8 +899,7 @@ exit:
  *
  * This gets called at the end of every AFP func.
  */
-void dir_free_invalid_q(void)
-{
+void dir_free_invalid_q(void) {
     struct dir *dir;
 
     while ((dir = (struct dir *)dequeue(invalid_dircache_entries))) {
@@ -933,8 +919,7 @@ void dir_free_invalid_q(void)
  * @param (r) pointer to struct vol
  * @param (rw) pointer to struct dir
  */
-int dir_remove(const struct vol *vol, struct dir *dir)
-{
+int dir_remove(const struct vol *vol, struct dir *dir) {
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
 
@@ -981,8 +966,7 @@ int dir_remove(const struct vol *vol, struct dir *dir)
  * 17. set m_name to the mac equivalent of "."
  * 18. goto 3
  */
-struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
-{
+struct path *cname(struct vol *vol, struct dir *dir, char **cpath) {
     static char        path[MAXPATHLEN + 1];
     static struct path ret;
     struct dir  *cdir;
@@ -999,7 +983,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     memset(&ret, 0, sizeof(ret));
 
     switch (ret.m_type = *data) { /* 1 */
-case 2:
+  case 2:
             data++;
         len = (unsigned char) * data++;
         size = 2;
@@ -1011,7 +995,7 @@ case 2:
 
         break;
 
-case 3:
+  case 3:
             if (vol->v_obj->afp_version >= 30) {
                 data++;
                 memcpy(&hint, data, sizeof(hint));
@@ -1025,7 +1009,7 @@ case 3:
             }
 
     /* else it's an error */
-default:
+  default:
             afp_errno = AFPERR_PARAM;
         return NULL;
     }
@@ -1248,8 +1232,7 @@ default:
  *
  * @returns 0 on success, -1 on error with afp_errno set appropriately
  */
-int movecwd(const struct vol *vol, struct dir *dir)
-{
+int movecwd(const struct vol *vol, struct dir *dir) {
     int ret;
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
@@ -1304,8 +1287,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
  * If we aren't the file's owner we can't change its perms when moving it and smb
  * nfs,... don't even try.
  */
-int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
-{
+int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode) {
     struct maccess ma;
     char *p;
     p = ad_dir(path);
@@ -1328,8 +1310,8 @@ int check_access(const AFPObj *obj, struct vol *vol, char *path, int mode)
 }
 
 /* --------------------- */
-int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
-{
+int file_access(const AFPObj *obj, struct vol *vol, struct path *path,
+                int mode) {
     struct maccess ma;
     accessmode(obj, vol, path->u_name, &ma, curdir, &path->st);
     LOG(log_debug, logtype_afpd, "file_access(\"%s\"): mapped user mode: 0x%02x",
@@ -1351,8 +1333,7 @@ int file_access(const AFPObj *obj, struct vol *vol, struct path *path, int mode)
 }
 
 /* --------------------- */
-void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
-{
+void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count) {
     dir->d_offcnt = count;
     dir->d_ctime = st->st_ctime;
     dir->d_flags &= ~DIRF_CNID;
@@ -1362,8 +1343,7 @@ void setdiroffcnt(struct dir *dir, struct stat *st,  uint32_t count)
 /* ---------------------
  * is our cached also for reenumerate id?
  */
-int dirreenumerate(struct dir *dir, struct stat *st)
-{
+int dirreenumerate(struct dir *dir, struct stat *st) {
     return st->st_ctime == dir->d_ctime && (dir->d_flags & DIRF_CNID);
 }
 
@@ -1376,8 +1356,7 @@ int getdirparams(const AFPObj *obj,
                  const struct vol *vol,
                  uint16_t bitmap, struct path *s_path,
                  struct dir *dir,
-                 char *buf, size_t *buflen)
-{
+                 char *buf, size_t *buflen) {
     struct maccess  ma;
     struct adouble  ad;
     char        *data, *l_nameoff = NULL, *utf_nameoff = NULL;
@@ -1643,8 +1622,7 @@ int getdirparams(const AFPObj *obj,
 }
 
 /* ----------------------------- */
-int path_error(struct path *path, int error)
-{
+int path_error(struct path *path, int error) {
     /* - a dir with access error
      * - no error it's a file
      * - file not found
@@ -1662,8 +1640,7 @@ int path_error(struct path *path, int error)
 
 /* ----------------------------- */
 int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
-                     char *rbuf _U_, size_t *rbuflen)
-{
+                     char *rbuf _U_, size_t *rbuflen) {
     struct vol  *vol;
     struct dir  *dir;
     struct path *path;
@@ -1725,8 +1702,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
  * assume path == '\0' e.g. it's a directory in canonical form
  */
 int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
-                 char *buf)
-{
+                 char *buf) {
     struct maccess  ma;
     struct adouble  ad;
     struct utimbuf      ut;
@@ -2106,8 +2082,7 @@ setprivdone:
 }
 
 int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
 #ifdef HAVE_DIRFD
     DIR                  *dp;
 #endif
@@ -2203,8 +2178,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 }
 
 int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                  size_t *rbuflen)
-{
+                  size_t *rbuflen) {
     struct adouble  ad;
     struct vol      *vol;
     struct dir      *dir;
@@ -2297,8 +2271,7 @@ int renamedir(struct vol *vol,
               char *src,
               char *dst,
               struct dir *newparent,
-              char *newname)
-{
+              char *newname) {
     struct adouble  ad;
     int             err;
 
@@ -2351,8 +2324,7 @@ int renamedir(struct vol *vol,
 }
 
 /* delete an empty directory */
-int deletecurdir(struct vol *vol)
-{
+int deletecurdir(struct vol *vol) {
     struct dir  *fdir, *pdir;
     struct adouble  ad;
     uint16_t       ashort;
@@ -2423,8 +2395,7 @@ delete_done:
 }
 
 int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-              size_t *rbuflen)
-{
+              size_t *rbuflen) {
     struct passwd   *pw;
     struct group    *gr;
     char        *name;
@@ -2567,8 +2538,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct passwd   *pw;
     struct group    *gr;
     int             len, sfunc;
@@ -2679,8 +2649,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
    variable DID support
 */
 int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
-                 char *rbuf _U_, size_t *rbuflen)
-{
+                 char *rbuf _U_, size_t *rbuflen) {
     *rbuflen = 0;
     /* do nothing as dids are static for the life of the process. */
     return AFP_OK;
@@ -2690,8 +2659,7 @@ int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
  * there's a pb again with case but move it to cname
  */
 int afp_opendir(AFPObj *obj _U_, char *ibuf, size_t ibuflen  _U_, char *rbuf,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct vol      *vol;
     struct dir      *parentdir;
     struct path     *path;

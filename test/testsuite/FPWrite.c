@@ -4,8 +4,7 @@
 
 
 /* ------------------------- */
-STATIC void test216()
-{
+STATIC void test216() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t216 file.txt";
@@ -65,8 +64,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test226()
-{
+STATIC void test226() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t226 file.txt";
@@ -157,8 +155,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test303()
-{
+STATIC void test303() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t303 file.txt";
@@ -190,8 +187,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPWrite_test()
-{
+void FPWrite_test() {
     ENTER_TESTSET
     test216();
     test226();

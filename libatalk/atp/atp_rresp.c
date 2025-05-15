@@ -46,8 +46,7 @@
 int
 atp_rresp(
     ATP			ah,		/* open atp handle */
-    struct atp_block	*atpb)		/* parameter block */
-{
+    struct atp_block	*atpb) {	/* parameter block */
     int		i, rc;
     size_t	len;
 #ifdef EBUG

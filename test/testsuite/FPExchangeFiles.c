@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test108()
-{
+STATIC void test108() {
     int dir;
     char *name  = "t108 exchange file";
     char *name1 = "t108 new file name";
@@ -89,8 +88,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test111()
-{
+STATIC void test111() {
     int fork;
     int fork1;
     int dir;
@@ -216,8 +214,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test197()
-{
+STATIC void test197() {
     int dir;
     char *name  = "t197 exchange file";
     char *name1 = "t197 new file name";
@@ -267,8 +264,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test342()
-{
+STATIC void test342() {
     int dir;
     char *name  = "t342 exchange file";
     char *name1 = "t342 new file name";
@@ -369,8 +365,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test389()
-{
+STATIC void test389() {
     int dir;
     char *name  = "t389 exchange file";
     char *name1 = "t389 new file name";
@@ -450,8 +445,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test390()
-{
+STATIC void test390() {
     int dir;
     char *name  = "t390 exchange file";
     char *name1 = "t390 new file name";
@@ -532,8 +526,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test391()
-{
+STATIC void test391() {
     int dir;
     char *name  = "t391 exchange file";
     char *name1 = "t391 new file name";
@@ -613,8 +606,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPExchangeFiles_test()
-{
+void FPExchangeFiles_test() {
     ENTER_TESTSET
     test108();
     test111();

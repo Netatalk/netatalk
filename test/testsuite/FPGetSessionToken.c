@@ -10,14 +10,12 @@ extern char *uam;
 
 static volatile int sigp = 0;
 
-static void pipe_handler()
-{
+static void pipe_handler() {
     sigp = 1;
 }
 
 /* ------------------------- */
-STATIC void test220()
-{
+STATIC void test220() {
     char *name = "t23 dir";
     char *name1 = "t23 subdir";
     char *name2 = "t23 file";
@@ -90,8 +88,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test221()
-{
+STATIC void test221() {
     ENTER_TEST
 
     if (Conn->afp_version < 31) {
@@ -106,8 +103,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetSessionToken_test()
-{
+void FPGetSessionToken_test() {
     ENTER_TESTSET
     test220();
     test221();

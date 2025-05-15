@@ -32,8 +32,7 @@
  * @returns             0 on sucess, any other value denotes failure
  */
 int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
-                   afp_child_t **childp)
-{
+                   afp_child_t **childp) {
     pid_t pid;
     int ipc_fds[2];
     afp_child_t *child;

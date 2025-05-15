@@ -57,8 +57,7 @@ static outputfunc_t gOutput;
 #define ROUTE_DEL 0
 #define ROUTE_ADD 1
 
-static int tunnel_ifconfig(void)
-{
+static int tunnel_ifconfig(void) {
     char cmd[2048], addr[256], mask[256], net[256];
     strlcpy(addr, iptoa(gTunnel.net + 1), sizeof(addr));
     strlcpy(mask, iptoa(gTunnel.mask), sizeof(mask));
@@ -74,8 +73,7 @@ static int tunnel_ifconfig(void)
 }
 
 
-static int tunnel_route(int op, uint32_t net, uint32_t mask, uint32_t gw)
-{
+static int tunnel_route(int op, uint32_t net, uint32_t mask, uint32_t gw) {
     char cmd[2048], saddr[256], smask[256], snet[256];
     strlcpy(saddr, iptoa(gw), sizeof(saddr));
     strlcpy(smask, iptoa(mask), sizeof(smask));
@@ -90,8 +88,7 @@ static int tunnel_route(int op, uint32_t net, uint32_t mask, uint32_t gw)
     return system(cmd);
 }
 
-int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
-{
+int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o) {
     int i;
     char s[32], *q;
 #if !defined(__NetBSD__)
@@ -173,8 +170,7 @@ int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
 }
 
 
-void tunnel_close(void)
-{
+void tunnel_close(void) {
     int i, sk;
     struct ifreq ifrq;
     struct ifaliasreq ifra;
@@ -239,8 +235,7 @@ void tunnel_close(void)
 }
 
 
-void tunnel_input(void)
-{
+void tunnel_input(void) {
     char buffer[600];
     int i;
     i = read(gTunnel.dev, buffer, sizeof(buffer));
@@ -261,8 +256,7 @@ void tunnel_input(void)
 }
 
 
-void tunnel_output(char *buffer, int len)
-{
+void tunnel_output(char *buffer, int len) {
     write(gTunnel.dev, buffer, len);
 
     if (gDebug & DEBUG_TUNNEL) {

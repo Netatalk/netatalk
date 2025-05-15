@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test203()
-{
+STATIC void test203() {
     uint16_t vol = VolID;
     uint16_t bitmap = (1 << FILPBIT_MDATE);
     struct afp_filedir_parms filedir;
@@ -81,8 +80,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPFlushFork_test()
-{
+void FPFlushFork_test() {
     ENTER_TESTSET
     test203();
 }

@@ -42,8 +42,7 @@ static void publish_reply(AvahiEntryGroup *g,
  * This function tries to register the AFP DNS
  * SRV service type.
  */
-static void register_stuff(void)
-{
+static void register_stuff(void) {
     uint port;
     const struct vol *volume;
     char name[MAXINSTANCENAMELEN + 1];
@@ -187,8 +186,7 @@ fail:
 /* Called when publishing of service data completes */
 static void publish_reply(AvahiEntryGroup *g,
                           AvahiEntryGroupState state,
-                          AVAHI_GCC_UNUSED void *userdata)
-{
+                          AVAHI_GCC_UNUSED void *userdata) {
     assert(ctx->group == NULL || g == ctx->group);
 
     switch (state) {
@@ -220,8 +218,7 @@ static void publish_reply(AvahiEntryGroup *g,
 
 static void client_callback(AvahiClient *client,
                             AvahiClientState state,
-                            void *userdata)
-{
+                            void *userdata) {
     ctx->client = client;
 
     switch (state) {
@@ -285,8 +282,7 @@ static void client_callback(AvahiClient *client,
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
-void av_zeroconf_register(const AFPObj *obj)
-{
+void av_zeroconf_register(const AFPObj *obj) {
     int error;
 
     /* initialize the struct that holds our config settings. */
@@ -335,8 +331,7 @@ fail:
  * Tries to shutdown this loop impl.
  * Call this function from inside this thread.
  */
-int av_zeroconf_unregister()
-{
+int av_zeroconf_unregister() {
     LOG(log_debug, logtype_afpd, "av_zeroconf_unregister");
 
     if (ctx) {

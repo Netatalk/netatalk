@@ -32,8 +32,7 @@
 ********************************************************************/
 /* surrogate pair support */
 
-int strlower_w(ucs2_t *s)
-{
+int strlower_w(ucs2_t *s) {
     int ret = 0;
 
     while (*s) {
@@ -70,8 +69,7 @@ int strlower_w(ucs2_t *s)
 ********************************************************************/
 /* surrogate pair support */
 
-int strupper_w(ucs2_t *s)
-{
+int strupper_w(ucs2_t *s) {
     int ret = 0;
 
     while (*s) {
@@ -108,13 +106,11 @@ determine if a character is lowercase
 ********************************************************************/
 /* These functions are not used. */
 
-int islower_w(ucs2_t c)
-{
+int islower_w(ucs2_t c) {
     return c == tolower_w(c);
 }
 
-int islower_sp(uint32_t c_sp)
-{
+int islower_sp(uint32_t c_sp) {
     return c_sp == tolower_sp(c_sp);
 }
 
@@ -124,13 +120,11 @@ determine if a character is uppercase
 ********************************************************************/
 /* These functions are not used. */
 
-int isupper_w(ucs2_t c)
-{
+int isupper_w(ucs2_t c) {
     return c == toupper_w(c);
 }
 
-int isupper_sp(uint32_t c_sp)
-{
+int isupper_sp(uint32_t c_sp) {
     return c_sp == toupper_sp(c_sp);
 }
 
@@ -140,8 +134,7 @@ wide strlen()
 ********************************************************************/
 /* NOTE: one surrogate pair is two characters. */
 
-size_t strlen_w(const ucs2_t *src)
-{
+size_t strlen_w(const ucs2_t *src) {
     size_t len;
 
     for (len = 0; *src++; len++) ;
@@ -155,8 +148,7 @@ wide strnlen()
 ********************************************************************/
 /* NOTE: one surrogate pair is two characters. */
 
-size_t strnlen_w(const ucs2_t *src, size_t max)
-{
+size_t strnlen_w(const ucs2_t *src, size_t max) {
     size_t len;
 
     for (len = 0; *src++ && (len < max); len++) ;
@@ -169,8 +161,7 @@ wide strchr()
 ********************************************************************/
 /* NOTE: hi and lo of surrogate pair are separately processed. */
 
-ucs2_t *strchr_w(const ucs2_t *s, ucs2_t c)
-{
+ucs2_t *strchr_w(const ucs2_t *s, ucs2_t c) {
     while (*s != 0) {
         if (c == *s) {
             return (ucs2_t *)s;
@@ -191,8 +182,7 @@ wide & sp strcasechr()
 ********************************************************************/
 /* NOTE: separately process BMP and surrogate pair */
 
-ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
-{
+ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c) {
     while (*s != 0) {
         if (tolower_w(c) == tolower_w(*s)) {
             return (ucs2_t *)s;
@@ -208,8 +198,7 @@ ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
     return NULL;
 }
 
-ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
-{
+ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp) {
     if (*s == 0) {
         return NULL;
     }
@@ -230,8 +219,7 @@ wide strcmp()
 ********************************************************************/
 /* no problem of surrogate pair */
 
-int strcmp_w(const ucs2_t *a, const ucs2_t *b)
-{
+int strcmp_w(const ucs2_t *a, const ucs2_t *b) {
     while (*b && *a == *b) {
         a++;
         b++;
@@ -248,8 +236,7 @@ wide strncmp()
 ********************************************************************/
 /* no problem of surrogate pair */
 
-int strncmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
-{
+int strncmp_w(const ucs2_t *a, const ucs2_t *b, size_t len) {
     size_t n = 0;
 
     while ((n < len) && *b && *a == *b) {
@@ -266,8 +253,7 @@ wide strstr()
 ********************************************************************/
 /* no problem of surrogate pair */
 
-ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
-{
+ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins) {
     ucs2_t *r;
     size_t inslen;
 
@@ -294,8 +280,7 @@ wide strcasestr()
 ********************************************************************/
 /* surrogate pair support */
 
-ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
-{
+ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins) {
     ucs2_t *r;
     size_t inslen;
 
@@ -339,8 +324,7 @@ case insensitive string comparison
 ********************************************************************/
 /* surrogate pair support */
 
-int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
-{
+int strcasecmp_w(const ucs2_t *a, const ucs2_t *b) {
     int ret;
 
     while (*a && *b) {
@@ -375,8 +359,7 @@ case insensitive string comparison, length limited
 ********************************************************************/
 /* NOTE: compare up to 'len+1' if 'len' isolate surrogate pair  */
 
-int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
-{
+int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len) {
     size_t n = 0;
     int ret;
 
@@ -415,8 +398,7 @@ duplicate string
 /* NOTE: not check isolation of surrogate pair */
 /* if len == 0 then duplicate the whole string */
 
-ucs2_t *strndup_w(const ucs2_t *src, size_t len)
-{
+ucs2_t *strndup_w(const ucs2_t *src, size_t len) {
     ucs2_t *dest;
 
     if (!len) {
@@ -441,8 +423,7 @@ duplicate string
 ********************************************************************/
 /* no problem of surrogate pair */
 
-ucs2_t *strdup_w(const ucs2_t *src)
-{
+ucs2_t *strdup_w(const ucs2_t *src) {
     return strndup_w(src, 0);
 }
 
@@ -452,8 +433,7 @@ copy a string with max len
 /* This function is not used. */
 /* NOTE: not check isolation of surrogate pair */
 
-ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
-{
+ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max) {
     size_t len;
 
     if (!dest || !src) {
@@ -478,8 +458,7 @@ append a string of len bytes and add a terminator
 /* These functions are not used. */
 
 /* NOTE: not check isolation of surrogate pair */
-ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
-{
+ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max) {
     size_t start;
     size_t len;
 
@@ -495,8 +474,7 @@ ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
 }
 
 /* no problem of surrogate pair */
-ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
-{
+ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src) {
     size_t start;
     size_t len;
 
@@ -516,8 +494,7 @@ ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
 binary search for pre|decomposition
 ********************************************************************/
 
-static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
-{
+static ucs2_t do_precomposition(unsigned int base, unsigned int comb) {
     int min = 0;
     int max = PRECOMP_COUNT - 1;
     int mid;
@@ -542,8 +519,8 @@ static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 }
 
 /* ------------------------ */
-static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
-{
+static uint32_t do_precomposition_sp(unsigned int base_sp,
+                                     unsigned int comb_sp) {
     int min = 0;
     int max = PRECOMP_SP_COUNT - 1;
     int mid;
@@ -569,8 +546,7 @@ static uint32_t do_precomposition_sp(unsigned int base_sp, unsigned int comb_sp)
 }
 
 /* -------------------------- */
-static uint32_t do_decomposition(ucs2_t base)
-{
+static uint32_t do_decomposition(ucs2_t base) {
     int min = 0;
     int max = DECOMP_COUNT - 1;
     int mid;
@@ -597,8 +573,7 @@ static uint32_t do_decomposition(ucs2_t base)
 }
 
 /* -------------------------- */
-static uint64_t do_decomposition_sp(unsigned int base_sp)
-{
+static uint64_t do_decomposition_sp(unsigned int base_sp) {
     int min = 0;
     int max = DECOMP_SP_COUNT - 1;
     int mid;
@@ -641,8 +616,7 @@ pre|decomposition
    in precompose.h from composition according to AFP 3.x spec
 ********************************************************************/
 
-size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
-{
+size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen) {
     size_t i;
     ucs2_t base, comb;
     uint32_t base_sp, comb_sp;
@@ -754,8 +728,7 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 }
 
 /* --------------- */
-size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
-{
+size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen) {
     size_t i;
     size_t comblen;
     ucs2_t base, comb[COMBBUFLEN];
@@ -867,8 +840,7 @@ size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 length of UTF-8 character and string
 ********************************************************************/
 
-size_t utf8_charlen(char* utf8)
-{
+size_t utf8_charlen(char* utf8) {
     unsigned char *p;
     p = (unsigned char*) utf8;
 
@@ -897,8 +869,7 @@ size_t utf8_charlen(char* utf8)
 }
 
 
-size_t utf8_strlen_validate(char * utf8)
-{
+size_t utf8_strlen_validate(char * utf8) {
     size_t len;
     unsigned char *p;
     p = (unsigned char*) utf8;

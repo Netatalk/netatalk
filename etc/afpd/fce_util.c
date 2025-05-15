@@ -73,8 +73,7 @@ static struct fce_history fce_history_list[FCE_HISTORY_LEN];
 *
 ****/
 
-static long get_ms_difftime(struct timeval *tv1, struct timeval *tv2)
-{
+static long get_ms_difftime(struct timeval *tv1, struct timeval *tv2) {
     unsigned long s = tv2->tv_sec - tv1->tv_sec;
     long us = tv2->tv_usec - tv1->tv_usec;
     return s * 1000 + us / 1000;
@@ -84,15 +83,13 @@ static long get_ms_difftime(struct timeval *tv1, struct timeval *tv2)
  * Public functions follow
  ******************************************************************************/
 
-void fce_initialize_history(void)
-{
+void fce_initialize_history(void) {
     for (int i = 0; i < FCE_HISTORY_LEN; i++) {
         memset(&fce_history_list[i], 0, sizeof(fce_history_list[i]));
     }
 }
 
-bool fce_handle_coalescation(int event, const char *path)
-{
+bool fce_handle_coalescation(int event, const char *path) {
     /* These two are used to eval our next index in history */
     /* the history is unsorted, speed should not be a problem, length is 10 */
     unsigned long oldest_entry = (unsigned long)((long) -1);
@@ -169,8 +166,7 @@ bool fce_handle_coalescation(int event, const char *path)
  * all|delete|create
  */
 
-int fce_set_coalesce(const char *opt)
-{
+int fce_set_coalesce(const char *opt) {
     char *e;
     char *p;
 

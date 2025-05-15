@@ -35,8 +35,7 @@
 int nbp_lookup(const char *obj, const char *type, const char *zone,
                struct nbpnve *nn,
                int			nncnt,
-               const struct at_addr *ataddr)
-{
+               const struct at_addr *ataddr) {
     struct sockaddr_at	addr, from;
     struct timeval	tv, tv_begin, tv_end;
     fd_set		fds;

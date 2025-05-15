@@ -2,8 +2,7 @@
 */
 #include "specs.h"
 /* -------------------------- */
-STATIC void test55()
-{
+STATIC void test55() {
     int fork;
     char *name  = "t55 dir no access";
     char *name1 = "t55 file.txt";
@@ -119,8 +118,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPAddComment_test()
-{
+void FPAddComment_test() {
     ENTER_TESTSET
     test55();
 }

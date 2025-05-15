@@ -9,8 +9,7 @@ static char temp1[MAXPATHLEN];
 /* --------------------
    delete metadata
 */
-int delete_unix_md(char *path, char *name, char *file)
-{
+int delete_unix_md(char *path, char *name, char *file) {
     if (adouble == AD_V2) {
         if (!*file) {
             sprintf(temp, "%s/%s/.AppleDouble/.Parent", path, name);
@@ -48,8 +47,7 @@ int delete_unix_md(char *path, char *name, char *file)
 /* --------------------
    delete a resource fork
 */
-int delete_unix_rf(char *path, char *name, char *file)
-{
+int delete_unix_rf(char *path, char *name, char *file) {
     if (adouble == AD_V2) {
         if (!*file) {
             sprintf(temp, "%s/%s/.AppleDouble/.Parent", path, name);
@@ -111,8 +109,7 @@ int delete_unix_rf(char *path, char *name, char *file)
 /* ----------------------
  * delete a file
 */
-int delete_unix_file(char *path, char *name, char *file)
-{
+int delete_unix_file(char *path, char *name, char *file) {
     int rc = 0;
 
     if (delete_unix_rf(path, name, file)) {
@@ -137,8 +134,7 @@ int delete_unix_file(char *path, char *name, char *file)
 }
 
 /* Rename a file and its resource fork */
-int rename_unix_file(char *path, char *dir, char *src, char *dst)
-{
+int rename_unix_file(char *path, char *dir, char *src, char *dst) {
     sprintf(temp, "%s/%s/%s", Path, dir, src);
     sprintf(temp1, "%s/%s/%s", Path, dir, dst);
 
@@ -199,8 +195,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
 }
 
 /* unlink file only, dont care about adouble file */
-int unlink_unix_file(char *path, char *name, char *file)
-{
+int unlink_unix_file(char *path, char *name, char *file) {
     sprintf(temp, "%s/%s/%s", path, name, file);
 
     if (!Quiet) {
@@ -220,8 +215,7 @@ int unlink_unix_file(char *path, char *name, char *file)
 }
 
 /* ----------------------------- */
-int symlink_unix_file(char *target, char *path, char *source)
-{
+int symlink_unix_file(char *target, char *path, char *source) {
     sprintf(temp, "%s/%s", path, source);
 
     if (!Quiet) {
@@ -242,8 +236,7 @@ int symlink_unix_file(char *target, char *path, char *source)
 }
 
 /* Delete metadata of directory */
-int delete_unix_adouble(char *path, char *name)
-{
+int delete_unix_adouble(char *path, char *name) {
     if (adouble == AD_EA) {
         sprintf(temp, "%s/%s", path, name);
         sys_lremovexattr(temp, AD_EA_META);
@@ -280,8 +273,7 @@ int delete_unix_adouble(char *path, char *name)
 }
 
 /* chmod .AppleDouble directory */
-static int chmod_unix_adouble(char *path, char *name, int mode)
-{
+static int chmod_unix_adouble(char *path, char *name, int mode) {
     if (adouble == AD_EA) {
         return 0;
     }
@@ -306,8 +298,7 @@ static int chmod_unix_adouble(char *path, char *name, int mode)
 
 /* --------------------
 */
-int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
-{
+int chmod_unix_meta(char *path, char *name, char *file, mode_t mode) {
     if (adouble == AD_EA) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
         sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode,
@@ -352,8 +343,7 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
 
 /* --------------------
 */
-int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
-{
+int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode) {
     if (adouble == AD_EA) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
         sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode,
@@ -416,8 +406,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
 /* --------------------
 	delete an empty directory
 */
-int delete_unix_dir(char *path, char *name)
-{
+int delete_unix_dir(char *path, char *name) {
     if (!Quiet) {
         fprintf(stdout, "rmdir(%s)\n", name);
     }
@@ -443,8 +432,7 @@ int delete_unix_dir(char *path, char *name)
 /* ----------------------
  * create a folder with r-xr-xr-x .AppleDouble
 */
-int folder_with_ro_adouble(uint16_t vol, int did, char *name, char *file)
-{
+int folder_with_ro_adouble(uint16_t vol, int did, char *name, char *file) {
     int ret = 0;
     int dir = 0;
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
@@ -500,8 +488,7 @@ fin:
 }
 
 /* -------------------------------- */
-int delete_ro_adouble(uint16_t vol, int did, char *file)
-{
+int delete_ro_adouble(uint16_t vol, int did, char *file) {
     if (!Quiet) {
         fprintf(stdout, "\t>>>>>>>> delete folder with ro adouble <<<<<<<<<< \n");
     }

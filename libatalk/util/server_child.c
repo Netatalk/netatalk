@@ -50,8 +50,7 @@
 /* hash/child functions: hash OR's pid */
 #define HASH(i) ((((i) >> 8) ^ (i)) & (CHILD_HASHSIZE - 1))
 
-static inline void hash_child(afp_child_t **htable, afp_child_t *child)
-{
+static inline void hash_child(afp_child_t **htable, afp_child_t *child) {
     afp_child_t **table;
     table = &htable[HASH(child->afpch_pid)];
 
@@ -63,8 +62,7 @@ static inline void hash_child(afp_child_t **htable, afp_child_t *child)
     child->afpch_prevp = table;
 }
 
-static inline void unhash_child(afp_child_t *child)
-{
+static inline void unhash_child(afp_child_t *child) {
     if (child->afpch_prevp) {
         if (child->afpch_next) {
             child->afpch_next->afpch_prevp = child->afpch_prevp;
@@ -74,8 +72,7 @@ static inline void unhash_child(afp_child_t *child)
     }
 }
 
-afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
-{
+afp_child_t *server_child_resolve(server_child_t *childs, id_t pid) {
     afp_child_t *child;
 
     for (child = childs->servch_table[HASH(pid)]; child;
@@ -89,8 +86,7 @@ afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
 }
 
 /* initialize server_child structure */
-server_child_t *server_child_alloc(int connections)
-{
+server_child_t *server_child_alloc(int connections) {
     server_child_t *children;
 
     if (!(children = (server_child_t *)calloc(1, sizeof(server_child_t)))) {
@@ -106,8 +102,7 @@ server_child_t *server_child_alloc(int connections)
  * add a child
  * @return pointer to struct server_child_data on success, NULL on error
  */
-afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
-{
+afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd) {
     afp_child_t *child = NULL;
     pthread_mutex_lock(&children->servch_lock);
 
@@ -139,8 +134,7 @@ exit:
 }
 
 /* remove a child and free it */
-int server_child_remove(server_child_t *children, pid_t pid)
-{
+int server_child_remove(server_child_t *children, pid_t pid) {
     int fd;
     afp_child_t *child;
 
@@ -171,8 +165,7 @@ int server_child_remove(server_child_t *children, pid_t pid)
 
 /* free everything: by using a hash table, this increases the cost of
  * this part over a linked list by the size of the hash table */
-void server_child_free(server_child_t *children)
-{
+void server_child_free(server_child_t *children) {
     afp_child_t *child, *tmp;
     int j;
 
@@ -200,8 +193,7 @@ void server_child_free(server_child_t *children)
 }
 
 /* send signal to all child processes */
-void server_child_kill(server_child_t *children, int sig)
-{
+void server_child_kill(server_child_t *children, int sig) {
     afp_child_t *child, *tmp;
     int i;
 
@@ -217,8 +209,7 @@ void server_child_kill(server_child_t *children, int sig)
 }
 
 /* send kill to a child processes */
-static int kill_child(afp_child_t *child)
-{
+static int kill_child(afp_child_t *child) {
     if (!child->afpch_killed) {
         kill(child->afpch_pid, SIGTERM);
         /* we don't wait because there's no guarantee that we can really kill it */
@@ -241,8 +232,7 @@ int server_child_transfer_session(server_child_t *children,
                                   pid_t pid,
                                   uid_t uid,
                                   int afp_socket,
-                                  uint16_t DSI_requestID)
-{
+                                  uint16_t DSI_requestID) {
     EC_INIT;
     afp_child_t *child;
 
@@ -294,8 +284,7 @@ EC_CLEANUP:
 /* see if there is a process for the same mac     */
 /* if the times don't match mac has been rebooted */
 void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
-                                 uid_t uid, uint32_t idlen, char *id, uint32_t boottime)
-{
+                                 uid_t uid, uint32_t idlen, char *id, uint32_t boottime) {
     afp_child_t *child, *tmp;
     int i;
     pthread_mutex_lock(&children->servch_lock);
@@ -350,8 +339,7 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
 
 /*  */
 void server_child_login_done(server_child_t *children, pid_t pid,
-                             uid_t uid)
-{
+                             uid_t uid) {
     afp_child_t *child;
     afp_child_t *tmp;
     pthread_mutex_lock(&children->servch_lock);
@@ -379,8 +367,7 @@ void server_child_login_done(server_child_t *children, pid_t pid,
 /* ---------------------------
  * reset children signals
  */
-void server_reset_signal(void)
-{
+void server_reset_signal(void) {
     struct sigaction    sv;
     sigset_t            sigs;
     const struct itimerval none = {{0, 0}, {0, 0}};

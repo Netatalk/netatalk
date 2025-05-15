@@ -132,8 +132,7 @@ static struct zones gZones;
 static outputfunc_t gOutput;
 
 
-static uint16_t cksum(char *buffer, int len)
-{
+static uint16_t cksum(char *buffer, int len) {
     uint16_t *b = (uint16_t *) buffer;
     uint32_t sum = 0;
     len /= 2;
@@ -148,8 +147,7 @@ static uint16_t cksum(char *buffer, int len)
 }
 
 
-static void icmp_echo(uint32_t src, uint32_t dst)
-{
+static void icmp_echo(uint32_t src, uint32_t dst) {
     char buffer[500];
     struct ip *ip = (struct ip *) buffer;
     struct icmp *icmp = (struct icmp *)(buffer + 20);
@@ -173,16 +171,14 @@ static void icmp_echo(uint32_t src, uint32_t dst)
 
 
 
-static long now(void)
-{
+static long now(void) {
     static struct timeval tv;
     gettimeofday(&tv, 0);
     return tv.tv_sec;
 }
 
 
-struct ipent *get_ipent(uint32_t ip)
-{
+struct ipent *get_ipent(uint32_t ip) {
     return (ip - gMacip.net > 0 && ip - gMacip.net < gMacip.nipent) ?
            &gMacip.ipent[ip - gMacip.net - 1] : 0;
 }
@@ -191,8 +187,7 @@ struct ipent *get_ipent(uint32_t ip)
  * aquire a new ip address from the pool
  */
 
-static uint32_t lease_ip()
-{
+static uint32_t lease_ip() {
     int i;
 
     for (i = 0; i < gMacip.nipent; i++) {
@@ -214,8 +209,7 @@ static uint32_t lease_ip()
  * find AT address for an IP address
  */
 
-static int arp_lookup(struct sockaddr_at *sat, uint32_t ip)
-{
+static int arp_lookup(struct sockaddr_at *sat, uint32_t ip) {
     int i;
     char s[32];
     struct ipent *e = get_ipent(ip);
@@ -245,8 +239,7 @@ static int arp_lookup(struct sockaddr_at *sat, uint32_t ip)
  * Set AT address from received packet
  */
 
-static void arp_set(uint32_t ip, struct sockaddr_at *sat)
-{
+static void arp_set(uint32_t ip, struct sockaddr_at *sat) {
     struct ipent *e;
     e = get_ipent(ip);
 
@@ -270,8 +263,7 @@ static void arp_set(uint32_t ip, struct sockaddr_at *sat)
  *	handle name lookup replies, add to arp table
  */
 
-static void arp_input(struct sockaddr_at *sat, char *buffer, int len)
-{
+static void arp_input(struct sockaddr_at *sat, char *buffer, int len) {
     struct nbpnve *nve;
     char s[32];
     uint32_t ip;
@@ -307,8 +299,7 @@ static void arp_input(struct sockaddr_at *sat, char *buffer, int len)
  *	handle incoming IP packet
  */
 
-static void ip_input(struct sockaddr_at *sat, char *buffer, int len)
-{
+static void ip_input(struct sockaddr_at *sat, char *buffer, int len) {
     struct ip *p = (struct ip *) buffer;
 
     if (gDebug & DEBUG_MACIP) {
@@ -326,8 +317,7 @@ static void ip_input(struct sockaddr_at *sat, char *buffer, int len)
  *	send IP packet through AT
  */
 
-void macip_output(char *buffer, int len)
-{
+void macip_output(char *buffer, int len) {
     struct sockaddr_at sat;
     struct ip *ip = (struct ip *) buffer;
     char ob[MACIP_MAXMTU + 1];
@@ -365,8 +355,7 @@ void macip_output(char *buffer, int len)
  */
 
 static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
-                         int len)
-{
+                         int len) {
     struct atp_block atpb;
     struct sockaddr_at sat;
     struct iovec iov;
@@ -472,8 +461,7 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
  *	Handle incoming AT packet
  */
 
-void macip_input(void)
-{
+void macip_input(void) {
     struct sockaddr_at sat;
     char buffer[800];
     ssize_t len;
@@ -513,8 +501,7 @@ void macip_input(void)
 }
 
 
-static int init_ip(uint32_t net, uint32_t mask, uint32_t nameserver)
-{
+static int init_ip(uint32_t net, uint32_t mask, uint32_t nameserver) {
     bzero(&gMacip, sizeof(gMacip));
     gMacip.net = net;
     gMacip.mask = mask;
@@ -546,8 +533,7 @@ static int init_ip(uint32_t net, uint32_t mask, uint32_t nameserver)
 }
 
 
-static void add_zones(short n, char *buf)
-{
+static void add_zones(short n, char *buf) {
     char s[32];
 
     for (; n--; buf += (*buf) + 1) {
@@ -564,8 +550,7 @@ static void add_zones(short n, char *buf)
     }
 }
 
-static int get_zones(void)
-{
+static int get_zones(void) {
     struct atp_handle *ah;
     struct atp_block atpb;
     struct sockaddr_at saddr;
@@ -656,8 +641,7 @@ static int get_zones(void)
  * time out old arp entries
  */
 
-void macip_idle(void)
-{
+void macip_idle(void) {
     struct ipent *e;
     int i;
     long n = now();
@@ -689,8 +673,7 @@ void macip_idle(void)
 
 int
 macip_open(char *zone, uint32_t net, uint32_t mask, uint32_t ns,
-           outputfunc_t o)
-{
+           outputfunc_t o) {
     int i;
 
     if (init_ip(net, mask, ns)) {
@@ -765,8 +748,7 @@ macip_open(char *zone, uint32_t net, uint32_t mask, uint32_t ns,
 }
 
 
-void macip_close(void)
-{
+void macip_close(void) {
     nbp_unrgstr(gMacip.name, gMacip.type, gMacip.zone, NULL);
     close(gMacip.sock);
 }

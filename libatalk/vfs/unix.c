@@ -27,15 +27,13 @@
 #include <atalk/volume.h>
 
 /* ------------------------- */
-int dir_rx_set(mode_t mode)
-{
+int dir_rx_set(mode_t mode) {
     return (mode & (S_IXUSR | S_IRUSR)) == (S_IXUSR | S_IRUSR);
 }
 
 /* --------------------- */
 int setfilmode(const struct vol *vol, const char *name, mode_t mode,
-               struct stat *st)
-{
+               struct stat *st) {
     struct stat sb;
     /* rwx for owner group and other, by default */
     mode_t mask = S_IRWXU | S_IRWXG | S_IRWXO;
@@ -67,8 +65,7 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode,
  *
  * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
  */
-int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
-{
+int netatalk_rmdir_all_errors(int dirfd _U_, const char *name) {
     int err;
 
     if (dirfd == -1) {
@@ -106,8 +103,7 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
  *
  * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
  */
-int netatalk_rmdir(int dirfd, const char *name)
-{
+int netatalk_rmdir(int dirfd, const char *name) {
     int ret = netatalk_rmdir_all_errors(dirfd, name);
 
     if (ret == AFPERR_NOOBJ) {
@@ -121,8 +117,7 @@ int netatalk_rmdir(int dirfd, const char *name)
    system unlink with afp error code.
    ENOENT is not an error.
 */
-int netatalk_unlink(const char *name)
-{
+int netatalk_unlink(const char *name) {
     if (unlink(name) < 0) {
         switch (errno) {
         case ENOENT :
@@ -148,8 +143,7 @@ int netatalk_unlink(const char *name)
  **************************************************************************/
 
 /* Copy all file data from one file fd to another */
-int copy_file_fd(int sfd, int dfd)
-{
+int copy_file_fd(int sfd, int dfd) {
     EC_INIT;
     ssize_t cc;
     size_t  buflen;
@@ -188,8 +182,7 @@ EC_CLEANUP:
 /*
  * Supports *at semantics, pass dirfd=-1 to ignore this
  */
-int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
-{
+int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode) {
     int    ret = 0;
     int    sfd = -1;
     int    dfd = -1;
@@ -241,8 +234,7 @@ exit:
  * Supports *at semantics, pass dirfd=-1 to ignore this
  */
 int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst,
-            mode_t mode)
-{
+            mode_t mode) {
     EC_INIT;
     int    sfd = -1;
     int    dfd = -1;
@@ -279,8 +271,7 @@ EC_CLEANUP:
 /*
  * at wrapper for netatalk_unlink
  */
-int netatalk_unlinkat(int dirfd _U_, const char *name)
-{
+int netatalk_unlinkat(int dirfd _U_, const char *name) {
     if (dirfd == -1) {
         dirfd = AT_FDCWD;
     }
@@ -316,8 +307,7 @@ int netatalk_unlinkat(int dirfd _U_, const char *name)
  * @param newpath    (r) guess what
  */
 int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_,
-                const char *newpath)
-{
+                const char *newpath) {
     if (sfd == -1) {
         sfd = AT_FDCWD;
     }
@@ -342,8 +332,7 @@ int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_,
  * @param path    (r) pathname
  * @param st      (rw) pointer to struct stat
  */
-int statat(int dirfd _U_, const char *path, struct stat *st)
-{
+int statat(int dirfd _U_, const char *path, struct stat *st) {
     if (dirfd == -1) {
         dirfd = AT_FDCWD;
     }
@@ -359,8 +348,7 @@ int statat(int dirfd _U_, const char *path, struct stat *st)
  * @param dirfd   (r) if != -1, chdir(dirfd) before opendir(path)
  * @param path    (r) pathname
  */
-DIR *opendirat(int dirfd, const char *path)
-{
+DIR *opendirat(int dirfd, const char *path) {
     DIR *ret;
     int cwd = -1;
 

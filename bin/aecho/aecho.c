@@ -63,8 +63,7 @@ static unsigned int     	pings = 0;
 
 static void usage(char *);
 
-static void done(int sig _U_)
-{
+static void done(int sig _U_) {
     if (nsent) {
         printf("\n----%d.%d AEP Statistics----\n",
                ntohs(target.sat_addr.s_net), target.sat_addr.s_node);
@@ -80,8 +79,7 @@ static void done(int sig _U_)
     exit(0);
 }
 
-static void aep_send(int sig _U_)
-{
+static void aep_send(int sig _U_) {
     struct timeval	tv;
     char		*p, buf[1024];
     static unsigned int	seq = 0;
@@ -113,8 +111,7 @@ static void aep_send(int sig _U_)
     }
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     struct servent	*se;
     struct sigaction	sv;
     struct itimerval	it;
@@ -279,8 +276,7 @@ int main(int ac, char **av)
     }
 }
 
-static void usage(char * av0)
-{
+static void usage(char * av0) {
     fprintf(stderr,
             "usage:\t%s [-A source address ] [-c count] ( addr | nbpname )\n", av0);
     exit(1);

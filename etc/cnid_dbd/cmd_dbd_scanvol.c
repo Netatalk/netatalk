@@ -68,8 +68,7 @@ static char pname[MAXPATHLEN] = "../";
 /*
   Taken form afpd/desktop.c
 */
-static char *utompath(char *upath)
-{
+static char *utompath(char *upath) {
     /* for convert_charset dest_len parameter +2 */
     static char  mpath[MAXPATHLEN + 2];
     char         *m, *u;
@@ -111,8 +110,7 @@ static char *utompath(char *upath)
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
   Returns pointer to name or NULL.
 */
-static const char *check_netatalk_dirs(const char *name)
-{
+static const char *check_netatalk_dirs(const char *name) {
     const int max_dirs = 2;
 
     for (int c = 0; c < max_dirs && netatalk_dirs[c]; c++) {
@@ -128,8 +126,7 @@ static const char *check_netatalk_dirs(const char *name)
   Check for special names
   Returns pointer to name or NULL.
 */
-static const char *check_special_dirs(const char *name)
-{
+static const char *check_special_dirs(const char *name) {
     const int max_dirs = 1;
 
     for (int c = 0; c < max_dirs && special_dirs[c]; c++) {
@@ -145,8 +142,7 @@ static const char *check_special_dirs(const char *name)
  * We unCAPed a name, update CNID db
  */
 static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
-                       const char *newname)
-{
+                       const char *newname) {
     cnid_t id;
 
     /* Query the database */
@@ -170,8 +166,7 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
   Check for .AppleDouble file, create if missing
 */
 static int check_adfile(const char *fname, const struct stat *st,
-                        const char **newname)
-{
+                        const char **newname) {
     int ret;
     int adflags = ADFLAGS_HF;
     struct adouble ad;
@@ -263,8 +258,7 @@ static int check_adfile(const char *fname, const struct stat *st,
 /*
    Remove all files with file::EA* from adouble dir
 */
-static void remove_eafiles(const char *name, struct ea *ea _U_)
-{
+static void remove_eafiles(const char *name, struct ea *ea _U_) {
     DIR *dp = NULL;
     struct dirent *ep;
     char eaname[MAXPATHLEN];
@@ -316,8 +310,7 @@ exit:
 /*
   Check Extended Attributes files
 */
-static int check_eafiles(const char *fname)
-{
+static int check_eafiles(const char *fname) {
     unsigned int  count = 0;
     int ret = 0, remove;
     struct ea ea;
@@ -378,8 +371,7 @@ static int check_eafiles(const char *fname)
 /*
   Check for .AppleDouble folder and .Parent, create if missing
 */
-static int check_addir(int volroot _U_)
-{
+static int check_addir(int volroot _U_) {
     int addir_fd = -1;
     int parent_fd = -1;
     struct stat st;
@@ -526,8 +518,7 @@ static int check_addir(int volroot _U_)
   1 = name is an EA file and no problem was found
   -1 = name is an EA file and data fork is gone
  */
-static int check_eafile_in_adouble(const char *name)
-{
+static int check_eafile_in_adouble(const char *name) {
     int ret = 0;
     char *namep, *namedup = NULL;
 
@@ -589,8 +580,7 @@ ea_check_done:
   - remove orphaned files
   - bail on dirs
 */
-static int read_addir(void)
-{
+static int read_addir(void) {
     DIR *dp;
     struct dirent *ep;
     struct stat st;
@@ -687,8 +677,7 @@ static int read_addir(void)
   @return Correct CNID of object or CNID_INVALID (ie 0) on error
 */
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
-                         int adfile_ok)
-{
+                         int adfile_ok) {
     int adflags = ADFLAGS_HF;
     int err;
     cnid_t db_cnid, ad_cnid;
@@ -758,8 +747,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     return db_cnid;
 }
 
-static int check_orphaned(const char *name)
-{
+static int check_orphaned(const char *name) {
     int rc;
     struct stat sb;
 
@@ -784,8 +772,7 @@ static int check_orphaned(const char *name)
   We use this when checking for netatalk private folders like .AppleDB.
   did is our parents CNID.
 */
-static int dbd_readdir(int volroot, cnid_t did)
-{
+static int dbd_readdir(int volroot, cnid_t did) {
     int cwd, ret = 0, adfile_ok, addir_ok;
     cnid_t cnid = 0;
     const char *name;
@@ -996,8 +983,7 @@ static int dbd_readdir(int volroot, cnid_t did)
 /*
   Main func called from cmd_dbd.c
 */
-int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
-{
+int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags) {
     EC_INIT;
     struct stat st;
     /* Run with umask 0 */

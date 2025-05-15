@@ -46,8 +46,7 @@ static void handle_method_call(GDBusConnection *connection _U_,
                                const gchar           *method_name,
                                GVariant              *parameters _U_,
                                GDBusMethodInvocation *invocation,
-                               gpointer               user_data)
-{
+                               gpointer               user_data) {
     AFPStatsObj *obj = AFPSTATS_OBJECT(user_data);
 
     if (g_strcmp0(method_name, "GetUsers") == 0) {
@@ -75,27 +74,23 @@ static const GDBusInterfaceVTable interface_vtable = {
 
 static void on_bus_acquired(GDBusConnection *connection _U_,
                             const gchar     *name,
-                            gpointer         user_data _U_)
-{
+                            gpointer         user_data _U_) {
     LOG(log_debug, logtype_afpd, "[afpstats] on_bus_acquired(): %s", name);
 }
 
 static void on_name_acquired(GDBusConnection *connection _U_,
                              const gchar     *name,
-                             gpointer         user_data _U_)
-{
+                             gpointer         user_data _U_) {
     LOG(log_debug, logtype_afpd, "[afpstats] on_name_acquired(): %s", name);
 }
 
 static void on_name_lost(GDBusConnection *connection _U_,
                          const gchar     *name,
-                         gpointer         user_data _U_)
-{
+                         gpointer         user_data _U_) {
     LOG(log_debug, logtype_afpd, "[afpstats] on_name_lost(): %s", name);
 }
 
-static gpointer afpstats_thread(gpointer _data _U_)
-{
+static gpointer afpstats_thread(gpointer _data _U_) {
     GDBusConnection *bus;
     GError *error = NULL;
     GMainContext *ctxt;
@@ -158,24 +153,20 @@ static gpointer afpstats_thread(gpointer _data _U_)
 static void my_glib_log(const gchar *log_domain,
                         GLogLevelFlags log_level _U_,
                         const gchar *message,
-                        gpointer user_data _U_)
-{
+                        gpointer user_data _U_) {
     LOG(log_debug, logtype_afpd, "[afpstats] %s: %s", log_domain, message);
 }
 
-server_child_t *afpstats_get_and_lock_childs(void)
-{
+server_child_t *afpstats_get_and_lock_childs(void) {
     pthread_mutex_lock(&childs->servch_lock);
     return childs;
 }
 
-void afpstats_unlock_childs(void)
-{
+void afpstats_unlock_childs(void) {
     pthread_mutex_unlock(&childs->servch_lock);
 }
 
-int afpstats_init(server_child_t *childs_in)
-{
+int afpstats_init(server_child_t *childs_in) {
     GThread *thread;
     childs = childs_in;
     (void)g_log_set_default_handler(my_glib_log, NULL);

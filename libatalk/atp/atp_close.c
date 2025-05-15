@@ -20,8 +20,7 @@
 #include <stdio.h>
 #endif /* EBUG */
 
-int atp_close(ATP ah)
-{
+int atp_close(ATP ah) {
     struct atpbuf	*cq;
     int			i;
     /* remove from list of open atp sockets & discard queued data

@@ -7,8 +7,7 @@
 extern char *Vol2;
 
 /* ----------------------- */
-STATIC void test320(void)
-{
+STATIC void test320(void) {
     int ret;
     DSI *dsi = &Conn->dsi;
     int nbe, i;
@@ -81,8 +80,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPGetSrvrParms_test()
-{
+void T2FPGetSrvrParms_test() {
     ENTER_TESTSET
     test320();
 }

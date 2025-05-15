@@ -48,8 +48,7 @@
 */
 int atp_rreq(
     ATP			ah,		/* open atp handle */
-    struct atp_block	*atpb)		/* parameter block */
-{
+    struct atp_block	*atpb) {	/* parameter block */
     struct atpbuf	*req_buf;	/* for receiving request packet */
     struct atphdr	req_hdr;	/* request header overlay */
     struct sockaddr_at	faddr;		/* sender's address */

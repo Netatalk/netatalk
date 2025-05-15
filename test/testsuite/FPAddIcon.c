@@ -51,8 +51,7 @@ char icon0_64[] = {
 };
 
 /* -------------------------- */
-STATIC void test212()
-{
+STATIC void test212() {
     uint16_t vol = VolID;
     uint16_t dt;
     int ret;
@@ -127,8 +126,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPAddIcon_test()
-{
+void FPAddIcon_test() {
     ENTER_TESTSET
     test212();
 }

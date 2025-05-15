@@ -57,8 +57,7 @@
 /* Forward Declaration */
 static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter);
 
-static void usage(char *path)
-{
+static void usage(char *path) {
     char	*p;
 
     if ((p = strrchr(path, '/')) == NULL) {
@@ -73,8 +72,7 @@ static void usage(char *path)
 }
 
 static char *
-paprc(void)
-{
+paprc(void) {
     static char	s[32 + 1 + 32 + 1 + 32];
     char	*name = NULL;
     FILE	*f;
@@ -103,8 +101,7 @@ static char			*printer = NULL;
 static char			cbuf[8];
 static struct nbpnve		nn;
 
-static void print_status(char status, char mask, char * message)
-{
+static void print_status(char status, char mask, char * message) {
     printf("%s", message);
 
     if (status & mask) {
@@ -114,8 +111,7 @@ static void print_status(char status, char mask, char * message)
     }
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     ATP			atp;
     int			wait, c, err = 0;
     char		*obj = NULL, *type = "LaserWriter", *zone = "*";
@@ -203,8 +199,7 @@ int main(int ac, char **av)
     return 0;
 }
 
-static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter)
-{
+static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter) {
     struct iovec	iov;
     struct atp_block	atpb;
     char		rbuf[ATP_MAXDATA];

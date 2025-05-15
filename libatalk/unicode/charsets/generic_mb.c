@@ -45,8 +45,7 @@
 
 size_t mb_generic_push(int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
                        char **inbuf,
-                       size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
-{
+                       size_t *inbytesleft, char **outbuf, size_t *outbytesleft) {
     int len = 0;
     unsigned char *tmpptr = (unsigned char *) *outbuf;
     ucs2_t inval;
@@ -78,8 +77,7 @@ size_t mb_generic_push(int (*char_func)(unsigned char *, ucs2_t), void *cd _U_,
 
 size_t mb_generic_pull(int (*char_func)(ucs2_t *, const unsigned char *),
                        void *cd _U_,
-                       char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft)
-{
+                       char **inbuf, size_t *inbytesleft, char **outbuf, size_t *outbytesleft) {
     ucs2_t 		temp;
     unsigned char	*inptr;
     size_t  len = 0;

@@ -64,8 +64,7 @@ static int
 callaurpc(struct vol *vol,
           u_long prognum, u_long versnum, u_long procnum,
           xdrproc_t inproc, char *in,
-          xdrproc_t outproc, char *out)
-{
+          xdrproc_t outproc, char *out) {
     enum clnt_stat clnt_stat;
     struct timeval tottimeout;
 
@@ -106,8 +105,7 @@ callaurpc(struct vol *vol,
 #define GQR_RQUOTA getquota_rslt_u.gqr_rquota
 
 int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
-                struct dqblk *dqp)
-{
+                struct dqblk *dqp) {
     struct getquota_args gq_args;
     struct getquota_rslt gq_rslt;
     struct timeval tv;

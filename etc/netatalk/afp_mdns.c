@@ -36,8 +36,8 @@ static pthread_t       poller;
  * Its easier to use asprintf to set the TXT record values
  */
 
-int TXTRecordPrintf(TXTRecordRef * rec, const char * key, const char * fmt, ...)
-{
+int TXTRecordPrintf(TXTRecordRef * rec, const char * key, const char * fmt,
+                    ...) {
     int ret = 0;
     char *str;
     va_list ap;
@@ -59,8 +59,7 @@ int TXTRecordPrintf(TXTRecordRef * rec, const char * key, const char * fmt, ...)
 }
 
 int TXTRecordKeyPrintf(TXTRecordRef * rec, const char * key_fmt, int key_var,
-                       const char *fmt, ...)
-{
+                       const char *fmt, ...) {
     int ret = 0;
     char *key = NULL, *str = NULL;
     va_list ap;
@@ -102,8 +101,7 @@ static struct pollfd *fds;
 /*
  * This is the thread that polls the filehandles
  */
-static void *polling_thread(void *arg _U_)
-{
+static void *polling_thread(void *arg _U_) {
     // First we loop through getting the filehandles and adding them to our poll, we
     // need to allocate our pollfd's
     DNSServiceErrorType error;
@@ -135,8 +133,7 @@ static void *polling_thread(void *arg _U_)
  */
 static void RegisterReply(DNSServiceRef sdRef _U_, DNSServiceFlags flags _U_,
                           DNSServiceErrorType errorCode,
-                          const char *name, const char *regtype, const char *domain, void *context _U_)
-{
+                          const char *name, const char *regtype, const char *domain, void *context _U_) {
     if (errorCode != kDNSServiceErr_NoError) {
         LOG(log_error, logtype_afpd, "Failed to register mDNS service: %s%s%s: code=%d",
             name, regtype, domain, errorCode);
@@ -147,8 +144,7 @@ static void RegisterReply(DNSServiceRef sdRef _U_, DNSServiceFlags flags _U_,
  * This function unregisters anything we have already
  * registered and frees associated memory
  */
-static void unregister_stuff(void)
-{
+static void unregister_stuff(void) {
     pthread_cancel(poller);
 
     for (int i = 0; i < svc_ref_count; i++) {
@@ -173,8 +169,7 @@ static void unregister_stuff(void)
  * This function tries to register the AFP DNS
  * SRV service type.
  */
-static void register_stuff(const AFPObj *obj)
-{
+static void register_stuff(const AFPObj *obj) {
     uint                                        port;
     const struct vol                *volume;
     char                                        name[MAXINSTANCENAMELEN + 1];
@@ -365,8 +360,7 @@ fail:
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
-void md_zeroconf_register(const AFPObj *obj)
-{
+void md_zeroconf_register(const AFPObj *obj) {
     int error _U_;
     register_stuff(obj);
     return;
@@ -376,8 +370,7 @@ void md_zeroconf_register(const AFPObj *obj)
  * Tries to shutdown this loop impl.
  * Call this function from inside this thread.
  */
-int md_zeroconf_unregister(void)
-{
+int md_zeroconf_unregister(void) {
     unregister_stuff();
     return 0;
 }

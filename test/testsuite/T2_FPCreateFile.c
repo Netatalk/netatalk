@@ -5,8 +5,7 @@
 static char temp[MAXPATHLEN];
 
 /* -------------------------- */
-STATIC void test325()
-{
+STATIC void test325() {
     char *name = "t325 file";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -79,8 +78,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPCreateFile_test()
-{
+void T2FPCreateFile_test() {
     ENTER_TESTSET
     test325();
 }

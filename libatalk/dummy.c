@@ -3,7 +3,6 @@
  * build host capabilities
  */
 
-int dummy_function(void)
-{
+int dummy_function(void) {
     return 0;
 }

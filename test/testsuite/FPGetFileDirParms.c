@@ -6,8 +6,7 @@ static char temp[MAXPATHLEN + 1];
 static char temp1[MAXPATHLEN + 1];
 
 /* ------------------------- */
-STATIC void test44()
-{
+STATIC void test44() {
     char *name = "t44 dir";
     unsigned int  dir, did;
     uint16_t vol = VolID;
@@ -60,8 +59,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test58()
-{
+STATIC void test58() {
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -94,8 +92,7 @@ STATIC void test58()
 }
 
 /* ----------- */
-STATIC void test70()
-{
+STATIC void test70() {
     uint16_t vol = VolID;
     int ofs;
     uint16_t bitmap;
@@ -155,8 +152,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test94()
-{
+STATIC void test94() {
     int  dir;
     char *name = "t94 invisible dir";
     int  ofs =  3 * sizeof(uint16_t);
@@ -251,8 +247,7 @@ test_exit:
 }
 
 /* --------------------- */
-STATIC void test104()
-{
+STATIC void test104() {
     char *name1 = "t104 dir1";
     char *name2 = "t104 dir2";
     char *name3 = "t104 dir3";
@@ -388,8 +383,7 @@ fin:
 }
 
 /* -------------------------- */
-STATIC void test132()
-{
+STATIC void test132() {
     int  dir;
     char *name = "t132 file";
     char *name1 = "t132 dir";
@@ -443,8 +437,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test194()
-{
+STATIC void test194() {
     int  dir = 0;
     char *name = "t194 dir";
     uint16_t vol = VolID;
@@ -473,8 +466,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test229()
-{
+STATIC void test229() {
     int  dir = 0;
     char *name = "t229 file";
     char *ndir = "t229 dir";
@@ -524,8 +516,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test307()
-{
+STATIC void test307() {
     char *name = "t307 dir#2";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -575,8 +566,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test308()
-{
+STATIC void test308() {
     char *name = "t308 dir";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -634,8 +624,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test319()
-{
+STATIC void test319() {
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -647,8 +636,7 @@ STATIC void test319()
 }
 
 /* ------------------------- */
-STATIC void test324()
-{
+STATIC void test324() {
     char *name = "t324 very long filename more than 31 bytes.txt";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -729,8 +717,7 @@ test_exit:
 
 
 /* ------------------------- */
-STATIC void test326()
-{
+STATIC void test326() {
     char *name = "t326 long filename and extension .longtxt";
     uint16_t vol = VolID;
     uint16_t bitmap = 0;
@@ -791,8 +778,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test333()
-{
+STATIC void test333() {
     char *name = "t333 very long filename (more than 31 bytes).txt";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -863,8 +849,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test334()
-{
+STATIC void test334() {
     char *name = "t334 very long filename (more than 31 bytes)";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -935,8 +920,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test335()
-{
+STATIC void test335() {
     char *name = "t335 very long filename (more than 31 bytes).txt";
     char *ndir = "t335 dir";
     uint16_t vol = VolID;
@@ -1021,8 +1005,7 @@ test_exit:
 .pdf      "PDF "  "CARO"
  * in extmap.conf
  */
-STATIC void test371()
-{
+STATIC void test371() {
     char *name  = "t371 file name";
     char *name1  = "t371 new name.pdf";
     uint16_t vol = VolID;
@@ -1088,8 +1071,7 @@ test_exit:
 .doc      "WDBN"  "MSWD"      Word Document
 in extmap.conf
 */
-STATIC void test380()
-{
+STATIC void test380() {
     char *name  = "t380 file name.doc";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
@@ -1152,8 +1134,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test396()
-{
+STATIC void test396() {
     char *name = "t396 dir";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -1194,8 +1175,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test423()
-{
+STATIC void test423() {
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t423 file";
@@ -1268,8 +1248,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetFileDirParms_test()
-{
+void FPGetFileDirParms_test() {
     ENTER_TESTSET
     test44();
     test58();

@@ -34,8 +34,7 @@ struct flag_map flag_map[] = {
 
 char buffer[MAXPATHLEN + 2];
 
-static void usage(void)
-{
+static void usage(void) {
     printf("Usage: netacnv [-o <conversion option> [...]] [-f <from charset>] [-t <to charset>] [-m legacy Mac charset] <string>\n");
     printf("Defaults: -f: UTF8-MAC, -t: UTF8, -m MAC_ROMAN\n");
     printf("Available conversion options:\n");
@@ -45,8 +44,7 @@ static void usage(void)
     }
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int opt;
     uint16_t flags = 0;
     char *string;

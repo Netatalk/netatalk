@@ -52,14 +52,12 @@ static dbd_flags_t flags;
  * SIGNAL handling:
  * catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
  */
-static void sig_handler(int signo _U_)
-{
+static void sig_handler(int signo _U_) {
     alarmed = 1;
     return;
 }
 
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
@@ -95,8 +93,7 @@ static void set_signal(void)
     }
 }
 
-static void usage(void)
-{
+static void usage(void) {
     printf("Usage: dbd [-cfFstuvV] <path to netatalk volume>\n\n"
            "dbd scans all file and directories of AFP volumes, updating the\n"
            "CNID database of the volume. dbd must be run with appropriate\n"
@@ -118,8 +115,7 @@ static void usage(void)
  * Global functions
  ***************************************************************************/
 
-void dbd_log(enum logtype lt, char *fmt, ...)
-{
+void dbd_log(enum logtype lt, char *fmt, ...) {
     int len;
     static char logbuffer[1024];
     va_list args;
@@ -133,8 +129,7 @@ void dbd_log(enum logtype lt, char *fmt, ...)
     }
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     EC_INIT;
     int dbd_cmd = dbd_rebuild;
     int cdir = -1;

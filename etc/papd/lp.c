@@ -104,8 +104,7 @@
 
 #ifndef HAVE_RRESVPORT
 int
-rresvport(int *alport)
-{
+rresvport(int *alport) {
     union {
         struct sockaddr generic;
         struct sockaddr_in in;
@@ -189,14 +188,12 @@ static struct lp {
 #define LP_QUEUE	(1<<4)
 #define LP_JOBPENDING	(1<<5)
 
-void lp_origin(int origin)
-{
+void lp_origin(int origin) {
     lp.lp_origin = origin;
 }
 
 /* the converted string should always be shorter, but ... FIXME! */
-static void convert_octal(char *string, charset_t dest)
-{
+static void convert_octal(char *string, charset_t dest) {
     unsigned char *p, *q;
     char temp[4];
     long int ch;
@@ -237,8 +234,7 @@ static void convert_octal(char *string, charset_t dest)
 }
 
 
-static void translate(charset_t from, charset_t dest, char **option)
-{
+static void translate(charset_t from, charset_t dest, char **option) {
     char *translated;
 
     if (*option != NULL) {
@@ -255,8 +251,7 @@ static void translate(charset_t from, charset_t dest, char **option)
 }
 
 
-static void lp_setup_comments(charset_t dest)
-{
+static void lp_setup_comments(charset_t dest) {
     charset_t from = 0;
 
     switch (lp.lp_origin) {
@@ -289,8 +284,7 @@ static void lp_setup_comments(charset_t dest)
 
 #if 0
 /* removed, it's not used and a pain to get it right from a security POV */
-static size_t quote(char *dest, char *src, const size_t bsize, size_t len)
-{
+static size_t quote(char *dest, char *src, const size_t bsize, size_t len) {
     size_t used = 0;
 
     while (len && used < bsize) {
@@ -319,8 +313,7 @@ static size_t quote(char *dest, char *src, const size_t bsize, size_t len)
     return used;
 }
 
-static char *pipexlate(char *src)
-{
+static char *pipexlate(char *src) {
     char *p, *q, *dest;
     static char destbuf[MAXPATHLEN + 1];
     size_t destlen = MAXPATHLEN;
@@ -394,8 +387,7 @@ static char *pipexlate(char *src)
 }
 #endif
 
-void lp_person(char *person)
-{
+void lp_person(char *person) {
     if (lp.lp_person != NULL) {
         free(lp.lp_person);
     }
@@ -409,8 +401,7 @@ void lp_person(char *person)
 }
 
 #ifdef ABS_PRINT
-int lp_pagecost(void)
-{
+int lp_pagecost(void) {
     char	cost[22];
     char	balance[22];
     int		err;
@@ -427,8 +418,7 @@ int lp_pagecost(void)
 }
 #endif /* ABS_PRINT */
 
-void lp_host(char *host)
-{
+void lp_host(char *host) {
     if (lp.lp_host != NULL) {
         free(lp.lp_host);
     }
@@ -447,8 +437,7 @@ void lp_host(char *host)
  * This should be added.
  */
 
-void lp_job(char *job)
-{
+void lp_job(char *job) {
     if (lp.lp_job != NULL) {
         free(lp.lp_job);
     }
@@ -457,8 +446,7 @@ void lp_job(char *job)
     LOG(log_debug9, logtype_papd, "job: %s", lp.lp_job);
 }
 
-void lp_for(char *lpfor)
-{
+void lp_for(char *lpfor) {
     if (lp.lp_created_for != NULL) {
         free(lp.lp_created_for);
     }
@@ -467,8 +455,7 @@ void lp_for(char *lpfor)
 }
 
 
-static int lp_init(struct papfile *out, struct sockaddr_at *sat)
-{
+static int lp_init(struct papfile *out, struct sockaddr_at *sat) {
     int		authenticated = 0;
 #ifndef HAVE_CUPS
     int		fd, n, len;
@@ -649,8 +636,7 @@ static int lp_init(struct papfile *out, struct sockaddr_at *sat)
     return 0;
 }
 
-int lp_open(struct papfile *out, struct sockaddr_at *sat)
-{
+int lp_open(struct papfile *out, struct sockaddr_at *sat) {
     char	name[MAXPATHLEN];
     int		fd;
     struct passwd	*pwent;
@@ -753,8 +739,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
     return 0;
 }
 
-int lp_close(void)
-{
+int lp_close(void) {
     if ((lp.lp_flags & LP_INIT) == 0 || (lp.lp_flags & LP_OPEN) == 0) {
         return 0;
     }
@@ -768,8 +753,7 @@ int lp_close(void)
 
 
 
-int lp_write(struct papfile *in, char *buf, size_t len)
-{
+int lp_write(struct papfile *in, char *buf, size_t len) {
 #define BUFSIZE 32768
     static char tempbuf[BUFSIZE];
     static char tempbuf2[BUFSIZE];
@@ -852,8 +836,7 @@ int lp_write(struct papfile *in, char *buf, size_t len)
     return 0;
 }
 
-int lp_cancel(void)
-{
+int lp_cancel(void) {
     char	name[MAXPATHLEN];
     char	letter;
 
@@ -882,8 +865,7 @@ int lp_cancel(void)
  *
  * XXX piped?
  */
-int lp_print(void)
-{
+int lp_print(void) {
 #ifndef HAVE_CUPS
     char		buf[MAXPATHLEN];
     char		tfname[MAXPATHLEN];
@@ -1016,13 +998,11 @@ int lp_print(void)
 }
 
 #ifndef HAVE_CUPS
-int lp_disconn_unix(int fd)
-{
+int lp_disconn_unix(int fd) {
     return close(fd);
 }
 
-int lp_conn_unix(void)
-{
+int lp_conn_unix(void) {
     int			s;
     struct sockaddr_un	saun;
 
@@ -1046,13 +1026,11 @@ int lp_conn_unix(void)
     return s;
 }
 
-int lp_disconn_inet(int fd)
-{
+int lp_disconn_inet(int fd) {
     return close(fd);
 }
 
-int lp_conn_inet(void)
-{
+int lp_conn_inet(void) {
     int			privfd, port = IPPORT_RESERVED - 1;
     struct sockaddr_in	sin;
     struct servent	*sp;
@@ -1095,8 +1073,7 @@ int lp_conn_inet(void)
     return privfd;
 }
 
-int lp_rmjob(int job)
-{
+int lp_rmjob(int job) {
     char	buf[1024];
     int		n, s;
 
@@ -1136,8 +1113,7 @@ char	*tag_files = "files: ";
 char	*tag_size = "size: ";
 char	*tag_status = "status: ";
 
-int lp_queue(struct papfile *out)
-{
+int lp_queue(struct papfile *out) {
     char			buf[1024], *start, *stop, *p, *q;
     int				linelength, crlflength;
     static struct papfile	pf;

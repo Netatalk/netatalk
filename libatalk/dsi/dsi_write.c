@@ -23,8 +23,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
-{
+size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen) {
     size_t bytes = 0;
     dsi->datasize = ntohl(dsi->header.dsi_len) - dsi->header.dsi_data.dsi_doff;
 
@@ -49,8 +48,7 @@ size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
 /* fill up buf and then return. this should be called repeatedly
  * until all the data has been read. i block alarm processing
  * during the transfer to avoid sending unnecessary tickles. */
-size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
-{
+size_t dsi_write(DSI *dsi, void *buf, const size_t buflen) {
     size_t length;
     LOG(log_maxdebug, logtype_dsi, "dsi_write: remaining DSI datasize: %jd",
         (intmax_t)dsi->datasize);
@@ -67,8 +65,7 @@ size_t dsi_write(DSI *dsi, void *buf, const size_t buflen)
 }
 
 /* flush any unread buffers. */
-void dsi_writeflush(DSI *dsi)
-{
+void dsi_writeflush(DSI *dsi) {
     size_t length;
 
     while (dsi->datasize > 0) {

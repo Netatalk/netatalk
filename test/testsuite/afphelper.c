@@ -26,8 +26,7 @@ int Loglevel = AFP_LOG_INFO;
  * @args token  (w)  return allocated buffer with token here
  * @returns length of token, -1 on error
  */
-ssize_t get_sessiontoken(const char *buf, char **token)
-{
+ssize_t get_sessiontoken(const char *buf, char **token) {
     uint32_t tmp;
     ssize_t len = -1;
     memcpy(&tmp, buf, sizeof(uint32_t));
@@ -47,8 +46,7 @@ ssize_t get_sessiontoken(const char *buf, char **token)
     return len;
 }
 
-void illegal_fork(DSI * dsi, char cmd, char *name)
-{
+void illegal_fork(DSI * dsi, char cmd, char *name) {
     uint16_t vol = VolID;
     int ofs;
     int fork;
@@ -106,8 +104,7 @@ void illegal_fork(DSI * dsi, char cmd, char *name)
 }
 
 /* ---------------------- */
-int get_did(CONN *conn, uint16_t vol, int dir, char *name)
-{
+int get_did(CONN *conn, uint16_t vol, int dir, char *name) {
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_DID);
     struct afp_filedir_parms filedir;
@@ -131,8 +128,7 @@ int get_did(CONN *conn, uint16_t vol, int dir, char *name)
 }
 
 /* ---------------------- */
-int get_fid(CONN *conn, uint16_t vol, int dir, char *name)
-{
+int get_fid(CONN *conn, uint16_t vol, int dir, char *name) {
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR);
     struct afp_filedir_parms filedir;
@@ -154,8 +150,7 @@ int get_fid(CONN *conn, uint16_t vol, int dir, char *name)
 }
 
 /* ---------------------- */
-uint32_t get_forklen(DSI *dsi, int type)
-{
+uint32_t get_forklen(DSI *dsi, int type) {
     uint16_t bitmap = 0;
     int len = (type == OPENFORK_RSCS) ? (1 << FILPBIT_RFLEN) : (1 << FILPBIT_DFLEN);
     int  ofs =  sizeof(uint16_t);
@@ -169,8 +164,7 @@ uint32_t get_forklen(DSI *dsi, int type)
 }
 
 /* ------------------------- */
-void write_fork(CONN *conn, uint16_t vol, int dir, char *name, char *txt)
-{
+void write_fork(CONN *conn, uint16_t vol, int dir, char *name, char *txt) {
     int fork;
     uint16_t bitmap = 0;
     fork = FPOpenFork(conn, vol, OPENFORK_DATA, bitmap, dir, name,
@@ -189,8 +183,7 @@ void write_fork(CONN *conn, uint16_t vol, int dir, char *name, char *txt)
 }
 
 /* ------------------------- */
-void read_fork(CONN *conn, uint16_t vol, int dir, char *name, int len)
-{
+void read_fork(CONN *conn, uint16_t vol, int dir, char *name, int len) {
     int fork;
     uint16_t bitmap = 0;
     fork = FPOpenFork(conn, vol, OPENFORK_DATA, bitmap, dir, name,
@@ -214,8 +207,7 @@ void read_fork(CONN *conn, uint16_t vol, int dir, char *name, int len)
  * Use the second user for creating a folder with no access right
  * assume did are the same for != user
 */
-int no_access_folder(uint16_t vol, int did, char *name)
-{
+int no_access_folder(uint16_t vol, int did, char *name) {
     int ret = 0;
     int dir = 0;
     uint16_t vol2;
@@ -342,8 +334,7 @@ fin:
 }
 
 /* ---------------------- */
-int group_folder(uint16_t vol, int did, char *name)
-{
+int group_folder(uint16_t vol, int did, char *name) {
     int ret = 0;
     int dir = 0;
     uint16_t vol2;
@@ -431,8 +422,7 @@ fin:
  * Use the second user for creating a folder with read only access right
  * assume did are the same for != user
 */
-int read_only_folder(uint16_t vol, int did, char *name)
-{
+int read_only_folder(uint16_t vol, int did, char *name) {
     int ret = 0;
     int dir = 0;
     uint16_t vol2;
@@ -510,8 +500,7 @@ fin:
  * Use the second user for creating a folder with read only access right
  * assume did are the same for != user
 */
-int read_only_folder_with_file(uint16_t vol, int did, char *name, char *file)
-{
+int read_only_folder_with_file(uint16_t vol, int did, char *name, char *file) {
     int ret = 0;
     int dir = 0;
     uint16_t vol2;
@@ -594,8 +583,7 @@ fin:
 /* ------------------------
  * We need to set rw perm first for .AppleDouble
 */
-int delete_folder(uint16_t vol, int did, char *name)
-{
+int delete_folder(uint16_t vol, int did, char *name) {
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
@@ -655,8 +643,7 @@ int delete_folder(uint16_t vol, int did, char *name)
 /* ------------------------
  * We need to set rw perm first for .AppleDouble
 */
-int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
-{
+int delete_folder_with_file(uint16_t vol, int did, char *name, char *file) {
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_DID);
@@ -719,8 +706,7 @@ int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
 }
 
 /* ---------------------- */
-int get_vol_attrib(uint16_t vol)
-{
+int get_vol_attrib(uint16_t vol) {
     struct afp_volume_parms parms;
     DSI *dsi;
     dsi = &Conn->dsi;
@@ -736,8 +722,7 @@ int get_vol_attrib(uint16_t vol)
 }
 
 /* ---------------------- */
-unsigned int get_vol_free(uint16_t vol)
-{
+unsigned int get_vol_free(uint16_t vol) {
     struct afp_volume_parms parms;
     DSI *dsi;
     dsi = &Conn->dsi;
@@ -753,8 +738,7 @@ unsigned int get_vol_free(uint16_t vol)
 }
 
 /* ---------------------- */
-int not_valid(unsigned int ret, int mac_error, int netatalk_error)
-{
+int not_valid(unsigned int ret, int mac_error, int netatalk_error) {
     if (htonl(mac_error) != ret) {
         if (!Mac) {
             if (!Quiet) {
@@ -781,8 +765,7 @@ int not_valid(unsigned int ret, int mac_error, int netatalk_error)
 }
 
 /* ---------------------- */
-static int error_in_list(unsigned int bitmap, unsigned int error)
-{
+static int error_in_list(unsigned int bitmap, unsigned int error) {
     if ((BITERR_NOOBJ & bitmap) && htonl(error) == AFPERR_NOOBJ) {
         return 1;
     }
@@ -835,8 +818,7 @@ static int error_in_list(unsigned int bitmap, unsigned int error)
 }
 
 /* ---------------------- */
-static char *bitmap2text(unsigned int bitmap)
-{
+static char *bitmap2text(unsigned int bitmap) {
     static char temp[4096];
     static char temp1[4096];
     temp[0] = 0;
@@ -904,8 +886,8 @@ static char *bitmap2text(unsigned int bitmap)
 }
 
 /* ---------------------- */
-int not_valid_bitmap(unsigned int ret, unsigned int bitmap, int netatalk_error)
-{
+int not_valid_bitmap(unsigned int ret, unsigned int bitmap,
+                     int netatalk_error) {
     if (!Mac && !Quiet) {
         fprintf(stdout, "MAC RESULT: %s\n", bitmap2text(bitmap));
     }
@@ -927,8 +909,7 @@ static char *Why;
 static char skipped_msg_buf[SKIPPED_MSG_BUFSIZE];
 
 /* ------------------------- */
-void test_skipped(int why)
-{
+void test_skipped(int why) {
     char *s = "";
 
     switch (why) {
@@ -1056,8 +1037,7 @@ void test_skipped(int why)
 }
 
 /* ------------------------- */
-void test_failed(void)
-{
+void test_failed(void) {
     if (!Quiet) {
         fprintf(stdout, "\tFAILED\n");
     }
@@ -1067,8 +1047,7 @@ void test_failed(void)
 }
 
 /* ------------------------- */
-void test_nottested(void)
-{
+void test_nottested(void) {
     if (!Quiet) {
         fprintf(stdout, "\tNOT TESTED\n");
     }
@@ -1081,15 +1060,13 @@ void test_nottested(void)
 }
 
 /* ------------------------- */
-void enter_test(void)
-{
+void enter_test(void) {
     CurTestResult = 0;
     Why = "";
 }
 
 /* ------------------------- */
-void exit_test(char *name)
-{
+void exit_test(char *name) {
     char *s = "";
 
     switch (CurTestResult) {
@@ -1146,8 +1123,7 @@ void exit_test(char *name)
     fflush(stdout);
 }
 
-static void afp_print_prefix(int level, int color)
-{
+static void afp_print_prefix(int level, int color) {
     if (color) {
         switch (level) {
         case AFP_LOG_WARNING:
@@ -1165,8 +1141,7 @@ static void afp_print_prefix(int level, int color)
     }
 }
 
-static void afp_print_postfix(int level, int color)
-{
+static void afp_print_postfix(int level, int color) {
     if (color) {
         switch (level) {
         case AFP_LOG_WARNING:
@@ -1181,8 +1156,7 @@ static void afp_print_postfix(int level, int color)
     }
 }
 
-void afp_printf(int level, int loglevel, int color, const char* fmt, ...)
-{
+void afp_printf(int level, int loglevel, int color, const char* fmt, ...) {
     va_list arg;
 
     if ((level >= AFP_LOG_MAX) || (level < AFP_LOG_DEBUG)) {
@@ -1201,8 +1175,7 @@ void afp_printf(int level, int loglevel, int color, const char* fmt, ...)
 }
 
 void assert_equal(intmax_t expect, intmax_t real, const char *file, int line,
-                  void (*fn)(), int log_level)
-{
+                  void (*fn)(), int log_level) {
     if (expect != real) {
         AFP_PRINTF(log_level, "%s:%d expected %" PRIdMAX ", got %" PRIdMAX "\n", file,
                    line, expect, real);
@@ -1211,8 +1184,7 @@ void assert_equal(intmax_t expect, intmax_t real, const char *file, int line,
 }
 
 void assert_equal_u(uintmax_t expect, uintmax_t real, const char *file,
-                    int line, void (*fn)(), int log_level)
-{
+                    int line, void (*fn)(), int log_level) {
     if (expect != real) {
         AFP_PRINTF(log_level, "%s:%d expected %" PRIuMAX ", got %" PRIuMAX "\n", file,
                    line, expect, real);
@@ -1221,8 +1193,7 @@ void assert_equal_u(uintmax_t expect, uintmax_t real, const char *file,
 }
 
 void assert_not_equal(intmax_t expect, intmax_t real, const char *file,
-                      int line, void (*fn)(), int log_level)
-{
+                      int line, void (*fn)(), int log_level) {
     if (expect == real) {
         AFP_PRINTF(log_level, "%s:%d should not be %" PRIdMAX "\n", file, line, real);
         fn();
@@ -1230,8 +1201,7 @@ void assert_not_equal(intmax_t expect, intmax_t real, const char *file,
 }
 
 void assert_not_equal_u(uintmax_t expect, intmax_t real, const char *file,
-                        int line, void (*fn)(), int log_level)
-{
+                        int line, void (*fn)(), int log_level) {
     if (expect == real) {
         AFP_PRINTF(log_level, "%s:%d should not be %" PRIuMAX "\n", file, line, real);
         fn();
@@ -1239,8 +1209,7 @@ void assert_not_equal_u(uintmax_t expect, intmax_t real, const char *file,
 }
 
 void assert_null(const void *real, const char *file, int line, void (*fn)(),
-                 int log_level)
-{
+                 int log_level) {
     if (real != NULL) {
         AFP_PRINTF(log_level, "%s:%d should be NULL\n", file, line);
         fn();
@@ -1248,24 +1217,21 @@ void assert_null(const void *real, const char *file, int line, void (*fn)(),
 }
 
 void assert_not_null(const void *real, char *file, int line, void (*fn)(),
-                     int log_level)
-{
+                     int log_level) {
     if (real == NULL) {
         AFP_PRINTF(log_level, "%s:%d should not be NULL\n", file, line);
         fn();
     }
 }
 
-void assert_true(int real, char *file, int line, void (*fn)(), int log_level)
-{
+void assert_true(int real, char *file, int line, void (*fn)(), int log_level) {
     if (!real) {
         AFP_PRINTF(log_level, "%s:%d should be true\n", file, line);
         fn();
     }
 }
 
-void assert_false(int real, char *file, int line, void (*fn)(), int log_level)
-{
+void assert_false(int real, char *file, int line, void (*fn)(), int log_level) {
     if (real) {
         AFP_PRINTF(log_level, "%s:%d should be false\n", file, line);
         fn();

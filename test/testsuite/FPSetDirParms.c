@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test82()
-{
+STATIC void test82() {
     int  dir;
     char *name = "t82 test dir";
     int  ofs =  3 * sizeof(uint16_t);
@@ -58,8 +57,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test84()
-{
+STATIC void test84() {
     int  dir;
     char *name = "t84 no delete dir";
     int  ofs =  3 * sizeof(uint16_t);
@@ -101,8 +99,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test88()
-{
+STATIC void test88() {
     int  dir = 0;
     char *name = "t88 error setdirparams";
     char *name1 = "t88 error setdirparams file";
@@ -196,8 +193,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test107()
-{
+STATIC void test107() {
     int  dir;
     int  pdir;
     char *name = "t107 test dir";
@@ -312,8 +308,7 @@ test_exit:
 
 
 /* ------------------------- */
-STATIC void test189()
-{
+STATIC void test189() {
     int  dir;
     char *name = "t189 error setdirparams";
     char *name1 = "t189 error setdirparams file";
@@ -355,8 +350,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test193()
-{
+STATIC void test193() {
     int  dir;
     char *name = "t193 no delete dir";
     int  ofs =  3 * sizeof(uint16_t);
@@ -394,8 +388,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test351()
-{
+STATIC void test351() {
     int  dir = 0;
     char *ndir = "t351 dir";
     char *name = "t351 file";
@@ -463,8 +456,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test352()
-{
+STATIC void test352() {
     int  dir = 0;
     char *name = "t352 file";
     char *ndir = "t352 dir";
@@ -526,8 +518,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test353()
-{
+STATIC void test353() {
     int  dir = 0;
     char *name = "t353 file";
     char *ndir = "t353 dir";
@@ -616,8 +607,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test354()
-{
+STATIC void test354() {
     int  dir = 0;
     char *ndir = "t354 dir";
     char *name = "t354 file";
@@ -683,8 +673,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test355()
-{
+STATIC void test355() {
     int  dir = 0;
     int  dir1 = 0;
     char *ndir = "t355 dir";
@@ -758,8 +747,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test356()
-{
+STATIC void test356() {
     int  dir = 0;
     char *ndir = "t356 dir";
     char *name = "t356 file";
@@ -838,8 +826,7 @@ static gid_t   *groups;
 #define GROUPS_SIZE sizeof(gid_t)
 static int     ngroups;
 
-static int init_groups(void)
-{
+static int init_groups(void) {
     if ((ngroups = getgroups(0, NULL)) < 0) {
         return 0;
     }
@@ -863,8 +850,7 @@ static int init_groups(void)
 /* -----------------
  * only work if client and server share the same numeric ids
 */
-static  int check_group(gid_t group)
-{
+static  int check_group(gid_t group) {
     int i, j;
 
     for (i = 0; i < ngroups; i++) {
@@ -885,8 +871,7 @@ static  int check_group(gid_t group)
 
 
 /* ------------------------- */
-STATIC void test405()
-{
+STATIC void test405() {
     int  dir = 0;
     char *ndir = "t405 dir";
     uint16_t vol = VolID;
@@ -938,8 +923,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSetDirParms_test()
-{
+void FPSetDirParms_test() {
     ENTER_TESTSET
     test82();
     test84();

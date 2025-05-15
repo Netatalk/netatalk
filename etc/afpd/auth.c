@@ -64,8 +64,7 @@ void status_versions(char *data,
 #ifndef NO_DDP
                      const ASP asp,
 #endif
-                     const DSI *dsi)
-{
+                     const DSI *dsi) {
     char                *start = data;
     uint16_t           status;
     int         len, num, i, count = 0;
@@ -114,8 +113,7 @@ void status_versions(char *data,
     memcpy(start + AFPSTATUS_UAMSOFF, &status, sizeof(status));
 }
 
-void status_uams(char *data, const char *authlist)
-{
+void status_uams(char *data, const char *authlist) {
     char                *start = data;
     uint16_t           status;
     struct uam_obj      *uams;
@@ -149,8 +147,7 @@ void status_uams(char *data, const char *authlist)
 
 /* handle errors by closing the connection. this is only needed
  * by the afp_* functions. */
-static int send_reply(const AFPObj *obj, const int err)
-{
+static int send_reply(const AFPObj *obj, const int err) {
     if ((err == AFP_OK) || (err == AFPERR_AUTHCONT)) {
         return err;
     }
@@ -167,21 +164,18 @@ static int send_reply(const AFPObj *obj, const int err)
 
 static int afp_errpwdexpired(AFPObj *obj _U_, char *ibuf _U_,
                              size_t ibuflen _U_,
-                             char *rbuf _U_, size_t *rbuflen)
-{
+                             char *rbuf _U_, size_t *rbuflen) {
     *rbuflen = 0;
     return AFPERR_PWDEXPR;
 }
 
 static int afp_null_nolog(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
-                          char *rbuf _U_, size_t *rbuflen)
-{
+                          char *rbuf _U_, size_t *rbuflen) {
     *rbuflen = 0;
     return AFPERR_NOOP;
 }
 
-static int set_auth_switch(const AFPObj *obj, int expired)
-{
+static int set_auth_switch(const AFPObj *obj, int expired) {
     int i;
 
     if (!expired) {
@@ -261,8 +255,7 @@ static int set_auth_switch(const AFPObj *obj, int expired)
 }
 
 static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
-                 int expired)
-{
+                 int expired) {
     bool admin = false;
     int i;
 
@@ -349,8 +342,7 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
 
 /* ---------------------- */
 int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-            size_t *rbuflen)
-{
+            size_t *rbuflen) {
     uint32_t data;
     DSI *dsi = (DSI *)AFPobj->dsi;
     *rbuflen = 0;
@@ -410,8 +402,7 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 }
 
 /* ---------------------- */
-static int create_session_token(AFPObj *obj)
-{
+static int create_session_token(AFPObj *obj) {
     pid_t pid;
 
     /* use 8 bytes for token as OSX, don't know if it helps */
@@ -431,8 +422,7 @@ static int create_session_token(AFPObj *obj)
     return 0;
 }
 
-static int create_session_key(AFPObj *obj)
-{
+static int create_session_key(AFPObj *obj) {
     /* create session key */
     if (obj->sinfo.sessionkey == NULL) {
         if (NULL == (obj->sinfo.sessionkey = malloc(SESSIONKEY_LEN))) {
@@ -451,8 +441,7 @@ static int create_session_key(AFPObj *obj)
 int afp_getsession(
     AFPObj *obj,
     char   *ibuf, size_t ibuflen,
-    char   *rbuf, size_t *rbuflen)
-{
+    char   *rbuf, size_t *rbuflen) {
     uint16_t           type;
     uint32_t           idlen = 0;
     uint32_t       boottime;
@@ -563,8 +552,7 @@ int afp_getsession(
 
 /* ---------------------- */
 int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                   size_t *rbuflen)
-{
+                   size_t *rbuflen) {
     DSI                 *dsi = (DSI *)obj->dsi;
     uint16_t           type;
     uint32_t           tklen;
@@ -648,8 +636,7 @@ exit:
 }
 
 /* ---------------------- */
-static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
-{
+static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len) {
     int num, i;
 
     if (!len || len > ibuflen) {
@@ -682,8 +669,7 @@ static int get_version(AFPObj *obj, char *ibuf, size_t ibuflen, size_t len)
 
 /* ---------------------- */
 int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-              size_t *rbuflen)
-{
+              size_t *rbuflen) {
     struct passwd *pwd = NULL;
     size_t len;
     int     i;
@@ -746,8 +732,7 @@ int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 
 /* ---------------------- */
 int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-                  size_t *rbuflen)
-{
+                  size_t *rbuflen) {
     struct passwd *pwd = NULL;
     size_t  len;
     int     i;
@@ -913,8 +898,7 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 
 /* ---------------------- */
 int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-                  size_t *rbuflen)
-{
+                  size_t *rbuflen) {
     struct passwd *pwd = NULL;
     int err;
 
@@ -938,8 +922,7 @@ int afp_logincont(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 
 
 int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
-               char *rbuf  _U_, size_t *rbuflen)
-{
+               char *rbuf  _U_, size_t *rbuflen) {
     LOG(log_note, logtype_afpd, "AFP logout by %s", obj->username);
     of_close_all_forks(obj);
     close_all_vol(obj);
@@ -963,8 +946,7 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
  *       it off to the uam.
  */
 int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-                 size_t *rbuflen)
-{
+                 size_t *rbuflen) {
     char username[MAXUSERLEN], *start = ibuf;
     struct uam_obj *uam;
     struct passwd *pwd;
@@ -1047,8 +1029,7 @@ int afp_changepw(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 
 /* FPGetUserInfo */
 int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                    size_t *rbuflen)
-{
+                    size_t *rbuflen) {
     uint8_t  thisuser;
     uint32_t id;
     uint16_t bitmap;
@@ -1129,8 +1110,7 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 /* just do a linked list search. this could be sped up with a hashed
  * list, but i doubt anyone's going to have enough uams to matter. */
 struct uam_obj *auth_uamfind(const int type, const char *name,
-                             const int len)
-{
+                             const int len) {
     struct uam_obj *prev, *start;
 
     if (!name || !(start = UAM_LIST(type))) {
@@ -1147,8 +1127,7 @@ struct uam_obj *auth_uamfind(const int type, const char *name,
     return NULL;
 }
 
-int auth_register(const int type, struct uam_obj *uam)
-{
+int auth_register(const int type, struct uam_obj *uam) {
     struct uam_obj *start;
 
     if (!uam || !uam->uam_name || (*uam->uam_name == '\0')) {
@@ -1164,8 +1143,7 @@ int auth_register(const int type, struct uam_obj *uam)
 }
 
 /* load all of the modules */
-int auth_load(AFPObj *obj, const char *path, const char *list)
-{
+int auth_load(AFPObj *obj, const char *path, const char *list) {
     char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p, *last;
     struct uam_mod *mod;
     struct stat st;
@@ -1214,8 +1192,7 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
 }
 
 /* get rid of all of the uams */
-void auth_unload(void)
-{
+void auth_unload(void) {
     struct uam_mod *mod, *prev, *start = &uam_modules;
     prev = start->uam_prev;
 

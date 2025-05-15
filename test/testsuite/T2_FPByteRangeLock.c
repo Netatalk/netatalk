@@ -11,8 +11,7 @@
 static char temp[MAXPATHLEN];
 
 /* ------------------------- */
-static void test_bytelock(uint16_t vol2, char *name, int type)
-{
+static void test_bytelock(uint16_t vol2, char *name, int type) {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -132,8 +131,7 @@ static void test_bytelock(uint16_t vol2, char *name, int type)
 }
 
 /* -------------------- */
-void test117()
-{
+void test117() {
     char *name = "t117 exclusive open DF";
     uint16_t vol2;
     ENTER_TEST
@@ -164,8 +162,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPByteRangeLock_test()
-{
+void T2FPByteRangeLock_test() {
     ENTER_TESTSET
     test117();
 }

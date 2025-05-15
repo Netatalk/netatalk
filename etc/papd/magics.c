@@ -21,15 +21,14 @@
 
 static int state = 0;
 
-static void parser_error(struct papfile *outfile)
-{
+static void parser_error(struct papfile *outfile) {
     spoolerror(outfile, "Comments error, Ignoring job.");
     outfile->pf_state |= PF_EOF;
     lp_close();
 }
 
-int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
-{
+int ps(struct papfile *infile, struct papfile *outfile,
+       struct sockaddr_at *sat) {
     char			*start;
     int				linelength, crlflength;
     struct papd_comment		*comment;
@@ -116,8 +115,7 @@ int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
 }
 
 int cm_psquery(struct papfile *in, struct papfile *out,
-               struct sockaddr_at *sat _U_)
-{
+               struct sockaddr_at *sat _U_) {
     struct papd_comment	*comment;
     char		*start;
     int			linelength, crlflength;
@@ -158,8 +156,7 @@ int cm_psquery(struct papfile *in, struct papfile *out,
 }
 
 int cm_psadobe(struct papfile *in, struct papfile *out,
-               struct sockaddr_at *sat _U_)
-{
+               struct sockaddr_at *sat _U_) {
     char		*start;
     int			linelength, crlflength;
     struct papd_comment	*comment = compeek();
@@ -204,8 +201,7 @@ int cm_psadobe(struct papfile *in, struct papfile *out,
 char	*Query = "Query";
 
 int cm_psswitch(struct papfile *in, struct papfile *out,
-                struct sockaddr_at *sat _U_)
-{
+                struct sockaddr_at *sat _U_) {
     char		*start, *stop, *p;
     int			linelength, crlflength;
 

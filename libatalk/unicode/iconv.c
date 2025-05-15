@@ -127,8 +127,7 @@ static struct charset_functions builtin_functions[] = {
 
 static struct charset_functions *charsets = NULL;
 
-struct charset_functions *find_charset_functions(const char *name)
-{
+struct charset_functions *find_charset_functions(const char *name) {
     struct charset_functions *c = charsets;
 
     while (c) {
@@ -142,8 +141,7 @@ struct charset_functions *find_charset_functions(const char *name)
     return NULL;
 }
 
-int atalk_register_charset(struct charset_functions *funcs)
-{
+int atalk_register_charset(struct charset_functions *funcs) {
     if (!funcs) {
         return -1;
     }
@@ -160,8 +158,7 @@ int atalk_register_charset(struct charset_functions *funcs)
     return 0;
 }
 
-static void lazy_initialize_iconv(void)
-{
+static void lazy_initialize_iconv(void) {
     static int initialized = 0;
     int charset_count = 2;
 
@@ -195,8 +192,7 @@ static void lazy_initialize_iconv(void)
    character sets like SJIS */
 static size_t sys_iconv(void *cd,
                         char **inbuf, size_t *inbytesleft,
-                        char **outbuf, size_t *outbytesleft)
-{
+                        char **outbuf, size_t *outbytesleft) {
 #ifdef HAVE_USABLE_ICONV
     size_t ret = iconv((iconv_t)cd,
                        (ICONV_CONST char**)inbuf, inbytesleft,
@@ -221,8 +217,7 @@ static size_t sys_iconv(void *cd,
  **/
 size_t atalk_iconv(atalk_iconv_t cd,
                    const char **inbuf, size_t *inbytesleft,
-                   char **outbuf, size_t *outbytesleft)
-{
+                   char **outbuf, size_t *outbytesleft) {
     char cvtbuf[2048];
     char *bufp = cvtbuf;
     size_t bufsize;
@@ -260,8 +255,7 @@ size_t atalk_iconv(atalk_iconv_t cd,
 /*
   simple iconv_open() wrapper
  */
-atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
-{
+atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode) {
     atalk_iconv_t ret;
     struct charset_functions *from, *to;
     lazy_initialize_iconv();
@@ -360,8 +354,7 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
 /*
   simple iconv_close() wrapper
 */
-int atalk_iconv_close(atalk_iconv_t cd)
-{
+int atalk_iconv_close(atalk_iconv_t cd) {
 #ifdef HAVE_USABLE_ICONV
 
     if (cd->cd_direct) {
@@ -390,8 +383,7 @@ int atalk_iconv_close(atalk_iconv_t cd)
 *************************************************************************/
 
 static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
-                         char **outbuf, size_t *outbytesleft)
-{
+                         char **outbuf, size_t *outbytesleft) {
     ucs2_t curchar;
 
     while (*inbytesleft >= 1 && *outbytesleft >= 2) {
@@ -418,8 +410,7 @@ static size_t ascii_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
 }
 
 static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
-                         char **outbuf, size_t *outbytesleft)
-{
+                         char **outbuf, size_t *outbytesleft) {
     int ir_count = 0;
     ucs2_t curchar;
 
@@ -454,8 +445,7 @@ static size_t ascii_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 
 
 static size_t iconv_copy(void *cd _U_, char **inbuf, size_t *inbytesleft,
-                         char **outbuf, size_t *outbytesleft)
-{
+                         char **outbuf, size_t *outbytesleft) {
     int n;
     n = MIN(*inbytesleft, *outbytesleft);
     memmove(*outbuf, *inbuf, n);

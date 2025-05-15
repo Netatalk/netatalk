@@ -119,14 +119,12 @@ struct server {
 
 static struct server srv[MAXVOLS];
 
-static void daemon_exit(int i)
-{
+static void daemon_exit(int i) {
     exit(i);
 }
 
 /* ------------------ */
-static void sig_handler(int sig)
-{
+static void sig_handler(int sig) {
     switch (sig) {
     case SIGTERM:
     case SIGQUIT:
@@ -141,8 +139,7 @@ static void sig_handler(int sig)
     daemon_exit(0);
 }
 
-static struct server *test_usockfn(const char *path)
-{
+static struct server *test_usockfn(const char *path) {
     int i;
 
     for (i = 0; i < maxvol; i++) {
@@ -165,8 +162,7 @@ static struct server *test_usockfn(const char *path)
  * @return 0 on success, -1 on error
  **/
 int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath,
-                    const char *username)
-{
+                    const char *username) {
     pid_t pid;
     struct server *up;
     int sv[2];
@@ -323,8 +319,7 @@ int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath,
 }
 
 /* ------------------ */
-static int set_dbdir(const char *dbdir, const char *vpath)
-{
+static int set_dbdir(const char *dbdir, const char *vpath) {
     EC_INIT;
     struct stat st;
     bstring oldpath, newpath = NULL;
@@ -367,14 +362,12 @@ EC_CLEANUP:
 }
 
 /* ------------------ */
-static void catch_child(int sig _U_)
-{
+static void catch_child(int sig _U_) {
     sigchild = 1;
 }
 
 /* ----------------------- */
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sigset_t set;
     memset(&sv, 0, sizeof(sv));
@@ -449,8 +442,7 @@ static void set_signal(void)
     sigprocmask(SIG_SETMASK, &set, NULL);
 }
 
-static int setlimits(void)
-{
+static int setlimits(void) {
     struct rlimit rlim;
 
     if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
@@ -474,8 +466,7 @@ static int setlimits(void)
     return 0;
 }
 
-static uid_t uid_from_name(const char *name)
-{
+static uid_t uid_from_name(const char *name) {
     struct passwd *pwd;
     pwd = getpwnam(name);
 
@@ -487,8 +478,7 @@ static uid_t uid_from_name(const char *name)
 }
 
 /* ------------------ */
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     char  *volname = NULL;
     char  *volpath = NULL;
     char  *username = NULL;

@@ -2,8 +2,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test2()
-{
+STATIC void test2() {
     uint16_t vol = VolID;
     DSI *dsi;
     char *name = "t2 sync dir";
@@ -41,8 +40,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSync_test()
-{
+void FPSync_test() {
     ENTER_TESTSET
 #if 0
     test2();

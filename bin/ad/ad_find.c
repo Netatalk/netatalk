@@ -43,14 +43,12 @@ static volatile sig_atomic_t alarmed;
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo _U_)
-{
+static void sig_handler(int signo _U_) {
     alarmed = 1;
     return;
 }
 
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
@@ -81,15 +79,13 @@ static void set_signal(void)
     }
 }
 
-static void usage_find(void)
-{
+static void usage_find(void) {
     printf(
         "Usage: ad find [-v VOLUME_PATH] NAME\n"
     );
 }
 
-int ad_find(int argc, char **argv, AFPObj *obj)
-{
+int ad_find(int argc, char **argv, AFPObj *obj) {
     int c, ret;
     afpvol_t vol;
     char *srchvol = strdup(getcwdpath());

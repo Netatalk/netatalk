@@ -42,8 +42,7 @@ static char *Obj = "=";
 static char *Type = "=";
 static char *Zone = "*";
 
-static void Usage(char *av0)
-{
+static void Usage(char *av0) {
     char *p = strrchr(av0, '/');
 
     if (p == NULL) {
@@ -57,8 +56,7 @@ static void Usage(char *av0)
     exit(1);
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     struct nbpnve *nn;
     char *name;
     int i, c, nresp = 1000;

@@ -20,8 +20,7 @@
 #include "pack.h"
 
 int dbd_delete(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply,
-               int idx)
-{
+               int idx) {
     DBT key;
     int rc;
     unsigned char *buf;

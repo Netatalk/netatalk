@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test214()
-{
+STATIC void test214() {
     uint16_t vol = VolID;
     uint16_t dt = 0;
     unsigned int ret;
@@ -74,8 +73,7 @@ test_exit:
 
 /* ------------------------- */
 // FIXME: The first branch needs to get refactored. Always fails with 1 user.
-STATIC void test301()
-{
+STATIC void test301() {
     uint16_t vol = VolID;
     unsigned int ret;
     char *file = "t301 file";
@@ -168,8 +166,7 @@ fin:
 }
 
 /* ----------- */
-void FPAddAPPL_test()
-{
+void FPAddAPPL_test() {
     ENTER_TESTSET
     test214();
 #if 0

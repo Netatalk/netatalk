@@ -44,8 +44,8 @@ struct charset_functions charset_mac_korean = {
     NULL
 };
 
-static size_t mac_korean_char_push(uint8_t* out, const ucs2_t* in, size_t* size)
-{
+static size_t mac_korean_char_push(uint8_t* out, const ucs2_t* in,
+                                   size_t *size) {
     ucs2_t wc = in[0];
 
     if ((wc & ~7) == 0xf860) {
@@ -96,14 +96,13 @@ static size_t mac_korean_char_push(uint8_t* out, const ucs2_t* in, size_t* size)
 }
 
 static size_t mac_korean_push(void *cd, char **inbuf, size_t *inbytesleft,
-                              char **outbuf, size_t *outbytesleft)
-{
+                              char **outbuf, size_t *outbytesleft) {
     return cjk_generic_push(mac_korean_char_push,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
-static size_t mac_korean_char_pull(ucs2_t* out, const uint8_t* in, size_t* size)
-{
+static size_t mac_korean_char_pull(ucs2_t* out, const uint8_t* in,
+                                   size_t *size) {
     uint16_t c = in[0];
 
     if (c <= 0x7f) {
@@ -135,8 +134,7 @@ static size_t mac_korean_char_pull(ucs2_t* out, const uint8_t* in, size_t* size)
 }
 
 static size_t mac_korean_pull(void *cd, char **inbuf, size_t *inbytesleft,
-                              char **outbuf, size_t *outbytesleft)
-{
+                              char **outbuf, size_t *outbytesleft) {
     return cjk_generic_pull(mac_korean_char_pull,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }

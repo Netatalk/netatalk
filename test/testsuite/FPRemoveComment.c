@@ -2,8 +2,7 @@
 */
 #include "specs.h"
 /* -------------------------- */
-STATIC void test54()
-{
+STATIC void test54() {
     int fork;
     char *name  = "t54 dir no access";
     char *name1 = "t54 file.txt";
@@ -110,8 +109,7 @@ test_exit:
 
 
 /* -------------------------- */
-STATIC void test379()
-{
+STATIC void test379() {
     int fork;
     char *name1 = "t379 file.txt";
     uint16_t vol = VolID;
@@ -137,8 +135,7 @@ fin:
 
 
 /* ----------- */
-void FPRemoveComment_test()
-{
+void FPRemoveComment_test() {
     ENTER_TESTSET
     test54();
     test379();

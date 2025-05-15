@@ -29,8 +29,7 @@ static const struct vol *volume;
  *  This implementation is portable, but could probably be faster by using htonl
  *  where appropriate. Also, this again doubles code from the cdb backend.
  */
-static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino)
-{
+static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino) {
     buf[CNID_DEV_LEN - 1] = dev;
     dev >>= 8;
     buf[CNID_DEV_LEN - 2] = dev;
@@ -64,8 +63,7 @@ static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino)
 }
 
 /* --------------- */
-int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
-{
+int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey) {
     int len;
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DID_OFS;
@@ -78,8 +76,7 @@ int didname(DB *dbp _U_, const DBT *pkey _U_, const DBT *pdata, DBT *skey)
 }
 
 /* --------------- */
-int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
-{
+int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey) {
     memset(skey, 0, sizeof(DBT));
     skey->data = (char *)pdata->data + CNID_DEVINO_OFS;
     skey->size = CNID_DEVINO_LEN;
@@ -87,8 +84,7 @@ int devino(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
 }
 
 /* --------------- */
-int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
-{
+int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey) {
     static char buffer[MAXPATHLEN + 2];
     uint16_t flags = CONV_TOLOWER;
     memset(skey, 0, sizeof(DBT));
@@ -109,8 +105,7 @@ int idxname(DB *dbp _U_, const DBT *pkey _U_,  const DBT *pdata, DBT *skey)
     return 0;
 }
 
-void pack_setvol(const struct vol *vol)
-{
+void pack_setvol(const struct vol *vol) {
     volume = vol;
 }
 
@@ -118,8 +113,7 @@ void pack_setvol(const struct vol *vol)
    differ from make_cnid_data in that we never return NULL, rqst->name cannot
    ever cause start[] to overflow because name length is checked in libatalk. */
 
-unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst)
-{
+unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst) {
     static unsigned char start[CNID_HEADER_LEN + MAXPATHLEN + 1];
     unsigned char *buf = start + CNID_LEN;
     u_int32_t i;

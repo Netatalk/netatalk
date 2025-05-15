@@ -52,8 +52,7 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
  * Pass afp_socket to old disconnected session if one has a matching token (token = pid)
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
-static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
-{
+static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children) {
     pid_t pid;
 
     if (ipc->len != sizeof(pid_t)) {
@@ -70,8 +69,7 @@ static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
 }
 
 /* ----------------- */
-static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
-{
+static int ipc_get_session(struct ipc_header *ipc, server_child_t *children) {
     uint32_t boottime;
     uint32_t idlen;
     char     *clientid, *p;
@@ -109,8 +107,7 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
 
 /* ----------------- */
 static int ipc_login_done(const struct ipc_header *ipc,
-                          server_child_t *children)
-{
+                          server_child_t *children) {
     LOG(log_debug, logtype_afpd, "ipc_login_done(pid: %u, uid: %u)",
         ipc->child_pid, ipc->uid);
     server_child_login_done(children,
@@ -119,8 +116,7 @@ static int ipc_login_done(const struct ipc_header *ipc,
     return 0;
 }
 
-static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
-{
+static int ipc_set_state(struct ipc_header *ipc, server_child_t *children) {
     EC_INIT;
     afp_child_t *child;
     pthread_mutex_lock(&children->servch_lock);
@@ -135,8 +131,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
-{
+static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children) {
     EC_INIT;
     afp_child_t *child;
     pthread_mutex_lock(&children->servch_lock);
@@ -181,8 +176,7 @@ EC_CLEANUP:
  *
  * @returns -1 on error, 0 on success
  */
-int ipc_server_read(server_child_t *children, int fd)
-{
+int ipc_server_read(server_child_t *children, int fd) {
     int       ret;
     struct ipc_header ipc;
     char      buf[IPC_MAXMSGSIZE], *p;
@@ -294,8 +288,7 @@ int ipc_server_read(server_child_t *children, int fd)
 }
 
 /* ----------------- */
-int ipc_child_write(int fd, uint16_t command, int len, void *msg)
-{
+int ipc_child_write(int fd, uint16_t command, int len, void *msg) {
     char block[IPC_MAXMSGSIZE], *p;
     pid_t pid;
     uid_t uid;
@@ -333,7 +326,6 @@ int ipc_child_write(int fd, uint16_t command, int len, void *msg)
     return 0;
 }
 
-int ipc_child_state(AFPObj *obj, uint16_t state)
-{
+int ipc_child_state(AFPObj *obj, uint16_t state) {
     return ipc_child_write(obj->ipc_fd, IPC_STATE, sizeof(uint16_t), &state);
 }

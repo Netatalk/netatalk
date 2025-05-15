@@ -125,8 +125,7 @@ static struct dircache_stat {
 } dircache_stat;
 
 /* FNV 1a */
-static hash_val_t hash_vid_did(const void *key)
-{
+static hash_val_t hash_vid_did(const void *key) {
     const struct dir *k = (const struct dir *)key;
     hash_val_t hash = 2166136261;
     hash ^= k->d_vid >> 8;
@@ -144,8 +143,7 @@ static hash_val_t hash_vid_did(const void *key)
     return hash;
 }
 
-static int hash_comp_vid_did(const void *key1, const void *key2)
-{
+static int hash_comp_vid_did(const void *key1, const void *key2) {
     const struct dir *k1 = key1;
     const struct dir *k2 = key2;
     return !(k1->d_did == k2->d_did && k1->d_vid == k2->d_vid);
@@ -164,8 +162,7 @@ static hash_t *index_didname;
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
-static hash_val_t hash_didname(const void *p)
-{
+static hash_val_t hash_didname(const void *p) {
     const struct dir *key = (const struct dir *)p;
     const unsigned char *data = key->d_u_name->data;
     int len = key->d_u_name->slen;
@@ -214,8 +211,7 @@ static hash_val_t hash_didname(const void *p)
     return hash;
 }
 
-static int hash_comp_didname(const void *k1, const void *k2)
-{
+static int hash_comp_didname(const void *k1, const void *k2) {
     const struct dir *key1 = (const struct dir *)k1;
     const struct dir *key2 = (const struct dir *)k2;
     return !(key1->d_vid == key2->d_vid
@@ -239,8 +235,7 @@ static unsigned long queue_count;
  * 3. Remove the dir from the main cache and the didname index
  * 4. Free the struct dir structure and all its members
  */
-static void dircache_evict(void)
-{
+static void dircache_evict(void) {
     int i = DIRCACHE_FREE_QUANTUM;
     struct dir *dir;
     LOG(log_debug, logtype_afpd, "dircache: {starting cache eviction}");
@@ -295,8 +290,7 @@ static void dircache_evict(void)
  *
  * @returns            Pointer to struct dir if found, else NULL
  */
-struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
-{
+struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid) {
     struct dir *cdir = NULL;
     struct dir key;
     struct stat st;
@@ -363,8 +357,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
 struct dir *dircache_search_by_name(const struct vol *vol,
                                     const struct dir *dir,
                                     char *name,
-                                    int len)
-{
+                                    int len) {
     struct dir *cdir = NULL;
     struct dir key;
     struct stat st;
@@ -429,8 +422,7 @@ struct dir *dircache_search_by_name(const struct vol *vol,
  * @returns 0 on success, -1 on error which should result in an abort
  */
 int dircache_add(const struct vol *vol,
-                 struct dir *dir)
-{
+                 struct dir *dir) {
     struct dir key;
     hnode_t *hn;
     AFP_ASSERT(dir);
@@ -509,8 +501,7 @@ int dircache_add(const struct vol *vol,
   * Callers outside of dircache.c should call this with
   * flags = QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE.
   */
-void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
-{
+void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags) {
     hnode_t *hn;
     AFP_ASSERT(dir);
     AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
@@ -564,8 +555,7 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
  *
  * @return 0 on success, -1 on error
  */
-int dircache_init(int reqsize)
-{
+int dircache_init(int reqsize) {
     dircache_maxsize = DEFAULT_MAX_DIRCACHE_SIZE;
 
     /* Initialize the main dircache */
@@ -615,8 +605,7 @@ int dircache_init(int reqsize)
 /*!
  * Log dircache statistics
  */
-void log_dircache_stat(void)
-{
+void log_dircache_stat(void) {
     LOG(log_info, logtype_afpd,
         "dircache statistics: entries: %lu, lookups: %llu, hits: %llu, misses: %llu, added: %llu, removed: %llu, expunged: %llu, evicted: %llu",
         queue_count,
@@ -632,8 +621,7 @@ void log_dircache_stat(void)
 /*!
  * @brief Dump dircache to /tmp/dircache.PID
  */
-void dircache_dump(void)
-{
+void dircache_dump(void) {
     char tmpnam[MAXPATHLEN + 1];
     FILE *dump;
     qnode_t *n = index_queue->next;

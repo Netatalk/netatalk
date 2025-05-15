@@ -42,8 +42,7 @@
 
 static int
 getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
-             VolSpace *btotal, id_t id, int idtype)
-{
+             VolSpace *btotal, id_t id, int idtype) {
     uid_t prevuid;
     const char *msg;
     struct quotahandle *qh;
@@ -112,8 +111,7 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
 }
 
 int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
-                       VolSpace *btotal, const u_int32_t bsize)
-{
+                       VolSpace *btotal, const u_int32_t bsize) {
     int uret, gret;
     VolSpace ubfree, ubtotal;
     VolSpace gbfree, gbtotal;
@@ -169,8 +167,7 @@ int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
 #define WANT_GROUP_QUOTA 1
 
 #ifdef NEED_QUOTACTL_WRAPPER
-int quotactl(int cmd, const char *special, int id, caddr_t addr)
-{
+int quotactl(int cmd, const char *special, int id, caddr_t addr) {
     return syscall(__NR_quotactl, cmd, special, id, addr);
 }
 #endif /* NEED_QUOTACTL_WRAPPER */
@@ -207,8 +204,7 @@ static int kernel_iface = IFACE_UNSET;
 **  Check kernel quota version
 **  Taken from quota-tools 3.08 by Jan Kara <jack@suse.cz>
 */
-static void linuxquota_get_api(void)
-{
+static void linuxquota_get_api(void) {
 #ifndef LINUX_API_VERSION
     struct stat st;
 
@@ -296,8 +292,7 @@ failure:
 /****************************************************************************/
 
 static int get_linux_quota(int what, char *path, uid_t euser_id,
-                           struct dqblk *dp)
-{
+                           struct dqblk *dp) {
     int r; /* result */
 
     if (is_xfs) {
@@ -314,8 +309,7 @@ static int get_linux_quota(int what, char *path, uid_t euser_id,
 ****************************************************************************/
 
 static int get_linux_xfs_quota(int what, char *path, uid_t euser_id,
-                               struct dqblk *dqb)
-{
+                               struct dqblk *dqb) {
     int ret = -1;
 #ifdef HAVE_LINUX_XQM_H
     struct fs_disk_quota D;
@@ -343,8 +337,7 @@ static int get_linux_xfs_quota(int what, char *path, uid_t euser_id,
 ** Taken from quota-1.4.8 perl module
 */
 static int get_linux_fs_quota(int what, char *path, uid_t euser_id,
-                              struct dqblk *dqb)
-{
+                              struct dqblk *dqb) {
     int ret;
 
     if (kernel_iface == IFACE_UNSET) {
@@ -412,8 +405,7 @@ static int get_linux_fs_quota(int what, char *path, uid_t euser_id,
  * on which "file" resides.  Returns NULL on failure.
  */
 static char *
-mountp(char *file, int *nfs)
-{
+mountp(char *file, int *nfs) {
     struct stat			sb;
     FILE 			*mtab;
     dev_t			devno;
@@ -452,8 +444,7 @@ mountp(char *file, int *nfs)
 #if (defined(HAVE_SYS_MOUNT_H) && !defined(__linux__)) || defined(BSD4_4)
 
 static char *
-special(char *file, int *nfs)
-{
+special(char *file, int *nfs) {
     static struct statfs	sfs;
 
     if (statfs(file, &sfs) < 0) {
@@ -471,8 +462,7 @@ special(char *file, int *nfs)
 #else /* BSD4_4 */
 
 static char *
-special(char *file, int *nfs)
-{
+special(char *file, int *nfs) {
     struct stat		sb;
     FILE 		*mtab;
     dev_t		devno;
@@ -620,8 +610,7 @@ static int getfsquota(const AFPObj *obj, struct vol *vol, const int uid,
 
 
 static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq,
-                    const uint32_t bsize)
-{
+                    const uint32_t bsize) {
     char *p;
 #ifdef __svr4__
     char		buf[MAXPATHLEN + 1];
@@ -670,8 +659,7 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq,
            getfsquota(obj, vol, obj->uid, dq);
 }
 
-static int overquota(struct dqblk *dqblk)
-{
+static int overquota(struct dqblk *dqblk) {
     struct timeval	tv;
 
     if (dqblk->dqb_curblocks > dqblk->dqb_bhardlimit &&
@@ -723,8 +711,7 @@ static int overquota(struct dqblk *dqblk)
 #endif
 
 int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
-                       VolSpace *btotal, const uint32_t bsize)
-{
+                       VolSpace *btotal, const uint32_t bsize) {
     uint64_t this_bsize;
     struct dqblk dqblk;
     this_bsize = bsize;

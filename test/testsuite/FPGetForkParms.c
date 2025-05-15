@@ -6,8 +6,7 @@
 */
 
 /* ------------- */
-static void check_forklen(DSI *dsi, int type, uint32_t  len)
-{
+static void check_forklen(DSI *dsi, int type, uint32_t  len) {
     uint32_t flen;
     flen = get_forklen(dsi, type);
 
@@ -21,8 +20,7 @@ static void check_forklen(DSI *dsi, int type, uint32_t  len)
 }
 
 /* ------------- */
-STATIC void test_21(uint16_t vol, char *name, int type)
-{
+STATIC void test_21(uint16_t vol, char *name, int type) {
     int fork = 0;
     int fork2 = 0;
     uint16_t bitmap = 0;
@@ -86,8 +84,7 @@ fin:
 }
 
 /* -------- */
-STATIC void test21()
-{
+STATIC void test21() {
     uint16_t vol = VolID;
     char *name = "t21 file";
     ENTER_TEST
@@ -107,8 +104,7 @@ test_exit:
 /* --------------------------
 FIXME set resource for size and check
 */
-STATIC void test50()
-{
+STATIC void test50() {
     uint16_t bitmap;
     int fork = 0;
     int fork2 = 0;
@@ -194,8 +190,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test188()
-{
+STATIC void test188() {
     char *name = "t188 illegal fork";
     DSI *dsi;
     dsi = &Conn->dsi;
@@ -205,8 +200,7 @@ STATIC void test188()
 }
 
 /* -------------------------- */
-STATIC void test192()
-{
+STATIC void test192() {
     uint16_t bitmap;
     int fork = 0;
     char *name = "t192 file";
@@ -250,8 +244,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test305()
-{
+STATIC void test305() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t305 file.txt";
@@ -292,8 +285,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetForkParms_test()
-{
+void FPGetForkParms_test() {
     ENTER_TESTSET
     test21();
     test50();

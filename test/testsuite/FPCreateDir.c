@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test6()
-{
+STATIC void test6() {
     int  dir;
     char *name = "test6 dir";
     uint16_t vol = VolID;
@@ -28,8 +27,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test26()
-{
+STATIC void test26() {
     char *name = "test26 dir";
     int pdir;
     uint16_t vol = VolID;
@@ -140,8 +138,7 @@ test_exit:
 }
 
 /* -------------------------- */
-static int create_deleted_folder(uint16_t vol, char *name)
-{
+static int create_deleted_folder(uint16_t vol, char *name) {
     uint16_t vol2;
     int tdir;
     DSI *dsi2;
@@ -173,8 +170,7 @@ static int create_deleted_folder(uint16_t vol, char *name)
 }
 
 /* ----------- */
-STATIC void test175()
-{
+STATIC void test175() {
     char *tname = "test175";
     int tdir, dir;
     uint16_t vol = VolID;
@@ -255,8 +251,7 @@ test_exit:
 }
 
 /* ----------- */
-STATIC void test198()
-{
+STATIC void test198() {
     char *name = "test198 dir";
     char *name1 = "test198 subdir";
     char *name2 = "test198 dir/test198 subdir";
@@ -325,8 +320,7 @@ test_exit:
 }
 
 /* ----------- */
-STATIC void test357()
-{
+STATIC void test357() {
     char *name = "test357 dir";
     int tdir;
     uint16_t vol = VolID;
@@ -397,8 +391,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCreateDir_test()
-{
+void FPCreateDir_test() {
     ENTER_TESTSET
     test6();
     test26();

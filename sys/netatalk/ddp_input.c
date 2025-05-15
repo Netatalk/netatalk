@@ -30,8 +30,7 @@ extern unsigned short	at_cksum();
 /*
  * Could probably merge these two code segments a little better...
  */
-atintr()
-{
+atintr() {
     struct elaphdr	*elhp, elh;
     struct ifnet	*ifp;
     struct mbuf		*m;

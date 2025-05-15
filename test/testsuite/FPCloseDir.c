@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test199()
-{
+STATIC void test199() {
     int dir;
     char *name = "t199 dir";
     uint16_t vol = VolID;
@@ -47,8 +46,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCloseDir_test()
-{
+void FPCloseDir_test() {
     ENTER_TESTSET
     test199();
 }

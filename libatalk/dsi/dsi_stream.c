@@ -40,8 +40,7 @@
 #endif
 
 /* Pack a DSI header in wire format */
-static void dsi_header_pack_reply(const DSI *dsi, char *buf)
-{
+static void dsi_header_pack_reply(const DSI *dsi, char *buf) {
     buf[0] = dsi->header.dsi_flags;
     buf[1] = dsi->header.dsi_command;
     memcpy(buf + 2, &dsi->header.dsi_requestID, sizeof(dsi->header.dsi_requestID));
@@ -59,8 +58,7 @@ static void dsi_header_pack_reply(const DSI *dsi, char *buf)
  *
  * @returns 0 when is possible to send again, -1 on error
  */
-static int dsi_peek(DSI *dsi)
-{
+static int dsi_peek(DSI *dsi) {
     static int warned = 0;
     fd_set readfds, writefds;
     int    len;
@@ -148,8 +146,7 @@ static int dsi_peek(DSI *dsi)
 /*
  * Return all bytes up to count from dsi->buffer if there are any buffered there
  */
-static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
-{
+static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count) {
     size_t nbe = 0;
 
     if (dsi->buffer == NULL)
@@ -185,8 +182,7 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
  *    Note: this may return fewer bytes then requested in count !!
  * 3. If the buffer was empty, read from the socket.
  */
-static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
-{
+static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count) {
     ssize_t len;
     LOG(log_maxdebug, logtype_dsi, "buf_read(%u bytes)", count);
 
@@ -210,8 +206,7 @@ static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
  * this tries to read larger chunks (8192 bytes) into a buffer.
  */
 static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data,
-                                       const size_t length)
-{
+                                       const size_t length) {
     size_t len;
     size_t buflen;
     LOG(log_maxdebug, logtype_dsi, "dsi_buffered_stream_read: %u bytes", length);
@@ -248,15 +243,13 @@ static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data,
 
 /* ---------------------------------------
 */
-static void block_sig(DSI *dsi)
-{
+static void block_sig(DSI *dsi) {
     dsi->in_write++;
 }
 
 /* ---------------------------------------
 */
-static void unblock_sig(DSI *dsi)
-{
+static void unblock_sig(DSI *dsi) {
     dsi->in_write--;
 }
 
@@ -274,8 +267,7 @@ static void unblock_sig(DSI *dsi)
  *          -1 if ppid is 1 which means afpd master died
  *             or euid == 0 i.e. where still running as root (unauthenticated session)
  */
-int dsi_disconnect(DSI *dsi)
-{
+int dsi_disconnect(DSI *dsi) {
     LOG(log_note, logtype_dsi, "dsi_disconnect: entering disconnected state");
     dsi->proto_close(dsi);          /* 1 */
     dsi->flags &= ~(DSI_SLEEPING | DSI_EXTSLEEP); /* 2 */
@@ -292,8 +284,7 @@ int dsi_disconnect(DSI *dsi)
  * write raw data. return actual bytes read. checks against EINTR
  * aren't necessary if all of the signals have SA_RESTART
  * specified. */
-ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
-{
+ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode) {
     size_t written;
     ssize_t len;
     unsigned int flags;
@@ -360,8 +351,7 @@ exit:
 */
 #ifdef WITH_SENDFILE
 ssize_t dsi_stream_read_file(DSI *dsi, const int fromfd, off_t offset,
-                             const size_t length, const int err)
-{
+                             const size_t length, const int err) {
     int ret = 0;
     size_t written = 0;
     size_t total = length;
@@ -520,8 +510,7 @@ exit:
  *
  * @returns length on success, some value smaller then length indicates an error
  */
-size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
-{
+size_t dsi_stream_read(DSI *dsi, void *data, const size_t length) {
     size_t stored;
     ssize_t len;
 
@@ -565,8 +554,7 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
  * write data. 0 on failure. this assumes that dsi_len will never
  * cause an overflow in the data buffer.
  */
-int dsi_stream_send(DSI *dsi, void *buf, size_t length)
-{
+int dsi_stream_send(DSI *dsi, void *buf, size_t length) {
     char block[DSI_BLOCKSIZ];
     struct iovec iov[2];
     int iovecs = 2;
@@ -646,8 +634,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
  *
  * @return    DSI function on success, 0 on failure
  */
-int dsi_stream_receive(DSI *dsi)
-{
+int dsi_stream_receive(DSI *dsi) {
     char block[DSI_BLOCKSIZ];
     LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: START");
 

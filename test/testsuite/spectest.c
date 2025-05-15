@@ -195,8 +195,7 @@ static struct test_fn Test_list[] = {
 
 
 /* =============================== */
-static void press_enter(char *s)
-{
+static void press_enter(char *s) {
     if (!Interactive) {
         return;
     }
@@ -212,8 +211,7 @@ static void press_enter(char *s)
 }
 
 /* =============================== */
-static void list_tests(void)
-{
+static void list_tests(void) {
     int i = 0;
     fprintf(stdout, "Available testsets. Run individually with the -f option.\n");
 
@@ -224,8 +222,7 @@ static void list_tests(void)
 }
 
 /* ----------- */
-static void run_one(char *name)
-{
+static void run_one(char *name) {
     int i = 0;
     void *handle = NULL;
     void (*fn)(void) = NULL;
@@ -293,8 +290,7 @@ static void run_one(char *name)
 }
 
 /* ----------- */
-static void run_all()
-{
+static void run_all() {
     int i = 0;
     dsi = &Conn->dsi;
     press_enter("Opening volume.");
@@ -339,8 +335,7 @@ char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
 
 /* =============================== */
-void usage(char * av0)
-{
+void usage(char * av0) {
     fprintf(stdout,
             "usage:\t%s [-1234567aCiLlmnVvXx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
@@ -377,8 +372,7 @@ void usage(char * av0)
 }
 
 /* ------------------------------- */
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     int cc;
     int ret;
 

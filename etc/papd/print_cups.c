@@ -65,8 +65,7 @@ static int 	cups_mangle_printer_name(struct printer *pr,
 static void     cups_free_printer(struct printer *pr);
 
 
-const char *cups_get_language(void)
-{
+const char *cups_get_language(void) {
     cups_lang_t *language;
     language = cupsLangDefault();           /* needed for conversion */
     const char *curr_encoding = cupsLangEncoding(language);
@@ -79,8 +78,7 @@ const char *cups_get_language(void)
 
 static const char *                            /* O - Password or NULL */
 cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method,
-               const char *resource, void *user_data)      /* I - Prompt */
-{
+               const char *resource, void *user_data) {    /* I - Prompt */
     /*
      * Always return NULL to indicate that no password is available...
      */
@@ -93,8 +91,7 @@ cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method,
  */
 
 int                                     /* O - 1 if printer name OK */
-cups_printername_ok(char *name)         /* I - Name of printer */
-{
+cups_printername_ok(char *name) {       /* I - Name of printer */
     http_t          *http;          /* HTTP connection to server */
     cups_dest_t	*dest = NULL;	/* Destination */
     ipp_t           *request,       /* IPP Request */
@@ -126,8 +123,7 @@ cups_printername_ok(char *name)         /* I - Name of printer */
 }
 
 const char *
-cups_get_printer_ppd(char * name)
-{
+cups_get_printer_ppd(char * name) {
     http_t		*http;		/* Connection to destination */
     cups_dest_t	*dest = NULL;	/* Destination */
     cups_dest_t	*dests;		/* Destination List */
@@ -314,8 +310,7 @@ cups_get_printer_ppd(char * name)
 }
 
 int
-cups_get_printer_status(struct printer *pr)
-{
+cups_get_printer_status(struct printer *pr) {
     http_t 	*http;          /* HTTP connection to server */
     cups_dest_t 	*dest = NULL;	/* Destination */
     int 		status = -1;
@@ -476,8 +471,7 @@ cups_get_printer_status(struct printer *pr)
 /* pass the job to cups */
 
 int cups_print_job(char * name, const char *filename, char *job, char *username,
-                   char *cupsoptions)
-{
+                   char *cupsoptions) {
     http_t          *http;          /* HTTP connection to server */
     cups_dest_t	*dest = NULL;	/* Destination */
     cups_dinfo_t 	*info = NULL;
@@ -579,8 +573,7 @@ int cups_print_job(char * name, const char *filename, char *job, char *username,
 /*------------------------------------------------------------------------*/
 
 struct printer	*
-cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
-{
+cups_autoadd_printers(struct printer	*defprinter, struct printer *printers) {
     struct printer 	*pr;
     int         	num_dests, i;
     int 	    	ret;
@@ -665,8 +658,7 @@ cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
  */
 
 static int cups_mangle_printer_name(struct printer *pr,
-                                    struct printer *printers)
-{
+                                    struct printer *printers) {
     size_t 	count, name_len;
     char	name[MAXCHOOSERLEN];
     count = 1;
@@ -694,8 +686,7 @@ static int cups_mangle_printer_name(struct printer *pr,
 /* fallback ASCII conversion */
 
 static size_t
-to_ascii(char  *inptr, char **outptr)
-{
+to_ascii(char  *inptr, char **outptr) {
     char *out, *osav;
 
     if (NULL == (out = (char *) malloc(strlen(inptr) + 1))) {
@@ -731,8 +722,7 @@ to_ascii(char  *inptr, char **outptr)
  */
 
 static int convert_to_mac_name(const char * encoding, char * inptr,
-                               char *outptr, size_t outlen)
-{
+                               char *outptr, size_t outlen) {
     char   	*outbuf;
     char	*soptr;
     size_t 	name_len = 0;
@@ -782,8 +772,7 @@ static int convert_to_mac_name(const char * encoding, char * inptr,
  */
 
 int cups_check_printer(struct printer *pr, struct printer *printers,
-                       int replace)
-{
+                       int replace) {
     struct printer *listptr, *listprev;
     listptr = printers;
     listprev = NULL;
@@ -830,8 +819,7 @@ int cups_check_printer(struct printer *pr, struct printer *printers,
 
 
 void
-cups_free_printer(struct printer *pr)
-{
+cups_free_printer(struct printer *pr) {
     if (pr->p_name != NULL) {
         free(pr->p_name);
     }

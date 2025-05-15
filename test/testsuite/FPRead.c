@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* --------------------------------- */
-static int is_there(CONN *conn, int did, char *name)
-{
+static int is_there(CONN *conn, int did, char *name) {
     uint16_t vol = VolID;
     return FPGetFileDirParams(conn, vol, did, name,
                               (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
@@ -14,8 +13,7 @@ static int is_there(CONN *conn, int did, char *name)
 }
 
 /* ------------------------- */
-STATIC void test5()
-{
+STATIC void test5() {
     uint16_t bitmap = 0;
     int fork, fork1;
     char *name = "t5 file.txt";
@@ -135,8 +133,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test46()
-{
+STATIC void test46() {
     uint16_t bitmap = 0;
     int fork, fork1;
     char *name = "t46 file.txt";
@@ -254,8 +251,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test59()
-{
+STATIC void test59() {
     int fork;
     uint16_t bitmap = 0;
     char *name = "test59 FPRead,FPWrite 2GB lim";
@@ -295,8 +291,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test61()
-{
+STATIC void test61() {
     int fork;
     uint16_t bitmap = 0;
     char *name = "test61 FPRead, FPWrite error";
@@ -372,8 +367,7 @@ extern int  Proto;
 static volatile int sigp = 0;
 static int sock = -1;
 
-static void alarm_handler()
-{
+static void alarm_handler() {
     sigp = 1;
 
     if (sock != -1) {
@@ -382,8 +376,7 @@ static void alarm_handler()
 }
 
 /* -------------------------- */
-static void write_test(int size)
-{
+static void write_test(int size) {
     int fork = 0, fork1 = 0;
     uint16_t bitmap = 0;
     char *name = "t309 FPRead,FPWrite deadlock";
@@ -575,24 +568,21 @@ fin:
 }
 
 /* -------------------------- */
-STATIC void test309()
-{
+STATIC void test309() {
     ENTER_TEST
     write_test(1024);
     exit_test("FPRead:test309: FPRead, FPWrite deadlock");
 }
 
 /* -------------------------- */
-STATIC void test327()
-{
+STATIC void test327() {
     ENTER_TEST
     write_test(128 * 1024);
     exit_test("FPRead:test327: FPRead, FPWrite deadlock");
 }
 
 /* ------------------------- */
-void test328()
-{
+void test328() {
     char *ndir;
     int dir;
     int i;
@@ -782,8 +772,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test343()
-{
+STATIC void test343() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t343 file.txt";
@@ -835,8 +824,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test344()
-{
+STATIC void test344() {
     uint16_t bitmap = 0;
     int fork = 0;
     int fork1;
@@ -911,8 +899,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test8()
-{
+STATIC void test8() {
     uint16_t bitmap = 0;
     int dfork = 0, rfork = 0;
     char *name1 = "t8 file1.txt";
@@ -1022,8 +1009,7 @@ test_exit:
 
 
 /* ----------- */
-void FPRead_test()
-{
+void FPRead_test() {
     ENTER_TESTSET
     test5();
     test8();

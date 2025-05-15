@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test206()
-{
+STATIC void test206() {
     uint16_t bitmap;
     uint16_t vol = VolID;
     struct afp_volume_parms parms;
@@ -63,8 +62,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSetVolParms_test()
-{
+void FPSetVolParms_test() {
     ENTER_TESTSET
     test206();
 }

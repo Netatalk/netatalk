@@ -2,8 +2,7 @@
 #include "adoublehelper.h"
 
 /* ------------------------- */
-STATIC void test109()
-{
+STATIC void test109() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t109 file.txt";
@@ -135,8 +134,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPRead_test()
-{
+void T2FPRead_test() {
     ENTER_TESTSET
     test109();
 }

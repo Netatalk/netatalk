@@ -117,8 +117,7 @@ static char *Dir_heap[MAXVOL][MAXDIR];
 static char *Vol_heap[MAXVOL];
 
 /* -------------- */
-uint16_t local_openvol(CONN *conn, char *vol)
-{
+uint16_t local_openvol(CONN *conn, char *vol) {
     uint16_t i;
     int fd;
 
@@ -151,8 +150,7 @@ uint16_t local_openvol(CONN *conn, char *vol)
 }
 
 /* ------------------------------- */
-unsigned int local_closevol(CONN *conn, uint16_t vol)
-{
+unsigned int local_closevol(CONN *conn, uint16_t vol) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "Close Vol %d\n\n", vol);
@@ -163,8 +161,7 @@ unsigned int local_closevol(CONN *conn, uint16_t vol)
 
 /* ------------- */
 static char temp[MAXPATHLEN + 1];
-static int local_chdir(uint16_t vol, int did)
-{
+static int local_chdir(uint16_t vol, int did) {
     if (vol > MAXVOL || did > MAXDIR) {
         return -1;
     }
@@ -181,8 +178,7 @@ static int local_chdir(uint16_t vol, int did)
 }
 
 /* ------------- */
-unsigned int local_createdir(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int local_createdir(CONN *conn, uint16_t vol, int did, char *name) {
     unsigned int i;
     int dirfd;
 
@@ -231,8 +227,7 @@ unsigned int local_createdir(CONN *conn, uint16_t vol, int did, char *name)
 
 /* -------------- */
 unsigned int local_getfiledirparams(CONN *conn, uint16_t vol, int did,
-                                    char *name, uint16_t f_bitmap, uint16_t d_bitmap)
-{
+                                    char *name, uint16_t f_bitmap, uint16_t d_bitmap) {
     struct stat st;
     did = ntohl(did);
 
@@ -250,8 +245,7 @@ unsigned int local_getfiledirparams(CONN *conn, uint16_t vol, int did,
 }
 
 /* ------------- */
-unsigned int local_delete(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int local_delete(CONN *conn, uint16_t vol, int did, char *name) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "FPDelete Vol %d did : 0x%x <%s>\n\n", vol, ntohl(did), name);
@@ -276,8 +270,7 @@ unsigned int local_delete(CONN *conn, uint16_t vol, int did, char *name)
 
 /* ------------------------- */
 unsigned int local_createfile(CONN *conn, uint16_t vol, char type, int did,
-                              char *name)
-{
+                              char *name) {
     int fd;
 
     if (!Quiet) {
@@ -309,8 +302,7 @@ unsigned int local_createfile(CONN *conn, uint16_t vol, char type, int did,
 #endif
 
 uint16_t local_openfork(CONN *conn, uint16_t vol, int type, uint16_t bitmap,
-                        int did, char *name, int access)
-{
+                        int did, char *name, int access) {
     int fd;
     int flags = O_RDWR;
 
@@ -343,8 +335,7 @@ uint16_t local_openfork(CONN *conn, uint16_t vol, int type, uint16_t bitmap,
 
 /* ------------------------------- */
 unsigned int local_writeheader(DSI *dsi, uint16_t fork, int offset, int size,
-                               char *data, char whence)
-{
+                               char *data, char whence) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "send write header fork %d  offset %d size %d from 0x%x\n\n",
@@ -364,8 +355,7 @@ unsigned int local_writeheader(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int local_writefooter(DSI *dsi, uint16_t fork, int offset, int size,
-                               char *data, char whence)
-{
+                               char *data, char whence) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "get write footer fork %d  offset %d size %d from 0x%x\n\n",
@@ -376,8 +366,7 @@ unsigned int local_writefooter(DSI *dsi, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int local_flushfork(CONN *conn, uint16_t fork)
-{
+unsigned int local_flushfork(CONN *conn, uint16_t fork) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "Flush fork %d\n\n", fork);
@@ -391,8 +380,7 @@ unsigned int local_flushfork(CONN *conn, uint16_t fork)
 }
 
 /* ------------------------------- */
-unsigned int local_closefork(CONN *conn, uint16_t fork)
-{
+unsigned int local_closefork(CONN *conn, uint16_t fork) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "Close Fork %d\n\n", fork);
@@ -407,8 +395,7 @@ unsigned int local_closefork(CONN *conn, uint16_t fork)
 
 /* ------------------------------- */
 unsigned int local_setforkparam(CONN *conn, uint16_t fork,  uint16_t bitmap,
-                                off_t size)
-{
+                                off_t size) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "Set Fork param fork %d bitmap 0x%x size %ld\n\n", fork, bitmap,
@@ -424,8 +411,7 @@ unsigned int local_setforkparam(CONN *conn, uint16_t fork,  uint16_t bitmap,
 
 /* ------------------------------- */
 unsigned int local_write(CONN *conn, uint16_t fork, long long offset, int size,
-                         char *data, char whence)
-{
+                         char *data, char whence) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "write fork %d  offset %lld size %d from 0x%x\n\n", fork,
@@ -445,8 +431,7 @@ unsigned int local_write(CONN *conn, uint16_t fork, long long offset, int size,
 
 /* ------------------------------- */
 unsigned int local_read(CONN *conn, uint16_t fork, long long offset, int size,
-                        char *data)
-{
+                        char *data) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "read fork %d  offset %lld size %d\n\n", fork, offset, size);
@@ -465,8 +450,7 @@ unsigned int local_read(CONN *conn, uint16_t fork, long long offset, int size,
 
 /* ------------------------------- */
 unsigned int local_readheader(DSI *dsi, uint16_t fork, int offset, int size,
-                              char *data)
-{
+                              char *data) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "send read header fork %d  offset %d size %d\n\n", fork, offset,
@@ -478,8 +462,7 @@ unsigned int local_readheader(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int local_readfooter(DSI *dsi, uint16_t fork, int offset, int size,
-                              char *data)
-{
+                              char *data) {
     if (!Quiet) {
         fprintf(stdout, "---------------------\n");
         fprintf(stdout, "get read reply fork %d  offset %d size %d\n\n", fork, offset,
@@ -499,8 +482,7 @@ unsigned int local_readfooter(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int local_copyfile(struct CONN *conn, uint16_t svol, int sdid,
-                            uint16_t dvol, int ddid, char *src, char *buf, char *dst)
-{
+                            uint16_t dvol, int ddid, char *src, char *buf, char *dst) {
     return ntohl(AFPERR_PARAM);
 }
 
@@ -527,8 +509,7 @@ struct vfs local_VFS = {
 
 
 /* =============================== */
-static void press_enter(char *s)
-{
+static void press_enter(char *s) {
     if (!Interactive) {
         return;
     }
@@ -544,8 +525,7 @@ static void press_enter(char *s)
 }
 
 /* --------------------------------- */
-int is_there(CONN *conn, uint16_t vol, int did, char *name)
-{
+int is_there(CONN *conn, uint16_t vol, int did, char *name) {
     return VFS.getfiledirparams(conn, vol, did, name,
                                 (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
                                 ,
@@ -554,8 +534,7 @@ int is_there(CONN *conn, uint16_t vol, int did, char *name)
 }
 
 /* ------------------ */
-unsigned long long delta(void)
-{
+unsigned long long delta(void) {
     unsigned long long s, e;
     s  = Timer_start.tv_sec;
     s *= 1000000;
@@ -567,14 +546,12 @@ unsigned long long delta(void)
 }
 
 /* ------------------ */
-static void header(void)
-{
+static void header(void) {
     fprintf(stdout, "run\t microsec\t  KB/s\n");
 }
 
 /* ------------------ */
-static void timer_footer(void)
-{
+static void timer_footer(void) {
     unsigned long long d;
     gettimeofday(&Timer_end, NULL);
     d = delta();
@@ -583,8 +560,7 @@ static void timer_footer(void)
 }
 
 /* ------------------ */
-void Write(void)
-{
+void Write(void) {
     int dir = 0;
     int fork = 0;
     int id = getpid();
@@ -725,8 +701,7 @@ fin:
 }
 
 /* ------------------------ */
-int init_fork(int fork)
-{
+int init_fork(int fork) {
     off_t  written;
     off_t  offset;
     size_t nbe;
@@ -765,8 +740,7 @@ int init_fork(int fork)
 }
 
 /* ------------------ */
-static int getfd(CONN *conn, int fork)
-{
+static int getfd(CONN *conn, int fork) {
     DSI *dsi;
 
     if (Local) {
@@ -779,8 +753,7 @@ static int getfd(CONN *conn, int fork)
 
 #if 0
 /* ------------------ */
-static int blocking_mode(CONN *conn, int fork, const int mode)
-{
+static int blocking_mode(CONN *conn, int fork, const int mode) {
     DSI *dsi;
     int adr = mode;
     int ret;
@@ -801,8 +774,7 @@ static int blocking_mode(CONN *conn, int fork, const int mode)
 #endif
 
 /* ------------------ */
-void Copy(void)
-{
+void Copy(void) {
     int dir = 0;
     int dir2 = 0;
     int fork = 0;
@@ -1072,8 +1044,7 @@ fin:
 }
 
 /* ------------------ */
-void ServerCopy(void)
-{
+void ServerCopy(void) {
     int dir = 0;
     int dir2 = 0;
     int fork = 0;
@@ -1190,8 +1161,7 @@ fin:
 }
 
 /* ------------------ */
-void Read(void)
-{
+void Read(void) {
     int dir = 0;
     int fork = 0;
     int id = getpid();
@@ -1352,8 +1322,7 @@ fin:
 
 #define BROKEN_DL
 #ifdef BROKEN_DL
-int test_to_run(char *s)
-{
+int test_to_run(char *s) {
     if (!strcmp("Write", s)) {
         return 0;
     }
@@ -1375,8 +1344,7 @@ int test_to_run(char *s)
 #endif
 
 /* ----------- */
-static void run_one(char *name)
-{
+static void run_one(char *name) {
     char *token;
     char *tp = strdup(name);
 #ifdef BROKEN_DL
@@ -1521,8 +1489,7 @@ static void run_one(char *name)
 }
 
 /* =============================== */
-void usage(char * av0)
-{
+void usage(char * av0) {
     fprintf(stdout,
             "usage:\t%s [-1234567aeLnVvy] [-h host] [-p port] [-s vol] [-S vol2] [-u user] [-w password] [-n iterations] "
             "[-d size] [-q quantum] [-f test] [-F file] \n", av0);
@@ -1562,8 +1529,7 @@ void usage(char * av0)
 }
 
 /* ------------------------------- */
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     int cc;
 
     if (ac == 1) {

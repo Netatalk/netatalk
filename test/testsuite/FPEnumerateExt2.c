@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test25()
-{
+STATIC void test25() {
     char *name = "t25 dir";
     char *name1 = "t25 subdir";
     char *name2 = "t25 file";
@@ -65,8 +64,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test211()
-{
+STATIC void test211() {
     char *name = "t211 dir";
     char *name1 = "t211 subdir";
     char *name2 = "t211 file";
@@ -132,8 +130,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPEnumerateExt2_test()
-{
+void FPEnumerateExt2_test() {
     ENTER_TESTSET
     test25();
     test211();

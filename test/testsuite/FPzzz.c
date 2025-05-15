@@ -10,14 +10,12 @@ extern char *uam;
 
 static volatile int sigp = 0;
 
-static void pipe_handler()
-{
+static void pipe_handler() {
     sigp = 1;
 }
 
 /* ------------------------- */
-STATIC void test223()
-{
+STATIC void test223() {
     char *name = "t223 file";
     uint16_t vol = VolID;
     unsigned int ret;
@@ -109,8 +107,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test224()
-{
+STATIC void test224() {
     char *name = "t224 file";
     uint16_t vol = VolID;
     unsigned int ret;
@@ -200,8 +197,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test239()
-{
+STATIC void test239() {
     char *name = "t239 file";
     uint16_t vol = VolID;
     unsigned int ret;
@@ -253,8 +249,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPzzz_test()
-{
+void FPzzz_test() {
     ENTER_TESTSET
     test223();
     test224();

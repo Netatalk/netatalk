@@ -57,8 +57,7 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
 static int asp_start(AFPObj* obj, server_child_t* server_children);
 static void asp_cleanup(const AFPObj* obj);
 
-static void afp_exit(int ret)
-{
+static void afp_exit(int ret) {
     exit(ret);
 }
 
@@ -67,8 +66,7 @@ static void afp_exit(int ret)
    initialize fd set we are waiting for.
 */
 static bool init_listening_sockets(const AFPObj *dsiconfig,
-                                   const AFPObj *aspconfig)
-{
+                                   const AFPObj *aspconfig) {
     DSI *dsi;
     int numlisteners;
 
@@ -100,8 +98,7 @@ static bool init_listening_sockets(const AFPObj *dsiconfig,
 }
 
 static bool reset_listening_sockets(const AFPObj *dsiconfig,
-                                    const AFPObj *aspconfig)
-{
+                                    const AFPObj *aspconfig) {
     const DSI *dsi;
 
     for (dsi = dsiconfig->dsi; dsi; dsi = dsi->next) {
@@ -124,8 +121,7 @@ static bool reset_listening_sockets(const AFPObj *dsiconfig,
 }
 
 /* ------------------ */
-static void afp_goaway(int sig)
-{
+static void afp_goaway(int sig) {
 #ifndef NO_DDP
     asp_kill(sig);
 #endif /* ! NO_DDP */
@@ -177,8 +173,7 @@ static void afp_goaway(int sig)
     return;
 }
 
-static void child_handler(void)
-{
+static void child_handler(void) {
     int fd;
     int status;
     pid_t pid;
@@ -214,8 +209,7 @@ static void child_handler(void)
     }
 }
 
-static int setlimits(void)
-{
+static int setlimits(void) {
     struct rlimit rlim;
 
     if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
@@ -241,8 +235,7 @@ static int setlimits(void)
     return 0;
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     struct sigaction	sv;
     sigset_t            sigs;
     int                 ret;
@@ -572,8 +565,7 @@ int main(int ac, char **av)
 }
 
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
-                              server_child_t *server_children)
-{
+                              server_child_t *server_children) {
     afp_child_t *child = NULL;
 
     if (dsi_getsession(dsi, server_children, obj->options.tickleval, &child) != 0) {
@@ -591,8 +583,7 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
     return child;
 }
 #ifndef NO_DDP
-static int asp_start(AFPObj* obj, server_child_t *server_children)
-{
+static int asp_start(AFPObj* obj, server_child_t *server_children) {
     ASP asp;
 
     if (!(asp = asp_getsession(obj->handle, server_children,
@@ -608,8 +599,7 @@ static int asp_start(AFPObj* obj, server_child_t *server_children)
 
     return 0;
 }
-static void asp_cleanup(const AFPObj* obj)
-{
+static void asp_cleanup(const AFPObj* obj) {
     /* we need to stop tickle handler */
     asp_stop_tickle();
     nbp_unrgstr(obj->Obj, obj->Type, obj->Zone,

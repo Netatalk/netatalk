@@ -4,8 +4,7 @@
 #include <inttypes.h>
 
 /* ------------------------- */
-STATIC void test398()
-{
+STATIC void test398() {
     uint16_t vol = VolID;
     DSI *dsi;
     char *file = "test398_file";
@@ -42,8 +41,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetACL_test()
-{
+void FPGetACL_test() {
     ENTER_TESTSET
     test398();
 }

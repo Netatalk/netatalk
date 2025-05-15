@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test76()
-{
+STATIC void test76() {
     int  dir;
     char *name = "t76 Resolve ID file";
     char *name1 = "t76 Resolve ID dir";
@@ -46,8 +45,7 @@ test_exit:
 
 /* -------------------------
 */
-STATIC void test91()
-{
+STATIC void test91() {
     int  dir;
     int  dir1;
     char *name = "t91 test ID file";
@@ -116,8 +114,7 @@ test_exit:
 
 /* -------------------------
 */
-STATIC void test310()
-{
+STATIC void test310() {
     int  dir;
     char *name = "t310 test ID file";
     char *name1 = "t310 new name";
@@ -156,8 +153,7 @@ test_exit:
 
 /* -------------------------
 */
-STATIC void test311()
-{
+STATIC void test311() {
     int  dir;
     char *name =  "t311-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94#113F.mp3";
     char *name1 = "t311-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94#11.mp3";
@@ -200,8 +196,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test362()
-{
+STATIC void test362() {
     int  dir;
     uint16_t vol = VolID;
     char *name = "t362 Resolve ID file";
@@ -258,8 +253,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test417()
-{
+STATIC void test417() {
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t417 file";
@@ -323,8 +317,7 @@ test_exit:
 
 
 /* ----------- */
-void FPResolveID_test()
-{
+void FPResolveID_test() {
     ENTER_TESTSET
     test76();
     test91();

@@ -56,8 +56,7 @@ static char emptydirad[32] = {0, 0, 0, 0, 0, 0, 0, 0,
                              };
 
 static int ad_conv_v22ea_hf(const char *path, const struct stat *sp,
-                            const struct vol *vol)
-{
+                            const struct vol *vol) {
     EC_INIT;
     struct adouble adv2;
     struct adouble adea;
@@ -150,8 +149,7 @@ EC_CLEANUP:
 }
 
 static int ad_conv_v22ea_rf(const char *path, const struct stat *sp,
-                            const struct vol *vol)
-{
+                            const struct vol *vol) {
     EC_INIT;
     struct adouble adv2;
     struct adouble adea;
@@ -207,8 +205,7 @@ EC_CLEANUP:
 }
 
 static int ad_conv_v22ea(const char *path, const struct stat *sp,
-                         const struct vol *vol)
-{
+                         const struct vol *vol) {
     EC_INIT;
     const char *adpath;
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
@@ -242,8 +239,7 @@ EC_CLEANUP:
  * Remove hexencoded dots and slashes (":2e" and ":2f")
  */
 static int ad_conv_dehex(const char *path, const struct stat *sp,
-                         const struct vol *vol, const char **newpathp)
-{
+                         const struct vol *vol, const char **newpathp) {
     EC_INIT;
     static char buf[MAXPATHLEN];
     int adflags = S_ISDIR(sp->st_mode) ? ADFLAGS_DIR : 0;
@@ -319,8 +315,7 @@ EC_CLEANUP:
  *                  otherwise newpath points to a static string with the converted name
  */
 int ad_convert(const char *path, const struct stat *sp, const struct vol *vol,
-               const char **newpath)
-{
+               const char **newpath) {
     EC_INIT;
     const char *p;
     LOG(log_debug, logtype_ad, "ad_convert(\"%s\"): BEGIN", fullpathname(path));

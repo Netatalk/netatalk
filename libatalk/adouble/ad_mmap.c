@@ -19,16 +19,14 @@
 
 static void *ad_mmap(const size_t length, const int prot,
                      const int flags, const int fd,
-                     const off_t offset)
-{
+                     const off_t offset) {
     return mmap(0, length, prot, flags, fd, offset);
 }
 
 /* this just sets things up for mmap. as mmap can handle offsets,
  * we need to reset the file position before handing it off */
 void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
-                  const off_t off, const size_t buflen)
-{
+                  const off_t off, const size_t buflen) {
     /* data fork */
     if (eid == ADEID_DFORK) {
         if (lseek(ad->ad_df.adf_fd, 0, SEEK_SET) < 0) {
@@ -57,8 +55,7 @@ void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
  * the file to be mapped is large enough. that's what all the initial
  * mess is for. */
 void *ad_mmapwrite(struct adouble *ad, const u_int32_t eid,
-                   off_t off, const int end, const size_t buflen)
-{
+                   off_t off, const int end, const size_t buflen) {
     struct stat st;
 
     /* data fork */

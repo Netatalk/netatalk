@@ -39,8 +39,7 @@
 
 extern int debug;
 
-void rtmp_delzonemap(struct rtmptab *rtmp)
-{
+void rtmp_delzonemap(struct rtmptab *rtmp) {
     struct list		*lz;
     struct list		*flz;
     struct list		*lr;
@@ -103,8 +102,7 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
 /*
  * Complete configuration for phase 1 interface using RTMP information.
  */
-static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
-{
+static int rtmp_config(struct rtmp_head *rh, struct interface *iface) {
     extern int		stabletimer;
     int cc;
 
@@ -167,8 +165,7 @@ static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
  * Delete rtmp from the per-interface in-use table, remove all
  * zone references, and remove the route from the kernel.
  */
-static void rtmp_delinuse(struct rtmptab *rtmp)
-{
+static void rtmp_delinuse(struct rtmptab *rtmp) {
     struct rtmptab	*irt;
 
     if (rtmp == NULL) {
@@ -222,8 +219,7 @@ static void rtmp_delinuse(struct rtmptab *rtmp)
 /*
  * Add rtmp to the per-interface in-use table.  No verification is done...
  */
-static void rtmp_addinuse(struct rtmptab *rtmp)
-{
+static void rtmp_addinuse(struct rtmptab *rtmp) {
     struct rtmptab	*irt;
 
     if (rtmp == NULL) {
@@ -270,8 +266,7 @@ static void rtmp_addinuse(struct rtmptab *rtmp)
  * at this point?  What do we do if we get several copies of a route in
  * an RTMP packet?
  */
-static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
-{
+static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from) {
     struct list		*lz, *lr;
 
     if (to == NULL) {
@@ -323,8 +318,7 @@ static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
  * Remove rtmp from the in-use table and the per-gate table.
  * Free any associated space.
  */
-void rtmp_free(struct rtmptab *rtmp)
-{
+void rtmp_free(struct rtmptab *rtmp) {
     struct gate		*gate;
     LOG(log_info, logtype_atalkd, "rtmp_free: %u-%u", ntohs(rtmp->rt_firstnet),
         ntohs(rtmp->rt_lastnet));
@@ -361,8 +355,7 @@ void rtmp_free(struct rtmptab *rtmp)
  * Find a replacement for "replace".  If we can't find a replacement,
  * return 1.  If we do find a replacement, return 0. -1 on error.
  */
-int rtmp_replace(struct rtmptab *replace)
-{
+int rtmp_replace(struct rtmptab *replace) {
     struct interface	*iface;
     struct gate		*gate;
     struct rtmptab	*rtmp, *found = NULL;
@@ -431,8 +424,7 @@ int rtmp_replace(struct rtmptab *replace)
 }
 
 
-static int rtmp_new(struct rtmptab *rtmp)
-{
+static int rtmp_new(struct rtmptab *rtmp) {
     struct interface	*i;
     struct rtmptab	*r;
     extern int		newrtmpdata;
@@ -499,8 +491,7 @@ static int rtmp_new(struct rtmptab *rtmp)
 
 
 int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
-                int len)
-{
+                int len) {
     struct rtmp_head	rh;
     struct rtmp_tuple	rt;
     struct rtmp_tuple	xrt = { 0 };
@@ -951,8 +942,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
     return 0;
 }
 
-int rtmp_request(struct interface *iface)
-{
+int rtmp_request(struct interface *iface) {
     struct sockaddr_at	sat;
     struct atport	*ap;
     char		*data, packet[2];
@@ -994,8 +984,7 @@ int rtmp_request(struct interface *iface)
 }
 
 
-int looproute(struct interface *iface, unsigned int cmd)
-{
+int looproute(struct interface *iface, unsigned int cmd) {
     struct sockaddr_at	dst, loop;
 
     if (cmd == RTMP_DEL && (iface->i_flags & IFACE_LOOP) == 0) {
@@ -1053,8 +1042,7 @@ int looproute(struct interface *iface, unsigned int cmd)
     return 0;
 }
 
-int gateroute(unsigned int command, struct rtmptab *rtmp)
-{
+int gateroute(unsigned int command, struct rtmptab *rtmp) {
     struct sockaddr_at	dst, gate;
     unsigned short	net;
 
@@ -1142,8 +1130,7 @@ int gateroute(unsigned int command, struct rtmptab *rtmp)
 }
 
 struct rtmptab *
-newrt(const struct interface *iface)
-{
+newrt(const struct interface *iface) {
     struct rtmptab	*rtmp;
 
     if ((rtmp = (struct rtmptab *)calloc(1, sizeof(struct rtmptab))) == NULL) {

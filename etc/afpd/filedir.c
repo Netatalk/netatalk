@@ -38,8 +38,7 @@
 #include "volume.h"
 
 int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                        char *rbuf, size_t *rbuflen)
-{
+                        char *rbuf, size_t *rbuflen) {
     struct stat     *st;
     struct vol      *vol;
     struct dir      *dir;
@@ -141,8 +140,7 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 }
 
 int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
-                        char *rbuf _U_, size_t *rbuflen)
-{
+                        char *rbuf _U_, size_t *rbuflen) {
     struct stat *st;
     struct vol  *vol;
     struct dir  *dir;
@@ -215,8 +213,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 /* --------------------------------------------
    Factorise some checks on a pathname
 */
-int check_name(const struct vol *vol, char *name)
-{
+int check_name(const struct vol *vol, char *name) {
     if (!vol->vfs->vfs_validupath(vol, name)) {
         LOG(log_warning, logtype_afpd, "check_name: illegal name: '%s'", name);
         return AFPERR_EXIST;
@@ -240,8 +237,7 @@ static int moveandrename(const AFPObj *obj,
                          int sdir_fd,
                          char *oldname,
                          char *newname,
-                         int isdir)
-{
+                         int isdir) {
     char            *oldunixname = NULL;
     char            *upath;
     int             rc;
@@ -440,8 +436,7 @@ exit:
 
 /* -------------------------------------------- */
 int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-               size_t *rbuflen)
-{
+               size_t *rbuflen) {
     struct vol  *vol;
     struct dir  *sdir;
     char        *oldname, *newname;
@@ -532,8 +527,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  * @returns 0 if the directory upath and all of its contents were deleted, otherwise -1.
  *            If the volume option is not set it returns -1.
  */
-int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
-{
+int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir) {
     EC_INIT;
     DIR            *dp = NULL;
     struct dirent  *de;
@@ -608,8 +602,7 @@ EC_CLEANUP:
 
 /* ------------------------------- */
 int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-               size_t *rbuflen)
-{
+               size_t *rbuflen) {
     struct vol  *vol;
     struct dir  *dir;
     struct path *s_path;
@@ -744,8 +737,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return rc;
 }
 /* ------------------------ */
-char *absupath(const struct vol *vol, struct dir *dir, char *u)
-{
+char *absupath(const struct vol *vol, struct dir *dir, char *u) {
     static char pathbuf[MAXPATHLEN + 1];
     bstring path;
 
@@ -776,8 +768,7 @@ char *absupath(const struct vol *vol, struct dir *dir, char *u)
     return pathbuf;
 }
 
-char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
-{
+char *ctoupath(const struct vol *vol, struct dir *dir, char *name) {
     if (vol == NULL || dir == NULL || name == NULL) {
         return NULL;
     }
@@ -788,8 +779,7 @@ char *ctoupath(const struct vol *vol, struct dir *dir, char *name)
 
 /* ------------------------- */
 int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
-                      char *rbuf _U_, size_t *rbuflen)
-{
+                      char *rbuf _U_, size_t *rbuflen) {
     struct vol  *vol;
     struct dir  *sdir, *ddir;
     int         isdir;

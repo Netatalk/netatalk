@@ -49,14 +49,12 @@ static bstring dbpath;
 static struct db_param *dbp;
 static struct vol *vol;
 
-static void sig_exit(int signo)
-{
+static void sig_exit(int signo) {
     exit_sig = signo;
     return;
 }
 
-static void block_sigs_onoff(int block)
-{
+static void block_sigs_onoff(int block) {
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGINT);
@@ -99,8 +97,7 @@ static void block_sigs_onoff(int block)
  *                     LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
  *                     success, 0 if the lock couldn't be acquired, -1 on other errors
  */
-static int get_lock(int cmd, const char *dbpath)
-{
+static int get_lock(int cmd, const char *dbpath) {
     static int lockfd = -1;
     int ret;
     char lockpath[PATH_MAX];
@@ -189,8 +186,7 @@ static int get_lock(int cmd, const char *dbpath)
     return -1;
 }
 
-static int open_db(void)
-{
+static int open_db(void) {
     EC_INIT;
 
     /* Get db lock */
@@ -227,8 +223,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int delete_db(void)
-{
+static int delete_db(void) {
     EC_INIT;
     int cwd = -1;
     EC_ZERO(get_lock(LOCK_FREE, bdata(dbpath)));
@@ -270,8 +265,7 @@ EC_CLEANUP:
  * Also tries to copy the rootinfo key, that would allow for keeping the db stamp
  * and last used CNID
  **/
-static int reinit_db(void)
-{
+static int reinit_db(void) {
     EC_INIT;
     DBT key, data;
     bool copyRootInfo = false;
@@ -312,8 +306,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int loop(struct db_param *dbp)
-{
+static int loop(struct db_param *dbp) {
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
     time_t timeout;
@@ -484,8 +477,7 @@ static int loop(struct db_param *dbp)
 }
 
 /* ------------------------ */
-static void switch_to_user(char *dir)
-{
+static void switch_to_user(char *dir) {
     struct stat st;
 
     if (dir == NULL) {
@@ -520,8 +512,7 @@ static void switch_to_user(char *dir)
 
 
 /* ----------------------- */
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_exit;
     sv.sa_flags = 0;
@@ -543,8 +534,7 @@ static void set_signal(void)
     }
 }
 
-static uid_t uid_from_name(const char *name)
-{
+static uid_t uid_from_name(const char *name) {
     struct passwd *pwd;
     pwd = getpwnam(name);
 
@@ -556,8 +546,7 @@ static uid_t uid_from_name(const char *name)
 }
 
 /* ------------------------ */
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     EC_INIT;
     int ctrlfd = -1, clntfd = -1;
     AFPObj obj = { 0 };

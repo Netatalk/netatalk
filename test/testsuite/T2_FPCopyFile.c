@@ -4,8 +4,7 @@
 #include "adoublehelper.h"
 
 /* ------------------------- */
-STATIC void test373()
-{
+STATIC void test373() {
     char *name  = "t373 old file name";
     char *name1 = "t373 new file name";
     uint16_t vol = VolID;
@@ -95,8 +94,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPCopyFile_test()
-{
+void T2FPCopyFile_test() {
     ENTER_TESTSET
     test373();
 }

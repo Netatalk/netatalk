@@ -64,8 +64,7 @@ static int rm(const char *fpath, const struct stat *sb, int tflag,
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
   Returns pointer to name or NULL.
 */
-static const char *check_netatalk_dirs(const char *name)
-{
+static const char *check_netatalk_dirs(const char *name) {
     const int max_dirs = 2;
 
     for (int c = 0; c < max_dirs && netatalk_dirs[c]; c++) {
@@ -77,8 +76,7 @@ static const char *check_netatalk_dirs(const char *name)
     return NULL;
 }
 
-static void upfunc(void)
-{
+static void upfunc(void) {
     did = pdid;
 }
 
@@ -87,14 +85,12 @@ static void upfunc(void)
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo _U_)
-{
+static void sig_handler(int signo _U_) {
     alarmed = 1;
     return;
 }
 
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
@@ -125,8 +121,7 @@ static void set_signal(void)
     }
 }
 
-static void usage_rm(void)
-{
+static void usage_rm(void) {
     printf(
         "Usage: ad rm [-vR] <file|dir> [<file|dir> ...]\n\n"
         "The rm utility attempts to remove the non-directory type files specified\n"
@@ -140,8 +135,7 @@ static void usage_rm(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_rm(int argc, char *argv[], AFPObj *obj)
-{
+int ad_rm(int argc, char *argv[], AFPObj *obj) {
     int ch;
     pdid = htonl(1);
     did = htonl(2);
@@ -194,8 +188,7 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
 static int rm(const char *path,
               const struct stat *statp,
               int tflag _U_,
-              struct FTW *ftw _U_)
-{
+              struct FTW *ftw _U_) {
     cnid_t cnid;
 
     if (alarmed) {

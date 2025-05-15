@@ -30,8 +30,7 @@ char		nbp_recv[1024];
 unsigned char		nbp_port = 0;
 unsigned char   nbp_id = 0;
 
-int nbp_parse(char *data, struct nbpnve *nn, int len)
-{
+int nbp_parse(char *data, struct nbpnve *nn, int len) {
     struct nbptuple	nt;
     memcpy(&nt, data, SZ_NBPTUPLE);
     data += SZ_NBPTUPLE;
@@ -93,8 +92,7 @@ int nbp_parse(char *data, struct nbpnve *nn, int len)
 #define NBPM_TYPE	(1<<2)
 #define NBPM_ZONE	(1<<3)
 
-int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
-{
+int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags) {
     int			match = 0;
 
     if (flags & NBPMATCH_NOZONE) {
@@ -135,8 +133,7 @@ int nbp_match(struct nbpnve *n1, struct nbpnve *n2, int flags)
     return 1;
 }
 
-int nbp_name(const char  *name, char **objp, char **typep, char **zonep)
-{
+int nbp_name(const char  *name, char **objp, char **typep, char **zonep) {
     static char	buf[32 + 1 + 32 + 1 + 32 + 1];
     char	*p;
 

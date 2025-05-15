@@ -77,8 +77,7 @@ typedef struct {
 static rc_elem_t replaycache[REPLAYCACHE_SIZE];
 
 static sigjmp_buf recon_jmp;
-static void afp_dsi_close(AFPObj *obj)
-{
+static void afp_dsi_close(AFPObj *obj) {
     DSI *dsi = obj->dsi;
     sigset_t sigs;
     close(obj->ipc_fd);
@@ -116,8 +115,7 @@ static void afp_dsi_close(AFPObj *obj)
  * SIGTERM
  * a little bit of code duplication.
  */
-static void afp_dsi_die(int sig)
-{
+static void afp_dsi_die(int sig) {
     DSI *dsi = (DSI *)AFPobj->dsi;
 
     if (dsi->flags & DSI_RECONINPROG) {
@@ -148,8 +146,7 @@ static void afp_dsi_die(int sig)
 }
 
 /* SIGURG handler (primary reconnect) */
-static void afp_dsi_transfer_session(int sig _U_)
-{
+static void afp_dsi_transfer_session(int sig _U_) {
     uint16_t dsiID;
     int socket;
     DSI *dsi = (DSI *)AFPobj->dsi;
@@ -202,8 +199,7 @@ static void afp_dsi_transfer_session(int sig _U_)
 }
 
 /* ------------------- */
-static void afp_dsi_timedown(int sig _U_)
-{
+static void afp_dsi_timedown(int sig _U_) {
     struct sigaction	sv;
     struct itimerval	it;
     DSI                 *dsi = (DSI *)AFPobj->dsi;
@@ -256,8 +252,7 @@ static void afp_dsi_timedown(int sig _U_)
  */
 volatile int reload_request = 0;
 
-static void afp_dsi_reload(int sig _U_)
-{
+static void afp_dsi_reload(int sig _U_) {
     reload_request = 1;
 }
 
@@ -266,14 +261,12 @@ static void afp_dsi_reload(int sig _U_)
  */
 static volatile sig_atomic_t debug_request = 0;
 
-static void afp_dsi_debug(int sig _U_)
-{
+static void afp_dsi_debug(int sig _U_) {
     debug_request = 1;
 }
 
 /* ---------------------- */
-static void afp_dsi_getmesg (int sig _U_)
-{
+static void afp_dsi_getmesg (int sig _U_) {
     DSI *dsi = (DSI *)AFPobj->dsi;
     dsi->msg_request = 1;
 
@@ -282,8 +275,7 @@ static void afp_dsi_getmesg (int sig _U_)
     }
 }
 
-static void alarm_handler(int sig _U_)
-{
+static void alarm_handler(int sig _U_) {
     int err;
     DSI *dsi = (DSI *)AFPobj->dsi;
     /* we have to restart the timer because some libraries may use alarm() */
@@ -366,8 +358,7 @@ static void alarm_handler(int sig _U_)
     }
 }
 
-static void child_handler(int sig _U_)
-{
+static void child_handler(int sig _U_) {
     wait(NULL);
 }
 
@@ -375,8 +366,7 @@ static void child_handler(int sig _U_)
    if dsi->in_write is set attention, tickle (and close?) msg
    aren't sent. We don't care about tickle
 */
-static void pending_request(DSI *dsi)
-{
+static void pending_request(DSI *dsi) {
     /* send pending attention */
 
     /* read msg if any, it could be done in afp_getsrvrmesg */
@@ -397,8 +387,7 @@ static void pending_request(DSI *dsi)
     }
 }
 
-void afp_over_dsi_sighandlers(AFPObj *obj)
-{
+void afp_over_dsi_sighandlers(AFPObj *obj) {
     DSI *dsi = (DSI *) obj->dsi;
     struct sigaction action;
     memset(&action, 0, sizeof(action));
@@ -487,8 +476,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
 /* -------------------------------------------
  afp over dsi. this never returns.
 */
-void afp_over_dsi(AFPObj *obj)
-{
+void afp_over_dsi(AFPObj *obj) {
     DSI *dsi = (DSI *) obj->dsi;
     int rc_idx;
     uint32_t err, cmd;

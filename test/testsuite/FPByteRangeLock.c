@@ -5,8 +5,7 @@
 static char temp[MAXPATHLEN];
 
 /* -------------------------- */
-STATIC void test60()
-{
+STATIC void test60() {
     char *name = "test60 illegal fork";
     DSI *dsi;
     dsi = &Conn->dsi;
@@ -16,8 +15,7 @@ STATIC void test60()
 }
 
 /* ------------------------- */
-static void test_bytelock(uint16_t vol, char *name, int type)
-{
+static void test_bytelock(uint16_t vol, char *name, int type) {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -99,8 +97,7 @@ static void test_bytelock(uint16_t vol, char *name, int type)
 }
 /* ----------- */
 // FIXME: broken since at least 3.1.12 - could not locate fork
-STATIC void test63()
-{
+STATIC void test63() {
     char *name = "test63 FPByteLock DF";
     ENTER_TEST
     test_bytelock(VolID, name, OPENFORK_DATA);
@@ -109,8 +106,7 @@ STATIC void test63()
 
 /* ----------- */
 // FIXME: broken since at least 3.1.12 - could not locate fork
-STATIC void test64()
-{
+STATIC void test64() {
     char *name = "test64 FPByteLock RF";
     ENTER_TEST
     test_bytelock(VolID, name, OPENFORK_RSCS);
@@ -118,8 +114,7 @@ STATIC void test64()
 }
 
 /* -------------------------- */
-static void test_bytelock3(char *name, int type)
-{
+static void test_bytelock3(char *name, int type) {
     int fork;
     int fork1;
     uint16_t vol = VolID;
@@ -182,8 +177,7 @@ fin:
 
 /* --------------- */
 // FIXME: broken since at least 3.1.12 - could not locate fork
-STATIC void test65()
-{
+STATIC void test65() {
     char *name = "t65 DF FPByteLock 2 users";
     ENTER_TEST
 
@@ -214,8 +208,7 @@ test_exit:
 }
 
 /* ---------------------------- */
-static void test_bytelock2(char *name, int type)
-{
+static void test_bytelock2(char *name, int type) {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -309,8 +302,7 @@ fin:
 
 /* -------------------------- */
 /* badly broken, didn't bother fixing for appledouble = ea */
-void test78()
-{
+void test78() {
     char *name = "t78 FPByteLock RF size -1";
     ENTER_TEST
 
@@ -339,8 +331,7 @@ test_exit:
 
 /* ----------- */
 // FIXME: broken since at least 3.1.12 - could not locate fork
-STATIC void test79()
-{
+STATIC void test79() {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -390,8 +381,7 @@ test_exit:
 }
 
 /* -------------------------- */
-static void test_bytelock5(uint16_t vol, char *name, int type)
-{
+static void test_bytelock5(uint16_t vol, char *name, int type) {
     int fork;
     uint16_t bitmap = 0;
     int len = (type == OPENFORK_RSCS) ? (1 << FILPBIT_RFLEN) : (1 << FILPBIT_DFLEN);
@@ -423,8 +413,7 @@ static void test_bytelock5(uint16_t vol, char *name, int type)
 }
 
 /* -------------------------- */
-STATIC void test80()
-{
+STATIC void test80() {
     char *name = "t80 RF FPByteLock Read write";
     ENTER_TEST
 
@@ -446,8 +435,7 @@ STATIC void test80()
 }
 
 /* --------------- */
-STATIC void test329()
-{
+STATIC void test329() {
     char *name = "t329 DF FPByteLock 2 users";
     int fork;
     int fork1 = 0;
@@ -555,8 +543,7 @@ test_exit:
 }
 
 /* --------------- */
-STATIC void test410()
-{
+STATIC void test410() {
     char *name = "t410 DF FPByteLock 2 users";
     int fork;
     int fork1 = 0;
@@ -651,8 +638,7 @@ test_exit:
 }
 
 /* ------------------- */
-static int create_trash(CONN *conn, uint16_t vol)
-{
+static int create_trash(CONN *conn, uint16_t vol) {
     char *trash = "Network Trash Folder";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
@@ -697,8 +683,7 @@ static int create_trash(CONN *conn, uint16_t vol)
 }
 
 /* ------------------- */
-static int create_map(CONN *conn, uint16_t vol, int dir, char *name)
-{
+static int create_map(CONN *conn, uint16_t vol, int dir, char *name) {
     DSI *dsi;
     struct afp_filedir_parms filedir;
     int  ofs =  3 * sizeof(uint16_t);
@@ -727,8 +712,7 @@ static int create_map(CONN *conn, uint16_t vol, int dir, char *name)
 }
 
 /* ------------------- */
-static int set_perm(CONN *conn, uint16_t vol, int dir)
-{
+static int set_perm(CONN *conn, uint16_t vol, int dir) {
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
@@ -762,8 +746,7 @@ static int set_perm(CONN *conn, uint16_t vol, int dir)
 }
 
 /* ------------------- */
-static int write_access(CONN *conn, uint16_t  vol, int dir)
-{
+static int write_access(CONN *conn, uint16_t  vol, int dir) {
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
@@ -787,8 +770,7 @@ static int write_access(CONN *conn, uint16_t  vol, int dir)
 }
 
 /* --------------- */
-static int init_trash(CONN *conn, uint16_t vol, int *result)
-{
+static int init_trash(CONN *conn, uint16_t vol, int *result) {
     char *trash = "Network Trash Folder";
     char *map = "Trash Can Usage Map";
     int ret;
@@ -885,8 +867,7 @@ static int init_trash(CONN *conn, uint16_t vol, int *result)
 }
 
 /* --------------- */
-STATIC void test330()
-{
+STATIC void test330() {
     uint16_t vol = VolID;
     uint16_t vol2;
     int fork = 0;
@@ -949,8 +930,7 @@ test_exit:
 }
 
 /* --------------- */
-STATIC void test366()
-{
+STATIC void test366() {
     char *name = "t366 FPByteLock 2 users";
     int fork;
     int fork1 = 0;
@@ -1065,8 +1045,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPByteRangeLock_test()
-{
+void FPByteRangeLock_test() {
     ENTER_TESTSET
     test60();
 #if 0

@@ -61,8 +61,7 @@ static size_t rbuflen;
         (len) += sizeof(t);                    \
     }
 
-static int push_path(char **bufp, const char *name)
-{
+static int push_path(char **bufp, const char *name) {
     int len = 0;
     int slen = strlen(name);
     char *p = *bufp;
@@ -90,8 +89,7 @@ static int push_path(char **bufp, const char *name)
  * Interface
  ***********************************************************************************/
 
-char **cnamewrap(const char *name)
-{
+char **cnamewrap(const char *name) {
     static char buf[256];
     static char *p = buf;
     int len = 0;
@@ -103,8 +101,7 @@ char **cnamewrap(const char *name)
     return &p;
 }
 
-int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
-{
+int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name) {
     const int bufsize = 256;
     char buf[bufsize];
     char *p = buf;
@@ -118,8 +115,7 @@ int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     return afp_getfildirparams(obj, buf, len, rbuf, &rbuflen);
 }
 
-int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
-{
+int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name) {
     const int bufsize = 256;
     char buf[bufsize];
     char *p = buf;
@@ -131,8 +127,7 @@ int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     return afp_createdir(obj, buf, len, rbuf, &rbuflen);
 }
 
-int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
-{
+int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name) {
     const int bufsize = 256;
     char buf[bufsize];
     char *p = buf;
@@ -144,8 +139,7 @@ int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     return afp_createfile(obj, buf, len, rbuf, &rbuflen);
 }
 
-int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
-{
+int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name) {
     const int bufsize = 256;
     char buf[bufsize];
     char *p = buf;
@@ -157,8 +151,7 @@ int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
     return afp_delete(obj, buf, len, rbuf, &rbuflen);
 }
 
-int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
-{
+int enumerate(AFPObj *obj, uint16_t vid, cnid_t did) {
     const int bufsize = 256;
     char buf[bufsize];
     char *p = buf;
@@ -182,8 +175,7 @@ int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
     return 0;
 }
 
-uint16_t openvol(AFPObj *obj, const char *name)
-{
+uint16_t openvol(AFPObj *obj, const char *name) {
     int ret;
     uint16_t bitmap;
     uint16_t vid;

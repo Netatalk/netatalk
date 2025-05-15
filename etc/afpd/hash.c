@@ -73,8 +73,7 @@ int hash_val_t_bit;
  *    right, replacing the topmost bit by zero.
  */
 
-static void compute_bits(void)
-{
+static void compute_bits(void) {
     hash_val_t val = HASH_VAL_T_MAX;    /* 1 */
     int bits = 0;
 
@@ -90,8 +89,7 @@ static void compute_bits(void)
  * Verify whether the given argument is a power of two.
  */
 
-static int is_power_of_two(hash_val_t arg)
-{
+static int is_power_of_two(hash_val_t arg) {
     if (arg == 0) {
         return 0;
     }
@@ -107,8 +105,7 @@ static int is_power_of_two(hash_val_t arg)
  * Initialize the table of pointers to null.
  */
 
-static void clear_table(hash_t *hash)
-{
+static void clear_table(hash_t *hash) {
     hash_val_t i;
 
     for (i = 0; i < hash->nchains; i++) {
@@ -144,8 +141,7 @@ static void clear_table(hash_t *hash)
  *     the various bookeeping fields of the hash structure.
  */
 
-static void grow_table(hash_t *hash)
-{
+static void grow_table(hash_t *hash) {
     hnode_t **newtable;
     assert(2 * hash->nchains > hash->nchains);  /* 1 */
     newtable = realloc(hash->table,
@@ -216,8 +212,7 @@ static void grow_table(hash_t *hash)
  * 9.  Finally, update the various table parameters to reflect the new size.
  */
 
-static void shrink_table(hash_t *hash)
-{
+static void shrink_table(hash_t *hash) {
     hash_val_t chain, nchains;
     hnode_t **newtable, *low_tail, *low_chain, *high_chain;
     assert(hash->nchains >= 2);             /* 1 */
@@ -285,8 +280,7 @@ static void shrink_table(hash_t *hash)
  */
 
 hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
-                    hash_fun_t hashfun)
-{
+                    hash_fun_t hashfun) {
     hash_t *hash;
 
     if (hash_val_t_bit == 0) {  /* 1 */
@@ -327,8 +321,7 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
  */
 
 void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
-                        hnode_free_t fr, void *context)
-{
+                        hnode_free_t fr, void *context) {
     assert(hash_count(hash) == 0);
     assert((al == 0 && fr == 0) || (al != 0 && fr != 0));
     hash->allocnode = al ? al : hnode_alloc;
@@ -341,8 +334,7 @@ void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
  * cause the hash to become empty.
  */
 
-void hash_free_nodes(hash_t *hash)
-{
+void hash_free_nodes(hash_t *hash) {
     hscan_t hs;
     hnode_t *node;
     hash_scan_begin(&hs, hash);
@@ -360,8 +352,7 @@ void hash_free_nodes(hash_t *hash)
  * Free a dynamic hash table structure.
  */
 
-void hash_destroy(hash_t *hash)
-{
+void hash_destroy(hash_t *hash) {
     assert(hash_val_t_bit != 0);
     assert(hash_isempty(hash));
     free(hash->table);
@@ -379,8 +370,7 @@ void hash_destroy(hash_t *hash)
  *    so that hash_scan_next() shall indicate failure.
  */
 
-void hash_scan_begin(hscan_t *scan, hash_t *hash)
-{
+void hash_scan_begin(hscan_t *scan, hash_t *hash) {
     hash_val_t nchains = hash->nchains;
     hash_val_t chain;
     scan->table = hash;
@@ -424,8 +414,7 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
  */
 
 
-hnode_t *hash_scan_next(hscan_t *scan)
-{
+hnode_t *hash_scan_next(hscan_t *scan) {
     hnode_t *next;
     hash_t *hash;
     hash_val_t chain;
@@ -474,8 +463,7 @@ hnode_t *hash_scan_next(hscan_t *scan)
  *    where N is the base 2 logarithm of the size of the hash table.
  */
 
-void hash_insert(hash_t *hash, hnode_t *node, const void *key)
-{
+void hash_insert(hash_t *hash, hnode_t *node, const void *key) {
     hash_val_t hkey, chain;
     assert(hash_val_t_bit != 0);
     assert(node->next == NULL);
@@ -510,8 +498,7 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
  *    entry.
  */
 
-hnode_t *hash_lookup(hash_t *hash, const void *key)
-{
+hnode_t *hash_lookup(hash_t *hash, const void *key) {
     hash_val_t hkey, chain;
     hnode_t *nptr;
     hkey = hash->function(key);     /* 1 */
@@ -544,8 +531,7 @@ hnode_t *hash_lookup(hash_t *hash, const void *key)
  * 6. Indicate that the node is no longer in a hash table.
  */
 
-hnode_t *hash_delete(hash_t *hash, hnode_t *node)
-{
+hnode_t *hash_delete(hash_t *hash, hnode_t *node) {
     hash_val_t chain;
     hnode_t *hptr;
     assert(hash_lookup(hash, node->key) == node);   /* 1 */
@@ -577,8 +563,7 @@ hnode_t *hash_delete(hash_t *hash, hnode_t *node)
     return node;
 }
 
-int hash_alloc_insert(hash_t *hash, const void *key, void *data)
-{
+int hash_alloc_insert(hash_t *hash, const void *key, void *data) {
     hnode_t *node = hash->allocnode(hash->context);
 
     if (node) {
@@ -590,8 +575,7 @@ int hash_alloc_insert(hash_t *hash, const void *key, void *data)
     return 0;
 }
 
-void hash_delete_free(hash_t *hash, hnode_t *node)
-{
+void hash_delete_free(hash_t *hash, hnode_t *node) {
     hash_delete(hash, node);
     hash->freenode(node, hash->context);
 }
@@ -601,8 +585,7 @@ void hash_delete_free(hash_t *hash, hnode_t *node)
  *  used from within a hash table scan operation. See notes for hash_delete.
  */
 
-hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
-{
+hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node) {
     hash_val_t chain;
     hnode_t *hptr;
     assert(hash_lookup(hash, node->key) == node);
@@ -630,8 +613,7 @@ hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
  * Like hash_delete_free but based on hash_scan_delete.
  */
 
-void hash_scan_delfree(hash_t *hash, hnode_t *node)
-{
+void hash_scan_delfree(hash_t *hash, hnode_t *node) {
     hash_scan_delete(hash, node);
     hash->freenode(node, hash->context);
 }
@@ -645,8 +627,7 @@ void hash_scan_delfree(hash_t *hash, hnode_t *node)
  *    to see whether it is correct for the node's chain.
  */
 
-int hash_verify(hash_t *hash)
-{
+int hash_verify(hash_t *hash) {
     hashcount_t count = 0;
     hash_val_t chain;
     hnode_t *hptr;
@@ -682,13 +663,11 @@ int hash_verify(hash_t *hash)
     return 1;
 }
 
-static hnode_t *hnode_alloc(void *context _U_)
-{
+static hnode_t *hnode_alloc(void *context _U_) {
     return malloc(sizeof * hnode_alloc(NULL));
 }
 
-static void hnode_free(hnode_t *node, void *context _U_)
-{
+static void hnode_free(hnode_t *node, void *context _U_) {
     free(node);
 }
 
@@ -696,39 +675,33 @@ static void hnode_free(hnode_t *node, void *context _U_)
  * Initialize a client-supplied node
  */
 
-hnode_t *hnode_init(hnode_t *hnode, void *data)
-{
+hnode_t *hnode_init(hnode_t *hnode, void *data) {
     hnode->data = data;
     hnode->next = NULL;
     return hnode;
 }
 
 #undef hnode_get
-void *hnode_get(hnode_t *node)
-{
+void *hnode_get(hnode_t *node) {
     return node->data;
 }
 
 #undef hnode_getkey
-const void *hnode_getkey(hnode_t *node)
-{
+const void *hnode_getkey(hnode_t *node) {
     return node->key;
 }
 
 #undef hash_count
-hashcount_t hash_count(hash_t *hash)
-{
+hashcount_t hash_count(hash_t *hash) {
     return hash->nodecount;
 }
 
 #undef hash_size
-hashcount_t hash_size(hash_t *hash)
-{
+hashcount_t hash_size(hash_t *hash) {
     return hash->nchains;
 }
 
-static hash_val_t hash_fun_default(const void *key)
-{
+static hash_val_t hash_fun_default(const void *key) {
     static unsigned long randbox[] = {
         0x49848f1bU, 0xe6255dbaU, 0x36da5bdcU, 0x47bf94e9U,
         0x8cbcce22U, 0x559fc06aU, 0xd268f536U, 0xe10af79aU,
@@ -759,15 +732,13 @@ static hash_val_t hash_fun_default(const void *key)
                       +(uint32_t)(((const uint8_t *)(d))[0]) )
 #endif
 
-static int hash_comp_default(const void *key1, const void *key2)
-{
+static int hash_comp_default(const void *key1, const void *key2) {
     return strcmp(key1, key2);
 }
 
 #ifdef KAZLIB_TEST_MAIN
 
-static hash_val_t hash_fun2(const void *key)
-{
+static hash_val_t hash_fun2(const void *key) {
     int len, rem;
     const unsigned char *data = key;
     hash_val_t hash = 0, tmp = 0;
@@ -821,8 +792,7 @@ static hash_val_t hash_fun2(const void *key)
 
 typedef char input_t[256];
 
-static int tokenize(char *string, ...)
-{
+static int tokenize(char *string, ...) {
     char **tokptr;
     va_list arglist;
     int tokcount = 0;
@@ -858,8 +828,7 @@ static int tokenize(char *string, ...)
     return tokcount;
 }
 
-static char *dupstring(char *str)
-{
+static char *dupstring(char *str) {
     int sz = strlen(str) + 1;
     char *new = malloc(sz);
 
@@ -870,8 +839,7 @@ static char *dupstring(char *str)
     return new;
 }
 
-static hnode_t *new_node(void *c)
-{
+static hnode_t *new_node(void *c) {
     static hnode_t few[5];
     static int count;
 
@@ -882,12 +850,10 @@ static hnode_t *new_node(void *c)
     return NULL;
 }
 
-static void del_node(hnode_t *n, void *c)
-{
+static void del_node(hnode_t *n, void *c) {
 }
 
-int main(void)
-{
+int main(void) {
     input_t in;
     hash_t *h = hash_create(HASHCOUNT_T_MAX, 0, hash_fun2);
     hnode_t *hn;

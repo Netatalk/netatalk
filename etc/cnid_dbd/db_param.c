@@ -28,14 +28,12 @@
 static struct db_param params;
 static int parse_err;
 
-static size_t usock_maxlen(void)
-{
+static size_t usock_maxlen(void) {
     struct sockaddr_un addr;
     return sizeof(addr.sun_path) - 1;
 }
 
-static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
-{
+static int make_pathname(char *path, char *dir, char *fn, size_t maxlen) {
     size_t len;
 
     if (fn[0] != '/') {
@@ -63,8 +61,7 @@ static int make_pathname(char *path, char *dir, char *fn, size_t maxlen)
     return 0;
 }
 
-static void default_params(struct db_param *dbp, char *dir)
-{
+static void default_params(struct db_param *dbp, char *dir) {
     dbp->logfile_autoremove  = DEFAULT_LOGFILE_AUTOREMOVE;
     dbp->cachesize           = DEFAULT_CACHESIZE;
     dbp->maxlocks            = DEFAULT_MAXLOCKS;
@@ -88,8 +85,7 @@ static void default_params(struct db_param *dbp, char *dir)
     return;
 }
 
-static int parse_int(char *val)
-{
+static int parse_int(char *val) {
     char *tmp;
     int   result = 0;
     result = strtol(val, &tmp, 10);
@@ -102,8 +98,7 @@ static int parse_int(char *val)
     return result;
 }
 
-struct db_param *db_param_read(char *dir)
-{
+struct db_param *db_param_read(char *dir) {
     FILE *fp;
     static char key[MAXKEYLEN + 1];
     static char val[MAXPATHLEN + 1];

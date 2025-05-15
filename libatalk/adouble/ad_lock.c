@@ -30,8 +30,7 @@
 
 #include "ad_lock.h"
 
-static const char *shmdstrfromoff(off_t off)
-{
+static const char *shmdstrfromoff(off_t off) {
     switch (off) {
     case AD_FILELOCK_OPEN_WR:
         return "OPEN_WR_DATA";
@@ -69,8 +68,7 @@ static const char *shmdstrfromoff(off_t off)
 }
 
 /* ----------------------- */
-static int set_lock(int fd, int cmd,  struct flock *lock)
-{
+static int set_lock(int fd, int cmd,  struct flock *lock) {
     EC_INIT;
     LOG(log_debug, logtype_ad,
         "set_lock(fd: %d, %s, %s, off: %jd (%s), len: %jd): BEGIN",
@@ -95,8 +93,7 @@ EC_CLEANUP:
 }
 
 /* ----------------------- */
-static int XLATE_FCNTL_LOCK(int type)
-{
+static int XLATE_FCNTL_LOCK(int type) {
     switch (type) {
     case ADLOCK_RD:
         return F_RDLCK;
@@ -112,8 +109,7 @@ static int XLATE_FCNTL_LOCK(int type)
 }
 
 /* ----------------------- */
-static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
-{
+static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen) {
     return (!alen && a <= b) ||
            (!blen && b <= a) ||
            ((a + alen > b) && (b + blen > a));
@@ -125,8 +121,7 @@ static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
 #define ARRAY_FREE_DELTA 100
 
 /* remove a lock and compact space if necessary */
-static void adf_freelock(struct ad_fd *ad, const int i)
-{
+static void adf_freelock(struct ad_fd *ad, const int i) {
     adf_lock_t *lock = ad->adf_lock + i;
 
     if (--(*lock->refcount) < 1) {
@@ -168,8 +163,7 @@ static void adf_freelock(struct ad_fd *ad, const int i)
  * gets removed, we shift all of the locks down.
  */
 static void adf_unlock(struct adouble *ad _U_, struct ad_fd *adf,
-                       const int fork, int unlckbrl)
-{
+                       const int fork, int unlckbrl) {
     adf_lock_t *lock = adf->adf_lock;
     int i;
 
@@ -189,8 +183,7 @@ static void adf_unlock(struct adouble *ad _U_, struct ad_fd *adf,
 
 /* relock any byte lock that overlaps off/len. unlock everything
  * else. */
-static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
-{
+static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len) {
     adf_lock_t *lock = ad->adf_lock;
     int i;
 
@@ -206,8 +199,7 @@ static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
 static int adf_findlock(struct ad_fd *ad,
                         const int fork, const int type,
                         const off_t off,
-                        const off_t len)
-{
+                        const off_t len) {
     adf_lock_t *lock = ad->adf_lock;
     int i;
 
@@ -228,8 +220,7 @@ static int adf_findlock(struct ad_fd *ad,
 static int adf_findxlock(struct ad_fd *ad,
                          const int fork, const int type,
                          const off_t off,
-                         const off_t len)
-{
+                         const off_t len) {
     adf_lock_t *lock = ad->adf_lock;
     int i;
 
@@ -264,8 +255,7 @@ static int adf_findxlock(struct ad_fd *ad,
 /* --------------
 	translate a resource fork lock to an offset
 */
-static off_t rf2off(off_t off)
-{
+static off_t rf2off(off_t off) {
     off_t start = off;
 
     if (off == AD_FILELOCK_OPEN_WR) {
@@ -296,8 +286,7 @@ static off_t rf2off(off_t off)
  * @returns           1 if there's an existing lock, 0 if there's no lock,
  *                    -1 in case any error occured
  */
-static int testlock(const struct ad_fd *adf, off_t off, off_t len)
-{
+static int testlock(const struct ad_fd *adf, off_t off, off_t len) {
     struct flock lock;
     adf_lock_t *plock;
     int i;
@@ -329,8 +318,7 @@ static int testlock(const struct ad_fd *adf, off_t off, off_t len)
 }
 
 #define LTYPE2STRBUFSIZ 128
-static const char *locktypetostr(int type)
-{
+static const char *locktypetostr(int type) {
     int first = 1;
     static char buf[LTYPE2STRBUFSIZ];
     buf[0] = 0;
@@ -385,8 +373,7 @@ static const char *locktypetostr(int type)
  ******************************************************************************/
 
 int ad_lock(struct adouble *ad, uint32_t eid, int locktype, off_t off,
-            off_t len, int fork)
-{
+            off_t len, int fork) {
     struct flock lock;
     struct ad_fd *adf;
     adf_lock_t *adflock;
@@ -539,8 +526,7 @@ exit:
 }
 
 int ad_tmplock(struct adouble *ad, uint32_t eid, int locktype, off_t off,
-               off_t len, int fork)
-{
+               off_t len, int fork) {
     struct flock lock;
     struct ad_fd *adf;
     int err;
@@ -611,8 +597,7 @@ exit:
 }
 
 /* --------------------- */
-void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
-{
+void ad_unlock(struct adouble *ad, const int fork, int unlckbrl) {
     LOG(log_debug, logtype_ad, "ad_unlock(unlckbrl: %d): BEGIN", unlckbrl);
 
     if (ad_data_fileno(ad) != -1) {
@@ -636,8 +621,7 @@ void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
  * @returns           1 if there's an existing lock, 0 if there's no lock,
  *                    -1 in case any error occured
  */
-int ad_testlock(struct adouble *ad, int eid, const off_t off)
-{
+int ad_testlock(struct adouble *ad, int eid, const off_t off) {
     int ret = 0;
     off_t lock_offset;
     LOG(log_debug, logtype_ad, "ad_testlock(%s, off: %jd (%s): BEGIN",
@@ -668,8 +652,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
  * @returns                bitflags ATTRBIT_DOPEN | ATTRBIT_ROPEN if
  *                         other process has fork of file opened
  */
-uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits)
-{
+uint16_t ad_openforks(struct adouble *ad, uint16_t attrbits) {
     uint16_t ret = 0;
     off_t off;
     off_t len;

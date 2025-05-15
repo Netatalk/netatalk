@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test200()
-{
+STATIC void test200() {
     uint16_t  dir;
     uint16_t vol = VolID;
     DSI *dsi;
@@ -26,8 +25,7 @@ STATIC void test200()
 }
 
 /* ----------- */
-void FPOpenDT_test()
-{
+void FPOpenDT_test() {
     ENTER_TESTSET
     test200();
 }

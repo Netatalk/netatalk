@@ -40,8 +40,7 @@ extern int  transition;
 struct nbptab   *nbptab = NULL;
 
 static
-void nbp_ack(int fd, int nh_op, int nh_id, struct sockaddr_at *to)
-{
+void nbp_ack(int fd, int nh_op, int nh_id, struct sockaddr_at *to) {
     struct nbphdr   nh;
     char        *data, packet[SZ_NBPHDR + 1];
     nh.nh_op = nh_op;
@@ -58,8 +57,8 @@ void nbp_ack(int fd, int nh_op, int nh_id, struct sockaddr_at *to)
     }
 }
 
-int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
-{
+int nbp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
+               int len) {
     struct nbphdr   nh;
     struct nbptuple nt;
     struct nbpnve   nn;

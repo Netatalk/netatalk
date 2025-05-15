@@ -59,8 +59,7 @@ static char *new_creator;
 static char *new_flags;
 static char *new_attributes;
 
-static void usage_set(void)
-{
+static void usage_set(void) {
     printf(
         "Usage: ad set [-t TYPE] [-c CREATOR] [-l label] [-f flags] [-a attributes] file|dir \n\n"
         "     Color Label:\n"
@@ -91,8 +90,7 @@ static void usage_set(void)
 }
 
 static void change_type(char *path _U_, afpvol_t *vol _U_,
-                        const struct stat *st _U_, struct adouble *ad, char *new_type)
-{
+                        const struct stat *st _U_, struct adouble *ad, char *new_type) {
     char *FinderInfo;
 
     if ((FinderInfo = ad_entry(ad, ADEID_FINDERI))) {
@@ -101,8 +99,7 @@ static void change_type(char *path _U_, afpvol_t *vol _U_,
 }
 
 static void change_creator(char *path _U_, afpvol_t *vol _U_,
-                           const struct stat *st _U_, struct adouble *ad, char *new_creator)
-{
+                           const struct stat *st _U_, struct adouble *ad, char *new_creator) {
     char *FinderInfo;
 
     if ((FinderInfo = ad_entry(ad, ADEID_FINDERI))) {
@@ -111,8 +108,7 @@ static void change_creator(char *path _U_, afpvol_t *vol _U_,
 }
 
 static void change_label(char *path _U_, afpvol_t *vol _U_,
-                         const struct stat *st _U_, struct adouble *ad, char *new_label)
-{
+                         const struct stat *st _U_, struct adouble *ad, char *new_label) {
     char *FinderInfo;
     const char **color = &labels[0];
     uint16_t FinderFlags;
@@ -142,8 +138,7 @@ static void change_label(char *path _U_, afpvol_t *vol _U_,
 }
 
 static void change_attributes(char *path _U_, afpvol_t *vol _U_,
-                              const struct stat *st, struct adouble *ad, char *new_attributes)
-{
+                              const struct stat *st, struct adouble *ad, char *new_attributes) {
     uint16_t AFPattributes;
     ad_getattr(ad, &AFPattributes);
     AFPattributes = ntohs(AFPattributes);
@@ -203,8 +198,7 @@ static void change_attributes(char *path _U_, afpvol_t *vol _U_,
 }
 
 static void change_flags(char *path _U_, afpvol_t *vol _U_,
-                         const struct stat *st, struct adouble *ad, char *new_flags)
-{
+                         const struct stat *st, struct adouble *ad, char *new_flags) {
     char *FinderInfo;
     uint16_t FinderFlags;
 
@@ -309,8 +303,7 @@ static void change_flags(char *path _U_, afpvol_t *vol _U_,
     memcpy(FinderInfo + 8, &FinderFlags, 2);
 }
 
-int ad_set(int argc, char **argv, AFPObj *obj)
-{
+int ad_set(int argc, char **argv, AFPObj *obj) {
     int c;
     afpvol_t vol;
     struct stat st;

@@ -45,8 +45,7 @@ static struct iovec	niov[PAP_MAXQUANTUM] = {
  * Read lines of a file, until the client sends eof, after
  * which we'll send eof also.
  */
-int session(ATP atp, struct sockaddr_at *sat)
-{
+int session(ATP atp, struct sockaddr_at *sat) {
     struct timeval	tv;
     struct atp_block	atpb;
     struct sockaddr_at	ssat;

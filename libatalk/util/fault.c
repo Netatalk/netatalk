@@ -52,8 +52,7 @@ static void (*cont_fn)(void *);
  2) The signal should be blocked during handler execution.
 ********************************************************************/
 
-static void (*CatchSignal(int signum, void (*handler)(int)))(int)
-{
+static void (*CatchSignal(int signum, void (*handler)(int)))(int) {
 #ifdef HAVE_SIGACTION
     struct sigaction act;
     struct sigaction oldact;
@@ -83,8 +82,7 @@ static void (*CatchSignal(int signum, void (*handler)(int)))(int)
  Something really nasty happened - panic !
 ********************************************************************/
 
-void netatalk_panic(const char *why _U_)
-{
+void netatalk_panic(const char *why _U_) {
 #ifdef HAVE_BACKTRACE_SYMBOLS
     void *backtrace_stack[BACKTRACE_STACK_SIZE];
     size_t backtrace_size;
@@ -112,8 +110,7 @@ void netatalk_panic(const char *why _U_)
 /*******************************************************************
 report a fault
 ********************************************************************/
-static void fault_report(int sig)
-{
+static void fault_report(int sig) {
     static int counter;
 
     if (counter) {
@@ -146,16 +143,14 @@ static void fault_report(int sig)
 /****************************************************************************
 catch serious errors
 ****************************************************************************/
-static void sig_fault(int sig)
-{
+static void sig_fault(int sig) {
     fault_report(sig);
 }
 
 /*******************************************************************
 setup our fault handlers
 ********************************************************************/
-void fault_setup(void (*fn)(void *))
-{
+void fault_setup(void (*fn)(void *)) {
     cont_fn = fn;
 #ifdef SIGSEGV
     CatchSignal(SIGSEGV, SIGNAL_CAST sig_fault);

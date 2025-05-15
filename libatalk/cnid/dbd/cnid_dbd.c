@@ -43,21 +43,18 @@
 #define MAX_DELAY 20
 #define ONE_DELAY 5
 
-static void RQST_RESET(struct cnid_dbd_rqst  *r)
-{
+static void RQST_RESET(struct cnid_dbd_rqst  *r) {
     memset(r, 0, sizeof(struct cnid_dbd_rqst));
 }
 
-static void delay(int sec)
-{
+static void delay(int sec) {
     struct timeval tv;
     tv.tv_usec = 0;
     tv.tv_sec  = sec;
     select(0, NULL, NULL, NULL, &tv);
 }
 
-static int tsock_getfd(const char *host, const char *port)
-{
+static int tsock_getfd(const char *host, const char *port) {
     int sock = -1;
     int attr;
     int err;
@@ -194,8 +191,7 @@ static int tsock_getfd(const char *host, const char *port)
  *
  * @returns "towrite" bytes written or -1 on error
  */
-static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
-{
+static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs) {
     ssize_t len;
     int slept = 0;
     int sleepsecs;
@@ -232,8 +228,7 @@ static int write_vec(int fd, struct iovec *iov, ssize_t towrite, int vecs)
 }
 
 /* --------------------- */
-static int init_tsock(CNID_bdb_private *db)
-{
+static int init_tsock(CNID_bdb_private *db) {
     int fd;
     int len[DBD_NUM_OPEN_ARGS];
     int iovecs;
@@ -282,8 +277,7 @@ static int init_tsock(CNID_bdb_private *db)
 }
 
 /* --------------------- */
-static int send_packet(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst)
-{
+static int send_packet(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst) {
     struct iovec iov[2];
     size_t towrite;
     int vecs;
@@ -310,15 +304,13 @@ static int send_packet(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst)
 }
 
 /* ------------------- */
-static void dbd_initstamp(struct cnid_dbd_rqst *rqst)
-{
+static void dbd_initstamp(struct cnid_dbd_rqst *rqst) {
     RQST_RESET(rqst);
     rqst->op = CNID_DBD_OP_GETSTAMP;
 }
 
 /* ------------------- */
-static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
-{
+static int dbd_reply_stamp(struct cnid_dbd_rply *rply) {
     switch (rply->result) {
     case CNID_DBD_RES_OK:
         break;
@@ -341,8 +333,7 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
  * if no answer after sometime (at least MAX_DELAY secondes) return an error
  */
 static int dbd_rpc(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
-                   struct cnid_dbd_rply *rply)
-{
+                   struct cnid_dbd_rply *rply) {
     ssize_t ret;
     char *nametmp;
     size_t len;
@@ -387,8 +378,7 @@ static int dbd_rpc(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
 
 /* -------------------- */
 static int transmit(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
-                    struct cnid_dbd_rply *rply)
-{
+                    struct cnid_dbd_rply *rply) {
     time_t orig, t;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
 
@@ -450,8 +440,7 @@ transmit_fail:
 }
 
 /* ---------------------- */
-static struct _cnid_db *cnid_dbd_new(struct vol *vol)
-{
+static struct _cnid_db *cnid_dbd_new(struct vol *vol) {
     struct _cnid_db *cdb;
 
     if ((cdb = (struct _cnid_db *)calloc(1, sizeof(struct _cnid_db))) == NULL) {
@@ -476,8 +465,7 @@ static struct _cnid_db *cnid_dbd_new(struct vol *vol)
 }
 
 /* ---------------------- */
-struct _cnid_db *cnid_dbd_open(struct cnid_open_args *args)
-{
+struct _cnid_db *cnid_dbd_open(struct cnid_open_args *args) {
     CNID_bdb_private *db = NULL;
     struct _cnid_db *cdb = NULL;
 
@@ -514,8 +502,7 @@ cnid_dbd_open_fail:
 }
 
 /* ---------------------- */
-void cnid_dbd_close(struct _cnid_db *cdb)
-{
+void cnid_dbd_close(struct _cnid_db *cdb) {
     CNID_bdb_private *db;
 
     if (!cdb) {
@@ -541,8 +528,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 /**
  * Get the db stamp
  **/
-static int cnid_dbd_stamp(CNID_bdb_private *db)
-{
+static int cnid_dbd_stamp(CNID_bdb_private *db) {
     struct cnid_dbd_rqst rqst_stamp;
     struct cnid_dbd_rply rply_stamp;
     char  stamp[ADEDLEN_PRIVSYN];
@@ -569,8 +555,7 @@ static int cnid_dbd_stamp(CNID_bdb_private *db)
 
 /* ---------------------- */
 cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
-                    cnid_t did, const char *name, size_t len, cnid_t hint)
-{
+                    cnid_t did, const char *name, size_t len, cnid_t hint) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply = { 0 };
@@ -638,8 +623,7 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
 
 /* ---------------------- */
 cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name,
-                    size_t len)
-{
+                    size_t len) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -695,8 +679,7 @@ cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name,
 
 /* ---------------------- */
 char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
-                       size_t len)
-{
+                       size_t len) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -756,8 +739,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
 /**
  * Caller passes buffer where we will store the db stamp
  **/
-int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
-{
+int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len) {
     CNID_bdb_private *db;
 
     if (!cdb || !(db = cdb->cnid_db_private) || len != ADEDLEN_PRIVSYN) {
@@ -773,8 +755,7 @@ int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 
 /* ---------------------- */
 cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
-                       const char *name, size_t len)
-{
+                       const char *name, size_t len) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -838,8 +819,7 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
 
 /* ---------------------- */
 int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                  void *buffer, size_t buflen)
-{
+                  void *buffer, size_t buflen) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -894,8 +874,7 @@ int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen,
 
 /* ---------------------- */
 int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
-                    cnid_t did, const char *name, size_t len)
-{
+                    cnid_t did, const char *name, size_t len) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -953,8 +932,7 @@ int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
 
 /* ---------------------- */
 cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
-                            cnid_t did, const char *name, size_t len, cnid_t hint)
-{
+                            cnid_t did, const char *name, size_t len, cnid_t hint) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -1020,8 +998,7 @@ cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* ---------------------- */
-int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
-{
+int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
@@ -1059,8 +1036,7 @@ int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
     }
 }
 
-int cnid_dbd_wipe(struct _cnid_db *cdb)
-{
+int cnid_dbd_wipe(struct _cnid_db *cdb) {
     CNID_bdb_private *db;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply = { 0 };

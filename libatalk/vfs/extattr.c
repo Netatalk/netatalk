@@ -81,8 +81,7 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
 ****************************************************************************/
 static char attr_name[256 + 5] = "user.";
 
-static const char *prefix(const char *uname)
-{
+static const char *prefix(const char *uname) {
 #if defined(SOLARIS) || defined(__APPLE__)
     return uname;
 #else
@@ -91,8 +90,7 @@ static const char *prefix(const char *uname)
 #endif
 }
 
-int sys_getxattrfd(int fd _U_, const char *uname _U_, int oflag _U_, ...)
-{
+int sys_getxattrfd(int fd _U_, const char *uname _U_, int oflag _U_, ...) {
 #if defined(SOLARIS)
     int eafd;
     va_list args;
@@ -118,8 +116,7 @@ int sys_getxattrfd(int fd _U_, const char *uname _U_, int oflag _U_, ...)
 }
 
 ssize_t sys_getxattr(const char *path, const char *uname, void *value,
-                     size_t size)
-{
+                     size_t size) {
     const char *name = prefix(uname);
 #if defined(HAVE_GETXATTR)
 #ifndef XATTR_ADD_OPT
@@ -184,8 +181,8 @@ ssize_t sys_getxattr(const char *path, const char *uname, void *value,
 #endif
 }
 
-ssize_t sys_fgetxattr(int filedes, const char *uname, void *value, size_t size)
-{
+ssize_t sys_fgetxattr(int filedes, const char *uname, void *value,
+                      size_t size) {
     const char *name = prefix(uname);
 #if defined(HAVE_FGETXATTR)
 #ifndef XATTR_ADD_OPT
@@ -248,8 +245,7 @@ ssize_t sys_fgetxattr(int filedes, const char *uname, void *value, size_t size)
 }
 
 ssize_t sys_lgetxattr(const char *path, const char *uname, void *value,
-                      size_t size)
-{
+                      size_t size) {
     const char *name = prefix(uname);
 #if defined(HAVE_LGETXATTR)
     return lgetxattr(path, name, value, size);
@@ -323,8 +319,8 @@ typedef union {
     int filedes;
 } extattr_arg;
 
-static ssize_t bsd_attr_list(int type, extattr_arg arg, char *list, size_t size)
-{
+static ssize_t bsd_attr_list(int type, extattr_arg arg, char *list,
+                             size_t size) {
     ssize_t list_size;
     int i, len;
 
@@ -395,8 +391,7 @@ static ssize_t bsd_attr_list(int type, extattr_arg arg, char *list, size_t size)
 #endif
 
 #if defined(HAVE_LISTXATTR)
-static ssize_t remove_user(ssize_t ret, char *list, size_t size)
-{
+static ssize_t remove_user(ssize_t ret, char *list, size_t size) {
     size_t len;
     char *ptr;
     char *ptr1;
@@ -432,8 +427,7 @@ static ssize_t remove_user(ssize_t ret, char *list, size_t size)
 }
 #endif
 
-ssize_t sys_listxattr(const char *path, char *list, size_t size)
-{
+ssize_t sys_listxattr(const char *path, char *list, size_t size) {
 #if defined(HAVE_LISTXATTR)
     ssize_t ret;
 #ifndef XATTR_ADD_OPT
@@ -466,8 +460,7 @@ ssize_t sys_listxattr(const char *path, char *list, size_t size)
 }
 
 ssize_t sys_flistxattr(int filedes _U_, const char *path, char *list,
-                       size_t size)
-{
+                       size_t size) {
 #if defined(HAVE_LISTXATTR)
     ssize_t ret;
 #ifndef XATTR_ADD_OPT
@@ -499,8 +492,7 @@ ssize_t sys_flistxattr(int filedes _U_, const char *path, char *list,
 #endif
 }
 
-ssize_t sys_llistxattr(const char *path, char *list, size_t size)
-{
+ssize_t sys_llistxattr(const char *path, char *list, size_t size) {
 #if defined(HAVE_LLISTXATTR)
     ssize_t ret;
     ret = llistxattr(path, list, size);
@@ -532,8 +524,7 @@ ssize_t sys_llistxattr(const char *path, char *list, size_t size)
 #endif
 }
 
-int sys_removexattr(const char *path, const char *uname)
-{
+int sys_removexattr(const char *path, const char *uname) {
     const char *name = prefix(uname);
 #if defined(HAVE_REMOVEXATTR)
 #ifndef XATTR_ADD_OPT
@@ -562,8 +553,7 @@ int sys_removexattr(const char *path, const char *uname)
 #endif
 }
 
-int sys_fremovexattr(int filedes _U_, const char *path, const char *uname)
-{
+int sys_fremovexattr(int filedes _U_, const char *path, const char *uname) {
     const char *name = prefix(uname);
 #if defined(HAVE_REMOVEXATTR)
 #ifndef XATTR_ADD_OPT
@@ -592,8 +582,7 @@ int sys_fremovexattr(int filedes _U_, const char *path, const char *uname)
 #endif
 }
 
-int sys_lremovexattr(const char *path, const char *uname)
-{
+int sys_lremovexattr(const char *path, const char *uname) {
     const char *name = prefix(uname);
 #if defined(HAVE_LREMOVEXATTR)
     return lremovexattr(path, name);
@@ -621,8 +610,7 @@ int sys_lremovexattr(const char *path, const char *uname)
 }
 
 int sys_setxattr(const char *path, const char *uname, const void *value,
-                 size_t size, int flags _U_)
-{
+                 size_t size, int flags _U_) {
     const char *name = prefix(uname);
 #if defined(HAVE_SETXATTR)
 #ifndef XATTR_ADD_OPT
@@ -686,8 +674,7 @@ int sys_setxattr(const char *path, const char *uname, const void *value,
 }
 
 int sys_fsetxattr(int filedes, const char *uname, const void *value,
-                  size_t size, int flags _U_)
-{
+                  size_t size, int flags _U_) {
     const char *name = prefix(uname);
 #if defined(HAVE_FSETXATTR)
 #ifndef XATTR_ADD_OPT
@@ -754,8 +741,7 @@ int sys_fsetxattr(int filedes, const char *uname, const void *value,
 }
 
 int sys_lsetxattr(const char *path, const char *uname, const void *value,
-                  size_t size, int flags _U_)
-{
+                  size_t size, int flags _U_) {
     const char *name = prefix(uname);
 #if defined(HAVE_LSETXATTR)
     return lsetxattr(path, name, value, size, flags);
@@ -821,8 +807,7 @@ int sys_lsetxattr(const char *path, const char *uname, const void *value,
  helper functions for Solaris' EA support
 ****************************************************************************/
 #ifdef SOLARIS
-static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
-{
+static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size) {
     struct stat sbuf;
 
     if (fstat(attrfd, &sbuf) == -1) {
@@ -842,8 +827,7 @@ static ssize_t solaris_read_xattr(int attrfd, void *value, size_t size)
     return read(attrfd, value, sbuf.st_size);
 }
 
-static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
-{
+static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size) {
     ssize_t len = 0;
     DIR *dirp;
     struct dirent *de;
@@ -891,8 +875,7 @@ static ssize_t solaris_list_xattr(int attrdirfd, char *list, size_t size)
     return len;
 }
 
-static int solaris_unlinkat(int attrdirfd, const char *name)
-{
+static int solaris_unlinkat(int attrdirfd, const char *name) {
     if (unlinkat(attrdirfd, name, 0) == -1) {
         return -1;
     }
@@ -901,8 +884,7 @@ static int solaris_unlinkat(int attrdirfd, const char *name)
 }
 
 static int solaris_attropen(const char *path, const char *attrpath, int oflag,
-                            mode_t mode)
-{
+                            mode_t mode) {
     EC_INIT;
     int filedes = -1, eafd = -1;
 
@@ -951,8 +933,7 @@ EC_CLEANUP:
 }
 
 static int solaris_attropenat(int filedes, const char *path,
-                              const char *attrpath, int oflag, mode_t mode)
-{
+                              const char *attrpath, int oflag, mode_t mode) {
     EC_INIT;
     int eafd = -1;
 
@@ -983,8 +964,8 @@ EC_CLEANUP:
 }
 
 
-static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
-{
+static int solaris_openat(int fildes, const char *path, int oflag,
+                          mode_t mode) {
     int filedes;
 
     if ((filedes = openat(fildes, path, oflag, mode)) == -1) {
@@ -1005,8 +986,7 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode)
     return filedes;
 }
 
-static int solaris_write_xattr(int attrfd, const char *value, size_t size)
-{
+static int solaris_write_xattr(int attrfd, const char *value, size_t size) {
     if ((ftruncate(attrfd, 0) == 0) && (write(attrfd, value, size) == size)) {
         return 0;
     } else {

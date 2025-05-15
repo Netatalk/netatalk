@@ -77,14 +77,12 @@ static char *labels[] = {
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo _U_)
-{
+static void sig_handler(int signo _U_) {
     alarmed = 1;
     return;
 }
 
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
@@ -119,8 +117,7 @@ static void set_signal(void)
   Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
   Returns pointer to name or NULL.
 */
-static const char *check_netatalk_dirs(const char *name)
-{
+static const char *check_netatalk_dirs(const char *name) {
     int c;
 
     for (c = 0; netatalk_dirs[c]; c++) {
@@ -133,8 +130,7 @@ static const char *check_netatalk_dirs(const char *name)
 }
 
 
-static void usage_ls(void)
-{
+static void usage_ls(void) {
     printf(
         "Usage: ad ls [-dRl[u]] [file|dir, ...]\n\n"
         "  -l Long Output [-u: unix info]:\n"
@@ -163,13 +159,11 @@ static void usage_ls(void)
     );
 }
 
-static void print_numlinks(const struct stat *statp)
-{
+static void print_numlinks(const struct stat *statp) {
     printf("%5ld", (long)statp->st_nlink);
 }
 
-static void print_owner(const struct stat *statp)
-{
+static void print_owner(const struct stat *statp) {
     struct passwd *pwd = getpwuid(statp->st_uid);
 
     if (pwd == NULL) {
@@ -179,8 +173,7 @@ static void print_owner(const struct stat *statp)
     }
 }
 
-static void print_group(const struct stat *statp)
-{
+static void print_group(const struct stat *statp) {
     struct group *grp = getgrgid(statp->st_gid);
 
     if (grp == NULL) {
@@ -190,8 +183,7 @@ static void print_group(const struct stat *statp)
     }
 }
 
-static void print_size(const struct stat *statp)
-{
+static void print_size(const struct stat *statp) {
     switch (statp->st_mode & S_IFMT) {
     case S_IFCHR:
     case S_IFBLK:
@@ -204,8 +196,7 @@ static void print_size(const struct stat *statp)
     }
 }
 
-static void print_date(const struct stat *statp)
-{
+static void print_date(const struct stat *statp) {
     time_t now;
     double diff;
     char buf[100], *fmt;
@@ -227,8 +218,7 @@ static void print_date(const struct stat *statp)
     printf(" %s", buf);
 }
 
-static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
-{
+static void print_flags(char *path, afpvol_t *vol, const struct stat *st) {
     int adflags = 0;
     struct adouble ad;
     char *FinderInfo;
@@ -429,8 +419,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
 #define TYPE(b) ((st->st_mode & (S_IFMT)) == (b))
 #define MODE(b) ((st->st_mode & (b)) == (b))
 
-static void print_mode(const struct stat *st)
-{
+static void print_mode(const struct stat *st) {
     if (TYPE(S_IFBLK)) {
         putchar('b');
     } else if (TYPE(S_IFCHR)) {
@@ -497,8 +486,7 @@ static void print_mode(const struct stat *st)
 #undef TYPE
 #undef MODE
 
-static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
-{
+static int ad_print(char *path, const struct stat *st, afpvol_t *vol) {
     if (! ls_l) {
         printf("%s  ", path);
 
@@ -524,8 +512,7 @@ static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
     return 0;
 }
 
-static int ad_ls_r(char *path, afpvol_t *vol)
-{
+static int ad_ls_r(char *path, afpvol_t *vol) {
     int ret = 0, cwd, dirprinted = 0, dirempty;
     const char *name;
     char *tmp;
@@ -670,8 +657,7 @@ exit:
     return ret;
 }
 
-int ad_ls(int argc, char **argv, AFPObj *obj)
-{
+int ad_ls(int argc, char **argv, AFPObj *obj) {
     int c, firstarg;
     afpvol_t vol;
     struct stat st;

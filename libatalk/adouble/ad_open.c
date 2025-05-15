@@ -171,8 +171,7 @@ static const struct entry entry_order_ea[ADEID_NUM_EA + 1] = {
 };
 
 #define ADFLAGS2LOGSTRBUFSIZ 128
-const char *adflags2logstr(int adflags)
-{
+const char *adflags2logstr(int adflags) {
     int first = 1;
     static char buf[ADFLAGS2LOGSTRBUFSIZ];
     buf[0] = 0;
@@ -294,8 +293,7 @@ const char *adflags2logstr(int adflags)
 }
 
 #define OPENFLAGS2LOGSTRBUFSIZ 128
-const char *openflags2logstr(int oflags)
-{
+const char *openflags2logstr(int oflags) {
     int first = 1;
     static char buf[OPENFLAGS2LOGSTRBUFSIZ];
     buf[0] = 0;
@@ -344,8 +342,7 @@ const char *openflags2logstr(int oflags)
     return buf;
 }
 
-static uint32_t get_eid(uint32_t eid)
-{
+static uint32_t get_eid(uint32_t eid) {
     if (eid <= 15) {
         return eid;
     }
@@ -373,8 +370,7 @@ static uint32_t get_eid(uint32_t eid)
 /**
  * Initialize offset pointers
  */
-int ad_init_offsets(struct adouble *ad)
-{
+int ad_init_offsets(struct adouble *ad) {
     const struct entry  *eid;
 
     if (ad->ad_magic == AD_MAGIC) {
@@ -421,8 +417,7 @@ int ad_init_offsets(struct adouble *ad)
 
 /* ----------------------------------- */
 static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
-                         int adflags)
-{
+                         int adflags) {
     const struct entry  *eid _U_;
     uint16_t            ashort;
     struct stat         st;
@@ -476,8 +471,7 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
  * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
  **/
 static int parse_entries(struct adouble *ad, uint16_t nentries,
-                         size_t valid_data_len)
-{
+                         size_t valid_data_len) {
     uint32_t   eid, len, off;
     uint8_t *buf = (uint8_t *) ad->ad_data + AD_HEADER_LEN;
 
@@ -518,8 +512,7 @@ static int parse_entries(struct adouble *ad, uint16_t nentries,
  *       the file. also, mmapping won't work for the hfs fs until it
  *       understands how to mmap header files. */
 static int ad_header_read(const char *path, struct adouble *ad,
-                          const struct stat *hst)
-{
+                          const struct stat *hst) {
     char                *buf = ad->ad_data;
     uint16_t            nentries;
     ssize_t             header_len;
@@ -595,8 +588,7 @@ static int ad_header_read(const char *path, struct adouble *ad,
 }
 
 /* error here means it's not ad ._ adouble:osx file and thus we return 1 */
-int ad_valid_header_osx(const char *path)
-{
+int ad_valid_header_osx(const char *path) {
     EC_INIT;
     int fd = -1;
     struct adouble      adosx;
@@ -662,8 +654,7 @@ EC_CLEANUP:
  *
  * Returns -1 in case an error occured, 0 if no conversion was done, 1 otherwise
  **/
-static int ad_convert_osx(const char *path, struct adouble *ad)
-{
+static int ad_convert_osx(const char *path, struct adouble *ad) {
     EC_INIT;
     static bool in_conversion = false;
     char *map;
@@ -746,8 +737,7 @@ EC_CLEANUP:
 
 /* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
 static int ad_header_read_osx(const char *path, struct adouble *ad,
-                              struct stat *hst)
-{
+                              struct stat *hst) {
     EC_INIT;
     struct adouble      adosx;
     char                *buf;
@@ -851,8 +841,7 @@ EC_CLEANUP:
 }
 
 static int ad_header_read_ea(const char *path, struct adouble *ad,
-                             const struct stat *hst _U_)
-{
+                             const struct stat *hst _U_) {
     EC_INIT;
     uint16_t nentries = 0;
     ssize_t  header_len;
@@ -953,8 +942,7 @@ EC_CLEANUP:
  * path: "/path/.AppleDouble/file"
  * => mkdir("/path/.AppleDouble/") (in ad_mkdir())
  */
-static int ad_mkrf(const char *path)
-{
+static int ad_mkrf(const char *path) {
     char *slash;
 
     /*
@@ -976,15 +964,13 @@ static int ad_mkrf(const char *path)
 }
 
 #ifdef HAVE_EAFD
-static int ad_mkrf_ea(const char *path _U_)
-{
+static int ad_mkrf_ea(const char *path _U_) {
     AFP_PANIC("ad_mkrf_ea: don't use");
     return 0;
 }
 #endif
 
-static int ad_mkrf_osx(const char *path _U_)
-{
+static int ad_mkrf_osx(const char *path _U_) {
     return 0;
 }
 
@@ -998,8 +984,7 @@ static int ad_mkrf_osx(const char *path _U_)
 */
 #define EMULATE_SUIDDIR
 
-static int ad_chown(const char *path, struct stat *stbuf)
-{
+static int ad_chown(const char *path, struct stat *stbuf) {
     int ret = 0;
 #ifdef EMULATE_SUIDDIR
     uid_t id;
@@ -1019,8 +1004,7 @@ static int ad_chown(const char *path, struct stat *stbuf)
 /* ----------------
    return access right and inode of path parent directory
 */
-static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
-{
+static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf) {
     if (*mode == 0) {
         return -1;
     }
@@ -1035,13 +1019,11 @@ static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
 }
 
 /* --------------------------- */
-static int ad_header_upgrade(struct adouble *ad _U_, const char *name _U_)
-{
+static int ad_header_upgrade(struct adouble *ad _U_, const char *name _U_) {
     return 0;
 }
 
-static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
-{
+static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_) {
     AFP_PANIC("ad_header_upgrade_ea: don't use");
     return 0;
 }
@@ -1055,8 +1037,7 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
  * 3. If ad_open was called with ADFLAGS_DF we may have opened the datafork and thus
  *    ought to close it before returning with an error condition.
  */
-static int ad_error(struct adouble *ad, int adflags)
-{
+static int ad_error(struct adouble *ad, int adflags) {
     int err _U_ = errno;
 
     if (adflags & ADFLAGS_NOHF) { /* 1 */
@@ -1083,8 +1064,7 @@ static int ad_error(struct adouble *ad, int adflags)
  * @param adflags  (r) flags from ad_open(..., adflags, ...)
  * @returns            mapped flags suitable for calling open()
  */
-static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
-{
+static int ad2openflags(const struct adouble *ad, int adfile, int adflags) {
     int oflags = 0;
 
     if (adflags & ADFLAGS_RDWR) {
@@ -1124,8 +1104,7 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
     return oflags;
 }
 #ifdef __APPLE__
-int ad_open_native_finderinfo(const char *path, char *ret)
-{
+int ad_open_native_finderinfo(const char *path, char *ret) {
     ssize_t size;
     LOG(log_debug, logtype_ad,
         "ad_open_native_finderinfo(\"%s\"): BEGIN",
@@ -1148,8 +1127,7 @@ int ad_open_native_finderinfo(const char *path, char *ret)
 #endif
 
 static int ad_open_df(const char *path, int adflags, mode_t mode,
-                      struct adouble *ad)
-{
+                      struct adouble *ad) {
     EC_INIT;
     struct stat st_dir;
     int         oflags;
@@ -1242,8 +1220,7 @@ EC_CLEANUP:
 }
 
 static int ad_open_hf_v2(const char *path, int adflags, mode_t mode,
-                         struct adouble *ad)
-{
+                         struct adouble *ad) {
     EC_INIT;
     struct stat st_dir;
     struct stat st_meta;
@@ -1393,8 +1370,7 @@ EC_CLEANUP:
 }
 
 static int ad_open_hf_ea(const char *path, int adflags, int mode _U_,
-                         struct adouble *ad)
-{
+                         struct adouble *ad) {
     EC_INIT;
     int oflags;
     int opened = 0;
@@ -1516,8 +1492,7 @@ EC_CLEANUP:
 }
 
 static int ad_open_hf(const char *path, int adflags, int mode,
-                      struct adouble *ad)
-{
+                      struct adouble *ad) {
     int ret = 0;
     ad->ad_meta_refcount++;
 
@@ -1546,8 +1521,7 @@ static int ad_open_hf(const char *path, int adflags, int mode,
 /*!
  * Get resofork length for adouble:ea, parameter 'ad' may be NULL
  */
-off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
-{
+off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_) {
     EC_INIT;
     struct stat st;
     off_t rlen;
@@ -1592,8 +1566,7 @@ EC_CLEANUP:
 }
 
 static int ad_open_rf_v2(const char *path, int adflags, int mode _U_,
-                         struct adouble *ad)
-{
+                         struct adouble *ad) {
     EC_INIT;
     /*
      * ad_open_hf_v2() does the work, but if it failed and adflags are ADFLAGS_NOHF | ADFLAGS_RF
@@ -1616,8 +1589,7 @@ EC_CLEANUP:
 }
 
 static int ad_open_rf_ea(const char *path, int adflags, int mode,
-                         struct adouble *ad)
-{
+                         struct adouble *ad) {
     EC_INIT;
     int oflags;
     int opened = 0;
@@ -1790,8 +1762,7 @@ EC_CLEANUP:
  * Open resource fork
  */
 static int ad_open_rf(const char *path, int adflags, int mode,
-                      struct adouble *ad)
-{
+                      struct adouble *ad) {
     int ret = 0;
 
     switch (ad->ad_vers) {
@@ -1826,8 +1797,7 @@ static int ad_open_rf(const char *path, int adflags, int mode,
 static bool ad_entry_check_size(uint32_t eid,
                                 size_t bufsize,
                                 uint32_t off,
-                                uint32_t got_len)
-{
+                                uint32_t got_len) {
     struct {
         off_t expected_len;
         bool fixed_size;
@@ -1926,8 +1896,7 @@ static bool ad_entry_check_size(uint32_t eid,
     return true;
 }
 
-void *ad_entry(const struct adouble *ad, int eid)
-{
+void *ad_entry(const struct adouble *ad, int eid) {
     size_t bufsize = ad->valid_data_len;
     off_t off = ad_getentryoff(ad, eid);
     size_t len = ad_getentrylen(ad, eid);
@@ -1950,8 +1919,7 @@ void *ad_entry(const struct adouble *ad, int eid)
     return ((struct adouble *)ad)->ad_data + off;
 }
 
-off_t ad_getentryoff(const struct adouble *ad, int eid)
-{
+off_t ad_getentryoff(const struct adouble *ad, int eid) {
     if (ad->ad_vers == AD_VERSION2) {
         return ad->ad_eid[eid].ade_off;
     }
@@ -1975,13 +1943,11 @@ off_t ad_getentryoff(const struct adouble *ad, int eid)
     AFP_PANIC("What am I doing here?");
 }
 
-const char *ad_path_ea(const char *path, int adflags _U_)
-{
+const char *ad_path_ea(const char *path, int adflags _U_) {
     return path;
 }
 
-const char *ad_path_osx(const char *path, int adflags _U_)
-{
+const char *ad_path_osx(const char *path, int adflags _U_) {
     static char pathbuf[MAXPATHLEN + 1];
     char    c, *slash, buf[MAXPATHLEN + 1];
 
@@ -2022,8 +1988,7 @@ const char *ad_path_osx(const char *path, int adflags _U_)
  *
  * FIXME: should do something for pathname > MAXPATHLEN
  */
-const char *ad_path(const char *path, int adflags)
-{
+const char *ad_path(const char *path, int adflags) {
     static char pathbuf[MAXPATHLEN + 1];
     const char *slash;
     size_t  l ;
@@ -2079,8 +2044,7 @@ const char *ad_path(const char *path, int adflags)
  * mode is ANDed with the parent directory's mask value in lieu of "umask",
  * and that value is returned.
  */
-char *ad_dir(const char *path)
-{
+char *ad_dir(const char *path) {
     static char     modebuf[MAXPATHLEN + 1];
     char        *slash;
     /*
@@ -2137,23 +2101,20 @@ use_cur:
     return modebuf;
 }
 
-int ad_setfuid(const uid_t id)
-{
+int ad_setfuid(const uid_t id) {
     default_uid = id;
     return 0;
 }
 
 /* ---------------- */
-uid_t ad_getfuid(void)
-{
+uid_t ad_getfuid(void) {
     return default_uid;
 }
 
 /* ----------------
    stat path parent directory
 */
-int ad_stat(const char *path, struct stat *stbuf)
-{
+int ad_stat(const char *path, struct stat *stbuf) {
     char *p;
     p = ad_dir(path);
 
@@ -2167,8 +2128,7 @@ int ad_stat(const char *path, struct stat *stbuf)
 /* ----------------
    return access right of path parent directory
 */
-int ad_mode(const char *path, mode_t mode)
-{
+int ad_mode(const char *path, mode_t mode) {
     struct stat     stbuf;
     ad_mode_st(path, &mode, &stbuf);
     return mode;
@@ -2177,8 +2137,7 @@ int ad_mode(const char *path, mode_t mode)
 /*
  * Use mkdir() with mode bits taken from ad_mode().
  */
-int ad_mkdir(const char *path, mode_t mode)
-{
+int ad_mkdir(const char *path, mode_t mode) {
     int ret;
     int st_invalid;
     struct stat stbuf;
@@ -2195,8 +2154,7 @@ int ad_mkdir(const char *path, mode_t mode)
     return ret;
 }
 
-static void ad_init_func(struct adouble *ad)
-{
+static void ad_init_func(struct adouble *ad) {
     switch (ad->ad_vers) {
     case AD_VERSION2:
         ad->ad_ops = &ad_adouble;
@@ -2222,16 +2180,14 @@ static void ad_init_func(struct adouble *ad)
     return;
 }
 
-void ad_init_old(struct adouble *ad, int flags, int options)
-{
+void ad_init_old(struct adouble *ad, int flags, int options) {
     memset(ad, 0, sizeof(struct adouble));
     ad->ad_vers = flags;
     ad->ad_options = options;
     ad_init_func(ad);
 }
 
-void ad_init(struct adouble *ad, const struct vol * restrict vol)
-{
+void ad_init(struct adouble *ad, const struct vol * restrict vol) {
     memset(ad, 0, sizeof(struct adouble));
     ad->ad_vers = vol->v_adouble;
     ad->ad_options = vol->v_ad_options;
@@ -2288,8 +2244,7 @@ void ad_init(struct adouble *ad, const struct vol * restrict vol)
  *
  * @returns 0 on success, any other value indicates an error
  */
-int ad_open(struct adouble *ad, const char *path, int adflags, ...)
-{
+int ad_open(struct adouble *ad, const char *path, int adflags, ...) {
     EC_INIT;
     va_list args;
     mode_t mode = 0;
@@ -2392,8 +2347,7 @@ EC_CLEANUP:
  *
  * @param adp   pointer to struct adouble
  */
-int ad_metadata(const char *name, int flags, struct adouble *adp)
-{
+int ad_metadata(const char *name, int flags, struct adouble *adp) {
     int   ret, err, oflags;
     /* Sanitize flags */
     oflags = (flags & (ADFLAGS_CHECK_OF | ADFLAGS_DIR)) | ADFLAGS_HF |
@@ -2413,8 +2367,7 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
 /*
  * @brief openat like wrapper for ad_metadata
  */
-int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
-{
+int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp) {
     int ret = 0;
     int cwdfd = -1;
 
@@ -2446,8 +2399,7 @@ exit:
     return ret;
 }
 
-int ad_refresh(const char *path, struct adouble *ad)
-{
+int ad_refresh(const char *path, struct adouble *ad) {
     switch (ad->ad_vers) {
     case AD_VERSION2:
         if (ad_meta_fileno(ad) == -1) {
@@ -2514,8 +2466,7 @@ int ad_refresh(const char *path, struct adouble *ad)
 int ad_openat(struct adouble  *ad,
               int dirfd,  /* dir fd openat like */
               const char *path,
-              int adflags, ...)
-{
+              int adflags, ...) {
     EC_INIT;
     int cwdfd = -1;
     va_list args;
@@ -2555,8 +2506,7 @@ EC_CLEANUP:
 /* build a resource fork mode from the data fork mode:
  * remove X mode and extend header to RW if R or W (W if R for locking),
  */
-mode_t ad_hf_mode(mode_t mode)
-{
+mode_t ad_hf_mode(mode_t mode) {
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
 
     /* fnctl lock need write access */

@@ -51,8 +51,7 @@ static unsigned char local_user_uuid[] = {0xff, 0xff, 0xee, 0xee, 0xdd, 0xdd,
                                           0xcc, 0xcc, 0xbb, 0xbb, 0xaa, 0xaa
                                          };
 
-void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
-{
+void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id) {
     uint32_t tmp;
 
     switch (type) {
@@ -75,8 +74,7 @@ void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
  * convert ascii string that can include dashes to binary uuid.
  * caller must provide a buffer.
  */
-void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
-{
+void uuid_string2bin(const char *uuidstring, unsigned char *uuid) {
     int nibble = 1;
     int i = 0;
     unsigned char c, val = 0;
@@ -111,8 +109,7 @@ void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
  * Use defined or default ascii mask for dash placement
  * Returns pointer to static buffer.
  */
-const char *uuid_bin2string(const unsigned char *uuid)
-{
+const char *uuid_bin2string(const unsigned char *uuid) {
     static char uuidstring[64];
     const char *uuidmask;
     int i = 0;
@@ -152,8 +149,7 @@ const char *uuid_bin2string(const unsigned char *uuid)
  *   uuid: pointer to uuid_t storage that the caller must provide
  * returns 0 on success !=0 on errror
  */
-int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
-{
+int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid) {
     int ret = 0;
     uuidtype_t mytype = type;
     char nulluuid[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -247,8 +243,7 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
  *
  * Caller must free name appropriately.
  */
-int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type)
-{
+int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     uid_t uid;
     gid_t gid;

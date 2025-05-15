@@ -49,8 +49,7 @@ extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 static int PAM_conv(int num_msg,
                     const struct pam_message **msg,
                     struct pam_response **resp,
-                    void *appdata_ptr _U_)
-{
+                    void *appdata_ptr _U_) {
     struct pam_response *reply;
     int count;
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
@@ -131,8 +130,7 @@ static struct pam_conv PAM_conversation = {
 
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
                  char *ibuf, size_t ibuflen _U_,
-                 char *rbuf _U_, size_t *rbuflen _U_)
-{
+                 char *rbuf _U_, size_t *rbuflen _U_) {
     struct passwd *pwd;
     int err, PAM_error;
 
@@ -229,8 +227,7 @@ login_err:
 */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
-                     char *rbuf, size_t *rbuflen)
-{
+                     char *rbuf, size_t *rbuflen) {
     char *username;
     size_t  len, ulen;
     *rbuflen = 0;
@@ -260,8 +257,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 /* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
+                         char *rbuf, size_t *rbuflen) {
     char *username;
     size_t  len, ulen;
     uint16_t  temp16;
@@ -290,8 +286,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 }
 
 /* logout */
-static void pam_logout(void)
-{
+static void pam_logout(void) {
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
@@ -300,8 +295,7 @@ static void pam_logout(void)
 /* change passwd */
 static int pam_changepw(void *obj _U_, char *username,
                         struct passwd *pwd _U_, char *ibuf, size_t ibuflen _U_,
-                        char *rbuf _U_, size_t *rbuflen _U_)
-{
+                        char *rbuf _U_, size_t *rbuflen _U_) {
     char pw[PASSWDLEN + 1];
     pam_handle_t *lpamh;
     uid_t uid;
@@ -384,8 +378,7 @@ static int pam_changepw(void *obj _U_, char *username,
 
 /* Printer ClearTxtUAM login */
 static int pam_printer(char *start, char *stop, char *username,
-                       struct papfile *out)
-{
+                       struct papfile *out) {
     int PAM_error;
     char *data;
     const char *p;
@@ -531,8 +524,7 @@ static int pam_printer(char *start, char *stop, char *username,
 }
 
 
-static int uam_setup(void *obj _U_, const char *path)
-{
+static int uam_setup(void *obj _U_, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Cleartxt Passwrd",
                      pam_login, NULL, pam_logout, pam_login_ext) < 0) {
         return -1;
@@ -552,8 +544,7 @@ static int uam_setup(void *obj _U_, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "Cleartxt Passwrd");
     uam_unregister(UAM_SERVER_CHANGEPW, "Cleartxt Passwrd");
     uam_unregister(UAM_SERVER_PRINTAUTH, "ClearTxtUAM");

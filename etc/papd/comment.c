@@ -20,16 +20,14 @@ struct comstate	*comstate;
 
 char	*comcont = "%%+";
 
-void compop(void)
-{
+void compop(void) {
     struct comstate	*cs;
     cs = comstate;
     comstate = cs->cs_prev;
     free(cs);
 }
 
-void compush(struct papd_comment *comment)
-{
+void compush(struct papd_comment *comment) {
     struct comstate	*cs;
 
     if ((cs = (struct comstate *)malloc(sizeof(struct comstate))) ==
@@ -44,8 +42,7 @@ void compush(struct papd_comment *comment)
     comstate = cs;
 }
 
-int comswitch(struct papd_comment *comments, int (*handler)())
-{
+int comswitch(struct papd_comment *comments, int (*handler)()) {
     struct papd_comment	*c, *comment = NULL;
 
     for (c = comments; c->c_begin; c++) {
@@ -64,8 +61,7 @@ int comswitch(struct papd_comment *comments, int (*handler)())
     return 0;
 }
 
-int comcmp(char *start, char *stop, char *str, int how)
-{
+int comcmp(char *start, char *stop, char *str, int how) {
     int		cc, len;
     len = stop - start;
     cc = strlen(str);
@@ -84,8 +80,7 @@ int comcmp(char *start, char *stop, char *str, int how)
 }
 
 struct papd_comment *commatch(char *start, char *stop,
-                              struct papd_comment comments[])
-{
+                              struct papd_comment comments[]) {
     struct papd_comment	*comment;
 
     for (comment = comments; comment->c_begin; comment++) {

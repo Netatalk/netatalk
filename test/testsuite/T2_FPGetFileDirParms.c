@@ -11,8 +11,7 @@
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
-STATIC void test32()
-{
+STATIC void test32() {
     char *name = "t32 dir";
     char *name1 = "t32 file";
     int  dir;
@@ -128,8 +127,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test33()
-{
+STATIC void test33() {
     char *name = "t33 dir";
     char *name1 = "t33 file";
     int  dir;
@@ -243,8 +241,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test42()
-{
+STATIC void test42() {
     char *name = "t42 dir";
     char *name1 = "t42 dir1";
     int  dir;
@@ -324,8 +321,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test52()
-{
+STATIC void test52() {
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -349,8 +345,7 @@ test_exit:
 }
 
 /* --------------------- */
-STATIC void test106()
-{
+STATIC void test106() {
     char *name1 = "t104 dir1";
     char *name2 = "t104 dir2";
     char *name3 = "t104 dir3";
@@ -504,8 +499,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test127()
-{
+STATIC void test127() {
     char *name  = "t127 smb afp dir1";
     char *name1 = "t127 dir1_1";
     int  dir1, dir;
@@ -548,8 +542,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test128()
-{
+STATIC void test128() {
     char *name  = "t128 smb afp dir1";
     char *name1 = "t128 dir1_1";
     int  dir1, dir;
@@ -589,8 +582,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test182()
-{
+STATIC void test182() {
     char *name = "t182 Contents";
     char *name1 = "t182 foo";
     int  dir, dir1;
@@ -686,8 +678,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test235()
-{
+STATIC void test235() {
     char *name = "t235 dir";
     char *name1 = "t235 file";
     char *name2 = "t235 file1";
@@ -756,8 +747,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test336()
-{
+STATIC void test336() {
     char *name = "t336 very long dirname (more than 31 bytes)";
     char *ndir = "t336 dir";
     uint16_t vol = VolID;
@@ -883,8 +873,7 @@ test_exit:
 }
 
 /* ----------------------- */
-STATIC void test340()
-{
+STATIC void test340() {
     char *name = "t340 dir";
     char *name1 = "t340 file";
     int  dir, dir1;
@@ -1011,8 +1000,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test420()
-{
+STATIC void test420() {
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t420 file";
@@ -1098,8 +1086,7 @@ test_exit:
 
 
 /* ----------- */
-void T2FPGetFileDirParms_test()
-{
+void T2FPGetFileDirParms_test() {
     ENTER_TESTSET
     test32();
     test33();

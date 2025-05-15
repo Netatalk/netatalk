@@ -33,8 +33,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_cmdreply(ASP asp, int result)
-{
+int asp_cmdreply(ASP asp, int result) {
     struct iovec	iov[ASP_MAXPACKETS];
     struct atp_block	atpb;
     int			iovcnt, buflen;

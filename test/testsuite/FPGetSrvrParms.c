@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ----------------------- */
-STATIC void test209(void)
-{
+STATIC void test209(void) {
     int ret;
     ENTER_TEST
     ret = FPGetSrvrParms(Conn);
@@ -17,8 +16,7 @@ STATIC void test209(void)
 }
 
 /* ----------------------- */
-STATIC void test316(void)
-{
+STATIC void test316(void) {
     int ret;
     DSI *dsi = &Conn->dsi;
     int nbe, i;
@@ -62,8 +60,7 @@ STATIC void test316(void)
 }
 
 /* ----------- */
-void FPGetSrvrParms_test()
-{
+void FPGetSrvrParms_test() {
     ENTER_TESTSET
     test209();
     test316();

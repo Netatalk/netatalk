@@ -63,8 +63,7 @@ int tundev;
 int debug = 0;
 static char	*version = VERSION;
 
-static void die(int n)
-{
+static void die(int n) {
     syslog(LOG_INFO, "going down on signal");
 
     if (gDebug) {
@@ -82,8 +81,7 @@ static void die(int n)
 }
 
 
-static void server(void)
-{
+static void server(void) {
     fd_set fds;
     int maxfd = 0;
     struct timeval tv;
@@ -133,8 +131,7 @@ static void server(void)
 }
 
 
-void disassociate(void)
-{
+void disassociate(void) {
     int i, dt;
 
     switch (fork()) {
@@ -168,8 +165,7 @@ void disassociate(void)
 }
 
 
-void usage(char *c)
-{
+void usage(char *c) {
     if (c) {
         fprintf(stderr, "%s\n", c);
     }
@@ -180,8 +176,7 @@ void usage(char *c)
     exit(EX_USAGE);
 }
 
-struct passwd *get_user(const char *username)
-{
+struct passwd *get_user(const char *username) {
     struct passwd *pwd;
     pwd = getpwnam(username);
 
@@ -193,8 +188,7 @@ struct passwd *get_user(const char *username)
     return pwd;
 }
 
-macip_options *read_options(const char *conf)
-{
+macip_options *read_options(const char *conf) {
     dictionary *config;
     macip_options *options = (macip_options *)malloc(sizeof(macip_options));
 
@@ -214,8 +208,7 @@ macip_options *read_options(const char *conf)
 }
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     struct sigaction sv;
     uint32_t net = 0;
     uint32_t mask = 0;

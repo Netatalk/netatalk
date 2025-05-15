@@ -74,8 +74,7 @@
  * This is usefull if a well know code path uses string, often doing strlen on string.
  * By converting to bstring which carries the strlen, the repeated computation can be avoided.
  */
-bstring brefcstr(char *str)
-{
+bstring brefcstr(char *str) {
     bstring b;
     size_t j;
 
@@ -99,8 +98,7 @@ bstring brefcstr(char *str)
 /*!
  * @brief Free up the bstring, WITHOUT freeing the pointed to c-string!
  */
-int bunrefcstr(bstring b)
-{
+int bunrefcstr(bstring b) {
     if (b == NULL || b->slen < 0 || b->mlen > 0 || b->data == NULL) {
         return BSTR_ERR;
     }
@@ -121,8 +119,7 @@ int bunrefcstr(bstring b)
 /*!
  * @brief Create an empty list with preallocated storage for at least 'min' members
  */
-struct bstrList *bstrListCreateMin(int min)
-{
+struct bstrList *bstrListCreateMin(int min) {
     struct bstrList *sl = NULL;
 
     if ((sl = bstrListCreate()) == NULL) {
@@ -140,8 +137,7 @@ struct bstrList *bstrListCreateMin(int min)
 /*!
  * @brief Push a bstring to the end of a list
  */
-int bstrListPush(struct bstrList *sl, bstring bs)
-{
+int bstrListPush(struct bstrList *sl, bstring bs) {
     if (sl->qty == sl->mlen) {
         if ((bstrListAlloc(sl, sl->qty + 1)) != BSTR_OK) {
             return BSTR_ERR;
@@ -156,16 +152,14 @@ int bstrListPush(struct bstrList *sl, bstring bs)
 /*!
  * @brief Pop a bstring from the end of a list
  */
-bstring bstrListPop(struct bstrList *sl _U_)
-{
+bstring bstrListPop(struct bstrList *sl _U_) {
     return NULL;
 }
 
 /*!
  * @brief Inverse bjoin
  */
-bstring bjoinInv(const struct bstrList * bl, const_bstring sep)
-{
+bstring bjoinInv(const struct bstrList * bl, const_bstring sep) {
     bstring b;
     int i, j, c, v;
 

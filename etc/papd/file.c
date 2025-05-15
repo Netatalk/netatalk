@@ -15,8 +15,8 @@
 
 #include "file.h"
 
-int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
-{
+int markline(struct papfile *pf, char **start, int *linelength,
+             int *crlflength) {
     char		*p;
 
     if (pf->pf_datalen == 0 && (pf->pf_state & PF_EOF)) {
@@ -60,8 +60,7 @@ int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
     return 1;
 }
 
-void morespace(struct papfile *pf, const char *data, int len)
-{
+void morespace(struct papfile *pf, const char *data, int len) {
     char		*nbuf;
     int			nsize;
 
@@ -94,8 +93,7 @@ void morespace(struct papfile *pf, const char *data, int len)
 }
 
 
-void append(struct papfile *pf, const char *data, int len)
-{
+void append(struct papfile *pf, const char *data, int len) {
     if ((pf->pf_data + pf->pf_datalen + len) >
             (pf->pf_buf + pf->pf_bufsize)) {
         morespace(pf, data, len);
@@ -106,8 +104,7 @@ void append(struct papfile *pf, const char *data, int len)
 }
 
 
-void spoolreply(struct papfile *out, char *str)
-{
+void spoolreply(struct papfile *out, char *str) {
     char	*pserr1 = "%%[ status: ";
     char	*pserr2 = " ]%%\n";
 
@@ -120,8 +117,7 @@ void spoolreply(struct papfile *out, char *str)
     append(out, pserr2, strlen(pserr2));
 }
 
-void spoolerror(struct papfile *out, char *str)
-{
+void spoolerror(struct papfile *out, char *str) {
     char	*pserr1 = "%%[ Error: ";
     char	*pserr2 = " ]%%\n";
 

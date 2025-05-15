@@ -4,8 +4,7 @@
 
 
 /* ------------------------- */
-STATIC void test227()
-{
+STATIC void test227() {
     uint16_t bitmap = (1 << FILPBIT_ATTR);
     uint16_t bitmap2;
     char *name = "t227 file.txt";
@@ -168,8 +167,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCatSearchExt_test()
-{
+void FPCatSearchExt_test() {
     ENTER_TESTSET
     test227();
 }

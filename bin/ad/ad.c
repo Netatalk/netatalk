@@ -34,19 +34,16 @@
 
 #include "ad.h"
 
-static void usage_main(void)
-{
+static void usage_main(void) {
     printf("Usage: ad ls|cp|rm|mv|set|find [file|dir, ...]\n");
     printf("       ad -v|--version\n");
 }
 
-static void show_version(void)
-{
+static void show_version(void) {
     printf("ad (Netatalk %s)\n", VERSION);
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     AFPObj obj = { 0 };
 
     if (argc < 2) {

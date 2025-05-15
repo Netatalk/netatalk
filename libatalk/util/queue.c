@@ -25,8 +25,7 @@
 
 #include <atalk/queue.h>
 
-static qnode_t *alloc_init_node(void *data)
-{
+static qnode_t *alloc_init_node(void *data) {
     qnode_t *node;
 
     if ((node = malloc(sizeof(qnode_t))) == NULL) {
@@ -41,8 +40,7 @@ static qnode_t *alloc_init_node(void *data)
  * Interface
  *******************************************************************************/
 
-q_t *queue_init(void)
-{
+q_t *queue_init(void) {
     q_t *queue;
 
     if ((queue = alloc_init_node(NULL)) == NULL) {
@@ -54,8 +52,7 @@ q_t *queue_init(void)
 }
 
 /* Insert at tail */
-qnode_t *enqueue(q_t *q, void *data)
-{
+qnode_t *enqueue(q_t *q, void *data) {
     qnode_t *node;
 
     if ((node = alloc_init_node(data)) == NULL) {
@@ -71,8 +68,7 @@ qnode_t *enqueue(q_t *q, void *data)
 }
 
 /* Insert at head */
-qnode_t *prequeue(q_t *q, void *data)
-{
+qnode_t *prequeue(q_t *q, void *data) {
     qnode_t *node;
 
     if ((node = alloc_init_node(data)) == NULL) {
@@ -88,8 +84,7 @@ qnode_t *prequeue(q_t *q, void *data)
 }
 
 /* Take from head */
-void *dequeue(q_t *q)
-{
+void *dequeue(q_t *q) {
     qnode_t *node;
     void *data;
 
@@ -106,8 +101,7 @@ void *dequeue(q_t *q)
     return data;
 }
 
-void queue_destroy(q_t *q, void (*callback)(void *))
-{
+void queue_destroy(q_t *q, void (*callback)(void *)) {
     void *p;
 
     while ((p = dequeue(q)) != NULL) {

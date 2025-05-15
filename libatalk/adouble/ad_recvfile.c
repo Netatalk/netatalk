@@ -34,8 +34,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-static int ad_recvfile_init(const struct adouble *ad, int eid, off_t *off)
-{
+static int ad_recvfile_init(const struct adouble *ad, int eid, off_t *off) {
     int fd;
 
     if (eid == ADEID_DFORK) {
@@ -64,8 +63,7 @@ static int ad_recvfile_init(const struct adouble *ad, int eid, off_t *off)
 static ssize_t default_sys_recvfile(int fromfd,
                                     int tofd,
                                     off_t offset,
-                                    size_t count)
-{
+                                    size_t count) {
     int saved_errno = 0;
     size_t total = 0;
     size_t bufsize = MIN(TRANSFER_BUF_SIZE, count);
@@ -134,8 +132,7 @@ static ssize_t default_sys_recvfile(int fromfd,
 }
 
 #ifdef HAVE_SPLICE
-static int waitfordata(int socket)
-{
+static int waitfordata(int socket) {
     fd_set readfds;
     int maxfd = socket + 1;
     int ret;
@@ -171,8 +168,7 @@ static int waitfordata(int socket)
  * from the network in the case of return != -1.
  */
 static ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count,
-                            int splice_size)
-{
+                            int splice_size) {
     static int pipefd[2] = { -1, -1 };
     static bool try_splice_call = true;
     size_t total_written = 0;
@@ -260,16 +256,14 @@ done:
  No recvfile system call - use the default 128 chunk implementation.
 *****************************************************************/
 
-ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count)
-{
+ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count) {
     return default_sys_recvfile(fromfd, tofd, offset, count);
 }
 #endif
 
 /* read from a socket and write to an adouble file */
 ssize_t ad_recvfile(struct adouble *ad, int eid, int sock, off_t off,
-                    size_t len, int splice_size)
-{
+                    size_t len, int splice_size) {
     ssize_t cc;
     int fd;
     off_t off_fork = off;

@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test56()
-{
+STATIC void test56() {
     uint16_t bitmap;
     uint16_t vol = VolID;
     ENTER_TEST
@@ -29,8 +28,7 @@ STATIC void test56()
 }
 
 /* ----------- */
-void FPGetVolParms_test()
-{
+void FPGetVolParms_test() {
     ENTER_TESTSET
     test56();
 }

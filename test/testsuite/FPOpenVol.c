@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test205()
-{
+STATIC void test205() {
     uint16_t vol = VolID;
     DSI *dsi = &Conn->dsi;
     uint16_t ret;
@@ -82,8 +81,7 @@ fin:
 }
 
 /* -------------------------------- */
-STATIC void test404()
-{
+STATIC void test404() {
     uint16_t vol = VolID;
     DSI *dsi = &Conn->dsi;
     uint16_t ret;
@@ -118,8 +116,7 @@ fin:
 }
 
 /* ----------- */
-void FPOpenVol_test()
-{
+void FPOpenVol_test() {
     ENTER_TESTSET
     test205();
     test404();

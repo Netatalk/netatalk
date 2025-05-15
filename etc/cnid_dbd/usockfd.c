@@ -28,8 +28,7 @@
 /* ---------------
  * create a tcp socket
  */
-int tsockfd_create(char *host, char *port, int backlog)
-{
+int tsockfd_create(char *host, char *port, int backlog) {
     int sockfd, flag, ret;
     struct addrinfo hints, *servinfo, *p;
     /* Prepare hint for getaddrinfo */
@@ -96,8 +95,7 @@ int tsockfd_create(char *host, char *port, int backlog)
 }
 
 /* --------------------- */
-int usockfd_check(int sockfd, const sigset_t *sigset)
-{
+int usockfd_check(int sockfd, const sigset_t *sigset) {
     int fd;
     socklen_t size;
     fd_set readfds;

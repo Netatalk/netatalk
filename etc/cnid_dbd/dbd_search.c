@@ -18,8 +18,8 @@
 #include "dbif.h"
 #include "pack.h"
 
-int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
-{
+int dbd_search(DBD *dbd, struct cnid_dbd_rqst *rqst,
+               struct cnid_dbd_rply *rply) {
     DBT key;
     int results;
     static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];

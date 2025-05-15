@@ -10,8 +10,7 @@ static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
 /* -------------------------- */
-STATIC void test129()
-{
+STATIC void test129() {
     int  dir;
     uint16_t vol = VolID;
     char *name = "t129 Resolve ID file";
@@ -77,8 +76,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test130()
-{
+STATIC void test130() {
     uint16_t vol = VolID;
     int  dir;
     char *name = "t130 Delete ID file";
@@ -150,8 +148,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test131()
-{
+STATIC void test131() {
     uint16_t vol = VolID;
     int  dir;
     char *name = "t131 Delete ID file";
@@ -218,8 +215,7 @@ test_exit:
 
 
 /* -------------------------- */
-STATIC void test331()
-{
+STATIC void test331() {
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t331 file";
@@ -319,8 +315,7 @@ test_exit:
 }
 
 /* -------------------------- */
-static int get_fs_lock(char *folder, char *file)
-{
+static int get_fs_lock(char *folder, char *file) {
     int fd;
     struct flock lock;
     int ret;
@@ -378,8 +373,7 @@ static int get_fs_lock(char *folder, char *file)
 }
 
 /* -------------------------- */
-STATIC void test360()
-{
+STATIC void test360() {
     uint16_t vol = VolID;
     int  dir;
     char *name  = "t360 file";
@@ -509,8 +503,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test397()
-{
+STATIC void test397() {
     uint16_t vol = VolID;
     char *name = "t397 Resolve ID file";
     int  ofs =  3 * sizeof(uint16_t);
@@ -563,8 +556,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test412()
-{
+STATIC void test412() {
     uint16_t vol = VolID;
     int  dir1, dir2;
     char *name  = "t412 file";
@@ -663,8 +655,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test413()
-{
+STATIC void test413() {
     uint16_t vol = VolID;
     int  dir;
     int  dir2;
@@ -767,8 +758,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test418()
-{
+STATIC void test418() {
     uint16_t vol = VolID;
     int  dir;
     char *name1 = "t418_file1";
@@ -874,8 +864,7 @@ test_exit:
 
 
 /* ----------- */
-void T2FPResolveID_test()
-{
+void T2FPResolveID_test() {
     ENTER_TESTSET
     test129();
     test130();

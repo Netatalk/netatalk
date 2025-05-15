@@ -16,8 +16,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_shutdown(ASP asp)
-{
+int asp_shutdown(ASP asp) {
     struct atp_block	atpb;
     struct iovec	iov;
     char		*p;

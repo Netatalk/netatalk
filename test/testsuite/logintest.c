@@ -35,8 +35,7 @@ int     Mac = 0;
 char    *Test;
 static char  *vers = "AFP3.4";
 
-STATIC void connect_server(CONN *conn)
-{
+STATIC void connect_server(CONN *conn) {
     DSI *dsi;
     conn->type = Proto;
 
@@ -55,8 +54,7 @@ STATIC void connect_server(CONN *conn)
 }
 
 /* ------------------------- */
-STATIC void test1(void)
-{
+STATIC void test1(void) {
     ENTER_TEST
     connect_server(Conn);
     Dsi = &Conn->dsi;
@@ -74,8 +72,7 @@ STATIC void test1(void)
 }
 
 /* ------------------------- */
-STATIC void test2(void)
-{
+STATIC void test2(void) {
     ENTER_TEST
     connect_server(Conn);
     Dsi = &Conn->dsi;
@@ -115,8 +112,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test3(void)
-{
+STATIC void test3(void) {
     static char *uam = "No User Authent";
     int ret;
     ENTER_TEST
@@ -156,8 +152,7 @@ test_exit:
 /* ------------------------- */
 // FIXME: when max connections is exceeded the server still returns
 // code DSIERR_OK and not DSIERR_TOOMANY (Netatalk 4.0.3, 3.1.12)
-STATIC void test4(void)
-{
+STATIC void test4(void) {
     CONN conn[50];
     int  i;
     int  cnt = 0;
@@ -211,8 +206,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test5(void)
-{
+STATIC void test5(void) {
     static char *uam = "Cleartxt Passwrd";
     int ret;
     ENTER_TEST
@@ -242,8 +236,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test6(void)
-{
+STATIC void test6(void) {
     DSI *dsi;
     uint32_t i = 0;
     connect_server(Conn);
@@ -283,8 +276,7 @@ test_exit:
 }
 
 /* =============================== */
-void usage(char * av0)
-{
+void usage(char * av0) {
     fprintf(stdout,
             "usage:\t%s [-1234567CmVv] [-h host] [-p port] [-s vol] [-u user] [-w password]\n",
             av0);
@@ -307,8 +299,7 @@ void usage(char * av0)
 }
 
 /* ------------------------------- */
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     int cc;
 
     if (ac == 1) {

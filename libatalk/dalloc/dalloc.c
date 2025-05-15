@@ -126,8 +126,7 @@
 
 /* Use dalloc_add_copy() macro, not this function */
 int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
-                            size_t size)
-{
+                            size_t size) {
     if (talloc_chunk) {
         /* Called from dalloc_add_copy() macro */
         dd->dd_talloc_array = talloc_realloc(dd,
@@ -156,8 +155,7 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
  * is supported by using the type string "DALLOC_CTX". Any other type string
  * designates the requested objects type.
  */
-void *dalloc_get(const DALLOC_CTX *d, ...)
-{
+void *dalloc_get(const DALLOC_CTX *d, ...) {
     EC_INIT;
     void *p = NULL;
     va_list args;
@@ -202,8 +200,7 @@ EC_CLEANUP:
     return p;
 }
 
-void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
-{
+void *dalloc_value_for_key(const DALLOC_CTX *d, ...) {
     EC_INIT;
     void *p = NULL;
     va_list args;
@@ -252,8 +249,7 @@ EC_CLEANUP:
     return p;
 }
 
-char *dalloc_strdup(const void *ctx, const char *string)
-{
+char *dalloc_strdup(const void *ctx, const char *string) {
     EC_INIT;
     char *p;
     EC_NULL(p = talloc_strdup(ctx, string));
@@ -271,8 +267,7 @@ EC_CLEANUP:
     return p;
 }
 
-char *dalloc_strndup(const void *ctx, const char *string, size_t n)
-{
+char *dalloc_strndup(const void *ctx, const char *string, size_t n) {
     EC_INIT;
     char *p;
     EC_NULL(p = talloc_strndup(ctx, string, n));

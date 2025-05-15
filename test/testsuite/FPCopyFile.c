@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test71()
-{
+STATIC void test71() {
     int fork;
     int dir;
     int dir1;
@@ -95,8 +94,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test158()
-{
+STATIC void test158() {
     char *name  = "t158 old file name";
     char *name1 = "t158 new file name";
     uint16_t vol = VolID;
@@ -119,8 +117,7 @@ STATIC void test158()
 }
 
 /* ------------------------- */
-STATIC void test315()
-{
+STATIC void test315() {
     uint16_t bitmap = 0;
     char *name  = "t315 old file name";
     char *name1 = "t315 new file name";
@@ -180,8 +177,7 @@ test_exit:
 }
 
 /* ------------------------- */
-static void test_meta(char *name, char *name1, uint16_t vol2)
-{
+static void test_meta(char *name, char *name1, uint16_t vol2) {
     uint16_t vol = VolID;
     int tp, tp1;
     int  ofs =  3 * sizeof(uint16_t);
@@ -255,8 +251,7 @@ fin:
 
 
 /* ------------------------- */
-STATIC void test317()
-{
+STATIC void test317() {
     char *name  = "t317 old file name";
     char *name1 = "t317 new file name";
     ENTER_TEST
@@ -265,8 +260,7 @@ STATIC void test317()
 }
 
 /* ------------------------- */
-STATIC void test332()
-{
+STATIC void test332() {
     char *name  = "t332 old file name";
     char *name1 = "t332 new file name";
     uint16_t vol = VolID;
@@ -345,8 +339,7 @@ fin:
 }
 
 /* ----------- */
-STATIC void test374()
-{
+STATIC void test374() {
     int fork;
     uint16_t vol2;
     uint16_t bitmap = 0;
@@ -399,8 +392,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test375()
-{
+STATIC void test375() {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -451,8 +443,7 @@ fin:
 }
 
 /* ------------------------- */
-STATIC void test401()
-{
+STATIC void test401() {
     int  dir = 0;
     char *name = "t401 file.pdf";
     char *name1 = "new t401 file.pdf";
@@ -553,8 +544,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test402()
-{
+STATIC void test402() {
     int  dir = 0;
     char *name = "t402 file.pdf";
     char *name1 = "new t402 file.pdf";
@@ -647,8 +637,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test403()
-{
+STATIC void test403() {
     int  dir = 0;
     char *name = "t403 file.pdf";
     char *name1 = "new t403 file.pdf";
@@ -740,8 +729,7 @@ test_exit:
 /* -------------------------
  * this one is not run by default
 */
-STATIC void test406()
-{
+STATIC void test406() {
     int  dir = DIRDID_ROOT;
     char *name = "Ducky.tif";
     char *name1 = "new ducky.tif";
@@ -764,8 +752,7 @@ test_exit:
 }
 
 /* ------------------------- */
-static void test_data(char *name, char *name1, uint16_t vol2)
-{
+static void test_data(char *name, char *name1, uint16_t vol2) {
     int  dir = DIRDID_ROOT;
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
@@ -983,8 +970,7 @@ fin:
 }
 
 /* ---------------------- */
-STATIC void test407()
-{
+STATIC void test407() {
     char *name = "t407 file.pdf";
     char *name1 = "new t407 file.pdf";
     uint16_t vol2;
@@ -1015,8 +1001,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test408()
-{
+STATIC void test408() {
     char *name  = "t408 old file name";
     char *name1 = "t408 new file name";
     uint16_t vol2;
@@ -1048,8 +1033,7 @@ test_exit:
 
 
 /* ------------------------- */
-STATIC void test409()
-{
+STATIC void test409() {
     char *name  = "t409 old file name";
     char *name1 = "t409 new file name";
     ENTER_TEST
@@ -1058,8 +1042,7 @@ STATIC void test409()
 }
 
 /* ------------------------- */
-STATIC void test414()
-{
+STATIC void test414() {
     int dir;
     char *name  = "t414 old file name";
     char *name1 = "t414 new file name";
@@ -1092,8 +1075,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test424()
-{
+STATIC void test424() {
     int dir;
     char *name  = "t424 Copy file";
     char *name1 = "t424 new file name";
@@ -1139,8 +1121,7 @@ test_exit:
 
 
 /* ----------- */
-void FPCopyFile_test()
-{
+void FPCopyFile_test() {
     ENTER_TESTSET
     test71();
     test158();

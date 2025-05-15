@@ -27,8 +27,7 @@ extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 /* login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf _U_, size_t ibuflen _U_,
-                        char *rbuf _U_, size_t *rbuflen)
-{
+                        char *rbuf _U_, size_t *rbuflen) {
     struct passwd *pwent;
     char *guest, *username;
     *rbuflen = 0;
@@ -58,16 +57,14 @@ static int noauth_login(void *obj, struct passwd **uam_pwd,
 
 static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
-                            char *rbuf, size_t *rbuflen)
-{
+                            char *rbuf, size_t *rbuflen) {
     return noauth_login(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 
 /* Printer NoAuthUAM Login */
 static int noauth_printer(char *start, char *stop, char *username,
-                          struct papfile *out)
-{
+                          struct papfile *out) {
     char	*data, *p, *q;
     static const char *loginok = "0\r";
     data = (char *)malloc(stop - start + 1);
@@ -118,8 +115,7 @@ static int noauth_printer(char *start, char *stop, char *username,
 }
 
 
-static int uam_setup(void *handle, const char *path)
-{
+static int uam_setup(void *handle, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "No User Authent",
                      noauth_login, NULL, NULL, noauth_login_ext) < 0) {
         return -1;
@@ -133,8 +129,7 @@ static int uam_setup(void *handle, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "No User Authent");
     uam_unregister(UAM_SERVER_PRINTAUTH, "NoAuthUAM");
 }

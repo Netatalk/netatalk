@@ -82,18 +82,15 @@ static char *resultstrings[] = {
     "Create directory tree with 10^3 dirs                   "
 };
 
-static void starttimer(void)
-{
+static void starttimer(void) {
     gettimeofday(&tv_start, NULL);
 }
 
-static void stoptimer(void)
-{
+static void stoptimer(void) {
     gettimeofday(&tv_end, NULL);
 }
 
-static unsigned long timediff(void)
-{
+static unsigned long timediff(void) {
     if (tv_end.tv_usec < tv_start.tv_usec) {
         tv_end.tv_usec += 1000000;
         tv_end.tv_sec -= 1;
@@ -104,8 +101,7 @@ static unsigned long timediff(void)
     return (tv_dif.tv_sec * 1000) + (tv_dif.tv_usec / 1000);
 }
 
-static void addresult(int test, int iteration)
-{
+static void addresult(int test, int iteration) {
     unsigned long t;
     unsigned long long avg;
     t = timediff();
@@ -120,8 +116,7 @@ static void addresult(int test, int iteration)
     (*results)[iteration][test] = t;
 }
 
-static void displayresults(void)
-{
+static void displayresults(void) {
     int i, test, maxindex, minindex, divsub = 0;
     unsigned long long sum, max = 0, min = 18446744073709551615ULL;
 
@@ -181,15 +176,13 @@ static void displayresults(void)
 }
 
 /* ------------------------- */
-void fatal_failed(void)
-{
+void fatal_failed(void) {
     fprintf(stdout, "\tFATAL ERROR\n");
     exit(1);
 }
 
 /* --------------------------------- */
-int is_there(CONN *conn, int did, char *name)
-{
+int is_there(CONN *conn, int did, char *name) {
     return FPGetFileDirParams(conn, vol, did, name,
                               (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
                               ,
@@ -202,8 +195,7 @@ struct async_io_req {
     size_t air_size;
 };
 
-static void *rply_thread(void *p)
-{
+static void *rply_thread(void *p) {
     struct async_io_req *air = p;
     size_t size = air->air_size;
     unsigned long long n = air->air_count;
@@ -241,8 +233,7 @@ exit:
 }
 
 /* ------------------------- */
-void run_test(const int dir)
-{
+void run_test(const int dir) {
     static char *data;
     int i, maxi = 0;
     int j, k;
@@ -779,8 +770,7 @@ fin:
 }
 
 /* =============================== */
-void usage(char * av0)
-{
+void usage(char * av0) {
     int i = 0;
     fprintf(stdout,
             "usage:\t%s [-34567GgVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
@@ -815,8 +805,7 @@ void usage(char * av0)
 }
 
 /* ------------------------------- */
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     int cc, i, t;
     int Debug = 0;
     static char *vers = "AFP3.4";

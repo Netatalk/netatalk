@@ -17,8 +17,7 @@
 #include <atalk/util.h>
 
 /* OpenSession. set up the connection */
-void dsi_opensession(DSI *dsi)
-{
+void dsi_opensession(DSI *dsi) {
     size_t i = 0;
     uint32_t servquant;
     uint32_t replcsize;

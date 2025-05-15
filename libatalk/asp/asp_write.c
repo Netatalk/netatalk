@@ -33,8 +33,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_wrtcont(ASP asp, char *buf, size_t *buflen)
-{
+int asp_wrtcont(ASP asp, char *buf, size_t *buflen) {
     struct iovec	iov[ASP_MAXPACKETS];
     struct atp_block	atpb;
     char	        *p;

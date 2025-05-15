@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test13()
-{
+STATIC void test13() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     char *name = "t13 file";
@@ -40,8 +39,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test27()
-{
+STATIC void test27() {
     char *name  = "t27 file";
     char *name2 = "t27 dir";
     uint16_t vol = VolID;
@@ -66,8 +64,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC  void test74()
-{
+STATIC  void test74() {
     int fork;
     uint16_t bitmap = 0;
     uint16_t vol2;
@@ -114,8 +111,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test90()
-{
+STATIC void test90() {
     int  dir = 0;
     char *name = "t90 dir";
     uint16_t vol = VolID;
@@ -139,8 +135,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test172()
-{
+STATIC void test172() {
     uint16_t bitmap = 0;
     char *tname = "test172";
     char *name = "test172.txt";
@@ -314,8 +309,7 @@ test_exit:
 
 /* -------------------------- */
 // Known to kill afpd 1.6.x servers
-STATIC void test196()
-{
+STATIC void test196() {
     char *name = "test196";
     char *name2 = "test196_subdir";
     char *name1 = "test196/test196_subdir";
@@ -395,8 +389,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test368()
-{
+STATIC void test368() {
     int fork;
     uint16_t bitmap = 0;
     uint16_t vol2 = 0;
@@ -455,8 +448,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test369()
-{
+STATIC void test369() {
     int fork;
     uint16_t bitmap = 0;
     uint16_t vol2 = 0;
@@ -514,8 +506,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test421()
-{
+STATIC void test421() {
     char *name = "test421";
     uint16_t vol = VolID;
     uint16_t vol2;
@@ -574,8 +565,7 @@ test_exit:
 /* ------------------------- */
 extern int Attention_received;
 
-STATIC void test422()
-{
+STATIC void test422() {
     uint16_t vol = VolID;
     char *name = "t422 file";
     int ret;
@@ -618,8 +608,7 @@ test_exit:
 
 
 /* ----------- */
-void FPDelete_test()
-{
+void FPDelete_test() {
     ENTER_TESTSET
     test13();
     test27();

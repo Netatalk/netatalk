@@ -50,8 +50,7 @@
 #ifdef EBUG
 #include <stdio.h>
 
-static void print_func(uint8_t ctrlinfo)
-{
+static void print_func(uint8_t ctrlinfo) {
     switch (ctrlinfo & ATP_FUNCMASK) {
     case ATP_TREQ:
         printf("TREQ");
@@ -74,8 +73,7 @@ static void print_func(uint8_t ctrlinfo)
     }
 }
 
-static void dump_packet(char *buf, int len)
-{
+static void dump_packet(char *buf, int len) {
     int		i;
 
     for (i = 0; i < len; ++i) {
@@ -85,8 +83,7 @@ static void dump_packet(char *buf, int len)
     putchar('\n');
 }
 
-void atp_print_addr(char *s, struct sockaddr_at *saddr)
-{
+void atp_print_addr(char *s, struct sockaddr_at *saddr) {
     printf("%s ", s);
     saddr->sat_family == AF_APPLETALK ? printf("at.") :
     printf("%d.", saddr->sat_family);
@@ -103,8 +100,7 @@ void atp_print_addr(char *s, struct sockaddr_at *saddr)
 void atp_build_req_packet(struct atpbuf *pktbuf,
                           uint16_t tid,
                           uint8_t ctrl,
-                          struct atp_block *atpb)
-{
+                          struct atp_block *atpb) {
     struct atphdr	hdr;
     /* fill in the packet fields
     */
@@ -124,8 +120,7 @@ void atp_build_resp_packet(struct atpbuf *pktbuf,
                            uint16_t tid,
                            uint8_t ctrl,
                            struct atp_block *atpb,
-                           uint8_t seqnum)
-{
+                           uint8_t seqnum) {
     struct atphdr	hdr;
     /* fill in the packet fields */
     *(pktbuf->atpbuf_info.atpbuf_data) = DDPTYPE_ATP;
@@ -150,8 +145,7 @@ atp_recv_atp(ATP ah,
              uint8_t *func,
              uint16_t tid,
              char *rbuf,
-             int wait)
-{
+             int wait) {
     /*
       Receive a packet from address fromaddr of the correct function type
       and with the correct tid.  fromaddr = AT_ANY... and function == ATP_TYPEANY
@@ -322,8 +316,7 @@ atp_recv_atp(ATP ah,
 
 int at_addr_eq(
     struct sockaddr_at	*paddr,		/* primary address */
-    struct sockaddr_at	*saddr)		/* secondary address */
-{
+    struct sockaddr_at	*saddr) {	/* secondary address */
     /* compare two atalk addresses -- only check the non-zero fields
        of paddr against saddr.
        return zero if not equal, non-zero if equal

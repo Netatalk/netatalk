@@ -39,8 +39,7 @@
 
 /* Get ACL. Allocates storage as needed. Caller must free.
  * Returns no of ACEs or -1 on error.  */
-int get_nfsv4_acl(const char *name, ace_t **retAces)
-{
+int get_nfsv4_acl(const char *name, ace_t **retAces) {
     int ace_count = -1;
     ace_t *aces;
     struct stat st;
@@ -100,8 +99,7 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
 /*
   Concatenate ACEs
 */
-ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
-{
+ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count) {
     ace_t *new_aces;
     int i, j;
 
@@ -132,8 +130,7 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 /*
   Remove any trivial ACE "in-place". Returns no of non-trivial ACEs
 */
-int strip_trivial_aces(ace_t **saces, int sacecount)
-{
+int strip_trivial_aces(ace_t **saces, int sacecount) {
     int i, j;
     int nontrivaces = 0;
     ace_t *aces = *saces;
@@ -178,8 +175,7 @@ int strip_trivial_aces(ace_t **saces, int sacecount)
 /*
   Remove non-trivial ACEs "in-place". Returns no of trivial ACEs.
 */
-int strip_nontrivial_aces(ace_t **saces, int sacecount)
-{
+int strip_nontrivial_aces(ace_t **saces, int sacecount) {
     int i, j;
     int trivaces = 0;
     ace_t *aces = *saces;
@@ -234,8 +230,7 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
  * (6) merge acl2 and acl2
  * (7) set the ACL merged ACL on the object
  */
-int nfsv4_chmod(char *name, mode_t mode)
-{
+int nfsv4_chmod(char *name, mode_t mode) {
     int ret = -1;
     int noaces, nnaces;
     ace_t *oacl = NULL, *nacl = NULL, *cacl = NULL;
@@ -330,8 +325,7 @@ exit:
 #define SEARCH_GROUP_OBJ 0x01
 #define SEARCH_MASK 0x02
 
-int posix_chmod(const char *name, mode_t mode)
-{
+int posix_chmod(const char *name, mode_t mode) {
     int ret = 0;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t entry;
@@ -456,8 +450,7 @@ done:
  * posix_fchmod() accepts the same arguments as fchmod() and returns 0 in case of
  * success or -1 in case something went wrong.
  */
-int posix_fchmod(int fd, mode_t mode)
-{
+int posix_fchmod(int fd, mode_t mode) {
     int ret = 0;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t entry;

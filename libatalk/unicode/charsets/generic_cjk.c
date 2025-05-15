@@ -27,8 +27,7 @@
 #include <string.h>
 
 static size_t cjk_iconv(void *cd, char **inbuf, char *end,
-                        char **outbuf, size_t *outbytesleft)
-{
+                        char **outbuf, size_t *outbytesleft) {
     size_t n = end - *inbuf;
 
     if (iconv(cd, (ICONV_CONST char * *)inbuf, &n, outbuf,
@@ -41,8 +40,7 @@ static size_t cjk_iconv(void *cd, char **inbuf, char *end,
 
 size_t cjk_generic_push(size_t (*char_func)(uint8_t*, const ucs2_t*, size_t*),
                         void *cd, char **inbuf, size_t *inbytesleft,
-                        char **outbuf, size_t *outbytesleft)
-{
+                        char **outbuf, size_t *outbytesleft) {
     char *in = *inbuf;
 
     while (*inbytesleft >= sizeof(ucs2_t) && *outbytesleft > 0) {
@@ -101,8 +99,7 @@ size_t cjk_generic_push(size_t (*char_func)(uint8_t*, const ucs2_t*, size_t*),
 
 size_t cjk_generic_pull(size_t (*char_func)(ucs2_t*, const uint8_t*, size_t*),
                         void *cd, char **inbuf, size_t *inbytesleft,
-                        char **outbuf, size_t *outbytesleft)
-{
+                        char **outbuf, size_t *outbytesleft) {
     char *in = *inbuf;
 
     while (*inbytesleft > 0 && *outbytesleft >= sizeof(ucs2_t)) {
@@ -159,8 +156,7 @@ size_t cjk_generic_pull(size_t (*char_func)(ucs2_t*, const uint8_t*, size_t*),
     return 0;
 }
 
-size_t cjk_char_push(uint16_t c, uint8_t *out)
-{
+size_t cjk_char_push(uint16_t c, uint8_t *out) {
     if (!c) {
         return 0;
     }
@@ -180,8 +176,7 @@ size_t cjk_char_push(uint16_t c, uint8_t *out)
     return 2;
 }
 
-size_t cjk_char_pull(ucs2_t wc, ucs2_t* out, const uint32_t* compose)
-{
+size_t cjk_char_pull(ucs2_t wc, ucs2_t* out, const uint32_t* compose) {
     if (!wc) {
         return 0;
     }
@@ -206,8 +201,7 @@ size_t cjk_char_pull(ucs2_t wc, ucs2_t* out, const uint32_t* compose)
 }
 
 uint16_t cjk_lookup(uint16_t c, const cjk_index_t *index,
-                    const uint16_t *charset)
-{
+                    const uint16_t *charset) {
     while (index->summary && c >= index->range[0]) {
         if (c <= index->range[1]) {
             const uint16_t *summary = index->summary[(c - index->range[0]) >> 4];
@@ -233,8 +227,8 @@ uint16_t cjk_lookup(uint16_t c, const cjk_index_t *index,
     return 0;
 }
 
-ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t* table, size_t size)
-{
+ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t* table,
+                   size_t size) {
     uint32_t v = ((uint32_t)base << 16) | comb;
     size_t low = 0;
 
@@ -256,8 +250,7 @@ ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t* table, size_t size)
 }
 
 ucs2_t cjk_compose_seq(const ucs2_t* in, size_t* len, const uint32_t* table,
-                       size_t size)
-{
+                       size_t size) {
     static uint8_t sz[] = { 3, 4, 5, 5, 5, 5, 5, 3 };
     ucs2_t wc = in[0];
     size_t n = sz[wc & 7];

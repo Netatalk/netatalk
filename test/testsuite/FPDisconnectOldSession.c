@@ -10,16 +10,14 @@ extern char *uam;
 
 static volatile int sigp = 0;
 
-static void pipe_handler()
-{
+static void pipe_handler() {
     sigp = 1;
 }
 
 
 /* ------------------------- */
 // FIXME: need to recheck GetSessionToken 0
-STATIC void test222()
-{
+STATIC void test222() {
     char *name = "t222 file";
     uint16_t vol = VolID, vol2;
     unsigned int ret;
@@ -182,8 +180,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test338()
-{
+STATIC void test338() {
     char *name = "t338 file";
     uint16_t vol = 0;
     unsigned int ret;
@@ -331,8 +328,7 @@ test_exit:
 
 /* ------------------------- */
 // Failing with 4.0.x as well as 3.1.12. May have to do with broken FPopenLoginExt().
-STATIC void test339()
-{
+STATIC void test339() {
     char *name = "t339 file";
     char *ndir = "t339 dir";
     char *no_user_uam = "No User Authent";
@@ -521,8 +517,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test370()
-{
+STATIC void test370() {
     char *name = "t370 file";
     char *ndir = "t370 dir";
     char *no_user_uam = "No User Authent";
@@ -714,8 +709,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPDisconnectOldSession_test()
-{
+void FPDisconnectOldSession_test() {
     ENTER_TESTSET
 #if 0
     test222();

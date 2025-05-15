@@ -76,8 +76,7 @@
 
 int log_verbose;             /* Logging flag */
 
-void _log(enum logtype lt, char *fmt, ...)
-{
+void _log(enum logtype lt, char *fmt, ...) {
     int len _U_;
     static char logbuffer[1024];
     va_list args;
@@ -101,8 +100,7 @@ void _log(enum logtype lt, char *fmt, ...)
  *
  * @returns 0 on success, exits on error
  */
-int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
-{
+int openvol(AFPObj *obj, const char *path, afpvol_t *vol) {
     int flags = 0;
     memset(vol, 0, sizeof(afpvol_t));
 
@@ -140,8 +138,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     return 0;
 }
 
-void closevol(afpvol_t *vol)
-{
+void closevol(afpvol_t *vol) {
     if (vol->vol) {
         if (vol->vol->v_cdb) {
             cnid_close(vol->vol->v_cdb);
@@ -155,8 +152,7 @@ void closevol(afpvol_t *vol)
 /*
   Taken from afpd/desktop.c
 */
-char *utompath(const struct vol *vol, const char *upath)
-{
+char *utompath(const struct vol *vol, const char *upath) {
     /* for convert_charset dest_len parameter +2 */
     static char  mpath[MAXPATHLEN + 2];
     char         *m;
@@ -211,8 +207,7 @@ char *utompath(const struct vol *vol, const char *upath)
  * @returns 0 on sucess, -1 on error
  */
 int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
-                          char *path, size_t buflen _U_)
-{
+                          char *path, size_t buflen _U_) {
     static charset_t from = (charset_t) -1;
     static char buf[MAXPATHLEN + 2];
     char *bname = stripped_slashes_basename(path);
@@ -268,8 +263,7 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
  */
 cnid_t cnid_for_paths_parent(const afpvol_t *vol,
                              const char *path,
-                             cnid_t *did)
-{
+                             cnid_t *did) {
     EC_INIT;
     cnid_t cnid;
     bstring rpath = NULL;

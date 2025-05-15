@@ -35,8 +35,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_getrequest(ASP asp)
-{
+int asp_getrequest(ASP asp) {
     struct atp_block	atpb;
     uint16_t		seq;
     asp->asp_sat.sat_port = ATADDR_ANYPORT;

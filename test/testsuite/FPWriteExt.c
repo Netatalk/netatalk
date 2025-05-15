@@ -6,8 +6,7 @@
 #define BUF_S 3000
 static char w_buf[BUF_S];
 
-STATIC void test148()
-{
+STATIC void test148() {
     int fork = 0;
     int fork1 = 0;
     uint16_t bitmap = 0;
@@ -131,8 +130,7 @@ test_exit:
 }
 
 /* --------------------- */
-STATIC void test207()
-{
+STATIC void test207() {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -284,8 +282,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test304()
-{
+STATIC void test304() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t304 file.txt";
@@ -323,8 +320,7 @@ test_exit:
 
 
 /* ----------- */
-void FPWriteExt_test()
-{
+void FPWriteExt_test() {
     ENTER_TESTSET
     test148();
     test207();

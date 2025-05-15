@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test202()
-{
+STATIC void test202() {
     uint16_t vol = VolID;
     ENTER_TEST
     FAIL(FPFlush(Conn, vol))
@@ -13,8 +12,7 @@ STATIC void test202()
 }
 
 /* ----------- */
-void FPFlush_test()
-{
+void FPFlush_test() {
     ENTER_TESTSET
     test202();
 }

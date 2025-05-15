@@ -40,8 +40,7 @@
 /* --- server uam functions -- */
 
 /* uam_load. uams must have a uam_setup function. */
-struct uam_mod *uam_load(AFPObj *obj, const char *path, const char *name)
-{
+struct uam_mod *uam_load(AFPObj *obj, const char *path, const char *name) {
     char buf[MAXPATHLEN + 1], *p;
     struct uam_mod *mod;
     void *module;
@@ -97,8 +96,7 @@ uam_load_fail:
 /* unload the module. we check for a cleanup function, but we don't
  * die if one doesn't exist. however, things are likely to leak without one.
  */
-void uam_unload(struct uam_mod *mod)
-{
+void uam_unload(struct uam_mod *mod) {
     if (mod->uam_fcn->uam_cleanup) {
         (*mod->uam_fcn->uam_cleanup)();
     }
@@ -109,8 +107,7 @@ void uam_unload(struct uam_mod *mod)
 
 /* -- client-side uam functions -- */
 /* set up stuff for this uam. */
-int uam_register(const int type, const char *path, const char *name, ...)
-{
+int uam_register(const int type, const char *path, const char *name, ...) {
     va_list ap;
     struct uam_obj *uam;
     int ret;
@@ -189,8 +186,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
     return ret;
 }
 
-void uam_unregister(const int type, const char *name)
-{
+void uam_unregister(const int type, const char *name) {
     struct uam_obj *uam;
 
     if (!name) {
@@ -213,8 +209,7 @@ void uam_unregister(const int type, const char *name)
  * len:  size of name buffer.
 */
 
-struct passwd *uam_getname(void *private, char *name, const int len)
-{
+struct passwd *uam_getname(void *private, char *name, const int len) {
     AFPObj *obj = private;
     struct passwd *pwent = NULL;
     struct passwd pwent_buf;
@@ -326,8 +321,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
     return pwent ? getpwnam(name) : NULL;
 }
 
-int uam_checkuser(const struct passwd *pwd)
-{
+int uam_checkuser(const struct passwd *pwd) {
 #if !defined(DISABLE_SHELLCHECK)
     const char *p;
 #endif /* DISABLE_SHELLCHECK */
@@ -362,8 +356,7 @@ int uam_checkuser(const struct passwd *pwd)
     return 0;
 }
 
-int uam_random_string(AFPObj *obj, char *buf, int len)
-{
+int uam_random_string(AFPObj *obj, char *buf, int len) {
     uint32_t result;
     int ret;
     int fd;
@@ -402,8 +395,7 @@ int uam_random_string(AFPObj *obj, char *buf, int len)
 
 /* afp-specific functions */
 int uam_afpserver_option(void *private, const int what, void *option,
-                         size_t *len)
-{
+                         size_t *len) {
     AFPObj *obj = private;
     const char **buf = (const char **) option; /* most of the options are this */
     struct session_info **sinfo = (struct session_info **) option;
@@ -572,7 +564,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
 struct papfile;
 
 UAM_MODULE_EXPORT void append(struct papfile *pf  _U_, const char *data _U_,
-                              int len _U_)
-{
+                              int len _U_) {
     return;
 }

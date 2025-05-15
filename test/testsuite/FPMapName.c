@@ -2,8 +2,7 @@
 */
 #include "specs.h"
 
-STATIC void test180()
-{
+STATIC void test180() {
     int  dir;
     char *name = "t180 test Map name";
     int  ofs =  3 * sizeof(uint16_t);
@@ -148,8 +147,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPMapName_test()
-{
+void FPMapName_test() {
     ENTER_TESTSET
 #if 0
     test180();

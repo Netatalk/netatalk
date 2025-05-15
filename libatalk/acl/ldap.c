@@ -121,8 +121,7 @@ static int ldap_getattr_fromfilter_withbase_scope(const char *searchbase,
         char *attributes[],
         int scope,
         ldapcon_t conflags,
-        char **result)
-{
+        char **result) {
     int ret;
     int ldaperr;
     int retrycount = 0;
@@ -290,8 +289,7 @@ cleanup:
  * @param[in] attr_filter  optional attribute
  * @returns   pointer to static filter string
  */
-static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
-{
+static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter) {
     EC_INIT;
     const char *uuidstr = uuidstr_in;
 #define MAX_FILTER_SIZE 512
@@ -363,8 +361,8 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  *
  * @returns 0 on success, -1 on error or not found
  */
-int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
-{
+int ldap_getuuidfromname(const char *name, uuidtype_t type,
+                         char **uuid_string) {
     int ret;
     int len;
     char filter[256];           /* this should really be enough. we don't want to malloc everything! */
@@ -433,8 +431,7 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
  *
  * returns 0 on success, -1 on errror
  */
-int ldap_getnamefromuuid(const char *uuidstr, char **name, uuidtype_t *type)
-{
+int ldap_getnamefromuuid(const char *uuidstr, char **name, uuidtype_t *type) {
     EC_INIT;
     char *filter;
     char *attributes[]  = { NULL, NULL};

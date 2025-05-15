@@ -23,8 +23,7 @@ int aep_packet(
     struct atport	*ap,
     struct sockaddr_at	*from,
     char		*data,
-    int			len)
-{
+    int			len) {
     char		*end;
     end = data + len;
 

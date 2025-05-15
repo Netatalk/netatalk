@@ -2,8 +2,7 @@
 */
 #include "specs.h"
 
-STATIC void test208()
-{
+STATIC void test208() {
     int  dir;
     char *name = "t208 test Map ID";
     int  ofs =  3 * sizeof(uint16_t);
@@ -69,8 +68,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPMapID_test()
-{
+void FPMapID_test() {
     ENTER_TESTSET
     test208();
 }

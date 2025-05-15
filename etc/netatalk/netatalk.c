@@ -73,8 +73,7 @@ static const char *dbus_path _U_;
  * Misc stuff
  ******************************************************************/
 
-static bool service_running(pid_t pid)
-{
+static bool service_running(pid_t pid) {
     if ((pid != NETATALK_SRV_NEEDED) && (pid != NETATALK_SRV_OPTIONAL)) {
         return true;
     }
@@ -83,8 +82,7 @@ static bool service_running(pid_t pid)
 }
 
 /* Set Tracker Miners to index all our volumes */
-static int set_sl_volumes(void)
-{
+static int set_sl_volumes(void) {
     EC_INIT;
     const struct vol *volumes, *vol;
     struct bstrList *vollist = bstrListCreate();
@@ -132,8 +130,7 @@ EC_CLEANUP:
  ******************************************************************/
 
 /* libevent logging callback */
-static void libevent_logmsg_cb(int severity, const char *msg)
-{
+static void libevent_logmsg_cb(int severity, const char *msg) {
     switch (severity) {
     case _EVENT_LOG_DEBUG:
         LOG(log_debug, logtype_default, "libevent: %s", msg);
@@ -162,8 +159,7 @@ static void libevent_logmsg_cb(int severity, const char *msg)
  ******************************************************************/
 
 /* SIGTERM callback */
-static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
-{
+static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_) {
     sigset_t sigs;
     struct timeval tv;
     LOG(log_info, logtype_afpd, "Exiting on SIGTERM");
@@ -192,8 +188,7 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 }
 
 /* SIGQUIT callback */
-static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
-{
+static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_) {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef WITH_SPOTLIGHT
     system(INDEXER_COMMAND " -t");
@@ -202,8 +197,7 @@ static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 }
 
 /* SIGHUP callback */
-static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
-{
+static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_) {
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
     load_volumes(&obj, LV_ALL);
@@ -218,8 +212,7 @@ static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 }
 
 /* SIGCHLD callback */
-static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
-{
+static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_) {
     int status;
     pid_t pid;
 
@@ -260,8 +253,7 @@ static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 }
 
 /* timer callback */
-static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
-{
+static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_) {
     if (in_shutdown) {
         return;
     }
@@ -307,8 +299,7 @@ static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
  ******************************************************************/
 
 /* kill processes passed as varargs of type "pid_t *", terminate list with NULL */
-static void kill_childs(int sig, ...)
-{
+static void kill_childs(int sig, ...) {
     va_list args;
     pid_t *pid;
     va_start(args, sig);
@@ -325,15 +316,13 @@ static void kill_childs(int sig, ...)
 }
 
 /* this get called when error conditions are met that require us to exit gracefully */
-static void netatalk_exit(int ret)
-{
+static void netatalk_exit(int ret) {
     server_unlock(PATH_NETATALK_LOCK);
     exit(ret);
 }
 
 /* this forks() and exec() "path" with varags as argc[] */
-static pid_t run_process(const char *path, ...)
-{
+static pid_t run_process(const char *path, ...) {
     int i = 0;
 #define MYARVSIZE 64
     char *myargv[MYARVSIZE];
@@ -365,8 +354,7 @@ static pid_t run_process(const char *path, ...)
     return pid;
 }
 
-static void show_netatalk_version(void)
-{
+static void show_netatalk_version(void) {
     int num _U_, i _U_;
     printf("netatalk %s - Netatalk AFP server service controller daemon\n\n",
            VERSION);
@@ -391,8 +379,7 @@ static void show_netatalk_version(void)
 #endif
 }
 
-static void show_netatalk_paths(void)
-{
+static void show_netatalk_paths(void) {
     printf("              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
     printf("                  afpd:\t%s\n", _PATH_AFPD);
     printf("            cnid_metad:\t%s\n", _PATH_CNID_METAD);
@@ -406,15 +393,13 @@ static void show_netatalk_paths(void)
 #endif
 }
 
-static void usage(void)
-{
+static void usage(void) {
     printf("usage: netatalk [-F configfile] \n");
     printf("       netatalk -d \n");
     printf("       netatalk -v|-V \n");
 }
 
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     int c, ret, debug = 0;
     sigset_t blocksigs;
     struct timeval tv;

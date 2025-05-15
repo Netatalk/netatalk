@@ -69,8 +69,7 @@ static unsigned char *PAM_password;
 static int PAM_conv(int num_msg,
                     const struct pam_message **msg,
                     struct pam_response **resp,
-                    void *appdata_ptr _U_)
-{
+                    void *appdata_ptr _U_) {
     int count = 0;
     struct pam_response *reply;
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
@@ -179,8 +178,7 @@ static struct pam_conv PAM_conversation = {
 
 
 static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
-                     unsigned char *rbuf, size_t *rbuflen)
-{
+                     unsigned char *rbuf, size_t *rbuflen) {
     uint16_t sessid;
     size_t i;
     size_t nwritten;
@@ -320,8 +318,7 @@ pam_fail:
 /* -------------------------------- */
 static int login(void *obj, unsigned char *username, int ulen,
                  struct passwd **uam_pwd _U_, const unsigned char *ibuf, size_t ibuflen,
-                 unsigned char *rbuf, size_t *rbuflen)
-{
+                 unsigned char *rbuf, size_t *rbuflen) {
     if ((dhxpwd = uam_getname(obj, (char *)username, ulen)) == NULL) {
         LOG(log_info, logtype_uams, "uams_dhx_pam.c: unknown username [%s]", username);
         return AFPERR_NOTAUTH;
@@ -337,8 +334,7 @@ static int login(void *obj, unsigned char *username, int ulen,
  * having to clean things up if there's an error. */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      unsigned char *ibuf, size_t ibuflen,
-                     unsigned char *rbuf, size_t *rbuflen)
-{
+                     unsigned char *rbuf, size_t *rbuflen) {
     unsigned char *username;
     size_t len, ulen;
     *rbuflen = 0;
@@ -376,8 +372,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 /* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          const unsigned char *ibuf, size_t ibuflen,
-                         unsigned char *rbuf, size_t *rbuflen)
-{
+                         unsigned char *rbuf, size_t *rbuflen) {
     unsigned char *username;
     int len;
     size_t ulen;
@@ -417,8 +412,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
                          const unsigned char *ibuf, size_t ibuflen _U_,
-                         unsigned char *rbuf, size_t *rbuflen)
-{
+                         unsigned char *rbuf, size_t *rbuflen) {
     const char *hostname;
     gcry_mpi_t bn1, bn2, bn3;
     gcry_cipher_hd_t ctx;
@@ -603,8 +597,7 @@ logincont_err:
 }
 
 /* logout */
-static void pam_logout(void)
-{
+static void pam_logout(void) {
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
@@ -615,8 +608,7 @@ static void pam_logout(void)
  * right. basically, it's like the login/logincont sequence */
 static int pam_changepw(void *obj, unsigned char *username,
                         const struct passwd *pwd _U_, unsigned char *ibuf,
-                        size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
-{
+                        size_t ibuflen, unsigned char *rbuf, size_t *rbuflen) {
     gcry_mpi_t bn1, bn2, bn3;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
@@ -801,8 +793,7 @@ static int pam_changepw(void *obj, unsigned char *username,
 }
 
 
-static int uam_setup(void *obj _U_, const char *path)
-{
+static int uam_setup(void *obj _U_, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128", pam_login,
                      pam_logincont, pam_logout, pam_login_ext) < 0) {
         return -1;
@@ -819,8 +810,7 @@ static int uam_setup(void *obj _U_, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "DHCAST128");
     uam_unregister(UAM_SERVER_CHANGEPW, "DHCAST128");
     /*uam_unregister(UAM_SERVER_PRINTAUTH, "DHCAST128"); */

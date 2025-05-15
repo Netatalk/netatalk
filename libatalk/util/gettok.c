@@ -18,8 +18,7 @@
 static char	*l_curr;
 static char	*l_end;
 
-void initline(int len, char *line)
-{
+void initline(int len, char *line) {
     l_curr = line;
     l_end = line + len;
 }
@@ -29,8 +28,7 @@ void initline(int len, char *line)
 #define ST_BEGIN	2
 
 int
-parseline(int len, char *token)
-{
+parseline(int len, char *token) {
     char	*p, *e;
     int		state;
     state = ST_BEGIN;

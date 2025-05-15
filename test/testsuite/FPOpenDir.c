@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test57()
-{
+STATIC void test57() {
     unsigned int dir;
     int pdir;
     int rdir = 0;
@@ -96,8 +95,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPOpenDir_test()
-{
+void FPOpenDir_test() {
     ENTER_TESTSET
     test57();
 }

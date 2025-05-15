@@ -46,8 +46,7 @@ static int addname(char **list, int *i, const char *name)
 }
 
 
-static int getifaces(const int sockfd, char ***list)
-{
+static int getifaces(const int sockfd, char ***list) {
 #ifdef HAVE_IFNAMEINDEX
     struct if_nameindex *ifstart, *ifs;
     int i = 0;
@@ -117,8 +116,7 @@ static int getifaces(const int sockfd, char ***list)
  * Get interfaces from the kernel. we keep an extra null entry to signify
  * the end of the interface list.
  */
-char **getifacelist(void)
-{
+char **getifacelist(void) {
     char **list = NULL; /* FIXME */
     int  i, fd;
 
@@ -138,8 +136,7 @@ char **getifacelist(void)
 
 
 /* go through and free the interface list */
-void freeifacelist(char **ifacelist)
-{
+void freeifacelist(char **ifacelist) {
     char *value, **list = ifacelist;
 
     if (!ifacelist) {

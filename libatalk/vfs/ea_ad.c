@@ -50,8 +50,7 @@
 /*
  * Build mode for EA header from file mode
  */
-static inline mode_t ea_header_mode(mode_t mode)
-{
+static inline mode_t ea_header_mode(mode_t mode) {
     /* Same as ad_hf_mode(mode) */
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
     /* Owner must be able to open, read and w-lock it, in order to chmod from e.g. 0000 -> 0xxxx*/
@@ -62,8 +61,7 @@ static inline mode_t ea_header_mode(mode_t mode)
 /*
  * Build mode for EA file from file mode
  */
-static inline mode_t ea_mode(mode_t mode)
-{
+static inline mode_t ea_mode(mode_t mode) {
     /* Same as ad_hf_mode(mode) */
     mode &= ~(S_IXUSR | S_IXGRP | S_IXOTH);
     return mode;
@@ -72,8 +70,7 @@ static inline mode_t ea_mode(mode_t mode)
 /*
   Taken form afpd/desktop.c
 */
-static char *mtoupath(const struct vol *vol, const char *mpath)
-{
+static char *mtoupath(const struct vol *vol, const char *mpath) {
     /* for convert_charset dest_len parameter +2 */
     static char  upath[MAXPATHLEN + 2];
     const char   *m;
@@ -121,8 +118,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
  *
  * Verifies magic and version.
  */
-static int unpack_header(struct ea * restrict ea)
-{
+static int unpack_header(struct ea * restrict ea) {
     int ret = 0;
     unsigned int count = 0;
     uint16_t uint16;
@@ -211,8 +207,7 @@ exit:
  *
  * adjust ea->ea_count in case an ea entry deletetion is detected
  */
-static int pack_header(struct ea * restrict ea)
-{
+static int pack_header(struct ea * restrict ea) {
     unsigned int count = 0, eacount = 0;
     uint16_t uint16;
     uint32_t uint32;
@@ -308,8 +303,7 @@ static int pack_header(struct ea * restrict ea)
 static int ea_addentry(struct ea * restrict ea,
                        const char *restrict attruname,
                        size_t attrsize,
-                       int bitmap)
-{
+                       int bitmap) {
     int ea_existed = 0;
     unsigned int count = 0;
     void *tmprealloc;
@@ -411,8 +405,7 @@ error:
  * On return the header file is still r/w locked.
  */
 static int create_ea_header(const char * restrict uname,
-                            struct ea * restrict ea)
-{
+                            struct ea * restrict ea) {
     int fd = -1, err = 0;
     char *ptr;
     uint16_t uint16;
@@ -476,8 +469,7 @@ exit:
 static int write_ea(const struct ea * restrict ea,
                     const char *restrict attruname,
                     const char *restrict ibuf,
-                    size_t attrsize)
-{
+                    size_t attrsize) {
     int fd = -1;
     int ret = AFP_OK;
     char *eaname;
@@ -541,8 +533,8 @@ exit:
  * Marks it as unused just by freeing name and setting it to NULL.
  * ea_close and pack_buffer must honor this.
  */
-static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
-{
+static int ea_delentry(struct ea * restrict ea,
+                       const char *restrict attruname) {
     int ret = 0;
     unsigned int count = 0;
 
@@ -582,8 +574,7 @@ static int ea_delentry(struct ea * restrict ea, const char * restrict attruname)
  *
  * Returns: 0 on success, -1 on error
  */
-static int delete_ea_file(const struct ea * restrict ea, const char *eaname)
-{
+static int delete_ea_file(const struct ea * restrict ea, const char *eaname) {
     int ret = 0;
     char *eafile;
     struct stat st;
@@ -632,8 +623,7 @@ static int delete_ea_file(const struct ea * restrict ea, const char *eaname)
  * "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
  */
 char *ea_path(const struct ea * restrict ea, const char * restrict eaname,
-              int macname)
-{
+              int macname) {
     const char *adname;
     static char pathbuf[MAXPATHLEN + 1];
     /* get name of a adouble file from uname */
@@ -687,8 +677,7 @@ char *ea_path(const struct ea * restrict ea, const char * restrict eaname,
 int ea_open(const struct vol * restrict vol,
             const char *restrict uname,
             eaflags_t eaflags,
-            struct ea * restrict ea)
-{
+            struct ea * restrict ea) {
     int ret = 0;
     char *eaname;
     struct stat st;
@@ -864,8 +853,7 @@ int ea_openat(const struct vol * restrict vol,
               int dirfd,
               const char *restrict uname,
               eaflags_t eaflags,
-              struct ea * restrict ea)
-{
+              struct ea * restrict ea) {
     int ret = 0;
     int cwdfd = -1;
 
@@ -911,8 +899,7 @@ exit:
  * Flushes and then closes and frees all resouces held by ea handle.
  * Pack data in ea into ea_data, then write ea_data to disk
  */
-int ea_close(struct ea * restrict ea)
-{
+int ea_close(struct ea * restrict ea) {
     int ret = 0;
     unsigned int count = 0;
     char *eaname;
@@ -1035,8 +1022,7 @@ exit:
  *
  * Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
-{
+int get_easize(VFS_FUNC_ARGS_EA_GETSIZE) {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
     uint32_t uint32;
@@ -1098,8 +1084,7 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *
  * Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
-{
+int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT) {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
     uint32_t uint32;
@@ -1195,8 +1180,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *buflen accordingly.
  */
-int list_eas(VFS_FUNC_ARGS_EA_LIST)
-{
+int list_eas(VFS_FUNC_ARGS_EA_LIST) {
     unsigned int count = 0;
     int attrbuflen = *buflen, ret = AFP_OK, len;
     char *buf = attrnamebuf;
@@ -1282,8 +1266,7 @@ exit:
  * Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
  */
-int set_ea(VFS_FUNC_ARGS_EA_SET)
-{
+int set_ea(VFS_FUNC_ARGS_EA_SET) {
     int ret = AFP_OK;
     struct ea ea;
     LOG(log_debug, logtype_afpd, "set_ea: file: %s", uname);
@@ -1334,8 +1317,7 @@ exit:
  *
  * Removes EA attruname from file uname.
  */
-int remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
-{
+int remove_ea(VFS_FUNC_ARGS_EA_REMOVE) {
     int ret = AFP_OK;
     struct ea ea;
     LOG(log_debug, logtype_afpd, "remove_ea('%s/%s')", uname, attruname);
@@ -1372,8 +1354,7 @@ exit:
  * EA VFS funcs that deal with file/dir cp/mv/rm
  ******************************************************************************************/
 
-int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
-{
+int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE) {
     unsigned int count = 0;
     int ret = AFP_OK;
     int cwd = -1;
@@ -1432,8 +1413,7 @@ exit:
     return ret;
 }
 
-int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
-{
+int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE) {
     unsigned int count = 0;
     int    ret = AFP_OK;
     size_t easize;
@@ -1555,8 +1535,7 @@ exit:
  *
  * Copies EAs from source file to dest file.
  */
-int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
-{
+int ea_copyfile(VFS_FUNC_ARGS_COPYFILE) {
     unsigned int count = 0;
     int    ret = AFP_OK;
     size_t easize;
@@ -1650,8 +1629,7 @@ exit:
     return ret;
 }
 
-int ea_chown(VFS_FUNC_ARGS_CHOWN)
-{
+int ea_chown(VFS_FUNC_ARGS_CHOWN) {
     unsigned int count = 0;
     int ret = AFP_OK;
     char *eaname;
@@ -1717,8 +1695,7 @@ exit:
     return ret;
 }
 
-int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
-{
+int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE) {
     unsigned int count = 0;
     int ret = AFP_OK;
     const char *eaname;
@@ -1792,8 +1769,7 @@ exit:
     return ret;
 }
 
-int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
-{
+int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE) {
     int ret = AFP_OK;
     unsigned int count = 0;
     const char *eaname;

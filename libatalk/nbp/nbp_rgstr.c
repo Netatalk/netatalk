@@ -31,8 +31,7 @@
 #endif /* ! SOCKLEN_T */
 
 int nbp_rgstr(struct sockaddr_at *sat, const char *obj, const char *type,
-              const char *zone)
-{
+              const char *zone) {
     struct sockaddr_at	to;
     struct nbpnve	nn;
     struct nbphdr	nh;

@@ -60,8 +60,7 @@ char	buf[4624];
 char	*server;
 static char	*version = VERSION;
 
-void usage(char *p)
-{
+void usage(char *p) {
     char	*s;
 
     if ((s = rindex(p, '/')) == NULL) {
@@ -78,8 +77,7 @@ void usage(char *p)
  * Unregister ourself on signal.
  */
 void
-goaway(int signal)
-{
+goaway(int signal) {
     if (nbp_unrgstr(server, "TimeLord", "*", NULL) < 0) {
         LOG(log_error, logtype_default, "Can't unregister %s", server);
         exit(1);
@@ -89,8 +87,7 @@ goaway(int signal)
     exit(0);
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     ATP			atp;
     struct sockaddr_at	sat;
     struct atp_block	atpb;

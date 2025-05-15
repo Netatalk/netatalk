@@ -25,8 +25,8 @@
    First, delete given CNID, then re-insert.
 */
 
-int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
-{
+int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst,
+               struct cnid_dbd_rply *rply) {
     DBT key, data;
     memset(&key, 0, sizeof(key));
     memset(&data, 0, sizeof(data));

@@ -136,8 +136,7 @@ static int dsidx = 0;   	     /* First free item index... */
 static struct scrit c1, c2;          /* search criteria */
 
 /* Clears directory stack. */
-static void clearstack(void)
-{
+static void clearstack(void) {
     save_cidx = -1;
 
     while (dsidx > 0) {
@@ -146,8 +145,7 @@ static void clearstack(void)
 }
 
 /* Puts new item onto directory stack. */
-static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
-{
+static int addstack(char *uname _U_, struct dir *dir, int pidx _U_) {
     struct dsitem *ds;
     struct dsitem *tmpds = NULL;
 
@@ -173,8 +171,7 @@ static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
 }
 
 /* Removes checked items from top of directory stack. Returns index of the first unchecked elements or -1. */
-static int reducestack(void)
-{
+static int reducestack(void) {
     int r;
 
     if (save_cidx != -1) {
@@ -199,8 +196,7 @@ static int reducestack(void)
  * FIXME What about noadouble?
 */
 static struct adouble *adl_lkup(struct vol *vol, struct path *path,
-                                struct adouble *adp)
-{
+                                struct adouble *adp) {
     static struct adouble ad;
     struct ofork *of;
     int isdir;
@@ -226,8 +222,8 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
 }
 
 /* -------------------- */
-static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
-{
+static struct finderinfo *unpack_buffer(struct finderinfo *finfo,
+                                        char *buffer) {
     memcpy(&finfo->f_type,  buffer + FINDERINFO_FRTYPEOFF, sizeof(finfo->f_type));
     memcpy(&finfo->creator, buffer + FINDERINFO_FRCREATOFF, sizeof(finfo->creator));
     memcpy(&finfo->attrs,   buffer + FINDERINFO_FRFLAGOFF, sizeof(finfo->attrs));
@@ -240,8 +236,7 @@ static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
 /* -------------------- */
 static struct finderinfo *
 unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp,
-                  struct finderinfo *finfo, int islnk)
-{
+                  struct finderinfo *finfo, int islnk) {
     packed_finder  buf;
     void           *ptr;
     *adp = adl_lkup(vol, path, *adp);
@@ -258,8 +253,7 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp,
  * fname - our fname (translated to UNIX)
  * cidx - index in directory stack
  */
-static int crit_check(struct vol *vol, struct path *path)
-{
+static int crit_check(struct vol *vol, struct path *path) {
     int result = 0;
     uint16_t attr, flags = CONV_PRECOMPOSE;
     struct finderinfo *finfo = NULL, finderinfo;
@@ -463,8 +457,7 @@ crit_check_ret:
 
 /* ------------------------------ */
 static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
-                    char **buf, int ext)
-{
+                    char **buf, int ext) {
     char 		*p = *buf;
     int 		ret;
     size_t		tbuf = 0;
@@ -539,8 +532,7 @@ static int catsearch(const AFPObj *obj,
                      char *rbuf,
                      uint32_t *nrecs,
                      int *rsize,
-                     int ext)
-{
+                     int ext) {
     static uint32_t
     /* Saved position index (ID) - used to remember "position" across FPCatSearch calls */
     cur_pos;
@@ -788,8 +780,7 @@ static int catsearch_db(const AFPObj *obj,
                         char *rbuf,
                         uint32_t *nrecs,
                         int *rsize,
-                        int ext)
-{
+                        int ext) {
     static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
     static uint32_t cur_pos;
     static int num_matches;
@@ -935,8 +926,7 @@ catsearch_end: /* Exiting catsearch: error condition */
 
 /* -------------------------- */
 static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen, int ext)
-{
+                         char *rbuf, size_t *rbuflen, int ext) {
     struct vol *vol;
     uint16_t   vid;
     uint16_t   spec_len;
@@ -1166,15 +1156,13 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
 /* -------------------------- */
 int afp_catsearch(AFPObj *obj, char *ibuf, size_t ibuflen,
-                  char *rbuf, size_t *rbuflen)
-{
+                  char *rbuf, size_t *rbuflen) {
     return catsearch_afp(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
 
 int afp_catsearch_ext(AFPObj *obj, char *ibuf, size_t ibuflen,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     return catsearch_afp(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 

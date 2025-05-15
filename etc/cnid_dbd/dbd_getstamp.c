@@ -23,8 +23,7 @@
 /* Return the unique stamp associated with this database */
 
 int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *rqst _U_,
-                 struct cnid_dbd_rply *rply)
-{
+                 struct cnid_dbd_rply *rply) {
     DBT key, data;
     int rc;
     memset(&key, 0, sizeof(key));

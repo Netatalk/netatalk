@@ -22,8 +22,7 @@
 int ch_title(struct papfile *, struct papfile *);
 int ch_for(struct papfile *, struct papfile *);
 
-static char *get_text(char *start, int linelength)
-{
+static char *get_text(char *start, int linelength) {
     char *p, *q;
     char *t, *ret;
     char *stop;
@@ -83,8 +82,7 @@ static char *get_text(char *start, int linelength)
     return ret;
 }
 
-int ch_for(struct papfile *in, struct papfile *out _U_)
-{
+int ch_for(struct papfile *in, struct papfile *out _U_) {
     char                *start, *cmt;
     int                 linelength, crlflength;
 
@@ -114,8 +112,7 @@ int ch_for(struct papfile *in, struct papfile *out _U_)
     return CH_DONE;
 }
 
-int ch_title(struct papfile *in, struct papfile *out _U_)
-{
+int ch_title(struct papfile *in, struct papfile *out _U_) {
     char		*start, *cmt;
     int			linelength, crlflength;
 
@@ -146,8 +143,7 @@ int ch_title(struct papfile *in, struct papfile *out _U_)
     return CH_DONE;
 }
 
-static int guess_creator(char *creator)
-{
+static int guess_creator(char *creator) {
     if (strstr(creator, "LaserWriter")) {
         return 1;
     }
@@ -160,8 +156,7 @@ static int guess_creator(char *creator)
 }
 
 
-int ch_creator(struct papfile *in, struct papfile *out _U_)
-{
+int ch_creator(struct papfile *in, struct papfile *out _U_) {
     char		*start, *cmt;
     int			linelength, crlflength;
 
@@ -192,8 +187,7 @@ int ch_creator(struct papfile *in, struct papfile *out _U_)
     return CH_DONE;
 }
 
-int ch_endcomm(struct papfile *in, struct papfile *out _U_)
-{
+int ch_endcomm(struct papfile *in, struct papfile *out _U_) {
     char                *start;
     int                 linelength, crlflength;
     LOG(log_debug9, logtype_papd, "End Comment");
@@ -218,8 +212,7 @@ int ch_endcomm(struct papfile *in, struct papfile *out _U_)
     return CH_DONE;
 }
 
-int ch_starttranslate(struct papfile *in, struct papfile *out _U_)
-{
+int ch_starttranslate(struct papfile *in, struct papfile *out _U_) {
     char                *start;
     int                 linelength, crlflength;
     LOG(log_debug9, logtype_papd, "Start translate");
@@ -242,8 +235,7 @@ int ch_starttranslate(struct papfile *in, struct papfile *out _U_)
     return CH_DONE;
 }
 
-int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
-{
+int ch_endtranslate(struct papfile *in, struct papfile *out _U_) {
     char                *start;
     int                 linelength, crlflength;
     LOG(log_debug9, logtype_papd, "EndTranslate");
@@ -266,8 +258,7 @@ int ch_endtranslate(struct papfile *in, struct papfile *out _U_)
     return CH_DONE;
 }
 
-int ch_translateone(struct papfile *in, struct papfile *out _U_)
-{
+int ch_translateone(struct papfile *in, struct papfile *out _U_) {
     char                *start;
     int                 linelength, crlflength;
     LOG(log_debug9, logtype_papd, "TranslateOne");

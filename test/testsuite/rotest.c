@@ -1,8 +1,7 @@
 #include "specs.h"
 
 /* -------------------------------- */
-static int really_ro()
-{
+static int really_ro() {
     int dir;
     char *ndir = "read only dir";
 
@@ -16,16 +15,14 @@ static int really_ro()
 }
 
 /* -------------------------------- */
-static void check_test(unsigned int err)
-{
+static void check_test(unsigned int err) {
     if (err != ntohl(AFPERR_VLOCK) && err != ntohl(AFPERR_ACCESS)) {
         test_failed();
     }
 }
 
 /* ----------------- */
-STATIC void test510()
-{
+STATIC void test510() {
     char *ndir = "read only dir";
     char *nfile = "read only file";
     int  ofs =  4 * sizeof(uint16_t);
@@ -350,8 +347,7 @@ test_exit:
     exit_test("Readonly:test510: Access files and directories on a read only volume");
 }
 
-void Readonly_test()
-{
+void Readonly_test() {
     ENTER_TESTSET
     test510();
 }

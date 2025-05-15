@@ -54,8 +54,7 @@ static const uint32_t set_eid[] = {
 /*
  * Prepare ad->ad_data buffer from struct adouble for writing on disk
  */
-int ad_rebuild_adouble_header_v2(struct adouble *ad)
-{
+int ad_rebuild_adouble_header_v2(struct adouble *ad) {
     uint32_t       eid;
     uint32_t       temp;
     uint16_t       nent;
@@ -94,8 +93,7 @@ int ad_rebuild_adouble_header_v2(struct adouble *ad)
     return ad_getentryoff(ad, ADEID_RFORK);
 }
 
-int ad_rebuild_adouble_header_ea(struct adouble *ad)
-{
+int ad_rebuild_adouble_header_ea(struct adouble *ad) {
     uint32_t       eid;
     uint32_t       temp;
     uint16_t       nent;
@@ -137,8 +135,7 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
 /*!
  * Prepare adbuf buffer from struct adouble for writing on disk
  */
-int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
-{
+int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf) {
     uint32_t       temp;
     uint16_t       nent;
     char           *buf;
@@ -193,8 +190,7 @@ int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
  * doesn't work well for adouble with different version.
  *
  */
-int ad_copy_header(struct adouble *add, struct adouble *ads)
-{
+int ad_copy_header(struct adouble *add, struct adouble *ads) {
     uint32_t       eid;
     uint32_t       len;
     char *src = NULL;
@@ -262,8 +258,7 @@ int ad_copy_header(struct adouble *add, struct adouble *ads)
     return 0;
 }
 
-static int ad_flush_hf(struct adouble *ad)
-{
+static int ad_flush_hf(struct adouble *ad) {
     EC_INIT;
     int len;
     int cwd = -1;
@@ -401,8 +396,7 @@ EC_CLEANUP:
 }
 
 /* Flush resofork adouble file if any (currently adouble:ea and #ifndef HAVE_EAFD e.g. Linux) */
-static int ad_flush_rf(struct adouble *ad)
-{
+static int ad_flush_rf(struct adouble *ad) {
     ssize_t len;
     char    adbuf[AD_DATASZ_OSX];
 #ifdef HAVE_EAFD
@@ -438,8 +432,7 @@ static int ad_flush_rf(struct adouble *ad)
     return 0;
 }
 
-int ad_flush(struct adouble *ad)
-{
+int ad_flush(struct adouble *ad) {
     EC_INIT;
     LOG(log_debug, logtype_ad, "ad_flush(%s)", adflags2logstr(ad->ad_adflags));
 
@@ -455,8 +448,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int ad_data_closefd(struct adouble *ad)
-{
+static int ad_data_closefd(struct adouble *ad) {
     int ret = 0;
 
     if (ad_data_fileno(ad) == AD_SYMLINK) {
@@ -475,8 +467,7 @@ static int ad_data_closefd(struct adouble *ad)
 /*!
  * Close a struct adouble freeing all resources
  */
-int ad_close(struct adouble *ad, int adflags)
-{
+int ad_close(struct adouble *ad, int adflags) {
     int err = 0;
 
     if (ad == NULL) {

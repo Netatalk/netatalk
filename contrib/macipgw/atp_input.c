@@ -37,8 +37,7 @@
 
 extern int gDebug;
 
-static void print_func(u_int8_t ctrlinfo)
-{
+static void print_func(u_int8_t ctrlinfo) {
     switch (ctrlinfo & ATP_FUNCMASK) {
     case ATP_TREQ:
         printf("TREQ");
@@ -61,8 +60,7 @@ static void print_func(u_int8_t ctrlinfo)
     }
 }
 
-void atp_print_addr(char *s, struct sockaddr_at *saddr)
-{
+void atp_print_addr(char *s, struct sockaddr_at *saddr) {
     printf("%s ", s);
     saddr->sat_family == AF_APPLETALK ? printf("at.") :
     printf("%d.", saddr->sat_family);
@@ -75,8 +73,7 @@ void atp_print_addr(char *s, struct sockaddr_at *saddr)
 }
 
 
-int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen)
-{
+int atp_input(ATP ah, struct sockaddr_at *faddr, char *rbuf, int recvlen) {
     struct atpbuf *pq, *cq;
     struct atphdr ahdr;
     uint16_t rfunc;

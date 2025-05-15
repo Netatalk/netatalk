@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test69()
-{
+STATIC void test69() {
     int  dir;
     char *name = "t69 rename file!name";
     char *name2 = "t69 new name";
@@ -33,8 +32,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test72()
-{
+STATIC void test72() {
     int dir = 0;
     int dir1 = 0;
     uint16_t bitmap = 0;
@@ -103,8 +101,7 @@ test_exit:
 }
 
 /* -------------------------- */
-static int create_double_deleted_folder(uint16_t vol, char *name)
-{
+static int create_double_deleted_folder(uint16_t vol, char *name) {
     uint16_t vol2;
     int tdir;
     int tdir1 = 0;
@@ -212,8 +209,7 @@ fin:
 }
 
 /* ----------- */
-STATIC void test183()
-{
+STATIC void test183() {
     char *tname = "test183";
     char *name1 = "test183.new";
     int tdir;
@@ -243,8 +239,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test184()
-{
+STATIC void test184() {
     char *name  = "t184.txt";
     char *name1 = "t184new.txt";
     uint16_t vol = VolID;
@@ -264,8 +259,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test191()
-{
+STATIC void test191() {
     char *name = "t191 dir";
     char *name1 = "t191 subdir";
     char *dest = "t191 newname";
@@ -306,8 +300,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test219()
-{
+STATIC void test219() {
     char *name = "t191 dir";
     char *dest = "t191 newname";
     uint16_t vol = VolID;
@@ -353,8 +346,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test376()
-{
+STATIC void test376() {
     char *name = "t376 name";
     char *name1 = "t376 new name";
     uint16_t vol = VolID;
@@ -381,8 +373,7 @@ test_exit:
 
 /* -------------------------
 */
-STATIC void test377()
-{
+STATIC void test377() {
     char *name =  "t377 name";
     char *name1 = "t377 Name";
     uint16_t vol = VolID;
@@ -415,8 +406,7 @@ test_exit:
 
 
 /* ----------- */
-void FPRename_test()
-{
+void FPRename_test() {
     ENTER_TESTSET
     test69();
     test72();

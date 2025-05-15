@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test43()
-{
+STATIC void test43() {
     char *name = "t43 dir";
     char *name1 = "t43 subdir";
     uint16_t vol = VolID;
@@ -71,8 +70,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test73()
-{
+STATIC void test73() {
     int fork;
     int dir;
     int dir1;
@@ -160,8 +158,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test77()
-{
+STATIC void test77() {
     int fork;
     int dir;
     char *name = "t77 Move open fork other dir";
@@ -198,8 +195,7 @@ test_exit:
 }
 
 /* ------------------------------ */
-STATIC void test123()
-{
+STATIC void test123() {
     int  dir;
     int  dir1 = 0, dir2 = 0, dir3 = 0, dir4 = 0, dir5 = 0;
     char *name = "t123 dir1";
@@ -257,8 +253,7 @@ fin:
 }
 
 /* -------------------------- */
-STATIC void test138()
-{
+STATIC void test138() {
     int  dir;
     char *name = "t138 file";
     char *name1 = "t138 dir";
@@ -309,8 +304,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test322()
-{
+STATIC void test322() {
     char *name = "t322 dir";
     char *name1 = "t322 file";
     char *name2 = "t322 file1";
@@ -345,8 +339,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test378()
-{
+STATIC void test378() {
     char *name =  "t378 name";
     char *name1 = "t378 Name";
     uint16_t vol = VolID;
@@ -379,8 +372,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPMoveAndRename_test()
-{
+void FPMoveAndRename_test() {
     ENTER_TESTSET
     test43();
     test73();

@@ -33,8 +33,7 @@
 /*!
  * Get the db stamp which is the st_ctime of the file "cnid2.db" and store it in buffer
  */
-static int dbif_stamp(DBD *dbd, void *buffer, int size)
-{
+static int dbif_stamp(DBD *dbd, void *buffer, int size) {
     EC_INIT;
     struct stat st;
     int cwd = -1;
@@ -90,8 +89,7 @@ EC_CLEANUP:
  *
  * @returns -1 on error, 0 on success
  */
-static int dbif_init_rootinfo(DBD *dbd, int version)
-{
+static int dbif_init_rootinfo(DBD *dbd, int version) {
     DBT key, data;
     uint32_t uint32;
     char buf[ROOTINFO_DATALEN];
@@ -131,8 +129,7 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
  *
  * @returns -1 on error, 0 if theres no rootinfo key yet, 1 if *version is returned
  */
-static int dbif_getversion(DBD *dbd, uint32_t *version)
-{
+static int dbif_getversion(DBD *dbd, uint32_t *version) {
     DBT key, data;
     int ret;
     LOG(log_maxdebug, logtype_cnid, "dbif_getversion: reading version info");
@@ -170,8 +167,7 @@ static int dbif_getversion(DBD *dbd, uint32_t *version)
  * Initializes rootinfo key as neccessary
  * @returns -1 on error, 0 on success
  */
-static int dbif_setversion(DBD *dbd, uint32_t version)
-{
+static int dbif_setversion(DBD *dbd, uint32_t version) {
     int ret;
     DBT key, data;
     uint32_t v;
@@ -215,8 +211,7 @@ static int dbif_setversion(DBD *dbd, uint32_t version)
  * For now this does nothing, as upgrading from ver. 0 to 1 is done in dbif_open
  */
 #define UNINTIALIZED_DB UINT32_MAX
-static int dbif_upgrade(DBD *dbd)
-{
+static int dbif_upgrade(DBD *dbd) {
     uint32_t version = CNID_VERSION_UNINTIALIZED_DB;
 
     if (dbif_getversion(dbd, &version) == -1) {
@@ -247,8 +242,7 @@ static int dbif_upgrade(DBD *dbd)
 }
 
 /* --------------- */
-static int dbif_openlog(DBD *dbd)
-{
+static int dbif_openlog(DBD *dbd) {
     int ret = 0;
     int cwd = -1;
 
@@ -296,8 +290,7 @@ exit:
 }
 
 /* --------------- */
-static int dbif_logautorem(DBD *dbd)
-{
+static int dbif_logautorem(DBD *dbd) {
     int ret = 0;
     int cwd = -1;
     char **logfiles = NULL;
@@ -357,8 +350,7 @@ exit:
 }
 
 /* --------------- */
-DBD *dbif_init(const char *envhome, const char *filename)
-{
+DBD *dbif_init(const char *envhome, const char *filename) {
     DBD *dbd;
 
     if (NULL == (dbd = calloc(sizeof(DBD), 1))) {
@@ -410,8 +402,7 @@ DBD *dbif_init(const char *envhome, const char *filename)
    in order to avoid creating absolute paths by copying. Both have no problem with
    a relative path.
 */
-int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
-{
+int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags) {
     int ret;
 
     if ((ret = db_env_create(&dbd->db_env, 0))) {
@@ -544,8 +535,7 @@ int dbif_env_open(DBD *dbd, struct db_param *dbp, uint32_t dbenv_oflags)
 }
 
 /* --------------- */
-int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
-{
+int dbif_open(DBD *dbd, struct db_param *dbp, int reindex) {
     int ret, i, cwd;
     u_int32_t count;
     struct stat st;
@@ -737,8 +727,7 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex)
 }
 
 /* ------------------------ */
-static int dbif_closedb(DBD *dbd)
-{
+static int dbif_closedb(DBD *dbd) {
     int i;
     int ret;
     int err = 0;
@@ -760,8 +749,7 @@ static int dbif_closedb(DBD *dbd)
 }
 
 /* ------------------------ */
-int dbif_close(DBD *dbd)
-{
+int dbif_close(DBD *dbd) {
     int ret;
     int err = 0;
 
@@ -795,8 +783,7 @@ int dbif_close(DBD *dbd)
    In order to support silent database upgrades:
    destroy env at cnid_dbd shutdown.
  */
-int dbif_env_remove(const char *path)
-{
+int dbif_env_remove(const char *path) {
     int ret;
     DBD *dbd;
     LOG(log_debug, logtype_cnid, "Trying to remove BerkeleyDB environment");
@@ -878,8 +865,7 @@ int dbif_env_remove(const char *path)
  *  functions are not expected and therefore error conditions.
  */
 
-int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
-{
+int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags) {
     int ret;
     ret = dbd->db_table[dbi].db->get(dbd->db_table[dbi].db,
                                      dbd->db_txn,
@@ -900,8 +886,7 @@ int dbif_get(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
     }
 }
 
-int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
-{
+int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags) {
     int ret;
 
     if (dbif_txn_begin(dbd) < 0) {
@@ -929,8 +914,7 @@ int dbif_put(DBD *dbd, const int dbi, DBT *key, DBT *val, u_int32_t flags)
     }
 }
 
-int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
-{
+int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags) {
     int ret;
 
     /* For cooperation with the dbd utility and its usage of a cursor */
@@ -972,8 +956,7 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, u_int32_t flags)
  *
  * @returns -1 on error, 0 when nothing found, else the number of matches
  */
-int dbif_search(DBD *dbd, DBT *key, char *resbuf)
-{
+int dbif_search(DBD *dbd, DBT *key, char *resbuf) {
     int ret = 0;
     int count = 0;
     DBC *cursorp = NULL;
@@ -1022,8 +1005,7 @@ exit:
     return ret;
 }
 
-int dbif_txn_begin(DBD *dbd)
-{
+int dbif_txn_begin(DBD *dbd) {
     int ret;
 
     /* If we already have an active txn, just return */
@@ -1047,8 +1029,7 @@ int dbif_txn_begin(DBD *dbd)
     }
 }
 
-int dbif_txn_commit(DBD *dbd)
-{
+int dbif_txn_commit(DBD *dbd) {
     int ret;
 
     if (! dbd->db_txn) {
@@ -1072,8 +1053,7 @@ int dbif_txn_commit(DBD *dbd)
     }
 }
 
-int dbif_txn_abort(DBD *dbd)
-{
+int dbif_txn_abort(DBD *dbd) {
     int ret;
 
     if (! dbd->db_txn) {
@@ -1104,8 +1084,7 @@ int dbif_txn_abort(DBD *dbd)
 
    @returns 0 on success (abort or commit), -1 on error
 */
-int dbif_txn_close(DBD *dbd, int ret)
-{
+int dbif_txn_close(DBD *dbd, int ret) {
     if (ret == 0) {
         if (dbif_txn_abort(dbd) < 0) {
             LOG(log_error, logtype_cnid, "Fatal error aborting transaction. Exiting!");
@@ -1126,8 +1105,7 @@ int dbif_txn_close(DBD *dbd, int ret)
 }
 
 int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min,
-                        u_int32_t flags)
-{
+                        u_int32_t flags) {
     int ret;
     ret = dbd->db_env->txn_checkpoint(dbd->db_env, kbyte, min, flags);
 
@@ -1140,8 +1118,7 @@ int dbif_txn_checkpoint(DBD *dbd, u_int32_t kbyte, u_int32_t min,
     }
 }
 
-int dbif_count(DBD *dbd, const int dbi, u_int32_t *count)
-{
+int dbif_count(DBD *dbd, const int dbi, u_int32_t *count) {
     int ret;
     DB_BTREE_STAT *sp;
     DB *db = dbd->db_table[dbi].db;
@@ -1158,8 +1135,7 @@ int dbif_count(DBD *dbd, const int dbi, u_int32_t *count)
     return 0;
 }
 
-int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd)
-{
+int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd) {
     DBT key, data;
     int rc;
     memset(&key, 0, sizeof(key));
@@ -1186,8 +1162,7 @@ int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd)
     return 0;
 }
 
-int dbif_dump(DBD *dbd, int dumpindexes)
-{
+int dbif_dump(DBD *dbd, int dumpindexes) {
     int rc;
     uint32_t max = 0, count = 0, cnid, type, did, lastid, version;
     uint64_t dev, ino;
@@ -1371,8 +1346,7 @@ int dbif_dump(DBD *dbd, int dumpindexes)
    If close=1, close cursor.
    Return -1 on error, 0 on EOD (end-of-database), 1 if returning cnid.
 */
-int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close)
-{
+int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close) {
     int rc;
     int flag;
     cnid_t id;

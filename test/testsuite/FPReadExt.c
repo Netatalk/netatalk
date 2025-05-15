@@ -8,8 +8,7 @@
 #define BUF_S 3000
 static char w_buf[BUF_S];
 
-STATIC void test22()
-{
+STATIC void test22() {
     int fork;
     int fork1 = 0;
     uint16_t bitmap = 0;
@@ -174,8 +173,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPReadExt_test()
-{
+void FPReadExt_test() {
     ENTER_TESTSET
     test22();
 }

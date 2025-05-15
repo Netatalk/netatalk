@@ -36,8 +36,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-int asp_close(ASP asp)
-{
+int asp_close(ASP asp) {
     struct atp_block	atpb;
     struct iovec	iov[1];
     int err = 0;

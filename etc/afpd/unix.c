@@ -37,8 +37,7 @@
  * Get the free space on a partition.
  */
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree,
-                        VolSpace *btotal, uint32_t *bsize)
-{
+                        VolSpace *btotal, uint32_t *bsize) {
     VolSpace maxVolSpace = UINT64_MAX;
     struct statfs	sfs;
 
@@ -69,8 +68,7 @@ int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree,
     return AFP_OK;
 }
 
-static int utombits(mode_t bits)
-{
+static int utombits(mode_t bits) {
     int		mbits;
     mbits = 0;
     mbits |= (bits & (S_IREAD >> 6))  ? AR_UREAD  : 0;
@@ -84,8 +82,7 @@ static int utombits(mode_t bits)
     cf AFP 3.0 page 63
 */
 static void utommode(const AFPObj *obj, const struct stat *stat,
-                     struct maccess *ma)
-{
+                     struct maccess *ma) {
     mode_t mode;
     mode = stat->st_mode;
     ma->ma_world = utombits(mode);
@@ -130,8 +127,7 @@ static void utommode(const AFPObj *obj, const struct stat *stat,
  * over NFS.
  */
 void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
-                struct maccess *ma, struct dir *dir _U_, struct stat *st)
-{
+                struct maccess *ma, struct dir *dir _U_, struct stat *st) {
     struct stat     sb;
     ma->ma_user = ma->ma_owner = ma->ma_world = ma->ma_group = 0;
 
@@ -149,8 +145,7 @@ void accessmode(const AFPObj *obj, const struct vol *vol, char *path,
 #endif
 }
 
-static mode_t mtoubits(uint8_t bits)
-{
+static mode_t mtoubits(uint8_t bits) {
     mode_t	mode;
     mode = 0;
     mode |= (bits & AR_UREAD) ? ((S_IREAD | S_IEXEC) >> 6) : 0;
@@ -165,8 +160,7 @@ static mode_t mtoubits(uint8_t bits)
    and from AFP 3.0 spec page 63
    the mac mode should be save somewhere
 */
-mode_t mtoumode(struct maccess *ma)
-{
+mode_t mtoumode(struct maccess *ma) {
     mode_t		mode;
     mode = 0;
     mode |= mtoubits(ma->ma_owner | ma->ma_world);
@@ -178,8 +172,7 @@ mode_t mtoumode(struct maccess *ma)
 }
 
 /* --------------------- */
-int setfilunixmode(const struct vol *vol, struct path* path, mode_t mode)
-{
+int setfilunixmode(const struct vol *vol, struct path* path, mode_t mode) {
     if (!path->st_valid) {
         of_stat(vol, path);
     }
@@ -200,8 +193,7 @@ int setfilunixmode(const struct vol *vol, struct path* path, mode_t mode)
 
 
 /* --------------------- */
-int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
-{
+int setdirunixmode(const struct vol *vol, char *name, mode_t mode) {
     LOG(log_debug, logtype_afpd, "setdirunixmode('%s', mode:%04o) {v_dperm:%04o}",
         fullpathname(name), mode, vol->v_dperm);
     mode |= vol->v_dperm | DIRBITS;
@@ -233,8 +225,7 @@ int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 
 /* ----------------------------- */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid,
-                struct path* path)
-{
+                struct path* path) {
     if (ochown(path->u_name, uid, gid, vol_syml_opt(vol)) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",
             uid, gid, path->u_name, strerror(errno));
@@ -256,8 +247,7 @@ int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid,
  * into the unix permission scheme. we can get around this by
  * co-opting some bits. */
 int setdirowner(const struct vol *vol, const char *name, const uid_t uid,
-                const gid_t gid)
-{
+                const gid_t gid) {
     if (ochown(name, uid, gid, vol_syml_opt(vol)) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
             uid, gid, fullpathname(name), strerror(errno));

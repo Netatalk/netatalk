@@ -41,8 +41,7 @@
  * Show version information about afpd.
  * Used by "afp -v".
  */
-static void show_version(void)
-{
+static void show_version(void) {
     int num, i;
     printf("afpd %s - Apple Filing Protocol (AFP) daemon of Netatalk\n\n", VERSION);
     puts("This program is free software; you can redistribute it and/or modify it under");
@@ -84,8 +83,7 @@ static void show_version(void)
  * Show extended version information about afpd and Netatalk.
  * Used by "afp -V".
  */
-static void show_version_extended(void)
-{
+static void show_version_extended(void) {
     show_version();
     printf("      Zeroconf support:\t");
 #if defined (HAVE_MDNS)
@@ -158,8 +156,7 @@ static void show_version_extended(void)
 /*
  * Display compiled-in default paths
  */
-static void show_paths(void)
-{
+static void show_paths(void) {
     printf("              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
     printf("           extmap.conf:\t%s\n", _PATH_CONFDIR "extmap.conf");
     printf("       state directory:\t%s\n", _PATH_STATEDIR);
@@ -172,14 +169,12 @@ static void show_paths(void)
 /*
  * Display usage information about afpd.
  */
-static void show_usage(void)
-{
+static void show_usage(void) {
     fprintf(stderr, "Usage:\tafpd [-d] [-F configfile]\n");
     fprintf(stderr, "\tafpd -h|-v|-V\n");
 }
 
-void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
-{
+void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av) {
     int c, err = 0;
     optind = 1;
 

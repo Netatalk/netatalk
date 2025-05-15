@@ -40,8 +40,7 @@
 
 static int reti;                /* for the TEST_int macro */
 
-int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
-{
+int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end) {
     struct dir *dir;
     char dirname[20];
 
@@ -62,8 +61,7 @@ int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
     return 0;
 }
 
-int test002_rem_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
-{
+int test002_rem_x_dirs(const struct vol *vol, cnid_t start, cnid_t end) {
     struct dir *dir;
 
     while (start++ < end) {

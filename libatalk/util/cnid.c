@@ -68,8 +68,7 @@
  *
  * @returns relative path in new bstring, caller must bdestroy it
  */
-bstring rel_path_in_vol(const char *path, const char *volpath)
-{
+bstring rel_path_in_vol(const char *path, const char *volpath) {
     EC_INIT;
     int cwd = -1;
     bstring fpath = NULL;
@@ -170,8 +169,7 @@ EC_CLEANUP:
 cnid_t cnid_for_path(struct _cnid_db *cdb,
                      const char *volpath,
                      const char *path,
-                     cnid_t *did)
-{
+                     cnid_t *did) {
     EC_INIT;
     cnid_t cnid;
     bstring rpath = NULL;

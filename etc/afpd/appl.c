@@ -30,13 +30,11 @@
 
 static struct savedt	sa = { { 0, 0, 0, 0 }, -1, 0, 0};
 
-static int pathcmp(char *p, int plen, char *q, int qlen)
-{
+static int pathcmp(char *p, int plen, char *q, int qlen) {
     return ((plen == qlen && memcmp(p, q, plen) == 0) ? 0 : 1);
 }
 
-static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
-{
+static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode) {
     char	*dtf, *adt, *adts;
 
     if (sa.sdt_fd != -1) {
@@ -87,8 +85,7 @@ static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 /*
  * copy appls to new file, deleting any matching (old) appl entries
  */
-static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
-{
+static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen) {
     int		cc;
     char	*p;
     uint16_t	len;
@@ -177,8 +174,7 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
  */
 static char *
 makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir,
-            char *path)
-{
+            char *path) {
     char	*p;
     int     reserved_space = sizeof(uint16_t) + sizeof(unsigned
                              char[4]); /* u_short + appltag */
@@ -213,8 +209,7 @@ makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir,
 
 
 int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct vol		*vol;
     struct dir		*dir;
     int			tfd;
@@ -348,8 +343,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 }
 
 int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct vol		*vol;
     struct dir		*dir;
     int			tfd;
@@ -449,8 +443,7 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 }
 
 int afp_getappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct vol		*vol;
     char		*p, *q;
     int			cc;

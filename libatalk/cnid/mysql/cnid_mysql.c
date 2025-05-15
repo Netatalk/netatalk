@@ -68,8 +68,7 @@ static unsigned long      lookup_result_name_len;
 static unsigned long long lookup_result_dev;
 static unsigned long long lookup_result_ino;
 
-static int init_prepared_stmt_lookup(CNID_mysql_private *db)
-{
+static int init_prepared_stmt_lookup(CNID_mysql_private *db) {
     EC_INIT;
     char *sql = NULL;
     lookup_param[0].buffer_type    = MYSQL_TYPE_STRING;
@@ -117,8 +116,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int init_prepared_stmt_add(CNID_mysql_private *db)
-{
+static int init_prepared_stmt_add(CNID_mysql_private *db) {
     EC_INIT;
     char *sql = NULL;
     EC_NULL(db->cnid_add_stmt = mysql_stmt_init(db->cnid_mysql_con));
@@ -149,8 +147,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int init_prepared_stmt_put(CNID_mysql_private *db)
-{
+static int init_prepared_stmt_put(CNID_mysql_private *db) {
     EC_INIT;
     char *sql = NULL;
     EC_NULL(db->cnid_put_stmt = mysql_stmt_init(db->cnid_mysql_con));
@@ -184,8 +181,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int init_prepared_stmt(CNID_mysql_private *db)
-{
+static int init_prepared_stmt(CNID_mysql_private *db) {
     EC_INIT;
     EC_ZERO(init_prepared_stmt_lookup(db));
     EC_ZERO(init_prepared_stmt_add(db));
@@ -194,15 +190,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static void close_prepared_stmt(CNID_mysql_private *db)
-{
+static void close_prepared_stmt(CNID_mysql_private *db) {
     mysql_stmt_close(db->cnid_lookup_stmt);
     mysql_stmt_close(db->cnid_add_stmt);
     mysql_stmt_close(db->cnid_put_stmt);
 }
 
-static int cnid_mysql_execute(MYSQL *con, char *fmt, ...)
-{
+static int cnid_mysql_execute(MYSQL *con, char *fmt, ...) {
     char *sql = NULL;
     va_list ap;
     int rv;
@@ -226,8 +220,7 @@ static int cnid_mysql_execute(MYSQL *con, char *fmt, ...)
     return rv;
 }
 
-int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id)
-{
+int cnid_mysql_delete(struct _cnid_db *cdb, const cnid_t id) {
     EC_INIT;
     CNID_mysql_private *db;
 
@@ -248,8 +241,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-void cnid_mysql_close(struct _cnid_db *cdb)
-{
+void cnid_mysql_close(struct _cnid_db *cdb) {
     CNID_mysql_private *db;
 
     if (!cdb) {
@@ -279,8 +271,7 @@ int cnid_mysql_update(struct _cnid_db *cdb,
                       const struct stat *st,
                       cnid_t did,
                       const char *name,
-                      size_t len)
-{
+                      size_t len) {
     EC_INIT;
     CNID_mysql_private *db;
     cnid_t update_id = 0;
@@ -349,8 +340,7 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
                          const struct stat *st,
                          cnid_t did,
                          const char *name,
-                         size_t len)
-{
+                         size_t len) {
     EC_INIT;
     CNID_mysql_private *db;
     cnid_t id = CNID_INVALID;
@@ -507,8 +497,7 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                       cnid_t did,
                       const char *name,
                       size_t len,
-                      cnid_t hint)
-{
+                      cnid_t hint) {
     EC_INIT;
     CNID_mysql_private *db;
     cnid_t id = CNID_INVALID;
@@ -627,8 +616,7 @@ EC_CLEANUP:
 }
 
 cnid_t cnid_mysql_get(struct _cnid_db *cdb, cnid_t did, const char *name,
-                      size_t len)
-{
+                      size_t len) {
     EC_INIT;
     CNID_mysql_private *db;
     cnid_t id = CNID_INVALID;
@@ -680,8 +668,7 @@ EC_CLEANUP:
 }
 
 char *cnid_mysql_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
-                         size_t len)
-{
+                         size_t len) {
     EC_INIT;
     CNID_mysql_private *db;
     MYSQL_RES *result = NULL;
@@ -723,8 +710,7 @@ EC_CLEANUP:
 /**
  * Caller passes buffer where we will store the db stamp
  **/
-int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
-{
+int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len) {
     EC_INIT;
     CNID_mysql_private *db;
     MYSQL_RES *result = NULL;
@@ -776,8 +762,7 @@ EC_CLEANUP:
 
 
 int cnid_mysql_find(struct _cnid_db *cdb _U_, const char *name,
-                    size_t namelen _U_, void *buffer _U_, size_t buflen _U_)
-{
+                    size_t namelen _U_, void *buffer _U_, size_t buflen _U_) {
     LOG(log_error, logtype_cnid,
         "cnid_mysql_find(\"%s\"): not supported with MySQL CNID backend", name);
     return -1;
@@ -785,15 +770,13 @@ int cnid_mysql_find(struct _cnid_db *cdb _U_, const char *name,
 
 cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb _U_,
                               const struct stat *st _U_,
-                              cnid_t did _U_, const char *name, size_t len _U_, cnid_t hint _U_)
-{
+                              cnid_t did _U_, const char *name, size_t len _U_, cnid_t hint _U_) {
     LOG(log_error, logtype_cnid,
         "cnid_mysql_rebuild_add(\"%s\"): not supported with MySQL CNID backend", name);
     return CNID_INVALID;
 }
 
-int cnid_mysql_wipe(struct _cnid_db *cdb)
-{
+int cnid_mysql_wipe(struct _cnid_db *cdb) {
     EC_INIT;
     CNID_mysql_private *db;
     MYSQL_RES *result = NULL;
@@ -828,8 +811,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static struct _cnid_db *cnid_mysql_new(struct vol *vol)
-{
+static struct _cnid_db *cnid_mysql_new(struct vol *vol) {
     struct _cnid_db *cdb;
 
     if ((cdb = (struct _cnid_db *)calloc(1, sizeof(struct _cnid_db))) == NULL) {
@@ -854,8 +836,7 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
 }
 
 /* Return allocated UUID string with dashes stripped */
-static char *uuid_strip_dashes(const char *uuid)
-{
+static char *uuid_strip_dashes(const char *uuid) {
     static char stripped[33];
     int i = 0;
 
@@ -872,8 +853,7 @@ static char *uuid_strip_dashes(const char *uuid)
 }
 
 /* ---------------------- */
-struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
-{
+struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args) {
     EC_INIT;
     CNID_mysql_private *db = NULL;
     struct _cnid_db *cdb = NULL;

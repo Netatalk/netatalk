@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ----------------------- */
-STATIC void test210(void)
-{
+STATIC void test210(void) {
     ENTER_TEST
     FAIL(FPGetSrvrMsg(Conn, 0, 0))
     FAIL(FPGetSrvrMsg(Conn, 1, 0))
@@ -12,8 +11,7 @@ STATIC void test210(void)
 }
 
 /* ----------- */
-void FPGetSrvrMsg_test()
-{
+void FPGetSrvrMsg_test() {
     ENTER_TESTSET
     test210();
 }

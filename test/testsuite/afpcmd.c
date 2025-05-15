@@ -18,8 +18,7 @@ static char *dsi_command2str[] = {
     "DSIFUNC_ATTN",    // 8       /* DSIAttention */
 };
 
-char *afp_error(int error)
-{
+char *afp_error(int error) {
     char *s;
 
     switch (ntohl(error)) {
@@ -232,8 +231,7 @@ char *afp_error(int error)
 }
 
 /* --------------------------------------------------- */
-const char *AfpNum2name(int num)
-{
+const char *AfpNum2name(int num) {
     switch (num) {
     case AFP_BYTELOCK      :
         return "AFP_BYTELOCK      ";   /*   1 */
@@ -438,8 +436,7 @@ const char *AfpNum2name(int num)
 }
 
 /* --------------------------------------------------- */
-void dump_header(DSI *dsi)
-{
+void dump_header(DSI *dsi) {
     char *s;
 
     if (Quiet) {
@@ -480,8 +477,7 @@ void dump_header(DSI *dsi)
 }
 
 /* --------------------------------------------------- */
-void dump_open(DSI *dsi)
-{
+void dump_open(DSI *dsi) {
     uint32_t i = 0;
 
     /* parse options */
@@ -520,8 +516,7 @@ void dump_open(DSI *dsi)
 
 */
 unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
-                         char *pwd)
-{
+                         char *pwd) {
     unsigned int ret;
     struct passwd *p = NULL;
     DSI *dsi;
@@ -550,8 +545,7 @@ unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
 /* -------------
 */
 unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
-                            char *pwd)
-{
+                            char *pwd) {
     unsigned int ret;
     struct passwd *p = NULL;
     DSI *dsi;
@@ -583,8 +577,7 @@ unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
 }
 
 /* ------------------------------- */
-unsigned int FPLogOut(CONN *conn)
-{
+unsigned int FPLogOut(CONN *conn) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -599,8 +592,7 @@ unsigned int FPLogOut(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int FPzzz(CONN *conn, int flag)
-{
+unsigned int FPzzz(CONN *conn, int flag) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -616,8 +608,7 @@ unsigned int FPzzz(CONN *conn, int flag)
 
 /* ------------------------------- */
 unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len,
-                               char *token)
-{
+                               char *token) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -633,8 +624,7 @@ unsigned int FPGetSessionToken(CONN *conn, int type, uint32_t time, int len,
 
 /* ------------------------------- */
 unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len,
-                                    char *token)
-{
+                                    char *token) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -650,8 +640,7 @@ unsigned int FPDisconnectOldSession(CONN *conn, uint16_t type, int len,
 }
 
 /* ------------------------------- */
-unsigned int FPMapID(CONN *conn, char fn, int id)
-{
+unsigned int FPMapID(CONN *conn, char fn, int id) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -666,8 +655,7 @@ unsigned int FPMapID(CONN *conn, char fn, int id)
 }
 
 /* ------------------------------- */
-unsigned int FPMapName(CONN *conn, char fn, char *name)
-{
+unsigned int FPMapName(CONN *conn, char fn, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -682,8 +670,7 @@ unsigned int FPMapName(CONN *conn, char fn, char *name)
 }
 
 /* ------------------------------- */
-unsigned int FPBadPacket(CONN *conn, char fn, char *name)
-{
+unsigned int FPBadPacket(CONN *conn, char fn, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -698,8 +685,7 @@ unsigned int FPBadPacket(CONN *conn, char fn, char *name)
 }
 
 /* ------------------------------- */
-unsigned int FPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
-{
+unsigned int FPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -715,8 +701,7 @@ unsigned int FPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
 }
 
 /* ------------------------------- */
-unsigned int FPGetSrvrInfo(CONN *conn)
-{
+unsigned int FPGetSrvrInfo(CONN *conn) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -731,8 +716,7 @@ unsigned int FPGetSrvrInfo(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int FPGetSrvrParms(CONN *conn)
-{
+unsigned int FPGetSrvrParms(CONN *conn) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -747,8 +731,7 @@ unsigned int FPGetSrvrParms(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
-{
+unsigned int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -768,8 +751,7 @@ unsigned int FPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
 	return -1 if error (O is a valid volume ID).
 	page 235
 */
-uint16_t FPOpenVolFull(CONN *conn, char *vol, uint16_t  bitmap)
-{
+uint16_t FPOpenVolFull(CONN *conn, char *vol, uint16_t  bitmap) {
     uint16_t  volID = 0;
     DSI *dsi = &conn->dsi;
 
@@ -783,14 +765,12 @@ uint16_t FPOpenVolFull(CONN *conn, char *vol, uint16_t  bitmap)
 }
 
 /* ------------------ */
-uint16_t FPOpenVol(CONN *conn, char *vol)
-{
+uint16_t FPOpenVol(CONN *conn, char *vol) {
     return FPOpenVolFull(conn, vol, (1 << VOLPBIT_VID) | (1 << VOLPBIT_ATTR));
 }
 
 /* ------------------------------- */
-unsigned int FPCloseVol(CONN *conn, uint16_t vol)
-{
+unsigned int FPCloseVol(CONN *conn, uint16_t vol) {
     DSI *dsi;
     dsi = &conn->dsi;
 
@@ -804,8 +784,7 @@ unsigned int FPCloseVol(CONN *conn, uint16_t vol)
 }
 
 /* ------------------------------- */
-uint16_t  FPOpenDT(CONN *conn, uint16_t vol)
-{
+uint16_t  FPOpenDT(CONN *conn, uint16_t vol) {
     int ofs;
     uint16_t  id = 0xffff, result;
     DSI *dsi;
@@ -849,8 +828,7 @@ uint16_t  FPOpenDT(CONN *conn, uint16_t vol)
 
 /* ------------------------------- */
 unsigned int FPGetIcon(CONN *conn, uint16_t dt, char *creator, char *type,
-                       char itype, uint16_t size)
-{
+                       char itype, uint16_t size) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -890,8 +868,7 @@ unsigned int FPGetIcon(CONN *conn, uint16_t dt, char *creator, char *type,
 
 /* ------------------------------- */
 unsigned int FPAddIcon(CONN *conn, uint16_t dt, char *creator, char *type,
-                       char itype, uint32_t tag, uint16_t size, char *data)
-{
+                       char itype, uint32_t tag, uint16_t size, char *data) {
     int ofs;
     DSI *dsi;
     uint16_t temp;
@@ -935,8 +912,7 @@ unsigned int FPAddIcon(CONN *conn, uint16_t dt, char *creator, char *type,
 
 /* ------------------------------- */
 unsigned int FPGetIconInfo(CONN *conn, uint16_t dt, unsigned char *creator,
-                           uint16_t itype)
-{
+                           uint16_t itype) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -971,8 +947,7 @@ unsigned int FPGetIconInfo(CONN *conn, uint16_t dt, unsigned char *creator,
 }
 
 /* ------------------------------- */
-unsigned int FPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap)
-{
+unsigned int FPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -989,8 +964,7 @@ unsigned int FPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap)
 
 /* ------------------------------- */
 unsigned int FPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap,
-                           struct afp_volume_parms *parms)
-{
+                           struct afp_volume_parms *parms) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1006,8 +980,7 @@ unsigned int FPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap,
 }
 
 /* ------------------------------- */
-unsigned int FPCloseDT(CONN *conn, uint16_t vol)
-{
+unsigned int FPCloseDT(CONN *conn, uint16_t vol) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1022,8 +995,7 @@ unsigned int FPCloseDT(CONN *conn, uint16_t vol)
 }
 
 /* ------------------------------- */
-unsigned int FPCloseFork(CONN *conn, uint16_t vol)
-{
+unsigned int FPCloseFork(CONN *conn, uint16_t vol) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1038,8 +1010,7 @@ unsigned int FPCloseFork(CONN *conn, uint16_t vol)
 }
 
 /* ------------------------------- */
-unsigned int FPFlush(CONN *conn, uint16_t vol)
-{
+unsigned int FPFlush(CONN *conn, uint16_t vol) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1055,8 +1026,7 @@ unsigned int FPFlush(CONN *conn, uint16_t vol)
 
 /* ------------------------------- */
 unsigned int FPByteLock(CONN *conn, uint16_t fork, int end, int mode,
-                        int offset, int size)
-{
+                        int offset, int size) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1073,8 +1043,7 @@ unsigned int FPByteLock(CONN *conn, uint16_t fork, int end, int mode,
 
 /* ------------------------------- */
 unsigned int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode,
-                            off_t offset, off_t size)
-{
+                            off_t offset, off_t size) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1092,8 +1061,7 @@ unsigned int FPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode,
 }
 
 /* ------------------------------- */
-unsigned int FPFlushFork(CONN *conn, uint16_t vol)
-{
+unsigned int FPFlushFork(CONN *conn, uint16_t vol) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1109,8 +1077,7 @@ unsigned int FPFlushFork(CONN *conn, uint16_t vol)
 
 /* -------------------------------
 */
-unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did)
-{
+unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1147,8 +1114,7 @@ unsigned int FPEnumerate(CONN *conn,
                          int did,
                          char *name,
                          uint16_t f_bitmap,
-                         uint16_t d_bitmap)
-{
+                         uint16_t d_bitmap) {
     int ofs;
     uint16_t bitmap;
     int len;
@@ -1212,8 +1178,7 @@ unsigned int FPEnumerateFull(CONN *conn,
                              int did,
                              char *name,
                              uint16_t f_bitmap,
-                             uint16_t d_bitmap)
-{
+                             uint16_t d_bitmap) {
     int ofs;
     uint16_t bitmap;
     int len;
@@ -1269,8 +1234,7 @@ unsigned int FPEnumerateFull(CONN *conn,
 /* -------------------------------
 */
 unsigned int FPGetFileDirParams(CONN *conn, uint16_t vol, int did, char *name,
-                                uint16_t f_bitmap, uint16_t d_bitmap)
-{
+                                uint16_t f_bitmap, uint16_t d_bitmap) {
     int ofs;
     uint16_t bitmap;
     DSI *dsi;
@@ -1311,8 +1275,7 @@ unsigned int FPGetFileDirParams(CONN *conn, uint16_t vol, int did, char *name,
 
 /* -------------------------------
 */
-unsigned int FPCreateID(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int FPCreateID(CONN *conn, uint16_t vol, int did, char *name) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1346,8 +1309,7 @@ unsigned int FPCreateID(CONN *conn, uint16_t vol, int did, char *name)
 
 /* -------------------------------
 */
-unsigned int FPDeleteID(CONN *conn, uint16_t vol, int did)
-{
+unsigned int FPDeleteID(CONN *conn, uint16_t vol, int did) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1380,8 +1342,7 @@ unsigned int FPDeleteID(CONN *conn, uint16_t vol, int did)
 
 /* -------------------------------
 */
-unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap)
-{
+unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1417,8 +1378,7 @@ unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap)
 /* -------------------------------
 */
 unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
-                             uint16_t f_bitmap, uint16_t d_bitmap)
-{
+                             uint16_t f_bitmap, uint16_t d_bitmap) {
     int ofs;
     uint16_t bitmap;
     uint16_t len;
@@ -1481,8 +1441,7 @@ unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
 /* -------------------------------
 */
 unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
-                              uint16_t f_bitmap, uint16_t d_bitmap)
-{
+                              uint16_t f_bitmap, uint16_t d_bitmap) {
     int ofs;
     uint16_t bitmap;
     uint16_t len;
@@ -1551,8 +1510,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
                                  uint16_t f_bitmap,
                                  uint16_t d_bitmap,
                                  uint32_t startindex,
-                                 uint16_t reqcount)
-{
+                                 uint16_t reqcount) {
     int ofs;
     uint16_t bitmap;
     uint16_t len;
@@ -1617,8 +1575,7 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
 
 /* -------------------------------
 */
-unsigned int FPDelete(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int FPDelete(CONN *conn, uint16_t vol, int did, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1635,8 +1592,7 @@ unsigned int FPDelete(CONN *conn, uint16_t vol, int did, char *name)
 
 /* -------------------------------
 */
-unsigned int FPGetComment(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int FPGetComment(CONN *conn, uint16_t vol, int did, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1653,8 +1609,7 @@ unsigned int FPGetComment(CONN *conn, uint16_t vol, int did, char *name)
 
 /* -------------------------------
 */
-unsigned int FPRemoveComment(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int FPRemoveComment(CONN *conn, uint16_t vol, int did, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1672,8 +1627,7 @@ unsigned int FPRemoveComment(CONN *conn, uint16_t vol, int did, char *name)
 /* -------------------------------
 */
 unsigned int FPAddComment(CONN *conn, uint16_t vol, int did, char *name,
-                          char *cmt)
-{
+                          char *cmt) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1691,8 +1645,7 @@ unsigned int FPAddComment(CONN *conn, uint16_t vol, int did, char *name,
 /* -------------------------------
 	depreciate (for variable dir volume)
 */
-unsigned int FPOpenDir(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int FPOpenDir(CONN *conn, uint16_t vol, int did, char *name) {
     int ofs;
     int dir = 0;
     DSI *dsi;
@@ -1737,8 +1690,7 @@ unsigned int FPOpenDir(CONN *conn, uint16_t vol, int did, char *name)
 }
 
 /* -------------------------------- */
-unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did, char *name) {
     int dir = 0;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1757,8 +1709,7 @@ unsigned int FPCreateDir(CONN *conn, uint16_t vol, int did, char *name)
 	type : resource or data
 */
 uint16_t  FPOpenFork(CONN *conn, uint16_t vol, int type, uint16_t bitmap,
-                     int did, char *name, int access)
-{
+                     int did, char *name, int access) {
     uint16_t ofork;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1781,8 +1732,7 @@ uint16_t  FPOpenFork(CONN *conn, uint16_t vol, int type, uint16_t bitmap,
 
 /* ------------------------- */
 unsigned int FPCreateFile(CONN *conn, uint16_t vol, char type, int did,
-                          char *name)
-{
+                          char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1798,8 +1748,7 @@ unsigned int FPCreateFile(CONN *conn, uint16_t vol, char type, int did,
 }
 
 /* ------------------------------- */
-unsigned int FPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap)
-{
+unsigned int FPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1816,8 +1765,7 @@ unsigned int FPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap)
 
 /* ------------------------------- */
 unsigned int FPGetAppl(CONN *conn, uint16_t dt, char *name, uint16_t index,
-                       uint16_t bitmap)
-{
+                       uint16_t bitmap) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1833,8 +1781,7 @@ unsigned int FPGetAppl(CONN *conn, uint16_t dt, char *name, uint16_t index,
 
 /* ------------------------------- */
 unsigned int FPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator,
-                       uint32_t tag, char *name)
-{
+                       uint32_t tag, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1851,8 +1798,7 @@ unsigned int FPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator,
 
 /* ------------------------------- */
 unsigned int FPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
-                          char *name)
-{
+                          char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1869,8 +1815,7 @@ unsigned int FPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
 
 /* ------------------------------- */
 unsigned int FPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
-                            off_t size)
-{
+                            off_t size) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1888,8 +1833,7 @@ unsigned int FPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
 /* ------------------------------- */
 unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name,
                            uint16_t bitmap,
-                           struct afp_filedir_parms *dir)
-{
+                           struct afp_filedir_parms *dir) {
     int ofs;
     uint16_t rbitmap;
     DSI *dsi;
@@ -1934,8 +1878,7 @@ unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name,
 /* ------------------------------- */
 unsigned int FPSetFileParams(CONN *conn, uint16_t vol, int did, char *name,
                              uint16_t bitmap,
-                             struct afp_filedir_parms *fil)
-{
+                             struct afp_filedir_parms *fil) {
     int ofs;
     uint16_t rbitmap;
     DSI *dsi;
@@ -1978,8 +1921,7 @@ unsigned int FPSetFileParams(CONN *conn, uint16_t vol, int did, char *name,
 }
 
 /* ------------------------------- */
-unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
-{
+unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did) {
     DSI *dsi;
     unsigned int ofs;
     dsi = &conn->dsi;
@@ -2013,8 +1955,7 @@ unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
 unsigned int FPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
                          uint16_t f_bitmap, uint16_t d_bitmap,
                          uint32_t rbitmap, struct afp_filedir_parms *filedir,
-                         struct afp_filedir_parms *filedir2)
-{
+                         struct afp_filedir_parms *filedir2) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2034,8 +1975,7 @@ unsigned int FPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
 unsigned int FPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
                             uint16_t f_bitmap, uint16_t d_bitmap,
                             uint32_t rbitmap, struct afp_filedir_parms *filedir,
-                            struct afp_filedir_parms *filedir2)
-{
+                            struct afp_filedir_parms *filedir2) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2054,8 +1994,7 @@ unsigned int FPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
 /* ------------------------------- */
 unsigned int FPSetFilDirParam(CONN *conn, uint16_t vol, int did, char *name,
                               uint16_t bitmap,
-                              struct afp_filedir_parms *fil)
-{
+                              struct afp_filedir_parms *fil) {
     int ofs;
     uint16_t rbitmap;
     DSI *dsi;
@@ -2099,8 +2038,7 @@ unsigned int FPSetFilDirParam(CONN *conn, uint16_t vol, int did, char *name,
 
 /* ------------------------------- */
 unsigned int FPCopyFile(CONN *conn, uint16_t svol, int sdid, uint16_t dvol,
-                        int ddid, char *src, char *dstdir, char *dst)
-{
+                        int ddid, char *src, char *dstdir, char *dst) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2140,8 +2078,7 @@ unsigned int FPCopyFile(CONN *conn, uint16_t svol, int sdid, uint16_t dvol,
 
 /* ------------------------------- */
 unsigned int FPExchangeFile(CONN *conn, uint16_t vol, int sdid, int ddid,
-                            char *src, char *dst)
-{
+                            char *src, char *dst) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2179,8 +2116,7 @@ unsigned int FPExchangeFile(CONN *conn, uint16_t vol, int sdid, int ddid,
 
 /* ------------------------------- */
 unsigned int FPMoveAndRename(CONN *conn, uint16_t svol, int sdid, int ddid,
-                             char *src, char *dst)
-{
+                             char *src, char *dst) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2216,8 +2152,8 @@ unsigned int FPMoveAndRename(CONN *conn, uint16_t svol, int sdid, int ddid,
     return dsi->header.dsi_code;
 }
 /* ------------------------------- */
-unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src, char *dst)
-{
+unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src,
+                      char *dst) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2252,8 +2188,7 @@ unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src, char *dst)
 
 /* ------------------------------- */
 unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                          char *data)
-{
+                          char *data) {
     unsigned int ret;
 
     if (!Quiet) {
@@ -2268,8 +2203,7 @@ unsigned int FPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int FPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                          char *data)
-{
+                          char *data) {
     unsigned int ret;
 
     if (!Quiet) {
@@ -2284,8 +2218,7 @@ unsigned int FPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int FPRead(CONN *conn, uint16_t fork, long long offset, int size,
-                    char *data)
-{
+                    char *data) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2302,8 +2235,7 @@ unsigned int FPRead(CONN *conn, uint16_t fork, long long offset, int size,
 
 /* ------------------------------- */
 unsigned int FPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
-                        char *data)
-{
+                        char *data) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2320,8 +2252,7 @@ unsigned int FPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
 
 /* ------------------------------- */
 unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
-                              off_t size, char *data)
-{
+                              off_t size, char *data) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2338,8 +2269,7 @@ unsigned int FPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
 
 /* ------------------------------- */
 unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                           char *data, char whence)
-{
+                           char *data, char whence) {
     unsigned int ret;
 
     if (!Quiet) {
@@ -2354,8 +2284,7 @@ unsigned int FPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                           char *data, char whence)
-{
+                           char *data, char whence) {
     unsigned int ret;
 
     if (!Quiet) {
@@ -2370,8 +2299,7 @@ unsigned int FPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int FPWrite(CONN *conn, uint16_t fork, long long offset, int size,
-                     char *data, char whence)
-{
+                     char *data, char whence) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2388,8 +2316,7 @@ unsigned int FPWrite(CONN *conn, uint16_t fork, long long offset, int size,
 
 /* ------------------------------- */
 unsigned int FPWrite_ext(CONN *conn, uint16_t fork, off_t  offset, off_t size,
-                         char *data, char whence)
-{
+                         char *data, char whence) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2406,8 +2333,7 @@ unsigned int FPWrite_ext(CONN *conn, uint16_t fork, off_t  offset, off_t size,
 
 /* ------------------------------- */
 unsigned int FPWrite_ext_async(CONN *conn, uint16_t fork, off_t  offset,
-                               off_t size, char *data, char whence)
-{
+                               off_t size, char *data, char whence) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2422,8 +2348,7 @@ unsigned int FPWrite_ext_async(CONN *conn, uint16_t fork, off_t  offset,
 }
 
 unsigned int FPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                      char *name)
-{
+                      char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2439,8 +2364,7 @@ unsigned int FPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 }
 
 unsigned int FPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                          uint16_t maxsize, char *name, char *attr)
-{
+                          uint16_t maxsize, char *name, char *attr) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2457,8 +2381,7 @@ unsigned int FPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 }
 
 unsigned int FPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                           int maxsize, char *name)
-{
+                           int maxsize, char *name) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2475,8 +2398,7 @@ unsigned int FPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 }
 
 unsigned int FPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                          char *name, char *attr, char *data)
-{
+                          char *name, char *attr, char *data) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2494,8 +2416,7 @@ unsigned int FPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 
 
 unsigned int FPRemoveExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                             char *name, char *attr)
-{
+                             char *name, char *attr) {
     unsigned int ret;
     DSI *dsi;
     dsi = &conn->dsi;

@@ -28,8 +28,7 @@
 #define u_int unsigned
 #endif
 
-bool_t xdr_getquota_args(XDR *xdrs, getquota_args *objp)
-{
+bool_t xdr_getquota_args(XDR *xdrs, getquota_args *objp) {
     if (!xdr_string(xdrs, &objp->gqa_pathp, RQ_PATHLEN)) {
         return FALSE;
     }
@@ -42,8 +41,7 @@ bool_t xdr_getquota_args(XDR *xdrs, getquota_args *objp)
 }
 
 
-bool_t xdr_rquota(XDR *xdrs, rquota *objp)
-{
+bool_t xdr_rquota(XDR *xdrs, rquota *objp) {
     if (!xdr_int(xdrs, &objp->rq_bsize)) {
         return FALSE;
     }
@@ -103,8 +101,7 @@ bool_t xdr_gqr_status(XDR *xdrs, gqr_status *objp)
 }
 
 
-bool_t xdr_getquota_rslt(XDR *xdrs, getquota_rslt *objp)
-{
+bool_t xdr_getquota_rslt(XDR *xdrs, getquota_rslt *objp) {
     if (!xdr_gqr_status(xdrs, &objp->status)) {
         return FALSE;
     }

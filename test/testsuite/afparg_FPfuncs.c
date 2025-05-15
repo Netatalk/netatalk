@@ -1,8 +1,7 @@
 #include "specs.h"
 #include <time.h>
 
-void FPCopyFile_arg(char **argv)
-{
+void FPCopyFile_arg(char **argv) {
     uint16_t vol = VolID;
     fprintf(stdout, "======================\n");
     fprintf(stdout, "FPCopyFile with args:\n");
@@ -11,8 +10,7 @@ void FPCopyFile_arg(char **argv)
 }
 
 /* ----------- */
-void FPResolveID_arg(char **argv)
-{
+void FPResolveID_arg(char **argv) {
     int argc = 0;
     unsigned int ret, ofs = 3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_PDINFO);
@@ -50,13 +48,11 @@ void FPResolveID_arg(char **argv)
     fprintf(stdout, "Resolved ID %d to: '%s'\n", id, filedir.utf8_name);
 }
 
-static void handler()
-{
+static void handler() {
     return;
 }
 
-void FPLockrw_arg(char **argv)
-{
+void FPLockrw_arg(char **argv) {
     uint16_t vol = VolID;
     int fork;
     struct sigaction action;
@@ -95,8 +91,7 @@ test_exit:
     (void)sigaction(SIGINT, &action, NULL);
 }
 
-void FPLockw_arg(char **argv)
-{
+void FPLockw_arg(char **argv) {
     uint16_t vol = VolID;
     int fork;
     struct sigaction action;
@@ -135,8 +130,7 @@ test_exit:
     (void)sigaction(SIGINT, &action, NULL);
 }
 
-void FPEnumerate_arg(char **argv)
-{
+void FPEnumerate_arg(char **argv) {
     uint8_t buffer[DSI_DATASIZ];
     uint16_t vol = VolID;
     uint16_t d_bitmap;

@@ -4,8 +4,7 @@
 #include "adoublehelper.h"
 
 /* ------------------------- */
-STATIC void test121()
-{
+STATIC void test121() {
     int  dir;
     char *name = "t121 test dir setdirparam";
     int  ofs =  3 * sizeof(uint16_t);
@@ -52,8 +51,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPSetDirParms_test()
-{
+void T2FPSetDirParms_test() {
     ENTER_TESTSET
     test121();
 }

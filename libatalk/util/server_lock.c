@@ -30,8 +30,7 @@ static struct itimerval itimer;
 /* this creates an open lock file which hangs around until the program
  * dies. it returns the pid. due to problems w/ solaris, this has
  * been changed to do the kill() thing. */
-pid_t server_lock(char *program, char *pidfile, int debug)
-{
+pid_t server_lock(char *program, char *pidfile, int debug) {
 #ifndef SOLARIS
     char buf[10];
     FILE *pf;
@@ -108,8 +107,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
 /*!
  * Check lockfile
  */
-int check_lockfile(const char *program, const char *pidfile)
-{
+int check_lockfile(const char *program, const char *pidfile) {
 #ifndef SOLARIS
     char buf[10];
     FILE *pf;
@@ -135,8 +133,7 @@ int check_lockfile(const char *program, const char *pidfile)
 /*!
  * Check and create lockfile
  */
-int create_lockfile(const char *program, const char *pidfile)
-{
+int create_lockfile(const char *program, const char *pidfile) {
 #ifndef SOLARIS
     FILE *pf;
     int mask;

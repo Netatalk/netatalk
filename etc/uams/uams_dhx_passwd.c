@@ -50,8 +50,7 @@ static uint8_t randbuf[16];
 static int pwd_login(void *obj, char *username, int ulen,
                      struct passwd **uam_pwd _U_,
                      char *ibuf, size_t ibuflen _U_,
-                     char *rbuf, size_t *rbuflen)
-{
+                     char *rbuf, size_t *rbuflen) {
     unsigned char iv[] = "CJalbert";
     static const unsigned char p_binary[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x57, 0xD4,
                                              0x3F, 0x20, 0x24, 0x74, 0x4C, 0xEE, 0xE7, 0x5B
@@ -212,8 +211,7 @@ passwd_fail:
 /* cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
-                        char *rbuf, size_t *rbuflen)
-{
+                        char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     *rbuflen = 0;
@@ -255,8 +253,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
-                            char *rbuf, size_t *rbuflen)
-{
+                            char *rbuf, size_t *rbuflen) {
     char       *username;
     size_t     len, ulen;
     uint16_t  temp16;
@@ -286,8 +283,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen _U_,
-                            char *rbuf, size_t *rbuflen)
-{
+                            char *rbuf, size_t *rbuflen) {
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
@@ -408,8 +404,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 
-static int uam_setup(void *obj, const char *path)
-{
+static int uam_setup(void *obj, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHCAST128",
                      passwd_login, passwd_logincont, NULL, passwd_login_ext) < 0) {
         return -1;
@@ -420,8 +415,7 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "DHCAST128");
     /*uam_unregister(UAM_SERVER_PRINTAUTH, "DHCAST128"); */
 }

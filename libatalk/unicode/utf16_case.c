@@ -15,8 +15,7 @@
 /*******************************************************************
  Convert a wide character to upper case.
 *******************************************************************/
-ucs2_t toupper_w(ucs2_t val)
-{
+ucs2_t toupper_w(ucs2_t val) {
     if (val <= 0x02BF) {
         return upper_table_1[val];
     }
@@ -79,8 +78,7 @@ ucs2_t toupper_w(ucs2_t val)
 /*******************************************************************
  Convert a surrogate pair to upper case.
 *******************************************************************/
-uint32_t toupper_sp(uint32_t val)
-{
+uint32_t toupper_sp(uint32_t val) {
     if (val >= 0xD801DC00 && val <= 0xD801DC7F) {
         return upper_table_sp_1[val - 0xD801DC00];
     }
@@ -123,8 +121,7 @@ uint32_t toupper_sp(uint32_t val)
 /*******************************************************************
  Convert a wide character to lower case.
 *******************************************************************/
-ucs2_t tolower_w(ucs2_t val)
-{
+ucs2_t tolower_w(ucs2_t val) {
     if (val <= 0x007F) {
         return lower_table_1[val];
     }
@@ -183,8 +180,7 @@ ucs2_t tolower_w(ucs2_t val)
 /*******************************************************************
  Convert a surrogate pair to lower case.
 *******************************************************************/
-uint32_t tolower_sp(uint32_t val)
-{
+uint32_t tolower_sp(uint32_t val) {
     if (val >= 0xD801DC00 && val <= 0xD801DC3F) {
         return lower_table_sp_1[val - 0xD801DC00];
     }

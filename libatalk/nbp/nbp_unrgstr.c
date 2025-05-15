@@ -31,8 +31,7 @@
 #endif /* ! SOCKLEN_T */
 
 int nbp_unrgstr(const char *obj, const char *type, const char  *zone,
-                const struct at_addr *addr)
-{
+                const struct at_addr *addr) {
     struct sockaddr_at	to;
     struct nbphdr	nh;
     struct timeval	timeout;

@@ -64,8 +64,7 @@ static struct passwd *dhxpwd;
  * the Diffie-Hellman key exchange.
  * The bits value should be one of 768, 1024, 2048, 3072 or 4096.
  **/
-static int dh_params_generate(unsigned int bits)
-{
+static int dh_params_generate(unsigned int bits) {
     int result, times = 0, qbits;
     gcry_mpi_t *factors = NULL;
     gcry_error_t err;
@@ -138,8 +137,7 @@ error:
 static int PAM_conv(int num_msg,
                     const struct pam_message **msg,
                     struct pam_response **resp,
-                    void *appdata_ptr _U_)
-{
+                    void *appdata_ptr _U_) {
     int count = 0;
     struct pam_response *reply;
 #define COPY_STRING(s) (s) ? strdup(s) : NULL
@@ -243,8 +241,7 @@ static struct pam_conv PAM_conversation = {
 
 
 static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     int ret;
     size_t nwritten;
     gcry_mpi_t Ma;
@@ -316,8 +313,7 @@ error:              /* We exit here anyway */
 static int login(void *obj, char *username, int ulen,
                  struct passwd **uam_pwd _U_,
                  char *ibuf, size_t ibuflen,
-                 char *rbuf, size_t *rbuflen)
-{
+                 char *rbuf, size_t *rbuflen) {
     if ((dhxpwd = uam_getname(obj, username, ulen)) == NULL) {
         LOG(log_info, logtype_uams, "DHX2: unknown username");
         return AFPERR_NOTAUTH;
@@ -333,8 +329,7 @@ static int login(void *obj, char *username, int ulen,
  * having to clean things up if there's an error. */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
-                     char *rbuf, size_t *rbuflen)
-{
+                     char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     *rbuflen = 0;
@@ -371,8 +366,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
 /* ----------------------------- */
 static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
+                         char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     uint16_t  temp16;
@@ -408,8 +402,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 /* -------------------------------- */
 static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
-                      size_t *rbuflen)
-{
+                      size_t *rbuflen) {
     int ret;
     size_t nwritten;
     gcry_mpi_t Mb, K, clientNonce;
@@ -562,8 +555,7 @@ exit:
  * Try to authenticate via PAM as "adminauthuser"
  **/
 static int loginasroot(const char *adminauthuser, const char **hostname,
-                       int status)
-{
+                       int status) {
     int PAM_error;
 
     if ((PAM_error = pam_end(pamh, status)) != PAM_SUCCESS) {
@@ -600,8 +592,7 @@ exit:
 
 static int logincont2(void *obj_in, struct passwd **uam_pwd,
                       char *ibuf, size_t ibuflen,
-                      char *rbuf _U_, size_t *rbuflen)
-{
+                      char *rbuf _U_, size_t *rbuflen) {
     AFPObj *obj = obj_in;
     int ret = AFPERR_MISC;
     int PAM_error;
@@ -778,8 +769,7 @@ error_noctx:
 
 static int pam_logincont(void *obj, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
+                         char *rbuf, size_t *rbuflen) {
     uint16_t retID;
     int ret;
     /* check for session id */
@@ -800,8 +790,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 
 
 /* logout */
-static void pam_logout(void)
-{
+static void pam_logout(void) {
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
@@ -811,8 +800,7 @@ static void pam_logout(void)
  * --- Change pwd stuff --- */
 
 static int changepw_1(void *obj, char *uname,
-                      char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
-{
+                      char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen) {
     *rbuflen = 0;
     /* Remember it now, use it in changepw_3 */
     PAM_username = uname;
@@ -820,15 +808,13 @@ static int changepw_1(void *obj, char *uname,
 }
 
 static int changepw_2(void *obj,
-                      char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen)
-{
+                      char *ibuf, size_t ibuflen, char *rbuf, size_t *rbuflen) {
     return logincont1(obj, ibuf, ibuflen, rbuf, rbuflen);
 }
 
 static int changepw_3(void *obj _U_,
                       char *ibuf, size_t ibuflen _U_,
-                      char *rbuf _U_, size_t *rbuflen _U_)
-{
+                      char *rbuf _U_, size_t *rbuflen _U_) {
     int ret;
     int PAM_error;
     uid_t uid;
@@ -983,8 +969,7 @@ error_noctx:
 
 static int dhx2_changepw(void *obj _U_, char *uname,
                          struct passwd *pwd _U_, char *ibuf, size_t ibuflen _U_,
-                         char *rbuf _U_, size_t *rbuflen _U_)
-{
+                         char *rbuf _U_, size_t *rbuflen _U_) {
     /* We use this to serialize the three incoming FPChangePassword calls */
     static int dhx2_changepw_status = 1;
     int ret = AFPERR_NOTAUTH;  /* gcc can't figure out it's always initialized */
@@ -1020,8 +1005,7 @@ static int dhx2_changepw(void *obj _U_, char *uname,
     return ret;
 }
 
-static int uam_setup(void *obj _U_, const char *path)
-{
+static int uam_setup(void *obj _U_, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHX2", pam_login,
                      pam_logincont, pam_logout, pam_login_ext) < 0) {
         return -1;
@@ -1042,8 +1026,7 @@ static int uam_setup(void *obj _U_, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "DHX2");
     uam_unregister(UAM_SERVER_CHANGEPW, "DHX2");
     LOG(log_debug, logtype_uams, "DHX2: uam_cleanup");

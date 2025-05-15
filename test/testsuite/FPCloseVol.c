@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ----------- */
-STATIC void test204()
-{
+STATIC void test204() {
     uint16_t vol = VolID;
     int ret;
     ENTER_TEST
@@ -27,8 +26,7 @@ STATIC void test204()
 }
 
 /* ----------- */
-void FPCloseVol_test()
-{
+void FPCloseVol_test() {
     ENTER_TESTSET
     test204();
 }

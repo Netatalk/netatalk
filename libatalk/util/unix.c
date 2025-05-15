@@ -47,8 +47,7 @@
 #include <atalk/vfs.h>
 
 /* close all FDs >= a specified value */
-static void closeall(int fd)
-{
+static void closeall(int fd) {
     int fdlimit = sysconf(_SC_OPEN_MAX);
 
     while (fd < fdlimit) {
@@ -59,8 +58,7 @@ static void closeall(int fd)
 /*!
  * Run command in a child and wait for it to finish
  */
-int run_cmd(const char *cmd, char **cmd_argv)
-{
+int run_cmd(const char *cmd, char **cmd_argv) {
     EC_INIT;
     pid_t pid, wpid;
     sigset_t sigs, oldsigs;
@@ -118,8 +116,7 @@ EC_CLEANUP:
  * returns -1 on failure, but you can't do much except exit in that case
  * since we may already have forked
  */
-int daemonize(void)
-{
+int daemonize(void) {
     switch (fork()) {
     case 0:
         break;
@@ -163,8 +160,7 @@ static uid_t saved_uid = -1;
 /*
  * seteuid(0) and back, if either fails and panic != 0 we PANIC
  */
-void become_root(void)
-{
+void become_root(void) {
     if (getuid() == 0) {
         saved_uid = geteuid();
 
@@ -174,8 +170,7 @@ void become_root(void)
     }
 }
 
-void unbecome_root(void)
-{
+void unbecome_root(void) {
     if (getuid() == 0) {
         if (saved_uid == -1 || seteuid(saved_uid) < 0) {
             AFP_PANIC("Can't seteuid back");
@@ -190,8 +185,7 @@ void unbecome_root(void)
  *
  * @returns pointer to path or pointer to error messages on error
  */
-const char *getcwdpath(void)
-{
+const char *getcwdpath(void) {
     static char cwd[MAXPATHLEN + 1];
     char *p;
 
@@ -207,8 +201,7 @@ const char *getcwdpath(void)
  *
  * @returns Absolute filesystem path to object
  */
-const char *fullpathname(const char *name)
-{
+const char *fullpathname(const char *name) {
     static char wd[MAXPATHLEN + 1];
 
     if (name[0] == '/') {
@@ -237,8 +230,7 @@ const char *fullpathname(const char *name)
  *
  * @returns pointer to basename in path buffer, buffer is possibly modified
  */
-char *stripped_slashes_basename(char *p)
-{
+char *stripped_slashes_basename(char *p) {
     int i = strlen(p) - 1;
 
     while (i > 0 && p[i] == '/') {
@@ -255,8 +247,7 @@ char *stripped_slashes_basename(char *p)
  * as it may be overwritten by a subsequent call.
  ****************************************************************************/
 
-const char *tmpdir(void)
-{
+const char *tmpdir(void) {
     static char netatalk_tmpdir[MAXPATHLEN + 1];
     char *systmp;
     struct stat st;
@@ -359,8 +350,7 @@ const char *tmpdir(void)
  * called which does special ACL handling depending on the filesytem
  *********************************************************************************/
 
-int ostat(const char *path, struct stat *buf, int options)
-{
+int ostat(const char *path, struct stat *buf, int options) {
     if (options & O_NOFOLLOW) {
         return lstat(path, buf);
     } else {
@@ -368,8 +358,7 @@ int ostat(const char *path, struct stat *buf, int options)
     }
 }
 
-int ochown(const char *path, uid_t owner, gid_t group, int options)
-{
+int ochown(const char *path, uid_t owner, gid_t group, int options) {
     if (options & O_NOFOLLOW) {
         return lchown(path, owner, group);
     } else {
@@ -390,8 +379,7 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
  * O_NETATALK_ACL: call chmod_acl() instead of chmod()
  * O_IGNORE: ignore chmod() request, directly return 0
  */
-int ochmod(char *path, mode_t mode, const struct stat *st, int options)
-{
+int ochmod(char *path, mode_t mode, const struct stat *st, int options) {
     struct stat sb;
 
     if (options & O_IGNORE) {
@@ -427,8 +415,7 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
  * @param path    (r) pathname
  * @param st      (rw) pointer to struct stat
  */
-int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
-{
+int ostatat(int dirfd _U_, const char *path, struct stat *st, int options) {
     if (dirfd == -1) {
         dirfd = AT_FDCWD;
     }
@@ -445,8 +432,7 @@ int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
  *
  * @returns 1 if a path element is a symlink, 0 otherwise, -1 on syserror
  */
-int ochdir(const char *dir, int options)
-{
+int ochdir(const char *dir, int options) {
     char buf[MAXPATHLEN + 1];
     char cwd[MAXPATHLEN + 1];
     char *test;
@@ -535,8 +521,7 @@ int ochdir(const char *dir, int options)
 /*!
  * Store n random bytes an buf
  */
-void randombytes(void *buf, int n)
-{
+void randombytes(void *buf, int n) {
     char *p = (char *)buf;
     int fd, i;
     struct timeval tv;
@@ -564,8 +549,7 @@ void randombytes(void *buf, int n)
     return;
 }
 
-int gmem(gid_t gid, int ngroups, gid_t *groups)
-{
+int gmem(gid_t gid, int ngroups, gid_t *groups) {
     int		i;
 
     for (i = 0; i < ngroups; i++) {
@@ -580,8 +564,7 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
 /*
  * realpath() replacement that always allocates storage for returned path
  */
-char *realpath_safe(const char *path)
-{
+char *realpath_safe(const char *path) {
     char *resolved_path;
 #ifdef REALPATH_TAKES_NULL
 
@@ -620,8 +603,7 @@ char *realpath_safe(const char *path)
 /**
  * Returns pointer to static buffer with basename of path
  **/
-const char *basename_safe(const char *path)
-{
+const char *basename_safe(const char *path) {
     static char buf[MAXPATHLEN + 1];
     strlcpy(buf, path, MAXPATHLEN);
     return basename(buf);
@@ -631,8 +613,7 @@ const char *basename_safe(const char *path)
  * extended strtok allows the quoted strings
  * modified strtok.c in glibc 2.0.6
  **/
-char *strtok_quote(char *s, const char *delim)
-{
+char *strtok_quote(char *s, const char *delim) {
     static char *olds = NULL;
     char *token;
 
@@ -675,8 +656,7 @@ char *strtok_quote(char *s, const char *delim)
     return token;
 }
 
-int set_groups(AFPObj *obj, struct passwd *pwd)
-{
+int set_groups(AFPObj *obj, struct passwd *pwd) {
     if (initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
         LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name,
             pwd->pw_gid, strerror(errno));
@@ -707,8 +687,7 @@ int set_groups(AFPObj *obj, struct passwd *pwd)
 }
 
 #define GROUPSTR_BUFSIZE 1024
-const char *print_groups(int ngroups, gid_t *groups)
-{
+const char *print_groups(int ngroups, gid_t *groups) {
     static char groupsstr[GROUPSTR_BUFSIZE];
     int i;
     char *s = groupsstr;

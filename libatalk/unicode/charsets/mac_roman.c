@@ -52,8 +52,7 @@ struct charset_functions charset_mac_roman = {
 
 /* ------------------------ */
 static int
-char_ucs2_to_mac_roman(unsigned char *r, ucs2_t wc)
-{
+char_ucs2_to_mac_roman(unsigned char *r, ucs2_t wc) {
     unsigned char c = 0;
 
     if (wc < 0x0080) {
@@ -90,8 +89,7 @@ char_ucs2_to_mac_roman(unsigned char *r, ucs2_t wc)
 }
 
 static size_t mac_roman_push(void *cd, char **inbuf, size_t *inbytesleft,
-                             char **outbuf, size_t *outbytesleft)
-{
+                             char **outbuf, size_t *outbytesleft) {
     /* No special handling required */
     return (size_t) mb_generic_push(char_ucs2_to_mac_roman, cd, inbuf, inbytesleft,
                                     outbuf, outbytesleft);
@@ -99,8 +97,7 @@ static size_t mac_roman_push(void *cd, char **inbuf, size_t *inbytesleft,
 
 /* ------------------------ */
 static int
-char_mac_roman_to_ucs2(ucs2_t *pwc, const unsigned char *s)
-{
+char_mac_roman_to_ucs2(ucs2_t *pwc, const unsigned char *s) {
     unsigned char c = *s;
 
     if (c < 0x80) {
@@ -116,8 +113,7 @@ char_mac_roman_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 }
 
 static size_t mac_roman_pull(void *cd, char **inbuf, size_t *inbytesleft,
-                             char **outbuf, size_t *outbytesleft)
-{
+                             char **outbuf, size_t *outbytesleft) {
     return (size_t) mb_generic_pull(char_mac_roman_to_ucs2, cd, inbuf, inbytesleft,
                                     outbuf, outbytesleft);
 }

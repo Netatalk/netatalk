@@ -40,8 +40,7 @@
 #include "subtests.h"
 #include "volume.h"
 
-static inline void alignok(int len)
-{
+static inline void alignok(int len) {
     int i = 1;
 
     if (len < 80) {

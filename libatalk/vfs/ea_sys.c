@@ -61,8 +61,7 @@
  *
  * Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
-{
+int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE) {
     ssize_t   ret;
     uint32_t  attrsize;
     LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\"",
@@ -160,8 +159,7 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *
  * Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
-{
+int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT) {
     ssize_t   ret;
     uint32_t  attrsize;
     size_t    extra = 0;
@@ -298,8 +296,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * We hide the adouble:ea extended attributes here, we do not
  * allow reading, writing and deleting them.
  */
-int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
-{
+int sys_list_eas(VFS_FUNC_ARGS_EA_LIST) {
     ssize_t attrbuflen = *buflen;
     int     ret, len, nlen;
     char    *buf;
@@ -399,8 +396,7 @@ exit:
  * Effects:
  *
  */
-int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
-{
+int sys_set_ea(VFS_FUNC_ARGS_EA_SET) {
     int attr_flag;
     int ret;
     char *eabuf;
@@ -519,8 +515,7 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
  *
  * Removes EA attruname from file uname.
  */
-int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
-{
+int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE) {
     int ret;
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 
@@ -592,8 +587,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
  *
  * Copies EAs from source file to dest file.
  */
-int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
-{
+int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE) {
     int ret = 0;
     int cwd = -1;
     ssize_t size;

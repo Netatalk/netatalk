@@ -27,8 +27,7 @@
 int gDebug;
 
 
-char *iptoa(uint32_t ip)
-{
+char *iptoa(uint32_t ip) {
     static char s[16];
     sprintf(s, "%u.%u.%u.%u",
             (ip >> 24) & 0xff, (ip >> 16) & 0xff,
@@ -37,8 +36,7 @@ char *iptoa(uint32_t ip)
 }
 
 
-uint32_t atoip(char *s)
-{
+uint32_t atoip(char *s) {
     uint32_t ip;
     ip = (uint32_t) strtol(s, &s, 0);
 

@@ -60,8 +60,7 @@ int deny_severity = log_warning;
 #define SOCKLEN_T unsigned int
 #endif /* ! SOCKLEN_T */
 
-static void dsi_tcp_close(DSI *dsi)
-{
+static void dsi_tcp_close(DSI *dsi) {
     if (dsi->socket == -1) {
         return;
     }
@@ -71,8 +70,7 @@ static void dsi_tcp_close(DSI *dsi)
 }
 
 /* alarm handler for tcp_open */
-static void timeout_handler(int sig _U_)
-{
+static void timeout_handler(int sig _U_) {
     LOG(log_error, logtype_dsi, "dsi_tcp_open: connection timed out");
     exit(EXITERR_CLNT);
 }
@@ -80,8 +78,7 @@ static void timeout_handler(int sig _U_)
 /*!
  * Allocate DSI read buffer and read-ahead buffer
  */
-static void dsi_init_buffer(DSI *dsi)
-{
+static void dsi_init_buffer(DSI *dsi) {
     if ((dsi->commands = malloc(dsi->server_quantum)) == NULL) {
         LOG(log_error, logtype_dsi, "dsi_init_buffer: OOM");
         AFP_PANIC("OOM in dsi_init_buffer");
@@ -101,8 +98,7 @@ static void dsi_init_buffer(DSI *dsi)
 /*!
  * Free any allocated resources of the master afpd DSI objects and close server socket
  */
-void dsi_free(DSI *dsi)
-{
+void dsi_free(DSI *dsi) {
     close(dsi->serversock);
     dsi->serversock = -1;
     free(dsi->commands);
@@ -117,8 +113,7 @@ void dsi_free(DSI *dsi)
 
 static struct itimerval itimer;
 /* accept the socket and do a little sanity checking */
-static pid_t dsi_tcp_open(DSI *dsi)
-{
+static pid_t dsi_tcp_open(DSI *dsi) {
     pid_t pid;
     SOCKLEN_T len;
     len = sizeof(dsi->client);
@@ -243,8 +238,7 @@ static pid_t dsi_tcp_open(DSI *dsi)
 #define IFF_SLAVE 0
 #endif
 
-static void guess_interface(DSI *dsi, const char *hostname, const char *port)
-{
+static void guess_interface(DSI *dsi, const char *hostname, const char *port) {
     int fd;
     char **start, **list;
     struct ifreq ifr;
@@ -300,8 +294,7 @@ static int dsi_tcp_listen(const char *address,
                           const char *port,
                           struct addrinfo *hints,
                           DSI *dsi,
-                          bool *psocket_err_afnotsup)
-{
+                          bool *psocket_err_afnotsup) {
     EC_INIT;
     int                flag;
     struct addrinfo   *servinfo = NULL;
@@ -428,8 +421,7 @@ EC_CLEANUP:
  * @returns 0 on success, -1 on failure
  */
 int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress,
-                 const char *inport)
-{
+                 const char *inport) {
     EC_INIT;
     int                err;
     char              *address = NULL, *port = NULL;

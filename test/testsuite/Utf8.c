@@ -5,8 +5,7 @@
 static char temp[MAXPATHLEN];
 
 /* ------------------------- */
-STATIC void test162()
-{
+STATIC void test162() {
     char ndir[4];
     int dir;
     uint16_t vol = VolID;
@@ -39,8 +38,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test166()
-{
+STATIC void test166() {
     char nfile[8];
     uint16_t bitmap;
     uint16_t vol = VolID;
@@ -103,8 +101,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test167()
-{
+STATIC void test167() {
     char nfile[8];
     uint16_t bitmap;
     uint16_t vol = VolID;
@@ -168,8 +165,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test181()
-{
+STATIC void test181() {
     char *name  = "t181 folder";
     char *name1 = "t181 donne\314\201es"; /* decomposed données */
     char *name2 = "t181 foo";
@@ -250,8 +246,7 @@ test_exit:
 
 /* -------------------------
  */
-STATIC void test185()
-{
+STATIC void test185() {
     char *name = "t185.txt";
     char *name1 = "t185 donne\314"; /* decomposed données */
     uint16_t vol = VolID;
@@ -282,8 +277,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test233()
-{
+STATIC void test233() {
     char *name = "t233 dire\314\201";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -341,8 +335,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test234()
-{
+STATIC void test234() {
     char *name = "t234 file\314\201";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -400,8 +393,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test312()
-{
+STATIC void test312() {
     char *name = "t312-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94.mp3";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -468,8 +460,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test313()
-{
+STATIC void test313() {
     char *name = "t313-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94 dir";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -514,8 +505,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test314()
-{
+STATIC void test314() {
     char *name = "test314#1";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -552,8 +542,7 @@ test_exit:
 /* -------------------------
  * MAC FAILED
 */
-STATIC void test337()
-{
+STATIC void test337() {
     char *name = "\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94 test 337.mp3";
     uint16_t vol = VolID;
     DSI *dsi;
@@ -624,8 +613,7 @@ test_exit:
 /* ------------------------- */
 extern int Force_type2;
 
-STATIC void test381()
-{
+STATIC void test381() {
     char nfile[8];
     uint16_t bitmap;
     uint16_t vol = VolID;
@@ -686,8 +674,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test382()
-{
+STATIC void test382() {
     char nfile[8];
     uint16_t bitmap;
     uint16_t vol = VolID;
@@ -748,8 +735,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test383()
-{
+STATIC void test383() {
     char *file = "test 383 la\xcc\x80";/* là */
     char *file2 = "test 383 l\210";
     char *nfile2 = "test 383 new name l\210";
@@ -791,8 +777,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test384()
-{
+STATIC void test384() {
     char *file = "test 384 la\xcc\x80";/* là */
     char *file2 = "test 384 l\210";
     char *nfile2 = "test 384 /new name l\210";
@@ -834,8 +819,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test385()
-{
+STATIC void test385() {
     char *file = "test 385 la\xcc\x80";/* là */
     char *file2 = "test 385 l\210";
     char *nfile2 = "test 385 new name l\210";
@@ -877,8 +861,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test386()
-{
+STATIC void test386() {
     char *file = "test 386 la\xcc\x80";/* là */
     char *file2 = "test 386 l\210";
     char *nfile2 = "test 386 new name l\210";
@@ -920,8 +903,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test395()
-{
+STATIC void test395() {
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -940,8 +922,7 @@ test_exit:
 
 
 /* ----------- */
-void Utf8_test()
-{
+void Utf8_test() {
     ENTER_TESTSET
     test162();
     test166();

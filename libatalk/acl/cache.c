@@ -45,8 +45,7 @@ static cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
  * helper function
  ********************************************************/
 
-void uuidcache_dump(void)
-{
+void uuidcache_dump(void) {
     int i;
     cacheduser_t *entry;
     char timestr[200];
@@ -104,8 +103,7 @@ void uuidcache_dump(void)
 }
 
 /* hash string it into unsigned char */
-static unsigned char hashstring(unsigned char *str)
-{
+static unsigned char hashstring(unsigned char *str) {
     unsigned long hash = 5381;
     unsigned char index;
     int c;
@@ -124,8 +122,7 @@ static unsigned char hashstring(unsigned char *str)
 }
 
 /* hash atalk_uuid_t into unsigned char */
-static unsigned char hashuuid(uuidp_t uuid)
-{
+static unsigned char hashuuid(uuidp_t uuid) {
     unsigned char index = 83;
     int i;
 
@@ -142,8 +139,7 @@ static unsigned char hashuuid(uuidp_t uuid)
  ********************************************************/
 
 int add_cachebyname(const char *inname, const uuidp_t inuuid,
-                    const uuidtype_t type, const unsigned long uid _U_)
-{
+                    const uuidtype_t type, const unsigned long uid _U_) {
     int ret = 0;
     char *name = NULL;
     unsigned char *uuid = NULL;
@@ -225,8 +221,8 @@ cleanup:
  * @returns       0 on sucess, entry found
  *                -1 no entry found
  */
-int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)
-{
+int search_cachebyname(const char *name, uuidtype_t *type,
+                       unsigned char *uuid) {
     int ret;
     unsigned char hash;
     cacheduser_t *entry;
@@ -287,8 +283,7 @@ int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)
 /*
  * Caller must free allocated name
  */
-int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
-{
+int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type) {
     int ret;
     unsigned char hash;
     cacheduser_t *entry;
@@ -346,8 +341,7 @@ int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
 }
 
 int add_cachebyuuid(uuidp_t inuuid, const char *inname, uuidtype_t type,
-                    const unsigned long uid _U_)
-{
+                    const unsigned long uid _U_) {
     int ret = 0;
     char *name = NULL;
     unsigned char *uuid = NULL;

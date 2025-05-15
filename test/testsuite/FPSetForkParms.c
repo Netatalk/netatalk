@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test62()
-{
+STATIC void test62() {
     int fork;
     int fork1 = 0;
     uint16_t bitmap = 0;
@@ -89,8 +88,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test141()
-{
+STATIC void test141() {
     int fork;
     uint16_t bitmap = 0;
     char *name  = "t140 setforkmode file";
@@ -146,8 +144,7 @@ test_exit:
 
 
 /* ------------------------- */
-STATIC void test217()
-{
+STATIC void test217() {
     int fork;
     uint16_t bitmap = 0;
     char *name  = "t217 setforkparms file";
@@ -197,8 +194,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test306()
-{
+STATIC void test306() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t306 file.txt";
@@ -249,8 +245,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSetForkParms_test()
-{
+void FPSetForkParms_test() {
     ENTER_TESTSET
     test62();
     test141();

@@ -37,24 +37,20 @@ struct AFPStatsObjClass {
     GObjectClass parent;
 };
 
-static void afpstats_obj_init(AFPStatsObj *obj _U_)
-{
+static void afpstats_obj_init(AFPStatsObj *obj _U_) {
 }
 
-static void afpstats_obj_class_init(AFPStatsObjClass *klass _U_)
-{
+static void afpstats_obj_class_init(AFPStatsObjClass *klass _U_) {
 }
 
 static gpointer afpstats_obj_parent_class = NULL;
 
-static void afpstats_obj_class_intern_init(gpointer klass)
-{
+static void afpstats_obj_class_intern_init(gpointer klass) {
     afpstats_obj_parent_class = g_type_class_peek_parent(klass);
     afpstats_obj_class_init((AFPStatsObjClass *)klass);
 }
 
-GType afpstats_obj_get_type(void)
-{
+GType afpstats_obj_get_type(void) {
     static volatile gsize g_define_type_id__volatile = 0;
 
     if (g_once_init_enter((gsize *)&g_define_type_id__volatile)) {
@@ -73,8 +69,7 @@ GType afpstats_obj_get_type(void)
 }
 
 gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret,
-                                GError **error _U_)
-{
+                                GError **error _U_) {
     gchar **names;
     server_child_t *childs = afpstats_get_and_lock_childs();
     afp_child_t *child;

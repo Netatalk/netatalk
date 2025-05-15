@@ -106,8 +106,7 @@ static int setfile(const struct stat *, int);
 // static int preserve_dir_acls(const struct stat *, char *, char *);
 static int preserve_fd_acls(int, int);
 
-static void upfunc(void)
-{
+static void upfunc(void) {
     did = pdid;
     pdid = ppdid;
 }
@@ -117,14 +116,12 @@ static void upfunc(void)
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo _U_)
-{
+static void sig_handler(int signo _U_) {
     alarmed = 1;
     return;
 }
 
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
@@ -155,8 +152,7 @@ static void set_signal(void)
     }
 }
 
-static void usage_cp(void)
-{
+static void usage_cp(void) {
     printf(
         "Usage: ad cp [-R] [-aipvf] <source_file> <target_file>\n"
         "       ad cp [-R] [-aipvfx] <source_file [source_file ...]> <target_directory>\n\n"
@@ -197,8 +193,7 @@ static void usage_cp(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_cp(int argc, char *argv[], AFPObj *obj)
-{
+int ad_cp(int argc, char *argv[], AFPObj *obj) {
     struct stat to_stat, tmp_stat;
     int r, ch, have_trailing_slash;
     char *target;
@@ -381,8 +376,7 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
 static int copy(const char *path,
                 const struct stat *statp,
                 int tflag _U_,
-                struct FTW *ftw)
-{
+                struct FTW *ftw) {
     static int base = 0;
     struct stat to_stat;
     int dne;
@@ -715,8 +709,7 @@ static int copy(const char *path,
 static int ftw_copy_file(const struct FTW *entp _U_,
                          const char *spath,
                          const struct stat *sp,
-                         int dne)
-{
+                         int dne) {
     static char *buf = NULL;
     static size_t bufsize;
     ssize_t wcount;
@@ -907,8 +900,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 static int ftw_copy_link(const struct FTW *p _U_,
                          const char *spath,
                          const struct stat *sstp,
-                         int exists)
-{
+                         int exists) {
     int len;
     char llink[PATH_MAX];
 
@@ -937,8 +929,7 @@ static int ftw_copy_link(const struct FTW *p _U_,
     return (pflag ? setfile(sstp, -1) : 0);
 }
 
-static int setfile(const struct stat *fs, int fd)
-{
+static int setfile(const struct stat *fs, int fd) {
     static struct timeval tv[2];
     struct stat ts;
     int rval, gotstat, islink, fdval;
@@ -1009,8 +1000,7 @@ static int setfile(const struct stat *fs, int fd)
     return rval;
 }
 
-static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
-{
+static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_) {
 #if 0
     acl_t acl;
     acl_type_t acl_type;
@@ -1073,8 +1063,7 @@ static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
 
 #if 0
 static int preserve_dir_acls(const struct stat *fs, char *source_dir,
-                             char *dest_dir)
-{
+                             char *dest_dir) {
     acl_t (*aclgetf)(const char *, acl_type_t);
     int (*aclsetf)(const char *, acl_type_t, acl_t);
     struct acl *aclp;

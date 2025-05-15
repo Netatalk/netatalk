@@ -24,8 +24,7 @@
  * buffer. it returns the amount of stuff still to be read
  * (constrained by the buffer size). */
 ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
-                     const size_t size, const int err)
-{
+                     const size_t size, const int err) {
     LOG(log_maxdebug, logtype_dsi,
         "dsi_readinit: sending %zd bytes from buffer, total size: %zd",
         buflen, size);
@@ -45,14 +44,12 @@ ssize_t dsi_readinit(DSI *dsi, void *buf, const size_t buflen,
     return -1; /* error */
 }
 
-void dsi_readdone(DSI *dsi)
-{
+void dsi_readdone(DSI *dsi) {
     dsi->in_write--;
 }
 
 /* send off the data */
-ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
-{
+ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen) {
     size_t len;
     len  = dsi_stream_write(dsi, buf, buflen, 0);
 

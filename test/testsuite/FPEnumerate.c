@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test28()
-{
+STATIC void test28() {
     uint16_t vol = VolID;
     char *name  = "t28 dir";
     char *name1 = "t28 subdir";
@@ -90,8 +89,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test34()
-{
+STATIC void test34() {
     uint16_t vol = VolID;
     char *name = "essai permission";
     ENTER_TEST
@@ -122,8 +120,7 @@ test_exit:
 }
 
 /* ----------------------- */
-STATIC void test38()
-{
+STATIC void test38() {
     uint16_t bitmap = (1 << DIRPBIT_DID);
     int  rdir;
     int  did;
@@ -206,8 +203,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test40()
-{
+STATIC void test40() {
     char *name  = "t40 dir";
     char *name1 = "t40 file";
     uint16_t vol = VolID;
@@ -265,8 +261,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test41()
-{
+STATIC void test41() {
     int dir = 0;
     uint16_t vol = VolID;
     char *name  = "t41 dir";
@@ -354,8 +349,7 @@ test_exit:
 }
 
 /* -------------------------------------- */
-STATIC void test93()
-{
+STATIC void test93() {
     char *name = "t93 bad enumerate file";
     char *name1 = "t93 bad enumerate dir";
     int dir = 0;
@@ -410,8 +404,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test218()
-{
+STATIC void test218() {
     uint16_t bitmap = 0;
     char *base  = "t218 test dir";
     char *name  = "t218 enumerate file";
@@ -517,8 +510,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test300(void)
-{
+STATIC void test300(void) {
     uint8_t buffer[DSI_DATASIZ];
     uint16_t vol = VolID;
     uint16_t d_bitmap;
@@ -630,8 +622,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPEnumerate_test()
-{
+void FPEnumerate_test() {
     ENTER_TESTSET
     test28();
 #if 0

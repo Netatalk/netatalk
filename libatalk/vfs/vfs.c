@@ -55,8 +55,7 @@ typedef int (*rf_loop)(const struct vol *, struct dirent *, char *, void *,
 /* ----------------------------- */
 static int
 for_each_adouble(const char *from, const char *name, rf_loop fn,
-                 const struct vol *vol, void *data, int flag)
-{
+                 const struct vol *vol, void *data, int flag) {
     char            buf[MAXPATHLEN + 1];
     char            *m;
     DIR             *dp;
@@ -97,8 +96,7 @@ for_each_adouble(const char *from, const char *name, rf_loop fn,
     return ret;
 }
 
-static int netatalk_name(const char *name)
-{
+static int netatalk_name(const char *name) {
     return strcmp(name, ".AppleDB") && strcmp(name, ".AppleDesktop");
 }
 
@@ -106,8 +104,7 @@ static int netatalk_name(const char *name)
  * classic adouble format
  *******************************************************************************/
 
-static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
-{
+static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH) {
     if (name[0] != '.') {
         return 1;
     }
@@ -117,8 +114,7 @@ static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 }
 
 /* ----------------- */
-static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
-{
+static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN) {
     const char *ad_p = vol->ad_path(path, ADFLAGS_HF);
 
     if (chown(ad_p, uid, gid) < 0) {
@@ -134,15 +130,13 @@ static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
 }
 
 /* ----------------- */
-static int RF_renamedir_adouble(VFS_FUNC_ARGS_RENAMEDIR)
-{
+static int RF_renamedir_adouble(VFS_FUNC_ARGS_RENAMEDIR) {
     return 0;
 }
 
 /* ----------------- */
 static int deletecurdir_adouble_loop(const struct vol *vol _U_,
-                                     struct dirent *de, char *name, void *data _U_, int flag _U_)
-{
+                                     struct dirent *de, char *name, void *data _U_, int flag _U_) {
     struct stat st;
     int         err;
 
@@ -160,8 +154,7 @@ static int deletecurdir_adouble_loop(const struct vol *vol _U_,
     return 0;
 }
 
-static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
-{
+static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR) {
     int err;
 
     /* delete stray .AppleDouble files. this happens to get .Parent files
@@ -176,19 +169,16 @@ static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
 
 /* ----------------- */
 static int adouble_setfilmode(const struct vol *vol, const char *name,
-                              mode_t mode, struct stat *st)
-{
+                              mode_t mode, struct stat *st) {
     return setfilmode(vol, name, ad_hf_mode(mode), st);
 }
 
-static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
-{
+static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE) {
     return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
 }
 
 /* ----------------- */
-static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
-{
+static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE) {
     const char *adouble = vol->ad_path(name, ADFLAGS_DIR);
 
     if (dir_rx_set(mode)) {
@@ -220,8 +210,7 @@ static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
 
 /* ----------------- */
 static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
-                                   char *name, void *data, int flag)
-{
+                                   char *name, void *data, int flag) {
     mode_t hf_mode = *(mode_t *)data;
     struct stat st;
 
@@ -240,8 +229,7 @@ static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
     return 0;
 }
 
-static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
-{
+static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE) {
     mode_t hf_mode = ad_hf_mode(mode);
     const char  *adouble = vol->ad_path(name, ADFLAGS_DIR);
     const char  *adouble_p = ad_dir(adouble);
@@ -274,8 +262,7 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
     return 0;
 }
 
-static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
-{
+static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER) {
     if (lchown(".AppleDouble", uid, gid) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
             uid, gid, fullpathname(".AppleDouble"), strerror(errno));
@@ -285,14 +272,12 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 }
 
 /* ----------------- */
-static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE)
-{
+static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE) {
     return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 }
 
 /* ----------------- */
-static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
-{
+static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE) {
     char  adsrc[MAXPATHLEN + 1];
     int   err = 0;
     strcpy(adsrc, vol->ad_path(src, 0));
@@ -341,8 +326,7 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
     return 0;
 }
 
-static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
-{
+static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE) {
     EC_INIT;
     bstring s = NULL;
     bstring d = NULL;
@@ -395,8 +379,7 @@ EC_CLEANUP:
 }
 
 #ifdef HAVE_NFSV4_ACLS
-static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
-{
+static int RF_solaris_acl(VFS_FUNC_ARGS_ACL) {
     static char buf[MAXPATHLEN + 1];
     struct stat st;
     int len;
@@ -419,8 +402,7 @@ static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
     return AFP_OK;
 }
 
-static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
-{
+static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL) {
     int ret;
     static char buf[MAXPATHLEN + 1];
     int len;
@@ -443,8 +425,7 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 #endif
 
 #ifdef HAVE_POSIX_ACLS
-static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
-{
+static int RF_posix_acl(VFS_FUNC_ARGS_ACL) {
     EC_INIT;
     struct stat st;
 
@@ -467,8 +448,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
-{
+static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL) {
     EC_INIT;
 
     if (dir) {
@@ -490,8 +470,7 @@ EC_CLEANUP:
 /*************************************************************************
  * EA adouble format
  ************************************************************************/
-static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
-{
+static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH) {
     if (name[0] != '.') {
         return 1;
     }
@@ -507,8 +486,7 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 }
 
 /* ----------------- */
-static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
-{
+static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN) {
 #ifndef HAVE_EAFD
     return chown(vol->ad_path(path, ADFLAGS_HF), uid, gid);
 #endif
@@ -516,15 +494,13 @@ static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
 }
 
 /* ---------------- */
-static int RF_renamedir_ea(VFS_FUNC_ARGS_RENAMEDIR)
-{
+static int RF_renamedir_ea(VFS_FUNC_ARGS_RENAMEDIR) {
     return 0;
 }
 
 /* Returns 1 if the entry is NOT an ._ file */
 static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol,
-        struct dirent *de, char *name, void *data _U_, int flag _U_)
-{
+        struct dirent *de, char *name, void *data _U_, int flag _U_) {
     if (de->d_name[0] != '.' || de->d_name[0] == '_') {
         return 1;
     }
@@ -533,8 +509,7 @@ static int deletecurdir_ea_osx_chkifempty_loop(const struct vol *vol,
 }
 
 static int deletecurdir_ea_osx_loop(const struct vol *vol _U_,
-                                    struct dirent *de _U_, char *name, void *data _U_, int flag _U_)
-{
+                                    struct dirent *de _U_, char *name, void *data _U_, int flag _U_) {
     int ret;
     struct stat sb;
 
@@ -553,8 +528,7 @@ static int deletecurdir_ea_osx_loop(const struct vol *vol _U_,
 }
 
 /* ---------------- */
-static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
-{
+static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR) {
 #ifndef HAVE_EAFD
     int err;
 
@@ -570,15 +544,13 @@ static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
 }
 
 /* ---------------- */
-static int RF_setdirunixmode_ea(VFS_FUNC_ARGS_SETDIRUNIXMODE)
-{
+static int RF_setdirunixmode_ea(VFS_FUNC_ARGS_SETDIRUNIXMODE) {
 #ifndef HAVE_EAFD
 #endif
     return 0;
 }
 
-static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
-{
+static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE) {
 #ifndef HAVE_EAFD
     return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
 #endif
@@ -586,30 +558,26 @@ static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
 }
 
 /* ---------------- */
-static int RF_setdirmode_ea(VFS_FUNC_ARGS_SETDIRMODE)
-{
+static int RF_setdirmode_ea(VFS_FUNC_ARGS_SETDIRMODE) {
 #ifndef HAVE_EAFD
 #endif
     return 0;
 }
 
 /* ---------------- */
-static int RF_setdirowner_ea(VFS_FUNC_ARGS_SETDIROWNER)
-{
+static int RF_setdirowner_ea(VFS_FUNC_ARGS_SETDIROWNER) {
 #ifndef HAVE_EAFD
 #endif
     return 0;
 }
 
-static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
-{
+static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE) {
 #ifndef HAVE_EAFD
     return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 #endif
     return 0;
 }
-static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
-{
+static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
     /* the EA VFS module does this all for us */
     return 0;
@@ -672,8 +640,7 @@ EC_CLEANUP:
 }
 
 /* ---------------- */
-static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
-{
+static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE) {
 #ifndef HAVE_EAFD
     char  adsrc[MAXPATHLEN + 1];
     int   err = 0;
@@ -753,8 +720,7 @@ VFS_MFUNC(ea_list, VFS_FUNC_ARGS_EA_LIST, VFS_FUNC_VARS_EA_LIST)
 VFS_MFUNC(ea_set, VFS_FUNC_ARGS_EA_SET, VFS_FUNC_VARS_EA_SET)
 VFS_MFUNC(ea_remove, VFS_FUNC_ARGS_EA_REMOVE, VFS_FUNC_VARS_EA_REMOVE)
 
-static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH)
-{
+static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH) {
     return vol->vfs_modules[0]->vfs_validupath(VFS_FUNC_VARS_VALIDUPATH);
 }
 
@@ -920,8 +886,7 @@ static struct vfs_ops netatalk_posix_acl_adouble = {
 #endif
 
 /* ---------------- */
-void initvol_vfs(struct vol *vol)
-{
+void initvol_vfs(struct vol *vol) {
     vol->vfs = &vfs_master_funcs;
 
     /* Default adouble stuff */

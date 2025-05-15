@@ -76,8 +76,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
  * Misc utility functions
  ************************************************/
 
-static char *tab_level(TALLOC_CTX *mem_ctx, int level)
-{
+static char *tab_level(TALLOC_CTX *mem_ctx, int level) {
     int i;
     char *string = talloc_array(mem_ctx, char, level + 1);
 
@@ -89,8 +88,7 @@ static char *tab_level(TALLOC_CTX *mem_ctx, int level)
     return string;
 }
 
-static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
-{
+static char *dd_dump(DALLOC_CTX *dd, int nestinglevel) {
     const char *type;
     int n;
     uint64_t i;
@@ -253,8 +251,7 @@ static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
     return logstring;
 }
 
-static int cnid_comp_fn(const void *p1, const void *p2)
-{
+static int cnid_comp_fn(const void *p1, const void *p2) {
     const uint64_t *cnid1 = p1, *cnid2 = p2;
 
     if (*cnid1 == *cnid2) {
@@ -268,8 +265,7 @@ static int cnid_comp_fn(const void *p1, const void *p2)
     return 1;
 }
 
-static int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
-{
+static int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p) {
     EC_INIT;
     uint64_t *cnids = NULL;
     EC_NULL(cnids = talloc_array(slq, uint64_t, talloc_array_length(p)));
@@ -292,8 +288,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
-{
+static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri) {
     GFile *f;
     char *path;
     char *talloc_path = NULL;
@@ -326,8 +321,7 @@ static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
 static bool add_filemeta(sl_array_t *reqinfo,
                          sl_array_t *fm_array,
                          const char *path,
-                         const struct stat *sp)
-{
+                         const struct stat *sp) {
     sl_array_t *meta;
     sl_nil_t nil;
     int i, metacount;
@@ -383,8 +377,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
  * Allocate result handle used in the async Tracker cursor result
  * handler for storing results
  **/
-static bool create_result_handle(slq_t *slq)
-{
+static bool create_result_handle(slq_t *slq) {
     sl_nil_t nil = 0;
     struct sl_rslts *query_results;
 
@@ -423,8 +416,7 @@ static bool create_result_handle(slq_t *slq)
     return true;
 }
 
-static bool add_results(sl_array_t *array, slq_t *slq)
-{
+static bool add_results(sl_array_t *array, slq_t *slq) {
     sl_filemeta_t *fm;
     uint64_t status;
     /* FileMeta */
@@ -478,24 +470,21 @@ static ATALK_LIST_HEAD(sl_cancelled_queries);
 /**
  * Add a query to the list of active queries
  **/
-static void slq_add(slq_t *slq)
-{
+static void slq_add(slq_t *slq) {
     list_add(&(slq->slq_list), &sl_queries);
 }
 
 /**
  * Add a query to the list of active queries
  **/
-static void slq_cancelled_add(slq_t *slq)
-{
+static void slq_cancelled_add(slq_t *slq) {
     list_add(&(slq->slq_list), &sl_cancelled_queries);
 }
 
 /**
  * Remove a query from the active list
  **/
-static void slq_remove(slq_t *slq)
-{
+static void slq_remove(slq_t *slq) {
     struct list_head *p;
     slq_t *q = NULL;
     list_for_each(p, &sl_queries) {
@@ -509,8 +498,7 @@ static void slq_remove(slq_t *slq)
     return;
 }
 
-static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
-{
+static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2) {
     slq_t *q = NULL;
     struct list_head *p;
     list_for_each(p, &sl_queries) {
@@ -528,8 +516,7 @@ static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
 /**
  * Remove a query from the active queue and free it
  **/
-static void slq_destroy(slq_t *slq)
-{
+static void slq_destroy(slq_t *slq) {
     if (slq == NULL) {
         return;
     }
@@ -541,8 +528,7 @@ static void slq_destroy(slq_t *slq)
 /**
  * Cancel a query
  **/
-static void slq_cancel(slq_t *slq)
-{
+static void slq_cancel(slq_t *slq) {
     slq->slq_state = SLQ_STATE_CANCEL_PENDING;
     slq_remove(slq);
     slq_cancelled_add(slq);
@@ -551,8 +537,7 @@ static void slq_cancel(slq_t *slq)
 /**
  * talloc destructor cb
  **/
-static int slq_free_cb(slq_t *slq)
-{
+static int slq_free_cb(slq_t *slq) {
     if (slq->tracker_cursor) {
         g_object_unref(slq->tracker_cursor);
     }
@@ -563,8 +548,7 @@ static int slq_free_cb(slq_t *slq)
 /**
  * Free all cancelled queries
  **/
-static void slq_cancelled_cleanup(void)
-{
+static void slq_cancelled_cleanup(void) {
     struct list_head *p;
     slq_t *q = NULL;
     list_for_each(p, &sl_cancelled_queries) {
@@ -585,8 +569,7 @@ static void slq_cancelled_cleanup(void)
     return;
 }
 
-static void slq_dump(void)
-{
+static void slq_dump(void) {
     struct list_head *p;
     slq_t *q = NULL;
     int i = 0;
@@ -607,8 +590,7 @@ static void slq_dump(void)
 #ifndef HAVE_TRACKER3
 static void tracker_con_cb(GObject      *object,
                            GAsyncResult *res,
-                           gpointer      user_data)
-{
+                           gpointer      user_data) {
     struct sl_ctx *sl_ctx = user_data;
     GError *error = NULL;
     sl_ctx->tracker_con = tracker_sparql_connection_get_finish(res,
@@ -628,8 +610,7 @@ static void tracker_con_cb(GObject      *object,
 
 static void tracker_cursor_cb(GObject      *object,
                               GAsyncResult *res,
-                              gpointer      user_data)
-{
+                              gpointer      user_data) {
     GError *error = NULL;
     slq_t *slq = user_data;
     gboolean more_results;
@@ -746,8 +727,7 @@ exit:
 
 static void tracker_query_cb(GObject      *object,
                              GAsyncResult *res,
-                             gpointer      user_data)
-{
+                             gpointer      user_data) {
     GError *error = NULL;
     slq_t *slq = user_data;
     LOG(log_debug, logtype_sl,
@@ -784,8 +764,7 @@ static void tracker_query_cb(GObject      *object,
 static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj,
         const DALLOC_CTX *query,
         DALLOC_CTX *reply,
-        const struct vol *v)
-{
+        const struct vol *v) {
     EC_INIT;
     char *s;
     sl_dict_t *dict;
@@ -829,8 +808,7 @@ EC_CLEANUP:
 static int sl_rpc_openQuery(AFPObj *obj,
                             const DALLOC_CTX *query,
                             DALLOC_CTX *reply,
-                            struct vol *v)
-{
+                            struct vol *v) {
     EC_INIT;
     char *sl_query;
     uint64_t *uint64;
@@ -989,8 +967,7 @@ EC_CLEANUP:
 static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
         const DALLOC_CTX *query,
         DALLOC_CTX *reply,
-        const struct vol *v)
-{
+        const struct vol *v) {
     EC_INIT;
     slq_t *slq = NULL;
     uint64_t *uint64, ctx1, ctx2, status;
@@ -1069,8 +1046,7 @@ EC_CLEANUP:
 static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
         const DALLOC_CTX *query,
         DALLOC_CTX *reply,
-        const struct vol *vol)
-{
+        const struct vol *vol) {
     EC_INIT;
     uint64_t uint64;
     sl_array_t *array;
@@ -1121,8 +1097,7 @@ EC_CLEANUP:
 }
 
 static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj,
-        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
-{
+        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol) {
     EC_INIT;
     uint64_t uint64;
     sl_cnids_t *cnids;
@@ -1183,8 +1158,7 @@ EC_CLEANUP:
 }
 
 static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj,
-        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
-{
+        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol) {
     EC_INIT;
     uint64_t uint64;
     sl_cnids_t *cnids, *replycnids;
@@ -1260,8 +1234,7 @@ EC_CLEANUP:
 static int sl_rpc_closeQueryForContext(const AFPObj *obj,
                                        const DALLOC_CTX *query,
                                        DALLOC_CTX *reply,
-                                       const struct vol *v)
-{
+                                       const struct vol *v) {
     EC_INIT;
     slq_t *slq = NULL;
     uint64_t *uint64, ctx1, ctx2;
@@ -1327,8 +1300,7 @@ EC_CLEANUP:
  * Spotlight functions
  ******************************************************************************/
 
-int spotlight_init(AFPObj *obj)
-{
+int spotlight_init(AFPObj *obj) {
     static bool initialized = false;
     const char *attributes;
     struct sl_ctx *sl_ctx;
@@ -1390,8 +1362,7 @@ int spotlight_init(AFPObj *obj)
  ******************************************************************************/
 
 int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     EC_INIT;
     TALLOC_CTX *tmp_ctx = talloc_new(NULL);
     uint16_t vid;

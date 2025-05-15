@@ -1,8 +1,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test9()
-{
+STATIC void test9() {
     int fork;
     int fork1 = 0;
     uint16_t bitmap = 0;
@@ -44,8 +43,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPSetForkParms_test()
-{
+void T2FPSetForkParms_test() {
     ENTER_TESTSET
     test9();
 }

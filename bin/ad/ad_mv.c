@@ -59,14 +59,12 @@ static int do_move(const char *, const char *);
   catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
 */
 
-static void sig_handler(int signo _U_)
-{
+static void sig_handler(int signo _U_) {
     alarmed = 1;
     return;
 }
 
-static void set_signal(void)
-{
+static void set_signal(void) {
     struct sigaction sv;
     sv.sa_handler = sig_handler;
     sv.sa_flags = SA_RESTART;
@@ -97,8 +95,7 @@ static void set_signal(void)
     }
 }
 
-static void usage_mv(void)
-{
+static void usage_mv(void) {
     printf(
         "Usage: ad mv [-f | -i | -n] [-v] source target\n"
         "       ad mv [-f | -i | -n] [-v] source ... directory\n\n"
@@ -122,8 +119,7 @@ static void usage_mv(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_mv(int argc, char *argv[], AFPObj *obj)
-{
+int ad_mv(int argc, char *argv[], AFPObj *obj) {
     size_t baselen;
     size_t len;
     int rval;
@@ -264,8 +260,7 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
     return rval;
 }
 
-static int do_move(const char *from, const char *to)
-{
+static int do_move(const char *from, const char *to) {
     struct stat sb;
     int ask, ch, first;
 
@@ -446,8 +441,7 @@ static int do_move(const char *from, const char *to)
     return -1;
 }
 
-static int copy(const char *from, const char *to)
-{
+static int copy(const char *from, const char *to) {
     struct stat sb;
     int pid, status;
 

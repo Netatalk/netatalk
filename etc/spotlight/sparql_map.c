@@ -104,8 +104,7 @@ struct MDTypeMap MDTypeMap[] = {
     {NULL,                      kMDTypeMapNotSup,   NULL}
 };
 
-void configure_spotlight_attributes(const char *attributes_in)
-{
+void configure_spotlight_attributes(const char *attributes_in) {
     char *attr, *attributes;
     int i;
 

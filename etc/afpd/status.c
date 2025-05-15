@@ -44,8 +44,7 @@
 
 static   size_t maxstatuslen = 0;
 
-static int uam_gss_enabled(void)
-{
+static int uam_gss_enabled(void) {
     /* XXX: must be a better way to find out if uam_gss is active */
     return auth_uamfind(UAM_SERVER_LOGIN_EXT,
                         "Client Krb v2",
@@ -57,8 +56,7 @@ static void status_flags(char *data,
                          const int ipok,
                          const unsigned char passwdbits,
                          const int dirsrvcs,
-                         int flags)
-{
+                         int flags) {
     uint16_t           status;
     status = AFPSRVRINFO_COPY
              | AFPSRVRINFO_SRVSIGNATURE
@@ -99,8 +97,7 @@ static void status_flags(char *data,
 }
 
 static int status_server(char *data, const char *server,
-                         const struct afp_options *options)
-{
+                         const struct afp_options *options) {
     char                *start = data;
     char       *Obj;
     char		buf[32];
@@ -148,8 +145,7 @@ static int status_server(char *data, const char *server,
     return len; /* return the offset to beginning of signature offset */
 }
 
-static void status_machine(char *data)
-{
+static void status_machine(char *data) {
     char                *start = data;
     uint16_t           status;
     int			len;
@@ -181,8 +177,7 @@ static void status_machine(char *data)
 
 /* server signature is a 16-byte quantity */
 static uint16_t status_signature(char *data, int *servoffset,
-                                 const struct afp_options *options)
-{
+                                 const struct afp_options *options) {
     char                 *status;
     uint16_t            offset, sigoff;
     status = data;
@@ -206,8 +201,7 @@ static size_t status_netaddress(char *data, int *servoffset,
                                 const ASP asp,
 #endif
                                 const DSI *dsi,
-                                const struct afp_options *options)
-{
+                                const struct afp_options *options) {
     char               *begin;
     uint16_t          offset;
     size_t             addresses_len = 0;
@@ -339,8 +333,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 static size_t status_directorynames(char *data,
                                     int *diroffset,
                                     const DSI *dsi _U_,
-                                    const struct afp_options *options)
-{
+                                    const struct afp_options *options) {
     char *begin = data;
     uint16_t offset;
     memcpy(&offset, begin + *diroffset, sizeof(offset));
@@ -365,8 +358,7 @@ static size_t status_directorynames(char *data,
 
 static size_t status_utf8servername(char *data, int *nameoffset,
                                     const DSI *dsi _U_,
-                                    const struct afp_options *options)
-{
+                                    const struct afp_options *options) {
     uint16_t namelen;
     size_t len;
     char *begin = data;
@@ -409,8 +401,7 @@ static size_t status_utf8servername(char *data, int *nameoffset,
 
 /* returns actual offset to signature */
 static void status_icon(char *data, const unsigned char *icondata,
-                        const size_t iconlen, const int sigoffset)
-{
+                        const size_t iconlen, const int sigoffset) {
     char                *start = data;
     char                *sigdata = data + sigoffset;
     uint16_t		ret, status;
@@ -434,8 +425,7 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
  */
-void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
-{
+void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi) {
 #ifndef NO_DDP
     ASP asp;
 #endif
@@ -606,8 +596,7 @@ void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
 /* If cannot open conf file, use one-time signature.                  */
 /* If signature = xxxxx, use it.                                      */
 
-void set_signature(struct afp_options *options)
-{
+void set_signature(struct afp_options *options) {
     int fd, i;
     struct stat tmpstat;
     char *servername_conf;
@@ -804,8 +793,7 @@ server_signature_done:
 
 /* this is the same as asp/dsi_getstatus */
 int afp_getsrvrinfo(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_, char *rbuf,
-                    size_t *rbuflen)
-{
+                    size_t *rbuflen) {
 #ifndef NO_DDP
 
     if (obj->proto == AFPPROTO_DSI) {

@@ -28,8 +28,7 @@
  * 0's. This means that we can't support octal addressing.
  */
 
-int atalk_aton(char* cp, struct at_addr* addr)
-{
+int atalk_aton(char* cp, struct at_addr* addr) {
     u_int32_t val, base, n;
     char c;
     val = 0;

@@ -50,8 +50,7 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
   we cache them in a static buffer.
 */
 int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                    size_t *rbuflen)
-{
+                    size_t *rbuflen) {
     int                 ret, oflag = 0, adflags = 0, fd = -1;
     uint16_t            vid;
     uint16_t            bitmap;
@@ -225,8 +224,7 @@ exit:
     return ret;
 }
 
-static char *to_stringz(char *ibuf, uint16_t len)
-{
+static char *to_stringz(char *ibuf, uint16_t len) {
     static char attrmname[256];
 
     if (len > 255)
@@ -241,8 +239,7 @@ static char *to_stringz(char *ibuf, uint16_t len)
 }
 
 int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                   size_t *rbuflen)
-{
+                   size_t *rbuflen) {
     int                 ret, oflag = 0, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, maxreply;
@@ -346,8 +343,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                   char *rbuf _U_, size_t *rbuflen)
-{
+                   char *rbuf _U_, size_t *rbuflen) {
     int                 oflag = 0, ret, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did, attrsize;
@@ -455,8 +451,7 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 }
 
 int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                   char *rbuf _U_, size_t *rbuflen)
-{
+                   char *rbuf _U_, size_t *rbuflen) {
     int                 oflag = 0, ret, fd = -1;
     uint16_t            vid, bitmap, attrnamelen;
     uint32_t            did;

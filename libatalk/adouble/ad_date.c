@@ -8,8 +8,7 @@
 #include <atalk/adouble.h>
 
 int ad_setdate(struct adouble *ad,
-               unsigned int dateoff, uint32_t date)
-{
+               unsigned int dateoff, uint32_t date) {
     int xlate = (dateoff & AD_DATE_UNIX);
     char *ade = NULL;
     dateoff &= AD_DATE_MASK;
@@ -37,8 +36,7 @@ int ad_setdate(struct adouble *ad,
 }
 
 int ad_getdate(const struct adouble *ad,
-               unsigned int dateoff, uint32_t *date)
-{
+               unsigned int dateoff, uint32_t *date) {
     int xlate = (dateoff & AD_DATE_UNIX);
     char *ade = NULL;
     dateoff &= AD_DATE_MASK;

@@ -24,8 +24,7 @@
    update the current cnid, for emergency repairs. */
 
 int dbd_rebuild_add(DBD *dbd, struct cnid_dbd_rqst *rqst,
-                    struct cnid_dbd_rply *rply)
-{
+                    struct cnid_dbd_rply *rply) {
     DBT key, data;
     cnid_t cur, tmp, id;
     memset(&key, 0, sizeof(key));

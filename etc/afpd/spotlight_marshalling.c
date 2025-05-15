@@ -76,8 +76,7 @@ static int sl_unpack_loop(DALLOC_CTX *query, const char *buf, int offset,
  * Wrapper functions for the *VAL macros with bound checking
  **************************************************************************************************/
 
-static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
-{
+static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val) {
     if (off + sizeof(val) >= maxoff) {
         LOG(log_error, logtype_sl, "sivalc: off: %zd, maxoff: %zd", off, maxoff);
         return -1;
@@ -87,8 +86,7 @@ static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
     return 0;
 }
 
-static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
-{
+static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val) {
     if (off + sizeof(val) >= maxoff) {
         LOG(log_error, logtype_sl, "slvalc: off: %zd, maxoff: %zd", off, maxoff);
         return -1;
@@ -103,8 +101,7 @@ static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
 * If there is no byte order mark, -1 is returned.
 */
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset,
-        int query_length, uint encoding)
-{
+        int query_length, uint encoding) {
     uint utf16_encoding;
     /* Assumed encoding in absence of a bom is little endian */
     utf16_encoding = SL_ENC_LITTLE_ENDIAN;
@@ -129,14 +126,13 @@ static uint spotlight_get_utf16_string_encoding(const char *buf, int offset,
 
 #define SL_OFFSET_DELTA 16
 
-static uint64_t sl_pack_tag(uint16_t type, uint16_t size_or_count, uint32_t val)
-{
+static uint64_t sl_pack_tag(uint16_t type, uint16_t size_or_count,
+                            uint32_t val) {
     uint64_t tag = ((uint64_t)val << 32) | ((uint64_t)type << 16) | size_or_count;
     return tag;
 }
 
-static int sl_pack_float(double d, char *buf, int offset)
-{
+static int sl_pack_float(double d, char *buf, int offset) {
     EC_INIT;
     union {
         double d;
@@ -154,8 +150,7 @@ EC_CLEANUP:
     return offset + 2 * sizeof(uint64_t);
 }
 
-static int sl_pack_uint64(uint64_t u, char *buf, int offset)
-{
+static int sl_pack_uint64(uint64_t u, char *buf, int offset) {
     EC_INIT;
     EC_ZERO(slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_INT64, 2, 1)));
     EC_ZERO(slvalc(buf, offset + 8, MAX_SLQ_DAT, u));
@@ -168,8 +163,7 @@ EC_CLEANUP:
     return offset + 2 * sizeof(uint64_t);
 }
 
-static int sl_pack_bool(sl_bool_t bl, char *buf, int offset)
-{
+static int sl_pack_bool(sl_bool_t bl, char *buf, int offset) {
     EC_INIT;
     EC_ZERO(slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_BOOL, 1,
                    bl ? 1 : 0)));
@@ -182,8 +176,7 @@ EC_CLEANUP:
     return offset + sizeof(uint64_t);
 }
 
-static int sl_pack_nil(char *buf, int offset)
-{
+static int sl_pack_nil(char *buf, int offset) {
     EC_INIT;
     EC_ZERO(slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_NULL, 1, 1)));
 EC_CLEANUP:
@@ -195,8 +188,7 @@ EC_CLEANUP:
     return offset + sizeof(uint64_t);
 }
 
-static int sl_pack_date(sl_time_t t, char *buf, int offset)
-{
+static int sl_pack_date(sl_time_t t, char *buf, int offset) {
     EC_INIT;
     uint64_t data = 0;
     data = (t.tv_sec + SPOTLIGHT_TIME_DELTA) << 24;
@@ -211,8 +203,7 @@ EC_CLEANUP:
     return offset + 2 * sizeof(uint64_t);
 }
 
-static int sl_pack_uuid(sl_uuid_t *uuid, char *buf, int offset)
-{
+static int sl_pack_uuid(sl_uuid_t *uuid, char *buf, int offset) {
     EC_INIT;
     EC_ZERO(slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_UUID, 3, 1)));
 
@@ -231,8 +222,7 @@ EC_CLEANUP:
 }
 
 static int sl_pack_CNID(sl_cnids_t *cnids, char *buf, int offset, char *toc_buf,
-                        int *toc_idx)
-{
+                        int *toc_idx) {
     EC_INIT;
     int len;
     int cnid_count = talloc_array_length(cnids->ca_cnids->dd_talloc_array);
@@ -275,8 +265,7 @@ EC_CLEANUP:
 }
 
 static int sl_pack_array(sl_array_t *array, char *buf, int offset,
-                         char *toc_buf, int *toc_idx)
-{
+                         char *toc_buf, int *toc_idx) {
     EC_INIT;
     int count = talloc_array_length(array->dd_talloc_array);
     int octets = (offset + SL_OFFSET_DELTA) / 8;
@@ -297,8 +286,7 @@ EC_CLEANUP:
 }
 
 static int sl_pack_dict(sl_array_t *dict, char *buf, int offset, char *toc_buf,
-                        int *toc_idx)
-{
+                        int *toc_idx) {
     EC_INIT;
     EC_ZERO(slvalc(toc_buf,
                    *toc_idx * 8,
@@ -321,8 +309,7 @@ EC_CLEANUP:
 }
 
 static int sl_pack_filemeta(sl_filemeta_t *fm, char *buf, int offset,
-                            char *toc_buf, int *toc_idx)
-{
+                            char *toc_buf, int *toc_idx) {
     EC_INIT;
     int fmlen;                  /* lenght of filemeta */
     int saveoff = offset;
@@ -355,8 +342,7 @@ EC_CLEANUP:
 }
 
 static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
-                          int *toc_idx)
-{
+                          int *toc_idx) {
     EC_INIT;
     int len, octets, used_in_last_octet;
     len = strlen(s);
@@ -390,8 +376,7 @@ EC_CLEANUP:
 }
 
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf,
-                        int *toc_idx)
-{
+                        int *toc_idx) {
     EC_INIT;
     const char *type;
 
@@ -449,8 +434,7 @@ EC_CLEANUP:
  * unmarshalling functions
  **************************************************************************************************/
 
-static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
-{
+static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding) {
     if (encoding == SL_ENC_LITTLE_ENDIAN) {
         return LVAL(buf, offset);
     } else {
@@ -459,8 +443,7 @@ static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
 }
 
 static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset,
-                          uint encoding)
-{
+                          uint encoding) {
     int count, i;
     uint64_t query_data64;
     query_data64 = sl_unpack_uint64(buf, offset, encoding);
@@ -478,8 +461,7 @@ static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
-                          uint encoding)
-{
+                          uint encoding) {
     int count, i;
     uint64_t query_data64;
     sl_time_t t;
@@ -500,8 +482,7 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset,
-                          uint encoding)
-{
+                          uint encoding) {
     int count, i;
     uint64_t query_data64;
     sl_uuid_t uuid;
@@ -520,8 +501,7 @@ static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
-                            uint encoding)
-{
+                            uint encoding) {
     int count, i;
     uint64_t query_data64;
     union {
@@ -560,8 +540,7 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset,
-                          int length, uint encoding)
-{
+                          int length, uint encoding) {
     EC_INIT;
     int count;
     uint64_t query_data64;
@@ -592,8 +571,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static const char *spotlight_get_qtype_string(uint64_t query_type)
-{
+static const char *spotlight_get_qtype_string(uint64_t query_type) {
     switch (query_type) {
     case SQ_TYPE_NULL:
         return "null";
@@ -621,8 +599,7 @@ static const char *spotlight_get_qtype_string(uint64_t query_type)
     }
 }
 
-static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type)
-{
+static const char *spotlight_get_cpx_qtype_string(uint64_t cpx_query_type) {
     switch (cpx_query_type) {
     case SQ_CPX_TYPE_ARRAY:
         return "array";
@@ -653,8 +630,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
                          uint cpx_query_type,
                          uint cpx_query_count,
                          const uint toc_offset,
-                         const uint encoding)
-{
+                         const uint encoding) {
     EC_INIT;
     int roffset = offset;
     uint64_t query_data64;
@@ -753,8 +729,7 @@ static int sl_unpack_loop(DALLOC_CTX *query,
                           int offset,
                           uint count,
                           const uint toc_offset,
-                          const uint encoding)
-{
+                          const uint encoding) {
     EC_INIT;
     int i, toc_index, query_length;
     uint subcount;
@@ -849,8 +824,7 @@ EC_CLEANUP:
  * Global functions for packing und unpacking
  **************************************************************************************************/
 
-int sl_pack(DALLOC_CTX *query, char *buf)
-{
+int sl_pack(DALLOC_CTX *query, char *buf) {
     EC_INIT;
     char toc_buf[MAX_SLQ_TOC];
     int toc_index = 0;
@@ -877,8 +851,7 @@ EC_CLEANUP:
     return len;
 }
 
-int sl_unpack(DALLOC_CTX *query, const char *buf)
-{
+int sl_unpack(DALLOC_CTX *query, const char *buf) {
     EC_INIT;
     int encoding, toc_entries;
     uint64_t toc_offset;

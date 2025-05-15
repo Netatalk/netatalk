@@ -79,8 +79,7 @@ static int have_uservol = 0;
 static struct vol *Volumes = NULL;
 static uint16_t lastvid = 0;
 
-static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
-{
+static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes) {
     int result;
     FILE *fp;
     struct vol *vol;
@@ -142,8 +141,7 @@ static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
  *
  * Returns pointer to allocated storage on success, NULL on error.
  */
-static char *get_vol_uuid(const AFPObj *obj, const char *volname)
-{
+static char *get_vol_uuid(const AFPObj *obj, const char *volname) {
     char *volname_conf;
     char buf[1024], uuid[UUID_PRINTABLE_STRING_LENGTH], *p;
     FILE *fp;
@@ -298,8 +296,7 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
   As we can't check (requires write access) on ro-volumes, we assume ea=sys.
 */
 #define EABUFSZ 4
-static int do_check_ea_support(const struct vol *vol)
-{
+static int do_check_ea_support(const struct vol *vol) {
     int haseas;
     const char *eaname = "org.netatalk.has-Extended-Attributes";
     const char *eacontent = "yes";
@@ -332,8 +329,7 @@ static int do_check_ea_support(const struct vol *vol)
     return haseas;
 }
 
-static void check_ea_support(struct vol *vol)
-{
+static void check_ea_support(struct vol *vol) {
     int haseas;
     haseas = do_check_ea_support(vol);
 
@@ -359,8 +355,7 @@ static void check_ea_support(struct vol *vol)
  *
  * @returns        0 if not, 1 if yes
  */
-static int check_vol_acl_support(const struct vol *vol)
-{
+static int check_vol_acl_support(const struct vol *vol) {
     int ret = 0;
 #ifdef HAVE_NFSV4_ACLS
     ace_t *aces = NULL;
@@ -429,8 +424,7 @@ static char *volxlate(const AFPObj *obj,
                       const char *src,
                       const struct passwd *pwd,
                       const char *path,
-                      const char *volname)
-{
+                      const char *volname) {
     char *p, *r;
     const char *q;
     int len;
@@ -607,8 +601,7 @@ static char *volxlate(const AFPObj *obj,
  *      0: list exists, but name isn't in it
  *      1: in list
  */
-static int accessvol(const AFPObj *obj, const char *args, const char *name)
-{
+static int accessvol(const AFPObj *obj, const char *args, const char *name) {
     EC_INIT;
     char *names = NULL, *p;
     struct group *gr;
@@ -648,8 +641,7 @@ EC_CLEANUP:
 }
 
 static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
-                         const char *args)
-{
+                         const char *args) {
     int mask_int;
     char buf[MAXPATHLEN + 1], *p, *b;
     struct sockaddr_storage client;
@@ -727,8 +719,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
 static const char *getoption_str(const dictionary *conf, const char *vol,
-                                 const char *opt, const char *defsec, const char *defval)
-{
+                                 const char *opt, const char *defsec, const char *defval) {
     const char *result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
@@ -758,8 +749,7 @@ static const char *getoption_str(const dictionary *conf, const char *vol,
  * @returns       dynamically allocated option string from "vol" or "defsec", or "defval" if not found
  */
 static char *getoption_strdup(const dictionary *conf, const char *vol,
-                              const char *opt, const char *defsec, const char *defval)
-{
+                              const char *opt, const char *defsec, const char *defval) {
     char *result;
     char option[MAXOPTLEN];
     const char *tmp;
@@ -792,8 +782,7 @@ static char *getoption_strdup(const dictionary *conf, const char *vol,
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
 static int getoption_bool(const dictionary *conf, const char *vol,
-                          const char *opt, const char *defsec, int defval)
-{
+                          const char *opt, const char *defsec, int defval) {
     int result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
@@ -823,8 +812,7 @@ static int getoption_bool(const dictionary *conf, const char *vol,
  * @returns       int option from "vol" or "defsec", or "defval" if not found
  */
 static int getoption_int(const dictionary *conf, const char *vol,
-                         const char *opt, const char *defsec, int defval)
-{
+                         const char *opt, const char *defsec, int defval) {
     int result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
@@ -857,8 +845,7 @@ static int getoption_int(const dictionary *conf, const char *vol,
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
 static int vdgoption_bool(const dictionary *conf, const char *vol,
-                          const char *opt, const char *defsec, int defval)
-{
+                          const char *opt, const char *defsec, int defval) {
     int result;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
@@ -893,8 +880,7 @@ static struct vol *creatvol(AFPObj *obj,
                             const char *section,
                             const char *name,
                             const char *path_in,
-                            const char *preset)
-{
+                            const char *preset) {
     EC_INIT;
     struct vol  *volume = NULL;
     int         i, suffixlen, vlen, tmpvlen, u8mvlen, macvlen;
@@ -1496,8 +1482,7 @@ EC_CLEANUP:
 
 /* ----------------------
  */
-static int volfile_changed(AFPObj *obj)
-{
+static int volfile_changed(AFPObj *obj) {
     struct stat st;
     struct afp_options *p = &obj->options;
     int result;
@@ -1521,8 +1506,7 @@ static int volfile_changed(AFPObj *obj)
     return 0;
 }
 
-static int vol_section(const char *sec)
-{
+static int vol_section(const char *sec) {
     if (STRCMP(sec, ==, INISEC_GLOBAL)) {
         return 0;
     }
@@ -1536,8 +1520,7 @@ static int vol_section(const char *sec)
  * the global volume list. This gets called from the forked afpd childs.
  * The master now reads this too for Zeroconf announcements.
  */
-static int readvolfile(AFPObj *obj, const struct passwd *pwent)
-{
+static int readvolfile(AFPObj *obj, const struct passwd *pwent) {
     EC_INIT;
     static int regexerr = -1;
     static regex_t reg;
@@ -1674,8 +1657,7 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
 static struct extmap    *Extmap = NULL, *Defextmap = NULL;
 static int              Extmap_cnt;
 
-static int setextmap(char *ext, char *type, char *creator)
-{
+static int setextmap(char *ext, char *type, char *creator) {
     EC_INIT;
     struct extmap *em;
     int           cnt;
@@ -1713,15 +1695,13 @@ EC_CLEANUP:
 }
 
 /* -------------------------- */
-static int extmap_cmp(const void *map1, const void *map2)
-{
+static int extmap_cmp(const void *map1, const void *map2) {
     const struct extmap *em1 = map1;
     const struct extmap *em2 = map2;
     return strdiacasecmp(em1->em_ext, em2->em_ext);
 }
 
-static void sortextmap(void)
-{
+static void sortextmap(void) {
     struct extmap   *em;
     Extmap_cnt = 0;
 
@@ -1746,8 +1726,7 @@ static void sortextmap(void)
     }
 }
 
-static void free_extmap(void)
-{
+static void free_extmap(void) {
     struct extmap   *em;
 
     if (Extmap) {
@@ -1762,15 +1741,13 @@ static void free_extmap(void)
     }
 }
 
-static int ext_cmp_key(const void *key, const void *obj)
-{
+static int ext_cmp_key(const void *key, const void *obj) {
     const char          *p = key;
     const struct extmap *em = obj;
     return strdiacasecmp(p, em->em_ext);
 }
 
-struct extmap *getextmap(const char *path)
-{
+struct extmap *getextmap(const char *path) {
     char      *p;
     struct extmap *em;
 
@@ -1793,13 +1770,11 @@ struct extmap *getextmap(const char *path)
     }
 }
 
-struct extmap *getdefextmap(void)
-{
+struct extmap *getdefextmap(void) {
     return Defextmap;
 }
 
-static int readextmap(const char *file)
-{
+static int readextmap(const char *file) {
     EC_INIT;
     FILE        *fp;
     char        ext[256];
@@ -1838,8 +1813,7 @@ EC_CLEANUP:
 /*!
  * Remove a volume from the linked list of volumes
  */
-void volume_unlink(struct vol *volume)
-{
+void volume_unlink(struct vol *volume) {
     struct vol *vol, *ovol, *nvol;
 
     if (volume == Volumes) {
@@ -1865,8 +1839,7 @@ void volume_unlink(struct vol *volume)
  * Actually opening a volume (afp_openvol()) will allocate additional
  * resources which are freed in closevol()
  */
-void volume_free(struct vol *vol)
-{
+void volume_free(struct vol *vol) {
     free(vol->v_configname);
     free(vol->v_localname);
     free(vol->v_u8mname);
@@ -1890,8 +1863,7 @@ void volume_free(struct vol *vol)
 /*!
  * Load charsets for a volume
  */
-int load_charset(struct vol *vol)
-{
+int load_charset(struct vol *vol) {
     if ((vol->v_maccharset = add_charset(vol->v_maccodepage)) == (charset_t) -1) {
         LOG(log_error, logtype_default, "Setting mac charset '%s' failed",
             vol->v_maccodepage);
@@ -1916,8 +1888,7 @@ int load_charset(struct vol *vol)
  *                     LV_ALL: load shares that are available in the config file
  *                     LV_FORCE: reload file even though the timestamp wasn't changed
  */
-int load_volumes(AFPObj *obj, lv_flags_t flags)
-{
+int load_volumes(AFPObj *obj, lv_flags_t flags) {
     EC_INIT;
     static long         bufsize;
     static char        *pwbuf = NULL;
@@ -2059,8 +2030,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-void unload_volumes(AFPObj *obj)
-{
+void unload_volumes(AFPObj *obj) {
     struct vol *vol, *p;
     LOG(log_debug, logtype_afpd, "unload_volumes: BEGIN");
     p = Volumes;
@@ -2078,13 +2048,11 @@ void unload_volumes(AFPObj *obj)
     LOG(log_debug, logtype_afpd, "unload_volumes: END");
 }
 
-struct vol *getvolumes(void)
-{
+struct vol *getvolumes(void) {
     return Volumes;
 }
 
-struct vol *getvolbyvid(const uint16_t vid)
-{
+struct vol *getvolbyvid(const uint16_t vid) {
     struct vol  *vol;
 
     for (vol = Volumes; vol; vol = vol->v_next) {
@@ -2111,8 +2079,7 @@ struct vol *getvolbyvid(const uint16_t vid)
  * @returns NULL     if no match is found, pointer to username if successfull
  *
  */
-static char *getuserbypath(const char *path)
-{
+static char *getuserbypath(const char *path) {
     EC_INIT;
     struct stat sbuf;
     struct passwd  *pwd;
@@ -2183,8 +2150,7 @@ EC_CLEANUP:
  * @param obj  (rw) handle
  * @param path (r)  path, may be relative or absolute
  */
-struct vol *getvolbypath(AFPObj *obj, const char *path)
-{
+struct vol *getvolbypath(AFPObj *obj, const char *path) {
     EC_INIT;
     static int regexerr = -1;
     static regex_t reg;
@@ -2402,8 +2368,7 @@ EC_CLEANUP:
     return vol;
 }
 
-struct vol *getvolbyname(const char *name)
-{
+struct vol *getvolbyname(const char *name) {
     struct vol *vol = NULL;
     struct vol *tmp;
 
@@ -2421,8 +2386,7 @@ struct vol *getvolbyname(const char *name)
 /*!
  * Initialize an AFPObj and options from ini config file
  */
-int afp_config_parse(AFPObj *AFPObj, char *processname)
-{
+int afp_config_parse(AFPObj *AFPObj, char *processname) {
     EC_INIT;
     dictionary *config;
     struct afp_options *options = &AFPObj->options;
@@ -2880,8 +2844,7 @@ EC_CLEANUP:
 }
 
 /* get rid of any allocated afp_option buffers. */
-void afp_config_free(AFPObj *obj)
-{
+void afp_config_free(AFPObj *obj) {
     if (obj->options.configfile) {
         CONFIG_ARG_FREE(obj->options.configfile)
     }

@@ -25,8 +25,7 @@
 #define isuxdigit(x)    (isdigit(x) || (isupper(x) && isxdigit(x)))
 
 static size_t mangle_extension(const struct vol *vol, const char* uname,
-                               char *extension, charset_t charset)
-{
+                               char *extension, charset_t charset) {
     char *p = strrchr(uname, '.');
 
     if (p && p != uname) {
@@ -44,8 +43,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
 }
 
 static char *demangle_checks(const struct vol *vol, char* uname,
-                             char *mfilename, size_t prefix, char *ext)
-{
+                             char *mfilename, size_t prefix, char *ext) {
     uint16_t flags;
     /* for convert_charset dest_len parameter +2 */
     static char buffer[MAXPATHLEN + 2];
@@ -144,8 +142,7 @@ static char *demangle_checks(const struct vol *vol, char* uname,
 */
 static char *
 private_demangle(const struct vol *vol, char *mfilename, cnid_t did,
-                 cnid_t *osx)
-{
+                 cnid_t *osx) {
     char *t;
     char *u_name;
     uint32_t id, file_id;
@@ -226,8 +223,7 @@ private_demangle(const struct vol *vol, char *mfilename, cnid_t did,
 /* -------------------------------------------------------
 */
 char *
-demangle(const struct vol *vol, char *mfilename, cnid_t did)
-{
+demangle(const struct vol *vol, char *mfilename, cnid_t did) {
     return private_demangle(vol, mfilename, did, NULL);
 }
 
@@ -235,8 +231,8 @@ demangle(const struct vol *vol, char *mfilename, cnid_t did)
  * OS X
 */
 char *
-demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
-{
+demangle_osx(const struct vol *vol, char *mfilename, cnid_t did,
+             cnid_t *fileid) {
     return private_demangle(vol, mfilename, did, fileid);
 }
 
@@ -259,8 +255,7 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
 */
 char *
 mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
-       cnid_t id, int flags)
-{
+       cnid_t id, int flags) {
     char *m = NULL;
     /* way > maxlen */
     static char mfilename[MAXPATHLEN];

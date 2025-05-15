@@ -104,8 +104,7 @@ static void consistency(void);
 
 /* this is the messiest of the bunch as atalkd can exit pretty much
  * everywhere. we delete interfaces here instead of in as_down. */
-static void atalkd_exit(const int i)
-{
+static void atalkd_exit(const int i) {
 #ifdef SIOCDIFADDR
     struct interface *iface;
 
@@ -135,8 +134,7 @@ static void atalkd_exit(const int i)
 */
 static ssize_t sendto_iface(struct interface *iface, int sockfd,
                             const void *buf, size_t len,
-                            const struct sockaddr_at *dest_addr)
-{
+                            const struct sockaddr_at *dest_addr) {
     ssize_t ret = sendto(sockfd, buf, len, 0, (struct sockaddr *)dest_addr,
                          sizeof(struct sockaddr_at));
 
@@ -157,8 +155,7 @@ static ssize_t sendto_iface(struct interface *iface, int sockfd,
     return ret;
 }
 
-static void as_timer(int sig _U_)
-{
+static void as_timer(int sig _U_) {
     struct sockaddr_at	sat;
     struct ziphdr	zh;
     struct rtmp_head	rh;
@@ -690,8 +687,7 @@ static void as_timer(int sig _U_)
 /*
 * Consistency check...
 */
-static void consistency()
-{
+static void consistency() {
     struct rtmptab	*rtmp;
     struct list		*lr, *lz;
     struct ziptab	*zt;
@@ -725,8 +721,7 @@ static void consistency()
 }
 
 static void
-as_debug(int sig _U_)
-{
+as_debug(int sig _U_) {
     struct interface	*iface;
     struct list		*l;
     struct ziptab	*zt;
@@ -856,8 +851,7 @@ as_debug(int sig _U_)
  * Called when SIGTERM is recieved.  Remove all routes and then exit.
  */
 static void
-as_down(int sig _U_)
-{
+as_down(int sig _U_) {
     struct interface	*iface;
     struct gate		*gate;
     struct rtmptab	*rt;
@@ -890,8 +884,7 @@ as_down(int sig _U_)
     atalkd_exit(0);
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     struct sockaddr_at	sat;
     struct sigaction	sv;
     struct itimerval	it;
@@ -1285,8 +1278,7 @@ int main(int ac, char **av)
  * and rtmp_packet()) to set the initial "bootstrapping" address
  * on an interface.
  */
-void bootaddr(struct interface *iface)
-{
+void bootaddr(struct interface *iface) {
     if (iface == NULL) {
         return;
     }
@@ -1349,8 +1341,7 @@ void bootaddr(struct interface *iface)
  */
 void setaddr(struct interface *iface,
              uint8_t  phase, uint16_t net, uint8_t node,
-             uint16_t first, uint16_t last)
-{
+             uint16_t first, uint16_t last) {
     int			i;
     struct atserv	*as;
     struct atport	*ap;
@@ -1468,8 +1459,7 @@ smaller net range.", iface->i_name, ntohs(first), ntohs(last), strerror(errno));
     nfds++;
 }
 
-int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa)
-{
+int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa) {
     struct ifreq	ifr;
     int			s;
     memset(&ifr, 0, sizeof(ifr));
@@ -1494,8 +1484,7 @@ int ifconfig(const char *iname, unsigned long cmd, struct sockaddr_at *sa)
     return 0;
 }
 
-void dumpconfig(struct interface *iface)
-{
+void dumpconfig(struct interface *iface) {
     struct list		*l;
     printf("%s", iface->i_name);
 

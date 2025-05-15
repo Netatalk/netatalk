@@ -25,8 +25,7 @@
  */
 
 ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count,
-                   off_t offset)
-{
+                   off_t offset) {
     ssize_t		cc;
 #ifndef  HAVE_PWRITE
 
@@ -53,8 +52,7 @@ ssize_t adf_pwrite(struct ad_fd *ad_fd, const void *buf, size_t count,
 
 /* end is always 0 */
 ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
-                 const char *buf, size_t buflen)
-{
+                 const char *buf, size_t buflen) {
     EC_INIT;
     struct stat		st;
     ssize_t		cc;
@@ -117,8 +115,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
  * the caller set the locks
  * ftruncate is undefined when the file length is smaller than 'size'
  */
-int sys_ftruncate(int fd, off_t length)
-{
+int sys_ftruncate(int fd, off_t length) {
 #ifndef  HAVE_PWRITE
     off_t           curpos;
 #endif
@@ -174,8 +171,7 @@ int sys_ftruncate(int fd, off_t length)
 }
 
 /* ------------------------ */
-int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size)
-{
+int ad_rtruncate(struct adouble *ad, const char *uname, const off_t size) {
     EC_INIT;
     /*
      * We can't delete 0 byte size resource forks either, because a
@@ -198,8 +194,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-int ad_dtruncate(struct adouble *ad, const off_t size)
-{
+int ad_dtruncate(struct adouble *ad, const off_t size) {
     if (sys_ftruncate(ad_data_fileno(ad), size) < 0) {
         LOG(log_error, logtype_ad, "sys_ftruncate(fd: %d): %s",
             ad_data_fileno(ad), strerror(errno));
@@ -211,8 +206,7 @@ int ad_dtruncate(struct adouble *ad, const off_t size)
 
 /* ----------------------- */
 static int copy_all(const int dfd, const void *buf,
-                    size_t buflen)
-{
+                    size_t buflen) {
     ssize_t cc;
 
     while (buflen > 0) {
@@ -236,8 +230,7 @@ static int copy_all(const int dfd, const void *buf,
  * copy only the fork data stream
 */
 int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf,
-              size_t buflen)
-{
+              size_t buflen) {
     ssize_t cc;
     int     err = 0;
     uint8_t fixedbuf[8192];

@@ -75,8 +75,7 @@ static char hexdig[] = "0123456789abcdef";
 /**
  * Return the name of a charset to give to iconv().
  **/
-static const char *charset_name(charset_t ch)
-{
+static const char *charset_name(charset_t ch) {
     const char *ret = NULL;
 
     if (ch == CH_UCS2) {
@@ -92,8 +91,7 @@ static const char *charset_name(charset_t ch)
     return ret;
 }
 
-int set_charset_name(charset_t ch, const char *name)
-{
+int set_charset_name(charset_t ch, const char *name) {
     if (ch >= NUM_CHARSETS) {
         return -1;
     }
@@ -102,8 +100,7 @@ int set_charset_name(charset_t ch, const char *name)
     return 0;
 }
 
-void free_charset_names(void)
-{
+void free_charset_names(void) {
     for (int ch = 0; ch < MAX_CHARSETS; ch++) {
         if (charset_names[ch]) {
             free(charset_names[ch]);
@@ -112,8 +109,7 @@ void free_charset_names(void)
     }
 }
 
-static struct charset_functions *get_charset_functions(charset_t ch)
-{
+static struct charset_functions *get_charset_functions(charset_t ch) {
     if (charsets[ch] != NULL) {
         return charsets[ch];
     }
@@ -123,8 +119,7 @@ static struct charset_functions *get_charset_functions(charset_t ch)
 }
 
 
-static void lazy_initialize_conv(void)
-{
+static void lazy_initialize_conv(void) {
     static int initialized = 0;
 
     if (!initialized) {
@@ -133,8 +128,7 @@ static void lazy_initialize_conv(void)
     }
 }
 
-charset_t add_charset(const char* name)
-{
+charset_t add_charset(const char* name) {
     static charset_t max_charset_t = NUM_CHARSETS - 1;
     charset_t cur_charset_t = max_charset_t + 1;
     unsigned int c1;
@@ -192,8 +186,7 @@ charset_t add_charset(const char* name)
  * every time the configuration is reloaded, because the charset or
  * codepage might have changed.
  **/
-void init_iconv(void)
-{
+void init_iconv(void) {
     int c1;
 
     for (c1 = 0; c1 < NUM_CHARSETS; c1++) {
@@ -225,8 +218,7 @@ void init_iconv(void)
 /**
  *
  **/
-static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
-{
+static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len) {
     /* Terminate the string */
     if (to == CH_UCS2 && bytesleft >= 2) {
         buf[len]   = 0;
@@ -253,8 +245,7 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
  **/
 static size_t convert_string_internal(charset_t from, charset_t to,
                                       void const *src, size_t srclen,
-                                      void *dest, size_t destlen)
-{
+                                      void *dest, size_t destlen) {
     size_t i_len, o_len;
     size_t retval;
     const char *inbuf = (const char*)src;
@@ -310,8 +301,7 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 
 size_t convert_string(charset_t from, charset_t to,
                       void const *src, size_t srclen,
-                      void *dest, size_t destlen)
-{
+                      void *dest, size_t destlen) {
     size_t i_len, o_len;
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN];
@@ -366,8 +356,7 @@ size_t convert_string(charset_t from, charset_t to,
  **/
 
 static size_t convert_string_allocate_internal(charset_t from, charset_t to,
-        void const *src, size_t srclen, char **dest)
-{
+        void const *src, size_t srclen, char **dest) {
     size_t i_len, o_len, destlen;
     size_t retval;
     const char *inbuf = (const char *)src;
@@ -456,8 +445,7 @@ convert:
 
 size_t convert_string_allocate(charset_t from, charset_t to,
                                void const *src, size_t srclen,
-                               char **dest)
-{
+                               char **dest) {
     size_t i_len, o_len;
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN];
@@ -500,8 +488,7 @@ size_t convert_string_allocate(charset_t from, charset_t to,
 }
 
 size_t charset_strupper(charset_t ch, const char *src, size_t srclen,
-                        char *dest, size_t destlen)
-{
+                        char *dest, size_t destlen) {
     size_t size;
     char *buffer;
     size = convert_string_allocate_internal(ch, CH_UCS2, src, srclen,
@@ -523,8 +510,7 @@ size_t charset_strupper(charset_t ch, const char *src, size_t srclen,
 }
 
 size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
-                        char *dest, size_t destlen)
-{
+                        char *dest, size_t destlen) {
     size_t size;
     char *buffer;
     size = convert_string_allocate_internal(ch, CH_UCS2, src, srclen,
@@ -546,23 +532,23 @@ size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
 }
 
 
-size_t unix_strupper(const char *src, size_t srclen, char *dest, size_t destlen)
-{
+size_t unix_strupper(const char *src, size_t srclen, char *dest,
+                     size_t destlen) {
     return charset_strupper(CH_UNIX, src, srclen, dest, destlen);
 }
 
-size_t unix_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
-{
+size_t unix_strlower(const char *src, size_t srclen, char *dest,
+                     size_t destlen) {
     return charset_strlower(CH_UNIX, src, srclen, dest, destlen);
 }
 
-size_t utf8_strupper(const char *src, size_t srclen, char *dest, size_t destlen)
-{
+size_t utf8_strupper(const char *src, size_t srclen, char *dest,
+                     size_t destlen) {
     return charset_strupper(CH_UTF8, src, srclen, dest, destlen);
 }
 
-size_t utf8_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
-{
+size_t utf8_strlower(const char *src, size_t srclen, char *dest,
+                     size_t destlen) {
     return charset_strlower(CH_UTF8, src, srclen, dest, destlen);
 }
 
@@ -575,8 +561,7 @@ size_t utf8_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
  *         or -1 in case of error.
  **/
 
-size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src)
-{
+size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src) {
     size_t src_len = strlen(src);
     *dest = NULL;
     return convert_string_allocate(ch, CH_UCS2, src, src_len, (char**) dest);
@@ -590,8 +575,7 @@ size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src)
  * @returns The number of bytes occupied by the string in the destination
  **/
 
-size_t charset_to_utf8_allocate(charset_t ch, char **dest, const char *src)
-{
+size_t charset_to_utf8_allocate(charset_t ch, char **dest, const char *src) {
     size_t src_len = strlen(src);
     *dest = NULL;
     return convert_string_allocate(ch, CH_UTF8, src, src_len, dest);
@@ -606,15 +590,13 @@ size_t charset_to_utf8_allocate(charset_t ch, char **dest, const char *src)
  **/
 
 size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
-                       size_t destlen)
-{
+                       size_t destlen) {
     size_t src_len = (strlen_w(src)) * sizeof(ucs2_t);
     return convert_string(CH_UCS2, ch, src, src_len, dest, destlen);
 }
 
 /* --------------------------------- */
-size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src)
-{
+size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src) {
     size_t src_len = (strlen_w(src)) * sizeof(ucs2_t);
     *dest = NULL;
     return convert_string_allocate(CH_UCS2, ch, src, src_len, dest);
@@ -628,16 +610,14 @@ size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src)
  * @returns The number of bytes occupied by the string in the destination
  **/
 
-size_t utf8_to_charset_allocate(charset_t ch, char **dest, const char *src)
-{
+size_t utf8_to_charset_allocate(charset_t ch, char **dest, const char *src) {
     size_t src_len = strlen(src);
     *dest = NULL;
     return convert_string_allocate(CH_UTF8, ch, src, src_len, dest);
 }
 
 size_t charset_precompose(charset_t ch, char * src, size_t inlen, char * dst,
-                          size_t outlen)
-{
+                          size_t outlen) {
     char *buffer;
     ucs2_t u[MAXPATHLEN];
     size_t len;
@@ -666,8 +646,7 @@ size_t charset_precompose(charset_t ch, char * src, size_t inlen, char * dst,
 }
 
 size_t charset_decompose(charset_t ch, char * src, size_t inlen, char * dst,
-                         size_t outlen)
-{
+                         size_t outlen) {
     char *buffer;
     ucs2_t u[MAXPATHLEN];
     size_t len;
@@ -695,20 +674,17 @@ size_t charset_decompose(charset_t ch, char * src, size_t inlen, char * dst,
     return len;
 }
 
-size_t utf8_precompose(char * src, size_t inlen, char * dst, size_t outlen)
-{
+size_t utf8_precompose(char * src, size_t inlen, char * dst, size_t outlen) {
     return charset_precompose(CH_UTF8, src, inlen, dst, outlen);
 }
 
-size_t utf8_decompose(char * src, size_t inlen, char * dst, size_t outlen)
-{
+size_t utf8_decompose(char * src, size_t inlen, char * dst, size_t outlen) {
     return charset_decompose(CH_UTF8, src, inlen, dst, outlen);
 }
 
 #if 0
 static char  debugbuf[MAXPATHLEN + 1];
-char *debug_out(char * seq, size_t len)
-{
+char *debug_out(char * seq, size_t len) {
     size_t i = 0;
     unsigned char *p;
     char *q;
@@ -741,8 +717,7 @@ char *debug_out(char * seq, size_t len)
 
 static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                                  charset_t cap_set, const char *src, size_t srclen, char *dest, size_t destlen,
-                                 uint16_t *flags)
-{
+                                 uint16_t *flags) {
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len;
     size_t j = 0;
@@ -963,8 +938,7 @@ end:
 
 
 static size_t push_charset_flags(charset_t to_set, charset_t cap_set, char* src,
-                                 size_t srclen, char *dest, size_t destlen, uint16_t *flags)
-{
+                                 size_t srclen, char *dest, size_t destlen, uint16_t *flags) {
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len, i;
     size_t j = 0;
@@ -1059,8 +1033,7 @@ end:
  */
 size_t convert_charset(charset_t from_set, charset_t to_set,
                        charset_t cap_charset, const char *src, size_t src_len, char *dest,
-                       size_t dest_len, uint16_t *flags)
-{
+                       size_t dest_len, uint16_t *flags) {
     size_t i_len, o_len;
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN + 2];

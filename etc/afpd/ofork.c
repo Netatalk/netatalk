@@ -39,13 +39,11 @@ static u_short      lastrefnum = 0;
 
 
 /* OR some of each character for the hash */
-static unsigned long hashfn(const struct file_key *key)
-{
+static unsigned long hashfn(const struct file_key *key) {
     return key->inode & (OFORK_HASHSIZE - 1);
 }
 
-static void of_hash(struct ofork *of)
-{
+static void of_hash(struct ofork *of) {
     struct ofork **table;
     table = &ofork_table[hashfn(&of->key)];
 
@@ -57,8 +55,7 @@ static void of_hash(struct ofork *of)
     of->prevp = table;
 }
 
-static void of_unhash(struct ofork *of)
-{
+static void of_unhash(struct ofork *of) {
     if (of->prevp) {
         if (of->next) {
             of->next->prevp = of->prevp;
@@ -68,8 +65,7 @@ static void of_unhash(struct ofork *of)
     }
 }
 
-void of_pforkdesc(FILE *f)
-{
+void of_pforkdesc(FILE *f) {
     int ofrefnum;
 
     if (!oforks) {
@@ -83,8 +79,7 @@ void of_pforkdesc(FILE *f)
     }
 }
 
-int of_flush(const struct vol *vol)
-{
+int of_flush(const struct vol *vol) {
     int refnum;
 
     if (!oforks) {
@@ -104,8 +99,7 @@ int of_flush(const struct vol *vol)
 int of_rename(const struct vol *vol,
               struct ofork *s_of,
               struct dir *olddir, const char *oldpath _U_,
-              struct dir *newdir, const char *newpath)
-{
+              struct dir *newdir, const char *newpath) {
     struct ofork *of, *next;
     int done = 0;
 
@@ -150,8 +144,7 @@ of_alloc(struct vol *vol,
          uint16_t     *ofrefnum,
          const int      eid,
          struct adouble *ad,
-         struct stat    *st)
-{
+         struct stat    *st) {
     struct ofork        *of;
     uint16_t       refnum, of_refnum;
     int         i;
@@ -259,8 +252,7 @@ of_alloc(struct vol *vol,
     return of;
 }
 
-struct ofork *of_find(const uint16_t ofrefnum)
-{
+struct ofork *of_find(const uint16_t ofrefnum) {
     if (!oforks || !nforks) {
         return NULL;
     }
@@ -269,8 +261,7 @@ struct ofork *of_find(const uint16_t ofrefnum)
 }
 
 /* -------------------------- */
-int of_stat(const struct vol *vol, struct path *path)
-{
+int of_stat(const struct vol *vol, struct path *path) {
     int ret;
     path->st_errno = 0;
     path->st_valid = 1;
@@ -284,8 +275,7 @@ int of_stat(const struct vol *vol, struct path *path)
     return ret;
 }
 
-int of_fstatat(int dirfd, struct path *path)
-{
+int of_fstatat(int dirfd, struct path *path) {
     int ret;
     path->st_errno = 0;
     path->st_valid = 1;
@@ -302,8 +292,7 @@ int of_fstatat(int dirfd, struct path *path)
    stat(".") works even if "." is deleted thus
    we have to stat ../name because we want to know if it's there
 */
-int of_statdir(struct vol *vol, struct path *path)
-{
+int of_statdir(struct vol *vol, struct path *path) {
     static char pathname[MAXPATHLEN + 1] = "../";
     int ret;
     size_t len;
@@ -350,8 +339,7 @@ int of_statdir(struct vol *vol, struct path *path)
 }
 
 /* -------------------------- */
-struct ofork *of_findname(const struct vol *vol, struct path *path)
-{
+struct ofork *of_findname(const struct vol *vol, struct path *path) {
     struct ofork *of;
     struct file_key key;
 
@@ -384,8 +372,7 @@ struct ofork *of_findname(const struct vol *vol, struct path *path)
  * @param dirfd     (r) directory fd
  * @param path      (rw) pointer to struct path
  */
-struct ofork *of_findnameat(int dirfd, struct path *path)
-{
+struct ofork *of_findnameat(int dirfd, struct path *path) {
     struct ofork *of;
     struct file_key key;
 
@@ -409,8 +396,7 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
     return NULL;
 }
 
-void of_dealloc(struct ofork *of)
-{
+void of_dealloc(struct ofork *of) {
     if (!oforks) {
         return;
     }
@@ -429,8 +415,7 @@ void of_dealloc(struct ofork *of)
 }
 
 /* --------------------------- */
-int of_closefork(const AFPObj *obj, struct ofork *ofork)
-{
+int of_closefork(const AFPObj *obj, struct ofork *ofork) {
     struct timeval      tv;
     int         adflags = 0;
     int                 ret;
@@ -539,8 +524,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
  */
 struct adouble *of_ad(const struct vol *vol, struct path *path,
-                      struct adouble *ad)
-{
+                      struct adouble *ad) {
     struct ofork        *of;
     struct adouble      *adp;
 
@@ -557,8 +541,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path,
 /* ----------------------
    close all forks for a volume
 */
-void of_closevol(const AFPObj *obj, const struct vol *vol)
-{
+void of_closevol(const AFPObj *obj, const struct vol *vol) {
     int refnum;
 
     if (!oforks) {
@@ -579,8 +562,7 @@ void of_closevol(const AFPObj *obj, const struct vol *vol)
 /* ----------------------
    close all forks for a volume
 */
-void of_close_all_forks(const AFPObj *obj)
-{
+void of_close_all_forks(const AFPObj *obj) {
     int refnum;
 
     if (!oforks) {

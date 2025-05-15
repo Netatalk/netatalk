@@ -25,8 +25,7 @@
 #include "pack.h"
 
 
-int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
-{
+int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply) {
     DBT key, data;
     int rc;
     memset(&key, 0, sizeof(key));
@@ -71,8 +70,7 @@ int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 }
 
 /* ---------------------- */
-int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
-{
+int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply) {
     static cnid_t id;
     static char buf[ROOTINFO_DATALEN];
     DBT rootinfo_key, rootinfo_data, key, data;
@@ -145,8 +143,7 @@ int get_cnid(DBD *dbd, struct cnid_dbd_rply *rply)
 
 /* ------------------------ */
 /* We need a nolookup version for `dbd` */
-int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
-{
+int dbd_add(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply) {
     rply->namelen = 0;
     LOG(log_debug, logtype_cnid,
         "dbd_add(did:%u, '%s', dev/ino:0x%llx/0x%llx) {start}",

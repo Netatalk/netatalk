@@ -14,8 +14,7 @@
 
 #include <atalk/dsi.h>
 
-void dsi_close(DSI *dsi)
-{
+void dsi_close(DSI *dsi) {
     /* server generated. need to set all the fields. */
     if (!(dsi->flags & DSI_SLEEPING) && !(dsi->flags & DSI_DISCONNECTED)) {
         dsi->header.dsi_flags = DSIFL_REQUEST;

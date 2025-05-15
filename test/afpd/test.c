@@ -49,8 +49,7 @@ static AFPObj obj, aspobj;
 static char *args[] = {"test", "-F", "test.conf"};
 /* Static variables */
 
-int main()
-{
+int main() {
     int reti;
     uint16_t vid;
     struct vol *vol;

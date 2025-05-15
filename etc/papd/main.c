@@ -55,8 +55,7 @@
 
 /* This maps to TReq and TResp, per "Inside AppleTalk" 10-13 */
 
-typedef struct __attribute__((__packed__))
-{
+typedef struct __attribute__((__packed__)) {
     uint8_t user_bytes[4];
     uint8_t data_bytes[4];
     uint8_t buf_len;
@@ -88,16 +87,14 @@ static void getprinters(char *cf);
 
 
 /* this only needs to be used by the server process */
-static void papd_exit(const int i)
-{
+static void papd_exit(const int i) {
     server_unlock(pidfile);
     auth_unload();
     exit(i);
 }
 
 static void
-die(int n)
-{
+die(int n) {
     struct printer	*pr;
     struct at_addr	addr;
     memset(&addr, 0, sizeof(addr));
@@ -129,8 +126,7 @@ die(int n)
 }
 
 static void
-reap(int sig _U_)
-{
+reap(int sig _U_) {
     int		status;
     int		pid;
 
@@ -155,8 +151,7 @@ reap(int sig _U_)
     return;
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     extern char         *optarg;
     ATP			atp;
     struct atp_block	atpb;
@@ -589,8 +584,7 @@ int main(int ac, char **av)
  * We assume buf is big enough for 255 bytes of data and a length byte.
  */
 
-int getstatus(struct printer *pr, rbuf_t *buf)
-{
+int getstatus(struct printer *pr, rbuf_t *buf) {
 #ifdef HAVE_CUPS
 
     if (pr->p_flags & P_PIPED) {
@@ -646,8 +640,7 @@ char	*getpname(char **area, int bufsize);
 
 #define PF_CONFBUFFER	1024
 
-static void getprinters(char *cf)
-{
+static void getprinters(char *cf) {
     char		buf[PF_CONFBUFFER], area[PF_CONFBUFFER], *a, *p, *name, *type, *zone;
     struct printer	*pr;
     int			c;
@@ -853,8 +846,7 @@ static void getprinters(char *cf)
     }
 }
 
-int rprintcap(struct printer *pr)
-{
+int rprintcap(struct printer *pr) {
 #ifdef HAVE_CUPS
     char		*p;
 

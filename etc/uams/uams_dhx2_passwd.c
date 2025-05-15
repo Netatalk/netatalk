@@ -69,8 +69,7 @@ static struct passwd *dhxpwd;
  **/
 
 static int
-dh_params_generate(gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits)
-{
+dh_params_generate(gcry_mpi_t *ret_p, gcry_mpi_t *ret_g, unsigned int bits) {
     int result, times = 0, qbits;
     gcry_mpi_t g = NULL, prime = NULL;
     gcry_mpi_t *factors = NULL;
@@ -153,8 +152,7 @@ error:
 }
 
 static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     int ret;
     size_t nwritten;
     gcry_mpi_t g, Ma;
@@ -257,8 +255,7 @@ error:              /* We exit here anyway */
 static int login(void *obj, char *username, int ulen,
                  struct passwd **uam_pwd _U_,
                  char *ibuf, size_t ibuflen,
-                 char *rbuf, size_t *rbuflen)
-{
+                 char *rbuf, size_t *rbuflen) {
     if ((dhxpwd = uam_getname(obj, username, ulen)) == NULL) {
         LOG(log_info, logtype_uams, "DHX2: unknown username");
         return AFPERR_NOTAUTH;
@@ -273,8 +270,7 @@ static int login(void *obj, char *username, int ulen,
  * having to clean things up if there's an error. */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
-                        char *rbuf, size_t *rbuflen)
-{
+                        char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     *rbuflen = 0;
@@ -311,8 +307,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
 /* ----------------------------- */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
-                            char *rbuf, size_t *rbuflen)
-{
+                            char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     uint16_t  temp16;
@@ -350,8 +345,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int logincont1(void *obj _U_, struct passwd **uam_pwd _U_,
                       char *ibuf, size_t ibuflen,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     size_t nwritten;
     int ret;
     gcry_mpi_t Mb, K, clientNonce;
@@ -504,8 +498,7 @@ exit:
 
 static int logincont2(void *obj _U_, struct passwd **uam_pwd,
                       char *ibuf, size_t ibuflen,
-                      char *rbuf _U_, size_t *rbuflen)
-{
+                      char *rbuf _U_, size_t *rbuflen) {
 #ifdef SHADOWPW
     struct spwd *sp;
 #endif /* SHADOWPW */
@@ -619,8 +612,7 @@ exit:
 
 static int passwd_logincont(void *obj, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
-                            char *rbuf, size_t *rbuflen)
-{
+                            char *rbuf, size_t *rbuflen) {
     uint16_t retID;
     int ret;
     /* check for session id */
@@ -639,8 +631,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     return ret;
 }
 
-static int uam_setup(void *obj, const char *path)
-{
+static int uam_setup(void *obj, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "DHX2", passwd_login,
                      passwd_logincont, NULL, passwd_login_ext) < 0) {
         return -1;
@@ -649,8 +640,7 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "DHX2");
 }
 

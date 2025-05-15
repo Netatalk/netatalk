@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ------------------------- */
-STATIC void test98()
-{
+STATIC void test98() {
     int  dir = 0;
     char *name = "t98 error setfildirparams";
     char *name1 = "t98 error setfildirparams file";
@@ -98,8 +97,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test230()
-{
+STATIC void test230() {
     int  dir = 0;
     char *name = "t230 file";
     char *ndir = "t230 dir";
@@ -240,8 +238,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test231()
-{
+STATIC void test231() {
     int  dir = 0;
     char *name = "t231 file";
     char *name1 = "t231 file user 2";
@@ -358,8 +355,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test232()
-{
+STATIC void test232() {
     int  dir = 0;
     char *name = "t232 file";
     char *ndir = "t232 dir";
@@ -426,8 +422,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test345()
-{
+STATIC void test345() {
     int  dir = 0;
     char *name = "t345 file";
     char *ndir = "t345 dir";
@@ -512,8 +507,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test346()
-{
+STATIC void test346() {
     int  dir = 0;
     char *name = "t346 file";
     char *ndir = "t346 dir";
@@ -573,8 +567,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test347()
-{
+STATIC void test347() {
     int  dir = 0;
     char *name = "t347 file";
     char *ndir = "t347 dir";
@@ -663,8 +656,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test348()
-{
+STATIC void test348() {
     int  dir = 0;
     char *ndir = "t348 dir";
     char *name = "t348 file";
@@ -730,8 +722,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test349()
-{
+STATIC void test349() {
     int  dir = 0;
     int  dir1 = 0;
     char *ndir = "t349 dir";
@@ -805,8 +796,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test350()
-{
+STATIC void test350() {
     int  dir = 0;
     char *ndir = "t350 dir";
     char *name = "t350 file";
@@ -881,8 +871,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test358()
-{
+STATIC void test358() {
     int  dir = 0;
     char *name = "t358 file";
     char *name1 = "t358 file user 2";
@@ -982,8 +971,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test359()
-{
+STATIC void test359() {
     int  dir = 0;
     char *name = "t359 file.pdf";
     char *ndir = "t359 dir";
@@ -1073,8 +1061,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test361()
-{
+STATIC void test361() {
     int  dir = 0;
     char *name = "t361 file.pdf";
     char *ndir = "t361 dir";
@@ -1179,8 +1166,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test400()
-{
+STATIC void test400() {
     int  dir = 0;
     char *name = "t400 file.pdf";
     char *ndir = "t400 dir";
@@ -1232,8 +1218,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPSetFileDirParms_test()
-{
+void FPSetFileDirParms_test() {
     ENTER_TESTSET
     test98();
     test230();

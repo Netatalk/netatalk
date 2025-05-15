@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ----------- */
-STATIC void test186()
-{
+STATIC void test186() {
     int fork;
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
@@ -40,8 +39,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test187()
-{
+STATIC void test187() {
     char *name = "t187 illegal fork";
     DSI *dsi;
     dsi = &Conn->dsi;
@@ -51,8 +49,7 @@ STATIC void test187()
 }
 
 /* ----------- */
-void FPCloseFork_test()
-{
+void FPCloseFork_test() {
     ENTER_TESTSET
     test186();
     test187();

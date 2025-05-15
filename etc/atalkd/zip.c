@@ -41,8 +41,7 @@
 
 struct ziptab	*ziptab = NULL, *ziplast = NULL;
 
-static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
-{
+static int zonecheck(struct rtmptab *rtmp, struct interface *iface) {
     struct list		*l;
     struct ziptab	*czt, *zt;
     int			cztcnt, ztcnt;
@@ -83,8 +82,8 @@ static int zonecheck(struct rtmptab *rtmp, struct interface *iface)
 }
 
 
-int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
-{
+int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data,
+               int len) {
     struct ziphdr	zh;
     struct atphdr	ah;
     struct interface	*iface;
@@ -950,8 +949,7 @@ int zip_packet(struct atport *ap, struct sockaddr_at *from, char *data, int len)
     return 0;
 }
 
-int zip_getnetinfo(struct interface *iface)
-{
+int zip_getnetinfo(struct interface *iface) {
     struct atport	*ap;
     struct ziphdr	zh;
     struct sockaddr_at	sat;
@@ -1004,8 +1002,7 @@ int zip_getnetinfo(struct interface *iface)
     return 0;
 }
 
-struct ziptab *newzt(const int len, const char *name)
-{
+struct ziptab *newzt(const int len, const char *name) {
     struct ziptab	*zt;
 
     if ((zt = (struct ziptab *)calloc(1, sizeof(struct ziptab))) == NULL) {
@@ -1028,8 +1025,7 @@ struct ziptab *newzt(const int len, const char *name)
  * Insert at the end.  Return 1 if a mapping already exists, 0 otherwise.
  * -1 on error.
  */
-static int add_list(struct list **head, void *data)
-{
+static int add_list(struct list **head, void *data) {
     struct list	*l, *l2;
 
     for (l = *head; l; l = l->l_next) {
@@ -1061,8 +1057,7 @@ static int add_list(struct list **head, void *data)
     return 0;
 }
 
-int addzone(struct rtmptab *rt, int len, char *zone)
-{
+int addzone(struct rtmptab *rt, int len, char *zone) {
     struct ziptab	*zt;
     int			cc, exists = 0;
 

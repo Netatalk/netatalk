@@ -21,8 +21,7 @@
 
 #include <atalk/logger.h>
 
-int main(int argc _U_, char *argv[] _U_)
-{
+int main(int argc _U_, char *argv[] _U_) {
     set_processname("logger_Test");
     /* syslog testing */
     setuplog("default:severe", NULL, false);

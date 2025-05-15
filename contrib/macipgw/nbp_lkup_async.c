@@ -48,8 +48,7 @@
 extern int gDebug;
 extern int nbp_parse(char *, struct nbpnve *, int);
 
-static char *nbp_addstring(char *p, char *s)
-{
+static char *nbp_addstring(char *p, char *s) {
     int i;
 
     if (s) {
@@ -68,8 +67,7 @@ static char *nbp_addstring(char *p, char *s)
 }
 
 static char *nbp_addtuple(char *p, struct sockaddr_at addr,
-                          char *name, char *type, char *zone)
-{
+                          char *name, char *type, char *zone) {
     struct nbptuple nt;
     nt.nt_net = addr.sat_addr.s_net;
     nt.nt_node = addr.sat_addr.s_node;
@@ -82,8 +80,7 @@ static char *nbp_addtuple(char *p, struct sockaddr_at addr,
     return p;
 }
 
-int nbp_lookup_req(int s, char *name, char *type, char *zone)
-{
+int nbp_lookup_req(int s, char *name, char *type, char *zone) {
     static int rqid = 1;
     static int nbp_port = 0;
     struct sockaddr_at addr;
@@ -135,8 +132,7 @@ int nbp_lookup_req(int s, char *name, char *type, char *zone)
     return 0;
 }
 
-struct nbpnve *nbp_parse_lkup_repl(char *buffer, int len)
-{
+struct nbpnve *nbp_parse_lkup_repl(char *buffer, int len) {
     static char *lastbuffer = NULL;
     static char *nexttuple = NULL;
     static struct nbpnve nve;

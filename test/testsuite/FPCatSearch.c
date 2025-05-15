@@ -4,8 +4,7 @@
 
 
 /* ------------------------- */
-STATIC void test225()
-{
+STATIC void test225() {
     uint16_t bitmap = (1 << FILPBIT_ATTR);
     char *name = "t225 file.txt";
     uint16_t vol = VolID;
@@ -118,8 +117,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCatSearch_test()
-{
+void FPCatSearch_test() {
     ENTER_TESTSET
     test225();
 }

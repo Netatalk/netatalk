@@ -56,8 +56,7 @@ struct charset_functions charset_mac_centraleurope = {
 
 static size_t mac_centraleurope_push(void *cd, char **inbuf,
                                      size_t *inbytesleft,
-                                     char **outbuf, size_t *outbytesleft)
-{
+                                     char **outbuf, size_t *outbytesleft) {
     return (size_t) mb_generic_push(char_ucs2_to_mac_centraleurope, cd, inbuf,
                                     inbytesleft, outbuf, outbytesleft);
 }
@@ -66,8 +65,7 @@ static size_t mac_centraleurope_push(void *cd, char **inbuf,
 
 static size_t mac_centraleurope_pull(void *cd, char **inbuf,
                                      size_t *inbytesleft,
-                                     char **outbuf, size_t *outbytesleft)
-{
+                                     char **outbuf, size_t *outbytesleft) {
     return (size_t) mb_generic_pull(char_mac_centraleurope_to_ucs2, cd, inbuf,
                                     inbytesleft, outbuf, outbytesleft);
 }

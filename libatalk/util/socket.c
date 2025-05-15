@@ -50,8 +50,7 @@ static char ipv4mapprefix[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
  *
  * @returns   0 on success, -1 on failure
  */
-int setnonblock(int fd, int cmd)
-{
+int setnonblock(int fd, int cmd) {
     int ofdflags;
     int fdflags;
 
@@ -86,8 +85,7 @@ int setnonblock(int fd, int cmd)
  * @returns number of bytes actually read or -1 on timeout or error
  */
 ssize_t readt(int socket, void *data, const size_t length, int setnonblocking,
-              int timeout)
-{
+              int timeout) {
     size_t stored = 0;
     ssize_t len = 0;
     struct timeval now, end, tv;
@@ -215,8 +213,7 @@ exit:
  * @returns number of bytes actually read or -1 on fatal error
  */
 ssize_t writet(int socket, void *data, const size_t length, int setnonblocking,
-               int timeout)
-{
+               int timeout) {
     size_t stored = 0;
     ssize_t len = 0;
     struct timeval now, end, tv;
@@ -324,8 +321,7 @@ exit:
  * @returns pointer to a static string cotaining the converted address as string.\n
  *          On error pointers to "0.0.0.0" or "::0" are returned.
  */
-const char *getip_string(const struct sockaddr *sa)
-{
+const char *getip_string(const struct sockaddr *sa) {
     static char ip4[INET_ADDRSTRLEN];
     static char ip6[INET6_ADDRSTRLEN];
 
@@ -370,8 +366,7 @@ const char *getip_string(const struct sockaddr *sa)
  *
  * @returns port as unsigned int
  */
-unsigned int getip_port(const struct sockaddr  *sa)
-{
+unsigned int getip_port(const struct sockaddr  *sa) {
     if (sa->sa_family == AF_INET) { /* IPv4 */
         const struct sockaddr_in *sai4 = (const struct sockaddr_in *)sa;
         return ntohs(sai4->sin_port);
@@ -394,8 +389,7 @@ unsigned int getip_port(const struct sockaddr  *sa)
  * @param  ai        (rw) pointer to an struct sockaddr
  * @parma  mask      (r) number of maskbits
  */
-void apply_ip_mask(struct sockaddr *sa, int mask)
-{
+void apply_ip_mask(struct sockaddr *sa, int mask) {
     switch (sa->sa_family) {
     case AF_INET: {
         if (mask >= 32) {
@@ -457,8 +451,7 @@ void apply_ip_mask(struct sockaddr *sa, int mask)
  *
  * @note IPv6 mapped IPv4 addresses are treated as IPv4 addresses.
  */
-int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
-{
+int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2) {
     int ret;
     char *ip1;
     const char *ip2;
@@ -488,8 +481,7 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
  * If the function returns -1, then the contents of address and port are
  * undefined.
  */
-int tokenize_ip_port(const char *ipurl, char **address, char **port)
-{
+int tokenize_ip_port(const char *ipurl, char **address, char **port) {
     EC_INIT;
     char *p = NULL;
     char *s;
@@ -560,8 +552,7 @@ EC_CLEANUP:
 /**
  * Allocate and initialize atalk socket event struct
  **/
-struct asev *asev_init(int max)
-{
+struct asev *asev_init(int max) {
     struct asev *asev = calloc(1, sizeof(struct asev));
 
     if (asev == NULL) {
@@ -594,8 +585,7 @@ bool asev_add_fd(struct asev *asev,
                  int fd,
                  enum asev_fdtype fdtype,
                  void *private,
-                 int protocol)
-{
+                 int protocol) {
     if (asev == NULL) {
         return false;
     }
@@ -618,8 +608,7 @@ bool asev_add_fd(struct asev *asev,
  *
  * @returns true if the fd was deleted, otherwise false
  **/
-bool asev_del_fd(struct asev *asev, int fd)
-{
+bool asev_del_fd(struct asev *asev, int fd) {
     int i;
     int numafter;
 
@@ -678,8 +667,7 @@ bool asev_del_fd(struct asev *asev, int fd)
  * @args nonblocking (r) 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
  * @returns fd on success, -1 on error
  */
-int recv_fd(int fd, int nonblocking)
-{
+int recv_fd(int fd, int nonblocking) {
     int ret;
     struct msghdr msgh;
     struct iovec iov[1];
@@ -742,8 +730,7 @@ int recv_fd(int fd, int nonblocking)
 /*
  * Send a fd across a suitable socket
  */
-int send_fd(int socket, int fd)
-{
+int send_fd(int socket, int fd) {
     int ret;
     struct msghdr msgh;
     struct iovec iov[1];

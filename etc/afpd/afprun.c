@@ -52,8 +52,7 @@
 This is a utility function of afprun().
 ****************************************************************************/
 
-static int setup_out_fd(void)
-{
+static int setup_out_fd(void) {
     int fd;
     char path[MAXPATHLEN + 1];
     snprintf(path, sizeof(path) -1, "%s/afp.XXXXXX", tmpdir());
@@ -75,8 +74,7 @@ static int setup_out_fd(void)
  Gain root privilege before doing something.
  We want to end up with ruid==euid==0
 ****************************************************************************/
-static void gain_root_privilege(void)
-{
+static void gain_root_privilege(void) {
     if (seteuid(0) < 0) {
         LOG(log_error, logtype_afpd, "gain_root_privilege: could not seteuid(%i)", 0);
     }
@@ -86,8 +84,7 @@ static void gain_root_privilege(void)
  Ensure our real and effective groups are zero.
  we want to end up with rgid==egid==0
 ****************************************************************************/
-static void gain_root_group_privilege(void)
-{
+static void gain_root_group_privilege(void) {
     if (setegid(0) < 0) {
         LOG(log_error, logtype_afpd, "gain_root_group_privilege: could not setegid(%i)",
             0);
@@ -98,8 +95,7 @@ static void gain_root_group_privilege(void)
  Become the specified uid and gid - permanently !
  there should be no way back if possible
 ****************************************************************************/
-static int become_user_permanently(uid_t uid, gid_t gid)
-{
+static int become_user_permanently(uid_t uid, gid_t gid) {
     int ret;
     /*
      * First - gain root privilege. We do this to ensure
@@ -266,8 +262,7 @@ run a command being careful about uid/gid handling and putting the output in
 outfd (or discard it if outfd is NULL).
 ****************************************************************************/
 
-int afprun(char *cmd, int *outfd)
-{
+int afprun(char *cmd, int *outfd) {
     pid_t pid;
     uid_t uid = geteuid();
     gid_t gid = getegid();
@@ -389,8 +384,7 @@ int afprun(char *cmd, int *outfd)
  * Run a command in the background without waiting,
  * being careful about uid/gid handling
  */
-int afprun_bg(char *cmd)
-{
+int afprun_bg(char *cmd) {
     pid_t pid;
     uid_t uid = geteuid();
     gid_t gid = getegid();

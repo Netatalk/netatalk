@@ -69,8 +69,7 @@ static const struct param {
 
 #define ARGV_CHUNK_SIZE 128
 #define MAXLINELEN 2048
-static char **at_parseline(const char *line)
-{
+static char **at_parseline(const char *line) {
     const char	 *p;
     int		  argc = 0;
     char	 *buffer, *tmpbuf;
@@ -157,8 +156,7 @@ static char **at_parseline(const char *line)
     return argv;
 }
 
-static void freeline(char **argv)
-{
+static void freeline(char **argv) {
     char **tmp = argv;
 
     if (argv) {
@@ -171,8 +169,7 @@ static void freeline(char **argv)
     }
 }
 
-int writeconf(char *cf)
-{
+int writeconf(char *cf) {
     struct stat		st;
     char		*path, *p, newpath[MAXPATHLEN], line[MAXLINELEN];
     char		**argv;
@@ -327,8 +324,7 @@ int writeconf(char *cf)
  * zone for an interface is the first zone encountered for that
  * interface.
  */
-int readconf(char *cf)
-{
+int readconf(char *cf) {
     struct ifreq	ifr;
     struct interface	*iface, *niface;
     char		line[MAXLINELEN], **argv, *p;
@@ -485,8 +481,7 @@ read_conf_err:
 }
 
 /*ARGSUSED*/
-int router(struct interface *iface, char **av _U_)
-{
+int router(struct interface *iface, char **av _U_) {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
     if (iface->i_flags & IFACE_DONTROUTE) {
         fprintf(stderr, "Can't specify both -router and -dontroute.\n");
@@ -507,8 +502,7 @@ int router(struct interface *iface, char **av _U_)
 }
 
 /*ARGSUSED*/
-int dontroute(struct interface *iface, char **av _U_)
-{
+int dontroute(struct interface *iface, char **av _U_) {
     /* make sure "-router" and "-dontroute" aren't both on the same line. */
     if (iface->i_flags & IFACE_RSEED) {
         fprintf(stderr, "Can't specify both -router and -dontroute.\n");
@@ -520,8 +514,7 @@ int dontroute(struct interface *iface, char **av _U_)
 }
 
 /*ARGSUSED*/
-int seed(struct interface *iface, char **av _U_)
-{
+int seed(struct interface *iface, char **av _U_) {
     /*
      * Check to be sure "-seed" is before "-zone". we keep the old
      * semantics of just ignoring this in a routerless world.
@@ -536,8 +529,7 @@ int seed(struct interface *iface, char **av _U_)
     return 1;
 }
 
-int phase(struct interface *iface, char **av)
-{
+int phase(struct interface *iface, char **av) {
     int			n;
     char		*pnum;
 
@@ -563,8 +555,7 @@ int phase(struct interface *iface, char **av)
     return 2;
 }
 
-int net(struct interface *iface, char **av)
-{
+int net(struct interface *iface, char **av) {
     char		*nrange;
     char		*stop;
     int			net;
@@ -641,8 +632,7 @@ int net(struct interface *iface, char **av)
     return 2;
 }
 
-int addr(struct interface *iface, char **av)
-{
+int addr(struct interface *iface, char **av) {
     if (av[0] == NULL) {
         fprintf(stderr, "No address.\n");
         return -1;
@@ -677,8 +667,7 @@ int addr(struct interface *iface, char **av)
     return 2;
 }
 
-int zone(struct interface *iface, char **av)
-{
+int zone(struct interface *iface, char **av) {
     struct ziptab	*zt;
     char		*zname;
 
@@ -727,8 +716,7 @@ int zone(struct interface *iface, char **av)
  * Get the configuration from the kernel. Only called if there's no
  * configuration.
  */
-int getifconf(void)
-{
+int getifconf(void) {
     struct interface	*iface, *niface;
     struct ifreq        ifr;
     char                **start, **list;
@@ -819,8 +807,7 @@ int getifconf(void)
  * the interface structure and have it updated nicely.
  */
 
-struct interface *newiface(const char *name)
-{
+struct interface *newiface(const char *name) {
     struct interface	*niface;
 
     if ((niface = (struct interface *)calloc(1, sizeof(struct interface)))
@@ -839,8 +826,7 @@ struct interface *newiface(const char *name)
 }
 
 #ifdef __svr4__
-int plumb(void)
-{
+int plumb(void) {
     struct interface	*iface;
     char		device[MAXPATHLEN + 1], *p, *t;
     int			fd, ppa;

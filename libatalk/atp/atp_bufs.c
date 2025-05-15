@@ -57,8 +57,7 @@ static int		numbufs = 0;
 /* only call this when the free_list is empty...
  * N_MORE_BUFS must be >= one
 */
-static int more_bufs(void)
-{
+static int more_bufs(void) {
     int			i;
     char		*mem;
     struct atpbuf	*bp;
@@ -85,8 +84,7 @@ static int more_bufs(void)
 
 
 #ifdef EBUG
-void atp_print_bufuse(ATP ah, char *s)
-{
+void atp_print_bufuse(ATP ah, char *s) {
     struct atpbuf *bp;
     int i;
     int sentcount;
@@ -127,8 +125,7 @@ void atp_print_bufuse(ATP ah, char *s)
 #endif /* EBUG */
 
 
-struct atpbuf *atp_alloc_buf(void)
-{
+struct atpbuf *atp_alloc_buf(void) {
     struct atpbuf *bp;
 
     if (free_list == NULL && more_bufs()) {
@@ -144,8 +141,7 @@ struct atpbuf *atp_alloc_buf(void)
 }
 
 
-int atp_free_buf(struct atpbuf *bp)
-{
+int atp_free_buf(struct atpbuf *bp) {
     if (bp == NULL) {
         return -1;
     }

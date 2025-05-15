@@ -291,8 +291,7 @@ static const unsigned char	ethermultitab[253][6] = {
 
 
 /* configure multicast for a given named interface */
-int addmulti(const char *name, const unsigned char *data)
-{
+int addmulti(const char *name, const unsigned char *data) {
     struct sockaddr sa;
     memset(&sa, 0, sizeof(sa));
     memcpy(sa.sa_data, data ? data : ethermulti, sizeof(ethermulti));
@@ -305,8 +304,7 @@ int addmulti(const char *name, const unsigned char *data)
 }
 
 static uint16_t
-atalk_cksum(unsigned char *data, int len)
-{
+atalk_cksum(unsigned char *data, int len) {
     unsigned char	*end;
     uint32_t	cksum = 0;
 
@@ -334,8 +332,7 @@ atalk_cksum(unsigned char *data, int len)
  * alike.)
  */
 int
-zone_bcast(struct ziptab *zt)
-{
+zone_bcast(struct ziptab *zt) {
     unsigned char		uname[32];
     uint16_t		cksum;
     int			i;

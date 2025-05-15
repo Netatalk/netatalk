@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-static void test_bytelock_ext(uint16_t vol, char *name, int type)
-{
+static void test_bytelock_ext(uint16_t vol, char *name, int type) {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -80,8 +79,7 @@ fin:
 
 /* ----------- */
 // FIXME: broken since at least 3.1.12
-STATIC void test66()
-{
+STATIC void test66() {
     char *name = "t66 FPByteLock_ext DF";
     ENTER_TEST
 
@@ -97,8 +95,7 @@ test_exit:
 
 /* ----------- */
 // FIXME: broken since at least 3.1.12 - could not locate fork
-STATIC void test67()
-{
+STATIC void test67() {
     char *name = "t67 FPByteLock_ext RF";
     ENTER_TEST
 
@@ -114,8 +111,7 @@ test_exit:
 
 
 /* -------------------------- */
-STATIC void test195()
-{
+STATIC void test195() {
     char *name = "test195 illegal fork";
     DSI *dsi;
     dsi = &Conn->dsi;
@@ -132,8 +128,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPByteRangeLockExt_test()
-{
+void FPByteRangeLockExt_test() {
     ENTER_TESTSET
 #if 0
     test66();

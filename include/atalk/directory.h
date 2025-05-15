@@ -97,8 +97,7 @@ struct path {
     struct stat st;
 };
 
-static inline int path_isadir(struct path *o_path)
-{
+static inline int path_isadir(struct path *o_path) {
     return o_path->d_dir != NULL;
 #if 0
     return o_path->m_name == '\0' || /* we are in a it */

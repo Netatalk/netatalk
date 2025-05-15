@@ -75,8 +75,7 @@ extern int afprun(char *cmd, int *outfd);
  * @param path   (r) path to Info.plist file
  * @return           band-size in bytes, -1 on error
  */
-static long long int get_tm_bandsize(const char *path)
-{
+static long long int get_tm_bandsize(const char *path) {
     EC_INIT;
     FILE *file = NULL;
     char buf[512];
@@ -121,8 +120,7 @@ EC_CLEANUP:
  * @param path   (r) path to dir
  * @return           number of entries, -1 on error
  */
-static long long int get_tm_bands(const char *path)
-{
+static long long int get_tm_bands(const char *path) {
     EC_INIT;
     long long int count = 0;
     DIR *dir = NULL;
@@ -172,8 +170,7 @@ EC_CLEANUP:
  * @return             0 on success, -1 on error
  */
 #define TM_USED_CACHETIME 60    /* cache for 60 seconds */
-static int get_tm_used(struct vol * restrict vol)
-{
+static int get_tm_used(struct vol * restrict vol) {
     EC_INIT;
     long long int bandsize;
     VolSpace used = 0;
@@ -252,8 +249,7 @@ EC_CLEANUP:
 
 static int getvolspace(const AFPObj *obj, struct vol *vol,
                        uint32_t *bfree, uint32_t *btotal,
-                       VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize)
-{
+                       VolSpace *xbfree, VolSpace *xbtotal, uint32_t *bsize) {
     int         rc;
     uint32_t   maxsize;
 #ifndef NO_QUOTA_SUPPORT
@@ -306,8 +302,7 @@ getvolspace_done:
  * set volume creation date
  * avoid duplicate, well at least it tries
  */
-static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
-{
+static void vol_setdate(uint16_t id, struct adouble *adp, time_t date) {
     struct vol  *volume;
     struct vol  *vol = getvolumes();
 
@@ -326,8 +321,7 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 
 /* ----------------------- */
 static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
-                        struct stat *st, char *buf, size_t *buflen)
-{
+                        struct stat *st, char *buf, size_t *buflen) {
     struct adouble  ad;
     int bit = 0, isad = 1;
     uint32_t aint;
@@ -570,8 +564,7 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
 
 /* ------------------------- */
 static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
-                    char *rbuf, size_t *rbuflen)
-{
+                    char *rbuf, size_t *rbuflen) {
     struct stat st;
     int     ret;
     size_t  buflen;
@@ -599,8 +592,7 @@ static int stat_vol(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
 
 /* ------------------------------- */
 int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
-                     char *rbuf, size_t *rbuflen)
-{
+                     char *rbuf, size_t *rbuflen) {
     struct timeval  tv;
     struct stat     st;
     struct vol      *volume;
@@ -690,8 +682,7 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
 }
 
 /* ------------------------- */
-static int volume_codepage(AFPObj *obj, struct vol *volume)
-{
+static int volume_codepage(AFPObj *obj, struct vol *volume) {
     struct charset_functions *charset;
     /* Codepages */
 
@@ -736,8 +727,7 @@ static int volume_codepage(AFPObj *obj, struct vol *volume)
 }
 
 /* ------------------------- */
-static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
-{
+static int volume_openDB(const AFPObj *obj _U_, struct vol *volume) {
     int flags = 0;
 
     if (volume->v_flags & AFPVOL_NODEV) {
@@ -758,8 +748,7 @@ static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
 /*
  * Send list of open volumes to afpd master via IPC
  */
-static void server_ipc_volumes(AFPObj *obj)
-{
+static void server_ipc_volumes(AFPObj *obj) {
     struct vol *volume, *vols;
     volume = vols = getvolumes();
     bstring openvolnames = bfromcstr("");
@@ -788,8 +777,7 @@ static void server_ipc_volumes(AFPObj *obj)
  * we are the user here
  */
 int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct stat st;
     char    *volname;
     struct vol  *volume;
@@ -990,8 +978,7 @@ openvol_err:
     return ret;
 }
 
-void closevol(const AFPObj *obj, struct vol *vol)
-{
+void closevol(const AFPObj *obj, struct vol *vol) {
     if (!vol) {
         return;
     }
@@ -1012,8 +999,7 @@ void closevol(const AFPObj *obj, struct vol *vol)
 }
 
 /* ------------------------- */
-void close_all_vol(const AFPObj *obj)
-{
+void close_all_vol(const AFPObj *obj) {
     struct vol  *ovol;
     curdir = NULL;
 
@@ -1027,8 +1013,7 @@ void close_all_vol(const AFPObj *obj)
 
 /* ------------------------- */
 int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                 size_t *rbuflen)
-{
+                 size_t *rbuflen) {
     struct vol  *vol;
     uint16_t   vid;
     *rbuflen = 0;
@@ -1095,8 +1080,7 @@ int  pollvoltime(AFPObj *obj)
 }
 
 /* ------------------------- */
-void setvoltime(AFPObj *obj, struct vol *vol)
-{
+void setvoltime(AFPObj *obj, struct vol *vol) {
     struct timeval  tv;
 
     if (obj->proto == AFPPROTO_DSI) {
@@ -1130,8 +1114,7 @@ void setvoltime(AFPObj *obj, struct vol *vol)
 
 /* ------------------------- */
 int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                     size_t *rbuflen)
-{
+                     size_t *rbuflen) {
     struct vol  *vol;
     uint16_t   vid, bitmap;
     ibuf += 2;
@@ -1150,8 +1133,7 @@ int afp_getvolparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
 /* ------------------------- */
 int afp_setvolparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                     char *rbuf _U_,  size_t *rbuflen)
-{
+                     char *rbuf _U_,  size_t *rbuflen) {
     struct adouble ad;
     struct vol  *vol;
     uint16_t   vid, bitmap;

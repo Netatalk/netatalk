@@ -33,8 +33,7 @@
 #ifdef HAVE_NFSV4_ACLS
 
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
-int remove_acl_vfs(const char *name)
-{
+int remove_acl_vfs(const char *name) {
     int ret, i, ace_count, trivial_aces, new_aces_count;
     ace_t *old_aces = NULL;
     ace_t *new_aces = NULL;
@@ -101,8 +100,7 @@ exit:
  *
  * @returns AFP error code, AFP_OK (= 0) on success, AFPERR_MISC on error
  */
-int remove_acl_vfs(const char *name)
-{
+int remove_acl_vfs(const char *name) {
     EC_INIT;
     struct stat st;
     acl_t acl = NULL;

@@ -111,8 +111,7 @@ static char *fce_event_names[] = {
  * We don't give return code because all errors are handled internally (I hope..)
  *
  * */
-void fce_init_udp(void)
-{
+void fce_init_udp(void) {
     int rv;
     struct addrinfo hints, *servinfo, *p;
 
@@ -166,8 +165,7 @@ void fce_init_udp(void)
     udp_initialized = true;
 }
 
-void fce_cleanup(void)
-{
+void fce_cleanup(void) {
     if (udp_initialized == false) {
         return;
     }
@@ -195,8 +193,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
                                 const char *oldpath,
                                 pid_t pid,
                                 const char *user,
-                                uint32_t event_id)
-{
+                                uint32_t event_id) {
     unsigned char *p = iobuf;
     size_t pathlen;
     ssize_t datalen = 0;
@@ -371,8 +368,7 @@ static ssize_t build_fce_packet(const AFPObj *obj,
  * We don't give return code because all errors are handled internally (I hope..)
  */
 static void send_fce_event(const AFPObj *obj, int event, const char *path,
-                           const char *oldpath)
-{
+                           const char *oldpath) {
     static bool first_event = true;
     /* the unique packet couter to detect packet/data loss.
      * Going from 0xFFFFFFFF to 0x0 is a valid increment */
@@ -525,8 +521,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
     event_id++;
 }
 
-static int add_udp_socket(const char *target_ip, const char *target_port)
-{
+static int add_udp_socket(const char *target_ip, const char *target_port) {
     if (target_port == NULL) {
         target_port = FCE_DEFAULT_PORT_STRING;
     }
@@ -548,8 +543,7 @@ static int add_udp_socket(const char *target_ip, const char *target_port)
     return AFP_OK;
 }
 
-static void save_close_event(const AFPObj *obj, const char *path)
-{
+static void save_close_event(const AFPObj *obj, const char *path) {
     time_t now = time(NULL);
 
     /* Check if it's a close for the same event as the last one */
@@ -566,8 +560,7 @@ static void save_close_event(const AFPObj *obj, const char *path)
 
 static void fce_init_ign_paths(const char *ignores,
                                const char ***dest_array,
-                               bool is_directory)
-{
+                               bool is_directory) {
     char *names = strdup(ignores);
     char *saveptr = NULL;
     int capacity = 10;  // Initial capacity, will grow if needed
@@ -611,8 +604,7 @@ static void fce_init_ign_paths(const char *ignores,
  *
  * */
 int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
-                 const char *oldpath)
-{
+                 const char *oldpath) {
     static bool first_event = true;
     const char *bname;
     const char *dirname;
@@ -694,8 +686,7 @@ int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
     return AFP_OK;
 }
 
-static void check_saved_close_events(const AFPObj *obj)
-{
+static void check_saved_close_events(const AFPObj *obj) {
     time_t now = time(NULL);
 
     /* check if configured holdclose time has passed */
@@ -715,8 +706,7 @@ static void check_saved_close_events(const AFPObj *obj)
 /*
  * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
  * */
-void fce_pending_events(const AFPObj *obj)
-{
+void fce_pending_events(const AFPObj *obj) {
     if (!udp_sockets) {
         return;
     }
@@ -729,8 +719,7 @@ void fce_pending_events(const AFPObj *obj)
  * Extern connect to afpd parameter, can be called multiple times for multiple listeners (up to MAX_UDP_SOCKS times)
  *
  * */
-int fce_add_udp_socket(const char *target)
-{
+int fce_add_udp_socket(const char *target) {
     const char *port = FCE_DEFAULT_PORT_STRING;
     char target_ip[256] = {""};
     strncpy(target_ip, target, sizeof(target_ip) - 1);
@@ -744,8 +733,7 @@ int fce_add_udp_socket(const char *target)
     return add_udp_socket(target_ip, port);
 }
 
-int fce_set_events(const char *events)
-{
+int fce_set_events(const char *events) {
     char *e;
     char *p;
 

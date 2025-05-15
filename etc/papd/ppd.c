@@ -52,8 +52,7 @@ struct ppdent {
 #ifndef SHOWPPD
 static int ppd_inited;
 
-static void ppd_init(void)
-{
+static void ppd_init(void) {
     if (ppd_inited) {
         return;
     }
@@ -69,8 +68,7 @@ static void ppd_init(void)
 
 /* quick and ugly hack to be able to read
    ppd files with Mac line ending */
-static char *my_fgets(char *buf, size_t bufsize, FILE *stream)
-{
+static char *my_fgets(char *buf, size_t bufsize, FILE *stream) {
     int p = 0;
     size_t count = 0;
 
@@ -96,8 +94,7 @@ static char *my_fgets(char *buf, size_t bufsize, FILE *stream)
     return buf;
 }
 
-static struct ppdent *getppdent(FILE *stream)
-{
+static struct ppdent *getppdent(FILE *stream) {
     static char			buf[1024];
     static struct ppdent	ppdent;
     char			*p, *q;
@@ -194,8 +191,7 @@ static struct ppdent *getppdent(FILE *stream)
     return NULL;
 }
 
-int read_ppd(char *file, int fcnt)
-{
+int read_ppd(char *file, int fcnt) {
     FILE		*ppdfile;
     struct ppdent	*pe;
     struct ppd_feature	*pfe;
@@ -271,8 +267,7 @@ int read_ppd(char *file, int fcnt)
     return 0;
 }
 
-struct ppd_font *ppd_font(char *font)
-{
+struct ppd_font *ppd_font(char *font) {
     struct ppd_font	*pfo;
 #ifndef SHOWPPD
 
@@ -291,8 +286,7 @@ struct ppd_font *ppd_font(char *font)
     return NULL;
 }
 
-struct ppd_feature *ppd_feature(const char *feature, int len)
-{
+struct ppd_feature *ppd_feature(const char *feature, int len) {
     struct ppd_feature	*pfe;
     char		ppd_feature_main[256];
     const char		*end, *p;

@@ -45,8 +45,7 @@
 
 #define EXEC_MODE (S_IXGRP | S_IXUSR | S_IXOTH)
 
-int setdeskmode(const struct vol *vol, const mode_t mode)
-{
+int setdeskmode(const struct vol *vol, const mode_t mode) {
     EC_INIT;
     char		wd[MAXPATHLEN + 1];
     struct stat         st;
@@ -159,8 +158,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
-{
+int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid) {
     EC_INIT;
     char		wd[MAXPATHLEN + 1];
     char		modbuf[12 + 1], *m;
@@ -240,8 +238,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static void create_appledesktop_folder(const struct vol * vol)
-{
+static void create_appledesktop_folder(const struct vol * vol) {
     bstring olddtpath = NULL, dtpath = NULL;
     struct stat st;
     olddtpath = bfromcstr(vol->v_path);
@@ -272,8 +269,7 @@ static void create_appledesktop_folder(const struct vol * vol)
 }
 
 int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-               size_t *rbuflen)
-{
+               size_t *rbuflen) {
     struct vol	*vol;
     uint16_t	vid;
     ibuf += 2;
@@ -291,21 +287,18 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
-                char *rbuf _U_, size_t *rbuflen)
-{
+                char *rbuf _U_, size_t *rbuflen) {
     *rbuflen = 0;
     return AFP_OK;
 }
 
 static struct savedt	si = { { 0, 0, 0, 0 }, -1, 0, 0 };
 
-static char *icon_dtfile(struct vol *vol, uint8_t creator[4])
-{
+static char *icon_dtfile(struct vol *vol, uint8_t creator[4]) {
     return dtfile(vol, creator, ".icon");
 }
 
-static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
-{
+static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode) {
     char	*dtf, *adt, *adts;
 
     if (si.sdt_fd != -1) {
@@ -354,8 +347,7 @@ static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 }
 
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct vol* vol;
 #ifndef NO_DDP
     struct iovec	iov[2];
@@ -547,8 +539,7 @@ static const short	usize = 256;
 
 
 int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                    size_t *rbuflen)
-{
+                    size_t *rbuflen) {
     struct vol	*vol;
     unsigned char	fcreator[4], ih[12];
     uint16_t	vid, iindex, bsize;
@@ -625,8 +616,7 @@ int afp_geticoninfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
 
 int afp_geticon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                size_t *rbuflen)
-{
+                size_t *rbuflen) {
     struct vol	*vol;
     off_t       offset;
     ssize_t	rc, buflen;
@@ -778,8 +768,7 @@ geticon_exit:
 
 /* ---------------------- */
 static const char		hexdig[] = "0123456789abcdef";
-char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
-{
+char *dtfile(const struct vol *vol, uint8_t creator[], char *ext) {
     static char	path[MAXPATHLEN + 1];
     char	*p;
     unsigned int i;
@@ -817,8 +806,7 @@ char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
  * did filename parent directory ID.
 */
 
-char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
-{
+char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8) {
     /* for convert_charset dest_len parameter +2 */
     static char  upath[MAXPATHLEN + 2];
     char	*m, *u;
@@ -859,8 +847,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
 /* ---------------
  * id filename ID
 */
-char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
-{
+char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8) {
     /* for convert_charset dest_len parameter +2 */
     static char  mpath[MAXPATHLEN + 2];
     char        *m, *u;
@@ -898,8 +885,7 @@ utompath_error:
 
 /* ------------------------- */
 static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
-                         char *ibuf)
-{
+                         char *ibuf) {
     struct ofork        *of;
     char                *name, *upath;
     int                 isadir;
@@ -950,8 +936,7 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
 
 /* ----------------------------- */
 int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                   size_t *rbuflen)
-{
+                   size_t *rbuflen) {
     struct vol		*vol;
     struct dir		*dir;
     struct path         *path;
@@ -986,8 +971,7 @@ int afp_addcomment(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
 /* -------------------- */
 static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
-                         size_t *rbuflen)
-{
+                         size_t *rbuflen) {
     struct adouble	ad, *adp;
     struct ofork        *of;
     char		*upath;
@@ -1032,8 +1016,7 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
 
 /* -------------------- */
 int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                   size_t *rbuflen)
-{
+                   size_t *rbuflen) {
     struct vol		*vol;
     struct dir		*dir;
     struct path         *s_path;
@@ -1063,8 +1046,8 @@ int afp_getcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 }
 
 /* ----------------------- */
-static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
-{
+static int ad_rmvcomment(const AFPObj *obj, struct vol *vol,
+                         struct path *path) {
     struct adouble	ad, *adp;
     struct ofork        *of;
     int                 isadir;
@@ -1109,8 +1092,7 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
 
 /* ----------------------- */
 int afp_rmvcomment(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                   char *rbuf _U_, size_t *rbuflen)
-{
+                   char *rbuf _U_, size_t *rbuflen) {
     struct vol		*vol;
     struct dir		*dir;
     struct path         *s_path;

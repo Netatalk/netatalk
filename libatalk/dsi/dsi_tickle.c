@@ -17,8 +17,7 @@
 
 /* server generated tickles. as this is only called by the tickle handler,
  * we don't need to block signals. */
-int dsi_tickle(DSI *dsi)
-{
+int dsi_tickle(DSI *dsi) {
     char block[DSI_BLOCKSIZ];
     uint16_t id;
 

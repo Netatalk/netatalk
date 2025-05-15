@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* -------------------------- */
-STATIC void test51()
-{
+STATIC void test51() {
     uint16_t bitmap;
     int fork = 0;
     char *name1 = "t51 file";
@@ -94,8 +93,7 @@ test_exit:
 /* --------------------------
  * test for japanese convertion
 */
-STATIC void test393()
-{
+STATIC void test393() {
 // char *name2 = "t393 \343\203\262\343\202\231.txt"; /* \231 is bogus */
 // char *name2 = "t393 \343\203\262\343\202.txt";
 // char *name2 = "\210m";
@@ -150,8 +148,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPCreateFile_test()
-{
+void FPCreateFile_test() {
     ENTER_TESTSET
     test51();
 }

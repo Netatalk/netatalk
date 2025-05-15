@@ -44,8 +44,7 @@ static sigset_t sigblockset;
 /* Registers new CNID backend module. */
 
 /* Once module has been registered, it cannot be unregistered. */
-void cnid_register(struct _cnid_module *module)
-{
+void cnid_register(struct _cnid_module *module) {
     struct list_head *ptr;
     /* Check if our module is already registered. */
     list_for_each(ptr, &modules)
@@ -62,8 +61,7 @@ void cnid_register(struct _cnid_module *module)
 }
 
 /* --------------- */
-static int cnid_dir(const char *dir, mode_t mask)
-{
+static int cnid_dir(const char *dir, mode_t mask) {
     struct stat st, st1;
     char tmp[MAXPATHLEN];
 
@@ -101,8 +99,7 @@ static int cnid_dir(const char *dir, mode_t mask)
 }
 
 /* Opens CNID database using particular back-end */
-struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
-{
+struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags) {
     struct _cnid_db *db;
     cnid_module *mod = NULL;
     struct list_head *ptr;
@@ -191,16 +188,14 @@ struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 }
 
 /* ------------------- */
-static void block_signal(uint32_t flags)
-{
+static void block_signal(uint32_t flags) {
     if (flags & CNID_FLAG_BLOCK) {
         pthread_sigmask(SIG_BLOCK, &sigblockset, NULL);
     }
 }
 
 /* ------------------- */
-static void unblock_signal(uint32_t flags)
-{
+static void unblock_signal(uint32_t flags) {
     if (flags & CNID_FLAG_BLOCK) {
         pthread_sigmask(SIG_UNBLOCK, &sigblockset, NULL);
     }
@@ -210,8 +205,7 @@ static void unblock_signal(uint32_t flags)
   protect against bogus value from the DB.
   adddir really doesn't like 2
 */
-static cnid_t valide(cnid_t id)
-{
+static cnid_t valide(cnid_t id) {
     if (id == CNID_INVALID) {
         return id;
     }
@@ -231,8 +225,7 @@ static cnid_t valide(cnid_t id)
 }
 
 /* Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
-void cnid_close(struct _cnid_db *db)
-{
+void cnid_close(struct _cnid_db *db) {
     uint32_t flags;
 
     if (NULL == db) {
@@ -249,8 +242,7 @@ void cnid_close(struct _cnid_db *db)
 
 /* --------------- */
 cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
-                const char *name, const size_t len, cnid_t hint)
-{
+                const char *name, const size_t len, cnid_t hint) {
     cnid_t ret;
 
     if (len == 0) {
@@ -264,8 +256,7 @@ cnid_t cnid_add(struct _cnid_db *cdb, const struct stat *st, const cnid_t did,
 }
 
 /* --------------- */
-int cnid_delete(struct _cnid_db *cdb, cnid_t id)
-{
+int cnid_delete(struct _cnid_db *cdb, cnid_t id) {
     int ret;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_delete(cdb, id);
@@ -276,8 +267,7 @@ int cnid_delete(struct _cnid_db *cdb, cnid_t id)
 
 /* --------------- */
 cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
-                const size_t len)
-{
+                const size_t len) {
     cnid_t ret;
     block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_get(cdb, did, name, len));
@@ -286,8 +276,7 @@ cnid_t cnid_get(struct _cnid_db *cdb, const cnid_t did, char *name,
 }
 
 /* --------------- */
-int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
-{
+int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len) {
     cnid_t ret;
     time_t t;
 
@@ -313,8 +302,7 @@ int cnid_getstamp(struct _cnid_db *cdb,  void *buffer, const size_t len)
 /* --------------- */
 cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
                    const cnid_t did,
-                   char *name, const size_t len)
-{
+                   char *name, const size_t len) {
     cnid_t ret;
     block_signal(cdb->cnid_db_flags);
     ret = valide(cdb->cnid_lookup(cdb, st, did, name, len));
@@ -324,8 +312,7 @@ cnid_t cnid_lookup(struct _cnid_db *cdb, const struct stat *st,
 
 /* --------------- */
 int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-              void *buffer, size_t buflen)
-{
+              void *buffer, size_t buflen) {
     int ret;
 
     if (cdb->cnid_find == NULL) {
@@ -340,8 +327,7 @@ int cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
 }
 
 /* --------------- */
-char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
-{
+char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len) {
     char *ret;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_resolve(cdb, id, buffer, len);
@@ -357,8 +343,7 @@ char *cnid_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer, size_t len)
 
 /* --------------- */
 int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
-                const cnid_t did, char *name, const size_t len)
-{
+                const cnid_t did, char *name, const size_t len) {
     int ret;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_update(cdb, id, st, did, name, len);
@@ -369,8 +354,7 @@ int cnid_update(struct _cnid_db *cdb, const cnid_t id, const struct stat *st,
 /* --------------- */
 cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
                         const cnid_t did,
-                        char *name, const size_t len, cnid_t hint)
-{
+                        char *name, const size_t len, cnid_t hint) {
     cnid_t ret;
     block_signal(cdb->cnid_db_flags);
     ret = cdb->cnid_rebuild_add(cdb, st, did, name, len, hint);
@@ -379,8 +363,7 @@ cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
 }
 
 /* --------------- */
-int cnid_wipe(struct _cnid_db *cdb)
-{
+int cnid_wipe(struct _cnid_db *cdb) {
     int ret = 0;
     block_signal(cdb->cnid_db_flags);
 

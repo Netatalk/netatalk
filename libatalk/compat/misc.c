@@ -9,15 +9,13 @@
 
 #if !defined HAVE_DIRFD && defined SOLARIS
 #include <dirent.h>
-int dirfd(DIR *dir)
-{
+int dirfd(DIR *dir) {
     return dir->d_fd;
 }
 #endif
 
 #ifndef HAVE_STRNLEN
-size_t strnlen(const char *s, size_t max)
-{
+size_t strnlen(const char *s, size_t max) {
     size_t len;
 
     for (len = 0; len < max; len++) {
@@ -31,8 +29,7 @@ size_t strnlen(const char *s, size_t max)
 #endif
 
 #ifndef HAVE_VASPRINTF
-int vasprintf(char **ret, const char *fmt, va_list ap)
-{
+int vasprintf(char **ret, const char *fmt, va_list ap) {
     int n, size = 64;
     char *p, *np;
 
@@ -73,8 +70,7 @@ int vasprintf(char **ret, const char *fmt, va_list ap)
 #endif
 
 #ifndef HAVE_ASPRINTF
-int asprintf(char **strp, const char *fmt, ...)
-{
+int asprintf(char **strp, const char *fmt, ...) {
     va_list ap;
     int len;
     va_start(ap, fmt);

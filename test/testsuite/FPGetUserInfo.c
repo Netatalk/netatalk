@@ -2,8 +2,7 @@
 */
 #include "specs.h"
 
-STATIC void test75()
-{
+STATIC void test75() {
     char *name = "t75 test get user info";
     uint32_t uid;
     uint32_t gid;
@@ -86,8 +85,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetUserInfo_test()
-{
+void FPGetUserInfo_test() {
     ENTER_TESTSET
     test75();
 }

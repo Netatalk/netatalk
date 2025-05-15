@@ -29,8 +29,7 @@
 /* --- server uam functions -- */
 
 /* uam_load. uams must have a uam_setup function. */
-struct uam_mod *uam_load(const char *path, const char *name)
-{
+struct uam_mod *uam_load(const char *path, const char *name) {
     char buf[MAXPATHLEN + 1], *p;
     struct uam_mod *mod;
     void *module;
@@ -85,8 +84,7 @@ uam_load_fail:
 /* unload the module. we check for a cleanup function, but we don't
  * die if one doesn't exist. however, things are likely to leak without one.
  */
-void uam_unload(struct uam_mod *mod)
-{
+void uam_unload(struct uam_mod *mod) {
     if (mod->uam_fcn->uam_cleanup) {
         (*mod->uam_fcn->uam_cleanup)();
     }
@@ -98,8 +96,7 @@ void uam_unload(struct uam_mod *mod)
 /* -- client-side uam functions -- */
 
 /* set up stuff for this uam. */
-int uam_register(const int type, const char *path, const char *name, ...)
-{
+int uam_register(const int type, const char *path, const char *name, ...) {
     va_list ap;
     struct uam_obj *uam;
     int ret;
@@ -165,8 +162,7 @@ int uam_register(const int type, const char *path, const char *name, ...)
     return ret;
 }
 
-void uam_unregister(const int type, const char *name)
-{
+void uam_unregister(const int type, const char *name) {
     struct uam_obj *uam;
 
     if (!name) {
@@ -186,15 +182,13 @@ void uam_unregister(const int type, const char *name)
 
 /* Crap to support uams which call this afpd function */
 int uam_afpserver_option(void *private _U_, const int what _U_,
-                         void *option _U_, size_t *len _U_)
-{
+                         void *option _U_, size_t *len _U_) {
     return 0;
 }
 
 /* --- helper functions for plugin uams --- */
 
-struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
-{
+struct passwd *uam_getname(void *dummy _U_, char *name, const int len) {
     struct passwd *pwent;
     char *user;
     int i;
@@ -231,8 +225,7 @@ struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
 }
 
 
-int uam_checkuser(const struct passwd *pwd)
-{
+int uam_checkuser(const struct passwd *pwd) {
     char *p;
 
     if (!pwd || !pwd->pw_shell || (*pwd->pw_shell == '\0')) {

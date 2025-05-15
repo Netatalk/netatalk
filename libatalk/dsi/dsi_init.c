@@ -15,8 +15,7 @@
 #include <atalk/dsi.h>
 
 DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,
-              const char *port)
-{
+              const char *port) {
     DSI		*dsi;
 
     if ((dsi = (DSI *)calloc(1, sizeof(DSI))) == NULL) {

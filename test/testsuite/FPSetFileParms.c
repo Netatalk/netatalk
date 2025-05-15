@@ -2,8 +2,7 @@
 */
 #include "specs.h"
 
-STATIC void test83()
-{
+STATIC void test83() {
     char *name = "t83 test file setfilparam";
     char *name1 = "t83 test enoent file";
     char *ndir = "t83 dir";
@@ -48,8 +47,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test96()
-{
+STATIC void test96() {
     char *name = "t96 invisible file";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -127,8 +125,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test118()
-{
+STATIC void test118() {
     char *name = "t118 no delete file";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -161,8 +158,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test122()
-{
+STATIC void test122() {
     char *name = "t122 setfilparam open fork";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -226,8 +222,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test318()
-{
+STATIC void test318() {
     char *name = "t318 PDinfo error";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -262,8 +257,7 @@ test_exit:
 }
 
 /* ------------------------ */
-static int afp_symlink(char *oldpath, char *newpath)
-{
+static int afp_symlink(char *oldpath, char *newpath) {
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap;
@@ -313,8 +307,7 @@ static int afp_symlink(char *oldpath, char *newpath)
 }
 
 /* ------------------------- */
-STATIC void test427()
-{
+STATIC void test427() {
     char *name = "t427 Symlink";
     char *dest = "t427 dest";
     int  ofs =  3 * sizeof(uint16_t);
@@ -355,8 +348,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test428()
-{
+STATIC void test428() {
     char *name = "t428 Symlink";
     char *name2 = "t428 Symlink2";
     char *dest = "t428 dest";
@@ -407,8 +399,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test429()
-{
+STATIC void test429() {
     char *name = "t429 Symlink";
     char *dest = "t429 dest";
     int  ofs =  sizeof(uint16_t);
@@ -469,8 +460,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test430()
-{
+STATIC void test430() {
     char *name = "t430 Symlink";
     char *dest = "t430 dest";
     int  ofs =  sizeof(uint16_t);
@@ -503,8 +493,7 @@ test_exit:
 
 
 /* ----------- */
-void FPSetFileParms_test()
-{
+void FPSetFileParms_test() {
     ENTER_TESTSET
     test83();
     test96();

@@ -54,8 +54,7 @@
  * "dsi" can be NULL in which case all DSI objects and the config object is freed,
  * otherwise its an afpd session child and only any unneeded DSI objects are freed
  */
-void configfree(AFPObj *obj, DSI *dsi)
-{
+void configfree(AFPObj *obj, DSI *dsi) {
 #ifndef NO_DDP
 
     /* just free the asp only resources and get out */
@@ -111,8 +110,7 @@ void configfree(AFPObj *obj, DSI *dsi)
 /*!
  * Get everything running
  */
-int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
-{
+int configinit(AFPObj *dsi_obj, AFPObj *asp_obj) {
     EC_INIT;
     DSI *dsi = NULL;
     DSI **next = &dsi_obj->dsi;

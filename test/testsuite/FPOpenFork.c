@@ -5,8 +5,7 @@
 /* --------------------------
 FIXME
 */
-STATIC void test14()
-{
+STATIC void test14() {
     uint16_t bitmap = 0;
     int fork;
     uint16_t vol = VolID;
@@ -50,8 +49,7 @@ test_exit:
  FIXME need to check open attrib
 */
 
-STATIC void test15()
-{
+STATIC void test15() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     int fork;
@@ -87,8 +85,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test16()
-{
+STATIC void test16() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     int fork = 0;
@@ -131,8 +128,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test17()
-{
+STATIC void test17() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     int fork = 0;
@@ -208,8 +204,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test18()
-{
+STATIC void test18() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     int fork;
@@ -260,8 +255,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test19()
-{
+STATIC void test19() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     int fork;
@@ -336,8 +330,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test20()
-{
+STATIC void test20() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     int fork = 0;
@@ -376,8 +369,7 @@ test_exit:
 }
 
 /* ----------------------- */
-STATIC void test39()
-{
+STATIC void test39() {
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     char *ndir = "t39 dir";
@@ -440,8 +432,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test48()
-{
+STATIC void test48() {
     uint16_t bitmap = 0;
     int fork;
     char *ndir = "t48 dir";
@@ -472,8 +463,7 @@ test_exit:
 }
 
 /* ---------------------------- */
-static void test_denymode(char *name, int type)
-{
+static void test_denymode(char *name, int type) {
     int fork;
     int fork1;
     int fork2;
@@ -586,8 +576,7 @@ static void test_denymode(char *name, int type)
 }
 
 /* -------------------------- */
-STATIC void test81()
-{
+STATIC void test81() {
     char *name = "t81 Denymode RF 2users";
     ENTER_TEST
 
@@ -618,8 +607,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test116()
-{
+STATIC void test116() {
     char *name = "t116 no write file";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -688,8 +676,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test145()
-{
+STATIC void test145() {
     uint16_t bitmap = 0;
     int fork;
     char *name = "t145 file.txt";
@@ -717,8 +704,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test151()
-{
+STATIC void test151() {
     uint16_t bitmap = 0;
     char *name1  = "t151 file";
     int fork;
@@ -801,8 +787,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test190()
-{
+STATIC void test190() {
     int fork = 0;
     int fork2 = 0;
     char *name = "t190 file";
@@ -859,8 +844,7 @@ test_exit:
 
 
 /* ---------------------------- */
-static void test_openmode(char *name, int type)
-{
+static void test_openmode(char *name, int type) {
     int fork;
     int fork1;
     uint16_t bitmap = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO);
@@ -966,8 +950,7 @@ static void test_openmode(char *name, int type)
 }
 
 /* -------------------------- */
-STATIC void test341()
-{
+STATIC void test341() {
     char *name = "t341 Attrib open mode RF";
     ENTER_TEST
 
@@ -998,8 +981,7 @@ test_exit:
 }
 
 /* ---------------------------- */
-static void test_denymode1(char *name, int type)
-{
+static void test_denymode1(char *name, int type) {
     int fork;
     int fork1;
     uint16_t bitmap = 0;
@@ -1059,8 +1041,7 @@ static void test_denymode1(char *name, int type)
 }
 
 /* -------------------------- */
-STATIC void test367()
-{
+STATIC void test367() {
     char *name = "t367 Denymode RF 2users";
     ENTER_TEST
 
@@ -1091,8 +1072,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPOpenFork_test()
-{
+void FPOpenFork_test() {
     ENTER_TESTSET
     test14();
     test15();

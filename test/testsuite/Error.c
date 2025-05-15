@@ -42,8 +42,7 @@ static unsigned char afp_cmd_with_vol[] = {
     AFP_ADDICON,			/* 192 */
 };
 
-STATIC void test35()
-{
+STATIC void test35() {
     int ofs;
     uint16_t param = VolID + 1;
     DSI *dsi;
@@ -109,8 +108,7 @@ static unsigned char afp_cmd_with_vol_did[] = {
     AFP_GETCMT,				/* 58 */
 };
 
-STATIC void test36()
-{
+STATIC void test36() {
     unsigned int i;
     int ofs;
     uint16_t param = VolID;
@@ -177,8 +175,7 @@ static unsigned char afp_cmd_with_vol_did1[] = {
     AFP_EXCHANGEFILE,		/* 42 */
 };
 
-STATIC void test37()
-{
+STATIC void test37() {
     int ofs;
     uint16_t param = VolID;
     char *name = "t37 dir";
@@ -262,8 +259,7 @@ afp_moveandrename
 afp_enumerate
 */
 
-static void cname_test(char *name)
-{
+static void cname_test(char *name) {
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
@@ -340,8 +336,7 @@ static void cname_test(char *name)
 
 /* ------------------------- */
 // FIXME: afpd crash in dircache_search_by_did()
-STATIC void test95()
-{
+STATIC void test95() {
     int dir;
     char *name  = "t95 exchange file";
     char *name1 = "t95 new file name";
@@ -441,8 +436,7 @@ test_exit:
 }
 
 /* ----------------- */
-STATIC void test99()
-{
+STATIC void test99() {
     int  dir = 0;
     char *name = "t99 dir no access";
     uint16_t vol = VolID;
@@ -467,8 +461,7 @@ test_exit:
 }
 
 /* --------------------- */
-STATIC void test100()
-{
+STATIC void test100() {
     int dir;
     char *name = "t100 no obj error";
     char *name1 = "t100 no obj error/none";
@@ -550,8 +543,7 @@ STATIC void test100()
 }
 
 /* --------------------- */
-STATIC void test101()
-{
+STATIC void test101() {
     int dir;
     char *name = "t101 no obj error";
     char *ndir = "t101 no";
@@ -646,8 +638,7 @@ test_exit:
 }
 
 /* --------------------- */
-static void test_comment(uint16_t vol, int dir, char *name)
-{
+static void test_comment(uint16_t vol, int dir, char *name) {
     int ret;
     ret = FPAddComment(Conn, vol, dir, name, "essai");
 
@@ -667,8 +658,7 @@ static void test_comment(uint16_t vol, int dir, char *name)
 }
 
 /* -------------- */
-STATIC void test102()
-{
+STATIC void test102() {
     int dir;
     char *name = "t102 access error";
     char *name1 = "t102 dir --";
@@ -780,8 +770,7 @@ test_exit:
 }
 
 /* --------------------- */
-STATIC void test103()
-{
+STATIC void test103() {
     int dir;
     char *name = "t103 did access error";
     char *name1 = "t130 dir --";
@@ -894,8 +883,7 @@ test_exit:
 }
 
 /* --------------------- */
-STATIC void test105()
-{
+STATIC void test105() {
     int dir;
     unsigned int err;
     char *name = "t105 bad did";
@@ -968,8 +956,7 @@ STATIC void test105()
 
 /* -------------------------- */
 // FIXME: afpd crash in dircache_search_by_did()
-STATIC void test170()
-{
+STATIC void test170() {
     uint16_t bitmap = 0;
     char *name = "test170.txt";
     char *name1 = "newtest170.txt";
@@ -1140,8 +1127,7 @@ test_exit:
 
 /* -------------------------- */
 // FIXME: afpd crash in dircache_search_by_did()
-STATIC void test171()
-{
+STATIC void test171() {
     uint16_t bitmap = 0;
     char *tname = "test171";
     char *name = "test171.txt";
@@ -1293,8 +1279,7 @@ test_exit:
 
 /* -------------------------- */
 // FIXME: afpd crash in dircache_search_by_did()
-STATIC void test173()
-{
+STATIC void test173() {
     uint16_t bitmap = 0;
     char *tname = "test173";
     char *name = "test173.txt";
@@ -1456,8 +1441,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test174()
-{
+STATIC void test174() {
     uint16_t bitmap = 0;
     char *tname = "test174";
     char *name = "test174.txt";
@@ -1649,8 +1633,7 @@ test_exit:
 }
 
 /* ----------- */
-void Error_test()
-{
+void Error_test() {
     ENTER_TESTSET
     test35();
     test36();

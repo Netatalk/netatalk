@@ -34,8 +34,7 @@
 #include <atalk/ldapconfig.h>
 #include <atalk/logger.h>
 
-void acl_ldap_freeconfig(void)
-{
+void acl_ldap_freeconfig(void) {
     int i = 0;
 
     for (i = 0; ldap_prefs[i].name != NULL; i++) {
@@ -48,8 +47,7 @@ void acl_ldap_freeconfig(void)
     }
 }
 
-int acl_ldap_readconfig(dictionary *iniconfig)
-{
+int acl_ldap_readconfig(dictionary *iniconfig) {
     int i, j;
     const char *val;
     i = 0;

@@ -32,8 +32,7 @@
 static void updatestatus(char *s, int len);
 static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter);
 
-static void usage(char *path)
-{
+static void usage(char *path) {
     char	*p;
 
     if ((p = strrchr(path, '/')) == NULL) {
@@ -60,8 +59,7 @@ static void usage(char *path)
 }
 
 static char *
-paprc(void)
-{
+paprc(void) {
     static char	s[32 + 1 + 32 + 1 + 32];
     char	*name = NULL;
     FILE	*f;
@@ -150,8 +148,7 @@ static struct iovec	sfiov[PAP_MAXQUANTUM] = {
 
 static int debug;
 
-int main(int ac, char	**av)
-{
+int main(int ac, char	**av) {
     ATP			atp;
     struct atp_block	atpb;
     int			c, err = 0, fd, cuts = 0;
@@ -505,8 +502,7 @@ static int		data = 0;
 static unsigned char	port;
 static uint16_t	seq = 0;
 
-static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
-{
+static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter) {
     struct timeval	stv, tv;
     struct sockaddr_at	ssat;
     struct atp_block	atpb;
@@ -944,8 +940,7 @@ static int send_file(int fd, ATP atp, int lastfile, int is_imagewriter)
     }
 }
 
-static void updatestatus(char *s, int len)
-{
+static void updatestatus(char *s, int len) {
     int			fd = -1;
     struct iovec	iov[3];
 

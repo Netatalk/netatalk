@@ -54,16 +54,14 @@ static struct tunnel gTunnel;
 
 static outputfunc_t gOutput;
 
-static void set_sin(struct sockaddr *s, uint32_t ip)
-{
+static void set_sin(struct sockaddr *s, uint32_t ip) {
     struct sockaddr_in *sin = (struct sockaddr_in *)s;
     bzero(sin, sizeof(*sin));
     sin->sin_family      = AF_INET;
     sin->sin_addr.s_addr = htonl(ip);
 }
 
-static int tunnel_ifconfig(void)
-{
+static int tunnel_ifconfig(void) {
     int sk;
     struct ifreq ifrq;
     printf("device = %s\n", gTunnel.name);
@@ -143,8 +141,7 @@ static int tunnel_ifconfig(void)
     return 0;
 }
 
-static int tunnel_create(char *dev, int flags)
-{
+static int tunnel_create(char *dev, int flags) {
     struct ifreq ifr;
     int fd;
     char *tundev = "/dev/net/tun";
@@ -171,8 +168,7 @@ static int tunnel_create(char *dev, int flags)
 }
 
 
-int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
-{
+int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o) {
     int i;
     char s[32];
     gTunnel.dev = 0;
@@ -212,8 +208,7 @@ int tunnel_open(uint32_t net, uint32_t mask, outputfunc_t o)
 }
 
 
-void tunnel_close(void)
-{
+void tunnel_close(void) {
     int sk;
     struct ifreq ifrq;
     sk = socket(PF_INET, SOCK_DGRAM, 0);
@@ -253,8 +248,7 @@ void tunnel_close(void)
 }
 
 
-void tunnel_input(void)
-{
+void tunnel_input(void) {
     char buffer[600];
     int i;
     i = read(gTunnel.dev, buffer, sizeof(buffer));
@@ -275,8 +269,7 @@ void tunnel_input(void)
 }
 
 
-void tunnel_output(char *buffer, int len)
-{
+void tunnel_output(char *buffer, int len) {
     if (write(gTunnel.dev, buffer, len) < 0) {
         fprintf(stderr, "tunnel_output() write failed\n");
     }

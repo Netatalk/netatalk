@@ -7,8 +7,7 @@ static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
 /* ------------------------- */
-STATIC void test146()
-{
+STATIC void test146() {
     int fork, fork1;
     int  dir;
     char *name = "t146 file";
@@ -139,8 +138,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test507()
-{
+STATIC void test507() {
     int  dir;
     uint16_t vol = VolID;
     char *name = "t507 Resolve ID file";
@@ -182,8 +180,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test363()
-{
+STATIC void test363() {
     int  dir;
     uint16_t vol = VolID;
     char *name = "t363 GetForkParams file";
@@ -258,8 +255,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test364()
-{
+STATIC void test364() {
     int  dir;
     uint16_t vol = VolID;
     char *name = "t364 Delete ID file";
@@ -302,8 +298,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPDelete_test()
-{
+void T2FPDelete_test() {
     ENTER_TESTSET
     test146();
     test507();

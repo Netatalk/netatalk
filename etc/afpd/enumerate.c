@@ -49,8 +49,7 @@ struct savedir {
 };
 #define SDBUFBRK	2048
 
-static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
-{
+static int enumerate_loop(struct dirent *de, char *mname _U_, void *data) {
     struct savedir *sd = data;
     char *start;
     const char *end;
@@ -99,8 +98,7 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
  * http://sourceforge.net/tracker/index.php?func=detail&aid=461938&group_id=8642&atid=108642
  *
 */
-char *check_dirent(const struct vol *vol, char *name)
-{
+char *check_dirent(const struct vol *vol, char *name) {
     if (!strcmp(name, "..") || !strcmp(name, ".")) {
         return NULL;
     }
@@ -132,8 +130,7 @@ char *check_dirent(const struct vol *vol, char *name)
 
 /* ----------------------------- */
 int
-for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
-{
+for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data) {
     DIR             *dp;
     struct dirent	*de;
     char            *m_name;
@@ -171,8 +168,7 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
 
 /* ----------------------------- */
 static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                     char *rbuf, size_t *rbuflen, int ext)
-{
+                     char *rbuf, size_t *rbuflen, int ext) {
     static struct savedir	sd = { 0, 0, 0, NULL, NULL, 0 };
     struct vol			*vol;
     struct dir			*dir;
@@ -528,21 +524,18 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
 /* ----------------------------- */
 int afp_enumerate(AFPObj *obj, char *ibuf, size_t ibuflen,
-                  char *rbuf, size_t *rbuflen)
-{
+                  char *rbuf, size_t *rbuflen) {
     return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 0);
 }
 
 /* ----------------------------- */
 int afp_enumerate_ext(AFPObj *obj, char *ibuf, size_t ibuflen,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 1);
 }
 
 /* ----------------------------- */
 int afp_enumerate_ext2(AFPObj *obj, char *ibuf, size_t ibuflen,
-                       char *rbuf, size_t *rbuflen)
-{
+                       char *rbuf, size_t *rbuflen) {
     return enumerate(obj, ibuf, ibuflen, rbuf, rbuflen, 2);
 }

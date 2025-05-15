@@ -5,8 +5,7 @@
 
 
 /* ------------------------- */
-STATIC void test399()
-{
+STATIC void test399() {
     uint16_t vol = VolID;
     char *file = "test399_file";
     char *attr_name = "test399_attribute";
@@ -69,8 +68,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test416()
-{
+STATIC void test416() {
     uint16_t vol = VolID;
     char *file = "test416_file";
     char *file1 = "test416 new file";
@@ -111,8 +109,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test432()
-{
+STATIC void test432() {
     uint16_t vol = VolID;
     const DSI *dsi;
     char *file = "test432_file";
@@ -177,8 +174,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetExtAttr_test()
-{
+void FPGetExtAttr_test() {
     ENTER_TESTSET
     test399();
     test416();

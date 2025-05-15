@@ -50,8 +50,7 @@
 */
 int atp_sresp(
     ATP			ah,		/* open atp handle */
-    struct atp_block	*atpb)		/* parameter block */
-{
+    struct atp_block	*atpb) {	/* parameter block */
     int			i;
     uint8_t		ctrlinfo;
     struct atpbuf	*resp_buf = NULL;

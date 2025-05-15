@@ -5,8 +5,7 @@
 extern char icon0_256[];
 
 /* -------------------------- */
-STATIC void test115()
-{
+STATIC void test115() {
     uint16_t vol = VolID;
     uint16_t dt;
     unsigned int ret;
@@ -49,8 +48,7 @@ test_exit:
 }
 
 /* ----------- */
-void FPGetIcon_test()
-{
+void FPGetIcon_test() {
     ENTER_TESTSET
     test115();
 }

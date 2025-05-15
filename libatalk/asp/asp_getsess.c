@@ -51,8 +51,7 @@ static struct asp_child    **asp_ac = NULL;
  * + space: if actual connections < potential
  * - space: actual connections ~ potential
  */
-static void tickle_handler(int sig _U_)
-{
+static void tickle_handler(int sig _U_) {
     int sid;
 
     /* check status */
@@ -77,15 +76,13 @@ static void tickle_handler(int sig _U_)
 }
 
 /* kill children */
-void asp_kill(int sig)
-{
+void asp_kill(int sig) {
     if (children) {
         server_child_kill(children, sig);
     }
 }
 
-void asp_stop_tickle(void)
-{
+void asp_stop_tickle(void) {
     if (server_asp && server_asp->inited) {
         static const struct itimerval timer = {{0, 0}, {0, 0}};
         setitimer(ITIMER_REAL, &timer, NULL);
@@ -101,8 +98,7 @@ void asp_stop_tickle(void)
 static void set_asp_ac(int sid, struct asp_child *tmp);
 
 ASP asp_getsession(ASP asp, server_child_t *server_children,
-                   const int tickleval)
-{
+                   const int tickleval) {
     struct sigaction    action;
     struct itimerval    timer;
     struct sockaddr_at  sat;
@@ -337,7 +333,6 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
 }
 
 /* with fn defined after use, assume it's not optimized by the compiler */
-static void set_asp_ac(int sid, struct asp_child *tmp)
-{
+static void set_asp_ac(int sid, struct asp_child *tmp) {
     asp_ac[sid] = tmp;
 }

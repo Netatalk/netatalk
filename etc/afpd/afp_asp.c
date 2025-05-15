@@ -36,8 +36,7 @@
 
 static AFPObj *child;
 
-static void afp_asp_close(AFPObj *obj)
-{
+static void afp_asp_close(AFPObj *obj) {
     ASP asp = obj->handle;
 
     if (obj->uid != geteuid()) {
@@ -65,8 +64,7 @@ static void afp_asp_close(AFPObj *obj)
 /* ------------------------
  * SIGTERM
 */
-static void afp_asp_die(const int sig)
-{
+static void afp_asp_die(const int sig) {
     ASP asp = child->handle;
     asp_attention(asp, AFPATTN_SHUTDOWN);
 
@@ -86,8 +84,7 @@ static void afp_asp_die(const int sig)
 /* -----------------------------
  * SIGUSR1
  */
-static void afp_asp_timedown(int sig _U_)
-{
+static void afp_asp_timedown(int sig _U_) {
     struct sigaction	sv;
     struct itimerval	it;
     /* shutdown and don't reconnect. server going down in 5 minutes. */
@@ -132,23 +129,20 @@ static void afp_asp_timedown(int sig _U_)
 */
 extern volatile int reload_request;
 
-static void afp_asp_reload(int sig _U_)
-{
+static void afp_asp_reload(int sig _U_) {
     reload_request = 1;
 }
 
 /* ---------------------- */
 #ifdef SERVERTEXT
-static void afp_asp_getmesg(int sig _U_)
-{
+static void afp_asp_getmesg(int sig _U_) {
     readmessage(child);
     asp_attention(child->handle, AFPATTN_MESG | AFPATTN_TIME(5));
 }
 #endif /* SERVERTEXT */
 
 /* ---------------------- */
-void afp_over_asp(AFPObj *obj)
-{
+void afp_over_asp(AFPObj *obj) {
     ASP asp;
     struct sigaction  action;
     int		func,  reply = 0;

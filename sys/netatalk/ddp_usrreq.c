@@ -548,14 +548,12 @@ struct at_ifaddr	*aa;
     return ddp;
 }
 
-ddp_init()
-{
+ddp_init() {
     atintrq1.ifq_maxlen = IFQ_MAXLEN;
     atintrq2.ifq_maxlen = IFQ_MAXLEN;
 }
 
-ddp_clean()
-{
+ddp_clean() {
     struct ddpcb	*ddp;
 
     for (ddp = ddpcb; ddp; ddp = ddp->ddp_next) {

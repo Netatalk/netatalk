@@ -34,8 +34,7 @@ static char localized_message[MAXPATHLEN] = "";
  * @returns 0 if this message is being set the first time, return 1 if the preceeding
  *          message was the same
  */
-int setmessage(const char *message)
-{
+int setmessage(const char *message) {
     if (strncmp(message, servermesg, MAXMESGSIZE) == 0) {
         return 1;
     }
@@ -44,8 +43,7 @@ int setmessage(const char *message)
     return 0;
 }
 
-void readmessage(AFPObj *obj)
-{
+void readmessage(AFPObj *obj) {
     /* Read server message from file defined as SERVERTEXT */
 #ifdef SERVERTEXT
     FILE *message;
@@ -113,8 +111,7 @@ void readmessage(AFPObj *obj)
 }
 
 int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                    size_t *rbuflen)
-{
+                    size_t *rbuflen) {
     char *message;
     uint16_t type, bitmap;
     uint16_t msgsize;

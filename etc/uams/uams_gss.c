@@ -46,8 +46,7 @@
 
 static void log_status(char *s,
                        OM_uint32 major_status,
-                       OM_uint32 minor_status)
-{
+                       OM_uint32 minor_status) {
     gss_buffer_desc msg = GSS_C_EMPTY_BUFFER;
     OM_uint32 min_status, maj_status;
     OM_uint32 maj_ctx = 0, min_ctx = 0;
@@ -79,8 +78,7 @@ static void log_status(char *s,
     }
 }
 
-static void log_ctx_flags(OM_uint32 flags)
-{
+static void log_ctx_flags(OM_uint32 flags) {
     if (flags & GSS_C_DELEG_FLAG) {
         LOG_LOGINCONT(log_debug, "context flag: GSS_C_DELEG_FLAG");
     }
@@ -106,8 +104,7 @@ static void log_ctx_flags(OM_uint32 flags)
     }
 }
 
-static void log_service_name(gss_ctx_id_t context)
-{
+static void log_service_name(gss_ctx_id_t context) {
     OM_uint32 major_status = 0, minor_status = 0;
     gss_name_t service_name;
     gss_buffer_desc service_name_buffer;
@@ -145,8 +142,7 @@ static void log_service_name(gss_ctx_id_t context)
 
 static int get_client_username(char *username,
                                int ulen,
-                               gss_name_t *client_name)
-{
+                               gss_name_t *client_name) {
     OM_uint32 major_status = 0, minor_status = 0;
     gss_buffer_desc client_name_buffer;
     char *p;
@@ -204,8 +200,7 @@ static int get_client_username(char *username,
 }
 
 /* wrap afpd's sessionkey */
-static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
-{
+static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo) {
     OM_uint32 major_status = 0, minor_status = 0;
     gss_buffer_desc sesskey_buff, wrap_buff;
     int ret = 0;
@@ -252,8 +247,7 @@ static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 static int accept_sec_context(gss_ctx_id_t *context,
                               gss_buffer_desc *ticket_buffer,
                               gss_name_t *client_name,
-                              gss_buffer_desc *authenticator_buff)
-{
+                              gss_buffer_desc *authenticator_buff) {
     OM_uint32 major_status = 0, minor_status = 0, flags = 0;
     /* Initialize autheticator buffer. */
     authenticator_buff->length = 0;
@@ -291,8 +285,7 @@ static int do_gss_auth(void *obj _U_,
                        char *ibuf, size_t ibuflen,
                        char *rbuf, int *rbuflen,
                        char *username, size_t ulen,
-                       struct session_info *sinfo)
-{
+                       struct session_info *sinfo) {
     OM_uint32 status = 0;
     gss_name_t client_name;
     gss_ctx_id_t context = GSS_C_NO_CONTEXT;
@@ -354,8 +347,7 @@ cleanup_client_name:
 static int gss_login(void *obj _U_,
                      struct passwd **uam_pwd _U_,
                      char *ibuf _U_, size_t ibuflen _U_,
-                     char *rbuf, size_t *rbuflen)
-{
+                     char *rbuf, size_t *rbuflen) {
     *rbuflen = 0;
     /* The reply contains a two-byte ID value - note
      * that Apple's implementation seems to always return 1 as well
@@ -369,8 +361,7 @@ static int gss_login(void *obj _U_,
 static int gss_logincont(void *obj,
                          struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
+                         char *rbuf, size_t *rbuflen) {
     struct passwd *pwd = NULL;
     uint16_t login_id;
     char *username;
@@ -493,21 +484,18 @@ static int gss_logincont(void *obj,
 }
 
 /* logout */
-static void gss_logout(void)
-{
+static void gss_logout(void) {
 }
 
 static int gss_login_ext(void *obj,
                          char *uname _U_,
                          struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
+                         char *rbuf, size_t *rbuflen) {
     return gss_login(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-static int set_principal(AFPObj *obj, char *principal)
-{
+static int set_principal(AFPObj *obj, char *principal) {
     size_t len = strlen(principal);
 
     if (len > 255) {
@@ -531,8 +519,7 @@ static int set_principal(AFPObj *obj, char *principal)
     return 0;
 }
 
-static int gss_create_principal(AFPObj *obj)
-{
+static int gss_create_principal(AFPObj *obj) {
     int rv = -1;
 #ifdef HAVE_KERBEROS
     krb5_context context;
@@ -649,8 +636,7 @@ exit:
     return rv;
 }
 
-static int uam_setup(void *handle, const char *path)
-{
+static int uam_setup(void *handle, const char *path) {
     AFPObj *obj = (AFPObj *)handle;
 
     if (gss_create_principal(obj) != 0) {
@@ -661,8 +647,7 @@ static int uam_setup(void *handle, const char *path)
                         gss_login, gss_logincont, gss_logout, gss_login_ext);
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN_EXT, "Client Krb v2");
 }
 

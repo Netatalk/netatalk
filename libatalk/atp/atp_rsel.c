@@ -34,8 +34,7 @@ static int	release_count = 0;
 
 
 static int
-resend_request(ATP ah)
-{
+resend_request(ATP ah) {
     /*
      * update bitmap and send request packet
      */

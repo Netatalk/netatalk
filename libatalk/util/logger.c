@@ -122,8 +122,7 @@ static int generate_message(char **message_details_buffer,
                             int display_options _U_,
                             enum loglevels loglevel,
                             enum logtypes logtype,
-                            bool log_us_timestamp)
-{
+                            bool log_us_timestamp) {
     char *details;
     int    len;
     struct timeval tv;
@@ -174,8 +173,7 @@ static int generate_message(char **message_details_buffer,
     return len;
 }
 
-static int get_syslog_equivalent(enum loglevels loglevel)
-{
+static int get_syslog_equivalent(enum loglevels loglevel) {
     switch (loglevel) {
     /* The question is we know how bad it is for us,
        but how should that translate in the syslogs?  */
@@ -201,8 +199,7 @@ static int get_syslog_equivalent(enum loglevels loglevel)
 
 /* Called by the LOG macro for syslog messages */
 static void make_syslog_entry(enum loglevels loglevel,
-                              enum logtypes logtype _U_, char *message)
-{
+                              enum logtypes logtype _U_, char *message) {
     if (!log_config.syslog_opened) {
         openlog(log_config.processname,
                 log_config.syslog_display_options,
@@ -213,8 +210,7 @@ static void make_syslog_entry(enum loglevels loglevel,
     syslog(get_syslog_equivalent(loglevel), "%s", message);
 }
 
-static void log_init(void)
-{
+static void log_init(void) {
     syslog_setup(log_info,
                  logtype_default,
                  logoption_ndelay | logoption_pid,
@@ -222,8 +218,7 @@ static void log_init(void)
 }
 
 static void log_setup(const char *filename, enum loglevels loglevel,
-                      enum logtypes logtype, const bool log_us_timestamp)
-{
+                      enum logtypes logtype, const bool log_us_timestamp) {
     if (loglevel == 0) {
         /* Disable */
         if (type_configs[logtype].set) {
@@ -341,8 +336,7 @@ static void log_setup(const char *filename, enum loglevels loglevel,
 
 /* Setup syslog logging */
 void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
-                  int facility)
-{
+                  int facility) {
     /*
      * FIXME:
      * this currently doesn't care if logtype is already logging to a file.
@@ -384,8 +378,7 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
  *       set to default logging
  */
 static void setuplog_internal(const char *loglevel, const char *logtype,
-                              const char *filename, const bool log_us_timestamp)
-{
+                              const char *filename, const bool log_us_timestamp) {
     unsigned int typenum, levelnum;
 
     /* Parse logtype */
@@ -434,8 +427,7 @@ static void setuplog_internal(const char *loglevel, const char *logtype,
    ========================================================================= */
 
 /* This function sets up the processname */
-void set_processname(const char *processname)
-{
+void set_processname(const char *processname) {
     strncpy(log_config.processname, processname, 15);
     log_config.processname[15] = 0;
 }
@@ -446,8 +438,7 @@ void set_processname(const char *processname)
    So it must be shorter than MAXLOGSIZE
    ------------------------------------------------------------------------- */
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
-                    const char *file, const bool log_us_timestamp, int line, char *message, ...)
-{
+                    const char *file, const bool log_us_timestamp, int line, char *message, ...) {
     /* fn is not reentrant but is used in signal handler
      * with LOGGER it's a little late source name and line number
      * are already changed. */
@@ -531,8 +522,7 @@ exit:
 }
 
 void setuplog(const char *logstr, const char *logfile,
-              const bool log_us_timestamp)
-{
+              const bool log_us_timestamp) {
     char *ptr, *save;
     char *logtype, *loglevel;
     char c;

@@ -6,8 +6,7 @@
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
-STATIC void test136()
-{
+STATIC void test136() {
     int dir;
     char *name  = "t136 move, rename ";
     char *name1 = "t136 dir/new file name";
@@ -58,8 +57,7 @@ test_exit:
 }
 
 /* ----------------------- */
-STATIC void test137()
-{
+STATIC void test137() {
     int fork;
     int dir;
     uint16_t bitmap = 0;
@@ -120,8 +118,7 @@ test_exit:
 }
 
 /* -------------------------- */
-STATIC void test139()
-{
+STATIC void test139() {
     int  dir;
     char *name = "t139 file";
     char *name1 = "t139 dir";
@@ -149,8 +146,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test302()
-{
+STATIC void test302() {
     char *name = "t302 dir";
     char *name1 = "t302 file";
     char *name2 = "t302 file1";
@@ -216,8 +212,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test323()
-{
+STATIC void test323() {
     char *name  = "t323 dir";
     char *name1 = "t323 dir1";
     char *file = "t323 file";
@@ -274,8 +269,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test365()
-{
+STATIC void test365() {
     char *name  = "t365 in";
     char *name1 = "t365 out";
     char *file = "t365 file";
@@ -348,8 +342,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPMoveAndRename_test()
-{
+void T2FPMoveAndRename_test() {
     ENTER_TESTSET
     test136();
     test137();

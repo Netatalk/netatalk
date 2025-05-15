@@ -62,8 +62,7 @@ char NotTestedTests[1024][256] = {{0}};
 char SkippedTests[1024][256] = {{0}};
 
 /* =============================== */
-static void list_tests(void)
-{
+static void list_tests(void) {
     int i = 0;
 
     while (Test_list[i].name != NULL) {
@@ -73,8 +72,7 @@ static void list_tests(void)
 }
 
 /* ----------- */
-static void run_one(char *name, char **args)
-{
+static void run_one(char *name, char **args) {
     int i = 0;
     void *handle = NULL;
     void (*fn)(char **) = NULL;
@@ -108,8 +106,7 @@ static void run_one(char *name, char **args)
 }
 
 /* =============================== */
-void usage(char * av0)
-{
+void usage(char * av0) {
     fprintf(stdout,
             "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n",
             av0);
@@ -133,8 +130,7 @@ void usage(char * av0)
 }
 
 /* ------------------------------- */
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     int cc;
     int ret;
 

@@ -100,8 +100,7 @@ static int solaris_acl_rights(const AFPObj *obj,
                               const char *path,
                               struct stat *sb,
                               struct maccess *ma,
-                              uint32_t *rights_out)
-{
+                              uint32_t *rights_out) {
     EC_INIT;
     int      i, ace_count, checkgroup;
     ace_t    *aces = NULL;
@@ -237,8 +236,7 @@ EC_CLEANUP:
 */
 static int map_aces_solaris_to_darwin(const ace_t *aces,
                                       darwin_ace_t *darwin_aces,
-                                      int ace_count)
-{
+                                      int ace_count) {
     EC_INIT;
     int i, count = 0;
     uint32_t flags;
@@ -318,8 +316,7 @@ EC_CLEANUP:
 */
 static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
                                       ace_t *nfsv4_aces,
-                                      int ace_count)
-{
+                                      int ace_count) {
     EC_INIT;
     int i, mapped_aces = 0;
     uint32_t darwin_ace_flags;
@@ -414,8 +411,7 @@ EC_CLEANUP:
 
 #ifdef HAVE_POSIX_ACLS
 
-static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir)
-{
+static uint32_t posix_permset_to_darwin_rights(acl_entry_t e, int is_dir) {
     EC_INIT;
     uint32_t rights = 0;
     acl_permset_t permset;
@@ -478,8 +474,7 @@ EC_CLEANUP:
 static int posix_acl_rights(const AFPObj *obj,
                             const char *path,
                             const struct stat *sb,
-                            uint32_t *result)
-{
+                            uint32_t *result) {
     EC_INIT;
     int entry_id = ACL_FIRST_ENTRY;
     /* rights which do not depend on ACL_MASK */
@@ -587,8 +582,7 @@ EC_CLEANUP:
  *
  * @returns         access rights
  */
-static uint8_t acl_permset_to_uarights(acl_entry_t entry)
-{
+static uint8_t acl_permset_to_uarights(acl_entry_t entry) {
     acl_permset_t permset;
     uint8_t rights = 0;
 
@@ -640,8 +634,7 @@ static uint8_t acl_permset_to_uarights(acl_entry_t entry)
  * @returns                  0 or -1 on error
  */
 static int posix_acls_to_uaperms(const AFPObj *obj, const char *path,
-                                 struct stat *sb, struct maccess *ma)
-{
+                                 struct stat *sb, struct maccess *ma) {
     EC_INIT;
     int entry_id = ACL_FIRST_ENTRY;
     acl_entry_t entry;
@@ -750,8 +743,7 @@ EC_CLEANUP:
  *
  * @returns 0 on success, -1 on error
  */
-static int acl_add_acl(acl_t *aclp, const acl_t acl)
-{
+static int acl_add_acl(acl_t *aclp, const acl_t acl) {
     EC_INIT;
     int id;
     acl_entry_t se, de;
@@ -782,8 +774,7 @@ EC_CLEANUP:
  * @returns mapping result as acl_perm_t, -1 on error
  */
 static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
-        int is_dir)
-{
+        int is_dir) {
     acl_perm_t perm = 0;
 
     if (darwin_ace_rights & DARWIN_ACE_READ_DATA) {
@@ -818,8 +809,7 @@ static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
  * @returns 0 on success, -1 on failure
  */
 static int posix_acl_add_perm(acl_t *aclp, acl_tag_t type, uid_t id,
-                              acl_perm_t perm)
-{
+                              acl_perm_t perm) {
     EC_INIT;
     uid_t *eid = NULL;
     acl_entry_t e;
@@ -895,8 +885,7 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
                                     acl_t *def_aclp,
                                     acl_t *acc_aclp,
                                     int ace_count,
-                                    uint32_t *default_acl_flags)
-{
+                                    uint32_t *default_acl_flags) {
     EC_INIT;
     char *name = NULL;
     uuidtype_t uuidtype;
@@ -988,8 +977,7 @@ EC_CLEANUP:
  * Return number of mapped ACES, -1 on error.
  */
 static int map_acl_posix_to_darwin(int type, const acl_t acl,
-                                   darwin_ace_t *darwin_aces)
-{
+                                   darwin_ace_t *darwin_aces) {
     EC_INIT;
     int mapped_aces = 0;
     int entry_id = ACL_FIRST_ENTRY;
@@ -1090,8 +1078,7 @@ EC_CLEANUP:
  * Ignores trivial ACEs.
  * Return no of mapped ACEs or -1 on error.
  */
-static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
-{
+static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count) {
     int mapped_aces = 0;
     LOG(log_debug9, logtype_afpd, "map_acl: BEGIN");
 
@@ -1135,8 +1122,7 @@ static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 /* Get ACL from object omitting trivial ACEs. Map to Darwin ACL style and
    store Darwin ACL at rbuf. Add length of ACL written to rbuf to *rbuflen.
    Returns 0 on success, -1 on error. */
-static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
-{
+static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen) {
     EC_INIT;
     int mapped_aces = 0;
     int dirflag;
@@ -1211,8 +1197,7 @@ EC_CLEANUP:
 }
 
 /* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
-static int remove_acl(const struct vol *vol, const char *path, int dir)
-{
+static int remove_acl(const struct vol *vol, const char *path, int dir) {
     int ret = AFP_OK;
 #if (defined HAVE_NFSV4_ACLS || defined HAVE_POSIX_ACLS)
 
@@ -1240,8 +1225,7 @@ static int set_acl(const struct vol *vol,
                    char *name,
                    int inherit,
                    darwin_ace_t *daces,
-                   uint32_t ace_count)
-{
+                   uint32_t ace_count) {
     EC_INIT;
     int i, nfsv4_ace_count;
     int tocopy_aces_count = 0, new_aces_count = 0, trivial_ace_count = 0;
@@ -1370,8 +1354,7 @@ EC_CLEANUP:
 
 #ifdef HAVE_POSIX_ACLS
 #ifndef HAVE_ACL_FROM_MODE
-static acl_t acl_from_mode(mode_t mode)
-{
+static acl_t acl_from_mode(mode_t mode) {
     acl_t acl;
     acl_entry_t entry;
     acl_permset_t permset;
@@ -1456,8 +1439,7 @@ static int set_acl(const struct vol *vol,
                    const char *name,
                    int inherit _U_,
                    darwin_ace_t *daces,
-                   uint32_t ace_count)
-{
+                   uint32_t ace_count) {
     EC_INIT;
     struct stat st;
     acl_t default_acl = NULL;
@@ -1561,8 +1543,7 @@ static int check_acl_access(const AFPObj *obj,
                             struct dir *dir,
                             const char *path,
                             const uuidp_t uuid,
-                            uint32_t requested_rights)
-{
+                            uint32_t requested_rights) {
     int            ret;
     uint32_t       allowed_rights = 0;
     char           *username = NULL;
@@ -1672,8 +1653,7 @@ EC_CLEANUP:
  ********************************************************/
 
 int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-               size_t *rbuflen)
-{
+               size_t *rbuflen) {
     int         ret;
     struct vol      *vol;
     struct dir      *dir;
@@ -1729,8 +1709,7 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 }
 
 int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-               size_t *rbuflen)
-{
+               size_t *rbuflen) {
     struct vol      *vol;
     struct dir      *dir;
     int         ret;
@@ -1842,8 +1821,7 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 }
 
 int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-               size_t *rbuflen)
-{
+               size_t *rbuflen) {
     struct vol      *vol;
     struct dir      *dir;
     int         ret = AFP_OK;
@@ -1971,8 +1949,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  * the access granted by ACEs to the logged in user.
  */
 int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path,
-                   struct stat *st, struct maccess *ma)
-{
+                   struct stat *st, struct maccess *ma) {
     EC_INIT;
 
     if (!(obj->options.flags & (OPTION_ACL2MACCESS | OPTION_ACL2MODE))) {

@@ -51,8 +51,7 @@ static int  fd_table_size;
 static int  fds_in_use = 0;
 
 
-static void invalidate_fd(int fd)
-{
+static void invalidate_fd(int fd) {
     int i;
 
     if (fd == control_fd) {
@@ -82,8 +81,7 @@ static void invalidate_fd(int fd)
  *  things and clean up fd_table. The same happens for any read/write errors.
  */
 
-static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
-{
+static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now) {
     int fd;
     fd_set readfds;
     struct timespec tv;
@@ -165,8 +163,7 @@ static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)
     return 0;
 }
 
-int comm_init(struct db_param *dbp, int ctrlfd, int clntfd)
-{
+int comm_init(struct db_param *dbp, int ctrlfd, int clntfd) {
     int i;
     fds_in_use = 0;
     fd_table_size = dbp->fd_table_size;
@@ -201,15 +198,13 @@ int comm_init(struct db_param *dbp, int ctrlfd, int clntfd)
 /* ------------
    nbe of clients
 */
-int comm_nbe(void)
-{
+int comm_nbe(void) {
     return fds_in_use;
 }
 
 /* ------------ */
 int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout,
-             const sigset_t *sigmask, time_t *now)
-{
+             const sigset_t *sigmask, time_t *now) {
     char *nametmp;
     int b;
 
@@ -261,8 +256,7 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout,
 
 /* ------------ */
 #define USE_WRITEV
-int comm_snd(struct cnid_dbd_rply *rply)
-{
+int comm_snd(struct cnid_dbd_rply *rply) {
 #ifdef USE_WRITEV
     struct iovec iov[2];
     size_t towrite;

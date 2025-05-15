@@ -16,8 +16,7 @@ int	Bigendian = 0;
 #define kTextEncodingUTF8 0x08000103
 
 /* -------------------------------------------- */
-int OpenClientSocket(char* host, int port)
-{
+int OpenClientSocket(char* host, int port) {
     int sock = -1;
     struct addrinfo hints;
     struct addrinfo *res;
@@ -64,16 +63,14 @@ int OpenClientSocket(char* host, int port)
 }
 
 /* -------------------------------------------- */
-int CloseClientSocket(int fd)
-{
+int CloseClientSocket(int fd) {
     return close(fd);
 }
 
 /* -------------------------------------------------------*/
 /* read raw data. return actual bytes read. this will wait until
  * it gets length bytes */
-size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length)
-{
+size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length) {
     size_t stored;
     ssize_t len;
     stored = 0;
@@ -105,8 +102,7 @@ size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length)
 }
 
 /* -------------------------------------------------------*/
-int dsi_read_header(DSI *dsi)
-{
+int dsi_read_header(DSI *dsi) {
     char block[DSI_BLOCKSIZ];
 
     /* read in the header */
@@ -130,8 +126,7 @@ int dsi_read_header(DSI *dsi)
  * stored in length variable. this should really use size_t's, but
  * that would require changes elsewhere. */
 int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
-                          size_t *rlength)
-{
+                          size_t *rlength) {
     int ret;
 
     if ((ret = dsi_read_header(dsi)) < 0) {
@@ -149,8 +144,7 @@ int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
 }
 
 /* ======================================================= */
-size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length)
-{
+size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length) {
     size_t written;
     ssize_t len;
     written = 0;
@@ -181,8 +175,7 @@ size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length)
 /* write data. 0 on failure. this assumes that dsi_len will never
  * cause an overflow in the data buffer. */
 static int use_writev = 1;
-int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
-{
+int my_dsi_stream_send(DSI *dsi, void *buf, size_t length) {
     char block[DSI_BLOCKSIZ];
     struct iovec iov[2];
     size_t towrite;
@@ -254,8 +247,7 @@ int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
 }
 
 /* ------------------------------------- */
-void my_dsi_tickle(DSI *dsi)
-{
+void my_dsi_tickle(DSI *dsi) {
     char block[DSI_BLOCKSIZ];
     uint16_t id;
     id = htons(dsi_clientID(dsi));
@@ -270,8 +262,7 @@ void my_dsi_tickle(DSI *dsi)
 /* ------------------------------------- */
 int Attention_received;
 
-static int my_dsi_receive(DSI *x, unsigned char *buf, size_t length)
-{
+static int my_dsi_receive(DSI *x, unsigned char *buf, size_t length) {
     int ret;
     Attention_received = 0;
 
@@ -294,8 +285,7 @@ static int my_dsi_receive(DSI *x, unsigned char *buf, size_t length)
 }
 
 /* ------------------------------------- */
-static int my_dsi_full_receive(DSI *x, unsigned char *buf, int length)
-{
+static int my_dsi_full_receive(DSI *x, unsigned char *buf, int length) {
     int ret;
     Attention_received = 0;
 
@@ -316,20 +306,17 @@ static int my_dsi_full_receive(DSI *x, unsigned char *buf, int length)
 }
 
 /* ------------------------------------- */
-int my_dsi_cmd_receive(DSI *x)
-{
+int my_dsi_cmd_receive(DSI *x) {
     return my_dsi_receive(x, x->commands, DSI_CMDSIZ);
 }
 
 /* ------------------------------------- */
-int my_dsi_data_receive(DSI *x)
-{
+int my_dsi_data_receive(DSI *x) {
     return my_dsi_receive(x, x->data, DSI_DATASIZ);
 }
 
 /* ------------------------------- */
-static void SendInit(DSI *dsi)
-{
+static void SendInit(DSI *dsi) {
     memset(dsi->commands, 0, DSI_CMDSIZ);
     memset(&dsi->header, 0, sizeof(dsi->header));
     dsi->header.dsi_flags = DSIFL_REQUEST;
@@ -338,16 +325,14 @@ static void SendInit(DSI *dsi)
 }
 
 /* ------------------------------- */
-static void SetLen(DSI *dsi, int ofs)
-{
+static void SetLen(DSI *dsi, int ofs) {
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
 }
 
 /* ------------------------------- */
-static int  SendCmd(DSI *dsi, int cmd)
-{
+static int  SendCmd(DSI *dsi, int cmd) {
     int ofs;
     SendInit(dsi);
     ofs = 0;
@@ -357,8 +342,7 @@ static int  SendCmd(DSI *dsi, int cmd)
 }
 
 /* ------------------------------- */
-static int  SendCmdWithU16(DSI *dsi, int cmd, uint16_t param)
-{
+static int  SendCmdWithU16(DSI *dsi, int cmd, uint16_t param) {
     int ofs;
     SendInit(dsi);
     ofs = 0;
@@ -372,8 +356,7 @@ static int  SendCmdWithU16(DSI *dsi, int cmd, uint16_t param)
 
 /* ------------------------- */
 static unsigned int SendCmdVolDidCname(CONN *conn, int cmd, uint16_t vol,
-                                       int did, char *name)
-{
+                                       int did, char *name) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -396,8 +379,7 @@ static unsigned int SendCmdVolDidCname(CONN *conn, int cmd, uint16_t vol,
 /* -----------------------------------------------
    Open a new session
 */
-unsigned int DSIOpenSession(CONN *conn)
-{
+unsigned int DSIOpenSession(CONN *conn) {
     DSI *dsi;
     uint32_t i = 0;
     dsi = &conn->dsi;
@@ -436,8 +418,7 @@ unsigned int DSIOpenSession(CONN *conn)
 /* -----------------------------------------------
    GetStatus
 */
-unsigned int DSIGetStatus(CONN *conn)
-{
+unsigned int DSIGetStatus(CONN *conn) {
     DSI *dsi;
     dsi = &conn->dsi;
     memset(&dsi->header, 0, sizeof(dsi->header));
@@ -454,8 +435,7 @@ unsigned int DSIGetStatus(CONN *conn)
    Close Session
    no reply
 */
-unsigned int DSICloseSession(CONN *conn)
-{
+unsigned int DSICloseSession(CONN *conn) {
     DSI *dsi;
     dsi = &conn->dsi;
     memset(&dsi->header, 0, sizeof(dsi->header));
@@ -472,8 +452,7 @@ unsigned int DSICloseSession(CONN *conn)
 	FPlogout ==> dsiclose
 */
 unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
-                          char *pwd)
-{
+                          char *pwd) {
     uint8_t len;
     int ofs;
     DSI *dsi = &conn->dsi;
@@ -519,8 +498,7 @@ unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
 
 /* ---------------------------- */
 unsigned int AFPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
-                             char *pwd)
-{
+                             char *pwd) {
     uint8_t len;
     uint16_t len16;
     uint16_t temp16;
@@ -590,8 +568,7 @@ unsigned int AFPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
 
 /* --------------------------- */
 unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
-                         char *pwd)
-{
+                         char *pwd) {
     uint8_t len;
     int ofs;
     DSI *dsi;
@@ -635,8 +612,7 @@ unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
     return dsi->header.dsi_code;
 }
 /* ------------------------------- */
-unsigned int AFPLogOut(CONN *conn)
-{
+unsigned int AFPLogOut(CONN *conn) {
     DSI *dsi;
     int ret;
     dsi = &conn->dsi;
@@ -647,8 +623,7 @@ unsigned int AFPLogOut(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int AFPzzz(CONN *conn, int flag)
-{
+unsigned int AFPzzz(CONN *conn, int flag) {
     int 		ofs = 0;
     DSI			*dsi = &conn->dsi;
     uint32_t   temp;
@@ -667,8 +642,7 @@ unsigned int AFPzzz(CONN *conn, int flag)
 }
 
 /* ------------------------------- */
-unsigned int AFPGetSrvrInfo(CONN *conn)
-{
+unsigned int AFPGetSrvrInfo(CONN *conn) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmd(dsi, AFP_GETSRVINFO);
@@ -677,8 +651,7 @@ unsigned int AFPGetSrvrInfo(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int AFPGetSrvrParms(CONN *conn)
-{
+unsigned int AFPGetSrvrParms(CONN *conn) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmd(dsi, AFP_GETSRVPARAM);
@@ -687,8 +660,7 @@ unsigned int AFPGetSrvrParms(CONN *conn)
 }
 
 /* ------------------------------- */
-unsigned int AFPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
-{
+unsigned int AFPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -709,8 +681,7 @@ unsigned int AFPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
 }
 
 /* -------------------------------  */
-unsigned int AFPCloseVol(CONN *conn, uint16_t vol)
-{
+unsigned int AFPCloseVol(CONN *conn, uint16_t vol) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_CLOSEVOL, vol);
@@ -719,8 +690,7 @@ unsigned int AFPCloseVol(CONN *conn, uint16_t vol)
 }
 
 /* -------------------------------  */
-unsigned int AFPCloseDT(CONN *conn, uint16_t vol)
-{
+unsigned int AFPCloseDT(CONN *conn, uint16_t vol) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_CLOSEDT, vol);
@@ -729,8 +699,7 @@ unsigned int AFPCloseDT(CONN *conn, uint16_t vol)
 }
 
 /* ------------------------------- */
-unsigned int AFPCloseFork(CONN *conn, uint16_t fork)
-{
+unsigned int AFPCloseFork(CONN *conn, uint16_t fork) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_CLOSEFORK, fork);
@@ -740,8 +709,7 @@ unsigned int AFPCloseFork(CONN *conn, uint16_t fork)
 
 /* ------------------------------- */
 unsigned int AFPByteLock(CONN *conn, uint16_t fork, int end, int mode,
-                         int offset, int size)
-{
+                         int offset, int size) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -764,8 +732,7 @@ unsigned int AFPByteLock(CONN *conn, uint16_t fork, int end, int mode,
 }
 
 /* ---------------------------- */
-static off_t get_off_t(unsigned char **ibuf, int is64)
-{
+static off_t get_off_t(unsigned char **ibuf, int is64) {
     uint32_t             temp;
     off_t                 ret;
     ret = 0;
@@ -785,8 +752,7 @@ static off_t get_off_t(unsigned char **ibuf, int is64)
 }
 
 /* ------------------------------- */
-static int set_off_t(off_t offset, uint8_t *rbuf, int is64)
-{
+static int set_off_t(off_t offset, uint8_t *rbuf, int is64) {
     uint32_t  temp;
     int        ret;
     ret = 0;
@@ -807,8 +773,7 @@ static int set_off_t(off_t offset, uint8_t *rbuf, int is64)
 
 /* ------------------------------- */
 unsigned int AFPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode,
-                             off_t offset, off_t size)
-{
+                             off_t offset, off_t size) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -828,8 +793,7 @@ unsigned int AFPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode,
 
 /* ------------------------------- */
 unsigned int AFPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
-                             off_t size)
-{
+                             off_t size) {
     int ofs;
     DSI *dsi;
     int is64 = bitmap & ((1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN));
@@ -852,8 +816,7 @@ unsigned int AFPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
 }
 
 /* ------------------------------- */
-unsigned int AFPFlush(CONN *conn, uint16_t vol)
-{
+unsigned int AFPFlush(CONN *conn, uint16_t vol) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_FLUSH, vol);
@@ -862,8 +825,7 @@ unsigned int AFPFlush(CONN *conn, uint16_t vol)
 }
 
 /* -------------------------------  */
-unsigned int AFPFlushFork(CONN *conn, uint16_t vol)
-{
+unsigned int AFPFlushFork(CONN *conn, uint16_t vol) {
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_FLUSHFORK, vol);
@@ -872,8 +834,7 @@ unsigned int AFPFlushFork(CONN *conn, uint16_t vol)
 }
 
 /* -------------------------------  */
-uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap)
-{
+uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap) {
     int ofs;
     uint16_t result, volID = 0;
     int len;
@@ -925,8 +886,7 @@ uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap)
 
 /* -------------------------------  */
 /* Converts Pascal string to C (null-terminated) string. */
-int strp2c(char *cstr, unsigned char *pstr)
-{
+int strp2c(char *cstr, unsigned char *pstr) {
     int i;
 
     for (i = 0; i < pstr[0]; i++) {
@@ -939,8 +899,7 @@ int strp2c(char *cstr, unsigned char *pstr)
 
 /* -------------------------------  */
 /* Converts null-terminated C string to Pascal form */
-int strc2p(char *pstr, char *cstr)
-{
+int strc2p(char *pstr, char *cstr) {
     int i;
 
     for (i = 0; cstr[i] != 0; i++) {
@@ -953,8 +912,7 @@ int strc2p(char *pstr, char *cstr)
 
 /* -------------------------------  */
 /* Our malloc wrapper. It zeroes allocated memory. */
-void *fp_malloc(size_t size)
-{
+void *fp_malloc(size_t size) {
     void *ret = malloc(size);
 
     if (ret == NULL) {
@@ -967,16 +925,14 @@ void *fp_malloc(size_t size)
 }
 
 /* -------------------------------  */
-char *strp2cdup(unsigned char *src)
-{
+char *strp2cdup(unsigned char *src) {
     char *r = fp_malloc(*src + 1);
     strp2c(r, src);
     return r;
 }
 
 /* -------------------------------  */
-void *fp_realloc(void *ptr, size_t size)
-{
+void *fp_realloc(void *ptr, size_t size) {
     void *ret = realloc(ptr, size);
 
     if (ret == NULL) {
@@ -989,8 +945,7 @@ void *fp_realloc(void *ptr, size_t size)
 
 /* -------------------------------  */
 /* Our free wrapper. It does nothing special at the moment. */
-void fp_free(void *ptr)
-{
+void fp_free(void *ptr) {
     if (ptr != NULL) {
         free(ptr);
     }
@@ -998,8 +953,7 @@ void fp_free(void *ptr)
 
 /* -------------------------------  */
 void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
-                       uint16_t rbitmap)
-{
+                       uint16_t rbitmap) {
     uint16_t i;
     uint32_t l;
 
@@ -1076,8 +1030,7 @@ void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
  * Only backup date is valid.
 */
 int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
-                    uint16_t bitmap)
-{
+                    uint16_t bitmap) {
     uint16_t i;
     uint32_t l;
     int bit = 0;
@@ -1151,8 +1104,7 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
 // FIXME: redundant bitmap parameters !
 // FIXME: some of those parameters are not tested.
 void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
-                        uint16_t rfbitmap, uint16_t rdbitmap)
-{
+                        uint16_t rfbitmap, uint16_t rdbitmap) {
     char isdir;
     uint16_t i, j;
     uint32_t l;
@@ -1317,8 +1269,7 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
 
 /* ---------------------- */
 int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
-                     uint16_t rfbitmap, uint16_t rdbitmap)
-{
+                     uint16_t rfbitmap, uint16_t rdbitmap) {
     char isdir;
     uint16_t i, tp;
     uint32_t l;
@@ -1476,8 +1427,7 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
 }
 
 /* -------------------------------  */
-unsigned int AFPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap)
-{
+unsigned int AFPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1499,8 +1449,7 @@ unsigned int AFPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap)
 
 /* -------------------------------  */
 unsigned int AFPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap,
-                            struct afp_volume_parms *parms)
-{
+                            struct afp_volume_parms *parms) {
     int ofs;
     DSI *dsi;
     uint16_t tp;
@@ -1525,8 +1474,7 @@ unsigned int AFPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap,
 /* ---------------------
 	FIXME for now, replace only / with 0. Should deal with ..
 */
-void u2mac(uint8_t *dst, char *name, int len)
-{
+void u2mac(uint8_t *dst, char *name, int len) {
     while (len) {
         if (Convert && *name == '/') {
             *dst = 0;
@@ -1545,8 +1493,7 @@ void u2mac(uint8_t *dst, char *name, int len)
 /* ------------------------- */
 int Force_type2;
 
-int FPset_name(CONN *conn, int ofs, char *name)
-{
+int FPset_name(CONN *conn, int ofs, char *name) {
     int len;
     uint16_t len16;
     uint32_t hint = htonl(kTextEncodingUTF8);
@@ -1576,8 +1523,7 @@ int FPset_name(CONN *conn, int ofs, char *name)
 
 /* ------------------------- */
 unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did,
-                            char *name)
-{
+                            char *name) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1599,8 +1545,7 @@ unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did,
 
 /* ------------------------------- */
 unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                            char *data, char whence)
-{
+                            char *data, char whence) {
     int ofs;
     int rsize;
     uint32_t temp;
@@ -1630,8 +1575,7 @@ unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                            char *data, char whence)
-{
+                            char *data, char whence) {
     uint32_t last;
     my_dsi_cmd_receive(dsi);
 
@@ -1656,8 +1600,7 @@ unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int AFPWrite(CONN *conn, uint16_t fork, int offset, int size,
-                      char *data, char whence)
-{
+                      char *data, char whence) {
     DSI *dsi;
     dsi = &conn->dsi;
     AFPWriteHeader(dsi, fork, offset, size, data, whence);
@@ -1666,8 +1609,7 @@ unsigned int AFPWrite(CONN *conn, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
-                          char *data, char whence)
-{
+                          char *data, char whence) {
     int ofs;
     DSI *dsi;
     off_t last;
@@ -1713,8 +1655,7 @@ unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
 
 /* ------------------------------- */
 unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
-                                off_t size, char *data, char whence)
-{
+                                off_t size, char *data, char whence) {
     int ofs;
     DSI *dsi = &conn->dsi;
     off_t last;
@@ -1743,8 +1684,7 @@ unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
 	type : resource or data
 */
 uint16_t  AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap,
-                      int did, char *name, uint16_t access)
-{
+                      int did, char *name, uint16_t access) {
     int ofs;
     uint16_t ofork = 0, result;
     DSI *dsi;
@@ -1781,27 +1721,23 @@ uint16_t  AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap,
 }
 
 /* ------------------------------- */
-unsigned int AFPDelete(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int AFPDelete(CONN *conn, uint16_t vol, int did, char *name) {
     return  SendCmdVolDidCname(conn, AFP_DELETE, vol, did, name);
 }
 
 /* ------------------------------- */
-unsigned int AFPGetComment(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int AFPGetComment(CONN *conn, uint16_t vol, int did, char *name) {
     return  SendCmdVolDidCname(conn, AFP_GETCMT, vol, did, name);
 }
 
 /* ------------------------------- */
-unsigned int AFPRemoveComment(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int AFPRemoveComment(CONN *conn, uint16_t vol, int did, char *name) {
     return  SendCmdVolDidCname(conn, AFP_RMVCMT, vol, did, name);
 }
 
 /* ------------------------------- */
 unsigned int AFPAddComment(CONN *conn, uint16_t vol, int did, char *name,
-                           char *cmt)
-{
+                           char *cmt) {
     int ofs;
     int len;
     DSI *dsi;
@@ -1833,8 +1769,7 @@ unsigned int AFPAddComment(CONN *conn, uint16_t vol, int did, char *name,
 
 /* ------------------------------- */
 unsigned int AFPGetSessionToken(CONN *conn, int type, uint32_t time, int len,
-                                char *token)
-{
+                                char *token) {
     int ofs;
     uint16_t tp = htons(type);
     uint32_t temp;
@@ -1871,8 +1806,7 @@ unsigned int AFPGetSessionToken(CONN *conn, int type, uint32_t time, int len,
 
 /* ------------------------------- */
 unsigned int AFPDisconnectOldSession(CONN *conn, uint16_t type, int len,
-                                     char *token)
-{
+                                     char *token) {
     int ofs;
     uint16_t tp = htons(type);
     uint32_t temp;
@@ -1897,8 +1831,7 @@ unsigned int AFPDisconnectOldSession(CONN *conn, uint16_t type, int len,
 }
 
 /* ------------------------------- */
-unsigned int AFPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
-{
+unsigned int AFPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap) {
     int ofs;
     uint16_t type = htons(bitmap);
     DSI *dsi;
@@ -1921,8 +1854,7 @@ unsigned int AFPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
 }
 
 /* ------------------------------- */
-unsigned int AFPMapID(CONN *conn, char fn, int id)
-{
+unsigned int AFPMapID(CONN *conn, char fn, int id) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -1942,8 +1874,7 @@ unsigned int AFPMapID(CONN *conn, char fn, int id)
 }
 
 /* ------------------------------- */
-unsigned int AFPMapName(CONN *conn, char fn, char *name)
-{
+unsigned int AFPMapName(CONN *conn, char fn, char *name) {
     int ofs;
     uint16_t len, l;
     DSI *dsi;
@@ -1980,8 +1911,7 @@ unsigned int AFPMapName(CONN *conn, char fn, char *name)
 }
 
 /* ------------------------------- */
-unsigned int AFPBadPacket(CONN *conn, char fn, char *name)
-{
+unsigned int AFPBadPacket(CONN *conn, char fn, char *name) {
     int ofs;
     uint16_t l;
     DSI *dsi;
@@ -2004,8 +1934,7 @@ unsigned int AFPBadPacket(CONN *conn, char fn, char *name)
 
 /* ------------------------------- */
 unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                           char *data)
-{
+                           char *data) {
     int ofs;
     uint32_t  temp;
     SendInit(dsi);
@@ -2029,8 +1958,7 @@ unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                           char *data)
-{
+                           char *data) {
     int rsize;
     my_dsi_cmd_receive(dsi);
     memcpy(data, dsi->commands, dsi->cmdlen);
@@ -2043,8 +1971,7 @@ unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
 
 /* ------------------------------- */
 unsigned int AFPRead(CONN *conn, uint16_t fork, int offset, int size,
-                     char *data)
-{
+                     char *data) {
     DSI *dsi;
     dsi = &conn->dsi;
     AFPReadHeader(dsi, fork, offset, size, data);
@@ -2055,8 +1982,7 @@ unsigned int AFPRead(CONN *conn, uint16_t fork, int offset, int size,
  * Assume size < 2GB
 */
 unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
-                         char *data)
-{
+                         char *data) {
     int ofs;
     int rsize;
     DSI *dsi;
@@ -2099,8 +2025,7 @@ unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
 }
 
 unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
-                               off_t size, char *data)
-{
+                               off_t size, char *data) {
     int ofs;
     int rsize;
     DSI *dsi;
@@ -2119,8 +2044,7 @@ unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
 }
 
 /* -------------------------------- */
-unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name)
-{
+unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name) {
     int ofs;
     unsigned int dir = 0;
     DSI *dsi;
@@ -2153,8 +2077,7 @@ unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name)
 }
 
 /* ------------------------------- */
-unsigned int AFPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap)
-{
+unsigned int AFPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2177,8 +2100,7 @@ unsigned int AFPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap)
 /* -------------------------------
 */
 unsigned int AFPGetAPPL(CONN *conn, uint16_t dt, char *name, uint16_t index,
-                        uint16_t f_bitmap)
-{
+                        uint16_t f_bitmap) {
     int ofs;
     uint16_t bitmap;
     DSI *dsi;
@@ -2207,8 +2129,7 @@ unsigned int AFPGetAPPL(CONN *conn, uint16_t dt, char *name, uint16_t index,
 /* -------------------------------
 */
 unsigned int AFPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator,
-                        uint32_t tag, char *name)
-{
+                        uint32_t tag, char *name) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2235,8 +2156,7 @@ unsigned int AFPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator,
 /* -------------------------------
 */
 unsigned int AFPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
-                           char *name)
-{
+                           char *name) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2263,8 +2183,7 @@ unsigned int AFPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
 unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
                           uint16_t f_bitmap, uint16_t d_bitmap,
                           uint32_t rbitmap, struct afp_filedir_parms *filedir,
-                          struct afp_filedir_parms *filedir2)
-{
+                          struct afp_filedir_parms *filedir2) {
     int ofs;
     int len;
     DSI *dsi;
@@ -2312,8 +2231,7 @@ unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
 unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
                              uint16_t f_bitmap, uint16_t d_bitmap,
                              uint32_t rbitmap, struct afp_filedir_parms *filedir,
-                             struct afp_filedir_parms *filedir2)
-{
+                             struct afp_filedir_parms *filedir2) {
     int ofs;
     int len;
     DSI *dsi;
@@ -2362,8 +2280,7 @@ unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
 /* -------------------------------
 */
 unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                       char *name)
-{
+                       char *name) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2391,8 +2308,7 @@ unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 /* --------------------------------
 */
 unsigned int AFPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                           int maxsize, char *pathname, char *attrname)
-{
+                           int maxsize, char *pathname, char *attrname) {
     int ofs;
     DSI *dsi;
     long long reqcount = -1;
@@ -2445,8 +2361,7 @@ unsigned int AFPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 /* --------------------------------
 */
 unsigned int AFPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                            int maxsize, char *pathname)
-{
+                            int maxsize, char *pathname) {
     int ofs;
     DSI *dsi;
     dsi = &conn->dsi;
@@ -2479,8 +2394,7 @@ unsigned int AFPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 /* --------------------------------
 */
 unsigned int AFPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
-                           char *pathname, char *attrname, char *data)
-{
+                           char *pathname, char *attrname, char *data) {
     int ofs;
     DSI *dsi;
     uint16_t len;
@@ -2529,8 +2443,7 @@ unsigned int AFPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
 }
 
 unsigned int AFPRemoveExtAttr(CONN *conn, uint16_t vol, int did,
-                              uint16_t bitmap, char *pathname, char *attrname)
-{
+                              uint16_t bitmap, char *pathname, char *attrname) {
     int ofs;
     DSI *dsi;
     uint16_t len;

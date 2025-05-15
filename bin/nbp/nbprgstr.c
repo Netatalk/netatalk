@@ -22,8 +22,7 @@
 
 #define MACCHARSET "MAC_ROMAN"
 
-static void Usage(char *av0)
-{
+static void Usage(char *av0) {
     char	*p;
 
     if ((p = strrchr(av0, '/')) == NULL) {
@@ -37,8 +36,7 @@ static void Usage(char *av0)
     exit(1);
 }
 
-int main(int ac, char **av)
-{
+int main(int ac, char **av) {
     struct sockaddr_at	addr;
     struct at_addr      ataddr;
     char		*Obj = NULL, *Type = NULL, *Zone = NULL;

@@ -50,8 +50,7 @@ static const unsigned short mac_centraleurope_2uni[128] = {
 };
 
 static int
-char_mac_centraleurope_to_ucs2(ucs2_t *pwc, const unsigned char *s)
-{
+char_mac_centraleurope_to_ucs2(ucs2_t *pwc, const unsigned char *s) {
     unsigned char c = *s;
 
     if (c < 0x80) {
@@ -113,8 +112,7 @@ static const unsigned char mac_centraleurope_page22_1[8] = {
 };
 
 static int
-char_ucs2_to_mac_centraleurope(unsigned char *r, ucs2_t wc)
-{
+char_ucs2_to_mac_centraleurope(unsigned char *r, ucs2_t wc) {
     unsigned char c = 0;
 
     if (wc < 0x0080) {

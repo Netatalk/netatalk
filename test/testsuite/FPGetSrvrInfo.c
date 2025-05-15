@@ -3,8 +3,7 @@
 #include "specs.h"
 
 /* ----------------------- */
-STATIC void test1(void)
-{
+STATIC void test1(void) {
     int ret;
     ENTER_TEST
     ret = FPGetSrvrInfo(Conn);
@@ -17,8 +16,7 @@ STATIC void test1(void)
 }
 
 /* ----------- */
-void FPGetSrvrInfo_test()
-{
+void FPGetSrvrInfo_test() {
     ENTER_TESTSET
     test1();
 }

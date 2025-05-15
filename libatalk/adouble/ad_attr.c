@@ -20,8 +20,7 @@
    retrieved from the FinderFlags. This fixes Bug #2802236:
    <https://sourceforge.net/tracker/?func=detail&aid=2802236&group_id=8642&atid=108642>
  */
-int ad_getattr(const struct adouble *ad, uint16_t *attr)
-{
+int ad_getattr(const struct adouble *ad, uint16_t *attr) {
     uint16_t fflags;
     char *adp = NULL;
     *attr = 0;
@@ -63,8 +62,7 @@ int ad_getattr(const struct adouble *ad, uint16_t *attr)
 }
 
 /* ----------------- */
-int ad_setattr(const struct adouble *ad, const uint16_t attribute)
-{
+int ad_setattr(const struct adouble *ad, const uint16_t attribute) {
     uint16_t fflags;
     char *ade = NULL, *adp = NULL;
     /* we don't save open forks indicator */
@@ -111,8 +109,7 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
  * return -1 on error.
  */
 int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino,
-             const uint32_t id, const cnid_t did, const void *stamp)
-{
+             const uint32_t id, const cnid_t did, const void *stamp) {
     EC_INIT;
     uint32_t tmp;
     char *ade = NULL;
@@ -220,8 +217,7 @@ EC_CLEANUP:
  * Retrieve stored file / folder. Callers should treat a return of CNID_INVALID (0) as an invalid value.
  */
 uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino,
-                  const cnid_t did, const void *stamp _U_)
-{
+                  const cnid_t did, const void *stamp _U_) {
     uint32_t aint = 0;
     dev_t  dev;
     ino_t  ino;
@@ -284,8 +280,7 @@ uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino,
 }
 
 /* ----------------------------- */
-uint32_t ad_forcegetid(struct adouble *adp)
-{
+uint32_t ad_forcegetid(struct adouble *adp) {
     uint32_t aint = 0;
 
     if (adp) {
@@ -311,8 +306,7 @@ uint32_t ad_forcegetid(struct adouble *adp)
 /* -----------------
  * set resource fork filename attribute.
  */
-int ad_setname(struct adouble *ad, const char *path)
-{
+int ad_setname(struct adouble *ad, const char *path) {
     int len;
 
     if ((len = strlen(path)) > ADEDLEN_NAME) {

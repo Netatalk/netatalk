@@ -44,8 +44,7 @@ extern struct _cnid_module cnid_dbd_module;
 extern struct _cnid_module cnid_mysql_module;
 #endif
 
-void cnid_init(void)
-{
+void cnid_init(void) {
 #ifdef CNID_BACKEND_LAST
     cnid_register(&cnid_last_module);
 #endif

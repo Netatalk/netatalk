@@ -91,8 +91,7 @@ static	int hopcount;		/* detect infinite loops in termcap, init 0 */
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int getprent(char *cap, char *bp, int bufsize)
-{
+int getprent(char *cap, char *bp, int bufsize) {
     int c;
     int skip = 0;
     int i;
@@ -159,8 +158,7 @@ int getprent(char *cap, char *bp, int bufsize)
     }
 }
 
-void endprent(void)
-{
+void endprent(void) {
     if (pfp != NULL) {
         fclose(pfp);
     }
@@ -174,8 +172,7 @@ void endprent(void)
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int tgetent(char *cap, char *bp, const char *name)
-{
+int tgetent(char *cap, char *bp, const char *name) {
     char *cp;
     int c;
     int i = 0;
@@ -291,8 +288,7 @@ int tgetent(char *cap, char *bp, const char *name)
  * Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
-int tnchktc(char *cap)
-{
+int tnchktc(char *cap) {
     char *p;
     char *q;
     /* name of similar terminal */
@@ -365,8 +361,7 @@ int tnchktc(char *cap)
  * against each such name.  The normal : terminator after the last
  * name (before the first field) stops us.
  */
-int tnamatch(const char *np)
-{
+int tnamatch(const char *np) {
     const char *Np;
     const char *Bp;
     Bp = tbuf;
@@ -401,8 +396,7 @@ int tnamatch(const char *np)
  * knowing about \: escapes or any such.  If necessary, :'s can be put
  * into the termcap file in octal.
  */
-static char *tskip(char *bp)
-{
+static char *tskip(char *bp) {
     while (*bp && *bp != ':') {
         bp++;
     }
@@ -422,8 +416,7 @@ static char *tskip(char *bp)
  * a # character.  If the option is not found we return -1.
  * Note that we handle octal numbers beginning with 0.
  */
-int tgetnum(char *id)
-{
+int tgetnum(char *id) {
     int i;
     int base;
     char *bp = tbuf;
@@ -470,8 +463,7 @@ int tgetnum(char *id)
  * of the buffer.  Return 1 if we find the option, or 0 if it is
  * not given.
  */
-int tgetflag(char *id)
-{
+int tgetflag(char *id) {
     char *bp = tbuf;
 
     for (;;) {
@@ -496,8 +488,7 @@ int tgetflag(char *id)
  * string capability escapes.
  */
 static char *
-tdecode(char *str, char **area)
-{
+tdecode(char *str, char **area) {
     char *cp;
     int c;
     const char *dp;
@@ -555,8 +546,7 @@ nextc:
  * No checking on area overflow.
  */
 char *
-tgetstr(char *id, char **area)
-{
+tgetstr(char *id, char **area) {
     char *bp = tbuf;
 
     for (;;) {
@@ -584,8 +574,7 @@ tgetstr(char *id, char **area)
 }
 
 static char *
-decodename(char *str, char **area, int bufsize)
-{
+decodename(char *str, char **area, int bufsize) {
     char *cp;
     int c;
     const char *dp;
@@ -635,7 +624,6 @@ nextc:
 }
 
 char *
-getpname(char **area, int bufsize)
-{
+getpname(char **area, int bufsize) {
     return decodename(tbuf, area, bufsize);
 }

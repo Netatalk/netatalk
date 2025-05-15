@@ -72,8 +72,7 @@ static const uint8_t old_ufinderi[] = {
 
 /* ----------------------
 */
-static int default_type(void *finder)
-{
+static int default_type(void *finder) {
     if (!memcmp(finder, ufinderi, 8) || !memcmp(finder, old_ufinderi, 8)) {
         return 1;
     }
@@ -83,8 +82,7 @@ static int default_type(void *finder)
 
 /* FIXME path : unix or mac name ? (for now it's unix name ) */
 void *get_finderinfo(const struct vol *vol, const char *upath,
-                     struct adouble *adp, void *data, int islink)
-{
+                     struct adouble *adp, void *data, int islink) {
     struct extmap       *em;
     void                *ad_finder = NULL;
     int                 chk_ext = 0;
@@ -150,8 +148,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath,
 /* ---------------------
 */
 char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
-               cnid_t id, uint32_t utf8)
-{
+               cnid_t id, uint32_t utf8) {
     uint32_t   aint;
     char        *tp = NULL;
     char        *src = name;
@@ -238,8 +235,7 @@ uint32_t get_id(struct vol *vol,
                 const struct stat *st,
                 const cnid_t did,
                 const char *upath,
-                const int len)
-{
+                const int len) {
     uint32_t adcnid;
     uint32_t dbcnid = CNID_INVALID;
 
@@ -303,8 +299,7 @@ int getmetadata(const AFPObj *obj,
                 struct vol *vol,
                 uint16_t bitmap,
                 struct path *path, struct dir *dir,
-                char *buf, size_t *buflen, struct adouble *adp)
-{
+                char *buf, size_t *buflen, struct adouble *adp) {
     char		*data, *l_nameoff = NULL, *upath;
     char                *utf_nameoff = NULL;
     char		*ade = NULL;
@@ -658,8 +653,7 @@ int getmetadata(const AFPObj *obj,
 /* ----------------------- */
 int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
                  struct path *path,
-                 struct dir *dir, char *buf, size_t *buflen, int in_enumerate)
-{
+                 struct dir *dir, char *buf, size_t *buflen, int in_enumerate) {
     struct adouble	ad, *adp;
     int                 opened = 0;
     int rc = AFP_OK;
@@ -711,8 +705,7 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
 
 /* ----------------------------- */
 int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                   size_t *rbuflen)
-{
+                   size_t *rbuflen) {
     struct adouble	ad;
     struct vol		*vol;
     struct dir		*dir;
@@ -835,8 +828,7 @@ createfile_iderr:
 }
 
 int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
-                     char *rbuf _U_, size_t *rbuflen)
-{
+                     char *rbuf _U_, size_t *rbuflen) {
     struct vol	*vol;
     struct dir	*dir;
     struct path *s_path;
@@ -896,8 +888,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 extern struct path Cur_Path;
 
 int setfilparams(const AFPObj *obj, struct vol *vol,
-                 struct path *path, uint16_t f_bitmap, char *buf)
-{
+                 struct path *path, uint16_t f_bitmap, char *buf) {
     struct adouble	ad, *adp;
     struct extmap	*em;
     int			bit, isad = 1, err = AFP_OK;
@@ -1260,8 +1251,7 @@ setfilparam_done:
  *
  */
 int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
-               char *dst, char *newname, struct adouble *adp)
-{
+               char *dst, char *newname, struct adouble *adp) {
     int		rc;
     LOG(log_debug, logtype_afpd,
         "renamefile: src[%d, \"%s\"] -> dst[\"%s\"]", sdir_fd, src, dst);
@@ -1344,8 +1334,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
    convert a Mac long name to an utf8 name,
 */
 size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
-               char *dest, size_t destlen)
-{
+               char *dest, size_t destlen) {
     size_t    outlen;
 
     if ((size_t) -1 == (outlen = convert_string(vol->v_maccharset, CH_UTF8_MAC, src,
@@ -1357,8 +1346,7 @@ size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
 }
 
 /* ---------------- */
-int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
-{
+int copy_path_name(const struct vol *vol, char *newname, char *ibuf) {
     char        type = *ibuf;
     size_t      plen = 0;
     uint16_t   len16;
@@ -1423,8 +1411,7 @@ int copy_path_name(const struct vol *vol, char *newname, char *ibuf)
 /* -----------------------------------
 */
 int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
-                 size_t *rbuflen)
-{
+                 size_t *rbuflen) {
     struct vol	*s_vol, *d_vol;
     struct dir	*dir;
     char	*newname;
@@ -1581,8 +1568,7 @@ int copyfile(struct vol *s_vol,
              char *src,
              char *dst,
              char *newname,
-             struct adouble *adp)
-{
+             struct adouble *adp) {
     struct adouble	ads, add;
     int			err = 0;
     int                 adflags;
@@ -1739,8 +1725,7 @@ done:
    WRITE lock on read only file.
 */
 
-static int check_attrib(const struct vol *vol, struct adouble *adp)
-{
+static int check_attrib(const struct vol *vol, struct adouble *adp) {
     uint16_t   bshort = 0;
     ad_getattr(adp, &bshort);
 
@@ -1761,8 +1746,7 @@ static int check_attrib(const struct vol *vol, struct adouble *adp)
 /*
  * dirfd can be used for unlinkat semantics
  */
-int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
-{
+int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib) {
     struct adouble	ad;
     struct adouble      *adp = NULL;
     int			adflags, err = AFP_OK;
@@ -1866,8 +1850,7 @@ end:
 /* ------------------------------------ */
 /* return a file id */
 int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                 size_t *rbuflen)
-{
+                 size_t *rbuflen) {
     struct stat         *st;
     struct vol		*vol;
     struct dir		*dir;
@@ -1951,8 +1934,7 @@ struct reenum {
     cnid_t     did;
 };
 
-static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
-{
+static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data) {
     struct path   path;
     struct reenum *param = data;
     struct vol    *vol = param->vol;
@@ -1976,8 +1958,7 @@ static int reenumerate_loop(struct dirent *de, char *mname _U_, void *data)
  * but if it's a deleted file we don't want to do it again and again.
  */
 static int
-reenumerate_id(struct vol *vol, char *name, struct dir *dir)
-{
+reenumerate_id(struct vol *vol, char *name, struct dir *dir) {
     int             ret;
     struct reenum   data;
     struct stat     st;
@@ -2010,8 +1991,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
 /* ------------------------------
    resolve a file id */
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
-                  size_t *rbuflen)
-{
+                  size_t *rbuflen) {
     struct vol		*vol;
     struct dir		*dir;
     char		*upath;
@@ -2132,8 +2112,7 @@ retry:
 
 /* ------------------------------ */
 int afp_deleteid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
-                 char *rbuf _U_, size_t *rbuflen)
-{
+                 char *rbuf _U_, size_t *rbuflen) {
     struct stat         st;
     struct vol		*vol;
     struct dir		*dir;
@@ -2229,22 +2208,21 @@ delete:
 
 /* ------------------------------ */
 static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
-                                    struct path *path, struct ofork **of, struct adouble *adp)
-{
+                                    struct path *path, struct ofork **of, struct adouble *adp) {
     int             ret;
 
     if (path->st_errno) {
         switch (path->st_errno) {
-    case ENOENT:
+      case ENOENT:
                 afp_errno = AFPERR_NOID;
             break;
 
-    case EPERM:
-        case EACCES:
+      case EPERM:
+          case EACCES:
                     afp_errno = AFPERR_ACCESS;
             break;
 
-    default:
+      default:
                 afp_errno = AFPERR_PARAM;
             break;
         }
@@ -2284,8 +2262,7 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
 #define APPLETEMP ".AppleTempXXXXXX"
 
 int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
-                      char *rbuf _U_, size_t *rbuflen)
-{
+                      char *rbuf _U_, size_t *rbuflen) {
     struct stat         srcst, destst;
     struct vol		*vol;
     struct dir		*dir, *sdir;

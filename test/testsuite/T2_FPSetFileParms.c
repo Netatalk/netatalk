@@ -4,8 +4,7 @@
 #include "adoublehelper.h"
 
 /* ------------------------ */
-static int afp_symlink(char *oldpath, char *newpath)
-{
+static int afp_symlink(char *oldpath, char *newpath) {
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap;
@@ -55,8 +54,7 @@ static int afp_symlink(char *oldpath, char *newpath)
 }
 
 /* ------------------------- */
-STATIC void test89()
-{
+STATIC void test89() {
     int  dir;
     char *file = "t89 test error setfilparam";
     char *name = "t89 error setfilparams dir";
@@ -107,8 +105,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test120()
-{
+STATIC void test120() {
     char *name = "t120 test file setfilparam";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -144,8 +141,7 @@ test_exit:
 }
 
 /* ------------------------- */
-STATIC void test426()
-{
+STATIC void test426() {
     char *name = "t426 Symlink";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
@@ -224,8 +220,7 @@ test_exit:
 }
 
 /* ----------- */
-void T2FPSetFileParms_test()
-{
+void T2FPSetFileParms_test() {
     ENTER_TESTSET
     test89();
     test120();

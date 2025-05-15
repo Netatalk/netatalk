@@ -20,8 +20,7 @@
 #include "route.h"
 
 #ifndef BSD4_4
-int route(int message, struct sockaddr *dst, struct sockaddr *gate, int flags)
-{
+int route(int message, struct sockaddr *dst, struct sockaddr *gate, int flags) {
     struct rtentry	rtent;
     memset(&rtent, 0, sizeof(struct rtentry));
     rtent.rt_dst = *dst;
@@ -48,8 +47,7 @@ struct rt_msg_at {
 } rtma;
 
 int route(int message, struct sockaddr_at *dst, struct sockaddr_at *gate,
-          int flags)
-{
+          int flags) {
     int			rc;
     memset(&rtma, 0, sizeof(struct rt_msg_at));
     rtma.rtma_rtm.rtm_msglen = sizeof(struct rt_msg_at);

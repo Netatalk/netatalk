@@ -12,8 +12,7 @@
 #include <atalk/afp.h>
 #include <atalk/globals.h>
 
-const char *AfpNum2name(int num)
-{
+const char *AfpNum2name(int num) {
     switch (num) {
     case AFP_BYTELOCK      :
         return "AFP_BYTELOCK";         /*   1 */
@@ -240,8 +239,7 @@ const char *AfpNum2name(int num)
 
 #define AFPERR2NAME(err) case err : return #err
 
-const char *AfpErr2name(int err)
-{
+const char *AfpErr2name(int err) {
     switch (err) {
         AFPERR2NAME(AFP_OK);
         AFPERR2NAME(AFPERR_DID1);

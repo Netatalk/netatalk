@@ -36,8 +36,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-ASP asp_init(ATP atp)
-{
+ASP asp_init(ATP atp) {
     ASP		asp;
 
     if ((asp = (struct ASP *)calloc(1, sizeof(struct ASP))) == NULL) {
@@ -62,8 +61,7 @@ ASP asp_init(ATP atp)
     return asp;
 }
 
-void asp_setstatus(ASP asp, char *status, const int slen)
-{
+void asp_setstatus(ASP asp, char *status, const int slen) {
     asp->asp_status = status;
     asp->asp_slen = slen;
 }

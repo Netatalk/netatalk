@@ -121,8 +121,7 @@
  */
 
 /* move and rename dir, enumerate new parent, stat renamed dir */
-STATIC void test500()
-{
+STATIC void test500() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -195,8 +194,7 @@ test_exit:
 }
 
 /* move and rename dir, then stat it */
-STATIC void test501()
-{
+STATIC void test501() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -266,8 +264,7 @@ test_exit:
 }
 
 /* move and rename dir, enumerate renamed dir */
-STATIC void test502()
-{
+STATIC void test502() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -343,8 +340,7 @@ test_exit:
 }
 
 /* move and rename dir, stat renamed dir */
-STATIC void test503()
-{
+STATIC void test503() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -414,8 +410,7 @@ test_exit:
 }
 
 /* rename topdir, stat file in subdir of renamed topdir */
-STATIC void test504()
-{
+STATIC void test504() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -484,8 +479,7 @@ test_exit:
 }
 
 /* rename dir, stat subdir in renamed dir */
-STATIC void test505()
-{
+STATIC void test505() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -556,8 +550,7 @@ test_exit:
 }
 
 /* stat subdir in poisened path */
-STATIC void test506()
-{
+STATIC void test506() {
     DSI *dsi = &Conn->dsi;
     uint16_t vol1 = VolID;
     uint16_t vol2;
@@ -634,8 +627,7 @@ test_exit:
     exit_test("Dircache:test506: stat subdir in poisoned path");
 }
 
-void Dircache_attack_test()
-{
+void Dircache_attack_test() {
     ENTER_TESTSET
     test500();
     test501();

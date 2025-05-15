@@ -21,8 +21,7 @@
  * DSI buffers to send one.
  * return 0 on error
  */
-int dsi_attention(DSI *dsi, AFPUserBytes flags)
-{
+int dsi_attention(DSI *dsi, AFPUserBytes flags) {
     /* header + AFPUserBytes */
     char block[DSI_BLOCKSIZ + sizeof(AFPUserBytes)];
     uint32_t len, nlen;

@@ -51,8 +51,7 @@ static uint8_t         randbuf[8];
 static  int home_passwd(const struct passwd *pwd,
                         const char *path, const int pathlen _U_,
                         unsigned char *passwd, const int len,
-                        const int set)
-{
+                        const int set) {
     struct stat st;
     int fd, i;
 
@@ -124,8 +123,7 @@ home_passwd_fail:
 static int afppasswd(const struct passwd *pwd,
                      const char *path, const int pathlen,
                      unsigned char *passwd, int len,
-                     const int set)
-{
+                     const int set) {
     uint8_t key[DES_KEY_SZ * 2];
     char buf[MAXPATHLEN + 1], *p;
     FILE *fp;
@@ -267,8 +265,7 @@ afppasswd_done:
  * depending upon whether or not the password is in ~/.passwd
  * or in a global location */
 static int randpass(const struct passwd *pwd, const char *file,
-                    unsigned char *passwd, const int len, const int set)
-{
+                    unsigned char *passwd, const int len, const int set) {
     int i;
     uid_t uid = geteuid();
     /* Build pathname to user's '.passwd' file */
@@ -325,8 +322,7 @@ static int randpass(const struct passwd *pwd, const char *file,
 static int rand_login(void *obj, char *username, int ulen,
                       struct passwd **uam_pwd _U_,
                       char *ibuf _U_, size_t ibuflen _U_,
-                      char *rbuf, size_t *rbuflen)
-{
+                      char *rbuf, size_t *rbuflen) {
     char *passwdfile;
     uint16_t sessid;
     size_t len;
@@ -379,8 +375,7 @@ static int rand_login(void *obj, char *username, int ulen,
  * here as the first part of randnum and rand2num are identical. */
 static int randnum_logincont(void *obj, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen _U_,
-                             char *rbuf _U_, size_t *rbuflen)
-{
+                             char *rbuf _U_, size_t *rbuflen) {
     uint16_t sessid;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
@@ -419,8 +414,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
  */
 static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
                               char *ibuf, size_t ibuflen _U_,
-                              char *rbuf, size_t *rbuflen)
-{
+                              char *rbuf, size_t *rbuflen) {
     uint16_t sessid;
     unsigned int i;
     gcry_cipher_hd_t ctx;
@@ -470,8 +464,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
  */
 static int randnum_changepw(void *obj, const char *username _U_,
                             struct passwd *pwd, char *ibuf,
-                            size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen _U_)
-{
+                            size_t ibuflen _U_, char *rbuf _U_, size_t *rbuflen _U_) {
     char *passwdfile;
     int err;
     size_t len;
@@ -548,8 +541,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
 /* randnum login */
 static int randnum_login(void *obj, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
-                         char *rbuf, size_t *rbuflen)
-{
+                         char *rbuf, size_t *rbuflen) {
     char *username;
     size_t len, ulen;
     *rbuflen = 0;
@@ -586,8 +578,7 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
 /* randnum login ext */
 static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen,
-                             char *rbuf, size_t *rbuflen)
-{
+                             char *rbuf, size_t *rbuflen) {
     char       *username;
     size_t     len, ulen;
     uint16_t  temp16;
@@ -615,8 +606,7 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-static int uam_setup(void *obj, const char *path)
-{
+static int uam_setup(void *obj, const char *path) {
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Randnum exchange",
                      randnum_login, randnum_logincont, NULL, randnum_login_ext) < 0) {
         return -1;
@@ -640,8 +630,7 @@ static int uam_setup(void *obj, const char *path)
     return 0;
 }
 
-static void uam_cleanup(void)
-{
+static void uam_cleanup(void) {
     uam_unregister(UAM_SERVER_LOGIN, "Randnum exchange");
     uam_unregister(UAM_SERVER_LOGIN, "2-Way Randnum exchange");
     uam_unregister(UAM_SERVER_CHANGEPW, "Randnum Exchange");

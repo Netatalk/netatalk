@@ -57,8 +57,7 @@ struct charset_functions charset_mac_hebrew = {
  * from unicode to mac hebrew code page
 */
 static int
-char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc)
-{
+char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc) {
     unsigned char c = 0;
 
     if (wc < 0x0080) {
@@ -85,8 +84,7 @@ char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc)
 }
 
 static size_t mac_hebrew_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
-                              char **outbuf, size_t *outbytesleft)
-{
+                              char **outbuf, size_t *outbytesleft) {
     unsigned char c = 0;
     int len = 0;
     unsigned char *tmpptr = (unsigned char *) *outbuf;
@@ -140,8 +138,7 @@ static size_t mac_hebrew_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
 
 /* ------------------------ */
 static int
-char_mac_hebrew_to_ucs2(ucs2_t *pwc, const unsigned char *s)
-{
+char_mac_hebrew_to_ucs2(ucs2_t *pwc, const unsigned char *s) {
     unsigned char c = *s;
 
     if (c < 0x80) {
@@ -160,8 +157,7 @@ char_mac_hebrew_to_ucs2(ucs2_t *pwc, const unsigned char *s)
 }
 
 static size_t mac_hebrew_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
-                              char **outbuf, size_t *outbytesleft)
-{
+                              char **outbuf, size_t *outbytesleft) {
     ucs2_t         temp;
     unsigned char  *inptr;
     size_t         len = 0;
