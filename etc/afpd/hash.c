@@ -28,7 +28,8 @@
 #endif
 
 #define INIT_BITS   6
-#define INIT_SIZE   (1UL << (INIT_BITS))    /* must be power of two     */
+/* must be power of two */
+#define INIT_SIZE   (1UL << (INIT_BITS))
 #define INIT_MASK   ((INIT_SIZE) - 1)
 
 #define next hash_next
@@ -75,10 +76,12 @@ int hash_val_t_bit;
 
 static void compute_bits(void)
 {
-    hash_val_t val = HASH_VAL_T_MAX;    /* 1 */
+    /* 1 */
+    hash_val_t val = HASH_VAL_T_MAX;
     int bits = 0;
 
-    while (val) {   /* 2 */
+    /* 2 */
+    while (val) {
         bits++;
         val >>= 1;
     }
@@ -147,17 +150,22 @@ static void clear_table(hash_t *hash)
 static void grow_table(hash_t *hash)
 {
     hnode_t **newtable;
-    assert(2 * hash->nchains > hash->nchains);  /* 1 */
-    newtable = realloc(hash->table,
-                       sizeof(*newtable) * hash->nchains * 2);  /* 4 */
+    /* 1 */
+    assert(2 * hash->nchains > hash->nchains);
+    /* 4 */
+    newtable = realloc(hash->table, sizeof(*newtable) * hash->nchains * 2);
 
-    if (newtable) { /* 5 */
-        hash_val_t mask = (hash->mask << 1) | 1;    /* 3 */
-        hash_val_t exposed_bit = mask ^ hash->mask; /* 6 */
+    /* 5 */
+    if (newtable) {
+        /* 3 */
+        hash_val_t mask = (hash->mask << 1) | 1;
+        /* 6 */
+        hash_val_t exposed_bit = mask ^ hash->mask;
         hash_val_t chain;
         assert(mask != hash->mask);
 
-        for (chain = 0; chain < hash->nchains; chain++) { /* 7 */
+        /* 7 */
+        for (chain = 0; chain < hash->nchains; chain++) {
             hnode_t *low_chain = NULL, *high_chain = NULL, *hptr, *next;
 
             for (hptr = newtable[chain]; hptr != NULL; hptr = next) {
@@ -172,11 +180,13 @@ static void grow_table(hash_t *hash)
                 }
             }
 
-            newtable[chain] = low_chain;    /* 8 */
+            /* 8 */
+            newtable[chain] = low_chain;
             newtable[chain + hash->nchains] = high_chain;
         }
 
-        hash->table = newtable;         /* 9 */
+        /* 9 */
+        hash->table = newtable;
         hash->mask = mask;
         hash->nchains *= 2;
         hash->lowmark *= 2;
@@ -220,34 +230,42 @@ static void shrink_table(hash_t *hash)
 {
     hash_val_t chain, nchains;
     hnode_t **newtable, *low_tail, *low_chain, *high_chain;
-    assert(hash->nchains >= 2);             /* 1 */
+    /* 1 */
+    assert(hash->nchains >= 2);
     nchains = hash->nchains / 2;
 
     for (chain = 0; chain < nchains; chain++) {
-        low_chain = hash->table[chain];     /* 2 */
+        /* 2 */
+        low_chain = hash->table[chain];
         high_chain = hash->table[chain + nchains];
 
+        /* 3 */
         for (low_tail = low_chain; low_tail
                 && low_tail->next; low_tail = low_tail->next)
-            ;   /* 3 */
+            ;
 
-        if (low_chain != NULL) {            /* 4 */
+        if (low_chain != NULL) {
+            /* 4 */
             low_tail->next = high_chain;
-        } else if (high_chain != NULL) {        /* 5 */
+        } else if (high_chain != NULL) {
+            /* 5 */
             hash->table[chain] = high_chain;
         } else {
-            assert(hash->table[chain] == NULL);    /* 6 */
+            /* 6 */
+            assert(hash->table[chain] == NULL);
         }
     }
 
-    newtable = realloc(hash->table,
-                       sizeof(*newtable) * nchains);    /* 7 */
+    /* 7 */
+    newtable = realloc(hash->table, sizeof(*newtable) * nchains);
 
-    if (newtable) {                 /* 8 */
+    /* 8 */
+    if (newtable) {
         hash->table = newtable;
     }
 
-    hash->mask >>= 1;           /* 9 */
+    /* 9 */
+    hash->mask >>= 1;
     hash->nchains = nchains;
     hash->lowmark /= 2;
     hash->highmark /= 2;
@@ -289,17 +307,23 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
 {
     hash_t *hash;
 
-    if (hash_val_t_bit == 0) {  /* 1 */
+    /* 1 */
+    if (hash_val_t_bit == 0) {
         compute_bits();
     }
 
-    hash = malloc(sizeof(*hash));   /* 2 */
+    /* 2 */
+    hash = malloc(sizeof(*hash));
 
-    if (hash) {     /* 3 */
-        hash->table = malloc(sizeof(*hash->table) * INIT_SIZE); /* 4 */
+    /* 3 */
+    if (hash) {
+        /* 4 */
+        hash->table = malloc(sizeof(*hash->table) * INIT_SIZE);
 
-        if (hash->table) {  /* 5 */
-            hash->nchains = INIT_SIZE;      /* 6 */
+        /* 5 */
+        if (hash->table) {
+            /* 6 */
+            hash->nchains = INIT_SIZE;
             hash->highmark = INIT_SIZE * 2;
             hash->lowmark = INIT_SIZE / 2;
             hash->nodecount = 0;
@@ -310,8 +334,10 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
             hash->freenode = hnode_free;
             hash->context = NULL;
             hash->mask = INIT_MASK;
-            hash->dynamic = 1;          /* 7 */
-            clear_table(hash);          /* 8 */
+            /* 7 */
+            hash->dynamic = 1;
+            /* 8 */
+            clear_table(hash);
             assert(hash_verify(hash));
             return hash;
         }
@@ -386,14 +412,15 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
     scan->table = hash;
 
     /* 1 */
-
     for (chain = 0; chain < nchains && hash->table[chain] == NULL; chain++)
         ;
 
-    if (chain < nchains) {  /* 2 */
+    if (chain < nchains) {
+        /* 2 */
         scan->chain = chain;
         scan->next = hash->table[chain];
-    } else {            /* 3 */
+    } else {
+        /* 3 */
         scan->next = NULL;
     }
 }
@@ -435,21 +462,27 @@ hnode_t *hash_scan_next(hscan_t *scan)
         return NULL;
     }
 
-    next = scan->next;     /* 1 */
+    /* 1 */
+    next = scan->next;
     hash = scan->table;
     chain = scan->chain + 1;
     nchains = (hash_val_t) hash->nchains;
-    assert(hash_val_t_bit != 0);    /* 2 */
+    /* 2 */
+    assert(hash_val_t_bit != 0);
 
-    if (next) {         /* 3 */
-        if (next->next) {   /* 4 */
+    /* 3 */
+    if (next) {
+        /* 4 */
+        if (next->next) {
             scan->next = next->next;
         } else {
-            while (chain < nchains && hash->table[chain] == NULL) { /* 5 */
+            /* 5 */
+            while (chain < nchains && hash->table[chain] == NULL) {
                 chain++;
             }
 
-            if (chain < nchains) {  /* 6 */
+            /* 6 */
+            if (chain < nchains) {
                 scan->chain = chain;
                 scan->next = hash->table[chain];
             } else {
@@ -479,15 +512,19 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
     hash_val_t hkey, chain;
     assert(hash_val_t_bit != 0);
     assert(node->next == NULL);
-    assert(hash->nodecount < hash->maxcount);   /* 1 */
-    assert(hash_lookup(hash, key) == NULL);     /* 2 */
+    /* 1 */
+    assert(hash->nodecount < hash->maxcount);
+    /* 2 */
+    assert(hash_lookup(hash, key) == NULL);
 
-    if (hash->dynamic && hash->nodecount >= hash->highmark) { /* 3 */
+    /* 3 */
+    if (hash->dynamic && hash->nodecount >= hash->highmark) {
         grow_table(hash);
     }
 
     hkey = hash->function(key);
-    chain = hkey & hash->mask;  /* 4 */
+    /* 4 */
+    chain = hkey & hash->mask;
     node->key = key;
     node->hkey = hkey;
     node->next = hash->table[chain];
@@ -514,10 +551,13 @@ hnode_t *hash_lookup(hash_t *hash, const void *key)
 {
     hash_val_t hkey, chain;
     hnode_t *nptr;
-    hkey = hash->function(key);     /* 1 */
-    chain = hkey & hash->mask;      /* 2 */
+    /* 1 */
+    hkey = hash->function(key);
+    /* 2 */
+    chain = hkey & hash->mask;
 
-    for (nptr = hash->table[chain]; nptr; nptr = nptr->next) {  /* 3 */
+    /* 3 */
+    for (nptr = hash->table[chain]; nptr; nptr = nptr->next) {
         if (nptr->hkey == hkey && hash->compare(nptr->key, key) == 0) {
             return nptr;
         }
@@ -548,21 +588,26 @@ hnode_t *hash_delete(hash_t *hash, hnode_t *node)
 {
     hash_val_t chain;
     hnode_t *hptr;
-    assert(hash_lookup(hash, node->key) == node);   /* 1 */
+    /* 1 */
+    assert(hash_lookup(hash, node->key) == node);
     assert(hash_val_t_bit != 0);
 
     if (hash->dynamic && hash->nodecount <= hash->lowmark
             && hash->nodecount > INIT_SIZE) {
-        shrink_table(hash);    /* 2 */
+        /* 2 */
+        shrink_table(hash);
     }
 
-    chain = node->hkey & hash->mask;            /* 3 */
+    /* 3 */
+    chain = node->hkey & hash->mask;
     hptr = hash->table[chain];
 
-    if (hptr == node) {                 /* 4 */
+    /* 4 */
+    if (hptr == node) {
         hash->table[chain] = node->next;
     } else {
-        while (hptr->next != node) {            /* 5 */
+        /* 5 */
+        while (hptr->next != node) {
             assert(hptr != 0);
             hptr = hptr->next;
         }
@@ -573,7 +618,8 @@ hnode_t *hash_delete(hash_t *hash, hnode_t *node)
 
     hash->nodecount--;
     assert(hash_verify(hash));
-    node->next = NULL;                  /* 6 */
+    /* 6 */
+    node->next = NULL;
     return node;
 }
 
@@ -651,7 +697,8 @@ int hash_verify(hash_t *hash)
     hash_val_t chain;
     hnode_t *hptr;
 
-    if (hash->dynamic) {    /* 1 */
+    /* 1 */
+    if (hash->dynamic) {
         if (hash->lowmark >= hash->highmark) {
             return 0;
         }
@@ -665,7 +712,8 @@ int hash_verify(hash_t *hash)
         }
     }
 
-    for (chain = 0; chain < hash->nchains; chain++) {   /* 2 */
+    /* 2 */
+    for (chain = 0; chain < hash->nchains; chain++) {
         for (hptr = hash->table[chain]; hptr != NULL; hptr = hptr->next) {
             if ((hptr->hkey & hash->mask) != chain) {
                 return 0;
@@ -1014,11 +1062,13 @@ int main(void)
             break;
 
         case '+':
-            grow_table(h);      /* private function */
+            /* private function */
+            grow_table(h);
             break;
 
         case '-':
-            shrink_table(h);    /* private function */
+            /* private function */
+            shrink_table(h);
             break;
 
         case 'q':
