@@ -149,7 +149,7 @@ static void grow_table(hash_t *hash)
     hnode_t **newtable;
     assert(2 * hash->nchains > hash->nchains);  /* 1 */
     newtable = realloc(hash->table,
-                       sizeof * newtable * hash->nchains * 2);  /* 4 */
+                       sizeof(*newtable) * hash->nchains * 2);  /* 4 */
 
     if (newtable) { /* 5 */
         hash_val_t mask = (hash->mask << 1) | 1;    /* 3 */
@@ -241,7 +241,7 @@ static void shrink_table(hash_t *hash)
     }
 
     newtable = realloc(hash->table,
-                       sizeof * newtable * nchains);    /* 7 */
+                       sizeof(*newtable) * nchains);    /* 7 */
 
     if (newtable) {                 /* 8 */
         hash->table = newtable;
@@ -293,10 +293,10 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
         compute_bits();
     }
 
-    hash = malloc(sizeof * hash);   /* 2 */
+    hash = malloc(sizeof(*hash));   /* 2 */
 
     if (hash) {     /* 3 */
-        hash->table = malloc(sizeof * hash->table * INIT_SIZE); /* 4 */
+        hash->table = malloc(sizeof(*hash->table) * INIT_SIZE); /* 4 */
 
         if (hash->table) {  /* 5 */
             hash->nchains = INIT_SIZE;      /* 6 */
@@ -684,7 +684,7 @@ int hash_verify(hash_t *hash)
 
 static hnode_t *hnode_alloc(void *context _U_)
 {
-    return malloc(sizeof * hnode_alloc(NULL));
+    return malloc(sizeof(*hnode_alloc(NULL)));
 }
 
 static void hnode_free(hnode_t *node, void *context _U_)

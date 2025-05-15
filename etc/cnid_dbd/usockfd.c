@@ -33,7 +33,7 @@ int tsockfd_create(char *host, char *port, int backlog)
     int sockfd, flag, ret;
     struct addrinfo hints, *servinfo, *p;
     /* Prepare hint for getaddrinfo */
-    memset(&hints, 0, sizeof hints);
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 

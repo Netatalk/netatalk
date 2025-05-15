@@ -751,7 +751,7 @@ int send_fd(int socket, int fd)
     char *buf;
     size_t size;
     int er = 0;
-    size = CMSG_SPACE(sizeof fd);
+    size = CMSG_SPACE(sizeof(fd));
     buf = malloc(size);
 
     if (!buf) {

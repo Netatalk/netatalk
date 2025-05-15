@@ -673,7 +673,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
         ipaddr = strtok(p, "/");
         mask_char = strtok(NULL, "/");
         /* Get address from string with getaddrinfo */
-        memset(&hints, 0, sizeof hints);
+        memset(&hints, 0, sizeof(hints));
         hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
 
