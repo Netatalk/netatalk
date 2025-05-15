@@ -1,7 +1,7 @@
-# astyle base ruleset: One True Brace Style
---style=1tbs
+# astyle base ruleset
+--style=google
 
-# See the async docs for descriptions of individual rules:
+# See the astyle docs for descriptions of individual rules:
 # https://astyle.sourceforge.net/astyle.html
 --add-braces
 --align-pointer=name
