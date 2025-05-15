@@ -451,7 +451,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress,
     }
 
     /* Prepare hint for getaddrinfo */
-    memset(&hints, 0, sizeof hints);
+    memset(&hints, 0, sizeof(hints));
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags = AI_NUMERICSERV;
 
@@ -499,7 +499,7 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress,
     }
 
     /* Prepare hint for getaddrinfo */
-    memset(&hints, 0, sizeof hints);
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 

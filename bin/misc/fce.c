@@ -233,7 +233,7 @@ int main(int argc, char **argv)
         }
     }
 
-    memset(&hints, 0, sizeof hints);
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
     hints.ai_socktype = SOCK_DGRAM;
 
@@ -272,7 +272,7 @@ int main(int argc, char **argv)
     freeaddrinfo(servinfo);
     free((void *)host);
     free((void *)port);
-    addr_len = sizeof their_addr;
+    addr_len = sizeof(their_addr);
     struct fce_packet packet;
 
     while (1) {

@@ -253,7 +253,7 @@ object_compare (const void *p1, const void *p2)
 static int
 add_object (struct ftw_data *data, struct STAT *st)
 {
-    struct known_object *newp = malloc (sizeof (struct known_object));
+    struct known_object *newp = malloc (sizeof(struct known_object));
 
     if (newp == NULL) {
         return -1;
@@ -692,8 +692,8 @@ static int ftw_startup (const char *dir,
     data.maxdir = descriptors < 1 ? 1 : descriptors;
     data.actdir = 0;
     data.dirstreams = (struct dir_data **) alloca (data.maxdir
-                      * sizeof (struct dir_data *));
-    memset (data.dirstreams, '\0', data.maxdir * sizeof (struct dir_data *));
+                      * sizeof(struct dir_data *));
+    memset (data.dirstreams, '\0', data.maxdir * sizeof(struct dir_data *));
     /* PATH_MAX is always defined when we get here.  */
     data.dirbufsize = MAX (2 * strlen (dir), PATH_MAX);
     data.dirbuf = (char *) malloc (data.dirbufsize);
