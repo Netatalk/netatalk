@@ -24,6 +24,7 @@
 #define ZIPOP_DEFAULT ZIPOP_GETZONELIST
 
 static void print_zones(short n, char *buf, charset_t charset);
+void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type, charset_t charset);
 
 static void usage(char *s)
 {
@@ -33,13 +34,8 @@ static void usage(char *s)
 
 int main(int argc, char *argv[])
 {
-    struct atp_handle *ah;
-    struct atp_block atpb;
     struct sockaddr_at saddr;
     struct servent *se;
-    char reqdata[4], buf[ATP_MAXDATA];
-    struct iovec iov;
-    uint16_t start_index = 0;
     int c, errflg = 0;
     extern int optind;
     charset_t chMac = CH_MAC;
@@ -104,6 +100,16 @@ int main(int argc, char *argv[])
         }
     }
 
+    do_atp_lookup(&saddr, lookup_type, chMac);
+}
+
+void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type, charset_t charset) {
+    struct atp_handle *ah;
+    struct atp_block atpb;
+    char reqdata[4], buf[ATP_MAXDATA];
+    struct iovec iov;
+    uint16_t start_index = 0;
+
     if ((ah = atp_open(ATADDR_ANYPORT, NULL)) == NULL) {
         perror("atp_open");
         exit(1);
@@ -127,7 +133,7 @@ int main(int argc, char *argv[])
     }
 
     do {
-        atpb.atp_saddr = &saddr;
+        atpb.atp_saddr = saddr;
 
         /* Put the start index into the packet */
         uint16_t start_idx_for_packet = htons(start_index);
@@ -159,7 +165,7 @@ int main(int argc, char *argv[])
         uint16_t zone_count_returned;
         memcpy(&zone_count_returned, (char *) iov.iov_base + 2, 2);
         zone_count_returned = ntohs(zone_count_returned);
-        print_zones(zone_count_returned, (char *) iov.iov_base + 4, chMac);
+        print_zones(zone_count_returned, (char *) iov.iov_base + 4, charset);
 
         /* If we're doing a GetMyZone request, we can just bail out now; there will
            never be more than one zone returned, so we don't need to ask for the next
