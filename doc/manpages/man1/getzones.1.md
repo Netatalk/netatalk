@@ -4,7 +4,7 @@ getzones — list AppleTalk zone names
 
 # Synopsis
 
-**getzones** [-m | -l] [*address*]
+**getzones** [-m | -l] [-c *Mac charset*] [*address*]
 
 # Description
 
@@ -24,6 +24,11 @@ ZIP GetMyZone request.
 
 > List the local zones; this is accomplished by sending a GetLocalZones
 request.
+
+**-c**
+
+> Sets the Macintosh character set to use when interpreting zone names.  If not specified,
+defaults to MacRoman.
 
 *address*
 
