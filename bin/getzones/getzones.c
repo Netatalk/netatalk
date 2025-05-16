@@ -21,11 +21,12 @@
 
 #define MACCHARSET "MAC_ROMAN"
 
-static void print_zones(short n, char *buf);
+
+static void print_zones(short n, char *buf, charset_t charset);
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [-m | -l] [address]\n", s);
+    fprintf(stderr, "usage:\t%s [-m | -l] [-c Mac charset] [address]\n", s);
     exit(1);
 }
 
@@ -40,9 +41,14 @@ int main(int argc, char *argv[])
     short temp, index = 0;
     int c, myzoneflg = 0, localzonesflg = 0, errflg = 0;
     extern int optind;
+    charset_t chMac = CH_MAC;
+    
+    set_charset_name(CH_UNIX, "UTF8");
+    set_charset_name(CH_MAC, MACCHARSET);
+    
     reqdata[0] = ZIPOP_GETZONELIST;
 
-    while ((c = getopt(argc, argv, "ml")) != EOF) {
+    while ((c = getopt(argc, argv, "mlc:")) != EOF) {
         switch (c) {
         case 'm':
             if (localzonesflg) {
@@ -62,13 +68,19 @@ int main(int argc, char *argv[])
             reqdata[0] = ZIPOP_GETLOCALZONES;
             break;
 
+        case 'c':
+            chMac = add_charset(optarg);
+            if ((charset_t) -1 == chMac) {
+                fprintf(stderr, "Invalid Mac charset.\n");
+                exit(1);
+            }
+            break;
+
         default:
             ++errflg;
         }
     }
 
-    set_charset_name(CH_UNIX, "UTF8");
-    set_charset_name(CH_MAC, MACCHARSET);
 
     if (errflg || argc - optind > 1) {
         usage(argv[0]);
@@ -132,7 +144,7 @@ int main(int argc, char *argv[])
 
         memcpy(&temp, (char *) iov.iov_base + 2, 2);
         temp = ntohs(temp);
-        print_zones(temp, (char *) iov.iov_base + 4);
+        print_zones(temp, (char *) iov.iov_base + 4, chMac);
         index += temp;
     } while (!myzoneflg && !((char *)iov.iov_base)[0]);
 
@@ -149,13 +161,13 @@ int main(int argc, char *argv[])
  * n:   number of zones in this packet
  * buf: zone length/name pairs
  */
-static void print_zones(short n, char *buf)
+static void print_zones(short n, char *buf, charset_t charset)
 {
     size_t zone_len;
     char *zone;
 
     for (; n--; buf += (*buf) + 1) {
-        if ((size_t)(-1) == (zone_len = convert_string_allocate(CH_MAC,
+        if ((size_t)(-1) == (zone_len = convert_string_allocate(charset,
                                         CH_UNIX, buf + 1, *buf, &zone))) {
             zone_len = *buf;
 
