@@ -4,7 +4,7 @@ getzones — list AppleTalk zone names
 
 # Synopsis
 
-**getzones** [-m | -l] [-c *Mac charset*] [*address*]
+**getzones** [-g | -m | -l] [-c *Mac charset*] [*address*]
 
 # Description
 
@@ -14,6 +14,12 @@ AppleTalk router. By default, it sends the request to the locally
 running **atalkd**(8).
 
 # Options
+
+**-g**
+
+> Get the current default zone and the valid network range for the current network.
+This is accomplished by sending a ZIP GetNetInfo request.  Note that only seed routers
+respond to GetNetInfo, so the usual idiom is to broadcast it.
 
 **-m**
 
@@ -34,6 +40,27 @@ defaults to MacRoman.
 
 > Contact the AppleTalk router at *address.* *address* is parsed by
 **atalk_aton**(3).
+
+# Examples
+
+Show all zones on the AppleTalk internetwork:
+
+	example$ getzones
+	Ethernet
+	LocalTalk
+	AirTalk
+	example$
+
+Get default zone and network configuration for current network from whichever router
+is seeding this network;
+
+	example$ getzones -g 0.255
+	Network range: 3-10
+	Flags (0xa0): requested-zone-invalid only-one-zone
+	Requested zone: 
+	Zone multicast address: 09:00:07:00:00:a8
+	Default zone: Ethernet
+	example$
 
 # See Also
 
