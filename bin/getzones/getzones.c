@@ -16,6 +16,7 @@
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 #include <atalk/ddp.h>
+#include <atalk/netddp.h>
 #include <atalk/util.h>
 #include <atalk/unicode.h>
 #include <atalk/zip.h>
@@ -25,10 +26,12 @@
 
 static void print_zones(short n, char *buf, charset_t charset);
 void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type, charset_t charset);
+static void print_gnireply(size_t len, uint8_t *buf, charset_t charset);
+void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm, charset_t charset);
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [-m | -l] [-c Mac charset] [address]\n", s);
+    fprintf(stderr, "usage:\t%s [-m | -l | -g] [-c Mac charset] [address]\n", s);
     exit(1);
 }
 
@@ -44,8 +47,14 @@ int main(int argc, char *argv[])
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
 
-    while ((c = getopt(argc, argv, "mlc:")) != EOF) {
+    while ((c = getopt(argc, argv, "glmc:")) != EOF) {
         switch (c) {
+        case 'g':
+            if (lookup_type != ZIPOP_DEFAULT) {
+                ++errflg;
+            }
+            lookup_type = ZIPOP_GNI;
+            break;
         case 'm':
             if (lookup_type != ZIPOP_DEFAULT) {
                 ++errflg;
@@ -100,7 +109,17 @@ int main(int argc, char *argv[])
         }
     }
 
-    do_atp_lookup(&saddr, lookup_type, chMac);
+    switch(lookup_type) {
+    case ZIPOP_GETZONELIST:
+    case ZIPOP_GETMYZONE:
+    case ZIPOP_GETLOCALZONES:
+        do_atp_lookup(&saddr, lookup_type, chMac);
+        break;
+        
+    case ZIPOP_GNI:
+        do_getnetinfo(&saddr, NULL, chMac);
+        break;
+    }
 }
 
 void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type, charset_t charset) {
@@ -211,5 +230,163 @@ static void print_zones(short n, char *buf, charset_t charset)
 
         printf("%.*s\n", (int)zone_len, zone);
         free(zone);
+    }
+}
+
+void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm, charset_t charset) {
+    uint8_t buf[600];
+    uint8_t *cursor;
+    int i;
+    struct sockaddr_at laddr = { 0 };
+    
+    cursor = buf;
+    
+    /* Construct packet. Layout is in IA, 2nd ed. p. 8-17 */
+    *cursor++ = DDPTYPE_ZIP;
+    *cursor++ = ZIPOP_GNI;
+    for (i = 0; i < 5; i++) {
+        *cursor++ = 0;
+    }
+    
+    if (zone_to_confirm != NULL) {
+        size_t zonelen = strnlen(zone_to_confirm, 32);
+        *cursor++ = (uint8_t)zonelen;
+        memcpy(cursor, zone_to_confirm, zonelen);
+        cursor += zonelen;
+    } else {
+        /* If we aren't trying to find out about a specific zone, give an empty name */
+        *cursor++ = 0;
+    }
+    
+    /* Send the thing */
+    int sockfd = netddp_open(&laddr, NULL);
+    if (sockfd < 0) {
+        perror("netddp_open");
+        exit(1);
+    }
+    
+    int ret = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
+        sizeof(struct sockaddr_at));
+    if (ret < 0) {
+        perror("netddp_sendto");
+        exit(1);
+    }
+    
+    /* Wait for a reply */
+    for(;;) {
+        ret = netddp_recvfrom(sockfd, buf, sizeof(buf), 0, NULL, NULL);
+        if (ret < 0) {
+            perror("netddp_recvfrom");
+            exit(1);
+        }
+        
+        /* Is this actually a ZIP GNI reply or some random packet that's just wandered
+           into our socket? */
+        if (ret < 2) {
+            continue;
+        }
+        if (buf[0] != DDPTYPE_ZIP || buf[1] != ZIPOP_GNIREPLY) {
+            continue;
+        }
+                
+        break;
+    }
+    
+    print_gnireply(ret, buf, charset);   
+}
+
+static void print_gnireply(size_t len, uint8_t *buf, charset_t charset) {
+    int ret;
+    uint8_t *cursor;
+    
+    /* Is the packet long enough for our flags and stuff? */
+    if (len < 9) {
+        fprintf(stderr, "getnetinfo reply too short, bailing out\n");
+        exit(1);
+    }
+
+    /* Fish out the fixed-length metadata. */
+    cursor = buf;
+    /* skip over DDP type and ZIP operation, which we checked above */
+    cursor += 2; 
+    
+    uint8_t flags = *cursor++;
+    uint16_t net_start = ntohs(*((uint16_t*)cursor));
+    cursor += 2;
+    uint16_t net_end = ntohs(*((uint16_t*)cursor));
+    cursor += 2;
+    
+    printf("Network range: %"PRIu16"-%"PRIu16"\n", net_start, net_end);
+        
+    /* Decode the flags */
+    printf("Flags (0x%"PRIx8"):", flags);
+    if (flags & ZIPGNI_INVALID) {
+        printf(" requested-zone-invalid");
+    }
+    if (flags & ZIPGNI_USEBROADCAST) {
+        printf(" use-broadcast");
+    }
+    if (flags & ZIPGNI_ONEZONE) {
+        printf(" only-one-zone");
+    }
+    printf("\n");
+    
+    /* Print out the zone requested */
+    uint8_t requested_zone_length = *cursor++;
+    if ((cursor - buf) + requested_zone_length >= len) {
+        fprintf(stderr, "getnetinfo reply too short (missing requested zone), bailing out\n");
+        exit(1);
+    }
+    char* requested_zone;
+    ret = convert_string_allocate(charset, CH_UNIX, cursor, requested_zone_length,
+                                  &requested_zone);
+    if (ret == -1) {
+        fprintf(stderr, "malformed requested zone name, bailing out\n");
+        exit(1);
+    }
+    printf("Requested zone: %s\n", requested_zone);
+    cursor += ret;
+    free(requested_zone);
+    
+    /* Print out multicast address */
+    uint8_t multicast_length = *cursor++;
+    if ((cursor - buf) + multicast_length > len) {
+        fprintf(stderr, "getnetinfo reply too short (missing multicast address), bailing out\n");
+        exit(1);
+    }
+    
+    printf("Zone multicast address: ");
+    bool first_octet = true;
+    for (int i = 0; i < multicast_length; i++) {
+        if (!first_octet) {
+            printf(":");
+        }
+        printf("%02"PRIx8, *cursor++);
+        first_octet = false;
+    }
+    printf("\n");
+    
+    /* Do we have a default zone? */
+    uint8_t default_zone_len = 0;
+    if ((cursor - buf) <= len) {
+        default_zone_len = *cursor++;
+    }
+    
+    if (default_zone_len > 0 && (cursor - buf) + default_zone_len > len) {
+        fprintf(stderr, "getnetinfo reply too short (insufficient room for default zone), bailing out\n");
+        exit(1);
+    }
+    
+    if (default_zone_len > 0) {
+        /* Yes! (We will never have a legit zone name with len = 0, it's not allowed). */
+        char* default_zone_name;
+        ret = convert_string_allocate(charset, CH_UNIX, cursor, default_zone_len,
+                                      &default_zone_name);
+        if (ret == -1) {
+            fprintf(stderr, "malformed default zone name, bailing out\n");
+            exit(1);
+        }
+        printf("Default zone: %s\n", default_zone_name);
+        free(default_zone_name);
     }
 }

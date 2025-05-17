@@ -55,6 +55,7 @@ struct zipreplent {
 #define ZIPOP_GETLOCALZONES 9
 
 #define ZIPGNI_INVALID	0x80
+#define ZIPGNI_USEBROADCAST	0x40
 #define ZIPGNI_ONEZONE	0x20
 
 #define MAX_ZONE_LENGTH 32
