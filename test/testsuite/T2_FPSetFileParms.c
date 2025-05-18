@@ -159,7 +159,7 @@ STATIC void test426()
     dsi = &Conn->dsi;
     ENTER_TEST
 
-    // FIXME: This test hangs with AFP2.x (3.1.12 - 4.0.3)
+    /* FIXME: This test hangs with AFP2.x (3.1.12 - 4.0.3) */
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
         return;

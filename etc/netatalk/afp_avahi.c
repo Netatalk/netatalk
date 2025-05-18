@@ -181,7 +181,9 @@ static void register_stuff(void)
     return;
 fail:
     time(NULL);
-//    avahi_threaded_poll_quit(ctx->threaded_poll);
+#if 0
+    avahi_threaded_poll_quit(ctx->threaded_poll);
+#endif
 }
 
 /* Called when publishing of service data completes */

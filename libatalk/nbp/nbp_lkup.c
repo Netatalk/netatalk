@@ -70,10 +70,10 @@ int nbp_do_lookup_op(const char *obj, const char *type, const char *zone,
     }
 
     if (!dstaddr) {
-        // Without a destination address, we assume we're doing loopback, so copy
-        // the source address to the destination.  We have to do this here, after
-        // netddp_open, because netddp_open mutates addr after binding to it, to
-        // set the address family and "real" address.
+        /* Without a destination address, we assume we're doing loopback, so copy
+         * the source address to the destination.  We have to do this here, after
+         * netddp_open, because netddp_open mutates addr after binding to it, to
+         * set the address family and "real" address. */
         memcpy(&dest, &addr, sizeof(struct sockaddr_at));
     }
 

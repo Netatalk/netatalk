@@ -63,7 +63,7 @@
 #include "fork.h"
 #include "volume.h"
 
-// ONLY USED IN THIS FILE
+/* ONLY USED IN THIS FILE */
 #include "fce_api_internal.h"
 
 extern int afprun_bg(char *cmd);
@@ -83,7 +83,8 @@ static unsigned long fce_ev_enabled =
     (1 << FCE_LOGIN) |
     (1 << FCE_LOGOUT);
 
-static uint8_t fce_ev_info;    /* flags of additional info to send in events */
+/* flags of additional info to send in events */
+static uint8_t fce_ev_info;
 
 #define MAXIOBUF 4096
 static unsigned char iobuf[MAXIOBUF];
@@ -570,7 +571,8 @@ static void fce_init_ign_paths(const char *ignores,
 {
     char *names = strdup(ignores);
     char *saveptr = NULL;
-    int capacity = 10;  // Initial capacity, will grow if needed
+    /* Initial capacity, will grow if needed */
+    int capacity = 10;
     int i = 0;
     *dest_array = calloc(capacity + 1, sizeof(char *));
 

@@ -133,14 +133,15 @@ STATIC void test70()
     bitmap = htons(DIRPBIT_LNAME);;
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
-    dsi->commands[ofs++] = 4;		/* ERROR !! long name */
+    /* ERROR !! long name */
+    dsi->commands[ofs++] = 4;
     len = strlen(name);
     dsi->commands[ofs++] = len;
     u2mac(&dsi->commands[ofs], name, len);
     ofs += len;
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
-    dsi->header.dsi_code = 0; // htonl(err);
+    dsi->header.dsi_code = 0;
     my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
     my_dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
@@ -591,7 +592,7 @@ STATIC void test308()
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
-        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes*/
+        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes */
             test_skipped(T_MAC);
             goto test_exit;
         }
@@ -665,7 +666,7 @@ STATIC void test324()
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
-        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes*/
+        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes */
             test_skipped(T_MAC);
             goto test_exit;
         }
@@ -747,7 +748,7 @@ STATIC void test326()
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
-        // FIXME: fails with afp 2.x despite the comment below
+        /* FIXME: fails with afp 2.x despite the comment below */
         bitmap = (1 << DIRPBIT_LNAME);
         test_skipped(T_AFP3);
         goto test_exit;
@@ -805,7 +806,8 @@ STATIC void test333()
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
-        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes*/
+        if (Mac) {
+            /* a Mac AFP 2.x can't create filename longer than 31 bytes */
             test_skipped(T_MAC);
             goto test_exit;
         }
@@ -877,7 +879,7 @@ STATIC void test334()
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
-        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes*/
+        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes */
             test_skipped(T_MAC);
             goto test_exit;
         }
@@ -951,7 +953,7 @@ STATIC void test335()
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
-        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes*/
+        if (Mac) { /* a Mac AFP 2.x can't create filename longer than 31 bytes */
             test_skipped(T_MAC);
             goto test_exit;
         }

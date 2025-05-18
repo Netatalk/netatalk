@@ -194,6 +194,8 @@ int afp_getsrvrmesg(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     }
 
     *rbuflen += outlen;
-//    *message = 0;
+#if 0
+    *message = 0;
+#endif
     return AFP_OK;
 }

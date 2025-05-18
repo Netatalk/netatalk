@@ -48,7 +48,7 @@
 #include "desktop.h"
 #include "directory.h"
 
-// ONLY USED IN THIS FILE
+/* ONLY USED IN THIS FILE */
 #include "fce_api_internal.h"
 
 #include "file.h"

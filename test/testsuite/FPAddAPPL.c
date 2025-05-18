@@ -15,7 +15,7 @@ STATIC void test214()
     int dir;
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;
@@ -73,7 +73,7 @@ test_exit:
 }
 
 /* ------------------------- */
-// FIXME: The first branch needs to get refactored. Always fails with 1 user.
+/* FIXME: The first branch needs to get refactored. Always fails with 1 user. */
 STATIC void test301()
 {
     uint16_t vol = VolID;

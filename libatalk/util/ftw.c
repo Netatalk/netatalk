@@ -610,7 +610,7 @@ fail:
 
         while (result == 0 && *runp != '\0') {
             char *endp = strchr(runp, '\0');
-            // XXX Should store the d_type values as well?!
+            /* XXX Should store the d_type values as well?! */
             result = process_entry(data, &dir, runp, endp - runp);
             runp = endp + 1;
         }

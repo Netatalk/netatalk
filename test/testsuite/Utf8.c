@@ -324,8 +324,8 @@ STATIC void test233()
         test_failed();
     }
 
-// NOTE: This assertion is not portable. On big-endian Linux, we get success here.
 #if 0
+    /* NOTE: This assertion is not portable. On big-endian Linux, we get success here. */
     sprintf(temp, "t233 dire#%X", ntohl(dir));
 
     if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0,
@@ -382,8 +382,8 @@ STATIC void test234()
             test_failed();
         }
 
-        // NOTE: This assertion is not portable. On big-endian Linux, we get success here.
 #if 0
+        /* NOTE: This assertion is not portable. On big-endian Linux, we get success here. */
         sprintf(temp, "t234 file#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,

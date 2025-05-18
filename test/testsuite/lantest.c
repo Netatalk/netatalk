@@ -951,9 +951,9 @@ int main(int ac, char **av)
         freopen("/dev/null", "w", stdout);
     }
 
-// FIXME: guest auth leads to broken DSI request
 #if 0
 
+    /* FIXME: guest auth leads to broken DSI request */
     if ((User[0] == 0) || (Password[0] == 0)) {
         uam = "No User Authent";
     }

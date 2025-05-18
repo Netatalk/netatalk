@@ -15,8 +15,10 @@
 #include <atalk/unicode.h>
 #include <atalk/vfs.h>
 
-#define AFPVOL_U8MNAMELEN   255 /* AFP3 sepc */
-#define AFPVOL_MACNAMELEN    27 /* AFP2 spec */
+/* AFP3 spec */
+#define AFPVOL_U8MNAMELEN   255
+/* AFP2 spec */
+#define AFPVOL_MACNAMELEN    27
 
 typedef uint64_t VolSpace;
 
@@ -146,41 +148,68 @@ typedef enum {
 /* flags for quota 0xxx0 */
 #define AFPVOL_GVSMASK  (7<<2)
 #define AFPVOL_NONE     (0<<2)
-// Previously used for Andrew File System: AFPVOL_AFSGVS   (1<<2)
+#if 0
+/* Previously used for Andrew File System */
+#define AFPVOL_AFSGVS   (1<<2)
+#endif
 #define AFPVOL_USTATFS  (1<<3)
 #define AFPVOL_UQUOTA   (1<<4)
 
-#define AFPVOL_NOV2TOEACONV (1 << 5) /* no adouble:v2 to adouble:ea conversion */
-#define AFPVOL_SPOTLIGHT (1 << 6)   /* Index volume for Spotlight searches */
-#define AFPVOL_EA_SAMBA  (1 << 7)   /* Store Samba compatible xattrs (append 0 byte) */
-#define AFPVOL_RO        (1 << 8)   /* read-only volume */
-#define AFPVOL_CHMOD_PRESERVE_ACL (1 << 9) /* try to preserve ACLs */
-#define AFPVOL_CHMOD_IGNORE (1 << 10) /* try to preserve ACLs */
-#define AFPVOL_FORCE_STICKY_XATTR (1 << 11) /* write metadata xattr as root on sticky dirs */
-#define AFPVOL_LIMITSIZE (1 << 12)  /* limit size for older macs */
-#define AFPVOL_A2VOL     (1 << 13)   /* prodos volume */
-#define AFPVOL_NOSTAT    (1 << 16)  /* advertise the volume even if we can't stat() it
-                                     * maybe because it will be mounted later in preexec */
-#define AFPVOL_UNIX_PRIV (1 << 17)  /* support unix privileges */
-#define AFPVOL_NODEV     (1 << 18)  /* always use 0 for device number in cnid calls
-                                     * help if device number is notconsistent across reboot
-                                     * NOTE symlink to a different device will return an ACCESS error
-                                     */
-#define AFPVOL_EILSEQ    (1 << 20)  /* encode illegal sequence 'asis' UCS2, ex "\217-", which is not
-                                       a valid SHIFT-JIS char, is encoded  as U\217 -*/
-#define AFPVOL_INV_DOTS  (1 << 22)   /* dots files are invisible */
-#define AFPVOL_TM        (1 << 23)   /* Supports TimeMachine */
-#define AFPVOL_ACLS      (1 << 24)   /* Volume supports ACLS */
-#define AFPVOL_SEARCHDB  (1 << 25)   /* Use fast CNID db search instead of filesystem */
-#define AFPVOL_NONETIDS  (1 << 26)   /* signal the client it shall do privelege mapping */
-#define AFPVOL_FOLLOWSYM (1 << 27)   /* follow symlinks on the server, default is not to */
-#define AFPVOL_DELVETO   (1 << 28)   /* delete veto files and dirs */
+/* no adouble:v2 to adouble:ea conversion */
+#define AFPVOL_NOV2TOEACONV (1 << 5)
+/* Index volume for Spotlight searches */
+#define AFPVOL_SPOTLIGHT (1 << 6)
+/* Store Samba compatible xattrs (append 0 byte) */
+#define AFPVOL_EA_SAMBA  (1 << 7)
+/* read-only volume */
+#define AFPVOL_RO        (1 << 8)
+/* try to preserve ACLs */
+#define AFPVOL_CHMOD_PRESERVE_ACL (1 << 9)
+/* try to preserve ACLs */
+#define AFPVOL_CHMOD_IGNORE (1 << 10)
+/* write metadata xattr as root on sticky dirs */
+#define AFPVOL_FORCE_STICKY_XATTR (1 << 11)
+/* limit size for older macs */
+#define AFPVOL_LIMITSIZE (1 << 12)
+/* prodos volume */
+#define AFPVOL_A2VOL     (1 << 13)
+/* advertise the volume even if we can't stat() it
+ * maybe because it will be mounted later in preexec */
+#define AFPVOL_NOSTAT    (1 << 16)
+/* support unix privileges */
+#define AFPVOL_UNIX_PRIV (1 << 17)
+/* always use 0 for device number in cnid calls
+ * help if device number is notconsistent across reboot
+ * NOTE symlink to a different device will return an ACCESS error
+ */
+#define AFPVOL_NODEV     (1 << 18)
+/* encode illegal sequence 'asis' UCS2, ex "\217-", which is not
+ * a valid SHIFT-JIS char, is encoded as U\217 -*/
+#define AFPVOL_EILSEQ    (1 << 20)
+/* dots files are invisible */
+#define AFPVOL_INV_DOTS  (1 << 22)
+/* Supports TimeMachine */
+#define AFPVOL_TM        (1 << 23)
+/* Volume supports ACLS */
+#define AFPVOL_ACLS      (1 << 24)
+/* Use fast CNID db search instead of filesystem */
+#define AFPVOL_SEARCHDB  (1 << 25)
+/* signal the client it shall do privelege mapping */
+#define AFPVOL_NONETIDS  (1 << 26)
+/* follow symlinks on the server, default is not to */
+#define AFPVOL_FOLLOWSYM (1 << 27)
+/* delete veto files and dirs */
+#define AFPVOL_DELVETO   (1 << 28)
 
-/* Extended Attributes vfs indirection  */
-#define AFPVOL_EA_NONE           0   /* No EAs */
-#define AFPVOL_EA_AUTO           1   /* try sys, fallback to ad (default) */
-#define AFPVOL_EA_SYS            2   /* Store them in native EAs */
-#define AFPVOL_EA_AD             3   /* Store them in adouble files */
+/* Extended Attributes vfs indirection */
+/* No EAs */
+#define AFPVOL_EA_NONE           0
+/* try sys, fallback to ad (default) */
+#define AFPVOL_EA_AUTO           1
+/* Store them in native EAs */
+#define AFPVOL_EA_SYS            2
+/* Store them in adouble files */
+#define AFPVOL_EA_AD             3
 
 /* FPGetSrvrParms options */
 #define AFPSRVR_CONFIGINFO     (1 << 0)
@@ -197,9 +226,12 @@ typedef enum {
 #define AFPVOL_ULOWERMUPPER    (AFPVOL_MTOULOWER | AFPVOL_UTOMUPPER)
 #define AFPVOL_CASESENS        (1 << 4)
 
-#define AFPVOLSIG_FLAT          0x0001 /* flat fs */
-#define AFPVOLSIG_FIX           0x0002 /* fixed ids */
-#define AFPVOLSIG_VAR           0x0003 /* variable ids */
+/* flat fs */
+#define AFPVOLSIG_FLAT          0x0001
+/* fixed ids */
+#define AFPVOLSIG_FIX           0x0002
+/* variable ids */
+#define AFPVOLSIG_VAR           0x0003
 #define AFPVOLSIG_DEFAULT       AFPVOLSIG_FIX
 
 /* volume attributes */
@@ -230,7 +262,8 @@ typedef enum {
 /* handle > 4GB volumes */
 #define VOLPBIT_XBFREE  9
 #define VOLPBIT_XBTOTAL 10
-#define VOLPBIT_BSIZE   11        /* block size */
+/* block size */
+#define VOLPBIT_BSIZE   11
 
 #define utf8_encoding(obj) ((obj)->afp_version >= 30)
 

@@ -103,7 +103,9 @@ static int ftw_copy_file(const struct FTW *, const char *, const struct stat *,
 static int ftw_copy_link(const struct FTW *, const char *, const struct stat *,
                          int);
 static int setfile(const struct stat *, int);
-// static int preserve_dir_acls(const struct stat *, char *, char *);
+#if 0
+static int preserve_dir_acls(const struct stat *, char *, char *);
+#endif
 static int preserve_fd_acls(int, int);
 
 static void upfunc(void)

@@ -49,13 +49,16 @@ int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
         (*crlflength)++;
     }
 
-    /* Apple LaserWriter 8 drivers don't respect line lengths
+#if 0
+
+    /* Apple LaserWriter 8 drivers don't respect line lengths */
     if (!*crlflength) {
-        // line is way too long, something fishy is going on, give up
-        LOG(log_error, logtype_papd, "markline: no crlf in comment, give up" );
+        /* line is way too long, something fishy is going on, give up */
+        LOG(log_error, logtype_papd, "markline: no crlf in comment, give up");
         return -2;
     }
-    */
+
+#endif
     /* success, return 1 */
     return 1;
 }

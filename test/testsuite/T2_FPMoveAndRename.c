@@ -37,7 +37,7 @@ STATIC void test136()
         test_failed();
     }
 
-    // Workaround for musl mkdir() not setting the right permissions
+    /* Workaround for musl mkdir() not setting the right permissions */
     if (chmod(temp, 0777)) {
         test_failed();
     }
@@ -91,7 +91,7 @@ STATIC void test137()
         test_failed();
     }
 
-    // Workaround for musl mkdir() not setting the right permissions
+    /* Workaround for musl mkdir() not setting the right permissions */
     if (chmod(temp, 0777)) {
         test_failed();
     }

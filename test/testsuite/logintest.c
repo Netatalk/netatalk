@@ -154,8 +154,8 @@ test_exit:
 }
 
 /* ------------------------- */
-// FIXME: when max connections is exceeded the server still returns
-// code DSIERR_OK and not DSIERR_TOOMANY (Netatalk 4.0.3, 3.1.12)
+/* FIXME: when max connections is exceeded the server still returns
+ * code DSIERR_OK and not DSIERR_TOOMANY (Netatalk 4.0.3, 3.1.12) */
 STATIC void test4(void)
 {
     CONN conn[50];

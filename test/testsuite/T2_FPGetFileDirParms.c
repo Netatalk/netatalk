@@ -712,7 +712,10 @@ STATIC void test235()
     FAIL(FPCreateFile(Conn, vol, 0, dir, name1))
     id = get_fid(Conn, vol, dir, name1);
     /* so it doesn't reuse the same inode */
-//    sleep(2); /* FIXME: Ensure ctimes differ, this circumvents dircache caching which only has second granularity */
+#if 0
+    /* FIXME: Ensure ctimes differ, this circumvents dircache caching which only has second granularity */
+    sleep(2);
+#endif
     sprintf(temp, "%s/%s/%s", Path, name, name2);
     fd = open(temp, O_RDWR | O_CREAT, 0666);
 

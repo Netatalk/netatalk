@@ -510,13 +510,15 @@ int dsi_tcp_init(DSI *dsi, const char *hostname, const char *inaddress,
     }
 
     for (p = servinfo; p != NULL; p = p->ai_next) {
-        if (p->ai_family == AF_INET) { // IPv4
+        if (p->ai_family == AF_INET) {
+            /* IPv4 */
             struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
 
             if ((ipv4->sin_addr.s_addr & htonl(0x7f000000)) != htonl(0x7f000000)) {
                 break;
             }
-        } else { // IPv6
+        } else {
+            /* IPv6 */
             struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)p->ai_addr;
             unsigned char ipv6loopb[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
 
