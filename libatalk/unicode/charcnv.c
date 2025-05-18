@@ -133,7 +133,7 @@ static void lazy_initialize_conv(void)
     }
 }
 
-charset_t add_charset(const char* name)
+charset_t add_charset(const char *name)
 {
     static charset_t max_charset_t = NUM_CHARSETS - 1;
     charset_t cur_charset_t = max_charset_t + 1;
@@ -257,8 +257,8 @@ static size_t convert_string_internal(charset_t from, charset_t to,
 {
     size_t i_len, o_len;
     size_t retval;
-    const char *inbuf = (const char*)src;
-    char *outbuf = (char*)dest;
+    const char *inbuf = (const char *)src;
+    char *outbuf = (char *)dest;
     char *o_save = outbuf;
     atalk_iconv_t descriptor;
 
@@ -505,7 +505,7 @@ size_t charset_strupper(charset_t ch, const char *src, size_t srclen,
     size_t size;
     char *buffer;
     size = convert_string_allocate_internal(ch, CH_UCS2, src, srclen,
-                                            (char**) &buffer);
+                                            (char **) &buffer);
 
     if (size == (size_t) -1) {
         SAFE_FREE(buffer);
@@ -579,7 +579,7 @@ size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src)
 {
     size_t src_len = strlen(src);
     *dest = NULL;
-    return convert_string_allocate(ch, CH_UCS2, src, src_len, (char**) dest);
+    return convert_string_allocate(ch, CH_UCS2, src, src_len, (char **) dest);
 }
 
 /** -----------------------------------
@@ -635,7 +635,7 @@ size_t utf8_to_charset_allocate(charset_t ch, char **dest, const char *src)
     return convert_string_allocate(CH_UTF8, ch, src, src_len, dest);
 }
 
-size_t charset_precompose(charset_t ch, char * src, size_t inlen, char * dst,
+size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
                           size_t outlen)
 {
     char *buffer;
@@ -665,7 +665,7 @@ size_t charset_precompose(charset_t ch, char * src, size_t inlen, char * dst,
     return len;
 }
 
-size_t charset_decompose(charset_t ch, char * src, size_t inlen, char * dst,
+size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
                          size_t outlen)
 {
     char *buffer;
@@ -695,24 +695,24 @@ size_t charset_decompose(charset_t ch, char * src, size_t inlen, char * dst,
     return len;
 }
 
-size_t utf8_precompose(char * src, size_t inlen, char * dst, size_t outlen)
+size_t utf8_precompose(char *src, size_t inlen, char *dst, size_t outlen)
 {
     return charset_precompose(CH_UTF8, src, inlen, dst, outlen);
 }
 
-size_t utf8_decompose(char * src, size_t inlen, char * dst, size_t outlen)
+size_t utf8_decompose(char *src, size_t inlen, char *dst, size_t outlen)
 {
     return charset_decompose(CH_UTF8, src, inlen, dst, outlen);
 }
 
 #if 0
 static char  debugbuf[MAXPATHLEN + 1];
-char *debug_out(char * seq, size_t len)
+char *debug_out(char *seq, size_t len)
 {
     size_t i = 0;
     unsigned char *p;
     char *q;
-    p = (unsigned char*) seq;
+    p = (unsigned char *) seq;
     q = debugbuf;
 
     for (i = 0; i <= (len - 1); i++) {
@@ -746,7 +746,7 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len;
     size_t j = 0;
-    const char *inbuf = (const char*)src;
+    const char *inbuf = (const char *)src;
     char *outbuf = dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
@@ -962,14 +962,14 @@ end:
  */
 
 
-static size_t push_charset_flags(charset_t to_set, charset_t cap_set, char* src,
+static size_t push_charset_flags(charset_t to_set, charset_t cap_set, char *src,
                                  size_t srclen, char *dest, size_t destlen, uint16_t *flags)
 {
     const uint16_t option = (flags ? *flags : 0);
     size_t i_len, o_len, i;
     size_t j = 0;
-    const char *inbuf = (const char*)src;
-    char *outbuf = (char*)dest;
+    const char *inbuf = (const char *)src;
+    char *outbuf = (char *)dest;
     atalk_iconv_t descriptor;
     atalk_iconv_t descriptor_cap;
     descriptor = conv_handles[CH_UCS2][to_set];
@@ -1071,7 +1071,7 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
 
     if ((size_t)(-1) == (o_len = pull_charset_flags(from_set, to_set, cap_charset,
                                  src, src_len,
-                                 (char *) buffer, sizeof(buffer) -2, flags))) {
+                                 (char *) buffer, sizeof(buffer) - 2, flags))) {
         LOG(log_error, logtype_default,
             "Conversion failed ( %s to CH_UCS2 ), errno %i, %s", charset_name(from_set),
             errno, src);
@@ -1083,7 +1083,7 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
     }
 
     /* Do pre/decomposition */
-    i_len = sizeof(buffer2) -2;
+    i_len = sizeof(buffer2) - 2;
     u = buffer2;
 
     if (CHECK_FLAGS(flags, CONV_DECOMPOSE) || (charsets[to_set]

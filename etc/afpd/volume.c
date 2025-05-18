@@ -171,8 +171,9 @@ EC_CLEANUP:
  * @param vol     (rw) volume to calculate
  * @return             0 on success, -1 on error
  */
-#define TM_USED_CACHETIME 60    /* cache for 60 seconds */
-static int get_tm_used(struct vol * restrict vol)
+/* cache for 60 seconds */
+#define TM_USED_CACHETIME 60
+static int get_tm_used(struct vol *restrict vol)
 {
     EC_INIT;
     long long int bandsize;
@@ -316,7 +317,8 @@ static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
             vol = volume;
         } else if ((time_t)(AD_DATE_FROM_UNIX(date)) == volume->v_ctime) {
             date = date + 1;
-            volume = getvolumes(); /* restart */
+            /* restart */
+            volume = getvolumes();
         }
     }
 
@@ -333,7 +335,8 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     uint32_t aint;
     uint16_t ashort;
     uint32_t bfree = 0, btotal = 0, bsize = 0;
-    VolSpace xbfree = 0, xbtotal = 0; /* extended bytes */
+    /* extended bytes */
+    VolSpace xbfree = 0, xbtotal = 0;
     char *data = NULL;
     char *nameoff = NULL;
     const char *slash = NULL;
@@ -526,7 +529,8 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
             data += sizeof(uint16_t);
             break;
 
-        case VOLPBIT_BSIZE:  /* block size */
+        case VOLPBIT_BSIZE:
+            /* block size */
             bsize = htonl(bsize);
             memcpy(data, &bsize, sizeof(bsize));
             data += sizeof(bsize);
@@ -620,17 +624,20 @@ int afp_getsrvrparms(AFPObj *obj, char *ibuf _U_, size_t ibuflen _U_,
             if (stat(volume->v_path, &st) < 0) {
                 LOG(log_info, logtype_afpd, "afp_getsrvrparms(%s): stat: %s",
                     volume->v_path, strerror(errno));
-                continue;       /* can't access directory */
+                /* can't access directory */
+                continue;
             }
 
             if (!S_ISDIR(st.st_mode)) {
-                continue;       /* not a dir */
+                /* not a dir */
+                continue;
             }
 
             accessmode(obj, volume, volume->v_path, &ma, NULL, &st);
 
             if ((ma.ma_user & (AR_UREAD | AR_USEARCH)) != (AR_UREAD | AR_USEARCH)) {
-                continue;   /* no r-x access */
+                /* no r-x access */
+                continue;
             }
         }
 

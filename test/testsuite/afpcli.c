@@ -16,7 +16,7 @@ int	Bigendian = 0;
 #define kTextEncodingUTF8 0x08000103
 
 /* -------------------------------------------- */
-int OpenClientSocket(char* host, int port)
+int OpenClientSocket(char *host, int port)
 {
     int sock = -1;
     struct addrinfo hints;
@@ -1052,7 +1052,7 @@ void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
     }
 
     if (rbitmap & (1 << VOLPBIT_NAME)) {
-        parms->name = (char*)malloc(b[0] + 1);
+        parms->name = (char *)malloc(b[0] + 1);
         l = strp2c(parms->name, b) + 1;
         b += l;
     }

@@ -108,7 +108,7 @@ static void run_one(char *name, char **args)
 }
 
 /* =============================== */
-void usage(char * av0)
+void usage(char *av0)
 {
     fprintf(stdout,
             "usage:\t%s [-1234567lVv] [-h host] [-p port] [-s vol] [-u user] [-w password] [-f command args]\n",

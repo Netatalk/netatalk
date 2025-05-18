@@ -279,7 +279,7 @@ int main(int ac, char **av)
     }
 }
 
-static void usage(char * av0)
+static void usage(char *av0)
 {
     fprintf(stderr,
             "usage:\t%s [-A source address ] [-c count] ( addr | nbpname )\n", av0);

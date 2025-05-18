@@ -307,7 +307,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 #ifndef NO_DDP
 
     if (asp) {
-        const struct sockaddr_at* ddpaddr = atp_sockaddr(asp->asp_atp);
+        const struct sockaddr_at *ddpaddr = atp_sockaddr(asp->asp_atp);
         /* ddp address */
         *data++ = 6;
         *data++ = 0x03; /* ddp address */
@@ -434,7 +434,7 @@ static void status_icon(char *data, const unsigned char *icondata,
 
 /* ---------------------
  */
-void status_init(AFPObj *dsi_obj, AFPObj* asp_obj, DSI *dsi)
+void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
 {
 #ifndef NO_DDP
     ASP asp;

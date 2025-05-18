@@ -272,7 +272,7 @@ static void afp_dsi_debug(int sig _U_)
 }
 
 /* ---------------------- */
-static void afp_dsi_getmesg (int sig _U_)
+static void afp_dsi_getmesg(int sig _U_)
 {
     DSI *dsi = (DSI *)AFPobj->dsi;
     dsi->msg_request = 1;

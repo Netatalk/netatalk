@@ -574,8 +574,9 @@ static int loginasroot(const char *adminauthuser, const char **hostname,
 
     if ((PAM_error = pam_start("netatalk", adminauthuser, &PAM_conversation,
                                &pamh)) != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
-            PAM_error));
+        LOG(log_info,
+            logtype_uams,
+            "DHX2: PAM_Error: %s", pam_strerror(pamh, PAM_error));
         goto exit;
     }
 

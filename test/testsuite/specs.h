@@ -53,7 +53,7 @@ extern int ExitCode;
 extern enum adouble adouble;
 
 /* Functions */
-extern void illegal_fork(DSI * dsi, char cmd, char *name);
+extern void illegal_fork(DSI *dsi, char cmd, char *name);
 extern int no_access_folder(uint16_t vol, int did, char *name);
 extern int read_only_folder(uint16_t vol, int did, char *name);
 extern int delete_folder(uint16_t vol, int did, char *name);

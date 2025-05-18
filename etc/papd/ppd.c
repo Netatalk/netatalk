@@ -98,10 +98,13 @@ static char *my_fgets(char *buf, size_t bufsize, FILE *stream)
 
 static struct ppdent *getppdent(FILE *stream)
 {
-    static char			buf[1024];
-    static struct ppdent	ppdent;
-    char			*p, *q;
-    ppdent.pe_main = ppdent.pe_option = ppdent.pe_translation =
+    static char buf[1024];
+    static struct ppdent ppdent;
+    char *p;
+    char *q;
+    ppdent.pe_main = NULL;
+    ppdent.pe_option = NULL;
+    ppdent.pe_translation = NULL;
     ppdent.pe_value = NULL;
 
     while ((p = my_fgets(buf, sizeof(buf), stream)) != NULL) {
@@ -305,7 +308,7 @@ struct ppd_feature *ppd_feature(const char *feature, int len)
 
 #endif /* SHOWPPD */
 
-    if (len > sizeof(ppd_feature_main) -1) {
+    if (len > sizeof(ppd_feature_main) - 1) {
         return NULL;
     }
 

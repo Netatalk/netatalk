@@ -30,7 +30,7 @@
 #define AFP_LOG_CRITICAL 4
 #define AFP_LOG_MAX      5
 
-extern void afp_printf(int level, int loglevel, int color, const char* fmt,
+extern void afp_printf(int level, int loglevel, int color, const char *fmt,
                        ...);
 
 #define AFP_PRINTF(level, fmt, ...)  afp_printf(level, Loglevel, Color, fmt, ##__VA_ARGS__)

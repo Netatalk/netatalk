@@ -339,7 +339,7 @@ char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";
 
 /* =============================== */
-void usage(char * av0)
+void usage(char *av0)
 {
     fprintf(stdout,
             "usage:\t%s [-1234567aCiLlmnVvXx] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "

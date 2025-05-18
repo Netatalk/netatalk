@@ -30,7 +30,8 @@
 #include <atalk/logger.h>
 #include <atalk/afp.h>
 #include <atalk/uuid.h>
-#include <atalk/ldapconfig.h>   /* For struct ldap_pref */
+/* For struct ldap_pref */
+#include <atalk/ldapconfig.h>
 #include <atalk/errchk.h>
 
 typedef enum {
@@ -129,8 +130,8 @@ static int ldap_getattr_fromfilter_withbase_scope(const char *searchbase,
     int desired_version  = LDAP_VERSION3;
     static int ldapconnected = 0;
     static LDAP *ld     = NULL;
-    LDAPMessage* msg    = NULL;
-    LDAPMessage* entry  = NULL;
+    LDAPMessage *msg    = NULL;
+    LDAPMessage *entry  = NULL;
     struct berval **attribute_values = NULL;
     struct timeval timeout;
     LOG(log_maxdebug, logtype_afpd, "ldap: BEGIN");
@@ -297,7 +298,8 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
 #define MAX_FILTER_SIZE 512
     static char filter[MAX_FILTER_SIZE];
     char stripped[MAX_FILTER_SIZE];
-#define LDAP_BIN_UUID_LEN 49 /* LDAP Binary Notation is \XX * 16 bytes of UUID + terminator = 49 */
+    /* LDAP Binary Notation is \XX * 16 bytes of UUID + terminator = 49 */
+#define LDAP_BIN_UUID_LEN 49
     char ldap_bytes[LDAP_BIN_UUID_LEN];
     memset(stripped, '0', sizeof(stripped));
     stripped[MAX_FILTER_SIZE - 1] = '\0';
@@ -367,8 +369,9 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
 {
     int ret;
     int len;
-    char filter[256];           /* this should really be enough. we don't want to malloc everything! */
-    char *attributes[]  = { ldap_uuid_attr, NULL};
+    /* this should really be enough. we don't want to malloc everything! */
+    char filter[256];
+    char *attributes[] = {ldap_uuid_attr, NULL};
     char *ldap_attr;
 
     if (!ldap_config_valid) {
@@ -378,7 +381,8 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
     /* make filter */
     if (type == UUID_GROUP) {
         ldap_attr = ldap_group_attr;
-    } else { /* type hopefully == UUID_USER */
+    } else {
+        /* type hopefully == UUID_USER */
         ldap_attr = ldap_name_attr;
     }
 
@@ -391,11 +395,22 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
     }
 
     if (type == UUID_GROUP) {
-        ret = ldap_getattr_fromfilter_withbase_scope(ldap_groupbase, filter, attributes,
-              ldap_groupscope, KEEPALIVE, uuid_string);
-    } else  { /* type hopefully == UUID_USER */
-        ret = ldap_getattr_fromfilter_withbase_scope(ldap_userbase, filter, attributes,
-              ldap_userscope, KEEPALIVE, uuid_string);
+        ret = ldap_getattr_fromfilter_withbase_scope(
+                  ldap_groupbase,
+                  filter,
+                  attributes,
+                  ldap_groupscope,
+                  KEEPALIVE,
+                  uuid_string);
+    } else  {
+        /* type hopefully == UUID_USER */
+        ret = ldap_getattr_fromfilter_withbase_scope(
+                  ldap_userbase,
+                  filter,
+                  attributes,
+                  ldap_userscope,
+                  KEEPALIVE,
+                  uuid_string);
     }
 
     if (ret != 1) {
@@ -404,7 +419,7 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
 
     if (ldap_uuid_encoding == LDAP_UUID_ENCODING_MSGUID) {
         /* Convert byte array to UUID string (no dashes) */
-        unsigned char *uuid_bytes = (unsigned char*) *uuid_string;
+        unsigned char *uuid_bytes = (unsigned char *) *uuid_string;
         *uuid_string = malloc(37);
         snprintf(*uuid_string, 37,
                  "%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X",

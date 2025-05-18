@@ -2230,7 +2230,7 @@ void ad_init_old(struct adouble *ad, int flags, int options)
     ad_init_func(ad);
 }
 
-void ad_init(struct adouble *ad, const struct vol * restrict vol)
+void ad_init(struct adouble *ad, const struct vol *restrict vol)
 {
     memset(ad, 0, sizeof(struct adouble));
     ad->ad_vers = vol->v_adouble;

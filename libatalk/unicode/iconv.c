@@ -199,7 +199,7 @@ static size_t sys_iconv(void *cd,
 {
 #ifdef HAVE_USABLE_ICONV
     size_t ret = iconv((iconv_t)cd,
-                       (ICONV_CONST char**)inbuf, inbytesleft,
+                       (ICONV_CONST char **)inbuf, inbytesleft,
                        outbuf, outbytesleft);
 
     if (ret == (size_t) -1) {

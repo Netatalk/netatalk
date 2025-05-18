@@ -254,13 +254,15 @@ int main(int argc, char *argv[])
 
         case 'V':
         case 'v':
-            fprintf(stdout, "macipgw %s - Mac IP Gateway Daemon\n"
-                            "Copyright (c) 1997, 2013 Stefan Bethke. All rights reserved.\n"
-                            "Copyright (c) 1988, 1992, 1993\n"
-                            "\tThe Regents of the University of California.  All rights reserved.\n"
-                            "Copyright (c) 1990, 1996 Regents of The University of Michigan.\n"
-                            "\tAll Rights Reserved.\n"
-                            "See the file COPYRIGHT for further information.\n", version);
+            fprintf(stdout,
+                    "macipgw %s - Mac IP Gateway Daemon\n"
+                    "Copyright (c) 1997, 2013 Stefan Bethke. All rights reserved.\n"
+                    "Copyright (c) 1988, 1992, 1993\n"
+                    "\tThe Regents of the University of California.  All rights reserved.\n"
+                    "Copyright (c) 1990, 1996 Regents of The University of Michigan.\n"
+                    "\tAll Rights Reserved.\n"
+                    "See the file COPYRIGHT for further information.\n",
+                    version);
             exit(0);
             break;
 

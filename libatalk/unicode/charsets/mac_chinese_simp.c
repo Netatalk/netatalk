@@ -46,7 +46,7 @@ struct charset_functions charset_mac_chinese_simp = {
     NULL
 };
 
-static size_t mac_chinese_simp_char_push(uint8_t* out, const ucs2_t* in,
+static size_t mac_chinese_simp_char_push(uint8_t *out, const ucs2_t *in,
         size_t *size)
 {
     ucs2_t wc = in[0];
@@ -83,7 +83,7 @@ static size_t mac_chinese_simp_push(void *cd, char **inbuf, size_t *inbytesleft,
                             cd, inbuf, inbytesleft, outbuf, outbytesleft);
 }
 
-static size_t mac_chinese_simp_char_pull(ucs2_t* out, const uint8_t* in,
+static size_t mac_chinese_simp_char_pull(ucs2_t *out, const uint8_t *in,
         size_t *size)
 {
     uint16_t c = in[0];

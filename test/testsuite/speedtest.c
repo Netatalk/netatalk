@@ -1521,7 +1521,7 @@ static void run_one(char *name)
 }
 
 /* =============================== */
-void usage(char * av0)
+void usage(char *av0)
 {
     fprintf(stdout,
             "usage:\t%s [-1234567aeLnVvy] [-h host] [-p port] [-s vol] [-S vol2] [-u user] [-w password] [-n iterations] "

@@ -985,10 +985,11 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf)
     memset(&pkey, 0, sizeof(DBT));
     memset(&data, 0, sizeof(DBT));
     /* Get a cursor */
-    ret = dbd->db_table[DBIF_IDX_NAME].db->cursor(dbd->db_table[DBIF_IDX_NAME].db,
-          NULL,
-          &cursorp,
-          0);
+    ret = dbd->db_table[DBIF_IDX_NAME].db->cursor(
+              dbd->db_table[DBIF_IDX_NAME].db,
+              NULL,
+              &cursorp,
+              0);
 
     if (ret != 0) {
         LOG(log_error, logtype_cnid, "Couldn't create cursor: %s", db_strerror(ret));

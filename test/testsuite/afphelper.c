@@ -47,7 +47,7 @@ ssize_t get_sessiontoken(const char *buf, char **token)
     return len;
 }
 
-void illegal_fork(DSI * dsi, char cmd, char *name)
+void illegal_fork(DSI *dsi, char cmd, char *name)
 {
     uint16_t vol = VolID;
     int ofs;
@@ -1181,7 +1181,7 @@ static void afp_print_postfix(int level, int color)
     }
 }
 
-void afp_printf(int level, int loglevel, int color, const char* fmt, ...)
+void afp_printf(int level, int loglevel, int color, const char *fmt, ...)
 {
     va_list arg;
 

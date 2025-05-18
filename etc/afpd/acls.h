@@ -23,7 +23,8 @@
 #include <sys/acl.h>
 #endif
 
-#include <atalk/uuid.h>		/* for atalk_uuid_t */
+/* for atalk_uuid_t */
+#include <atalk/uuid.h>
 
 #include "directory.h"
 
@@ -63,13 +64,20 @@ enum {
 
 /* ACE Flags */
 #define DARWIN_ACE_FLAGS_KINDMASK           0xf
-#define DARWIN_ACE_FLAGS_PERMIT             (1<<0) /* 0x00000001 */
-#define DARWIN_ACE_FLAGS_DENY               (1<<1) /* 0x00000002 */
-#define DARWIN_ACE_FLAGS_INHERITED          (1<<4) /* 0x00000010 */
-#define DARWIN_ACE_FLAGS_FILE_INHERIT       (1<<5) /* 0x00000020 */
-#define DARWIN_ACE_FLAGS_DIRECTORY_INHERIT  (1<<6) /* 0x00000040 */
-#define DARWIN_ACE_FLAGS_LIMIT_INHERIT      (1<<7) /* 0x00000080 */
-#define DARWIN_ACE_FLAGS_ONLY_INHERIT       (1<<8) /* 0x00000100 */
+/* 0x00000001 */
+#define DARWIN_ACE_FLAGS_PERMIT             (1<<0)
+/* 0x00000002 */
+#define DARWIN_ACE_FLAGS_DENY               (1<<1)
+/* 0x00000010 */
+#define DARWIN_ACE_FLAGS_INHERITED          (1<<4)
+/* 0x00000020 */
+#define DARWIN_ACE_FLAGS_FILE_INHERIT       (1<<5)
+/* 0x00000040 */
+#define DARWIN_ACE_FLAGS_DIRECTORY_INHERIT  (1<<6)
+/* 0x00000080 */
+#define DARWIN_ACE_FLAGS_LIMIT_INHERIT      (1<<7)
+/* 0x00000100 */
+#define DARWIN_ACE_FLAGS_ONLY_INHERIT       (1<<8)
 
 /* All flag bits controlling ACE inheritance */
 #define DARWIN_ACE_INHERIT_CONTROL_FLAGS \
@@ -111,12 +119,12 @@ typedef struct {
 } darwin_acl_header_t;
 
 /* FP functions */
-int afp_access (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-                size_t *rbuflen);
-int afp_getacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-                size_t *rbuflen);
-int afp_setacl (AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
-                size_t *rbuflen);
+int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+               size_t *rbuflen);
+int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+               size_t *rbuflen);
+int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
+               size_t *rbuflen);
 
 /* Misc funcs */
 extern int acltoownermode(const AFPObj *obj, const struct vol *vol, char *path,

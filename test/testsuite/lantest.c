@@ -779,7 +779,7 @@ fin:
 }
 
 /* =============================== */
-void usage(char * av0)
+void usage(char *av0)
 {
     int i = 0;
     fprintf(stdout,

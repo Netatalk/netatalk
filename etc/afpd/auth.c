@@ -483,13 +483,17 @@ int afp_getsession(
      *
      */
     switch (type) {
-    case 0: /* old version ?*/
+    /* old version ? */
+    case 0:
         tklen = obj->sinfo.sessiontoken_len;
         token = obj->sinfo.sessiontoken;
         break;
 
-    case 1: /* disconnect */
-    case 2: /* reconnect update id */
+    /* disconnect */
+    case 1:
+
+    /* reconnect update id */
+    case 2:
         if (ibuflen >= sizeof(idlen)) {
             memcpy(&idlen, ibuf, sizeof(idlen));
             idlen = ntohl(idlen);
@@ -538,7 +542,8 @@ int afp_getsession(
 
         break;
 
-    case 8: /* Panther Kerberos Token */
+    /* Panther Kerberos Token */
+    case 8:
         tklen = obj->sinfo.cryptedkey_len;
         token = obj->sinfo.cryptedkey;
         break;
@@ -945,7 +950,7 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
     close_all_vol(obj);
 
     if (obj->proto == AFPPROTO_DSI) {
-        DSI* dsi = (DSI*)(obj->dsi);
+        DSI *dsi = (DSI *) obj->dsi;
         dsi->flags = DSI_AFP_LOGGED_OUT;
     }
 
@@ -954,7 +959,6 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
     fce_register(obj, FCE_LOGOUT, "", NULL);
     return AFP_OK;
 }
-
 
 
 /* change password  --

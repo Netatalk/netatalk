@@ -224,22 +224,22 @@ extern struct afp_options default_options;
 extern const char         *Cnid_srv;
 extern const char         *Cnid_port;
 
-extern int  get_afp_errno   (const int param);
-extern void afp_options_init (struct afp_options *);
+extern int  get_afp_errno(const int param);
+extern void afp_options_init(struct afp_options *);
 extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
-extern int setmessage (const char *);
-extern void readmessage (AFPObj *);
+extern int setmessage(const char *);
+extern void readmessage(AFPObj *);
 
 /* afp_util.c */
-extern const char *AfpNum2name (int);
+extern const char *AfpNum2name(int);
 extern const char *AfpErr2name(int err);
 
 /* directory.c */
 extern struct dir rootParent;
 
 #ifndef NO_DDP
-extern void afp_over_asp (AFPObj *);
+extern void afp_over_asp(AFPObj *);
 #endif /* NO_DDP */
-extern void afp_over_dsi (AFPObj *);
+extern void afp_over_dsi(AFPObj *);
 extern void afp_over_dsi_sighandlers(AFPObj *obj);
 #endif /* globals.h */

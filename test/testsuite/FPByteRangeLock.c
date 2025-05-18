@@ -252,10 +252,11 @@ static void test_bytelock2(char *name, int type)
 
         FAIL(htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0, 20, 60));
 
-        if (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0, ((off_t)1 << 32) +2,
+        if (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn, fork1, 0, 0,
+                ((off_t)1 << 32) + 2,
                 60)) {
             test_failed();
-            FAIL(FPByteLock_ext(Conn, fork1, 0, 1, ((off_t)1 << 32) +2, 60));
+            FAIL(FPByteLock_ext(Conn, fork1, 0, 1, ((off_t)1 << 32) + 2, 60));
         }
 
         FPCloseFork(Conn, fork1);
@@ -288,13 +289,13 @@ static void test_bytelock2(char *name, int type)
 #if 0
 
         if (htonl(AFPERR_LOCK) != FPByteLock_ext(Conn2, fork1, 0, 0,
-                ((off_t)1 << 32) +2, 60)) {
+                ((off_t)1 << 32) + 2, 60)) {
             test_failed();
-            FPByteLock_ext(Conn2, fork1, 0, 1, ((off_t)1 << 32) +2, 60);
+            FPByteLock_ext(Conn2, fork1, 0, 1, ((off_t)1 << 32) + 2, 60);
         }
 
 #endif
-        FAIL(htonl(AFPERR_LOCK)  != FPWrite_ext(Conn2, fork1, ((off_t)1 << 32) +2, 40,
+        FAIL(htonl(AFPERR_LOCK)  != FPWrite_ext(Conn2, fork1, ((off_t)1 << 32) + 2, 40,
                                                 Data, 0));
         FAIL(FPCloseFork(Conn2, fork1));
 fin2:

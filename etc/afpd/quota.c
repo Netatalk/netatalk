@@ -197,8 +197,8 @@ static int overquota(struct dqblk *);
 
 static int is_xfs = 0;
 
-static int get_linux_xfs_quota(int, char*, uid_t, struct dqblk *);
-static int get_linux_fs_quota(int, char*, uid_t, struct dqblk *);
+static int get_linux_xfs_quota(int, char *, uid_t, struct dqblk *);
+static int get_linux_fs_quota(int, char *, uid_t, struct dqblk *);
 
 /* format supported by current kernel */
 static int kernel_iface = IFACE_UNSET;
@@ -261,7 +261,7 @@ static void linuxquota_get_api(void)
             ** but without it quota version is not correctly
             ** identified for the original SuSE 8.0 kernel */
             unsigned int vers_no;
-            FILE * qf;
+            FILE *qf;
 
             if ((qf = fopen("/proc/fs/quota", "r"))) {
                 if (fscanf(qf, "Version %u", &vers_no) == 1) {

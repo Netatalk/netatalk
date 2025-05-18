@@ -134,10 +134,12 @@ int main(int ac, char **av)
 
         case 'V' :
         case 'v' :
-            fprintf(stdout, "a2boot %s - Apple2 Netboot Daemon\n"
-                            "Copyright (c) 1990,1992 Regents of The University of Michigan.\n"
-                            "\tAll Rights Reserved.\n"
-                            "Copyright (c) 1990, The University of Melbourne.\n", version);
+            fprintf(stdout,
+                    "a2boot %s - Apple2 Netboot Daemon\n"
+                    "Copyright (c) 1990,1992 Regents of The University of Michigan.\n"
+                    "\tAll Rights Reserved.\n"
+                    "Copyright (c) 1990, The University of Melbourne.\n",
+                    version);
             exit(0);
             break;
 

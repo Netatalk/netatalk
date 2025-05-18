@@ -57,7 +57,7 @@ static const char *cups_status_msg[] = {
 };
 
 /* Local functions */
-static int 	convert_to_mac_name(const char *encoding, char * inptr,
+static int 	convert_to_mac_name(const char *encoding, char *inptr,
                                 char *outptr, size_t outlen);
 static size_t	to_ascii(char *inbuf, char **outbuf);
 static int 	cups_mangle_printer_name(struct printer *pr,
@@ -68,18 +68,20 @@ static void     cups_free_printer(struct printer *pr);
 const char *cups_get_language(void)
 {
     cups_lang_t *language;
-    language = cupsLangDefault();           /* needed for conversion */
+    /* needed for conversion */
+    language = cupsLangDefault();
     const char *curr_encoding = cupsLangEncoding(language);
     return curr_encoding;
 }
 
 /*
  * 'cups_passwd_cb()' - The CUPS password callback...
+ * O - Password or NULL
+ * I - Prompt
  */
-
-static const char *                            /* O - Password or NULL */
-cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method,
-               const char *resource, void *user_data)      /* I - Prompt */
+static const char *cups_passwd_cb(const char *prompt _U_, http_t *http,
+                                  const char *method,
+                                  const char *resource, void *user_data)
 {
     /*
      * Always return NULL to indicate that no password is available...
@@ -90,15 +92,20 @@ cups_passwd_cb(const char *prompt _U_, http_t *http, const char *method,
 
 /*
  * 'cups_printername_ok()' - Verify supplied printer name is a valid cups printer
+ * O - 1 if printer name OK
+ * I - Name of printer
  */
 
-int                                     /* O - 1 if printer name OK */
-cups_printername_ok(char *name)         /* I - Name of printer */
+int cups_printername_ok(char *name)
 {
-    http_t          *http;          /* HTTP connection to server */
-    cups_dest_t	*dest = NULL;	/* Destination */
-    ipp_t           *request,       /* IPP Request */
-                    *response;      /* IPP Response */
+    /* HTTP connection to server */
+    http_t *http;
+    /* Destination */
+    cups_dest_t	*dest = NULL;
+    /* IPP Request */
+    ipp_t *request;
+    /* IPP Response */
+    ipp_t *response;
     /*
      * Make sure we don't ask for passwords...
      */
@@ -125,26 +132,35 @@ cups_printername_ok(char *name)         /* I - Name of printer */
     return 1;
 }
 
-const char *
-cups_get_printer_ppd(char * name)
+const char *cups_get_printer_ppd(char *name)
 {
-    http_t		*http;		/* Connection to destination */
-    cups_dest_t	*dest = NULL;	/* Destination */
-    cups_dest_t	*dests;		/* Destination List */
-    ipp_t		*request,       /* IPP Request */
-                *response;      /* IPP Response */
-    const char	*pattrs[] =   /* Requested printer attributes */
-    {
+    /* Connection to destination */
+    http_t *http;
+    /* Destination */
+    cups_dest_t *dest = NULL;
+    /* Destination List */
+    cups_dest_t *dests;
+    /* IPP Request */
+    ipp_t *request;
+    /* IPP Response */
+    ipp_t *response;
+    /* Requested printer attributes */
+    const char *pattrs[] = {
         "printer-make-and-model",
         "color-supported"
     };
     ipp_attribute_t	*attr;
-    cups_file_t	*fp;		/* PPD file */
-    static char	buffer[1024];	/* I - Filename buffer */
-    size_t		bufsize;	/* I - Size of filename buffer */
-    char		make[256],	/* Make and model */
-                *model;
-    unsigned 	flags = 0;	/* Destination flag */
+    /* PPD file */
+    cups_file_t	*fp;
+    /* I - Filename buffer */
+    static char buffer[1024];
+    /* I - Size of filename buffer */
+    size_t bufsize;
+    /* Make and model */
+    char make[256];
+    char *model;
+    /* Destination flag */
+    unsigned flags = 0;
     cupsSetPasswordCB2(cups_passwd_cb, NULL);
     int num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
     dest = cupsGetDest(name, NULL, num_dests, dests);
@@ -316,14 +332,16 @@ cups_get_printer_ppd(char * name)
 int
 cups_get_printer_status(struct printer *pr)
 {
-    http_t 	*http;          /* HTTP connection to server */
-    cups_dest_t 	*dest = NULL;	/* Destination */
-    int 		status = -1;
-    char 		printer_reason[150];
+    /* HTTP connection to server */
+    http_t 	*http;
+    /* Destination */
+    cups_dest_t *dest = NULL;
+    int status = -1;
+    char printer_reason[150];
     memset(printer_reason, 0, sizeof(printer_reason));
-    int 		printer_avail = 0;
-    int 		printer_state = 3;
-    unsigned 	flags;
+    int printer_avail = 0;
+    int printer_state = 3;
+    unsigned flags;
     /*
      * Make sure we don't ask for passwords...
      */
@@ -368,10 +386,12 @@ cups_get_printer_status(struct printer *pr)
         return 0;
     }
 
-    ipp_t	* request,       /* IPP Request */
-            * response;      /* IPP Response */
-    const char *pattrs[] =   /* Requested printer attributes */
-    {
+    /* IPP Request */
+    ipp_t *request;
+    /* IPP Response */
+    ipp_t *response;
+    /* Requested printer attributes */
+    const char *pattrs[] = {
         "printer-state",
         "printer-is-accepting-jobs",
         "printer-state-reasons"
@@ -444,16 +464,20 @@ cups_get_printer_status(struct printer *pr)
      * Get the current printer status and convert it to the status values.
      */
 
-    if (printer_state == 5) { /* printer is stopped */
+    if (printer_state == 5) {
+        /* printer is stopped */
         status = 1;
-    } else if (printer_state == 4) { /* printer is processing a job */
+    } else if (printer_state == 4) {
+        /* printer is processing a job */
         status = 3;
-    } else { /* ready */
+    } else {
+        /* ready */
         status = 2;
     }
 
     if (!printer_avail && printer_state != 4) {
-        status = 0;    /* printer is rejecting jobs */
+        /* printer is rejecting jobs */
+        status = 0;
     }
 
     snprintf(pr->p_status, 255, cups_status_msg[status], pr->p_printer);
@@ -475,19 +499,21 @@ cups_get_printer_status(struct printer *pr)
 
 /* pass the job to cups */
 
-int cups_print_job(char * name, const char *filename, char *job, char *username,
+int cups_print_job(char *name, const char *filename, char *job, char *username,
                    char *cupsoptions)
 {
-    http_t          *http;          /* HTTP connection to server */
-    cups_dest_t	*dest = NULL;	/* Destination */
-    cups_dinfo_t 	*info = NULL;
-    int 		jobid;
-    char 		filepath[MAXPATHLEN];
-    int           	num_options;
-    cups_option_t 	*options;
+    /* HTTP connection to server */
+    http_t *http;
+    /* Destination */
+    cups_dest_t	*dest = NULL;
+    cups_dinfo_t *info = NULL;
+    int jobid;
+    char filepath[MAXPATHLEN];
+    int num_options;
+    cups_option_t *options;
     /* Initialize the options array */
     num_options = 0;
-    options     = (cups_option_t *)0;
+    options = (cups_option_t *) 0;
     /*
      * Make sure we don't ask for passwords...
      */
@@ -724,13 +750,13 @@ to_ascii(char  *inptr, char **outptr)
 /*------------------------------------------------------------------------*/
 
 /* convert_to_mac_name
- * 	1) Convert from encoding to MacRoman
- *	2) Shorten to MAXCHOOSERLEN (31)
- *      3) Replace @ and _ as they are illegal
+ *  1) Convert from encoding to MacRoman
+ *  2) Shorten to MAXCHOOSERLEN (31)
+ *  3) Replace @ and _ as they are illegal
  * Returns: -1 on failure, length of name on success; outpr contains name in MacRoman
  */
 
-static int convert_to_mac_name(const char * encoding, char * inptr,
+static int convert_to_mac_name(const char *encoding, char *inptr,
                                char *outptr, size_t outlen)
 {
     char   	*outbuf;
@@ -822,7 +848,8 @@ int cups_check_printer(struct printer *pr, struct printer *printers,
         listptr = listptr->p_next;
     }
 
-    return 0;	/* No conflict */
+    /* No conflict */
+    return 0;
 }
 
 

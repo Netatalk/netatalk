@@ -186,9 +186,9 @@ STATIC void test217()
         goto fin;
     }
 
-    FAIL(ntohl(AFPERR_PARAM) != FPRead_ext(Conn, fork, (1 << 31) +1, 1, Data))
-    FAIL(ntohl(AFPERR_EOF) != FPRead_ext(Conn, fork, (1UL << 31) +1, 1, Data))
-    FAIL(FPRead(Conn, fork, (1UL << 31) -1, 1, Data))
+    FAIL(ntohl(AFPERR_PARAM) != FPRead_ext(Conn, fork, (1 << 31) + 1, 1, Data))
+    FAIL(ntohl(AFPERR_EOF) != FPRead_ext(Conn, fork, (1UL << 31) + 1, 1, Data))
+    FAIL(FPRead(Conn, fork, (1UL << 31) - 1, 1, Data))
 fin:
     FAIL(fork && FPCloseFork(Conn, fork))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))

@@ -498,7 +498,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             return afp_errno;
         }
 
-        memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) +1);
+        memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) + 1);
     }
 
     /* another place where we know about the path type */
@@ -909,7 +909,7 @@ exit:
     return rc;
 }
 
-int veto_file(const char*veto_str, const char*path)
+int veto_file(const char *veto_str, const char *path)
 /* given a veto_str like "abc/zxc/" and path "abc", return 1
  * veto_str should be '/' delimited
  * if path matches any one of the veto_str elements exactly, then 1 is returned

@@ -180,9 +180,9 @@ STATIC void test207()
     }
 
     memset(w_buf, 'b', BUF_S);
-    FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 31) +20, 2000, w_buf, 0))
-    FAIL(FPWrite_ext(Conn, fork1, ((off_t)1 << 31) +20, 1000, w_buf, 0))
-    FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 31) +1000, 3000, w_buf, 0))
+    FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 31) + 20, 2000, w_buf, 0))
+    FAIL(FPWrite_ext(Conn, fork1, ((off_t)1 << 31) + 20, 1000, w_buf, 0))
+    FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 31) + 1000, 3000, w_buf, 0))
     FAIL(FPWrite_ext(Conn, fork, 0, 200, w_buf, 0x80))
     FAIL(FPWrite_ext(Conn, fork1, 0, 200, w_buf, 0x80))
 
@@ -199,7 +199,7 @@ STATIC void test207()
             }
         }
 
-    if (FPRead_ext(Conn, fork, ((off_t)1 << 31) +20, 3000, Data)) {
+    if (FPRead_ext(Conn, fork, ((off_t)1 << 31) + 20, 3000, Data)) {
         test_failed();
     } else for (i = 0; i < 3000; i++) {
             if (Data[i] == 0) {
@@ -238,13 +238,13 @@ STATIC void test207()
         goto fin;
     }
 
-    FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 32) +20, 2000, w_buf, 0))
+    FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 32) + 20, 2000, w_buf, 0))
 
     if (Conn2) {
         FPGetSrvrMsg(Conn2, 0, 0);
     }
 
-    FAIL(FPWrite_ext(Conn, fork1, ((off_t)1 << 32) +20, 1000, w_buf, 0))
+    FAIL(FPWrite_ext(Conn, fork1, ((off_t)1 << 32) + 20, 1000, w_buf, 0))
 
     if (Conn2) {
         FPGetSrvrMsg(Conn2, 0, 0);
@@ -263,7 +263,7 @@ STATIC void test207()
             }
         }
 
-    if (FPRead_ext(Conn, fork, ((off_t)1 << 32) +20, 1500, Data)) {
+    if (FPRead_ext(Conn, fork, ((off_t)1 << 32) + 20, 1500, Data)) {
         test_failed();
     } else for (i = 0; i < 1500; i++) {
             if (Data[i] == 0) {

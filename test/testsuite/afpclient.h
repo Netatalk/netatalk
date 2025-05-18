@@ -259,7 +259,7 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
 /*
  afpcli.c
 */
-int OpenClientSocket(char* host, int port);
+int OpenClientSocket(char *host, int port);
 int CloseClientSocket(int fd);
 
 

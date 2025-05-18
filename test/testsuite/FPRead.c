@@ -277,9 +277,9 @@ STATIC void test59()
         goto fin;
     }
 
-    FAIL(ntohl(AFPERR_PARAM) != FPRead(Conn, fork, ((off_t)1 << 31) +20, 3000,
+    FAIL(ntohl(AFPERR_PARAM) != FPRead(Conn, fork, ((off_t)1 << 31) + 20, 3000,
                                        Data))
-    FAIL(ntohl(AFPERR_PARAM) != FPWrite(Conn, fork, ((off_t)1 << 31) +20, 3000,
+    FAIL(ntohl(AFPERR_PARAM) != FPWrite(Conn, fork, ((off_t)1 << 31) + 20, 3000,
                                         Data, 0))
     ret = FPWrite(Conn, fork, 0x7fffffff, 30, Data, 0);
 

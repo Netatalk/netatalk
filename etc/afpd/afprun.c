@@ -56,7 +56,7 @@ static int setup_out_fd(void)
 {
     int fd;
     char path[MAXPATHLEN + 1];
-    snprintf(path, sizeof(path) -1, "%s/afp.XXXXXX", tmpdir());
+    snprintf(path, sizeof(path) - 1, "%s/afp.XXXXXX", tmpdir());
     /* now create the file */
     fd = mkstemp(path);
 

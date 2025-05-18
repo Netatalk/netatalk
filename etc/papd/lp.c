@@ -712,7 +712,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
             return -1;
         }
 
-        if (NULL == (lp.lp_spoolfile = (char *) malloc(strlen(name) +1))) {
+        if (NULL == (lp.lp_spoolfile = (char *) malloc(strlen(name) + 1))) {
             LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
             exit(1);
         }

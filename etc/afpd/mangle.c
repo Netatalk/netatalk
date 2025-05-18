@@ -24,7 +24,7 @@
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'A' )
 #define isuxdigit(x)    (isdigit(x) || (isupper(x) && isxdigit(x)))
 
-static size_t mangle_extension(const struct vol *vol, const char* uname,
+static size_t mangle_extension(const struct vol *vol, const char *uname,
                                char *extension, charset_t charset)
 {
     char *p = strrchr(uname, '.');
@@ -43,7 +43,7 @@ static size_t mangle_extension(const struct vol *vol, const char* uname,
     return 0;
 }
 
-static char *demangle_checks(const struct vol *vol, char* uname,
+static char *demangle_checks(const struct vol *vol, char *uname,
                              char *mfilename, size_t prefix, char *ext)
 {
     uint16_t flags;

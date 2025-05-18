@@ -131,8 +131,8 @@ STATIC void test73()
     FAIL(FPMoveAndRename(Conn, vol, dir1, DIRDID_ROOT, name, ""))
     /* dirty but well */
     FAIL(ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
-    FAIL(ntohl(AFPERR_EXIST) != FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT,
-         name, name1))
+    FAIL(ntohl(AFPERR_EXIST) !=
+         FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
     FAIL(ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     fork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name,
                       OPENACC_WR | OPENACC_RD);

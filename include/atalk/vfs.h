@@ -122,6 +122,6 @@ struct vfs_ops {
     int (*vfs_ea_remove)(VFS_FUNC_ARGS_EA_REMOVE);
 };
 
-extern void initvol_vfs(struct vol * restrict vol);
+extern void initvol_vfs(struct vol *restrict vol);
 
 #endif /* ATALK_VFS_H */

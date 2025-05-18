@@ -734,7 +734,7 @@ as_debug(int sig _U_)
     struct rtmptab	*rt;
     FILE		*rtmpdebug;
     char path_atalkdebug[MAXPATHLEN + 1];
-    snprintf(path_atalkdebug, sizeof(path_atalkdebug) -1, "%s/atalkd.%u.debug",
+    snprintf(path_atalkdebug, sizeof(path_atalkdebug) - 1, "%s/atalkd.%u.debug",
              tmpdir(), getpid());
     rtmpdebug = fopen(path_atalkdebug, "w");
 

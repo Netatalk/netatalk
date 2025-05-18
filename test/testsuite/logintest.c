@@ -283,7 +283,7 @@ test_exit:
 }
 
 /* =============================== */
-void usage(char * av0)
+void usage(char *av0)
 {
     fprintf(stdout,
             "usage:\t%s [-1234567CmVv] [-h host] [-p port] [-s vol] [-u user] [-w password]\n",
