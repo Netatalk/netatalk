@@ -997,9 +997,10 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
     memset(&ret, 0, sizeof(ret));
+    ret.m_type = *data;
 
     /* 1 */
-    switch (ret.m_type = *data) {
+    switch (ret.m_type) {
 case 2:
             data++;
         len = (unsigned char) * data++;
@@ -1208,7 +1209,9 @@ default:
             if (cdir == NULL) {
                 /* Not in cache, create one */
                 /* 15 */
-                if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) {
+                cdir = dir_add(vol, dir, &ret, unamelen);
+
+                if (cdir == NULL) {
                     LOG(log_error, logtype_afpd,
                         "cname(did:%u, name:'%s', cwd:'%s'): failed to add dir",
                         ntohl(dir->d_did), ret.u_name, getcwdpath());

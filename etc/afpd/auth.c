@@ -950,7 +950,7 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
     close_all_vol(obj);
 
     if (obj->proto == AFPPROTO_DSI) {
-        DSI *dsi = (DSI *) obj->dsi;
+        DSI *dsi = obj->dsi;
         dsi->flags = DSI_AFP_LOGGED_OUT;
     }
 
