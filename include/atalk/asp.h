@@ -89,19 +89,19 @@ typedef struct ASP {
 #define ASPERR_TOOMANY	0xfbce
 #define ASPERR_NOACK	0xfbcd
 
-extern ASP asp_init         (ATP);
-extern void asp_setstatus   (ASP, char *, const int);
-extern ASP asp_getsession   (ASP, server_child_t *, const int);
-extern int asp_close        (ASP);
-extern int asp_shutdown     (ASP);
-extern int asp_attention    (ASP, AFPUserBytes);
-extern int asp_getrequest   (ASP);
-extern int asp_cmdreply     (ASP, int);
-extern int asp_wrtcont      (ASP, char *, size_t *);
+extern ASP asp_init(ATP);
+extern void asp_setstatus(ASP, char *, const int);
+extern ASP asp_getsession(ASP, server_child_t *, const int);
+extern int asp_close(ASP);
+extern int asp_shutdown(ASP);
+extern int asp_attention(ASP, AFPUserBytes);
+extern int asp_getrequest(ASP);
+extern int asp_cmdreply(ASP, int);
+extern int asp_wrtcont(ASP, char *, size_t *);
 #define asp_wrtreply(a,b)   asp_cmdreply((a), (b))
-extern void asp_kill        (int);
-extern int asp_tickle      (ASP, const uint8_t, struct sockaddr_at *);
-extern void asp_stop_tickle (void);
+extern void asp_kill(int);
+extern int asp_tickle(ASP, const uint8_t, struct sockaddr_at *);
+extern void asp_stop_tickle(void);
 
 #endif  /* NO_DDP */
 #endif

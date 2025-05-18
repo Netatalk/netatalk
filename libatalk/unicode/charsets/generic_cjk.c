@@ -39,7 +39,8 @@ static size_t cjk_iconv(void *cd, char **inbuf, char *end,
     return n;
 }
 
-size_t cjk_generic_push(size_t (*char_func)(uint8_t*, const ucs2_t*, size_t*),
+size_t cjk_generic_push(size_t (*char_func)(uint8_t *, const ucs2_t *,
+                        size_t *),
                         void *cd, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {
@@ -48,7 +49,7 @@ size_t cjk_generic_push(size_t (*char_func)(uint8_t*, const ucs2_t*, size_t*),
     while (*inbytesleft >= sizeof(ucs2_t) && *outbytesleft > 0) {
         uint8_t buf[CJK_PUSH_BUFFER];
         size_t size = *inbytesleft / sizeof(ucs2_t);
-        size_t n = (char_func)(buf, (const ucs2_t*)in, &size);
+        size_t n = (char_func)(buf, (const ucs2_t *)in, &size);
 
         if (n == 0) {
             in += size * sizeof(ucs2_t);
@@ -99,7 +100,8 @@ size_t cjk_generic_push(size_t (*char_func)(uint8_t*, const ucs2_t*, size_t*),
     return 0;
 }
 
-size_t cjk_generic_pull(size_t (*char_func)(ucs2_t*, const uint8_t*, size_t*),
+size_t cjk_generic_pull(size_t (*char_func)(ucs2_t *, const uint8_t *,
+                        size_t *),
                         void *cd, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {
@@ -108,7 +110,7 @@ size_t cjk_generic_pull(size_t (*char_func)(ucs2_t*, const uint8_t*, size_t*),
     while (*inbytesleft > 0 && *outbytesleft >= sizeof(ucs2_t)) {
         ucs2_t buf[CJK_PULL_BUFFER];
         size_t size = *inbytesleft;
-        size_t n = (char_func)(buf, (const uint8_t*)in, &size);
+        size_t n = (char_func)(buf, (const uint8_t *)in, &size);
 
         if (n == 0) {
             in += size;
@@ -180,7 +182,7 @@ size_t cjk_char_push(uint16_t c, uint8_t *out)
     return 2;
 }
 
-size_t cjk_char_pull(ucs2_t wc, ucs2_t* out, const uint32_t* compose)
+size_t cjk_char_pull(ucs2_t wc, ucs2_t *out, const uint32_t *compose)
 {
     if (!wc) {
         return 0;
@@ -233,7 +235,7 @@ uint16_t cjk_lookup(uint16_t c, const cjk_index_t *index,
     return 0;
 }
 
-ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t* table, size_t size)
+ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t *table, size_t size)
 {
     uint32_t v = ((uint32_t)base << 16) | comb;
     size_t low = 0;
@@ -255,7 +257,7 @@ ucs2_t cjk_compose(ucs2_t base, ucs2_t comb, const uint32_t* table, size_t size)
     return 0;
 }
 
-ucs2_t cjk_compose_seq(const ucs2_t* in, size_t* len, const uint32_t* table,
+ucs2_t cjk_compose_seq(const ucs2_t *in, size_t *len, const uint32_t *table,
                        size_t size)
 {
     static uint8_t sz[] = { 3, 4, 5, 5, 5, 5, 5, 3 };

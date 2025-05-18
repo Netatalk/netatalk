@@ -867,10 +867,10 @@ size_t decompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 length of UTF-8 character and string
 ********************************************************************/
 
-size_t utf8_charlen(char* utf8)
+size_t utf8_charlen(char *utf8)
 {
     unsigned char *p;
-    p = (unsigned char*) utf8;
+    p = (unsigned char *) utf8;
 
     if (*p < 0x80) {
         return 1;
@@ -897,11 +897,11 @@ size_t utf8_charlen(char* utf8)
 }
 
 
-size_t utf8_strlen_validate(char * utf8)
+size_t utf8_strlen_validate(char *utf8)
 {
     size_t len;
     unsigned char *p;
-    p = (unsigned char*) utf8;
+    p = (unsigned char *) utf8;
     len = 0;
 
     /* see http://www.unicode.org/unicode/reports/tr27/ for an explanation */

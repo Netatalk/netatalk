@@ -64,9 +64,12 @@
 struct finderinfo {
     uint32_t f_type;
     uint32_t creator;
-    uint16_t attrs;    /* File attributes (high 8 bits)*/
-    uint16_t label;    /* Label (low 8 bits )*/
-    char reserved[22]; /* Unknown (at least for now...) */
+    /* File attributes (high 8 bits) */
+    uint16_t attrs;
+    /* Label (low 8 bits) */
+    uint16_t label;
+    /* Unknown (at least for now...) */
+    char reserved[22];
 };
 
 typedef char packed_finder[ADEDLEN_FINDERI];
@@ -123,17 +126,24 @@ struct scrit {
  *
  */
 struct dsitem {
-    cnid_t ds_did;               /* CNID of this directory           */
-    uint32_t ds_checked;    /* Have we checked this directory ? */
+    /* CNID of this directory */
+    cnid_t ds_did;
+    /* Have we checked this directory? */
+    uint32_t ds_checked;
 };
 
 
 #define DS_BSIZE 128
-static int save_cidx = -1; /* Saved index of currently scanned directory. */
-static struct dsitem *dstack = NULL; /* Directory stack data... */
-static int dssize = 0;  	     /* Directory stack (allocated) size... */
-static int dsidx = 0;   	     /* First free item index... */
-static struct scrit c1, c2;          /* search criteria */
+/* Saved index of currently scanned directory. */
+static int save_cidx = -1;
+/* Directory stack data... */
+static struct dsitem *dstack = NULL;
+/* Directory stack (allocated) size... */
+static int dssize = 0;
+/* First free item index... */
+static int dsidx = 0;
+/* search criteria */
+static struct scrit c1, c2;
 
 /* Clears directory stack. */
 static void clearstack(void)
@@ -219,7 +229,8 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
     }
 
     if (ad_metadata(path->u_name, (isdir ? ADFLAGS_DIR : 0), adp) < 0) {
-        adp = NULL; /* FIXME without resource fork adl_lkup will be call again */
+        /* FIXME without resource fork adl_lkup will be called again */
+        adp = NULL;
     }
 
     return adp;
@@ -232,8 +243,10 @@ static struct finderinfo *unpack_buffer(struct finderinfo *finfo, char *buffer)
     memcpy(&finfo->creator, buffer + FINDERINFO_FRCREATOFF, sizeof(finfo->creator));
     memcpy(&finfo->attrs,   buffer + FINDERINFO_FRFLAGOFF, sizeof(finfo->attrs));
     memcpy(&finfo->label,   buffer + FINDERINFO_FRFLAGOFF, sizeof(finfo->label));
-    finfo->attrs &= 0xff00; /* high 8 bits */
-    finfo->label &= 0xff;   /* low 8 bits */
+    /* high 8 bits */
+    finfo->attrs &= 0xff00;
+    /* low 8 bits */
+    finfo->label &= 0xff;
     return finfo;
 }
 
@@ -750,7 +763,8 @@ static int catsearch(const AFPObj *obj,
 catsearch_pause:
     cur_pos = *pos;
     save_cidx = cidx;
-catsearch_end: /* Exiting catsearch: error condition */
+catsearch_end:
+    /* Exiting catsearch: error condition */
     *rsize = rrbuf - rbuf;
 
     if (cwd != -1) {
@@ -926,7 +940,8 @@ next:
     goto catsearch_end;
 catsearch_pause:
     *pos = cur_pos;
-catsearch_end: /* Exiting catsearch: error condition */
+catsearch_end:
+    /* Exiting catsearch: error condition */
     *rsize = rrbuf - rbuf;
     LOG(log_debug, logtype_afpd, "catsearch_db(req pos: %u): {pos: %u}", *pos,
         cur_pos);
@@ -996,12 +1011,12 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         /* with catsearch only name and parent id are allowed */
         c1.fbitmap &= (1U << FILPBIT_LNAME) | (1U << FILPBIT_PDID);
         c1.dbitmap &= (1U << DIRPBIT_LNAME) | (1U << DIRPBIT_PDID);
-        spec_len = *(unsigned char*)ibuf;
+        spec_len = *(unsigned char *) ibuf;
     }
 
     /* Parse file specifications */
-    spec1 = (unsigned char*)ibuf;
-    spec2 = (unsigned char*)ibuf + spec_len + 2;
+    spec1 = (unsigned char *) ibuf;
+    spec2 = (unsigned char *) ibuf + spec_len + 2;
     spec1 += 2;
     spec2 += 2;
     bspec1 = spec1;
@@ -1077,7 +1092,8 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         } else if (c1.dbitmap == 0) {
             /* resource fork length */
         } else {
-            return AFPERR_BITMAP;  /* error */
+            /* error */
+            return AFPERR_BITMAP;
         }
     } /* Offspring count/resource fork length */
 
@@ -1105,12 +1121,14 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         /* offset */
         memcpy(&namelen, spec1, sizeof(namelen));
         namelen = ntohs(namelen);
-        spec1 = bspec1 + namelen + 4; /* Skip Unicode Hint */
+        /* Skip Unicode Hint */
+        spec1 = bspec1 + namelen + 4;
         /* length */
         memcpy(&namelen, spec1, sizeof(namelen));
         namelen = ntohs(namelen);
 
-        if (namelen > UTF8FILELEN_EARLY) { /* Safeguard */
+        /* Safeguard */
+        if (namelen > UTF8FILELEN_EARLY) {
             namelen = UTF8FILELEN_EARLY;
         }
 

@@ -240,7 +240,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static void create_appledesktop_folder(const struct vol * vol)
+static void create_appledesktop_folder(const struct vol *vol)
 {
     bstring olddtpath = NULL, dtpath = NULL;
     struct stat st;
@@ -356,7 +356,7 @@ static int iconopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
 int afp_addicon(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 size_t *rbuflen)
 {
-    struct vol* vol;
+    struct vol *vol;
 #ifndef NO_DDP
     struct iovec	iov[2];
 #endif
@@ -505,28 +505,37 @@ addicon_err:
 #endif /* no afp/asp */
 
     case AFPPROTO_DSI: {
-        DSI* dsi = obj->dsi;
+        DSI *dsi = obj->dsi;
         iovcnt = dsi_writeinit(dsi, rbuf, buflen);
 
         /* add headers at end of file */
         if ((cc == 0) && (write(si.sdt_fd, imh, sizeof(imh)) < 0)) {
-            LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol,
-                    fcreator), strerror(errno));
+            LOG(log_error,
+                logtype_afpd,
+                "afp_addicon(%s): write: %s",
+                icon_dtfile(vol, fcreator),
+                strerror(errno));
             dsi_writeflush(dsi);
             return AFPERR_PARAM;
         }
 
         if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-            LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol,
-                fcreator), strerror(errno));
+            LOG(log_error,
+                logtype_afpd,
+                "afp_addicon(%s): write: %s",
+                icon_dtfile(vol, fcreator),
+                strerror(errno));
             dsi_writeflush(dsi);
             return AFPERR_PARAM;
         }
 
         while ((iovcnt = dsi_write(dsi, rbuf, buflen))) {
             if ((cc = write(si.sdt_fd, rbuf, iovcnt)) < 0) {
-                LOG(log_error, logtype_afpd, "afp_addicon(%s): write: %s", icon_dtfile(vol,
-                    fcreator), strerror(errno));
+                LOG(log_error,
+                    logtype_afpd,
+                    "afp_addicon(%s): write: %s",
+                    icon_dtfile(vol, fcreator),
+                    strerror(errno));
                 dsi_writeflush(dsi);
                 return AFPERR_PARAM;
             }

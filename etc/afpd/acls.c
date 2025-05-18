@@ -916,11 +916,13 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
         }
 
         darwin_ace_rights = ntohl(darwin_aces->darwin_ace_rights);
-        perm = map_darwin_right_to_posix_permset(darwin_ace_rights,
-               (*def_aclp != NULL));
+        perm = map_darwin_right_to_posix_permset(
+                   darwin_ace_rights,
+                   *def_aclp != NULL);
 
         if (perm == 0) {
-            continue;    /* don't add empty perm */
+            /* don't add empty perm */
+            continue;
         }
 
         LOG(log_debug, logtype_afpd,

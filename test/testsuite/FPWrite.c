@@ -40,13 +40,13 @@ STATIC void test216()
 
     memset(Data, 0xff, 0x20000);
 
-    if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL -20, 15000, Data,
+    if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL - 20, 15000, Data,
                                        0)) {
         test_failed();
         goto fin;
     }
 
-    if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL -12000, 15000, Data,
+    if (htonl(AFPERR_DFULL) != FPWrite(Conn, fork, 0x7fffffffL - 12000, 15000, Data,
                                        0)) {
         test_failed();
         goto fin;

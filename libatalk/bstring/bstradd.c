@@ -164,7 +164,7 @@ bstring bstrListPop(struct bstrList *sl _U_)
 /*!
  * @brief Inverse bjoin
  */
-bstring bjoinInv(const struct bstrList * bl, const_bstring sep)
+bstring bjoinInv(const struct bstrList *bl, const_bstring sep)
 {
     bstring b;
     int i, j, c, v;

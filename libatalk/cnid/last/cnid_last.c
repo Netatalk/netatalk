@@ -153,7 +153,7 @@ struct _cnid_module cnid_last_module = {
 };
 
 /* Return the did/name pair corresponding to a CNID. */
-char *cnid_last_resolve(struct _cnid_db *cdb _U_, cnid_t * id _U_,
+char *cnid_last_resolve(struct _cnid_db *cdb _U_, cnid_t *id _U_,
                         void *buffer _U_, size_t len _U_)
 {
     /* FIXME: frankly, it does not work. As get, add and other functions. */

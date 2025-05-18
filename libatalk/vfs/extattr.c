@@ -414,7 +414,7 @@ static ssize_t remove_user(ssize_t ret, char *list, size_t size)
     ptr = ptr1 = list;
 
     while (ptrsize > 0) {
-        len = strlen(ptr1) +1;
+        len = strlen(ptr1) + 1;
         ptrsize -= len;
 
         if (strncmp(ptr1, "user.", 5)) {

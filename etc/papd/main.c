@@ -755,7 +755,7 @@ static void getprinters(char *cf)
          * Do we want authenticated printing?
          */
         if ((p = pgetstr("ca", &a)) != NULL) {
-            if ((pr->p_authprintdir = (char *)malloc(strlen(p) +1)) == NULL) {
+            if ((pr->p_authprintdir = (char *)malloc(strlen(p) + 1)) == NULL) {
                 perror("malloc");
                 exit(1);
             }
@@ -773,7 +773,7 @@ static void getprinters(char *cf)
         }
 
         if ((p = pgetstr("am", &a)) != NULL) {
-            if ((uamlist = (char *)malloc(strlen(p) +1)) == NULL) {
+            if ((uamlist = (char *)malloc(strlen(p) + 1)) == NULL) {
                 perror("malloc");
                 exit(1);
             }

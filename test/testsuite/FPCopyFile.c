@@ -53,8 +53,8 @@ STATIC void test71()
 
     FAIL(!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT, name2)))
     /* source is a dir */
-    FAIL(ntohl(AFPERR_BADTYPE) != FPCopyFile(Conn, vol, DIRDID_ROOT, vol,
-         DIRDID_ROOT, name2, "", name1))
+    FAIL(ntohl(AFPERR_BADTYPE) !=
+         FPCopyFile(Conn, vol, DIRDID_ROOT, vol, DIRDID_ROOT, name2, "", name1))
     fork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name,
                       OPENACC_WR | OPENACC_RD);
 

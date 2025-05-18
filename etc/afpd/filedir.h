@@ -9,12 +9,10 @@
 
 extern struct afp_options default_options;
 
-extern char		*ctoupath(const struct vol *, struct dir *,
-                        char *);
-extern char		*absupath(const struct vol *, struct dir *,
-                        char *);
-extern int		veto_file(const char *veto_str, const char *path);
-extern int 		check_name(const struct vol *vol, char *name);
+extern char *ctoupath(const struct vol *, struct dir *, char *);
+extern char *absupath(const struct vol *, struct dir *, char *);
+extern int veto_file(const char *veto_str, const char *path);
+extern int check_name(const struct vol *vol, char *name);
 
 extern int delete_vetoed_files(struct vol *vol, const char *upath,
                                bool in_vetodir);

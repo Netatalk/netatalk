@@ -486,7 +486,7 @@ int uam_afpserver_option(void *private, const int what, void *option,
         break;
 
     case UAM_OPTION_PROTOCOL:
-        *((int*)option) = obj->proto;
+        *((int *)option) = obj->proto;
         break;
 
     case UAM_OPTION_CLIENTNAME: {

@@ -498,10 +498,10 @@ static char *volxlate(const AFPObj *obj,
 #endif
 
                 if (obj->proto == AFPPROTO_DSI) {
-                    DSI* dsi = obj->dsi;
+                    DSI *dsi = obj->dsi;
                     len = sprintf(dest, "%s:%u",
-                                  getip_string((struct sockaddr*)&dsi->client),
-                                  getip_port((struct sockaddr*)&dsi->client));
+                                  getip_string((struct sockaddr *)&dsi->client),
+                                  getip_port((struct sockaddr *)&dsi->client));
                     dest += len;
                     destlen -= len;
                 }
@@ -535,8 +535,8 @@ static char *volxlate(const AFPObj *obj,
 #endif
 
             if (obj->proto == AFPPROTO_DSI) {
-                DSI* dsi = obj->dsi;
-                q = getip_string((struct sockaddr*)&dsi->client);
+                DSI *dsi = obj->dsi;
+                q = getip_string((struct sockaddr *)&dsi->client);
             }
         } else if (IS_VAR(p, "$s")) {
             if (obj->options.servername) {
@@ -2751,7 +2751,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
 
         struct addrinfo *result;
         memset(&hints, 0, sizeof(hints));
-        hints.ai_family = AF_UNSPEC;    /* Allow IPv4 or IPv6 */
+        /* Allow IPv4 or IPv6 */
+        hints.ai_family = AF_UNSPEC;
         hints.ai_socktype = SOCK_STREAM;
         hints.ai_flags = AI_CANONNAME;
 

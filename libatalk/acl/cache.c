@@ -332,7 +332,7 @@ int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)
                 free(entry);
                 return -1;
             } else {
-                *name = malloc(strlen(entry->name) +1);
+                *name = malloc(strlen(entry->name) + 1);
                 strcpy(*name, entry->name);
                 *type = entry->type;
                 return 0;
@@ -354,7 +354,7 @@ int add_cachebyuuid(uuidp_t inuuid, const char *inname, uuidtype_t type,
     cacheduser_t *cacheduser = NULL;
     unsigned char hash;
     /* allocate mem and copy values */
-    name = malloc(strlen(inname) +1);
+    name = malloc(strlen(inname) + 1);
 
     if (!name) {
         LOG(log_error, logtype_default, "add_cachebyuuid: mallor error");

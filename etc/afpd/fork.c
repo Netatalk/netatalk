@@ -1311,13 +1311,13 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     int             eid;
     int             err = AFP_OK;
     uint16_t        ofrefnum;
-    DSI* dsi = obj->dsi;
+    DSI *dsi = obj->dsi;
     char *rcvbuf = NULL;
     size_t          rcvbuflen = 0;
     ssize_t         cc;
 
     if (dsi) {
-        rcvbuf = (char*)dsi->commands;
+        rcvbuf = (char *)dsi->commands;
         rcvbuflen = dsi->server_quantum;
     }
 

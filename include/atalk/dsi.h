@@ -89,8 +89,8 @@ typedef struct DSI {
     /* protocol specific open/close, send/receive
      * send/receive fill in the header and use dsi->commands.
      * write/read just write/read data */
-    pid_t  (*proto_open)(struct DSI *);
-    void   (*proto_close)(struct DSI *);
+    pid_t (*proto_open)(struct DSI *);
+    void (*proto_close)(struct DSI *);
 } DSI;
 
 /* DSI flags */
@@ -150,32 +150,32 @@ typedef struct DSI {
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,
                      const char *port);
-extern void dsi_setstatus (DSI *, char *, const size_t);
+extern void dsi_setstatus(DSI *, char *, const size_t);
 extern int dsi_tcp_init(DSI *dsi, const char *hostname, const char *address,
                         const char *port);
 extern void dsi_free(DSI *dsi);
 
 /* in dsi_getsess.c */
-extern int dsi_getsession (DSI *, server_child_t *, const int, afp_child_t **);
-extern void dsi_kill (int);
+extern int dsi_getsession(DSI *, server_child_t *, const int, afp_child_t **);
+extern void dsi_kill(int);
 
 
 /* DSI Commands: individual files */
-extern void dsi_opensession (DSI *);
-extern int  dsi_attention (DSI *, AFPUserBytes);
-extern int  dsi_cmdreply (DSI *, const int);
-extern int dsi_tickle (DSI *);
-extern void dsi_getstatus (DSI *);
-extern void dsi_close (DSI *);
+extern void dsi_opensession(DSI *);
+extern int  dsi_attention(DSI *, AFPUserBytes);
+extern int  dsi_cmdreply(DSI *, const int);
+extern int dsi_tickle(DSI *);
+extern void dsi_getstatus(DSI *);
+extern void dsi_close(DSI *);
 
 #define DSI_NOWAIT 1
 #define DSI_MSG_MORE 2
 
 /* low-level stream commands -- in dsi_stream.c */
-extern ssize_t dsi_stream_write (DSI *, void *, const size_t, const int mode);
-extern size_t dsi_stream_read (DSI *, void *, const size_t);
-extern int dsi_stream_send (DSI *, void *, size_t);
-extern int dsi_stream_receive (DSI *);
+extern ssize_t dsi_stream_write(DSI *, void *, const size_t, const int mode);
+extern size_t dsi_stream_read(DSI *, void *, const size_t);
+extern int dsi_stream_send(DSI *, void *, size_t);
+extern int dsi_stream_receive(DSI *);
 extern int dsi_disconnect(DSI *dsi);
 
 #ifdef WITH_SENDFILE
@@ -184,16 +184,16 @@ extern ssize_t dsi_stream_read_file(DSI *, int, off_t off, const size_t len,
 #endif
 
 /* client writes -- dsi_write.c */
-extern size_t dsi_writeinit (DSI *, void *, const size_t);
-extern size_t dsi_write (DSI *, void *, const size_t);
-extern void   dsi_writeflush (DSI *);
+extern size_t dsi_writeinit(DSI *, void *, const size_t);
+extern size_t dsi_write(DSI *, void *, const size_t);
+extern void   dsi_writeflush(DSI *);
 #define dsi_wrtreply(a,b)  dsi_cmdreply(a,b)
 
 /* client reads -- dsi_read.c */
-extern ssize_t dsi_readinit (DSI *, void *, const size_t, const size_t,
-                             const int);
-extern ssize_t dsi_read (DSI *, void *, const size_t);
-extern void dsi_readdone (DSI *);
+extern ssize_t dsi_readinit(DSI *, void *, const size_t, const size_t,
+                            const int);
+extern ssize_t dsi_read(DSI *, void *, const size_t);
+extern void dsi_readdone(DSI *);
 
 /* some useful macros */
 #define dsi_serverID(x)   ((x)->serverID++)

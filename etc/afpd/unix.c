@@ -178,7 +178,7 @@ mode_t mtoumode(struct maccess *ma)
 }
 
 /* --------------------- */
-int setfilunixmode(const struct vol *vol, struct path* path, mode_t mode)
+int setfilunixmode(const struct vol *vol, struct path *path, mode_t mode)
 {
     if (!path->st_valid) {
         of_stat(vol, path);
@@ -233,7 +233,7 @@ int setdirunixmode(const struct vol *vol, char *name, mode_t mode)
 
 /* ----------------------------- */
 int setfilowner(const struct vol *vol, const uid_t uid, const gid_t gid,
-                struct path* path)
+                struct path *path)
 {
     if (ochown(path->u_name, uid, gid, vol_syml_opt(vol)) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setfilowner: chown %d/%d %s: %s",

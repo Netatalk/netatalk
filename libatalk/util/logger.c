@@ -102,16 +102,16 @@ static int  log_src_linenumber;
 
 /* Array to store text to list given a log type */
 static const char *arr_logtype_strings[] =  LOGTYPE_STRING_IDENTIFIERS;
-static const unsigned int num_logtype_strings = COUNT_ARRAY(
-        arr_logtype_strings);
+static const unsigned int num_logtype_strings =
+    COUNT_ARRAY(arr_logtype_strings);
 
 /* Array for charachters representing log severity in the log file */
 static const char arr_loglevel_chars[] = {'-', 'S', 'E', 'W', 'N', 'I', 'D'};
 static const unsigned int num_loglevel_chars = COUNT_ARRAY(arr_loglevel_chars);
 
 static const char *arr_loglevel_strings[] = LOGLEVEL_STRING_IDENTIFIERS;
-static const unsigned int num_loglevel_strings = COUNT_ARRAY(
-        arr_loglevel_strings);
+static const unsigned int num_loglevel_strings =
+    COUNT_ARRAY(arr_loglevel_strings);
 
 /* =========================================================================
    Internal function definitions
@@ -179,22 +179,28 @@ static int get_syslog_equivalent(enum loglevels loglevel)
     switch (loglevel) {
     /* The question is we know how bad it is for us,
        but how should that translate in the syslogs?  */
-    case 1: /* severe */
+    case 1:
+        /* severe */
         return LOG_ERR;
 
-    case 2: /* error */
+    case 2:
+        /* error */
         return LOG_ERR;
 
-    case 3: /* warning */
+    case 3:
+        /* warning */
         return LOG_WARNING;
 
-    case 4: /* note */
+    case 4:
+        /* note */
         return LOG_NOTICE;
 
-    case 5: /* information */
+    case 5:
+        /* information */
         return LOG_INFO;
 
-    default: /* debug */
+    default:
+        /* debug */
         return LOG_DEBUG;
     }
 }
@@ -571,4 +577,3 @@ void setuplog(const char *logstr, const char *logfile,
 
     free(save);
 }
-

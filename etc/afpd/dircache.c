@@ -642,7 +642,7 @@ void dircache_dump(void)
     const struct dir *dir;
     int i;
     LOG(log_warning, logtype_afpd, "Dumping directory cache...");
-    snprintf(tmpnam, sizeof(tmpnam) -1, "%s/dircache.%u", tmpdir(), getpid());
+    snprintf(tmpnam, sizeof(tmpnam) - 1, "%s/dircache.%u", tmpdir(), getpid());
 
     if ((dump = fopen(tmpnam, "w+")) == NULL) {
         LOG(log_error, logtype_afpd, "dircache_dump: %s", strerror(errno));

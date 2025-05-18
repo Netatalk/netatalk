@@ -61,7 +61,7 @@ static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
     }
 
     /* assume signals SA_RESTART set */
-    memcpy (&pid, ipc->msg, sizeof(pid_t));
+    memcpy(&pid, ipc->msg, sizeof(pid_t));
     return server_child_transfer_session(children,
                                          pid,
                                          ipc->uid,
@@ -81,10 +81,10 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
     }
 
     p = ipc->msg;
-    memcpy (&idlen, p, sizeof(idlen));
-    idlen = ntohl (idlen);
+    memcpy(&idlen, p, sizeof(idlen));
+    idlen = ntohl(idlen);
     p += sizeof(idlen);
-    memcpy (&boottime, p, sizeof(boottime));
+    memcpy(&boottime, p, sizeof(boottime));
     p += sizeof(boottime);
 
     if (ipc->len < idlen + sizeof(idlen) + sizeof(boottime)) {
@@ -95,7 +95,7 @@ static int ipc_get_session(struct ipc_header *ipc, server_child_t *children)
         return -1;
     }
 
-    memcpy (clientid, p, idlen);
+    memcpy(clientid, p, idlen);
     LOG(log_debug, logtype_afpd, "ipc_get_session(pid: %u, uid: %u, time: 0x%08x)",
         ipc->child_pid, ipc->uid, boottime);
     server_child_kill_one_by_id(children,
@@ -212,11 +212,11 @@ int ipc_server_read(server_child_t *children, int fd)
 
     /* This should never happen */
     if (ipc.len > (IPC_MAXMSGSIZE - IPC_HEADERLEN)) {
-        LOG (log_info, logtype_afpd, "IPC message exceeds allowed size (%u)", ipc.len);
+        LOG(log_info, logtype_afpd, "IPC message exceeds allowed size (%u)", ipc.len);
         return -1;
     }
 
-    memset (buf, 0, IPC_MAXMSGSIZE);
+    memset(buf, 0, IPC_MAXMSGSIZE);
 
     if (ipc.len != 0) {
         if ((ret = read(fd, buf, ipc.len)) != (int) ipc.len) {
@@ -234,15 +234,15 @@ int ipc_server_read(server_child_t *children, int fd)
     switch (ipc.command) {
     case IPC_DISCOLDSESSION:
         if (readt(fd, &ipc.DSI_requestID, 2, 0, 2) != 2) {
-            LOG (log_error, logtype_afpd,
-                 "ipc_read(%s:child[%u]): couldn't read DSI id: %s",
-                 ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
+            LOG(log_error, logtype_afpd,
+                "ipc_read(%s:child[%u]): couldn't read DSI id: %s",
+                ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
             return -1;
         }
 
         if ((ipc.afp_socket = recv_fd(fd, 1)) == -1) {
-            LOG (log_error, logtype_afpd, "ipc_read(%s:child[%u]): recv_fd: %s",
-                 ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
+            LOG(log_error, logtype_afpd, "ipc_read(%s:child[%u]): recv_fd: %s",
+                ipc_cmd_str[ipc.command], ipc.child_pid, strerror(errno));
             return -1;
         }
 
@@ -286,7 +286,7 @@ int ipc_server_read(server_child_t *children, int fd)
         break;
 
     default:
-        LOG (log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
+        LOG(log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
         return -1;
     }
 
@@ -301,7 +301,7 @@ int ipc_child_write(int fd, uint16_t command, int len, void *msg)
     uid_t uid;
     ssize_t ret;
     p = block;
-    memset (p, 0, IPC_MAXMSGSIZE);
+    memset(p, 0, IPC_MAXMSGSIZE);
 
     if (len + IPC_HEADERLEN > IPC_MAXMSGSIZE) {
         return -1;

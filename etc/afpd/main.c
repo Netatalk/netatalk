@@ -54,8 +54,8 @@ static struct asev *asev;
 
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
                               server_child_t *server_children);
-static int asp_start(AFPObj* obj, server_child_t* server_children);
-static void asp_cleanup(const AFPObj* obj);
+static int asp_start(AFPObj *obj, server_child_t *server_children);
+static void asp_cleanup(const AFPObj *obj);
 
 static void afp_exit(int ret)
 {
@@ -591,7 +591,7 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
     return child;
 }
 #ifndef NO_DDP
-static int asp_start(AFPObj* obj, server_child_t *server_children)
+static int asp_start(AFPObj *obj, server_child_t *server_children)
 {
     ASP asp;
 
@@ -608,7 +608,7 @@ static int asp_start(AFPObj* obj, server_child_t *server_children)
 
     return 0;
 }
-static void asp_cleanup(const AFPObj* obj)
+static void asp_cleanup(const AFPObj *obj)
 {
     /* we need to stop tickle handler */
     asp_stop_tickle();

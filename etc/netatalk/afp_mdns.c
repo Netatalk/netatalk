@@ -36,7 +36,7 @@ static pthread_t       poller;
  * Its easier to use asprintf to set the TXT record values
  */
 
-int TXTRecordPrintf(TXTRecordRef * rec, const char * key, const char * fmt, ...)
+int TXTRecordPrintf(TXTRecordRef *rec, const char *key, const char *fmt, ...)
 {
     int ret = 0;
     char *str;
@@ -58,7 +58,7 @@ int TXTRecordPrintf(TXTRecordRef * rec, const char * key, const char * fmt, ...)
     return ret;
 }
 
-int TXTRecordKeyPrintf(TXTRecordRef * rec, const char * key_fmt, int key_var,
+int TXTRecordKeyPrintf(TXTRecordRef *rec, const char *key_fmt, int key_var,
                        const char *fmt, ...)
 {
     int ret = 0;

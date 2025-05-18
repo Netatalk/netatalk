@@ -184,10 +184,10 @@ struct adouble;
 
 struct adouble_fops {
     const char *(*ad_path)(const char *, int);
-    int  (*ad_mkrf)(const char *);
-    int  (*ad_rebuild_header)(struct adouble *);
-    int  (*ad_header_read)(const char *, struct adouble *, const struct stat *);
-    int  (*ad_header_upgrade)(struct adouble *, const char *);
+    int (*ad_mkrf)(const char *);
+    int (*ad_rebuild_header)(struct adouble *);
+    int (*ad_header_read)(const char *, struct adouble *, const struct stat *);
+    int (*ad_header_upgrade)(struct adouble *, const char *);
 };
 
 struct adouble {
@@ -390,14 +390,14 @@ struct adouble {
 extern int ad_rebuild_adouble_header_v2(struct adouble *);
 extern int ad_rebuild_adouble_header_ea(struct adouble *);
 extern  int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf);
-extern int ad_copy_header (struct adouble *, struct adouble *);
-extern int ad_flush (struct adouble *);
-extern int ad_close (struct adouble *, int);
+extern int ad_copy_header(struct adouble *, struct adouble *);
+extern int ad_flush(struct adouble *);
+extern int ad_close(struct adouble *, int);
 extern int fsetrsrcea(struct adouble *ad, int fd, const char *eaname,
                       const void *value, size_t size, int flags);
 
 /* ad_lock.c */
-extern int ad_testlock      (struct adouble *adp, int eid, off_t off);
+extern int ad_testlock(struct adouble *adp, int eid, off_t off);
 extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
 extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off,
                    off_t len, int fork);
@@ -409,29 +409,28 @@ extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off,
 extern void *ad_entry(const struct adouble *ad, int eid);
 extern off_t ad_getentryoff(const struct adouble *ad, int eid);
 extern const char *adflags2logstr(int adflags);
-extern int ad_setfuid     (const uid_t);
-extern uid_t ad_getfuid   (void);
-extern char *ad_dir       (const char *);
-extern const char *ad_path      (const char *, int);
-extern const char *ad_path_ea   (const char *, int);
-extern const char *ad_path_osx  (const char *path, int adflags);
-extern int ad_mode        (const char *, mode_t);
-extern int ad_mkdir       (const char *, mode_t);
+extern int ad_setfuid(const uid_t);
+extern uid_t ad_getfuid(void);
+extern char *ad_dir(const char *);
+extern const char *ad_path(const char *, int);
+extern const char *ad_path_ea(const char *, int);
+extern const char *ad_path_osx(const char *path, int adflags);
+extern int ad_mode(const char *, mode_t);
+extern int ad_mkdir(const char *, mode_t);
 struct vol;
-extern void ad_init       (struct adouble *, const struct vol * restrict);
-extern void ad_init_old   (struct adouble *ad, int flags, int options);
+extern void ad_init(struct adouble *, const struct vol *restrict);
+extern void ad_init_old(struct adouble *ad, int flags, int options);
 extern int ad_init_offsets(struct adouble *ad);
-extern int ad_open        (struct adouble *ad, const char *path, int adflags,
-                           ...);
+extern int ad_open(struct adouble *ad, const char *path, int adflags, ...);
 #ifdef __APPLE__
 extern int ad_open_native_finderinfo(const char *path, char *ret);
 #endif
-extern int ad_openat      (struct adouble *, int dirfd, const char *path,
-                           int adflags, ...);
-extern int ad_refresh     (const char *path, struct adouble *);
-extern int ad_stat        (const char *, struct stat *);
-extern int ad_metadata    (const char *, int, struct adouble *);
-extern int ad_metadataat  (int, const char *, int, struct adouble *);
+extern int ad_openat(struct adouble *, int dirfd, const char *path,
+                     int adflags, ...);
+extern int ad_refresh(const char *path, struct adouble *);
+extern int ad_stat(const char *, struct stat *);
+extern int ad_metadata(const char *, int, struct adouble *);
+extern int ad_metadataat(int, const char *, int, struct adouble *);
 extern mode_t ad_hf_mode(mode_t mode);
 extern int ad_valid_header_osx(const char *path);
 extern off_t ad_reso_size(const char *path, int adflags, struct adouble *ad);
@@ -454,7 +453,7 @@ extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads,
                          uint8_t *buf, size_t buflen);
 
 /* ad_size.c */
-extern off_t ad_size (const struct adouble *, uint32_t);
+extern off_t ad_size(const struct adouble *, uint32_t);
 
 /* ad_mmap.c */
 extern void *ad_mmapread(struct adouble *, uint32_t, off_t, size_t);

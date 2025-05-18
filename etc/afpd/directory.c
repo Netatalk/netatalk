@@ -998,7 +998,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     afp_errno = AFPERR_NOOBJ;
     memset(&ret, 0, sizeof(ret));
 
-    switch (ret.m_type = *data) { /* 1 */
+    /* 1 */
+    switch (ret.m_type = *data) {
 case 2:
             data++;
         len = (unsigned char) * data++;
@@ -1045,12 +1046,15 @@ default:
         }
     }
 
-    while (len) {         /* 3 */
-        if (*data == 0) { /* 4 or 5 */
+    /* 3 */
+    while (len) {
+        /* 4 or 5 */
+        if (*data == 0) {
             data++;
             len--;
 
-            while (len > 0 && *data == 0) { /* 5 */
+            /* 5 */
+            while (len > 0 && *data == 0) {
                 /* chdir to parrent dir */
                 if ((dir = dirlookup(vol, dir->d_pdid)) == NULL) {
                     return NULL;
@@ -1068,20 +1072,23 @@ default:
             continue;
         }
 
-        /* 6*/
+        /* 6 */
         for (p = path; *data != 0 && len > 0; len--) {
             *p++ = *data++;
 
-            if (p > &path[UTF8FILELEN_EARLY]) {   /* FIXME safeguard, limit of early Mac OS X */
+            /* FIXME safeguard, limit of early Mac OS X */
+            if (p > &path[UTF8FILELEN_EARLY]) {
                 afp_errno = AFPERR_PARAM;
                 return NULL;
             }
         }
 
-        *p = 0;            /* Terminate string */
+        /* Terminate string */
+        *p = 0;
         ret.u_name = NULL;
 
-        if (cname_mtouname(vol, dir, &ret, toUTF8) != 0) { /* 7 */
+        /* 7 */
+        if (cname_mtouname(vol, dir, &ret, toUTF8) != 0) {
             LOG(log_error, logtype_afpd, "cname('%s'): error from cname_mtouname", path);
             return NULL;
         }
@@ -1100,9 +1107,8 @@ default:
                     bformat("Attempt to access vetoed file or directory \"%s\" in directory \"%s\"",
                             ret.u_name, bdata(dir->d_u_name));
 
-                if (setmessage(bdata(message)) == 0)
-                    /* Client may make multiple attempts, only send the message the first time */
-                {
+                /* Client may make multiple attempts, only send the message the first time */
+                if (setmessage(bdata(message)) == 0) {
                     kill(getpid(), SIGUSR2);
                 }
 
@@ -1112,7 +1118,8 @@ default:
             return NULL;
         }
 
-        if (dir->d_did == DIRDID_ROOT_PARENT) { /* 8 */
+        /* 8 */
+        if (dir->d_did == DIRDID_ROOT_PARENT) {
             /*
              * Special case: CNID 1
              * root parent (did 1) has one child: the volume. Requests for did=1 with
@@ -1154,7 +1161,8 @@ default:
             }
 
             switch (ret.st.st_mode & S_IFMT) {
-            case S_IFREG: /* 11 */
+            /* 11 */
+            case S_IFREG:
                 LOG(log_debug, logtype_afpd, "cname('%s'): {file: '%s'}",
                     cfrombstr(dir->d_fullpath), ret.u_name);
 
@@ -1164,9 +1172,11 @@ default:
                     return NULL;
                 }
 
-                continue; /* continues while loop */
+                /* continues while loop */
+                continue;
 
-            case S_IFLNK: /* 12 */
+            /* 12 */
+            case S_IFLNK:
                 LOG(log_debug, logtype_afpd, "cname('%s'): {link: '%s'}",
                     cfrombstr(dir->d_fullpath), ret.u_name);
 
@@ -1177,9 +1187,11 @@ default:
                     return NULL;
                 }
 
-                continue; /* continues while loop */
+                /* continues while loop */
+                continue;
 
-            case S_IFDIR: /* 13 */
+            /* 13 */
+            case S_IFDIR:
                 break;
 
             default:
@@ -1190,11 +1202,13 @@ default:
 
             /* Search the cache */
             int unamelen = strlen(ret.u_name);
-            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen); /* 14 */
+            /* 14 */
+            cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen);
 
             if (cdir == NULL) {
                 /* Not in cache, create one */
-                if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) { /* 15 */
+                /* 15 */
+                if ((cdir = dir_add(vol, dir, &ret, unamelen)) == NULL) {
                     LOG(log_error, logtype_afpd,
                         "cname(did:%u, name:'%s', cwd:'%s'): failed to add dir",
                         ntohl(dir->d_did), ret.u_name, getcwdpath());
@@ -1204,7 +1218,8 @@ default:
         } /* if/else cnid==1 */
 
         /* Now chdir to the evaluated dir */
-        if (movecwd(vol, cdir) < 0) {    /* 16 */
+        /* 16 */
+        if (movecwd(vol, cdir) < 0) {
             LOG(log_debug, logtype_afpd,
                 "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
                 cfrombstr(curdir->d_fullpath), cfrombstr(cdir->d_fullpath), strerror(errno));
@@ -2492,7 +2507,7 @@ int afp_mapid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         LOG(log_debug, logtype_afpd, "afp_mapid: valid UUID request");
         uuidtype_t type;
-        len = getnamefromuuid((unsigned char*) ibuf, &name, &type);
+        len = getnamefromuuid((unsigned char *) ibuf, &name, &type);
 
         if (len != 0) {     /* its a error code, not len */
             return AFPERR_NOITEM;

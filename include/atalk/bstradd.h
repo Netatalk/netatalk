@@ -43,5 +43,5 @@ extern int bunrefcstr(bstring b);
 extern struct bstrList *bstrListCreateMin(int min);
 extern int bstrListPush(struct bstrList *sl, bstring bs);
 extern bstring bstrListPop(struct bstrList *sl);
-extern bstring bjoinInv(const struct bstrList * bl, const_bstring sep);
+extern bstring bjoinInv(const struct bstrList *bl, const_bstring sep);
 #endif /* ATALK_BSTRADD_H */

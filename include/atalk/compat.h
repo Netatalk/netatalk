@@ -14,8 +14,8 @@
 #endif
 
 #if !defined(HAVE_PSELECT) || defined(__OpenBSD__)
-extern int pselect(int, fd_set * restrict, fd_set * restrict,
-                   fd_set * restrict, const struct timespec * restrict,
+extern int pselect(int, fd_set *restrict, fd_set *restrict,
+                   fd_set *restrict, const struct timespec *restrict,
                    const sigset_t *restrict);
 #endif
 
