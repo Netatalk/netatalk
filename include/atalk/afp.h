@@ -34,86 +34,154 @@ typedef uint16_t AFPUserBytes;
 #define AFPPROTO_DSI           2
 
 /* server flags */
-#define AFPSRVRINFO_COPY         (1<<0)  /* supports copyfile */
-#define AFPSRVRINFO_PASSWD       (1<<1)  /* supports change password */
-#define AFPSRVRINFO_NOSAVEPASSWD (1<<2)  /* don't allow save password */
-#define AFPSRVRINFO_SRVMSGS      (1<<3)  /* supports server messages */
-#define AFPSRVRINFO_SRVSIGNATURE (1<<4)  /* supports server signature */
-#define AFPSRVRINFO_TCPIP        (1<<5)  /* supports tcpip */
-#define AFPSRVRINFO_SRVNOTIFY    (1<<6)  /* supports server notifications */
-#define AFPSRVRINFO_SRVRECONNECT (1<<7)  /* supports server reconnect */
-#define AFPSRVRINFO_SRVRDIR      (1<<8)  /* supports directories service */
-#define AFPSRVRINFO_SRVUTF8      (1<<9)  /* supports UTF8 names AFP 3.1 */
-#define AFPSRVRINFO_UUID         (1<<10) /* supports UUIDs */
-#define AFPSRVRINFO_EXTSLEEP     (1<<11) /* supports extended sleep */
-#define AFPSRVRINFO_FASTBOZO     (1<<15) /* fast copying */
+/* supports copyfile */
+#define AFPSRVRINFO_COPY         (1<<0)
+/* supports change password */
+#define AFPSRVRINFO_PASSWD       (1<<1)
+/* don't allow save password */
+#define AFPSRVRINFO_NOSAVEPASSWD (1<<2)
+/* supports server messages */
+#define AFPSRVRINFO_SRVMSGS      (1<<3)
+/* supports server signature */
+#define AFPSRVRINFO_SRVSIGNATURE (1<<4)
+/* supports tcpip */
+#define AFPSRVRINFO_TCPIP        (1<<5)
+/* supports server notifications */
+#define AFPSRVRINFO_SRVNOTIFY    (1<<6)
+/* supports server reconnect */
+#define AFPSRVRINFO_SRVRECONNECT (1<<7)
+/* supports directories service */
+#define AFPSRVRINFO_SRVRDIR      (1<<8)
+/* supports UTF8 names AFP 3.1 */
+#define AFPSRVRINFO_SRVUTF8      (1<<9)
+/* supports UUIDs */
+#define AFPSRVRINFO_UUID         (1<<10)
+/* supports extended sleep */
+#define AFPSRVRINFO_EXTSLEEP     (1<<11)
+/* fast copying */
+#define AFPSRVRINFO_FASTBOZO     (1<<15)
 
 #define AFP_OK		0
-#define AFPERR_MAXSESS  -1068   /* maximum number of allowed sessions reached */
-#define AFPERR_DID1     -4000   /* not an afp error DID is 1*/
-#define AFPERR_ACCESS	-5000   /* permission denied */
-#define AFPERR_AUTHCONT	-5001   /* logincont */
-#define AFPERR_BADUAM	-5002   /* uam doesn't exist */
-#define AFPERR_BADVERS	-5003   /* bad afp version number */
-#define AFPERR_BITMAP	-5004   /* invalid bitmap */
-#define AFPERR_CANTMOVE -5005   /* can't move file */
-#define AFPERR_DENYCONF	-5006   /* file synchronization locks conflict */
-#define AFPERR_DIRNEMPT	-5007   /* directory not empty */
-#define AFPERR_DFULL	-5008   /* disk full */
-#define AFPERR_EOF	-5009   /* end of file -- catsearch and afp_read */
-#define AFPERR_BUSY	-5010   /* FileBusy */
-#define AFPERR_FLATVOL  -5011   /* volume doesn't support directories */
-#define AFPERR_NOITEM	-5012   /* ItemNotFound */
-#define AFPERR_LOCK     -5013   /* LockErr */
-#define AFPERR_MISC     -5014   /* misc. err */
-#define AFPERR_NLOCK    -5015   /* no more locks */
-#define AFPERR_NOSRVR	-5016   /* no response by server at that address */
-#define AFPERR_EXIST	-5017   /* object already exists */
-#define AFPERR_NOOBJ	-5018   /* object not found */
-#define AFPERR_PARAM	-5019   /* parameter error */
-#define AFPERR_NORANGE  -5020   /* no range lock */
-#define AFPERR_RANGEOVR -5021   /* range overlap */
-#define AFPERR_SESSCLOS -5022   /* session closed */
-#define AFPERR_NOTAUTH	-5023   /* user not authenticated */
-#define AFPERR_NOOP	-5024   /* command not supported */
-#define AFPERR_BADTYPE	-5025   /* object is the wrong type */
-#define AFPERR_NFILE	-5026   /* too many files open */
-#define AFPERR_SHUTDOWN	-5027   /* server is going down */
-#define AFPERR_NORENAME -5028   /* can't rename */
-#define AFPERR_NODIR	-5029   /* couldn't find directory */
-#define AFPERR_ITYPE	-5030   /* wrong icon type */
-#define AFPERR_VLOCK	-5031   /* volume locked */
-#define AFPERR_OLOCK    -5032   /* object locked */
-#define AFPERR_CTNSHRD  -5033   /* share point contains a share point */
-#define AFPERR_NOID     -5034   /* file thread not found */
-#define AFPERR_EXISTID  -5035   /* file already has an id */
-#define AFPERR_DIFFVOL  -5036   /* different volume */
-#define AFPERR_CATCHNG  -5037   /* catalog has changed */
-#define AFPERR_SAMEOBJ  -5038   /* source file == destination file */
-#define AFPERR_BADID    -5039   /* non-existent file id */
-#define AFPERR_PWDSAME  -5040   /* same password/can't change password */
-#define AFPERR_PWDSHORT -5041   /* password too short */
-#define AFPERR_PWDEXPR  -5042   /* password expired */
-#define AFPERR_INSHRD   -5043   /* folder being shared is inside a
-				   shared folder. may be returned by
-				   afpMoveAndRename. */
-#define AFPERR_INTRASH  -5044   /* shared folder in trash. */
-#define AFPERR_PWDCHNG  -5045   /* password needs to be changed */
-#define AFPERR_PWDPOLCY -5046   /* password fails policy check */
-#define AFPERR_USRLOGIN -5047   /* user already logged on */
+/* maximum number of allowed sessions reached */
+#define AFPERR_MAXSESS  -1068
+/* not an afp error DID is 1 */
+#define AFPERR_DID1     -4000
+/* permission denied */
+#define AFPERR_ACCESS	-5000
+/* logincont */
+#define AFPERR_AUTHCONT	-5001
+/* uam doesn't exist */
+#define AFPERR_BADUAM	-5002
+/* bad afp version number */
+#define AFPERR_BADVERS	-5003
+/* invalid bitmap */
+#define AFPERR_BITMAP	-5004
+/* can't move file */
+#define AFPERR_CANTMOVE -5005
+/* file synchronization locks conflict */
+#define AFPERR_DENYCONF	-5006
+/* directory not empty */
+#define AFPERR_DIRNEMPT	-5007
+/* disk full */
+#define AFPERR_DFULL	-5008
+/* end of file -- catsearch and afp_read */
+#define AFPERR_EOF	-5009
+/* FileBusy */
+#define AFPERR_BUSY	-5010
+/* volume doesn't support directories */
+#define AFPERR_FLATVOL  -5011
+/* ItemNotFound */
+#define AFPERR_NOITEM	-5012
+/* LockErr */
+#define AFPERR_LOCK     -5013
+/* misc. err */
+#define AFPERR_MISC     -5014
+/* no more locks */
+#define AFPERR_NLOCK    -5015
+/* no response by server at that address */
+#define AFPERR_NOSRVR	-5016
+/* object already exists */
+#define AFPERR_EXIST	-5017
+/* object not found */
+#define AFPERR_NOOBJ	-5018
+/* parameter error */
+#define AFPERR_PARAM	-5019
+/* no range lock */
+#define AFPERR_NORANGE  -5020
+/* range overlap */
+#define AFPERR_RANGEOVR -5021
+/* session closed */
+#define AFPERR_SESSCLOS -5022
+/* user not authenticated */
+#define AFPERR_NOTAUTH	-5023
+/* command not supported */
+#define AFPERR_NOOP	-5024
+/* object is the wrong type */
+#define AFPERR_BADTYPE	-5025
+/* too many files open */
+#define AFPERR_NFILE	-5026
+/* server is going down */
+#define AFPERR_SHUTDOWN	-5027
+/* can't rename */
+#define AFPERR_NORENAME -5028
+/* couldn't find directory */
+#define AFPERR_NODIR	-5029
+/* wrong icon type */
+#define AFPERR_ITYPE	-5030
+/* volume locked */
+#define AFPERR_VLOCK	-5031
+/* object locked */
+#define AFPERR_OLOCK    -5032
+/* share point contains a share point */
+#define AFPERR_CTNSHRD  -5033
+/* file thread not found */
+#define AFPERR_NOID     -5034
+/* file already has an id */
+#define AFPERR_EXISTID  -5035
+/* different volume */
+#define AFPERR_DIFFVOL  -5036
+/* catalog has changed */
+#define AFPERR_CATCHNG  -5037
+/* source file == destination file */
+#define AFPERR_SAMEOBJ  -5038
+/* non-existent file id */
+#define AFPERR_BADID    -5039
+/* same password/can't change password */
+#define AFPERR_PWDSAME  -5040
+/* password too short */
+#define AFPERR_PWDSHORT -5041
+/* password expired */
+#define AFPERR_PWDEXPR  -5042
+/* folder being shared is inside a shared folder. may be returned by
+ * afpMoveAndRename. */
+#define AFPERR_INSHRD   -5043
+/* shared folder in trash. */
+#define AFPERR_INTRASH  -5044
+/* password needs to be changed */
+#define AFPERR_PWDCHNG  -5045
+/* password fails policy check */
+#define AFPERR_PWDPOLCY -5046
+/* user already logged on */
+#define AFPERR_USRLOGIN -5047
 
 /* AFP Attention Codes -- 4 bits */
-#define AFPATTN_SHUTDOWN     (1 << 15)            /* shutdown/disconnect */
-#define AFPATTN_CRASH        (1 << 14)            /* server crashed */
-#define AFPATTN_MESG         (1 << 13)            /* server has message */
-#define AFPATTN_NORECONNECT  (1 << 12)            /* don't reconnect */
+/* shutdown/disconnect */
+#define AFPATTN_SHUTDOWN     (1 << 15)
+/* server crashed */
+#define AFPATTN_CRASH        (1 << 14)
+/* server has message */
+#define AFPATTN_MESG         (1 << 13)
+/* don't reconnect */
+#define AFPATTN_NORECONNECT  (1 << 12)
 /* server notification */
 #define AFPATTN_NOTIFY       (AFPATTN_MESG | AFPATTN_NORECONNECT)
 
 /* extended bitmap -- 12 bits. volchanged is only useful w/ a server
  * notification, and time is only useful for shutdown. */
-#define AFPATTN_VOLCHANGED   (1 << 0)             /* volume has changed */
-#define AFPATTN_TIME(x)      ((x) & 0xfff)        /* time in minutes */
+/* volume has changed */
+#define AFPATTN_VOLCHANGED   (1 << 0)
+/* time in minutes */
+#define AFPATTN_TIME(x)      ((x) & 0xfff)
 
 typedef enum {
     AFPMESG_LOGIN = 0,

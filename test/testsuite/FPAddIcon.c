@@ -59,7 +59,7 @@ STATIC void test212()
     DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;
@@ -67,8 +67,8 @@ STATIC void test212()
 
     dt = FPOpenDT(Conn, vol);
     FAIL(FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256))
-    // FIXME: afpd crash in afp_addicon() that hangs the execution
 #if 0
+    /* FIXME: afpd crash in afp_addicon() that hangs the execution */
     FAIL(htonl(AFPERR_PARAM) != FPAddIcon(Conn,  dt + 1, "ttxt", "3DMF", 1, 0, 256,
                                           icon0_256))
 #endif
@@ -116,8 +116,8 @@ STATIC void test212()
         goto test_exit;
     }
 
-    // FIXME: This line causes memory corruption in the testsuite
 #if 0
+    /* FIXME: This line causes memory corruption in the testsuite */
     FAIL(htonl(AFPERR_ITYPE) != FPAddIcon(Conn,  dt, "ttxt", "3DMF", 4, 0, 256,
                                           icon0_256))
 #endif

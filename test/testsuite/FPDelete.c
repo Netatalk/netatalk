@@ -313,7 +313,7 @@ test_exit:
 }
 
 /* -------------------------- */
-// Known to kill afpd 1.6.x servers
+/* Known to kill afpd 1.6.x servers */
 STATIC void test196()
 {
     char *name = "test196";

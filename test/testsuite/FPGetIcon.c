@@ -13,7 +13,7 @@ STATIC void test115()
     char   u_null[] = { 0, 0, 0, 0 };
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;
@@ -31,7 +31,7 @@ STATIC void test115()
     if (!Mac) {
         FAIL(htonl(AFPERR_NOITEM) != FPGetIcon(Conn,  dt, "UNIX", "TEXT",  2, 512))
 #if 0
-// netatalk 2.0.4 and above don't have a default icon
+        /* netatalk 2.0.4 and above don't have a default icon */
         ret = FPGetIcon(Conn,  dt, "UNIX", "TEXT", 1, 256);
 
         if (ret == htonl(AFPERR_NOITEM)) {

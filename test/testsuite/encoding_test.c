@@ -3,10 +3,13 @@
 
 static char temp[MAXPATHLEN];
 static char *extascii[24] = {
-    " ?\"#$%&'", // substituted illegal char: ! -> ?
-    "()*+,-.?", // substituted illegal char: / -> ?
+    /* substituted illegal char: ! -> ? */
+    " ?\"#$%&'",
+    /* substituted illegal char: / -> ? */
+    "()*+,-.?",
     "01234567",
-    "89?;<=>?", // substituted illegal char: : -> ?
+    /* substituted illegal char: : -> ? */
+    "89?;<=>?",
     "@ABCDEFG",
     "HIJKLMNO",
     "PQRSTUVW",

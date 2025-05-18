@@ -1667,7 +1667,9 @@ static int readvolfile(AFPObj *obj, const struct passwd *pwent)
         free(realvolpath);
     }
 
-// EC_CLEANUP:
+#if 0
+EC_CLEANUP:
+#endif
     EC_EXIT;
 }
 

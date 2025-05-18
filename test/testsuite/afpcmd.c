@@ -8,14 +8,22 @@
 /* -------------------------------------------*/
 static char *dsi_command2str[] = {
     "???",
-    "DSIFUNC_CLOSE",   // 1       /* DSICloseSession */
-    "DSIFUNC_CMD",     // 2       /* DSICommand */
-    "DSIFUNC_STAT",    // 3       /* DSIGetStatus */
-    "DSIFUNC_OPEN",    // 4       /* DSIOpenSession */
-    "DSIFUNC_TICKLE",  // 5       /* DSITickle */
-    "DSIFUNC_WRITE",   // 6       /* DSIWrite */
-    "DSI???",		   // 7
-    "DSIFUNC_ATTN",    // 8       /* DSIAttention */
+    /* 1 - DSICloseSession */
+    "DSIFUNC_CLOSE",
+    /* 2 - DSICommand */
+    "DSIFUNC_CMD",
+    /* 3 - DSIGetStatus */
+    "DSIFUNC_STAT",
+    /* 4 - DSIOpenSession */
+    "DSIFUNC_OPEN",
+    /* 5 - DSITickle */
+    "DSIFUNC_TICKLE",
+    /* 6 - DSIWrite */
+    "DSIFUNC_WRITE",
+    /* 7 */
+    "DSI???",
+    /* 8 - DSIAttention */
+    "DSIFUNC_ATTN",
 };
 
 char *afp_error(int error)
@@ -24,196 +32,244 @@ char *afp_error(int error)
 
     switch (ntohl(error)) {
     case AFPERR_ACCESS  :
+        /* -5000   permission denied */
         s = "AFPERR_ACCESS  ";
-        break; /* -5000   permission denied */
+        break;
 
     case AFPERR_AUTHCONT:
+        /* -5001   logincont */
         s = "AFPERR_AUTHCONT";
-        break; /* -5001   logincont */
+        break;
 
     case AFPERR_BADUAM  :
+        /* -5002   uam doesn't exist */
         s = "AFPERR_BADUAM  ";
-        break; /* -5002   uam doesn't exist */
+        break;
 
     case AFPERR_BADVERS :
+        /* -5003   bad afp version number */
         s = "AFPERR_BADVERS ";
-        break; /* -5003   bad afp version number */
+        break;
 
     case AFPERR_BITMAP  :
+        /* -5004   invalid bitmap */
         s = "AFPERR_BITMAP  ";
-        break; /* -5004   invalid bitmap */
+        break;
 
     case AFPERR_CANTMOVE:
+        /* -5005   can't move file */
         s = "AFPERR_CANTMOVE";
-        break; /* -5005   can't move file */
+        break;
 
     case AFPERR_DENYCONF:
+        /* -5006   file synchronization locks conflict */
         s = "AFPERR_DENYCONF";
-        break; /* -5006   file synchronization locks conflict */
+        break;
 
     case AFPERR_DIRNEMPT:
+        /* -5007   directory not empty */
         s = "AFPERR_DIRNEMPT";
-        break; /* -5007   directory not empty */
+        break;
 
     case AFPERR_DFULL   :
+        /* -5008   disk full */
         s = "AFPERR_DFULL   ";
-        break; /* -5008   disk full */
+        break;
 
     case AFPERR_EOF     :
+        /* -5009   end of file -- catsearch and afp_read */
         s = "AFPERR_EOF     ";
-        break; /* -5009   end of file -- catsearch and afp_read */
+        break;
 
     case AFPERR_BUSY    :
+        /* -5010   FileBusy */
         s = "AFPERR_BUSY    ";
-        break; /* -5010   FileBusy */
+        break;
 
     case AFPERR_FLATVOL :
+        /* -5011   volume doesn't support directories */
         s = "AFPERR_FLATVOL ";
-        break; /* -5011   volume doesn't support directories */
+        break;
 
     case AFPERR_NOITEM  :
+        /* -5012   ItemNotFound */
         s = "AFPERR_NOITEM  ";
-        break; /* -5012   ItemNotFound */
+        break;
 
     case AFPERR_LOCK    :
+        /* -5013   LockErr */
         s = "AFPERR_LOCK    ";
-        break; /* -5013   LockErr */
+        break;
 
     case AFPERR_MISC    :
+        /* -5014   misc. err */
         s = "AFPERR_MISC    ";
-        break; /* -5014   misc. err */
+        break;
 
     case AFPERR_NLOCK   :
+        /* -5015   no more locks */
         s = "AFPERR_NLOCK   ";
-        break; /* -5015   no more locks */
+        break;
 
     case AFPERR_NOSRVR  :
+        /* -5016   no response by server at that address */
         s = "AFPERR_NOSRVR  ";
-        break; /* -5016   no response by server at that address */
+        break;
 
     case AFPERR_EXIST   :
+        /* -5017   object already exists */
         s = "AFPERR_EXIST   ";
-        break; /* -5017   object already exists */
+        break;
 
     case AFPERR_NOOBJ   :
+        /* -5018   object not found */
         s = "AFPERR_NOOBJ   ";
-        break; /* -5018   object not found */
+        break;
 
     case AFPERR_PARAM   :
+        /* -5019   parameter error */
         s = "AFPERR_PARAM   ";
-        break; /* -5019   parameter error */
+        break;
 
     case AFPERR_NORANGE :
+        /* -5020   no range lock */
         s = "AFPERR_NORANGE ";
-        break; /* -5020   no range lock */
+        break;
 
     case AFPERR_RANGEOVR:
+        /* -5021   range overlap */
         s = "AFPERR_RANGEOVR";
-        break; /* -5021   range overlap */
+        break;
 
     case AFPERR_SESSCLOS:
+        /* -5022   session closed */
         s = "AFPERR_SESSCLOS";
-        break; /* -5022   session closed */
+        break;
 
     case AFPERR_NOTAUTH :
+        /* -5023   user not authenticated */
         s = "AFPERR_NOTAUTH ";
-        break; /* -5023   user not authenticated */
+        break;
 
     case AFPERR_NOOP    :
+        /* -5024   command not supported */
         s = "AFPERR_NOOP    ";
-        break; /* -5024   command not supported */
+        break;
 
     case AFPERR_BADTYPE :
+        /* -5025   object is the wrong type */
         s = "AFPERR_BADTYPE ";
-        break; /* -5025   object is the wrong type */
+        break;
 
     case AFPERR_NFILE   :
+        /* -5026   too many files open */
         s = "AFPERR_NFILE   ";
-        break; /* -5026   too many files open */
+        break;
 
     case AFPERR_SHUTDOWN:
+        /* -5027   server is going down */
         s = "AFPERR_SHUTDOWN";
-        break; /* -5027   server is going down */
+        break;
 
     case AFPERR_NORENAME:
+        /* -5028   can't rename */
         s = "AFPERR_NORENAME";
-        break; /* -5028   can't rename */
+        break;
 
     case AFPERR_NODIR   :
+        /* -5029   couldn't find directory */
         s = "AFPERR_NODIR   ";
-        break; /* -5029   couldn't find directory */
+        break;
 
     case AFPERR_ITYPE   :
+        /* -5030   wrong icon type */
         s = "AFPERR_ITYPE   ";
-        break; /* -5030   wrong icon type */
+        break;
 
     case AFPERR_VLOCK   :
+        /* -5031   volume locked */
         s = "AFPERR_VLOCK   ";
-        break; /* -5031   volume locked */
+        break;
 
     case AFPERR_OLOCK   :
+        /* -5032   object locked */
         s = "AFPERR_OLOCK   ";
-        break; /* -5032   object locked */
+        break;
 
     case AFPERR_CTNSHRD :
+        /* -5033   share point contains a share point */
         s = "AFPERR_CTNSHRD ";
-        break; /* -5033   share point contains a share point */
+        break;
 
     case AFPERR_NOID    :
+        /* -5034   file thread not found */
         s = "AFPERR_NOID    ";
-        break; /* -5034   file thread not found */
+        break;
 
     case AFPERR_EXISTID :
+        /* -5035   file already has an id */
         s = "AFPERR_EXISTID ";
-        break; /* -5035   file already has an id */
+        break;
 
     case AFPERR_DIFFVOL :
+        /* -5036   different volume */
         s = "AFPERR_DIFFVOL ";
-        break; /* -5036   different volume */
+        break;
 
     case AFPERR_CATCHNG :
+        /* -5037   catalog has changed */
         s = "AFPERR_CATCHNG ";
-        break; /* -5037   catalog has changed */
+        break;
 
     case AFPERR_SAMEOBJ :
+        /* -5038   source file == destination file */
         s = "AFPERR_SAMEOBJ ";
-        break; /* -5038   source file == destination file */
+        break;
 
     case AFPERR_BADID   :
+        /* -5039   non-existent file id */
         s = "AFPERR_BADID   ";
-        break; /* -5039   non-existent file id */
+        break;
 
     case AFPERR_PWDSAME :
+        /* -5040   same password/can't change password */
         s = "AFPERR_PWDSAME ";
-        break; /* -5040   same password/can't change password */
+        break;
 
     case AFPERR_PWDSHORT:
+        /* -5041   password too short */
         s = "AFPERR_PWDSHORT";
-        break; /* -5041   password too short */
+        break;
 
     case AFPERR_PWDEXPR :
+        /* -5042   password expired */
         s = "AFPERR_PWDEXPR ";
-        break; /* -5042   password expired */
+        break;
 
     case AFPERR_INSHRD  :
+        /* -5043   folder being shared is inside a */
         s = "AFPERR_INSHRD  ";
-        break; /* -5043   folder being shared is inside a */
+        break;
 
     case AFPERR_INTRASH :
+        /* -5044   shared folder in trash. */
         s = "AFPERR_INTRASH ";
-        break; /* -5044   shared folder in trash. */
+        break;
 
     case AFPERR_PWDCHNG :
+        /* -5045   password needs to be changed */
         s = "AFPERR_PWDCHNG ";
-        break; /* -5045   password needs to be changed */
+        break;
 
     case AFPERR_PWDPOLCY:
+        /* -5046   password fails policy check */
         s = "AFPERR_PWDPOLCY";
-        break; /* -5046   password fails policy check */
+        break;
 
     case AFPERR_USRLOGIN:
+        /* -5047   user already logged on */
         s = "AFPERR_USRLOGIN";
-        break; /* -5047   user already logged on */
+        break;
 
     case 0				:
         s = "";
@@ -504,7 +560,8 @@ void dump_open(DSI *dsi)
             break;
         }
 
-        i += dsi->commands[i] + 1; /* forward past length tag + length */
+        /* forward past length tag + length */
+        i += dsi->commands[i] + 1;
     }
 
     fprintf(stdout, "=========================\n");
@@ -572,8 +629,8 @@ unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
                 __func__, vers, uam, usr);
     }
 
-    // FIXME: Workaround for AFPopenLoginExt() being broken
 #if 0
+    /* FIXME: Workaround for AFPopenLoginExt() being broken */
     ret = AFPopenLoginExt(conn, vers, uam, usr, pwd);
 #else
     ret = AFPopenLogin(conn, vers, uam, usr, pwd);
@@ -1242,16 +1299,20 @@ unsigned int FPEnumerateFull(CONN *conn,
     bitmap = htons(d_bitmap);;
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
-    bitmap = htons(reqcnt);		/* reqcnt */
+    /* reqcnt */
+    bitmap = htons(reqcnt);
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
-    bitmap = htons(sindex);		/* sindex  */
+    /* sindex */
+    bitmap = htons(sindex);
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
-    bitmap = htons(size); // DSI_DATASIZ);		/* maxsize  */
+    /* maxsize */
+    bitmap = htons(size);
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
-    dsi->commands[ofs++] = 2;		/* long name */
+    /* long name */
+    dsi->commands[ofs++] = 2;
     len = strlen(name);
     dsi->commands[ofs++] = len;
     u2mac(&dsi->commands[ofs], name, len);

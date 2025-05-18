@@ -25,23 +25,29 @@ STATIC void test208()
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
     filedir.isdir = 1;
     afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-    FAIL(FPMapID(Conn, 1, 0))   /* user to Mac roman */
-    FAIL(FPMapID(Conn, 1, filedir.uid))   /* user to Mac roman */
-    ret = FPMapID(Conn, 1, -filedir.uid);  /* user to Mac roman */
+    /* user to Mac roman */
+    FAIL(FPMapID(Conn, 1, 0))
+    /* user to Mac roman */
+    FAIL(FPMapID(Conn, 1, filedir.uid))
+    /* user to Mac roman */
+    ret = FPMapID(Conn, 1, -filedir.uid);
 
     if (not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
         test_failed();
     }
 
-    ret = FPMapID(Conn, 2, -filedir.gid);  /* group to Mac roman */
+    /* group to Mac roman */
+    ret = FPMapID(Conn, 2, -filedir.gid);
 
     /* sometime -filedir.gid is there */
     if (ret && not_valid_bitmap(ret, BITERR_NOOBJ | BITERR_NOITEM, AFPERR_NOITEM)) {
         test_failed();
     }
 
-    FAIL(FPMapID(Conn, 2, filedir.gid))   /* group to Mac roman */
-    ret = FPMapID(Conn, 3, filedir.uid); /* user to UTF8 */
+    /* group to Mac roman */
+    FAIL(FPMapID(Conn, 2, filedir.gid))
+    /* user to UTF8 */
+    ret = FPMapID(Conn, 3, filedir.uid);
 
     if (Conn->afp_version >= 30 && ret) {
         test_failed();
@@ -49,7 +55,8 @@ STATIC void test208()
         test_failed();
     }
 
-    ret = FPMapID(Conn, 4, filedir.gid); /* group to UTF8 */
+    /* group to UTF8 */
+    ret = FPMapID(Conn, 4, filedir.gid);
 
     if (Conn->afp_version >= 30 && ret) {
         test_failed();
@@ -57,7 +64,7 @@ STATIC void test208()
         test_failed();
     }
 
-    // Older AFP versions only have 4 subfunctions
+    /* Older AFP versions only have 4 subfunctions */
     if (Conn->afp_version > 31) {
         FAIL((htonl(AFPERR_NOITEM) != FPMapID(Conn, 5, filedir.gid)))
     }

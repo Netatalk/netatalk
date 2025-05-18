@@ -17,7 +17,7 @@ static void pipe_handler()
 
 
 /* ------------------------- */
-// FIXME: need to recheck GetSessionToken 0
+/* FIXME: need to recheck GetSessionToken 0 */
 STATIC void test222()
 {
     char *name = "t222 file";
@@ -330,7 +330,7 @@ test_exit:
 }
 
 /* ------------------------- */
-// Failing with 4.0.x as well as 3.1.12. May have to do with broken FPopenLoginExt().
+/* Failing with 4.0.x as well as 3.1.12. May have to do with broken FPopenLoginExt(). */
 STATIC void test339()
 {
     char *name = "t339 file";

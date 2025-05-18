@@ -146,11 +146,12 @@ STATIC void test36()
         dsi->commands[ofs++] = 0;
         memcpy(dsi->commands + ofs, &param, sizeof(param));
         ofs += sizeof(param);
-        memcpy(dsi->commands + ofs, &did, sizeof(did)); /* directory did */
+        /* directory did */
+        memcpy(dsi->commands + ofs, &did, sizeof(did));
         ofs += sizeof(did);
         dsi->datalen = ofs;
         dsi->header.dsi_len = htonl(dsi->datalen);
-        dsi->header.dsi_code = 0; // htonl(err);
+        dsi->header.dsi_code = 0;
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         my_dsi_cmd_receive(dsi);
         ret = dsi->header.dsi_code;
@@ -339,7 +340,7 @@ static void cname_test(char *name)
 }
 
 /* ------------------------- */
-// FIXME: afpd crash in dircache_search_by_did()
+/* FIXME: afpd crash in dircache_search_by_did() */
 STATIC void test95()
 {
     int dir;
@@ -752,15 +753,19 @@ STATIC void test102()
             bitmap, &filedir))
 
     if (FPRename(Conn, vol, DIRDID_ROOT, name1, name)) {
-        // FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS
-        // test_failed();
+#if 0
+        /* FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS */
+        test_failed();
+#endif
     } else {
         FPRename(Conn, vol, DIRDID_ROOT, name, name1);
     }
 
     if (FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name1, name)) {
-        // FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS
-        // test_failed();
+#if 0
+        /* FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS */
+        test_failed();
+#endif
     } else {
         FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1);
     }
@@ -858,8 +863,10 @@ STATIC void test103()
     }
 
     if (FPRename(Conn, vol, dir, "", name)) {
-        // FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS
-        // test_failed();
+#if 0
+        /* FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS */
+        test_failed();
+#endif
     } else {
         if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
             test_failed();
@@ -869,8 +876,10 @@ STATIC void test103()
     }
 
     if (FPMoveAndRename(Conn, vol, dir, DIRDID_ROOT, "", name)) {
-        // FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS
-        // test_failed();
+#if 0
+        /* FIXME: This operation is allowed on Linux, but rejected on macOS with AFPERR_ACCESS */
+        test_failed();
+#endif
     } else {
         if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
             test_failed();
@@ -967,7 +976,7 @@ STATIC void test105()
 }
 
 /* -------------------------- */
-// FIXME: afpd crash in dircache_search_by_did()
+/* FIXME: afpd crash in dircache_search_by_did() */
 STATIC void test170()
 {
     uint16_t bitmap = 0;
@@ -1139,7 +1148,7 @@ test_exit:
 }
 
 /* -------------------------- */
-// FIXME: afpd crash in dircache_search_by_did()
+/* FIXME: afpd crash in dircache_search_by_did() */
 STATIC void test171()
 {
     uint16_t bitmap = 0;
@@ -1292,7 +1301,7 @@ test_exit:
 }
 
 /* -------------------------- */
-// FIXME: afpd crash in dircache_search_by_did()
+/* FIXME: afpd crash in dircache_search_by_did() */
 STATIC void test173()
 {
     uint16_t bitmap = 0;

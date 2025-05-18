@@ -104,8 +104,8 @@ static struct pollfd *fds;
  */
 static void *polling_thread(void *arg _U_)
 {
-    // First we loop through getting the filehandles and adding them to our poll, we
-    // need to allocate our pollfd's
+    /* First we loop through getting the filehandles and adding them to our poll, we
+     * need to allocate our pollfd's */
     DNSServiceErrorType error;
     fds = calloc(svc_ref_count, sizeof(struct pollfd));
     assert(fds);
@@ -116,7 +116,7 @@ static void *polling_thread(void *arg _U_)
         fds[i].events = POLLIN;
     }
 
-    // Now we can poll and process the results...
+    /* Now we can poll and process the results... */
     while (poll(fds, svc_ref_count, -1) > 0) {
         for (int i = 0; i < svc_ref_count; i++) {
             if (fds[i].revents & POLLIN) {
@@ -183,7 +183,7 @@ static void register_stuff(const AFPObj *obj)
     TXTRecordRef                        txt_devinfo;
     char                                        tmpname[256];
 
-    // If we had already registered, then we will unregister and re-register
+    /* If we had already registered, then we will unregister and re-register */
     if (svc_refs) {
         unregister_stuff();
     }
@@ -232,7 +232,7 @@ static void register_stuff(const AFPObj *obj)
         }
     }
 
-    // Allocate the memory to store our service refs
+    /* Allocate the memory to store our service refs */
     svc_refs = calloc(svc_ref_count, sizeof(DNSServiceRef));
     assert(svc_refs);
     svc_ref_count = 0;
@@ -263,17 +263,25 @@ static void register_stuff(const AFPObj *obj)
     }
 
     error = DNSServiceRegister(&svc_refs[svc_ref_count++],
-                               0,               // no flags
-                               0,               // all network interfaces
+                               /* no flags */
+                               0,
+                               /* all network interfaces */
+                               0,
                                name,
                                AFP_DNS_SERVICE_TYPE,
-                               "",            // default domains
-                               NULL,            // default host name
+                               /* default domains */
+                               "",
+                               /* default host name */
+                               NULL,
                                htons(port),
-                               0,               // length of TXT
-                               NULL,            // no TXT
-                               RegisterReply,           // callback
-                               NULL);       // no context
+                               /* length of TXT */
+                               0,
+                               /* no TXT */
+                               NULL,
+                               /* callback */
+                               RegisterReply,
+                               /* no context */
+                               NULL);
 
     if (error != kDNSServiceErr_NoError) {
         LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
@@ -284,17 +292,23 @@ static void register_stuff(const AFPObj *obj)
 
     if (i) {
         error = DNSServiceRegister(&svc_refs[svc_ref_count++],
-                                   0,               // no flags
-                                   0,               // all network interfaces
+                                   /* no flags */
+                                   0,
+                                   /* all network interfaces */
+                                   0,
                                    name,
                                    ADISK_SERVICE_TYPE,
-                                   "",            // default domains
-                                   NULL,            // default host name
+                                   /* default domains */
+                                   "",
+                                   /* default host name */
+                                   NULL,
                                    htons(port),
                                    TXTRecordGetLength(&txt_adisk),
                                    TXTRecordGetBytesPtr(&txt_adisk),
-                                   RegisterReply,           // callback
-                                   NULL);       // no context
+                                   /* callback */
+                                   RegisterReply,
+                                   /* no context */
+                                   NULL);
 
         if (error != kDNSServiceErr_NoError) {
             LOG(log_error, logtype_afpd, "Failed to add service: %s, error=%d",
@@ -315,12 +329,16 @@ static void register_stuff(const AFPObj *obj)
         }
 
         error = DNSServiceRegister(&svc_refs[svc_ref_count++],
-                                   0,               // no flags
-                                   0,               // all network interfaces
+                                   /* no flags */
+                                   0,
+                                   /* all network interfaces */
+                                   0,
                                    name,
                                    DEV_INFO_SERVICE_TYPE,
-                                   "",            // default domains
-                                   NULL,            // default host name
+                                   /* default domains */
+                                   "",
+                                   /* default host name */
+                                   NULL,
                                    /*
                                     * We would probably use port 0 zero, but we can't, from man DNSServiceRegister:
                                     *   "A value of 0 for a port is passed to register placeholder services.
@@ -331,8 +349,10 @@ static void register_stuff(const AFPObj *obj)
                                    htons(9),
                                    TXTRecordGetLength(&txt_devinfo),
                                    TXTRecordGetBytesPtr(&txt_devinfo),
-                                   RegisterReply,           // callback
-                                   NULL);       // no context
+                                   /* callback */
+                                   RegisterReply,
+                                   /* no context */
+                                   NULL);
         TXTRecordDeallocate(&txt_devinfo);
 
         if (error != kDNSServiceErr_NoError) {

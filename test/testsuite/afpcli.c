@@ -1,7 +1,7 @@
 #include "afpclient.h"
 #include "test.h"
 
-// Define the global test settings
+/* Define the global test settings */
 int Throttle = 0;
 int Convert = 1;
 int	Interactive = 0;
@@ -44,7 +44,8 @@ int OpenClientSocket(char *host, int port)
             setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &attr, sizeof(attr));
 
             if (connect(sock, res->ai_addr, res->ai_addrlen) == 0) {
-                break;    // Success
+                /* Success */
+                break;
             }
 
             close(sock);
@@ -1058,11 +1059,11 @@ void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
     }
 
     if (rbitmap & (1 << VOLPBIT_XBFREE)) {
-        // FIXME
+        /* FIXME */
     }
 
     if (rbitmap & (1 << VOLPBIT_XBTOTAL)) {
-        // FIXME
+        /* FIXME */
     }
 
     if (rbitmap & (1 << VOLPBIT_BSIZE)) {
@@ -1148,8 +1149,8 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
 }
 
 /* -------------------------------------- */
-// FIXME: redundant bitmap parameters !
-// FIXME: some of those parameters are not tested.
+/* FIXME: redundant bitmap parameters !
+ * FIXME: some of those parameters are not tested. */
 void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
                         uint16_t rfbitmap, uint16_t rdbitmap)
 {

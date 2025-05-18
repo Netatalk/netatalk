@@ -98,7 +98,7 @@ static void test_bytelock(uint16_t vol, char *name, int type)
     }
 }
 /* ----------- */
-// FIXME: broken since at least 3.1.12 - could not locate fork
+/* FIXME: broken since at least 3.1.12 - could not locate fork */
 STATIC void test63()
 {
     char *name = "test63 FPByteLock DF";
@@ -108,7 +108,7 @@ STATIC void test63()
 }
 
 /* ----------- */
-// FIXME: broken since at least 3.1.12 - could not locate fork
+/* FIXME: broken since at least 3.1.12 - could not locate fork */
 STATIC void test64()
 {
     char *name = "test64 FPByteLock RF";
@@ -181,7 +181,7 @@ fin:
 }
 
 /* --------------- */
-// FIXME: broken since at least 3.1.12 - could not locate fork
+/* FIXME: broken since at least 3.1.12 - could not locate fork */
 STATIC void test65()
 {
     char *name = "t65 DF FPByteLock 2 users";
@@ -339,7 +339,7 @@ test_exit:
 }
 
 /* ----------- */
-// FIXME: broken since at least 3.1.12 - could not locate fork
+/* FIXME: broken since at least 3.1.12 - could not locate fork */
 STATIC void test79()
 {
     int fork;

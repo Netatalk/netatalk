@@ -234,7 +234,8 @@ int main(int argc, char **argv)
     }
 
     memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
+    /* set to AF_INET to force IPv4 */
+    hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_DGRAM;
 
     if ((rv = getaddrinfo(host, port, &hints, &servinfo)) != 0) {
@@ -244,7 +245,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    // loop through all the results and bind to the first we can
+    /* loop through all the results and bind to the first we can */
     for (p = servinfo; p != NULL; p = p->ai_next) {
         if ((sockfd = socket(p->ai_family, p->ai_socktype,
                              p->ai_protocol)) == -1) {

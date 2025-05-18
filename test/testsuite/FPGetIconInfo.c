@@ -13,7 +13,7 @@ STATIC void test213()
     u_char   u_null[] = { 0, 0, 0, 0 };
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;

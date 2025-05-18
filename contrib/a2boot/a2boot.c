@@ -248,17 +248,20 @@ int main(int ac, char **av)
         */
 
         switch (req) {
-        case 0x01000000 :	/* Apple IIgs both ROM 1 and ROM 3 */
+        /* Apple IIgs both ROM 1 and ROM 3 */
+        case 0x01000000 :
             /*    LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks" ); */
             resp = a2bootreq(_PATH_A_GS_BLOCKS);
             break;
 
-        case 0x02000000 :	/* Apple 2 Workstation card  */
+        /* Apple 2 Workstation card  */
+        case 0x02000000 :
             /*    LOG(log_info, logtype_default, "          Req Apple //e Boot" );  */
             resp = a2bootreq(_PATH_A_2E_BLOCKS);
             break;
 
-        case 0x03000000 :	/* Apple IIgs both ROM 1 and ROM 3 */
+        /* Apple IIgs both ROM 1 and ROM 3 */
+        case 0x03000000 :
             /*    LOG(log_info, logtype_default, "          Req ProDOS16 Image" );    */
             resp = a2bootreq(_PATH_P16_IMAGE);
             break;

@@ -79,7 +79,7 @@ fin:
 }
 
 /* ----------- */
-// FIXME: broken since at least 3.1.12
+/* FIXME: broken since at least 3.1.12 */
 STATIC void test66()
 {
     char *name = "t66 FPByteLock_ext DF";
@@ -96,7 +96,7 @@ test_exit:
 }
 
 /* ----------- */
-// FIXME: broken since at least 3.1.12 - could not locate fork
+/* FIXME: broken since at least 3.1.12 - could not locate fork */
 STATIC void test67()
 {
     char *name = "t67 FPByteLock_ext RF";

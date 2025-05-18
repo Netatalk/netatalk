@@ -990,7 +990,7 @@ STATIC void test407()
     uint16_t vol2;
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;
@@ -1022,7 +1022,7 @@ STATIC void test408()
     uint16_t vol2;
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;

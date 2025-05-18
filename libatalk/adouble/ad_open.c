@@ -2464,7 +2464,7 @@ int ad_refresh(const char *path, struct adouble *ad)
                 return -1;
             }
 
-            // TODO: read meta EA
+            /* TODO: read meta EA */
         }
 
         if (AD_RSRC_OPEN(ad)) {
@@ -2488,7 +2488,7 @@ int ad_refresh(const char *path, struct adouble *ad)
                 return -1;
             }
 
-            // TODO: read meta EA
+            /* TODO: read meta EA */
         }
 
         if (AD_RSRC_OPEN(ad)) {

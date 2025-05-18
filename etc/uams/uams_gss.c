@@ -21,7 +21,7 @@
 #include <gssapi/gssapi.h>
 #elif HAVE_GSSAPI_H
 #include <gssapi.h>
-#endif // HAVE_GSSAPI_GSSAPI_H
+#endif /* HAVE_GSSAPI_GSSAPI_H */
 
 #ifdef HAVE_KERBEROS
 #ifdef HAVE_KRB5_KRB5_H
@@ -571,8 +571,10 @@ static int gss_create_principal(AFPObj *obj)
         if ((ret = krb5_kt_get_entry(context,
                                      keytab,
                                      service_principal,
-                                     0, // kvno - wildcard
-                                     0, // enctype - wildcard
+                                     /* kvno - wildcard */
+                                     0,
+                                     /* enctype - wildcard */
+                                     0,
                                      &entry)) == KRB5_KT_NOTFOUND) {
             krb5_unparse_name(context, service_principal, &principal);
             LOG(log_error, logtype_afpd,

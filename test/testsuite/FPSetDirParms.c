@@ -219,7 +219,7 @@ STATIC void test107()
     dsi = &Conn->dsi;
     ENTER_TEST
 
-    // Not supported with the mysql backend
+    /* Not supported with the mysql backend */
     if (Exclude) {
         test_skipped(T_EXCLUDE);
         goto test_exit;
