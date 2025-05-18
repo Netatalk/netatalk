@@ -15,8 +15,6 @@
 --max-code-length=80
 --pad-comma
 --pad-header
---pad-include
 --pad-oper
 --suffix=none
---unpad-brackets
 --unpad-paren
