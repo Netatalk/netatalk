@@ -79,9 +79,11 @@ const char *cups_get_language(void)
  * O - Password or NULL
  * I - Prompt
  */
-static const char *cups_passwd_cb(const char *prompt _U_, http_t *http,
-                                  const char *method,
-                                  const char *resource, void *user_data)
+static const char *cups_passwd_cb(const char *prompt _U_,
+                                  http_t *http _U_,
+                                  const char *method _U_,
+                                  const char *resource _U_,
+                                  void *user_data _U_)
 {
     /*
      * Always return NULL to indicate that no password is available...
@@ -99,13 +101,15 @@ static const char *cups_passwd_cb(const char *prompt _U_, http_t *http,
 int cups_printername_ok(char *name)
 {
     /* HTTP connection to server */
-    http_t *http;
+    const http_t *http;
     /* Destination */
     cups_dest_t	*dest = NULL;
+#if 0
     /* IPP Request */
     ipp_t *request;
     /* IPP Response */
     ipp_t *response;
+#endif
     /*
      * Make sure we don't ask for passwords...
      */
@@ -502,8 +506,10 @@ cups_get_printer_status(struct printer *pr)
 int cups_print_job(char *name, const char *filename, char *job, char *username,
                    char *cupsoptions)
 {
+#if 0
     /* HTTP connection to server */
     http_t *http;
+#endif
     /* Destination */
     cups_dest_t	*dest = NULL;
     cups_dinfo_t *info = NULL;
