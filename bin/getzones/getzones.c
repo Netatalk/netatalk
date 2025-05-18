@@ -31,7 +31,7 @@ void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm, charset_t ch
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [-m | -l | -g] [-c Mac charset] [address]\n", s);
+    fprintf(stderr, "usage:\t%s [-m | -l | -g | -z zone ] [-c Mac charset] [address]\n", s);
     exit(1);
 }
 
@@ -43,11 +43,12 @@ int main(int argc, char *argv[])
     extern int optind;
     charset_t chMac = CH_MAC;
     uint8_t lookup_type = ZIPOP_DEFAULT;
+    char* requested_zone = NULL;
 
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
 
-    while ((c = getopt(argc, argv, "glmc:")) != EOF) {
+    while ((c = getopt(argc, argv, "glmc:z:")) != EOF) {
         switch (c) {
         case 'g':
             if (lookup_type != ZIPOP_DEFAULT) {
@@ -75,6 +76,14 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Invalid Mac charset.\n");
                 exit(1);
             }
+            break;
+                        
+        case 'z':
+            if (lookup_type != ZIPOP_DEFAULT) {
+                ++errflg;
+            }
+            requested_zone = strdup(optarg);
+            lookup_type = ZIPOP_GNI;
             break;
 
         default:
@@ -117,8 +126,12 @@ int main(int argc, char *argv[])
         break;
         
     case ZIPOP_GNI:
-        do_getnetinfo(&saddr, NULL, chMac);
+        do_getnetinfo(&saddr, requested_zone, chMac);
         break;
+    }
+    
+    if (requested_zone != NULL) {
+        free(requested_zone);
     }
 }
 
@@ -388,5 +401,11 @@ static void print_gnireply(size_t len, uint8_t *buf, charset_t charset) {
         }
         printf("Default zone: %s\n", default_zone_name);
         free(default_zone_name);
+    }
+    
+    /* If we're trying to verify a specific zone, then bail out with exit status 2 if
+       the zone is invalid. */
+    if (requested_zone != NULL && (flags & ZIPGNI_INVALID)) {
+        exit(2);
     }
 }

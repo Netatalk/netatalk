@@ -4,7 +4,7 @@ getzones — list AppleTalk zone names
 
 # Synopsis
 
-**getzones** [-g | -m | -l] [-c *Mac charset*] [*address*]
+**getzones** [-g | -m | -l | -z *zone*] [-c *Mac charset*] [*address*]
 
 # Description
 
@@ -30,6 +30,13 @@ ZIP GetMyZone request.
 
 > List the local zones; this is accomplished by sending a GetLocalZones
 request.
+
+**-z**
+
+> Verifies whether *zone* is a valid zone for this network by sending a GetNetInfo.
+If *zone* is valid, exit with 0; if *zone* is not valid, exit with 2.  Also prints the
+network configuration including, if the zone is invalid, the default zone to use instead
+of the one requested.
 
 **-c**
 
@@ -60,6 +67,12 @@ is seeding this network;
 	Requested zone: 
 	Zone multicast address: 09:00:07:00:00:a8
 	Default zone: Ethernet
+	example$
+	
+Check whether OtherNet is a valid zone for the current network:
+
+	example$ getzones -z Othernet 0.255 >/dev/null || echo "bad zone"
+	bad zone
 	example$
 
 # See Also
