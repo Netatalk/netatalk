@@ -29,12 +29,15 @@
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/nbp.h>
-#include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+
+#include <atalk/unicode.h>
 
 #define MACCHARSET "MAC_ROMAN"
 
@@ -52,17 +55,19 @@ static void Usage(char *av0)
         p++;
     }
 
-    printf("Usage:\t%s [-A address] [-r responses] [-m Mac charset] [-s] [obj:type@zone]\n",
+    printf("Usage:\t%s [-A address] [-D address] [-r responses] [-m Mac charset] [-f | -l] [-s] [obj:type@zone]\n",
            p);
     exit(1);
 }
 
 int main(int ac, char **av)
 {
+    uint8_t nbp_op = NBPOP_BRRQ;
     struct nbpnve *nn;
     char *name;
     int i, c, nresp = 1000;
     struct at_addr addr;
+    struct at_addr *dst_addr = NULL;
     char *obj = NULL;
     char *type = NULL;
     size_t obj_len;
@@ -76,8 +81,32 @@ int main(int ac, char **av)
     set_charset_name(CH_MAC, MACCHARSET);
     memset(&addr, 0, sizeof(addr));
 
-    while ((c = getopt(ac, av, "sA:m:r:")) != EOF) {
+    while ((c = getopt(ac, av, "flsA:D:m:r:")) != EOF) {
         switch (c) {
+        case 'f':
+            if (nbp_op == NBPOP_BRRQ) {
+                nbp_op = NBPOP_FWD;
+            } else {
+                fprintf(stderr, "Cannot use both -f and -l in the same command.\n");
+                exit(1);
+            }
+
+            break;
+
+        case 'l':
+            if (nbp_op == NBPOP_BRRQ) {
+                nbp_op = NBPOP_LKUP;
+            } else {
+                fprintf(stderr, "Cannot use both -f and -l in the same command.\n");
+                exit(1);
+            }
+
+            break;
+
+        case 's':
+            script_friendly_output = true;
+            break;
+
         case 'A':
             if (!atalk_aton(optarg, &addr)) {
                 fprintf(stderr, "Bad address.\n");
@@ -86,8 +115,14 @@ int main(int ac, char **av)
 
             break;
 
-        case 'r' :
-            nresp = atoi(optarg);
+        case 'D':
+            dst_addr = malloc(sizeof(struct at_addr));
+
+            if (!atalk_aton(optarg, dst_addr)) {
+                fprintf(stderr, "Bad address.\n");
+                exit(1);
+            }
+
             break;
 
         case 'm':
@@ -100,8 +135,8 @@ int main(int ac, char **av)
 
             break;
 
-        case 's':
-            script_friendly_output = true;
+        case 'r' :
+            nresp = atoi(optarg);
             break;
 
         default:
@@ -170,7 +205,7 @@ int main(int ac, char **av)
         }
     }
 
-    c = nbp_lookup(Obj, Type, Zone, nn, nresp, &addr);
+    c = nbp_do_lookup_op(Obj, Type, Zone, nn, nresp, &addr, dst_addr, nbp_op);
 
     if (c < 0) {
         perror("nbp_lookup");

@@ -94,6 +94,9 @@ struct nbpnve {
 #define NBPMATCH_NOZONE	(1<<2)
 
 extern int nbp_name(const char *, char **, char **, char **);
+extern int nbp_do_lookup_op(const char *, const char *, const char *,
+                            struct nbpnve *, const int,
+                            const struct at_addr *, const struct at_addr *, uint8_t);
 extern int nbp_lookup(const char *, const char *, const char *,
                       struct nbpnve *, const int,
                       const struct at_addr *);
