@@ -28,10 +28,12 @@ static void print_zones(short n, char *buf, charset_t charset);
 void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type, charset_t charset);
 static void print_gnireply(size_t len, uint8_t *buf, charset_t charset);
 void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm, charset_t charset);
+static int print_and_count_zones_in_reply(char *buf, size_t len, charset_t charset);
+void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset);
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [-m | -l | -g | -z zone ] [-c Mac charset] [address]\n", s);
+    fprintf(stderr, "usage:\t%s [-m | -l | -g | -q network | -z zone ] [-c Mac charset] [address]\n", s);
     exit(1);
 }
 
@@ -44,11 +46,13 @@ int main(int argc, char *argv[])
     charset_t chMac = CH_MAC;
     uint8_t lookup_type = ZIPOP_DEFAULT;
     char* requested_zone = NULL;
+    long requested_network = 0;
+    char *end_of_digits;
 
     set_charset_name(CH_UNIX, "UTF8");
     set_charset_name(CH_MAC, MACCHARSET);
 
-    while ((c = getopt(argc, argv, "glmc:z:")) != EOF) {
+    while ((c = getopt(argc, argv, "glmc:q:z:")) != EOF) {
         switch (c) {
         case 'g':
             if (lookup_type != ZIPOP_DEFAULT) {
@@ -77,7 +81,23 @@ int main(int argc, char *argv[])
                 exit(1);
             }
             break;
-                        
+            
+        case 'q':
+            if (lookup_type != ZIPOP_DEFAULT) {
+                ++errflg;
+            }
+            requested_network = strtol(optarg, &end_of_digits, 10);
+            if (*end_of_digits != '\0') {
+                fprintf(stderr, "Network must be a number between 0 and 65535.\n");
+                exit(1);
+            }
+            if (requested_network < 0 || requested_network > 65535) {
+                fprintf(stderr, "Network must be a number between 0 and 65535.\n");
+                exit(1);
+            }
+            lookup_type = ZIPOP_QUERY;
+            break;
+            
         case 'z':
             if (lookup_type != ZIPOP_DEFAULT) {
                 ++errflg;
@@ -127,6 +147,10 @@ int main(int argc, char *argv[])
         
     case ZIPOP_GNI:
         do_getnetinfo(&saddr, requested_zone, chMac);
+        break;
+        
+    case ZIPOP_QUERY:
+        do_query(&saddr, (uint16_t)requested_network, chMac);
         break;
     }
     
@@ -408,4 +432,129 @@ static void print_gnireply(size_t len, uint8_t *buf, charset_t charset) {
     if (requested_zone != NULL && (flags & ZIPGNI_INVALID)) {
         exit(2);
     }
+}
+
+void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset) {
+    uint8_t buf[600];
+    uint8_t *cursor;
+    int i;
+    struct sockaddr_at laddr = { 0 };
+    uint8_t reply_type;
+    int replied_zone_count = 0;
+    int expected_zone_count = 0;
+    
+    cursor = buf;
+    
+    /* Construct packet. Layout is in IA, 2nd ed. p. 8-12 */
+    *cursor++ = DDPTYPE_ZIP;
+    *cursor++ = ZIPOP_QUERY;
+    /* Network count = 1; we only support querying one network at a time */
+    *cursor++ = 1; 
+    *((uint16_t*)cursor) = htons(network);
+    cursor += 2;
+    
+    /* Send the thing */
+    int sockfd = netddp_open(&laddr, NULL);
+    if (sockfd < 0) {
+        perror("netddp_open");
+        exit(1);
+    }
+    
+    int length = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
+        sizeof(struct sockaddr_at));
+    if (length < 0) {
+        perror("netddp_sendto");
+        exit(1);
+    }
+    
+    for(;;) {
+        length = netddp_recvfrom(sockfd, buf, sizeof(buf), 0, NULL, NULL);
+        if (length < 0) {
+            perror("netddp_recvfrom");
+            exit(1);
+        }
+        
+        /* Is this a ZIP reply or extended reply?  If not, it's just some random
+           packet that's fallen into our socket; ignore it.
+           The 3 bytes here are: DDP type, ZIP Op, Num of networks */
+        if (length < 3) {
+            continue;
+        }
+        if (buf[0] != DDPTYPE_ZIP) {
+            continue;
+        }
+        reply_type = buf[1];
+        if (reply_type != ZIPOP_REPLY && reply_type != ZIPOP_EREPLY) {
+            continue;
+        }
+                
+        if (reply_type == ZIPOP_REPLY) {
+            /* A reply contains all the zones in one packet; we can bail out.
+               Ignore the network count; we only asked for one network. */
+            print_and_count_zones_in_reply(buf + 3, length - 3, charset);
+            break;
+        } else {
+            /* An extended reply may be spread over more than one packet; we
+               need to keep track of how many we've seen and only exit once we've
+               seen enough zones. */
+            
+            if (expected_zone_count == 0) {
+                expected_zone_count = buf[2];
+            }
+            replied_zone_count += print_and_count_zones_in_reply(buf + 3, length - 3, charset);
+            if (replied_zone_count >= expected_zone_count) {
+                break;
+            }
+        }
+    }
+}
+
+static int print_and_count_zones_in_reply(char *buf, size_t len, charset_t charset) {
+    char *cursor = buf;
+    int count = 0;
+    
+    while (cursor - buf < len) {
+        uint16_t network_number = 0;
+        uint8_t zone_len = 0;
+        
+        /* Proceed carefully; we don't know how many zones are in this packet, so we
+           just have to iterate until we run out of packet to iterate over. */
+        
+        /* Can we read a network number without falling off the end of the packet? */
+        if ((cursor + 2) - buf <= len) {
+            network_number = ntohs(*(uint16_t*)cursor);
+            cursor += 2;
+        } else {
+            break;
+        }
+        
+        /* What about a string length? */
+        if ((cursor + 1) - buf <= len) {
+            zone_len = *cursor++;
+        } else {
+            break;
+        }
+        
+        /* How about the zone name? */
+        if ((cursor + zone_len) - buf <= len) {
+            char* unix_zone_name;
+            int ret = convert_string_allocate(charset, CH_UNIX, cursor, zone_len,
+                                              &unix_zone_name);
+            if (ret == -1) {
+                fprintf(stderr, "malformed default zone name, bailing out\n");
+                exit(1);
+            }
+            
+            /* Hooray!  We got a whole tuple.  Print it, quick, before it gets away. */
+            printf("%"PRIu16" %s\n", network_number, unix_zone_name);
+            free(unix_zone_name);
+            
+        } else {
+            break;
+        }
+        
+        count++;
+    }
+    
+    return count;
 }

@@ -4,7 +4,7 @@ getzones — list AppleTalk zone names
 
 # Synopsis
 
-**getzones** [-g | -m | -l | -z *zone*] [-c *Mac charset*] [*address*]
+**getzones** [-g | -m | -l | -q network | -z *zone*] [-c *Mac charset*] [*address*]
 
 # Description
 
@@ -30,6 +30,12 @@ ZIP GetMyZone request.
 
 > List the local zones; this is accomplished by sending a GetLocalZones
 request.
+
+**-q**
+
+> List the zones available to a given network range.  This is accomplished by sending
+a ZIP Query.  Note that to query the zones available to an extended network, generally
+the first network number in the range must be used.
 
 **-z**
 
