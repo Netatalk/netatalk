@@ -156,7 +156,7 @@ void test117()
     }
 
 #if 0
-	test_bytelock(vol2, name, OPENFORK_DATA);
+    test_bytelock(vol2, name, OPENFORK_DATA);
 #endif
     name = "t117 exclusive open RF";
     test_bytelock(vol2, name, OPENFORK_RSCS);

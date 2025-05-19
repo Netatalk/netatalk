@@ -29,12 +29,12 @@ STATIC void test398()
 
     FAIL(FPGetACL(Conn, vol, DIRDID_ROOT, 7, file))
 #if 0
-    FPGetACL(Conn,vol, DIRDID_ROOT , 7, "testdir");
-    FPGetACL(Conn,vol, DIRDID_ROOT , 8, "test");
-    FPGetACL(Conn,vol, DIRDID_ROOT , 23, "test");
-    FPGetACL(Conn,vol, DIRDID_ROOT , 23, "test2");
-    FPGetACL(Conn,vol, DIRDID_ROOT , 23, "test3");
-    FPGetACL(Conn,vol, DIRDID_ROOT , 23, "testdir");
+    FPGetACL(Conn, vol, DIRDID_ROOT, 7, "testdir");
+    FPGetACL(Conn, vol, DIRDID_ROOT, 8, "test");
+    FPGetACL(Conn, vol, DIRDID_ROOT, 23, "test");
+    FPGetACL(Conn, vol, DIRDID_ROOT, 23, "test2");
+    FPGetACL(Conn, vol, DIRDID_ROOT, 23, "test3");
+    FPGetACL(Conn, vol, DIRDID_ROOT, 23, "testdir");
 #endif
     FPDelete(Conn, vol, DIRDID_ROOT, file);
 test_exit:

@@ -197,7 +197,7 @@ static int reducestack(void)
         if (dstack[dsidx - 1].ds_checked) {
             dsidx--;
 #if 0
-			free(dstack[dsidx].path);
+            free(dstack[dsidx].path);
 #endif
         } else {
             return dsidx - 1;

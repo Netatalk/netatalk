@@ -666,7 +666,7 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
 
     if (lp.lp_flags & LP_OPEN) {
 #ifdef EBUG
-        LOG(log_error, logtype_papd, "lp_open already open" );
+        LOG(log_error, logtype_papd, "lp_open already open");
 #endif
 #if 0
         abort();

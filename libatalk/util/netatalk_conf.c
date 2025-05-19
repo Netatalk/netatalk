@@ -2343,9 +2343,11 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     if ((subpathconfig = getoption_str(obj->iniconfig, INISEC_HOMES, "path", NULL,
                                        NULL))) {
 #if 0
+
         if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
             EC_FAIL;
         }
+
 #endif
         strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
         strlcat(tmpbuf, "/", MAXPATHLEN);

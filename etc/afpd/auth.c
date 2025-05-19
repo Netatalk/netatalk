@@ -505,7 +505,7 @@ int afp_getsession(
             }
 
 #if 0
-            memcpy (id, ibuf, idlen)
+            memcpy(id, ibuf, idlen)
 #endif
             tklen = obj->sinfo.sessiontoken_len;
             token = obj->sinfo.sessiontoken;
