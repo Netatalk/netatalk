@@ -222,9 +222,11 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     /* check for proper bitmaps -- the stuff in comments is for
      * variable directory ids. */
-    if (!(fbitmap || dbitmap)
-            /*|| (fbitmap & (1 << FILPBIT_PDID)) ||
-              (dbitmap & (1 << DIRPBIT_PDID))*/) {
+    if (!(fbitmap || dbitmap)) {
+#if 0
+            || (fbitmap & (1 << FILPBIT_PDID)) ||
+              (dbitmap & (1 << DIRPBIT_PDID))
+#endif
         *rbuflen = 0;
         return AFPERR_BITMAP;
     }

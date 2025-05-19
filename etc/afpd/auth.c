@@ -504,7 +504,9 @@ int afp_getsession(
                 return AFPERR_PARAM;
             }
 
-            /* memcpy (id, ibuf, idlen) */
+#if 0
+            memcpy (id, ibuf, idlen)
+#endif
             tklen = obj->sinfo.sessiontoken_len;
             token = obj->sinfo.sessiontoken;
         }
@@ -1197,9 +1199,6 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
         strlcpy(name + len, p, sizeof(name) - len);
         LOG(log_debug, logtype_afpd, "uam: loading (%s)", name);
 
-        /*
-          if ((stat(name, &st) == 0) && (mod = uam_load(name, p))) {
-        */
         if (stat(name, &st) == 0) {
             if ((mod = uam_load(obj, name, p))) {
                 uam_attach(&uam_modules, mod);

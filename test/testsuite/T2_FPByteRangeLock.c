@@ -155,7 +155,9 @@ void test117()
         goto test_exit;
     }
 
-//	test_bytelock(vol2, name, OPENFORK_DATA);
+#if 0
+	test_bytelock(vol2, name, OPENFORK_DATA);
+#endif
     name = "t117 exclusive open RF";
     test_bytelock(vol2, name, OPENFORK_RSCS);
     FPCloseVol(Conn2, vol2);

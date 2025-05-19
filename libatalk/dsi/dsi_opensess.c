@@ -67,7 +67,9 @@ void dsi_opensession(DSI *dsi)
      * max server quantum due to a bug in appleshare client 3.8.6. */
     dsi->header.dsi_flags = DSIFL_REPLY;
     dsi->header.dsi_data.dsi_code = 0;
-    /* dsi->header.dsi_command = DSIFUNC_OPEN;*/
+#if 0
+    dsi->header.dsi_command = DSIFUNC_OPEN;
+#endif
     /* length of data. dsi_send uses it. */
     dsi->cmdlen = 2 * (2 + sizeof(uint32_t));
     /* DSI Option Server Request Quantum */

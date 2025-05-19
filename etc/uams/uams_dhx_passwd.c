@@ -415,15 +415,18 @@ static int uam_setup(void *obj, const char *path)
         return -1;
     }
 
-    /*uam_register(UAM_SERVER_PRINTAUTH, path, "DHCAST128",
-      passwd_printer);*/
+#if 0
+    uam_register(UAM_SERVER_PRINTAUTH, path, "DHCAST128", passwd_printer);
+#endif
     return 0;
 }
 
 static void uam_cleanup(void)
 {
     uam_unregister(UAM_SERVER_LOGIN, "DHCAST128");
-    /*uam_unregister(UAM_SERVER_PRINTAUTH, "DHCAST128"); */
+#if 0
+    uam_unregister(UAM_SERVER_PRINTAUTH, "DHCAST128");
+#endif
 }
 
 UAM_MODULE_EXPORT struct uam_export uams_dhx = {

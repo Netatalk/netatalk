@@ -2552,7 +2552,9 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     /*
      * we need to exchange ACL entries as well
      */
-    /* exchange_acls(vol, p, upath); */
+#if 0
+    exchange_acls(vol, p, upath);
+#endif
     path->st = srcst;
     path->st_valid = 1;
     path->st_errno = 0;

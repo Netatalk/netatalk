@@ -531,8 +531,8 @@ STATIC void test329()
         test_failed();
     }
 
-    fork2 = FPOpenFork(Conn2, vol2, type, bitmap, DIRDID_ROOT,
-                       name,/* OPENACC_WR | */OPENACC_RD);
+    fork2 = FPOpenFork(Conn2, vol2, type, bitmap, DIRDID_ROOT, name,
+                       OPENACC_RD);
 
     if (!fork2) {
         test_failed();
@@ -1043,8 +1043,8 @@ STATIC void test366()
         test_failed();
     }
 
-    fork2 = FPOpenFork(Conn2, vol2, type, bitmap, DIRDID_ROOT,
-                       name,/* OPENACC_WR | */OPENACC_RD);
+    fork2 = FPOpenFork(Conn2, vol2, type, bitmap, DIRDID_ROOT, name,
+                       OPENACC_RD);
 
     if (!fork2) {
         test_failed();

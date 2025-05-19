@@ -77,7 +77,7 @@ struct path Cur_Path = {
     ".",
     /* id */
     0,
-    /* struct dir * */
+    /* pointer to struct dir */
     NULL,
     /* stat is not set */
     0,

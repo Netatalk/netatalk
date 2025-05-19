@@ -635,8 +635,9 @@ static int uam_setup(void *obj, const char *path)
         return -1;
     }
 
-    /*uam_register(UAM_SERVER_PRINTAUTH, path, "Randnum Exchange",
-      pam_printer);*/
+#if 0
+    uam_register(UAM_SERVER_PRINTAUTH, path, "Randnum Exchange", pam_printer);
+#endif
     return 0;
 }
 
@@ -645,7 +646,9 @@ static void uam_cleanup(void)
     uam_unregister(UAM_SERVER_LOGIN, "Randnum exchange");
     uam_unregister(UAM_SERVER_LOGIN, "2-Way Randnum exchange");
     uam_unregister(UAM_SERVER_CHANGEPW, "Randnum Exchange");
-    /*uam_unregister(UAM_SERVER_PRINTAUTH, "Randnum Exchange");*/
+#if 0
+    uam_unregister(UAM_SERVER_PRINTAUTH, "Randnum Exchange");
+#endif
 }
 
 UAM_MODULE_EXPORT struct uam_export uams_randnum = {
