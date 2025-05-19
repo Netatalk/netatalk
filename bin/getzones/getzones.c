@@ -257,12 +257,17 @@ static void print_zones(short n, char *buf, charset_t charset)
     for (; n--; buf += (*buf) + 1) {
         if ((size_t)(-1) == (zone_len = convert_string_allocate(charset,
                                         CH_UNIX, buf + 1, *buf, &zone))) {
+            
+            /* If the string conversion fails, just copy the MacRoman string
+               and hope it makes sense as whatever our UNIX charset is */
             zone_len = *buf;
-
-            if ((zone = strdup(buf + 1)) == NULL) {
-                perror("strdup");
+            zone = malloc(zone_len+1);
+            if (zone == NULL) {
+                perror("malloc");
                 exit(1);
             }
+            memcpy(zone, buf+1, zone_len);
+            zone[zone_len] = 0;
         }
 
         printf("%.*s\n", (int)zone_len, zone);
