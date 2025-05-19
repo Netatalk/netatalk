@@ -1,3 +1,5 @@
+#include <atalk/afp.h>
+
 #include "afpclient.h"
 #include "test.h"
 
@@ -1906,7 +1908,7 @@ unsigned int AFPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
     dsi = &conn->dsi;
     SendInit(dsi);
     ofs = 0;
-    dsi->commands[ofs++] = 37; /* AFP_GETUSERINFO;*/
+    dsi->commands[ofs++] = AFP_GETUSERINFO;
     memcpy(dsi->commands + ofs, &flag, sizeof(flag));
     ofs++;
     id = htonl(id);

@@ -91,7 +91,9 @@ STATIC void test91()
         test_failed();
     }
 
-//	FAIL (FPCreateID(Conn,vol, dir, name))
+#if 0
+	FAIL (FPCreateID(Conn,vol, dir, name))
+#endif
 
     if (FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
         test_failed();

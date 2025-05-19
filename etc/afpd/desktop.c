@@ -550,8 +550,10 @@ addicon_err:
 }
 
 static const uint8_t	utag[] = { 0, 0, 0, 0 };
-static const uint8_t	ucreator[] = { 0, 0, 0, 0 };/* { 'U', 'N', 'I', 'X' };*/
-static const uint8_t	utype[] = { 0, 0, 0, 0 };/* { 'T', 'E', 'X', 'T' };*/
+/* example values: U, N, I, X */
+static const uint8_t	ucreator[] = { 0, 0, 0, 0 };
+/* example values: T, E, X, T */
+static const uint8_t	utype[] = { 0, 0, 0, 0 };
 static const short	usize = 256;
 
 

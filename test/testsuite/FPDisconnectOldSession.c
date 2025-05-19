@@ -80,8 +80,7 @@ STATIC void test222()
         goto fin;
     }
 
-    fork = FPOpenFork(conn2, vol2, OPENFORK_RSCS, 0, DIRDID_ROOT,
-                      name,  /* OPENACC_WR |OPENACC_RD |*/
+    fork = FPOpenFork(conn2, vol2, OPENFORK_RSCS, 0, DIRDID_ROOT, name,
                       OPENACC_DWR | OPENACC_DRD);
 
     if (!fork) {

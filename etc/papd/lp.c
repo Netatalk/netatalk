@@ -665,8 +665,12 @@ int lp_open(struct papfile *out, struct sockaddr_at *sat)
     }
 
     if (lp.lp_flags & LP_OPEN) {
-        /* LOG(log_error, logtype_papd, "lp_open already open" ); */
-        /* abort(); */
+#ifdef EBUG
+        LOG(log_error, logtype_papd, "lp_open already open" );
+#endif
+#if 0
+        abort();
+#endif
         return -1;
     }
 
@@ -1005,7 +1009,9 @@ int lp_print(void)
                            printer->p_operator, printer->p_cupsoptions);
         }
 
-        /*LOG(log_info, logtype_papd, "lp_print unlink %s", lp.lp_spoolfile );*/
+#ifdef EBUG
+        LOG(log_info, logtype_papd, "lp_print unlink %s", lp.lp_spoolfile);
+#endif
         unlink(lp.lp_spoolfile);
         return 0;
 #endif /* HAVE_CUPS*/
