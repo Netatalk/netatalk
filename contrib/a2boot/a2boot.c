@@ -79,8 +79,7 @@ void usage(char *p)
 /*
  * Unregister ourself on signal.
  */
-void
-goaway(int signal)
+void goaway(int signal _U_)
 {
     int regerr;
     regerr = nbp_unrgstr(server, "Apple //gs", "*", NULL);
@@ -292,8 +291,7 @@ int main(int ac, char **av)
 
 
 /* below MJ 2002 (initially borrowed from aep_packet */
-long a2bootreq(fname)
-char	*fname;
+long a2bootreq(char *fname)
 {
     int f;
     int32_t readlen;
@@ -327,4 +325,3 @@ char	*fname;
     close(f);
     return  TL_OK;
 }
-

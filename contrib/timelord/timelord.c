@@ -77,8 +77,7 @@ void usage(char *p)
 /*
  * Unregister ourself on signal.
  */
-void
-goaway(int signal)
+void goaway(int signal _U_)
 {
     if (nbp_unrgstr(server, "TimeLord", "*", NULL) < 0) {
         LOG(log_error, logtype_default, "Can't unregister %s", server);
