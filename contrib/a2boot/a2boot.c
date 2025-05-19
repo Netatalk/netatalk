@@ -233,36 +233,40 @@ int main(int ac, char **av)
         bcopy(p, &req, sizeof(int32_t));
         req = ntohl(req);
         p += sizeof(int32_t);
-        /*
-            LOG(log_info, logtype_default, "req = %08lx",(long)req );
-        */
+#ifdef EBUG
+        LOG(log_info, logtype_default, "req = %08lx",(long)req );
+#endif
         /* Byte-swap and multiply by 0x200. Converts block number to
            file offset. */
         fileoff = ((req & 0x00ff0000) >> 7) | ((req & 0x0000ff00) << 9);
         req &= 0xff000000;
 
-        /*
-            LOG(log_info, logtype_default, "       reqblklo = %02x",(int)reqblklo );
-            LOG(log_info, logtype_default, "       reqblkhi = %02x",(int)reqblkhi );
-            LOG(log_info, logtype_default, "       req now = %08lx",(long)req );
-        */
+#ifdef EBUG
+        LOG(log_info, logtype_default, "       req now = %08lx",(long)req );
+#endif
 
         switch (req) {
         /* Apple IIgs both ROM 1 and ROM 3 */
         case 0x01000000 :
-            /*    LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks" ); */
+#ifdef EBUG
+            LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks" );
+#endif
             resp = a2bootreq(_PATH_A_GS_BLOCKS);
             break;
 
         /* Apple 2 Workstation card  */
         case 0x02000000 :
-            /*    LOG(log_info, logtype_default, "          Req Apple //e Boot" );  */
+#ifdef EBUG
+            LOG(log_info, logtype_default, "          Req Apple //e Boot" );
+#endif
             resp = a2bootreq(_PATH_A_2E_BLOCKS);
             break;
 
         /* Apple IIgs both ROM 1 and ROM 3 */
         case 0x03000000 :
-            /*    LOG(log_info, logtype_default, "          Req ProDOS16 Image" );    */
+#ifdef EBUG
+            LOG(log_info, logtype_default, "          Req ProDOS16 Image" );
+#endif
             resp = a2bootreq(_PATH_P16_IMAGE);
             break;
 
@@ -294,9 +298,9 @@ char	*fname;
 {
     int f;
     int32_t readlen;
-    /*
-        LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );
-    */
+#if EBUG
+    LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );
+#endif
     f = open(fname, O_RDONLY);
 
     if (f == EOF) {
@@ -304,18 +308,20 @@ char	*fname;
         return close(f);
     }
 
-    /*
-        LOG(log_info, logtype_default, "would lseek to %08lx",fileoff);
-    */
+#if EBUG
+    LOG(log_info, logtype_default, "would lseek to %08lx",fileoff);
+#endif
     lseek(f, fileoff, 0);
     readlen = read(f, buf + sizeof(int32_t), 512);
 
-    /*
-        LOG(log_info, logtype_default, "length is %08lx", readlen);
-    */
+#if EBUG
+    LOG(log_info, logtype_default, "length is %08lx", readlen);
+#endif
 
     if (readlen < 0x200) {
-        /*    LOG(log_info, logtype_default, "Read to EOF");  */
+#if EBUG
+    LOG(log_info, logtype_default, "Read to EOF");
+#endif
         close(f);
         return TL_EOF;
     }
