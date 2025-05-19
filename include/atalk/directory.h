@@ -40,16 +40,21 @@
 #endif /* DIRBITS */
 
 /* reserved directory id's */
-#define DIRDID_ROOT_PARENT    htonl(1)  /* parent directory of root */
-#define DIRDID_ROOT           htonl(2)  /* root directory */
+/* parent directory of root */
+#define DIRDID_ROOT_PARENT    htonl(1)
+/* root directory */
+#define DIRDID_ROOT           htonl(2)
 
 /* struct dir.d_flags */
 #define DIRF_FSMASK	   (3<<0)
 #define DIRF_NOFS	   (0<<0)
 #define DIRF_UFS	   (1<<1)
-#define DIRF_ISFILE    (1<<3) /* it's cached file, not a directory */
-#define DIRF_OFFCNT    (1<<4) /* offsprings count is valid */
-#define DIRF_CNID	   (1<<5) /* renumerate id */
+/* it's cached file, not a directory */
+#define DIRF_ISFILE    (1<<3)
+/* offsprings count is valid */
+#define DIRF_OFFCNT    (1<<4)
+/* renumerate id */
+#define DIRF_CNID	   (1<<5)
 
 struct dir {
     /* complete unix path to dir (or file) */
@@ -87,12 +92,17 @@ struct dir {
 };
 
 struct path {
-    int         m_type;             /* mac name type (long name, unicode */
-    char        *m_name;            /* mac name */
-    char        *u_name;            /* unix name */
-    cnid_t      id;                 /* file id (only for getmetadata) */
-    struct dir  *d_dir;             /* */
-    int         st_valid;           /* does st_errno and st set */
+    /* mac name type (long name, unicode */
+    int         m_type;
+    /* mac name */
+    char        *m_name;
+    /* unix name */
+    char        *u_name;
+    /* file id (only for getmetadata) */
+    cnid_t      id;
+    struct dir  *d_dir;
+    /* does st_errno and st set */
+    int         st_valid;
     int         st_errno;
     struct stat st;
 };

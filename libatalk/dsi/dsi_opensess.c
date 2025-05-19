@@ -54,7 +54,8 @@ void dsi_opensession(DSI *dsi)
             memcpy(&dsi->attn_quantum, &dsi->commands[i], option_len);
             dsi->attn_quantum = ntohl(dsi->attn_quantum);
 
-        case DSIOPT_SERVQUANT: /* just ignore these */
+        case DSIOPT_SERVQUANT:
+        /* just ignore these */
         default:
             break;
         }

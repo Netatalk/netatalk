@@ -124,7 +124,8 @@ static struct _cnid_db *cnid_last_new(struct vol *vol _U_)
     cdb->cnid_delete = cnid_last_delete;
     cdb->cnid_get = cnid_last_get;
     cdb->cnid_lookup = cnid_last_lookup;
-    cdb->cnid_nextid = NULL;    /* cnid_last_nextid; */
+    /* cnid_last_nextid; */
+    cdb->cnid_nextid = NULL;
     cdb->cnid_resolve = cnid_last_resolve;
     cdb->cnid_update = cnid_last_update;
     cdb->cnid_close = cnid_last_close;

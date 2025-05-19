@@ -50,20 +50,27 @@
 #define SL_ENC_BIG_ENDIAN    2
 #define SL_ENC_UTF_16        4
 
-typedef DALLOC_CTX     sl_array_t;    /* an array of elements                 */
-typedef DALLOC_CTX     sl_dict_t;     /* an array of key/value elements       */
-typedef DALLOC_CTX     sl_filemeta_t; /* contains one sl_array_t              */
-typedef int            sl_nil_t;      /* a nil element                        */
-typedef bool           sl_bool_t;     /* a boolean, we avoid bool_t           */
+/* an array of elements */
+typedef DALLOC_CTX     sl_array_t;
+/* an array of key/value elements */
+typedef DALLOC_CTX     sl_dict_t;
+/* contains one sl_array_t */
+typedef DALLOC_CTX     sl_filemeta_t;
+/* a nil element */
+typedef int            sl_nil_t;
+/* a boolean, we avoid bool_t */
+typedef bool           sl_bool_t;
 typedef struct timeval sl_time_t;
 typedef struct {
+    /* a UUID */
     char sl_uuid[16];
-}  sl_uuid_t;                         /* a UUID                               */
+}  sl_uuid_t;
 typedef struct {
+    /* an array of CNIDs */
     uint16_t   ca_unkn1;
     uint32_t   ca_context;
     DALLOC_CTX *ca_cnids;
-}  sl_cnids_t;                        /* an array of CNIDs                    */
+}  sl_cnids_t;
 
 /******************************************************************************
  * Some helper stuff dealing with queries
@@ -71,14 +78,22 @@ typedef struct {
 
 /* query state */
 typedef enum {
-    SLQ_STATE_NEW,            /* Query received from client           */
-    SLQ_STATE_RUNNING,        /* Query dispatched to Tracker          */
-    SLQ_STATE_RESULTS,        /* Async Tracker query read             */
-    SLQ_STATE_FULL,           /* result queue is full                 */
-    SLQ_STATE_DONE,           /* Got all results from Tracker         */
-    SLQ_STATE_CANCEL_PENDING, /* a cancel op for the query is pending */
-    SLQ_STATE_CANCELLED,      /* the query has been cancelled         */
-    SLQ_STATE_ERROR	          /* an error happended somewhere         */
+    /* Query received from client */
+    SLQ_STATE_NEW,
+    /* Query dispatched to Tracker */
+    SLQ_STATE_RUNNING,
+    /* Async Tracker query read */
+    SLQ_STATE_RESULTS,
+    /* result queue is full */
+    SLQ_STATE_FULL,
+    /* Got all results from Tracker */
+    SLQ_STATE_DONE,
+    /* a cancel op for the query is pending */
+    SLQ_STATE_CANCEL_PENDING,
+    /* the query has been cancelled */
+    SLQ_STATE_CANCELLED,
+    /* an error happended somewhere */
+    SLQ_STATE_ERROR
 } slq_state_t;
 
 /* Handle for query results */
@@ -90,29 +105,46 @@ struct sl_rslts {
 
 /* Internal query data structure */
 typedef struct _slq_t {
-    struct list_head  slq_list;           /* queries are stored in a list     */
-    slq_state_t       slq_state;          /* State                            */
-    AFPObj           *slq_obj;            /* global AFPObj handle             */
-    const struct vol *slq_vol;            /* volume handle                    */
-    char             *slq_scope;          /* search scope                     */
-    time_t            slq_time;           /* timestamp received query         */
-    uint64_t          slq_ctx1;           /* client context 1                 */
-    uint64_t          slq_ctx2;           /* client context 2                 */
-    sl_array_t       *slq_reqinfo;        /* array with requested metadata    */
-    const char       *slq_qstring;        /* the Spotlight query string       */
-    uint64_t         *slq_cnids;          /* Pointer to array with CNIDs      */
-    size_t            slq_cnids_num;      /* Size of slq_cnids array          */
-    void             *tracker_cursor;     /* Tracker SPARQL cursor            */
-    bool              slq_allow_expr;     /* Whether to allow expressions     */
-    uint64_t          slq_result_limit;   /* Whether to LIMIT SPARQL results  */
-    struct sl_rslts  *query_results;      /* query results                    */
+    /* queries are stored in a list */
+    struct list_head  slq_list;
+    /* State */
+    slq_state_t       slq_state;
+    /* global AFPObj handle */
+    AFPObj           *slq_obj;
+    /* volume handle */
+    const struct vol *slq_vol;
+    /* search scope */
+    char             *slq_scope;
+    /* timestamp received query */
+    time_t            slq_time;
+    /* client context 1 */
+    uint64_t          slq_ctx1;
+    /* client context 2 */
+    uint64_t          slq_ctx2;
+    /* array with requested metadata */
+    sl_array_t       *slq_reqinfo;
+    /* the Spotlight query string */
+    const char       *slq_qstring;
+    /* Pointer to array with CNIDs */
+    uint64_t         *slq_cnids;
+    /* Size of slq_cnids array */
+    size_t            slq_cnids_num;
+    /* Tracker SPARQL cursor */
+    void             *tracker_cursor;
+    /* Whether to allow expressions */
+    bool              slq_allow_expr;
+    /* Whether to LIMIT SPARQL results */
+    uint64_t          slq_result_limit;
+    /* query results */
+    struct sl_rslts  *query_results;
 } slq_t;
 
 struct sl_ctx {
     TrackerSparqlConnection *tracker_con;
     GCancellable *cancellable;
     GMainLoop *mainloop;
-    slq_t *query_list; /* list of active queries */
+    /* list of active queries */
+    slq_t *query_list;
 };
 
 /******************************************************************************
