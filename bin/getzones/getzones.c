@@ -33,7 +33,7 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset);
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [-m | -l | -g | -q network | -z zone ] [-c Mac charset] [address]\n", s);
+    fprintf(stderr, "usage:\t%s [-g | -l | -m | -q network | -z zone ] [-c Mac charset] [address]\n", s);
     exit(1);
 }
 
@@ -60,18 +60,19 @@ int main(int argc, char *argv[])
             }
             lookup_type = ZIPOP_GNI;
             break;
-        case 'm':
-            if (lookup_type != ZIPOP_DEFAULT) {
-                ++errflg;
-            }
-            lookup_type = ZIPOP_GETMYZONE;
-            break;
 
         case 'l':
             if (lookup_type != ZIPOP_DEFAULT) {
                 ++errflg;
             }
             lookup_type = ZIPOP_GETLOCALZONES;
+            break;
+            
+        case 'm':
+            if (lookup_type != ZIPOP_DEFAULT) {
+                ++errflg;
+            }
+            lookup_type = ZIPOP_GETMYZONE;
             break;
 
         case 'c':

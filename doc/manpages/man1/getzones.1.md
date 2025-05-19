@@ -4,7 +4,7 @@ getzones — list AppleTalk zone names
 
 # Synopsis
 
-**getzones** [-g | -m | -l | -q network | -z *zone*] [-c *Mac charset*] [*address*]
+**getzones** [-g | -l | -m | -q network | -z *zone*] [-c *Mac charset*] [*address*]
 
 # Description
 
@@ -21,15 +21,15 @@ running **atalkd**(8).
 This is accomplished by sending a ZIP GetNetInfo request.  Note that only seed routers
 respond to GetNetInfo, so the usual idiom is to broadcast it.
 
-**-m**
-
-> List the name of the local zone only; this is accomplished by sending a
-ZIP GetMyZone request.
-
 **-l**
 
 > List the local zones; this is accomplished by sending a GetLocalZones
 request.
+
+**-m**
+
+> List the name of the local zone only; this is accomplished by sending a
+ZIP GetMyZone request.
 
 **-q**
 
