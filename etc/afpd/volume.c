@@ -65,6 +65,8 @@
 #include "unix.h"
 #include "volume.h"
 
+/* Time Machine cache for 60 seconds */
+#define TM_USED_CACHETIME 60
 #define VOLPASSLEN  8
 
 extern int afprun(char *cmd, int *outfd);
@@ -171,8 +173,6 @@ EC_CLEANUP:
  * @param vol     (rw) volume to calculate
  * @return             0 on success, -1 on error
  */
-/* cache for 60 seconds */
-#define TM_USED_CACHETIME 60
 static int get_tm_used(struct vol *restrict vol)
 {
     EC_INIT;
