@@ -234,22 +234,21 @@ int main(int ac, char **av)
         req = ntohl(req);
         p += sizeof(int32_t);
 #ifdef EBUG
-        LOG(log_info, logtype_default, "req = %08lx",(long)req );
+        LOG(log_info, logtype_default, "req = %08lx", (long)req);
 #endif
         /* Byte-swap and multiply by 0x200. Converts block number to
            file offset. */
         fileoff = ((req & 0x00ff0000) >> 7) | ((req & 0x0000ff00) << 9);
         req &= 0xff000000;
-
 #ifdef EBUG
-        LOG(log_info, logtype_default, "       req now = %08lx",(long)req );
+        LOG(log_info, logtype_default, "       req now = %08lx", (long)req);
 #endif
 
         switch (req) {
         /* Apple IIgs both ROM 1 and ROM 3 */
         case 0x01000000 :
 #ifdef EBUG
-            LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks" );
+            LOG(log_info, logtype_default, "          Req ProDOS16 Boot Blocks");
 #endif
             resp = a2bootreq(_PATH_A_GS_BLOCKS);
             break;
@@ -257,7 +256,7 @@ int main(int ac, char **av)
         /* Apple 2 Workstation card  */
         case 0x02000000 :
 #ifdef EBUG
-            LOG(log_info, logtype_default, "          Req Apple //e Boot" );
+            LOG(log_info, logtype_default, "          Req Apple //e Boot");
 #endif
             resp = a2bootreq(_PATH_A_2E_BLOCKS);
             break;
@@ -265,7 +264,7 @@ int main(int ac, char **av)
         /* Apple IIgs both ROM 1 and ROM 3 */
         case 0x03000000 :
 #ifdef EBUG
-            LOG(log_info, logtype_default, "          Req ProDOS16 Image" );
+            LOG(log_info, logtype_default, "          Req ProDOS16 Image");
 #endif
             resp = a2bootreq(_PATH_P16_IMAGE);
             break;
@@ -299,7 +298,7 @@ char	*fname;
     int f;
     int32_t readlen;
 #if EBUG
-    LOG(log_info, logtype_default, "          a2bootreq( %s )",fname );
+    LOG(log_info, logtype_default, "          a2bootreq( %s )", fname);
 #endif
     f = open(fname, O_RDONLY);
 
@@ -309,18 +308,17 @@ char	*fname;
     }
 
 #if EBUG
-    LOG(log_info, logtype_default, "would lseek to %08lx",fileoff);
+    LOG(log_info, logtype_default, "would lseek to %08lx", fileoff);
 #endif
     lseek(f, fileoff, 0);
     readlen = read(f, buf + sizeof(int32_t), 512);
-
 #if EBUG
     LOG(log_info, logtype_default, "length is %08lx", readlen);
 #endif
 
     if (readlen < 0x200) {
 #if EBUG
-    LOG(log_info, logtype_default, "Read to EOF");
+        LOG(log_info, logtype_default, "Read to EOF");
 #endif
         close(f);
         return TL_EOF;

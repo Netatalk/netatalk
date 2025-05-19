@@ -224,8 +224,8 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
      * variable directory ids. */
     if (!(fbitmap || dbitmap)) {
 #if 0
-            || (fbitmap & (1 << FILPBIT_PDID)) ||
-              (dbitmap & (1 << DIRPBIT_PDID))
+        || (fbitmap & (1 << FILPBIT_PDID)) ||
+        (dbitmap & (1 << DIRPBIT_PDID))
 #endif
         *rbuflen = 0;
         return AFPERR_BITMAP;

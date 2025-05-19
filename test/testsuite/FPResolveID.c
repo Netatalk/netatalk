@@ -92,7 +92,7 @@ STATIC void test91()
     }
 
 #if 0
-	FAIL (FPCreateID(Conn,vol, dir, name))
+    FAIL(FPCreateID(Conn, vol, dir, name))
 #endif
 
     if (FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
