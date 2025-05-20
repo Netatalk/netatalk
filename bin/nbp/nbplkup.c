@@ -29,15 +29,13 @@
 #include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/nbp.h>
+#include <atalk/unicode.h>
 #include <atalk/util.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-#include <atalk/unicode.h>
 
 #define MACCHARSET "MAC_ROMAN"
 
