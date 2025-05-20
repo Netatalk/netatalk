@@ -16,5 +16,4 @@
 --pad-comma
 --pad-header
 --pad-oper
---suffix=none
 --unpad-paren
