@@ -42,6 +42,9 @@ If -s is specified, output is printed in a script-friendly format: for each
 response, first the address is printed, followed by a single space, followed 
 by the name and type, followed by a linefeed.
 
+If -m is specified, strings will be interpreted in the given Macintosh character set.
+If -m is not specified, nbplkup defaults to using MacRoman.
+
 # Environment Variables
 
 NBPLKUP
