@@ -13,4 +13,5 @@ if have_appletalk
     subdir('getzones')
     subdir('nbp')
     subdir('pap')
+    subdir('rtmpqry')
 endif
