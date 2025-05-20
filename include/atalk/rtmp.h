@@ -28,6 +28,8 @@
 #include <netatalk/endian.h>
 
 #define RTMPROP_REQUEST	1
+#define RTMPROP_RDR 2
+#define RTMPROP_RDR_NOSH 3
 
 struct rtmpent {
     u_int16_t   re_net;
