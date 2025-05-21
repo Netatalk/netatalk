@@ -24,7 +24,7 @@ void print_rtmp_data_packet(uint8_t *buf, size_t len);
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [ -A local_address ] [remote_address]\n", s);
+    fprintf(stderr, "usage:\t%s [-a] [ -A local_address ] [remote_address]\n", s);
     exit(1);
 }
 
@@ -35,9 +35,14 @@ void main(int argc, char** argv)
     struct at_addr local_addr = { 0 };
     struct at_addr *remote_addr = NULL;
     int sockfd;
+    bool all_routes = false;
 
-    while ((c = getopt(argc, argv, "A:")) != EOF) {
+    while ((c = getopt(argc, argv, "aA:")) != EOF) {
         switch (c) {
+        case 'a':
+            all_routes = true;
+            break;
+
         case 'A':
             if (!atalk_aton(optarg, &local_addr)) {
                 fprintf(stderr, "Bad address.\n");
@@ -82,7 +87,7 @@ void main(int argc, char** argv)
     /* RIS socket is always 1 */
     sa_remote.sat_port = 1;
     memcpy(&sa_remote.sat_addr, remote_addr, sizeof(struct at_addr));
-    do_rtmp_rdr(sockfd, &sa_remote, true, 2);
+    do_rtmp_rdr(sockfd, &sa_remote, all_routes, 2);
 }
 
 /* Set up a DDP socket ready for sending RTMP packets.  The remote_addr is a pointer
