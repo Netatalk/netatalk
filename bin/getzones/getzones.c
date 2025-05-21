@@ -30,7 +30,7 @@ void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type,
 static void print_gnireply(size_t len, uint8_t *buf, charset_t charset);
 void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm,
                    charset_t charset);
-static int print_and_count_zones_in_reply(char *buf, size_t len,
+static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
         charset_t charset);
 void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset);
 
@@ -553,10 +553,10 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
     }
 }
 
-static int print_and_count_zones_in_reply(char *buf, size_t len,
+static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
         charset_t charset)
 {
-    char *cursor = buf;
+    uint8_t *cursor = buf;
     int count = 0;
 
     while (cursor - buf < len) {
