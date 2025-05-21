@@ -22,6 +22,7 @@
 #include <atalk/rtmp.h>
 #include <atalk/util.h>
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,7 @@ int setup_ddp_socket(const struct at_addr *local_addr,
                      struct at_addr **remote_addr);
 void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
                  int secs_timeout);
+void print_rtmp_data_packet(const uint8_t *buf, size_t len);
 
 static void usage(char *s)
 {
@@ -84,8 +86,6 @@ void main(int argc, char** argv)
     /* set up DDP socket - fills in the remote address if none was explicitly
        provided */
     sockfd = setup_ddp_socket(&local_addr, &remote_addr);
-    printf("honk %d.%d\n", (int)ntohs(remote_addr->s_net),
-           (int)remote_addr->s_node);
     /* Construct remote sockaddr */
     struct sockaddr_at sa_remote = { 0 };
 #ifdef BSD4_4
@@ -191,7 +191,7 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
                 exit(1);
             }
 
-            printf("%d bytes\n", ret);
+            print_rtmp_data_packet(buf, ret);
         }
 
         /* have we run out of time? */
@@ -207,4 +207,119 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
             break;
         }
     }
+}
+
+/* Print an RTMP tuple pointed to by 'cursor' within the buffer 'buf' with length 'len'.
+   Returns the next value of 'cursor' or NULL if no more tuples exist. */
+const uint8_t *print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor,
+                                size_t len, uint16_t router_net,
+                                uint8_t router_node)
+{
+    /* A tuple is at least 3 bytes long */
+    if ((cursor + 3) - buf > len) {
+        return NULL;
+    }
+
+    /* Is this an extended network tuple?  If so, it's actually 6 bytes long. */
+    bool tuple_extended = false;
+
+    if (cursor[2] & 0x80) {
+        tuple_extended = true;
+
+        if ((cursor + 6) - buf > len) {
+            return NULL;
+        }
+    }
+
+    uint16_t net_start = ntohs(*(uint16_t*)cursor);
+    cursor += 2;
+    /* top bit of distance is the extended network bit we used above */
+    uint8_t distance = (*cursor++) & 0x7f;
+
+    /* If this is an extended tuple, we also have an end network and an RTMP version */
+    if (tuple_extended) {
+        uint16_t net_end = ntohs(*(uint16_t*)cursor);
+        cursor += 2;
+        uint8_t rtmp_version = *cursor++;
+
+        if (rtmp_version != 0x82) {
+            fprintf(stderr, "Bad RTMP version 0x"PRIx8" in tuple; ignoring tuple.");
+            return cursor;
+        }
+
+        printf("%"PRIu16" - %"PRIu16" distance %"PRIu8
+               " via %"PRIu16".%"PRIu8"\n", net_start, net_end, distance, router_net,
+               router_node);
+    } else {
+        printf("%"PRIu16" distance %"PRIu8" via %"PRIu16".%"PRIu8"\n",
+               net_start, distance, router_net, router_node);
+    }
+
+    return cursor;
+}
+
+void print_rtmp_data_packet(const uint8_t *buf, size_t len)
+{
+    const uint8_t *cursor = buf;
+
+    /* The RTMP data packet format is in Inside Appletalk 2nd ed, p. 5-14. */
+
+    /* check we have enough packet to be an RTMP packet */
+    if (len < 5) {
+        /* 5 = length of RTMP packet with no tuples */
+        return;
+    }
+
+    /* check that we have RTMP... */
+    if (*cursor != DDPTYPE_RTMPRD) {
+        /* Nope, a random packet has wandered into our socket */
+        return;
+    }
+
+    cursor++;
+    uint16_t router_net_num = ntohs(*(uint16_t*)cursor);
+    cursor += 2;
+    uint8_t id_len = *cursor++;
+
+    if (id_len != 8) {
+        fprintf(stderr, "RTMP packet contained bad id length %"PRIu8" - are you "
+                        "living in an alternate timeline where DDP was extended?", id_len);
+        return;
+    }
+
+    uint8_t router_node = *cursor++;
+    bool network_is_extended = true;
+
+    /* If we're on a nonextended network, we'll have three further bytes, the first
+       two of which are 0 and the third is the RTMP version (0x82). */
+    if ((cursor + 3) - buf <= len) {
+        if (cursor[0] == 0 && cursor[1] == 0) {
+            network_is_extended = false;
+        }
+
+        if (!network_is_extended && cursor[2] != 0x82) {
+            fprintf(stderr,
+                    "Invalid RTMP version 0x%"PRIx8"; disregarding rest of packet\n",
+                    cursor[2]);
+            return;
+        }
+
+        if (!network_is_extended) {
+            cursor += 3;
+        }
+    } else {
+        /* We've run out of packet. */
+        return;
+    }
+
+    /* The cursor will now point to the first tuple. */
+    for (;;) {
+        cursor = print_rtmp_tuple(buf, cursor, len, router_net_num, router_node);
+
+        if (cursor == NULL) {
+            break;
+        }
+    }
+
+    printf("\n");
 }
