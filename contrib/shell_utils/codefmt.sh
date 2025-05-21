@@ -14,13 +14,10 @@
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU General Public License for more details.
 
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-    echo "Error: Not inside a git repository"
-    exit 3
-fi
-
 FORMATTER_CMD=""
 SOURCE_TYPE=""
+IS_GIT=0
+FORMATTED=0
 VERBOSE=0
 
 usage() {
@@ -48,56 +45,65 @@ while getopts "vs:" opt; do
   esac
 done
 
-if [ -z "$SOURCE_TYPE" ]; then
-    echo "Error: Source type (-s) is required"
-    usage
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Warning: Not inside a git repository; no diff will be produced"
+else
+    IS_GIT=1
+    git diff --quiet HEAD
+    INITIAL_STATE=$?
 fi
 
-git diff --quiet HEAD
-initial_state=$?
-
-if [ "$SOURCE_TYPE" = "meson" ]; then
+if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v muon >/dev/null 2>&1; then
         FORMATTER_CMD="muon"
     elif command -v muon-meson >/dev/null 2>&1; then
         FORMATTER_CMD="muon-meson"
     else
-        echo "Error: No variant of muon found in PATH"
-        exit 2
+        echo "Warning: No variant of muon found in PATH; will not format meson sources"
     fi
     if [ $VERBOSE -eq 1 ]; then
+        echo "Formatting meson sources..."
         find . -type f -name "meson.build" -exec sh -c 'echo "Processing file in: $(dirname {})" && '$FORMATTER_CMD' fmt -i {}' \;
     fi
     find . -type f -name "meson.build" -exec $FORMATTER_CMD fmt -i {} \;
-elif [ "$SOURCE_TYPE" = "C" ]; then
+    FORMATTED=1
+fi
+
+if [ "$SOURCE_TYPE" = "C" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v astyle >/dev/null 2>&1; then
         FORMATTER_CMD="astyle --options=.astylerc --recursive --suffix=none"
         if [ $VERBOSE -eq 0 ]; then
             FORMATTER_CMD="$FORMATTER_CMD --quiet"
+        else
+            echo "Formatting C sources..."
         fi
     else
-        echo "Error: astyle not found in PATH"
-        exit 2
+        echo "Warning: astyle not found in PATH; will not format C sources"
     fi
     $FORMATTER_CMD '*.h' '*.c'
+    FORMATTED=1
 fi
 
-git diff --quiet HEAD
-final_state=$?
+if [ $IS_GIT -eq 1 ]; then
+    git diff --quiet HEAD
+    FINAL_STATE=$?
+fi
 
-if [ $initial_state -eq 0 ] && [ $final_state -eq 1 ]; then
-    if [ $VERBOSE -eq 1 ]; then
-        git --no-pager diff
-        echo
+if [ $FORMATTED -eq 1 ] && [ $IS_GIT -eq 1 ]; then
+    if [ $INITIAL_STATE -eq 0 ] && [ $FINAL_STATE -eq 1 ]; then
+        if [ $VERBOSE -eq 1 ]; then
+            git --no-pager diff
+            echo
+        fi
+        echo "reformatted source files to adhere to coding style guide"
+        exit 1
+    elif [ $INITIAL_STATE -eq 1 ] && [ $FINAL_STATE -eq 1 ]; then
+        echo "repo was dirty, please stash changes and try again"
+        exit 2
+    else
+        if [ $VERBOSE -eq 1 ]; then
+            echo "beautiful, source files have compliant coding style!"
+        fi
+        exit 0
     fi
-    echo "reformatted $SOURCE_TYPE files to adhere to coding style guide"
-    exit 1
-elif [ $initial_state -eq 1 ] && [ $final_state -eq 1 ]; then
-    echo "repo was dirty, please stash changes and try again"
-    exit 2
-else
-    if [ $VERBOSE -eq 1 ]; then
-        echo "beautiful, $SOURCE_TYPE files have compliant coding style!"
-    fi
-    exit 0
 fi
