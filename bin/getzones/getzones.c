@@ -24,11 +24,11 @@
 #define MACCHARSET "MAC_ROMAN"
 #define ZIPOP_DEFAULT ZIPOP_GETZONELIST
 
-static void print_zones(short n, char *buf, charset_t charset);
+static void print_zones(short n, const char *buf, charset_t charset);
 void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type,
                    charset_t charset);
-static void print_gnireply(size_t len, uint8_t *buf, charset_t charset);
-void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm,
+static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset);
+void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm,
                    charset_t charset);
 static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
         charset_t charset);
@@ -45,7 +45,7 @@ static void usage(char *s)
 int main(int argc, char *argv[])
 {
     struct sockaddr_at saddr;
-    struct servent *se;
+    const struct servent *se;
     int c, errflg = 0;
     extern int optind;
     charset_t chMac = CH_MAC;
@@ -139,7 +139,8 @@ int main(int argc, char *argv[])
     if ((se = getservbyname("zip", "ddp")) == NULL) {
         saddr.sat_port = 6;
     } else {
-        saddr.sat_port = ntohs(se->s_port);
+        uint16_t at_port = ntohs((uint16_t)se->s_port);
+        saddr.sat_port = (unsigned char)at_port;
     }
 
     if (argc == optind) {
@@ -166,6 +167,10 @@ int main(int argc, char *argv[])
     case ZIPOP_QUERY:
         do_query(&saddr, (uint16_t)requested_network, chMac);
         break;
+
+    default:
+        fprintf(stderr, "Unknown operation.\n");
+        exit(1);
     }
 
     if (requested_zone != NULL) {
@@ -263,7 +268,7 @@ void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type,
  * n:   number of zones in this packet
  * buf: zone length/name pairs
  */
-static void print_zones(short n, char *buf, charset_t charset)
+static void print_zones(short n, const char *buf, charset_t charset)
 {
     size_t zone_len;
     char *zone;
@@ -290,19 +295,19 @@ static void print_zones(short n, char *buf, charset_t charset)
     }
 }
 
-void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm,
+void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm,
                    charset_t charset)
 {
+    ssize_t ret;
     uint8_t buf[600];
     uint8_t *cursor;
-    int i;
     struct sockaddr_at laddr = { 0 };
     cursor = buf;
     /* Construct packet. Layout is in IA, 2nd ed. p. 8-17 */
     *cursor++ = DDPTYPE_ZIP;
     *cursor++ = ZIPOP_GNI;
 
-    for (i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {
         *cursor++ = 0;
     }
 
@@ -324,8 +329,8 @@ void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm,
         exit(1);
     }
 
-    int ret = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
-                            sizeof(struct sockaddr_at));
+    ret = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
+                        sizeof(struct sockaddr_at));
 
     if (ret < 0) {
         perror("netddp_sendto");
@@ -357,9 +362,9 @@ void do_getnetinfo(struct sockaddr_at *dest, char *zone_to_confirm,
     print_gnireply(ret, buf, charset);
 }
 
-static void print_gnireply(size_t len, uint8_t *buf, charset_t charset)
+static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset)
 {
-    int ret;
+    ssize_t ret;
     uint8_t *cursor;
 
     /* Is the packet long enough for our flags and stuff? */
@@ -476,11 +481,11 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
 {
     uint8_t buf[600];
     uint8_t *cursor;
-    int i;
     struct sockaddr_at laddr = { 0 };
     uint8_t reply_type;
     int replied_zone_count = 0;
     int expected_zone_count = 0;
+    ssize_t length;
     cursor = buf;
     /* Construct packet. Layout is in IA, 2nd ed. p. 8-12 */
     *cursor++ = DDPTYPE_ZIP;
@@ -497,8 +502,8 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
         exit(1);
     }
 
-    int length = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
-                               sizeof(struct sockaddr_at));
+    length = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
+                           sizeof(struct sockaddr_at));
 
     if (length < 0) {
         perror("netddp_sendto");
@@ -584,8 +589,8 @@ static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
         /* How about the zone name? */
         if ((cursor + zone_len) - buf <= len) {
             char *unix_zone_name;
-            int ret = convert_string_allocate(charset, CH_UNIX, cursor, zone_len,
-                                              &unix_zone_name);
+            ssize_t ret = convert_string_allocate(charset, CH_UNIX, cursor, zone_len,
+                                                  &unix_zone_name);
 
             if (ret == -1) {
                 fprintf(stderr, "malformed default zone name, bailing out\n");
