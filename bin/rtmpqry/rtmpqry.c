@@ -20,11 +20,13 @@
 int setup_ddp_socket(struct at_addr *local_addr, struct at_addr **remote_addr);
 void do_rtmp_rdr(int sockfd, struct sockaddr_at *sa_remote, bool get_all,
                  int secs_timeout);
+void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote);
 void print_rtmp_data_packet(uint8_t *buf, size_t len);
 
 static void usage(char *s)
 {
-    fprintf(stderr, "usage:\t%s [-a] [ -A local_address ] [remote_address]\n", s);
+    fprintf(stderr, "usage:\t%s [-a | -r] [ -A local_address ] [remote_address]\n",
+            s);
     exit(1);
 }
 
@@ -36,11 +38,26 @@ void main(int argc, char** argv)
     struct at_addr *remote_addr = NULL;
     int sockfd;
     bool all_routes = false;
+    bool send_request = false;
 
-    while ((c = getopt(argc, argv, "aA:")) != EOF) {
+    while ((c = getopt(argc, argv, "arA:")) != EOF) {
         switch (c) {
         case 'a':
-            all_routes = true;
+            if (send_request) {
+                error_flag++;
+            } else {
+                all_routes = true;
+            }
+
+            break;
+
+        case 'r':
+            if (all_routes) {
+                error_flag++;
+            } else {
+                send_request = true;
+            }
+
             break;
 
         case 'A':
@@ -87,7 +104,12 @@ void main(int argc, char** argv)
     /* RIS socket is always 1 */
     sa_remote.sat_port = 1;
     memcpy(&sa_remote.sat_addr, remote_addr, sizeof(struct at_addr));
-    do_rtmp_rdr(sockfd, &sa_remote, all_routes, 2);
+
+    if (send_request) {
+        do_rtmp_request(sockfd, &sa_remote);
+    } else {
+        do_rtmp_rdr(sockfd, &sa_remote, all_routes, 2);
+    }
 }
 
 /* Set up a DDP socket ready for sending RTMP packets.  The remote_addr is a pointer
@@ -113,6 +135,101 @@ int setup_ddp_socket(struct at_addr *local_addr, struct at_addr **remote_addr)
     }
 
     return sockfd;
+}
+
+/* Send an RTMP Request and wait for a reply.  An RTMP request just requests details
+   of the network this node is connected to; in general, these aren't used on extended
+   networks (instead, a ZIP GetNetInfo is used) but they should be supported anyway. */
+void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
+{
+    /* See Inside Appletalk 2nd ed p. 5-18 for packet layout for both request and
+       reply. */
+    uint8_t buf[600];
+    buf[0] = DDPTYPE_RTMPR;
+    buf[1] = RTMPROP_REQUEST;
+    int ret = netddp_sendto(sockfd, buf, 2, 0, (struct sockaddr*)sa_remote,
+                            sizeof(struct sockaddr_at));
+
+    if (ret < 0) {
+        perror("netddp_sendto");
+        exit(1);
+    }
+
+    for (;;) {
+        int length = netddp_recvfrom(sockfd, buf, sizeof(buf), 0, NULL, NULL);
+
+        if (length < 0) {
+            perror("netddp_recvfrom");
+            exit(1);
+        }
+
+        /* Is this a RTMP response?  If not, it's just some random
+           packet that's fallen into our socket; ignore it.  */
+        if (length < 5) {
+            /* 4 is DDP type + network number + id length + node.  No valid reply will be
+               shorter than this */
+            continue;
+        }
+
+        if (buf[0] != DDPTYPE_RTMPRD) {
+            continue;
+        }
+
+        /* Skip the DDP type which we checked above */
+        uint8_t *cursor = buf + 1;
+        uint16_t router_net = ntohs(*(uint16_t*)cursor);
+        cursor += 2;
+        uint8_t id_len = *cursor++;
+
+        if (id_len != 8) {
+            fprintf(stderr, "RTMP packet contained bad id length %"PRIu8" - are you "
+                            "living in an alternate timeline where DDP was extended?", id_len);
+            continue;
+        }
+
+        uint8_t router_node = *cursor++;
+        /* If this is a nonextended network, we'll now have run out of packet.  If
+           this is extended, we'll have six more bytes. */
+        uint16_t net_start = 0;
+        uint16_t net_end = 0;
+        bool extended_network = false;
+
+        if (((cursor + 6) - buf) <= length) {
+            extended_network = true;
+            net_start = ntohs(*(uint16_t*)cursor);
+            cursor += 2;
+
+            /* magic number.  Why 0x80?  Who knows! */
+            if ((*cursor++) != 0x80) {
+                fprintf(stderr, "Bad magic byte in RTMP response; giving up.");
+                exit(1);
+            }
+
+            net_end = ntohs(*(uint16_t*)cursor);
+            cursor += 2;
+            /* Another magic byte: I assume this is the RTMP version as it's the same
+               as bytes documented as RTMP version in other packets, but IA isn't
+               actually very forthcoming here. */
+            uint8_t rtmp_version = *cursor++;
+
+            if (rtmp_version != 0x82) {
+                fprintf(stderr, "Bad RTMP version 0x"PRIx8" in response; bailing out.");
+                exit(1);
+            }
+        }
+
+        /* At this point, we should have extracted all the data from the packet.
+           Now print it and quit. */
+        printf("Router: %"PRIu16".%"PRIu8"\n", router_net, router_node);
+
+        if (!extended_network) {
+            printf("Network(s): %"PRIu16"\n", router_net);
+        } else {
+            printf("Network(s): %"PRIu16" - %"PRIu16"\n", net_start, net_end);
+        }
+
+        break;
+    }
 }
 
 /* Send an RTMP Route Data Request (RDR) and wait for a reply. An RTMP RDR solicits
