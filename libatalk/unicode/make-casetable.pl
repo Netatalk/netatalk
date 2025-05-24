@@ -237,7 +237,7 @@ sub make_array{
                    $_[0], $table_no, $char_end - $char_start +1);
 
             for ($char = $char_start ; $char <= $char_end ; $char++) {
-                printf(CHEADER "  0x%04X, /*U\+%04X*/ /*%s*/\n",
+                printf(CHEADER "    0x%04X, /*U\+%04X*/ /*%s*/\n",
                        $table[$char][0],
                        $table[$char][1],
                        $table[$char][2]
@@ -247,15 +247,17 @@ sub make_array{
             print(CHEADER "\n");
 
             if ($char_start == 0x0000) {
-                printf(CSOURCE "    if \( val \<\= 0x%04X)\n",
+                printf(CSOURCE "    if \(val \<\= 0x%04X) {\n",
                        $char_end);
                 printf(CSOURCE "        return %s\_table\_%d\[val]\;\n",
                        $_[0], $table_no);
+                printf(CSOURCE "    }\n");
             } else {
-                printf(CSOURCE "    if \( val \>\= 0x%04X \&\& val \<\= 0x%04X)\n",
+                printf(CSOURCE "    if \(val \>\= 0x%04X \&\& val \<\= 0x%04X) {\n",
                        $char_start, $char_end);
-                printf(CSOURCE "        return %s\_table\_%d\[val-0x%04X\]\;\n",
+                printf(CSOURCE "        return %s\_table\_%d\[val - 0x%04X\]\;\n",
                        $_[0], $table_no, $char_start);
+                printf(CSOURCE "    }\n");
             }
             print(CSOURCE "\n");
 
@@ -297,7 +299,7 @@ sub make_array{
                    $_[0], $table_no, $char_end - $char_start +1);
 
             for ($char = $char_start ; $char <= $char_end ; $char++) {
-                printf(CHEADER "  0x%08X, /*0x%08X*/ /*U\+%06X*/ /*U\+%06X*/ /*%s*/\n",
+                printf(CHEADER "    0x%08X, /*0x%08X*/ /*U\+%06X*/ /*U\+%06X*/ /*%s*/\n",
                        $table_sp[$char][0],
                        $table_sp[$char][1],
                        $table_sp[$char][2],
@@ -308,11 +310,11 @@ sub make_array{
             print(CHEADER "\}\;\n");
             print(CHEADER "\n");
 
-            printf(CSOURCE "    if \( val \>\= 0x%08X \&\& val \<\= 0x%08X)\n",
+            printf(CSOURCE "    if \(val \>\= 0x%08X \&\& val \<\= 0x%08X) {\n",
                    $table_sp[$char_start][1], $table_sp[$char_end][1]);
-            printf(CSOURCE "        return %s\_table\_sp\_%d\[val-0x%08X\]\;\n",
+            printf(CSOURCE "        return %s\_table\_sp\_%d\[val - 0x%08X\]\;\n",
                    $_[0], $table_no, $table_sp[$char_start][1]);
-            print(CSOURCE "\n");
+            printf(CSOURCE "    }\n\n");
 
             $table_no++;
         }
