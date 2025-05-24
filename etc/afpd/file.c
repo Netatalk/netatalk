@@ -2235,17 +2235,17 @@ static struct adouble *find_adouble(const AFPObj *obj, struct vol *vol,
 
     if (path->st_errno) {
         switch (path->st_errno) {
-    case ENOENT:
-                afp_errno = AFPERR_NOID;
+        case ENOENT:
+            afp_errno = AFPERR_NOID;
             break;
 
-    case EPERM:
+        case EPERM:
         case EACCES:
-                    afp_errno = AFPERR_ACCESS;
+            afp_errno = AFPERR_ACCESS;
             break;
 
-    default:
-                afp_errno = AFPERR_PARAM;
+        default:
+            afp_errno = AFPERR_PARAM;
             break;
         }
 
