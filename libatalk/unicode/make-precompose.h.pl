@@ -54,14 +54,14 @@ while (<UNICODEDATA>) {
     if (($Decomposition_Mapping5 ne "") && ($Decomposition_Mapping5 !~ /\</) && ($Decomposition_Mapping5 =~ / /)) {
 	($base, $comb) = split(/ /,$Decomposition_Mapping5);
 
-	$leftbracket  = "  { ";
+	$leftbracket  = "    { ";
 	$rightbracket =" },     ";
 
 	# AFP 3.x Spec
 	if ( ((0x2000  <= hex($code0)) && (hex($code0) <=  0x2FFF))
 	     || ((0xFE30  <= hex($code0)) && (hex($code0) <=  0xFE4F))
 	     || ((0x2F800 <= hex($code0)) && (hex($code0) <= 0x2FA1F))) {
-	    $leftbracket  = "\/\*{ ";
+	    $leftbracket  = "    \/\*{ ";
 	    $rightbracket =" },\*\/   ";
 	}
 
@@ -79,8 +79,8 @@ while (<UNICODEDATA>) {
 	    printf(COMPOSE_SP_TEMP "%s0x%04X%04X, 0x%04X%04X, 0x%04X%04X%s\/\* %s \*\/\n",
 		   $leftbracket, $code0_sp_hi ,$code0_sp_lo, $base_sp_hi, $base_sp_lo, $comb_sp_hi, $comb_sp_lo, $rightbracket, $Name1);
 
-	    $leftbracket  = "\/\*{ ";
-	    $rightbracket =" },\*\/   ";
+	    $leftbracket  = "    \/\*{ ";
+	    $rightbracket = " },\*\/   ";
 	}
 
 	printf(COMPOSE_TEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base), hex($comb), $rightbracket, $Name1);
@@ -214,9 +214,9 @@ printf (CHEADER "\#define COMBBUFLEN %d  \/\* max\(MAXCOMBLEN\,MAXCOMBSPLEN\) \*
 print (CHEADER "\n");
 
 print (CHEADER "static const struct \{\n");
-print (CHEADER "  unsigned int replacement\;\n");
-print (CHEADER "  unsigned int base\;\n");
-print (CHEADER "  unsigned int comb\;\n");
+print (CHEADER "    unsigned int replacement\;\n");
+print (CHEADER "    unsigned int base\;\n");
+print (CHEADER "    unsigned int comb\;\n");
 print (CHEADER "\} precompositions\[\] \= \{\n");
 
 my $precompose_file = "precompose.SORT";
@@ -230,9 +230,9 @@ print (CHEADER "\}\;\n");
 print (CHEADER "\n");
 
 print (CHEADER "static const struct \{\n");
-print (CHEADER "  unsigned int replacement\;\n");
-print (CHEADER "  unsigned int base\;\n");
-print (CHEADER "  unsigned int comb\;\n");
+print (CHEADER "    unsigned int replacement\;\n");
+print (CHEADER "    unsigned int base\;\n");
+print (CHEADER "    unsigned int comb\;\n");
 print (CHEADER "\} decompositions\[\] \= \{\n");
 
 my $decompose_file = "decompose.SORT";
@@ -248,9 +248,9 @@ print (CHEADER "\n");
 
 
 print (CHEADER "static const struct \{\n");
-print (CHEADER "  unsigned int replacement_sp\;\n");
-print (CHEADER "  unsigned int base_sp\;\n");
-print (CHEADER "  unsigned int comb_sp\;\n");
+print (CHEADER "    unsigned int replacement_sp\;\n");
+print (CHEADER "    unsigned int base_sp\;\n");
+print (CHEADER "    unsigned int comb_sp\;\n");
 print (CHEADER "\} precompositions_sp\[\] \= \{\n");
 
 my $precompose_sp_file = "precompose_sp.SORT";
@@ -264,9 +264,9 @@ print (CHEADER "\}\;\n");
 print (CHEADER "\n");
 
 print (CHEADER "static const struct \{\n");
-print (CHEADER "  unsigned int replacement_sp\;\n");
-print (CHEADER "  unsigned int base_sp\;\n");
-print (CHEADER "  unsigned int comb_sp\;\n");
+print (CHEADER "    unsigned int replacement_sp\;\n");
+print (CHEADER "    unsigned int base_sp\;\n");
+print (CHEADER "    unsigned int comb_sp\;\n");
 print (CHEADER "\} decompositions_sp\[\] \= \{\n");
 
 my $decompose_sp_file = "decompose_sp.SORT";
