@@ -36,7 +36,7 @@ name: Tests
 
 jobs:
     formatting:
-        name: Formatting
+        name: Code Formatting
         runs-on: macos-latest
         env:
           HOMEBREW_NO_INSTALL_CLEANUP: 1
@@ -56,6 +56,17 @@ jobs:
           run: |
               ./contrib/shell_utils/codefmt.sh -v -s C
               ./contrib/shell_utils/codefmt.sh -v -s meson
+
+    markdown-linting:
+        name: Markdown Linting
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v4
+          with:
+            fetch-depth: 0
+        - uses: DavidAnson/markdownlint-cli2-action@v20
+          with:
+            globs: '**/*.md'
 
     static_analysis:
         name: Static Analysis
