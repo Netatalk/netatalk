@@ -430,7 +430,7 @@ STATIC void test49()
         goto fin;
     }
 
-    sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name, file);
+    snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, name, file);
     unlink(temp);
     fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, dir, file,
                        OPENACC_WR | OPENACC_RD);
@@ -675,7 +675,7 @@ STATIC void test321()
         goto test_exit;
     }
 
-    sprintf(temp, "%s/%s", Path, file);
+    snprintf(temp, sizeof(temp), "%s/%s", Path, file);
 
     if (chmod(temp, 0444) < 0) {
         if (!Quiet) {
@@ -686,7 +686,7 @@ STATIC void test321()
         goto fin;
     }
 
-    sprintf(temp, "%s/.AppleDouble/%s", Path, file);
+    snprintf(temp, sizeof(temp), "%s/.AppleDouble/%s", Path, file);
 
     if (!Quiet) {
         fprintf(stdout, "unlink %s \n", temp);
@@ -810,7 +810,7 @@ STATIC void test372()
         test_failed();
     }
 
-    sprintf(temp, "%s/%s", Path, name);
+    snprintf(temp, sizeof(temp), "%s/%s", Path, name);
     fd = open(temp, O_RDWR, 0666);
 
     if (fd < 0) {
@@ -914,7 +914,7 @@ STATIC void test388()
         test_failed();
     }
 
-    sprintf(temp, "%s/%s", Path, name);
+    snprintf(temp, sizeof(temp), "%s/%s", Path, name);
     fd = open(temp, O_RDWR, 0666);
 
     if (fd < 0) {
@@ -1018,7 +1018,7 @@ STATIC void test392()
         test_failed();
     }
 
-    sprintf(temp, "%s/%s", Path, name);
+    snprintf(temp, sizeof(temp), "%s/%s", Path, name);
     fd = open(temp, O_RDWR, 0666);
 
     if (fd < 0) {
@@ -1136,7 +1136,7 @@ STATIC void test415()
         goto fin;
     }
 
-    sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name, file);
+    snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, name, file);
 
     if (unlink(temp)) {
         test_nottested();
@@ -1265,6 +1265,7 @@ STATIC void test237()
     char *name2 = "passwd";
     char *name3 = "t237 dir/passwd";
     char *name4 = "/etc/passwd";
+    int name4_len = 11;
     int testdir;
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
@@ -1315,7 +1316,7 @@ STATIC void test237()
         goto fin;
     }
 
-    if (FPRead(Conn, fork, 0, strlen(name4), Data)) {
+    if (FPRead(Conn, fork, 0, name4_len, Data)) {
         test_failed();
         goto fin;
     }
@@ -1346,6 +1347,7 @@ STATIC void test238()
     char *name2 = "link";
     char *name3 = "t238 dir/link";
     char *verylonglinkname = "verylonglinkname";
+    int verylonglinkname_len = 16;
     int  testdir;
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
@@ -1405,12 +1407,12 @@ STATIC void test238()
         goto fin;
     }
 
-    if (FPRead(Conn, fork, 0, strlen(verylonglinkname), Data)) {
+    if (FPRead(Conn, fork, 0, verylonglinkname_len, Data)) {
         test_failed();
         goto fin;
     }
 
-    Data[strlen(verylonglinkname)] = 0;
+    Data[verylonglinkname_len] = 0;
 
     if (!Quiet) {
         fprintf(stdout, "readlink: %s\n", Data);
@@ -1438,6 +1440,7 @@ STATIC void test431()
     uint16_t vol = VolID;
     char cmd[8192];
     const char *teststring = "test\n";
+    int teststring_len = 5;
     struct afp_filedir_parms filedir = { 0 };
     DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -1536,9 +1539,9 @@ STATIC void test431()
         goto fin;
     }
 
-    FAIL(FPRead(Conn, fork1, 0, strlen(teststring), Data))
+    FAIL(FPRead(Conn, fork1, 0, teststring_len, Data))
 
-    if (memcmp(Data, teststring, strlen(teststring)) != 0) {
+    if (memcmp(Data, teststring, teststring_len) != 0) {
         if (!Quiet) {
             fprintf(stdout, "FPOpenFork:test431: conversion failed\n");
         }
