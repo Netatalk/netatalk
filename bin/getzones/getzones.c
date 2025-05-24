@@ -329,7 +329,7 @@ void do_getnetinfo(struct sockaddr_at *dest, const char *zone_to_confirm,
         exit(1);
     }
 
-    ret = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
+    ret = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr *)dest,
                         sizeof(struct sockaddr_at));
 
     if (ret < 0) {
@@ -378,9 +378,9 @@ static void print_gnireply(ssize_t len, uint8_t *buf, charset_t charset)
     /* skip over DDP type and ZIP operation, which we checked above */
     cursor += 2;
     uint8_t flags = *cursor++;
-    uint16_t net_start = ntohs(*((uint16_t*)cursor));
+    uint16_t net_start = ntohs(*((uint16_t *)cursor));
     cursor += 2;
-    uint16_t net_end = ntohs(*((uint16_t*)cursor));
+    uint16_t net_end = ntohs(*((uint16_t *)cursor));
     cursor += 2;
     printf("Network range: %"PRIu16"-%"PRIu16"\n", net_start, net_end);
     /* Decode the flags */
@@ -492,7 +492,7 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
     *cursor++ = ZIPOP_QUERY;
     /* Network count = 1; we only support querying one network at a time */
     *cursor++ = 1;
-    *((uint16_t*)cursor) = htons(network);
+    *((uint16_t *)cursor) = htons(network);
     cursor += 2;
     /* Send the thing */
     int sockfd = netddp_open(&laddr, NULL);
@@ -502,7 +502,7 @@ void do_query(struct sockaddr_at *dest, uint16_t network, charset_t charset)
         exit(1);
     }
 
-    length = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr*)dest,
+    length = netddp_sendto(sockfd, buf, cursor - buf, 0, (struct sockaddr *)dest,
                            sizeof(struct sockaddr_at));
 
     if (length < 0) {
@@ -573,7 +573,7 @@ static int print_and_count_zones_in_reply(uint8_t *buf, size_t len,
 
         /* Can we read a network number without falling off the end of the packet? */
         if ((cursor + 2) - buf <= len) {
-            network_number = ntohs(*(uint16_t*)cursor);
+            network_number = ntohs(*(uint16_t *)cursor);
             cursor += 2;
         } else {
             break;
