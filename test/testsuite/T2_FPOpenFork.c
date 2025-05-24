@@ -16,7 +16,8 @@ STATIC void test3()
 {
     char *name = "t3.txt";
     uint16_t bitmap = 0;
-    int fork1, fork2;
+    uint16_t fork1;
+    uint16_t fork2;
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -77,7 +78,8 @@ STATIC void test4()
 {
     char *name = "t4.txt";
     uint16_t bitmap = 0;
-    int fork1, fork2;
+    uint16_t fork1;
+    uint16_t fork2;
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -139,7 +141,8 @@ STATIC void test7()
 {
     char *name = "t7.txt";
     uint16_t bitmap = 0;
-    int fork1, fork2;
+    uint16_t fork1;
+    uint16_t fork2;
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -202,7 +205,8 @@ STATIC void test47()
     char *file = "t47 file.txt";
     uint16_t vol = VolID;
     uint16_t bitmap = 0;
-    int fork = 0, fork1 = 0;
+    uint16_t fork = 0;
+    uint16_t fork1 = 0;
     int dir;
     ENTER_TEST
 
@@ -221,7 +225,7 @@ STATIC void test47()
 
     if (!fork) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, dir, file,
@@ -229,7 +233,7 @@ STATIC void test47()
 
     if (fork1) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -237,12 +241,12 @@ STATIC void test47()
 
     if (!fork) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, dir, file,
@@ -250,19 +254,19 @@ STATIC void test47()
 
     if (fork1) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, dir, file, OPENACC_RD);
 
     if (!fork1) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     FAIL(FPCloseFork(Conn, fork1))
@@ -270,7 +274,7 @@ STATIC void test47()
 
     if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -282,7 +286,7 @@ STATIC void test47()
 
     if (!fork) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT,
@@ -290,7 +294,7 @@ STATIC void test47()
 
     if (fork1) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -308,7 +312,7 @@ STATIC void test47()
 
     if (!fork) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT,
@@ -316,7 +320,7 @@ STATIC void test47()
 
     if (fork1) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -327,7 +331,7 @@ STATIC void test47()
     if (unlink(temp)) {
         fprintf(stdout, "\tFAILED Resource fork not there\n");
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT,
@@ -335,12 +339,12 @@ STATIC void test47()
 
     if (!fork) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     if (ntohl(AFPERR_EOF) != FPRead(Conn, fork, 0, 100, Data)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT,
@@ -351,17 +355,17 @@ STATIC void test47()
      */
     if (!fork1) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     if (FPWrite(Conn, fork1, 0, 10, Data, 0)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     if (FPRead(Conn, fork, 0, 10, Data)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     FAIL(FPCloseFork(Conn, fork))
@@ -369,7 +373,7 @@ STATIC void test47()
 
     if (FPWrite(Conn, fork1, 0, 20, Data, 0x80)) {
         test_failed();
-        goto fin1;
+        goto fin;
     }
 
     if (ntohl(AFPERR_PARAM) != FPRead(Conn, fork, 0, 30, Data)) {
@@ -377,7 +381,7 @@ STATIC void test47()
     }
 
 #endif
-fin1:
+fin:
 
     if (fork1) {
         FPCloseFork(Conn, fork1);
@@ -387,7 +391,6 @@ fin1:
         FPCloseFork(Conn, fork);
     }
 
-fin:
     delete_ro_adouble(vol, dir, file);
 test_exit:
     exit_test("FPOpenFork:test47: open read only file read only then read write in a read only folder");
@@ -399,7 +402,8 @@ STATIC void test49()
     char *name = "t49 folder";
     char *file = "t49 file.txt";
     uint16_t bitmap = 0;
-    int fork, fork1;
+    uint16_t fork;
+    uint16_t fork1;
     uint16_t vol = VolID;
     int dir;
     ENTER_TEST
@@ -469,9 +473,9 @@ STATIC void test152()
     uint16_t bitmap = 0;
     char *name = "t152 ro AppleDouble";
     char *file = "t152 test.pdf";
-    int fork;
+    uint16_t fork;
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     unsigned int ret;
     ENTER_TEST
 
@@ -517,7 +521,7 @@ STATIC void test153()
 {
     char *name = "t153.txt";
     uint16_t bitmap = 0;
-    int fork;
+    uint16_t fork;
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -558,7 +562,7 @@ STATIC void test157()
 {
     char *name = "t157.txt";
     uint16_t bitmap = 0;
-    int fork;
+    uint16_t fork;
     uint16_t vol = VolID;
     ENTER_TEST
 
@@ -601,7 +605,7 @@ STATIC void test156()
 {
     int dir;
     uint16_t bitmap = 0;
-    int fork;
+    uint16_t fork;
     char *name = "t156 ro AppleDouble";
     char *file = "t156 test.pdf";
     uint16_t vol = VolID;
@@ -650,7 +654,7 @@ test_exit:
 STATIC void test321()
 {
     uint16_t bitmap = 0;
-    int fork;
+    uint16_t fork;
     char *file = "t321 test.txt";
     uint16_t vol = VolID;
     int fd;
@@ -746,7 +750,7 @@ STATIC void test372()
     char *name = "t372 file name.txt";
     char data[20];
     uint16_t vol = VolID;
-    int fork;
+    uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     DSI *dsi = &Conn->dsi;
@@ -850,7 +854,7 @@ STATIC void test388()
     char *name = "t388 file name.rtf";
     char data[20];
     uint16_t vol = VolID;
-    int fork;
+    uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     DSI *dsi = &Conn->dsi;
@@ -954,7 +958,7 @@ STATIC void test392()
     char *name = "t392 file name.pdf";
     char data[20];
     uint16_t vol = VolID;
-    int fork;
+    uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     DSI *dsi = &Conn->dsi;
@@ -1058,7 +1062,7 @@ STATIC void test411()
     char *name = "t411 folder";
     char *file = "t411 file.txt";
     uint16_t bitmap = 0;
-    int fork;
+    uint16_t fork;
     uint16_t vol = VolID;
     int dir;
     ENTER_TEST
@@ -1111,8 +1115,8 @@ STATIC void test415()
     char *name = "t415 folder";
     char *file = "t415 file.txt";
     uint16_t bitmap = 0;
-    int fork;
-    int fork1;
+    uint16_t fork;
+    uint16_t fork1;
     uint16_t vol = VolID;
     int dir;
     ENTER_TEST
@@ -1173,7 +1177,7 @@ STATIC void test236()
     char *name3 = "t236 dir/etc";
     char *name4 = "passwd";
     int testdir, etcdir;
-    int fork = 0;
+    uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
     struct afp_filedir_parms filedir;
     DSI *dsi = &Conn->dsi;
@@ -1262,7 +1266,7 @@ STATIC void test237()
     char *name3 = "t237 dir/passwd";
     char *name4 = "/etc/passwd";
     int testdir;
-    int fork = 0;
+    uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
     struct afp_filedir_parms filedir;
     DSI *dsi = &Conn->dsi;
@@ -1343,7 +1347,7 @@ STATIC void test238()
     char *name3 = "t238 dir/link";
     char *verylonglinkname = "verylonglinkname";
     int  testdir;
-    int fork = 0;
+    uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
     struct afp_filedir_parms filedir;
     DSI *dsi = &Conn->dsi;
@@ -1430,11 +1434,10 @@ test_exit:
 STATIC void test431()
 {
     char *name = "t431";
-    int fork1 = 0;
+    uint16_t fork1 = 0;
     uint16_t vol = VolID;
     char cmd[8192];
-    char *teststring = "test\n";
-    int ofs = 3 * sizeof(uint16_t);
+    const char *teststring = "test\n";
     struct afp_filedir_parms filedir = { 0 };
     DSI *dsi = &Conn->dsi;
     ENTER_TEST
