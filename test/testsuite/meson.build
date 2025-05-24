@@ -1,11 +1,5 @@
 subdir('data')
 
-t2_fpopenfork_c = configure_file(
-    input: 'T2_FPOpenFork.c.in',
-    output: 'T2_FPOpenFork.c',
-    configuration: cdata,
-)
-
 afptest_external_deps = []
 
 if threads.found()
@@ -157,14 +151,15 @@ spectest_sources = [
     'T2_Dircache_attack.c',
     'T2_FPRead.c',
     'T2_FPSetForkParms.c',
+    'T2_FPOpenFork.c',
     'encoding_test.c',
-    t2_fpopenfork_c,
 ]
 
 executable(
     'afp_spectest',
     spectest_sources,
     include_directories: root_includes,
+    c_args: ['-D_PATH_TESTDATA_DIR="' + datadir + '/netatalk/test-data"'],
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
