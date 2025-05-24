@@ -1012,8 +1012,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
     /* 1 */
     switch (ret.m_type) {
-case 2:
-            data++;
+    case 2:
+        data++;
         len = (unsigned char) * data++;
         size = 2;
 
@@ -1024,22 +1024,22 @@ case 2:
 
         break;
 
-case 3:
-            if (vol->v_obj->afp_version >= 30) {
-                data++;
-                memcpy(&hint, data, sizeof(hint));
-                hint = ntohl(hint);
-                data += sizeof(hint);
-                memcpy(&len16, data, sizeof(len16));
-                len = ntohs(len16);
-                data += 2;
-                size = 7;
-                break;
-            }
+    case 3:
+        if (vol->v_obj->afp_version >= 30) {
+            data++;
+            memcpy(&hint, data, sizeof(hint));
+            hint = ntohl(hint);
+            data += sizeof(hint);
+            memcpy(&len16, data, sizeof(len16));
+            len = ntohs(len16);
+            data += 2;
+            size = 7;
+            break;
+        }
 
     /* else it's an error */
-default:
-            afp_errno = AFPERR_PARAM;
+    default:
+        afp_errno = AFPERR_PARAM;
         return NULL;
     }
 
