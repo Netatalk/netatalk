@@ -1395,7 +1395,7 @@ STATIC void test431()
     }
 
     /* Copy resource fork */
-    if (snprintf(cmd, sizeof(cmd), "cp @datadir@/netatalk/test-data/test431_data %s/.AppleDouble/%s", Path, name) > sizeof(cmd)) {
+    if (snprintf(cmd, sizeof(cmd), "cp %s/test431_data %s/.AppleDouble/%s", _PATH_TESTDATA_DIR, Path, name) > sizeof(cmd)) {
 	if (!Quiet) {
 		fprintf(stdout,"FPOpenFork:test431: path too long\n");
 	}
