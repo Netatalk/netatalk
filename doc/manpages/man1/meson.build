@@ -16,6 +16,7 @@ if have_appletalk
         'getzones',
         'nbp',
         'pap',
+        'rtmpqry',
     ]
 endif
 
