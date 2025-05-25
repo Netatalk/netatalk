@@ -700,10 +700,9 @@ jobs:
               gcc \
               libevent \
               libgcrypt \
+              meson \
               ninja \
-              pkg-config \
-              python/pip
-            pip install meson
+              pkg-config
             curl --location -o cmark.tar.gz \
               https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
             curl --location -o iniparser.tar.gz \
