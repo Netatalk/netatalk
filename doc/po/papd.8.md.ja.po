@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.2.2dev\n"
-"POT-Creation-Date: 2025-04-27 07:37+0200\n"
+"Project-Id-Version: Netatalk 4.3.0dev\n"
+"POT-Creation-Date: 2025-05-25 10:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -22,9 +22,9 @@ msgstr ""
 #: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
 #: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
 #: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
-#: manpages/man1/pap.1.md:1 manpages/man3/atalk_aton.3.md:1
-#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
-#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man1/pap.1.md:1 manpages/man1/rtmpqry.1.md:1
+#: manpages/man3/atalk_aton.3.md:1 manpages/man3/nbp_name.3.md:1
+#: manpages/man4/atalk.4.md:1 manpages/man5/afp_signature.conf.5.md:1
 #: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
 #: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
 #: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
@@ -44,14 +44,14 @@ msgstr "名前"
 #: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
 #: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
 #: manpages/man1/macusers.1.md:5 manpages/man1/nbp.1.md:5
-#: manpages/man1/pap.1.md:5 manpages/man3/atalk_aton.3.md:5
-#: manpages/man3/nbp_name.3.md:5 manpages/man4/atalk.4.md:5
-#: manpages/man5/afp.conf.5.md:5 manpages/man8/a2boot.8.md:5
-#: manpages/man8/afpd.8.md:5 manpages/man8/atalkd.8.md:5
-#: manpages/man8/cnid_dbd.8.md:5 manpages/man8/cnid_metad.8.md:5
-#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
-#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
-#: manpages/man8/timelord.8.md:5
+#: manpages/man1/pap.1.md:5 manpages/man1/rtmpqry.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
 #, no-wrap
 msgid "Synopsis"
 msgstr "概要"
@@ -60,12 +60,12 @@ msgstr "概要"
 #: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
 #: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
 #: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
-#: manpages/man1/afptest.1.md:19 manpages/man1/asip-status.1.md:13
+#: manpages/man1/afptest.1.md:22 manpages/man1/asip-status.1.md:13
 #: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
 #: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:13
-#: manpages/man1/pap.1.md:9 manpages/man3/atalk_aton.3.md:15
-#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
-#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man1/pap.1.md:9 manpages/man1/rtmpqry.1.md:9
+#: manpages/man3/atalk_aton.3.md:14 manpages/man3/nbp_name.3.md:16
+#: manpages/man4/atalk.4.md:10 manpages/man5/afp_signature.conf.5.md:5
 #: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
 #: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
 #: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
@@ -89,10 +89,10 @@ msgid "**-d**\n"
 msgstr ""
 
 #. type: Title #
-#: manpages/man1/ad.1.md:270 manpages/man1/afptest.1.md:172
-#: manpages/man1/dbd.1.md:59 manpages/man1/nbp.1.md:54
-#: manpages/man5/afp_signature.conf.5.md:46
-#: manpages/man5/afp_voluuid.conf.5.md:38 manpages/man8/papd.8.md:132
+#: manpages/man1/ad.1.md:270 manpages/man1/afptest.1.md:175
+#: manpages/man1/dbd.1.md:59 manpages/man1/nbp.1.md:86
+#: manpages/man5/afp_signature.conf.5.md:44
+#: manpages/man5/afp_voluuid.conf.5.md:36 manpages/man8/papd.8.md:130
 #, no-wrap
 msgid "See also"
 msgstr "参照"
@@ -100,20 +100,20 @@ msgstr "参照"
 #. type: Title #
 #: manpages/man1/ad.1.md:274 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
-#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:31
-#: manpages/man1/afptest.1.md:176 manpages/man1/asip-status.1.md:106
-#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:37
-#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:58
-#: manpages/man1/pap.1.md:97 manpages/man3/atalk_aton.3.md:29
-#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
-#: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1353
+#: manpages/man1/afppasswd.1.md:72 manpages/man1/afpstats.1.md:31
+#: manpages/man1/afptest.1.md:179 manpages/man1/asip-status.1.md:106
+#: manpages/man1/dbd.1.md:63 manpages/man1/getzones.1.md:88
+#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:90
+#: manpages/man1/pap.1.md:97 manpages/man1/rtmpqry.1.md:56
+#: manpages/man3/atalk_aton.3.md:28 manpages/man3/nbp_name.3.md:42
+#: manpages/man4/atalk.4.md:49 manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1339
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
-#: manpages/man8/afpd.8.md:116 manpages/man8/atalkd.8.md:83
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:83
 #: manpages/man8/cnid_dbd.8.md:145 manpages/man8/cnid_metad.8.md:48
-#: manpages/man8/macipgw.8.md:108 manpages/man8/netatalk.8.md:52
-#: manpages/man8/papd.8.md:136 manpages/man8/papstatus.8.md:53
+#: manpages/man8/macipgw.8.md:107 manpages/man8/netatalk.8.md:52
+#: manpages/man8/papd.8.md:134 manpages/man8/papstatus.8.md:53
 #: manpages/man8/timelord.8.md:42
 #, no-wrap
 msgid "Author"
@@ -122,19 +122,19 @@ msgstr "著者"
 #. type: Plain text
 #: manpages/man1/ad.1.md:276 manpages/man1/addump.1.md:75
 #: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
-#: manpages/man1/afppasswd.1.md:76 manpages/man1/afpstats.1.md:33
-#: manpages/man1/afptest.1.md:178 manpages/man1/asip-status.1.md:108
-#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:39
-#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:60
-#: manpages/man1/pap.1.md:99 manpages/man3/atalk_aton.3.md:31
-#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
-#: manpages/man5/afp_signature.conf.5.md:52
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1355
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:33
+#: manpages/man1/afptest.1.md:181 manpages/man1/asip-status.1.md:108
+#: manpages/man1/dbd.1.md:65 manpages/man1/getzones.1.md:90
+#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:92
+#: manpages/man1/pap.1.md:99 manpages/man1/rtmpqry.1.md:58
+#: manpages/man3/atalk_aton.3.md:30 manpages/man3/nbp_name.3.md:44
+#: manpages/man4/atalk.4.md:51 manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1341
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
-#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:85
+#: manpages/man8/afpd.8.md:120 manpages/man8/atalkd.8.md:85
 #: manpages/man8/cnid_dbd.8.md:147 manpages/man8/cnid_metad.8.md:50
-#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:138
+#: manpages/man8/netatalk.8.md:54 manpages/man8/papd.8.md:136
 #: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
 msgid ""
 "[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
@@ -142,48 +142,37 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
-#: manpages/man1/afpldaptest.1.md:16 manpages/man1/afppasswd.1.md:35
+#: manpages/man1/afpldaptest.1.md:16 manpages/man1/afppasswd.1.md:33
 #: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:17
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
-#: manpages/man1/pap.1.md:29 manpages/man8/a2boot.8.md:32
-#: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
-#: manpages/man8/cnid_dbd.8.md:57 manpages/man8/cnid_metad.8.md:18
-#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:17
-#: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
-#: manpages/man8/timelord.8.md:23
+#: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
+#: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
+#: manpages/man8/atalkd.8.md:26 manpages/man8/cnid_dbd.8.md:57
+#: manpages/man8/cnid_metad.8.md:18 manpages/man8/macipgw.8.md:38
+#: manpages/man8/netatalk.8.md:17 manpages/man8/papd.8.md:37
+#: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:23
 #, no-wrap
 msgid "Options"
 msgstr "オプション"
 
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:20 manpages/man5/afp_signature.conf.5.md:21
-#: manpages/man5/afp_voluuid.conf.5.md:20 manpages/man5/afp.conf.5.md:339
-#: manpages/man5/afp.conf.5.md:363 manpages/man5/afp.conf.5.md:376
-#: manpages/man5/afp.conf.5.md:391 manpages/man5/afp.conf.5.md:694
-#: manpages/man5/afp.conf.5.md:1214 manpages/man5/afp.conf.5.md:1252
-#: manpages/man8/papd.8.md:96 manual/Configuration.md:114
-#, no-wrap
-msgid "> **NOTE**\n"
-msgstr "> **注記**\n"
-
 #. type: Title #
-#: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:88
+#: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:90
 #: manpages/man8/atalkd.8.md:75 manpages/man8/netatalk.8.md:42
-#: manpages/man8/papd.8.md:99 manpages/man8/papstatus.8.md:43
+#: manpages/man8/papd.8.md:97 manpages/man8/papstatus.8.md:43
 #, no-wrap
 msgid "Files"
 msgstr "ファイル"
 
 #. type: Title #
 #: manpages/man5/papd.conf.5.md:158 manpages/man8/cnid_metad.8.md:34
-#: manpages/man8/papd.8.md:117
+#: manpages/man8/papd.8.md:115
 #, no-wrap
 msgid "Caveats"
 msgstr "注意事項"
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
-#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:68
+#: manpages/man8/cnid_dbd.8.md:60 manpages/man8/macipgw.8.md:67
 #: manpages/man8/netatalk.8.md:28 manpages/man8/papd.8.md:58
 #: manpages/man8/timelord.8.md:39
 #, no-wrap
@@ -199,7 +188,7 @@ msgid "> Print version information and exit.\n"
 msgstr "> バージョン情報を出力して終了する。\n"
 
 #. type: Plain text
-#: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:48
+#: manpages/man8/atalkd.8.md:42 manpages/man8/macipgw.8.md:47
 #: manpages/man8/papd.8.md:44
 #, no-wrap
 msgid "**-f** *configfile*\n"
@@ -320,7 +309,7 @@ msgid "> Specifies the file in which **papd** stores its process id.\n"
 msgstr "> **papd** がプロセス ID を保存するファイルを指定する。\n"
 
 #. type: Title ##
-#: manpages/man8/papd.8.md:61 manual/Configuration.md:339
+#: manpages/man8/papd.8.md:61 manual/Configuration.md:335
 #, no-wrap
 msgid "Authentication"
 msgstr "認証"
@@ -392,43 +381,43 @@ msgstr ""
 "有効なユーザー名と正しいパスワードの両方が必要。"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:98
+#: manpages/man8/papd.8.md:96
 #, no-wrap
-msgid "> Print authentication is only supported on Mac OS 9 and earlier.\n"
-msgstr "> 印刷認証は、Mac OS 9 以前でのみサポートされている。\n"
+msgid "> ***NOTE:*** Print authentication is only supported on Mac OS 9 and earlier.\n"
+msgstr "> **【注記】** 印刷認証は、Mac OS 9 以前でのみサポートされている。\n"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:102
+#: manpages/man8/papd.8.md:100
 #, no-wrap
 msgid "*papd.conf*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:104
+#: manpages/man8/papd.8.md:102
 #, no-wrap
 msgid "> Default configuration file.\n"
 msgstr "> デフォルトの設定ファイル。\n"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:106
+#: manpages/man8/papd.8.md:104
 #, no-wrap
 msgid "*/etc/printcap*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:108
+#: manpages/man8/papd.8.md:106
 #, no-wrap
 msgid "> Printer capabilities database.\n"
 msgstr "> プリンタ機能データベース。\n"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:110
+#: manpages/man8/papd.8.md:108
 #, no-wrap
 msgid "*.ppd*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:116
+#: manpages/man8/papd.8.md:114
 #, no-wrap
 msgid ""
 "> PostScript Printer Description file. papd answers configuration and font\n"
@@ -444,7 +433,7 @@ msgstr ""
 "はデフォルトの応答を返すため、クライアントが過度に大きなジョブを送信する可能性がある。\n"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:127
+#: manpages/man8/papd.8.md:125
 #, no-wrap
 msgid ""
 "**papd** accepts characters with the high bit set (a full 8-bits) from the\n"
@@ -458,7 +447,7 @@ msgid ""
 msgstr "**papd** は、クライアントから上位ビットが設定された文字 (完全な 8 ビット)  を受け入れるが、一部の PostScript プリンタ (Apple の LaserWriter ファミリを含む) は、デフォルトでシリアル インターフェイスで 7 ビット文字のみを受け入れる。TCP/IP メソッド (リモート LPR またはソケット)  経由でアクセスされる一部のプリンタにも同じことが当てはまる。プリンタを 8 ビット全体を受け入れるように設定するか、特別な予防措置を講じて印刷ジョブのエンコードを変換する必要がある (たとえば、CUPS 1.1.19 以降を使用している場合は、*co=\"protocol=BCP\"* を使用する)。\n"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:131
+#: manpages/man8/papd.8.md:129
 msgid ""
 "When printing clients run Mac OS X 10.2 or later, take care that PPDs do not "
 "make use of *\\*cupsFilter:* comments unless the appropriate filters are "
@@ -469,6 +458,6 @@ msgstr ""
 "トを使用しないように注意してください。"
 
 #. type: Plain text
-#: manpages/man8/papd.8.md:135
+#: manpages/man8/papd.8.md:133
 msgid "lp(1), lpr(1), lprm(1), printcap(5), lpc(8), lpd(8), papd.conf(8)"
 msgstr ""

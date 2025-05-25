@@ -1,21 +1,20 @@
-# Japanese translations for Netatalk documentation
-# Netatalk ドキュメントの日本語訳
-# Copyright (C) 2015-2017 Eiichirou UDA
-# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Japanese translations for Netatalk package
+# Copyright (C) 2025 Contributors to the Netatalk Project
 # This file is distributed under the same license as the Netatalk package.
+# Automatically generated, 2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0dev\n"
-"POT-Creation-Date: 2025-05-25 10:43+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"POT-Creation-Date: 2025-05-25 09:45+0200\n"
+"PO-Revision-Date: 2025-05-25 09:45+0200\n"
+"Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Title #
 #: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
@@ -84,20 +83,6 @@ msgstr "説明"
 #: manpages/man1/rtmpqry.1.md:18
 #, no-wrap
 msgid "**-a**\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/ad.1.md:120 manpages/man1/ad.1.md:173
-#: manpages/man1/afppasswd.1.md:44 manpages/man1/dbd.1.md:24
-#, no-wrap
-msgid "**-f**\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/ad.1.md:133 manpages/man1/ad.1.md:185
-#: manpages/man1/afppasswd.1.md:52
-#, no-wrap
-msgid "**-n**\n"
 msgstr ""
 
 #. type: Title #
@@ -188,146 +173,104 @@ msgid "Examples"
 msgstr "例"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:4
-msgid "afppasswd — AFP password maintenance utility"
-msgstr "afppasswd — AFP パスワード保守ユーティリティ"
+#: manpages/man1/rtmpqry.1.md:4
+msgid "rtmpqry — query AppleTalk routing information"
+msgstr "rtmpqrt - AppleTalkルーティング情報を照会する"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:8
+#: manpages/man1/rtmpqry.1.md:8
 #, no-wrap
-msgid "**afppasswd** [-acfn] [-p *afppasswd file*] [-u *minimum uid*] [-w *password string*]\n"
+msgid "**rtmpqry** [-a | -r] [ -A local_address ] [remote_address]\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:14
+#: manpages/man1/rtmpqry.1.md:14
 #, no-wrap
 msgid ""
-"**afppasswd** creates and maintains an *afppasswd* file, which supplies the\n"
-"user credentials for the \"Randnum exchange\" and \"2-Way Randnum exchange\"\n"
-"User Authentication Modules.\n"
-msgstr "**afppasswd** は、「Randnum exchange」および「2-Way Randnum exchange」ユーザー認証モジュールのユーザー資格情報を提供する afppasswd ファイルを作成および管理する。\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:18
-#, no-wrap
-msgid ""
-"**afppasswd** can either be called by root with parameters to manage all\n"
-"user credentials, or by local system users with no parameters to change\n"
-"their own AFP passwords.\n"
-msgstr "**afppasswd**は、rootがパラメータ付きで呼び出すことも、一般のユーザが自分のAFPパスワードを変更するためにパラメータなしで呼び出すこともできる。\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:23
-#, no-wrap
-msgid ""
-"> ***NOTE:*** With this utility you can only change the passwords used by these two\n"
-"Random Number UAMs. As they provide only weak password encryption, their\n"
-"use is discouraged unless one has to support very old AFP clients that\n"
-"can not deal with the more secure \"DHX\" or \"DHX2\" UAMs.\n"
+"**rtmpqry** is used to query and display the routing information that an\n"
+"AppleTalk router is advertising using the RTMP protocol.  By default,\n"
+"it queries the local atalkd instance.\n"
 msgstr ""
-"> 【注記】 このユーティリティでは、Random Number UAMの2種類が利用するパスワードのみ変更できる。\n"
-"かなり弱いパスワード暗号化を提供するため、非常に古いAFPクライアントをサポートしなければならない限り、\n"
-"より安全な「DHX」（「DHCAST128」）及び「DHX2」UAMを推奨する。\n"
+"**rtmpqry** は、AppleTalk ルーターが RTMP プロトコルを使用してアドバタイズしている\n"
+"ルーティング情報を照会し、表示するために使用される。デフォルトでは、ローカルの atalkd インスタンスに照会する。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:27
-msgid "Local user changing their own password:"
-msgstr "ローカルユーザが自分のパスワードを変更する:"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:32
+#: manpages/man1/rtmpqry.1.md:25
 #, no-wrap
 msgid ""
-"    example% afppasswd\n"
-"    Enter NEW AFP password: (hidden)\n"
-"    Enter NEW AFP password again: (hidden)\n"
-"    afppasswd: updated password.\n"
+"> Query all routes, do not suppress those that would be dropped by split-\n"
+"horizon processing.  Generally (and if this option is omitted), routers\n"
+"do not advertise routes where, if you sent it a packet, it would send that\n"
+"packet straight back out the same interface to another router, as this would\n"
+"be pointless.  However, for visibility into the structure of the internetwork,\n"
+"it is sometimes useful to see all the routes.\n"
 msgstr ""
-"    example% afppasswd\n"
-"    Enter NEW AFP password: (非表示)\n"
-"    Enter NEW AFP password again: (非表示)\n"
-"    afppasswd: updated password.\n"
+"> すべてのルートを照会し、スプリットホライズン処理によってドロップされるルートは抑制しない。\n"
+"一般的に（このオプションが省略されている場合も）、ルータは、意味はないためにパケットを送信した場合に\n"
+"そのパケットが同じインターフェースから別のルータに直接返送されるようなルートをアドバタイズしない。\n"
+"ただし、インターネットワークの構造を可視化するために、すべてのルートを確認することが有用な場合がある。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:38
+#: manpages/man1/rtmpqry.1.md:27
 #, no-wrap
-msgid "> Add a new user to the *afppasswd* file.\n"
-msgstr "> *afppasswd*ファイルに新しいユーザを追加する。\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:40 manpages/man1/dbd.1.md:20
-#: manpages/man1/getzones.1.md:48 manpages/man1/pap.1.md:38
-#, no-wrap
-msgid "**-c**\n"
+msgid "**-r**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:42
+#: manpages/man1/rtmpqry.1.md:29
 #, no-wrap
-msgid "> Create and/or initialize *afppasswd* file or specific user.\n"
-msgstr "> *afppasswd*ファイルまたは特定ユーザを作成する。(さらに/または)初期化する。\n"
+msgid "> Request just the RTMP network metadata, not any routes.\n"
+msgstr "> ルートではなく、RTMPネットワークメタデータのみをリクエストする。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:46
+#: manpages/man1/rtmpqry.1.md:31
 #, no-wrap
-msgid "> Force the current action.\n"
-msgstr "> 現在の動作を強制する。\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:48
-#, no-wrap
-msgid "**-p** *path*\n"
-msgstr "**-p** *パス*\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:50
-#, no-wrap
-msgid "> Path to *afppasswd* file.\n"
-msgstr "> *afppasswd*ファイルのパス。\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:56
-#, no-wrap
-msgid ""
-"> If cracklib support is built into *netatalk* this option will cause\n"
-"cracklib checking to be disabled, if the superuser does not want to have\n"
-"the password run against the cracklib dictionary.\n"
-msgstr "> もしcracklibサポートが*netatalk*に組み込まれており、cracklib辞書に対して実行されたパスワードを持つことをスーパユーザが望まないなら、このオプションはcracklibチェックを無効にできるだろう。\n"
-
-#. type: Plain text
-#: manpages/man1/afppasswd.1.md:58
-#, no-wrap
-msgid "**-u** *minimum uid*\n"
+msgid "**-A**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:61
+#: manpages/man1/rtmpqry.1.md:33
+#, no-wrap
+msgid "> Bind to the local AppleTalk address given.\n"
+msgstr "> 指定されたローカルAppleTalkアドレスにバインドする。\n"
+
+#. type: Plain text
+#: manpages/man1/rtmpqry.1.md:37
+msgid "Get network range and seed router for the current network:"
+msgstr "現在のネットワークのネットワーク範囲とシードルーターを取得する："
+
+#. type: Plain text
+#: manpages/man1/rtmpqry.1.md:42
 #, no-wrap
 msgid ""
-"> This is the minimum *user id* (uid) that **afppasswd** will use when\n"
-"creating users.\n"
+"    example$ rtmpqry -r 0.255\n"
+"    Router: 9.239\n"
+"    Network(s): 3 - 10\n"
+"    example$\n"
 msgstr ""
-"> これは、**afppasswd**がユーザを作成するときに使う最小の*ユーザid*\n"
-"(uid)である。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:63
-#, no-wrap
-msgid "**-w** *password string*\n"
-msgstr "**-w** *パスワード文字列*\n"
+#: manpages/man1/rtmpqry.1.md:44
+msgid "Get all routes from the router at 12.1:"
+msgstr "12.1 のルータからすべてのルートを取得する："
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:67
+#: manpages/man1/rtmpqry.1.md:49
 #, no-wrap
 msgid ""
-"> Use string as password, instead of typing it interactively. Please use\n"
-"this option only if absolutely necessary, since the password may remain\n"
-"in the terminal history in plain text.\n"
+"    example$ build/bin/rtmpqry/rtmpqry -a 12.1\n"
+"    3 - 10 distance 0 via 12.1\n"
+"    11 distance 0 via 12.1\n"
+"    12 distance 0 via 12.1\n"
 msgstr ""
-"> パスワードを対話形式で入力するのではなく、文字列をパスワードとして使用する。\n"
-"パスワードは平文で端末履歴に残るため、このオプションは絶対に必要な場合にのみ使用してください。\n"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:71
-msgid "afpd(8), afp.conf(5)"
+#: manpages/man1/rtmpqry.1.md:51
+#, no-wrap
+msgid "    example$\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/rtmpqry.1.md:55
+msgid "atalk_aton(3), atalkd(8), getzones(1)"
 msgstr ""
