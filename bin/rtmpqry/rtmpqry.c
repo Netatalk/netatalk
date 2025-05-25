@@ -43,7 +43,7 @@ static void usage(char *s)
     exit(1);
 }
 
-void main(int argc, char** argv)
+int main(int argc, char** argv)
 {
     int c;
     int error_flag = 0;
