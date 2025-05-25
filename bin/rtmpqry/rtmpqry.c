@@ -123,6 +123,8 @@ int main(int argc, char** argv)
     } else {
         do_rtmp_rdr(sockfd, &sa_remote, all_routes, 2);
     }
+    
+    free(remote_addr);
 }
 
 /* Set up a DDP socket ready for sending RTMP packets.  The remote_addr is a pointer
