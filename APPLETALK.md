@@ -1,4 +1,4 @@
-# Introduction
+# AppleTalk Networking
 
 This document describes using Netatalk with AppleTalk networking.
 
@@ -14,16 +14,7 @@ Userland AppleTalk networking is considered feasible
 and is known to have been prototyped,
 but no complete implementation exists at the time of writing.
 
-Platforms Covered:
-
-- A.   Linux
-- B.I  NetBSD
-- B.II Other BSDs
-- C.   Generic
-
-----------------------------------------------------------------
-
-# A. Linux
+## Linux
 
 Some Linux distributions ship with AppleTalk support out of the box
 (e.g. Debian) others have the kernel module but with a blacklisting
@@ -33,14 +24,14 @@ Classic AFP on Linux requires that CONFIG_ATALK is compiled
 into the kernel or as a kernel module. To check to see if the kernel
 has support for AppleTalk:
 
-```
+```shell
 $> dmesg | grep Apple
 ```
 
 This just parses the boot messages for any line containing
 'Apple'.
 
-```
+```shell
 $> lsmod | grep appletalk
 ```
 
@@ -63,9 +54,7 @@ For more complete information about the Linux kernel see the
 A note for RedHat users: You may need to install the glibc-devel
 package to be able to compile Netatalk correctly.
 
-----------------------------------------------------------------
-
-# B.I NetBSD
+## NetBSD
 
 Kernel support for AppleTalk appeared in NetBSD 1.3 in April 1997.
 See the [release notes](http://www.netbsd.org/changes/changes-1.3.html)
@@ -76,7 +65,7 @@ sys/netatalk of the NetBSD source tree.
 As of NetBSD 9.3, the netatalk kernel module is loaded by default,
 and made available to the atalkd daemon when it starts up.
 
-# B.II Other BSDs
+## Other BSDs
 
 Kernel support for AppleTalk appears in FreeBSD 2.2-current
 dated after 12 September 1996, as well as OpenBSD 2.2,
@@ -86,9 +75,7 @@ However, both distributions deprecated AppleTalk in the 2010s.
 You can still run Netatalk as an AFP over TCP server on any
 BSD-derived operating system.
 
-----------------------------------------------------------------
-
-# C. Generic
+## Generic
 
 If you would like AppleTalk support on another operating system,
 you will need either need a kernel module for your operating system,

@@ -16,9 +16,7 @@ User Authentication Modules.
 user credentials, or by local system users with no parameters to change
 their own AFP passwords.
 
-> **NOTE**
-
-> With this utility you can only change the passwords used by these two
+> ***NOTE:*** With this utility you can only change the passwords used by these two
 Random Number UAMs. As they provide only weak password encryption, their
 use is discouraged unless one has to support very old AFP clients that
 can not deal with the more secure "DHX" or "DHX2" UAMs.

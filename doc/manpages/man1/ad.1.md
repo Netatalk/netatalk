@@ -25,13 +25,13 @@ List files and directories.
 Copy files and directories.
 
 > ad cp [-aipvf] {src_file} {dst_file}
-
+>
 > ad cp -R [-aipvf] {src_file|src_directory ...} {dst_directory}
 
 Move files and directories.
 
 > ad mv [-finv] {src_file} {dst_file}
-
+>
 > ad mv [-finv] {src_file|src_directory ...} {dst_directory}
 
 Remove files and directories.

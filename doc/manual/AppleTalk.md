@@ -150,9 +150,7 @@ interfaces. A seed router has to supply information about:
 
 - The so called "default zone" for this segment
 
-> **WARNING**
-
-> Unless you are the network admin yourself, consider asking them before
+> ***WARNING:*** Unless you are the network admin yourself, consider asking them before
 changing anything related to AppleTalk routing, as changing these
 settings might have side effects for all of your AppleTalk network
 clients!

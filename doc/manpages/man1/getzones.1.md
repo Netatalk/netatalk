@@ -58,28 +58,28 @@ defaults to MacRoman.
 
 Show all zones on the AppleTalk internetwork:
 
-	example$ getzones
-	Ethernet
-	LocalTalk
-	AirTalk
-	example$
+    example$ getzones
+    Ethernet
+    LocalTalk
+    AirTalk
+    example$
 
 Get default zone and network configuration for current network from whichever router
 is seeding this network;
 
-	example$ getzones -g 0.255
-	Network range: 3-10
-	Flags (0xa0): requested-zone-invalid only-one-zone
-	Requested zone: 
-	Zone multicast address: 09:00:07:00:00:a8
-	Default zone: Ethernet
-	example$
-	
+    example$ getzones -g 0.255
+    Network range: 3-10
+    Flags (0xa0): requested-zone-invalid only-one-zone
+    Requested zone: 
+    Zone multicast address: 09:00:07:00:00:a8
+    Default zone: Ethernet
+    example$
+    
 Check whether OtherNet is a valid zone for the current network:
 
-	example$ getzones -z Othernet 0.255 >/dev/null || echo "bad zone"
-	bad zone
-	example$
+    example$ getzones -z Othernet 0.255 >/dev/null || echo "bad zone"
+    bad zone
+    example$
 
 # See Also
 

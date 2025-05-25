@@ -11,37 +11,37 @@ and may not always be optimized for standalone execution.
 
 Install dependencies
 
-```
+```shell
 apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc iniparser-dev krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc pandoc perl pkgconfig rpcsvc-proto-dev talloc-dev tinysparql-dev
 ```
 
 Configure
 
-```
+```shell
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-statedir-path=/var/lib -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
 
-```
+```shell
 meson compile -C build
 ```
 
 Run integration tests
 
-```
+```shell
 meson test -C build
 ```
 
 Install
 
-```
+```shell
 meson install -C build
 ```
 
 Check netatalk capabilities
 
-```
+```shell
 netatalk -V
 afpd -V
 atalkd -V
@@ -53,7 +53,7 @@ timelord -V
 
 Uninstall
 
-```
+```shell
 ninja -C build uninstall
 ```
 
@@ -61,37 +61,37 @@ ninja -C build uninstall
 
 Install dependencies
 
-```
+```shell
 pacman -Sy --noconfirm avahi bison cmark-gfm cracklib cups db flex gcc iniparser localsearch mariadb-clients meson ninja perl pkgconfig rpcsvc-proto talloc tinysparql
 ```
 
 Configure
 
-```
+```shell
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
 
-```
+```shell
 meson compile -C build
 ```
 
 Run integration tests
 
-```
+```shell
 meson test -C build
 ```
 
 Install
 
-```
+```shell
 meson install -C build
 ```
 
 Check netatalk capabilities
 
-```
+```shell
 netatalk -V
 afpd -V
 atalkd -V
@@ -103,7 +103,7 @@ timelord -V
 
 Uninstall
 
-```
+```shell
 ninja -C build uninstall
 ```
 
@@ -111,38 +111,38 @@ ninja -C build uninstall
 
 Install dependencies
 
-```
+```shell
 apt-get update
 apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libiniparser-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs
 ```
 
 Configure
 
-```
+```shell
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-init-style=debian-sysv,systemd -Dwith-pkgconfdir-path=/etc/netatalk -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
 
-```
+```shell
 meson compile -C build
 ```
 
 Run integration tests
 
-```
+```shell
 meson test -C build
 ```
 
 Install
 
-```
+```shell
 meson install -C build
 ```
 
 Check netatalk capabilities
 
-```
+```shell
 netatalk -V
 afpd -V
 atalkd -V
@@ -154,7 +154,7 @@ timelord -V
 
 Uninstall
 
-```
+```shell
 ninja -C build uninstall
 ```
 
@@ -162,37 +162,37 @@ ninja -C build uninstall
 
 Install dependencies
 
-```
+```shell
 dnf --setopt=install_weak_deps=False --assumeyes install avahi-devel bison chkconfig cracklib-devel cups-devel dbus-devel flex glib2-devel iniparser-devel krb5-devel libacl-devel libdb-devel libgcrypt-devel libtalloc-devel mariadb-connector-c-devel meson ninja-build openldap-devel pam-devel pandoc perl perl-Net-DBus quota-devel systemd systemtap-sdt-devel tracker tracker-devel
 ```
 
 Configure
 
-```
+```shell
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
 
-```
+```shell
 meson compile -C build
 ```
 
 Run integration tests
 
-```
+```shell
 meson test -C build
 ```
 
 Install
 
-```
+```shell
 sudo meson install -C build
 ```
 
 Check netatalk capabilities
 
-```
+```shell
 netatalk -V
 afpd -V
 atalkd -V
@@ -204,7 +204,7 @@ timelord -V
 
 Uninstall
 
-```
+```shell
 sudo ninja -C build uninstall
 ```
 
@@ -212,38 +212,38 @@ sudo ninja -C build uninstall
 
 Install dependencies
 
-```
+```shell
 sudo apt-get update
 sudo apt-get install --assume-yes --no-install-recommends bison cmark-gfm cracklib-runtime file flex libacl1-dev libavahi-client-dev libcrack2-dev libcups2-dev libdb-dev libdbus-1-dev libevent-dev libgcrypt20-dev libglib2.0-dev libiniparser-dev libkrb5-dev libldap2-dev libmariadb-dev libpam0g-dev libtalloc-dev libtirpc-dev libtracker-sparql-3.0-dev libwrap0-dev meson ninja-build quota systemtap-sdt-dev tcpd tracker tracker-miner-fs
 ```
 
 Configure
 
-```
+```shell
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-init-hooks=false -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
 
-```
+```shell
 meson compile -C build
 ```
 
 Run distribution tests
 
-```
+```shell
 meson dist -C build
 ```
 
 Install
 
-```
+```shell
 sudo meson install -C build
 ```
 
 Check netatalk capabilities
 
-```
+```shell
 netatalk -V
 afpd -V
 atalkd -V
@@ -255,7 +255,7 @@ timelord -V
 
 Start netatalk
 
-```
+```shell
 sudo systemctl start netatalk
 sleep 1
 asip-status localhost
@@ -263,13 +263,13 @@ asip-status localhost
 
 Stop netatalk
 
-```
+```shell
 sudo systemctl stop netatalk
 ```
 
 Uninstall
 
-```
+```shell
 sudo ninja -C build uninstall
 ```
 
@@ -277,45 +277,45 @@ sudo ninja -C build uninstall
 
 Install dependencies
 
-```
+```shell
 brew update
 brew install cmark-gfm cracklib iniparser mariadb meson openldap
 ```
 
 Configure
 
-```
+```shell
 meson setup build -Dbuildtype=release -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
 
-```
+```shell
 meson compile -C build
 ```
 
 Run integration tests
 
-```
+```shell
 meson test -C build
 ```
 
 Install
 
-```
+```shell
 sudo meson install -C build
 ```
 
 Check netatalk capabilities
 
-```
+```shell
 netatalk -V
 afpd -V
 ```
 
 Start netatalk
 
-```
+```shell
 sudo netatalkd start
 sleep 1
 asip-status localhost
@@ -323,13 +323,13 @@ asip-status localhost
 
 Stop netatalk
 
-```
+```shell
 sudo netatalkd stop
 ```
 
 Uninstall
 
-```
+```shell
 sudo ninja -C build uninstall
 ```
 
@@ -337,13 +337,13 @@ sudo ninja -C build uninstall
 
 Install required packages
 
-```
+```shell
 pkg install -y avahi bison cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter talloc tracker3
 ```
 
 Configure, compile, install, run, and uninstall
 
-```
+```shell
 set -e
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
@@ -357,13 +357,13 @@ ninja -C build uninstall
 
 Install required packages
 
-```
+```shell
 pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql91-client openldap26-client p5-Net-DBus perl5 pkgconf talloc
 ```
 
 Configure, compile, install, run, and uninstall
 
-```
+```shell
 set -e
 meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
@@ -383,14 +383,14 @@ ninja -C build uninstall
 
 Install required packages
 
-```
+```shell
 export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
 pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config talloc
 ```
 
 Configure, compile, install, run, and uninstall
 
-```
+```shell
 set -e
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
@@ -414,13 +414,13 @@ ninja -C build uninstall
 
 Install required packages
 
-```
+```shell
 pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p15 heimdal iniparser libevent libgcrypt libtalloc localsearch-3.8.2p0 mariadb-client meson openldap-client-2.6.9p0v0 p5-Net-DBus pkgconf tinysparql-3.8.2
 ```
 
 Configure, compile, install, run, and uninstall
 
-```
+```shell
 set -e
 meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-pam=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
@@ -439,7 +439,7 @@ ninja -C build uninstall
 
 Install required packages
 
-```
+```shell
 pkg install build-essential pkg-config
 curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz
 tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /
@@ -449,7 +449,7 @@ pkgin -y install avahi cmark gnome-tracker iniparser libevent libgcrypt meson my
 
 Configure, compile, install, run, and uninstall
 
-```
+```shell
 set -e
 export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
 meson setup build --prefix=/opt/local -Dbuildtype=release -Dpkg_config_path=/opt/local/lib/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-ldap-path=/opt/local -Dwith-tests=true -Dwith-testsuite=true
@@ -470,7 +470,7 @@ ninja -C build uninstall
 
 Install required packages
 
-```
+```shell
 set -e
 pkg install bison cmake flex gcc libevent libgcrypt ninja pkg-config python/pip
 pip install meson
@@ -495,7 +495,7 @@ make install
 
 Configure, compile, install, run, and uninstall
 
-```
+```shell
 set -e
 export PATH=/usr/local/sbin:/usr/local/bin:$PATH
 meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true

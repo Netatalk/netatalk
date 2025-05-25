@@ -92,9 +92,7 @@ authentication methods. The guest method requires a valid username, but
 not a password. The Cleartext UAM requires both a valid username and the
 correct password.
 
-> **NOTE**
-
-> Print authentication is only supported on Mac OS 9 and earlier.
+> ***NOTE:*** Print authentication is only supported on Mac OS 9 and earlier.
 
 # Files
 
