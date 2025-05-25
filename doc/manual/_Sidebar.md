@@ -24,6 +24,7 @@ User Tools
 * [macusers](macusers.1.html)
 * [nbp](nbp.1.html)
 * [pap](pap.1.html)
+* [rtmpqry](rtmpqry.1.html)
 
 Configuration Files
 
