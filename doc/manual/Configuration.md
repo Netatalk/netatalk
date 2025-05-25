@@ -111,21 +111,16 @@ at compile time.
 There is a command line utility called **dbd** available which can be used
 to verify, repair and rebuild the CNID database.
 
-> **NOTE**
-
-> There are some CNID related things you should keep in mind when
+***NOTE:*** There are some CNID related things you should keep in mind when
 working with netatalk:
 
-> - Don't nest volumes unless "**vol dbnest = yes**" is set.
-
-> - CNID backends are databases, so they turn afpd into a file
+- Don't nest volumes unless "**vol dbnest = yes**" is set.
+- CNID backends are databases, so they turn afpd into a file
 server/database mix.
-
-> - If there's no more space on the filesystem left, the database will
+- If there's no more space on the filesystem left, the database will
 get corrupted. You can work around this by using the **vol dbpath**
 option and put the database files into another location.
-
-> - Be careful with CNID databases for volumes that are mounted via NFS.
+- Be careful with CNID databases for volumes that are mounted via NFS.
 That is a pretty audacious decision to make anyway, but putting a
 database there as well is really asking for trouble, i.e. database
 corruption. Use the **vol dbpath** directive to put the databases onto
@@ -604,7 +599,7 @@ add a new one) to you directory server (e.g. OpenLDAP).
 
 In detail:
 
-1.  For Solaris/ZFS: ZFS Volumes
+1. For Solaris/ZFS: ZFS Volumes
 
     You should configure a ZFS ACL know for any volume you want to use
     with Netatalk:
@@ -615,7 +610,7 @@ In detail:
     For an explanation of what this knob does and how to apply it, check
     your hosts ZFS documentation (e.g. man zfs).
 
-2.  Authentication Domain
+2. Authentication Domain
 
     Your server and the clients must be part of a security association
     where identity data is coming from a common source. ACLs in Darwin
@@ -820,10 +815,8 @@ action. When using FCE v2 you also get the following events:
 You can enable Netatalk's Spotlight compatible search and indexing
 either globally or on a per volume basis with the **spotlight** option.
 
-> **WARNING**
-
-> Once Spotlight is enabled for a single volume, all other volumes for
-which spotlight is disabled won't be searchable at all.
+> ***WARNING:*** Once Spotlight is enabled for a single volume,
+all other volumes for which spotlight is disabled won't be searchable at all.
 
 The **dbus-daemon** binary has to be installed for Spotlight feature. The
 path to dbus-daemon is determined at compile time the dbus-daemon build

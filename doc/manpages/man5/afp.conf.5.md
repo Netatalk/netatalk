@@ -149,47 +149,47 @@ value, it will get ignored.
 The variables which can be used for substitutions are:
 
 > $b
-
+>
 > > basename
-
+>
 > $c
-
+>
 > > client's ip address
-
+>
 > $d
-
+>
 > > volume pathname on server
-
+>
 > $f
-
+>
 > > full name (contents of the gecos field in the passwd file)
-
+>
 > $g
-
+>
 > > group name
-
+>
 > $h
-
+>
 > > hostname
-
+>
 > $i
-
+>
 > > client's ip, without port
-
+>
 > $s
-
+>
 > > server name (this can be the hostname)
-
+>
 > $u
-
+>
 > > user name (if guest, it is the user that guest is running as)
-
+>
 > $v
-
+>
 > > volume name
-
+>
 > $$
-
+>
 > > prints dollar sign ($)
 
 # Explanation of Global Parameters
@@ -260,34 +260,34 @@ uams_dhx2.so").
 The most commonly used UAMs are:
 
 > uams_guest.so
-
+>
 > > allows guest logins
-
+>
 > uams_clrtxt.so
-
+>
 > > (uams_pam.so or uams_passwd.so) Allow logins with passwords transmitted
 in the clear. Compatible with Mac OS 9 and earlier.
-
+>
 > uams_randnum.so
-
+>
 > > allows Random Number and Two-Way Random Number Exchange for
 authentication (requires a separate file containing the passwords,
 either the default *afppasswd* file or the one specified via
 "**passwd file**"). See **afppasswd**(1) for details.
 Compatible with Mac OS 9 and earlier.
-
+>
 > uams_dhx.so
-
+>
 > > (uams_dhx_pam.so or uams_dhx_passwd.so) Allow Diffie-Hellman eXchange
 (DHX) for authentication.
-
+>
 > uams_dhx2.so
-
+>
 > > (uams_dhx2_pam.so or uams_dhx2_passwd.so) Allow Diffie-Hellman eXchange 2
 (DHX2) for authentication.
-
+>
 > uam_gss.so
-
+>
 > > Allow Kerberos V for authentication (optional)
 
 uam path = *path* **(G)**
@@ -334,10 +334,8 @@ vol charset = *charset* **(G)**/**(V)**
 
 > Specifies the encoding of the volumes filesystem. By default, it is the
 same as **unix charset**.
-
-> **NOTE**
-
-> It is highly recommended to stick to the default UTF-8 encoding.
+>
+> ***NOTE:*** It is highly recommended to stick to the default UTF-8 encoding.
 
 ## Password Options
 
@@ -358,10 +356,8 @@ tunneled AFP connection through SSH. If this option is set, the server's
 answers to client's FPGetSrvrInfo requests contain an additional entry.
 It depends on both client's settings and a correctly configured and
 running **sshd**(8) on the server to let things work.
-
-> **NOTE**
-
-> Setting this option is not recommended since globally encrypting AFP
+>
+> ***NOTE:*** Setting this option is not recommended since globally encrypting AFP
 connections via SSH will increase the server's load significantly. On
 the other hand, Apple's client side implementation of this feature in
 MacOS X versions prior to 10.3.4 contained a security flaw.
@@ -371,10 +367,8 @@ afp interfaces = *name [name ...]* **(G)**
 > Specifies the network interfaces that the server should listen on. The
 default is to advertise the first IP address of the system, while
 listening for any incoming request.
-
-> **NOTE**
-
-> Do not use at the same time as the **afp listen** option.
+>
+> ***NOTE:*** Do not use at the same time as the **afp listen** option.
 
 afp listen = *ip address[:port] [ip address[:port] ...]* **(G)**
 
@@ -383,13 +377,11 @@ listens to. The default is advertise the first IP address of the system,
 but to listen for any incoming request. The network address may be
 specified either in dotted-decimal format for IPv4 or in hexadecimal
 format for IPv6.
-
+>
 > IPv6 address + port combination must use URL the format using square
 brackets [IPv6]:port
-
-> **NOTE**
-
-> Do not use at the same time as the **afp interfaces** option.
+>
+> ***NOTE:*** Do not use at the same time as the **afp interfaces** option.
 
 afp port = *port number* **(G)**
 
@@ -420,7 +412,8 @@ dsireadbuf = *number* **(G)**
 default is 12. This is multiplies with the DSI server quantum (default
 1MiB) to give the size of the buffer. Increasing this value might
 increase throughput in fast local networks for volume to volume copies.
-*Note*: This buffer is allocated per afpd child process, so specifying
+>
+> ***NOTE:*** This buffer is allocated per afpd child process, so specifying
 large values will eat up large amount of memory (buffer size \* number
 of clients).
 
@@ -515,7 +508,7 @@ cnid server = *ipaddress[:port]* **(G)**/**(V)**
 > Specifies the IP address and port of a cnid_metad server, required
 for the CNID dbd backend. This should match the address and port of the
 **cnid listen** option for most deployments. Defaults to localhost:4700.
-
+>
 > The network address may be specified either in dotted-decimal format
 for IPv4 or in hexadecimal format for IPv6.
 
@@ -547,7 +540,7 @@ dircachesize = *number* **(G)**
 > Maximum possible entries in the directory cache. The cache stores
 directories and files. It is used to cache the full path to directories
 and CNIDs which considerably speeds up directory enumeration.
-
+>
 > Default size is 8192, maximum size is 131072. Given value is rounded up
 to nearest power of 2. Each entry takes about 100 bytes, which is not
 much, but remember that every afpd child process for every connected
@@ -563,14 +556,14 @@ force xattr with sticky bit = *BOOLEAN* (default: *no*) **(G)**/**(V)**
 > Writing metadata xattr on directories with the sticky bit set may fail
 even though we may have write access to a directory, because if the
 sticky bit is set only the owner is allowed to write xattrs.
-
+>
 > By enabling this option Netatalk will write the metadata xattr as root.
 
 ignored attributes = *all* | *nowrite* | *nodelete* | *norename* **(G)**/**(V)**
 
 > Specify a set of file and directory attributes that shall be ignored by
 the server, *all* includes all the other options.
-
+>
 > In OS X when the Finder sets a lock on a file/directory or you set the
 BSD uchg flag in the Terminal, all three attributes are used. Thus in
 order to ignore the Finder lock/BSD uchg flag, add set *ignored
@@ -581,11 +574,11 @@ mimic model = *model* **(G)**
 > Specifies a custom icon for the mounted AFP volume on macOS (Mac OS X)
 clients. Default is to let macOS choose. Requires netatalk to be built
 with Zeroconf. Examples:
-
+>
 > - **Laptop**
 > - **RackMount**
 > - **Tower**
-
+>
 > A complete set of supported model codes by a macOS client can be found
 by inspecting system properties files, such as
 */System/Library/CoreServices/CoreTypes.bundle/Contents/Info.plist*
@@ -681,18 +674,16 @@ log level = *type:level [type:level ...]* **(G)**; log level = *type:level,[type
 
 > Specify that any message of a loglevel up to the given *log level*
 should be logged.
-
+>
 > By default afpd logs to syslog with a default logging setup equivalent
 to **default:note**
-
+>
 > logtypes: default, afpdaemon, logger, uamsdaemon
-
+>
 > loglevels: severe, error, warn, note, info, debug, debug6, debug7,
 debug8, debug9, maxdebug
-
-> **NOTE**
-
-> Both logtype and loglevels are case insensitive.
+>
+> ***NOTE:*** Both logtype and loglevels are case insensitive.
 
 log microseconds = *BOOLEAN* (default: *yes*) **(G)**
 
@@ -791,29 +782,29 @@ mode. You can adjust this behaviour with the configuration option
 chmod request = *preserve* (default) | *ignore* | *simple* **(G)**/**(V)**
 
 > Advanced permission control that deals with ACLs.
-
+>
 > - **ignore** - UNIX chmod() requests are completely ignored, use this
 option to allow the parent directory's ACL inheritance full control
 over new items.
-
+>
 > - **preserve** - preserve ZFS ACEs for named users and groups or POSIX ACL
 group mask
-
+>
 > - **simple** - just to a chmod() as requested without any extra steps
 
 map acls = *none* | *rights* | *mode* **(G)**
 
 > none
-
+>
 > > no mapping of ACLs
-
+>
 > rights
-
+>
 > > effective permissions are mapped to UARights structure. This is the
 default.
-
+>
 > mode
-
+>
 > > ACLs are additionally mapped to the UNIX mode of the filesystem object.
 
 If you want to be able to display ACLs on the client, you must setup
@@ -834,11 +825,11 @@ The following LDAP options must be configured for Netatalk:
 ldap auth method = *none* | *simple* **(G)**
 
 > none
-
+>
 > > anonymous LDAP bind
-
+>
 > simple
-
+>
 > > simple LDAP bind
 
 ldap auth dn = *dn* **(G)**
@@ -855,7 +846,7 @@ ldap uri = *ldap://somehost:1234/* **(G)**
 be ldap, ldapi or ldaps, specifying LDAP over TCP, ICP or TLS
 respectively (if supported by the LDAP library). This is only needed for
 explicit ACL support in order to be able to query LDAP for UUIDs.
-
+>
 > You can use **afpldaptest**(1) to syntactically check your config.
 
 ldap userbase = *base dn* **(G)**
@@ -877,8 +868,8 @@ ldap groupscope = *scope* **(G)**
 ldap uuid attr = *dn* **(G)**
 
 > Name of the LDAP attribute with the UUIDs.
-
-> Note: this is used both for users and groups.
+>
+> ***NOTE:*** this is used both for users and groups.
 
 ldap name attr = *dn* **(G)**
 
@@ -892,7 +883,7 @@ ldap uuid string = *STRING* **(G)**
 
 > Format of the uuid string in the directory. A series of x and -, where
 every x denotes a value 0-9a-f and every - is a separator.
-
+>
 > Default: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 ldap uuid encoding = *string* (default) | *ms-guid* **(G)**
@@ -903,15 +894,15 @@ the default, which passes through the ASCII UUID returned by most other
 LDAP stores. If set to ms-guid, the internal UUID representation is
 converted to and from the binary format used in the objectGUID attribute
 found on objects in Active Directory when interacting with the server.
-
+>
 > See also the options **ldap user filter** and **ldap group filter**.
-
+>
 > string
-
+>
 > > UUID is a string, use with e.g. OpenDirectory.
-
+>
 > ms-guid
-
+>
 > > Binary objectGUID from Active Directory
 
 ldap user filter = *STRING* (default: unused) **(G)**
@@ -919,7 +910,7 @@ ldap user filter = *STRING* (default: unused) **(G)**
 > Optional LDAP filter that matches user objects. This is necessary for
 Active Directory environments where users and groups are stored in the
 same directory subtree.
-
+>
 > Recommended setting for Active Directory: **objectClass=user**.
 
 ldap group filter = *STRING* (default: unused) **(G)**
@@ -927,7 +918,7 @@ ldap group filter = *STRING* (default: unused) **(G)**
 > Optional LDAP filter that matches group objects. This is necessary for
 Active Directory environments where users and groups are stored in the
 same directory subtree.
-
+>
 > Recommended setting for Active Directory: **objectClass=group**.
 
 ## Classic Options
@@ -958,7 +949,7 @@ legacy icon = *icon* **(G)**
 > Sets the shared volume icon displayed in the Finder in Classic Mac OS.
 Note that some versions of Classic Mac OS ignores this icon. Examples of
 valid icon styles:
-
+>
 > - **daemon**
 > - **globe**
 > - **sdcard**
@@ -1034,7 +1025,7 @@ volume name = *STRING* (default: section name in lowercase) **(V)**
 > The volume name option specifies the name of the shared AFP volume.
 When not set, this defaults to the name of the ini file section
 where the volume is defined, converted to lowercase.
-
+>
 > No two volumes may have the same name.
 The volume name cannot contain the ':' character.
 The volume name is mangled if it is very long.
@@ -1047,10 +1038,8 @@ vol size limit = *size in MiB* **(V)**
 preventing Time Machine from using the whole real disk space for backup.
 Example: "**vol size limit = 1000**" would limit the reported disk space to
 1 GB.
-
-> **IMPORTANT**
-
-> This is an approximated calculation taking into
+>
+> ***IMPORTANT:*** This is an approximated calculation taking into
 account the contents of Time Machine sparsebundle images. Therefore you
 MUST NOT use this volume to store other content when using this option,
 because it would NOT be accounted for. The calculation works by reading
@@ -1076,13 +1065,13 @@ hosts allow = *IP host address/IP netmask bits* [ ... ] **(V)**
 > Only listed hosts and networks are allowed, all others are rejected. The
 network address may be specified either in dotted-decimal format for
 IPv4 or in hexadecimal format for IPv6.
-
+>
 > Example: hosts allow = 10.1.0.0/16 10.2.1.100 2001:0db8:1234::/48
 
 hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 
 > Listed hosts and nets are rejected, all others are allowed.
-
+>
 > Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
 
 cnid scheme = *backend* **(V)**
@@ -1090,9 +1079,9 @@ cnid scheme = *backend* **(V)**
 > set the CNID backend to be used for the volume.
 The "dbd" and "last" backends are always available. Default is **dbd**.
 Run *afpd -v* to see a list of available backends.
-
+>
 > The "last" backend is read only, used to mount CD-ROMs and similar media.
-
+>
 > The optional "mysql" backend requires the system administrator to provision
 a MySQL database instance for use with Netatalk, as well as setting the
 *cnid mysql \** configuration options.
@@ -1101,34 +1090,32 @@ ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 
 > Specify how Extended Attributes and Classic Mac OS resource forks are
 stored.
-
+>
 > By default, we attempt to enable **sys** with a fallback to **none**.
 For the auto detection to work, the volume needs to be writable
 because we attempt to set an EA on the shared directory itself.
 For read-only volumes, set this option explicitly.
-
+>
 > sys
-
+>
 > > Use filesystem Extended Attributes.
-
+>
 > samba
-
+>
 > > Use filesystem Extended Attributes, but append a 0 byte to each xattr in
 order to be compatible with Samba's vfs_streams_xattr.
-
+>
 > ad
-
+>
 > > Use AppleDouble v2 metadata stored as files in *.AppleDouble* directories.
 This should only be used when the host's filesystem does not support
 Extended Attributes.
-
+>
 > none
-
+>
 > > No Extended Attributes support.
-
-> **WARNING**
-
-> The **samba** option should not be used on a volume that was previously
+>
+> ***WARNING:*** The **samba** option should not be used on a volume that was previously
 set to **sys**. This may lead data loss.
 
 mac charset = *charset* **(V)**
@@ -1142,13 +1129,13 @@ casefold = *option* **(V)**
 
 > The casefold option handles, if the case of filenames should be changed.
 The available options are:
-
+>
 > **tolower** - Lowercases names in both directions.
-
+>
 > **toupper** - Uppercases names in both directions.
-
+>
 > **xlatelower** - Client sees lowercase, server sees uppercase.
-
+>
 > **xlateupper** - Client sees uppercase, server sees lowercase.
 
 password = *password* **(V)**
@@ -1162,7 +1149,7 @@ file perm = *mode* **(V)**; directory perm = *mode* **(V)**
 > Add(or) with the client requested permissions: **file perm** is for files
 only, **directory perm** is for directories only. Don't use with
 "**unix priv = no**".
-
+>
 > **Example**: Volume for a collaborative workgroup
 
     file perm = 0660
@@ -1210,10 +1197,8 @@ case sensitive = *BOOLEAN* (default: *yes*) **(V)**
 > Whether to flag volumes as supporting case-sensitive filenames. If the
 filesystem is case-insensitive, set to no. However, it is not fully
 verified.
-
-> **NOTE**
-
-> In spite of being case sensitive as a matter of fact, netatalk 3.1.3 and
+>
+> ***NOTE:*** In spite of being case sensitive as a matter of fact, netatalk 3.1.3 and
 earlier did not notify kCaseSensitive flag to the client. Starting with
 3.1.4, it is notified correctly by default.
 
@@ -1237,7 +1222,7 @@ that contains one or more vetoed files or directories (see the veto
 files option). If this option is set to no (the default) then if a
 directory contains any non-vetoed files or directories then the
 directory delete will fail. This is usually what you want.
-
+>
 > If this option is set to yes, then Netatalk will attempt to recursively
 delete any files and directories within the vetoed directory.
 
@@ -1248,15 +1233,15 @@ server. This is the same behaviour as OS X's AFP server. Setting the
 option to true causes afpd to follow symlinks on the server. symlinks
 may point outside of the AFP volume, currently afpd doesn't do any
 checks for "wide symlinks".
-
-> **NOTE**
-
-> This option will subtly break when the symlinks point across filesystem
+>
+> ***NOTE:*** This option will subtly break when the symlinks point across filesystem
 boundaries.
 
 invisible dots = *BOOLEAN* (default: *no*) **(V)**
 
-> make dot files invisible. WARNING: enabling this option will lead to
+> make dot files invisible.
+>
+> ***WARNING:*** enabling this option will lead to
 unwanted side effects where OS X applications, when saving files to a
 temporary file starting with a dot first, then renaming the temp file to
 its final name, result in the saved file being invisible. The only thing

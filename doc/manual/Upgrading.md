@@ -15,17 +15,17 @@ more available.
 
 There are three major changes between Netatalk 2 and Netatalk 4:
 
-1.  New configuration files that replaces most of the previous ones:
-    *afp.conf* and *extmap.conf*
+1. New configuration files that replaces most of the previous ones:
+   *afp.conf* and *extmap.conf*
 
-2.  New backend for file metadata which stores metadata in extended attributes
-    of the filesystem.
+2. New backend for file metadata which stores metadata in extended attributes
+   of the filesystem.
 
-3.  The AppleTalk transport layer is disabled by default. If you want to
-    use Netatalk with very old Macs, turn it on with the
-    **appletalk = yes** option in *afp.conf*. Then start the **atalkd**
-    daemon before **netatalk** in order to activate the AppleTalk
-    transport layer.
+3. The AppleTalk transport layer is disabled by default. If you want to
+   use Netatalk with very old Macs, turn it on with the
+   **appletalk = yes** option in *afp.conf*. Then start the **atalkd**
+   daemon before **netatalk** in order to activate the AppleTalk
+   transport layer.
 
 ### New configuration
 
@@ -38,10 +38,8 @@ There are three major changes between Netatalk 2 and Netatalk 4:
 - obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and
 *afp_ldap.conf*
 
-> **WARNING**
-
-> most option names have changed, read the full manpage
-[afp.conf](afp.conf.5.html) for details
+> ***WARNING:*** Most option names have changed. Read the full manpage
+[afp.conf](afp.conf.5.html) for details.
 
 #### extmap.conf
 
@@ -72,19 +70,19 @@ Implementation details:
 - stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an
 Extended Attributed named *org.netatalk.Metadata*
 
-    - Additionally, on macOS hosts running Netatalk 4.1.0 or later,
+  - Additionally, on macOS hosts running Netatalk 4.1.0 or later,
     FinderInfo is natively stored in the file system and appears as an
     Extended Attribute named *com.apple.FinderInfo*
 
 - stores Mac ResourceFork either in
 
-    - an Extended Attribute named *org.netatalk.ResourceFork* on
+  - an Extended Attribute named *org.netatalk.ResourceFork* on
     Solaris w. ZFS, or in
 
-    - an extra AppleDouble file named *._file* for a file named *file*,
+  - an extra AppleDouble file named *._file* for a file named *file*,
     or
 
-    - natively stored in the resource fork on macOS hosts as of Netatalk
+  - natively stored in the resource fork on macOS hosts as of Netatalk
     4.1.0.
 
 - the format of the .\_ file is exactly as the Mac’s CIFS client expects
@@ -112,21 +110,21 @@ default
 
 ### Upgrading procedure
 
-1.  Stop Netatalk 2.x
+1. Stop Netatalk 2.x
 
-2.  Install Netatalk 4
+2. Install Netatalk 4
 
-3.  Manually recreate configurations in *afp.conf* and *extmap.conf*
+3. Manually recreate configurations in *afp.conf* and *extmap.conf*
 
-4.  Update your Netatalk init script to start **netatalk** instead of
-    **afpd** and **cnid_metad**, or replace it with the appropriate stock
-    init script for your system.
+4. Update your Netatalk init script to start **netatalk** instead of
+   **afpd** and **cnid_metad**, or replace it with the appropriate stock
+   init script for your system.
 
-5.  Move *afp_voluuid.conf* and *afp_signature.conf* to the localstate
-    directory (default *$prefix/var/netatalk/*), you can use **afpd -v**
-    in order to find the correct path
+5. Move *afp_voluuid.conf* and *afp_signature.conf* to the localstate
+   directory (default *$prefix/var/netatalk/*), you can use **afpd -v**
+   in order to find the correct path
 
-6.  Start Netatalk 4
+6. Start Netatalk 4
 
 ### Old and new configuration file names
 

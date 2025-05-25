@@ -14,7 +14,7 @@ might want to use.
 
 To build from a release tarball, download and unpack the tarball.
 
-```
+```shell
 tar xjf netatalk-*.tar.xz                               # unpack the sources
 cd netatalk-*                                           # change to the toplevel directory
 ```
@@ -22,7 +22,7 @@ cd netatalk-*                                           # change to the toplevel
 To build from the Netatalk GitHub repo, make sure you have Git installed,
 then clone the source tree.
 
-```
+```shell
 git clone https://github.com/netatalk/netatalk.git      # clone the repository
 cd netatalk                                             # change to the repo directory
 ```
@@ -85,7 +85,7 @@ documentation for more details.
 
 Use the `meson` command to compile and install Netatalk.
 
-```
+```shell
 meson setup build                                       # configure the build
 meson compile -C build                                  # build Netatalk
 
@@ -96,13 +96,13 @@ sudo meson install -C build                             # install Netatalk
 
 To uninstall Netatalk:
 
-```
+```shell
 sudo ninja -C build uninstall                           # uninstall Netatalk
 ```
 
 To test (requires the `-Dwith-tests=true` flag at configure time):
 
-```
+```shell
 cd build && meson test
 ```
 
@@ -110,7 +110,7 @@ cd build && meson test
 
 When using Meson, to review the options which Meson chose, run:
 
-```
+```shell
 meson configure
 ```
 
@@ -120,7 +120,7 @@ this command take the form `-Doption=value`.
 
 For example, to install Netatalk in a specific location:
 
-```
+```shell
 meson setup build -Dprefix=/tmp/install
 ```
 
@@ -136,7 +136,7 @@ for full details of all Netatalk-specific options,
 and the [Meson documentation](https://mesonbuild.com/Builtin-options.html)
 for details of generic Meson options.
 
-# See also
+## See also
 
 The Netatalk manual has further resources to aid building and installation.
 

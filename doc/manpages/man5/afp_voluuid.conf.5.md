@@ -16,13 +16,11 @@ string representation of a UUID.
 All leading spaces and tabs are ignored. Blank lines are ignored. The
 lines prefixed with \# are ignored. Any illegal lines are ignored.
 
-> **NOTE**
-
-> This UUID is advertised by Zeroconf in order to provide robust
+> ***NOTE:*** This UUID is advertised by Zeroconf in order to provide robust
 disambiguation of Time Machine volumes.
-
+>
 > It is also used by the MySQL CNID backend.
-
+>
 > This file should not be thoughtlessly edited or copied onto another
 server.
 

@@ -2,8 +2,8 @@ Information for Netatalk Developers
 ===================================
 
 For basic installation instructions, see the Installation chapter
-in the html manual published on https://netatalk.io
-and the INSTALL.md file in the root of the source tree.
+in the html manual published on the [Netatalk homepage](https://netatalk.io)
+and the [Installation Quick Start Guide](https://netatalk.io/install).
 
 Netatalk is an implementation of Apple Filing Protocol (AFP) over TCP.
 The session layer used to carry AFP over TCP is called DSI.
@@ -15,22 +15,22 @@ PAP, and ASP, while expecting the kernel to supply DDP.
 
 The complete stack looks like this on a BSD-derived system:
 
-```
-AFP                          AFP
- |                            |
-ASP    PAP                   DSI
-  \   /                       |
-   ATP RTMP NBP ZIP AEP       |
-    |    |   |   |   |        |
--+---------------------------------------------------+- (kernel boundary)
-|                    Socket                         |
-+-----------------------+------------+--------------+
-|                       |     TCP    |    UDP       |
-|          DDP          +------------+--------------+
-|                       |           IP              |
-+-----------------------+---------------------------+
-|                Network-Interface                  |
-+---------------------------------------------------+
+```txt
+    AFP                          AFP
+     |                            |
+    ASP    PAP                   DSI
+      \   /                       |
+       ATP RTMP NBP ZIP AEP       |
+        |    |   |   |   |        |
+    -+---------------------------------------------------+- (kernel boundary)
+    |                    Socket                         |
+    +-----------------------+------------+--------------+
+    |                       |     TCP    |    UDP       |
+    |          DDP          +------------+--------------+
+    |                       |           IP              |
+    +-----------------------+---------------------------+
+    |                Network-Interface                  |
+    +---------------------------------------------------+
 ```
 
 * DDP is a socket to socket protocol that all other AppleTalk protocols
@@ -47,7 +47,7 @@ ASP    PAP                   DSI
 
 When built without AppleTalk support, the network stack looks something like this:
 
-```
+```txt
           AFP
            |
           DSI
@@ -77,20 +77,22 @@ value of statements against 0, NULL, -1 (and maybe more, check it out).
 Every macro comes in four flavours: EC_CHECK, EC_CHECK_LOG, EC_CHECK_LOG_ERR
 and EC_CHECK_CUSTOM:
 
-- EC_CHECK just checks the CHECK
-- EC_CHECK_LOG additionally logs the stringified function call.
-- EC_CHECK_LOG_ERR allows specifying the return value
-- EC_CHECK_CUSTOM allows custom actions
+* EC_CHECK just checks the CHECK
+* EC_CHECK_LOG additionally logs the stringified function call.
+* EC_CHECK_LOG_ERR allows specifying the return value
+* EC_CHECK_CUSTOM allows custom actions
 
 The macros EC_CHECK* unconditionally jump to a cleanup label where the
 necessary cleanup can be done alongside controlling the return value.
 EC_CHECK_CUSTOM doesn't do that, so an extra "goto EC_CLEANUP" may be
 performed as appropriate.
 
-Example:
+Examples
+--------
 
-```
-- stat() without EC macro:
+stat() without EC macro:
+
+```c
   static int func(const char *name) {
     int ret = 0;
     ...
@@ -106,8 +108,11 @@ Example:
     ...
     return ret;
   }
+```
 
-- stat() with EC macro:
+stat() with EC macro:
+
+```c
   static int func(const char *name) {
     EC_INIT; /* expands to int ret = 0; */
 
@@ -123,9 +128,11 @@ EC_CLEANUP:
     if (uppername) free(uppername);
     EC_EXIT;
   }
+```
 
 A boilerplate function template is:
 
+```c
 int func(void)
 {
     EC_INIT;
@@ -148,32 +155,34 @@ into separate daemons.
 There is one cnid_dbd daemon per netatalk volume. The underlying database
 structure is based on Berkeley DB.
 
-## Advantages
+Advantages
+----------
 
-- No locking issues or leftover locks due to crashed afpd daemons any
+* No locking issues or leftover locks due to crashed afpd daemons any
   more. Since there is only one thread of control accessing the
   database, no locking is needed and changes appear atomic.
 
-- Berkeley DB transactions are difficult to get right with several
+* Berkeley DB transactions are difficult to get right with several
   processes attempting to access the CNID database simultaneously. This
   is much easier with a single process and the database can be made nearly
   crash-proof this way (at a performance cost).
 
-- No problems with user permissions and access to underlying database
+* No problems with user permissions and access to underlying database
   files, the cnid_dbd process runs under a configurable user
   ID that normally also owns the underlying database
   and can be contacted by whatever afpd daemon accesses a volume.
 
-- If an afpd process crashes, the CNID database is unaffected. If the
+* If an afpd process crashes, the CNID database is unaffected. If the
   process was making changes to the database at the time of the crash,
   those changes will be rolled back entirely (transactions).
   If the process was not using the database at the time of the crash,
   no corrective action is necessary. In any case, database consistency
   is assured.
 
-## Disadvantages
+Disadvantages
+-------------
 
-- Performance in an environment of processes sharing the database
+* Performance in an environment of processes sharing the database
   (files) is potentially better for two reasons:
 
   i)  IPC overhead.
@@ -193,8 +202,8 @@ structure is based on Berkeley DB.
   I have not measured the effects of the advantages of simultaneous
   database access.
 
-
-## Installation and configuration
+Installation and configuration
+------------------------------
 
 There are two executables that will be built in etc/cnid_dbd and
 installed into the systems binaries directories of netatalk
@@ -211,14 +220,15 @@ cnid_dbd changes to the Berkeley DB directory on startup and sets
 effective UID and GID to owner and group of that directory. Database and
 supporting files should therefore be writeable by that user/group.
 
-## Current shortcomings:
+Current shortcomings
+--------------------
 
-- The parameter file parsing of db_param is very simpleminded. It is
+* The parameter file parsing of db_param is very simpleminded. It is
 easy to cause buffer overruns and the like.
 Also, there is no support for blanks (or weird characters) in
 filenames for the usock_file parameter.
 
-- There is no protection against a malicious user connecting to the
+* There is no protection against a malicious user connecting to the
 cnid_dbd socket and changing the database.
 
 Spotlight Compatible Indexing
@@ -228,9 +238,10 @@ Starting with version 3.1 Netatalk supports Spotlight searching.
 Netatalk uses GNOME TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)
 (previously known as Tracker) as metadata store, indexer and search engine.
 
-## Limitations and notes
+Limitations and notes
+---------------------
 
-- Large filesystems
+* Large filesystems
 
     Tracker on Linux uses the inotify Kernel filesystem change event API
     for tracking filesystem changes. On large filesystems this may be
@@ -246,7 +257,7 @@ Netatalk uses GNOME TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.or
     Tracker periodically scan filesystems for changes instead, see the
     Tracker configuration options enable-monitors and crawling-interval below.
 
-- Indexing home directories
+* Indexing home directories
 
     A known limitation with the current implementation means that shared
     volumes in a user's home directory does not get indexed by Spotlight.
@@ -254,7 +265,8 @@ Netatalk uses GNOME TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.or
     As a workaround, keep the shared volumes you want to have indexed
     elsewhere on the host filesystem.
 
-## Supported metadata attributes
+Supported metadata attributes
+-----------------------------
 
 The following table lists the supported Spotlight metadata attributes,
 based on Apple's [MDItem object](https://developer.apple.com/documentation/coreservices/mditemref/)

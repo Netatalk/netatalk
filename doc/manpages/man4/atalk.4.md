@@ -29,7 +29,7 @@ structure:
         short sat_family;
         unsigned char sat_port;
         struct at_addr sat_addr;
-        char sat_zero[ 8 ];
+        char sat_zero[8];
     };
 
 The port of a socket may be set with **bind**(2). The node for *bind* must

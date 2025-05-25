@@ -7,10 +7,9 @@ atalk_aton — AppleTalk address parsing
     #include <sys/types.h>
     #include <netatalk/at.h>
 
-    atalk_aton(	cp, 	 
-        ata);	 
-    char * cp;
-    struct at_addr * ata;
+    atalk_aton(cp, ata);
+    char *cp;
+    struct at_addr *ata;
 
 # Description
 

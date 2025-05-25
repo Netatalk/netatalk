@@ -1,7 +1,9 @@
+# Netatalk Contributors
+
 Lots of thanks to the following people who've made Netatalk what it is
 with their contributions. Cheers.
 
-# Original Authors
+## Original Authors
 
 Thanks a bunch folks, wherever you are.
 
@@ -19,14 +21,14 @@ support
 original afile/achfile/acleandir implementation
 - Marsha Jackson: reverse engineered the Apple II boot protocol
 
-# Community Contributors
+## Community Contributors
 
-## Project Administration
+### Project Administration
 
 - Jeffrey Buchbinder <jeff@univrel.pr.uconn.edu>
 - Matthew Keller <kellermg@potsdam.edu>
 
-## Developers: Version 1.4.99 - 2.0
+### Developers: Version 1.4.99 - 2.0
 
 - Alain Richard <alain.richard@equation.fr>
 - David R Bosso <dbosso@ltsc.ucsb.edu>
@@ -57,7 +59,7 @@ original afile/achfile/acleandir implementation
 - Joerg Lenneis <lenneis@wu-wien.ac.at>
 - Bjoern Fernhomberg <lists@fernhomberg.de>
 
-## Webmin Module
+### Webmin Module
 
 - Matthew Keller <kellermg@potsdam.edu>
 - Sven Mosimann/EcoLogic <sven.mosimann@ecologic.ch>
@@ -65,7 +67,7 @@ original afile/achfile/acleandir implementation
 - Ralph Boehme <slow@samba.org> (3.x version)
 - Daniel Markstedt <daniel@mindani.net> (4.x version)
 
-## Test Suite
+### Test Suite
 
 - Didier Gautheron <dgautheron@magic.fr>
 - Rafal Lewczuk <rlewczuk@pronet.pl>
@@ -74,7 +76,7 @@ original afile/achfile/acleandir implementation
 - CHANG-NING TSAI <spiderpower02@gmail.com>
 - Daniel Markstedt <daniel@mindani.net>
 
-## Package Maintainers and Contributors
+### Package Maintainers and Contributors
 
 - Arvid Norlander (Arch Linux, version 2.x)
 - Sebastian Rittau <srittau@debian.org> (Debian GNU/Linux)
@@ -89,14 +91,15 @@ original afile/achfile/acleandir implementation
 - Antoine Jacoutot <ajacoutot@openbsd.org> (OpenBSD)
 - Antonio Pastor (OpenWrt)
 
-> **NOTE:** This list of package maintainers is nowhere near complete,
+> ***NOTE:*** This list of package maintainers is nowhere near complete,
 but rather folks who have engaged directly with the Netatalk project.
 Our gratitude goes out to all package maintainers not listed here, too!
 
-## Website Maintainers
+### Website Maintainers
+
 - Andrew Morgan <morgan@orst.edu>
 
-## Documentation: Version 1.4.99 - 2.0
+### Documentation: Version 1.4.99 - 2.0
 
 - Steve Freitas <sflist@ihonk.com>
 - Karen A Swanberg <swanberg@tc.umn.edu>
@@ -114,7 +117,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Chris Blake <Chris.Blake@anu.edu.au>
 - Thomas Kaiser <Thomas.Kaiser@phg-online.de>
 
-## Bug Reports: Version 1.4.99 - 2.0
+### Bug Reports: Version 1.4.99 - 2.0
 
 - Ryan Dooley <dooleyr@missouri.edu>
 - Don Jessup <DJessup@tricord.com>
@@ -258,7 +261,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Sergey Fedorov <vital.had@gmail.com>
 - Jakub Jirutka <jakub@jirutka.cz>
 
-### macipgw
+## macipgw
 
 Contributors to the original macipgw project and forks,
 at the time the codebase was merged into netatalk.

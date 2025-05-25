@@ -1,9 +1,7 @@
 # Installation
 
-> **WARNING**
-
-> Before upgrading to Netatalk 4 from an earlier version, please read the
-[Upgrade](Upgrading.html) chapter in this manual.
+> ***WARNING:*** Before upgrading to Netatalk 4 from an earlier version,
+please read the [Upgrade](Upgrading.html) chapter in this manual.
 
 ## How to obtain Netatalk
 
