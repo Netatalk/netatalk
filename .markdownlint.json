@@ -1,0 +1,7 @@
+{
+  "default": true,
+  "MD013": { "code_blocks": false, "line_length": 120, "tables": false },
+  "first-line-h1": false,
+  "no-emphasis-as-heading": false,
+  "single-h1": false
+}
