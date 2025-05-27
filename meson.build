@@ -167,14 +167,18 @@ endif
 brew_prefix = ''
 if host_os == 'darwin'
     if cpu == 'aarch64' and fs.is_dir('/opt/homebrew')
-        brew_prefix += '/opt/homebrew'
-        include_dirs += brew_prefix + '/include'
+        brew_prefix = '/opt/homebrew'
+        if fs.is_dir(brew_prefix + '/include')
+            include_dirs += brew_prefix + '/include'
+        endif
     elif cpu == 'x86_64'
-        brew_prefix += '/usr/local'
+        brew_prefix = '/usr/local'
     endif
 elif host_os == 'linux' and fs.is_dir('/opt/linuxbrew/.linuxbrew')
     brew_prefix = '/home/linuxbrew/.linuxbrew'
-    include_dirs += brew_prefix + '/include'
+    if fs.is_dir(brew_prefix + '/include')
+        include_dirs += brew_prefix + '/include'
+    fi
 endif
 
 #############
