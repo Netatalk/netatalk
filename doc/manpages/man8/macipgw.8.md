@@ -79,7 +79,7 @@ zone.
 
 ## Example: macipgw invocation
 
-    /usr/local/libexec/macipgw -n 192.168.1.1 -z "Remote Users" 192.168.1.0 255.255.255.0
+    macipgw -n 192.168.1.1 -z "Remote Users" 192.168.1.0 255.255.255.0
 
 Starts **macipgw**, assigning the Class C network 192.168.1.0 for devices
 connected through the gateway, specifying that the system **macipgw** is

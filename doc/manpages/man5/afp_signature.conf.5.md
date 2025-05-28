@@ -17,7 +17,7 @@ characters for a 16-byte server signature.
 All leading spaces and tabs are ignored. Blank lines are ignored. The
 lines prefixed with \# are ignored. Any illegal lines are ignored.
 
-> **NOTE** The server signature is a unique 16-byte identifier used to prevent
+> ***NOTE:*** The server signature is a unique 16-byte identifier used to prevent
 users from logging on to the same server twice.
 >
 > Netatalk 2.0 and earlier generated a server signature by using
