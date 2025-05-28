@@ -472,8 +472,7 @@ Install required packages
 
 ```shell
 set -e
-pkg install bison cmake flex gcc libevent libgcrypt ninja pkg-config python/pip
-pip install meson
+pkg install bison cmake flex gcc libevent libgcrypt meson ninja pkg-config
 curl --location -o cmark.tar.gz https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
 curl --location -o iniparser.tar.gz https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
 set +e # tar on Solaris is too old to handle git tarballs cleanly
@@ -498,7 +497,7 @@ Configure, compile, install, run, and uninstall
 ```shell
 set -e
 export PATH=/usr/local/sbin:/usr/local/bin:$PATH
-meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true
+meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-pam=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 meson test -C build
 meson install -C build
