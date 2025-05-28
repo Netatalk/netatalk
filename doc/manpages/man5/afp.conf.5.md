@@ -360,7 +360,7 @@ running **sshd**(8) on the server to let things work.
 > ***NOTE:*** Setting this option is not recommended since globally encrypting AFP
 connections via SSH will increase the server's load significantly. On
 the other hand, Apple's client side implementation of this feature in
-MacOS X versions prior to 10.3.4 contained a security flaw.
+Mac OS X versions prior to 10.3.4 contained a security flaw.
 
 afp interfaces = *name [name ...]* **(G)**
 
@@ -1241,7 +1241,7 @@ invisible dots = *BOOLEAN* (default: *no*) **(V)**
 
 > make dot files invisible.
 >
-> ***WARNING:*** enabling this option will lead to
+> ***WARNING:*** Enabling this option will lead to
 unwanted side effects where OS X applications, when saving files to a
 temporary file starting with a dot first, then renaming the temp file to
 its final name, result in the saved file being invisible. The only thing

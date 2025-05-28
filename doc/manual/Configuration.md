@@ -116,15 +116,15 @@ working with netatalk:
 
 - Don't nest volumes unless "**vol dbnest = yes**" is set.
 - CNID backends are databases, so they turn afpd into a file
-server/database mix.
+  server/database mix.
 - If there's no more space on the filesystem left, the database will
-get corrupted. You can work around this by using the **vol dbpath**
-option and put the database files into another location.
+  get corrupted. You can work around this by using the **vol dbpath**
+  option and put the database files into another location.
 - Be careful with CNID databases for volumes that are mounted via NFS.
-That is a pretty audacious decision to make anyway, but putting a
-database there as well is really asking for trouble, i.e. database
-corruption. Use the **vol dbpath** directive to put the databases onto
-a local disk if you must use NFS mounted volumes.
+  That is a pretty audacious decision to make anyway, but putting a
+  database there as well is really asking for trouble, i.e. database
+  corruption. Use the **vol dbpath** directive to put the databases onto
+  a local disk if you must use NFS mounted volumes.
 
 ### dbd
 
