@@ -1,4 +1,4 @@
-# About Netatalk
+# Netatalk - Free and Open Source AFP File Server
 
 ## Continuous Integration
 
@@ -24,6 +24,8 @@
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=sqale_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=duplicated_lines_density)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
+
+## About Netatalk
 
 Netatalk is a Free and Open Source file server that implements
 the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol)
