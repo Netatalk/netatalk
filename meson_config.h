@@ -235,6 +235,9 @@
 /* Whether NFSv4 ACLs are available */
 #mesondefine HAVE_NFSV4_ACLS
 
+/* Whether the PAM header has a pam_conv struct with const pam_message member. */
+#mesondefine HAVE_PAM_CONV_CONST_PAM_MESSAGE
+
 /* Define to 1 if you have the <pam/pam_appl.h> header file. */
 #mesondefine HAVE_PAM_PAM_APPL_H
 
