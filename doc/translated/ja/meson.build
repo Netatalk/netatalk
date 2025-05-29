@@ -50,6 +50,7 @@ if have_appletalk
             'papd.8',
             'papd.conf.5',
             'papstatus.8',
+            'rtmpqry.1',
             'timelord.8',
         ]
     endif
