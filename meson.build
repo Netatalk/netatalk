@@ -1640,6 +1640,30 @@ else
             cdata.set('PAM_SESSION', 'pam_unix.so')
         endif
 
+        pam_conv_with_const_code = '''
+        #include <security/pam_appl.h>
+
+        int my_conv(int, const struct pam_message **, struct pam_response **, void *);
+
+        static struct pam_conv conv = {
+        .conv = my_conv,
+        .appdata_ptr = 0,
+        };
+
+        int main(void) {
+        return 0;
+        }
+        '''
+
+        have_pam_conv_with_const = cc.compiles(
+            pam_conv_with_const_code,
+            name: 'pam_conv with const pam_message',
+        )
+
+        if have_pam_conv_with_const
+            cdata.set('HAVE_PAM_CONV_CONST_PAM_MESSAGE', 1)
+        endif
+
         if pam_conf_path != ''
             pam_confdir += pam_conf_path
         else

@@ -731,7 +731,6 @@ jobs:
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-iniparser-path=/usr/local \
-              -Dwith-pam=false \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build

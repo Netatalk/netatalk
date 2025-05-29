@@ -67,7 +67,11 @@ static unsigned char *PAM_password;
  * echo off means password.
  */
 static int PAM_conv(int num_msg,
+#ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
                     const struct pam_message **msg,
+#else
+                    struct pam_message **msg,
+#endif
                     struct pam_response **resp,
                     void *appdata_ptr _U_)
 {
