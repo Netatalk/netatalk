@@ -395,6 +395,7 @@ jobs:
         run: |
           meson setup build \
             -Dbuildtype=release \
+            -Dwith-homebrew=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build

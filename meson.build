@@ -165,19 +165,21 @@ endif
 # note: the brew app is not visible from within the brew build wrapper iteslf,
 # so rather than checking for brew we apply a blanket prefix
 brew_prefix = ''
-if host_os == 'darwin'
-    if cpu == 'aarch64' and fs.is_dir('/opt/homebrew')
-        brew_prefix = '/opt/homebrew'
+if get_option('with-homebrew') == true
+    if host_os == 'darwin'
+        if cpu == 'aarch64' and fs.is_dir('/opt/homebrew')
+            brew_prefix = '/opt/homebrew'
+            if fs.is_dir(brew_prefix + '/include')
+                include_dirs += brew_prefix + '/include'
+            endif
+        elif cpu == 'x86_64'
+            brew_prefix = '/usr/local'
+        endif
+    elif host_os == 'linux' and fs.is_dir('/opt/linuxbrew/.linuxbrew')
+        brew_prefix = '/home/linuxbrew/.linuxbrew'
         if fs.is_dir(brew_prefix + '/include')
             include_dirs += brew_prefix + '/include'
         endif
-    elif cpu == 'x86_64'
-        brew_prefix = '/usr/local'
-    endif
-elif host_os == 'linux' and fs.is_dir('/opt/linuxbrew/.linuxbrew')
-    brew_prefix = '/home/linuxbrew/.linuxbrew'
-    if fs.is_dir(brew_prefix + '/include')
-        include_dirs += brew_prefix + '/include'
     endif
 endif
 
@@ -825,8 +827,12 @@ endif
 # Check for Spotlight support
 #
 
+bison = ''
+
 if host_os == 'darwin'
-    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+    if brew_prefix != ''
+        bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+    endif
     if not bison.found()
         bison = find_program('/opt/local/bin/bison', required: false)
     endif
@@ -1894,7 +1900,7 @@ else
         cdata.set('USE_CRACKLIB', 1)
         if cracklib_path != ''
             cdata.set('_PATH_CRACKLIB', '"' + cracklib_path + '"')
-        elif host_os == 'darwin'
+        elif host_os == 'darwin' and brew_prefix != ''
             cdata.set(
                 '_PATH_CRACKLIB',
                 '"' + brew_prefix / 'var/cracklib/cracklib-words' + '"',
