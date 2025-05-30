@@ -1,6 +1,16 @@
 Netatalk Changelogs
 ===================
 
+Changes in 4.2.4
+----------------
+
+* FIX: uams: Check for const pam_message member of pam_conv, GitHub #2196
+       Makes it possible to build on Solaris 11.4.81 CBE
+* FIX: meson: Avoid build error in incomplete Homebrew env, GitHub #2190
+* UPD: meson: Build with Homebrew libraries is now opt-in, GitHub #2194
+       To opt in to build against Homebrew, use -Dwith-homebrew=true
+* UPD: docs: Improve afpd and macipgw man pages, GitHub #2155
+
 Changes in 4.2.3
 ----------------
 
