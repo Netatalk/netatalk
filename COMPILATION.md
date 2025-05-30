@@ -285,7 +285,7 @@ brew install cmark-gfm cracklib iniparser mariadb meson openldap
 Configure
 
 ```
-meson setup build -Dbuildtype=release -Dwith-tests=true -Dwith-testsuite=true
+meson setup build -Dbuildtype=release -Dwith-homebrew=true -Dwith-tests=true -Dwith-testsuite=true
 ```
 
 Build
@@ -472,8 +472,7 @@ Install required packages
 
 ```
 set -e
-pkg install bison cmake flex gcc libevent libgcrypt ninja pkg-config python/pip
-pip install meson
+pkg install bison cmake flex gcc libevent libgcrypt meson ninja pkg-config
 curl --location -o cmark.tar.gz https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
 curl --location -o iniparser.tar.gz https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
 set +e # tar on Solaris is too old to handle git tarballs cleanly
