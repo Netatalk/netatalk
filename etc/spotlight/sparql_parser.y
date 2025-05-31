@@ -1,45 +1,45 @@
 %{
-  #include <stdbool.h>
-  #include <stdio.h>
-  #include <string.h>
-  #include <time.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
-  #include <gio/gio.h>
+#include <gio/gio.h>
 
-  #include <talloc.h>
+#include <talloc.h>
 
-  #include <atalk/errchk.h>
-  #include <atalk/logger.h>
-  #include <atalk/spotlight.h>
+#include <atalk/errchk.h>
+#include <atalk/logger.h>
+#include <atalk/spotlight.h>
 
-  #include "sparql_map.h"
+#include "sparql_map.h"
 
-  struct yy_buffer_state;
-  typedef struct yy_buffer_state *YY_BUFFER_STATE;
-  extern int yylex (void);
-  extern void yyerror (char const *);
-  extern void *yyterminate(void);
-  extern YY_BUFFER_STATE yy_scan_string( const char *str);
-  extern void yy_delete_buffer ( YY_BUFFER_STATE buffer );
+    struct yy_buffer_state;
+    typedef struct yy_buffer_state *YY_BUFFER_STATE;
+    extern int yylex (void);
+    extern void yyerror (char const *);
+    extern void *yyterminate(void);
+    extern YY_BUFFER_STATE yy_scan_string(const char *str);
+    extern void yy_delete_buffer (YY_BUFFER_STATE buffer);
 
-  /* forward declarations */
-  static const char *map_expr(const char *attr, char op, const char *val);
-  static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
-  static time_t isodate2unix(const char *s);
+    /* forward declarations */
+    static const char *map_expr(const char *attr, char op, const char *val);
+    static const char *map_daterange(const char *dateattr, time_t date1, time_t date2);
+    static time_t isodate2unix(const char *s);
 
- /* global vars, e.g. needed by the lexer */
-  slq_t *ssp_slq;
+    /* global vars, e.g. needed by the lexer */
+    slq_t *ssp_slq;
 
-  /* local vars */
-  static gchar *ssp_result;
-  static char sparqlvar;
-  static char *result_limit;
+    /* local vars */
+    static gchar *ssp_result;
+    static char sparqlvar;
+    static char *result_limit;
 %}
 
 %code provides {
-  #define SPRAW_TIME_OFFSET 978307200
-  extern int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result);
-  extern slq_t *ssp_slq;
+#define SPRAW_TIME_OFFSET 978307200
+    extern int map_spotlight_to_sparql_query(slq_t * slq, gchar **sparql_result);
+    extern slq_t *ssp_slq;
 }
 
 %union {
@@ -71,10 +71,13 @@ input:
 
 line:
 expr                           {
-    if (ssp_slq->slq_result_limit)
-        result_limit = talloc_asprintf(ssp_slq, "LIMIT %ld", ssp_slq->slq_result_limit);
-    else
+    if (ssp_slq->slq_result_limit) {
+        result_limit = talloc_asprintf(ssp_slq, "LIMIT %ld",
+                                       ssp_slq->slq_result_limit);
+    } else {
         result_limit = "";
+    }
+
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT ?url WHERE "
                                  "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
@@ -85,23 +88,26 @@ expr                           {
 
 expr:
 BOOL {
-	/*
-	 * We can't properly handle these in expressions, fortunately this
-	 * is probably only ever used by OS X as sole element in an
-	 * expression i.e. "False" (when Finder window selected our share
-	 * but no search string entered yet). Packet traces showed that OS
-	 * X Spotlight server then returns a failure (ie -1) which is what
-	 * we do here too by calling YYABORT.
-	 */
-	YYABORT;
+    /*
+     * We can't properly handle these in expressions, fortunately this
+     * is probably only ever used by OS X as sole element in an
+     * expression i.e. "False" (when Finder window selected our share
+     * but no search string entered yet). Packet traces showed that OS
+     * X Spotlight server then returns a failure (ie -1) which is what
+     * we do here too by calling YYABORT.
+     */
+    YYABORT;
 }
 | match OR match                 {
-    if ($1 == NULL || $3 == NULL)
+    if ($1 == NULL || $3 == NULL) {
         YYABORT;
-    if (strcmp($1, $3) != 0)
+    }
+
+    if (strcmp($1, $3) != 0) {
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
-    else
+    } else {
         $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    }
 }
 | match                        {$$ = $1; if ($$ == NULL) YYABORT;}
 | function                     {$$ = $1;}
@@ -111,6 +117,7 @@ BOOL {
         yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
     }
+
     $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
 }
 | expr OR expr                 {
@@ -118,12 +125,16 @@ BOOL {
         yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
     }
-    if ($1 == NULL || $3 == NULL)
+
+    if ($1 == NULL || $3 == NULL) {
         YYABORT;
-    if (strcmp($1, $3) != 0)
+    }
+
+    if (strcmp($1, $3) != 0) {
         $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
-    else
+    } else {
         $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    }
 }
 ;
 
@@ -153,22 +164,24 @@ static time_t isodate2unix(const char *s)
 {
     struct tm tm;
 
-    if (!strptime(s, "%Y-%m-%dT%H:%M:%SZ", &tm))
-        return (time_t)-1;
+    if (!strptime(s, "%Y-%m-%dT%H:%M:%SZ", &tm)) {
+        return (time_t) -1;
+    }
+
     return mktime(&tm);
 }
 
-static const char *map_daterange(const char *dateattr, time_t date1, time_t date2)
+static const char *map_daterange(const char *dateattr, time_t date1,
+                                 time_t date2)
 {
     EC_INIT;
     char *result = NULL;
     struct spotlight_sparql_map *p;
     struct tm *tmp;
     char buf1[64], buf2[64];
-
-    EC_NULL_LOG( tmp = localtime(&date1) );
+    EC_NULL_LOG(tmp = localtime(&date1));
     strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-    EC_NULL_LOG( tmp = localtime(&date2) );
+    EC_NULL_LOG(tmp = localtime(&date2));
     strftime(buf2, sizeof(buf2), "%Y-%m-%dT%H:%M:%SZ", tmp);
 
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
@@ -187,8 +200,11 @@ static const char *map_daterange(const char *dateattr, time_t date1, time_t date
     }
 
 EC_CLEANUP:
-    if (ret != 0)
+
+    if (ret != 0) {
         return NULL;
+    }
+
     return result;
 }
 
@@ -203,18 +219,22 @@ static char *map_type_search(const char *attr, char op, const char *val)
             case kMDTypeMapRDF:
                 sparqlAttr = "rdf:type";
                 break;
+
             case kMDTypeMapMime:
                 sparqlAttr = "nie:mimeType";
                 break;
+
             default:
                 return NULL;
             }
+
             result = talloc_asprintf(ssp_slq, "?obj %s '%s'",
                                      sparqlAttr,
                                      p->mdtm_sparql);
             break;
         }
     }
+
     return result;
 }
 
@@ -234,10 +254,12 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 yyerror("unsupported Spotlight attribute");
                 EC_FAIL;
             }
+
             switch (p->ssm_type) {
             case ssmt_bool:
                 result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
                 break;
+
             case ssmt_num:
                 result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c%c '%s')",
                                          p->ssm_sparql_attr,
@@ -248,6 +270,7 @@ static const char *map_expr(const char *attr, char op, const char *val)
                                          val);
                 sparqlvar++;
                 break;
+
             case ssmt_str:
                 q = bformat("^%s$", val);
                 search = bfromcstr("*");
@@ -260,12 +283,14 @@ static const char *map_expr(const char *attr, char op, const char *val)
                                          bdata(q));
                 sparqlvar++;
                 break;
+
             case ssmt_fts:
                 result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
                 break;
+
             case ssmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
-                EC_NULL( tmp = localtime(&t) );
+                EC_NULL(tmp = localtime(&t));
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
                 result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c '%s')",
                                          p->ssm_sparql_attr,
@@ -275,25 +300,37 @@ static const char *map_expr(const char *attr, char op, const char *val)
                                          buf1);
                 sparqlvar++;
                 break;
+
             case ssmt_type:
                 result = map_type_search(attr, op, val);
                 break;
+
             default:
                 EC_FAIL;
             }
+
             break;
         }
     }
 
 EC_CLEANUP:
-    if (ret != 0)
+
+    if (ret != 0) {
         result = NULL;
-    if (q)
+    }
+
+    if (q) {
         bdestroy(q);
-    if (search)
+    }
+
+    if (search) {
         bdestroy(search);
-    if (replace)
+    }
+
+    if (replace) {
         bdestroy(replace);
+    }
+
     return result;
 }
 
@@ -324,20 +361,22 @@ int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
     EC_INIT;
     YY_BUFFER_STATE s = NULL;
     ssp_result = NULL;
-
     ssp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
     sparqlvar = 'a';
-
-    EC_ZERO( yyparse() );
-
+    EC_ZERO(yyparse());
 EC_CLEANUP:
-    if (s)
+
+    if (s) {
         yy_delete_buffer(s);
-    if (ret == 0)
+    }
+
+    if (ret == 0) {
         *sparql_result = ssp_result;
-    else
+    } else {
         *sparql_result = NULL;
+    }
+
     EC_EXIT;
 }
 
@@ -356,15 +395,13 @@ int main(int argc, char **argv)
     ssp_slq->slq_scope = talloc_strdup(ssp_slq, "/Volumes/test");
     ssp_slq->slq_allow_expr = true;
     sparqlvar = 'a';
-
     s = yy_scan_string(argv[1]);
-
     ret = yyparse();
-
     yy_delete_buffer(s);
 
-    if (ret == 0)
+    if (ret == 0) {
         printf("SPARQL: %s\n", ssp_result ? ssp_result : "(empty)");
+    }
 
     return 0;
 }
