@@ -153,7 +153,7 @@ static time_t isodate2unix(const char *s)
 {
     struct tm tm;
 
-    if (strptime(s, "%Y-%m-%dT%H:%M:%SZ", &tm) == NULL)
+    if (!strptime(s, "%Y-%m-%dT%H:%M:%SZ", &tm))
         return (time_t)-1;
     return mktime(&tm);
 }
