@@ -132,14 +132,15 @@ sub parse_afpconf {
 	while($i <= $#afpconflines) {
 		my $j = $i;
 		my $line = $afpconflines[$i++];
-		while($line =~ /^[^#;]*\\$/) {				# no line continuation after comments
+        # no line continuation after comments
+		while($line =~ /^[^#;]*\\$/) {
 			die "$text{'afpconf_unexpectedeof'}\n" if($i > $#afpconflines);
 			$line = substr($line, 0, -1) . $afpconflines[$i++];
 		}
 
 		if($line =~ /^\s*\[/) {
-			# section name
-			if($line =~ /^\s*\[([^#\]]+)\]\s*$/) {	# section name must not contain ']' or '#'
+            # section name must not contain ']' or '#'
+			if($line =~ /^\s*\[([^#\]]+)\]\s*$/) {
 				$section = {
 					firstline => $j,
 					linecountOfSectionHeader => $i - $j,
@@ -160,7 +161,8 @@ sub parse_afpconf {
 		} else {
 			$$section{linecount} = $i - $$section{firstline} if($section);
 
-			next if($line =~ /^\s*(#|;|$)/);			# skip empty or comment lines
+            # skip empty or comment lines
+			next if($line =~ /^\s*(#|;|$)/);
 
 			die &text('afpconf_err_no_section', $line, $j + 1)."\n" unless($section);
 
@@ -313,7 +315,8 @@ sub modify_afpconf_ref_and_write {
 	}
 
 	my $parametersOfSectionRef = {};
-	my $insertWhere = scalar(@{$$afpconfRef{lines}});			# default to appending at end
+    # default to appending at end
+	my $insertWhere = scalar(@{$$afpconfRef{lines}});
 	my @insertedLines = ();
 
 	if($index =~ /\d+/) {
@@ -470,7 +473,8 @@ sub file_rotate {
     rename($file . ".3", $file . ".4");
     rename($file . ".2", $file . ".3");
     rename($file . ".1", $file . ".2");
-    copy_source_dest($file, $file . ".1") or die "copy failed: $!";	# use function from web-lib-funcs.pl instead of File::Copy
+    # use function from web-lib-funcs.pl instead of File::Copy
+    copy_source_dest($file, $file . ".1") or die "copy failed: $!";
 }
 
 sub build_select {
@@ -527,19 +531,19 @@ sub version {
 	return $1;
 }
 
-# ------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 # Below are functions that were ported from the old 2.x webmin module
-# ------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
-#Returns the number of lines of a file
+# Returns the number of lines of a file
 #
-#$var1 is the file
+# $var1 is the file
 #-------------------------------------------------------------------------------
 sub getLinesSpezFile {
 	my ($var1) = @_;
 	my $counting = 1;
-	#Test whether the variable has been passed
+	# Test whether the variable has been passed
 	open(FileHandle, "<$var1") || die return 0;
 	while(<FileHandle>){
 		$counting++;
@@ -549,10 +553,10 @@ sub getLinesSpezFile {
 }
 
 #-------------------------------------------------------------------------------
-#Returns the the line number where a specific string was found
+# Returns the the line number where a specific string was found
 #
-#$var1 is the file
-#$var2 is the line to match
+# $var1 is the file
+# $var2 is the line to match
 #-------------------------------------------------------------------------------
 sub getSpezLine {
 	my ($var1, $var2) = @_;
@@ -563,7 +567,7 @@ sub getSpezLine {
 	open(OLD, "<$var1") || die "$var1 $text{not_readable}";
 	while(<OLD>){
 		$counter++;
-		# Server names may or may not be quoted
+		# Handle both quoted and naked strings
  		if($_ =~ /^\"?$escaped_name/ ){
  			$outputli = $counter;
  			last
@@ -574,12 +578,12 @@ sub getSpezLine {
 }
 
 #------------------------------------------------------------------------------
-#Function appends a new line to file
+# Function appends a new line to file
 #
-#$var1 File to which the line should be appended
-#$var2 String to be appended
-#$var3 Line number to append string to
-#$var4 Total number of lines in file
+# $var1 File to which the line should be appended
+# $var2 String to be appended
+# $var3 Line number to append string to
+# $var4 Total number of lines in file
 #------------------------------------------------------------------------------
 sub addLineToFile {
 	my ($var1, $var2, $var3, $var4) = @_;
@@ -615,9 +619,9 @@ sub addLineToFile {
 }
 
 #------------------------------------------------------------------
-#deletes a certain line in a file
-#$var1 =>File
-#$var2 =>Line number to delete
+# deletes a certain line in a file
+# $var1 =>File
+# $var2 =>Line number to delete
 #------------------------------------------------------------------
 sub deleteSpezLine {
 	my ($var1, $var2) = @_;
@@ -668,7 +672,7 @@ sub createNewAtalkLine {
 }
 
 #------------------------------------------------------------------
-#Parses atalkd.conf and stores data for editing in an array
+# Parses atalkd.conf and stores data for editing in an array
 #------------------------------------------------------------------
 sub getAtalkIfs {
 	my @atalk_all;
@@ -709,9 +713,9 @@ sub getAtalkIfs {
 }
 
 #------------------------------------------------------------------
-#Page, which displays input error
+# Page, which displays input error
 #
-#$var1 Info-Text
+# $var1 Info-Text
 #------------------------------------------------------------------
 sub showMessage {
 	my ($var1) = @_;
