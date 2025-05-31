@@ -67,7 +67,7 @@ enable the `unconfined` security option.
 
 Example for the docker compose yaml configuration file:
 
-```docker
+```yaml
     security_opt:
       - apparmor=unconfined
 ```
@@ -131,8 +131,11 @@ services:
 
 volumes:
   afpshare:
+    name: afpshare
   afpbackup:
+    name: afpbackup
   cnid_db_data:
+    name: cnid_db_data
 
 networks:
   afp_network:
@@ -189,8 +192,11 @@ services:
 
 volumes:
   afpshare:
+    name: afpshare
   afpbackup:
+    name: afpbackup
   afpconf:
+    name: afpconf
 
 networks:
   afp_network:
