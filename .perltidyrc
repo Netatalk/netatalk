@@ -1,0 +1,11 @@
+--backup-and-modify-in-place
+--block-brace-tightness=1
+--brace-tightness=2
+--break-at-old-comma-breakpoints
+--cuddled-else
+--extended-continuation-indentation
+--extended-line-up-parentheses
+--maximum-line-length=120
+--opening-brace-always-on-right
+--paren-tightness=2
+--square-bracket-tightness=2

@@ -21,8 +21,8 @@ require 'netatalk-lib.pl';
 @printers = split(/\r?\n/, $in{'papd'});
 &open_lock_tempfile(PAPD, ">$config{'papd_c'}");
 foreach $p (@printers) {
-	&print_tempfile(PAPD, $p,"\n");
-	}
+    &print_tempfile(PAPD, $p, "\n");
+}
 &close_tempfile(PAPD);
 
 &redirect("index.cgi?tab=general");

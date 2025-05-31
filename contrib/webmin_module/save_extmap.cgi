@@ -21,8 +21,8 @@ require 'netatalk-lib.pl';
 @mappings = split(/\r?\n/, $in{'extmap'});
 &open_lock_tempfile(EXTMAP, ">$config{'extmap_c'}");
 foreach $p (@mappings) {
-	&print_tempfile(EXTMAP, $p,"\n");
-	}
+    &print_tempfile(EXTMAP, $p, "\n");
+}
 &close_tempfile(EXTMAP);
 
 &redirect("index.cgi?tab=general");
