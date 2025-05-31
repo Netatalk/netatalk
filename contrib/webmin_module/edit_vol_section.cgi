@@ -25,11 +25,13 @@
 #   [baseOnIndex = index of section in sectionsByIndex to base this new volume or volume preset on]
 #   [reload = true - if set, then values of inputs are read from the %in-Hash]
 
-# all inputs for netatalk configuration parameters follow the naming convention "p_"+parameter name to keep the save_vol_section.cgi simple
+# all inputs for netatalk configuration parameters follow the naming convention "p_"+parameter name
+# to keep the save_vol_section.cgi simple
 
 require 'netatalk-lib.pl';
 
-my $subject; # what it is, we are going to edit: volume | volume_preset | homes
+# what it is, we are going to edit: volume | volume_preset | homes
+my $subject;
 my $pageTitle = $text{'errmsg_title'};
 my $afpconfRef;
 my $sectionRef;
@@ -68,7 +70,8 @@ eval {
 		$sectionRef = $$afpconfRef{sectionsByIndex}[$in{'baseOnIndex'}];
 	}
 
-	# rejoin parameters that have been split for the user interface (as users and groups are handled in different lists within the UI, whereas they are combined in afp.conf)
+	# rejoin parameters that have been split for the user interface
+    # (as users and groups are handled in different lists within the UI, whereas they are combined in afp.conf)
 	if($in{'reload'}) {
 		$in{'p_valid users'} = join_users_and_groups(defined $in{'pu_valid_users'} ? $in{'pu_valid_users'} : '', defined $in{'pg_valid_users'} ? $in{'pg_valid_users'} : '');
 		$in{'p_invalid users'} = join_users_and_groups(defined $in{'pu_invalid_users'} ? $in{'pu_invalid_users'} : '', defined $in{'pg_invalid_users'} ? $in{'pg_invalid_users'} : '');

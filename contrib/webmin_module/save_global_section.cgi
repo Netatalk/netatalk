@@ -27,7 +27,8 @@ eval {
 	$in{'p_uam list'} =~ s/\x00/ /g;
 	$in{'p_uam list'} =~ s/^[ ,]+//; $in{'p_uam list'} =~ s/[ ,]+$//; $in{'p_uam list'} =~ s/[ ,]+/ /g;
 
-	# correct fields which had to be named without spaces catering for sloppy name handling in the webmin API
+	# correct fields which had to be named without spaces catering for sloppy name handling
+    # in the webmin API
 	$in{'p_k5 keytab'} = $in{'p_k5_keytab'}; delete $in{'p_k5_keytab'};
 	$in{'p_vol dbpath'} = $in{'p_vol_dbpath'}; delete $in{'p_vol_dbpath'};
 	$in{'p_log file'} = $in{'p_log_file'}; delete $in{'p_log_file'};
