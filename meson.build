@@ -827,13 +827,10 @@ endif
 # Check for Spotlight support
 #
 
-bison = ''
-
 if host_os == 'darwin'
     if brew_prefix != ''
         bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
-    endif
-    if not bison.found()
+    else
         bison = find_program('/opt/local/bin/bison', required: false)
     endif
 else
