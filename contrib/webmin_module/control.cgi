@@ -21,15 +21,14 @@ require 'netatalk-lib.pl';
 
 &ReadParse();
 
-my $daemon = $in{'daemon'};
-my $action = $in{'action'};
-my $command = $config{$action.'_'.$daemon};
-my $rv = system($command.' </dev/null');
+my $daemon  = $in{'daemon'};
+my $action  = $in{'action'};
+my $command = $config{$action . '_' . $daemon};
+my $rv      = system($command. ' </dev/null');
 if ($rv) { die &text('init_failed', $command); }
 
 if ($daemon ne 'netatalk') {
     redirect("index.cgi?tab=ddp");
-}
-else {
+} else {
     redirect("index.cgi");
 }

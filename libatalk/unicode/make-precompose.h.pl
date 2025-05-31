@@ -22,13 +22,12 @@
 # https://www.unicode.org/reports/tr15/
 # https://www.unicode.org/Public/UNIDATA/UnicodeData.txt
 
-
 # temp files for binary search (compose.TEMP, compose_sp.TEMP) -------------
 
 open(UNICODEDATA, "<$ARGV[0]") or die "$0: open $ARGV[0]: $!";
-open(CHEADER, ">$ARGV[1]") or die "$0: open $ARGV[1]: $!";
+open(CHEADER,     ">$ARGV[1]") or die "$0: open $ARGV[1]: $!";
 
-open(COMPOSE_TEMP, ">compose.TEMP") or die "$0: open compose.TEMP: $!";
+open(COMPOSE_TEMP,    ">compose.TEMP")    or die "$0: open compose.TEMP: $!";
 open(COMPOSE_SP_TEMP, ">compose_sp.TEMP") or die "$0: open compose_sp.TEMP: $!";
 
 while (<UNICODEDATA>) {
@@ -52,38 +51,42 @@ while (<UNICODEDATA>) {
     ) = split(/\;/);
 
     if (($Decomposition_Mapping5 ne "") && ($Decomposition_Mapping5 !~ /\</) && ($Decomposition_Mapping5 =~ / /)) {
-	($base, $comb) = split(/ /,$Decomposition_Mapping5);
+        ($base, $comb) = split(/ /, $Decomposition_Mapping5);
 
-	$leftbracket  = "    { ";
-	$rightbracket =" },     ";
+        $leftbracket  = "    { ";
+        $rightbracket = " },     ";
 
-	# AFP 3.x Spec
-	if ( ((0x2000  <= hex($code0)) && (hex($code0) <=  0x2FFF))
-	     || ((0xFE30  <= hex($code0)) && (hex($code0) <=  0xFE4F))
-	     || ((0x2F800 <= hex($code0)) && (hex($code0) <= 0x2FA1F))) {
-	    $leftbracket  = "    \/\*{ ";
-	    $rightbracket =" },\*\/   ";
-	}
+        # AFP 3.x Spec
+        if (    ((0x2000 <= hex($code0)) && (hex($code0) <= 0x2FFF))
+             || ((0xFE30 <= hex($code0))  && (hex($code0) <= 0xFE4F))
+             || ((0x2F800 <= hex($code0)) && (hex($code0) <= 0x2FA1F))) {
+            $leftbracket  = "    \/\*{ ";
+            $rightbracket = " },\*\/   ";
+        }
 
-	if (hex($code0) > 0xFFFF) {
+        if (hex($code0) > 0xFFFF) {
 
-	    $code0_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($code0) >> 10);
-	    $code0_sp_lo = 0xDC00 + (hex($code0) & 0x3FF);
+            $code0_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($code0) >> 10);
+            $code0_sp_lo = 0xDC00 + (hex($code0) & 0x3FF);
 
-	    $base_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($base) >> 10);
-	    $base_sp_lo = 0xDC00 + (hex($base) & 0x3FF);
+            $base_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($base) >> 10);
+            $base_sp_lo = 0xDC00 + (hex($base) & 0x3FF);
 
-	    $comb_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($comb) >> 10);
-	    $comb_sp_lo = 0xDC00 + (hex($comb) & 0x3FF);
+            $comb_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($comb) >> 10);
+            $comb_sp_lo = 0xDC00 + (hex($comb) & 0x3FF);
 
-	    printf(COMPOSE_SP_TEMP "%s0x%04X%04X, 0x%04X%04X, 0x%04X%04X%s\/\* %s \*\/\n",
-		   $leftbracket, $code0_sp_hi ,$code0_sp_lo, $base_sp_hi, $base_sp_lo, $comb_sp_hi, $comb_sp_lo, $rightbracket, $Name1);
+            printf(COMPOSE_SP_TEMP "%s0x%04X%04X, 0x%04X%04X, 0x%04X%04X%s\/\* %s \*\/\n",
+                   $leftbracket,  $code0_sp_hi, $code0_sp_lo, $base_sp_hi, $base_sp_lo, $comb_sp_hi, $comb_sp_lo,
+                   $rightbracket, $Name1
+            );
 
-	    $leftbracket  = "    \/\*{ ";
-	    $rightbracket = " },\*\/   ";
-	}
+            $leftbracket  = "    \/\*{ ";
+            $rightbracket = " },\*\/   ";
+        }
 
-	printf(COMPOSE_TEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base), hex($comb), $rightbracket, $Name1);
+        printf(COMPOSE_TEMP "%s0x%08X, 0x%08X, 0x%08X%s\/\* %s \*\/\n", $leftbracket, hex($code0), hex($base),
+               hex($comb), $rightbracket, $Name1
+        );
 
     }
 }
@@ -102,9 +105,9 @@ $comp_count = 0;
 
 while (<COMPOSE_TEMP>) {
     if (m/^\/\*/) {
-	next;
+        next;
     }
-    $comp_table[$comp_count][0] = substr($_, 4, 10);
+    $comp_table[$comp_count][0] = substr($_, 4,  10);
     $comp_table[$comp_count][1] = substr($_, 16, 10);
     $comp_count++;
 }
@@ -113,18 +116,18 @@ while (<COMPOSE_TEMP>) {
 $maxcomblen = 2;
 
 for ($i = 0 ; $i < $comp_count ; $i++) {
-    $base = $comp_table[$i][1];
+    $base    = $comp_table[$i][1];
     $comblen = 1;
-    $j = 0;
+    $j       = 0;
     while ($j < $comp_count) {
-	if ($base ne $comp_table[$j][0]) {
-	    $j++;
-	    next;
-	} else {
-	    $comblen++;
-	    $base =  $comp_table[$j][1];
-	    $j = 0;
-	}
+        if ($base ne $comp_table[$j][0]) {
+            $j++;
+            next;
+        } else {
+            $comblen++;
+            $base = $comp_table[$j][1];
+            $j    = 0;
+        }
     }
     $maxcomblen = ($maxcomblen > $comblen) ? $maxcomblen : $comblen;
 }
@@ -140,9 +143,9 @@ $comp_sp_count = 0;
 
 while (<COMPOSE_SP_TEMP>) {
     if (m/^\/\*/) {
-	next;
+        next;
     }
-    $comp_sp_table[$comp_sp_count][0] = substr($_, 4, 10);
+    $comp_sp_table[$comp_sp_count][0] = substr($_, 4,  10);
     $comp_sp_table[$comp_sp_count][1] = substr($_, 16, 10);
     $comp_sp_count++;
 }
@@ -153,16 +156,16 @@ $maxcombsplen = 2;
 for ($i = 0 ; $i < $comp_sp_count ; $i++) {
     $base_sp = $comp_sp_table[$i][1];
     $comblen = 2;
-    $j = 0;
+    $j       = 0;
     while ($j < $comp_sp_count) {
-	if ($base_sp ne $comp_sp_table[$j][0]) {
-	    $j++;
-	    next;
-	} else {
-	    $comblen += 2;
-	    $base_sp =  $comp_sp_table[$j][1];
-	    $j = 0;
-	}
+        if ($base_sp ne $comp_sp_table[$j][0]) {
+            $j++;
+            next;
+        } else {
+            $comblen += 2;
+            $base_sp = $comp_sp_table[$j][1];
+            $j       = 0;
+        }
     }
     $maxcombsplen = ($maxcombsplen > $comblen) ? $maxcombsplen : $comblen;
 }
@@ -183,105 +186,103 @@ system("sort -k 2 compose_sp.TEMP \>  decompose_sp.SORT");
 
 # print  -------------------------------------------------------------------
 
-print (CHEADER "\/\*\n");
-print (CHEADER "  DO NOT EDIT BY HAND\!\!\!\n");
-print (CHEADER "  This file is generated by:\n");
-print (CHEADER "    make-precompose.h.pl\n");
-print (CHEADER "\n");
-print (CSOURCE "  The Unicode Character Database is sourced from:\n");
-print (CHEADER "    https\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt\n");
-print (CHEADER "\*\/\n");
-print (CHEADER "\n");
+print(CHEADER "\/\*\n");
+print(CHEADER "  DO NOT EDIT BY HAND\!\!\!\n");
+print(CHEADER "  This file is generated by:\n");
+print(CHEADER "    make-precompose.h.pl\n");
+print(CHEADER "\n");
+print(CSOURCE "  The Unicode Character Database is sourced from:\n");
+print(CHEADER "    https\:\/\/www.unicode.org\/Public\/UNIDATA\/UnicodeData.txt\n");
+print(CHEADER "\*\/\n");
+print(CHEADER "\n");
 
-print (CHEADER "\#define SBASE 0xAC00\n");
-print (CHEADER "\#define LBASE 0x1100\n");
-print (CHEADER "\#define VBASE 0x1161\n");
-print (CHEADER "\#define TBASE 0x11A7\n");
-print (CHEADER "\#define LCOUNT 19\n");
-print (CHEADER "\#define VCOUNT 21\n");
-print (CHEADER "\#define TCOUNT 28\n");
-print (CHEADER "\#define NCOUNT 588     \/\* (VCOUNT \* TCOUNT) \*\/\n");
-print (CHEADER "\#define SCOUNT 11172   \/\* (LCOUNT \* NCOUNT) \*\/\n");
-print (CHEADER "\n");
+print(CHEADER "\#define SBASE 0xAC00\n");
+print(CHEADER "\#define LBASE 0x1100\n");
+print(CHEADER "\#define VBASE 0x1161\n");
+print(CHEADER "\#define TBASE 0x11A7\n");
+print(CHEADER "\#define LCOUNT 19\n");
+print(CHEADER "\#define VCOUNT 21\n");
+print(CHEADER "\#define TCOUNT 28\n");
+print(CHEADER "\#define NCOUNT 588     \/\* (VCOUNT \* TCOUNT) \*\/\n");
+print(CHEADER "\#define SCOUNT 11172   \/\* (LCOUNT \* NCOUNT) \*\/\n");
+print(CHEADER "\n");
 
-printf (CHEADER "\#define PRECOMP_COUNT %d\n", $comp_count);
-printf (CHEADER "\#define DECOMP_COUNT %d\n", $comp_count);
-printf (CHEADER "\#define MAXCOMBLEN %d\n", $maxcomblen);
-print (CHEADER "\n");
-printf (CHEADER "\#define PRECOMP_SP_COUNT %d\n", $comp_sp_count);
-printf (CHEADER "\#define DECOMP_SP_COUNT %d\n", $comp_sp_count);
-printf (CHEADER "\#define MAXCOMBSPLEN %d\n", $maxcombsplen);
-print (CHEADER "\n");
-printf (CHEADER "\#define COMBBUFLEN %d  \/\* max\(MAXCOMBLEN\,MAXCOMBSPLEN\) \*\/\n", $combbuflen);
-print (CHEADER "\n");
+printf(CHEADER "\#define PRECOMP_COUNT %d\n", $comp_count);
+printf(CHEADER "\#define DECOMP_COUNT %d\n",  $comp_count);
+printf(CHEADER "\#define MAXCOMBLEN %d\n",    $maxcomblen);
+print(CHEADER "\n");
+printf(CHEADER "\#define PRECOMP_SP_COUNT %d\n", $comp_sp_count);
+printf(CHEADER "\#define DECOMP_SP_COUNT %d\n",  $comp_sp_count);
+printf(CHEADER "\#define MAXCOMBSPLEN %d\n",     $maxcombsplen);
+print(CHEADER "\n");
+printf(CHEADER "\#define COMBBUFLEN %d  \/\* max\(MAXCOMBLEN\,MAXCOMBSPLEN\) \*\/\n", $combbuflen);
+print(CHEADER "\n");
 
-print (CHEADER "static const struct \{\n");
-print (CHEADER "    unsigned int replacement\;\n");
-print (CHEADER "    unsigned int base\;\n");
-print (CHEADER "    unsigned int comb\;\n");
-print (CHEADER "\} precompositions\[\] \= \{\n");
+print(CHEADER "static const struct \{\n");
+print(CHEADER "    unsigned int replacement\;\n");
+print(CHEADER "    unsigned int base\;\n");
+print(CHEADER "    unsigned int comb\;\n");
+print(CHEADER "\} precompositions\[\] \= \{\n");
 
 my $precompose_file = "precompose.SORT";
 open(my $fh, "<", $precompose_file) or die "Could not open file '$precompose_file' $!";
 while (my $line = <$fh>) {
-    print (CHEADER $line);
+    print(CHEADER $line);
 }
 close($fh);
 
-print (CHEADER "\}\;\n");
-print (CHEADER "\n");
+print(CHEADER "\}\;\n");
+print(CHEADER "\n");
 
-print (CHEADER "static const struct \{\n");
-print (CHEADER "    unsigned int replacement\;\n");
-print (CHEADER "    unsigned int base\;\n");
-print (CHEADER "    unsigned int comb\;\n");
-print (CHEADER "\} decompositions\[\] \= \{\n");
+print(CHEADER "static const struct \{\n");
+print(CHEADER "    unsigned int replacement\;\n");
+print(CHEADER "    unsigned int base\;\n");
+print(CHEADER "    unsigned int comb\;\n");
+print(CHEADER "\} decompositions\[\] \= \{\n");
 
 my $decompose_file = "decompose.SORT";
 open(my $fh, "<", $decompose_file) or die "Could not open file '$decompose_file' $!";
 while (my $line = <$fh>) {
-    print (CHEADER $line);
+    print(CHEADER $line);
 }
 close($fh);
 
-print (CHEADER "\}\;\n");
-print (CHEADER "\n");
+print(CHEADER "\}\;\n");
+print(CHEADER "\n");
 
-
-
-print (CHEADER "static const struct \{\n");
-print (CHEADER "    unsigned int replacement_sp\;\n");
-print (CHEADER "    unsigned int base_sp\;\n");
-print (CHEADER "    unsigned int comb_sp\;\n");
-print (CHEADER "\} precompositions_sp\[\] \= \{\n");
+print(CHEADER "static const struct \{\n");
+print(CHEADER "    unsigned int replacement_sp\;\n");
+print(CHEADER "    unsigned int base_sp\;\n");
+print(CHEADER "    unsigned int comb_sp\;\n");
+print(CHEADER "\} precompositions_sp\[\] \= \{\n");
 
 my $precompose_sp_file = "precompose_sp.SORT";
 open(my $fh, "<", $precompose_sp_file) or die "Could not open file '$precompose_sp_file' $!";
 while (my $line = <$fh>) {
-    print (CHEADER $line);
+    print(CHEADER $line);
 }
 close($fh);
 
-print (CHEADER "\}\;\n");
-print (CHEADER "\n");
+print(CHEADER "\}\;\n");
+print(CHEADER "\n");
 
-print (CHEADER "static const struct \{\n");
-print (CHEADER "    unsigned int replacement_sp\;\n");
-print (CHEADER "    unsigned int base_sp\;\n");
-print (CHEADER "    unsigned int comb_sp\;\n");
-print (CHEADER "\} decompositions_sp\[\] \= \{\n");
+print(CHEADER "static const struct \{\n");
+print(CHEADER "    unsigned int replacement_sp\;\n");
+print(CHEADER "    unsigned int base_sp\;\n");
+print(CHEADER "    unsigned int comb_sp\;\n");
+print(CHEADER "\} decompositions_sp\[\] \= \{\n");
 
 my $decompose_sp_file = "decompose_sp.SORT";
 open(my $fh, "<", $decompose_sp_file) or die "Could not open file '$decompose_sp_file' $!";
 while (my $line = <$fh>) {
-    print (CHEADER $line);
+    print(CHEADER $line);
 }
 close($fh);
 
-print (CHEADER "\}\;\n");
-print (CHEADER "\n");
+print(CHEADER "\}\;\n");
+print(CHEADER "\n");
 
-print (CHEADER "\/\* EOF \*\/\n");
+print(CHEADER "\/\* EOF \*\/\n");
 
 close(CHEADER);
 

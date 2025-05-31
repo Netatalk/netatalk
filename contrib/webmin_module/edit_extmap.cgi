@@ -22,8 +22,10 @@ require 'netatalk-lib.pl';
 
 print &ui_form_start("save_extmap.cgi", "post");
 print &ui_table_start(undef, undef, 2);
-print &ui_table_row(undef,
-	&ui_textarea("extmap", &read_file_contents($config{'extmap_c'}), 24, 80), 2);
+print &ui_table_row(
+                    undef,
+                    &ui_textarea("extmap", &read_file_contents($config{'extmap_c'}), 24, 80), 2
+);
 print &ui_table_end();
 print &ui_form_end([[undef, $text{'save_button_title'}]]);
 
