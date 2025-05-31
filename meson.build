@@ -836,27 +836,23 @@ endif
 # Check for Spotlight support
 #
 
-bison = ''
-
-if host_os == 'darwin'
-    if brew_prefix != ''
-        bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
-    endif
-    if not bison.found()
-        bison = find_program('/opt/local/bin/bison', required: false)
-    endif
-else
-    bison = find_program('bison', required: false)
-endif
-
-flex = find_program('flex', required: false)
-talloc = dependency('talloc', required: false)
-
 tracker_prefix = get_option('with-tracker-prefix')
 
 have_spotlight = false
 
 if get_option('with-spotlight')
+    if host_os == 'darwin'
+        if brew_prefix != ''
+            bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+        else
+            bison = find_program('/opt/local/bin/bison', required: false)
+        endif
+    else
+        bison = find_program('bison', required: false)
+    endif
+
+    flex = find_program('flex', required: false)
+    talloc = dependency('talloc', required: false)
 
     # Check for SPARQL
 
