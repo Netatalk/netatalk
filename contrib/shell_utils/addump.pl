@@ -49,7 +49,8 @@
 use File::Basename;
 use File::Spec;
 use File::Temp qw /tempfile/;
-use bigint; # require perl >= 5.8
+# require perl >= 5.8
+use bigint;
 use IPC::Open2 qw /open2/;
 
 # check command for extended attributes -----------------------------------
@@ -72,7 +73,8 @@ if (     0 == system("which getfattr > /dev/null 2>&1")) {
 
 $stdinputmode = 0;
 $eaoption = 0;
-$finderinfo = 0;              #  0: unknown   1: file   2: directory
+#  0: unknown   1: file   2: directory
+$finderinfo = 0;
 while ($arg = shift @ARGV)
 {
     if  ($arg =~ /^(-h|-help|--help)$/ ) {
@@ -386,11 +388,31 @@ for ( $num = 0 ; $num < $entnum ; $num++) {
 #    if ( $entid == 12 ) { ; } # MS-DOS File Info
 #    if ( $entid == 13 ) { ; } # Short Name
 #    if ( $entid == 14 ) { ; } # AFP File Info
-    elsif ( $entid == 15 ) { print "\n"; bedump($ofst,$len); } # Directory ID
-    elsif ( $entid == 0x8053567E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # CNID (Netatalk Extended)
-    elsif ( $entid == 0x8053594E  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # DB stamp (Netatalk Extended)
-    elsif ( $entid == 0x80444556  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # dev (Netatalk Extended)
-    elsif ( $entid == 0x80494E4F  ) { print "\n"; bedump($ofst,$len); ledump($ofst,$len); } # inode (Netatalk Extended)
+    elsif ( $entid == 15 ) {
+        # Directory ID
+        print "\n";
+        bedump($ofst,$len); 
+    } elsif ( $entid == 0x8053567E  ) {
+        # CNID (Netatalk Extended)
+        print "\n";
+        bedump($ofst,$len);
+        ledump($ofst,$len);
+    } elsif ( $entid == 0x8053594E  ) {
+        # DB stamp (Netatalk Extended)
+        print "\n";
+        bedump($ofst,$len);
+        ledump($ofst,$len);
+    } elsif ( $entid == 0x80444556  ) {
+        # dev (Netatalk Extended)
+        print "\n";
+        bedump($ofst,$len);
+        ledump($ofst,$len);
+    } elsif ( $entid == 0x80494E4F  ) {
+        # inode (Netatalk Extended)
+        print "\n";
+        bedump($ofst,$len);
+        ledump($ofst,$len);
+    }
 
 #    RAW Dump ---------------------------------------------------
 
@@ -518,7 +540,8 @@ sub filefinderinfodump {
     read(INFILE,$buf,4);
     $val = unpack("N", $buf );
     printf("PutAway    : %08X", $val);
-    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val); # Why SInt32?
+    # Why SInt32?
+    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val);
 
 }
 
@@ -579,7 +602,8 @@ sub dirfinderinfodump {
     read(INFILE,$buf,4);
     $val = unpack("N", $buf );
     printf("Rsvd|OpnChn: %08X", $val);
-    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val); # Why SInt32?
+    # Why SInt32?
+    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val);
 
     xflagsdump();
 
@@ -590,7 +614,8 @@ sub dirfinderinfodump {
     read(INFILE,$buf,4);
     $val = unpack("N", $buf );
     printf("PutAway    : %08X", $val);
-    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val); # Why SInt32?
+    # Why SInt32?
+    printf(" : %d\n", $val>0x7FFFFFFF?$val-0x100000000:$val);
 
 }
 sub flagsdump {

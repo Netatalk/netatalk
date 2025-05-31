@@ -28,7 +28,8 @@
 #
 
 use strict;
-use IO::Socket::IP;			# sucks because Timeout doesn't
+# sucks because Timeout doesn't
+use IO::Socket::IP;
 
 my ($arg);
 my ($hostport);
@@ -83,35 +84,42 @@ sub parse_hostport
 	my ( $hostport, $port ) = @_;
 	my ($host);
 
-	if (($port) && ($hostport =~ /\[\S+\]/)) # [fd01:1::1] 10548
+	if (($port) && ($hostport =~ /\[\S+\]/))
 	{
+        # [fd01:1::1] 10548
 		$host = $hostport;
 	}
-	elsif (($port) && ( $hostport =~ /:/)) # fd01:1::1 10548
+	elsif (($port) && ( $hostport =~ /:/))
 	{
+        # fd01:1::1 10548
 		$host = "\[" . $hostport . "\]";
 	}
-	elsif ($port) # myserver 10548 / 192.168.0.1 10548
+	elsif ($port)
 	{
+        # myserver 10548 / 192.168.0.1 10548
 	    $host = $hostport;
 	}
-	elsif ($hostport =~ /\[(\S+)\]:(\S+)/) # [fd01:1::1]:10548
+	elsif ($hostport =~ /\[(\S+)\]:(\S+)/)
 	{
+        # [fd01:1::1]:10548
 		$host = "\[" . $1 . "\]";
 		$port = $2;
 	}
-	elsif ($hostport =~ /\[\S+\]/) # [fd01:1::1]
+	elsif ($hostport =~ /\[\S+\]/)
 	{
+        # [fd01:1::1]
 		$host = $hostport;
 		$port = "548";
 	}
-	elsif ( (() = $hostport =~ m/:/g) >= 2 ) # fd01:1::1
+	elsif ( (() = $hostport =~ m/:/g) >= 2 )
 	{
+        # fd01:1::1
 		$host = "\[" . $hostport . "\]";
 		$port = "548";
 	}
-	else # myserver:10548 / myserver / 192.168.0.1:10548 / 192.168.0.1
+	else
 	{
+        # myserver:10548 / myserver / 192.168.0.1:10548 / 192.168.0.1
 		($host, $port) = split(/\:/, $hostport);
 		$port = "548" if ($port eq "");
 	}
@@ -123,12 +131,18 @@ sub build_packet
 {
 	my (@packet) =
 		(
-		0x00,			# 0- request, 1-reply
-		0x03,			# 3- DSIGetStatus
-		0xde, 0xad, 0x00,	# request ID
-		0x00, 0x00, 0x00, 0x00,	# data field
-		0x00, 0x00, 0x00, 0x00,	# length of data stream header
-		0x00, 0x00, 0x00, 0x00	# reserved
+        # 0- request, 1-reply
+		0x00,
+        # 3- DSIGetStatus
+		0x03,
+        # request ID
+		0xde, 0xad, 0x00,
+        # data field
+		0x00, 0x00, 0x00, 0x00,
+        # length of data stream header
+		0x00, 0x00, 0x00, 0x00,
+        # reserved
+		0x00, 0x00, 0x00, 0x00
 		);
 
 
@@ -342,7 +356,8 @@ sub parse_FPGetSrvrInfo()
 	extract_network_address($network_address_count_offset, @packet);
 
 	$offset += 4;
-	if ($flags & (1<<8)) { # Supports directory services
+    # Supports directory services
+	if ($flags & (1<<8)) {
 		my ($directory_service_offset) = unpack("n2", @packet[$offset] . @packet[$offset+1]);
 		print "Directory service offset: $directory_service_offset\n" if ($main::debug);
 		if ($directory_service_offset)
@@ -356,7 +371,8 @@ sub parse_FPGetSrvrInfo()
 		$offset +=2;
 	}
 
-	if ($flags & (1<<9)) { # Supports UTF8 servername
+    # Supports UTF8 servername
+	if ($flags & (1<<9)) {
 		my ($utf8_name_offset) = unpack("n2", @packet[$offset] . @packet[$offset+1]);
 		print "UTF8 name offset: $utf8_name_offset\n" if ($main::debug);
 		if ($utf8_name_offset)
@@ -367,7 +383,8 @@ sub parse_FPGetSrvrInfo()
 		$offset +=2;
 	}
 
-	if ($flags & (1<<12)) { # Undocumented Bit12
+    # Undocumented Bit12
+	if ($flags & (1<<12)) {
 		# looks like a SPNEGNO negTokenInit blob with the extensions from MS-SPNG
 		# <http://download.microsoft.com/download/9/5/E/95EF66AF-9026-4BB0-A41D-A4F81802D92C/[MS-SPNG].pdf>
 		# <https://tools.ietf.org/html/rfc4178#section-4.2.1>

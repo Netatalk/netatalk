@@ -127,27 +127,37 @@ sub make_array{
     # init table -----------------------------------------------------
 
     for ($char = 0 ; $char <= 0xFFFF ; $char++) {
-        $table[$char][0] = $char;       # mapped char
-        $table[$char][1] = $char;       # orig char
-        $table[$char][2] = "";          # char name
+        # mapped char
+        $table[$char][0] = $char;
+        # orig char
+        $table[$char][1] = $char;
+        # char name
+        $table[$char][2] = "";
     }
 
     for ($char = 0x10000 ; $char <= 0x10FFFF ; $char++) {
         $sp = ((0xD800 - (0x10000 >> 10) + ($char >> 10)) << 16)
             + (0xDC00 + ($char & 0x3FF));
-        $table_sp[$char][0] = $sp;      # mapped surrogate pair
-        $table_sp[$char][1] = $sp;      # orig surrogate pair
-        $table_sp[$char][2] = $char;    # mapped char
-        $table_sp[$char][3] = $char;    # orig char
-        $table_sp[$char][4] = "";       # char name
+        # mapped surrogate pair
+        $table_sp[$char][0] = $sp;
+        # orig surrogate pair
+        $table_sp[$char][1] = $sp;
+        # mapped char
+        $table_sp[$char][2] = $char;
+        # orig char
+        $table_sp[$char][3] = $char;
+        # char name
+        $table_sp[$char][4] = "";
     }
 
     for ($block = 0 ; $block <= 1025 ; $block++) {
         $block_enable[$block] = 0;
     }
 
-    $block_enable[1] = 1;           # ASCII block is forcibly included
-    $block_enable[2] = 1;           # in the array for Speed-Up.
+    # ASCII block is forcibly included
+    $block_enable[1] = 1;
+    # in the array for Speed-Up.
+    $block_enable[2] = 1;
 
     for ($block = 1024 ; $block <= 17409 ; $block++) {
         $block_enable_sp[$block] = 0;

@@ -109,7 +109,8 @@ while (<COMPOSE_TEMP>) {
     $comp_count++;
 }
 
-$maxcomblen = 2;      # Hangul's maxcomblen is already 2. That is, VT.
+# Hangul's maxcomblen is already 2. That is, VT.
+$maxcomblen = 2;
 
 for ($i = 0 ; $i < $comp_count ; $i++) {
     $base = $comp_table[$i][1];
@@ -146,7 +147,8 @@ while (<COMPOSE_SP_TEMP>) {
     $comp_sp_count++;
 }
 
-$maxcombsplen = 2;     # one char have 2 codepoints, like a D8xx DCxx.
+# one char have 2 codepoints, like a D8xx DCxx.
+$maxcombsplen = 2;
 
 for ($i = 0 ; $i < $comp_sp_count ; $i++) {
     $base_sp = $comp_sp_table[$i][1];
