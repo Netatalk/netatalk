@@ -21,7 +21,7 @@ FORMATTED=0
 VERBOSE=0
 
 usage() {
-    echo "Usage: $0 [-v] [-s C|meson]"
+    echo "Usage: $0 [-v] [-s c|meson|perl]"
     exit 2
 }
 
@@ -32,8 +32,8 @@ while getopts "vs:" opt; do
       ;;
     s)
       SOURCE_TYPE="$OPTARG"
-      if [ "$SOURCE_TYPE" != "C" ] && [ "$SOURCE_TYPE" != "meson" ]; then
-        echo "Error: Source type must be either 'C' or 'meson'"
+      if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ]; then
+        echo "Error: Source type must be either 'c', 'meson', or 'perl'"
         usage
         exit 2
       fi
@@ -54,34 +54,48 @@ else
 fi
 
 if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
-    if command -v muon >/dev/null 2>&1; then
-        FORMATTER_CMD="muon"
-    elif command -v muon-meson >/dev/null 2>&1; then
-        FORMATTER_CMD="muon-meson"
-    else
-        echo "Warning: No variant of muon found in PATH; will not format meson sources"
-    fi
     if [ $VERBOSE -eq 1 ]; then
         echo "Formatting meson sources..."
-        find . -type f -name "meson.build" -exec sh -c 'echo "Processing file in: $(dirname {})" && '$FORMATTER_CMD' fmt -i {}' \;
     fi
-    find . -type f -name "meson.build" -exec $FORMATTER_CMD fmt -i {} \;
-    FORMATTED=1
+    if command -v muon >/dev/null 2>&1; then
+        find . -type f -name "meson.build" -exec muon fmt -i {} \;
+        FORMATTED=1
+    elif command -v muon-meson >/dev/null 2>&1; then
+        find . -type f -name "meson.build" -exec muon-meson fmt -i {} \;
+        FORMATTED=1
+    else
+        echo "Error: No variant of muon found in PATH"
+        exit 2
+    fi
 fi
 
-if [ "$SOURCE_TYPE" = "C" ] || [ "$SOURCE_TYPE" = "" ]; then
+if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v astyle >/dev/null 2>&1; then
-        FORMATTER_CMD="astyle --options=.astylerc --recursive --suffix=none"
         if [ $VERBOSE -eq 0 ]; then
             FORMATTER_CMD="$FORMATTER_CMD --quiet"
         else
             echo "Formatting C sources..."
         fi
+        FORMATTER_CMD="astyle --options=.astylerc --recursive --suffix=none"
+        $FORMATTER_CMD '*.h' '*.c'
+        FORMATTED=1
     else
-        echo "Warning: astyle not found in PATH; will not format C sources"
+        echo "Error: astyle not found in PATH"
+        exit 2
     fi
-    $FORMATTER_CMD '*.h' '*.c'
-    FORMATTED=1
+fi
+
+if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
+    if command -v perltidy >/dev/null 2>&1; then
+        if [ $VERBOSE -ne 0 ]; then
+            echo "Formatting Perl sources..."
+        fi
+        find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec perltidy --backup-file-extension='/' {} \;
+        FORMATTED=1
+    else
+        echo "Error: perltidy not found in PATH"
+        exit 2
+    fi
 fi
 
 if [ $IS_GIT -eq 1 ]; then
@@ -93,11 +107,12 @@ if [ $FORMATTED -eq 1 ] && [ $IS_GIT -eq 1 ]; then
     if [ $INITIAL_STATE -eq 0 ] && [ $FINAL_STATE -eq 1 ]; then
         if [ $VERBOSE -eq 1 ]; then
             git --no-pager diff
-            echo
         fi
+        echo
         echo "reformatted source files to adhere to coding style guide"
         exit 1
     elif [ $INITIAL_STATE -eq 1 ] && [ $FINAL_STATE -eq 1 ]; then
+        echo
         echo "repo was dirty, please stash changes and try again"
         exit 2
     else
