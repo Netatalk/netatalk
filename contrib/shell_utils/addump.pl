@@ -875,42 +875,50 @@ sub checkea {
         open2(\*EALIST, \*EAIN, 'getfattr', $file) or die $@;
         while (<EALIST>) {
             if ($_ eq "user.org.netatalk.Metadata\n") {
-                close(EALIST, EAIN);
+                close(EALIST);
+                close(EAIN);
                 return 1;
             }
         }
-        close(EALIST, EAIN);
+        close(EALIST);
+        close(EAIN);
         return 0;
     } elsif ($eacommand == 2) {
         open2(\*EALIST, \*EAIN, 'attr', '-q', '-l', $file) or die $@;
         while (<EALIST>) {
             if ($_ eq "org.netatalk.Metadata\n") {
-                close(EALIST, EAIN);
+                close(EALIST);
+                close(EAIN);
                 return 1;
             }
         }
-        close(EALIST, EAIN);
+        close(EALIST);
+        close(EAIN);
         return 0;
     } elsif ($eacommand == 3) {
         open2(\*EALIST, \*EAIN, 'runat', $file, 'ls', '-1') or die $@;
         while (<EALIST>) {
             if ($_ eq "org.netatalk.Metadata\n") {
-                close(EALIST, EAIN);
+                close(EALIST);
+                close(EAIN);
                 return 1;
             }
         }
-        close(EALIST, EAIN);
+        close(EALIST);
+        close(EAIN);
         return 0;
     } elsif ($eacommand == 4) {
         open2(\*EALIST, \*EAIN, 'lsextattr', '-q', 'user', $file) or die $@;
         while (<EALIST>) {
             $_ = "\t" . $_;
             if ($_ =~ /\torg\.netatalk\.Metadata[\n\t]/) {
-                close(EALIST, EAIN);
+                close(EALIST);
+                close(EAIN);
                 return 1;
             }
         }
-        close(EALIST, EAIN);
+        close(EALIST);
+        close(EAIN);
         return 0;
     } else {
         return 0;
