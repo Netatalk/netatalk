@@ -104,11 +104,11 @@ open(COMPOSE_TEMP, "<compose.TEMP") or die "$0: open compose.TEMP: $!";
 $comp_count = 0;
 
 while (<COMPOSE_TEMP>) {
-    if (m/^\/\*/) {
+    if (m/^\s{4}\/\*/) {
         next;
     }
-    $comp_table[$comp_count][0] = substr($_, 4,  10);
-    $comp_table[$comp_count][1] = substr($_, 16, 10);
+    $comp_table[$comp_count][0] = substr($_, 6,  12);
+    $comp_table[$comp_count][1] = substr($_, 18, 12);
     $comp_count++;
 }
 
@@ -142,11 +142,11 @@ open(COMPOSE_SP_TEMP, "<compose_sp.TEMP") or die "$0: open compose_sp.TEMP: $!";
 $comp_sp_count = 0;
 
 while (<COMPOSE_SP_TEMP>) {
-    if (m/^\/\*/) {
+    if (m/^\s{4}\/\*/) {
         next;
     }
-    $comp_sp_table[$comp_sp_count][0] = substr($_, 4,  10);
-    $comp_sp_table[$comp_sp_count][1] = substr($_, 16, 10);
+    $comp_sp_table[$comp_sp_count][0] = substr($_, 6,  12);
+    $comp_sp_table[$comp_sp_count][1] = substr($_, 18, 12);
     $comp_sp_count++;
 }
 
