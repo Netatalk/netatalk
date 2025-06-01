@@ -26,42 +26,50 @@ ui_print_header(undef, $text{users_title}, "", "configs", 1, 1);
 &ReadParse();
 
 if ($in{kill}) {
-	if (kill('TERM', $in{kill})) {
-		print "<h4>$text{'users_disconnect_success'}</h4>\n";
-	} else {
-		print "<h4>$text{'users_disconnect_fail'}</h4>\n";
-	}
+    if (kill('TERM', $in{kill})) {
+        print "<h4>$text{'users_disconnect_success'}</h4>\n";
+    } else {
+        print "<h4>$text{'users_disconnect_fail'}</h4>\n";
+    }
 }
 
 my @users;
 for (qx(ps aux)) {
-	chomp;
-	my @columns = split /\s+/;
+    chomp;
+    my @columns = split /\s+/;
 
-	# Pick only lines that are afpd processes not owned by root
-	if ($columns[10] =~ m/afpd/ && $columns[0] ne "root") {
-		# Columns with index: 0=username, 1=PID, 8=date
-		push @users, join(":::", $columns[0], $columns[1], $columns[8]);
-	}
+    # Pick only lines that are afpd processes not owned by root
+    if ($columns[10] =~ m/afpd/ && $columns[0] ne "root") {
+        # Columns with index: 0=username, 1=PID, 8=date
+        push @users, join(":::", $columns[0], $columns[1], $columns[8]);
+    }
 }
 
-print "<p>",&text('users_connected_users', scalar(@users)),"</p>\n";
-print &ui_columns_start([
-		$text{'users_table_user'},
-		$text{'users_table_connected'},
-		$text{'users_table_pid'},
-		$text{'users_table_action'}
-	], undef, 0, undef, undef);
+print "<p>", &text('users_connected_users', scalar(@users)), "</p>\n";
+print &ui_columns_start(
+                        [
+                         $text{'users_table_user'},
+                         $text{'users_table_connected'},
+                         $text{'users_table_pid'},
+                         $text{'users_table_action'}
+                        ],
+                        undef,
+                        0,
+                        undef,
+                        undef
+);
 foreach my $user (sort @users) {
-	my @line = split(":::", $user);
-		print &ui_columns_row([
-			$line[0],
-			$line[2],
-			$line[1],
-			&ui_form_start('show_users.cgi', 'POST')
-			.&ui_hidden('kill', $line[1])
-			.&ui_form_end([[undef, $text{'users_button_disconnect'}]])
-	]);
+    my @line = split(":::", $user);
+    print &ui_columns_row(
+                          [
+                           $line[0],
+                           $line[2],
+                           $line[1],
+                           &ui_form_start('show_users.cgi', 'POST')
+                           . &ui_hidden('kill', $line[1])
+                           . &ui_form_end([[undef, $text{'users_button_disconnect'}]])
+                          ]
+    );
 }
 print &ui_columns_end();
 

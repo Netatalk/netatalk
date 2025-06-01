@@ -21,30 +21,35 @@
 require 'netatalk-lib.pl';
 
 eval {
-	&ReadParse();
+    &ReadParse();
 
-	# properly join multiple values for uam list and canonicalize
-	$in{'p_uam list'} =~ s/\x00/ /g;
-	$in{'p_uam list'} =~ s/^[ ,]+//; $in{'p_uam list'} =~ s/[ ,]+$//; $in{'p_uam list'} =~ s/[ ,]+/ /g;
+    # properly join multiple values for uam list and canonicalize
+    $in{'p_uam list'} =~ s/\x00/ /g;
+    $in{'p_uam list'} =~ s/^[ ,]+//;
+    $in{'p_uam list'} =~ s/[ ,]+$//;
+    $in{'p_uam list'} =~ s/[ ,]+/ /g;
 
-	# correct fields which had to be named without spaces catering for sloppy name handling
+    # correct fields which had to be named without spaces catering for sloppy name handling
     # in the webmin API
-	$in{'p_k5 keytab'} = $in{'p_k5_keytab'}; delete $in{'p_k5_keytab'};
-	$in{'p_vol dbpath'} = $in{'p_vol_dbpath'}; delete $in{'p_vol_dbpath'};
-	$in{'p_log file'} = $in{'p_log_file'}; delete $in{'p_log_file'};
+    $in{'p_k5 keytab'} = $in{'p_k5_keytab'};
+    delete $in{'p_k5_keytab'};
+    $in{'p_vol dbpath'} = $in{'p_vol_dbpath'};
+    delete $in{'p_vol_dbpath'};
+    $in{'p_log file'} = $in{'p_log_file'};
+    delete $in{'p_log_file'};
 
-	my $afpconfRef = &read_afpconf();
-	modify_afpconf_ref_and_write($afpconfRef, \%in);
+    my $afpconfRef = &read_afpconf();
+    modify_afpconf_ref_and_write($afpconfRef, \%in);
 
-	redirect("index.cgi?tab=general");
+    redirect("index.cgi?tab=general");
 };
-if($@) {
-	my $msg = $@;
+if ($@) {
+    my $msg = $@;
 
-	ui_print_header(undef, $text{'errmsg_title'}, "", "configs", 1, 1);
+    ui_print_header(undef, $text{'errmsg_title'}, "", "configs", 1, 1);
 
-	print "<p>$msg<p>";
+    print "<p>$msg<p>";
 
-	ui_print_footer("index.cgi?tab=general", $text{'edit_return'});
-	exit;
+    ui_print_footer("index.cgi?tab=general", $text{'edit_return'});
+    exit;
 }

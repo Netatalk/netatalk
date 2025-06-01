@@ -24,8 +24,10 @@ sub main {
 
     eval {
         my $service = $bus->get_service("org.netatalk.AFPStats");
-        my $remote_object = $service->get_object("/org/netatalk/AFPStats",
-                                                 "org.netatalk.AFPStats");
+        my $remote_object = $service->get_object(
+                                                   "/org/netatalk/AFPStats",
+                                                   "org.netatalk.AFPStats"
+        );
 
         print "Connected user   PID      Login time        State          Mounted volumes\n";
 
@@ -34,7 +36,7 @@ sub main {
                 my ($name, $pid, $logintime, $state, $volume) = ($1, $2, $3, $4, $5);
                 printf "%-17s%-9s%-18s%-15s%s\n", $name, $pid, $logintime, $state, $volume;
             } else {
-                print "WARNING Unexpected output. This is probably a bug:\n".$user."\n";
+                print "WARNING Unexpected output. This is probably a bug:\n" . $user . "\n";
             }
         }
     };

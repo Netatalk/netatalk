@@ -24,23 +24,23 @@ require 'netatalk-lib.pl';
 # only in case of error an error message is printed
 
 eval {
-	my $afpconfRef = &read_afpconf();
+    my $afpconfRef = &read_afpconf();
 
-	&ReadParse();
+    &ReadParse();
 
-	my @indices = split(/\0/, $in{'section_index'});
-	delete_sections_in_afpconf_ref_and_write($afpconfRef, @indices);
+    my @indices = split(/\0/, $in{'section_index'});
+    delete_sections_in_afpconf_ref_and_write($afpconfRef, @indices);
 
-	redirect("index.cgi?tab=".$in{'tab'});
+    redirect("index.cgi?tab=" . $in{'tab'});
 };
-if($@) {
-	# in case the block above has been exited through "die": output error message
-	my $msg = $@;
+if ($@) {
+    # in case the block above has been exited through "die": output error message
+    my $msg = $@;
 
-	ui_print_header(undef, $text{'errmsg_title'}, "", "configs", 1, 1);
-	print $msg;
-	ui_print_footer("index.cgi", $text{'edit_return'});
+    ui_print_header(undef, $text{'errmsg_title'}, "", "configs", 1, 1);
+    print $msg;
+    ui_print_footer("index.cgi", $text{'edit_return'});
 
-	exit;
+    exit;
 }
 
