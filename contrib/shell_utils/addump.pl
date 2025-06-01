@@ -439,6 +439,7 @@ sub filedatesdump {
     my ($datedata);
     my ($i);
     my ($datestr);
+    my $buf;
 
     my @datetype = ('create    ', 'modify    ', 'backup    ', 'access    ');
 
@@ -463,6 +464,7 @@ sub filedatesdump {
 
 sub finderinfodump {
     my ($ofst, $len) = @_;
+    my $buf;
 
     seek(INFILE, $ofst, 0);
 
@@ -483,6 +485,7 @@ sub finderinfodump {
 }
 
 sub filefinderinfodump {
+    my $buf;
 
     print "\n";
     print "-FInfo-----:\n";
@@ -545,6 +548,7 @@ sub filefinderinfodump {
 }
 
 sub dirfinderinfodump {
+    my $buf;
 
     print "\n";
     print "-DInfo-----:\n";
@@ -619,6 +623,7 @@ sub dirfinderinfodump {
 }
 
 sub flagsdump {
+    my $buf;
 
     my @colortype = ('none', 'gray', 'green', 'purple', 'blue', 'yellow', 'red', 'orange');
 
@@ -647,6 +652,7 @@ sub flagsdump {
 }
 
 sub xflagsdump {
+    my $buf;
 
     read(INFILE, $buf, 2);
     my $flags = unpack("n", $buf);
@@ -677,6 +683,7 @@ sub xflagsdump {
 }
 
 sub eadump {
+    my $buf;
 
     print "\n";
     print "-EA--------:\n";
@@ -778,6 +785,7 @@ sub bedump {
     my ($i);
     my ($value);
     my @bytedata;
+    my $buf;
 
     seek(INFILE, $ofst, 0);
 
@@ -803,6 +811,7 @@ sub ledump {
     my ($i);
     my ($value);
     my @bytedata;
+    my $buf;
 
     seek(INFILE, $ofst, 0);
 
