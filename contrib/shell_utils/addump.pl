@@ -436,10 +436,7 @@ exit 0;
 
 sub filedatesdump {
     my ($ofst, $len) = @_;
-    my ($datedata);
-    my ($i);
-    my ($datestr);
-    my $buf;
+    my ($datedata, $datestr, $buf);
 
     my @datetype = ('create    ', 'modify    ', 'backup    ', 'access    ');
 
@@ -448,7 +445,7 @@ sub filedatesdump {
     print "\n";
     printf("-DATE------:          : (GMT)                    : (Local)\n");
 
-    for ($i = 0 ; $i < 4 ; $i++) {
+    for (my $i = 0 ; $i < 4 ; $i++) {
         read(INFILE, $buf, 4);
         $datedata = unpack("N", $buf);
         if ($datedata < 0x80000000) {
@@ -782,10 +779,7 @@ sub eadump {
 
 sub bedump {
     my ($ofst, $len) = @_;
-    my ($i);
-    my ($value);
-    my @bytedata;
-    my $buf;
+    my ($i, $value, $buf, @bytedata);
 
     seek(INFILE, $ofst, 0);
 
@@ -808,10 +802,7 @@ sub bedump {
 
 sub ledump {
     my ($ofst, $len) = @_;
-    my ($i);
-    my ($value);
-    my @bytedata;
-    my $buf;
+    my ($i, $value, $buf, @bytedata);
 
     seek(INFILE, $ofst, 0);
 
@@ -852,7 +843,7 @@ sub rawdump {
 
 sub hexdump {
     my ($buf, $len, $col, $delimit) = @_;
-    my ($i);
+    my $i;
 
     my $hexstr = "";
     my $ascstr = "";
