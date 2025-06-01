@@ -27,7 +27,7 @@ if (@ARGV < 2 || grep { $_ eq '--help' || $_ eq '-h' } @ARGV) {
     exit((@ARGV < 2) ? 1 : 0);
 }
 
-my $input_file = $ARGV[0];
+my $input_file  = $ARGV[0];
 my $output_file = $ARGV[1];
 
 unless (-e $input_file) {
@@ -36,23 +36,21 @@ unless (-e $input_file) {
 
 my $ypp = YAML::PP->new(preserve => PRESERVE_ORDER);
 my $workflow;
-eval {
-    $workflow = $ypp->load_file($input_file);
-};
+eval { $workflow = $ypp->load_file($input_file); };
 if ($@) {
     die "Error parsing YAML file: $@\n";
 }
 
 my @markdown = (
-    "# Compile Netatalk from Source",
-    "",
-    "Below are instructions on how to compile Netatalk from source for specific operating systems.",
-    "Before starting, please read through the [Install Quick Start](https://netatalk.io/install) guide first.",
-    "You need to have a local clone of Netatalk's source code before proceeding.",
-    "",
-    "Please note that these steps are automatically generated from the CI jobs,",
-    "and may not always be optimized for standalone execution.",
-    "",
+            "# Compile Netatalk from Source",
+            "",
+            "Below are instructions on how to compile Netatalk from source for specific operating systems.",
+            "Before starting, please read through the [Install Quick Start](https://netatalk.io/install) guide first.",
+            "You need to have a local clone of Netatalk's source code before proceeding.",
+            "",
+            "Please note that these steps are automatically generated from the CI jobs,",
+            "and may not always be optimized for standalone execution.",
+            "",
 );
 
 foreach my $key (keys %{$workflow->{jobs}}) {
@@ -90,27 +88,27 @@ foreach my $key (keys %{$workflow->{jobs}}) {
 
         # There are two types of jobs with different structures
         if (exists $step->{uses} && $step->{uses} =~ /^vmactions\//) {
-            push @markdown, 
-                "Install required packages",
-                "",
-                "```shell",
-                $step->{with}->{prepare},
-                "```",
-                "",
-                "Configure, compile, install, run, and uninstall",
-                "",
-                "```shell",
-                $step->{with}->{run},
-                "```",
-                "";
+            push @markdown,
+              "Install required packages",
+              "",
+              "```shell",
+              $step->{with}->{prepare},
+              "```",
+              "",
+              "Configure, compile, install, run, and uninstall",
+              "",
+              "```shell",
+              $step->{with}->{run},
+              "```",
+              "";
         } else {
             push @markdown,
-                $step->{name},
-                "",
-                "```shell",
-                $step->{run},
-                "```",
-                "";
+              $step->{name},
+              "",
+              "```shell",
+              $step->{run},
+              "```",
+              "";
         }
     }
 }

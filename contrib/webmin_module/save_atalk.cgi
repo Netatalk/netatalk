@@ -24,20 +24,20 @@ my $filetoedit = $config{'atalk_c'};
 my $totalLines = getLinesSpezFile($filetoedit);
 my $lineNumber = 1;
 
-if($in{'old_iface'}) {
-	$lineNumber = getSpezLine($filetoedit, $in{'old_iface'});
-	my $result = deleteSpezLine($filetoedit, $lineNumber);
-	if ($result == 0) {
-		showMessage($text{'edit_delete_error'})
-	}
+if ($in{'old_iface'}) {
+    $lineNumber = getSpezLine($filetoedit, $in{'old_iface'});
+    my $result = deleteSpezLine($filetoedit, $lineNumber);
+    if ($result == 0) {
+        showMessage($text{'edit_delete_error'});
+    }
 } else {
-	$lineNumber = getLinesSpezFile($filetoedit);
+    $lineNumber = getLinesSpezFile($filetoedit);
 }
 
 my $atalkLine = createNewAtalkLine($in);
 
 if ($atalkLine ne 0) {
-	addLineToFile($filetoedit, $atalkLine, $lineNumber, $totalLines);
+    addLineToFile($filetoedit, $atalkLine, $lineNumber, $totalLines);
 }
 
 redirect("index.cgi?tab=ddp");

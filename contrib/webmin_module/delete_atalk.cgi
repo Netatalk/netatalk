@@ -19,40 +19,39 @@
 require 'netatalk-lib.pl';
 
 eval {
-	&ReadParse();
+    &ReadParse();
 
-	my $filetoedit = $config{'atalk_c'};
-	my @ifs;
-	my @lines;
+    my $filetoedit = $config{'atalk_c'};
+    my @ifs;
+    my @lines;
 
-	if ($in{'section_index'}) {
-		@ifs = split(/\0/, $in{'section_index'});
-	}
-	else {
-		showMessage($text{'edit_delete_nothing'});
-		exit;
-	}
+    if ($in{'section_index'}) {
+        @ifs = split(/\0/, $in{'section_index'});
+    } else {
+        showMessage($text{'edit_delete_nothing'});
+        exit;
+    }
 
-	foreach my $if (@ifs) {
-		unshift (@lines, getSpezLine($filetoedit, $if));
-	}
+    foreach my $if (@ifs) {
+        unshift(@lines, getSpezLine($filetoedit, $if));
+    }
 
-	foreach my $l (@lines){
-		my $result = deleteSpezLine($filetoedit, $l);
-		if ($result == 0) {
-			die($text{'edit_delete_error'})
-		}
-	}
+    foreach my $l (@lines) {
+        my $result = deleteSpezLine($filetoedit, $l);
+        if ($result == 0) {
+            die($text{'edit_delete_error'});
+        }
+    }
 
-	redirect("index.cgi?tab=ddp");
+    redirect("index.cgi?tab=ddp");
 };
-if($@) {
-	# in case the block above has been exited through "die": output error message
-	my $msg = $@;
+if ($@) {
+    # in case the block above has been exited through "die": output error message
+    my $msg = $@;
 
-	ui_print_header(undef, $text{'error_title'}, "", "configs", 1, 1);
-	print $msg;
-	ui_print_footer("index.cgi?tab=ddp", $text{'index_module'});
+    ui_print_header(undef, $text{'error_title'}, "", "configs", 1, 1);
+    print $msg;
+    ui_print_footer("index.cgi?tab=ddp", $text{'index_module'});
 
-	exit;
+    exit;
 }
