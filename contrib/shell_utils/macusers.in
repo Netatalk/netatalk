@@ -21,7 +21,7 @@ if ($ARGV[0] =~ /^(-v|-version|--version)$/ ) {
 
 $NETATALK_PROCESS = "netatalk";
 $AFPD_PROCESS = "afpd";
-if ($^O eq "freebsd" || $^O eq "openbsd" || $^O eq "netbsd") {
+if ($^O eq "darwin" || $^O eq "freebsd" || $^O eq "netbsd" || $^O eq "openbsd") {
         $PS_STR    = "-awwxouser,pid,ppid,start,command";
         $MATCH_STR = '(\S+)\s+(\d+)\s+(\d+)\s+([\d\w:]+)';
 } elsif ($^O eq "solaris") {
