@@ -46,6 +46,7 @@
 # http://www.opensource.apple.com/source/xnu/xnu-1486.2.11/bsd/vfs/vfs_xattr.c
 #
 
+use strict;
 use File::Basename;
 use File::Spec;
 use File::Temp qw /tempfile/;
@@ -54,7 +55,7 @@ use bigint;
 use IPC::Open2 qw /open2/;
 
 # check command for extended attributes -----------------------------------
-
+my $eacommand;
 if (0 == system("which getfattr > /dev/null 2>&1")) {
     $eacommand = 1;
 } elsif (0 == system("which attr > /dev/null 2>&1")) {
@@ -71,11 +72,12 @@ if (0 == system("which getfattr > /dev/null 2>&1")) {
 
 # parse command line -----------------------------------------------
 
-$stdinputmode = 0;
-$eaoption     = 0;
+my $stdinputmode = 0;
+my $eaoption     = 0;
 #  0: unknown   1: file   2: directory
-$finderinfo = 0;
-while ($arg = shift @ARGV) {
+my $finderinfo = 0;
+my $afile;
+while (my $arg = shift @ARGV) {
     if ($arg =~ /^(-h|-help|--help)$/) {
         printf("usage: %s [-a] [FILE|DIR]\n",       basename($0));
         printf(" or:   %s -e FILE|DIR\n",           basename($0));
@@ -141,10 +143,14 @@ if (!($afile)) {
 
 # detect FinderInfo, and search AppleSingle/AppleDouble file --------------
 
-$abspath = File::Spec->rel2abs($afile);
-($basename, $path, $ext) = fileparse($abspath);
+my $abspath = File::Spec->rel2abs($afile);
+my ($basename, $path, $ext) = fileparse($abspath);
 
+my $openfile;
+my $openmessage;
+my $buf;
 if ($stdinputmode == 1) {
+    my $eatempfh;
     ($eatempfh, $openfile) = tempfile(UNLINK => 1);
     system("cat - > $openfile");
     close($eatempfh);
@@ -184,17 +190,17 @@ if ($stdinputmode == 1) {
         exit 1;
     }
     read(INFILE, $buf, 4);
-    $val = unpack("N", $buf);
+    my $val = unpack("N", $buf);
     close(INFILE);
     if ($val == 0x00051600 || $val == 0x00051607) {
         $openfile    = $afile;
         $openmessage = "Dumping \"$openfile\"...\n";
     } else {
         printf("\"%s\" is not AppleSingle/AppleDouble format.\n", $afile);
-        $finderinfo   = 1;
-        $adcount      = 0;
-        $netatalkfile = $path . ".AppleDouble/" . $basename;
-        $osxfile      = $path . "._" . $basename;
+        $finderinfo = 1;
+        my $adcount      = 0;
+        my $netatalkfile = $path . ".AppleDouble/" . $basename;
+        my $osxfile      = $path . "._" . $basename;
 
         if (1 == checkea($afile)) {
             printf("\"%s\"\'s extended attribute is found.\n", $afile);
@@ -225,10 +231,10 @@ if ($stdinputmode == 1) {
     }
 } elsif (-d $afile) {
     printf("\"%s\" is a directory.\n", $afile);
-    $finderinfo   = 2;
-    $adcount      = 0;
-    $netatalkfile = $path . $basename . "/.AppleDouble/.Parent";
-    $osxfile      = $path . "._" . $basename;
+    $finderinfo = 2;
+    my $adcount      = 0;
+    my $netatalkfile = $path . $basename . "/.AppleDouble/.Parent";
+    my $osxfile      = $path . "._" . $basename;
 
     if (1 == checkea($afile)) {
         printf("\"%s\"\'s extended attribute is found.\n", $afile);
@@ -275,7 +281,7 @@ printf($openmessage);
 print "-------------------------------------------------------------------------------\n";
 
 read(INFILE, $buf, 4);
-$val = unpack("N", $buf);
+my $val = unpack("N", $buf);
 printf("MagicNumber: %08X", $val);
 if ($val == 0x00051600) {
     printf("                                        : AppleSingle");
@@ -289,7 +295,7 @@ print "\n";
 # Version Number ---------------------------------------------
 
 read(INFILE, $buf, 4);
-$version = unpack("N", $buf);
+my $version = unpack("N", $buf);
 printf("Version    : %08X", $version);
 if ($version == 0x00010000) {
     printf("                                        : Version 1");
@@ -313,21 +319,21 @@ hexdump($buf, 16, 16, " ");
 # Number of entities -----------------------------------------
 
 read(INFILE, $buf, 2);
-$entnum = unpack("n", $buf);
+my $entnum = unpack("n", $buf);
 printf("Num. of ent: %04X    ",                        $entnum);
 printf("                                        : %d", $entnum);
 print "\n";
 
 # data -------------------------------------------------------
 
-for ($num = 0 ; $num < $entnum ; $num++) {
+for (my $num = 0 ; $num < $entnum ; $num++) {
 
     seek(INFILE, ($num * 12 + 26), 0);
 
     #    Entry ---------------------------------------------------
 
     read(INFILE, $buf, 4);
-    $entid = unpack("N", $buf);
+    my $entid = unpack("N", $buf);
     print "\n-------------------------------------------------------------------------------\n";
     printf("Entry ID   : %08X", $entid);
     if    ($entid == 1)          { printf(" : Data Fork"); }
@@ -355,18 +361,18 @@ for ($num = 0 ; $num < $entnum ; $num++) {
     #    Offset -------------------------------------------------
 
     read(INFILE, $buf, 4);
-    $ofst = unpack("N", $buf);
+    my $ofst = unpack("N", $buf);
     printf("Offset     : %08X", $ofst);
     printf(" : %d ",            $ofst);
 
     #    Length -------------------------------------------------
 
     read(INFILE, $buf, 4);
-    $len = unpack("N", $buf);
+    my $len = unpack("N", $buf);
     printf("\nLength     : %08X", $len);
     printf(" : %d",               $len);
-    $quo = $len >> 4;
-    $rem = $len & 0xF;
+    my $quo = $len >> 4;
+    my $rem = $len & 0xF;
     print "\n";
 
     #     Dump for each Entry ID --------------------------------
@@ -434,7 +440,7 @@ sub filedatesdump {
     my ($i);
     my ($datestr);
 
-    @datetype = ('create    ', 'modify    ', 'backup    ', 'access    ');
+    my @datetype = ('create    ', 'modify    ', 'backup    ', 'access    ');
 
     seek(INFILE, $ofst, 0);
 
@@ -614,10 +620,10 @@ sub dirfinderinfodump {
 
 sub flagsdump {
 
-    @colortype = ('none', 'gray', 'green', 'purple', 'blue', 'yellow', 'red', 'orange');
+    my @colortype = ('none', 'gray', 'green', 'purple', 'blue', 'yellow', 'red', 'orange');
 
     read(INFILE, $buf, 2);
-    $flags = unpack("n", $buf);
+    my $flags = unpack("n", $buf);
     printf("isAlias    : %d\n", ($flags >> 15) & 1);
     printf("Invisible  : %d\n", ($flags >> 14) & 1);
     printf("hasBundle  : %d\n", ($flags >> 13) & 1);
@@ -643,7 +649,7 @@ sub flagsdump {
 sub xflagsdump {
 
     read(INFILE, $buf, 2);
-    $flags = unpack("n", $buf);
+    my $flags = unpack("n", $buf);
 
     if (($flags >> 15) == 1) {
         print "Script     : ";
@@ -684,22 +690,22 @@ sub eadump {
     hexdump($buf, 4, 4, "");
 
     read(INFILE, $buf, 4);
-    $ea_debug_tag = unpack("N", $buf);
+    my $ea_debug_tag = unpack("N", $buf);
     printf("debug_tag  : %08X", $ea_debug_tag);
     printf(" : %d\n",           $ea_debug_tag);
 
     read(INFILE, $buf, 4);
-    $ea_total_size = unpack("N", $buf);
+    my $ea_total_size = unpack("N", $buf);
     printf("total_size : %08X", $ea_total_size);
     printf(" : %d\n",           $ea_total_size);
 
     read(INFILE, $buf, 4);
-    $ea_data_start = unpack("N", $buf);
+    my $ea_data_start = unpack("N", $buf);
     printf("data_start : %08X", $ea_data_start);
     printf(" : %d\n",           $ea_data_start);
 
     read(INFILE, $buf, 4);
-    $ea_data_length = unpack("N", $buf);
+    my $ea_data_length = unpack("N", $buf);
     printf("data_length: %08X", $ea_data_length);
     printf(" : %d\n",           $ea_data_length);
 
@@ -720,13 +726,13 @@ sub eadump {
     hexdump($buf, 2, 4, "");
 
     read(INFILE, $buf, 2);
-    $ea_num_attrs = unpack("n", $buf);
+    my $ea_num_attrs = unpack("n", $buf);
     printf("num_attrs  : %04X", $ea_num_attrs);
     printf("     : %d\n",       $ea_num_attrs);
 
-    $pos = tell(INFILE);
+    my $pos = tell(INFILE);
 
-    for ($i = 0 ; $i < $ea_num_attrs ; $i++) {
+    for (my $i = 0 ; $i < $ea_num_attrs ; $i++) {
 
         $pos = (($pos & 0x3) == 0) ? ($pos) : ((($pos >> 2) + 1) << 2);
         seek(INFILE, $pos, 0);
@@ -734,12 +740,12 @@ sub eadump {
         print "-EA ENTRY--:\n";
 
         read(INFILE, $buf, 4);
-        $ea_offset = unpack("N", $buf);
+        my $ea_offset = unpack("N", $buf);
         printf("offset     : %08X", $ea_offset);
         printf(" : %d\n",           $ea_offset);
 
         read(INFILE, $buf, 4);
-        $ea_length = unpack("N", $buf);
+        my $ea_length = unpack("N", $buf);
         printf("length     : %08X", $ea_length);
         printf(" : %d\n",           $ea_length);
 
@@ -748,20 +754,20 @@ sub eadump {
         hexdump($buf, 2, 4, "");
 
         read(INFILE, $buf, 1);
-        $ea_namelen = unpack("C", $buf);
+        my $ea_namelen = unpack("C", $buf);
         printf("namelen    : %02X", $ea_namelen);
         printf("       : %d\n",     $ea_namelen);
 
-        $ea_namequo = $ea_namelen >> 4;
-        $ea_namerem = $ea_namelen & 0xF;
+        my $ea_namequo = $ea_namelen >> 4;
+        my $ea_namerem = $ea_namelen & 0xF;
         print "-EA NAME---:  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F : (ASCII)\n";
         rawdump($ea_namequo, $ea_namerem);
 
         $pos = tell(INFILE);
 
         seek(INFILE, $ea_offset, 0);
-        $ea_quo = $ea_length >> 4;
-        $ea_rem = $ea_length & 0xF;
+        my $ea_quo = $ea_length >> 4;
+        my $ea_rem = $ea_length & 0xF;
         print "-EA VALUE--:  0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F : (ASCII)\n";
         rawdump($ea_quo, $ea_rem);
     }
@@ -771,6 +777,7 @@ sub bedump {
     my ($ofst, $len) = @_;
     my ($i);
     my ($value);
+    my @bytedata;
 
     seek(INFILE, $ofst, 0);
 
@@ -795,6 +802,7 @@ sub ledump {
     my ($ofst, $len) = @_;
     my ($i);
     my ($value);
+    my @bytedata;
 
     seek(INFILE, $ofst, 0);
 
@@ -837,12 +845,12 @@ sub hexdump {
     my ($buf, $len, $col, $delimit) = @_;
     my ($i);
 
-    $hexstr = "";
-    $ascstr = "";
+    my $hexstr = "";
+    my $ascstr = "";
 
     for ($i = 0 ; $i < $len ; $i++) {
-        $val    = substr($buf, $i, 1);
-        $ascval = ord($val);
+        $val = substr($buf, $i, 1);
+        my $ascval = ord($val);
         $hexstr .= sprintf("%s%02X", $delimit, $ascval);
 
         if (($ascval < 32) || ($ascval > 126)) {
