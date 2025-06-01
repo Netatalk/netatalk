@@ -55,9 +55,9 @@ jobs:
                 perltidy
         - name: Check formatting
           run: |
-              ./contrib/shell_utils/codefmt.sh -v -s c
-              ./contrib/shell_utils/codefmt.sh -v -s meson
-              ./contrib/shell_utils/codefmt.sh -v -s perl
+              ./contrib/scripts/codefmt.sh -v -s c
+              ./contrib/scripts/codefmt.sh -v -s meson
+              ./contrib/scripts/codefmt.sh -v -s perl
 
     markdown-linting:
         name: Markdown Linting

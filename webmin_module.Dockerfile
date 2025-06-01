@@ -75,7 +75,7 @@ RUN sed -i 's/hide_service_controls=0/hide_service_controls=1/' /netatalk-code/c
     /usr/share/poppler \
     /var/lib/apt/lists
 
-COPY /contrib/shell_utils/webmin_container_entrypoint.sh /entrypoint.sh
+COPY /contrib/scripts/webmin_container_entrypoint.sh /entrypoint.sh
 
 WORKDIR /
 EXPOSE 10000
