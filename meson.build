@@ -2268,7 +2268,7 @@ build_html_docs = false
 build_readme_docs = false
 
 if 'readmes' in get_option('with-docs')
-    make_compile_doc = find_program('contrib/shell_utils/make_compile_docs.pl', required: false)
+    make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: false)
     build_readme_docs = true
 
     readmes_md = [

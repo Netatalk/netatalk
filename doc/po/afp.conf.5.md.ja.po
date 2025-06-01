@@ -2055,13 +2055,13 @@ msgstr ""
 #: manpages/man5/afp.conf.5.md:774
 #, no-wrap
 msgid ""
-"> Script which will be executed for every FCE event, see\n"
-"contrib/shell_utils/fce_ev_script.sh from the Netatalk sources for an\n"
-"example script.\n"
+"> Script which will be executed for every FCE event. See\n"
+"*contrib/scripts/fce_ev_script.sh* in the Netatalk source tree\n"
+"for an example script.\n"
 msgstr ""
 "> 各々の FCE\n"
 "イベントに対して実行されるスクリプト。スクリプト例については、Netatalk\n"
-"のソースの contrib/shell_utils/fce_ev_script.sh を参照のこと。\n"
+"のソースの *contrib/scripts/fce_ev_script.sh* を参照のこと。\n"
 
 #. type: Title ##
 #: manpages/man5/afp.conf.5.md:775

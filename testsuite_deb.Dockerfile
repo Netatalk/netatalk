@@ -100,7 +100,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends $RUN_DEPS
 
-COPY /contrib/shell_utils/netatalk_container_entrypoint.sh /entrypoint.sh
+COPY /contrib/scripts/netatalk_container_entrypoint.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548

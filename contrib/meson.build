@@ -1,4 +1,4 @@
-subdir('shell_utils')
+subdir('bin_utils')
 
 if have_appletalk
     subdir('a2boot')
