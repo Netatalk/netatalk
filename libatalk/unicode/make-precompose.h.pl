@@ -4,7 +4,7 @@
 #        make-precompose.h.pl UnicodeData.txt precompose.h
 #
 # (c) 2008-2011 by HAT <hat@fa2.so-net.ne.jp>
-# (c) 2024 by Daniel Markstedt <daniel@mindani.net>
+# (c) 2024-2025 by Daniel Markstedt <daniel@mindani.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -24,6 +24,9 @@
 
 # temp files for binary search (compose.TEMP, compose_sp.TEMP) -------------
 
+use strict;
+use warnings;
+
 open(UNICODEDATA, "<$ARGV[0]") or die "$0: open $ARGV[0]: $!";
 open(CHEADER,     ">$ARGV[1]") or die "$0: open $ARGV[1]: $!";
 
@@ -33,28 +36,28 @@ open(COMPOSE_SP_TEMP, ">compose_sp.TEMP") or die "$0: open compose_sp.TEMP: $!";
 while (<UNICODEDATA>) {
     chop;
     (
-     $code0,
-     $Name1,
-     $General_Category2,
-     $Canonical_Combining_Class3,
-     $Bidi_Class4,
-     $Decomposition_Mapping5,
-     $Numeric_Value6,
-     $Numeric_Value7,
-     $Numeric_Value8,
-     $Bidi_Mirrored9,
-     $Unicode_1_Name10,
-     $ISO_Comment11,
-     $Simple_Uppercase_Mapping12,
-     $Simple_Lowercase_Mapping13,
-     $Simple_Titlecase_Mapping14
+     my $code0,
+     my $Name1,
+     my $General_Category2,
+     my $Canonical_Combining_Class3,
+     my $Bidi_Class4,
+     my $Decomposition_Mapping5,
+     my $Numeric_Value6,
+     my $Numeric_Value7,
+     my $Numeric_Value8,
+     my $Bidi_Mirrored9,
+     my $Unicode_1_Name10,
+     my $ISO_Comment11,
+     my $Simple_Uppercase_Mapping12,
+     my $Simple_Lowercase_Mapping13,
+     my $Simple_Titlecase_Mapping14
     ) = split(/\;/);
 
     if (($Decomposition_Mapping5 ne "") && ($Decomposition_Mapping5 !~ /\</) && ($Decomposition_Mapping5 =~ / /)) {
-        ($base, $comb) = split(/ /, $Decomposition_Mapping5);
+        (my $base, my $comb) = split(/ /, $Decomposition_Mapping5);
 
-        $leftbracket  = "    { ";
-        $rightbracket = " },     ";
+        my $leftbracket  = "    { ";
+        my $rightbracket = " },     ";
 
         # AFP 3.x Spec
         if (    ((0x2000 <= hex($code0)) && (hex($code0) <= 0x2FFF))
@@ -66,14 +69,14 @@ while (<UNICODEDATA>) {
 
         if (hex($code0) > 0xFFFF) {
 
-            $code0_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($code0) >> 10);
-            $code0_sp_lo = 0xDC00 + (hex($code0) & 0x3FF);
+            my $code0_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($code0) >> 10);
+            my $code0_sp_lo = 0xDC00 + (hex($code0) & 0x3FF);
 
-            $base_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($base) >> 10);
-            $base_sp_lo = 0xDC00 + (hex($base) & 0x3FF);
+            my $base_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($base) >> 10);
+            my $base_sp_lo = 0xDC00 + (hex($base) & 0x3FF);
 
-            $comb_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($comb) >> 10);
-            $comb_sp_lo = 0xDC00 + (hex($comb) & 0x3FF);
+            my $comb_sp_hi = 0xD800 - (0x10000 >> 10) + (hex($comb) >> 10);
+            my $comb_sp_lo = 0xDC00 + (hex($comb) & 0x3FF);
 
             printf(COMPOSE_SP_TEMP "%s0x%04X%04X, 0x%04X%04X, 0x%04X%04X%s\/\* %s \*\/\n",
                    $leftbracket,  $code0_sp_hi, $code0_sp_lo, $base_sp_hi, $base_sp_lo, $comb_sp_hi, $comb_sp_lo,
@@ -100,8 +103,8 @@ close(COMPOSE_SP_TEMP);
 
 open(COMPOSE_TEMP, "<compose.TEMP") or die "$0: open compose.TEMP: $!";
 
-@comp_table = ();
-$comp_count = 0;
+my @comp_table = ();
+my $comp_count = 0;
 
 while (<COMPOSE_TEMP>) {
     if (m/^\s{4}\/\*/) {
@@ -113,12 +116,12 @@ while (<COMPOSE_TEMP>) {
 }
 
 # Hangul's maxcomblen is already 2. That is, VT.
-$maxcomblen = 2;
+my $maxcomblen = 2;
 
-for ($i = 0 ; $i < $comp_count ; $i++) {
-    $base    = $comp_table[$i][1];
-    $comblen = 1;
-    $j       = 0;
+for (my $i = 0 ; $i < $comp_count ; $i++) {
+    my $base    = $comp_table[$i][1];
+    my $comblen = 1;
+    my $j       = 0;
     while ($j < $comp_count) {
         if ($base ne $comp_table[$j][0]) {
             $j++;
@@ -138,8 +141,8 @@ close(COMPOSE_TEMP);
 
 open(COMPOSE_SP_TEMP, "<compose_sp.TEMP") or die "$0: open compose_sp.TEMP: $!";
 
-@comp_sp_table = ();
-$comp_sp_count = 0;
+my @comp_sp_table = ();
+my $comp_sp_count = 0;
 
 while (<COMPOSE_SP_TEMP>) {
     if (m/^\s{4}\/\*/) {
@@ -151,12 +154,12 @@ while (<COMPOSE_SP_TEMP>) {
 }
 
 # one char have 2 codepoints, like a D8xx DCxx.
-$maxcombsplen = 2;
+my $maxcombsplen = 2;
 
-for ($i = 0 ; $i < $comp_sp_count ; $i++) {
-    $base_sp = $comp_sp_table[$i][1];
-    $comblen = 2;
-    $j       = 0;
+for (my $i = 0 ; $i < $comp_sp_count ; $i++) {
+    my $base_sp = $comp_sp_table[$i][1];
+    my $comblen = 2;
+    my $j       = 0;
     while ($j < $comp_sp_count) {
         if ($base_sp ne $comp_sp_table[$j][0]) {
             $j++;
@@ -174,7 +177,7 @@ close(COMPOSE_SP_TEMP);
 
 # macro for buffer length (COMBBUFLEN) -------------------------------------
 
-$combbuflen = ($maxcomblen > $maxcombsplen) ? $maxcomblen : $maxcombsplen;
+my $combbuflen = ($maxcomblen > $maxcombsplen) ? $maxcomblen : $maxcombsplen;
 
 # sort ---------------------------------------------------------------------
 
@@ -241,7 +244,7 @@ print(CHEADER "    unsigned int comb\;\n");
 print(CHEADER "\} decompositions\[\] \= \{\n");
 
 my $decompose_file = "decompose.SORT";
-open(my $fh, "<", $decompose_file) or die "Could not open file '$decompose_file' $!";
+open($fh, "<", $decompose_file) or die "Could not open file '$decompose_file' $!";
 while (my $line = <$fh>) {
     print(CHEADER $line);
 }
@@ -257,7 +260,7 @@ print(CHEADER "    unsigned int comb_sp\;\n");
 print(CHEADER "\} precompositions_sp\[\] \= \{\n");
 
 my $precompose_sp_file = "precompose_sp.SORT";
-open(my $fh, "<", $precompose_sp_file) or die "Could not open file '$precompose_sp_file' $!";
+open($fh, "<", $precompose_sp_file) or die "Could not open file '$precompose_sp_file' $!";
 while (my $line = <$fh>) {
     print(CHEADER $line);
 }
@@ -273,7 +276,7 @@ print(CHEADER "    unsigned int comb_sp\;\n");
 print(CHEADER "\} decompositions_sp\[\] \= \{\n");
 
 my $decompose_sp_file = "decompose_sp.SORT";
-open(my $fh, "<", $decompose_sp_file) or die "Could not open file '$decompose_sp_file' $!";
+open($fh, "<", $decompose_sp_file) or die "Could not open file '$decompose_sp_file' $!";
 while (my $line = <$fh>) {
     print(CHEADER $line);
 }
