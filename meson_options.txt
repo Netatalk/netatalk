@@ -16,24 +16,6 @@ option(
     description: 'Enable AFP statistics via D-Bus',
 )
 option(
-    'with-cnid-dbd-backend',
-    type: 'boolean',
-    value: true,
-    description: 'Compile CNID with Database Daemon Data Store',
-)
-option(
-    'with-cnid-last-backend',
-    type: 'boolean',
-    value: true,
-    description: 'Compile LAST CNID scheme',
-)
-option(
-    'with-cnid-mysql-backend',
-    type: 'boolean',
-    value: true,
-    description: 'Compile MySQL CNID scheme',
-)
-option(
     'with-cracklib',
     type: 'boolean',
     value: true,
@@ -396,6 +378,17 @@ option(
 
 # The following options offer a choice from pre-defined selections
 
+option(
+    'with-cnid-backends',
+    type: 'array',
+    choices: [
+        'dbd',
+        'last',
+        'mysql',
+    ],
+    value: ['dbd', 'last', 'mysql'],
+    description: 'Choose the CNID backends to build and install',
+)
 option(
     'with-cnid-default-backend',
     type: 'combo',
