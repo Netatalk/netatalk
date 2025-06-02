@@ -1466,9 +1466,9 @@ cnid_backends = ''
 
 # Determine whether or not to use Database Daemon CNID backend
 
-if not get_option('with-cnid-dbd-backend')
-    use_dbd_backend = false
-else
+use_dbd_backend = false
+
+if 'dbd' in get_option('with-cnid-backends')
     use_dbd_backend = true
     cnid_backends += 'dbd'
     cdata.set('CNID_BACKEND_DBD', 1)
@@ -1476,9 +1476,9 @@ endif
 
 # Determine whether or not to use LAST DID scheme
 
-if not get_option('with-cnid-last-backend')
-    use_last_backend = false
-else
+use_last_backend = false
+
+if 'last' in get_option('with-cnid-backends')
     use_last_backend = true
     if cnid_backends != ''
         cnid_backends += ' | '
@@ -1494,7 +1494,7 @@ mariadb = dependency('libmariadb', required: false)
 
 use_mysql_backend = false
 
-if get_option('with-cnid-mysql-backend')
+if 'mysql' in get_option('with-cnid-backends')
     if mysqlclient.found()
         mysql_deps = mysqlclient
     else
