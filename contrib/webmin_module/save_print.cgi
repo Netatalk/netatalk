@@ -14,15 +14,20 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
+use strict;
+use warnings;
 require 'netatalk-lib.pl';
+our (%config, %in);
 
 &ReadParse();
 
-@printers = split(/\r?\n/, $in{'papd'});
-&open_lock_tempfile(PAPD, ">$config{'papd_c'}");
-foreach $p (@printers) {
-    &print_tempfile(PAPD, $p, "\n");
-}
-&close_tempfile(PAPD);
+my @printers = split(/\r?\n/, $in{'papd'});
+my $papd_fh;
+&open_lock_tempfile($papd_fh, ">$config{'papd_c'}");
 
+foreach my $p (@printers) {
+    &print_tempfile($papd_fh, $p, "\n");
+}
+
+&close_tempfile($papd_fh);
 &redirect("index.cgi?tab=general");

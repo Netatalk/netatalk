@@ -18,7 +18,10 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+use strict;
+use warnings;
 require 'netatalk-lib.pl';
+our (%in, %text);
 
 # process deletion request silently and redirect back to the index page
 # only in case of error an error message is printed

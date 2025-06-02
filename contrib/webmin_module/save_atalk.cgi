@@ -16,7 +16,10 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
+use strict;
+use warnings;
 require 'netatalk-lib.pl';
+our (%config, %in, %text);
 
 &ReadParse();
 
@@ -34,7 +37,7 @@ if ($in{'old_iface'}) {
     $lineNumber = getLinesSpezFile($filetoedit);
 }
 
-my $atalkLine = createNewAtalkLine($in);
+my $atalkLine = createNewAtalkLine(%in);
 
 if ($atalkLine ne 0) {
     addLineToFile($filetoedit, $atalkLine, $lineNumber, $totalLines);

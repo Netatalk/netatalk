@@ -22,9 +22,14 @@
 #
 
 BEGIN { push(@INC, ".."); }
+use strict;
+use warnings;
 use WebminCore;
 use File::Copy;
+
 &init_config();
+
+our (%config, %text);
 
 our %netatalkParameterDefaults = (
                                   'acls'                        => 'yes',

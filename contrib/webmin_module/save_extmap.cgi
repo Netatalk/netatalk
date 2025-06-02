@@ -14,15 +14,20 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 
+use strict;
+use warnings;
 require 'netatalk-lib.pl';
+our (%config, %in);
 
 &ReadParse();
 
-@mappings = split(/\r?\n/, $in{'extmap'});
-&open_lock_tempfile(EXTMAP, ">$config{'extmap_c'}");
-foreach $p (@mappings) {
-    &print_tempfile(EXTMAP, $p, "\n");
-}
-&close_tempfile(EXTMAP);
+my @mappings = split(/\r?\n/, $in{'extmap'});
+my $extmap_fh;
+&open_lock_tempfile($extmap_fh, ">$config{'extmap_c'}");
 
+foreach my $p (@mappings) {
+    &print_tempfile($extmap_fh, $p, "\n");
+}
+
+&close_tempfile($extmap_fh);
 &redirect("index.cgi?tab=general");
