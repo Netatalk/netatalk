@@ -53,30 +53,14 @@ else
     INITIAL_STATE=$?
 fi
 
-if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
-    if [ $VERBOSE -eq 1 ]; then
-        echo "Formatting meson sources..."
-    fi
-    if command -v muon >/dev/null 2>&1; then
-        find . -type f -name "meson.build" -exec muon fmt -i {} \;
-        FORMATTED=1
-    elif command -v muon-meson >/dev/null 2>&1; then
-        find . -type f -name "meson.build" -exec muon-meson fmt -i {} \;
-        FORMATTED=1
-    else
-        echo "Error: No variant of muon found in PATH"
-        exit 2
-    fi
-fi
-
 if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v astyle >/dev/null 2>&1; then
-        if [ $VERBOSE -eq 0 ]; then
-            FORMATTER_CMD="$FORMATTER_CMD --quiet"
-        else
-            echo "Formatting C sources..."
-        fi
         FORMATTER_CMD="astyle --options=.astylerc --recursive --suffix=none"
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Formatting C sources..."
+        else
+            FORMATTER_CMD="$FORMATTER_CMD --quiet"
+        fi
         $FORMATTER_CMD '*.h' '*.c'
         FORMATTED=1
     else
@@ -85,12 +69,37 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
     fi
 fi
 
+if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
+    if command -v muon >/dev/null 2>&1; then
+        FORMATTER_CMD="muon"
+    elif command -v muon-meson >/dev/null 2>&1; then
+        FORMATTER_CMD="muon-meson"
+    else
+        echo "Error: No variant of muon found in PATH"
+        exit 2
+    fi
+    if [ $VERBOSE -eq 1 ]; then
+        echo "Formatting meson sources..."
+        find . -type f -name "meson.build" -exec sh -c 'echo "Processing: $(dirname {})/meson.build" && '$FORMATTER_CMD' fmt -i {}' \;
+    else
+        find . -type f -name "meson.build" -exec $FORMATTER_CMD fmt -i {} \;
+    fi
+    FORMATTED=1
+fi
+
 if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v perltidy >/dev/null 2>&1; then
-        if [ $VERBOSE -ne 0 ]; then
+        if [ "$VERBOSE" -eq 1 ]; then
             echo "Formatting Perl sources..."
+            find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec sh -c '
+                for file do
+                    echo "Processing: $file"
+                    perltidy --backup-file-extension="/" "$file"
+                done
+            ' sh {} +
+        else
+            find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec perltidy --backup-file-extension='/' {} +
         fi
-        find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec perltidy --backup-file-extension='/' {} \;
         FORMATTED=1
     else
         echo "Error: perltidy not found in PATH"
