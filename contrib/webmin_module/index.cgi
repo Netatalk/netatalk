@@ -19,8 +19,11 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 #
 
+use strict;
+use warnings;
 require 'netatalk-lib.pl';
 use File::Basename;
+our (%config, %in, %text, $module_name);
 
 &ReadParse();
 
@@ -54,6 +57,10 @@ if ($@) {
 print &ui_tabs_start(\@tabs, 'mode', $defaulttab);
 print &ui_tabs_start_tab('mode', 'general');
 
+# since we are using a different number of forms, depending on the status of the service,
+# we are keeping a running index while outputting the forms
+my $current_formindex = 0;
+
 # Volume presets
 print "<h3>$text{index_volume_presets}</h3>\n";
 my @volume_preset_links = (
@@ -77,7 +84,7 @@ if (@{$$afpconf{volumePresetSections}}) {
                             undef,
                             undef
     );
-    foreach $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumePresetSections}}) {
+    foreach my $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumePresetSections}}) {
         print &ui_columns_row(
             [
                 &ui_checkbox('section_index', $$volumeSection{'index'}),
@@ -185,7 +192,7 @@ if (@atalk_ifs) {
                             undef
     );
     my $index = 0;
-    foreach $if (sort { lc($a->{atalk_iface}) cmp lc($b->{atalk_iface}) } @atalk_ifs) {
+    foreach my $if (sort { lc($a->{atalk_iface}) cmp lc($b->{atalk_iface}) } @atalk_ifs) {
         print &ui_columns_row(
                               [
                                &ui_checkbox('section_index', $if->{atalk_iface}),
@@ -283,7 +290,7 @@ if (@{$$afpconf{volumeSections}}) {
                             undef,
                             undef
     );
-    foreach $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumeSections}}) {
+    foreach my $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumeSections}}) {
         print &ui_columns_row(
             [
                 &ui_checkbox('section_index', $$volumeSection{'index'}),
@@ -306,11 +313,6 @@ if (@{$$afpconf{volumeSections}}) {
 
 if (!$config{hide_service_controls}) {
     print &ui_hr();
-
-    # since we are using a different number of forms, depending on the status of the service,
-    # we are keeping a running index while outputting the forms
-    my $current_formindex = 0;
-
     print "<h3>$text{'index_filesharing_services'}</h3>\n";
 
     # Process control Buttons

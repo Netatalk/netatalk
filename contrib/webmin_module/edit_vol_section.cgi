@@ -28,7 +28,10 @@
 # all inputs for netatalk configuration parameters follow the naming convention "p_"+parameter name
 # to keep the save_vol_section.cgi simple
 
+use strict;
+use warnings;
 require 'netatalk-lib.pl';
+our (%in, %text);
 
 # what it is, we are going to edit: volume | volume_preset | homes
 my $subject;
@@ -122,17 +125,15 @@ if ($subject ne 'homes') {
 
 # preparations done, start outputting page
 ui_print_header(undef, $pageTitle, "", "configs", 1, 1);
-
 print &ui_form_start('save_vol_section.cgi?tab=' . $tab, 'POST', undef, 'name="configform"');
-
 print &ui_hidden('action', $in{'action'});
 print &ui_hidden('reload', 'true');
 print &ui_hidden('index',  $in{'index'}) if (defined $in{'index'});
-
 print &ui_tabs_start(\@tabs, 'mode', 'common');
 print &ui_tabs_start_tab('mode', 'common');
-
 print &ui_table_start($text{'edit_vol_section_title_table'}, 'width="100%"', 2);
+
+my @values;
 
 if ($subject eq 'volume') {
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'vol preset', \%in);
