@@ -42,7 +42,7 @@ Get network range and seed router for the current network:
 
 Get all routes from the router at 12.1:
 
-    example$ build/bin/rtmpqry/rtmpqry -a 12.1
+    example$ rtmpqry -a 12.1
     3 - 10 distance 0 via 12.1
     11 distance 0 via 12.1
     12 distance 0 via 12.1
