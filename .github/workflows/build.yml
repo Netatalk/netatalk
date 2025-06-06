@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     container:
-      image: alpine:latest
+      image: alpine:3.21
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
