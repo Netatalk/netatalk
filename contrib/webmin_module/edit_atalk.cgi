@@ -17,7 +17,7 @@
 use strict;
 use warnings;
 require 'netatalk-lib.pl';
-our (%in %text);
+our (%in, %text);
 
 &ReadParse();
 
