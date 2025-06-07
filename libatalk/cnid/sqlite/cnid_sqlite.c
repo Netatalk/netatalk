@@ -602,6 +602,10 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
             sqlite3_bind_int64(stmt, 3, stmt_param_dev);
             sqlite3_bind_int64(stmt, 4, stmt_param_ino);
             int status = sqlite3_step(stmt);
+            LOG(log_maxdebug, logtype_cnid,
+                "cnid_sqlite_add: binding name='%s', did=%" PRIu64 ", dev=%" PRIu64 ", ino=%"
+                PRIu64,
+                stmt_param_name, stmt_param_did, stmt_param_dev, stmt_param_ino);
 
             if (status != SQLITE_DONE) {
                 if (status == SQLITE_CONSTRAINT) {
@@ -872,17 +876,16 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     LOG(log_debug, logtype_cnid,
         "cnid_sqlite_wipe: Successfully wiped CNID database for volume '%s'",
         cdb->cnid_db_vol->v_localname);
+    EC_ZERO(init_prepared_stmt(db));
 EC_CLEANUP:
     EC_EXIT;
 }
 
 static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
 {
-    struct _cnid_db *cdb;
+    struct _cnid_db *cdb = (struct _cnid_db *) calloc(1, sizeof(struct _cnid_db));
 
-    if ((cdb =
-                (struct _cnid_db *) calloc(1,
-                                           sizeof(struct _cnid_db))) == NULL) {
+    if (cdb == NULL) {
         return NULL;
     }
 
@@ -1046,7 +1049,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     /* Create volume table */
     if (cnid_sqlite_execute(db->cnid_sqlite_con,
                             "CREATE TABLE IF NOT EXISTS \"%s\" ("
-                            "Id INTEGER PRIMARY KEY AUTOINCREMENT CHECK (Id > 16),"
+                            "Id INTEGER PRIMARY KEY AUTOINCREMENT,"
                             "Name VARCHAR(255) NOT NULL,"
                             "Did INTEGER NOT NULL,"
                             "DevNo INTEGER NOT NULL,"
