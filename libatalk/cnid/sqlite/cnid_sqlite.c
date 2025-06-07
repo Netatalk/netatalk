@@ -596,7 +596,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
             stmt_param_did = ntohl(did);
             stmt_param_dev = dev;
             stmt_param_ino = ino;
-            sqlite3_bind_text(stmt, 1, stmt_param_name, stmt_param_name_len,
+            sqlite3_bind_text(stmt, 1, stmt_param_name, (int)stmt_param_name_len,
                               SQLITE_STATIC);
             sqlite3_bind_int64(stmt, 2, stmt_param_did);
             sqlite3_bind_int64(stmt, 3, stmt_param_dev);
@@ -846,10 +846,10 @@ cnid_t cnid_sqlite_rebuild_add(struct _cnid_db *cdb _U_,
 int cnid_sqlite_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
-    CNID_sqlite_private *db;
+    CNID_sqlite_private *db = cdb->cnid_db_private;
 
-    if (!cdb || !(db = cdb->cnid_db_private)) {
-        LOG(log_error, logtype_cnid, "cnid_wipe: Parameter error");
+    if (!cdb || !db) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_wipe: Parameter error");
         errno = CNID_ERR_PARAM;
         return -1;
     }
@@ -857,29 +857,18 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     LOG(log_debug, logtype_cnid,
         "cnid_sqlite_wipe: Wiping CNID database for volume '%s'",
         cdb->cnid_db_vol->v_localname);
-    EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con,
-                                "BEGIN TRANSACTION;"
-                                "UPDATE volumes SET Depleted=0 WHERE VolUUID=\"%s\";"
-                                "DELETE FROM \"%s\";"
-                                "COMMIT;",
-                                db->cnid_sqlite_voluuid_str,
-                                db->cnid_sqlite_voluuid_str));
-
-    if (cnid_sqlite_execute(db->cnid_sqlite_con,
-                            "BEGIN TRANSACTION;"
-                            "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";"
-                            "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
-                            "16 WHERE NOT EXISTS "
-                            "(SELECT changes() AS change "
-                            "FROM sqlite_sequence WHERE change <> 0);"
-                            "COMMIT;",
-                            db->cnid_sqlite_voluuid_str,
-                            db->cnid_sqlite_voluuid_str)) {
-        LOG(log_error, logtype_cnid, "cnid_sqlite_open: sqlite query error: %s",
-            sqlite3_errmsg(db->cnid_sqlite_con));
-        EC_FAIL;
-    }
-
+    EC_NEG1(cnid_sqlite_execute(
+                db->cnid_sqlite_con,
+                "UPDATE volumes SET Depleted=0 WHERE VolUUID=\"%s\";"
+                "DELETE FROM \"%s\";"
+                "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";"
+                "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
+                "16 WHERE NOT EXISTS "
+                "(SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
+                db->cnid_sqlite_voluuid_str,
+                db->cnid_sqlite_voluuid_str,
+                db->cnid_sqlite_voluuid_str,
+                db->cnid_sqlite_voluuid_str));
     LOG(log_debug, logtype_cnid,
         "cnid_sqlite_wipe: Successfully wiped CNID database for volume '%s'",
         cdb->cnid_db_vol->v_localname);
@@ -1083,7 +1072,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
      */
     if (cnid_sqlite_execute(db->cnid_sqlite_con,
                             "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";"
-                            "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
+                            "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
                             "16 WHERE NOT EXISTS "
                             "(SELECT changes() AS change "
                             "FROM sqlite_sequence WHERE change <> 0);",
