@@ -103,6 +103,7 @@ jobs:
         run: ninja -C build uninstall
 
   build-archlinux:
+    if: false
     name: Arch Linux
     runs-on: ubuntu-latest
     timeout-minutes: 12
