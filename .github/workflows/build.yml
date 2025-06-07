@@ -107,7 +107,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     container:
-      image: archlinux:latest
+      image: archlinux/archlinux:base-20250604.0.359550
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
