@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Recursively format source files in the current repo directory
 #
@@ -60,7 +60,7 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
         else
             FORMATTER_CMD="$FORMATTER_CMD --quiet"
         fi
-        $FORMATTER_CMD '*.h' '*.c'
+        eval "$FORMATTER_CMD '*.h' '*.c'"
     else
         echo "Error: astyle not found in PATH"
         exit 2
@@ -89,7 +89,7 @@ if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
         if [ "$VERBOSE" -eq 1 ]; then
             echo "Formatting Perl sources..."
             find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec sh -c '
-                for file do
+                for file in "$@"; do
                     echo "Processing: $file"
                     perltidy --backup-file-extension="/" "$file"
                 done
@@ -108,7 +108,7 @@ if [ "$SOURCE_TYPE" = "shell" ] || [ "$SOURCE_TYPE" = "" ]; then
         if [ $VERBOSE -eq 1 ]; then
             echo "Formatting shell scripts..."
             find . -name "*.sh" -exec sh -c '
-                for file do
+                for file in "$@"; do
                     echo "Processing: $file"
                     shfmt -w "$file"
                 done
