@@ -17,11 +17,10 @@
 FORMATTER_CMD=""
 SOURCE_TYPE=""
 IS_GIT=0
-FORMATTED=0
 VERBOSE=0
 
 usage() {
-    echo "Usage: $0 [-v] [-s c|meson|perl]"
+    echo "Usage: $0 [-v] [-s c|meson|perl|shell]"
     exit 2
 }
 
@@ -32,8 +31,8 @@ while getopts "vs:" opt; do
       ;;
     s)
       SOURCE_TYPE="$OPTARG"
-      if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ]; then
-        echo "Error: Source type must be either 'c', 'meson', or 'perl'"
+      if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ]; then
+        echo "Error: Source type must be either 'c', 'meson', 'perl', or 'shell'"
         usage
         exit 2
       fi
@@ -62,7 +61,6 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
             FORMATTER_CMD="$FORMATTER_CMD --quiet"
         fi
         $FORMATTER_CMD '*.h' '*.c'
-        FORMATTED=1
     else
         echo "Error: astyle not found in PATH"
         exit 2
@@ -84,7 +82,6 @@ if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
     else
         find . -type f -name "meson.build" -exec $FORMATTER_CMD fmt -i {} \;
     fi
-    FORMATTED=1
 fi
 
 if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
@@ -100,9 +97,26 @@ if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
         else
             find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec perltidy --backup-file-extension='/' {} +
         fi
-        FORMATTED=1
     else
         echo "Error: perltidy not found in PATH"
+        exit 2
+    fi
+fi
+
+if [ "$SOURCE_TYPE" = "shell" ] || [ "$SOURCE_TYPE" = "" ]; then
+    if command -v shfmt >/dev/null 2>&1; then
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Formatting shell scripts..."
+            find . -name "*.sh" -exec sh -c '
+                for file do
+                    echo "Processing: $file"
+                    shfmt -w "$file"
+                done
+            ' sh {} +
+        fi
+        shfmt --write .
+    else
+        echo "Error: shfmt not found in PATH"
         exit 2
     fi
 fi
@@ -110,9 +124,6 @@ fi
 if [ $IS_GIT -eq 1 ]; then
     git diff --quiet HEAD
     FINAL_STATE=$?
-fi
-
-if [ $FORMATTED -eq 1 ] && [ $IS_GIT -eq 1 ]; then
     if [ $INITIAL_STATE -eq 0 ] && [ $FINAL_STATE -eq 1 ]; then
         if [ $VERBOSE -eq 1 ]; then
             git --no-pager diff

@@ -52,12 +52,14 @@ jobs:
               brew install \
                 astyle \
                 muon \
-                perltidy
+                perltidy \
+                shfmt
         - name: Check formatting
           run: |
               ./contrib/scripts/codefmt.sh -v -s c
               ./contrib/scripts/codefmt.sh -v -s meson
               ./contrib/scripts/codefmt.sh -v -s perl
+              ./contrib/scripts/codefmt.sh -v -s shell
 
     markdown-linting:
         name: Markdown Linting
