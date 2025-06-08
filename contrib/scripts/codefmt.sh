@@ -25,26 +25,26 @@ usage() {
 }
 
 while getopts "vs:" opt; do
-  case $opt in
-    v)
-      VERBOSE=1
-      ;;
-    s)
-      SOURCE_TYPE="$OPTARG"
-      if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ]; then
-        echo "Error: Source type must be either 'c', 'meson', 'perl', or 'shell'"
-        usage
-        exit 2
-      fi
-      ;;
-    *)
-      usage
-      exit 2
-      ;;
-  esac
+    case $opt in
+        v)
+            VERBOSE=1
+            ;;
+        s)
+            SOURCE_TYPE="$OPTARG"
+            if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ]; then
+                echo "Error: Source type must be either 'c', 'meson', 'perl', or 'shell'"
+                usage
+                exit 2
+            fi
+            ;;
+        *)
+            usage
+            exit 2
+            ;;
+    esac
 done
 
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     echo "Warning: Not inside a git repository; no diff will be produced"
 else
     IS_GIT=1
@@ -53,7 +53,7 @@ else
 fi
 
 if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
-    if command -v astyle >/dev/null 2>&1; then
+    if command -v astyle > /dev/null 2>&1; then
         FORMATTER_CMD="astyle --options=.astylerc --recursive --suffix=none"
         if [ $VERBOSE -eq 1 ]; then
             echo "Formatting C sources..."
@@ -68,9 +68,9 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
 fi
 
 if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
-    if command -v muon >/dev/null 2>&1; then
+    if command -v muon > /dev/null 2>&1; then
         FORMATTER_CMD="muon"
-    elif command -v muon-meson >/dev/null 2>&1; then
+    elif command -v muon-meson > /dev/null 2>&1; then
         FORMATTER_CMD="muon-meson"
     else
         echo "Error: No variant of muon found in PATH"
@@ -85,7 +85,7 @@ if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
 fi
 
 if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
-    if command -v perltidy >/dev/null 2>&1; then
+    if command -v perltidy > /dev/null 2>&1; then
         if [ "$VERBOSE" -eq 1 ]; then
             echo "Formatting Perl sources..."
             find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec sh -c '
@@ -104,7 +104,7 @@ if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
 fi
 
 if [ "$SOURCE_TYPE" = "shell" ] || [ "$SOURCE_TYPE" = "" ]; then
-    if command -v shfmt >/dev/null 2>&1; then
+    if command -v shfmt > /dev/null 2>&1; then
         if [ $VERBOSE -eq 1 ]; then
             echo "Formatting shell scripts..."
             find . -name "*.sh" -exec sh -c '

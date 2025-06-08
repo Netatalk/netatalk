@@ -23,7 +23,7 @@ set -e
 
 handle_sigterm() {
     echo "*** Received SIGTERM, shutting down Webmin..."
-    if [ -n "$MINISERV_PID" ] && kill -0 "$MINISERV_PID" 2>/dev/null; then
+    if [ -n "$MINISERV_PID" ] && kill -0 "$MINISERV_PID" 2> /dev/null; then
         kill "$MINISERV_PID"
         wait "$MINISERV_PID"
     fi
