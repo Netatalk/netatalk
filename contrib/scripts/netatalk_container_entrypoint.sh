@@ -26,7 +26,7 @@ set -e
 
 DISTRO="unknown"
 if [ -f /etc/os-release ]; then
-    DISTRO=`grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"'`
+    DISTRO=$(grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
     echo "Detected Linux distribution: $DISTRO"
 else
     echo "WARNING: /etc/os-release not found; are we running on Linux?"
@@ -47,7 +47,6 @@ if [ -z "$AFP_GROUP" ]; then
     exit 1
 fi
 
-
 if [ "$DISTRO" = "alpine" ]; then
     uidcmd=""
     gidcmd=""
@@ -57,8 +56,8 @@ if [ "$DISTRO" = "alpine" ]; then
     if [ -n "$AFP_GID" ]; then
         gidcmd="-g $AFP_GID"
     fi
-    adduser $uidcmd --no-create-home --disabled-password "$AFP_USER" 2>/dev/null || true
-    addgroup $gidcmd "$AFP_GROUP" 2>/dev/null || true
+    adduser $uidcmd --no-create-home --disabled-password "$AFP_USER" 2> /dev/null || true
+    addgroup $gidcmd "$AFP_GROUP" 2> /dev/null || true
     addgroup "$AFP_USER" "$AFP_GROUP"
 else
     cmd=""
@@ -94,7 +93,7 @@ if [ -n "$AFP_DROPBOX" ]; then
     fi
 elif [ -n "$AFP_USER2" ]; then
     if [ "$DISTRO" = "alpine" ]; then
-        adduser --no-create-home --disabled-password "$AFP_USER2" 2>/dev/null || true
+        adduser --no-create-home --disabled-password "$AFP_USER2" 2> /dev/null || true
         addgroup "$AFP_USER2" "$AFP_GROUP"
     else
         adduser --no-create-home --disabled-password --gecos '' "$AFP_USER2" 2> /dev/null || true
@@ -220,7 +219,7 @@ if [ -n "$AFP_CONFIG_POLLING" ]; then
 fi
 
 if [ -z "$MANUAL_CONFIG" ]; then
-    cat <<EOF > /etc/netatalk/afp.conf
+    cat << EOF > /etc/netatalk/afp.conf
 [Global]
 appletalk = $AFP_DDP
 cnid mysql host = $AFP_CNID_SQL_HOST
