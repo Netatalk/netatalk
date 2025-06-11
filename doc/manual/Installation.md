@@ -166,6 +166,11 @@ functionality.
     strings from source files and merge them with the translations
     stored in PO files.
 
+- SQLite v3
+
+    The SQLite library version 3 enables the SQLite CNID backend
+    which is an alternative zero-configuration backend.
+
 - TCP wrappers
 
     Wietse Venema's network logger, also known as TCPD or LOG_TCP.

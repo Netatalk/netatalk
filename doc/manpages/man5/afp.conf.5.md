@@ -1077,14 +1077,26 @@ hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 cnid scheme = *backend* **(V)**
 
 > set the CNID backend to be used for the volume.
-The "dbd" and "last" backends are always available. Default is **dbd**.
-Run *afpd -v* to see a list of available backends.
+The *dbd* and *last* backends are always available. Default is *dbd*.
+Run **afpd -v** to see a list of available backends.
 >
-> The "last" backend is read only, used to mount CD-ROMs and similar media.
+> *dbd* is a zero-configuration, full-featured, and reliable backend
+using Berkeley DB, where database access is managed through
+the **cnid_dbd** daemon.
 >
-> The optional "mysql" backend requires the system administrator to provision
-a MySQL database instance for use with Netatalk, as well as setting the
+> The *last* backend uses a read only Trivial Database,
+commonly used to mount CD-ROMs and similar media.
+>
+> The optional *mysql* backend requires the system administrator to provision
+a MySQL database instance for use with Netatalk, while setting the appropriate
 *cnid mysql \** configuration options.
+>
+> The EXPERIMENTAL "sqlite" backend is a zero-configuration backend
+that uses the SQLite library.
+>
+> ***WARNING:*** The *sqlite* backend should only be used for testing purposes
+and not in a production setting.
+Please take a backup of your data before enabling this backend.
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 

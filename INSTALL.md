@@ -77,8 +77,10 @@ documentation for more details.
 | libldap                    | For LDAP support |
 | libpam                     | For PAM support |
 | libtirpc **OR** libquota   | For Quota support |
+| mysql-client **OR** mariadb-client | For *mysql* CNID backend support |
 | Perl                       | For admin scripts |
 | po4a                       | For localization of documentation |
+| sqlite3                    | for *sqlite* CNID backend support |
 | tcpwrap                    | For TCP wrapper support |
 | [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | For regenerating Unicode lookup tables |
 
