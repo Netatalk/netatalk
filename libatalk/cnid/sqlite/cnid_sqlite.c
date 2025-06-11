@@ -46,8 +46,6 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-sqlite3_stmt *stmt = NULL;
-
 /*
  * Prepared statement parameters
  */
@@ -266,6 +264,8 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
     EC_INIT;
     CNID_sqlite_private *db = cdb->cnid_db_private;
     cnid_t update_id = CNID_INVALID;
+    uint64_t dev;
+    uint64_t ino;
 
     if (!cdb || !db || !id || !st || !name) {
         if (!cdb) {
@@ -295,8 +295,8 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = st->st_dev;
-    uint64_t ino = st->st_ino;
+    dev = st->st_dev;
+    ino = st->st_ino;
 
     do {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con,
@@ -304,16 +304,14 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
                                     PRIu32,
                                     db->cnid_sqlite_voluuid_str,
                                     ntohl(id)));
-        EC_NEG1(cnid_sqlite_execute
-                (db->cnid_sqlite_con,
-                 "DELETE FROM \"%s\" WHERE Did = %" PRIu32
-                 " AND Name = \"%s\"", db->cnid_sqlite_voluuid_str,
-                 ntohl(did), name));
-        EC_NEG1(cnid_sqlite_execute
-                (db->cnid_sqlite_con,
-                 "DELETE FROM \"%s\" WHERE DevNo = %" PRIu64
-                 " AND InodeNo = %" PRIu64,
-                 db->cnid_sqlite_voluuid_str, dev, ino));
+        EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con,
+                                    "DELETE FROM \"%s\" WHERE Did = %" PRIu32
+                                    " AND Name = \"%s\"", db->cnid_sqlite_voluuid_str,
+                                    ntohl(did), name));
+        EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con,
+                                    "DELETE FROM \"%s\" WHERE DevNo = %" PRIu64
+                                    " AND InodeNo = %" PRIu64,
+                                    db->cnid_sqlite_voluuid_str, dev, ino));
         stmt_param_id = ntohl(id);
         strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
         stmt_param_name_len = len;
@@ -547,6 +545,8 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     CNID_sqlite_private *db;
     cnid_t id = CNID_INVALID;
     uint64_t lastid;
+    uint64_t dev;
+    uint64_t ino;
     int sqlite_return;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
@@ -563,8 +563,8 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = st->st_dev;
-    uint64_t ino = st->st_ino;
+    dev = st->st_dev;
+    ino = st->st_ino;
     db->cnid_sqlite_hint = hint;
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_add(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32
@@ -602,29 +602,30 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                     || (db->cnid_sqlite_flags & CNID_SQLITE_FLAG_DEPLETED)) {
                 LOG(log_debug, logtype_cnid,
                     "cnid_sqlite_add: CNID set is depleted, ignoring hint");
-                stmt = db->cnid_add_stmt;
-                sqlite3_reset(stmt);
-                sqlite3_bind_text(stmt, 1, stmt_param_name, (int)stmt_param_name_len,
+                sqlite3_reset(db->cnid_add_stmt);
+                sqlite3_bind_text(db->cnid_add_stmt, 1, stmt_param_name,
+                                  (int)stmt_param_name_len,
                                   SQLITE_STATIC);
-                sqlite3_bind_int64(stmt, 2, stmt_param_did);
-                sqlite3_bind_int64(stmt, 3, stmt_param_dev);
-                sqlite3_bind_int64(stmt, 4, stmt_param_ino);
+                sqlite3_bind_int64(db->cnid_add_stmt, 2, stmt_param_did);
+                sqlite3_bind_int64(db->cnid_add_stmt, 3, stmt_param_dev);
+                sqlite3_bind_int64(db->cnid_add_stmt, 4, stmt_param_ino);
+                sqlite_return = sqlite3_step(db->cnid_add_stmt);
             } else {
                 LOG(log_debug, logtype_cnid,
                     "cnid_sqlite_add: CNID set is not depleted, using hint: %" PRIu32,
                     ntohl(db->cnid_sqlite_hint));
-                stmt = db->cnid_put_stmt;
                 stmt_param_id = ntohl(db->cnid_sqlite_hint);
-                sqlite3_reset(stmt);
-                sqlite3_bind_int64(stmt, 1, stmt_param_id);
-                sqlite3_bind_text(stmt, 2, stmt_param_name, (int)stmt_param_name_len,
+                sqlite3_reset(db->cnid_put_stmt);
+                sqlite3_bind_int64(db->cnid_put_stmt, 1, stmt_param_id);
+                sqlite3_bind_text(db->cnid_put_stmt, 2, stmt_param_name,
+                                  (int)stmt_param_name_len,
                                   SQLITE_STATIC);
-                sqlite3_bind_int64(stmt, 3, stmt_param_did);
-                sqlite3_bind_int64(stmt, 4, stmt_param_dev);
-                sqlite3_bind_int64(stmt, 5, stmt_param_ino);
+                sqlite3_bind_int64(db->cnid_put_stmt, 3, stmt_param_did);
+                sqlite3_bind_int64(db->cnid_put_stmt, 4, stmt_param_dev);
+                sqlite3_bind_int64(db->cnid_put_stmt, 5, stmt_param_ino);
+                sqlite_return = sqlite3_step(db->cnid_put_stmt);
             }
 
-            sqlite_return = sqlite3_step(stmt);
             LOG(log_debug, logtype_cnid,
                 "cnid_sqlite_add: binding name='%s', did=%" PRIu64 ", dev=%" PRIu64 ", ino=%"
                 PRIu64,
