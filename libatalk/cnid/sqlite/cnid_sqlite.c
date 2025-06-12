@@ -326,8 +326,10 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     cnid_t id = CNID_INVALID;
     uint64_t dev = st->st_dev;
     uint64_t ino = st->st_ino;
+    const unsigned char *retname;
     cnid_t retid;
     uint64_t retdid;
+    int sqlite_return;
     char stmt_param_name[MAXPATHLEN];
     size_t stmt_param_name_len;
     uint64_t stmt_param_did;
@@ -361,9 +363,6 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     stmt_param_did = ntohl(did);
     stmt_param_dev = dev;
     stmt_param_ino = ino;
-    const char *retname;
-    const unsigned char *col_text;
-    int sqlite_return;
     sqlite3_reset(db->cnid_lookup_stmt);
     sqlite3_bind_text(db->cnid_lookup_stmt, 1, stmt_param_name,
                       (int)stmt_param_name_len, SQLITE_STATIC);
@@ -390,10 +389,10 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     /* got at least one row, store result in lookup_result_X */
     lookup_result_id = sqlite3_column_int64(db->cnid_lookup_stmt, 0);
     lookup_result_did = sqlite3_column_int64(db->cnid_lookup_stmt, 1);
-    col_text = sqlite3_column_text(db->cnid_lookup_stmt, 2);
+    retname = sqlite3_column_text(db->cnid_lookup_stmt, 2);
 
-    if (col_text) {
-        strlcpy(lookup_result_name, (const char *)col_text, MAXPATHLEN);
+    if (retname) {
+        strlcpy(lookup_result_name, (const char *)retname, MAXPATHLEN);
     } else {
         lookup_result_name[0] = '\0';
     }
@@ -450,8 +449,8 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    retid = htonl(lookup_result_id);
-    retdid = htonl(lookup_result_did);
+    retid = htonl((uint32_t)lookup_result_id);
+    retdid = htonl((uint32_t)lookup_result_did);
 
     if (retid == 0) {
         LOG(log_error, logtype_cnid,
@@ -731,8 +730,7 @@ cnid_t cnid_sqlite_get(struct _cnid_db *cdb, cnid_t did, const char *name,
         EC_FAIL;
     }
 
-    sqlite3_int64 id_int64 = htonl(sqlite3_column_int64(transient_stmt, 0));
-    id = (cnid_t)id_int64;
+    id = htonl((uint32_t)sqlite3_column_int64(transient_stmt, 0));
 EC_CLEANUP:
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_get(id: %" PRIu32 ", did: %" PRIu32 ", name: \"%s\"): END",
@@ -776,8 +774,7 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
         EC_FAIL;
     }
 
-    sqlite3_int64 id_int64 = htonl(sqlite3_column_int64(transient_stmt, 0));
-    *id = (cnid_t)id_int64;
+    *id = htonl((uint32_t)sqlite3_column_int64(transient_stmt, 0));
     strlcpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 1), len);
     ((char *)buffer)[len - 1] = '\0';
 EC_CLEANUP:
