@@ -46,26 +46,6 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-/*
- * Prepared statement parameters
- */
-static char stmt_param_name[MAXPATHLEN];
-static size_t stmt_param_name_len;
-static uint64_t stmt_param_id;
-static uint64_t stmt_param_did;
-static uint64_t stmt_param_dev;
-static uint64_t stmt_param_ino;
-
-/*
- * lookup result parameters
- */
-static uint64_t lookup_result_id;
-static uint64_t lookup_result_did;
-static char lookup_result_name[MAXPATHLEN];
-static size_t lookup_result_name_len;
-static uint64_t lookup_result_dev;
-static uint64_t lookup_result_ino;
-
 static int init_prepared_stmt_lookup(CNID_sqlite_private * db)
 {
     EC_INIT;
@@ -85,11 +65,6 @@ static int init_prepared_stmt_lookup(CNID_sqlite_private * db)
     LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_lookup: SQL: %s", sql);
     EC_ZERO_LOG(sqlite3_prepare_v2
                 (db->cnid_sqlite_con, sql, strlen(sql), &db->cnid_lookup_stmt, NULL));
-    EC_ZERO_LOG(sqlite3_bind_text(db->cnid_lookup_stmt,
-                                  1, stmt_param_name, strlen(stmt_param_name), SQLITE_STATIC));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_lookup_stmt, 2, stmt_param_did));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_lookup_stmt, 3, stmt_param_dev));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_lookup_stmt, 4, stmt_param_ino));
 EC_CLEANUP:
 
     if (sql) {
@@ -116,11 +91,6 @@ static int init_prepared_stmt_add(CNID_sqlite_private * db)
     LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_add: SQL: %s", sql);
     EC_ZERO_LOG(sqlite3_prepare_v2
                 (db->cnid_sqlite_con, sql, strlen(sql), &db->cnid_add_stmt, NULL));
-    EC_ZERO_LOG(sqlite3_bind_text(db->cnid_add_stmt,
-                                  1, stmt_param_name, strlen(stmt_param_name), SQLITE_STATIC));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_add_stmt, 2, stmt_param_did));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_add_stmt, 3, stmt_param_dev));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_add_stmt, 4, stmt_param_ino));
 EC_CLEANUP:
 
     if (sql) {
@@ -147,12 +117,6 @@ static int init_prepared_stmt_put(CNID_sqlite_private * db)
     LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_put: SQL: %s", sql);
     EC_ZERO_LOG(sqlite3_prepare_v2
                 (db->cnid_sqlite_con, sql, strlen(sql), &db->cnid_put_stmt, NULL));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_put_stmt, 1, stmt_param_id));
-    EC_ZERO_LOG(sqlite3_bind_text(db->cnid_put_stmt,
-                                  2, stmt_param_name, strlen(stmt_param_name), SQLITE_STATIC));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_put_stmt, 3, stmt_param_did));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_put_stmt, 4, stmt_param_dev));
-    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_put_stmt, 5, stmt_param_ino));
 EC_CLEANUP:
 
     if (sql) {
@@ -266,6 +230,12 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
     cnid_t update_id = CNID_INVALID;
     uint64_t dev;
     uint64_t ino;
+    char stmt_param_name[MAXPATHLEN];
+    size_t stmt_param_name_len;
+    uint64_t stmt_param_id;
+    uint64_t stmt_param_did;
+    uint64_t stmt_param_dev;
+    uint64_t stmt_param_ino;
 
     if (!cdb || !db || !id || !st || !name) {
         if (!cdb) {
@@ -354,6 +324,17 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     uint64_t retino;
     cnid_t retid;
     uint64_t retdid;
+    char stmt_param_name[MAXPATHLEN];
+    size_t stmt_param_name_len;
+    uint64_t stmt_param_did;
+    uint64_t stmt_param_dev;
+    uint64_t stmt_param_ino;
+    char lookup_result_name[MAXPATHLEN];
+    size_t lookup_result_name_len;
+    uint64_t lookup_result_id;
+    uint64_t lookup_result_did;
+    uint64_t lookup_result_dev;
+    uint64_t lookup_result_ino;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -548,6 +529,12 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     uint64_t dev;
     uint64_t ino;
     int sqlite_return;
+    char stmt_param_name[MAXPATHLEN];
+    size_t stmt_param_name_len;
+    uint64_t stmt_param_id;
+    uint64_t stmt_param_did;
+    uint64_t stmt_param_dev;
+    uint64_t stmt_param_ino;
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -580,6 +567,12 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 LOG(log_error, logtype_cnid, "cnid_sqlite_add: Invalid CNID returned!");
                 EC_FAIL;
             }
+
+            strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
+            stmt_param_name_len = len;
+            stmt_param_did = ntohl(did);
+            stmt_param_dev = dev;
+            stmt_param_ino = ino;
 
             if (stmt_param_name[0] == '\0' ||
                     stmt_param_did == 0 ||
