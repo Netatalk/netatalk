@@ -172,6 +172,8 @@ int cnid_sqlite_delete(struct _cnid_db *cdb, const cnid_t id)
 {
     EC_INIT;
     CNID_sqlite_private *db;
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_delete(id: %" PRIu32 "): START", ntohl(id));
 
     if (!cdb || !(db = cdb->cnid_db_private) || !id) {
         LOG(log_error, logtype_cnid, "cnid_sqlite_delete: Parameter error");
@@ -236,6 +238,9 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
     uint64_t stmt_param_did;
     uint64_t stmt_param_dev;
     uint64_t stmt_param_ino;
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_update(id: %" PRIu32 ", did: %" PRIu32 ", name: \"%s\"): START",
+        ntohl(id), ntohl(did), name);
 
     if (!cdb || !db || !id || !st || !name) {
         if (!cdb) {
@@ -320,8 +325,6 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     cnid_t id = CNID_INVALID;
     uint64_t dev = st->st_dev;
     uint64_t ino = st->st_ino;
-    uint64_t retdev;
-    uint64_t retino;
     cnid_t retid;
     uint64_t retdid;
     char stmt_param_name[MAXPATHLEN];
@@ -330,11 +333,13 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     uint64_t stmt_param_dev;
     uint64_t stmt_param_ino;
     char lookup_result_name[MAXPATHLEN];
-    size_t lookup_result_name_len;
     uint64_t lookup_result_id;
     uint64_t lookup_result_did;
     uint64_t lookup_result_dev;
     uint64_t lookup_result_ino;
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_lookup(did: %" PRIu32 ", name: \"%s\"): START",
+        ntohl(did), name);
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -349,10 +354,6 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         errno = CNID_ERR_PATH;
         EC_FAIL;
     }
-
-    LOG(log_maxdebug, logtype_cnid,
-        "cnid_sqlite_lookup(did: %" PRIu32 ", name: \"%s\"): START",
-        ntohl(did), name);
     strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
     stmt_param_name_len = len;
     stmt_param_did = ntohl(did);
@@ -395,7 +396,6 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         lookup_result_name[0] = '\0';
     }
 
-    lookup_result_name_len = strnlen(lookup_result_name, MAXPATHLEN);
     lookup_result_dev = sqlite3_column_int64(db->cnid_lookup_stmt, 3);
     lookup_result_ino = sqlite3_column_int64(db->cnid_lookup_stmt, 4);
     LOG(log_maxdebug, logtype_cnid,
@@ -405,15 +405,14 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
 
     if (lookup_result_id < 17 ||
             lookup_result_did == 0 ||
-            !col_text || col_text[0] == '\0' ||
+            lookup_result_name[0] == '\0' ||
             lookup_result_dev == 0 ||
             lookup_result_ino == 0) {
         LOG(log_error, logtype_cnid,
             "cnid_sqlite_lookup: Invalid/corrupt row: id=%" PRIu64 ", did=%" PRIu64
             ", name='%s', dev=%" PRIu64 ", ino=%" PRIu64,
-            lookup_result_id, lookup_result_did,
-            col_text ? (const char*)col_text : "(null)", lookup_result_dev,
-            lookup_result_ino);
+            lookup_result_id, lookup_result_did, lookup_result_name,
+            lookup_result_dev, lookup_result_ino);
         errno = CNID_INVALID;
         EC_FAIL;
     }
@@ -451,9 +450,6 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
 
     retid = htonl(lookup_result_id);
     retdid = htonl(lookup_result_did);
-    retname = lookup_result_name;
-    retdev = lookup_result_dev;
-    retino = lookup_result_ino;
 
     if (retid == 0) {
         LOG(log_error, logtype_cnid,
@@ -462,7 +458,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    if (retdid != did || STRCMP(retname, !=, name)) {
+    if (retdid != did || STRCMP(lookup_result_name, !=, name)) {
         LOG(log_debug, logtype_cnid,
             "cnid_sqlite_lookup(CNID %" PRIu32 ", DID: %" PRIu32
             ", name: \"%s\"): server side mv oder reused inode",
@@ -470,7 +466,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         LOG(log_debug, logtype_cnid,
             "cnid_sqlite_lookup: server side mv, got hint, updating");
 
-        if (!retname || retname[0] == '\0') {
+        if (lookup_result_name[0] == '\0') {
             LOG(log_error, logtype_cnid,
                 "cnid_sqlite_lookup: Refusing to update with empty name");
             errno = CNID_ERR_PARAM;
@@ -486,7 +482,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
         }
 
         id = retid;
-    } else if (retdev != dev || retino != ino) {
+    } else if (lookup_result_dev != dev || lookup_result_ino != ino) {
         LOG(log_debug, logtype_cnid,
             "cnid_sqlite_lookup(DID:%u, name: \"%s\"): changed dev/ino",
             ntohl(did), name);
@@ -535,6 +531,9 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     uint64_t stmt_param_did;
     uint64_t stmt_param_dev;
     uint64_t stmt_param_ino;
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_add(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): START",
+        ntohl(did), name, ntohl(hint));
 
     if (!cdb || !(db = cdb->cnid_db_private) || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -696,6 +695,9 @@ cnid_t cnid_sqlite_get(struct _cnid_db *cdb, cnid_t did, const char *name,
     cnid_t id = CNID_INVALID;
     char *sql = NULL;
     sqlite3_stmt *transient_stmt = NULL;
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_get(did: %" PRIu32 ", name: \"%s\"): START",
+        ntohl(did), name);
 
     if (!cdb || !(db = cdb->cnid_db_private) || !name) {
         LOG(log_error, logtype_cnid,
@@ -750,9 +752,11 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
     char *sql = NULL;
     sqlite3_stmt *transient_stmt = NULL;
     CNID_sqlite_private *db;
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_resolve(id: %u): START", *id);
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
-        LOG(log_error, logtype_cnid, "cnid_sqlite_get: Parameter error");
+        LOG(log_error, logtype_cnid, "cnid_sqlite_resolve: Parameter error");
         errno = CNID_ERR_PARAM;
         *id = CNID_INVALID;
         EC_FAIL;
@@ -805,6 +809,7 @@ int cnid_sqlite_getstamp(struct _cnid_db *cdb, void *buffer,
     char *sql = NULL;
     sqlite3_stmt *transient_stmt = NULL;
     CNID_sqlite_private *db;
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_getstamp(): START");
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_find: Parameter error");
@@ -868,16 +873,14 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
 {
     EC_INIT;
     CNID_sqlite_private *db = cdb->cnid_db_private;
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_wipe(\"%s\"): START",
+        cdb->cnid_db_vol->v_localname);
 
     if (!cdb || !db) {
         LOG(log_error, logtype_cnid, "cnid_sqlite_wipe: Parameter error");
         errno = CNID_ERR_PARAM;
         return -1;
     }
-
-    LOG(log_debug, logtype_cnid,
-        "cnid_sqlite_wipe: Wiping CNID database for volume '%s'",
-        cdb->cnid_db_vol->v_localname);
     EC_NEG1(cnid_sqlite_execute(
                 db->cnid_sqlite_con,
                 "UPDATE volumes SET Depleted = 0 WHERE VolUUID = \"%s\";"
