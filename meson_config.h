@@ -13,6 +13,9 @@
 /* whether the MySQL CNID module is available */
 #mesondefine CNID_BACKEND_MYSQL
 
+/* whether the SQLite CNID module is available */
+#mesondefine CNID_BACKEND_SQLITE
+
 /* CUPS API Version */
 #mesondefine CUPS_API_VERSION
 

@@ -81,29 +81,30 @@ to the [afp.conf](afp.conf.5.html) man page.
 ## CNID backends
 
 Unlike other protocols like SMB or NFS, the AFP protocol mostly refers
-to files and directories by ID and not by a path (the IDs are also
-called CNID, which stand for Catalog Node ID). A typical AFP request
-uses a directory ID and a filename,
+to files and directories by ID and not by a path. These IDs are
+called CNID, which stand for Catalog Node ID.
+A typical AFP request uses a directory ID and a filename,
 something like "server, please open the file named 'Test' in the
 directory with id 167". For example "Aliases" on the Mac basically work
 by ID (with a fallback to the absolute path in more recent AFP clients.
 But this applies only to Finder, not to applications).
 
-Every file in an AFP volume has to have a unique file
-ID, IDs must, according to the specs,
-never be reused, and IDs are 32 bit numbers (Directory IDs use the same
-ID pool). So, after ~4 billion files/folders have been written to an AFP
+Every file in an AFP volume has to have a unique file ID.
+CNIDs must, according to the AFP specification, never be reused.
+The IDs are represented as 32 bit numbers, and directory IDs use the same
+ID pool. So, after ~4 billion files/folders have been written to an AFP
 volume, the ID pool is depleted and no new file can be written to the
-volume. No whining please :-)
+volume. Some of Netatalk's CNID backends may attempt to reuse available
+IDs after depletion, which is technically in violation of the spec,
+but may enable continuous use on long-lived volumes.
 
 Netatalk needs to map IDs to files and folders in the host filesystem.
-To achieve this, several different CNID
-backends are available and can be
-selected with the **cnid scheme** option in
-the *afp.conf* configuration file. A CNID backend is basically a
-database storing ID <-\> name mappings.
+To achieve this, several different CNID backends are available and can be
+selected with the **cnid scheme** option in the *afp.conf* configuration file.
+A CNID backend is basically a database storing ID <-\> name mappings.
 
-The CNID databases are by default located in a *netatalk/CNID* subdirectory
+For the CNID backends which use a zero-configuration database,
+the database files are by default located in a *netatalk/CNID* subdirectory
 of your system's state directory path, e.g. */var/lib*.
 You can change the state directory path with *-Dwith-statedir-path=PATH*
 at compile time.
@@ -137,7 +138,7 @@ This is the default backend since Netatalk 2.1.
 
 ### last
 
-The last backend is an in-memory tdb database. It is not persistent,
+The last backend is an in-memory Trivial Database (tdb). It is not persistent,
 with IDs valid only for the current session. Starting with netatalk 3.0,
 it operates in *read only mode*. This backend is useful e.g. for
 mounting CD-ROMs, or for automated testing.
@@ -149,6 +150,12 @@ This is basically equivalent to how **afpd** stored CNID data in netatalk
 
 CNID backend using a MySQL server. The MySQL server has to be
 provisioned by the system administrator.
+
+### sqlite
+
+A zero-configuration database backend, equivalent to the dbd backend.
+It uses the SQLite v3 engine and stores its database files under
+*netatalk/CNID/sqlite* in the system state directory.
 
 ## Charsets/Unicode
 
