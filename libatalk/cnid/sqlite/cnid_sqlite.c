@@ -401,7 +401,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb,
     lookup_result_ino = sqlite3_column_int64(db->cnid_lookup_stmt, 4);
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_lookup: id=%i, did=%i, name=%s, dev=%i, ino=%i",
-        htonl(lookup_result_id), htonl(lookup_result_did), lookup_result_name,
+        lookup_result_id, lookup_result_did, lookup_result_name,
         lookup_result_dev, lookup_result_ino);
 
     if (lookup_result_id < 17 ||
@@ -571,28 +571,30 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
             stmt_param_did = ntohl(did);
             stmt_param_dev = dev;
             stmt_param_ino = ino;
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_add: binding name='%s', did=%" PRIu64 ", dev=%" PRIu64 ", ino=%"
+                PRIu64,
+                stmt_param_name, stmt_param_did, stmt_param_dev, stmt_param_ino);
 
             if (stmt_param_name[0] == '\0' ||
                     stmt_param_did == 0 ||
                     stmt_param_dev == 0 ||
                     stmt_param_ino == 0) {
                 LOG(log_error, logtype_cnid,
-                    "cnid_sqlite_add: Refusing to insert invalid/empty entry: name='%s', did=%"
-                    PRIu64 ", dev=%" PRIu64 ", ino=%" PRIu64,
-                    stmt_param_name, stmt_param_did, stmt_param_dev, stmt_param_ino);
+                    "cnid_sqlite_add: Refusing to insert invalid/empty entry");
                 errno = CNID_ERR_PARAM;
                 EC_FAIL;
             }
 
             /*
-             * If the CNID set overflowed before
-             * (CNID_SQLITE_FLAG_DEPLETED) ignore the CNID "hint"
-             * taken from the AppleDouble file
+             * If the CNID set has previously overflowed
+             * (CNID_SQLITE_FLAG_DEPLETED flag) ignore the CNID "hint"
+             * read from AppleDouble or Extended Attributes.
              */
             if (!db->cnid_sqlite_hint
                     || (db->cnid_sqlite_flags & CNID_SQLITE_FLAG_DEPLETED)) {
                 LOG(log_debug, logtype_cnid,
-                    "cnid_sqlite_add: CNID set is depleted, ignoring hint");
+                    "cnid_sqlite_add: not using CNID hint, CNID set is depleted or hint not set");
                 sqlite3_reset(db->cnid_add_stmt);
                 sqlite3_bind_text(db->cnid_add_stmt, 1, stmt_param_name,
                                   (int)stmt_param_name_len,
@@ -602,9 +604,6 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 sqlite3_bind_int64(db->cnid_add_stmt, 4, stmt_param_ino);
                 sqlite_return = sqlite3_step(db->cnid_add_stmt);
             } else {
-                LOG(log_debug, logtype_cnid,
-                    "cnid_sqlite_add: CNID set is not depleted, using hint: %" PRIu32,
-                    ntohl(db->cnid_sqlite_hint));
                 stmt_param_id = ntohl(db->cnid_sqlite_hint);
                 sqlite3_reset(db->cnid_put_stmt);
                 sqlite3_bind_int64(db->cnid_put_stmt, 1, stmt_param_id);
@@ -616,11 +615,6 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 sqlite3_bind_int64(db->cnid_put_stmt, 5, stmt_param_ino);
                 sqlite_return = sqlite3_step(db->cnid_put_stmt);
             }
-
-            LOG(log_debug, logtype_cnid,
-                "cnid_sqlite_add: binding name='%s', did=%" PRIu64 ", dev=%" PRIu64 ", ino=%"
-                PRIu64,
-                stmt_param_name, stmt_param_did, stmt_param_dev, stmt_param_ino);
 
             if (sqlite_return != SQLITE_DONE) {
                 if (sqlite_return == SQLITE_CONSTRAINT) {
@@ -750,7 +744,8 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
     char *sql = NULL;
     sqlite3_stmt *transient_stmt = NULL;
     CNID_sqlite_private *db;
-    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_resolve(id: %u): BEGIN", *id);
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_resolve(id: %" PRIu32 "): BEGIN",
+        ntohl(*id));
 
     if (!cdb || !(db = cdb->cnid_db_private)) {
         LOG(log_error, logtype_cnid, "cnid_sqlite_resolve: Parameter error");
@@ -769,7 +764,7 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
 
     if (sqlite3_step(transient_stmt) != SQLITE_ROW) {
         LOG(log_error, logtype_cnid,
-            "cnid_sqlite_resolve: No result found for Id: %" PRIu32, ntohl(*id));
+            "cnid_sqlite_resolve: No result found for id: %" PRIu32, ntohl(*id));
         *id = CNID_INVALID;
         EC_FAIL;
     }
@@ -777,8 +772,10 @@ char *cnid_sqlite_resolve(struct _cnid_db *cdb, cnid_t * id, void *buffer,
     *id = htonl((uint32_t)sqlite3_column_int64(transient_stmt, 0));
     strlcpy(buffer, (const char *)sqlite3_column_text(transient_stmt, 1), len);
     ((char *)buffer)[len - 1] = '\0';
+    LOG(log_debug, logtype_cnid, "cnid_dbd_resolve: resolved did: %u, name: \"%s\"",
+        ntohl(*id), buffer);
 EC_CLEANUP:
-    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_resolve(id: %u): END", *id);
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_resolve(): END");
 
     if (transient_stmt) {
         sqlite3_finalize(transient_stmt);
