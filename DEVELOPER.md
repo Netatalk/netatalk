@@ -1,15 +1,15 @@
 Information for Netatalk Developers
 ===================================
 
-For basic installation instructions, see the Installation chapter
-in the html manual published on the [Netatalk homepage](https://netatalk.io)
-and the [Installation Quick Start Guide](https://netatalk.io/install).
+To get started with a development environment, read the
+[https://netatalk.io/manual/en/Installation](Installation chapter)
+in the Netatalk manual, followed by the
+[Installation Quick Start Guide](https://netatalk.io/install).
 
 Netatalk is an implementation of Apple Filing Protocol (AFP) over TCP.
 The session layer used to carry AFP over TCP is called DSI.
-
 Netatalk also supports the AppleTalk Protocol Suite for legacy Macs,
-Lisas and Apple IIs via the "atalkd" daemon.
+Lisas and Apple IIs via the **atalkd** daemon.
 
 The complete stack looks like this on a BSD-derived system:
 
@@ -79,41 +79,46 @@ Examples
 stat() without EC macro:
 
 ```c
-  static int func(const char *name) {
+static int func(const char *name) {
     int ret = 0;
     ...
     if ((ret = stat(name, &some_struct_stat)) != 0) {
-      LOG(...);
-      ret = -1; /* often needed to explicitly set the error indicating return value */
-      goto cleanup;
+        LOG(...);
+        /* often needed to explicitly set the error indicating return value */
+        ret = -1;
+        goto cleanup;
     }
 
     return ret;
 
-  cleanup:
+    cleanup:
     ...
     return ret;
-  }
+}
 ```
 
 stat() with EC macro:
 
 ```c
-  static int func(const char *name) {
-    EC_INIT; /* expands to int ret = 0; */
+static int func(const char *name) {
+    /* expands to int ret = 0; */
+    EC_INIT;
 
-    char *uppername = NULL
+    char *uppername = NULL;
     EC_NULL(uppername = strdup(name));
     EC_ZERO(strtoupper(uppername));
 
-    EC_ZERO(stat(uppername, &some_struct_stat)); /* expands to complete if block from above */
+    /* expands to complete if block from above */
+    EC_ZERO(stat(uppername, &some_struct_stat));
 
     EC_STATUS(0);
 
 EC_CLEANUP:
-    if (uppername) free(uppername);
+    if (uppername) {
+        free(uppername);
+    }
     EC_EXIT;
-  }
+}
 ```
 
 A boilerplate function template is:
