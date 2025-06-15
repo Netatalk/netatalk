@@ -10,8 +10,6 @@ The session layer used to carry AFP over TCP is called DSI.
 
 Netatalk also supports the AppleTalk Protocol Suite for legacy Macs,
 Lisas and Apple IIs via the "atalkd" daemon.
-It supports EtherTalk Phase I and II, RTMP, NBP, ZIP, AEP, ATP,
-PAP, and ASP, while expecting the kernel to supply DDP.
 
 The complete stack looks like this on a BSD-derived system:
 
@@ -32,18 +30,6 @@ The complete stack looks like this on a BSD-derived system:
     |                Network-Interface                  |
     +---------------------------------------------------+
 ```
-
-* DDP is a socket to socket protocol that all other AppleTalk protocols
-  are built on top of.
-
-* "atalkd" implements RTMP, NBP, ZIP, and AEP.
-  It is the AppleTalk equivalent of Unix "routed".
-
-* There is also a client-stub library for NBP.
-  ATP and ASP are implemented as libraries.
-
-* "papd" allows Macs to spool to "lpd", and "pap" allows Unix
-  machines to print to AppleTalk connected printers.
 
 When built without AppleTalk support, the network stack looks something like this:
 
