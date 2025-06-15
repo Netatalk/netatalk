@@ -48,10 +48,11 @@ documentation for more details.
 
 ### Required to Build
 
-| Package | Details |
-|---------|---------|
-| meson   | v0.61.2 or later |
-| ninja   | Often packaged as `ninja-build` |
+| Package    | Details |
+|------------|---------|
+| C compiler | clang or gcc are recommended |
+| meson      | v0.61.2 or later |
+| ninja      | Often packaged as `ninja-build` |
 
 ### Required for Spotlight Support
 
