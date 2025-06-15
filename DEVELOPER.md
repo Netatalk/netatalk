@@ -22,7 +22,7 @@ The complete stack looks like this on a BSD-derived system:
       \   /                       |
        ATP RTMP NBP ZIP AEP       |
         |    |   |   |   |        |
-    -+---------------------------------------------------+- (kernel boundary)
+   -+---------------------------------------------------+- (kernel boundary)
     |                    Socket                         |
     +-----------------------+------------+--------------+
     |                       |     TCP    |    UDP       |
