@@ -16,21 +16,21 @@ PAP, and ASP, while expecting the kernel to supply DDP.
 The complete stack looks like this on a BSD-derived system:
 
 ```
-AFP                          AFP
- |                            |
-ASP    PAP                   DSI
-  \   /                       |
-   ATP RTMP NBP ZIP AEP       |
-    |    |   |   |   |        |
--+---------------------------------------------------+- (kernel boundary)
-|                    Socket                         |
-+-----------------------+------------+--------------+
-|                       |     TCP    |    UDP       |
-|          DDP          +------------+--------------+
-|                       |           IP              |
-+-----------------------+---------------------------+
-|                Network-Interface                  |
-+---------------------------------------------------+
+    AFP                          AFP
+     |                            |
+    ASP    PAP                   DSI
+      \   /                       |
+       ATP RTMP NBP ZIP AEP       |
+        |    |   |   |   |        |
+   -+---------------------------------------------------+- (kernel boundary)
+    |                    Socket                         |
+    +-----------------------+------------+--------------+
+    |                       |     TCP    |    UDP       |
+    |          DDP          +------------+--------------+
+    |                       |           IP              |
+    +-----------------------+---------------------------+
+    |                Network-Interface                  |
+    +---------------------------------------------------+
 ```
 
 * DDP is a socket to socket protocol that all other AppleTalk protocols
