@@ -1085,6 +1085,9 @@ Run *afpd -v* to see a list of available backends.
 > The optional "mysql" backend requires the system administrator to provision
 a MySQL database instance for use with Netatalk, as well as setting the
 *cnid mysql \** configuration options.
+>
+> The optional "sqlite" backend is an alternative to "dbd" that uses
+a SQLite database.
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 
