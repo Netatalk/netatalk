@@ -59,18 +59,16 @@ eval {
     $subject   = $2;
     $pageTitle = $text{"edit_vol_section_title_$in{'action'}"};
 
-    unless (     ($in{'action'} =~ /^edit/ && $in{'index'} =~ /\d+/ && $$afpconfRef{sectionsByIndex}[$in{'index'}])
-              || ($in{'action'} =~ /^new/ && !$in{'index'})) {
+    unless (   ($in{'action'} =~ /^edit/ && $in{'index'} =~ /\d+/ && $$afpconfRef{sectionsByIndex}[$in{'index'}])
+            || ($in{'action'} =~ /^new/ && !$in{'index'})) {
         die &text('errmsg_parameter_error', 'index') . "\n";
     }
 
     if (
-          $in{'baseOnIndex'}
-          && !(
-                  $in{'action'} =~ /^new/
-               && $in{'baseOnIndex'} =~ /\d+/
-               && $$afpconfRef{sectionsByIndex}[$in{'baseOnIndex'}]
-          )
+         $in{'baseOnIndex'}
+         && !(
+             $in{'action'} =~ /^new/ && $in{'baseOnIndex'} =~ /\d+/ && $$afpconfRef{sectionsByIndex}[$in{'baseOnIndex'}]
+         )
     ) {
         die &text('errmsg_parameter_error', 'baseOnIndex') . "\n";
     }
@@ -84,8 +82,8 @@ eval {
     # rejoin parameters that have been split for the user interface
     # (as users and groups are handled in different lists within the UI, whereas they are combined in afp.conf)
     if ($in{'reload'}) {
-        $in{'p_valid users'} = join_users_and_groups(  defined $in{'pu_valid_users'} ? $in{'pu_valid_users'} : '',
-                                                       defined $in{'pg_valid_users'} ? $in{'pg_valid_users'} : '');
+        $in{'p_valid users'} = join_users_and_groups(defined $in{'pu_valid_users'} ? $in{'pu_valid_users'} : '',
+                                                     defined $in{'pg_valid_users'} ? $in{'pg_valid_users'} : '');
         $in{'p_invalid users'} =
           join_users_and_groups(
                                 defined $in{'pu_invalid_users'} ? $in{'pu_invalid_users'} : '',
@@ -93,10 +91,10 @@ eval {
                                 ? $in{'pg_invalid_users'}
                                 : ''
           );
-        $in{'p_rolist'} = join_users_and_groups(  defined $in{'pu_rolist'} ? $in{'pu_rolist'} : '',
-                                                  defined $in{'pg_rolist'} ? $in{'pg_rolist'} : '');
-        $in{'p_rwlist'} = join_users_and_groups(  defined $in{'pu_rwlist'} ? $in{'pu_rwlist'} : '',
-                                                  defined $in{'pg_rwlist'} ? $in{'pg_rwlist'} : '');
+        $in{'p_rolist'} = join_users_and_groups(defined $in{'pu_rolist'} ? $in{'pu_rolist'} : '',
+                                                defined $in{'pg_rolist'} ? $in{'pg_rolist'} : '');
+        $in{'p_rwlist'} = join_users_and_groups(defined $in{'pu_rwlist'} ? $in{'pu_rwlist'} : '',
+                                                defined $in{'pg_rwlist'} ? $in{'pg_rwlist'} : '');
     }
 };
 if ($@) {
