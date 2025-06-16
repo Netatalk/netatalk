@@ -25,8 +25,8 @@ sub main {
     eval {
         my $service = $bus->get_service("org.netatalk.AFPStats");
         my $remote_object = $service->get_object(
-                                                   "/org/netatalk/AFPStats",
-                                                   "org.netatalk.AFPStats"
+                                                 "/org/netatalk/AFPStats",
+                                                 "org.netatalk.AFPStats"
         );
 
         print "Connected user   PID      Login time        State          Mounted volumes\n";

@@ -29,24 +29,24 @@ eval {
 
     if (exists $in{'tab'}) {
         $tab = $in{'tab'};
-    } elsif (     $in{'action'} eq "new_volume_preset"
-               || $in{'action'} eq "edit_volume_preset"
-               || $in{'action'} eq "new_homes"
-               || $in{'action'} eq "edit_homes") {
+    } elsif (   $in{'action'} eq "new_volume_preset"
+             || $in{'action'} eq "edit_volume_preset"
+             || $in{'action'} eq "new_homes"
+             || $in{'action'} eq "edit_homes") {
         $tab = "general";
     } else {
         $tab = "fileserver";
     }
 
     # rejoin parameters that have been split for the user interface
-    $in{'p_valid users'} = join_users_and_groups(  defined $in{'pu_valid_users'} ? $in{'pu_valid_users'} : '',
-                                                   defined $in{'pg_valid_users'} ? $in{'pg_valid_users'} : '');
-    $in{'p_invalid users'} = join_users_and_groups(  defined $in{'pu_invalid_users'} ? $in{'pu_invalid_users'} : '',
-                                                     defined $in{'pg_invalid_users'} ? $in{'pg_invalid_users'} : '');
-    $in{'p_rolist'} = join_users_and_groups(  defined $in{'pu_rolist'} ? $in{'pu_rolist'} : '',
-                                              defined $in{'pg_rolist'} ? $in{'pg_rolist'} : '');
-    $in{'p_rwlist'} = join_users_and_groups(  defined $in{'pu_rwlist'} ? $in{'pu_rwlist'} : '',
-                                              defined $in{'pg_rwlist'} ? $in{'pg_rwlist'} : '');
+    $in{'p_valid users'} = join_users_and_groups(defined $in{'pu_valid_users'} ? $in{'pu_valid_users'} : '',
+                                                 defined $in{'pg_valid_users'} ? $in{'pg_valid_users'} : '');
+    $in{'p_invalid users'} = join_users_and_groups(defined $in{'pu_invalid_users'} ? $in{'pu_invalid_users'} : '',
+                                                   defined $in{'pg_invalid_users'} ? $in{'pg_invalid_users'} : '');
+    $in{'p_rolist'} = join_users_and_groups(defined $in{'pu_rolist'} ? $in{'pu_rolist'} : '',
+                                            defined $in{'pg_rolist'} ? $in{'pg_rolist'} : '');
+    $in{'p_rwlist'} = join_users_and_groups(defined $in{'pu_rwlist'} ? $in{'pu_rwlist'} : '',
+                                            defined $in{'pg_rwlist'} ? $in{'pg_rwlist'} : '');
 
     my $afpconfRef = &read_afpconf();
     modify_afpconf_ref_and_write($afpconfRef, \%in);
