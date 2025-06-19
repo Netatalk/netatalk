@@ -1,25 +1,21 @@
 # Netatalk - Free and Open Source AFP File Server
 
-## Continuous Integration
-
+Continuous Integration:
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/build.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/build.yml)
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/test.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/test.yml)
 [![Container Status](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml)
 
-## Get Netatalk
-
+Get Netatalk:
 [![Project releases](https://img.shields.io/github/release/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/releases)
 [![Downloads](https://img.shields.io/github/downloads/Netatalk/netatalk/total)](https://github.com/Netatalk/netatalk/releases)
 [![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
 
-## Project Activity
-
+Project Activity:
 [![Project contributors](https://img.shields.io/github/contributors/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/contributors)
 [![Monthly commits](https://img.shields.io/github/commit-activity/m/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/commit-activity)
 [![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=ncloc)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 
-## Code Quality
-
+Code Quality:
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=security_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=sqale_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
@@ -30,14 +26,14 @@
 Netatalk is a Free and Open Source file server that implements
 the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol)
 (AFP) 3.4 over TCP/IP and AppleTalk.
-AFP is the primary file sharing protocol used on Apple II, Classic Mac OS, and Mac OS X,
-as well as one of several supported protocols on macOS.
+AFP is the native file sharing protocol used on Apple II, Classic Mac OS, and early Mac OS X,
+as well as one of several supported protocols built into macOS.
 A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for Mac clients.
 
 ## Why Should I Use Netatalk?
 
 If you have a local network of macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
-running a Netatalk AFP server allows you to share, collaborate on, and back up files comfortably.
+running a Netatalk AFP server allows you to share, collaborate on, and back up files remotely.
 The latest macOS at the time of writing (macOS 15 Sequoia) comes with a built-in AFP client,
 so Netatalk can act as a seamless bridge between new and old Macs.
 
