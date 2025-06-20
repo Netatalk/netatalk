@@ -133,19 +133,25 @@ Editing is open to all registered GitHub users.
 We are looking forward to your additions to existing material,
 or brand new articles on topics concerning Netatalk and Mac networking.
 
-## We are Using GitHub Under Protest
+## Hosting
 
 This project is currently hosted on GitHub. This is not ideal;
 the GitHub platform itself is a proprietary system that is not Free and Open Souce Software (FOSS).
-We are deeply concerned about using a proprietary system like GitHub to develop our FOSS project.
-We have an [open ticket](https://gitlab.com/netatalk-team/netatalk/-/issues/1)
-for project members and volunteers to discuss how we can move away from GitHub in the long term.
+We are deeply concerned about the long term sustainability
+of using a proprietary system like GitHub to develop our FOSS project.
 
-The primary source of platform lock-in for this project
-is the reliance on GitHub-hosted CI runners for cross-platform builds and tests.
+We have an [open ticket on our GitLab mirror](https://gitlab.com/netatalk-team/netatalk/-/issues/1)
+for project members and volunteers to discuss hosting options.
 
-If you are a contributor who prefer not using GitHub, please see the [Developer FAQ](https://netatalk.io/docs/Developer-FAQ)
-for instructions how to submit patches without using GitHub directly.
+If you are a contributor who prefer to not use GitHub, please see the [Developer FAQ](https://netatalk.io/docs/Developer-FAQ)
+for instructions on how to create and submit patches without using GitHub directly.
 
-Any use of this project's code by GitHub Copilot, past or present, is done without our permission.
-We do not consent to GitHub's use of this project's code in Copilot.
+## License and Copyright
+
+The netatalk software package is distributed under the GNU General Public License v2.
+However, individual source files or modules may be covered by other open source licenses.
+Refer to the headers of each source file, or the copyright/license notice in a module subdir.
+
+Any use of this project's code to train commercial large language models
+was done without permission by this project's contributors.
+We protest the use of our code in a way that goes against the word and spirit of our open source licenses.
