@@ -4,15 +4,12 @@ on:
       - main
       - branch-*
     paths-ignore:
-      - "**.md"
       - "**/COPYING"
-      - "**/README*"
-      - "config/**"
-      - "contrib/**"
-      - "distrib/**"
-      - "doc/**"
-      - "COPYRIGHT"
+      - "**/COPYRIGHT"
+      - "**/README"
       - "*Dockerfile"
+      - "config/**"
+      - "distrib/**"
   pull_request:
     branches:
       - main
@@ -22,15 +19,12 @@ on:
       - synchronize
       - reopened
     paths-ignore:
-        - "**.md"
         - "**/COPYING"
-        - "**/README*"
-        - "config/**"
-        - "contrib/**"
-        - "distrib/**"
-        - "doc/**"
-        - "COPYRIGHT"
+        - "**/COPYRIGHT"
+        - "**/README"
         - "*Dockerfile"
+        - "config/**"
+        - "distrib/**"
 
 name: Tests
 
