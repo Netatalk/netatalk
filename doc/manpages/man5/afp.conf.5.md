@@ -1080,11 +1080,15 @@ cnid scheme = *backend* **(V)**
 The "dbd" and "last" backends are always available. Default is **dbd**.
 Run *afpd -v* to see a list of available backends.
 >
+> "dbd" is a zero-configuration, full-featured, and reliable backend.
+>
 > The "last" backend is read only, used to mount CD-ROMs and similar media.
 >
 > The optional "mysql" backend requires the system administrator to provision
-a MySQL database instance for use with Netatalk, as well as setting the
+a MySQL database instance for use with Netatalk, while setting the appropriate
 *cnid mysql \** configuration options.
+>
+> The optional "sqlite" backend is an alternative zero-configuration backend.
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 
