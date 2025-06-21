@@ -2237,8 +2237,8 @@ Changes in 1.5rc2
        was used in etc/afp/afp_config.c. This call was replaced by sprintf()
        and prior bounds checking.
 
-Changes from the 1.4b1 release
-------------------------------
+Changes in 1.4b2
+----------------
 
 * Fixed the maximum free/total volume size in afpd.
 
@@ -2267,8 +2267,8 @@ Changes from the 1.4b1 release
 
 * Moved all the config files to .../config.
 
-Changes from the 1.3.3 release
-------------------------------
+Changes in 1.4b1
+----------------
 
 * Added code from Sun Microsystems, Inc (OPCOM) for Solaris support.
     See COPYRIGHT.
@@ -2278,8 +2278,8 @@ Changes from the 1.3.3 release
 
 * All sorts of other stuff.
 
-Changes from the 1.3.1 release
-------------------------------
+Changes in 1.3.3
+----------------
 
 * Added options to psf's filter names to support accounting on HPs.
     !!! NOTE:  The location of the filters has changed, see the man
@@ -2379,8 +2379,8 @@ Changes from the 1.3.1 release
     won't hang when atalkd dies during boot, thus hanging your
     machine.
 
-Changes from the 1.3 release
-----------------------------
+Changes in 1.3.1
+----------------
 
 * Fixed a bug in afpd which would cause APPL mappings to contain both
     mac and unix path names.  The fixed code will handle the old
@@ -2406,8 +2406,8 @@ Changes from the 1.3 release
 
 * Suppressed a spurious error ("route: No such process") in atalkd.
 
-Changes from the 1.2.1 release
-------------------------------
+Changes in 1.3
+--------------
 
 * atalkd is completely rewritten for phase 2 support.  atalkd.conf
     from previous version will not work!
@@ -2422,8 +2422,8 @@ Changes from the 1.2.1 release
 
 * There are many, many more changes, but most are small bug fixes.
 
-Changes from the 1.2 release
-----------------------------
+Changes in 1.2.1
+----------------
 
 * The Sun support now uses loadable kernel modules (a la VDDRV)
     instead of binary patches. As such, it should work on any sunos
