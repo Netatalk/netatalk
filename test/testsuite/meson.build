@@ -38,6 +38,8 @@ executable(
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
+    install_rpath: rpath_libdir,
+    build_rpath: rpath_libdir,
 )
 
 lantest_sources = [
@@ -51,6 +53,8 @@ executable(
     dependencies: afptest_external_deps,
     link_with: libafptest,
     install: true,
+    install_rpath: rpath_libdir,
+    build_rpath: rpath_libdir,
 )
 
 login_test_sources = [
@@ -64,6 +68,8 @@ executable(
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
+    install_rpath: rpath_libdir,
+    build_rpath: rpath_libdir,
 )
 
 speedtest_sources = [
@@ -77,6 +83,8 @@ executable(
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
+    install_rpath: rpath_libdir,
+    build_rpath: rpath_libdir,
 )
 
 spectest_sources = [
@@ -168,4 +176,6 @@ executable(
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
+    install_rpath: rpath_libdir,
+    build_rpath: rpath_libdir,
 )
