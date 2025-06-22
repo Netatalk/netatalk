@@ -230,7 +230,6 @@ jobs:
                     -e AFP_HOST=afp_server \
                     ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-
     afp-spectest-mysql-afp34-prod:
         name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Prod)
         needs:
@@ -290,7 +289,6 @@ jobs:
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-
     afp-spectest-mysql-afp34-debian:
         name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
         needs: build-container-testsuite-debian
@@ -331,6 +329,52 @@ jobs:
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+
+    afp-spectest-sqlite-afp34:
+        name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
+        needs: build-container-testsuite
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: ${{ secrets.AFP_PASSWD }}
+            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
+            AFP_GROUP: afpusers
+            AFP_CNID_BACKEND: sqlite
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest
+            AFP_VERSION: 7
+            AFP_EXTMAP: 1
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+
+    afp-spectest-sqlite-afp34-debian:
+        name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
+        needs: build-container-testsuite-debian
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        env:
+            AFP_USER: atalk1
+            AFP_USER2: atalk2
+            AFP_PASS: ${{ secrets.AFP_PASSWD }}
+            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
+            AFP_GROUP: afpusers
+            AFP_CNID_BACKEND: sqlite
+            SHARE_NAME: test1
+            SHARE_NAME2: test2
+            INSECURE_AUTH: 1
+            DISABLE_TIMEMACHINE: 1
+            VERBOSE: 1
+            TESTSUITE: spectest
+            AFP_VERSION: 7
+            AFP_EXTMAP: 1
+        steps:
+            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
 
 
     afp-spectest-afp34:
