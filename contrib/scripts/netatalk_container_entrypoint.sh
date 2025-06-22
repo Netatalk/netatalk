@@ -122,8 +122,8 @@ else
     chown "$AFP_USER:$AFP_GROUP" /mnt/afpshare /mnt/afpbackup
 fi
 
-if [ -n "$AFP_DROPBOX" ] && [ -z "$SHARE2_NAME" ]; then
-    SHARE2_NAME="Dropbox"
+if [ -n "$AFP_DROPBOX" ] && [ -z "$SHARE_NAME2" ]; then
+    SHARE_NAME2="Dropbox"
 fi
 
 echo "*** Removing residual lock files"
@@ -240,13 +240,13 @@ path = /mnt/afpshare
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
-[${SHARE2_NAME:-Time Machine}]
+[${SHARE_NAME2:-Time Machine}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
 path = /mnt/afpbackup
 time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2
-volume name = ${SHARE2_NAME:-Time Machine}
+volume name = ${SHARE_NAME2:-Time Machine}
 $AFP_RWRO = $AFP_VALIDUSERS2
 EOF
 fi
@@ -278,7 +278,7 @@ else
     sleep 2
     case "$TESTSUITE" in
         spectest)
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE2_NAME"
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
