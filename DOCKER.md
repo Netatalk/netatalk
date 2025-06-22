@@ -242,7 +242,7 @@ These are required to set the credentials used to authenticate with the file ser
 | AFP_PASS2         | Password for the secondary user                                        |
 | SERVER_NAME       | The name of the server (AFP and Zeroconf)                              |
 | SHARE_NAME        | The name of the primary shared volume                                  |
-| SHARE2_NAME       | The name of the secondary shared (Time Machine) volume                 |
+| SHARE_NAME2       | The name of the secondary shared (Time Machine) volume                 |
 | AFP_LOGLEVEL      | The verbosity of logs; default is "info"                               |
 | AFP_MIMIC_MODEL   | Use a custom modern AFP icon, such as `Tower` or `RackMount`           |
 | AFP_LEGACY_ICON   | Use a custom legacy AFP icon, such as `daemon` or `sdcard`             |
