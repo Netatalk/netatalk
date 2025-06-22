@@ -12,6 +12,7 @@ ARG RUN_DEPS="\
     libldap2 \
     libmariadb3 \
     libpam0g \
+    libsqlite3-0 \
     libssl3 \
     libtalloc2 \
     libtinysparql-3.0-0 \
@@ -42,6 +43,7 @@ ARG BUILD_DEPS="\
     libltdl-dev \
     libmariadb-dev \
     libpam0g-dev \
+    libsqlite3-dev \
     libtalloc-dev \
     libtirpc-dev \
     libtinysparql-dev \

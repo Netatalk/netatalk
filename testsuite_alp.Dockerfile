@@ -13,6 +13,7 @@ ARG RUN_DEPS="\
     mariadb-client \
     mariadb-connector-c \
     openldap \
+    sqlite \
     talloc \
     tinysparql \
     tzdata"
@@ -36,6 +37,7 @@ ARG BUILD_DEPS="\
     ninja \
     openldap-dev \
     pkgconfig \
+    sqlite-dev \
     talloc-dev \
     tinysparql-dev"
 
