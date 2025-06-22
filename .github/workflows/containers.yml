@@ -205,7 +205,7 @@ jobs:
                     -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
                     -e AFP_GROUP=afpusers \
                     -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
+                    -e SHARE2_NAME=test2 \
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
                     -e AFP_EXTMAP=1 \
@@ -219,7 +219,7 @@ jobs:
                     -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
                     -e AFP_GROUP=afpusers \
                     -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
+                    -e SHARE2_NAME=test2 \
                     -e VERBOSE=1 \
                     -e TESTSUITE=spectest \
                     -e AFP_VERSION=7 \
@@ -257,7 +257,7 @@ jobs:
                     -e AFP_GROUP=afpusers \
                     -e AFP_CNID_BACKEND=mysql \
                     -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
+                    -e SHARE2_NAME=test2 \
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
                     -e AFP_EXTMAP=1 \
@@ -273,7 +273,7 @@ jobs:
                     -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
                     -e AFP_GROUP=afpusers \
                     -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
+                    -e SHARE2_NAME=test2 \
                     -e VERBOSE=1 \
                     -e TESTSUITE=spectest \
                     -e AFP_VERSION=7 \
@@ -312,7 +312,7 @@ jobs:
                     -e AFP_GROUP=afpusers \
                     -e AFP_CNID_BACKEND=mysql \
                     -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
+                    -e SHARE2_NAME=test2 \
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
                     -e VERBOSE=1 \
@@ -338,7 +338,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -361,7 +361,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -384,7 +384,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -408,7 +408,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -432,7 +432,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -455,7 +455,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -478,7 +478,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -501,7 +501,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -524,7 +524,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -547,7 +547,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -570,7 +570,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -593,7 +593,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -616,7 +616,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
@@ -640,7 +640,7 @@ jobs:
             AFP_PASS2: ${{ secrets.AFP_PASSWD }}
             AFP_GROUP: afpusers
             SHARE_NAME: test1
-            SHARE_NAME2: test2
+            SHARE2_NAME: test2
             INSECURE_AUTH: 1
             DISABLE_TIMEMACHINE: 1
             VERBOSE: 1
