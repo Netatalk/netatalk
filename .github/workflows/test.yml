@@ -1,3 +1,4 @@
+name: Tests
 on:
   push:
     branches:
@@ -20,7 +21,7 @@ on:
         - "**/COPYRIGHT"
         - "**/README"
 
-name: Tests
+permissions: read-all
 
 jobs:
     formatting:

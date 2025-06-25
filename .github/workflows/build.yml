@@ -1,3 +1,4 @@
+name: Builds
 on:
   push:
     branches:
@@ -26,7 +27,7 @@ on:
       - "COPYRIGHT"
       - "*Dockerfile"
 
-name: Builds
+permissions: read-all
 
 jobs:
   build-alpine:
@@ -422,8 +423,6 @@ jobs:
     name: DragonflyBSD
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -468,8 +467,6 @@ jobs:
     name: FreeBSD
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -518,8 +515,6 @@ jobs:
     name: NetBSD
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -576,8 +571,6 @@ jobs:
     name: OpenBSD
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -630,8 +623,6 @@ jobs:
     name: OmniOS
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -683,8 +674,6 @@ jobs:
     name: Solaris
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
