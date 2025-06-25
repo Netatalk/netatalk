@@ -56,7 +56,7 @@ jobs:
                   type=raw,value=latest
                   type=sha
             - name: Build and push container image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               with:
                 context: .
                 file: Dockerfile
@@ -96,7 +96,7 @@ jobs:
                   type=raw,value=latest
                   type=sha
             - name: Build and push container image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               with:
                 context: .
                 file: testsuite_alp.Dockerfile
@@ -136,7 +136,7 @@ jobs:
                   type=raw,value=latest
                   type=sha
             - name: Build and push container image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               with:
                 context: .
                 file: webmin_module.Dockerfile
@@ -176,7 +176,7 @@ jobs:
                   type=raw,value=latest
                   type=sha
             - name: Build and push container image
-              uses: docker/build-push-action@v5
+              uses: docker/build-push-action@v6
               with:
                 context: .
                 file: testsuite_deb.Dockerfile
