@@ -39,7 +39,7 @@ ARG BUILD_DEPS="\
     talloc-dev \
     tinysparql-dev"
 
-FROM alpine:3.21 AS build
+FROM alpine:3.22 AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -72,7 +72,7 @@ RUN meson setup build \
 
 RUN meson install --destdir=/staging/ -C build
 
-FROM alpine:3.21 AS deploy
+FROM alpine:3.22 AS deploy
 
 ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
