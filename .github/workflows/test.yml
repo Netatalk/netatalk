@@ -78,7 +78,7 @@ jobs:
           with:
             fetch-depth: 0
         - name: Install Build Wrapper
-          uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v4
+          uses: SonarSource/sonarqube-scan-action/install-build-wrapper@v5
         - name: Install dependencies
           run: |
             sudo apt-get update
@@ -120,7 +120,7 @@ jobs:
                 -Dwith-testsuite=true
             build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
         - name: Run SonarQube scan
-          uses: sonarsource/sonarqube-scan-action@v4
+          uses: sonarsource/sonarqube-scan-action@v5
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
