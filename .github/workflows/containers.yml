@@ -1,3 +1,4 @@
+name: Containers
 on:
     push:
         branches: [ "main" ]
@@ -18,11 +19,10 @@ on:
           - "contrib/webmin_module/**"
           - "COPYRIGHT"
 
+permissions: read-all
 env:
     REGISTRY: ghcr.io
     REPO: ${{ github.repository }}
-
-name: Containers
 
 jobs:
     build-container:
