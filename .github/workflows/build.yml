@@ -36,7 +36,7 @@ jobs:
     container:
       image: alpine:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install dependencies
         run: |
           apk add \
@@ -109,7 +109,7 @@ jobs:
     container:
       image: archlinux:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install dependencies
         run: |
           pacman -Sy --noconfirm \
@@ -166,7 +166,7 @@ jobs:
     container:
       image: debian:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install dependencies
         run: |
           apt-get update
@@ -238,7 +238,7 @@ jobs:
     container:
       image: fedora:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install dependencies
         run: |
           dnf --setopt=install_weak_deps=False --assumeyes install \
@@ -302,7 +302,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -380,7 +380,7 @@ jobs:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Install dependencies
         run: |
           brew update
@@ -426,9 +426,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Build on VM
-        uses: vmactions/dragonflybsd-vm@v1
+        uses: vmactions/dragonflybsd-vm@e3c420e8a2362c2496fca6e76a291abd46f5d8e7
         with:
           copyback: false
           usesh: true
@@ -472,9 +472,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Build on VM
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/freebsd-vm@966989c456d41351f095a421f60e71342d3bce41
         with:
           copyback: false
           prepare: |
@@ -522,9 +522,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Build on VM
-        uses: vmactions/netbsd-vm@v1
+        uses: vmactions/netbsd-vm@46a58bbf03682b4cb24142b97fa315ae52bed573
         with:
           copyback: false
           prepare: |
@@ -580,9 +580,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Build on VM
-        uses: vmactions/openbsd-vm@v1
+        uses: vmactions/openbsd-vm@0d65352eee1508bab7cb12d130536d3a556be487
         with:
           copyback: false
           prepare: |
@@ -634,9 +634,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Build on VM
-        uses: vmactions/omnios-vm@v1
+        uses: vmactions/omnios-vm@8eba2a9217262f275d4566751a92d6ef2f433d00
         with:
           copyback: false
           prepare: |
@@ -687,9 +687,9 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Build on VM
-        uses: vmactions/solaris-vm@v1
+        uses: vmactions/solaris-vm@170f1f96f376cf7467cc41627e0c7590932fccaa
         with:
           copyback: false
           prepare: |
