@@ -54,7 +54,7 @@ jobs:
                   type=ref,event=branch
                   type=ref,event=tag
                   type=raw,value=latest
-                  type=sha
+                  type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -94,7 +94,7 @@ jobs:
                   type=ref,event=branch
                   type=ref,event=tag
                   type=raw,value=latest
-                  type=sha
+                  type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -134,7 +134,7 @@ jobs:
                   type=ref,event=branch
                   type=ref,event=tag
                   type=raw,value=latest
-                  type=sha
+                  type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -174,7 +174,7 @@ jobs:
                   type=ref,event=branch
                   type=ref,event=tag
                   type=raw,value=latest
-                  type=sha
+                  type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -198,7 +198,9 @@ jobs:
                 docker network create afp_network
             - name: Run Netatalk
               run: |
-                docker run --detach --name afp_server --network afp_network \
+                docker run --detach \
+                    --name afp_server \
+                    --network afp_network \
                     -e AFP_USER=atalk1 \
                     -e AFP_USER2=atalk2 \
                     -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
@@ -209,10 +211,11 @@ jobs:
                     -e INSECURE_AUTH=1 \
                     -e DISABLE_TIMEMACHINE=1 \
                     -e AFP_EXTMAP=1 \
-                    ghcr.io/netatalk/netatalk:latest
+                    ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
             - name: Run Netatalk testsuite
               run: |
-                docker run --rm --network afp_network \
+                docker run --rm \
+                    --network afp_network \
                     -e AFP_USER=atalk1 \
                     -e AFP_USER2=atalk2 \
                     -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
@@ -225,7 +228,7 @@ jobs:
                     -e AFP_VERSION=7 \
                     -e AFP_REMOTE=1 \
                     -e AFP_HOST=afp_server \
-                    ghcr.io/netatalk/netatalk-testsuite:latest
+                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
 
     afp-spectest-mysql-afp34-prod:
@@ -249,7 +252,9 @@ jobs:
                 sleep 4
             - name: Start Netatalk
               run: |
-                docker run --detach --name afp_server --network afp_network \
+                docker run --detach \
+                    --name afp_server \
+                    --network afp_network \
                     -e AFP_USER=atalk1 \
                     -e AFP_USER2=atalk2 \
                     -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
@@ -263,10 +268,11 @@ jobs:
                     -e AFP_EXTMAP=1 \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    ghcr.io/netatalk/netatalk:latest
+                    ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
             - name: Run Netatalk testsuite
               run: |
-                docker run --rm --network afp_network \
+                docker run --rm \
+                    --network afp_network \
                     -e AFP_USER=atalk1 \
                     -e AFP_USER2=atalk2 \
                     -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
@@ -282,7 +288,7 @@ jobs:
                     -e AFP_HOST=afp_server \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    ghcr.io/netatalk/netatalk-testsuite:latest
+                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
 
     afp-spectest-mysql-afp34-debian:
@@ -304,7 +310,8 @@ jobs:
                 sleep 4
             - name: Run Netatalk testsuite
               run: |
-                docker run --rm --network afp_network \
+                docker run --rm \
+                    --network afp_network \
                     -e AFP_USER=atalk1 \
                     -e AFP_USER2=atalk2 \
                     -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
@@ -323,7 +330,7 @@ jobs:
                     -e AFP_EXCLUDE_TESTS=1 \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    ghcr.io/netatalk/netatalk-testsuite-debian:latest
+                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
 
     afp-spectest-afp34:
@@ -331,429 +338,451 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 7
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="7" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-afp34-debian:
         name: AFP spec test (ea:sys) AFP 3.4 - Debian
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 7
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="7" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
     afp-adtest-afp34:
         name: AFP spec test (ea:ad) AFP 3.4 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            AFP_ADOUBLE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 7
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e AFP_ADOUBLE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="7" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-adtest-afp34-debian:
         name: AFP spec test (ea:ad) AFP 3.4 - Debian
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            AFP_ADOUBLE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 7
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e AFP_ADOUBLE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="7" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
     afp-spectest-afp33:
         name: AFP spec test (ea:sys) AFP 3.3 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 6
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="6" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-afp32:
         name: AFP spec test (ea:sys) AFP 3.2 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 5
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="5" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-afp31:
         name: AFP spec test (ea:sys) AFP 3.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 4
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="4" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-afp30:
         name: AFP spec test (ea:sys) AFP 3.0 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 3
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="3" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-afp30-debian:
         name: AFP spec test (ea:sys) AFP 3.0 - Debian
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 3
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="3" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
     afp-spectest-afp22:
         name: AFP spec test (ea:sys) AFP 2.2 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 2
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-  
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="2" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-afp21:
         name: AFP spec test (ea:sys) AFP 2.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 1
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="1" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-  
     afp-spectest-afp21-debian:
         name: AFP spec test (ea:sys) AFP 2.1 - Debian
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 1
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="1" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
     afp-adtest-afp21:
         name: AFP spec test (ea:ad) AFP 2.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            AFP_ADOUBLE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 1
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e AFP_ADOUBLE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="1" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-adtest-afp21-debian:
         name: AFP spec test (ea:ad) AFP 2.1 - Debian
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_USER2: atalk2
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_PASS2: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            SHARE_NAME2: test2
-            INSECURE_AUTH: 1
-            DISABLE_TIMEMACHINE: 1
-            VERBOSE: 1
-            AFP_ADOUBLE: 1
-            TESTSUITE: spectest
-            AFP_VERSION: 1
-            AFP_EXTMAP: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite-debian:latest
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e AFP_ADOUBLE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="1" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
     afp-rotest-afp34:
         name: AFP spec test (readonly) AFP 3.4 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            INSECURE_AUTH: 1
-            VERBOSE: 1
-            AFP_READONLY: 1
-            TESTSUITE: readonly
-            AFP_VERSION: 7
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e INSECURE_AUTH="1" \
+                  -e VERBOSE="1" \
+                  -e AFP_READONLY="1" \
+                  -e TESTSUITE="readonly" \
+                  -e AFP_VERSION="7" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-rotest-afp21:
         name: AFP spec test (readonly) AFP 2.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            INSECURE_AUTH: 1
-            VERBOSE: 1
-            AFP_READONLY: 1
-            TESTSUITE: readonly
-            AFP_VERSION: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e INSECURE_AUTH="1" \
+                  -e VERBOSE="1" \
+                  -e AFP_READONLY="1" \
+                  -e TESTSUITE="readonly" \
+                  -e AFP_VERSION="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-logintest-afp34:
         name: AFP login test AFP 3.4 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            INSECURE_AUTH: 1
-            VERBOSE: 1
-            TESTSUITE: login
-            AFP_VERSION: 7
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e INSECURE_AUTH="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="login" \
+                  -e AFP_VERSION="7" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-logintest-afp21:
         name: AFP login test AFP 2.1 - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            INSECURE_AUTH: 1
-            VERBOSE: 1
-            TESTSUITE: login
-            AFP_VERSION: 1
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e INSECURE_AUTH="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="login" \
+                  -e AFP_VERSION="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-lantest:
         name: AFP lantest - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            INSECURE_AUTH: 1
-            VERBOSE: 1
-            TESTSUITE: lan
-            AFP_VERSION: 7
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
-
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e INSECURE_AUTH="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="lan" \
+                  -e AFP_VERSION="7" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-speedtest:
         name: AFP speedtest - Alpine
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        env:
-            AFP_USER: atalk1
-            AFP_PASS: ${{ secrets.AFP_PASSWD }}
-            AFP_GROUP: afpusers
-            SHARE_NAME: test1
-            INSECURE_AUTH: 1
-            VERBOSE: 1
-            TESTSUITE: speed
-            AFP_VERSION: 7
         steps:
-            - uses: docker://ghcr.io/netatalk/netatalk-testsuite:latest
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e SHARE_NAME="test1" \
+                  -e INSECURE_AUTH="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="speed" \
+                  -e AFP_VERSION="7" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
