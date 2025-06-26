@@ -21,6 +21,10 @@ Code Quality:
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=sqale_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=duplicated_lines_density)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 
+Supply Chain Security:
+[![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/Netatalk/netatalk?label=openssf+scorecard&style=flat)](https://scorecard.dev/viewer/?uri=github.com/Netatalk/netatalk)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/10806/badge)](https://www.bestpractices.dev/projects/10806)
+
 ## About Netatalk
 
 Netatalk is a Free and Open Source file server that implements
