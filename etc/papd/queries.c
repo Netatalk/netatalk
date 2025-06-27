@@ -24,9 +24,9 @@
 #include "lp.h"
 #include "uam_auth.h"
 
-int cq_default(struct papfile *, struct papfile *);
-int cq_k4login(struct papfile *, struct papfile *);
-int cq_uameth(struct papfile *, struct papfile *);
+int cq_default(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_k4login(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_uameth(struct papfile *, struct papfile *, struct sockaddr_at *);
 
 int gq_balance(struct papfile *);
 int gq_pagecost(struct papfile *);
@@ -35,21 +35,22 @@ int gq_rbispoolerid(struct papfile *);
 int gq_rbiuamlist(struct papfile *);
 int gq_product(struct papfile *);
 
-int cq_query(struct papfile *, struct papfile *);
+int cq_query(struct papfile *, struct papfile *, struct sockaddr_at *);
 void cq_font_answer(char *, char *, struct papfile *);
-int cq_fontlist(struct papfile *, struct papfile *);
-int cq_font(struct papfile *, struct papfile *);
-int cq_feature(struct papfile *, struct papfile *);
-int cq_printer(struct papfile *, struct papfile *);
-int cq_rmjob(struct papfile *, struct papfile *);
+int cq_fontlist(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_font(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_feature(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_printer(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_rmjob(struct papfile *, struct papfile *, struct sockaddr_at *);
 #ifndef HAVE_CUPS
-int cq_listq(struct papfile *, struct papfile *);
-int cq_rbilogin(struct papfile *, struct papfile *);
+int cq_listq(struct papfile *, struct papfile *, struct sockaddr_at *);
+int cq_rbilogin(struct papfile *, struct papfile *, struct sockaddr_at *);
 #endif  /* HAVE_CUPS */
-int cq_end(struct papfile *, struct papfile *);
+int cq_end(struct papfile *, struct papfile *, struct sockaddr_at *);
 
 
-int cq_default(struct papfile *in, struct papfile *out)
+int cq_default(struct papfile *in, struct papfile *out,
+               struct sockaddr_at *sat _U_)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -203,7 +204,7 @@ int gq_product(struct papfile *out)
 
 struct genquery {
     char *gq_name;
-    int	(*gq_handler)();
+    int (*gq_handler)(struct papfile *);
 } genqueries[] = {
     { "UMICHCostPerPage", gq_pagecost },
 #ifdef notdef
@@ -218,7 +219,8 @@ struct genquery {
     { NULL, NULL },
 };
 
-int cq_query(struct papfile *in, struct papfile *out)
+int cq_query(struct papfile *in, struct papfile *out,
+             struct sockaddr_at *sat _U_)
 {
     char		*start, *stop, *p, *q;
     int			linelength, crlflength;
@@ -326,7 +328,8 @@ void cq_font_answer(char *start, char *stop, struct papfile *out)
     return;
 }
 
-int cq_fontlist(struct papfile *in, struct papfile *out)
+int cq_fontlist(struct papfile *in, struct papfile *out,
+                struct sockaddr_at *sat _U_)
 {
     char		*start;
     int			linelength, crlflength;
@@ -397,7 +400,8 @@ int cq_fontlist(struct papfile *in, struct papfile *out)
 }
 
 
-int cq_font(struct papfile *in, struct papfile *out)
+int cq_font(struct papfile *in, struct papfile *out,
+            struct sockaddr_at *sat _U_)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -462,7 +466,8 @@ int cq_font(struct papfile *in, struct papfile *out)
     }
 }
 
-int cq_feature(struct papfile *in, struct papfile *out)
+int cq_feature(struct papfile *in, struct papfile *out,
+               struct sockaddr_at *sat _U_)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -533,7 +538,8 @@ int cq_feature(struct papfile *in, struct papfile *out)
 static const char	*psver = "*PSVersion\n";
 static const char	*prod = "*Product\n";
 
-int cq_printer(struct papfile *in, struct papfile *out)
+int cq_printer(struct papfile *in, struct papfile *out,
+               struct sockaddr_at *sat _U_)
 {
     char		*start, *p;
     int			linelength, crlflength;
@@ -616,7 +622,8 @@ int cq_printer(struct papfile *in, struct papfile *out)
 static const char	*rmjobfailed = "Failed\n";
 static const char	*rmjobok = "Ok\n";
 
-int cq_rmjob(struct papfile *in, struct papfile *out)
+int cq_rmjob(struct papfile *in, struct papfile *out,
+             struct sockaddr_at *sat _U_)
 {
     char		*start, *stop, *p;
     int			linelength, crlflength;
@@ -661,7 +668,8 @@ int cq_rmjob(struct papfile *in, struct papfile *out)
     return CH_DONE;
 }
 
-int cq_listq(struct papfile *in, struct papfile *out)
+int cq_listq(struct papfile *in, struct papfile *out,
+             struct sockaddr_at *sat _U_)
 {
     char		*start;
     int			linelength, crlflength;
@@ -700,7 +708,8 @@ SecurityViolation: Unknown user, incorrect password or log on is \
 disabled ]%%\r%%[Flushing: rest of job (to end-of-file) will be \
 ignored ]%%\r";
 
-int cq_rbilogin(struct papfile *in, struct papfile *out)
+int cq_rbilogin(struct papfile *in, struct papfile *out,
+                struct sockaddr_at *sat _U_)
 {
     char        	*start, *stop, *p, *begin;
     int			linelength, crlflength;
@@ -765,7 +774,8 @@ int cq_rbilogin(struct papfile *in, struct papfile *out)
     }
 }
 
-int cq_end(struct papfile *in, struct papfile *out)
+int cq_end(struct papfile *in, struct papfile *out _U_,
+           struct sockaddr_at *sat _U_)
 {
     char                *start;
     int                 linelength, crlflength;
@@ -793,16 +803,16 @@ int cq_end(struct papfile *in, struct papfile *out)
  */
 struct papd_comment	queries[] = {
 #ifndef HAVE_CUPS
-    { "%UMICHListQueue",	NULL,			cq_listq,  C_FULL },
-    { "%UMICHDeleteJob",	NULL,			cq_rmjob,	0 },
+    { "%UMICHListQueue", NULL, cq_listq,  C_FULL },
+    { "%UMICHDeleteJob", NULL, cq_rmjob, 0 },
 #endif /* HAVE_CUPS */
-    { "%%?BeginQuery: RBILogin ", "%%?EndQuery",	cq_rbilogin,	0 },
-    { "%%?BeginQuery",		"%%?EndQuery",		cq_query,	0 },
-    { "%%?BeginFeatureQuery",	"%%?EndFeatureQuery",	cq_feature,	0 },
-    { "%%?BeginFontQuery",	"%%?EndFontQuery",	cq_font,	0 },
+    { "%%?BeginQuery: RBILogin ", "%%?EndQuery", cq_rbilogin, 0 },
+    { "%%?BeginQuery", "%%?EndQuery", cq_query, 0 },
+    { "%%?BeginFeatureQuery", "%%?EndFeatureQuery", cq_feature, 0 },
+    { "%%?BeginFontQuery", "%%?EndFontQuery", cq_font, 0 },
     { "%%?BeginFontListQuery",  "%%?EndFontListQuery",  cq_fontlist,    0 },
-    { "%%?BeginPrinterQuery",	"%%?EndPrinterQuery",	cq_printer, C_FULL },
-    { "%%?Begin",		"%%?End",		cq_default,	0 },
-    { "%%EOF",			NULL,			cq_end,		0 },
-    { NULL,			NULL,			NULL,		0 },
+    { "%%?BeginPrinterQuery", "%%?EndPrinterQuery", cq_printer, C_FULL },
+    { "%%?Begin", "%%?End", cq_default, 0 },
+    { "%%EOF", NULL, cq_end, 0 },
+    { NULL, NULL, NULL, 0 },
 };
