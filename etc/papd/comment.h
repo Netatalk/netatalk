@@ -8,11 +8,14 @@
 
 #include <sys/types.h>
 
+struct papfile;
+struct sockaddr_at;
+
 struct papd_comment {
-    char		*c_begin;
-    char		*c_end;
-    int	(*c_handler)();
-    int			c_flags;
+    char        *c_begin;
+    char        *c_end;
+    int (*c_handler)(struct papfile *, struct papfile *, struct sockaddr_at *);
+    int         c_flags;
 };
 
 #define CH_DONE		0
@@ -55,7 +58,8 @@ extern char			*comcont;
 
 void compop(void);
 void compush(struct papd_comment *);
-int comswitch(struct papd_comment *, int (*)());
+int comswitch(struct papd_comment *, int (*)(struct papfile *, struct papfile *,
+              struct sockaddr_at *));
 int comcmp(char *, char *, char *, int);
 struct papd_comment *commatch(char *, char *, struct papd_comment *);
 char *comtoken(char *, char *, char *, char *);
