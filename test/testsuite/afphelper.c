@@ -1080,9 +1080,37 @@ void test_nottested(void)
     CurTestResult = 2;
 }
 
+static void clear_volume(uint16_t vol, CONN *conn)
+{
+    uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_PDID);
+    uint32_t dir_id = DIRDID_ROOT;
+    struct afp_filedir_parms filedir;
+    int ofs = 3 * sizeof(uint16_t);
+
+    while (1) {
+        int ret = FPEnumerate(conn, vol, dir_id, "", bitmap, bitmap);
+        if (ret != AFP_OK) {
+            break;
+        }
+
+        afp_filedir_unpack(&filedir, conn->dsi.data + ofs, 0, bitmap);
+
+        if (filedir.isdir) {
+            clear_volume(vol, conn);
+            FPDelete(conn, vol, filedir.did, "");
+        } else {
+            FPDelete(conn, vol, dir_id, filedir.lname);
+        }
+    }
+}
+
 /* ------------------------- */
 void enter_test(void)
 {
+    clear_volume(VolID, Conn);
+    if (Conn2) {
+        clear_volume(VolID, Conn2); \
+    }
     CurTestResult = 0;
     Why = "";
 }
