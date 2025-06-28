@@ -1,0 +1,21 @@
+# Netatalk executables - all run in the same domain due to forking structure
+/usr/sbin/netatalk               --      gen_context(system_u:object_r:netatalk_exec_t,s0)
+/usr/sbin/afpd                   --      gen_context(system_u:object_r:netatalk_exec_t,s0)
+/usr/sbin/cnid_metad             --      gen_context(system_u:object_r:netatalk_exec_t,s0)
+/usr/sbin/cnid_dbd               --      gen_context(system_u:object_r:netatalk_exec_t,s0)
+
+# Configuration files
+/etc/netatalk(/.*)?                      gen_context(system_u:object_r:netatalk_etc_t,s0)
+/etc/netatalk/afp\.conf          --      gen_context(system_u:object_r:netatalk_etc_t,s0)
+/etc/netatalk/dbus-session\.conf --      gen_context(system_u:object_r:netatalk_etc_t,s0)
+/etc/netatalk/extmap\.conf       --      gen_context(system_u:object_r:netatalk_etc_t,s0)
+
+# Variable data
+/var/lib/netatalk/CNID(/.*)?             gen_context(system_u:object_r:netatalk_var_lib_t,s0)
+/var/lib/netatalk/afp_signature\.conf -- gen_context(system_u:object_r:netatalk_var_lib_t,s0)
+/var/lib/netatalk/afp_voluuid\.conf   -- gen_context(system_u:object_r:netatalk_var_lib_t,s0)
+/var/lock/netatalk(/.*)?                 gen_context(system_u:object_r:netatalk_lock_t,s0)
+
+# Log files
+/var/log/netatalk\.log           --      gen_context(system_u:object_r:netatalk_log_t,s0)
+/var/log/netatalk(/.*)?                  gen_context(system_u:object_r:netatalk_log_t,s0)
