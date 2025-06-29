@@ -245,6 +245,20 @@ if ($subject ne 'homes') {
 }
 
 print &ui_table_row(
+                    $text{'edit_vol_section_cnid_scheme'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'cnid scheme', $text{'edit_undefined'},
+                                  'dbd',
+                                  'dbd',
+                                  'last',
+                                  'last',
+                                  'mysql',
+                                  'mysql',
+                                  'sqlite',
+                                  'sqlite'
+                    )
+);
+print &ui_table_row(
                     $text{'edit_vol_section_ea'},
                     &build_select(
                                   $afpconfRef, $sectionRef, \%in, 'ea', $text{'edit_undefined'}, 'sys',
@@ -457,15 +471,6 @@ if ($subject ne 'homes') {
                         &build_select(
                                       $afpconfRef, $sectionRef, \%in, 'convert appledouble', $text{'edit_undefined'},
                                       'yes',       'yes',       'no', 'no'
-                        )
-    );
-
-    @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid scheme', \%in);
-    print &ui_table_row(
-                        $text{'edit_vol_section_cnid_scheme'},
-                        &build_select(
-                                      $afpconfRef, $sectionRef, \%in,   'cnid scheme', $text{'edit_undefined'}, 'dbd',
-                                      'dbd',       'last',      'last', 'mysql',       'mysql'
                         )
     );
 
