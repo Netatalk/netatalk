@@ -1215,7 +1215,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             strerror(errno));
     }
 
-    sqlite3_busy_timeout(db->cnid_sqlite_con, 5000);
+    sqlite3_busy_timeout(db->cnid_sqlite_con, 2000);
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "PRAGMA synchronous=NORMAL;"));
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "PRAGMA journal_mode=WAL;"));
 
