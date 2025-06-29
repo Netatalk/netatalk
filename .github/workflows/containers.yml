@@ -353,7 +353,7 @@ jobs:
                   -e TESTSUITE="spectest" \
                   -e AFP_VERSION="7" \
                   -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
     afp-spectest-sqlite-afp34-debian:
         name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
