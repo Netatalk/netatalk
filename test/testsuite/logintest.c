@@ -22,7 +22,6 @@ char Data[300000] = "";
 /* ------------------------------- */
 char    *Server = "localhost";
 char    *Server2;
-int     Proto = 0;
 int     Port = DSI_AFPOVERTCP_PORT;
 char    *Password = "";
 char    *Vol = "";
@@ -38,20 +37,16 @@ static char  *vers = "AFP3.4";
 STATIC void connect_server(CONN *conn)
 {
     DSI *dsi;
-    conn->type = Proto;
+    int sock;
+    dsi = &conn->dsi;
+    sock = OpenClientSocket(Server, Port);
 
-    if (!Proto) {
-        int sock;
-        dsi = &conn->dsi;
-        sock = OpenClientSocket(Server, Port);
-
-        if (sock < 0) {
-            test_nottested();
-            exit(ExitCode);
-        }
-
-        dsi->socket = sock;
+    if (sock < 0) {
+        test_nottested();
+        exit(ExitCode);
     }
+
+    dsi->socket = sock;
 }
 
 /* ------------------------- */

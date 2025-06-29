@@ -32,7 +32,6 @@ struct timeval Timer_end;
 
 /* ------------------------------- */
 static char    *Server = "localhost";
-static int     Proto = 0;
 static int     Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 char    *Vol = "";
@@ -1647,12 +1646,6 @@ int main(int ac, char **av)
         case 'n':
             Count = atoi(optarg);
             break;
-#if 0
-
-        case 'n':
-            Proto = 1;
-            break;
-#endif
 
         case 'p' :
             Port = atoi(optarg);
@@ -1733,26 +1726,22 @@ int main(int ac, char **av)
         return 1;
     }
 
-    Conn->type = Proto;
-
     if (Local) {
         Dsi = &Conn->dsi;
         dsi = Dsi;
         dsi->server_quantum = 512 * KILOBYTE;
         VFS = local_VFS;
     } else {
-        if (!Proto) {
-            int sock;
-            Dsi = &Conn->dsi;
-            dsi = Dsi;
-            sock = OpenClientSocket(Server, Port);
+        int sock;
+        Dsi = &Conn->dsi;
+        dsi = Dsi;
+        sock = OpenClientSocket(Server, Port);
 
-            if (sock < 0) {
-                return 2;
-            }
-
-            Dsi->socket = sock;
+        if (sock < 0) {
+            return 2;
         }
+
+        Dsi->socket = sock;
 
         /* login */
         if (Version >= 30) {
