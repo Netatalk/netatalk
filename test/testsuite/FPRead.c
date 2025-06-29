@@ -367,7 +367,6 @@ extern int  Port;
 extern char *Password;
 extern char *vers;
 extern char *uam;
-extern int  Proto;
 
 static volatile int sigp = 0;
 static int sock = -1;
@@ -440,7 +439,6 @@ static void write_test(int size)
         goto fin;
     }
 
-    myconn->type = Proto;
     dsi2 = &myconn->dsi;
     sock = OpenClientSocket(Server, Port);
 

@@ -58,7 +58,6 @@ static int create_enum_files = 2000;              /* 2000 files */
 static uint16_t vol;
 static DSI *dsi;
 static char    *Server = "localhost";
-static int     Proto = 0;
 static int     Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 static int     Iterations = 1;
@@ -990,20 +989,15 @@ int main(int ac, char **av)
         return 1;
     }
 
-    Conn->type = Proto;
+    int sock;
+    dsi = &Conn->dsi;
+    sock = OpenClientSocket(Server, Port);
 
-    if (!Proto) {
-        int sock;
-        dsi = &Conn->dsi;
-        sock = OpenClientSocket(Server, Port);
-
-        if (sock < 0) {
-            return 2;
-        }
-
-        dsi->socket = sock;
+    if (sock < 0) {
+        return 2;
     }
 
+    dsi->socket = sock;
     Conn->afp_version = Version;
 
     /* login */

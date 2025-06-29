@@ -37,7 +37,6 @@ DSI        *Dsi;
 
 /* Default values for options */
 char    *Server = "localhost";
-int     Proto = 0;
 int     Port = DSI_AFPOVERTCP_PORT;
 char    *Password = "";
 char    *Vol = "";
@@ -259,21 +258,16 @@ int main(int ac, char **av)
         return 1;
     }
 
-    Conn->type = Proto;
+    int sock;
+    Dsi = &Conn->dsi;
+    dsi = Dsi;
+    sock = OpenClientSocket(Server, Port);
 
-    if (!Proto) {
-        int sock;
-        Dsi = &Conn->dsi;
-        dsi = Dsi;
-        sock = OpenClientSocket(Server, Port);
-
-        if (sock < 0) {
-            return 2;
-        }
-
-        Dsi->socket = sock;
-    } else {
+    if (sock < 0) {
+        return 2;
     }
+
+    Dsi->socket = sock;
 
     /* login */
     if (Version >= 30) {
