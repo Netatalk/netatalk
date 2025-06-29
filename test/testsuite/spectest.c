@@ -320,7 +320,6 @@ char Data[300000] = "";
 /* ------------------------------- */
 char    *Server = "localhost";
 char    *Server2;
-int     Proto = 0;
 int     Port = DSI_AFPOVERTCP_PORT;
 char    *Password = "";
 char    *Vol = "";
@@ -462,12 +461,6 @@ int main(int ac, char **av)
         case 'm':
             Mac = 1;
             break;
-#if 0
-
-        case 'n':
-            Proto = 1;
-            break;
-#endif
 
         case 'p' :
             Port = atoi(optarg);
@@ -550,23 +543,17 @@ int main(int ac, char **av)
         return 1;
     }
 
-    Conn->type = Proto;
+    int sock;
+    Dsi = &Conn->dsi;
+    dsi = Dsi;
+    sock = OpenClientSocket(Server, Port);
 
-    if (!Proto) {
-        int sock;
-        Dsi = &Conn->dsi;
-        dsi = Dsi;
-        sock = OpenClientSocket(Server, Port);
-
-        if (sock < 0) {
-            return 2;
-        }
-
-        Dsi->socket = sock;
-    } else {
+    if (sock < 0) {
+        return 2;
     }
 
-    /* login */
+    Dsi->socket = sock;
+
     if (Version >= 30) {
         ret = FPopenLoginExt(Conn, vers, uam, User, Password);
     } else {
@@ -585,28 +572,22 @@ int main(int ac, char **av)
      * User 2                              *
      *                                     *
      ***************************************/
-    /* user 2 */
+
     if (User2) {
         if ((Conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
             return 1;
         }
 
-        Conn2->type = Proto;
+        int sock2;
+        Dsi2 = &Conn2->dsi;
+        sock2 = OpenClientSocket(Server2 ? Server2 : Server, Port);
 
-        if (!Proto) {
-            int sock;
-            Dsi2 = &Conn2->dsi;
-            sock = OpenClientSocket(Server2 ? Server2 : Server, Port);
-
-            if (sock < 0) {
-                return 1;
-            }
-
-            Dsi2->socket = sock;
-        } else {
+        if (sock2 < 0) {
+            return 1;
         }
 
-        /* login */
+        Dsi2->socket = sock2;
+
         if (Version >= 30) {
             ret = FPopenLoginExt(Conn2, vers, uam, User2, Password);
         } else {
