@@ -27,8 +27,6 @@
 #ifndef NO_DDP
 
 #include <sys/types.h>
-#include <sys/types.h>
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 #include <atalk/afp.h>

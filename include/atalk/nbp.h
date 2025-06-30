@@ -30,7 +30,6 @@
 #define ATP_OPEN_2ARGS 1
 
 #include <sys/types.h>
-#include <sys/types.h>
 #include <netatalk/at.h>
 #include <netatalk/endian.h>
 

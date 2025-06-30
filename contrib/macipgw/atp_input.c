@@ -37,7 +37,7 @@
 
 extern int gDebug;
 
-static void print_func(u_int8_t ctrlinfo)
+static void print_func(uint8_t ctrlinfo)
 {
     switch (ctrlinfo & ATP_FUNCMASK) {
     case ATP_TREQ:

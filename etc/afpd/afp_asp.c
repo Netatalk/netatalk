@@ -20,7 +20,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-#include <netatalk/endian.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 #include <atalk/compat.h>

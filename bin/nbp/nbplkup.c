@@ -26,7 +26,6 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <sys/types.h>
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/nbp.h>
 #include <atalk/unicode.h>

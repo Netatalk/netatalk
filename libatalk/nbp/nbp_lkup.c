@@ -17,7 +17,6 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <netatalk/ddp.h>
 #include <atalk/compat.h>

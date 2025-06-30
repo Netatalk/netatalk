@@ -91,8 +91,11 @@
 #define QCMD(cmd, type)  (((cmd) << SUBCMDSHIFT) | ((type) & SUBCMDMASK))
 
 /* declare an internal version of the quota block struct */
-typedef u_int64_t qsize_t;	/* Type in which we store size limitations */
-typedef u_int32_t qid_t;	/* Type in which we store ids in memory */
+
+/* Type in which we store size limitations */
+typedef uint64_t qsize_t;
+/* Type in which we store ids in memory */
+typedef uint32_t qid_t;
 
 struct dqblk {
     qsize_t bsize;
@@ -130,15 +133,15 @@ struct dqblk {
 #define DEV_QBSIZE 1024
 
 struct dqblk_v3 {
-    u_int64_t dqb_bhardlimit;
-    u_int64_t dqb_bsoftlimit;
-    u_int64_t dqb_curspace;
-    u_int64_t dqb_ihardlimit;
-    u_int64_t dqb_isoftlimit;
-    u_int64_t dqb_curinodes;
-    u_int64_t dqb_btime;
-    u_int64_t dqb_itime;
-    u_int32_t dqb_valid;
+    uint64_t dqb_bhardlimit;
+    uint64_t dqb_bsoftlimit;
+    uint64_t dqb_curspace;
+    uint64_t dqb_ihardlimit;
+    uint64_t dqb_isoftlimit;
+    uint64_t dqb_curinodes;
+    uint64_t dqb_btime;
+    uint64_t dqb_itime;
+    uint32_t dqb_valid;
 };
 
 struct dqblk_v2 {
@@ -153,24 +156,24 @@ struct dqblk_v2 {
 };
 
 struct dqstats_v2 {
-    u_int32_t lookups;
-    u_int32_t drops;
-    u_int32_t reads;
-    u_int32_t writes;
-    u_int32_t cache_hits;
-    u_int32_t allocated_dquots;
-    u_int32_t free_dquots;
-    u_int32_t syncs;
-    u_int32_t version;
+    uint32_t lookups;
+    uint32_t drops;
+    uint32_t reads;
+    uint32_t writes;
+    uint32_t cache_hits;
+    uint32_t allocated_dquots;
+    uint32_t free_dquots;
+    uint32_t syncs;
+    uint32_t version;
 };
 
 struct dqblk_v1 {
-    u_int32_t dqb_bhardlimit;
-    u_int32_t dqb_bsoftlimit;
-    u_int32_t dqb_curblocks;
-    u_int32_t dqb_ihardlimit;
-    u_int32_t dqb_isoftlimit;
-    u_int32_t dqb_curinodes;
+    uint32_t dqb_bhardlimit;
+    uint32_t dqb_bsoftlimit;
+    uint32_t dqb_curblocks;
+    uint32_t dqb_ihardlimit;
+    uint32_t dqb_isoftlimit;
+    uint32_t dqb_curinodes;
     time_t dqb_btime;
     time_t dqb_itime;
 };

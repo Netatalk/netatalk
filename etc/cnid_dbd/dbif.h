@@ -98,18 +98,18 @@ int dbif_open(DBD *dbd, struct db_param *dbp, int reindex);
 int dbif_close(DBD *dbd);
 int dbif_env_remove(const char *path);
 
-int dbif_get(DBD *, const int, DBT *, DBT *, u_int32_t);
-int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, u_int32_t);
-int dbif_put(DBD *, const int, DBT *, DBT *, u_int32_t);
-int dbif_del(DBD *, const int, DBT *, u_int32_t);
-int dbif_count(DBD *, const int, u_int32_t *);
+int dbif_get(DBD *, const int, DBT *, DBT *, uint32_t);
+int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, uint32_t);
+int dbif_put(DBD *, const int, DBT *, DBT *, uint32_t);
+int dbif_del(DBD *, const int, DBT *, uint32_t);
+int dbif_count(DBD *, const int, uint32_t *);
 int dbif_search(DBD *dbd, DBT *key, char *resbuf);
 int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 int dbif_txn_begin(DBD *);
 int dbif_txn_commit(DBD *);
 int dbif_txn_abort(DBD *);
 int dbif_txn_close(DBD *dbd, int ret); /* Switch between commit+abort */
-int dbif_txn_checkpoint(DBD *, u_int32_t, u_int32_t, u_int32_t);
+int dbif_txn_checkpoint(DBD *, uint32_t, uint32_t, uint32_t);
 
 int dbif_dump(DBD *dbd, int dumpindexes);
 int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close);

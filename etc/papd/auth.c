@@ -13,7 +13,6 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#include <netatalk/endian.h>
 #include <atalk/afp.h>
 #include <atalk/compat.h>
 #include <atalk/util.h>

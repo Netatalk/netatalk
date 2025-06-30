@@ -9,32 +9,31 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <atalk/logger.h>
-#include <sys/param.h>
 #include <net/if.h>
-#include <netatalk/at.h>
-#include <netatalk/endian.h>
-#include <atalk/util.h>
 #include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
-#include <ctype.h>
-#include <string.h>
-
-#include <fcntl.h>
 
 #ifdef __svr4__
 #include <sys/sockio.h>
 #include <sys/stropts.h>
 #endif /* __svr4__ */
 
+#include <atalk/logger.h>
 #include <atalk/unicode.h>
+#include <atalk/util.h>
+#include <netatalk/at.h>
+
 #include "interface.h"
 #include "multicast.h"
 #include "rtmp.h"
