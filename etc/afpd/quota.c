@@ -112,7 +112,7 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
 }
 
 int uquota_getvolspace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
-                       VolSpace *btotal, const u_int32_t bsize)
+                       VolSpace *btotal, const uint32_t bsize)
 {
     int uret, gret;
     VolSpace ubfree, ubtotal;

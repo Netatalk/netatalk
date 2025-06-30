@@ -24,9 +24,6 @@
 #ifndef _ATALK_RTMP_H
 #define _ATALK_RTMP_H 1
 
-
-#include <netatalk/endian.h>
-
 #define RTMPROP_REQUEST	1
 #define RTMPROP_RDR 2
 #define RTMPROP_RDR_NOSH 3

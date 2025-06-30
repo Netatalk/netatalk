@@ -18,7 +18,6 @@
 
 #include "at.h"
 #include "at_var.h"
-#include "endian.h"
 #include "ddp.h"
 #include "ddp_var.h"
 

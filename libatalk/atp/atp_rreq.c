@@ -34,7 +34,6 @@
 
 #include <netinet/in.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
 #include <atalk/atp.h>
 
 #include "atp_internals.h"

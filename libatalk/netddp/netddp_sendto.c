@@ -19,7 +19,6 @@
 #include <errno.h>
 
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
 #include <netatalk/ddp.h>
 #include <atalk/netddp.h>
 

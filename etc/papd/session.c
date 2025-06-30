@@ -7,17 +7,18 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
-#include <atalk/logger.h>
 #include <sys/time.h>
+#include <sys/types.h>
 #include <sys/uio.h>
-#include <netatalk/endian.h>
-#include <netatalk/at.h>
+
 #include <atalk/atp.h>
+#include <atalk/logger.h>
 #include <atalk/pap.h>
+#include <netatalk/at.h>
 
 #include "file.h"
 #include "lp.h"

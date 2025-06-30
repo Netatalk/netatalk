@@ -27,8 +27,6 @@
 
 #ifndef NO_DDP
 
-#include <netatalk/endian.h>
-
 struct ziphdr {
     uint8_t    zh_op;
     uint8_t    zh_cnt;

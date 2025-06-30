@@ -26,7 +26,7 @@ static void *ad_mmap(const size_t length, const int prot,
 
 /* this just sets things up for mmap. as mmap can handle offsets,
  * we need to reset the file position before handing it off */
-void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
+void *ad_mmapread(struct adouble *ad, const uint32_t eid,
                   const off_t off, const size_t buflen)
 {
     /* data fork */
@@ -56,7 +56,7 @@ void *ad_mmapread(struct adouble *ad, const u_int32_t eid,
 /* to do writeable mmaps correctly, we actually need to make sure that
  * the file to be mapped is large enough. that's what all the initial
  * mess is for. */
-void *ad_mmapwrite(struct adouble *ad, const u_int32_t eid,
+void *ad_mmapwrite(struct adouble *ad, const uint32_t eid,
                    off_t off, const int end, const size_t buflen)
 {
     struct stat st;

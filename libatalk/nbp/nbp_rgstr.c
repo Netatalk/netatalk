@@ -18,7 +18,6 @@
 #include <sys/time.h>
 
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
 #include <atalk/nbp.h>
 #include <atalk/ddp.h>
 #include <atalk/netddp.h>
