@@ -23,7 +23,6 @@
 #include "at.h"
 #include "at_var.h"
 #include "ddp_var.h"
-#include "endian.h"
 
 struct ddpcb	*ddpcb = NULL;
 uint32_t		ddp_sendspace = DDP_MAXSZ; /* Max ddp size + 1 (ddp_type) */

@@ -509,7 +509,6 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
             memcpy(data, &btotal, sizeof(btotal));
             data += sizeof(btotal);
             break;
-#ifndef NO_LARGE_VOL_SUPPORT
 
         case VOLPBIT_XBFREE :
             xbfree = hton64(xbfree);
@@ -522,7 +521,6 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
             memcpy(data, &xbtotal, sizeof(xbtotal));
             data += sizeof(xbfree);
             break;
-#endif /* ! NO_LARGE_VOL_SUPPORT */
 
         case VOLPBIT_NAME :
             nameoff = data;

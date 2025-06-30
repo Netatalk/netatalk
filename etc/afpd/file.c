@@ -181,8 +181,8 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
     } else {
         uint16_t temp;
 
-        if (aint >
-                UTF8FILELEN_EARLY) { /* FIXME safeguard, anyway if no ascii char it's game over*/
+        /* FIXME safeguard, anyway if no ascii char it's game over */
+        if (aint > UTF8FILELEN_EARLY) {
             aint = UTF8FILELEN_EARLY;
         }
 

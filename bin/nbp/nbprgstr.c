@@ -13,7 +13,6 @@
 #include <sys/types.h>
 #include <sys/param.h>
 
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/netddp.h>
 #include <atalk/nbp.h>

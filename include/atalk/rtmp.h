@@ -24,25 +24,24 @@
 #ifndef _ATALK_RTMP_H
 #define _ATALK_RTMP_H 1
 
-
-#include <netatalk/endian.h>
+#include <stdint.h>
 
 #define RTMPROP_REQUEST	1
 #define RTMPROP_RDR 2
 #define RTMPROP_RDR_NOSH 3
 
 struct rtmpent {
-    u_int16_t   re_net;
-    u_int8_t    re_hops;
+    uint16_t   re_net;
+    uint8_t    re_hops;
 };
 
 #define RTMPHOPS_MAX	15
 #define RTMPHOPS_POISON	31
 
 struct rtmprdhdr {
-    u_int16_t   rrdh_snet;
-    u_int8_t    rrdh_idlen;
-    u_int8_t    rrdh_id;
+    uint16_t   rrdh_snet;
+    uint8_t    rrdh_idlen;
+    uint8_t    rrdh_id;
 };
 
 #endif

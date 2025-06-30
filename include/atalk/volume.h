@@ -43,9 +43,8 @@ struct vol {
     /* flags for convert_charset in mtoupath */
     uint16_t        v_mtou_flags;
     uint16_t        v_utom_flags;
-    /* mac charset encoding in network order
-     * FIXME: should be a u_int32_t ? */
-    long            v_kTextEncoding;
+    /* mac charset encoding in network order */
+    uint32_t        v_kTextEncoding;
     size_t          max_filename;
     char            *v_veto;
     /* adouble format: v1, v2, sfm ... */

@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 #include <atalk/ddp.h>

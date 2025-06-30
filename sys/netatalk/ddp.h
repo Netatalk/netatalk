@@ -40,7 +40,7 @@
 #ifndef _NETATALK_DDP_H
 #define _NETATALK_DDP_H 1
 
-#include <netatalk/endian.h>
+#include "endian.h"
 
 struct elaphdr {
     unsigned char	el_dnode;

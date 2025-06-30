@@ -4,9 +4,9 @@
 
 #ifndef NO_DDP
 
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
 #include <atalk/util.h>
 #include <ctype.h>
 
@@ -30,7 +30,7 @@
 
 int atalk_aton(char *cp, struct at_addr *addr)
 {
-    u_int32_t val, base, n;
+    uint32_t val, base, n;
     char c;
     val = 0;
     base = 10;

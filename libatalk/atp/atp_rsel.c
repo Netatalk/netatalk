@@ -7,14 +7,14 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <string.h>
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/uio.h>
-#include <signal.h>
 #include <errno.h>
+#include <signal.h>
+#include <string.h>
 
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 
 #include <atalk/netddp.h>
