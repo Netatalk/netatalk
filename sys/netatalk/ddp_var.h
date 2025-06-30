@@ -6,8 +6,6 @@
 #ifndef _NETATALK_DDP_VAR_H
 #define _NETATALK_DDP_VAR_H 1
 
-#include <netatalk/endian.h>
-
 struct ddpcb {
     struct sockaddr_at	ddp_fsat, ddp_lsat;
     struct route	ddp_route;

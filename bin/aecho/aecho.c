@@ -41,7 +41,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 #include <atalk/compat.h>
 #include <atalk/aep.h>

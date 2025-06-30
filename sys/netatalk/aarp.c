@@ -25,7 +25,6 @@
 #include "at_var.h"
 #include "aarp.h"
 #include "ddp_var.h"
-#include "endian.h"
 #include "phase2.h"
 
 #ifdef GATEWAY

@@ -17,7 +17,6 @@
 #include <sys/param.h>
 #include <net/if.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
 #include <atalk/util.h>
 #include <assert.h>
 #include <stdio.h>

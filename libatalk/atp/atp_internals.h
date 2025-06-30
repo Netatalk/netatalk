@@ -25,9 +25,7 @@
 #define ATP_INTERNALS_H 1
 
 #include <sys/types.h>
-#include <sys/types.h>
 #include <netatalk/at.h>
-#include <netatalk/endian.h>
 #include <atalk/atp.h>
 
 /*

@@ -17,7 +17,6 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 #include <net/route.h>
-#include <netatalk/endian.h>
 #include <netatalk/at.h>
 
 #ifdef __svr4__

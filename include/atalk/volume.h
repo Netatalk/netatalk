@@ -44,7 +44,7 @@ struct vol {
     uint16_t        v_mtou_flags;
     uint16_t        v_utom_flags;
     /* mac charset encoding in network order
-     * FIXME: should be a u_int32_t ? */
+     * FIXME: should be a uint32_t ? */
     long            v_kTextEncoding;
     size_t          max_filename;
     char            *v_veto;
