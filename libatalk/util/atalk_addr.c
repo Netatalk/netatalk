@@ -4,6 +4,7 @@
 
 #ifndef NO_DDP
 
+#include <arpa/inet.h>
 #include <sys/types.h>
 #include <netatalk/at.h>
 #include <atalk/util.h>
