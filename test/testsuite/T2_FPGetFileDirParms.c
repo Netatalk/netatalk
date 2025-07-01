@@ -819,24 +819,11 @@ STATIC void test336()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap);
-#if 0
 
-    /* for afp3 it's not valid mangled filename
-     * changed
-    */
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     ret = FPCreateDir(Conn, vol, dir, temp);
 
     if (!ret || ret != get_did(Conn, vol, dir, temp)) {
