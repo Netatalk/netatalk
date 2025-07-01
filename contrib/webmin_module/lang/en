@@ -22,7 +22,7 @@ delete_failed=Could not delete file
 not_valid_path=Not Valid Path
 no_path=No Path
 
-index_tab_general=General Settings
+index_tab_general=Advanced Settings
 index_tab_ddp=DDP Services
 index_tab_fileserver=File Sharing Services
 
@@ -281,7 +281,7 @@ show_atalk_zone=Zone
 
 index_delete_atalk_ifs=Delete selected interfaces
 index_no_atalk_ifs=No network interfaces configured
-index_show_atalk_title=Manage network interfaces
+index_show_atalk_title=Manage DDP (AppleTalk) network interfaces
 index_create_atalk=Create new interface
 
 edit_atalk_title=Edit DDP Interface
