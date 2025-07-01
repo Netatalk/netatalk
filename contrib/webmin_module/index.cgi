@@ -28,9 +28,9 @@ our (%config, %in, %text, $module_name);
 &ReadParse();
 
 my @tabs = (
+            ['fileserver', $text{'index_tab_fileserver'}],
             ['general',    $text{'index_tab_general'}],
-            ['ddp',        $text{'index_tab_ddp'}],
-            ['fileserver', $text{'index_tab_fileserver'}]
+            ['ddp',        $text{'index_tab_ddp'}]
 );
 
 my $defaulttab = 'fileserver';
@@ -54,12 +54,103 @@ if ($@) {
     exit;
 }
 
-print &ui_tabs_start(\@tabs, 'mode', $defaulttab);
-print &ui_tabs_start_tab('mode', 'general');
-
 # since we are using a different number of forms, depending on the status of the service,
 # we are keeping a running index while outputting the forms
 my $current_formindex = 0;
+
+print &ui_tabs_start(\@tabs, 'mode', $defaulttab);
+
+print &ui_tabs_start_tab('mode', 'fileserver');
+
+# Volumes
+print "<h3>$text{index_volumes}</h3>\n";
+my @volume_links = ("<a href=\"edit_vol_section.cgi?action=new_volume\">$text{'index_create_volume_link_name'}</a>");
+if (@{$$afpconf{volumeSections}}) {
+    unshift @volume_links, (
+                            &select_all_link('section_index', $current_formindex),
+                            &select_invert_link('section_index', $current_formindex)
+    ) if (@{$$afpconf{volumeSections}} > 1);
+    print &ui_form_start('delete_sections.cgi?tab=fileserver', 'post', undef, "id='volumes'");
+    print &ui_columns_start(
+                            [
+                             '',
+                             $text{'index_col_title_vol_name'},
+                             $text{'index_col_title_path'},
+                             $text{'index_col_title_uses_preset'}
+                            ],
+                            undef,
+                            0,
+                            undef,
+                            undef
+    );
+    foreach my $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumeSections}}) {
+        print &ui_columns_row(
+            [
+                &ui_checkbox('section_index', $$volumeSection{'index'}),
+"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{parameters}{'volume name'}{value}</b></a>",
+                $$volumeSection{parameters}{'path'}{value},
+                $$volumeSection{parameters}{'vol preset'}{value}
+            ],
+            ["width='20'"]
+        );
+    }
+    print &ui_columns_end();
+    print &ui_links_row(\@volume_links);
+    print &ui_form_end([[undef, $text{'index_delete_volumes_button_title'}, 0, undef]]);
+    $current_formindex += 1;
+} else {
+    print "<b>$text{'index_no_volumes'}</b>\n";
+    print "<p>\n";
+    print &ui_links_row(\@volume_links);
+}
+
+if (!$config{hide_service_controls}) {
+    print &ui_hr();
+    print "<h3>$text{'index_filesharing_services'}</h3>\n";
+
+    # Process control Buttons
+    if (&find_byname($config{'netatalk_d'})) {
+        print &ui_buttons_start();
+        print &ui_buttons_row(
+                              'control.cgi?action=restart&daemon=' . basename($config{netatalk_d}),
+                              $text{'running_restart'},
+                              &text('index_process_control_restart_daemon', basename($config{netatalk_d}))
+        );
+        print &ui_buttons_row(
+                              'control.cgi?action=stop&daemon=' . basename($config{netatalk_d}),
+                              $text{'running_stop'},
+                              &text('index_process_control_stop_daemon', basename($config{netatalk_d}))
+        );
+        print &ui_buttons_end();
+        $current_formindex += 2;
+    } else {
+        print &ui_buttons_start();
+        print &ui_buttons_row(
+                              'control.cgi?action=start&daemon=' . basename($config{netatalk_d}),
+                              $text{'running_start'},
+                              &text('index_process_control_start_daemon', basename($config{netatalk_d}))
+        );
+        print &ui_buttons_end();
+        $current_formindex += 1;
+    }
+
+    my @links_f = (
+                   "server_status.cgi",
+                   "show_users.cgi"
+    );
+    my @titles_f = (
+                    $text{'index_icon_text_capabilities'},
+                    $text{'index_icon_text_users'}
+    );
+    my @icons_f = (
+                   "images/inspect.gif",
+                   "images/users.gif"
+    );
+    icons_table(\@links_f, \@titles_f, \@icons_f);
+}
+
+print &ui_tabs_end_tab('mode', 'fileserver');
+print &ui_tabs_start_tab('mode', 'general');
 
 # Volume presets
 print "<h3>$text{index_volume_presets}</h3>\n";
@@ -145,18 +236,15 @@ print "<h3>$text{index_global}</h3>\n";
 
 my @links_g = (
                "edit_global_section.cgi",
-               "edit_extmap.cgi",
-               "edit_print.cgi"
+               "edit_extmap.cgi"
 );
 my @titles_g = (
                 $text{'index_icon_text_server'},
-                $text{'index_icon_text_extmap'},
-                $text{'index_icon_text_print'}
+                $text{'index_icon_text_extmap'}
 );
 my @icons_g = (
                "images/server.gif",
                "images/digest.gif",
-               "images/printer.gif"
 );
 icons_table(\@links_g, \@titles_g, \@icons_g);
 
@@ -265,96 +353,17 @@ if (!$config{hide_service_controls}) {
     }
 }
 
+my @links_d = (
+               "edit_print.cgi"
+);
+my @titles_d = (
+                $text{'index_icon_text_print'}
+);
+my @icons_d = (
+               "images/printer.gif"
+);
+icons_table(\@links_d, \@titles_d, \@icons_d);
+
 print &ui_tabs_end_tab('mode', 'ddp');
 
-print &ui_tabs_start_tab('mode', 'fileserver');
-
-# Volumes
-print "<h3>$text{index_volumes}</h3>\n";
-my @volume_links = ("<a href=\"edit_vol_section.cgi?action=new_volume\">$text{'index_create_volume_link_name'}</a>");
-if (@{$$afpconf{volumeSections}}) {
-    unshift @volume_links, (
-                            &select_all_link('section_index', $current_formindex),
-                            &select_invert_link('section_index', $current_formindex)
-    ) if (@{$$afpconf{volumeSections}} > 1);
-    print &ui_form_start('delete_sections.cgi?tab=fileserver', 'post', undef, "id='volumes'");
-    print &ui_columns_start(
-                            [
-                             '',
-                             $text{'index_col_title_vol_name'},
-                             $text{'index_col_title_path'},
-                             $text{'index_col_title_uses_preset'}
-                            ],
-                            undef,
-                            0,
-                            undef,
-                            undef
-    );
-    foreach my $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumeSections}}) {
-        print &ui_columns_row(
-            [
-                &ui_checkbox('section_index', $$volumeSection{'index'}),
-"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{parameters}{'volume name'}{value}</b></a>",
-                $$volumeSection{parameters}{'path'}{value},
-                $$volumeSection{parameters}{'vol preset'}{value}
-            ],
-            ["width='20'"]
-        );
-    }
-    print &ui_columns_end();
-    print &ui_links_row(\@volume_links);
-    print &ui_form_end([[undef, $text{'index_delete_volumes_button_title'}, 0, undef]]);
-    $current_formindex += 1;
-} else {
-    print "<b>$text{'index_no_volumes'}</b>\n";
-    print "<p>\n";
-    print &ui_links_row(\@volume_links);
-}
-
-if (!$config{hide_service_controls}) {
-    print &ui_hr();
-    print "<h3>$text{'index_filesharing_services'}</h3>\n";
-
-    # Process control Buttons
-    if (&find_byname($config{'netatalk_d'})) {
-        print &ui_buttons_start();
-        print &ui_buttons_row(
-                              'control.cgi?action=restart&daemon=' . basename($config{netatalk_d}),
-                              $text{'running_restart'},
-                              &text('index_process_control_restart_daemon', basename($config{netatalk_d}))
-        );
-        print &ui_buttons_row(
-                              'control.cgi?action=stop&daemon=' . basename($config{netatalk_d}),
-                              $text{'running_stop'},
-                              &text('index_process_control_stop_daemon', basename($config{netatalk_d}))
-        );
-        print &ui_buttons_end();
-        $current_formindex += 2;
-    } else {
-        print &ui_buttons_start();
-        print &ui_buttons_row(
-                              'control.cgi?action=start&daemon=' . basename($config{netatalk_d}),
-                              $text{'running_start'},
-                              &text('index_process_control_start_daemon', basename($config{netatalk_d}))
-        );
-        print &ui_buttons_end();
-        $current_formindex += 1;
-    }
-
-    my @links_f = (
-                   "server_status.cgi",
-                   "show_users.cgi"
-    );
-    my @titles_f = (
-                    $text{'index_icon_text_capabilities'},
-                    $text{'index_icon_text_users'}
-    );
-    my @icons_f = (
-                   "images/inspect.gif",
-                   "images/users.gif"
-    );
-    icons_table(\@links_f, \@titles_f, \@icons_f);
-}
-
-print &ui_tabs_end_tab('mode', 'fileserver');
 print &ui_tabs_end();
