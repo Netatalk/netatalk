@@ -464,6 +464,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
@@ -618,6 +619,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
