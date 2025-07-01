@@ -162,17 +162,6 @@ void dump_header(DSI *dsi);
 char *afp_error(int error);
 const char *AfpNum2name(int num);
 
-#define FILPBIT_EXTDFLEN 11
-#define FILPBIT_PDINFO   13    /* ProDOS Info/ UTF8 name */
-#define FILPBIT_EXTRFLEN 14
-
-#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open */
-#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open */
-#define ATTRBIT_NOWRITE   (1<<5)  /* write inhibit(v2)/read-only(v1) bit */
-#define ATTRBIT_NORENAME  (1<<7)  /* rename inhibit (d) */
-#define ATTRBIT_NODELETE  (1<<8)  /* delete inhibit (d) */
-#define ATTRBIT_SETCLR    (1<<15) /* set/clear bits (d) */
-
 extern CONN *Conn, *Conn2;
 
 extern char Data[];
