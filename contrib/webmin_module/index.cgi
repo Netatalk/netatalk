@@ -236,15 +236,18 @@ print "<h3>$text{index_global}</h3>\n";
 
 my @links_g = (
                "edit_global_section.cgi",
-               "edit_extmap.cgi"
+               "edit_extmap.cgi",
+               "rebuild_db.cgi"
 );
 my @titles_g = (
                 $text{'index_icon_text_server'},
-                $text{'index_icon_text_extmap'}
+                $text{'index_icon_text_extmap'},
+                $text{'index_icon_text_rebuild'}
 );
 my @icons_g = (
                "images/server.gif",
                "images/digest.gif",
+               "images/options.gif",
 );
 icons_table(\@links_g, \@titles_g, \@icons_g);
 
@@ -353,15 +356,9 @@ if (!$config{hide_service_controls}) {
     }
 }
 
-my @links_d = (
-               "edit_print.cgi"
-);
-my @titles_d = (
-                $text{'index_icon_text_print'}
-);
-my @icons_d = (
-               "images/printer.gif"
-);
+my @links_d  = ("edit_print.cgi");
+my @titles_d = ($text{'index_icon_text_print'});
+my @icons_d  = ("images/printer.gif");
 icons_table(\@links_d, \@titles_d, \@icons_d);
 
 print &ui_tabs_end_tab('mode', 'ddp');

@@ -12,6 +12,7 @@ webmin_files = [
     'index.cgi',
     'netatalk-lib.pl',
     'README.md',
+    'rebuild_db.cgi',
     'save_atalk.cgi',
     'save_extmap.cgi',
     'save_global_section.cgi',
