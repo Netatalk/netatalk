@@ -73,6 +73,7 @@ index_value_not_set=<i>not set</i>
 
 index_icon_text_server=File Server Options
 index_icon_text_extmap=File Server Extension Mapping
+index_icon_text_rebuild=CNID Database Maintenance
 index_icon_text_print=Print Server Configuration
 index_icon_text_users=Manage Connected Users
 index_icon_text_capabilities=Show Server Status
@@ -317,3 +318,11 @@ users_button_disconnect=Disconnect
 server_status_title=Server Status
 server_status_message=The local AFP-over-TCP server reports the following capabilities
 server_status_error=No response from the AFP server. Is netatalk running?
+
+rebuild_db_button_rebuild=Rebuild database
+rebuild_db_button_status=Scan database
+rebuild_db_command=Command:
+rebuild_db_command_help=Rebuild the CNID database for the specified volume. This will remove all existing CNID entries and rebuild them from the filesystem.
+rebuild_db_command_rebuild_success=CNID database was rebuilt
+rebuild_db_command_scan_success=No issues found in CNID database
+rebuild_db_command_failed=Command failed with: $1
