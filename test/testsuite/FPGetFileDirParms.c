@@ -658,7 +658,6 @@ STATIC void test324()
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -674,9 +673,7 @@ STATIC void test324()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
@@ -688,41 +685,15 @@ STATIC void test324()
         test_nottested();
     }
 
-#if 0
-    else {
-        filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-        result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
-
-        if (strcmp(result, name)) {
-            test_failed();
-        }
-    }
-
-#endif
     sprintf(temp1, "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it was not valid mangled filename
-     * Updated 2004-07-12
-     * we changed mangled handling, now it's a valid filename for AFP3.x.
-    */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("FPGetFileDirParms:test324: long file name >31 bytes");
@@ -762,23 +733,10 @@ STATIC void test326()
         goto test_exit;
     }
 
-#if 0
-    else {
-        filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-        result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
-
-        if (strcmp(result, name)) {
-            test_failed();
-        }
-    }
-
-#endif
     sprintf(temp1, "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
     ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
     if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
@@ -798,7 +756,6 @@ STATIC void test333()
     uint16_t vol = VolID;
     DSI *dsi;
     uint16_t bitmap = 0;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -815,9 +772,7 @@ STATIC void test333()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
@@ -833,29 +788,17 @@ STATIC void test333()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     sprintf(temp1, "#0%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
-    if (!ret) {
+    if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
@@ -871,7 +814,6 @@ STATIC void test334()
     uint16_t vol = VolID;
     DSI *dsi;
     uint16_t bitmap = 0;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -887,9 +829,7 @@ STATIC void test334()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
@@ -905,29 +845,17 @@ STATIC void test334()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     sprintf(temp1, "#%X.", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
-    if (!ret) {
+    if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
@@ -945,7 +873,6 @@ STATIC void test335()
     DSI *dsi;
     unsigned int  dir;
     uint16_t bitmap = 0;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -968,9 +895,7 @@ STATIC void test335()
         goto test_exit;
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto fin;
     }
@@ -986,25 +911,12 @@ STATIC void test335()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
-    ret = FPCreateFile(Conn, vol, 0, dir, temp);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, dir, temp)) {
         test_failed();
     }
 
