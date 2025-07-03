@@ -1261,6 +1261,67 @@ test_exit:
     exit_test("FPGetFileDirParms:test440: ProDOS Info Bit for legacy clients");
 }
 
+STATIC void test441()
+{
+    char *name_appl = "pdinfo_appl";
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    const unsigned char *buf;
+    uint8_t prodos_type;
+    uint16_t prodos_aux;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name_appl);
+
+    /* Get current FinderInfo */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name_appl, bitmap_finfo, 0)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+        goto test_exit;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    /* Set type to "APPL" and creator to "TEST" - an invalid combination */
+    memcpy(filedir.finder_info, "APPLTEST", 8);
+
+    /* Set FinderInfo via AFP */
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name_appl, bitmap_finfo,
+                        &filedir)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+        goto test_exit;
+    }
+
+    /* Now get ProDOS Info Bit */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name_appl, bitmap_pdinfo, 0)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+        goto test_exit;
+    }
+
+    buf = dsi->data + ofs;
+    prodos_type = buf[0];
+    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+
+    if (prodos_type != 0x00 || prodos_aux != 0x0000) {
+        test_failed();
+    }
+
+    FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+test_exit:
+    exit_test("FPGetFileDirParms:test441: APPL/TEST returns ProDOS $00/$0000");
+}
+
 /* ----------- */
 void FPGetFileDirParms_test()
 {
@@ -1286,4 +1347,5 @@ void FPGetFileDirParms_test()
     test396();
     test423();
     test440();
+    test441();
 }
