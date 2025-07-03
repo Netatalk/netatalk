@@ -501,6 +501,135 @@ test_exit:
     exit_test("FPSetFileParms:test430: set creation date on symlink");
 }
 
+STATIC void test433()
+{
+    char *name = "pdinfo_text";
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    uint8_t prodos_type = 0x50;
+    uint16_t prodos_aux = 0x5445;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
+
+    /* Get current ProDOS Info */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
+    /* Set ProDOS Info Bit using pdinfo member */
+    filedir.pdinfo[0] = prodos_type;
+    filedir.pdinfo[1] = 0x00;
+    filedir.pdinfo[2] = (prodos_aux >> 8) & 0xFF;
+    filedir.pdinfo[3] = prodos_aux & 0xFF;
+    filedir.pdinfo[4] = 0x00;
+    filedir.pdinfo[5] = 0x00;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    /* Now get FinderInfo and verify type/creator mapping */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+
+    if (memcmp(filedir.finder_info, "pPTEpdos", 8) != 0) {
+        if (!Quiet) {
+            fprintf(stdout, "Mac creator/type needs to be pPTEpdos, was %s\n",
+                    filedir.finder_info);
+        }
+
+        test_failed();
+    }
+
+fin:
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+test_exit:
+    exit_test("FPSetFileParms:test433: set ProDOS type/aux, verify Mac pPTE/pdos mapping");
+}
+
+STATIC void test434()
+{
+    char *name = "pdinfo_text";
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    uint8_t prodos_type = 0x04;
+    uint16_t prodos_aux = 0x0000;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
+
+    /* Get current ProDOS Info */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
+    /* Set ProDOS Info Bit using pdinfo member */
+    filedir.pdinfo[0] = prodos_type;
+    filedir.pdinfo[1] = 0x00;
+    filedir.pdinfo[2] = (prodos_aux >> 8) & 0xFF;
+    filedir.pdinfo[3] = prodos_aux & 0xFF;
+    filedir.pdinfo[4] = 0x00;
+    filedir.pdinfo[5] = 0x00;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    /* Now get FinderInfo and verify type/creator mapping */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+
+    if (memcmp(filedir.finder_info, "TEXTpdos", 8) != 0) {
+        if (!Quiet) {
+            fprintf(stdout, "Mac creator/type needs to be TEXTpdos, was %s\n",
+                    filedir.finder_info);
+        }
+
+        test_failed();
+    }
+
+fin:
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+test_exit:
+    exit_test("FPSetFileParms:test434: set ProDOS $04/$0000, verify Mac TEXT/pdos mapping");
+}
 
 /* ----------- */
 void FPSetFileParms_test()
@@ -515,4 +644,6 @@ void FPSetFileParms_test()
     test428();
     test429();
     test430();
+    test433();
+    test434();
 }
