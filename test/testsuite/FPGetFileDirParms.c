@@ -1322,6 +1322,51 @@ test_exit:
     exit_test("FPGetFileDirParms:test441: APPL/TEST returns ProDOS $00/$0000");
 }
 
+STATIC void test442()
+{
+    char *dirname = "pdinfo_dir";
+    uint16_t vol = VolID;
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    const DSI *dsi = &Conn->dsi;
+    const unsigned char *buf;
+    uint8_t prodos_type;
+    uint16_t prodos_aux;
+    int dir;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dirname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /* Get ProDOS Info Bit for the directory */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, dirname, 0, bitmap_pdinfo)) {
+        test_failed();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, dirname))
+        goto test_exit;
+    }
+
+    buf = dsi->data + ofs;
+    prodos_type = buf[0];
+    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+
+    if (prodos_type != 0x0F || prodos_aux != 0x0200) {
+        test_failed();
+    }
+
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, dirname))
+test_exit:
+    exit_test("FPGetFileDirParms:test442: directory returns ProDOS $0F/$0200");
+}
+
 /* ----------- */
 void FPGetFileDirParms_test()
 {
@@ -1348,4 +1393,5 @@ void FPGetFileDirParms_test()
     test423();
     test440();
     test441();
+    test442();
 }
