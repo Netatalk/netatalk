@@ -510,8 +510,6 @@ STATIC void test433()
     int ofs = 3 * sizeof(uint16_t);
     DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
-    uint8_t prodos_type = 0x50;
-    uint16_t prodos_aux = 0x5445;
     ENTER_TEST
 
     if (Conn->afp_version >= 30) {
@@ -521,20 +519,35 @@ STATIC void test433()
 
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
-    /* Get current ProDOS Info */
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, 0)) {
+    /* Get current FinderInfo */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    /* Overwrite the first 4 bytes with an arbitrary type */
+    memcpy(filedir.finder_info, "BINA", 4);
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, &filedir)) {
         test_failed();
         goto fin;
     }
 
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
-    /* Set ProDOS Info Bit using pdinfo member */
-    filedir.pdinfo[0] = prodos_type;
+    /* ProDOS type */
+    filedir.pdinfo[0] = 0x50;
+    /* Unused bytes */
     filedir.pdinfo[1] = 0x00;
-    filedir.pdinfo[2] = (prodos_aux >> 8) & 0xFF;
-    filedir.pdinfo[3] = prodos_aux & 0xFF;
+    /* High byte of prodos_aux */
+    filedir.pdinfo[2] = 0x54;
+    /* Low byte of prodos_aux */
+    filedir.pdinfo[3] = 0x45;
+    /* Unused bytes */
     filedir.pdinfo[4] = 0x00;
+    /* Unused bytes */
     filedir.pdinfo[5] = 0x00;
 
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, &filedir)) {
@@ -553,8 +566,14 @@ STATIC void test433()
 
     if (memcmp(filedir.finder_info, "pPTEpdos", 8) != 0) {
         if (!Quiet) {
-            fprintf(stdout, "Mac creator/type needs to be pPTEpdos, was %s\n",
+            fprintf(stdout, "Mac creator/type needs to be pPTEpdos, was: %.8s - ",
                     filedir.finder_info);
+
+            for (int i = 0; i < 8; i++) {
+                fprintf(stdout, "%02x ", (unsigned char)filedir.finder_info[i]);
+            }
+
+            fprintf(stdout, "\n");
         }
 
         test_failed();
@@ -575,8 +594,6 @@ STATIC void test434()
     int ofs = 3 * sizeof(uint16_t);
     DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
-    uint8_t prodos_type = 0x04;
-    uint16_t prodos_aux = 0x0000;
     ENTER_TEST
 
     if (Conn->afp_version >= 30) {
@@ -586,20 +603,35 @@ STATIC void test434()
 
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
-    /* Get current ProDOS Info */
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, 0)) {
+    /* Get current FinderInfo */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    /* Overwrite the first 4 bytes with an arbitrary type */
+    memcpy(filedir.finder_info, "BINA", 4);
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, &filedir)) {
         test_failed();
         goto fin;
     }
 
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
-    /* Set ProDOS Info Bit using pdinfo member */
-    filedir.pdinfo[0] = prodos_type;
+    /* ProDOS type */
+    filedir.pdinfo[0] = 0x04;
+    /* Unused bytes */
     filedir.pdinfo[1] = 0x00;
-    filedir.pdinfo[2] = (prodos_aux >> 8) & 0xFF;
-    filedir.pdinfo[3] = prodos_aux & 0xFF;
+    /* High byte of prodos_aux */
+    filedir.pdinfo[2] = 0x00;
+    /* Low byte of prodos_aux */
+    filedir.pdinfo[3] = 0x00;
+    /* Unused bytes */
     filedir.pdinfo[4] = 0x00;
+    /* Unused bytes */
     filedir.pdinfo[5] = 0x00;
 
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, &filedir)) {
@@ -618,8 +650,14 @@ STATIC void test434()
 
     if (memcmp(filedir.finder_info, "TEXTpdos", 8) != 0) {
         if (!Quiet) {
-            fprintf(stdout, "Mac creator/type needs to be TEXTpdos, was %s\n",
+            fprintf(stdout, "Mac creator/type needs to be TEXTpdos, was: %.8s - ",
                     filedir.finder_info);
+
+            for (int i = 0; i < 8; i++) {
+                fprintf(stdout, "%02x ", (unsigned char)filedir.finder_info[i]);
+            }
+
+            fprintf(stdout, "\n");
         }
 
         test_failed();
