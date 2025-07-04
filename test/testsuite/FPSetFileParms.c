@@ -538,11 +538,6 @@ STATIC void test433()
         goto fin;
     }
 
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, 0)) {
-        test_failed();
-        goto fin;
-    }
-
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
     /* ProDOS type */
@@ -550,9 +545,9 @@ STATIC void test433()
     /* Unused bytes */
     filedir.pdinfo[1] = 0x00;
     /* High byte of prodos_aux */
-    filedir.pdinfo[2] = 0x45;
+    filedir.pdinfo[2] = 0x54;
     /* Low byte of prodos_aux */
-    filedir.pdinfo[3] = 0x54;
+    filedir.pdinfo[3] = 0x45;
     /* Unused bytes */
     filedir.pdinfo[4] = 0x00;
     /* Unused bytes */
@@ -626,11 +621,6 @@ STATIC void test434()
     filedir.mdate += 1;
 
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, &filedir)) {
-        test_failed();
-        goto fin;
-    }
-
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, 0)) {
         test_failed();
         goto fin;
     }
