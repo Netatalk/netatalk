@@ -507,6 +507,8 @@ STATIC void test433()
     uint16_t vol = VolID;
     uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
     uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    uint16_t bitmap_date = (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
+                           (1 << FILPBIT_MDATE);
     int ofs = 3 * sizeof(uint16_t);
     DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
@@ -519,8 +521,24 @@ STATIC void test433()
 
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
-    filedir.isdir = 0;
+    /* Update the date of the file to ensure AppleDouble is created */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, 0)) {
+        test_failed();
+        goto fin;
+    }
 
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_date, 0);
+    filedir.cdate += 1;
+    filedir.bdate += 1;
+    filedir.mdate += 1;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
     /* ProDOS type */
     filedir.pdinfo[0] = 0x50;
@@ -576,6 +594,8 @@ STATIC void test434()
     uint16_t vol = VolID;
     uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
     uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    uint16_t bitmap_date = (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
+                           (1 << FILPBIT_MDATE);
     int ofs = 3 * sizeof(uint16_t);
     DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
@@ -587,6 +607,23 @@ STATIC void test434()
     }
 
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
+
+    /* Update the date of the file to ensure AppleDouble is created */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_date, 0);
+    filedir.cdate += 1;
+    filedir.bdate += 1;
+    filedir.mdate += 1;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, &filedir)) {
+        test_failed();
+        goto fin;
+    }
 
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
