@@ -1239,23 +1239,32 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
             break;
 
         case FILPBIT_PDINFO: /* utf8 name */
-            memcpy(filedir->pdinfo, b, sizeof(filedir->pdinfo));
-            /* blindly try utf8 name */
-            memcpy(&i, b, sizeof(i));
-            i = ntohs(i);
 
-            if (i != 0) {
-                memcpy(&j, beg + i + 4, sizeof(j));
-                j = ntohs(j);
+            /* For AFP < 3.0, PDINFO is always a 6-byte ProDOS info field.
+                For AFP >= 3.0, it may be a UTF-8 name offset structure. */
+            if (Conn->afp_version < 30) {
+                memcpy(filedir->pdinfo, b, 6);
+                b += 6;
+            } else {
+                memcpy(filedir->pdinfo, b, sizeof(filedir->pdinfo));
+                /* blindly try utf8 name */
+                memcpy(&i, b, sizeof(i));
+                i = ntohs(i);
 
-                /* hack */
-                if (j && j < 512 && (filedir->utf8_name = fp_malloc(j + 1))) {
-                    memcpy(filedir->utf8_name, beg + i + 6, j);
-                    filedir->utf8_name[j] = 0;
+                if (i != 0) {
+                    memcpy(&j, beg + i + 4, sizeof(j));
+                    j = ntohs(j);
+
+                    /* hack */
+                    if (j && j < 512 && (filedir->utf8_name = fp_malloc(j + 1))) {
+                        memcpy(filedir->utf8_name, beg + i + 6, j);
+                        filedir->utf8_name[j] = 0;
+                    }
                 }
+
+                b += sizeof(filedir->pdinfo);
             }
 
-            b += sizeof(filedir->pdinfo);
             break;
 
         case FILPBIT_UNIXPR:
