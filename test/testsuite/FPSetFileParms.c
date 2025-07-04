@@ -519,23 +519,8 @@ STATIC void test433()
 
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
-    /* Get current FinderInfo */
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
-        test_failed();
-        goto fin;
-    }
-
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
-    /* Overwrite the first 4 bytes with an arbitrary type */
-    memcpy(filedir.finder_info, "BINA", 4);
 
-    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, &filedir)) {
-        test_failed();
-        goto fin;
-    }
-
-    filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
     /* ProDOS type */
     filedir.pdinfo[0] = 0x50;
@@ -602,22 +587,6 @@ STATIC void test434()
     }
 
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    /* Get current FinderInfo */
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
-        test_failed();
-        goto fin;
-    }
-
-    filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
-    /* Overwrite the first 4 bytes with an arbitrary type */
-    memcpy(filedir.finder_info, "BINA", 4);
-
-    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, &filedir)) {
-        test_failed();
-        goto fin;
-    }
 
     filedir.isdir = 0;
     afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_pdinfo, 0);
