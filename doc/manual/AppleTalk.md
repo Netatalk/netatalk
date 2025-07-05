@@ -20,11 +20,9 @@ PAP, and ASP, while expecting the host OS kernel to supply DDP.
   in Netatalk's *libatalk* shared library.
 
 - The **atalkd** daemon implements RTMP, ZIP, and AEP.
-  It is the AppleTalk equivalent of Unix **routed**.
 
-- The **papd** daemon allows Macs to spool to **lpd**,
-  while the **pap** application allows Unix machines to print to
-  AppleTalk connected printers.
+- The **papd** daemon implements PAP, allowing Mac clients to spool
+  to a Unix print spooler on the netatalk host computer.
 
 A diagram of the network stack can be found inside the [developer
 readme](/developer.html), while the latest information about DDP support
