@@ -1,0 +1,103 @@
+policy_module(netatalk, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+type netatalk_t;
+type netatalk_exec_t;
+init_daemon_domain(netatalk_t, netatalk_exec_t)
+
+# Ensure proper entrypoint
+allow netatalk_t netatalk_exec_t:file entrypoint;
+
+# Allow netatalk to execute and transition to its child daemons
+# This handles the forking structure: netatalk -> afpd, cnid_metad -> cnid_dbd
+allow netatalk_t netatalk_exec_t:file execute;
+domtrans_pattern(netatalk_t, netatalk_exec_t, netatalk_t)
+
+# Configuration files
+type netatalk_etc_t;
+files_config_file(netatalk_etc_t)
+
+# Variable library files
+type netatalk_var_lib_t;
+files_type(netatalk_var_lib_t)
+
+# Lock files
+type netatalk_lock_t;
+files_lock_file(netatalk_lock_t)
+
+# Log files
+type netatalk_log_t;
+logging_log_file(netatalk_log_t)
+
+########################################
+#
+# netatalk local policy
+#
+
+# Basic process and IPC permissions
+allow netatalk_t self:process { fork signal_perms };
+allow netatalk_t self:fifo_file rw_fifo_file_perms;
+allow netatalk_t self:unix_stream_socket create_stream_socket_perms;
+
+# Process management for forking daemons
+allow netatalk_t self:process { setrlimit setpgid setsched };
+
+# Allow netatalk to bind to privileged ports
+allow netatalk_t self:capability net_bind_service;
+
+# Socket permissions
+allow netatalk_t self:netlink_route_socket { bind create getattr nlmsg_read };
+allow netatalk_t self:tcp_socket { bind create ioctl listen setopt };
+allow netatalk_t self:udp_socket { connect create getattr };
+allow netatalk_t self:unix_dgram_socket { connect create };
+
+# Core command execution and binary mapping
+corecmd_exec_bin(netatalk_t)
+corecmd_exec_shell(netatalk_t)
+corecmd_mmap_bin_files(netatalk_t)
+
+# Network binding permissions
+corenet_tcp_bind_dhcpd_port(netatalk_t)
+corenet_tcp_bind_generic_node(netatalk_t)
+corenet_tcp_bind_generic_port(netatalk_t)
+corenet_udp_bind_generic_node(netatalk_t)
+corenet_udp_bind_generic_port(netatalk_t)
+
+# D-Bus communication
+dbus_read_pid_sock_files(netatalk_t)
+dbus_stream_connect_system_dbusd(netatalk_t)
+dbus_write_pid_sock_files(netatalk_t)
+
+# File and lock management
+files_create_lock_dirs(netatalk_t)
+files_manage_generic_locks(netatalk_t)
+files_rw_var_files(netatalk_t)
+files_search_locks(netatalk_t)
+files_read_etc_files(netatalk_t)
+
+# Kernel communication
+kernel_dgram_send(netatalk_t)
+kernel_read_proc_files(netatalk_t)
+kernel_read_system_state(netatalk_t)
+
+# Logging
+logging_create_devlog_dev(netatalk_t)
+logging_read_syslog_pid(netatalk_t)
+logging_send_syslog_msg(netatalk_t)
+
+# System network configuration
+sysnet_read_config(netatalk_t)
+
+# Interactive and standard daemon permissions
+domain_use_interactive_fds(netatalk_t)
+
+# Allow systemd to transition to netatalk
+init_domtrans_script(netatalk_exec_t)
+
+# Additional permissions that might be needed
+auth_use_nsswitch(netatalk_t)
+miscfiles_read_localization(netatalk_t)
