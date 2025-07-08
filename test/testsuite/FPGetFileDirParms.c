@@ -658,7 +658,6 @@ STATIC void test324()
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -674,9 +673,7 @@ STATIC void test324()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
@@ -688,41 +685,15 @@ STATIC void test324()
         test_nottested();
     }
 
-#if 0
-    else {
-        filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-        result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
-
-        if (strcmp(result, name)) {
-            test_failed();
-        }
-    }
-
-#endif
     sprintf(temp1, "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it was not valid mangled filename
-     * Updated 2004-07-12
-     * we changed mangled handling, now it's a valid filename for AFP3.x.
-    */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("FPGetFileDirParms:test324: long file name >31 bytes");
@@ -762,23 +733,10 @@ STATIC void test326()
         goto test_exit;
     }
 
-#if 0
-    else {
-        filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
-        result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
-
-        if (strcmp(result, name)) {
-            test_failed();
-        }
-    }
-
-#endif
     sprintf(temp1, "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
     ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
     if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
@@ -798,7 +756,6 @@ STATIC void test333()
     uint16_t vol = VolID;
     DSI *dsi;
     uint16_t bitmap = 0;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -815,9 +772,7 @@ STATIC void test333()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
@@ -833,29 +788,17 @@ STATIC void test333()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     sprintf(temp1, "#0%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
-    if (!ret) {
+    if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
@@ -871,7 +814,6 @@ STATIC void test334()
     uint16_t vol = VolID;
     DSI *dsi;
     uint16_t bitmap = 0;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -887,9 +829,7 @@ STATIC void test334()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
@@ -905,29 +845,17 @@ STATIC void test334()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
     sprintf(temp1, "#%X.", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
-    if (!ret) {
+    if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
@@ -945,7 +873,6 @@ STATIC void test335()
     DSI *dsi;
     unsigned int  dir;
     uint16_t bitmap = 0;
-    int ret;
     int id;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -968,9 +895,7 @@ STATIC void test335()
         goto test_exit;
     }
 
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto fin;
     }
@@ -986,25 +911,12 @@ STATIC void test335()
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
     strcat(temp, temp1);
-    /* for afp3 it's not valid mangled filename */
-    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
-#ifdef OLD_MANGLING
 
-    if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
-            || (Conn->afp_version < 30 && ret)) {
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-#else
-
-    if (ret) {
-        test_failed();
-    }
-
-#endif
-    ret = FPCreateFile(Conn, vol, 0, dir, temp);
-
-    if (ret) {
+    if (FPCreateFile(Conn, vol, 0, dir, temp)) {
         test_failed();
     }
 
@@ -1269,6 +1181,192 @@ test_exit:
     exit_test("FPGetFileDirParms:test420: an open file is renamed");
 }
 
+/*
+ * Helper to create a file, set FinderInfo via AFP, and test ProDOS Info Bit
+ */
+static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
+                           uint16_t expect_aux)
+{
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    const unsigned char *buf;
+    uint8_t prodos_type;
+    uint16_t prodos_aux;
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, fname);
+
+    /* Get current FinderInfo */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, fname, bitmap_finfo, 0)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, fname);
+        return;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    /* Overwrite the first 4 bytes with our test type */
+    memcpy(filedir.finder_info, fourcc, 4);
+
+    /* Set FinderInfo via AFP */
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, fname, bitmap_finfo, &filedir)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, fname);
+        return;
+    }
+
+    /* Now get ProDOS Info Bit */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, fname, bitmap_pdinfo, 0)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, fname);
+        return;
+    }
+
+    buf = dsi->data + ofs;
+    prodos_type = buf[0];
+    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+
+    if (prodos_type != expect_type || prodos_aux != expect_aux) {
+        test_failed();
+    }
+
+    FPDelete(Conn, vol, DIRDID_ROOT, fname);
+}
+
+/* ------------------------- */
+STATIC void test440()
+{
+    char *name_text = "pdinfo_text";
+    char *name_bina = "pdinfo_bina";
+    char *name_psys = "pdinfo_psys";
+    char *name_ps16 = "pdinfo_ps16";
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    /* TEXT: type 'TEXT' -> ProDOS type 0x04, aux 0x0000 */
+    do_pdinfo_test(name_text, "TEXT", 0x04, 0x0000);
+    /* BINA: type 'BINA' -> ProDOS type 0x00, aux 0x0000 */
+    do_pdinfo_test(name_bina, "BINA", 0x00, 0x0000);
+    /* PSYS: type 'PSYS' -> ProDOS type 0xff, aux 0x0000 */
+    do_pdinfo_test(name_psys, "PSYS", 0xff, 0x0000);
+    /* PS16: type 'PS16' -> ProDOS type 0xb3, aux 0x0000 */
+    do_pdinfo_test(name_ps16, "PS16", 0xb3, 0x0000);
+test_exit:
+    exit_test("FPGetFileDirParms:test440: ProDOS Info Bit for legacy clients");
+}
+
+STATIC void test441()
+{
+    char *name_appl = "pdinfo_appl";
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    const unsigned char *buf;
+    uint8_t prodos_type;
+    uint16_t prodos_aux;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name_appl);
+
+    /* Get current FinderInfo */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name_appl, bitmap_finfo, 0)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+        goto test_exit;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    /* Set type to "APPL" and creator to "TEST" - an invalid combination */
+    memcpy(filedir.finder_info, "APPLTEST", 8);
+
+    /* Set FinderInfo via AFP */
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name_appl, bitmap_finfo,
+                        &filedir)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+        goto test_exit;
+    }
+
+    /* Now get ProDOS Info Bit */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name_appl, bitmap_pdinfo, 0)) {
+        test_failed();
+        FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+        goto test_exit;
+    }
+
+    buf = dsi->data + ofs;
+    prodos_type = buf[0];
+    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+
+    if (prodos_type != 0x00 || prodos_aux != 0x0000) {
+        test_failed();
+    }
+
+    FPDelete(Conn, vol, DIRDID_ROOT, name_appl);
+test_exit:
+    exit_test("FPGetFileDirParms:test441: APPL/TEST returns ProDOS $00/$0000");
+}
+
+STATIC void test442()
+{
+    char *dirname = "pdinfo_dir";
+    uint16_t vol = VolID;
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    int ofs = 3 * sizeof(uint16_t);
+    const DSI *dsi = &Conn->dsi;
+    const unsigned char *buf;
+    uint8_t prodos_type;
+    uint16_t prodos_aux;
+    int dir;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dirname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /* Get ProDOS Info Bit for the directory */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, dirname, 0, bitmap_pdinfo)) {
+        test_failed();
+        FAIL(FPDelete(Conn, vol, DIRDID_ROOT, dirname))
+        goto test_exit;
+    }
+
+    buf = dsi->data + ofs;
+    prodos_type = buf[0];
+    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+
+    if (prodos_type != 0x0F || prodos_aux != 0x0200) {
+        test_failed();
+    }
+
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, dirname))
+test_exit:
+    exit_test("FPGetFileDirParms:test442: directory returns ProDOS $0F/$0200");
+}
+
 /* ----------- */
 void FPGetFileDirParms_test()
 {
@@ -1293,4 +1391,7 @@ void FPGetFileDirParms_test()
     test380();
     test396();
     test423();
+    test440();
+    test441();
+    test442();
 }
