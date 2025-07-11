@@ -143,8 +143,8 @@ if (!$config{hide_service_controls}) {
                     $text{'index_icon_text_users'}
     );
     my @icons_f = (
-                   "images/inspect.gif",
-                   "images/users.gif"
+                   "images/inspect.png",
+                   "images/users.png"
     );
     icons_table(\@links_f, \@titles_f, \@icons_f);
 }
@@ -245,9 +245,9 @@ my @titles_g = (
                 $text{'index_icon_text_rebuild'}
 );
 my @icons_g = (
-               "images/server.gif",
-               "images/digest.gif",
-               "images/options.gif",
+               "images/server.png",
+               "images/digest.png",
+               "images/options.png",
 );
 icons_table(\@links_g, \@titles_g, \@icons_g);
 
@@ -358,7 +358,7 @@ if (!$config{hide_service_controls}) {
 
 my @links_d  = ("edit_print.cgi");
 my @titles_d = ($text{'index_icon_text_print'});
-my @icons_d  = ("images/printer.gif");
+my @icons_d  = ("images/printer.png");
 icons_table(\@links_d, \@titles_d, \@icons_d);
 
 print &ui_tabs_end_tab('mode', 'ddp');
