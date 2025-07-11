@@ -415,9 +415,6 @@
 /* Define whether to enable Spotlight support */
 #mesondefine WITH_SPOTLIGHT
 
-/* Define when the test suite should be executed */
-#mesondefine WITH_TESTS
-
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
 #if defined AC_APPLE_UNIVERSAL_BUILD

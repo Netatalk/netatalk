@@ -15,7 +15,7 @@ afp port = 10548
 
 [test]
 path = /tmp/AFPtestvolume
-cnid scheme = last
+cnid scheme = sqlite
 ea = none
 EOF
     echo [ok]

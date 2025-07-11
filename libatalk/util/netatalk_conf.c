@@ -1273,13 +1273,9 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_RO;
     }
 
-#ifndef WITH_TESTS
-
     if (0 == strcmp(volume->v_cnidscheme, "last")) {
         volume->v_flags |= AFPVOL_RO;
     }
-
-#endif
 
     if (volume->v_flags & AFPVOL_NODEV) {
         volume->v_ad_options |= ADVOL_NODEV;

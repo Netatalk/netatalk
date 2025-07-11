@@ -2260,10 +2260,6 @@ if have_webmin
     cdata.set('init_a2boot_restart', init_a2boot_restart)
 endif
 
-if get_option('with-tests')
-    cdata.set('WITH_TESTS', 1)
-endif
-
 configure_file(
     input: 'meson_config.h',
     output: 'config.h',
