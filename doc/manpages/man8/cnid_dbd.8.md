@@ -11,11 +11,12 @@ cnid_dbd — CNID database access daemon
 # Description
 
 **cnid_dbd** provides an interface for storage and retrieval of catalog
-node IDs (CNIDs) and related information to the *afpd* daemon. CNIDs are
-a component of Macintosh based file systems with semantics that map not
-easily onto Unix file systems. This makes separate storage in a database
-necessary. **cnid_dbd** is part of the *CNID backend* framework of *afpd*
-and implements the *dbd* backend.
+node IDs (CNIDs) and related information to the *afpd* daemon
+when using the *dbd* (Database Daemon) CNID backend.
+
+CNIDs are a component of Classic Mac OS based file systems
+with semantics that does not map easily onto Unix file systems.
+This makes separate storage in a database necessary.
 
 **cnid_dbd** is never started via the command line or system startup
 scripts but only by the *cnid_metad* daemon. There is one instance of

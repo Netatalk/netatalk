@@ -61,7 +61,11 @@ static void kill_childs(int sig, ...);
 /* static variables */
 static AFPObj obj;
 static pid_t afpd_pid = NETATALK_SRV_NEEDED;
+#ifdef CNID_BACKEND_DBD
 static pid_t cnid_metad_pid = NETATALK_SRV_NEEDED;
+#else
+static pid_t cnid_metad_pid = NETATALK_SRV_OPTIONAL;
+#endif
 static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
 static uint afpd_restarts, cnid_metad_restarts, dbus_restarts _U_;
 static struct event_base *base;
@@ -476,11 +480,15 @@ int main(int argc, char **argv)
         netatalk_exit(EXITERR_CONF);
     }
 
+#ifdef CNID_BACKEND_DBD
+
     if ((cnid_metad_pid = run_process(_PATH_CNID_METAD, "-d", "-F",
                                       obj.options.configfile, NULL)) == NETATALK_SRV_ERROR) {
         LOG(log_error, logtype_afpd, "Error starting 'cnid_metad'");
         netatalk_exit(EXITERR_CONF);
     }
+
+#endif
 
     if ((base = event_base_new()) == NULL) {
         LOG(log_error, logtype_afpd, "Error starting event loop");
