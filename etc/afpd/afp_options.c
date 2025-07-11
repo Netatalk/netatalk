@@ -81,6 +81,8 @@ static void show_version(void)
     printf("sqlite ");
 #endif
     puts("");
+    printf("  Default CNID backend:\t");
+    puts(DEFAULT_CNID_SCHEME);
 }
 
 /*
