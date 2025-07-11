@@ -88,10 +88,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
-        run: meson test -C build
       - name: Install
         run: meson install -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
@@ -146,10 +146,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
-        run: meson test -C build
       - name: Install
         run: meson install -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
@@ -219,10 +219,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
-        run: meson test -C build
       - name: Install
         run: meson install -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
@@ -406,10 +406,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
-        run: meson test -C build
       - name: Install
         run: sudo meson install -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
@@ -465,6 +465,7 @@ jobs:
               -Dwith-testsuite=true
             meson compile -C build
             meson install -C build
+            meson test -C build
             netatalk -V
             afpd -V
             ninja -C build uninstall
@@ -507,8 +508,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
             meson install -C build
+            meson test -C build
             netatalk -V
             afpd -V
             /usr/local/etc/rc.d/netatalk start
@@ -560,8 +561,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
             meson install -C build
+            meson test -C build
             netatalk -V
             afpd -V
             atalkd -V
@@ -619,6 +620,7 @@ jobs:
               -Dwith-testsuite=true
             meson compile -C build
             meson install -C build
+            meson test -C build
             netatalk -V
             afpd -V
             rcctl -d start netatalk
@@ -669,8 +671,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
             meson install -C build
+            meson test -C build
             netatalk -V
             afpd -V
             sleep 1
@@ -735,8 +737,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
             meson install -C build
+            meson test -C build
             netatalk -V
             afpd -V
             sleep 1
