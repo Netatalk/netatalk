@@ -605,23 +605,28 @@ if 'sqlite' in get_option('with-cnid-backends') and sqlite_deps.found()
     cdata.set('CNID_BACKEND_SQLITE', 1)
 endif
 
-if cnid_backends == ''
-    error(
-        'No CNID backends selected for compilation! Please select at least one backend using the -Dwith-cnid-backends= option',
-    )
-else
-    compiled_backends = '"' + cnid_backends + '"'
-    cdata.set('compiled_backends', compiled_backends)
+compiled_backends = '"' + cnid_backends + '"'
+cdata.set('compiled_backends', compiled_backends)
 
-    summary_backends = cnid_backends
-endif
+summary_backends = cnid_backends
 
 # Determine default CNID backend
 
 default_backend = get_option('with-cnid-default-backend')
-cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')
 
-if default_backend == 'dbd' and not use_dbd_backend
+if default_backend == ''
+    if use_dbd_backend
+        default_backend = 'dbd'
+    elif use_sqlite_backend
+        default_backend = 'sqlite'
+    elif use_mysql_backend
+        default_backend = 'mysql'
+    elif use_last_backend
+        default_backend = 'last'
+    else
+        error('No CNID backends selected for compilation')
+    endif
+elif default_backend == 'dbd' and not use_dbd_backend
     error('Specified default CNID scheme dbd was not selected for compilation')
 elif default_backend == 'last' and not use_last_backend
     error('Specified default CNID scheme last was not selected for compilation')
@@ -634,6 +639,8 @@ elif default_backend == 'sqlite' and not use_sqlite_backend
         'Specified default CNID scheme sqlite was not selected for compilation',
     )
 endif
+
+cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')
 
 #
 # Check for iniparser
@@ -2439,6 +2446,7 @@ summary({'Netatalk version': netatalk_version}, section: 'Configuration Summary:
 summary_info = {
     '  Access control': uams_options,
     '  CNID backends': summary_backends,
+    '  Default CNID backend': default_backend,
     '  Extended Attributes': netatalk_ea,
     '  Init script style': init_style,
 }

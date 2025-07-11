@@ -394,12 +394,13 @@ option(
     'with-cnid-default-backend',
     type: 'combo',
     choices: [
+        '',
         'dbd',
         'last',
         'mysql',
         'sqlite',
     ],
-    value: 'dbd',
+    value: '',
     description: 'Set default CNID scheme',
 )
 option(
