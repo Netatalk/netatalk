@@ -286,10 +286,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
-        run: meson test -C build
       - name: Install
         run: sudo meson install -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
@@ -354,10 +354,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run distribution tests
-        run: meson dist -C build
       - name: Install
         run: sudo meson install -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
