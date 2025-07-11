@@ -1,8 +1,4 @@
-afppasswd_sources = [
-    'afppasswd.c',
-]
-
-afppasswd_deps = []
+afppasswd_deps = [libgcrypt]
 afppasswd_libs = [libatalk]
 
 if have_cracklib
@@ -13,17 +9,13 @@ if use_mysql_backend
     afppasswd_deps += mysqlclient
 endif
 
-if have_libgcrypt
-    afppasswd_deps += [libgcrypt]
-endif
-
 if have_iconv
     afppasswd_deps += iconv
 endif
 
 executable(
     'afppasswd',
-    afppasswd_sources,
+    ['afppasswd.c'],
     include_directories: root_includes,
     dependencies: afppasswd_deps,
     link_with: afppasswd_libs,
