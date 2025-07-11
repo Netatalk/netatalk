@@ -362,176 +362,276 @@ if host_os == 'sunos' or host_os == 'netbsd' or get_option('with-rpath')
 endif
 
 #
-# Check for the Berkeley DB library
+# Check which CNID backends to compile
 #
 
-grep = find_program('grep', required: false)
-bdb_path = get_option('with-bdb-path')
-bdb_include_path_override = get_option('with-bdb-include-path')
-bdb_req_version = get_option('with-bdb-version')
+cnid_backends = ''
 
+#
+# Check for the Berkeley DB library for the Database Daemon CNID backend
+#
+
+use_dbd_backend = false
 have_bdb = false
+grep = find_program('grep', required: false)
 
-bdb_header = ''
-bdb_includes = []
-bdb_libdir = ''
-bdb_major_version = ''
-bdb_minor_version = ''
-bdb_version = ''
-bdb_dirs = []
+if 'dbd' in get_option('with-cnid-backends')
+    bdb_path = get_option('with-bdb-path')
+    bdb_include_path_override = get_option('with-bdb-include-path')
+    bdb_req_version = get_option('with-bdb-version')
 
-if bdb_path != ''
-    bdb_dirs += [bdb_path]
-else
-    if brew_prefix != ''
+    bdb_header = ''
+    bdb_includes = []
+    bdb_libdir = ''
+    bdb_major_version = ''
+    bdb_minor_version = ''
+    bdb_version = ''
+    bdb_dirs = []
+
+    if bdb_path != ''
+        bdb_dirs += [bdb_path]
+    else
+        if brew_prefix != ''
+            bdb_dirs += [
+                brew_prefix / 'opt/berkeley-db@5',
+                brew_prefix / 'opt/berkeley-db@4',
+                brew_prefix / 'opt/berkeley-db',
+            ]
+        endif
+
         bdb_dirs += [
-            brew_prefix / 'opt/berkeley-db@5',
-            brew_prefix / 'opt/berkeley-db@4',
-            brew_prefix / 'opt/berkeley-db',
+            '/usr/local',
+            '/usr/pkg',
+            '/opt/local',
+            '/usr',
         ]
     endif
 
-    bdb_dirs += [
-        '/usr/local',
-        '/usr/pkg',
-        '/opt/local',
-        '/usr',
+    bdb_subdirs = [
+        'db62',
+        'db6.2',
+        'db61',
+        'db6.1',
+        'db5',
+        'db53',
+        'db5.3',
+        'db52',
+        'db5.2',
+        'db51',
+        'db5.1',
+        'db50',
+        'db5.0',
+        'db4',
+        'db48',
+        'db4.8',
+        'db47',
+        'db4.7',
+        'db46',
+        'db4.6',
+        '',
     ]
-endif
 
-bdb_subdirs = [
-    'db62',
-    'db6.2',
-    'db61',
-    'db6.1',
-    'db5',
-    'db53',
-    'db5.3',
-    'db52',
-    'db5.2',
-    'db51',
-    'db5.1',
-    'db50',
-    'db5.0',
-    'db4',
-    'db48',
-    'db4.8',
-    'db47',
-    'db4.7',
-    'db46',
-    'db4.6',
-    '',
-]
-
-if bdb_req_version != ''
-    if not bdb_req_version.version_compare('>=4.6')
-        error('Berkeley DB library version is below supported 4.6')
-    endif
-    message('Searching for Berkeley DB library version', bdb_req_version)
-endif
-
-foreach dir : bdb_dirs
-    foreach subdir : bdb_subdirs
-        if bdb_include_path_override != ''
-            bdb_include_path = bdb_include_path_override
-        else
-            bdb_include_path = dir / 'include' / subdir
+    if bdb_req_version != ''
+        if not bdb_req_version.version_compare('>=4.6')
+            error('Berkeley DB library version is below supported 4.6')
         endif
-        bdb_header = bdb_include_path / 'db.h'
-        if fs.exists(bdb_header)
-            bdb_includes = include_directories(bdb_include_path)
+        message('Searching for Berkeley DB library version', bdb_req_version)
+    endif
 
-            grep_result = run_command(
-                'grep',
-                'DB_VERSION_MAJOR',
-                bdb_header,
-                check: false,
-            )
-            if grep_result.returncode() != 0
-                warning(
-                    'Unable to determine Berkeley DB major version from header',
-                    bdb_header,
-                )
-                continue
-            endif
-            bdb_major_version = grep_result.stdout().strip().substring(25)
-
-            grep_result = run_command(
-                'grep',
-                'DB_VERSION_MINOR',
-                bdb_header,
-                check: false,
-            )
-            if grep_result.returncode() != 0
-                warning(
-                    'Unable to determine Berkeley DB minor version from header',
-                    bdb_header,
-                )
-                continue
-            endif
-            bdb_minor_version = grep_result.stdout().strip().substring(25)
-
-            bdb_version = bdb_major_version + '.' + bdb_minor_version
-
-            if not bdb_version.version_compare('>=4.6')
-                continue
-            endif
-
-            if bdb_req_version != '' and not bdb_version.version_compare('~' + bdb_req_version)
-                continue
-            endif
-
-            message('Berkeley DB header found at', bdb_header)
-
-            # Now find lib file matching header
-            if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
-                bdb_libdir = dir / 'lib/64'
+    foreach dir : bdb_dirs
+        foreach subdir : bdb_subdirs
+            if bdb_include_path_override != ''
+                bdb_include_path = bdb_include_path_override
             else
-                bdb_libdir = dir / 'lib'
+                bdb_include_path = dir / 'include' / subdir
             endif
+            bdb_header = bdb_include_path / 'db.h'
+            if fs.exists(bdb_header)
+                bdb_includes = include_directories(bdb_include_path)
 
-            # Guess lib name starting from more specific ones
-            bdb_libnames = [
-                'db-' + bdb_major_version + '.' + bdb_minor_version,
-                'db' + bdb_major_version + '.' + bdb_minor_version,
-                'db' + bdb_major_version + bdb_minor_version,
-                'db-' + bdb_major_version,
-                'db' + bdb_major_version,
-                'db',
-            ]
+                grep_result = run_command(
+                    'grep',
+                    'DB_VERSION_MAJOR',
+                    bdb_header,
+                    check: false,
+                )
+                if grep_result.returncode() != 0
+                    warning(
+                        'Unable to determine Berkeley DB major version from header',
+                        bdb_header,
+                    )
+                    continue
+                endif
+                bdb_major_version = grep_result.stdout().strip().substring(25)
 
-            foreach name : bdb_libnames
-                libdb = cc.find_library(name, dirs: bdb_libdir, required: false)
-                if not libdb.found()
-                    libdb = cc.find_library(name, dirs: bdb_libdir / subdir, required: false)
+                grep_result = run_command(
+                    'grep',
+                    'DB_VERSION_MINOR',
+                    bdb_header,
+                    check: false,
+                )
+                if grep_result.returncode() != 0
+                    warning(
+                        'Unable to determine Berkeley DB minor version from header',
+                        bdb_header,
+                    )
+                    continue
+                endif
+                bdb_minor_version = grep_result.stdout().strip().substring(25)
+
+                bdb_version = bdb_major_version + '.' + bdb_minor_version
+
+                if not bdb_version.version_compare('>=4.6')
+                    continue
                 endif
 
-                if libdb.found()
-                    have_bdb = true
+                if bdb_req_version != '' and not bdb_version.version_compare('~' + bdb_req_version)
+                    continue
+                endif
+
+                message('Berkeley DB header found at', bdb_header)
+
+                # Now find lib file matching header
+                if target_os == 'sunos' and compiler_64_bit_mode and fs.exists(dir / 'lib/64')
+                    bdb_libdir = dir / 'lib/64'
+                else
+                    bdb_libdir = dir / 'lib'
+                endif
+
+                # Guess lib name starting from more specific ones
+                bdb_libnames = [
+                    'db-' + bdb_major_version + '.' + bdb_minor_version,
+                    'db' + bdb_major_version + '.' + bdb_minor_version,
+                    'db' + bdb_major_version + bdb_minor_version,
+                    'db-' + bdb_major_version,
+                    'db' + bdb_major_version,
+                    'db',
+                ]
+
+                foreach name : bdb_libnames
+                    libdb = cc.find_library(name, dirs: bdb_libdir, required: false)
+                    if not libdb.found()
+                        libdb = cc.find_library(name, dirs: bdb_libdir / subdir, required: false)
+                    endif
+
+                    if libdb.found()
+                        have_bdb = true
+                        break
+                    endif
+                endforeach
+
+                if have_bdb
                     break
                 endif
-            endforeach
-
-            if have_bdb
-                break
             endif
+        endforeach
+
+        if have_bdb
+            break
         endif
     endforeach
 
     if have_bdb
-        break
-    endif
-endforeach
-
-if not have_bdb
-    if bdb_req_version != ''
-        msg = 'Berkeley DB library version ' + bdb_req_version + ' requested via -Dwith-bdb-version= not found!'
+        use_dbd_backend = true
+        cnid_backends += 'dbd'
+        cdata.set('CNID_BACKEND_DBD', 1)
     else
-        msg = 'Berkeley DB library required but not found!'
+        if bdb_req_version != ''
+            msg = 'Berkeley DB library version ' + bdb_req_version + ' requested via -Dwith-bdb-version= not found!'
+        else
+            msg = 'Berkeley DB library not found, bdb CNID backend will not be built!'
+        endif
+        message(
+            msg,
+            'If you want dbd CNID backend support, define the Berkeley DB path using the -Dwith-bdb-path= configure option (must include lib and include dirs)',
+        )
     endif
+endif
+
+# Determine whether or not to use LAST DID scheme
+
+use_last_backend = false
+
+if 'last' in get_option('with-cnid-backends')
+    use_last_backend = true
+    if cnid_backends != ''
+        cnid_backends += ' | '
+    endif
+    cnid_backends += 'last'
+    cdata.set('CNID_BACKEND_LAST', 1)
+endif
+
+# Check for mysql CNID backend
+
+mysqlclient = dependency('mysqlclient', required: false)
+mariadb = dependency('libmariadb', required: false)
+
+use_mysql_backend = false
+
+if 'mysql' in get_option('with-cnid-backends')
+    if mysqlclient.found()
+        mysql_deps = mysqlclient
+    else
+        mysql_deps = mariadb
+    endif
+    if mysql_deps.found()
+        use_mysql_backend = (
+            fs.exists(
+                mysql_deps.get_variable(pkgconfig: 'includedir') / 'mysql.h',
+            )
+        )
+    endif
+    if use_mysql_backend
+        if cnid_backends != ''
+            cnid_backends += ' | '
+        endif
+        cnid_backends += 'mysql'
+        cdata.set('CNID_BACKEND_MYSQL', 1)
+    endif
+endif
+
+# Check for sqlite CNID backend
+
+sqlite_deps = dependency('sqlite3', required: false)
+
+use_sqlite_backend = false
+
+if 'sqlite' in get_option('with-cnid-backends') and sqlite_deps.found()
+    use_sqlite_backend = true
+    if cnid_backends != ''
+        cnid_backends += ' | '
+    endif
+    cnid_backends += 'sqlite'
+    cdata.set('CNID_BACKEND_SQLITE', 1)
+endif
+
+if cnid_backends == ''
     error(
-        msg,
-        'Please specify an installation path using the -Dwith-bdb-path= configure option (must include lib and include dirs)',
+        'No CNID backends selected for compilation! Please select at least one backend using the -Dwith-cnid-backends= option',
+    )
+else
+    compiled_backends = '"' + cnid_backends + '"'
+    cdata.set('compiled_backends', compiled_backends)
+
+    summary_backends = cnid_backends
+endif
+
+# Determine default CNID backend
+
+default_backend = get_option('with-cnid-default-backend')
+cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')
+
+if default_backend == 'dbd' and not use_dbd_backend
+    error('Specified default CNID scheme dbd was not selected for compilation')
+elif default_backend == 'last' and not use_last_backend
+    error('Specified default CNID scheme last was not selected for compilation')
+elif default_backend == 'mysql' and not use_mysql_backend
+    error(
+        'Specified default CNID scheme mysql was not selected for compilation',
+    )
+elif default_backend == 'sqlite' and not use_sqlite_backend
+    error(
+        'Specified default CNID scheme sqlite was not selected for compilation',
     )
 endif
 
@@ -1456,99 +1556,6 @@ else
             'Please install libiconv',
         )
     endif
-endif
-
-#
-# Check whether BDB daemon needs to be compiled
-#
-
-cnid_backends = ''
-
-# Determine whether or not to use Database Daemon CNID backend
-
-use_dbd_backend = false
-
-if 'dbd' in get_option('with-cnid-backends')
-    use_dbd_backend = true
-    cnid_backends += 'dbd'
-    cdata.set('CNID_BACKEND_DBD', 1)
-endif
-
-# Determine whether or not to use LAST DID scheme
-
-use_last_backend = false
-
-if 'last' in get_option('with-cnid-backends')
-    use_last_backend = true
-    if cnid_backends != ''
-        cnid_backends += ' | '
-    endif
-    cnid_backends += 'last'
-    cdata.set('CNID_BACKEND_LAST', 1)
-endif
-
-# Check for mysql CNID backend
-
-mysqlclient = dependency('mysqlclient', required: false)
-mariadb = dependency('libmariadb', required: false)
-
-use_mysql_backend = false
-
-if 'mysql' in get_option('with-cnid-backends')
-    if mysqlclient.found()
-        mysql_deps = mysqlclient
-    else
-        mysql_deps = mariadb
-    endif
-    if mysql_deps.found()
-        use_mysql_backend = (
-            fs.exists(
-                mysql_deps.get_variable(pkgconfig: 'includedir') / 'mysql.h',
-            )
-        )
-    endif
-    if use_mysql_backend
-        if cnid_backends != ''
-            cnid_backends += ' | '
-        endif
-        cnid_backends += 'mysql'
-        cdata.set('CNID_BACKEND_MYSQL', 1)
-    endif
-endif
-
-# Check for sqlite CNID backend
-
-sqlite_deps = dependency('sqlite3', required: false)
-
-use_sqlite_backend = false
-
-if 'sqlite' in get_option('with-cnid-backends') and sqlite_deps.found()
-    use_sqlite_backend = true
-    if cnid_backends != ''
-        cnid_backends += ' | '
-    endif
-    cnid_backends += 'sqlite'
-    cdata.set('CNID_BACKEND_SQLITE', 1)
-endif
-
-compiled_backends = '"' + cnid_backends + '"'
-cdata.set('compiled_backends', compiled_backends)
-
-summary_backends = cnid_backends
-
-# Determine default CNID backend
-
-default_backend = get_option('with-cnid-default-backend')
-cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')
-
-if default_backend == 'dbd' and not use_dbd_backend
-    error('Specified default CNID scheme dbd was not selected for compilation')
-elif default_backend == 'last' and not use_last_backend
-    error('Specified default CNID scheme last was not selected for compilation')
-elif default_backend == 'mysql' and not use_mysql_backend
-    error(
-        'Specified default CNID scheme mysql was not selected for compilation',
-    )
 endif
 
 #
