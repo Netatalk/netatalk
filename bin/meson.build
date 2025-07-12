@@ -1,11 +1,5 @@
-if have_bdb
-    subdir('ad')
-endif
-
-if have_libgcrypt
-    subdir('afppasswd')
-endif
-
+subdir('ad')
+subdir('afppasswd')
 subdir('misc')
 
 if have_appletalk

@@ -127,14 +127,21 @@ working with netatalk:
   corruption. Use the **vol dbpath** directive to put the databases onto
   a local disk if you must use NFS mounted volumes.
 
+Below follows descriptions of the various CNID backends that are
+included with netatalk.
+You can choose to build one or several of them at compile time.
+Run the command *afpd -v* to see which backends are available to you,
+as well as which one is the default.
+
 ### dbd
 
 The "Database Daemon" backend is built on Berkeley DB. Access to the
-CNID database is restricted to the cnid_dbd daemon process.
+CNID database is restricted to the **cnid_dbd** daemon process.
 **afpd** processes communicate with the **cnid_dbd** daemon
-for database reads and updates.
+for database reads and updates, which is in turn launched and
+controlled by the **cnid_metad** daemon.
 
-This is the default backend since Netatalk 2.1.
+This is the most reliable and proven backend for daily use.
 
 ### last
 

@@ -39,14 +39,28 @@ documentation for more details.
 
 ### Required
 
+These are the libraries that are hard requirements for netatalk.
+
 | Package      | Details |
 |--------------|---------|
-| Berkeley DB  | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
 | iniparser    | v3.1 or later |
 | libevent     | v2.0 or later |
 | libgcrypt    | v1.2.3 or later |
 
-### Required to Build
+### CNID Backend Requirements
+
+One or more of the below is required to build the respective CNID backend.
+
+| Package      | Backend | Details |
+|--------------|---------|---------|
+| Berkeley DB  | dbd     | v4.6.0 or later (often packaged as `bdb` or sometimes `db`) |
+| mysql-client **OR** mariadb-client | mysql |  |
+| sqlite3      | sqlite  |  |
+
+### Required for Build Environment
+
+In order to build netatalk from source code, the following components are
+required at the bare minimum.
 
 | Package    | Details |
 |------------|---------|
@@ -54,7 +68,7 @@ documentation for more details.
 | meson      | v0.61.2 or later |
 | ninja      | Often packaged as `ninja-build` |
 
-### Required for Spotlight Support
+### Optional Spotlight Support
 
 | Package    | Details |
 |------------|---------|
@@ -64,7 +78,7 @@ documentation for more details.
 | bison      |  |
 | flex       |  |
 
-### Optional
+### Optional Features
 
 | Package      | Details |
 |--------------|---------|
@@ -77,10 +91,8 @@ documentation for more details.
 | libldap                    | For LDAP support |
 | libpam                     | For PAM support |
 | libtirpc **OR** libquota   | For Quota support |
-| mysql-client **OR** mariadb-client | For *mysql* CNID backend support |
 | Perl                       | For admin scripts |
 | po4a                       | For localization of documentation |
-| sqlite3                    | for *sqlite* CNID backend support |
 | tcpwrap                    | For TCP wrapper support |
 | [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | For regenerating Unicode lookup tables |
 

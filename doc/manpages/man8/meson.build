@@ -1,9 +1,14 @@
 manfiles = [
     'afpd',
-    'cnid_dbd',
-    'cnid_metad',
     'netatalk',
 ]
+
+if use_dbd_backend
+    manfiles += [
+        'cnid_dbd',
+        'cnid_metad',
+    ]
+endif
 
 if have_appletalk
     manfiles += [

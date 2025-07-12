@@ -1,10 +1,13 @@
-subdir('dbd')
-subdir('last')
-
 libcnid_deps = [iniparser]
-libcnid_libs = [libcnid_dbd]
+libcnid_libs = []
+
+if use_dbd_backend
+    subdir('dbd')
+    libcnid_libs += libcnid_dbd
+endif
 
 if use_last_backend
+    subdir('last')
     libcnid_libs += libcnid_last
 endif
 

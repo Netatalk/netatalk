@@ -12,8 +12,11 @@ cnid_metad — daemon for starting cnid_dbd daemons on demand
 
 **cnid_metad** waits for requests from *afpd* to start up instances of the
 *cnid_dbd* daemon. It keeps track of the status of a *cnid_dbd* instance
-once started and will restart it if necessary. **cnid_metad** is normally
-started at boot time by **netatalk**(8) and runs until shutdown.
+once started and will restart it if necessary.
+
+When built with support for the *dbd* (Database Daemon) CNID backend,
+**netatalk**(8) will start and stop **cnid_metad** as needed.
+The user will normally not interact with it directly.
 
 # Options
 

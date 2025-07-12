@@ -46,15 +46,6 @@ packages that can be installed to enhance Netatalk's functionality.
 
 ### Required third-party software
 
-- Berkeley DB
-
-    The default dbd CNID backend for netatalk uses Berkeley DB to store
-    unique file identifiers. At the time of writing you need at least
-    version 4.6.
-
-    The recommended version is 5.3, the final release under the permissive
-    Sleepycat license, and therefore the most widely distributed version.
-
 - iniparser
 
     The iniparser library is used to parse the configuration files.
@@ -70,6 +61,37 @@ packages that can be installed to enhance Netatalk's functionality.
     The [Libgcrypt](https://gnupg.org/software/libgcrypt/) library
     supplies the encryption for the standard User Authentication Modules
     (UAMs). They are: DHX2, DHCAST128 (a.k.a. DHX) and RandNum.
+
+#### CNID database backends
+
+At least one of the below database libraries is required
+to power the CNID scheme of your choice.
+Without one of these, only the *last* backend will be available
+which operates in read-only mode and therefore not recommended
+for daily use.
+
+- Berkeley DB
+
+    The default dbd CNID backend for netatalk uses Berkeley DB to store
+    unique file identifiers. At the time of writing you need at least
+    version 4.6.
+
+    The recommended version is 5.3, the final release under the permissive
+    Sleepycat license, and therefore the most widely distributed version.
+
+- MySQL or MariaDB
+
+    By leveraging a MySQL-compatible client library, netatalk can be built
+    with a MySQL CNID backend that is highly scalable and reliable.
+    The administrator has to provide a separate database instance for use with
+    this backend.
+
+- SQLite v3
+
+    The SQLite library version 3 enables the SQLite CNID backend
+    which is an alternative zero-configuration backend.
+    This backend is **experimental** and should be used only for
+    testing purposes.
 
 ### Optional third-party software
 
@@ -139,13 +161,6 @@ functionality.
     library, netatalk can produce the GSS UAM library for authentication
     with existing Kerberos infrastructure.
 
-- MySQL or MariaDB
-
-    By leveraging a MySQL-compatible client library, netatalk can be built
-    with a MySQL CNID backend that is highly scalable and reliable. The
-    administrator has to provide a separate database instance for use with
-    this backend.
-
 - PAM
 
     PAM provides a flexible mechanism for authenticating users. PAM was
@@ -165,11 +180,6 @@ functionality.
     into other languages. It uses gettext to extract translatable
     strings from source files and merge them with the translations
     stored in PO files.
-
-- SQLite v3
-
-    The SQLite library version 3 enables the SQLite CNID backend
-    which is an alternative zero-configuration backend.
 
 - TCP wrappers
 
