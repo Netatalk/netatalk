@@ -897,7 +897,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                 EC_FAIL;
             }
         } else {
-            LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
+            LOG(log_error, logtype_cnid, "Failed to create volume directory '%s': %s",
                 dirpath, strerror(errno));
             EC_FAIL;
         }

@@ -12,13 +12,6 @@ STATIC void test213()
     unsigned int ret;
     u_char   u_null[] = { 0, 0, 0, 0 };
     ENTER_TEST
-
-    /* Not supported with the mysql backend */
-    if (Exclude) {
-        test_skipped(T_EXCLUDE);
-        goto test_exit;
-    }
-
     dt = FPOpenDT(Conn, vol);
     ret = FPGetIconInfo(Conn,  dt, (unsigned char *) "ttxt", 1);
 

@@ -58,13 +58,6 @@ STATIC void test212()
     int ret;
     DSI *dsi = &Conn->dsi;
     ENTER_TEST
-
-    /* Not supported with the mysql backend */
-    if (Exclude) {
-        test_skipped(T_EXCLUDE);
-        goto test_exit;
-    }
-
     dt = FPOpenDT(Conn, vol);
     FAIL(FPAddIcon(Conn,  dt, "ttxt", "3DMF", 1, 0, 256, icon0_256))
 #if 0

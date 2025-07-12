@@ -209,10 +209,6 @@ if [ "$TESTSUITE" = "spectest" ] && [ -z "$AFP_REMOTE" ]; then
     TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
 fi
 
-if [ -n "$AFP_EXCLUDE_TESTS" ]; then
-    TEST_FLAGS="$TEST_FLAGS -x"
-fi
-
 if [ -n "$AFP_CONFIG_POLLING" ]; then
     echo "*** Starting config file polling"
     /config_watch.sh /etc/netatalk/afp.conf "$AFP_CONFIG_POLLING" &
