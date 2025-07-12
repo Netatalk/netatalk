@@ -877,10 +877,33 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     EC_INIT;
     CNID_mysql_private *db = NULL;
     struct _cnid_db *cdb = NULL;
+    char dirpath[PATH_MAX];
     MYSQL_RES *result = NULL;
     MYSQL_ROW row;
     struct vol *vol = args->cnid_args_vol;
     MYSQL *temp_conn = NULL;
+    snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
+             vol->v_localname);
+    become_root();
+
+    /* We need the volume dir under CNID to store .AppleDesktop,
+       although this backend does not keep any database file here. */
+    if (mkdir(dirpath, 0755) != 0) {
+        if (errno == EEXIST) {
+            struct stat st;
+
+            if (stat(dirpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
+                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+                EC_FAIL;
+            }
+        } else {
+            LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
+                dirpath, strerror(errno));
+            EC_FAIL;
+        }
+    }
+
+    unbecome_root();
     EC_NULL(cdb = cnid_mysql_new(vol));
     EC_NULL(db = (CNID_mysql_private *)calloc(1, sizeof(CNID_mysql_private)));
     cdb->cnid_db_private = db;
