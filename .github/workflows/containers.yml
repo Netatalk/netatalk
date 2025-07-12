@@ -283,7 +283,6 @@ jobs:
                     -e TESTSUITE=spectest \
                     -e AFP_VERSION=7 \
                     -e AFP_REMOTE=1 \
-                    -e AFP_EXCLUDE_TESTS=1 \
                     -e AFP_HOST=afp_server \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
@@ -325,7 +324,6 @@ jobs:
                     -e AFP_VERSION=7 \
                     -e AFP_REMOTE=1 \
                     -e AFP_EXTMAP=1 \
-                    -e AFP_EXCLUDE_TESTS=1 \
                     -e AFP_CNID_SQL_HOST=mariadb \
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
