@@ -1028,10 +1028,6 @@ void test_skipped(int why)
         s = "a smaller volume";
         break;
 
-    case T_EXCLUDE:
-        s = "in the Exclude bucket";
-        break;
-
     case T_MANUAL:
         s = "Interactive mode";
         break;

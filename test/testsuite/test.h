@@ -194,7 +194,6 @@ extern int Loglevel;
 extern int Color;
 extern int Interactive;
 extern int Throttle;
-extern int Exclude;
 extern int Bigendian;
 
 extern int PassCount;

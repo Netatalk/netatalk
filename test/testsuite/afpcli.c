@@ -10,7 +10,6 @@ int	Interactive = 0;
 int	Quiet = 1;
 int	Verbose = 0;
 int	Color = 1;
-int	Exclude = 0;
 int	Bigendian = 0;
 
 #define UNICODE(a) (a->afp_version >= 30)
