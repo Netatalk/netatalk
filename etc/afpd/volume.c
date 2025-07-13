@@ -29,7 +29,6 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 
 #ifdef CNID_DB

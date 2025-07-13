@@ -23,7 +23,6 @@
 #include <string.h>
 #include <time.h>
 
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
@@ -369,7 +368,7 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     struct dir key;
     struct stat st;
     hnode_t *hn;
-    static_bstring uname = {-1, len, (unsigned char *)name};
+    struct tagbstring uname = {-1, len, (unsigned char *)name};
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
     AFP_ASSERT(name);

@@ -61,7 +61,6 @@
 #include <atalk/uuid.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/bstrlib.h>
-#include <atalk/bstradd.h>
 
 #define VOLPASSLEN  8
 #ifndef UUID_PRINTABLE_STRING_LENGTH

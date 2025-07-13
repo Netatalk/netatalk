@@ -62,7 +62,6 @@
 #include <unistd.h>
 
 #include <atalk/adouble.h>
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/ftw.h>
 #include <atalk/queue.h>

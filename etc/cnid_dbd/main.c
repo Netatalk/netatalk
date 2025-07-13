@@ -22,7 +22,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/errchk.h>

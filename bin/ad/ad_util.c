@@ -61,7 +61,6 @@
 #include <sys/types.h>
 #endif /* HAVE_POSIX_ACLS */
 
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>

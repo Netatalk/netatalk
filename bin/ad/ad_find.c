@@ -26,7 +26,6 @@
 #include <unistd.h>
 
 #include <atalk/adouble.h>
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid.h>
@@ -86,6 +85,106 @@ static void usage_find(void)
     printf(
         "Usage: ad find [-v VOLUME_PATH] NAME\n"
     );
+}
+
+/*!
+ * @brief Push a bstring to the end of a list
+ */
+int bstr_list_push(struct bstrList *sl, bstring bs)
+{
+    if (sl->qty == sl->mlen && bstrListAlloc(sl, sl->qty + 1) != BSTR_OK) {
+        return BSTR_ERR;
+    }
+
+    sl->entry[sl->qty] = bs;
+    sl->qty++;
+    return BSTR_OK;
+}
+
+/*!
+ * @brief Create an empty list with preallocated storage for at least 'min' members
+ */
+struct bstrList *bstr_list_create_min(int min)
+{
+    struct bstrList *sl = NULL;
+
+    if ((sl = bstrListCreate()) == NULL) {
+        return NULL;
+    }
+
+    if ((bstrListAlloc(sl, min)) != BSTR_OK) {
+        bstrListDestroy(sl);
+        return NULL;
+    }
+
+    return sl;
+}
+
+/*!
+ * @brief Inverse bjoin
+ */
+bstring bjoin_inv(const struct bstrList *bl, const bstring sep)
+{
+    bstring b;
+    int i, j, c, v;
+
+    if (bl == NULL || bl->qty < 0) {
+        return NULL;
+    }
+
+    if (sep != NULL && (sep->slen < 0 || sep->data == NULL)) {
+        return NULL;
+    }
+
+    for (i = 0, c = 1; i < bl->qty; i++) {
+        v = bl->entry[i]->slen;
+
+        if (v < 0) {
+            /* Invalid input */
+            return NULL;
+        }
+
+        c += v;
+
+        if (c < 0) {
+            /* Wrap around ?? */
+            return NULL;
+        }
+    }
+
+    if (sep != NULL) {
+        c += (bl->qty - 1) * sep->slen;
+    }
+
+    b = (bstring) malloc(sizeof(struct tagbstring));
+
+    if (NULL == b) {
+        return NULL;    /* Out of memory */
+    }
+
+    b->data = (unsigned char *) malloc(c);
+
+    if (b->data == NULL) {
+        free(b);
+        return NULL;
+    }
+
+    b->mlen = c;
+    b->slen = c - 1;
+
+    for (i = bl->qty - 1, c = 0, j = 0; i >= 0; i--, j++) {
+        if (j > 0 && sep != NULL) {
+            memcpy(b->data + c, sep->data, sep->slen);
+            c += sep->slen;
+        }
+
+        v = bl->entry[i]->slen;
+        memcpy(b->data + c, bl->entry[i]->data, v);
+        c += v;
+    }
+
+    b->data[c] = (unsigned char) '\0';
+    return b;
 }
 
 int ad_find(int argc, char **argv, AFPObj *obj)
@@ -165,18 +264,29 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             int buflen = 12 + MAXPATHLEN + 1;
             char *name;
             cnid_t did = cnid;
-            struct bstrList *pathlist = bstrListCreateMin(32);
+            struct bstrList *pathlist = bstr_list_create_min(32);
 
             while (did != DIRDID_ROOT) {
                 if ((name = cnid_resolve(vol.vol->v_cdb, &did, buffer, buflen)) == NULL) {
                     goto next;
                 }
 
-                bstrListPush(pathlist, bfromcstr(name));
+                if (bstr_list_push(pathlist, bfromcstr(name)) < 0) {
+                    ERROR("bstr_list_push failed for \"%s\"", name);
+                    bstrListDestroy(pathlist);
+                    bdestroy(volpath);
+                    return 1;
+                }
             }
 
-            bstrListPush(pathlist, volpath);
-            path = bjoinInv(pathlist, sep);
+            if (bstr_list_push(pathlist, volpath) < 0) {
+                ERROR("bstr_list_push failed for volume path");
+                bstrListDestroy(pathlist);
+                bdestroy(volpath);
+                return 1;
+            }
+
+            path = bjoin_inv(pathlist, sep);
             printf("%s\n", cfrombstr(path));
 next:
             bstrListDestroy(pathlist);
