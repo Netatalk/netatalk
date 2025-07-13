@@ -27,7 +27,6 @@
 #include <atalk/afp.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>

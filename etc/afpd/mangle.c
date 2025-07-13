@@ -14,7 +14,6 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include <atalk/bstradd.h>
 #include <atalk/util.h>
 
 #include "desktop.h"

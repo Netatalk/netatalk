@@ -18,10 +18,10 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/globals.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/util.h>
 
 #include "desktop.h"
 #include "directory.h"

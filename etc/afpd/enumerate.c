@@ -16,7 +16,6 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstradd.h>
 #include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/globals.h>
