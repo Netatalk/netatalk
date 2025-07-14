@@ -8,6 +8,7 @@
 
 #include <talloc.h>
 
+#include <atalk/bstrlib.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/spotlight.h>

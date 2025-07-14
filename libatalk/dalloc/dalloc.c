@@ -121,7 +121,6 @@
 #include <atalk/errchk.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
-#include <atalk/bstrlib.h>
 #include <atalk/dalloc.h>
 
 /* Use dalloc_add_copy() macro, not this function */
