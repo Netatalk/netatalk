@@ -41,6 +41,7 @@
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
