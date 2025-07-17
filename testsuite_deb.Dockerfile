@@ -1,4 +1,5 @@
 ARG RUN_DEPS="\
+    ca-certificates \
     cracklib-runtime \
     libacl1 \
     libavahi-client3 \

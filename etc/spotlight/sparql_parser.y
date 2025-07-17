@@ -4,8 +4,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <bstrlib.h>
 #include <gio/gio.h>
-
 #include <talloc.h>
 
 #include <atalk/errchk.h>

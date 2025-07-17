@@ -4,7 +4,7 @@ libcnid_mysql = static_library(
     'cnid_mysql',
     libcnid_mysql_sources,
     include_directories: root_includes,
-    dependencies: [iniparser, mysql_deps],
+    dependencies: [bstring, iniparser, mysql_deps],
     c_args: statedir,
     install: false,
 )

@@ -31,10 +31,10 @@
 #include <sys/un.h>
 #include <time.h>
 
+#include <bstrlib.h>
 #include <sqlite3.h>
 
 #include <atalk/adouble.h>
-#include <atalk/bstrlib.h>
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid_sqlite_private.h>
 #include <atalk/errchk.h>

@@ -33,7 +33,6 @@
 #include <string.h>
 
 #include <atalk/adouble.h>
-#include <atalk/bstrlib.h>
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>

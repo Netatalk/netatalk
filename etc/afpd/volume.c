@@ -11,11 +11,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <grp.h>
-#ifdef HAVE_INIPARSER_INIPARSER_H
-#include <iniparser/iniparser.h>
-#else
-#include <iniparser.h>
-#endif
 #include <inttypes.h>
 #include <netinet/in.h>
 #include <pwd.h>
@@ -27,9 +22,16 @@
 #include <time.h>
 #include <utime.h>
 
+#include <bstrlib.h>
+
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
+
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 
 #ifdef CNID_DB
 #include <atalk/cnid.h>

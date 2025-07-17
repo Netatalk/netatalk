@@ -29,7 +29,8 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#include <atalk/bstrlib.h>
+#include <bstrlib.h>
+
 #include <atalk/cnid.h>
 #include <atalk/queue.h>
 #include <atalk/unicode.h>

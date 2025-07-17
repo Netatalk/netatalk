@@ -4,7 +4,7 @@ compat_sources = [
     'strlcpy.c',
 ]
 
-libcompat_deps = []
+libcompat_deps = [bstring]
 
 if have_quota
     libcompat_deps += quota_deps

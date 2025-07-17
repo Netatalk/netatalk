@@ -14,5 +14,6 @@ libasp = static_library(
     'asp',
     asp_sources,
     include_directories: root_includes,
+    dependencies: [bstring],
     install: false,
 )

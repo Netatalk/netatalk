@@ -10,7 +10,7 @@ else
     lib_suffix = []
 endif
 
-passwd_deps = []
+passwd_deps = [bstring]
 if crypt.found()
     passwd_deps += crypt
 endif
@@ -19,6 +19,7 @@ library(
     'uams_guest',
     ['uams_guest.c'],
     include_directories: root_includes,
+    dependencies: [bstring],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -103,7 +104,7 @@ if have_pam
         'uams_pam',
         ['uams_pam.c'],
         include_directories: [pam_includes, root_includes],
-        dependencies: pam,
+        dependencies: [bstring, pam],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -151,7 +152,7 @@ if have_krb5_uam
         'uams_gss',
         ['uams_gss.c'],
         include_directories: [gssapi_includes, root_includes],
-        dependencies: [iniparser, gss_libs],
+        dependencies: [bstring, iniparser, gss_libs],
         c_args: kerberos_c_args,
         name_prefix: '',
         name_suffix: lib_suffix,

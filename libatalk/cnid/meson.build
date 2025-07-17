@@ -1,4 +1,4 @@
-libcnid_deps = [iniparser]
+libcnid_deps = [bstring, iniparser]
 libcnid_libs = []
 
 if use_dbd_backend

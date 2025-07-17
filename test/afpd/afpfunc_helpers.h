@@ -24,7 +24,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
 #include <atalk/globals.h>

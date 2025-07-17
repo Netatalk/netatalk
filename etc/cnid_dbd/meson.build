@@ -17,7 +17,7 @@ if use_dbd_backend
         'pack.c',
     ]
 
-    cnid_dbd_deps = [iniparser]
+    cnid_dbd_deps = [bstring, iniparser]
 
     if have_iconv
         cnid_dbd_deps += iconv

@@ -28,11 +28,11 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 
+#include <bstrlib.h>
 #include <event2/event.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>

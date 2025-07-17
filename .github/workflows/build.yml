@@ -171,6 +171,7 @@ jobs:
           apt-get update
           apt-get install --assume-yes --no-install-recommends \
             bison \
+            ca-certificates \
             cmark-gfm \
             cracklib-runtime \
             file \

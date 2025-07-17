@@ -28,6 +28,8 @@
 #include <string.h>
 #include <strings.h>
 
+#include <bstrlib.h>
+
 #ifdef HAVE_FREEBSD_SUNACL
 #include <sunacl.h>
 #endif
@@ -39,7 +41,6 @@
 #include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
