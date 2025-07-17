@@ -336,7 +336,7 @@ int cnid_mysql_update(struct _cnid_db *cdb,
             }
         }
 
-        update_id = mysql_stmt_insert_id(db->cnid_put_stmt);
+        update_id = (cnid_t)mysql_stmt_insert_id(db->cnid_put_stmt);
     } while (update_id != ntohl(id));
 
 EC_CLEANUP:
@@ -437,8 +437,8 @@ exec_stmt:
         EC_FAIL;
     }
 
-    retid = htonl(lookup_result_id);
-    retdid = htonl(lookup_result_did);
+    retid = htonl((uint32_t)lookup_result_id);
+    retdid = htonl((uint32_t)lookup_result_did);
     retname = lookup_result_name;
     retdev = lookup_result_dev;
     retino = lookup_result_ino;
