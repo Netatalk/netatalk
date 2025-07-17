@@ -25,8 +25,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
-#include <atalk/bstrlib.h>
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid.h>
 #include <atalk/directory.h>

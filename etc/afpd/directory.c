@@ -19,9 +19,10 @@
 #include <sys/stat.h>
 #include <utime.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/fce_api.h>

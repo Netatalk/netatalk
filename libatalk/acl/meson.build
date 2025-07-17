@@ -4,7 +4,7 @@ acl_sources = [
     'uuid.c',
 ]
 
-libacl_deps = [acl_deps, iniparser]
+libacl_deps = [bstring, acl_deps, iniparser]
 
 if have_ldap
     acl_sources += [

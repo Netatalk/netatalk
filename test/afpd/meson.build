@@ -32,7 +32,7 @@ test_sources = [
 ]
 
 test_c_args = []
-test_external_deps = [iniparser, libgcrypt]
+test_external_deps = [bstring, iniparser, libgcrypt]
 test_internal_deps = []
 test_link_args = []
 test_includes = [root_includes]

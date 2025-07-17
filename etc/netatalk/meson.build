@@ -1,5 +1,5 @@
 netatalk_sources = ['afp_avahi.c', 'afp_mdns.c', 'afp_zeroconf.c', 'netatalk.c']
-netatalk_deps = [iniparser, libevent]
+netatalk_deps = [bstring, iniparser, libevent]
 
 if use_mysql_backend
     netatalk_deps += mysqlclient

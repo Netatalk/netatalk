@@ -41,6 +41,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <bstrlib.h>
+
 #ifdef HAVE_FREEBSD_SUNACL
 #include <sunacl.h>
 #endif
@@ -61,7 +63,6 @@
 #include <sys/types.h>
 #endif /* HAVE_POSIX_ACLS */
 
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>

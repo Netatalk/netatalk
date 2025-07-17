@@ -1,4 +1,4 @@
-pap_deps = []
+pap_deps = [bstring]
 
 if have_iconv
     pap_deps += iconv

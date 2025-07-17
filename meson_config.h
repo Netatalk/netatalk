@@ -199,6 +199,9 @@
 /* Define to 1 if you have the `lgetxattr' function. */
 #mesondefine HAVE_LGETXATTR
 
+/* define if libgen.h has the `bgets` function. */
+#mesondefine HAVE_LIBGEN_H_BGETS
+
 /* define if you have libquota */
 #mesondefine HAVE_LIBQUOTA
 

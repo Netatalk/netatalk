@@ -23,11 +23,12 @@
 #include <sys/uio.h>
 #include <netatalk/at.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/atp.h>
 #include <atalk/asp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>

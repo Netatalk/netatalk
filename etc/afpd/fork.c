@@ -16,10 +16,11 @@
 #include <sys/param.h>
 #include <sys/socket.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include <atalk/asp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
 #include <atalk/ea.h>

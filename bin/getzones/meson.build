@@ -1,4 +1,4 @@
-getzones_deps = []
+getzones_deps = [bstring]
 
 if have_iconv
     getzones_deps += iconv

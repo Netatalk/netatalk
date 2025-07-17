@@ -26,7 +26,7 @@ executable(
     ['fce.c'],
     include_directories: root_includes,
     link_with: libatalk,
-    dependencies: [iniparser, misc_deps],
+    dependencies: [bstring, iniparser, misc_deps],
     install: true,
 )
 

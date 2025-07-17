@@ -9,5 +9,6 @@ libnbp = static_library(
     'nbp',
     nbp_sources,
     include_directories: root_includes,
+    dependencies: [bstring],
     install: false,
 )

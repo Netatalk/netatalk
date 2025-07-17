@@ -48,6 +48,8 @@
 #include <sys/wait.h>
 #include <time.h>
 
+#include <bstrlib.h>
+
 #ifndef WEXITSTATUS
 #define WEXITSTATUS(stat_val) ((unsigned)(stat_val) >> 8)
 #endif /* ! WEXITSTATUS */
@@ -82,7 +84,6 @@
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/compat.h>
 #include <atalk/errchk.h>
-#include <atalk/bstrlib.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
 
