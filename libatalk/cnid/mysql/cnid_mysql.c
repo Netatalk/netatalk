@@ -401,7 +401,7 @@ exec_stmt:
     EC_ZERO_LOG(mysql_stmt_bind_result(db->cnid_lookup_stmt, lookup_result));
     uint64_t retdev, retino;
     cnid_t retid, retdid;
-    char *retname;
+    const char *retname;
 
     switch (mysql_stmt_num_rows(db->cnid_lookup_stmt)) {
     case 0:
@@ -590,7 +590,7 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
 
             lastid = mysql_stmt_insert_id(stmt);
 
-            if (lastid > 0xffffffff) {
+            if (lastid > UINT32_MAX) {
                 /* CNID set ist depleted, restart from scratch */
                 EC_NEG1(asprintf(&sql,
                                  "START TRANSACTION;"
@@ -605,7 +605,6 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
                 free(sql);
                 sql = NULL;
                 db->cnid_mysql_flags |= CNID_MYSQL_FLAG_DEPLETED;
-                hint = CNID_INVALID;
 
                 do {
                     result = mysql_store_result(db->cnid_mysql_con);
@@ -766,12 +765,11 @@ int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
     EC_NEG1(asprintf(&sql, "SELECT Stamp FROM volumes WHERE VolPath='%s'",
                      cdb->cnid_db_vol->v_path));
 
-    if (cnid_mysql_execute(db->cnid_mysql_con, sql)) {
-        if (mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
-            LOG(log_error, logtype_cnid, "MySQL query error: %s",
-                mysql_error(db->cnid_mysql_con));
-            EC_FAIL;
-        }
+    if (cnid_mysql_execute(db->cnid_mysql_con, sql)
+            && mysql_errno(db->cnid_mysql_con) != ER_DUP_ENTRY) {
+        LOG(log_error, logtype_cnid, "MySQL query error: %s",
+            mysql_error(db->cnid_mysql_con));
+        EC_FAIL;
     }
 
     free(sql);
