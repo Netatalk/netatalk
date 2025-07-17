@@ -382,17 +382,22 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
     stmt_param_did = ntohl(did);
     stmt_param_dev = dev;
     stmt_param_ino = ino;
-exec_stmt:
+    bool retry = true;
 
-    if (mysql_stmt_execute(db->cnid_lookup_stmt)) {
-        switch (mysql_stmt_errno(db->cnid_lookup_stmt)) {
-        case CR_SERVER_LOST:
-            close_prepared_stmt(db);
-            EC_ZERO(init_prepared_stmt(db));
-            goto exec_stmt;
+    while (retry) {
+        retry = false;
 
-        default:
-            EC_FAIL;
+        if (mysql_stmt_execute(db->cnid_lookup_stmt)) {
+            switch (mysql_stmt_errno(db->cnid_lookup_stmt)) {
+            case CR_SERVER_LOST:
+                close_prepared_stmt(db);
+                EC_ZERO(init_prepared_stmt(db));
+                retry = true;
+                continue;
+
+            default:
+                EC_FAIL;
+            }
         }
     }
 
