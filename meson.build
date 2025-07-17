@@ -643,6 +643,33 @@ endif
 cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')
 
 #
+# Check for Better String Library
+#
+
+bgets_test_code = '''
+#include <stdio.h>
+#include <libgen.h>
+int main() {
+    char buffer[256];
+    char delim = '\n';
+    FILE *fp = stdin;
+    char *result = bgets(buffer, sizeof(buffer), fp, &delim);
+    return 0;
+}
+'''
+
+has_bgets = cc.compiles(bgets_test_code, name: 'bgets defined in standard C library')
+
+cdata.set('HAVE_LIBGEN_H_BGETS', has_bgets)
+
+bstring = dependency('bstring', required: false)
+
+if not bstring.found()
+    bstring_proj = subproject('bstring')
+    bstring = bstring_proj.get_variable('bstring_dep')
+endif
+
+#
 # Check for iniparser
 #
 

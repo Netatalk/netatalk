@@ -4,11 +4,10 @@
 #include <string.h>
 #include <time.h>
 
+#include <bstrlib.h>
 #include <gio/gio.h>
-
 #include <talloc.h>
 
-#include <atalk/bstrlib.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/spotlight.h>

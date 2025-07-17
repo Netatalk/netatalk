@@ -15,7 +15,8 @@
 #include <sys/stat.h> /* works around a bug */
 #include <unistd.h>
 
-#include <atalk/bstrlib.h>
+#include <bstrlib.h>
+
 #include <atalk/ea.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>

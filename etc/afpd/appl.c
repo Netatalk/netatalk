@@ -8,7 +8,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#include <atalk/logger.h>
 #include <ctype.h>
 #include <errno.h>
 #include <stdio.h>
@@ -16,10 +15,12 @@
 #include <string.h>
 #include <sys/param.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/globals.h>
+#include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 

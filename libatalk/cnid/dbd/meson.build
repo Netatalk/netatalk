@@ -4,6 +4,6 @@ libcnid_dbd = static_library(
     'cnid_dbd',
     libcnid_dbd_sources,
     include_directories: root_includes,
-    dependencies: [iniparser],
+    dependencies: [bstring, iniparser],
     install: false,
 )

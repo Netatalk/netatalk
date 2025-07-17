@@ -14,5 +14,6 @@ libatp = static_library(
     'atp',
     atp_sources,
     include_directories: root_includes,
+    dependencies: [bstring],
     install: false,
 )

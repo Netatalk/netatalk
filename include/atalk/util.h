@@ -18,9 +18,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <bstrlib.h>
+
 #include <netatalk/at.h>
 
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/unicode.h>
 

@@ -23,7 +23,8 @@
 #include <string.h>
 #include <time.h>
 
-#include <atalk/bstrlib.h>
+#include <bstrlib.h>
+
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
 #include <atalk/globals.h>

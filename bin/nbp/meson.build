@@ -1,4 +1,4 @@
-npb_deps = []
+npb_deps = [bstring]
 
 if have_iconv
     npb_deps += iconv

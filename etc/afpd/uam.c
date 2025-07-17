@@ -25,8 +25,9 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include <bstrlib.h>
+
 #include <atalk/afp.h>
-#include <atalk/bstrlib.h>
 #include <atalk/dsi.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
