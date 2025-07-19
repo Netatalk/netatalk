@@ -833,12 +833,20 @@ static int ftw_startup(const char *dir,
     /* Return to the start directory (if necessary).  */
     if (cwdfd != -1) {
         int save_err = errno;
-        __fchdir(cwdfd);
+
+        if (__fchdir(cwdfd) < 0) {
+            result = -1;
+        }
+
         close(cwdfd);
         __set_errno(save_err);
     } else if (cwd != NULL) {
         int save_err = errno;
-        __chdir(cwd);
+
+        if (__chdir(cwd) < 0) {
+            result = -1;
+        }
+
         free(cwd);
         __set_errno(save_err);
     }

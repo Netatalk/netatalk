@@ -92,6 +92,7 @@ static int set_sl_volumes(void)
     EC_INIT;
     const struct vol *volumes, *vol;
     struct bstrList *vollist = bstrListCreate();
+    int sysret;
     bstring sep = bfromcstr(", ");
     bstring volnamelist = NULL, cmd = NULL;
     EC_NULL_LOG(volumes = getvolumes());
@@ -117,9 +118,34 @@ static int set_sl_volumes(void)
                   " index-recursive-directories \"[%s]\"",
                   bdata(volnamelist) ? bdata(volnamelist) : "");
     LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
-    system(bdata(cmd));
+    sysret = system(bdata(cmd));
+
+    if (sysret == -1) {
+        LOG(log_error, logtype_sl, "set_sl_volumes: system() failed to run '%s': %s",
+            bdata(cmd), strerror(errno));
+        EC_FAIL;
+    } else if (sysret != 0) {
+        LOG(log_error, logtype_sl, "set_sl_volumes: command '%s' exited with status %d",
+            bdata(cmd), WEXITSTATUS(sysret));
+        EC_FAIL;
+    }
+
     /* Disable default root user home indexing */
-    system("gsettings set " INDEXER_DBUS_NAME " index-single-directories \"[]\"");
+    sysret = system("gsettings set " INDEXER_DBUS_NAME
+                    " index-single-directories \"[]\"");
+
+    if (sysret == -1) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: system() failed to run disable home indexing: %s",
+            strerror(errno));
+        EC_FAIL;
+    } else if (sysret != 0) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: disable home indexing exited with status %d",
+            WEXITSTATUS(sysret));
+        EC_FAIL;
+    }
+
 EC_CLEANUP:
 
     if (cmd) {
@@ -181,6 +207,7 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     sigset_t sigs;
     struct timeval tv;
+    int sysret;
     LOG(log_info, logtype_afpd, "Exiting on SIGTERM");
 
     if (in_shutdown) {
@@ -201,7 +228,18 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     event_del(sighup_ev);
     event_del(timer_ev);
 #ifdef WITH_SPOTLIGHT
-    system(INDEXER_COMMAND " -t");
+    sysret = system(INDEXER_COMMAND " -t");
+
+    if (sysret == -1) {
+        LOG(log_error, logtype_afpd,
+            "sigterm_cb: system() failed to run Spotlight indexer stop: %s",
+            strerror(errno));
+    } else if (sysret != 0) {
+        LOG(log_error, logtype_afpd,
+            "sigterm_cb: Spotlight indexer stop exited with status %d",
+            WEXITSTATUS(sysret));
+    }
+
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -211,7 +249,18 @@ static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef WITH_SPOTLIGHT
-    system(INDEXER_COMMAND " -t");
+    int sysret = system(INDEXER_COMMAND " -t");
+
+    if (sysret == -1) {
+        LOG(log_error, logtype_afpd,
+            "sigquit_cb: system() failed to run Spotlight indexer stop: %s",
+            strerror(errno));
+    } else if (sysret != 0) {
+        LOG(log_error, logtype_afpd,
+            "sigquit_cb: Spotlight indexer stop exited with status %d",
+            WEXITSTATUS(sysret));
+    }
+
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -433,6 +482,7 @@ int main(int argc, char **argv)
     int c, ret, debug = 0;
     sigset_t blocksigs;
     struct timeval tv;
+    int sysret;
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
@@ -547,7 +597,17 @@ int main(int argc, char **argv)
         sleep(1);
         set_sl_volumes();
         LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
-        system(INDEXER_COMMAND " -s");
+        sysret = system(INDEXER_COMMAND " -s");
+
+        if (sysret == -1) {
+            LOG(log_error, logtype_default,
+                "system() failed to run Spotlight indexer start: %s", strerror(errno));
+            netatalk_exit(EXITERR_CONF);
+        } else if (sysret != 0) {
+            LOG(log_error, logtype_default, "Spotlight indexer start exited with status %d",
+                WEXITSTATUS(sysret));
+            netatalk_exit(EXITERR_CONF);
+        }
     }
 
 #endif

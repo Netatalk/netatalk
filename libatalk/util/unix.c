@@ -153,8 +153,19 @@ int daemonize(void)
 
     closeall(0);
     open("/dev/null", O_RDWR);
-    dup(0);
-    dup(0);
+
+    if (dup(0) < 0) {
+        LOG(log_error, logtype_default, "Can't dup /dev/null first time: %s",
+            strerror(errno));
+        return -1;
+    }
+
+    if (dup(0) < 0) {
+        LOG(log_error, logtype_default, "Can't dup /dev/null second time: %s",
+            strerror(errno));
+        return -1;
+    }
+
     return 0;
 }
 

@@ -529,7 +529,15 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         goto exit;
     }
 
-    write(fd, log_message, len);
+    if (write(fd, log_message, len) < 0) {
+        LOG(log_error, logtype_logger,
+            "make_log_entry: write to log file %s failed: %s",
+            log_src_filename, strerror(errno));
+        close(fd);
+        type_configs[logtype].fd = -1;
+        goto exit;
+    }
+
     free(log_message);
     free(user_message);
 exit:
