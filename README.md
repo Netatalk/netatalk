@@ -2,7 +2,7 @@
 
 Continuous Integration:
 [![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/build.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/build.yml)
-[![Build Status](https://github.com/Netatalk/netatalk/actions/workflows/test.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/test.yml)
+[![Test Status](https://github.com/Netatalk/netatalk/actions/workflows/test.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/test.yml)
 [![Container Status](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml)
 
 Get Netatalk:
@@ -57,11 +57,22 @@ In addition, a print server, time server, MacIP gateway bridge, and Apple II net
 are also provided.
 
 All versions of Netatalk except the 3.x release series can speak AppleTalk.
+However, your host OS must supply an AppleTalk networking stack to be able to use this feature.
+Please read the [AppleTalk chapter in the manual](https://netatalk.io/manual/en/AppleTalk) for more information.
 
-## Website
+## Documentation
 
-The Netatalk website [netatalk.io](https://netatalk.io) is where project updates and resources are published,
-including documentation, release notes, security advisories, links to related projects, and more.
+To aid in your installation and configuration of Netatalk, a comprehensive [manual](https://netatalk.io/manual/en/)
+is published on the project website.
+
+Additionally, each Netatalk program and configuration file also has a man page
+which can be accessed on the command line, f.e. `man afpd`.
+
+Collaborative wiki articles can be found on the [GitHub wiki](https://github.com/Netatalk/netatalk/wiki).
+The [Netatalk website](https://netatalk.io/docs) also serves a static mirror of all wiki pages.
+
+Editing is open to all registered GitHub users.
+We are looking forward to your contributions!
 
 ## Community
 
@@ -83,20 +94,23 @@ the archives are a veritable treasure trove of decades of Mac networking know-ho
 Most OS distributions and package repositories ship a version of Netatalk.
 If you want a pre-built binary package, try your package manager first.
 
-To get started with building Netatalk from source code, the [install readme](https://netatalk.io/install)
+To get started with building Netatalk from source code, the
+[Installation Quick Start](https://netatalk.io/install)
 is a good starting point.
 
 ## Container deployments
 
-Netatalk runs well in a containerized environment.
+Netatalk is distributed as a container image
+and can be deployed with containerization engines such as Docker or Podman.
 
 Read the [container readme](https://netatalk.io/docker) for more information.
 
-## Webmin module
+## Administrative GUI
 
-An administrative GUI frontend built on the Webmin 2.0 platform is distributed with Netatalk.
+A [Webmin](https://webmin.com/) module for Netatalk is available,
+used for configuring and operating the Netatalk daemons through a convenient web interface.
 
-See the [Webmin README](https://github.com/Netatalk/netatalk/blob/main/contrib/webmin_module/README.md)
+See the [Webmin module readme](https://github.com/Netatalk/netatalk/blob/main/contrib/webmin_module/README.md)
 for instructions how to install and get started with the module.
 or this [overview of the module's feature set](https://netatalk.io/docs/Webmin-Module).
 
@@ -105,7 +119,7 @@ or this [overview of the module's feature set](https://netatalk.io/docs/Webmin-M
 Bug reports and feature requests should be filed as [GitHub issue tickets](https://github.com/Netatalk/netatalk/issues).
 
 Before contributing code to the project, please read the [Developer Notes](https://netatalk.io/docs/Developer-Notes)
-to learn how to prepare a PR that is compliant with project guidelines.
+for the code and PR conventions used by this project.
 
 PRs are automatically picked up by GitHub CI, which runs the builds, integration tests,
 as well as static analysis scan on SonarCloud (the latter only for PRs created by project members.)
@@ -119,23 +133,6 @@ We would love to hear from you if you think you found a security vulnerability i
 Please read the above policy and then file a
 [security issue ticket](https://github.com/Netatalk/netatalk/security/advisories/new) with us.
 We promise to follow up with you as soon as possible.
-
-## Documentation
-
-To aid in your installation and configuration of Netatalk, a comprehensive [manual](https://netatalk.io/manual/en/)
-is published on the project website.
-
-Additionally, each Netatalk program and configuration file also has a _roff_ man page
-which can be accessed on the command line, f.e. `man afpd`.
-
-## Wiki
-
-Collaborative articles can be found on the [Netatalk wiki](https://github.com/Netatalk/netatalk/wiki).
-The [Netatalk website](https://netatalk.io/docs) also serves a static mirror of all wiki pages.
-
-Editing is open to all registered GitHub users.
-We are looking forward to your additions to existing material,
-or brand new articles on topics concerning Netatalk and Mac networking.
 
 ## Hosting
 
