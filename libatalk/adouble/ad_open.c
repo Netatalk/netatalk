@@ -1984,8 +1984,17 @@ const char *ad_path_osx(const char *path, int adflags _U_)
     char    c, *slash, buf[MAXPATHLEN + 1];
 
     if (!strcmp(path, ".")) {
-        /* fixme */
-        getcwd(buf, MAXPATHLEN);
+        if (getcwd(buf, MAXPATHLEN) == NULL) {
+            LOG(log_error, logtype_default,
+                "ad_path_osx(\"%s\"): getcwd() failed in ad_path_osx: %s", path,
+                strerror(errno));
+            buf[0] = '\0';
+        } else if (strnlen(buf, MAXPATHLEN + 1) >= MAXPATHLEN) {
+            LOG(log_error, logtype_default,
+                "ad_path_osx(\"%s\"): Current working directory path too long, truncating to MAXPATHLEN",
+                path);
+            buf[MAXPATHLEN - 1] = '\0';
+        }
     } else {
         strlcpy(buf, path, MAXPATHLEN + 1);
     }

@@ -194,8 +194,8 @@ static int ad_conv_v22ea_rf(const char *path, const struct stat *sp,
                               copybuf_len));
         adea.ad_rlen = adv2.ad_rlen;
         ad_flush(&adea);
-        fchmod(ad_reso_fileno(&adea), sp->st_mode & 0666);
-        fchown(ad_reso_fileno(&adea), sp->st_uid, sp->st_gid);
+        EC_NEG1_LOG(fchmod(ad_reso_fileno(&adea), sp->st_mode & 0666));
+        EC_NEG1_LOG(fchown(ad_reso_fileno(&adea), sp->st_uid, sp->st_gid));
     }
 
 EC_CLEANUP:

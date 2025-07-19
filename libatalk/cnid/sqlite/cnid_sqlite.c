@@ -368,18 +368,20 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
 
     do {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "BEGIN"));
-        asprintf(&sql, "DELETE FROM \"%s\" WHERE Id=%" PRIu32,
-                 db->cnid_sqlite_voluuid_str, ntohl(id));
+        EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\" WHERE Id=%" PRIu32,
+                         db->cnid_sqlite_voluuid_str, ntohl(id)));
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, sql));
         free(sql);
         sql = NULL;
-        asprintf(&sql, "DELETE FROM \"%s\" WHERE Did = %" PRIu32 " AND Name = \"%s\"",
-                 db->cnid_sqlite_voluuid_str, ntohl(did), name);
+        EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\" WHERE Did = %" PRIu32
+                         " AND Name = \"%s\"",
+                         db->cnid_sqlite_voluuid_str, ntohl(did), name));
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, sql));
         free(sql);
         sql = NULL;
-        asprintf(&sql, "DELETE FROM \"%s\" WHERE DevNo = %" PRIu64 " AND InodeNo = %"
-                 PRIu64, db->cnid_sqlite_voluuid_str, dev, ino);
+        EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\" WHERE DevNo = %" PRIu64
+                         " AND InodeNo = %"
+                         PRIu64, db->cnid_sqlite_voluuid_str, dev, ino));
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, sql));
         free(sql);
         sql = NULL;
@@ -798,8 +800,8 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 LOG(log_info, logtype_cnid,
                     "cnid_sqlite_add: CNID set is depleted, resetting ID sequence");
                 EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "BEGIN"));
-                asprintf(&sql, "UPDATE volumes SET Depleted = 1 WHERE VolUUID = \"%s\"",
-                         db->cnid_sqlite_voluuid_str);
+                EC_NEG1(asprintf(&sql, "UPDATE volumes SET Depleted = 1 WHERE VolUUID = \"%s\"",
+                                 db->cnid_sqlite_voluuid_str));
 
                 if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
                     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -808,7 +810,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                asprintf(&sql, "DELETE FROM \"%s\"", db->cnid_sqlite_voluuid_str);
+                EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\"", db->cnid_sqlite_voluuid_str));
 
                 if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
                     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -817,8 +819,9 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                asprintf(&sql, "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
-                         db->cnid_sqlite_voluuid_str);
+                EC_NEG1(asprintf(&sql,
+                                 "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                                 db->cnid_sqlite_voluuid_str));
 
                 if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
                     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -827,11 +830,11 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
-                               "16 WHERE NOT EXISTS "
-                               "(SELECT changes() AS change "
-                               "FROM sqlite_sequence WHERE change <> 0);",
-                         db->cnid_sqlite_voluuid_str);
+                EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
+                                       "16 WHERE NOT EXISTS "
+                                       "(SELECT changes() AS change "
+                                       "FROM sqlite_sequence WHERE change <> 0);",
+                                 db->cnid_sqlite_voluuid_str));
 
                 if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
                     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1064,8 +1067,9 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     }
 
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "BEGIN"));
-    asprintf(&sql, "UPDATE volumes SET Depleted = 0 WHERE VolUUID = \"%s\";",
-             db->cnid_sqlite_voluuid_str);
+    EC_NEG1(asprintf(&sql,
+                     "UPDATE volumes SET Depleted = 0 WHERE VolUUID = \"%s\";",
+                     db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1074,7 +1078,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
 
     free(sql);
     sql = NULL;
-    asprintf(&sql, "DELETE FROM \"%s\";", db->cnid_sqlite_voluuid_str);
+    EC_NEG1(asprintf(&sql, "DELETE FROM \"%s\";", db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1083,8 +1087,9 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
 
     free(sql);
     sql = NULL;
-    asprintf(&sql, "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
-             db->cnid_sqlite_voluuid_str);
+    EC_NEG1(asprintf(&sql,
+                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                     db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1093,9 +1098,9 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
 
     free(sql);
     sql = NULL;
-    asprintf(&sql,
-             "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
-             db->cnid_sqlite_voluuid_str);
+    EC_NEG1(asprintf(&sql,
+                     "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
+                     db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1316,16 +1321,16 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_reset(transient_stmt);
     sqlite3_clear_bindings(transient_stmt);
     /* Create volume table */
-    asprintf(&sql, "CREATE TABLE IF NOT EXISTS \"%s\" ("
-                   "Id INTEGER PRIMARY KEY AUTOINCREMENT,"
-                   "Name VARCHAR(255) NOT NULL,"
-                   "Did INTEGER NOT NULL,"
-                   "DevNo INTEGER NOT NULL,"
-                   "InodeNo INTEGER NOT NULL,"
-                   "UNIQUE (Did, Name),"
-                   "UNIQUE (DevNo, InodeNo)"
-                   ");",
-             db->cnid_sqlite_voluuid_str);
+    EC_NEG1(asprintf(&sql, "CREATE TABLE IF NOT EXISTS \"%s\" ("
+                           "Id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                           "Name VARCHAR(255) NOT NULL,"
+                           "Did INTEGER NOT NULL,"
+                           "DevNo INTEGER NOT NULL,"
+                           "InodeNo INTEGER NOT NULL,"
+                           "UNIQUE (Did, Name),"
+                           "UNIQUE (DevNo, InodeNo)"
+                           ");",
+                     db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql)) {
         EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1367,8 +1372,9 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         LOG(log_debug, logtype_cnid,
             "Creating new CNID table for volume '%s' with ID sequence starting at 16",
             vol->v_path);
-        asprintf(&sql, "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
-                 db->cnid_sqlite_voluuid_str);
+        EC_NEG1(asprintf(&sql,
+                         "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                         db->cnid_sqlite_voluuid_str));
 
         if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
             EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
@@ -1377,11 +1383,11 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
         free(sql);
         sql = NULL;
-        asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
-                       "16 WHERE NOT EXISTS "
-                       "(SELECT changes() AS change "
-                       "FROM sqlite_sequence WHERE change <> 0);",
-                 db->cnid_sqlite_voluuid_str);
+        EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
+                               "16 WHERE NOT EXISTS "
+                               "(SELECT changes() AS change "
+                               "FROM sqlite_sequence WHERE change <> 0);",
+                         db->cnid_sqlite_voluuid_str));
 
         if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
             EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));

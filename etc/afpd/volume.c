@@ -1045,7 +1045,11 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return AFPERR_PARAM;
     }
 
-    (void)chdir("/");
+    if (chdir("/") < 0) {
+        LOG(log_error, logtype_afpd, "afp_closevol: chdir: %s", strerror(errno));
+        return AFPERR_PARAM;
+    }
+
     curdir = NULL;
     closevol(obj, vol);
     server_ipc_volumes(obj);

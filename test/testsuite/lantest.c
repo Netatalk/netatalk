@@ -947,7 +947,10 @@ int main(int ac, char **av)
     }
 
     if (! Debug) {
-        freopen("/dev/null", "w", stdout);
+        if (freopen("/dev/null", "w", stdout) == NULL) {
+            fprintf(stderr, "Error: Could not redirect stdout to /dev/null\n");
+            exit(1);
+        }
     }
 
 #if 0
