@@ -11,7 +11,7 @@ atalkd_sources = [
 
 atalkd_c_args = ['-D_PATH_ATALKDCONF="' + pkgconfdir + '/atalkd.conf"', dversion]
 
-atalkd_deps = []
+atalkd_deps = [bstring]
 
 if have_iconv
     atalkd_deps += iconv

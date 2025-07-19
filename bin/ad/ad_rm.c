@@ -26,9 +26,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
-#include <atalk/bstradd.h>
-#include <atalk/bstrlib.h>
 #include <atalk/ftw.h>
 #include <atalk/queue.h>
 #include <atalk/unix.h>

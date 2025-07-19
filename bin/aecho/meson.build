@@ -1,4 +1,4 @@
-aecho_deps = []
+aecho_deps = [bstring]
 
 if have_iconv
     aecho_deps += iconv

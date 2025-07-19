@@ -20,11 +20,6 @@
 #include <ctype.h>
 #include <errno.h>
 #include <grp.h>
-#ifdef HAVE_INIPARSER_INIPARSER_H
-#include <iniparser/iniparser.h>
-#else
-#include <iniparser.h>
-#endif
 #include <inttypes.h>
 
 #if HAVE_LANGINFO_H
@@ -48,6 +43,14 @@
 #include <time.h>
 #include <utime.h>
 
+#include <bstrlib.h>
+
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
+
 #include <atalk/afp.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
@@ -60,8 +63,6 @@
 #include <atalk/asp.h>
 #include <atalk/uuid.h>
 #include <atalk/netatalk_conf.h>
-#include <atalk/bstrlib.h>
-#include <atalk/bstradd.h>
 
 #define VOLPASSLEN  8
 #ifndef UUID_PRINTABLE_STRING_LENGTH

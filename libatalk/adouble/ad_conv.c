@@ -29,9 +29,9 @@
 #include <string.h>
 #include <sys/param.h>
 
+#include <bstrlib.h>
+
 #include <atalk/adouble.h>
-#include <atalk/bstradd.h>
-#include <atalk/bstrlib.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/ea.h>

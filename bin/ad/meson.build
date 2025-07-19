@@ -10,7 +10,7 @@ ad_sources = [
     'ad.h',
 ]
 
-ad_deps = [iniparser]
+ad_deps = [bstring, iniparser]
 
 if have_iconv
     ad_deps += iconv

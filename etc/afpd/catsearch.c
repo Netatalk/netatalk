@@ -43,7 +43,6 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstradd.h>
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/cnid.h>
 #include <atalk/globals.h>

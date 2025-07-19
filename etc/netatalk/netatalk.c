@@ -28,12 +28,11 @@
 #include <sys/uio.h>
 #include <sys/wait.h>
 
+#include <bstrlib.h>
 #include <event2/event.h>
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
-#include <atalk/bstradd.h>
-#include <atalk/bstrlib.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>
@@ -99,7 +98,16 @@ static int set_sl_volumes(void)
     for (vol = volumes; vol; vol = vol->v_next) {
         if (vol->v_flags & AFPVOL_SPOTLIGHT) {
             bstring volnamequot = bformat("'%s'", vol->v_path);
-            bstrListPush(vollist, volnamequot);
+
+            if (vollist->qty == vollist->mlen
+                    && bstrListAlloc(vollist, vollist->qty + 1) != BSTR_OK) {
+                LOG(log_error, logtype_default,
+                    "set_sl_volumes: failed to initialize indexing for %s",
+                    bdata(volnamequot));
+            }
+
+            vollist->entry[vollist->qty] = volnamequot;
+            vollist->qty++;
         }
     }
 

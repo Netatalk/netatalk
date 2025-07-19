@@ -18,9 +18,10 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <bstrlib.h>
+
 #include <netatalk/at.h>
 
-#include <atalk/bstrlib.h>
 #include <atalk/cnid.h>
 #include <atalk/unicode.h>
 
@@ -138,6 +139,15 @@ extern void mod_close(void *);
 #ifndef strequal
 #define strequal(a,b) (strcmp((a),(b)) == 0)
 #endif
+
+#define cfrombstr(b) ((char *)((b)->data))
+
+/* strip slashes from end of a bstring */
+#define BSTRING_STRIP_SLASH(a)                      \
+    do {                                            \
+        while (bchar((a), blength(a) - 1) == '/')   \
+            bdelete((a), blength(a) - 1, 1);        \
+    } while (0);
 
 /******************************************************************
  * locking.c

@@ -30,7 +30,7 @@ afpd_sources = [
 ]
 
 afpd_c_args = []
-afpd_external_deps = [iniparser, libgcrypt]
+afpd_external_deps = [bstring, iniparser, libgcrypt]
 afpd_internal_deps = []
 afpd_link_args = []
 afpd_includes = [root_includes]

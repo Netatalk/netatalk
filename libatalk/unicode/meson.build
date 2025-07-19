@@ -55,6 +55,7 @@ libunicode = static_library(
     'unicode',
     unicode_sources,
     include_directories: root_includes,
+    dependencies: [bstring],
     link_with: libcharsets,
     install: false,
 )

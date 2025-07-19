@@ -1,4 +1,4 @@
-macipgw_deps = [iniparser]
+macipgw_deps = [bstring, iniparser]
 
 if have_iconv
     macipgw_deps += iconv

@@ -1,6 +1,5 @@
 subdir('acl')
 subdir('adouble')
-subdir('bstring')
 subdir('cnid')
 subdir('compat')
 subdir('dsi')
@@ -9,6 +8,7 @@ subdir('unicode')
 subdir('vfs')
 
 libatalk_deps = [
+    bstring,
     iniparser,
     threads,
 ]
@@ -16,7 +16,6 @@ libatalk_deps = [
 libatalk_libs = [
     libacl,
     libadouble,
-    libbstring,
     libcnid,
     libcompat,
     libdsi,

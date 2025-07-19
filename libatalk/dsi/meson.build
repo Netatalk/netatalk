@@ -13,7 +13,7 @@ dsi_sources = [
     'dsi_write.c',
 ]
 
-libdsi_deps = [iniparser]
+libdsi_deps = [bstring, iniparser]
 
 if have_tcpwrap
     libdsi_deps += wrap

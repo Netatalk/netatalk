@@ -4,5 +4,6 @@ libcnid_last = static_library(
     'cnid_last',
     libcnid_last_sources,
     include_directories: root_includes,
+    dependencies: [bstring],
     install: false,
 )

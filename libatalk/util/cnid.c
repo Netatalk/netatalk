@@ -46,8 +46,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <atalk/bstradd.h>
-#include <atalk/bstrlib.h>
+#include <bstrlib.h>
+
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
