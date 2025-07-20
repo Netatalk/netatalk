@@ -23,7 +23,7 @@ ARG BUILD_DEPS="\
     meson \
     ninja-build \
     pkg-config \
-    systemtap-sdt-dev\
+    systemtap-sdt-dev \
     "
 
 ARG RUN_DEPS
@@ -57,6 +57,7 @@ RUN sed -i 's/hide_service_controls=0/hide_service_controls=1/' /netatalk-code/c
     -Dwith-krbV-uam=false \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-rpath=false \
+    -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=false \
     -Dwith-webmin=true \
