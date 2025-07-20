@@ -260,6 +260,7 @@ jobs:
             libdb-devel \
             libgcrypt-devel \
             libtalloc-devel \
+            localsearch \
             mariadb-connector-c-devel \
             meson \
             ninja-build \
@@ -272,8 +273,7 @@ jobs:
             sqlite-devel \
             systemd \
             systemtap-sdt-devel \
-            tracker \
-            tracker-devel
+            tinysparql-devel
       - name: Configure
         run: |
           meson setup build \
