@@ -604,28 +604,6 @@ static void slq_dump(void)
  * Tracker async callbacks
  ************************************************/
 
-#ifndef HAVE_TRACKER3
-static void tracker_con_cb(GObject      *object,
-                           GAsyncResult *res,
-                           gpointer      user_data)
-{
-    struct sl_ctx *sl_ctx = user_data;
-    GError *error = NULL;
-    sl_ctx->tracker_con = tracker_sparql_connection_get_finish(res,
-                          &error);
-
-    if (error) {
-        LOG(log_error, logtype_sl, "Could not connect to Tracker: %s",
-            error->message);
-        sl_ctx->tracker_con = NULL;
-        g_error_free(error);
-        return;
-    }
-
-    LOG(log_info, logtype_sl, "connected to Tracker");
-}
-#endif
-
 static void tracker_cursor_cb(GObject      *object,
                               GAsyncResult *res,
                               gpointer      user_data)
@@ -1332,9 +1310,7 @@ int spotlight_init(AFPObj *obj)
     static bool initialized = false;
     const char *attributes;
     struct sl_ctx *sl_ctx;
-#ifdef HAVE_TRACKER3
     GError *error = NULL;
-#endif
 
     if (initialized) {
         return 0;
@@ -1363,24 +1339,19 @@ int spotlight_init(AFPObj *obj)
     setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
     setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
     setenv("TRACKER_USE_LOG_FILES", "1", 0);
-#ifdef HAVE_TRACKER3
     sl_ctx->tracker_con =
-        tracker_sparql_connection_bus_new("org.freedesktop.Tracker3.Miner.Files",
+        tracker_sparql_connection_bus_new(INDEXER_DBUS_NAME,
                                           NULL, NULL, &error);
 
     if (error) {
-        LOG(log_error, logtype_sl, "Could not connect to Tracker: %s",
+        LOG(log_error, logtype_sl, "Could not connect to indexer: %s",
             error->message);
         sl_ctx->tracker_con = NULL;
         g_error_free(error);
         return -1;
     }
 
-    LOG(log_info, logtype_sl, "connected to Tracker3");
-#else
-    tracker_sparql_connection_get_async(sl_ctx->cancellable,
-                                        tracker_con_cb, sl_ctx);
-#endif
+    LOG(log_info, logtype_sl, "connected to indexer");
     initialized = true;
     return 0;
 }

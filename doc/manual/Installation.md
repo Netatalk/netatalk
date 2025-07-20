@@ -189,15 +189,11 @@ functionality.
     detection of host name spoofing or host address spoofing; booby traps
     to implement an early-warning system.
 
-- Tracker, or TinySPARQL / LocalSearch
+- LocalSearch or Tracker
 
-    Netatalk uses [Tracker](https://tracker.gnome.org) or its later
-    incarnation
-    TinySPARQL/[LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/)
-    as the metadata backend for Spotlight
-    search indexing. The minimum required version is 0.12 as this was the
-    first version to support
-    [SPARQL](https://gnome.pages.gitlab.gnome.org/tracker/).
+    Netatalk uses [GNOME LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/index.html),
+    or Tracker as it was previously known, version 3 or later as the metadata backend for Spotlight
+    compatible search indexing.
 
 - talloc / bison / flex
 

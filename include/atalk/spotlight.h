@@ -22,14 +22,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-
 #include <gio/gio.h>
 
-#ifndef HAVE_TRACKER3
-#include <libtracker-miner/tracker-miner.h>
-#endif
-
+#ifdef HAVE_TRACKER3
 #include <tracker-sparql.h>
+#else
+#include <tinysparql.h>
+#endif
 
 #include <atalk/globals.h>
 #include <atalk/volume.h>

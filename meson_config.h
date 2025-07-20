@@ -397,6 +397,9 @@
 /* Indexer managing command */
 #mesondefine INDEXER_COMMAND
 
+/* Indexer D-Bus name */
+#mesondefine INDEXER_DBUS_NAME
+
 /* Define if cracklib should be used */
 #mesondefine USE_CRACKLIB
 

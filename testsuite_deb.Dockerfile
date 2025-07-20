@@ -87,7 +87,6 @@ RUN meson setup build \
     -Dwith-spooldir=/var/spool/netatalk \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \
-    -Dwith-tracker-prefix=/usr \
 &&  meson compile -C build
 
 RUN meson install --destdir=/staging/ -C build
