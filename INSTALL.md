@@ -73,8 +73,8 @@ required at the bare minimum.
 | Package    | Details |
 |------------|---------|
 | D-Bus      | Also used by avahi and afpstats |
+| localsearch **OR** tracker | v3.0 or later |
 | talloc     |  |
-| tracker **OR** localsearch | v0.12 or later|
 | bison      |  |
 | flex       |  |
 

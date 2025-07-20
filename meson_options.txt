@@ -352,18 +352,6 @@ option(
     description: 'Set path for statedir used for CNID databases etc.',
 )
 option(
-    'with-tracker-install-prefix',
-    type: 'string',
-    value: '',
-    description: 'Set Tracker installation prefix',
-)
-option(
-    'with-tracker-prefix',
-    type: 'string',
-    value: '',
-    description: 'Set Tracker prefix',
-)
-option(
     'with-uams-path',
     type: 'string',
     value: 'libdir / netatalk',

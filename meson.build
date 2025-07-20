@@ -943,8 +943,6 @@ endif
 # Check for Spotlight support
 #
 
-tracker_prefix = get_option('with-tracker-prefix')
-
 have_spotlight = false
 
 if get_option('with-spotlight')
@@ -963,95 +961,50 @@ if get_option('with-spotlight')
 
     # Check for SPARQL
 
-    sparql_versions = ['tracker-sparql-3.0', 'tracker-sparql-2.0', 'tracker-sparql-1.0']
+    sparql_found = false
+    tinysparql = dependency('tinysparql-3.0', required: false)
+    tracker_sparql = dependency('tracker-sparql-3.0', required: false)
 
-    foreach sparql_version : sparql_versions
-        sparql = dependency(sparql_version, required: false)
-        if sparql.found()
-            break
-        endif
-    endforeach
+    if tinysparql.found()
+        sparql_found = true
+        sparql = tinysparql
+    elif tracker_sparql.found()
+        sparql_found = true
+        sparql = tracker_sparql
+        cdata.set('HAVE_TRACKER3', 1)
+    endif
 
-    if not sparql.found()
-        warning(
-            'Tracker SPARQL or TinySPARQL not found (required for Spotlight support)',
-        )
-    else
-        sparql_prefix = sparql.get_variable(pkgconfig: 'prefix')
+    # Check for indexer
 
-        # Check for indexer
+    indexer_found = false
+    localsearch = find_program('localsearch', required: false)
+    tracker3 = find_program('tracker3', required: false)
 
-        if tracker_prefix != ''
-            indexer_dirs = [tracker_prefix + '/bin']
-        else
-            indexer_dirs = []
-        endif
-
-        tracker = find_program(
-            'tracker',
-            dirs: indexer_dirs,
-            required: false,
-        )
-        tracker3 = find_program(
-            'tracker3',
-            dirs: indexer_dirs,
-            required: false,
-        )
-        tracker_control = find_program(
-            'tracker-control',
-            dirs: indexer_dirs,
-            required: false,
-        )
-        localsearch = find_program(
-            'localsearch',
-            dirs: indexer_dirs,
-            required: false,
-        )
-
-        indexer_command = ''
-
-        if localsearch.found()
-            cdata.set('HAVE_TRACKER3', 1)
-            indexer_command = localsearch.full_path() + ' daemon'
-        elif tracker3.found()
-            cdata.set('HAVE_TRACKER3', 1)
-            indexer_command = tracker3.full_path() + ' daemon'
-        elif tracker.found()
-            indexer_command = tracker.full_path() + ' daemon'
-        elif tracker_control.found()
-            indexer_command = tracker_control.full_path()
-        endif
-        indexer_found = (
-            tracker.found()
-            or tracker3.found()
-            or tracker_control.found()
-            or localsearch.found()
-        )
-        if indexer_found
-            cdata.set('INDEXER_COMMAND', '"' + indexer_command + '"')
-        else
-            warning(
-                'Tracker or LocalSearch not found (required for Spotlight support)',
-            )
-        endif
-        if not talloc.found()
-            warning(
-                'talloc library not found (required for Spotlight support)',
-            )
-        endif
+    if localsearch.found()
+        indexer_found = true
+        cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.LocalSearch3"')
+        cdata.set('INDEXER_COMMAND', '"' + localsearch.full_path() + ' daemon"')
+    elif tracker3.found()
+        indexer_found = true
+        cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.Tracker3.Miner.Files"')
+        cdata.set('INDEXER_COMMAND', '"' + tracker3.full_path() + ' daemon"')
     endif
 
     have_spotlight = (
-        sparql.found()
+        sparql_found
         and indexer_found
         and talloc.found()
         and flex.found()
         and bison.found()
     )
-endif
 
-if have_spotlight
-    cdata.set('WITH_SPOTLIGHT', 1)
+    if have_spotlight
+        cdata.set('WITH_SPOTLIGHT', 1)
+    else
+        warning(
+            'Spotlight support requested but required libraries not found',
+        )
+    endif
 endif
 
 #
@@ -2500,11 +2453,6 @@ summary_info = {
     '  Print spool directory': spooldir,
     '  User home basedir': homedir,
 }
-if have_spotlight
-    summary_info += {
-        '  Indexer command': indexer_command,
-    }
-endif
 summary(summary_info, bool_yn: true, section: '  Paths:')
 
 summary_info = {

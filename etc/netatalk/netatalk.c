@@ -86,7 +86,8 @@ static bool service_running(pid_t pid)
     return false;
 }
 
-/* Set Tracker Miners to index all our volumes */
+#ifdef WITH_SPOTLIGHT
+/* Set indexers to index all our volumes */
 static int set_sl_volumes(void)
 {
     EC_INIT;
@@ -104,12 +105,13 @@ static int set_sl_volumes(void)
     }
 
     volnamelist = bjoin(vollist, sep);
-    cmd = bformat("gsettings set org.freedesktop.Tracker.Miner.Files index-recursive-directories \"[%s]\"",
+    cmd = bformat("gsettings set " INDEXER_DBUS_NAME
+                  " index-recursive-directories \"[%s]\"",
                   bdata(volnamelist) ? bdata(volnamelist) : "");
     LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
     system(bdata(cmd));
     /* Disable default root user home indexing */
-    system("gsettings set org.freedesktop.Tracker.Miner.Files index-single-directories \"[]\"");
+    system("gsettings set " INDEXER_DBUS_NAME " index-single-directories \"[]\"");
 EC_CLEANUP:
 
     if (cmd) {
@@ -130,6 +132,7 @@ EC_CLEANUP:
 
     EC_EXIT;
 }
+#endif /* WITH_SPOTLIGHT */
 
 /******************************************************************
  * libevent helper functions
