@@ -1,23 +1,9 @@
-name: Containers
+name: Build Containers
 on:
-    push:
-        branches: [ "main" ]
-        paths-ignore:
-          - "**.md"
-          - "**/COPYING"
-          - "**/README*"
-          - ".github/workflows/build.yml"
-          - "contrib/webmin_module/**"
-          - "COPYRIGHT"
-    pull_request:
-        branches: [ "main" ]
-        paths-ignore:
-          - "**.md"
-          - "**/COPYING"
-          - "**/README*"
-          - ".github/workflows/build.yml"
-          - "contrib/webmin_module/**"
-          - "COPYRIGHT"
+  workflow_run:
+    workflows: [Tests]
+    types:
+      - completed
 
 permissions: read-all
 env:
@@ -29,7 +15,6 @@ jobs:
         name: Build production container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -69,7 +54,6 @@ jobs:
         name: Build Alpine testsuite container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -109,7 +93,6 @@ jobs:
         name: Build Netatalk Webmin Module container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -149,7 +132,6 @@ jobs:
         name: Build Debian testsuite container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write

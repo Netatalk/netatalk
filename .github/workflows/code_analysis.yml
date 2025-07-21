@@ -1,9 +1,9 @@
 name: Code Analysis
 on:
   workflow_run:
-    workflows: ["Builds"]
+    workflows: [Tests]
     types: 
-      - requested
+      - completed
 
 permissions: read-all
 
