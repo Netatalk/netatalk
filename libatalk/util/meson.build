@@ -3,7 +3,6 @@ util_sources = [
     'bprint.c',
     'cnid.c',
     'fault.c',
-    'ftw.c',
     'getiface.c',
     'gettok.c',
     'locking.c',

@@ -29,7 +29,6 @@
 #include <bstrlib.h>
 
 #include <atalk/adouble.h>
-#include <atalk/ftw.h>
 #include <atalk/queue.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
@@ -37,6 +36,7 @@
 #include <atalk/volume.h>
 
 #include "ad.h"
+#include "ftw.h"
 
 #define STRIP_TRAILING_SLASH(p) {                                   \
         while ((p).p_end > (p).p_path + 1 && (p).p_end[-1] == '/')  \
