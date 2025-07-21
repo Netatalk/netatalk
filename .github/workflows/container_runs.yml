@@ -14,6 +14,7 @@ jobs:
         name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Create Docker network
               run: |
@@ -56,6 +57,7 @@ jobs:
         name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Prod)
         runs-on: ubuntu-latest
         timeout-minutes: 10
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Create container network
               run: |
@@ -111,6 +113,7 @@ jobs:
         name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 10
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Create container network
               run: |
@@ -150,6 +153,7 @@ jobs:
         name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -174,6 +178,7 @@ jobs:
         name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -198,6 +203,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.4 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -221,6 +227,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.4 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -244,6 +251,7 @@ jobs:
         name: AFP spec test (ea:ad) AFP 3.4 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -268,6 +276,7 @@ jobs:
         name: AFP spec test (ea:ad) AFP 3.4 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -292,6 +301,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.3 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -315,6 +325,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.2 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -338,6 +349,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.1 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -361,6 +373,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.0 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -384,6 +397,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 3.0 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -407,6 +421,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 2.2 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -430,6 +445,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 2.1 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -453,6 +469,7 @@ jobs:
         name: AFP spec test (ea:sys) AFP 2.1 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -476,6 +493,7 @@ jobs:
         name: AFP spec test (ea:ad) AFP 2.1 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -500,6 +518,7 @@ jobs:
         name: AFP spec test (ea:ad) AFP 2.1 - Debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -524,6 +543,7 @@ jobs:
         name: AFP spec test (readonly) AFP 3.4 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -543,6 +563,7 @@ jobs:
         name: AFP spec test (readonly) AFP 2.1 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -562,6 +583,7 @@ jobs:
         name: AFP login test AFP 3.4 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -579,6 +601,7 @@ jobs:
         name: AFP login test AFP 2.1 - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -596,6 +619,7 @@ jobs:
         name: AFP lantest - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -614,6 +638,7 @@ jobs:
         name: AFP speedtest - Alpine
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
