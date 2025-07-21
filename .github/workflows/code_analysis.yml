@@ -1,9 +1,17 @@
 name: Code Analysis
 on:
-  workflow_run:
-    workflows: [Tests]
-    types: 
-      - completed
+  push:
+    branches:
+      - main
+      - branch-*
+  pull_request:
+    branches:
+      - main
+      - branch-*
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions: read-all
 
@@ -11,6 +19,7 @@ jobs:
     static_analysis:
         name: SonarQube Static Analysis
         runs-on: ubuntu-latest
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         env:
           BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
         steps:
