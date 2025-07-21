@@ -8,6 +8,8 @@ ad_sources = [
     'ad_util.c',
     'ad.c',
     'ad.h',
+    'ftw.c',
+    'ftw.h',
 ]
 
 ad_deps = [bstring, iniparser]

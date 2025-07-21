@@ -41,9 +41,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <atalk/ftw.h>
-#include <atalk/globals.h>
 #include <atalk/util.h>
+
+#include "ftw.h"
 
 #ifndef HAVE_MEMPCPY
 #define mempcpy(D, S, N) ((void *) ((char *) memcpy (D, S, N) + (N)))
@@ -293,13 +293,14 @@ open_dir_stream(int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             DIR *st = data->dirstreams[data->actdir]->stream;
             struct dirent64 *d;
             size_t actsize = 0;
-            const size_t MAX_BUFFER_SIZE = 1024 * 1024; /* 1MB buffer limit */
+            const size_t MAX_FILENAME_LEN = 255;
+            const size_t MAX_BUFFER_SIZE = 1024 * 1024;
 
             while ((d = __readdir64(st)) != NULL) {
                 size_t this_len = NAMLEN(d);
 
-                if (this_len > UTF8FILELEN_EARLY) {
-                    this_len = UTF8FILELEN_EARLY;
+                if (this_len > MAX_FILENAME_LEN) {
+                    this_len = MAX_FILENAME_LEN;
                 }
 
                 /* Check if we need more space with overflow protection */

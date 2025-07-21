@@ -31,7 +31,6 @@
 #include <bstrlib.h>
 
 #include <atalk/adouble.h>
-#include <atalk/ftw.h>
 #include <atalk/queue.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
