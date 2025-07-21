@@ -1,7 +1,7 @@
 name: Container Test Runs
 on:
   workflow_run:
-    workflows: ["Containers"]
+    workflows: [Containers]
     types: 
       - completed
 

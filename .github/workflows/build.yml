@@ -8,9 +8,7 @@ on:
       - "**.md"
       - "**/COPYING"
       - "**/README*"
-      - "contrib/webmin_module/**"
       - "COPYRIGHT"
-      - "*Dockerfile"
   pull_request:
     branches:
       - main
@@ -23,9 +21,7 @@ on:
       - "**.md"
       - "**/COPYING"
       - "**/README*"
-      - "contrib/webmin_module/**"
       - "COPYRIGHT"
-      - "*Dockerfile"
 
 permissions: read-all
 
