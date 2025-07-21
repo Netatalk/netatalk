@@ -12,7 +12,7 @@ project(
 cc = meson.get_compiler('c')
 
 if not cc.compiles('int func() { return 0; }')
-    error('The C compiler cannot compile code. Please check the logs.')
+    error('The C compiler cannot compile code. Please check the logs!')
 endif
 
 # Reserved for future use:
