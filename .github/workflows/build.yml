@@ -52,6 +52,7 @@ jobs:
             dbus-dev \
             flex \
             gcc \
+            glib \
             iniparser-dev \
             krb5-dev \
             libevent-dev \
