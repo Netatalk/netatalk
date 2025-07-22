@@ -321,6 +321,7 @@ jobs:
                     -e SHARE_NAME=test1 \
                     -e SHARE_NAME2=test2 \
                     -e INSECURE_AUTH=1 \
+                    -e DISABLE_SPOTLIGHT=1 \
                     -e DISABLE_TIMEMACHINE=1 \
                     -e AFP_EXTMAP=1 \
                     ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
