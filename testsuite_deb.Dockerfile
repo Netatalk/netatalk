@@ -22,7 +22,7 @@ ARG RUN_DEPS="\
     localsearch \
     mariadb-client \
     systemtap \
-    tracker\
+    tracker \
     "
 ARG BUILD_DEPS="\
     bison \
@@ -52,7 +52,7 @@ ARG BUILD_DEPS="\
     meson \
     ninja-build \
     pkg-config \
-    systemtap-sdt-dev\
+    systemtap-sdt-dev \
     "
 
 FROM debian:trixie-slim@sha256:88ef4df0f82963ff3c0472493da188f082822b2a16b1be23d238d124d5c8c92e AS build
@@ -85,6 +85,7 @@ RUN meson setup build \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-rpath=false \
     -Dwith-spooldir=/var/spool/netatalk \
+    -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \
 &&  meson compile -C build
