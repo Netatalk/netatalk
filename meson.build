@@ -1359,6 +1359,9 @@ else
         if cc.has_function('getxattr', dependencies: attr)
             acl_deps += attr
         endif
+        if glib.found()
+            acl_deps += glib
+        endif
     endif
 
     acl_get_entry_code = '''
