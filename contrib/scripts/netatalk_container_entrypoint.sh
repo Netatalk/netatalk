@@ -160,6 +160,12 @@ else
     TIMEMACHINE="yes"
 fi
 
+if [ -n "$DISABLE_SPOTLIGHT" ]; then
+    AFP_SPOTLIGHT="no"
+else
+    AFP_SPOTLIGHT="yes"
+fi
+
 if [ -n "$AFP_READONLY" ]; then
     AFP_RWRO="rolist"
 else
@@ -221,6 +227,7 @@ log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
 mimic model = $AFP_MIMIC_MODEL
 server name = ${SERVER_NAME:-Netatalk File Server}
+spotlight = $AFP_SPOTLIGHT
 uam list = $UAMS
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}

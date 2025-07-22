@@ -78,9 +78,6 @@ for further details.
 The container is hard coded to output `afpd` (the Netatalk file server daemon) logs to the container's stdout,
 with default log level `info`. Logs from the AppleTalk daemons are sent to the syslog.
 
-Spotlight compatible search is currently not supported in a containerized environment
-due to constraints when running file system indexing on the D-Bus.
-
 ## MySQL CNID Backend
 
 The MySQL CNID backend is an alternative to the default Berkeley DB CNID backend which offers better scalability.
@@ -267,4 +264,5 @@ Set this environment variable to a non-zero value to enable, ex. "1"
 | AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
 | INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs                                                         |
 | DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
+| DISABLE_SPOTLIGHT   | Spotlight compatible indexing is disabled                                                      |
 | MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |

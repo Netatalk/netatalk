@@ -9,19 +9,23 @@ ARG RUN_DEPS="\
     libevent \
     libgcrypt \
     linux-pam \
+    localsearch \
     mariadb-client \
     mariadb-connector-c \
     openldap \
     sqlite \
-    tzdata \
-    "
+    talloc \
+    tinysparql \
+    tzdata"
 ARG BUILD_DEPS="\
     acl-dev \
     avahi-dev \
+    bison \
     cups-dev \
     db-dev \
     dbus-dev \
     build-base \
+    flex \
     gcc \
     iniparser-dev \
     krb5-dev \
@@ -34,7 +38,8 @@ ARG BUILD_DEPS="\
     openldap-dev \
     pkgconfig \
     sqlite-dev \
-    "
+    talloc-dev \
+    tinysparql-dev"
 
 FROM alpine:3.22@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1 AS build
 
@@ -63,7 +68,6 @@ RUN meson setup build \
     -Dwith-init-style=none \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-quota=false \
-    -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \
 &&  meson compile -C build
