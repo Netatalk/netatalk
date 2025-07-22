@@ -4,6 +4,7 @@ ARG RUN_DEPS="\
     cups \
     db \
     dbus \
+    glib \
     iniparser \
     krb5 \
     libevent \
