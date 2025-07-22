@@ -1356,7 +1356,6 @@ else
     endif
 
     if host_os == 'linux'
-        acl_deps += glib
         if cc.has_function('getxattr', dependencies: attr)
             acl_deps += attr
         endif
