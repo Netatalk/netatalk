@@ -70,7 +70,7 @@ RUN meson setup build \
     -Dwith-init-style=none \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-quota=false \
-    -Dwith-spotlight=true \
+    -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \
 &&  meson compile -C build
