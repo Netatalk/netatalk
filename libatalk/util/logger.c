@@ -11,7 +11,7 @@ I believe libatalk is released under the L/GPL licence.
 Just incase, it is, thats the licence I'm applying to this file.
 Netatalk 2001 (c)
 
-========================================================================= */
+ */
 
 #include <ctype.h>
 #include <errno.h>
@@ -67,7 +67,7 @@ Netatalk 2001 (c)
 
 /* =========================================================================
    Config
-   ========================================================================= */
+ */
 
 /* Main log config container */
 log_config_t log_config = { 0 };
@@ -115,7 +115,7 @@ static const unsigned int num_loglevel_strings =
 
 /* =========================================================================
    Internal function definitions
-   ========================================================================= */
+ */
 
 static int generate_message(char **message_details_buffer,
                             char *user_message,
@@ -437,7 +437,7 @@ static void setuplog_internal(const char *loglevel, const char *logtype,
 
 /* =========================================================================
    Global function definitions
-   ========================================================================= */
+ */
 
 /* This function sets up the processname */
 void set_processname(const char *processname)

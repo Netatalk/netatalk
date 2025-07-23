@@ -72,7 +72,7 @@ enum logtypes {
 
 /* =========================================================================
     Structure definitions
-   ========================================================================= */
+ */
 
 /* Main log config */
 typedef struct {
@@ -106,7 +106,7 @@ typedef struct {
 
 /* =========================================================================
     Global variables
-    ========================================================================= */
+ */
 
 /* Make config accessible for LOG macro */
 extern log_config_t log_config;
@@ -116,7 +116,7 @@ type_configs[logtype_end_of_list_marker];
 
 /* =========================================================================
     Global function decarations
-   ========================================================================= */
+ */
 
 void setuplog(const char *loglevel, const char *logfile,
               const bool log_us_timestamp);
