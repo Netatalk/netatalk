@@ -640,7 +640,7 @@ jobs:
             pkg install \
               build-essential \
               pkg-config
-            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-trunk-x86_64-20240116.tar.gz
+            curl -O https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2024Q4-x86_64.tar.gz
             tar -zxpf bootstrap-trunk-x86_64-20240116.tar.gz -C /
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \
