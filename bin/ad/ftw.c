@@ -527,15 +527,15 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
     int previous_base = data->ftw.base;
     int result;
     char *startp;
+    int need_cleanup = 0;
     /* Open the stream for this directory.  This might require that
        another stream has to be closed.  */
     result = open_dir_stream(old_dir == NULL ? NULL : &old_dir->streamfd,
                              data, &dir);
 
     if (result != 0) {
-        if (errno == EACCES)
+        if (errno == EACCES) {
             /* We cannot read the directory.  Signal this with a special flag.  */
-        {
             result = (*data->func)(data->dirbuf, st, FTW_DNR, &data->ftw);
         }
 
@@ -547,19 +547,8 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
         result = (*data->func)(data->dirbuf, st, FTW_D, &data->ftw);
 
         if (result != 0) {
-            int save_err;
-fail:
-            save_err = errno;
-            __closedir(dir.stream);
-            dir.streamfd = -1;
-            __set_errno(save_err);
-
-            if (data->actdir-- == 0) {
-                data->actdir = data->maxdir - 1;
-            }
-
-            data->dirstreams[data->actdir] = NULL;
-            return result;
+            need_cleanup = 1;
+            goto cleanup;
         }
     }
 
@@ -567,7 +556,8 @@ fail:
     if (data->flags & FTW_CHDIR) {
         if (__fchdir(dirfd(dir.stream)) < 0) {
             result = -1;
-            goto fail;
+            need_cleanup = 1;
+            goto cleanup;
         }
     }
 
@@ -619,6 +609,22 @@ fail:
         save_err = errno;
         free(dir.content);
         __set_errno(save_err);
+    }
+
+cleanup:
+
+    if (need_cleanup) {
+        int save_err = errno;
+        __closedir(dir.stream);
+        dir.streamfd = -1;
+        __set_errno(save_err);
+
+        if (data->actdir-- == 0) {
+            data->actdir = data->maxdir - 1;
+        }
+
+        data->dirstreams[data->actdir] = NULL;
+        return result;
     }
 
     if ((data->flags & FTW_ACTIONRETVAL) && result == FTW_SKIP_SIBLINGS) {
