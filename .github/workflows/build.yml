@@ -663,6 +663,7 @@ jobs:
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-ldap-path=/opt/local \
+              -Dwith-libiconv-path=/opt/local \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
