@@ -576,12 +576,10 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
     }
 
     /* If necessary, change to this directory.  */
-    if (data->flags & FTW_CHDIR) {
-        if (__fchdir(dirfd(dir.stream)) < 0) {
-            result = -1;
-            need_cleanup = 1;
-            goto cleanup;
-        }
+    if (data->flags & FTW_CHDIR && __fchdir(dirfd(dir.stream)) < 0) {
+        result = -1;
+        need_cleanup = 1;
+        goto cleanup;
     }
 
     /* Next, update the `struct FTW' information.  */
@@ -677,10 +675,9 @@ cleanup:
         /* Change back to the parent directory.  */
         int done = 0;
 
-        if (old_dir->stream != NULL)
-            if (__fchdir(dirfd(old_dir->stream)) == 0) {
-                done = 1;
-            }
+        if (old_dir->stream != NULL && __fchdir(dirfd(old_dir->stream)) == 0) {
+            done = 1;
+        }
 
         if (!done) {
             if (data->ftw.base == 1) {
