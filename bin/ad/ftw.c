@@ -41,9 +41,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <atalk/ftw.h>
-#include <atalk/globals.h>
 #include <atalk/util.h>
+
+#include "ftw.h"
 
 #ifndef HAVE_MEMPCPY
 #define mempcpy(D, S, N) ((void *) ((char *) memcpy (D, S, N) + (N)))
@@ -53,29 +53,53 @@
 #include <assert.h>
 
 #ifndef _LIBC
+# ifdef __chdir
 # undef __chdir
+# endif
 # define __chdir chdir
+# ifdef __closedir
 # undef __closedir
+# endif
 # define __closedir closedir
+# ifdef __fchdir
 # undef __fchdir
+# endif
 # define __fchdir fchdir
+# ifdef __getcwd
 # undef __getcwd
+# endif
 # define __getcwd(P, N) xgetcwd ()
+# ifdef __mempcpy
 # undef __mempcpy
+# endif
 # define __mempcpy mempcpy
+# ifdef __opendir
 # undef __opendir
+# endif
 # define __opendir opendir
+# ifdef __readdir64
 # undef __readdir64
+# endif
 # define __readdir64 readdir
+# ifdef __tdestroy
 # undef __tdestroy
+# endif
 # define __tdestroy tdestroy
+# ifdef __tfind
 # undef __tfind
+# endif
 # define __tfind tfind
+# ifdef __tsearch
 # undef __tsearch
+# endif
 # define __tsearch tsearch
+# ifdef internal_function
 # undef internal_function
+# endif
 # define internal_function /* empty */
+# ifdef dirent64
 # undef dirent64
+# endif
 # define dirent64 dirent
 #endif
 
@@ -89,7 +113,6 @@
 # define NFTW_NAME nftw
 # define NFTW_OLD_NAME __old_nftw
 # define NFTW_NEW_NAME __new_nftw
-# define INO_T ino_t
 # define STAT stat
 # define LXSTAT(V,f,sb) lstat (f,sb)
 # define XSTAT(V,f,sb) stat (f,sb)
@@ -113,7 +136,7 @@ struct dir_data {
 
 struct known_object {
     dev_t dev;
-    INO_T ino;
+    ino_t ino;
 };
 
 struct ftw_data {
@@ -139,7 +162,7 @@ struct ftw_data {
     const int *cvt_arr;
 
     /* Callback function.  We always use the `nftw' form.  */
-    NFTW_FUNC_T func;
+    nftw_func_t func;
 
     /* Device of starting point.  Needed for FTW_MOUNT.  */
     dev_t dev;
@@ -169,7 +192,7 @@ static int ftw_dir(struct ftw_data *data, struct STAT *st,
 
 typedef void (*__free_fn_t)(void *__nodep);
 typedef struct node_t {
-    const void *key;
+    void *key;
     struct node_t *left;
     struct node_t *right;
     unsigned int red: 1;
@@ -185,7 +208,7 @@ static void tdestroy_recurse(node root, __free_fn_t freefct)
         tdestroy_recurse(root->right, freefct);
     }
 
-    (*freefct)((void *) root->key);
+    (*freefct)(root->key);
     /* Free the node itself.  */
     free(root);
 }
@@ -199,16 +222,28 @@ static void mytdestroy(void *vroot, __free_fn_t freefct)
     }
 }
 
-static char *mystpcpy(char *a, const char *b)
+static char *mystpcpy(char *dest, const char *src, size_t dest_size)
 {
-    strcpy(a, b);
-    return a + strlen(a);
+    size_t src_len = strlen(src);
+
+    if (src_len + 1 > dest_size) {
+        if (dest_size > 0) {
+            strncpy(dest, src, dest_size - 1);
+            dest[dest_size - 1] = '\0';
+            return dest + dest_size - 1 - 1;
+        }
+
+        return dest;
+    } else {
+        strcpy(dest, src);
+        return dest + src_len;
+    }
 }
 
 static char *xgetcwd(void)
 {
     char *cwd;
-    char *ret;
+    const char *ret;
     unsigned path_max;
     errno = 0;
     path_max = (unsigned) PATH_MAX;
@@ -291,15 +326,16 @@ open_dir_stream(int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             result = -1;
         } else {
             DIR *st = data->dirstreams[data->actdir]->stream;
-            struct dirent64 *d;
+            const struct dirent64 *d;
             size_t actsize = 0;
-            const size_t MAX_BUFFER_SIZE = 1024 * 1024; /* 1MB buffer limit */
+            const size_t MAX_ENTRY_SIZE = 255;
+            const size_t MAX_BUFFER_SIZE = 1024 * 1024;
 
             while ((d = __readdir64(st)) != NULL) {
                 size_t this_len = NAMLEN(d);
 
-                if (this_len > UTF8FILELEN_EARLY) {
-                    this_len = UTF8FILELEN_EARLY;
+                if (this_len > MAX_ENTRY_SIZE) {
+                    this_len = MAX_ENTRY_SIZE;
                 }
 
                 /* Check if we need more space with overflow protection */
@@ -522,19 +558,20 @@ static int
 ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 {
     struct dir_data dir;
-    struct dirent64 *d;
+    const struct dirent64 *d;
     int previous_base = data->ftw.base;
     int result;
     char *startp;
+    int need_cleanup = 0;
+    size_t dirbuf_len;
     /* Open the stream for this directory.  This might require that
        another stream has to be closed.  */
     result = open_dir_stream(old_dir == NULL ? NULL : &old_dir->streamfd,
                              data, &dir);
 
     if (result != 0) {
-        if (errno == EACCES)
+        if (errno == EACCES) {
             /* We cannot read the directory.  Signal this with a special flag.  */
-        {
             result = (*data->func)(data->dirbuf, st, FTW_DNR, &data->ftw);
         }
 
@@ -546,33 +583,22 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
         result = (*data->func)(data->dirbuf, st, FTW_D, &data->ftw);
 
         if (result != 0) {
-            int save_err;
-fail:
-            save_err = errno;
-            __closedir(dir.stream);
-            dir.streamfd = -1;
-            __set_errno(save_err);
-
-            if (data->actdir-- == 0) {
-                data->actdir = data->maxdir - 1;
-            }
-
-            data->dirstreams[data->actdir] = NULL;
-            return result;
+            need_cleanup = 1;
+            goto cleanup;
         }
     }
 
     /* If necessary, change to this directory.  */
-    if (data->flags & FTW_CHDIR) {
-        if (__fchdir(dirfd(dir.stream)) < 0) {
-            result = -1;
-            goto fail;
-        }
+    if (data->flags & FTW_CHDIR && __fchdir(dirfd(dir.stream)) < 0) {
+        result = -1;
+        need_cleanup = 1;
+        goto cleanup;
     }
 
     /* Next, update the `struct FTW' information.  */
     ++data->ftw.level;
-    startp = data->dirbuf + strlen(data->dirbuf);
+    dirbuf_len = strnlen(data->dirbuf, data->dirbufsize);
+    startp = data->dirbuf + dirbuf_len;
     /* There always must be a directory name.  */
     assert(startp != data->dirbuf);
 
@@ -580,7 +606,7 @@ fail:
         *startp++ = '/';
     }
 
-    data->ftw.base = startp - data->dirbuf;
+    data->ftw.base = (int)(startp - data->dirbuf);
 
     while (dir.stream != NULL && (d = __readdir64(dir.stream)) != NULL) {
         result = process_entry(data, &dir, d->d_name, NAMLEN(d));
@@ -606,10 +632,10 @@ fail:
         data->dirstreams[data->actdir] = NULL;
     } else {
         int save_err;
-        char *runp = dir.content;
+        const char *runp = dir.content;
 
         while (result == 0 && *runp != '\0') {
-            char *endp = strchr(runp, '\0');
+            const char *endp = strchr(runp, '\0');
             /* XXX Should store the d_type values as well?! */
             result = process_entry(data, &dir, runp, endp - runp);
             runp = endp + 1;
@@ -618,6 +644,22 @@ fail:
         save_err = errno;
         free(dir.content);
         __set_errno(save_err);
+    }
+
+cleanup:
+
+    if (need_cleanup) {
+        int save_err = errno;
+        __closedir(dir.stream);
+        dir.streamfd = -1;
+        __set_errno(save_err);
+
+        if (data->actdir-- == 0) {
+            data->actdir = data->maxdir - 1;
+        }
+
+        data->dirstreams[data->actdir] = NULL;
+        return result;
     }
 
     if ((data->flags & FTW_ACTIONRETVAL) && result == FTW_SKIP_SIBLINGS) {
@@ -647,10 +689,9 @@ fail:
         /* Change back to the parent directory.  */
         int done = 0;
 
-        if (old_dir->stream != NULL)
-            if (__fchdir(dirfd(old_dir->stream)) == 0) {
-                done = 1;
-            }
+        if (old_dir->stream != NULL && __fchdir(dirfd(old_dir->stream)) == 0) {
+            done = 1;
+        }
 
         if (!done) {
             if (data->ftw.base == 1) {
@@ -702,7 +743,7 @@ static int ftw_startup(const char *dir,
         return -1;
     }
 
-    cp = mystpcpy(data.dirbuf, dir);
+    cp = mystpcpy(data.dirbuf, dir, data.dirbufsize);
 
     /* Strip trailing slashes.  */
     while (cp > data.dirbuf + 1 && cp[-1] == '/') {
@@ -717,7 +758,7 @@ static int ftw_startup(const char *dir,
         --cp;
     }
 
-    data.ftw.base = cp - data.dirbuf;
+    data.ftw.base = (int)(cp - data.dirbuf);
     data.flags = flags;
     /* This assignment might seem to be strange but it is what we want.
        The trick is that the first three arguments to the `ftw' and
@@ -725,7 +766,7 @@ static int ftw_startup(const char *dir,
        every case the callback using the format of the `nftw' version
        and get the correct result since the stack layout for a function
        call in C allows this.  */
-    data.func = (NFTW_FUNC_T) func;
+    data.func = (nftw_func_t) func;
     /* Since we internally use the complete set of FTW_* values we need
        to reduce the value range before calling a `ftw' callback.  */
     data.cvt_arr = is_nftw ? nftw_arr : ftw_arr;
@@ -832,7 +873,7 @@ static int ftw_startup(const char *dir,
 
     /* Return to the start directory (if necessary).  */
     if (cwdfd != -1) {
-        int save_err = errno;
+        save_err = errno;
 
         if (__fchdir(cwdfd) < 0) {
             result = -1;
@@ -841,7 +882,7 @@ static int ftw_startup(const char *dir,
         close(cwdfd);
         __set_errno(save_err);
     } else if (cwd != NULL) {
-        int save_err = errno;
+        save_err = errno;
 
         if (__chdir(cwd) < 0) {
             result = -1;
@@ -864,7 +905,7 @@ out_fail:
 
 /* Entry points.  */
 int NFTW_NAME(const char *path,
-              NFTW_FUNC_T func,
+              nftw_func_t func,
               dir_notification_func_t up,
               int descriptors,
               int flags)

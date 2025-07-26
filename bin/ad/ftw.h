@@ -20,9 +20,6 @@
  *	X/Open Portability Guide 4.2: ftw.h
  */
 
-#ifndef _ATALK_FTW_H
-#define	_ATALK_FTW_H	1
-
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -92,7 +89,6 @@ typedef int (*nftw_func_t)(const char *filename,
                            const struct stat *status,
                            int flag,
                            struct FTW *info);
-#define NFTW_FUNC_T nftw_func_t
 
 typedef void (*dir_notification_func_t)(void);
 
@@ -101,5 +97,3 @@ extern int nftw(const char *dir,
                 dir_notification_func_t up,
                 int descriptors,
                 int flag);
-
-#endif	/* ATALK_FTW_H */
