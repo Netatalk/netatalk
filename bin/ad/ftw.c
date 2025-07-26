@@ -592,7 +592,7 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
         *startp++ = '/';
     }
 
-    data->ftw.base = startp - data->dirbuf;
+    data->ftw.base = (int)(startp - data->dirbuf);
 
     while (dir.stream != NULL && (d = __readdir64(dir.stream)) != NULL) {
         result = process_entry(data, &dir, d->d_name, NAMLEN(d));
@@ -744,7 +744,7 @@ static int ftw_startup(const char *dir,
         --cp;
     }
 
-    data.ftw.base = cp - data.dirbuf;
+    data.ftw.base = (int)(cp - data.dirbuf);
     data.flags = flags;
     /* This assignment might seem to be strange but it is what we want.
        The trick is that the first three arguments to the `ftw' and
