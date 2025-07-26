@@ -113,7 +113,6 @@
 # define NFTW_NAME nftw
 # define NFTW_OLD_NAME __old_nftw
 # define NFTW_NEW_NAME __new_nftw
-# define INO_T ino_t
 # define STAT stat
 # define LXSTAT(V,f,sb) lstat (f,sb)
 # define XSTAT(V,f,sb) stat (f,sb)
@@ -137,7 +136,7 @@ struct dir_data {
 
 struct known_object {
     dev_t dev;
-    INO_T ino;
+    ino_t ino;
 };
 
 struct ftw_data {
@@ -163,7 +162,7 @@ struct ftw_data {
     const int *cvt_arr;
 
     /* Callback function.  We always use the `nftw' form.  */
-    NFTW_FUNC_T func;
+    nftw_func_t func;
 
     /* Device of starting point.  Needed for FTW_MOUNT.  */
     dev_t dev;
@@ -756,7 +755,7 @@ static int ftw_startup(const char *dir,
        every case the callback using the format of the `nftw' version
        and get the correct result since the stack layout for a function
        call in C allows this.  */
-    data.func = (NFTW_FUNC_T) func;
+    data.func = (nftw_func_t) func;
     /* Since we internally use the complete set of FTW_* values we need
        to reduce the value range before calling a `ftw' callback.  */
     data.cvt_arr = is_nftw ? nftw_arr : ftw_arr;
@@ -895,7 +894,7 @@ out_fail:
 
 /* Entry points.  */
 int NFTW_NAME(const char *path,
-              NFTW_FUNC_T func,
+              nftw_func_t func,
               dir_notification_func_t up,
               int descriptors,
               int flags)

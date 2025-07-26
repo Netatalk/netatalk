@@ -89,7 +89,6 @@ typedef int (*nftw_func_t)(const char *filename,
                            const struct stat *status,
                            int flag,
                            struct FTW *info);
-#define NFTW_FUNC_T nftw_func_t
 
 typedef void (*dir_notification_func_t)(void);
 
