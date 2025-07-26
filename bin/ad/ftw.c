@@ -859,7 +859,7 @@ static int ftw_startup(const char *dir,
 
     /* Return to the start directory (if necessary).  */
     if (cwdfd != -1) {
-        int save_err = errno;
+        save_err = errno;
 
         if (__fchdir(cwdfd) < 0) {
             result = -1;
@@ -868,7 +868,7 @@ static int ftw_startup(const char *dir,
         close(cwdfd);
         __set_errno(save_err);
     } else if (cwd != NULL) {
-        int save_err = errno;
+        save_err = errno;
 
         if (__chdir(cwd) < 0) {
             result = -1;
