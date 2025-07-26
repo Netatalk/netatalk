@@ -53,29 +53,53 @@
 #include <assert.h>
 
 #ifndef _LIBC
+# ifdef __chdir
 # undef __chdir
+# endif
 # define __chdir chdir
+# ifdef __closedir
 # undef __closedir
+# endif
 # define __closedir closedir
+# ifdef __fchdir
 # undef __fchdir
+# endif
 # define __fchdir fchdir
+# ifdef __getcwd
 # undef __getcwd
+# endif
 # define __getcwd(P, N) xgetcwd ()
+# ifdef __mempcpy
 # undef __mempcpy
+# endif
 # define __mempcpy mempcpy
+# ifdef __opendir
 # undef __opendir
+# endif
 # define __opendir opendir
+# ifdef __readdir64
 # undef __readdir64
+# endif
 # define __readdir64 readdir
+# ifdef __tdestroy
 # undef __tdestroy
+# endif
 # define __tdestroy tdestroy
+# ifdef __tfind
 # undef __tfind
+# endif
 # define __tfind tfind
+# ifdef __tsearch
 # undef __tsearch
+# endif
 # define __tsearch tsearch
+# ifdef internal_function
 # undef internal_function
+# endif
 # define internal_function /* empty */
+# ifdef dirent64
 # undef dirent64
+# endif
 # define dirent64 dirent
 #endif
 
