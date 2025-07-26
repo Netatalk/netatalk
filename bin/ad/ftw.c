@@ -193,7 +193,7 @@ static int ftw_dir(struct ftw_data *data, struct STAT *st,
 
 typedef void (*__free_fn_t)(void *__nodep);
 typedef struct node_t {
-    const void *key;
+    void *key;
     struct node_t *left;
     struct node_t *right;
     unsigned int red: 1;
@@ -209,7 +209,7 @@ static void tdestroy_recurse(node root, __free_fn_t freefct)
         tdestroy_recurse(root->right, freefct);
     }
 
-    (*freefct)((void *) root->key);
+    (*freefct)(root->key);
     /* Free the node itself.  */
     free(root);
 }
