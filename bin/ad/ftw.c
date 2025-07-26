@@ -231,7 +231,7 @@ static char *mystpcpy(char *a, const char *b)
 static char *xgetcwd(void)
 {
     char *cwd;
-    char *ret;
+    const char *ret;
     unsigned path_max;
     errno = 0;
     path_max = (unsigned) PATH_MAX;
@@ -314,7 +314,7 @@ open_dir_stream(int *dfdp, struct ftw_data *data, struct dir_data *dirp)
             result = -1;
         } else {
             DIR *st = data->dirstreams[data->actdir]->stream;
-            struct dirent64 *d;
+            const struct dirent64 *d;
             size_t actsize = 0;
             const size_t MAX_FILENAME_LEN = 255;
             const size_t MAX_BUFFER_SIZE = 1024 * 1024;
@@ -546,7 +546,7 @@ static int
 ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 {
     struct dir_data dir;
-    struct dirent64 *d;
+    const struct dirent64 *d;
     int previous_base = data->ftw.base;
     int result;
     char *startp;
@@ -620,10 +620,10 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
         data->dirstreams[data->actdir] = NULL;
     } else {
         int save_err;
-        char *runp = dir.content;
+        const char *runp = dir.content;
 
         while (result == 0 && *runp != '\0') {
-            char *endp = strchr(runp, '\0');
+            const char *endp = strchr(runp, '\0');
             /* XXX Should store the d_type values as well?! */
             result = process_entry(data, &dir, runp, endp - runp);
             runp = endp + 1;
