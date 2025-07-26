@@ -4,9 +4,7 @@ project(
     version: '4.3.0dev',
     license: 'GPLv2',
     default_options: ['warning_level=3', 'c_std=c11'],
-    meson_version: '>=0.61.2',
-    # Reserved for future use:
-    # meson_version: '>=0.62.0',
+    meson_version: '>=0.62.0',
 )
 
 cc = meson.get_compiler('c')
