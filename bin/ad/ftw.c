@@ -222,10 +222,22 @@ static void mytdestroy(void *vroot, __free_fn_t freefct)
     }
 }
 
-static char *mystpcpy(char *a, const char *b)
+static char *mystpcpy(char *dest, const char *src, size_t dest_size)
 {
-    strcpy(a, b);
-    return a + strlen(a);
+    size_t src_len = strlen(src);
+
+    if (src_len + 1 > dest_size) {
+        if (dest_size > 0) {
+            strncpy(dest, src, dest_size - 1);
+            dest[dest_size - 1] = '\0';
+            return dest + dest_size - 1 - 1;
+        }
+
+        return dest;
+    } else {
+        strcpy(dest, src);
+        return dest + src_len;
+    }
 }
 
 static char *xgetcwd(void)
@@ -551,6 +563,7 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
     int result;
     char *startp;
     int need_cleanup = 0;
+    size_t dirbuf_len;
     /* Open the stream for this directory.  This might require that
        another stream has to be closed.  */
     result = open_dir_stream(old_dir == NULL ? NULL : &old_dir->streamfd,
@@ -584,7 +597,8 @@ ftw_dir(struct ftw_data *data, struct STAT *st, struct dir_data *old_dir)
 
     /* Next, update the `struct FTW' information.  */
     ++data->ftw.level;
-    startp = data->dirbuf + strlen(data->dirbuf);
+    dirbuf_len = strnlen(data->dirbuf, data->dirbufsize);
+    startp = data->dirbuf + dirbuf_len;
     /* There always must be a directory name.  */
     assert(startp != data->dirbuf);
 
@@ -729,7 +743,7 @@ static int ftw_startup(const char *dir,
         return -1;
     }
 
-    cp = mystpcpy(data.dirbuf, dir);
+    cp = mystpcpy(data.dirbuf, dir, data.dirbufsize);
 
     /* Strip trailing slashes.  */
     while (cp > data.dirbuf + 1 && cp[-1] == '/') {
