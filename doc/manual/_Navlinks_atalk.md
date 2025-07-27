@@ -6,3 +6,4 @@
 * [AppleTalk](AppleTalk.html)
 * [Upgrading](Upgrading.html)
 * [License](License.html)
+* [Legal Notices](Legal.html)
