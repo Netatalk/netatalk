@@ -1,6 +1,7 @@
 manual_pages = [
     'Configuration',
     'Installation',
+    'Legal',
     'License',
     'Upgrading',
     'index',
