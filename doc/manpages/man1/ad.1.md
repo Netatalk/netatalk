@@ -4,7 +4,7 @@ ad - AppleDouble file utility suite
 
 # Synopsis
 
-**ad** [ls | cp | mv | rm | set] [...]
+**ad** [ls | cp | mv | rm | set | find] [...]
 
 **ad** [-v | --version]
 
@@ -16,11 +16,15 @@ directories or files in **.AppleDouble** directories) and the CNID
 databases are updated as appropriate when files in a shared Netatalk
 volume are modified.
 
+This is preferable over using the equivalent system file operation commands
+on files in a Netatalk shared volume to preserve the integrity of Mac OS
+metadata and CNIDs.
+
 # Available Commands
 
 List files and directories.
 
-> ad ls [-dRl[u]] {file|dir [...]}
+> ad ls [-dRl[u]] {file|directory [...]}
 
 Copy files and directories.
 
@@ -41,6 +45,10 @@ Remove files and directories.
 Set metadata on files.
 
 > ad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}
+
+Find files and directories
+
+> ad find [-v volume path] {file|directory}
 
 Show version.
 
@@ -266,6 +274,19 @@ Uppercase letter sets the flag, lowercase removes the flag.
       r = No rename                       (f/d)
       l = No delete                       (f/d)
       o = No copy                         (f)
+
+# ad find
+
+Find files and directories in an AFP volume.
+
+This returns a list of paths that wholly or partially match the given name.
+
+It takes one option:
+
+**-v** *path*
+
+> Use path to the shared volume to search rather than the current working
+directory.
 
 # See also
 
