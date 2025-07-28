@@ -25,6 +25,11 @@ A clear and concise description of what you expected to happen.
 - Client OS: [e.g. macOS Sonoma]
 - Netatalk Version: [e.g. 3.1.18]
 
+**Configuration**
+
+Share the (anonymized) contents of your afp.conf file,
+plus any other relevant configuration files
+
 **Logs**
 
 Attach syslogs from the malfunctioning process, `maxdebug` log level
