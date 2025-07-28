@@ -20,7 +20,7 @@ jobs:
         name: SonarQube Static Analysis
         runs-on: ubuntu-latest
         if: |
-          ${{ !github.event.pull_request.head.repo.fork }} ||
+          ${{ !github.event.pull_request.head.repo.fork }} &&
           ${{ github.actor != 'dependabot[bot]' }}
         env:
           BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
