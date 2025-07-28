@@ -41,6 +41,10 @@ if have_appletalk
     ]
 endif
 
+if glib.found()
+    afpd_external_deps += glib
+endif
+
 if have_spotlight
     afpd_sources += [
         'spotlight.c',
@@ -48,7 +52,6 @@ if have_spotlight
     ]
     afpd_internal_deps += libspotlight
     afpd_external_deps += [
-        glib,
         talloc,
         sparql,
     ]
