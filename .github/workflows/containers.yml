@@ -29,7 +29,7 @@ jobs:
         name: Build production container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -69,7 +69,7 @@ jobs:
         name: Build Alpine testsuite container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -109,7 +109,7 @@ jobs:
         name: Build Netatalk Webmin Module container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -149,7 +149,7 @@ jobs:
         name: Build Debian testsuite container
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.event.pull_request.head.repo.full_name == github.repository
+        if: ${{ !github.event.pull_request.head.repo.fork }}
         permissions:
             contents: read
             packages: write
@@ -192,7 +192,7 @@ jobs:
             - build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Create Docker network
               run: |
@@ -238,7 +238,7 @@ jobs:
             - build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Create container network
               run: |
@@ -297,7 +297,7 @@ jobs:
             - build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Create Docker network
               run: |
@@ -342,7 +342,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Create container network
               run: |
@@ -383,7 +383,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -409,7 +409,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -434,7 +434,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -459,7 +459,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -485,7 +485,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -511,7 +511,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -536,7 +536,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -561,7 +561,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -586,7 +586,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -611,7 +611,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -636,7 +636,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -661,7 +661,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -686,7 +686,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -711,7 +711,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -737,7 +737,7 @@ jobs:
         needs: build-container-testsuite-debian
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -763,7 +763,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -784,7 +784,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -805,7 +805,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -824,7 +824,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -843,7 +843,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
@@ -863,7 +863,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
-        if: github.actor != 'dependabot[bot]'
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
