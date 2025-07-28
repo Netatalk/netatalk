@@ -19,7 +19,9 @@ jobs:
     static_analysis:
         name: SonarQube Static Analysis
         runs-on: ubuntu-latest
-        if: github.event.pull_request.head.repo.full_name == github.repository && github.actor != 'dependabot[bot]'
+        if: |
+          ${{ !github.event.pull_request.head.repo.fork }} ||
+          ${{ github.actor != 'dependabot[bot]' }}
         env:
           BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
         steps:
