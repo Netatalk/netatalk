@@ -140,7 +140,7 @@ UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 
-[ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
+[ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -V"
 
 if [ -z "$AFP_HOST" ]; then
     AFP_HOST="127.0.0.1"
