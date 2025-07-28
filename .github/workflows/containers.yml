@@ -429,6 +429,32 @@ jobs:
                   -e AFP_EXTMAP="1" \
                   ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+
+    afp-spectest-sqlite-afp34:
+        name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
+        needs: build-container-testsuite
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        steps:
+            - name: Run Netatalk testsuite
+              run: |
+                docker run --rm \
+                  -e AFP_USER="atalk1" \
+                  -e AFP_USER2="atalk2" \
+                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+                  -e AFP_GROUP="afpusers" \
+                  -e AFP_CNID_BACKEND="sqlite" \
+                  -e SHARE_NAME="test1" \
+                  -e SHARE_NAME2="test2" \
+                  -e INSECURE_AUTH="1" \
+                  -e DISABLE_TIMEMACHINE="1" \
+                  -e VERBOSE="1" \
+                  -e TESTSUITE="spectest" \
+                  -e AFP_VERSION="7" \
+                  -e AFP_EXTMAP="1" \
+                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
     afp-spectest-afp34-debian:
         name: AFP spec test (ea:sys) AFP 3.4 - Debian
         needs: build-container-testsuite-debian
