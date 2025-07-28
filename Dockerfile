@@ -1,5 +1,4 @@
 ARG RUN_DEPS="\
-    acl \
     avahi \
     cups \
     db \
@@ -17,7 +16,6 @@ ARG RUN_DEPS="\
     tzdata \
     "
 ARG BUILD_DEPS="\
-    acl-dev \
     avahi-dev \
     cups-dev \
     db-dev \
@@ -54,6 +52,7 @@ COPY . .
 
 RUN meson setup build \
     -Dbuildtype=release \
+    -Dwith-acls=false \
     -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
