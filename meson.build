@@ -1361,10 +1361,6 @@ else
         endif
     endif
 
-    if glib.found()
-        acl_deps += glib
-    endif
-
     acl_get_entry_code = '''
         #include <sys/types.h>
         #include <sys/acl.h>
