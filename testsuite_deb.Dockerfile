@@ -15,14 +15,19 @@ ARG RUN_DEPS="\
     libpam0g \
     libsqlite3-0 \
     libssl3 \
+    libtalloc2 \
+    libtinysparql-3.0-0 \
     libtirpc3t64 \
     libwrap0 \
+    localsearch \
     mariadb-client \
     systemtap \
     "
 ARG BUILD_DEPS="\
+    bison \
     build-essential \
     file \
+    flex \
     libacl1-dev \
     libattr1-dev \
     libavahi-client-dev \
@@ -39,6 +44,8 @@ ARG BUILD_DEPS="\
     libmariadb-dev \
     libpam0g-dev \
     libsqlite3-dev \
+    libtalloc-dev \
+    libtinysparql-dev \
     libtirpc-dev \
     libwrap0-dev \
     meson \
@@ -77,7 +84,7 @@ RUN meson setup build \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-rpath=false \
     -Dwith-spooldir=/var/spool/netatalk \
-    -Dwith-spotlight=false \
+    -Dwith-spotlight=true \
     -Dwith-tcp-wrappers=false \
     -Dwith-testsuite=true \
 &&  meson compile -C build
