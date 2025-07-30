@@ -300,10 +300,9 @@ msgid ""
 "connection. Some clients don't wait, and hence some printers have\n"
 "related bugs in their implementation.\n"
 msgstr ""
-"> プリンタからの EOF を待機しない。このオプションは、PAP\n"
-"を正しく実装していないプリンタで役立つ。正しい実装では、クライアント側は接続を閉じる前にプリンタが\n"
-"EOF\n"
-"を返すのを待機する必要がある。一部のクライアントは待機しないため、一部のプリンタでは実装に関連するバグがある。\n"
+"> プリンタからの EOF を待機しない。このオプションは、PAPを正しく実装していないプリンタで役立つ。\n"
+"正しい実装では、クライアント側は接続を閉じる前にプリンタがEOFを返すのを待機する必要がある。\n"
+"一部のクライアントは待機しないため、一部のプリンタでは実装に関連するバグがある。\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:62
@@ -340,7 +339,7 @@ msgid ""
 "**pap** is invoked by **psf**(8) within *lpd*'s spool directory.\n"
 msgstr ""
 "> *statusfile* というファイルを更新して、プリンタからの最新のステータス\n"
-"メッセージを含める。 **pap**\n"
+"メッセージを含める。**pap**\n"
 "は、プリンタが入力を処理するのを待っているときに、プリンタからステータスを取得する。*statusfile*\n"
 "には、改行で終了する 1 行が含まれる。これは、*lpd* のスプール\n"
 "ディレクトリ内の **psf**(8) によって **pap** が呼び出される場合に便利。\n"
@@ -359,10 +358,8 @@ msgid ""
 "the job. This is to defeat printer-side spool available on HP IV and V\n"
 "printers.\n"
 msgstr ""
-"> ジョブを送信する前に、プリンタ\n"
-"ステータスに「waiting」という単語が含まれるまで待機する。これは、HP IV\n"
-"および V\n"
-"プリンターで使用可能なプリンター側スプールを無効にするためのものである。\n"
+"> ジョブを送信する前に、プリンタステータスに「waiting」という単語が含まれるまで待機する。\n"
+"これは、HP IV および V プリンターで使用可能なプリンター側スプールを無効にするためのものである。\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:82
@@ -378,9 +375,8 @@ msgid ""
 "the job. This is to defeat printer-side spool available on HP IV and V\n"
 "printers.\n"
 msgstr ""
-"> ジョブを送信する前に、プリンターのステータスに「アイドル」という単語が含まれるまで待機する。これは、HP\n"
-"IV および V\n"
-"プリンタで利用可能なプリンタ側スプールを無効にするためのものである。\n"
+"> ジョブを送信する前に、プリンターのステータスに「アイドル」という単語が含まれるまで待機する。\n"
+"これは、HP IV および V プリンタで利用可能なプリンタ側スプールを無効にするためのものである。\n"
 
 #. type: Title #
 #: manpages/man1/pap.1.md:87 manpages/man8/afpd.8.md:88

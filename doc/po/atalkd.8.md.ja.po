@@ -219,7 +219,11 @@ msgid ""
 "the AppleTalk Echo Protocol (similar to **ping**(8)). Specifically, this\n"
 "corresponds to the RTMP, NBP, ZIP, and AEP protocols in the AppleTalk\n"
 "protocol family.\n"
-msgstr "**atalkd** は、すべてのユーザー レベルの AppleTalk ネットワーク管理を担当する。これには、ルーティング、名前の登録と検索、ゾーン検索、および AppleTalk Echo プロトコル (**ping**(8) に類似)  が含まれる。具体的には、AppleTalk プロトコル ファミリの RTMP、NBP、ZIP、および AEP プロトコルに対応する。\n"
+msgstr ""
+"**atalkd** は、すべてのユーザー レベルの AppleTalk ネットワーク管理を担当する。\n"
+"これには、ルーティング、名前の登録と検索、ゾーン検索、および AppleTalk Echo プロトコル \n"
+"(**ping**(8) に類似)  が含まれる。\n"
+"具体的には、AppleTalk プロトコル ファミリの RTMP、NBP、ZIP、および AEP プロトコルに対応する。\n"
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:25
@@ -334,7 +338,13 @@ msgid ""
 "for startup). It is best to choose the smallest useful net-range, i.e.\n"
 "if you have three machines on a LAN, choose a net-range below 1000. Each\n"
 "net-range may have an arbitrary list of zones associated with it.\n"
-msgstr "**atalkd**は、複数のインターフェイスを構成することでインターフェイス間のルーティングを提供できる。各インターフェースには、1から 65279 までの一意のネット範囲 を割り当てる必要がある (0 から 65535 は無効で、65280 から 65534までのアドレスは起動用に予約されている)。最も小さい有効なネット範囲を選択するのが最善。つまり、LAN上に 3 台のマシンがある場合は、1000未満のネット範囲を選択する。各ネット範囲には任意のリストを設定できる。\n"
+msgstr ""
+"**atalkd**は、複数のインターフェイスを構成することでインターフェイス間のルーティングを提供できる。\n"
+"各インターフェースには、1から 65279 までの一意のネット範囲 を割り当てる必要がある \n"
+"(0 から 65535 は無効で、65280 から 65534までのアドレスは起動用に予約されている)。\n"
+"最も小さい有効なネット範囲を選択するのが最善。\n"
+"つまり、LAN上に 3 台のマシンがある場合は、1000未満のネット範囲を選択する。\n"
+"各ネット範囲には任意のリストを設定できる。\n"
 
 #. type: Plain text
 #: manpages/man8/atalkd.8.md:74

@@ -205,7 +205,9 @@ msgid ""
 "**afppasswd** creates and maintains an *afppasswd* file, which supplies the\n"
 "user credentials for the \"Randnum exchange\" and \"2-Way Randnum exchange\"\n"
 "User Authentication Modules.\n"
-msgstr "**afppasswd** は、「Randnum exchange」および「2-Way Randnum exchange」ユーザー認証モジュールのユーザー資格情報を提供する afppasswd ファイルを作成および管理する。\n"
+msgstr ""
+"**afppasswd** は、「Randnum exchange」および「2-Way Randnum exchange」\n"
+"ユーザー認証モジュールのユーザー資格情報を提供する afppasswd ファイルを作成および管理する。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:18
@@ -214,7 +216,9 @@ msgid ""
 "**afppasswd** can either be called by root with parameters to manage all\n"
 "user credentials, or by local system users with no parameters to change\n"
 "their own AFP passwords.\n"
-msgstr "**afppasswd**は、rootがパラメータ付きで呼び出すことも、一般のユーザが自分のAFPパスワードを変更するためにパラメータなしで呼び出すこともできる。\n"
+msgstr ""
+"**afppasswd**は、rootがパラメータ付きで呼び出すことも、\n"
+"一般のユーザが自分のAFPパスワードを変更するためにパラメータなしで呼び出すこともできる。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:23
@@ -292,7 +296,10 @@ msgid ""
 "> If cracklib support is built into *netatalk* this option will cause\n"
 "cracklib checking to be disabled, if the superuser does not want to have\n"
 "the password run against the cracklib dictionary.\n"
-msgstr "> もしcracklibサポートが*netatalk*に組み込まれており、cracklib辞書に対して実行されたパスワードを持つことをスーパユーザが望まないなら、このオプションはcracklibチェックを無効にできるだろう。\n"
+msgstr ""
+"> もしcracklibサポートが*netatalk*に組み込まれており、\n"
+"cracklib辞書に対して実行されたパスワードを持つことをスーパユーザが望まないなら、\n"
+"このオプションはcracklibチェックを無効にできるだろう。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:58

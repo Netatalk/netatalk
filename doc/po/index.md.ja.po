@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0dev\n"
-"POT-Creation-Date: 2025-01-25 20:17+0100\n"
+"POT-Creation-Date: 2025-07-29 20:18+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -20,44 +20,11 @@ msgstr ""
 #. type: Title #
 #: manual/index.md:1
 #, no-wrap
-msgid "Introduction"
+msgid "Introduction to Netatalk"
 msgstr "序説"
 
-#. type: Title ##
-#: manual/index.md:3
-#, no-wrap
-msgid "Legal Notice"
-msgstr "法的条項"
-
 #. type: Plain text
-#: manual/index.md:9
-msgid ""
-"The Netatalk software package as well as this documentation are distributed "
-"under the GNU General Public License (GPL) version 2. A copy of the license "
-"is included in this documentation, as well as within the Netatalk source "
-"distribution."
-msgstr ""
-"Netatalk のソフトウェアのパッケージまたは本ドキュメントは GNU 一般公衆利用許"
-"諾書 (GPL) バージョン 2 のもとで配布されている。 Netatalk ソース一式にも本ド"
-"キュメントと同様に許諾書のコピーが同梱されている。"
-
-#. type: Plain text
-#: manual/index.md:12
-msgid ""
-"The Free Software Foundation distributes an [online copy of the license]"
-"(http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt)."
-msgstr ""
-"[許諾書のコピーのオンライン版](http://www.gnu.org/licenses/old-licenses/"
-"gpl-2.0.txt) はフリーソフトウェア財団によって配布されている。"
-
-#. type: Title ##
-#: manual/index.md:13
-#, no-wrap
-msgid "Overview of Netatalk"
-msgstr "Netatalk 概要"
-
-#. type: Plain text
-#: manual/index.md:19
+#: manual/index.md:7
 msgid ""
 "Netatalk is an Open Source software package that can be used to turn a "
 "\\*NIX machine into a performant and light-weight file server for Macintosh "
@@ -69,7 +36,7 @@ msgstr ""
 "す。TCP/IP と従来の AppleTalk トランスポート層を提供する。"
 
 #. type: Plain text
-#: manual/index.md:26
+#: manual/index.md:14
 msgid ""
 "Using Netatalk's AFP 3.4 compliant file-server leads to noticeably higher "
 "transmission speeds for macOS clients compared to Samba/NFS, while providing "
@@ -84,7 +51,7 @@ msgstr ""
 "の Mac が混在する環境を容易にする。"
 
 #. type: Plain text
-#: manual/index.md:31
+#: manual/index.md:19
 msgid ""
 "Netatalk ships with range of capabilities to accommodate most deployment "
 "environments, including Kerberos, ACLs and LDAP. Modern macOS features such "
@@ -96,7 +63,7 @@ msgstr ""
 "Spotlight インデックス検索などの最新の macOS 機能が提供される。"
 
 #. type: Plain text
-#: manual/index.md:36
+#: manual/index.md:24
 msgid ""
 "For AppleTalk networks with legacy Macs and Apple IIs, Netatalk provides a "
 "print server, time server, and Apple II NetBoot server. The print server is "
@@ -110,7 +77,7 @@ msgstr ""
 "る。"
 
 #. type: Plain text
-#: manual/index.md:39
+#: manual/index.md:27
 msgid ""
 "Additionally, Netatalk can be configured as an AppleTalk router through its "
 "AppleTalk Network Management daemon, providing both segmentation and zone "

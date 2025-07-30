@@ -228,7 +228,13 @@ msgid ""
 "after accepting a job from the network to have it re-examine the\n"
 "appropriate spool directory. The actual printing and spooling is handled\n"
 "entirely by **lpd**.\n"
-msgstr "**papd** は AppleTalk プリンタ デーモンである。このデーモンは、プリンタ アクセス プロトコル (PAP) を使用して、AppleTalk クライアント (通常は Macintosh コンピュータ) からの印刷ジョブを受け入れる。 System V 印刷システムで使用する場合、**papd** はジョブを **lpd**(8) スプール ディレクトリに直接スプールし、ネットワークからジョブを受け入れた後に **lpd** を起動して適切なスプール ディレクトリを再検査させる。実際の印刷とスプールは、すべて **lpd** によって処理される。\n"
+msgstr ""
+"**papd** は AppleTalk プリンタ デーモンである。\n"
+"このデーモンは、プリンタ アクセス プロトコル (PAP) を使用して、\n"
+"AppleTalk クライアント (通常は Macintosh コンピュータ) からの印刷ジョブを受け入れる。\n"
+"System V 印刷システムで使用する場合、**papd** はジョブを **lpd**(8) スプールディレクトリに\n"
+"直接スプールし、ネットワークからジョブを受け入れた後に **lpd** を起動して適切な\n"
+"スプールディレクトリを再検査させる。実際の印刷とスプールは、すべて **lpd** によって処理される。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:24
@@ -237,7 +243,10 @@ msgid ""
 "**papd** can also pipe the print job to an external program for\n"
 "processing, and this is the preferred method on systems not using CUPS\n"
 "to avoid compatibility problems with all the flavours of **lpd** in use.\n"
-msgstr "**papd** は、印刷ジョブを外部プログラムにパイプして処理することもできる。これは、CUPS を使用していないシステムで推奨される方法である。これは、使用されているすべての種類の **lpd** との互換性の問題を回避するためである。\n"
+msgstr ""
+"**papd** は、印刷ジョブを外部プログラムにパイプして処理することもできる。\n"
+"これは、CUPS を使用していないシステムで推奨される方法である。\n"
+"これは、使用されているすべての種類の **lpd** との互換性の問題を回避するためである。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:30
@@ -259,7 +268,9 @@ msgstr ""
 msgid ""
 "**papd** is typically started at boot time from system init scripts or\n"
 "services. It first reads from its configuration file, **papd.conf**.\n"
-msgstr "**papd** は通常、システムの init スクリプトまたはサービスからブート時に起動される。まず、設定ファイル **papd.conf** から読み取る。\n"
+msgstr ""
+"**papd** は通常、システムの init スクリプトまたはサービスからブート時に起動される。\n"
+"まず、設定ファイル **papd.conf** から読み取る。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:36
@@ -426,11 +437,12 @@ msgid ""
 "manufacturer. If no PPD file is configured, papd will return the default\n"
 "answer, possibly causing the client to send excessively large jobs.\n"
 msgstr ""
-"> PostScript プリンタ記述ファイル。 papd は、設定された PPD\n"
-"ファイルを参照して、印刷クライアントからの設定およびフォントのクエリに応答する。このようなファイルは、Adobe,\n"
-"Inc. またはプリンタの製造元から入手できる。PPD\n"
-"ファイルが設定されていない場合、papd\n"
-"はデフォルトの応答を返すため、クライアントが過度に大きなジョブを送信する可能性がある。\n"
+"> PostScript プリンタ記述ファイル。\n"
+"papd は、設定された PPD ファイルを参照して、\n"
+"印刷クライアントからの設定およびフォントのクエリに応答する。\n"
+"このようなファイルは、Adobe, Inc. またはプリンタの製造元から入手できる。\n"
+"PPD ファイルが設定されていない場合、papd はデフォルトの応答を返すため、\n"
+"クライアントが過度に大きなジョブを送信する可能性がある。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:125
@@ -444,7 +456,15 @@ msgid ""
 "printer to accept a full 8 bits or take special precautions and convert\n"
 "the printjob's encoding (e.g. by using *co=\"protocol=BCP\"* when using\n"
 "CUPS 1.1.19 or above).\n"
-msgstr "**papd** は、クライアントから上位ビットが設定された文字 (完全な 8 ビット)  を受け入れるが、一部の PostScript プリンタ (Apple の LaserWriter ファミリを含む) は、デフォルトでシリアル インターフェイスで 7 ビット文字のみを受け入れる。TCP/IP メソッド (リモート LPR またはソケット)  経由でアクセスされる一部のプリンタにも同じことが当てはまる。プリンタを 8 ビット全体を受け入れるように設定するか、特別な予防措置を講じて印刷ジョブのエンコードを変換する必要がある (たとえば、CUPS 1.1.19 以降を使用している場合は、*co=\"protocol=BCP\"* を使用する)。\n"
+msgstr ""
+"**papd** は、クライアントから上位ビットが設定された文字 (完全な8ビット) を受け入れるが、\n"
+"一部の PostScript プリンタ (Apple の LaserWriter ファミリを含む) は、\n"
+"デフォルトでシリアルインターフェイスで7ビット文字のみを受け入れる。\n"
+"TCP/IP メソッド (リモート LPR またはソケット) 経由でアクセスされる\n"
+"一部のプリンタにも同じことが当てはまる。\n"
+"プリンタを8ビット全体を受け入れるように設定するか、\n"
+"特別な予防措置を講じて印刷ジョブのエンコードを変換する必要がある \n"
+"(たとえば、CUPS 1.1.19 以降を使用している場合は、*co=\"protocol=BCP\"* を使用する)。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:129

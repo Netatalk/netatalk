@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0dev\n"
-"POT-Creation-Date: 2025-04-22 22:06+0200\n"
+"POT-Creation-Date: 2025-07-29 20:18+0200\n"
 "PO-Revision-Date: 2025-04-22 22:06+0200\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -20,34 +20,39 @@ msgstr ""
 #: manual/_Navlinks.md:1 manual/_Navlinks_atalk.md:1
 #, no-wrap
 msgid "Netatalk Manual"
-msgstr ""
+msgstr "Netatalk マニュアル"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
 msgid "[Introduction](index.html)"
 msgstr "[序説](index.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
 msgid "[Installation](Installation.html)"
 msgstr "[インストール](Installation.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
 msgid "[Configuration](Configuration.html)"
 msgstr "[セットアップ](Configuration.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
 msgid "[Upgrading](Upgrading.html)"
 msgstr "[アップグレード](Upgrading.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:7 manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
 msgid "[License](License.html)"
 msgstr "[ライセンス](License.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks_atalk.md:8 manual/_Sidebar.md:11
+#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+msgid "[Legal Notices](Legal.html)"
+msgstr "[法的条項](Legal.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
 msgid "[AppleTalk](AppleTalk.html)"
 msgstr ""

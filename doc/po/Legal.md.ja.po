@@ -1,0 +1,417 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.3.0dev\n"
+"POT-Creation-Date: 2025-07-29 20:18+0200\n"
+"PO-Revision-Date: 2025-07-29 20:18+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title ##
+#: manual/Installation.md:240 manual/Legal.md:10
+#, no-wrap
+msgid "netatalk"
+msgstr ""
+
+#. type: Title #
+#: manual/Legal.md:1
+#, no-wrap
+msgid "Legal Notices"
+msgstr "法的条項"
+
+#. type: Plain text
+#: manual/Legal.md:7
+msgid ""
+"The Netatalk software package as well as this documentation are distributed "
+"under the [GNU General Public License version 2](License.html).  A copy of "
+"the license is included with this documentation, as well as within the "
+"Netatalk source distribution."
+msgstr ""
+"Netatalk のソフトウェアのパッケージまたは本ドキュメントは [GNU 一般公衆利用許"
+"諾書 (GPL) バージョン 2](License.html) のもとで配布されている。 Netatalk ソー"
+"ス一式にも本ドキュメントと同様に許諾書のコピーが同梱されている。"
+
+#. type: Plain text
+#: manual/Legal.md:9
+msgid ""
+"Legal notices for individual modules bundled with the Netatalk distribution "
+"follow below."
+msgstr ""
+"Netatalk ディストリビューションにバンドルされている個々のモジュールに関する法"
+"的通知は下記のとおり。"
+
+#. type: Plain text
+#: manual/Legal.md:14
+#, no-wrap
+msgid ""
+"    Copyright (c) 1990,1996 Regents of The University of Michigan.\n"
+"    All Rights Reserved.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:24 manual/Legal.md:69 manual/Legal.md:167
+#: manual/Legal.md:229
+#, no-wrap
+msgid ""
+"    Permission to use, copy, modify, and distribute this software and\n"
+"    its documentation for any purpose and without fee is hereby granted,\n"
+"    provided that the above copyright notice appears in all copies and\n"
+"    that both that copyright notice and this permission notice appear\n"
+"    in supporting documentation, and that the name of The University\n"
+"    of Michigan not be used in advertising or publicity pertaining to\n"
+"    distribution of the software without specific, written prior\n"
+"    permission. This software is supplied as is without expressed or\n"
+"    implied warranties of any kind.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:27
+#, no-wrap
+msgid ""
+"    This product includes software developed by the University of\n"
+"    California, Berkeley and its contributors.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:35
+#, no-wrap
+msgid ""
+"    Research Systems Unix Group\n"
+"    The University of Michigan\n"
+"    c/o Wesley Craig\n"
+"    535 W. William Street\n"
+"    Ann Arbor, Michigan\n"
+"    +1-313-764-2278\n"
+"    netatalk@umich.edu\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:38
+#, no-wrap
+msgid ""
+"    Modifications for Appleshare IP and other files copyrighted by Adrian\n"
+"    Sun are under the following copyright:\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:41
+#, no-wrap
+msgid ""
+"    Copyright (c) 1997,1998,1999,2000 Adrian Sun (asun@cobalt.com)\n"
+"    All Rights Reserved.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:48
+#, no-wrap
+msgid ""
+"    Permission to use, copy, modify, and distribute this software and\n"
+"    its documentation for any purpose and without fee is hereby granted,\n"
+"    provided that the above copyright notice appears in all copies and\n"
+"    that both that copyright notice and this permission notice appear\n"
+"    in supporting documentation. This software is supplied as is\n"
+"    without expressed or implied warranties of any kind.\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Legal.md:49
+#, no-wrap
+msgid "a2boot"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:56
+#, no-wrap
+msgid ""
+"    Recoding circa Dec 2002-early 2003          by Marsha Jackson\n"
+"    support booting of Apple 2 computers,   with aid of Steven N. Hirsch\n"
+"    Code is copyrighted as listed below...\n"
+"    M. Jackson is establishing no personal copyright\n"
+"    or personal restrictions on this software.  Only the below rights exist\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:57 manual/Legal.md:217
+#, no-wrap
+msgid "    Copyright (c) 1990,1994 Regents of The University of Michigan.  \n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:59 manual/Legal.md:157 manual/Legal.md:219
+#, no-wrap
+msgid "    All Rights Reserved.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:77 manual/Legal.md:237
+#, no-wrap
+msgid ""
+"    Research Systems Unix Group\n"
+"    The University of Michigan\n"
+"    c/o Wesley Craig\n"
+"    535 W. William Street\n"
+"    Ann Arbor, Michigan\n"
+"    +1 313 764 2278\n"
+"    netatalk@umich.edu\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:82 manual/Legal.md:242
+#, no-wrap
+msgid ""
+"    The \"timelord protocol\" was reverse engineered from Timelord,\n"
+"    distributed with CAP, Copyright (c) 1990, The University of\n"
+"    Melbourne.  The following copyright, supplied by The University\n"
+"    of Melbourne, may apply to this code:\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:85 manual/Legal.md:245
+#, no-wrap
+msgid ""
+"    This version of timelord.c is based on code distributed\n"
+"    by the University of Melbourne as part of the CAP package.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:88 manual/Legal.md:247
+#, no-wrap
+msgid ""
+"    The tardis/Timelord package for Macintosh/CAP is\n"
+"    Copyright (c) 1990, The University of Melbourne.\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Legal.md:89
+#, no-wrap
+msgid "authentic-theme"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:92
+#, no-wrap
+msgid "    MIT License\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:94
+#, no-wrap
+msgid "    Copyright (c) Ilia Rostovtsev\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:101
+#, no-wrap
+msgid ""
+"    Permission is hereby granted, free of charge, to any person obtaining a copy\n"
+"    of this software and associated documentation files (the \"Software\"), to deal\n"
+"    in the Software without restriction, including without limitation the rights\n"
+"    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell\n"
+"    copies of the Software, and to permit persons to whom the Software is\n"
+"    furnished to do so, subject to the following conditions:\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:104
+#, no-wrap
+msgid ""
+"    The above copyright notice and this permission notice shall be included in all\n"
+"    copies or substantial portions of the Software.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:112
+#, no-wrap
+msgid ""
+"    THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\n"
+"    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\n"
+"    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\n"
+"    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
+"    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
+"    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
+"    SOFTWARE.\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Legal.md:113
+#, no-wrap
+msgid "glibc"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:119
+#, no-wrap
+msgid ""
+"    File tree walker functions.\n"
+"    Copyright (C) 1996-2004, 2006-2008, 2010 Free Software Foundation, Inc.\n"
+"    This file is part of the GNU C Library.\n"
+"    Contributed by Ulrich Drepper <drepper@cygnus.com>, 1996.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:124
+#, no-wrap
+msgid ""
+"    The GNU C Library is free software; you can redistribute it and/or\n"
+"    modify it under the terms of the GNU Lesser General Public\n"
+"    License as published by the Free Software Foundation; either\n"
+"    version 2.1 of the License, or (at your option) any later version.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:129
+#, no-wrap
+msgid ""
+"    The GNU C Library is distributed in the hope that it will be useful,\n"
+"    but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU\n"
+"    Lesser General Public License for more details.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:134
+#, no-wrap
+msgid ""
+"    You should have received a copy of the GNU Lesser General Public\n"
+"    License along with the GNU C Library; if not, write to the Free\n"
+"    Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA\n"
+"    02110-1301 USA.\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Legal.md:135
+#, no-wrap
+msgid "macipgw"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:138
+#, no-wrap
+msgid "    AppleTalk MacIP Gateway\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:140
+#, no-wrap
+msgid "    (c) 2013, 1997 Stefan Bethke. All rights reserved.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:145 manual/Legal.md:205
+#, no-wrap
+msgid ""
+"    This program is free software; you can redistribute it and/or modify\n"
+"    it under the terms of the GNU General Public License as published by\n"
+"    the Free Software Foundation; either version 2 of the License, or\n"
+"    (at your option) any later version.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:150 manual/Legal.md:210 manual/License.md:314
+#, no-wrap
+msgid ""
+"    This program is distributed in the hope that it will be useful,\n"
+"    but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"    GNU General Public License for more details.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:154 manual/Legal.md:214
+#, no-wrap
+msgid ""
+"    You should have received a copy of the GNU General Public License along\n"
+"    with this program; if not, write to the Free Software Foundation, Inc.,\n"
+"    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:155
+#, no-wrap
+msgid "    Copyright (c) 1990,1996 Regents of The University of Michigan.  \n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:168
+#, no-wrap
+msgid "    Copyright (c) 1988, 1992, 1993  \n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:170
+#, no-wrap
+msgid "    The Regents of the University of California.  All rights reserved.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:182
+#, no-wrap
+msgid ""
+"    Redistribution and use in source and binary forms, with or without\n"
+"    modification, are permitted provided that the following conditions\n"
+"    are met:\n"
+"    1. Redistributions of source code must retain the above copyright\n"
+"    notice, this list of conditions and the following disclaimer.\n"
+"    2. Redistributions in binary form must reproduce the above copyright\n"
+"    notice, this list of conditions and the following disclaimer in the\n"
+"    documentation and/or other materials provided with the distribution.\n"
+"    4. Neither the name of the University nor the names of its contributors\n"
+"    may be used to endorse or promote products derived from this software\n"
+"    without specific prior written permission.\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:194
+#, no-wrap
+msgid ""
+"    THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND\n"
+"    ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n"
+"    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE\n"
+"    ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE\n"
+"    FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n"
+"    DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS\n"
+"    OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)\n"
+"    HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT\n"
+"    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\n"
+"    OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF\n"
+"    SUCH DAMAGE.\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Legal.md:195
+#, no-wrap
+msgid "testsuite"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:197
+#, no-wrap
+msgid "    The Netatalk Test-Suite  \n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:198
+#, no-wrap
+msgid "    Copyright (C) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>  \n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Legal.md:200
+#, no-wrap
+msgid "    Copyright (C) 2003-2010 Didier Gautheron <dgautheron@magic.fr>\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Legal.md:215
+#, no-wrap
+msgid "timelord"
+msgstr ""

@@ -7,7 +7,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0dev\n"
-"POT-Creation-Date: 2025-01-25 09:26+0100\n"
+"POT-Creation-Date: 2025-07-29 20:18+0200\n"
 "PO-Revision-Date: 2025-01-25 09:26+0100\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -16,6 +16,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Plain text
+#: manual/Legal.md:150 manual/Legal.md:210 manual/License.md:314
+#, no-wrap
+msgid ""
+"    This program is distributed in the hope that it will be useful,\n"
+"    but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
+"    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"    GNU General Public License for more details.\n"
+msgstr ""
 
 #. type: Title #
 #: manual/License.md:1
@@ -196,7 +206,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:102
+#: manual/License.md:101
 #, no-wrap
 msgid ""
 "**a)** You must cause the modified files to carry prominent notices\n"
@@ -204,7 +214,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:108
+#: manual/License.md:106
 #, no-wrap
 msgid ""
 "**b)** You must cause any work that you distribute or publish, that in\n"
@@ -214,7 +224,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:120
+#: manual/License.md:117
 #, no-wrap
 msgid ""
 "**c)** If the modified program normally reads commands interactively\n"
@@ -230,7 +240,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:131
+#: manual/License.md:128
 msgid ""
 "These requirements apply to the modified work as a whole. If identifiable "
 "sections of that work are not derived from the Program, and can be "
@@ -244,7 +254,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:136
+#: manual/License.md:133
 msgid ""
 "Thus, it is not the intent of this section to claim rights or contest your "
 "rights to work written entirely by you; rather, the intent is to exercise "
@@ -253,7 +263,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:141
+#: manual/License.md:138
 msgid ""
 "In addition, mere aggregation of another work not based on the Program with "
 "the Program (or with a work based on the Program) on a volume of a storage "
@@ -262,7 +272,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:145
+#: manual/License.md:142
 #, no-wrap
 msgid ""
 "**3.** You may copy and distribute the Program (or a work based on it,\n"
@@ -271,7 +281,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:150
+#: manual/License.md:146
 #, no-wrap
 msgid ""
 "**a)** Accompany it with the complete corresponding machine-readable\n"
@@ -280,7 +290,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:158
+#: manual/License.md:153
 #, no-wrap
 msgid ""
 "**b)** Accompany it with a written offer, valid for at least three\n"
@@ -292,7 +302,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:165
+#: manual/License.md:159
 #, no-wrap
 msgid ""
 "**c)** Accompany it with the information you received as to the offer\n"
@@ -303,7 +313,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:176
+#: manual/License.md:170
 msgid ""
 "The source code for a work means the preferred form of the work for making "
 "modifications to it. For an executable work, complete source code means all "
@@ -317,7 +327,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:182
+#: manual/License.md:176
 msgid ""
 "If distribution of executable or object code is made by offering access to "
 "copy from a designated place, then offering equivalent access to copy the "
@@ -327,7 +337,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:190
+#: manual/License.md:184
 #, no-wrap
 msgid ""
 "**4.** You may not copy, modify, sublicense, or distribute the Program\n"
@@ -340,7 +350,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:199
+#: manual/License.md:193
 #, no-wrap
 msgid ""
 "**5.** You are not required to accept this License, since you have not\n"
@@ -354,7 +364,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:207
+#: manual/License.md:201
 #, no-wrap
 msgid ""
 "**6.** Each time you redistribute the Program (or any work based on\n"
@@ -367,7 +377,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:221
+#: manual/License.md:215
 #, no-wrap
 msgid ""
 "**7.** If, as a consequence of a court judgment or allegation of\n"
@@ -386,7 +396,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:226
+#: manual/License.md:220
 msgid ""
 "If any portion of this section is held invalid or unenforceable under any "
 "particular circumstance, the balance of the section is intended to apply and "
@@ -394,7 +404,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:237
+#: manual/License.md:231
 msgid ""
 "It is not the purpose of this section to induce you to infringe any patents "
 "or other property right claims or to contest validity of any such claims; "
@@ -408,14 +418,14 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:240
+#: manual/License.md:234
 msgid ""
 "This section is intended to make thoroughly clear what is believed to be a "
 "consequence of the rest of this License."
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:248
+#: manual/License.md:242
 #, no-wrap
 msgid ""
 "**8.** If the distribution and/or use of the Program is restricted in\n"
@@ -428,7 +438,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:253
+#: manual/License.md:247
 #, no-wrap
 msgid ""
 "**9.** The Free Software Foundation may publish revised and/or new\n"
@@ -438,7 +448,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:261
+#: manual/License.md:255
 msgid ""
 "Each version is given a distinguishing version number. If the Program "
 "specifies a version number of this License which applies to it and \"any "
@@ -450,7 +460,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:270
+#: manual/License.md:264
 #, no-wrap
 msgid ""
 "**10.** If you wish to incorporate parts of the Program into other\n"
@@ -464,13 +474,13 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:272
+#: manual/License.md:266
 #, no-wrap
 msgid "**NO WARRANTY**\n"
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:282
+#: manual/License.md:276
 #, no-wrap
 msgid ""
 "**11.** BECAUSE THE PROGRAM IS LICENSED FREE OF CHARGE, THERE IS NO\n"
@@ -485,7 +495,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:293
+#: manual/License.md:287
 #, no-wrap
 msgid ""
 "**12.** IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN\n"
@@ -501,18 +511,18 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:295
+#: manual/License.md:289
 msgid "END OF TERMS AND CONDITIONS"
 msgstr ""
 
 #. type: Title ##
-#: manual/License.md:296
+#: manual/License.md:290
 #, no-wrap
 msgid "How to Apply These Terms to Your New Programs"
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:302
+#: manual/License.md:296
 msgid ""
 "If you develop a new program, and you want it to be of the greatest possible "
 "use to the public, the best way to achieve this is to make it free software "
@@ -520,7 +530,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:307
+#: manual/License.md:301
 msgid ""
 "To do so, attach the following notices to the program. It is safest to "
 "attach them to the start of each source file to most effectively convey the "
@@ -529,7 +539,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:310
+#: manual/License.md:304
 #, no-wrap
 msgid ""
 "    one line to give the program's name and an idea of what it does.\n"
@@ -537,7 +547,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:315
+#: manual/License.md:309
 #, no-wrap
 msgid ""
 "    This program is free software; you can redistribute it and/or\n"
@@ -547,17 +557,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:320
-#, no-wrap
-msgid ""
-"    This program is distributed in the hope that it will be useful,\n"
-"    but WITHOUT ANY WARRANTY; without even the implied warranty of\n"
-"    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
-"    GNU General Public License for more details.\n"
-msgstr ""
-
-#. type: Plain text
-#: manual/License.md:323
+#: manual/License.md:317
 #, no-wrap
 msgid ""
 "    You should have received a copy of the GNU General Public License\n"
@@ -565,20 +565,20 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:326
+#: manual/License.md:320
 msgid ""
 "Also add information on how to contact you by electronic and paper mail."
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:329
+#: manual/License.md:323
 msgid ""
 "If the program is interactive, make it output a short notice like this when "
 "it starts in an interactive mode:"
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:335
+#: manual/License.md:329
 #, no-wrap
 msgid ""
 "    Gnomovision version 69, Copyright (C) year name of author\n"
@@ -589,7 +589,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:341
+#: manual/License.md:335
 msgid ""
 "The hypothetical commands \\`show w' and \\`show c' should show the "
 "appropriate parts of the General Public License. Of course, the commands you "
@@ -598,7 +598,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:345
+#: manual/License.md:339
 msgid ""
 "You should also get your employer (if you work as a programmer) or your "
 "school, if any, to sign a \"copyright disclaimer\" for the program, if "
@@ -606,7 +606,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:350
+#: manual/License.md:344
 #, no-wrap
 msgid ""
 "    Yoyodyne, Inc., hereby disclaims all copyright\n"
@@ -616,7 +616,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:353
+#: manual/License.md:347
 #, no-wrap
 msgid ""
 "    signature of Moe Ghoul, 1 April 1989\n"
@@ -624,7 +624,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/License.md:360
+#: manual/License.md:354
 msgid ""
 "This General Public License does not permit incorporating your program into "
 "proprietary programs. If your program is a subroutine library, you may "

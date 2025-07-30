@@ -242,7 +242,9 @@ msgstr ""
 msgid ""
 "> Allows specification of the net and node numbers for this interface,\n"
 "specified in AppleTalk numbering format (example: **-addr 66.6**).\n"
-msgstr "このインターフェイスのネット番号とノード番号を指定できる。AppleTalk 番号形式 (例: **-addr 66.6**) で指定する。\n"
+msgstr ""
+"このインターフェイスのネット番号とノード番号を指定できる。\n"
+"AppleTalk 番号形式 (例: **-addr 66.6**) で指定する。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:50
@@ -294,7 +296,9 @@ msgstr ""
 msgid ""
 "> Seed an AppleTalk router on a single interface. The inverse option is\n"
 "**-dontroute**. Akin to **-seed**, but allows single interface routing.\n"
-msgstr "> 単一のインターフェイスで AppleTalk ルーターをシードする。逆の オプションは**-dontroute**。 **-seed**に似ているが、単一インターフェイス ルーティング。\n"
+msgstr ""
+"> 単一のインターフェイスで AppleTalk ルーターをシードする。\n"
+"逆の オプションは**-dontroute**。 **-seed**に似ているが、単一インターフェイス ルーティング。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:68
@@ -310,7 +314,10 @@ msgid ""
 "configured. If you have a single network interface, use **-router**\n"
 "instead. It also causes all missing arguments to be automagically\n"
 "configured from the network.\n"
-msgstr "> AppleTalk ルーターをシードする。これには、2 つ以上のインターフェイスを構成する必要がある。単一のネットワーク インターフェイスがある場合は、代わりに **-router** を使用する。これにより、不足しているすべての引数がネットワークから自動的に構成される。\n"
+msgstr ""
+"> AppleTalk ルーターをシードする。これには、2 つ以上のインターフェイスを構成する必要がある。\n"
+"単一のネットワーク インターフェイスがある場合は、代わりに **-router** を使用する。\n"
+"これにより、不足しているすべての引数がネットワークから自動的に構成される。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:75
@@ -325,7 +332,9 @@ msgid ""
 "> Specifies a specific zone that this interface should appear on (example:\n"
 "**-zone \"Parking Lot\"**). Please note that zones with spaces and other\n"
 "special characters should be enclosed in quotation marks.\n"
-msgstr "> このインターフェイスが表示される特定のゾーンを指定する (例: **-zone** \"Parking Lot\")。スペースやその他の特殊文字を含むゾーンは、ダブルクォーテーションで囲む必要があることに注意してください。\n"
+msgstr ""
+"> このインターフェイスが表示される特定のゾーンを指定する (例: **-zone** \"Parking Lot\")。\n"
+"スペースやその他の特殊文字を含むゾーンは、ダブルクォーテーションで囲む必要があることに注意してください。\n"
 
 #. type: Plain text
 #: manpages/man5/atalkd.conf.5.md:83

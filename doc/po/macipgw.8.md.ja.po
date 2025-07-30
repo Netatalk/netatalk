@@ -189,7 +189,10 @@ msgid ""
 "**macipgw** provides IP connectivity for devices connected through an\n"
 "AppleTalk-only network, i.e. LocalTalk or Apple Remote Access (ARA).\n"
 "**macipgw** is normally started out of */etc/rc*.\n"
-msgstr "**macipgw** は、AppleTalk のみのネットワークを介して接続されたデバイスに IP 接続を提供する。つまり、LocalTalk または Apple Remote Access (ARA)。**macipgw** は通常、*/etc/rc* から起動される。\n"
+msgstr ""
+"**macipgw** は、AppleTalk のみのネットワークを介して接続されたデバイスに IP 接続を提供する。\n"
+"つまり、LocalTalk または Apple Remote Access (ARA)。\n"
+"**macipgw** は通常、*/etc/rc* から起動される。\n"
 
 #. type: Plain text
 #: manpages/man8/macipgw.8.md:25
@@ -240,7 +243,9 @@ msgstr ""
 msgid ""
 "**macipgw** will log operational messages through **syslog**(3) under the\n"
 "facility *LOG_DAEMON*.\n"
-msgstr "**macipgw** は、*LOG_DAEMON* 機能の下で、**syslog**(3) を介して操作メッセージをログに記録する。\n"
+msgstr ""
+"**macipgw** は、*LOG_DAEMON* 機能の下で、**syslog**(3) を介して\n"
+"操作メッセージをログに記録する。\n"
 
 #. type: Plain text
 #: manpages/man8/macipgw.8.md:41

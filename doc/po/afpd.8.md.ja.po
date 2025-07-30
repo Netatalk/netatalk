@@ -217,7 +217,9 @@ msgstr ""
 msgid ""
 "**afpd** provides an Apple Filing Protocol (AFP) interface to the Unix\n"
 "file system. It is normally started at boot time by **netatalk**(8).\n"
-msgstr "**afpd**はUnixファイルシステムにApple Filing Protocol (AFP)インターフェースを提供する。これは通常、**netatalk**(8)によってブート時に起動される。\n"
+msgstr ""
+"**afpd**はUnixファイルシステムにApple Filing Protocol (AFP)インターフェースを提供する。\n"
+"これは通常、**netatalk**(8)によってブート時に起動される。\n"
 
 #. type: Plain text
 #: manpages/man8/afpd.8.md:18
@@ -314,7 +316,9 @@ msgid ""
 "> Sending this to the parent **afpd** will cause it to exit,\n"
 "but leaving all children running!\n"
 "This can be used to implement an AFP service without downtime.\n"
-msgstr "> 親**afpd**にこれを送ると全ての子プロセスを終了する。休止時間なしでAFPサービスを実施するのに使われる。\n"
+msgstr ""
+"> 親**afpd**にこれを送ると全ての子プロセスを終了する。\n"
+"休止時間なしでAFPサービスを実施するのに使われる。\n"
 
 #. type: Plain text
 #: manpages/man8/afpd.8.md:64 manpages/man8/netatalk.8.md:38
@@ -362,7 +366,9 @@ msgid ""
 "disabling all new connections.\n"
 msgstr ""
 "> **afpd**プロセスはクライアントに「The server is going down for\n"
-"maintenance.」というメッセージを送り、5分後に自身を終了する。新規接続を許さない。子プロセスのafpdにこれを送った場合、他の子プロセスには影響しない。それでもメインプロセスは終了するだろうし、全ての新規接続は無効になる。\n"
+"maintenance.」というメッセージを送り、5分後に自身を終了する。新規接続を許さない。\n"
+"子プロセスのafpdにこれを送った場合、他の子プロセスには影響しない。\n"
+"それでもメインプロセスは終了するだろうし、全ての新規接続は無効になる。\n"
 
 #. type: Plain text
 #: manpages/man8/afpd.8.md:84
@@ -378,7 +384,11 @@ msgid ""
 "contents will be sent as a message to the associated AFP client. The\n"
 "file is removed after the message is sent. This should only be sent to a\n"
 "child **afpd**.\n"
-msgstr "> **afpd**プロセスはビルド時に設定したメッセージディレクトリの下のmessage.pidという名前のファイルを探する。発見したプロセスについて、その内容をメッセージとして対応するAFPクライアントに送る。メッセージを送った後にファイルは削除される。このシグナルは子プロセスの**afpd**にのみ送るべき。\n"
+msgstr ""
+"> **afpd**プロセスはビルド時に設定したメッセージディレクトリの下の\n"
+"message.pidという名前のファイルを探する。\n"
+"発見したプロセスについて、その内容をメッセージとして対応するAFPクライアントに送る。\n"
+"メッセージを送った後にファイルは削除される。このシグナルは子プロセスの**afpd**にのみ送るべき。\n"
 
 #. type: Plain text
 #: manpages/man8/afpd.8.md:94 manpages/man8/netatalk.8.md:45
