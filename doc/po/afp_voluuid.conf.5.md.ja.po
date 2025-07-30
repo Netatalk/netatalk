@@ -150,7 +150,10 @@ msgstr ""
 msgid ""
 "**afp_voluuid.conf** is the configuration file used by **afpd** to store\n"
 "UUID of all AFP volumes. The configuration lines are composed like:\n"
-msgstr "**afp_voluuid.conf** は全てのAFPボリュームのUUIDを魔法のように自動的に指定するために **afpd** が利用する設定ファイルである。設定行は以下のように構成される。\n"
+msgstr ""
+"**afp_voluuid.conf** は全てのAFPボリュームのUUIDを魔法のように\n"
+"自動的に指定するために **afpd** が利用する設定ファイルである。\n"
+"設定行は以下のように構成される。\n"
 
 #. type: Plain text
 #: manpages/man5/afp_voluuid.conf.5.md:11

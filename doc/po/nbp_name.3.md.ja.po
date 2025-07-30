@@ -161,7 +161,15 @@ msgid ""
 "*object:type@zone*, where each of *object*, *:type*, and *@zone*\n"
 "replace *obj*, *type*, and *zone*, respectively. *type* must be\n"
 "proceeded by \\`*:*', and *zone* must be preceded by \\`*@*'.\n"
-msgstr "**nbp_name()** は、ユーザーが指定した名前を、そのコンポーネント オブジェクト、タイプ、およびゾーンに解析する。 *obj*、*type*、*zone* は参照渡しされ、呼び出し元のデフォルト値を指す必要がある。**nbp_name()** は、解析された値へのポインタを変更する。 *name* は、*object:type@**zone* の形式である。ここで、*object*、 *:type、*、および *@**zone* はそれぞれ、*obj*、 *type*、*zone,* です。*type* の前には \\`*:*' が、*zone* の前には \\`*@*' がなければならない。\n"
+msgstr ""
+"**nbp_name()** は、ユーザーが指定した名前を、そのコンポーネント オブジェクト、\n"
+"タイプ、およびゾーンに解析する。\n"
+"*obj*、*type*、*zone* は参照渡しされ、呼び出し元のデフォルト値を指す必要がある。\n"
+"**nbp_name()** は、解析された値へのポインタを変更する。\n"
+"*name* は、*object:type@**zone* の形式である。\n"
+"ここで、*object*、 *:type、*、および *@**zone* はそれぞれ、\n"
+"*obj*、 *type*、*zone,* です。\n"
+"*type* の前には \\`*:*' が、*zone* の前には \\`*@*' がなければならない。\n"
 
 #. type: Plain text
 #: manpages/man3/nbp_name.3.md:34

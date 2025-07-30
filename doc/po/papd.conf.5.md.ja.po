@@ -291,7 +291,13 @@ msgid ""
 "Unless the *pd* option is set, the CUPS PPDs will be used. To overwrite\n"
 "these global settings for individual printers simply add them\n"
 "subsequently to papd.conf and assign different settings.\n"
-msgstr "> papd.conf の最初のエントリとして使用すると、papd を介してすべての CUPS プリンタが共有される。この特別な共有プリンタに割り当てられたタイプ/ゾーン設定とその他のパラメータは、すべての CUPS プリンタに適用される。*pd* オプションが設定されていない場合は、CUPS PPD が使用される。個々のプリンタのこれらのグローバル設定を上書きするには、後でそれらを papd.conf に追加し、異なる設定を割り当てるだけである。\n"
+msgstr ""
+"> papd.conf の最初のエントリとして使用すると、papd を介してすべての CUPS プリンタが共有される。\n"
+"この特別な共有プリンタに割り当てられたタイプ/ゾーン設定とその他のパラメータは、\n"
+"すべての CUPS プリンタに適用される。\n"
+"*pd* オプションが設定されていない場合は、CUPS PPD が使用される。\n"
+"個々のプリンタのこれらのグローバル設定を上書きするには、\n"
+"後でそれらを papd.conf に追加し、異なる設定を割り当てるだけである。\n"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:66
@@ -307,7 +313,11 @@ msgid ""
 "originating from pre-Mac OS X LaserWriter drivers to let *foomatic-rip*\n"
 "recognize foomatic PPD options set in the printer dialog. Attention: Use\n"
 "with caution since this might corrupt binary print jobs!\n"
-msgstr "> このフラグが存在する場合、Mac OS X 以前の LaserWriter ドライバから生成された行末を変換するハックが有効になり、*foomatic-rip* がプリンタ ダイアログで設定された foomatic PPD オプションを認識できるようになる。注意: バイナリ印刷ジョブが破損する可能性があるため、注意して使用してください。\n"
+msgstr ""
+"> このフラグが存在する場合、Mac OS X 以前の LaserWriter ドライバから\n"
+"生成された行末を変換するハックが有効になり、*foomatic-rip* がプリンタダイアログで\n"
+"設定された foomatic PPD オプションを認識できるようになる。\n"
+"注意: バイナリ印刷ジョブが破損する可能性があるため、注意して使用してください。\n"
 
 #. type: Plain text
 #: manpages/man5/papd.conf.5.md:73

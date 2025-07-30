@@ -290,7 +290,9 @@ msgstr ""
 msgid ""
 "> Sets the Macintosh character set to use when interpreting zone names.  If not specified,\n"
 "defaults to MacRoman.\n"
-msgstr "> ゾーン名を解釈する際に使用するMacintosh文字セットを設定する。指定しない場合は、デフォルトでMacRomanが使用される。\n"
+msgstr ""
+"> ゾーン名を解釈する際に使用するMacintosh文字セットを設定する。\n"
+"指定しない場合は、デフォルトでMacRomanが使用される。\n"
 
 #. type: Plain text
 #: manpages/man1/getzones.1.md:53

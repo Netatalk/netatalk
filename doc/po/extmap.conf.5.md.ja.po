@@ -146,7 +146,9 @@ msgstr ""
 msgid ""
 "**extmap.conf** is the configuration file used by **afpd** to specify file\n"
 "name extension mappings.\n"
-msgstr "**extmap.conf**はファイル名拡張子マッピングを指定するために**afpd**が利用する設定ファイルである。\n"
+msgstr ""
+"**extmap.conf**はファイル名拡張子マッピングを指定するために\n"
+"**afpd**が利用する設定ファイルである。\n"
 
 #. type: Plain text
 #: manpages/man5/extmap.conf.5.md:11

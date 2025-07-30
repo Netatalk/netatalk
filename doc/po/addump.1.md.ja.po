@@ -216,7 +216,10 @@ msgid ""
 "look for extended attributes, *.AppleDouble/FILE* and *.\\_FILE*. If\n"
 "*DIR*, look for extended attributes, *DIR/.AppleDouble/.Parent* and\n"
 "*.\\_DIR*.\n"
-msgstr "> これがデフォルトである。*FILE*または*DIR*のためのAppleSingle/AppleDoubleデータを自動的にダンプする。もし*FILE*がAppleSingle/AppleDoubleフォーマットでないなら、拡張属性と*.AppleDouble/FILE*と*.\\_FILE*を探す。もし*DIR*なら、拡張属性と*DIR/.AppleDouble/.Parent*と*.\\_DIR*を探す。\n"
+msgstr ""
+"> これがデフォルトである。*FILE*または*DIR*のためのAppleSingle/AppleDoubleデータを自動的にダンプする。\n"
+"もし*FILE*がAppleSingle/AppleDoubleフォーマットでないなら、拡張属性と*.AppleDouble/FILE*と*.\\_FILE*を探す。\n"
+"もし*DIR*なら、拡張属性と*DIR/.AppleDouble/.Parent*と*.\\_DIR*を探す。\n"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:40

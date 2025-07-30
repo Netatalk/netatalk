@@ -213,8 +213,10 @@ msgid ""
 "signature\" and the network addresses that the server provides AFP\n"
 "services on.\n"
 msgstr ""
-"**asip-status**は、*HOSTNAME*:*PORT*で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
-"type\"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、AFPフラグ、サーバシグネチャ、ネットワークアドレスである。\n"
+"**asip-status**は、*HOSTNAME*:*PORT*で示したAFPサーバにFPGetSrvrInfoリクエストを送信し、\n"
+"その結果を表示する。すなわち、そのサーバがAFPサービスで提供する\"Machine\n"
+"type\"、サーバ名、サポートするAFPバージョン、ユーザ認証モジュール(UAM)、\n"
+"AFPフラグ、サーバシグネチャ、ネットワークアドレスである。\n"
 
 #. type: Plain text
 #: manpages/man1/asip-status.1.md:23
