@@ -1,6 +1,29 @@
 Netatalk Changelogs
 ===================
 
+Changes in 4.3.0
+----------------
+
+* NEW: cnid: Experimental SQLite CNID backend, GitHub #1570
+* UPD: cnid: Automatically create volume directory when starting up mysql CNID backend, GitHub #2267
+* NEW: libatalk: Introduce bstring as subproject, link with shared library, and remove vendored bstring code, GitHub #2268
+* UPD: afpd: Properly support LocalSearch and remove Tracker < v3 support, GitHub #2275
+* REM: docker: Disable support for Spotlight compatible search, GitHub #2276
+* REM: docker: Build production container without ACL support, GitHub #2309
+* NEW: Add rtmpqry utility to allow querying of routing information from neighbour routers, GitHub #2178
+* NEW: nbplkup: provide for script-friendly output, GitHub #2157
+* NEW: nbplkup: allow specification of NBP operation and of destination address, GitHub #2162
+* NEW: getzones: allow all ZIP query types to be generated (and sundry other enhancements), GitHub #2169
+* UPD: macusers: Add support for macOS in the macusers script, GitHub #2206
+* UPD: meson: Use single array option to control CNID backends to build, GitHub #2210
+* UPD: meson: Build and run netatalk without Berkeley DB, GitHub #2265
+* NEW: webmin: Create page for scanning and rebuilding CNID database, GitHub #2259
+* NEW: testsuite: Test ProDOS Info Bit in FPGetFileDirParams, GitHub #2256
+* FIX: Beautify C and meson code with astyle / muon, GitHub #2152
+* FIX: Introduce Markdown style guide and reformat all sources, GitHub #2180
+* FIX: Reformat Perl source code with perltidy, GitHub #2201
+* FIX: Beautify shell scripts with shfmt, GitHub #2217
+
 Changes in 4.2.4
 ----------------
 
