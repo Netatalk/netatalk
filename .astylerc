@@ -10,8 +10,6 @@
 --delete-empty-lines
 --exclude=build
 --exclude=builddir
---exclude=etc/afpd/directory.c
---exclude=etc/afpd/file.c
 --exclude=libatalk/unicode/precompose.h
 --exclude=libatalk/unicode/utf16_case.c
 --exclude=libatalk/unicode/utf16_casetable.h
