@@ -105,6 +105,9 @@ elif [ -n "$AFP_USER2" ]; then
     fi
 fi
 
+echo "*** AFP User Password file ***"
+cat /etc/netatalk/afppasswd
+
 echo "*** Configuring shared volume"
 [ -d /mnt/afpshare ] || mkdir /mnt/afpshare
 [ -d /mnt/afpbackup ] || mkdir /mnt/afpbackup
@@ -211,6 +214,7 @@ fi
 if [ -z "$MANUAL_CONFIG" ]; then
     cat << EOF > /etc/netatalk/afp.conf
 [Global]
+dircachesize = 100
 appletalk = $AFP_DDP
 cnid mysql host = $AFP_CNID_SQL_HOST
 cnid mysql user = $AFP_CNID_SQL_USER
@@ -240,6 +244,9 @@ $AFP_RWRO = $AFP_VALIDUSERS2
 EOF
 fi
 
+echo "*** Created /etc/netatalk/afp.conf ***"
+cat /etc/netatalk/afp.conf
+
 if [ -n "$AFP_EXTMAP" ]; then
     sed -i 's/^#\./\./' /etc/netatalk/extmap.conf
 fi
@@ -265,23 +272,29 @@ if [ -z "$TESTSUITE" ]; then
 else
     netatalk
     sleep 2
+    echo "*** Running testsuite: $TESTSUITE"
     case "$TESTSUITE" in
         spectest)
+            echo "afp_spectest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -d $AFP_USER2 -w $AFP_PASS -s $SHARE_NAME -S $SHARE_NAME2"
             afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
             echo "testfile dos" > /mnt/afpshare/second.txt
             mkdir /mnt/afpshare/third
+            echo "afp_spectest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME -f Readonly_test"
             afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
             ;;
         login)
+            echo "afp_logintest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS"
             afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS"
             ;;
         lan)
+            echo "afp_lantest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME"
             afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         speed)
+            echo "afp_speedtest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME"
             afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         *)
