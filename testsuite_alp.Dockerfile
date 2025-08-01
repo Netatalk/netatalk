@@ -1,3 +1,19 @@
+#
+# To test using this Dockerfile
+# Build Container Image: docker build -t netatalk-test:latest .
+
+# Init Container and Netatalk: docker run -d --network host --cap-add=NET_ADMIN --volume "<path to local folder>:/mnt/afpshare" --volume "<path to local folder>:/mnt/afpbackup" --env AFP_USER=test --env AFP_PASS=test --env SHARE_NAME='File Sharing' --env AFP_VERSION=7 --env AFP_GROUP=afpusers --env TZ=Europe/London --env INSECURE_AUTH=true --name netatalk-test netatalk-test:latest
+# Read Container Logs: docker logs netatalk-test
+# Run Netatalk Test: docker exec -it netatalk-test /usr/local/bin/afp_lantest -7 -h localhost -p 548 -u test -w test -s "File Sharing" -n 3
+# Stop Container: docker stop netatalk-test
+# Start Container: docker start netatalk-test netatalk-test
+
+# Init Container, Run Test, Shutdown: docker run --rm -it --network host --cap-add=NET_ADMIN --volume "<path to local folder>:/mnt/afpshare" --volume "<path to local folder>:/mnt/afpbackup" --env TESTSUITE=lan --env TEST_FLAGS="-n 2" --env AFP_USER=test --env AFP_PASS=test --env SHARE_NAME='File Sharing' --env AFP_VERSION=7 --env AFP_GROUP=afpusers --env TZ=Europe/London --env INSECURE_AUTH=true --name netatalk-test netatalk-test:latest
+
+# List Containers: docker ps -a
+# Delete Container Instance: docker rm netatalk-test
+# Delete Container Image: docker image rm netatalk-test
+
 ARG RUN_DEPS="\
     acl \
     avahi \

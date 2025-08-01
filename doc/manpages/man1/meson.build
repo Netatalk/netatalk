@@ -1,5 +1,6 @@
 manfiles = [
     'ad',
+    'afp_lantest',
     'afpldaptest',
     'afppasswd',
     'afpstats',

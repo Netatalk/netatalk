@@ -15,6 +15,7 @@ User Tools
 * [ad](ad.1.html)
 * [addump](addump.1.html)
 * [aecho](aecho.1.html)
+* [afp_lantest](afp_lantest.1.html)
 * [afpldaptest](afpldaptest.1.html)
 * [afppasswd](afppasswd.1.html)
 * [afpstats](afpstats.1.html)
