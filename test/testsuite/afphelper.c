@@ -39,7 +39,7 @@ ssize_t get_sessiontoken(const char *buf, char **token)
     }
 
     if (!(*token = malloc(len))) {
-        fprintf(stdout, "\tFAILED malloc(%ld) %s\n", len, strerror(errno));
+        fprintf(stderr, "\tFAILED malloc(%ld) %s\n", len, strerror(errno));
         return -1;
     }
 
@@ -98,7 +98,7 @@ void illegal_fork(DSI *dsi, char cmd, char *name)
 
     if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED command %i\n", cmd);
+            fprintf(stderr, "\tFAILED command %i\n", cmd);
         }
 
         test_failed();
@@ -1055,7 +1055,7 @@ void test_skipped(int why)
 void test_failed(void)
 {
     if (!Quiet) {
-        fprintf(stdout, "\tFAILED\n");
+        fprintf(stderr, "\tFAILED\n");
     }
 
     ExitCode = 1;
@@ -1066,7 +1066,7 @@ void test_failed(void)
 void test_nottested(void)
 {
     if (!Quiet) {
-        fprintf(stdout, "\tNOT TESTED\n");
+        fprintf(stderr, "\tNOT TESTED\n");
     }
 
     if (!ExitCode) {

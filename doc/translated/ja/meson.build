@@ -16,6 +16,7 @@ if get_option('with-website')
         'afp_signature.conf.5',
         'afp_voluuid.conf.5',
         'afpd.8',
+        'afp_lantest.1',
         'afpldaptest.1',
         'afppasswd.1',
         'afpstats.1',

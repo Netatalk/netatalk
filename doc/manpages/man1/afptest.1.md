@@ -4,7 +4,7 @@ afp_lantest, afp_logintest, afp_spectest, afp_speedtest, afparg, fce_listen — 
 
 # Synopsis
 
-**afp_lantest** [-34567GgVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-n *iterations*]
+**afp_lantest** [-34567CGgVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-n *iterations*]
 [-t *tests*] [-F *bigfile*]
 
 **afp_logintest** [-1234567CmVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
@@ -150,27 +150,69 @@ Run the afp_spectest for the "FPSetForkParms_test" testset with AFP 3.4.
     FPSetForkParms:test217: Setfork size 64 bits - PASSED
     FPSetForkParms:test306: set fork size, new size > old size - PASSED
 
-Run the afp_lantest benchmark using AFP 3.0.
+Run the afp_lantest benchmark using AFP 3.4.
 
-    % afp_lantest -h 192.168.0.2 -s testvol1 -u user1 -w passwd -3
-    Run 0 => Opening, stating and reading 512 bytes from 1000 files   1799 ms
-    Run 0 => Writing one large file                                     30 ms for 100 MB (avg. 3495 MB/s)
-    Run 0 => Reading one large file                                      8 ms for 100 MB (avg. 13107 MB/s)
-    Run 0 => Locking/Unlocking 10000 times each                       1959 ms
-    Run 0 => Creating dir with 2000 files                             1339 ms
-    Run 0 => Enumerate dir with 2000 files                             217 ms
-    Run 0 => Create directory tree with 10^3 dirs                      496 ms
+    % afp_lantest -7 -h localhost -p 548 -u test -w test -s "File Sharing" -n 2
+    Run 0 => Opening, stating and reading 512 bytes from 1000 files   3237 ms
+    Run 0 => Writing one large file                                    146 ms for 100 MB (avg. 718 MB/s)
+    Run 0 => Reading one large file                                     36 ms for 100 MB (avg. 2912 MB/s)
+    Run 0 => Locking/Unlocking 10000 times each                        772 ms
+    Run 0 => Creating dir with 2000 files                             3615 ms
+    Run 0 => Enumerate dir with 2000 files                             755 ms
+    Run 0 => Create directory tree with 10^3 dirs                     1724 ms
+    Run 0 => Directory cache hits (1000 dir + 10000 file lookups)     3056 ms
+    Run 0 => Mixed cache operations (create/stat/enum/delete)          484 ms
+    Run 0 => Deep path traversal (nested directory navigation)         377 ms
+    Run 0 => Cache validation efficiency (metadata changes)           8822 ms
+    Run 1 => Opening, stating and reading 512 bytes from 1000 files   3448 ms
+    Run 1 => Writing one large file                                     79 ms for 100 MB (avg. 1327 MB/s)
+    Run 1 => Reading one large file                                     37 ms for 100 MB (avg. 2833 MB/s)
+    Run 1 => Locking/Unlocking 10000 times each                        779 ms
+    Run 1 => Creating dir with 2000 files                             3731 ms
+    Run 1 => Enumerate dir with 2000 files                             587 ms
+    Run 1 => Create directory tree with 10^3 dirs                     1802 ms
+    Run 1 => Directory cache hits (1000 dir + 10000 file lookups)     3006 ms
+    Run 1 => Mixed cache operations (create/stat/enum/delete)          463 ms
+    Run 1 => Deep path traversal (nested directory navigation)         247 ms
+    Run 1 => Cache validation efficiency (metadata changes)           8565 ms
 
-    Netatalk Lantest Results (averages)
+    Netatalk Lantest Results (average times across 2 iterations)
     ===================================
 
-    Opening, stating and reading 512 bytes from 1000 files   1799 ms
-    Writing one large file                                     30 ms for 100 MB (avg. 3495 MB/s)
-    Reading one large file                                      8 ms for 100 MB (avg. 13107 MB/s)
-    Locking/Unlocking 10000 times each                       1959 ms
-    Creating dir with 2000 files                             1339 ms
-    Enumerate dir with 2000 files                             217 ms
-    Create directory tree with 10^3 dirs                      496 ms
+    Test 1: Opening, stating and reading 512 bytes from 1000 files
+     Average:   3342 ms ± 149.2 ms (std dev)
+
+    Test 2: Writing one large file
+     Average:    112 ms ± 47.4 ms (std dev)
+     Throughput: 936 MB/s (Write, 100 MB file)
+
+    Test 3: Reading one large file
+     Average:     36 ms ± 1.0 ms (std dev)
+     Throughput: 2912 MB/s (Read, 100 MB file)
+
+    Test 4: Locking/Unlocking 10000 times each
+     Average:    775 ms ± 5.0 ms (std dev)
+
+    Test 5: Creating dir with 2000 files
+     Average:   3673 ms ± 82.0 ms (std dev)
+
+    Test 6: Enumerate dir with 2000 files
+     Average:    671 ms ± 118.8 ms (std dev)
+
+    Test 7: Create directory tree with 10^3 dirs
+     Average:   1763 ms ± 55.2 ms (std dev)
+
+    Test 8: Directory cache hits (1000 dir + 10000 file lookups)
+     Average:   3031 ms ± 35.4 ms (std dev)
+
+    Test 9: Mixed cache operations (create/stat/enum/delete)
+     Average:    473 ms ± 14.9 ms (std dev)
+
+    Test 10: Deep path traversal (nested directory navigation)
+     Average:    312 ms ± 91.9 ms (std dev)
+
+    Test 11: Cache validation efficiency (metadata changes)
+     Average:   8693 ms ± 181.7 ms (std dev)
 
 # See also
 

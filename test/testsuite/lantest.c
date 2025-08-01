@@ -10,6 +10,8 @@
 #include <pwd.h>
 #include <pthread.h>
 #include <sys/socket.h>
+#include <math.h>
+#include <stdint.h>
 
 #include "afpclient.h"
 #include "test.h"
@@ -17,14 +19,18 @@
 #define FPWRITE_RPLY_SIZE 24
 #define FPWRITE_RQST_SIZE 36
 
-#define TEST_OPENSTATREAD    0
-#define TEST_WRITE100MB      1
-#define TEST_READ100MB       2
-#define TEST_LOCKUNLOCK      3
+#define TEST_OPENSTATREAD 0
+#define TEST_WRITE100MB 1
+#define TEST_READ100MB 2
+#define TEST_LOCKUNLOCK 3
 #define TEST_CREATE2000FILES 4
-#define TEST_ENUM2000FILES   5
-#define TEST_DIRTREE         6
-#define LASTTEST TEST_DIRTREE
+#define TEST_ENUM2000FILES 5
+#define TEST_DIRTREE 6
+#define TEST_CACHE_HITS 7
+#define TEST_MIXED_CACHE_OPS 8
+#define TEST_DEEP_TRAVERSAL 9
+#define TEST_CACHE_VALIDATION 10
+#define LASTTEST TEST_CACHE_VALIDATION
 #define NUMTESTS (LASTTEST+1)
 
 CONN *Conn;
@@ -55,6 +61,17 @@ static off_t rwsize = 100 * 1024 * 1024;          /* 100 MB */
 static int locking = 10000 / 40;                  /* 10000 times */
 static int create_enum_files = 2000;              /* 2000 files */
 
+/* Cache test configuration */
+static int cache_dirs = 10;                /* dirs for cache tests */
+static int cache_files_per_dir = 10;       /* files per dir */
+static int cache_lookup_iterations = 100;  /* cache test iterations */
+static int mixed_cache_files = 200;        /* mixed ops file count */
+static int deep_dir_levels = 20;           /* deep traversal dir levels */
+static int deep_test_files = 50;           /* files in deepest dir */
+static int deep_traversals = 50;           /* path traversal iterations */
+static int validation_files = 100;         /* validation file count */
+static int validation_iterations = 100;    /* validation iterations */
+
 static uint16_t vol;
 static DSI *dsi;
 static char    *Server = "localhost";
@@ -62,6 +79,7 @@ static int     Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 static int     Iterations = 1;
 static int     Iterations_save;
+static int     iteration_counter = 0;
 static struct timeval tv_start;
 static struct timeval tv_end;
 static struct timeval tv_dif;
@@ -78,7 +96,11 @@ static char *resultstrings[] = {
     "Locking/Unlocking 10000 times each                     ",
     "Creating dir with 2000 files                           ",
     "Enumerate dir with 2000 files                          ",
-    "Create directory tree with 10^3 dirs                   "
+    "Create directory tree with 10^3 dirs                   ",
+    "Directory cache hits (1000 dir + 10000 file lookups)   ",
+    "Mixed cache operations (create/stat/enum/delete)       ",
+    "Deep path traversal (nested directory navigation)      ",
+    "Cache validation efficiency (metadata changes)         "
 };
 
 static void starttimer(void)
@@ -111,8 +133,13 @@ static void addresult(int test, int iteration)
     fprintf(stderr, "Run %u => %s%6lu ms", iteration, resultstrings[test], t);
 
     if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
-        avg = (rwsize / 1000) / t;
-        fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), avg);
+        if (t > 0) {  /* Prevent division by zero */
+            avg = (rwsize / 1000) / t;
+            fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), avg);
+        } else {
+            fprintf(stderr, " for %lu MB (time too small to measure)",
+                    rwsize / (1024 * 1024));
+        }
     }
 
     fprintf(stderr, "\n");
@@ -122,7 +149,7 @@ static void addresult(int test, int iteration)
 static void displayresults(void)
 {
     int i, test, maxindex, minindex, divsub = 0;
-    unsigned long long sum, max = 0, min = 18446744073709551615ULL;
+    unsigned long long sum, max, min;
 
     /* Eleminate runaways */
     if (Iterations_save > 5) {
@@ -133,7 +160,13 @@ static void displayresults(void)
                 continue;
             }
 
-            for (i = 0, sum = 0; i < Iterations_save; i++) {
+            /* Reset min/max for each test */
+            max = 0;
+            min = UINT64_MAX;
+            maxindex = 0;
+            minindex = 0;
+
+            for (i = 0; i < Iterations_save; i++) {
                 if ((*results)[i][test] < min) {
                     min = (*results)[i][test];
                     minindex = i;
@@ -150,39 +183,100 @@ static void displayresults(void)
         }
     }
 
-    fprintf(stderr, "\nNetatalk Lantest Results (averages)\n");
+    fprintf(stderr, "\nNetatalk Lantest Results");
+
+    if (Iterations_save > 1) {
+        fprintf(stderr, " (average times across %d iterations)", Iterations_save);
+    } else {
+        fprintf(stderr, " (single iteration)");
+    }
+
+    fprintf(stderr, "\n");
     fprintf(stderr, "===================================\n\n");
     unsigned long long avg, thrput;
+    double std_dev;
 
-    for (test = 0; test != NUMTESTS; test++) {
+    for (test = 0; test < NUMTESTS; test++) {
         if (! teststorun[test]) {
             continue;
         }
 
+        /* Calculate sum and count valid values */
+        int valid_count = 0;
+
         for (i = 0, sum = 0; i < Iterations_save; i++) {
-            sum += (*results)[i][test];
+            /* Skip outliers that were set to 0 during elimination */
+            if ((*results)[i][test] > 0) {
+                sum += (*results)[i][test];
+                valid_count++;
+            }
         }
 
-        avg = sum / (Iterations_save - divsub);
+        if (valid_count <= 0) {
+            fprintf(stderr, "\tFATAL ERROR: no valid iterations for averaging\n");
+            exit(1);
+        }
+
+        avg = sum / valid_count;
 
         if (avg < 1) {
             fprintf(stderr, "\tFATAL ERROR: invalid result\n");
             exit(1);
         }
 
-        if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
+        /* Calculate standard deviation if we have multiple valid iterations */
+        std_dev = 0.0;
+
+        if (valid_count > 1) {
+            double sum_sq_diff = 0.0;
+
+            for (i = 0; i < Iterations_save; i++) {
+                if ((*results)[i][test] > 0) {
+                    double diff = (double)((*results)[i][test]) - (double)avg;
+                    sum_sq_diff += diff * diff;
+                }
+            }
+
+            std_dev = sqrt(sum_sq_diff / (valid_count - 1));
+        }
+
+        /* Display test result */
+        fprintf(stderr, "Test %d: %s", test + 1, resultstrings[test]);
+
+        if (Iterations_save > 1) {
+            fprintf(stderr, "\n\t  Average: %6llu ms", avg);
+
+            if (valid_count > 1) {
+                fprintf(stderr, " ± %.1f ms (std dev)", std_dev);
+            }
+        } else {
+            fprintf(stderr, ": %6llu ms", avg);
+        }
+
+        if (test == TEST_WRITE100MB) {
             thrput = (rwsize / 1000) / avg;
-            fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), thrput);
+            fprintf(stderr, "\n\t  Throughput: %llu MB/s (Write, %lu MB file)", thrput,
+                    rwsize / (1024 * 1024));
+        }
+
+        if (test == TEST_READ100MB) {
+            thrput = (rwsize / 1000) / avg;
+            fprintf(stderr, "\n\t  Throughput: %llu MB/s (Read, %lu MB file)", thrput,
+                    rwsize / (1024 * 1024));
         }
 
         fprintf(stderr, "\n");
+
+        if (Iterations_save > 1) {
+            fprintf(stderr, "\n");
+        }
     }
 }
 
 /* ------------------------- */
 void fatal_failed(void)
 {
-    fprintf(stdout, "\tFATAL ERROR\n");
+    fprintf(stderr, "\tFATAL ERROR\n");
     exit(1);
 }
 
@@ -211,6 +305,11 @@ static void *rply_thread(void *p)
     char *buf = NULL;
     buf = malloc(size);
 
+    if (!buf) {
+        fprintf(stderr, "Memory allocation failed in rply_thread\n");
+        return NULL;
+    }
+
     while (n--) {
         stored = 0;
 
@@ -223,7 +322,7 @@ static void *rply_thread(void *p)
             if (len > 0) {
                 stored += len;
             } else {
-                fprintf(stdout, "dsi_stream_read(%ld): %s\n", len,
+                fprintf(stderr, "dsi_stream_read(%ld): %s\n", len,
                         (len < 0) ? strerror(errno) : "EOF");
                 goto exit;
             }
@@ -255,13 +354,18 @@ void run_test(const int dir)
 
     if (!data) {
         data = calloc(1, dsi->server_quantum);
+
+        if (!data) {
+            fprintf(stderr, "Memory allocation failed for data buffer\n");
+            fatal_failed();
+        }
     }
 
     /* --------------- */
     /* Test (1)        */
     if (teststorun[TEST_OPENSTATREAD]) {
-        for (i = 0; i <= smallfiles; i++) {
-            sprintf(temp, "File.small%d", i);
+        for (i = 0; i < smallfiles; i++) {
+            snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (ntohl(AFPERR_NOOBJ) != is_there(Conn, dir, temp)) {
                 fatal_failed();
@@ -337,8 +441,8 @@ void run_test(const int dir)
 
         starttimer();
 
-        for (i = 1; i <= maxi; i++) {
-            sprintf(temp, "File.small%d", i);
+        for (i = 0; i <= maxi; i++) {
+            snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (is_there(Conn, dir, temp)) {
                 fatal_failed();
@@ -391,11 +495,11 @@ void run_test(const int dir)
         }
 
         stoptimer();
-        addresult(TEST_OPENSTATREAD, Iterations);
+        addresult(TEST_OPENSTATREAD, iteration_counter);
 
         /* ---------------- */
         for (i = 0; i <= maxi; i++) {
-            sprintf(temp, "File.small%d", i);
+            snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (is_there(Conn, dir, temp)) {
                 fatal_failed();
@@ -421,8 +525,7 @@ void run_test(const int dir)
         strcpy(temp, "File.big");
 
         if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-            test_failed();
-            goto fin1;
+            fatal_failed();
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp, 0x72d, 0)) {
@@ -447,7 +550,13 @@ void run_test(const int dir)
 
         air.air_count = numrw;
         air.air_size = FPWRITE_RPLY_SIZE;
-        (void)pthread_create(&tid, NULL, rply_thread, &air);
+        int pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
+
+        if (pthread_ret != 0) {
+            fprintf(stderr, "pthread_create failed: %d\n", pthread_ret);
+            fatal_failed();
+        }
+
         starttimer();
 
         for (i = 0, offset = 0; i < numrw;
@@ -458,14 +567,19 @@ void run_test(const int dir)
             }
         }
 
-        pthread_join(tid, NULL);
+        pthread_ret = pthread_join(tid, NULL);
+
+        if (pthread_ret != 0) {
+            fprintf(stderr, "pthread_join failed: %d\n", pthread_ret);
+            fatal_failed();
+        }
 
         if (FPCloseFork(Conn, fork)) {
             fatal_failed();
         }
 
         stoptimer();
-        addresult(TEST_WRITE100MB, Iterations);
+        addresult(TEST_WRITE100MB, iteration_counter);
     }
 
     /* -------- */
@@ -497,7 +611,13 @@ void run_test(const int dir)
 
         air.air_count = numrw;
         air.air_size = (dsi->server_quantum - FPWRITE_RQST_SIZE) + 16;
-        (void)pthread_create(&tid, NULL, rply_thread, &air);
+        int pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
+
+        if (pthread_ret != 0) {
+            fprintf(stderr, "pthread_create failed: %d\n", pthread_ret);
+            fatal_failed();
+        }
+
         starttimer();
 
         for (i = 0; i < numrw ; i++) {
@@ -507,14 +627,19 @@ void run_test(const int dir)
             }
         }
 
-        pthread_join(tid, NULL);
+        pthread_ret = pthread_join(tid, NULL);
+
+        if (pthread_ret != 0) {
+            fprintf(stderr, "pthread_join failed: %d\n", pthread_ret);
+            fatal_failed();
+        }
 
         if (FPCloseFork(Conn, fork)) {
             fatal_failed();
         }
 
         stoptimer();
-        addresult(TEST_READ100MB, Iterations);
+        addresult(TEST_READ100MB, iteration_counter);
     }
 
     /* Remove test 2+3 testfile */
@@ -634,7 +759,7 @@ void run_test(const int dir)
         }
 
         stoptimer();
-        addresult(TEST_LOCKUNLOCK, Iterations);
+        addresult(TEST_LOCKUNLOCK, iteration_counter);
 
         if (is_there(Conn, dir, temp)) {
             fatal_failed();
@@ -655,7 +780,7 @@ void run_test(const int dir)
         starttimer();
 
         for (i = 1; i <= create_enum_files; i++) {
-            sprintf(temp, "File.0k%d", i);
+            snprintf(temp, sizeof(temp), "File.0k%d", i);
 
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
                 fatal_failed();
@@ -668,11 +793,12 @@ void run_test(const int dir)
                                    , 0) != AFP_OK) {
                 fatal_failed();
             }
+
+            maxi = i;  /* Track last successful file creation */
         }
 
-        maxi = i;
         stoptimer();
-        addresult(TEST_CREATE2000FILES, Iterations);
+        addresult(TEST_CREATE2000FILES, iteration_counter);
     }
 
     /* -------- */
@@ -719,13 +845,13 @@ void run_test(const int dir)
         }
 
         stoptimer();
-        addresult(TEST_ENUM2000FILES, Iterations);
+        addresult(TEST_ENUM2000FILES, iteration_counter);
     }
 
     /* Delete files from Test (5/6) */
     if (teststorun[TEST_CREATE2000FILES]) {
-        for (i = 1; i < maxi; i++) {
-            sprintf(temp, "File.0k%d", i);
+        for (i = 1; i <= maxi; i++) {
+            snprintf(temp, sizeof(temp), "File.0k%d", i);
 
             if (FPDelete(Conn, vol, dir, temp)) {
                 fatal_failed();
@@ -742,22 +868,22 @@ void run_test(const int dir)
         starttimer();
 
         for (i = 0; i < DIRNUM; i++) {
-            sprintf(temp, "dir%02u", i + 1);
+            snprintf(temp, sizeof(temp), "dir%02u", i + 1);
             FAILEXIT(!(idirs[i] = FPCreateDir(Conn, vol, dir, temp)), fin1);
 
             for (j = 0; j < DIRNUM; j++) {
-                sprintf(temp, "dir%02u", j + 1);
+                snprintf(temp, sizeof(temp), "dir%02u", j + 1);
                 FAILEXIT(!(jdirs[i][j] = FPCreateDir(Conn, vol, idirs[i], temp)), fin1);
 
                 for (k = 0; k < DIRNUM; k++) {
-                    sprintf(temp, "dir%02u", k + 1);
+                    snprintf(temp, sizeof(temp), "dir%02u", k + 1);
                     FAILEXIT(!(kdirs[i][j][k] = FPCreateDir(Conn, vol, jdirs[i][j], temp)), fin1);
                 }
             }
         }
 
         stoptimer();
-        addresult(TEST_DIRTREE, Iterations);
+        addresult(TEST_DIRTREE, iteration_counter);
 
         for (i = 0; i < DIRNUM; i++) {
             for (j = 0; j < DIRNUM; j++) {
@@ -769,6 +895,300 @@ void run_test(const int dir)
             }
 
             FAILEXIT(FPDelete(Conn, vol, idirs[i], "") != 0, fin1);
+        }
+    }
+
+    /* -------- */
+    /* Test (8) - Directory Cache Hits */
+    if (teststorun[TEST_CACHE_HITS]) {
+        /* Validate configuration to prevent stack overflow */
+        if (cache_dirs <= 0 || cache_dirs > 50 || cache_files_per_dir <= 0
+                || cache_files_per_dir > 50) {
+            fprintf(stderr, "Invalid cache test configuration: dirs=%d, files_per_dir=%d\n",
+                    cache_dirs, cache_files_per_dir);
+            fatal_failed();
+        }
+
+        /* Use dynamic allocation to prevent stack overflow with VLAs */
+        char (*cache_test_files)[32] = calloc(cache_dirs * cache_files_per_dir,
+                                              sizeof(char[32]));
+        int *cache_test_dirs_arr = calloc(cache_dirs, sizeof(int));
+
+        if (!cache_test_files || !cache_test_dirs_arr) {
+            fprintf(stderr, "Memory allocation failed for cache test arrays\n");
+
+            if (cache_test_files) {
+                free(cache_test_files);
+            }
+
+            if (cache_test_dirs_arr) {
+                free(cache_test_dirs_arr);
+            }
+
+            fatal_failed();
+        }
+
+        /* Create test directories */
+        for (i = 0; i < cache_dirs; i++) {
+            snprintf(temp, sizeof(temp), "cache_dir_%d", i);
+
+            if (!(cache_test_dirs_arr[i] = FPCreateDir(Conn, vol, dir, temp))) {
+                free(cache_test_files);
+                free(cache_test_dirs_arr);
+                fatal_failed();
+            }
+        }
+
+        /* Create test files in each directory */
+        for (i = 0; i < cache_dirs; i++) {
+            for (j = 0; j < cache_files_per_dir; j++) {
+                snprintf(cache_test_files[i * cache_files_per_dir + j],
+                         sizeof(cache_test_files[0]), "cache_file_%d_%d", i, j);
+
+                if (FPCreateFile(Conn, vol, 0, cache_test_dirs_arr[i],
+                                 cache_test_files[i * cache_files_per_dir + j])) {
+                    free(cache_test_files);
+                    free(cache_test_dirs_arr);
+                    fatal_failed();
+                }
+            }
+        }
+
+        /* Now perform many repeated lookups to benefit from caching */
+        starttimer();
+
+        for (k = 0; k < cache_lookup_iterations; k++) {
+            for (i = 0; i < cache_dirs; i++) {
+                /* Directory lookups - is_there() returns AFP_OK (0) when found */
+                snprintf(temp, sizeof(temp), "cache_dir_%d", i);
+
+                if (is_there(Conn, dir, temp) != AFP_OK) {
+                    fatal_failed();
+                }
+
+                /* File parameter requests (should hit cache) */
+                for (j = 0; j < cache_files_per_dir; j++) {
+                    if (FPGetFileDirParams(Conn, vol, cache_test_dirs_arr[i],
+                                           cache_test_files[i * cache_files_per_dir + j],
+                                           (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_DFLEN), 0)) {
+                        fatal_failed();
+                    }
+                }
+            }
+        }
+
+        stoptimer();
+        addresult(TEST_CACHE_HITS, iteration_counter);
+
+        /* Cleanup cache test files and directories */
+        for (i = 0; i < cache_dirs; i++) {
+            for (j = 0; j < cache_files_per_dir; j++) {
+                FPDelete(Conn, vol, cache_test_dirs_arr[i],
+                         cache_test_files[i * cache_files_per_dir + j]);
+            }
+
+            FPDelete(Conn, vol, cache_test_dirs_arr[i], "");
+        }
+
+        free(cache_test_files);
+        free(cache_test_dirs_arr);
+    }
+
+    /* -------- */
+    /* Test (9) - Mixed Cache Operations */
+    if (teststorun[TEST_MIXED_CACHE_OPS]) {
+        starttimer();
+
+        /* Pattern: create -> stat -> enum -> stat -> delete (tests cache lifecycle) */
+        for (i = 0; i < mixed_cache_files; i++) {
+            snprintf(temp, sizeof(temp), "mixed_file_%d", i);
+
+            /* Create file */
+            if (FPCreateFile(Conn, vol, 0, dir, temp)) {
+                fatal_failed();
+            }
+
+            /* Stat it (should cache the entry) */
+            if (FPGetFileDirParams(Conn, vol, dir, temp,
+                                   (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_DFLEN), 0)) {
+                fatal_failed();
+            }
+
+            /* Enumerate directory (should use cached entries) */
+            if (i % 10 == 9) {  /* Every 10th iteration */
+                if (FPEnumerate(Conn, vol, dir, "", (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM),
+                                0)) {
+                    /* Enumeration failure is not fatal for this test, just log and continue */
+                    fprintf(stderr,
+                            "Warning: Enumeration failed during mixed cache operations test (iteration %d)\n",
+                            i);
+                }
+            }
+
+            /* Stat again (should hit cache) */
+            if (FPGetFileDirParams(Conn, vol, dir, temp,
+                                   (1 << FILPBIT_FNUM) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_MDATE), 0)) {
+                fatal_failed();
+            }
+
+            /* Delete (should invalidate cache entry) */
+            if (FPDelete(Conn, vol, dir, temp)) {
+                fatal_failed();
+            }
+        }
+
+        stoptimer();
+        addresult(TEST_MIXED_CACHE_OPS, iteration_counter);
+    }
+
+    /* -------- */
+    /* Test (10) - Deep Path Traversal */
+    if (teststorun[TEST_DEEP_TRAVERSAL]) {
+        /* Validate configuration to prevent issues */
+        if (deep_dir_levels <= 0 || deep_dir_levels > 100) {
+            fprintf(stderr, "Invalid deep directory levels: %d\n", deep_dir_levels);
+            fatal_failed();
+        }
+
+        /* Create a deep directory structure */
+        uint32_t *deep_dirs = calloc(deep_dir_levels, sizeof(uint32_t));
+
+        if (!deep_dirs) {
+            fprintf(stderr, "Memory allocation failed for deep directories\n");
+            fatal_failed();
+        }
+
+        uint32_t current_dir = dir;
+
+        /* Create deep directory structure */
+        for (i = 0; i < deep_dir_levels; i++) {
+            snprintf(temp, sizeof(temp), "deep_%02d", i);
+
+            if (!(deep_dirs[i] = FPCreateDir(Conn, vol, current_dir, temp))) {
+                free(deep_dirs);
+                fatal_failed();
+            }
+
+            current_dir = deep_dirs[i];
+        }
+
+        /* Create some files in the deepest directory */
+        for (i = 0; i < deep_test_files; i++) {
+            snprintf(temp, sizeof(temp), "deep_file_%d", i);
+
+            if (FPCreateFile(Conn, vol, 0, current_dir, temp)) {
+                free(deep_dirs);
+                fatal_failed();
+            }
+        }
+
+        starttimer();
+
+        /* Perform deep traversals - this benefits greatly from directory caching */
+        for (k = 0; k < deep_traversals; k++) {
+            current_dir = dir;
+
+            /* Navigate down the deep structure */
+            for (i = 0; i < deep_dir_levels; i++) {
+                snprintf(temp, sizeof(temp), "deep_%02d", i);
+
+                /* Directory lookup (should hit cache after first time) - is_there() returns AFP_OK when found */
+                if (is_there(Conn, current_dir, temp) != AFP_OK) {
+                    free(deep_dirs);
+                    fatal_failed();
+                }
+
+                current_dir = deep_dirs[i];
+            }
+
+            /* Access files in deep directory - limit to avoid excessive operations */
+            int files_to_access = (deep_test_files < 10) ? deep_test_files : 10;
+
+            for (i = 0; i < files_to_access; i++) {
+                snprintf(temp, sizeof(temp), "deep_file_%d", i);
+
+                if (FPGetFileDirParams(Conn, vol, current_dir, temp,
+                                       (1 << FILPBIT_FNUM) | (1 << FILPBIT_DFLEN), 0)) {
+                    free(deep_dirs);
+                    fatal_failed();
+                }
+            }
+        }
+
+        stoptimer();
+        addresult(TEST_DEEP_TRAVERSAL, iteration_counter);
+        /* Cleanup deep structure - cleanup files from deepest directory first */
+        current_dir = deep_dirs[deep_dir_levels - 1];  /* Reset to deepest directory */
+
+        for (i = 0; i < deep_test_files; i++) {
+            snprintf(temp, sizeof(temp), "deep_file_%d", i);
+            FPDelete(Conn, vol, current_dir, temp);
+        }
+
+        /* Delete directories from deepest to shallowest */
+        for (i = deep_dir_levels - 1; i >= 0; i--) {
+            FPDelete(Conn, vol, deep_dirs[i], "");
+        }
+
+        /* Free dynamically allocated memory */
+        free(deep_dirs);
+    }
+
+    /* -------- */
+    /* Test (11) - Cache Validation Efficiency */
+    if (teststorun[TEST_CACHE_VALIDATION]) {
+        /* Validate configuration parameters */
+        if (validation_files <= 0 || validation_files > 1000 ||
+                validation_iterations <= 0 || validation_iterations > 1000) {
+            fprintf(stderr,
+                    "Invalid validation test configuration: files=%d, iterations=%d\n",
+                    validation_files, validation_iterations);
+            fatal_failed();
+        }
+
+        /* Create test files for validation testing */
+        for (i = 0; i < validation_files; i++) {
+            snprintf(temp, sizeof(temp), "valid_file_%d", i);
+
+            if (FPCreateFile(Conn, vol, 0, dir, temp)) {
+                fatal_failed();
+            }
+        }
+
+        starttimer();
+
+        /* Perform many repeated access operations
+         * With the improved cache validation, most of these should skip
+         * the expensive filesystem validation calls */
+        for (k = 0; k < validation_iterations; k++) {
+            for (i = 0; i < validation_files; i++) {
+                snprintf(temp, sizeof(temp), "valid_file_%d", i);
+
+                /* Multiple parameter requests on same file */
+                if (FPGetFileDirParams(Conn, vol, dir, temp,
+                                       (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID), 0)) {
+                    fatal_failed();
+                }
+
+                if (FPGetFileDirParams(Conn, vol, dir, temp,
+                                       (1 << FILPBIT_DFLEN) | (1 << FILPBIT_CDATE), 0)) {
+                    fatal_failed();
+                }
+
+                if (FPGetFileDirParams(Conn, vol, dir, temp,
+                                       (1 << FILPBIT_MDATE) | (1 << FILPBIT_FINFO), 0)) {
+                    fatal_failed();
+                }
+            }
+        }
+
+        stoptimer();
+        addresult(TEST_CACHE_VALIDATION, iteration_counter);
+
+        /* Cleanup validation test files */
+        for (i = 0; i < validation_files; i++) {
+            snprintf(temp, sizeof(temp), "valid_file_%d", i);
+            FPDelete(Conn, vol, dir, temp);
         }
     }
 
@@ -804,12 +1224,23 @@ void usage(char *av0)
     fprintf(stdout, "\t-f\ttests to run, eg 134 for tests 1, 3 and 4\n");
     fprintf(stdout,
             "\t-F\tuse this file located in the volume root for the read test (size must match -g and -G options)\n");
+    fprintf(stdout, "\t-C\trun cache-focused tests only (tests 8-11)\n");
     fprintf(stdout, "\tAvailable tests:\n");
 
     for (i = 0; i < NUMTESTS; i++) {
-        fprintf(stdout, "\t(%u) %s\n", i + 1, resultstrings[i]);
+        fprintf(stdout, "\t(%u) %s", i + 1, resultstrings[i]);
+
+        if (i >= TEST_CACHE_HITS) {
+            fprintf(stdout, " [CACHE]");
+        }
+
+        fprintf(stdout, "\n");
     }
 
+    fprintf(stdout, "\n\tCache-focused tests (8-11) are designed to highlight\n");
+    fprintf(stdout, "\tdirectory cache performance improvements in netatalk.\n");
+    fprintf(stdout, "\tThese tests benefit significantly from optimized cache\n");
+    fprintf(stdout, "\tvalidation and probabilistic validation features.\n");
     exit(1);
 }
 
@@ -825,7 +1256,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567bGgVvF:f:h:n:p:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567bCGgVvF:f:h:n:p:s:u:w:")) != EOF) {
         switch (cc) {
         case '3':
             vers = "AFPX03";
@@ -856,12 +1287,40 @@ int main(int ac, char **av)
             Debug = 1;
             break;
 
+        case 'C':
+            /* Special handling for cache tests - set them directly */
+            memset(teststorun, 0, NUMTESTS);
+            teststorun[TEST_CACHE_HITS] = 1;
+            teststorun[TEST_MIXED_CACHE_OPS] = 1;
+            teststorun[TEST_DEEP_TRAVERSAL] = 1;
+            teststorun[TEST_CACHE_VALIDATION] = 1;
+            Test = strdup("C");  /* Mark as cache-only mode */
+
+            if (!Test) {
+                fprintf(stderr, "Memory allocation failed for Test string\n");
+                exit(1);
+            }
+
+            break;
+
         case 'F':
             bigfilename = strdup(optarg);
+
+            if (!bigfilename) {
+                fprintf(stderr, "Memory allocation failed for bigfilename\n");
+                exit(1);
+            }
+
             break;
 
         case 'f':
             Test = strdup(optarg);
+
+            if (!Test) {
+                fprintf(stderr, "Memory allocation failed for Test string\n");
+                exit(1);
+            }
+
             break;
 
         case 'G':
@@ -874,17 +1333,30 @@ int main(int ac, char **av)
 
         case 'h':
             Server = strdup(optarg);
+
+            if (!Server) {
+                fprintf(stderr, "Memory allocation failed for Server string\n");
+                exit(1);
+            }
+
             break;
 
         case 'n':
             Iterations = atoi(optarg);
+
+            if (Iterations <= 0) {
+                fprintf(stderr, "Error: Number of iterations must be positive (got %d)\n",
+                        Iterations);
+                exit(1);
+            }
+
             break;
 
         case 'p' :
             Port = atoi(optarg);
 
             if (Port <= 0) {
-                fprintf(stdout, "Bad port.\n");
+                fprintf(stderr, "Bad port.\n");
                 exit(1);
             }
 
@@ -892,10 +1364,22 @@ int main(int ac, char **av)
 
         case 's':
             Vol = strdup(optarg);
+
+            if (!Vol) {
+                fprintf(stderr, "Memory allocation failed for Vol string\n");
+                exit(1);
+            }
+
             break;
 
         case 'u':
             User = strdup(optarg);
+
+            if (!User) {
+                fprintf(stderr, "Memory allocation failed for User string\n");
+                exit(1);
+            }
+
             break;
 
         case 'V':
@@ -909,6 +1393,12 @@ int main(int ac, char **av)
 
         case 'w':
             Password = strdup(optarg);
+
+            if (!Password) {
+                fprintf(stderr, "Memory allocation failed for Password string\n");
+                exit(1);
+            }
+
             break;
 
         default :
@@ -935,15 +1425,18 @@ int main(int ac, char **av)
     }
 
     if (User != NULL && User[0] == '\0') {
-        fprintf(stdout, "Error: Define a user with -u\n");
+        fprintf(stderr, "Error: Define a user with -u\n");
+        exit(1);
     }
 
     if (Password != NULL && Password[0] == '\0') {
-        fprintf(stdout, "Error: Define a password with -w\n");
+        fprintf(stderr, "Error: Define a password with -w\n");
+        exit(1);
     }
 
     if (Vol != NULL && Vol[0] == '\0') {
-        fprintf(stdout, "Error: Define a volume with -s\n");
+        fprintf(stderr, "Error: Define a volume with -s\n");
+        exit(1);
     }
 
     if (! Debug) {
@@ -962,17 +1455,26 @@ int main(int ac, char **av)
 
 #endif
     Iterations_save = Iterations;
-    results = calloc(Iterations * NUMTESTS, sizeof(unsigned long));
+    /* Allocate memory for 2D results array: Iterations x NUMTESTS */
+    results = calloc(Iterations, sizeof(unsigned long[NUMTESTS]));
+
+    if (!results) {
+        fprintf(stderr, "Memory allocation failed for results array\n");
+        exit(1);
+    }
 
     if (!Test) {
         memset(teststorun, 1, NUMTESTS);
+    } else if (strcmp(Test, "C") == 0) {
+        /* Cache-only mode was already set when parsing -C option */
+        /* No additional processing needed */
     } else {
         i = 0;
 
         for (; Test[i]; i++) {
             t = Test[i] - '1';
 
-            if ((t >= 0) && (t <= NUMTESTS)) {
+            if ((t >= 0) && (t < NUMTESTS)) {
                 teststorun[t] = 1;
             }
         }
@@ -985,10 +1487,13 @@ int main(int ac, char **av)
             teststorun[TEST_CREATE2000FILES] = 1;
         }
 
-        free(Test);
+        if (Test) {
+            free(Test);
+        }
     }
 
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
+        fprintf(stderr, "Memory allocation failed for connection structure\n");
         return 1;
     }
 
@@ -1018,7 +1523,7 @@ int main(int ac, char **av)
 
     int dir;
     char testdir[MAXPATHLEN];
-    sprintf(testdir, "LanTest-%d", getpid());
+    snprintf(testdir, sizeof(testdir), "LanTest-%d", getpid());
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, (1 << DIRPBIT_DID))) {
         fatal_failed();
@@ -1040,7 +1545,10 @@ int main(int ac, char **av)
         fatal_failed();
     }
 
-    while (Iterations--) {
+    for (int current_iteration = 0; current_iteration < Iterations;
+            current_iteration++) {
+        /* Update global iteration counter for addresult() calls */
+        iteration_counter = current_iteration;
         run_test(dir);
     }
 
