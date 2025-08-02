@@ -384,7 +384,7 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
-export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All/"
+export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
 pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config sqlite3 talloc
 ```
 
