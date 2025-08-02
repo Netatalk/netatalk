@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0dev\n"
-"POT-Creation-Date: 2025-07-29 20:18+0200\n"
+"POT-Creation-Date: 2025-08-02 07:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -793,7 +793,7 @@ msgstr "最も一般的に使われるUAMは以下の通り:"
 msgid ""
 "> uams_guest.so\n"
 ">\n"
-"> > allows guest logins\n"
+"> > Allows guest logins.\n"
 ">\n"
 "> uams_clrtxt.so\n"
 ">\n"
@@ -802,7 +802,7 @@ msgid ""
 ">\n"
 "> uams_randnum.so\n"
 ">\n"
-"> > allows Random Number and Two-Way Random Number Exchange for\n"
+"> > Allows Random Number and Two-Way Random Number Exchange for\n"
 "authentication (requires a separate file containing the passwords,\n"
 "either the default *afppasswd* file or the one specified via\n"
 "\"**passwd file**\"). See **afppasswd**(1) for details.\n"
@@ -2178,11 +2178,11 @@ msgstr ""
 msgid ""
 "> none\n"
 ">\n"
-"> > no mapping of ACLs\n"
+"> > No mapping of ACLs.\n"
 ">\n"
 "> rights\n"
 ">\n"
-"> > effective permissions are mapped to UARights structure. This is the\n"
+"> > Effective permissions are mapped to UARights structure. This is the\n"
 "default.\n"
 ">\n"
 "> mode\n"
@@ -2914,7 +2914,7 @@ msgstr ""
 #: manpages/man5/afp.conf.5.md:1102
 #, no-wrap
 msgid ""
-"> set the CNID backend to be used for the volume.\n"
+"> Set the CNID backend to be used for the volume.\n"
 "Run **afpd -v** to see a list of available backends,\n"
 "as well as which one is the default.\n"
 ">\n"
@@ -2994,7 +2994,7 @@ msgid ""
 "> > No Extended Attributes support.\n"
 ">\n"
 "> ***WARNING:*** The **samba** option should not be used on a volume that was previously\n"
-"set to **sys**. This may lead data loss.\n"
+"set to **sys**. This may lead to data loss.\n"
 msgstr ""
 "> 拡張属性およびリソースフォークをどのように保存するか指定する。\n"
 ">\n"
@@ -3033,7 +3033,7 @@ msgstr ""
 #: manpages/man5/afp.conf.5.md:1141
 #, no-wrap
 msgid ""
-"> specifies the Mac client charset for this Volume, e.g. *MAC_ROMAN*,\n"
+"> Specifies the Mac client charset for this Volume, e.g. *MAC_ROMAN*,\n"
 "*MAC_CYRILLIC*. If not specified the global setting is applied. This\n"
 "setting is only required if you need volumes, where the Mac charset\n"
 "differs from the one globally set in the [Global] section.\n"
@@ -3126,7 +3126,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1175
 #, no-wrap
-msgid "> set perm mask. Don't use with \"**unix priv = no**\".\n"
+msgid "> Set perm mask. Don't use with \"**unix priv = no**\".\n"
 msgstr "> 権限のマスクを設定する。\"**unix priv = no**\" と共に用いてはならない。\n"
 
 #. type: Plain text
@@ -3137,7 +3137,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1179
 #, no-wrap
-msgid "> command to be run when the volume is mounted\n"
+msgid "> Command to be run when the volume is mounted\n"
 msgstr "> ボリュームがマウントされる時に実行されるコマンド\n"
 
 #. type: Plain text
@@ -3148,7 +3148,7 @@ msgstr ""
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:1183
 #, no-wrap
-msgid "> command to be run when the volume is closed\n"
+msgid "> Command to be run when the volume is closed\n"
 msgstr "> ボリュームが閉じられる時に実行されるコマンド\n"
 
 #. type: Plain text
@@ -3190,7 +3190,7 @@ msgstr ""
 #: manpages/man5/afp.conf.5.md:1199
 #, no-wrap
 msgid ""
-"> hide files and directories,where the path matches one of the '/'\n"
+"> Hide files and directories,where the path matches one of the '/'\n"
 "delimited vetoed names. The veto string must always be terminated with a\n"
 "'/', e.g. \"**veto files = veto1/**\", \"**veto files = veto1/veto2/**\".\n"
 msgstr ""
@@ -3347,7 +3347,7 @@ msgstr "invisible dots = *BOOLEAN* (デフォルト: *no*) **(V)**"
 #: manpages/man5/afp.conf.5.md:1265
 #, no-wrap
 msgid ""
-"> make dot files invisible.\n"
+"> Make dot files invisible.\n"
 ">\n"
 "> ***WARNING:*** Enabling this option will lead to\n"
 "unwanted side effects where OS X applications, when saving files to a\n"
