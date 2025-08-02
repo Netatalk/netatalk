@@ -1875,7 +1875,7 @@ Changes in 2.0.2
 Changes in 2.0.1
 ----------------
 
-* NEW: --enable=debian configure option. Will install /etc/init.d/atalk
+* NEW: --enable-debian configure option. Will install /etc/init.d/atalk
        to get not in conflict with standard debian /etc/init.d/netatalk.
        Reads netatalk.conf from $ETCDIR and not from /etc/default/
 * UPD: Disable logger code by default. Log to syslog instead

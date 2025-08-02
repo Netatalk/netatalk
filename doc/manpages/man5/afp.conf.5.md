@@ -261,7 +261,7 @@ The most commonly used UAMs are:
 
 > uams_guest.so
 >
-> > allows guest logins
+> > Allows guest logins.
 >
 > uams_clrtxt.so
 >
@@ -270,7 +270,7 @@ in the clear. Compatible with Mac OS 9 and earlier.
 >
 > uams_randnum.so
 >
-> > allows Random Number and Two-Way Random Number Exchange for
+> > Allows Random Number and Two-Way Random Number Exchange for
 authentication (requires a separate file containing the passwords,
 either the default *afppasswd* file or the one specified via
 "**passwd file**"). See **afppasswd**(1) for details.
@@ -796,11 +796,11 @@ map acls = *none* | *rights* | *mode* **(G)**
 
 > none
 >
-> > no mapping of ACLs
+> > No mapping of ACLs.
 >
 > rights
 >
-> > effective permissions are mapped to UARights structure. This is the
+> > Effective permissions are mapped to UARights structure. This is the
 default.
 >
 > mode
@@ -1076,7 +1076,7 @@ hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 
 cnid scheme = *backend* **(V)**
 
-> set the CNID backend to be used for the volume.
+> Set the CNID backend to be used for the volume.
 Run **afpd -v** to see a list of available backends,
 as well as which one is the default.
 >
@@ -1130,11 +1130,11 @@ Extended Attributes.
 > > No Extended Attributes support.
 >
 > ***WARNING:*** The **samba** option should not be used on a volume that was previously
-set to **sys**. This may lead data loss.
+set to **sys**. This may lead to data loss.
 
 mac charset = *charset* **(V)**
 
-> specifies the Mac client charset for this Volume, e.g. *MAC_ROMAN*,
+> Specifies the Mac client charset for this Volume, e.g. *MAC_ROMAN*,
 *MAC_CYRILLIC*. If not specified the global setting is applied. This
 setting is only required if you need volumes, where the Mac charset
 differs from the one globally set in the [Global] section.
@@ -1171,15 +1171,15 @@ only, **directory perm** is for directories only. Don't use with
 
 umask = *mode* **(V)**
 
-> set perm mask. Don't use with "**unix priv = no**".
+> Set perm mask. Don't use with "**unix priv = no**".
 
 preexec = *command* **(V)**
 
-> command to be run when the volume is mounted
+> Command to be run when the volume is mounted
 
 postexec = *command* **(V)**
 
-> command to be run when the volume is closed
+> Command to be run when the volume is closed
 
 rolist = *users/groups* **(V)**
 
@@ -1193,7 +1193,7 @@ This follows the allow option format.
 
 veto files = *vetoed names* **(V)**
 
-> hide files and directories,where the path matches one of the '/'
+> Hide files and directories,where the path matches one of the '/'
 delimited vetoed names. The veto string must always be terminated with a
 '/', e.g. "**veto files = veto1/**", "**veto files = veto1/veto2/**".
 
@@ -1253,7 +1253,7 @@ boundaries.
 
 invisible dots = *BOOLEAN* (default: *no*) **(V)**
 
-> make dot files invisible.
+> Make dot files invisible.
 >
 > ***WARNING:*** Enabling this option will lead to
 unwanted side effects where OS X applications, when saving files to a
