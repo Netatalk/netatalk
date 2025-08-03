@@ -832,7 +832,15 @@ STATIC void test336()
 
     if (Path) {
         struct stat st;
-        sprintf(temp1, "%s/%s/%s", Path, ndir, temp);
+        int len = snprintf(temp1, sizeof(temp1), "%s/%s/%s", Path, ndir, temp);
+
+        if (len < 0 || len >= sizeof(temp1)) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED path too long for temp1 buffer\n");
+            }
+
+            test_failed();
+        }
 
         if (stat(temp1, &st)) {
             if (!Quiet) {
