@@ -46,6 +46,18 @@ packages that can be installed to enhance Netatalk's functionality.
 
 ### Required third-party software
 
+- bstring
+
+    Netatalk relies on the Better String Library for memory safe
+    string data manipulation and retrieval.
+    Version 1.0.1 or later of Mike Steinert's
+    [bstring](https://github.com/msteinert/bstring) fork is recommended,
+    but any version of the original [bstrlib](https://bstring.sourceforge.net/)
+    library by Paul Hsieh should theoretically work just as well.
+
+    In the absence of a shared *bstring* library, the Netatalk build system
+    will build and install the library as a Meson subproject.
+
 - iniparser
 
     The iniparser library is used to parse the configuration files.
