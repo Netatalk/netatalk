@@ -224,7 +224,7 @@ These are required to set the credentials used to authenticate with the file ser
 | Variable  | Description                                    |
 |-----------|------------------------------------------------|
 | AFP_USER  | Primary user of the shared volumes             |
-| AFP_PASS  | Password to authenticate with the primary user |
+| AFP_PASS  | Password to authenticate with the primary user (8 chars or less when using INSECURE_AUTH) |
 | AFP_GROUP | Group that owns the shared volume dirs         |
 
 ### Mandatory for AppleTalk
@@ -265,6 +265,6 @@ Set this environment variable to a non-zero value to enable, ex. "1"
 |---------------------|------------------------------------------------------------------------------------------------|
 | AFP_DROPBOX         | Enable dropbox mode; secondary user is guest with read only access to the second shared volume |
 | AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
-| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs                                                         |
+| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs; the AFP password must be 8 chars or shorter            |
 | DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
 | MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |

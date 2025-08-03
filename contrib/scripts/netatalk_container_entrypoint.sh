@@ -27,9 +27,8 @@ set -e
 DISTRO="unknown"
 if [ -f /etc/os-release ]; then
     DISTRO=$(grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
-    echo "Detected Linux distribution: $DISTRO"
 else
-    echo "WARNING: /etc/os-release not found; are we running on Linux?"
+    echo "WARNING: /etc/os-release not found; unable to detect Linux distro"
 fi
 
 echo "*** Setting up users and groups"
@@ -73,15 +72,16 @@ else
     usermod -aG $AFP_GROUP $AFP_USER 2> /dev/null || true
 fi
 
-echo "$AFP_USER:$AFP_PASS" | chpasswd
+echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 
-# Creating credentials for the RandNum UAM
 if [ -f "/etc/netatalk/afppasswd" ]; then
     rm -f /etc/netatalk/afppasswd
 fi
-afppasswd -c
-if ! afppasswd -a -f -w "$AFP_PASS" "$AFP_USER"; then
-    echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
+
+# Creating credentials for the RandNum UAM
+if [ -n "$INSECURE_AUTH" ]; then
+    afppasswd -c
+    afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null
 fi
 
 # Optional second user
@@ -99,9 +99,9 @@ elif [ -n "$AFP_USER2" ]; then
         adduser --no-create-home --disabled-password --gecos '' "$AFP_USER2" 2> /dev/null || true
         usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
     fi
-    echo "$AFP_USER2:$AFP_PASS2" | chpasswd
-    if ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2"; then
-        echo "NOTE: Use a password of 8 chars or less to authenticate with Mac OS 8 or earlier clients"
+    echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
+    if [ -n "$INSECURE_AUTH" ]; then
+        afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null
     fi
 fi
 
@@ -256,7 +256,7 @@ if [ -n "$ATALKD_INTERFACE" ]; then
     timelord -l
     a2boot
 else
-    echo "Set the \`ATALKD_INTERFACE' environment variable to start DDP services."
+    echo "NOTE: Set the \`ATALKD_INTERFACE' environment variable to start DDP services."
 fi
 
 echo "*** Starting AFP server"
