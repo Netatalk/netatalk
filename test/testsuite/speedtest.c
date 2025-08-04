@@ -1570,7 +1570,7 @@ int main(int ac, char **av)
     }
 
     while ((cc = getopt(ac, av,
-                        "1234567aeDiLnVvyc:d:F:f:h:o:p:q:R:r:S:s:u:w:")) != EOF) {
+                        "1234567aeDiLVvyc:d:F:f:h:n:o:p:q:R:r:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";

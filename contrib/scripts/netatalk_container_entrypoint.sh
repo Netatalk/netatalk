@@ -288,7 +288,7 @@ else
             ;;
         speed)
             echo "afp_speedtest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME"
-            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 2
             ;;
         *)
             echo "Unknown testsuite: $TESTSUITE"
