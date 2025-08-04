@@ -47,7 +47,7 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Extract metadata
               id: metadata
-              uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                 tags: |
@@ -87,7 +87,7 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Extract metadata
               id: metadata
-              uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                 tags: |
@@ -127,7 +127,7 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Extract metadata
               id: metadata
-              uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                 tags: |
@@ -167,7 +167,7 @@ jobs:
                 password: ${{ secrets.GITHUB_TOKEN }}
             - name: Extract metadata
               id: metadata
-              uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
                 tags: |
@@ -290,53 +290,6 @@ jobs:
                     -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
                     ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-sqlite-afp34-prod:
-        name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine (Prod)
-        needs:
-            - build-container
-            - build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Create Docker network
-              run: |
-                docker network create afp_network
-            - name: Run Netatalk
-              run: |
-                docker run --detach \
-                    --name afp_server \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e AFP_CNID_BACKEND=sqlite \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e INSECURE_AUTH=1 \
-                    -e DISABLE_TIMEMACHINE=1 \
-                    -e AFP_EXTMAP=1 \
-                    ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e VERBOSE=1 \
-                    -e TESTSUITE=spectest \
-                    -e AFP_VERSION=7 \
-                    -e AFP_REMOTE=1 \
-                    -e AFP_HOST=afp_server \
-                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
     afp-spectest-mysql-afp34-debian:
         name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
         needs: build-container-testsuite-debian
@@ -435,6 +388,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |

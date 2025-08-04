@@ -159,6 +159,7 @@ Run the afp_lantest benchmark using AFP 3.4.
     Run 0 => Locking/Unlocking 10000 times each                        772 ms
     Run 0 => Creating dir with 2000 files                             3615 ms
     Run 0 => Enumerate dir with 2000 files                             755 ms
+    Run 0 => Deleting dir with 2000 files                             1245 ms
     Run 0 => Create directory tree with 10^3 dirs                     1724 ms
     Run 0 => Directory cache hits (1000 dir + 10000 file lookups)     3056 ms
     Run 0 => Mixed cache operations (create/stat/enum/delete)          484 ms
@@ -170,6 +171,7 @@ Run the afp_lantest benchmark using AFP 3.4.
     Run 1 => Locking/Unlocking 10000 times each                        779 ms
     Run 1 => Creating dir with 2000 files                             3731 ms
     Run 1 => Enumerate dir with 2000 files                             587 ms
+    Run 1 => Deleting dir with 2000 files                             1156 ms
     Run 1 => Create directory tree with 10^3 dirs                     1802 ms
     Run 1 => Directory cache hits (1000 dir + 10000 file lookups)     3006 ms
     Run 1 => Mixed cache operations (create/stat/enum/delete)          463 ms
@@ -199,19 +201,22 @@ Run the afp_lantest benchmark using AFP 3.4.
     Test 6: Enumerate dir with 2000 files
      Average:    671 ms ± 118.8 ms (std dev)
 
-    Test 7: Create directory tree with 10^3 dirs
+    Test 7: Deleting dir with 2000 files
+     Average:   1200 ms ± 62.9 ms (std dev)
+
+    Test 8: Create directory tree with 1000 dirs
      Average:   1763 ms ± 55.2 ms (std dev)
 
-    Test 8: Directory cache hits (1000 dir + 10000 file lookups)
+    Test 9: Directory cache hits (1000 dir + 10000 file lookups)
      Average:   3031 ms ± 35.4 ms (std dev)
 
-    Test 9: Mixed cache operations (create/stat/enum/delete)
+    Test 10: Mixed cache operations (create/stat/enum/delete)
      Average:    473 ms ± 14.9 ms (std dev)
 
-    Test 10: Deep path traversal (nested directory navigation)
+    Test 11: Deep path traversal (nested directory navigation)
      Average:    312 ms ± 91.9 ms (std dev)
 
-    Test 11: Cache validation efficiency (metadata changes)
+    Test 12: Cache validation efficiency (metadata changes)
      Average:   8693 ms ± 181.7 ms (std dev)
 
 # See also
