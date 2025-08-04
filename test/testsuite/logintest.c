@@ -214,6 +214,11 @@ STATIC void test5(void)
     connect_server(Conn);
     Dsi = &Conn->dsi;
 
+    if (!User || Password[0] == '\0') {
+        test_skipped(T_CRED);
+        goto test_exit;
+    }
+
     if (Version >= 30) {
         ret = FPopenLoginExt(Conn, vers, uam, User, Password);
     } else {
@@ -257,6 +262,11 @@ STATIC void test6(void)
     memcpy(dsi->commands + 2, &i, sizeof(i));
     my_dsi_send(dsi);
     my_dsi_cmd_receive(dsi);
+
+    if (!User || Password[0] == '\0') {
+        test_skipped(T_CRED);
+        goto test_exit;
+    }
 
     if (dsi->header.dsi_code) {
         test_failed();
@@ -393,14 +403,6 @@ int main(int ac, char **av)
 
     if (!Quiet) {
         fprintf(stdout, "Connecting to host %s:%d\n", Server, Port);
-    }
-
-    if (User != NULL && User[0] == '\0') {
-        fprintf(stdout, "Error: Define a user with -u\n");
-    }
-
-    if (Password != NULL && Password[0] == '\0') {
-        fprintf(stdout, "Error: Define a password with -w\n");
     }
 
     if ((Conn = (CONN *)calloc(1, sizeof(CONN))) == NULL) {

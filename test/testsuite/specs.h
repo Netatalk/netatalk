@@ -118,6 +118,7 @@ extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap,
 #define T_AFP32      27
 #define T_NONDETERM  28
 #define T_BIGENDIAN  29
+#define T_CRED       30
 
 /* ---------------------------------
 */
