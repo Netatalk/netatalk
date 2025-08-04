@@ -196,11 +196,6 @@ STATIC void test65()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     test_bytelock3(name, OPENFORK_DATA);
     name = "t65 RF FPByteLock 2 users";
 
@@ -264,12 +259,6 @@ static void test_bytelock2(char *name, int type)
 
     if (Conn2) {
         uint16_t vol2;
-
-        if (Locking) {
-            test_skipped(T_LOCKING);
-            goto fin;
-        }
-
         dsi2 = &Conn2->dsi;
         vol2  = FPOpenVol(Conn2, Vol);
 
@@ -320,11 +309,6 @@ void test78()
                 "FPByteRangeLock:test78: test Byte Lock size -1 with no large file support\n");
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     test_bytelock2(name, OPENFORK_RSCS);
 
     if (!Quiet) {
@@ -334,7 +318,6 @@ void test78()
 
     name = "t78 FPByteLock DF size -1";
     test_bytelock2(name, OPENFORK_DATA);
-test_exit:
     exit_test("FPByteRangeLock:test78: test Byte Lock size -1");
 }
 
@@ -465,11 +448,6 @@ STATIC void test329()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
@@ -571,11 +549,6 @@ STATIC void test410()
 
     if (!Conn2) {
         test_skipped(T_CONN2);
-        goto test_exit;
-    }
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
         goto test_exit;
     }
 
@@ -965,11 +938,6 @@ STATIC void test366()
 
     if (!Conn2) {
         test_skipped(T_CONN2);
-        goto test_exit;
-    }
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
         goto test_exit;
     }
 

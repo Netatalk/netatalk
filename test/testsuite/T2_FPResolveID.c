@@ -399,11 +399,6 @@ STATIC void test360()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
         test_failed();
         goto test_exit;

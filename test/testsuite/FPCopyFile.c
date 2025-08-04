@@ -362,11 +362,6 @@ STATIC void test374()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     vol2  = FPOpenVol(Conn2, Vol);
 
     if (vol2 == 0xffff) {

@@ -849,11 +849,6 @@ STATIC void test344()
     size = 100;
     offset = 128;
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
@@ -921,11 +916,6 @@ STATIC void test8()
     int ret;
     dsi = &Conn->dsi;
     ENTER_TEST
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1)) {
         test_failed();
@@ -1014,7 +1004,6 @@ fin:
 
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name2))
-test_exit:
     exit_test("FPRead:test8: open data and rfork, datafork size is 0, rfork is 65k, read from datafork after EOF");
 }
 

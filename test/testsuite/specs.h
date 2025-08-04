@@ -95,7 +95,9 @@ extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap,
 #define T_UNIX_PREV  6
 #define T_UTF8       7
 #define T_VOL2       8
+#if 0
 #define T_LOCKING    9
+#endif
 #define T_VOL_SMALL  10
 #define T_ID         11
 #define T_AFP2       12

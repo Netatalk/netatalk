@@ -984,10 +984,6 @@ void test_skipped(int why)
         s = "a second volume";
         break;
 
-    case T_LOCKING:
-        s = "working fcntl locking";
-        break;
-
     case T_VOL_SMALL:
         s = "a bigger volume";
         break;

@@ -341,11 +341,9 @@ char *uam = "Cleartxt Passwrd";
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCiLlmnVvX] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "usage:\t%s [-1234567aCilmnVvX] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
-    fprintf(stdout,
-            "\t-L\tserver without working fcntl locking, skip tests using it\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
@@ -384,7 +382,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCiLlmVvXc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567aCilmVvXc:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
