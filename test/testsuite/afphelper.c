@@ -1039,6 +1039,10 @@ void test_skipped(int why)
     case T_BIGENDIAN:
         s = "not big-endian compatible";
         break;
+
+    case T_CRED:
+        s = "username/password for the AFP server";
+        break;
     }
 
     if (Color) {
