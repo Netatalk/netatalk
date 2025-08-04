@@ -268,26 +268,26 @@ else
     echo "*** Running testsuite: $TESTSUITE"
     case "$TESTSUITE" in
         spectest)
-            echo "afp_spectest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -d $AFP_USER2 -w $AFP_PASS -s $SHARE_NAME -S $SHARE_NAME2"
+            set -x
             afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
             echo "testfile dos" > /mnt/afpshare/second.txt
             mkdir /mnt/afpshare/third
-            echo "afp_spectest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME -f Readonly_test"
+            set -x
             afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
             ;;
         login)
-            echo "afp_logintest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS"
+            set -x
             afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS"
             ;;
         lan)
-            echo "afp_lantest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME"
+            set -x
             afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
             ;;
         speed)
-            echo "afp_speedtest $TEST_FLAGS -$AFP_VERSION -h $AFP_HOST -p $AFP_PORT -u $AFP_USER -w $AFP_PASS -s $SHARE_NAME"
+            set -x
             afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 2
             ;;
         *)
