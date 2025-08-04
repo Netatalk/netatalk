@@ -66,7 +66,7 @@ features.
 : Optimize for 10-gigabit networks (increases file test size to 10 GB)
 
 **-C**
-: Run cache-focused tests only (tests 8-11)
+: Run cache-focused tests only (tests 9-12)
 
 **-v**
 : Verbose output
@@ -99,24 +99,27 @@ The following tests are available:
 **(6) Enumerate dir with 2000 files**
 : Tests directory enumeration with many files
 
-**(7) Create directory tree with 10^3 dirs**
+**(7) Deleting dir with 2000 files**
+: Tests directory and file deletion performance
+
+**(8) Create directory tree with 1000 dirs**
 : Tests nested directory creation
 
-**(8) Directory cache hits [CACHE]**
+**(9) Directory cache hits [CACHE]**
 : Tests directory and file lookup performance (1000 dirs + 10000 files)
 
-**(9) Mixed cache operations [CACHE]**
+**(10) Mixed cache operations [CACHE]**
 : Tests mixed create/stat/enum/delete operations
 
-**(10) Deep path traversal [CACHE]**
+**(11) Deep path traversal [CACHE]**
 : Tests performance with deep directory structures
 
-**(11) Cache validation [CACHE]**
+**(12) Cache validation [CACHE]**
 : Tests directory cache validation mechanisms
 
 ## Cache-Focused Tests
 
-Tests 8-11 are specifically designed to highlight directory cache performance improvements in
+Tests 9-12 are specifically designed to highlight directory cache performance improvements in
 netatalk. These tests benefit significantly from optimized cache validation and probabilistic
 validation features. Use the **-C** option to run only these cache-focused tests.
 

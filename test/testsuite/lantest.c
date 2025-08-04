@@ -25,11 +25,12 @@
 #define TEST_LOCKUNLOCK 3
 #define TEST_CREATE2000FILES 4
 #define TEST_ENUM2000FILES 5
-#define TEST_DIRTREE 6
-#define TEST_CACHE_HITS 7
-#define TEST_MIXED_CACHE_OPS 8
-#define TEST_DEEP_TRAVERSAL 9
-#define TEST_CACHE_VALIDATION 10
+#define TEST_DELETE2000FILES 6
+#define TEST_DIRTREE 7
+#define TEST_CACHE_HITS 8
+#define TEST_MIXED_CACHE_OPS 9
+#define TEST_DEEP_TRAVERSAL 10
+#define TEST_CACHE_VALIDATION 11
 #define LASTTEST TEST_CACHE_VALIDATION
 #define NUMTESTS (LASTTEST+1)
 
@@ -55,7 +56,7 @@ char NotTestedTests[1024][256] = {{0}};
 char SkippedTests[1024][256] = {{0}};
 
 /* Configure the tests */
-#define DIRNUM 10                                 /* 10^3 nested dirs */
+#define DIRNUM 10                                 /* 1000 nested dirs */
 static int smallfiles = 1000;                     /* 1000 files */
 static off_t rwsize = 100 * 1024 * 1024;          /* 100 MB */
 static int locking = 10000 / 40;                  /* 10000 times */
@@ -96,7 +97,8 @@ static char *resultstrings[] = {
     "Locking/Unlocking 10000 times each                     ",
     "Creating dir with 2000 files                           ",
     "Enumerate dir with 2000 files                          ",
-    "Create directory tree with 10^3 dirs                   ",
+    "Deleting dir with 2000 files                           ",
+    "Create directory tree with 1000 dirs                   ",
     "Directory cache hits (1000 dir + 10000 file lookups)   ",
     "Mixed cache operations (create/stat/enum/delete)       ",
     "Deep path traversal (nested directory navigation)      ",
@@ -135,7 +137,8 @@ static void addresult(int test, int iteration)
     if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
         if (t > 0) {  /* Prevent division by zero */
             avg = (rwsize / 1000) / t;
-            fprintf(stderr, " for %lu MB (avg. %llu MB/s)", rwsize / (1024 * 1024), avg);
+            fprintf(stderr, " for %lu MB (avg. %llu MB/s)",
+                    rwsize / (1024 * 1024), avg);
         } else {
             fprintf(stderr, " for %lu MB (time too small to measure)",
                     rwsize / (1024 * 1024));
@@ -148,13 +151,11 @@ static void addresult(int test, int iteration)
 
 static void displayresults(void)
 {
-    int i, test, maxindex, minindex, divsub = 0;
+    int i, test, maxindex, minindex;
     unsigned long long sum, max, min;
 
     /* Eleminate runaways */
     if (Iterations_save > 5) {
-        divsub = 2;
-
         for (test = 0; test != NUMTESTS; test++) {
             if (! teststorun[test]) {
                 continue;
@@ -848,8 +849,11 @@ void run_test(const int dir)
         addresult(TEST_ENUM2000FILES, iteration_counter);
     }
 
-    /* Delete files from Test (5/6) */
-    if (teststorun[TEST_CREATE2000FILES]) {
+    /* -------- */
+    /* Test (7) */
+    if (teststorun[TEST_DELETE2000FILES]) {
+        starttimer();
+
         for (i = 1; i <= maxi; i++) {
             snprintf(temp, sizeof(temp), "File.0k%d", i);
 
@@ -857,10 +861,13 @@ void run_test(const int dir)
                 fatal_failed();
             }
         }
+
+        stoptimer();
+        addresult(TEST_DELETE2000FILES, iteration_counter);
     }
 
     /* -------- */
-    /* Test (7) */
+    /* Test (8) */
     if (teststorun[TEST_DIRTREE]) {
         uint32_t idirs[DIRNUM];
         uint32_t jdirs[DIRNUM][DIRNUM];
@@ -899,7 +906,7 @@ void run_test(const int dir)
     }
 
     /* -------- */
-    /* Test (8) - Directory Cache Hits */
+    /* Test (9) - Directory Cache Hits */
     if (teststorun[TEST_CACHE_HITS]) {
         /* Validate configuration to prevent stack overflow */
         if (cache_dirs <= 0 || cache_dirs > 50 || cache_files_per_dir <= 0
@@ -995,7 +1002,7 @@ void run_test(const int dir)
     }
 
     /* -------- */
-    /* Test (9) - Mixed Cache Operations */
+    /* Test (10) - Mixed Cache Operations */
     if (teststorun[TEST_MIXED_CACHE_OPS]) {
         starttimer();
 
@@ -1015,14 +1022,13 @@ void run_test(const int dir)
             }
 
             /* Enumerate directory (should use cached entries) */
-            if (i % 10 == 9) {  /* Every 10th iteration */
-                if (FPEnumerate(Conn, vol, dir, "", (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM),
-                                0)) {
-                    /* Enumeration failure is not fatal for this test, just log and continue */
-                    fprintf(stderr,
-                            "Warning: Enumeration failed during mixed cache operations test (iteration %d)\n",
-                            i);
-                }
+            if (i % 10 == 9
+                    && FPEnumerate(Conn, vol, dir, "", (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM),
+                                   0)) {  /* Every 10th iteration */
+                /* Enumeration failure is not fatal for this test, just log and continue */
+                fprintf(stderr,
+                        "Warning: Enumeration failed during mixed cache operations test (iteration %d)\n",
+                        i);
             }
 
             /* Stat again (should hit cache) */
@@ -1042,7 +1048,7 @@ void run_test(const int dir)
     }
 
     /* -------- */
-    /* Test (10) - Deep Path Traversal */
+    /* Test (11) - Deep Path Traversal */
     if (teststorun[TEST_DEEP_TRAVERSAL]) {
         /* Validate configuration to prevent issues */
         if (deep_dir_levels <= 0 || deep_dir_levels > 100) {
@@ -1135,7 +1141,7 @@ void run_test(const int dir)
     }
 
     /* -------- */
-    /* Test (11) - Cache Validation Efficiency */
+    /* Test (12) - Cache Validation Efficiency */
     if (teststorun[TEST_CACHE_VALIDATION]) {
         /* Validate configuration parameters */
         if (validation_files <= 0 || validation_files > 1000 ||
@@ -1439,11 +1445,9 @@ int main(int ac, char **av)
         exit(1);
     }
 
-    if (! Debug) {
-        if (freopen("/dev/null", "w", stdout) == NULL) {
-            fprintf(stderr, "Error: Could not redirect stdout to /dev/null\n");
-            exit(1);
-        }
+    if (! Debug && freopen("/dev/null", "w", stdout) == NULL) {
+        fprintf(stderr, "Error: Could not redirect stdout to /dev/null\n");
+        exit(1);
     }
 
 #if 0
@@ -1484,6 +1488,10 @@ int main(int ac, char **av)
         }
 
         if (teststorun[TEST_ENUM2000FILES]) {
+            teststorun[TEST_CREATE2000FILES] = 1;
+        }
+
+        if (teststorun[TEST_DELETE2000FILES]) {
             teststorun[TEST_CREATE2000FILES] = 1;
         }
 
