@@ -600,11 +600,6 @@ STATIC void test81()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     test_denymode(name, OPENFORK_RSCS);
 
     if (!Quiet) {
@@ -980,11 +975,6 @@ STATIC void test341()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     test_openmode(name, OPENFORK_RSCS);
 
     if (!Quiet) {
@@ -1070,11 +1060,6 @@ STATIC void test367()
 
     if (!Conn2) {
         test_skipped(T_CONN2);
-        goto test_exit;
-    }
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
         goto test_exit;
     }
 

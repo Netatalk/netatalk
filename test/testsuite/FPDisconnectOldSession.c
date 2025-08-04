@@ -37,11 +37,6 @@ STATIC void test222()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     ret = FPGetSessionToken(Conn, 0, 0, 0, NULL);
 
     if (ret) {
@@ -206,11 +201,6 @@ STATIC void test338()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     /* setup 2 new connections for testing */
 
     /* connection 1 */
@@ -358,11 +348,6 @@ STATIC void test339()
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
         goto test_exit;
     }
 
@@ -550,11 +535,6 @@ STATIC void test370()
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
         goto test_exit;
     }
 

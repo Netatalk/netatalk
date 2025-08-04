@@ -83,11 +83,6 @@ STATIC  void test74()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
@@ -415,11 +410,6 @@ STATIC void test368()
         goto test_exit;
     }
 
-    if (Locking) {
-        test_skipped(T_LOCKING);
-        goto test_exit;
-    }
-
     dir  = FPCreateDir(Conn, vol, DIRDID_ROOT, name2);
 
     if (!dir) {
@@ -471,11 +461,6 @@ STATIC void test369()
 
     if (!Conn2) {
         test_skipped(T_CONN2);
-        goto test_exit;
-    }
-
-    if (Locking) {
-        test_skipped(T_LOCKING);
         goto test_exit;
     }
 
