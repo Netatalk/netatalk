@@ -1,13 +1,12 @@
 manfiles = [
     'ad',
-    'afp_lantest',
     'afpldaptest',
     'afppasswd',
     'afpstats',
-    'afptest',
     'addump',
     'asip-status',
     'dbd',
+    'fce_listen',
     'macusers',
 ]
 
@@ -18,6 +17,16 @@ if have_appletalk
         'nbp',
         'pap',
         'rtmpqry',
+    ]
+endif
+
+if get_option('with-testsuite')
+    manfiles += [
+        'afp_lantest',
+        'afp_logintest',
+        'afp_spectest',
+        'afp_speedtest',
+        'afparg',
     ]
 endif
 
@@ -41,18 +50,7 @@ foreach man : manfiles
     )
 endforeach
 
-afptest_staticmans = [
-    'afp_lantest.1',
-    'afp_logintest.1',
-    'afp_spectest.1',
-    'afp_speedtest.1',
-    'afparg.1',
-    'fce_listen.1',
-]
-
-foreach man : afptest_staticmans
-    install_data('afptest.1', rename: man, install_dir: mandir / 'man1')
-endforeach
+install_data('afptest.1', install_dir: mandir / 'man1')
 
 if have_appletalk
     nbp_staticmans = [
