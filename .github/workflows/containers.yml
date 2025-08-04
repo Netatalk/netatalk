@@ -388,6 +388,7 @@ jobs:
         needs: build-container-testsuite
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        if: ${{ github.actor != 'dependabot[bot]' }}
         steps:
             - name: Run Netatalk testsuite
               run: |
