@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0dev\n"
-"POT-Creation-Date: 2025-07-29 20:18+0200\n"
+"POT-Creation-Date: 2025-08-05 13:58+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -19,14 +19,17 @@ msgstr ""
 
 #. type: Title #
 #: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
-#: manpages/man1/aecho.1.md:1 manpages/man1/afpldaptest.1.md:1
-#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
-#: manpages/man1/afptest.1.md:1 manpages/man1/asip-status.1.md:1
-#: manpages/man1/dbd.1.md:1 manpages/man1/getzones.1.md:1
-#: manpages/man1/macusers.1.md:1 manpages/man1/nbp.1.md:1
-#: manpages/man1/pap.1.md:1 manpages/man1/rtmpqry.1.md:1
-#: manpages/man3/atalk_aton.3.md:1 manpages/man3/nbp_name.3.md:1
-#: manpages/man4/atalk.4.md:1 manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afp_lantest.1.md:1
+#: manpages/man1/afp_logintest.1.md:1 manpages/man1/afp_spectest.1.md:1
+#: manpages/man1/afp_speedtest.1.md:1 manpages/man1/afparg.1.md:1
+#: manpages/man1/afpldaptest.1.md:1 manpages/man1/afppasswd.1.md:1
+#: manpages/man1/afpstats.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/fce_listen.1.md:1
+#: manpages/man1/getzones.1.md:1 manpages/man1/macusers.1.md:1
+#: manpages/man1/nbp.1.md:1 manpages/man1/pap.1.md:1
+#: manpages/man1/rtmpqry.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
 #: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
 #: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
 #: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
@@ -41,33 +44,39 @@ msgstr "名前"
 
 #. type: Title #
 #: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
-#: manpages/man1/aecho.1.md:5 manpages/man1/afpldaptest.1.md:5
-#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
-#: manpages/man1/afptest.1.md:5 manpages/man1/asip-status.1.md:5
-#: manpages/man1/dbd.1.md:5 manpages/man1/getzones.1.md:5
-#: manpages/man1/macusers.1.md:5 manpages/man1/nbp.1.md:5
-#: manpages/man1/pap.1.md:5 manpages/man1/rtmpqry.1.md:5
-#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
-#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
-#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
-#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
-#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
-#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
-#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afp_lantest.1.md:5
+#: manpages/man1/afp_logintest.1.md:5 manpages/man1/afp_spectest.1.md:5
+#: manpages/man1/afp_speedtest.1.md:5 manpages/man1/afparg.1.md:5
+#: manpages/man1/afpldaptest.1.md:5 manpages/man1/afppasswd.1.md:5
+#: manpages/man1/afpstats.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/fce_listen.1.md:5
+#: manpages/man1/getzones.1.md:5 manpages/man1/macusers.1.md:5
+#: manpages/man1/nbp.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man1/rtmpqry.1.md:5 manpages/man3/atalk_aton.3.md:5
+#: manpages/man3/nbp_name.3.md:5 manpages/man4/atalk.4.md:5
+#: manpages/man5/afp.conf.5.md:5 manpages/man8/a2boot.8.md:5
+#: manpages/man8/afpd.8.md:5 manpages/man8/atalkd.8.md:5
+#: manpages/man8/cnid_dbd.8.md:5 manpages/man8/cnid_metad.8.md:5
+#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
+#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
+#: manpages/man8/timelord.8.md:5
 #, no-wrap
 msgid "Synopsis"
 msgstr "概要"
 
 #. type: Title #
 #: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
-#: manpages/man1/aecho.1.md:9 manpages/man1/afpldaptest.1.md:11
-#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
-#: manpages/man1/afptest.1.md:22 manpages/man1/asip-status.1.md:13
-#: manpages/man1/dbd.1.md:11 manpages/man1/getzones.1.md:9
-#: manpages/man1/macusers.1.md:11 manpages/man1/nbp.1.md:13
-#: manpages/man1/pap.1.md:9 manpages/man1/rtmpqry.1.md:9
-#: manpages/man3/atalk_aton.3.md:14 manpages/man3/nbp_name.3.md:16
-#: manpages/man4/atalk.4.md:10 manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man1/aecho.1.md:9 manpages/man1/afp_lantest.1.md:10
+#: manpages/man1/afp_logintest.1.md:9 manpages/man1/afp_spectest.1.md:10
+#: manpages/man1/afp_speedtest.1.md:10 manpages/man1/afparg.1.md:9
+#: manpages/man1/afpldaptest.1.md:11 manpages/man1/afppasswd.1.md:9
+#: manpages/man1/afpstats.1.md:9 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/fce_listen.1.md:9
+#: manpages/man1/getzones.1.md:9 manpages/man1/macusers.1.md:11
+#: manpages/man1/nbp.1.md:13 manpages/man1/pap.1.md:9
+#: manpages/man1/rtmpqry.1.md:9 manpages/man3/atalk_aton.3.md:14
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
 #: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
 #: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
 #: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
@@ -83,12 +92,12 @@ msgstr "説明"
 #: manpages/man1/ad.1.md:295 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
 #: manpages/man1/afppasswd.1.md:72 manpages/man1/afpstats.1.md:31
-#: manpages/man1/afptest.1.md:179 manpages/man1/asip-status.1.md:106
-#: manpages/man1/dbd.1.md:72 manpages/man1/getzones.1.md:88
-#: manpages/man1/macusers.1.md:29 manpages/man1/nbp.1.md:90
-#: manpages/man1/pap.1.md:97 manpages/man1/rtmpqry.1.md:56
-#: manpages/man3/atalk_aton.3.md:28 manpages/man3/nbp_name.3.md:42
-#: manpages/man4/atalk.4.md:49 manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man1/asip-status.1.md:106 manpages/man1/dbd.1.md:72
+#: manpages/man1/getzones.1.md:88 manpages/man1/macusers.1.md:29
+#: manpages/man1/nbp.1.md:90 manpages/man1/pap.1.md:97
+#: manpages/man1/rtmpqry.1.md:56 manpages/man3/atalk_aton.3.md:28
+#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
+#: manpages/man5/afp_signature.conf.5.md:48
 #: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1353
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
@@ -105,12 +114,12 @@ msgstr "著者"
 #: manpages/man1/ad.1.md:297 manpages/man1/addump.1.md:75
 #: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
 #: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:33
-#: manpages/man1/afptest.1.md:181 manpages/man1/asip-status.1.md:108
-#: manpages/man1/dbd.1.md:74 manpages/man1/getzones.1.md:90
-#: manpages/man1/macusers.1.md:31 manpages/man1/nbp.1.md:92
-#: manpages/man1/pap.1.md:99 manpages/man1/rtmpqry.1.md:58
-#: manpages/man3/atalk_aton.3.md:30 manpages/man3/nbp_name.3.md:44
-#: manpages/man4/atalk.4.md:51 manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man1/asip-status.1.md:108 manpages/man1/dbd.1.md:74
+#: manpages/man1/getzones.1.md:90 manpages/man1/macusers.1.md:31
+#: manpages/man1/nbp.1.md:92 manpages/man1/pap.1.md:99
+#: manpages/man1/rtmpqry.1.md:58 manpages/man3/atalk_aton.3.md:30
+#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
+#: manpages/man5/afp_signature.conf.5.md:50
 #: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1355
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
@@ -124,8 +133,11 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
-#: manpages/man1/afpldaptest.1.md:16 manpages/man1/afppasswd.1.md:33
-#: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:21
+#: manpages/man1/afp_lantest.1.md:21 manpages/man1/afp_logintest.1.md:15
+#: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
+#: manpages/man1/afparg.1.md:16 manpages/man1/afpldaptest.1.md:16
+#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
 #: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
 #: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
@@ -139,8 +151,11 @@ msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afpldaptest.1.md:34 manpages/man1/afppasswd.1.md:68
-#: manpages/man1/afpstats.1.md:27 manpages/man1/getzones.1.md:84
+#: manpages/man1/afp_lantest.1.md:242 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_spectest.1.md:236 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afparg.1.md:110 manpages/man1/afpldaptest.1.md:34
+#: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:27
+#: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
 #: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1348
@@ -152,6 +167,14 @@ msgstr "オプション"
 #, no-wrap
 msgid "See Also"
 msgstr "関連項目"
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:80 manpages/man1/afp_speedtest.1.md:102
+#: manpages/man1/afparg.1.md:63 manpages/man8/cnid_dbd.8.md:64
+#: manual/Configuration.md:587
+#, no-wrap
+msgid "Configuration"
+msgstr "設定"
 
 #. type: Plain text
 #: manpages/man8/a2boot.8.md:43 manpages/man8/atalkd.8.md:55
@@ -299,12 +322,6 @@ msgstr ""
 #, no-wrap
 msgid "> Show version and exit.\n"
 msgstr "> バージョンを表示してから終了する。\n"
-
-#. type: Title ###
-#: manpages/man8/cnid_dbd.8.md:64 manual/Configuration.md:587
-#, no-wrap
-msgid "Configuration"
-msgstr "設定"
 
 #. type: Plain text
 #: manpages/man8/cnid_dbd.8.md:72
