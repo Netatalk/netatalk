@@ -81,7 +81,7 @@ List available commands and their arguments
 
 Resolve a CNID to file name
 
-    $ afparg -u myuser -w mypass -s "test volume" -f FPResolveID 18
+    $ afparg -h 10.0.0.8 -u myuser -w mypass -s "test volume" -f FPResolveID 18
     ======================
     FPResolveID with args:
     Trying to resolve id 18
@@ -89,20 +89,20 @@ Resolve a CNID to file name
 
 List files inside of a directory on the shared volume
 
-    $ afparg -u myuser -w mypass -s "test volume" -f FPEnumerate "my dir"
+    $ afparg -h 10.0.0.8 -u myuser -w mypass -s "test volume" -f FPEnumerate "my dir"
     file1
     file2
 
 Make a copy of a file on the shared volume
 
-    $ afparg -u myuser -w mypass -s "test volume" -f FPCopyFile AFP_Reference.pdf AFP_Reference2.pdf
+    $ afparg -h 10.0.0.8 -u myuser -w mypass -s "test volume" -f FPCopyFile AFP_Reference.pdf AFP_Reference2.pdf
     ======================
     FPCopyFile with args:
     source: "AFP_Reference.pdf" -> dest: "AFP_Reference2.pdf"
 
 Open a file's data fork with read/write lock
 
-    $ afparg -u myuser -w mypass -s "test volume" -f FPLockrw d AFP_Reference2.pdf
+    $ afparg -h 10.0.0.8 -u myuser -w mypass -s "test volume" -f FPLockrw d AFP_Reference2.pdf
     ======================
     FPOpen with read/write lock
     source: "AFP_Reference2.pdf"
