@@ -1,21 +1,20 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2015-2017 Eiichirou UDA
-# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.3.0dev\n"
+"Project-Id-Version: Netatalk 4.3.0\n"
 "POT-Creation-Date: 2025-08-05 13:58+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2025-08-05 13:58+0200\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Title #
 #: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
@@ -89,49 +88,6 @@ msgid "Description"
 msgstr "説明"
 
 #. type: Title #
-#: manpages/man1/ad.1.md:295 manpages/man1/addump.1.md:73
-#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
-#: manpages/man1/afppasswd.1.md:72 manpages/man1/afpstats.1.md:31
-#: manpages/man1/asip-status.1.md:106 manpages/man1/dbd.1.md:72
-#: manpages/man1/getzones.1.md:88 manpages/man1/macusers.1.md:29
-#: manpages/man1/nbp.1.md:90 manpages/man1/pap.1.md:97
-#: manpages/man1/rtmpqry.1.md:56 manpages/man3/atalk_aton.3.md:28
-#: manpages/man3/nbp_name.3.md:42 manpages/man4/atalk.4.md:49
-#: manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1353
-#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
-#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
-#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:83
-#: manpages/man8/cnid_dbd.8.md:146 manpages/man8/cnid_metad.8.md:51
-#: manpages/man8/macipgw.8.md:107 manpages/man8/netatalk.8.md:61
-#: manpages/man8/papd.8.md:134 manpages/man8/papstatus.8.md:53
-#: manpages/man8/timelord.8.md:42
-#, no-wrap
-msgid "Author"
-msgstr "著者"
-
-#. type: Plain text
-#: manpages/man1/ad.1.md:297 manpages/man1/addump.1.md:75
-#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
-#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:33
-#: manpages/man1/asip-status.1.md:108 manpages/man1/dbd.1.md:74
-#: manpages/man1/getzones.1.md:90 manpages/man1/macusers.1.md:31
-#: manpages/man1/nbp.1.md:92 manpages/man1/pap.1.md:99
-#: manpages/man1/rtmpqry.1.md:58 manpages/man3/atalk_aton.3.md:30
-#: manpages/man3/nbp_name.3.md:44 manpages/man4/atalk.4.md:51
-#: manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1355
-#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
-#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
-#: manpages/man8/afpd.8.md:120 manpages/man8/atalkd.8.md:85
-#: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:53
-#: manpages/man8/netatalk.8.md:63 manpages/man8/papd.8.md:136
-#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
-msgid ""
-"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
-msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
-
-#. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
 #: manpages/man1/afp_lantest.1.md:21 manpages/man1/afp_logintest.1.md:15
 #: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
@@ -148,31 +104,6 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #, no-wrap
 msgid "Options"
 msgstr "オプション"
-
-#. type: Plain text
-#: manpages/man1/addump.1.md:52 manpages/man1/macusers.1.md:22
-#, no-wrap
-msgid "**-h**, **-help**, **--help**\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/addump.1.md:54 manpages/man1/macusers.1.md:24
-#, no-wrap
-msgid "> Display the help and exit\n"
-msgstr "> ヘルプを表示して終了する\n"
-
-#. type: Plain text
-#: manpages/man1/addump.1.md:56 manpages/man1/asip-status.1.md:51
-#: manpages/man1/macusers.1.md:18
-#, no-wrap
-msgid "**-v**, **-version**, **--version**\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/addump.1.md:58 manpages/man1/macusers.1.md:20
-#, no-wrap
-msgid "> Show version and exit\n"
-msgstr "> バージョンを表示して終了する\n"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
@@ -193,30 +124,107 @@ msgstr "> バージョンを表示して終了する\n"
 msgid "See Also"
 msgstr "関連項目"
 
-#. type: Plain text
-#: manpages/man1/macusers.1.md:4
-msgid "macusers — List the users connecting via AFP"
-msgstr "macusers — AFP 経由で接続しているユーザをリストする"
+#. type: Title #
+#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:134
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:189
+#: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:71
+#: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:20
+#: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
+#: manpages/man1/getzones.1.md:57 manpages/man1/nbp.1.md:62
+#: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
+#: manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1302
+#: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
+#: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
+#, no-wrap
+msgid "Examples"
+msgstr "例"
 
 #. type: Plain text
-#: manpages/man1/macusers.1.md:8
+#: manpages/man1/fce_listen.1.md:4
+msgid "fce_listen — Netatalk Filesystem Change Events listener application"
+msgstr ""
+"fce_listen — Netatalk Filesystem Change Event リスナーアプリケーション"
+
+#. type: Plain text
+#: manpages/man1/fce_listen.1.md:8
 #, no-wrap
-msgid "**macusers**\n"
+msgid "**fce_listen** [-h *host*] [-p *port*]\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/macusers.1.md:10
+#: manpages/man1/fce_listen.1.md:13
 #, no-wrap
-msgid "**macusers** [-v | -version | --version | -h | -help | --help]\n"
+msgid ""
+"**fce_listen** is a simple listener for Netatalk's Filesystem Change Event (FCE) protocol.\n"
+"It will print out any UDP datagrams received from the AFP server to stdout.\n"
+msgstr ""
+"**fce_listen** は、Netatalk の Filesystem Change Event (FCE) プロトコルのシンプルなリスナーである。\n"
+"AFP サーバーから受信した UDP データグラムを標準出力に出力する。\n"
+
+#. type: Plain text
+#: manpages/man1/fce_listen.1.md:18
+#, no-wrap
+msgid ""
+"**-h** *host*\n"
+": Server hostname or IP address\n"
+msgstr ""
+"**-h** *ホスト*\n"
+": サーバーのホスト名またはIPアドレス\n"
+
+#. type: Plain text
+#: manpages/man1/fce_listen.1.md:21
+#, no-wrap
+msgid ""
+"**-p** *port*\n"
+": Server port number\n"
+msgstr ""
+"**-p** *ポート*\n"
+": サーバーポート番号\n"
+
+#. type: Plain text
+#: manpages/man1/fce_listen.1.md:25
+msgid ""
+"Configure netatalk to emit FCE packets to a listener on localhost port "
+"58585, in afp.conf:"
+msgstr ""
+"afp.conf で、netatalk が localhost のポート58585のリスナーに FCE パケットを送"
+"信するように設定する。"
+
+#. type: Plain text
+#: manpages/man1/fce_listen.1.md:30
+#, no-wrap
+msgid ""
+"    [Global]\n"
+"    fce listener = localhost:58585\n"
+"    fce version = 2\n"
+"    fce events = fmod,fdel,ddel,fcre,dcre,fmov,dmov,login,logout\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/macusers.1.md:14
-#, no-wrap
-msgid "**macusers** list the users connecting via AFP.\n"
-msgstr "**macusers**はAFP経由で接続しているユーザをリストする。\n"
+#: manpages/man1/fce_listen.1.md:32
+msgid "Listen to FCE events on localhost port 58585"
+msgstr "localhost のポート58585で FCE イベントをリッスンする"
 
 #. type: Plain text
-#: manpages/man1/macusers.1.md:28
-msgid "afpd(8)"
+#: manpages/man1/fce_listen.1.md:44
+#, no-wrap
+msgid ""
+"    $ fce_listen -h localhost -p 58585\n"
+"    Listening for Netatalk FCE datagrams on localhost:58585...\n"
+"    FCE Start\n"
+"    ID: 1, Event: FCE_LOGIN, pid: 429918, user: nobody, Path: \n"
+"    ID: 2, Event: FCE_LOGOUT, pid: 429918, user: nobody, Path: \n"
+"    FCE Start\n"
+"    ID: 1, Event: FCE_LOGIN, pid: 429924, user: myuser, Path: \n"
+"    ID: 2, Event: FCE_FILE_DELETE, pid: 429924, user: myuser, Path: /srv/afpme/Read Me First copy\n"
+"    ID: 3, Event: FCE_DIR_CREATE, pid: 429924, user: myuser, Path: /srv/afpme/untitled folder\n"
+"    ID: 4, Event: FCE_DIR_MOVE, pid: 429924, user: myuser, source: /srv/afpme/untitled folder, Path: /srv/afpme/My Folder\n"
+"    ID: 5, Event: FCE_FILE_MOVE, pid: 429924, user: myuser, source: /srv/afpme/LICENSE, Path: /srv/afpme/My Folder/LICENSE\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/fce_listen.1.md:47
+#, no-wrap
+msgid "**afpd**(8)\n"
 msgstr ""

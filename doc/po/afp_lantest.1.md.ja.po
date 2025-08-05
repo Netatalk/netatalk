@@ -1,14 +1,14 @@
-# Japanese translations for Netatalk package
-# Copyright (C) 2025 Contributors to the Netatalk Project
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
-# Automatically generated, 2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0\n"
-"POT-Creation-Date: 2025-08-04 14:23+1000\n"
+"POT-Creation-Date: 2025-08-05 13:58+0200\n"
 "PO-Revision-Date: 2025-08-04 14:22+1000\n"
-"Last-Translator: Automatically generated\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
@@ -16,134 +16,142 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#. type: Plain text
-#: manpages/man1/ad.1.md:2 manpages/man1/addump.1.md:2
-#: manpages/man1/aecho.1.md:2 manpages/man1/afp_lantest.1.md:2
-#: manpages/man1/afpldaptest.1.md:2 manpages/man1/afppasswd.1.md:2
-#: manpages/man1/afpstats.1.md:2 manpages/man1/afptest.1.md:2
-#: manpages/man1/asip-status.1.md:2 manpages/man1/dbd.1.md:2
-#: manpages/man1/getzones.1.md:2 manpages/man1/macusers.1.md:2
-#: manpages/man1/nbp.1.md:2 manpages/man1/pap.1.md:2
-#: manpages/man1/rtmpqry.1.md:2 manpages/man3/atalk_aton.3.md:2
-#: manpages/man3/nbp_name.3.md:2 manpages/man4/atalk.4.md:2
-#: manpages/man5/afp_signature.conf.5.md:2
-#: manpages/man5/afp_voluuid.conf.5.md:2 manpages/man5/afp.conf.5.md:2
-#: manpages/man5/atalkd.conf.5.md:2 manpages/man5/extmap.conf.5.md:2
-#: manpages/man5/papd.conf.5.md:2 manpages/man8/a2boot.8.md:2
-#: manpages/man8/afpd.8.md:2 manpages/man8/atalkd.8.md:2
-#: manpages/man8/cnid_dbd.8.md:2 manpages/man8/cnid_metad.8.md:2
-#: manpages/man8/macipgw.8.md:2 manpages/man8/netatalk.8.md:2
-#: manpages/man8/papd.8.md:2 manpages/man8/papstatus.8.md:2
-#: manpages/man8/timelord.8.md:2
-#, fuzzy
-#| msgid "Name"
-msgid "# Name"
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afp_lantest.1.md:1
+#: manpages/man1/afp_logintest.1.md:1 manpages/man1/afp_spectest.1.md:1
+#: manpages/man1/afp_speedtest.1.md:1 manpages/man1/afparg.1.md:1
+#: manpages/man1/afpldaptest.1.md:1 manpages/man1/afppasswd.1.md:1
+#: manpages/man1/afpstats.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/fce_listen.1.md:1
+#: manpages/man1/getzones.1.md:1 manpages/man1/macusers.1.md:1
+#: manpages/man1/nbp.1.md:1 manpages/man1/pap.1.md:1
+#: manpages/man1/rtmpqry.1.md:1 manpages/man3/atalk_aton.3.md:1
+#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
+#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
 msgstr "名前"
 
-#. type: Plain text
-#: manpages/man1/ad.1.md:6 manpages/man1/addump.1.md:6
-#: manpages/man1/aecho.1.md:6 manpages/man1/afp_lantest.1.md:6
-#: manpages/man1/afpldaptest.1.md:6 manpages/man1/afppasswd.1.md:6
-#: manpages/man1/afpstats.1.md:6 manpages/man1/afptest.1.md:6
-#: manpages/man1/asip-status.1.md:6 manpages/man1/dbd.1.md:6
-#: manpages/man1/getzones.1.md:6 manpages/man1/macusers.1.md:6
-#: manpages/man1/nbp.1.md:6 manpages/man1/pap.1.md:6
-#: manpages/man1/rtmpqry.1.md:6 manpages/man3/atalk_aton.3.md:6
-#: manpages/man3/nbp_name.3.md:6 manpages/man4/atalk.4.md:6
-#: manpages/man5/afp.conf.5.md:6 manpages/man8/a2boot.8.md:6
-#: manpages/man8/afpd.8.md:6 manpages/man8/atalkd.8.md:6
-#: manpages/man8/cnid_dbd.8.md:6 manpages/man8/cnid_metad.8.md:6
-#: manpages/man8/macipgw.8.md:6 manpages/man8/netatalk.8.md:6
-#: manpages/man8/papd.8.md:6 manpages/man8/papstatus.8.md:6
-#: manpages/man8/timelord.8.md:6
-#, fuzzy
-#| msgid "Synopsis"
-msgid "# Synopsis"
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afp_lantest.1.md:5
+#: manpages/man1/afp_logintest.1.md:5 manpages/man1/afp_spectest.1.md:5
+#: manpages/man1/afp_speedtest.1.md:5 manpages/man1/afparg.1.md:5
+#: manpages/man1/afpldaptest.1.md:5 manpages/man1/afppasswd.1.md:5
+#: manpages/man1/afpstats.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/fce_listen.1.md:5
+#: manpages/man1/getzones.1.md:5 manpages/man1/macusers.1.md:5
+#: manpages/man1/nbp.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man1/rtmpqry.1.md:5 manpages/man3/atalk_aton.3.md:5
+#: manpages/man3/nbp_name.3.md:5 manpages/man4/atalk.4.md:5
+#: manpages/man5/afp.conf.5.md:5 manpages/man8/a2boot.8.md:5
+#: manpages/man8/afpd.8.md:5 manpages/man8/atalkd.8.md:5
+#: manpages/man8/cnid_dbd.8.md:5 manpages/man8/cnid_metad.8.md:5
+#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
+#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
+#: manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
 msgstr "概要"
 
-#. type: Plain text
-#: manpages/man1/ad.1.md:12 manpages/man1/addump.1.md:20
-#: manpages/man1/aecho.1.md:10 manpages/man1/afp_lantest.1.md:11
-#: manpages/man1/afpldaptest.1.md:12 manpages/man1/afppasswd.1.md:10
-#: manpages/man1/afpstats.1.md:10 manpages/man1/afptest.1.md:23
-#: manpages/man1/asip-status.1.md:14 manpages/man1/dbd.1.md:12
-#: manpages/man1/getzones.1.md:10 manpages/man1/macusers.1.md:12
-#: manpages/man1/nbp.1.md:14 manpages/man1/pap.1.md:10
-#: manpages/man1/rtmpqry.1.md:10 manpages/man3/atalk_aton.3.md:15
-#: manpages/man3/nbp_name.3.md:17 manpages/man4/atalk.4.md:11
-#: manpages/man5/afp_signature.conf.5.md:6
-#: manpages/man5/afp_voluuid.conf.5.md:6 manpages/man5/atalkd.conf.5.md:6
-#: manpages/man5/extmap.conf.5.md:6 manpages/man5/papd.conf.5.md:6
-#: manpages/man8/a2boot.8.md:12 manpages/man8/afpd.8.md:12
-#: manpages/man8/atalkd.8.md:12 manpages/man8/cnid_dbd.8.md:12
-#: manpages/man8/cnid_metad.8.md:12 manpages/man8/macipgw.8.md:12
-#: manpages/man8/netatalk.8.md:12 manpages/man8/papd.8.md:12
-#: manpages/man8/papstatus.8.md:10 manpages/man8/timelord.8.md:12
-#, fuzzy
-#| msgid "Description"
-msgid "# Description"
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afp_lantest.1.md:10
+#: manpages/man1/afp_logintest.1.md:9 manpages/man1/afp_spectest.1.md:10
+#: manpages/man1/afp_speedtest.1.md:10 manpages/man1/afparg.1.md:9
+#: manpages/man1/afpldaptest.1.md:11 manpages/man1/afppasswd.1.md:9
+#: manpages/man1/afpstats.1.md:9 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/fce_listen.1.md:9
+#: manpages/man1/getzones.1.md:9 manpages/man1/macusers.1.md:11
+#: manpages/man1/nbp.1.md:13 manpages/man1/pap.1.md:9
+#: manpages/man1/rtmpqry.1.md:9 manpages/man3/atalk_aton.3.md:14
+#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
+#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
 msgstr "説明"
 
-#. type: Plain text
-#: manpages/man1/addump.1.md:30 manpages/man1/aecho.1.md:41
-#: manpages/man1/afp_lantest.1.md:22 manpages/man1/afpldaptest.1.md:17
-#: manpages/man1/afppasswd.1.md:34 manpages/man1/asip-status.1.md:29
-#: manpages/man1/dbd.1.md:22 manpages/man1/getzones.1.md:17
-#: manpages/man1/macusers.1.md:16 manpages/man1/pap.1.md:30
-#: manpages/man1/rtmpqry.1.md:16 manpages/man8/a2boot.8.md:33
-#: manpages/man8/afpd.8.md:20 manpages/man8/atalkd.8.md:27
-#: manpages/man8/cnid_dbd.8.md:59 manpages/man8/cnid_metad.8.md:22
-#: manpages/man8/macipgw.8.md:39 manpages/man8/netatalk.8.md:27
-#: manpages/man8/papd.8.md:38 manpages/man8/papstatus.8.md:25
-#: manpages/man8/timelord.8.md:24
-#, fuzzy
-#| msgid "Options"
-msgid "# Options"
+#. type: Title #
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afp_lantest.1.md:21 manpages/man1/afp_logintest.1.md:15
+#: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
+#: manpages/man1/afparg.1.md:16 manpages/man1/afpldaptest.1.md:16
+#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
+#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
+#: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
+#: manpages/man8/atalkd.8.md:26 manpages/man8/cnid_dbd.8.md:58
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/macipgw.8.md:38
+#: manpages/man8/netatalk.8.md:26 manpages/man8/papd.8.md:37
+#: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:23
+#, no-wrap
+msgid "Options"
 msgstr "オプション"
 
-#. type: Plain text
-#: manpages/man1/addump.1.md:69 manpages/man1/aecho.1.md:47
-#: manpages/man1/afp_lantest.1.md:168 manpages/man1/afpldaptest.1.md:35
-#: manpages/man1/afppasswd.1.md:69 manpages/man1/afpstats.1.md:28
-#: manpages/man1/getzones.1.md:85 manpages/man1/macusers.1.md:26
-#: manpages/man1/pap.1.md:94 manpages/man1/rtmpqry.1.md:53
-#: manpages/man3/atalk_aton.3.md:25 manpages/man4/atalk.4.md:46
-#: manpages/man5/afp.conf.5.md:1349 manpages/man5/atalkd.conf.5.md:99
-#: manpages/man5/extmap.conf.5.md:29 manpages/man5/papd.conf.5.md:165
-#: manpages/man8/afpd.8.md:113 manpages/man8/atalkd.8.md:80
-#: manpages/man8/cnid_dbd.8.md:143 manpages/man8/cnid_metad.8.md:48
-#: manpages/man8/macipgw.8.md:99 manpages/man8/netatalk.8.md:58
-#: manpages/man8/papstatus.8.md:50
-#, fuzzy
-#| msgid "See Also"
-msgid "# See Also"
+#. type: Title #
+#: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
+#: manpages/man1/afp_lantest.1.md:242 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_spectest.1.md:236 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afparg.1.md:110 manpages/man1/afpldaptest.1.md:34
+#: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:27
+#: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
+#: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
+#: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
+#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1348
+#: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
+#: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
+#: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
+#: manpages/man8/cnid_metad.8.md:47 manpages/man8/macipgw.8.md:98
+#: manpages/man8/netatalk.8.md:57 manpages/man8/papstatus.8.md:49
+#, no-wrap
+msgid "See Also"
 msgstr "関連項目"
 
-#. type: Plain text
-#: manpages/man1/aecho.1.md:25 manpages/man1/afp_lantest.1.md:124
-#: manpages/man1/afppasswd.1.md:25 manpages/man1/afpstats.1.md:21
-#: manpages/man1/afptest.1.md:107 manpages/man1/asip-status.1.md:55
-#: manpages/man1/getzones.1.md:58 manpages/man1/nbp.1.md:63
-#: manpages/man1/rtmpqry.1.md:35 manpages/man3/nbp_name.3.md:27
-#: manpages/man5/afp_signature.conf.5.md:38
-#: manpages/man5/afp_voluuid.conf.5.md:28 manpages/man5/afp.conf.5.md:1303
-#: manpages/man5/atalkd.conf.5.md:81 manpages/man5/extmap.conf.5.md:19
-#: manpages/man5/papd.conf.5.md:92 manpages/man8/macipgw.8.md:79
-#, fuzzy
-#| msgid "Examples"
-msgid "# Examples"
+#. type: Title #
+#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:134
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:189
+#: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:71
+#: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:20
+#: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
+#: manpages/man1/getzones.1.md:57 manpages/man1/nbp.1.md:62
+#: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
+#: manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1302
+#: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
+#: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
+#, no-wrap
+msgid "Examples"
 msgstr "例"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:4
 msgid "afp_lantest — AFP LAN performance and directory cache testing tool"
 msgstr ""
+"afp_lantest – AFP LAN パフォーマンスおよびディレクトリキャッシュのテストツー"
+"ル"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:9
 #, no-wrap
 msgid ""
-"**afp_lantest** [-34567GgVvbC] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] \n"
+"**afp_lantest** [-34567GgVvbC] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]\n"
 "[-n *iterations*] [-f *tests*] [-F *bigfile*]\n"
 msgstr ""
 
@@ -151,10 +159,13 @@ msgstr ""
 #: manpages/man1/afp_lantest.1.md:15
 #, no-wrap
 msgid ""
-"**afp_lantest** is a comprehensive AFP (Apple Filing Protocol) performance testing tool designed to \n"
-"benchmark various aspects of AFP servers, with special focus on directory cache performance \n"
+"**afp_lantest** is a comprehensive AFP (Apple Filing Protocol) performance testing tool designed to\n"
+"benchmark various aspects of AFP servers, with special focus on directory cache performance\n"
 "improvements in netatalk.\n"
 msgstr ""
+"**afp_lantest** は、AFP (Apple Filing Protocol) サーバーの様々な側面をベンチマークするために\n"
+"設計された包括的な AFP パフォーマンステストツールである。\n"
+"特に netatalk におけるディレクトリキャッシュのパフォーマンス改善に重点を置いている。\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:20
@@ -165,376 +176,671 @@ msgid ""
 "of optimized directory cache validation and probabilistic validation "
 "features."
 msgstr ""
+"このツールは、ファイル操作、ディレクトリトラバーサル、キャッシュ効率を測定す"
+"る一連のテストを実行する。従来のファイルシステムベンチマークに加え、最適化さ"
+"れたディレクトリキャッシュ検証と確率的検証機能の利点を強調する、キャッシュに"
+"特化したテストも含まれている。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:25
+#: manpages/man1/afp_lantest.1.md:25 manpages/man1/afp_logintest.1.md:25
+#: manpages/man1/afp_spectest.1.md:28 manpages/man1/afp_speedtest.1.md:26
+#: manpages/man1/afparg.1.md:26
 #, no-wrap
 msgid ""
 "**-3**\n"
 ": Use AFP 3.0 protocol version\n"
 msgstr ""
+"**-3**\n"
+": AFP 3.0プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:28
+#: manpages/man1/afp_lantest.1.md:28 manpages/man1/afp_logintest.1.md:28
+#: manpages/man1/afp_spectest.1.md:31 manpages/man1/afp_speedtest.1.md:29
+#: manpages/man1/afparg.1.md:29
 #, no-wrap
 msgid ""
-"**-4** \n"
+"**-4**\n"
 ": Use AFP 3.1 protocol version\n"
 msgstr ""
+"**-4**\n"
+": AFP 3.1プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:31
+#: manpages/man1/afp_lantest.1.md:31 manpages/man1/afp_logintest.1.md:31
+#: manpages/man1/afp_spectest.1.md:34 manpages/man1/afp_speedtest.1.md:32
+#: manpages/man1/afparg.1.md:32
 #, no-wrap
 msgid ""
 "**-5**\n"
 ": Use AFP 3.2 protocol version\n"
 msgstr ""
+"**-5**\n"
+": AFP 3.2プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:34
+#: manpages/man1/afp_lantest.1.md:34 manpages/man1/afp_logintest.1.md:34
+#: manpages/man1/afp_spectest.1.md:37 manpages/man1/afp_speedtest.1.md:35
+#: manpages/man1/afparg.1.md:35
 #, no-wrap
 msgid ""
 "**-6**\n"
 ": Use AFP 3.3 protocol version\n"
 msgstr ""
+"**-6**\n"
+": AFP 3.3プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:37
+#: manpages/man1/afp_lantest.1.md:37 manpages/man1/afp_logintest.1.md:37
+#: manpages/man1/afp_spectest.1.md:40 manpages/man1/afp_speedtest.1.md:38
+#: manpages/man1/afparg.1.md:38
 #, no-wrap
 msgid ""
 "**-7**\n"
 ": Use AFP 3.4 protocol version (default)\n"
 msgstr ""
+"**-7**\n"
+": AFP 3.4プロトコルバージョンを使用する\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:40
 #, no-wrap
 msgid ""
-"**-h** *host*\n"
-": Server hostname or IP address (default: localhost)\n"
+"**-b**\n"
+": Debug mode\n"
 msgstr ""
+"**-b**\n"
+": デバッグモード\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:43
 #, no-wrap
 msgid ""
-"**-p** *port*\n"
-": Server port number (default: 548)\n"
+"**-C**\n"
+": Run cache-focused tests only (tests 9-12)\n"
 msgstr ""
+"**-C**\n"
+": キャッシュに重点を置いたテストのみを実行する（テスト9～12）\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:46
 #, no-wrap
 msgid ""
-"**-s** *volume*\n"
-": Volume name to mount for testing\n"
+"**-f** *tests*\n"
+": Specific tests to run, specified as digits (e.g., \"134\" runs tests 1, 3, and 4)\n"
 msgstr ""
+"**-f** *テスト*\n"
+": 実行する特定のテストを数字で指定する（例：「134」はテスト 1、3、4 を実行する）\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:49
 #, no-wrap
 msgid ""
-"**-u** *user*\n"
-": Username for authentication (default: current uid)\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:52
-#, fuzzy, no-wrap
-#| msgid "**-w** *password string*\n"
-msgid ""
-"**-w** *password*\n"
-": Password for authentication\n"
-msgstr "**-w** *パスワード文字列*\n"
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:55
-#, no-wrap
-msgid ""
-"**-n** *iterations*\n"
-": Number of test iterations to run (default: 1)\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:58
-#, no-wrap
-msgid ""
-"**-f** *tests*\n"
-": Specific tests to run, specified as digits (e.g., \"134\" runs tests 1, 3, and 4)\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:61
-#, no-wrap
-msgid ""
 "**-F** *bigfile*\n"
 ": Use existing file in volume root for read test (file size must match -g/-G options)\n"
 msgstr ""
+"**-F** *ビッグファイル*\n"
+": 読み取りテストにはボリュームのルート内の既存のファイルを使用する (ファイルサイズは -g/-G オプションと一致する必要がある)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:64
+#: manpages/man1/afp_lantest.1.md:52
 #, no-wrap
 msgid ""
 "**-g**\n"
 ": Optimize for gigabit networks (increases file test size to 1 GB)\n"
 msgstr ""
+"**-g**\n"
+": ギガビットネットワーク向けに最適化 (ファイルのテストサイズを1GBに増加)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:67
+#: manpages/man1/afp_lantest.1.md:55
 #, no-wrap
 msgid ""
 "**-G**\n"
 ": Optimize for 10-gigabit networks (increases file test size to 10 GB)\n"
 msgstr ""
+"**-G**\n"
+": 10ギガビットネットワーク向けに最適化 (ファイルのテストサイズが10GBに増加)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:70
+#: manpages/man1/afp_lantest.1.md:58 manpages/man1/afp_logintest.1.md:43
+#: manpages/man1/afp_spectest.1.md:58 manpages/man1/afp_speedtest.1.md:59
+#: manpages/man1/afparg.1.md:44
 #, no-wrap
 msgid ""
-"**-C**\n"
-": Run cache-focused tests only (tests 8-11)\n"
+"**-h** *host*\n"
+": Server hostname or IP address (default: localhost)\n"
 msgstr ""
+"**-h** *host*\n"
+": サーバーのホスト名またはIPアドレス（デフォルト: localhost）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:73
+#: manpages/man1/afp_lantest.1.md:61 manpages/man1/afp_speedtest.1.md:68
+#, no-wrap
+msgid ""
+"**-n** *iterations*\n"
+": Number of test iterations to run (default: 1)\n"
+msgstr ""
+"**-n** *回数*\n"
+": 実行するテスト反復回数（デフォルト: 1）\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:64 manpages/man1/afp_logintest.1.md:49
+#: manpages/man1/afp_spectest.1.md:73 manpages/man1/afp_speedtest.1.md:71
+#: manpages/man1/afparg.1.md:50
+#, no-wrap
+msgid ""
+"**-p** *port*\n"
+": Server port number (default: 548)\n"
+msgstr ""
+"**-p** *port*\n"
+": サーバーポート番号（デフォルト: 548）\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:67 manpages/man1/afp_spectest.1.md:76
+#: manpages/man1/afp_speedtest.1.md:83
+#, no-wrap
+msgid ""
+"**-s** *volume*\n"
+": Volume name to mount for testing\n"
+msgstr ""
+"**-s** *ボリューム名*\n"
+": テスト用にマウントするボリューム名\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:70 manpages/man1/afp_spectest.1.md:82
+#: manpages/man1/afp_speedtest.1.md:89
+#, no-wrap
+msgid ""
+"**-u** *user*\n"
+": Username for authentication (default: current uid)\n"
+msgstr ""
+"**-u** *ユーザー名*\n"
+": 認証用のユーザー名（デフォルト: 現在のuid）\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:73 manpages/man1/afp_logintest.1.md:55
+#: manpages/man1/afp_spectest.1.md:85 manpages/man1/afp_speedtest.1.md:92
+#: manpages/man1/afparg.1.md:56
 #, no-wrap
 msgid ""
 "**-v**\n"
 ": Verbose output\n"
 msgstr ""
+"**-v**\n"
+": 詳細出力\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:76
+#: manpages/man1/afp_lantest.1.md:76 manpages/man1/afp_logintest.1.md:58
+#: manpages/man1/afp_spectest.1.md:88 manpages/man1/afp_speedtest.1.md:95
+#: manpages/man1/afparg.1.md:59
 #, no-wrap
 msgid ""
 "**-V**\n"
 ": Very verbose output\n"
 msgstr ""
+"**-V**\n"
+": 超詳細出力\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:79
+#: manpages/man1/afp_lantest.1.md:79 manpages/man1/afp_logintest.1.md:61
+#: manpages/man1/afp_spectest.1.md:91 manpages/man1/afp_speedtest.1.md:98
+#: manpages/man1/afparg.1.md:62
 #, no-wrap
 msgid ""
-"**-b**\n"
-": Debug mode\n"
+"**-w** *password*\n"
+": Password for authentication\n"
+msgstr ""
+"**-w** *パスワード文字列*\n"
+": 認証用のパスワード\n"
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:80 manpages/man1/afp_speedtest.1.md:102
+#: manpages/man1/afparg.1.md:63 manpages/man8/cnid_dbd.8.md:64
+#: manual/Configuration.md:587
+#, no-wrap
+msgid "Configuration"
+msgstr "設定"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:84 manpages/man1/afp_speedtest.1.md:106
+#: manpages/man1/afparg.1.md:67
+msgid ""
+"The test runner AFP client only supports the ClearTxt UAM currently.  "
+"Configure the UAM in netatalk's afp.conf:"
+msgstr ""
+"テストランナーの AFP クライアントは現在 ClearTxt UAM のみをサポートしている。"
+"netatalk の afp.conf で UAM を設定する。"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:87 manpages/man1/afp_speedtest.1.md:109
+#: manpages/man1/afparg.1.md:70
+#, no-wrap
+msgid ""
+"    [Global]\n"
+"    uam list = uams_clrtxt.so\n"
 msgstr ""
 
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:81
-#, fuzzy
-#| msgid "Available Commands"
-msgid "# Available Tests"
-msgstr "有効なコマンド"
+#. type: Title #
+#: manpages/man1/afp_lantest.1.md:88
+#, no-wrap
+msgid "Available Tests"
+msgstr "利用可能なテスト"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:83
-#, fuzzy
-#| msgid "The following FCE events are defined:"
+#: manpages/man1/afp_lantest.1.md:91
 msgid "The following tests are available:"
-msgstr "以下の FCE イベントが定義されている:"
+msgstr "以下のテストが利用可能"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:86
+#: manpages/man1/afp_lantest.1.md:94
 #, no-wrap
 msgid ""
 "**(1) Opening, stating and reading 512 bytes from 1000 files**\n"
 ": Tests basic file access patterns with many small operations\n"
 msgstr ""
+"**(1) 1000個のファイルを開き、512バイトを読み出す**\n"
+": 多数の小さな操作を伴う基本的なファイルアクセスパターンをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:89
+#: manpages/man1/afp_lantest.1.md:97
 #, no-wrap
 msgid ""
 "**(2) Writing one large file**\n"
 ": Measures sustained write performance\n"
 msgstr ""
+"**(2) 1つの大きなファイルを書き込む**\n"
+": 持続的な書き込みパフォーマンスを測定する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:92
+#: manpages/man1/afp_lantest.1.md:100
 #, no-wrap
 msgid ""
-"**(3) Reading one large file**  \n"
+"**(3) Reading one large file**\n"
 ": Measures sustained read performance\n"
 msgstr ""
+"**(3) 1つの大きなファイルを読み取る**\n"
+": 持続的な読み取りパフォーマンスを測定する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:95
+#: manpages/man1/afp_lantest.1.md:103
 #, no-wrap
 msgid ""
 "**(4) Locking/Unlocking 10000 times each**\n"
 ": Tests file locking performance\n"
 msgstr ""
+"**(4) ロック/ロック解除をそれぞれ10000回行う**\n"
+": ファイルのロックパフォーマンスをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:98
+#: manpages/man1/afp_lantest.1.md:106
 #, no-wrap
 msgid ""
 "**(5) Creating dir with 2000 files**\n"
 ": Tests directory creation and file creation performance\n"
 msgstr ""
+"**(5) 2000個のファイルを含むディレクトリを作成する**\n"
+": ディレクトリ作成とファイル作成のパフォーマンスをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:101
+#: manpages/man1/afp_lantest.1.md:109
 #, no-wrap
 msgid ""
 "**(6) Enumerate dir with 2000 files**\n"
 ": Tests directory enumeration with many files\n"
 msgstr ""
+"**(6) 2000個のファイルを含むディレクトリを列挙する**\n"
+": 多数のファイルを含むディレクトリ列挙をテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:104
+#: manpages/man1/afp_lantest.1.md:112
 #, no-wrap
 msgid ""
-"**(7) Create directory tree with 10^3 dirs**\n"
+"**(7) Deleting dir with 2000 files**\n"
+": Tests directory and file deletion performance\n"
+msgstr ""
+"**(7) 2000個のファイルを含むディレクトリを削除する**\n"
+": ディレクトリとファイルの削除のパフォーマンスをテストする\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:115
+#, no-wrap
+msgid ""
+"**(8) Create directory tree with 1000 dirs**\n"
 ": Tests nested directory creation\n"
 msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:107
-#, no-wrap
-msgid ""
-"**(8) Directory cache hits [CACHE]**\n"
-": Tests directory and file lookup performance (1000 dirs + 10000 files)\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:110
-#, no-wrap
-msgid ""
-"**(9) Mixed cache operations [CACHE]**\n"
-": Tests mixed create/stat/enum/delete operations\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:113
-#, no-wrap
-msgid ""
-"**(10) Deep path traversal [CACHE]**\n"
-": Tests performance with deep directory structures  \n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:116
-#, no-wrap
-msgid ""
-"**(11) Cache validation [CACHE]**\n"
-": Tests directory cache validation mechanisms\n"
-msgstr ""
+"**(8) 1000個のディレクトリを含むディレクトリツリーを作成する**\n"
+": ネストされたディレクトリの作成をテストする\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:118
-msgid "## Cache-Focused Tests"
+#, no-wrap
+msgid ""
+"**(9) Directory cache hits [CACHE]**\n"
+": Tests directory and file lookup performance (1000 dirs + 10000 files)\n"
 msgstr ""
+"**(9) ディレクトリキャッシュヒット [CACHE]**\n"
+": ディレクトリとファイルの検索パフォーマンスをテストする。 (1000ディレクトリ + 10000ファイル)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:122
+#: manpages/man1/afp_lantest.1.md:121
+#, no-wrap
 msgid ""
-"Tests 8-11 are specifically designed to highlight directory cache "
+"**(10) Mixed cache operations [CACHE]**\n"
+": Tests mixed create/stat/enum/delete operations\n"
+msgstr ""
+"**(10) 混合キャッシュ操作 [CACHE]**\n"
+": create/stat/enum/delete の各操作をテストする\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:124
+#, no-wrap
+msgid ""
+"**(11) Deep path traversal [CACHE]**\n"
+": Tests performance with deep directory structures\n"
+msgstr ""
+"**(11) ディープパストラバーサル [CACHE]**\n"
+": 深いディレクトリ構造でのパフォーマンスをテストする\n"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:127
+#, no-wrap
+msgid ""
+"**(12) Cache validation [CACHE]**\n"
+": Tests directory cache validation mechanisms\n"
+msgstr ""
+"**(12) キャッシュ検証 [CACHE]**\n"
+": ディレクトリキャッシュの検証メカニズムをテストする\n"
+
+#. type: Title ##
+#: manpages/man1/afp_lantest.1.md:128
+#, no-wrap
+msgid "Cache-Focused Tests"
+msgstr "キャッシュ重視のテスト"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:133
+msgid ""
+"Tests 9-12 are specifically designed to highlight directory cache "
 "performance improvements in netatalk. These tests benefit significantly from "
 "optimized cache validation and probabilistic validation features. Use the **-"
 "C** option to run only these cache-focused tests."
 msgstr ""
+"テスト9～12は、netatalkにおけるディレクトリキャッシュのパフォーマンス向上に焦"
+"点を当てて設計されている。これらのテストは、最適化されたキャッシュ検証機能と"
+"確率的検証機能の恩恵を大きく受けている。これらのキャッシュ重視のテストのみを"
+"実行するには、**-C** オプションを使用してください。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:129
-msgid ""
-"Run all tests with default settings: ``` afp_lantest -h server.example.com "
-"-u testuser -w password -s TestVolume ```"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:134
-msgid ""
-"Run only cache-focused tests: ``` afp_lantest -C -h server.example.com -u "
-"testuser -w password -s TestVolume ```"
-msgstr ""
+#: manpages/man1/afp_lantest.1.md:137
+msgid "Run all tests with default settings:"
+msgstr "すべてのテストをデフォルト設定で実行する"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:139
-msgid ""
-"Run specific tests (file operations): ``` afp_lantest -f 123 -h "
-"server.example.com -u testuser -w password -s TestVolume ```"
+#, no-wrap
+msgid "    afp_lantest -h server.example.com -u testuser -w password -s TestVolume\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:144
-msgid ""
-"Run tests optimized for gigabit network: ``` afp_lantest -g -h "
-"server.example.com -u testuser -w password -s TestVolume ```"
+#: manpages/man1/afp_lantest.1.md:141
+msgid "Run only cache-focused tests:"
+msgstr "キャッシュに重点を置いたテストのみを実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:143
+#, no-wrap
+msgid "    afp_lantest -C -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:145
+msgid "Run specific tests (file operations):"
+msgstr "特定のテストを実行する（ファイル操作）"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:147
+#, no-wrap
+msgid "    afp_lantest -f 123 -h server.example.com -u testuser -w password -s TestVolume\n"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:149
-msgid ""
-"Run multiple iterations for statistical analysis: ``` afp_lantest -n 5 -h "
-"server.example.com -u testuser -w password -s TestVolume ```"
-msgstr ""
+msgid "Run tests optimized for gigabit network:"
+msgstr "ギガビットネットワークに最適化されたテストを実行する"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:151
-#, fuzzy
-#| msgid "Return codes"
-msgid "# Return Codes"
+#, no-wrap
+msgid "    afp_lantest -g -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:153
+msgid "Run multiple iterations for statistical analysis:"
+msgstr "統計分析のために複数の反復を実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:155
+#, no-wrap
+msgid "    afp_lantest -n 5 -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:157
+msgid "Run the afp_lantest benchmark using AFP 3.4."
+msgstr "AFP 3.4 を使用して afp_lantest ベンチマークを実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:183
+#, no-wrap
+msgid ""
+"    % afp_lantest -7 -h localhost -p 548 -u test -w test -s \"File Sharing\" -n 2\n"
+"    Run 0 => Opening, stating and reading 512 bytes from 1000 files   3237 ms\n"
+"    Run 0 => Writing one large file                                    146 ms for 100 MB (avg. 718 MB/s)\n"
+"    Run 0 => Reading one large file                                     36 ms for 100 MB (avg. 2912 MB/s)\n"
+"    Run 0 => Locking/Unlocking 10000 times each                        772 ms\n"
+"    Run 0 => Creating dir with 2000 files                             3615 ms\n"
+"    Run 0 => Enumerate dir with 2000 files                             755 ms\n"
+"    Run 0 => Deleting dir with 2000 files                             1245 ms\n"
+"    Run 0 => Create directory tree with 10^3 dirs                     1724 ms\n"
+"    Run 0 => Directory cache hits (1000 dir + 10000 file lookups)     3056 ms\n"
+"    Run 0 => Mixed cache operations (create/stat/enum/delete)          484 ms\n"
+"    Run 0 => Deep path traversal (nested directory navigation)         377 ms\n"
+"    Run 0 => Cache validation efficiency (metadata changes)           8822 ms\n"
+"    Run 1 => Opening, stating and reading 512 bytes from 1000 files   3448 ms\n"
+"    Run 1 => Writing one large file                                     79 ms for 100 MB (avg. 1327 MB/s)\n"
+"    Run 1 => Reading one large file                                     37 ms for 100 MB (avg. 2833 MB/s)\n"
+"    Run 1 => Locking/Unlocking 10000 times each                        779 ms\n"
+"    Run 1 => Creating dir with 2000 files                             3731 ms\n"
+"    Run 1 => Enumerate dir with 2000 files                             587 ms\n"
+"    Run 1 => Deleting dir with 2000 files                             1156 ms\n"
+"    Run 1 => Create directory tree with 10^3 dirs                     1802 ms\n"
+"    Run 1 => Directory cache hits (1000 dir + 10000 file lookups)     3006 ms\n"
+"    Run 1 => Mixed cache operations (create/stat/enum/delete)          463 ms\n"
+"    Run 1 => Deep path traversal (nested directory navigation)         247 ms\n"
+"    Run 1 => Cache validation efficiency (metadata changes)           8565 ms\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:186
+#, no-wrap
+msgid ""
+"    Netatalk Lantest Results (average times across 2 iterations)\n"
+"    ===================================\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:189
+#, no-wrap
+msgid ""
+"    Test 1: Opening, stating and reading 512 bytes from 1000 files\n"
+"     Average:   3342 ms ± 149.2 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:193
+#, no-wrap
+msgid ""
+"    Test 2: Writing one large file\n"
+"     Average:    112 ms ± 47.4 ms (std dev)\n"
+"     Throughput: 936 MB/s (Write, 100 MB file)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:197
+#, no-wrap
+msgid ""
+"    Test 3: Reading one large file\n"
+"     Average:     36 ms ± 1.0 ms (std dev)\n"
+"     Throughput: 2912 MB/s (Read, 100 MB file)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:200
+#, no-wrap
+msgid ""
+"    Test 4: Locking/Unlocking 10000 times each\n"
+"     Average:    775 ms ± 5.0 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:203
+#, no-wrap
+msgid ""
+"    Test 5: Creating dir with 2000 files\n"
+"     Average:   3673 ms ± 82.0 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:206
+#, no-wrap
+msgid ""
+"    Test 6: Enumerate dir with 2000 files\n"
+"     Average:    671 ms ± 118.8 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:209
+#, no-wrap
+msgid ""
+"    Test 7: Deleting dir with 2000 files\n"
+"     Average:   1200 ms ± 62.9 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:212
+#, no-wrap
+msgid ""
+"    Test 8: Create directory tree with 1000 dirs\n"
+"     Average:   1763 ms ± 55.2 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:215
+#, no-wrap
+msgid ""
+"    Test 9: Directory cache hits (1000 dir + 10000 file lookups)\n"
+"     Average:   3031 ms ± 35.4 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:218
+#, no-wrap
+msgid ""
+"    Test 10: Mixed cache operations (create/stat/enum/delete)\n"
+"     Average:    473 ms ± 14.9 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:221
+#, no-wrap
+msgid ""
+"    Test 11: Deep path traversal (nested directory navigation)\n"
+"     Average:    312 ms ± 91.9 ms (std dev)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:224
+#, no-wrap
+msgid ""
+"    Test 12: Cache validation efficiency (metadata changes)\n"
+"     Average:   8693 ms ± 181.7 ms (std dev)\n"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/afp_lantest.1.md:225
+#, no-wrap
+msgid "Return Codes"
 msgstr "復帰コード"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:154
+#: manpages/man1/afp_lantest.1.md:229
 #, no-wrap
 msgid ""
 "**0**\n"
 ": All tests passed successfully\n"
 msgstr ""
+"**0**\n"
+": すべてのテストは成功した\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:157
+#: manpages/man1/afp_lantest.1.md:232
 #, no-wrap
 msgid ""
-"**1** \n"
+"**1**\n"
 ": One or more tests failed\n"
 msgstr ""
+"**1**\n"
+": 1つ以上のテストが失敗した\n"
 
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:159
-#, fuzzy
-#| msgid "Note"
-msgid "# Notes"
+#. type: Title #
+#: manpages/man1/afp_lantest.1.md:233
+#, no-wrap
+msgid "Notes"
 msgstr "注記"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:166
+#: manpages/man1/afp_lantest.1.md:241
 msgid ""
 "Tests that involve large file operations (tests 2 and 3) will create "
 "temporary files in the test volume"
 msgstr ""
+"大容量ファイル操作を伴うテスト（テスト2および3）では、テストボリュームに一時"
+"ファイルが作成される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:166
+#: manpages/man1/afp_lantest.1.md:241
 msgid ""
 "The **-g** and **-G** options significantly increase test file sizes and "
 "test duration"
 msgstr ""
+"**-g** および **-G** オプションは、テストファイルのサイズとテスト時間を大幅に"
+"増加させる。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:166
+#: manpages/man1/afp_lantest.1.md:241
 msgid ""
 "Cache-focused tests (8-11) provide the most insight into netatalk's "
 "directory cache performance"
 msgstr ""
+"キャッシュに重点を置いたテスト（8～11）は、netatalk のディレクトリキャッシュ"
+"のパフォーマンスに関する最も詳細な情報を提供する。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:166
+#: manpages/man1/afp_lantest.1.md:241
 msgid ""
 "Multiple iterations (**-n**) are recommended for consistent performance "
 "measurements"
-msgstr ""
+msgstr "一貫したパフォーマンス測定には、複数回の反復（**-n**）が推奨される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:166
+#: manpages/man1/afp_lantest.1.md:241
 msgid "The tool requires write access to the specified AFP volume"
 msgstr ""
+"このツールは、指定された AFP ボリュームへの書き込みアクセスを必要とする。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:169
+#: manpages/man1/afp_lantest.1.md:244
 #, no-wrap
-msgid "**afptest**(1), **afpd**(8), **netatalk**(8)\n"
+msgid "**afp_speedtest**(1), **afpd**(8), **netatalk**(8)\n"
 msgstr ""

@@ -1,6 +1,6 @@
 # Name
 
-afp_spectest — AFP specification compilance test suite
+afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
