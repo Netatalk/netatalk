@@ -1,5 +1,4 @@
 #include "specs.h"
-#include <dlfcn.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -776,29 +775,6 @@ static int getfd(CONN *conn, int fork)
     return dsi->socket;
 }
 
-#if 0
-/* ------------------ */
-static int blocking_mode(CONN *conn, int fork, const int mode)
-{
-    DSI *dsi;
-    int adr = mode;
-    int ret;
-
-    if (Local) {
-        if (mode) {
-            adr = O_NONBLOCK;
-        }
-
-        ret = fcntl(fork, F_SETFL, adr);
-    } else {
-        dsi = &Conn->dsi;
-        ret = ioctl(dsi->socket, FIONBIO, &adr);
-    }
-
-    return ret;
-}
-#endif
-
 /* ------------------ */
 void Copy(void)
 {
@@ -827,7 +803,7 @@ void Copy(void)
     int max = Request;
     int cnt = 0;
     dsi = &Conn->dsi;
-    fprintf(stdout, "Copy qantum %ld, size %ld %s\n", Quantum, Size,
+    fprintf(stdout, "Copy quantum %ld, size %ld %s\n", Quantum, Size,
             Sparse ? "sparse file" : "");
     header();
     sprintf(temp, "CopyTest-%d", id);
@@ -1067,6 +1043,7 @@ fin:
         test_failed();
     }
 
+    fprintf(stdout, "\n");
     return;
 }
 
@@ -1081,7 +1058,7 @@ void ServerCopy(void)
     int vol = VolID;
     int vol2 = VolID2;
     int i;
-    fprintf(stdout, "ServerCopy qantum %ld, size %ld %s\n", Quantum, Size,
+    fprintf(stdout, "ServerCopy quantum %ld, size %ld %s\n", Quantum, Size,
             Sparse ? "sparse file" : "");
     header();
     sprintf(temp, "ServerCopyTest-%d", id);
@@ -1185,6 +1162,7 @@ fin:
         test_failed();
     }
 
+    fprintf(stdout, "\n");
     return;
 }
 
@@ -1205,7 +1183,7 @@ void Read(void)
     DSI *dsi;
     int i;
     int push;
-    fprintf(stdout, "Read qantum %ld, size %ld %s\n", Quantum, Size,
+    fprintf(stdout, "Read quantum %ld, size %ld %s\n", Quantum, Size,
             Sparse ? "sparse file" : "");
     header();
 
@@ -1346,74 +1324,31 @@ fin:
         test_failed();
     }
 
+    fprintf(stdout, "\n");
     return;
 }
 
-#define BROKEN_DL
-#ifdef BROKEN_DL
-int test_to_run(char *s)
-{
-    if (!strcmp("Write", s)) {
-        return 0;
-    }
 
-    if (!strcmp("Read", s)) {
-        return 1;
-    }
-
-    if (!strcmp("Copy", s)) {
-        return 2;
-    }
-
-    if (!strcmp("ServerCopy", s)) {
-        return 3;
-    }
-
-    return -1;
-}
-#endif
 
 /* ----------- */
+
+struct test_entry {
+    const char *name;
+    void (*fn)(void);
+};
+
+static struct test_entry test_table[] = {
+    { "Read", Read },
+    { "Write", Write },
+    { "Copy", Copy },
+    { "ServerCopy", ServerCopy },
+    { NULL, NULL }
+};
+
 static void run_one(char *name)
 {
     char *token;
-    char *tp = strdup(name);
-#ifdef BROKEN_DL
-    int  fn;
-#else
-    char *error;
-    void *handle = NULL;
-    void (*fn)(void) = NULL;
-#endif
-    token = strtok(tp, ",");
-    free(tp);
-#ifdef BROKEN_DL
-    fn = test_to_run(token);
-
-    if (fn == -1) {
-        test_nottested();
-        return;
-    }
-
-#else
-    handle = dlopen(NULL, RTLD_LAZY);
-
-    if (handle) {
-        fn = dlsym(handle, token);
-
-        if ((error = dlerror()) != NULL)  {
-            fprintf(stdout, "%s\n", error);
-        }
-    } else {
-        fprintf(stdout, "%s\n", dlerror());
-    }
-
-    if (!handle || !fn) {
-        test_nottested();
-        return;
-    }
-
-#endif
+    char *tp;
     dsi = &Conn->dsi;
     press_enter("Opening volume.");
     VolID = VFS.openvol(Conn, Vol);
@@ -1455,63 +1390,39 @@ static void run_one(char *name)
         return;
     }
 
-    /* loop */
+    tp = strdup(name);
+
+    if (!Quiet) {
+        fprintf(stdout, "Running test(s): %s\n", tp);
+    }
+
+    token = strtok(tp, ",");
+
     while (token) {
+        if (!Quiet) {
+            fprintf(stdout, "Running test: %s\n", token);
+        }
+
         press_enter(token);
-#ifdef BROKEN_DL
+        int found = 0;
 
-        switch (fn) {
-        case 0:
-            Write();
-            break;
-
-        case 1:
-            Read();
-            break;
-
-        case 2:
-            Copy();
-            break;
-
-        case 3:
-            ServerCopy();
-            break;
+        for (int i = 0; test_table[i].name; i++) {
+            if (!strcmp(test_table[i].name, token)) {
+                test_table[i].fn();
+                found = 1;
+                break;
+            }
         }
 
-#else
-        (*fn)();
-#endif
+        if (!found) {
+            fprintf(stderr, "Unknown test: %s\n", token);
+            test_nottested();
+        }
+
         token = strtok(NULL, ",");
-#ifdef BROKEN_DL
-
-        if (token) {
-            fn = test_to_run(token);
-
-            if (fn == -1) {
-                fprintf(stdout, "%s undefined test\n", token);
-            }
-        }
-
-#else
-
-        if (token && handle) {
-            fn = dlsym(handle, token);
-
-            if ((error = dlerror()) != NULL)  {
-                fprintf(stdout, "%s\n", error);
-            }
-        }
-
-#endif
     }
 
-#ifndef BROKEN_DL
-
-    if (handle) {
-        dlclose(handle);
-    }
-
-#endif
+    free(tp);
     VFS.closevol(Conn, VolID);
 
     if (*Vol2) {
@@ -1554,7 +1465,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-v\tverbose (default no)\n");
     fprintf(stdout, "\t-V\tvery verbose (default no)\n");
     fprintf(stdout,
-            "\t-f\ttest to run (Read, Write, Copy, ServerCopy, default Write)  \n");
+            "\t-f\ttest(s) to run, comma-separated list (Read,Write,Copy,ServerCopy - default Write)  \n");
     fprintf(stdout,
             "\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
     exit(1);
