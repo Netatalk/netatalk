@@ -19,6 +19,9 @@ Changes in 4.3.0
 * UPD: meson: Build and run netatalk without Berkeley DB, GitHub #2265
 * NEW: webmin: Create page for scanning and rebuilding CNID database, GitHub #2259
 * NEW: testsuite: Test ProDOS Info Bit in FPGetFileDirParams, GitHub #2256
+* NEW: testsuite: Add caching performance tests to afp_lantest, GitHub #2322
+* FIX: testsuite: The ability to run test batches in afp_speedtest, GitHub #2332
+* NEW: docs: Create separate man pages for each afptest tool, GitHub #2331
 * FIX: Beautify C and meson code with astyle / muon, GitHub #2152
 * FIX: Introduce Markdown style guide and reformat all sources, GitHub #2180
 * FIX: Reformat Perl source code with perltidy, GitHub #2201
