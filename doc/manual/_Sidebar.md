@@ -28,7 +28,8 @@ User Tools
 * [fce_listen](fce_listen.1.html)
 * [getzones](getzones.1.html)
 * [macusers](macusers.1.html)
-* [nbp](nbp.1.html)
+* [nbplkup](nbplkup.1.html)
+* [nbprgstr](nbprgstr.1.html)
 * [pap](pap.1.html)
 * [rtmpqry](rtmpqry.1.html)
 

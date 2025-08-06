@@ -14,10 +14,13 @@ if have_appletalk
     manfiles += [
         'aecho',
         'getzones',
-        'nbp',
+        'nbplkup',
+        'nbprgstr',
         'pap',
         'rtmpqry',
     ]
+
+    install_data(['nbp.1', 'nbpunrgstr.1'], install_dir: mandir / 'man1')
 endif
 
 if get_option('with-testsuite')
@@ -28,6 +31,8 @@ if get_option('with-testsuite')
         'afp_speedtest',
         'afparg',
     ]
+
+    install_data('afptest.1', install_dir: mandir / 'man1')
 endif
 
 foreach man : manfiles
@@ -49,20 +54,6 @@ foreach man : manfiles
         build_by_default: true,
     )
 endforeach
-
-install_data('afptest.1', install_dir: mandir / 'man1')
-
-if have_appletalk
-    nbp_staticmans = [
-        'nbplkup.1',
-        'nbprgstr.1',
-        'nbpunrgstr.1',
-    ]
-
-    foreach man : nbp_staticmans
-        install_data('nbp.1', rename: man, install_dir: mandir / 'man1')
-    endforeach
-endif
 
 if get_option('with-website')
     foreach page : manfiles
