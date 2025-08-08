@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.0\n"
-"POT-Creation-Date: 2025-08-05 13:58+0200\n"
+"POT-Creation-Date: 2025-08-13 22:14+1000\n"
 "PO-Revision-Date: 2025-08-04 14:22+1000\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -25,10 +25,10 @@ msgstr ""
 #: manpages/man1/afpstats.1.md:1 manpages/man1/asip-status.1.md:1
 #: manpages/man1/dbd.1.md:1 manpages/man1/fce_listen.1.md:1
 #: manpages/man1/getzones.1.md:1 manpages/man1/macusers.1.md:1
-#: manpages/man1/nbp.1.md:1 manpages/man1/pap.1.md:1
-#: manpages/man1/rtmpqry.1.md:1 manpages/man3/atalk_aton.3.md:1
-#: manpages/man3/nbp_name.3.md:1 manpages/man4/atalk.4.md:1
-#: manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man1/nbplkup.1.md:1 manpages/man1/nbprgstr.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man1/rtmpqry.1.md:1
+#: manpages/man3/atalk_aton.3.md:1 manpages/man3/nbp_name.3.md:1
+#: manpages/man4/atalk.4.md:1 manpages/man5/afp_signature.conf.5.md:1
 #: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
 #: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
 #: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
@@ -37,7 +37,7 @@ msgstr ""
 #: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
 #: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
 #: manpages/man8/timelord.8.md:1
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Name"
 msgstr "名前"
 
@@ -50,16 +50,16 @@ msgstr "名前"
 #: manpages/man1/afpstats.1.md:5 manpages/man1/asip-status.1.md:5
 #: manpages/man1/dbd.1.md:5 manpages/man1/fce_listen.1.md:5
 #: manpages/man1/getzones.1.md:5 manpages/man1/macusers.1.md:5
-#: manpages/man1/nbp.1.md:5 manpages/man1/pap.1.md:5
-#: manpages/man1/rtmpqry.1.md:5 manpages/man3/atalk_aton.3.md:5
-#: manpages/man3/nbp_name.3.md:5 manpages/man4/atalk.4.md:5
-#: manpages/man5/afp.conf.5.md:5 manpages/man8/a2boot.8.md:5
-#: manpages/man8/afpd.8.md:5 manpages/man8/atalkd.8.md:5
-#: manpages/man8/cnid_dbd.8.md:5 manpages/man8/cnid_metad.8.md:5
-#: manpages/man8/macipgw.8.md:5 manpages/man8/netatalk.8.md:5
-#: manpages/man8/papd.8.md:5 manpages/man8/papstatus.8.md:5
-#: manpages/man8/timelord.8.md:5
-#, no-wrap
+#: manpages/man1/nbplkup.1.md:5 manpages/man1/nbprgstr.1.md:5
+#: manpages/man1/pap.1.md:5 manpages/man1/rtmpqry.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, fuzzy, no-wrap
 msgid "Synopsis"
 msgstr "概要"
 
@@ -72,10 +72,10 @@ msgstr "概要"
 #: manpages/man1/afpstats.1.md:9 manpages/man1/asip-status.1.md:13
 #: manpages/man1/dbd.1.md:11 manpages/man1/fce_listen.1.md:9
 #: manpages/man1/getzones.1.md:9 manpages/man1/macusers.1.md:11
-#: manpages/man1/nbp.1.md:13 manpages/man1/pap.1.md:9
-#: manpages/man1/rtmpqry.1.md:9 manpages/man3/atalk_aton.3.md:14
-#: manpages/man3/nbp_name.3.md:16 manpages/man4/atalk.4.md:10
-#: manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man1/nbplkup.1.md:9 manpages/man1/nbprgstr.1.md:11
+#: manpages/man1/pap.1.md:9 manpages/man1/rtmpqry.1.md:9
+#: manpages/man3/atalk_aton.3.md:14 manpages/man3/nbp_name.3.md:16
+#: manpages/man4/atalk.4.md:10 manpages/man5/afp_signature.conf.5.md:5
 #: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
 #: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
 #: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
@@ -83,31 +83,32 @@ msgstr "概要"
 #: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
 #: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
 #: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Description"
 msgstr "説明"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
-#: manpages/man1/afp_lantest.1.md:21 manpages/man1/afp_logintest.1.md:15
+#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
 #: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
 #: manpages/man1/afparg.1.md:16 manpages/man1/afpldaptest.1.md:16
 #: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
 #: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
 #: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
 #: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
 #: manpages/man8/atalkd.8.md:26 manpages/man8/cnid_dbd.8.md:58
 #: manpages/man8/cnid_metad.8.md:21 manpages/man8/macipgw.8.md:38
 #: manpages/man8/netatalk.8.md:26 manpages/man8/papd.8.md:37
 #: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:23
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Options"
-msgstr "オプション"
+msgstr "オプション:"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:242 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_lantest.1.md:453 manpages/man1/afp_logintest.1.md:84
 #: manpages/man1/afp_spectest.1.md:236 manpages/man1/afp_speedtest.1.md:147
 #: manpages/man1/afparg.1.md:110 manpages/man1/afpldaptest.1.md:34
 #: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:27
@@ -120,23 +121,23 @@ msgstr "オプション"
 #: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
 #: manpages/man8/cnid_metad.8.md:47 manpages/man8/macipgw.8.md:98
 #: manpages/man8/netatalk.8.md:57 manpages/man8/papstatus.8.md:49
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "See Also"
 msgstr "関連項目"
 
 #. type: Title #
-#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:134
+#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:325
 #: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:189
 #: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:71
 #: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:20
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
-#: manpages/man1/getzones.1.md:57 manpages/man1/nbp.1.md:62
-#: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
-#: manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man1/getzones.1.md:57 manpages/man1/nbplkup.1.md:74
+#: manpages/man1/nbprgstr.1.md:40 manpages/man1/rtmpqry.1.md:34
+#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
 #: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1302
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Examples"
 msgstr "例"
 
@@ -151,24 +152,27 @@ msgstr ""
 #: manpages/man1/afp_lantest.1.md:9
 #, no-wrap
 msgid ""
-"**afp_lantest** [-34567GgVvbC] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]\n"
+"**afp_lantest** [-34567GgVvbcC] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]\n"
 "[-n *iterations*] [-f *tests*] [-F *bigfile*]\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:15
-#, no-wrap
+#: manpages/man1/afp_lantest.1.md:14
+#, fuzzy, no-wrap
+#| msgid ""
+#| "**afp_lantest** is a comprehensive AFP (Apple Filing Protocol) performance testing tool designed to\n"
+#| "benchmark various aspects of AFP servers, with special focus on directory cache performance\n"
+#| "improvements in netatalk.\n"
 msgid ""
 "**afp_lantest** is a comprehensive AFP (Apple Filing Protocol) performance testing tool designed to\n"
-"benchmark various aspects of AFP servers, with special focus on directory cache performance\n"
-"improvements in netatalk.\n"
+"benchmark various aspects of AFP servers, including directory cache performance in netatalk.\n"
 msgstr ""
 "**afp_lantest** は、AFP (Apple Filing Protocol) サーバーの様々な側面をベンチマークするために\n"
 "設計された包括的な AFP パフォーマンステストツールである。\n"
 "特に netatalk におけるディレクトリキャッシュのパフォーマンス改善に重点を置いている。\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:20
+#: manpages/man1/afp_lantest.1.md:19
 msgid ""
 "The tool runs a series of tests that measure file operations, directory "
 "traversal, and caching efficiency. It includes both traditional file system "
@@ -182,7 +186,7 @@ msgstr ""
 "特化したテストも含まれている。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:25 manpages/man1/afp_logintest.1.md:25
+#: manpages/man1/afp_lantest.1.md:24 manpages/man1/afp_logintest.1.md:25
 #: manpages/man1/afp_spectest.1.md:28 manpages/man1/afp_speedtest.1.md:26
 #: manpages/man1/afparg.1.md:26
 #, no-wrap
@@ -194,7 +198,7 @@ msgstr ""
 ": AFP 3.0プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:28 manpages/man1/afp_logintest.1.md:28
+#: manpages/man1/afp_lantest.1.md:27 manpages/man1/afp_logintest.1.md:28
 #: manpages/man1/afp_spectest.1.md:31 manpages/man1/afp_speedtest.1.md:29
 #: manpages/man1/afparg.1.md:29
 #, no-wrap
@@ -206,7 +210,7 @@ msgstr ""
 ": AFP 3.1プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:31 manpages/man1/afp_logintest.1.md:31
+#: manpages/man1/afp_lantest.1.md:30 manpages/man1/afp_logintest.1.md:31
 #: manpages/man1/afp_spectest.1.md:34 manpages/man1/afp_speedtest.1.md:32
 #: manpages/man1/afparg.1.md:32
 #, no-wrap
@@ -218,7 +222,7 @@ msgstr ""
 ": AFP 3.2プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:34 manpages/man1/afp_logintest.1.md:34
+#: manpages/man1/afp_lantest.1.md:33 manpages/man1/afp_logintest.1.md:34
 #: manpages/man1/afp_spectest.1.md:37 manpages/man1/afp_speedtest.1.md:35
 #: manpages/man1/afparg.1.md:35
 #, no-wrap
@@ -230,7 +234,7 @@ msgstr ""
 ": AFP 3.3プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:37 manpages/man1/afp_logintest.1.md:37
+#: manpages/man1/afp_lantest.1.md:36 manpages/man1/afp_logintest.1.md:37
 #: manpages/man1/afp_spectest.1.md:40 manpages/man1/afp_speedtest.1.md:38
 #: manpages/man1/afparg.1.md:38
 #, no-wrap
@@ -242,7 +246,7 @@ msgstr ""
 ": AFP 3.4プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:40
+#: manpages/man1/afp_lantest.1.md:39
 #, no-wrap
 msgid ""
 "**-b**\n"
@@ -252,7 +256,15 @@ msgstr ""
 ": デバッグモード\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:43
+#: manpages/man1/afp_lantest.1.md:42
+#, no-wrap
+msgid ""
+"**-c**\n"
+": Output results in CSV format (default: tabular)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:45
 #, no-wrap
 msgid ""
 "**-C**\n"
@@ -262,7 +274,7 @@ msgstr ""
 ": キャッシュに重点を置いたテストのみを実行する（テスト9～12）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:46
+#: manpages/man1/afp_lantest.1.md:48
 #, no-wrap
 msgid ""
 "**-f** *tests*\n"
@@ -272,7 +284,7 @@ msgstr ""
 ": 実行する特定のテストを数字で指定する（例：「134」はテスト 1、3、4 を実行する）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:49
+#: manpages/man1/afp_lantest.1.md:51
 #, no-wrap
 msgid ""
 "**-F** *bigfile*\n"
@@ -282,7 +294,7 @@ msgstr ""
 ": 読み取りテストにはボリュームのルート内の既存のファイルを使用する (ファイルサイズは -g/-G オプションと一致する必要がある)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:52
+#: manpages/man1/afp_lantest.1.md:54
 #, no-wrap
 msgid ""
 "**-g**\n"
@@ -292,7 +304,7 @@ msgstr ""
 ": ギガビットネットワーク向けに最適化 (ファイルのテストサイズを1GBに増加)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:55
+#: manpages/man1/afp_lantest.1.md:57
 #, no-wrap
 msgid ""
 "**-G**\n"
@@ -302,7 +314,7 @@ msgstr ""
 ": 10ギガビットネットワーク向けに最適化 (ファイルのテストサイズが10GBに増加)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:58 manpages/man1/afp_logintest.1.md:43
+#: manpages/man1/afp_lantest.1.md:60 manpages/man1/afp_logintest.1.md:43
 #: manpages/man1/afp_spectest.1.md:58 manpages/man1/afp_speedtest.1.md:59
 #: manpages/man1/afparg.1.md:44
 #, no-wrap
@@ -314,7 +326,7 @@ msgstr ""
 ": サーバーのホスト名またはIPアドレス（デフォルト: localhost）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:61 manpages/man1/afp_speedtest.1.md:68
+#: manpages/man1/afp_lantest.1.md:63 manpages/man1/afp_speedtest.1.md:68
 #, no-wrap
 msgid ""
 "**-n** *iterations*\n"
@@ -324,7 +336,7 @@ msgstr ""
 ": 実行するテスト反復回数（デフォルト: 1）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:64 manpages/man1/afp_logintest.1.md:49
+#: manpages/man1/afp_lantest.1.md:66 manpages/man1/afp_logintest.1.md:49
 #: manpages/man1/afp_spectest.1.md:73 manpages/man1/afp_speedtest.1.md:71
 #: manpages/man1/afparg.1.md:50
 #, no-wrap
@@ -336,7 +348,7 @@ msgstr ""
 ": サーバーポート番号（デフォルト: 548）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:67 manpages/man1/afp_spectest.1.md:76
+#: manpages/man1/afp_lantest.1.md:69 manpages/man1/afp_spectest.1.md:76
 #: manpages/man1/afp_speedtest.1.md:83
 #, no-wrap
 msgid ""
@@ -347,7 +359,7 @@ msgstr ""
 ": テスト用にマウントするボリューム名\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:70 manpages/man1/afp_spectest.1.md:82
+#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_spectest.1.md:82
 #: manpages/man1/afp_speedtest.1.md:89
 #, no-wrap
 msgid ""
@@ -358,7 +370,7 @@ msgstr ""
 ": 認証用のユーザー名（デフォルト: 現在のuid）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:73 manpages/man1/afp_logintest.1.md:55
+#: manpages/man1/afp_lantest.1.md:75 manpages/man1/afp_logintest.1.md:55
 #: manpages/man1/afp_spectest.1.md:85 manpages/man1/afp_speedtest.1.md:92
 #: manpages/man1/afparg.1.md:56
 #, no-wrap
@@ -370,7 +382,7 @@ msgstr ""
 ": 詳細出力\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:76 manpages/man1/afp_logintest.1.md:58
+#: manpages/man1/afp_lantest.1.md:78 manpages/man1/afp_logintest.1.md:58
 #: manpages/man1/afp_spectest.1.md:88 manpages/man1/afp_speedtest.1.md:95
 #: manpages/man1/afparg.1.md:59
 #, no-wrap
@@ -382,7 +394,7 @@ msgstr ""
 ": 超詳細出力\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:79 manpages/man1/afp_logintest.1.md:61
+#: manpages/man1/afp_lantest.1.md:81 manpages/man1/afp_logintest.1.md:61
 #: manpages/man1/afp_spectest.1.md:91 manpages/man1/afp_speedtest.1.md:98
 #: manpages/man1/afparg.1.md:62
 #, no-wrap
@@ -394,15 +406,15 @@ msgstr ""
 ": 認証用のパスワード\n"
 
 #. type: Title ###
-#: manpages/man1/afp_lantest.1.md:80 manpages/man1/afp_speedtest.1.md:102
+#: manpages/man1/afp_lantest.1.md:82 manpages/man1/afp_speedtest.1.md:102
 #: manpages/man1/afparg.1.md:63 manpages/man8/cnid_dbd.8.md:64
 #: manual/Configuration.md:587
-#, no-wrap
+#, fuzzy, no-wrap
 msgid "Configuration"
 msgstr "設定"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:84 manpages/man1/afp_speedtest.1.md:106
+#: manpages/man1/afp_lantest.1.md:86 manpages/man1/afp_speedtest.1.md:106
 #: manpages/man1/afparg.1.md:67
 msgid ""
 "The test runner AFP client only supports the ClearTxt UAM currently.  "
@@ -412,7 +424,7 @@ msgstr ""
 "netatalk の afp.conf で UAM を設定する。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:87 manpages/man1/afp_speedtest.1.md:109
+#: manpages/man1/afp_lantest.1.md:89 manpages/man1/afp_speedtest.1.md:109
 #: manpages/man1/afparg.1.md:70
 #, no-wrap
 msgid ""
@@ -421,18 +433,19 @@ msgid ""
 msgstr ""
 
 #. type: Title #
-#: manpages/man1/afp_lantest.1.md:88
-#, no-wrap
+#: manpages/man1/afp_lantest.1.md:90
+#, fuzzy, no-wrap
+#| msgid "Available Tests"
 msgid "Available Tests"
 msgstr "利用可能なテスト"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:91
+#: manpages/man1/afp_lantest.1.md:93
 msgid "The following tests are available:"
 msgstr "以下のテストが利用可能"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:94
+#: manpages/man1/afp_lantest.1.md:96
 #, no-wrap
 msgid ""
 "**(1) Opening, stating and reading 512 bytes from 1000 files**\n"
@@ -442,7 +455,7 @@ msgstr ""
 ": 多数の小さな操作を伴う基本的なファイルアクセスパターンをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:97
+#: manpages/man1/afp_lantest.1.md:99
 #, no-wrap
 msgid ""
 "**(2) Writing one large file**\n"
@@ -452,7 +465,7 @@ msgstr ""
 ": 持続的な書き込みパフォーマンスを測定する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:100
+#: manpages/man1/afp_lantest.1.md:102
 #, no-wrap
 msgid ""
 "**(3) Reading one large file**\n"
@@ -462,7 +475,7 @@ msgstr ""
 ": 持続的な読み取りパフォーマンスを測定する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:103
+#: manpages/man1/afp_lantest.1.md:105
 #, no-wrap
 msgid ""
 "**(4) Locking/Unlocking 10000 times each**\n"
@@ -472,7 +485,7 @@ msgstr ""
 ": ファイルのロックパフォーマンスをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:106
+#: manpages/man1/afp_lantest.1.md:108
 #, no-wrap
 msgid ""
 "**(5) Creating dir with 2000 files**\n"
@@ -482,7 +495,7 @@ msgstr ""
 ": ディレクトリ作成とファイル作成のパフォーマンスをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:109
+#: manpages/man1/afp_lantest.1.md:111
 #, no-wrap
 msgid ""
 "**(6) Enumerate dir with 2000 files**\n"
@@ -492,7 +505,7 @@ msgstr ""
 ": 多数のファイルを含むディレクトリ列挙をテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:112
+#: manpages/man1/afp_lantest.1.md:114
 #, no-wrap
 msgid ""
 "**(7) Deleting dir with 2000 files**\n"
@@ -502,7 +515,7 @@ msgstr ""
 ": ディレクトリとファイルの削除のパフォーマンスをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:115
+#: manpages/man1/afp_lantest.1.md:117
 #, no-wrap
 msgid ""
 "**(8) Create directory tree with 1000 dirs**\n"
@@ -512,7 +525,7 @@ msgstr ""
 ": ネストされたディレクトリの作成をテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:118
+#: manpages/man1/afp_lantest.1.md:120
 #, no-wrap
 msgid ""
 "**(9) Directory cache hits [CACHE]**\n"
@@ -522,7 +535,7 @@ msgstr ""
 ": ディレクトリとファイルの検索パフォーマンスをテストする。 (1000ディレクトリ + 10000ファイル)\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:121
+#: manpages/man1/afp_lantest.1.md:123
 #, no-wrap
 msgid ""
 "**(10) Mixed cache operations [CACHE]**\n"
@@ -532,7 +545,7 @@ msgstr ""
 ": create/stat/enum/delete の各操作をテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:124
+#: manpages/man1/afp_lantest.1.md:126
 #, no-wrap
 msgid ""
 "**(11) Deep path traversal [CACHE]**\n"
@@ -542,7 +555,7 @@ msgstr ""
 ": 深いディレクトリ構造でのパフォーマンスをテストする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:127
+#: manpages/man1/afp_lantest.1.md:129
 #, no-wrap
 msgid ""
 "**(12) Cache validation [CACHE]**\n"
@@ -552,13 +565,14 @@ msgstr ""
 ": ディレクトリキャッシュの検証メカニズムをテストする\n"
 
 #. type: Title ##
-#: manpages/man1/afp_lantest.1.md:128
-#, no-wrap
+#: manpages/man1/afp_lantest.1.md:130
+#, fuzzy, no-wrap
+#| msgid "Cache-Focused Tests"
 msgid "Cache-Focused Tests"
 msgstr "キャッシュ重視のテスト"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:133
+#: manpages/man1/afp_lantest.1.md:135
 msgid ""
 "Tests 9-12 are specifically designed to highlight directory cache "
 "performance improvements in netatalk. These tests benefit significantly from "
@@ -570,211 +584,722 @@ msgstr ""
 "確率的検証機能の恩恵を大きく受けている。これらのキャッシュ重視のテストのみを"
 "実行するには、**-C** オプションを使用してください。"
 
-#. type: Plain text
+#. type: Title #
 #: manpages/man1/afp_lantest.1.md:137
-msgid "Run all tests with default settings:"
-msgstr "すべてのテストをデフォルト設定で実行する"
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:139
 #, no-wrap
-msgid "    afp_lantest -h server.example.com -u testuser -w password -s TestVolume\n"
+msgid "AFP Operation Counts Analysis"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:141
-msgid "Run only cache-focused tests:"
-msgstr "キャッシュに重点を置いたテストのみを実行する"
+#: manpages/man1/afp_lantest.1.md:140
+msgid ""
+"The number of AFP (Apple Filing Protocol) operations performed by each test "
+"in lantest.c."
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:143
+msgid ""
+"The operation counts are measured between `starttimer()` and `stoptimer()` "
+"calls to understand the actual workload each test generates."
+msgstr ""
+
+#. type: Title ##
+#: manpages/man1/afp_lantest.1.md:144
 #, no-wrap
-msgid "    afp_lantest -C -h server.example.com -u testuser -w password -s TestVolume\n"
+msgid "DSI Quantum Size Impact"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:145
-msgid "Run specific tests (file operations):"
-msgstr "特定のテストを実行する（ファイル操作）"
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:147
-#, no-wrap
-msgid "    afp_lantest -f 123 -h server.example.com -u testuser -w password -s TestVolume\n"
+#: manpages/man1/afp_lantest.1.md:148
+msgid ""
+"The DSI (Data Stream Interface) protocol default quantum size is **1MB "
+"(1048576 bytes)**, which affects how many read/write operations are "
+"performed for large data transfers."
 msgstr ""
 
-#. type: Plain text
+#. type: Title ##
 #: manpages/man1/afp_lantest.1.md:149
-msgid "Run tests optimized for gigabit network:"
-msgstr "ギガビットネットワークに最適化されたテストを実行する"
+#, no-wrap
+msgid "Test AFP Operation Counts"
+msgstr ""
 
-#. type: Plain text
+#. type: Title ###
 #: manpages/man1/afp_lantest.1.md:151
 #, no-wrap
-msgid "    afp_lantest -g -h server.example.com -u testuser -w password -s TestVolume\n"
+msgid "1. TEST_OPENSTATREAD - Open, stat and read 512 bytes from 1000 files"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:153
-msgid "Run multiple iterations for statistical analysis:"
-msgstr "統計分析のために複数の反復を実行する"
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:155
 #, no-wrap
-msgid "    afp_lantest -n 5 -h server.example.com -u testuser -w password -s TestVolume\n"
+msgid "**Total AFP Operations: 8,000**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:157
-msgid "Run the afp_lantest benchmark using AFP 3.4."
-msgstr "AFP 3.4 を使用して afp_lantest ベンチマークを実行する"
-
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:183
-#, no-wrap
+#: manpages/man1/afp_lantest.1.md:161
 msgid ""
-"    % afp_lantest -7 -h localhost -p 548 -u test -w test -s \"File Sharing\" -n 2\n"
-"    Run 0 => Opening, stating and reading 512 bytes from 1000 files   3237 ms\n"
-"    Run 0 => Writing one large file                                    146 ms for 100 MB (avg. 718 MB/s)\n"
-"    Run 0 => Reading one large file                                     36 ms for 100 MB (avg. 2912 MB/s)\n"
-"    Run 0 => Locking/Unlocking 10000 times each                        772 ms\n"
-"    Run 0 => Creating dir with 2000 files                             3615 ms\n"
-"    Run 0 => Enumerate dir with 2000 files                             755 ms\n"
-"    Run 0 => Deleting dir with 2000 files                             1245 ms\n"
-"    Run 0 => Create directory tree with 10^3 dirs                     1724 ms\n"
-"    Run 0 => Directory cache hits (1000 dir + 10000 file lookups)     3056 ms\n"
-"    Run 0 => Mixed cache operations (create/stat/enum/delete)          484 ms\n"
-"    Run 0 => Deep path traversal (nested directory navigation)         377 ms\n"
-"    Run 0 => Cache validation efficiency (metadata changes)           8822 ms\n"
-"    Run 1 => Opening, stating and reading 512 bytes from 1000 files   3448 ms\n"
-"    Run 1 => Writing one large file                                     79 ms for 100 MB (avg. 1327 MB/s)\n"
-"    Run 1 => Reading one large file                                     37 ms for 100 MB (avg. 2833 MB/s)\n"
-"    Run 1 => Locking/Unlocking 10000 times each                        779 ms\n"
-"    Run 1 => Creating dir with 2000 files                             3731 ms\n"
-"    Run 1 => Enumerate dir with 2000 files                             587 ms\n"
-"    Run 1 => Deleting dir with 2000 files                             1156 ms\n"
-"    Run 1 => Create directory tree with 10^3 dirs                     1802 ms\n"
-"    Run 1 => Directory cache hits (1000 dir + 10000 file lookups)     3006 ms\n"
-"    Run 1 => Mixed cache operations (create/stat/enum/delete)          463 ms\n"
-"    Run 1 => Deep path traversal (nested directory navigation)         247 ms\n"
-"    Run 1 => Cache validation efficiency (metadata changes)           8565 ms\n"
+"For each of the 1000 files, the test performs: - 1 `is_there()` call "
+"(FPGetFileDirParams)  - 2 additional FPGetFileDirParams calls - 1 FPOpenFork "
+"operation - 2 FPGetForkParam operations - 1 FPRead operation (512 bytes)  - "
+"1 FPCloseFork operation"
 msgstr ""
 
 #. type: Plain text
+#: manpages/man1/afp_lantest.1.md:167
+msgid ""
+"Operations per file: 8 - Open operations: 1 - Stat operations "
+"(GetFileDirParams + GetForkParam): 5 - Read operations: 1 - Close "
+"operations: 1"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:169
+msgid "Total: 8 × 1000 files = 8,000 AFP operations"
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:170
+#, no-wrap
+msgid "2. TEST_WRITE100MB - Writing one large file"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:172
+#, no-wrap
+msgid "**Total AFP Operations: 103**\n"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:177
+msgid "1 FPCreateExt (create file)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:177 manpages/man1/afp_lantest.1.md:186
+msgid "1 FPOpenFork"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:177
+msgid "100 FPWrite operations (100MB @1MB quantum)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:177 manpages/man1/afp_lantest.1.md:186
+msgid "1 FPCloseFork"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:179
+msgid "Total: 103 AFP operations (100MB @1MB quantum)"
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:180
+#, no-wrap
+msgid "3. TEST_READ100MB - Reading one large file  "
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:182
+#, no-wrap
+msgid "**Total AFP Operations: 102**\n"
+msgstr ""
+
+#. type: Bullet: '- '
 #: manpages/man1/afp_lantest.1.md:186
-#, no-wrap
-msgid ""
-"    Netatalk Lantest Results (average times across 2 iterations)\n"
-"    ===================================\n"
+msgid "100 FPRead operations (100MB @1MB quantum)"
 msgstr ""
 
 #. type: Plain text
+#: manpages/man1/afp_lantest.1.md:188
+msgid "Total: 102 AFP operations (100MB @1MB quantum)"
+msgstr ""
+
+#. type: Title ###
 #: manpages/man1/afp_lantest.1.md:189
 #, no-wrap
-msgid ""
-"    Test 1: Opening, stating and reading 512 bytes from 1000 files\n"
-"     Average:   3342 ms ± 149.2 ms (std dev)\n"
+msgid "4. TEST_LOCKUNLOCK - Locking/Unlocking 10000 times each"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:193
+#: manpages/man1/afp_lantest.1.md:191
 #, no-wrap
-msgid ""
-"    Test 2: Writing one large file\n"
-"     Average:    112 ms ± 47.4 ms (std dev)\n"
-"     Throughput: 936 MB/s (Write, 100 MB file)\n"
+msgid "**Total AFP Operations: 20,000**\n"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:194
+msgid "10,000 FPByteRangeLock operations (lock)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:194
+msgid "10,000 FPByteRangeLock operations (unlock)"
 msgstr ""
 
 #. type: Plain text
+#: manpages/man1/afp_lantest.1.md:196
+msgid "Total: 20,000 AFP operations"
+msgstr ""
+
+#. type: Title ###
 #: manpages/man1/afp_lantest.1.md:197
 #, no-wrap
-msgid ""
-"    Test 3: Reading one large file\n"
-"     Average:     36 ms ± 1.0 ms (std dev)\n"
-"     Throughput: 2912 MB/s (Read, 100 MB file)\n"
+msgid "5. TEST_CREATE2000FILES - Creating dir with 2000 files"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:200
+#: manpages/man1/afp_lantest.1.md:199
 #, no-wrap
-msgid ""
-"    Test 4: Locking/Unlocking 10000 times each\n"
-"     Average:    775 ms ± 5.0 ms (std dev)\n"
+msgid "**Total AFP Operations: 4,000**\n"
 msgstr ""
 
-#. type: Plain text
+#. type: Bullet: '- '
 #: manpages/man1/afp_lantest.1.md:203
-#, no-wrap
-msgid ""
-"    Test 5: Creating dir with 2000 files\n"
-"     Average:   3673 ms ± 82.0 ms (std dev)\n"
+msgid "1 FPCreateDir (Directory creation outside timed section)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:203
+msgid "2,000 FPCreateExt (one per file)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:203
+msgid "2,000 FPGetFileDirParams (one per file after creation)"
 msgstr ""
 
 #. type: Plain text
+#: manpages/man1/afp_lantest.1.md:205
+msgid "Total: 4,000 AFP operations"
+msgstr ""
+
+#. type: Title ###
 #: manpages/man1/afp_lantest.1.md:206
 #, no-wrap
-msgid ""
-"    Test 6: Enumerate dir with 2000 files\n"
-"     Average:    671 ms ± 118.8 ms (std dev)\n"
+msgid "6. TEST_ENUM2000FILES - Enumerate dir with 2000 files"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:209
+#: manpages/man1/afp_lantest.1.md:208
 #, no-wrap
-msgid ""
-"    Test 7: Deleting dir with 2000 files\n"
-"     Average:   1200 ms ± 62.9 ms (std dev)\n"
+msgid "**Total AFP Operations: ~51**\n"
 msgstr ""
 
-#. type: Plain text
-#: manpages/man1/afp_lantest.1.md:212
-#, no-wrap
-msgid ""
-"    Test 8: Create directory tree with 1000 dirs\n"
-"     Average:   1763 ms ± 55.2 ms (std dev)\n"
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:213
+msgid "~51 FPEnumerate operations (based on response packet size)"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: manpages/man1/afp_lantest.1.md:213
+msgid "Each FPEnumerate can return ~40 entries"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: manpages/man1/afp_lantest.1.md:213
+msgid "2000 files ÷ 40 per call ≈ 50 calls"
+msgstr ""
+
+#. type: Bullet: '  - '
+#: manpages/man1/afp_lantest.1.md:213
+msgid "Plus 1 final call to confirm end"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:215
+msgid "This test demonstrates the efficiency of enumeration through batching."
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:216
 #, no-wrap
-msgid ""
-"    Test 9: Directory cache hits (1000 dir + 10000 file lookups)\n"
-"     Average:   3031 ms ± 35.4 ms (std dev)\n"
+msgid "7. TEST_DELETE2000FILES - Deleting dir with 2000 files"
 msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:218
 #, no-wrap
-msgid ""
-"    Test 10: Mixed cache operations (create/stat/enum/delete)\n"
-"     Average:    473 ms ± 14.9 ms (std dev)\n"
+msgid "**Total AFP Operations: 2,000**\n"
 msgstr ""
 
-#. type: Plain text
+#. type: Bullet: '- '
 #: manpages/man1/afp_lantest.1.md:221
-#, no-wrap
-msgid ""
-"    Test 11: Deep path traversal (nested directory navigation)\n"
-"     Average:    312 ms ± 91.9 ms (std dev)\n"
+msgid "2,000 FPDelete operations (one per file)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:221
+msgid "1 FPDelete (Directory deletion outside timed section)"
 msgstr ""
 
 #. type: Plain text
+#: manpages/man1/afp_lantest.1.md:223
+msgid "Total: 2,000 AFP operations"
+msgstr ""
+
+#. type: Title ###
 #: manpages/man1/afp_lantest.1.md:224
 #, no-wrap
+msgid "8. TEST_CREATEDIR - Create directory tree with 1000 dirs"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:226
+#, no-wrap
+msgid "**Total AFP Operations: 1,110**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:231
 msgid ""
-"    Test 12: Cache validation efficiency (metadata changes)\n"
-"     Average:   8693 ms ± 181.7 ms (std dev)\n"
+"Creates nested structure: 10 × 10 × 10 directories + 10 top-level - 10 "
+"FPCreateDir (level 1)  - 100 FPCreateDir (level 2: 10 × 10)  - 1,000 "
+"FPCreateDir (level 3: 10 × 10 × 10)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:233
+msgid "Total: 10 + 100 + 1,000 dirs = 1,110 AFP operations"
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:234
+#, no-wrap
+msgid "9. TEST_DIRCACHE_HITS - Directory cache hits"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:236
+#, no-wrap
+msgid "**Total AFP Operations: 11,100**\n"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:240
+msgid "100 FPCreateDir operations (10 × 10 directories)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:240
+msgid "1,000 FPCreateExt operations (100 dirs × 10 files per dir)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:240
+msgid "10,000 FPGetFileDirParams operations (100 iterations × 100 dirs)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:242
+msgid "Total: 100 + 1,000 + 10,000 dirs = 1,110 AFP operations"
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:243
+#, no-wrap
+msgid "10. TEST_DIRCACHE_MIXED - Mixed cache operations"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:245
+#, no-wrap
+msgid "**Total AFP Operations: 820**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:252
+msgid ""
+"For each of 10 iterations (with 20 files each): - 1 FPCreateDir - 10 "
+"FPCreateExt (files)  - 20 FPGetFileDirParams (2 × 10 stats)  - 41 "
+"FPEnumerate (~40 entries per call + 1)  - 10 FPDelete (files)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:255
+msgid ""
+"Operations per iteration: 82 Total for 10 iterations: 820 AFP operations"
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:256
+#, no-wrap
+msgid "11. TEST_DIRCACHE_TRAVERSE - Deep path traversal"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:258
+#, no-wrap
+msgid "**Total AFP Operations: 3,500**\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:262
+msgid ""
+"Creates 20-level deep directory structure with 50 files in the deepest "
+"directory, then performs 50 traversals: - Initial Directory creation: 20 "
+"FPCreateDir operations (outside timed section)  - Initial File creation: 50 "
+"FPCreateFile operations (outside timed section)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:266
+msgid ""
+"For each of 50 traversals (within timed section): - 20 FPGetFileDirParams "
+"(navigating down 20 directory levels using `is_there()` call)  - 50 "
+"FPGetFileDirParams (accessing all 50 files in the deepest directory)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:269
+msgid ""
+"Operations per traversal: 70 Total: 50 traversals × 70 operations = 3,500 "
+"AFP operations"
+msgstr ""
+
+#. type: Title ###
+#: manpages/man1/afp_lantest.1.md:270
+#, no-wrap
+msgid "12. TEST_CACHE_VALIDATION - Cache validation efficiency"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:272
+#, no-wrap
+msgid "**Total AFP Operations: 30,000**\n"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "100 FPCreateDir"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "1,000 FPCreateExt (10 files per dir)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "10,000 FPGetFileDirParams (validation before modifications)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "1,000 FPSetFileParms (modify timestamps)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "1,000 FPWrite operations (trigger metadata changes)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "10,000 FPGetFileDirParams (revalidation after changes)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "1,000 FPRename operations (test cache coherency)"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:281
+msgid "6,000 FPGetFileDirParams (verify renames - partial dirs)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:283
+msgid "Total: ~30,000 AFP operations"
+msgstr ""
+
+#. type: Title ##
+#: manpages/man1/afp_lantest.1.md:284
+#, no-wrap
+msgid "Key Insights"
+msgstr ""
+
+#. type: Bullet: '1. '
+#: manpages/man1/afp_lantest.1.md:288
+msgid ""
+"**Enumeration Efficiency**: The enumeration test (TEST_ENUM2000FILES) "
+"performs only ~51 operations for 2000 files due to batching, making it the "
+"most efficient operation per item."
+msgstr ""
+
+#. type: Bullet: '2. '
+#: manpages/man1/afp_lantest.1.md:291
+msgid ""
+"**Read/Write Quantum Impact**: With 1MB quantum size, the 100MB file tests "
+"perform only ~100 operations each, making them very efficient for bulk data "
+"transfer."
+msgstr ""
+
+#. type: Bullet: '3. '
+#: manpages/man1/afp_lantest.1.md:294
+msgid ""
+"**Cache Validation Overhead**: The cache validation test performs the most "
+"operations (30,000), making it ideal for stress testing and cache coherency "
+"validation."
+msgstr ""
+
+#. type: Bullet: '4. '
+#: manpages/man1/afp_lantest.1.md:297
+msgid ""
+"**Lock Operations**: The lock/unlock test provides a pure protocol overhead "
+"measurement with 20,000 rapid operations that don't involve actual data "
+"transfer."
+msgstr ""
+
+#. type: Bullet: '5. '
+#: manpages/man1/afp_lantest.1.md:300
+msgid ""
+"**Directory Operations**: Directory creation and traversal tests "
+"(1,110-1,500 operations) provide good measurements for metadata operation "
+"performance."
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:306
+msgid ""
+"These operation counts help identify which tests are best suited for: - "
+"**Protocol efficiency testing**: Enumeration, large file I/O - **Stress "
+"testing**: Cache validation, lock/unlock, open/stat/read - **Metadata "
+"performance**: Directory operations, cache hits - **Real-world simulation**: "
+"Mixed operations, open/stat/read patterns"
 msgstr ""
 
 #. type: Title #
-#: manpages/man1/afp_lantest.1.md:225
+#: manpages/man1/afp_lantest.1.md:308
 #, no-wrap
+msgid "IO Monitoring (Developer mode)"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:312
+msgid ""
+"The IO Monitoring capability is an advanted performance analysis mechanism "
+"to enable Netatalk developers to validate performance enhancements and "
+"quantify AFP-to-IO operation impact."
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:315
+#, no-wrap
+msgid ""
+"*Requires afp_lantest to be run on the same (Linux) host as Netatalk, to enable access to the afpd processes disk\n"
+"IO operation stats via the Linux proc virtual filesystem.*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:318
+msgid ""
+"Distributions running systemd do not allow exiting /proc filesystem to be "
+"remounted, therefore a secondary proc mount is required at /proc_io from the "
+"default /proc location."
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:322
+msgid ""
+"Example - Run as root to allow 'root' GID access to /proc_io for other UIDs "
+"(When running afp_lantest as user other than root, update gid accordingly.): "
+"`mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io`"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:324
+msgid ""
+"NB; IO Monitoring is intended for use with the Netatalk test Docker "
+"container (see `testsuite_alp.Dockerfile`)."
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:328
+msgid "Run all tests with default settings:"
+msgstr "すべてのテストをデフォルト設定で実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:330
+#, no-wrap
+msgid "    afp_lantest -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:332
+msgid "Run only cache-focused tests:"
+msgstr "キャッシュに重点を置いたテストのみを実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:334
+#, no-wrap
+msgid "    afp_lantest -C -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:336
+msgid "Run specific tests (file operations):"
+msgstr "特定のテストを実行する（ファイル操作）"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:338
+#, no-wrap
+msgid "    afp_lantest -f 123 -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:340
+msgid "Run tests optimized for gigabit network:"
+msgstr "ギガビットネットワークに最適化されたテストを実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:342
+#, no-wrap
+msgid "    afp_lantest -g -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:344
+msgid "Run multiple iterations for statistical analysis:"
+msgstr "統計分析のために複数の反復を実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:346
+#, no-wrap
+msgid "    afp_lantest -n 5 -h server.example.com -u testuser -w password -s TestVolume\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:348
+#, fuzzy
+#| msgid "Run the afp_lantest benchmark using AFP 3.4."
+msgid ""
+"Run the afp_lantest benchmark using AFP 3.4 (IO Monitoring automatically "
+"enabled)."
+msgstr "AFP 3.4 を使用して afp_lantest ベンチマークを実行する"
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:357
+#, no-wrap
+msgid ""
+"    % afp_lantest -n 2 -7 -h 127.0.0.1 -p 548 -u test -w test -s 'File Sharing'\n"
+"    Connecting to host 127.0.0.1:548\n"
+"    IO monitoring: /proc_io is available\n"
+"    Looking for cnid_dbd processes with -u test in command line\n"
+"    Found cnid_dbd process: PID 40\n"
+"    Looking for afpd processes owned by user 'test' (UID: 1000)\n"
+"    Found privilege-dropped afpd process: PID 36\n"
+"    IO monitoring enabled (afpd: 36, cnid_dbd: 40)\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:406
+#, no-wrap
+msgid ""
+"    Run 1 => Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]        2647 ms\n"
+"            IO Operations; afpd: 6000 READs, 7001 WRITEs | cnid_dbd: 0 READs, 1 WRITEs\n"
+"    Run 1 => Writing one large file [103 AFP ops]                                  164 ms for 100 MB (avg. 639 MB/s)\n"
+"            IO Operations; afpd: 0 READs, 299 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 1 => Reading one large file [102 AFP ops]                                   42 ms for 100 MB (avg. 2496 MB/s)\n"
+"            IO Operations; afpd: 100 READs, 100 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 1 => Locking/Unlocking 10000 times each [20,000 AFP ops]                   764 ms\n"
+"            IO Operations; afpd: 0 READs, 20000 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 1 => Creating dir with 2000 files [4,000 AFP ops]                         3716 ms\n"
+"            IO Operations; afpd: 2000 READs, 10004 WRITEs | cnid_dbd: 4 READs, 6149 WRITEs\n"
+"    Run 1 => Enumerate dir with 2000 files [~51 AFP ops]                          1005 ms\n"
+"            IO Operations; afpd: 1960 READs, 49 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 1 => Deleting dir with 2000 files [2,000 AFP ops]                         2750 ms\n"
+"            IO Operations; afpd: 4000 READs, 4004 WRITEs | cnid_dbd: 2 READs, 6104 WRITEs\n"
+"    Run 1 => Create directory tree with 1000 dirs [1,110 AFP ops]                 1753 ms\n"
+"            IO Operations; afpd: 0 READs, 4444 WRITEs | cnid_dbd: 4 READs, 2350 WRITEs\n"
+"    Run 1 => Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]        2931 ms\n"
+"            IO Operations; afpd: 10000 READs, 11100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
+"    Run 1 => Mixed cache operations (create/stat/enum/delete) [820 AFP ops]        627 ms\n"
+"            IO Operations; afpd: 820 READs, 1621 WRITEs | cnid_dbd: 0 READs, 1201 WRITEs\n"
+"    Run 1 => Deep path traversal (nested directory navigation) [3,500 AFP ops]     780 ms\n"
+"            IO Operations; afpd: 2500 READs, 3550 WRITEs | cnid_dbd: 0 READs, 50 WRITEs\n"
+"    Run 1 => Cache validation efficiency (metadata changes) [30,000 AFP ops]      8316 ms\n"
+"            IO Operations; afpd: 30000 READs, 30100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
+"    Run 2 => Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]        2566 ms\n"
+"            IO Operations; afpd: 6000 READs, 7003 WRITEs | cnid_dbd: 0 READs, 3 WRITEs\n"
+"    Run 2 => Writing one large file [103 AFP ops]                                   95 ms for 100 MB (avg. 1103 MB/s)\n"
+"            IO Operations; afpd: 0 READs, 299 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 2 => Reading one large file [102 AFP ops]                                   38 ms for 100 MB (avg. 2759 MB/s)\n"
+"            IO Operations; afpd: 100 READs, 100 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 2 => Locking/Unlocking 10000 times each [20,000 AFP ops]                   764 ms\n"
+"            IO Operations; afpd: 0 READs, 20000 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 2 => Creating dir with 2000 files [4,000 AFP ops]                         3861 ms\n"
+"            IO Operations; afpd: 2000 READs, 10004 WRITEs | cnid_dbd: 7 READs, 6139 WRITEs\n"
+"    Run 2 => Enumerate dir with 2000 files [~51 AFP ops]                           801 ms\n"
+"            IO Operations; afpd: 1960 READs, 49 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
+"    Run 2 => Deleting dir with 2000 files [2,000 AFP ops]                         2627 ms\n"
+"            IO Operations; afpd: 4000 READs, 4004 WRITEs | cnid_dbd: 4 READs, 6181 WRITEs\n"
+"    Run 2 => Create directory tree with 1000 dirs [1,110 AFP ops]                 1746 ms\n"
+"            IO Operations; afpd: 0 READs, 4443 WRITEs | cnid_dbd: 2 READs, 2268 WRITEs\n"
+"    Run 2 => Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]        3092 ms\n"
+"            IO Operations; afpd: 10000 READs, 11100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
+"    Run 2 => Mixed cache operations (create/stat/enum/delete) [820 AFP ops]        480 ms\n"
+"            IO Operations; afpd: 820 READs, 1620 WRITEs | cnid_dbd: 2 READs, 1241 WRITEs\n"
+"    Run 2 => Deep path traversal (nested directory navigation) [3,500 AFP ops]    1148 ms\n"
+"            IO Operations; afpd: 2500 READs, 3550 WRITEs | cnid_dbd: 0 READs, 50 WRITEs\n"
+"    Run 2 => Cache validation efficiency (metadata changes) [30,000 AFP ops]      8374 ms\n"
+"            IO Operations; afpd: 30000 READs, 30100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:409
+#, no-wrap
+msgid ""
+"    Netatalk Lantest Results (Averages and standard deviations (±) for all tests, across 2 iterations)\n"
+"    =========================================================================================================\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:424
+#, no-wrap
+msgid ""
+"    Test                                                               Time(ms)  Time± AFPD_R AFPD_R± AFPD_W AFPD_W± CNID_R CNID_R± CNID_W CNID_W±   MB/s\n"
+"    ------------------------------------------------------------------ -------- ------ ------ ------- ------ ------- ------ ------- ------ ------- ------\n"
+"    Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]          2606   57.3   6000     0.0   7002     1.4      0     0.0      2     1.4      0\n"
+"    Writing one large file [103 AFP ops]                                    129   48.8      0     0.0    299     0.0      0     0.0      0     0.0    775\n"
+"    Reading one large file [102 AFP ops]                                     40    2.8    100     0.0    100     0.0      0     0.0      0     0.0   2500\n"
+"    Locking/Unlocking 10000 times each [20,000 AFP ops]                     764    0.0      0     0.0  20000     0.0      0     0.0      0     0.0      0\n"
+"    Creating dir with 2000 files [4,000 AFP ops]                           3788  102.5   2000     0.0  10004     0.0      5     2.2   6144     7.1      0\n"
+"    Enumerate dir with 2000 files [~51 AFP ops]                             903  144.2   1960     0.0     49     0.0      0     0.0      0     0.0      0\n"
+"    Deleting dir with 2000 files [2,000 AFP ops]                           2688   87.0   4000     0.0   4004     0.0      3     1.4   6142    54.5      0\n"
+"    Create directory tree with 1000 dirs [1,110 AFP ops]                   1749    5.0      0     0.0   4443     1.0      3     1.4   2309    58.0      0\n"
+"    Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]          3011  113.8  10000     0.0  11100     0.0      0     0.0    100     0.0      0\n"
+"    Mixed cache operations (create/stat/enum/delete) [820 AFP ops]          553  103.9    820     0.0   1620     1.0      2     0.0   1221    28.3      0\n"
+"    Deep path traversal (nested directory navigation) [3,500 AFP ops]       964  260.2   2500     0.0   3550     0.0      0     0.0     50     0.0      0\n"
+"    Cache validation efficiency (metadata changes) [30,000 AFP ops]        8345   41.0  30000     0.0  30100     0.0      0     0.0    100     0.0      0\n"
+msgstr ""
+
+#. type: Fenced code block
+#: manpages/man1/afp_lantest.1.md:425
+#, no-wrap
+msgid ""
+"Time(ms) = Test runtime in milliseconds\n"
+"Time±    = Test runtime standard deviation\n"
+"AFPD_R   = afpd process IO Read operations\n"
+"AFPD_R±  = afpd process IO Read operation standard deviation\n"
+"AFPD_W   = afpd process IO Write operations\n"
+"AFPD_W±  = afpd process IO Write operation standard deviation\\\n"
+"\n"
+"CNID_*   = IO measurements for the cnid_dbd process (optional)\n"
+msgstr ""
+
+#. type: Title #
+#: manpages/man1/afp_lantest.1.md:436
+#, fuzzy, no-wrap
+#| msgid "Return Codes"
 msgid "Return Codes"
 msgstr "復帰コード"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:229
+#: manpages/man1/afp_lantest.1.md:440
 #, no-wrap
 msgid ""
 "**0**\n"
@@ -784,7 +1309,7 @@ msgstr ""
 ": すべてのテストは成功した\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:232
+#: manpages/man1/afp_lantest.1.md:443
 #, no-wrap
 msgid ""
 "**1**\n"
@@ -793,14 +1318,14 @@ msgstr ""
 "**1**\n"
 ": 1つ以上のテストが失敗した\n"
 
-#. type: Title #
-#: manpages/man1/afp_lantest.1.md:233
-#, no-wrap
+#. type: Title ##
+#: manpages/man1/afp_lantest.1.md:444 manpages/man1/nbplkup.1.md:54
+#, fuzzy, no-wrap
 msgid "Notes"
 msgstr "注記"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:241
+#: manpages/man1/afp_lantest.1.md:452
 msgid ""
 "Tests that involve large file operations (tests 2 and 3) will create "
 "temporary files in the test volume"
@@ -809,7 +1334,7 @@ msgstr ""
 "ファイルが作成される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:241
+#: manpages/man1/afp_lantest.1.md:452
 msgid ""
 "The **-g** and **-G** options significantly increase test file sizes and "
 "test duration"
@@ -818,7 +1343,7 @@ msgstr ""
 "増加させる。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:241
+#: manpages/man1/afp_lantest.1.md:452
 msgid ""
 "Cache-focused tests (8-11) provide the most insight into netatalk's "
 "directory cache performance"
@@ -827,20 +1352,20 @@ msgstr ""
 "のパフォーマンスに関する最も詳細な情報を提供する。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:241
+#: manpages/man1/afp_lantest.1.md:452
 msgid ""
 "Multiple iterations (**-n**) are recommended for consistent performance "
 "measurements"
 msgstr "一貫したパフォーマンス測定には、複数回の反復（**-n**）が推奨される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:241
+#: manpages/man1/afp_lantest.1.md:452
 msgid "The tool requires write access to the specified AFP volume"
 msgstr ""
 "このツールは、指定された AFP ボリュームへの書き込みアクセスを必要とする。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:244
+#: manpages/man1/afp_lantest.1.md:455
 #, no-wrap
 msgid "**afp_speedtest**(1), **afpd**(8), **netatalk**(8)\n"
 msgstr ""
