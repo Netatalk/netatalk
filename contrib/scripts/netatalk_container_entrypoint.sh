@@ -79,10 +79,8 @@ if [ -f "/etc/netatalk/afppasswd" ]; then
 fi
 
 # Creating credentials for the RandNum UAM
-if [ -n "$INSECURE_AUTH" ]; then
-    afppasswd -c
-    afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null
-fi
+afppasswd -c
+afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null
 
 # Optional second user
 if [ -n "$AFP_DROPBOX" ]; then
@@ -100,9 +98,7 @@ elif [ -n "$AFP_USER2" ]; then
         usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
     fi
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
-    if [ -n "$INSECURE_AUTH" ]; then
-        afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null
-    fi
+    afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null
 fi
 
 echo "*** Configuring shared volume"
