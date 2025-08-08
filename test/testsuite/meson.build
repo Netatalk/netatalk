@@ -38,6 +38,7 @@ executable(
 
 lantest_sources = [
     'lantest.c',
+    'lantest_io_monitor.c',
 ]
 
 executable(
