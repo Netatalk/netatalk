@@ -219,6 +219,7 @@ cnid mysql db = $AFP_CNID_SQL_DB
 legacy icon = $AFP_LEGACY_ICON
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}
+login message = $AFP_LOGIN_MESSAGE
 mimic model = $AFP_MIMIC_MODEL
 server name = ${SERVER_NAME:-Netatalk File Server}
 uam list = $UAMS
