@@ -26,7 +26,6 @@ jobs:
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
             SUFFIX=${BASH_REMATCH[4]}
-            MAJ_VERSION="${MAJOR}"
             MIN_VERSION="${MAJOR}.${MINOR}"
             SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
@@ -34,7 +33,6 @@ jobs:
             exit 1
           fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
-          echo "major_version=${MAJ_VERSION}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
           echo "tarball_name=netatalk-${SEM_VERSION}" >> $GITHUB_OUTPUT
@@ -51,6 +49,10 @@ jobs:
         run: meson setup build
       - name: Create distribution tarball
         run: meson dist -C build --no-tests
+      - name: Generate checksums
+        run: |
+          sha256sum build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz > SHA256SUMS
+          sha512sum build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz > SHA512SUMS
       - name: Create release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
         with:
@@ -61,11 +63,9 @@ jobs:
           body: |
             ## Netatalk ${{ steps.get_version.outputs.version }} is available!
 
-            The Netatalk team is proud to announce the latest version in the **Netatalk
-            ${{ steps.get_version.outputs.minor_version }}** release series.
+            The Netatalk team is proud to announce the latest version in the **Netatalk ${{ steps.get_version.outputs.minor_version }}** release series.
 
-            All users of previous Netatalk versions are encouraged to upgrade to
-            ${{ steps.get_version.outputs.version }}.
+            All users of previous Netatalk versions are encouraged to upgrade to ${{ steps.get_version.outputs.version }}.
 
             This is a source-only release. To build:
 
@@ -83,6 +83,7 @@ jobs:
             ```
           files: |
             build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz
-            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256
+            SHA256SUMS
+            SHA512SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
