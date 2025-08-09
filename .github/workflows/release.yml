@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'netatalk-*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-source-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Get version
+        id: get_version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          if [[ "$TAG" =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+            MAJ_VERSION="${MAJOR}"
+            MIN_VERSION="${MAJOR}.${MINOR}"
+            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          else
+            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "major_version=${MAJ_VERSION}" >> $GITHUB_OUTPUT
+          echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+          echo "tarball_name=netatalk-${SEM_VERSION}" >> $GITHUB_OUTPUT
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends \
+            libevent-dev \
+            libgcrypt20-dev \
+            libiniparser-dev \
+            meson \
+            ninja-build
+      - name: Configure build
+        run: meson setup build
+      - name: Create distribution tarball
+        run: meson dist -C build --no-tests
+      - name: Create release
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag }}
+          name: Release ${{ steps.get_version.outputs.version }}
+          draft: true
+          generate_release_notes: true
+          body: |
+            ## Netatalk ${{ steps.get_version.outputs.version }} is available!
+
+            The Netatalk team is proud to announce the latest version in the **Netatalk
+            ${{ steps.get_version.outputs.min_version }}** release series.
+
+            All users of previous Netatalk versions are encouraged to upgrade to
+            ${{ steps.get_version.outputs.version }}.
+
+            This is a source-only release. To build:
+
+            ```bash
+            # Extract the source
+            tar -xf ${{ steps.get_version.outputs.tarball_name }}.tar.xz
+            cd ${{ steps.get_version.outputs.tarball_name }}
+
+            # Configure and build
+            meson setup build
+            meson compile -C build
+
+            # Install
+            sudo meson install -C build
+            ```
+          files: |
+            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz
+            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
