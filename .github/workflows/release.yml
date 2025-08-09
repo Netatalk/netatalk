@@ -10,8 +10,8 @@ permissions:
 
 jobs:
   create-source-release:
+    name: Create Source Release
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -21,13 +21,14 @@ jobs:
         id: get_version
         run: |
           TAG=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG" =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)$ ]]; then
+          if [[ "$TAG" =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
+            SUFFIX=${BASH_REMATCH[4]}
             MAJ_VERSION="${MAJOR}"
             MIN_VERSION="${MAJOR}.${MINOR}"
-            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
             echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
@@ -61,7 +62,7 @@ jobs:
             ## Netatalk ${{ steps.get_version.outputs.version }} is available!
 
             The Netatalk team is proud to announce the latest version in the **Netatalk
-            ${{ steps.get_version.outputs.min_version }}** release series.
+            ${{ steps.get_version.outputs.minor_version }}** release series.
 
             All users of previous Netatalk versions are encouraged to upgrade to
             ${{ steps.get_version.outputs.version }}.
