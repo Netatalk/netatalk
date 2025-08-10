@@ -25,8 +25,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG" =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
@@ -111,8 +110,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          TAG=${GITHUB_REF#refs/tags/}
-          if [[ "$TAG" =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
