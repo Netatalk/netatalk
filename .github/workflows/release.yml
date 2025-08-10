@@ -1,9 +1,12 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'netatalk-*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., netatalk-4-1-0, netatalk-4-1-0rc1)'
+        required: true
+        type: string
 
 permissions: read-all
 
@@ -15,8 +18,9 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
+          ref: ${{ inputs.tag }}
           fetch-depth: 0
       - name: Get version
         id: get_version
@@ -61,14 +65,14 @@ jobs:
           sha256sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256"
           sha512sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha512"
       - name: Create release
-        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+        uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
           tag_name: ${{ steps.get_version.outputs.tag }}
-          name: Release ${{ steps.get_version.outputs.version }}
+          name: Netatalk ${{ steps.get_version.outputs.version }}
           draft: true
           generate_release_notes: true
           body: |
-            ## Netatalk ${{ steps.get_version.outputs.version }} is available!
+            # Netatalk ${{ steps.get_version.outputs.version }} is available!
 
             The Netatalk team is proud to announce the latest version in the **Netatalk ${{ steps.get_version.outputs.minor_version }}** release series.
 
@@ -76,7 +80,7 @@ jobs:
 
             This is a source-only release. To build:
 
-            ```bash
+            ```shell
             # Extract the source
             tar -xf ${{ steps.get_version.outputs.tarball_name }}.tar.xz
             cd ${{ steps.get_version.outputs.tarball_name }}
@@ -95,3 +99,53 @@ jobs:
             build/contrib/webmin_module/${{ steps.get_version.outputs.tarball_name }}.wbm.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docker-hub:
+    name: Publish Container Image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Get version
+        id: get_version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          if [[ "$TAG" =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+            SUFFIX=${BASH_REMATCH[4]}
+            MIN_VERSION="${MAJOR}.${MINOR}"
+            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
+          else
+            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
+          echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+      - name: Login to Docker Hub
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Build and push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
+          push: true
+          tags: |
+            netatalk/netatalk:latest,\
+            netatalk/netatalk:${{ steps.get_version.outputs.major_version }},\
+            netatalk/netatalk:${{ steps.get_version.outputs.minor_version }},\
+            netatalk/netatalk:${{ steps.get_version.outputs.version }}
