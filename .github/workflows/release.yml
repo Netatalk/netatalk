@@ -5,13 +5,14 @@ on:
     tags:
       - 'netatalk-*'
 
-permissions:
-  contents: write
+permissions: read-all
 
 jobs:
   create-source-release:
     name: Create Source Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
