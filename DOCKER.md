@@ -247,10 +247,11 @@ These are required to set the credentials used to authenticate with the file ser
 | SHARE_NAME        | The name of the primary shared volume                                  |
 | SHARE_NAME2       | The name of the secondary shared (Time Machine) volume                 |
 | AFP_LOGLEVEL      | The verbosity of logs; default is "info"                               |
-| AFP_MIMIC_MODEL   | Use a custom modern AFP icon, such as `Tower` or `RackMount`           |
-| AFP_LEGACY_ICON   | Use a custom legacy AFP icon, such as `daemon` or `sdcard`             |
+| AFP_MIMIC_MODEL   | Use a custom macOS (OSX) AFP icon; examples: *Tower*, *RackMount*      |
+| AFP_LEGACY_ICON   | Use a custom Classic Mac OS AFP icon; examples: *daemon*. *sdcard*     |
+| AFP_LOGIN_MESSAGE | A message to display when a user logs in (Classic Mac OS)              |
 | ATALKD_OPTIONS    | A string with options to append to atalkd.conf                         |
-| AFP_CNID_BACKEND  | The backend to use for the CNID database: `bdb` or `mysql`             |
+| AFP_CNID_BACKEND  | The backend to use for the CNID database: *bdb* or *mysql*             |
 | AFP_CNID_SQL_HOST | The hostname or IP address of the CNID SQL server                      |
 | AFP_CNID_SQL_USER | The username to use when connecting to the CNID SQL server             |
 | AFP_CNID_SQL_PASS | The password to use when connecting to the CNID SQL server             |
