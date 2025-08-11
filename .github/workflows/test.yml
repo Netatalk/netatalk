@@ -34,13 +34,15 @@ jobs:
                 astyle \
                 muon \
                 perltidy \
-                shfmt
+                shfmt \
+                yamlfmt
         - name: Check formatting
           run: |
               ./contrib/scripts/codefmt.sh -v -s c
               ./contrib/scripts/codefmt.sh -v -s meson
               ./contrib/scripts/codefmt.sh -v -s perl
               ./contrib/scripts/codefmt.sh -v -s shell
+              ./contrib/scripts/codefmt.sh -v -s yaml
 
     markdown-linting:
         name: Markdown Linting
