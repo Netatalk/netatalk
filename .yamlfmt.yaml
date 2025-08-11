@@ -1,0 +1,11 @@
+formatter:
+  type: basic
+  eof_newline: true
+  include_document_start: false
+  include_document_end: false
+  indent: 2
+  indentless_arrays: false
+  line_ending: lf
+  max_line_length: 120
+  pad_line_comments: 1
+  retain_line_breaks_single: true
