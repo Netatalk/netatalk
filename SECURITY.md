@@ -14,8 +14,9 @@ For instance, if 4.0 and 4.1 are supported, and we release 4.2, then support for
 
 | Version | Supported | Planned End of Life |
 |---------|-----------|---------------------|
-| 4.2.x   | ✓         | Active development  |
-| 4.1.x   | ✓         | Mar 31, 2026        |
+| 4.3.x   | ✓         | Active development  |
+| 4.2.x   | ✓         | Aug 5, 2026         |
+| 4.1.x   | X         | -                   |
 | 4.0.x   | X         | -                   |
 | 3.2.x   | ✓         | Sep 28, 2025        |
 | 3.1.x   | X         | -                   |
