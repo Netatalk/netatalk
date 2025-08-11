@@ -10,6 +10,10 @@ on:
 
 permissions: read-all
 
+env:
+  GHCR_REGISTRY: ghcr.io
+  REPO: ${{ github.repository }}
+
 jobs:
   create-source-release:
     name: Create Source Release
@@ -99,8 +103,126 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  ghcr-publish:
+    name: Publish Netatalk Container Image to GitHub Container Registry
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+            SUFFIX=${BASH_REMATCH[4]}
+            MIN_VERSION="${MAJOR}.${MINOR}"
+            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
+          else
+            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
+          echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
+        with:
+          images: ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest
+            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ steps.get_version.outputs.major_version }}
+            type=raw,value=${{ steps.get_version.outputs.minor_version }}
+            type=raw,value=${{ steps.get_version.outputs.version }}
+      - name: Build and push container image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+
+  ghcr-publish-webmin:
+    name: Publish Netatalk Webmin Module Container Image to GitHub Container Registry
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+            SUFFIX=${BASH_REMATCH[4]}
+            MIN_VERSION="${MAJOR}.${MINOR}"
+            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
+          else
+            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
+          echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.GHCR_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
+        with:
+          images: ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=raw,value=latest
+            type=raw,value=${{ github.sha }}
+            type=raw,value=${{ steps.get_version.outputs.major_version }}
+            type=raw,value=${{ steps.get_version.outputs.minor_version }}
+            type=raw,value=${{ steps.get_version.outputs.version }}
+      - name: Build and push container image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: webmin_module.Dockerfile
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+
   docker-hub:
-    name: Publish Container Image to Docker Hub
+    name: Publish Netatalk Container Image to Docker Hub
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -140,6 +262,57 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
+          file: Dockerfile
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
+          push: true
+          tags: |
+            netatalk/netatalk:latest
+            netatalk/netatalk:${{ steps.get_version.outputs.major_version }}
+            netatalk/netatalk:${{ steps.get_version.outputs.minor_version }}
+            netatalk/netatalk:${{ steps.get_version.outputs.version }}
+
+  docker-hub-webmin:
+    name: Publish Netatalk Webmin Module Container Image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.tag }}
+      - name: Get version
+        id: get_version
+        run: |
+          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+            MAJOR=${BASH_REMATCH[1]}
+            MINOR=${BASH_REMATCH[2]}
+            PATCH=${BASH_REMATCH[3]}
+            SUFFIX=${BASH_REMATCH[4]}
+            MIN_VERSION="${MAJOR}.${MINOR}"
+            SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
+          else
+            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            exit 1
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
+          echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+      - name: Login to Docker Hub
+        uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Build and push
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          file: webmin_module.Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
           push: true
           tags: |
