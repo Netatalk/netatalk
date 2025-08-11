@@ -16,65 +16,65 @@ on:
 permissions: read-all
 
 jobs:
-    static_analysis:
-        name: SonarQube Static Analysis
-        runs-on: ubuntu-latest
-        if: >
-          (github.event_name == 'push' && github.actor != 'dependabot[bot]' && github.actor != 'dependabot') ||
-          (github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' && github.actor != 'dependabot')
+  static_analysis:
+    name: SonarQube Static Analysis
+    runs-on: ubuntu-latest
+    if: >
+      (github.event_name == 'push' && github.actor != 'dependabot[bot]' && github.actor != 'dependabot') || (github.event_name
+      == 'pull_request' && !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' && github.actor
+      != 'dependabot')
+    env:
+      BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@8c71dc039c2dd71d3821e89a2b58ecc7fee6ced9
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --assume-yes --no-install-recommends \
+              bison \
+              cracklib-runtime \
+              flex \
+              libacl1-dev \
+              libavahi-client-dev \
+              libcrack2-dev \
+              libcups2-dev \
+              libdb-dev \
+              libdbus-1-dev \
+              libevent-dev \
+              libgcrypt20-dev \
+              libglib2.0-dev \
+              libiniparser-dev \
+              libkrb5-dev \
+              libldap2-dev \
+              libmariadb-dev \
+              libpam0g-dev \
+              libtalloc-dev \
+              libtirpc-dev \
+              libtracker-sparql-3.0-dev \
+              libwrap0-dev \
+              meson \
+              ninja-build \
+              systemtap-sdt-dev \
+              tracker-miner-fs
+      - name: Run build wrapper
+        run: |
+          mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
+          meson setup build \
+              -Dbuildtype=debug \
+              -Dwith-appletalk=true \
+              -Dwith-docs= \
+              -Dwith-init-style=none \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+          build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
+      - name: Run SonarQube scan
+        uses: sonarsource/sonarqube-scan-action@8c71dc039c2dd71d3821e89a2b58ecc7fee6ced9
         env:
-          BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
-        steps:
-        - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-          with:
-            fetch-depth: 0
-        - name: Install Build Wrapper
-          uses: SonarSource/sonarqube-scan-action/install-build-wrapper@8c71dc039c2dd71d3821e89a2b58ecc7fee6ced9
-        - name: Install dependencies
-          run: |
-            sudo apt-get update
-            sudo apt-get install --assume-yes --no-install-recommends \
-                bison \
-                cracklib-runtime \
-                flex \
-                libacl1-dev \
-                libavahi-client-dev \
-                libcrack2-dev \
-                libcups2-dev \
-                libdb-dev \
-                libdbus-1-dev \
-                libevent-dev \
-                libgcrypt20-dev \
-                libglib2.0-dev \
-                libiniparser-dev \
-                libkrb5-dev \
-                libldap2-dev \
-                libmariadb-dev \
-                libpam0g-dev \
-                libtalloc-dev \
-                libtirpc-dev \
-                libtracker-sparql-3.0-dev \
-                libwrap0-dev \
-                meson \
-                ninja-build \
-                systemtap-sdt-dev \
-                tracker-miner-fs
-        - name: Run build wrapper
-          run: |
-            mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
-            meson setup build \
-                -Dbuildtype=debug \
-                -Dwith-appletalk=true \
-                -Dwith-docs= \
-                -Dwith-init-style=none \
-                -Dwith-tests=true \
-                -Dwith-testsuite=true
-            build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
-        - name: Run SonarQube scan
-          uses: sonarsource/sonarqube-scan-action@8c71dc039c2dd71d3821e89a2b58ecc7fee6ced9
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          with:
-            args: >
-              --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json" 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: "--define sonar.cfamily.compile-commands=\"${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json\" \n"

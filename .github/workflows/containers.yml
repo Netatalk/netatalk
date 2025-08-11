@@ -1,843 +1,838 @@
 name: Containers
 on:
-    push:
-        branches: [ "main" ]
-        paths-ignore:
-          - "**.md"
-          - "**/COPYING"
-          - "**/README*"
-          - ".github/workflows/build.yml"
-          - "contrib/webmin_module/**"
-          - "COPYRIGHT"
-    pull_request:
-        branches: [ "main" ]
-        paths-ignore:
-          - "**.md"
-          - "**/COPYING"
-          - "**/README*"
-          - ".github/workflows/build.yml"
-          - "contrib/webmin_module/**"
-          - "COPYRIGHT"
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "**.md"
+      - "**/COPYING"
+      - "**/README*"
+      - ".github/workflows/build.yml"
+      - "contrib/webmin_module/**"
+      - "COPYRIGHT"
+  pull_request:
+    branches: ["main"]
+    paths-ignore:
+      - "**.md"
+      - "**/COPYING"
+      - "**/README*"
+      - ".github/workflows/build.yml"
+      - "contrib/webmin_module/**"
+      - "COPYRIGHT"
 
 permissions: read-all
 env:
-    REGISTRY: ghcr.io
-    REPO: ${{ github.repository }}
+  REGISTRY: ghcr.io
+  REPO: ${{ github.repository }}
 
 jobs:
-    build-container:
-        name: Build production container
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-            - name: Create image name
-              run: |
-                echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
-            - name: Login to container registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
-              with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Extract metadata
-              id: metadata
-              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
-              with:
-                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: type=raw,value=${{ github.sha }}
-            - name: Build and push container image
-              uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
-              with:
-                context: .
-                file: Dockerfile
-                push: true
-                labels: ${{ steps.metadata.outputs.labels }}
-                tags: ${{ steps.metadata.outputs.tags }}
+  build-container:
+    name: Build production container
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ github.sha }}
+      - name: Build and push container image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
 
+  build-container-testsuite:
+    name: Build Alpine testsuite container
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-testsuite" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ github.sha }}
+      - name: Build and push container image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: testsuite_alp.Dockerfile
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
 
-    build-container-testsuite:
-        name: Build Alpine testsuite container
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-            - name: Create image name
-              run: |
-                echo "IMAGE_NAME=${REPO,,}-testsuite" >> ${GITHUB_ENV}
-            - name: Login to container registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
-              with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Extract metadata
-              id: metadata
-              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
-              with:
-                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: type=raw,value=${{ github.sha }}
-            - name: Build and push container image
-              uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
-              with:
-                context: .
-                file: testsuite_alp.Dockerfile
-                push: true
-                labels: ${{ steps.metadata.outputs.labels }}
-                tags: ${{ steps.metadata.outputs.tags }}
+  build-container-webmin:
+    name: Build Netatalk Webmin Module container
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ github.sha }}
+      - name: Build and push container image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: webmin_module.Dockerfile
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
 
+  build-container-testsuite-debian:
+    name: Build Debian testsuite container
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ !github.event.pull_request.head.repo.fork }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-testsuite-debian" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ github.sha }}
+      - name: Build and push container image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: testsuite_deb.Dockerfile
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
 
-    build-container-webmin:
-        name: Build Netatalk Webmin Module container
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-            - name: Create image name
-              run: |
-                echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
-            - name: Login to container registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
-              with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Extract metadata
-              id: metadata
-              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
-              with:
-                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: type=raw,value=${{ github.sha }}
-            - name: Build and push container image
-              uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
-              with:
-                context: .
-                file: webmin_module.Dockerfile
-                push: true
-                labels: ${{ steps.metadata.outputs.labels }}
-                tags: ${{ steps.metadata.outputs.tags }}
+  afp-spectest-afp34-prod:
+    name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)
+    needs:
+      - build-container
+      - build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Create Docker network
+        run: |
+          docker network create afp_network
+      - name: Run Netatalk
+        run: |
+          docker run --detach \
+              --name afp_server \
+              --network afp_network \
+              -e AFP_USER=atalk1 \
+              -e AFP_USER2=atalk2 \
+              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_GROUP=afpusers \
+              -e SHARE_NAME=test1 \
+              -e SHARE_NAME2=test2 \
+              -e INSECURE_AUTH=1 \
+              -e DISABLE_TIMEMACHINE=1 \
+              -e AFP_EXTMAP=1 \
+              ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+              --network afp_network \
+              -e AFP_USER=atalk1 \
+              -e AFP_USER2=atalk2 \
+              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_GROUP=afpusers \
+              -e SHARE_NAME=test1 \
+              -e SHARE_NAME2=test2 \
+              -e VERBOSE=1 \
+              -e TESTSUITE=spectest \
+              -e AFP_VERSION=7 \
+              -e AFP_REMOTE=1 \
+              -e AFP_HOST=afp_server \
+              ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
+  afp-spectest-mysql-afp34-prod:
+    name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Prod)
+    needs:
+      - build-container
+      - build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Create container network
+        run: |
+          docker network create afp_network
+      - name: Start MariaDB
+        run: |
+          docker run --detach --name mariadb --network afp_network \
+              -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              mariadb:latest
+      - name: Wait for MariaDB to initialize
+        run: |
+          sleep 4
+      - name: Start Netatalk
+        run: |
+          docker run --detach \
+              --name afp_server \
+              --network afp_network \
+              -e AFP_USER=atalk1 \
+              -e AFP_USER2=atalk2 \
+              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_GROUP=afpusers \
+              -e AFP_CNID_BACKEND=mysql \
+              -e SHARE_NAME=test1 \
+              -e SHARE_NAME2=test2 \
+              -e INSECURE_AUTH=1 \
+              -e DISABLE_TIMEMACHINE=1 \
+              -e AFP_EXTMAP=1 \
+              -e AFP_CNID_SQL_HOST=mariadb \
+              -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+              --network afp_network \
+              -e AFP_USER=atalk1 \
+              -e AFP_USER2=atalk2 \
+              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_GROUP=afpusers \
+              -e SHARE_NAME=test1 \
+              -e SHARE_NAME2=test2 \
+              -e VERBOSE=1 \
+              -e TESTSUITE=spectest \
+              -e AFP_VERSION=7 \
+              -e AFP_REMOTE=1 \
+              -e AFP_HOST=afp_server \
+              -e AFP_CNID_SQL_HOST=mariadb \
+              -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    build-container-testsuite-debian:
-        name: Build Debian testsuite container
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ !github.event.pull_request.head.repo.fork }}
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout repo
-              uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-            - name: Create image name
-              run: |
-                echo "IMAGE_NAME=${REPO,,}-testsuite-debian" >> ${GITHUB_ENV}
-            - name: Login to container registry
-              uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
-              with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Extract metadata
-              id: metadata
-              uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
-              with:
-                images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: type=raw,value=${{ github.sha }}
-            - name: Build and push container image
-              uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
-              with:
-                context: .
-                file: testsuite_deb.Dockerfile
-                push: true
-                labels: ${{ steps.metadata.outputs.labels }}
-                tags: ${{ steps.metadata.outputs.tags }}
+  afp-spectest-mysql-afp34-debian:
+    name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Create container network
+        run: |
+          docker network create afp_network
+      - name: Start MariaDB container
+        run: |
+          docker run --detach --name mariadb --network afp_network \
+              -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              mariadb:latest
+      - name: Wait for MariaDB to initialize
+        run: |
+          sleep 4
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+              --network afp_network \
+              -e AFP_USER=atalk1 \
+              -e AFP_USER2=atalk2 \
+              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_GROUP=afpusers \
+              -e AFP_CNID_BACKEND=mysql \
+              -e SHARE_NAME=test1 \
+              -e SHARE_NAME2=test2 \
+              -e INSECURE_AUTH=1 \
+              -e DISABLE_TIMEMACHINE=1 \
+              -e VERBOSE=1 \
+              -e TESTSUITE=spectest \
+              -e AFP_VERSION=7 \
+              -e AFP_REMOTE=1 \
+              -e AFP_EXTMAP=1 \
+              -e AFP_CNID_SQL_HOST=mariadb \
+              -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
+  afp-spectest-sqlite-afp34-debian:
+    name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_CNID_BACKEND="sqlite" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
-    afp-spectest-afp34-prod:
-        name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)
-        needs:
-            - build-container
-            - build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Create Docker network
-              run: |
-                docker network create afp_network
-            - name: Run Netatalk
-              run: |
-                docker run --detach \
-                    --name afp_server \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e INSECURE_AUTH=1 \
-                    -e DISABLE_TIMEMACHINE=1 \
-                    -e AFP_EXTMAP=1 \
-                    ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e VERBOSE=1 \
-                    -e TESTSUITE=spectest \
-                    -e AFP_VERSION=7 \
-                    -e AFP_REMOTE=1 \
-                    -e AFP_HOST=afp_server \
-                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-afp34:
+    name: AFP spec test (ea:sys) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-mysql-afp34-prod:
-        name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Prod)
-        needs:
-            - build-container
-            - build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Create container network
-              run: |
-                docker network create afp_network
-            - name: Start MariaDB
-              run: |
-                docker run --detach --name mariadb --network afp_network \
-                    -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    mariadb:latest
-            - name: Wait for MariaDB to initialize
-              run: |
-                sleep 4
-            - name: Start Netatalk
-              run: |
-                docker run --detach \
-                    --name afp_server \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e AFP_CNID_BACKEND=mysql \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e INSECURE_AUTH=1 \
-                    -e DISABLE_TIMEMACHINE=1 \
-                    -e AFP_EXTMAP=1 \
-                    -e AFP_CNID_SQL_HOST=mariadb \
-                    -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e VERBOSE=1 \
-                    -e TESTSUITE=spectest \
-                    -e AFP_VERSION=7 \
-                    -e AFP_REMOTE=1 \
-                    -e AFP_HOST=afp_server \
-                    -e AFP_CNID_SQL_HOST=mariadb \
-                    -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-sqlite-afp34:
+    name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e AFP_CNID_BACKEND="sqlite" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-mysql-afp34-debian:
-        name: AFP spec test (cnid:mysql) AFP 3.4 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Create container network
-              run: |
-                docker network create afp_network
-            - name: Start MariaDB container
-              run: |
-                docker run --detach --name mariadb --network afp_network \
-                    -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    mariadb:latest
-            - name: Wait for MariaDB to initialize
-              run: |
-                sleep 4
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                    --network afp_network \
-                    -e AFP_USER=atalk1 \
-                    -e AFP_USER2=atalk2 \
-                    -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
-                    -e AFP_GROUP=afpusers \
-                    -e AFP_CNID_BACKEND=mysql \
-                    -e SHARE_NAME=test1 \
-                    -e SHARE_NAME2=test2 \
-                    -e INSECURE_AUTH=1 \
-                    -e DISABLE_TIMEMACHINE=1 \
-                    -e VERBOSE=1 \
-                    -e TESTSUITE=spectest \
-                    -e AFP_VERSION=7 \
-                    -e AFP_REMOTE=1 \
-                    -e AFP_EXTMAP=1 \
-                    -e AFP_CNID_SQL_HOST=mariadb \
-                    -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
-                    ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-spectest-afp34-debian:
+    name: AFP spec test (ea:sys) AFP 3.4 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
-    afp-spectest-sqlite-afp34-debian:
-        name: AFP spec test (cnid:sqlite) AFP 3.4 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e AFP_CNID_BACKEND="sqlite" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="7" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-adtest-afp34:
+    name: AFP spec test (ea:ad) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e AFP_ADOUBLE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp34:
-        name: AFP spec test (ea:sys) AFP 3.4 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="7" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-adtest-afp34-debian:
+    name: AFP spec test (ea:ad) AFP 3.4 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e AFP_ADOUBLE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
+  afp-spectest-afp33:
+    name: AFP spec test (ea:sys) AFP 3.3 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="6" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-sqlite-afp34:
-        name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e AFP_CNID_BACKEND="sqlite" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="7" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-afp32:
+    name: AFP spec test (ea:sys) AFP 3.2 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="5" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp34-debian:
-        name: AFP spec test (ea:sys) AFP 3.4 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="7" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-spectest-afp31:
+    name: AFP spec test (ea:sys) AFP 3.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="4" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-adtest-afp34:
-        name: AFP spec test (ea:ad) AFP 3.4 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e AFP_ADOUBLE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="7" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-afp30:
+    name: AFP spec test (ea:sys) AFP 3.0 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="3" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-adtest-afp34-debian:
-        name: AFP spec test (ea:ad) AFP 3.4 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e AFP_ADOUBLE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="7" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-spectest-afp30-debian:
+    name: AFP spec test (ea:sys) AFP 3.0 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="3" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
-    afp-spectest-afp33:
-        name: AFP spec test (ea:sys) AFP 3.3 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="6" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-afp22:
+    name: AFP spec test (ea:sys) AFP 2.2 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="2" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp32:
-        name: AFP spec test (ea:sys) AFP 3.2 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="5" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-afp21:
+    name: AFP spec test (ea:sys) AFP 2.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="1" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp31:
-        name: AFP spec test (ea:sys) AFP 3.1 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="4" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-spectest-afp21-debian:
+    name: AFP spec test (ea:sys) AFP 2.1 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="1" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
-    afp-spectest-afp30:
-        name: AFP spec test (ea:sys) AFP 3.0 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="3" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-adtest-afp21:
+    name: AFP spec test (ea:ad) AFP 2.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e AFP_ADOUBLE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="1" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp30-debian:
-        name: AFP spec test (ea:sys) AFP 3.0 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="3" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-adtest-afp21-debian:
+    name: AFP spec test (ea:ad) AFP 2.1 - Debian
+    needs: build-container-testsuite-debian
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e AFP_ADOUBLE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="1" \
+            -e AFP_EXTMAP="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
-    afp-spectest-afp22:
-        name: AFP spec test (ea:sys) AFP 2.2 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="2" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-rotest-afp34:
+    name: AFP spec test (readonly) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e INSECURE_AUTH="1" \
+            -e VERBOSE="1" \
+            -e AFP_READONLY="1" \
+            -e TESTSUITE="readonly" \
+            -e AFP_VERSION="7" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp21:
-        name: AFP spec test (ea:sys) AFP 2.1 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="1" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-rotest-afp21:
+    name: AFP spec test (readonly) AFP 2.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e INSECURE_AUTH="1" \
+            -e VERBOSE="1" \
+            -e AFP_READONLY="1" \
+            -e TESTSUITE="readonly" \
+            -e AFP_VERSION="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-spectest-afp21-debian:
-        name: AFP spec test (ea:sys) AFP 2.1 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="1" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-logintest-afp34:
+    name: AFP login test AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e INSECURE_AUTH="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="login" \
+            -e AFP_VERSION="7" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-adtest-afp21:
-        name: AFP spec test (ea:ad) AFP 2.1 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e AFP_ADOUBLE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="1" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-logintest-afp21:
+    name: AFP login test AFP 2.1 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e INSECURE_AUTH="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="login" \
+            -e AFP_VERSION="1" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-adtest-afp21-debian:
-        name: AFP spec test (ea:ad) AFP 2.1 - Debian
-        needs: build-container-testsuite-debian
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_USER2="atalk2" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e SHARE_NAME2="test2" \
-                  -e INSECURE_AUTH="1" \
-                  -e DISABLE_TIMEMACHINE="1" \
-                  -e VERBOSE="1" \
-                  -e AFP_ADOUBLE="1" \
-                  -e TESTSUITE="spectest" \
-                  -e AFP_VERSION="1" \
-                  -e AFP_EXTMAP="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
+  afp-lantest:
+    name: AFP lantest - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e INSECURE_AUTH="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="lan" \
+            -e AFP_VERSION="7" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-    afp-rotest-afp34:
-        name: AFP spec test (readonly) AFP 3.4 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e INSECURE_AUTH="1" \
-                  -e VERBOSE="1" \
-                  -e AFP_READONLY="1" \
-                  -e TESTSUITE="readonly" \
-                  -e AFP_VERSION="7" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-    afp-rotest-afp21:
-        name: AFP spec test (readonly) AFP 2.1 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e INSECURE_AUTH="1" \
-                  -e VERBOSE="1" \
-                  -e AFP_READONLY="1" \
-                  -e TESTSUITE="readonly" \
-                  -e AFP_VERSION="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-    afp-logintest-afp34:
-        name: AFP login test AFP 3.4 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e INSECURE_AUTH="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="login" \
-                  -e AFP_VERSION="7" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-    afp-logintest-afp21:
-        name: AFP login test AFP 2.1 - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e INSECURE_AUTH="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="login" \
-                  -e AFP_VERSION="1" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-    afp-lantest:
-        name: AFP lantest - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e INSECURE_AUTH="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="lan" \
-                  -e AFP_VERSION="7" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
-
-    afp-speedtest:
-        name: AFP speedtest - Alpine
-        needs: build-container-testsuite
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        if: ${{ github.actor != 'dependabot[bot]' }}
-        steps:
-            - name: Run Netatalk testsuite
-              run: |
-                docker run --rm \
-                  -e AFP_USER="atalk1" \
-                  -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-                  -e AFP_GROUP="afpusers" \
-                  -e SHARE_NAME="test1" \
-                  -e INSECURE_AUTH="1" \
-                  -e VERBOSE="1" \
-                  -e TESTSUITE="speed" \
-                  -e AFP_VERSION="7" \
-                  ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+  afp-speedtest:
+    name: AFP speedtest - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e INSECURE_AUTH="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="speed" \
+            -e AFP_VERSION="7" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
