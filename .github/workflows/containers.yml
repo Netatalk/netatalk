@@ -50,11 +50,7 @@ jobs:
               uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: |
-                  type=ref,event=branch
-                  type=ref,event=tag
-                  type=raw,value=latest
-                  type=raw,value=${{ github.sha }}
+                tags: type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -90,11 +86,7 @@ jobs:
               uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: |
-                  type=ref,event=branch
-                  type=ref,event=tag
-                  type=raw,value=latest
-                  type=raw,value=${{ github.sha }}
+                tags: type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -130,11 +122,7 @@ jobs:
               uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: |
-                  type=ref,event=branch
-                  type=ref,event=tag
-                  type=raw,value=latest
-                  type=raw,value=${{ github.sha }}
+                tags: type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:
@@ -170,11 +158,7 @@ jobs:
               uses: docker/metadata-action@c1e51972afc2121e065aed6d45c65596fe445f3f
               with:
                 images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-                tags: |
-                  type=ref,event=branch
-                  type=ref,event=tag
-                  type=raw,value=latest
-                  type=raw,value=${{ github.sha }}
+                tags: type=raw,value=${{ github.sha }}
             - name: Build and push container image
               uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
               with:

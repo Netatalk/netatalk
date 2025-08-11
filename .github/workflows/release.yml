@@ -106,7 +106,6 @@ jobs:
   ghcr-publish:
     name: Publish Netatalk Container Image to GitHub Container Registry
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       packages: write
     steps:
@@ -145,8 +144,6 @@ jobs:
         with:
           images: ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=tag
             type=raw,value=latest
             type=raw,value=${{ github.sha }}
             type=raw,value=${{ steps.get_version.outputs.major_version }}
@@ -169,7 +166,6 @@ jobs:
   ghcr-publish-webmin:
     name: Publish Netatalk Webmin Module Container Image to GitHub Container Registry
     runs-on: ubuntu-latest
-    timeout-minutes: 5
     permissions:
       packages: write
     steps:
@@ -208,8 +204,6 @@ jobs:
         with:
           images: ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=tag
             type=raw,value=latest
             type=raw,value=${{ github.sha }}
             type=raw,value=${{ steps.get_version.outputs.major_version }}
@@ -224,7 +218,6 @@ jobs:
         with:
           context: .
           file: webmin_module.Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
           push: true
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
@@ -321,7 +314,6 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           file: webmin_module.Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
           push: true
           tags: |
             netatalk/webmin:latest
