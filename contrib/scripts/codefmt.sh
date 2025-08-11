@@ -20,7 +20,7 @@ IS_GIT=0
 VERBOSE=0
 
 usage() {
-    echo "Usage: $0 [-v] [-s c|meson|perl|shell]"
+    echo "Usage: $0 [-v] [-s c|meson|perl|shell|yaml]"
     exit 2
 }
 
@@ -31,8 +31,8 @@ while getopts "vs:" opt; do
             ;;
         s)
             SOURCE_TYPE="$OPTARG"
-            if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ]; then
-                echo "Error: Source type must be either 'c', 'meson', 'perl', or 'shell'"
+            if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ] && [ "$SOURCE_TYPE" != "yaml" ]; then
+                echo "Error: Source type must be either 'c', 'meson', 'perl', 'shell', or 'yaml'"
                 usage
                 exit 2
             fi
@@ -117,6 +117,20 @@ if [ "$SOURCE_TYPE" = "shell" ] || [ "$SOURCE_TYPE" = "" ]; then
         shfmt --write .
     else
         echo "Error: shfmt not found in PATH"
+        exit 2
+    fi
+fi
+
+if [ "$SOURCE_TYPE" = "yaml" ] || [ "$SOURCE_TYPE" = "" ]; then
+    if command -v yamlfmt > /dev/null 2>&1; then
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Formatting yaml files..."
+            yamlfmt --verbose .
+        else
+            yamlfmt .
+        fi
+    else
+        echo "Error: yamlfmt not found in PATH"
         exit 2
     fi
 fi
