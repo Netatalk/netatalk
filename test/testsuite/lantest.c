@@ -13,6 +13,7 @@
 #include <sys/socket.h>
 #include <math.h>
 #include <stdint.h>
+#include <limits.h>
 
 #ifdef __linux__
 #include "lantest_io_monitor.h"

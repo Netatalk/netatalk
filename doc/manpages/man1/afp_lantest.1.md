@@ -133,7 +133,6 @@ Tests 9-12 are specifically designed to highlight directory cache performance im
 netatalk. These tests benefit significantly from optimized cache validation and probabilistic
 validation features. Use the **-C** option to run only these cache-focused tests.
 
-
 # AFP Operation Counts Analysis
 
 The number of AFP (Apple Filing Protocol) operations performed by each test in lantest.c.
@@ -149,9 +148,11 @@ read/write operations are performed for large data transfers.
 ## Test AFP Operation Counts
 
 ### 1. TEST_OPENSTATREAD - Open, stat and read 512 bytes from 1000 files
+
 **Total AFP Operations: 8,000**
 
 For each of the 1000 files, the test performs:
+
 - 1 `is_there()` call (FPGetFileDirParams)
 - 2 additional FPGetFileDirParams calls
 - 1 FPOpenFork operation
@@ -160,6 +161,7 @@ For each of the 1000 files, the test performs:
 - 1 FPCloseFork operation
 
 Operations per file: 8
+
 - Open operations: 1
 - Stat operations (GetFileDirParams + GetForkParam): 5
 - Read operations: 1
@@ -168,6 +170,7 @@ Operations per file: 8
 Total: 8 × 1000 files = 8,000 AFP operations
 
 ### 2. TEST_WRITE100MB - Writing one large file
+
 **Total AFP Operations: 103**
 
 - 1 FPCreateExt (create file)
@@ -177,7 +180,8 @@ Total: 8 × 1000 files = 8,000 AFP operations
 
 Total: 103 AFP operations (100MB @1MB quantum)
 
-### 3. TEST_READ100MB - Reading one large file  
+### 3. TEST_READ100MB - Reading one large file
+
 **Total AFP Operations: 102**
 
 - 1 FPOpenFork
@@ -187,6 +191,7 @@ Total: 103 AFP operations (100MB @1MB quantum)
 Total: 102 AFP operations (100MB @1MB quantum)
 
 ### 4. TEST_LOCKUNLOCK - Locking/Unlocking 10000 times each
+
 **Total AFP Operations: 20,000**
 
 - 10,000 FPByteRangeLock operations (lock)
@@ -195,6 +200,7 @@ Total: 102 AFP operations (100MB @1MB quantum)
 Total: 20,000 AFP operations
 
 ### 5. TEST_CREATE2000FILES - Creating dir with 2000 files
+
 **Total AFP Operations: 4,000**
 
 - 1 FPCreateDir (Directory creation outside timed section)
@@ -204,6 +210,7 @@ Total: 20,000 AFP operations
 Total: 4,000 AFP operations
 
 ### 6. TEST_ENUM2000FILES - Enumerate dir with 2000 files
+
 **Total AFP Operations: ~51**
 
 - ~51 FPEnumerate operations (based on response packet size)
@@ -214,6 +221,7 @@ Total: 4,000 AFP operations
 This test demonstrates the efficiency of enumeration through batching.
 
 ### 7. TEST_DELETE2000FILES - Deleting dir with 2000 files
+
 **Total AFP Operations: 2,000**
 
 - 2,000 FPDelete operations (one per file)
@@ -222,9 +230,11 @@ This test demonstrates the efficiency of enumeration through batching.
 Total: 2,000 AFP operations
 
 ### 8. TEST_CREATEDIR - Create directory tree with 1000 dirs
+
 **Total AFP Operations: 1,110**
 
 Creates nested structure: 10 × 10 × 10 directories + 10 top-level
+
 - 10 FPCreateDir (level 1)
 - 100 FPCreateDir (level 2: 10 × 10)
 - 1,000 FPCreateDir (level 3: 10 × 10 × 10)
@@ -232,6 +242,7 @@ Creates nested structure: 10 × 10 × 10 directories + 10 top-level
 Total: 10 + 100 + 1,000 dirs = 1,110 AFP operations
 
 ### 9. TEST_DIRCACHE_HITS - Directory cache hits
+
 **Total AFP Operations: 11,100**
 
 - 100 FPCreateDir operations (10 × 10 directories)
@@ -241,9 +252,11 @@ Total: 10 + 100 + 1,000 dirs = 1,110 AFP operations
 Total: 100 + 1,000 + 10,000 dirs = 1,110 AFP operations
 
 ### 10. TEST_DIRCACHE_MIXED - Mixed cache operations
+
 **Total AFP Operations: 820**
 
 For each of 10 iterations (with 20 files each):
+
 - 1 FPCreateDir
 - 10 FPCreateExt (files)
 - 20 FPGetFileDirParams (2 × 10 stats)
@@ -254,13 +267,16 @@ Operations per iteration: 82
 Total for 10 iterations: 820 AFP operations
 
 ### 11. TEST_DIRCACHE_TRAVERSE - Deep path traversal
+
 **Total AFP Operations: 3,500**
 
 Creates 20-level deep directory structure with 50 files in the deepest directory, then performs 50 traversals:
+
 - Initial Directory creation: 20 FPCreateDir operations (outside timed section)
 - Initial File creation: 50 FPCreateFile operations (outside timed section)
 
 For each of 50 traversals (within timed section):
+
 - 20 FPGetFileDirParams (navigating down 20 directory levels using `is_there()` call)
 - 50 FPGetFileDirParams (accessing all 50 files in the deepest directory)
 
@@ -268,6 +284,7 @@ Operations per traversal: 70
 Total: 50 traversals × 70 operations = 3,500 AFP operations
 
 ### 12. TEST_CACHE_VALIDATION - Cache validation efficiency
+
 **Total AFP Operations: 30,000**
 
 - 100 FPCreateDir
@@ -299,11 +316,11 @@ Total: ~30,000 AFP operations
    measurements for metadata operation performance.
 
 These operation counts help identify which tests are best suited for:
+
 - **Protocol efficiency testing**: Enumeration, large file I/O
 - **Stress testing**: Cache validation, lock/unlock, open/stat/read
 - **Metadata performance**: Directory operations, cache hits
 - **Real-world simulation**: Mixed operations, open/stat/read patterns
-
 
 # IO Monitoring (Developer mode)
 
@@ -422,16 +439,14 @@ Run the afp_lantest benchmark using AFP 3.4 (IO Monitoring automatically enabled
     Deep path traversal (nested directory navigation) [3,500 AFP ops]       964  260.2   2500     0.0   3550     0.0      0     0.0     50     0.0      0
     Cache validation efficiency (metadata changes) [30,000 AFP ops]        8345   41.0  30000     0.0  30100     0.0      0     0.0    100     0.0      0
 
-```
-Time(ms) = Test runtime in milliseconds
-Time±    = Test runtime standard deviation
-AFPD_R   = afpd process IO Read operations
-AFPD_R±  = afpd process IO Read operation standard deviation
-AFPD_W   = afpd process IO Write operations
-AFPD_W±  = afpd process IO Write operation standard deviation\
+    Time(ms) = Test runtime in milliseconds
+    Time±    = Test runtime standard deviation
+    AFPD_R   = afpd process IO Read operations
+    AFPD_R±  = afpd process IO Read operation standard deviation
+    AFPD_W   = afpd process IO Write operations
+    AFPD_W±  = afpd process IO Write operation standard deviation
 
-CNID_*   = IO measurements for the cnid_dbd process (optional)
-```
+    CNID_*   = IO measurements for the cnid_dbd process (optional)
 
 # Return Codes
 

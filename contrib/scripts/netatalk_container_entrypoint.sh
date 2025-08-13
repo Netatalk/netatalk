@@ -262,7 +262,7 @@ fi
 
 if [ "$TESTSUITE" = "lan" ]; then
     if [ -n "$IO_MONITORING" ]; then
-        if mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io 2>/dev/null; then
+        if mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io 2> /dev/null; then
             echo "Successfully created /proc_io with hidepid=0,gid=0 for I/O monitoring (gid=0 as TESTSUITE tests run as root)"
         else
             echo "WARNING: IO_MONITORING enabled, however failed to create /proc_io mount"
