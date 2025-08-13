@@ -177,6 +177,7 @@ jobs:
             cracklib-runtime \
             file \
             flex \
+            gcc \
             libacl1-dev \
             libavahi-client-dev \
             libcrack2-dev \
