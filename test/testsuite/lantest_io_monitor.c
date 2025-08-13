@@ -606,4 +606,55 @@ void init_io_monitoring(const char *username)
     }
 }
 
+#else /* !__linux__ */
+
+/* Stub implementations for non-Linux systems */
+
+#include <sys/types.h>
+#include "lantest_io_monitor.h"
+
+/* Global variables - stub versions for non-Linux */
+int io_monitoring_enabled = 0;
+pid_t afpd_pid = 0;
+pid_t cnid_dbd_pid = 0;
+unsigned long long afpd_start_reads = 0, afpd_start_writes = 0;
+unsigned long long cnid_start_reads = 0, cnid_start_writes = 0;
+unsigned long long afpd_end_reads = 0, afpd_end_writes = 0;
+unsigned long long cnid_end_reads = 0, cnid_end_writes = 0;
+
+/* Stub function implementations */
+int check_proc_io_availability(void)
+{
+    return 0;  /* IO monitoring not available on non-Linux */
+}
+
+pid_t find_process_pid(const char *process_name, const char *username,
+                       int filter_by_cmdline)
+{
+    (void)process_name;
+    (void)username;
+    (void)filter_by_cmdline;
+    return 0;  /* Process not found */
+}
+
+void capture_io_values(int is_start)
+{
+    (void)is_start;
+    /* No-op on non-Linux */
+}
+
+unsigned long long iodiff_io(pid_t pid, int is_write)
+{
+    (void)pid;
+    (void)is_write;
+    return 0;  /* No IO data available */
+}
+
+void init_io_monitoring(const char *username)
+{
+    (void)username;
+    /* IO monitoring is not available on non-Linux systems */
+    io_monitoring_enabled = 0;
+}
+
 #endif /* __linux__ */
