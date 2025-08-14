@@ -32,6 +32,7 @@ jobs:
           brew update
           brew install \
             astyle \
+            markdownlint-cli2 \
             muon \
             perltidy \
             shfmt \
@@ -39,18 +40,8 @@ jobs:
       - name: Check formatting
         run: |
           ./contrib/scripts/codefmt.sh -v -s c
+          ./contrib/scripts/codefmt.sh -v -s markdown
           ./contrib/scripts/codefmt.sh -v -s meson
           ./contrib/scripts/codefmt.sh -v -s perl
           ./contrib/scripts/codefmt.sh -v -s shell
           ./contrib/scripts/codefmt.sh -v -s yaml
-
-  markdown-linting:
-    name: Markdown Linting
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
-      - uses: DavidAnson/markdownlint-cli2-action@992badcdf24e3b8eb7e87ff9287fe931bcb00c6e
-        with:
-          globs: '**/*.md'
