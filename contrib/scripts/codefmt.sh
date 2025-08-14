@@ -20,7 +20,8 @@ IS_GIT=0
 VERBOSE=0
 
 usage() {
-    echo "Usage: $0 [-v] [-s c|meson|perl|shell|yaml]"
+    echo "Usage: $0 [-v] [-s c|markdown|meson|perl|shell|yaml]"
+    echo "Run without arguments to format all source files recursively in working directory."
     exit 2
 }
 
@@ -31,8 +32,8 @@ while getopts "vs:" opt; do
             ;;
         s)
             SOURCE_TYPE="$OPTARG"
-            if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ] && [ "$SOURCE_TYPE" != "yaml" ]; then
-                echo "Error: Source type must be either 'c', 'meson', 'perl', 'shell', or 'yaml'"
+            if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "markdown" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ] && [ "$SOURCE_TYPE" != "yaml" ]; then
+                echo "Error: Source type must be either 'c', 'markdown', 'meson', 'perl', 'shell', or 'yaml'"
                 usage
                 exit 2
             fi
@@ -63,6 +64,15 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
         eval "$FORMATTER_CMD '*.h' '*.c'"
     else
         echo "Error: astyle not found in PATH"
+        exit 2
+    fi
+fi
+
+if [ "$SOURCE_TYPE" = "markdown" ] || [ "$SOURCE_TYPE" = "" ]; then
+    if command -v markdownlint-cli2 > /dev/null 2>&1; then
+        markdownlint-cli2 --fix .
+    else
+        echo "Error: markdownlint-cli2 not found in PATH"
         exit 2
     fi
 fi
