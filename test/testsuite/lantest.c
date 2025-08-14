@@ -108,11 +108,13 @@ static int validation_iterations = 100;  /* validation iterations */
 /* Forward declarations */
 void fatal_failed(void);
 static unsigned long long numrw;
-static char teststorun[NUMTESTS];  /* Bool array of which tests to run */
-static unsigned long (
-    *results)[][NUMTESTS][NUM_MEASUREMENTS];  /* [iteration][test][measurement_type] */
+/* Bool array of which tests to run */
+static char teststorun[NUMTESTS];
+/* [iteration][test][measurement_type] */
+static unsigned long (*results)[][NUMTESTS][NUM_MEASUREMENTS];
 static char *bigfilename;
-static int csv_output = 0;  /* 0 = tabular (default), 1 = CSV */
+/* 0 = tabular (default), 1 = CSV */
+static int csv_output = 0;
 
 /* Display width for test names in progress output */
 #define TEST_NAME_DISPLAY_WIDTH 66
@@ -734,7 +736,7 @@ static void *rply_thread(void *p)
     buf = malloc(size);
 
     if (!buf) {
-        fprintf(stderr, "Memory allocation failed for 'buf' (%zu bytes)\n", size);
+        fprintf(stderr, "Memory allocation failed for DSI buffer (%zu bytes)\n", size);
         fatal_failed();
     }
 
@@ -1378,12 +1380,12 @@ void run_test(const int dir)
         int *cache_test_dirs_arr = calloc(cache_dirs, sizeof(int));
 
         if (!cache_test_files) {
-            fprintf(stderr, "Memory allocation failed for 'cache_test_files'\n");
+            fprintf(stderr, "Memory allocation failed for test files cache\n");
             fatal_failed();
         }
 
         if (!cache_test_dirs_arr) {
-            fprintf(stderr, "Memory allocation failed for 'cache_test_dirs_arr'\n");
+            fprintf(stderr, "Memory allocation failed for test dirs array cache\n");
             free(cache_test_files);  /* Free the successfully allocated memory from above */
             fatal_failed();
         }
@@ -1519,7 +1521,7 @@ void run_test(const int dir)
         uint32_t *deep_dirs = calloc(deep_dir_levels, sizeof(uint32_t));
 
         if (!deep_dirs) {
-            fprintf(stderr, "Memory allocation failed for 'deep_dirs'\n");
+            fprintf(stderr, "Memory allocation failed for deep directories\n");
             fatal_failed();
         }
 
@@ -1779,7 +1781,7 @@ int main(int ac, char **av)
             bigfilename = strdup(optarg);
 
             if (!bigfilename) {
-                fprintf(stderr, "Memory allocation failed for bigfilename\n");
+                fprintf(stderr, "Memory allocation failed for big filename\n");
                 exit(1);
             }
 
@@ -1929,7 +1931,8 @@ int main(int ac, char **av)
     results = calloc(Iterations, sizeof(unsigned long[NUMTESTS][NUM_MEASUREMENTS]));
 
     if (!results) {
-        fprintf(stderr, "Memory allocation failed for 'results' (%d iterations)\n",
+        fprintf(stderr,
+                "Memory allocation failed for 3D results array (%d iterations)\n",
                 Iterations);
         fatal_failed();
     }

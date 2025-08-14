@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Netatalk Project
+ * Copyright (c) 2025, Andy Lemin (@andylemin), Netatalk Project
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
