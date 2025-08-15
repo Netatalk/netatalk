@@ -23,7 +23,7 @@ done
 # The start subroutine
 StartService() {
   ConsoleMessage "Starting netatalk fileserver..."
-  rm -f /var/run/netatalk.pid
+  rm -f @lockfile_path@/netatalk.pid
   @sbindir@/netatalk
 }
 
@@ -40,7 +40,7 @@ StopService() {
 # The restart subroutine
 RestartService() {
   StopService
-  rm -f /var/run/netatalk.pid
+  rm -f @lockfile_path@/netatalk.pid
   StartService
 }
 
