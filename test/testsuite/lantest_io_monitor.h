@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, Andy Lemin (andylemin@github.com)
+ * Copyright (c) 2025, Andy Lemin (andylemin)
  * Credits; Based on work by Netatalk contributors
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,47 +16,53 @@
 #ifndef LANTEST_IO_MONITOR_H
 #define LANTEST_IO_MONITOR_H
 
+#include <stdint.h>
+#include <sys/types.h>
+
+/* Define PID_MAX if not available from system headers */
+#ifndef PID_MAX
+/* Conservative default maximum PID value */
+#define PID_MAX 99999
+#endif
+
 /* Global Debug flag - controlled by -b option in lantest.c */
-extern int Debug;
+extern int32_t Debug;
 
 #ifdef __linux__
-
-#include <sys/types.h>
-#include <stdint.h>
 
 /* Structure to hold process filtering configuration */
 typedef struct {
     const char *process_name;
     const char *username;
-    int filter_by_cmdline;  /* 0 = filter by UID ownership, 1 = filter by cmdline -u arg */
+    int32_t filter_by_cmdline;  /* 0 = filter by UID ownership, 1 = filter by cmdline -u arg */
     uid_t target_uid;       /* For ownership filtering */
 } ProcessFilter;
 
 /* Structure to hold discovered process information */
 typedef struct {
     pid_t pids[10];
-    int count;
+    int32_t count;
 } ProcessList;
 
 /* External variables for IO monitoring */
-extern int io_monitoring_enabled;
+extern int32_t io_monitoring_enabled;
 extern pid_t afpd_pid;
 extern pid_t cnid_dbd_pid;
-extern unsigned long long afpd_start_reads, afpd_start_writes;
-extern unsigned long long cnid_start_reads, cnid_start_writes;
-extern unsigned long long afpd_end_reads, afpd_end_writes;
-extern unsigned long long cnid_end_reads, cnid_end_writes;
+extern uint64_t afpd_start_reads, afpd_start_writes;
+extern uint64_t cnid_start_reads, cnid_start_writes;
+extern uint64_t afpd_end_reads, afpd_end_writes;
+extern uint64_t cnid_end_reads, cnid_end_writes;
 
 /* Constants for capture_io_values() */
 #define TEST_START 1
 #define TEST_STOP  0
 
 /* Function declarations */
-int check_proc_io_availability(void);
+int32_t check_proc_io_availability(void);
 pid_t find_process_pid(const char *process_name, const char *username,
-                       int filter_by_cmdline);
-void capture_io_values(int is_start);
-unsigned long long iodiff_io(pid_t pid, int is_write);
+                       int32_t filter_by_cmdline);
+void capture_io_values(int32_t is_start);
+uint64_t iodiff_io(pid_t pid, int32_t is_write);
 
 /* Initialization function */
 void init_io_monitoring(const char *username);

@@ -1,22 +1,4 @@
-
-# Build Container Image: docker build --no-cache -f testsuite_alp.Dockerfile -t netatalk-test:latest .
-
-# Init Container and run Netatalk: docker run -d --network host --cap-add=NET_ADMIN --volume "<path to local folder>:/mnt/afpshare" --volume "<path to local folder>:/mnt/afpbackup" --env AFP_USER=test --env AFP_PASS=test --env AFP_GROUP=test --env SHARE_NAME='File Sharing' --env INSECURE_AUTH=true --name netatalk-test netatalk-test:latest
-
-# Read Container Logs: docker logs netatalk-test
-# Run Netatalk Test: docker exec -it netatalk-test /usr/local/bin/afp_lantest -h localhost -p 548 -u test -w test -s "File Sharing" -n 2
-# Stop Container: docker stop netatalk-test
-# Start Container: docker start netatalk-test netatalk-test
-# List Containers: docker ps -a
-# Delete Container Instance: docker rm netatalk-test
-# Delete Container Image: docker image rm netatalk-test
-# Purge ALL Docker images after testing: docker rmi $(docker images -q)
-
-# Init Container, run Netatalk interactively, Run Test, and Shutdown: docker run --rm -it --network host --cap-add=NET_ADMIN --volume "<path to local folder>:/mnt/afpshare" --volume "<path to local folder>:/mnt/afpbackup" --env TESTSUITE=lan --env TEST_FLAGS="-n 2" --env AFP_USER=test --env AFP_PASS=test --env AFP_GROUP=test --env SHARE_NAME='File Sharing' --env INSECURE_AUTH=true --name netatalk-test netatalk-test:latest
-
-# Running the test container in developer mode (IO monitoring enabled);
-# docker run -it --rm --privileged --network host --cap-add=NET_ADMIN --volume "<path to local folder>:/mnt/afpshare" --volume "<path to local folder>:/mnt/afpbackup" --env IO_MONITORING=1 --env TESTSUITE=lan --env TEST_FLAGS="-n 3 -b" --env AFP_USER=test --env AFP_PASS=test --env AFP_GROUP=test --env SHARE_NAME='File Sharing' --env INSECURE_AUTH=true --name netatalk-test netatalk-test:latest
-# NB; --privileged is required to enable the /proc mount to work for IO monitoring
+# See https://github.com/Netatalk/netatalk/wiki/Testing for guidance
 
 ARG RUN_DEPS="\
     acl \

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, Andy Lemin (andylemin@github.com)
+ * Copyright (c) 2025, Andy Lemin (andylemin)
  * Credits; Based on work by Rafal Lewczuk, Didier Gautheron, Frank Lahm, and Netatalk contributors
  *
  * This program is free software; you can redistribute it and/or modify
@@ -66,70 +66,70 @@
 #define TOTAL_AFP_OPS 80686
 
 CONN *Conn;
-int ExitCode = 0;
+int32_t ExitCode = 0;
 char Data[300000] = "";
 char    *Vol = "";
 char    *User = "";
 char    *Path;
-int     Version = 34;
-int     Mac = 0;
+int32_t Version = 34;
+int32_t Mac = 0;
 char    *Test = NULL;
 static uint16_t vol;
 static DSI *dsi;
 static char    *Server = "localhost";
-static int     Port = DSI_AFPOVERTCP_PORT;
+static int32_t Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
-static int     Iterations = 2;
-static int     Iterations_save;
-static int     iteration_counter = 0;
+static int32_t Iterations = 2;
+static int32_t Iterations_save;
+static int32_t iteration_counter = 0;
 static struct timeval tv_start;
 static struct timeval tv_end;
 static struct timeval tv_dif;
 static pthread_t tid;
-static int active_thread = 0;  /* Track if we have an active thread */
+static int32_t active_thread = 0;  /* Track if we have an active thread */
 
 /* Global Debug flag */
-int Debug = 0;
+int32_t Debug = 0;
 /* Global Quiet flag override for lantest (stdout output enabled) */
-int lantest_Quiet = 0;
+int32_t lantest_Quiet = 0;
 
 /* Remote linker names */
 CONN *Conn2;
 uint16_t VolID;
-int PassCount = 0;
-int FailCount = 0;
-int SkipCount = 0;
-int NotTestedCount = 0;
+int32_t PassCount = 0;
+int32_t FailCount = 0;
+int32_t SkipCount = 0;
+int32_t NotTestedCount = 0;
 char FailedTests[1024][256] = {{0}};
 char NotTestedTests[1024][256] = {{0}};
 char SkippedTests[1024][256] = {{0}};
 
 /* Tests configuration */
 #define DIRNUM 10  /* 1000 nested dirs */
-static int smallfiles = 1000;  /* 1000 files */
+static int32_t smallfiles = 1000;  /* 1000 files */
 static off_t rwsize = 100 * 1024 * 1024;  /* 100 MB */
-static int locking = 10000 / 40;  /* 10000 times */
-static int create_enum_files = 2000;  /* 2000 files */
-static int cache_dirs = 10;  /* dirs for cache tests */
-static int cache_files_per_dir = 10;  /* files per dir */
-static int cache_lookup_iterations = 100;  /* cache test iterations */
-static int mixed_cache_files = 200;  /* mixed ops file count */
-static int deep_dir_levels = 20;  /* deep traversal dir levels */
-static int deep_test_files = 50;  /* files in deepest dir */
-static int deep_traversals = 50;  /* path traversal iterations */
-static int validation_files = 100;  /* validation file count */
-static int validation_iterations = 100;  /* validation iterations */
+static int32_t locking = 10000 / 40;  /* 10000 times */
+static int32_t create_enum_files = 2000;  /* 2000 files */
+static int32_t cache_dirs = 10;  /* dirs for cache tests */
+static int32_t cache_files_per_dir = 10;  /* files per dir */
+static int32_t cache_lookup_iterations = 100;  /* cache test iterations */
+static int32_t mixed_cache_files = 200;  /* mixed ops file count */
+static int32_t deep_dir_levels = 20;  /* deep traversal dir levels */
+static int32_t deep_test_files = 50;  /* files in deepest dir */
+static int32_t deep_traversals = 50;  /* path traversal iterations */
+static int32_t validation_files = 100;  /* validation file count */
+static int32_t validation_iterations = 100;  /* validation iterations */
 
 /* Forward declarations */
 void fatal_failed(void);
-static unsigned long long numrw;
+static uint64_t numrw;
 /* Bool array of which tests to run */
 static char teststorun[NUMTESTS];
 /* [iteration][test][measurement_type] */
-static unsigned long (*results)[][NUMTESTS][NUM_MEASUREMENTS];
+static uint64_t (*results)[][NUMTESTS][NUM_MEASUREMENTS];
 static char *bigfilename;
 /* 0 = tabular (default), 1 = CSV */
-static int csv_output = 0;
+static int32_t csv_output = 0;
 
 /* Display width for test names in progress output */
 #define TEST_NAME_DISPLAY_WIDTH 66
@@ -160,7 +160,7 @@ static void stoptimer(void)
     gettimeofday(&tv_end, NULL);
 }
 
-static unsigned long timediff(void)
+static uint64_t timediff(void)
 {
     if (tv_end.tv_usec < tv_start.tv_usec) {
         tv_end.tv_usec += 1000000;
@@ -175,7 +175,7 @@ static unsigned long timediff(void)
 /* Helper function to format test name with fixed-width padding */
 static void format_padded_test_name(char *dest, const char *src, size_t width)
 {
-    int len = snprintf(dest, width + 1, "%-*s", (int)width, src);
+    int32_t len = snprintf(dest, width + 1, "%-*s", (int32_t)width, src);
 
     if (len >= 0 && len < width) {
         memset(dest + len, ' ', width - len);
@@ -184,10 +184,10 @@ static void format_padded_test_name(char *dest, const char *src, size_t width)
     dest[width] = '\0';
 }
 
-static void addresult(int test, int iteration)
+static void addresult(int32_t test, int32_t iteration)
 {
-    unsigned long t;
-    unsigned long long avg;
+    uint64_t t;
+    uint64_t avg;
     t = timediff();
     /* Store timing measurement */
     (*results)[iteration][test][MEASURE_TIME_MS] = t;
@@ -248,7 +248,7 @@ static void addresult(int test, int iteration)
 }
 
 /* Helper function to check if measurement should be skipped */
-static inline int should_skip_measurement(int measure_type)
+static inline int32_t should_skip_measurement(int32_t measure_type)
 {
 #ifdef __linux__
     return (!io_monitoring_enabled && measure_type > MEASURE_TIME_MS);
@@ -258,14 +258,14 @@ static inline int should_skip_measurement(int measure_type)
 }
 
 /* Helper function to calculate statistics for all tests */
-static void results_calc_stats(unsigned long long
+static void results_calc_stats(uint64_t
                                averages[NUMTESTS][NUM_MEASUREMENTS],
                                double std_devs[NUMTESTS][NUM_MEASUREMENTS],
                                char teststorun[NUMTESTS])
 {
-    int i, test, measure_type;
-    unsigned long long sum;
-    int valid_counts[NUMTESTS][NUM_MEASUREMENTS] = {0};
+    int32_t i, test, measure_type;
+    uint64_t sum;
+    int32_t valid_counts[NUMTESTS][NUM_MEASUREMENTS] = {0};
 
     for (test = 0; test < NUMTESTS; test++) {
         if (!teststorun[test]) {
@@ -320,7 +320,7 @@ static void results_calc_stats(unsigned long long
 }
 
 /* Helper function to print headers */
-static void results_print_headers(int is_csv)
+static void results_print_headers(int32_t is_csv)
 {
 #ifdef __linux__
 
@@ -368,12 +368,12 @@ static void results_print_headers(int is_csv)
 }
 
 /* Helper function to print data row */
-static void results_print_row(int test, int is_csv,
-                              unsigned long long averages[NUMTESTS][NUM_MEASUREMENTS],
+static void results_print_row(int32_t test, int32_t is_csv,
+                              uint64_t averages[NUMTESTS][NUM_MEASUREMENTS],
                               double std_devs[NUMTESTS][NUM_MEASUREMENTS])
 {
     /* Calculate throughput for file I/O tests */
-    unsigned long long thrput = 0;
+    uint64_t thrput = 0;
 
     if ((test == TEST_WRITE100MB || test == TEST_READ100MB)
             && averages[test][MEASURE_TIME_MS] > 0) {
@@ -437,12 +437,12 @@ static void results_print_row(int test, int is_csv,
 #endif
 }
 
-static void result_print_summary(unsigned long long
+static void result_print_summary(uint64_t
                                  averages[NUMTESTS][NUM_MEASUREMENTS],
-                                 int csv_output,
+                                 int32_t csv_output,
                                  char teststorun[NUMTESTS])
 {
-    int test, measure_type;
+    int32_t test, measure_type;
     double column_sums[NUM_MEASUREMENTS] = {0.0};
 
     /* Calculate sums for each measurement type across all active tests */
@@ -569,10 +569,10 @@ static void result_print_summary(unsigned long long
 
 static void displayresults(void)
 {
-    int i, test, maxindex, minindex;
-    unsigned long long sum;
-    unsigned long max, min;
-    int measure_type;
+    int32_t i, test, maxindex, minindex;
+    uint64_t sum;
+    uint64_t max, min;
+    int32_t measure_type;
 
     /* Eliminate runaways for all measurement types */
     if (Iterations_save > 5) {
@@ -613,7 +613,7 @@ static void displayresults(void)
     }
 
     /* Calculate statistics (results and standard deviations) for each test */
-    unsigned long long averages[NUMTESTS][NUM_MEASUREMENTS] = {0};
+    uint64_t averages[NUMTESTS][NUM_MEASUREMENTS] = {0};
     double std_devs[NUMTESTS][NUM_MEASUREMENTS] = {0.0};
     results_calc_stats(averages, std_devs, teststorun);
     /* Display results banner */
@@ -649,11 +649,12 @@ static void displayresults(void)
 }
 
 /* Safe integer conversion with validation */
-static int safe_atoi(const char *str, const char *param_name, int min_val,
-                     int max_val)
+static int32_t safe_atoi(const char *str, const char *param_name,
+                         int32_t min_val,
+                         int32_t max_val)
 {
     char *endptr;
-    long val;
+    int64_t val;
 
     if (!str || *str == '\0') {
         fprintf(stderr, "Error: Empty %s parameter\n", param_name);
@@ -684,7 +685,7 @@ static int safe_atoi(const char *str, const char *param_name, int min_val,
         fatal_failed();
     }
 
-    return (int)val;
+    return (int32_t)val;
 }
 
 /* ------------------------- */
@@ -726,7 +727,7 @@ void fatal_failed(void)
 }
 
 /* --------------------------------- */
-int is_there(CONN *conn, uint16_t vol, int did, char *name)
+int32_t is_there(CONN *conn, uint16_t vol, int32_t did, char *name)
 {
     return FPGetFileDirParams(conn, vol, did, name,
                               (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
@@ -736,7 +737,7 @@ int is_there(CONN *conn, uint16_t vol, int did, char *name)
 }
 
 struct async_io_req {
-    unsigned long long air_count;
+    uint64_t air_count;
     size_t air_size;
 };
 
@@ -744,7 +745,7 @@ static void *rply_thread(void *p)
 {
     struct async_io_req *air = p;
     size_t size = air->air_size;
-    unsigned long long n = air->air_count;
+    uint64_t n = air->air_count;
     size_t stored;
     ssize_t len;
     char *buf = NULL;
@@ -784,14 +785,14 @@ exit:
 }
 
 /* ------------------------- */
-void run_test(const int dir)
+void run_test(const int32_t dir)
 {
     static char *data;
-    int i, maxi = 0;
-    int j, k;
-    int fork;
-    int test = 0;
-    int nowrite;
+    int32_t i, maxi = 0;
+    int32_t j, k;
+    int32_t fork;
+    int32_t test = 0;
+    int32_t nowrite;
     off_t offset;
     struct async_io_req air;
     static char temp[MAXPATHLEN];
@@ -991,7 +992,7 @@ void run_test(const int dir)
 
         air.air_count = numrw;
         air.air_size = FPWRITE_RPLY_SIZE;
-        int pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
+        int32_t pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
 
         if (pthread_ret != 0) {
             fprintf(stderr, "pthread_create failed: %d\n", pthread_ret);
@@ -1061,7 +1062,7 @@ void run_test(const int dir)
 
         air.air_count = numrw;
         air.air_size = (dsi->server_quantum - FPWRITE_RQST_SIZE) + 16;
-        int pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
+        int32_t pthread_ret = pthread_create(&tid, NULL, rply_thread, &air);
 
         if (pthread_ret != 0) {
             fprintf(stderr, "pthread_create failed: %d\n", pthread_ret);
@@ -1392,7 +1393,7 @@ void run_test(const int dir)
         /* Use dynamic allocation to prevent stack overflow with VLAs */
         char (*cache_test_files)[32] = calloc(cache_dirs * cache_files_per_dir,
                                               sizeof(char[32]));
-        int *cache_test_dirs_arr = calloc(cache_dirs, sizeof(int));
+        int32_t *cache_test_dirs_arr = calloc(cache_dirs, sizeof(int32_t));
 
         if (!cache_test_files) {
             fprintf(stderr, "Memory allocation failed for test files cache\n");
@@ -1685,9 +1686,9 @@ fin:
 /* =============================== */
 void usage(char *av0)
 {
-    int i = 0;
+    int32_t i = 0;
     fprintf(stdout,
-            "usage:\t%s [-34567CcGgVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
+            "usage:\t%s [-1234567bcGgKVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
             "[-n iterations] [-f tests] [-F bigfile]\n", av0);
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
@@ -1708,7 +1709,8 @@ void usage(char *av0)
     fprintf(stdout, "\t-g\tfast network (Gbit, file testsize 1 GB)\n");
     fprintf(stdout,
             "\t-G\tridiculously fast network (10 Gbit, file testsize 10 GB)\n");
-    fprintf(stdout, "\t-n\thow many iterations to run (default: 2)\n");
+    fprintf(stdout,
+            "\t-n\titerations to run (default: 2), for iterations > 5 outliers will be removed\n");
     fprintf(stdout, "\t-v\tverbose\n");
     fprintf(stdout, "\t-V\tvery verbose\n");
     fprintf(stdout, "\tAvailable tests:\n");
@@ -1731,9 +1733,9 @@ void usage(char *av0)
 }
 
 /* ------------------------------- */
-int main(int ac, char **av)
+int main(int32_t ac, char **av)
 {
-    int cc, i, t;
+    int32_t cc, i, t;
     static char *vers = "AFP3.4";
     static char *uam = "Cleartxt Passwrd";
 
@@ -1741,7 +1743,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567bKcGgVvF:f:h:n:p:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567bcGgKVvF:f:h:n:p:s:u:w:")) != EOF) {
         switch (cc) {
         case '3':
             vers = "AFPX03";
@@ -1900,7 +1902,7 @@ int main(int ac, char **av)
         struct passwd *result = NULL;
         uid_t uid = geteuid();
         char buf[1024];
-        int ret;
+        int32_t ret;
         ret = getpwuid_r(uid, &pwd, buf, sizeof(buf), &result);
 
         if (ret == 0 && result != NULL) {
@@ -1943,7 +1945,7 @@ int main(int ac, char **av)
 #endif
     Iterations_save = Iterations;
     /* Allocate memory for 3D results array: Iterations x NUMTESTS x NUM_MEASUREMENTS */
-    results = calloc(Iterations, sizeof(unsigned long[NUMTESTS][NUM_MEASUREMENTS]));
+    results = calloc(Iterations, sizeof(uint64_t[NUMTESTS][NUM_MEASUREMENTS]));
 
     if (!results) {
         fprintf(stderr,
@@ -1991,7 +1993,7 @@ int main(int ac, char **av)
     }
 
     /* Open socket and setup DSI connection */
-    int sock;
+    int32_t sock;
     dsi = &Conn->dsi;
     sock = OpenClientSocket(Server, Port);
 
@@ -2020,8 +2022,9 @@ int main(int ac, char **av)
     /* IO monitoring setup - only after AFP connection is established */
     init_io_monitoring(User);
 
-    /* Warn if not running on localhost */
-    if (strcmp(Server, "localhost") != 0 && strcmp(Server, "127.0.0.1") != 0) {
+    /* Warn if not localhost - only warn to allow testing with local interface IP for TCP network stack tests */
+    if (strcmp(Server, "localhost") != 0 && strcmp(Server, "127.0.0.1") != 0
+            && strstr(Server, "::") != NULL) {
         fprintf(stderr,
                 "Warning: IO monitoring only works when afp_lantest is executed on the same host as the Netatalk server.\n"
                 "         Current server: %s (not localhost or 127.0.0.1)\n", Server);
@@ -2029,7 +2032,7 @@ int main(int ac, char **av)
 
     fprintf(stdout, "\n");
 #endif /* __linux__ */
-    int dir;
+    int32_t dir;
     char testdir[MAXPATHLEN];
     snprintf(testdir, sizeof(testdir), "LanTest-%d", getpid());
 
@@ -2072,7 +2075,7 @@ int main(int ac, char **av)
         fatal_failed();
     }
 
-    for (int current_iteration = 0; current_iteration < Iterations;
+    for (int32_t current_iteration = 0; current_iteration < Iterations;
             current_iteration++) {
         /* Update global iteration counter for addresult() calls */
         iteration_counter = current_iteration;

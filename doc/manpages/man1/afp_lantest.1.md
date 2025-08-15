@@ -4,7 +4,7 @@ afp_lantest — AFP LAN performance and directory cache testing tool
 
 # Synopsis
 
-**afp_lantest** [-34567GgVvbcK] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
+**afp_lantest** [-1234567bcGgKVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
 [-n *iterations*] [-f *tests*] [-F *bigfile*]
 
 # Description
@@ -40,9 +40,6 @@ features.
 **-c**
 : Output results in CSV format (default: tabular)
 
-**-K**
-: Run cache-focused tests only (tests 9-12)
-
 **-f** *tests*
 : Specific tests to run, specified as digits (e.g., "134" runs tests 1, 3, and 4)
 
@@ -58,8 +55,11 @@ features.
 **-h** *host*
 : Server hostname or IP address (default: localhost)
 
+**-K**
+: Run cache-focused tests only (tests 9-12)
+
 **-n** *iterations*
-: Number of test iterations to run (default: 1)
+: Number of test iterations to run (default: 2). For iterations > 5 outliers will be removed
 
 **-p** *port*
 : Server port number (default: 548)
@@ -155,7 +155,12 @@ Run multiple iterations for statistical analysis:
 
     afp_lantest -n 5 -h server.example.com -u testuser -w password -s TestVolume
 
-# Results Example with IO Monitoring
+# Example with IO Monitoring
+
+IO Monitoring (Linux only) requires proc filesystem mounted at /proc_io with hidepid=0.
+Set gid to the group ID of the user running afp_lantest.
+For example, to run as root;
+`mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io`
 
     afp_lantest -n 2 -7 -h 127.0.0.1 -p 548 -u test -w test -s 'File Sharing'
     Connecting to host 127.0.0.1:548
@@ -252,211 +257,7 @@ Run multiple iterations for statistical analysis:
 
     CNID_*   = IO measurements for the cnid_dbd process (optional)
 
-# IO Monitoring
-
-The IO Monitoring capability is an advanted performance analysis mechanism to enable Netatalk developers to validate
-performance enhancements and quantify AFP-to-IO operation impact.
-
-*Requires afp_lantest to be run on the same (Linux) host as Netatalk, to enable access to the afpd processes disk
-IO operation stats via the Linux proc virtual filesystem.*
-
-Distributions running systemd do not allow exiting /proc filesystem to be remounted, therefore a secondary proc
-mount is required at /proc_io from the default /proc location.
-
-Example - Run as root to allow 'root' GID access to /proc_io for other UIDs (When running afp_lantest as user
-other than root, update gid accordingly.):
-`mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io`
-
-NB; IO Monitoring is intended for use with the Netatalk test Docker container (see `testsuite_alp.Dockerfile`).
-
-# AFP Operation Counts Analysis
-
-The number of AFP (Apple Filing Protocol) operations performed by each test in lantest.c.
-
-The operation counts are measured between `starttimer()` and `stoptimer()` calls to understand the actual workload
-each test generates.
-
-## DSI Quantum Size Impact
-
-The DSI (Data Stream Interface) protocol default quantum size is **1MB (1048576 bytes)**, which affects how many
-read/write operations are performed for large data transfers.
-
-## Test AFP Operation Counts
-
-### 1. TEST_OPENSTATREAD - Open, stat and read 512 bytes from 1000 files
-
-**Total AFP Operations: 8,000**
-
-For each of the 1000 files, the test performs:
-
-- 1 `is_there()` call (FPGetFileDirParams)
-- 2 additional FPGetFileDirParams calls
-- 1 FPOpenFork operation
-- 2 FPGetForkParam operations
-- 1 FPRead operation (512 bytes)
-- 1 FPCloseFork operation
-
-Operations per file: 8
-
-- Open operations: 1
-- Stat operations (GetFileDirParams + GetForkParam): 5
-- Read operations: 1
-- Close operations: 1
-
-Total: 8 × 1000 files = 8,000 AFP operations
-
-### 2. TEST_WRITE100MB - Writing one large file
-
-**Total AFP Operations: 103**
-
-- 1 FPCreateExt (create file)
-- 1 FPOpenFork
-- 100 FPWrite operations (100MB @1MB quantum)
-- 1 FPCloseFork
-
-Total: 103 AFP operations (100MB @1MB quantum)
-
-### 3. TEST_READ100MB - Reading one large file
-
-**Total AFP Operations: 102**
-
-- 1 FPOpenFork
-- 100 FPRead operations (100MB @1MB quantum)
-- 1 FPCloseFork
-
-Total: 102 AFP operations (100MB @1MB quantum)
-
-### 4. TEST_LOCKUNLOCK - Locking/Unlocking 10000 times each
-
-**Total AFP Operations: 20,000**
-
-- 10,000 FPByteRangeLock operations (lock)
-- 10,000 FPByteRangeLock operations (unlock)
-
-Total: 20,000 AFP operations
-
-### 5. TEST_CREATE2000FILES - Creating dir with 2000 files
-
-**Total AFP Operations: 4,000**
-
-- 1 FPCreateDir (Directory creation outside timed section)
-- 2,000 FPCreateExt (one per file)
-- 2,000 FPGetFileDirParams (one per file after creation)
-
-Total: 4,000 AFP operations
-
-### 6. TEST_ENUM2000FILES - Enumerate dir with 2000 files
-
-**Total AFP Operations: ~51**
-
-- ~51 FPEnumerate operations (based on response packet size)
-  - Each FPEnumerate can return ~40 entries
-  - 2000 files ÷ 40 per call ≈ 50 calls
-  - Plus 1 final call to confirm end
-
-This test demonstrates the efficiency of enumeration through batching.
-
-### 7. TEST_DELETE2000FILES - Deleting dir with 2000 files
-
-**Total AFP Operations: 2,000**
-
-- 2,000 FPDelete operations (one per file)
-- 1 FPDelete (Directory deletion outside timed section)
-
-Total: 2,000 AFP operations
-
-### 8. TEST_CREATEDIR - Create directory tree with 1000 dirs
-
-**Total AFP Operations: 1,110**
-
-Creates nested structure: 10 × 10 × 10 directories + 10 top-level
-
-- 10 FPCreateDir (level 1)
-- 100 FPCreateDir (level 2: 10 × 10)
-- 1,000 FPCreateDir (level 3: 10 × 10 × 10)
-
-Total: 10 + 100 + 1,000 dirs = 1,110 AFP operations
-
-### 9. TEST_DIRCACHE_HITS - Directory cache hits
-
-**Total AFP Operations: 11,100**
-
-- 100 FPCreateDir operations (10 × 10 directories)
-- 1,000 FPCreateExt operations (100 dirs × 10 files per dir)
-- 10,000 FPGetFileDirParams operations (100 iterations × 100 dirs)
-
-Total: 100 + 1,000 + 10,000 dirs = 1,110 AFP operations
-
-### 10. TEST_DIRCACHE_MIXED - Mixed cache operations
-
-**Total AFP Operations: 820**
-
-For each of 10 iterations (with 20 files each):
-
-- 1 FPCreateDir
-- 10 FPCreateExt (files)
-- 20 FPGetFileDirParams (2 × 10 stats)
-- 41 FPEnumerate (~40 entries per call + 1)
-- 10 FPDelete (files)
-
-Operations per iteration: 82
-Total for 10 iterations: 820 AFP operations
-
-### 11. TEST_DIRCACHE_TRAVERSE - Deep path traversal
-
-**Total AFP Operations: 3,500**
-
-Creates 20-level deep directory structure with 50 files in the deepest directory, then performs 50 traversals:
-
-- Initial Directory creation: 20 FPCreateDir operations (outside timed section)
-- Initial File creation: 50 FPCreateFile operations (outside timed section)
-
-For each of 50 traversals (within timed section):
-
-- 20 FPGetFileDirParams (navigating down 20 directory levels using `is_there()` call)
-- 50 FPGetFileDirParams (accessing all 50 files in the deepest directory)
-
-Operations per traversal: 70
-Total: 50 traversals × 70 operations = 3,500 AFP operations
-
-### 12. TEST_CACHE_VALIDATION - Cache validation efficiency
-
-**Total AFP Operations: 30,000**
-
-- 100 FPCreateDir
-- 1,000 FPCreateExt (10 files per dir)
-- 10,000 FPGetFileDirParams (validation before modifications)
-- 1,000 FPSetFileParms (modify timestamps)
-- 1,000 FPWrite operations (trigger metadata changes)
-- 10,000 FPGetFileDirParams (revalidation after changes)
-- 1,000 FPRename operations (test cache coherency)
-- 6,000 FPGetFileDirParams (verify renames - partial dirs)
-
-Total: ~30,000 AFP operations
-
-## Key Insights
-
-1. **Enumeration Efficiency**: The enumeration test (TEST_ENUM2000FILES) performs only ~51 operations for 2000
-   files due to batching, making it the most efficient operation per item.
-
-2. **Read/Write Quantum Impact**: With 1MB quantum size, the 100MB file tests perform only ~100 operations each,
-   making them very efficient for bulk data transfer.
-
-3. **Cache Validation Overhead**: The cache validation test performs the most operations (30,000), making it ideal
-   for stress testing and cache coherency validation.
-
-4. **Lock Operations**: The lock/unlock test provides a pure protocol overhead measurement with 20,000 rapid
-   operations that don't involve actual data transfer.
-
-5. **Directory Operations**: Directory creation and traversal tests (1,110-1,500 operations) provide good
-   measurements for metadata operation performance.
-
-These operation counts help identify which tests are best suited for:
-
-- **Protocol efficiency testing**: Enumeration, large file I/O
-- **Stress testing**: Cache validation, lock/unlock, open/stat/read
-- **Metadata performance**: Directory operations, cache hits
-- **Real-world simulation**: Mixed operations, open/stat/read patterns
+For more information see [Testing Wiki](https://netatalk.io/docs/Testing)
 
 # Return Codes
 

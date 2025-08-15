@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025, Andy Lemin (andylemin@github.com)
+ * Copyright (c) 2025, Andy Lemin (andylemin)
  * Credits; Based on work by Netatalk contributors
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,37 +30,40 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <ctype.h>
+#include <stdint.h>
 
 #include "lantest_io_monitor.h"
 
 #include <limits.h>  /* For PATH_MAX */
 
 /* Global variables for IO monitoring */
-int io_monitoring_enabled = 0;
+int32_t io_monitoring_enabled = 0;
 pid_t afpd_pid = 0;
 pid_t cnid_dbd_pid = 0;
-unsigned long long afpd_start_reads = 0, afpd_start_writes = 0;
-unsigned long long cnid_start_reads = 0, cnid_start_writes = 0;
-unsigned long long afpd_end_reads = 0, afpd_end_writes = 0;
-unsigned long long cnid_end_reads = 0, cnid_end_writes = 0;
+uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
+uint64_t cnid_start_reads = 0, cnid_start_writes = 0;
+uint64_t afpd_end_reads = 0, afpd_end_writes = 0;
+uint64_t cnid_end_reads = 0, cnid_end_writes = 0;
 
 /* Static helper function prototypes */
 static pid_t safe_parse_pid(const char *pidstr);
-static int init_process_filter(ProcessFilter *filter, const char *process_name,
-                               const char *username, int filter_by_cmdline);
-static int check_process_name_match(const char *pid_dir,
-                                    const char *target_name);
-static int check_cmdline_filter(const char *pid_dir, const char *username);
-static int check_uid_filter(const char *pid_dir, uid_t target_uid);
-static int process_proc_entry(const char *pid_dir, const ProcessFilter *filter,
-                              ProcessList *found);
+static int32_t init_process_filter(ProcessFilter *filter,
+                                   const char *process_name,
+                                   const char *username, int32_t filter_by_cmdline);
+static int32_t check_process_name_match(const char *pid_dir,
+                                        const char *target_name);
+static int32_t check_cmdline_filter(const char *pid_dir, const char *username);
+static int32_t check_uid_filter(const char *pid_dir, uid_t target_uid);
+static int32_t process_proc_entry(const char *pid_dir,
+                                  const ProcessFilter *filter,
+                                  ProcessList *found);
 static void report_multiple_pids(const ProcessFilter *filter,
                                  const ProcessList *found);
 
 /* Helper: Show warning about /proc_io availability */
 static void show_proc_io_warning(const char *specific_issue)
 {
-    static int warning_shown = 0;
+    static int32_t warning_shown = 0;
 
     if (!warning_shown) {
         fprintf(stderr,
@@ -75,7 +78,7 @@ static void show_proc_io_warning(const char *specific_issue)
 }
 
 /* Helper: Check if /proc_io is available and show warning if not */
-int check_proc_io_availability(void)
+int32_t check_proc_io_availability(void)
 {
     struct stat st;
 
@@ -97,7 +100,7 @@ int check_proc_io_availability(void)
 
     /* Count entries in /proc_io to check if it's properly mounted */
     struct dirent *entry;
-    int entry_count = 0;
+    int32_t entry_count = 0;
 
     while ((entry = readdir(proc_dir)) != NULL && entry_count < 5) {
         /* Skip . and .. */
@@ -123,8 +126,9 @@ int check_proc_io_availability(void)
 }
 
 /* Helper: Initialize process filter configuration */
-static int init_process_filter(ProcessFilter *filter, const char *process_name,
-                               const char *username, int filter_by_cmdline)
+static int32_t init_process_filter(ProcessFilter *filter,
+                                   const char *process_name,
+                                   const char *username, int32_t filter_by_cmdline)
 {
     filter->process_name = process_name;
     filter->username = username;
@@ -151,8 +155,8 @@ static int init_process_filter(ProcessFilter *filter, const char *process_name,
 }
 
 /* Helper: Check if process name matches */
-static int check_process_name_match(const char *pid_dir,
-                                    const char *target_name)
+static int32_t check_process_name_match(const char *pid_dir,
+                                        const char *target_name)
 {
     char comm_path[256];
     char comm_name[256];
@@ -165,7 +169,7 @@ static int check_process_name_match(const char *pid_dir,
         return 0;
     }
 
-    int matches = 0;
+    int32_t matches = 0;
 
     if (fgets(comm_name, sizeof(comm_name), comm_file)) {
         comm_name[strcspn(comm_name, "\n")] = '\0';  /* Remove trailing newline */
@@ -177,7 +181,7 @@ static int check_process_name_match(const char *pid_dir,
 }
 
 /* Helper: Check if process matches cmdline filter (-u username) */
-static int check_cmdline_filter(const char *pid_dir, const char *username)
+static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
 {
     char cmdline_path[256];
     char cmdline_buffer[1024];
@@ -235,7 +239,7 @@ static int check_cmdline_filter(const char *pid_dir, const char *username)
 }
 
 /* Helper: Check if process matches UID filter (ownership) */
-static int check_uid_filter(const char *pid_dir, uid_t target_uid)
+static int32_t check_uid_filter(const char *pid_dir, uid_t target_uid)
 {
     char status_path[256];
     char status_line[256];
@@ -248,7 +252,7 @@ static int check_uid_filter(const char *pid_dir, uid_t target_uid)
         return 0;
     }
 
-    int matches = 0;
+    int32_t matches = 0;
 
     while (fgets(status_line, sizeof(status_line), status_file)) {
         if (strncmp(status_line, "Uid:", 4) == 0) {
@@ -268,8 +272,9 @@ static int check_uid_filter(const char *pid_dir, uid_t target_uid)
 }
 
 /* Helper: Process a single /proc directory entry */
-static int process_proc_entry(const char *pid_dir, const ProcessFilter *filter,
-                              ProcessList *found)
+static int32_t process_proc_entry(const char *pid_dir,
+                                  const ProcessFilter *filter,
+                                  ProcessList *found)
 {
     /* Skip non-numeric entries (must be PID directories) */
     if (strspn(pid_dir, "0123456789") != strlen(pid_dir)) {
@@ -282,7 +287,7 @@ static int process_proc_entry(const char *pid_dir, const ProcessFilter *filter,
     }
 
     /* Apply appropriate filter based on configuration */
-    int process_matches = 0;
+    int32_t process_matches = 0;
 
     if (filter->filter_by_cmdline) {
         process_matches = check_cmdline_filter(pid_dir, filter->username);
@@ -315,7 +320,7 @@ static void report_multiple_pids(const ProcessFilter *filter,
                 filter->process_name, filter->username);
     }
 
-    for (int i = 0; i < found->count; i++) {
+    for (int32_t i = 0; i < found->count; i++) {
         fprintf(stderr, "%d", found->pids[i]);
 
         if (i < found->count - 1) {
@@ -328,7 +333,7 @@ static void report_multiple_pids(const ProcessFilter *filter,
 
 /* Main Netatalk process find function for IO monitoring */
 pid_t find_process_pid(const char *process_name, const char *username,
-                       int filter_by_cmdline)
+                       int32_t filter_by_cmdline)
 {
     /* Check prerequisites */
     if (!io_monitoring_enabled) {
@@ -362,8 +367,8 @@ pid_t find_process_pid(const char *process_name, const char *username,
     /* Scan directory entries and collect matching PIDs */
     ProcessList found = { .count = 0 };
     struct dirent *entry;
-    int entries_checked = 0;
-    int total_entries = 0;
+    int32_t entries_checked = 0;
+    int32_t total_entries = 0;
 
     while ((entry = readdir(proc_dir)) != NULL && found.count < 10) {
         total_entries++;
@@ -397,13 +402,13 @@ pid_t find_process_pid(const char *process_name, const char *username,
 }
 
 /* Read IO statistics from /proc_io */
-static int read_proc_io(pid_t pid, unsigned long long *read_ops,
-                        unsigned long long *write_ops)
+static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
+                            uint64_t *write_ops)
 {
     FILE *io_file;
     char io_path[256];
     char line[256];
-    int found_read = 0, found_write = 0;
+    int32_t found_read = 0, found_write = 0;
     *read_ops = 0;
     *write_ops = 0;
     snprintf(io_path, sizeof(io_path), "/proc_io/%d/io", pid);
@@ -433,7 +438,7 @@ static int read_proc_io(pid_t pid, unsigned long long *read_ops,
 }
 
 /* Capture IO values - consolidated function for start and stop */
-void capture_io_values(int is_start)
+void capture_io_values(int32_t is_start)
 {
     if (!io_monitoring_enabled) {
         return;
@@ -441,8 +446,8 @@ void capture_io_values(int is_start)
 
     /* Process afpd_pid */
     if (afpd_pid > 0) {
-        unsigned long long *reads = is_start ? &afpd_start_reads : &afpd_end_reads;
-        unsigned long long *writes = is_start ? &afpd_start_writes : &afpd_end_writes;
+        uint64_t *reads = is_start ? &afpd_start_reads : &afpd_end_reads;
+        uint64_t *writes = is_start ? &afpd_start_writes : &afpd_end_writes;
 
         if (read_proc_io(afpd_pid, reads, writes) != 0) {
             *reads = *writes = 0;
@@ -451,8 +456,8 @@ void capture_io_values(int is_start)
 
     /* Process cnid_dbd_pid */
     if (cnid_dbd_pid > 0) {
-        unsigned long long *reads = is_start ? &cnid_start_reads : &cnid_end_reads;
-        unsigned long long *writes = is_start ? &cnid_start_writes : &cnid_end_writes;
+        uint64_t *reads = is_start ? &cnid_start_reads : &cnid_end_reads;
+        uint64_t *writes = is_start ? &cnid_start_writes : &cnid_end_writes;
 
         if (read_proc_io(cnid_dbd_pid, reads, writes) != 0) {
             *reads = *writes = 0;
@@ -461,9 +466,9 @@ void capture_io_values(int is_start)
 }
 
 /* Get IO difference for specific PID - consolidated for read and write */
-unsigned long long iodiff_io(pid_t pid, int is_write)
+uint64_t iodiff_io(pid_t pid, int32_t is_write)
 {
-    unsigned long long start_val, end_val;
+    uint64_t start_val, end_val;
 
     if (!io_monitoring_enabled || pid == 0) {
         return 0;  /* Return 0 instead of -1 for unsigned return type */
@@ -487,11 +492,6 @@ static pid_t safe_parse_pid(const char *pid_str)
 {
     char *endptr;
     long val;
-    /* Define PID_MAX if not available from system headers */
-#ifndef PID_MAX
-    /* Conservative default maximum PID value */
-#define PID_MAX 99999
-#endif
 
     if (!pid_str || *pid_str == '\0') {
         return 0;  /* Invalid PID, return 0 to indicate failure */
@@ -545,8 +545,8 @@ void init_io_monitoring(const char *username)
     }
 
     /* Always search for afpd (mandatory - drops privileges) */
-    int attempts = 0;
-    const int max_attempts = 3;
+    int32_t attempts = 0;
+    const int32_t max_attempts = 3;
 
     while (attempts < max_attempts) {
         attempts++;
@@ -577,8 +577,8 @@ void init_io_monitoring(const char *username)
     /* Only check afpd since it's mandatory; cnid_dbd is optional */
     if (afpd_pid > 0) {
         /* Test that we can actually read from the processes we found */
-        int afpd_valid = 0, cnid_dbd_valid = 0;
-        unsigned long long dummy_read, dummy_write;
+        int32_t afpd_valid = 0, cnid_dbd_valid = 0;
+        uint64_t dummy_read, dummy_write;
         /* Validate afpd (mandatory) */
         afpd_valid = (read_proc_io(afpd_pid, &dummy_read, &dummy_write) == 0);
 
@@ -626,25 +626,26 @@ void init_io_monitoring(const char *username)
 /* Stub implementations for non-Linux systems */
 
 #include <sys/types.h>
+#include <stdint.h>
 #include "lantest_io_monitor.h"
 
 /* Global variables - stub versions for non-Linux */
-int io_monitoring_enabled = 0;
+int32_t io_monitoring_enabled = 0;
 pid_t afpd_pid = 0;
 pid_t cnid_dbd_pid = 0;
-unsigned long long afpd_start_reads = 0, afpd_start_writes = 0;
-unsigned long long cnid_start_reads = 0, cnid_start_writes = 0;
-unsigned long long afpd_end_reads = 0, afpd_end_writes = 0;
-unsigned long long cnid_end_reads = 0, cnid_end_writes = 0;
+uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
+uint64_t cnid_start_reads = 0, cnid_start_writes = 0;
+uint64_t afpd_end_reads = 0, afpd_end_writes = 0;
+uint64_t cnid_end_reads = 0, cnid_end_writes = 0;
 
 /* Stub function implementations */
-int check_proc_io_availability(void)
+int32_t check_proc_io_availability(void)
 {
     return 0;  /* IO monitoring not available on non-Linux */
 }
 
 pid_t find_process_pid(const char *process_name, const char *username,
-                       int filter_by_cmdline)
+                       int32_t filter_by_cmdline)
 {
     (void)process_name;
     (void)username;
@@ -652,13 +653,13 @@ pid_t find_process_pid(const char *process_name, const char *username,
     return 0;  /* Process not found */
 }
 
-void capture_io_values(int is_start)
+void capture_io_values(int32_t is_start)
 {
     (void)is_start;
     /* No-op on non-Linux */
 }
 
-unsigned long long iodiff_io(pid_t pid, int is_write)
+uint64_t iodiff_io(pid_t pid, int32_t is_write)
 {
     (void)pid;
     (void)is_write;

@@ -1,3 +1,5 @@
+# See https://github.com/Netatalk/netatalk/wiki/Testing for guidance
+
 ARG RUN_DEPS="\
     ca-certificates \
     cracklib-runtime \
