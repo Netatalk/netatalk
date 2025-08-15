@@ -54,7 +54,7 @@ ARG BUILD_DEPS="\
     systemtap-sdt-dev \
     "
 
-FROM debian:trixie-slim@sha256:cc92da07b99dd5c078cb5583fdb4ba639c7c9c14eb78508a2be285ca67cc738a AS build
+FROM debian:trixie-slim@sha256:c85a2732e97694ea77237c61304b3bb410e0e961dd6ee945997a06c788c545bb AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -91,7 +91,7 @@ RUN meson setup build \
 
 RUN meson install --destdir=/staging/ -C build
 
-FROM debian:trixie-slim@sha256:cc92da07b99dd5c078cb5583fdb4ba639c7c9c14eb78508a2be285ca67cc738a AS deploy
+FROM debian:trixie-slim@sha256:c85a2732e97694ea77237c61304b3bb410e0e961dd6ee945997a06c788c545bb AS deploy
 
 ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
