@@ -678,7 +678,7 @@ should be logged.
 > By default afpd logs to syslog with a default logging setup equivalent
 to **default:note**
 >
-> logtypes: default, afpdaemon, logger, uamsdaemon
+> logtypes: default, logger, cnid, afpd, dsi, uams, fce, ad, sl
 >
 > loglevels: severe, error, warn, note, info, debug, debug6, debug7,
 debug8, debug9, maxdebug
