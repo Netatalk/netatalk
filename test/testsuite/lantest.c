@@ -1,3 +1,18 @@
+/*
+ * Copyright (c) 2025, Andy Lemin (andylemin@github.com)
+ * Credits; Based on work by Rafal Lewczuk, Didier Gautheron, Frank Lahm, and Netatalk contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
 #include "specs.h"
 
 #include <getopt.h>
@@ -1686,7 +1701,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-7\tAFP 3.4 version (default)\n");
     fprintf(stdout, "\t-b\tdebug mode\n");
     fprintf(stdout, "\t-c\toutput results in CSV format (default: tabular)\n");
-    fprintf(stdout, "\t-C\trun cache-focused tests only (tests 8-11)\n");
+    fprintf(stdout, "\t-K\trun cache-focused tests only (tests 8-11)\n");
     fprintf(stdout, "\t-f\ttests to run, eg 134 for tests 1, 3 and 4\n");
     fprintf(stdout,
             "\t-F\tuse this file located in the volume root for the read test (size must match -g and -G options)\n");
@@ -1726,7 +1741,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567bCcGgVvF:f:h:n:p:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567bKcGgVvF:f:h:n:p:s:u:w:")) != EOF) {
         switch (cc) {
         case '3':
             vers = "AFPX03";
@@ -1757,14 +1772,14 @@ int main(int ac, char **av)
             Debug = 1;
             break;
 
-        case 'C':
+        case 'K':
             /* Special handling for cache tests - set them directly */
             memset(teststorun, 0, NUMTESTS);
             teststorun[TEST_CACHE_HITS] = 1;
             teststorun[TEST_MIXED_CACHE_OPS] = 1;
             teststorun[TEST_DEEP_TRAVERSAL] = 1;
             teststorun[TEST_CACHE_VALIDATION] = 1;
-            Test = strdup("C");  /* Mark as cache-only mode */
+            Test = strdup("K");  /* Mark as cache-only mode */
 
             if (!Test) {
                 fprintf(stderr, "Memory allocation failed for Test string\n");
@@ -1939,8 +1954,8 @@ int main(int ac, char **av)
 
     if (!Test) {
         memset(teststorun, 1, NUMTESTS);
-    } else if (strcmp(Test, "C") == 0) {
-        /* Cache-only mode was already set when parsing -C option */
+    } else if (strcmp(Test, "K") == 0) {
+        /* Cache-only mode was already set when parsing -K option */
     } else {
         i = 0;
 

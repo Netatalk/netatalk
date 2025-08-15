@@ -4,7 +4,7 @@ afp_lantest — AFP LAN performance and directory cache testing tool
 
 # Synopsis
 
-**afp_lantest** [-34567GgVvbcC] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
+**afp_lantest** [-34567GgVvbcK] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
 [-n *iterations*] [-f *tests*] [-F *bigfile*]
 
 # Description
@@ -40,7 +40,7 @@ features.
 **-c**
 : Output results in CSV format (default: tabular)
 
-**-C**
+**-K**
 : Run cache-focused tests only (tests 9-12)
 
 **-f** *tests*
@@ -131,7 +131,7 @@ The following tests are available:
 
 Tests 9-12 are specifically designed to highlight directory cache performance improvements in
 netatalk. These tests benefit significantly from optimized cache validation and probabilistic
-validation features. Use the **-C** option to run only these cache-focused tests.
+validation features. Use the **-K** option to run only these cache-focused tests.
 
 # Examples
 
@@ -141,7 +141,7 @@ Run all tests with default settings:
 
 Run only cache-focused tests:
 
-    afp_lantest -C -h server.example.com -u testuser -w password -s TestVolume
+    afp_lantest -K -h server.example.com -u testuser -w password -s TestVolume
 
 Run specific tests (file operations):
 
