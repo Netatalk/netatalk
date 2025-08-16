@@ -256,6 +256,23 @@ else
     echo "NOTE: Set the \`ATALKD_INTERFACE' environment variable to start DDP services."
 fi
 
+if [ -z "$AFP_VERSION" ]; then
+    AFP_VERSION=7
+fi
+
+if [ "$TESTSUITE" = "lan" ]; then
+    if [ -n "$IO_MONITORING" ]; then
+        if mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io 2> /dev/null; then
+            echo "Successfully created /proc_io with hidepid=0,gid=0 for I/O monitoring (gid=0 as TESTSUITE tests run as root)"
+        else
+            echo "WARNING: IO_MONITORING enabled, however failed to create /proc_io mount"
+            echo "NOTE: Container must be run with '--privileged' argument to allow proc mounts for afp_lantest IO monitoring"
+        fi
+    else
+        echo "NOTE: TESTSUITE set to 'lan' for afp_lantest test, however IO_MONITORING=1 envvar not set (mounts /proc_io filesystem). IO monitoring disabled."
+    fi
+fi
+
 echo "*** Starting AFP server"
 if [ -z "$TESTSUITE" ]; then
     netatalk -d
@@ -263,6 +280,7 @@ else
     netatalk
     sleep 2
     echo "*** Running testsuite: $TESTSUITE"
+    echo ""
     case "$TESTSUITE" in
         spectest)
             set -x
