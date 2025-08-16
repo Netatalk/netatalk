@@ -1,12 +1,12 @@
-FROM debian:bookworm-slim@sha256:b1a741487078b369e78119849663d7f1a5341ef2768798f7b7406c4240f86aef
+FROM debian:trixie-slim@sha256:c85a2732e97694ea77237c61304b3bb410e0e961dd6ee945997a06c788c545bb
 
 ARG RUN_DEPS="\
     ca-certificates \
     iproute2 \
-    libdb5.3 \
+    libdb5.3t64 \
     libevent-2.1-7 \
     libgcrypt20 \
-    libiniparser1 \
+    libiniparser4 \
     libpam0g \
     sudo \
     systemtap \
