@@ -4,7 +4,7 @@ afp_lantest — AFP LAN performance and directory cache testing tool
 
 # Synopsis
 
-**afp_lantest** [-1234567bcGgKVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
+**afp_lantest** [-34567bcGgKVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]
 [-n *iterations*] [-f *tests*] [-F *bigfile*]
 
 # Description
@@ -40,17 +40,17 @@ features.
 **-c**
 : Output results in CSV format (default: tabular)
 
-**-f** *tests*
-: Specific tests to run, specified as digits (e.g., "134" runs tests 1, 3, and 4)
-
 **-F** *bigfile*
 : Use existing file in volume root for read test (file size must match -g/-G options)
 
-**-g**
-: Optimize for gigabit networks (increases file test size to 1 GB)
+**-f** *tests*
+: Specific tests to run, specified as digits (e.g., "134" runs tests 1, 3, and 4)
 
 **-G**
 : Optimize for 10-gigabit networks (increases file test size to 10 GB)
+
+**-g**
+: Optimize for gigabit networks (increases file test size to 1 GB)
 
 **-h** *host*
 : Server hostname or IP address (default: localhost)
@@ -70,11 +70,11 @@ features.
 **-u** *user*
 : Username for authentication (default: current uid)
 
-**-v**
-: Verbose output
-
 **-V**
 : Very verbose output
+
+**-v**
+: Verbose output
 
 **-w** *password*
 : Password for authentication

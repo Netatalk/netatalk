@@ -13,6 +13,16 @@
  * GNU General Public License for more details.
  */
 
+/*
+ * lantest_io_monitor.c - Linux I/O monitoring for Netatalk performance testing
+ *
+ * Monitors system call I/O statistics for afpd and cnid_dbd processes during tests.
+ * Uses /proc_io filesystem (a secondary mount of proc) to track read/write syscalls.
+ * Automatically discovers target processes by name and user, handling both privilege-dropped
+ * processes (afpd) and root processes with user arguments (cnid_dbd).
+ * Provides before/after test IO metrics to measure actual filesystem activity during AFP operations.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -37,7 +47,7 @@
 #include <limits.h>  /* For PATH_MAX */
 
 /* Global variables for IO monitoring */
-int32_t io_monitoring_enabled = 0;
+uint8_t io_monitoring_enabled = 0;
 pid_t afpd_pid = 0;
 pid_t cnid_dbd_pid = 0;
 uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
@@ -154,7 +164,7 @@ static int32_t init_process_filter(ProcessFilter *filter,
     return 0;
 }
 
-/* Helper: Check if process name matches */
+/* Helper: Check if process name matches target_name */
 static int32_t check_process_name_match(const char *pid_dir,
                                         const char *target_name)
 {
@@ -401,7 +411,9 @@ pid_t find_process_pid(const char *process_name, const char *username,
     return found.pids[0];
 }
 
-/* Read IO statistics from /proc_io */
+/* Read IO statistics from /proc_io/<pid>/io file.
+ * syscr: cumulative count of read system calls (read(), pread(), readv(), etc.)
+ * syscw: cumulative count of write system calls (write(), pwrite(), writev(), etc.) */
 static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
                             uint64_t *write_ops)
 {
@@ -465,7 +477,7 @@ void capture_io_values(int32_t is_start)
     }
 }
 
-/* Get IO difference for specific PID - consolidated for read and write */
+/* Get IO delta between stored cumulative counts - consolidated for read and write */
 uint64_t iodiff_io(pid_t pid, int32_t is_write)
 {
     uint64_t start_val, end_val;
@@ -514,7 +526,7 @@ static pid_t safe_parse_pid(const char *pid_str)
     return (pid_t)val;
 }
 
-/* Initialize IO monitoring by finding required processes */
+/* Initialize IO monitoring by checking proc filesystem and finding required processes */
 void init_io_monitoring(const char *username)
 {
     /* Check if /proc_io is available */
@@ -567,7 +579,6 @@ void init_io_monitoring(const char *username)
                 max_attempts);
     }
 
-    /* Debug output */
     if (afpd_pid > 0) {
         fprintf(stdout, "Found privilege-dropped afpd process: PID %d\n", afpd_pid);
     } else {
@@ -630,7 +641,7 @@ void init_io_monitoring(const char *username)
 #include "lantest_io_monitor.h"
 
 /* Global variables - stub versions for non-Linux */
-int32_t io_monitoring_enabled = 0;
+uint8_t io_monitoring_enabled = 0;
 pid_t afpd_pid = 0;
 pid_t cnid_dbd_pid = 0;
 uint64_t afpd_start_reads = 0, afpd_start_writes = 0;

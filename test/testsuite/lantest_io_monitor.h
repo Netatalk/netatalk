@@ -26,11 +26,13 @@
 #endif
 
 /* Global Debug flag - controlled by -b option in lantest.c */
-extern int32_t Debug;
+extern uint8_t Debug;
 
 #ifdef __linux__
 
-/* Structure to hold process filtering configuration */
+/* Process filtering configuration for finding Netatalk daemons.
+ * Supports two modes: filter by process UID ownership (for afpd which drops privileges)
+ * or filter by cmdline -u argument (for cnid_dbd which runs as root). */
 typedef struct {
     const char *process_name;
     const char *username;
@@ -38,14 +40,16 @@ typedef struct {
     uid_t target_uid;       /* For ownership filtering */
 } ProcessFilter;
 
-/* Structure to hold discovered process information */
+/* Container for discovered process IDs during /proc_io scanning.
+ * Stores up to 10 matching PIDs to detect multiple instances.
+ * count=0 means no match, count=1 is ideal, count>1 indicates duplicates. */
 typedef struct {
     pid_t pids[10];
     int32_t count;
 } ProcessList;
 
 /* External variables for IO monitoring */
-extern int32_t io_monitoring_enabled;
+extern uint8_t io_monitoring_enabled;
 extern pid_t afpd_pid;
 extern pid_t cnid_dbd_pid;
 extern uint64_t afpd_start_reads, afpd_start_writes;

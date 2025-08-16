@@ -66,40 +66,40 @@
 #define TOTAL_AFP_OPS 80686
 
 CONN *Conn;
-int32_t ExitCode = 0;
+int ExitCode = 0;
+int Version = 34;
+int Mac = 0;
 char Data[300000] = "";
 char    *Vol = "";
 char    *User = "";
 char    *Path;
-int32_t Version = 34;
-int32_t Mac = 0;
 char    *Test = NULL;
 static uint16_t vol;
 static DSI *dsi;
 static char    *Server = "localhost";
 static int32_t Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
-static int32_t Iterations = 2;
-static int32_t Iterations_save;
-static int32_t iteration_counter = 0;
+static uint8_t Iterations = 2;
+static uint8_t Iterations_save;
+static uint8_t iteration_counter = 0;
 static struct timeval tv_start;
 static struct timeval tv_end;
 static struct timeval tv_dif;
 static pthread_t tid;
-static int32_t active_thread = 0;  /* Track if we have an active thread */
+static uint8_t active_thread = 0;  /* Track if we have an active thread */
 
 /* Global Debug flag */
-int32_t Debug = 0;
+uint8_t Debug = 0;
 /* Global Quiet flag override for lantest (stdout output enabled) */
-int32_t lantest_Quiet = 0;
+uint8_t lantest_Quiet = 0;
 
 /* Remote linker names */
 CONN *Conn2;
 uint16_t VolID;
-int32_t PassCount = 0;
-int32_t FailCount = 0;
-int32_t SkipCount = 0;
-int32_t NotTestedCount = 0;
+int PassCount = 0;
+int FailCount = 0;
+int SkipCount = 0;
+int NotTestedCount = 0;
 char FailedTests[1024][256] = {{0}};
 char NotTestedTests[1024][256] = {{0}};
 char SkippedTests[1024][256] = {{0}};
@@ -121,16 +121,17 @@ static int32_t validation_files = 100;  /* validation file count */
 static int32_t validation_iterations = 100;  /* validation iterations */
 
 /* Forward declarations */
-void fatal_failed(void);
+void clean_exit(int exit_code);
 static uint64_t numrw;
 /* Bool array of which tests to run */
 static char teststorun[NUMTESTS];
 /* [iteration][test][measurement_type] */
 static uint64_t (*results)[][NUMTESTS][NUM_MEASUREMENTS];
 static char *bigfilename;
-/* 0 = tabular (default), 1 = CSV */
-static int32_t csv_output = 0;
 
+/* Results display control
+0 = tabular (default), 1 = CSV */
+static int32_t csv_output = 0;
 /* Display width for test names in progress output */
 #define TEST_NAME_DISPLAY_WIDTH 66
 
@@ -148,6 +149,26 @@ static const char *test_names[NUMTESTS] = {
     "Mixed cache operations (create/stat/enum/delete) [820 AFP ops]",  /* TEST_DIRCACHE_MIXED */
     "Deep path traversal (nested directory navigation) [3,500 AFP ops]",  /* TEST_DIRCACHE_TRAVERSE */
     "Cache validation efficiency (metadata changes) [30,000 AFP ops]"  /* TEST_CACHE_VALIDATION */
+};
+
+/* Error type descriptions for clean_exit() */
+typedef struct {
+    uint8_t exit_code;
+    const char *category;
+    const char *description;
+} ErrorDescription;
+
+static const ErrorDescription error_descriptions[] = {
+    {0, "Normal Exit", "Clean shutdown"},
+    {2, "Memory Allocation", "Buffer/cache allocation failures"},
+    {3, "File/Directory Ops", "Create/delete/access failures"},
+    {4, "Fork Operations", "Fork open/close failures"},
+    {5, "Network/Protocol", "AFP protocol/read/write errors"},
+    {6, "Thread Operations", "pthread_create failures"},
+    {7, "Validation/Test", "Test validation errors"},
+    {8, "Configuration", "Invalid parameters/out of range"},
+    {9, "Volume Operations", "Volume open/access failures"},
+    {-1, NULL, NULL}  /* Sentinel value */
 };
 
 static void starttimer(void)
@@ -658,7 +679,7 @@ static int32_t safe_atoi(const char *str, const char *param_name,
 
     if (!str || *str == '\0') {
         fprintf(stderr, "Error: Empty %s parameter\n", param_name);
-        fatal_failed();
+        clean_exit(8);  /* Configuration error */
     }
 
     errno = 0;  /* Reset errno before conversion */
@@ -667,7 +688,7 @@ static int32_t safe_atoi(const char *str, const char *param_name,
     /* Check for conversion errors */
     if (errno == ERANGE || val < LONG_MIN || val > LONG_MAX) {
         fprintf(stderr, "Error: %s parameter '%s' out of range\n", param_name, str);
-        fatal_failed();
+        clean_exit(8);  /* Configuration error */
     }
 
     /* Check for non-numeric characters */
@@ -675,23 +696,44 @@ static int32_t safe_atoi(const char *str, const char *param_name,
         fprintf(stderr,
                 "Error: Invalid %s parameter '%s' - contains non-numeric characters\n",
                 param_name, str);
-        fatal_failed();
+        clean_exit(8);  /* Configuration error */
     }
 
     /* Check parameter-specific bounds */
     if (val < min_val || val > max_val) {
         fprintf(stderr, "Error: %s parameter %ld out of valid range [%d, %d]\n",
                 param_name, val, min_val, max_val);
-        fatal_failed();
+        clean_exit(8);  /* Configuration error */
     }
 
     return (int32_t)val;
 }
 
 /* ------------------------- */
-void fatal_failed(void)
+void clean_exit(int exit_code)
 {
-    fprintf(stderr, "\tFATAL ERROR\n");
+    /* Only print error details if this is an error exit (exit_code > 0) */
+    if (exit_code > 0) {
+        fprintf(stderr, "\n\tERROR (Exit Code: %d)\n", exit_code);
+        /* Look up and print error description */
+        uint8_t found = 0;
+
+        for (uint8_t i = 0; error_descriptions[i].category != NULL; i++) {
+            if (error_descriptions[i].exit_code == exit_code) {
+                fprintf(stderr, "\tCategory: %s\n", error_descriptions[i].category);
+                fprintf(stderr, "\tDescription: %s\n", error_descriptions[i].description);
+                found = 1;
+                break;
+            }
+        }
+
+        if (!found) {
+            fprintf(stderr, "\tCategory: Unknown\n");
+            fprintf(stderr, "\tDescription: Unspecified error\n");
+        }
+
+        fprintf(stderr, "\n");
+    }
 
     /* Thread cleanup - attempt to join active thread if it exists */
     if (active_thread) {
@@ -708,7 +750,13 @@ void fatal_failed(void)
     /* Perform cleanup to prevent resource leaks, AFP Session, Sockets, Connection, and struts */
     if (Conn) {
         FPLogOut(Conn);
-        CloseClientSocket(Conn->dsi.socket);
+
+        /* Always close socket regardless of logout success */
+        if (Conn->dsi.socket >= 0) {
+            CloseClientSocket(Conn->dsi.socket);
+            Conn->dsi.socket = -1;
+        }
+
         free(Conn);
         Conn = NULL;
     }
@@ -723,7 +771,7 @@ void fatal_failed(void)
         bigfilename = NULL;
     }
 
-    exit(1);
+    exit(exit_code);
 }
 
 /* --------------------------------- */
@@ -753,7 +801,7 @@ static void *rply_thread(void *p)
 
     if (!buf) {
         fprintf(stderr, "Memory allocation failed for DSI buffer (%zu bytes)\n", size);
-        fatal_failed();
+        clean_exit(2);  /* Memory allocation error */
     }
 
     while (n--) {
@@ -803,7 +851,7 @@ void run_test(const int32_t dir)
 
         if (!data) {
             fprintf(stderr, "Memory allocation failed for data buffer\n");
-            fatal_failed();
+            clean_exit(2);  /* Memory allocation error */
         }
     }
 
@@ -815,19 +863,19 @@ void run_test(const int32_t dir)
             snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (ntohl(AFPERR_NOOBJ) != is_there(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPGetFileDirParams(Conn, vol, dir, "", 0, (1 << DIRPBIT_DID))) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (is_there(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPGetFileDirParams(Conn, vol, dir, temp,
@@ -835,7 +883,7 @@ void run_test(const int32_t dir)
                                    (1 << FILPBIT_CDATE) | (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) |
                                    (1 << FILPBIT_RFLEN)
                                    , 0)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPGetFileDirParams(Conn, vol, dir, temp,
@@ -844,7 +892,7 @@ void run_test(const int32_t dir)
                                    (1 << FILPBIT_CDATE) | (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) |
                                    (1 << FILPBIT_RFLEN)
                                    , 0)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             fork = FPOpenFork(Conn, vol, OPENFORK_DATA,
@@ -853,20 +901,20 @@ void run_test(const int32_t dir)
                               , dir, temp, OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD);
 
             if (!fork) {
-                fatal_failed();
+                clean_exit(4);  /* Fork operation error */
             }
 
             if (FPGetForkParam(Conn, fork,
                                (1 << FILPBIT_PDID) | (1 << DIRPBIT_LNAME) | (1 << FILPBIT_DFLEN))) {
-                fatal_failed();
+                clean_exit(4);  /* Fork operation error */
             }
 
             if (FPWrite(Conn, fork, 0, 20480, data, 0)) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
 
             if (FPCloseFork(Conn, fork)) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
 
             maxi = i;
@@ -883,7 +931,7 @@ void run_test(const int32_t dir)
                         (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
                         (1 << DIRPBIT_ACCESS)
                        )) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
 #ifdef __linux__
@@ -897,15 +945,15 @@ void run_test(const int32_t dir)
 
             /* Stat operations first (3 AFP ops) */
             if (is_there(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPGetFileDirParams(Conn, vol, dir, temp, 0x72d, 0)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPGetFileDirParams(Conn, vol, dir, temp, 0x73f, 0x133f)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             /* Open once with read+write permissions (1 AFP op) */
@@ -913,26 +961,26 @@ void run_test(const int32_t dir)
                               OPENACC_RD | OPENACC_DWR);
 
             if (!fork) {
-                fatal_failed();
+                clean_exit(4);  /* Fork operation error */
             }
 
             /* Get fork params (2 AFP ops) */
             if (FPGetForkParam(Conn, fork, (1 << FILPBIT_DFLEN))) {
-                fatal_failed();
+                clean_exit(4);  /* Fork operation error */
             }
 
             if (FPGetForkParam(Conn, fork, 0x242)) {
-                fatal_failed();
+                clean_exit(4);  /* Fork operation error */
             }
 
             /* Read operation (1 AFP op) */
             if (FPRead(Conn, fork, 0, 512, data)) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
 
             /* Close fork (1 AFP op) */
             if (FPCloseFork(Conn, fork)) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
         }
 
@@ -944,20 +992,20 @@ void run_test(const int32_t dir)
             snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (is_there(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPGetFileDirParams(Conn, vol, dir, temp, 0, (1 << FILPBIT_FNUM))) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             if (FPDelete(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
         }
 
         if (FPGetVolParam(Conn, vol, (1 << VOLPBIT_MDATE) | (1 << VOLPBIT_XBFREE))) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
     }
 
@@ -967,15 +1015,15 @@ void run_test(const int32_t dir)
         snprintf(temp, sizeof(temp), "File.big");
 
         if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp, 0x72d, 0)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp, 0x73f, 0x133f)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         fork = FPOpenFork(Conn, vol, OPENFORK_DATA,
@@ -983,11 +1031,11 @@ void run_test(const int32_t dir)
                           , dir, temp, OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD);
 
         if (!fork) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetForkParam(Conn, fork, (1 << FILPBIT_PDID))) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         air.air_count = numrw;
@@ -996,7 +1044,7 @@ void run_test(const int32_t dir)
 
         if (pthread_ret != 0) {
             fprintf(stderr, "pthread_create failed: %d\n", pthread_ret);
-            fatal_failed();
+            clean_exit(6);  /* Thread operation error */
         }
 
         active_thread = 1;  /* Mark thread as active */
@@ -1009,7 +1057,7 @@ void run_test(const int32_t dir)
                 offset += (dsi->server_quantum - FPWRITE_RQST_SIZE), i++) {
             if (FPWrite_ext_async(Conn, fork, offset,
                                   dsi->server_quantum - FPWRITE_RQST_SIZE, data, 0)) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
         }
 
@@ -1020,13 +1068,13 @@ void run_test(const int32_t dir)
             /* Thread join failed, but thread may still be running */
             /* Try pthread_cancel as cleanup attempt before fatal exit */
             pthread_cancel(tid);
-            fatal_failed();
+            clean_exit(6);  /* Thread operation error */
         }
 
         active_thread = 0;  /* Thread successfully joined */
 
         if (FPCloseFork(Conn, fork)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         stoptimer();
@@ -1038,14 +1086,14 @@ void run_test(const int32_t dir)
     if (teststorun[TEST_READ100MB]) {
         if (!bigfilename) {
             if (is_there(Conn, vol, dir, temp) != AFP_OK) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0x342, dir, temp,
                               OPENACC_RD | OPENACC_DWR);
         } else {
             if (is_there(Conn, vol, DIRDID_ROOT, bigfilename) != AFP_OK) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0x342, DIRDID_ROOT, bigfilename,
@@ -1053,11 +1101,11 @@ void run_test(const int32_t dir)
         }
 
         if (!fork) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetForkParam(Conn, fork, 0x242)) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         air.air_count = numrw;
@@ -1066,7 +1114,7 @@ void run_test(const int32_t dir)
 
         if (pthread_ret != 0) {
             fprintf(stderr, "pthread_create failed: %d\n", pthread_ret);
-            fatal_failed();
+            clean_exit(6);  /* Thread operation error */
         }
 
         active_thread = 1;  /* Mark thread as active */
@@ -1078,7 +1126,7 @@ void run_test(const int32_t dir)
         for (i = 0; i < numrw ; i++) {
             if (FPRead_ext_async(Conn, fork, i * (dsi->server_quantum - FPWRITE_RQST_SIZE),
                                  dsi->server_quantum - FPWRITE_RQST_SIZE, data)) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
         }
 
@@ -1089,13 +1137,13 @@ void run_test(const int32_t dir)
             /* Thread join failed, but thread may still be running */
             /* Try pthread_cancel as cleanup attempt before fatal exit */
             pthread_cancel(tid);
-            fatal_failed();
+            clean_exit(6);  /* Thread operation error */
         }
 
         active_thread = 0;  /* Thread successfully joined */
 
         if (FPCloseFork(Conn, fork)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         stoptimer();
@@ -1113,26 +1161,26 @@ void run_test(const int32_t dir)
         snprintf(temp, sizeof(temp), "File.lock");
 
         if (ntohl(AFPERR_NOOBJ) != is_there(Conn, vol, dir, temp)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, "", 0, (1 << DIRPBIT_DID))) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (is_there(Conn, vol, dir, temp)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp,
                                (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_FINFO) |
                                (1 << FILPBIT_CDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
                                , 0)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         fork = FPOpenFork(Conn, vol, OPENFORK_DATA,
@@ -1140,11 +1188,11 @@ void run_test(const int32_t dir)
                           , dir, temp, OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD);
 
         if (!fork) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetForkParam(Conn, fork, (1 << FILPBIT_PDID) | (1 << FILPBIT_DFLEN))) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp,
@@ -1152,56 +1200,56 @@ void run_test(const int32_t dir)
                                (1 << FILPBIT_FNUM) |
                                (1 << FILPBIT_FINFO) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
                                , 0)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPWrite(Conn, fork, 0, 40000, data, 0)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         if (FPCloseFork(Conn, fork)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         if (is_there(Conn, vol, dir, temp)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp, 0x73f, 0x133f)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0x342, dir, temp, OPENACC_RD);
 
         if (!fork) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetForkParam(Conn, fork, (1 << FILPBIT_DFLEN))) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPRead(Conn, fork, 0, 512, data)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         if (FPCloseFork(Conn, fork)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0x342, dir, temp,
                           OPENACC_RD | OPENACC_WR);
 
         if (!fork) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetForkParam(Conn, fork, 0x242)) {
-            fatal_failed();
+            clean_exit(4);  /* Fork operation error */
         }
 
         if (FPGetFileDirParams(Conn, vol, dir, temp, 0x72d, 0)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
 #ifdef __linux__
@@ -1212,11 +1260,11 @@ void run_test(const int32_t dir)
         for (j = 0; j < locking; j++) {
             for (i = 0; i <= 390; i += 10) {
                 if (FPByteLock(Conn, fork, 0, 0, i, 10)) {
-                    fatal_failed();
+                    clean_exit(5);  /* Network/protocol error */
                 }
 
                 if (FPByteLock(Conn, fork, 0, 1, i, 10)) {
-                    fatal_failed();
+                    clean_exit(5);  /* Network/protocol error */
                 }
             }
         }
@@ -1225,15 +1273,15 @@ void run_test(const int32_t dir)
         addresult(TEST_LOCKUNLOCK, iteration_counter);
 
         if (is_there(Conn, vol, dir, temp)) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         if (FPCloseFork(Conn, fork)) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         if (FPDelete(Conn, vol, dir, "File.lock")) {
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
     }
 
@@ -1249,7 +1297,7 @@ void run_test(const int32_t dir)
             snprintf(temp, sizeof(temp), "File.0k%d", i);
 
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
                 break;
             }
 
@@ -1257,7 +1305,7 @@ void run_test(const int32_t dir)
                                    (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_FINFO) |
                                    (1 << FILPBIT_CDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
                                    , 0) != AFP_OK) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             maxi = i;  /* Track last successful file creation */
@@ -1284,7 +1332,7 @@ void run_test(const int32_t dir)
                             (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
                             (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
                             (1 << DIRPBIT_ACCESS))) {
-            fatal_failed();
+            clean_exit(5);  /* Network/protocol error */
         }
 
         for (i = 41; (i + 40) < create_enum_files; i += 80) {
@@ -1297,7 +1345,7 @@ void run_test(const int32_t dir)
                                 (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
                                 (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
                                 (1 << DIRPBIT_ACCESS))) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
 
             if (FPEnumerateFull(Conn, vol, i, 40, DSI_DATASIZ, dir, "",
@@ -1309,7 +1357,7 @@ void run_test(const int32_t dir)
                                 (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) |
                                 (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
                                 (1 << DIRPBIT_ACCESS))) {
-                fatal_failed();
+                clean_exit(5);  /* Network/protocol error */
             }
         }
 
@@ -1329,7 +1377,7 @@ void run_test(const int32_t dir)
             snprintf(temp, sizeof(temp), "File.0k%d", i);
 
             if (FPDelete(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
         }
 
@@ -1387,7 +1435,7 @@ void run_test(const int32_t dir)
                 || cache_files_per_dir > 50) {
             fprintf(stderr, "Invalid cache test configuration: dirs=%d, files_per_dir=%d\n",
                     cache_dirs, cache_files_per_dir);
-            fatal_failed();
+            clean_exit(7);  /* Validation/test error */
         }
 
         /* Use dynamic allocation to prevent stack overflow with VLAs */
@@ -1397,13 +1445,13 @@ void run_test(const int32_t dir)
 
         if (!cache_test_files) {
             fprintf(stderr, "Memory allocation failed for test files cache\n");
-            fatal_failed();
+            clean_exit(2);  /* Memory allocation error */
         }
 
         if (!cache_test_dirs_arr) {
             fprintf(stderr, "Memory allocation failed for test dirs array cache\n");
             free(cache_test_files);  /* Free the successfully allocated memory from above */
-            fatal_failed();
+            clean_exit(2);  /* Memory allocation error */
         }
 
         /* Create test directories */
@@ -1413,7 +1461,7 @@ void run_test(const int32_t dir)
             if (!(cache_test_dirs_arr[i] = FPCreateDir(Conn, vol, dir, temp))) {
                 free(cache_test_files);
                 free(cache_test_dirs_arr);
-                fatal_failed();
+                clean_exit(2);  /* Memory allocation error */
             }
         }
 
@@ -1427,7 +1475,7 @@ void run_test(const int32_t dir)
                                  cache_test_files[i * cache_files_per_dir + j])) {
                     free(cache_test_files);
                     free(cache_test_dirs_arr);
-                    fatal_failed();
+                    clean_exit(2);  /* Memory allocation error */
                 }
             }
         }
@@ -1444,7 +1492,7 @@ void run_test(const int32_t dir)
                 snprintf(temp, sizeof(temp), "cache_dir_%d", i);
 
                 if (is_there(Conn, vol, dir, temp) != AFP_OK) {
-                    fatal_failed();
+                    clean_exit(3);  /* File/directory operation error */
                 }
 
                 /* File parameter requests (should hit cache) */
@@ -1452,7 +1500,7 @@ void run_test(const int32_t dir)
                     if (FPGetFileDirParams(Conn, vol, cache_test_dirs_arr[i],
                                            cache_test_files[i * cache_files_per_dir + j],
                                            (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_DFLEN), 0)) {
-                        fatal_failed();
+                        clean_exit(3);  /* File/directory operation error */
                     }
                 }
             }
@@ -1489,13 +1537,13 @@ void run_test(const int32_t dir)
 
             /* Create file */
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             /* Stat it (should cache the entry) */
             if (FPGetFileDirParams(Conn, vol, dir, temp,
                                    (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_DFLEN), 0)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             /* Enumerate directory (should use cached entries) */
@@ -1511,12 +1559,12 @@ void run_test(const int32_t dir)
             /* Stat again (should hit cache) */
             if (FPGetFileDirParams(Conn, vol, dir, temp,
                                    (1 << FILPBIT_FNUM) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_MDATE), 0)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
 
             /* Delete (should invalidate cache entry) */
             if (FPDelete(Conn, vol, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
         }
 
@@ -1530,7 +1578,7 @@ void run_test(const int32_t dir)
         /* Validate configuration to prevent issues */
         if (deep_dir_levels <= 0 || deep_dir_levels > 100) {
             fprintf(stderr, "Invalid deep directory levels: %d\n", deep_dir_levels);
-            fatal_failed();
+            clean_exit(8);  /* Configuration error */
         }
 
         /* Create a deep directory structure */
@@ -1538,7 +1586,7 @@ void run_test(const int32_t dir)
 
         if (!deep_dirs) {
             fprintf(stderr, "Memory allocation failed for deep directories\n");
-            fatal_failed();
+            clean_exit(2);  /* Memory allocation error */
         }
 
         uint32_t current_dir = dir;
@@ -1549,7 +1597,7 @@ void run_test(const int32_t dir)
 
             if (!(deep_dirs[i] = FPCreateDir(Conn, vol, current_dir, temp))) {
                 free(deep_dirs);
-                fatal_failed();
+                clean_exit(2);  /* Memory allocation error */
             }
 
             current_dir = deep_dirs[i];
@@ -1561,7 +1609,7 @@ void run_test(const int32_t dir)
 
             if (FPCreateFile(Conn, vol, 0, current_dir, temp)) {
                 free(deep_dirs);
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
         }
 
@@ -1581,7 +1629,7 @@ void run_test(const int32_t dir)
                 /* Directory lookup (should hit cache after first time) - is_there() returns AFP_OK when found */
                 if (is_there(Conn, vol, current_dir, temp) != AFP_OK) {
                     free(deep_dirs);
-                    fatal_failed();
+                    clean_exit(3);  /* File/directory operation error */
                 }
 
                 current_dir = deep_dirs[i];
@@ -1593,7 +1641,7 @@ void run_test(const int32_t dir)
                 if (FPGetFileDirParams(Conn, vol, current_dir, temp,
                                        (1 << FILPBIT_FNUM) | (1 << FILPBIT_DFLEN), 0)) {
                     free(deep_dirs);
-                    fatal_failed();
+                    clean_exit(3);  /* File/directory operation error */
                 }
             }
         }
@@ -1626,7 +1674,7 @@ void run_test(const int32_t dir)
             fprintf(stderr,
                     "Invalid validation test configuration: files=%d, iterations=%d\n",
                     validation_files, validation_iterations);
-            fatal_failed();
+            clean_exit(7);  /* Validation/test error */
         }
 
         /* Create test files for validation testing */
@@ -1634,7 +1682,7 @@ void run_test(const int32_t dir)
             snprintf(temp, sizeof(temp), "valid_file_%d", i);
 
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
-                fatal_failed();
+                clean_exit(3);  /* File/directory operation error */
             }
         }
 
@@ -1653,17 +1701,17 @@ void run_test(const int32_t dir)
                 /* Multiple parameter requests on same file */
                 if (FPGetFileDirParams(Conn, vol, dir, temp,
                                        (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID), 0)) {
-                    fatal_failed();
+                    clean_exit(3);  /* File/directory operation error */
                 }
 
                 if (FPGetFileDirParams(Conn, vol, dir, temp,
                                        (1 << FILPBIT_DFLEN) | (1 << FILPBIT_CDATE), 0)) {
-                    fatal_failed();
+                    clean_exit(3);  /* File/directory operation error */
                 }
 
                 if (FPGetFileDirParams(Conn, vol, dir, temp,
                                        (1 << FILPBIT_MDATE) | (1 << FILPBIT_FINFO), 0)) {
-                    fatal_failed();
+                    clean_exit(3);  /* File/directory operation error */
                 }
             }
         }
@@ -1688,7 +1736,7 @@ void usage(char *av0)
 {
     int32_t i = 0;
     fprintf(stdout,
-            "usage:\t%s [-1234567bcGgKVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
+            "usage:\t%s [-34567bcGgKVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
             "[-n iterations] [-f tests] [-F bigfile]\n", av0);
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
@@ -1743,7 +1791,7 @@ int main(int32_t ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567bcGgKVvF:f:h:n:p:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "34567bcGgKVvF:f:h:n:p:s:u:w:")) != EOF) {
         switch (cc) {
         case '3':
             vers = "AFPX03";
@@ -1833,7 +1881,7 @@ int main(int32_t ac, char **av)
             break;
 
         case 'n':
-            Iterations = safe_atoi(optarg, "iterations", 1, 10000);
+            Iterations = safe_atoi(optarg, "iterations", 1, 256);
 
             if (Iterations <= 0) {
                 fprintf(stderr, "Error: Number of iterations must be positive (got %d)\n",
@@ -1951,7 +1999,7 @@ int main(int32_t ac, char **av)
         fprintf(stderr,
                 "Memory allocation failed for 3D results array (%d iterations)\n",
                 Iterations);
-        fatal_failed();
+        clean_exit(7);  /* Validation/test error */
     }
 
     if (!Test) {
@@ -2015,7 +2063,7 @@ int main(int32_t ac, char **av)
 
     if (vol == 0xffff) {
         fprintf(stderr, "Error: Failed to open volume '%s'\n", Vol);
-        fatal_failed();
+        clean_exit(9);  /* Volume operation error */
     }
 
 #ifdef __linux__
@@ -2037,7 +2085,7 @@ int main(int32_t ac, char **av)
     snprintf(testdir, sizeof(testdir), "LanTest-%d", getpid());
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, "", 0, (1 << DIRPBIT_DID))) {
-        fatal_failed();
+        clean_exit(3);  /* File/directory operation error */
     }
 
     /* Delete any existing testdir directory first to avoid conflicts */
@@ -2052,27 +2100,27 @@ int main(int32_t ac, char **av)
                     testdir);
             fprintf(stderr,
                     "The directory may not be empty. Please manually delete it and try again.\n");
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
 
         /* Verify the directory was actually deleted */
         if (is_there(Conn, vol, DIRDID_ROOT, testdir) == AFP_OK) {
             fprintf(stderr,
                     "ERROR: Test directory '%s' still exists after deletion attempt\n", testdir);
-            fatal_failed();
+            clean_exit(3);  /* File/directory operation error */
         }
     }
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, testdir))) {
-        fatal_failed();
+        clean_exit(3);  /* File/directory operation error */
     }
 
     if (FPGetFileDirParams(Conn, vol, dir, "", 0, (1 << DIRPBIT_DID))) {
-        fatal_failed();
+        clean_exit(3);  /* File/directory operation error */
     }
 
     if (is_there(Conn, vol, DIRDID_ROOT, testdir) != AFP_OK) {
-        fatal_failed();
+        clean_exit(3);  /* File/directory operation error */
     }
 
     for (int32_t current_iteration = 0; current_iteration < Iterations;
@@ -2087,15 +2135,9 @@ int main(int32_t ac, char **av)
     if (ExitCode != AFP_OK && !Debug) {
         printf("Error, ExitCode: %u. Run with -v or -b to see what went wrong.\n",
                ExitCode);
-        goto exit;
+        clean_exit(ExitCode);
     }
 
     displayresults();
-exit:
-
-    if (Conn) {
-        FPLogOut(Conn);
-    }
-
-    return ExitCode;
+    clean_exit(ExitCode);
 }
