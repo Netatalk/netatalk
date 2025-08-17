@@ -59,13 +59,11 @@ static void show_version(void)
     }
 
     puts("");
-    printf("        TCP/IP Support:\t");
-    puts("Yes");
-    printf("     AppleTalk Support:\t");
+    printf("      Transport layers:\t");
 #ifdef NO_DDP
-    puts("No");
+    puts("TCP/IP");
 #else
-    puts("Yes");
+    puts("TCP/IP AppleTalk");
 #endif
     printf("         CNID backends:\t");
 #ifdef CNID_BACKEND_DBD
@@ -112,8 +110,6 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("   Admin group support:\t");
-    puts("Yes");
     printf("    Valid shell checks:\t");
 #ifndef DISABLE_SHELLCHECK
     puts("Yes");
@@ -140,7 +136,7 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("         D-Bus support:\t");
+    printf("AFP statistics support:\t");
 #ifdef HAVE_DBUS_GLIB
     puts("Yes");
 #else
