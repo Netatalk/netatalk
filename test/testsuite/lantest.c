@@ -15,27 +15,31 @@
 
 #include "specs.h"
 
+/* Standard C library includes */
 #include <getopt.h>
-#include <sys/time.h>
-#include <time.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <math.h>
+#include <pthread.h>
+#include <pwd.h>
+#include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <pwd.h>
-#include <pthread.h>
 #include <sys/socket.h>
-#include <math.h>
-#include <stdint.h>
-#include <limits.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <time.h>
 
+/* Netatalk library includes */
+#include "afpclient.h"
+#include "test.h"
+
+/* Platform-specific includes */
 #ifdef __linux__
 #include "lantest_io_monitor.h"
 #endif
-
-#include "afpclient.h"
-#include "test.h"
 
 /* IO Monitoring measurement types */
 #define MEASURE_TIME_MS 0
@@ -65,6 +69,22 @@
 #define NUMTESTS (LASTTEST+1)
 #define TOTAL_AFP_OPS 80686
 
+/* Global Error Constants */
+#define ERROR_MEMORY_ALLOCATION  2
+#define ERROR_FILE_DIRECTORY_OPS 3
+#define ERROR_FORK_OPERATIONS    4
+#define ERROR_NETWORK_PROTOCOL   5
+#define ERROR_THREAD_OPERATIONS  6
+#define ERROR_VALIDATION_TEST    7
+#define ERROR_CONFIGURATION      8
+#define ERROR_VOLUME_OPERATIONS  9
+
+/* Global Debug flag */
+uint8_t Debug = 0;
+/* Global Quiet flag override for lantest (stdout output enabled) */
+uint8_t lantest_Quiet = 0;
+
+/* Control Variables */
 CONN *Conn;
 int ExitCode = 0;
 int Version = 34;
@@ -87,11 +107,6 @@ static struct timeval tv_end;
 static struct timeval tv_dif;
 static pthread_t tid;
 static uint8_t active_thread = 0;  /* Track if we have an active thread */
-
-/* Global Debug flag */
-uint8_t Debug = 0;
-/* Global Quiet flag override for lantest (stdout output enabled) */
-uint8_t lantest_Quiet = 0;
 
 /* Remote linker names */
 CONN *Conn2;
@@ -129,12 +144,11 @@ static char teststorun[NUMTESTS];
 static uint64_t (*results)[][NUMTESTS][NUM_MEASUREMENTS];
 static char *bigfilename;
 
-/* Results display control
+/* Result display controls
 0 = tabular (default), 1 = CSV */
 static int32_t csv_output = 0;
 /* Display width for test names in progress output */
 #define TEST_NAME_DISPLAY_WIDTH 66
-
 /* Descriptive test names for output formatting with AFP operation counts */
 static const char *test_names[NUMTESTS] = {
     "Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]",  /* TEST_OPENSTATREAD */
@@ -150,16 +164,6 @@ static const char *test_names[NUMTESTS] = {
     "Deep path traversal (nested directory navigation) [3,500 AFP ops]",  /* TEST_DIRCACHE_TRAVERSE */
     "Cache validation efficiency (metadata changes) [30,000 AFP ops]"  /* TEST_CACHE_VALIDATION */
 };
-
-/* Global error constants for clean_exit() */
-#define ERROR_MEMORY_ALLOCATION  2
-#define ERROR_FILE_DIRECTORY_OPS 3
-#define ERROR_FORK_OPERATIONS    4
-#define ERROR_NETWORK_PROTOCOL   5
-#define ERROR_THREAD_OPERATIONS  6
-#define ERROR_VALIDATION_TEST    7
-#define ERROR_CONFIGURATION      8
-#define ERROR_VOLUME_OPERATIONS  9
 
 static void starttimer(void)
 {
@@ -234,7 +238,7 @@ static void addresult(int32_t test, int32_t iteration)
     if ((test == TEST_WRITE100MB) || (test == TEST_READ100MB)) {
         if (t > 0) {  /* Prevent division by zero */
             avg = (rwsize / 1000) / t;
-            fprintf(stdout, " for %lu MB (avg. %llu MB/s)",
+            fprintf(stdout, " for %lu MB (avg. %" PRIu64 " MB/s)",
                     rwsize / (1024 * 1024), avg);
         } else {
             fprintf(stdout, " for %lu MB (time too small to measure)",
@@ -247,7 +251,8 @@ static void addresult(int32_t test, int32_t iteration)
     /* Display IO measurements if enabled */
     if (io_monitoring_enabled) {
         fprintf(stdout,
-                "\n         IO Operations; afpd: %llu READs, %llu WRITEs | cnid_dbd: %llu READs, %llu WRITEs",
+                "\n         IO Operations; afpd: %" PRIu64 " READs, %" PRIu64
+                " WRITEs | cnid_dbd: %" PRIu64 " READs, %" PRIu64 " WRITEs",
                 (*results)[iteration][test][MEASURE_AFPD_READ_IO],
                 (*results)[iteration][test][MEASURE_AFPD_WRITE_IO],
                 (*results)[iteration][test][MEASURE_CNID_READ_IO],
@@ -398,7 +403,8 @@ static void results_print_row(int32_t test, int32_t is_csv,
     if (io_monitoring_enabled) {
         if (is_csv) {
             fprintf(stdout,
-                    "%s,%llu,%.1f,%llu,%.1f,%llu,%.1f,%llu,%.1f,%llu,%.1f,%llu\n",
+                    "%s,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%"
+                    PRIu64 ",%.1f,%" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                     averages[test][MEASURE_AFPD_READ_IO], std_devs[test][MEASURE_AFPD_READ_IO],
@@ -408,7 +414,8 @@ static void results_print_row(int32_t test, int32_t is_csv,
                     thrput);
         } else {
             fprintf(stdout,
-                    "%-66s %8llu %6.1f %6llu %7.1f %6llu %7.1f %6llu %7.1f %6llu %7.1f %6llu\n",
+                    "%-66s %8" PRIu64 " %6.1f %6" PRIu64 " %7.1f %6" PRIu64 " %7.1f %6" PRIu64
+                    " %7.1f %6" PRIu64 " %7.1f %6" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                     averages[test][MEASURE_AFPD_READ_IO], std_devs[test][MEASURE_AFPD_READ_IO],
@@ -419,12 +426,12 @@ static void results_print_row(int32_t test, int32_t is_csv,
         }
     } else {
         if (is_csv) {
-            fprintf(stdout, "%s,%llu,%.1f,%llu\n",
+            fprintf(stdout, "%s,%" PRIu64 ",%.1f,%" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                     thrput);
         } else {
-            fprintf(stdout, "%-66s %7llu %6.1f %6llu\n",
+            fprintf(stdout, "%-66s %7" PRIu64 " %6.1f %6" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                     thrput);
@@ -434,12 +441,12 @@ static void results_print_row(int32_t test, int32_t is_csv,
 #else
 
     if (is_csv) {
-        fprintf(stdout, "%s,%llu,%.1f,%llu\n",
+        fprintf(stdout, "%s,%" PRIu64 ",%.1f,%" PRIu64 "\n",
                 test_names[test],
                 averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                 thrput);
     } else {
-        fprintf(stdout, "%-66s %7llu %6.1f %6llu\n",
+        fprintf(stdout, "%-66s %7" PRIu64 " %6.1f %6" PRIu64 "\n",
                 test_names[test],
                 averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
                 thrput);
@@ -574,6 +581,10 @@ static void result_print_summary(uint64_t
         }
 
 #endif
+        fprintf(stdout,
+                "Aggregate values are purely Intrinsic Metrics, as AFP operations are a mixture of reads, writes, and connection related operations.\n");
+        fprintf(stdout,
+                "See afp_lantest manpage for more information: https://netatalk.io/manual/en/afp_lantest.1\n");
         fprintf(stdout, "\n");
     }
 }

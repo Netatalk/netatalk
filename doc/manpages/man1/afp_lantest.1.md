@@ -257,6 +257,25 @@ For example, to run as root;
 
     CNID_*   = IO measurements for the cnid_dbd process (optional)
 
+## Aggregates Summary
+
+The aggregate values are purely Intrinsic Metrics, as AFP operations are a mixture of reads, writes,
+and connection related operations.
+
+Therefore the measurements are meaningful only within their own context.
+They provide a way to assess changes relative to itself,
+but lack any external coherence or reference point for comparison with other systems.
+
+Generally, values less than 1 indicate efficient operation (for example due to batching and caching etc),
+and values greater than 1 indicate sub-optimal operation (for example amplification of a single operation,
+causing additional downstream operations).
+
+Note; As total AFP Ops are a mix of reads, writes, and other ops the effective 1:1 (AFP:IO) thresholds are not equal to 1.
+Accurate thresholds can be calculated on a per test basis using the information shown in the Testing Wiki,
+and comparing relevant AFP read/write ops with the relevant AFPD_R/AFPD_W values.
+
+Ideally code changes should observe aggregate values as reducing.
+
 For more information see [Testing Wiki](https://netatalk.io/docs/Testing)
 
 # Return Codes
