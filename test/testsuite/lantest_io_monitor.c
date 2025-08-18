@@ -29,22 +29,34 @@
 
 #ifdef __linux__
 
+/* Standard C library includes */
+#include <ctype.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <limits.h>
+#include <pwd.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <pwd.h>
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <ctype.h>
-#include <stdint.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+/* Netatalk library includes */
 #include "lantest_io_monitor.h"
 
-#include <limits.h>  /* For PATH_MAX */
+/* Constants for magic numbers */
+#define MAX_PROCESSES_TO_TRACK 10
+#define PROC_SCAN_THRESHOLD 3
+#define PROC_IO_WAIT_SECONDS 1
+#define MAX_RETRY_ATTEMPTS 3
+#define PATH_BUFFER_SIZE 256
+#define LINE_BUFFER_SIZE 256
+#define COMM_BUFFER_SIZE 256
+#define CMDLINE_BUFFER_SIZE 1024
 
 /* Global variables for IO monitoring */
 uint8_t io_monitoring_enabled = 0;
@@ -122,8 +134,8 @@ int32_t check_proc_io_availability(void)
     closedir(proc_dir);
 
     /* If /proc_io appears to be empty or nearly empty, it's likely not properly mounted */
-    if (entry_count < 3) {
-        char message[256];
+    if (entry_count < PROC_SCAN_THRESHOLD) {
+        char message[PATH_BUFFER_SIZE];
         snprintf(message, sizeof(message),
                  "/proc_io directory appears to be empty (found %d entries)",
                  entry_count);
@@ -146,9 +158,12 @@ static int32_t init_process_filter(ProcessFilter *filter,
 
     if (!filter_by_cmdline) {
         /* Convert username to UID for ownership-based filtering */
-        struct passwd *pwd = getpwnam(username);
+        struct passwd pwd_buffer;
+        struct passwd *pwd = NULL;
+        char buffer[1024];
+        int ret = getpwnam_r(username, &pwd_buffer, buffer, sizeof(buffer), &pwd);
 
-        if (!pwd) {
+        if (ret != 0 || pwd == NULL) {
             fprintf(stderr, "Error: Unable to find UID for user '%s'\n", username);
             return -1;
         }
@@ -168,8 +183,8 @@ static int32_t init_process_filter(ProcessFilter *filter,
 static int32_t check_process_name_match(const char *pid_dir,
                                         const char *target_name)
 {
-    char comm_path[256];
-    char comm_name[256];
+    char comm_path[PATH_BUFFER_SIZE];
+    char comm_name[COMM_BUFFER_SIZE];
     FILE *comm_file;
     snprintf(comm_path, sizeof(comm_path), "/proc_io/%s/comm", pid_dir);
     comm_file = fopen(comm_path, "r");
@@ -193,8 +208,8 @@ static int32_t check_process_name_match(const char *pid_dir,
 /* Helper: Check if process matches cmdline filter (-u username) */
 static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
 {
-    char cmdline_path[256];
-    char cmdline_buffer[1024];
+    char cmdline_path[PATH_BUFFER_SIZE];
+    char cmdline_buffer[CMDLINE_BUFFER_SIZE];
     FILE *cmdline_file;
     snprintf(cmdline_path, sizeof(cmdline_path), "/proc_io/%s/cmdline", pid_dir);
     cmdline_file = fopen(cmdline_path, "r");
@@ -251,8 +266,8 @@ static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
 /* Helper: Check if process matches UID filter (ownership) */
 static int32_t check_uid_filter(const char *pid_dir, uid_t target_uid)
 {
-    char status_path[256];
-    char status_line[256];
+    char status_path[PATH_BUFFER_SIZE];
+    char status_line[LINE_BUFFER_SIZE];
     FILE *status_file;
     snprintf(status_path, sizeof(status_path), "/proc_io/%s/status", pid_dir);
     status_file = fopen(status_path, "r");
@@ -306,7 +321,7 @@ static int32_t process_proc_entry(const char *pid_dir,
     }
 
     /* Add to found list if matches */
-    if (process_matches && found->count < 10) {
+    if (process_matches && found->count < MAX_PROCESSES_TO_TRACK) {
         pid_t pid = safe_parse_pid(pid_dir);
 
         if (pid > 0) {
@@ -380,7 +395,8 @@ pid_t find_process_pid(const char *process_name, const char *username,
     int32_t entries_checked = 0;
     int32_t total_entries = 0;
 
-    while ((entry = readdir(proc_dir)) != NULL && found.count < 10) {
+    while ((entry = readdir(proc_dir)) != NULL
+            && found.count < MAX_PROCESSES_TO_TRACK) {
         total_entries++;
 
         /* Only process numeric entries (PID directories) */
@@ -418,9 +434,10 @@ static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
                             uint64_t *write_ops)
 {
     FILE *io_file;
-    char io_path[256];
-    char line[256];
+    char io_path[PATH_BUFFER_SIZE];
+    char line[LINE_BUFFER_SIZE];
     int32_t found_read = 0, found_write = 0;
+    uint64_t temp_value;
     *read_ops = 0;
     *write_ops = 0;
     snprintf(io_path, sizeof(io_path), "/proc_io/%d/io", pid);
@@ -428,13 +445,15 @@ static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
 
     if (!io_file) {
         fprintf(stderr, "Cannot open %s (errno: %d)\n", io_path, errno);
-        return 0;
+        return -1;
     }
 
     while (fgets(line, sizeof(line), io_file) && (!found_read || !found_write)) {
-        if (sscanf(line, "syscr: %llu", read_ops) == 1) {
+        if (sscanf(line, "syscr: %" SCNu64, &temp_value) == 1) {
+            *read_ops = temp_value;
             found_read = 1;
-        } else if (sscanf(line, "syscw: %llu", write_ops) == 1) {
+        } else if (sscanf(line, "syscw: %" SCNu64, &temp_value) == 1) {
+            *write_ops = temp_value;
             found_write = 1;
         }
     }
@@ -442,7 +461,8 @@ static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
     fclose(io_file);
 
     if (Debug) {
-        fprintf(stderr, "DEBUG: IO result (%d) - syscr: %llu, syscw: %llu\n", pid,
+        fprintf(stderr, "DEBUG: IO result (%d) - syscr: %" PRIu64 ", syscw: %" PRIu64
+                "\n", pid,
                 *read_ops, *write_ops);
     }
 
@@ -542,7 +562,7 @@ void init_io_monitoring(const char *username)
                 "DEBUG: Waiting for login user child processes to be created...\n");
     }
 
-    sleep(1);
+    sleep(PROC_IO_WAIT_SECONDS);
     /* Temporarily enable monitoring for process discovery */
     io_monitoring_enabled = 1;
     /* First, search for cnid_dbd (optional - doesn't drop privileges) */
@@ -558,7 +578,7 @@ void init_io_monitoring(const char *username)
 
     /* Always search for afpd (mandatory - drops privileges) */
     int32_t attempts = 0;
-    const int32_t max_attempts = 3;
+    const int32_t max_attempts = MAX_RETRY_ATTEMPTS;
 
     while (attempts < max_attempts) {
         attempts++;
@@ -569,7 +589,7 @@ void init_io_monitoring(const char *username)
         }
 
         if (attempts < max_attempts) {
-            sleep(1);
+            sleep(PROC_IO_WAIT_SECONDS);
         }
     }
 
