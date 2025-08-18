@@ -3,7 +3,7 @@
 > ***WARNING:*** Before upgrading to Netatalk 4 from an earlier version,
 please read the [Upgrade](Upgrading.html) chapter in this manual.
 
-## How to obtain Netatalk
+# How to obtain Netatalk
 
 Please have a look at the [Netatalk homepage](https://netatalk.io) for
 the most up to date information on where to find the latest version of
