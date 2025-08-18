@@ -2,14 +2,9 @@
 
 ## Upgrading from Netatalk 3
 
-Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new
-version on top of the old one. The primary difference is that Netatalk 4
-brings back essential AppleTalk services, configuration files, and tools
-that were removed between Netatalk 2 and Netatalk 3.
+Upgrading to Netatalk 4 from Netatalk 3 is trivial. Just install the new version on top of the old one. The primary difference is that Netatalk 4 brings back essential AppleTalk services, configuration files, and tools that were removed between Netatalk 2 and Netatalk 3.
 
-Notably, the **atalkd** daemon with its **atalkd.conf** configuration file,
-and the **papd** daemon with its **papd.conf** configuration file are once
-more available.
+Notably, the **atalkd** daemon with its **atalkd.conf** configuration file, and the **papd** daemon with its **papd.conf** configuration file are once more available.
 
 ## Upgrading from Netatalk 2
 
