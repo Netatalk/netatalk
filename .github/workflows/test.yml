@@ -37,11 +37,15 @@ jobs:
             perltidy \
             shfmt \
             yamlfmt
-      - name: Check formatting
-        run: |
-          ./contrib/scripts/codefmt.sh -v -s c
-          ./contrib/scripts/codefmt.sh -v -s markdown
-          ./contrib/scripts/codefmt.sh -v -s meson
-          ./contrib/scripts/codefmt.sh -v -s perl
-          ./contrib/scripts/codefmt.sh -v -s shell
-          ./contrib/scripts/codefmt.sh -v -s yaml
+      - name: Check C formatting
+        run: ./contrib/scripts/codefmt.sh -v -s c
+      - name: Check markdown formatting
+        run: ./contrib/scripts/codefmt.sh -v -s markdown
+      - name: Check meson formatting
+        run: ./contrib/scripts/codefmt.sh -v -s meson
+      - name: Check perl formatting
+        run: ./contrib/scripts/codefmt.sh -v -s perl
+      - name: Check shell script formatting
+        run: ./contrib/scripts/codefmt.sh -v -s shell
+      - name: Check yaml formatting
+        run: ./contrib/scripts/codefmt.sh -v -s yaml
