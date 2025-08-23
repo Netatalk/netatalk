@@ -59,7 +59,7 @@ int markline(struct papfile *pf, char **start, int *linelength, int *crlflength)
     }
 
 #endif
-    /* success, return 1 */
+    /* success */
     return 1;
 }
 

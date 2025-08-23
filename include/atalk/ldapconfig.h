@@ -43,7 +43,7 @@ struct ldap_pref {
     int strorint;
     /* convert to int, but use string to int mapping array pref_array[] */
     int intfromarray;
-    /* -1 = mandatory, 0 = omittable/valid */
+    /* set to -1 if mandatory, 0 if omittable/valid */
     int valid;
     /* copy of 'valid', used when resettting config */
     int valid_save;
