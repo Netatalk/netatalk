@@ -70,7 +70,12 @@ fi
 
 if [ "$SOURCE_TYPE" = "markdown" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v markdownlint-cli2 > /dev/null 2>&1; then
-        markdownlint-cli2 --fix .
+        if [ $VERBOSE -eq 1 ]; then
+            echo "Formatting markdown sources..."
+            find . -type f -name "*.md" -exec markdownlint-cli2 --fix {} +
+        else
+            find . -type f -name "*.md" -exec markdownlint-cli2 --fix {} + > /dev/null
+        fi
     else
         echo "Error: markdownlint-cli2 not found in PATH"
         exit 2
