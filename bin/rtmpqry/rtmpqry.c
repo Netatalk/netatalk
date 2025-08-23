@@ -125,7 +125,7 @@ int main(int argc, char** argv)
     } else {
         do_rtmp_rdr(sockfd, &sa_remote, all_routes, 2);
     }
-    
+
     free(remote_addr);
 }
 
@@ -165,8 +165,8 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
     uint8_t buf[600];
     buf[0] = DDPTYPE_RTMPR;
     buf[1] = RTMPROP_REQUEST;
-    int ret = netddp_sendto(sockfd, buf, 2, 0, (struct sockaddr*)sa_remote,
-                            (int)sizeof(struct sockaddr_at));
+    ssize_t ret = netddp_sendto(sockfd, buf, 2, 0, (struct sockaddr*)sa_remote,
+                                (int)sizeof(struct sockaddr_at));
 
     if (ret < 0) {
         perror("netddp_sendto");
@@ -268,10 +268,11 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
         buf[1] = RTMPROP_RDR_NOSH;
     }
 
-    int ret = netddp_sendto(sockfd, buf, 2, 0, (struct sockaddr*)sa_remote,
-                            (int)sizeof(struct sockaddr_at));
+    ssize_t ret_socket = netddp_sendto(sockfd, buf, 2, 0,
+                                       (const struct sockaddr*)sa_remote,
+                                       (int)sizeof(struct sockaddr_at));
 
-    if (ret < 0) {
+    if (ret_socket < 0) {
         perror("netddp_sendto");
         exit(1);
     }
@@ -288,7 +289,7 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
     struct timeval end_time;
     select_timeout.tv_sec = 0;
     select_timeout.tv_usec = 250000;
-    ret = gettimeofday(&end_time, NULL);
+    int ret = gettimeofday(&end_time, NULL);
 
     if (ret < 0) {
         perror("gettimeofday");
@@ -310,14 +311,14 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
         }
 
         if (ret > 0) {
-            ret = netddp_recvfrom(sockfd, buf, (int)sizeof(buf), 0, NULL, NULL);
+            ret_socket = netddp_recvfrom(sockfd, buf, (int)sizeof(buf), 0, NULL, NULL);
 
-            if (ret < 0) {
+            if (ret_socket < 0) {
                 perror("netddp_recvfrom");
                 exit(1);
             }
 
-            print_rtmp_data_packet(buf, ret);
+            print_rtmp_data_packet(buf, ret_socket);
         }
 
         /* have we run out of time? */
@@ -357,14 +358,14 @@ const uint8_t *print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor,
         }
     }
 
-    uint16_t net_start = ntohs(*(uint16_t*)cursor);
+    uint16_t net_start = ntohs(*(const uint16_t*)cursor);
     cursor += 2;
     /* top bit of distance is the extended network bit we used above */
     uint8_t distance = (*cursor++) & 0x7f;
 
     /* If this is an extended tuple, we also have an end network and an RTMP version */
     if (tuple_extended) {
-        uint16_t net_end = ntohs(*(uint16_t*)cursor);
+        uint16_t net_end = ntohs(*(const uint16_t*)cursor);
         cursor += 2;
         uint8_t rtmp_version = *cursor++;
 
@@ -403,7 +404,7 @@ void print_rtmp_data_packet(const uint8_t *buf, size_t len)
     }
 
     cursor++;
-    uint16_t router_net_num = ntohs(*(uint16_t*)cursor);
+    uint16_t router_net_num = ntohs(*(const uint16_t*)cursor);
     cursor += 2;
     uint8_t id_len = *cursor++;
 
