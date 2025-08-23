@@ -123,30 +123,30 @@
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
 
-/* attribute bits. (d) = directory attribute bit as well. */
-/* invisible (d) */
+/* attribute bits. d = directory attribute bit as well. */
+/* invisible d */
 #define ATTRBIT_INVISIBLE (1<<0)
 /* multiuser */
 #define ATTRBIT_MULTIUSER (1<<1)
-/* system (d) */
+/* system d */
 #define ATTRBIT_SYSTEM    (1<<2)
 /* data fork already open */
 #define ATTRBIT_DOPEN     (1<<3)
 /* resource fork already open */
 #define ATTRBIT_ROPEN     (1<<4)
-/* shared area (d) */
+/* shared area d */
 #define ATTRBIT_SHARED    (1<<4)
 /* write inhibit(v2)/read-only(v1) bit */
 #define ATTRBIT_NOWRITE   (1<<5)
-/* backup needed (d) */
+/* backup needed d */
 #define ATTRBIT_BACKUP    (1<<6)
-/* rename inhibit (d) */
+/* rename inhibit d */
 #define ATTRBIT_NORENAME  (1<<7)
-/* delete inhibit (d) */
+/* delete inhibit d */
 #define ATTRBIT_NODELETE  (1<<8)
 /* copy protect */
 #define ATTRBIT_NOCOPY    (1<<10)
-/* set/clear bits (d) */
+/* set/clear bits d */
 #define ATTRBIT_SETCLR    (1<<15)
 
 /* ----------------------------- */

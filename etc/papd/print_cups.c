@@ -539,7 +539,6 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
     info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
 
     if (username != NULL) {
-        /* Add options using cupsAddOption() */
         num_options = cupsAddOption("job-originating-user-name", username, num_options,
                                     &options);
         num_options = cupsAddOption("originating-user-name", username, num_options,

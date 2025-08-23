@@ -679,7 +679,7 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
         /* Non-Combination Character */
         if (comb < 0x300) ;
         /* Unicode Standard Annex #15 A10.3 Hangul Composition */
-        /* Step 1 <L,V> */
+        /* Step 1: leading consonant, vowel */
         else if ((VBASE <= comb) && (comb <= VBASE + VCOUNT)) {
             if ((LBASE <= base) && (base < LBASE + LCOUNT)) {
                 result = 1;
@@ -688,7 +688,7 @@ size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
                 base = SBASE + (lindex * VCOUNT + vindex) * TCOUNT;
             }
         }
-        /* Step 2 <LV,T> */
+        /* Step 2: leading vowel, trailing consonant */
         else if ((TBASE < comb) && (comb < TBASE + TCOUNT)) {
             if ((SBASE <= base) && (base < SBASE + SCOUNT)
                     && (((base - SBASE) % TCOUNT) == 0)) {
