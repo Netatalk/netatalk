@@ -91,7 +91,7 @@ static int push_path(char **bufp, const char *name)
 
 char **cnamewrap(const char *name)
 {
-    static char buf[256];
+    static char buf[256] = { 0 };
     static char *p = buf;
     int len = 0;
     PUSHVAL(p, uint8_t, 3, len); /* path type */
@@ -104,8 +104,7 @@ char **cnamewrap(const char *name)
 
 int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 {
-    const int bufsize = 256;
-    char buf[bufsize];
+    static char buf[256] = { 0 };
     char *p = buf;
     int len = 0;
     ADD(p, len, 2);
@@ -119,8 +118,7 @@ int getfiledirparms(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 
 int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 {
-    const int bufsize = 256;
-    char buf[bufsize];
+    static char buf[256] = { 0 };
     char *p = buf;
     int len = 0;
     ADD(p, len, 2);
@@ -132,8 +130,7 @@ int createdir(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 
 int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 {
-    const int bufsize = 256;
-    char buf[bufsize];
+    static char buf[256] = { 0 };
     char *p = buf;
     int len = 0;
     PUSHVAL(p, uint16_t, htons(128), len); /* hard create */
@@ -145,8 +142,7 @@ int createfile(AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 
 int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 {
-    const int bufsize = 256;
-    char buf[bufsize];
+    static char buf[256] = { 0 };
     char *p = buf;
     int len = 0;
     PUSHVAL(p, uint16_t, htons(128), len); /* hard create */
@@ -158,8 +154,7 @@ int delete (AFPObj *obj, uint16_t vid, cnid_t did, const char *name)
 
 int enumerate(AFPObj *obj, uint16_t vid, cnid_t did)
 {
-    const int bufsize = 256;
-    char buf[bufsize];
+    static char buf[256] = { 0 };
     char *p = buf;
     int len = 0;
     int ret;
@@ -186,11 +181,9 @@ uint16_t openvol(AFPObj *obj, const char *name)
     int ret;
     uint16_t bitmap;
     uint16_t vid;
-    const int bufsize = 32;
-    char buf[bufsize];
+    static char buf[32] = { 0 };
     char *p = buf;
     char len = strlen(name);
-    memset(p, 0, bufsize);
     p += 2;
     /* bitmap */
     bitmap = htons(1 << VOLPBIT_VID);
