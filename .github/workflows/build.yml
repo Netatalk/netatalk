@@ -72,7 +72,8 @@ jobs:
             rpcsvc-proto-dev \
             sqlite-dev \
             talloc-dev \
-            tinysparql-dev
+            tinysparql-dev \
+            valgrind
       - name: Configure
         run: |
           meson setup build \
@@ -87,6 +88,8 @@ jobs:
         run: meson compile -C build
       - name: Run integration tests
         run: meson test -C build
+      - name: Run memory profiling
+        run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
@@ -203,7 +206,8 @@ jobs:
             systemtap-sdt-dev \
             tcpd \
             tracker \
-            tracker-miner-fs
+            tracker-miner-fs \
+            valgrind
       - name: Configure
         run: |
           meson setup build \
@@ -220,6 +224,8 @@ jobs:
         run: meson compile -C build
       - name: Run integration tests
         run: meson test -C build
+      - name: Run memory profiling
+        run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
         run: meson install -C build
       - name: Check netatalk capabilities
@@ -272,7 +278,8 @@ jobs:
             sqlite-devel \
             systemd \
             systemtap-sdt-devel \
-            tinysparql-devel
+            tinysparql-devel \
+            valgrind
       - name: Configure
         run: |
           meson setup build \
@@ -287,6 +294,8 @@ jobs:
         run: meson compile -C build
       - name: Run integration tests
         run: meson test -C build
+      - name: Run memory profiling
+        run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
       - name: Install
         run: sudo meson install -C build
       - name: Check netatalk capabilities
