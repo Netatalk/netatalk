@@ -16,6 +16,7 @@
 #ifndef LANTEST_IO_MONITOR_H
 #define LANTEST_IO_MONITOR_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/types.h>
 
@@ -26,7 +27,7 @@
 #endif
 
 /* Global Debug flag - controlled by -b option in lantest.c */
-extern uint8_t Debug;
+extern bool Debug;
 
 #ifdef __linux__
 
@@ -49,7 +50,7 @@ typedef struct {
 } ProcessList;
 
 /* External variables for IO monitoring */
-extern uint8_t io_monitoring_enabled;
+extern bool io_monitoring_enabled;
 extern pid_t afpd_pid;
 extern pid_t cnid_dbd_pid;
 extern uint64_t afpd_start_reads, afpd_start_writes;

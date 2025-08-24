@@ -59,7 +59,7 @@
 #define CMDLINE_BUFFER_SIZE 1024
 
 /* Global variables for IO monitoring */
-uint8_t io_monitoring_enabled = 0;
+bool io_monitoring_enabled = false;
 pid_t afpd_pid = 0;
 pid_t cnid_dbd_pid = 0;
 uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
@@ -107,7 +107,7 @@ int32_t check_proc_io_availability(void)
     /* Check if /proc_io exists */
     if (stat("/proc_io", &st) != 0) {
         show_proc_io_warning("/proc_io directory not found");
-        io_monitoring_enabled = 0;
+        io_monitoring_enabled = false;
         return 0;
     }
 
@@ -116,11 +116,13 @@ int32_t check_proc_io_availability(void)
 
     if (!proc_dir) {
         show_proc_io_warning("Cannot open /proc_io directory");
-        io_monitoring_enabled = 0;
+        io_monitoring_enabled = false;
         return 0;
     }
 
     /* Count entries in /proc_io to check if it's properly mounted */
+    /* Note: readdir() returns non-const pointer per POSIX standard */
+    /* NOSONAR: False positive - API requires non-const pointer */
     struct dirent *entry;
     int32_t entry_count = 0;
 
@@ -140,7 +142,7 @@ int32_t check_proc_io_availability(void)
                  "/proc_io directory appears to be empty (found %d entries)",
                  entry_count);
         show_proc_io_warning(message);
-        io_monitoring_enabled = 0;
+        io_monitoring_enabled = false;
         return 0;
     }
 
@@ -197,7 +199,13 @@ static int32_t check_process_name_match(const char *pid_dir,
     int32_t matches = 0;
 
     if (fgets(comm_name, sizeof(comm_name), comm_file)) {
-        comm_name[strcspn(comm_name, "\n")] = '\0';  /* Remove trailing newline */
+        /* Safely remove trailing newline with bounds checking */
+        size_t newline_pos = strcspn(comm_name, "\n");
+
+        if (newline_pos < sizeof(comm_name)) {
+            comm_name[newline_pos] = '\0';
+        }
+
         matches = (strcmp(comm_name, target_name) == 0);
     }
 
@@ -237,8 +245,8 @@ static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
     }
 
     /* Parse null-separated command line arguments */
-    char *arg = cmdline_buffer;
-    char *end = cmdline_buffer + bytes_read;
+    const char *arg = cmdline_buffer;
+    const char *end = cmdline_buffer + bytes_read;
 
     while (arg < end) {
         if (strcmp(arg, "-u") == 0) {
@@ -391,6 +399,8 @@ pid_t find_process_pid(const char *process_name, const char *username,
 
     /* Scan directory entries and collect matching PIDs */
     ProcessList found = { .count = 0 };
+    /* Note: readdir() returns non-const pointer per POSIX standard */
+    /* NOSONAR: False positive - API requires non-const pointer */
     struct dirent *entry;
     int32_t entries_checked = 0;
     int32_t total_entries = 0;
@@ -564,7 +574,7 @@ void init_io_monitoring(const char *username)
 
     sleep(PROC_IO_WAIT_SECONDS);
     /* Temporarily enable monitoring for process discovery */
-    io_monitoring_enabled = 1;
+    io_monitoring_enabled = true;
     /* First, search for cnid_dbd (optional - doesn't drop privileges) */
     cnid_dbd_pid = find_process_pid("cnid_dbd", username,
                                     1);  /* Filter -u argument */
@@ -641,13 +651,13 @@ void init_io_monitoring(const char *username)
             }
         } else {
             /* /proc_io available but cannot read from afpd - disable monitoring */
-            io_monitoring_enabled = 0;
+            io_monitoring_enabled = false;
             fprintf(stderr,
                     "IO monitoring disabled: cannot read IO statistics for afpd (mandatory)\n");
         }
     } else {
         /* /proc_io available but afpd not found - disable monitoring */
-        io_monitoring_enabled = 0;
+        io_monitoring_enabled = false;
         fprintf(stderr, "IO monitoring disabled: afpd not found (mandatory)\n");
     }
 }
@@ -661,7 +671,7 @@ void init_io_monitoring(const char *username)
 #include "lantest_io_monitor.h"
 
 /* Global variables - stub versions for non-Linux */
-uint8_t io_monitoring_enabled = 0;
+bool io_monitoring_enabled = false;
 pid_t afpd_pid = 0;
 pid_t cnid_dbd_pid = 0;
 uint64_t afpd_start_reads = 0, afpd_start_writes = 0;
@@ -701,7 +711,7 @@ void init_io_monitoring(const char *username)
 {
     (void)username;
     /* IO monitoring is not available on non-Linux systems */
-    io_monitoring_enabled = 0;
+    io_monitoring_enabled = false;
 }
 
 #endif /* __linux__ */

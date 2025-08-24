@@ -23,14 +23,17 @@
 #include <pthread.h>
 #include <pwd.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <time.h>
+#include <unistd.h>
 
 /* Netatalk library includes */
 #include "afpclient.h"
@@ -80,9 +83,9 @@
 #define ERROR_VOLUME_OPERATIONS  9
 
 /* Global Debug flag */
-uint8_t Debug = 0;
+bool Debug = false;
 /* Global Quiet flag override for lantest (stdout output enabled) */
-uint8_t lantest_Quiet = 0;
+bool lantest_Quiet = false;
 
 /* Control Variables */
 CONN *Conn;
@@ -106,7 +109,7 @@ static struct timeval tv_start;
 static struct timeval tv_end;
 static struct timeval tv_dif;
 static pthread_t tid;
-static uint8_t active_thread = 0;  /* Track if we have an active thread */
+static bool active_thread = false;  /* Track if we have an active thread */
 
 /* Remote linker names */
 CONN *Conn2;
@@ -145,8 +148,8 @@ static uint64_t (*results)[][NUMTESTS][NUM_MEASUREMENTS];
 static char *bigfilename;
 
 /* Result display controls
-0 = tabular (default), 1 = CSV */
-static int32_t csv_output = 0;
+false = tabular (default), true = CSV */
+static bool csv_output = false;
 /* Display width for test names in progress output */
 #define TEST_NAME_DISPLAY_WIDTH 66
 /* Descriptive test names for output formatting with AFP operation counts */
@@ -199,7 +202,7 @@ static void format_padded_test_name(char *dest, const char *src, size_t width)
     dest[width] = '\0';
 }
 
-static void addresult(int32_t test, int32_t iteration)
+static void addresult(int32_t test, uint8_t iteration)
 {
     uint64_t t;
     uint64_t avg;
@@ -277,19 +280,19 @@ static inline int32_t should_skip_measurement(int32_t measure_type)
 static void results_calc_stats(uint64_t
                                averages[NUMTESTS][NUM_MEASUREMENTS],
                                double std_devs[NUMTESTS][NUM_MEASUREMENTS],
-                               char teststorun[NUMTESTS])
+                               char tests_enabled[NUMTESTS])
 {
-    int32_t i, test, measure_type;
     uint64_t sum;
     int32_t valid_counts[NUMTESTS][NUM_MEASUREMENTS] = {0};
 
-    for (test = 0; test < NUMTESTS; test++) {
-        if (!teststorun[test]) {
+    for (int32_t test = 0; test < NUMTESTS; test++) {
+        if (!tests_enabled[test]) {
             continue;
         }
 
         /* Calculate averages */
-        for (measure_type = 0; measure_type < NUM_MEASUREMENTS; measure_type++) {
+        for (int32_t measure_type = 0; measure_type < NUM_MEASUREMENTS;
+                measure_type++) {
             if (should_skip_measurement(measure_type)) {
                 continue;
             }
@@ -297,7 +300,7 @@ static void results_calc_stats(uint64_t
             sum = 0;
             valid_counts[test][measure_type] = 0;
 
-            for (i = 0; i < Iterations_save; i++) {
+            for (int32_t i = 0; i < Iterations_save; i++) {
                 if ((*results)[i][test][measure_type] > 0) {
                     sum += (*results)[i][test][measure_type];
                     valid_counts[test][measure_type]++;
@@ -311,7 +314,8 @@ static void results_calc_stats(uint64_t
 
         /* Calculate standard deviations */
         if (Iterations_save > 1) {
-            for (measure_type = 0; measure_type < NUM_MEASUREMENTS; measure_type++) {
+            for (int32_t measure_type = 0; measure_type < NUM_MEASUREMENTS;
+                    measure_type++) {
                 if (should_skip_measurement(measure_type)) {
                     continue;
                 }
@@ -319,7 +323,7 @@ static void results_calc_stats(uint64_t
                 if (valid_counts[test][measure_type] > 1) {
                     double sum_sq_diff = 0.0;
 
-                    for (i = 0; i < Iterations_save; i++) {
+                    for (int32_t i = 0; i < Iterations_save; i++) {
                         if ((*results)[i][test][measure_type] > 0) {
                             double diff = (double)((*results)[i][test][measure_type]) -
                                           (double)averages[test][measure_type];
@@ -336,7 +340,7 @@ static void results_calc_stats(uint64_t
 }
 
 /* Helper function to print headers */
-static void results_print_headers(int32_t is_csv)
+static void results_print_headers(bool is_csv)
 {
 #ifdef __linux__
 
@@ -384,7 +388,7 @@ static void results_print_headers(int32_t is_csv)
 }
 
 /* Helper function to print data row */
-static void results_print_row(int32_t test, int32_t is_csv,
+static void results_print_row(int32_t test, bool is_csv,
                               uint64_t averages[NUMTESTS][NUM_MEASUREMENTS],
                               double std_devs[NUMTESTS][NUM_MEASUREMENTS])
 {
@@ -396,8 +400,6 @@ static void results_print_row(int32_t test, int32_t is_csv,
         thrput = (100 * 1000) / averages[test][MEASURE_TIME_MS];
     }
 
-    /* Print test identifier */
-    const char *test_id = is_csv ? "Test_%d" : test_names[test];
 #ifdef __linux__
 
     if (io_monitoring_enabled) {
@@ -457,29 +459,29 @@ static void results_print_row(int32_t test, int32_t is_csv,
 
 static void result_print_summary(uint64_t
                                  averages[NUMTESTS][NUM_MEASUREMENTS],
-                                 int32_t csv_output,
-                                 char teststorun[NUMTESTS])
+                                 bool is_csv,
+                                 char tests_enabled[NUMTESTS])
 {
-    int32_t test, measure_type;
     double column_sums[NUM_MEASUREMENTS] = {0.0};
 
     /* Calculate sums for each measurement type across all active tests */
-    for (test = 0; test < NUMTESTS; test++) {
-        if (!teststorun[test]) {
+    for (int32_t test = 0; test < NUMTESTS; test++) {
+        if (!tests_enabled[test]) {
             continue;
         }
 
-        for (measure_type = 0; measure_type < NUM_MEASUREMENTS; measure_type++) {
+        for (int32_t measure_type = 0; measure_type < NUM_MEASUREMENTS;
+                measure_type++) {
             if (should_skip_measurement(measure_type)) {
                 continue;
             }
 
-            column_sums[measure_type] += averages[test][measure_type];
+            column_sums[measure_type] += (double)averages[test][measure_type];
         }
     }
 
     /* Print separator line */
-    if (!csv_output) {
+    if (!is_csv) {
 #ifdef __linux__
 
         if (io_monitoring_enabled) {
@@ -507,7 +509,7 @@ static void result_print_summary(uint64_t
 #ifdef __linux__
 
     if (io_monitoring_enabled) {
-        if (csv_output) {
+        if (is_csv) {
             fprintf(stdout,
                     "Sum of all AFP OPs = %d,%.0f,,%.0f,,%.0f,,%.0f,,%.0f,,\n",
                     TOTAL_AFP_OPS,
@@ -531,7 +533,7 @@ static void result_print_summary(uint64_t
                     "");
         }
     } else {
-        if (csv_output) {
+        if (is_csv) {
             fprintf(stdout, "Sum of all AFP OPs = %d,%.0f,,\n",
                     TOTAL_AFP_OPS,
                     column_sums[MEASURE_TIME_MS]);
@@ -547,7 +549,7 @@ static void result_print_summary(uint64_t
 
 #else
 
-    if (csv_output) {
+    if (is_csv) {
         fprintf(stdout, "Sum of all AFP OPs = %d,%.0f,,\n",
                 TOTAL_AFP_OPS,
                 column_sums[MEASURE_TIME_MS]);
@@ -563,7 +565,7 @@ static void result_print_summary(uint64_t
 #endif
 
     /* Print aggregates summary */
-    if (!csv_output) {
+    if (!is_csv) {
         fprintf(stdout, "\nAggregates Summary:\n");
         fprintf(stdout, "-------------------\n");
         /* Calculate average time per AFP OP */
@@ -591,31 +593,30 @@ static void result_print_summary(uint64_t
 
 static void displayresults(void)
 {
-    int32_t i, test, maxindex, minindex;
     uint64_t sum;
     uint64_t max, min;
-    int32_t measure_type;
 
     /* Eliminate runaways for all measurement types */
     if (Iterations_save > 5) {
-        for (test = 0; test != NUMTESTS; test++) {
+        for (int32_t test = 0; test != NUMTESTS; test++) {
             if (!teststorun[test]) {
                 continue;
             }
 
             /* Eliminate outliers for each measurement type */
-            for (measure_type = 0; measure_type < NUM_MEASUREMENTS; measure_type++) {
+            for (int32_t measure_type = 0; measure_type < NUM_MEASUREMENTS;
+                    measure_type++) {
                 if (should_skip_measurement(measure_type)) {
                     continue;
                 }
 
                 max = 0;
                 min = ULONG_MAX;
-                maxindex = 0;
-                minindex = 0;
+                int32_t maxindex = 0;
+                int32_t minindex = 0;
 
                 /* Find min/max for this measurement type */
-                for (i = 0; i < Iterations_save; i++) {
+                for (int32_t i = 0; i < Iterations_save; i++) {
                     if ((*results)[i][test][measure_type] < min) {
                         min = (*results)[i][test][measure_type];
                         minindex = i;
@@ -657,7 +658,7 @@ static void displayresults(void)
     results_print_headers(csv_output);
 
     /* Output row data for each test */
-    for (test = 0; test < NUMTESTS; test++) {
+    for (int32_t test = 0; test < NUMTESTS; test++) {
         if (!teststorun[test]) {
             continue;
         }
@@ -665,9 +666,7 @@ static void displayresults(void)
         results_print_row(test, csv_output, averages, std_devs);
     }
 
-    /* Add summary row showing sum of all columns */
     result_print_summary(averages, csv_output, teststorun);
-    /* TODO If running on Localhost with access to afpd.logs, print 'dircache statistics:' log line */
 }
 
 /* Safe integer conversion with validation */
@@ -768,7 +767,7 @@ void clean_exit(int exit_code)
             pthread_cancel(tid);
         }
 
-        active_thread = 0;
+        active_thread = false;
     }
 
     /* Perform cleanup to prevent resource leaks, AFP Session, Sockets, Connection, and struts */
@@ -799,9 +798,9 @@ void clean_exit(int exit_code)
 }
 
 /* --------------------------------- */
-int32_t is_there(CONN *conn, uint16_t vol, int32_t did, char *name)
+int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name)
 {
-    return FPGetFileDirParams(conn, vol, did, name,
+    return FPGetFileDirParams(conn, volume, did, name,
                               (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
                               ,
                               (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
@@ -815,7 +814,7 @@ struct async_io_req {
 
 static void *rply_thread(void *p)
 {
-    struct async_io_req *air = p;
+    const struct async_io_req *air = p;
     size_t size = air->air_size;
     uint64_t n = air->air_count;
     size_t stored;
@@ -860,11 +859,8 @@ exit:
 void run_test(const int32_t dir)
 {
     static char *data;
-    int32_t i, maxi = 0;
-    int32_t j, k;
-    int32_t fork;
-    int32_t test = 0;
-    int32_t nowrite;
+    int32_t maxi = 0;
+    uint16_t fork;
     off_t offset;
     struct async_io_req air;
     static char temp[MAXPATHLEN];
@@ -883,7 +879,7 @@ void run_test(const int32_t dir)
     /* Test (1)        */
     if (teststorun[TEST_OPENSTATREAD]) {
         /* Create files before test */
-        for (i = 0; i < smallfiles; i++) {
+        for (int32_t i = 0; i < smallfiles; i++) {
             snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (ntohl(AFPERR_NOOBJ) != is_there(Conn, vol, dir, temp)) {
@@ -964,7 +960,7 @@ void run_test(const int32_t dir)
         starttimer();
 
         /* Read files for test - OPTIMIZED to reduce AFP operations */
-        for (i = 0; i <= maxi; i++) {
+        for (int32_t i = 0; i <= maxi; i++) {
             snprintf(temp, sizeof(temp), "File.small%d", i);
 
             /* Stat operations first (3 AFP ops) */
@@ -1012,7 +1008,7 @@ void run_test(const int32_t dir)
         addresult(TEST_OPENSTATREAD, iteration_counter);
 
         /* Clean up files after test */
-        for (i = 0; i <= maxi; i++) {
+        for (int32_t i = 0; i <= maxi; i++) {
             snprintf(temp, sizeof(temp), "File.small%d", i);
 
             if (is_there(Conn, vol, dir, temp)) {
@@ -1071,13 +1067,13 @@ void run_test(const int32_t dir)
             clean_exit(ERROR_THREAD_OPERATIONS);
         }
 
-        active_thread = 1;  /* Mark thread as active */
+        active_thread = true;  /* Mark thread as active */
 #ifdef __linux__
         capture_io_values(TEST_START);
 #endif
         starttimer();
 
-        for (i = 0, offset = 0; i < numrw;
+        for (int32_t i = 0, offset = 0; i < numrw;
                 offset += (dsi->server_quantum - FPWRITE_RQST_SIZE), i++) {
             if (FPWrite_ext_async(Conn, fork, offset,
                                   dsi->server_quantum - FPWRITE_RQST_SIZE, data, 0)) {
@@ -1095,7 +1091,7 @@ void run_test(const int32_t dir)
             clean_exit(ERROR_THREAD_OPERATIONS);
         }
 
-        active_thread = 0;  /* Thread successfully joined */
+        active_thread = false;  /* Thread successfully joined */
 
         if (FPCloseFork(Conn, fork)) {
             clean_exit(ERROR_NETWORK_PROTOCOL);
@@ -1147,7 +1143,7 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (i = 0; i < numrw ; i++) {
+        for (int32_t i = 0; i < numrw ; i++) {
             if (FPRead_ext_async(Conn, fork, i * (dsi->server_quantum - FPWRITE_RQST_SIZE),
                                  dsi->server_quantum - FPWRITE_RQST_SIZE, data)) {
                 clean_exit(ERROR_NETWORK_PROTOCOL);
@@ -1281,8 +1277,8 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (j = 0; j < locking; j++) {
-            for (i = 0; i <= 390; i += 10) {
+        for (int32_t j = 0; j < locking; j++) {
+            for (int32_t i = 0; i <= 390; i += 10) {
                 if (FPByteLock(Conn, fork, 0, 0, i, 10)) {
                     clean_exit(ERROR_NETWORK_PROTOCOL);
                 }
@@ -1317,7 +1313,7 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (i = 1; i <= create_enum_files; i++) {
+        for (int32_t i = 1; i <= create_enum_files; i++) {
             snprintf(temp, sizeof(temp), "File.0k%d", i);
 
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
@@ -1359,8 +1355,8 @@ void run_test(const int32_t dir)
             clean_exit(ERROR_NETWORK_PROTOCOL);
         }
 
-        for (i = 41; (i + 40) < create_enum_files; i += 80) {
-            if (FPEnumerateFull(Conn, vol, i + 40, 40, DSI_DATASIZ, dir, "",
+        for (int32_t i = 41; (i + 40) < create_enum_files; i += 80) {
+            if (FPEnumerateFull(Conn, vol, (uint16_t)(i + 40), 40, DSI_DATASIZ, dir, "",
                                 (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                                 (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
                                 (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
@@ -1372,7 +1368,7 @@ void run_test(const int32_t dir)
                 clean_exit(ERROR_NETWORK_PROTOCOL);
             }
 
-            if (FPEnumerateFull(Conn, vol, i, 40, DSI_DATASIZ, dir, "",
+            if (FPEnumerateFull(Conn, vol, (uint16_t)i, 40, DSI_DATASIZ, dir, "",
                                 (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                                 (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
                                 (1 << FILPBIT_MDATE) | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN)
@@ -1397,7 +1393,7 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (i = 1; i <= maxi; i++) {
+        for (int32_t i = 1; i <= maxi; i++) {
             snprintf(temp, sizeof(temp), "File.0k%d", i);
 
             if (FPDelete(Conn, vol, dir, temp)) {
@@ -1420,15 +1416,15 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (i = 0; i < DIRNUM; i++) {
+        for (int32_t i = 0; i < DIRNUM; i++) {
             snprintf(temp, sizeof(temp), "dir%02u", i + 1);
             FAILEXIT(!(idirs[i] = FPCreateDir(Conn, vol, dir, temp)), fin1);
 
-            for (j = 0; j < DIRNUM; j++) {
+            for (int32_t j = 0; j < DIRNUM; j++) {
                 snprintf(temp, sizeof(temp), "dir%02u", j + 1);
                 FAILEXIT(!(jdirs[i][j] = FPCreateDir(Conn, vol, idirs[i], temp)), fin1);
 
-                for (k = 0; k < DIRNUM; k++) {
+                for (int32_t k = 0; k < DIRNUM; k++) {
                     snprintf(temp, sizeof(temp), "dir%02u", k + 1);
                     FAILEXIT(!(kdirs[i][j][k] = FPCreateDir(Conn, vol, jdirs[i][j], temp)), fin1);
                 }
@@ -1438,9 +1434,9 @@ void run_test(const int32_t dir)
         stoptimer();
         addresult(TEST_DIRTREE, iteration_counter);
 
-        for (i = 0; i < DIRNUM; i++) {
-            for (j = 0; j < DIRNUM; j++) {
-                for (k = 0; k < DIRNUM; k++) {
+        for (int32_t i = 0; i < DIRNUM; i++) {
+            for (int32_t j = 0; j < DIRNUM; j++) {
+                for (int32_t k = 0; k < DIRNUM; k++) {
                     FAILEXIT(FPDelete(Conn, vol, kdirs[i][j][k], "") != 0, fin1);
                 }
 
@@ -1479,7 +1475,7 @@ void run_test(const int32_t dir)
         }
 
         /* Create test directories */
-        for (i = 0; i < cache_dirs; i++) {
+        for (int32_t i = 0; i < cache_dirs; i++) {
             snprintf(temp, sizeof(temp), "cache_dir_%d", i);
 
             if (!(cache_test_dirs_arr[i] = FPCreateDir(Conn, vol, dir, temp))) {
@@ -1490,8 +1486,8 @@ void run_test(const int32_t dir)
         }
 
         /* Create test files in each directory */
-        for (i = 0; i < cache_dirs; i++) {
-            for (j = 0; j < cache_files_per_dir; j++) {
+        for (int32_t i = 0; i < cache_dirs; i++) {
+            for (int32_t j = 0; j < cache_files_per_dir; j++) {
                 snprintf(cache_test_files[i * cache_files_per_dir + j],
                          sizeof(cache_test_files[0]), "cache_file_%d_%d", i, j);
 
@@ -1510,8 +1506,8 @@ void run_test(const int32_t dir)
 #endif
         starttimer();
 
-        for (k = 0; k < cache_lookup_iterations; k++) {
-            for (i = 0; i < cache_dirs; i++) {
+        for (int32_t k = 0; k < cache_lookup_iterations; k++) {
+            for (int32_t i = 0; i < cache_dirs; i++) {
                 /* Directory lookups - is_there() returns AFP_OK (0) when found */
                 snprintf(temp, sizeof(temp), "cache_dir_%d", i);
 
@@ -1520,7 +1516,7 @@ void run_test(const int32_t dir)
                 }
 
                 /* File parameter requests (should hit cache) */
-                for (j = 0; j < cache_files_per_dir; j++) {
+                for (int32_t j = 0; j < cache_files_per_dir; j++) {
                     if (FPGetFileDirParams(Conn, vol, cache_test_dirs_arr[i],
                                            cache_test_files[i * cache_files_per_dir + j],
                                            (1 << FILPBIT_FNUM) | (1 << FILPBIT_PDID) | (1 << FILPBIT_DFLEN), 0)) {
@@ -1534,8 +1530,8 @@ void run_test(const int32_t dir)
         addresult(TEST_CACHE_HITS, iteration_counter);
 
         /* Cleanup cache test files and directories */
-        for (i = 0; i < cache_dirs; i++) {
-            for (j = 0; j < cache_files_per_dir; j++) {
+        for (int32_t i = 0; i < cache_dirs; i++) {
+            for (int32_t j = 0; j < cache_files_per_dir; j++) {
                 FPDelete(Conn, vol, cache_test_dirs_arr[i],
                          cache_test_files[i * cache_files_per_dir + j]);
             }
@@ -1556,7 +1552,7 @@ void run_test(const int32_t dir)
         starttimer();
 
         /* Pattern: create -> stat -> enum -> stat -> delete (tests cache lifecycle) */
-        for (i = 0; i < mixed_cache_files; i++) {
+        for (int32_t i = 0; i < mixed_cache_files; i++) {
             snprintf(temp, sizeof(temp), "mixed_file_%d", i);
 
             /* Create file */
@@ -1616,7 +1612,7 @@ void run_test(const int32_t dir)
         uint32_t current_dir = dir;
 
         /* Create deep directory structure */
-        for (i = 0; i < deep_dir_levels; i++) {
+        for (int32_t i = 0; i < deep_dir_levels; i++) {
             snprintf(temp, sizeof(temp), "deep_%02d", i);
 
             if (!(deep_dirs[i] = FPCreateDir(Conn, vol, current_dir, temp))) {
@@ -1628,7 +1624,7 @@ void run_test(const int32_t dir)
         }
 
         /* Create some files in the deepest directory */
-        for (i = 0; i < deep_test_files; i++) {
+        for (int32_t i = 0; i < deep_test_files; i++) {
             snprintf(temp, sizeof(temp), "deep_file_%d", i);
 
             if (FPCreateFile(Conn, vol, 0, current_dir, temp)) {
@@ -1643,11 +1639,11 @@ void run_test(const int32_t dir)
         starttimer();
 
         /* Perform deep traversals - this benefits greatly from directory caching */
-        for (k = 0; k < deep_traversals; k++) {
+        for (int32_t k = 0; k < deep_traversals; k++) {
             current_dir = dir;
 
             /* Navigate down the deep structure */
-            for (i = 0; i < deep_dir_levels; i++) {
+            for (int32_t i = 0; i < deep_dir_levels; i++) {
                 snprintf(temp, sizeof(temp), "deep_%02d", i);
 
                 /* Directory lookup (should hit cache after first time) - is_there() returns AFP_OK when found */
@@ -1659,7 +1655,7 @@ void run_test(const int32_t dir)
                 current_dir = deep_dirs[i];
             }
 
-            for (i = 0; i < deep_test_files; i++) {
+            for (int32_t i = 0; i < deep_test_files; i++) {
                 snprintf(temp, sizeof(temp), "deep_file_%d", i);
 
                 if (FPGetFileDirParams(Conn, vol, current_dir, temp,
@@ -1675,13 +1671,13 @@ void run_test(const int32_t dir)
         /* Cleanup deep structure - cleanup files from deepest directory first */
         current_dir = deep_dirs[deep_dir_levels - 1];  /* Reset to deepest directory */
 
-        for (i = 0; i < deep_test_files; i++) {
+        for (int32_t i = 0; i < deep_test_files; i++) {
             snprintf(temp, sizeof(temp), "deep_file_%d", i);
             FPDelete(Conn, vol, current_dir, temp);
         }
 
         /* Delete directories from deepest to shallowest */
-        for (i = deep_dir_levels - 1; i >= 0; i--) {
+        for (int32_t i = deep_dir_levels - 1; i >= 0; i--) {
             FPDelete(Conn, vol, deep_dirs[i], "");
         }
 
@@ -1702,7 +1698,7 @@ void run_test(const int32_t dir)
         }
 
         /* Create test files for validation testing */
-        for (i = 0; i < validation_files; i++) {
+        for (int32_t i = 0; i < validation_files; i++) {
             snprintf(temp, sizeof(temp), "valid_file_%d", i);
 
             if (FPCreateFile(Conn, vol, 0, dir, temp)) {
@@ -1718,8 +1714,8 @@ void run_test(const int32_t dir)
         /* Perform many repeated access operations
          * With the improved cache validation, most of these should skip
          * the expensive filesystem validation calls */
-        for (k = 0; k < validation_iterations; k++) {
-            for (i = 0; i < validation_files; i++) {
+        for (int32_t k = 0; k < validation_iterations; k++) {
+            for (int32_t i = 0; i < validation_files; i++) {
                 snprintf(temp, sizeof(temp), "valid_file_%d", i);
 
                 /* Multiple parameter requests on same file */
@@ -1744,14 +1740,13 @@ void run_test(const int32_t dir)
         addresult(TEST_CACHE_VALIDATION, iteration_counter);
 
         /* Cleanup validation test files */
-        for (i = 0; i < validation_files; i++) {
+        for (int32_t i = 0; i < validation_files; i++) {
             snprintf(temp, sizeof(temp), "valid_file_%d", i);
             FPDelete(Conn, vol, dir, temp);
         }
     }
 
 fin1:
-fin:
     return;
 }
 
@@ -1787,7 +1782,7 @@ void usage(char *av0)
     fprintf(stdout, "\t-V\tvery verbose\n");
     fprintf(stdout, "\tAvailable tests:\n");
 
-    for (i = 0; i < NUMTESTS; i++) {
+    for (int32_t i = 0; i < NUMTESTS; i++) {
         fprintf(stdout, "\t(%u) %s", i + 1, test_names[i]);
 
         if (i >= TEST_CACHE_HITS) {
@@ -1807,7 +1802,7 @@ void usage(char *av0)
 /* ------------------------------- */
 int main(int32_t ac, char **av)
 {
-    int32_t cc, i, t;
+    int32_t cc, t;
     static char *vers = "AFP3.4";
     static char *uam = "Cleartxt Passwrd";
 
@@ -1843,7 +1838,7 @@ int main(int32_t ac, char **av)
             break;
 
         case 'b':
-            Debug = 1;
+            Debug = true;
             break;
 
         case 'K':
@@ -1863,7 +1858,7 @@ int main(int32_t ac, char **av)
             break;
 
         case 'c':
-            csv_output = 1;
+            csv_output = true;
             break;
 
         case 'F':
@@ -1905,7 +1900,7 @@ int main(int32_t ac, char **av)
             break;
 
         case 'n':
-            Iterations = safe_atoi(optarg, "iterations", 1, 256);
+            Iterations = (uint8_t)safe_atoi(optarg, "iterations", 1, 256);
 
             if (Iterations <= 0) {
                 fprintf(stderr, "Error: Number of iterations must be positive (got %d)\n",
@@ -2031,9 +2026,7 @@ int main(int32_t ac, char **av)
     } else if (strcmp(Test, "K") == 0) {
         /* Cache-only mode was already set when parsing -K option */
     } else {
-        i = 0;
-
-        for (; Test[i]; i++) {
+        for (int32_t i = 0; Test[i]; i++) {
             t = Test[i] - '1';
 
             if ((t >= 0) && (t < NUMTESTS)) {
@@ -2078,9 +2071,9 @@ int main(int32_t ac, char **av)
 
     /* Login to AFP server and open Vol */
     if (Version >= 30) {
-        ExitCode = ntohs(FPopenLoginExt(Conn, vers, uam, User, Password));
+        ExitCode = ntohs((uint16_t)FPopenLoginExt(Conn, vers, uam, User, Password));
     } else {
-        ExitCode = ntohs(FPopenLogin(Conn, vers, uam, User, Password));
+        ExitCode = ntohs((uint16_t)FPopenLogin(Conn, vers, uam, User, Password));
     }
 
     vol  = FPOpenVol(Conn, Vol);
@@ -2147,7 +2140,7 @@ int main(int32_t ac, char **av)
         clean_exit(ERROR_FILE_DIRECTORY_OPS);
     }
 
-    for (int32_t current_iteration = 0; current_iteration < Iterations;
+    for (uint8_t current_iteration = 0; current_iteration < Iterations;
             current_iteration++) {
         /* Update global iteration counter for addresult() calls */
         iteration_counter = current_iteration;
