@@ -39,6 +39,9 @@
 static server_child_t * volatile childs = NULL;
 static GDBusNodeInfo * volatile introspection_data = NULL;
 static pthread_mutex_t init_mutex = PTHREAD_MUTEX_INITIALIZER;
+static GThread *afp_stats_thread = NULL;
+static volatile gboolean should_exit = FALSE;
+static GMainLoop *main_loop = NULL;
 
 static void handle_method_call(GDBusConnection *connection _U_,
                                const gchar           *sender _U_,
@@ -110,6 +113,7 @@ static gpointer afpstats_thread(gpointer _data _U_)
     ctxt = g_main_context_new();
     g_main_context_push_thread_default(ctxt);
     thread_loop = g_main_loop_new(ctxt, FALSE);
+    main_loop = thread_loop;
 
     if (!(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM,
                                NULL,
@@ -117,6 +121,7 @@ static gpointer afpstats_thread(gpointer _data _U_)
         LOG(log_error, logtype_afpd, "Couldn't connect to system bus: %s",
             error->message);
         g_error_free(error);
+        main_loop = NULL;
         g_main_loop_unref(thread_loop);
         g_main_context_pop_thread_default(ctxt);
         g_main_context_unref(ctxt);
@@ -181,7 +186,10 @@ static gpointer afpstats_thread(gpointer _data _U_)
                                          on_name_lost,
                                          NULL,
                                          NULL);
-    g_main_loop_run(thread_loop);
+    while (!should_exit && g_main_loop_is_running(thread_loop)) {
+        g_main_context_iteration(ctxt, TRUE);
+    }
+
     g_bus_unown_name(request_name_result);
     g_dbus_connection_unregister_object(bus, registration_id);
     g_dbus_node_info_unref(introspection_data);
@@ -190,6 +198,7 @@ static gpointer afpstats_thread(gpointer _data _U_)
     g_main_context_pop_thread_default(ctxt);
     g_main_context_unref(ctxt);
     g_main_loop_unref(thread_loop);
+    main_loop = NULL;
     return NULL;
 }
 
@@ -210,6 +219,39 @@ server_child_t *afpstats_get_and_lock_childs(void)
 void afpstats_unlock_childs(void)
 {
     pthread_mutex_unlock(&childs->servch_lock);
+}
+
+void afpstats_cleanup(void)
+{
+    pthread_mutex_lock(&init_mutex);
+    
+    if (childs == NULL) {
+        pthread_mutex_unlock(&init_mutex);
+        return;
+    }
+
+    /* Signal thread to exit */
+    should_exit = TRUE;
+    
+    /* Quit the main loop if it's running */
+    if (main_loop) {
+        g_main_loop_quit(main_loop);
+    }
+    
+    /* Wait for thread to finish */
+    if (afp_stats_thread) {
+        g_thread_join(afp_stats_thread);
+        afp_stats_thread = NULL;
+    }
+    
+    /* Reset state */
+    childs = NULL;
+    should_exit = FALSE;
+    introspection_data = NULL;
+    
+    pthread_mutex_unlock(&init_mutex);
+
+    LOG(log_debug, logtype_afpd, "afpstats_cleanup: completed");
 }
 
 int afpstats_init(server_child_t *childs_in)

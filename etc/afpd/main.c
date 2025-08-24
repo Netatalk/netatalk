@@ -146,6 +146,11 @@ static void afp_goaway(int sig)
         }
 
 #endif /* ! NO_DDP */
+#ifdef HAVE_DBUS_GLIB
+        if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS) {
+            afpstats_cleanup();
+        }
+#endif
         _exit(0);
         break;
 
