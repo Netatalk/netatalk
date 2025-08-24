@@ -5,13 +5,8 @@ Continuous Integration:
 [![Test Status](https://github.com/Netatalk/netatalk/actions/workflows/test.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/test.yml)
 [![Container Status](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml)
 
-Get Netatalk:
-[![Project releases](https://img.shields.io/github/release/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/releases)
-[![Downloads](https://img.shields.io/github/downloads/Netatalk/netatalk/total)](https://github.com/Netatalk/netatalk/releases)
+Project Status:
 [![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
-
-Project Activity:
-[![Project contributors](https://img.shields.io/github/contributors/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/contributors)
 [![Monthly commits](https://img.shields.io/github/commit-activity/m/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/commit-activity)
 [![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=ncloc)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 
@@ -19,7 +14,6 @@ Code Quality:
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=security_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=sqale_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
-[![Maintainability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=duplicated_lines_density)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 
 Supply Chain Security:
 [![OpenSSF Scorecard](https://img.shields.io/ossf-scorecard/github.com/Netatalk/netatalk?label=openssf+scorecard&style=flat)](https://scorecard.dev/viewer/?uri=github.com/Netatalk/netatalk)
