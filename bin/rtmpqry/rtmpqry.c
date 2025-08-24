@@ -174,7 +174,7 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
     }
 
     for (;;) {
-        int length = netddp_recvfrom(sockfd, buf, (int)sizeof(buf), 0, NULL, NULL);
+        ssize_t length = netddp_recvfrom(sockfd, buf, (int)sizeof(buf), 0, NULL, NULL);
 
         if (length < 0) {
             perror("netddp_recvfrom");
