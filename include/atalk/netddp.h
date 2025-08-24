@@ -15,16 +15,29 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <unistd.h>
+
 #include <netatalk/at.h>
 
 extern int netddp_open(struct sockaddr_at *, struct sockaddr_at *);
 
-#include <unistd.h>
-#include <sys/types.h>
+static inline int netddp_close(int filedes)
+{
+    return close(filedes);
+}
 
-#define netddp_close(a)  close(a)
-#define netddp_sendto    sendto
-#define netddp_recvfrom  recvfrom
+static inline ssize_t netddp_sendto(int s, const void *msg, size_t len,
+                                    int flags, const struct sockaddr *to, socklen_t tolen)
+{
+    return sendto(s, msg, len, flags, to, tolen);
+}
+
+static inline ssize_t netddp_recvfrom(int s, void *buf, size_t len,
+                                      int flags, struct sockaddr *from,
+                                      socklen_t *fromlen)
+{
+    return recvfrom(s, buf, len, flags, from, fromlen);
+}
 
 #endif  /* NO_DDP */
 #endif /* netddp.h */
