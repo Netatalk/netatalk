@@ -158,7 +158,8 @@ Run multiple iterations for statistical analysis:
 # Example with IO Monitoring
 
 IO Monitoring (Linux only) requires proc filesystem mounted at /proc_io with hidepid=0.
-Set gid to the group ID of the user running afp_lantest.
+Set *gid* to the group ID of the user running afp_lantest.
+
 For example, to run as root;
 `mkdir -p /proc_io && mount -t proc -o hidepid=0,gid=0 proc /proc_io`
 
@@ -246,7 +247,7 @@ For example, to run as root;
     Average AFPD Reads per AFP OP: 0.711
     Average AFPD Writes per AFP OP: 1.144
 
-## Result Columns
+## IO Monitoring Result Columns
 
     Time(ms) = Test runtime in milliseconds
     Time±    = Test runtime standard deviation
@@ -257,7 +258,10 @@ For example, to run as root;
 
     CNID_*   = IO measurements for the cnid_dbd process (optional)
 
-## Aggregates Summary
+Note; When performance testing with afp_lantest, ensure the afp.conf `log level` is set to `default:severe`.
+Anything more verbose and the counted AFPD_W IO values may include the log writes.
+
+## IO Monitoring Aggregates Summary
 
 The aggregate values are purely Intrinsic Metrics, as AFP operations are a mixture of reads, writes,
 and connection related operations.
