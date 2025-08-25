@@ -23,6 +23,8 @@ permissions: read-all
 env:
   REGISTRY: ghcr.io
   REPO: ${{ github.repository }}
+  CONT_PASSWD: ${{ secrets.AFP_PASSWD }}
+  DB_PASSWD: ${{ secrets.MARIADB_ROOT_PASSWORD }}
 
 jobs:
   build-container:
@@ -184,8 +186,8 @@ jobs:
               --network afp_network \
               -e AFP_USER=atalk1 \
               -e AFP_USER2=atalk2 \
-              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_PASS2="$CONT_PASSWD" \
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
@@ -199,8 +201,8 @@ jobs:
               --network afp_network \
               -e AFP_USER=atalk1 \
               -e AFP_USER2=atalk2 \
-              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_PASS2="$CONT_PASSWD" \
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
@@ -226,7 +228,7 @@ jobs:
       - name: Start MariaDB
         run: |
           docker run --detach --name mariadb --network afp_network \
-              -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              -e MARIADB_ROOT_PASSWORD="$DB_PASSWD" \
               mariadb:latest
       - name: Wait for MariaDB to initialize
         run: |
@@ -238,8 +240,8 @@ jobs:
               --network afp_network \
               -e AFP_USER=atalk1 \
               -e AFP_USER2=atalk2 \
-              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_PASS2="$CONT_PASSWD" \
               -e AFP_GROUP=afpusers \
               -e AFP_CNID_BACKEND=mysql \
               -e SHARE_NAME=test1 \
@@ -248,7 +250,7 @@ jobs:
               -e DISABLE_TIMEMACHINE=1 \
               -e AFP_EXTMAP=1 \
               -e AFP_CNID_SQL_HOST=mariadb \
-              -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -256,8 +258,8 @@ jobs:
               --network afp_network \
               -e AFP_USER=atalk1 \
               -e AFP_USER2=atalk2 \
-              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_PASS2="$CONT_PASSWD" \
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
@@ -267,7 +269,7 @@ jobs:
               -e AFP_REMOTE=1 \
               -e AFP_HOST=afp_server \
               -e AFP_CNID_SQL_HOST=mariadb \
-              -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-mysql-afp34-debian:
@@ -283,7 +285,7 @@ jobs:
       - name: Start MariaDB container
         run: |
           docker run --detach --name mariadb --network afp_network \
-              -e MARIADB_ROOT_PASSWORD=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              -e MARIADB_ROOT_PASSWORD="$DB_PASSWD" \
               mariadb:latest
       - name: Wait for MariaDB to initialize
         run: |
@@ -294,8 +296,8 @@ jobs:
               --network afp_network \
               -e AFP_USER=atalk1 \
               -e AFP_USER2=atalk2 \
-              -e AFP_PASS=${{ secrets.AFP_PASSWD }} \
-              -e AFP_PASS2=${{ secrets.AFP_PASSWD }} \
+              -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_PASS2="$CONT_PASSWD" \
               -e AFP_GROUP=afpusers \
               -e AFP_CNID_BACKEND=mysql \
               -e SHARE_NAME=test1 \
@@ -308,7 +310,7 @@ jobs:
               -e AFP_REMOTE=1 \
               -e AFP_EXTMAP=1 \
               -e AFP_CNID_SQL_HOST=mariadb \
-              -e AFP_CNID_SQL_PASS=${{ secrets.MARIADB_ROOT_PASSWORD }} \
+              -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-spectest-sqlite-afp34-debian:
@@ -323,8 +325,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e AFP_CNID_BACKEND="sqlite" \
             -e SHARE_NAME="test1" \
@@ -349,8 +351,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -374,8 +376,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e AFP_CNID_BACKEND="sqlite" \
             -e SHARE_NAME="test1" \
@@ -400,8 +402,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -425,8 +427,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -451,8 +453,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -477,8 +479,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -502,8 +504,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -527,8 +529,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -552,8 +554,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -577,8 +579,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -602,8 +604,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -627,8 +629,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -652,8 +654,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -677,8 +679,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -703,8 +705,8 @@ jobs:
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_USER2="atalk2" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
-            -e AFP_PASS2="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
@@ -728,7 +730,7 @@ jobs:
         run: |
           docker run --rm \
             -e AFP_USER="atalk1" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
@@ -749,7 +751,7 @@ jobs:
         run: |
           docker run --rm \
             -e AFP_USER="atalk1" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
@@ -770,7 +772,7 @@ jobs:
         run: |
           docker run --rm \
             -e AFP_USER="atalk1" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e INSECURE_AUTH="1" \
             -e VERBOSE="1" \
@@ -789,7 +791,7 @@ jobs:
         run: |
           docker run --rm \
             -e AFP_USER="atalk1" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e INSECURE_AUTH="1" \
             -e VERBOSE="1" \
@@ -808,7 +810,7 @@ jobs:
         run: |
           docker run --rm \
             -e AFP_USER="atalk1" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
@@ -828,7 +830,7 @@ jobs:
         run: |
           docker run --rm \
             -e AFP_USER="atalk1" \
-            -e AFP_PASS="${{ secrets.AFP_PASSWD }}" \
+            -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
