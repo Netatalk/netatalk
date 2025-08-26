@@ -199,10 +199,11 @@ static int32_t check_process_name_match(const char *pid_dir,
     int32_t matches = 0;
 
     if (fgets(comm_name, sizeof(comm_name), comm_file)) {
+        comm_name[COMM_BUFFER_SIZE - 1] = '\0';
         /* Safely remove trailing newline with bounds checking */
         size_t newline_pos = strcspn(comm_name, "\n");
 
-        if (newline_pos < sizeof(comm_name)) {
+        if (newline_pos < COMM_BUFFER_SIZE - 1) {
             comm_name[newline_pos] = '\0';
         }
 
