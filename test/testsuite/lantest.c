@@ -593,7 +593,6 @@ static void result_print_summary(uint64_t
 
 static void displayresults(void)
 {
-    uint64_t sum;
     uint64_t max, min;
 
     /* Eliminate runaways for all measurement types */
@@ -861,7 +860,6 @@ void run_test(const int32_t dir)
     static char *data;
     int32_t maxi = 0;
     uint16_t fork;
-    off_t offset;
     struct async_io_req air;
     static char temp[MAXPATHLEN];
     numrw = rwsize / (dsi->server_quantum - FPWRITE_RQST_SIZE);
@@ -1753,7 +1751,6 @@ fin1:
 /* =============================== */
 void usage(char *av0)
 {
-    int32_t i = 0;
     fprintf(stdout,
             "usage:\t%s [-34567bcGgKVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
             "[-n iterations] [-f tests] [-F bigfile]\n", av0);
