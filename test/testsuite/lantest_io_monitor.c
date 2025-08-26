@@ -123,7 +123,7 @@ int32_t check_proc_io_availability(void)
     /* Count entries in /proc_io to check if it's properly mounted */
     /* Note: readdir() returns non-const pointer per POSIX standard */
     /* NOSONAR: False positive - API requires non-const pointer */
-    struct dirent *entry;
+    struct dirent *entry; //NOSONAR
     int32_t entry_count = 0;
 
     while ((entry = readdir(proc_dir)) != NULL && entry_count < 5) {
@@ -401,7 +401,7 @@ pid_t find_process_pid(const char *process_name, const char *username,
     ProcessList found = { .count = 0 };
     /* Note: readdir() returns non-const pointer per POSIX standard */
     /* NOSONAR: False positive - API requires non-const pointer */
-    struct dirent *entry;
+    struct dirent *entry; //NOSONAR
     int32_t entries_checked = 0;
     int32_t total_entries = 0;
 
