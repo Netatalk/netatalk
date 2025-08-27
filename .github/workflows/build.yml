@@ -314,17 +314,21 @@ jobs:
     name: Ubuntu Linux
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    container:
+      image: ubuntu:25.10
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --assume-yes --no-install-recommends \
+          apt-get update
+          apt-get install --assume-yes --no-install-recommends \
             bison \
+            ca-certificates \
             cmark-gfm \
             cracklib-runtime \
             file \
             flex \
+            gcc \
             libacl1-dev \
             libavahi-client-dev \
             libcrack2-dev \
@@ -362,10 +366,10 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run distribution tests
-        run: meson dist -C build
+      - name: Run integration tests
+        run: meson test -C build
       - name: Install
-        run: sudo meson install -C build
+        run: meson install -C build
       - name: Check netatalk capabilities
         run: |
           netatalk -V
@@ -375,15 +379,8 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Start netatalk
-        run: |
-          sudo systemctl start netatalk
-          sleep 1
-          asip-status localhost
-      - name: Stop netatalk
-        run: sudo systemctl stop netatalk
       - name: Uninstall
-        run: sudo ninja -C build uninstall
+        run: ninja -C build uninstall
 
   build-macos:
     name: macOS
