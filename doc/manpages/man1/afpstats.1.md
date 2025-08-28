@@ -1,6 +1,6 @@
 # Name
 
-afpstats — List AFP server statistics
+afpstats — List netatalk AFP server statistics
 
 # Synopsis
 
@@ -8,20 +8,23 @@ afpstats — List AFP server statistics
 
 # Description
 
-**afpstats** list statistics about users connected to the AFP server,
-their mounted volumes, etc.
+**afpstats** list information about users connected to the netatalk AFP server,
+their mounted volumes, and time of login.
 
 # Note
 
-**afpd** must be built with D-Bus support. Check this with "**afpd -V**".
+To make use of this feature, **afpd** must be built with *AFP statistics* support,
+which can be checked with "**afpd -V**".
+Furthermore, the host must be running D-Bus configured with a policy that defines the *org.netatalk.AFPStats* service,
+typically enabled through a configuration file called *netatalk-dbus.conf* which is distributed with netatalk.
 
-Additionally, "**afpstats = yes**" must be set in *afp.conf*.
+Finally, to enable AFP statistics in netatalk at runtime, "**afpstats = yes**" must be set in *afp.conf*.
 
 # Examples
 
     $ afpstats
     Connected user   PID      Login time        State          Mounted volumes
-    sandy            452547   Apr 28 21:58:50   active         Test Volume, sandy's Home
+    alice            452547   Apr 28 21:58:50   active         Test Volume, alice's Home
     charlie          451969   Apr 28 21:21:32   active         My AFP Volume
 
 # See Also
