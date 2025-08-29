@@ -1,7 +1,5 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2015-2017 Eiichirou UDA
-# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
 # Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
@@ -9,13 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.3.1\n"
 "POT-Creation-Date: 2025-08-29 13:22+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"PO-Revision-Date: 2025-08-29 13:22+0200\n"
+"Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Title #
 #: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
@@ -89,6 +88,15 @@ msgid "Description"
 msgstr "説明"
 
 #. type: Title #
+#: manpages/man1/ad.1.md:291 manpages/man1/dbd.1.md:68
+#: manpages/man1/nbplkup.1.md:98 manpages/man1/nbprgstr.1.md:55
+#: manpages/man5/afp_signature.conf.5.md:44
+#: manpages/man5/afp_voluuid.conf.5.md:36 manpages/man8/papd.8.md:130
+#, no-wrap
+msgid "See also"
+msgstr "参照"
+
+#. type: Title #
 #: manpages/man1/ad.1.md:295 manpages/man1/addump.1.md:73
 #: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
 #: manpages/man1/afppasswd.1.md:72 manpages/man1/afpstats.1.md:34
@@ -132,29 +140,23 @@ msgid ""
 msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Title #
-#: manpages/man1/addump.1.md:59 manpages/man1/afpstats.1.md:14
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
+#: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
+#: manpages/man1/afparg.1.md:16 manpages/man1/afpldaptest.1.md:16
+#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
+#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
+#: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
+#: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
+#: manpages/man8/atalkd.8.md:26 manpages/man8/cnid_dbd.8.md:58
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/macipgw.8.md:38
+#: manpages/man8/netatalk.8.md:26 manpages/man8/papd.8.md:37
+#: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:23
 #, no-wrap
-msgid "Note"
-msgstr "注記"
-
-#. type: Title #
-#: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:302 manpages/man1/afp_logintest.1.md:84
-#: manpages/man1/afp_spectest.1.md:236 manpages/man1/afp_speedtest.1.md:147
-#: manpages/man1/afparg.1.md:110 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:30
-#: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
-#: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
-#: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
-#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1348
-#: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
-#: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
-#: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
-#: manpages/man8/cnid_metad.8.md:47 manpages/man8/macipgw.8.md:98
-#: manpages/man8/netatalk.8.md:57 manpages/man8/papstatus.8.md:49
-#, no-wrap
-msgid "See Also"
-msgstr "関連項目"
+msgid "Options"
+msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
@@ -173,59 +175,131 @@ msgid "Examples"
 msgstr "例"
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:4
-msgid "afpstats — List netatalk AFP server statistics"
-msgstr "afpstats — netatalk AFP サーバの利用状況を参照する"
-
-#. type: Plain text
-#: manpages/man1/afpstats.1.md:8
-#, no-wrap
-msgid "**afpstats**\n"
+#: manpages/man1/nbplkup.1.md:18 manpages/man1/nbprgstr.1.md:19
+msgid ""
+"This uses the Name-Binding Protocol (NBP) to interact with the AppleTalk "
+"network.  *nbpname* is parsed by **nbp_name**(3)."
 msgstr ""
+"これは Name-Binding Protocol (NBP) を使用して AppleTalk ネットワークと対話す"
+"る。*nbpname* は **nbp_name**(3) によって解析される。"
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:13
+#: manpages/man1/nbplkup.1.md:23 manpages/man1/nbprgstr.1.md:24
 #, no-wrap
 msgid ""
-"**afpstats** list information about users connected to the netatalk AFP server,\n"
-"their mounted volumes, and time of login.\n"
-msgstr "**afpstats** は netatalk AFP サーバに接続しているユーザ、そのマウントされたボリューム、ログイン時間に関する情報を一覧表示する。\n"
-
-#. type: Plain text
-#: manpages/man1/afpstats.1.md:20
-msgid ""
-"To make use of this feature, **afpd** must be built with *AFP statistics* "
-"support, which can be checked with \"**afpd -V**\".  Furthermore, the host "
-"must be running D-Bus configured with a policy that defines the "
-"*org.netatalk.AFPStats* service, typically enabled through a configuration "
-"file called *netatalk-dbus.conf* which is distributed with netatalk."
+"**-A** *address*\n"
+"> Use *address* as the local address to be used for the lookup.\n"
 msgstr ""
-"この機能を利用するには、**afpd** が AFP 統計サポートでビルドされている必要が"
-"あり、これは \"**afpd -V**\" で確認できる。さらに、ホストは D-Bus を実行して"
-"おり、通常 netatalk に付属の *netatalk-dbus.conf* という設定ファイルを通じて"
-"有効になる *org.netatalk.AFPStats* サービスを定義するポリシーで構成されている"
-"必要がある。"
+"**-A** *address*\n"
+"> 検索に使用するローカルアドレスとして *address* を使用する。\n"
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:22
-msgid ""
-"Finally, to enable AFP statistics in netatalk at runtime, \"**afpstats = "
-"yes**\" must be set in *afp.conf*."
-msgstr ""
-"最後に、実行時に netatalk で AFP 統計を有効にするには、\"**afpstats = "
-"yes**\" を *afp.conf* に設定する必要がある。"
-
-#. type: Plain text
-#: manpages/man1/afpstats.1.md:29
+#: manpages/man1/nbplkup.1.md:30 manpages/man1/nbprgstr.1.md:28
 #, no-wrap
 msgid ""
-"    $ afpstats\n"
-"    Connected user   PID      Login time        State          Mounted volumes\n"
-"    alice            452547   Apr 28 21:58:50   active         Test Volume, alice's Home\n"
-"    charlie          451969   Apr 28 21:21:32   active         My AFP Volume\n"
+"**-m** *Mac charset*\n"
+"> Interpret strings in the given Macintosh character set.\n"
+"> If not specified, nbplkup defaults to using MacRoman.\n"
+msgstr ""
+"**-m** *Mac charset*\n"
+"> 指定された Macintosh 文字セットで文字列を解釈する。\n"
+"> 指定されていない場合、nbplkup はデフォルトで MacRoman を使用する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:53 manpages/man1/nbprgstr.1.md:39
+#, no-wrap
+msgid ""
+"**nbpname**\n"
+"> The NBP name to use.\n"
+">\n"
+"> The *nbpname* is a string of the form *obj:type@zone*, where *obj* is the object name,\n"
+"> *type* is the type of the object, and *zone* is the zone name.\n"
+"> The *obj* and *type* can be arbitrary strings, but the *zone* must be a valid zone name.\n"
+"> An \\`*=*' for the *object* or *type* matches anything, and an \\`*\\**' for *zone* means the local zone.\n"
+msgstr ""
+"**nbpname**\n"
+"> 使用する NBP 名。\n"
+">\n"
+"> *nbpname* は *obj:type@zone* の形式の文字列で、ここで *obj* はオブジェクト名、\n"
+"> *type* はオブジェクトのタイプ、*zone* はゾーン名である。\n"
+"> *obj* と *type* は任意の文字列にできるが、*zone* は有効なゾーン名でなければならない。\n"
+"> *object* または *type* に対する \\`*=*' は何でも一致し、*zone* に対する \\`*\\**' はローカルゾーンを意味する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:4
+msgid ""
+"nbprgstr, nbpunrgstr — manage AppleTalk entry registration on the network"
+msgstr ""
+"nbprgstr, nbpunrgstr — ネットワーク上の AppleTalk エントリ登録を管理する"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:8
+#, no-wrap
+msgid "**nbprgstr** [-A *address*] [-m *Mac charset*] [-p *port*] *nbpname*\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:33
-msgid "afpd(8), afp.conf(5), dbus-daemon(1)"
+#: manpages/man1/nbprgstr.1.md:10
+#, no-wrap
+msgid "**nbpunrgstr** [-A *address*] [-m *Mac charset*] *nbpname*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:14
+#, no-wrap
+msgid "**nbprgstr** registers *nbpname* with **atalkd**(8), at the given *port*.\n"
+msgstr "**nbprgstr** は指定された *port* で *nbpname* を **atalkd**(8) に登録する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:16
+#, no-wrap
+msgid "**nbpunrgstr** informs **atalkd** that *nbpname* is no longer to be advertised.\n"
+msgstr "**nbpunrgstr** は *nbpname* がもはや広告されないことを **atalkd** に通知する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:31
+#, no-wrap
+msgid ""
+"**-p** *port*\n"
+"> Use *port* as the port to register the entity on.\n"
+msgstr ""
+"**-p** *port*\n"
+"> エンティティを登録するポートとして *port* を使用する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:43
+msgid ""
+"Register an entity \"myhost:Foobar\" on the local zone, with DDP address "
+"65280.68:"
+msgstr ""
+"ローカルゾーンにエンティティ \"myhost:Foobar\" を DDP アドレス 65280.68 で登"
+"録する。"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:48
+#, no-wrap
+msgid ""
+"    example% nbprgstr -A 65280.68 myhost:Foobar\n"
+"    example% nbplkup\n"
+"                            myhost:Foobar                             65280.68:128\n"
+"    example%\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:50
+msgid "Revoke the registration of the entity \"myhost:Foobar\":"
+msgstr "エンティティ \"myhost:Foobar\" の登録を取り消す。"
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:54
+#, no-wrap
+msgid ""
+"    example% nbpunrgstr myhost:Foobar\n"
+"    example% nbplkup\n"
+"    example%\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbprgstr.1.md:58
+msgid "nbp_name(3), nbplkup(1), atalkd(8)"
 msgstr ""

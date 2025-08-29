@@ -7,7 +7,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.3.0dev\n"
+"Project-Id-Version: Netatalk 4.3.1\n"
 "POT-Creation-Date: 2025-05-25 10:43+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
