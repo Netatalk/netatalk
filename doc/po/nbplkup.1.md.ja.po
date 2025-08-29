@@ -1,0 +1,424 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.3.1dev\n"
+"POT-Creation-Date: 2025-08-29 17:56+0200\n"
+"PO-Revision-Date: 2025-08-29 13:22+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
+#: manpages/man1/aecho.1.md:1 manpages/man1/afp_lantest.1.md:1
+#: manpages/man1/afp_logintest.1.md:1 manpages/man1/afp_spectest.1.md:1
+#: manpages/man1/afp_speedtest.1.md:1 manpages/man1/afparg.1.md:1
+#: manpages/man1/afpldaptest.1.md:1 manpages/man1/afppasswd.1.md:1
+#: manpages/man1/afpstats.1.md:1 manpages/man1/asip-status.1.md:1
+#: manpages/man1/dbd.1.md:1 manpages/man1/fce_listen.1.md:1
+#: manpages/man1/getzones.1.md:1 manpages/man1/macusers.1.md:1
+#: manpages/man1/nbplkup.1.md:1 manpages/man1/nbprgstr.1.md:1
+#: manpages/man1/pap.1.md:1 manpages/man1/rtmpqry.1.md:1
+#: manpages/man3/atalk_aton.3.md:1 manpages/man3/nbp_name.3.md:1
+#: manpages/man4/atalk.4.md:1 manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
+#: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
+#: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
+#: manpages/man8/afpd.8.md:1 manpages/man8/atalkd.8.md:1
+#: manpages/man8/cnid_dbd.8.md:1 manpages/man8/cnid_metad.8.md:1
+#: manpages/man8/macipgw.8.md:1 manpages/man8/netatalk.8.md:1
+#: manpages/man8/papd.8.md:1 manpages/man8/papstatus.8.md:1
+#: manpages/man8/timelord.8.md:1
+#, no-wrap
+msgid "Name"
+msgstr "名前"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
+#: manpages/man1/aecho.1.md:5 manpages/man1/afp_lantest.1.md:5
+#: manpages/man1/afp_logintest.1.md:5 manpages/man1/afp_spectest.1.md:5
+#: manpages/man1/afp_speedtest.1.md:5 manpages/man1/afparg.1.md:5
+#: manpages/man1/afpldaptest.1.md:5 manpages/man1/afppasswd.1.md:5
+#: manpages/man1/afpstats.1.md:5 manpages/man1/asip-status.1.md:5
+#: manpages/man1/dbd.1.md:5 manpages/man1/fce_listen.1.md:5
+#: manpages/man1/getzones.1.md:5 manpages/man1/macusers.1.md:5
+#: manpages/man1/nbplkup.1.md:5 manpages/man1/nbprgstr.1.md:5
+#: manpages/man1/pap.1.md:5 manpages/man1/rtmpqry.1.md:5
+#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
+#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
+#: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
+#: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
+#: manpages/man8/netatalk.8.md:5 manpages/man8/papd.8.md:5
+#: manpages/man8/papstatus.8.md:5 manpages/man8/timelord.8.md:5
+#, no-wrap
+msgid "Synopsis"
+msgstr "概要"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
+#: manpages/man1/aecho.1.md:9 manpages/man1/afp_lantest.1.md:10
+#: manpages/man1/afp_logintest.1.md:9 manpages/man1/afp_spectest.1.md:10
+#: manpages/man1/afp_speedtest.1.md:10 manpages/man1/afparg.1.md:9
+#: manpages/man1/afpldaptest.1.md:11 manpages/man1/afppasswd.1.md:9
+#: manpages/man1/afpstats.1.md:9 manpages/man1/asip-status.1.md:13
+#: manpages/man1/dbd.1.md:11 manpages/man1/fce_listen.1.md:9
+#: manpages/man1/getzones.1.md:9 manpages/man1/macusers.1.md:11
+#: manpages/man1/nbplkup.1.md:9 manpages/man1/nbprgstr.1.md:11
+#: manpages/man1/pap.1.md:9 manpages/man1/rtmpqry.1.md:9
+#: manpages/man3/atalk_aton.3.md:14 manpages/man3/nbp_name.3.md:16
+#: manpages/man4/atalk.4.md:10 manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
+#: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
+#: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
+#: manpages/man8/atalkd.8.md:11 manpages/man8/cnid_dbd.8.md:11
+#: manpages/man8/cnid_metad.8.md:11 manpages/man8/macipgw.8.md:11
+#: manpages/man8/netatalk.8.md:11 manpages/man8/papd.8.md:11
+#: manpages/man8/papstatus.8.md:9 manpages/man8/timelord.8.md:11
+#, no-wrap
+msgid "Description"
+msgstr "説明"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:291 manpages/man1/dbd.1.md:68
+#: manpages/man1/nbplkup.1.md:101 manpages/man1/nbprgstr.1.md:55
+#: manpages/man5/afp_signature.conf.5.md:44
+#: manpages/man5/afp_voluuid.conf.5.md:36 manpages/man8/papd.8.md:130
+#, no-wrap
+msgid "See also"
+msgstr "参照"
+
+#. type: Title #
+#: manpages/man1/ad.1.md:295 manpages/man1/addump.1.md:73
+#: manpages/man1/aecho.1.md:50 manpages/man1/afpldaptest.1.md:38
+#: manpages/man1/afppasswd.1.md:72 manpages/man1/afpstats.1.md:34
+#: manpages/man1/asip-status.1.md:106 manpages/man1/dbd.1.md:72
+#: manpages/man1/getzones.1.md:88 manpages/man1/macusers.1.md:29
+#: manpages/man1/nbplkup.1.md:105 manpages/man1/nbprgstr.1.md:59
+#: manpages/man1/pap.1.md:97 manpages/man1/rtmpqry.1.md:56
+#: manpages/man3/atalk_aton.3.md:28 manpages/man3/nbp_name.3.md:42
+#: manpages/man4/atalk.4.md:49 manpages/man5/afp_signature.conf.5.md:48
+#: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1353
+#: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
+#: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
+#: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:83
+#: manpages/man8/cnid_dbd.8.md:146 manpages/man8/cnid_metad.8.md:51
+#: manpages/man8/macipgw.8.md:107 manpages/man8/netatalk.8.md:61
+#: manpages/man8/papd.8.md:134 manpages/man8/papstatus.8.md:53
+#: manpages/man8/timelord.8.md:42
+#, no-wrap
+msgid "Author"
+msgstr "著者"
+
+#. type: Plain text
+#: manpages/man1/ad.1.md:297 manpages/man1/addump.1.md:75
+#: manpages/man1/aecho.1.md:52 manpages/man1/afpldaptest.1.md:40
+#: manpages/man1/afppasswd.1.md:74 manpages/man1/afpstats.1.md:36
+#: manpages/man1/asip-status.1.md:108 manpages/man1/dbd.1.md:74
+#: manpages/man1/getzones.1.md:90 manpages/man1/macusers.1.md:31
+#: manpages/man1/nbplkup.1.md:107 manpages/man1/nbprgstr.1.md:61
+#: manpages/man1/pap.1.md:99 manpages/man1/rtmpqry.1.md:58
+#: manpages/man3/atalk_aton.3.md:30 manpages/man3/nbp_name.3.md:44
+#: manpages/man4/atalk.4.md:51 manpages/man5/afp_signature.conf.5.md:50
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1355
+#: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
+#: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
+#: manpages/man8/afpd.8.md:120 manpages/man8/atalkd.8.md:85
+#: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:53
+#: manpages/man8/netatalk.8.md:63 manpages/man8/papd.8.md:136
+#: manpages/man8/papstatus.8.md:55 manpages/man8/timelord.8.md:44
+msgid ""
+"[Contributors to the Netatalk Project](https://netatalk.io/contributors)"
+msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
+
+#. type: Title #
+#: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
+#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
+#: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
+#: manpages/man1/afparg.1.md:16 manpages/man1/afpldaptest.1.md:16
+#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
+#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
+#: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
+#: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
+#: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
+#: manpages/man8/atalkd.8.md:26 manpages/man8/cnid_dbd.8.md:58
+#: manpages/man8/cnid_metad.8.md:21 manpages/man8/macipgw.8.md:38
+#: manpages/man8/netatalk.8.md:26 manpages/man8/papd.8.md:37
+#: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:23
+#, no-wrap
+msgid "Options"
+msgstr "オプション"
+
+#. type: Title #
+#: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:189
+#: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:71
+#: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:23
+#: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
+#: manpages/man1/getzones.1.md:57 manpages/man1/nbplkup.1.md:77
+#: manpages/man1/nbprgstr.1.md:40 manpages/man1/rtmpqry.1.md:34
+#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1302
+#: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
+#: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
+#, no-wrap
+msgid "Examples"
+msgstr "例"
+
+#. type: Title ##
+#: manpages/man1/afp_lantest.1.md:293 manpages/man1/nbplkup.1.md:57
+#, no-wrap
+msgid "Notes"
+msgstr "注記"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:4
+msgid "nbplkup — look up registered AppleTalk entities on the network"
+msgstr "nbplkup — ネットワーク上の登録された AppleTalk エンティティを検索する"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:8
+#, no-wrap
+msgid "**nbplkup** [-A *address*] [-D *address*] [-m *Mac charset*] [-r *responses*] [-s] [-f | -l] [*nbpname*]\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:12
+#, no-wrap
+msgid "**nbplkup** displays up to *responses* (default 1000) entities registered on the AppleTalk network.\n"
+msgstr "**nbplkup** は AppleTalk ネットワークに登録されているエンティティを最大 *responses* 件（デフォルトは 1000 件）表示する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:15
+msgid ""
+"By default, it looks up all entities in the local zone.  If *nbpname* is "
+"specified, the lookup can be filtered to only return entities matching that "
+"name."
+msgstr ""
+"デフォルトでは、ローカルゾーン内のすべてのエンティティを検索する。*nbpname* "
+"が指定されている場合、検索はその名前に一致するエンティティのみを返すように"
+"フィルタリングできる。"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:18 manpages/man1/nbprgstr.1.md:19
+msgid ""
+"This uses the Name-Binding Protocol (NBP) to interact with the AppleTalk "
+"network.  *nbpname* is parsed by **nbp_name**(3)."
+msgstr ""
+"これは Name-Binding Protocol (NBP) を使用して AppleTalk ネットワークと対話す"
+"る。*nbpname* は **nbp_name**(3) によって解析される。"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:23 manpages/man1/nbprgstr.1.md:24
+#, no-wrap
+msgid ""
+"**-A** *address*\n"
+"> Use *address* as the local address to be used for the lookup.\n"
+msgstr ""
+"**-A** *address*\n"
+"> 検索に使用するローカルアドレスとして *address* を使用する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:26
+#, no-wrap
+msgid ""
+"**-D** *address*\n"
+"> Use *address* as the destination address to send the lookup to.\n"
+msgstr ""
+"**-D** *address*\n"
+"> 検索を送信する宛先アドレスとして *address* を使用する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:30 manpages/man1/nbprgstr.1.md:28
+#, no-wrap
+msgid ""
+"**-m** *Mac charset*\n"
+"> Interpret strings in the given Macintosh character set.\n"
+"> If not specified, nbplkup defaults to using MacRoman.\n"
+msgstr ""
+"**-m** *Mac charset*\n"
+"> 指定された Macintosh 文字セットで文字列を解釈する。\n"
+"> 指定されていない場合、nbplkup はデフォルトで MacRoman を使用する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:33
+#, no-wrap
+msgid ""
+"**-r** *responses*\n"
+"> Limit the number of responses to *responses* (default 1000).\n"
+msgstr ""
+"**-r** *responses*\n"
+"> 応答の数を *responses*（デフォルトは 1000）に制限する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:38
+#, no-wrap
+msgid ""
+"**-s**\n"
+"> Print output in a script-friendly format:\n"
+"> for each response, first the address is printed, followed by a single space,\n"
+"> followed by the name and type, followed by a linefeed.\n"
+msgstr ""
+"**-s**\n"
+"> スクリプトに適した形式で出力を印刷する。\n"
+"> 各応答について、最初にアドレスが印刷され、その後に単一のスペース、その後に名前とタイプが続き、最後に改行が続く。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:43
+#, no-wrap
+msgid ""
+"**-f**\n"
+"> Use a *FwdReq* operation for the lookup request instead of the default *BrRq*.\n"
+">\n"
+"> Cannot be used with -l.\n"
+msgstr ""
+"**-f**\n"
+"> 検索要求にデフォルトの *BrRq* の代わりに *FwdReq* 操作を使用する。\n"
+">\n"
+"> -l と一緒に使用できない。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:48
+#, no-wrap
+msgid ""
+"**-l**\n"
+"> Use a *LkUp* operation for the lookup request instead of the default *BrRq*.\n"
+">\n"
+"> Cannot be used with -f.\n"
+msgstr ""
+"**-l**\n"
+"> 検索要求にデフォルトの *BrRq* の代わりに *LkUp* 操作を使用する。\n"
+">\n"
+"> -f と一緒に使用できない。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:56 manpages/man1/nbprgstr.1.md:39
+#, no-wrap
+msgid ""
+"**nbpname**\n"
+"> The NBP name to use.\n"
+">\n"
+"> The *nbpname* is a string of the form *obj:type@zone*, where *obj* is the object name,\n"
+"> *type* is the type of the object, and *zone* is the zone name.\n"
+"> The *obj* and *type* can be arbitrary strings, but the *zone* must be a valid zone name.\n"
+"> An \\`*=*' for the *object* or *type* matches anything, and an \\`*\\**' for *zone* means the local zone.\n"
+msgstr ""
+"**nbpname**\n"
+"> 使用する NBP 名。\n"
+">\n"
+"> *nbpname* は *obj:type@zone* の形式の文字列で、ここで *obj* はオブジェクト名、\n"
+"> *type* はオブジェクトのタイプ、*zone* はゾーン名である。\n"
+"> *obj* と *type* は任意の文字列にできるが、*zone* は有効なゾーン名でなければならない。\n"
+"> *object* または *type* に対する \\`*=*' は何でも一致し、*zone* に対する \\`*\\**' はローカルゾーンを意味する。\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:62
+msgid ""
+"A *BrRq* asks a router (by default the local atalkd instance) to propagate a "
+"lookup request across the entire AppleTalk internetwork.  This is the "
+"default option because it is generally the most useful.  If in doubt, use a "
+"*BrRq*."
+msgstr ""
+"**-BrRq** はルーター（デフォルトではローカルの atalkd インスタンス）に、"
+"AppleTalk インターネットワーク全体にわたって検索要求を伝播するように依頼す"
+"る。これは一般的に最も有用であるため、デフォルトのオプションである。疑わしい"
+"場合は、*BrRq* を使用する。"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:66
+msgid ""
+"A *LkUp* asks a node just about itself.  It can be used either to query what "
+"names are bound on a specific node, or by specifying a broadcast "
+"destination, simulate the kind of lookup that is done on a routerless "
+"network."
+msgstr ""
+"*LkUp* はノードに対して自分自身について尋ねる。それは特定のノードにバインドさ"
+"れている名前を照会するため、またはブロードキャスト宛先を指定することによっ"
+"て、ルーターのないネットワークで行われる種類の検索をシミュレートするために使"
+"用できる。"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:70
+msgid ""
+"A *FwdReq* asks a router to propagate the lookup to its directly connected "
+"networks that are members of the zone specified, but not to propagate it any "
+"further across the internetwork.  This can be useful on large internetworks, "
+"or to troubleshoot caches on refractory nodes."
+msgstr ""
+"*FwdReq* はルーターに対して、指定されたゾーンのメンバーである直接接続された"
+"ネットワークに検索を伝播するように依頼するが、インターネットワーク全体にそれ"
+"以上伝播しないようにする。これは大規模なインターネットワークで役立つ場合があ"
+"り、または難治性ノードのキャッシュをトラブルシューティングするために役立つ場"
+"合がある。"
+
+#. type: Title #
+#: manpages/man1/nbplkup.1.md:71
+#, no-wrap
+msgid "Environment Variables"
+msgstr "環境変数"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:74
+msgid "NBPLKUP"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:76
+#, no-wrap
+msgid "> default nbpname for nbplkup in format *obj:type@zone*\n"
+msgstr "> nbplkup のデフォルト nbpname、形式は *obj:type@zone*\n"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:80
+msgid "Find all devices of type *LaserWriter* in the local zone."
+msgstr "ローカルゾーン内のタイプ *LaserWriter* のすべてのデバイスを検索する。"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:91
+#, no-wrap
+msgid ""
+"    example% nbplkup :LaserWriter\n"
+"                   Petoskey:LaserWriter        7942.129:218\n"
+"                 Gloucester:LaserWriter        8200.188:186\n"
+"                     Rahway:LaserWriter        7942.2:138\n"
+"                 517 Center:LaserWriter        7942.2:132\n"
+"                      ionia:LaserWriter        7942.2:136\n"
+"         Evil DEC from Hell:LaserWriter        7942.2:130\n"
+"                  Hamtramck:LaserWriter        7942.2:134\n"
+"             Iron Mountain :LaserWriter        7942.128:250\n"
+"    example%\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:94
+msgid ""
+"Find all devices of type *netatalk* in the local zone, providing script-"
+"friendly output."
+msgstr ""
+"ローカルゾーン内のタイプ *netatalk* のすべてのデバイスを検索し、スクリプトに"
+"適した出力を提供する。"
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:100
+#, no-wrap
+msgid ""
+"    example% nbplkup -s :netatalk\n"
+"    5.42:4 netatalk-build:netatalk\n"
+"    4.162:4 prometheus:netatalk\n"
+"    8.31:4 Tiryns:netatalk\n"
+"    example%\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/nbplkup.1.md:104
+msgid "nbp_name(3), nbprgstr(1), nbpunrgstr(1), atalkd(8)"
+msgstr ""
