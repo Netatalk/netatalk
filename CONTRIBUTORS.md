@@ -223,6 +223,8 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Daniel Markstedt <daniel@mindani.net> (2022-)
 - dgsga (2023-2024)
 - NJRoadfan (2023-)
+- Rob Mitchelmore (2025-)
+- Andy Lemin (2025-)
 
 ### Patches: Version 3.2 - 4.x
 
@@ -257,7 +259,6 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Johan Huldtgren
 - Stuart Henderson
 - Antoine Jacoutot <ajacoutot@openbsd.org>
-- Rob Mitchelmore
 - Sergey Fedorov <vital.had@gmail.com>
 - Jakub Jirutka <jakub@jirutka.cz>
 
