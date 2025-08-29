@@ -28,6 +28,9 @@ This uses the Name-Binding Protocol (NBP) to interact with the AppleTalk network
 > Interpret strings in the given Macintosh character set.
 > If not specified, nbplkup defaults to using MacRoman.
 
+**-r** *responses*
+> Limit the number of responses to *responses* (default 1000).
+
 **-s**
 > Print output in a script-friendly format:
 > for each response, first the address is printed, followed by a single space,
