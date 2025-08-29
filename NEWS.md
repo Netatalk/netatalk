@@ -1,6 +1,23 @@
 Netatalk Changelogs
 ===================
 
+Changes in 4.3.1
+----------------
+
+* FIX: afpd: Refactor the afpd version helptext for readability and brevity, GitHub #2367
+* FIX: libatalk: remove macros, define interface for netddp_{close, recvfrom, sendto}, GitHub #2383
+* FIX: rtmpqry: Fix code quality issues in rtmpqry and disambiguate comments, GitHub #2379
+* NEW: testsuite: Added Linux IO monitoring to afp_lantest and refactored results display, GitHub #2354
+* FIX: test: Consistently initialize buffers before use in afpd component tests, GitHub #2380
+* FIX: docker: Bring back the RandNum password creation by default, GitHub #2338
+* NEW: docker: Expose Classic Mac OS login message option, GitHub #2339
+* FIX: distrib: substitute lockfile path in netatalkd init scripts for macOS, GitHub #2357
+* NEW: docs: Create separate nbplkup and nbprgstr man pages and improve them, GitHub #2336
+* UPD: docs: update logtypes list in afp.conf man page, GitHub #2364
+* UPD: docs: Flesh out the afpstats.1 man page, GitHub #2389
+* NEW: Introduce yaml code style guide and automatic formatting, GitHub #2351
+* NEW: contrib: Add support for beautifying markdown to codefmt.sh, GitHub #2356
+
 Changes in 4.3.0
 ----------------
 
