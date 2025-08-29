@@ -65,8 +65,8 @@ jobs:
       - name: Generate checksums
         run: |
           cd build/meson-dist
-          sha256sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256"
-          sha512sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha512"
+          sha256sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256sum"
+          sha512sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha512sum"
       - name: Create release
         uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8 # v2.3.2
         with:
@@ -97,8 +97,8 @@ jobs:
             ```
           files: |
             build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz
-            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256
-            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha512
+            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256sum
+            build/meson-dist/${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha512sum
             build/contrib/webmin_module/${{ steps.get_version.outputs.tarball_name }}.wbm.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
