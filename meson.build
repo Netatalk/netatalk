@@ -1897,7 +1897,7 @@ if 'auto' in init_style
     endif
 endif
 
-if init_cmd != ''
+if init_cmd != '' and get_option('with-init-hooks')
     init_program = find_program(init_cmd, required: not init_style_auto)
     if not init_program.found()
         warning(init_cmd + ' not found, defaulting to no init scripts')
