@@ -183,7 +183,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 
     PAM_error = pam_acct_mgmt(pamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
         /* Password change required */
         if (PAM_error == PAM_NEW_AUTHTOK_REQD) {
             err = AFPERR_PWDEXPR;
@@ -353,7 +353,7 @@ static int pam_changepw(void *obj _U_, char *username,
 
     PAM_error = pam_acct_mgmt(lpamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
         }
@@ -499,7 +499,7 @@ static int pam_printer(char *start, char *stop, char *username,
 
     PAM_error = pam_acct_mgmt(pamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);

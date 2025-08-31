@@ -593,8 +593,10 @@ static int loginasroot(const char *adminauthuser, const char **hostname,
         goto exit;
     }
 
-    if ((PAM_error = pam_acct_mgmt(pamh, 0)) != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 loginasroot: error validating PAM account");
+    PAM_error = pam_acct_mgmt(pamh, 0);
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
+        LOG(log_info, logtype_uams, "DHX2 loginasroot: error validating PAM account: %s",
+            pam_strerror(pamh, PAM_error));
         goto exit;
     }
 
@@ -720,7 +722,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
 
     PAM_error = pam_acct_mgmt(pamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
             pam_strerror(pamh, PAM_error));
 
@@ -946,8 +948,9 @@ static int changepw_3(void *obj _U_,
 
     PAM_error = pam_acct_mgmt(lpamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error validating PAM account");
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
+        LOG(log_info, logtype_uams, "DHX2 Chgpwd: error validating PAM account: %s",
+            pam_strerror(lpamh, PAM_error));
 
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);

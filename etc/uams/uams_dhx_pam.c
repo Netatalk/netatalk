@@ -543,7 +543,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 
     PAM_error = pam_acct_mgmt(pamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
         /* Log Entry */
         LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM_Error: %s",
             pam_strerror(pamh, PAM_error));
@@ -767,7 +767,7 @@ static int pam_changepw(void *obj, unsigned char *username,
 
     PAM_error = pam_acct_mgmt(lpamh, 0);
 
-    if (PAM_error != PAM_SUCCESS) {
+    if (PAM_error != PAM_SUCCESS && PAM_error != PAM_IGNORE) {
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
         }
