@@ -944,18 +944,36 @@ have_dns = (
 )
 
 if enable_zeroconf
-    if avahi.found()
-        have_zeroconf = true
-        cdata.set('USE_ZEROCONF', 1)
-        cdata.set('HAVE_AVAHI', 1)
-        cdata.set('freebsd_zeroconf', 'avahi_daemon')
-        zeroconf_provider += 'Avahi'
-    elif have_dns
-        have_zeroconf = true
-        cdata.set('USE_ZEROCONF', 1)
-        cdata.set('HAVE_MDNS', 1)
-        cdata.set('freebsd_zeroconf', 'mdnsd')
-        zeroconf_provider += 'mDNS'
+    if host_os == 'darwin'
+        # On Darwin/macOS, prefer mDNS (Bonjour) over Avahi
+        if have_dns
+            have_zeroconf = true
+            cdata.set('USE_ZEROCONF', 1)
+            cdata.set('HAVE_MDNS', 1)
+            cdata.set('freebsd_zeroconf', 'mdnsd')
+            zeroconf_provider += 'mDNS'
+        elif avahi.found()
+            have_zeroconf = true
+            cdata.set('USE_ZEROCONF', 1)
+            cdata.set('HAVE_AVAHI', 1)
+            cdata.set('freebsd_zeroconf', 'avahi_daemon')
+            zeroconf_provider += 'Avahi'
+        endif
+    else
+        # On non-Darwin platforms, use original priority
+        if avahi.found()
+            have_zeroconf = true
+            cdata.set('USE_ZEROCONF', 1)
+            cdata.set('HAVE_AVAHI', 1)
+            cdata.set('freebsd_zeroconf', 'avahi_daemon')
+            zeroconf_provider += 'Avahi'
+        elif have_dns
+            have_zeroconf = true
+            cdata.set('USE_ZEROCONF', 1)
+            cdata.set('HAVE_MDNS', 1)
+            cdata.set('freebsd_zeroconf', 'mdnsd')
+            zeroconf_provider += 'mDNS'
+        endif
     endif
 endif
 
