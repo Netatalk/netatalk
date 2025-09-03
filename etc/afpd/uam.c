@@ -193,7 +193,6 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 {
     AFPObj *obj = private;
     struct passwd *pwent = NULL;
-    struct passwd pwent_buf;
     static char username[256];
     static char user[256];
     static char pwname[256];
@@ -201,23 +200,15 @@ struct passwd *uam_getname(void *private, char *name, const int len)
     size_t namelen;
     size_t gecoslen = 0;
     size_t pwnamelen = 0;
-
-    long bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
-    if (bufsize == -1) {
-        bufsize = 16384;
-    }
-    char *buffer = malloc(bufsize);
-    if (buffer == NULL) {
-        free(buffer);
-        return NULL;
-    }
-
+    /* Should ideally be using reentrant getpwnam functions, but would require
+       a broader rework of the uam interface. */
 #ifdef HAVE_GETPWNAM_SHADOW
-    if (pwent = getpwnam_shadow(name)) {
+    pwent = getpwnam_shadow(name);
 #else
-    if (getpwnam_r(name, &pwent_buf, buffer, sizeof(buffer), &pwent) == 0 && pwent != NULL) {
-        free(buffer);
+    pwent = getpwnam(name);
 #endif
+
+    if (pwent) {
         return pwent;
     }
 
@@ -231,7 +222,7 @@ struct passwd *uam_getname(void *private, char *name, const int len)
 
         if (bdata(princ) != NULL) {
             const char *bdatum = bdata(princ);
-            getpwnam_r(bdatum, &pwent_buf, buffer, sizeof(buffer), &pwent);
+            pwent = getpwnam(bdatum);
         }
         bdestroy(princ);
 
@@ -242,12 +233,9 @@ struct passwd *uam_getname(void *private, char *name, const int len)
             } else {
                 LOG(log_error, logtype_uams, "The name '%s' is longer than %d", pwent->pw_name, MAXUSERLEN);
             }
-            free(buffer);
             return pwent;
         }
     }
-
-    free(buffer);
 
     namelen = convert_string((utf8_encoding(obj))?CH_UTF8_MAC:obj->options.maccharset,
                             CH_UCS2, name, -1, username, sizeof(username));
