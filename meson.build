@@ -659,9 +659,7 @@ int main() {
 '''
 
 has_bgets = cc.compiles(bgets_test_code, name: 'bgets defined in standard C library')
-
-cdata.set('HAVE_LIBGEN_H_BGETS', has_bgets)
-
+cdata.set('HAVE_BGETS', has_bgets)
 bstring = dependency('bstring', required: false)
 
 if not bstring.found()
