@@ -395,6 +395,7 @@ jobs:
         run: |
           brew update
           brew install \
+            bstring \
             cmark-gfm \
             cracklib \
             iniparser \
