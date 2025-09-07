@@ -1,6 +1,14 @@
 Netatalk Changelogs
 ===================
 
+Changes in 4.3.2
+----------------
+
+* FIX: afpd: restore functionality of authentication over PAM with AD, GitHub #2402
+* FIX: meson: check for init bins only if installing service, GitHub #2398
+* FIX: meson: prefer mDNS over Avahi on Darwin systems, GitHub #2400
+* UPD: subprojects: update bstring library to 1.0.2, GitHub #2406
+
 Changes in 4.3.1
 ----------------
 
