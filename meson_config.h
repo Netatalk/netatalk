@@ -319,6 +319,9 @@
 /* Define to 1 if you have the <sys/mount.h> header file. */
 #mesondefine HAVE_SYS_MOUNT_H
 
+/* Define to 1 if you have the <sys/sysinfo.h> header file. */
+#mesondefine HAVE_SYS_SYSINFO_H
+
 /* Define to 1 if you have the <sys/vfs.h> header file. */
 #mesondefine HAVE_SYS_VFS_H
 
