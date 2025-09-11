@@ -60,6 +60,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef HAVE_SYS_SYSINFO_H
+#include <sys/sysinfo.h>
+#endif
 
 #include <bstrlib.h>
 
@@ -832,16 +835,37 @@ static int ftw_copy_file(const struct FTW *entp _U_,
         }
     } else {
         if (buf == NULL) {
-            /*
-             * Note that buf and bufsize are static. If
-             * malloc() fails, it will fail at the start
-             * and not copy only some files.
-             */
-            if (sysconf(_SC_PHYS_PAGES) >
-                    PHYSPAGES_THRESHOLD) {
-                bufsize = MIN(BUFSIZE_MAX, MAXPHYS * 8);
-            } else {
-                bufsize = BUFSIZE_SMALL;
+            bufsize = BUFSIZE_SMALL;
+#if defined (_SC_PAGESIZE)
+            long pagesize = sysconf(_SC_PAGESIZE);
+#else
+            long pagesize = getpagesize();
+#endif
+
+            if (pagesize > 0) {
+#if defined (_SC_PHYS_PAGES)
+                long num_pages = sysconf(_SC_PHYS_PAGES);
+
+                if (num_pages > 0 && num_pages < (SIZE_MAX / pagesize)) {
+                    size_t total_mem = (size_t)num_pages * (size_t)pagesize;
+
+                    if (total_mem > (32UL * 1024 * 1024 * 1024)) {
+                        bufsize = MIN(BUFSIZE_MAX, MAXPHYS * 8);
+                    }
+                }
+
+#elif defined (HAVE_SYS_SYSINFO_H)
+                struct sysinfo si;
+
+                if (sysinfo(&si) == 0) {
+                    unsigned long total_mem = si.totalram * si.mem_unit;
+
+                    if (total_mem > (32UL * 1024 * 1024 * 1024)) {
+                        bufsize = MIN(BUFSIZE_MAX, MAXPHYS * 8);
+                    }
+                }
+
+#endif
             }
 
             buf = malloc(bufsize);

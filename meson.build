@@ -256,6 +256,7 @@ check_headers = [
     'sys/extattr.h',
     'sys/mnttab.h',
     'sys/mount.h',
+    'sys/sysinfo.h',
     'sys/vfs.h',
     'sys/xattr.h',
     'ufs/quota.h',
