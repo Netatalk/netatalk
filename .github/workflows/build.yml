@@ -713,7 +713,7 @@ jobs:
             curl --location -o cmark.tar.gz \
               https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
             curl --location -o iniparser.tar.gz \
-              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
+              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
             set +e # tar on Solaris is too old to handle git tarballs cleanly
             tar xzf cmark.tar.gz
             tar xzf iniparser.tar.gz
@@ -723,7 +723,7 @@ jobs:
             cmake --build build
             cmake --install build
             cd ..
-            cd iniparser-v4.2.5
+            cd iniparser-v4.2.6
             mkdir build
             cd build
             cmake ..
