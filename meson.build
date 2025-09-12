@@ -2100,6 +2100,7 @@ elif host_os == 'sunos'
     cdata.set('__svr4__', 1)
     cdata.set('_ISOC9X_SOURCE', 1)
     cdata.set('_XOPEN_SOURCE', 600)
+    cdata.set('_XPG6', 1)
     cdata.set('SOLARIS', 1)
 elif host_os == 'darwin'
     cdata.set('HAVE_BROKEN_DBTOB', 1)
