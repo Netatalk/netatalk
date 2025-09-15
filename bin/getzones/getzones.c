@@ -116,6 +116,10 @@ int main(int argc, char *argv[])
                 ++errflg;
             }
 
+            if (requested_zone != NULL) {
+                free(requested_zone);
+            }
+
             requested_zone = strdup(optarg);
             lookup_type = ZIPOP_GNI;
             break;
