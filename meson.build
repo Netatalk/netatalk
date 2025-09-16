@@ -1518,25 +1518,31 @@ else
     )
     if have_iconv
         cdata.set('HAVE_USABLE_ICONV', 1)
+        iconv_code = '''
+            #ifndef _XPG6
+            #define _XPG6 1
+            #endif
+            #include <stdlib.h>
+            #include <iconv.h>
+            extern
+            #ifdef __cplusplus
+                "C"
+            #endif
+            #if defined(__STDC__) || defined(__cplusplus)
+                size_t iconv (iconv_t cd, const char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
+            #else
+                size_t iconv();
+            #endif
+        '''
 
         if cc.compiles(
-            '''
-        #include <stdlib.h>
-        #include <iconv.h>
-        extern
-        #ifdef __cplusplus
-            "C"
-        #endif
-        #if defined(__STDC__) || defined(__cplusplus)
-            size_t iconv (iconv_t cd, char * *inbuf, size_t *inbytesleft, char * *outbuf, size_t *outbytesleft);
-        #else
-            size_t iconv();
-        #endif
-        ''',
+            iconv_code,
+            include_directories: include_directories(include_dirs),
+            name: 'iconv with const inbuf',
         )
-            cdata.set('ICONV_CONST', '')
-        else
             cdata.set('ICONV_CONST', 'const')
+        else
+            cdata.set('ICONV_CONST', '')
         endif
 
         if meson.can_run_host_binaries()
