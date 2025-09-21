@@ -18,6 +18,7 @@ STATIC void test23()
         goto test_exit;
     }
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (Conn->afp_version < 30) {
         if (ntohl(AFPERR_NOOP) != FPEnumerate_ext(Conn, vol, DIRDID_ROOT, "",
                 (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)

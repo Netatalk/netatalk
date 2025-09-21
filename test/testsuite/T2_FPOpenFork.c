@@ -1526,6 +1526,7 @@ STATIC void test431()
     }
 
     /* Enumerating should convert it */
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate_ext2(Conn, vol, DIRDID_ROOT, "",
                          (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN),
                          (1 << DIRPBIT_PDINFO) | (1 << DIRPBIT_OFFCNT))) {

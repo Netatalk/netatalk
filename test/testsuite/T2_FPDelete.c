@@ -60,6 +60,7 @@ STATIC void test146()
         test_failed();
     }
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FAIL(FPEnumerate(Conn2, vol2,  DIRDID_ROOT, "", 0, bitmap))
     FAIL(ntohl(AFPERR_ACCESS) != FPDelete(Conn2, vol2,  dir, name))
     fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,

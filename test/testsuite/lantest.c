@@ -38,6 +38,7 @@
 /* Netatalk library includes */
 #include "afpclient.h"
 #include "test.h"
+#include "afphelper.h"
 
 /* Platform-specific includes */
 #ifdef __linux__
@@ -140,6 +141,11 @@ static int32_t validation_iterations = 100;  /* validation iterations */
 
 /* Forward declarations */
 void clean_exit(int exit_code);
+static int cleanup_test_directory(CONN *conn, uint16_t vol,
+                                  char *dirname);
+int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
+extern int delete_directory_tree(CONN *conn, uint16_t volume,
+                                 uint32_t parent_did, char *dirname);
 static uint64_t numrw;
 /* Bool array of which tests to run */
 static char teststorun[NUMTESTS];
@@ -796,6 +802,53 @@ void clean_exit(int exit_code)
     exit(exit_code);
 }
 
+/*!
+ * @brief Clean up a test directory (main entry point)
+ *
+ * @param conn     AFP connection
+ * @param vol      Volume ID
+ * @param dirname  Directory name to delete
+ *
+ * @returns 0 on success, -1 on failure
+ */
+static int cleanup_test_directory(CONN *conn, uint16_t volume, char *dirname)
+{
+    /* Use the recursive delete function from afphelper.c */
+    int result = delete_directory_tree(conn, volume, DIRDID_ROOT, dirname);
+
+    if (result == 0) {
+        if (!lantest_Quiet) {
+            fprintf(stdout, "Successfully deleted test directory '%s'\n", dirname);
+        }
+    } else {
+        result = FPDelete(conn, volume, DIRDID_ROOT, dirname);
+
+        if (result == AFP_OK) {
+            if (!lantest_Quiet) {
+                fprintf(stdout, "Successfully deleted test directory '%s' (on retry)\n",
+                        dirname);
+            }
+
+            return 0;
+        }
+
+        /* Check if directory still exists */
+        if (is_there(conn, volume, DIRDID_ROOT, dirname) != AFP_OK) {
+            if (!lantest_Quiet) {
+                fprintf(stdout, "Test directory '%s' no longer exists\n", dirname);
+            }
+
+            return 0;
+        }
+
+        if (!lantest_Quiet) {
+            fprintf(stdout, "Failed to completely delete test directory '%s'\n", dirname);
+        }
+    }
+
+    return result;
+}
+
 /* --------------------------------- */
 int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name)
 {
@@ -1432,16 +1485,20 @@ void run_test(const int32_t dir)
         stoptimer();
         addresult(TEST_DIRTREE, iteration_counter);
 
+        /* Delete directory tree */
         for (int32_t i = 0; i < DIRNUM; i++) {
             for (int32_t j = 0; j < DIRNUM; j++) {
                 for (int32_t k = 0; k < DIRNUM; k++) {
-                    FAILEXIT(FPDelete(Conn, vol, kdirs[i][j][k], "") != 0, fin1);
+                    snprintf(temp, sizeof(temp), "dir%02u", k + 1);
+                    FAILEXIT(FPDelete(Conn, vol, jdirs[i][j], temp) != 0, fin1);
                 }
 
-                FAILEXIT(FPDelete(Conn, vol, jdirs[i][j], "") != 0, fin1);
+                snprintf(temp, sizeof(temp), "dir%02u", j + 1);
+                FAILEXIT(FPDelete(Conn, vol, idirs[i], temp) != 0, fin1);
             }
 
-            FAILEXIT(FPDelete(Conn, vol, idirs[i], "") != 0, fin1);
+            snprintf(temp, sizeof(temp), "dir%02u", i + 1);
+            FAILEXIT(FPDelete(Conn, vol, dir, temp) != 0, fin1);
         }
     }
 
@@ -1534,7 +1591,8 @@ void run_test(const int32_t dir)
                          cache_test_files[i * cache_files_per_dir + j]);
             }
 
-            FPDelete(Conn, vol, cache_test_dirs_arr[i], "");
+            snprintf(temp, sizeof(temp), "cache_dir_%d", i);
+            FPDelete(Conn, vol, dir, temp);
         }
 
         free(cache_test_files);
@@ -1676,7 +1734,15 @@ void run_test(const int32_t dir)
 
         /* Delete directories from deepest to shallowest */
         for (int32_t i = deep_dir_levels - 1; i >= 0; i--) {
-            FPDelete(Conn, vol, deep_dirs[i], "");
+            if (i == 0) {
+                /* First level directory - delete from test dir */
+                snprintf(temp, sizeof(temp), "deep_%02d", i);
+                FPDelete(Conn, vol, dir, temp);
+            } else {
+                /* Other levels - delete from parent */
+                snprintf(temp, sizeof(temp), "deep_%02d", i);
+                FPDelete(Conn, vol, deep_dirs[i - 1], temp);
+            }
         }
 
         /* Free dynamically allocated memory */
@@ -2105,15 +2171,16 @@ int main(int32_t ac, char **av)
     /* Delete any existing testdir directory first to avoid conflicts */
     if (is_there(Conn, vol, DIRDID_ROOT, testdir) == AFP_OK) {
         if (!lantest_Quiet) {
-            fprintf(stdout, "Found existing test directory '%s', deleting it...\n",
+            fprintf(stdout, "Found existing test directory '%s', cleaning it up...\n",
                     testdir);
         }
 
-        if (FPDelete(Conn, vol, DIRDID_ROOT, testdir)) {
+        /* Use the cleanup function to recursively delete the directory */
+        if (cleanup_test_directory(Conn, vol, testdir) != 0) {
             fprintf(stderr, "ERROR: Could not delete existing test directory '%s'\n",
                     testdir);
             fprintf(stderr,
-                    "The directory may not be empty. Please manually delete it and try again.\n");
+                    "The directory may contain protected files. Please manually delete it and try again.\n");
             clean_exit(ERROR_FILE_DIRECTORY_OPS);
         }
 
@@ -2144,7 +2211,12 @@ int main(int32_t ac, char **av)
         run_test(dir);
     }
 
-    FPDelete(Conn, vol, dir, "");
+    /* Clean up test directory */
+    if (cleanup_test_directory(Conn, vol, testdir) != 0) {
+        fprintf(stderr, "Warning: Failed to delete test directory '%s'\n", testdir);
+        fprintf(stderr, "Please manually delete the directory on the server.\n");
+        /* Non-fatal - continue to display results */
+    }
 
     if (ExitCode != AFP_OK && !Debug) {
         printf("Error, ExitCode: %u. Run with -v or -b to see what went wrong.\n",

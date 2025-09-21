@@ -336,6 +336,7 @@ STATIC void test219()
         goto fin;
     }
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     bitmap = (1 << FILPBIT_LNAME);
     FAIL(FPEnumerate(Conn, vol, DIRDID_ROOT, "", bitmap, bitmap))
     FAIL(FPEnumerate(Conn2, vol2,  DIRDID_ROOT, "", bitmap, bitmap))

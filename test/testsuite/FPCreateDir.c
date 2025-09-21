@@ -51,6 +51,7 @@ STATIC void test26()
         goto fin;
     }
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FPEnumerate(Conn, vol, DIRDID_ROOT, "",
                 (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM),
                 (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
