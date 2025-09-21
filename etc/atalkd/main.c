@@ -334,7 +334,7 @@ static void as_timer(int sig _U_)
                     } else {
                         rtmp->rt_hops = RTMPHOPS_POISON;
 
-                        if ((cc = rtmp_replace(rtmp)) < 0) {
+                        if ((cc = rtmp_replace(&rtmp)) < 0) {
                             LOG(log_error, logtype_atalkd, "rtmp_replace: %s", strerror(errno));
                             atalkd_exit(1);
                         }
@@ -440,7 +440,7 @@ static void as_timer(int sig _U_)
                         } else {
                             rtmp->rt_hops = RTMPHOPS_POISON;
 
-                            if ((cc = rtmp_replace(rtmp)) < 0) {
+                            if ((cc = rtmp_replace(&rtmp)) < 0) {
                                 LOG(log_error, logtype_atalkd, "rtmp_replace: %s", strerror(errno));
                                 atalkd_exit(1);
                             }

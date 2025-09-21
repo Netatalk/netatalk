@@ -87,7 +87,7 @@ void rtmp_delzonemap(struct rtmptab *);
 
 int rtmp_request(struct interface *);
 void rtmp_free(struct rtmptab *);
-int rtmp_replace(struct rtmptab *);
+int rtmp_replace(struct rtmptab **);
 int looproute(struct interface *, unsigned int);
 int gateroute(unsigned int, struct rtmptab *);
 
