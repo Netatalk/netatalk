@@ -73,7 +73,6 @@ extern int delete_folder_with_file(uint16_t vol, int did, char *name,
 extern int get_vol_attrib(uint16_t vol) ;
 extern int group_folder(uint16_t vol, int did, char *name);
 extern unsigned int get_vol_free(uint16_t vol) ;
-extern ssize_t get_sessiontoken(const char *buf, char **token);
 
 extern void test_failed(void);
 extern void test_skipped(int why);

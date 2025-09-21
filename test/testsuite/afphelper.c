@@ -5,47 +5,7 @@
 #include "afphelper.h"
 #include "specs.h"
 
-/* -------------------------- */
-#if 0
-static char afp_cmd_with_fork[] = {
-    AFP_BYTELOCK,
-    AFP_CLOSEFORK,
-    AFP_GETFORKPARAM,
-    AFP_SETFORKPARAM,
-    AFP_READ,
-    AFP_FLUSHFORK,
-    AFP_WRITE,
-};
-#endif
-
 int Loglevel = AFP_LOG_INFO;
-
-/*!
- * Helper for FPGetSessionToken, extracts token from reply buffer
- * @args buf    (r)  pointer to reply buffer
- * @args token  (w)  return allocated buffer with token here
- * @returns length of token, -1 on error
- */
-ssize_t get_sessiontoken(const char *buf, char **token)
-{
-    uint32_t tmp;
-    ssize_t len = -1;
-    memcpy(&tmp, buf, sizeof(uint32_t));
-    tmp = ntohl(tmp);
-    len = tmp;
-
-    if (len <= 0 || len > 200) {
-        return -1;
-    }
-
-    if (!(*token = malloc(len))) {
-        fprintf(stderr, "\tFAILED malloc(%ld) %s\n", len, strerror(errno));
-        return -1;
-    }
-
-    memcpy(*token, buf + sizeof(uint32_t), len);
-    return len;
-}
 
 void illegal_fork(DSI *dsi, char cmd, char *name)
 {
@@ -1195,78 +1155,6 @@ void afp_printf(int level, int loglevel, int color, const char *fmt, ...)
     vfprintf(stdout, fmt, arg);
     va_end(arg);
     afp_print_postfix(level, color);
-}
-
-void assert_equal(intmax_t expect, intmax_t real, const char *file, int line,
-                  void (*fn)(), int log_level)
-{
-    if (expect != real) {
-        AFP_PRINTF(log_level, "%s:%d expected %" PRIdMAX ", got %" PRIdMAX "\n", file,
-                   line, expect, real);
-        fn();
-    }
-}
-
-void assert_equal_u(uintmax_t expect, uintmax_t real, const char *file,
-                    int line, void (*fn)(), int log_level)
-{
-    if (expect != real) {
-        AFP_PRINTF(log_level, "%s:%d expected %" PRIuMAX ", got %" PRIuMAX "\n", file,
-                   line, expect, real);
-        fn();
-    }
-}
-
-void assert_not_equal(intmax_t expect, intmax_t real, const char *file,
-                      int line, void (*fn)(), int log_level)
-{
-    if (expect == real) {
-        AFP_PRINTF(log_level, "%s:%d should not be %" PRIdMAX "\n", file, line, real);
-        fn();
-    }
-}
-
-void assert_not_equal_u(uintmax_t expect, intmax_t real, const char *file,
-                        int line, void (*fn)(), int log_level)
-{
-    if (expect == real) {
-        AFP_PRINTF(log_level, "%s:%d should not be %" PRIuMAX "\n", file, line, real);
-        fn();
-    }
-}
-
-void assert_null(const void *real, const char *file, int line, void (*fn)(),
-                 int log_level)
-{
-    if (real != NULL) {
-        AFP_PRINTF(log_level, "%s:%d should be NULL\n", file, line);
-        fn();
-    }
-}
-
-void assert_not_null(const void *real, char *file, int line, void (*fn)(),
-                     int log_level)
-{
-    if (real == NULL) {
-        AFP_PRINTF(log_level, "%s:%d should not be NULL\n", file, line);
-        fn();
-    }
-}
-
-void assert_true(int real, char *file, int line, void (*fn)(), int log_level)
-{
-    if (!real) {
-        AFP_PRINTF(log_level, "%s:%d should be true\n", file, line);
-        fn();
-    }
-}
-
-void assert_false(int real, char *file, int line, void (*fn)(), int log_level)
-{
-    if (real) {
-        AFP_PRINTF(log_level, "%s:%d should be false\n", file, line);
-        fn();
-    }
 }
 
 /*!
