@@ -357,20 +357,24 @@ void rtmp_free(struct rtmptab *rtmp)
 
 
 /*
- * Find a replacement for "replace".  If we can't find a replacement,
- * return 1.  If we do find a replacement, return 0. -1 on error.
+ * Find a replacement for the structure pointed to by "replace_ptr".
+ * If we can't find a replacement, return 1.
+ * If we do find a replacement, return 0.
+ * If we encounter an error, return -1.
  */
-int rtmp_replace(struct rtmptab *replace)
+int rtmp_replace(struct rtmptab **replace_ptr)
 {
     struct interface	*iface;
     struct gate		*gate;
     struct rtmptab	*rtmp, *found = NULL;
+    struct rtmptab  *replace;
 
-    if (replace == NULL) {
+    if (replace_ptr == NULL || *replace_ptr == NULL) {
         LOG(log_error, logtype_atalkd, "rtmp_replace: NULL replace pointer");
         return -1;
     }
 
+    replace = *replace_ptr;
     LOG(log_info, logtype_atalkd, "rtmp_replace %u-%u", ntohs(replace->rt_firstnet),
         ntohs(replace->rt_lastnet));
 
@@ -417,6 +421,7 @@ int rtmp_replace(struct rtmptab *replace)
 
         if (replace->rt_state == RTMPTAB_BAD) {
             rtmp_free(replace);
+            *replace_ptr = NULL;
         }
 
         return 0;
@@ -798,7 +803,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
                                 rtmp->rt_hops = (rt.rt_dist & 0x7f) + 1;
                             }
 
-                            if (rtmp_replace(rtmp) < 0) {
+                            if (rtmp_replace(&rtmp) < 0) {
                                 LOG(log_error, logtype_atalkd, "rtmp_packet: rtmp_replace");
                                 return -1;
                             }
@@ -821,7 +826,7 @@ int rtmp_packet(struct atport *ap, struct sockaddr_at *from, char *data,
                  * we're not likely to be asked for the same tuple twice
                  * in a row.
                  */
-                if (rtmp->rt_next != NULL) {
+                if (rtmp != NULL && rtmp->rt_next != NULL) {
                     gate->g_rt->rt_prev->rt_next = gate->g_rt;
                     gate->g_rt = rtmp->rt_next;
                     rtmp->rt_next = NULL;
