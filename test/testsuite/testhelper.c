@@ -11,7 +11,7 @@ static char skipped_msg_buf[SKIPPED_MSG_BUFSIZE];
 /* ------------------------- */
 void test_skipped(int why)
 {
-    char *s = "";
+    char *s;
 
     switch (why) {
     case T_CONN2:
@@ -121,6 +121,10 @@ void test_skipped(int why)
     case T_CRED:
         s = "username/password for the AFP server";
         break;
+
+    default:
+        s = "UNKNOWN REASON - this is a bug";
+        break;
     }
 
     if (Color) {
@@ -168,7 +172,7 @@ void enter_test(void)
 /* ------------------------- */
 void exit_test(char *name)
 {
-    char *s = "";
+    char *s;
 
     switch (CurTestResult) {
     case 0:
@@ -217,6 +221,12 @@ void exit_test(char *name)
         SkipCount++;
         s = skipped_msg_buf;
         break;
+
+    default:
+        fprintf(stdout, "%s - ", name);
+        fprintf(stdout, "UNKNOWN RESULT (%d)%s\n", CurTestResult, Why);
+        fflush(stdout);
+        return;
     }
 
     fprintf(stdout, "%s - ", name);
