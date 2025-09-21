@@ -11,6 +11,7 @@ libafptest_sources = [
     'afpcli.c',
     'afpcmd.c',
     'afphelper.c',
+    'testhelper.c',
 ]
 
 libafptest = static_library(

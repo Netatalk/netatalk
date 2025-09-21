@@ -3,6 +3,8 @@
 
 #include <inttypes.h>
 
+#include "dsi.h"
+
 /* define ansi color */
 #define ANSI_RED      "\033[0;31m"
 #define ANSI_GREEN    "\033[0;32m"
@@ -39,6 +41,23 @@ extern void afp_printf(int level, int loglevel, int color, const char *fmt,
 typedef struct CONN CONN;
 
 /* Function declarations */
+extern void illegal_fork(DSI *dsi, char cmd, char *name);
+extern int no_access_folder(uint16_t vol, int did, char *name);
+extern int read_only_folder(uint16_t vol, int did, char *name);
+extern int delete_folder(uint16_t vol, int did, char *name);
+extern int get_did(CONN *conn, uint16_t vol, int dir, char *name);
+extern int get_fid(CONN *conn, uint16_t vol, int dir, char *name);
+extern uint32_t get_forklen(DSI *dsi, int type);
+extern void write_fork(CONN *conn, uint16_t vol, int dir, char *name,
+                       char *data);
+extern void read_fork(CONN *conn, uint16_t vol, int dir, char *name, int len);
+extern int read_only_folder_with_file(uint16_t vol, int did, char *name,
+                                      char *file);
+extern int delete_folder_with_file(uint16_t vol, int did, char *name,
+                                   char *file);
+extern int get_vol_attrib(uint16_t vol);
+extern int group_folder(uint16_t vol, int did, char *name);
+extern unsigned int get_vol_free(uint16_t vol);
 extern int delete_directory_tree(CONN *conn, uint16_t volume,
                                  uint32_t parent_did, char *dirname);
 

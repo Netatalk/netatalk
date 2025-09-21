@@ -53,33 +53,11 @@ extern int ExitCode;
 extern enum adouble adouble;
 
 /* Functions */
-extern void illegal_fork(DSI *dsi, char cmd, char *name);
-extern int no_access_folder(uint16_t vol, int did, char *name);
-extern int read_only_folder(uint16_t vol, int did, char *name);
-extern int delete_folder(uint16_t vol, int did, char *name);
-
-extern int get_did(CONN *conn, uint16_t vol, int dir, char *name);
-extern int get_fid(CONN *conn, uint16_t vol, int dir, char *name);
-extern uint32_t get_forklen(DSI *dsi, int type);
-
-extern void write_fork(CONN *conn, uint16_t vol, int dir, char *name,
-                       char *data);
-extern void read_fork(CONN *conn, uint16_t vol, int dir, char *name, int len);
-
-extern int read_only_folder_with_file(uint16_t vol, int did, char *name,
-                                      char *file);
-extern int delete_folder_with_file(uint16_t vol, int did, char *name,
-                                   char *file);
-extern int get_vol_attrib(uint16_t vol) ;
-extern int group_folder(uint16_t vol, int did, char *name);
-extern unsigned int get_vol_free(uint16_t vol) ;
-
 extern void test_failed(void);
 extern void test_skipped(int why);
 extern void test_nottested(void);
 extern void enter_test(void);
 extern void exit_test(char *name);
-
 extern int not_valid(unsigned int ret, int mac_error, int afpd_error);
 extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap,
                             int afpd_error);
