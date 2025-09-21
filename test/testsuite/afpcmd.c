@@ -1198,6 +1198,7 @@ unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did)
 }
 
 /* -------------------------------
+* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerate(CONN *conn,
                          uint16_t vol,
@@ -1260,6 +1261,7 @@ unsigned int FPEnumerate(CONN *conn,
 
 
 /* -------------------------------
+* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerateFull(CONN *conn,
                              uint16_t vol,
@@ -1476,6 +1478,7 @@ unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap)
     return dsi->header.dsi_code;
 }
 /* -------------------------------
+* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
                              uint16_t f_bitmap, uint16_t d_bitmap)
@@ -1540,6 +1543,7 @@ unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
 }
 
 /* -------------------------------
+* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
                               uint16_t f_bitmap, uint16_t d_bitmap)
@@ -1604,7 +1608,9 @@ unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
     return dsi->header.dsi_code;
 }
 
-/* ------------------------------- */
+/* -------------------------------
+* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
+*/
 unsigned int FPEnumerateExt2Full(CONN *conn,
                                  uint16_t vol,
                                  uint32_t did,

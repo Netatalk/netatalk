@@ -2,8 +2,8 @@
 */
 #include <stdarg.h>
 
-#include "specs.h"
 #include "afphelper.h"
+#include "specs.h"
 
 /* -------------------------- */
 #if 0
@@ -303,6 +303,7 @@ int no_access_folder(uint16_t vol, int did, char *name)
         /* Mac OSX here does strange things
          * for when things go wrong */
         test_nottested();
+        /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
         FPEnumerate(Conn2, vol2,  DIRDID_ROOT, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR),
                     (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
@@ -1266,4 +1267,206 @@ void assert_false(int real, char *file, int line, void (*fn)(), int log_level)
         AFP_PRINTF(log_level, "%s:%d should be false\n", file, line);
         fn();
     }
+}
+
+/*!
+ * @brief depth-first recursively delete a directory tree
+ *
+ * Algorithm:
+ * 1. Try simple delete (works if directory is empty)
+ * 2. If not empty, get directory ID
+ * 3. Enumerate contents and for each entry:
+ *    - If it's a file: delete it immediately
+ *    - If it's a directory: recurse into it
+ * 4. After all contents are deleted, delete the now-empty directory
+ *
+ * @param conn       AFP connection
+ * @param volume     Volume ID
+ * @param parent_did Parent directory ID
+ * @param dirname    Directory name to delete
+ *
+ * @returns 0 on success, -1 on failure
+ */
+int delete_directory_tree(CONN *conn, uint16_t volume,
+                          uint32_t parent_did, char *dirname)
+{
+    struct afp_filedir_parms filedir;
+    DSI *dsi_ptr = &conn->dsi;
+    uint32_t dir_id;
+    uint16_t f_bitmap, d_bitmap;
+    unsigned int ret;
+    uint16_t entry_count;
+    unsigned char *entry_ptr;
+    const unsigned char *data_end;
+
+    /* Step 1: Try simple delete - optimal case for empty directories */
+    if (FPDelete(conn, volume, parent_did, dirname) == AFP_OK) {
+        return 0;
+    }
+
+    /* Step 2: dirname directory not empty - get its ID for enumeration */
+    if (FPGetFileDirParams(conn, volume, parent_did, dirname, 0,
+                           (1 << DIRPBIT_DID)) != AFP_OK) {
+        /* Directory doesn't exist or access denied */
+        fprintf(stderr, "[delete_directory_tree] Failed to get directory ID for '%s'\n",
+                dirname);
+        return -1;
+    }
+
+    /* Extract directory ID for dirname from DSI following FPGetFileDirParams call */
+    filedir.isdir = 1;
+    afp_filedir_unpack(&filedir, dsi_ptr->data + (3 * sizeof(uint16_t)), 0,
+                       (1 << DIRPBIT_DID));
+    dir_id = filedir.did;
+
+    /* Invalid directory ID */
+    if (dir_id == 0) {
+        fprintf(stderr, "[delete_directory_tree] Got invalid directory ID for '%s'\n",
+                dirname);
+        return -1;
+    }
+
+    /* Step 3: Enumerate and process contents - names for deletion & dir IDs for recursion */
+    f_bitmap = (1 << FILPBIT_LNAME);
+    d_bitmap = (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_DID);
+    /* Call FPEnumerate until AFPERR_NOOBJ (no more entries) */
+    int total_files_deleted = 0;
+    int total_dirs_deleted = 0;
+    int enumeration_round = 0;
+    int max_rounds = 100;
+
+    while (enumeration_round < max_rounds) {
+        enumeration_round++;
+        /* FPEnumerate batch of entries */
+        ret = FPEnumerate(conn, volume, dir_id, "", f_bitmap, d_bitmap);
+
+        if (ret == htonl(AFPERR_NOOBJ)) {
+            /* No more objects - done enumerating */
+            break;
+        } else if (ret != AFP_OK) {
+            fprintf(stderr,
+                    "[delete_directory_tree] Enumeration failed for '%s' (error: 0x%08x)\n",
+                    dirname, ret);
+            break;
+        }
+
+        /* Process batch */
+        /* WARN: FPEnumerate and FPEnumerate* use my_dsi_data_receive, other commands use my_dsi_cmd_receive.
+         my_dsi_data_receive stores data length in 'cmdlen', not 'datalen'?
+         my_dsi_cmd_receive (line 321) - receives data into DSI_CMDSIZ buffer (x->commands)
+         my_dsi_data_receive (line 327) - receives data into DSI_DATASIZ buffer (x->data)
+         So my_dsi_data_receive data is received into dsi->data buffer, not dsi->commands.
+         &conn->dsi->cmdlen = datalen
+         &conn->dsi->data + 0 = fbitmap
+         &conn->dsi->data + 2 = dbitmap
+         &conn->dsi->data + 4 = count
+         &conn->dsi->data + 6 = data */
+        if (dsi_ptr->cmdlen < 6) {
+            fprintf(stderr, "[delete_directory_tree] Response too small (%lu bytes)\n",
+                    dsi_ptr->cmdlen);
+            break;
+        }
+
+        /* Get entry count (skip bitmap fields at offset 0 (fbitmap) and 2(dbitmap)) */
+        memcpy(&entry_count, dsi_ptr->data + 4, sizeof(entry_count));
+        entry_count = ntohs(entry_count);
+
+        /* If no entries, we're done */
+        if (entry_count == 0) {
+            break;
+        }
+
+        /* Process each entry data */
+        if (dsi_ptr->cmdlen > 6) {
+            entry_ptr = dsi_ptr->data + 6;
+            data_end = dsi_ptr->data + dsi_ptr->cmdlen;
+            int batch_files_deleted = 0;
+            int batch_dirs_deleted = 0;
+
+            for (int i = 0; i < entry_count; i++) {
+                /* Bounds checking */
+                if (entry_ptr >= data_end || entry_ptr + 2 > data_end) {
+                    fprintf(stderr,
+                            "[delete_directory_tree] Reached end of data at entry %d of %u\n",
+                            i, entry_count);
+                    break;
+                }
+
+                /* Validate entry length */
+                uint8_t entry_len = entry_ptr[0];
+                uint8_t is_dir = entry_ptr[1];
+
+                /* Validate entry length */
+                if (entry_len == 0) {
+                    /* Zero length means end of entries */
+                    break;
+                }
+
+                if (entry_ptr + entry_len > data_end) {
+                    /* Might be padding at the end of the batch */
+                    if (!Quiet) {
+                        fprintf(stdout,
+                                "[delete_directory_tree] Warning: Entry %d length %u extends beyond buffer\n",
+                                i, entry_len);
+                    }
+
+                    break;
+                }
+
+                /* Unpack entry to get name */
+                memset(&filedir, 0, sizeof(filedir)); /* Clear structure first */
+                filedir.isdir = is_dir;
+
+                if (is_dir) {
+                    /* Recurse subdirectory */
+                    afp_filedir_unpack(&filedir, entry_ptr + 2, 0, d_bitmap);
+
+                    if (filedir.lname && filedir.lname[0] != '\0') {
+                        /* Pass current dir ID as new parent, and subdir entry name as dirname */
+                        delete_directory_tree(conn, volume, dir_id, filedir.lname);
+                        batch_dirs_deleted++;
+                    }
+                } else {
+                    /* Delete file */
+                    afp_filedir_unpack(&filedir, entry_ptr + 2, f_bitmap, 0);
+
+                    if (filedir.lname && filedir.lname[0] != '\0') {
+                        FPDelete(conn, volume, dir_id, filedir.lname);
+                        batch_files_deleted++;
+                    }
+                }
+
+                entry_ptr += entry_len;
+            }
+
+            total_files_deleted += batch_files_deleted;
+            total_dirs_deleted += batch_dirs_deleted;
+        }
+    }
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "[delete_directory_tree] Total for '%s': Deleted %d files, deleted %d dirs in %d rounds\n",
+                dirname, total_files_deleted, total_dirs_deleted, enumeration_round);
+    }
+
+    /* Step 4: Delete the now-empty directory */
+    ret = FPDelete(conn, volume, parent_did, dirname);
+
+    if (ret != AFP_OK) {
+        /* Trying to delete dirname by its own ID */
+        ret = FPDelete(conn, volume, dir_id, "");
+    }
+
+    if (!Quiet) {
+        if (ret == AFP_OK) {
+            fprintf(stdout, "[delete_directory_tree] Successfully deleted '%s'\n", dirname);
+        } else {
+            fprintf(stderr,
+                    "[delete_directory_tree] Failed to delete '%s' (error: 0x%08x)\n",
+                    dirname, ret);
+        }
+    }
+
+    return (ret == AFP_OK) ? 0 : -1;
 }

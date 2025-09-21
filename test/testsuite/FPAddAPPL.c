@@ -95,6 +95,7 @@ STATIC void test301()
 
         test_failed();
         ret = FPCreateFile(Conn, vol, 0, dir, file);
+        /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
         FPEnumerate(Conn, vol, dir, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR),
                     (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |

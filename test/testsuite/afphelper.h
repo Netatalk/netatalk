@@ -85,4 +85,11 @@ extern void assert_false(int real, char *file, int line, void (*fn)(),
 #define ASSERT_GT(a, b)     /* a > b  */
 #define ASSERT_GE(a, b)     /* a >= b */
 
+/* Forward declarations */
+typedef struct CONN CONN;
+
+/* Function declarations */
+extern int delete_directory_tree(CONN *conn, uint16_t volume,
+                                 uint32_t parent_did, char *dirname);
+
 #endif

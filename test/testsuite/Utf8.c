@@ -87,6 +87,7 @@ STATIC void test166()
         }
     }
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FPEnumerate_ext(Conn, vol, DIRDID_ROOT, "",
                     (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
                     | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0);
@@ -156,6 +157,7 @@ STATIC void test167()
         }
     }
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FPEnumerate_ext(Conn, vol, DIRDID_ROOT, "",
                     (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
                     | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0);
@@ -206,6 +208,7 @@ STATIC void test181()
     FAIL(FPCloseVol(Conn, vol))
     vol = VolID = FPOpenVol(Conn, Vol);
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, dir1, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |

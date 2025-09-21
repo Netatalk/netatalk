@@ -284,6 +284,7 @@ STATIC void test172()
             tname))
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     /* ---- enumerate.c ---- */
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerate(Conn, vol, tdir, tname,
                       (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                       (1 << FILPBIT_FINFO) |

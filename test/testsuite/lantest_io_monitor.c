@@ -80,7 +80,8 @@ static int32_t process_proc_entry(const char *pid_dir,
                                   const ProcessFilter *filter,
                                   ProcessList *found);
 static void report_multiple_pids(const ProcessFilter *filter,
-                                 const ProcessList *found);
+                                 const ProcessList *found,
+                                 pid_t highest_pid);
 
 /* Helper: Show warning about /proc_io availability */
 static void show_proc_io_warning(const char *specific_issue)
@@ -342,9 +343,10 @@ static int32_t process_proc_entry(const char *pid_dir,
     return 0;
 }
 
-/* Helper: Report multiple PIDs found */
+/* Helper: Report multiple PIDs found and get highest PID */
 static void report_multiple_pids(const ProcessFilter *filter,
-                                 const ProcessList *found)
+                                 const ProcessList *found,
+                                 pid_t highest_pid)
 {
     if (filter->filter_by_cmdline) {
         fprintf(stderr, "Warning: Multiple %s processes with -u %s found (",
@@ -362,7 +364,7 @@ static void report_multiple_pids(const ProcessFilter *filter,
         }
     }
 
-    fprintf(stderr, "), using first: %d\n", found->pids[0]);
+    fprintf(stderr, "), using highest: %d\n", highest_pid);
 }
 
 /* Main Netatalk process find function for IO monitoring */
@@ -431,11 +433,20 @@ pid_t find_process_pid(const char *process_name, const char *username,
         return 0;
     }
 
-    if (found.count > 1) {
-        report_multiple_pids(&filter, &found);
+    /* Find the highest PID */
+    pid_t highest_pid = found.pids[0];
+
+    for (int32_t i = 1; i < found.count; i++) {
+        if (found.pids[i] > highest_pid) {
+            highest_pid = found.pids[i];
+        }
     }
 
-    return found.pids[0];
+    if (found.count > 1) {
+        report_multiple_pids(&filter, &found, highest_pid);
+    }
+
+    return highest_pid;
 }
 
 /* Read IO statistics from /proc_io/<pid>/io file.

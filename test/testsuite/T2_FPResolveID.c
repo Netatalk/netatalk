@@ -616,6 +616,7 @@ STATIC void test412()
 
     FPResolveID(Conn, vol, fid, bitmap);
 
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, dir2, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |

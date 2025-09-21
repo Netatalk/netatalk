@@ -946,6 +946,7 @@ STATIC void test358()
     FAIL(FPSetFilDirParam(Conn, vol, dir, "", bitmap, &filedir))
     FAIL(FPGetFileDirParams(Conn2, vol2, dir, "", bitmap, bitmap))
     bitmap = (1 << FILPBIT_LNAME);
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FAIL(FPEnumerateFull(Conn, vol, 1, 5, 800,  dir, "", bitmap, bitmap))
     FAIL(htonl(AFPERR_ACCESS) != FPEnumerateFull(Conn2, vol2, 1, 5, 800,  dir, "",
             bitmap, bitmap))
