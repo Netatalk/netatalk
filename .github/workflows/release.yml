@@ -13,6 +13,7 @@ permissions: read-all
 env:
   GHCR_REGISTRY: ghcr.io
   REPO: ${{ github.repository }}
+  RELEASE_TAG: ${{ inputs.tag }}
 
 jobs:
   create-source-release:
@@ -24,12 +25,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          ref: ${{ inputs.tag }}
+          ref: $RELEASE_TAG
           fetch-depth: 0
       - name: Get version
         id: get_version
         run: |
-          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ $RELEASE_TAG =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
@@ -37,10 +38,9 @@ jobs:
             MIN_VERSION="${MAJOR}.${MINOR}"
             SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
-            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
           echo "tarball_name=netatalk-${SEM_VERSION}" >> $GITHUB_OUTPUT
@@ -114,7 +114,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ $RELEASE_TAG =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
@@ -122,10 +122,9 @@ jobs:
             MIN_VERSION="${MAJOR}.${MINOR}"
             SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
-            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
@@ -174,7 +173,7 @@ jobs:
       - name: Get version
         id: get_version
         run: |
-          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ $RELEASE_TAG =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
@@ -182,10 +181,9 @@ jobs:
             MIN_VERSION="${MAJOR}.${MINOR}"
             SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
-            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
@@ -225,11 +223,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          ref: ${{ inputs.tag }}
+          ref: $RELEASE_TAG
       - name: Get version
         id: get_version
         run: |
-          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ $RELEASE_TAG =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
@@ -237,10 +235,9 @@ jobs:
             MIN_VERSION="${MAJOR}.${MINOR}"
             SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
-            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
@@ -275,11 +272,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
-          ref: ${{ inputs.tag }}
+          ref: $RELEASE_TAG
       - name: Get version
         id: get_version
         run: |
-          if [[ ${{ inputs.tag }} =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
+          if [[ $RELEASE_TAG =~ ^netatalk-([0-9]+)-([0-9]+)-([0-9]+)(.*)$ ]]; then
             MAJOR=${BASH_REMATCH[1]}
             MINOR=${BASH_REMATCH[2]}
             PATCH=${BASH_REMATCH[3]}
@@ -287,10 +284,9 @@ jobs:
             MIN_VERSION="${MAJOR}.${MINOR}"
             SEM_VERSION="${MAJOR}.${MINOR}.${PATCH}${SUFFIX}"
           else
-            echo "Error: Tag '$TAG' does not match expected format 'netatalk-x-y-z'"
+            echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
-          echo "tag=${TAG}" >> $GITHUB_OUTPUT
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
