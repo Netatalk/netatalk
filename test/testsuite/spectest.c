@@ -332,6 +332,7 @@ int     List = 0;
 int     Mac = 0;
 char    *Test;
 int		Locking;
+int     EmptyVol = 0;
 enum adouble adouble = AD_EA;
 
 char *vers = "AFP3.4";
@@ -369,6 +370,8 @@ void usage(char *av0)
     fprintf(stdout,
             "\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
     fprintf(stdout, "\t-C\tturn off terminal color output\n");
+    fprintf(stdout,
+            "\t-E\tempty test volume between tests (WARNING deletes all user data on volume)\n");
     exit(1);
 }
 
@@ -382,7 +385,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCilmVvXc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567aCEilmVvXc:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -433,6 +436,10 @@ int main(int ac, char **av)
 
         case 'd':
             User2 = strdup(optarg);
+            break;
+
+        case 'E':
+            EmptyVol = 1;
             break;
 
         case 'f' :

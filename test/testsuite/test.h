@@ -184,6 +184,7 @@ extern int Color;
 extern int Interactive;
 extern int Throttle;
 extern int Bigendian;
+extern int EmptyVol;
 
 extern int PassCount;
 extern int FailCount;

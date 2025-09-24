@@ -93,6 +93,7 @@ CONN *Conn;
 int ExitCode = 0;
 int Version = 34;
 int Mac = 0;
+int EmptyVol = 0;
 char Data[300000] = "";
 char    *Vol = "";
 char    *User = "";
@@ -850,15 +851,6 @@ static int cleanup_test_directory(CONN *conn, uint16_t volume, char *dirname)
 }
 
 /* --------------------------------- */
-int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name)
-{
-    return FPGetFileDirParams(conn, volume, did, name,
-                              (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
-                              ,
-                              (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
-                             );
-}
-
 struct async_io_req {
     uint64_t air_count;
     size_t air_size;
