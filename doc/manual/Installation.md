@@ -102,8 +102,6 @@ for daily use.
 
     The SQLite library version 3 enables the SQLite CNID backend
     which is an alternative zero-configuration backend.
-    This backend is **experimental** and should be used only for
-    testing purposes.
 
 ### Optional third-party software
 

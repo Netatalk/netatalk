@@ -143,15 +143,10 @@ controlled by the **cnid_metad** daemon.
 
 This is the most reliable and proven backend for daily use.
 
-### last
+### sqlite
 
-The last backend is an in-memory Trivial Database (tdb). It is not persistent,
-with IDs valid only for the current session. Starting with netatalk 3.0,
-it operates in *read only mode*. This backend is useful e.g. for
-mounting CD-ROMs, or for automated testing.
-
-This is basically equivalent to how **afpd** stored CNID data in netatalk
-1.5 and earlier.
+A performant and lean CNID database backend that uses the SQLite v3
+embedded database engine.
 
 ### mysql
 
@@ -161,13 +156,15 @@ to connect to it over the network.
 
 See **afp.conf**(5) for documentation of the configuration options.
 
-### sqlite
+### last
 
-A zero-configuration database backend that uses the SQLite v3
-embedded database engine.
+The last backend is an in-memory Trivial Database (tdb). It is not persistent,
+with IDs valid only for the current session. Starting with netatalk 3.0,
+it operates in *read only mode*. This backend is useful e.g. for
+mounting CD-ROMs, or for automated testing.
 
-This backend is considered experimental and should only be used
-for testing.
+This is basically equivalent to how **afpd** stored CNID data in netatalk
+1.5 and earlier.
 
 ## Charsets/Unicode
 
