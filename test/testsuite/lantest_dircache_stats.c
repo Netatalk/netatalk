@@ -195,25 +195,34 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer,
 static char *find_dircache_stats_line(const char *buffer, size_t bytes_read)
 {
     char *stats_line = NULL;
-    /* Search backwards through buffer for the LAST dircache statistics line */
-    char *current = (char *)buffer + bytes_read;
+    /* Make a working copy of the buffer to avoid const issues */
+    char *work_buffer = malloc(bytes_read + 1);
 
-    while (current > buffer) {
+    if (!work_buffer) {
+        return NULL;
+    }
+
+    memcpy(work_buffer, buffer, bytes_read);
+    work_buffer[bytes_read] = '\0';
+    /* Search backwards through buffer for the LAST dircache statistics line */
+    char *current = work_buffer + bytes_read;
+
+    while (current > work_buffer) {
         /* Find end of previous line */
         char *line_end = current - 1;
 
-        while (line_end >= buffer && *line_end == '\n') {
+        while (line_end >= work_buffer && *line_end == '\n') {
             line_end--;
         }
 
-        if (line_end < buffer) {
+        if (line_end < work_buffer) {
             break;
         }
 
         /* Find start of this line */
         char *line_start = line_end;
 
-        while (line_start > buffer && *(line_start - 1) != '\n') {
+        while (line_start > work_buffer && *(line_start - 1) != '\n') {
             line_start--;
         }
 
@@ -234,6 +243,7 @@ static char *find_dircache_stats_line(const char *buffer, size_t bytes_read)
         current = line_start;
     }
 
+    free(work_buffer);
     return stats_line;
 }
 
@@ -245,27 +255,37 @@ static void display_last_log_lines(const char *buffer, size_t bytes_read)
     printf("(At least 'log level = default:info' is required)\n");
     printf("Last 10 lines of log file:\n");
     printf("---------------------------\n");
+    /* Make a working copy of the buffer to avoid const issues */
+    char *work_buffer = malloc(bytes_read + 1);
+
+    if (!work_buffer) {
+        printf("Memory allocation failed\n");
+        return;
+    }
+
+    memcpy(work_buffer, buffer, bytes_read);
+    work_buffer[bytes_read] = '\0';
     /* Search backwards through buffer for last 10 lines */
     char *last_lines[MAX_LOG_LINES_DISPLAY] = {NULL};
     int line_count = 0;
-    char *curr = (char *)buffer + bytes_read;
+    char *curr = work_buffer + bytes_read;
 
-    while (curr > buffer && line_count < MAX_LOG_LINES_DISPLAY) {
+    while (curr > work_buffer && line_count < MAX_LOG_LINES_DISPLAY) {
         /* Find end of previous line */
         char *l_end = curr - 1;
 
-        while (l_end >= buffer && *l_end == '\n') {
+        while (l_end >= work_buffer && *l_end == '\n') {
             l_end--;
         }
 
-        if (l_end < buffer) {
+        if (l_end < work_buffer) {
             break;
         }
 
         /* Find start of this line */
         char *l_start = l_end;
 
-        while (l_start > buffer && *(l_start - 1) != '\n') {
+        while (l_start > work_buffer && *(l_start - 1) != '\n') {
             l_start--;
         }
 
@@ -285,12 +305,13 @@ static void display_last_log_lines(const char *buffer, size_t bytes_read)
         curr = l_start;
     }
 
+    free(work_buffer);
+
     /* Print the last lines in correct order (reverse read order) */
     for (int i = line_count - 1; i >= 0; i--) {
         if (last_lines[i]) {
             /* Get length while pointer is known to be non-NULL */
-            size_t len = strlen(
-                             last_lines[i]); /* NOSONAR: Pointer verified non-NULL in enclosing if statement */
+            size_t len = strlen(last_lines[i]); // NOSONAR: Pointer verified non-NULL
             printf("%s", last_lines[i]);
 
             /* Add newline if not present */
@@ -335,8 +356,7 @@ static void display_dircache_statistics(void)
 
     if (stats_line) {
         /* Get length while pointer is known to be non-NULL */
-        size_t len = strlen(
-                         stats_line); /* NOSONAR: Pointer verified non-NULL in enclosing if statement */
+        size_t len = strlen(stats_line); // NOSONAR: Pointer verified non-NULL
         printf("%s", stats_line);
 
         if (len > 0 && stats_line[len - 1] != '\n') {
