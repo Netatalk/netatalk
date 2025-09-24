@@ -1080,25 +1080,19 @@ cnid scheme = *backend* **(V)**
 Run **afpd -v** to see a list of available backends,
 as well as which one is the default.
 >
-> *dbd* is a zero-configuration, full-featured, and reliable backend
-using Berkeley DB, where database access is managed through
-the **cnid_dbd** daemon.
+> *dbd* uses Berkeley DB, with database reads and writes managed through the **cnid_dbd** daemon.
+It is recommended for most deployments.
 >
-> The *last* backend uses a read-only, in-memory Trivial Database.
-It can be used to mount CD-ROMs and similar read-only media, for instance.
+> The *sqlite* backend uses the SQLite embedded database library.
+It is performant and lean, requiring no external database or daemon.
 >
 > The *mysql* backend requires that a MySQL (or MariaDB) database instance
 has been provisioned for use with Netatalk.
 The upside is that you get full control over how the CNID data is stored,
 which makes for a robust and scalable solution.
 >
-> The EXPERIMENTAL *sqlite* backend is a zero-configuration backend
-that uses the SQLite library. It is performant and lean, requiring
-no external database or daemon.
->
-> ***WARNING:*** The *sqlite* backend should only be used for testing purposes
-and not in a production setting.
-Please take a backup of your data before enabling this backend.
+> The *last* backend uses a read-only, in-memory Trivial Database.
+It can be used to mount CD-ROMs and similar read-only media, for instance.
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 
