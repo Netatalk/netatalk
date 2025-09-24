@@ -13,9 +13,8 @@
  * GNU General Public License for more details.
  */
 
-#include "specs.h"
-
 /* Standard C library includes */
+#include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -37,11 +36,13 @@
 
 /* Netatalk library includes */
 #include "afpclient.h"
-#include "test.h"
 #include "afphelper.h"
+#include "specs.h"
+#include "test.h"
 
 /* Platform-specific includes */
 #ifdef __linux__
+#include "lantest_dircache_stats.c"
 #include "lantest_io_monitor.h"
 #endif
 
@@ -574,7 +575,8 @@ static void result_print_summary(uint64_t
     /* Print aggregates summary */
     if (!is_csv) {
         fprintf(stdout, "\nAggregates Summary:\n");
-        fprintf(stdout, "-------------------\n");
+        fprintf(stdout,
+                "------------------------------------------------------------------\n");
         /* Calculate average time per AFP OP */
         double avg_time_per_op = column_sums[MEASURE_TIME_MS] / (double)TOTAL_AFP_OPS;
         fprintf(stdout, "Average Time per AFP OP: %.3f ms\n", avg_time_per_op);
@@ -591,10 +593,7 @@ static void result_print_summary(uint64_t
 
 #endif
         fprintf(stdout,
-                "Aggregate values are purely Intrinsic Metrics, as AFP operations are a mixture of reads, writes, and connection related operations.\n");
-        fprintf(stdout,
                 "See afp_lantest manpage for more information: https://netatalk.io/manual/en/afp_lantest.1\n");
-        fprintf(stdout, "\n");
     }
 }
 
@@ -2216,6 +2215,31 @@ int main(int32_t ac, char **av)
         clean_exit(ExitCode);
     }
 
+    /* Close DSI connection to trigger dircache stats output in server logs */
+    if (Conn) {
+        /* Properly close the AFP session */
+        FPLogOut(Conn);
+
+        /* Close the socket */
+        if (Conn->dsi.socket >= 0) {
+            CloseClientSocket(Conn->dsi.socket);
+            Conn->dsi.socket = -1;
+        }
+    }
+
+    /* Display test results */
     displayresults();
+#ifdef __linux__
+
+    /* Retrieve and display dircache statistics from log file */
+    if (io_monitoring_enabled) {
+        /* Additional wait to ensure logs are flushed */
+        sleep(1);
+        /* Display dircache statistics from log file */
+        display_dircache_statistics();
+        fprintf(stdout, "\n");
+    }
+
+#endif
     clean_exit(ExitCode);
 }

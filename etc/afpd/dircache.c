@@ -613,15 +613,30 @@ int dircache_init(int reqsize)
 }
 
 /*!
- * Log dircache statistics
+ * @brief Log dircache statistics
+ *
+ * Includes hit ratio percentage for monitoring cache effectiveness.
  */
 void log_dircache_stat(void)
 {
+    double hit_ratio = 0.0;
+
+    if (dircache_stat.lookups > 0) {
+        hit_ratio = (double)dircache_stat.hits / dircache_stat.lookups * 100.0;
+    }
+
+    /* Get username from AFPobj if available */
+    extern AFPObj *AFPobj;
+    const char *username = (AFPobj
+                            && AFPobj->username) ? AFPobj->username : "unknown";
     LOG(log_info, logtype_afpd,
-        "dircache statistics: entries: %lu, lookups: %llu, hits: %llu, misses: %llu, added: %llu, removed: %llu, expunged: %llu, evicted: %llu",
+        "dircache statistics: (user: %s) "
+        "entries: %lu, lookups: %llu, hits: %llu (%.1f%%), misses: %llu, "
+        "added: %llu, removed: %llu, expunged: %llu, evicted: %llu",
+        username,
         queue_count,
         dircache_stat.lookups,
-        dircache_stat.hits,
+        dircache_stat.hits, hit_ratio,
         dircache_stat.misses,
         dircache_stat.added,
         dircache_stat.removed,
