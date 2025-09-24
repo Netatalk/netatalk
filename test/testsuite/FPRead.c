@@ -1,17 +1,9 @@
 /* ----------------------------------------------
 */
 #include "specs.h"
+#include "afphelper.h"
 
-/* --------------------------------- */
-static int is_there(CONN *conn, int did, char *name)
-{
-    uint16_t vol = VolID;
-    return FPGetFileDirParams(conn, vol, did, name,
-                              (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
-                              ,
-                              (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
-                             );
-}
+int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
 
 /* ------------------------- */
 STATIC void test5()
@@ -615,7 +607,7 @@ void test328()
     size = min(65536, dsi->server_quantum);
     data = calloc(1, size);
 
-    if (ntohl(AFPERR_NOOBJ) != is_there(Conn, DIRDID_ROOT, ndir)) {
+    if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, DIRDID_ROOT, ndir)) {
         test_nottested();
         goto fin;
     }
@@ -631,7 +623,7 @@ void test328()
         goto fin;
     }
 
-    if (ntohl(AFPERR_NOOBJ) != is_there(Conn, dir, "File.big")) {
+    if (ntohl(AFPERR_NOOBJ) != is_there(Conn, VolID, dir, "File.big")) {
         test_failed();
         goto fin1;
     }
@@ -650,7 +642,7 @@ void test328()
     /* --------------- */
     strcpy(temp, "File.big");
 
-    if (is_there(Conn, dir, temp)) {
+    if (is_there(Conn, VolID, dir, temp)) {
         test_failed();
         goto fin1;
     }
@@ -695,7 +687,7 @@ void test328()
         }
     }
 
-    if (is_there(Conn, dir, temp)) {
+    if (is_there(Conn, VolID, dir, temp)) {
         test_failed();
     }
 

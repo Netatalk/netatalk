@@ -2,6 +2,7 @@
 */
 
 #include "specs.h"
+#include "afphelper.h"
 
 static int CurTestResult;
 static char *Why;
@@ -165,6 +166,14 @@ void test_nottested(void)
 /* ------------------------- */
 void enter_test(void)
 {
+    if (EmptyVol) {
+        clear_volume(VolID, Conn);
+
+        if (Conn2) {
+            clear_volume(VolID, Conn2);
+        }
+    }
+
     CurTestResult = 0;
     Why = "";
 }

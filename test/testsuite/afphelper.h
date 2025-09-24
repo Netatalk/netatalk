@@ -58,7 +58,9 @@ extern int delete_folder_with_file(uint16_t vol, int did, char *name,
 extern int get_vol_attrib(uint16_t vol);
 extern int group_folder(uint16_t vol, int did, char *name);
 extern unsigned int get_vol_free(uint16_t vol);
+extern int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
 extern int delete_directory_tree(CONN *conn, uint16_t volume,
                                  uint32_t parent_did, char *dirname);
+extern void clear_volume(uint16_t vol, CONN *conn);
 
 #endif

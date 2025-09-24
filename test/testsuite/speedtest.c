@@ -7,12 +7,16 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "afphelper.h"
+
 /* For compiling os OS X */
 #ifndef MAP_ANONYMOUS
 #ifdef MAP_ANON
 #define MAP_ANONYMOUS MAP_ANON
 #endif
 #endif
+
+int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
 
 uint16_t VolID;
 uint16_t VolID2;
@@ -57,6 +61,7 @@ static int Direct = 0;
 /* not used */
 CONN *Conn2;
 int  Mac = 0;
+int EmptyVol = 0;
 int PassCount = 0;
 int FailCount = 0;
 int SkipCount = 0;
@@ -539,16 +544,6 @@ static void press_enter(char *s)
 
     while (fgetc(stdin) != '\n')
         ;
-}
-
-/* --------------------------------- */
-int is_there(CONN *conn, uint16_t vol, int did, char *name)
-{
-    return VFS.getfiledirparams(conn, vol, did, name,
-                                (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
-                                ,
-                                (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
-                               );
 }
 
 /* ------------------ */

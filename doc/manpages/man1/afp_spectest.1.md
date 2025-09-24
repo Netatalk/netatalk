@@ -4,7 +4,7 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCilmVvX] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+**afp_spectest** [-1234567aCEilmVvX] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
 [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
 
 # Description
@@ -49,6 +49,11 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 **-d** *user*
 : Second username for authentication
+
+**-E**
+: Empty the test volume before running tests
+
+> ***WARNING:*** This will delete all files and directories in the test volume!
 
 **-f** *test*
 : Specify test or testset to run

@@ -936,6 +936,15 @@ void afp_printf(int level, int loglevel, int color, const char *fmt, ...)
     afp_print_postfix(level, color);
 }
 
+int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name)
+{
+    return FPGetFileDirParams(conn, volume, did, name,
+                              (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
+                              ,
+                              (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID)
+                             );
+}
+
 /*!
  * @brief depth-first recursively delete a directory tree
  *
@@ -1136,4 +1145,51 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
     }
 
     return (ret == AFP_OK) ? 0 : -1;
+}
+
+void clear_volume(uint16_t vol, CONN *conn)
+{
+    uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_PDID);
+    uint32_t dir_id = DIRDID_ROOT;
+    struct afp_filedir_parms filedir;
+    int ofs = 3 * sizeof(uint16_t);
+
+    while (1) {
+        int ret = FPEnumerate(conn, vol, dir_id, "", bitmap, bitmap);
+
+        if (ret != AFP_OK) {
+            break;
+        }
+
+        afp_filedir_unpack(&filedir, conn->dsi.data + ofs, 0, bitmap);
+
+        if (filedir.isdir) {
+            int result = delete_directory_tree(conn, vol, DIRDID_ROOT, filedir.lname);
+
+            if (result == 0) {
+                if (!Quiet) {
+                    fprintf(stdout, "deleted test directory '%s'\n", filedir.lname);
+                }
+            } else {
+                result = FPDelete(conn, vol, DIRDID_ROOT, filedir.lname);
+
+                if (result == AFP_OK && !Quiet) {
+                    fprintf(stdout, "deleted test directory '%s' (on retry)\n",
+                            filedir.lname);
+                }
+
+                if (is_there(conn, vol, DIRDID_ROOT, filedir.lname) != AFP_OK && !Quiet) {
+                    fprintf(stdout, "could not delete directory '%s' because it no longer exists\n",
+                            filedir.lname);
+                }
+
+                if (!Quiet) {
+                    fprintf(stdout, "failed to delete test directory '%s'\n",
+                            filedir.lname);
+                }
+            }
+        } else {
+            FPDelete(conn, vol, dir_id, filedir.lname);
+        }
+    }
 }

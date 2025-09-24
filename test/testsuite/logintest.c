@@ -31,6 +31,7 @@ char    *Path;
 int     Version = 34;
 int     List = 0;
 int     Mac = 0;
+int     EmptyVol = 0;
 char    *Test;
 static char  *vers = "AFP3.4";
 
