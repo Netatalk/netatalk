@@ -622,7 +622,8 @@ void log_dircache_stat(void)
     double hit_ratio = 0.0;
 
     if (dircache_stat.lookups > 0) {
-        hit_ratio = (double)dircache_stat.hits / dircache_stat.lookups * 100.0;
+        hit_ratio = ((double)dircache_stat.hits / (double)dircache_stat.lookups) *
+                    100.0;
     }
 
     /* Get username from AFPobj if available */
