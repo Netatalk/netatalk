@@ -172,11 +172,17 @@ static int32_t init_process_filter(ProcessFilter *filter,
         }
 
         filter->target_uid = pwd->pw_uid;
-        fprintf(stdout, "Looking for %s processes owned by user '%s' (UID: %u)\n",
-                process_name, username, filter->target_uid);
+
+        if (Debug) {
+            fprintf(stderr,
+                    "DEBUG: Looking for %s processes owned by user '%s' (UID: %u)\n",
+                    process_name, username, filter->target_uid);
+        }
     } else {
-        fprintf(stdout, "Looking for %s processes with -u %s in command line\n",
-                process_name, username);
+        if (Debug) {
+            fprintf(stderr, "DEBUG: Looking for %s processes with -u %s in command line\n",
+                    process_name, username);
+        }
     }
 
     return 0;
@@ -592,7 +598,8 @@ void init_io_monitoring(const char *username)
                                     1);  /* Filter -u argument */
 
     if (cnid_dbd_pid > 0) {
-        fprintf(stdout, "Found cnid_dbd process: PID %d\n", cnid_dbd_pid);
+        fprintf(stdout, "Found cnid_dbd process for user '%s': PID %d\n", username,
+                cnid_dbd_pid);
     } else {
         fprintf(stdout, "cnid_dbd not found (optional), continuing...\n");
         cnid_dbd_pid = 0;  /* Explicitly set to 0 */
@@ -622,7 +629,8 @@ void init_io_monitoring(const char *username)
     }
 
     if (afpd_pid > 0) {
-        fprintf(stdout, "Found privilege-dropped afpd process: PID %d\n", afpd_pid);
+        fprintf(stdout, "Found privilege-dropped afpd process for user '%s': PID %d\n",
+                username, afpd_pid);
     } else {
         fprintf(stderr, "Error: afpd process not found (mandatory)\n");
     }
