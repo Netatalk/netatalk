@@ -401,8 +401,7 @@ jobs:
             iniparser \
             mariadb \
             meson \
-            openldap \
-            sqlite
+            openldap
       - name: Configure
         run: |
           meson setup build \
