@@ -794,8 +794,17 @@ char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
     static char	path[MAXPATHLEN + 1];
     char	*p;
     unsigned int i;
-    strcpy(path, vol->v_dbpath);
-    strcat(path, "/" APPLEDESKTOP "/");
+
+    if (vol == NULL || vol->v_dbpath == NULL) {
+        LOG(log_error, logtype_afpd, "dtfile: bad volume parameter");
+        return NULL;
+    }
+
+    if (snprintf(path, MAXPATHLEN + 1, "%s/" APPLEDESKTOP "/",
+                 vol->v_dbpath) >= MAXPATHLEN + 1) {
+        LOG(log_error, logtype_afpd, "dtfile: path too long");
+        return NULL;
+    }
 
     for (p = path; *p != '\0'; p++)
         ;
