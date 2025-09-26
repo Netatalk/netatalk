@@ -1,12 +1,46 @@
+/*
+ * Copyright (c) 2025, Andy Lemin (andylemin)
+ * Credits; Based on work by Netatalk contributors
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/* Configuration header (must be first) */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 /* Standard C library includes */
+#include <stdio.h>
+
+#ifdef __linux__
+
+/* Standard C library includes for Linux implementation */
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+
+/* Netatalk includes for INIPARSER_GETSTRDUP macro */
+#include <atalk/globals.h>
+
+/* Iniparser includes */
+#ifdef HAVE_INIPARSER_INIPARSER_H
+#include <iniparser/iniparser.h>
+#else
+#include <iniparser.h>
+#endif
 
 /* External globals from lantest.c */
 extern bool Debug;
@@ -14,7 +48,6 @@ extern bool Debug;
 /* Constants */
 #define LOG_BUFFER_SIZE (100 * 1024)  /* 100KB buffer for reading log file */
 #define MAX_LOG_LINES_DISPLAY 10      /* Number of log lines to show when no stats found */
-#define CONFIG_LINE_SIZE 1024         /* Max line size for config file parsing */
 
 /* Debug logging macro */
 #define DEBUG_LOG(fmt, ...) \
@@ -23,112 +56,52 @@ extern bool Debug;
             fprintf(stderr, "DEBUG: " fmt "\n", ##__VA_ARGS__); \
     } while(0)
 
-#ifdef __linux__
-
 /* Parse netatalk config file to extract log file path */
 static char *parse_config_for_log_path(void)
 {
-    FILE *config_fp = NULL;
+    dictionary *iniconfig = NULL;
     char *log_file_path = NULL;
-    const char *config_paths[] = {
-        "/etc/afp.conf",
-        "/etc/netatalk/afp.conf",
-        "/usr/local/etc/afp.conf",
-        "/usr/local/etc/netatalk/afp.conf",
-        NULL
-    };
+    DEBUG_LOG("Loading config file: %safp.conf", _PATH_CONFDIR);
+    /* Load the config file using iniparser */
+    iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
 
-    for (int i = 0; config_paths[i] != NULL; i++) {
-        DEBUG_LOG("Trying to open config file: %s", config_paths[i]);
+    if (!iniconfig) {
+        fprintf(stderr, "INFO: Could not load config file: %safp.conf\n",
+                _PATH_CONFDIR);
+        return NULL;
+    }
 
-        if (access(config_paths[i], F_OK) != 0) {
-            DEBUG_LOG("Config file does not exist: %s", config_paths[i]);
-            continue;
-        }
+    /* Get the log file value from the Global section */
+    log_file_path = INIPARSER_GETSTRDUP(iniconfig, INISEC_GLOBAL, "log file", NULL);
 
-        if (access(config_paths[i], R_OK) != 0) {
-            DEBUG_LOG("Config file exists but not readable: %s", config_paths[i]);
-            continue;
-        }
+    if (log_file_path && *log_file_path != '\0') {
+        DEBUG_LOG("Found log file path: %s", log_file_path);
+    } else {
+        DEBUG_LOG("No 'log file' configuration found in Global section");
 
-        config_fp = fopen(config_paths[i], "r");
-
-        if (config_fp) {
-            DEBUG_LOG("Successfully opened config file: %s", config_paths[i]);
-            char line[CONFIG_LINE_SIZE];
-
-            while (fgets(line, sizeof(line), config_fp)) {
-                /* Look for "log file = " directive */
-                char *ptr = strstr(line, "log file");
-
-                if (ptr) {
-                    ptr = strchr(ptr, '=');
-
-                    if (ptr) {
-                        ptr++;
-
-                        /* Extract path */
-                        while (*ptr && (*ptr == ' ' || *ptr == '\t')) {
-                            ptr++;
-                        }
-
-                        char *end = ptr;
-
-                        while (*end && *end != '\n' && *end != '\r' && *end != '#') {
-                            end++;
-                        }
-
-                        if (end > ptr) {
-                            *end = '\0';
-                            end--;
-
-                            while (end > ptr && (*end == ' ' || *end == '\t')) {
-                                *end = '\0';
-                                end--;
-                            }
-
-                            if (ptr && *ptr != '\0') {
-                                DEBUG_LOG("Found log file path: %s", ptr);
-                                log_file_path = strdup(ptr);
-
-                                if (!log_file_path) {
-                                    fprintf(stderr, "ERROR: strdup() failed for log_file_path\n");
-                                    fclose(config_fp);
-                                    return NULL;
-                                }
-
-                                break;
-                            } else {
-                                fprintf(stderr, "WARNING: Log file path was empty after trimming\n");
-                            }
-                        } else {
-                            fprintf(stderr, "WARNING: No content after '=' in log file line\n");
-                        }
-                    } else {
-                        fprintf(stderr, "WARNING: No '=' found in log file line\n");
-                    }
-                }
-            }
-
-            fclose(config_fp);
-
-            if (log_file_path) {
-                break;
-            }
-        } else {
-            fprintf(stderr, "ERROR: Failed to open config file: %s (errno=%d: %s)\n",
-                    config_paths[i], errno, strerror(errno));
+        if (log_file_path) {
+            free(log_file_path);
+            log_file_path = NULL;
         }
     }
 
+    /* Free the iniparser dictionary */
+    iniparser_freedict(iniconfig);
     return log_file_path;
 }
 
-/* Read the last portion of log file into buffer */
-static ssize_t read_log_tail(const char *log_file_path, char *buffer,
-                             size_t buffer_size)
+/* Read the last portion of log file into buffer
+ * Buffer must be at least LOG_BUFFER_SIZE + 1 bytes */
+static ssize_t read_log_tail(const char *log_file_path, char *buffer)
 {
     FILE *log_fp = NULL;
+
+    /* Validate input parameters */
+    if (!buffer) {
+        fprintf(stderr, "ERROR: Buffer is NULL\n");
+        return -1;
+    }
+
     DEBUG_LOG("Opening log file: %s", log_file_path);
     log_fp = fopen(log_file_path, "rb");
 
@@ -164,10 +137,11 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer,
         return 0;
     }
 
-    /* Read from the end, up to buffer_size */
-    long read_start = (file_size > (long)buffer_size) ? (file_size -
-                      (long)buffer_size) : 0;
-    size_t read_size = (file_size > (long)buffer_size) ? buffer_size :
+    /* Read from the end, up to LOG_BUFFER_SIZE to reserve space for null terminator */
+    size_t max_read = LOG_BUFFER_SIZE;
+    long read_start = (file_size > (long)max_read) ? (file_size -
+                      (long)max_read) : 0;
+    size_t read_size = (file_size > (long)max_read) ? max_read :
                        (size_t)file_size;
     DEBUG_LOG("Reading %zu bytes from position: %ld", read_size, read_start);
 
@@ -186,6 +160,16 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer,
         return -1;
     }
 
+    /* Simple validation - fread cannot return more than requested */
+    if (bytes_read > read_size) {
+        fprintf(stderr, "ERROR: fread returned more bytes than requested\n");
+        fclose(log_fp);
+        return -1;
+    }
+
+    /* Null-terminate the buffer
+     * Since read_size <= LOG_BUFFER_SIZE and bytes_read <= read_size,
+     * we know bytes_read <= LOG_BUFFER_SIZE, so this is always safe */
     buffer[bytes_read] = '\0';
     fclose(log_fp);
     return (ssize_t)bytes_read;
@@ -195,6 +179,12 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer,
 static char *find_dircache_stats_line(const char *buffer, size_t bytes_read)
 {
     char *stats_line = NULL;
+
+    /* Validate bytes_read before using for allocation */
+    if (bytes_read == 0 || bytes_read > LOG_BUFFER_SIZE) {
+        return NULL;
+    }
+
     /* Make a working copy of the buffer to avoid const issues */
     char *work_buffer = malloc(bytes_read + 1);
 
@@ -255,6 +245,13 @@ static void display_last_log_lines(const char *buffer, size_t bytes_read)
     printf("(At least 'log level = default:info' is required)\n");
     printf("Last 10 lines of log file:\n");
     printf("---------------------------\n");
+
+    /* Validate bytes_read before using for allocation */
+    if (bytes_read == 0 || bytes_read > LOG_BUFFER_SIZE) {
+        printf("Invalid buffer size\n");
+        return;
+    }
+
     /* Make a working copy of the buffer to avoid const issues */
     char *work_buffer = malloc(bytes_read + 1);
 
@@ -324,12 +321,9 @@ static void display_last_log_lines(const char *buffer, size_t bytes_read)
     }
 }
 
-#endif /* __linux__ */
-
 /* Read and display dircache statistics from log file */
-static void display_dircache_statistics(void)
+void display_dircache_statistics(void)
 {
-#ifdef __linux__
     char *log_file_path = NULL;
     char *stats_line = NULL;
     static char buffer[LOG_BUFFER_SIZE + 1];
@@ -343,9 +337,16 @@ static void display_dircache_statistics(void)
     }
 
     DEBUG_LOG("Log file path: %s", log_file_path);
-    bytes_read = read_log_tail(log_file_path, buffer, LOG_BUFFER_SIZE);
+    bytes_read = read_log_tail(log_file_path, buffer, sizeof(buffer));
 
     if (bytes_read <= 0) {
+        free(log_file_path);
+        return;
+    }
+
+    /* Validate bytes_read is positive and reasonable before casting */
+    if (bytes_read < 0 || bytes_read > LOG_BUFFER_SIZE) {
+        fprintf(stderr, "ERROR: Invalid bytes_read value: %zd\n", bytes_read);
         free(log_file_path);
         return;
     }
@@ -369,7 +370,14 @@ static void display_dircache_statistics(void)
     }
 
     free(log_file_path);
-#else
-    /* Not on Linux, function not available */
-#endif /* __linux__ */
 }
+
+#else /* !__linux__ */
+
+/* Stub implementation for non-Linux systems */
+void display_dircache_statistics(void)
+{
+    /* Not available on this platform */
+}
+
+#endif /* __linux__ */
