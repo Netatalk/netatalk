@@ -13,6 +13,19 @@
  * GNU General Public License for more details.
  */
 
+/* Feature test macros for strdup and other POSIX functions - MUST be before any includes */
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#ifndef _DEFAULT_SOURCE
+#define _DEFAULT_SOURCE
+#endif
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200112L
+#endif
+
+#include "specs.h"
+
 /* Standard C library includes */
 #include <errno.h>
 #include <getopt.h>
@@ -37,12 +50,11 @@
 /* Netatalk library includes */
 #include "afpclient.h"
 #include "afphelper.h"
-#include "specs.h"
 #include "test.h"
 
 /* Platform-specific includes */
 #ifdef __linux__
-#include "lantest_dircache_stats.c"
+#include "lantest_dircache_stats.h"
 #include "lantest_io_monitor.h"
 #endif
 
@@ -1179,7 +1191,7 @@ void run_test(const int32_t dir)
             clean_exit(ERROR_THREAD_OPERATIONS);
         }
 
-        active_thread = 1;  /* Mark thread as active */
+        active_thread = true;  /* Mark thread as active */
 #ifdef __linux__
         capture_io_values(TEST_START);
 #endif
@@ -1202,7 +1214,7 @@ void run_test(const int32_t dir)
             clean_exit(ERROR_THREAD_OPERATIONS);
         }
 
-        active_thread = 0;  /* Thread successfully joined */
+        active_thread = false;  /* Thread successfully joined */
 
         if (FPCloseFork(Conn, fork)) {
             clean_exit(ERROR_NETWORK_PROTOCOL);
@@ -2019,9 +2031,9 @@ int main(int32_t ac, char **av)
     }
 
     if (User[0] == '\0') {
+        uid_t uid = geteuid();
         struct passwd pwd;
         struct passwd *result = NULL;
-        uid_t uid = geteuid();
         char buf[1024];
         int32_t ret;
         ret = getpwuid_r(uid, &pwd, buf, sizeof(buf), &result);
