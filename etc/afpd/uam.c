@@ -311,39 +311,37 @@ struct passwd *uam_getname(void *private, char *name, const int len)
     return pwent ? getpwnam(name) : NULL;
 }
 
-int uam_checkuser(const struct passwd *pwd)
+int uam_checkuser(void *private, const struct passwd *pwd)
 {
-#if !defined(DISABLE_SHELLCHECK)
+    const AFPObj *obj = private;
     const char *p;
-#endif /* DISABLE_SHELLCHECK */
 
     if (!pwd) {
         return -1;
     }
 
-#if !defined(DISABLE_SHELLCHECK)
+    if (obj && obj->options.flags & OPTION_VALID_SHELLCHECK) {
+        if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
+            LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell",
+                pwd->pw_name);
+            return -1;
+        }
 
-    if (!pwd->pw_shell || (*pwd->pw_shell == '\0')) {
-        LOG(log_info, logtype_afpd, "uam_checkuser: User %s does not have a shell",
-            pwd->pw_name);
-        return -1;
-    }
+        while ((p = getusershell())) {
+            if (strcmp(p, pwd->pw_shell) == 0) {
+                break;
+            }
+        }
 
-    while ((p = getusershell())) {
-        if (strcmp(p, pwd->pw_shell) == 0) {
-            break;
+        endusershell();
+
+        if (!p) {
+            LOG(log_info, logtype_afpd, "illegal shell %s for %s", pwd->pw_shell,
+                pwd->pw_name);
+            return -1;
         }
     }
 
-    endusershell();
-
-    if (!p) {
-        LOG(log_info, logtype_afpd, "illegal shell %s for %s", pwd->pw_shell,
-            pwd->pw_name);
-        return -1;
-    }
-
-#endif /* DISABLE_SHELLCHECK */
     return 0;
 }
 

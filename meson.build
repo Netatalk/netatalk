@@ -2128,14 +2128,6 @@ if get_option('with-debugging')
 endif
 
 #
-# Check for optional valid-shell-check support
-#
-
-if not get_option('with-shell-check')
-    cdata.set('DISABLE_SHELLCHECK', 1)
-endif
-
-#
 # Variable substitution
 #
 

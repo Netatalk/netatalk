@@ -462,7 +462,7 @@ static int pam_printer(char *start, char *stop, char *username,
         return -1;
     }
 
-    if (uam_checkuser(pwd) < 0) {
+    if (uam_checkuser(NULL, pwd) < 0) {
         /* syslog of error happens in uam_checkuser */
         free(PAM_password);
         PAM_password = NULL;

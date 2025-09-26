@@ -229,8 +229,10 @@ struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
     return pwent ? getpwnam(name) : NULL;
 }
 
-
-int uam_checkuser(const struct passwd *pwd)
+/* FIXME: the ability to disable valid shellcheck at papd runtime
+ * which will first require implementation in papd.conf
+ * and then propagation of the option flag here */
+int uam_checkuser(void *private _U_, const struct passwd *pwd)
 {
     char *p;
 
@@ -245,7 +247,6 @@ int uam_checkuser(const struct passwd *pwd)
     }
 
     endusershell();
-#ifndef DISABLE_SHELLCHECK
 
     if (!p) {
         LOG(log_info, logtype_papd, "illegal shell %s for %s", pwd->pw_shell,
@@ -253,8 +254,5 @@ int uam_checkuser(const struct passwd *pwd)
         return -1;
     }
 
-#endif /* DISABLE_SHELLCHECK */
     return 0;
 }
-
-

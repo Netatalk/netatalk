@@ -482,7 +482,7 @@ static int gss_logincont(void *obj,
         return AFPERR_NOTAUTH;
     }
 
-    if (uam_checkuser(pwd) < 0) {
+    if (uam_checkuser(obj, pwd) < 0) {
         LOG_LOGINCONT(log_info, "`%s'' not a valid user", username);
         return AFPERR_NOTAUTH;
     }

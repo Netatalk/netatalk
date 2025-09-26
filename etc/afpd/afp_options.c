@@ -110,12 +110,6 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("    Valid shell checks:\t");
-#ifndef DISABLE_SHELLCHECK
-    puts("Yes");
-#else
-    puts("No");
-#endif
     printf("      cracklib support:\t");
 #ifdef USE_CRACKLIB
     puts("Yes");
