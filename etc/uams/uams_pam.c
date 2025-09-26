@@ -157,6 +157,12 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
         return AFPERR_NOTAUTH;
     }
 
+    if (uam_checkuser(NULL, pwd) < 0) {
+        free(PAM_password);
+        PAM_password = NULL;
+        return AFPERR_NOTAUTH;
+    }
+
     LOG(log_info, logtype_uams, "cleartext login: %s", username);
     PAM_username = username;
     PAM_password = ibuf; /* Set these things up for the conv function */
