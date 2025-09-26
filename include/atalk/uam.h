@@ -88,7 +88,7 @@ extern UAM_MODULE_EXPORT void uam_unregister(const int, const char *);
 
 /* helper functions */
 extern UAM_MODULE_EXPORT struct passwd *uam_getname(void *, char *, const int);
-extern UAM_MODULE_EXPORT int uam_checkuser(const struct passwd *);
+extern UAM_MODULE_EXPORT int uam_checkuser(void *, const struct passwd *);
 
 /* afp helper functions */
 extern UAM_MODULE_EXPORT int uam_afp_read(void *, char *, size_t *,

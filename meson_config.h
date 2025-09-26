@@ -31,9 +31,6 @@
 /* Default CNID scheme to be used */
 #mesondefine DEFAULT_CNID_SCHEME
 
-/* Define if shell check should be disabled */
-#mesondefine DISABLE_SHELLCHECK
-
 /* Available Extended Attributes modules */
 #mesondefine EA_MODULES
 

@@ -89,7 +89,7 @@ static int pwd_login(void *obj, char *username, int ulen,
 
     LOG(log_info, logtype_uams, "dhx login: %s", username);
 
-    if (uam_checkuser(dhxpwd) < 0) {
+    if (uam_checkuser(obj, dhxpwd) < 0) {
         return AFPERR_NOTAUTH;
     }
 

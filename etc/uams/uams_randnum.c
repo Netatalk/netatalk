@@ -339,7 +339,7 @@ static int rand_login(void *obj, char *username, int ulen,
 
     LOG(log_info, logtype_uams, "randnum/rand2num login: %s", username);
 
-    if (uam_checkuser(randpwd) < 0) {
+    if (uam_checkuser(obj, randpwd) < 0) {
         return AFPERR_NOTAUTH;
     }
 
@@ -483,7 +483,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
             GCRYPT_VERSION);
     }
 
-    if (uam_checkuser(pwd) < 0) {
+    if (uam_checkuser(obj, pwd) < 0) {
         return AFPERR_ACCESS;
     }
 

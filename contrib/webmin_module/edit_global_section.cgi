@@ -338,6 +338,15 @@ print &ui_table_row(
                     . $text{'edit_global_section_passwd_minlen_help'}
 );
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'valid shellcheck', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_valid_shellcheck'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'valid shellcheck', $text{'edit_undefined'}, 'yes',
+                                  'yes',       'no',        'no'
+                    )
+);
+
 print &ui_table_end();
 print &ui_tabs_end_tab('mode', 'auth');
 

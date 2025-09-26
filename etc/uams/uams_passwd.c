@@ -61,7 +61,7 @@ static int pwd_login(void *obj, char *username, int ulen,
 
     LOG(log_info, logtype_uams, "cleartext login: %s", username);
 
-    if (uam_checkuser(pwd) < 0) {
+    if (uam_checkuser(obj, pwd) < 0) {
         LOG(log_info, logtype_uams, "not a valid user");
         return AFPERR_NOTAUTH;
     }
@@ -248,7 +248,7 @@ static int passwd_printer(char	*start, char *stop, char *username,
         return -1;
     }
 
-    if (uam_checkuser(pwd) < 0) {
+    if (uam_checkuser(NULL, pwd) < 0) {
         /* syslog of error happens in uam_checkuser */
         return -1;
     }

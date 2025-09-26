@@ -2524,6 +2524,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_SPOTLIGHT_EXPR;
     }
 
+    if (getoption_bool(config, INISEC_GLOBAL, "valid shellcheck", NULL, 1)) {
+        options->flags |= OPTION_VALID_SHELLCHECK;
+    }
+
     /* figure out options w values */
     options->loginmesg      = getoption_strdup(config, INISEC_GLOBAL,
                               "login message",  NULL, NULL);

@@ -198,6 +198,7 @@ edit_global_section_set_password=Allow users to change password
 edit_global_section_passwd_file=Password file
 edit_global_section_passwd_minlen=Minimum password length
 edit_global_section_passwd_minlen_help=Depends on support in UAM
+edit_global_section_valid_shellcheck=Check for valid login shell
 edit_global_section_advertise_ssh=Advertise SSH
 edit_global_section_afp_interfaces=AFP interfaces listen
 edit_global_section_afp_listen=AFP listen (IP address:port)

@@ -294,6 +294,14 @@ uam path = *path* **(G)**
 
 > Sets the default path for UAMs for this server.
 
+valid shellcheck = *BOOLEAN* (default: *yes*) **(G)**
+
+> Whether to check if the user's login shell is valid (i.e. listed in
+/etc/shells). If the user's shell is not valid, authentication will
+fail. This is a security feature to prevent users with nologin shells
+from logging in. Disable this option to allow users with nologin shells
+to log in.
+
 ## Charset Options
 
 With OS X Apple introduced the AFP3 protocol. One of the big changes

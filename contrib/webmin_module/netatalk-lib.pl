@@ -89,6 +89,7 @@ our %netatalkParameterDefaults = (
                                   'unix charset'                => 'UTF8',
                                   'unix priv'                   => 'yes',
                                   'use sendfile'                => 'yes',
+                                  'valid shellcheck'            => 'yes',
                                   'veto message'                => 'no',
                                   'vol dbnest'                  => 'no',
                                   'vol dbpath'                  => '@localstatedir@/netatalk/CNID/',
