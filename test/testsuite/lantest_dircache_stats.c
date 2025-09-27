@@ -46,8 +46,19 @@
 extern bool Debug;
 
 /* Constants */
-#define LOG_BUFFER_SIZE (100 * 1024)  /* 100KB buffer for reading log file */
-#define MAX_LOG_LINES_DISPLAY 10      /* Number of log lines to show when no stats found */
+/* 100KB buffer for reading log file */
+#define LOG_BUFFER_SIZE (100 * 1024)
+/* Number of log lines to show when no stats found */
+#define MAX_LOG_LINES_DISPLAY 10
+
+/* Static buffer for reading log file - shared across functions */
+static char log_buffer[LOG_BUFFER_SIZE + 1];
+/* Actual number of bytes read into log_buffer */
+static size_t log_buffer_bytes_read = 0;
+
+/* Compile-time assertion to ensure buffer size is reasonable */
+_Static_assert(LOG_BUFFER_SIZE > 0 && LOG_BUFFER_SIZE <= (1024 * 1024),
+               "LOG_BUFFER_SIZE must be between 1 byte and 1MB");
 
 /* Debug logging macro */
 #define DEBUG_LOG(fmt, ...) \
@@ -62,7 +73,6 @@ static char *parse_config_for_log_path(void)
     dictionary *iniconfig = NULL;
     char *log_file_path = NULL;
     DEBUG_LOG("Loading config file: %safp.conf", _PATH_CONFDIR);
-    /* Load the config file using iniparser */
     iniconfig = iniparser_load(_PATH_CONFDIR "afp.conf");
 
     if (!iniconfig) {
@@ -90,25 +100,20 @@ static char *parse_config_for_log_path(void)
     return log_file_path;
 }
 
-/* Read the last portion of log file into buffer
- * Buffer must be at least LOG_BUFFER_SIZE + 1 bytes */
-static ssize_t read_log_tail(const char *log_file_path, char *buffer)
+/* Read the last portion of log file into the static log_buffer
+ * Returns: true on success, false on error */
+static bool read_log_tail(const char *log_file_path)
 {
     FILE *log_fp = NULL;
-
-    /* Validate input parameters */
-    if (!buffer) {
-        fprintf(stderr, "ERROR: Buffer is NULL\n");
-        return -1;
-    }
-
+    /* Reset global state */
+    log_buffer_bytes_read = 0;
     DEBUG_LOG("Opening log file: %s", log_file_path);
     log_fp = fopen(log_file_path, "rb");
 
     if (!log_fp) {
         DEBUG_LOG("Failed to open log file: %s (errno=%d: %s)",
                   log_file_path, errno, strerror(errno));
-        return -1;
+        return false;
     }
 
     DEBUG_LOG("Successfully opened log file");
@@ -117,7 +122,7 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer)
         fprintf(stderr, "ERROR: Failed to seek to end of log file: %s\n",
                 strerror(errno));
         fclose(log_fp);
-        return -1;
+        return false;
     }
 
     long file_size = ftell(log_fp);
@@ -126,7 +131,7 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer)
         fprintf(stderr, "ERROR: Failed to determine log file size: %s\n",
                 strerror(errno));
         fclose(log_fp);
-        return -1;
+        return false;
     }
 
     DEBUG_LOG("Log file size: %ld bytes", file_size);
@@ -134,14 +139,14 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer)
     if (file_size <= 0) {
         fprintf(stderr, "WARNING: Log file size is 0, no content to read\n");
         fclose(log_fp);
-        return 0;
+        /* Not an error, just no content */
+        return true;
     }
 
     /* Read from the end, up to LOG_BUFFER_SIZE to reserve space for null terminator */
-    size_t max_read = LOG_BUFFER_SIZE;
-    long read_start = (file_size > (long)max_read) ? (file_size -
-                      (long)max_read) : 0;
-    size_t read_size = (file_size > (long)max_read) ? max_read :
+    long read_start = (file_size > LOG_BUFFER_SIZE) ? (file_size - LOG_BUFFER_SIZE)
+                      : 0;
+    size_t read_size = (file_size > LOG_BUFFER_SIZE) ? LOG_BUFFER_SIZE :
                        (size_t)file_size;
     DEBUG_LOG("Reading %zu bytes from position: %ld", read_size, read_start);
 
@@ -149,53 +154,59 @@ static ssize_t read_log_tail(const char *log_file_path, char *buffer)
         fprintf(stderr, "ERROR: Failed to seek to read position: %s\n",
                 strerror(errno));
         fclose(log_fp);
-        return -1;
+        return false;
     }
 
-    size_t bytes_read = fread(buffer, 1, read_size, log_fp);
+    size_t bytes_read = fread(log_buffer, 1, read_size, log_fp);
 
     if (ferror(log_fp)) {
         fprintf(stderr, "ERROR: Failed to read log file: %s\n", strerror(errno));
         fclose(log_fp);
-        return -1;
+        return false;
     }
 
-    /* Simple validation - fread cannot return more than requested */
-    if (bytes_read > read_size) {
-        fprintf(stderr, "ERROR: fread returned more bytes than requested\n");
+    /* Explicit bounds check and enforcement for static analyzer */
+    if (bytes_read > LOG_BUFFER_SIZE) {
+        fprintf(stderr, "ERROR: Read more bytes than buffer size (corruption?)\n");
         fclose(log_fp);
-        return -1;
+        return false;
     }
 
-    /* Null-terminate the buffer
-     * Since read_size <= LOG_BUFFER_SIZE and bytes_read <= read_size,
-     * we know bytes_read <= LOG_BUFFER_SIZE, so this is always safe */
-    buffer[bytes_read] = '\0';
+    /* Explicitly cap the value to help static analyzer understand the bound */
+    if (bytes_read > LOG_BUFFER_SIZE) {
+        bytes_read = LOG_BUFFER_SIZE;
+    }
+
+    /* Null-terminate the buffer - always safe with static buffer */
+    log_buffer[bytes_read] = '\0';
+    log_buffer_bytes_read = bytes_read;
     fclose(log_fp);
-    return (ssize_t)bytes_read;
+    return true;
 }
 
-/* Search buffer backwards for dircache statistics line */
-static char *find_dircache_stats_line(const char *buffer, size_t bytes_read)
+/* Search buffer backwards for dircache statistics line
+ * Uses the global log_buffer and log_buffer_bytes_read */
+static char *find_dircache_stats_line(void)
 {
     char *stats_line = NULL;
 
-    /* Validate bytes_read before using for allocation */
-    if (bytes_read == 0 || bytes_read > LOG_BUFFER_SIZE) {
+    if (log_buffer_bytes_read == 0) {
         return NULL;
     }
 
-    /* Make a working copy of the buffer to avoid const issues */
-    char *work_buffer = malloc(bytes_read + 1);
+    /* Make a working copy of the static buffer to avoid modifying it
+     * log_buffer_bytes_read is guaranteed <= LOG_BUFFER_SIZE by read_log_tail() */
+    char *work_buffer = malloc(log_buffer_bytes_read + 1);
 
     if (!work_buffer) {
         return NULL;
     }
 
-    memcpy(work_buffer, buffer, bytes_read);
-    work_buffer[bytes_read] = '\0';
+    /* Safe copy - log_buffer_bytes_read is bounded by LOG_BUFFER_SIZE */
+    memcpy(work_buffer, log_buffer, log_buffer_bytes_read);
+    work_buffer[log_buffer_bytes_read] = '\0';
     /* Search backwards through buffer for the LAST dircache statistics line */
-    char *current = work_buffer + bytes_read;
+    char *current = work_buffer + log_buffer_bytes_read;
 
     while (current > work_buffer) {
         /* Find end of previous line */
@@ -238,34 +249,34 @@ static char *find_dircache_stats_line(const char *buffer, size_t bytes_read)
 }
 
 /* Display the last N lines from buffer when no stats found */
-static void display_last_log_lines(const char *buffer, size_t bytes_read)
+static void display_last_log_lines(void)
 {
-    /* No dircache statistics found - print message and last 10 lines of log */
     printf("No 'dircache statistics:' logs found.\n\n");
     printf("(At least 'log level = default:info' is required)\n");
     printf("Last 10 lines of log file:\n");
     printf("---------------------------\n");
 
-    /* Validate bytes_read before using for allocation */
-    if (bytes_read == 0 || bytes_read > LOG_BUFFER_SIZE) {
-        printf("Invalid buffer size\n");
+    if (log_buffer_bytes_read == 0) {
+        printf("No log content available\n");
         return;
     }
 
-    /* Make a working copy of the buffer to avoid const issues */
-    char *work_buffer = malloc(bytes_read + 1);
+    /* Make a working copy of the static buffer
+     * log_buffer_bytes_read is guaranteed <= LOG_BUFFER_SIZE by read_log_tail() */
+    char *work_buffer = malloc(log_buffer_bytes_read + 1);
 
     if (!work_buffer) {
         printf("Memory allocation failed\n");
         return;
     }
 
-    memcpy(work_buffer, buffer, bytes_read);
-    work_buffer[bytes_read] = '\0';
+    /* Safe copy - log_buffer_bytes_read is bounded by LOG_BUFFER_SIZE */
+    memcpy(work_buffer, log_buffer, log_buffer_bytes_read);
+    work_buffer[log_buffer_bytes_read] = '\0';
     /* Search backwards through buffer for last 10 lines */
     char *last_lines[MAX_LOG_LINES_DISPLAY] = {NULL};
     int line_count = 0;
-    char *curr = work_buffer + bytes_read;
+    char *curr = work_buffer + log_buffer_bytes_read;
 
     while (curr > work_buffer && line_count < MAX_LOG_LINES_DISPLAY) {
         /* Find end of previous line */
@@ -326,8 +337,7 @@ void display_dircache_statistics(void)
 {
     char *log_file_path = NULL;
     char *stats_line = NULL;
-    static char buffer[LOG_BUFFER_SIZE + 1];
-    ssize_t bytes_read;
+    bool read_success;
     log_file_path = parse_config_for_log_path();
 
     if (!log_file_path) {
@@ -337,21 +347,24 @@ void display_dircache_statistics(void)
     }
 
     DEBUG_LOG("Log file path: %s", log_file_path);
-    bytes_read = read_log_tail(log_file_path, buffer, sizeof(buffer));
+    read_success = read_log_tail(log_file_path);
 
-    if (bytes_read <= 0) {
+    if (!read_success) {
         free(log_file_path);
         return;
     }
 
-    /* Validate bytes_read is positive and reasonable before casting */
-    if (bytes_read < 0 || bytes_read > LOG_BUFFER_SIZE) {
-        fprintf(stderr, "ERROR: Invalid bytes_read value: %zd\n", bytes_read);
+    /* Check if we actually read any content */
+    if (log_buffer_bytes_read == 0) {
+        printf("\nDircache Statistics (%s):\n", log_file_path);
+        printf("------------------------------------------------------------------\n");
+        printf("Log file is empty\n");
         free(log_file_path);
         return;
     }
 
-    stats_line = find_dircache_stats_line(buffer, (size_t)bytes_read);
+    /* Search for dircache statistics line using global buffer */
+    stats_line = find_dircache_stats_line();
     printf("\nDircache Statistics (%s):\n", log_file_path);
     printf("------------------------------------------------------------------\n");
 
@@ -366,7 +379,7 @@ void display_dircache_statistics(void)
 
         free(stats_line);
     } else {
-        display_last_log_lines(buffer, (size_t)bytes_read);
+        display_last_log_lines();
     }
 
     free(log_file_path);

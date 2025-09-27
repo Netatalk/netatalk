@@ -13,17 +13,7 @@
  * GNU General Public License for more details.
  */
 
-/* Feature test macros for strdup and other POSIX functions - MUST be before any includes */
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-#ifndef _DEFAULT_SOURCE
-#define _DEFAULT_SOURCE
-#endif
-#ifndef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 200112L
-#endif
-
+/* Specs must be first */
 #include "specs.h"
 
 /* Standard C library includes */
