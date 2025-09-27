@@ -339,8 +339,7 @@ int ad_set(int argc, char **argv, AFPObj *obj)
             new_attributes = strdup(optarg);
             break;
 
-        case ':':
-        case '?':
+        default:
             usage_set();
             return -1;
             break;

@@ -697,8 +697,7 @@ int ad_ls(int argc, char **argv, AFPObj *obj)
             ls_u = 1;
             break;
 
-        case ':':
-        case '?':
+        default:
             usage_ls();
             return -1;
             break;
