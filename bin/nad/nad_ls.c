@@ -121,9 +121,7 @@ static void set_signal(void)
 */
 static const char *check_netatalk_dirs(const char *name)
 {
-    int c;
-
-    for (c = 0; netatalk_dirs[c]; c++) {
+    for (int c = 0; netatalk_dirs[c]; c++) {
         if ((strcmp(name, netatalk_dirs[c])) == 0) {
             return netatalk_dirs[c];
         }
