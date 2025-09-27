@@ -326,5 +326,5 @@ msgstr "関連項目"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:72
-msgid "ad(1), getfattr(1), attr(1), runat(1), getextattr(8), lsextattr(8)"
+msgid "nad(1), getfattr(1), attr(1), runat(1), getextattr(8), lsextattr(8)"
 msgstr ""

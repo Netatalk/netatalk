@@ -37,7 +37,7 @@
 #include <atalk/vfs.h>
 #include <atalk/volume.h>
 
-#include "ad.h"
+#include "nad.h"
 
 #define STRIP_TRAILING_SLASH(p) {                                   \
         while ((p).p_end > (p).p_path + 1 && (p).p_end[-1] == '/')  \
@@ -99,8 +99,8 @@ static void set_signal(void)
 static void usage_mv(void)
 {
     printf(
-        "Usage: ad mv [-f | -i | -n] [-v] source target\n"
-        "       ad mv [-f | -i | -n] [-v] source ... directory\n\n"
+        "Usage: nad mv [-f | -i | -n] [-v] source target\n"
+        "       nad mv [-f | -i | -n] [-v] source ... directory\n\n"
         "Move files around within an AFP volume, updating the CNID\n"
         "database as needed. If either:\n"
         " - source or destination is not an AFP volume\n"
@@ -470,7 +470,7 @@ static int copy(const char *from, const char *to)
 
     /* Copy source to destination. */
     if (!(pid = fork())) {
-        execl(_PATH_AD, "ad", "cp", vflg ? "-Rpv" : "-Rp", from, to, (char *)NULL);
+        execl(_PATH_NAD, "nad", "cp", vflg ? "-Rpv" : "-Rp", from, to, (char *)NULL);
         _exit(1);
     }
 
@@ -479,12 +479,12 @@ static int copy(const char *from, const char *to)
             continue;
         }
 
-        SLOG("%s cp -R %s %s: waitpid: %s", _PATH_AD, from, to, strerror(errno));
+        SLOG("%s cp -R %s %s: waitpid: %s", _PATH_NAD, from, to, strerror(errno));
         return 1;
     }
 
     if (!WIFEXITED(status)) {
-        SLOG("%s cp -R %s %s: did not terminate normally", _PATH_AD, from, to);
+        SLOG("%s cp -R %s %s: did not terminate normally", _PATH_NAD, from, to);
         return 1;
     }
 
@@ -494,13 +494,13 @@ static int copy(const char *from, const char *to)
 
     default:
         SLOG("%s cp -R %s %s: terminated with %d (non-zero) status",
-             _PATH_AD, from, to, WEXITSTATUS(status));
+             _PATH_NAD, from, to, WEXITSTATUS(status));
         return 1;
     }
 
     /* Delete the source. */
     if (!(pid = fork())) {
-        execl(_PATH_AD, "ad", "rm", "-R", from, (char *)NULL);
+        execl(_PATH_NAD, "nad", "rm", "-R", from, (char *)NULL);
         _exit(1);
     }
 
@@ -509,12 +509,12 @@ static int copy(const char *from, const char *to)
             continue;
         }
 
-        SLOG("%s rm -R %s: waitpid: %s", _PATH_AD, from, strerror(errno));
+        SLOG("%s rm -R %s: waitpid: %s", _PATH_NAD, from, strerror(errno));
         return 1;
     }
 
     if (!WIFEXITED(status)) {
-        SLOG("%s rm -R %s: did not terminate normally", _PATH_AD, from);
+        SLOG("%s rm -R %s: did not terminate normally", _PATH_NAD, from);
         return 1;
     }
 
@@ -524,7 +524,7 @@ static int copy(const char *from, const char *to)
 
     default:
         SLOG("%s rm -R %s: terminated with %d (non-zero) status",
-             _PATH_AD, from, WEXITSTATUS(status));
+             _PATH_NAD, from, WEXITSTATUS(status));
         return 1;
     }
 

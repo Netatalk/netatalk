@@ -35,7 +35,7 @@
 #include <atalk/vfs.h>
 #include <atalk/volume.h>
 
-#include "ad.h"
+#include "nad.h"
 #include "ftw.h"
 
 #define STRIP_TRAILING_SLASH(p) {                                   \
@@ -128,7 +128,7 @@ static void set_signal(void)
 static void usage_rm(void)
 {
     printf(
-        "Usage: ad rm [-vR] <file|dir> [<file|dir> ...]\n\n"
+        "Usage: nad rm [-vR] <file|dir> [<file|dir> ...]\n\n"
         "The rm utility attempts to remove the non-directory type files specified\n"
         "on the command line.\n"
         "If the files and directories reside on an AFP volume, the corresponding\n"
