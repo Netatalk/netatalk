@@ -216,7 +216,7 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
     static charset_t from = (charset_t) -1;
     static char buf[MAXPATHLEN + 2];
     char *bname = stripped_slashes_basename(path);
-    int pos = bname - path;
+    long pos = bname - path;
     uint16_t flags = 0;
 
     if (! svol->vol->v_path) {
@@ -230,12 +230,12 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
         from = svol->vol->v_volcharset;
     }
 
-    int len = convert_charset(from,
-                              dvol->vol->v_volcharset,
-                              dvol->vol->v_maccharset,
-                              bname, strlen(bname),
-                              buf, MAXPATHLEN,
-                              &flags);
+    size_t len = convert_charset(from,
+                                 dvol->vol->v_volcharset,
+                                 dvol->vol->v_maccharset,
+                                 bname, strlen(bname),
+                                 buf, MAXPATHLEN,
+                                 &flags);
 
     if (len == -1) {
         return -1;
