@@ -448,7 +448,7 @@ static int copy(const char *path,
                     base += 1;
                 }
             } else {
-                base = strlen(path);
+                base = (int) strlen(path);
             }
         }
 
@@ -598,9 +598,9 @@ static int copy(const char *path,
                 ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
             }
 
-            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close(&ad, ADFLAGS_HF);
@@ -686,9 +686,9 @@ static int copy(const char *path,
                 ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
             }
 
-            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close(&ad, ADFLAGS_HF);
@@ -877,7 +877,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 
         wtotal = 0;
 
-        while ((rcount = read(from_fd, buf, bufsize)) > 0) {
+        while ((rcount = (int) read(from_fd, buf, bufsize)) > 0) {
             for (bufp = buf, wresid = rcount; ;
                     bufp += wcount, wresid -= wcount) {
                 wcount = write(to_fd, bufp, wresid);
@@ -938,7 +938,7 @@ static int ftw_copy_link(const struct FTW *p _U_,
     int len;
     char llink[PATH_MAX];
 
-    if ((len = readlink(spath, llink, sizeof(llink) - 1)) == -1) {
+    if ((len = (int) readlink(spath, llink, sizeof(llink) - 1)) == -1) {
         SLOG("readlink: %s: %s", spath, strerror(errno));
         return 1;
     }
