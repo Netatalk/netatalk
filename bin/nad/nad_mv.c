@@ -216,11 +216,13 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
         ++baselen;
     }
 
-    for (rval = 0; --argc; ++argv) {
+    rval = 0;
+
+    for (int i = 0; i < argc; i++) {
         /*
          * Find the last component of the source pathname using basename
          */
-        char *src_copy = strdup(*argv);
+        char *src_copy = strdup(argv[i]);
 
         if (src_copy == NULL) {
             SLOG("Memory allocation error");
