@@ -67,7 +67,7 @@ other data.
 
 # See Also
 
-ad(1), getfattr(1), attr(1), runat(1), getextattr(8),
+nad(1), getfattr(1), attr(1), runat(1), getextattr(8),
 lsextattr(8)
 
 # Author

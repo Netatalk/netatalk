@@ -1,6 +1,6 @@
-subdir('ad')
 subdir('afppasswd')
 subdir('misc')
+subdir('nad')
 
 if have_appletalk
     subdir('aecho')

@@ -12,7 +12,6 @@ Manual
 
 User Tools
 
-* [ad](ad.1.html)
 * [addump](addump.1.html)
 * [aecho](aecho.1.html)
 * [afp_lantest](afp_lantest.1.html)
@@ -28,6 +27,7 @@ User Tools
 * [fce_listen](fce_listen.1.html)
 * [getzones](getzones.1.html)
 * [macusers](macusers.1.html)
+* [nad](nad.1.html)
 * [nbplkup](nbplkup.1.html)
 * [nbprgstr](nbprgstr.1.html)
 * [pap](pap.1.html)

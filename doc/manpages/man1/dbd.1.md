@@ -62,12 +62,12 @@ as gracefully as possible.
 
 For when you want to operate on a Netatalk volume outside of an AFP client
 without sacrificing the integrity of the CNID database,
-you can use the **ad**(1) tool which updates the CNID records while
+you can use the **nad**(1) tool which updates the CNID records while
 modifying files.
 
 # See also
 
-ad(1), cnid_metad(8), cnid_dbd(8)
+nad(1), cnid_metad(8), cnid_dbd(8)
 
 # Author
 
