@@ -505,12 +505,11 @@ static int copy(const char *path,
     }
 
     /* Convert basename to appropriate volume encoding */
-    if (dvolume.vol->v_path) {
-        if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
-            SLOG("Error converting name for %s", to.p_path);
-            badcp = rval = 1;
-            return -1;
-        }
+    if (dvolume.vol->v_path
+            && (convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
+        SLOG("Error converting name for %s", to.p_path);
+        badcp = rval = 1;
+        return -1;
     }
 
     switch (statp->st_mode & S_IFMT) {
@@ -557,13 +556,12 @@ static int copy(const char *path,
                 bdestroy(addir);
             }
 
-            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)) {
-                /* copy metadata file */
-                if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
-                    SLOG("Error copying adouble for %s -> %s", path, to.p_path);
-                    badcp = rval = 1;
-                    break;
-                }
+            /* copy metadata file */
+            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
+                    && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
+                SLOG("Error copying adouble for %s -> %s", path, to.p_path);
+                badcp = rval = 1;
+                break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
@@ -607,11 +605,8 @@ static int copy(const char *path,
             umask(omask);
         }
 
-        if (pflag) {
-            if (setfile(statp, -1)) {
-                rval = 1;
-            }
-
+        if (pflag && setfile(statp, -1)) {
+            rval = 1;
 #if 0
 
             if (preserve_dir_acls(statp, curr->fts_accpath, to.p_path) != 0) {
@@ -644,13 +639,12 @@ static int copy(const char *path,
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
             mode_t omask = umask(0);
 
-            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)) {
-                /* copy ad-file */
-                if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
-                    SLOG("Error copying adouble for %s -> %s", path, to.p_path);
-                    badcp = rval = 1;
-                    break;
-                }
+            /* copy ad-file */
+            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
+                    && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
+                SLOG("Error copying adouble for %s -> %s", path, to.p_path);
+                badcp = rval = 1;
+                break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
@@ -1002,34 +996,33 @@ static int setfile(const struct stat *fs, int fd)
      * the mode; current BSD behavior is to remove all setuid bits on
      * chown.  If chown fails, lose setuid/setgid bits.
      */
-    if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid)
-        if (fdval ? fchown(fd, fs->st_uid, fs->st_gid) :
-                (islink ? lchown(to.p_path, fs->st_uid, fs->st_gid) :
-                 chown(to.p_path, fs->st_uid, fs->st_gid))) {
-            if (errno != EPERM) {
-                SLOG("chown: %s: %s", to.p_path, strerror(errno));
-                rval = 1;
-            }
-
-            mode &= ~(S_ISUID | S_ISGID);
-        }
-
-    if (!gotstat || mode != ts.st_mode)
-        if (fdval ? fchmod(fd, mode) : chmod(to.p_path, mode)) {
-            SLOG("chmod: %s: %s", to.p_path, strerror(errno));
+    if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid
+            && fdval ? fchown(fd, fs->st_uid, fs->st_gid) :
+            (islink ? lchown(to.p_path, fs->st_uid, fs->st_gid) :
+             chown(to.p_path, fs->st_uid, fs->st_gid))) {
+        if (errno != EPERM) {
+            SLOG("chown: %s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
+
+        mode &= ~(S_ISUID | S_ISGID);
+    }
+
+    if ((!gotstat || mode != ts.st_mode)
+            && (fdval ? fchmod(fd, mode) : chmod(to.p_path, mode))) {
+        SLOG("chmod: %s: %s", to.p_path, strerror(errno));
+        rval = 1;
+    }
 
 #ifdef HAVE_ST_FLAGS
 
-    if (!gotstat || fs->st_flags != ts.st_flags)
-        if (fdval ?
-                fchflags(fd, fs->st_flags) :
-                (islink ? lchflags(to.p_path, fs->st_flags) :
-                 chflags(to.p_path, fs->st_flags))) {
-            SLOG("chflags: %s: %s", to.p_path, strerror(errno));
-            rval = 1;
-        }
+    if (!gotstat || fs->st_flags != ts.st_flags) && fdval ?
+        fchflags(fd, fs->st_flags) :
+        (islink ? lchflags(to.p_path, fs->st_flags) :
+         chflags(to.p_path, fs->st_flags))) {
+        SLOG("chflags: %s: %s", to.p_path, strerror(errno));
+        rval = 1;
+    }
 
 #endif
     return rval;
