@@ -201,12 +201,10 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             srchvol = strdup(optarg);
             break;
 
-        case ':':
-        case '?':
+        default:
             usage_find();
             free((void *)srchvol);
             exit(1);
-            break;
         }
     }
 
