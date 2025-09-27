@@ -39,6 +39,7 @@ executable(
 
 lantest_sources = [
     'lantest.c',
+    'lantest_dircache_stats.c',
     'lantest_io_monitor.c',
 ]
 
@@ -46,7 +47,8 @@ executable(
     'afp_lantest',
     lantest_sources,
     include_directories: root_includes,
-    dependencies: afptest_external_deps,
+    dependencies: [afptest_external_deps, iniparser],
+    c_args: confdir,
     link_with: libafptest,
     install: true,
     install_rpath: rpath_libdir,
