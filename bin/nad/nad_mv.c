@@ -363,12 +363,10 @@ static int do_move(const char *from, const char *to)
                     return -1;
                 }
 
-                if (!S_ISLNK(sb.st_mode)) {
-                    /* Can't mv(1) a mount point. */
-                    if (realpath(from, path) == NULL) {
-                        SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
-                        return 1;
-                    }
+                /* Can't mv(1) a mount point. */
+                if (!S_ISLNK(sb.st_mode) && realpath(from, path) == NULL) {
+                    SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
+                    return 1;
                 }
             } else { /* != EXDEV */
                 SLOG("rename %s to %s: %s", from, to, strerror(errno));
