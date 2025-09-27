@@ -208,7 +208,8 @@ static void print_date(const struct stat *statp)
 {
     time_t now;
     double diff;
-    char buf[100], *fmt;
+    char buf[100];
+    const char *fmt;
 
     if (time(&now) == -1) {
         printf(" ????????????");
@@ -231,7 +232,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
 {
     int adflags = 0;
     struct adouble ad;
-    char *FinderInfo;
+    const char *FinderInfo;
     uint16_t FinderFlags;
     uint16_t AFPattributes;
     char type[5] = "----";
