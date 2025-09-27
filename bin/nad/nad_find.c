@@ -260,7 +260,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             bufp += sizeof(cnid_t);
             bstring path = NULL;
             bstring volpath = bfromcstr(vol.vol->v_path);
-            BSTRING_STRIP_SLASH(volpath);
+            BSTRING_STRIP_SLASH(volpath)
             char buffer[12 + MAXPATHLEN + 1];
             int buflen = 12 + MAXPATHLEN + 1;
             char *name;
