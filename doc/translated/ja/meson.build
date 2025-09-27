@@ -10,7 +10,6 @@ manual_pages = [
 if get_option('with-website')
     manual_pages += [
         '_Sidebar',
-        'ad.1',
         'addump.1',
         'afp.conf.5',
         'afp_signature.conf.5',
@@ -31,6 +30,7 @@ if get_option('with-website')
         'extmap.conf.5',
         'fce_listen.1',
         'macusers.1',
+        'nad.1',
         'netatalk.8',
     ]
 endif

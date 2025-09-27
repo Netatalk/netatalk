@@ -34,7 +34,7 @@
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 
-#include "ad.h"
+#include "nad.h"
 
 static volatile sig_atomic_t alarmed;
 
@@ -84,7 +84,7 @@ static void set_signal(void)
 static void usage_find(void)
 {
     printf(
-        "Usage: ad find [-v VOLUME_PATH] NAME\n"
+        "Usage: nad find [-v VOLUME_PATH] NAME\n"
     );
 }
 

@@ -72,7 +72,7 @@
 #include <atalk/util.h>
 
 
-#include "ad.h"
+#include "nad.h"
 
 int log_verbose;             /* Logging flag */
 
