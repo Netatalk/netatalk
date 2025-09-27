@@ -947,6 +947,7 @@ static int setfile(const struct stat *fs, int fd)
     static struct timeval tv[2];
     struct stat ts;
     int gotstat, islink, fdval;
+    int result;
     mode_t mode;
     rval = 0;
     fdval = fd != -1;
@@ -966,8 +967,15 @@ static int setfile(const struct stat *fs, int fd)
         rval = 1;
     }
 
-    if (fdval ? fstat(fd, &ts) :
-            (islink ? lstat(to.p_path, &ts) : stat(to.p_path, &ts))) {
+    if (fdval) {
+        result = fstat(fd, &ts);
+    } else if (islink) {
+        result = lstat(to.p_path, &ts);
+    } else {
+        result = stat(to.p_path, &ts);
+    }
+
+    if (result) {
         gotstat = 0;
     } else {
         gotstat = 1;
@@ -981,11 +989,17 @@ static int setfile(const struct stat *fs, int fd)
      * the mode; current BSD behavior is to remove all setuid bits on
      * chown.  If chown fails, lose setuid/setgid bits.
      */
-    if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid
-            && fdval ? fchown(fd, fs->st_uid, fs->st_gid) :
-            (islink ? lchown(to.p_path, fs->st_uid, fs->st_gid) :
-             chown(to.p_path, fs->st_uid, fs->st_gid))) {
-        if (errno != EPERM) {
+
+    if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid) {
+        if (fdval) {
+            result = fchown(fd, fs->st_uid, fs->st_gid);
+        } else if (islink) {
+            result = lchown(to.p_path, fs->st_uid, fs->st_gid);
+        } else {
+            result = chown(to.p_path, fs->st_uid, fs->st_gid);
+        }
+
+        if (result != 0 && errno != EPERM) {
             SLOG("chown: %s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
