@@ -181,10 +181,10 @@ char *utompath(const struct vol *vol, const char *upath)
     }
 
     /* convert charsets */
-    if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
-                                 CH_UTF8_MAC,
-                                 vol->v_maccharset,
-                                 u, outlen, mpath, MAXPATHLEN, &flags))) {
+    if ((size_t) -1 == convert_charset(vol->v_volcharset,
+                                       CH_UTF8_MAC,
+                                       vol->v_maccharset,
+                                       u, outlen, mpath, MAXPATHLEN, &flags)) {
         SLOG("Conversion from %s to %s for %s failed.",
              vol->v_volcodepage, vol->v_maccodepage, u);
         return NULL;
