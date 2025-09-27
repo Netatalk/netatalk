@@ -34,6 +34,50 @@
 
 #include "nad.h"
 
+typedef enum {
+    CMD_UNKNOWN = -1,
+    CMD_LS,
+    CMD_CP,
+    CMD_RM,
+    CMD_MV,
+    CMD_SET,
+    CMD_FIND,
+    CMD_VERSION
+} nad_command_t;
+
+static nad_command_t get_command(const char *cmd)
+{
+    if (STRCMP(cmd, ==, "ls")) {
+        return CMD_LS;
+    }
+
+    if (STRCMP(cmd, ==, "cp")) {
+        return CMD_CP;
+    }
+
+    if (STRCMP(cmd, ==, "rm")) {
+        return CMD_RM;
+    }
+
+    if (STRCMP(cmd, ==, "mv")) {
+        return CMD_MV;
+    }
+
+    if (STRCMP(cmd, ==, "set")) {
+        return CMD_SET;
+    }
+
+    if (STRCMP(cmd, ==, "find")) {
+        return CMD_FIND;
+    }
+
+    if (STRCMP(cmd, ==, "-v") || STRCMP(cmd, ==, "--version")) {
+        return CMD_VERSION;
+    }
+
+    return CMD_UNKNOWN;
+}
+
 static void usage_main(void)
 {
     printf("Usage: nad ls|cp|rm|mv|set|find [file|dir, ...]\n");
@@ -64,25 +108,33 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (STRCMP(argv[1], ==, "ls")) {
+    nad_command_t cmd = get_command(argv[1]);
+
+    switch (cmd) {
+    case CMD_LS:
         return ad_ls(argc - 1, argv + 1, &obj);
-    } else if (STRCMP(argv[1], ==, "cp")) {
+
+    case CMD_CP:
         return ad_cp(argc - 1, argv + 1, &obj);
-    } else if (STRCMP(argv[1], ==, "rm")) {
+
+    case CMD_RM:
         return ad_rm(argc - 1, argv + 1, &obj);
-    } else if (STRCMP(argv[1], ==, "mv")) {
+
+    case CMD_MV:
         return ad_mv(argc, argv, &obj);
-    } else if (STRCMP(argv[1], ==, "set")) {
+
+    case CMD_SET:
         return ad_set(argc - 1, argv + 1, &obj);
-    } else if (STRCMP(argv[1], ==, "find")) {
+
+    case CMD_FIND:
         return ad_find(argc, argv, &obj);
-    } else if (STRCMP(argv[1], ==, "-v")) {
+
+    case CMD_VERSION:
         show_version();
         return 1;
-    } else if (STRCMP(argv[1], ==, "--version")) {
-        show_version();
-        return 1;
-    } else {
+
+    case CMD_UNKNOWN:
+    default:
         usage_main();
         return 1;
     }
