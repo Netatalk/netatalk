@@ -189,7 +189,7 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
             return 1;
         }
 
-        rval = do_move(argv[0], argv[1]);
+        do_move(argv[0], argv[1]);
         closevol(&svolume);
         closevol(&dvolume);
         return 1;
@@ -351,7 +351,6 @@ static int do_move(const char *from, const char *to)
             close(srcfd);
 
             if (errno == EXDEV) {
-                mustcopy = 1;
                 char path[MAXPATHLEN];
 
                 /*

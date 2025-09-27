@@ -526,7 +526,6 @@ static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
 static int ad_ls_r(char *path, afpvol_t *vol)
 {
     int ret = 0, cwd, dirprinted = 0, dirempty;
-    const char *name;
     char *tmp;
     static char cwdpath[MAXPATHLEN + 1];
     DIR *dp;
@@ -584,7 +583,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
         }
 
         /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
-        if ((name = check_netatalk_dirs(ep->d_name)) != NULL) {
+        if (check_netatalk_dirs(ep->d_name) != NULL) {
             continue;
         }
 
@@ -631,7 +630,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
             }
 
             /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
-            if ((name = check_netatalk_dirs(ep->d_name)) != NULL) {
+            if (check_netatalk_dirs(ep->d_name) != NULL) {
                 continue;
             }
 
