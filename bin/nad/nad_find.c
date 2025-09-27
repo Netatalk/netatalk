@@ -252,7 +252,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     } else {
         ret = 0;
         cnid_t cnid;
-        char *bufp = resbuf;
+        const char *bufp = resbuf;
         bstring sep = bfromcstr("/");
 
         while (count--) {

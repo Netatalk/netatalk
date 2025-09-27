@@ -728,7 +728,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     size_t wresid;
     off_t wtotal;
     int ch, checkch, from_fd = 0, rcount, rval, to_fd = 0;
-    char *bufp;
+    const char *bufp;
     char *p;
 
     if ((from_fd = open(spath, O_RDONLY, 0)) == -1) {
