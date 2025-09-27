@@ -710,7 +710,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     ssize_t wcount;
     size_t wresid;
     off_t wtotal;
-    int ch, checkch, from_fd = 0, rcount, rval, to_fd = 0;
+    int ch, checkch, from_fd = 0, rcount, to_fd = 0;
     const char *bufp;
     char *p;
 
@@ -946,7 +946,7 @@ static int setfile(const struct stat *fs, int fd)
 {
     static struct timeval tv[2];
     struct stat ts;
-    int rval, gotstat, islink, fdval;
+    int gotstat, islink, fdval;
     mode_t mode;
     rval = 0;
     fdval = fd != -1;
