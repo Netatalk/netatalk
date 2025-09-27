@@ -32,17 +32,17 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 
-#include "ad.h"
+#include "nad.h"
 
 static void usage_main(void)
 {
-    printf("Usage: ad ls|cp|rm|mv|set|find [file|dir, ...]\n");
-    printf("       ad -v|--version\n");
+    printf("Usage: nad ls|cp|rm|mv|set|find [file|dir, ...]\n");
+    printf("       nad -v|--version\n");
 }
 
 static void show_version(void)
 {
-    printf("ad (Netatalk %s)\n", VERSION);
+    printf("nad (Netatalk %s)\n", VERSION);
 }
 
 int main(int argc, char **argv)
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    if (afp_config_parse(&obj, "ad") != 0) {
+    if (afp_config_parse(&obj, "nad") != 0) {
         return 1;
     }
 

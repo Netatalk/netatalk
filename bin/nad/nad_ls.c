@@ -34,7 +34,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 
-#include "ad.h"
+#include "nad.h"
 
 #define ADv2_DIRNAME ".AppleDouble"
 
@@ -136,7 +136,7 @@ static const char *check_netatalk_dirs(const char *name)
 static void usage_ls(void)
 {
     printf(
-        "Usage: ad ls [-dRl[u]] [file|dir, ...]\n\n"
+        "Usage: nad ls [-dRl[u]] [file|dir, ...]\n\n"
         "  -l Long Output [-u: unix info]:\n"
         "     <unixinfo ...> <FinderFlags> <AFPAttributes> <Color> <Type> <Creator> <CNID from AppleDouble> <name>\n\n"
         "     FinderFlags (valid for (f)ile and/or (d)irectory):\n"

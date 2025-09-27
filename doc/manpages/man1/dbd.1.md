@@ -67,7 +67,7 @@ modifying files.
 
 # See also
 
-ad(1), cnid_metad(8), cnid_dbd(8)
+nad(1), cnid_metad(8), cnid_dbd(8)
 
 # Author
 

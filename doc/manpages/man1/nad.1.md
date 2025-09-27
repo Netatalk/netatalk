@@ -1,16 +1,16 @@
 # Name
 
-ad - AppleDouble file utility suite
+nad - Netatalk AppleDouble file utility suite
 
 # Synopsis
 
-**ad** [ls | cp | mv | rm | set | find] [...]
+**nad** [ls | cp | mv | rm | set | find] [...]
 
-**ad** [-v | --version]
+**nad** [-v | --version]
 
 # Description
 
-**ad** is an AppleDouble file utility suite with Netatalk compatibility.
+**nad** is a file utility suite that operates on Netatalk AFP shared volumes.
 AppleDouble data (extended attributes of files, .\_files in same
 directories or files in **.AppleDouble** directories) and the CNID
 databases are updated as appropriate when files in a shared Netatalk
@@ -18,43 +18,46 @@ volume are modified.
 
 This is preferable over using the equivalent system file operation commands
 on files in a Netatalk shared volume to preserve the integrity of Mac OS
-metadata and CNIDs.
+metadata and accuracy of the CNID database.
+
+It depends on Netatalk running on the host system and the AFP volume being
+shared by Netatalk.
 
 # Available Commands
 
 List files and directories.
 
-> ad ls [-dRl[u]] {file|directory [...]}
+> nad ls [-dRl[u]] {file|directory [...]}
 
 Copy files and directories.
 
-> ad cp [-aipvf] {src_file} {dst_file}
+> nad cp [-aipvf] {src_file} {dst_file}
 >
-> ad cp -R [-aipvf] {src_file|src_directory ...} {dst_directory}
+> nad cp -R [-aipvf] {src_file|src_directory ...} {dst_directory}
 
 Move files and directories.
 
-> ad mv [-finv] {src_file} {dst_file}
+> nad mv [-finv] {src_file} {dst_file}
 >
-> ad mv [-finv] {src_file|src_directory ...} {dst_directory}
+> nad mv [-finv] {src_file|src_directory ...} {dst_directory}
 
 Remove files and directories.
 
-> ad rm [-Rv] {file|directory}
+> nad rm [-Rv] {file|directory}
 
 Set metadata on files.
 
-> ad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}
+> nad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}
 
 Find files and directories
 
-> ad find [-v volume path] {file|directory}
+> nad find [-v volume path] {file|directory}
 
 Show version.
 
-> ad -v | --version
+> nad -v | --version
 
-# ad ls
+# nad ls
 
 List files and directories. Options:
 
@@ -103,7 +106,7 @@ List files and directories. Options:
 
     Note: any letter appearing in uppercase means the flag is set but it's a directory for which the flag is not allowed.
 
-# ad cp
+# nad cp
 
 Copy files and directories.
 
@@ -164,7 +167,7 @@ contents of the directory are copied rather than the directory itself.
 
 > File system mount points are not traversed.
 
-# ad mv
+# nad mv
 
 Move files and directories.
 
@@ -198,7 +201,7 @@ input begins with the character \`y' or \`Y', the move is attempted.
 
 > Cause mv to be verbose, showing files after they are moved.
 
-# ad rm
+# nad rm
 
 Remove files and directories.
 
@@ -216,7 +219,7 @@ The options are as follows:
 
 > Be verbose when deleting files, showing them as they are removed.
 
-# ad set
+# nad set
 
 Set metadata on files.
 
@@ -275,7 +278,7 @@ Uppercase letter sets the flag, lowercase removes the flag.
       l = No delete                       (f/d)
       o = No copy                         (f)
 
-# ad find
+# nad find
 
 Find files and directories in an AFP volume.
 

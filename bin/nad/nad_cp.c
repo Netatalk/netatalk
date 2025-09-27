@@ -73,7 +73,7 @@
 #include <atalk/vfs.h>
 #include <atalk/volume.h>
 
-#include "ad.h"
+#include "nad.h"
 #include "ftw.h"
 
 #define STRIP_TRAILING_SLASH(p) {                                   \
@@ -163,8 +163,8 @@ static void set_signal(void)
 static void usage_cp(void)
 {
     printf(
-        "Usage: ad cp [-R] [-aipvf] <source_file> <target_file>\n"
-        "       ad cp [-R] [-aipvfx] <source_file [source_file ...]> <target_directory>\n\n"
+        "Usage: nad cp [-R] [-aipvf] <source_file> <target_file>\n"
+        "       nad cp [-R] [-aipvfx] <source_file [source_file ...]> <target_directory>\n\n"
         "In the first synopsis form, the cp utility copies the contents of the source_file to the\n"
         "target_file.  In the second synopsis form, the contents of each named source_file is copied to the\n"
         "destination target_directory.  The names of the files themselves are not changed.  If cp detects an\n"

@@ -321,5 +321,5 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/dbd.1.md:71
-msgid "ad(1), cnid_metad(8), cnid_dbd(8)"
+msgid "nad(1), cnid_metad(8), cnid_dbd(8)"
 msgstr ""
