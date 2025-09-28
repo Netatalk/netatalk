@@ -940,20 +940,6 @@ int strp2c(char *cstr, unsigned char *pstr)
 }
 
 /* -------------------------------  */
-/* Converts null-terminated C string to Pascal form */
-int strc2p(char *pstr, char *cstr)
-{
-    int i;
-
-    for (i = 0; cstr[i] != 0; i++) {
-        pstr[i + 1] = cstr[i];
-    }
-
-    pstr[0] = i;
-    return i;
-}
-
-/* -------------------------------  */
 /* Our malloc wrapper. It zeroes allocated memory. */
 void *fp_malloc(size_t size)
 {
