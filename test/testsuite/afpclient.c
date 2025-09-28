@@ -1719,8 +1719,6 @@ unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
 {
     int ofs;
     DSI *dsi = &conn->dsi;
-    off_t last;
-    unsigned char *ptr;
     memset(dsi->commands, 0, DSI_CMDSIZ);
     memset(&dsi->header, 0, sizeof(dsi->header));
     dsi->header.dsi_flags = DSIFL_REQUEST;
@@ -2104,7 +2102,6 @@ unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
                                off_t size, char *data)
 {
     int ofs;
-    int rsize;
     DSI *dsi;
     dsi = &conn->dsi;
     SendInit(dsi);
