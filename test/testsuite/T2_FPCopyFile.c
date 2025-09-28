@@ -1,7 +1,9 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
 #include "adoublehelper.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 /* ------------------------- */
 STATIC void test373()

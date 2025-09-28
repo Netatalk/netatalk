@@ -1,8 +1,15 @@
 /* ----------------------------------------------
 */
 
-#include "specs.h"
+#include <signal.h>
+#include <stdio.h>
+
+#include "afpcmd.h"
 #include "afphelper.h"
+#include "testhelper.h"
+#include "afpclient.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 static int CurTestResult;
 static char *Why;

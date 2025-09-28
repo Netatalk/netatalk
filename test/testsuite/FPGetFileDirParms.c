@@ -1,6 +1,8 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 static char temp[MAXPATHLEN + 1];
 static char temp1[MAXPATHLEN + 1];

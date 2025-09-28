@@ -1,9 +1,8 @@
-#include "afpclient.h"
-#include "test.h"
-
 #include <pwd.h>
 #include <stdint.h>
 
+#include "afpclient.h"
+#include "testhelper.h"
 
 /* -------------------------------------------*/
 static char *dsi_command2str[] = {

@@ -1,10 +1,13 @@
 /* ----------------------------------------------
 */
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include "specs.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #include "adoublehelper.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];

@@ -1,15 +1,22 @@
-#include "specs.h"
-#include <sys/time.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <getopt.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #include <fcntl.h>
+#include <getopt.h>
+#include <signal.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
 
+#include "afpclient.h"
+#include "afpcmd.h"
 #include "afphelper.h"
+#include "testhelper.h"
 
-/* For compiling os OS X */
+/* For compiling on OS X */
 #ifndef MAP_ANONYMOUS
 #ifdef MAP_ANON
 #define MAP_ANONYMOUS MAP_ANON

@@ -1,7 +1,9 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
 #include "adoublehelper.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 /* ------------------------ */
 static int afp_symlink(char *oldpath, char *newpath)

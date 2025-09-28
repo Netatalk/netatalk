@@ -1,4 +1,6 @@
-#include "specs.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 /* -------------------------------- */
 static int really_ro()

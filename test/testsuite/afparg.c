@@ -1,6 +1,11 @@
-#include "specs.h"
 #include <dlfcn.h>
 #include <getopt.h>
+#include <signal.h>
+
+#include "afpclient.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 #define FN(a) a ## _arg
 #define EXT_FN(a) extern void FN(a) (char **argv)
