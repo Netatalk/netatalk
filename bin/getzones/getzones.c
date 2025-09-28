@@ -86,6 +86,11 @@ int main(int argc, char *argv[])
 
             if ((charset_t) -1 == chMac) {
                 fprintf(stderr, "Invalid Mac charset.\n");
+
+                if (requested_zone != NULL) {
+                    free(requested_zone);
+                }
+
                 exit(1);
             }
 
@@ -100,11 +105,21 @@ int main(int argc, char *argv[])
 
             if (*end_of_digits != '\0') {
                 fprintf(stderr, "Network must be a number between 0 and 65535.\n");
+
+                if (requested_zone != NULL) {
+                    free(requested_zone);
+                }
+
                 exit(1);
             }
 
             if (requested_network < 0 || requested_network > 65535) {
                 fprintf(stderr, "Network must be a number between 0 and 65535.\n");
+
+                if (requested_zone != NULL) {
+                    free(requested_zone);
+                }
+
                 exit(1);
             }
 
