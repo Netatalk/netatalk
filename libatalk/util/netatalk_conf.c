@@ -56,6 +56,7 @@
 #include <atalk/logger.h>
 #include <atalk/ea.h>
 #include <atalk/globals.h>
+#include <atalk/iniparser_util.h>
 #include <atalk/errchk.h>
 #include <atalk/unix.h>
 #include <atalk/cnid.h>

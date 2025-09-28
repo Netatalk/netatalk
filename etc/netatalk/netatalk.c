@@ -37,6 +37,7 @@
 #include <atalk/dsi.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
+#include <atalk/iniparser_util.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/server_child.h>

@@ -76,31 +76,6 @@
 
 #define IS_AFP_SESSION(obj) (((obj)->dsi && (obj)->dsi->serversock == -1) || ((obj)->Type))
 
-/**********************************************************************************************
- * Ini config manipulation macros
- **********************************************************************************************/
-
-#define INISEC_GLOBAL "global"
-#define INISEC_HOMES  "homes"
-
-#define INIPARSER_GETSTR(config, section, key, default) ({            \
-    char _option[MAXOPTLEN];                                          \
-    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
-    iniparser_getstring(config, _option, default);                    \
-})
-
-#define INIPARSER_GETSTRDUP(config, section, key, default) ({         \
-    char _option[MAXOPTLEN];                                          \
-    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
-    const char *_tmp = iniparser_getstring(config, _option, default); \
-    _tmp ? strdup(_tmp) : NULL;                                       \
-})
-
-#define CONFIG_ARG_FREE(a) do {                     \
-    free(a);                                        \
-    a = NULL;                                       \
-    } while (0);
-
 struct DSI;
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
