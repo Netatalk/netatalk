@@ -1,7 +1,7 @@
 #include <atalk/afp.h>
 
 #include "afpclient.h"
-#include "test.h"
+#include "testhelper.h"
 
 /* Define the global test settings */
 int Throttle = 0;

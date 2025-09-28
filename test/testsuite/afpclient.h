@@ -217,6 +217,8 @@ typedef struct CONN {
     int afp_version;
 } CONN;
 
+extern CONN *Conn, *Conn2;
+
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
 #define PASSWDLEN 8
@@ -285,7 +287,7 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
                      uint16_t rfbitmap, uint16_t rdbitmap);
 
 /*
- afpcli.c
+ afpclient.c
 */
 int OpenClientSocket(char *host, int port);
 int CloseClientSocket(int fd);
@@ -297,6 +299,7 @@ int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
 size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length);
 int my_dsi_stream_send(DSI *dsi, void *buf, size_t length);
 uint16_t my_dsi_cmd_nwriterply_async(CONN *conn, uint64_t n);
+void dump_header(DSI *dsi);
 
 unsigned int DSIOpenSession(CONN *conn);
 unsigned int DSIGetStatus(CONN *conn);

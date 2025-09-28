@@ -1,6 +1,8 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 #include "adoublehelper.h"
 
 static char temp[MAXPATHLEN];

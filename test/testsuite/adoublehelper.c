@@ -1,7 +1,12 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include <errno.h>
+#include <stdio.h>
+
 #include "adoublehelper.h"
+#include "afpclient.h"
+#include "afpcmd.h"
+#include "testhelper.h"
 
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];

@@ -13,8 +13,9 @@
  * GNU General Public License for more details.
  */
 
-/* Specs must be first */
-#include "specs.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
 
 /* Standard C library includes */
 #include <errno.h>
@@ -39,8 +40,9 @@
 
 /* Netatalk library includes */
 #include "afpclient.h"
+#include "afpcmd.h"
 #include "afphelper.h"
-#include "test.h"
+#include "testhelper.h"
 
 /* Platform-specific includes */
 #ifdef __linux__

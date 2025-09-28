@@ -8,7 +8,7 @@ endif
 
 libafptest_sources = [
     'adoublehelper.c',
-    'afpcli.c',
+    'afpclient.c',
     'afpcmd.c',
     'afphelper.c',
     'testhelper.c',

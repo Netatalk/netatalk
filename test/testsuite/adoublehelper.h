@@ -1,5 +1,12 @@
 /* ---------------------------------------
 */
+
+#ifndef ADOUBLEHELPER_H
+#define ADOUBLEHELPER_H
+
+#include <inttypes.h>
+#include <sys/types.h>
+
 extern int delete_unix_adouble(char *path, char *name);
 extern int delete_unix_dir(char *path, char *name);
 extern int folder_with_ro_adouble(uint16_t vol, int did, char *name,
@@ -37,3 +44,5 @@ int sys_lremovexattr(const char *path, const char *name);
 
 /* -------------------
 */
+
+#endif
