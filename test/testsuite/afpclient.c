@@ -1083,7 +1083,7 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
     uint16_t i;
     uint32_t l;
     int bit = 0;
-    unsigned char *beg = b;
+    const unsigned char *beg = b;
 
     while (bitmap != 0) {
         while ((bitmap & 1) == 0) {
@@ -1326,7 +1326,7 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
     uint32_t l;
     int bit = 0;
     uint16_t bitmap;
-    unsigned char *beg = b;
+    const unsigned char *beg = b;
     unsigned char *l_ofs = NULL;
     unsigned char *u_ofs = NULL;
     isdir = filedir->isdir;
