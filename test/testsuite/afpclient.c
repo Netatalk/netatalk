@@ -640,10 +640,9 @@ unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
 unsigned int AFPLogOut(CONN *conn)
 {
     DSI *dsi;
-    int ret;
     dsi = &conn->dsi;
     SendCmd(dsi, AFP_LOGOUT);
-    ret = my_dsi_full_receive(dsi, dsi->commands, DSI_CMDSIZ);
+    my_dsi_full_receive(dsi, dsi->commands, DSI_CMDSIZ);
     DSICloseSession(conn);
     return dsi->header.dsi_code;
 }
@@ -770,7 +769,6 @@ static off_t get_off_t(unsigned char **ibuf, int is64)
 {
     uint32_t             temp;
     off_t                 ret;
-    ret = 0;
     memcpy(&temp, *ibuf, sizeof(temp));
     ret = ntohl(temp); /* ntohl is unsigned */
     *ibuf += sizeof(temp);
@@ -1055,7 +1053,6 @@ void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
 
     if (rbitmap & (1 << VOLPBIT_BSIZE)) {
         memcpy(&l, b, sizeof(l));
-        b += sizeof(l);
         parms->bsize = ntohl(l);
     }
 }
@@ -1200,6 +1197,7 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
 
             if (i != 0) {
                 filedir->lname = fp_malloc((beg + i)[0] + 1);
+                /* FIXME: what to do with this after Pascal to C conversion? */
                 r = strp2c(filedir->lname, beg + i) + 1;
             }
 
@@ -1212,6 +1210,7 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
 
             if (i != 0) {
                 filedir->sname = fp_malloc((beg + i)[0] + 1);
+                /* FIXME: what to do with this after Pascal to C conversion? */
                 r = strp2c(filedir->sname, beg + i) + 1;
             }
 
@@ -1617,8 +1616,8 @@ unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                            char *data, char whence)
+unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork _U_, int offset, int size,
+                            char *data _U_, char whence)
 {
     uint32_t last;
     my_dsi_cmd_receive(dsi);
@@ -1990,7 +1989,7 @@ unsigned int AFPBadPacket(CONN *conn, char fn, char *name)
 
 /* ------------------------------- */
 unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
-                           char *data)
+                           char *data _U_)
 {
     int ofs;
     uint32_t  temp;
@@ -2014,8 +2013,8 @@ unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
 }
 
 /* ------------------------------- */
-unsigned int AFPReadFooter(DSI *dsi, uint16_t fork, int offset, int size,
-                           char *data)
+unsigned int AFPReadFooter(DSI *dsi, uint16_t fork _U_, int offset _U_,
+                           int size, char *data)
 {
     int rsize;
     my_dsi_cmd_receive(dsi);
@@ -2085,7 +2084,7 @@ unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
 }
 
 unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
-                               off_t size, char *data)
+                               off_t size, char *data _U_)
 {
     int ofs;
     DSI *dsi;
@@ -2125,9 +2124,7 @@ unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name)
     my_dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
-        ofs = 0;
         memcpy(&dir, dsi->commands, sizeof(dir));			/* did */
-        ofs += sizeof(dir);
 
         if (!Quiet) {
             fprintf(stdout, "directory ID 0x%x\n", ntohl(dir));
