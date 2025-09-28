@@ -34,6 +34,7 @@
 #include <atalk/ddp.h>
 #include <atalk/atp.h>
 #include <atalk/globals.h>
+#include <atalk/iniparser_util.h>
 
 #include <errno.h>
 #ifdef HAVE_INIPARSER_INIPARSER_H

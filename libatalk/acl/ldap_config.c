@@ -31,6 +31,7 @@
 #include <string.h>
 
 #include <atalk/globals.h>
+#include <atalk/iniparser_util.h>
 #include <atalk/ldapconfig.h>
 #include <atalk/logger.h>
 

@@ -11,6 +11,7 @@ headers = [
     'ea.h',
     'globals.h',
     'hash.h',
+    'iniparser_util.h',
     'list.h',
     'logger.h',
     'netatalk_conf.h',
