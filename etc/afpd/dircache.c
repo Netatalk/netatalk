@@ -629,7 +629,7 @@ void log_dircache_stat(void)
     /* Get username from AFPobj if available */
     extern AFPObj *AFPobj;
     const char *username = (AFPobj
-                            && AFPobj->username) ? AFPobj->username : "unknown";
+                            && AFPobj->username[0]) ? AFPobj->username : "unknown";
     LOG(log_info, logtype_afpd,
         "dircache statistics: (user: %s) "
         "entries: %lu, lookups: %llu, hits: %llu (%.1f%%), misses: %llu, "
