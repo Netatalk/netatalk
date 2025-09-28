@@ -29,6 +29,7 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <atalk/afp_util.h>
 #include <atalk/compat.h>
 #include <atalk/dsi.h>
 #include <atalk/fce_api.h>

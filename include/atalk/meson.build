@@ -3,6 +3,7 @@ headers = [
     'adouble.h',
     'aep.h',
     'afp.h',
+    'afp_util.h',
     'asp.h',
     'atp.h',
     'cnid.h',

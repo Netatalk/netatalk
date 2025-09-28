@@ -231,13 +231,6 @@ extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
 extern int setmessage(const char *);
 extern void readmessage(AFPObj *);
 
-/* afp_util.c */
-extern const char *AfpNum2name(int);
-extern const char *AfpErr2name(int err);
-
-/* directory.c */
-extern struct dir rootParent;
-
 #ifndef NO_DDP
 extern void afp_over_asp(AFPObj *);
 #endif /* NO_DDP */
