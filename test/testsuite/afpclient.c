@@ -2037,8 +2037,14 @@ unsigned int AFPReadFooter(DSI *dsi, uint16_t fork _U_, int offset _U_,
     rsize =  ntohl(dsi->header.dsi_len);
     rsize -= dsi->cmdlen;
     my_dsi_stream_read(dsi, data + dsi->cmdlen, rsize);
-    return dsi->header.dsi_code ? dsi->header.dsi_code : (rsize + dsi->cmdlen ==
-            size) ? 0 : -1;
+
+    if (dsi->header.dsi_code) {
+        return dsi->header.dsi_code;
+    } else if (rsize + dsi->cmdlen == size) {
+        return 0;
+    } else {
+        return -1;
+    }
 }
 
 /* ------------------------------- */
@@ -2094,8 +2100,14 @@ unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
     rsize =  ntohl(dsi->header.dsi_len);
     rsize -= dsi->cmdlen;
     my_dsi_stream_read(dsi, data + dsi->cmdlen, rsize);
-    return dsi->header.dsi_code ? dsi->header.dsi_code : (rsize + dsi->cmdlen ==
-            size) ? 0 : -1;
+
+    if (dsi->header.dsi_code) {
+        return dsi->header.dsi_code;
+    } else if (rsize + dsi->cmdlen == size) {
+        return 0;
+    } else {
+        return -1;
+    }
 }
 
 unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
