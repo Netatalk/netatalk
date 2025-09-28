@@ -1123,6 +1123,9 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
 
         case VOLPBIT_BSIZE:
             break;
+
+        default:
+            break;
         }
 
         bitmap = bitmap >> 1;
@@ -1269,6 +1272,9 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
                     b += sizeof(l);
                     filedir->rflen = ntohl(l);
                     break;
+
+                default:
+                    break;
                 } else switch (bit) { /* Directory specific parametrs */
                 case DIRPBIT_OFFCNT:
                     memcpy(&i, b, sizeof(i));
@@ -1291,6 +1297,9 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
                 case DIRPBIT_ACCESS:
                     memcpy(filedir->access, b, sizeof(filedir->access));
                     b += sizeof(filedir->access);
+                    break;
+
+                default:
                     break;
                 }
 
@@ -1393,6 +1402,9 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
                 case FILPBIT_RFLEN:
                     /* error */
                     break;
+
+                default:
+                    break;
                 } else switch (bit) { /* Directory specific parametrs */
                 case DIRPBIT_OFFCNT:
                     break;
@@ -1412,6 +1424,9 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
                 case DIRPBIT_ACCESS:
                     memcpy(b, filedir->access, sizeof(filedir->access));
                     b += sizeof(filedir->access);
+                    break;
+
+                default:
                     break;
                 }
 
