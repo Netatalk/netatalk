@@ -2,7 +2,6 @@ afpd_sources = [
     'afp_config.c',
     'afp_dsi.c',
     'afp_options.c',
-    'afp_util.c',
     'afprun.c',
     'appl.c',
     'auth.c',

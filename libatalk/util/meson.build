@@ -1,4 +1,5 @@
 util_sources = [
+    'afp_util.c',
     'atalk_addr.c',
     'bprint.c',
     'cnid.c',
