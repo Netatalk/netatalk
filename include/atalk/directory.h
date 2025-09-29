@@ -56,6 +56,8 @@
 #define DIRF_OFFCNT    (1<<4)
 /* renumerate id */
 #define DIRF_CNID	   (1<<5)
+/* cache entry was returned without validation */
+#define DIRF_UNVALIDATED (1<<6)
 
 struct dir {
     /* complete unix path to dir (or file) */

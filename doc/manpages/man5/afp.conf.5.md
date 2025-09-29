@@ -531,6 +531,69 @@ vol dbnest = *BOOLEAN* (default: *no*) **(G)**
 the CNID database in a folder called .AppleDB inside the volume root of
 each share.
 
+## Directory Cache Tuning
+
+dircachesize = *number* **(G)**
+
+> Maximum possible entries in the directory cache. The cache stores
+directories and files. It is used to cache the full path to directories
+and CNIDs which considerably speeds up directory enumeration.
+>
+> Default size is 8192, maximum size is 131072. Given value is rounded up
+to nearest power of 2. Each entry takes about 100 bytes, which is not
+much, but remember that every afpd child process for every connected
+user has its own cache.
+
+dircache validation freq = *number* **(G)**
+
+> Directory cache validation frequency for external change detection.
+Controls how often cached entries are validated against the filesystem
+to detect changes made outside of netatalk (e.g., direct filesystem
+modifications by other processes).
+>
+> Value of 1 means validate cache every access (default for backward
+compatibility), higher values validate less frequently. For example,
+5 means validate cache entries every 5th access. Higher values improve
+performance and significantly reduce storage IO and page cache stress
+but may delay detection of changes external from Netatalk. Range: 1-100.
+>
+> Internal netatalk operations (file/directory create, delete, rename)
+always invalidate cache entries immediately regardless of this setting.
+> If Netatalk is the only process accessing the volume you can safely
+set a value of 100 for maximum performance.
+
+dircache metadata window = *number* **(G)**
+
+> Time window in seconds for distinguishing metadata-only changes from
+content changes in directories. When a directory's ctime changes within
+this window from the current time, the change is considered potentially
+metadata-only (permissions, extended attributes) rather than content
+modification.
+>
+> Default: 300 seconds (5 minutes). Range: 60-3600 seconds.
+> Smaller values are more conservative but may cause unnecessary cache
+invalidation. Larger values improve performance but may retain stale
+entries longer.
+> If Netatalk is the only process accessing the volume you can safely
+set a value of 3600.
+
+dircache metadata threshold = *number* **(G)**
+
+> Maximum time difference in seconds between cached and current directory
+ctime to be considered a metadata-only change. Works together with
+dircache metadata window to avoid invalidating cache entries for minor
+metadata modifications.
+>
+> Default: 60 seconds (1 minute). Range: 10-1800 seconds.
+> This prevents cache invalidation for small, recent ctime changes that
+are likely due to permission or extended attribute modifications rather
+than directory content changes.
+> If Netatalk is the only process accessing the volume you can safely
+set a value of 1800.
+
+**Note**: Monitor cache effectiveness with `afpstats` or check log files
+for cache statistics when afpd shuts down gracefully.
+
 ## Miscellaneous Options
 
 afpstats = *BOOLEAN* (default: *no*) **(G)**
@@ -542,17 +605,6 @@ close vol = *BOOLEAN* (default: *no*) **(G)**
 
 > Whether to close volumes possibly opened by clients when they're removed
 from the configuration and the configuration is reloaded.
-
-dircachesize = *number* **(G)**
-
-> Maximum possible entries in the directory cache. The cache stores
-directories and files. It is used to cache the full path to directories
-and CNIDs which considerably speeds up directory enumeration.
->
-> Default size is 8192, maximum size is 131072. Given value is rounded up
-to nearest power of 2. Each entry takes about 100 bytes, which is not
-much, but remember that every afpd child process for every connected
-user has its cache.
 
 extmap file = *path* **(G)**
 

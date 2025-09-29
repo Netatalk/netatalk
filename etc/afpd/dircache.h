@@ -38,4 +38,9 @@ extern struct dir *dircache_search_by_name(const struct vol *,
         const struct dir *dir, char *name, int len);
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);
+extern int        dircache_set_validation_params(unsigned int freq,
+        unsigned int meta_win,
+        unsigned int meta_thresh);
+extern void       dircache_reset_validation_counter(void);
+extern void       dircache_report_invalid_entry(struct dir *dir);
 #endif /* DIRCACHE_H */

@@ -543,30 +543,10 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             goto exit;
         }
 
-        if (lstat(cfrombstr(ret->d_fullpath), &st) != 0) {
-            LOG(log_debug, logtype_afpd, "dirlookup(did: %u, path: \"%s\"): lstat: %s",
-                ntohl(did), cfrombstr(ret->d_fullpath), strerror(errno));
-
-            switch (errno) {
-            case ENOENT:
-            case ENOTDIR:
-                /* It's not there anymore, so remove it */
-                LOG(log_debug, logtype_afpd, "dirlookup(did: %u): calling dir_remove",
-                    ntohl(did));
-                dir_remove(vol, ret);
-                afp_errno = AFPERR_NOOBJ;
-                ret = NULL;
-                goto exit;
-
-            default:
-                goto exit;
-            }
-
-            /* DEADC0DE */
-            ret = NULL;
-            goto exit;
-        }
-
+        /* Trust the cache entry - validation already happened in dircache_search_by_did()
+         * based on the probabilistic validation model (should_validate_cache_entry).
+         * If the entry is invalid, it will be caught when actually used and
+         * dir_remove() will handle it, which reports invalid entries. */
         goto exit;
     }
 
@@ -955,6 +935,9 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
     LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
+    /* Report if this was an unvalidated entry that turned out to be invalid
+     * Only increments invalid_on_use counter if DIRF_UNVALIDATED flag is set */
+    dircache_report_invalid_entry(dir);
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     enqueue(invalid_dircache_entries, dir); /* 3 */
 

@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
+#include <limits.h>
 
 #ifdef HAVE_GETIFADDRS
 #include <ifaddrs.h>
@@ -47,6 +48,61 @@
 #include "uam_auth.h"
 #include "status.h"
 #include "volume.h"
+#include "dircache.h"
+
+/*!
+ * Safe string to integer conversion with bounds checking
+ *
+ * @param str         String to convert
+ * @param param_name  Parameter name for error messages
+ * @param min_val     Minimum allowed value
+ * @param max_val     Maximum allowed value
+ * @param default_val Default value to return on error
+ *
+ * @returns Converted integer value or default_val on error
+ */
+static int safe_atoi(const char *str, const char *param_name,
+                     int min_val, int max_val, int default_val)
+{
+    char *endptr;
+    long val;
+
+    if (!str || *str == '\0') {
+        LOG(log_warning, logtype_afpd,
+            "Config: Empty %s parameter, using default %d",
+            param_name, default_val);
+        return default_val;
+    }
+
+    errno = 0;  /* Reset errno before conversion */
+    val = strtol(str, &endptr, 10);
+
+    /* Check for conversion errors */
+    if (errno == ERANGE || val < LONG_MIN || val > LONG_MAX) {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s parameter '%s' out of range, using default %d",
+            param_name, str, default_val);
+        return default_val;
+    }
+
+    /* Check for non-numeric characters */
+    if (*endptr != '\0') {
+        LOG(log_warning, logtype_afpd,
+            "Config: Invalid %s parameter '%s' - contains non-numeric characters, using default %d",
+            param_name, str, default_val);
+        return default_val;
+    }
+
+    /* Check parameter-specific bounds */
+    if (val < min_val || val > max_val) {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s parameter %ld out of valid range [%d, %d], using default %d",
+            param_name, val, min_val, max_val, default_val);
+        return default_val;
+    }
+
+    return (int)val;
+}
 
 /*!
  * Free and cleanup config and DSI
@@ -378,7 +434,7 @@ serv_free_return:
 
     r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
     LOG(log_debug, logtype_afpd, "Fce version: %s", r);
-    dsi_obj->fce_version = atoi(r);
+    dsi_obj->fce_version = safe_atoi(r, "fce version", 1, 2, 1);
 
     if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names",
                               ".DS_Store"))) {
@@ -393,6 +449,46 @@ serv_free_return:
     if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
                               "fce notify script", NULL))) {
         dsi_obj->fce_notify_script = strdup(r);
+    }
+
+    /* Directory cache validation parameters */
+    unsigned int dircache_freq = DEFAULT_DIRCACHE_VALIDATION_FREQ;
+    unsigned int dircache_window = DEFAULT_DIRCACHE_METADATA_WINDOW;
+    unsigned int dircache_threshold = DEFAULT_DIRCACHE_METADATA_THRESHOLD;
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                              "dircache validation freq", NULL))) {
+        dircache_freq = safe_atoi(r, "dircache validation freq",
+                                  1, 100, DEFAULT_DIRCACHE_VALIDATION_FREQ);
+        LOG(log_info, logtype_afpd, "Config: dircache validation freq = %u",
+            dircache_freq);
+    }
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                              "dircache metadata window", NULL))) {
+        dircache_window = safe_atoi(r, "dircache metadata window",
+                                    60, 3600, DEFAULT_DIRCACHE_METADATA_WINDOW);
+        LOG(log_info, logtype_afpd, "Config: dircache metadata window = %u",
+            dircache_window);
+    }
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                              "dircache metadata threshold", NULL))) {
+        dircache_threshold = safe_atoi(r, "dircache metadata threshold",
+                                       10, 1800, DEFAULT_DIRCACHE_METADATA_THRESHOLD);
+        LOG(log_info, logtype_afpd, "Config: dircache metadata threshold = %u",
+            dircache_threshold);
+    }
+
+    /* Apply directory cache validation configuration */
+    if (dircache_set_validation_params(dircache_freq, dircache_window,
+                                       dircache_threshold) == 0) {
+        LOG(log_info, logtype_afpd,
+            "Config: Directory cache validation configured: freq=%u, window=%us, threshold=%us",
+            dircache_freq, dircache_window, dircache_threshold);
+    } else {
+        LOG(log_error, logtype_afpd,
+            "Config: Failed to configure directory cache validation parameters");
     }
 
 EC_CLEANUP:
