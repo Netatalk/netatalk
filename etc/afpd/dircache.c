@@ -704,6 +704,98 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 }
 
 /*!
+ * @brief Remove all child entries of a directory from the dircache
+ *
+ * When a directory is renamed or moved, the full paths stored in the
+ * dircache become invalid for all child entries of the renamed dir.
+ * This function prunes orphaned child dircache entries of given dir.
+ * CNID entries use parent DIDs and name, and requre recursion to get
+ * the full path, therefore parent changes do no invalid the CNIDs.
+ *
+ * @param vol  (r) volume
+ * @param dir  (r) parent directory whose children should be removed
+ */
+void dircache_remove_children(const struct vol *vol, struct dir *dir)
+{
+    struct dir *entry;
+    hnode_t *hn;
+    hscan_t hs;
+    /* Store dir pointers */
+    struct dir **to_remove = NULL;
+    int remove_count = 0;
+    int remove_capacity = 0;
+
+    if (!dir || !dir->d_fullpath) {
+        return;
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "dircache_remove_children: removing children of \"%s\" (did:%u)",
+        cfrombstr(dir->d_fullpath), ntohl(dir->d_did));
+    /* Two stages to avoid modifying the hash during iteration */
+    /* First pass: collect entries to remove */
+    hash_scan_begin(&hs, dircache);
+
+    while ((hn = hash_scan_next(&hs))) {
+        entry = hnode_get(hn);
+
+        /* Skip the parent directory itself */
+        if (entry == dir) {
+            continue;
+        }
+
+        /* Check if entry is a decendant by comparing parent path */
+        if (entry->d_fullpath && dir->d_fullpath) {
+            const char *entry_path = cfrombstr(entry->d_fullpath);
+            const char *parent_path = cfrombstr(dir->d_fullpath);
+            size_t parent_len = blength(dir->d_fullpath);
+
+            /* Check if entry's path starts with parent's path followed by '/' */
+            if (parent_path && entry_path && parent_len > 0 &&
+                    strncmp(entry_path, parent_path, parent_len) == 0 &&
+                    entry_path[parent_len] == '/') {
+                /* Expand to_remove array */
+                if (remove_count >= remove_capacity) {
+                    remove_capacity = remove_capacity ? remove_capacity * 2 : 16;
+                    to_remove = realloc(to_remove, remove_capacity * sizeof(struct dir*));
+
+                    if (!to_remove) {
+                        LOG(log_error, logtype_afpd,
+                            "dircache_remove_children: out of memory");
+                        return;
+                    }
+                }
+
+                /* Store the dir pointer for removal */
+                to_remove[remove_count] = entry;
+                remove_count++;
+                LOG(log_debug, logtype_afpd,
+                    "dircache_remove_children: marking child \"%s\" (did:%u) for removal",
+                    cfrombstr(entry->d_u_name), ntohl(entry->d_did));
+            }
+        }
+    }
+
+    /* Second pass: remove collected entries from dircache */
+    for (int i = 0; i < remove_count; i++) {
+        entry = to_remove[i];
+        LOG(log_debug, logtype_afpd,
+            "dircache_remove_children: removing stale \"%s\" (did:%u) from dircache",
+            cfrombstr(entry->d_u_name), ntohl(entry->d_did));
+        /* Remove entry from dircache */
+        dir_remove(vol, entry);
+    }
+
+    if (to_remove) {
+        free(to_remove);
+    }
+
+    LOG(log_info, logtype_afpd,
+        "dircache_remove_children: removed %d dircache entries of \"%s\"",
+        remove_count, cfrombstr(dir->d_fullpath));
+}
+
+/*!
  * @brief Initialize the dircache and indexes
  *
  * This is called in child afpd initialisation. The maximum cache size will be

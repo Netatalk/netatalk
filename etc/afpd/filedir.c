@@ -395,14 +395,6 @@ static int moveandrename(const AFPObj *obj,
             goto exit;
         }
 
-        /* Remove it from the cache */
-        struct dir *cacheddir = dircache_search_by_did(vol, id);
-
-        if (cacheddir) {
-            LOG(log_warning, logtype_afpd, "Still cached: \"%s/%s\"", getcwdpath(), upath);
-            (void)dir_remove(vol, cacheddir);
-        }
-
         /* Fixup adouble info */
         if (!ad_metadata(upath, adflags, adp)) {
             ad_setid(adp, st->st_dev, st->st_ino, id, curdir->d_did, vol->v_stamp);
@@ -414,6 +406,20 @@ static int moveandrename(const AFPObj *obj,
         AFP_CNID_START("cnid_update");
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
         AFP_CNID_DONE();
+        /* Remove old file/dir entry it from the dircache */
+        struct dir *cacheddir = dircache_search_by_did(vol, id);
+
+        if (cacheddir) {
+            LOG(log_warning, logtype_afpd, "Still cached: \"%s/%s\"", getcwdpath(), upath);
+
+            /* If directory is being renamed, all child dircache entries are now invalid */
+            if (isdir && !(cacheddir->d_flags & DIRF_ISFILE)) {
+                dircache_remove_children(vol, cacheddir);
+            }
+
+            /* Remove the cache entry */
+            (void)dir_remove(vol, cacheddir);
+        }
 
         /* Send FCE event */
         if (isdir) {
@@ -653,6 +659,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 return AFPERR_ACCESS;
             }
 
+            /* Delete the directory */
             if (rmdir(upath) != 0) {
                 switch (errno) {
                 case ENOTEMPTY:
@@ -675,20 +682,33 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             cnid_t delcnid = CNID_INVALID;
 
             if ((deldir = dircache_search_by_name(vol, curdir, upath, strlen(upath)))) {
-                delcnid = deldir->d_did;
-                dir_remove(vol, deldir);
-            }
+                /* If directory, also remove child dircache entries */
+                if (!(deldir->d_flags & DIRF_ISFILE)) {
+                    dircache_remove_children(vol, deldir);
+                }
 
-            if (delcnid == CNID_INVALID) {
+                /* Delete deldir's CNID */
+                delcnid = deldir->d_did;
+
+                if (delcnid != CNID_INVALID) {
+                    AFP_CNID_START("cnid_delete");
+                    cnid_delete(vol->v_cdb, delcnid);
+                    AFP_CNID_DONE();
+                }
+
+                /* Remove deldir from dircache cache */
+                dir_remove(vol, deldir);
+            } else {
+                /* Directory not in cache, delete CNID manually */
                 AFP_CNID_START("cnid_get");
                 delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, strlen(upath));
                 AFP_CNID_DONE();
-            }
 
-            if (delcnid != CNID_INVALID) {
-                AFP_CNID_START("cnid_delete");
-                cnid_delete(vol->v_cdb, delcnid);
-                AFP_CNID_DONE();
+                if (delcnid != CNID_INVALID) {
+                    AFP_CNID_START("cnid_delete");
+                    cnid_delete(vol->v_cdb, delcnid);
+                    AFP_CNID_DONE();
+                }
             }
 
             fce_register(obj, FCE_DIR_DELETE, fullpathname(upath), NULL);
@@ -701,6 +721,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 return AFPERR_MISC;
             }
 
+            /* deletecurdir() also handles CNID and dircache cleanup */
             if ((rc = deletecurdir(vol)) == AFP_OK) {
                 fce_register(obj, FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL);
             }
@@ -717,6 +738,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         if (s_path->st_valid && s_path->st_errno == ENOENT) {
             rc = AFPERR_NOOBJ;
         } else {
+            /* deletefile() also handles CNID and dircache cleanup */
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
                 fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
 
@@ -725,13 +747,6 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 } else {
                     vol->v_tm_used -= s_path->st.st_size;
                 }
-            }
-
-            struct dir *cachedfile;
-
-            if ((cachedfile = dircache_search_by_name(vol, dir, upath, strlen(upath)))) {
-                dircache_remove(vol, cachedfile, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
-                dir_free(cachedfile);
             }
         }
     }

@@ -46,6 +46,7 @@
 
 #include "auth.h"
 #include "dircache.h"
+#include "directory.h"
 #include "fork.h"
 #include "switch.h"
 
