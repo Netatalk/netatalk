@@ -1,0 +1,93 @@
+
+## <summary>policy for netatalk</summary>
+
+########################################
+## <summary>
+##      Execute netatalk_exec_t in the netatalk domain.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed to transition.
+##      </summary>
+## </param>
+#
+interface(`netatalk_domtrans',`
+        gen_require(`
+                type netatalk_t, netatalk_exec_t;
+        ')
+
+        corecmd_search_bin($1)
+        domtrans_pattern($1, netatalk_exec_t, netatalk_t)
+')
+
+########################################
+## <summary>
+##      Execute netatalk in the caller domain.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`netatalk_exec',`
+        gen_require(`
+                type netatalk_exec_t;
+        ')
+
+        corecmd_search_bin($1)
+        can_exec($1, netatalk_exec_t)
+')
+
+########################################
+## <summary>
+##      Read netatalk configuration files.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`netatalk_read_config',`
+        gen_require(`
+                type netatalk_etc_t;
+        ')
+
+        files_search_etc($1)
+        allow $1 netatalk_etc_t:dir list_dir_perms;
+        allow $1 netatalk_etc_t:file read_file_perms;
+')
+
+########################################
+## <summary>
+##      Manage netatalk log files.
+## </summary>
+## <param name="domain">
+##      <summary>
+##      Domain allowed access.
+##      </summary>
+## </param>
+#
+interface(`netatalk_manage_log',`
+        gen_require(`
+                type netatalk_log_t;
+        ')
+
+        logging_search_logs($1)
+        allow $1 netatalk_log_t:dir rw_dir_perms;
+        allow $1 netatalk_log_t:file manage_file_perms;
+')
+
+# Additional rules for the new types
+allow netatalk_t netatalk_etc_t:dir list_dir_perms;
+allow netatalk_t netatalk_etc_t:file read_file_perms;
+
+allow netatalk_t netatalk_var_lib_t:dir manage_dir_perms;
+allow netatalk_t netatalk_var_lib_t:file manage_file_perms;
+
+allow netatalk_t netatalk_lock_t:dir manage_dir_perms;
+allow netatalk_t netatalk_lock_t:file manage_file_perms;
+
+allow netatalk_t netatalk_log_t:dir manage_dir_perms;
+allow netatalk_t netatalk_log_t:file manage_file_perms;
