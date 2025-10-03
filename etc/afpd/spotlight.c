@@ -35,6 +35,7 @@
 #include <atalk/compat.h>
 #include <atalk/dalloc.h>
 #include <atalk/errchk.h>
+#include <atalk/iniparser_util.h>
 #include <atalk/list.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>

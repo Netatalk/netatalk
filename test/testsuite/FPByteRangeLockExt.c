@@ -1,6 +1,8 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 /* -------------------------- */
 static void test_bytelock_ext(uint16_t vol, char *name, int type)

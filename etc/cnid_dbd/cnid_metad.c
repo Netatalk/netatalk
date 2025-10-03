@@ -84,6 +84,7 @@
 #include <atalk/cnid_bdb_private.h>
 #include <atalk/compat.h>
 #include <atalk/errchk.h>
+#include <atalk/iniparser_util.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/volume.h>
 

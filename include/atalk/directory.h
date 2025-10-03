@@ -119,4 +119,7 @@ static inline int path_isadir(struct path *o_path)
 #endif
 }
 
+/* directory.c */
+extern struct dir rootParent;
+
 #endif /* ATALK_DIRECTORY_H */

@@ -34,6 +34,7 @@
 
 /* Netatalk includes for INIPARSER_GETSTRDUP macro */
 #include <atalk/globals.h>
+#include <atalk/iniparser_util.h>
 
 /* Iniparser includes */
 #ifdef HAVE_INIPARSER_INIPARSER_H

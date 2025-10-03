@@ -5,25 +5,6 @@
 
 #include "dsi.h"
 
-/* define ansi color */
-#define ANSI_RED      "\033[0;31m"
-#define ANSI_GREEN    "\033[0;32m"
-#define ANSI_YELLOW   "\033[0;33m"
-#define ANSI_BLUE     "\033[0;34m"
-#define ANSI_MAGENTA  "\033[0;35m"
-#define ANSI_CYAN     "\033[0;36m"
-#define ANSI_GREY     "\033[0;37m"
-#define ANSI_DARKGREY "\033[01;30m"
-#define ANSI_BRED     "\033[01;31m"
-#define ANSI_BGREEN   "\033[01;32m"
-#define ANSI_BYELLOW  "\033[01;33m"
-#define ANSI_BBLUE    "\033[01;34m"
-#define ANSI_BMAGENTA "\033[01;35m"
-#define ANSI_BCYAN    "\033[01;36m"
-#define ANSI_WHITE    "\033[01;37m"
-#define ANSI_NORMAL   "\033[0m"
-#define ANSI_BOLD     "\033[1m"
-
 /* log level */
 #define AFP_LOG_DEBUG    0
 #define AFP_LOG_INFO     1
@@ -58,6 +39,9 @@ extern int delete_folder_with_file(uint16_t vol, int did, char *name,
 extern int get_vol_attrib(uint16_t vol);
 extern int group_folder(uint16_t vol, int did, char *name);
 extern unsigned int get_vol_free(uint16_t vol);
+extern int not_valid(unsigned int ret, int mac_error, int afpd_error);
+extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap,
+                            int afpd_error);
 extern int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
 extern int delete_directory_tree(CONN *conn, uint16_t volume,
                                  uint32_t parent_did, char *dirname);

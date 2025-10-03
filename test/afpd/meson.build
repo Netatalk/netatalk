@@ -5,7 +5,6 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/afp_config.c',
     meson.project_source_root() / 'etc/afpd/afp_dsi.c',
     meson.project_source_root() / 'etc/afpd/afp_options.c',
-    meson.project_source_root() / 'etc/afpd/afp_util.c',
     meson.project_source_root() / 'etc/afpd/afprun.c',
     meson.project_source_root() / 'etc/afpd/appl.c',
     meson.project_source_root() / 'etc/afpd/auth.c',

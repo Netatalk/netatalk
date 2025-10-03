@@ -1,5 +1,8 @@
-#include "specs.h"
 #include <fcntl.h>
+
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 static char temp[MAXPATHLEN];
 static char *extascii[24] = {

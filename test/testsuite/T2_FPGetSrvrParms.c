@@ -1,9 +1,13 @@
 /* ----------------------------------------------
 */
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
-#include "specs.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
+
 extern char *Vol2;
 
 /* ----------------------- */

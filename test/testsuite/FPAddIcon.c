@@ -1,6 +1,8 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 char icon0_256[] = {
     0x1f, 0xff, 0xfc, 0x00,

@@ -1,7 +1,8 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include "afpcmd.h"
 #include "afphelper.h"
+#include "testhelper.h"
 
 int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
 

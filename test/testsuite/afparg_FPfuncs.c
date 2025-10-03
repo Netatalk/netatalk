@@ -1,5 +1,8 @@
-#include "specs.h"
 #include <time.h>
+
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 void FPCopyFile_arg(char **argv)
 {

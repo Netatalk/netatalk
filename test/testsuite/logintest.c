@@ -1,6 +1,9 @@
-#include "specs.h"
-
 #include <getopt.h>
+
+#include "afpclient.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 uint16_t VolID;
 

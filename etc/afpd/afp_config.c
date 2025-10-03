@@ -38,6 +38,7 @@
 #include <atalk/ldapconfig.h>
 #endif
 
+#include <atalk/iniparser_util.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/server_child.h>

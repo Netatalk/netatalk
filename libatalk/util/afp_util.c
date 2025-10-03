@@ -10,7 +10,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <atalk/afp.h>
-#include <atalk/globals.h>
+#include <atalk/afp_util.h>
 
 const char *AfpNum2name(int num)
 {
@@ -233,9 +233,10 @@ const char *AfpNum2name(int num)
 
     case AFP_SYNCFORK           :
         return "AFP_SYNCFORK";	      /* 79 */
-    }
 
-    return "not yet defined";
+    default:
+        return "not yet defined";
+    }
 }
 
 #define AFPERR2NAME(err) case err : return #err
@@ -293,7 +294,8 @@ const char *AfpErr2name(int err)
         AFPERR2NAME(AFPERR_PWDCHNG);
         AFPERR2NAME(AFPERR_PWDPOLCY);
         AFPERR2NAME(AFPERR_USRLOGIN);
-    }
 
-    return "not yet defined";
+    default:
+        return "not yet defined";
+    }
 }

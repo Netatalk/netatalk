@@ -76,31 +76,6 @@
 
 #define IS_AFP_SESSION(obj) (((obj)->dsi && (obj)->dsi->serversock == -1) || ((obj)->Type))
 
-/**********************************************************************************************
- * Ini config manipulation macros
- **********************************************************************************************/
-
-#define INISEC_GLOBAL "global"
-#define INISEC_HOMES  "homes"
-
-#define INIPARSER_GETSTR(config, section, key, default) ({            \
-    char _option[MAXOPTLEN];                                          \
-    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
-    iniparser_getstring(config, _option, default);                    \
-})
-
-#define INIPARSER_GETSTRDUP(config, section, key, default) ({         \
-    char _option[MAXOPTLEN];                                          \
-    snprintf(_option, sizeof(_option), "%s:%s", section, key);        \
-    const char *_tmp = iniparser_getstring(config, _option, default); \
-    _tmp ? strdup(_tmp) : NULL;                                       \
-})
-
-#define CONFIG_ARG_FREE(a) do {                     \
-    free(a);                                        \
-    a = NULL;                                       \
-    } while (0);
-
 struct DSI;
 
 #define AFPOBJ_TMPSIZ (MAXPATHLEN)
@@ -230,13 +205,6 @@ extern void afp_options_init(struct afp_options *);
 extern void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av);
 extern int setmessage(const char *);
 extern void readmessage(AFPObj *);
-
-/* afp_util.c */
-extern const char *AfpNum2name(int);
-extern const char *AfpErr2name(int err);
-
-/* directory.c */
-extern struct dir rootParent;
 
 #ifndef NO_DDP
 extern void afp_over_asp(AFPObj *);

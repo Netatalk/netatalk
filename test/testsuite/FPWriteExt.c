@@ -1,6 +1,8 @@
 /* ----------------------------------------------
 */
-#include "specs.h"
+#include "afpcmd.h"
+#include "afphelper.h"
+#include "testhelper.h"
 
 /* ------------------------- */
 #define BUF_S 3000

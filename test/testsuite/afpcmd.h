@@ -1,4 +1,11 @@
 /* -------------------------------- */
+#ifndef AFPCMD_H
+#define AFPCMD_H
+
+#include <inttypes.h>
+
+#include "afpclient.h"
+
 extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
                                 char *pwd);
 extern unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
@@ -158,35 +165,6 @@ extern unsigned int FPRemoveExtAttr(CONN *conn, uint16_t vol, int did,
                                     uint16_t bitmap, char *name, char *attr);
 extern unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did);
 
-void dump_header(DSI *dsi);
 char *afp_error(int error);
-const char *AfpNum2name(int num);
 
-extern CONN *Conn, *Conn2;
-
-extern char Data[];
-extern char FailedTests[1024][256];
-extern char NotTestedTests[1024][256];
-extern char SkippedTests[1024][256];
-
-extern char *Vol;
-extern char *Vol2;
-extern char *Path;
-extern char *User;
-extern char *Test;
-
-extern int Version;
-extern int Verbose;
-extern int Quiet;
-extern int Locking;
-extern int Loglevel;
-extern int Color;
-extern int Interactive;
-extern int Throttle;
-extern int Bigendian;
-extern int EmptyVol;
-
-extern int PassCount;
-extern int FailCount;
-extern int SkipCount;
-extern int NotTestedCount;
+#endif
