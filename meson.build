@@ -623,7 +623,9 @@ if default_backend == ''
     elif use_mysql_backend
         default_backend = 'mysql'
     elif use_last_backend
-        default_backend = 'last'
+        error(
+            'No writable CNID backend selected for compilation; need at least one of dbd, sqlite or mysql',
+        )
     else
         error('No CNID backends selected for compilation')
     endif

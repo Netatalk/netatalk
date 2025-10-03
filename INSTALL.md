@@ -50,7 +50,7 @@ These are the libraries that are hard requirements for netatalk.
 
 ### CNID Backend Requirements
 
-One or more of the below is required to build the respective CNID backend.
+At least one CNID backend is required for netatalk to function.
 
 | Package      | Backend | Details |
 |--------------|---------|---------|
