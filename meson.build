@@ -132,7 +132,6 @@ netatalk_common_link_args = []
 
 # Per target
 
-ad = '-D_PATH_AD="' + bindir + '/ad"'
 afpd = '-D_PATH_AFPD="' + sbindir + '/afpd"'
 afpdpwfile = '-D_PATH_AFPDPWFILE="' + pkgconfdir + '/afppasswd"'
 cnid_dbd = '-D_PATH_CNID_DBD="' + sbindir + '/cnid_dbd"'
@@ -140,6 +139,7 @@ cnid_metad = '-D_PATH_CNID_METAD="' + sbindir + '/cnid_metad"'
 confdir = '-D_PATH_CONFDIR="' + pkgconfdir + '/"'
 dversion = '-DVERSION="' + netatalk_version + '"'
 messagedir = '-DSERVERTEXT="' + localstatedir + '/netatalk/msg/"'
+naddir = '-D_PATH_NAD="' + bindir + '/nad"'
 statedir = '-D_PATH_STATEDIR="' + localstatedir + '/netatalk/"'
 uamdir = '-D_PATH_AFPDUAMPATH="' + libdir + '/netatalk/"'
 

@@ -78,7 +78,6 @@ typedef struct {
     char p_path[MAXPATHLEN + 2];/* pointer to the start of a path */
 } PATH_T;
 
-extern PATH_T to;
 extern int fflag, iflag, lflag, nflag, pflag, vflag;
 
 #endif /* AD_H */

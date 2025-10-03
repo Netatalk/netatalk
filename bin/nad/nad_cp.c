@@ -73,7 +73,7 @@
 #include <atalk/vfs.h>
 #include <atalk/volume.h>
 
-#include "ad.h"
+#include "nad.h"
 #include "ftw.h"
 
 #define STRIP_TRAILING_SLASH(p) {                                   \
@@ -106,10 +106,6 @@ static int ftw_copy_file(const struct FTW *, const char *, const struct stat *,
 static int ftw_copy_link(const struct FTW *, const char *, const struct stat *,
                          int);
 static int setfile(const struct stat *, int);
-#if 0
-static int preserve_dir_acls(const struct stat *, char *, char *);
-#endif
-static int preserve_fd_acls(int, int);
 
 static void upfunc(void)
 {
@@ -163,8 +159,8 @@ static void set_signal(void)
 static void usage_cp(void)
 {
     printf(
-        "Usage: ad cp [-R] [-aipvf] <source_file> <target_file>\n"
-        "       ad cp [-R] [-aipvfx] <source_file [source_file ...]> <target_directory>\n\n"
+        "Usage: nad cp [-R] [-aipvf] <source_file> <target_file>\n"
+        "       nad cp [-R] [-aipvfx] <source_file [source_file ...]> <target_directory>\n\n"
         "In the first synopsis form, the cp utility copies the contents of the source_file to the\n"
         "target_file.  In the second synopsis form, the contents of each named source_file is copied to the\n"
         "destination target_directory.  The names of the files themselves are not changed.  If cp detects an\n"
@@ -448,7 +444,7 @@ static int copy(const char *path,
                     base += 1;
                 }
             } else {
-                base = strlen(path);
+                base = (int) strlen(path);
             }
         }
 
@@ -505,12 +501,11 @@ static int copy(const char *path,
     }
 
     /* Convert basename to appropriate volume encoding */
-    if (dvolume.vol->v_path) {
-        if ((convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
-            SLOG("Error converting name for %s", to.p_path);
-            badcp = rval = 1;
-            return -1;
-        }
+    if (dvolume.vol->v_path
+            && (convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
+        SLOG("Error converting name for %s", to.p_path);
+        badcp = rval = 1;
+        return -1;
     }
 
     switch (statp->st_mode & S_IFMT) {
@@ -557,13 +552,12 @@ static int copy(const char *path,
                 bdestroy(addir);
             }
 
-            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)) {
-                /* copy metadata file */
-                if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
-                    SLOG("Error copying adouble for %s -> %s", path, to.p_path);
-                    badcp = rval = 1;
-                    break;
-                }
+            /* copy metadata file */
+            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
+                    && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
+                SLOG("Error copying adouble for %s -> %s", path, to.p_path);
+                badcp = rval = 1;
+                break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
@@ -598,27 +592,17 @@ static int copy(const char *path,
                 ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
             }
 
-            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close(&ad, ADFLAGS_HF);
             umask(omask);
         }
 
-        if (pflag) {
-            if (setfile(statp, -1)) {
-                rval = 1;
-            }
-
-#if 0
-
-            if (preserve_dir_acls(statp, curr->fts_accpath, to.p_path) != 0) {
-                rval = 1;
-            }
-
-#endif
+        if (pflag && setfile(statp, -1)) {
+            rval = 1;
         }
 
         break;
@@ -644,13 +628,12 @@ static int copy(const char *path,
         if (dvolume.vol->v_path && ADVOL_V2_OR_EA(dvolume.vol->v_adouble)) {
             mode_t omask = umask(0);
 
-            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)) {
-                /* copy ad-file */
-                if (dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
-                    SLOG("Error copying adouble for %s -> %s", path, to.p_path);
-                    badcp = rval = 1;
-                    break;
-                }
+            /* copy ad-file */
+            if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
+                    && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
+                SLOG("Error copying adouble for %s -> %s", path, to.p_path);
+                badcp = rval = 1;
+                break;
             }
 
             /* Get CNID of Parent and add new childir to CNID database */
@@ -686,9 +669,9 @@ static int copy(const char *path,
                 ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
             }
 
-            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, st.st_mtime);
-            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, st.st_mtime);
+            ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_MODIFY | AD_DATE_UNIX, (uint32_t) st.st_mtime);
+            ad_setdate(&ad, AD_DATE_ACCESS | AD_DATE_UNIX, (uint32_t) st.st_mtime);
             ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
             ad_flush(&ad);
             ad_close(&ad, ADFLAGS_HF);
@@ -727,8 +710,8 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     ssize_t wcount;
     size_t wresid;
     off_t wtotal;
-    int ch, checkch, from_fd = 0, rcount, rval, to_fd = 0;
-    char *bufp;
+    int ch, checkch, from_fd = 0, rcount, to_fd = 0;
+    const char *bufp;
     char *p;
 
     if ((from_fd = open(spath, O_RDONLY, 0)) == -1) {
@@ -877,7 +860,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
 
         wtotal = 0;
 
-        while ((rcount = read(from_fd, buf, bufsize)) > 0) {
+        while ((rcount = (int) read(from_fd, buf, bufsize)) > 0) {
             for (bufp = buf, wresid = rcount; ;
                     bufp += wcount, wresid -= wcount) {
                 wcount = write(to_fd, bufp, wresid);
@@ -917,10 +900,6 @@ static int ftw_copy_file(const struct FTW *entp _U_,
         rval = 1;
     }
 
-    if (pflag && preserve_fd_acls(from_fd, to_fd) != 0) {
-        rval = 1;
-    }
-
     if (close(to_fd)) {
         SLOG("%s: %s", to.p_path, strerror(errno));
         rval = 1;
@@ -938,7 +917,7 @@ static int ftw_copy_link(const struct FTW *p _U_,
     int len;
     char llink[PATH_MAX];
 
-    if ((len = readlink(spath, llink, sizeof(llink) - 1)) == -1) {
+    if ((len = (int) readlink(spath, llink, sizeof(llink) - 1)) == -1) {
         SLOG("readlink: %s: %s", spath, strerror(errno));
         return 1;
     }
@@ -967,7 +946,8 @@ static int setfile(const struct stat *fs, int fd)
 {
     static struct timeval tv[2];
     struct stat ts;
-    int rval, gotstat, islink, fdval;
+    int gotstat, islink, fdval;
+    int result;
     mode_t mode;
     rval = 0;
     fdval = fd != -1;
@@ -987,8 +967,15 @@ static int setfile(const struct stat *fs, int fd)
         rval = 1;
     }
 
-    if (fdval ? fstat(fd, &ts) :
-            (islink ? lstat(to.p_path, &ts) : stat(to.p_path, &ts))) {
+    if (fdval) {
+        result = fstat(fd, &ts);
+    } else if (islink) {
+        result = lstat(to.p_path, &ts);
+    } else {
+        result = stat(to.p_path, &ts);
+    }
+
+    if (result) {
         gotstat = 0;
     } else {
         gotstat = 1;
@@ -1002,201 +989,40 @@ static int setfile(const struct stat *fs, int fd)
      * the mode; current BSD behavior is to remove all setuid bits on
      * chown.  If chown fails, lose setuid/setgid bits.
      */
-    if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid)
-        if (fdval ? fchown(fd, fs->st_uid, fs->st_gid) :
-                (islink ? lchown(to.p_path, fs->st_uid, fs->st_gid) :
-                 chown(to.p_path, fs->st_uid, fs->st_gid))) {
-            if (errno != EPERM) {
-                SLOG("chown: %s: %s", to.p_path, strerror(errno));
-                rval = 1;
-            }
 
-            mode &= ~(S_ISUID | S_ISGID);
+    if (!gotstat || fs->st_uid != ts.st_uid || fs->st_gid != ts.st_gid) {
+        if (fdval) {
+            result = fchown(fd, fs->st_uid, fs->st_gid);
+        } else if (islink) {
+            result = lchown(to.p_path, fs->st_uid, fs->st_gid);
+        } else {
+            result = chown(to.p_path, fs->st_uid, fs->st_gid);
         }
 
-    if (!gotstat || mode != ts.st_mode)
-        if (fdval ? fchmod(fd, mode) : chmod(to.p_path, mode)) {
-            SLOG("chmod: %s: %s", to.p_path, strerror(errno));
+        if (result != 0 && errno != EPERM) {
+            SLOG("chown: %s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
+
+        mode &= ~(S_ISUID | S_ISGID);
+    }
+
+    if ((!gotstat || mode != ts.st_mode)
+            && (fdval ? fchmod(fd, mode) : chmod(to.p_path, mode))) {
+        SLOG("chmod: %s: %s", to.p_path, strerror(errno));
+        rval = 1;
+    }
 
 #ifdef HAVE_ST_FLAGS
 
-    if (!gotstat || fs->st_flags != ts.st_flags)
-        if (fdval ?
-                fchflags(fd, fs->st_flags) :
-                (islink ? lchflags(to.p_path, fs->st_flags) :
-                 chflags(to.p_path, fs->st_flags))) {
-            SLOG("chflags: %s: %s", to.p_path, strerror(errno));
-            rval = 1;
-        }
+    if (!gotstat || fs->st_flags != ts.st_flags) && fdval ?
+        fchflags(fd, fs->st_flags) :
+        (islink ? lchflags(to.p_path, fs->st_flags) :
+         chflags(to.p_path, fs->st_flags))) {
+        SLOG("chflags: %s: %s", to.p_path, strerror(errno));
+        rval = 1;
+    }
 
 #endif
     return rval;
 }
-
-static int preserve_fd_acls(int source_fd _U_, int dest_fd _U_)
-{
-#if 0
-    acl_t acl;
-    acl_type_t acl_type;
-    int acl_supported = 0, ret, trivial;
-    ret = fpathconf(source_fd, _PC_ACL_NFS4);
-
-    if (ret > 0) {
-        acl_supported = 1;
-        acl_type = ACL_TYPE_NFS4;
-    } else if (ret < 0 && errno != EINVAL) {
-        warn("fpathconf(..., _PC_ACL_NFS4) failed for %s", to.p_path);
-        return 1;
-    }
-
-    if (acl_supported == 0) {
-        ret = fpathconf(source_fd, _PC_ACL_EXTENDED);
-
-        if (ret > 0) {
-            acl_supported = 1;
-            acl_type = ACL_TYPE_ACCESS;
-        } else if (ret < 0 && errno != EINVAL) {
-            warn("fpathconf(..., _PC_ACL_EXTENDED) failed for %s",
-                 to.p_path);
-            return 1;
-        }
-    }
-
-    if (acl_supported == 0) {
-        return 0;
-    }
-
-    acl = acl_get_fd_np(source_fd, acl_type);
-
-    if (acl == NULL) {
-        warn("failed to get acl entries while setting %s", to.p_path);
-        return 1;
-    }
-
-    if (acl_is_trivial_np(acl, &trivial)) {
-        warn("acl_is_trivial() failed for %s", to.p_path);
-        acl_free(acl);
-        return 1;
-    }
-
-    if (trivial) {
-        acl_free(acl);
-        return 0;
-    }
-
-    if (acl_set_fd_np(dest_fd, acl, acl_type) < 0) {
-        warn("failed to set acl entries for %s", to.p_path);
-        acl_free(acl);
-        return 1;
-    }
-
-    acl_free(acl);
-#endif
-    return 0;
-}
-
-#if 0
-static int preserve_dir_acls(const struct stat *fs, char *source_dir,
-                             char *dest_dir)
-{
-    acl_t (*aclgetf)(const char *, acl_type_t);
-    int (*aclsetf)(const char *, acl_type_t, acl_t);
-    struct acl *aclp;
-    acl_t acl;
-    acl_type_t acl_type;
-    int acl_supported = 0, ret, trivial;
-    ret = pathconf(source_dir, _PC_ACL_NFS4);
-
-    if (ret > 0) {
-        acl_supported = 1;
-        acl_type = ACL_TYPE_NFS4;
-    } else if (ret < 0 && errno != EINVAL) {
-        warn("fpathconf(..., _PC_ACL_NFS4) failed for %s", source_dir);
-        return 1;
-    }
-
-    if (acl_supported == 0) {
-        ret = pathconf(source_dir, _PC_ACL_EXTENDED);
-
-        if (ret > 0) {
-            acl_supported = 1;
-            acl_type = ACL_TYPE_ACCESS;
-        } else if (ret < 0 && errno != EINVAL) {
-            warn("fpathconf(..., _PC_ACL_EXTENDED) failed for %s",
-                 source_dir);
-            return 1;
-        }
-    }
-
-    if (acl_supported == 0) {
-        return 0;
-    }
-
-    /*
-     * If the file is a link we will not follow it
-     */
-    if (S_ISLNK(fs->st_mode)) {
-        aclgetf = acl_get_link_np;
-        aclsetf = acl_set_link_np;
-    } else {
-        aclgetf = acl_get_file;
-        aclsetf = acl_set_file;
-    }
-
-    if (acl_type == ACL_TYPE_ACCESS) {
-        /*
-         * Even if there is no ACL_TYPE_DEFAULT entry here, a zero
-         * size ACL will be returned. So it is not safe to simply
-         * check the pointer to see if the default ACL is present.
-         */
-        acl = aclgetf(source_dir, ACL_TYPE_DEFAULT);
-
-        if (acl == NULL) {
-            warn("failed to get default acl entries on %s",
-                 source_dir);
-            return 1;
-        }
-
-        aclp = &acl->ats_acl;
-
-        if (aclp->acl_cnt != 0 && aclsetf(dest_dir,
-                                          ACL_TYPE_DEFAULT, acl) < 0) {
-            warn("failed to set default acl entries on %s",
-                 dest_dir);
-            acl_free(acl);
-            return 1;
-        }
-
-        acl_free(acl);
-    }
-
-    acl = aclgetf(source_dir, acl_type);
-
-    if (acl == NULL) {
-        warn("failed to get acl entries on %s", source_dir);
-        return 1;
-    }
-
-    if (acl_is_trivial_np(acl, &trivial)) {
-        warn("acl_is_trivial() failed on %s", source_dir);
-        acl_free(acl);
-        return 1;
-    }
-
-    if (trivial) {
-        acl_free(acl);
-        return 0;
-    }
-
-    if (aclsetf(dest_dir, acl_type, acl) < 0) {
-        warn("failed to set acl entries on %s", dest_dir);
-        acl_free(acl);
-        return 1;
-    }
-
-    acl_free(acl);
-    return 0;
-}
-#endif

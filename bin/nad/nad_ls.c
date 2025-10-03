@@ -34,7 +34,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 
-#include "ad.h"
+#include "nad.h"
 
 #define ADv2_DIRNAME ".AppleDouble"
 
@@ -121,9 +121,7 @@ static void set_signal(void)
 */
 static const char *check_netatalk_dirs(const char *name)
 {
-    int c;
-
-    for (c = 0; netatalk_dirs[c]; c++) {
+    for (int c = 0; netatalk_dirs[c]; c++) {
         if ((strcmp(name, netatalk_dirs[c])) == 0) {
             return netatalk_dirs[c];
         }
@@ -136,7 +134,7 @@ static const char *check_netatalk_dirs(const char *name)
 static void usage_ls(void)
 {
     printf(
-        "Usage: ad ls [-dRl[u]] [file|dir, ...]\n\n"
+        "Usage: nad ls [-dRl[u]] [file|dir, ...]\n\n"
         "  -l Long Output [-u: unix info]:\n"
         "     <unixinfo ...> <FinderFlags> <AFPAttributes> <Color> <Type> <Creator> <CNID from AppleDouble> <name>\n\n"
         "     FinderFlags (valid for (f)ile and/or (d)irectory):\n"
@@ -208,7 +206,8 @@ static void print_date(const struct stat *statp)
 {
     time_t now;
     double diff;
-    char buf[100], *fmt;
+    char buf[100];
+    const char *fmt;
 
     if (time(&now) == -1) {
         printf(" ????????????");
@@ -231,7 +230,7 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
 {
     int adflags = 0;
     struct adouble ad;
-    char *FinderInfo;
+    const char *FinderInfo;
     uint16_t FinderFlags;
     uint16_t AFPattributes;
     char type[5] = "----";
@@ -527,7 +526,6 @@ static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
 static int ad_ls_r(char *path, afpvol_t *vol)
 {
     int ret = 0, cwd, dirprinted = 0, dirempty;
-    const char *name;
     char *tmp;
     static char cwdpath[MAXPATHLEN + 1];
     DIR *dp;
@@ -585,7 +583,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
         }
 
         /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
-        if ((name = check_netatalk_dirs(ep->d_name)) != NULL) {
+        if (check_netatalk_dirs(ep->d_name) != NULL) {
             continue;
         }
 
@@ -632,7 +630,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
             }
 
             /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
-            if ((name = check_netatalk_dirs(ep->d_name)) != NULL) {
+            if (check_netatalk_dirs(ep->d_name) != NULL) {
                 continue;
             }
 
@@ -698,8 +696,7 @@ int ad_ls(int argc, char **argv, AFPObj *obj)
             ls_u = 1;
             break;
 
-        case ':':
-        case '?':
+        default:
             usage_ls();
             return -1;
             break;

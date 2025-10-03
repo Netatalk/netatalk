@@ -34,7 +34,7 @@
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
 
-#include "ad.h"
+#include "nad.h"
 
 #define ADv2_DIRNAME ".AppleDouble"
 
@@ -62,7 +62,7 @@ static char *new_attributes;
 static void usage_set(void)
 {
     printf(
-        "Usage: ad set [-t TYPE] [-c CREATOR] [-l label] [-f flags] [-a attributes] file|dir \n\n"
+        "Usage: nad set [-t TYPE] [-c CREATOR] [-l label] [-f flags] [-a attributes] file|dir \n\n"
         "     Color Label:\n"
         "       none | grey | green | violet | blue | yellow | red | orange\n\n"
         "     FinderFlags:\n"
@@ -91,27 +91,27 @@ static void usage_set(void)
 }
 
 static void change_type(char *path _U_, afpvol_t *vol _U_,
-                        const struct stat *st _U_, struct adouble *ad, char *new_type)
+                        const struct stat *st _U_, struct adouble *ad, char *p_new_type)
 {
     char *FinderInfo;
 
     if ((FinderInfo = ad_entry(ad, ADEID_FINDERI))) {
-        memcpy(FinderInfo, new_type, 4);
+        memcpy(FinderInfo, p_new_type, 4);
     }
 }
 
 static void change_creator(char *path _U_, afpvol_t *vol _U_,
-                           const struct stat *st _U_, struct adouble *ad, char *new_creator)
+                           const struct stat *st _U_, struct adouble *ad, char *p_new_creator)
 {
     char *FinderInfo;
 
     if ((FinderInfo = ad_entry(ad, ADEID_FINDERI))) {
-        memcpy(FinderInfo + 4, new_creator, 4);
+        memcpy(FinderInfo + 4, p_new_creator, 4);
     }
 }
 
 static void change_label(char *path _U_, afpvol_t *vol _U_,
-                         const struct stat *st _U_, struct adouble *ad, char *new_label)
+                         const struct stat *st _U_, struct adouble *ad, char *p_new_label)
 {
     char *FinderInfo;
     const char **color = &labels[0];
@@ -123,7 +123,7 @@ static void change_label(char *path _U_, afpvol_t *vol _U_,
     }
 
     while (*color) {
-        if (strcasecmp(*color, new_label) == 0) {
+        if (strcasecmp(*color, p_new_label) == 0) {
             /* get flags */
             memcpy(&FinderFlags, FinderInfo + 8, 2);
             FinderFlags = ntohs(FinderFlags);
@@ -142,14 +142,14 @@ static void change_label(char *path _U_, afpvol_t *vol _U_,
 }
 
 static void change_attributes(char *path _U_, afpvol_t *vol _U_,
-                              const struct stat *st, struct adouble *ad, char *new_attributes)
+                              const struct stat *st, struct adouble *ad, char *p_new_attributes)
 {
     uint16_t AFPattributes;
     ad_getattr(ad, &AFPattributes);
     AFPattributes = ntohs(AFPattributes);
 
     if (S_ISREG(st->st_mode)) {
-        if (strchr(new_attributes, 'W')) {
+        if (strchr(p_new_attributes, 'W')) {
             AFPattributes |= ATTRBIT_NOWRITE;
         }
 
@@ -203,7 +203,7 @@ static void change_attributes(char *path _U_, afpvol_t *vol _U_,
 }
 
 static void change_flags(char *path _U_, afpvol_t *vol _U_,
-                         const struct stat *st, struct adouble *ad, char *new_flags)
+                         const struct stat *st, struct adouble *ad, char *p_new_flags)
 {
     char *FinderInfo;
     uint16_t FinderFlags;
@@ -216,7 +216,7 @@ static void change_flags(char *path _U_, afpvol_t *vol _U_,
     FinderFlags = ntohs(FinderFlags);
 
     if (S_ISREG(st->st_mode)) {
-        if (strchr(new_flags, 'M')) {
+        if (strchr(p_new_flags, 'M')) {
             FinderFlags |= FINDERINFO_ISHARED;
         }
 
@@ -339,8 +339,7 @@ int ad_set(int argc, char **argv, AFPObj *obj)
             new_attributes = strdup(optarg);
             break;
 
-        case ':':
-        case '?':
+        default:
             usage_set();
             return -1;
             break;

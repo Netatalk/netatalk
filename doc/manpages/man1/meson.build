@@ -1,5 +1,4 @@
 manfiles = [
-    'ad',
     'afpldaptest',
     'afppasswd',
     'afpstats',
@@ -8,6 +7,7 @@ manfiles = [
     'dbd',
     'fce_listen',
     'macusers',
+    'nad',
 ]
 
 if have_appletalk

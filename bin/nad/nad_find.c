@@ -34,7 +34,7 @@
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 
-#include "ad.h"
+#include "nad.h"
 
 static volatile sig_atomic_t alarmed;
 
@@ -84,7 +84,7 @@ static void set_signal(void)
 static void usage_find(void)
 {
     printf(
-        "Usage: ad find [-v VOLUME_PATH] NAME\n"
+        "Usage: nad find [-v VOLUME_PATH] NAME\n"
     );
 }
 
@@ -201,12 +201,10 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             srchvol = strdup(optarg);
             break;
 
-        case ':':
-        case '?':
+        default:
             usage_find();
             free((void *)srchvol);
             exit(1);
-            break;
         }
     }
 
@@ -252,7 +250,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     } else {
         ret = 0;
         cnid_t cnid;
-        char *bufp = resbuf;
+        const char *bufp = resbuf;
         bstring sep = bfromcstr("/");
 
         while (count--) {
@@ -260,7 +258,7 @@ int ad_find(int argc, char **argv, AFPObj *obj)
             bufp += sizeof(cnid_t);
             bstring path = NULL;
             bstring volpath = bfromcstr(vol.vol->v_path);
-            BSTRING_STRIP_SLASH(volpath);
+            BSTRING_STRIP_SLASH(volpath)
             char buffer[12 + MAXPATHLEN + 1];
             int buflen = 12 + MAXPATHLEN + 1;
             char *name;
