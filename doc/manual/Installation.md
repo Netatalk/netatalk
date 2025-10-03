@@ -76,31 +76,26 @@ packages that can be installed to enhance Netatalk's functionality.
 
 #### CNID database backends
 
-At least one of the below database libraries is required
-to power the CNID scheme of your choice.
-Without one of these, only the *last* backend will be available
-which operates in read-only mode and therefore not recommended
-for daily use.
+At least one of the below database libraries is required to power the CNID scheme of your choice.
 
 - Berkeley DB
 
-    The default dbd CNID backend for netatalk uses Berkeley DB to store
-    unique file identifiers. At the time of writing you need at least
-    version 4.6.
+    The default *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store
+    unique file identifiers.
 
-    The recommended version is 5.3, the final release under the permissive
-    Sleepycat license, and therefore the most widely distributed version.
+    The recommended Berekeley DB version is 5.3, while versions 4.6 and later should work as well.
+    Version 6 and later should generally be avoided due to licensing issues.
 
-- MySQL or MariaDB
+- MySQL Client or MariaDB Client
 
     By leveraging a MySQL-compatible client library, netatalk can be built
-    with a MySQL CNID backend that is highly scalable and reliable.
+    with the *mysql* CNID backend that is highly scalable and reliable.
     The administrator has to provide a separate database instance for use with
     this backend.
 
 - SQLite v3
 
-    The SQLite library version 3 enables the SQLite CNID backend
+    The SQLite library version 3 enables the *sqlite* CNID backend
     which is an alternative zero-configuration backend.
 
 ### Optional third-party software
