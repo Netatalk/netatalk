@@ -149,6 +149,7 @@ if have_dtrace and host_os != 'darwin'
                 meson.project_source_root() / 'etc/afpd/fork.c',
                 meson.project_source_root() / 'etc/afpd/appl.c',
                 meson.project_source_root() / 'etc/afpd/catsearch.c',
+                meson.project_source_root() / 'etc/afpd/dircache.c',
                 meson.project_source_root() / 'etc/afpd/directory.c',
                 meson.project_source_root() / 'etc/afpd/enumerate.c',
                 meson.project_source_root() / 'etc/afpd/file.c',

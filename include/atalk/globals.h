@@ -49,6 +49,11 @@
 
 #define DEFAULT_MAX_DIRCACHE_SIZE 8192
 
+/* Directory cache validation settings */
+#define DEFAULT_DIRCACHE_VALIDATION_FREQ    1     /* Validate every Nth access (default 1 for backward compatibility) */
+#define DEFAULT_DIRCACHE_METADATA_WINDOW    300   /* Metadata change window (seconds) */
+#define DEFAULT_DIRCACHE_METADATA_THRESHOLD 60    /* Metadata change threshold (seconds) */
+
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)
 #define OPTION_SERVERNOTIF   (1 << 2)

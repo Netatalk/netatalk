@@ -53,9 +53,9 @@
         if (!(b)) {                                                     \
             AFP_PANIC(#b);                                              \
         } \
-    } while(0);
+    } while(0)
 #else
-#define AFP_ASSERT(b)
+#define AFP_ASSERT(b) do {} while(0)
 #endif /* NDEBUG */
 
 #ifndef MIN

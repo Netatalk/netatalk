@@ -543,30 +543,10 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             goto exit;
         }
 
-        if (lstat(cfrombstr(ret->d_fullpath), &st) != 0) {
-            LOG(log_debug, logtype_afpd, "dirlookup(did: %u, path: \"%s\"): lstat: %s",
-                ntohl(did), cfrombstr(ret->d_fullpath), strerror(errno));
-
-            switch (errno) {
-            case ENOENT:
-            case ENOTDIR:
-                /* It's not there anymore, so remove it */
-                LOG(log_debug, logtype_afpd, "dirlookup(did: %u): calling dir_remove",
-                    ntohl(did));
-                dir_remove(vol, ret);
-                afp_errno = AFPERR_NOOBJ;
-                ret = NULL;
-                goto exit;
-
-            default:
-                goto exit;
-            }
-
-            /* DEADC0DE */
-            ret = NULL;
-            goto exit;
-        }
-
+        /* Trust the cache entry - validation already happened in dircache_search_by_did()
+         * based on the probabilistic validation model (should_validate_cache_entry).
+         * If the entry is invalid, it will be caught when actually used and
+         * dir_remove() will handle it, which reports invalid entries. */
         goto exit;
     }
 
@@ -933,35 +913,44 @@ void dir_free_invalid_q(void)
 }
 
 /*!
- * @brief Remove a dir from a cache and queue it for freeing
+ * @brief Remove a file/directory from dircache
  *
- * 1. Check if the dir is locked or has opened forks
+ * 1. Check the dir
  * 2. Remove it from the cache
  * 3. Queue it for removal
  * 4. If it's a request to remove curdir, mark curdir as invalid
  * 5. Mark it as invalid
  *
- * @param (r) pointer to struct vol
- * @param (rw) pointer to struct dir
+ * @param vol  (r) volume pointer
+ * @param dir  (rw) directory/file entry to remove from cache
+ * @return 0 on success
  */
 int dir_remove(const struct vol *vol, struct dir *dir)
 {
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
 
-    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT) {
+    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT
+            || dir->d_did == CNID_INVALID) { /* 1 */
         return 0;
     }
 
-    LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing}",
+    LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing from cache}",
         ntohl(dir->d_did), cfrombstr(dir->d_u_name));
+    /* Report if this was an unvalidated entry that turned out to be invalid
+     * Only increments invalid_on_use counter if DIRF_UNVALIDATED is set */
+    dircache_report_invalid_entry(dir);
+    /* Remove the dircache entry */
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
+    /* Queue pruned entry for memory deallocation */
     enqueue(invalid_dircache_entries, dir); /* 3 */
 
-    if (curdir == dir) {                    /* 4 */
+    /* Only null out curdir if we're removing a directory */
+    if (curdir == dir && !(dir->d_flags & DIRF_ISFILE)) { /* 4 */
         curdir = NULL;
     }
 
+    /* Mark invalid */
     dir->d_did = CNID_INVALID;              /* 5 */
     return 0;
 }
@@ -2443,9 +2432,16 @@ int deletecurdir(struct vol *vol)
         goto delete_done;
     }
 
+    /* For directory deletion: prune all child dircache entries */
+    if (!(fdir->d_flags & DIRF_ISFILE)) {
+        dircache_remove_children(vol, fdir);
+    }
+
+    /* Delete the directory's CNID */
     AFP_CNID_START("cnid_delete");
     cnid_delete(vol->v_cdb, fdir->d_did);
     AFP_CNID_DONE();
+    /* Remove from dircache */
     dir_remove(vol, fdir);
 delete_done:
     return err;
