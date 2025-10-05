@@ -18,6 +18,7 @@
 #include <atalk/server_child.h>
 
 extern int afpstats_init(server_child_t *);
+extern void afpstats_cleanup(void);
 extern server_child_t *afpstats_get_and_lock_childs(void);
 extern void afpstats_unlock_childs(void);
 #endif
