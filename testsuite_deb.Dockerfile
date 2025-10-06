@@ -56,7 +56,7 @@ ARG BUILD_DEPS="\
     systemtap-sdt-dev \
     "
 
-FROM debian:13.1-slim@sha256:c2880112cc5c61e1200c26f106e4123627b49726375eb5846313da9cca117337 AS build
+FROM debian:13.1-slim@sha256:1caf1c703c8f7e15dcf2e7769b35000c764e6f50e4d7401c355fb0248f3ddfdb AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -93,7 +93,7 @@ RUN meson setup build \
 
 RUN meson install --destdir=/staging/ -C build
 
-FROM debian:13.1-slim@sha256:c2880112cc5c61e1200c26f106e4123627b49726375eb5846313da9cca117337 AS deploy
+FROM debian:13.1-slim@sha256:1caf1c703c8f7e15dcf2e7769b35000c764e6f50e4d7401c355fb0248f3ddfdb AS deploy
 
 ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
