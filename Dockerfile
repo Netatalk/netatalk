@@ -12,6 +12,7 @@ ARG RUN_DEPS="\
     mariadb-client \
     mariadb-connector-c \
     openldap \
+    sqlite \
     tzdata \
     "
 ARG BUILD_DEPS="\
@@ -31,6 +32,7 @@ ARG BUILD_DEPS="\
     ninja \
     openldap-dev \
     pkgconfig \
+    sqlite-dev \
     "
 
 FROM alpine:3.22.1@sha256:4bcff63911fcb4448bd4fdacec207030997caf25e9bea4045fa6c8c44de311d1 AS build
@@ -53,7 +55,7 @@ RUN meson setup build \
     -Dwith-acls=false \
     -Dwith-afpstats=false \
     -Dwith-appletalk=true \
-    -Dwith-cnid-backends=dbd,mysql \
+    -Dwith-cnid-backends=dbd,mysql,sqlite \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-path=/etc \
     -Dwith-docs= \
