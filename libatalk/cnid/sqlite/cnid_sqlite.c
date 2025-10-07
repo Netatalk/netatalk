@@ -1171,7 +1171,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_stmt *transient_stmt = NULL;
     char dirpath[PATH_MAX];
     bstring dbpath = NULL;
-    const char *path_data = NULL;
+    const char *dbpath_str = NULL;
     int sqlite_return;
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
@@ -1199,25 +1199,35 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     unbecome_root();
     EC_NULL(dbpath = bformat("%s/%s.sqlite", dirpath, vol->v_localname));
-    path_data = bdata(dbpath);
+    dbpath_str = bdata(dbpath);
     EC_NULL(db->cnid_sqlite_voluuid_str = uuid_strip_dashes(vol->v_uuid));
     EC_ZERO(sqlite3_initialize());
     become_root();
 
-    if (sqlite3_open_v2(path_data,
+    if (sqlite3_open_v2(dbpath_str,
                         &db->cnid_sqlite_con,
                         SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL)) {
         LOG(log_error, logtype_cnid, "sqlite open error: %s, path: %s",
             sqlite3_errmsg(db->cnid_sqlite_con),
-            path_data);
+            dbpath_str);
         EC_FAIL;
     }
 
-    /* creating the db file as world-writable
-        to permit CNID records to be updated by any authenticated AFP user */
-    if (path_data && chmod(path_data, 0666) != 0) {
-        LOG(log_error, logtype_cnid, "Failed to set permissions on CNID SQLite DB: %s",
-            strerror(errno));
+    /* Setting permissions of the sqlite db file to world-writable.
+     * This is to allow CNID records to be updated by any authenticated AFP user.
+     *
+     * At the same time, do not treat a failure to change the permissions as a fatal error,
+     * because non-root clients such as 'nad' may open the database after it's been created. */
+    if (dbpath_str && chmod(dbpath_str, 0666) != 0) {
+        if (errno == EPERM || errno == EACCES) {
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_open: Current user has no permissions to set permissions on db file %s: %s",
+                dbpath_str, strerror(errno));
+        } else {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_open: Failed to set permissions on db file %s: %s",
+                dbpath_str, strerror(errno));
+        }
     }
 
     sqlite3_busy_timeout(db->cnid_sqlite_con, 2000);

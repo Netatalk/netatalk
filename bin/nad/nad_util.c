@@ -94,8 +94,6 @@ void _log(enum logtype lt, char *fmt, ...)
 /*!
  * Load volinfo and initialize struct vol
  *
- * Only opens "dbd" volumes !
- *
  * @param path   (r)  path to evaluate
  * @param vol    (rw) structure to initialize
  *
@@ -110,17 +108,14 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
         return -1;
     }
 
-    if (STRCMP(vol->vol->v_cnidscheme, !=, "dbd")) {
-        ERROR("\"%s\" isn't a \"dbd\" CNID volume!", vol->vol->v_path);
-    }
-
     /* Sanity checks to ensure we can touch this volume */
     if (vol->vol->v_adouble != AD_VERSION2
             && vol->vol->v_adouble != AD_VERSION_EA) {
         ERROR("Unsupported adouble versions: %u", vol->vol->v_adouble);
     }
 
-    if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS) {
+    if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS
+            && vol->vol->v_vfs_ea != AFPVOL_EA_NONE) {
         ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
     }
 
@@ -129,9 +124,10 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     }
 
     if ((vol->vol->v_cdb = cnid_open(vol->vol,
-                                     "dbd",
+                                     vol->vol->v_cnidscheme,
                                      flags)) == NULL) {
-        ERROR("Can't initialize CNID database connection for %s", vol->vol->v_path);
+        ERROR("Can't initialize CNID database connection for %s",
+              vol->vol->v_path);
     }
 
     cnid_getstamp(vol->vol->v_cdb,
