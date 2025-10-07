@@ -157,9 +157,30 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
     int ret = 0;
     uuidtype_t mytype = type;
     char nulluuid[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    /* Local copy to prevent corruption */
+    char name_copy[256];
+    /* Save original pointer and value to detect if caller's buffer was corrupted */
+    char original_check[256];
+    const char *original_ptr = name;
 #ifdef HAVE_LDAP
     char *uuid_string = NULL;
 #endif
+
+    if (name == NULL) {
+        LOG(log_error, logtype_afpd, "getuuidfromname: name is NULL");
+        return -1;
+    }
+
+    /* Copy name to local buffer to avoid pointer corruptions and improve security.
+     * Protects against the non-reentrant nature of getpwuid()/getgrgid().
+     * name pointer corrupted in race-condition for some ACL test cases */
+    snprintf(name_copy, sizeof(name_copy), "%s", name);
+    /* Save for corruption check */
+    snprintf(original_check, sizeof(original_check), "%s", name);
+    /* Use local copy from now on */
+    name = name_copy;
+    LOG(log_debug, logtype_afpd,
+        "getuuidfromname: START - name='%s', type=%d", name, type);
     ret = search_cachebyname(name, &mytype, uuid);
 
     if (ret == 0) {
@@ -172,6 +193,8 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
             uuid_bin2string(uuid));
 
         if ((mytype & UUID_ENOENT) == UUID_ENOENT) {
+            LOG(log_debug, logtype_afpd,
+                "getuuidfromname: returning -1 due to UUID_ENOENT for '%s'", name);
             return -1;
         }
     } else  {
@@ -194,13 +217,18 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
             /* Build a local UUID */
             if (type == UUID_USER) {
                 struct passwd *pwd;
+                LOG(log_debug, logtype_afpd,
+                    "getuuidfromname: calling getpwnam('%s')", name);
 
                 if ((pwd = getpwnam(name)) == NULL) {
-                    LOG(log_error, logtype_afpd, "getuuidfromname(\"%s\",t:%u): unknown user",
+                    LOG(log_error, logtype_afpd,
+                        "getuuidfromname(\"%s\",t:%u): unknown user (getpwnam returned NULL)",
                         name, uuidtype[type & UUIDTYPESTR_MASK]);
                     mytype |= UUID_ENOENT;
                     memcpy(uuid, nulluuid, 16);
                 } else {
+                    LOG(log_debug, logtype_afpd,
+                        "getuuidfromname: getpwnam('%s') succeeded, uid=%d", name, pwd->pw_uid);
                     localuuid_from_id(uuid, UUID_USER, pwd->pw_uid);
                     ret = 0;
                     LOG(log_debug, logtype_afpd,
@@ -235,6 +263,17 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
     }
 
 #endif
+
+    /* Check if the original name pointer was corrupted during execution */
+    if (original_ptr != NULL && strcmp(original_ptr, original_check) != 0) {
+        LOG(log_error, logtype_afpd,
+            "uuid.c:getuuidfromname: CORRUPTION DETECTED - caller's name buffer overwritten!"
+            "Original='%s', Now='%s'. Error handled, but caller should be fixed.",
+            original_check, original_ptr);
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "getuuidfromname: END - name='%s', ret=%d", name, ret);
     return ret;
 }
 

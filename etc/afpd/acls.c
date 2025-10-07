@@ -1735,7 +1735,6 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 {
     struct vol      *vol;
     struct dir      *dir;
-    int         ret;
     uint32_t           did;
     uint16_t        vid, bitmap;
     struct path         *s_path;
@@ -1793,11 +1792,14 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             LOG(log_debug, logtype_afpd, "afp_getacl: local uid: %u", s_path->st.st_uid);
             localuuid_from_id((unsigned char *)rbuf, UUID_USER, s_path->st.st_uid);
         } else {
+            /* Make defensive copy of username from static buffer */
+            char username[256];
+            snprintf(username, sizeof(username), "%s", pw->pw_name);
             LOG(log_debug, logtype_afpd, "afp_getacl: got uid: %d, name: %s",
-                s_path->st.st_uid, pw->pw_name);
+                s_path->st.st_uid, username);
 
-            if ((ret = getuuidfromname(pw->pw_name, UUID_USER,
-                                       (unsigned char *)rbuf)) != 0) {
+            if (getuuidfromname(username, UUID_USER,
+                                (unsigned char *)rbuf) != 0) {
                 return AFPERR_MISC;
             }
         }
@@ -1815,11 +1817,14 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             LOG(log_debug, logtype_afpd, "afp_getacl: local gid: %u", s_path->st.st_gid);
             localuuid_from_id((unsigned char *)rbuf, UUID_GROUP, s_path->st.st_gid);
         } else {
+            /* Make defensive copy of groupname from static buffer */
+            char groupname[256];
+            snprintf(groupname, sizeof(groupname), "%s", gr->gr_name);
             LOG(log_debug, logtype_afpd, "afp_getacl: got gid: %d, name: %s",
-                s_path->st.st_gid, gr->gr_name);
+                s_path->st.st_gid, groupname);
 
-            if ((ret = getuuidfromname(gr->gr_name, UUID_GROUP,
-                                       (unsigned char *)rbuf)) != 0) {
+            if (getuuidfromname(groupname, UUID_GROUP,
+                                (unsigned char *)rbuf) != 0) {
                 return AFPERR_MISC;
             }
         }

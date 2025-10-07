@@ -213,7 +213,7 @@ void *dalloc_value_for_key(const DALLOC_CTX *d, ...)
 
     while (STRCMP(type, ==, "DALLOC_CTX")) {
         elem = va_arg(args, int);
-        AFP_ASSERT(elem < talloc_array_length(d->dd_talloc_array))
+        AFP_ASSERT(elem < talloc_array_length(d->dd_talloc_array));
         d = d->dd_talloc_array[elem];
         type = va_arg(args, const char *);
     }
