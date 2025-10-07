@@ -39,6 +39,7 @@
 #include <unistd.h>
 
 /* Netatalk library includes */
+#include "afp.h"
 #include "afpclient.h"
 #include "afpcmd.h"
 #include "afphelper.h"
@@ -87,6 +88,7 @@
 #define ERROR_VALIDATION_TEST    7
 #define ERROR_CONFIGURATION      8
 #define ERROR_VOLUME_OPERATIONS  9
+#define ERROR_LOGIN             10
 
 /* Global Debug flag */
 bool Debug = false;
@@ -2127,11 +2129,75 @@ int main(int32_t ac, char **av)
     dsi->socket = sock;
     Conn->afp_version = Version;
 
-    /* Login to AFP server and open Vol */
+    /* Login to AFP server */
     if (Version >= 30) {
         ExitCode = ntohs((uint16_t)FPopenLoginExt(Conn, vers, uam, User, Password));
     } else {
         ExitCode = ntohs((uint16_t)FPopenLogin(Conn, vers, uam, User, Password));
+    }
+
+    /* Check if login was successful */
+    if (ExitCode != 0) {
+        fprintf(stderr, "Error: Login failed with error code %d", ExitCode);
+
+        /* Provide more specific error messages for common AFP login error codes */
+        /* Note: ExitCode is the uint16_t representation of the signed AFP error */
+        switch ((int16_t)ExitCode) {
+        case AFPERR_NOTAUTH:
+            fprintf(stderr, " (User not authenticated - invalid username or password)");
+            break;
+
+        case AFPERR_BADUAM:
+            fprintf(stderr, " (UAM doesn't exist)");
+            break;
+
+        case AFPERR_BADVERS:
+            fprintf(stderr, " (Bad AFP version number)");
+            break;
+
+        case AFPERR_ACCESS:
+            fprintf(stderr, " (Permission denied)");
+            break;
+
+        case AFPERR_PWDEXPR:
+            fprintf(stderr, " (Password expired)");
+            break;
+
+        case AFPERR_PWDCHNG:
+            fprintf(stderr, " (Password needs to be changed)");
+            break;
+
+        case AFPERR_PWDSHORT:
+            fprintf(stderr, " (Password too short)");
+            break;
+
+        case AFPERR_PWDPOLCY:
+            fprintf(stderr, " (Password fails policy check)");
+            break;
+
+        case AFPERR_USRLOGIN:
+            fprintf(stderr, " (User already logged on)");
+            break;
+
+        case AFPERR_SHUTDOWN:
+            fprintf(stderr, " (Server is going down)");
+            break;
+
+        case AFPERR_SESSCLOS:
+            fprintf(stderr, " (Session closed)");
+            break;
+
+        default:
+            fprintf(stderr, " (AFP error)");
+            break;
+        }
+
+        fprintf(stderr, "\n");
+        fprintf(stderr,
+                "afp_lantest lacks auth encryption, ensure 'uam list' contains 'uams_clrtxt.so' (test only)");
+        fprintf(stderr, "User: %s, UAM: %s, Server: %s:%d\n",
+                User, uam, Server, Port);
+        clean_exit(ERROR_LOGIN);
     }
 
     vol  = FPOpenVol(Conn, Vol);
@@ -2235,8 +2301,9 @@ int main(int32_t ac, char **av)
     displayresults();
 #ifdef __linux__
 
-    /* Retrieve and display dircache statistics from log file */
-    if (io_monitoring_enabled) {
+    /* Retrieve and display dircache statistics from log file if running on localhost */
+    if (strcmp(Server, "localhost") == 0 || strcmp(Server, "127.0.0.1") == 0
+            || strstr(Server, "::1") != NULL) {
         /* Additional wait to ensure logs are flushed */
         sleep(1);
         /* Display dircache statistics from log file */

@@ -166,6 +166,7 @@ if have_dtrace and host_os != 'darwin'
                 'fork.c',
                 'appl.c',
                 'catsearch.c',
+                'dircache.c',
                 'directory.c',
                 'enumerate.c',
                 'file.c',

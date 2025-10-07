@@ -114,6 +114,18 @@
 static hash_t       *dircache;        /* The actual cache */
 static unsigned int dircache_maxsize; /* cache maximum size */
 
+/*
+ * Configuration variables for cache validation behavior
+ * These control how frequently we validate cached entries against filesystem
+ */
+static unsigned int dircache_validation_freq = DEFAULT_DIRCACHE_VALIDATION_FREQ;
+static unsigned int dircache_metadata_window = DEFAULT_DIRCACHE_METADATA_WINDOW;
+static unsigned int dircache_metadata_threshold =
+    DEFAULT_DIRCACHE_METADATA_THRESHOLD;
+
+/* Counter for probabilistic validation - thread-safe with compiler builtins */
+static volatile uint64_t validation_counter = 0;
+
 static struct dircache_stat {
     unsigned long long lookups;
     unsigned long long hits;
@@ -122,6 +134,7 @@ static struct dircache_stat {
     unsigned long long removed;
     unsigned long long expunged;
     unsigned long long evicted;
+    unsigned long long invalid_on_use;  /* entries that failed when used */
 } dircache_stat;
 
 /* FNV 1a */
@@ -230,6 +243,105 @@ static q_t *index_queue;    /* the index itself */
 static unsigned long queue_count;
 
 /*!
+ * @brief Determine if cache entry should be validated against filesystem
+ *
+ * Uses probabilistic validation to reduce filesystem calls while still
+ * detecting external changes. Internal netatalk operations use explicit
+ * cache invalidation via dir_remove() calls, so frequent validation is
+ * only needed to detect external filesystem changes.
+ *
+ * @returns 1 if validation should be performed, 0 otherwise
+ */
+static int should_validate_cache_entry(void)
+{
+    /* Thread-safe increment using compiler builtins */
+    uint64_t count = __sync_fetch_and_add(&validation_counter, 1);
+
+    /* Validate every Nth access to detect external changes */
+    if (dircache_validation_freq == 0) {
+        return 1;  /* Always validate if freq is 0 (invalid config) */
+    }
+
+    /* Use the fetched value + 1 (post-increment semantics) */
+    return ((count + 1) % dircache_validation_freq == 0);
+}
+
+/*!
+ * @brief Smart validation for directory cache entries
+ *
+ * Distinguishes between metadata-only changes (permissions, xattrs) and
+ * content changes (files added/removed) to avoid unnecessary cache invalidation.
+ * This is critical for AFP performance as directory ctime changes frequently
+ * for reasons that don't affect cached directory information.
+ *
+ * @param cdir   (r) cached directory entry
+ * @param st     (r) fresh stat information from filesystem
+ *
+ * @returns 1 if entry should be invalidated, 0 if still valid
+ */
+static int cache_entry_externally_modified(struct dir *cdir,
+        const struct stat *st)
+{
+    AFP_ASSERT(cdir);
+    AFP_ASSERT(st);
+
+    /* Inode number changed means file was deleted and recreated */
+    if (cdir->dcache_ino != st->st_ino) {
+        LOG(log_debug, logtype_afpd,
+            "dircache: inode changed for \"%s\" (%llu -> %llu)",
+            cfrombstr(cdir->d_u_name),
+            (unsigned long long)cdir->dcache_ino,
+            (unsigned long long)st->st_ino);
+        return 1;
+    }
+
+    /* No ctime change means no external modification */
+    if (cdir->dcache_ctime == st->st_ctime) {
+        return 0;
+    }
+
+    /* Files: any ctime change is significant */
+    if (cdir->d_flags & DIRF_ISFILE) {
+        LOG(log_debug, logtype_afpd,
+            "dircache: file ctime changed for \"%s\"",
+            cfrombstr(cdir->d_u_name));
+        return 1;
+    }
+
+    /*
+     * Directories: ctime changes for multiple reasons:
+     * 1. Content changes (files added/removed) - should invalidate
+     * 2. Metadata changes (permissions, xattrs) - should NOT invalidate
+     * 3. Subdirectory changes - should NOT invalidate parent
+     *
+     * Heuristic: Recent, small ctime changes are likely metadata-only.
+     * Older or larger changes suggest content modification.
+     */
+    time_t now = time(NULL);
+    time_t ctime_age = now - st->st_ctime;
+    time_t ctime_delta = st->st_ctime - cdir->dcache_ctime;
+
+    if (ctime_age <= dircache_metadata_window &&
+            ctime_delta <= dircache_metadata_threshold) {
+        /*
+         * Recent, small change - likely metadata update.
+         * Update cached ctime to prevent repeated checks and continue.
+         */
+        LOG(log_debug, logtype_afpd,
+            "dircache: metadata-only change detected for \"%s\", updating cached ctime",
+            cfrombstr(cdir->d_u_name));
+        cdir->dcache_ctime = st->st_ctime;
+        return 0;
+    }
+
+    /* Significant change - assume content modification */
+    LOG(log_debug, logtype_afpd,
+        "dircache: significant change detected for \"%s\" (age=%lds, delta=%lds)",
+        cfrombstr(cdir->d_u_name), (long)ctime_age, (long)ctime_delta);
+    return 1;
+}
+
+/*!
  * @brief Remove a fixed number of (oldest) entries from the cache and indexes
  *
  * The default is to remove the 256 oldest entries from the cache.
@@ -312,35 +424,61 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
     }
 
     if (cdir) {
-        if (cdir->d_flags & DIRF_ISFILE) { /* (1) */
-            LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {not a directory:\"%s\"}",
+        /* Files found when expecting directories are always invalid */
+        if (cdir->d_flags & DIRF_ISFILE) {
+            LOG(log_debug, logtype_afpd,
+                "dircache(cnid:%u): {not a directory:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_u_name));
-            (void)dir_remove(vol, cdir); /* (1a) */
+            (void)dir_remove(vol, cdir);
             dircache_stat.expunged++;
-            return NULL;        /* (1b) */
+            return NULL;
         }
 
-        if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
-            LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {missing:\"%s\"}",
+        /*
+         * OPTIMIZATION: Skip validation most of the time.
+         * Internal netatalk operations invalidate cache explicitly.
+         * Periodic validation catches external filesystem changes.
+         */
+        if (should_validate_cache_entry()) {
+            /* Mark entry as validated to track unvalidated entries */
+            cdir->d_flags &= ~DIRF_UNVALIDATED;
+
+            /* Check if file still exists */
+            if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+                LOG(log_debug, logtype_afpd,
+                    "dircache(cnid:%u): {missing:\"%s\"}",
+                    ntohl(cnid), cfrombstr(cdir->d_fullpath));
+                (void)dir_remove(vol, cdir);
+                dircache_stat.expunged++;
+                return NULL;
+            }
+
+            /* Smart validation: distinguish meaningful changes */
+            if (cache_entry_externally_modified(cdir, &st)) {
+                LOG(log_debug, logtype_afpd,
+                    "dircache(cnid:%u): {externally modified:\"%s\"}",
+                    ntohl(cnid), cfrombstr(cdir->d_u_name));
+                (void)dir_remove(vol, cdir);
+                dircache_stat.expunged++;
+                return NULL;
+            }
+
+            /* Entry validated and still valid */
+            LOG(log_debug, logtype_afpd,
+                "dircache(cnid:%u): {validated: path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
-            (void)dir_remove(vol, cdir);
-            dircache_stat.expunged++;
-            return NULL;
+        } else {
+            /* Skipped validation for performance - mark as unvalidated */
+            cdir->d_flags |= DIRF_UNVALIDATED;
+            LOG(log_debug, logtype_afpd,
+                "dircache(cnid:%u): {cached (unvalidated): path:\"%s\"}",
+                ntohl(cnid), cfrombstr(cdir->d_fullpath));
         }
 
-        if ((cdir->dcache_ctime != st.st_ctime) || (cdir->dcache_ino != st.st_ino)) {
-            LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {modified:\"%s\"}",
-                ntohl(cnid), cfrombstr(cdir->d_u_name));
-            (void)dir_remove(vol, cdir);
-            dircache_stat.expunged++;
-            return NULL;
-        }
-
-        LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {cached: path:\"%s\"}",
-            ntohl(cnid), cfrombstr(cdir->d_fullpath));
         dircache_stat.hits++;
     } else {
-        LOG(log_debug, logtype_afpd, "dircache(cnid:%u): {not in cache}", ntohl(cnid));
+        LOG(log_debug, logtype_afpd,
+            "dircache(cnid:%u): {not in cache}", ntohl(cnid));
         dircache_stat.misses++;
     }
 
@@ -376,7 +514,8 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     AFP_ASSERT(len == strlen(name));
     AFP_ASSERT(len < 256);
     dircache_stat.lookups++;
-    LOG(log_debug, logtype_afpd, "dircache_search_by_name(did:%u, \"%s\")",
+    LOG(log_debug, logtype_afpd,
+        "dircache_search_by_name(did:%u, \"%s\")",
         ntohl(dir->d_did), name);
 
     if (dir->d_did != DIRDID_ROOT_PARENT) {
@@ -390,28 +529,42 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     }
 
     if (cdir) {
-        if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
-            LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {missing:\"%s\"}",
-                ntohl(dir->d_did), name, cfrombstr(cdir->d_fullpath));
-            (void)dir_remove(vol, cdir);
-            dircache_stat.expunged++;
-            return NULL;
+        /* Periodic validation to detect external changes */
+        if (should_validate_cache_entry()) {
+            /* Mark entry as validated */
+            cdir->d_flags &= ~DIRF_UNVALIDATED;
+
+            /* Check if file still exists */
+            if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+                LOG(log_debug, logtype_afpd,
+                    "dircache(did:%u,\"%s\"): {missing:\"%s\"}",
+                    ntohl(dir->d_did), name, cfrombstr(cdir->d_fullpath));
+                (void)dir_remove(vol, cdir);
+                dircache_stat.expunged++;
+                return NULL;
+            }
+
+            /* Smart validation for external modifications */
+            if (cache_entry_externally_modified(cdir, &st)) {
+                LOG(log_debug, logtype_afpd,
+                    "dircache(did:%u,\"%s\"): {externally modified}",
+                    ntohl(dir->d_did), name);
+                (void)dir_remove(vol, cdir);
+                dircache_stat.expunged++;
+                return NULL;
+            }
+        } else {
+            /* Mark as unvalidated since we skipped validation */
+            cdir->d_flags |= DIRF_UNVALIDATED;
         }
 
-        /* Remove modified directories and files */
-        if ((cdir->dcache_ctime != st.st_ctime) || (cdir->dcache_ino != st.st_ino)) {
-            LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {modified}",
-                ntohl(dir->d_did), name);
-            (void)dir_remove(vol, cdir);
-            dircache_stat.expunged++;
-            return NULL;
-        }
-
-        LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {found in cache}",
+        LOG(log_debug, logtype_afpd,
+            "dircache(did:%u,\"%s\"): {found in cache}",
             ntohl(dir->d_did), name);
         dircache_stat.hits++;
     } else {
-        LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {not in cache}",
+        LOG(log_debug, logtype_afpd,
+            "dircache(did:%u,\"%s\"): {not in cache}",
             ntohl(dir->d_did), name);
         dircache_stat.misses++;
     }
@@ -551,6 +704,104 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 }
 
 /*!
+ * @brief Remove all child entries of a directory from the dircache
+ *
+ * When a directory is renamed or moved, the full paths stored in the
+ * dircache become invalid for all child entries of the renamed dir.
+ * This function prunes orphaned child dircache entries of given dir.
+ * CNID entries use parent DIDs and name, and requre recursion to get
+ * the full path, therefore parent changes do not invalidate the CNIDs.
+ *
+ * @param vol  (r) volume
+ * @param dir  (r) parent directory whose children should be removed
+ */
+void dircache_remove_children(const struct vol *vol, struct dir *dir)
+{
+    struct dir *entry;
+    hnode_t *hn;
+    hscan_t hs;
+    /* Store dir pointers */
+    struct dir **to_remove = NULL;
+    int remove_count = 0;
+    int remove_capacity = 0;
+
+    if (!dir || !dir->d_fullpath) {
+        return;
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "dircache_remove_children: removing children of \"%s\" (did:%u)",
+        cfrombstr(dir->d_fullpath), ntohl(dir->d_did));
+    /* Two stages to avoid modifying the hash during iteration */
+    /* First pass: collect entries to remove */
+    hash_scan_begin(&hs, dircache);
+
+    while ((hn = hash_scan_next(&hs))) {
+        entry = hnode_get(hn);
+
+        /* Skip the parent directory itself */
+        if (entry == dir) {
+            continue;
+        }
+
+        /* Check if entry is a decendant by comparing parent path */
+        if (entry->d_fullpath && dir->d_fullpath) {
+            const char *entry_path = cfrombstr(entry->d_fullpath);
+            const char *parent_path = cfrombstr(dir->d_fullpath);
+            size_t parent_len = blength(dir->d_fullpath);
+
+            /* Check if entry's path starts with parent's path followed by '/' */
+            if (parent_path && entry_path && parent_len > 0 &&
+                    strncmp(entry_path, parent_path, parent_len) == 0 &&
+                    entry_path[parent_len] == '/') {
+                /* Expand to_remove array */
+                if (remove_count >= remove_capacity) {
+                    remove_capacity = remove_capacity ? remove_capacity * 2 : 16;
+                    to_remove = realloc(to_remove, remove_capacity * sizeof(struct dir*));
+
+                    if (!to_remove) {
+                        LOG(log_error, logtype_afpd,
+                            "dircache_remove_children: out of memory");
+                        return;
+                    }
+                }
+
+                /* Store the dir pointer for removal */
+                to_remove[remove_count] = entry;
+                remove_count++;
+                LOG(log_debug, logtype_afpd,
+                    "dircache_remove_children: marking child \"%s\" (did:%u) for removal",
+                    cfrombstr(entry->d_u_name), ntohl(entry->d_did));
+            }
+        }
+    }
+
+    /* Second pass: remove collected entries from dircache */
+    for (int i = 0; i < remove_count; i++) {
+        entry = to_remove[i];
+        LOG(log_debug, logtype_afpd,
+            "dircache_remove_children: removing stale \"%s\" (did:%u) from dircache",
+            cfrombstr(entry->d_u_name), ntohl(entry->d_did));
+        /* Remove entry from dircache */
+        dir_remove(vol, entry);
+    }
+
+    if (to_remove) {
+        free(to_remove);
+    }
+
+    if (remove_count) {
+        LOG(log_info, logtype_afpd,
+            "dircache_remove_children: removed %d dircache entries of \"%s\"",
+            remove_count, cfrombstr(dir->d_fullpath));
+    } else {
+        LOG(log_debug, logtype_afpd,
+            "dircache_remove_children: removed %d dircache entries of \"%s\"",
+            remove_count, cfrombstr(dir->d_fullpath));
+    }
+}
+
+/*!
  * @brief Initialize the dircache and indexes
  *
  * This is called in child afpd initialisation. The maximum cache size will be
@@ -615,34 +866,52 @@ int dircache_init(int reqsize)
 /*!
  * @brief Log dircache statistics
  *
- * Includes hit ratio percentage for monitoring cache effectiveness.
+ * Includes hit ratio percentage for monitoring cache effectiveness,
+ * validation-specific metrics to monitor performance impact of
+ * the optimization changes, and username for tracking per-user stats.
+ * Shows both expunged (caught by validation) and invalid_on_use (missed by validation).
  */
 void log_dircache_stat(void)
 {
     double hit_ratio = 0.0;
+    double validation_ratio = 0.0;
 
     if (dircache_stat.lookups > 0) {
         hit_ratio = ((double)dircache_stat.hits / (double)dircache_stat.lookups) *
                     100.0;
+
+        if (dircache_validation_freq > 0) {
+            /* Thread-safe read of validation counter */
+            uint64_t counter_value = __sync_fetch_and_add(&validation_counter, 0);
+            validation_ratio = ((double)counter_value / (double)dircache_validation_freq) /
+                               (double)dircache_stat.lookups * 100.0;
+        }
     }
 
-    /* Get username from AFPobj if available */
+    /* Get username from AFPobj if available. AFPobj->username is an array,
+     * not a pointer so only need to check if AFPobj is non-null. */
     extern AFPObj *AFPobj;
     const char *username = (AFPobj
                             && AFPobj->username[0]) ? AFPobj->username : "unknown";
     LOG(log_info, logtype_afpd,
         "dircache statistics: (user: %s) "
         "entries: %lu, lookups: %llu, hits: %llu (%.1f%%), misses: %llu, "
-        "added: %llu, removed: %llu, expunged: %llu, evicted: %llu",
+        "validations: ~%llu (%.1f%%), "
+        "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
+        "validation_freq: %u",
         username,
         queue_count,
         dircache_stat.lookups,
         dircache_stat.hits, hit_ratio,
         dircache_stat.misses,
+        dircache_validation_freq > 0 ? __sync_fetch_and_add(&validation_counter,
+                0) / dircache_validation_freq : 0, validation_ratio,
         dircache_stat.added,
         dircache_stat.removed,
         dircache_stat.expunged,
-        dircache_stat.evicted);
+        dircache_stat.invalid_on_use,
+        dircache_stat.evicted,
+        dircache_validation_freq);
 }
 
 /*!
@@ -729,4 +998,79 @@ void dircache_dump(void)
     fflush(dump);
     fclose(dump);
     return;
+}
+
+/*!
+ * @brief Set directory cache validation parameters
+ *
+ * Allows runtime configuration of cache validation behavior for performance tuning.
+ * Lower validation frequency improves performance but may delay detection of
+ * external filesystem changes.
+ *
+ * @param freq       (r) validation frequency (1 = validate every access, 5 = every 5th access)
+ * @param meta_win   (r) metadata change time window in seconds
+ * @param meta_thresh (r) metadata change threshold in seconds
+ *
+ * @returns 0 on success, -1 on invalid parameters
+ */
+int dircache_set_validation_params(unsigned int freq,
+                                   unsigned int meta_win,
+                                   unsigned int meta_thresh)
+{
+    if (freq == 0 || freq > 100) {
+        LOG(log_error, logtype_afpd,
+            "dircache_set_validation_params: invalid frequency %u (must be 1-100)", freq);
+        return -1;
+    }
+
+    if (meta_win > 3600 || meta_thresh > 1800) {
+        LOG(log_error, logtype_afpd,
+            "dircache_set_validation_params: invalid metadata parameters (%u, %u)",
+            meta_win, meta_thresh);
+        return -1;
+    }
+
+    dircache_validation_freq = freq;
+    dircache_metadata_window = meta_win;
+    dircache_metadata_threshold = meta_thresh;
+    /* Thread-safe reset of validation counter using compiler builtins */
+    __sync_lock_test_and_set(&validation_counter, 0);
+    LOG(log_info, logtype_afpd,
+        "dircache: validation parameters updated (freq=%u, window=%us, threshold=%us), counter reset",
+        freq, meta_win, meta_thresh);
+    return 0;
+}
+
+/*!
+ * @brief Reset validation counter for consistent testing
+ *
+ * Resets the global validation counter to ensure predictable
+ * validation patterns between test runs or configuration changes.
+ */
+void dircache_reset_validation_counter(void)
+{
+    /* Thread-safe reset using compiler builtins */
+    __sync_lock_test_and_set(&validation_counter, 0);
+    LOG(log_debug, logtype_afpd, "dircache: validation counter reset");
+}
+
+/*!
+ * @brief Report that a cache entry was invalid when actually used
+ *
+ * This function should be called when a cached directory entry that was
+ * returned without validation (for performance) turns out to be invalid
+ * when actually accessed (e.g., file doesn't exist, has been modified, etc).
+ * This helps track the effectiveness of the validation frequency setting.
+ *
+ * @param dir (r) The directory entry that was found to be invalid
+ */
+void dircache_report_invalid_entry(struct dir *dir)
+{
+    if (dir && (dir->d_flags & DIRF_UNVALIDATED)) {
+        /* Only count entries that were returned without validation */
+        dircache_stat.invalid_on_use++;
+        LOG(log_debug, logtype_afpd,
+            "dircache: unvalidated entry was invalid on use: \"%s\"",
+            cfrombstr(dir->d_u_name));
+    }
 }

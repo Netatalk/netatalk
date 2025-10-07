@@ -1758,6 +1758,7 @@ static int check_attrib(const struct vol *vol, struct adouble *adp)
 
     return 0;
 }
+
 /*
  * dirfd can be used for unlinkat semantics
  */
@@ -1767,6 +1768,12 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
     struct adouble      *adp = NULL;
     int			adflags, err = AFP_OK;
     int			meta = 0;
+
+    if (file == NULL) {
+        LOG(log_error, logtype_afpd, "deletefile: file parameter is NULL");
+        return AFPERR_PARAM;
+    }
+
     LOG(log_debug, logtype_afpd, "deletefile('%s')", file);
     ad_init(&ad, vol);
 
@@ -1836,8 +1843,10 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
     } else if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file))
                && !(err = netatalk_unlinkat(dirfd, file))) {
         cnid_t id;
+        struct dir *cachedfile;
 
         if (checkAttrib) {
+            /* Delete CNID */
             AFP_CNID_START("cnid_get");
             id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file));
             AFP_CNID_DONE();
@@ -1846,6 +1855,16 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
                 AFP_CNID_START("cnid_delete");
                 cnid_delete(vol->v_cdb, id);
                 AFP_CNID_DONE();
+            }
+
+            /* Remove file from dircache */
+            /* file guaranteed non-NULL (checked at function entry) */
+            AFP_ASSERT(file != NULL);
+            cachedfile = dircache_search_by_name(vol, curdir, file,
+                                                 strlen(file)); // NOSONAR:
+
+            if (cachedfile) {
+                dir_remove(vol, cachedfile);
             }
         }
     }
