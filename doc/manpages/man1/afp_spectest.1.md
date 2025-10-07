@@ -4,8 +4,10 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCEilmVvX] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+**afp_spectest** [-1234567aCEimVvX] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
 [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
+
+**afp_spectest** -l
 
 # Description
 
