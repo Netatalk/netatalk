@@ -490,92 +490,6 @@ A small overview of the officially supported UAMs.
 | Server support   | uams_guest.so | uams_cleartxt.so | uams_randnum.so  | uams_dhx.so  | uams_dhx2.so  | uams_gss.so      |
 | Password storage | None          | Either system auth or PAM | Passwords stored in clear text in a separate text file | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center |
 
-### SSH tunneling
-
-Tunneling and VPNs usually have nothing to do with AFP authentication
-and UAMs. But since Apple introduced an option called "Allow Secure
-Connections Using SSH" and many people tend to confuse the two, we'll
-cover this here.
-
-#### Manually tunneling an AFP session
-
-This works since the first AFP servers that spoke "AFP over TCP"
-appeared in networks. One simply tunnels the remote server's AFP port to
-a local port different than 548 and connects locally to this port
-afterwards. On macOS this can be done by
-
-    ssh -l $USER $SERVER -L 10548:127.0.0.1:548 sleep 3000
-
-After establishing the tunnel one will use `"afp://127.0.0.1:10548"` in
-the "Connect to server" dialog. All AFP traffic including the initial
-connection attempts will be sent encrypted over the wire since the local
-AFP client will connect to the Mac's local port 10548 which will be
-forwarded to the remote server's AFP port (we used the default 548) over
-SSH.
-
-This sort of tunnel is an ideal solution if you must access an AFP
-server through the Internet without having the ability or desire to use
-a "real" VPN. Note that you can let **ssh** compress the data by using its
-"-C" switch and that the tunnel endpoints can be different from both AFP
-client and server (compare with the SSH documentation for details).
-
-#### Automatically establishing a tunneled AFP connection
-
-From Mac OS X 10.2 to 10.4, Apple added an "Allow Secure Connections
-Using SSH" checkbox to the "Connect to Server" dialog. The idea behind
-this was: When the server signals that it can be contacted by SSH then
-macOS's AFP client tries to establish the tunnel and automagically send
-all AFP traffic through it.
-
-But it took until the release of Mac OS X 10.3 that this feature worked
-the first time... partly. In case, the SSH tunnel could not be
-established and the AFP client **silently** fell back to an unencrypted
-AFP connection attempt.
-
-Netatalk's afpd will report that it is capable of handling SSH tunneled
-AFP requests, when both "**advertise ssh**" and "**fqdn**" options are set
-in the **Global** section (double check with **asip-status** after you
-restarted afpd when you made changes to the settings). But there are a
-couple of reasons why you don't want to use this option at all:
-
-- Most users who need such a feature are probably already familiar with
-using a VPN; it might be easier for the user to employ the same VPN
-software in order to connect to the network on which the AFP server is
-running, and then to access the AFP server as normal.
-
-    That being said, for the simple case of connecting to one specific AFP
-    server, a direct SSH connection is likely to perform better than a
-    general-purpose VPN; contrary to popular belief, tunneling via SSH
-    does **not** result in what's called "TCP-over-TCP meltdown", because
-    the AFP data that are being tunneled do not encapsulate TCP data.
-
-- Since this SSH kludge isn't a normal UAM that integrates directly into
-the AFP authentication mechanisms but instead uses a single flag
-signalling clients whether they can **try** to establish a tunnel or
-not, it makes life harder to see what's happening when things go
-wrong.
-
-- You cannot control which machines are logged on by Netatalk tools like
-a **macusers** since all connection attempts seem to be made from
-localhost.
-
-- Indeed, to ensure that all AFP sessions are encrypted via SSH, you
-need to limit afpd to connections that originate only from localhost
-(e.g., by using Wietse Venema's TCP Wrappers, or by using suitable
-firewall or packet-filtering facilities, etc.).
-
-    Otherwise, when you're using Mac OS X 10.2 through 10.3.3, you get the
-    opposite of what you'd expect: potentially unencrypted AFP
-    communications (including login credentials) being sent across the
-    network without a single notification that establishing the tunnel
-    failed. Apple fixed that with Mac OS X 10.3.4.
-
-- Encrypting all AFP sessions via SSH can lead to a significantly higher
-load on the computer that is running the AFP server, because that
-computer must also handle encryption; if the user is connecting
-through a trusted network, then such encryption might be an
-unnecessary overhead.
-
 ## ACL Support
 
 ACL support for AFP is implemented for ZFS ACLs on Solaris and derived
@@ -784,6 +698,101 @@ afpd always updates ACL_USER_OBJ, ACL_GROUP_OBJ and ACL_OTHERS. If an
 ACL_MASK entry is present too, afpd recalculates its value so that the
 new group rights become effective and existing entries of type ACL_USER
 or ACL_GROUP stay intact.
+
+## Directory Cache Tuning
+
+The dircache (Directory Cache) in Netatalk provides a cache of the full
+paths for all files and directories enumerated by a user. Once populated
+during the first directory enumeration, subsequent enumerations can be
+delivered directly from memory. This enables fast responses even when
+working with very large directories. When a user renames/deletes files
+and directories, the dircache entries are updated/removed immediately.
+
+While the dircache is kept in sync with AFP operations, it is unable to
+detect external changes outside of Netatalk (eg, local file changes, or
+changes using other file sharing services like Samba). As a result,
+Netatalk performs a stat() operation to validate a dircache entry is
+still valid, every single time a cache entry is read. This impacts the
+benefits and effectiveness of the dircache.
+
+For setups where Netatalk is the only accessor, or where external file
+changes are infrequent, the additional file stat operations are mostly
+redundant, and can be safely tuned down. This significantly reduces IO
+operations on storage/page-cache/ZFS ARC layers.
+
+**If a dircache entry is found to be stale when used, the invalid_on_use
+counter is incremented, and the dircache entry is transparently rebuilt.**
+You can use the invalid_on_use counter to tune `dircache validation freq`.
+
+dircachesize = *number* **(G)**
+
+Maximum possible entries in the directory cache. The cache stores
+directories and files. It is used to cache the full path to directories
+and CNIDs which considerably speeds up directory enumeration.
+Given value is rounded up to nearest power of 2. Each entry takes about
+100 bytes, which is not much, but remember that every afpd child process
+for every connected user has its own cache.
+
+Default: 8192, Maximum size: 131072.
+
+dircache validation freq = *number* **(G)**
+
+Directory cache validation frequency for external change detection.
+Controls how often cached entries are validated against the filesystem
+to detect changes made outside of netatalk (e.g., direct filesystem
+modifications by other processes).
+A value of 1 means validate cache every access (default for backward
+compatibility which performs a stat() operation on the storage object
+to validate the cache every cache read), higher values validate less
+frequently. For example, 5 means validate cache entries every 5th access.
+Higher values improve performance and significantly reduce storage IO
+and page cache stress, but may delay detection of changes external from
+Netatalk.
+
+Default: 1, Range: 1-100.
+
+Internal netatalk operations (file/directory create, delete, rename)
+always invalidate dircache entries immediately regardless of this setting.
+If Netatalk is the only process accessing the volume you can safely
+set a value of 100 for maximum performance.
+
+dircache metadata window = *number* **(G)**
+
+Time window in seconds for distinguishing metadata-only changes from
+content changes in directories. When a directory's ctime changes within
+this window from the current time, the change is considered potentially
+metadata-only (permissions, extended attributes) rather than content
+modification. Smaller values are more conservative but may cause
+unnecessary cache invalidation. Larger values improve performance but
+may retain stale entries longer.
+
+Default: 300 seconds (5 minutes). Range: 60-3600 seconds.
+
+If Netatalk is the only process accessing the volume you can safely
+set a value of 3600.
+
+dircache metadata threshold = *number* **(G)**
+
+Maximum time difference in seconds between cached and current directory
+ctime to be considered a metadata-only change. Works together with
+dircache metadata window to avoid invalidating cache entries for minor
+metadata modifications. This prevents cache invalidation for small,
+recent ctime changes that are likely due to more frequent permission or
+extended attribute modifications rather than directory content changes.
+
+Default: 60 seconds (1 minute). Range: 10-1800 seconds.
+
+If Netatalk is the only process accessing the volume you can safely
+set a value of 1800.
+
+**Example** (Netatalk only access to volume):
+dircache validation freq = 100
+dircache metadata window = 3600
+dircache metadata threshold = 1800
+
+**Note**: Monitor dircache effectiveness by checking Netatalk log files
+for "dircache statistics:" lines when afpd shuts down gracefully (user
+disconnects).
 
 ## Filesystem Change Events
 
