@@ -4,7 +4,9 @@ afparg — Send commands to an AFP server
 
 # Synopsis
 
-**afparg** [-1234567lVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-f *command*]
+**afparg** [-1234567Vv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*] [-f *command*]
+
+**afparg** -l
 
 # Description
 
