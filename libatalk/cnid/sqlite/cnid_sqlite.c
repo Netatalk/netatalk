@@ -182,6 +182,29 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+static int init_prepared_stmt_find(CNID_sqlite_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+
+    if (db->cnid_find_stmt) {
+        sqlite3_finalize(db->cnid_find_stmt);
+    }
+
+    EC_NEG1(asprintf(&sql, "SELECT Id FROM \"%s\" WHERE Name LIKE ? ORDER BY Id",
+                     db->cnid_sqlite_voluuid_str));
+    LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_find: SQL: %s", sql);
+    EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
+                                   &db->cnid_find_stmt, NULL));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
 static int init_prepared_stmt_getstamp(CNID_sqlite_private *db)
 {
     EC_INIT;
@@ -208,6 +231,7 @@ static int init_prepared_stmt(CNID_sqlite_private * db)
     EC_ZERO(init_prepared_stmt_resolve(db));
     EC_ZERO(init_prepared_stmt_delete(db));
     EC_ZERO(init_prepared_stmt_getstamp(db));
+    EC_ZERO(init_prepared_stmt_find(db));
     EC_EXIT;
 EC_CLEANUP:
     EC_EXIT;
@@ -222,6 +246,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     sqlite3_finalize(db->cnid_resolve_stmt);
     sqlite3_finalize(db->cnid_delete_stmt);
     sqlite3_finalize(db->cnid_getstamp_stmt);
+    sqlite3_finalize(db->cnid_find_stmt);
     db->cnid_lookup_stmt = NULL;
     db->cnid_add_stmt = NULL;
     db->cnid_put_stmt = NULL;
@@ -229,6 +254,7 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     db->cnid_resolve_stmt = NULL;
     db->cnid_delete_stmt = NULL;
     db->cnid_getstamp_stmt = NULL;
+    db->cnid_find_stmt = NULL;
 }
 
 static int cnid_sqlite_execute(sqlite3 *con, const char *sql)
@@ -1030,15 +1056,67 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-
-int cnid_sqlite_find(struct _cnid_db *cdb _U_, const char *name,
-                     size_t namelen _U_,
-                     void *buffer _U_, size_t buflen _U_)
+int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
+                     void *buffer, size_t buflen)
 {
-    LOG(log_error, logtype_cnid,
-        "cnid_sqlite_find(\"%s\"): not supported with sqlite CNID backend",
-        name);
-    return -1;
+    EC_INIT;
+    CNID_sqlite_private *db = cdb->cnid_db_private;
+    int count = 0;
+    char *namelike = NULL;
+    cnid_t *cnids = (cnid_t *)buffer;
+    unsigned long max_results = buflen / sizeof(cnid_t);
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(\"%s\"): BEGIN", name);
+
+    if (!cdb || !db || !name) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_find: Parameter error");
+        errno = CNID_ERR_PARAM;
+        EC_FAIL;
+    }
+
+    if (namelen > MAXPATHLEN) {
+        LOG(log_error, logtype_cnid, "cnid_sqlite_find: Path name is too long");
+        errno = CNID_ERR_PATH;
+        EC_FAIL;
+    }
+
+    /* Construct the LIKE pattern, escaping any special characters */
+    EC_NEG1(asprintf(&namelike, "%%%s%%", name));
+    sqlite3_reset(db->cnid_find_stmt);
+    sqlite3_clear_bindings(db->cnid_find_stmt);
+    EC_ZERO_LOG(sqlite3_bind_text(db->cnid_find_stmt, 1, namelike, strlen(namelike),
+                                  SQLITE_STATIC));
+
+    /* Fetch results */
+    while (sqlite3_step(db->cnid_find_stmt) == SQLITE_ROW && count < max_results) {
+        cnids[count] = htonl((uint32_t)sqlite3_column_int64(db->cnid_find_stmt, 0));
+        count++;
+    }
+
+    if (sqlite3_errcode(db->cnid_sqlite_con) != SQLITE_OK
+            && sqlite3_errcode(db->cnid_sqlite_con) != SQLITE_DONE) {
+        LOG(log_error, logtype_cnid,
+            "cnid_sqlite_find: sqlite query error: %s",
+            sqlite3_errmsg(db->cnid_sqlite_con));
+        EC_FAIL;
+    }
+
+    LOG(log_debug, logtype_cnid, "cnid_sqlite_find: got %d matches", count);
+EC_CLEANUP:
+    LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(): END");
+
+    if (cdb && db) {
+        sqlite3_reset(db->cnid_find_stmt);
+    }
+
+    if (namelike) {
+        free(namelike);
+    }
+
+    if (ret != 0) {
+        count = -1;
+    }
+
+    return count;
 }
 
 cnid_t cnid_sqlite_rebuild_add(struct _cnid_db *cdb _U_,
