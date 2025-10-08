@@ -20,6 +20,7 @@ typedef struct CNID_sqlite_private {
     sqlite3_stmt *cnid_resolve_stmt;
     sqlite3_stmt *cnid_delete_stmt;
     sqlite3_stmt *cnid_getstamp_stmt;
+    sqlite3_stmt *cnid_find_stmt;
 } CNID_sqlite_private;
 
 #endif
