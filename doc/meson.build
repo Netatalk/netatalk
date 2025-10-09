@@ -29,3 +29,21 @@ if build_html_docs
         endif
     endif
 endif
+
+if build_dev_docs and doxygen.found()
+    doxyfile_conf = configuration_data()
+    doxyfile_conf.set('PACKAGE', meson.project_name())
+    doxyfile_conf.set('VERSION', meson.project_version())
+    doxyfile_conf.set('ABS_TOP_SRCDIR', meson.project_source_root())
+    doxyfile_conf.set('OUTPUT_DIR', meson.current_build_dir())
+
+    doxyfile = configure_file(input: 'Doxyfile.in', output: 'Doxyfile', configuration: doxyfile_conf)
+
+    run_command(doxygen, doxyfile, check: true)
+
+    install_subdir(
+        meson.current_build_dir() / 'developer',
+        install_dir: get_option('datadir') / 'doc' / meson.project_name(),
+        strip_directory: false,
+    )
+endif
