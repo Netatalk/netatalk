@@ -395,11 +395,12 @@ option(
     'with-docs',
     type: 'array',
     choices: [
-        'man',
+        'developer',
         'html_manual',
+        'man',
         'readmes',
     ],
-    value: ['man', 'html_manual', 'readmes'],
+    value: ['developer', 'html_manual', 'man', 'readmes'],
     description: 'Choose the type documentation to build and install',
 )
 option(

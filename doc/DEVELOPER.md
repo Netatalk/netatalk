@@ -1,10 +1,5 @@
-Information for Netatalk Developers
-===================================
-
-To get started with a development environment, read the
-[https://netatalk.io/manual/en/Installation](Installation chapter)
-in the Netatalk manual, followed by the
-[Installation Quick Start Guide](https://netatalk.io/install).
+Documentation for Netatalk Developers
+=====================================
 
 Netatalk is an implementation of Apple Filing Protocol (AFP) over TCP.
 The session layer used to carry AFP over TCP is called DSI.

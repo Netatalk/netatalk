@@ -2288,10 +2288,12 @@ configure_file(
 cmark = find_program('cmark', required: false)
 cmarkgfm = find_program('cmark-gfm', required: false)
 pandoc = find_program('pandoc', required: false)
+doxygen = find_program('doxygen', required: false)
 
 build_man_docs = false
 build_html_docs = false
 build_readme_docs = false
+build_dev_docs = true
 
 if 'readmes' in get_option('with-docs')
     make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: false)
@@ -2300,7 +2302,6 @@ if 'readmes' in get_option('with-docs')
     readmes_md = [
         'COMPILATION',
         'CONTRIBUTORS',
-        'DEVELOPER',
         'DOCKER',
         'INSTALL',
         'NEWS',
@@ -2378,6 +2379,14 @@ if 'html_manual' in get_option('with-docs')
         build_html_docs = true
     else
         warning('cmark, cmark-gfm or pandoc is required to build the html manual')
+    endif
+endif
+
+if 'dev' in get_option('with-docs')
+    if doxygen.found()
+        build_dev_docs = true
+    else
+        warning('doxygen is required to build developer documentation')
     endif
 endif
 
@@ -2500,9 +2509,10 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  Paths:')
 
 summary_info = {
-    '  man pages': build_man_docs,
+    '  developer': build_dev_docs,
     '  html manual': build_html_docs,
-    '  READMEs': build_readme_docs,
+    '  man pages': build_man_docs,
+    '  readmes': build_readme_docs,
 }
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 
