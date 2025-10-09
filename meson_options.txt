@@ -256,12 +256,6 @@ option(
     description: 'Set path to D-Bus system bus security configuration directory',
 )
 option(
-    'with-docbook-path',
-    type: 'string',
-    value: '',
-    description: 'Set path to Docbook XSL directory',
-)
-option(
     'with-gssapi-path',
     type: 'string',
     value: '',
