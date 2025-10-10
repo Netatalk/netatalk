@@ -13,16 +13,16 @@ The complete stack looks like this on a BSD-derived system:
      |                            |
     ASP    PAP                   DSI
       \   /                       |
-       ATP RTMP NBP ZIP AEP       |
+       ATP RTMP NBP ZIP AEP       | (port:548)
         |    |   |   |   |        |
    -+---------------------------------------------------+- (kernel boundary)
     |                    Socket                         |
     +-----------------------+------------+--------------+
     |                       |     TCP    |    UDP       |
     |          DDP          +------------+--------------+
-    |                       |           IP              |
+    |                       |       IP v4 or v6         |
     +-----------------------+---------------------------+
-    |                Network-Interface                  |
+    |                Network Interface                  |
     +---------------------------------------------------+
 ```
 
