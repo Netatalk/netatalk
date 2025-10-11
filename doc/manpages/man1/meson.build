@@ -57,6 +57,6 @@ endforeach
 
 if get_option('with-website')
     foreach page : manfiles
-        install_data(page + '.1.md', install_dir: manual_install_path + '/en')
+        install_data(page + '.1.md', install_dir: docs_install_path + '/manual/en')
     endforeach
 endif
