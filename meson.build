@@ -97,10 +97,10 @@ else
     homedir = '/home'
 endif
 
-manual_install_path = get_option('with-manual-install-path')
+docs_install_path = datadir / 'doc' / meson.project_name()
 
-if manual_install_path == ''
-    manual_install_path = datadir / 'doc/netatalk/htmldocs'
+if get_option('with-docs-install-path') != ''
+    docs_install_path = get_option('with-docs-install-path')
 endif
 
 ##################
@@ -2326,7 +2326,7 @@ if 'readmes' in get_option('with-docs')
                 )
             endif
 
-            install_data(file + '.md', install_dir: manual_install_path)
+            install_data(file + '.md', install_dir: docs_install_path)
         else
             if pandoc.found()
                 custom_target(
