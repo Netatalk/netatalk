@@ -52,6 +52,12 @@ option(
     description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
 )
 option(
+    'with-docs-install-path',
+    type: 'string',
+    value: '',
+    description: 'Set path where to install generated documentation',
+)
+option(
     'with-docs-l10n',
     type: 'boolean',
     value: false,
@@ -302,12 +308,6 @@ option(
     type: 'string',
     value: '',
     description: 'Set path to directory that contains the Netatalk lockfiles',
-)
-option(
-    'with-manual-install-path',
-    type: 'string',
-    value: '',
-    description: 'Set path where to install manual html pages',
 )
 option(
     'with-pam-path',

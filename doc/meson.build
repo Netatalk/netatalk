@@ -43,7 +43,15 @@ if build_dev_docs and doxygen.found()
 
     install_subdir(
         meson.current_build_dir() / 'developer',
-        install_dir: get_option('datadir') / 'doc' / meson.project_name(),
+        install_dir: datadir / 'doc' / meson.project_name(),
         strip_directory: false,
     )
+
+    if get_option('with-website')
+        install_subdir(
+            meson.current_build_dir() / 'developer',
+            install_dir: docs_install_path / 'public',
+            strip_directory: false,
+        )
+    endif
 endif

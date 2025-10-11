@@ -65,7 +65,7 @@ endif
 
 if get_option('with-website')
     foreach page : manual_pages
-        install_data(page + '.md', install_dir: manual_install_path + '/ja')
+        install_data(page + '.md', install_dir: docs_install_path + '/manual/ja')
     endforeach
 else
     foreach page : manual_pages
@@ -82,7 +82,7 @@ else
                 ],
                 capture: true,
                 install: true,
-                install_dir: manual_install_path + '/ja',
+                install_dir: docs_install_path / 'manual' / 'ja',
             )
         elif cmarkgfm.found()
             custom_target(
@@ -98,7 +98,7 @@ else
                 ],
                 capture: true,
                 install: true,
-                install_dir: manual_install_path + '/ja',
+                install_dir: docs_install_path / 'manual' / 'ja',
             )
         elif cmark.found()
             custom_target(
@@ -114,7 +114,7 @@ else
                 ],
                 capture: true,
                 install: true,
-                install_dir: manual_install_path + '/ja',
+                install_dir: docs_install_path / 'manual' / 'ja',
             )
         endif
     endforeach
