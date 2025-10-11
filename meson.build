@@ -2309,12 +2309,6 @@ if 'readmes' in get_option('with-docs')
         'SECURITY',
     ]
 
-    if have_appletalk
-        readmes_md += [
-            'APPLETALK',
-        ]
-    endif
-
     foreach file : readmes_md
         if get_option('with-website')
             if perl.found() and make_compile_doc.found()
