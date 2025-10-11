@@ -2,31 +2,13 @@
 
 ## AppleTalk Transport Layer
 
-AppleTalk is a network protocol family created by Apple which predates
-TCP/IP. It contains different protocols for different uses: address
-resolution, address/name mapping, service location, establishing
-connections, and the like.
+Netatalk supplies two different types of AFP servers and both can run at the same time.
+Classic AFP requires running both **atalkd** and **afpd**, while AFP over TCP only requires running **afpd**.
 
-Netatalk implements the AppleTalk protocols to serve files over AFP and
-provide other services to old Mac and Apple II clients.
+Classic AFP (or AFP over DDP) depends on an AppleTalk network stack, typically provided by the host OS kernel.
 
-It supports EtherTalk Phase I and II, RTMP, NBP, ZIP, AEP, ATP,
-PAP, and ASP, while expecting the host OS kernel to supply DDP.
-
-- DDP is a socket to socket protocol that all other AppleTalk protocols
-  are built on top of.
-
-- ATP, ASP, and NBP are implemented as statically linked libraries
-  in Netatalk's *libatalk* shared library.
-
-- The **atalkd** daemon implements RTMP, ZIP, and AEP.
-
-- The **papd** daemon implements PAP, allowing Mac clients to spool
-  to a Unix print spooler on the netatalk host computer.
-
-A diagram of the network stack can be found inside the [developer
-readme](/developer.html), while the latest information about DDP support
-in the kernel can be found in the [AppleTalk readme](/appletalk.html).
+See the [AppleTalk Kernel Module](https://netatalk.io/docs/AppleTalk-Kernel-Module.html)
+page in the Netatalk wiki for details on how to enable AppleTalk support in your OS kernel.
 
 ### To use AppleTalk or not
 
