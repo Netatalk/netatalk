@@ -211,7 +211,7 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          file: webmin_module.Dockerfile
+          file: distrib/docker/webmin_module.Dockerfile
           push: true
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
@@ -256,7 +256,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          file: Dockerfile
+          file: distrib/docker/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
           push: true
           tags: |
@@ -298,7 +298,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
-          file: webmin_module.Dockerfile
+          file: distrib/docker/webmin_module.Dockerfile
           push: true
           tags: |
             netatalk/webmin:latest

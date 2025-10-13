@@ -90,7 +90,7 @@ COPY --from=build /staging/ /
 RUN apk update \
 &&  apk add --no-cache $RUN_DEPS
 
-COPY /contrib/scripts/netatalk_container_entrypoint.sh /entrypoint.sh
+COPY /distrib/docker/entrypoint_netatalk.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548

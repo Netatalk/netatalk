@@ -75,14 +75,14 @@ ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
 
 COPY --from=build /staging/ /
-COPY --from=build /netatalk-code/contrib/scripts/config_watch.sh /config_watch.sh
+COPY --from=build /netatalk-code/distrib/docker/config_watch.sh /config_watch.sh
 
 RUN apk update \
 &&  apk add --no-cache $RUN_DEPS
 
 RUN ln -sf /dev/stdout /var/log/afpd.log
 
-COPY /contrib/scripts/netatalk_container_entrypoint.sh /entrypoint.sh
+COPY /distrib/docker/entrypoint_netatalk.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548

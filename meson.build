@@ -2302,7 +2302,6 @@ if 'readmes' in get_option('with-docs')
     readmes_md = [
         'COMPILATION',
         'CONTRIBUTORS',
-        'DOCKER',
         'INSTALL',
         'NEWS',
         'README',
