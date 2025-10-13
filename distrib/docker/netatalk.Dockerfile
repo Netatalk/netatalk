@@ -48,7 +48,22 @@ RUN apk update \
     $BUILD_DEPS
 
 WORKDIR /netatalk-code
-COPY . .
+COPY bin/ ./bin/
+COPY config/ ./config/
+COPY contrib/meson.build ./contrib/
+COPY contrib/a2boot/ ./contrib/a2boot/
+COPY contrib/bin_utils/ ./contrib/bin_utils/
+COPY contrib/macipgw/ ./contrib/macipgw/
+COPY contrib/timelord/ ./contrib/timelord/
+COPY distrib/docker/ ./distrib/docker/
+COPY etc/ ./etc/
+COPY include/ ./include/
+COPY libatalk/ ./libatalk/
+COPY subprojects/ ./subprojects/
+COPY sys/ ./sys/
+COPY meson_config.h .
+COPY meson_options.txt .
+COPY meson.build .
 
 RUN meson setup build \
     -Dbuildtype=release \
@@ -65,6 +80,8 @@ RUN meson setup build \
     -Dwith-quota=false \
     -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
+    -Dwith-tests=false \
+    -Dwith-testsuite=false \
 &&  meson compile -C build
 
 RUN meson install --destdir=/staging/ -C build
