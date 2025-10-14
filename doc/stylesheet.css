@@ -1,0 +1,28 @@
+#titlearea {
+  width: 100%;
+}
+
+#projectrow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0;
+}
+
+#projectlogo {
+  flex-shrink: 0;
+}
+
+#projectalign {
+  flex-grow: 1;
+}
+
+.searchbox-container {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.searchbox-full {
+  width: 100%;
+  margin-top: 1rem;
+}
