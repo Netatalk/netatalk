@@ -64,6 +64,12 @@ option(
     description: 'Build and install the localized documentation',
 )
 option(
+    'with-doxygen-strict',
+    type: 'boolean',
+    value: false,
+    description: 'Fail Doxygen build on warnings',
+)
+option(
     'with-dtrace',
     type: 'boolean',
     value: true,
