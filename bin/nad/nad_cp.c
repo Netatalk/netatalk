@@ -502,7 +502,7 @@ static int copy(const char *path,
 
     /* Convert basename to appropriate volume encoding */
     if (dvolume.vol->v_path
-            && (convert_dots_encoding(&svolume, &dvolume, to.p_path, MAXPATHLEN)) == -1) {
+            && (convert_dots_encoding(&svolume, &dvolume, to.p_path)) == -1) {
         SLOG("Error converting name for %s", to.p_path);
         badcp = rval = 1;
         return -1;

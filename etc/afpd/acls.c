@@ -84,8 +84,8 @@
 /*!
  * Compile access rights for a user to one file-system object
  *
- * This combines combines all access rights for a user to one fs-object and
- * returns the result as a Darwin allowed rights ACE.
+ * This combines all access rights for a user to one fs-object
+ * and returns the result as a Darwin allowed rights ACE.
  * This must honor trivial ACEs which are a mode_t mapping.
  *
  * @param obj            (r) handle
@@ -740,32 +740,6 @@ EC_CLEANUP:
 
     EC_EXIT;
 }
-
-#if 0
-/*!
- * Add entries of one acl to another acl
- *
- * @param aclp   (rw) destination acl where new aces will be added
- * @param acl    (r)  source acl where aces will be copied from
- *
- * @returns 0 on success, -1 on error
- */
-static int acl_add_acl(acl_t *aclp, const acl_t acl)
-{
-    EC_INIT;
-    int id;
-    acl_entry_t se, de;
-
-    for (id = ACL_FIRST_ENTRY; acl_get_entry(acl, id, &se) == 1;
-            id = ACL_NEXT_ENTRY) {
-        EC_ZERO_LOG_ERR(acl_create_entry(aclp, &de), AFPERR_MISC);
-        EC_ZERO_LOG_ERR(acl_copy_entry(de, se), AFPERR_MISC);
-    }
-
-EC_CLEANUP:
-    EC_EXIT;
-}
-#endif
 
 /*!
  * Map Darwin ACE rights to POSIX 1e perm
@@ -1550,6 +1524,7 @@ EC_CLEANUP:
  *
  * Note: this gets called frequently and is a good place for optimizations !
  *
+ * @param obj              (r) AFP object
  * @param vol              (r) volume
  * @param dir              (rw) directory
  * @param path             (r) path to filesystem object

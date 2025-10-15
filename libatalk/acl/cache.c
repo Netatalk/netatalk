@@ -223,11 +223,11 @@ cleanup:
 /*!
  * Search cache by name and uuid type
  *
- * @args name     (r)  name to search
- * @args type     (rw) type (user or group) of name, returns found type here which might
+ * @param name    (r)  name to search
+ * @param type    (rw) type (user or group) of name, returns found type here which might
  *                     mark it as a negative entry
- * @args uuid     (w)  found uuid is returned here
- * @returns       0 on sucess, entry found
+ * @param uuid    (w)  found uuid is returned here
+ * @returns       0 on success, entry found
  *                -1 no entry found
  */
 int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)

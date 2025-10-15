@@ -783,9 +783,10 @@ catsearch_end:
  * This function performs a CNID db search
  *
  * Uses globals c1, c2, the search criteria
+ * Always searches the whole volume, not a subtree
  *
+ * @param obj       (r)  AFP connection object
  * @param vol       (r)  volume we are searching on ...
- * @param dir       (rw) directory we are starting from ...
  * @param uname     (r)  UNIX name of object to search
  * @param rmatches  (r)  maximum number of matches we can return
  * @param pos       (r)  position we've stopped recently
@@ -796,7 +797,6 @@ catsearch_end:
  */
 static int catsearch_db(const AFPObj *obj,
                         struct vol *vol,
-                        struct dir *dir _U_,
                         const char *uname,
                         int rmatches,
                         uint32_t *pos,
@@ -1159,7 +1159,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
             && (vol->v_flags & AFPVOL_SEARCHDB))
         /* we've got a name and it's a dbd volume, so search CNID database */
     {
-        ret = catsearch_db(obj, vol, vol->v_root, uname, rmatches, &catpos[0],
+        ret = catsearch_db(obj, vol, uname, rmatches, &catpos[0],
                            rbuf + 24, &nrecs, &rsize, ext);
     } else
         /* perform a slow filesystem tree search */

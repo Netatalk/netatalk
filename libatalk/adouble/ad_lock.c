@@ -291,7 +291,7 @@ static off_t rf2off(off_t off)
  *
  * @param adf     (r) handle
  * @param off     (r) offset
- * @param len     (r) lenght
+ * @param len     (r) length
  *
  * @returns           1 if there's an existing lock, 0 if there's no lock,
  *                    -1 in case any error occured

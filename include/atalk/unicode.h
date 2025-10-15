@@ -122,8 +122,6 @@ extern ucs2_t   *strncat_w(ucs2_t *, const ucs2_t *, const size_t);
 extern ucs2_t   *strcat_w(ucs2_t *, const ucs2_t *);
 extern size_t   precompose_w(ucs2_t *, size_t, ucs2_t *, size_t *);
 extern size_t   decompose_w(ucs2_t *, size_t, ucs2_t *, size_t *);
-extern size_t   utf8_charlen(char *);
-extern size_t   utf8_strlen_validate(char *);
 
 /* from charcnv.c */
 extern int      set_charset_name(charset_t, const char *);
@@ -133,33 +131,19 @@ extern size_t   convert_string(charset_t, charset_t, void const *, size_t,
                                void *, size_t);
 extern size_t   convert_string_allocate(charset_t, charset_t, void const *,
                                         size_t, char **);
-extern size_t   utf8_strupper(const char *, size_t, char *, size_t);
-extern size_t   utf8_strlower(const char *, size_t, char *, size_t);
-extern size_t   unix_strupper(const char *, size_t, char *, size_t);
-extern size_t   unix_strlower(const char *, size_t, char *, size_t);
 extern size_t   charset_strupper(charset_t, const char *, size_t, char *,
                                  size_t);
 extern size_t   charset_strlower(charset_t, const char *, size_t, char *,
                                  size_t);
-
-extern size_t   charset_to_ucs2_allocate(charset_t, ucs2_t **dest,
-        const char *src);
-extern size_t   charset_to_utf8_allocate(charset_t, char **dest,
-        const char *src);
 extern size_t   ucs2_to_charset_allocate(charset_t, char **dest,
         const ucs2_t *src);
-extern size_t   utf8_to_charset_allocate(charset_t, char **dest,
-        const char *src);
 extern size_t   ucs2_to_charset(charset_t, const ucs2_t *src, char *dest,
                                 size_t);
 
 extern size_t   convert_charset(charset_t, charset_t, charset_t, const char *,
                                 size_t, char *, size_t, uint16_t *);
-
 extern size_t   charset_precompose(charset_t, char *, size_t, char *, size_t);
 extern size_t   charset_decompose(charset_t, char *, size_t, char *, size_t);
-extern size_t   utf8_precompose(char *, size_t, char *, size_t);
-extern size_t   utf8_decompose(char *, size_t, char *, size_t);
 
 extern charset_t add_charset(const char *name);
 
