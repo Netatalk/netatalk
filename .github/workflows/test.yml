@@ -84,3 +84,35 @@ jobs:
             -Dwith-tests=true
       - name: Run distribution tests
         run: meson dist -C build
+
+  build-doxygen-docs:
+    name: Build Doxygen Docs
+    runs-on: macos-latest
+    timeout-minutes: 12
+    env:
+      HOMEBREW_NO_INSTALL_CLEANUP: 1
+      HOMEBREW_NO_AUTO_UPDATE: 1
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install dependencies
+        run: |
+          brew update
+          brew upgrade
+          brew install \
+            bstring \
+            doxygen \
+            iniparser \
+            meson
+      - name: Configure
+        run: |
+          meson setup build \
+            -Dbuildtype=debug \
+            -Dwith-docs=developer \
+            -Dwith-doxygen-strict=true \
+            -Dwith-homebrew=true
+      - name: Upload Meson log on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: meson-log
+          path: build/meson-logs/meson-log.txt
