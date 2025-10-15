@@ -494,7 +494,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
  * @param vol      (r) volume
  * @param dir      (r) directory
  * @param name     (r) name (server side encoding)
- * @parma len      (r) strlen of name
+ * @param len      (r) strlen of name
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
@@ -577,7 +577,8 @@ struct dir *dircache_search_by_name(const struct vol *vol,
  *
  * Add a struct dir to the cache and its indexes.
  *
- * @param dir   (r) pointer to parrent directory
+ * @param vol   (r) pointer to volume
+ * @param dir   (r) pointer to parent directory
  *
  * @returns 0 on success, -1 on error which should result in an abort
  */
@@ -804,14 +805,14 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
 /*!
  * @brief Initialize the dircache and indexes
  *
- * This is called in child afpd initialisation. The maximum cache size will be
+ * This is called in child afpd initialization. The maximum cache size will be
  * max(DEFAULT_MAX_DIRCACHE_SIZE, min(size, MAX_POSSIBLE_DIRCACHE_SIZE)).
  * It initializes a hashtable which we use to store a directory cache in.
  * It also initializes two indexes:
  * - a DID/name index on the main dircache
  * - a queue index on the dircache
  *
- * @param size   (r) requested maximum size from afp.conf
+ * @param reqsize   (r) requested maximum size from afp.conf
  *
  * @return 0 on success, -1 on error
  */

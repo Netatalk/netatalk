@@ -94,6 +94,7 @@ void _log(enum logtype lt, char *fmt, ...)
 /*!
  * Load volinfo and initialize struct vol
  *
+ * @param obj    (r)  AFPObj of the current connection
  * @param path   (r)  path to evaluate
  * @param vol    (rw) structure to initialize
  *
@@ -198,14 +199,13 @@ char *utompath(const struct vol *vol, const char *upath)
  * longer then the original which means provide a big enough buffer.
  *
  * @param svol   (r)  source volume
- * @param dvol   (r)  destinatio volume
+ * @param dvol   (r)  destination volume
  * @param path   (rw) path to convert _in place_
- * @param buflen (r)  size of path buffer (max strlen == buflen - 1)
  *
- * @returns 0 on sucess, -1 on error
+ * @returns 0 on success, -1 on error
  */
 int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
-                          char *path, size_t buflen _U_)
+                          char *path)
 {
     static charset_t from = (charset_t) -1;
     static char buf[MAXPATHLEN + 2];

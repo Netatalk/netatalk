@@ -135,18 +135,17 @@ static inline void list_splice(struct list_head *list, struct list_head *head)
 #endif
 /**
  * list_entry - get the struct for this entry
- * @ptr:	the &struct list_head pointer.
- * @type:	the type of the struct this is embedded in.
- * @member:	the name of the list_struct within the struct.
+ * @param ptr       the &struct list_head pointer.
+ * @param type      the type of the struct this is embedded in.
+ * @param member    the name of the list_struct within the struct.
  */
 #define list_entry(ptr, type, member) \
     ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
 
 /**
  * list_for_each	-	iterate over a list
- * @pos:	the &struct list_head to use as a loop counter.
- * @n:		another &struct list_head to use as temporary storage
- * @head:	the head for your list.
+ * @param pos       the &struct list_head to use as a loop counter.
+ * @param head      the head for your list.
  */
 #define list_for_each(pos, head) \
     for (pos = (head)->next; pos != (head); \
@@ -154,8 +153,8 @@ static inline void list_splice(struct list_head *list, struct list_head *head)
 
 /**
  * list_for_each_prev	-	iterate over a list in reverse order
- * @pos:	the &struct list_head to use as a loop counter.
- * @head:	the head for your list.
+ * @param pos       the &struct list_head to use as a loop counter.
+ * @param head      the head for your list.
  */
 #define list_for_each_prev(pos, head) \
     for (pos = (head)->prev; pos != (head); \

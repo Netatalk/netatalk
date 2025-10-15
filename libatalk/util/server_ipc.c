@@ -176,8 +176,8 @@ EC_CLEANUP:
  *
  * This is using an fd with non-blocking IO, so EAGAIN is not an error
  *
- * @args children  (rw) pointer to our structure with all childs
- * @args fd        (r)  IPC socket with child
+ * @param children  (rw) pointer to our structure with all childs
+ * @param fd        (r)  IPC socket with child
  *
  * @returns -1 on error, 0 on success
  */
