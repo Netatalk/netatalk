@@ -1,4 +1,4 @@
-# Docker
+# Containerized Netatalk
 
 Netatalk comes with a Dockerfile and entry point script for running a containerized AFP server and AppleTalk services.
 
@@ -9,14 +9,25 @@ If you need a different setup, please use the manual configuration option.
 Make sure you have a container runtime installed, then build the netatalk container:
 
 ```shell
-docker build -t netatalk:latest .
+docker build -f distrib/docker/netatalk.Dockerfile .
 ```
 
-Alternatively, pull a pre-built Docker image from [Docker Hub](https://hub.docker.com/u/netatalk).
+Alternatively, pull a pre-built container image from [Docker Hub](https://hub.docker.com/u/netatalk)
+or [GHCR](https://github.com/Netatalk/netatalk/pkgs/container/netatalk).
 
 ## How to Run
 
 Once you have the netatalk image on your machine run it with `docker`, `podman` or equivalent container runtime.
+
+The easiest way to get started is to use the included *docer_compose.yml* file with Docker Compose.
+
+```shell
+docker compose -f distrib/docker/docker-compose.yml up
+```
+
+You just need to edit the file to set the AFP_USER and AFP_PASS environment variables first.
+
+### Configuration
 
 The easiest way to enable full functionality including Zeroconf service discovery and AppleTalk
 is to use the `host` network driver.
@@ -28,11 +39,9 @@ the IP address in the client when connecting to the file server.
 It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
 
-For Docker Compose, you can use the sample [docker-compose.yml](https://github.com/Netatalk/netatalk/blob/main/docker-compose.yml)
-file that is distributed with this source code.
-
-Below follows a sample `docker run` command. Substitute `/path/to/share` with an actual path
-on your file system with appropriate permissions, `AFP_USER` and `AFP_PASS` with the appropriate user and password,
+Below follows a sample `docker run` command for illustration.
+Substitute `/path/to/share` with an actual path on your file system with appropriate permissions,
+`AFP_USER` and `AFP_PASS` with the appropriate user and password,
 and `ATALKD_INTERFACE` with the network interface to use for AppleTalk.
 
 You also need to set the timezone with `TZ` to the [IANA time zone ID](https://nodatime.org/TimeZones)

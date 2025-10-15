@@ -2302,7 +2302,6 @@ if 'readmes' in get_option('with-docs')
     readmes_md = [
         'COMPILATION',
         'CONTRIBUTORS',
-        'DOCKER',
         'INSTALL',
         'NEWS',
         'README',
@@ -2394,12 +2393,21 @@ subdir('include')
 subdir('libatalk')
 subdir('bin')
 subdir('config')
-subdir('doc')
 subdir('etc')
 subdir('contrib')
-subdir('distrib')
 subdir('sys')
-subdir('test')
+
+if get_option('with-docs') != []
+    subdir('doc')
+endif
+
+if 'none' not in init_style
+    subdir('distrib')
+endif
+
+if get_option('with-tests') or get_option('with-testsuite')
+    subdir('test')
+endif
 
 #########################
 # Configuration summary #
