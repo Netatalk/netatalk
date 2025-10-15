@@ -602,7 +602,7 @@ static char *volxlate(const AFPObj *obj,
  * or space. Names may be quoted within a pair of quotes. Groups are
  * denoted by a leading @ symbol.
  * Example:
- * user1 user2, user3, @group1 @group2, @group3 "user name1", "@group name1"
+ * user1 user2, user3, "@group1", "@group2", "@group3", "user name1", "@group name1"
  * A NULL argument allows everybody to have access.
  * We return three things:
  *     -1: no list

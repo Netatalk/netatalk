@@ -967,6 +967,9 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, uint32_t flags)
 /*!
  * Search the database by name
  *
+ * @param dbd       (r) database handle
+ * @param key       (r) key to search for, must be initialized with name to search for
+ *                      (key->data, key->size)
  * @param resbuf    (w) buffer for search results CNIDs, maxsize is assumed to be
  *                      DBD_MAX_SRCH_RSLTS * sizefof(cnid_t)
  *

@@ -138,7 +138,7 @@ void *get_finderinfo(const struct vol *vol, const char *upath,
         memcpy((char *)data + FINDERINFO_FRCREATOFF, "rhap", 4);
     }
 
-    /** Only enter if no appledouble information and no finder information found. */
+    /* Only enter if no appledouble information and no finder information found. */
     if (chk_ext && (em = getextmap(upath))) {
         memcpy(data, em->em_type, sizeof(em->em_type));
         memcpy((char *)data + 4, em->em_creator, sizeof(em->em_creator));

@@ -70,7 +70,7 @@ extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path,
                                     cnid_t *did);
 extern char *utompath(const struct vol *, const char *);
 extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
-                                 char *path, size_t buflen);
+                                 char *path);
 
 typedef struct {
     char *p_end;/* pointer to NULL at end of path */

@@ -945,7 +945,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Takes a path to an AppleDouble file and creates the parrent .AppleDouble directory
+ * Takes a path to an AppleDouble file and creates the parent .AppleDouble directory
  *
  * Example:
  * path: "/path/.AppleDouble/file"
@@ -1077,6 +1077,7 @@ static int ad_error(struct adouble *ad, int adflags)
 /*!
  * Map ADFLAGS to open() flags
  *
+ * @param ad       (r) the adouble structure
  * @param adfile   (r) the file you really want to open: ADFLAGS_DF or ADFLAGS_HF
  * @param adflags  (r) flags from ad_open(..., adflags, ...)
  * @returns            mapped flags suitable for calling open()
@@ -2281,7 +2282,7 @@ void ad_init(struct adouble *ad, const struct vol *restrict vol)
  *                         ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
  *                         ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
  *                                            This basically results in the files being opened RW instead of RDONLY.
- * @param mode      (r)  mode used with O_CREATE
+ * @param ...       (r)  mode used with O_CREATE
  *
  * The open mode flags (rw vs ro) have to take into account all the following requirements:
  * - we remember open fds for files because me must avoid a single close releasing fcntl locks for other
