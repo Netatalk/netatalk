@@ -37,6 +37,12 @@ if build_dev_docs and doxygen.found()
     doxyfile_conf.set('ABS_TOP_SRCDIR', meson.project_source_root())
     doxyfile_conf.set('OUTPUT_DIR', meson.current_build_dir())
 
+    if get_option('with-doxygen-strict')
+        doxyfile_conf.set('WARN_AS_ERROR', 'YES')
+    else
+        doxyfile_conf.set('WARN_AS_ERROR', 'NO')
+    endif
+
     doxyfile = configure_file(input: 'Doxyfile.in', output: 'Doxyfile', configuration: doxyfile_conf)
 
     run_command(doxygen, doxyfile, check: true)
