@@ -1006,9 +1006,9 @@ EC_CLEANUP:
     return buffer;
 }
 
-/**
+/*!
  * Caller passes buffer where we will store the db stamp
- **/
+ */
 int cnid_sqlite_getstamp(struct _cnid_db *cdb, void *buffer,
                          const size_t len)
 {

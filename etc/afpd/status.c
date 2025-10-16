@@ -330,7 +330,7 @@ static size_t status_netaddress(char *data, int *servoffset,
 }
 
 
-/**
+/*!
  * DirectoryNamesCount offset: uint16_t
  * ...
  * DirectoryNamesCount: uint8_t

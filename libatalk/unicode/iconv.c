@@ -47,7 +47,7 @@
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 
-/**
+/*!
  * @file
  *
  * @brief Samba wrapper/stub for iconv character set conversion.
@@ -68,7 +68,7 @@
  * there.
  *
  * @sa Samba Developers Guide
- **/
+ */
 #define CHARSET_WIDECHAR    32
 
 #ifdef HAVE_USABLE_ICONV
@@ -213,12 +213,12 @@ static size_t sys_iconv(void *cd,
 #endif
 }
 
-/**
+/*!
  * This is a simple portable iconv() implementaion.
  *
  * It only knows about a very small number of character sets - just
  * enough that netatalk works on systems that don't have iconv.
- **/
+ */
 size_t atalk_iconv(atalk_iconv_t cd,
                    const char **inbuf, size_t *inbytesleft,
                    char **outbuf, size_t *outbytesleft)
