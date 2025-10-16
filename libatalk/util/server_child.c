@@ -103,7 +103,7 @@ server_child_t *server_child_alloc(int connections)
 }
 
 /*!
- * add a child
+ * @brief add a child
  * @return pointer to struct server_child_data on success, NULL on error
  */
 afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
@@ -234,7 +234,7 @@ static int kill_child(afp_child_t *child)
 }
 
 /*!
- * Try to find an old session and pass socket
+ * @brief Try to find an old session and pass socket
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
 int server_child_transfer_session(server_child_t *children,

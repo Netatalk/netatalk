@@ -14,7 +14,7 @@
 
 /*!
   @file
-  Typesafe, dynamic object store based on talloc
+  @brief Typesafe, dynamic object store based on talloc
 
   Usage:
 

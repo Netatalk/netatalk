@@ -31,7 +31,8 @@
 #define DB_ERRLOGFILE "db_errlog"
 
 /*!
- * Get the db stamp which is the st_ctime of the file "cnid2.db" and store it in buffer
+ * @brief Get the db stamp which is the st_ctime of the file "cnid2.db"
+ * and store it in buffer
  */
 static int dbif_stamp(DBD *dbd, void *buffer, int size)
 {
@@ -80,7 +81,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Inititialize rootinfo key (which has CNID 0 as key)
+ * @brief Inititialize rootinfo key (which has CNID 0 as key)
  *
  * This also "stamps" the database, which means storing st.st_ctime of the
  * "cnid2.db" file in the rootinfo data at the DEV offset
@@ -125,7 +126,7 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
 }
 
 /*!
- * Return CNID database version number
+ * @brief Return CNID database version number
  *
  * Returns version in *version
  *
@@ -165,7 +166,7 @@ static int dbif_getversion(DBD *dbd, uint32_t *version)
 }
 
 /*!
- * Set CNID database version number
+ * @brief Set CNID database version number
  *
  * Initializes rootinfo key as neccessary
  * @returns -1 on error, 0 on success
@@ -210,7 +211,8 @@ static int dbif_setversion(DBD *dbd, uint32_t version)
 }
 
 /*!
- * Upgrade CNID database versions, initialize rootinfo key as as necessary in dbif_setversion()
+ * @brief Upgrade CNID database versions,
+ * initialize rootinfo key as as necessary in dbif_setversion()
  *
  * For now this does nothing, as upgrading from ver. 0 to 1 is done in dbif_open
  */
@@ -965,7 +967,7 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, uint32_t flags)
 }
 
 /*!
- * Search the database by name
+ * @brief Search the database by name
  *
  * @param dbd       (r) database handle
  * @param key       (r) key to search for, must be initialized with name to search for

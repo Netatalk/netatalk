@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Part of Netatalk's AppleDouble implementatation
+ * @brief Part of Netatalk's AppleDouble implementatation
  * @sa include/atalk/adouble.h
  */
 
@@ -239,7 +239,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Remove hexencoded dots and slashes (":2e" and ":2f")
+ * @brief Remove hexencoded dots and slashes (":2e" and ":2f")
  */
 static int ad_conv_dehex(const char *path, const struct stat *sp,
                          const struct vol *vol, const char **newpathp)
@@ -308,7 +308,7 @@ EC_CLEANUP:
 }
 
 /*!
- * AppleDouble and encoding conversion on the fly
+ * @brief AppleDouble and encoding conversion on the fly
  *
  * @param path      (r) path to file or directory
  * @param sp        (r) stat(path)

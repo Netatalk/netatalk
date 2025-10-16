@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Netatalk utility functions: queue
+ * @brief Netatalk utility functions: queue
  */
 
 #ifdef HAVE_CONFIG_H

@@ -220,7 +220,7 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
 }
 
 /*!
- * Change mode of file preserving existing explicit ACEs
+ * @brief Change mode of file preserving existing explicit ACEs
  *
  * nfsv4_chmod
  * (1) reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on e.g. UFS fs

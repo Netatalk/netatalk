@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Netatalk utility functions
+ * @brief Netatalk utility functions: locking
  */
 
 #ifdef HAVE_CONFIG_H

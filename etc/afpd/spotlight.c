@@ -317,7 +317,7 @@ static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
 }
 
 /*!
- * Add requested metadata for a query result element
+ * @brief Add requested metadata for a query result element
  *
  * This could be rewritten to something more sophisticated like
  * querying metadata from Tracker.
@@ -381,7 +381,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
 }
 
 /*!
- * Allocate result handle used in the async Tracker cursor result
+ * @brief Allocate result handle used in the async Tracker cursor result
  * handler for storing results
  */
 static bool create_result_handle(slq_t *slq)
@@ -477,7 +477,7 @@ static ATALK_LIST_HEAD(sl_queries);
 static ATALK_LIST_HEAD(sl_cancelled_queries);
 
 /*!
- * Add a query to the list of active queries
+ * @brief Add a query to the list of active queries
  */
 static void slq_add(slq_t *slq)
 {
@@ -485,7 +485,7 @@ static void slq_add(slq_t *slq)
 }
 
 /*!
- * Add a query to the list of active queries
+ * @brief Add a query to the list of active queries
  */
 static void slq_cancelled_add(slq_t *slq)
 {
@@ -493,7 +493,7 @@ static void slq_cancelled_add(slq_t *slq)
 }
 
 /*!
- * Remove a query from the active list
+ * @brief Remove a query from the active list
  */
 static void slq_remove(slq_t *slq)
 {
@@ -527,7 +527,7 @@ static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
 }
 
 /*!
- * Remove a query from the active queue and free it
+ * @brief Remove a query from the active queue and free it
  */
 static void slq_destroy(slq_t *slq)
 {
@@ -540,7 +540,7 @@ static void slq_destroy(slq_t *slq)
 }
 
 /*!
- * Cancel a query
+ * @brief Cancel a query
  */
 static void slq_cancel(slq_t *slq)
 {
@@ -550,7 +550,7 @@ static void slq_cancel(slq_t *slq)
 }
 
 /*!
- * talloc destructor cb
+ * @brief talloc destructor cb
  */
 static int slq_free_cb(slq_t *slq)
 {
@@ -562,7 +562,7 @@ static int slq_free_cb(slq_t *slq)
 }
 
 /*!
- * Free all cancelled queries
+ * @brief Free all cancelled queries
  */
 static void slq_cancelled_cleanup(void)
 {

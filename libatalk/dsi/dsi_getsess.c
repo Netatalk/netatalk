@@ -25,7 +25,7 @@
 #include <atalk/util.h>
 
 /*!
- * Start a DSI session, fork an afpd process
+ * @brief Start a DSI session, fork an afpd process
  *
  * @param dsi       (rw) DSI structure
  * @param serv_children (rw) pointer to our structure with all childs

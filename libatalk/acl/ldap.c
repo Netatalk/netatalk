@@ -285,7 +285,7 @@ cleanup:
 }
 
 /*!
- * Generate LDAP filter string for UUID query
+ * @brief Generate LDAP filter string for UUID query
 
  * @param[in] uuidstr      the UUID as string
  * @param[in] attr_filter  optional attribute
@@ -355,7 +355,7 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  ********************************************************/
 
 /*!
- * Search UUID for name in LDAP
+ * @brief Search UUID for name in LDAP
  *
  * Caller must free uuid_string when done with it
  *

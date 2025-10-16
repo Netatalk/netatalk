@@ -73,7 +73,7 @@ static char hexdig[] = "0123456789abcdef";
 
 
 /*!
- * Return the name of a charset to give to iconv().
+ * @brief Return the name of a charset to give to iconv().
  */
 static const char *charset_name(charset_t ch)
 {
@@ -186,7 +186,7 @@ charset_t add_charset(const char *name)
 }
 
 /*!
- * Initialize iconv conversion descriptors.
+ * @brief Initialize iconv conversion descriptors
  *
  * This is called the first time it is needed, and also called again
  * every time the configuration is reloaded, because the charset or
@@ -240,7 +240,8 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 
 
 /*!
- * Convert string from one encoding to another, making error checking etc
+ * @brief Convert string from one encoding to another,
+ * making error checking etc
  *
  * @param from source character set
  * @param to destination character set
@@ -355,16 +356,17 @@ size_t convert_string(charset_t from, charset_t to,
 
 
 /*!
- * Convert between character sets, allocating a new buffer for the result.
+ * @brief Convert between character sets,
+ * allocating a new buffer for the result
  *
  * @param from source character set
  * @param to destination character set
  * @param src pointer to source string (multibyte or singlebyte)
- * @param srclen length of source buffer.
+ * @param srclen length of source buffer
  * @param dest always set at least to NULL
- * @note -1 is not accepted for srclen.
+ * @note -1 is not accepted for srclen
  *
- * @returns Size in bytes of the converted string; or -1 in case of error.
+ * @returns Size in bytes of the converted string; or -1 in case of error
  */
 
 static size_t convert_string_allocate_internal(charset_t from, charset_t to,
@@ -548,7 +550,8 @@ size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
 }
 
 /*!
- * Copy a string from a UCS2 src to a unix char * destination, allocating a buffer
+ * @brief Copy a string from a UCS2 src to a unix char * destination,
+ * allocating a buffer
  *
  * @param ch destination character set
  * @param src source UCS2 string

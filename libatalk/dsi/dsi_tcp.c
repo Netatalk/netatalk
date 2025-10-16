@@ -78,7 +78,7 @@ static void timeout_handler(int sig _U_)
 }
 
 /*!
- * Allocate DSI read buffer and read-ahead buffer
+ * @brief Allocate DSI read buffer and read-ahead buffer
  */
 static void dsi_init_buffer(DSI *dsi)
 {
@@ -99,7 +99,8 @@ static void dsi_init_buffer(DSI *dsi)
 }
 
 /*!
- * Free any allocated resources of the master afpd DSI objects and close server socket
+ * @brief Free any allocated resources of the master afpd DSI objects
+ * and close server socket
  */
 void dsi_free(DSI *dsi)
 {
@@ -406,7 +407,7 @@ EC_CLEANUP:
 #endif
 
 /*!
- * Initialize DSI over TCP
+ * @brief Initialize DSI over TCP
  *
  * @param dsi        (rw) DSI handle
  * @param hostname   (r)  pointer to hostname string

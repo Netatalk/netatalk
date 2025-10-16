@@ -52,7 +52,7 @@
 #include "dircache.h"
 
 /*!
- * Safe string to integer conversion with bounds checking
+ * @brief Safe string to integer conversion with bounds checking
  *
  * @param str         String to convert
  * @param param_name  Parameter name for error messages
@@ -106,7 +106,7 @@ static int safe_atoi(const char *str, const char *param_name,
 }
 
 /*!
- * Free and cleanup config and DSI
+ * @brief Free and cleanup config and DSI
  *
  * "dsi" can be NULL in which case all DSI objects and the config object is freed,
  * otherwise its an afpd session child and only any unneeded DSI objects are freed
@@ -166,7 +166,7 @@ void configfree(AFPObj *obj, DSI *dsi)
 
 
 /*!
- * Get everything running
+ * @brief Get everything running
  */
 int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
 {
