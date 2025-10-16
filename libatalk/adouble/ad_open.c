@@ -368,7 +368,7 @@ static uint32_t get_eid(uint32_t eid)
 }
 
 
-/**
+/*!
  * Initialize offset pointers
  */
 int ad_init_offsets(struct adouble *ad)
@@ -470,9 +470,9 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     return 0;
 }
 
-/**
+/*!
  * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
- **/
+ */
 static int parse_entries(struct adouble *ad, uint16_t nentries,
                          size_t valid_data_len)
 {
@@ -648,7 +648,7 @@ EC_CLEANUP:
     return 0;
 }
 
-/**
+/*!
  * Convert from Apple's ._ file to Netatalk
  *
  * Apple's AppleDouble may contain a FinderInfo entry longer then 32 bytes
@@ -659,7 +659,7 @@ EC_CLEANUP:
  * use static variable in_conversion to check for that.
  *
  * Returns -1 in case an error occured, 0 if no conversion was done, 1 otherwise
- **/
+ */
 static int ad_convert_osx(const char *path, struct adouble *ad)
 {
     EC_INIT;

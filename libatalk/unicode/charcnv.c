@@ -45,7 +45,7 @@
 #include <atalk/compat.h>
 #include <atalk/byteorder.h>
 
-/**
+/*!
  * @file
  *
  * @brief Character-set conversion routines built on our iconv.
@@ -72,9 +72,9 @@ static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 
 
-/**
+/*!
  * Return the name of a charset to give to iconv().
- **/
+ */
 static const char *charset_name(charset_t ch)
 {
     const char *ret = NULL;
@@ -185,13 +185,13 @@ charset_t add_charset(const char *name)
     return cur_charset_t;
 }
 
-/**
+/*!
  * Initialize iconv conversion descriptors.
  *
  * This is called the first time it is needed, and also called again
  * every time the configuration is reloaded, because the charset or
  * codepage might have changed.
- **/
+ */
 void init_iconv(void)
 {
     int c1;
@@ -222,9 +222,6 @@ void init_iconv(void)
     }
 }
 
-/**
- *
- **/
 static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 {
     /* Terminate the string */
@@ -242,7 +239,7 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 }
 
 
-/**
+/*!
  * Convert string from one encoding to another, making error checking etc
  *
  * @param from source character set
@@ -252,7 +249,7 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
  * @param dest pointer to destination string (multibyte or singlebyte)
  * @param destlen maximal length allowed for string
  * @returns the number of bytes occupied in the destination
- **/
+ */
 static size_t convert_string_internal(charset_t from, charset_t to,
                                       void const *src, size_t srclen,
                                       void *dest, size_t destlen)
@@ -357,7 +354,7 @@ size_t convert_string(charset_t from, charset_t to,
 
 
 
-/**
+/*!
  * Convert between character sets, allocating a new buffer for the result.
  *
  * @param from source character set
@@ -368,7 +365,7 @@ size_t convert_string(charset_t from, charset_t to,
  * @note -1 is not accepted for srclen.
  *
  * @returns Size in bytes of the converted string; or -1 in case of error.
- **/
+ */
 
 static size_t convert_string_allocate_internal(charset_t from, charset_t to,
         void const *src, size_t srclen, char **dest)
@@ -559,8 +556,7 @@ size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
  * @param destlen maximum length of destination buffer
  *
  * @returns The number of bytes occupied by the string in the destination
- **/
-
+ */
 size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
                        size_t destlen)
 {

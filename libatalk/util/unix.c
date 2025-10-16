@@ -628,9 +628,9 @@ char *realpath_safe(const char *path)
 #endif
 }
 
-/**
+/*!
  * Returns pointer to static buffer with basename of path
- **/
+ */
 const char *basename_safe(const char *path)
 {
     static char buf[MAXPATHLEN + 1];
@@ -638,10 +638,10 @@ const char *basename_safe(const char *path)
     return basename(buf);
 }
 
-/**
+/*!
  * extended strtok allows the quoted strings
  * modified strtok.c in glibc 2.0.6
- **/
+ */
 char *strtok_quote(char *s, const char *delim)
 {
     static char *olds = NULL;

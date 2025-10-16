@@ -557,9 +557,9 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/**
+/*!
  * Allocate and initialize atalk socket event struct
- **/
+ */
 struct asev *asev_init(int max)
 {
     struct asev *asev = calloc(1, sizeof(struct asev));
@@ -584,12 +584,12 @@ struct asev *asev_init(int max)
     return asev;
 }
 
-/**
+/*!
  * Add a fd to a dynamic pollfd array and associated data array
  *
  * This uses an additional array of struct polldata which stores type
  * information (enum fdtype) and a pointer to anciliary user data.
- **/
+ */
 bool asev_add_fd(struct asev *asev,
                  int fd,
                  enum asev_fdtype fdtype,
@@ -617,7 +617,7 @@ bool asev_add_fd(struct asev *asev,
  * Remove fd from asev
  *
  * @returns true if the fd was deleted, otherwise false
- **/
+ */
 bool asev_del_fd(struct asev *asev, int fd)
 {
     int i;
