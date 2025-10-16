@@ -265,7 +265,7 @@ static void unblock_sig(DSI *dsi)
  *********************************************************************************/
 
 /*!
- * Communication error with the client, enter disconnected state
+ * @brief Communication error with the client, enter disconnected state
  *
  * 1. close the socket
  * 2. set the DSI_DISCONNECTED flag, remove possible sleep flags
@@ -640,7 +640,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 
 
 /*!
- * Read DSI command and data
+ * @brief Read DSI command and data
  *
  * @param  dsi   (rw) DSI handle
  *

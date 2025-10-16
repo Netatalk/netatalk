@@ -853,7 +853,7 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 #undef UNLOCKBIT
 
 /*!
- * Read *rbuflen bytes from fork at offset
+ * @brief Read *rbuflen bytes from fork at offset
  *
  * @param ofork    (r)  fork handle
  * @param eid      (r)  data fork or resource fork entry id

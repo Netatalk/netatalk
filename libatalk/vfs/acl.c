@@ -95,7 +95,8 @@ exit:
 
 #ifdef HAVE_POSIX_ACLS
 /*!
- * Remove any ACL_USER, ACL_GROUP, ACL_MASK or ACL_TYPE_DEFAULT ACEs from an object
+ * @brief Remove any ACL_USER, ACL_GROUP, ACL_MASK
+ * or ACL_TYPE_DEFAULT ACEs from an object
  *
  * @param name  (r) filesystem object name
  *

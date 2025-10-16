@@ -86,7 +86,7 @@ static void block_sigs_onoff(int block)
 */
 
 /*!
- * Get lock on db lock file
+ * @brief Get lock on db lock file
  *
  * @param cmd      (r) lock command:
  *                     LOCK_FREE:   close lockfd
@@ -265,7 +265,7 @@ EC_CLEANUP:
 
 
 /*!
- * Close dbd if open, delete it, reopen
+ * @brief Close dbd if open, delete it, reopen
  *
  * Also tries to copy the rootinfo key, that would allow for keeping the db stamp
  * and last used CNID

@@ -72,7 +72,7 @@
 extern int afprun(char *cmd, int *outfd);
 
 /*!
- * Read band-size info from Info.plist XML file of an TM sparsebundle
+ * @brief Read band-size info from Info.plist XML file of an TM sparsebundle
  *
  * @param path   (r) path to Info.plist file
  * @return           band-size in bytes, -1 on error
@@ -118,7 +118,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Return number on entries in a directory
+ * @brief Return number on entries in a directory
  *
  * @param path   (r) path to dir
  * @return           number of entries, -1 on error
@@ -152,7 +152,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Calculate used size of a TimeMachine volume
+ * @brief Calculate used size of a TimeMachine volume
  *
  * This assumes that the volume is used only for TimeMachine.
  *

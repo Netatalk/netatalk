@@ -156,7 +156,8 @@ static struct server *test_usockfn(const char *path)
 }
 
 /*!
- * Pass connection request to existing cnid_dbd process or start a new one
+ * @brief Pass connection request to existing cnid_dbd process
+ * or start a new one
  *
  * @param[in] obj      handle
  * @param[in] dbdpn    Path to cnid_dbd binary

@@ -172,7 +172,7 @@ EC_CLEANUP:
  */
 
 /*!
- * Read a IPC message from a child
+ * @brief Read a IPC message from a child
  *
  * This is using an fd with non-blocking IO, so EAGAIN is not an error
  *

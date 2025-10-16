@@ -55,7 +55,7 @@
 #include <atalk/util.h>
 
 /*!
- * Build path relativ to volume root
+ * @brief Build path relativ to volume root
  *
  * path might be:
  * (a) relative:
@@ -149,7 +149,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Resolves CNID of a given path
+ * @brief Resolves CNID of a given path
  *
  * path might be:
  * (a) relative:

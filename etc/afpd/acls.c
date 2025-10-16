@@ -82,7 +82,7 @@
 #ifdef HAVE_NFSV4_ACLS
 
 /*!
- * Compile access rights for a user to one file-system object
+ * @brief Compile access rights for a user to one file-system object
  *
  * This combines all access rights for a user to one fs-object
  * and returns the result as a Darwin allowed rights ACE.
@@ -462,7 +462,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Compile access rights for a user to one file-system object
+ * @brief Compile access rights for a user to one file-system object
  *
  * This combines combines all access rights for a user to one fs-object and
  * returns the result as a Darwin allowed rights ACE.
@@ -580,6 +580,8 @@ EC_CLEANUP:
 }
 
 /*!
+ * @brief Convert Posix ACL permissions into access rights
+ *
  * Helper function for posix_acls_to_uaperms() to convert Posix ACL permissions
  * into access rights needed to fill ua_permissions of a FPUnixPrivs structure.
  *
@@ -624,7 +626,8 @@ static uint8_t acl_permset_to_uarights(acl_entry_t entry)
 }
 
 /*!
- * Update FPUnixPrivs for a file-system object on a volume supporting ACLs
+ * @brief Update FPUnixPrivs for a file-system object
+ * on a volume supporting ACLs
  *
  * Checks permissions granted by ACLS for a user to one fs-object and
  * updates user and group permissions in given struct maccess. As OS X
@@ -742,7 +745,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Map Darwin ACE rights to POSIX 1e perm
+ * @brief Map Darwin ACE rights to POSIX 1e perm
  *
  * We can only map few rights:
  *   DARWIN_ACE_READ_DATA                    -> ACL_READ
@@ -777,7 +780,8 @@ static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
 }
 
 /*!
- * Add a ACL_USER or ACL_GROUP permission to an ACL, extending existing ACEs
+ * @brief  Add a ACL_USER or ACL_GROUP permission to an ACL,
+ * extending existing ACEs
  *
  * Add a permission of "type" for user or group "id" to an ACL. Scan the ACL
  * for existing permissions for this type/id, if there is one add the perm,
@@ -844,7 +848,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Map Darwin ACL to POSIX ACL.
+ * @brief Map Darwin ACL to POSIX ACL.
  *
  * aclp must point to a acl_init'ed acl_t or an acl_t that can e.g. contain default ACEs.
  * Mapping pecularities:
@@ -1520,7 +1524,8 @@ EC_CLEANUP:
 #endif /* HAVE_POSIX_ACLS */
 
 /*!
- * Checks if a given UUID has requested_rights(type darwin_ace_rights) for path.
+ * @brief Checks if a given UUID has requested_rights (type darwin_ace_rights)
+ * for path.
  *
  * Note: this gets called frequently and is a good place for optimizations !
  *
@@ -1947,7 +1952,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  ********************************************************************/
 
 /*!
- * map ACL to user maccess
+ * @brief map ACL to user maccess
  *
  * This is the magic function that makes ACLs usable by calculating
  * the access granted by ACEs to the logged in user.

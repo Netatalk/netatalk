@@ -106,7 +106,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
 }
 
 /*!
- * Check lockfile
+ * @brief Check lockfile
  */
 int check_lockfile(const char *program, const char *pidfile)
 {
@@ -133,7 +133,7 @@ int check_lockfile(const char *program, const char *pidfile)
 }
 
 /*!
- * Check and create lockfile
+ * @brief Check and create lockfile
  */
 int create_lockfile(const char *program, const char *pidfile)
 {

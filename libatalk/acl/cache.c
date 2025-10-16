@@ -221,7 +221,7 @@ cleanup:
 }
 
 /*!
- * Search cache by name and uuid type
+ * @brief Search cache by name and uuid type
  *
  * @param name    (r)  name to search
  * @param type    (rw) type (user or group) of name, returns found type here which might

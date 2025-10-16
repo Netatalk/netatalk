@@ -92,7 +92,7 @@ void _log(enum logtype lt, char *fmt, ...)
 }
 
 /*!
- * Load volinfo and initialize struct vol
+ * @brief Load volinfo and initialize struct vol
  *
  * @param obj    (r)  AFPObj of the current connection
  * @param path   (r)  path to evaluate
@@ -192,7 +192,7 @@ char *utompath(const struct vol *vol, const char *upath)
 
 
 /*!
- * Convert dot encoding of basename _in place_
+ * @brief Convert dot encoding of basename _in place_
  *
  * path arg can be "[/][dir/ | ...]filename". It will be converted in place
  * possible encoding ".file" as ":2efile" which means the result will be
@@ -243,7 +243,7 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
 }
 
 /*!
- * Resolves CNID of a given paths parent directory
+ * @brief Resolves CNID of a given paths parent directory
  *
  * path might be:
  * (a) relative:

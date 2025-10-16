@@ -531,7 +531,7 @@ static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
         "./../.AppleDouble/.AppleDB/Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/.AppleDesktop/.Parent/"
 
 /*!
- * This function performs a filesystem search
+ * @brief This function performs a filesystem search
  *
  * Uses globals c1, c2, the search criteria
  *
@@ -780,7 +780,7 @@ catsearch_end:
 } /* catsearch() */
 
 /*!
- * This function performs a CNID db search
+ * @brief This function performs a CNID db search
  *
  * Uses globals c1, c2, the search criteria
  * Always searches the whole volume, not a subtree

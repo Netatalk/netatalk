@@ -331,10 +331,14 @@ static size_t status_netaddress(char *data, int *servoffset,
 
 
 /*!
+ * @brief Build the DirectoryNames field of the status reply
+ *
+ * @code
  * DirectoryNamesCount offset: uint16_t
  * ...
  * DirectoryNamesCount: uint8_t
  * DirectoryNames: list of UTF-8 Pascal strings (uint8_t + char[1,255])
+ * @endcode
  */
 static size_t status_directorynames(char *data,
                                     int *diroffset,
