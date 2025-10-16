@@ -538,9 +538,9 @@ void cnid_dbd_close(struct _cnid_db *cdb)
     return;
 }
 
-/**
+/*!
  * Get the db stamp
- **/
+ */
 static int cnid_dbd_stamp(CNID_bdb_private *db)
 {
     struct cnid_dbd_rqst rqst_stamp;
@@ -753,9 +753,9 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
     return name;
 }
 
-/**
+/*!
  * Caller passes buffer where we will store the db stamp
- **/
+ */
 int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {
     CNID_bdb_private *db;

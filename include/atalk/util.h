@@ -181,9 +181,9 @@ extern int tokenize_ip_port(const char *ipurl, char **address, char **port);
 
 enum asev_fdtype {IPC_FD, LISTEN_FD};
 
-/**
+/*!
  * atalk socket event data
- **/
+ */
 struct asev_data {
     enum asev_fdtype fdtype;  /* IPC fd or listening socket fd                 */
     void            *private; /* pointer to AFPconfig for listening socket and *
@@ -191,9 +191,9 @@ struct asev_data {
     int             protocol; /* protocol type ASP or DSI                      */
 };
 
-/**
+/*!
  * atalk socket event
- **/
+ */
 struct asev {
     struct pollfd         *fdset; /* struct pollfd array for poll() */
     struct asev_data      *data;  /* associated array of data       */

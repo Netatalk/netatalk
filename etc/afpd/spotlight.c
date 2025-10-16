@@ -316,14 +316,14 @@ static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
     return talloc_path;
 }
 
-/**
+/*!
  * Add requested metadata for a query result element
  *
  * This could be rewritten to something more sophisticated like
  * querying metadata from Tracker.
  *
  * If path or sp is NULL, simply add nil values for all attributes.
- **/
+ */
 static bool add_filemeta(sl_array_t *reqinfo,
                          sl_array_t *fm_array,
                          const char *path,
@@ -380,10 +380,10 @@ static bool add_filemeta(sl_array_t *reqinfo,
     return true;
 }
 
-/**
+/*!
  * Allocate result handle used in the async Tracker cursor result
  * handler for storing results
- **/
+ */
 static bool create_result_handle(slq_t *slq)
 {
     sl_nil_t nil = 0;
@@ -476,25 +476,25 @@ static bool add_results(sl_array_t *array, slq_t *slq)
 static ATALK_LIST_HEAD(sl_queries);
 static ATALK_LIST_HEAD(sl_cancelled_queries);
 
-/**
+/*!
  * Add a query to the list of active queries
- **/
+ */
 static void slq_add(slq_t *slq)
 {
     list_add(&(slq->slq_list), &sl_queries);
 }
 
-/**
+/*!
  * Add a query to the list of active queries
- **/
+ */
 static void slq_cancelled_add(slq_t *slq)
 {
     list_add(&(slq->slq_list), &sl_cancelled_queries);
 }
 
-/**
+/*!
  * Remove a query from the active list
- **/
+ */
 static void slq_remove(slq_t *slq)
 {
     struct list_head *p;
@@ -526,9 +526,9 @@ static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
     return q;
 }
 
-/**
+/*!
  * Remove a query from the active queue and free it
- **/
+ */
 static void slq_destroy(slq_t *slq)
 {
     if (slq == NULL) {
@@ -539,9 +539,9 @@ static void slq_destroy(slq_t *slq)
     talloc_free(slq);
 }
 
-/**
+/*!
  * Cancel a query
- **/
+ */
 static void slq_cancel(slq_t *slq)
 {
     slq->slq_state = SLQ_STATE_CANCEL_PENDING;
@@ -549,9 +549,9 @@ static void slq_cancel(slq_t *slq)
     slq_cancelled_add(slq);
 }
 
-/**
+/*!
  * talloc destructor cb
- **/
+ */
 static int slq_free_cb(slq_t *slq)
 {
     if (slq->tracker_cursor) {
@@ -561,9 +561,9 @@ static int slq_free_cb(slq_t *slq)
     return 0;
 }
 
-/**
+/*!
  * Free all cancelled queries
- **/
+ */
 static void slq_cancelled_cleanup(void)
 {
     struct list_head *p;

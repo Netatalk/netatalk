@@ -264,12 +264,12 @@ EC_CLEANUP:
 }
 
 
-/**
+/*!
  * Close dbd if open, delete it, reopen
  *
  * Also tries to copy the rootinfo key, that would allow for keeping the db stamp
  * and last used CNID
- **/
+ */
 static int reinit_db(void)
 {
     EC_INIT;
