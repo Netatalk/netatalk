@@ -923,7 +923,7 @@ void dir_free_invalid_q(void)
  *
  * @param vol  (r) volume pointer
  * @param dir  (rw) directory/file entry to remove from cache
- * @return 0 on success
+ * @returns 0 on success
  */
 int dir_remove(const struct vol *vol, struct dir *dir)
 {

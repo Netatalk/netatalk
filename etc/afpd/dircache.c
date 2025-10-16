@@ -814,7 +814,7 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
  *
  * @param reqsize   (r) requested maximum size from afp.conf
  *
- * @return 0 on success, -1 on error
+ * @returns 0 on success, -1 on error
  */
 int dircache_init(int reqsize)
 {
