@@ -113,7 +113,7 @@ EC_CLEANUP:
 /*!
  * @brief Fork, exit parent, setsid(), chdir("/"), close all fds
  *
- * @return -1 on failure, but you can't do much except exit in that case
+ * @returns -1 on failure, but you can't do much except exit in that case
  * since we may already have forked
  */
 int daemonize(void)

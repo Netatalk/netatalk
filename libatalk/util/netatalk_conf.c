@@ -604,7 +604,7 @@ static char *volxlate(const AFPObj *obj,
  * Example:
  * user1 user2, user3, "@group1", "@group2", "@group3", "user name1", "@group name1"
  * A NULL argument allows everybody to have access.
- * @return three things:
+ * @returns three things:
  *     -1: no list
  *      0: list exists, but name isn't in it
  *      1: in list

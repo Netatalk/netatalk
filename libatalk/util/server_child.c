@@ -104,7 +104,7 @@ server_child_t *server_child_alloc(int connections)
 
 /*!
  * @brief add a child
- * @return pointer to struct server_child_data on success, NULL on error
+ * @returns pointer to struct server_child_data on success, NULL on error
  */
 afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
 {
