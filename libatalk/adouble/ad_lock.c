@@ -284,7 +284,7 @@ static off_t rf2off(off_t off)
 }
 
 /*!
- * Test a lock
+ * @brief Test a lock
  *
  * (1) Test against our own locks array
  * (2) Test fcntl lock, locks from other processes
@@ -627,7 +627,7 @@ void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
 }
 
 /*!
- * Test for a share mode lock
+ * @brief Test for a share mode lock
  *
  * @param ad      (rw) handle
  * @param eid     (r)  datafork or resource fork
@@ -657,7 +657,7 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 }
 
 /*!
- * Return if a file is open by another process.
+ * @brief Return if a file is open by another process.
  *
  * Optimized for the common case:
  * - there's no locks held by another process (clients)

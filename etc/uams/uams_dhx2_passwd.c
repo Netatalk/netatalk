@@ -63,8 +63,9 @@ static struct passwd *dhxpwd;
  *********************************************************/
 
 /*!
- * This function will generate a new pair of prime and generator for use in
+ * @brief Generate a new pair of prime and generator for use in
  * the Diffie-Hellman key exchange.
+ *
  * The bits value should be one of 768, 1024, 2048, 3072 or 4096.
  */
 

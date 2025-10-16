@@ -107,9 +107,10 @@ void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 }
 
 /*!
- * Convert 16 byte binary uuid to neat ascii represantation including dashes.
+ * @brief Convert 16 byte binary uuid to neat ascii represantation including dashes
+ *
  * Use defined or default ascii mask for dash placement
- * Returns pointer to static buffer.
+ * @returns pointer to static buffer
  */
 const char *uuid_bin2string(const unsigned char *uuid)
 {

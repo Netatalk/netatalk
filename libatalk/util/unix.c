@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Netatalk utility functions
+ * @brief Netatalk utility functions: unix
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +57,7 @@ static void closeall(int fd)
 }
 
 /*!
- * Run command in a child and wait for it to finish
+ * @brief Run command in a child and wait for it to finish
  */
 int run_cmd(const char *cmd, char **cmd_argv)
 {
@@ -111,11 +111,9 @@ EC_CLEANUP:
 }
 
 /*!
- * Daemonize
+ * @brief Fork, exit parent, setsid(), chdir("/"), close all fds
  *
- * Fork, exit parent, setsid(), chdir("/"), close all fds
- *
- * returns -1 on failure, but you can't do much except exit in that case
+ * @return -1 on failure, but you can't do much except exit in that case
  * since we may already have forked
  */
 int daemonize(void)
@@ -237,7 +235,7 @@ const char *fullpathname(const char *name)
 }
 
 /*!
- * Takes a buffer with a path, strips slashs, returns basename
+ * @brief Takes a buffer with a path, strips slashs, returns basename
  *
  * @param p (rw) path
  *        path may be
@@ -389,7 +387,7 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
 }
 
 /*!
- * chmod() wrapper for symlink and ACL handling
+ * @brief chmod() wrapper for symlink and ACL handling
  *
  * @param path       (r) path
  * @param mode       (r) requested mode
@@ -544,7 +542,7 @@ int ochdir(const char *dir, int options)
 }
 
 /*!
- * Store n random bytes an buf
+ * @brief Store n random bytes an buf
  */
 void randombytes(void *buf, int n)
 {
@@ -629,7 +627,7 @@ char *realpath_safe(const char *path)
 }
 
 /*!
- * Returns pointer to static buffer with basename of path
+ * @brief Returns pointer to static buffer with basename of path
  */
 const char *basename_safe(const char *path)
 {
@@ -639,7 +637,8 @@ const char *basename_safe(const char *path)
 }
 
 /*!
- * extended strtok allows the quoted strings
+ * @brief extended strtok allows the quoted strings
+ *
  * modified strtok.c in glibc 2.0.6
  */
 char *strtok_quote(char *s, const char *delim)

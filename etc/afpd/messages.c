@@ -29,7 +29,7 @@ static char servermesg[MAXPATHLEN] = "";
 static char localized_message[MAXPATHLEN] = "";
 
 /*!
- * Copy AFP message to message buffer
+ * @brief Copy AFP message to message buffer
  * @param message (r) message to send
  * @returns 0 if this message is being set the first time, return 1 if the preceeding
  *          message was the same

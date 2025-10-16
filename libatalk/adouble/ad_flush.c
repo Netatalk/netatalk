@@ -133,7 +133,7 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
 }
 
 /*!
- * Prepare adbuf buffer from struct adouble for writing on disk
+ * @brief Prepare adbuf buffer from struct adouble for writing on disk
  */
 int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
 {
@@ -471,7 +471,7 @@ static int ad_data_closefd(struct adouble *ad)
 }
 
 /*!
- * Close a struct adouble freeing all resources
+ * @brief Close a struct adouble freeing all resources
  */
 int ad_close(struct adouble *ad, int adflags)
 {

@@ -214,7 +214,7 @@ static size_t sys_iconv(void *cd,
 }
 
 /*!
- * This is a simple portable iconv() implementaion.
+ * @brief This is a simple portable iconv() implementaion
  *
  * It only knows about a very small number of character sets - just
  * enough that netatalk works on systems that don't have iconv.

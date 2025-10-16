@@ -236,7 +236,7 @@ exit:
 }
 
 /*!
- * Copy an EA from one file to another
+ * @brief Copy an EA from one file to another
  *
  * Supports *at semantics, pass dirfd=-1 to ignore this
  */

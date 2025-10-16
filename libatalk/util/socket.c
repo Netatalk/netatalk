@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Netatalk utility functions
+ * @brief Netatalk utility functions: socket
  */
 
 #ifdef HAVE_CONFIG_H
@@ -74,7 +74,7 @@ int setnonblock(int fd, int cmd)
 }
 
 /*!
- * non-blocking drop-in replacement for read with timeout using select
+ * @brief non-blocking drop-in replacement for read with timeout using select
  *
  * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
  * @param data            (rw) buffer for the read data
@@ -203,7 +203,7 @@ exit:
 }
 
 /*!
- * non-blocking drop-in replacement for read with timeout using select
+ * @brief non-blocking drop-in replacement for read with timeout using select
  *
  * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
  * @param data            (rw) buffer for the read data
@@ -470,7 +470,8 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
 }
 
 /*!
- * Tokenize IP(4/6) addresses with an optional port into address and port
+ * @brief Tokenize IP(4/6) addresses with an optional port
+ * into address and port
  *
  * @param ipurl    (r) IP URL string
  * @param address  (w) IP address
@@ -558,7 +559,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Allocate and initialize atalk socket event struct
+ * @brief Allocate and initialize atalk socket event struct
  */
 struct asev *asev_init(int max)
 {
@@ -585,7 +586,7 @@ struct asev *asev_init(int max)
 }
 
 /*!
- * Add a fd to a dynamic pollfd array and associated data array
+ * @brief Add a fd to a dynamic pollfd array and associated data array
  *
  * This uses an additional array of struct polldata which stores type
  * information (enum fdtype) and a pointer to anciliary user data.
@@ -614,7 +615,7 @@ bool asev_add_fd(struct asev *asev,
 }
 
 /*!
- * Remove fd from asev
+ * @brief Remove fd from asev
  *
  * @returns true if the fd was deleted, otherwise false
  */
@@ -673,7 +674,7 @@ bool asev_del_fd(struct asev *asev, int fd)
 #endif
 
 /*!
- * Receive a fd on a suitable socket
+ * @brief Receive a fd on a suitable socket
  * @param fd          (r) PF_UNIX socket to receive on
  * @param nonblocking (r) 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
  * @returns fd on success, -1 on error

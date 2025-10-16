@@ -899,7 +899,7 @@ exit:
 }
 
 /*!
- * Free the queue with invalid struct dirs
+ * @brief Free the queue with invalid struct dirs
  *
  * This gets called at the end of every AFP func.
  */
