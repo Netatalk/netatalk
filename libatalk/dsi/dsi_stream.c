@@ -644,7 +644,7 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
  *
  * @param  dsi   (rw) DSI handle
  *
- * @return    DSI function on success, 0 on failure
+ * @returns    DSI function on success, 0 on failure
  */
 int dsi_stream_receive(DSI *dsi)
 {

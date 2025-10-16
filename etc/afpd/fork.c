@@ -861,7 +861,7 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
  * @param rbuf     (r)  data buffer
  * @param rbuflen  (rw) in: number of bytes to read, out: bytes read
  *
- * @return         AFP status code
+ * @returns         AFP status code
  */
 static int read_file(const struct ofork *ofork, int eid, off_t offset,
                      char *rbuf, size_t *rbuflen)
