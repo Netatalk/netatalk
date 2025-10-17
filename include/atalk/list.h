@@ -134,7 +134,7 @@ static inline void list_splice(struct list_head *list, struct list_head *head)
 
 #endif
 /*!
- * @brief list_entry - get the struct for this entry
+ * @brief get the struct for this entry
  * @param ptr       the &struct list_head pointer.
  * @param type      the type of the struct this is embedded in.
  * @param member    the name of the list_struct within the struct.
@@ -143,7 +143,7 @@ static inline void list_splice(struct list_head *list, struct list_head *head)
     ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
 
 /*!
- * @brief list_for_each	-	iterate over a list
+ * @brief iterate over a list
  * @param pos       the &struct list_head to use as a loop counter.
  * @param head      the head for your list.
  */
@@ -152,7 +152,7 @@ static inline void list_splice(struct list_head *list, struct list_head *head)
         pos = pos->next)
 
 /*!
- * @brief list_for_each_prev	-	iterate over a list in reverse order
+ * @brief iterate over a list in reverse order
  * @param pos       the &struct list_head to use as a loop counter.
  * @param head      the head for your list.
  */
