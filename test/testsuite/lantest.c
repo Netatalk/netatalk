@@ -812,7 +812,7 @@ void clean_exit(int exit_code)
  * @brief Clean up a test directory (main entry point)
  *
  * @param conn     AFP connection
- * @param vol      Volume ID
+ * @param volume   Volume ID
  * @param dirname  Directory name to delete
  *
  * @returns 0 on success, -1 on failure

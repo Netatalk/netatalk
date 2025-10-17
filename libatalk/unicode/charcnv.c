@@ -45,7 +45,7 @@
 #include <atalk/compat.h>
 #include <atalk/byteorder.h>
 
-/**
+/*!
  * @file
  *
  * @brief Character-set conversion routines built on our iconv.
@@ -72,9 +72,9 @@ static char hexdig[] = "0123456789abcdef";
 #define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
 
 
-/**
- * Return the name of a charset to give to iconv().
- **/
+/*!
+ * @brief Return the name of a charset to give to iconv().
+ */
 static const char *charset_name(charset_t ch)
 {
     const char *ret = NULL;
@@ -185,13 +185,13 @@ charset_t add_charset(const char *name)
     return cur_charset_t;
 }
 
-/**
- * Initialize iconv conversion descriptors.
+/*!
+ * @brief Initialize iconv conversion descriptors
  *
  * This is called the first time it is needed, and also called again
  * every time the configuration is reloaded, because the charset or
  * codepage might have changed.
- **/
+ */
 void init_iconv(void)
 {
     int c1;
@@ -222,9 +222,6 @@ void init_iconv(void)
     }
 }
 
-/**
- *
- **/
 static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 {
     /* Terminate the string */
@@ -242,15 +239,18 @@ static size_t add_null(charset_t to, char *buf, size_t bytesleft, size_t len)
 }
 
 
-/**
- * Convert string from one encoding to another, making error checking etc
+/*!
+ * @brief Convert string from one encoding to another,
+ * making error checking etc
  *
+ * @param from source character set
+ * @param to destination character set
  * @param src pointer to source string (multibyte or singlebyte)
  * @param srclen length of the source string in bytes
  * @param dest pointer to destination string (multibyte or singlebyte)
  * @param destlen maximal length allowed for string
  * @returns the number of bytes occupied in the destination
- **/
+ */
 static size_t convert_string_internal(charset_t from, charset_t to,
                                       void const *src, size_t srclen,
                                       void *dest, size_t destlen)
@@ -355,15 +355,19 @@ size_t convert_string(charset_t from, charset_t to,
 
 
 
-/**
- * Convert between character sets, allocating a new buffer for the result.
+/*!
+ * @brief Convert between character sets,
+ * allocating a new buffer for the result
  *
- * @param srclen length of source buffer.
+ * @param from source character set
+ * @param to destination character set
+ * @param src pointer to source string (multibyte or singlebyte)
+ * @param srclen length of source buffer
  * @param dest always set at least to NULL
- * @note -1 is not accepted for srclen.
+ * @note -1 is not accepted for srclen
  *
- * @returns Size in bytes of the converted string; or -1 in case of error.
- **/
+ * @returns Size in bytes of the converted string; or -1 in case of error
+ */
 
 static size_t convert_string_allocate_internal(charset_t from, charset_t to,
         void const *src, size_t srclen, char **dest)
@@ -545,66 +549,17 @@ size_t charset_strlower(charset_t ch, const char *src, size_t srclen,
     return size;
 }
 
-
-size_t unix_strupper(const char *src, size_t srclen, char *dest, size_t destlen)
-{
-    return charset_strupper(CH_UNIX, src, srclen, dest, destlen);
-}
-
-size_t unix_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
-{
-    return charset_strlower(CH_UNIX, src, srclen, dest, destlen);
-}
-
-size_t utf8_strupper(const char *src, size_t srclen, char *dest, size_t destlen)
-{
-    return charset_strupper(CH_UTF8, src, srclen, dest, destlen);
-}
-
-size_t utf8_strlower(const char *src, size_t srclen, char *dest, size_t destlen)
-{
-    return charset_strlower(CH_UTF8, src, srclen, dest, destlen);
-}
-
-/**
- * Copy a string from a charset_t char* src to a UCS2 destination, allocating a buffer
+/*!
+ * @brief Copy a string from a UCS2 src to a unix char * destination,
+ * allocating a buffer
  *
+ * @param ch destination character set
+ * @param src source UCS2 string
  * @param dest always set at least to NULL
+ * @param destlen maximum length of destination buffer
  *
  * @returns The number of bytes occupied by the string in the destination
- *         or -1 in case of error.
- **/
-
-size_t charset_to_ucs2_allocate(charset_t ch, ucs2_t **dest, const char *src)
-{
-    size_t src_len = strlen(src);
-    *dest = NULL;
-    return convert_string_allocate(ch, CH_UCS2, src, src_len, (char **) dest);
-}
-
-/** -----------------------------------
- * Copy a string from a charset_t char* src to a UTF-8 destination, allocating a buffer
- *
- * @param dest always set at least to NULL
- *
- * @returns The number of bytes occupied by the string in the destination
- **/
-
-size_t charset_to_utf8_allocate(charset_t ch, char **dest, const char *src)
-{
-    size_t src_len = strlen(src);
-    *dest = NULL;
-    return convert_string_allocate(ch, CH_UTF8, src, src_len, dest);
-}
-
-/** -----------------------------------
- * Copy a string from a UCS2 src to a unix char * destination, allocating a buffer
- *
- * @param dest always set at least to NULL
- *
- * @returns The number of bytes occupied by the string in the destination
- **/
-
+ */
 size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
                        size_t destlen)
 {
@@ -618,21 +573,6 @@ size_t ucs2_to_charset_allocate(charset_t ch, char **dest, const ucs2_t *src)
     size_t src_len = (strlen_w(src)) * sizeof(ucs2_t);
     *dest = NULL;
     return convert_string_allocate(CH_UCS2, ch, src, src_len, dest);
-}
-
-/** ---------------------------------
- * Copy a string from a UTF-8 src to a unix char * destination, allocating a buffer
- *
- * @param dest always set at least to NULL
- *
- * @returns The number of bytes occupied by the string in the destination
- **/
-
-size_t utf8_to_charset_allocate(charset_t ch, char **dest, const char *src)
-{
-    size_t src_len = strlen(src);
-    *dest = NULL;
-    return convert_string_allocate(CH_UTF8, ch, src, src_len, dest);
 }
 
 size_t charset_precompose(charset_t ch, char *src, size_t inlen, char *dst,
@@ -695,45 +635,15 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
     return len;
 }
 
-size_t utf8_precompose(char *src, size_t inlen, char *dst, size_t outlen)
-{
-    return charset_precompose(CH_UTF8, src, inlen, dst, outlen);
-}
-
-size_t utf8_decompose(char *src, size_t inlen, char *dst, size_t outlen)
-{
-    return charset_decompose(CH_UTF8, src, inlen, dst, outlen);
-}
-
-#if 0
-static char  debugbuf[MAXPATHLEN + 1];
-char *debug_out(char *seq, size_t len)
-{
-    size_t i = 0;
-    unsigned char *p;
-    char *q;
-    p = (unsigned char *) seq;
-    q = debugbuf;
-
-    for (i = 0; i <= (len - 1); i++) {
-        sprintf(q, "%2.2x.", *p);
-        q += 3;
-        p++;
-    }
-
-    *q = 0;
-    q = debugbuf;
-    return q;
-}
-#endif
-
-/*
- * Convert from MB to UCS2 charset
+/*!
+ * @brief Convert from MB to UCS2 charset
+ *
  * Flags:
- *      CONV_UNESCAPEHEX:    ':XX' will be converted to an UCS2 character
- *      CONV_IGNORE:         return the first convertable characters.
- *      CONV_FORCE:  force convertion
- * FIXME:
+ *  - CONV_UNESCAPEHEX:    ':XX' will be converted to an UCS2 character
+ *  - CONV_IGNORE:         return the first convertable characters.
+ *  - CONV_FORCE:  force convertion
+ *
+ * @bug
  *      This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail
  *      The (un)escape scheme is not compatible to the old cap style escape. This is bad, we need it
  *      for e.g. HFS cdroms.
@@ -812,7 +722,7 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                         goto end;
                     }
 
-                    *((ucs2_t *)outbuf) = (ucs2_t) IGNORE_CHAR; /**inbuf */
+                    *((ucs2_t *)outbuf) = (ucs2_t) IGNORE_CHAR; /* inbuf */
                     inbuf++;
                     i_len--;
                     outbuf += 2;

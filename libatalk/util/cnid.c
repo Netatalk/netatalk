@@ -55,12 +55,12 @@
 #include <atalk/util.h>
 
 /*!
- * Build path relativ to volume root
+ * @brief Build path relativ to volume root
  *
  * path might be:
- * (a) relative:
- *     "dir/subdir" with cwd: "/afp_volume/topdir"
- * (b) absolute:
+ * 1. relative:
+ *    "dir/subdir" with cwd: "/afp_volume/topdir"
+ * 2. absolute:
  *     "/afp_volume/dir/subdir"
  *
  * @param path     (r) path relative to cwd() or absolute
@@ -149,13 +149,13 @@ EC_CLEANUP:
 }
 
 /*!
- * Resolves CNID of a given path
+ * @brief Resolves CNID of a given path
  *
  * path might be:
- * (a) relative:
- *     "dir/subdir" with cwd: "/afp_volume/topdir"
- * (b) absolute:
- *     "/afp_volume/dir/subdir"
+ * 1. relative:
+ *    "dir/subdir" with cwd: "/afp_volume/topdir"
+ * 2. absolute:
+ *    "/afp_volume/dir/subdir"
  *
  * path MUST be pointing inside vol, this is usually the case as vol has been build from
  * path using loadvolinfo and friends.

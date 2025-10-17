@@ -175,7 +175,6 @@ You can also use the `./contrib/scripts/codefmt.sh` convenience script to the sa
   - Variable and function names should be in snake_case
   - Lists of symbols, files etc. should be sorted in alphabetic order, unless a constraint dictates otherwise
   - One variable declaration and definition per line
-  - Code documentation comments should be in kernel-doc format
   - Alphanumeric symbols in optarg should be in alphabetical order, with unary options first and parameter options second
 
 Ex.
@@ -217,6 +216,37 @@ Ex.
 /*
  * Your comment goes here
  */
+```
+
+- Code documentation comments
+  - Use *Qt style* comments for documenting functions, parameters, return values, structs, enums, and macros
+  - Use `/*! ... */` to indicate multi-line comments
+  - Use `/*!< ... */` to indicate single-line comments
+  - Use a *@* prefix for [commanded tags](https://www.doxygen.nl/manual/commands.html) such as `@param` and `@returns`
+  - A multi-line function documentation comment should have a `@brief` description first,
+    followed by a blank line, followed by a more elaborate description if needed,
+    followed by `@param` and `@returns` value documentation
+  - Indicate input/output status for `@param` with \[in\],[\out\], and \[[in,out]\] tags
+  - Use Markdown for rich formatting, for instance for numbered and bulleted lists
+
+Ex.
+
+```C
+/*!
+ * @brief Copy a string from a UCS2 src to a unix char * destination, allocating a buffer
+ *
+ * @param ch destination character set
+ * @param src source UCS2 string
+ * @param dest always set at least to NULL
+ * @param destlen maximum length of destination buffer
+ *
+ * @returns The number of bytes occupied by the string in the destination
+ */
+size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
+                       size_t destlen)
+{
+    ...
+}
 ```
 
 - Padding and alignment

@@ -86,18 +86,19 @@ static void block_sigs_onoff(int block)
 */
 
 /*!
- * Get lock on db lock file
+ * @brief Get lock on db lock file
  *
- * @args cmd       (r) lock command:
- *                     LOCK_FREE:   close lockfd
- *                     LOCK_UNLOCK: unlock lockm keep lockfd open
- *                     LOCK_EXCL:   F_WRLCK on lockfd
- *                     LOCK_SHRD:   F_RDLCK on lockfd
- * @args dbpath    (r) path to lockfile, only used on first call,
+ * @param cmd      (r) lock command:
+ *                     - LOCK_FREE:   close lockfd
+ *                     - LOCK_UNLOCK: unlock lockm keep lockfd open
+ *                     - LOCK_EXCL:   F_WRLCK on lockfd
+ *                     - LOCK_SHRD:   F_RDLCK on lockfd
+ * @param dbpath   (r) path to lockfile, only used on first call,
  *                     later the stored fd is used
- * @returns            LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
- *                     LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
- *                     success, 0 if the lock couldn't be acquired, -1 on other errors
+ * @returns        depending on lock command:
+ *                     - LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
+ *                     - LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
+ *                       success, 0 if the lock couldn't be acquired, -1 on other errors
  */
 static int get_lock(int cmd, const char *dbpath)
 {
@@ -264,12 +265,12 @@ EC_CLEANUP:
 }
 
 
-/**
- * Close dbd if open, delete it, reopen
+/*!
+ * @brief Close dbd if open, delete it, reopen
  *
  * Also tries to copy the rootinfo key, that would allow for keeping the db stamp
  * and last used CNID
- **/
+ */
 static int reinit_db(void)
 {
     EC_INIT;

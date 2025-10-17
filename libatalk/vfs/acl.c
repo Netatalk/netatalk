@@ -32,7 +32,10 @@
 
 #ifdef HAVE_NFSV4_ACLS
 
-/* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
+/*!
+ * @brief Removes all non-trivial ACLs from object
+ * @returns full AFPERR code
+ */
 int remove_acl_vfs(const char *name)
 {
     int ret, i, ace_count, trivial_aces, new_aces_count;
@@ -95,7 +98,8 @@ exit:
 
 #ifdef HAVE_POSIX_ACLS
 /*!
- * Remove any ACL_USER, ACL_GROUP, ACL_MASK or ACL_TYPE_DEFAULT ACEs from an object
+ * @brief Remove any ACL_USER, ACL_GROUP, ACL_MASK
+ * or ACL_TYPE_DEFAULT ACEs from an object
  *
  * @param name  (r) filesystem object name
  *

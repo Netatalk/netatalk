@@ -155,16 +155,17 @@ static struct server *test_usockfn(const char *path)
     return NULL;
 }
 
-/**
- * Pass connection request to existing cnid_dbd process or start a new one
+/*!
+ * @brief Pass connection request to existing cnid_dbd process
+ * or start a new one
  *
  * @param[in] obj      handle
  * @param[in] dbdpn    Path to cnid_dbd binary
  * @param[in] volpath  Path of AFP volume
  * @param[in] username  Optional username, may be NULL
  *
- * @return 0 on success, -1 on error
- **/
+ * @returns 0 on success, -1 on error
+ */
 int maybe_start_dbd(const AFPObj *obj, char *dbdpn, const char *volpath,
                     const char *username)
 {

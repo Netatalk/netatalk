@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Netatalk utility functions
+ * @brief Netatalk utility functions: socket
  */
 
 #ifdef HAVE_CONFIG_H
@@ -74,11 +74,11 @@ int setnonblock(int fd, int cmd)
 }
 
 /*!
- * non-blocking drop-in replacement for read with timeout using select
+ * @brief non-blocking drop-in replacement for read with timeout using select
  *
  * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
  * @param data            (rw) buffer for the read data
- * @param lenght          (r)  how many bytes to read
+ * @param length          (r)  how many bytes to read
  * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
  *                             io mode for the socket
  * @param timeout         (r)  number of seconds to try reading, 0 means no timeout
@@ -203,11 +203,11 @@ exit:
 }
 
 /*!
- * non-blocking drop-in replacement for read with timeout using select
+ * @brief non-blocking drop-in replacement for read with timeout using select
  *
  * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
  * @param data            (rw) buffer for the read data
- * @param lenght          (r)  how many bytes to read
+ * @param length          (r)  how many bytes to read
  * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
  *                             io mode for the socket
  * @param timeout         (r)  number of seconds to try reading
@@ -391,8 +391,8 @@ unsigned int getip_port(const struct sockaddr  *sa)
  * e.g. 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
  * IPv4 is treated as mask = 32, mask > 128 is set to 128 for IPv6.
  *
- * @param  ai        (rw) pointer to an struct sockaddr
- * @parma  mask      (r) number of maskbits
+ * @param  sa        (rw) pointer to an struct sockaddr
+ * @param  mask      (r) number of maskbits
  */
 void apply_ip_mask(struct sockaddr *sa, int mask)
 {
@@ -470,7 +470,8 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
 }
 
 /*!
- * Tokenize IP(4/6) addresses with an optional port into address and port
+ * @brief Tokenize IP(4/6) addresses with an optional port
+ * into address and port
  *
  * @param ipurl    (r) IP URL string
  * @param address  (w) IP address
@@ -557,9 +558,9 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/**
- * Allocate and initialize atalk socket event struct
- **/
+/*!
+ * @brief Allocate and initialize atalk socket event struct
+ */
 struct asev *asev_init(int max)
 {
     struct asev *asev = calloc(1, sizeof(struct asev));
@@ -584,12 +585,12 @@ struct asev *asev_init(int max)
     return asev;
 }
 
-/**
- * Add a fd to a dynamic pollfd array and associated data array
+/*!
+ * @brief Add a fd to a dynamic pollfd array and associated data array
  *
  * This uses an additional array of struct polldata which stores type
  * information (enum fdtype) and a pointer to anciliary user data.
- **/
+ */
 bool asev_add_fd(struct asev *asev,
                  int fd,
                  enum asev_fdtype fdtype,
@@ -613,11 +614,11 @@ bool asev_add_fd(struct asev *asev,
     return true;
 }
 
-/**
- * Remove fd from asev
+/*!
+ * @brief Remove fd from asev
  *
  * @returns true if the fd was deleted, otherwise false
- **/
+ */
 bool asev_del_fd(struct asev *asev, int fd)
 {
     int i;
@@ -672,10 +673,10 @@ bool asev_del_fd(struct asev *asev, int fd)
 #define CMSG_SPACE(len) (__CMSG_ALIGN(sizeof(struct cmsghdr)) + __CMSG_ALIGN(len))
 #endif
 
-/*
- * Receive a fd on a suitable socket
- * @args fd          (r) PF_UNIX socket to receive on
- * @args nonblocking (r) 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
+/*!
+ * @brief Receive a fd on a suitable socket
+ * @param fd          (r) PF_UNIX socket to receive on
+ * @param nonblocking (r) 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
  * @returns fd on success, -1 on error
  */
 int recv_fd(int fd, int nonblocking)

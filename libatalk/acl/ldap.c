@@ -103,15 +103,16 @@ struct pref_array prefs_array[] = {
  * Static helper function
  ********************************************************/
 
-/*
+/*!
+ * @brief LDAP get attribute from filter with base and scope
  * ldap_getattr_fromfilter_withbase_scope():
  *   conflags: KEEPALIVE
  *   scope: LDAP_SCOPE_BASE, LDAP_SCOPE_ONELEVEL, LDAP_SCOPE_SUBTREE
  *   result: return unique search result here, allocated here, caller must free
  *
- * returns: -1 on error
- *           0 nothing found
- *           1 successfull search, result int 'result'
+ * @returns: -1 on error,
+ *           0 nothing found,
+ *           1 successful search, result int 'result'
  *
  * All connection managment to the LDAP server is done here. Just set KEEPALIVE if you know
  * you will be dispatching more than one search in a row, then don't set it with the last search.
@@ -285,7 +286,7 @@ cleanup:
 }
 
 /*!
- * Generate LDAP filter string for UUID query
+ * @brief Generate LDAP filter string for UUID query
 
  * @param[in] uuidstr      the UUID as string
  * @param[in] attr_filter  optional attribute
@@ -355,7 +356,7 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  ********************************************************/
 
 /*!
- * Search UUID for name in LDAP
+ * @brief Search UUID for name in LDAP
  *
  * Caller must free uuid_string when done with it
  *
@@ -437,8 +438,9 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
     return 0;
 }
 
-/*
- * LDAP search wrapper
+/*!
+ * @brief LDAP search wrapper
+ *
  * returns allocated storage in name, caller must free it
  * returns 0 on success, -1 on error or not found
  *
@@ -446,7 +448,7 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
  * @param name     (w) return pointer to name as allocated string
  * @param type     (w) return type: USER or GROUP
  *
- * returns 0 on success, -1 on errror
+ * @returns 0 on success, -1 on errror
  */
 int ldap_getnamefromuuid(const char *uuidstr, char **name, uuidtype_t *type)
 {

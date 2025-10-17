@@ -27,7 +27,7 @@
 
 /*!
  * @file
- * Part of Netatalk's AppleDouble implementatation
+ * @brief Part of Netatalk's AppleDouble implementatation
  * @sa include/atalk/adouble.h
  */
 
@@ -368,8 +368,8 @@ static uint32_t get_eid(uint32_t eid)
 }
 
 
-/**
- * Initialize offset pointers
+/*!
+ * @brief Initialize offset pointers
  */
 int ad_init_offsets(struct adouble *ad)
 {
@@ -470,9 +470,10 @@ static int new_ad_header(struct adouble *ad, const char *path, struct stat *stp,
     return 0;
 }
 
-/**
- * Read an AppleDouble buffer, returns 0 on success, -1 if an entry was malformatted
- **/
+/*!
+ * @brief Read an AppleDouble buffer
+ * @returns 0 on success, -1 if an entry was malformatted
+ */
 static int parse_entries(struct adouble *ad, uint16_t nentries,
                          size_t valid_data_len)
 {
@@ -648,8 +649,8 @@ EC_CLEANUP:
     return 0;
 }
 
-/**
- * Convert from Apple's ._ file to Netatalk
+/*!
+ * @brief Convert from Apple's ._ file to Netatalk
  *
  * Apple's AppleDouble may contain a FinderInfo entry longer then 32 bytes
  * containing packed xattrs. Netatalk can't deal with that, so we
@@ -658,8 +659,9 @@ EC_CLEANUP:
  * As we call ad_open() which might result in a recursion, just to be sure
  * use static variable in_conversion to check for that.
  *
- * Returns -1 in case an error occured, 0 if no conversion was done, 1 otherwise
- **/
+ * @returns -1 in case an error occured, 0 if no conversion was done,
+ * 1 otherwise
+ */
 static int ad_convert_osx(const char *path, struct adouble *ad)
 {
     EC_INIT;
@@ -945,7 +947,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Takes a path to an AppleDouble file and creates the parrent .AppleDouble directory
+ * @brief Takes a path to an AppleDouble file and creates the parent .AppleDouble directory
  *
  * Example:
  * path: "/path/.AppleDouble/file"
@@ -1045,7 +1047,7 @@ static int ad_header_upgrade_ea(struct adouble *ad _U_, const char *name _U_)
 }
 
 /*!
- * Error handling for adouble header(=metadata) file open error
+ * @brief Error handling for adouble header(=metadata) file open error
  *
  * We're called because opening ADFLAGS_HF caused an error.
  * 1. In case ad_open is called with ADFLAGS_NOHF the error is suppressed.
@@ -1075,8 +1077,9 @@ static int ad_error(struct adouble *ad, int adflags)
 }
 
 /*!
- * Map ADFLAGS to open() flags
+ * @brief Map ADFLAGS to open() flags
  *
+ * @param ad       (r) the adouble structure
  * @param adfile   (r) the file you really want to open: ADFLAGS_DF or ADFLAGS_HF
  * @param adflags  (r) flags from ad_open(..., adflags, ...)
  * @returns            mapped flags suitable for calling open()
@@ -1542,7 +1545,7 @@ static int ad_open_hf(const char *path, int adflags, int mode,
 }
 
 /*!
- * Get resofork length for adouble:ea, parameter 'ad' may be NULL
+ * @brief Get resofork length for adouble:ea, parameter 'ad' may be NULL
  */
 off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
 {
@@ -1785,7 +1788,7 @@ EC_CLEANUP:
 }
 
 /*!
- * Open resource fork
+ * @brief Open resource fork
  */
 static int ad_open_rf(const char *path, int adflags, int mode,
                       struct adouble *ad)
@@ -2246,12 +2249,14 @@ void ad_init(struct adouble *ad, const struct vol *restrict vol)
 }
 
 /*!
- * Open data-, metadata(header)- or resource fork
+ * @brief Open data-, metadata(header)- or resource fork
  *
+ * @code
  * ad_open(struct adouble *ad, const char *path, int adflags, int flags)
  * ad_open(struct adouble *ad, const char *path, int adflags, int flags, mode_t mode)
+ * @endcode
  *
- * You must call ad_init() before ad_open, usually you'll just call it like this: \n
+ * You must call ad_init() before ad_open, usually you'll just call it like this:
  * @code
  *      struct adoube ad;
  *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
@@ -2261,35 +2266,36 @@ void ad_init(struct adouble *ad, const struct vol *restrict vol)
  *
  * @param ad        (rw) pointer to struct adouble
  * @param path      (r)  Path to file or directory
- * @param adflags   (r)  Flags specifying which fork to open, can be or'd:
- *                         ADFLAGS_DF:        open data fork
- *                         ADFLAGS_RF:        open resource fork
- *                         ADFLAGS_HF:        open header (metadata) file
- *                         ADFLAGS_NOHF:      it's not an error if header file couldn't be opened
- *                         ADFLAGS_NORF:      it's not an error if reso fork couldn't be opened
- *                         ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags
+ * @param adflags   (r)  Flags specifying which fork to open, can be or'd (see below)
+ * @param ...       (r)  mode used with O_CREATE
  *
- *                       Access mode for the forks:
- *                         ADFLAGS_RDONLY:    open read only
- *                         ADFLAGS_RDWR:      open read write
+ * Regular adflags:
+ *  - ADFLAGS_DF:        open data fork
+ *  - ADFLAGS_RF:        open resource fork
+ *  - ADFLAGS_HF:        open header (metadata) file
+ *  - ADFLAGS_NOHF:      it's not an error if header file couldn't be opened
+ *  - ADFLAGS_NORF:      it's not an error if reso fork couldn't be opened
+ *  - ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags
  *
- *                       Creation flags:
- *                         ADFLAGS_CREATE:    create if not existing
- *                         ADFLAGS_TRUNC:     truncate
+ * Access mode for the forks:
+ *  - ADFLAGS_RDONLY:    open read only
+ *  - ADFLAGS_RDWR:      open read write
  *
- *                       Special flags:
- *                         ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
- *                         ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
- *                                            This basically results in the files being opened RW instead of RDONLY.
- * @param mode      (r)  mode used with O_CREATE
+ * Creation flags:
+ *  - ADFLAGS_CREATE:    create if not existing
+ *  - ADFLAGS_TRUNC:     truncate
+ *
+ * Special flags:
+ *  - ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
+ *  - ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
+ *                       This basically results in the files being opened RW instead of RDONLY.
  *
  * The open mode flags (rw vs ro) have to take into account all the following requirements:
+ *
  * - we remember open fds for files because me must avoid a single close releasing fcntl locks for other
  *   fds of the same file
  *
- * BUGS:
- *
- * * on Solaris (HAVE_EAFD) ADFLAGS_RF doesn't work without
+ * @bug on Solaris (HAVE_EAFD) ADFLAGS_RF doesn't work without
  *   ADFLAGS_HF, because it checks whether ad_meta_fileno() is already
  *   openend. As a workaround pass ADFLAGS_SETSHRMD.
  *

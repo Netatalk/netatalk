@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * Netatalk utility functions
+ * @brief Netatalk utility functions: unix
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +57,7 @@ static void closeall(int fd)
 }
 
 /*!
- * Run command in a child and wait for it to finish
+ * @brief Run command in a child and wait for it to finish
  */
 int run_cmd(const char *cmd, char **cmd_argv)
 {
@@ -111,11 +111,9 @@ EC_CLEANUP:
 }
 
 /*!
- * Daemonize
+ * @brief Fork, exit parent, setsid(), chdir("/"), close all fds
  *
- * Fork, exit parent, setsid(), chdir("/"), close all fds
- *
- * returns -1 on failure, but you can't do much except exit in that case
+ * @returns -1 on failure, but you can't do much except exit in that case
  * since we may already have forked
  */
 int daemonize(void)
@@ -237,7 +235,7 @@ const char *fullpathname(const char *name)
 }
 
 /*!
- * Takes a buffer with a path, strips slashs, returns basename
+ * @brief Takes a buffer with a path, strips slashs, returns basename
  *
  * @param p (rw) path
  *        path may be
@@ -389,17 +387,18 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
 }
 
 /*!
- * chmod() wrapper for symlink and ACL handling
+ * @brief chmod() wrapper for symlink and ACL handling
  *
  * @param path       (r) path
  * @param mode       (r) requested mode
- * @param sb         (r) stat() of path or NULL
- * @param option     (r) O_NOFOLLOW | O_NETATALK_ACL
+ * @param st         (r) stat() of path or NULL
+ * @param options    (r) O_NOFOLLOW | O_NETATALK_ACL
  *
- * Options description:
- * O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
- * O_NETATALK_ACL: call chmod_acl() instead of chmod()
- * O_IGNORE: ignore chmod() request, directly return 0
+ * Option descriptions:
+ *
+ * - O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
+ * - O_NETATALK_ACL: call chmod_acl() instead of chmod()
+ * - O_IGNORE: ignore chmod() request, directly return 0
  */
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 {
@@ -544,7 +543,7 @@ int ochdir(const char *dir, int options)
 }
 
 /*!
- * Store n random bytes an buf
+ * @brief Store n random bytes an buf
  */
 void randombytes(void *buf, int n)
 {
@@ -628,9 +627,9 @@ char *realpath_safe(const char *path)
 #endif
 }
 
-/**
- * Returns pointer to static buffer with basename of path
- **/
+/*!
+ * @brief Returns pointer to static buffer with basename of path
+ */
 const char *basename_safe(const char *path)
 {
     static char buf[MAXPATHLEN + 1];
@@ -638,10 +637,11 @@ const char *basename_safe(const char *path)
     return basename(buf);
 }
 
-/**
- * extended strtok allows the quoted strings
+/*!
+ * @brief extended strtok allows the quoted strings
+ *
  * modified strtok.c in glibc 2.0.6
- **/
+ */
 char *strtok_quote(char *s, const char *delim)
 {
     static char *olds = NULL;

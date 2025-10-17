@@ -355,7 +355,7 @@ static void check_ea_support(struct vol *vol)
 }
 
 /*!
- * Check whether a volume supports ACLs
+ * @brief Check whether a volume supports ACLs
  *
  * @param vol  (r) volume
  *
@@ -596,15 +596,20 @@ static char *volxlate(const AFPObj *obj,
 }
 
 /*!
- * check access list
+ * @brief check access list
  *
  * this function wants a string consisting of names seperated by comma
  * or space. Names may be quoted within a pair of quotes. Groups are
  * denoted by a leading @ symbol.
+ *
  * Example:
- * user1 user2, user3, @group1 @group2, @group3 "user name1", "@group name1"
+ * @code
+ * user1 user2, user3, "@group1", "@group2", "@group3", "user name1", "@group name1"
+ * @endcode
+ *
  * A NULL argument allows everybody to have access.
- * We return three things:
+ *
+ * @returns three things:
  *     -1: no list
  *      0: list exists, but name isn't in it
  *      1: in list
@@ -718,7 +723,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
 }
 
 /*!
- * Get option string from config, use default value if not set
+ * @brief Get option string from config, use default value if not set
  *
  * @param conf    (r) config handle
  * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
@@ -748,7 +753,7 @@ static const char *getoption_str(const dictionary *conf, const char *vol,
 }
 
 /*!
- * Get option string from config, use default value if not set
+ * @brief Get option string from config, use default value if not set
  * Returns a dynamically allocated string which caller must free
  *
  * @param conf    (r) config handle
@@ -783,7 +788,7 @@ static char *getoption_strdup(const dictionary *conf, const char *vol,
 }
 
 /*!
- * Get boolean option from config, use default value if not set
+ * @brief Get boolean option from config, use default value if not set
  *
  * @param conf    (r) config handle
  * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
@@ -814,7 +819,7 @@ static int getoption_bool(const dictionary *conf, const char *vol,
 }
 
 /*!
- * Get integer option from config, use default value if not set
+ * @brief Get integer option from config, use default value if not set
  *
  * @param conf    (r) config handle
  * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
@@ -844,7 +849,8 @@ static int getoption_int(const dictionary *conf, const char *vol,
 }
 
 /*!
- * Get boolean option from volume, default section or global - use default value if not set
+ * @brief Get boolean option from volume, default section or global -
+ * use default value if not set
  *
  * Order of precedence: volume -> default section -> global -> default value
  *
@@ -880,7 +886,7 @@ static int vdgoption_bool(const dictionary *conf, const char *vol,
 }
 
 /*!
- * Create volume struct
+ * @brief Create volume struct
  *
  * @param obj      (r) handle
  * @param pwd      (r) struct passwd of logged in user, may be NULL in master afpd
@@ -1534,8 +1540,10 @@ static int vol_section(const char *sec)
 
 #define MAXPRESETLEN 100
 /*!
- * Read volumes from iniconfig and add the volumes contained within to
- * the global volume list. This gets called from the forked afpd childs.
+ * @brief Read volumes from iniconfig and add the volumes contained within to
+ * the global volume list
+ *
+ * This gets called from the forked afpd childs.
  * The master now reads this too for Zeroconf announcements.
  */
 static int readvolfile(AFPObj *obj, const struct passwd *pwent)
@@ -1840,7 +1848,7 @@ EC_CLEANUP:
  **************************************************************/
 
 /*!
- * Remove a volume from the linked list of volumes
+ * @brief Remove a volume from the linked list of volumes
  */
 void volume_unlink(struct vol *volume)
 {
@@ -1864,7 +1872,7 @@ void volume_unlink(struct vol *volume)
 }
 
 /*!
- * Free all resources allocated in a struct vol in load_volumes()
+ * @brief Free all resources allocated in a struct vol in load_volumes()
  *
  * Actually opening a volume (afp_openvol()) will allocate additional
  * resources which are freed in closevol()
@@ -1892,7 +1900,7 @@ void volume_free(struct vol *vol)
 }
 
 /*!
- * Load charsets for a volume
+ * @brief Load charsets for a volume
  */
 int load_charset(struct vol *vol)
 {
@@ -1912,7 +1920,7 @@ int load_charset(struct vol *vol)
 }
 
 /*!
- * Initialize volumes and load ini configfile
+ * @brief Initialize volumes and load ini configfile
  *
  * @param obj      (r) handle
  * @param flags    (r) flags controlling volume load behaviour:
@@ -2104,15 +2112,15 @@ struct vol *getvolbyvid(const uint16_t vid)
     return vol;
 }
 
-/*
- * get username by path
+/*!
+ * @brief get username by path
  *
  * getvolbypath() assumes that the user home directory has the same name as the username.
  * If that is not true, getuserbypath() is called and tries to retrieve the username
  * from the directory owner, checking its validity.
  *
  * @param   path (r) absolute volume path
- * @returns NULL     if no match is found, pointer to username if successfull
+ * @returns NULL     if no match is found, pointer to username if successful
  *
  */
 static char *getuserbypath(const char *path)
@@ -2164,7 +2172,7 @@ EC_CLEANUP:
     return pwd->pw_name;
 }
 /*!
- * Search volume by path, creating user home vols as necessary
+ * @brief Search volume by path, creating user home vols as necessary
  *
  * Path may be absolute or relative. Ordinary volume structs are created when
  * the ini config is initially parsed (load_volumes()), but user volumes are
@@ -2173,16 +2181,16 @@ EC_CLEANUP:
  * Both cnid_metad and dbd thus need a way to lookup and create struct vols
  * for user home by path. This is what this func does as well.
  *
- * (1) Search "normal" volume list
- * (2) Check if theres a [Homes] section, load_volumes() remembers this for us
- * (3) If there is, match "path" with "basedir regex" to get the user home parent dir
- * (4) Built user home path by appending the basedir matched in (3) and appending the username
- * (5) The next path element then is the username
- * (5b) getvolbypath() assumes that the user home directory has the same name as the username.
- *     If that is not true, getuserbypath() is called and tries to retrieve the username
- *     from the directory owner, checking its validity
- * (6) Append [Homes]->path subdirectory if defined
- * (7) Create volume
+ * 1. Search "normal" volume list
+ * 2. Check if theres a [Homes] section, load_volumes() remembers this for us
+ * 3. If there is, match "path" with "basedir regex" to get the user home parent dir
+ * 4. Built user home path by appending the basedir matched in (3) and appending the username
+ * 5. The next path element then is the username
+ *    - getvolbypath() assumes that the user home directory has the same name as the username.
+ *      If that is not true, getuserbypath() is called and tries to retrieve the username
+ *      from the directory owner, checking its validity
+ * 6. Append [Homes]->path subdirectory if defined
+ * 7. Create volume
  *
  * @param obj  (rw) handle
  * @param path (r)  path, may be relative or absolute
@@ -2425,7 +2433,7 @@ struct vol *getvolbyname(const char *name)
 
 #define MAXVAL 1024
 /*!
- * Initialize an AFPObj and options from ini config file
+ * @brief Initialize an AFPObj and options from ini config file
  */
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 {

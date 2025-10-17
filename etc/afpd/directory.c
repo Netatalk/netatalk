@@ -748,7 +748,7 @@ struct dir *dir_new(const char *m_name,
 /*!
  * @brief Free a struct dir and all its members
  *
- * @param (rw) pointer to struct dir
+ * @param dir (rw) pointer to struct dir
  */
 void dir_free(struct dir *dir)
 {
@@ -776,7 +776,7 @@ void dir_free(struct dir *dir)
  * 4. Add it to the cache.
  *
  * @param vol   (r) pointer to struct vol, possibly modified in callee
- * @param dir   (r) pointer to parrent directory
+ * @param dir   (r) pointer to parent directory
  * @param path  (rw) pointer to struct path with valid path->u_name
  * @param len   (r) strlen of path->u_name
  *
@@ -899,7 +899,7 @@ exit:
 }
 
 /*!
- * Free the queue with invalid struct dirs
+ * @brief Free the queue with invalid struct dirs
  *
  * This gets called at the end of every AFP func.
  */
@@ -923,7 +923,7 @@ void dir_free_invalid_q(void)
  *
  * @param vol  (r) volume pointer
  * @param dir  (rw) directory/file entry to remove from cache
- * @return 0 on success
+ * @returns 0 on success
  */
 int dir_remove(const struct vol *vol, struct dir *dir)
 {

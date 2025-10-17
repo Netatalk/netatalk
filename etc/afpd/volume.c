@@ -72,10 +72,10 @@
 extern int afprun(char *cmd, int *outfd);
 
 /*!
- * Read band-size info from Info.plist XML file of an TM sparsebundle
+ * @brief Read band-size info from Info.plist XML file of an TM sparsebundle
  *
  * @param path   (r) path to Info.plist file
- * @return           band-size in bytes, -1 on error
+ * @returns           band-size in bytes, -1 on error
  */
 static long long int get_tm_bandsize(const char *path)
 {
@@ -118,10 +118,10 @@ EC_CLEANUP:
 }
 
 /*!
- * Return number on entries in a directory
+ * @brief Return number on entries in a directory
  *
  * @param path   (r) path to dir
- * @return           number of entries, -1 on error
+ * @returns           number of entries, -1 on error
  */
 static long long int get_tm_bands(const char *path)
 {
@@ -152,15 +152,15 @@ EC_CLEANUP:
 }
 
 /*!
- * Calculate used size of a TimeMachine volume
+ * @brief Calculate used size of a TimeMachine volume
  *
  * This assumes that the volume is used only for TimeMachine.
  *
- * 1) readdir(path of volume)
- * 2) for every element that matches regex "\(.*\)\.sparsebundle$" :
- * 3) parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
- * 4) readdir "\1.sparsebundle/bands/" counting files
- * 5) calculate used size as: (file_count - 1) * band-size
+ * 1. readdir(path of volume)
+ * 2. for every element that matches regex "\(.*\)\.sparsebundle$" :
+ * 3. parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
+ * 4. readdir "\1.sparsebundle/bands/" counting files
+ * 5. calculate used size as: (file_count - 1) * band-size
  *
  * The result of the calculation is returned in "volume->v_tm_used".
  * "volume->v_appended" gets reset to 0.
@@ -171,7 +171,7 @@ EC_CLEANUP:
  * appends X bytes to a file (in fork.c).
  *
  * @param vol     (rw) volume to calculate
- * @return             0 on success, -1 on error
+ * @returns             0 on success, -1 on error
  */
 static int get_tm_used(struct vol *restrict vol)
 {
