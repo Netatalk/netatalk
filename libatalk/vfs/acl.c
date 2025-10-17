@@ -32,7 +32,10 @@
 
 #ifdef HAVE_NFSV4_ACLS
 
-/* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
+/*!
+ * @brief Removes all non-trivial ACLs from object
+ * @returns full AFPERR code
+ */
 int remove_acl_vfs(const char *name)
 {
     int ret, i, ace_count, trivial_aces, new_aces_count;

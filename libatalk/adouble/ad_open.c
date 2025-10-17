@@ -2251,10 +2251,12 @@ void ad_init(struct adouble *ad, const struct vol *restrict vol)
 /*!
  * @brief Open data-, metadata(header)- or resource fork
  *
+ * @code
  * ad_open(struct adouble *ad, const char *path, int adflags, int flags)
  * ad_open(struct adouble *ad, const char *path, int adflags, int flags, mode_t mode)
+ * @endcode
  *
- * You must call ad_init() before ad_open, usually you'll just call it like this: \n
+ * You must call ad_init() before ad_open, usually you'll just call it like this:
  * @code
  *      struct adoube ad;
  *      ad_init(&ad, vol->v_adouble, vol->v_ad_options);
@@ -2264,29 +2266,32 @@ void ad_init(struct adouble *ad, const struct vol *restrict vol)
  *
  * @param ad        (rw) pointer to struct adouble
  * @param path      (r)  Path to file or directory
- * @param adflags   (r)  Flags specifying which fork to open, can be or'd:
- *                         ADFLAGS_DF:        open data fork
- *                         ADFLAGS_RF:        open resource fork
- *                         ADFLAGS_HF:        open header (metadata) file
- *                         ADFLAGS_NOHF:      it's not an error if header file couldn't be opened
- *                         ADFLAGS_NORF:      it's not an error if reso fork couldn't be opened
- *                         ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags
- *
- *                       Access mode for the forks:
- *                         ADFLAGS_RDONLY:    open read only
- *                         ADFLAGS_RDWR:      open read write
- *
- *                       Creation flags:
- *                         ADFLAGS_CREATE:    create if not existing
- *                         ADFLAGS_TRUNC:     truncate
- *
- *                       Special flags:
- *                         ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
- *                         ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
- *                                            This basically results in the files being opened RW instead of RDONLY.
+ * @param adflags   (r)  Flags specifying which fork to open, can be or'd (see below)
  * @param ...       (r)  mode used with O_CREATE
  *
+ * Regular adflags:
+ *  - ADFLAGS_DF:        open data fork
+ *  - ADFLAGS_RF:        open resource fork
+ *  - ADFLAGS_HF:        open header (metadata) file
+ *  - ADFLAGS_NOHF:      it's not an error if header file couldn't be opened
+ *  - ADFLAGS_NORF:      it's not an error if reso fork couldn't be opened
+ *  - ADFLAGS_DIR:       if path is a directory you MUST or ADFLAGS_DIR to adflags
+ *
+ * Access mode for the forks:
+ *  - ADFLAGS_RDONLY:    open read only
+ *  - ADFLAGS_RDWR:      open read write
+ *
+ * Creation flags:
+ *  - ADFLAGS_CREATE:    create if not existing
+ *  - ADFLAGS_TRUNC:     truncate
+ *
+ * Special flags:
+ *  - ADFLAGS_CHECK_OF:  check for open forks from us and other afpd's
+ *  - ADFLAGS_SETSHRMD:  this adouble struct will be used to set sharemode locks.
+ *                       This basically results in the files being opened RW instead of RDONLY.
+ *
  * The open mode flags (rw vs ro) have to take into account all the following requirements:
+ *
  * - we remember open fds for files because me must avoid a single close releasing fcntl locks for other
  *   fds of the same file
  *

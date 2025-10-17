@@ -223,16 +223,16 @@ int strip_nontrivial_aces(ace_t **saces, int sacecount)
  * @brief Change mode of file preserving existing explicit ACEs
  *
  * nfsv4_chmod
- * (1) reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on e.g. UFS fs
- * (2) removes all trivial ACEs from the ACL by calling strip_trivial_aces(), possibly
- *     leaving 0 ACEs in the ACL if there were only trivial ACEs as mapped from the mode
- * (3) calls chmod() with mode, we're done if step (1) returned 0 for noaces
- * (4) reads the changed ACL (acl2) which
- *     a) might still contain explicit ACEs (up to onnv132)
- *     b) will have any explicit ACE removed (starting with onnv145/Openindiana)
- * (5) strip any explicit ACE from acl2 using strip_nontrivial_aces()
- * (6) merge acl2 and acl2
- * (7) set the ACL merged ACL on the object
+ * 1. reads objects ACL (acl1), may return 0 or -1 NFSv4 ACEs on e.g. UFS fs
+ * 2. removes all trivial ACEs from the ACL by calling strip_trivial_aces(), possibly
+ *    leaving 0 ACEs in the ACL if there were only trivial ACEs as mapped from the mode
+ * 3. calls chmod() with mode, we're done if step (1) returned 0 for noaces
+ * 4. reads the changed ACL (acl2) which
+ *    a. might still contain explicit ACEs (up to onnv132)
+ *    b. will have any explicit ACE removed (starting with onnv145/Openindiana)
+ * 5. strip any explicit ACE from acl2 using strip_nontrivial_aces()
+ * 6. merge acl2 and acl2
+ * 7. set the ACL merged ACL on the object
  */
 int nfsv4_chmod(char *name, mode_t mode)
 {

@@ -635,13 +635,15 @@ size_t charset_decompose(charset_t ch, char *src, size_t inlen, char *dst,
     return len;
 }
 
-/*
- * Convert from MB to UCS2 charset
+/*!
+ * @brief Convert from MB to UCS2 charset
+ *
  * Flags:
- *      CONV_UNESCAPEHEX:    ':XX' will be converted to an UCS2 character
- *      CONV_IGNORE:         return the first convertable characters.
- *      CONV_FORCE:  force convertion
- * FIXME:
+ *  - CONV_UNESCAPEHEX:    ':XX' will be converted to an UCS2 character
+ *  - CONV_IGNORE:         return the first convertable characters.
+ *  - CONV_FORCE:  force convertion
+ *
+ * @bug
  *      This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail
  *      The (un)escape scheme is not compatible to the old cap style escape. This is bad, we need it
  *      for e.g. HFS cdroms.
@@ -720,7 +722,7 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                         goto end;
                     }
 
-                    *((ucs2_t *)outbuf) = (ucs2_t) IGNORE_CHAR; /**inbuf */
+                    *((ucs2_t *)outbuf) = (ucs2_t) IGNORE_CHAR; /* inbuf */
                     inbuf++;
                     i_len--;
                     outbuf += 2;
