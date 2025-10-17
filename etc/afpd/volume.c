@@ -156,11 +156,11 @@ EC_CLEANUP:
  *
  * This assumes that the volume is used only for TimeMachine.
  *
- * 1) readdir(path of volume)
- * 2) for every element that matches regex "\(.*\)\.sparsebundle$" :
- * 3) parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
- * 4) readdir "\1.sparsebundle/bands/" counting files
- * 5) calculate used size as: (file_count - 1) * band-size
+ * 1. readdir(path of volume)
+ * 2. for every element that matches regex "\(.*\)\.sparsebundle$" :
+ * 3. parse "\1.sparsebundle/Info.plist" and read the band-size XML key integer value
+ * 4. readdir "\1.sparsebundle/bands/" counting files
+ * 5. calculate used size as: (file_count - 1) * band-size
  *
  * The result of the calculation is returned in "volume->v_tm_used".
  * "volume->v_appended" gets reset to 0.

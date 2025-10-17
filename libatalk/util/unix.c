@@ -394,10 +394,11 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
  * @param st         (r) stat() of path or NULL
  * @param options    (r) O_NOFOLLOW | O_NETATALK_ACL
  *
- * Options description:
- * O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
- * O_NETATALK_ACL: call chmod_acl() instead of chmod()
- * O_IGNORE: ignore chmod() request, directly return 0
+ * Option descriptions:
+ *
+ * - O_NOFOLLOW: don't chmod() symlinks, do nothing, return 0
+ * - O_NETATALK_ACL: call chmod_acl() instead of chmod()
+ * - O_IGNORE: ignore chmod() request, directly return 0
  */
 int ochmod(char *path, mode_t mode, const struct stat *st, int options)
 {

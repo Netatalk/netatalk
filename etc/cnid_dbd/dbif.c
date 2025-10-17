@@ -130,7 +130,7 @@ static int dbif_init_rootinfo(DBD *dbd, int version)
  *
  * Returns version in *version
  *
- * @returns -1 on error, 0 if theres no rootinfo key yet, 1 if *version is returned
+ * @returns -1 on error, 0 if there's no rootinfo key yet, 1 if *version is returned
  */
 static int dbif_getversion(DBD *dbd, uint32_t *version)
 {

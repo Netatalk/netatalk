@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 2010,2011,2012 Frank Lahm <franklahm@googlemail.com>
-> * All rights reserved. See COPYRIGHT.
+ * All rights reserved. See COPYRIGHT.
  *
  * this file provides the following functions:
  * dsi_stream_write:    just write a bunch of bytes.
@@ -51,7 +51,9 @@ static void dsi_header_pack_reply(const DSI *dsi, char *buf)
     memcpy(buf + 12, &dsi->header.dsi_reserved, sizeof(dsi->header.dsi_reserved));
 }
 
-/*
+/*!
+ * @brief Check if we can write to the DSI socket
+ *
  * afpd is sleeping too much while trying to send something.
  * May be there's no reader or the reader is also sleeping in write,
  * look if there's some data for us to read, hopefully it will wake up
@@ -145,8 +147,9 @@ static int dsi_peek(DSI *dsi)
     return 0;
 }
 
-/*
- * Return all bytes up to count from dsi->buffer if there are any buffered there
+/*!
+ * @brief Return all bytes up to count from dsi->buffer
+ * if there are any buffered there
  */
 static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
 {
@@ -177,8 +180,8 @@ static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
     return nbe;
 }
 
-/*
- * Get bytes from buffer dsi->buffer or read from socket
+/*!
+ * @brief Get bytes from buffer dsi->buffer or read from socket
  *
  * 1. Check if there are bytes in the the dsi->buffer buffer.
  * 2. Return bytes from (1) if yes.
@@ -205,9 +208,11 @@ static ssize_t buf_read(DSI *dsi, uint8_t *buf, size_t count)
     return len;
 }
 
-/*
- * Get "length" bytes from buffer and/or socket. In order to avoid frequent small reads
- * this tries to read larger chunks (8192 bytes) into a buffer.
+/*!
+ * @brief Get "length" bytes from buffer and/or socket
+ *
+ * In order to avoid frequent small reads this tries to read
+ * larger chunks (8192 bytes) into a buffer.
  */
 static size_t dsi_buffered_stream_read(DSI *dsi, uint8_t *data,
                                        const size_t length)
@@ -270,8 +275,8 @@ static void unblock_sig(DSI *dsi)
  * 1. close the socket
  * 2. set the DSI_DISCONNECTED flag, remove possible sleep flags
  *
- * @returns  0 if successfully entered disconnected state
- *          -1 if ppid is 1 which means afpd master died
+ * @returns  0 if successfully entered disconnected state,
+ *          -1 if ppid is 1 which means afpd master died,
  *             or euid == 0 i.e. where still running as root (unauthenticated session)
  */
 int dsi_disconnect(DSI *dsi)
@@ -288,10 +293,14 @@ int dsi_disconnect(DSI *dsi)
     return 0;
 }
 
-/* ------------------------------
- * write raw data. return actual bytes read. checks against EINTR
- * aren't necessary if all of the signals have SA_RESTART
- * specified. */
+/*!
+ * @brief write raw DSI data
+ *
+ * Checks against EINTR aren't necessary if all of the signals have SA_RESTART
+ * specified.
+ *
+ * @returns actual bytes written, -1 on error
+ */
 ssize_t dsi_stream_write(DSI *dsi, void *data, const size_t length, int mode)
 {
     size_t written;
@@ -514,11 +523,13 @@ exit:
 #endif
 
 
-/*
+/*!
+ * @brief Read data from DSI buffer
+ *
  * Essentially a loop around buf_read() to ensure "length" bytes are read
  * from dsi->buffer and/or the socket.
  *
- * @returns length on success, some value smaller then length indicates an error
+ * @returns length on success, some value smaller than length indicates an error
  */
 size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {

@@ -89,15 +89,16 @@ static void block_sigs_onoff(int block)
  * @brief Get lock on db lock file
  *
  * @param cmd      (r) lock command:
- *                     LOCK_FREE:   close lockfd
- *                     LOCK_UNLOCK: unlock lockm keep lockfd open
- *                     LOCK_EXCL:   F_WRLCK on lockfd
- *                     LOCK_SHRD:   F_RDLCK on lockfd
+ *                     - LOCK_FREE:   close lockfd
+ *                     - LOCK_UNLOCK: unlock lockm keep lockfd open
+ *                     - LOCK_EXCL:   F_WRLCK on lockfd
+ *                     - LOCK_SHRD:   F_RDLCK on lockfd
  * @param dbpath   (r) path to lockfile, only used on first call,
  *                     later the stored fd is used
- * @returns            LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
- *                     LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
- *                     success, 0 if the lock couldn't be acquired, -1 on other errors
+ * @returns        depending on lock command:
+ *                     - LOCK_FREE/LOCK_UNLOCK return 0 on success, -1 on error
+ *                     - LOCK_EXCL/LOCK_SHRD return LOCK_EXCL or LOCK_SHRD respectively on
+ *                       success, 0 if the lock couldn't be acquired, -1 on other errors
  */
 static int get_lock(int cmd, const char *dbpath)
 {

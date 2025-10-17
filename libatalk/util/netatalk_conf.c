@@ -601,9 +601,14 @@ static char *volxlate(const AFPObj *obj,
  * this function wants a string consisting of names seperated by comma
  * or space. Names may be quoted within a pair of quotes. Groups are
  * denoted by a leading @ symbol.
+ *
  * Example:
+ * @code
  * user1 user2, user3, "@group1", "@group2", "@group3", "user name1", "@group name1"
+ * @endcode
+ *
  * A NULL argument allows everybody to have access.
+ *
  * @returns three things:
  *     -1: no list
  *      0: list exists, but name isn't in it
@@ -2107,15 +2112,15 @@ struct vol *getvolbyvid(const uint16_t vid)
     return vol;
 }
 
-/*
- * get username by path
+/*!
+ * @brief get username by path
  *
  * getvolbypath() assumes that the user home directory has the same name as the username.
  * If that is not true, getuserbypath() is called and tries to retrieve the username
  * from the directory owner, checking its validity.
  *
  * @param   path (r) absolute volume path
- * @returns NULL     if no match is found, pointer to username if successfull
+ * @returns NULL     if no match is found, pointer to username if successful
  *
  */
 static char *getuserbypath(const char *path)
@@ -2176,16 +2181,16 @@ EC_CLEANUP:
  * Both cnid_metad and dbd thus need a way to lookup and create struct vols
  * for user home by path. This is what this func does as well.
  *
- * (1) Search "normal" volume list
- * (2) Check if theres a [Homes] section, load_volumes() remembers this for us
- * (3) If there is, match "path" with "basedir regex" to get the user home parent dir
- * (4) Built user home path by appending the basedir matched in (3) and appending the username
- * (5) The next path element then is the username
- * (5b) getvolbypath() assumes that the user home directory has the same name as the username.
- *     If that is not true, getuserbypath() is called and tries to retrieve the username
- *     from the directory owner, checking its validity
- * (6) Append [Homes]->path subdirectory if defined
- * (7) Create volume
+ * 1. Search "normal" volume list
+ * 2. Check if theres a [Homes] section, load_volumes() remembers this for us
+ * 3. If there is, match "path" with "basedir regex" to get the user home parent dir
+ * 4. Built user home path by appending the basedir matched in (3) and appending the username
+ * 5. The next path element then is the username
+ *    - getvolbypath() assumes that the user home directory has the same name as the username.
+ *      If that is not true, getuserbypath() is called and tries to retrieve the username
+ *      from the directory owner, checking its validity
+ * 6. Append [Homes]->path subdirectory if defined
+ * 7. Create volume
  *
  * @param obj  (rw) handle
  * @param path (r)  path, may be relative or absolute
