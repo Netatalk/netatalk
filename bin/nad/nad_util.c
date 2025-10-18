@@ -94,9 +94,9 @@ void _log(enum logtype lt, char *fmt, ...)
 /*!
  * @brief Load volinfo and initialize struct vol
  *
- * @param obj    (r)  AFPObj of the current connection
- * @param path   (r)  path to evaluate
- * @param vol    (rw) structure to initialize
+ * @param[in] obj        AFPObj of the current connection
+ * @param[in] path       path to evaluate
+ * @param[in,out] vol    structure to initialize
  *
  * @returns 0 on success, exits on error
  */
@@ -198,9 +198,9 @@ char *utompath(const struct vol *vol, const char *upath)
  * possible encoding ".file" as ":2efile" which means the result will be
  * longer then the original which means provide a big enough buffer.
  *
- * @param svol   (r)  source volume
- * @param dvol   (r)  destination volume
- * @param path   (rw) path to convert _in place_
+ * @param[in] svol       source volume
+ * @param[in] dvol       destination volume
+ * @param[in,out] path   path to convert _in place_
  *
  * @returns 0 on success, -1 on error
  */
@@ -254,9 +254,9 @@ int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
  * path MUST be pointing inside vol, this is usually the case as vol has been build from
  * path using loadvolinfo and friends.
  *
- * @param vol  (r) pointer to afpvol_t
- * @param path (r) path, see above
- * @param did  (rw) parent CNID of returned CNID
+ * @param[in] vol      pointer to afpvol_t
+ * @param[in] path     path, see above
+ * @param[in,out] did  parent CNID of returned CNID
  *
  * @returns CNID of path
  */

@@ -282,9 +282,11 @@ void do_atp_lookup(struct sockaddr_at *saddr, uint8_t lookup_type,
 }
 
 
-/*
- * n:   number of zones in this packet
- * buf: zone length/name pairs
+/*!
+ * @brief Print zones from a getzone reply
+ * @param n        number of zones in this packet
+ * @param buf      zone length/name pairs
+ * @param charset  charset to convert zone names from
  */
 static void print_zones(short n, const char *buf, charset_t charset)
 {

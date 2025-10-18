@@ -86,8 +86,8 @@ EC_CLEANUP:
  * This also "stamps" the database, which means storing st.st_ctime of the
  * "cnid2.db" file in the rootinfo data at the DEV offset
  *
- * @param dbd      (rw) database handle
- * @param version  (r)  database version number
+ * @param[in,out] dbd       database handle
+ * @param[in] version       database version number
  *
  * @returns -1 on error, 0 on success
  */
@@ -969,10 +969,10 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, uint32_t flags)
 /*!
  * @brief Search the database by name
  *
- * @param dbd       (r) database handle
- * @param key       (r) key to search for, must be initialized with name to search for
+ * @param[in] dbd       database handle
+ * @param[in] key       key to search for, must be initialized with name to search for
  *                      (key->data, key->size)
- * @param resbuf    (w) buffer for search results CNIDs, maxsize is assumed to be
+ * @param[out] resbuf   buffer for search results CNIDs, maxsize is assumed to be
  *                      DBD_MAX_SRCH_RSLTS * sizefof(cnid_t)
  *
  * @returns -1 on error, 0 when nothing found, else the number of matches

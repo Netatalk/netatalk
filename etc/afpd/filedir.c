@@ -525,11 +525,12 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return rc;
 }
 
-/*
- * Recursivley delete vetoed files and directories if the volume option is set
+/*!
+ * @brief Recursivley delete vetoed files and directories if the volume option is set
  *
- * @param vol   (r) volume handle
- * @param upath (r) path of directory
+ * @param[in] vol    volume handle
+ * @param[in] upath  path of directory
+ * @param[in] in_vetodir  true if we are already in a vetoed directory
  *
  * If the volume option delete veto files is set, this function recursively scans the
  * directory "upath" for vetoed files and tries deletes these, the it will try to delete

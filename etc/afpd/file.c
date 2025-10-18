@@ -226,12 +226,12 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
  * 2. Get the objects CNID from the database
  * 3. Store resource fork data
  *
- * @param vol    (rw) volume
- * @param adp    (rw) adouble struct of object upath, might be NULL
- * @param st     (r) stat of upath, must NOT be NULL
- * @param did    (r) parent CNID of upath
- * @param upath  (r) name of object
- * @param len    (r) strlen of upath
+ * @param[in,out] vol    volume
+ * @param[in,out] adp    adouble struct of object upath, might be NULL
+ * @param[in] st         stat of upath, must NOT be NULL
+ * @param[in] did        parent CNID of upath
+ * @param[in] upath      name of object
+ * @param[in] len        strlen of upath
  */
 uint32_t get_id(struct vol *vol,
                 struct adouble *adp,

@@ -187,10 +187,10 @@ static int tsock_getfd(const char *host, const char *port)
  *
  * Every short write is considered an error, transmit can handle that.
  *
- * @param fd      (r) socket fd which must be non-blocking
- * @param iov     (r) iovec for writev
- * @param towrite (r) number of bytes in all iovec elements
- * @param vecs    (r) number of iovecs in array
+ * @param[in] fd       socket fd which must be non-blocking
+ * @param[in] iov      iovec for writev
+ * @param[in] towrite  number of bytes in all iovec elements
+ * @param[in] vecs     number of iovecs in array
  *
  * @returns "towrite" bytes written or -1 on error
  */

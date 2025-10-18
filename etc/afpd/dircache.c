@@ -274,8 +274,8 @@ static int should_validate_cache_entry(void)
  * This is critical for AFP performance as directory ctime changes frequently
  * for reasons that don't affect cached directory information.
  *
- * @param cdir   (r) cached directory entry
- * @param st     (r) fresh stat information from filesystem
+ * @param[in] cdir   cached directory entry
+ * @param[in] st     fresh stat information from filesystem
  *
  * @returns 1 if entry should be invalidated, 0 if still valid
  */
@@ -402,8 +402,8 @@ static void dircache_evict(void)
  *     (1b) return NULL indicating nothing found
  * (2) we can then use d_fullpath to stat the directory
  *
- * @param vol      (r) pointer to struct vol
- * @param cnid     (r) CNID of the directory to search
+ * @param[in] vol      pointer to struct vol
+ * @param[in] cnid     CNID of the directory to search
  *
  * @returns            Pointer to struct dir if found, else NULL
  */
@@ -491,10 +491,10 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
  * Found cache entries are expunged if both the parent directory st_ctime and the objects
  * st_ctime are modified.
  *
- * @param vol      (r) volume
- * @param dir      (r) directory
- * @param name     (r) name (server side encoding)
- * @param len      (r) strlen of name
+ * @param[in] vol      volume
+ * @param[in] dir      directory
+ * @param[in] name     name (server side encoding)
+ * @param[in] len      strlen of name
  *
  * @returns pointer to struct dir if found in cache, else NULL
  */
@@ -577,8 +577,8 @@ struct dir *dircache_search_by_name(const struct vol *vol,
  *
  * Add a struct dir to the cache and its indexes.
  *
- * @param vol   (r) pointer to volume
- * @param dir   (r) pointer to parent directory
+ * @param[in] vol   pointer to volume
+ * @param[in] dir   pointer to parent directory
  *
  * @returns 0 on success, -1 on error which should result in an abort
  */
@@ -713,8 +713,8 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
  * CNID entries use parent DIDs and name, and requre recursion to get
  * the full path, therefore parent changes do not invalidate the CNIDs.
  *
- * @param vol  (r) volume
- * @param dir  (r) parent directory whose children should be removed
+ * @param[in] vol  volume
+ * @param[in] dir  parent directory whose children should be removed
  */
 void dircache_remove_children(const struct vol *vol, struct dir *dir)
 {
@@ -812,7 +812,7 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
  * - a DID/name index on the main dircache
  * - a queue index on the dircache
  *
- * @param reqsize   (r) requested maximum size from afp.conf
+ * @param[in] reqsize   requested maximum size from afp.conf
  *
  * @returns 0 on success, -1 on error
  */
@@ -1008,9 +1008,9 @@ void dircache_dump(void)
  * Lower validation frequency improves performance but may delay detection of
  * external filesystem changes.
  *
- * @param freq       (r) validation frequency (1 = validate every access, 5 = every 5th access)
- * @param meta_win   (r) metadata change time window in seconds
- * @param meta_thresh (r) metadata change threshold in seconds
+ * @param[in] freq         validation frequency (1 = validate every access, 5 = every 5th access)
+ * @param[in] meta_win     metadata change time window in seconds
+ * @param[in] meta_thresh  metadata change threshold in seconds
  *
  * @returns 0 on success, -1 on invalid parameters
  */
@@ -1063,7 +1063,7 @@ void dircache_reset_validation_counter(void)
  * when actually accessed (e.g., file doesn't exist, has been modified, etc).
  * This helps track the effectiveness of the validation frequency setting.
  *
- * @param dir (r) The directory entry that was found to be invalid
+ * @param[in] dir  The directory entry that was found to be invalid
  */
 void dircache_report_invalid_entry(struct dir *dir)
 {

@@ -59,7 +59,7 @@
 #define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, int dirfd, const char *src, const char *dst
 #define VFS_FUNC_VARS_RENAMEFILE vol, dirfd, src, dst
 
-#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol _U_, int sfd, const char *src, const char *dst
+#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, int sfd, const char *src, const char *dst
 #define VFS_FUNC_VARS_COPYFILE vol, sfd, src, dst
 
 #ifdef HAVE_NFSV4_ACLS

@@ -494,16 +494,16 @@ int get_afp_errno(const int param)
  *
  * Resolve a DID, allocate a struct dir for it
  * 1. Check for special CNIDs 0 (invalid), 1 and 2.
- * 2a. Check if the DID is in the cache.
- * 2b. Check if it's really a dir  because we cache files too.
- * 3. If it's not in the cache resolve it via the database.
- * 4. Build complete server-side path to the dir.
- * 5. Check if it exists and is a directory.
- * 6. Create the struct dir and populate it.
- * 7. Add it to the cache.
+ *    1. Check if the DID is in the cache.
+ *    2. Check if it's really a dir because we cache files too.
+ * 2. If it's not in the cache resolve it via the database.
+ * 3. Build complete server-side path to the dir.
+ * 4. Check if it exists and is a directory.
+ * 5. Create the struct dir and populate it.
+ * 6. Add it to the cache.
  *
- * @param vol   (r) pointer to struct vol
- * @param did   (r) DID to resolve
+ * @param[in] vol   pointer to struct vol
+ * @param[in] did   DID to resolve
  *
  * @returns pointer to struct dir
  */
@@ -679,13 +679,13 @@ exit:
  *
  * Construct struct dir from parameters.
  *
- * @param m_name   (r) directory name in UTF8-dec
- * @param u_name   (r) directory name in server side encoding
- * @param vol      (r) pointer to struct vol
- * @param pdid     (r) Parent CNID
- * @param did      (r) CNID
- * @param path     (r) Full unix path to object
- * @param st       (r) struct stat of object
+ * @param[in] m_name   directory name in UTF8-dec
+ * @param[in] u_name   directory name in server side encoding
+ * @param[in] vol      pointer to struct vol
+ * @param[in] pdid     Parent CNID
+ * @param[in] did      CNID
+ * @param[in] path     Full unix path to object
+ * @param[in] st       struct stat of object
  *
  * @returns pointer to new struct dir or NULL on error
  *
@@ -775,10 +775,10 @@ void dir_free(struct dir *dir)
  * 3. Build fullpath and create struct dir.
  * 4. Add it to the cache.
  *
- * @param vol   (r) pointer to struct vol, possibly modified in callee
- * @param dir   (r) pointer to parent directory
- * @param path  (rw) pointer to struct path with valid path->u_name
- * @param len   (r) strlen of path->u_name
+ * @param[in] vol       pointer to struct vol, possibly modified in callee
+ * @param[in] dir       pointer to parent directory
+ * @param[in,out] path  pointer to struct path with valid path->u_name
+ * @param[in] len       strlen of path->u_name
  *
  * @returns Pointer to new struct dir or NULL on error.
  *
@@ -921,8 +921,8 @@ void dir_free_invalid_q(void)
  * 4. If it's a request to remove curdir, mark curdir as invalid
  * 5. Mark it as invalid
  *
- * @param vol  (r) volume pointer
- * @param dir  (rw) directory/file entry to remove from cache
+ * @param[in] vol      volume pointer
+ * @param[in,out] dir  directory/file entry to remove from cache
  * @returns 0 on success
  */
 int dir_remove(const struct vol *vol, struct dir *dir)
@@ -1258,11 +1258,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     return &ret;
 }
 
-/*
+/*!
  * @brief chdir() to dir
  *
- * @param vol   (r) pointer to struct vol
- * @param dir   (r) pointer to struct dir
+ * @param[in] vol   pointer to struct vol
+ * @param[in] dir   pointer to struct dir
  *
  * @returns 0 on success, -1 on error with afp_errno set appropriately
  */

@@ -63,8 +63,8 @@
  * 2. absolute:
  *     "/afp_volume/dir/subdir"
  *
- * @param path     (r) path relative to cwd() or absolute
- * @param volpath  (r) volume path that path is a subdir of (has been computed in volinfo funcs)
+ * @param[in] path     path relative to cwd() or absolute
+ * @param[in] volpath  volume path that path is a subdir of (has been computed in volinfo funcs)
  *
  * @returns relative path in new bstring, caller must bdestroy it
  */
@@ -160,10 +160,10 @@ EC_CLEANUP:
  * path MUST be pointing inside vol, this is usually the case as vol has been build from
  * path using loadvolinfo and friends.
  *
- * @param cdb     (r) CNID db handle
- * @param volpath (r) UNIX path of volume
- * @param path    (r) path, see above
- * @param did     (w) parent CNID of returned CNID
+ * @param[in] cdb       CNID db handle
+ * @param[in] volpath   UNIX path of volume
+ * @param[in] path      path, see above
+ * @param[out] did      parent CNID of returned CNID
  *
  * @returns CNID of path
  */
