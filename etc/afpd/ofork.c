@@ -381,8 +381,8 @@ struct ofork *of_findname(const struct vol *vol, struct path *path)
  * Function call of_fstatat with dirfd and path and uses dev and ino
  * to search the open fork table.
  *
- * @param dirfd     (r) directory fd
- * @param path      (rw) pointer to struct path
+ * @param[in] dirfd         directory fd
+ * @param[in,out] path      pointer to struct path
  */
 struct ofork *of_findnameat(int dirfd, struct path *path)
 {

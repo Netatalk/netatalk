@@ -30,10 +30,10 @@
  * @def read_lock(fd, offset, whence, len)
  * @brief place read lock on file
  *
- * @param   fd         (r) File descriptor
- * @param   offset     (r) byte offset relative to l_whence
- * @param   whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
- * @param   len        (r) no. of bytes (0 means to EOF)
+ * @param[in]   fd         File descriptor
+ * @param[in]   offset     byte offset relative to l_whence
+ * @param[in]   whence     SEEK_SET, SEEK_CUR, SEEK_END
+ * @param[in]   len        no. of bytes (0 means to EOF)
  *
  * @returns 0 on success, -1 on failure with
  *          fcntl return value and errno
@@ -43,10 +43,10 @@
  * @def write_lock(fd, offset, whence, len)
  * @brief place write lock on file
  *
- * @param   fd         (r) File descriptor
- * @param   offset     (r) byte offset relative to l_whence
- * @param   whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
- * @param   len        (r) no. of bytes (0 means to EOF)
+ * @param[in]   fd         File descriptor
+ * @param[in]   offset     byte offset relative to l_whence
+ * @param[in]   whence     SEEK_SET, SEEK_CUR, SEEK_END
+ * @param[in]   len        no. of bytes (0 means to EOF)
  *
  * @returns 0 on success, -1 on failure with
  *          fcntl return value and errno
@@ -56,10 +56,10 @@
  * @def unlock(fd, offset, whence, len)
  * @brief unlock a file
  *
- * @param   fd         (r) File descriptor
- * @param   offset     (r) byte offset relative to l_whence
- * @param   whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
- * @param   len        (r) no. of bytes (0 means to EOF)
+ * @param[in]   fd         File descriptor
+ * @param[in]   offset     byte offset relative to l_whence
+ * @param[in]   whence     SEEK_SET, SEEK_CUR, SEEK_END
+ * @param[in]   len        no. of bytes (0 means to EOF)
  *
  * @returns 0 on success, -1 on failure with
  *          fcntl return value and errno
@@ -71,12 +71,12 @@
  * This function is called via the macros:
  * read_lock, write_lock, un_lock
  *
- * @param   fd         (r) File descriptor
- * @param   cmd        (r) cmd to fcntl, only F_SETLK is usable here
- * @param   type       (r) F_RDLCK, F_WRLCK, F_UNLCK
- * @param   offset     (r) byte offset relative to l_whence
- * @param   whence     (r) SEEK_SET, SEEK_CUR, SEEK_END
- * @param   len        (r) no. of bytes (0 means to EOF)
+ * @param[in]   fd         File descriptor
+ * @param[in]   cmd        cmd to fcntl, only F_SETLK is usable here
+ * @param[in]   type       F_RDLCK, F_WRLCK, F_UNLCK
+ * @param[in]   offset     byte offset relative to l_whence
+ * @param[in]   whence     SEEK_SET, SEEK_CUR, SEEK_END
+ * @param[in]   len        no. of bytes (0 means to EOF)
  *
  * @returns 0 on success, -1 on failure with
  *          fcntl return value and errno

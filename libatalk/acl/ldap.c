@@ -360,9 +360,9 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  *
  * Caller must free uuid_string when done with it
  *
- * @param name        (r) name to search
- * @param type        (r) type of USER or GROUP
- * @param uuid_string (w) result as pointer to allocated UUID-string
+ * @param[in] name          name to search
+ * @param[in] type          type of USER or GROUP
+ * @param[out] uuid_string  result as pointer to allocated UUID-string
  *
  * @returns 0 on success, -1 on error or not found
  */
@@ -442,13 +442,12 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
  * @brief LDAP search wrapper
  *
  * returns allocated storage in name, caller must free it
- * returns 0 on success, -1 on error or not found
  *
- * @param uuidstr  (r) uuid to search as ascii string
- * @param name     (w) return pointer to name as allocated string
- * @param type     (w) return type: USER or GROUP
+ * @param[in] uuidstr   uuid to search as ascii string
+ * @param[out] name     return pointer to name as allocated string
+ * @param[out] type     return type: USER or GROUP
  *
- * @returns 0 on success, -1 on errror
+ * @returns 0 on success, -1 on errror or not found
  */
 int ldap_getnamefromuuid(const char *uuidstr, char **name, uuidtype_t *type)
 {

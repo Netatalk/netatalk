@@ -310,10 +310,10 @@ EC_CLEANUP:
 /*!
  * @brief AppleDouble and encoding conversion on the fly
  *
- * @param path      (r) path to file or directory
- * @param sp        (r) stat(path)
- * @param vol       (r) volume handle
- * @param newpath   (w) if encoding changed, new name. Can be NULL.
+ * @param[in] path       path to file or directory
+ * @param[in] sp         stat(path)
+ * @param[in] vol        volume handle
+ * @param[out] newpath   if encoding changed, new name. Can be NULL.
  *
  * @returns         -1 on internal error, otherwise 0. newpath is NULL if no character conversion was done,
  *                  otherwise newpath points to a static string with the converted name

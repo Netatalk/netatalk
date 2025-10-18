@@ -286,12 +286,12 @@ static off_t rf2off(off_t off)
 /*!
  * @brief Test a lock
  *
- * (1) Test against our own locks array
- * (2) Test fcntl lock, locks from other processes
+ * 1. Test against our own locks array
+ * 2. Test fcntl lock, locks from other processes
  *
- * @param adf     (r) handle
- * @param off     (r) offset
- * @param len     (r) length
+ * @param[in] adf     handle
+ * @param[in] off     offset
+ * @param[in] len     length
  *
  * @returns           1 if there's an existing lock, 0 if there's no lock,
  *                    -1 in case any error occured
@@ -629,9 +629,9 @@ void ad_unlock(struct adouble *ad, const int fork, int unlckbrl)
 /*!
  * @brief Test for a share mode lock
  *
- * @param ad      (rw) handle
- * @param eid     (r)  datafork or resource fork
- * @param off     (r)  sharemode lock to test
+ * @param[in,out] ad    handle
+ * @param[in] eid       datafork or resource fork
+ * @param[in] off       sharemode lock to test
  *
  * @returns           1 if there's an existing lock, 0 if there's no lock,
  *                    -1 in case any error occured
@@ -663,8 +663,8 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
  * - there's no locks held by another process (clients)
  * - or we already know the answer and don't need to test (attrbits)
  *
- * @param ad          (rw) handle
- * @param attrbits    (r)  forks opened by us
+ * @param[in,out] ad       handle
+ * @param[in] attrbits     forks opened by us
  * @returns                bitflags ATTRBIT_DOPEN | ATTRBIT_ROPEN if
  *                         other process has fork of file opened
  */

@@ -1079,9 +1079,9 @@ static int ad_error(struct adouble *ad, int adflags)
 /*!
  * @brief Map ADFLAGS to open() flags
  *
- * @param ad       (r) the adouble structure
- * @param adfile   (r) the file you really want to open: ADFLAGS_DF or ADFLAGS_HF
- * @param adflags  (r) flags from ad_open(..., adflags, ...)
+ * @param[in] ad       the adouble structure
+ * @param[in] adfile   the file you really want to open: ADFLAGS_DF or ADFLAGS_HF
+ * @param[in] adflags  flags from ad_open(..., adflags, ...)
  * @returns            mapped flags suitable for calling open()
  */
 static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
@@ -2264,10 +2264,10 @@ void ad_init(struct adouble *ad, const struct vol *restrict vol)
  *
  * Open a files data fork, metadata fork or resource fork.
  *
- * @param ad        (rw) pointer to struct adouble
- * @param path      (r)  Path to file or directory
- * @param adflags   (r)  Flags specifying which fork to open, can be or'd (see below)
- * @param ...       (r)  mode used with O_CREATE
+ * @param[in,out] ad     pointer to struct adouble
+ * @param[in] path       Path to file or directory
+ * @param[in] adflags    Flags specifying which fork to open, can be or'd (see below)
+ * @param[in] ...        mode used with O_CREATE
  *
  * Regular adflags:
  *  - ADFLAGS_DF:        open data fork

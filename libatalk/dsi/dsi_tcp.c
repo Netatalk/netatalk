@@ -409,10 +409,10 @@ EC_CLEANUP:
 /*!
  * @brief Initialize DSI over TCP
  *
- * @param dsi        (rw) DSI handle
- * @param hostname   (r)  pointer to hostname string
- * @param inaddress  (r)  Optional IPv4 or IPv6 address with an optional port, may be NULL
- * @param inport     (r)  pointer to port string
+ * @param[in,out] dsi      DSI handle
+ * @param[in] hostname     pointer to hostname string
+ * @param[in] inaddress    Optional IPv4 or IPv6 address with an optional port, may be NULL
+ * @param[in] inport       pointer to port string
  *
  * Creates listening AFP/DSI socket. If the parameter inaddress is NULL, then we listen
  * on the wildcard address, i,e, on all interfaces. That should mean listening on the IPv6

@@ -106,20 +106,14 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
 }
 
 
-/*
- * Function: unpack_header
+/*!
+ * @brief unpack and verify header file data buffer at ea->ea_data into struct ea
  *
- * Purpose: unpack and verify header file data buffer at ea->ea_data into struct ea
+ * @param[in,out] ea      handle to struct ea
  *
- * Arguments:
+ * @returns 0 on success, -1 on error
  *
- *    ea      (rw) handle to struct ea
- *
- * Returns: 0 on success, -1 on error
- *
- * Effects:
- *
- * Verifies magic and version.
+ * @note Verifies magic and version.
  */
 static int unpack_header(struct ea *restrict ea)
 {
@@ -196,20 +190,14 @@ exit:
     return ret;
 }
 
-/*
- * Function: pack_header
+/*!
+ * @brief pack everything from struct ea into buffer at ea->ea_data
  *
- * Purpose: pack everything from struct ea into buffer at ea->ea_data
+ * @param[in,out] ea      handle to struct ea
  *
- * Arguments:
+ * @returns 0 on success, -1 on error
  *
- *    ea      (rw) handle to struct ea
- *
- * Returns: 0 on success, -1 on error
- *
- * Effects:
- *
- * adjust ea->ea_count in case an ea entry deletetion is detected
+ * @note adjust ea->ea_count in case an ea entry deletetion is detected
  */
 static int pack_header(struct ea *restrict ea)
 {
@@ -286,23 +274,17 @@ static int pack_header(struct ea *restrict ea)
     return 0;
 }
 
-/*
- * Function: ea_addentry
+/*!
+ * @brief add one EA into ea->ea_entries[]
  *
- * Purpose: add one EA into ea->ea_entries[]
+ * @param[in,out] ea        pointer to struct ea
+ * @param[in] attruname     name of EA
+ * @param[in] attrsize      size of ea
+ * @param[in] bitmap        bitmap from FP func
  *
- * Arguments:
+ * @returns new number of EA entries, -1 on error
  *
- *    ea            (rw) pointer to struct ea
- *    attruname     (r) name of EA
- *    attrsize      (r) size of ea
- *    bitmap        (r) bitmap from FP func
- *
- * Returns: new number of EA entries, -1 on error
- *
- * Effects:
- *
- * Grow array ea->ea_entries[]. If ea->ea_entries is still NULL, start allocating.
+ * @note Grow array ea->ea_entries[]. If ea->ea_entries is still NULL, start allocating.
  * Otherwise realloc and put entry at the end. Increments ea->ea_count.
  */
 static int ea_addentry(struct ea *restrict ea,
@@ -385,23 +367,17 @@ error:
     return -1;
 }
 
-/*
- * Function: create_ea_header
+/*!
+ * @brief create EA header file, only called from ea_open
  *
- * Purpose: create EA header file, only called from ea_open
- *
- * Arguments:
- *
- *    uname       (r)  filename for which we have to create a header
- *    ea          (rw) ea handle with already allocated storage pointed to
+ * @param[in] uname    filename for which we have to create a header
+ * @param[in,out] ea   ea handle with already allocated storage pointed to
  *                     by ea->ea_data
  *
- * Returns: fd of open header file on success, -1 on error, errno semantics:
+ * @returns fd of open header file on success, -1 on error, errno semantics:
  *          EEXIST: open with O_CREAT | O_EXCL failed
  *
- * Effects:
- *
- * Creates EA header file and initialize ea->ea_data buffer.
+ * @note Creates EA header file and initialize ea->ea_data buffer.
  * Possibe race condition with other afpd processes:
  * we were called because header file didn't exist in e.g. ea_open. We then
  * try to create a file with O_CREAT | O_EXCL, but the whole process in not atomic.
@@ -454,23 +430,17 @@ exit:
     return fd;
 }
 
-/*
- * Function: write_ea
+/*!
+ * @brief write an EA to disk
  *
- * Purpose: write an EA to disk
+ * @param[in] ea         struct ea handle
+ * @param[in] attruname  EA name
+ * @param[in] ibuf       buffer with EA content
+ * @param[in] attrsize   size of EA
  *
- * Arguments:
+ * @returns 0 on success, -1 on error
  *
- *    ea         (r) struct ea handle
- *    attruname  (r) EA name
- *    ibuf       (r) buffer with EA content
- *    attrsize   (r) size of EA
- *
- * Returns: 0 on success, -1 on error
- *
- * Effects:
- *
- * Creates/overwrites EA file.
+ * @note Creates/overwrites EA file.
  *
  */
 static int write_ea(const struct ea *restrict ea,
@@ -523,21 +493,15 @@ exit:
     return ret;
 }
 
-/*
- * Function: ea_delentry
+/*!
+ * @brief delete one EA from ea->ea_entries[]
  *
- * Purpose: delete one EA from ea->ea_entries[]
+ * @param[in,out] ea        pointer to struct ea
+ * @param[in] attruname     EA name
  *
- * Arguments:
+ * @returns new number of EA entries, -1 on error
  *
- *    ea            (rw) pointer to struct ea
- *    attruname     (r) EA name
- *
- * Returns: new number of EA entries, -1 on error
- *
- * Effects:
- *
- * Remove entry from  ea->ea_entries[]. Decrement ea->ea_count.
+ * @note Remove entry from  ea->ea_entries[]. Decrement ea->ea_count.
  * Marks it as unused just by freeing name and setting it to NULL.
  * ea_close and pack_buffer must honor this.
  */
@@ -570,17 +534,13 @@ static int ea_delentry(struct ea *restrict ea, const char *restrict attruname)
     return ret;
 }
 
-/*
- * Function: delete_ea_file
+/*!
+ * @brief delete EA file from disk
  *
- * Purpose: delete EA file from disk
+ * @param[in] ea         struct ea handle
+ * @param[in] attruname  EA name
  *
- * Arguments:
- *
- *    ea         (r) struct ea handle
- *    attruname  (r) EA name
- *
- * Returns: 0 on success, -1 on error
+ * @returns 0 on success, -1 on error
  */
 static int delete_ea_file(const struct ea *restrict ea, const char *eaname)
 {
@@ -611,25 +571,19 @@ static int delete_ea_file(const struct ea *restrict ea, const char *eaname)
  * ea_path, ea_open and ea_close are only global so that dbd can call them
  *************************************************************************************/
 
-/*
- * Function: ea_path
+/*!
+ * @brief return name of ea header filename
  *
- * Purpose: return name of ea header filename
+ * @param[in] ea           ea handle
+ * @param[in] eaname       name of EA or NULL
+ * @param[in] macname      if != 0 call mtoupath on eaname
  *
- * Arguments:
+ * @returns pointer to name in static buffer, NULL on error
  *
- *    ea           (r) ea handle
- *    eaname       (r) name of EA or NULL
- *    macname      (r) if != 0 call mtoupath on eaname
- *
- * Returns: pointer to name in static buffer, NULL on error
- *
- * Effects:
- *
- * Calls ad_open, copies buffer, appends "::EA" and if supplied append eanme
- * Files: "file" -> "file/.AppleDouble/file::EA"
- * Dirs: "dir" -> "dir/.AppleDouble/.Parent::EA"
- * "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
+ * @note - Calls ad_open, copies buffer, appends "::EA" and if supplied append eanme
+ * - Files: "file" -> "file/.AppleDouble/file::EA"
+ * - Dirs: "dir" -> "dir/.AppleDouble/.Parent::EA"
+ * - "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
  */
 char *ea_path(const struct ea *restrict ea, const char *restrict eaname,
               int macname)
@@ -658,28 +612,23 @@ char *ea_path(const struct ea *restrict ea, const char *restrict eaname,
     return pathbuf;
 }
 
-/*
- * Function: ea_open
+/*!
+ * @brief open EA header file, create if it doesnt exits and called with O_CREATE
  *
- * Purpose: open EA header file, create if it doesnt exits and called with O_CREATE
+ * @param[in] vol     current volume
+ * @param[in] uname   filename for which we have to open a header
+ * @param[in] flags   flag to control open behavior:
+ *                    - EA_CREATE: create if it doesn't exist (without it won't be created)
+ *                    - EA_RDONLY: open read only
+ *                    - EA_RDWR: open read/write
+ *                    - Either EA_RDONLY or EA_RDWR MUST be requested
+ * @param[out] ea     pointer to a struct ea that we fill
  *
- * Arguments:
- *
- *    vol         (r) current volume
- *    uname       (r) filename for which we have to open a header
- *    flags       (r) EA_CREATE: create if it doesn't exist (without it won't be created)
- *                    EA_RDONLY: open read only
- *                    EA_RDWR: open read/write
- *                    Eiterh EA_RDONLY or EA_RDWR MUST be requested
- *    ea          (w) pointer to a struct ea that we fill
- *
- * Returns: 0 on success
- *         -1 on misc error with errno = EFAULT
+ * @returns 0 on success,
+ *         -1 on misc error with errno = EFAULT,
  *         -2 if no EA header exists with errno = ENOENT
  *
- * Effects:
- *
- * opens header file and stores fd in ea->ea_fd. Size of file is put into ea->ea_size.
+ * @note opens header file and stores fd in ea->ea_fd. Size of file is put into ea->ea_size.
  * number of EAs is stored in ea->ea_count. flags are remembered in ea->ea_flags.
  * file is either read or write locked depending on the open flags.
  * When you're done with struct ea you must call ea_close on it.
@@ -833,29 +782,24 @@ exit:
     return ret;
 }
 
-/*
- * Function: ea_openat
+/*!
+ * @brief openat like wrapper for ea_open, takes a additional file descriptor
  *
- * Purpose: openat like wrapper for ea_open, takes a additional file descriptor
+ * @param[in] vol     current volume
+ * @param[in] sfd     openat like file descriptor
+ * @param[in] uname   filename for which we have to open a header
+ * @param[in] flags   flag to control open behavior:
+ *                    - EA_CREATE: create if it doesn't exist (without it won't be created)
+ *                    - EA_RDONLY: open read only
+ *                    - EA_RDWR: open read/write
+ *                    - Either EA_RDONLY or EA_RDWR MUST be requested
+ * @param[out] ea     pointer to a struct ea that we fill
  *
- * Arguments:
- *
- *    vol         (r) current volume
- *    sfd         (r) openat like file descriptor
- *    uname       (r) filename for which we have to open a header
- *    flags       (r) EA_CREATE: create if it doesn't exist (without it won't be created)
- *                    EA_RDONLY: open read only
- *                    EA_RDWR: open read/write
- *                    Eiterh EA_RDONLY or EA_RDWR MUST be requested
- *    ea          (w) pointer to a struct ea that we fill
- *
- * Returns: 0 on success
- *         -1 on misc error with errno = EFAULT
+ * @returns 0 on success,
+ *         -1 on misc error with errno = EFAULT,
  *         -2 if no EA header exists with errno = ENOENT
  *
- * Effects:
- *
- * opens header file and stores fd in ea->ea_fd. Size of file is put into ea->ea_size.
+ * @note opens header file and stores fd in ea->ea_fd. Size of file is put into ea->ea_size.
  * number of EAs is stored in ea->ea_count. flags are remembered in ea->ea_flags.
  * file is either read or write locked depending on the open flags.
  * When you're done with struct ea you must call ea_close on it.
@@ -895,20 +839,14 @@ exit:
     return ret;
 }
 
-/*
- * Function: ea_close
+/*!
+ * @brief flushes and closes an ea handle
  *
- * Purpose: flushes and closes an ea handle
+ * @param[in,out] ea          pointer to ea handle
  *
- * Arguments:
+ * @returns 0 on success, -1 on error
  *
- *    ea          (rw) pointer to ea handle
- *
- * Returns: 0 on success, -1 on error
- *
- * Effects:
- *
- * Flushes and then closes and frees all resouces held by ea handle.
+ * @note Flushes and then closes and frees all resouces held by ea handle.
  * Pack data in ea into ea_data, then write ea_data to disk
  */
 int ea_close(struct ea *restrict ea)
@@ -1015,25 +953,19 @@ exit:
  * VFS funcs called from afp_ea* funcs
  ************************************************************************************/
 
-/*
- * Function: get_easize
+/*!
+ * @brief get size of an EA
  *
- * Purpose: get size of an EA
+ * @param[in]   vol          current volume
+ * @param[out]  rbuf         DSI reply buffer
+ * @param[in,out] rbuflen    current length of data in reply buffer
+ * @param[in]   uname        filename
+ * @param[in]   oflag        link and create flag
+ * @param[in]   attruname    name of attribute
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    rbuf         (w) DSI reply buffer
- *    rbuflen      (rw) current length of data in reply buffer
- *    uname        (r) filename
- *    oflag        (r) link and create flag
- *    attruname    (r) name of attribute
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies EA size into rbuf in network order. Increments *rbuflen +4.
+ * @note Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
 int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
@@ -1077,26 +1009,20 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     return ret;
 }
 
-/*
- * Function: get_eacontent
+/*!
+ * @brief copy EA into rbuf
  *
- * Purpose: copy EA into rbuf
+ * @param[in] vol          current volume
+ * @param[out] rbuf        DSI reply buffer
+ * @param[in,out] rbuflen  current length of data in reply buffer
+ * @param[in] uname        filename
+ * @param[in] oflag        link and create flag
+ * @param[in] attruname    name of attribute
+ * @param[in] maxreply     maximum EA size as of current specs/real-life
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    rbuf         (w) DSI reply buffer
- *    rbuflen      (rw) current length of data in reply buffer
- *    uname        (r) filename
- *    oflag        (r) link and create flag
- *    attruname    (r) name of attribute
- *    maxreply     (r) maximum EA size as of current specs/real-life
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies EA into rbuf. Increments *rbuflen accordingly.
+ * @note Copies EA into rbuf. Increments *rbuflen accordingly.
  */
 int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
@@ -1175,24 +1101,18 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     return ret;
 }
 
-/*
- * Function: list_eas
+/*!
+ * @brief copy names of EAs into attrnamebuf
  *
- * Purpose: copy names of EAs into attrnamebuf
+ * @param[in] vol           current volume
+ * @param[out] attrnamebuf  store names a consecutive C strings here
+ * @param[in,out] buflen    length of names in attrnamebuf
+ * @param[in] uname         filename
+ * @param[in] oflag         link and create flag
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    attrnamebuf  (w) store names a consecutive C strings here
- *    buflen       (rw) length of names in attrnamebuf
- *    uname        (r) filename
- *    oflag        (r) link and create flag
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies names of all EAs of uname as consecutive C strings into rbuf.
+ * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *buflen accordingly.
  */
 int list_eas(VFS_FUNC_ARGS_EA_LIST)
@@ -1261,25 +1181,19 @@ exit:
     return ret;
 }
 
-/*
- * Function: set_ea
+/*!
+ * @brief set a Solaris native EA
  *
- * Purpose: set a Solaris native EA
+ * @param[in] vol          current volume
+ * @param[in] uname        filename
+ * @param[in] attruname    EA name
+ * @param[in] ibuf         buffer with EA content
+ * @param[in] attrsize     length EA in ibuf
+ * @param[in] oflag        link and create flag
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    uname        (r) filename
- *    attruname    (r) EA name
- *    ibuf         (r) buffer with EA content
- *    attrsize     (r) length EA in ibuf
- *    oflag        (r) link and create flag
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies names of all EAs of uname as consecutive C strings into rbuf.
+ * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
  */
 int set_ea(VFS_FUNC_ARGS_EA_SET)
@@ -1316,23 +1230,17 @@ exit:
     return ret;
 }
 
-/*
- * Function: remove_ea
+/*!
+ * @brief remove a EA from a file
  *
- * Purpose: remove a EA from a file
+ * @param[in] vol          current volume
+ * @param[in] uname        filename
+ * @param[in] attruname    EA name
+ * @param[in] oflag        link and create flag
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    uname        (r) filename
- *    attruname    (r) EA name
- *    oflag        (r) link and create flag
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Removes EA attruname from file uname.
+ * @note Removes EA attruname from file uname.
  */
 int remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
@@ -1537,23 +1445,17 @@ exit:
     return ret;
 }
 
-/*
- * Function: ea_copyfile
+/*!
+ * @brief copy EAs
  *
- * Purpose: copy EAs
+ * @param[in] vol          current volume
+ * @param[in] sfd          source file descriptor
+ * @param[in] src          source path
+ * @param[in] dst          destination path
  *
- * Arguments:
+ * @returns AFP code AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    sdf          (r) source file descriptor
- *    src          (r) source path
- *    dst          (r) destination path
- *
- * Return AFP code AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies EAs from source file to dest file.
+ * @note Copies EAs from source file to dest file.
  */
 int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {

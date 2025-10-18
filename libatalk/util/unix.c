@@ -238,11 +238,16 @@ const char *fullpathname(const char *name)
  * @brief Takes a buffer with a path, strips slashs, returns basename
  *
  * @param p (rw) path
- *        path may be
- *          "[/][dir/[...]]file"
- *        or
- *          "[/][dir/[...]]dir/[/]"
- *        Result is "file" or "dir"
+ *
+ * path may be
+ * @code
+ *   "[/][dir/[...]]file"
+ * @endcode
+ * or
+ * @code
+ *   "[/][dir/[...]]dir/[/]"
+ * @endcode
+ * Result is "file" or "dir"
  *
  * @returns pointer to basename in path buffer, buffer is possibly modified
  */
@@ -389,10 +394,10 @@ int ochown(const char *path, uid_t owner, gid_t group, int options)
 /*!
  * @brief chmod() wrapper for symlink and ACL handling
  *
- * @param path       (r) path
- * @param mode       (r) requested mode
- * @param st         (r) stat() of path or NULL
- * @param options    (r) O_NOFOLLOW | O_NETATALK_ACL
+ * @param[in] path       path
+ * @param[in] mode       requested mode
+ * @param[in] st         stat() of path or NULL
+ * @param[in] options    O_NOFOLLOW | O_NETATALK_ACL
  *
  * Option descriptions:
  *
@@ -428,16 +433,17 @@ int ochmod(char *path, mode_t mode, const struct stat *st, int options)
     }
 }
 
-/*
+/*!
  * @brief ostat/fsstatat multiplexer
  *
  * ostatat mulitplexes ostat and fstatat.
  *
- * @param dirfd   (r) -1 gives AT_FDCWD
- * @param path    (r) pathname
- * @param st      (rw) pointer to struct stat
+ * @param[in] dirfd    -1 gives AT_FDCWD
+ * @param[in] path     pathname
+ * @param[in,out] st   pointer to struct stat
+ * @param[in] options  file options
  */
-int ostatat(int dirfd _U_, const char *path, struct stat *st, int options)
+int ostatat(int dirfd, const char *path, struct stat *st, int options)
 {
     if (dirfd == -1) {
         dirfd = AT_FDCWD;
@@ -628,7 +634,8 @@ char *realpath_safe(const char *path)
 }
 
 /*!
- * @brief Returns pointer to static buffer with basename of path
+ * @brief safe basename() replacement
+ * @returns pointer to static buffer with basename of path
  */
 const char *basename_safe(const char *path)
 {

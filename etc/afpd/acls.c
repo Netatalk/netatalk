@@ -88,11 +88,11 @@
  * and returns the result as a Darwin allowed rights ACE.
  * This must honor trivial ACEs which are a mode_t mapping.
  *
- * @param obj            (r) handle
- * @param path           (r) path to filesystem object
- * @param sb             (rw) struct stat of path
- * @param ma             (rw) UARights struct
- * @param rights_out     (w) mapped Darwin ACL rights
+ * @param[in] obj            handle
+ * @param[in] path           path to filesystem object
+ * @param[in,out] sb         struct stat of path
+ * @param[in,out] ma         UARights struct
+ * @param[out] rights_out    mapped Darwin ACL rights
  *
  * @returns                  0 or -1 on error
  */
@@ -468,9 +468,9 @@ EC_CLEANUP:
  * returns the result as a Darwin allowed rights ACE.
  * This must honor trivial ACEs which are a mode_t mapping.
  *
- * @param path           (r) path to filesystem object
- * @param sb             (r) struct stat of path
- * @param result         (rw) resulting Darwin allow ACE
+ * @param[in] path           path to filesystem object
+ * @param[in] sb             struct stat of path
+ * @param[in,out] result     resulting Darwin allow ACE
  *
  * @returns                  0 or -1 on error
  */
@@ -585,7 +585,7 @@ EC_CLEANUP:
  * Helper function for posix_acls_to_uaperms() to convert Posix ACL permissions
  * into access rights needed to fill ua_permissions of a FPUnixPrivs structure.
  *
- * @param entry     (r) Posix ACL entry
+ * @param[in] entry     Posix ACL entry
  *
  * @returns         access rights
  */
@@ -636,9 +636,9 @@ static uint8_t acl_permset_to_uarights(acl_entry_t entry)
  * ACL_MASK entry, st_mode gets modified to properly reflect group
  * permissions.
  *
- * @param path           (r) path to filesystem object
- * @param sb             (rw) struct stat of path
- * @param maccess        (rw) struct maccess of path
+ * @param[in] path           path to filesystem object
+ * @param[in,out] sb         struct stat of path
+ * @param[in,out] maccess    struct maccess of path
  *
  * @returns                  0 or -1 on error
  */
@@ -748,13 +748,13 @@ EC_CLEANUP:
  * @brief Map Darwin ACE rights to POSIX 1e perm
  *
  * We can only map few rights:
- *   DARWIN_ACE_READ_DATA                    -> ACL_READ
- *   DARWIN_ACE_WRITE_DATA                   -> ACL_WRITE
- *   DARWIN_ACE_DELETE_CHILD & (is_dir == 1) -> ACL_WRITE
- *   DARWIN_ACE_EXECUTE                      -> ACL_EXECUTE
+ *  - DARWIN_ACE_READ_DATA                    -> ACL_READ
+ *  - DARWIN_ACE_WRITE_DATA                   -> ACL_WRITE
+ *  - DARWIN_ACE_DELETE_CHILD & (is_dir == 1) -> ACL_WRITE
+ *  - DARWIN_ACE_EXECUTE                      -> ACL_EXECUTE
  *
- * @param entry             (rw) result of the mapping
- * @param is_dir            (r) 1 for dirs, 0 for files
+ * @param[in,out] entry         result of the mapping
+ * @param[in] is_dir            1 for dirs, 0 for files
  *
  * @returns mapping result as acl_perm_t, -1 on error
  */
@@ -788,10 +788,10 @@ static acl_perm_t map_darwin_right_to_posix_permset(uint32_t darwin_ace_rights,
  * otherwise create a new ACL entry.
  * perm can be or'ed ACL_READ, ACL_WRITE and ACL_EXECUTE.
  *
- * @param aclp     (rw) pointer to ACL
- * @param type     (r)  acl_tag_t of ACL_USER or ACL_GROUP
- * @param id       (r)  uid_t uid for ACL_USER, or gid casted to uid_t for ACL_GROUP
- * @param perm     (r)  acl_perm_t permissions to add
+ * @param[in,out] aclp     pointer to ACL
+ * @param[in] type         acl_tag_t of ACL_USER or ACL_GROUP
+ * @param[in] id           uid_t uid for ACL_USER, or gid casted to uid_t for ACL_GROUP
+ * @param[in] perm         acl_perm_t permissions to add
  *
  * @returns 0 on success, -1 on failure
  */
@@ -857,13 +857,13 @@ EC_CLEANUP:
  * - we throw away DARWIN_ACE_FLAGS_LIMIT_INHERIT (can't be mapped), thus the ACL will
  *   not be limited
  *
- * @param darwin_aces        (r)  pointer to darwin_aces buffer
- * @param def_aclp           (rw) directories: pointer to an initialized acl_t with
-                                  the default acl files: *def_aclp will be NULL
- * @param acc_aclp           (rw) pointer to an initialized acl_t with the access acl
- * @param ace_count          (r)  number of ACEs in darwin_aces buffer
- * @param default_acl_flags  (rw) flags to indicate if the object has a basic default
- *                                acl or an extended default acl.
+ * @param[in] darwin_aces            pointer to darwin_aces buffer
+ * @param[in,out] def_aclp           directories: pointer to an initialized acl_t with
+                                     the default acl files: *def_aclp will be NULL
+ * @param[in,out] acc_aclp           pointer to an initialized acl_t with the access acl
+ * @param[in] ace_count              number of ACEs in darwin_aces buffer
+ * @param[in,out] default_acl_flags  flags to indicate if the object has a basic default
+ *                                   acl or an extended default acl.
  *
  * @returns 0 on success storing the result in aclp, -1 on error. default_acl_flags
  * is set to HAS_DEFAULT_ACL|HAS_EXT_DEFAULT_ACL in case there is at least one
@@ -1527,14 +1527,14 @@ EC_CLEANUP:
  * @brief Checks if a given UUID has requested_rights (type darwin_ace_rights)
  * for path.
  *
- * Note: this gets called frequently and is a good place for optimizations !
+ * @note this gets called frequently and is a good place for optimizations !
  *
- * @param obj              (r) AFP object
- * @param vol              (r) volume
- * @param dir              (rw) directory
- * @param path             (r) path to filesystem object
- * @param uuid             (r) UUID of user
- * @param requested_rights (r) requested Darwin ACE
+ * @param[in] obj              AFP object
+ * @param[in] vol              volume
+ * @param[in,out] dir          directory
+ * @param[in] path             path to filesystem object
+ * @param[in] uuid             UUID of user
+ * @param[in] requested_rights requested Darwin ACE
  *
  * @returns                    AFP result code
 */

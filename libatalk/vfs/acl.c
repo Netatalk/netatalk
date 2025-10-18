@@ -101,7 +101,7 @@ exit:
  * @brief Remove any ACL_USER, ACL_GROUP, ACL_MASK
  * or ACL_TYPE_DEFAULT ACEs from an object
  *
- * @param name  (r) filesystem object name
+ * @param name  filesystem object name
  *
  * @returns AFP error code, AFP_OK (= 0) on success, AFPERR_MISC on error
  */

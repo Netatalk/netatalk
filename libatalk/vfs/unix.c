@@ -62,7 +62,7 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode,
     return 0;
 }
 
-/*
+/*!
  * @brief system rmdir with afp error code.
  *
  * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
@@ -101,7 +101,7 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
     return AFP_OK;
 }
 
-/*
+/*!
  * @brief System rmdir with afp error code, but ENOENT is not an error.
  *
  * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
@@ -305,18 +305,17 @@ int netatalk_unlinkat(int dirfd _U_, const char *name)
     return AFP_OK;
 }
 
-/*
+/*!
  * @brief This is equivalent of unix rename()
  *
  * unix_rename mulitplexes rename and renameat.
  *
- * @param sfd        (r) -1 gives AT_FDCWD
- * @param oldpath    (r) guess what
- * @param dfd        (r) same as sfd
- * @param newpath    (r) guess what
+ * @param[in] sfd        -1 gives AT_FDCWD
+ * @param[in] oldpath    guess what
+ * @param[in] dfd        same as sfd
+ * @param[in] newpath    guess what
  */
-int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_,
-                const char *newpath)
+int unix_rename(int sfd, const char *oldpath, int dfd, const char *newpath)
 {
     if (sfd == -1) {
         sfd = AT_FDCWD;
@@ -333,16 +332,16 @@ int unix_rename(int sfd _U_, const char *oldpath, int dfd _U_,
     return 0;
 }
 
-/*
+/*!
  * @brief stat/fsstatat multiplexer
  *
  * statat mulitplexes stat and fstatat.
  *
- * @param dirfd   (r) -1 gives AT_FDCWD
- * @param path    (r) pathname
- * @param st      (rw) pointer to struct stat
+ * @param[in] dirfd   -1 gives AT_FDCWD
+ * @param[in] path    pathname
+ * @param[in,out] st  pointer to struct stat
  */
-int statat(int dirfd _U_, const char *path, struct stat *st)
+int statat(int dirfd, const char *path, struct stat *st)
 {
     if (dirfd == -1) {
         dirfd = AT_FDCWD;
@@ -351,13 +350,13 @@ int statat(int dirfd _U_, const char *path, struct stat *st)
     return fstatat(dirfd, path, st, 0);
 }
 
-/*
+/*!
  * @brief opendir wrapper for *at semantics support
  *
  * opendirat chdirs to dirfd if dirfd != -1 before calling opendir on path.
  *
- * @param dirfd   (r) if != -1, chdir(dirfd) before opendir(path)
- * @param path    (r) pathname
+ * @param[in] dirfd   if != -1, chdir(dirfd) before opendir(path)
+ * @param[in] path    pathname
  */
 DIR *opendirat(int dirfd, const char *path)
 {

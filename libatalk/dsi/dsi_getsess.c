@@ -27,11 +27,11 @@
 /*!
  * @brief Start a DSI session, fork an afpd process
  *
- * @param dsi       (rw) DSI structure
- * @param serv_children (rw) pointer to our structure with all childs
- * @param tickleval (r)  tickle interval in seconds
- * @param childp    (w) after fork: parent return pointer to child, child returns NULL
- * @returns             0 on success, any other value denotes failure
+ * @param[in,out] dsi           DSI structure
+ * @param[in,out] serv_children pointer to our structure with all childs
+ * @param[in] tickleval         tickle interval in seconds
+ * @param[out] childp           after fork: parent return pointer to child, child returns NULL
+ * @returns                     0 on success, any other value denotes failure
  */
 int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
                    afp_child_t **childp)

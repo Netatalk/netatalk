@@ -44,8 +44,8 @@ static char ipv4mapprefix[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff};
 /*!
  * @brief set or unset non-blocking IO on a fd
  *
- * @param     fd         (r) File descriptor
- * @param     cmd        (r) 0: disable non-blocking IO, i.e. block\n
+ * @param[in]     fd         File descriptor
+ * @param[in]     cmd        0: disable non-blocking IO, i.e. block\n
  *                           <>0: enable non-blocking IO
  *
  * @returns   0 on success, -1 on failure
@@ -76,12 +76,12 @@ int setnonblock(int fd, int cmd)
 /*!
  * @brief non-blocking drop-in replacement for read with timeout using select
  *
- * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
- * @param data            (rw) buffer for the read data
- * @param length          (r)  how many bytes to read
- * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
- *                             io mode for the socket
- * @param timeout         (r)  number of seconds to try reading, 0 means no timeout
+ * @param[in] socket          socket, if in blocking mode, pass "setnonblocking" arg as 1
+ * @param[in,out] data        buffer for the read data
+ * @param[in] length          how many bytes to read
+ * @param[in] setnonblocking  when non-zero this func will enable and disable non blocking
+ *                            io mode for the socket
+ * @param[in] timeout         number of seconds to try reading, 0 means no timeout
  *
  * @returns number of bytes actually read or -1 on timeout or error
  */
@@ -205,12 +205,12 @@ exit:
 /*!
  * @brief non-blocking drop-in replacement for read with timeout using select
  *
- * @param socket          (r)  socket, if in blocking mode, pass "setnonblocking" arg as 1
- * @param data            (rw) buffer for the read data
- * @param length          (r)  how many bytes to read
- * @param setnonblocking  (r)  when non-zero this func will enable and disable non blocking
- *                             io mode for the socket
- * @param timeout         (r)  number of seconds to try reading
+ * @param[in] socket          socket, if in blocking mode, pass "setnonblocking" arg as 1
+ * @param[in,out] data        buffer for the read data
+ * @param[in] length          how many bytes to read
+ * @param[in] setnonblocking  when non-zero this func will enable and disable non blocking
+ *                            io mode for the socket
+ * @param[in] timeout         number of seconds to try reading
  *
  * @returns number of bytes actually read or -1 on fatal error
  */
@@ -319,7 +319,7 @@ exit:
  * IPv6 mapped IPv4 addresses are returned as IPv4 addreses e.g.
  * ::ffff:10.0.0.0 is returned as "10.0.0.0".
  *
- * @param  sa        (r) pointer to an struct sockaddr
+ * @param[in]  sa        pointer to an struct sockaddr
  *
  * @returns pointer to a static string cotaining the converted address as string.\n
  *          On error pointers to "0.0.0.0" or "::0" are returned.
@@ -366,7 +366,7 @@ const char *getip_string(const struct sockaddr *sa)
 /*!
  * @brief return port number from struct sockaddr
  *
- * @param  sa        (r) pointer to an struct sockaddr
+ * @param[in]  sa        pointer to an struct sockaddr
  *
  * @returns port as unsigned int
  */
@@ -391,8 +391,8 @@ unsigned int getip_port(const struct sockaddr  *sa)
  * e.g. 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
  * IPv4 is treated as mask = 32, mask > 128 is set to 128 for IPv6.
  *
- * @param  sa        (rw) pointer to an struct sockaddr
- * @param  mask      (r) number of maskbits
+ * @param[in,out]  sa    pointer to an struct sockaddr
+ * @param[in]  mask      number of maskbits
  */
 void apply_ip_mask(struct sockaddr *sa, int mask)
 {
@@ -449,8 +449,8 @@ void apply_ip_mask(struct sockaddr *sa, int mask)
 /*!
  * @brief compare IP addresses for equality
  *
- * @param  sa1       (r) pointer to an struct sockaddr
- * @param  sa2       (r) pointer to an struct sockaddr
+ * @param[in]  sa1       pointer to an struct sockaddr
+ * @param[in]  sa2       pointer to an struct sockaddr
  *
  * @returns Addresses are converted to strings and compared with strcmp and
  *          the result of strcmp is returned.
@@ -473,9 +473,9 @@ int compare_ip(const struct sockaddr *sa1, const struct sockaddr *sa2)
  * @brief Tokenize IP(4/6) addresses with an optional port
  * into address and port
  *
- * @param ipurl    (r) IP URL string
- * @param address  (w) IP address
- * @param port     (w) IP port
+ * @param[in] ipurl     IP URL string
+ * @param[out] address  IP address
+ * @param[out] port     IP port
  *
  * @returns 0 on success, -1 on failure
  *
@@ -675,8 +675,8 @@ bool asev_del_fd(struct asev *asev, int fd)
 
 /*!
  * @brief Receive a fd on a suitable socket
- * @param fd          (r) PF_UNIX socket to receive on
- * @param nonblocking (r) 0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
+ * @param[in] fd           PF_UNIX socket to receive on
+ * @param[in] nonblocking  0: fd is in blocking mode - 1: fd is nonblocking, poll for 1 sec
  * @returns fd on success, -1 on error
  */
 int recv_fd(int fd, int nonblocking)

@@ -74,7 +74,7 @@ extern int afprun(char *cmd, int *outfd);
 /*!
  * @brief Read band-size info from Info.plist XML file of an TM sparsebundle
  *
- * @param path   (r) path to Info.plist file
+ * @param[in] path    path to Info.plist file
  * @returns           band-size in bytes, -1 on error
  */
 static long long int get_tm_bandsize(const char *path)
@@ -120,7 +120,7 @@ EC_CLEANUP:
 /*!
  * @brief Return number on entries in a directory
  *
- * @param path   (r) path to dir
+ * @param[in] path    path to dir
  * @returns           number of entries, -1 on error
  */
 static long long int get_tm_bands(const char *path)

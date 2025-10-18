@@ -535,14 +535,14 @@ static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
  *
  * Uses globals c1, c2, the search criteria
  *
- * @param vol       (r)  volume we are searching on ...
- * @param dir       (rw) directory we are starting from ...
- * @param rmatches  (r)  maximum number of matches we can return
- * @param pos       (r)  position we've stopped recently
- * @param rbuf      (w)  output buffer
- * @param nrecs     (w)  number of matches
- * @param rsize     (w)  length of data written to output buffer
- * @param ext       (r)  extended search flag
+ * @param[in] vol       volume we are searching on ...
+ * @param[in,out] dir   directory we are starting from ...
+ * @param[in] rmatches  maximum number of matches we can return
+ * @param[in] pos       position we've stopped recently
+ * @param[out] rbuf     output buffer
+ * @param[out] nrecs    number of matches
+ * @param[out] rsize    length of data written to output buffer
+ * @param[in] ext       extended search flag
  */
 #define NUM_ROUNDS 200
 static int catsearch(const AFPObj *obj,
@@ -785,15 +785,15 @@ catsearch_end:
  * Uses globals c1, c2, the search criteria
  * Always searches the whole volume, not a subtree
  *
- * @param obj       (r)  AFP connection object
- * @param vol       (r)  volume we are searching on ...
- * @param uname     (r)  UNIX name of object to search
- * @param rmatches  (r)  maximum number of matches we can return
- * @param pos       (r)  position we've stopped recently
- * @param rbuf      (w)  output buffer
- * @param nrecs     (w)  number of matches
- * @param rsize     (w)  length of data written to output buffer
- * @param ext       (r)  extended search flag
+ * @param[in] obj       AFP connection object
+ * @param[in] vol       volume we are searching on ...
+ * @param[in] uname     UNIX name of object to search
+ * @param[in] rmatches  maximum number of matches we can return
+ * @param[in] pos       position we've stopped recently
+ * @param[out] rbuf     output buffer
+ * @param[out] nrecs    number of matches
+ * @param[out] rsize    length of data written to output buffer
+ * @param[in] ext       extended search flag
  */
 static int catsearch_db(const AFPObj *obj,
                         struct vol *vol,

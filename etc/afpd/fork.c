@@ -855,11 +855,11 @@ int afp_bytelock_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 /*!
  * @brief Read *rbuflen bytes from fork at offset
  *
- * @param ofork    (r)  fork handle
- * @param eid      (r)  data fork or resource fork entry id
- * @param offset   (r)  offset
- * @param rbuf     (r)  data buffer
- * @param rbuflen  (rw) in: number of bytes to read, out: bytes read
+ * @param[in] ofork        fork handle
+ * @param[in] eid          data fork or resource fork entry id
+ * @param[in] offset       offset
+ * @param[in] rbuf         data buffer
+ * @param[in,out] rbuflen  in: number of bytes to read, out: bytes read
  *
  * @returns         AFP status code
  */

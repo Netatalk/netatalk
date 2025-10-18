@@ -357,7 +357,7 @@ static void check_ea_support(struct vol *vol)
 /*!
  * @brief Check whether a volume supports ACLs
  *
- * @param vol  (r) volume
+ * @param[in] vol  volume
  *
  * @returns        0 if not, 1 if yes
  */
@@ -604,7 +604,7 @@ static char *volxlate(const AFPObj *obj,
  *
  * Example:
  * @code
- * user1 user2, user3, "@group1", "@group2", "@group3", "user name1", "@group name1"
+ * user1 user2, user3, @group1, @group2, @group3, "user name1", "@group name1"
  * @endcode
  *
  * A NULL argument allows everybody to have access.
@@ -725,11 +725,11 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
 /*!
  * @brief Get option string from config, use default value if not set
  *
- * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
- * @param opt     (r) option
- * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
- * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] defval  if neither "vol" nor "defsec" contain "opt" return "defval"
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
@@ -754,13 +754,14 @@ static const char *getoption_str(const dictionary *conf, const char *vol,
 
 /*!
  * @brief Get option string from config, use default value if not set
+ *
  * Returns a dynamically allocated string which caller must free
  *
- * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
- * @param opt     (r) option
- * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
- * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] defval  if neither "vol" nor "defsec" contain "opt" return "defval"
  *
  * @returns       dynamically allocated option string from "vol" or "defsec", or "defval" if not found
  */
@@ -790,11 +791,11 @@ static char *getoption_strdup(const dictionary *conf, const char *vol,
 /*!
  * @brief Get boolean option from config, use default value if not set
  *
- * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
- * @param opt     (r) option
- * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
- * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] defval  if neither "vol" nor "defsec" contain "opt" return "defval"
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
@@ -821,11 +822,11 @@ static int getoption_bool(const dictionary *conf, const char *vol,
 /*!
  * @brief Get integer option from config, use default value if not set
  *
- * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
- * @param opt     (r) option
- * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
- * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] defval  if neither "vol" nor "defsec" contain "opt" return "defval"
  *
  * @returns       int option from "vol" or "defsec", or "defval" if not found
  */
@@ -856,11 +857,11 @@ static int getoption_int(const dictionary *conf, const char *vol,
  *
  * "vdg" means volume, default section or global
  *
- * @param conf    (r) config handle
- * @param vol     (r) volume name (must be section name i.e. wo vars expanded)
- * @param opt     (r) option
- * @param defsec  (r) if "option" is not found in "vol", try to find it in section "defsec"
- * @param defval  (r) if neither "vol" nor "defsec" contain "opt" return "defval"
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] defval  if neither "vol" nor "defsec" contain "opt" return "defval"
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
@@ -888,12 +889,12 @@ static int vdgoption_bool(const dictionary *conf, const char *vol,
 /*!
  * @brief Create volume struct
  *
- * @param obj      (r) handle
- * @param pwd      (r) struct passwd of logged in user, may be NULL in master afpd
- * @param section  (r) volume name wo variables expanded (exactly as in iniconfig)
- * @param name     (r) volume name
- * @param path_in  (r) volume path
- * @param preset   (r) default preset, may be NULL
+ * @param[in] obj      handle
+ * @param[in] pwd      struct passwd of logged in user, may be NULL in master afpd
+ * @param[in] section  volume name wo variables expanded (exactly as in iniconfig)
+ * @param[in] name     volume name
+ * @param[in] path_in  volume path
+ * @param[in] preset   default preset, may be NULL
  * @returns            vol on success, NULL on error
  */
 static struct vol *creatvol(AFPObj *obj,
@@ -1922,11 +1923,11 @@ int load_charset(struct vol *vol)
 /*!
  * @brief Initialize volumes and load ini configfile
  *
- * @param obj      (r) handle
- * @param flags    (r) flags controlling volume load behaviour:
- *                     LV_DEFAULT: load shares in a user/session context, this honors authorisation
- *                     LV_ALL: load shares that are available in the config file
- *                     LV_FORCE: reload file even though the timestamp wasn't changed
+ * @param[in] obj      handle
+ * @param[in] flags    flags controlling volume load behaviour:
+ *                     - LV_DEFAULT: load shares in a user/session context, this honors authorization
+ *                     - LV_ALL: load shares that are available in the config file
+ *                     - LV_FORCE: reload file even though the timestamp wasn't changed
  */
 int load_volumes(AFPObj *obj, lv_flags_t flags)
 {
@@ -2119,7 +2120,7 @@ struct vol *getvolbyvid(const uint16_t vid)
  * If that is not true, getuserbypath() is called and tries to retrieve the username
  * from the directory owner, checking its validity.
  *
- * @param   path (r) absolute volume path
+ * @param[in] path   absolute volume path
  * @returns NULL     if no match is found, pointer to username if successful
  *
  */
@@ -2192,8 +2193,8 @@ EC_CLEANUP:
  * 6. Append [Homes]->path subdirectory if defined
  * 7. Create volume
  *
- * @param obj  (rw) handle
- * @param path (r)  path, may be relative or absolute
+ * @param[in,out] obj   handle
+ * @param[in] path      path, may be relative or absolute
  */
 struct vol *getvolbypath(AFPObj *obj, const char *path)
 {

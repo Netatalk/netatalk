@@ -41,25 +41,19 @@
  * EA VFS funcs for storing EAs in nativa filesystem EAs
  **********************************************************************************/
 
-/*
- * Function: sys_get_easize
+/*!
+ * @brief get size of a native EA
  *
- * Purpose: get size of a native EA
+ * @param[in] vol          current volume
+ * @param[out] rbuf        DSI reply buffer
+ * @param[in,out] rbuflen  current length of data in reply buffer
+ * @param[in] uname        filename
+ * @param[in] oflag        link and create flag
+ * @param[in] attruname    name of attribute
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    rbuf         (w) DSI reply buffer
- *    rbuflen      (rw) current length of data in reply buffer
- *    uname        (r) filename
- *    oflag        (r) link and create flag
- *    attruname    (r) name of attribute
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies EA size into rbuf in network order. Increments *rbuflen +4.
+ * @note Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
 int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
 {
@@ -139,26 +133,20 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
     return ret;
 }
 
-/*
- * Function: sys_get_eacontent
+/*!
+ * @brief copy native EA into rbuf
  *
- * Purpose: copy native EA into rbuf
+ * @param[in] vol          current volume
+ * @param[out] rbuf        DSI reply buffer
+ * @param[in,out] rbuflen  current length of data in reply buffer
+ * @param[in] uname        filename
+ * @param[in] oflag        link and create flag
+ * @param[in] attruname    name of attribute
+ * @param[in] maxreply     maximum EA size as of current specs/real-life
+ * @param[in] fd           file descriptor
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- * Arguments:
- *
- *    vol          (r) current volume
- *    rbuf         (w) DSI reply buffer
- *    rbuflen      (rw) current length of data in reply buffer
- *    uname        (r) filename
- *    oflag        (r) link and create flag
- *    attruname    (r) name of attribute
- *    maxreply     (r) maximum EA size as of current specs/real-life
- *    fd           (r) file descriptor
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies EA into rbuf. Increments *rbuflen accordingly.
+ * @note Copies EA into rbuf. Increments *rbuflen accordingly.
  */
 int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
 {
@@ -276,24 +264,18 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
     return AFP_OK;
 }
 
-/*
- * Function: sys_list_eas
+/*!
+ * @brief copy names of native EAs into attrnamebuf
  *
- * Purpose: copy names of native EAs into attrnamebuf
+ * @param[in] vol           current volume
+ * @param[out] attrnamebuf  store names a consecutive C strings here
+ * @param[in,out] buflen    length of names in attrnamebuf
+ * @param[in] uname         filename
+ * @param[in] oflag         link and create flag
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    attrnamebuf  (w) store names a consecutive C strings here
- *    buflen       (rw) length of names in attrnamebuf
- *    uname        (r) filename
- *    oflag        (r) link and create flag
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies names of all EAs of uname as consecutive C strings into rbuf.
+ * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
  * We hide the adouble:ea extended attributes here, we do not
  * allow reading, writing and deleting them.
@@ -380,24 +362,17 @@ exit:
     return ret;
 }
 
-/*
- * Function: sys_set_ea
+/*!
+ * @brief set a native EA
  *
- * Purpose: set a native EA
+ * @param[in] vol          current volume
+ * @param[in] uname        filename
+ * @param[in] attruname    EA name
+ * @param[in] ibuf         buffer with EA content
+ * @param[in] attrsize     length EA in ibuf
+ * @param[in] oflag        link and create flag
  *
- * Arguments:
- *
- *    vol          (r) current volume
- *    uname        (r) filename
- *    attruname    (r) EA name
- *    ibuf         (r) buffer with EA content
- *    attrsize     (r) length EA in ibuf
- *    oflag        (r) link and create flag
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  */
 int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
 {
@@ -500,24 +475,18 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
     return AFP_OK;
 }
 
-/*
- * Function: sys_remove_ea
+/*!
+ * @brief remove a native EA
  *
- * Purpose: remove a native EA
+ * @param[in] vol          current volume
+ * @param[in] uname        filename
+ * @param[in] attruname    EA name
+ * @param[in] oflag        link and create flag
+ * @param[in] fd           file descriptor
  *
- * Arguments:
+ * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    uname        (r) filename
- *    attruname    (r) EA name
- *    oflag        (r) link and create flag
- *    fd           (r) file descriptor
- *
- * Returns: AFP code: AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Removes EA attruname from file uname.
+ * @note Removes EA attruname from file uname.
  */
 int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
 {
@@ -574,23 +543,17 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
     return AFP_OK;
 }
 
-/*
- * Function: sys_ea_copyfile
+/*!
+ * @brief copy EAs
  *
- * Purpose: copy EAs
+ * @param[in] vol          current volume
+ * @param[in] sdf          source file descriptor
+ * @param[in] src          source path
+ * @param[in] dst          destination path
  *
- * Arguments:
+ * @returns AFP code AFP_OK on success or appropriate AFP error code
  *
- *    vol          (r) current volume
- *    sdf          (r) source file descriptor
- *    src          (r) source path
- *    dst          (r) destination path
- *
- * Return AFP code AFP_OK on success or appropriate AFP error code
- *
- * Effects:
- *
- * Copies EAs from source file to dest file.
+ * @note Copies EAs from source file to dest file.
  */
 int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
 {
