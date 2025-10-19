@@ -16,9 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif /* HAVE_CONFIG_H */
 
-#if defined(BSD4_4)
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/socket.h>
@@ -269,5 +270,3 @@ void tunnel_output(char *buffer, int len)
         printf("sent packet into tunnel.\n");
     }
 }
-
-#endif				/* BSD4_4 */
