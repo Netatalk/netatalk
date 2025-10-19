@@ -5,6 +5,7 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <signal.h>
 
@@ -35,6 +36,4 @@ extern size_t strlcat(char *, const char *, size_t);
 #include <stdio.h>
 #include <stdarg.h>
 extern int vasprintf(char **ret, const char *fmt, va_list ap);
-#endif
-
 #endif
