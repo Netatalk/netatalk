@@ -453,11 +453,6 @@ extern int     copy_fork(int eid, struct adouble *add, struct adouble *ads,
 /* ad_size.c */
 extern off_t ad_size(const struct adouble *, uint32_t);
 
-/* ad_mmap.c */
-extern void *ad_mmapread(struct adouble *, uint32_t, off_t, size_t);
-extern void *ad_mmapwrite(struct adouble *, uint32_t, off_t, int, size_t);
-#define ad_munmap(buf, len)  (munmap((buf), (len)))
-
 /* ad_date.c */
 extern int ad_setdate(struct adouble *, unsigned int, uint32_t);
 extern int ad_getdate(const struct adouble *, unsigned int, uint32_t *);
