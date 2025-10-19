@@ -2409,7 +2409,7 @@ MACRO_EXPANSION        = YES
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_ONLY_PREDEF     = NO
+EXPAND_ONLY_PREDEF     = YES
 
 # If the SEARCH_INCLUDES tag is set to YES, the include files in the
 # INCLUDE_PATH will be searched if a #include is found.
@@ -2442,7 +2442,21 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             =
+PREDEFINED             = \
+    __attribute__(x)= \
+    _U_= \
+    restrict= \
+    VFS_FUNC_ARGS_CHOWN="const struct vol *vol, const char *path, uid_t uid, gid_t gid" \
+    VFS_FUNC_ARGS_COPYFILE="const struct vol *vol, int sfd, const char *src, const char *dst" \
+    VFS_FUNC_ARGS_DELETEFILE="const struct vol *vol, int dirfd, const char *file" \
+    VFS_FUNC_ARGS_EA_GETCONTENT="const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname, int maxreply, int fd" \
+    VFS_FUNC_ARGS_EA_GETSIZE="const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname, int fd" \
+    VFS_FUNC_ARGS_EA_LIST="const struct vol * restrict vol, char * restrict attrnamebuf, size_t * restrict buflen, const char * restrict uname, int oflag, int fd" \
+    VFS_FUNC_ARGS_EA_REMOVE="const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag, int fd" \
+    VFS_FUNC_ARGS_EA_SET="const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag, int fd" \
+    VFS_FUNC_ARGS_RENAMEFILE="const struct vol *vol, int dirfd, const char *src, const char *dst" \
+    VFS_FUNC_ARGS_SETDIRUNIXMODE="const struct vol *vol, const char *name, mode_t mode, struct stat *st" \
+    VFS_FUNC_ARGS_SETFILEMODE="const struct vol *vol, const char *name, mode_t mode, struct stat *st" \
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

@@ -50,6 +50,7 @@
  * @param[in] uname        filename
  * @param[in] oflag        link and create flag
  * @param[in] attruname    name of attribute
+ * @param[in] fd           file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
@@ -272,6 +273,7 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * @param[in,out] buflen    length of names in attrnamebuf
  * @param[in] uname         filename
  * @param[in] oflag         link and create flag
+ * @param[in] fd            file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
@@ -371,6 +373,7 @@ exit:
  * @param[in] ibuf         buffer with EA content
  * @param[in] attrsize     length EA in ibuf
  * @param[in] oflag        link and create flag
+ * @param[in] fd           file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  */
@@ -547,7 +550,7 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
  * @brief copy EAs
  *
  * @param[in] vol          current volume
- * @param[in] sdf          source file descriptor
+ * @param[in] sfd          source file descriptor
  * @param[in] src          source path
  * @param[in] dst          destination path
  *
