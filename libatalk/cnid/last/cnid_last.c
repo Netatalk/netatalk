@@ -7,8 +7,6 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
-#ifdef CNID_BACKEND_LAST
-
 #include "cnid_last.h"
 #include <atalk/logger.h>
 #include <atalk/util.h>
@@ -167,6 +165,3 @@ int cnid_last_update(struct _cnid_db *cdb _U_, cnid_t id _U_,
 {
     return 0;
 }
-
-
-#endif /* CNID_BACKEND_LAST */
