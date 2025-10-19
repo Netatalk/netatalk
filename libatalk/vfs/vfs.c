@@ -430,7 +430,7 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
     }
 
     /* remove ACL from resource fork */
-    if ((ret = remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK) {
+    if ((ret = remove_nfsv4_acl_vfs(vol->ad_path(path, ADFLAGS_HF))) != AFP_OK) {
         if (errno == ENOENT) {
             return AFP_OK;
         }
@@ -476,7 +476,7 @@ static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
     }
 
     /* remove ACL from resource fork */
-    EC_ZERO_ERR(remove_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC);
+    EC_ZERO_ERR(remove_posix_acl_vfs(vol->ad_path(path, ADFLAGS_HF)), AFPERR_MISC);
 EC_CLEANUP:
 
     if (errno == ENOENT) {
