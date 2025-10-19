@@ -9,10 +9,14 @@ macipgw_sources = [
     'macip.c',
     'main.c',
     'nbp_lkup_async.c',
-    'tunnel_bsd.c',
-    'tunnel_linux.c',
     'util.c',
 ]
+
+if host_os == 'linux'
+    macipgw_sources += 'tunnel_linux.c'
+else
+    macipgw_sources += 'tunnel_bsd.c'
+endif
 
 macipgw_includes = include_directories('../../libatalk/atp')
 
