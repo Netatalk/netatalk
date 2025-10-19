@@ -105,10 +105,13 @@ struct pref_array prefs_array[] = {
 
 /*!
  * @brief LDAP get attribute from filter with base and scope
- * ldap_getattr_fromfilter_withbase_scope():
- *   conflags: KEEPALIVE
- *   scope: LDAP_SCOPE_BASE, LDAP_SCOPE_ONELEVEL, LDAP_SCOPE_SUBTREE
- *   result: return unique search result here, allocated here, caller must free
+ *
+ * @param searchbase  Base DN for LDAP search
+ * @param filter      LDAP search filter
+ * @param attributes  Array of attribute names to retrieve
+ * @param scope       Search scope (LDAP_SCOPE_BASE, LDAP_SCOPE_ONELEVEL, LDAP_SCOPE_SUBTREE)
+ * @param conflags    Connection flags (KEEPALIVE)
+ * @param result      unique search result, allocated here, caller must free
  *
  * @returns -1 on error,
  *          0 nothing found,
@@ -288,7 +291,7 @@ cleanup:
 /*!
  * @brief Generate LDAP filter string for UUID query
 
- * @param[in] uuidstr      the UUID as string
+ * @param[in] uuidstr_in   the UUID as string
  * @param[in] attr_filter  optional attribute
  * @returns   pointer to static filter string
  */

@@ -468,6 +468,7 @@ EC_CLEANUP:
  * returns the result as a Darwin allowed rights ACE.
  * This must honor trivial ACEs which are a mode_t mapping.
  *
+ * @param[in] obj            handle
  * @param[in] path           path to filesystem object
  * @param[in] sb             struct stat of path
  * @param[in,out] result     resulting Darwin allow ACE
@@ -636,9 +637,10 @@ static uint8_t acl_permset_to_uarights(acl_entry_t entry)
  * ACL_MASK entry, st_mode gets modified to properly reflect group
  * permissions.
  *
+ * @param[in] obj            handle
  * @param[in] path           path to filesystem object
  * @param[in,out] sb         struct stat of path
- * @param[in,out] maccess    struct maccess of path
+ * @param[in,out] ma         struct maccess of path
  *
  * @returns                  0 or -1 on error
  */
@@ -753,7 +755,7 @@ EC_CLEANUP:
  *  - DARWIN_ACE_DELETE_CHILD & (is_dir == 1) -> ACL_WRITE
  *  - DARWIN_ACE_EXECUTE                      -> ACL_EXECUTE
  *
- * @param[in,out] entry         result of the mapping
+ * @param[in,out] darwin_ace_rights  result of the mapping
  * @param[in] is_dir            1 for dirs, 0 for files
  *
  * @returns mapping result as acl_perm_t, -1 on error

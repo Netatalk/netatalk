@@ -2443,6 +2443,21 @@ INCLUDE_FILE_PATTERNS  =
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
 PREDEFINED             = \
+    HAVE_ACLS=1 \
+    HAVE_AVAHI=1 \
+    HAVE_CUPS=1 \
+    HAVE_DBUS_GLIB=1 \
+    HAVE_LDAP=1 \
+    HAVE_LIBQUOTA=1 \
+    HAVE_MDNS=1 \
+    HAVE_POSIX_ACLS=1 \
+    HAVE_SPLICE=1 \
+    TCPWRAP=1 \
+    USE_CRACKLIB=1 \
+    WITH_DTRACE=1 \
+    WITH_RECVFILE=1 \
+    WITH_SENDFILE=1 \
+    WITH_SPOTLIGHT=1 \
     __attribute__(x)= \
     _U_= \
     restrict= \
