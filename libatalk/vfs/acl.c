@@ -36,7 +36,7 @@
  * @brief Removes all non-trivial ACLs from object
  * @returns full AFPERR code
  */
-int remove_acl_vfs(const char *name)
+int remove_nfsv4_acl_vfs(const char *name)
 {
     int ret, i, ace_count, trivial_aces, new_aces_count;
     ace_t *old_aces = NULL;
@@ -105,7 +105,7 @@ exit:
  *
  * @returns AFP error code, AFP_OK (= 0) on success, AFPERR_MISC on error
  */
-int remove_acl_vfs(const char *name)
+int remove_posix_acl_vfs(const char *name)
 {
     EC_INIT;
     struct stat st;

@@ -37,6 +37,7 @@
 #define chmod_acl nfsv4_chmod
 
 extern int get_nfsv4_acl(const char *name, ace_t **retAces);
+extern int remove_nfsv4_acl_vfs(const char *name);
 extern int strip_trivial_aces(ace_t **saces, int sacecount);
 extern int strip_nontrivial_aces(ace_t **saces, int sacecount);
 extern ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2,
@@ -53,12 +54,11 @@ extern int nfsv4_chmod(char *name, mode_t mode);
 #define chmod_acl posix_chmod
 #define fchmod_acl posix_fchmod
 
+extern int remove_posix_acl_vfs(const char *name);
 extern int posix_chmod(const char *name, mode_t mode);
 extern int posix_fchmod(int fd, mode_t mode);
 
 #endif /* HAVE_POSIX_ACLS */
-
-extern int remove_acl_vfs(const char *name);
 
 #else /* HAVE_ACLS=no */
 

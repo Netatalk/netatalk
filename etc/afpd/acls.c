@@ -1196,7 +1196,7 @@ EC_CLEANUP:
 static int remove_acl(const struct vol *vol, const char *path, int dir)
 {
     int ret = AFP_OK;
-#if (defined HAVE_NFSV4_ACLS || defined HAVE_POSIX_ACLS)
+#ifdef HAVE_ACLS
 
     /* Resource etc. first */
     if ((ret = vol->vfs->vfs_remove_acl(vol, path, dir)) != AFP_OK) {
@@ -1204,8 +1204,13 @@ static int remove_acl(const struct vol *vol, const char *path, int dir)
     }
 
     /* now the data fork or dir */
-    ret = remove_acl_vfs(path);
-#endif
+#ifdef HAVE_NFSV4_ACLS
+    ret = remove_nfsv4_acl_vfs(path);
+#endif /* HAVE_NFSV4_ACLS */
+#ifdef HAVE_POSIX_ACLS
+    ret = remove_posix_acl_vfs(path);
+#endif /* HAVE_POSIX_ACLS */
+#endif /* HAVE_ACLS */
     return ret;
 }
 
