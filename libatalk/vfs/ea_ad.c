@@ -538,7 +538,7 @@ static int ea_delentry(struct ea *restrict ea, const char *restrict attruname)
  * @brief delete EA file from disk
  *
  * @param[in] ea         struct ea handle
- * @param[in] attruname  EA name
+ * @param[in] eaname     EA name
  *
  * @returns 0 on success, -1 on error
  */
@@ -617,7 +617,7 @@ char *ea_path(const struct ea *restrict ea, const char *restrict eaname,
  *
  * @param[in] vol     current volume
  * @param[in] uname   filename for which we have to open a header
- * @param[in] flags   flag to control open behavior:
+ * @param[in] eaflags flag to control open behavior:
  *                    - EA_CREATE: create if it doesn't exist (without it won't be created)
  *                    - EA_RDONLY: open read only
  *                    - EA_RDWR: open read/write
@@ -786,9 +786,9 @@ exit:
  * @brief openat like wrapper for ea_open, takes a additional file descriptor
  *
  * @param[in] vol     current volume
- * @param[in] sfd     openat like file descriptor
+ * @param[in] dirfd   openat like file descriptor
  * @param[in] uname   filename for which we have to open a header
- * @param[in] flags   flag to control open behavior:
+ * @param[in] eaflags flag to control open behavior:
  *                    - EA_CREATE: create if it doesn't exist (without it won't be created)
  *                    - EA_RDONLY: open read only
  *                    - EA_RDWR: open read/write
@@ -962,6 +962,7 @@ exit:
  * @param[in]   uname        filename
  * @param[in]   oflag        link and create flag
  * @param[in]   attruname    name of attribute
+ * @param[in]   fd           file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
@@ -1019,6 +1020,7 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  * @param[in] oflag        link and create flag
  * @param[in] attruname    name of attribute
  * @param[in] maxreply     maximum EA size as of current specs/real-life
+ * @param[in] fd           file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
@@ -1109,6 +1111,7 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * @param[in,out] buflen    length of names in attrnamebuf
  * @param[in] uname         filename
  * @param[in] oflag         link and create flag
+ * @param[in] fd            file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
@@ -1190,6 +1193,7 @@ exit:
  * @param[in] ibuf         buffer with EA content
  * @param[in] attrsize     length EA in ibuf
  * @param[in] oflag        link and create flag
+ * @param[in] fd           file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
@@ -1237,6 +1241,7 @@ exit:
  * @param[in] uname        filename
  * @param[in] attruname    EA name
  * @param[in] oflag        link and create flag
+ * @param[in] fd           file descriptor
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  *
