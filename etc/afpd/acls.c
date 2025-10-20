@@ -1306,8 +1306,8 @@ static int set_acl(const struct vol *vol,
         trivial_ace_count);
 
     /* Resourcefork first */
-    if ((ret = (vol->vfs->vfs_acl(vol, name, ACE_SETACL, new_aces_count,
-                                  new_aces))) != 0) {
+    if ((ret = (vol->vfs->vfs_solaris_acl(vol, name, ACE_SETACL, new_aces_count,
+                                          new_aces))) != 0) {
         LOG(log_debug, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
 
         switch (errno) {
@@ -1498,7 +1498,8 @@ static int set_acl(const struct vol *vol,
     EC_ZERO_LOG_ERR(acl_valid(access_acl), AFPERR_MISC);
     /* set it */
     EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_ACCESS, access_acl), AFPERR_MISC);
-    EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_ACCESS, 0, access_acl),
+    EC_ZERO_LOG_ERR(vol->vfs->vfs_posix_acl(vol, name, ACL_TYPE_ACCESS, 0,
+                                            access_acl),
                     AFPERR_MISC);
 
     if (default_acl) {
@@ -1510,7 +1511,8 @@ static int set_acl(const struct vol *vol,
         if (default_acl_flags) {
             EC_ZERO_LOG_ERR(acl_valid(default_acl), AFPERR_MISC);
             EC_ZERO_LOG_ERR(acl_set_file(name, ACL_TYPE_DEFAULT, default_acl), AFPERR_MISC);
-            EC_ZERO_LOG_ERR(vol->vfs->vfs_acl(vol, name, ACL_TYPE_DEFAULT, 0, default_acl),
+            EC_ZERO_LOG_ERR(vol->vfs->vfs_posix_acl(vol, name, ACL_TYPE_DEFAULT, 0,
+                                                    default_acl),
                             AFPERR_MISC);
         }
     }
