@@ -2218,8 +2218,10 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
     char *prw;
     regmatch_t match[1];
     size_t abspath_len;
+
     LOG(log_debug, logtype_afpd, "getvolbypath(\"%s\")", path);
 
+    /* Handle relative paths */
     if (path[0] != '/') {
         /* relative path, build absolute path */
         EC_NULL_LOG(getcwd(abspath, MAXPATHLEN));
@@ -2231,73 +2233,71 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         path = abspath;
     }
 
-    /* path now points to a copy of path in the abspath buffer */
     /*
      * Strip trailing slashes
      */
     abspath_len = strlen(abspath);
-
-    while (abspath[abspath_len - 1] == '/') {
+    while (abspath_len > 1 && abspath[abspath_len - 1] == '/') {
         abspath[abspath_len - 1] = 0;
         abspath_len--;
     }
 
-    for (tmp = Volumes; tmp; tmp = tmp->v_next) { /* (1) */
-        size_t v_path_len = strlen(tmp->v_path);
-
-        if (strncmp(path, tmp->v_path, v_path_len) == 0) {
-            if (v_path_len < strlen(path) && path[v_path_len] != '/') {
-                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")",
-                    path, tmp->v_path);
-            } else {
-                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") == volume(\"%s\")",
+    /* First try exact volume path matches */
+    for (tmp = Volumes; tmp; tmp = tmp->v_next) {
+        if (tmp->v_path) {
+            size_t v_path_len = strlen(tmp->v_path);
+            if (strncmp(path, tmp->v_path, v_path_len) == 0) {
+                if (v_path_len < strlen(path) && path[v_path_len] != '/') {
+                    LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")",
+                        path, tmp->v_path);
+                    continue;
+                }
+                LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") matches volume(\"%s\")",
                     path, tmp->v_path);
                 vol = tmp;
                 goto EC_CLEANUP;
             }
-        } else {
-            LOG(log_debug, logtype_afpd, "getvolbypath: path(\"%s\") != volume(\"%s\")",
-                path, tmp->v_path);
         }
     }
 
-    if (!have_uservol) { /* (2) */
+    /* No exact match found, try home directory handling */
+    if (!have_uservol) {
         EC_FAIL_LOG("getvolbypath(\"%s\"): no user home share defined in configuration",
                     path);
     }
 
+    /* Look for the Homes section in the config */
     int secnum = iniparser_getnsec(obj->iniconfig);
-
     for (int i = 0; i < secnum; i++) {
         secname = iniparser_getsecname(obj->iniconfig, i);
-
         if (STRCMP(secname, ==, INISEC_HOMES)) {
             break;
         }
     }
 
-    if (secname == NULL) {
+    if (secname == NULL || STRCMP(secname, !=, INISEC_HOMES)) {
         EC_FAIL_LOG("getvolbypath(\"%s\"): could not find user home section in configuration",
                     path);
     }
 
-    if (STRCMP(secname, !=, INISEC_HOMES))
-        EC_FAIL_LOG("getvolbypath(\"%s\"): could not find user home section in configuration (last section: \"%s\")",
-                    path, secname);
-
-    /* (3) */
+    /* Get basedir regex from Homes section */
     EC_NULL_LOG(basedir = getoption_str(obj->iniconfig, INISEC_HOMES,
-                                        "basedir regex", NULL, NULL));
+                                      "basedir regex", NULL, NULL));
+
     LOG(log_debug, logtype_afpd,
         "getvolbypath: user home section: '%s', basedir: '%s'", secname, basedir);
 
-    if (regexerr != 0 && (regexerr = regcomp(&reg, basedir, REG_EXTENDED)) != 0) {
-        char errbuf[1024];
-        regerror(regexerr, &reg, errbuf, sizeof(errbuf));
-        printf("error: %s\n", errbuf);
-        EC_FAIL_LOG("getvolbypath(\"%s\"): bad basedir regex: %s", errbuf);
+    /* Only compile regex once */
+    if (regexerr != 0) {
+        regexerr = regcomp(&reg, basedir, REG_EXTENDED);
+        if (regexerr != 0) {
+            char errbuf[1024];
+            regerror(regexerr, &reg, errbuf, sizeof(errbuf));
+            EC_FAIL_LOG("getvolbypath(\"%s\"): bad basedir regex: %s", path, errbuf);
+        }
     }
 
+    /* Check if path matches home directory pattern */
     if (regexec(&reg, path, 1, match, 0) == REG_NOMATCH) {
         EC_FAIL_LOG("getvolbypath(\"%s\"): path does not match basedir regex \"%s\"",
                     path, basedir);
@@ -2307,71 +2307,55 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         EC_FAIL_LOG("getvolbypath(\"%s\"): path too long", path);
     }
 
-    /* (4) */
+    /* Extract matched portion and username */
     strncpy(tmpbuf, path + match[0].rm_so, match[0].rm_eo - match[0].rm_so);
     tmpbuf[match[0].rm_eo - match[0].rm_so] = 0;
+
     LOG(log_debug, logtype_afpd,
         "getvolbypath: basedir regex: '%s', basedir match: \"%s\"",
         basedir, tmpbuf);
-    strlcat(tmpbuf, "/", MAXPATHLEN);
-    /* (5) */
-    p = path + match[0].rm_eo - match[0].rm_so;
 
-    while (*p == '/') {
-        p++;
-    }
+    strlcat(tmpbuf, "/", MAXPATHLEN);
+    p = path + match[0].rm_eo;
+    while (*p == '/') p++;
 
     EC_NULL_LOG(user = strdup(p));
-
     if ((prw = strchr(user, '/'))) {
         *prw++ = 0;
     }
-
     if (prw != 0) {
         subpath = prw;
     }
 
     strlcat(tmpbuf, user, MAXPATHLEN);
-
     if ((pw = getpwnam(user)) == NULL) {
-        /* (5b) */
         char *tuser;
-
         if ((tuser = getuserbypath(tmpbuf)) != NULL) {
             free(user);
             user = strdup(tuser);
         }
-
         if ((pw = getpwnam(user)) == NULL) {
             EC_FAIL_LOG("unknown user: %s", user);
         }
     }
 
+    /* Rest of home directory setup */
     strlcpy(obj->username, user, MAXUSERLEN);
     strlcat(tmpbuf, "/", MAXPATHLEN);
 
-    /* (6) */
-    if ((subpathconfig = getoption_str(obj->iniconfig, INISEC_HOMES, "path", NULL,
-                                       NULL))) {
-#if 0
-
-        if (!subpath || strncmp(subpathconfig, subpath, strlen(subpathconfig)) != 0) {
-            EC_FAIL;
-        }
-
-#endif
+    /* Handle home directory path configuration */
+    if ((subpathconfig = getoption_str(obj->iniconfig, INISEC_HOMES, "path", NULL, NULL))) {
         strlcat(tmpbuf, subpathconfig, MAXPATHLEN);
         strlcat(tmpbuf, "/", MAXPATHLEN);
     }
 
-    /* (7) */
-    if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL,
-                 NULL) == NULL) {
+    if (volxlate(obj, volpath, sizeof(volpath) - 1, tmpbuf, pw, NULL, NULL) == NULL) {
         EC_FAIL;
     }
 
     EC_NULL(realvolpath = realpath_safe(volpath));
     EC_NULL(pw = getpwnam(user));
+
     become_root();
     ret = set_groups(obj, pw);
     unbecome_root();
@@ -2381,39 +2365,23 @@ struct vol *getvolbypath(AFPObj *obj, const char *path)
         EC_FAIL;
     }
 
-    LOG(log_debug, logtype_afpd,
-        "getvolbypath(\"%s\"): user: %s, homedir: %s => realvolpath: \"%s\"",
-        path, user, pw->pw_dir, realvolpath);
-    /* do variable substitution for volume name */
+    /* Set up volume name */
     p = getoption_str(obj->iniconfig, INISEC_HOMES, "home name", NULL, "$u's home");
-
     if (strstr(p, "$u") == NULL) {
         p = "$u's home";
     }
-
     strlcpy(tmpbuf, p, AFPVOL_U8MNAMELEN);
-    EC_NULL_LOG(volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, realvolpath,
-                         NULL));
-    const char  *preset, *default_preset;
-    default_preset = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol preset",
-                                   NULL, NULL);
+    EC_NULL_LOG(volxlate(obj, volname, sizeof(volname) - 1, tmpbuf, pw, realvolpath, NULL));
+
+    /* Get volume presets */
+    const char *preset, *default_preset;
+    default_preset = getoption_str(obj->iniconfig, INISEC_GLOBAL, "vol preset", NULL, NULL);
     preset = getoption_str(obj->iniconfig, INISEC_HOMES, "vol preset", NULL, NULL);
-    vol = creatvol(obj, pw, INISEC_HOMES, volname, realvolpath,
-                   preset ? preset : default_preset ? default_preset : NULL);
+
 EC_CLEANUP:
-
-    if (user) {
-        free(user);
-    }
-
-    if (realvolpath) {
-        free(realvolpath);
-    }
-
-    if (ret != 0) {
-        vol = NULL;
-    }
-
+    if (user) free(user);
+    if (realvolpath) free(realvolpath);
+    if (ret != 0) return NULL;
     return vol;
 }
 
