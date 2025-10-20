@@ -358,11 +358,16 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
     ad_setfuid(0);
 #endif
     /* Load .volinfo file for destination*/
-    openvol(obj, to.p_path, &dvolume);
+    if (openvol(obj, to.p_path, &dvolume) != 0) {
+        return 1;
+    }
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(obj, argv[i], &svolume);
+        if (openvol(obj, argv[i], &svolume) != 0) {
+            closevol(&dvolume);
+            return 1;
+        }
 
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             if (alarmed) {
@@ -373,9 +378,13 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
 
             closevol(&svolume);
             closevol(&dvolume);
+            return 1;
         }
+
+        closevol(&svolume);
     }
 
+    closevol(&dvolume);
     return rval;
 }
 
