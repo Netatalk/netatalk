@@ -969,7 +969,8 @@ exit:
  * @note Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
 int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
-               const char *uname, int oflag, const char *attruname, int fd)
+               const char *uname, int oflag _U_, const char *attruname,
+               int fd _U_)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
@@ -1028,7 +1029,8 @@ int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
  * @note Copies EA into rbuf. Increments *rbuflen accordingly.
  */
 int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
-                  const char *uname, int oflag, const char *attruname, int maxreply, int fd)
+                  const char *uname, int oflag _U_, const char *attruname,
+                  int maxreply, int fd)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
@@ -1121,7 +1123,7 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
  * Increments *buflen accordingly.
  */
 int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen,
-             const char *uname, int oflag, int fd)
+             const char *uname, int oflag _U_, int fd _U_)
 {
     unsigned int count = 0;
     int attrbuflen = *buflen, ret = AFP_OK, len;
@@ -1204,7 +1206,7 @@ exit:
  * Increments *rbuflen accordingly.
  */
 int set_ea(const struct vol *vol, const char *uname, const char *attruname,
-           const char *ibuf, size_t attrsize, int oflag, int fd)
+           const char *ibuf, size_t attrsize, int oflag, int fd _U_)
 {
     int ret = AFP_OK;
     struct ea ea;
@@ -1252,7 +1254,7 @@ exit:
  * @note Removes EA attruname from file uname.
  */
 int remove_ea(const struct vol *vol, const char *uname, const char *attruname,
-              int oflag, int fd)
+              int oflag _U_, int fd _U_)
 {
     int ret = AFP_OK;
     struct ea ea;
@@ -1632,7 +1634,7 @@ exit:
 }
 
 int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
-                  struct stat *st)
+                  struct stat *st _U_)
 {
     unsigned int count = 0;
     int ret = AFP_OK;
@@ -1708,7 +1710,7 @@ exit:
 }
 
 int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
-                 struct stat *st)
+                 struct stat *st _U_)
 {
     int ret = AFP_OK;
     unsigned int count = 0;
