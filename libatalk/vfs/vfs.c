@@ -244,7 +244,7 @@ static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
     return 0;
 }
 
-static int RF_setdirmode_adouble(const struct vol *vol,  const char *name,
+static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
                                  mode_t mode, struct stat *st)
 {
     mode_t hf_mode = ad_hf_mode(mode);
@@ -602,7 +602,7 @@ static int RF_setfilmode_ea(const struct vol *vol, const char *name,
 }
 
 /* ---------------- */
-static int RF_setdirmode_ea(const struct vol *vol,  const char *name,
+static int RF_setdirmode_ea(const struct vol *vol, const char *name,
                             mode_t mode, struct stat *st)
 {
 #ifndef HAVE_EAFD
@@ -917,8 +917,7 @@ static int vfs_copyfile(const struct vol *vol, int sfd, const char *src,
 #ifdef HAVE_ACLS
 #ifdef HAVE_NFSV4_ACLS
 static int vfs_solaris_acl(const struct vol *vol, const char *path, int cmd,
-                           int count,
-                           void *aces)
+                           int count, void *aces)
 {
     int ret = AFP_OK;
 
@@ -974,9 +973,9 @@ static int vfs_remove_acl(const struct vol *vol, const char *path, int dir)
 }
 #endif /* HAVE_ACLS */
 
-static int vfs_ea_getsize(const struct vol *restrict vol, char *restrict rbuf,
-                          size_t *restrict rbuflen, const char *restrict uname, int oflag,
-                          const char *restrict attruname, int fd)
+static int vfs_ea_getsize(const struct vol *vol, char *rbuf,
+                          size_t *rbuflen, const char *uname, int oflag,
+                          const char *attruname, int fd)
 {
     int ret = AFP_OK;
 
@@ -994,9 +993,9 @@ static int vfs_ea_getsize(const struct vol *restrict vol, char *restrict rbuf,
     return ret;
 }
 
-static int vfs_ea_getcontent(const struct vol *restrict vol,
-                             char *restrict rbuf, size_t *restrict rbuflen, const char *restrict uname,
-                             int oflag, const char *restrict attruname, int maxreply, int fd)
+static int vfs_ea_getcontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
+                             const char *uname, int oflag, const char *attruname,
+                             int maxreply, int fd)
 {
     int ret = AFP_OK;
 
@@ -1014,8 +1013,8 @@ static int vfs_ea_getcontent(const struct vol *restrict vol,
     return ret;
 }
 
-static int vfs_ea_list(const struct vol *restrict vol,
-                       char *restrict attrnamebuf, size_t *restrict buflen, const char *restrict uname,
+static int vfs_ea_list(const struct vol *vol,
+                       char *attrnamebuf, size_t *buflen, const char *uname,
                        int oflag, int fd)
 {
     int ret = AFP_OK;
@@ -1034,9 +1033,9 @@ static int vfs_ea_list(const struct vol *restrict vol,
     return ret;
 }
 
-static int vfs_ea_set(const struct vol *restrict vol,
-                      const char *restrict uname, const char *restrict attruname,
-                      const char *restrict ibuf, size_t attrsize, int oflag, int fd)
+static int vfs_ea_set(const struct vol *vol, const char *uname,
+                      const char *attruname, const char *ibuf, size_t attrsize,
+                      int oflag, int fd)
 {
     int ret = AFP_OK;
 
@@ -1054,8 +1053,8 @@ static int vfs_ea_set(const struct vol *restrict vol,
     return ret;
 }
 
-static int vfs_ea_remove(const struct vol *restrict vol,
-                         const char *restrict uname, const char *restrict attruname, int oflag, int fd)
+static int vfs_ea_remove(const struct vol *vol, const char *uname,
+                         const char *attruname, int oflag, int fd)
 {
     int ret = AFP_OK;
 

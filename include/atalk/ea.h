@@ -204,21 +204,16 @@ struct ea_ondisk {
 /* VFS inderected funcs ... : */
 
 /* Default adouble EAs */
-extern int get_easize(const struct vol * restrict vol, char * restrict rbuf,
-                      size_t *restrict rbuflen, const char *restrict uname, int oflag,
-                      const char *restrict attruname, int fd);
-extern int get_eacontent(const struct vol * restrict vol, char * restrict rbuf,
-                         size_t *restrict rbuflen,  const char *restrict uname, int oflag,
-                         const char *restrict attruname, int maxreply, int fd);
-extern int list_eas(const struct vol * restrict vol,
-                    char *restrict attrnamebuf, size_t *restrict buflen,
-                    const char *restrict uname, int oflag, int fd);
-extern int set_ea(const struct vol * restrict vol, const char * restrict uname,
-                  const char *restrict attruname, const char *restrict ibuf, size_t attrsize,
-                  int oflag, int fd);
-extern int remove_ea(const struct vol * restrict vol,
-                     const char *restrict uname, const char *restrict attruname, int oflag,
-                     int fd);
+extern int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
+                      const char *uname, int oflag, const char *attruname, int fd);
+extern int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
+                         const char *uname, int oflag, const char *attruname, int maxreply, int fd);
+extern int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen,
+                    const char *uname, int oflag, int fd);
+extern int set_ea(const struct vol *vol, const char *uname,
+                  const char *attruname, const char *ibuf, size_t attrsize, int oflag, int fd);
+extern int remove_ea(const struct vol *vol, const char *uname,
+                     const char *attruname, int oflag, int fd);
 /* ... EA VFS funcs that deal with file/dir cp/mv/rm */
 extern int ea_deletefile(const struct vol *vol, int dirfd, const char *file);
 extern int ea_renamefile(const struct vol *vol, int dirfd, const char *src,
@@ -233,37 +228,31 @@ extern int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
                         struct stat *st);
 
 /* native EAs */
-extern int sys_get_easize(const struct vol * restrict vol, char * restrict rbuf,
-                          size_t *restrict rbuflen, const char *restrict uname, int oflag,
-                          const char *restrict attruname, int fd);
-extern int sys_get_eacontent(const struct vol * restrict vol,
-                             char *restrict rbuf, size_t *restrict rbuflen,  const char *restrict uname,
-                             int oflag, const char *restrict attruname, int maxreply, int fd);
-extern int sys_list_eas(const struct vol * restrict vol,
-                        char *restrict attrnamebuf, size_t *restrict buflen,
-                        const char *restrict uname, int oflag, int fd);
-extern int sys_set_ea(const struct vol * restrict vol,
-                      const char *restrict uname, const char *restrict attruname,
-                      const char *restrict ibuf, size_t attrsize, int oflag, int fd);
-extern int sys_remove_ea(const struct vol * restrict vol,
-                         const char *restrict uname, const char *restrict attruname, int oflag,
-                         int fd);
+extern int sys_get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
+                          const char *uname, int oflag, const char *attruname, int fd);
+extern int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
+                             const char *uname, int oflag, const char *attruname, int maxreply, int fd);
+extern int sys_list_eas(const struct vol *vol, char *attrnamebuf,
+                        size_t *buflen, const char *uname, int oflag, int fd);
+extern int sys_set_ea(const struct vol *vol, const char *uname,
+                      const char *attruname, const char *ibuf, size_t attrsize, int oflag, int fd);
+extern int sys_remove_ea(const struct vol *vol, const char *uname,
+                         const char *attruname, int oflag, int fd);
 /* native EA VFSfile/dir cp/mv/rm */
 extern int sys_ea_copyfile(const struct vol *vol, int sfd, const char *src,
                            const char *dst);
 
 /* dbd needs access to these */
-extern int ea_open(const struct vol *restrict vol,
-                   const char *restrict uname,
+extern int ea_open(const struct vol *vol,
+                   const char *uname,
                    eaflags_t eaflags,
-                   struct ea *restrict ea);
-extern int ea_openat(const struct vol *restrict vol,
+                   struct ea *ea);
+extern int ea_openat(const struct vol *vol,
                      int dirfd,
-                     const char *restrict uname,
+                     const char *uname,
                      eaflags_t eaflags,
-                     struct ea *restrict ea);
-extern int ea_close(struct ea *restrict ea);
-extern char *ea_path(const struct ea *restrict ea,
-                     const char *restrict eaname, int macname);
+                     struct ea *ea);
+extern int ea_close(struct ea *ea);
+extern char *ea_path(const struct ea *ea, const char *eaname, int macname);
 
 #endif /* ATALK_EA_H */
