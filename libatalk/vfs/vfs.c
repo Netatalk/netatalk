@@ -106,7 +106,7 @@ static int netatalk_name(const char *name)
  * classic adouble format
  *******************************************************************************/
 
-static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
+static int validupath_adouble(const struct vol *vol, const char *name)
 {
     if (name[0] != '.') {
         return 1;
@@ -117,7 +117,8 @@ static int validupath_adouble(VFS_FUNC_ARGS_VALIDUPATH)
 }
 
 /* ----------------- */
-static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
+static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid,
+                            gid_t gid)
 {
     const char *ad_p = vol->ad_path(path, ADFLAGS_HF);
 
@@ -134,7 +135,8 @@ static int RF_chown_adouble(VFS_FUNC_ARGS_CHOWN)
 }
 
 /* ----------------- */
-static int RF_renamedir_adouble(VFS_FUNC_ARGS_RENAMEDIR)
+static int RF_renamedir_adouble(const struct vol *vol, int dirfd,
+                                const char *oldpath, const char *newpath)
 {
     return 0;
 }
@@ -160,7 +162,7 @@ static int deletecurdir_adouble_loop(const struct vol *vol _U_,
     return 0;
 }
 
-static int RF_deletecurdir_adouble(VFS_FUNC_ARGS_DELETECURDIR)
+static int RF_deletecurdir_adouble(const struct vol *vol)
 {
     int err;
 
@@ -181,13 +183,15 @@ static int adouble_setfilmode(const struct vol *vol, const char *name,
     return setfilmode(vol, name, ad_hf_mode(mode), st);
 }
 
-static int RF_setfilmode_adouble(VFS_FUNC_ARGS_SETFILEMODE)
+static int RF_setfilmode_adouble(const struct vol *vol, const char *name,
+                                 mode_t mode, struct stat *st)
 {
     return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
 }
 
 /* ----------------- */
-static int RF_setdirunixmode_adouble(VFS_FUNC_ARGS_SETDIRUNIXMODE)
+static int RF_setdirunixmode_adouble(const struct vol *vol, const char *name,
+                                     mode_t mode, struct stat *st)
 {
     const char *adouble = vol->ad_path(name, ADFLAGS_DIR);
 
@@ -240,7 +244,8 @@ static int setdirmode_adouble_loop(const struct vol *vol, struct dirent *de _U_,
     return 0;
 }
 
-static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
+static int RF_setdirmode_adouble(const struct vol *vol,  const char *name,
+                                 mode_t mode, struct stat *st)
 {
     mode_t hf_mode = ad_hf_mode(mode);
     const char  *adouble = vol->ad_path(name, ADFLAGS_DIR);
@@ -274,7 +279,8 @@ static int RF_setdirmode_adouble(VFS_FUNC_ARGS_SETDIRMODE)
     return 0;
 }
 
-static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
+static int RF_setdirowner_adouble(const struct vol *vol, const char *name,
+                                  uid_t uid, gid_t gid)
 {
     if (lchown(".AppleDouble", uid, gid) < 0 && errno != EPERM) {
         LOG(log_debug, logtype_afpd, "setdirowner: chown %d/%d %s: %s",
@@ -285,13 +291,15 @@ static int RF_setdirowner_adouble(VFS_FUNC_ARGS_SETDIROWNER)
 }
 
 /* ----------------- */
-static int RF_deletefile_adouble(VFS_FUNC_ARGS_DELETEFILE)
+static int RF_deletefile_adouble(const struct vol *vol, int dirfd,
+                                 const char *file)
 {
     return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 }
 
 /* ----------------- */
-static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
+static int RF_renamefile_adouble(const struct vol *vol, int dirfd,
+                                 const char *src, const char *dst)
 {
     char  adsrc[MAXPATHLEN + 1];
     int   err = 0;
@@ -341,7 +349,8 @@ static int RF_renamefile_adouble(VFS_FUNC_ARGS_RENAMEFILE)
     return 0;
 }
 
-static int RF_copyfile_adouble(VFS_FUNC_ARGS_COPYFILE)
+static int RF_copyfile_adouble(const struct vol *vol, int sfd, const char *src,
+                               const char *dst)
 {
     EC_INIT;
     bstring s = NULL;
@@ -395,7 +404,8 @@ EC_CLEANUP:
 }
 
 #ifdef HAVE_NFSV4_ACLS
-static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
+static int RF_solaris_acl(const struct vol *vol, const char *path, int cmd,
+                          int count, void *aces)
 {
     static char buf[MAXPATHLEN + 1];
     struct stat st;
@@ -419,7 +429,8 @@ static int RF_solaris_acl(VFS_FUNC_ARGS_ACL)
     return AFP_OK;
 }
 
-static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
+static int RF_solaris_remove_acl(const struct vol *vol, const char *path,
+                                 int dir)
 {
     int ret;
     static char buf[MAXPATHLEN + 1];
@@ -443,7 +454,8 @@ static int RF_solaris_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
 #endif
 
 #ifdef HAVE_POSIX_ACLS
-static int RF_posix_acl(VFS_FUNC_ARGS_ACL)
+static int RF_posix_acl(const struct vol *vol, const char *path,
+                        acl_type_t type, int count, acl_t acl)
 {
     EC_INIT;
     struct stat st;
@@ -467,7 +479,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int RF_posix_remove_acl(VFS_FUNC_ARGS_REMOVE_ACL)
+static int RF_posix_remove_acl(const struct vol *vol, const char *path, int dir)
 {
     EC_INIT;
 
@@ -490,7 +502,7 @@ EC_CLEANUP:
 /*************************************************************************
  * EA adouble format
  ************************************************************************/
-static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
+static int validupath_ea(const struct vol *vol, const char *name)
 {
     if (name[0] != '.') {
         return 1;
@@ -507,7 +519,8 @@ static int validupath_ea(VFS_FUNC_ARGS_VALIDUPATH)
 }
 
 /* ----------------- */
-static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
+static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid,
+                       gid_t gid)
 {
 #ifndef HAVE_EAFD
     return chown(vol->ad_path(path, ADFLAGS_HF), uid, gid);
@@ -516,7 +529,8 @@ static int RF_chown_ea(VFS_FUNC_ARGS_CHOWN)
 }
 
 /* ---------------- */
-static int RF_renamedir_ea(VFS_FUNC_ARGS_RENAMEDIR)
+static int RF_renamedir_ea(const struct vol *vol, int dirfd,
+                           const char *oldpath, const char *newpath)
 {
     return 0;
 }
@@ -553,7 +567,7 @@ static int deletecurdir_ea_osx_loop(const struct vol *vol _U_,
 }
 
 /* ---------------- */
-static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
+static int RF_deletecurdir_ea(const struct vol *vol)
 {
 #ifndef HAVE_EAFD
     int err;
@@ -570,14 +584,16 @@ static int RF_deletecurdir_ea(VFS_FUNC_ARGS_DELETECURDIR)
 }
 
 /* ---------------- */
-static int RF_setdirunixmode_ea(VFS_FUNC_ARGS_SETDIRUNIXMODE)
+static int RF_setdirunixmode_ea(const struct vol *vol, const char *name,
+                                mode_t mode, struct stat *st)
 {
 #ifndef HAVE_EAFD
 #endif
     return 0;
 }
 
-static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
+static int RF_setfilmode_ea(const struct vol *vol, const char *name,
+                            mode_t mode, struct stat *st)
 {
 #ifndef HAVE_EAFD
     return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
@@ -586,7 +602,8 @@ static int RF_setfilmode_ea(VFS_FUNC_ARGS_SETFILEMODE)
 }
 
 /* ---------------- */
-static int RF_setdirmode_ea(VFS_FUNC_ARGS_SETDIRMODE)
+static int RF_setdirmode_ea(const struct vol *vol,  const char *name,
+                            mode_t mode, struct stat *st)
 {
 #ifndef HAVE_EAFD
 #endif
@@ -594,21 +611,23 @@ static int RF_setdirmode_ea(VFS_FUNC_ARGS_SETDIRMODE)
 }
 
 /* ---------------- */
-static int RF_setdirowner_ea(VFS_FUNC_ARGS_SETDIROWNER)
+static int RF_setdirowner_ea(const struct vol *vol, const char *name, uid_t uid,
+                             gid_t gid)
 {
 #ifndef HAVE_EAFD
 #endif
     return 0;
 }
 
-static int RF_deletefile_ea(VFS_FUNC_ARGS_DELETEFILE)
+static int RF_deletefile_ea(const struct vol *vol, int dirfd, const char *file)
 {
 #ifndef HAVE_EAFD
     return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
 #endif
     return 0;
 }
-static int RF_copyfile_ea(VFS_FUNC_ARGS_COPYFILE)
+static int RF_copyfile_ea(const struct vol *vol, int sfd, const char *src,
+                          const char *dst)
 {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
     /* the EA VFS module does this all for us */
@@ -672,7 +691,8 @@ EC_CLEANUP:
 }
 
 /* ---------------- */
-static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
+static int RF_renamefile_ea(const struct vol *vol, int dirfd, const char *src,
+                            const char *dst)
 {
 #ifndef HAVE_EAFD
     char  adsrc[MAXPATHLEN + 1];
@@ -711,51 +731,351 @@ static int RF_renamefile_ea(VFS_FUNC_ARGS_RENAMEFILE)
  */
 
 /*
- * Define most VFS funcs with macros as they all do the same.
+ * Most VFS funcs have similar logic.
  * Only "ad_path" and "validupath" will NOT do stacking and only
  * call the func from the first module.
  */
 
-#define VFS_MFUNC(name, args, vars) \
-    static int vfs_ ## name(args) \
-    { \
-        int i = 0, ret = AFP_OK, err; \
-        while (vol->vfs_modules[i]) { \
-            if (vol->vfs_modules[i]->vfs_ ## name) { \
-                err = vol->vfs_modules[i]->vfs_ ## name (vars); \
-                if ((ret == AFP_OK) && (err != AFP_OK)) \
-                    ret = err; \
-            } \
-            i ++; \
-        } \
-        return ret; \
+static int vfs_chown(const struct vol *vol, const char *path, uid_t uid,
+                     gid_t gid)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_chown) {
+            int curr_ret = vol->vfs_modules[i]->vfs_chown(vol, path, uid, gid);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
     }
 
-VFS_MFUNC(chown, VFS_FUNC_ARGS_CHOWN, VFS_FUNC_VARS_CHOWN)
-VFS_MFUNC(renamedir, VFS_FUNC_ARGS_RENAMEDIR, VFS_FUNC_VARS_RENAMEDIR)
-VFS_MFUNC(deletecurdir, VFS_FUNC_ARGS_DELETECURDIR, VFS_FUNC_VARS_DELETECURDIR)
-VFS_MFUNC(setfilmode, VFS_FUNC_ARGS_SETFILEMODE, VFS_FUNC_VARS_SETFILEMODE)
-VFS_MFUNC(setdirmode, VFS_FUNC_ARGS_SETDIRMODE, VFS_FUNC_VARS_SETDIRMODE)
-VFS_MFUNC(setdirunixmode, VFS_FUNC_ARGS_SETDIRUNIXMODE,
-          VFS_FUNC_VARS_SETDIRUNIXMODE)
-VFS_MFUNC(setdirowner, VFS_FUNC_ARGS_SETDIROWNER, VFS_FUNC_VARS_SETDIROWNER)
-VFS_MFUNC(deletefile, VFS_FUNC_ARGS_DELETEFILE, VFS_FUNC_VARS_DELETEFILE)
-VFS_MFUNC(renamefile, VFS_FUNC_ARGS_RENAMEFILE, VFS_FUNC_VARS_RENAMEFILE)
-VFS_MFUNC(copyfile, VFS_FUNC_ARGS_COPYFILE, VFS_FUNC_VARS_COPYFILE)
-#ifdef HAVE_ACLS
-VFS_MFUNC(acl, VFS_FUNC_ARGS_ACL, VFS_FUNC_VARS_ACL)
-VFS_MFUNC(remove_acl, VFS_FUNC_ARGS_REMOVE_ACL, VFS_FUNC_VARS_REMOVE_ACL)
-#endif
-VFS_MFUNC(ea_getsize, VFS_FUNC_ARGS_EA_GETSIZE, VFS_FUNC_VARS_EA_GETSIZE)
-VFS_MFUNC(ea_getcontent, VFS_FUNC_ARGS_EA_GETCONTENT,
-          VFS_FUNC_VARS_EA_GETCONTENT)
-VFS_MFUNC(ea_list, VFS_FUNC_ARGS_EA_LIST, VFS_FUNC_VARS_EA_LIST)
-VFS_MFUNC(ea_set, VFS_FUNC_ARGS_EA_SET, VFS_FUNC_VARS_EA_SET)
-VFS_MFUNC(ea_remove, VFS_FUNC_ARGS_EA_REMOVE, VFS_FUNC_VARS_EA_REMOVE)
+    return ret;
+}
 
-static int vfs_validupath(VFS_FUNC_ARGS_VALIDUPATH)
+static int vfs_renamedir(const struct vol *vol, int dirfd, const char *oldpath,
+                         const char *newpath)
 {
-    return vol->vfs_modules[0]->vfs_validupath(VFS_FUNC_VARS_VALIDUPATH);
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_renamedir) {
+            int curr_ret = vol->vfs_modules[i]->vfs_renamedir(vol, dirfd, oldpath, newpath);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_deletecurdir(const struct vol *vol)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_deletecurdir) {
+            int curr_ret = vol->vfs_modules[i]->vfs_deletecurdir(vol);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_setfilmode(const struct vol *vol, const char *name, mode_t mode,
+                          struct stat *st)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_setfilmode) {
+            int curr_ret = vol->vfs_modules[i]->vfs_setfilmode(vol, name, mode, st);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_setdirmode(const struct vol *vol, const char *name, mode_t mode,
+                          struct stat *st)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_setdirmode) {
+            int curr_ret = vol->vfs_modules[i]->vfs_setdirmode(vol, name, mode, st);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_setdirunixmode(const struct vol *vol, const char *name,
+                              mode_t mode, struct stat *st)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_setdirunixmode) {
+            int curr_ret = vol->vfs_modules[i]->vfs_setdirunixmode(vol, name, mode, st);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_setdirowner(const struct vol *vol, const char *name, uid_t uid,
+                           gid_t gid)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_setdirowner) {
+            int curr_ret = vol->vfs_modules[i]->vfs_setdirowner(vol, name, uid, gid);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_deletefile(const struct vol *vol, int dirfd, const char *file)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_deletefile) {
+            int curr_ret = vol->vfs_modules[i]->vfs_deletefile(vol, dirfd, file);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_renamefile(const struct vol *vol, int dirfd, const char *src,
+                          const char *dst)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_renamefile) {
+            int curr_ret = vol->vfs_modules[i]->vfs_renamefile(vol, dirfd, src, dst);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_copyfile(const struct vol *vol, int sfd, const char *src,
+                        const char *dst)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_copyfile) {
+            int curr_ret = vol->vfs_modules[i]->vfs_copyfile(vol, sfd, src, dst);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+#ifdef HAVE_ACLS
+#ifdef HAVE_NFSV4_ACLS
+static int vfs_solaris_acl(const struct vol *vol, const char *path, int cmd,
+                           int count,
+                           void *aces)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_solaris_acl) {
+            int curr_ret = vol->vfs_modules[i]->vfs_solaris_acl(vol, path, cmd, count,
+                           aces);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+#endif /* HAVE_NFSV4_ACLS */
+#ifdef HAVE_POSIX_ACLS
+static int vfs_posix_acl(const struct vol *vol, const char *path,
+                         acl_type_t type, int count, acl_t acl)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_posix_acl) {
+            int curr_ret = vol->vfs_modules[i]->vfs_posix_acl(vol, path, type, count, acl);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+#endif /* HAVE_POSIX_ACLS */
+
+static int vfs_remove_acl(const struct vol *vol, const char *path, int dir)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_remove_acl) {
+            int curr_ret = vol->vfs_modules[i]->vfs_remove_acl(vol, path, dir);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+#endif /* HAVE_ACLS */
+
+static int vfs_ea_getsize(const struct vol *restrict vol, char *restrict rbuf,
+                          size_t *restrict rbuflen, const char *restrict uname, int oflag,
+                          const char *restrict attruname, int fd)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_getsize) {
+            int curr_ret = vol->vfs_modules[i]->vfs_ea_getsize(vol, rbuf, rbuflen, uname,
+                           oflag, attruname, fd);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_ea_getcontent(const struct vol *restrict vol,
+                             char *restrict rbuf, size_t *restrict rbuflen, const char *restrict uname,
+                             int oflag, const char *restrict attruname, int maxreply, int fd)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_getcontent) {
+            int curr_ret = vol->vfs_modules[i]->vfs_ea_getcontent(vol, rbuf, rbuflen, uname,
+                           oflag, attruname, maxreply, fd);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_ea_list(const struct vol *restrict vol,
+                       char *restrict attrnamebuf, size_t *restrict buflen, const char *restrict uname,
+                       int oflag, int fd)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_list) {
+            int curr_ret = vol->vfs_modules[i]->vfs_ea_list(vol, attrnamebuf, buflen, uname,
+                           oflag, fd);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_ea_set(const struct vol *restrict vol,
+                      const char *restrict uname, const char *restrict attruname,
+                      const char *restrict ibuf, size_t attrsize, int oflag, int fd)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_set) {
+            int curr_ret = vol->vfs_modules[i]->vfs_ea_set(vol, uname, attruname, ibuf,
+                           attrsize, oflag, fd);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_ea_remove(const struct vol *restrict vol,
+                         const char *restrict uname, const char *restrict attruname, int oflag, int fd)
+{
+    int ret = AFP_OK;
+
+    for (int i = 0; i < VFS_MODULES_MAX; i++) {
+        if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_remove) {
+            int curr_ret = vol->vfs_modules[i]->vfs_ea_remove(vol, uname, attruname, oflag,
+                           fd);
+
+            if (curr_ret != AFP_OK) {
+                ret = curr_ret;
+            }
+        }
+    }
+
+    return ret;
+}
+
+static int vfs_validupath(const struct vol *vol, const char *name)
+{
+    return vol->vfs_modules[0]->vfs_validupath(vol, name);
 }
 
 /*
@@ -775,7 +1095,12 @@ static struct vfs_ops vfs_master_funcs = {
     vfs_renamefile,
     vfs_copyfile,
 #ifdef HAVE_ACLS
-    vfs_acl,
+#ifdef HAVE_NFSV4_ACLS
+    vfs_solaris_acl,
+#endif
+#ifdef HAVE_POSIX_ACLS
+    vfs_posix_acl,
+#endif
     vfs_remove_acl,
 #endif
     vfs_ea_getsize,
@@ -790,41 +1115,59 @@ static struct vfs_ops vfs_master_funcs = {
  */
 
 static struct vfs_ops netatalk_adouble_v2 = {
-    /* vfs_validupath:    */ validupath_adouble,
-    /* vfs_chown:         */ RF_chown_adouble,
-    /* vfs_renamedir:     */ RF_renamedir_adouble,
-    /* vfs_deletecurdir:  */ RF_deletecurdir_adouble,
-    /* vfs_setfilmode:    */ RF_setfilmode_adouble,
-    /* vfs_setdirmode:    */ RF_setdirmode_adouble,
-    /* vfs_setdirunixmode:*/ RF_setdirunixmode_adouble,
-    /* vfs_setdirowner:   */ RF_setdirowner_adouble,
-    /* vfs_deletefile:    */ RF_deletefile_adouble,
-    /* vfs_renamefile:    */ RF_renamefile_adouble,
-    /* vfs_copyfile:      */ RF_copyfile_adouble,
-    /* vfs_ea_getsize:    */ NULL,
-    /* vfs_ea_getcontent: */ NULL,
-    /* vfs_ea_list:       */ NULL,
-    /* vfs_ea_set:        */ NULL,
-    /* vfs_ea_remove:     */ NULL
+    .vfs_validupath = validupath_adouble,
+    .vfs_chown = RF_chown_adouble,
+    .vfs_renamedir = RF_renamedir_adouble,
+    .vfs_deletecurdir = RF_deletecurdir_adouble,
+    .vfs_setfilmode = RF_setfilmode_adouble,
+    .vfs_setdirmode = RF_setdirmode_adouble,
+    .vfs_setdirunixmode = RF_setdirunixmode_adouble,
+    .vfs_setdirowner = RF_setdirowner_adouble,
+    .vfs_deletefile = RF_deletefile_adouble,
+    .vfs_renamefile = RF_renamefile_adouble,
+    .vfs_copyfile = RF_copyfile_adouble,
+#ifdef HAVE_ACLS
+#ifdef HAVE_NFSV4_ACLS
+    .vfs_solaris_acl = NULL,
+#endif
+#ifdef HAVE_POSIX_ACLS
+    .vfs_posix_acl = NULL,
+#endif
+    .vfs_remove_acl = NULL,
+#endif
+    .vfs_ea_getsize = NULL,
+    .vfs_ea_getcontent = NULL,
+    .vfs_ea_list = NULL,
+    .vfs_ea_set = NULL,
+    .vfs_ea_remove = NULL
 };
 
 static struct vfs_ops netatalk_adouble_ea = {
-    /* vfs_validupath:    */ validupath_ea,
-    /* vfs_chown:         */ RF_chown_ea,
-    /* vfs_renamedir:     */ RF_renamedir_ea,
-    /* vfs_deletecurdir:  */ RF_deletecurdir_ea,
-    /* vfs_setfilmode:    */ RF_setfilmode_ea,
-    /* vfs_setdirmode:    */ RF_setdirmode_ea,
-    /* vfs_setdirunixmode:*/ RF_setdirunixmode_ea,
-    /* vfs_setdirowner:   */ RF_setdirowner_ea,
-    /* vfs_deletefile:    */ RF_deletefile_ea,
-    /* vfs_renamefile:    */ RF_renamefile_ea,
-    /* vfs_copyfile:      */ RF_copyfile_ea,
-    /* vfs_ea_getsize:    */ NULL,
-    /* vfs_ea_getcontent: */ NULL,
-    /* vfs_ea_list:       */ NULL,
-    /* vfs_ea_set:        */ NULL,
-    /* vfs_ea_remove:     */ NULL
+    .vfs_validupath = validupath_ea,
+    .vfs_chown = RF_chown_ea,
+    .vfs_renamedir = RF_renamedir_ea,
+    .vfs_deletecurdir = RF_deletecurdir_ea,
+    .vfs_setfilmode = RF_setfilmode_ea,
+    .vfs_setdirmode = RF_setdirmode_ea,
+    .vfs_setdirunixmode = RF_setdirunixmode_ea,
+    .vfs_setdirowner = RF_setdirowner_ea,
+    .vfs_deletefile = RF_deletefile_ea,
+    .vfs_renamefile = RF_renamefile_ea,
+    .vfs_copyfile = RF_copyfile_ea,
+#ifdef HAVE_ACLS
+#ifdef HAVE_NFSV4_ACLS
+    .vfs_solaris_acl = NULL,
+#endif
+#ifdef HAVE_POSIX_ACLS
+    .vfs_posix_acl = NULL,
+#endif
+    .vfs_remove_acl = NULL,
+#endif
+    .vfs_ea_getsize = NULL,
+    .vfs_ea_getcontent = NULL,
+    .vfs_ea_list = NULL,
+    .vfs_ea_set = NULL,
+    .vfs_ea_remove = NULL
 };
 
 /*
@@ -832,49 +1175,59 @@ static struct vfs_ops netatalk_adouble_ea = {
  */
 
 static struct vfs_ops netatalk_ea_adouble = {
-    /* vfs_validupath:    */ NULL,
-    /* vfs_chown:         */ ea_chown,
-    /* vfs_renamedir:     */ NULL, /* ok */
-    /* vfs_deletecurdir:  */ NULL, /* ok */
-    /* vfs_setfilmode:    */ ea_chmod_file,
-    /* vfs_setdirmode:    */ NULL, /* ok */
-    /* vfs_setdirunixmode:*/ ea_chmod_dir,
-    /* vfs_setdirowner:   */ NULL, /* ok */
-    /* vfs_deletefile:    */ ea_deletefile,
-    /* vfs_renamefile:    */ ea_renamefile,
-    /* vfs_copyfile       */ ea_copyfile,
+    .vfs_validupath = NULL,
+    .vfs_chown = ea_chown,
+    .vfs_renamedir = NULL,
+    .vfs_deletecurdir = NULL,
+    .vfs_setfilmode = ea_chmod_file,
+    .vfs_setdirmode = NULL,
+    .vfs_setdirunixmode = ea_chmod_dir,
+    .vfs_setdirowner = NULL,
+    .vfs_deletefile = ea_deletefile,
+    .vfs_renamefile = ea_renamefile,
+    .vfs_copyfile = ea_copyfile,
 #ifdef HAVE_ACLS
-    /* vfs_acl:           */ NULL,
-    /* vfs_remove_acl     */ NULL,
+#ifdef HAVE_NFSV4_ACLS
+    .vfs_solaris_acl = NULL,
 #endif
-    /* vfs_getsize        */ get_easize,
-    /* vfs_getcontent     */ get_eacontent,
-    /* vfs_list           */ list_eas,
-    /* vfs_set            */ set_ea,
-    /* vfs_remove         */ remove_ea
+#ifdef HAVE_POSIX_ACLS
+    .vfs_posix_acl = NULL,
+#endif
+    .vfs_remove_acl = NULL,
+#endif
+    .vfs_ea_getsize = get_easize,
+    .vfs_ea_getcontent = get_eacontent,
+    .vfs_ea_list = list_eas,
+    .vfs_ea_set = set_ea,
+    .vfs_ea_remove = remove_ea
 };
 
 static struct vfs_ops netatalk_ea_sys = {
-    /* validupath:        */ NULL,
-    /* rf_chown:          */ NULL,
-    /* rf_renamedir:      */ NULL,
-    /* rf_deletecurdir:   */ NULL,
-    /* rf_setfilmode:     */ NULL,
-    /* rf_setdirmode:     */ NULL,
-    /* rf_setdirunixmode: */ NULL,
-    /* rf_setdirowner:    */ NULL,
-    /* rf_deletefile:     */ NULL,
-    /* rf_renamefile:     */ NULL,
-    /* vfs_copyfile:      */ sys_ea_copyfile,
+    .vfs_validupath = NULL,
+    .vfs_chown = NULL,
+    .vfs_renamedir = NULL,
+    .vfs_deletecurdir = NULL,
+    .vfs_setfilmode = NULL,
+    .vfs_setdirmode = NULL,
+    .vfs_setdirunixmode = NULL,
+    .vfs_setdirowner = NULL,
+    .vfs_deletefile = NULL,
+    .vfs_renamefile = NULL,
+    .vfs_copyfile = sys_ea_copyfile,
 #ifdef HAVE_ACLS
-    /* rf_acl:            */ NULL,
-    /* rf_remove_acl      */ NULL,
+#ifdef HAVE_NFSV4_ACLS
+    .vfs_solaris_acl = NULL,
 #endif
-    /* ea_getsize         */ sys_get_easize,
-    /* ea_getcontent      */ sys_get_eacontent,
-    /* ea_list            */ sys_list_eas,
-    /* ea_set             */ sys_set_ea,
-    /* ea_remove          */ sys_remove_ea
+#ifdef HAVE_POSIX_ACLS
+    .vfs_posix_acl = NULL,
+#endif
+    .vfs_remove_acl = NULL,
+#endif
+    .vfs_ea_getsize = sys_get_easize,
+    .vfs_ea_getcontent = sys_get_eacontent,
+    .vfs_ea_list = sys_list_eas,
+    .vfs_ea_set = sys_set_ea,
+    .vfs_ea_remove = sys_remove_ea
 };
 
 /*
@@ -883,39 +1236,47 @@ static struct vfs_ops netatalk_ea_sys = {
 
 #ifdef HAVE_NFSV4_ACLS
 static struct vfs_ops netatalk_solaris_acl_adouble = {
-    /* validupath:        */ NULL,
-    /* rf_chown:          */ NULL,
-    /* rf_renamedir:      */ NULL,
-    /* rf_deletecurdir:   */ NULL,
-    /* rf_setfilmode:     */ NULL,
-    /* rf_setdirmode:     */ NULL,
-    /* rf_setdirunixmode: */ NULL,
-    /* rf_setdirowner:    */ NULL,
-    /* rf_deletefile:     */ NULL,
-    /* rf_renamefile:     */ NULL,
-    /* vfs_copyfile       */ NULL,
-    /* rf_acl:            */ RF_solaris_acl,
-    /* rf_remove_acl      */ RF_solaris_remove_acl,
-    NULL
+    .vfs_validupath = NULL,
+    .vfs_chown = NULL,
+    .vfs_renamedir = NULL,
+    .vfs_deletecurdir = NULL,
+    .vfs_setfilmode = NULL,
+    .vfs_setdirmode = NULL,
+    .vfs_setdirunixmode = NULL,
+    .vfs_setdirowner = NULL,
+    .vfs_deletefile = NULL,
+    .vfs_renamefile = NULL,
+    .vfs_copyfile = NULL,
+    .vfs_solaris_acl = RF_solaris_acl,
+    .vfs_remove_acl = RF_solaris_remove_acl,
+    .vfs_ea_getsize = NULL,
+    .vfs_ea_getcontent = NULL,
+    .vfs_ea_list = NULL,
+    .vfs_ea_set = NULL,
+    .vfs_ea_remove = NULL
 };
 #endif
 
 #ifdef HAVE_POSIX_ACLS
 static struct vfs_ops netatalk_posix_acl_adouble = {
-    /* validupath:        */ NULL,
-    /* rf_chown:          */ NULL,
-    /* rf_renamedir:      */ NULL,
-    /* rf_deletecurdir:   */ NULL,
-    /* rf_setfilmode:     */ NULL,
-    /* rf_setdirmode:     */ NULL,
-    /* rf_setdirunixmode: */ NULL,
-    /* rf_setdirowner:    */ NULL,
-    /* rf_deletefile:     */ NULL,
-    /* rf_renamefile:     */ NULL,
-    /* vfs_copyfile       */ NULL,
-    /* rf_acl:            */ RF_posix_acl,
-    /* rf_remove_acl      */ RF_posix_remove_acl,
-    NULL
+    .vfs_validupath = NULL,
+    .vfs_chown = NULL,
+    .vfs_renamedir = NULL,
+    .vfs_deletecurdir = NULL,
+    .vfs_setfilmode = NULL,
+    .vfs_setdirmode = NULL,
+    .vfs_setdirunixmode = NULL,
+    .vfs_setdirowner = NULL,
+    .vfs_deletefile = NULL,
+    .vfs_renamefile = NULL,
+    .vfs_copyfile = NULL,
+    .vfs_posix_acl = RF_posix_acl,
+    .vfs_remove_acl = RF_posix_remove_acl,
+    .vfs_ea_getsize = NULL,
+    .vfs_ea_getcontent = NULL,
+    .vfs_ea_list = NULL,
+    .vfs_ea_set = NULL,
+    .vfs_ea_remove = NULL
 };
 #endif
 

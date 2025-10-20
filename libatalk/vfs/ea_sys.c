@@ -56,7 +56,9 @@
  *
  * @note Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
+int sys_get_easize(const struct vol * restrict vol, char * restrict rbuf,
+                   size_t *restrict rbuflen, const char *restrict uname, int oflag,
+                   const char *restrict attruname, int fd)
 {
     ssize_t   ret;
     uint32_t  attrsize;
@@ -149,7 +151,9 @@ int sys_get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *
  * @note Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
+int sys_get_eacontent(const struct vol * restrict vol, char * restrict rbuf,
+                      size_t *restrict rbuflen,  const char *restrict uname, int oflag,
+                      const char *restrict attruname, int maxreply, int fd)
 {
     ssize_t   ret;
     uint32_t  attrsize;
@@ -282,7 +286,8 @@ int sys_get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * We hide the adouble:ea extended attributes here, we do not
  * allow reading, writing and deleting them.
  */
-int sys_list_eas(VFS_FUNC_ARGS_EA_LIST)
+int sys_list_eas(const struct vol * restrict vol, char * restrict attrnamebuf,
+                 size_t *restrict buflen, const char *restrict uname, int oflag, int fd)
 {
     ssize_t attrbuflen = *buflen;
     int     ret, len, nlen;
@@ -377,7 +382,9 @@ exit:
  *
  * @returns AFP code: AFP_OK on success or appropriate AFP error code
  */
-int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
+int sys_set_ea(const struct vol * restrict vol, const char * restrict uname,
+               const char *restrict attruname, const char *restrict ibuf, size_t attrsize,
+               int oflag, int fd)
 {
     int attr_flag;
     int ret;
@@ -491,7 +498,8 @@ int sys_set_ea(VFS_FUNC_ARGS_EA_SET)
  *
  * @note Removes EA attruname from file uname.
  */
-int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
+int sys_remove_ea(const struct vol * restrict vol, const char * restrict uname,
+                  const char *restrict attruname, int oflag, int fd)
 {
     int ret;
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
@@ -558,7 +566,8 @@ int sys_remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
  *
  * @note Copies EAs from source file to dest file.
  */
-int sys_ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
+int sys_ea_copyfile(const struct vol *vol, int sfd, const char *src,
+                    const char *dst)
 {
     int ret = 0;
     int cwd = -1;

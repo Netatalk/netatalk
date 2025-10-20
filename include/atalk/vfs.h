@@ -29,65 +29,62 @@
 #include <atalk/adouble.h>
 #include <atalk/volume.h>
 
-#define VFS_FUNC_ARGS_VALIDUPATH const struct vol *vol, const char *name
-#define VFS_FUNC_VARS_VALIDUPATH vol, name
+/* Maximum number of VFS modules that can be chained */
+#define VFS_MODULES_MAX 3
 
-#define VFS_FUNC_ARGS_CHOWN const struct vol *vol, const char *path, uid_t uid, gid_t gid
-#define VFS_FUNC_VARS_CHOWN vol, path, uid, gid
-
-#define VFS_FUNC_ARGS_RENAMEDIR const struct vol *vol, int dirfd, const char *oldpath, const char *newpath
-#define VFS_FUNC_VARS_RENAMEDIR vol, dirfd, oldpath, newpath
-
-#define VFS_FUNC_ARGS_DELETECURDIR const struct vol *vol
-#define VFS_FUNC_VARS_DELETECURDIR vol
-
-#define VFS_FUNC_ARGS_SETFILEMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st
-#define VFS_FUNC_VARS_SETFILEMODE vol, name, mode, st
-
-#define VFS_FUNC_ARGS_SETDIRMODE const struct vol *vol,  const char *name, mode_t mode, struct stat *st
-#define VFS_FUNC_VARS_SETDIRMODE vol, name, mode, st
-
-#define VFS_FUNC_ARGS_SETDIRUNIXMODE const struct vol *vol, const char *name, mode_t mode, struct stat *st
-#define VFS_FUNC_VARS_SETDIRUNIXMODE vol, name, mode, st
-
-#define VFS_FUNC_ARGS_SETDIROWNER const struct vol *vol, const char *name, uid_t uid, gid_t gid
-#define VFS_FUNC_VARS_SETDIROWNER vol, name, uid, gid
-
-#define VFS_FUNC_ARGS_DELETEFILE const struct vol *vol, int dirfd, const char *file
-#define VFS_FUNC_VARS_DELETEFILE vol, dirfd, file
-
-#define VFS_FUNC_ARGS_RENAMEFILE const struct vol *vol, int dirfd, const char *src, const char *dst
-#define VFS_FUNC_VARS_RENAMEFILE vol, dirfd, src, dst
-
-#define VFS_FUNC_ARGS_COPYFILE const struct vol *vol, int sfd, const char *src, const char *dst
-#define VFS_FUNC_VARS_COPYFILE vol, sfd, src, dst
+/* Function argument types for VFS operations */
+typedef int (*vfs_validupath_fn)(const struct vol *vol, const char *name);
+typedef int (*vfs_chown_fn)(const struct vol *vol, const char *path, uid_t uid,
+                            gid_t gid);
+typedef int (*vfs_renamedir_fn)(const struct vol *vol, int dirfd,
+                                const char *oldpath, const char *newpath);
+typedef int (*vfs_deletecurdir_fn)(const struct vol *vol);
+typedef int (*vfs_setfilmode_fn)(const struct vol *vol, const char *name,
+                                 mode_t mode, struct stat *st);
+typedef int (*vfs_setdirmode_fn)(const struct vol *vol, const char *name,
+                                 mode_t mode, struct stat *st);
+typedef int (*vfs_setdirunixmode_fn)(const struct vol *vol, const char *name,
+                                     mode_t mode, struct stat *st);
+typedef int (*vfs_setdirowner_fn)(const struct vol *vol, const char *name,
+                                  uid_t uid, gid_t gid);
+typedef int (*vfs_deletefile_fn)(const struct vol *vol, int dirfd,
+                                 const char *file);
+typedef int (*vfs_renamefile_fn)(const struct vol *vol, int dirfd,
+                                 const char *src, const char *dst);
+typedef int (*vfs_copyfile_fn)(const struct vol *vol, int sfd, const char *src,
+                               const char *dst);
 
 #ifdef HAVE_NFSV4_ACLS
-#define VFS_FUNC_ARGS_ACL const struct vol *vol, const char *path, int cmd, int count, void *aces
-#define VFS_FUNC_VARS_ACL vol, path, cmd, count, aces
+typedef int (*vfs_solaris_acl_fn)(const struct vol *vol, const char *path,
+                                  int cmd, int count, void *aces);
 #endif
+
 #ifdef HAVE_POSIX_ACLS
-#define VFS_FUNC_ARGS_ACL const struct vol *vol, const char *path, acl_type_t type, int count, acl_t acl
-#define VFS_FUNC_VARS_ACL vol, path, type, count, acl
+typedef int (*vfs_posix_acl_fn)(const struct vol *vol, const char *path,
+                                acl_type_t type, int count, acl_t acl);
 #endif
 
-#define VFS_FUNC_ARGS_REMOVE_ACL const struct vol *vol, const char *path, int dir
-#define VFS_FUNC_VARS_REMOVE_ACL vol, path, dir
+typedef int (*vfs_remove_acl_fn)(const struct vol *vol, const char *path,
+                                 int dir);
 
-#define VFS_FUNC_ARGS_EA_GETSIZE const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen, const char * restrict uname, int oflag, const char * restrict attruname, int fd
-#define VFS_FUNC_VARS_EA_GETSIZE vol, rbuf, rbuflen, uname, oflag, attruname, fd
+typedef int (*vfs_ea_getsize_fn)(const struct vol *restrict vol,
+                                 char *restrict rbuf, size_t *restrict rbuflen, const char *restrict uname,
+                                 int oflag, const char *restrict attruname, int fd);
 
-#define VFS_FUNC_ARGS_EA_GETCONTENT const struct vol * restrict vol, char * restrict rbuf, size_t * restrict rbuflen,  const char * restrict uname, int oflag, const char * restrict attruname, int maxreply, int fd
-#define VFS_FUNC_VARS_EA_GETCONTENT vol, rbuf, rbuflen, uname, oflag, attruname, maxreply, fd
+typedef int (*vfs_ea_getcontent_fn)(const struct vol *restrict vol,
+                                    char *restrict rbuf, size_t *restrict rbuflen, const char *restrict uname,
+                                    int oflag, const char *restrict attruname, int maxreply, int fd);
 
-#define VFS_FUNC_ARGS_EA_LIST const struct vol * restrict vol, char * restrict attrnamebuf, size_t * restrict buflen, const char * restrict uname, int oflag, int fd
-#define VFS_FUNC_VARS_EA_LIST vol, attrnamebuf, buflen, uname, oflag, fd
+typedef int (*vfs_ea_list_fn)(const struct vol *restrict vol,
+                              char *restrict attrnamebuf, size_t *restrict buflen, const char *restrict uname,
+                              int oflag, int fd);
 
-#define VFS_FUNC_ARGS_EA_SET const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, const char * restrict ibuf, size_t attrsize, int oflag, int fd
-#define VFS_FUNC_VARS_EA_SET vol, uname, attruname, ibuf, attrsize, oflag, fd
+typedef int (*vfs_ea_set_fn)(const struct vol *restrict vol,
+                             const char *restrict uname, const char *restrict attruname,
+                             const char *restrict ibuf, size_t attrsize, int oflag, int fd);
 
-#define VFS_FUNC_ARGS_EA_REMOVE const struct vol * restrict vol, const char * restrict uname, const char * restrict attruname, int oflag, int fd
-#define VFS_FUNC_VARS_EA_REMOVE vol, uname, attruname, oflag, fd
+typedef int (*vfs_ea_remove_fn)(const struct vol *restrict vol,
+                                const char *restrict uname, const char *restrict attruname, int oflag, int fd);
 
 /*
  * Forward declaration. We need it because of the circular inclusion of
@@ -96,30 +93,34 @@
 struct vol;
 
 struct vfs_ops {
-    int (*vfs_validupath)(VFS_FUNC_ARGS_VALIDUPATH);
-    int (*vfs_chown)(VFS_FUNC_ARGS_CHOWN);
-    int (*vfs_renamedir)(VFS_FUNC_ARGS_RENAMEDIR);
-    int (*vfs_deletecurdir)(VFS_FUNC_ARGS_DELETECURDIR);
-    int (*vfs_setfilmode)(VFS_FUNC_ARGS_SETFILEMODE);
-    int (*vfs_setdirmode)(VFS_FUNC_ARGS_SETDIRMODE);
-    int (*vfs_setdirunixmode)(VFS_FUNC_ARGS_SETDIRUNIXMODE);
-    int (*vfs_setdirowner)(VFS_FUNC_ARGS_SETDIROWNER);
-    int (*vfs_deletefile)(VFS_FUNC_ARGS_DELETEFILE);
-    int (*vfs_renamefile)(VFS_FUNC_ARGS_RENAMEFILE);
-    int (*vfs_copyfile)(VFS_FUNC_ARGS_COPYFILE);
+    vfs_validupath_fn vfs_validupath;
+    vfs_chown_fn vfs_chown;
+    vfs_renamedir_fn vfs_renamedir;
+    vfs_deletecurdir_fn vfs_deletecurdir;
+    vfs_setfilmode_fn vfs_setfilmode;
+    vfs_setdirmode_fn vfs_setdirmode;
+    vfs_setdirunixmode_fn vfs_setdirunixmode;
+    vfs_setdirowner_fn vfs_setdirowner;
+    vfs_deletefile_fn vfs_deletefile;
+    vfs_renamefile_fn vfs_renamefile;
+    vfs_copyfile_fn vfs_copyfile;
 
 #ifdef HAVE_ACLS
-    /* ACLs */
-    int (*vfs_acl)(VFS_FUNC_ARGS_ACL);
-    int (*vfs_remove_acl)(VFS_FUNC_ARGS_REMOVE_ACL);
+#ifdef HAVE_NFSV4_ACLS
+    vfs_solaris_acl_fn vfs_solaris_acl;
+#endif
+#ifdef HAVE_POSIX_ACLS
+    vfs_posix_acl_fn vfs_posix_acl;
+#endif
+    vfs_remove_acl_fn vfs_remove_acl;
 #endif
 
     /* Extended Attributes */
-    int (*vfs_ea_getsize)(VFS_FUNC_ARGS_EA_GETSIZE);
-    int (*vfs_ea_getcontent)(VFS_FUNC_ARGS_EA_GETCONTENT);
-    int (*vfs_ea_list)(VFS_FUNC_ARGS_EA_LIST);
-    int (*vfs_ea_set)(VFS_FUNC_ARGS_EA_SET);
-    int (*vfs_ea_remove)(VFS_FUNC_ARGS_EA_REMOVE);
+    vfs_ea_getsize_fn vfs_ea_getsize;
+    vfs_ea_getcontent_fn vfs_ea_getcontent;
+    vfs_ea_list_fn vfs_ea_list;
+    vfs_ea_set_fn vfs_ea_set;
+    vfs_ea_remove_fn vfs_ea_remove;
 };
 
 extern void initvol_vfs(struct vol *restrict vol);

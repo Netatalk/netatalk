@@ -968,7 +968,9 @@ exit:
  *
  * @note Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
+int get_easize(const struct vol * restrict vol, char * restrict rbuf,
+               size_t *restrict rbuflen, const char *restrict uname, int oflag,
+               const char *restrict attruname, int fd)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
@@ -1026,7 +1028,9 @@ int get_easize(VFS_FUNC_ARGS_EA_GETSIZE)
  *
  * @note Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
+int get_eacontent(const struct vol * restrict vol, char * restrict rbuf,
+                  size_t *restrict rbuflen,  const char *restrict uname, int oflag,
+                  const char *restrict attruname, int maxreply, int fd)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
@@ -1118,7 +1122,8 @@ int get_eacontent(VFS_FUNC_ARGS_EA_GETCONTENT)
  * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *buflen accordingly.
  */
-int list_eas(VFS_FUNC_ARGS_EA_LIST)
+int list_eas(const struct vol * restrict vol, char * restrict attrnamebuf,
+             size_t *restrict buflen, const char *restrict uname, int oflag, int fd)
 {
     unsigned int count = 0;
     int attrbuflen = *buflen, ret = AFP_OK, len;
@@ -1200,7 +1205,9 @@ exit:
  * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
  */
-int set_ea(VFS_FUNC_ARGS_EA_SET)
+int set_ea(const struct vol * restrict vol, const char * restrict uname,
+           const char *restrict attruname, const char *restrict ibuf, size_t attrsize,
+           int oflag, int fd)
 {
     int ret = AFP_OK;
     struct ea ea;
@@ -1247,7 +1254,8 @@ exit:
  *
  * @note Removes EA attruname from file uname.
  */
-int remove_ea(VFS_FUNC_ARGS_EA_REMOVE)
+int remove_ea(const struct vol * restrict vol, const char * restrict uname,
+              const char *restrict attruname, int oflag, int fd)
 {
     int ret = AFP_OK;
     struct ea ea;
@@ -1285,7 +1293,7 @@ exit:
  * EA VFS funcs that deal with file/dir cp/mv/rm
  ******************************************************************************************/
 
-int ea_deletefile(VFS_FUNC_ARGS_DELETEFILE)
+int ea_deletefile(const struct vol *vol, int dirfd, const char *file)
 {
     unsigned int count = 0;
     int ret = AFP_OK;
@@ -1345,7 +1353,8 @@ exit:
     return ret;
 }
 
-int ea_renamefile(VFS_FUNC_ARGS_RENAMEFILE)
+int ea_renamefile(const struct vol *vol, int dirfd, const char *src,
+                  const char *dst)
 {
     unsigned int count = 0;
     int    ret = AFP_OK;
@@ -1462,7 +1471,8 @@ exit:
  *
  * @note Copies EAs from source file to dest file.
  */
-int ea_copyfile(VFS_FUNC_ARGS_COPYFILE)
+int ea_copyfile(const struct vol *vol, int sfd, const char *src,
+                const char *dst)
 {
     unsigned int count = 0;
     int    ret = AFP_OK;
@@ -1557,7 +1567,7 @@ exit:
     return ret;
 }
 
-int ea_chown(VFS_FUNC_ARGS_CHOWN)
+int ea_chown(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
 {
     unsigned int count = 0;
     int ret = AFP_OK;
@@ -1624,7 +1634,8 @@ exit:
     return ret;
 }
 
-int ea_chmod_file(VFS_FUNC_ARGS_SETFILEMODE)
+int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
+                  struct stat *st)
 {
     unsigned int count = 0;
     int ret = AFP_OK;
@@ -1699,7 +1710,8 @@ exit:
     return ret;
 }
 
-int ea_chmod_dir(VFS_FUNC_ARGS_SETDIRUNIXMODE)
+int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
+                 struct stat *st)
 {
     int ret = AFP_OK;
     unsigned int count = 0;
