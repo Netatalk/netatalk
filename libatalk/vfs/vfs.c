@@ -106,7 +106,7 @@ static int netatalk_name(const char *name)
  * classic adouble format
  *******************************************************************************/
 
-static int validupath_adouble(const struct vol *vol, const char *name)
+static int validupath_adouble(const struct vol *vol _U_, const char *name)
 {
     if (name[0] != '.') {
         return 1;
@@ -135,8 +135,9 @@ static int RF_chown_adouble(const struct vol *vol, const char *path, uid_t uid,
 }
 
 /* ----------------- */
-static int RF_renamedir_adouble(const struct vol *vol, int dirfd,
-                                const char *oldpath, const char *newpath)
+static int RF_renamedir_adouble(const struct vol *vol _U_, int dirfd _U_,
+                                const char *oldpath _U_,
+                                const char *newpath _U_)
 {
     return 0;
 }
@@ -279,7 +280,8 @@ static int RF_setdirmode_adouble(const struct vol *vol, const char *name,
     return 0;
 }
 
-static int RF_setdirowner_adouble(const struct vol *vol, const char *name,
+static int RF_setdirowner_adouble(const struct vol *vol _U_,
+                                  const char *name _U_,
                                   uid_t uid, gid_t gid)
 {
     if (lchown(".AppleDouble", uid, gid) < 0 && errno != EPERM) {
@@ -349,8 +351,8 @@ static int RF_renamefile_adouble(const struct vol *vol, int dirfd,
     return 0;
 }
 
-static int RF_copyfile_adouble(const struct vol *vol, int sfd, const char *src,
-                               const char *dst)
+static int RF_copyfile_adouble(const struct vol *vol _U_, int sfd,
+                               const char *src, const char *dst)
 {
     EC_INIT;
     bstring s = NULL;
@@ -455,7 +457,7 @@ static int RF_solaris_remove_acl(const struct vol *vol, const char *path,
 
 #ifdef HAVE_POSIX_ACLS
 static int RF_posix_acl(const struct vol *vol, const char *path,
-                        acl_type_t type, int count, acl_t acl)
+                        acl_type_t type, int count _U_, acl_t acl)
 {
     EC_INIT;
     struct stat st;
@@ -502,7 +504,7 @@ EC_CLEANUP:
 /*************************************************************************
  * EA adouble format
  ************************************************************************/
-static int validupath_ea(const struct vol *vol, const char *name)
+static int validupath_ea(const struct vol *vol _U_, const char *name)
 {
     if (name[0] != '.') {
         return 1;
@@ -529,8 +531,8 @@ static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid,
 }
 
 /* ---------------- */
-static int RF_renamedir_ea(const struct vol *vol, int dirfd,
-                           const char *oldpath, const char *newpath)
+static int RF_renamedir_ea(const struct vol *vol _U_, int dirfd _U_,
+                           const char *oldpath _U_, const char *newpath _U_)
 {
     return 0;
 }
@@ -584,8 +586,9 @@ static int RF_deletecurdir_ea(const struct vol *vol)
 }
 
 /* ---------------- */
-static int RF_setdirunixmode_ea(const struct vol *vol, const char *name,
-                                mode_t mode, struct stat *st)
+static int RF_setdirunixmode_ea(const struct vol *vol _U_,
+                                const char *name _U_, mode_t mode _U_,
+                                struct stat *st _U_)
 {
 #ifndef HAVE_EAFD
 #endif
@@ -602,8 +605,8 @@ static int RF_setfilmode_ea(const struct vol *vol, const char *name,
 }
 
 /* ---------------- */
-static int RF_setdirmode_ea(const struct vol *vol, const char *name,
-                            mode_t mode, struct stat *st)
+static int RF_setdirmode_ea(const struct vol *vol _U_, const char *name _U_,
+                            mode_t mode _U_, struct stat *st _U_)
 {
 #ifndef HAVE_EAFD
 #endif
@@ -611,8 +614,8 @@ static int RF_setdirmode_ea(const struct vol *vol, const char *name,
 }
 
 /* ---------------- */
-static int RF_setdirowner_ea(const struct vol *vol, const char *name, uid_t uid,
-                             gid_t gid)
+static int RF_setdirowner_ea(const struct vol *vol _U_, const char *name _U_,
+                             uid_t uid _U_, gid_t gid _U_)
 {
 #ifndef HAVE_EAFD
 #endif
@@ -626,7 +629,7 @@ static int RF_deletefile_ea(const struct vol *vol, int dirfd, const char *file)
 #endif
     return 0;
 }
-static int RF_copyfile_ea(const struct vol *vol, int sfd, const char *src,
+static int RF_copyfile_ea(const struct vol *vol _U_, int sfd, const char *src,
                           const char *dst)
 {
 #if defined (HAVE_EAFD) && defined (SOLARIS)

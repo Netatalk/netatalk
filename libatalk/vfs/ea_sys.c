@@ -495,7 +495,7 @@ int sys_set_ea(const struct vol *vol, const char *uname, const char *attruname,
  *
  * @note Removes EA attruname from file uname.
  */
-int sys_remove_ea(const struct vol *vol, const char *uname,
+int sys_remove_ea(const struct vol *vol _U_, const char *uname,
                   const char *attruname, int oflag, int fd)
 {
     int ret;
@@ -563,7 +563,7 @@ int sys_remove_ea(const struct vol *vol, const char *uname,
  *
  * @note Copies EAs from source file to dest file.
  */
-int sys_ea_copyfile(const struct vol *vol, int sfd, const char *src,
+int sys_ea_copyfile(const struct vol *vol _U_, int sfd, const char *src,
                     const char *dst)
 {
     int ret = 0;
