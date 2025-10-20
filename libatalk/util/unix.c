@@ -695,9 +695,12 @@ char *strtok_quote(char *s, const char *delim)
 
 int set_groups(AFPObj *obj, struct passwd *pwd)
 {
-    if (initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
-        LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name,
-            pwd->pw_gid, strerror(errno));
+    /* Skip initgroups() if we're not root */
+    if (getuid() == 0) {
+        if (initgroups(pwd->pw_name, pwd->pw_gid) < 0) {
+            LOG(log_error, logtype_afpd, "initgroups(%s, %d): %s", pwd->pw_name,
+                pwd->pw_gid, strerror(errno));
+        }
     }
 
     if ((obj->ngroups = getgroups(0, NULL)) < 0) {

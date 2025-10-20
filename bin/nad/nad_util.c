@@ -106,6 +106,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     memset(vol, 0, sizeof(afpvol_t));
 
     if ((vol->vol = getvolbypath(obj, path)) == NULL) {
+        LOG(log_error, logtype_default, "No volume found for path: %s", path);
         return -1;
     }
 
