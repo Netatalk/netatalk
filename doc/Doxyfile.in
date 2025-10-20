@@ -2450,6 +2450,7 @@ PREDEFINED             = \
     HAVE_LDAP=1 \
     HAVE_LIBQUOTA=1 \
     HAVE_MDNS=1 \
+    HAVE_NFSV4_ACLS=1 \
     HAVE_POSIX_ACLS=1 \
     HAVE_SPLICE=1 \
     TCPWRAP=1 \
