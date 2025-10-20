@@ -173,7 +173,7 @@ EC_CLEANUP:
  * @param vol     (rw) volume to calculate
  * @returns             0 on success, -1 on error
  */
-static int get_tm_used(struct vol *restrict vol)
+static int get_tm_used(struct vol *vol)
 {
     EC_INIT;
     long long int bandsize;

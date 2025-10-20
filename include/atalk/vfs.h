@@ -67,24 +67,24 @@ typedef int (*vfs_posix_acl_fn)(const struct vol *vol, const char *path,
 typedef int (*vfs_remove_acl_fn)(const struct vol *vol, const char *path,
                                  int dir);
 
-typedef int (*vfs_ea_getsize_fn)(const struct vol *restrict vol,
-                                 char *restrict rbuf, size_t *restrict rbuflen, const char *restrict uname,
-                                 int oflag, const char *restrict attruname, int fd);
+typedef int (*vfs_ea_getsize_fn)(const struct vol *vol, char *rbuf,
+                                 size_t *rbuflen, const char *uname,
+                                 int oflag, const char *attruname, int fd);
 
-typedef int (*vfs_ea_getcontent_fn)(const struct vol *restrict vol,
-                                    char *restrict rbuf, size_t *restrict rbuflen, const char *restrict uname,
-                                    int oflag, const char *restrict attruname, int maxreply, int fd);
+typedef int (*vfs_ea_getcontent_fn)(const struct vol *vol, char *rbuf,
+                                    size_t *rbuflen, const char *uname,
+                                    int oflag, const char *attruname,
+                                    int maxreply, int fd);
 
-typedef int (*vfs_ea_list_fn)(const struct vol *restrict vol,
-                              char *restrict attrnamebuf, size_t *restrict buflen, const char *restrict uname,
-                              int oflag, int fd);
+typedef int (*vfs_ea_list_fn)(const struct vol *vol, char *attrnamebuf,
+                              size_t *buflen, const char *uname, int oflag, int fd);
 
-typedef int (*vfs_ea_set_fn)(const struct vol *restrict vol,
-                             const char *restrict uname, const char *restrict attruname,
-                             const char *restrict ibuf, size_t attrsize, int oflag, int fd);
+typedef int (*vfs_ea_set_fn)(const struct vol *vol, const char *uname,
+                             const char *attruname, const char *ibuf,
+                             size_t attrsize, int oflag, int fd);
 
-typedef int (*vfs_ea_remove_fn)(const struct vol *restrict vol,
-                                const char *restrict uname, const char *restrict attruname, int oflag, int fd);
+typedef int (*vfs_ea_remove_fn)(const struct vol *vol, const char *uname,
+                                const char *attruname, int oflag, int fd);
 
 /*
  * Forward declaration. We need it because of the circular inclusion of
@@ -123,6 +123,6 @@ struct vfs_ops {
     vfs_ea_remove_fn vfs_ea_remove;
 };
 
-extern void initvol_vfs(struct vol *restrict vol);
+extern void initvol_vfs(struct vol *vol);
 
 #endif /* ATALK_VFS_H */

@@ -115,7 +115,7 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
  *
  * @note Verifies magic and version.
  */
-static int unpack_header(struct ea *restrict ea)
+static int unpack_header(struct ea *ea)
 {
     int ret = 0;
     unsigned int count = 0;
@@ -199,7 +199,7 @@ exit:
  *
  * @note adjust ea->ea_count in case an ea entry deletetion is detected
  */
-static int pack_header(struct ea *restrict ea)
+static int pack_header(struct ea *ea)
 {
     unsigned int count = 0, eacount = 0;
     uint16_t uint16;
@@ -287,8 +287,8 @@ static int pack_header(struct ea *restrict ea)
  * @note Grow array ea->ea_entries[]. If ea->ea_entries is still NULL, start allocating.
  * Otherwise realloc and put entry at the end. Increments ea->ea_count.
  */
-static int ea_addentry(struct ea *restrict ea,
-                       const char *restrict attruname,
+static int ea_addentry(struct ea *ea,
+                       const char *attruname,
                        size_t attrsize,
                        int bitmap)
 {
@@ -386,8 +386,8 @@ error:
  * We therefor currently just break with an error.
  * On return the header file is still r/w locked.
  */
-static int create_ea_header(const char *restrict uname,
-                            struct ea *restrict ea)
+static int create_ea_header(const char *uname,
+                            struct ea *ea)
 {
     int fd = -1, err = 0;
     char *ptr;
@@ -443,9 +443,9 @@ exit:
  * @note Creates/overwrites EA file.
  *
  */
-static int write_ea(const struct ea *restrict ea,
-                    const char *restrict attruname,
-                    const char *restrict ibuf,
+static int write_ea(const struct ea *ea,
+                    const char *attruname,
+                    const char *ibuf,
                     size_t attrsize)
 {
     int fd = -1;
@@ -505,7 +505,7 @@ exit:
  * Marks it as unused just by freeing name and setting it to NULL.
  * ea_close and pack_buffer must honor this.
  */
-static int ea_delentry(struct ea *restrict ea, const char *restrict attruname)
+static int ea_delentry(struct ea *ea, const char *attruname)
 {
     int ret = 0;
     unsigned int count = 0;
@@ -542,7 +542,7 @@ static int ea_delentry(struct ea *restrict ea, const char *restrict attruname)
  *
  * @returns 0 on success, -1 on error
  */
-static int delete_ea_file(const struct ea *restrict ea, const char *eaname)
+static int delete_ea_file(const struct ea *ea, const char *eaname)
 {
     int ret = 0;
     char *eafile;
@@ -585,7 +585,7 @@ static int delete_ea_file(const struct ea *restrict ea, const char *eaname)
  * - Dirs: "dir" -> "dir/.AppleDouble/.Parent::EA"
  * - "file" with EA "myEA" -> "file/.AppleDouble/file::EA:myEA"
  */
-char *ea_path(const struct ea *restrict ea, const char *restrict eaname,
+char *ea_path(const struct ea *ea, const char *eaname,
               int macname)
 {
     const char *adname;
@@ -633,10 +633,10 @@ char *ea_path(const struct ea *restrict ea, const char *restrict eaname,
  * file is either read or write locked depending on the open flags.
  * When you're done with struct ea you must call ea_close on it.
  */
-int ea_open(const struct vol *restrict vol,
-            const char *restrict uname,
+int ea_open(const struct vol *vol,
+            const char *uname,
             eaflags_t eaflags,
-            struct ea *restrict ea)
+            struct ea *ea)
 {
     int ret = 0;
     char *eaname;
@@ -804,11 +804,11 @@ exit:
  * file is either read or write locked depending on the open flags.
  * When you're done with struct ea you must call ea_close on it.
  */
-int ea_openat(const struct vol *restrict vol,
+int ea_openat(const struct vol *vol,
               int dirfd,
-              const char *restrict uname,
+              const char *uname,
               eaflags_t eaflags,
-              struct ea *restrict ea)
+              struct ea *ea)
 {
     int ret = 0;
     int cwdfd = -1;
@@ -849,7 +849,7 @@ exit:
  * @note Flushes and then closes and frees all resouces held by ea handle.
  * Pack data in ea into ea_data, then write ea_data to disk
  */
-int ea_close(struct ea *restrict ea)
+int ea_close(struct ea *ea)
 {
     int ret = 0;
     unsigned int count = 0;
@@ -968,9 +968,8 @@ exit:
  *
  * @note Copies EA size into rbuf in network order. Increments *rbuflen +4.
  */
-int get_easize(const struct vol * restrict vol, char * restrict rbuf,
-               size_t *restrict rbuflen, const char *restrict uname, int oflag,
-               const char *restrict attruname, int fd)
+int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
+               const char *uname, int oflag, const char *attruname, int fd)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
@@ -1028,9 +1027,8 @@ int get_easize(const struct vol * restrict vol, char * restrict rbuf,
  *
  * @note Copies EA into rbuf. Increments *rbuflen accordingly.
  */
-int get_eacontent(const struct vol * restrict vol, char * restrict rbuf,
-                  size_t *restrict rbuflen,  const char *restrict uname, int oflag,
-                  const char *restrict attruname, int maxreply, int fd)
+int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
+                  const char *uname, int oflag, const char *attruname, int maxreply, int fd)
 {
     int ret = AFPERR_MISC;
     unsigned int count = 0;
@@ -1122,8 +1120,8 @@ int get_eacontent(const struct vol * restrict vol, char * restrict rbuf,
  * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *buflen accordingly.
  */
-int list_eas(const struct vol * restrict vol, char * restrict attrnamebuf,
-             size_t *restrict buflen, const char *restrict uname, int oflag, int fd)
+int list_eas(const struct vol *vol, char *attrnamebuf, size_t *buflen,
+             const char *uname, int oflag, int fd)
 {
     unsigned int count = 0;
     int attrbuflen = *buflen, ret = AFP_OK, len;
@@ -1205,9 +1203,8 @@ exit:
  * @note Copies names of all EAs of uname as consecutive C strings into rbuf.
  * Increments *rbuflen accordingly.
  */
-int set_ea(const struct vol * restrict vol, const char * restrict uname,
-           const char *restrict attruname, const char *restrict ibuf, size_t attrsize,
-           int oflag, int fd)
+int set_ea(const struct vol *vol, const char *uname, const char *attruname,
+           const char *ibuf, size_t attrsize, int oflag, int fd)
 {
     int ret = AFP_OK;
     struct ea ea;
@@ -1254,8 +1251,8 @@ exit:
  *
  * @note Removes EA attruname from file uname.
  */
-int remove_ea(const struct vol * restrict vol, const char * restrict uname,
-              const char *restrict attruname, int oflag, int fd)
+int remove_ea(const struct vol *vol, const char *uname, const char *attruname,
+              int oflag, int fd)
 {
     int ret = AFP_OK;
     struct ea ea;
