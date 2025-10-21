@@ -25,7 +25,7 @@
 #include "ddp_var.h"
 
 struct ddpcb	*ddpcb = NULL;
-uint32_t		ddp_sendspace = DDP_MAXSZ; /* Max ddp size + 1 (ddp_type) */
+uint32_t		ddp_sendspace = DDP_MAXSZ; /*!< Max ddp size + 1 (ddp_type) */
 uint32_t		ddp_recvspace = 10 * (587 + sizeof(struct sockaddr_at));
 
 /*ARGSUSED*/

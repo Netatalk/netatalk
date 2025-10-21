@@ -37,16 +37,16 @@
 #define CRYPTBUFLEN  (KEYSIZE*2)
 #define CRYPT2BUFLEN (KEYSIZE + PASSWDLEN)
 
-/* hash a number to a 16-bit quantity */
+/*! hash a number to a 16-bit quantity */
 #define dhxhash(a) ((((unsigned long) (a) >> 8) ^ \
 		     (unsigned long) (a)) & 0xffff)
 
-/* the secret key */
+/*! the secret key */
 gcry_mpi_t K;
 static struct passwd *dhxpwd;
 static uint8_t randbuf[16];
 
-/* dhx passwd */
+/*! dhx passwd */
 static int pwd_login(void *obj, char *username, int ulen,
                      struct passwd **uam_pwd _U_,
                      char *ibuf, size_t ibuflen _U_,
@@ -209,7 +209,7 @@ passwd_fail:
     return AFPERR_PARAM;
 }
 
-/* cleartxt login */
+/*! cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
                         char *rbuf, size_t *rbuflen)
@@ -247,11 +247,15 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* cleartxt login ext
+/*!
+ * @brief cleartxt login ext
+ *
  * uname format :
-    byte      3
-    2 bytes   len (network order)
-    len bytes utf8 name
+ * @code
+ *   byte      3
+ *   2 bytes   len (network order)
+ *   len bytes utf8 name
+ * @endcode
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,

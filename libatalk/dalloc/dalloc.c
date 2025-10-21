@@ -164,7 +164,7 @@
 #include <atalk/logger.h>
 #include <atalk/dalloc.h>
 
-/* Use dalloc_add_copy() macro, not this function */
+/*! Use dalloc_add_copy() macro, not this function */
 int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
                             size_t size)
 {
@@ -189,8 +189,8 @@ int dalloc_add_talloc_chunk(DALLOC_CTX *dd, void *talloc_chunk, void *obj,
     return 0;
 }
 
-/*
- * Get pointer to value from a DALLOC object
+/*!
+ * @brief Get pointer to value from a DALLOC object
  *
  * Returns pointer to object from a DALLOC object. Nested object interation
  * is supported by using the type string "DALLOC_CTX". Any other type string

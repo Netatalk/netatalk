@@ -31,8 +31,9 @@
  * SUCH DAMAGE.
  */
 
-/*
- * Cp copies source files to target files.
+/*!
+ * @file
+ * @brief Cp copies source files to target files.
  *
  * The global PATH_T structure "to" always contains the path to the
  * current target file.  Since fts(3) does not change directories,
@@ -688,14 +689,14 @@ static int copy(const char *path,
     return 0;
 }
 
-/* Memory strategy threshold, in pages: if physmem is larger then this, use a large buffer */
+/*! Memory strategy threshold, in pages: if physmem is larger then this, use a large buffer */
 #define PHYSPAGES_THRESHOLD (32*1024)
 
-/* Maximum buffer size in bytes - do not allow it to grow larger than this */
+/*! Maximum buffer size in bytes - do not allow it to grow larger than this */
 #define BUFSIZE_MAX (2*1024*1024)
 
-/* Small (default) buffer size in bytes. It's inefficient for this to be smaller than MAXPHYS */
 #if ! defined __APPLE__ && ! defined __FreeBSD__
+/*! Small (default) buffer size in bytes. It's inefficient for this to be smaller than MAXPHYS */
 #define MAXPHYS (64 * 1024)
 #endif
 #define BUFSIZE_SMALL (MAXPHYS)

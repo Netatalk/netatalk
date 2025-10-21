@@ -74,10 +74,11 @@ const char *cups_get_language(void)
     return curr_encoding;
 }
 
-/*
- * 'cups_passwd_cb()' - The CUPS password callback...
- * O - Password or NULL
- * I - Prompt
+/*!
+ * @brief The CUPS password callback...
+ * @note O - Password or NULL
+ * @note I - Prompt
+ * @returns NULL (not implemented)
  */
 static const char *cups_passwd_cb(const char *prompt _U_,
                                   http_t *http _U_,
@@ -92,10 +93,10 @@ static const char *cups_passwd_cb(const char *prompt _U_,
 }
 
 
-/*
- * 'cups_printername_ok()' - Verify supplied printer name is a valid cups printer
- * O - 1 if printer name OK
- * I - Name of printer
+/*!
+ * @brief Verify supplied printer name is a valid cups printer
+ * @note O - 1 if printer name OK
+ * @note I - Name of printer
  */
 
 int cups_printername_ok(char *name)
@@ -501,7 +502,7 @@ cups_get_printer_status(struct printer *pr)
 
 /*------------------------------------------------------------------------*/
 
-/* pass the job to cups */
+/*! pass the job to cups */
 
 int cups_print_job(char *name, const char *filename, char *job, char *username,
                    char *cupsoptions)
@@ -689,10 +690,10 @@ cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
 
 /*------------------------------------------------------------------------*/
 
-/* cups_mangle_printer_name
- *    Mangles the printer name if two CUPS printer provide the same Chooser Name
- *    Append '#nn' to the chooser name, if it is longer than 28 char we overwrite the last three chars
- * Returns: 0 on Success, 2 on Error
+/*!
+ * @brief Mangles the printer name if two CUPS printer provide the same Chooser Name
+ * @note Append '#nn' to the chooser name, if it is longer than 28 char we overwrite the last three chars
+ * @returns 0 on Success, 2 on Error
  */
 
 static int cups_mangle_printer_name(struct printer *pr,
@@ -722,7 +723,7 @@ static int cups_mangle_printer_name(struct printer *pr,
 
 /*------------------------------------------------------------------------*/
 
-/* fallback ASCII conversion */
+/*! fallback ASCII conversion */
 
 static size_t
 to_ascii(char  *inptr, char **outptr)
@@ -754,11 +755,12 @@ to_ascii(char  *inptr, char **outptr)
 
 /*------------------------------------------------------------------------*/
 
-/* convert_to_mac_name
- *  1) Convert from encoding to MacRoman
- *  2) Shorten to MAXCHOOSERLEN (31)
- *  3) Replace @ and _ as they are illegal
- * Returns: -1 on failure, length of name on success; outpr contains name in MacRoman
+/*!
+ * @brief Convert to Mac printer name
+ * @note 1) Convert from encoding to MacRoman
+ * @note 2) Shorten to MAXCHOOSERLEN (31)
+ * @note 3) Replace @ and _ as they are illegal
+ * @returns -1 on failure, length of name on success; outpr contains name in MacRoman
  */
 
 static int convert_to_mac_name(const char *encoding, char *inptr,
@@ -804,12 +806,11 @@ static int convert_to_mac_name(const char *encoding, char *inptr,
 
 /*------------------------------------------------------------------------*/
 
-/*
- * cups_check_printer:
- * check if a printer with this name already exists.
- * if yes, and replace = 1 the existing printer is replaced with
+/*!
+ * @brief check if a printer with this name already exists.
+ * @note if yes, and replace = 1 the existing printer is replaced with
  * the new one. This allows to overwrite printer settings
- * created by cupsautoadd. It also used by cups_mangle_printer.
+ * @note created by cupsautoadd. It also used by cups_mangle_printer.
  */
 
 int cups_check_printer(struct printer *pr, struct printer *printers,

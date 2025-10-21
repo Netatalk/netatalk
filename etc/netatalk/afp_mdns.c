@@ -1,8 +1,8 @@
-/*
- * Author:   Lee Essen <lee.essen@nowonline.co.uk>
- * Based on: avahi support from Daniel S. Haischt <me@daniel.stefan.haischt.name>
- * Purpose:  mdns based Zeroconf support
- *
+/*!
+ * @file
+ * @author   Lee Essen <lee.essen@nowonline.co.uk>
+ * @brief    mDNS based Zeroconf support
+ * @note     Based on: avahi support from Daniel S. Haischt <me@daniel.stefan.haischt.name>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -99,7 +99,7 @@ exit:
 
 static struct pollfd *fds;
 
-/*
+/*!
  * This is the thread that polls the filehandles
  */
 static void *polling_thread(void *arg _U_)
@@ -128,10 +128,10 @@ static void *polling_thread(void *arg _U_)
     return NULL;
 }
 
-/*
- * This is the callback for the service register function ... actually there isn't a lot
- * we can do if we get problems, so we don't really need to do anything other than report
- * the issue.
+/*!
+ * @brief This is the callback for the service register function
+ * @note actually there isn't a lot we can do if we get problems,
+ * so we don't really need to do anything other than report the issue.
  */
 static void RegisterReply(DNSServiceRef sdRef _U_, DNSServiceFlags flags _U_,
                           DNSServiceErrorType errorCode,
@@ -143,7 +143,7 @@ static void RegisterReply(DNSServiceRef sdRef _U_, DNSServiceFlags flags _U_,
     }
 }
 
-/*
+/*!
  * This function unregisters anything we have already
  * registered and frees associated memory
  */
@@ -169,7 +169,7 @@ static void unregister_stuff(void)
     }
 }
 
-/*
+/*!
  * This function tries to register the AFP DNS
  * SRV service type.
  */
@@ -381,7 +381,7 @@ fail:
  * Public funcions
  ************************************************************************/
 
-/*
+/*!
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
@@ -392,9 +392,9 @@ void md_zeroconf_register(const AFPObj *obj)
     return;
 }
 
-/*
- * Tries to shutdown this loop impl.
- * Call this function from inside this thread.
+/*!
+ * @brief Tries to shutdown this loop impl.
+ * @note Call this function from inside this thread.
  */
 int md_zeroconf_unregister(void)
 {

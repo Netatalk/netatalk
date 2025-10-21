@@ -88,7 +88,7 @@ afp_child_t *server_child_resolve(server_child_t *childs, id_t pid)
     return child;
 }
 
-/* initialize server_child structure */
+/*! initialize server_child structure */
 server_child_t *server_child_alloc(int connections)
 {
     server_child_t *children;
@@ -138,7 +138,7 @@ exit:
     return child;
 }
 
-/* remove a child and free it */
+/*! remove a child and free it */
 int server_child_remove(server_child_t *children, pid_t pid)
 {
     int fd;
@@ -169,8 +169,12 @@ int server_child_remove(server_child_t *children, pid_t pid)
     return fd;
 }
 
-/* free everything: by using a hash table, this increases the cost of
- * this part over a linked list by the size of the hash table */
+/*!
+ * @brief free everything
+ *
+ * by using a hash table, this increases the cost of
+ * this part over a linked list by the size of the hash table
+ */
 void server_child_free(server_child_t *children)
 {
     afp_child_t *child, *tmp;
@@ -199,7 +203,7 @@ void server_child_free(server_child_t *children)
     free(children);
 }
 
-/* send signal to all child processes */
+/*! send signal to all child processes */
 void server_child_kill(server_child_t *children, int sig)
 {
     afp_child_t *child, *tmp;
@@ -216,7 +220,7 @@ void server_child_kill(server_child_t *children, int sig)
     }
 }
 
-/* send kill to a child processes */
+/*! send kill to a child processes */
 static int kill_child(afp_child_t *child)
 {
     if (!child->afpch_killed) {
@@ -291,8 +295,11 @@ EC_CLEANUP:
 }
 
 
-/* see if there is a process for the same mac     */
-/* if the times don't match mac has been rebooted */
+/*!
+ * @brief see if there is a process for the same mac
+ *
+ * if the times don't match mac has been rebooted
+ */
 void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                                  uid_t uid, uint32_t idlen, char *id, uint32_t boottime)
 {
@@ -348,7 +355,6 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
     pthread_mutex_unlock(&children->servch_lock);
 }
 
-/*  */
 void server_child_login_done(server_child_t *children, pid_t pid,
                              uid_t uid)
 {
@@ -376,7 +382,7 @@ void server_child_login_done(server_child_t *children, pid_t pid,
     pthread_mutex_unlock(&children->servch_lock);
 }
 
-/* ---------------------------
+/*!
  * reset children signals
  */
 void server_reset_signal(void)

@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * @brief Netatalk utility functions: unix
+ * Netatalk utility functions: unix
  */
 
 #ifdef HAVE_CONFIG_H
@@ -46,7 +46,7 @@
 #include <atalk/util.h>
 #include <atalk/vfs.h>
 
-/* close all FDs >= a specified value */
+/*! close all FDs >= a specified value */
 static void closeall(int fd)
 {
     int fdlimit = sysconf(_SC_OPEN_MAX);
@@ -57,7 +57,7 @@ static void closeall(int fd)
 }
 
 /*!
- * @brief Run command in a child and wait for it to finish
+ * Run command in a child and wait for it to finish
  */
 int run_cmd(const char *cmd, char **cmd_argv)
 {
@@ -169,7 +169,7 @@ int daemonize(void)
 
 static uid_t saved_uid = -1;
 
-/*
+/*!
  * seteuid(0) and back, if either fails and panic != 0 we PANIC
  */
 void become_root(void)
@@ -262,13 +262,13 @@ char *stripped_slashes_basename(char *p)
     return strrchr(p, '/') ? strrchr(p, '/') + 1 : p;
 }
 
-/****************************************************************************
- * Find a suitable temporary directory for Netatalk.
+/*!
+ * @brief Find a suitable temporary directory for Netatalk.
+ *
  * Creates a subdirectory for current gid if it doesn't exist.
  * The result should be copied immediately
  * as it may be overwritten by a subsequent call.
- ****************************************************************************/
-
+ */
 const char *tmpdir(void)
 {
     static char netatalk_tmpdir[MAXPATHLEN + 1];
@@ -549,7 +549,7 @@ int ochdir(const char *dir, int options)
 }
 
 /*!
- * @brief Store n random bytes an buf
+ * Store n random bytes an buf
  */
 void randombytes(void *buf, int n)
 {
@@ -593,7 +593,7 @@ int gmem(gid_t gid, int ngroups, gid_t *groups)
     return 0;
 }
 
-/*
+/*!
  * realpath() replacement that always allocates storage for returned path
  */
 char *realpath_safe(const char *path)

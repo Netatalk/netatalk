@@ -7,7 +7,7 @@
 #ifndef _ATVAR_H
 #define _ATVAR_H 1
 
-/*
+/*!
  * For phase2, we need to keep not only our address on an interface,
  * but also the legal networks on the interface.
  */
@@ -31,7 +31,7 @@ struct at_ifaddr {
 
 #ifdef BSD4_4
 struct at_aliasreq {
-    char	ifra_name[IFNAMSIZ];		/* if name, e.g. "en0" */
+    char	ifra_name[IFNAMSIZ];		/*!< if name, e.g. "en0" */
     struct	sockaddr_at ifra_addr;
     struct	sockaddr_at ifra_broadaddr;
 #define ifra_dstaddr ifra_broadaddr

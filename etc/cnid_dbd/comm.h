@@ -6,7 +6,7 @@
 #ifndef CNID_DBD_COMM_H
 #define CNID_DBD_COMM_H 1
 
-/* number of seconds to try reading in readt */
+/*! number of seconds to try reading in readt */
 #define CNID_DBD_TIMEOUT 1
 
 #include <atalk/cnid_bdb_private.h>

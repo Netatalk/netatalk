@@ -34,20 +34,20 @@
 #endif
 
 /* exit error codes */
-#define EXITERR_CLNT 1  /* client related error */
-#define EXITERR_CONF 2  /* error in config files/cmd line parameters */
-#define EXITERR_SYS  3  /* local system error */
-#define EXITERR_CLOSED 4  /* connection was immediately closed after TCP handshake */
+#define EXITERR_CLNT 1  /*!< client related error */
+#define EXITERR_CONF 2  /*!< error in config files/cmd line parameters */
+#define EXITERR_SYS  3  /*!< local system error */
+#define EXITERR_CLOSED 4  /*!< connection was immediately closed after TCP handshake */
 
-/* Print a SBT and exit */
+/*! Print a SBT and exit */
 #define AFP_PANIC(why) \
     do {                                            \
         netatalk_panic(why);                        \
         abort();                                    \
     } while(0);
 
-/* LOG assert errors */
 #ifndef NDEBUG
+/*! LOG assert errors */
 #define AFP_ASSERT(b) \
     do {                                                                \
         if (!(b)) {                                                     \
@@ -142,7 +142,7 @@ extern void mod_close(void *);
 
 #define cfrombstr(b) ((char *)((b)->data))
 
-/* strip slashes from end of a bstring */
+/*! strip slashes from end of a bstring */
 #define BSTRING_STRIP_SLASH(a)                      \
     do {                                            \
         while (bchar((a), blength(a) - 1) == '/')   \
@@ -185,18 +185,18 @@ enum asev_fdtype {IPC_FD, LISTEN_FD};
  * @brief atalk socket event data
  */
 struct asev_data {
-    enum asev_fdtype fdtype;  /* IPC fd or listening socket fd                 */
-    void            *private; /* pointer to AFPconfig for listening socket and *
-                               * pointer to afp_child_t for IPC fd             */
-    int             protocol; /* protocol type ASP or DSI                      */
+    enum asev_fdtype fdtype;  /*!< IPC fd or listening socket fd */
+    void            *private; /*!< pointer to AFPconfig for listening socket and
+                               * pointer to afp_child_t for IPC fd */
+    int             protocol; /*!< protocol type ASP or DSI */
 };
 
 /*!
  * @brief atalk socket event
  */
 struct asev {
-    struct pollfd         *fdset; /* struct pollfd array for poll() */
-    struct asev_data      *data;  /* associated array of data       */
+    struct pollfd         *fdset; /*!< struct pollfd array for poll() */
+    struct asev_data      *data;  /*!< associated array of data */
     int                    max;
     int                    used;
 };

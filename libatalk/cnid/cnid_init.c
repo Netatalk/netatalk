@@ -15,8 +15,10 @@
  *
  */
 
-/*
- * This file contains initialization stuff for CNID backends.
+/*!
+ * @file
+ * @brief initialization stuff for CNID backends.
+ *
  * Currently it only employs static bindings.
  * No plans for dynamically loaded CNID backends here (temporary).
  * Maybe somewhere in the future.

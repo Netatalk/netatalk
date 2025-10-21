@@ -1,9 +1,8 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/*
- * Author:  Daniel S. Haischt <me@daniel.stefan.haischt.name>
- * Purpose: Avahi based Zeroconf support
- * Docs:    http://avahi.org/download/doxygen/
- *
+/*!
+ * @file
+ * @author  Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ * @brief   Avahi based Zeroconf support
+ * @sa      https://avahi.org/doxygen/html/
  */
 
 #ifndef AFPD_AVAHI_H

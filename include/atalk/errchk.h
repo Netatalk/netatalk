@@ -28,30 +28,36 @@
 #define EC_CLEANUP cleanup
 #define EC_EXIT return ret
 
-/*
- * Check out doc/DEVELOPER for more infos.
+/*!
+ * @file
+ * @brief Error checking macros
+ * @sa ./doc/developer/developer.md
  *
  * We have these macros:
- * EC_ZERO, EC_ZERO_LOG, EC_ZERO_LOGSTR, EC_ZERO_LOG_ERR, EC_ZERO_CUSTOM
- * EC_NEG1, EC_NEG1_LOG, EC_NEG1_LOGSTR, EC_NEG1_LOG_ERR, EC_NEG1_CUSTOM
- * EC_NULL, EC_NULL_LOG, EC_NULL_LOGSTR, EC_NULL_LOG_ERR, EC_NULL_CUSTOM
+ * @code
+ * EC_ZERO, EC_ZERO_LOG, EC_ZERO_LOGSTR, EC_ZERO_LOG_ERR
+ * EC_NEG1, EC_NEG1_LOG, EC_NEG1_LOGSTR, EC_NEG1_LOG_ERR
+ * EC_NULL, EC_NULL_LOG, EC_NULL_LOGSTR, EC_NULL_LOG_ERR
+ * @endcode
  *
  * A boileplate function template is:
-
-   int func(void)
-   {
-       EC_INIT;
-
-       ...your code here...
-
-       EC_STATUS(0);
-
-   EC_CLEANUP:
-       EC_EXIT;
-   }
+ *
+ * @code
+ *   int func(void)
+ *   {
+ *       EC_INIT;
+ *
+ *       ...your code here...
+ *
+ *       EC_STATUS(0);
+ *
+ *   EC_CLEANUP:
+ *       EC_EXIT;
+ *   }
+ * @endcode
  */
 
-/* check for return val 0 which is ok, every other is an error, prints errno */
+/*! check for return val 0 which is ok, every other is an error, prints errno */
 #define EC_ZERO_LOG(a)                                                  \
     do {                                                                \
         if ((a) != 0) {                                                 \
@@ -95,7 +101,7 @@
         }                                       \
     } while (0)
 
-/* check for return val 0 which is ok, every other is an error, prints errno */
+/*! check for return val 0 which is ok, every other is an error, prints errno */
 #define EC_NEG1_LOG(a)                                                  \
     do {                                                                \
         if ((a) == -1) {                                                \
@@ -131,7 +137,7 @@
         }                                       \
     } while (0)
 
-/* check for return val != NULL, prints errno */
+/*! check for return val != NULL, prints errno */
 #define EC_NULL_LOG(a)                                                  \
     do {                                                                \
         if ((a) == NULL) {                                              \

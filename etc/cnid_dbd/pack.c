@@ -27,7 +27,7 @@ static const struct vol *volume;
 /* --------------- */
 /*
  *  This implementation is portable, but could probably be faster by using htonl
- *  where appropriate. Also, this again doubles code from the cdb backend.
+ *  where appropriate.
  */
 static void pack_devino(unsigned char *buf, dev_t dev, ino_t ino)
 {
@@ -114,8 +114,7 @@ void pack_setvol(const struct vol *vol)
     volume = vol;
 }
 
-/* The equivalent to make_cnid_data in the cnid library. Non re-entrant. We
-   differ from make_cnid_data in that we never return NULL, rqst->name cannot
+/* Non re-entrant. We never return NULL, rqst->name cannot
    ever cause start[] to overflow because name length is checked in libatalk. */
 
 unsigned char *pack_cnid_data(struct cnid_dbd_rqst *rqst)

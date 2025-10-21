@@ -31,8 +31,11 @@
 #include <sys/time.h>
 #include <netatalk/at.h>
 
-/* ATP packet format
+/*!
+ @file
+ @brief ATP packet format
 
+ @code
  |----------------|
  | link header    |
  |      ...       |
@@ -54,29 +57,31 @@
  | data (0-578)   |
  |      ...       |
  |----------------|
+ @endcode
 */
+
 struct atphdr {
-    uint8_t	atphd_ctrlinfo;	/* control information */
-    uint8_t	atphd_bitmap;   /* bitmap or sequence number */
-    uint16_t	atphd_tid;	/* transaction id. */
+    uint8_t	atphd_ctrlinfo;	/*!< control information */
+    uint8_t	atphd_bitmap;   /*!< bitmap or sequence number */
+    uint16_t	atphd_tid;	/*!< transaction id. */
 };
 
 /* ATP protocol parameters
 */
-#define ATP_MAXDATA	(578+4)		/* maximum ATP data size */
-#define ATP_BUFSIZ	587		/* maximum packet size */
-#define ATP_HDRSIZE	5		/* includes DDP type field */
+#define ATP_MAXDATA	(578+4)		/*!< maximum ATP data size */
+#define ATP_BUFSIZ	587		/*!< maximum packet size */
+#define ATP_HDRSIZE	5		/*!< includes DDP type field */
 
-#define ATP_TRELMASK	0x07		/* mask all but TREL */
-#define ATP_RELTIME	30		/* base release timer (in secs) */
+#define ATP_TRELMASK	0x07		/*!< mask all but TREL */
+#define ATP_RELTIME	30		/*!< base release timer (in secs) */
 
-#define ATP_TREL30	0x0		/* release time codes */
-#define ATP_TREL1M	0x1		/* these are passed in flags of */
-#define ATP_TREL2M	0x2		/* atp_sreq call, and set in the */
-#define ATP_TREL4M	0x3		/* packet control info. */
+#define ATP_TREL30	0x0		/*!< release time codes */
+#define ATP_TREL1M	0x1		/*!< these are passed in flags of */
+#define ATP_TREL2M	0x2		/*!< atp_sreq call, and set in the */
+#define ATP_TREL4M	0x3		/*!< packet control info. */
 #define ATP_TREL8M	0x4
 
-#define ATP_TRIES_INFINITE	-1	/* for atp_sreq, etc */
+#define ATP_TRIES_INFINITE	-1	/*!< for atp_sreq, etc */
 
 struct atpxobuf {
     uint16_t		atpxo_tid;
@@ -86,31 +91,31 @@ struct atpxobuf {
 };
 
 struct atpbuf {
-    struct atpbuf	*atpbuf_next;		/* next buffer in chain */
-    size_t		atpbuf_dlen;		/* data length <= ATP_BUFSIZ */
-    struct sockaddr_at	atpbuf_addr;		/* net address sent/recvd */
+    struct atpbuf	*atpbuf_next;		/*!< next buffer in chain */
+    size_t		atpbuf_dlen;		/*!< data length <= ATP_BUFSIZ */
+    struct sockaddr_at	atpbuf_addr;		/*!< net address sent/recvd */
     union {
-        char		atpbuf_data[ATP_BUFSIZ];	/* the data */
-        struct atpxobuf	atpbuf_xo;			/* for XO requests */
+        char		atpbuf_data[ATP_BUFSIZ];	/*!< the data */
+        struct atpxobuf	atpbuf_xo;			/*!< for XO requests */
     } atpbuf_info;
 };
 
 struct atp_handle {
-    int			atph_socket;		/* ddp socket */
-    struct sockaddr_at	atph_saddr;		/* address */
-    uint16_t		atph_tid;		/* last tid used */
-    uint16_t		atph_rtid;		/* last received (rreq) */
-    uint8_t		atph_rxo;		/* XO flag from last rreq */
-    int			atph_rreltime;		/* release time (secs) */
-    struct atpbuf	*atph_sent;		/* packets we send (XO) */
-    struct atpbuf	*atph_queue;		/* queue of pending packets */
-    int			atph_reqtries;		/* retry count for request */
-    int			atph_reqto;		/* retry timeout for request */
-    int			atph_rrespcount;	/* expected # of responses */
-    uint8_t		atph_rbitmap;		/* bitmap for request */
-    struct atpbuf	*atph_reqpkt;		/* last request packet */
-    struct timeval	atph_reqtv;		/* when we last sent request */
-    struct atpbuf	*atph_resppkt[8];	/* response to request */
+    int			atph_socket;		/*!< ddp socket */
+    struct sockaddr_at	atph_saddr;		/*!< address */
+    uint16_t		atph_tid;		/*!< last tid used */
+    uint16_t		atph_rtid;		/*!< last received (rreq) */
+    uint8_t		atph_rxo;		/*!< XO flag from last rreq */
+    int			atph_rreltime;		/*!< release time (secs) */
+    struct atpbuf	*atph_sent;		/*!< packets we send (XO) */
+    struct atpbuf	*atph_queue;		/*!< queue of pending packets */
+    int			atph_reqtries;		/*!< retry count for request */
+    int			atph_reqto;		/*!< retry timeout for request */
+    int			atph_rrespcount;	/*!< expected # of responses */
+    uint8_t		atph_rbitmap;		/*!< bitmap for request */
+    struct atpbuf	*atph_reqpkt;		/*!< last request packet */
+    struct timeval	atph_reqtv;		/*!< when we last sent request */
+    struct atpbuf	*atph_resppkt[8];	/*!< response to request */
 };
 
 typedef struct atp_handle *ATP;
@@ -119,29 +124,29 @@ typedef struct atp_handle *ATP;
 #define atp_fileno(x)		((x)->atph_socket)
 
 struct sreq_st {
-    char	    *atpd_data;		/* request data */
+    char	    *atpd_data;		/*!< request data */
     int		    atpd_dlen;
-    int		    atpd_tries;		/* max. retry count */
-    int		    atpd_to;		/* retry interval */
+    int		    atpd_tries;		/*!< max. retry count */
+    int		    atpd_to;		/*!< retry interval */
 };
 
 struct rres_st {
-    struct iovec    *atpd_iov;		/* for response */
+    struct iovec    *atpd_iov;		/*!< for response */
     int		    atpd_iovcnt;
 };
 
 struct rreq_st {
-    char	    *atpd_data;		/* request data */
+    char	    *atpd_data;		/*!< request data */
     int		    atpd_dlen;
 };
 
 struct sres_st {
-    struct iovec    *atpd_iov;		/* for response */
+    struct iovec    *atpd_iov;		/*!< for response */
     int		    atpd_iovcnt;
 };
 
 struct atp_block {
-    struct sockaddr_at	*atp_saddr;		/* from/to address */
+    struct sockaddr_at	*atp_saddr;		/*!< from/to address */
     union {
         struct sreq_st	sreqdata;
 #define atp_sreqdata	atp_data.sreqdata.atpd_data
@@ -161,23 +166,23 @@ struct atp_block {
 #define atp_sresiov	atp_data.sresdata.atpd_iov
 #define atp_sresiovcnt	atp_data.sresdata.atpd_iovcnt
     } atp_data;
-    uint8_t		atp_bitmap;	/* response buffer bitmap */
+    uint8_t		atp_bitmap;	/*!< response buffer bitmap */
 };
 
 
 /* flags for ATP options (and control byte)
 */
-#define ATP_STS		(1<<3)		/* Send Transaction Status */
-#define ATP_EOM		(1<<4)		/* End Of Message */
-#define ATP_XO		(1<<5)		/* eXactly Once mode */
+#define ATP_STS		(1<<3)		/*!< Send Transaction Status */
+#define ATP_EOM		(1<<4)		/*!< End Of Message */
+#define ATP_XO		(1<<5)		/*!< eXactly Once mode */
 
 /* function codes
 */
-#define ATP_FUNCMASK	(3<<6)		/* mask all but function */
+#define ATP_FUNCMASK	(3<<6)		/*!< mask all but function */
 
-#define ATP_TREQ	(1<<6)		/* Trans. REQuest */
-#define ATP_TRESP	(2<<6)		/* Trans. RESPonse */
-#define ATP_TREL	(3<<6)		/* Trans. RELease */
+#define ATP_TREQ	(1<<6)		/*!< Trans. REQuest */
+#define ATP_TRESP	(2<<6)		/*!< Trans. RESPonse */
+#define ATP_TREL	(3<<6)		/*!< Trans. RELease */
 
 extern ATP		atp_open(uint8_t, const struct at_addr *);
 extern int		atp_close(ATP);

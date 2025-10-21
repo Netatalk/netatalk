@@ -289,7 +289,7 @@ static const unsigned char	ethermultitab[253][6] = {
 };
 
 
-/* configure multicast for a given named interface */
+/*! configure multicast for a given named interface */
 int addmulti(const char *name, const unsigned char *data)
 {
     struct sockaddr sa;
@@ -326,11 +326,13 @@ atalk_cksum(unsigned char *data, int len)
     return (uint16_t) cksum;
 }
 
-/*
- * Fill in multicast for zone.  There is a general issue here:  how can
- * we tell the type of interface we're configuring for?  E.g.  Is it
- * ethernet, tokenring, or FDDI?  (Of course, FDDI and Ethernet look just
- * alike.)
+/*!
+ * @brief Fill in multicast for zone.
+ *
+ * @note There is a general issue here:
+ * how can we tell the type of interface we're configuring for?
+ * E.g. Is it ethernet, tokenring, or FDDI?
+ * (Of course, FDDI and Ethernet look just alike.)
  */
 int
 zone_bcast(struct ziptab *zt)

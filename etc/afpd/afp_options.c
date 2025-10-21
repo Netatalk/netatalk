@@ -37,9 +37,10 @@
 
 #define LENGTH 512
 
-/*
- * Show version information about afpd.
- * Used by "afp -v".
+/*!
+ * @brief Show version information about afpd.
+ *
+ * Used by "afpd -v".
  */
 static void show_version(void)
 {
@@ -83,9 +84,10 @@ static void show_version(void)
     puts(DEFAULT_CNID_SCHEME);
 }
 
-/*
- * Show extended version information about afpd and Netatalk.
- * Used by "afp -V".
+/*!
+ * @brief Show extended version information about afpd and Netatalk.
+ *
+ * Used by "afpd -V".
  */
 static void show_version_extended(void)
 {
@@ -150,7 +152,7 @@ static void show_version_extended(void)
 #endif
 }
 
-/*
+/*!
  * Display compiled-in default paths
  */
 static void show_paths(void)
@@ -164,7 +166,7 @@ static void show_paths(void)
     printf("  Server messages path:\t%s\n", SERVERTEXT);
 }
 
-/*
+/*!
  * Display usage information about afpd.
  */
 static void show_usage(void)

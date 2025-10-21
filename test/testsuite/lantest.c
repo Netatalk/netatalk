@@ -89,9 +89,9 @@
 #define ERROR_VOLUME_OPERATIONS  9
 #define ERROR_LOGIN             10
 
-/* Global Debug flag */
+/*! Global Debug flag */
 bool Debug = false;
-/* Global Quiet flag override for lantest (stdout output enabled) */
+/*! Global Quiet flag override for lantest (stdout output enabled) */
 bool lantest_Quiet = false;
 
 /* Control Variables */
@@ -160,25 +160,25 @@ static char teststorun[NUMTESTS];
 static uint64_t (*results)[][NUMTESTS][NUM_MEASUREMENTS];
 static char *bigfilename;
 
-/* Result display controls
+/*! Result display controls
 false = tabular (default), true = CSV */
 static bool csv_output = false;
-/* Display width for test names in progress output */
+/*! Display width for test names in progress output */
 #define TEST_NAME_DISPLAY_WIDTH 66
-/* Descriptive test names for output formatting with AFP operation counts */
+/*! Descriptive test names for output formatting with AFP operation counts */
 static const char *test_names[NUMTESTS] = {
-    "Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]",  /* TEST_OPENSTATREAD */
-    "Writing one large file [103 AFP ops]",  /* TEST_WRITE100MB */
-    "Reading one large file [102 AFP ops]",  /* TEST_READ100MB */
-    "Locking/Unlocking 10000 times each [20,000 AFP ops]",  /* TEST_LOCKUNLOCK */
-    "Creating dir with 2000 files [4,000 AFP ops]",  /* TEST_CREATE2000FILES */
-    "Enumerate dir with 2000 files [~51 AFP ops]",  /* TEST_ENUM2000FILES */
-    "Deleting dir with 2000 files [2,000 AFP ops]",  /* TEST_DELETE2000FILES */
-    "Create directory tree with 1000 dirs [1,110 AFP ops]",  /* TEST_CREATEDIR */
-    "Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]",  /* TEST_DIRCACHE_HITS */
-    "Mixed cache operations (create/stat/enum/delete) [820 AFP ops]",  /* TEST_DIRCACHE_MIXED */
-    "Deep path traversal (nested directory navigation) [3,500 AFP ops]",  /* TEST_DIRCACHE_TRAVERSE */
-    "Cache validation efficiency (metadata changes) [30,000 AFP ops]"  /* TEST_CACHE_VALIDATION */
+    "Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]",  /*!< TEST_OPENSTATREAD */
+    "Writing one large file [103 AFP ops]",  /*!< TEST_WRITE100MB */
+    "Reading one large file [102 AFP ops]",  /*!< TEST_READ100MB */
+    "Locking/Unlocking 10000 times each [20,000 AFP ops]",  /*!< TEST_LOCKUNLOCK */
+    "Creating dir with 2000 files [4,000 AFP ops]",  /*!< TEST_CREATE2000FILES */
+    "Enumerate dir with 2000 files [~51 AFP ops]",  /*!< TEST_ENUM2000FILES */
+    "Deleting dir with 2000 files [2,000 AFP ops]",  /*!< TEST_DELETE2000FILES */
+    "Create directory tree with 1000 dirs [1,110 AFP ops]",  /*!< TEST_CREATEDIR */
+    "Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]",  /*!< TEST_DIRCACHE_HITS */
+    "Mixed cache operations (create/stat/enum/delete) [820 AFP ops]",  /*!< TEST_DIRCACHE_MIXED */
+    "Deep path traversal (nested directory navigation) [3,500 AFP ops]",  /*!< TEST_DIRCACHE_TRAVERSE */
+    "Cache validation efficiency (metadata changes) [30,000 AFP ops]"  /*!< TEST_CACHE_VALIDATION */
 };
 
 static void starttimer(void)
@@ -203,7 +203,7 @@ static uint64_t timediff(void)
     return (tv_dif.tv_sec * 1000) + (tv_dif.tv_usec / 1000);
 }
 
-/* Helper function to format test name with fixed-width padding */
+/*! Helper function to format test name with fixed-width padding */
 static void format_padded_test_name(char *dest, const char *src, size_t width)
 {
     int32_t len = snprintf(dest, width + 1, "%-*s", (int32_t)width, src);
@@ -279,7 +279,7 @@ static void addresult(int32_t test, uint8_t iteration)
     fprintf(stdout, "\n");
 }
 
-/* Helper function to check if measurement should be skipped */
+/*! Helper function to check if measurement should be skipped */
 static inline int32_t should_skip_measurement(int32_t measure_type)
 {
 #ifdef __linux__
@@ -289,7 +289,7 @@ static inline int32_t should_skip_measurement(int32_t measure_type)
 #endif
 }
 
-/* Helper function to calculate statistics for all tests */
+/*! Helper function to calculate statistics for all tests */
 static void results_calc_stats(uint64_t
                                averages[NUMTESTS][NUM_MEASUREMENTS],
                                double std_devs[NUMTESTS][NUM_MEASUREMENTS],
@@ -352,7 +352,7 @@ static void results_calc_stats(uint64_t
     }
 }
 
-/* Helper function to print headers */
+/*! Helper function to print headers */
 static void results_print_headers(bool is_csv)
 {
 #ifdef __linux__
@@ -400,7 +400,7 @@ static void results_print_headers(bool is_csv)
 #endif
 }
 
-/* Helper function to print data row */
+/*! Helper function to print data row */
 static void results_print_row(int32_t test, bool is_csv,
                               uint64_t averages[NUMTESTS][NUM_MEASUREMENTS],
                               double std_devs[NUMTESTS][NUM_MEASUREMENTS])
@@ -679,7 +679,7 @@ static void displayresults(void)
     result_print_summary(averages, csv_output, teststorun);
 }
 
-/* Safe integer conversion with validation */
+/*! Safe integer conversion with validation */
 static int32_t safe_atoi(const char *str, const char *param_name,
                          int32_t min_val,
                          int32_t max_val)

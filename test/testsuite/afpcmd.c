@@ -8,22 +8,14 @@
 /* -------------------------------------------*/
 static char *dsi_command2str[] = {
     "???",
-    /* 1 - DSICloseSession */
-    "DSIFUNC_CLOSE",
-    /* 2 - DSICommand */
-    "DSIFUNC_CMD",
-    /* 3 - DSIGetStatus */
-    "DSIFUNC_STAT",
-    /* 4 - DSIOpenSession */
-    "DSIFUNC_OPEN",
-    /* 5 - DSITickle */
-    "DSIFUNC_TICKLE",
-    /* 6 - DSIWrite */
-    "DSIFUNC_WRITE",
-    /* 7 */
+    "DSIFUNC_CLOSE",          /*!< DSICloseSession */
+    "DSIFUNC_CMD",            /*!< DSICommand */
+    "DSIFUNC_STAT",           /*!< DSIGetStatus */
+    "DSIFUNC_OPEN",           /*!< DSIOpenSession */
+    "DSIFUNC_TICKLE",         /*!< DSITickle */
+    "DSIFUNC_WRITE",          /*!< DSIWrite */
     "DSI???",
-    /* 8 - DSIAttention */
-    "DSIFUNC_ATTN",
+    "DSIFUNC_ATTN",           /*!< DSIAttention */
 };
 
 char *afp_error(int error)

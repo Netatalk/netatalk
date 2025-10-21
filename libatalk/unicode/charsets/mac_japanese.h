@@ -15,10 +15,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
- *
- * Reference
+ */
+
+/*!
+ * @file
+ * @sa Reference
  * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
+
 
 static const uint16_t mac_japanese_uni2_page00[][2] = {
     /* 0x00a */ { 0x0201,    1 },

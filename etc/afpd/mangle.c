@@ -1,8 +1,12 @@
 /*
  * Copyright (c) 2002 Joe Marcus Clarke (jclarke@marcuscom.com)
  * All Rights Reserved.  See COPYRIGHT.
+ */
+
+/*!
+ * @file
+ * @brief mangle, demangle (filename)
  *
- * mangle, demangle (filename):
  * mangle or demangle filenames if they are greater than the max allowed
  * characters for a given version of AFP.
  */
@@ -239,22 +243,23 @@ demangle_osx(const struct vol *vol, char *mfilename, cnid_t did, cnid_t *fileid)
     return private_demangle(vol, mfilename, did, fileid);
 }
 
-/* -------------------------------------------------------
-   FIXME !!!
-
+/*!
+   @bug
    Early Mac OS X (10.0-10.4.?) had the limitation up to 255 Byte.
    Current implementation is:
       volcharset -> UTF16-MAC -> truncated 255 UTF8-MAC
-
+   @bug
    Recent Mac OS X (10.4.?-) don't have this limitation.
    Desirable implementation is:
       volcharset -> truncated 510 UTF16-MAC -> UTF8-MAC
 
-   ------------------------
+   @note
    with utf8 filename not always round trip
+   @code
    filename   mac filename too long or first chars if unmatchable chars.
    uname      unix filename
    id         file/folder ID or 0
+   @endcode
 */
 char *
 mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,

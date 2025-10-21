@@ -43,7 +43,7 @@
  * RPC data marshalling and unmarshalling
  **************************************************************************************************/
 
-/* Spotlight epoch is UNIX epoch minus SPOTLIGHT_TIME_DELTA */
+/*! Spotlight epoch is UNIX epoch minus SPOTLIGHT_TIME_DELTA */
 #define SPOTLIGHT_TIME_DELTA INT64_C(280878921600U)
 
 #define SQ_TYPE_NULL    0x0000
@@ -98,10 +98,10 @@ static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
     return 0;
 }
 
-/*
-* Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
-* If there is no byte order mark, -1 is returned.
-*/
+/*!
+ * @brief Returns the UTF-16 string encoding, by checking the 2-byte byte order mark.
+ * @returns If there is no byte order mark, -1 is returned.
+ */
 static uint spotlight_get_utf16_string_encoding(const char *buf, int offset,
         int query_length, uint encoding)
 {

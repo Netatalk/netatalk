@@ -74,7 +74,7 @@
 
 #include "nad.h"
 
-int log_verbose;             /* Logging flag */
+int log_verbose;             /*!< Logging flag */
 
 void _log(enum logtype lt, char *fmt, ...)
 {

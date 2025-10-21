@@ -48,19 +48,18 @@ static int ad_recvfile_init(const struct adouble *ad, int eid, off_t *off)
     return fd;
 }
 
-/*
+#define TRANSFER_BUF_SIZE (128*1024)
+
+/*!
  * If tofd is -1, drain the incoming socket of count bytes without writing to the outgoing fd,
  * if a write fails we do the same.
  *
  * Returns -1 on short reads from fromfd (read error) and sets errno.
  *
- * Returns number of bytes written to 'tofd'  or thrown away if 'tofd == -1'.
+ * Returns number of bytes written to 'tofd' or thrown away if 'tofd == -1'.
  * return != count then sets errno.
  * Returns count if complete success.
  */
-
-#define TRANSFER_BUF_SIZE (128*1024)
-
 static ssize_t default_sys_recvfile(int fromfd,
                                     int tofd,
                                     off_t offset,
@@ -266,7 +265,7 @@ ssize_t sys_recvfile(int fromfd, int tofd, off_t offset, size_t count)
 }
 #endif
 
-/* read from a socket and write to an adouble file */
+/*! read from a socket and write to an adouble file */
 ssize_t ad_recvfile(struct adouble *ad, int eid, int sock, off_t off,
                     size_t len, int splice_size)
 {

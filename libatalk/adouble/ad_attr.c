@@ -14,11 +14,12 @@
 #define FILEIOFF_ATTR 14
 #define AFPFILEIOFF_ATTR 2
 
-/*
-   Note:
+/*!
+   @note
    the "shared" and "invisible" attributes are opaque and stored and
    retrieved from the FinderFlags. This fixes Bug #2802236:
-   <https://sourceforge.net/tracker/?func=detail&aid=2802236&group_id=8642&atid=108642>
+
+   @sa https://sourceforge.net/p/netatalk/bugs/350/
  */
 int ad_getattr(const struct adouble *ad, uint16_t *attr)
 {
@@ -105,10 +106,10 @@ int ad_setattr(const struct adouble *ad, const uint16_t attribute)
     return 0;
 }
 
-/* --------------
- * save file/folder ID in AppleDoubleV2 netatalk private parameters
- * return 1 if resource fork has been modified
- * return -1 on error.
+/*!
+ * @brief save file/folder ID in AppleDoubleV2 netatalk private parameters
+ * @returns 1 if resource fork has been modified
+ * @returns -1 on error.
  */
 int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino,
              const uint32_t id, const cnid_t did, const void *stamp)
@@ -216,8 +217,9 @@ EC_CLEANUP:
     return 1;
 }
 
-/*
- * Retrieve stored file / folder. Callers should treat a return of CNID_INVALID (0) as an invalid value.
+/*!
+ * @brief Retrieve stored file / folder.
+ * @note Callers should treat a return of CNID_INVALID (0) as an invalid value.
  */
 uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino,
                   const cnid_t did, const void *stamp _U_)
@@ -308,7 +310,7 @@ uint32_t ad_forcegetid(struct adouble *adp)
     return CNID_INVALID;
 }
 
-/* -----------------
+/*!
  * set resource fork filename attribute.
  */
 int ad_setname(struct adouble *ad, const char *path)

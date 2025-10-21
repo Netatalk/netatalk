@@ -230,7 +230,7 @@ static int copy_all(const int dfd, const void *buf,
     return 0;
 }
 
-/* --------------------------
+/*!
  * copy only the fork data stream
 */
 int copy_fork(int eid, struct adouble *add, struct adouble *ads, uint8_t *buf,

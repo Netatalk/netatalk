@@ -71,8 +71,7 @@ int CloseClientSocket(int fd)
     return close(fd);
 }
 
-/* -------------------------------------------------------*/
-/* read raw data. return actual bytes read. this will wait until
+/*! read raw data. return actual bytes read. this will wait until
  * it gets length bytes */
 size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
@@ -127,8 +126,7 @@ int dsi_read_header(DSI *dsi)
     return block[1];
 }
 
-/* -------------------------------------------------------*/
-/* read data. function on success. 0 on failure. data length gets
+/*! read data. function on success. 0 on failure. data length gets
  * stored in length variable. this should really use size_t's, but
  * that would require changes elsewhere. */
 int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
@@ -179,8 +177,7 @@ size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length)
     return written;
 }
 
-/* --------------------------------------------------- */
-/* write data. 0 on failure. this assumes that dsi_len will never
+/*! write data. 0 on failure. this assumes that dsi_len will never
  * cause an overflow in the data buffer. */
 static int use_writev = 1;
 int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
@@ -396,7 +393,7 @@ static unsigned int SendCmdVolDidCname(CONN *conn, uint8_t cmd, uint16_t vol,
     return dsi->header.dsi_code;
 }
 
-/* -----------------------------------------------
+/*!
    Open a new session
 */
 unsigned int DSIOpenSession(CONN *conn)
@@ -436,7 +433,7 @@ unsigned int DSIOpenSession(CONN *conn)
     return dsi->header.dsi_code;
 }
 
-/* -----------------------------------------------
+/*!
    GetStatus
 */
 unsigned int DSIGetStatus(CONN *conn)
@@ -453,7 +450,7 @@ unsigned int DSIGetStatus(CONN *conn)
     return dsi->header.dsi_code;
 }
 
-/* -----------------------------------------------
+/*!
    Close Session
    no reply
 */
@@ -470,8 +467,8 @@ unsigned int DSICloseSession(CONN *conn)
     return 0;
 }
 
-/* ==============================================
-	spec violation in netatalk
+/*!
+	@bug spec violation in netatalk
 	FPlogout ==> dsiclose
 */
 unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
@@ -924,8 +921,7 @@ uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap)
     return volID;
 }
 
-/* -------------------------------  */
-/* Converts Pascal string to C (null-terminated) string. */
+/*! Converts Pascal string to C (null-terminated) string. */
 int strp2c(char *cstr, unsigned char *pstr)
 {
     int i;
@@ -938,8 +934,7 @@ int strp2c(char *cstr, unsigned char *pstr)
     return i;
 }
 
-/* -------------------------------  */
-/* Our malloc wrapper. It zeroes allocated memory. */
+/*! Our malloc wrapper. It zeroes allocated memory. */
 void *fp_malloc(size_t size)
 {
     void *ret = malloc(size);
@@ -974,8 +969,7 @@ void *fp_realloc(void *ptr, size_t size)
     return ret;
 }
 
-/* -------------------------------  */
-/* Our free wrapper. It does nothing special at the moment. */
+/*! Our free wrapper. It does nothing special at the moment. */
 void fp_free(void *ptr)
 {
     if (ptr != NULL) {
@@ -1058,7 +1052,7 @@ void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
     }
 }
 
-/* -------------------------------
+/*!
  * Only backup date is valid.
 */
 int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
@@ -1136,7 +1130,6 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
     return b - beg;
 }
 
-/* -------------------------------------- */
 /* FIXME: redundant bitmap parameters !
  * FIXME: some of those parameters are not tested. */
 void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
@@ -2058,8 +2051,8 @@ unsigned int AFPRead(CONN *conn, uint16_t fork, int offset, int size,
     return AFPReadFooter(dsi, fork, offset, size, data);
 }
 
-/* ----------------------
- * Assume size < 2GB
+/*!
+ * @note Assume size < 2GB
 */
 unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
                          char *data)
@@ -2270,10 +2263,9 @@ unsigned int AFPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
 
 /* -------------------------------
 */
-unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
-                          uint16_t f_bitmap, uint16_t d_bitmap,
-                          uint32_t rbitmap, struct afp_filedir_parms *filedir,
-                          struct afp_filedir_parms *filedir2)
+unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t nbe, char *pos,
+                          uint16_t f_bitmap, uint16_t d_bitmap, uint32_t rbitmap,
+                          struct afp_filedir_parms *filedir, struct afp_filedir_parms *filedir2)
 {
     int ofs;
     int len;
@@ -2304,8 +2296,7 @@ unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
     temp = htonl(rbitmap);
     memcpy(dsi->commands + ofs, &temp, sizeof(temp));
     ofs += sizeof(temp);
-    len = afp_filedir_pack(dsi->commands + ofs + 2, filedir,
-                           rbitmap & 0xffff, 0);
+    len = afp_filedir_pack(dsi->commands + ofs + 2, filedir, rbitmap & 0xffff, 0);
     dsi->commands[ofs] = (uint8_t) len;
     ofs += len + 2;
     len = afp_filedir_pack(dsi->commands + ofs + 2, filedir2, rbitmap & 0xffff, 0);
@@ -2321,9 +2312,8 @@ unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
 /* -------------------------------
 */
 unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
-                             uint16_t f_bitmap, uint16_t d_bitmap,
-                             uint32_t rbitmap, struct afp_filedir_parms *filedir,
-                             struct afp_filedir_parms *filedir2)
+                             uint16_t f_bitmap, uint16_t d_bitmap, uint32_t rbitmap,
+                             struct afp_filedir_parms *filedir, struct afp_filedir_parms *filedir2)
 {
     int ofs;
     int len;

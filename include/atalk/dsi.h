@@ -17,32 +17,38 @@
 #include <atalk/globals.h>
 #include <atalk/server_child.h>
 
-/* What a DSI packet looks like:
-   0                               32
-   |-------------------------------|
-   |flags  |command| requestID     |
-   |-------------------------------|
-   |error code/enclosed data offset|
-   |-------------------------------|
-   |total data length              |
-   |-------------------------------|
-   |reserved field                 |
-   |-------------------------------|
-
-   CONVENTION: anything with a dsi_ prefix is kept in network byte order.
+/*!
+ * @file
+ * @brief DSI (Data Stream Interface) protocol definitions
+ *
+ * What a DSI packet looks like:
+ * @code
+ *   0                               32
+ *   |-------------------------------|
+ *   |flags  |command| requestID     |
+ *   |-------------------------------|
+ *   |error code/enclosed data offset|
+ *   |-------------------------------|
+ *   |total data length              |
+ *   |-------------------------------|
+ *   |reserved field                 |
+ *   |-------------------------------|
+ * @endcode
+ *
+ * @note CONVENTION: anything with a dsi_ prefix is kept in network byte order.
 */
 
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
-    uint8_t dsi_flags;       /* packet type: request or reply */
-    uint8_t dsi_command;     /* command */
-    uint16_t dsi_requestID;  /* request ID */
+    uint8_t dsi_flags;       /*!< packet type: request or reply */
+    uint8_t dsi_command;     /*!< command */
+    uint16_t dsi_requestID;  /*!< request ID */
     union {
-        uint32_t dsi_code;   /* error code */
-        uint32_t dsi_doff;   /* data offset */
+        uint32_t dsi_code;   /*!< error code */
+        uint32_t dsi_doff;   /*!< data offset */
     } dsi_data;
-    uint32_t dsi_len;        /* total data length */
-    uint32_t dsi_reserved;   /* reserved field */
+    uint32_t dsi_len;        /*!< total data length */
+    uint32_t dsi_reserved;   /*!< reserved field */
 };
 
 #define DSI_DATASIZ       65536
@@ -50,7 +56,7 @@ struct dsi_block {
 /* child and parent processes might interpret a couple of these
  * differently. */
 typedef struct DSI {
-    struct DSI *next;             /* multiple listening addresses */
+    struct DSI *next;             /*!< multiple listening addresses */
     AFPObj   *AFPobj;
     int      statuslen;
     char     status[1400];
@@ -58,31 +64,31 @@ typedef struct DSI {
     struct dsi_block        header;
     struct sockaddr_storage server, client;
     struct itimerval        timer;
-    int      tickle;            /* tickle count */
-    int      in_write;          /* in the middle of writing multiple packets,
+    int      tickle;            /*!< tickle count */
+    int      in_write;          /*!< in the middle of writing multiple packets,
                                    signal handlers can't write to the socket */
-    int      msg_request;       /* pending message to the client */
-    int      down_request;      /* pending SIGUSR1 down in 5 mn */
+    int      msg_request;       /*!< pending message to the client */
+    int      down_request;      /*!< pending SIGUSR1 down in 5 mn */
 
     uint32_t attn_quantum, datasize, server_quantum;
     uint16_t serverID, clientID;
-    uint8_t  *commands; /* DSI recieve buffer */
-    uint8_t  data[DSI_DATASIZ];    /* DSI reply buffer */
+    uint8_t  *commands; /*!< DSI recieve buffer */
+    uint8_t  data[DSI_DATASIZ];    /*!< DSI reply buffer */
     size_t   datalen, cmdlen;
     off_t    read_count, write_count;
-    uint32_t flags;             /* DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
-    int      socket;            /* AFP session socket */
-    int      serversock;        /* listening socket */
+    uint32_t flags;             /*!< DSI flags like DSI_SLEEPING, DSI_DISCONNECTED */
+    int      socket;            /*!< AFP session socket */
+    int      serversock;        /*!< listening socket */
 
     /* DSI readahead buffer used for buffered reads in dsi_peek */
-    size_t   dsireadbuf;        /* size of the DSI readahead buffer used in dsi_peek() */
-    char     *buffer;           /* buffer start */
-    char     *start;            /* current buffer head */
-    char     *eof;              /* end of currently used buffer */
+    size_t   dsireadbuf;        /*!< size of the DSI readahead buffer used in dsi_peek() */
+    char     *buffer;           /*!< buffer start */
+    char     *start;            /*!< current buffer head */
+    char     *eof;              /*!< end of currently used buffer */
     char     *end;
 
 #ifdef USE_ZEROCONF
-    char *bonjourname;      /* server name as UTF8 maxlen MAXINSTANCENAMELEN */
+    char *bonjourname;      /*!< server name as UTF8 maxlen MAXINSTANCENAMELEN */
     int zeroconf_registered;
 #endif
 
@@ -99,19 +105,19 @@ typedef struct DSI {
 #define DSIFL_MAX        0x01
 
 /* DSI session options */
-#define DSIOPT_SERVQUANT 0x00   /* server request quantum */
-#define DSIOPT_ATTNQUANT 0x01   /* attention quantum */
-#define DSIOPT_REPLCSIZE 0x02   /* AFP replaycache size supported by the server (that's us) */
+#define DSIOPT_SERVQUANT 0x00   /*!< server request quantum */
+#define DSIOPT_ATTNQUANT 0x01   /*!< attention quantum */
+#define DSIOPT_REPLCSIZE 0x02   /*!< AFP replaycache size supported by the server (that's us) */
 
 /* DSI Commands */
-#define DSIFUNC_CLOSE   1       /* DSICloseSession */
-#define DSIFUNC_CMD     2       /* DSICommand */
-#define DSIFUNC_STAT    3       /* DSIGetStatus */
-#define DSIFUNC_OPEN    4       /* DSIOpenSession */
-#define DSIFUNC_TICKLE  5       /* DSITickle */
-#define DSIFUNC_WRITE   6       /* DSIWrite */
-#define DSIFUNC_ATTN    8       /* DSIAttention */
-#define DSIFUNC_MAX     8       /* largest command */
+#define DSIFUNC_CLOSE   1       /*!< DSICloseSession */
+#define DSIFUNC_CMD     2       /*!< DSICommand */
+#define DSIFUNC_STAT    3       /*!< DSIGetStatus */
+#define DSIFUNC_OPEN    4       /*!< DSIOpenSession */
+#define DSIFUNC_TICKLE  5       /*!< DSITickle */
+#define DSIFUNC_WRITE   6       /*!< DSIWrite */
+#define DSIFUNC_ATTN    8       /*!< DSIAttention */
+#define DSIFUNC_MAX     8       /*!< largest command */
 
 /* DSI Error codes: most of these aren't used. */
 #define DSIERR_OK   0x0000
@@ -127,25 +133,25 @@ typedef struct DSI {
 #define DSIERR_NOACK    0xfbcd
 
 /* server and client quanta */
-#define DSI_DEFQUANT        2           /* default attention quantum size */
-#define DSI_SERVQUANT_MAX   0xffffffff  /* server quantum */
-#define DSI_SERVQUANT_MIN   32000       /* minimum server quantum */
-#define DSI_SERVQUANT_DEF   0x100000L   /* default server quantum (1 MB) */
+#define DSI_DEFQUANT        2           /*!< default attention quantum size */
+#define DSI_SERVQUANT_MAX   0xffffffff  /*!< server quantum */
+#define DSI_SERVQUANT_MIN   32000       /*!< minimum server quantum */
+#define DSI_SERVQUANT_DEF   0x100000L   /*!< default server quantum (1 MB) */
 
-/* default port number */
+/*! default port number */
 #define DSI_AFPOVERTCP_PORT 548
 
 /* DSI session State flags */
-#define DSI_DATA             (1 << 0) /* we have received a DSI command */
-#define DSI_RUNNING          (1 << 1) /* we have received a AFP command */
-#define DSI_SLEEPING         (1 << 2) /* we're sleeping after FPZzz */
-#define DSI_EXTSLEEP         (1 << 3) /* we're sleeping after FPZzz */
-#define DSI_DISCONNECTED     (1 << 4) /* we're in diconnected state after a socket error */
-#define DSI_DIE              (1 << 5) /* SIGUSR1, going down in 5 minutes */
-#define DSI_NOREPLY          (1 << 6) /* in dsi_write we generate our own replies */
-#define DSI_RECONSOCKET      (1 << 7) /* we have a new socket from primary reconnect */
-#define DSI_RECONINPROG      (1 << 8) /* used in the new session in reconnect */
-#define DSI_AFP_LOGGED_OUT   (1 << 9) /* client called afp_logout, quit on next EOF from socket */
+#define DSI_DATA             (1 << 0) /*!< we have received a DSI command */
+#define DSI_RUNNING          (1 << 1) /*!< we have received a AFP command */
+#define DSI_SLEEPING         (1 << 2) /*!< we're sleeping after FPZzz */
+#define DSI_EXTSLEEP         (1 << 3) /*!< we're sleeping after FPZzz */
+#define DSI_DISCONNECTED     (1 << 4) /*!< we're in diconnected state after a socket error */
+#define DSI_DIE              (1 << 5) /*!< SIGUSR1, going down in 5 minutes */
+#define DSI_NOREPLY          (1 << 6) /*!< in dsi_write we generate our own replies */
+#define DSI_RECONSOCKET      (1 << 7) /*!< we have a new socket from primary reconnect */
+#define DSI_RECONINPROG      (1 << 8) /*!< used in the new session in reconnect */
+#define DSI_AFP_LOGGED_OUT   (1 << 9) /*!< client called afp_logout, quit on next EOF from socket */
 
 /* basic initialization: dsi_init.c */
 extern DSI *dsi_init(AFPObj *obj, const char *hostname, const char *address,

@@ -75,7 +75,7 @@ void usage(char *p)
     exit(1);
 }
 
-/*
+/*!
  * Unregister ourself on signal.
  */
 void goaway(int signal _U_)

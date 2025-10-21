@@ -30,9 +30,8 @@
 /* allocation size for interface list. */
 #define IFACE_NUM 5
 
-/* we leave all of the ioctl's to the application */
+/*! we leave all of the ioctl's to the application */
 static int addname(char **list, int *i, const char *name)
-
 {
     /* if we've run out of room, allocate some more. just return
      * the present list if we can't. */
@@ -113,9 +112,9 @@ static int getifaces(const int sockfd, char ***list)
 }
 
 
-/*
- * Get interfaces from the kernel. we keep an extra null entry to signify
- * the end of the interface list.
+/*!
+ * @brief Get interfaces from the kernel.
+ * @note we keep an extra null entry to signify the end of the interface list.
  */
 char **getifacelist(void)
 {
@@ -137,7 +136,7 @@ char **getifacelist(void)
 }
 
 
-/* go through and free the interface list */
+/*! go through and free the interface list */
 void freeifacelist(char **ifacelist)
 {
     char *value, **list = ifacelist;

@@ -164,9 +164,9 @@ bool fce_handle_coalescation(int event, const char *path)
     return false;
 }
 
-/*
- * Set event coalescation to reduce number of events sent over UDP
- * all|delete|create
+/*!
+ * @brief Set event coalescation to reduce number of events sent over UDP
+ * @note supports event types all|delete|create
  */
 
 int fce_set_coalesce(const char *opt)

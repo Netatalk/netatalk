@@ -24,7 +24,7 @@
 struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
-/* login and login_ext are almost the same */
+/*! login and login_ext are almost the same */
 static int noauth_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf _U_, size_t ibuflen _U_,
                         char *rbuf _U_, size_t *rbuflen)
@@ -64,7 +64,7 @@ static int noauth_login_ext(void *obj, char *uname _U_, struct passwd **uam_pwd,
 }
 
 
-/* Printer NoAuthUAM Login */
+/*! Printer NoAuthUAM Login */
 static int noauth_printer(char *start, char *stop, char *username,
                           struct papfile *out)
 {

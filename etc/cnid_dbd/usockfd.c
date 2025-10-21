@@ -25,7 +25,7 @@
 
 #include "usockfd.h"
 
-/* ---------------
+/*!
  * create a tcp socket
  */
 int tsockfd_create(char *host, char *port, int backlog)

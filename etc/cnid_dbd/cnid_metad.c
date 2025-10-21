@@ -5,24 +5,27 @@
  * All Rights Reserved.  See COPYING.
  */
 
-/*
-   cnid_dbd metadaemon to start up cnid_dbd upon request from afpd.
-   Here is how it works:
-
-                       via TCP socket
-   1.       afpd          ------->        cnid_metad
-
-                   via UNIX domain socket
-   2.   cnid_metad        ------->         cnid_dbd
-
-                    passes afpd client fd
-   3.   cnid_metad        ------->         cnid_dbd
-
-   Result:
-                       via TCP socket
-   4.       afpd          ------->         cnid_dbd
-
-   cnid_metad and cnid_dbd have been converted to non-blocking IO in 2010.
+/*!
+ * @file
+ * @brief cnid_dbd metadaemon to start up cnid_dbd upon request from afpd.
+ *
+ *  Here is how it works:
+ * @code
+ *                      via TCP socket
+ *  1.       afpd          ------->        cnid_metad
+ *
+ *                  via UNIX domain socket
+ *  2.   cnid_metad        ------->         cnid_dbd
+ *
+ *                   passes afpd client fd
+ *  3.   cnid_metad        ------->         cnid_dbd
+ *
+ *  Result:
+ *                      via TCP socket
+ *  4.       afpd          ------->         cnid_dbd
+ * @endcode
+ *
+ *  cnid_metad and cnid_dbd have been converted to non-blocking IO in 2010.
  */
 
 
@@ -98,11 +101,9 @@ static int rqstfd;
 static volatile sig_atomic_t sigchild = 0;
 static uint maxvol;
 
-/* Max times respawned in.. */
-#define MAXSPAWN   3
-/* this much seconds apfd client tries to  *
- * to reconnect every 5 secondes, catch it */
-#define TESTTIME   10
+#define MAXSPAWN   3              /*!< Max times respawned in.. */
+#define TESTTIME   10             /*!< this much seconds apfd client tries to
+                                   * to reconnect every 5 secondes, catch it */
 #define MAXVOLS    4096
 #define DEFAULTHOST  "localhost"
 #define DEFAULTPORT  "4700"
@@ -110,12 +111,9 @@ static uint maxvol;
 struct server {
     char *v_path;
     pid_t pid;
-    /* When respawned last */
-    time_t tm;
-    /* Times respawned in the last TESTTIME secondes */
-    unsigned int count;
-    /* file descriptor to child cnid_dbd process */
-    int control_fd;
+    time_t tm;           /*!< When respawned last */
+    unsigned int count;  /*!< Times respawned in the last TESTTIME secondes */
+    int control_fd;      /*!< file descriptor to child cnid_dbd process */
 };
 
 static struct server srv[MAXVOLS];

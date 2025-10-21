@@ -52,7 +52,7 @@ Netatalk 2001 (c)
   "debug9",                       \
   "maxdebug"}
 
-/* these are the string identifiers corresponding to each logtype */
+/*! these are the string identifiers corresponding to each logtype */
 #define LOGTYPE_STRING_IDENTIFIERS { \
   "Default",                         \
   "Logger",                          \
@@ -69,16 +69,19 @@ Netatalk 2001 (c)
    Config
  */
 
-/* Main log config container */
+/*! Main log config container */
 log_config_t log_config = { 0 };
 
-/* Default log config: log nothing to files.
+/*! Default log config: log nothing to files.
+ @code
    0:               set ?
    0:               syslog ?
    -1:              logfiles fd
    log_none:        no logging by default
    0:               Display options
-   false            timestamp_us */
+   false            timestamp_us
+ @endcode
+ */
 #define DEFAULT_LOG_CONFIG {0, 0, -1, log_none, 0, true}
 
 UAM_MODULE_EXPORT logtype_conf_t type_configs[logtype_end_of_list_marker] = {
@@ -205,7 +208,7 @@ static int get_syslog_equivalent(enum loglevels loglevel)
     }
 }
 
-/* Called by the LOG macro for syslog messages */
+/*! Called by the LOG macro for syslog messages */
 static void make_syslog_entry(enum loglevels loglevel,
                               enum logtypes logtype _U_, char *message)
 {
@@ -345,7 +348,7 @@ static void log_setup(const char *filename, enum loglevels loglevel,
         log_us_timestamp);
 }
 
-/* Setup syslog logging */
+/*! Setup syslog logging */
 void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
                   int facility)
 {
@@ -380,14 +383,17 @@ void syslog_setup(int loglevel, enum logtypes logtype, int display_options,
         arr_loglevel_strings[loglevel]);
 }
 
-/*
- * If filename == NULL its for syslog logging, otherwise its for file-logging.
+/*!
+ * @brief If filename == NULL its for syslog logging, otherwise its for file-logging.
+ *
  * "unsetuplog" calls with loglevel == NULL.
  * loglevel == NULL means:
+ * @code
  *    if logtype == default
  *       disable logging
  *    else
  *       set to default logging
+ * @endcode
  */
 static void setuplog_internal(const char *loglevel, const char *logtype,
                               const char *filename, const bool log_us_timestamp)
@@ -439,18 +445,18 @@ static void setuplog_internal(const char *loglevel, const char *logtype,
    Global function definitions
  */
 
-/* This function sets up the processname */
+/*! This function sets up the processname */
 void set_processname(const char *processname)
 {
     strncpy(log_config.processname, processname, 15);
     log_config.processname[15] = 0;
 }
 
-/* -------------------------------------------------------------------------
-   make_log_entry has 1 main flaws:
-   The message in its entirity, must fit into the tempbuffer.
-   So it must be shorter than MAXLOGSIZE
-   ------------------------------------------------------------------------- */
+/*!
+ * @bug make_log_entry has 1 main flaw:
+ * The message in its entirety, must fit into the tempbuffer.
+ * So it must be shorter than MAXLOGSIZE
+ */
 void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
                     const char *file, const bool log_us_timestamp, int line, char *message, ...)
 {

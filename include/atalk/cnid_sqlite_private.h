@@ -4,8 +4,7 @@
 #include <atalk/cnid_private.h>
 #include <atalk/uuid.h>
 
-/* CNID set overflowed */
-#define CNID_SQLITE_FLAG_DEPLETED (1 << 0)
+#define CNID_SQLITE_FLAG_DEPLETED (1 << 0) /*!< CNID set overflowed */
 
 typedef struct CNID_sqlite_private {
     struct vol *vol;

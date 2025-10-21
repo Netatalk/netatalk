@@ -47,17 +47,7 @@
 
 /*!
  * @file
- *
- * @brief Character-set conversion routines built on our iconv.
- *
- * @note Samba's internal character set (at least in the 3.0 series)
- * is always the same as the one for the Unix filesystem.  It is
- * <b>not</b> necessarily UTF-8 and may be different on machines that
- * need i18n filenames to be compatible with Unix software.  It does
- * have to be a superset of ASCII.  All multibyte sequences must start
- * with a byte with the high bit set.
- *
- * @sa lib/iconv.c
+ * Character-set conversion routines based on samba iconv wrappers.
  */
 
 
@@ -73,7 +63,7 @@ static char hexdig[] = "0123456789abcdef";
 
 
 /*!
- * @brief Return the name of a charset to give to iconv().
+ * Return the name of a charset to give to iconv().
  */
 static const char *charset_name(charset_t ch)
 {
@@ -856,15 +846,16 @@ end:
             || (option & CONV_FORCE)) ? destlen - o_len : (size_t) -1;
 }
 
-/*
- * Convert from UCS2 to MB charset
+/*!
+ * @brief Convert from UCS2 to MB charset
+ *
  * Flags:
- *      CONV_ESCAPEDOTS: escape leading dots
- *      CONV_ESCAPEHEX:  unconvertable characters and '/' will be escaped to :XX
- *      CONV_IGNORE:     return the first convertable characters.
- *      CONV__EILSEQ:    unconvertable characters will be replaced with '_'
- *      CONV_FORCE:  force convertion
- * FIXME:
+ *     - CONV_ESCAPEDOTS: escape leading dots
+ *     - CONV_ESCAPEHEX:  unconvertable characters and '/' will be escaped to :XX
+ *     - CONV_IGNORE:     return the first convertable characters.
+ *     - CONV__EILSEQ:    unconvertable characters will be replaced with '_'
+ *     - CONV_FORCE:      force convertion
+ * @bug
  *      CONV_IGNORE and CONV_ESCAPEHEX can't work together. Should we check this ?
  *      This will *not* work if the destination charset is not multibyte, i.e. UCS2->UCS2 will fail
  *      The escape scheme is not compatible to the old cap style escape. This is bad, we need it
@@ -963,9 +954,9 @@ end:
             || (option & CONV_FORCE)) ? destlen - o_len : (size_t) -1;
 }
 
-/*
- * FIXME the size is a mess we really need a malloc/free logic
- *`dest size must be dest_len +2
+/*!
+ * @bug the size is a mess we really need a malloc/free logic
+ * @note dest size must be dest_len +2
  */
 size_t convert_charset(charset_t from_set, charset_t to_set,
                        charset_t cap_charset, const char *src, size_t src_len, char *dest,

@@ -29,7 +29,7 @@
 #include "cache.h"
 
 typedef struct cacheduser {
-    unsigned long uid;      /* for future use */
+    unsigned long uid;      /*!< for future use */
     uuidtype_t type;
     unsigned char *uuid;
     char *name;
@@ -38,8 +38,8 @@ typedef struct cacheduser {
     struct cacheduser *next;
 } cacheduser_t;
 
-static cacheduser_t *namecache[256];   /* indexed by hash of name */
-static cacheduser_t *uuidcache[256];   /* indexed by hash of uuid */
+static cacheduser_t *namecache[256];   /*!< indexed by hash of name */
+static cacheduser_t *uuidcache[256];   /*!< indexed by hash of uuid */
 
 /********************************************************
  * helper function
@@ -103,7 +103,7 @@ void uuidcache_dump(void)
     }
 }
 
-/* hash string it into unsigned char using FNV-1a algorithm */
+/*! hash string it into unsigned char using FNV-1a algorithm */
 static unsigned char hashstring(unsigned char *str)
 {
     /* FNV-1a constants */
@@ -120,7 +120,7 @@ static unsigned char hashstring(unsigned char *str)
     return ((hash >> 8) ^ hash) & 0xff;
 }
 
-/* hash atalk_uuid_t into unsigned char */
+/*! hash atalk_uuid_t into unsigned char */
 static unsigned char hashuuid(uuidp_t uuid)
 {
     unsigned char index = 83;
@@ -289,7 +289,7 @@ int search_cachebyname(const char *name, uuidtype_t *type, unsigned char *uuid)
     return -1;
 }
 
-/*
+/*!
  * Caller must free allocated name
  */
 int search_cachebyuuid(uuidp_t uuidp, char **name, uuidtype_t *type)

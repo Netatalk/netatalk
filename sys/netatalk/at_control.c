@@ -42,7 +42,7 @@ void atalk_hash(struct sockaddr_at *sat, struct afhash *hp)
                        sat->sat_addr.s_node;
 }
 
-/*
+/*!
  * Note the magic to get ifa_ifwithnet() to work without adding an
  * ifaddr entry for each net in our local range.
  */

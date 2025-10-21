@@ -46,7 +46,7 @@
 
 #include "afp_zeroconf.h"
 
-/* how many seconds we wait to shutdown from SIGTERM before we send SIGKILL */
+/*! how many seconds we wait to shutdown from SIGTERM before we send SIGKILL */
 #define KILL_GRACETIME 5
 
 /* defines that control whether services should run by default */
@@ -87,7 +87,7 @@ static bool service_running(pid_t pid)
 }
 
 #ifdef WITH_SPOTLIGHT
-/* Set indexers to index all our volumes */
+/*! Set indexers to index all our volumes */
 static int set_sl_volumes(void)
 {
     EC_INIT;
@@ -173,7 +173,7 @@ EC_CLEANUP:
  * libevent helper functions
  ******************************************************************/
 
-/* libevent logging callback */
+/*! libevent logging callback */
 static void libevent_logmsg_cb(int severity, const char *msg)
 {
     switch (severity) {
@@ -203,7 +203,7 @@ static void libevent_logmsg_cb(int severity, const char *msg)
  * libevent event callbacks
  ******************************************************************/
 
-/* SIGTERM callback */
+/*! SIGTERM callback */
 static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     sigset_t sigs;
@@ -245,7 +245,7 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
-/* SIGQUIT callback */
+/*! SIGQUIT callback */
 static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
@@ -266,7 +266,7 @@ static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
-/* SIGHUP callback */
+/*! SIGHUP callback */
 static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     LOG(log_note, logtype_afpd,
@@ -282,7 +282,7 @@ static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
 }
 
-/* SIGCHLD callback */
+/*! SIGCHLD callback */
 static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     int status;
@@ -324,7 +324,7 @@ static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     }
 }
 
-/* timer callback */
+/*! timer callback */
 static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 {
     if (in_shutdown) {
@@ -371,7 +371,7 @@ static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
  * helper functions
  ******************************************************************/
 
-/* kill processes passed as varargs of type "pid_t *", terminate list with NULL */
+/*! kill processes passed as varargs of type "pid_t *", terminate list with NULL */
 static void kill_childs(int sig, ...)
 {
     va_list args;
@@ -389,14 +389,14 @@ static void kill_childs(int sig, ...)
     va_end(args);
 }
 
-/* this get called when error conditions are met that require us to exit gracefully */
+/*! this get called when error conditions are met that require us to exit gracefully */
 static void netatalk_exit(int ret)
 {
     server_unlock(PATH_NETATALK_LOCK);
     exit(ret);
 }
 
-/* this forks() and exec() "path" with varags as argc[] */
+/*! this forks() and exec() "path" with varags as argc[] */
 static pid_t run_process(const char *path, ...)
 {
     int i = 0;

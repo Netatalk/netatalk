@@ -43,19 +43,19 @@
 
 #include <atalk/vfs.h>
 
-/*
+/*!
  * This seems to be the current limit fo HFS+, we arbitrarily force that
  *  which also safes us from buffer overflows
  */
 #define MAX_EA_SIZE 3802
 
-/*
+/*!
  * req_count has space for AFP response bitmap and length as well, so
  * 6 bytes
  */
 #define MAX_REPLY_EXTRA_BYTES 6
 
-/*
+/*!
  * Library user must provide a static buffer of size ATTRNAMEBUFSIZ.
  * It's used when listing EAs as intermediate buffer. For afpd it's
  * defined in extattrs.c.
@@ -69,8 +69,8 @@ enum {
 };
 
 #if !defined(HAVE_SETXATTR)
-#define XATTR_CREATE  0x1       /* set value, fail if attr already exists */
-#define XATTR_REPLACE 0x2       /* set value, fail if attr does not exist */
+#define XATTR_CREATE  0x1       /*!< set value, fail if attr already exists */
+#define XATTR_REPLACE 0x2       /*!< set value, fail if attr does not exist */
 #endif
 
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
@@ -123,18 +123,20 @@ int sys_getxattrfd(int fd, const char *uname, int oflag, ...);
  * Stuff for our implementation of storing EAs in files in .AppleDouble dirs
  ****************************************************************************************/
 
-#define EA_INITED   0xea494e54  /* ea"INT", for interfacing ea_open w. ea_close */
-#define EA_MAGIC    0x61644541 /* "adEA" */
+#define EA_INITED   0xea494e54  /*!< ea"INT",
+                                 * for interfacing ea_open w. ea_close */
+#define EA_MAGIC    0x61644541 /*!< "adEA" */
 #define EA_VERSION1 0x01
 #define EA_VERSION  EA_VERSION1
 
 typedef enum {
     /* ea_open flags */
-    EA_CREATE    = (1 << 1),    /* create if not existing on ea_open */
-    EA_RDONLY    = (1 << 2),    /* open read only */
-    EA_RDWR      = (1 << 3),    /* open read/write */
+    EA_CREATE    = (1 << 1),    /*!< create if not existing on ea_open */
+    EA_RDONLY    = (1 << 2),    /*!< open read only */
+    EA_RDWR      = (1 << 3),    /*!< open read/write */
     /* ea_open internal flags */
-    EA_DIR       = (1 << 4)     /* ea header file is for a dir, ea_open adds it as appropriate */
+    EA_DIR       = (1 << 4)     /*!< ea header file is for a dir,
+                                 *ea_open adds it as appropriate */
 } eaflags_t;
 
 #define EA_MAGIC_OFF   0
@@ -152,37 +154,30 @@ typedef enum {
  */
 
 struct ea_entry {
-    /* len of ea_name without terminating 0 i.e. strlen(ea_name)*/
-    size_t ea_namelen;
-    /* size of EA */
-    size_t ea_size;
-    /* name of the EA */
-    char *ea_name;
+    size_t       ea_namelen; /*!< len of ea_name without terminating 0
+                              * i.e. strlen(ea_name)*/
+    size_t       ea_size;    /*!< size of EA*/
+    char         *ea_name;   /*!< name of the EA */
 };
 
 /* We read the on-disk data into *ea_data and parse it into this*/
 struct ea {
-    /* needed for interfacing ea_open w. ea_close */
-    uint32_t ea_inited;
-    /* vol handle, ea_close needs it */
-    const struct vol *vol;
-    /* for *at (cf openat) semantics, -1 means ignore */
-    int dirfd;
-    /* name of file, needed by ea_close too */
-    char *filename;
-    /* number of EAs in ea_entries array */
-    unsigned int ea_count;
-    /* malloced and realloced as needed by ea_count*/
-    struct ea_entry(*ea_entries)[];
-    /* open fd for ea_data */
-    int ea_fd;
-    /* flags */
-    eaflags_t ea_flags;
-    /* size of header file = size of ea_data buffer */
-    size_t ea_size;
-    /* pointer to buffer into that we actually *
-     * read the disc file into                 */
-    char *ea_data;
+    uint32_t         ea_inited;       /*!< needed for interfacing ea_open
+                                       * w. ea_close */
+    const struct vol *vol;            /*!< vol handle, ea_close needs it */
+    int              dirfd;           /*!< for *at (cf openat) semantics,
+                                       * -1 means ignore */
+    char             *filename;       /*!< name of file,
+                                       * needed by ea_close too */
+    unsigned int     ea_count;        /*!< number of EAs in ea_entries array */
+    struct ea_entry(*ea_entries)[];   /*!< malloced and realloced
+                                       * as needed by ea_count */
+    int              ea_fd;           /*!< open fd for ea_data */
+    eaflags_t        ea_flags;        /*!< flags */
+    size_t           ea_size;         /*!< size of header file = size of
+                                       * ea_data buffer */
+    char             *ea_data;        /*!< pointer to buffer into that we
+                                       * actually read the disc file into */
 };
 
 /* On-disk format, just for reference ! */

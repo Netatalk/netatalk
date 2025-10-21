@@ -1,6 +1,9 @@
 /*
  * All rights reserved. See COPYRIGHT.
- *
+ */
+
+/*!
+ * @file
  * IPC over socketpair between parent and children.
  */
 
@@ -48,8 +51,8 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
                                "IPC_LOGINDONE"
                              };
 
-/*
- * Pass afp_socket to old disconnected session if one has a matching token (token = pid)
+/*!
+ * @brief Pass afp_socket to old disconnected session if one has a matching token (token = pid)
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
 static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)

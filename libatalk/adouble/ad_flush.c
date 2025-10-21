@@ -49,7 +49,7 @@ static const uint32_t set_eid[] = {
 
 #define EID_DISK(a) (set_eid[a])
 
-/*
+/*!
  * Prepare ad->ad_data buffer from struct adouble for writing on disk
  */
 int ad_rebuild_adouble_header_v2(struct adouble *ad)
@@ -133,7 +133,7 @@ int ad_rebuild_adouble_header_ea(struct adouble *ad)
 }
 
 /*!
- * @brief Prepare adbuf buffer from struct adouble for writing on disk
+ * Prepare adbuf buffer from struct adouble for writing on disk
  */
 int ad_rebuild_adouble_header_osx(struct adouble *ad, char *adbuf)
 {
@@ -398,7 +398,10 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/* Flush resofork adouble file if any (currently adouble:ea and #ifndef HAVE_EAFD e.g. Linux) */
+/*!
+ * @brief Flush resofork adouble file if any
+ * @note currently adouble:ea and \#ifndef HAVE_EAFD e.g. Linux
+ */
 static int ad_flush_rf(struct adouble *ad)
 {
     ssize_t len;
@@ -471,7 +474,7 @@ static int ad_data_closefd(struct adouble *ad)
 }
 
 /*!
- * @brief Close a struct adouble freeing all resources
+ * Close a struct adouble freeing all resources
  */
 int ad_close(struct adouble *ad, int adflags)
 {

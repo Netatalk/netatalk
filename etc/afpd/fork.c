@@ -1158,11 +1158,11 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFP_OK;
 }
 
-/*
-  FIXME
+/*!
+  @bug
   There is a lot to tell about fsync, fdatasync, F_FULLFSYNC.
   fsync(2) on OSX is implemented differently than on other platforms.
-  see: http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf.
+  @sa http://mirror.linux.org.au/pub/linux.conf.au/2007/video/talks/278.pdf
 */
 int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
