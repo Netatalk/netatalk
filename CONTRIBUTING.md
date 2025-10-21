@@ -206,7 +206,8 @@ int return_zero(int i)
 
 - Code comments
   - C style comments, not C++ style
-  - Comments should come on the line before the code it describes; avoid trailing comments on the same line
+  - Comments should come on the line before the code it describes
+    - Exception: Trailing Doxygen comments (see below)
   - Single line: `/* Your comment goes here */`
   - Multi line comments use a `*` prefix
 
@@ -218,32 +219,31 @@ Ex.
  */
 ```
 
-- Code documentation comments
-  - Use *Qt style* comments for documenting functions, parameters, return values, structs, enums, and macros
-  - Use `/*! ... */` to indicate multi-line comments
-  - Use `/*!< ... */` to indicate single-line comments
-  - Use a *@* prefix for [commanded tags](https://www.doxygen.nl/manual/commands.html) such as `@param` and `@returns`
-  - A multi-line function documentation comment should have a `@brief` description first,
-    followed by a blank line, followed by a more elaborate description if needed,
-    followed by `@param` and `@returns` value documentation
-  - Indicate input/output status for `@param` with \[in\],[\out\], and \[[in,out]\] tags
-  - Use Markdown for rich formatting, for instance for numbered and bulleted lists
+- Code documentation
+  - We use a Doxygen based documentation system for code documentation, with:
+    - *QDoc* style `/*! ... */` markers
+    - Use `/*!< ... */` to for trailing comments
+    - *JavaDoc* style `@` prefixed [commanded tags](https://www.doxygen.nl/manual/commands.html)
+  - Most comment blocks should include `@brief`, `@param` and `@returns`
+  - Indicate input/output status for `@param` with \[in\],\[out\], and \[in,out\] tags
+  - Surround code blocks with `@code ... @endcode` for proper formatting
+  - Use CommonMark markdown for rich formatting, for instance for numbered and bulleted lists
 
 Ex.
 
 ```C
 /*!
- * @brief Copy a string from a UCS2 src to a unix char * destination, allocating a buffer
+ * @brief Inititialize rootinfo key (which has CNID 0 as key)
  *
- * @param ch destination character set
- * @param src source UCS2 string
- * @param dest always set at least to NULL
- * @param destlen maximum length of destination buffer
+ * @note This also "stamps" the database, which means storing st.st_ctime
+ * of the "cnid2.db" file in the rootinfo data at the DEV offset
  *
- * @returns The number of bytes occupied by the string in the destination
+ * @param[in,out] dbd       database handle
+ * @param[in] version       database version number
+ *
+ * @returns -1 on error, 0 on success
  */
-size_t ucs2_to_charset(charset_t ch, const ucs2_t *src, char *dest,
-                       size_t destlen)
+static int dbif_init_rootinfo(DBD *dbd, int version)
 {
     ...
 }
