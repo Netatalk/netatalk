@@ -1,5 +1,6 @@
 /*
- * See COPYRIGHT.
+ * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * All Rights Reserved.  See COPYRIGHT.
  *
  * bug:
  * afp_XXXcomment are (the only) functions able to open
