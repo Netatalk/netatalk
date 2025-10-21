@@ -20,18 +20,18 @@
 #define SPOTLIGHT_SPARQL_MAP_H
 
 enum ssm_type {
-    ssmt_bool,   /* a boolean value that doesn't requires a SPARQL FILTER */
-    ssmt_num,    /* a numeric value that requires a SPARQL FILTER */
-    ssmt_str,    /* a string value that requieres a SPARQL FILTER */
-    ssmt_fts,    /* a string value that will be queried with SPARQL 'fts:match' */
-    ssmt_date,   /* date values are handled in a special map function map_daterange() */
-    ssmt_type    /* kMDItemContentType, requires special mapping */
+    ssmt_bool,   /*!< a boolean value that doesn't requires a SPARQL FILTER */
+    ssmt_num,    /*!< a numeric value that requires a SPARQL FILTER */
+    ssmt_str,    /*!< a string value that requieres a SPARQL FILTER */
+    ssmt_fts,    /*!< a string value that will be queried with SPARQL 'fts:match' */
+    ssmt_date,   /*!< date values are handled in a special map function map_daterange() */
+    ssmt_type    /*!< kMDItemContentType, requires special mapping */
 };
 
 enum kMDTypeMap {
-    kMDTypeMapNotSup,           /* not supported */
-    kMDTypeMapRDF,              /* query with rdf:type */
-    kMDTypeMapMime              /* query with nie:mimeType */
+    kMDTypeMapNotSup,           /*!< not supported */
+    kMDTypeMapRDF,              /*!< query with rdf:type */
+    kMDTypeMapMime              /*!< query with nie:mimeType */
 };
 
 struct spotlight_sparql_map {
@@ -42,12 +42,11 @@ struct spotlight_sparql_map {
 };
 
 struct MDTypeMap {
-    /* MD query value of attributes '_kMDItemGroupId' and 'kMDItemContentTypeTree' */
-    const char *mdtm_value;
-    /* whether SPARQL query must search attribute rdf:type or nie:mime_Type */
-    enum kMDTypeMap mdtm_type;
-    /* the SPARQL query match string */
-    const char *mdtm_sparql;
+    const char *mdtm_value;    /*!< MD query value of attributes
+                                * '_kMDItemGroupId' and 'kMDItemContentTypeTree' */
+    enum kMDTypeMap mdtm_type; /*!< whether SPARQL query must search attribute
+                                * rdf:type or nie:mime_Type */
+    const char *mdtm_sparql;   /*!< the SPARQL query match string */
 };
 
 extern struct spotlight_sparql_map spotlight_sparql_map[];

@@ -203,7 +203,7 @@ static int get_client_username(char *username,
     return ret;
 }
 
-/* wrap afpd's sessionkey */
+/*! wrap afpd's sessionkey */
 static int wrap_sessionkey(gss_ctx_id_t context, struct session_info *sinfo)
 {
     OM_uint32 major_status = 0, minor_status = 0;

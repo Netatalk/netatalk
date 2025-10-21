@@ -203,10 +203,10 @@ static int get_linux_fs_quota(int, char *, uid_t, struct dqblk *);
 /* format supported by current kernel */
 static int kernel_iface = IFACE_UNSET;
 
-/*
-**  Check kernel quota version
-**  Taken from quota-tools 3.08 by Jan Kara <jack@suse.cz>
-*/
+/*!
+ *  @brief Check kernel quota version
+ *  @note Taken from quota-tools 3.08 by Jan Kara <jack@suse.cz>
+ */
 static void linuxquota_get_api(void)
 {
 #ifndef LINUX_API_VERSION
@@ -309,9 +309,9 @@ static int get_linux_quota(int what, char *path, uid_t euser_id,
     return r;
 }
 
-/****************************************************************************
- Abstract out the XFS Quota Manager quota get call.
-****************************************************************************/
+/*!
+ * Abstract out the XFS Quota Manager quota get call.
+ */
 
 static int get_linux_xfs_quota(int what, char *path, uid_t euser_id,
                                struct dqblk *dqb)
@@ -337,11 +337,11 @@ static int get_linux_xfs_quota(int what, char *path, uid_t euser_id,
     return ret;
 }
 
-/*
-** Wrapper for the quotactl(GETQUOTA) call.
-** For API v2 the results are copied back into a v1 structure.
-** Taken from quota-1.4.8 perl module
-*/
+/*!
+ * @brief Wrapper for the quotactl(GETQUOTA) call.
+ * @note For API v2 the results are copied back into a v1 structure.
+ * @note Taken from quota-1.4.8 perl module
+ */
 static int get_linux_fs_quota(int what, char *path, uid_t euser_id,
                               struct dqblk *dqb)
 {
@@ -407,9 +407,10 @@ static int get_linux_fs_quota(int what, char *path, uid_t euser_id,
 #endif /* linux */
 
 #if defined(HAVE_SYS_MNTTAB_H) || defined(__svr4__)
-/*
- * Return the mount point associated with the filesystem
- * on which "file" resides.  Returns NULL on failure.
+/*!
+ * @brief Return the mount point associated with the filesystem
+ * on which "file" resides.
+ * @returns NULL on failure.
  */
 static char *
 mountp(char *file, int *nfs)

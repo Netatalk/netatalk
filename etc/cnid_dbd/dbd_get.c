@@ -22,8 +22,7 @@
 #include "pack.h"
 
 
-/* Return CNID for a given did/name. */
-
+/*! Return CNID for a given did/name. */
 int dbd_get(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
 {
     char start[CNID_DID_LEN + MAXPATHLEN + 1], *buf;

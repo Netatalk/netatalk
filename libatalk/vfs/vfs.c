@@ -1080,9 +1080,8 @@ static int vfs_validupath(const struct vol *vol, const char *name)
     return vol->vfs_modules[0]->vfs_validupath(vol, name);
 }
 
-/*
+/*!
  * These function pointers get called from the lib users via vol->vfs->func.
- * These funcs are defined via the macros above.
  */
 static struct vfs_ops vfs_master_funcs = {
     vfs_validupath,

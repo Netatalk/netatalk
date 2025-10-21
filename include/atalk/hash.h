@@ -35,8 +35,9 @@ extern int hash_val_t_bit;
 #define HASH_VAL_T_BIT ((int) hash_val_t_bit)
 #endif
 
-/*
- * Hash chain node structure.
+/*!
+ * @brief Hash chain node structure.
+ *
  * Notes:
  * 1. This preprocessing directive is for debugging purposes.  The effect is
  *    that if the preprocessor symbol KAZLIB_OPAQUE_DEBUG is defined prior to the
@@ -70,7 +71,7 @@ typedef struct hnode_t {
 #endif
 } hnode_t;
 
-/*
+/*!
  * The comparison function pointer type. A comparison function takes two keys
  * and produces a value of -1 if the left key is less than the right key, a
  * value of 0 if the keys are equal, and a value of 1 if the left key is
@@ -79,7 +80,7 @@ typedef struct hnode_t {
 
 typedef int (*hash_comp_t)(const void *, const void *);
 
-/*
+/*!
  * The hashing function performs some computation on a key and produces an
  * integral value of type hash_val_t based on that key. For best results, the
  * function should have a good randomness properties in *all* significant bits
@@ -100,7 +101,7 @@ typedef hash_val_t (*hash_fun_t)(const void *);
 typedef hnode_t *(*hnode_alloc_t)(void *);
 typedef void (*hnode_free_t)(hnode_t *, void *);
 
-/*
+/*!
  * This is the hash table control structure. It keeps track of information
  * about a hash table, as well as the hash table itself.
  * Notes:
@@ -137,25 +138,25 @@ typedef void (*hnode_free_t)(hnode_t *, void *);
 
 typedef struct hash_t {
 #if defined(HASH_IMPLEMENTATION) || !defined(KAZLIB_OPAQUE_DEBUG)
-    struct hnode_t **hash_table;		/* 1 */
-    hashcount_t hash_nchains;			/* 2 */
-    hashcount_t hash_nodecount;			/* 3 */
-    hashcount_t hash_maxcount;			/* 4 */
-    hashcount_t hash_highmark;			/* 5 */
-    hashcount_t hash_lowmark;			/* 6 */
-    hash_comp_t hash_compare;			/* 7 */
-    hash_fun_t hash_function;			/* 8 */
+    struct hnode_t **hash_table;		/*!< 1 */
+    hashcount_t hash_nchains;			/*!< 2 */
+    hashcount_t hash_nodecount;			/*!< 3 */
+    hashcount_t hash_maxcount;			/*!< 4 */
+    hashcount_t hash_highmark;			/*!< 5 */
+    hashcount_t hash_lowmark;			/*!< 6 */
+    hash_comp_t hash_compare;			/*!< 7 */
+    hash_fun_t hash_function;			/*!< 8 */
     hnode_alloc_t hash_allocnode;
     hnode_free_t hash_freenode;
     void *hash_context;
-    hash_val_t hash_mask;			/* 9 */
-    int hash_dynamic;				/* 10 */
+    hash_val_t hash_mask;			/*!< 9 */
+    int hash_dynamic;				/*!< 10 */
 #else
     int hash_dummy;
 #endif
 } hash_t;
 
-/*
+/*!
  * Hash scanner structure, used for traversals of the data structure.
  * Notes:
  * 1. Pointer to the hash table that is being traversed.

@@ -28,25 +28,28 @@
 
 #include "directory.h"
 
-/*
+/*!
+ * @file
+ * @brief Definitions for ACL mapping code
+ *
  * This is what Apple says about ACL flags in sys/kauth.h:
  *
- * <Apple> The low 16 bits of the flags field are reserved for filesystem
+ * \<Apple\> The low 16 bits of the flags field are reserved for filesystem
  * internal use and must be preserved by all APIs.  This includes
  * round-tripping flags through user-space interfaces.
  * The high 16 bits of the flags are used to store attributes and
- * to request specific handling of the ACL. </Apple>
+ * to request specific handling of the ACL. \</Apple\>
  *
  * The constants are included for reference. We DONT expect them on
  * the wire! We will ignore and spoil em.
  */
 
 #ifdef HAVE_NFSV4_ACLS
-/* Some stuff for the handling of NFSv4 ACLs */
+/*! Some stuff for the handling of NFSv4 ACLs */
 #define ACE_TRIVIAL (ACE_OWNER | ACE_GROUP | ACE_EVERYONE)
 #endif /* HAVE_NFSV4_ACLS */
 
-/* FPGet|Set Bitmap */
+/*! FPGet|Set Bitmap */
 enum {
     kFileSec_UUID      = (1 << 0),
     kFileSec_GRPUUID   = (1 << 1),
@@ -55,31 +58,24 @@ enum {
     kFileSec_Inherit   = (1 << 4)
 };
 
-/* ACL Flags */
+/*! ACL Flags */
 #define DARWIN_ACL_FLAGS_PRIVATE       (0xffff)
-/* inheritance will be deferred until the first rename operation */
+/*! inheritance will be deferred until the first rename operation */
 #define KAUTH_ACL_DEFER_INHERIT (1<<16)
-/* this ACL must not be overwritten as part of an inheritance operation */
+/*! this ACL must not be overwritten as part of an inheritance operation */
 #define KAUTH_ACL_NO_INHERIT (1<<17)
 
 /* ACE Flags */
 #define DARWIN_ACE_FLAGS_KINDMASK           0xf
-/* 0x00000001 */
-#define DARWIN_ACE_FLAGS_PERMIT             (1<<0)
-/* 0x00000002 */
-#define DARWIN_ACE_FLAGS_DENY               (1<<1)
-/* 0x00000010 */
-#define DARWIN_ACE_FLAGS_INHERITED          (1<<4)
-/* 0x00000020 */
-#define DARWIN_ACE_FLAGS_FILE_INHERIT       (1<<5)
-/* 0x00000040 */
-#define DARWIN_ACE_FLAGS_DIRECTORY_INHERIT  (1<<6)
-/* 0x00000080 */
-#define DARWIN_ACE_FLAGS_LIMIT_INHERIT      (1<<7)
-/* 0x00000100 */
-#define DARWIN_ACE_FLAGS_ONLY_INHERIT       (1<<8)
+#define DARWIN_ACE_FLAGS_PERMIT             (1<<0) /*!< 0x00000001 */
+#define DARWIN_ACE_FLAGS_DENY               (1<<1) /*!< 0x00000002 */
+#define DARWIN_ACE_FLAGS_INHERITED          (1<<4) /*!< 0x00000010 */
+#define DARWIN_ACE_FLAGS_FILE_INHERIT       (1<<5) /*!< 0x00000020 */
+#define DARWIN_ACE_FLAGS_DIRECTORY_INHERIT  (1<<6) /*!< 0x00000040 */
+#define DARWIN_ACE_FLAGS_LIMIT_INHERIT      (1<<7) /*!< 0x00000080 */
+#define DARWIN_ACE_FLAGS_ONLY_INHERIT       (1<<8) /*!< 0x00000100 */
 
-/* All flag bits controlling ACE inheritance */
+/*! All flag bits controlling ACE inheritance */
 #define DARWIN_ACE_INHERIT_CONTROL_FLAGS \
        (DARWIN_ACE_FLAGS_FILE_INHERIT |\
         DARWIN_ACE_FLAGS_DIRECTORY_INHERIT |\
@@ -105,14 +101,14 @@ enum {
 #define DARWIN_ACE_WRITE_SECURITY      0x00001000
 #define DARWIN_ACE_TAKE_OWNERSHIP      0x00002000
 
-/* Access Control List Entry (ACE) */
+/*! Access Control List Entry (ACE) */
 typedef struct {
     atalk_uuid_t      darwin_ace_uuid;
     uint32_t    darwin_ace_flags;
     uint32_t    darwin_ace_rights;
 } darwin_ace_t;
 
-/* Access Control List */
+/*! Access Control List */
 typedef struct {
     uint32_t darwin_acl_count;
     uint32_t darwin_acl_flags;

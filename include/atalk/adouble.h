@@ -57,20 +57,20 @@
 #define ADEID_COMMENT       4
 #define ADEID_ICONBW        5
 #define ADEID_ICONCOL       6
-#define ADEID_FILEI         7  /* v1, replaced by: */
-#define ADEID_FILEDATESI    8  /* this */
+#define ADEID_FILEI         7  /*!< v1, replaced by ADEID_FILEDATESI */
+#define ADEID_FILEDATESI    8
 #define ADEID_FINDERI       9
-#define ADEID_MACFILEI      10 /* we don't use this */
-#define ADEID_PRODOSFILEI   11 /* we store prodos info here */
-#define ADEID_MSDOSFILEI    12 /* we don't use this */
+#define ADEID_MACFILEI      10 /*!< we don't use this */
+#define ADEID_PRODOSFILEI   11 /*!< we store prodos info here */
+#define ADEID_MSDOSFILEI    12 /*!< we don't use this */
 #define ADEID_SHORTNAME     13
-#define ADEID_AFPFILEI      14 /* where the rest of the FILEI info goes */
+#define ADEID_AFPFILEI      14 /*!< where the rest of the FILEI info goes */
 #define ADEID_DID           15
 
 /* netatalk private note fileid reused DID */
 #define ADEID_PRIVDEV       16
 #define ADEID_PRIVINO       17
-#define ADEID_PRIVSYN       18 /* in synch with database */
+#define ADEID_PRIVSYN       18 /*!< in synch with database */
 #define ADEID_PRIVID        19
 #define ADEID_MAX           (ADEID_PRIVID + 1)
 
@@ -90,8 +90,8 @@
 #define ADEDLEN_VERSION     4
 #define ADEDLEN_FILLER      16
 #define ADEDLEN_NENTRIES    2
-#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + ADEDLEN_FILLER + ADEDLEN_NENTRIES) /* 26 */
-#define AD_ENTRY_LEN        12  /* size of a single entry header */
+#define AD_HEADER_LEN       (ADEDLEN_MAGIC + ADEDLEN_VERSION + ADEDLEN_FILLER + ADEDLEN_NENTRIES) /*!< 26 */
+#define AD_ENTRY_LEN        12  /*!< size of a single entry header */
 
 /* field widths */
 #define ADEDLEN_NAME            255
@@ -99,7 +99,7 @@
 #define ADEDLEN_FILEI           16
 #define ADEDLEN_FINDERI         32
 #define ADEDLEN_FILEDATESI      16
-#define ADEDLEN_SHORTNAME       12 /* length up to 8.3 */
+#define ADEDLEN_SHORTNAME       12 /*!< length up to 8.3 */
 #define ADEDLEN_AFPFILEI        4
 #define ADEDLEN_MACFILEI        4
 #define ADEDLEN_PRODOSFILEI     8
@@ -150,7 +150,7 @@
 #define ADEDOFF_FINDERI_OSX  (AD_HEADER_LEN + ADEID_NUM_OSX*AD_ENTRY_LEN)
 #define ADEDOFF_RFORK_OSX    (ADEDOFF_FINDERI_OSX + ADEDLEN_FINDERI)
 
-/* special fd value used to indicate an open fork file is a (not open) symlink */
+/*! special fd value used to indicate an open fork file is a (not open) symlink */
 #define AD_SYMLINK -2
 
 typedef uint32_t cnid_t;
@@ -163,11 +163,11 @@ struct ad_entry {
 typedef struct adf_lock_t {
     struct flock lock;
     int user;
-    int *refcount; /* handle read locks with multiple users */
+    int *refcount; /*!< handle read locks with multiple users */
 } adf_lock_t;
 
 struct ad_fd {
-    int          adf_fd;        /* -1: invalid, AD_SYMLINK: symlink */
+    int          adf_fd;        /*!< -1: invalid, AD_SYMLINK: symlink */
     char         *adf_syml;
     int          adf_flags;
     adf_lock_t   *adf_lock;
@@ -175,7 +175,7 @@ struct ad_fd {
 };
 
 /* some header protection */
-#define AD_INITED  0xad494e54  /* ad"INT" */
+#define AD_INITED  0xad494e54  /*!< ad"INT" */
 #define AD_CLOSED  0xadc10ced
 
 struct adouble;
@@ -189,44 +189,36 @@ struct adouble_fops {
 };
 
 struct adouble {
-    /* Official adouble magic */
-    uint32_t ad_magic;
-    /* Official adouble version number */
-    uint32_t ad_version;
+    uint32_t ad_magic; /*!< Official adouble magic */
+    uint32_t ad_version; /*!< Official adouble version number */
     char ad_filler[16];
     struct ad_entry ad_eid[ADEID_MAX];
-    /* the data fork */
-    struct ad_fd ad_data_fork;
-    /* adouble:v2 -> the adouble file
-     * adouble:ea -> the EA fd */
-    struct ad_fd ad_resource_fork;
-    /* adouble:v2 -> ad_resource_fork
-     * adouble:ea -> ad_resource_fork */
-    struct ad_fd *ad_rfp;
-    /* adouble:v2 -> ad_resource_fork
-     * adouble:ea -> ad_data_fork */
-    struct ad_fd *ad_mdp;
-    /* Our adouble version info (AD_VERSION*) */
-    int ad_vers;
-    /* ad_open flags adflags like ADFLAGS_DIR */
-    int ad_adflags;
+
+    struct ad_fd ad_data_fork; /*!< the data fork */
+
+    struct ad_fd ad_resource_fork; /*!< adouble:v2 -> the adouble file
+                                    * adouble:ea -> the EA fd */
+
+    struct ad_fd *ad_rfp; /*!< adouble:v2 -> ad_resource_fork
+                           * adouble:ea -> ad_resource_fork */
+
+    struct ad_fd *ad_mdp; /*!< adouble:v2 -> ad_resource_fork
+                           * adouble:ea -> ad_data_fork */
+
+    int ad_vers; /*!< Our adouble version info (AD_VERSION*) */
+    int ad_adflags; /*!< ad_open flags adflags like ADFLAGS_DIR */
     uint32_t ad_inited;
     int ad_options;
-    /* multiple forks may open one adouble */
-    int ad_refcount;
+    int ad_refcount; /*!< multiple forks may open one adouble */
     int ad_data_refcount;
     int ad_meta_refcount;
     int ad_reso_refcount;
-    /* resource fork len with AFP 3.0
-     * the header parameter size is too small. */
-    off_t ad_rlen;
-    /* mac name (maccharset or UTF8-MAC) */
-    char *ad_name;
+    off_t ad_rlen; /*!< resource fork len with AFP 3.0
+                    * the header parameter size is too small. */
+    char *ad_name; /*!< mac name (maccharset or UTF8-MAC) */
     struct adouble_fops *ad_ops;
-    /* open forks (by others) */
-    uint16_t ad_open_forks;
-    /* Bytes read into ad_data */
-    size_t valid_data_len;
+    uint16_t ad_open_forks; /*!< open forks (by others) */
+    size_t valid_data_len; /*!< Bytes read into ad_data */
     char ad_data[AD_DATASZ_MAX];
 };
 
@@ -234,25 +226,25 @@ struct adouble {
 #define ADFLAGS_RF        (1<<1)
 #define ADFLAGS_HF        (1<<2)
 #define ADFLAGS_DIR       (1<<3)
-#define ADFLAGS_NOHF      (1<<4)  /* not an error if no metadata fork */
-#define ADFLAGS_NORF      (1<<5)  /* not an error if no resource fork */
-#define ADFLAGS_CHECK_OF  (1<<6)  /* check for open forks from us and other afpd's */
-#define ADFLAGS_SETSHRMD  (1<<7)  /* setting share mode must be done with excl fcnt lock,
-                                     which implies that the file must be openend rw.
+#define ADFLAGS_NOHF      (1<<4)  /*!< not an error if no metadata fork */
+#define ADFLAGS_NORF      (1<<5)  /*!< not an error if no resource fork */
+#define ADFLAGS_CHECK_OF  (1<<6)  /*!< check for open forks from us and other afpd's */
+#define ADFLAGS_SETSHRMD  (1<<7)  /*!< setting share mode must be done with excl fcnt lock,
+                                     which implies that the file must be opened rw.
                                      If it can't be opened rw (eg EPERM or EROFS) it will
                                      be opened ro and the fcntl locks will be shared, that
                                      at least prevent other users who have rw access to the
                                      file from placing excl locks. */
-#define ADFLAGS_RDWR      (1<<8)  /* open read/write */
-#define ADFLAGS_RDONLY    (1<<9)  /* open read only */
-#define ADFLAGS_CREATE    (1<<10) /* create file, open called with O_CREAT */
-#define ADFLAGS_EXCL      (1<<11) /* exclusive open, open called with O_EXCL */
-#define ADFLAGS_TRUNC     (1<<12) /* truncate, open called with O_TRUNC */
+#define ADFLAGS_RDWR      (1<<8)  /*!< open read/write */
+#define ADFLAGS_RDONLY    (1<<9)  /*!< open read only */
+#define ADFLAGS_CREATE    (1<<10) /*!< create file, open called with O_CREAT */
+#define ADFLAGS_EXCL      (1<<11) /*!< exclusive open, open called with O_EXCL */
+#define ADFLAGS_TRUNC     (1<<12) /*!< truncate, open called with O_TRUNC */
 
 #define ADVOL_NODEV      (1 << 0)
 #define ADVOL_RO         (1 << 1)
-#define ADVOL_UNIXPRIV   (1 << 2) /* adouble unix priv */
-#define ADVOL_INVDOTS    (1 << 3) /* dot files (.DS_Store) are invisible) */
+#define ADVOL_UNIXPRIV   (1 << 2) /*!< adouble unix priv */
+#define ADVOL_INVDOTS    (1 << 3) /*!< dot files (.DS_Store) are invisible) */
 #define ADVOL_FOLLO_SYML (1 << 4)
 #define ADVOL_FORCE_STICKY_XATTR (1 << 5)
 
@@ -307,18 +299,18 @@ struct adouble {
 #define FINDERINFO_FRFLAGOFF   8
 
 /* FinderInfo Flags, char in `ad ls`, valid for files|dirs */
-#define FINDERINFO_ISONDESK      (1)     /* "d", fd */
+#define FINDERINFO_ISONDESK      (1)     /*!< "d", fd */
 #define FINDERINFO_COLOR         (0x0e)
-#define FINDERINFO_HIDEEXT       (1<<4)  /* "e", fd */
-#define FINDERINFO_ISHARED       (1<<6)  /* "m", f  */
-#define FINDERINFO_HASNOINITS    (1<<7)  /* "n", f  */
-#define FINDERINFO_HASBEENINITED (1<<8)  /* "i", fd */
-#define FINDERINFO_HASCUSTOMICON (1<<10) /* "c", fd */
-#define FINDERINFO_ISSTATIONNERY (1<<11) /* "t", f  */
-#define FINDERINFO_NAMELOCKED    (1<<12) /* "s", fd */
-#define FINDERINFO_HASBUNDLE     (1<<13) /* "b", fd */
-#define FINDERINFO_INVISIBLE     (1<<14) /* "v", fd */
-#define FINDERINFO_ISALIAS       (1<<15) /* "a", fd */
+#define FINDERINFO_HIDEEXT       (1<<4)  /*!< "e", fd */
+#define FINDERINFO_ISHARED       (1<<6)  /*!< "m", f  */
+#define FINDERINFO_HASNOINITS    (1<<7)  /*!< "n", f  */
+#define FINDERINFO_HASBEENINITED (1<<8)  /*!< "i", fd */
+#define FINDERINFO_HASCUSTOMICON (1<<10) /*!< "c", fd */
+#define FINDERINFO_ISSTATIONNERY (1<<11) /*!< "t", f  */
+#define FINDERINFO_NAMELOCKED    (1<<12) /*!< "s", fd */
+#define FINDERINFO_HASBUNDLE     (1<<13) /*!< "b", fd */
+#define FINDERINFO_INVISIBLE     (1<<14) /*!< "v", fd */
+#define FINDERINFO_ISALIAS       (1<<15) /*!< "a", fd */
 
 #define FINDERINFO_FRVIEWOFF  14
 #define FINDERINFO_CUSTOMICON 0x4
@@ -331,28 +323,28 @@ struct adouble {
 */
 
 /* AFP attributes, char in `ad ls`, valid for files|dirs */
-#define ATTRBIT_INVISIBLE (1<<0)  /* opaque from FinderInfo */
-#define ATTRBIT_MULTIUSER (1<<1)  /* file: opaque, dir: see below */
-#define ATTRBIT_SYSTEM    (1<<2)  /* "y", fd */
-#define ATTRBIT_DOPEN     (1<<3)  /* data fork already open. Not stored, computed on the fly */
-#define ATTRBIT_ROPEN     (1<<4)  /* resource fork already open. Not stored, computed on the fly */
-#define ATTRBIT_NOWRITE   (1<<5)  /* "w", f, write inhibit(v2)/read-only(v1) bit */
-#define ATTRBIT_BACKUP    (1<<6)  /* "p", fd */
-#define ATTRBIT_NORENAME  (1<<7)  /* "r", fd */
-#define ATTRBIT_NODELETE  (1<<8)  /* "l", fd */
-#define ATTRBIT_NOCOPY    (1<<10) /* "o", f */
-#define ATTRBIT_SETCLR    (1<<15) /* set/clear bit (d) */
+#define ATTRBIT_INVISIBLE (1<<0)  /*!< opaque from FinderInfo */
+#define ATTRBIT_MULTIUSER (1<<1)  /*!< file: opaque, dir: see below */
+#define ATTRBIT_SYSTEM    (1<<2)  /*!< "y", fd */
+#define ATTRBIT_DOPEN     (1<<3)  /*!< data fork already open. Not stored, computed on the fly */
+#define ATTRBIT_ROPEN     (1<<4)  /*!< resource fork already open. Not stored, computed on the fly */
+#define ATTRBIT_NOWRITE   (1<<5)  /*!< "w", f, write inhibit(v2)/read-only(v1) bit */
+#define ATTRBIT_BACKUP    (1<<6)  /*!< "p", fd */
+#define ATTRBIT_NORENAME  (1<<7)  /*!< "r", fd */
+#define ATTRBIT_NODELETE  (1<<8)  /*!< "l", fd */
+#define ATTRBIT_NOCOPY    (1<<10) /*!< "o", f */
+#define ATTRBIT_SETCLR    (1<<15) /*!< set/clear bit (d) */
 
 /* AFP attributes for dirs. These should probably be computed on the fly.
  * We don't do that, nor does e.g. OS S X 10.5 Server */
-#define ATTRBIT_EXPFLDR   (1<<1)  /* Folder is a sharepoint */
-#define ATTRBIT_MOUNTED   (1<<3)  /* Directory is mounted by a user */
-#define ATTRBIT_SHARED    (1<<4)  /* Shared area, called IsExpFolder in spec */
+#define ATTRBIT_EXPFLDR   (1<<1)  /*!< Folder is a sharepoint */
+#define ATTRBIT_MOUNTED   (1<<3)  /*!< Directory is mounted by a user */
+#define ATTRBIT_SHARED    (1<<4)  /*!< Shared area, called IsExpFolder in spec */
 
 /* private AFPFileInfo bits */
-#define AD_AFPFILEI_OWNER       (1 << 0) /* any owner */
-#define AD_AFPFILEI_GROUP       (1 << 1) /* ignore group */
-#define AD_AFPFILEI_BLANKACCESS (1 << 2) /* blank access permissions */
+#define AD_AFPFILEI_OWNER       (1 << 0) /*!< any owner */
+#define AD_AFPFILEI_GROUP       (1 << 1) /*!< ignore group */
+#define AD_AFPFILEI_BLANKACCESS (1 << 2) /*!< blank access permissions */
 
 /*
  * String identifiers for the 16 AppleDouble filler bytes

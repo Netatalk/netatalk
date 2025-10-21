@@ -1,11 +1,13 @@
 /*
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
- *
+ */
+
+/*!
+ * @file
  * this provides a generic interface to the ddp layer. with this, we
  * should be able to interact with any appletalk stack that allows
- * direct access to the ddp layer. right now, only os x server's ddp
- * layer and the generic socket based interfaces are understood.
+ * direct access to the ddp layer.
  */
 
 #ifndef _ATALK_NETDDP_H

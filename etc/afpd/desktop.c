@@ -1,12 +1,16 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * All Rights Reserved.  See COPYRIGHT.
- *
- * bug:
- * afp_XXXcomment are (the only) functions able to open
- * a resource fork when there's no data fork, e.g. after
- * it was removed with samba.
  */
+
+/*!
+* @file
+* @brief Manage the AppleDesktop folder and its contents
+* @bug
+* afp_XXXcomment are (the only) functions able to open
+* a resource fork when there's no data fork, e.g. after
+* it was removed with samba.
+*/
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

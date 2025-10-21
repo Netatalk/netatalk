@@ -38,15 +38,15 @@ struct ofork {
 #define OPENACC_DWR (1<<5)
 
 /* ofork.of_flags bits */
-#define AFPFORK_DATA    (1<<0)  /* open datafork */
-#define AFPFORK_RSRC    (1<<1)  /* open rsrcfork */
-#define AFPFORK_META    (1<<2)  /* open metadata */
+#define AFPFORK_DATA    (1<<0)  /*!< open datafork */
+#define AFPFORK_RSRC    (1<<1)  /*!< open rsrcfork */
+#define AFPFORK_META    (1<<2)  /*!< open metadata */
 #define AFPFORK_DIRTY   (1<<3)
 #define AFPFORK_ACCRD   (1<<4)
 #define AFPFORK_ACCWR   (1<<5)
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
-#define AFPFORK_MODIFIED (1<<6) /* used in FCE for modified files */
-#define AFPFORK_ERROR   (1<<7)  /* used to indicate an error in opening the fork */
+#define AFPFORK_MODIFIED (1<<6) /*!< used in FCE for modified files */
+#define AFPFORK_ERROR   (1<<7)  /*!< used to indicate an error in opening the fork */
 
 #define of_name(a) (a)->of_ad->ad_name
 /* in ofork.c */

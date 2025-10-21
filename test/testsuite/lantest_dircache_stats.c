@@ -47,28 +47,28 @@
 extern bool Debug;
 
 /* Constants */
-/* 100KB buffer for reading log file */
+/*! 100KB buffer for reading log file */
 #define LOG_BUFFER_SIZE (100 * 1024)
-/* Number of log lines to show when no stats found */
+/*! Number of log lines to show when no stats found */
 #define MAX_LOG_LINES_DISPLAY 10
 
-/* Static buffer for reading log file - shared across functions */
+/*! Static buffer for reading log file - shared across functions */
 static char log_buffer[LOG_BUFFER_SIZE + 1];
-/* Actual number of bytes read into log_buffer */
+/*! Actual number of bytes read into log_buffer */
 static size_t log_buffer_bytes_read = 0;
 
-/* Compile-time assertion to ensure buffer size is reasonable */
+/*! Compile-time assertion to ensure buffer size is reasonable */
 _Static_assert(LOG_BUFFER_SIZE > 0 && LOG_BUFFER_SIZE <= (1024 * 1024),
                "LOG_BUFFER_SIZE must be between 1 byte and 1MB");
 
-/* Debug logging macro */
+/*! Debug logging macro */
 #define DEBUG_LOG(fmt, ...) \
     do { \
         if (Debug) \
             fprintf(stderr, "DEBUG: " fmt "\n", ##__VA_ARGS__); \
     } while(0)
 
-/* Parse netatalk config file to extract log file path */
+/*! Parse netatalk config file to extract log file path */
 static char *parse_config_for_log_path(void)
 {
     dictionary *iniconfig = NULL;
@@ -101,8 +101,8 @@ static char *parse_config_for_log_path(void)
     return log_file_path;
 }
 
-/* Read the last portion of log file into the static log_buffer
- * Returns: true on success, false on error */
+/*! @brief Read the last portion of log file into the static log_buffer
+ * @returns true on success, false on error */
 static bool read_log_tail(const char *log_file_path)
 {
     FILE *log_fp = NULL;
@@ -185,8 +185,8 @@ static bool read_log_tail(const char *log_file_path)
     return true;
 }
 
-/* Search buffer backwards for dircache statistics line
- * Uses the global log_buffer and log_buffer_bytes_read */
+/*! @brief Search buffer backwards for dircache statistics line
+ * @note Uses the global log_buffer and log_buffer_bytes_read */
 static char *find_dircache_stats_line(void)
 {
     char *stats_line = NULL;
@@ -249,7 +249,7 @@ static char *find_dircache_stats_line(void)
     return stats_line;
 }
 
-/* Display the last N lines from buffer when no stats found */
+/*! Display the last N lines from buffer when no stats found */
 static void display_last_log_lines(void)
 {
     printf("No 'dircache statistics:' logs found.\n\n");
@@ -333,7 +333,7 @@ static void display_last_log_lines(void)
     }
 }
 
-/* Read and display dircache statistics from log file */
+/*! Read and display dircache statistics from log file */
 void display_dircache_statistics(void)
 {
     char *log_file_path = NULL;
@@ -388,7 +388,7 @@ void display_dircache_statistics(void)
 
 #else /* !__linux__ */
 
-/* Stub implementation for non-Linux systems */
+/*! Stub implementation for non-Linux systems */
 void display_dircache_statistics(void)
 {
     /* Not available on this platform */

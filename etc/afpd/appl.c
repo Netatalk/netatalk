@@ -85,7 +85,7 @@ static int applopen(struct vol *vol, uint8_t creator[4], int flags, int mode)
     return AFP_OK;
 }
 
-/*
+/*!
  * copy appls to new file, deleting any matching (old) appl entries
  */
 static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
@@ -163,8 +163,8 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
     return cc;
 }
 
-/*
- * build mac. path (backwards) by traversing the directory tree
+/*!
+ * @brief build mac. path (backwards) by traversing the directory tree
  *
  * The old way: dir and path refer to an app, path is a mac format
  * pathname.  makemacpath() builds something that looks like a cname,
@@ -174,7 +174,7 @@ static int copyapplfile(int sfd, int dfd, char *mpath, u_short mplen)
  * pathname.  makemacpath() builds a cname. (zero is a path separator
  * and it's not \0 terminated).
  *
- * See afp_getappl() for the backward compatiblity code.
+ * @sa afp_getappl() for the backward compatiblity code.
  */
 static char *
 makemacpath(const struct vol *vol, char *mpath, int mpathlen, struct dir *dir,

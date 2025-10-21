@@ -187,10 +187,9 @@ struct ipent *get_ipent(uint32_t ip)
            &gMacip.ipent[ip - gMacip.net - 1] : 0;
 }
 
-/*
+/*!
  * aquire a new ip address from the pool
  */
-
 static uint32_t lease_ip()
 {
     int i;
@@ -210,7 +209,7 @@ static uint32_t lease_ip()
 }
 
 
-/*
+/*!
  * find AT address for an IP address
  */
 
@@ -241,7 +240,7 @@ static int arp_lookup(struct sockaddr_at *sat, uint32_t ip)
 }
 
 
-/*
+/*!
  * Set AT address from received packet
  */
 
@@ -266,8 +265,8 @@ static void arp_set(uint32_t ip, struct sockaddr_at *sat)
     }
 }
 
-/*
- *	handle name lookup replies, add to arp table
+/*!
+ * handle name lookup replies, add to arp table
  */
 
 static void arp_input(struct sockaddr_at *sat, char *buffer, int len)
@@ -303,8 +302,8 @@ static void arp_input(struct sockaddr_at *sat, char *buffer, int len)
     /* send packets waiting */
 }
 
-/*
- *	handle incoming IP packet
+/*!
+ * handle incoming IP packet
  */
 
 static void ip_input(struct sockaddr_at *sat, char *buffer, int len)
@@ -322,8 +321,8 @@ static void ip_input(struct sockaddr_at *sat, char *buffer, int len)
     gOutput(buffer, len);
 }
 
-/*
- *	send IP packet through AT
+/*!
+ * send IP packet through AT
  */
 
 void macip_output(char *buffer, int len)
@@ -360,8 +359,8 @@ void macip_output(char *buffer, int len)
     }
 }
 
-/*
- *	handle configuration ATP request
+/*!
+ * handle configuration ATP request
  */
 
 static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
@@ -468,8 +467,8 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
     }
 }
 
-/*
- *	Handle incoming AT packet
+/*!
+ * Handle incoming AT packet
  */
 
 void macip_input(void)
@@ -652,7 +651,7 @@ static int get_zones(void)
 }
 
 
-/*
+/*!
  * time out old arp entries
  */
 

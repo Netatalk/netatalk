@@ -209,11 +209,12 @@ void uam_unregister(const int type, const char *name)
     free(uam);
 }
 
-/* --- helper functions for plugin uams ---
- * name: user name
- * len:  size of name buffer.
-*/
-
+/*!
+ * @brief helper functions for plugin uams
+ * @param private pointer to AFPObj
+ * @param name    user name
+ * @param len     size of name buffer.
+ */
 struct passwd *uam_getname(void *private, char *name, const int len)
 {
     AFPObj *obj = private;

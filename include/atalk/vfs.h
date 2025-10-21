@@ -14,8 +14,11 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 
-   vfs layer for afp
+/*!
+ * @file
+ * vfs layer for afp
 */
 
 #ifndef ATALK_VFS_H
@@ -29,7 +32,7 @@
 #include <atalk/adouble.h>
 #include <atalk/volume.h>
 
-/* Maximum number of VFS modules that can be chained */
+/*! Maximum number of VFS modules that can be chained */
 #define VFS_MODULES_MAX 3
 
 /* Function argument types for VFS operations */
@@ -86,7 +89,7 @@ typedef int (*vfs_ea_set_fn)(const struct vol *vol, const char *uname,
 typedef int (*vfs_ea_remove_fn)(const struct vol *vol, const char *uname,
                                 const char *attruname, int oflag, int fd);
 
-/*
+/*!
  * Forward declaration. We need it because of the circular inclusion of
  * of vfs.h <-> volume.h.
  */

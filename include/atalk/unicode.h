@@ -10,10 +10,10 @@
 #define SAFE_FREE(x) do { if ((x) != NULL) {free(x); x=NULL;} } while(0)
 
 #ifndef EILSEQ
-#define EILSEQ       84      /* Illegal byte sequence.  */
+#define EILSEQ       84      /*!< Illegal byte sequence.  */
 #endif
 
-/* generic iconv conversion structure */
+/*! generic iconv conversion structure */
 typedef struct {
     size_t (*direct)(void *cd, char **inbuf, size_t *inbytesleft,
                      char **outbuf, size_t *outbytesleft);
@@ -36,35 +36,24 @@ typedef struct {
 #define IGNORE_CHAR '_'
 
 /* conversion flags */
-/* return the first convertable characters. */
-#define CONV_IGNORE         (1<<0)
-/* escape unconvertable chars with :[UCS2HEX], */
-/* also escape '/'. Escape ':' if also CONV_ALLOW_COLON, */
-/* else ':' raises EILSEQ */
-#define CONV_ESCAPEHEX      (1<<1)
-/* escape leading dots with :2600 */
-#define CONV_ESCAPEDOTS     (1<<2)
+#define CONV_IGNORE         (1<<0) /*!< return the first convertable characters. */
+#define CONV_ESCAPEHEX      (1<<1) /*!< escape unconvertable chars with :[UCS2HEX],
+                                    * also escape '/'. Escape ':' if also CONV_ALLOW_COLON,
+                                    * else ':' raises EILSEQ */
+#define CONV_ESCAPEDOTS     (1<<2) /*!< escape leading dots with :2600 */
 #define CONV_UNESCAPEHEX    (1<<3)
-/* convert to UPPERcase */
-#define CONV_TOUPPER        (1<<4)
-/* convert to lowercase */
-#define CONV_TOLOWER        (1<<5)
-/* precompose */
-#define CONV_PRECOMPOSE     (1<<6)
-/* decompose */
-#define CONV_DECOMPOSE      (1<<7)
-/* force convertion */
-#define CONV_FORCE          (1<<8)
-/* ignore EILSEQ, replace with IGNORE_CHAR (try USC2) */
-#define CONV__EILSEQ        (1<<9)
+#define CONV_TOUPPER        (1<<4) /*!< convert to UPPERcase */
+#define CONV_TOLOWER        (1<<5) /*!< convert to lowercase */
+#define CONV_PRECOMPOSE     (1<<6) /*!< precompose */
+#define CONV_DECOMPOSE      (1<<7) /*!< decompose */
+#define CONV_FORCE          (1<<8) /*!< force convertion */
+#define CONV__EILSEQ        (1<<9) /*!< ignore EILSEQ, replace with IGNORE_CHAR (try USC2) */
 
 /* conversion return flags */
-/* mangling of returned name is required */
-#define CONV_REQMANGLE  (1<<14)
-/* espace unconvertable chars with :[UCS2HEX] */
-#define CONV_REQESCAPE  (1<<15)
+#define CONV_REQMANGLE  (1<<14) /*!< mangling of returned name is required */
+#define CONV_REQESCAPE  (1<<15) /*!< espace unconvertable chars with :[UCS2HEX] */
 
-/* this defines the charset types used in samba */
+/*! this defines the charset types used in netatalk */
 typedef enum {CH_UCS2 = 0, CH_UTF8 = 1, CH_MAC = 2, CH_UNIX = 3, CH_UTF8_MAC = 4} charset_t;
 
 #define NUM_CHARSETS 5
@@ -103,8 +92,6 @@ extern uint32_t  tolower_sp(uint32_t);
 /* from util_unistr.c */
 extern int      strupper_w(ucs2_t *);
 extern int      strlower_w(ucs2_t *);
-extern int      islower_w(ucs2_t);
-extern int      isupper_w(ucs2_t);
 extern size_t   strlen_w(const ucs2_t *);
 extern size_t   strnlen_w(const ucs2_t *, size_t);
 extern ucs2_t  *strchr_w(const ucs2_t *, ucs2_t);
@@ -117,9 +104,6 @@ extern ucs2_t   *strstr_w(const ucs2_t *s, const ucs2_t *ins);
 extern ucs2_t   *strcasestr_w(const ucs2_t *, const ucs2_t *);
 extern ucs2_t   *strndup_w(const ucs2_t *, size_t);
 extern ucs2_t   *strdup_w(const ucs2_t *);
-extern ucs2_t   *strncpy_w(ucs2_t *, const ucs2_t *, const size_t);
-extern ucs2_t   *strncat_w(ucs2_t *, const ucs2_t *, const size_t);
-extern ucs2_t   *strcat_w(ucs2_t *, const ucs2_t *);
 extern size_t   precompose_w(ucs2_t *, size_t, ucs2_t *, size_t *);
 extern size_t   decompose_w(ucs2_t *, size_t, ucs2_t *, size_t *);
 

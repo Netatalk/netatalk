@@ -40,7 +40,9 @@
 #include "unix.h"
 #include "volume.h"
 
-/* the format for the finderinfo fields (from IM: Toolbox Essentials):
+/*!
+ * @code
+ * the format for the finderinfo fields (from IM: Toolbox Essentials):
  * field         bytes        subfield    bytes
  *
  * files:
@@ -57,6 +59,7 @@
  *                              xflags    1  reserved
  *                           commentID    2  comment id
  *                           putawayID    4  home directory id
+ * @endcode
  */
 
 const uint8_t ufinderi[ADEDLEN_FINDERI] = {
@@ -1247,16 +1250,20 @@ setfilparam_done:
     return err;
 }
 
-/*
+/*!
+ * @brief Rename a file, including its resource fork and mac name.
+ *
  * renamefile and copyfile take the old and new unix pathnames
  * and the new mac name.
  *
- * sdir_fd     source dir fd to which src path is relative (for openat et al semantics)
- *             passing -1 means this is not used, src path is a full path
- * src         the source path
- * dst         the dest filename in current dir
- * newname     the dest mac name
- * adp         adouble struct of src file, if open, or & zeroed one
+ * @param vol         volume structure
+ * @param ddir        dest dir structure
+ * @param sdir_fd     source dir fd to which src path is relative (for openat et al semantics)
+ *                    passing -1 means this is not used, src path is a full path
+ * @param src         the source path
+ * @param dst         the dest filename in current dir
+ * @param newname     the dest mac name
+ * @param adp         adouble struct of src file, if open, or & zeroed one
  *
  */
 int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
@@ -1340,8 +1347,8 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
     return AFP_OK;
 }
 
-/* ----------------
-   convert a Mac long name to an utf8 name,
+/*!
+   convert a Mac long name to an utf8 name
 */
 size_t mtoUTF8(const struct vol *vol, const char *src, size_t srclen,
                char *dest, size_t destlen)
@@ -1569,8 +1576,8 @@ copy_exit:
     return retvalue;
 }
 
-/* ----------------------------------
- * if newname is NULL (from directory.c) we don't want to copy the resource fork.
+/*!
+ * @note if newname is NULL (from directory.c) we don't want to copy the resource fork.
  * because we are doing it elsewhere.
  * currently if newname is NULL then adp is NULL.
  */
@@ -1759,8 +1766,8 @@ static int check_attrib(const struct vol *vol, struct adouble *adp)
     return 0;
 }
 
-/*
- * dirfd can be used for unlinkat semantics
+/*!
+ * @note dirfd can be used for unlinkat semantics
  */
 int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
 {
@@ -1882,8 +1889,7 @@ end:
     return err;
 }
 
-/* ------------------------------------ */
-/* return a file id */
+/*! @returns a file id */
 int afp_createid(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                  size_t *rbuflen)
 {
@@ -2026,7 +2032,7 @@ reenumerate_id(struct vol *vol, char *name, struct dir *dir)
     return ret;
 }
 
-/* ------------------------------
+/*!
    resolve a file id */
 int afp_resolveid(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
                   size_t *rbuflen)

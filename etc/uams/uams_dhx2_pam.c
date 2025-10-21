@@ -28,10 +28,10 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
-/* Number of bits for p which we generate. Everybode out there uses 512, so we beet them */
+/*! Number of bits for p which we generate. Everybody out there uses 512, so we beat them */
 #define PRIMEBITS 1024
 
-/* hash a number to a 16-bit quantity */
+/*! hash a number to a 16-bit quantity */
 #define dhxhash(a) ((((unsigned long) (a) >> 8) ^   \
                      (unsigned long) (a)) & 0xffff)
 
@@ -132,9 +132,10 @@ error:
 }
 
 
-/* PAM conversation function
- * Here we assume (for now, at least) that echo on means login name, and
- * echo off means password.
+/*!
+ * @brief PAM conversation function
+ * @note Here we assume (for now, at least) that echo on means login name,
+ * and echo off means password.
  */
 static int PAM_conv(int num_msg,
 #ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
@@ -334,8 +335,11 @@ static int login(void *obj, char *username, int ulen,
 }
 
 /* -------------------------------- */
-/* dhx login: things are done in a slightly bizarre order to avoid
- * having to clean things up if there's an error. */
+/*!
+ * @brief dhx login
+ * @note things are done in a slightly bizarre order to avoid
+ * having to clean things up if there's an error.
+ */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
                      char *rbuf, size_t *rbuflen)

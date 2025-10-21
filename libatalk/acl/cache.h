@@ -15,12 +15,15 @@
 #ifndef LDAPCACHE_H
 #define LDAPCACHE_H
 
-/*
- * We need to cache all LDAP querie results, they just take too long.
+/*!
+ * @file
+ * @brief LDAP cache interface
+ *
+ * We need to cache all LDAP query results, they just take too long.
  * We do hashing with chaining. Two caches are needed:
- * 1) name -> uuid, indexed by a hash(f(): hashstring) of the name
- * 2) uuid -> name, indexed by a hash of the uuid(f(): hashuuid)
- * Both hash funcs result in a value 0-255 with which we index a array.
+ * 1. name -> uuid, indexed by a hash(f(): hashstring) of the name
+ * 2. uuid -> name, indexed by a hash of the uuid(f(): hashuuid)
+ * Both hash funcs result in a value 0-255 with which we index in an array.
  * We malloc and free all elements as needed.
  * The cache caches for CACHESECONDS.
  */

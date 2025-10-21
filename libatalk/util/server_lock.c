@@ -27,7 +27,7 @@
 
 static struct itimerval itimer;
 
-/* this creates an open lock file which hangs around until the program
+/*! this creates an open lock file which hangs around until the program
  * dies. it returns the pid. due to problems w/ solaris, this has
  * been changed to do the kill() thing. */
 pid_t server_lock(char *program, char *pidfile, int debug)
@@ -106,7 +106,7 @@ pid_t server_lock(char *program, char *pidfile, int debug)
 }
 
 /*!
- * @brief Check lockfile
+ * Check lockfile
  */
 int check_lockfile(const char *program, const char *pidfile)
 {
@@ -133,7 +133,7 @@ int check_lockfile(const char *program, const char *pidfile)
 }
 
 /*!
- * @brief Check and create lockfile
+ * Check and create lockfile
  */
 int create_lockfile(const char *program, const char *pidfile)
 {

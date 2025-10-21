@@ -19,12 +19,13 @@
  *
  * from libiconv
  * modified for round trip by didier gautheron
- * Reference
- * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
 
-/*
- * MacHebrew
+/*!
+ * @file
+ * @brief MacHebrew
+ * @sa Reference
+ * http://www.unicode.org/Public/MAPPINGS/VENDORS/APPLE/
  */
 
 static const unsigned short mac_hebrew_2uni[128] = {

@@ -21,7 +21,8 @@
  *	netatalk@itd.umich.edu
  */
 
-/*
+/*!
+ * @file
  * Our own memory maintenance for atp
 */
 
@@ -48,7 +49,7 @@
 
 #define			N_MORE_BUFS		10
 
-static struct atpbuf 	*free_list = NULL;	/* free buffers */
+static struct atpbuf 	*free_list = NULL;	/*!< free buffers */
 
 #ifdef EBUG
 static int		numbufs = 0;

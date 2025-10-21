@@ -48,14 +48,14 @@ extern const uint8_t	ufinderi[];
 #define FILPBIT_DFLEN	 9
 #define FILPBIT_RFLEN	 10
 #define FILPBIT_EXTDFLEN 11
-#define FILPBIT_PDINFO   13    /* ProDOS Info/ UTF8 name */
+#define FILPBIT_PDINFO   13    /*!< ProDOS Info/ UTF8 name */
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
 
 #define kTextEncodingUTF8 0x08000103
 
+/*! Mac OS encodings*/
 typedef enum {
-    /* Mac OS encodings*/
     kTextEncodingMacRoman         = 0L,
     kTextEncodingMacJapanese      = 1,
     kTextEncodingMacChineseTrad   = 2,
@@ -86,7 +86,7 @@ typedef enum {
     kTextEncodingMacEthiopic      = 28,
     kTextEncodingMacCentralEurRoman = 29,
     kTextEncodingMacVietnamese    = 30,
-    kTextEncodingMacExtArabic     = 31,   /* The following use script code 0, smRoman*/
+    kTextEncodingMacExtArabic     = 31,   /*!< The following use script code 0, smRoman */
     kTextEncodingMacSymbol        = 33,
     kTextEncodingMacDingbats      = 34,
     kTextEncodingMacTurkish       = 35,

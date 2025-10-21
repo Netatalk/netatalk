@@ -13,8 +13,9 @@
  * GNU General Public License for more details.
  */
 
-/*
- * File change event API for netatalk
+/*!
+ * @file
+ * @brief File change event API for netatalk
  *
  * for every detected filesystem change a UDP packet is sent to an arbitrary list
  * of listeners. Each packet contains unix path of modified filesystem element,
@@ -106,12 +107,10 @@ static char *fce_event_names[] = {
     [FCE_CONN_BROKEN] = "FCE_CONN_BROKEN"
 };
 
-/*
- *
- * Initialize network structs for any listeners
- * We don't give return code because all errors are handled internally (I hope..)
- *
- * */
+/*!
+ * @brief Initialize network structs for any listeners
+ * @note We don't give return code because all errors are handled internally (I hope..)
+ */
 void fce_init_udp(void)
 {
     int rv;
@@ -186,9 +185,9 @@ void fce_cleanup(void)
     udp_initialized = false;
 }
 
-/*
+/*!
  * Construct a UDP packet for our listeners and return packet size
- * */
+ */
 static ssize_t build_fce_packet(const AFPObj *obj,
                                 unsigned char *iobuf,
                                 fce_ev_t event,
@@ -367,9 +366,9 @@ static ssize_t build_fce_packet(const AFPObj *obj,
     return datalen;
 }
 
-/*
- * Send the fce information to all (connected) listeners
- * We don't give return code because all errors are handled internally (I hope..)
+/*!
+ * @brief Send the fce information to all (connected) listeners
+ * @note We don't give return code because all errors are handled internally (I hope..)
  */
 static void send_fce_event(const AFPObj *obj, int event, const char *path,
                            const char *oldpath)
@@ -607,11 +606,9 @@ static void fce_init_ign_paths(const char *ignores,
 }
 
 
-/*
- *
+/*!
  * Dispatcher for all incoming file change events
- *
- * */
+ */
 int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
                  const char *oldpath)
 {
@@ -714,9 +711,9 @@ static void check_saved_close_events(const AFPObj *obj)
 
 /******************** External calls start here **************************/
 
-/*
- * API-Calls for file change api, called form outside (file.c directory.c ofork.c filedir.c)
- * */
+/*!
+ * API-Calls for file change api, called from outside (file.c directory.c ofork.c filedir.c)
+ */
 void fce_pending_events(const AFPObj *obj)
 {
     if (!udp_sockets) {
@@ -726,11 +723,10 @@ void fce_pending_events(const AFPObj *obj)
     check_saved_close_events(obj);
 }
 
-/*
- *
- * Extern connect to afpd parameter, can be called multiple times for multiple listeners (up to MAX_UDP_SOCKS times)
- *
- * */
+/*!
+ * @brief Extern connect to afpd parameter
+ * @note can be called multiple times for multiple listeners (up to MAX_UDP_SOCKS times)
+ */
 int fce_add_udp_socket(const char *target)
 {
     const char *port = FCE_DEFAULT_PORT_STRING;

@@ -28,7 +28,7 @@
 #include <netatalk/at.h>
 #include <atalk/atp.h>
 
-/*
+/*!
  * masks for matching incoming packets
  */
 #define ATP_FUNCANY	ATP_TREQ | ATP_TRESP | ATP_TREL

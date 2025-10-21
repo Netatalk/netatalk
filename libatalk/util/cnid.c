@@ -55,7 +55,7 @@
 #include <atalk/util.h>
 
 /*!
- * @brief Build path relativ to volume root
+ * @brief Build path relative to volume root
  *
  * path might be:
  * 1. relative:

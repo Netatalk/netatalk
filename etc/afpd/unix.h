@@ -77,8 +77,8 @@
 #if defined (__linux__)
 
 /* definitions from sys/quota.h */
-#define USRQUOTA  0             /* element used for user quotas */
-#define GRPQUOTA  1             /* element used for group quotas */
+#define USRQUOTA  0             /*!< element used for user quotas */
+#define GRPQUOTA  1             /*!< element used for group quotas */
 
 /*
  * Command definitions for the 'quotactl' system call.
@@ -91,22 +91,19 @@
 #define QCMD(cmd, type)  (((cmd) << SUBCMDSHIFT) | ((type) & SUBCMDMASK))
 
 /* declare an internal version of the quota block struct */
-
-/* Type in which we store size limitations */
-typedef uint64_t qsize_t;
-/* Type in which we store ids in memory */
-typedef uint32_t qid_t;
+typedef u_int64_t qsize_t;	/*!< Type in which we store size limitations */
+typedef u_int32_t qid_t;	/*!< Type in which we store ids in memory */
 
 struct dqblk {
     qsize_t bsize;
-    qsize_t dqb_ihardlimit;   /* absolute limit on allocated inodes */
-    qsize_t dqb_isoftlimit;   /* preferred inode limit */
-    qsize_t dqb_curinodes;    /* current # allocated inodes */
-    qsize_t dqb_bhardlimit;   /* absolute limit on disk blks alloc */
-    qsize_t dqb_bsoftlimit;   /* preferred limit on disk blks */
-    qsize_t dqb_curblocks;    /* current block count */
-    time_t  dqb_btime;        /* time limit for excessive disk use */
-    time_t  dqb_itime;        /* time limit for excessive inode use */
+    qsize_t dqb_ihardlimit;   /*!< absolute limit on allocated inodes */
+    qsize_t dqb_isoftlimit;   /*!< preferred inode limit */
+    qsize_t dqb_curinodes;    /*!< current # allocated inodes */
+    qsize_t dqb_bhardlimit;   /*!< absolute limit on disk blks alloc */
+    qsize_t dqb_bsoftlimit;   /*!< preferred limit on disk blks */
+    qsize_t dqb_curblocks;    /*!< current block count */
+    time_t  dqb_btime;        /*!< time limit for excessive disk use */
+    time_t  dqb_itime;        /*!< time limit for excessive inode use */
 };
 
 /* API v1 command definitions */

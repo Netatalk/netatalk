@@ -43,10 +43,12 @@
 
 #include "atp_internals.h"
 
-int
-atp_rresp(
-    ATP			ah,		/* open atp handle */
-    struct atp_block	*atpb)		/* parameter block */
+/*!
+ * @brief Receives ATP response packets
+ * @param ah open atp handle
+ * @param atpb parameter block
+ */
+int atp_rresp(ATP ah, struct atp_block *atpb)
 {
     int		i, rc;
     size_t	len;

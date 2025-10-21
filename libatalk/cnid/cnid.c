@@ -36,14 +36,14 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-/* List of all registered modules. */
+/*! List of all registered modules. */
 static struct list_head modules = ATALK_LIST_HEAD_INIT(modules);
 
 static sigset_t sigblockset;
 
 /* Registers new CNID backend module. */
 
-/* Once module has been registered, it cannot be unregistered. */
+/*! Once module has been registered, it cannot be unregistered. */
 void cnid_register(struct _cnid_module *module)
 {
     struct list_head *ptr;
@@ -100,7 +100,7 @@ static int cnid_dir(const char *dir, mode_t mask)
     return 0;
 }
 
-/* Opens CNID database using particular back-end */
+/*! Opens CNID database using particular back-end */
 struct _cnid_db *cnid_open(struct vol *vol, char *type, int flags)
 {
     struct _cnid_db *db;
@@ -206,7 +206,7 @@ static void unblock_signal(uint32_t flags)
     }
 }
 
-/* -------------------
+/*!
   protect against bogus value from the DB.
   adddir really doesn't like 2
 */
@@ -230,7 +230,7 @@ static cnid_t valide(cnid_t id)
     return id;
 }
 
-/* Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
+/*! Closes CNID database. Currently it's just a wrapper around db->cnid_close(). */
 void cnid_close(struct _cnid_db *db)
 {
     uint32_t flags;

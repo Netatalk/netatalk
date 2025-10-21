@@ -36,11 +36,11 @@
 #define CRYPT2BUFLEN (KEYSIZE + PASSWDLEN)
 #define CHANGEPWBUFLEN (KEYSIZE + 2*PASSWDLEN)
 
-/* hash a number to a 16-bit quantity */
+/*! hash a number to a 16-bit quantity */
 #define dhxhash(a) ((((unsigned long) (a) >> 8) ^ \
 		     (unsigned long) (a)) & 0xffff)
 
-/* the secret key */
+/*! the secret key */
 gcry_mpi_t K;
 
 static struct passwd *dhxpwd;
@@ -62,9 +62,10 @@ static pam_handle_t *pamh = NULL;
 static unsigned char *PAM_username;
 static unsigned char *PAM_password;
 
-/* PAM conversation function
- * Here we assume (for now, at least) that echo on means login name, and
- * echo off means password.
+/*!
+ * @brief PAM conversation function
+ * @note Here we assume (for now, at least) that echo on means login name,
+ * and echo off means password.
  */
 static int PAM_conv(int num_msg,
 #ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
@@ -337,8 +338,11 @@ static int login(void *obj, unsigned char *username, int ulen,
 }
 
 /* -------------------------------- */
-/* dhx login: things are done in a slightly bizarre order to avoid
- * having to clean things up if there's an error. */
+/*!
+ * @brief dhx login
+ * @note things are done in a slightly bizarre order to avoid
+ * having to clean things up if there's an error.
+ */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      unsigned char *ibuf, size_t ibuflen,
                      unsigned char *rbuf, size_t *rbuflen)
@@ -615,8 +619,11 @@ static void pam_logout(void)
 }
 
 
-/* change pw for dhx needs a couple passes to get everything all
- * right. basically, it's like the login/logincont sequence */
+/*!
+ * @brief change pw for dhx
+ * @note needs a couple passes to get everything all right.
+ * basically, it's like the login/logincont sequence
+ */
 static int pam_changepw(void *obj, unsigned char *username,
                         const struct passwd *pwd _U_, unsigned char *ibuf,
                         size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)

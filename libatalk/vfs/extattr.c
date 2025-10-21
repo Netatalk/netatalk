@@ -77,7 +77,7 @@ static int solaris_openat(int fildes, const char *path, int oflag, mode_t mode);
 #endif
 
 /**************************************************************************
- Wrappers for extented attribute calls. Based on the Linux package.
+ Wrappers for extended attribute calls. Based on the Linux package.
 ****************************************************************************/
 static char attr_name[256 + 5] = "user.";
 

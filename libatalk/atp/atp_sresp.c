@@ -45,11 +45,12 @@
 #include <stdio.h>
 #endif /* EBUG */
 
-/* send a transaction response
-*/
-int atp_sresp(
-    ATP			ah,		/* open atp handle */
-    struct atp_block	*atpb)		/* parameter block */
+/*!
+ * @brief send a transaction response
+ * @param ah         open atp handle
+ * @param atpb       parameter block
+ */
+int atp_sresp(ATP ah, struct atp_block *atpb)
 {
     int			i;
     uint8_t		ctrlinfo;

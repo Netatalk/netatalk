@@ -2,9 +2,10 @@
 #include "afphelper.h"
 #include "testhelper.h"
 
-/*
-   Test the following:
-
+/*!
+  @file
+  @brief Test the following:
+  @code
    test500()
    =========
 
@@ -118,11 +119,10 @@
 
    client 1:
       stat dir2
-
-
+  @endcode
  */
 
-/* move and rename dir, enumerate new parent, stat renamed dir */
+/*! move and rename dir, enumerate new parent, stat renamed dir */
 STATIC void test500()
 {
     DSI *dsi = &Conn->dsi;
@@ -196,7 +196,7 @@ test_exit:
     exit_test("Dircache:test500: move and rename dir, enumerate new parent, stat renamed dir");
 }
 
-/* move and rename dir, then stat it */
+/*! move and rename dir, then stat it */
 STATIC void test501()
 {
     DSI *dsi = &Conn->dsi;
@@ -267,7 +267,7 @@ test_exit:
     exit_test("Dircache:test501: move and rename dir, then stat it");
 }
 
-/* move and rename dir, enumerate renamed dir */
+/*! move and rename dir, enumerate renamed dir */
 STATIC void test502()
 {
     DSI *dsi = &Conn->dsi;
@@ -344,7 +344,7 @@ test_exit:
     exit_test("Dircache:test502: move and rename dir, enumerate renamed dir");
 }
 
-/* move and rename dir, stat renamed dir */
+/*! move and rename dir, stat renamed dir */
 STATIC void test503()
 {
     DSI *dsi = &Conn->dsi;
@@ -415,7 +415,7 @@ test_exit:
     exit_test("Dircache:test503: move and rename dir, enumerate renamed dir");
 }
 
-/* rename topdir, stat file in subdir of renamed topdir */
+/*! rename topdir, stat file in subdir of renamed topdir */
 STATIC void test504()
 {
     DSI *dsi = &Conn->dsi;
@@ -485,7 +485,7 @@ test_exit:
     exit_test("Dircache:test504: rename topdir, stat file in subdir of renamed topdir");
 }
 
-/* rename dir, stat subdir in renamed dir */
+/*! rename dir, stat subdir in renamed dir */
 STATIC void test505()
 {
     DSI *dsi = &Conn->dsi;
@@ -557,7 +557,7 @@ test_exit:
     exit_test("Dircache:test505: rename dir, stat subdir in renamed dir");
 }
 
-/* stat subdir in poisened path */
+/*! stat subdir in poisened path */
 STATIC void test506()
 {
     DSI *dsi = &Conn->dsi;

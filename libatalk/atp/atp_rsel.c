@@ -70,12 +70,13 @@ resend_request(ATP ah)
     return 0;
 }
 
-int
-atp_rsel(
-    ATP			ah,		/* open atp handle */
-    struct sockaddr_at	*faddr,		/* address to receive from */
-    int			func)		/* which function(s) to wait for;
-					   0 means request or response */
+/*!
+ * @brief Receive ATP packets
+ * @param ah open atp handle
+ * @param faddr address to receive from
+ * @param func which function(s) to wait for; 0 means request or response
+ */
+int atp_rsel(ATP ah, struct sockaddr_at *faddr, int func)
 {
     struct atpbuf	*abuf, *pb, *cb;
     struct atphdr	req_hdr, resp_hdr;

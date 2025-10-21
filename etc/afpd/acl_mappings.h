@@ -24,7 +24,8 @@
 
 #include "acls.h"
 
-/*
+/*!
+ * @file
  * Stuff for mapping between ACL implementations
  */
 

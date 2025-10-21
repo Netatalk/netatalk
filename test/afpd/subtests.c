@@ -37,7 +37,7 @@
 #include "test.h"
 #include "volume.h"
 
-static int reti;                /* for the TEST_int macro */
+static int reti;                /*!< for the TEST_int macro */
 
 int test001_add_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 {

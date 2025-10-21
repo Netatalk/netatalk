@@ -37,7 +37,9 @@
 #include <atalk/vfs.h>
 #include <atalk/volume.h>
 
-/*
+/*!
+ * @file
+ *
  * Store Extended Attributes inside .AppleDouble folders as follows:
  *
  * filename "fileWithEAs" with EAs "testEA1" and "testEA2"
@@ -47,7 +49,7 @@
  * - store EAs in files "fileWithEAs::EA::testEA1" and "fileWithEAs::EA::testEA2"
  */
 
-/*
+/*!
  * Build mode for EA header from file mode
  */
 static inline mode_t ea_header_mode(mode_t mode)
@@ -59,7 +61,7 @@ static inline mode_t ea_header_mode(mode_t mode)
     return mode;
 }
 
-/*
+/*!
  * Build mode for EA file from file mode
  */
 static inline mode_t ea_mode(mode_t mode)
@@ -441,7 +443,6 @@ exit:
  * @returns 0 on success, -1 on error
  *
  * @note Creates/overwrites EA file.
- *
  */
 static int write_ea(const struct ea *ea,
                     const char *attruname,

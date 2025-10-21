@@ -42,9 +42,10 @@ static char *PAM_password;
 struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
 
-/* PAM conversation function
- * Here we assume (for now, at least) that echo on means login name, and
- * echo off means password.
+/*!
+ * @brief PAM conversation function
+ * @note Here we assume (for now, at least) that echo on means login name,
+ * and echo off means password.
  */
 static int PAM_conv(int num_msg,
 #ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
@@ -234,8 +235,8 @@ login_err:
     return err;
 }
 
-/* --------------------------
-   cleartxt login
+/*!
+ * cleartxt login
 */
 static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *ibuf, size_t ibuflen,
@@ -307,7 +308,7 @@ static void pam_logout(void)
     pamh = NULL;
 }
 
-/* change passwd */
+/*! change passwd */
 static int pam_changepw(void *obj _U_, char *username,
                         struct passwd *pwd _U_, char *ibuf, size_t ibuflen _U_,
                         char *rbuf _U_, size_t *rbuflen _U_)
@@ -392,7 +393,7 @@ static int pam_changepw(void *obj _U_, char *username,
 }
 
 
-/* Printer ClearTxtUAM login */
+/*! Printer ClearTxtUAM login */
 static int pam_printer(char *start, char *stop, char *username,
                        struct papfile *out)
 {

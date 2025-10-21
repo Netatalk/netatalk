@@ -20,9 +20,10 @@
 #include "pack.h"
 
 
-/*
-   cnid_update: takes the given cnid and updates the metadata.
-   First, delete given CNID, then re-insert.
+/*!
+ * @brief takes the given cnid and updates the metadata.
+ *
+ * First, delete given CNID, then re-insert.
 */
 
 int dbd_update(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)

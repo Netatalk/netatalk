@@ -153,27 +153,22 @@ int gq_balance(struct papfile *out)
 }
 #endif /* ABS_PRINT */
 
-
-/*
- * Handler for RBISpoolerID
- */
-
 static const char *spoolerid = "(PAPD Spooler) 1.0 (" VERSION ")\n";
 
+/*!
+ * Handler for RBISpoolerID
+ */
 int gq_rbispoolerid(struct papfile *out)
 {
     append(out, spoolerid, strlen(spoolerid));
     return 0;
 }
 
-
-
-/*
- * Handler for RBIUAMListQuery
- */
-
 static const char *nouams = "*\n";
 
+/*!
+ * Handler for RBIUAMListQuery
+ */
 int gq_rbiuamlist(struct papfile *out)
 {
     char uamnames[128] = "\0";
@@ -695,11 +690,6 @@ int cq_listq(struct papfile *in, struct papfile *out,
 }
 #endif /* HAVE_CUPS */
 
-
-/*
- * Handler for RBILogin
- */
-
 static struct uam_obj *papd_uam = NULL;
 static const char *rbiloginok = "0\r";
 static const char *rbiloginbad = "-1\r";
@@ -708,6 +698,9 @@ SecurityViolation: Unknown user, incorrect password or log on is \
 disabled ]%%\r%%[Flushing: rest of job (to end-of-file) will be \
 ignored ]%%\r";
 
+/*!
+ * Handler for RBILogin
+ */
 int cq_rbilogin(struct papfile *in, struct papfile *out,
                 struct sockaddr_at *sat _U_)
 {
@@ -797,7 +790,7 @@ int cq_end(struct papfile *in, struct papfile *out _U_,
     return CH_DONE ;
 }
 
-/*
+/*!
  * All queries start with %%?Begin and end with %%?End.  Note that the
  * "Begin"/"End" general queries have to be last.
  */

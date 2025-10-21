@@ -107,10 +107,10 @@ static char *utompath(char *upath)
     return m;
 }
 
-/*
-  Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
-  Returns pointer to name or NULL.
-*/
+/*!
+ * @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
+ * @returns pointer to name or NULL.
+ */
 static const char *check_netatalk_dirs(const char *name)
 {
     const int max_dirs = 2;
@@ -124,10 +124,10 @@ static const char *check_netatalk_dirs(const char *name)
     return NULL;
 }
 
-/*
-  Check for special names
-  Returns pointer to name or NULL.
-*/
+/*!
+ * @brief Check for special names
+ * @returns pointer to name or NULL.
+ */
 static const char *check_special_dirs(const char *name)
 {
     const int max_dirs = 1;
@@ -141,7 +141,7 @@ static const char *check_special_dirs(const char *name)
     return NULL;
 }
 
-/*
+/*!
  * We unCAPed a name, update CNID db
  */
 static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
@@ -166,9 +166,9 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
     return 0;
 }
 
-/*
-  Check for .AppleDouble file, create if missing
-*/
+/*!
+ * Check for .AppleDouble file, create if missing
+ */
 static int check_adfile(const char *fname, const struct stat *st,
                         const char **newname)
 {
@@ -260,9 +260,9 @@ static int check_adfile(const char *fname, const struct stat *st,
     return 0;
 }
 
-/*
-   Remove all files with file::EA* from adouble dir
-*/
+/*!
+ * Remove all files with file::EA* from adouble dir
+ */
 static void remove_eafiles(const char *name, struct ea *ea _U_)
 {
     DIR *dp = NULL;
@@ -313,9 +313,9 @@ exit:
     }
 }
 
-/*
-  Check Extended Attributes files
-*/
+/*!
+ * Check Extended Attributes files
+ */
 static int check_eafiles(const char *fname)
 {
     unsigned int  count = 0;
@@ -375,9 +375,9 @@ static int check_eafiles(const char *fname)
     return ret;
 }
 
-/*
-  Check for .AppleDouble folder and .Parent, create if missing
-*/
+/*!
+ * Check for .AppleDouble folder and .Parent, create if missing
+ */
 static int check_addir(int volroot _U_)
 {
     int addir_fd = -1;
@@ -519,12 +519,11 @@ static int check_addir(int volroot _U_)
     return 0;
 }
 
-/*
-  Check if file cotains "::EA" and if it does check if its correspondig data fork exists.
-  Returns:
-  0 = name is not an EA file
-  1 = name is an EA file and no problem was found
-  -1 = name is an EA file and data fork is gone
+/*!
+ * @brief Check if file cotains "::EA" and if it does check if its correspondig data fork exists.
+ * @returns 0 = name is not an EA file
+ * @returns 1 = name is an EA file and no problem was found
+ * @returns -1 = name is an EA file and data fork is gone
  */
 static int check_eafile_in_adouble(const char *name)
 {
@@ -584,11 +583,11 @@ ea_check_done:
     return ret;
 }
 
-/*
-  Check files and dirs inside .AppleDouble folder:
-  - remove orphaned files
-  - bail on dirs
-*/
+/*!
+ * @brief Check files and dirs inside .AppleDouble folder
+ * @note remove orphaned files
+ * @note bail on dirs
+ */
 static int read_addir(void)
 {
     DIR *dp;
@@ -680,12 +679,10 @@ static int read_addir(void)
     return 0;
 }
 
-/*
-  Check CNID for a file/dir, both from db and from ad-file.
-  For detailed specs see intro.
-
-  @return Correct CNID of object or CNID_INVALID (ie 0) on error
-*/
+/*!
+ * @brief Check CNID for a file/dir, both from db and from ad-file.
+ * @returns Correct CNID of object or CNID_INVALID (ie 0) on error
+ */
 static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
                          int adfile_ok)
 {
@@ -778,11 +775,11 @@ static int check_orphaned(const char *name)
     return 0;
 }
 
-/*
+/*!
   This is called recursively for all dirs.
   volroot=1 means we're in the volume root dir, 0 means we aren't.
   We use this when checking for netatalk private folders like .AppleDB.
-  did is our parents CNID.
+  did is our parent's CNID.
 */
 static int dbd_readdir(int volroot, cnid_t did)
 {
@@ -993,9 +990,9 @@ static int dbd_readdir(int volroot, cnid_t did)
     return ret;
 }
 
-/*
-  Main func called from cmd_dbd.c
-*/
+/*!
+ * Main func called from cmd_dbd.c
+ */
 int cmd_dbd_scanvol(struct vol *vol_in, dbd_flags_t flags)
 {
     EC_INIT;

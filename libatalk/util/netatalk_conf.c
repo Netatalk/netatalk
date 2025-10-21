@@ -76,7 +76,7 @@
  * Locals
  **************************************************************/
 
-/* whether there's generic user home share in config ("~" or "~/path", but not "~user") */
+/*! whether there's generic user home share in config ("~" or "~/path", but not "~user") */
 static int have_uservol = 0;
 static struct vol *Volumes = NULL;
 static uint16_t lastvid = 0;
@@ -138,11 +138,12 @@ static int rewrite_vol_uuid_conf(AFPObj *obj, struct vol *Volumes)
     return 0;
 }
 
-/*
- * Get a volumes UUID from the config file.
+/*!
+ * @brief Get a volume's UUID from the config file.
+ *
  * If there is none, it is generated and stored there.
  *
- * Returns pointer to allocated storage on success, NULL on error.
+ * @returns pointer to allocated storage on success, NULL on error.
  */
 static char *get_vol_uuid(const AFPObj *obj, const char *volname)
 {
@@ -294,12 +295,13 @@ static char *get_vol_uuid(const AFPObj *obj, const char *volname)
     return strdup(cp);
 }
 
-/*
-  Check if the underlying filesystem supports EAs.
-  If not, switch to ea=ad.
-  As we can't check (requires write access) on ro-volumes, we assume ea=sys.
-*/
 #define EABUFSZ 4
+/*!
+ * @brief Check if the underlying filesystem supports EAs.
+ *
+ * If not, switch to ea=ad.
+ * As we can't check (requires write access) on ro-volumes, we assume ea=sys.
+*/
 static int do_check_ea_support(const struct vol *vol)
 {
     int haseas;
@@ -401,8 +403,11 @@ static int check_vol_acl_support(const struct vol *vol)
     return ret;
 }
 
-/*
- * Handle variable substitutions. here's what we understand:
+/*!
+ * @brief Handle variable substitutions.
+ *
+ * here's what we understand:
+ * @code
  * $b   -> basename of path
  * $c   -> client ip/appletalk address
  * $d   -> volume pathname on server
@@ -414,12 +419,15 @@ static int check_vol_acl_support(const struct vol *vol)
  * $u   -> username (guest is usually nobody)
  * $v   -> volume name or basename if null
  * $$   -> $
+ * @endcode
  *
  * This get's called from readvolfile with
+ * @code
  * path = NULL, volname = NULL for xlating the volumes path
  * path = path, volname = NULL for xlating the volumes name
  * ... and from volumes options parsing code when xlating e.g. dbpath with
  * path = path, volname = volname
+ * @endcode
  *
  * Using this information we can reject xlation of any variable depeninding on a login
  * context which is not given in the afp master, where we must evaluate this whole stuff
@@ -609,10 +617,9 @@ static char *volxlate(const AFPObj *obj,
  *
  * A NULL argument allows everybody to have access.
  *
- * @returns three things:
- *     -1: no list
- *      0: list exists, but name isn't in it
- *      1: in list
+ * @returns -1: no list
+ * @returns 0: list exists, but name isn't in it
+ * @returns 1: in list
  */
 static int accessvol(const AFPObj *obj, const char *args, const char *name)
 {
@@ -1849,7 +1856,7 @@ EC_CLEANUP:
  **************************************************************/
 
 /*!
- * @brief Remove a volume from the linked list of volumes
+ * Remove a volume from the linked list of volumes
  */
 void volume_unlink(struct vol *volume)
 {
@@ -1901,7 +1908,7 @@ void volume_free(struct vol *vol)
 }
 
 /*!
- * @brief Load charsets for a volume
+ * Load charsets for a volume
  */
 int load_charset(struct vol *vol)
 {
@@ -2122,7 +2129,6 @@ struct vol *getvolbyvid(const uint16_t vid)
  *
  * @param[in] path   absolute volume path
  * @returns NULL     if no match is found, pointer to username if successful
- *
  */
 static char *getuserbypath(const char *path)
 {
@@ -2434,7 +2440,7 @@ struct vol *getvolbyname(const char *name)
 
 #define MAXVAL 1024
 /*!
- * @brief Initialize an AFPObj and options from ini config file
+ * Initialize an AFPObj and options from ini config file
  */
 int afp_config_parse(AFPObj *AFPObj, char *processname)
 {
@@ -2899,7 +2905,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/* get rid of any allocated afp_option buffers. */
+/*! get rid of any allocated afp_option buffers. */
 void afp_config_free(AFPObj *obj)
 {
     if (obj->options.configfile) {

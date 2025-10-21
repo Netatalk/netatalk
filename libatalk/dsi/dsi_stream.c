@@ -39,7 +39,7 @@
 #define MSG_DONTWAIT 0x40
 #endif
 
-/* Pack a DSI header in wire format */
+/*! Pack a DSI header in wire format */
 static void dsi_header_pack_reply(const DSI *dsi, char *buf)
 {
     buf[0] = dsi->header.dsi_flags;
@@ -148,7 +148,7 @@ static int dsi_peek(DSI *dsi)
 }
 
 /*!
- * @brief Return all bytes up to count from dsi->buffer
+ * Return all bytes up to count from dsi->buffer
  * if there are any buffered there
  */
 static size_t from_buf(DSI *dsi, uint8_t *buf, size_t count)
@@ -275,8 +275,8 @@ static void unblock_sig(DSI *dsi)
  * 1. close the socket
  * 2. set the DSI_DISCONNECTED flag, remove possible sleep flags
  *
- * @returns  0 if successfully entered disconnected state,
- *          -1 if ppid is 1 which means afpd master died,
+ * @returns  0 if successfully entered disconnected state
+ * @returns -1 if ppid is 1 which means afpd master died,
  *             or euid == 0 i.e. where still running as root (unauthenticated session)
  */
 int dsi_disconnect(DSI *dsi)
@@ -572,8 +572,10 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
     return stored;
 }
 
-/* ---------------------------------------
- * write data. 0 on failure. this assumes that dsi_len will never
+/*!
+ * @brief write data.
+ * @returns 0 on failure.
+ * @note this assumes that dsi_len will never
  * cause an overflow in the data buffer.
  */
 int dsi_stream_send(DSI *dsi, void *buf, size_t length)
