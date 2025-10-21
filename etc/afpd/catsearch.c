@@ -1,6 +1,6 @@
 /*
- * Netatalk 2002 (c)
  * Copyright (C) 1990, 1993 Regents of The University of Michigan
+ * Copyright (c) 2002 Rafal Lewczuk <rlewczuk@pronet.pl>
  * Copyright (C) 2010 Frank Lahm
  * All Rights Reserved. See COPYRIGHT
  */
