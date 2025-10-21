@@ -40,7 +40,7 @@
 
 
 struct connection {
-    time_t tm;                    /* When respawned last */
+    time_t tm;                    /*!< When respawned last */
     int    fd;
 };
 
@@ -73,13 +73,16 @@ static void invalidate_fd(int fd)
 }
 
 
-/*
- *  Check for client requests. We keep up to fd_table_size open descriptors in
- *  fd_table. If the table is full and we get a new descriptor via
- *  control_fd, we close a random decriptor in the table to make space. The
- *  affected client will automatically reconnect. For an EOF (descriptor is
- *  closed by the client, so a read here returns 0) comm_rcv will take care of
- *  things and clean up fd_table. The same happens for any read/write errors.
+/*!
+ * @brief Check for client requests.
+ *
+ * We keep up to fd_table_size open descriptors in fd_table.
+ * If the table is full and we get a new descriptor via control_fd,
+ * we close a random decriptor in the table to make space.
+ * The affected client will automatically reconnect.
+ * For an EOF (descriptor is closed by the client, so a read here returns 0)
+ * comm_rcv will take care of things and clean up fd_table.
+ * The same happens for any read/write errors.
  */
 
 static int check_fd(time_t timeout, const sigset_t *sigmask, time_t *now)

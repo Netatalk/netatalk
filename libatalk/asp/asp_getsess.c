@@ -43,13 +43,16 @@ static ASP server_asp;
 static server_child_t *children = NULL;
 static struct asp_child    **asp_ac = NULL;
 
-/* send tickles and check tickle status of connections
+/*!
+ * @brief send tickles and check tickle status of connections
+ *
  * thoughts on using a hashed list:
- * + child_cleanup, finding slots
- * - tickle_handler, freeing, tickles
- * if setup for a large number of connections,
- * + space: if actual connections < potential
- * - space: actual connections ~ potential
+ * - + child_cleanup, finding slots
+ * - - tickle_handler, freeing, tickles
+ *
+ * if setup for a large number of connections:
+ * - + space: if actual connections < potential
+ * - - space: actual connections ~ potential
  */
 static void tickle_handler(int sig _U_)
 {
@@ -76,7 +79,7 @@ static void tickle_handler(int sig _U_)
     }
 }
 
-/* kill children */
+/*! kill children */
 void asp_kill(int sig)
 {
     if (children) {
@@ -92,14 +95,14 @@ void asp_stop_tickle(void)
     }
 }
 
-/*
- * This call handles open, tickle, and getstatus requests. On a
- * successful open, it forks a child process.
- * It returns an ASP to the child and parent and NULL if there is
- * an error.
- */
 static void set_asp_ac(int sid, struct asp_child *tmp);
 
+/*!
+ * @brief This call handles open, tickle, and getstatus requests.
+ * @note On a successful open, it forks a child process.
+ * @returns an ASP to the child and parent and NULL if there is
+ * an error.
+ */
 ASP asp_getsession(ASP asp, server_child_t *server_children,
                    const int tickleval)
 {

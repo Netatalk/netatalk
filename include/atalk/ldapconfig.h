@@ -30,32 +30,24 @@ extern char *ldap_groupfilter;
 extern int  ldap_uuid_encoding;
 
 typedef enum {
-    /* Plain ASCII string */
-    LDAP_UUID_ENCODING_STRING = 0,
-    /* Raw byte array, from Active Directory objectGUID */
-    LDAP_UUID_ENCODING_MSGUID = 1
+    LDAP_UUID_ENCODING_STRING = 0, /*!< Plain ASCII string */
+    LDAP_UUID_ENCODING_MSGUID = 1  /*!< Raw byte array, from Active Directory objectGUID */
 } ldap_uuid_encoding_type;
 
 struct ldap_pref {
     const void *pref;
     char *name;
-    /* string to just store in char * or convert to int ? */
-    int strorint;
-    /* convert to int, but use string to int mapping array pref_array[] */
-    int intfromarray;
-    /* set to -1 if mandatory, 0 if omittable/valid */
-    int valid;
-    /* copy of 'valid', used when resettting config */
-    int valid_save;
+    int strorint;     /*!< string to just store in char * or convert to int ? */
+    int intfromarray; /*!< convert to int, but use string to int mapping array pref_array[] */
+    int valid;        /*!< -1 = mandatory, 0 = omittable/valid */
+    int valid_save;   /*!< copy of 'valid', used when resettting config */
 };
 
 struct pref_array {
-    /* name of pref from ldap_prefs[] to which this value corresponds */
-    const char *pref;
-    /* config string */
-    char *valuestring;
-    /* corresponding value */
-    int value;
+    const char *pref;   /*!< name of pref from ldap_prefs[]
+                         * to which this value corresponds */
+    char *valuestring;  /*!< config string */
+    int  value;         /*!< corresponding value */
 };
 
 

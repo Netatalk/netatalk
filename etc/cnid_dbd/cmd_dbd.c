@@ -39,7 +39,7 @@
 enum dbd_cmd {dbd_scan, dbd_rebuild};
 
 /* Global variables */
-volatile sig_atomic_t alarmed;  /* flags for signals */
+volatile sig_atomic_t alarmed;  /*!< flags for signals */
 
 /* Local variables */
 static dbd_flags_t flags;
@@ -48,9 +48,9 @@ static dbd_flags_t flags;
  * Local functions
  ***************************************************************************/
 
-/*
- * SIGNAL handling:
- * catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
+/*!
+ * @brief SIGNAL handling
+ * @note catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
  */
 static void sig_handler(int signo _U_)
 {

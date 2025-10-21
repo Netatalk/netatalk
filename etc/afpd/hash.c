@@ -61,19 +61,20 @@ static int hash_comp_default(const void *key1, const void *key2);
 
 int hash_val_t_bit;
 
-/*
- * Compute the number of bits in the hash_val_t type.  We know that hash_val_t
- * is an unsigned integral type. Thus the highest value it can hold is a
- * Mersenne number (power of two, less one). We initialize a hash_val_t
- * object with this value and then shift bits out one by one while counting.
- * Notes:
+/*!
+ * @brief Compute the number of bits in the hash_val_t type.
+ *
+ * We know that hash_val_t is an unsigned integral type.
+ * Thus the highest value it can hold is a Mersenne number (power of two, less one).
+ * We initialize a hash_val_t object with this value
+ * and then shift bits out one by one while counting.
+ * @note
  * 1. HASH_VAL_T_MAX is a Mersenne number---one that is one less than a power
  *    of two. This means that its binary representation consists of all one
- *    bits, and hence ``val'' is initialized to all one bits.
+ *    bits, and hence 'val' is initialized to all one bits.
  * 2. While bits remain in val, we increment the bit count and shift it to the
  *    right, replacing the topmost bit by zero.
  */
-
 static void compute_bits(void)
 {
     /* 1 */
@@ -89,10 +90,9 @@ static void compute_bits(void)
     hash_val_t_bit = bits;
 }
 
-/*
+/*!
  * Verify whether the given argument is a power of two.
  */
-
 static int is_power_of_two(hash_val_t arg)
 {
     if (arg == 0) {
@@ -106,10 +106,9 @@ static int is_power_of_two(hash_val_t arg)
     return arg == 1;
 }
 
-/*
+/*!
  * Initialize the table of pointers to null.
  */
-
 static void clear_table(hash_t *hash)
 {
     hash_val_t i;
@@ -119,16 +118,19 @@ static void clear_table(hash_t *hash)
     }
 }
 
-/*
- * Double the size of a dynamic table. This works as follows. Each chain splits
- * into two adjacent chains.  The shift amount increases by one, exposing an
- * additional bit of each hashed key. For each node in the original chain, the
- * value of this newly exposed bit will decide which of the two new chains will
- * receive the node: if the bit is 1, the chain with the higher index will have
- * the node, otherwise the lower chain will receive the node. In this manner,
- * the hash table will continue to function exactly as before without having to
- * rehash any of the keys.
- * Notes:
+/*!
+ * @brief Double the size of a dynamic table.
+ *
+ * This works as follows. Each chain splits into two adjacent chains.
+ * The shift amount increases by one, exposing an additional bit of each hashed key.
+ * For each node in the original chain, the value of this newly exposed bit
+ * will decide which of the two new chains will receive the node:
+ * if the bit is 1, the chain with the higher index will have the node,
+ * otherwise the lower chain will receive the node.
+ * In this manner, the hash table will continue to function exactly as before
+ * without having to rehash any of the keys.
+ *
+ * @note
  * 1.  Overflow check.
  * 2.  The new number of chains is twice the old number of chains.
  * 3.  The new mask is one bit wider than the previous, revealing a
@@ -146,7 +148,6 @@ static void clear_table(hash_t *hash)
  * 9.  We have finished dealing with the chains and nodes. We now update
  *     the various bookeeping fields of the hash structure.
  */
-
 static void grow_table(hash_t *hash)
 {
     hnode_t **newtable;
@@ -195,12 +196,15 @@ static void grow_table(hash_t *hash)
     assert(hash_verify(hash));
 }
 
-/*
- * Cut a table size in half. This is done by folding together adjacent chains
- * and populating the lower half of the table with these chains. The chains are
- * simply spliced together. Once this is done, the whole table is reallocated
- * to a smaller object.
- * Notes:
+/*!
+ * @brief Cut a table size in half.
+ *
+ * This is done by folding together adjacent chains and populating
+ * the lower half of the table with these chains.
+ * The chains are simply spliced together.
+ * Once this is done, the whole table is reallocated to a smaller object.
+ *
+ * @note
  * 1.  It is illegal to have a hash table with one slot. This would mean that
  *     hash->shift is equal to hash_val_t_bit, an illegal shift value.
  *     Also, other things could go wrong, such as hash->lowmark becoming zero.
@@ -224,7 +228,6 @@ static void grow_table(hash_t *hash)
  *     pretend that the table _was_ reallocated to a smaller object.
  * 9.  Finally, update the various table parameters to reflect the new size.
  */
-
 static void shrink_table(hash_t *hash)
 {
     hash_val_t chain;
@@ -273,12 +276,14 @@ static void shrink_table(hash_t *hash)
 }
 
 
-/*
- * Create a dynamic hash table. Both the hash table structure and the table
- * itself are dynamically allocated. Furthermore, the table is extendible in
- * that it will automatically grow as its load factor increases beyond a
- * certain threshold.
- * Notes:
+/*!
+ * @brief Create a dynamic hash table.
+ *
+ * Both the hash table structure and the table itself are dynamically allocated.
+ * Furthermore, the table is extendible in that it will automatically grow
+ * as its load factor increases beyond a certain threshold.
+ *
+ * @note
  * 1. If the number of bits in the hash_val_t type has not been computed yet,
  *    we do so here, because this is likely to be the first function that the
  *    user calls.
@@ -301,7 +306,6 @@ static void shrink_table(hash_t *hash)
  *    assumed to be statically allocated and will not be resized.
  * 8. The table of chains must be properly reset to all null pointers.
  */
-
 hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
                     hash_fun_t hashfun)
 {
@@ -348,10 +352,9 @@ hash_t *hash_create(hashcount_t maxcount, hash_comp_t compfun,
     return NULL;
 }
 
-/*
+/*!
  * Select a different set of node allocator routines.
  */
-
 void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
                         hnode_free_t fr, void *context)
 {
@@ -362,11 +365,10 @@ void hash_set_allocator(hash_t *hash, hnode_alloc_t al,
     hash->context = context;
 }
 
-/*
+/*!
  * Free every node in the hash using the hash->freenode() function pointer, and
  * cause the hash to become empty.
  */
-
 void hash_free_nodes(hash_t *hash)
 {
     hscan_t hs;
@@ -382,10 +384,9 @@ void hash_free_nodes(hash_t *hash)
     clear_table(hash);
 }
 
-/*
+/*!
  * Free a dynamic hash table structure.
  */
-
 void hash_destroy(hash_t *hash)
 {
     assert(hash_val_t_bit != 0);
@@ -394,17 +395,19 @@ void hash_destroy(hash_t *hash)
     free(hash);
 }
 
-/*
+/*!
+ * @brief Initialize a hash scanner.
+ *
  * Reset the hash scanner so that the next element retrieved by
  * hash_scan_next() shall be the first element on the first non-empty chain.
- * Notes:
+ *
+ * @note
  * 1. Locate the first non empty chain.
  * 2. If an empty chain is found, remember which one it is and set the next
  *    pointer to refer to its first element.
  * 3. Otherwise if a chain is not found, set the next pointer to NULL
  *    so that hash_scan_next() shall indicate failure.
  */
-
 void hash_scan_begin(hscan_t *scan, hash_t *hash)
 {
     hash_val_t nchains = hash->nchains;
@@ -425,10 +428,11 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
     }
 }
 
-/*
- * Retrieve the next node from the hash table, and update the pointer
+/*!
+ * @brief Retrieve the next node from the hash table, and update the pointer
  * for the next invocation of hash_scan_next().
- * Notes:
+ *
+ * @note
  * 1. Remember the next pointer in a temporary value so that it can be
  *    returned.
  * 2. This assertion essentially checks whether the module has been properly
@@ -449,8 +453,6 @@ void hash_scan_begin(hscan_t *scan, hash_t *hash)
  *    pointer to NULL so that the next time hash_scan_next() is called, a null
  *    pointer shall be immediately returned.
  */
-
-
 hnode_t *hash_scan_next(hscan_t *scan)
 {
     hnode_t *next;
@@ -494,9 +496,10 @@ hnode_t *hash_scan_next(hscan_t *scan)
     return next;
 }
 
-/*
- * Insert a node into the hash table.
- * Notes:
+/*!
+ * @brief Insert a node into the hash table.
+ *
+ * @note
  * 1. It's illegal to insert more than the maximum number of nodes. The client
  *    should verify that the hash table is not full before attempting an
  *    insertion.
@@ -506,7 +509,6 @@ hnode_t *hash_scan_next(hscan_t *scan)
  * 4. We take the bottom N bits of the hash value to derive the chain index,
  *    where N is the base 2 logarithm of the size of the hash table.
  */
-
 void hash_insert(hash_t *hash, hnode_t *node, const void *key)
 {
     hash_val_t hkey;
@@ -534,9 +536,10 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
     assert(hash_verify(hash));
 }
 
-/*
- * Find a node in the hash table and return a pointer to it.
- * Notes:
+/*!
+ * @brief Find a node in the hash table and return a pointer to it.
+ *
+ * @note
  * 1. We hash the key and keep the entire hash value. As an optimization, when
  *    we descend down the chain, we can compare hash values first and only if
  *    hash values match do we perform a full key comparison.
@@ -547,7 +550,6 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
  *    comparison between the unhashed keys. If these match, we have located the
  *    entry.
  */
-
 hnode_t *hash_lookup(hash_t *hash, const void *key)
 {
     hash_val_t hkey;
@@ -567,11 +569,12 @@ hnode_t *hash_lookup(hash_t *hash, const void *key)
     return NULL;
 }
 
-/*
- * Delete the given node from the hash table.  Since the chains
- * are singly linked, we must locate the start of the node's chain
- * and traverse.
- * Notes:
+/*!
+ * @brief Delete the given node from the hash table.
+ * Since the chains are singly linked,
+ * we must locate the start of the node's chain and traverse.
+ *
+ * @note
  * 1. The node must belong to this hash table, and its key must not have
  *    been tampered with.
  * 2. If this deletion will take the node count below the low mark, we
@@ -584,7 +587,6 @@ hnode_t *hash_lookup(hash_t *hash, const void *key)
  *    by updating the predecessor's next pointer.
  * 6. Indicate that the node is no longer in a hash table.
  */
-
 hnode_t *hash_delete(hash_t *hash, hnode_t *node)
 {
     hash_val_t chain;
@@ -643,11 +645,10 @@ void hash_delete_free(hash_t *hash, hnode_t *node)
     hash->freenode(node, hash->context);
 }
 
-/*
+/*!
  *  Exactly like hash_delete, except does not trigger table shrinkage. This is to be
  *  used from within a hash table scan operation. See notes for hash_delete.
  */
-
 hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
 {
     hash_val_t chain;
@@ -673,25 +674,24 @@ hnode_t *hash_scan_delete(hash_t *hash, hnode_t *node)
     return node;
 }
 
-/*
+/*!
  * Like hash_delete_free but based on hash_scan_delete.
  */
-
 void hash_scan_delfree(hash_t *hash, hnode_t *node)
 {
     hash_scan_delete(hash, node);
     hash->freenode(node, hash->context);
 }
 
-/*
- * Verify whether the given object is a valid hash table. This means
- * Notes:
+/*!
+ * @brief Verify whether the given object is a valid hash table.
+ *
+ * @note
  * 1. If the hash table is dynamic, verify whether the high and
  *    low expansion/shrinkage thresholds are powers of two.
  * 2. Count all nodes in the table, and test each hash value
  *    to see whether it is correct for the node's chain.
  */
-
 int hash_verify(hash_t *hash)
 {
     hashcount_t count = 0;
@@ -740,10 +740,9 @@ static void hnode_free(hnode_t *node, void *context _U_)
     free(node);
 }
 
-/*
+/*!
  * Initialize a client-supplied node
  */
-
 hnode_t *hnode_init(hnode_t *hnode, void *data)
 {
     hnode->data = data;

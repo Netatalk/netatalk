@@ -56,7 +56,7 @@ static int afp_null(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     return AFPERR_NOOP;
 }
 
-/*
+/*!
  * Routines marked "NULL" are not AFP functions.
  * Routines marked "afp_null" are AFP functions
  * which are not yet implemented. A fine line...

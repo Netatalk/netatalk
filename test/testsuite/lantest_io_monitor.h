@@ -22,26 +22,26 @@
 
 /* Define PID_MAX if not available from system headers */
 #ifndef PID_MAX
-/* Conservative default maximum PID value */
+/*! Conservative default maximum PID value */
 #define PID_MAX 99999
 #endif
 
-/* Global Debug flag - controlled by -b option in lantest.c */
+/*! Global Debug flag - controlled by -b option in lantest.c */
 extern bool Debug;
 
 #ifdef __linux__
 
-/* Process filtering configuration for finding Netatalk daemons.
+/*! Process filtering configuration for finding Netatalk daemons.
  * Supports two modes: filter by process UID ownership (for afpd which drops privileges)
  * or filter by cmdline -u argument (for cnid_dbd which runs as root). */
 typedef struct {
     const char *process_name;
     const char *username;
-    int32_t filter_by_cmdline;  /* 0 = filter by UID ownership, 1 = filter by cmdline -u arg */
-    uid_t target_uid;       /* For ownership filtering */
+    int32_t filter_by_cmdline;  /*!< 0 = filter by UID ownership, 1 = filter by cmdline -u arg */
+    uid_t target_uid;       /*!< For ownership filtering */
 } ProcessFilter;
 
-/* Container for discovered process IDs during /proc_io scanning.
+/*! Container for discovered process IDs during /proc_io scanning.
  * Stores up to 10 matching PIDs to detect multiple instances.
  * count=0 means no match, count=1 is ideal, count>1 indicates duplicates. */
 typedef struct {
@@ -69,7 +69,7 @@ pid_t find_process_pid(const char *process_name, const char *username,
 void capture_io_values(int32_t is_start);
 uint64_t iodiff_io(pid_t pid, int32_t is_write);
 
-/* Initialization function */
+/*! Initialization function */
 void init_io_monitoring(const char *username);
 
 #endif /* __linux__ */

@@ -230,10 +230,11 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*
-  Maps ACE array from Solaris to Darwin. Darwin ACEs are stored in network byte order.
-  Return numer of mapped ACEs or -1 on error.
-  All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
+/*!
+  @brief Maps ACE array from Solaris to Darwin.
+  @returns number of mapped ACEs or -1 on error.
+  @note Darwin ACEs are stored in network byte order.
+  @note All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
 */
 static int map_aces_solaris_to_darwin(const ace_t *aces,
                                       darwin_ace_t *darwin_aces,
@@ -311,10 +312,11 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*
-  Maps ACE array from Darwin to Solaris. Darwin ACEs are expected in network byte order.
-  Return numer of mapped ACEs or -1 on error.
-  All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
+/*!
+  @brief Maps ACE array from Darwin to Solaris.
+  @returns number of mapped ACEs or -1 on error.
+  @note Darwin ACEs are expected in network byte order.
+  @note All errors while mapping (e.g. getting UUIDs from LDAP) are fatal.
 */
 static int map_aces_darwin_to_solaris(darwin_ace_t *darwin_aces,
                                       ace_t *nfsv4_aces,
@@ -964,10 +966,10 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*
- * Map ACEs from POSIX to Darwin.
- * type is either POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, cf. acl_get_file.
- * Return number of mapped ACES, -1 on error.
+/*!
+ * @brief Map ACEs from POSIX to Darwin.
+ * @returns number of mapped ACES, -1 on error.
+ * @note type is either POSIX_DEFAULT_2_DARWIN or POSIX_ACCESS_2_DARWIN, cf. acl_get_file.
  */
 static int map_acl_posix_to_darwin(int type, const acl_t acl,
                                    darwin_ace_t *darwin_aces)
@@ -1063,14 +1065,16 @@ EC_CLEANUP:
 }
 #endif
 
-/*
- * Multiplex ACL mapping (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
+/*!
+ * @brief Multiplex ACL mapping (SOLARIS_2_DARWIN, DARWIN_2_SOLARIS, POSIX_2_DARWIN, DARWIN_2_POSIX).
+ *
  * Reads from 'aces' buffer, writes to 'rbuf' buffer.
  * Caller must provide buffer.
  * Darwin ACEs are read and written in network byte order.
  * Needs to know how many ACEs are in the ACL (ace_count) for Solaris ACLs.
  * Ignores trivial ACEs.
- * Return no of mapped ACEs or -1 on error.
+ *
+ * @returns no of mapped ACEs or -1 on error.
  */
 static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
 {
@@ -1114,9 +1118,12 @@ static int map_acl(int type, void *acl, darwin_ace_t *buf, int ace_count)
     return mapped_aces;
 }
 
-/* Get ACL from object omitting trivial ACEs. Map to Darwin ACL style and
-   store Darwin ACL at rbuf. Add length of ACL written to rbuf to *rbuflen.
-   Returns 0 on success, -1 on error. */
+/*!
+   @brief Get ACL from object omitting trivial ACEs.
+
+   Map to Darwin ACL style and store Darwin ACL at rbuf.
+   Add length of ACL written to rbuf to *rbuflen.
+   @returns 0 on success, -1 on error. */
 static int get_and_map_acl(char *name, char *rbuf, size_t *rbuflen)
 {
     EC_INIT;
@@ -1192,7 +1199,9 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/* Removes all non-trivial ACLs from object. Returns full AFPERR code. */
+/*!
+ * @brief Removes all non-trivial ACLs from object.
+ * @returns full AFPERR code. */
 static int remove_acl(const struct vol *vol, const char *path, int dir)
 {
     int ret = AFP_OK;
@@ -1214,13 +1223,16 @@ static int remove_acl(const struct vol *vol, const char *path, int dir)
     return ret;
 }
 
-/*
-  Set ACL. Subtleties:
+/*!
+  @brief Set ACL.
+
+  @note Subtleties:
   - the client sends a complete list of ACEs, not only new ones. So we don't need to do
   any combination business (one exception being 'kFileSec_Inherit': see next)
   - client might request that we add inherited ACEs via 'kFileSec_Inherit'.
   We will store inherited ACEs first, which is Darwins canonical order.
-  - returns AFPerror code
+
+  @returns AFPerror code
 */
 #ifdef HAVE_NFSV4_ACLS
 static int set_acl(const struct vol *vol,

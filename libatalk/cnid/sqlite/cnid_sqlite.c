@@ -1007,7 +1007,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Caller passes buffer where we will store the db stamp
+ * Caller passes buffer where we will store the db stamp
  */
 int cnid_sqlite_getstamp(struct _cnid_db *cdb, void *buffer,
                          const size_t len)
@@ -1220,7 +1220,7 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     return cdb;
 }
 
-/* Return allocated UUID string with dashes stripped */
+/*! Return allocated UUID string with dashes stripped */
 static char *uuid_strip_dashes(const char *uuid)
 {
     static char stripped[33];

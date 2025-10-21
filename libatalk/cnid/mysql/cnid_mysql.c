@@ -49,7 +49,7 @@
 static MYSQL_BIND lookup_param[4], lookup_result[5];
 static MYSQL_BIND add_param[4], put_param[5];
 
-/*
+/*!
  * Prepared statement parameters
  */
 static char               stmt_param_name[MAXPATHLEN];
@@ -59,7 +59,7 @@ static unsigned long long stmt_param_did;
 static unsigned long long stmt_param_dev;
 static unsigned long long stmt_param_ino;
 
-/*
+/*!
  * lookup result parameters
  */
 static unsigned long long lookup_result_id;
@@ -747,7 +747,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Caller passes buffer where we will store the db stamp
+ * Caller passes buffer where we will store the db stamp
  */
 int cnid_mysql_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {
@@ -894,7 +894,7 @@ static struct _cnid_db *cnid_mysql_new(struct vol *vol)
     return cdb;
 }
 
-/* Return allocated UUID string with dashes stripped */
+/*! Return allocated UUID string with dashes stripped */
 static char *uuid_strip_dashes(const char *uuid)
 {
     static char stripped[33];

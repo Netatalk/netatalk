@@ -43,10 +43,10 @@
  * count on them being there, and it's annoying to patch system files.
  */
 #ifndef ETHERTYPE_AT
-#define ETHERTYPE_AT	0x809B		/* AppleTalk protocol */
+#define ETHERTYPE_AT	0x809B		/*!< AppleTalk protocol */
 #endif
 #ifndef ETHERTYPE_AARP
-#define ETHERTYPE_AARP	0x80F3		/* AppleTalk ARP */
+#define ETHERTYPE_AARP	0x80F3		/*!< AppleTalk ARP */
 #endif
 
 #define DDP_MAXSZ	587
@@ -60,7 +60,7 @@
  */
 #define ATPORT_FIRST	1
 #define ATPORT_RESERVED	128
-#define ATPORT_LAST	254 /* 254 is reserved on ether/tokentalk networks */
+#define ATPORT_LAST	254 /*!< 254 is reserved on ether/tokentalk networks */
 
 /*
  * AppleTalk address.
@@ -76,7 +76,7 @@ struct at_addr {
 #define ATADDR_ANYNET	(unsigned short)0x0000
 #define ATADDR_ANYNODE	(unsigned char)0x00
 #define ATADDR_ANYPORT	(unsigned char)0x00
-#define ATADDR_BCAST	(unsigned char)0xff		/* There is no BCAST for NET */
+#define ATADDR_BCAST	(unsigned char)0xff		/*!< There is no BCAST for NET */
 
 /*
  * Socket address, AppleTalk style.  We keep magic information in the

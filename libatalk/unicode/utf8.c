@@ -36,12 +36,12 @@
 #include <atalk/logger.h>
 #include <atalk/unicode.h>
 
-/* Given a trailing UTF-8 byte, get the contribution from it to
+/*! Given a trailing UTF-8 byte, get the contribution from it to
  * the Unicode scalar value for a particular bit shift amount
  */
 #define GETUCVAL(utf8_trailbyte,shift)  ((unsigned int) (( utf8_trailbyte & 0x3F) << shift))
 
-/* Given a unicode scalar, get a trail UTF-8 byte for a particular bit shift amount */
+/*! Given a unicode scalar, get a trail UTF-8 byte for a particular bit shift amount */
 #define GETUTF8TRAILBYTE(uc,shift)      ((char)( 0x80 | ((uc >> shift) & 0x3F) ) )
 
 
@@ -71,29 +71,35 @@ struct charset_functions charset_utf8_mac = {
     NULL
 };
 
-/* The Unicode Standard Version 6.2 – Core Specification          */
-/* http://www.unicode.org/versions/Unicode6.2.0/ch03.pdf          */
-/*                                                                */
-/* Scalar Value               First    Second   Third    Fourth   */
-/* 00000000 0xxxxxxx          0xxxxxxx                            */
-/* 00000yyy yyxxxxxx          110yyyyy 10xxxxxx                   */
-/* zzzzyyyy yyxxxxxx          1110zzzz 10yyyyyy 10xxxxxx          */
-/* 000uuuuu zzzzyyyy yyxxxxxx 11110uuu 10uuzzzz 10yyyyyy 10xxxxxx */
+/*!
+ * @file
+ * @sa The Unicode Standard Version 6.2 – Core Specification
+ * http://www.unicode.org/versions/Unicode6.2.0/ch03.pdf
+ * @code
+ * Scalar Value               First    Second   Third    Fourth
+ * 00000000 0xxxxxxx          0xxxxxxx
+ * 00000yyy yyxxxxxx          110yyyyy 10xxxxxx
+ * zzzzyyyy yyxxxxxx          1110zzzz 10yyyyyy 10xxxxxx
+ * 000uuuuu zzzzyyyy yyxxxxxx 11110uuu 10uuzzzz 10yyyyyy 10xxxxxx
+ * @endcode
+ */
 
 
-/* ------------------- Convert from UTF-8 to UTF-16 -------------------*/
-
-/* Code Points        First   Second  Third    Fourth  */
-/* U+0000..U+007F      00..7F                          */
-/* U+0080..U+07FF      C2..DF  80..BF                  */
-/* U+0800..U+0FFF      E0      A0..BF  80..BF          */
-/* U+1000..U+CFFF      E1..EC  80..BF  80..BF          */
-/* U+D000..U+D7FF      ED      80..9F  80..BF          */
-/* U+E000..U+FFFF      EE..EF  80..BF  80..BF          */
-/* U+10000..U+3FFFF    F0      90..BF  80..BF  80..BF  */
-/* U+40000..U+FFFFF    F1..F3  80..BF  80..BF  80..BF  */
-/* U+100000..U+10FFFF  F4      80..8F  80..BF  80..BF  */
-
+/*!
+ * @brief Convert from UTF-8 to UTF-16
+ * @code
+ * Code Points         First   Second  Third   Fourth
+ * U+0000..U+007F      00..7F
+ * U+0080..U+07FF      C2..DF  80..BF
+ * U+0800..U+0FFF      E0      A0..BF  80..BF
+ * U+1000..U+CFFF      E1..EC  80..BF  80..BF
+ * U+D000..U+D7FF      ED      80..9F  80..BF
+ * U+E000..U+FFFF      EE..EF  80..BF  80..BF
+ * U+10000..U+3FFFF    F0      90..BF  80..BF  80..BF
+ * U+40000..U+FFFFF    F1..F3  80..BF  80..BF  80..BF
+ * U+100000..U+10FFFF  F4      80..8F  80..BF  80..BF
+ * @endcode
+ */
 static size_t utf8_pull(void *cd _U_, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {
@@ -217,7 +223,7 @@ inval:
     return -1;
 }
 
-/* --------------------- Convert from UTF-16 to UTF-8 -----------*/
+/*! Convert from UTF-16 to UTF-8 */
 static size_t utf8_push(void *cd _U_, char **inbuf, size_t *inbytesleft,
                         char **outbuf, size_t *outbytesleft)
 {

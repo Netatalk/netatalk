@@ -65,7 +65,7 @@
 #include "unix.h"
 #include "volume.h"
 
-/* Time Machine cache for 60 seconds */
+/*! Time Machine cache for 60 seconds */
 #define TM_USED_CACHETIME 60
 #define VOLPASSLEN  8
 
@@ -171,7 +171,7 @@ EC_CLEANUP:
  * appends X bytes to a file (in fork.c).
  *
  * @param vol     (rw) volume to calculate
- * @returns             0 on success, -1 on error
+ * @returns       0 on success, -1 on error
  */
 static int get_tm_used(struct vol *vol)
 {
@@ -303,9 +303,9 @@ getvolspace_done:
     return AFP_OK;
 }
 
-/* -----------------------
- * set volume creation date
- * avoid duplicate, well at least it tries
+/*! -----------------------
+ * @brief set volume creation date
+ * @note avoid duplicate, well at least it tries
  */
 static void vol_setdate(uint16_t id, struct adouble *adp, time_t date)
 {
@@ -760,7 +760,7 @@ static int volume_openDB(const AFPObj *obj _U_, struct vol *volume)
     return (!volume->v_cdb) ? -1 : 0;
 }
 
-/*
+/*!
  * Send list of open volumes to afpd master via IPC
  */
 static void server_ipc_volumes(AFPObj *obj)
@@ -1055,14 +1055,15 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     return AFP_OK;
 }
 
-/* --------------------------
-   poll if a volume is changed by other processes.
-   return
-   0 no attention msg sent
-   1 attention msg sent
+/*!
+   @brief poll if a volume is changed by other processes.
+   @param obj AFP connection object
+   @return
+   0 no attention msg sent,
+   1 attention msg sent,
    -1 error (socket closed)
 
-   Note: if attention return -1 no packet has been
+   @note if attention return -1 no packet has been
    sent because the buffer is full, we don't care
    either there's no reader or there's a lot of
    traffic and another pollvoltime will follow

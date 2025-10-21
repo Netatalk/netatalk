@@ -175,9 +175,9 @@ void read_fork(CONN *conn, uint16_t vol, int dir, char *name, int len)
     FAIL(FPCloseFork(conn, fork))
 }
 
-/* ----------------------
- * Use the second user for creating a folder with no access right
- * assume did are the same for != user
+/*!
+ * @brief Use the second user for creating a folder with no access right
+ * @note assume did are the same for != user
 */
 int no_access_folder(uint16_t vol, int did, char *name)
 {
@@ -393,9 +393,9 @@ fin:
     return ret;
 }
 
-/* ----------------------
- * Use the second user for creating a folder with read only access right
- * assume did are the same for != user
+/*!
+ * @brief Use the second user for creating a folder with read only access right
+ * @note assume did are the same for != user
 */
 int read_only_folder(uint16_t vol, int did, char *name)
 {
@@ -472,9 +472,9 @@ fin:
     return ret;
 }
 
-/* ----------------------
- * Use the second user for creating a folder with read only access right
- * assume did are the same for != user
+/*!
+ * @brief Use the second user for creating a folder with read only access right
+ * @note assume did are the same for != user
 */
 int read_only_folder_with_file(uint16_t vol, int did, char *name, char *file)
 {
@@ -557,8 +557,8 @@ fin:
     return ret;
 }
 
-/* ------------------------
- * We need to set rw perm first for .AppleDouble
+/*!
+ * @note We need to set rw perm first for .AppleDouble
 */
 int delete_folder(uint16_t vol, int did, char *name)
 {
@@ -618,8 +618,8 @@ int delete_folder(uint16_t vol, int did, char *name)
     return 1;
 }
 
-/* ------------------------
- * We need to set rw perm first for .AppleDouble
+/*!
+ * @note We need to set rw perm first for .AppleDouble
 */
 int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
 {

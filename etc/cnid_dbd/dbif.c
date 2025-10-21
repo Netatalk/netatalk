@@ -83,8 +83,8 @@ EC_CLEANUP:
 /*!
  * @brief Inititialize rootinfo key (which has CNID 0 as key)
  *
- * This also "stamps" the database, which means storing st.st_ctime of the
- * "cnid2.db" file in the rootinfo data at the DEV offset
+ * @note This also "stamps" the database, which means storing st.st_ctime
+ * of the "cnid2.db" file in the rootinfo data at the DEV offset
  *
  * @param[in,out] dbd       database handle
  * @param[in] version       database version number
@@ -405,8 +405,8 @@ DBD *dbif_init(const char *envhome, const char *filename)
     return dbd;
 }
 
-/*
-   We must open the db_env with an absolute pathname, as `dbd` keeps chdir'ing, which
+/*!
+   We must open the db_env with an absolute pathname, as 'dbd' keeps chdir'ing, which
    breaks e.g. bdb logfile-rotation with relative pathnames.
    But still we use relative paths with DB_ERRLOGFILE
    in order to avoid creating absolute paths by copying. Both have no problem with
@@ -1103,12 +1103,13 @@ int dbif_txn_abort(DBD *dbd)
     }
 }
 
-/*
-   ret = 1 -> commit txn if db_param.txn_frequency
-   ret = 0 -> abort txn db_param.txn_frequency -> exit!
-   anything else -> exit!
-
-   @returns 0 on success (abort or commit), -1 on error
+/*!
+ * @brief Close a transaction based on ret code
+ * @note ret = 1 -> commit txn if db_param.txn_frequency
+ * @note ret = 0 -> abort txn db_param.txn_frequency -> exit!
+ * @note anything else -> exit!
+ *
+ * @returns 0 on success (abort or commit), -1 on error
 */
 int dbif_txn_close(DBD *dbd, int ret)
 {
@@ -1371,11 +1372,12 @@ int dbif_dump(DBD *dbd, int dumpindexes)
     return 0;
 }
 
-/*
-   Iterates over dbd, returning cnids.
-   Uses in-value of cnid to seek to that cnid, then gets next and return that in cnid.
-   If close=1, close cursor.
-   Return -1 on error, 0 on EOD (end-of-database), 1 if returning cnid.
+/*!
+ * @brief Iterates over dbd, returning cnids.
+ *
+ * Uses in-value of cnid to seek to that cnid, then gets next and return that in cnid.
+ * If close=1, close cursor.
+ * @returns -1 on error, 0 on EOD (end-of-database), 1 if returning cnid.
 */
 int dbif_idwalk(DBD *dbd, cnid_t *cnid, int close)
 {

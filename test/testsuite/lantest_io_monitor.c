@@ -13,8 +13,9 @@
  * GNU General Public License for more details.
  */
 
-/*
- * lantest_io_monitor.c - Linux I/O monitoring for Netatalk performance testing
+/*!
+ * @file
+ * @brief Linux I/O monitoring for Netatalk performance testing
  *
  * Monitors system call I/O statistics for afpd and cnid_dbd processes during tests.
  * Uses /proc_io filesystem (a secondary mount of proc) to track read/write syscalls.
@@ -83,7 +84,7 @@ static void report_multiple_pids(const ProcessFilter *filter,
                                  const ProcessList *found,
                                  pid_t highest_pid);
 
-/* Helper: Show warning about /proc_io availability */
+/*! Helper: Show warning about /proc_io availability */
 static void show_proc_io_warning(const char *specific_issue)
 {
     static int32_t warning_shown = 0;
@@ -100,7 +101,7 @@ static void show_proc_io_warning(const char *specific_issue)
     }
 }
 
-/* Helper: Check if /proc_io is available and show warning if not */
+/*! Helper: Check if /proc_io is available and show warning if not */
 int32_t check_proc_io_availability(void)
 {
     struct stat st;
@@ -150,7 +151,7 @@ int32_t check_proc_io_availability(void)
     return 1;
 }
 
-/* Helper: Initialize process filter configuration */
+/*! Helper: Initialize process filter configuration */
 static int32_t init_process_filter(ProcessFilter *filter,
                                    const char *process_name,
                                    const char *username, int32_t filter_by_cmdline)
@@ -188,7 +189,7 @@ static int32_t init_process_filter(ProcessFilter *filter,
     return 0;
 }
 
-/* Helper: Check if process name matches target_name */
+/*! Helper: Check if process name matches target_name */
 static int32_t check_process_name_match(const char *pid_dir,
                                         const char *target_name)
 {
@@ -221,7 +222,7 @@ static int32_t check_process_name_match(const char *pid_dir,
     return matches;
 }
 
-/* Helper: Check if process matches cmdline filter (-u username) */
+/*! Helper: Check if process matches cmdline filter (-u username) */
 static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
 {
     char cmdline_path[PATH_BUFFER_SIZE];
@@ -279,7 +280,7 @@ static int32_t check_cmdline_filter(const char *pid_dir, const char *username)
     return 0;
 }
 
-/* Helper: Check if process matches UID filter (ownership) */
+/*! Helper: Check if process matches UID filter (ownership) */
 static int32_t check_uid_filter(const char *pid_dir, uid_t target_uid)
 {
     char status_path[PATH_BUFFER_SIZE];
@@ -312,7 +313,7 @@ static int32_t check_uid_filter(const char *pid_dir, uid_t target_uid)
     return matches;
 }
 
-/* Helper: Process a single /proc directory entry */
+/*! Helper: Process a single /proc directory entry */
 static int32_t process_proc_entry(const char *pid_dir,
                                   const ProcessFilter *filter,
                                   ProcessList *found)
@@ -349,7 +350,7 @@ static int32_t process_proc_entry(const char *pid_dir,
     return 0;
 }
 
-/* Helper: Report multiple PIDs found and get highest PID */
+/*! Helper: Report multiple PIDs found and get highest PID */
 static void report_multiple_pids(const ProcessFilter *filter,
                                  const ProcessList *found,
                                  pid_t highest_pid)
@@ -373,7 +374,7 @@ static void report_multiple_pids(const ProcessFilter *filter,
     fprintf(stderr, "), using highest: %d\n", highest_pid);
 }
 
-/* Main Netatalk process find function for IO monitoring */
+/*! Main Netatalk process find function for IO monitoring */
 pid_t find_process_pid(const char *process_name, const char *username,
                        int32_t filter_by_cmdline)
 {
@@ -455,7 +456,8 @@ pid_t find_process_pid(const char *process_name, const char *username,
     return highest_pid;
 }
 
-/* Read IO statistics from /proc_io/<pid>/io file.
+/*! @brief Read IO statistics from /proc_io/<pid>/io file.
+ *
  * syscr: cumulative count of read system calls (read(), pread(), readv(), etc.)
  * syscw: cumulative count of write system calls (write(), pwrite(), writev(), etc.) */
 static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
@@ -497,7 +499,7 @@ static int32_t read_proc_io(pid_t pid, uint64_t *read_ops,
     return (found_read && found_write) ? 0 : -1;
 }
 
-/* Capture IO values - consolidated function for start and stop */
+/*! Capture IO values - consolidated function for start and stop */
 void capture_io_values(int32_t is_start)
 {
     if (!io_monitoring_enabled) {
@@ -525,7 +527,7 @@ void capture_io_values(int32_t is_start)
     }
 }
 
-/* Get IO delta between stored cumulative counts - consolidated for read and write */
+/*! Get IO delta between stored cumulative counts - consolidated for read and write */
 uint64_t iodiff_io(pid_t pid, int32_t is_write)
 {
     uint64_t start_val, end_val;
@@ -547,7 +549,7 @@ uint64_t iodiff_io(pid_t pid, int32_t is_write)
     return (end_val > start_val) ? end_val - start_val : 0;
 }
 
-/* Safe PID string parsing helper */
+/*! Safe PID string parsing helper */
 static pid_t safe_parse_pid(const char *pid_str)
 {
     char *endptr;
@@ -574,7 +576,7 @@ static pid_t safe_parse_pid(const char *pid_str)
     return (pid_t)val;
 }
 
-/* Initialize IO monitoring by checking proc filesystem and finding required processes */
+/*! Initialize IO monitoring by checking proc filesystem and finding required processes */
 void init_io_monitoring(const char *username)
 {
     /* Check if /proc_io is available */

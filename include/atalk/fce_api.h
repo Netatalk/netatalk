@@ -1,10 +1,10 @@
-/*
- * File:   fce_api.h
- * Author: mw
+/*!
+ * @file
+ * @author: mw
  *
  * Created on 1. Oktober 2010, 21:35
  *
- * API calls for file change event api
+ * @brief API calls for file change event api
  */
 
 #ifndef _FCE_API_H
@@ -38,7 +38,7 @@
 #define FCE_CONN_BROKEN    99
 
 
-/* fce_packet.fce_magic */
+/*! fce_packet.fce_magic */
 #define FCE_PACKET_MAGIC  "at_fcapi"
 
 /* flags for "fce_ev_info" of additional info to send in events */
@@ -46,9 +46,10 @@
 #define FCE_EV_INFO_USER    (1 << 1)
 #define FCE_EV_INFO_SRCPATH (1 << 2)
 
-/*
+/*!
  * Network payload of an FCE packet, version 1
  *
+ * @code
  *      1         2         3         4         5         6         7          8
  * +---------+---------+---------+---------+---------+---------+----------+----------+
  * |                                   FCE magic                                     |
@@ -61,10 +62,11 @@
  * +-------------------+-------------------+ . . . .
  * |     pathlen       | path
  * +-------------------+------ . . . . . . . . . . .
- *
+ * @endcode
  *
  * Network payload of an FCE packet, version 2
  *
+ * @code
  *      1         2         3         4         5         6         7          8
  * +---------+---------+---------+---------+---------+---------+----------+----------+
  * |                                   FCE magic                                     |
@@ -107,6 +109,7 @@
  * pid          = optional pid
  * username     = optional username
  * source path  = optional source path
+ * @endcode
  */
 
 struct fce_packet {
@@ -132,11 +135,11 @@ struct ofork;
 void fce_pending_events(const AFPObj *obj);
 int fce_register(const AFPObj *obj, fce_ev_t event, const char *path,
                  const char *oldpath);
-/* IP or IP:Port */
+/*! IP or IP:Port */
 int fce_add_udp_socket(const char *target);
-/* all|delete|create */
+/*! all|delete|create */
 int fce_set_coalesce(const char *coalesce_opt);
-/* fmod,fdel,ddel,fcre,dcre */
+/*! fmod,fdel,ddel,fcre,dcre */
 int fce_set_events(const char *events);
 
 #define FCE_DEFAULT_PORT 12250

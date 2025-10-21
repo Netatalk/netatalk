@@ -6,7 +6,10 @@
  */
 
 
-/*
+/*!
+ * @file
+ * @brief FPCatSearch implementation
+ *
  * This file contains FPCatSearch implementation. FPCatSearch performs
  * file/directory search based on specified criteria. It is used by client
  * to perform fast searches on (propably) big volumes. So, it has to be
@@ -16,12 +19,6 @@
  * possible and does a standard filesystem search. It calls higher-level
  * libatalk/afpd functions only when it is really needed, mainly while
  * returning some non-UNIX information or filtering by non-UNIX criteria.
- *
- * Initial version written by Rafal Lewczuk <rlewczuk@pronet.pl>
- *
- * Starting with Netatalk 2.2 searching by name criteria utilizes the
- * CNID database in conjunction with an enhanced cnid_dbd. This requires
- * the use of cnidscheme:dbd for the searched volume.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -63,12 +60,9 @@
 struct finderinfo {
     uint32_t f_type;
     uint32_t creator;
-    /* File attributes (high 8 bits) */
-    uint16_t attrs;
-    /* Label (low 8 bits) */
-    uint16_t label;
-    /* Unknown (at least for now...) */
-    char reserved[22];
+    uint16_t attrs;    /*!< File attributes (high 8 bits)*/
+    uint16_t label;    /*!< Label (low 8 bits )*/
+    char reserved[22]; /*!< Unknown (at least for now...) */
 };
 
 typedef char packed_finder[ADEDLEN_FINDERI];
@@ -89,34 +83,24 @@ typedef char packed_finder[ADEDLEN_FINDERI];
  * 0x0e - essential
  */
 
-/* This is our search-criteria structure. */
+/*! This is our search-criteria structure. */
 struct scrit {
-    /* Request bitmap - which values should we check ? */
-    uint32_t rbitmap;
-    /* file & directory bitmap - which values should we return ? */
-    uint16_t fbitmap, dbitmap;
-    /* File attributes */
-    uint16_t attr;
-    /* Creation date */
-    time_t cdate;
-    /* Last modification date */
-    time_t mdate;
-    /* Last backup date */
-    time_t bdate;
-    /* Parent DID */
-    uint32_t pdid;
-    /* Offspring count */
-    uint16_t offcnt;
-    /* Finder info */
-    struct finderinfo finfo;
-    /* Long name */
-    char lname[64];
-    /* UTF8 or UCS2 name */
-    /* for convert_charset dest_len parameter +2 */
-    char utf8name[514];
+    uint32_t rbitmap;          /*!< Request bitmap - which values should we check ? */
+    uint16_t fbitmap;          /*!< file bitmap - which values should we return ? */
+    uint16_t dbitmap;          /*!< directory bitmap - which values should we return ? */
+    uint16_t attr;             /*!< File attributes */
+    time_t cdate;              /*!< Creation date */
+    time_t mdate;              /*!< Last modification date */
+    time_t bdate;              /*!< Last backup date */
+    uint32_t pdid;             /*!< Parent DID */
+    uint16_t offcnt;           /*!< Offspring count */
+    struct finderinfo finfo;   /*!< Finder info */
+    char lname[64];            /*!< Long name */
+    char utf8name[514];        /*!< UTF8 or UCS2 name
+                                * for convert_charset dest_len parameter +2 */
 };
 
-/*
+/*!
  * Directory tree search is recursive by its nature. But AFP specification
  * requires FPCatSearch to pause after returning n results and be able to
  * resume the search later. So we have to do recursive search using flat
@@ -125,26 +109,19 @@ struct scrit {
  *
  */
 struct dsitem {
-    /* CNID of this directory */
-    cnid_t ds_did;
-    /* Have we checked this directory? */
-    uint32_t ds_checked;
+    cnid_t ds_did;          /*!< CNID of this directory           */
+    uint32_t ds_checked;    /*!< Have we checked this directory ? */
 };
 
 
 #define DS_BSIZE 128
-/* Saved index of currently scanned directory. */
-static int save_cidx = -1;
-/* Directory stack data... */
-static struct dsitem *dstack = NULL;
-/* Directory stack (allocated) size... */
-static int dssize = 0;
-/* First free item index... */
-static int dsidx = 0;
-/* search criteria */
-static struct scrit c1, c2;
+static int save_cidx = -1; /*!< Saved index of currently scanned directory. */
+static struct dsitem *dstack = NULL; /*!< Directory stack data... */
+static int dssize = 0;  	         /*!< Directory stack (allocated) size... */
+static int dsidx = 0;   	         /*!< First free item index... */
+static struct scrit c1, c2;          /*!< search criteria */
 
-/* Clears directory stack. */
+/*! @brief Clears directory stack. */
 static void clearstack(void)
 {
     save_cidx = -1;
@@ -154,7 +131,7 @@ static void clearstack(void)
     }
 }
 
-/* Puts new item onto directory stack. */
+/*! Puts new item onto directory stack. */
 static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
 {
     struct dsitem *ds;
@@ -181,7 +158,10 @@ static int addstack(char *uname _U_, struct dir *dir, int pidx _U_)
     return 0;
 }
 
-/* Removes checked items from top of directory stack. Returns index of the first unchecked elements or -1. */
+/*!
+ * @brief Removes checked items from top of directory stack.
+ * @returns index of the first unchecked elements or -1.
+ */
 static int reducestack(void)
 {
     int r;
@@ -206,12 +186,14 @@ static int reducestack(void)
     return -1;
 }
 
-/* Looks up for an opened adouble structure, opens resource fork of selected file.
- * FIXME What about noadouble?
+/*!
+ * Looks up for an opened adouble structure,
+ * opens resource fork of selected file.
 */
 static struct adouble *adl_lkup(struct vol *vol, struct path *path,
                                 struct adouble *adp)
 {
+    /* FIXME What about noadouble? */
     static struct adouble ad;
     struct ofork *of;
     int isdir;
@@ -265,12 +247,14 @@ unpack_finderinfo(struct vol *vol, struct path *path, struct adouble **adp,
 
 /* -------------------- */
 #define CATPBIT_PARTIAL 31
-/* Criteria checker. This function returns a 2-bit value. */
-/* bit 0 means if checked file meets given criteria. */
-/* bit 1 means if it is a directory and we should descent into it. */
-/* uname - UNIX name
- * fname - our fname (translated to UNIX)
- * cidx - index in directory stack
+/*!
+ * @brief Criteria checker.
+ * @returns a 2-bit value.
+ * - bit 0 means if checked file meets given criteria.
+ * - bit 1 means if it is a directory and we should descent into it.
+ *   - uname - UNIX name
+ *   - fname - our fname (translated to UNIX)
+ *   - cidx - index in directory stack
  */
 static int crit_check(struct vol *vol, struct path *path)
 {
@@ -529,12 +513,14 @@ static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
 
 #define VETO_STR \
         "./../.AppleDouble/.AppleDB/Network Trash Folder/TheVolumeSettingsFolder/TheFindByContentFolder/.AppleDesktop/.Parent/"
+#define NUM_ROUNDS 200
 
 /*!
  * @brief This function performs a filesystem search
  *
  * Uses globals c1, c2, the search criteria
  *
+ * @param[in] obj       AFP connection object
  * @param[in] vol       volume we are searching on ...
  * @param[in,out] dir   directory we are starting from ...
  * @param[in] rmatches  maximum number of matches we can return
@@ -544,7 +530,6 @@ static int rslt_add(const AFPObj *obj, struct vol *vol, struct path *path,
  * @param[out] rsize    length of data written to output buffer
  * @param[in] ext       extended search flag
  */
-#define NUM_ROUNDS 200
 static int catsearch(const AFPObj *obj,
                      struct vol *vol,
                      struct dir *dir,

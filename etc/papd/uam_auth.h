@@ -1,7 +1,10 @@
 /*
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
- *
+ */
+
+/*!
+ * @file
  * interface between uam.c and auth.c
  */
 
@@ -22,8 +25,8 @@ struct uam_mod {
 };
 
 struct uam_obj {
-    const char *uam_name; /* authentication method */
-    char *uam_path; /* where it's located */
+    const char *uam_name; /*!< authentication method */
+    char *uam_path; /*!< where it's located */
     int uam_count;
     union {
         struct {

@@ -59,32 +59,21 @@
 int         afp_errno;
 /* As long as directory.c hasn't got its own init call, this get initialized in dircache_init */
 struct dir rootParent  = {
-    /* d_fullpath, d_m_name, d_u_name, d_m_name_ucs2 */
-    NULL, NULL, NULL, NULL,
-    /* qidx_node, d_ctime, d_flags d_pdid */
-    NULL, 0, 0, 0,
-    /* d_did, d_offcnt, d_vid, d_rights_cache */
-    0, 0, 0, 0,
-    /* d_cache_ctime, d_cache_ino */
-    0, 0
+    NULL, NULL, NULL, NULL,          /* d_fullpath, d_m_name, d_u_name, d_m_name_ucs2 */
+    NULL, 0, 0, 0,                   /* qidx_node, d_ctime, d_flags d_pdid */
+    0, 0, 0, 0,                      /* d_did, d_offcnt, d_vid, d_rights_cache */
+    0, 0                             /* d_cache_ctime, d_cache_ino */
 };
 struct dir  *curdir = &rootParent;
 struct path Cur_Path = {
     0,
-    /* mac name */
-    "",
-    /* unix name */
-    ".",
-    /* id */
-    0,
-    /* pointer to struct dir */
-    NULL,
-    /* stat is not set */
-    0,
-    /* errno */
-    0,
-    /* struct stat */
-    {0}
+    "",  /* mac name */
+    ".", /* unix name */
+    0,   /* id */
+    NULL,/* pointer to struct dir */
+    0,   /* stat is not set */
+    0,   /* errno */
+    {0} /* struct stat */
 };
 
 /*
@@ -212,7 +201,7 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
     return err;
 }
 
-/* do a recursive copy. */
+/*! do a recursive copy. */
 static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src,
                    char *dst)
 {
@@ -294,7 +283,7 @@ copydir_done:
     return err;
 }
 
-/* ---------------------
+/*!
  * is our cached offspring count valid?
  */
 static int diroffcnt(struct dir *dir, struct stat *st)
@@ -901,7 +890,7 @@ exit:
 /*!
  * @brief Free the queue with invalid struct dirs
  *
- * This gets called at the end of every AFP func.
+ * @note This gets called at the end of every AFP func.
  */
 void dir_free_invalid_q(void)
 {
@@ -1317,7 +1306,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     return 0;
 }
 
-/*
+/*!
  * We can't use unix file's perm to support Apple's inherited protection modes.
  * If we aren't the file's owner we can't change its perms when moving it and smb
  * nfs,... don't even try.
@@ -1739,8 +1728,8 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     return rc;
 }
 
-/*
- * assume path == '\0' e.g. it's a directory in canonical form
+/*!
+ * @note assume path == '\0' e.g. it's a directory in canonical form
  */
 int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
                  char *buf)
@@ -2304,11 +2293,14 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return AFP_OK;
 }
 
-/*
- * dst       new unix filename (not a pathname)
- * newname   new mac name
- * newparent curdir
- * dirfd     -1 means ignore dirfd (or use AT_FDCWD), otherwise src is relative to dirfd
+/*!
+ * @brief Rename a directory
+ * @param vol       volume
+ * @param dirfd     -1 means ignore dirfd (or use AT_FDCWD), otherwise src is relative to dirfd
+ * @param src       old unix filename (not a pathname)
+ * @param dst       new unix filename (not a pathname)
+ * @param newparent curdir
+ * @param newname   new mac name
  */
 int renamedir(struct vol *vol,
               int dirfd,
@@ -2368,7 +2360,7 @@ int renamedir(struct vol *vol,
     return AFP_OK;
 }
 
-/* delete an empty directory */
+/*! delete an empty directory */
 int deletecurdir(struct vol *vol)
 {
     struct dir  *fdir, *pdir;
@@ -2700,7 +2692,7 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return AFP_OK;
 }
 
-/* ------------------------------------
+/*
    variable DID support
 */
 int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,

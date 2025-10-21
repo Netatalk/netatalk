@@ -11,7 +11,7 @@
 static char temp[MAXPATHLEN];
 static char temp1[MAXPATHLEN];
 
-/* --------------------
+/*!
    delete metadata
 */
 int delete_unix_md(char *path, char *name, char *file)
@@ -50,7 +50,7 @@ int delete_unix_md(char *path, char *name, char *file)
     return 0;
 }
 
-/* --------------------
+/*!
    delete a resource fork
 */
 int delete_unix_rf(char *path, char *name, char *file)
@@ -113,7 +113,7 @@ int delete_unix_rf(char *path, char *name, char *file)
     return 0;
 }
 
-/* ----------------------
+/*!
  * delete a file
 */
 int delete_unix_file(char *path, char *name, char *file)
@@ -141,7 +141,7 @@ int delete_unix_file(char *path, char *name, char *file)
     return rc;
 }
 
-/* Rename a file and its resource fork */
+/*! Rename a file and its resource fork */
 int rename_unix_file(char *path, char *dir, char *src, char *dst)
 {
     sprintf(temp, "%s/%s/%s", Path, dir, src);
@@ -203,7 +203,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
     return 0;
 }
 
-/* unlink file only, dont care about adouble file */
+/*! unlink file only, dont care about adouble file */
 int unlink_unix_file(char *path, char *name, char *file)
 {
     sprintf(temp, "%s/%s/%s", path, name, file);
@@ -246,7 +246,7 @@ int symlink_unix_file(char *target, char *path, char *source)
     return 0;
 }
 
-/* Delete metadata of directory */
+/*! Delete metadata of directory */
 int delete_unix_adouble(char *path, char *name)
 {
     if (adouble == AD_EA) {
@@ -284,7 +284,7 @@ int delete_unix_adouble(char *path, char *name)
     return 0;
 }
 
-/* chmod .AppleDouble directory */
+/*! chmod .AppleDouble directory */
 static int chmod_unix_adouble(char *path, char *name, int mode)
 {
     if (adouble == AD_EA) {
@@ -418,7 +418,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
     }
 }
 
-/* --------------------
+/*!
 	delete an empty directory
 */
 int delete_unix_dir(char *path, char *name)
@@ -445,7 +445,7 @@ int delete_unix_dir(char *path, char *name)
     return 0;
 }
 
-/* ----------------------
+/*!
  * create a folder with r-xr-xr-x .AppleDouble
 */
 int folder_with_ro_adouble(uint16_t vol, int did, char *name, char *file)

@@ -20,9 +20,10 @@
 #include "pack.h"
 
 
-/* rebuild_add: Enter all fields (including the CNID) into the database and
-   update the current cnid, for emergency repairs. */
-
+/*!
+ * Enter all fields (including the CNID) into the database and
+ * update the current cnid, for emergency repairs.
+ */
 int dbd_rebuild_add(DBD *dbd, struct cnid_dbd_rqst *rqst,
                     struct cnid_dbd_rply *rply)
 {

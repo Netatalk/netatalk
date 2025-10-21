@@ -108,7 +108,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 #endif
 
 #define CVAL(buf,pos) ((unsigned)(((const unsigned char *)(buf))[pos]))
-#define CVAL_NC(buf,pos) (((unsigned char *)(buf))[pos]) /* Non-const version of CVAL */
+#define CVAL_NC(buf,pos) (((unsigned char *)(buf))[pos]) /*!< Non-const version of CVAL */
 #define PVAL(buf,pos) (CVAL(buf,pos))
 #define SCVAL(buf,pos,val) (CVAL_NC(buf,pos) = (val))
 
@@ -168,15 +168,15 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 /* get single value from an SMB buffer */
 #define SVAL(buf,pos) (*(const uint16_t *)((const char *)(buf) + (pos)))
-#define SVAL_NC(buf,pos) (*(uint16_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define SVAL_NC(buf,pos) (*(uint16_t *)((char *)(buf) + (pos))) /*!< Non const version of above. */
 #define IVAL(buf,pos) (*(const uint32_t *)((const char *)(buf) + (pos)))
-#define IVAL_NC(buf,pos) (*(uint32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define IVAL_NC(buf,pos) (*(uint32_t *)((char *)(buf) + (pos))) /*!< Non const version of above. */
 #define LVAL(buf,pos) (*(const uint64_t *)((const char *)(buf) + (pos)))
 #define LVAL_NC(buf,pos) (*(uint64_t *)((char *)(buf) + (pos)))
 #define SVALS(buf,pos) (*(const int16_t *)((const char *)(buf) + (pos)))
-#define SVALS_NC(buf,pos) (*(int16 *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define SVALS_NC(buf,pos) (*(int16 *)((char *)(buf) + (pos))) /*!< Non const version of above. */
 #define IVALS(buf,pos) (*(const int32_t *)((const char *)(buf) + (pos)))
-#define IVALS_NC(buf,pos) (*(int32_t *)((char *)(buf) + (pos))) /* Non const version of above. */
+#define IVALS_NC(buf,pos) (*(int32_t *)((char *)(buf) + (pos))) /*!< Non const version of above. */
 #define LVALS(buf,pos) (*(const int64_t *)((const char *)(buf) + (pos)))
 #define LVALS_NC(buf,pos) (*(int64_t *)((char *)(buf) + (pos)))
 

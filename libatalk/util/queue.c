@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * @brief Netatalk utility functions: queue
+ * Netatalk utility functions: queue
  */
 
 #ifdef HAVE_CONFIG_H
@@ -53,7 +53,7 @@ q_t *queue_init(void)
     return queue;
 }
 
-/* Insert at tail */
+/*! Insert at tail */
 qnode_t *enqueue(q_t *q, void *data)
 {
     qnode_t *node;
@@ -70,7 +70,7 @@ qnode_t *enqueue(q_t *q, void *data)
     return node;
 }
 
-/* Insert at head */
+/*! Insert at head */
 qnode_t *prequeue(q_t *q, void *data)
 {
     qnode_t *node;
@@ -87,7 +87,7 @@ qnode_t *prequeue(q_t *q, void *data)
     return node;
 }
 
-/* Take from head */
+/*! Take from head */
 void *dequeue(q_t *q)
 {
     qnode_t *node;

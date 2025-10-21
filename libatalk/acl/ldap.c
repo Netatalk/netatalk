@@ -113,9 +113,9 @@ struct pref_array prefs_array[] = {
  * @param conflags    Connection flags (KEEPALIVE)
  * @param result      unique search result, allocated here, caller must free
  *
- * @returns -1 on error,
- *          0 nothing found,
- *          1 successful search, result int 'result'
+ * @returns -1 on error
+ * @returns 0 nothing found
+ * @returns 1 successful search, result int 'result'
  *
  * All connection managment to the LDAP server is done here. Just set KEEPALIVE if you know
  * you will be dispatching more than one search in a row, then don't set it with the last search.

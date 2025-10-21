@@ -17,9 +17,10 @@
 #include <atalk/dsi.h>
 #include <atalk/util.h>
 
-/* send an attention. this may get called at any time, so we can't use
- * DSI buffers to send one.
- * return 0 on error
+/*!
+ * @brief send an attention.
+ * @note this may get called at any time, so we can't use  DSI buffers to send one.
+ * @returns 0 on error
  */
 int dsi_attention(DSI *dsi, AFPUserBytes flags)
 {

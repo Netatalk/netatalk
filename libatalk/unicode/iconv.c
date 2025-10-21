@@ -50,25 +50,18 @@
 /*!
  * @file
  *
- * @brief Samba wrapper/stub for iconv character set conversion.
+ * @brief wrapper/stub for iconv character set conversion.
  *
- * iconv is the XPG2 interface for converting between character
- * encodings.  This file provides a Samba wrapper around it, and also
- * a simple reimplementation that is used if the system does not
- * implement iconv.
+ * iconv is an interface for converting between character encodings.
+ * This file, forked from samba, provides a wrapper around it,
+ * and also a simple reimplementation that is used
+ * if the system does not implement iconv.
  *
- * Samba only works with encodings that are supersets of ASCII: ascii
- * characters like whitespace can be tested for directly, multibyte
- * sequences start with a byte with the high bit set, and strings are
- * terminated by a nul byte.
- *
- * Note that the only function provided by iconv is conversion between
- * characters.  It doesn't directly support operations like
- * uppercasing or comparison.  We have to convert to UCS-2 and compare
- * there.
- *
- * @sa Samba Developers Guide
+ * @note the only function provided by iconv is conversion between characters.
+ * It doesn't directly support operations like uppercasing or comparison.
+ * We have to convert to UCS-2 and compare there.
  */
+
 #define CHARSET_WIDECHAR    32
 
 #ifdef HAVE_USABLE_ICONV
@@ -257,7 +250,7 @@ size_t atalk_iconv(atalk_iconv_t cd,
 }
 
 
-/*
+/*!
   simple iconv_open() wrapper
  */
 atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
@@ -357,7 +350,7 @@ atalk_iconv_t atalk_iconv_open(const char *tocode, const char *fromcode)
     return ret;
 }
 
-/*
+/*!
   simple iconv_close() wrapper
 */
 int atalk_iconv_close(atalk_iconv_t cd)

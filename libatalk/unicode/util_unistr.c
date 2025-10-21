@@ -1,4 +1,4 @@
-/*******************************************************************
+/*
   NOTE:
   The early netatalk 2.x was based on UCS-2.
   UCS-2 don't support chars above U+10000.
@@ -6,7 +6,7 @@
   UTF-16 can support chars above U+10000, using Surrogate Pair.
   However, Surrogate Pair is complex, dirty, filthy and disagreeable.
   There might still be latent bugs...
-********************************************************************/
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -26,12 +26,11 @@
 
 #include "precompose.h"
 
-/*******************************************************************
- Convert a string to lower case.
- return True if any char is converted
-********************************************************************/
-/* surrogate pair support */
-
+/*!
+ * @brief Convert a string to lower case.
+ * @returns True if any char is converted
+ * @note surrogate pair support
+ */
 int strlower_w(ucs2_t *s)
 {
     int ret = 0;
@@ -64,12 +63,11 @@ int strlower_w(ucs2_t *s)
     return ret;
 }
 
-/*******************************************************************
- Convert a string to upper case.
- return True if any char is converted
-********************************************************************/
-/* surrogate pair support */
-
+/*!
+ * @brief Convert a string to upper case.
+ * @returns True if any char is converted
+ * @note surrogate pair support
+ */
 int strupper_w(ucs2_t *s)
 {
     int ret = 0;
@@ -102,44 +100,12 @@ int strupper_w(ucs2_t *s)
     return ret;
 }
 
-/*******************************************************************
-wide & sp islower()
-determine if a character is lowercase
-********************************************************************/
-/* These functions are not used. */
-
-int islower_w(ucs2_t c)
-{
-    return c == tolower_w(c);
-}
-
-int islower_sp(uint32_t c_sp)
-{
-    return c_sp == tolower_sp(c_sp);
-}
-
-/*******************************************************************
-wide & sp isupper()
-determine if a character is uppercase
-********************************************************************/
-/* These functions are not used. */
-
-int isupper_w(ucs2_t c)
-{
-    return c == toupper_w(c);
-}
-
-int isupper_sp(uint32_t c_sp)
-{
-    return c_sp == toupper_sp(c_sp);
-}
-
-/*******************************************************************
-wide strlen()
- Count the number of characters in a UTF-16 string.
-********************************************************************/
-/* NOTE: one surrogate pair is two characters. */
-
+/*!
+ * @brief wide strlen()
+ *
+ * Count the number of characters in a UTF-16 string.
+ * @note one surrogate pair is two characters.
+ */
 size_t strlen_w(const ucs2_t *src)
 {
     size_t len;
@@ -149,11 +115,12 @@ size_t strlen_w(const ucs2_t *src)
     return len;
 }
 
-/*******************************************************************
-wide strnlen()
- Count up to max number of characters in a UTF-16 string.
-********************************************************************/
-/* NOTE: one surrogate pair is two characters. */
+/*!
+ * @brief wide strnlen()
+ *
+ * Count up to max number of characters in a UTF-16 string.
+ * @note one surrogate pair is two characters.
+ */
 
 size_t strnlen_w(const ucs2_t *src, size_t max)
 {
@@ -164,11 +131,10 @@ size_t strnlen_w(const ucs2_t *src, size_t max)
     return len;
 }
 
-/*******************************************************************
-wide strchr()
-********************************************************************/
-/* NOTE: hi and lo of surrogate pair are separately processed. */
-
+/*!
+ * @brief wide strchr()
+ * @note hi and lo of surrogate pair are separately processed.
+ */
 ucs2_t *strchr_w(const ucs2_t *s, ucs2_t c)
 {
     while (*s != 0) {
@@ -186,11 +152,10 @@ ucs2_t *strchr_w(const ucs2_t *s, ucs2_t c)
     return NULL;
 }
 
-/*******************************************************************
-wide & sp strcasechr()
-********************************************************************/
-/* NOTE: separately process BMP and surrogate pair */
-
+/*!
+ * @brief wide strcasechr()
+ * @note separately process BMP and surrogate pair
+ */
 ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
 {
     while (*s != 0) {
@@ -208,6 +173,10 @@ ucs2_t *strcasechr_w(const ucs2_t *s, ucs2_t c)
     return NULL;
 }
 
+/*!
+ * @brief sp strcasechr()
+ * @note separately process BMP and surrogate pair
+ */
 ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
 {
     if (*s == 0) {
@@ -225,11 +194,10 @@ ucs2_t *strcasechr_sp(const ucs2_t *s, uint32_t c_sp)
     return NULL;
 }
 
-/*******************************************************************
-wide strcmp()
-********************************************************************/
-/* no problem of surrogate pair */
-
+/*!
+ * @brief wide strcmp()
+ * @note no problem of surrogate pair
+ */
 int strcmp_w(const ucs2_t *a, const ucs2_t *b)
 {
     while (*b && *a == *b) {
@@ -243,11 +211,10 @@ int strcmp_w(const ucs2_t *a, const ucs2_t *b)
        string is longer */
 }
 
-/*******************************************************************
-wide strncmp()
-********************************************************************/
-/* no problem of surrogate pair */
-
+/*!
+ * @brief wide strncmp()
+ * @note no problem of surrogate pair
+ */
 int strncmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 {
     size_t n = 0;
@@ -261,11 +228,10 @@ int strncmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
     return (len - n) ? (*a - *b) : 0;
 }
 
-/*******************************************************************
-wide strstr()
-********************************************************************/
-/* no problem of surrogate pair */
-
+/*!
+ * @brief wide strstr()
+ * @note no problem of surrogate pair
+ */
 ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
 {
     ucs2_t *r;
@@ -289,11 +255,10 @@ ucs2_t *strstr_w(const ucs2_t *s, const ucs2_t *ins)
     return NULL;
 }
 
-/*******************************************************************
-wide strcasestr()
-********************************************************************/
-/* surrogate pair support */
-
+/*!
+ * @brief wide strcasestr()
+ * @note surrogate pair support
+ */
 ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
 {
     ucs2_t *r;
@@ -333,12 +298,12 @@ ucs2_t *strcasestr_w(const ucs2_t *s, const ucs2_t *ins)
     return NULL;
 }
 
-/*******************************************************************
-wide strcasecmp()
-case insensitive string comparison
-********************************************************************/
-/* surrogate pair support */
-
+/*!
+ * @brief wide strcasecmp()
+ *
+ * case insensitive string comparison
+ * @note surrogate pair support
+ */
 int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
 {
     int ret;
@@ -369,12 +334,12 @@ int strcasecmp_w(const ucs2_t *a, const ucs2_t *b)
     return (tolower_w(*a) - tolower_w(*b));
 }
 
-/*******************************************************************
-wide strncasecmp()
-case insensitive string comparison, length limited
-********************************************************************/
-/* NOTE: compare up to 'len+1' if 'len' isolate surrogate pair  */
-
+/*!
+ * @brief wide strncasecmp()
+ *
+ * case insensitive string comparison, length limited
+ * @note compare up to 'len+1' if 'len' isolate surrogate pair
+ */
 int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
 {
     size_t n = 0;
@@ -408,13 +373,13 @@ int strncasecmp_w(const ucs2_t *a, const ucs2_t *b, size_t len)
     return (len - n) ? (tolower_w(*a) - tolower_w(*b)) : 0;
 }
 
-/*******************************************************************
-wide strndup()
-duplicate string
-********************************************************************/
-/* NOTE: not check isolation of surrogate pair */
-/* if len == 0 then duplicate the whole string */
-
+/*!
+ * @brief wide strndup()
+ *
+ * duplicate string
+ * @note not check isolation of surrogate pair
+ * @note if len == 0 then duplicate the whole string
+ */
 ucs2_t *strndup_w(const ucs2_t *src, size_t len)
 {
     ucs2_t *dest;
@@ -435,87 +400,20 @@ ucs2_t *strndup_w(const ucs2_t *src, size_t len)
     return dest;
 }
 
-/*******************************************************************
-wide strdup()
-duplicate string
-********************************************************************/
-/* no problem of surrogate pair */
-
+/*!
+ * @brief wide strdup()
+ *
+ * duplicate string
+ * @note no problem of surrogate pair
+ */
 ucs2_t *strdup_w(const ucs2_t *src)
 {
     return strndup_w(src, 0);
 }
 
-/*******************************************************************
-copy a string with max len
-********************************************************************/
-/* This function is not used. */
-/* NOTE: not check isolation of surrogate pair */
-
-ucs2_t *strncpy_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
-{
-    size_t len;
-
-    if (!dest || !src) {
-        return NULL;
-    }
-
-    for (len = 0; (src[len] != 0) && (len < max); len++) {
-        dest[len] = src[len];
-    }
-
-    while (len < max) {
-        dest[len++] = 0;
-    }
-
-    return dest;
-}
-
-
-/*******************************************************************
-append a string of len bytes and add a terminator
-********************************************************************/
-/* These functions are not used. */
-
-/* NOTE: not check isolation of surrogate pair */
-ucs2_t *strncat_w(ucs2_t *dest, const ucs2_t *src, const size_t max)
-{
-    size_t start;
-    size_t len;
-
-    if (!dest || !src) {
-        return NULL;
-    }
-
-    start = strlen_w(dest);
-    len = strnlen_w(src, max);
-    memcpy(&dest[start], src, len * sizeof(ucs2_t));
-    dest[start + len] = 0;
-    return dest;
-}
-
-/* no problem of surrogate pair */
-ucs2_t *strcat_w(ucs2_t *dest, const ucs2_t *src)
-{
-    size_t start;
-    size_t len;
-
-    if (!dest || !src) {
-        return NULL;
-    }
-
-    start = strlen_w(dest);
-    len = strlen_w(src);
-    memcpy(&dest[start], src, len * sizeof(ucs2_t));
-    dest[start + len] = 0;
-    return dest;
-}
-
-
-/*******************************************************************
-binary search for pre|decomposition
-********************************************************************/
-
+/*!
+ * binary search for pre|decomposition
+ */
 static ucs2_t do_precomposition(unsigned int base, unsigned int comb)
 {
     int min = 0;
@@ -626,21 +524,20 @@ static uint64_t do_decomposition_sp(unsigned int base_sp)
     return 0;
 }
 
-/*******************************************************************
-pre|decomposition
-
-   we can't use static, this stuff needs to be reentrant
-   static char comp[MAXPATHLEN +1];
-
-   We don't implement Singleton and Canonical Ordering.
-   We ignore CompositionExclusions.txt.
-   because they cause the problem of the roundtrip
-   such as Dancing Icon.
-
-   exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges
-   in precompose.h from composition according to AFP 3.x spec
-********************************************************************/
-
+/*!
+ * @brief pre|decomposition
+ *
+ *  we can't use static, this stuff needs to be reentrant
+ *  static char comp[MAXPATHLEN +1];
+ *
+ *  We don't implement Singleton and Canonical Ordering.
+ *  We ignore CompositionExclusions.txt
+ *  because they cause the problem of the roundtrip
+ *  such as Dancing Icon.
+ *
+ *  exclude U2000-U2FFF, UFE30-UFE4F and U2F800-U2FA1F ranges
+ *  in precompose.h from composition according to AFP 3.x spec
+ */
 size_t precompose_w(ucs2_t *name, size_t inplen, ucs2_t *comp, size_t *outlen)
 {
     size_t i;

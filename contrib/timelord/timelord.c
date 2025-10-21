@@ -50,7 +50,7 @@
 #define	TL_GETTIME	0
 #define	TL_OK		12
 #define TL_BAD		10
-#define EPOCH		0x7C25B080	/* 00:00:00 GMT Jan 1, 1970 for Mac */
+#define EPOCH		0x7C25B080	/*!< 00:00:00 GMT Jan 1, 1970 for Mac */
 #define SIZEOF_MAC_LONG 4
 
 int	debug = 0;
@@ -73,7 +73,7 @@ void usage(char *p)
     exit(1);
 }
 
-/*
+/*!
  * Unregister ourself on signal.
  */
 void goaway(int signal _U_)

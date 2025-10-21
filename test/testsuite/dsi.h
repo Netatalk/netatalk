@@ -14,29 +14,40 @@
 
 #include <netinet/in.h>
 
-/* What a DSI packet looks like:
- 0                               32
- |-------------------------------|
- |flags  |command| requestID     |
- |-------------------------------|
- |error code/enclosed data offset|
- |-------------------------------|
- |total data length              |
- |-------------------------------|
- |reserved field                 |
- |-------------------------------|
-
- CONVENTION: anything with a dsi_ prefix is kept in network byte order.
+/*!
+ * @file
+ * @brief DSI (Data Stream Interface) protocol definitions
+ * modified for the afptest test-suite
+ *
+ * The interface for the test-suite differts from the libatalk DSI interface
+ * in that is retains a statically allocated buffer for commands
+ * as well as smaller command and data buffer sizes that fit in 16 bit size fields.
+ *
+ * What a DSI packet looks like:
+ * @code
+ *   0                               32
+ *   |-------------------------------|
+ *   |flags  |command| requestID     |
+ *   |-------------------------------|
+ *   |error code/enclosed data offset|
+ *   |-------------------------------|
+ *   |total data length              |
+ *   |-------------------------------|
+ *   |reserved field                 |
+ *   |-------------------------------|
+ * @endcode
+ *
+ * @note CONVENTION: anything with a dsi_ prefix is kept in network byte order.
 */
 
 #define DSI_BLOCKSIZ 16
 struct dsi_block {
-    uint8_t dsi_flags;       /* packet type: request or reply */
-    uint8_t dsi_command;     /* command */
-    uint16_t dsi_requestID;  /* request ID */
-    uint32_t dsi_code;       /* error code or data offset */
-    uint32_t dsi_len;        /* total data length */
-    uint32_t dsi_reserved;   /* reserved field */
+    uint8_t dsi_flags;       /*!< packet type: request or reply */
+    uint8_t dsi_command;     /*!< command */
+    uint16_t dsi_requestID;  /*!< request ID */
+    uint32_t dsi_code;       /*!< error code or data offset */
+    uint32_t dsi_len;        /*!< total data length */
+    uint32_t dsi_reserved;   /*!< reserved field */
 };
 
 #define DSI_CMDSIZ        800
@@ -54,7 +65,7 @@ typedef struct DSI {
     int statuslen;
     size_t datalen, cmdlen;
     size_t read_count, write_count;
-    int asleep; /* client won't reply AFP 0x7a ? */
+    int asleep; /*!< client won't reply AFP 0x7a ? */
     /* inited = initialized?, child = a child?, noreply = send reply? */
     char child, inited, noreply;
     const char *program;
@@ -73,18 +84,18 @@ typedef struct DSI {
 #define DSIFL_MAX        0x01
 
 /* DSI session options */
-#define DSIOPT_SERVQUANT 0x00   /* server request quantum */
-#define DSIOPT_ATTNQUANT 0x01   /* attention quantum */
+#define DSIOPT_SERVQUANT 0x00   /*!< server request quantum */
+#define DSIOPT_ATTNQUANT 0x01   /*!< attention quantum */
 
 /* DSI Commands */
-#define DSIFUNC_CLOSE   1       /* DSICloseSession */
-#define DSIFUNC_CMD     2       /* DSICommand */
-#define DSIFUNC_STAT    3       /* DSIGetStatus */
-#define DSIFUNC_OPEN    4       /* DSIOpenSession */
-#define DSIFUNC_TICKLE  5       /* DSITickle */
-#define DSIFUNC_WRITE   6       /* DSIWrite */
-#define DSIFUNC_ATTN    8       /* DSIAttention */
-#define DSIFUNC_MAX     8       /* largest command */
+#define DSIFUNC_CLOSE   1       /*!< DSICloseSession */
+#define DSIFUNC_CMD     2       /*!< DSICommand */
+#define DSIFUNC_STAT    3       /*!< DSIGetStatus */
+#define DSIFUNC_OPEN    4       /*!< DSIOpenSession */
+#define DSIFUNC_TICKLE  5       /*!< DSITickle */
+#define DSIFUNC_WRITE   6       /*!< DSIWrite */
+#define DSIFUNC_ATTN    8       /*!< DSIAttention */
+#define DSIFUNC_MAX     8       /*!< largest command */
 
 /* DSI Error codes: most of these aren't used. */
 #define DSIERR_OK	0x0000
@@ -100,15 +111,15 @@ typedef struct DSI {
 #define DSIERR_NOACK	0xfbcd
 
 /* server and client quanta */
-#define DSI_DEFQUANT        2           /* default attention quantum size */
-#define DSI_SERVQUANT_MAX   0xffffffffL /* server quantum */
-#define DSI_SERVQUANT_MIN   0x0004A2E0L /* minimum server quantum */
-#define DSI_SERVQUANT_DEF   DSI_SERVQUANT_MIN /* default server quantum */
+#define DSI_DEFQUANT        2           /*!< default attention quantum size */
+#define DSI_SERVQUANT_MAX   0xffffffffL /*!< server quantum */
+#define DSI_SERVQUANT_MIN   0x0004A2E0L /*!< minimum server quantum */
+#define DSI_SERVQUANT_DEF   DSI_SERVQUANT_MIN /*!< default server quantum */
 
-/* default port number */
+/*! default port number */
 #define DSI_AFPOVERTCP_PORT 548
 
-/* basic initialization: dsi_init.c */
+/*! basic initialization: dsi_init.c */
 extern DSI *dsi_init(
     const char * /*program*/,
     const char * /*host*/, const char * /*address*/,

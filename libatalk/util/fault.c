@@ -45,13 +45,12 @@
 
 static void (*cont_fn)(void *);
 
-/*******************************************************************
- Catch a signal. This should implement the following semantics:
-
- 1) The handler remains installed after being called.
- 2) The signal should be blocked during handler execution.
-********************************************************************/
-
+/*!
+ * Catch a signal. This should implement the following semantics:
+ *
+ * 1. The handler remains installed after being called.
+ * 2. The signal should be blocked during handler execution.
+ */
 static void (*CatchSignal(int signum, void (*handler)(int)))(int)
 {
 #ifdef HAVE_SIGACTION
@@ -79,10 +78,9 @@ static void (*CatchSignal(int signum, void (*handler)(int)))(int)
 #endif
 }
 
-/*******************************************************************
- Something really nasty happened - panic !
-********************************************************************/
-
+/*!
+ * Something really nasty happened - panic !
+ */
 void netatalk_panic(const char *why _U_)
 {
 #ifdef HAVE_BACKTRACE_SYMBOLS
@@ -109,9 +107,9 @@ void netatalk_panic(const char *why _U_)
 }
 
 
-/*******************************************************************
-report a fault
-********************************************************************/
+/*!
+ * report a fault
+ */
 static void fault_report(int sig)
 {
     static int counter;
@@ -143,17 +141,17 @@ static void fault_report(int sig)
     abort();
 }
 
-/****************************************************************************
-catch serious errors
-****************************************************************************/
+/*!
+ * catch serious errors
+ */
 static void sig_fault(int sig)
 {
     fault_report(sig);
 }
 
-/*******************************************************************
-setup our fault handlers
-********************************************************************/
+/*!
+ * setup our fault handlers
+ */
 void fault_setup(void (*fn)(void *))
 {
     cont_fn = fn;

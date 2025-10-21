@@ -46,14 +46,14 @@
 #include <stdio.h>
 #endif /* EBUG */
 
-/*
- * ah:        open atp handle
- * atpb:      parameter block
- * respcount: buffers available for response
- * flags:     ATP_XO, ATP_TREL
+/*!
+ * @brief Send ATP transaction service request
+ * @param ah         open atp handle
+ * @param atpb       parameter block
+ * @param respcount  buffers available for response
+ * @param flags      ATP_XO, ATP_TREL
  */
-int
-atp_sreq(ATP ah, struct atp_block *atpb, int respcount, uint8_t flags)
+int atp_sreq(ATP ah, struct atp_block *atpb, int respcount, uint8_t flags)
 {
     struct atpbuf	*req_buf;
     int			i;

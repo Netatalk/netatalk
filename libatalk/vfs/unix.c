@@ -65,7 +65,7 @@ int setfilmode(const struct vol *vol, const char *name, mode_t mode,
 /*!
  * @brief system rmdir with afp error code.
  *
- * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
+ * @note Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
  */
 int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 {
@@ -104,7 +104,7 @@ int netatalk_rmdir_all_errors(int dirfd _U_, const char *name)
 /*!
  * @brief System rmdir with afp error code, but ENOENT is not an error.
  *
- * Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
+ * @note Supports *at semantics (cf openat). Pass dirfd=-1 to ignore this.
  */
 int netatalk_rmdir(int dirfd, const char *name)
 {
@@ -117,9 +117,9 @@ int netatalk_rmdir(int dirfd, const char *name)
     return ret;
 }
 
-/* -------------------
-   system unlink with afp error code.
-   ENOENT is not an error.
+/*!
+ * @brief system unlink with afp error code.
+ * @note ENOENT is not an error.
 */
 int netatalk_unlink(const char *name)
 {
@@ -147,7 +147,7 @@ int netatalk_unlink(const char *name)
  * *at semnatics support functions (like openat, renameat standard funcs)
  **************************************************************************/
 
-/* Copy all file data from one file fd to another */
+/*! Copy all file data from one file fd to another */
 int copy_file_fd(int sfd, int dfd)
 {
     EC_INIT;
@@ -185,7 +185,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*
+/*!
  * Supports *at semantics, pass dirfd=-1 to ignore this
  */
 int copy_file(int dirfd _U_, const char *src, const char *dst, mode_t mode)
@@ -238,7 +238,7 @@ exit:
 /*!
  * @brief Copy an EA from one file to another
  *
- * Supports *at semantics, pass dirfd=-1 to ignore this
+ * @note Supports *at semantics, pass dirfd=-1 to ignore this
  */
 int copy_ea(const char *ea, int dirfd _U_, const char *src, const char *dst,
             mode_t mode)
@@ -276,7 +276,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-/*
+/*!
  * at wrapper for netatalk_unlink
  */
 int netatalk_unlinkat(int dirfd _U_, const char *name)

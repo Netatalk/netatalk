@@ -41,7 +41,7 @@ static struct iovec	niov[PAP_MAXQUANTUM] = {
     { buf[7],	0 },
 };
 
-/*
+/*!
  * Accept files until the client closes the connection.
  * Read lines of a file, until the client sends eof, after
  * which we'll send eof also.

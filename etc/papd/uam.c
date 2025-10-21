@@ -81,8 +81,11 @@ uam_load_fail:
     return NULL;
 }
 
-/* unload the module. we check for a cleanup function, but we don't
- * die if one doesn't exist. however, things are likely to leak without one.
+/*!
+ * @brief unload the module.
+ *
+ * we check for a cleanup function, but we don't die if one doesn't exist.
+ * however, things are likely to leak without one.
  */
 void uam_unload(struct uam_mod *mod)
 {
@@ -96,7 +99,7 @@ void uam_unload(struct uam_mod *mod)
 
 /* -- client-side uam functions -- */
 
-/* set up stuff for this uam. */
+/*! set up stuff for this uam. */
 int uam_register(const int type, const char *path, const char *name, ...)
 {
     va_list ap;
@@ -183,7 +186,7 @@ void uam_unregister(const int type, const char *name)
     free(uam);
 }
 
-/* Crap to support uams which call this afpd function */
+/*! Crap to support uams which call this afpd function */
 int uam_afpserver_option(void *private _U_, const int what _U_,
                          void *option _U_, size_t *len _U_)
 {
@@ -192,7 +195,7 @@ int uam_afpserver_option(void *private _U_, const int what _U_,
 
 /* --- helper functions for plugin uams --- */
 
-struct passwd *uam_getname(void *dummy _U_, char *name, const int len)
+struct passwd *uam_getname(void *private _U_, char *name, const int len)
 {
     struct passwd *pwent;
     char *user;

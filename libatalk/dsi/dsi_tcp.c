@@ -47,11 +47,11 @@ int deny_severity = log_warning;
 #define min(a,b)  ((a) < (b) ? (a) : (b))
 
 #ifndef DSI_TCPMAXPEND
-#define DSI_TCPMAXPEND      20       /* max # of pending connections */
+#define DSI_TCPMAXPEND      20       /*!< max # of pending connections */
 #endif /* DSI_TCPMAXPEND */
 
 #ifndef DSI_TCPTIMEOUT
-#define DSI_TCPTIMEOUT      120     /* timeout in seconds for connections */
+#define DSI_TCPTIMEOUT      120     /*!< timeout in seconds for connections */
 #endif /* ! DSI_TCPTIMEOUT */
 
 
@@ -70,7 +70,7 @@ static void dsi_tcp_close(DSI *dsi)
     dsi->socket = -1;
 }
 
-/* alarm handler for tcp_open */
+/*! alarm handler for tcp_open */
 static void timeout_handler(int sig _U_)
 {
     LOG(log_error, logtype_dsi, "dsi_tcp_open: connection timed out");
@@ -78,7 +78,7 @@ static void timeout_handler(int sig _U_)
 }
 
 /*!
- * @brief Allocate DSI read buffer and read-ahead buffer
+ * Allocate DSI read buffer and read-ahead buffer
  */
 static void dsi_init_buffer(DSI *dsi)
 {
@@ -99,7 +99,7 @@ static void dsi_init_buffer(DSI *dsi)
 }
 
 /*!
- * @brief Free any allocated resources of the master afpd DSI objects
+ * Free any allocated resources of the master afpd DSI objects
  * and close server socket
  */
 void dsi_free(DSI *dsi)
@@ -117,7 +117,7 @@ void dsi_free(DSI *dsi)
 }
 
 static struct itimerval itimer;
-/* accept the socket and do a little sanity checking */
+/*! accept the socket and do a little sanity checking */
 static pid_t dsi_tcp_open(DSI *dsi)
 {
     pid_t pid;

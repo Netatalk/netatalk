@@ -58,7 +58,7 @@
 #define ADEDOFF_FILLER       (ADEDOFF_VERSION + ADEDLEN_VERSION)
 #define ADEDOFF_NENTRIES     (ADEDOFF_FILLER + ADEDLEN_FILLER)
 
-/* initial lengths of some of the fields */
+/*! initial lengths of some of the fields */
 #define ADEDLEN_INIT     0
 
 /* i stick things in a slightly different order than their eid order in
@@ -90,7 +90,7 @@
 #define ADEDOFF_PRIVSYN_EA    (ADEDOFF_PRIVINO_EA    + ADEDLEN_PRIVINO)
 #define ADEDOFF_PRIVID_EA     (ADEDOFF_PRIVSYN_EA    + ADEDLEN_PRIVSYN)
 
-/* this is to prevent changing timezones from causing problems with
+/*! this is to prevent changing timezones from causing problems with
    localtime volumes. the screw-up is 30 years. we use a delta of 5 years */
 #define TIMEWARP_DELTA 157680000
 
@@ -369,7 +369,7 @@ static uint32_t get_eid(uint32_t eid)
 
 
 /*!
- * @brief Initialize offset pointers
+ * Initialize offset pointers
  */
 int ad_init_offsets(struct adouble *ad)
 {
@@ -744,7 +744,7 @@ EC_CLEANUP:
     return 1;
 }
 
-/* Read an ._ file, only uses the resofork, finderinfo is taken from EA */
+/*! Read an ._ file, only uses the resofork, finderinfo is taken from EA */
 static int ad_header_read_osx(const char *path, struct adouble *ad,
                               struct stat *hst)
 {
@@ -950,6 +950,7 @@ EC_CLEANUP:
  * @brief Takes a path to an AppleDouble file and creates the parent .AppleDouble directory
  *
  * Example:
+ *
  * path: "/path/.AppleDouble/file"
  * => mkdir("/path/.AppleDouble/") (in ad_mkdir())
  */
@@ -988,16 +989,16 @@ static int ad_mkrf_osx(const char *path _U_)
     return 0;
 }
 
-/* ----------------
-   if we are root change path user/ group
-   It can be a native function for BSD cf. FAQ.Q10
-   path:  pathname to chown
-   stbuf: parent directory inode
+#define EMULATE_SUIDDIR
+
+/*!
+   @brief if we are root change path user/ group
+   @note It can be a native function for BSD cf. FAQ.Q10
+   @param path   pathname to chown
+   @param stbuf  parent directory inode
 
    use fstat and fchown or lchown with linux?
 */
-#define EMULATE_SUIDDIR
-
 static int ad_chown(const char *path, struct stat *stbuf)
 {
     int ret = 0;
@@ -1014,9 +1015,9 @@ static int ad_chown(const char *path, struct stat *stbuf)
     return ret;
 }
 
-#define DEFMASK 07700   /* be conservative */
+#define DEFMASK 07700   /*!< be conservative */
 
-/* ----------------
+/*!
    return access right and inode of path parent directory
 */
 static int ad_mode_st(const char *path, mode_t *mode, struct stat *stbuf)
@@ -1545,7 +1546,7 @@ static int ad_open_hf(const char *path, int adflags, int mode,
 }
 
 /*!
- * @brief Get resofork length for adouble:ea, parameter 'ad' may be NULL
+ * Get resofork length for adouble:ea, parameter 'ad' may be NULL
  */
 off_t ad_reso_size(const char *path, int adflags, struct adouble *ad _U_)
 {
@@ -2023,14 +2024,14 @@ const char *ad_path_osx(const char *path, int adflags _U_)
     return pathbuf;
 }
 
-/*
- * Put the .AppleDouble where it needs to be:
- *
+/*!
+ * @brief Put the .AppleDouble where it needs to be:
+ * @code
  *      /   a/.AppleDouble/b
  *  a/b
  *      \   b/.AppleDouble/.Parent
- *
- * FIXME: should do something for pathname > MAXPATHLEN
+ * @endcode
+ * @bug should do something for pathname > MAXPATHLEN
  */
 const char *ad_path(const char *path, int adflags)
 {
@@ -2084,9 +2085,9 @@ const char *ad_path(const char *path, int adflags)
     return pathbuf;
 }
 
-/* -------------------------
- * Support inherited protection modes for AppleDouble files.  The supplied
- * mode is ANDed with the parent directory's mask value in lieu of "umask",
+/*!
+ * @brief Support inherited protection modes for AppleDouble files.
+ * The supplied mode is ANDed with the parent directory's mask value in lieu of "umask",
  * and that value is returned.
  */
 char *ad_dir(const char *path)
@@ -2159,7 +2160,7 @@ uid_t ad_getfuid(void)
     return default_uid;
 }
 
-/* ----------------
+/*!
    stat path parent directory
 */
 int ad_stat(const char *path, struct stat *stbuf)
@@ -2174,7 +2175,7 @@ int ad_stat(const char *path, struct stat *stbuf)
     return stat(p, stbuf);
 }
 
-/* ----------------
+/*!
    return access right of path parent directory
 */
 int ad_mode(const char *path, mode_t mode)
@@ -2184,7 +2185,7 @@ int ad_mode(const char *path, mode_t mode)
     return mode;
 }
 
-/*
+/*!
  * Use mkdir() with mode bits taken from ad_mode().
  */
 int ad_mkdir(const char *path, mode_t mode)
@@ -2297,7 +2298,7 @@ void ad_init(struct adouble *ad, const struct vol *vol)
  *
  * @bug on Solaris (HAVE_EAFD) ADFLAGS_RF doesn't work without
  *   ADFLAGS_HF, because it checks whether ad_meta_fileno() is already
- *   openend. As a workaround pass ADFLAGS_SETSHRMD.
+ *   opened. As a workaround pass ADFLAGS_SETSHRMD.
  *
  * @returns 0 on success, any other value indicates an error
  */
@@ -2423,8 +2424,8 @@ int ad_metadata(const char *name, int flags, struct adouble *adp)
     return ret;
 }
 
-/*
- * @brief openat like wrapper for ad_metadata
+/*!
+ * openat like wrapper for ad_metadata
  */
 int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
 {
@@ -2565,7 +2566,8 @@ EC_CLEANUP:
     return ret;
 }
 
-/* build a resource fork mode from the data fork mode:
+/*!
+ * build a resource fork mode from the data fork mode:
  * remove X mode and extend header to RW if R or W (W if R for locking),
  */
 mode_t ad_hf_mode(mode_t mode)

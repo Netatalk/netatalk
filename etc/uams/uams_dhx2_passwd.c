@@ -34,10 +34,10 @@
 
 #define PASSWDLEN 255
 
-/* Number of bits for p which we generate. Everybode out there uses 512, so we beet them */
+/*! Number of bits for p which we generate. Everybody out there uses 512, so we beat them */
 #define PRIMEBITS 1024
 
-/* hash a number to a 16-bit quantity */
+/*! hash a number to a 16-bit quantity */
 #define dhxhash(a) ((((unsigned long) (a) >> 8) ^   \
                      (unsigned long) (a)) & 0xffff)
 
@@ -270,8 +270,11 @@ static int login(void *obj, char *username, int ulen,
 }
 
 /* -------------------------------- */
-/* dhx login: things are done in a slightly bizarre order to avoid
- * having to clean things up if there's an error. */
+/*!
+ * @brief dhx login
+ * @note things are done in a slightly bizarre order to avoid
+ * having to clean things up if there's an error.
+ */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
                         char *rbuf, size_t *rbuflen)

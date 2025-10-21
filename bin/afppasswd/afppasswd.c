@@ -1,10 +1,17 @@
 /*
  * Copyright 1999 (c) Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved. See COPYRIGHT.
+ */
+
+/*!
+ * @file
+ * @brief AFP user password utility
  *
  * format of the password file:
+ * @code
  * name:****************:****************:********
  *      password         last login date  failed usage count
+ * @endcode
  *
  * ***'s are illegal. they're just place holders for hex values. hex
  * values that represent actual numbers are in network byte order.
@@ -14,8 +21,10 @@
  *
  * the last two fields aren't currently used by the randnum uams.
  *
+ * @code
  * root syntax: afppasswd [-c] [-a] [-p path] [-f] [username]
  * user syntax: afppasswd
+ * @endcode
  */
 
 #ifdef HAVE_CONFIG_H

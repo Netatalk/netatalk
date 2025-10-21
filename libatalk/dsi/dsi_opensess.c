@@ -16,7 +16,7 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-/* OpenSession. set up the connection */
+/*! OpenSession. set up the connection */
 void dsi_opensession(DSI *dsi)
 {
     size_t i = 0;

@@ -297,9 +297,9 @@ int of_fstatat(int dirfd, struct path *path)
     return ret;
 }
 
-/* --------------------------
-   stat the current directory.
-   stat(".") works even if "." is deleted thus
+/*!
+   @brief stat the current directory.
+   @note stat(".") works even if "." is deleted thus
    we have to stat ../name because we want to know if it's there
 */
 int of_statdir(struct vol *vol, struct path *path)
@@ -535,9 +535,6 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     return ret;
 }
 
-/* ----------------------
-
- */
 struct adouble *of_ad(const struct vol *vol, struct path *path,
                       struct adouble *ad)
 {
@@ -554,7 +551,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path,
     return adp;
 }
 
-/* ----------------------
+/*!
    close all forks for a volume
 */
 void of_closevol(const AFPObj *obj, const struct vol *vol)
@@ -576,8 +573,8 @@ void of_closevol(const AFPObj *obj, const struct vol *vol)
     return;
 }
 
-/* ----------------------
-   close all forks for a volume
+/*!
+   close all forks
 */
 void of_close_all_forks(const AFPObj *obj)
 {

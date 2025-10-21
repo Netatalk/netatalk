@@ -48,10 +48,9 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-/****************************************************************************
-This is a utility function of afprun().
-****************************************************************************/
-
+/*!
+ * This is a utility function of afprun().
+ */
 static int setup_out_fd(void)
 {
     int fd;
@@ -71,10 +70,10 @@ static int setup_out_fd(void)
     return fd;
 }
 
-/****************************************************************************
- Gain root privilege before doing something.
- We want to end up with ruid==euid==0
-****************************************************************************/
+/*!
+ * @brief Gain root privilege before doing something.
+ * @note We want to end up with ruid==euid==0
+ */
 static void gain_root_privilege(void)
 {
     if (seteuid(0) < 0) {
@@ -82,10 +81,10 @@ static void gain_root_privilege(void)
     }
 }
 
-/****************************************************************************
- Ensure our real and effective groups are zero.
- we want to end up with rgid==egid==0
-****************************************************************************/
+/*!
+ * @brief Ensure our real and effective groups are zero.
+ * @note we want to end up with rgid==egid==0
+ */
 static void gain_root_group_privilege(void)
 {
     if (setegid(0) < 0) {
@@ -94,10 +93,10 @@ static void gain_root_group_privilege(void)
     }
 }
 
-/****************************************************************************
- Become the specified uid and gid - permanently !
- there should be no way back if possible
-****************************************************************************/
+/*!
+ * @brief Become the specified uid and gid - permanently !
+ * @note there should be no way back if possible
+ */
 static int become_user_permanently(uid_t uid, gid_t gid)
 {
     int ret;
@@ -261,10 +260,11 @@ static int become_user_permanently(uid_t uid, gid_t gid)
     return 0;
 }
 
-/****************************************************************************
-run a command being careful about uid/gid handling and putting the output in
-outfd (or discard it if outfd is NULL).
-****************************************************************************/
+/*!
+ * @brief run a command
+ * @note being careful about uid/gid handling and putting the output in
+ * outfd (or discard it if outfd is NULL).
+ */
 
 int afprun(char *cmd, int *outfd)
 {
@@ -385,9 +385,9 @@ int afprun(char *cmd, int *outfd)
     return 1;
 }
 
-/*
- * Run a command in the background without waiting,
- * being careful about uid/gid handling
+/*!
+ * @brief Run a command in the background without waiting
+ * @note being careful about uid/gid handling
  */
 int afprun_bg(char *cmd)
 {

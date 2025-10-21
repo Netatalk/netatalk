@@ -15,7 +15,7 @@
 
 #include <atalk/dsi.h>
 
-/* server generated tickles. as this is only called by the tickle handler,
+/*! server generated tickles. as this is only called by the tickle handler,
  * we don't need to block signals. */
 int dsi_tickle(DSI *dsi)
 {

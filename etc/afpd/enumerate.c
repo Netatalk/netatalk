@@ -35,9 +35,9 @@
 
 #define min(a,b)	((a)<(b)?(a):(b))
 
-/*
- * Struct to save directory reading context in. Used to prevent
- * O(n^2) searches on a directory.
+/*!
+ * @brief Struct to save directory reading context in.
+ * @note Used to prevent O(n^2) searches on a directory.
  */
 struct savedir {
     u_short	 sd_vid;
@@ -85,18 +85,17 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
     return 0;
 }
 
-/* -----------------------------
- * FIXME:
+/*!
+ * @bug
  * Doesn't work with dangling symlink
  * i.e.:
  * - Move a folder with a dangling symlink in the trash
  * - empty the trash
+ *
  * afp_enumerate return an empty listing but offspring count != 0 in afp_getdirparams
  * and the Mac doesn't try to call afp_delete!
  *
- * Another option for symlink
- * cf:
- * http://sourceforge.net/tracker/index.php?func=detail&aid=461938&group_id=8642&atid=108642
+ * @sa https://sourceforge.net/p/netatalk/bugs/97/
  *
 */
 char *check_dirent(const struct vol *vol, char *name)
@@ -162,7 +161,7 @@ for_each_dirent(const struct vol *vol, char *name, dir_loop fn, void *data)
     return ret;
 }
 
-/* This is the maximal length of a single entry for a file/dir in the reply
+/*! This is the maximal length of a single entry for a file/dir in the reply
    block if all bits in the file/dir bitmap are set: header(4) + params(104) +
    macnamelength(1) + macname(31) + utf8(4) + utf8namelen(2) + utf8name(255) +
    oddpadding(1) */

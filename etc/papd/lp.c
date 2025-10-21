@@ -59,7 +59,8 @@
  * SUCH DAMAGE.
  */
 
-/*
+/*!
+ * @file
  * Interface to lpr system.
  */
 
@@ -177,7 +178,7 @@ static struct lp {
     int 		lp_origin;
     char		lp_letter;
     char		*lp_person;
-    char		*lp_created_for; /* Holds the content of the Postscript %%For Comment if available */
+    char		*lp_created_for; /*!< Holds the content of the Postscript %%For Comment if available */
     char		*lp_host;
     char		*lp_job;
     char		*lp_spoolfile;
@@ -880,9 +881,9 @@ int lp_cancel(void)
     return 0;
 }
 
-/*
- * Create printcap control file, signal printer.  Errors here should
- * remove queue files.
+/*!
+ * @brief Create printcap control file, signal printer.
+ * @note Errors here should remove queue files.
  *
  * XXX piped?
  */

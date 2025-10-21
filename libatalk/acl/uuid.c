@@ -71,9 +71,9 @@ void localuuid_from_id(unsigned char *buf, uuidtype_t type, unsigned int id)
     return;
 }
 
-/*
- * convert ascii string that can include dashes to binary uuid.
- * caller must provide a buffer.
+/*!
+ * @brief convert ascii string that can include dashes to binary uuid.
+ * @note caller must provide a buffer.
  */
 void uuid_string2bin(const char *uuidstring, unsigned char *uuid)
 {
@@ -147,11 +147,11 @@ const char *uuid_bin2string(const unsigned char *uuid)
  * Interface
  ********************************************************/
 
-/*
- *   name: give me his name
- *   type: and type (UUID_USER or UUID_GROUP)
- *   uuid: pointer to uuid_t storage that the caller must provide
- * returns 0 on success !=0 on errror
+/*!
+ * @param name give me his name
+ * @param type and type (UUID_USER or UUID_GROUP)
+ * @param uuid pointer to uuid_t storage that the caller must provide
+ * @returns 0 on success !=0 on errror
  */
 int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
 {
@@ -279,13 +279,13 @@ int getuuidfromname(const char *name, uuidtype_t type, unsigned char *uuid)
 }
 
 
-/*
- * uuidp: pointer to a uuid
- * name: returns allocated buffer from ldap_getnamefromuuid
- * type: returns USER, GROUP or LOCAL
- * return 0 on success !=0 on errror
+/*!
+ * @param uuidp pointer to a uuid
+ * @param name returns allocated buffer from ldap_getnamefromuuid
+ * @param type returns USER, GROUP or LOCAL
+ * @returns 0 on success !=0 on errror
  *
- * Caller must free name appropriately.
+ * @note Caller must free name appropriately.
  */
 int getnamefromuuid(const uuidp_t uuidp, char **name, uuidtype_t *type)
 {

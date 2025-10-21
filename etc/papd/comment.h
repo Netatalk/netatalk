@@ -44,7 +44,7 @@ extern char			*comcont;
  * Comment flags.  0-15 reserved for "global" flags, 16-31 for specific
  * subtypes.
  */
-#define C_FULL		(1<<0)				/* or prefix */
+#define C_FULL		(1<<0)				/*!< or prefix */
 #define C_CONTINUE	(1<<1)
 
 /*
@@ -54,7 +54,7 @@ extern char			*comcont;
 /*
  * Magic "number" subtypes.
  */
-#define CM_NOPRINT	(1<<16)				/* or print */
+#define CM_NOPRINT	(1<<16)				/*!< or print */
 
 void compop(void);
 void compush(struct papd_comment *);
