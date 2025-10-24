@@ -9,7 +9,6 @@
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
-#include "testhelper.h"
 
 int Loglevel = AFP_LOG_INFO;
 

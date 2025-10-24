@@ -39,7 +39,6 @@
 #include <unistd.h>
 
 /* Netatalk library includes */
-#include "afp.h"
 #include "afpclient.h"
 #include "afpcmd.h"
 #include "afphelper.h"
