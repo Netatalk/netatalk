@@ -29,6 +29,9 @@
 #include <errno.h>
 #include <netdb.h>
 
+#include <atalk/afp.h>
+#include "dsi.h"
+
 #ifndef SA_ONESHOT
 #define SA_ONESHOT SA_RESETHAND
 #endif
@@ -46,8 +49,6 @@
      | (((x) & 0x00000000000000ffull) << 56))
 #endif	/* bswap_64 */
 
-#include "dsi.h"
-#include "afp.h"
 /* AFP functions */
 #ifndef AFP_CLOSEVOL
 #define AFP_CLOSEVOL     2
