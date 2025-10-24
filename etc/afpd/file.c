@@ -189,7 +189,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
             aint = UTF8FILELEN_EARLY;
         }
 
-        utf8 = vol->v_kTextEncoding;
+        utf8 = (uint32_t) vol->v_kTextEncoding;
         memcpy(data, &utf8, sizeof(utf8));
         data += sizeof(utf8);
         temp = htons(aint);
