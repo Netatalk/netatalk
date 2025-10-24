@@ -129,9 +129,12 @@ int main(int argc, char** argv)
     free(remote_addr);
 }
 
-/* Set up a DDP socket ready for sending RTMP packets.  The remote_addr is a pointer
-   to a pointer so that if it's null we can fill it in with the address the kernel
-   provides, as we do in libatalk/nbp/nbp_lkup.c for example. */
+/*!
+ * @brief Set up a DDP socket ready for sending RTMP packets.
+ *
+ * The remote_addr is a pointer to a pointer so that if it's null
+ * we can fill it in with the address the kernel provides,
+ * as we do in libatalk/nbp/nbp_lkup.c for example. */
 int setup_ddp_socket(const struct at_addr *local_addr,
                      struct at_addr **remote_addr)
 {
@@ -155,9 +158,12 @@ int setup_ddp_socket(const struct at_addr *local_addr,
     return sockfd;
 }
 
-/* Send an RTMP Request and wait for a reply.  An RTMP request just requests details
-   of the network this node is connected to; in general, these aren't used on extended
-   networks (instead, a ZIP GetNetInfo is used) but they should be supported anyway. */
+/*!
+ * @brief Send an RTMP Request and wait for a reply.
+ *
+ * An RTMP request just requests details of the network this node is connected to;
+ * in general, these aren't used on extended networks
+ * (instead, a ZIP GetNetInfo is used) but they should be supported anyway. */
 void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
 {
     /* See Inside Appletalk 2nd ed p. 5-18 for packet layout for both request and
@@ -250,11 +256,13 @@ void do_rtmp_request(int sockfd, struct sockaddr_at *sa_remote)
     }
 }
 
-/* Send an RTMP Route Data Request (RDR) and wait for a reply. An RTMP RDR solicits
-   RTMP data packets - generally, these are sent out broadcast on a timer, but one can
-   specifically ask for them to be sent to a non-standard socket by means of an RDR.
-   An RDR can also specify whether or not for the router to do split horizon
-   processing (or whether to return all routes). */
+/*!
+ * @brief Send an RTMP Route Data Request (RDR) and wait for a reply.
+ *
+ * An RTMP RDR solicits RTMP data packets - generally, these are sent out broadcast on a timer,
+ * but one can specifically ask for them to be sent to a non-standard socket by means of an RDR.
+ * An RDR can also specify whether or not for the router to do split horizon
+ * processing (or whether to return all routes). */
 void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
                  int secs_timeout)
 {
@@ -336,8 +344,10 @@ void do_rtmp_rdr(int sockfd, const struct sockaddr_at *sa_remote, bool get_all,
     }
 }
 
-/* Print an RTMP tuple pointed to by 'cursor' within the buffer 'buf' with length 'len'.
-   Returns the next value of 'cursor' or NULL if no more tuples exist. */
+/*!
+ * @brief Print an RTMP tuple pointed to by 'cursor' within the buffer 'buf' with length 'len'.
+ *
+ * @returns the next value of 'cursor' or NULL if no more tuples exist. */
 const uint8_t *print_rtmp_tuple(const uint8_t *buf, const uint8_t *cursor,
                                 size_t len, uint16_t router_net,
                                 uint8_t router_node)

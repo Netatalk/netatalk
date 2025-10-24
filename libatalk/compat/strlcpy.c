@@ -31,7 +31,7 @@
 #include <atalk/util.h>
 
 #ifndef HAVE_STRLCPY
-/* like strncpy but does not 0 fill the buffer and always null
+/*! like strncpy but does not 0 fill the buffer and always null
    terminates. bufsize is the size of the destination buffer */
 size_t strlcpy(char *d, const char *s, size_t bufsize)
 {
@@ -53,7 +53,7 @@ size_t strlcpy(char *d, const char *s, size_t bufsize)
 #endif
 
 #ifndef HAVE_STRLCAT
-/* like strncat but does not 0 fill the buffer and always null
+/*! like strncat but does not 0 fill the buffer and always null
    terminates. bufsize is the length of the buffer, which should
    be one more than the maximum resulting string length */
 size_t strlcat(char *d, const char *s, size_t bufsize)

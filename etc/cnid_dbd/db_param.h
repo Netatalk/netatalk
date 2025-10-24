@@ -10,7 +10,7 @@
 #include <sys/param.h>
 
 #define DEFAULT_LOGFILE_AUTOREMOVE 1
-#define DEFAULT_CACHESIZE          (8 * 1024) /* KB, so 8 MB */
+#define DEFAULT_CACHESIZE          (8 * 1024) /*!< KB, so 8 MB */
 #define DEFAULT_MAXLOCKS           20000
 #define DEFAULT_MAXLOCKOBJS        20000
 #define DEFAULT_FLUSH_FREQUENCY    1000
@@ -22,7 +22,7 @@
 struct db_param {
     char *dir;
     int logfile_autoremove;
-    int cachesize;              /* in KB */
+    int cachesize;              /*!< in KB */
     int maxlocks;
     int maxlockobjs;
     int flush_interval;

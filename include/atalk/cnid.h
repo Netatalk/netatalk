@@ -14,7 +14,8 @@
  *
  */
 
-/*
+/*!
+ * @file
  * This file contains all generic CNID related stuff
  * declarations. Included:
  * - CNID factory, which retrieves (eventually instantiates)
@@ -31,25 +32,24 @@
 #include <atalk/uuid.h>
 
 /* CNID object flags */
-#define CNID_FLAG_PERSISTENT   0x01      /* This backend implements DID persistence */
-#define CNID_FLAG_MANGLING     0x02      /* This backend has name mangling feature. */
-#define CNID_FLAG_SETUID       0x04      /* Set db owner to parent folder owner. */
-#define CNID_FLAG_BLOCK        0x08      /* block signals in update. */
-#define CNID_FLAG_NODEV        0x10      /* don't use device number only inode */
-#define CNID_FLAG_LAZY_INIT    0x20      /* */
-#define CNID_FLAG_INODE        0x80  /* in cnid_add the inode is authoritative */
+#define CNID_FLAG_PERSISTENT   0x01      /*!< This backend implements DID persistence */
+#define CNID_FLAG_MANGLING     0x02      /*!< This backend has name mangling feature. */
+#define CNID_FLAG_SETUID       0x04      /*!< Set db owner to parent folder owner. */
+#define CNID_FLAG_BLOCK        0x08      /*!< block signals in update. */
+#define CNID_FLAG_NODEV        0x10      /*!< don't use device number only inode */
+#define CNID_FLAG_LAZY_INIT    0x20
+#define CNID_FLAG_INODE        0x80      /*!< in cnid_add the inode is authoritative */
 
 #define CNID_INVALID   0
-/* first valid ID */
-#define CNID_START     17
+#define CNID_START     17    /*!< first valid ID */
 
 #define CNID_ERR_PARAM 0x80000001
 #define CNID_ERR_PATH  0x80000002
 #define CNID_ERR_DB    0x80000003
-#define CNID_ERR_CLOSE 0x80000004   /* the db was not open */
+#define CNID_ERR_CLOSE 0x80000004   /*!< the db was not open */
 #define CNID_ERR_MAX   0x80000005
 
-/*
+/*!
  * This is instance of CNID database object.
  */
 typedef struct _cnid_db {
@@ -81,7 +81,7 @@ typedef struct _cnid_db {
 } cnid_db;
 
 /*
- * Consolidation of args passedn from main cnid_open to modules cnid_XXX_open, so
+ * Consolidation of args passed from main cnid_open to modules cnid_XXX_open, so
  * that it's easier to add aditional args as required.
  */
 struct cnid_open_args {

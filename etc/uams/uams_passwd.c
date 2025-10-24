@@ -107,7 +107,7 @@ static int pwd_login(void *obj, char *username, int ulen,
     return AFPERR_NOTAUTH;
 }
 
-/* cleartxt login */
+/*! cleartxt login */
 static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *ibuf, size_t ibuflen,
                         char *rbuf, size_t *rbuflen)
@@ -145,11 +145,15 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* cleartxt login ext
+/*!
+ * @brief cleartxt login ext
+ *
  * uname format :
-    byte      3
-    2 bytes   len (network order)
-    len bytes unicode name
+ * @code
+ *   byte      3
+ *   2 bytes   len (network order)
+ *   len bytes unicode name
+ * @endcode
 */
 static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
@@ -182,7 +186,7 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* Printer ClearTxtUAM login */
+/*! Printer ClearTxtUAM login */
 static int passwd_printer(char	*start, char *stop, char *username,
                           struct papfile *out)
 {

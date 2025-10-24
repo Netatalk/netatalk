@@ -602,13 +602,15 @@ void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
 #endif /* ! NO_DDP */
 }
 
-/* set_signature()                                                    */
-/*                                                                    */
-/* If found in conf file, use it.                                     */
-/* If not found in conf file, genarate and append in conf file.       */
-/* If conf file don't exist, create and genarate.                     */
-/* If cannot open conf file, use one-time signature.                  */
-/* If signature = xxxxx, use it.                                      */
+/*!
+ * @brief Set the server signature
+ *
+ * - If found in conf file, use it.
+ * - If not found in conf file, genarate and append in conf file.
+ * - If conf file don't exist, create and genarate.
+ * - If cannot open conf file, use one-time signature.
+ * - If signature = xxxxx, use it.
+ */
 
 void set_signature(struct afp_options *options)
 {

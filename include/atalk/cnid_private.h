@@ -1,5 +1,6 @@
-/*
- *  Common defines for cnid
+/*!
+ * @file
+ * Common defines for cnid
  */
 
 #ifndef _ATALK_CNID_PRIVATE_H
@@ -34,22 +35,22 @@
 #define ROOTINFO_KEY    "\0\0\0\0"
 #define ROOTINFO_KEYLEN 4
 
-/*
+/*!
    Rootinfo data, fields as they are used by normal entries for CNIDs (for reference):
-   4 bytes: CNID
-   8 bytes: dev
-   8 bytes: inode
-   4 bytes: is a file/directory (type)
-   4 bytes: DID
-   x bytes: name
+   - 4 bytes: CNID
+   - 8 bytes: dev
+   - 8 bytes: inode
+   - 4 bytes: is a file/directory (type)
+   - 4 bytes: DID
+   - x bytes: name
 
    Contents in Rootinfo entry:
-   4 bytes: 0
-   8 bytes: db stamp: struct stat.st_ctime of database file
-   8 bytes: unused
-   4 bytes: last used CNID
-   4 bytes: version as htonl(uint32_t)
-   9 bytes: name "RootInfo"
+   - 4 bytes: 0
+   - 8 bytes: db stamp: struct stat.st_ctime of database file
+   - 8 bytes: unused
+   - 4 bytes: last used CNID
+   - 4 bytes: version as htonl(uint32_t)
+   - 9 bytes: name "RootInfo"
 */
 #define ROOTINFO_DATA    "\0\0\0\0" \
                          "\0\0\0\0\0\0\0\0" \

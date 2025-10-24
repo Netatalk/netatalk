@@ -1,10 +1,9 @@
-/* -*- Mode: C; tab-width: 2; indent-tabs-mode: t; c-basic-offset: 2 -*- */
-/*
- * Author:  Daniel S. Haischt <me@daniel.stefan.haischt.name>
- * Purpose: Zeroconf facade, that abstracts access to a
+/*!
+ * @file
+ * @author  Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ * @brief   Zeroconf facade, that abstracts access to a
  *          particular Zeroconf implementation
- * Doc:     http://www.dns-sd.org/
- *
+ * @sa      http://www.dns-sd.org/
  */
 
 #ifdef HAVE_CONFIG_H

@@ -18,8 +18,11 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-/* streaming i/o for afp_read. this is all from the perspective of the
- * client. it basically does the reverse of dsi_write. on first entry,
+/*!
+ * @brief streaming i/o for afp_read.
+ *
+ * this is all from the perspective of the client.
+ * it basically does the reverse of dsi_write. on first entry,
  * it will send off the header plus whatever is in its command
  * buffer. it returns the amount of stuff still to be read
  * (constrained by the buffer size). */
@@ -50,7 +53,7 @@ void dsi_readdone(DSI *dsi)
     dsi->in_write--;
 }
 
-/* send off the data */
+/*! send off the data */
 ssize_t dsi_read(DSI *dsi, void *buf, const size_t buflen)
 {
     size_t len;

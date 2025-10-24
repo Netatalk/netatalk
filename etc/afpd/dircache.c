@@ -38,9 +38,9 @@
 #include "hash.h"
 
 
-/*
- * Directory Cache
- * ===============
+/*!
+ * @file
+ * @brief Directory Cache
  *
  * Cache files and directories in a LRU cache.
  *
@@ -58,15 +58,15 @@
  *
  * The most frequent codepatch that leads to caching is directory enumeration (cf enumerate.c):
  * - if a element is a directory:
- *   (1) the cache is searched by dircache_search_by_name()
- *   (2) if it wasn't found a new struct dir is created and cached both from within dir_add()
+ *    1. the cache is searched by dircache_search_by_name()
+ *    2. if it wasn't found a new struct dir is created and cached both from within dir_add()
  * - for files the caching happens a little bit down the call chain:
- *   (3) first getfilparams() is called, which calls
- *   (4) getmetadata() where the cache is searched with dircache_search_by_name()
- *   (5) if the element is not found
- *   (6) get_id() queries the CNID from the database
- *   (7) then a struct dir is initialized via dir_new() (note the fullpath arg is NULL)
- *   (8) finally added to the cache with dircache_add()
+ *    3. first getfilparams() is called, which calls
+ *    4. getmetadata() where the cache is searched with dircache_search_by_name()
+ *    5. if the element is not found
+ *    6. get_id() queries the CNID from the database
+ *    7. then a struct dir is initialized via dir_new() (note the fullpath arg is NULL)
+ *    8. finally added to the cache with dircache_add()
  * (2) of course does contain the steps 6,7 and 8.
  *
  * The dircache is a LRU cache, whenever it fills up we call dircache_evict internally which removes
@@ -79,10 +79,10 @@
  * value with the result of a fresh stat. If the times differ, we remove the cached
  * entry and return "no entry found in cache".
  * A elements ctime changes when
- *   1) the element is renamed
- *      (we loose the cached entry here, but it will expire when the cache fills)
- *   2) its a directory and an object has been created therein
- *   3) the element is deleted and recreated under the same name
+ *   1. the element is renamed
+ *      (we lose the cached entry here, but it will expire when the cache fills)
+ *   2. its a directory and an object has been created therein
+ *   3. the element is deleted and recreated under the same name
  * Using ctime leads to cache eviction in case 2) where it wouldn't be necessary, because
  * the dir itself (name, CNID, ...) hasn't changed, but there's no other way.
  *
@@ -134,7 +134,7 @@ static struct dircache_stat {
     unsigned long long removed;
     unsigned long long expunged;
     unsigned long long evicted;
-    unsigned long long invalid_on_use;  /* entries that failed when used */
+    unsigned long long invalid_on_use;  /*!< entries that failed when used */
 } dircache_stat;
 
 /* FNV 1a */

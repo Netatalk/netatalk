@@ -77,7 +77,7 @@ int cnid_last_delete(struct _cnid_db *cdb _U_, const cnid_t id _U_)
 }
 
 
-/* Return CNID for a given did/name. */
+/*! Return CNID for a given did/name. */
 cnid_t cnid_last_get(struct _cnid_db *cdb _U_, cnid_t did _U_,
                      const char *name _U_, size_t len _U_)
 {
@@ -150,7 +150,7 @@ struct _cnid_module cnid_last_module = {
     0
 };
 
-/* Return the did/name pair corresponding to a CNID. */
+/*! Return the did/name pair corresponding to a CNID. */
 char *cnid_last_resolve(struct _cnid_db *cdb _U_, cnid_t *id _U_,
                         void *buffer _U_, size_t len _U_)
 {

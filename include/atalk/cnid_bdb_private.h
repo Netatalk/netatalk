@@ -1,5 +1,6 @@
-/*
- *  Interface to the cnid_dbd daemon that stores/retrieves CNIDs from a database.
+/*!
+ * @file
+ * Interface to the cnid_dbd daemon that stores/retrieves CNIDs from a database.
  */
 
 
@@ -59,12 +60,12 @@ struct cnid_dbd_rply {
 
 typedef struct CNID_bdb_private {
     struct vol *vol;
-    int       fd;		/* File descriptor to cnid_dbd */
-    char      stamp[ADEDLEN_PRIVSYN]; /* db timestamp */
+    int       fd;		/*!< File descriptor to cnid_dbd */
+    char      stamp[ADEDLEN_PRIVSYN]; /*!< db timestamp */
     char      *client_stamp;
     size_t    stamp_size;
-    int       notfirst;   /* already open before */
-    int       changed;  /* stamp differ */
+    int       notfirst;   /*!< already open before */
+    int       changed;  /*!< stamp differ */
 } CNID_bdb_private;
 
 

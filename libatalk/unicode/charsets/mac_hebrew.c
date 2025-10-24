@@ -53,9 +53,9 @@ struct charset_functions charset_mac_hebrew = {
 };
 
 
-/* ------------------------
+/*!
  * from unicode to mac hebrew code page
-*/
+ */
 static int
 char_ucs2_to_mac_hebrew(unsigned char *r, ucs2_t wc)
 {

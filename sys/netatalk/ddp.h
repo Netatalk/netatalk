@@ -3,7 +3,9 @@
  * All Rights Reserved. See COPYRIGHT.
  */
 
-/*
+/*!
+ * @file
+ * @code
  * <-1byte(8bits) ->
  * +---------------+
  * | 0 | hopc  |len|
@@ -30,6 +32,7 @@
  * +---------------+
  * | Src PORT      |
  * +---------------+
+ * @endcode
  *
  * On Apples, there is also a ddp_type field, after src_port. However,
  * under this unix implementation, user level processes need to be able
@@ -53,7 +56,7 @@ struct elaphdr {
 #define ELAP_DDPSHORT	0x01
 #define ELAP_DDPEXTEND	0x02
 
-/*
+/*!
  * Extended DDP header. Includes sickness for dealing with arbitrary
  * bitfields on a little-endian arch.
  */

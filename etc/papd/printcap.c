@@ -49,15 +49,16 @@
 #ifndef BUFSIZ
 #define	BUFSIZ	1024
 #endif /* ! BUFSIZ */
-#define MAXHOP	32	/* max number of tc= indirections */
+#define MAXHOP	32	/*!< max number of tc= indirections */
 
-/*
- * termcap - routines for dealing with the terminal capability data base
+/*!
+ * @file
+ * @brief routines for dealing with the terminal capability data base based on termcap
  *
- * BUG:		Should use a "last" pointer in tbuf, so that searching
+ * @bug		Should use a "last" pointer in tbuf, so that searching
  *		for capabilities alphabetically would not be a n**2/2
  *		process when large numbers of capabilities are given.
- * Note:	If we add a last pointer now we will screw up the
+ * @note	If we add a last pointer now we will screw up the
  *		tc capability. We really should compile termcap.
  *
  * Essentially all the work here is scanning and decoding escapes
@@ -80,15 +81,15 @@
 #define V6
 #endif /* PRINTCAP */
 
-static	FILE *pfp = NULL;	/* printcap data base file pointer */
+static	FILE *pfp = NULL;	/*!< printcap data base file pointer */
 static	char *tbuf;
-static	int hopcount;		/* detect infinite loops in termcap, init 0 */
+static	int hopcount;		/*!< detect infinite loops in termcap, init 0 */
 
-/*
- * Similar to tgetent except it returns the next entry instead of
+/*!
+ * @brief Similar to tgetent except it returns the next entry instead of
  * doing a lookup.
  *
- * Added a "cap" parameter, so we can use these calls for printcap
+ * @note Added a "cap" parameter, so we can use these calls for printcap
  * and papd.conf.
  */
 int getprent(char *cap, char *bp, int bufsize)
@@ -166,9 +167,10 @@ void endprent(void)
     }
 }
 
-/*
- * Get an entry for terminal name in buffer bp,
- * from the termcap file.  Parse is very rudimentary;
+/*!
+ * @brief Get an entry for terminal name in buffer bp,
+ * from the termcap file.
+ * @note Parse is very rudimentary;
  * we just notice escaped newlines.
  *
  * Added a "cap" parameter, so we can use these calls for printcap
@@ -281,9 +283,10 @@ int tgetent(char *cap, char *bp, const char *name)
     }
 }
 
-/*
- * tnchktc: check the last entry, see if it's tc=xxx. If so,
- * recursively find xxx and append that entry (minus the names)
+/*!
+ * @brief check the last entry, see if it's tc=xxx.
+ *
+ * If so, recursively find xxx and append that entry (minus the names)
  * to take the place of the tc=xxx entry. This allows termcap
  * entries to say "like an HP2621 but doesn't turn on the labels".
  * Note that this works because of the left to right scan.
@@ -359,11 +362,12 @@ int tnchktc(char *cap)
     return 1;
 }
 
-/*
- * Tnamatch deals with name matching.  The first field of the termcap
- * entry is a sequence of names separated by |'s, so we compare
- * against each such name.  The normal : terminator after the last
- * name (before the first field) stops us.
+/*!
+ * @brief deals with name matching.
+ *
+ * The first field of the termcap entry is a sequence of names separated by |'s,
+ * so we compare against each such name.
+ * The normal : terminator after the last name (before the first field) stops us.
  */
 int tnamatch(const char *np)
 {
@@ -396,10 +400,10 @@ int tnamatch(const char *np)
     }
 }
 
-/*
- * Skip to the next field.  Notice that this is very dumb, not
- * knowing about \: escapes or any such.  If necessary, :'s can be put
- * into the termcap file in octal.
+/*!
+ * @brief Skip to the next field.
+ * Notice that this is very dumb, not knowing about \\: escapes or any such.
+ * If necessary, :'s can be put into the termcap file in octal.
  */
 static char *tskip(char *bp)
 {
@@ -414,10 +418,13 @@ static char *tskip(char *bp)
     return bp;
 }
 
-/*
- * Return the (numeric) option id.
+/*!
+ * @brief Return the (numeric) option id.
+ *
  * Numeric options look like
+ * @code
  *	li#80
+ * @endcode
  * i.e. the option string is separated from the numeric value by
  * a # character.  If the option is not found we return -1.
  * Note that we handle octal numbers beginning with 0.
@@ -464,11 +471,12 @@ int tgetnum(char *id)
     }
 }
 
-/*
- * Handle a flag option.
+/*!
+ * @brief Handle a flag option.
+ *
  * Flag options are given "naked", i.e. followed by a : or the end
- * of the buffer.  Return 1 if we find the option, or 0 if it is
- * not given.
+ * of the buffer.
+ * @returns 1 if we find the option, or 0 if it is not given.
  */
 int tgetflag(char *id)
 {
@@ -491,8 +499,8 @@ int tgetflag(char *id)
     }
 }
 
-/*
- * Tdecode does the grung work to decode the
+/*!
+ * Tdecode does the grunt work to decode the
  * string capability escapes.
  */
 static char *
@@ -546,10 +554,13 @@ nextc:
     return str;
 }
 
-/*
- * Get a string valued option.
+/*!
+ * @brief Get a string valued option.
+ *
  * These are given as
+ * @code
  *	cl=^Z
+ * @endcode
  * Much decoding is done on the strings, and the strings are
  * placed in area, which is a ref parameter which is updated.
  * No checking on area overflow.

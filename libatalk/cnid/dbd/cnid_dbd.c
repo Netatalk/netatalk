@@ -39,7 +39,7 @@
 #define SOL_TCP IPPROTO_TCP
 #endif /* ! SOL_TCP */
 
-/* Wait MAX_DELAY seconds before a request to the CNID server times out */
+/*! Wait MAX_DELAY seconds before a request to the CNID server times out */
 #define MAX_DELAY 20
 #define ONE_DELAY 5
 
@@ -335,10 +335,10 @@ static int dbd_reply_stamp(struct cnid_dbd_rply *rply)
     return 0;
 }
 
-/* ---------------------
- * send a request and get reply
- * assume send is non blocking
- * if no answer after sometime (at least MAX_DELAY secondes) return an error
+/*!
+ * @brief send a request and get reply
+ * @note assume send is non blocking
+ * @note if no answer after sometime (at least MAX_DELAY secondes) return an error
  */
 static int dbd_rpc(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
                    struct cnid_dbd_rply *rply)
@@ -539,7 +539,7 @@ void cnid_dbd_close(struct _cnid_db *cdb)
 }
 
 /*!
- * @brief Get the db stamp
+ * Get the db stamp
  */
 static int cnid_dbd_stamp(CNID_bdb_private *db)
 {
@@ -754,7 +754,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
 }
 
 /*!
- * @brief Caller passes buffer where we will store the db stamp
+ * Caller passes buffer where we will store the db stamp
  */
 int cnid_dbd_getstamp(struct _cnid_db *cdb, void *buffer, const size_t len)
 {

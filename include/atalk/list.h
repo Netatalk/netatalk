@@ -4,8 +4,9 @@
 #ifndef _ATALK_LIST_H
 #define _ATALK_LIST_H
 
-/*
- * Simple doubly linked list implementation.
+/*!
+ * @file
+ * @brief Simple doubly linked list implementation.
  *
  * Some of the internal functions ("__xxx") are useful when
  * manipulating whole lists rather than single entries, as
@@ -28,8 +29,8 @@ struct list_head {
 } while (0)
 
 #ifdef USE_LIST
-/*
- * Insert a new entry between two known consecutive entries.
+/*!
+ * @brief Insert a new entry between two known consecutive entries.
  *
  * This is only for internal list manipulation where we know
  * the prev/next entries already!
@@ -70,8 +71,8 @@ static inline void list_add_tail(struct list_head *new, struct list_head *head)
     __list_add(new, head->prev, head);
 }
 
-/*
- * Delete a list entry by making the prev/next entries
+/*!
+ * @brief Delete a list entry by making the prev/next entries
  * point to each other.
  *
  * This is only for internal list manipulation where we know

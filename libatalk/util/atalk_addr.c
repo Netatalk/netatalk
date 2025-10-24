@@ -10,16 +10,18 @@
 #include <atalk/util.h>
 #include <ctype.h>
 
-/*
- * Check whether "cp" is a valid ascii representation
+/*!
+ * @brief Check whether "cp" is a valid ascii representation
  * of an AppleTalk address and convert to a binary address.
+ *
  * Examples of accepted forms are (in decimal, net of 4321,
  * node of 65):
- *
+ * @code
  *	4321.65
  *	0x10E1.41
  *	16.225.65
  *	0x10.E1.41
+ * @endcode
  *
  * If hex is used, and the first digit is one of A-F, the leading
  * 0x is redundant. Returns 1 if the address is valid, 0 if not.
@@ -27,7 +29,6 @@
  * Unlike Internet addresses, AppleTalk addresses can have leading
  * 0's. This means that we can't support octal addressing.
  */
-
 int atalk_aton(char *cp, struct at_addr *addr)
 {
     uint32_t val, base, n;

@@ -41,13 +41,13 @@ static unsigned char seskey[8];
 static struct passwd	*randpwd;
 static uint8_t         randbuf[8];
 
-/* hash to a 16-bit number. this will generate completely harmless
+/*! hash to a 16-bit number. this will generate completely harmless
  * warnings on 64-bit machines. */
 #define randhash(a) (((((unsigned long) a) >> 8) ^ \
 		      ((unsigned long)a)) & 0xffff)
 
 
-/* handle ~/.passwd. courtesy of shirsch@ibm.net. */
+/*! handle ~/.passwd. courtesy of shirsch@ibm.net. */
 static  int home_passwd(const struct passwd *pwd,
                         const char *path, const int pathlen _U_,
                         unsigned char *passwd, const int len,
@@ -104,23 +104,33 @@ home_passwd_fail:
 }
 
 
+#define PASSWD_ILLEGAL '*'
+#define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 
-/*
- * handle /path/afppasswd with an optional key file. we're a lot more
- * trusting of this file. NOTE: we use our own password entry writing
- * bits as we want to avoid tromping over global variables. in addition,
- * we look for a key file and use that if it's there. here are the
- * formats:
- * password file:
+/*!
+ * @brief handle /path/afppasswd with an optional key file.
+ * we're a lot more trusting of this file.
+ * @note we use our own password entry writing bits
+ * as we want to avoid tromping over global variables.
+ * in addition, we look for a key file and use that if it's there.
+ *
+ * here are the formats:
+ *
+ * password file
+ * -------------
+ * @code
  * username:password:last login date:failedcount
+ * @endcode
  *
  * password is just the hex equivalent of either the ASCII password
  * (if the key file doesn't exist) or the des encrypted password.
  *
- * key file:
- * key (in hex) */
-#define PASSWD_ILLEGAL '*'
-#define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
+ * key file
+ * --------
+ * @code
+ * key (in hex)
+ * @endcode
+ */
 static int afppasswd(const struct passwd *pwd,
                      const char *path, const int pathlen,
                      unsigned char *passwd, int len,
@@ -263,9 +273,12 @@ afppasswd_done:
 }
 
 
-/* this sets the uid. it needs to do slightly different things
+/*!
+ * @brief this sets the uid.
+ * @note it needs to do slightly different things
  * depending upon whether or not the password is in ~/.passwd
- * or in a global location */
+ * or in a global location
+ */
 static int randpass(const struct passwd *pwd, const char *file,
                     unsigned char *passwd, const int len, const int set)
 {
@@ -320,8 +333,10 @@ static int randpass(const struct passwd *pwd, const char *file,
     return i;
 }
 
-/* randnum sends an 8-byte number and uses the user's password to
- * check against the encrypted reply. */
+/*!
+ * randnum sends an 8-byte number and uses the user's password to
+ * check against the encrypted reply.
+ */
 static int rand_login(void *obj, char *username, int ulen,
                       struct passwd **uam_pwd _U_,
                       char *ibuf _U_, size_t ibuflen _U_,
@@ -375,8 +390,11 @@ static int rand_login(void *obj, char *username, int ulen,
 }
 
 
-/* check encrypted reply. we actually setup the encryption stuff
- * here as the first part of randnum and rand2num are identical. */
+/*!
+ * @brief check encrypted reply.
+ * @note we actually setup the encryption stuff here
+ * as the first part of randnum and rand2num are identical.
+ */
 static int randnum_logincont(void *obj, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen _U_,
                              char *rbuf _U_, size_t *rbuflen)
@@ -412,9 +430,9 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
 }
 
 
-/* differences from randnum:
- * 1) each byte of the key is shifted left one bit
- * 2) client sends the server a 64-bit number. the server encrypts it
+/*! differences from randnum:
+ * 1. each byte of the key is shifted left one bit
+ * 2. client sends the server a 64-bit number. the server encrypts it
  *    and sends it back as part of the reply.
  */
 static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
@@ -464,8 +482,9 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     return AFP_OK;
 }
 
-/* change password  --
- * NOTE: an FPLogin must already have completed successfully for this
+/*!
+ * @brief change password
+ * @note an FPLogin must already have completed successfully for this
  *       to work.
  */
 static int randnum_changepw(void *obj, const char *username _U_,
@@ -545,7 +564,7 @@ static int randnum_changepw(void *obj, const char *username _U_,
     return AFP_OK;
 }
 
-/* randnum login */
+/*! randnum login */
 static int randnum_login(void *obj, struct passwd **uam_pwd,
                          char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen)
@@ -583,7 +602,7 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
     return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
-/* randnum login ext */
+/*! randnum login ext */
 static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen,
                              char *rbuf, size_t *rbuflen)

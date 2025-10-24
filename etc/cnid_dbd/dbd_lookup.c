@@ -5,106 +5,114 @@
  * All Rights Reserved.  See COPYING.
  */
 
-/*
-CNID salvation spec:
-general rule: better safe then sorry, so we always delete CNIDs and assign
-new ones in case of a lookup mismatch. afpd also sends us the CNID found
-in the adouble file. In certain cases we can use this hint to determince
-the right CNID.
-
-
-The lines...
-
-Id  Did T   Dev Inode   Name
-============================
-a   b   c   d   e       name1
--->
-f   g   h   i   h       name2
-
-...are the expected results of certain operations. (f) is the speced CNID, in some
-cases it's only intermediate as described in the text and is overridden by another
-spec.
-
-1) UNIX rename (via mv) or inode reusage(!)
--------------------------------------------
-Name is possibly changed (rename case) but inode is the same.
-We should try to keep the CNID, but we can't, because inode reusage is probably
-much to frequent.
-
-rename:
-15  2   f   1   1       file
--->
-15  x   f   1   1       renamedfile
-
-inode reusage:
-15  2   f   1   1       file
--->
-16  y   f   1   1       inodereusagefile
-
-Result in dbd_lookup (-: not found, +: found):
-+ devino
-- didname
-
-Possible solution:
-None. Delete old data, file gets new CNID in both cases (rename and inode).
-If we got a hint and hint matches the CNID from devino we keep it and update
-the record.
-
-2) UNIX mv from one folder to another
-----------------------------------------
-Name is unchanged and inode stays the same, but DID is different.
-We should try to keep the CNID.
-
-15  2   f   1   1       file
--->
-15  x   f   1   1       file
-
-Result in dbd_lookup:
-+ devino
-- didname
-
-Possible solution:
-strcmp names, if they match keep CNID. Unfortunately this also can't be
-distinguished from a new file with a reused inode. So me must assign
-a new CNID.
-If we got a hint and hint matches the CNID from devino we keep it and update
-the record.
-
-3) Restore from backup i.e. change of inode number -- or emacs
-------------------------------------------------------------
-
-15  2   f   1   1       file
--->
-15  2   f   1   2       file
-
-Result in dbd_lookup:
-- devino
-+ didname
-
-Possible fixup solution:
-test-suite test235 tests and ensures that the CNID is _changed_. The reason for
-this is somewhat lost in time, but nevertheless we believe our test suite.
-
-Similar things happen with emas: emacs uses a backup file (file~). When saving
-because of inode reusage of the fs, both files most likely exchange inodes.
-
-15  2   f   1   1       file
-16  2   f   1   2       file~
---> this would be nice:
-15  2   f   1   2       file
-16  2   f   1   1       file~
---> but for the reasons described above we must implement
-17  2   f   1   2       file
-18  2   f   1   1       file~
-
-Result in dbd_lookup for the emacs case:
-+ devino --> CNID: 16
-+ didname -> CNID: 15
-devino search and didname search result in different CNIDs !!
-
-Possible fixup solution:
-to be safe we must assign new CNIDs to both files.
-*/
+/*!
+ * @file
+ * @brief CNID salvation spec
+ *
+ * general rule: better safe then sorry, so we always delete CNIDs and assign
+ * new ones in case of a lookup mismatch. afpd also sends us the CNID found
+ * in the adouble file. In certain cases we can use this hint to determince
+ * the right CNID.
+ *
+ *
+ * The lines...
+ * @code
+ * Id  Did T   Dev Inode   Name
+ * ============================
+ * a   b   c   d   e       name1
+ * -->
+ * f   g   h   i   h       name2
+ * @endcode
+ * ...are the expected results of certain operations. (f) is the speced CNID, in some
+ * cases it's only intermediate as described in the text and is overridden by another
+ * spec.
+ *
+ * 1) UNIX rename (via mv) or inode reusage(!)
+ * -------------------------------------------
+ * Name is possibly changed (rename case) but inode is the same.
+ * We should try to keep the CNID, but we can't, because inode reusage is probably
+ * much to frequent.
+ *
+ * rename:
+ * @code
+ * 15  2   f   1   1       file
+ * -->
+ * 15  x   f   1   1       renamedfile
+ * @endcode
+ * inode reusage:
+ * @code
+ * 15  2   f   1   1       file
+ * -->
+ * 16  y   f   1   1       inodereusagefile
+ *
+ * Result in dbd_lookup (-: not found, +: found):
+ * + devino
+ * - didname
+ * @endcode
+ *
+ * Possible solution:
+ *
+ * None. Delete old data, file gets new CNID in both cases (rename and inode).
+ * If we got a hint and hint matches the CNID from devino we keep it and update
+ * the record.
+ *
+ * 2) UNIX mv from one folder to another
+ * -------------------------------------
+ * Name is unchanged and inode stays the same, but DID is different.
+ * We should try to keep the CNID.
+ * @code
+ * 15  2   f   1   1       file
+ * -->
+ * 15  x   f   1   1       file
+ *
+ * Result in dbd_lookup:
+ * + devino
+ * - didname
+ * @endcode
+ * Possible solution:
+ *
+ * strcmp names, if they match keep CNID. Unfortunately this also can't be
+ * distinguished from a new file with a reused inode. So me must assign
+ * a new CNID.
+ * If we got a hint and hint matches the CNID from devino we keep it and update
+ * the record.
+ *
+ * 3) Restore from backup i.e. change of inode number -- or emacs
+ * --------------------------------------------------------------
+ * @code
+ * 15  2   f   1   1       file
+ * -->
+ * 15  2   f   1   2       file
+ *
+ * Result in dbd_lookup:
+ * - devino
+ * + didname
+ * @endcode
+ * Possible fixup solution:
+ * test-suite test235 tests and ensures that the CNID is _changed_. The reason for
+ * this is somewhat lost in time, but nevertheless we believe our test suite.
+ *
+ * Similar things happen with emas: emacs uses a backup file (file~). When saving
+ * because of inode reusage of the fs, both files most likely exchange inodes.
+ * @code
+ * 15  2   f   1   1       file
+ * 16  2   f   1   2       file~
+ * --> this would be nice:
+ * 15  2   f   1   2       file
+ * 16  2   f   1   1       file~
+ * --> but for the reasons described above we must implement
+ * 17  2   f   1   2       file
+ * 18  2   f   1   1       file~
+ *
+ * Result in dbd_lookup for the emacs case:
+ * + devino --> CNID: 16
+ * + didname -> CNID: 15
+ * @endcode
+ * devino search and didname search result in different CNIDs !!
+ *
+ * Possible fixup solution:
+ * to be safe we must assign new CNIDs to both files.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -125,9 +133,9 @@ to be safe we must assign new CNIDs to both files.
 #include "dbif.h"
 #include "pack.h"
 
-/*
- *  This returns the CNID corresponding to a particular file.  It will also fix
- *  up the database if there's a problem.
+/*!
+ * @brief This returns the CNID corresponding to a particular file.
+ * @note It will also fix up the database if there's a problem.
  */
 
 int dbd_lookup(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)

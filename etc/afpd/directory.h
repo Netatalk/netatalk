@@ -54,11 +54,11 @@
 #define DIRPBIT_UID	10
 #define DIRPBIT_GID	11
 #define DIRPBIT_ACCESS	12
-#define DIRPBIT_PDINFO  13         /* ProDOS Info */
+#define DIRPBIT_PDINFO  13         /*!< ProDOS Info */
 #define DIRPBIT_UNIXPR  15
 
-#define FILDIRBIT_ISDIR        (1 << 7) /* is a directory */
-#define FILDIRBIT_ISFILE       (0)      /* is a file */
+#define FILDIRBIT_ISDIR        (1 << 7) /*!< is a directory */
+#define FILDIRBIT_ISFILE       (0)      /*!< is a file */
 
 /* file/directory ids. what a mess. we scramble things in a vain attempt
  * to get something meaningful */

@@ -124,7 +124,7 @@ static int OVERLAP(off_t a, off_t alen, off_t b, off_t blen)
 #define ARRAY_BLOCK_SIZE 10
 #define ARRAY_FREE_DELTA 100
 
-/* remove a lock and compact space if necessary */
+/*! remove a lock and compact space if necessary */
 static void adf_freelock(struct ad_fd *ad, const int i)
 {
     adf_lock_t *lock = ad->adf_lock + i;
@@ -187,7 +187,7 @@ static void adf_unlock(struct adouble *ad _U_, struct ad_fd *adf,
     }
 }
 
-/* relock any byte lock that overlaps off/len. unlock everything
+/*! relock any byte lock that overlaps off/len. unlock everything
  * else. */
 static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
 {
@@ -202,7 +202,7 @@ static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
 }
 
 
-/* find a byte lock that overlaps off/len for a particular open fork */
+/*! find a byte lock that overlaps off/len for a particular open fork */
 static int adf_findlock(struct ad_fd *ad,
                         const int fork, const int type,
                         const off_t off,
@@ -224,7 +224,7 @@ static int adf_findlock(struct ad_fd *ad,
 }
 
 
-/* search other fork lock lists */
+/*! search other fork lock lists */
 static int adf_findxlock(struct ad_fd *ad,
                          const int fork, const int type,
                          const off_t off,
@@ -261,7 +261,7 @@ static int adf_findxlock(struct ad_fd *ad,
  *          in the locations specified by AD_FILELOCK_RD/WR.
  */
 
-/* --------------
+/*!
 	translate a resource fork lock to an offset
 */
 static off_t rf2off(off_t off)

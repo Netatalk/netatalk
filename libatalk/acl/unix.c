@@ -37,8 +37,11 @@
 
 #ifdef HAVE_NFSV4_ACLS
 
-/* Get ACL. Allocates storage as needed. Caller must free.
- * Returns no of ACEs or -1 on error.  */
+/*!
+ * @brief Get ACL.
+ * @note Allocates storage as needed. Caller must free.
+ * @returns no of ACEs or -1 on error.
+ */
 int get_nfsv4_acl(const char *name, ace_t **retAces)
 {
     int ace_count = -1;
@@ -97,9 +100,9 @@ int get_nfsv4_acl(const char *name, ace_t **retAces)
     return ace_count;
 }
 
-/*
-  Concatenate ACEs
-*/
+/*!
+ * Concatenate ACEs
+ */
 ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
 {
     ace_t *new_aces;
@@ -129,9 +132,10 @@ ace_t *concat_aces(ace_t *aces1, int ace1count, ace_t *aces2, int ace2count)
     return new_aces;
 }
 
-/*
-  Remove any trivial ACE "in-place". Returns no of non-trivial ACEs
-*/
+/*!
+ * @brief Remove any trivial ACE "in-place".
+ * @returns no of non-trivial ACEs
+ */
 int strip_trivial_aces(ace_t **saces, int sacecount)
 {
     int i, j;
@@ -175,9 +179,10 @@ int strip_trivial_aces(ace_t **saces, int sacecount)
     return nontrivaces;
 }
 
-/*
-  Remove non-trivial ACEs "in-place". Returns no of trivial ACEs.
-*/
+/*!
+ * @brief Remove non-trivial ACEs "in-place".
+ * @returns no of trivial ACEs.
+ */
 int strip_nontrivial_aces(ace_t **saces, int sacecount)
 {
     int i, j;
@@ -317,19 +322,22 @@ exit:
 
 #ifdef HAVE_POSIX_ACLS
 
-/* This is a workaround for chmod() on filestystems supporting Posix 1003.1e draft 17
- * compliant ACLs. For objects with extented ACLs, e.g. objects with an ACL_MASK entry,
+#define SEARCH_GROUP_OBJ 0x01
+#define SEARCH_MASK 0x02
+
+/*!
+ * @brief POSIX ACL chmod
+ *
+ * This is a workaround for chmod() on filestystems supporting Posix 1003.1e draft 17
+ * compliant ACLs. For objects with extended ACLs, e.g. objects with an ACL_MASK entry,
  * chmod() manipulates ACL_MASK instead of ACL_GROUP_OBJ. As OS X isn't aware of
  * this behavior calling FPSetFileDirParms may lead to unpredictable results. For
  * more information see section 23.1.2 of Posix 1003.1e draft 17.
  *
- * posix_chmod() accepts the same arguments as chmod() and returns 0 in case of
- * success or -1 in case something went wrong.
+ * @note accepts the same arguments as chmod()
+ *
+ * @returns 0 in case of success or -1 in case something went wrong.
  */
-
-#define SEARCH_GROUP_OBJ 0x01
-#define SEARCH_MASK 0x02
-
 int posix_chmod(const char *name, mode_t mode)
 {
     int ret = 0;
@@ -388,7 +396,7 @@ int posix_chmod(const char *name, mode_t mode)
         }
 
         if (!not_found) {
-            /* The filesystem object has extented ACLs. We have to update ACL_GROUP_OBJ
+            /* The filesystem object has extended ACLs. We have to update ACL_GROUP_OBJ
              * with the group permissions.
              */
             acl_permset_t permset;
@@ -452,9 +460,11 @@ done:
     return ret;
 }
 
-/*
- * posix_fchmod() accepts the same arguments as fchmod() and returns 0 in case of
- * success or -1 in case something went wrong.
+/*!
+ * @brief POSIX ACL fchmod
+ *
+ * @note accepts the same arguments as fchmod()
+ * @returns 0 in case of success or -1 in case something went wrong.
  */
 int posix_fchmod(int fd, mode_t mode)
 {
@@ -504,7 +514,7 @@ int posix_fchmod(int fd, mode_t mode)
         }
 
         if (!not_found) {
-            /* The filesystem object has extented ACLs. We have to update ACL_GROUP_OBJ
+            /* The filesystem object has extended ACLs. We have to update ACL_GROUP_OBJ
              * with the group permissions.
              */
             acl_permset_t permset;

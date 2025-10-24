@@ -44,8 +44,8 @@ static const char *ea_resourcefork = "com.apple.ResourceFork";
  * AFP funcs
  ****************************************/
 
-/*
-  Note: we're being called twice. Firstly the client only want the size of all
+/*!
+  @note we're being called twice. Firstly the client only want the size of all
   EA names, secondly it wants these names. In order to avoid scanning EAs twice
   we cache them in a static buffer.
 */

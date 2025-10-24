@@ -115,9 +115,9 @@ static void set_signal(void)
     }
 }
 
-/*
-  Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
-  Returns pointer to name or NULL.
+/*!
+  @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
+  @returns pointer to name or NULL.
 */
 static const char *check_netatalk_dirs(const char *name)
 {

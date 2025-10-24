@@ -99,7 +99,7 @@ void rtmp_delzonemap(struct rtmptab *rtmp)
 }
 
 
-/*
+/*!
  * Complete configuration for phase 1 interface using RTMP information.
  */
 static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
@@ -162,7 +162,7 @@ static int rtmp_config(struct rtmp_head *rh, struct interface *iface)
     return 0;
 }
 
-/*
+/*!
  * Delete rtmp from the per-interface in-use table, remove all
  * zone references, and remove the route from the kernel.
  */
@@ -218,8 +218,9 @@ static void rtmp_delinuse(struct rtmptab *rtmp)
     gateroute(RTMP_DEL, rtmp);
 }
 
-/*
- * Add rtmp to the per-interface in-use table.  No verification is done...
+/*!
+ * @brief Add rtmp to the per-interface in-use table.
+ * @note No verification is done...
  */
 static void rtmp_addinuse(struct rtmptab *rtmp)
 {
@@ -262,9 +263,11 @@ static void rtmp_addinuse(struct rtmptab *rtmp)
 }
 
 
-/*
- * Change the zone mapping to replace "from" with "to".  This code assumes
- * the consistency of both the route -> zone map and the zone -> route map.
+/*!
+ * @brief Change the zone mapping to replace "from" with "to".
+ *
+ * @note This code assumes the consistency of
+ * both the route -> zone map and the zone -> route map.
  * This is probably a bad idea.  How can we insure that the data is good
  * at this point?  What do we do if we get several copies of a route in
  * an RTMP packet?
@@ -318,7 +321,7 @@ static int rtmp_copyzones(struct rtmptab *to, struct rtmptab *from)
 }
 
 
-/*
+/*!
  * Remove rtmp from the in-use table and the per-gate table.
  * Free any associated space.
  */
@@ -356,11 +359,11 @@ void rtmp_free(struct rtmptab *rtmp)
 }
 
 
-/*
- * Find a replacement for the structure pointed to by "replace_ptr".
- * If we can't find a replacement, return 1.
- * If we do find a replacement, return 0.
- * If we encounter an error, return -1.
+/*!
+ * @brief Find a replacement for the structure pointed to by "replace_ptr".
+ * @return If we can't find a replacement, return 1.
+ * @return If we do find a replacement, return 0.
+ * @return If we encounter an error, return -1.
  */
 int rtmp_replace(struct rtmptab **replace_ptr)
 {

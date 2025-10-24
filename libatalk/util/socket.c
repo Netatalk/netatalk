@@ -14,7 +14,7 @@
 
 /*!
  * @file
- * @brief Netatalk utility functions: socket
+ * Netatalk utility functions: socket
  */
 
 #ifdef HAVE_CONFIG_H
@@ -321,8 +321,8 @@ exit:
  *
  * @param[in]  sa        pointer to an struct sockaddr
  *
- * @returns pointer to a static string cotaining the converted address as string.\n
- *          On error pointers to "0.0.0.0" or "::0" are returned.
+ * @returns pointer to a static string cotaining the converted address as string.
+ * @returns On error pointers to "0.0.0.0" or "::0" are returned.
  */
 const char *getip_string(const struct sockaddr *sa)
 {
@@ -391,8 +391,8 @@ unsigned int getip_port(const struct sockaddr  *sa)
  * e.g. 0 <= mask <= 32 for IPv4 or 0<= mask <= 128 for IPv6. mask > 32 for
  * IPv4 is treated as mask = 32, mask > 128 is set to 128 for IPv6.
  *
- * @param[in,out]  sa    pointer to an struct sockaddr
- * @param[in]  mask      number of maskbits
+ * @param[in,out] sa    pointer to an struct sockaddr
+ * @param[in]     mask  number of maskbits
  */
 void apply_ip_mask(struct sockaddr *sa, int mask)
 {
@@ -559,7 +559,7 @@ EC_CLEANUP:
 }
 
 /*!
- * @brief Allocate and initialize atalk socket event struct
+ * Allocate and initialize atalk socket event struct
  */
 struct asev *asev_init(int max)
 {
@@ -668,8 +668,8 @@ bool asev_del_fd(struct asev *asev, int fd)
     return false;
 }
 
-/* Length of the space taken up by a padded control message of length len */
 #ifndef CMSG_SPACE
+/*! Length of the space taken up by a padded control message of length len */
 #define CMSG_SPACE(len) (__CMSG_ALIGN(sizeof(struct cmsghdr)) + __CMSG_ALIGN(len))
 #endif
 
@@ -740,7 +740,7 @@ int recv_fd(int fd, int nonblocking)
     return -1;
 }
 
-/*
+/*!
  * Send a fd across a suitable socket
  */
 int send_fd(int socket, int fd)

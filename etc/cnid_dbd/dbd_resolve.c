@@ -19,7 +19,7 @@
 #include "dbif.h"
 #include "pack.h"
 
-/* Return the did/name pair corresponding to a CNID. */
+/*! Return the did/name pair corresponding to a CNID. */
 
 int dbd_resolve(DBD *dbd, struct cnid_dbd_rqst *rqst,
                 struct cnid_dbd_rply *rply)

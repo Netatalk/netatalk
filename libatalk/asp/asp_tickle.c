@@ -11,7 +11,7 @@
 #include <atalk/atp.h>
 #include <atalk/asp.h>
 
-/* send off a tickle */
+/*! send off a tickle */
 int asp_tickle(ASP asp, const uint8_t sid, struct sockaddr_at *sat)
 {
     struct atp_block atpb;

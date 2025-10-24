@@ -71,18 +71,19 @@ static void block_sigs_onoff(int block)
     return;
 }
 
-/*
-  The dbd_XXX and comm_XXX functions all obey the same protocol for return values:
-
-  1: Success, if transactions are used commit.
-  0: Failure, but we continue to serve requests. If transactions are used abort/rollback.
-  -1: Fatal error, either from t
-  he database or from the socket. Abort the transaction if applicable
-  (which might fail as well) and then exit.
-
-  We always try to notify the client process about the outcome, the result field
-  of the cnid_dbd_rply structure contains further details.
-
+/*!
+ * @file
+ * @brief CNID DBD (Database Daemon) Backend startup routines
+ *
+ * The dbd_XXX and comm_XXX functions all obey the same protocol for return values:
+ *
+ * - 1: Success, if transactions are used commit.
+ * - 0: Failure, but we continue to serve requests. If transactions are used abort/rollback.
+ * - -1: Fatal error, either from the database or from the socket.
+ *   Abort the transaction if applicable (which might fail as well) and then exit.
+ *
+ * We always try to notify the client process about the outcome, the result field
+ * of the cnid_dbd_rply structure contains further details.
 */
 
 /*!

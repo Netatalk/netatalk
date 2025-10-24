@@ -21,7 +21,8 @@
  *	netatalk@itd.umich.edu
  */
 
-/*
+/*!
+ * @file
  * AppleTalk Echo Protocol Client
  */
 

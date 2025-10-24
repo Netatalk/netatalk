@@ -20,7 +20,7 @@
 #include "dbif.h"
 #include "pack.h"
 
-/* Return the unique stamp associated with this database */
+/*! Return the unique stamp associated with this database */
 
 int dbd_getstamp(DBD *dbd, struct cnid_dbd_rqst *rqst _U_,
                  struct cnid_dbd_rply *rply)

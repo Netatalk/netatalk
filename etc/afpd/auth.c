@@ -1169,7 +1169,7 @@ int auth_register(const int type, struct uam_obj *uam)
     return 0;
 }
 
-/* load all of the modules */
+/*! load all of the modules */
 int auth_load(AFPObj *obj, const char *path, const char *list)
 {
     char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p, *last;
@@ -1216,7 +1216,7 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
     return 0;
 }
 
-/* get rid of all of the uams */
+/*! get rid of all of the uams */
 void auth_unload(void)
 {
     struct uam_mod *mod, *prev, *start = &uam_modules;

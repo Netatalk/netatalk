@@ -20,7 +20,7 @@
 typedef const unsigned char *uuidp_t;
 typedef unsigned char atalk_uuid_t[UUID_BINSIZE];
 
-/* used as bit flag */
+/*! used as bit flag */
 typedef enum {UUID_USER   = 1,
               UUID_GROUP  = 2,
               UUID_ENOENT = 4

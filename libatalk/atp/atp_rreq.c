@@ -43,11 +43,12 @@
 #endif /* EBUG */
 
 
-/* wait for a tranasaction service request
-*/
-int atp_rreq(
-    ATP			ah,		/* open atp handle */
-    struct atp_block	*atpb)		/* parameter block */
+/*!
+ * @brief wait for a transaction service request
+ * @param ah open atp handle
+ * @param atpb parameter block
+ */
+int atp_rreq(ATP ah, struct atp_block *atpb)
 {
     struct atpbuf	*req_buf;	/* for receiving request packet */
     struct atphdr	req_hdr;	/* request header overlay */

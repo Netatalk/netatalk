@@ -1,8 +1,8 @@
-/*
- * Author:  Daniel S. Haischt <me@daniel.stefan.haischt.name>
- * Purpose: Avahi based Zeroconf support
- * Docs:    http://avahi.org/download/doxygen/
- *
+/*!
+ * @file
+ * @author  Daniel S. Haischt <me@daniel.stefan.haischt.name>
+ * @brief   Avahi based Zeroconf support
+ * @sa      https://avahi.org/doxygen/html/
  */
 
 #ifdef HAVE_CONFIG_H
@@ -38,7 +38,7 @@ static void publish_reply(AvahiEntryGroup *g,
                           AvahiEntryGroupState state,
                           void *userdata);
 
-/*
+/*!
  * This function tries to register the AFP DNS
  * SRV service type.
  */
@@ -186,7 +186,7 @@ fail:
 #endif
 }
 
-/* Called when publishing of service data completes */
+/*! Called when publishing of service data completes */
 static void publish_reply(AvahiEntryGroup *g,
                           AvahiEntryGroupState state,
                           AVAHI_GCC_UNUSED void *userdata)
@@ -283,7 +283,7 @@ static void client_callback(AvahiClient *client,
  * Public funcions
  ************************************************************************/
 
-/*
+/*!
  * Tries to setup the Zeroconf thread and any
  * neccessary config setting.
  */
@@ -333,9 +333,9 @@ fail:
     return;
 }
 
-/*
- * Tries to shutdown this loop impl.
- * Call this function from inside this thread.
+/*!
+ * @brief Tries to shutdown this loop impl.
+ * @note Call this function from inside this thread.
  */
 int av_zeroconf_unregister()
 {

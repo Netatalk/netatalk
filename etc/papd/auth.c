@@ -37,7 +37,7 @@ static struct uam_obj uam_printer = {"", "", 0, {{NULL, NULL, NULL}}, &uam_print
 };
 
 
-/*
+/*!
  * Return a list of names for loaded uams
  */
 int getuamnames(const int type, char *uamnames)
@@ -60,7 +60,7 @@ int getuamnames(const int type, char *uamnames)
 }
 
 
-/* just do a linked list search. this could be sped up with a hashed
+/*! just do a linked list search. this could be sped up with a hashed
  * list, but i doubt anyone's going to have enough uams to matter. */
 struct uam_obj *auth_uamfind(const int type, const char *name,
                              const int len)
@@ -97,7 +97,7 @@ int auth_register(const int type, struct uam_obj *uam)
     return 0;
 }
 
-/* load all of the modules */
+/*! load all of the modules */
 int auth_load(const char *path, const char *list)
 {
     char name[MAXPATHLEN + 1], buf[MAXPATHLEN + 1], *p;
@@ -136,7 +136,7 @@ int auth_load(const char *path, const char *list)
     return 0;
 }
 
-/* get rid of all of the uams */
+/*! get rid of all of the uams */
 void auth_unload(void)
 {
     struct uam_mod *mod, *prev, *start = &uam_modules;

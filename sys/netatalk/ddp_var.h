@@ -17,16 +17,16 @@ struct ddpcb {
 #define sotoddpcb(so)	((struct ddpcb *)(so)->so_pcb)
 
 struct ddpstat {
-    uint32_t	ddps_short;		/* short header packets received */
-    uint32_t	ddps_long;		/* long header packets received */
-    uint32_t	ddps_nosum;		/* no checksum */
-    uint32_t	ddps_badsum;		/* bad checksum */
-    uint32_t	ddps_tooshort;		/* packet too short */
-    uint32_t	ddps_toosmall;		/* not enough data */
-    uint32_t	ddps_forward;		/* packets forwarded */
-    uint32_t	ddps_encap;		/* packets encapsulated */
-    uint32_t	ddps_cantforward;	/* packets rcvd for unreachable dest */
-    uint32_t	ddps_nosockspace;	/* no space in sockbuf for packet */
+    uint32_t	ddps_short;		/*!< short header packets received */
+    uint32_t	ddps_long;		/*!< long header packets received */
+    uint32_t	ddps_nosum;		/*!< no checksum */
+    uint32_t	ddps_badsum;		/*!< bad checksum */
+    uint32_t	ddps_tooshort;		/*!< packet too short */
+    uint32_t	ddps_toosmall;		/*!< not enough data */
+    uint32_t	ddps_forward;		/*!< packets forwarded */
+    uint32_t	ddps_encap;		/*!< packets encapsulated */
+    uint32_t	ddps_cantforward;	/*!< packets rcvd for unreachable dest */
+    uint32_t	ddps_nosockspace;	/*!< no space in sockbuf for packet */
 };
 
 #ifdef KERNEL

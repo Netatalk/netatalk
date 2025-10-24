@@ -212,8 +212,8 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     return rc;
 }
 
-/* --------------------------------------------
-   Factorise some checks on a pathname
+/*!
+  Factorise some checks on a pathname
 */
 int check_name(const struct vol *vol, char *name)
 {
@@ -230,9 +230,9 @@ int check_name(const struct vol *vol, char *name)
     return 0;
 }
 
-/* -------------------------
-    move and rename sdir:oldname to curdir:newname in volume vol
-    special care is needed for lock
+/*!
+  @brief move and rename sdir:oldname to curdir:newname in volume vol
+  @note special care is needed for lock
 */
 static int moveandrename(const AFPObj *obj,
                          struct vol *vol,
@@ -537,7 +537,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
  * the directory. That may fail if the directory contains normal files that aren't vetoed.
  *
  * @returns 0 if the directory upath and all of its contents were deleted, otherwise -1.
- *            If the volume option is not set it returns -1.
+ * @returns If the volume option is not set it returns -1.
  */
 int delete_vetoed_files(struct vol *vol, const char *upath, bool in_vetodir)
 {
@@ -925,12 +925,13 @@ exit:
     return rc;
 }
 
-int veto_file(const char *veto_str, const char *path)
-/* given a veto_str like "abc/zxc/" and path "abc", return 1
- * veto_str should be '/' delimited
- * if path matches any one of the veto_str elements exactly, then 1 is returned
+/*!
+ * @brief given a veto_str like "abc/zxc/" and path "abc", return 1
+ * @note veto_str should be '/' delimited
+ * @returns if path matches any one of the veto_str elements exactly, then 1 is returned
  * otherwise, 0 is returned.
  */
+int veto_file(const char *veto_str, const char *path)
 {
     int i;  /* index to veto_str */
     int j;  /* index to path */

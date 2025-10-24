@@ -55,7 +55,7 @@
 #define SOL_TCP IPPROTO_TCP
 #endif
 
-/*
+/*!
  * We generally pass this from afp_over_dsi to all afp_* funcs, so it should already be
  * available everywhere. Unfortunately some funcs (eg acltoownermode) need acces to it
  * but are deeply nested in the function chain with the caller already without acces to it.
@@ -71,7 +71,7 @@ typedef struct {
     uint32_t result;
 } rc_elem_t;
 
-/*
+/*!
  * AFP replay cache:
  * - fix sized array
  * - indexed just by taking DSIreqID mod REPLAYCACHE_SIZE

@@ -33,7 +33,7 @@
 #include "unix.h"
 #include "volume.h"
 
-/*
+/*!
  * Get the free space on a partition.
  */
 int ustatfs_getvolspace(const struct vol *vol, VolSpace *bfree,
@@ -122,11 +122,11 @@ static void utommode(const AFPObj *obj, const struct stat *stat,
     }
 }
 
-/*
- * Calculate the mode for a directory using a stat() call to
+/*!
+ * @brief Calculate the mode for a directory using a stat() call to
  * estimate permission.
  *
- * Note: the previous method, using access(), does not work correctly
+ * @note the previous method, using access(), does not work correctly
  * over NFS.
  */
 void accessmode(const AFPObj *obj, const struct vol *vol, char *path,

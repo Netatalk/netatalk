@@ -53,7 +53,7 @@ typedef struct {
     char           db_stamp[ADEDLEN_PRIVSYN];
 } afpvol_t;
 
-extern int log_verbose;             /* Logging flag */
+extern int log_verbose;             /*!< Logging flag */
 extern void _log(enum logtype lt, char *fmt, ...);
 
 extern int ad_ls(int argc, char **argv, AFPObj *obj);
@@ -73,9 +73,9 @@ extern int convert_dots_encoding(const afpvol_t *svol, const afpvol_t *dvol,
                                  char *path);
 
 typedef struct {
-    char *p_end;/* pointer to NULL at end of path */
-    char *target_end;/* pointer to end of target base */
-    char p_path[MAXPATHLEN + 2];/* pointer to the start of a path */
+    char *p_end; /*!< pointer to NULL at end of path */
+    char *target_end; /*!< pointer to end of target base */
+    char p_path[MAXPATHLEN + 2]; /*!< pointer to the start of a path */
 } PATH_T;
 
 extern int fflag, iflag, lflag, nflag, pflag, vflag;
