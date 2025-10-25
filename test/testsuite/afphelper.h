@@ -18,6 +18,19 @@ extern void afp_printf(int level, int loglevel, int color, const char *fmt,
 
 #define AFP_PRINTF(level, fmt, ...)  afp_printf(level, Loglevel, Color, fmt, ##__VA_ARGS__)
 
+#define BITERR_NOOBJ     (1 << 0)
+#define BITERR_NODIR     (1 << 1)
+#define BITERR_PARAM     (1 << 2)
+#define BITERR_BUSY      (1 << 3)
+#define BITERR_BADTYPE   (1 << 4)
+#define BITERR_NOITEM    (1 << 5)
+#define BITERR_DENYCONF  (1 << 6)
+#define BITERR_NFILE     (1 << 7)
+#define BITERR_ACCESS    (1 << 8)
+#define BITERR_NOID      (1 << 9)
+#define BITERR_BITMAP    (1 << 10)
+#define BITERR_MISC      (1 << 11)
+
 /* Forward declarations */
 typedef struct CONN CONN;
 
