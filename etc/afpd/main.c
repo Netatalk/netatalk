@@ -146,6 +146,13 @@ static void afp_goaway(int sig)
         }
 
 #endif /* ! NO_DDP */
+#ifdef HAVE_DBUS_GLIB
+
+        if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS) {
+            afpstats_cleanup();
+        }
+
+#endif
         _exit(0);
         break;
 
@@ -389,7 +396,10 @@ int main(int ac, char **av)
 
     /* Run dbus AFP statistics thread */
     if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS) {
-        (void)afpstats_init(server_children);
+        if (afpstats_init(server_children) != 0) {
+            LOG(log_warning, logtype_afpd,
+                "main: AFPStats D-Bus thread not started; continuing without D-Bus statistics");
+        }
     }
 
 #endif
