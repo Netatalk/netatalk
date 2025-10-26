@@ -38,6 +38,8 @@
  */
 static server_child_t *childs;
 static GDBusNodeInfo *introspection_data = NULL;
+static GMainLoop *thread_loop = NULL;
+static GThread *afpstats_thread_handle = NULL;
 
 static void handle_method_call(GDBusConnection *connection _U_,
                                const gchar           *sender _U_,
@@ -96,27 +98,33 @@ static void on_name_lost(GDBusConnection *connection _U_,
 
 static gpointer afpstats_thread(gpointer _data _U_)
 {
-    GDBusConnection *bus;
+    EC_INIT;
+    GDBusConnection *bus = NULL;
     GError *error = NULL;
-    GMainContext *ctxt;
-    GMainLoop *thread_loop;
+    GMainContext *ctxt = NULL;
     GBusNameOwnerFlags request_name_result;
-    guint registration_id;
+    guint registration_id = 0;
     sigset_t sigs;
+    AFPStatsObj *obj = NULL;
+
     /* Block all signals in this thread */
     sigfillset(&sigs);
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-    ctxt = g_main_context_new();
-    g_main_context_push_thread_default(ctxt);
-    thread_loop = g_main_loop_new(ctxt, FALSE);
 
-    if (!(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM,
-                               NULL,
-                               &error))) {
-        LOG(log_error, logtype_afpd, "Couldn't connect to system bus: %s",
-            error->message);
-        return NULL;
-    }
+    ctxt = g_main_context_new();
+    EC_NULL_LOG(ctxt);
+    g_main_context_push_thread_default(ctxt);
+
+    thread_loop = g_main_loop_new(ctxt, FALSE);
+    EC_NULL_LOG(thread_loop);
+
+    EC_NULL_LOG_ERR(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error),
+                    ({ if (error) {
+                        LOG(log_error, logtype_afpd, "[afpstats] Failed to connect to system bus: %s",
+                            error->message);
+                        g_error_free(error);
+                    }
+                      ret = -1; }));
 
     static const gchar introspection_xml[] =
         "<node>"
@@ -126,17 +134,32 @@ static gpointer afpstats_thread(gpointer _data _U_)
         "    </method>"
         "  </interface>"
         "</node>";
+
     introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-    g_assert(introspection_data != NULL);
-    AFPStatsObj *obj = g_object_new(AFPSTATS_TYPE_OBJECT, NULL);
+    EC_NULL_LOG(introspection_data);
+
+    obj = g_object_new(AFPSTATS_TYPE_OBJECT, NULL);
+    EC_NULL_LOG(obj);
+
+    error = NULL;
     registration_id = g_dbus_connection_register_object(bus,
-                      "/org/netatalk/AFPStats",
-                      introspection_data->interfaces[0],
-                      &interface_vtable,
-                      g_object_ref(obj),
-                      g_object_unref,
-                      &error);
-    g_assert(registration_id > 0);
+                                                        "/org/netatalk/AFPStats",
+                                                        introspection_data->interfaces[0],
+                                                        &interface_vtable,
+                                                        g_object_ref(obj),
+                                                        g_object_unref,
+                                                        &error);
+
+    if (registration_id == 0) {
+        LOG(log_error, logtype_afpd, "[afpstats] Failed to register object: %s",
+            error ? error->message : "unknown error");
+        if (error) {
+            g_error_free(error);
+        }
+        ret = -1;
+        goto EC_CLEANUP;
+    }
+
     request_name_result = g_bus_own_name(G_BUS_TYPE_SYSTEM,
                                          "org.netatalk.AFPStats",
                                          G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -145,14 +168,39 @@ static gpointer afpstats_thread(gpointer _data _U_)
                                          on_name_lost,
                                          NULL,
                                          NULL);
+
+    LOG(log_info, logtype_afpd, "[afpstats] D-Bus thread started successfully");
     g_main_loop_run(thread_loop);
-    g_bus_unown_name(request_name_result);
-    g_dbus_connection_unregister_object(bus, registration_id);
-    g_dbus_node_info_unref(introspection_data);
-    g_object_unref(obj);
-    g_main_context_pop_thread_default(ctxt);
-    g_main_context_unref(ctxt);
-    return thread_loop;
+
+EC_CLEANUP:
+    if (request_name_result > 0) {
+        g_bus_unown_name(request_name_result);
+    }
+
+    if (registration_id > 0) {
+        g_dbus_connection_unregister_object(bus, registration_id);
+    }
+
+    if (introspection_data) {
+        g_dbus_node_info_unref(introspection_data);
+        introspection_data = NULL;
+    }
+
+    if (obj) {
+        g_object_unref(obj);
+    }
+
+    if (bus) {
+        g_object_unref(bus);
+    }
+
+    if (ctxt) {
+        g_main_context_pop_thread_default(ctxt);
+        g_main_context_unref(ctxt);
+    }
+
+    LOG(log_info, logtype_afpd, "[afpstats] D-Bus thread shutting down (ret=%d)", ret);
+    return GINT_TO_POINTER(ret);
 }
 
 static void my_glib_log(const gchar *log_domain,
@@ -165,20 +213,71 @@ static void my_glib_log(const gchar *log_domain,
 
 server_child_t *afpstats_get_and_lock_childs(void)
 {
+    if (childs == NULL) {
+        return NULL;
+    }
     pthread_mutex_lock(&childs->servch_lock);
     return childs;
 }
 
 void afpstats_unlock_childs(void)
 {
+    if (childs == NULL) {
+        return;
+    }
     pthread_mutex_unlock(&childs->servch_lock);
 }
 
 int afpstats_init(server_child_t *childs_in)
 {
-    GThread *thread;
+    EC_INIT;
+
+    if (childs_in == NULL) {
+        LOG(log_error, logtype_afpd, "[afpstats] init: childs_in is NULL");
+        return -1;
+    }
+
     childs = childs_in;
     (void)g_log_set_default_handler(my_glib_log, NULL);
-    thread = g_thread_new("afpstats", afpstats_thread, NULL);
+
+    afpstats_thread_handle = g_thread_new("afpstats", afpstats_thread, NULL);
+    EC_NULL_LOG(afpstats_thread_handle);
+
+    LOG(log_info, logtype_afpd, "[afpstats] initialized");
     return 0;
+
+EC_CLEANUP:
+    return ret;
+}
+
+void afpstats_shutdown(void)
+{
+    gpointer thread_ret;
+
+    if (thread_loop == NULL) {
+        LOG(log_debug, logtype_afpd, "[afpstats] shutdown: not initialized");
+        return;
+    }
+
+    LOG(log_info, logtype_afpd, "[afpstats] shutting down D-Bus thread");
+
+    /* Signal the GLib event loop to exit */
+    g_main_loop_quit(thread_loop);
+
+    /* Wait for thread to finish and collect return code */
+    if (afpstats_thread_handle) {
+        thread_ret = g_thread_join(afpstats_thread_handle);
+        LOG(log_info, logtype_afpd, "[afpstats] D-Bus thread joined (ret=%d)",
+            GPOINTER_TO_INT(thread_ret));
+        afpstats_thread_handle = NULL;
+    }
+
+    /* Release references */
+    if (thread_loop) {
+        g_main_loop_unref(thread_loop);
+        thread_loop = NULL;
+    }
+
+    childs = NULL;
+    LOG(log_info, logtype_afpd, "[afpstats] shutdown complete");
 }

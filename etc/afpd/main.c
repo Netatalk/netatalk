@@ -135,6 +135,10 @@ static void afp_goaway(int sig)
     case SIGQUIT:
         LOG(log_note, logtype_afpd, "AFP Server shutting down");
 
+        if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS) {
+            afpstats_shutdown();
+        }
+
         if (server_children) {
             server_child_kill(server_children, SIGTERM);
         }
@@ -389,7 +393,9 @@ int main(int ac, char **av)
 
     /* Run dbus AFP statistics thread */
     if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS) {
-        (void)afpstats_init(server_children);
+        if (afpstats_init(server_children) != 0) {
+            LOG(log_warning, logtype_afpd, "main: afpstats init failed, continuing without stats");
+        }
     }
 
 #endif
