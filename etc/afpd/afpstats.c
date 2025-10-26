@@ -312,14 +312,6 @@ static gpointer afpstats_thread(gpointer _data)
     return NULL;
 }
 
-static void my_glib_log(const gchar *log_domain,
-                        GLogLevelFlags log_level _U_,
-                        const gchar *message,
-                        gpointer user_data _U_)
-{
-    LOG(log_debug, logtype_afpd, "[afpstats] %s: %s", log_domain, message);
-}
-
 server_child_t *afpstats_get_and_lock_childs(void)
 {
     if (childs) {
@@ -338,11 +330,23 @@ void afpstats_unlock_childs(void)
 int afpstats_init(server_child_t *childs_in)
 {
     GError *error = NULL;
+    gboolean init_success = FALSE;
 
     if (!childs_in) {
         LOG(log_error, logtype_afpd, "[afpstats] Invalid server_child_t pointer");
         return -1;
     }
+
+    /* Test if D-Bus system bus is available before allocating any resources */
+    GDBusConnection *test_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+    if (!test_bus) {
+        LOG(log_warning, logtype_afpd, 
+            "[afpstats] D-Bus system bus not available: %s. Skipping AFPStats module.",
+            error ? error->message : "Unknown error");
+        g_clear_error(&error);
+        return 0; /* Return success - D-Bus just isn't available */
+    }
+    g_object_unref(test_bus);
 
     /* Allocate thread state */
     thread_state = g_malloc0(sizeof(afpstats_thread_state_t));
@@ -358,9 +362,8 @@ int afpstats_init(server_child_t *childs_in)
     thread_state->gthread = NULL;
 
     childs = childs_in;
-    (void)g_log_set_default_handler(my_glib_log, NULL);
 
-    /* Create thread - DO NOT hold a reference yet */
+    /* Create thread */
     thread_state->gthread = g_thread_new("afpstats", afpstats_thread, thread_state);
     if (!thread_state->gthread) {
         LOG(log_error, logtype_afpd, "[afpstats] Failed to create afpstats thread");
@@ -370,25 +373,44 @@ int afpstats_init(server_child_t *childs_in)
         return -1;
     }
 
-    /* Give thread time to initialize */
-    g_usleep(100000); /* 100ms */
+    /* Give thread time to initialize - longer timeout for safety */
+    g_usleep(200000); /* 200ms */
 
     /* Check initialization status */
     pthread_mutex_lock(&thread_state->lock);
-    if (!thread_state->initialized) {
-        if (thread_state->init_error) {
-            LOG(log_error, logtype_afpd, "[afpstats] Thread initialization failed: %s",
-                thread_state->init_error->message);
+    if (thread_state->initialized) {
+        init_success = TRUE;
+    } else if (thread_state->init_error) {
+        LOG(log_error, logtype_afpd, "[afpstats] Thread initialization failed: %s",
+            thread_state->init_error->message);
+    }
+    if (thread_state->failed) {
+        LOG(log_warning, logtype_afpd,
+            "[afpstats] Thread initialization failed, joining thread for cleanup");
+    }
+    GThread *thread_to_join = thread_state->gthread;
+    pthread_mutex_unlock(&thread_state->lock);
+
+    /* If initialization failed, join the thread immediately to clean up */
+    if (!init_success) {
+        LOG(log_debug, logtype_afpd, "[afpstats] Waiting for failed thread to clean up");
+        if (thread_to_join) {
+            g_thread_join(thread_to_join);
         }
-        if (thread_state->failed) {
-            LOG(log_warning, logtype_afpd,
-                "[afpstats] Thread initialization failed, but thread will clean up");
+
+        /* Clean up thread_state after thread has finished */
+        pthread_mutex_lock(&thread_state->lock);
+        if (thread_state->init_error) {
+            g_clear_error(&thread_state->init_error);
         }
         pthread_mutex_unlock(&thread_state->lock);
-        /* Do NOT free thread_state here - let the thread clean up */
-        return -1;
+        pthread_mutex_destroy(&thread_state->lock);
+        g_free(thread_state);
+        thread_state = NULL;
+
+        LOG(log_debug, logtype_afpd, "[afpstats] Failed thread cleanup complete");
+        return 0; /* Return success - we tried but D-Bus isn't available */
     }
-    pthread_mutex_unlock(&thread_state->lock);
 
     LOG(log_info, logtype_afpd, "[afpstats] afpstats module initialized successfully");
 
@@ -408,15 +430,15 @@ void afpstats_shutdown(void)
     LOG(log_debug, logtype_afpd, "[afpstats] Initiating graceful shutdown");
 
     pthread_mutex_lock(&thread_state->lock);
-    gboolean has_loop = (thread_state->loop != NULL);
     GThread *thread_to_join = thread_state->gthread;
-    if (has_loop) {
+    if (thread_state->loop) {
         g_main_loop_quit(thread_state->loop);
     }
     pthread_mutex_unlock(&thread_state->lock);
 
     /* Join the thread to ensure it finishes cleanup */
     if (thread_to_join) {
+        LOG(log_debug, logtype_afpd, "[afpstats] Joining thread");
         g_thread_join(thread_to_join);
     }
 
