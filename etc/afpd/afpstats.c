@@ -329,52 +329,26 @@ void afpstats_unlock_childs(void)
     }
 }
 
-/**
- * Check if D-Bus is available by attempting a non-blocking connection test
- * Returns TRUE if D-Bus appears available, FALSE otherwise
- * Does not poll, just checks synchronously
- */
-static gboolean is_dbus_available(void)
-{
-    GError *error = NULL;
-    GDBusConnection *test_bus = NULL;
-    
-    /* Use a very short timeout to test D-Bus availability */
-    GCancellable *cancellable = g_cancellable_new();
-    
-    /* Try to get the system bus with a timeout */
-    test_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, cancellable, &error);
-    
-    g_object_unref(cancellable);
-    
-    if (test_bus) {
-        g_object_unref(test_bus);
-        return TRUE;
-    }
-    
-    if (error) {
-        LOG(log_debug, logtype_afpd, "[afpstats] D-Bus check failed: %s", error->message);
-        g_error_free(error);
-    }
-    
-    return FALSE;
-}
-
 int afpstats_init(server_child_t *childs_in)
 {
-    gboolean init_success = FALSE;
-
     if (!childs_in) {
         LOG(log_error, logtype_afpd, "[afpstats] Invalid server_child_t pointer");
         return -1;
     }
 
-    /* Quick check if D-Bus is available without forking */
-    if (!is_dbus_available()) {
-        LOG(log_info, logtype_afpd, 
-            "[afpstats] D-Bus system bus not available. Skipping AFPStats module.");
-        return 0; /* Return success - D-Bus just isn't available */
-    }
+    /* Store the childs pointer for later use */
+    childs = childs_in;
+
+    /* On macOS, skip D-Bus initialization entirely to avoid GLib state corruption
+     * in forked child processes. D-Bus is typically not running on macOS anyway.
+     * This module can be disabled at compile time if D-Bus support is not needed.
+     */
+#ifdef __APPLE__
+    LOG(log_info, logtype_afpd, 
+        "[afpstats] D-Bus statistics disabled on macOS to avoid fork() issues. "
+        "Compile without D-Bus support to eliminate this message.");
+    return 0;
+#endif
 
     /* Allocate thread state */
     thread_state = g_malloc0(sizeof(afpstats_thread_state_t));
@@ -388,8 +362,6 @@ int afpstats_init(server_child_t *childs_in)
     thread_state->failed = FALSE;
     thread_state->init_error = NULL;
     thread_state->gthread = NULL;
-
-    childs = childs_in;
 
     /* Create thread */
     thread_state->gthread = g_thread_new("afpstats", afpstats_thread, thread_state);
@@ -406,15 +378,13 @@ int afpstats_init(server_child_t *childs_in)
 
     /* Check initialization status */
     pthread_mutex_lock(&thread_state->lock);
-    if (thread_state->initialized) {
-        init_success = TRUE;
-    } else if (thread_state->init_error) {
+    gboolean init_success = thread_state->initialized;
+    if (thread_state->init_error) {
         LOG(log_error, logtype_afpd, "[afpstats] Thread initialization failed: %s",
             thread_state->init_error->message);
     }
     if (thread_state->failed) {
-        LOG(log_info, logtype_afpd,
-            "[afpstats] Thread initialization failed");
+        LOG(log_info, logtype_afpd, "[afpstats] Thread initialization failed");
     }
     GThread *thread_to_join = thread_state->gthread;
     pthread_mutex_unlock(&thread_state->lock);
