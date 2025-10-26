@@ -40,7 +40,9 @@ static server_child_t *childs;
 static GDBusNodeInfo *introspection_data = NULL;
 static GMainLoop *thread_loop = NULL;
 static GThread *afpstats_thread_handle = NULL;
-static GDBusConnection *bus = NULL;  /* Thread-safe: only accessed from afpstats_thread */
+static GDBusConnection *bus = NULL;
+static guint registration_id = 0;
+static GBusNameOwnerFlags request_name_result = 0;
 
 static void handle_method_call(GDBusConnection *connection _U_,
                                const gchar           *sender _U_,
@@ -100,6 +102,8 @@ static void on_name_lost(GDBusConnection *connection _U_,
 static void on_bus_got(GObject *source _U_, GAsyncResult *res, gpointer user_data _U_)
 {
     GError *error = NULL;
+    AFPStatsObj *obj = NULL;
+
     bus = g_bus_get_finish(res, &error);
     if (error) {
         LOG(log_error, logtype_afpd, "[afpstats] Failed to get bus: %s", error->message);
@@ -107,46 +111,16 @@ static void on_bus_got(GObject *source _U_, GAsyncResult *res, gpointer user_dat
         g_main_loop_quit(thread_loop);
         return;
     }
+
     LOG(log_debug, logtype_afpd, "[afpstats] D-Bus connection acquired");
-}
 
-static gpointer afpstats_thread(gpointer _data _U_)
-{
-    EC_INIT;
-    GError *error = NULL;
-    GMainContext *ctxt = NULL;
-    GBusNameOwnerFlags request_name_result;
-    guint registration_id = 0;
-    sigset_t sigs;
-    AFPStatsObj *obj = NULL;
-
-    /* Block all signals in this thread */
-    sigfillset(&sigs);
-    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-
-    ctxt = g_main_context_new();
-    EC_NULL_LOG(ctxt);
-    g_main_context_push_thread_default(ctxt);
-
-    thread_loop = g_main_loop_new(ctxt, FALSE);
-    EC_NULL_LOG(thread_loop);
-
-    g_bus_get(G_BUS_TYPE_SYSTEM, NULL, on_bus_got, NULL);
-
-    static const gchar introspection_xml[] =
-        "<node>"
-        "  <interface name='org.netatalk.AFPStats'>"
-        "    <method name='GetUsers'>"
-        "      <arg name='ret' type='as' direction='out'/>"
-        "    </method>"
-        "  </interface>"
-        "</node>";
-
-    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-    EC_NULL_LOG(introspection_data);
-
+    /* Now register the object */
     obj = g_object_new(AFPSTATS_TYPE_OBJECT, NULL);
-    EC_NULL_LOG(obj);
+    if (obj == NULL) {
+        LOG(log_error, logtype_afpd, "[afpstats] Failed to create AFPStatsObj");
+        g_main_loop_quit(thread_loop);
+        return;
+    }
 
     error = NULL;
     registration_id = g_dbus_connection_register_object(bus,
@@ -163,29 +137,78 @@ static gpointer afpstats_thread(gpointer _data _U_)
         if (error) {
             g_error_free(error);
         }
-        ret = -1;
-        goto EC_CLEANUP;
+        g_object_unref(obj);
+        g_main_loop_quit(thread_loop);
+        return;
     }
 
-    request_name_result = g_bus_own_name(G_BUS_TYPE_SYSTEM,
-                                         "org.netatalk.AFPStats",
-                                         G_BUS_NAME_OWNER_FLAGS_NONE,
-                                         on_bus_acquired,
-                                         on_name_acquired,
-                                         on_name_lost,
-                                         NULL,
-                                         NULL);
+    LOG(log_debug, logtype_afpd, "[afpstats] Object registered, requesting name");
 
-    LOG(log_info, logtype_afpd, "[afpstats] D-Bus thread started successfully");
+    /* Request D-Bus name */
+    request_name_result = g_bus_own_name_on_connection(bus,
+                                                       "org.netatalk.AFPStats",
+                                                       G_BUS_NAME_OWNER_FLAGS_NONE,
+                                                       on_name_acquired,
+                                                       on_name_lost,
+                                                       NULL,
+                                                       NULL);
+
+    if (request_name_result == 0) {
+        LOG(log_error, logtype_afpd, "[afpstats] Failed to request name");
+        g_main_loop_quit(thread_loop);
+        return;
+    }
+
+    g_object_unref(obj);
+}
+
+static gpointer afpstats_thread(gpointer _data _U_)
+{
+    EC_INIT;
+    GError *error = NULL;
+    GMainContext *ctxt = NULL;
+    sigset_t sigs;
+
+    /* Block all signals in this thread */
+    sigfillset(&sigs);
+    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+
+    ctxt = g_main_context_new();
+    EC_NULL_LOG(ctxt);
+    g_main_context_push_thread_default(ctxt);
+
+    thread_loop = g_main_loop_new(ctxt, FALSE);
+    EC_NULL_LOG(thread_loop);
+
+    static const gchar introspection_xml[] =
+        "<node>"
+        "  <interface name='org.netatalk.AFPStats'>"
+        "    <method name='GetUsers'>"
+        "      <arg name='ret' type='as' direction='out'/>"
+        "    </method>"
+        "  </interface>"
+        "</node>";
+
+    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
+    EC_NULL_LOG(introspection_data);
+
+    LOG(log_debug, logtype_afpd, "[afpstats] Connecting to system bus");
+
+    /* Request bus connection asynchronously */
+    g_bus_get(G_BUS_TYPE_SYSTEM, NULL, on_bus_got, NULL);
+
+    LOG(log_info, logtype_afpd, "[afpstats] D-Bus thread started, running main loop");
     g_main_loop_run(thread_loop);
 
 EC_CLEANUP:
     if (request_name_result > 0) {
         g_bus_unown_name(request_name_result);
+        request_name_result = 0;
     }
 
     if (registration_id > 0) {
         g_dbus_connection_unregister_object(bus, registration_id);
+        registration_id = 0;
     }
 
     if (introspection_data) {
@@ -193,12 +216,9 @@ EC_CLEANUP:
         introspection_data = NULL;
     }
 
-    if (obj) {
-        g_object_unref(obj);
-    }
-
     if (bus) {
         g_object_unref(bus);
+        bus = NULL;
     }
 
     if (ctxt) {
