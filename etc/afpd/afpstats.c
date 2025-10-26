@@ -40,6 +40,7 @@ static server_child_t *childs;
 static GDBusNodeInfo *introspection_data = NULL;
 static GMainLoop *thread_loop = NULL;
 static GThread *afpstats_thread_handle = NULL;
+static GDBusConnection *bus = NULL;  /* Thread-safe: only accessed from afpstats_thread */
 
 static void handle_method_call(GDBusConnection *connection _U_,
                                const gchar           *sender _U_,
@@ -106,7 +107,7 @@ static void on_bus_got(GObject *source _U_, GAsyncResult *res, gpointer user_dat
         g_main_loop_quit(thread_loop);
         return;
     }
-    /* Continue with registration... */
+    LOG(log_debug, logtype_afpd, "[afpstats] D-Bus connection acquired");
 }
 
 static gpointer afpstats_thread(gpointer _data _U_)
