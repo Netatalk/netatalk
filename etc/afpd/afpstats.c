@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include <glib.h>
 #include <gio/gio.h>
@@ -327,9 +329,39 @@ void afpstats_unlock_childs(void)
     }
 }
 
-int afpstats_init(server_child_t *childs_in)
+/**
+ * Check if D-Bus is available by attempting a non-blocking connection test
+ * Returns TRUE if D-Bus appears available, FALSE otherwise
+ * Does not poll, just checks synchronously
+ */
+static gboolean is_dbus_available(void)
 {
     GError *error = NULL;
+    GDBusConnection *test_bus = NULL;
+    
+    /* Use a very short timeout to test D-Bus availability */
+    GCancellable *cancellable = g_cancellable_new();
+    
+    /* Try to get the system bus with a timeout */
+    test_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, cancellable, &error);
+    
+    g_object_unref(cancellable);
+    
+    if (test_bus) {
+        g_object_unref(test_bus);
+        return TRUE;
+    }
+    
+    if (error) {
+        LOG(log_debug, logtype_afpd, "[afpstats] D-Bus check failed: %s", error->message);
+        g_error_free(error);
+    }
+    
+    return FALSE;
+}
+
+int afpstats_init(server_child_t *childs_in)
+{
     gboolean init_success = FALSE;
 
     if (!childs_in) {
@@ -337,16 +369,12 @@ int afpstats_init(server_child_t *childs_in)
         return -1;
     }
 
-    /* Test if D-Bus system bus is available before allocating any resources */
-    GDBusConnection *test_bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
-    if (!test_bus) {
-        LOG(log_warning, logtype_afpd, 
-            "[afpstats] D-Bus system bus not available: %s. Skipping AFPStats module.",
-            error ? error->message : "Unknown error");
-        g_clear_error(&error);
+    /* Quick check if D-Bus is available without forking */
+    if (!is_dbus_available()) {
+        LOG(log_info, logtype_afpd, 
+            "[afpstats] D-Bus system bus not available. Skipping AFPStats module.");
         return 0; /* Return success - D-Bus just isn't available */
     }
-    g_object_unref(test_bus);
 
     /* Allocate thread state */
     thread_state = g_malloc0(sizeof(afpstats_thread_state_t));
@@ -373,7 +401,7 @@ int afpstats_init(server_child_t *childs_in)
         return -1;
     }
 
-    /* Give thread time to initialize - longer timeout for safety */
+    /* Give thread time to initialize */
     g_usleep(200000); /* 200ms */
 
     /* Check initialization status */
@@ -385,8 +413,8 @@ int afpstats_init(server_child_t *childs_in)
             thread_state->init_error->message);
     }
     if (thread_state->failed) {
-        LOG(log_warning, logtype_afpd,
-            "[afpstats] Thread initialization failed, joining thread for cleanup");
+        LOG(log_info, logtype_afpd,
+            "[afpstats] Thread initialization failed");
     }
     GThread *thread_to_join = thread_state->gthread;
     pthread_mutex_unlock(&thread_state->lock);
@@ -409,7 +437,7 @@ int afpstats_init(server_child_t *childs_in)
         thread_state = NULL;
 
         LOG(log_debug, logtype_afpd, "[afpstats] Failed thread cleanup complete");
-        return 0; /* Return success - we tried but D-Bus isn't available */
+        return 0; /* Return success - we tried but D-Bus initialization failed */
     }
 
     LOG(log_info, logtype_afpd, "[afpstats] afpstats module initialized successfully");
