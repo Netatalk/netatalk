@@ -49,24 +49,28 @@ When built without AppleTalk support, the network stack looks something like thi
 Error checking and logging
 ==========================
 
-We want rigid error checking and concise log messages. This often leads
-to significant code bloat where the relevant function call is buried in error
-checking and logging statements.
-In order to alleviate error checking and code readability, we provide a set
-of error checking macros in <atalk/errchk.h>. These macros compare the return
-value of statements against 0, NULL, -1 (and maybe more, check it out).
-Every macro comes in four flavours: EC_CHECK, EC_CHECK_LOG, EC_CHECK_LOG_ERR
-and EC_CHECK_CUSTOM:
+We want rigid error checking and concise log messages.
+At the same time, we want to avoid overly verbose code where the relevant function call
+is buried in error checking and logging statements.
+In order to address both error checking and code readability,
+we provide a set of error checking macros in <atalk/errchk.h>.
+Every macro comes in four flavours: EC\_*CHECK*, EC\_*CHECK*\_LOG, EC\_*CHECK*\_LOGSTR
+and EC\_*CHECK*\_LOG\_ERR where *CHECK* should be substituted with one of the supported tests:
 
-* EC_CHECK just checks the CHECK
-* EC_CHECK_LOG additionally logs the stringified function call.
-* EC_CHECK_LOG_ERR allows specifying the return value
-* EC_CHECK_CUSTOM allows custom actions
+* *ZERO* - the value equals 0
+* *NULL* - the value equals NULL
+* *NEG1* - the value equals -1
 
-The macros EC_CHECK* unconditionally jump to a cleanup label where the
-necessary cleanup can be done alongside controlling the return value.
-EC_CHECK_CUSTOM doesn't do that, so an extra "goto EC_CLEANUP" may be
-performed as appropriate.
+To explain the loggging logic of each error checking macro flavor,
+using the *ZERO* test as an example:
+
+* EC\_ZERO checks that the value equals 0 with a standard log message
+* EC\_ZERO\_LOG additionally logs the stringified function call
+* EC\_ZERO\_LOGSTR allows specifying an arbitrary string to log
+* EC\_ZERO\_LOG\_ERR allows specifying the return value
+
+The macros EC_CHECK* unconditionally jump to the cleanup label defined by the *EC_CLEANUP* macro
+where the necessary cleanup can be done alongside validating the return value.
 
 Examples
 --------
@@ -86,7 +90,7 @@ static int func(const char *name) {
 
     return ret;
 
-    cleanup:
+cleanup:
     ...
     return ret;
 }
