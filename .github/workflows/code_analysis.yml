@@ -23,21 +23,24 @@ jobs:
       (github.event_name == 'push' && github.actor != 'dependabot[bot]' && github.actor != 'dependabot') || (github.event_name
       == 'pull_request' && !github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' && github.actor
       != 'dependabot')
+    container:
+      image: ubuntu:25.10
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           fetch-depth: 0
-      - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install --assume-yes --no-install-recommends \
+          apt-get update
+          apt-get install --assume-yes --no-install-recommends \
               bison \
+              ca-certificates \
               cracklib-runtime \
+              curl \
               flex \
+              gcc \
               libacl1-dev \
               libavahi-client-dev \
               libcrack2-dev \
@@ -59,7 +62,10 @@ jobs:
               meson \
               ninja-build \
               systemtap-sdt-dev \
-              tracker-miner-fs
+              tracker-miner-fs \
+              unzip
+      - name: Install Build Wrapper
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
       - name: Run build wrapper
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
