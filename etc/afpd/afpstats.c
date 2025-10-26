@@ -96,10 +96,22 @@ static void on_name_lost(GDBusConnection *connection _U_,
     LOG(log_debug, logtype_afpd, "[afpstats] on_name_lost(): %s", name);
 }
 
+static void on_bus_got(GObject *source _U_, GAsyncResult *res, gpointer user_data _U_)
+{
+    GError *error = NULL;
+    bus = g_bus_get_finish(res, &error);
+    if (error) {
+        LOG(log_error, logtype_afpd, "[afpstats] Failed to get bus: %s", error->message);
+        g_error_free(error);
+        g_main_loop_quit(thread_loop);
+        return;
+    }
+    /* Continue with registration... */
+}
+
 static gpointer afpstats_thread(gpointer _data _U_)
 {
     EC_INIT;
-    GDBusConnection *bus = NULL;
     GError *error = NULL;
     GMainContext *ctxt = NULL;
     GBusNameOwnerFlags request_name_result;
@@ -118,13 +130,7 @@ static gpointer afpstats_thread(gpointer _data _U_)
     thread_loop = g_main_loop_new(ctxt, FALSE);
     EC_NULL_LOG(thread_loop);
 
-    EC_NULL_LOG_ERR(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error),
-                    ({ if (error) {
-                        LOG(log_error, logtype_afpd, "[afpstats] Failed to connect to system bus: %s",
-                            error->message);
-                        g_error_free(error);
-                    }
-                      ret = -1; }));
+    g_bus_get(G_BUS_TYPE_SYSTEM, NULL, on_bus_got, NULL);
 
     static const gchar introspection_xml[] =
         "<node>"
