@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2024-2025 Daniel Markstedt <daniel@mindani.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,12 +33,20 @@
 
 #include "afpstats_obj.h"
 
-/*
- * Beware: this struct is accessed and modified from the main thread
- * and from this thread, thus be careful to lock and unlock the mutex.
+/*!
+ * Thread state management structure
  */
+typedef struct {
+    GMainLoop *loop;
+    GMainContext *context;
+    GError *init_error;
+    gboolean initialized;
+    pthread_mutex_t lock;
+} afpstats_thread_state_t;
+
 static server_child_t *childs;
 static GDBusNodeInfo *introspection_data = NULL;
+static afpstats_thread_state_t *thread_state = NULL;
 
 static void handle_method_call(GDBusConnection *connection _U_,
                                const gchar           *sender _U_,
@@ -77,47 +86,88 @@ static void on_bus_acquired(GDBusConnection *connection _U_,
                             const gchar     *name,
                             gpointer         user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] on_bus_acquired(): %s", name);
+    LOG(log_debug, logtype_afpd, "on_bus_acquired: %s", name);
 }
 
 static void on_name_acquired(GDBusConnection *connection _U_,
                              const gchar     *name,
                              gpointer         user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] on_name_acquired(): %s", name);
+    LOG(log_debug, logtype_afpd, "on_name_acquired: %s", name);
 }
 
 static void on_name_lost(GDBusConnection *connection _U_,
                          const gchar     *name,
                          gpointer         user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] on_name_lost(): %s", name);
+    LOG(log_debug, logtype_afpd, "on_name_lost: %s", name);
 }
 
-static gpointer afpstats_thread(gpointer _data _U_)
+static gpointer afpstats_thread(gpointer _data)
 {
-    GDBusConnection *bus;
+    afpstats_thread_state_t *state = (afpstats_thread_state_t *)_data;
+    GDBusConnection *bus = NULL;
     GError *error = NULL;
-    GMainContext *ctxt;
-    GMainLoop *thread_loop;
-    GBusNameOwnerFlags request_name_result;
-    guint registration_id;
+    GBusNameOwnerFlags request_name_result = 0;
+    guint registration_id = 0;
     sigset_t sigs;
-    /* Block all signals in this thread */
-    sigfillset(&sigs);
-    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-    ctxt = g_main_context_new();
-    g_main_context_push_thread_default(ctxt);
-    thread_loop = g_main_loop_new(ctxt, FALSE);
+    AFPStatsObj *obj = NULL;
 
-    if (!(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM,
-                               NULL,
-                               &error))) {
-        LOG(log_error, logtype_afpd, "Couldn't connect to system bus: %s",
-            error->message);
+    if (!state) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Invalid thread state");
         return NULL;
     }
 
+    /* Block all signals in this thread */
+    sigfillset(&sigs);
+    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
+
+    /* Create and configure GLib main context */
+    state->context = g_main_context_new();
+    if (!state->context) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Failed to create GMainContext");
+        state->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED,
+                                                "Failed to create GMainContext");
+        pthread_mutex_lock(&state->lock);
+        state->initialized = FALSE;
+        pthread_mutex_unlock(&state->lock);
+        return NULL;
+    }
+
+    g_main_context_push_thread_default(state->context);
+
+    state->loop = g_main_loop_new(state->context, FALSE);
+    if (!state->loop) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Failed to create GMainLoop");
+        state->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED,
+                                                "Failed to create GMainLoop");
+        g_main_context_pop_thread_default(state->context);
+        g_main_context_unref(state->context);
+        state->context = NULL;
+        pthread_mutex_lock(&state->lock);
+        state->initialized = FALSE;
+        pthread_mutex_unlock(&state->lock);
+        return NULL;
+    }
+
+    /* Connect to system bus */
+    bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM, NULL, &error);
+    if (!bus) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Couldn't connect to system bus: %s",
+            error ? error->message : "Unknown error");
+        state->init_error = error;
+        g_main_loop_unref(state->loop);
+        state->loop = NULL;
+        g_main_context_pop_thread_default(state->context);
+        g_main_context_unref(state->context);
+        state->context = NULL;
+        pthread_mutex_lock(&state->lock);
+        state->initialized = FALSE;
+        pthread_mutex_unlock(&state->lock);
+        return NULL;
+    }
+
+    /* Parse and register D-Bus interface */
     static const gchar introspection_xml[] =
         "<node>"
         "  <interface name='org.netatalk.AFPStats'>"
@@ -126,9 +176,46 @@ static gpointer afpstats_thread(gpointer _data _U_)
         "    </method>"
         "  </interface>"
         "</node>";
-    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-    g_assert(introspection_data != NULL);
-    AFPStatsObj *obj = g_object_new(AFPSTATS_TYPE_OBJECT, NULL);
+
+    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, &error);
+    if (!introspection_data) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Failed to parse D-Bus introspection: %s",
+            error ? error->message : "Unknown error");
+        state->init_error = error;
+        g_object_unref(bus);
+        g_main_loop_unref(state->loop);
+        state->loop = NULL;
+        g_main_context_pop_thread_default(state->context);
+        g_main_context_unref(state->context);
+        state->context = NULL;
+        pthread_mutex_lock(&state->lock);
+        state->initialized = FALSE;
+        pthread_mutex_unlock(&state->lock);
+        return NULL;
+    }
+
+    /* Create AFPStats object */
+    obj = g_object_new(AFPSTATS_TYPE_OBJECT, NULL);
+    if (!obj) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Failed to create AFPStatsObj");
+        state->init_error = g_error_new_literal(G_IO_ERROR, G_IO_ERROR_FAILED,
+                                                "Failed to create AFPStatsObj");
+        g_dbus_node_info_unref(introspection_data);
+        introspection_data = NULL;
+        g_object_unref(bus);
+        g_main_loop_unref(state->loop);
+        state->loop = NULL;
+        g_main_context_pop_thread_default(state->context);
+        g_main_context_unref(state->context);
+        state->context = NULL;
+        pthread_mutex_lock(&state->lock);
+        state->initialized = FALSE;
+        pthread_mutex_unlock(&state->lock);
+        return NULL;
+    }
+
+    /* Register D-Bus object */
+    error = NULL;
     registration_id = g_dbus_connection_register_object(bus,
                       "/org/netatalk/AFPStats",
                       introspection_data->interfaces[0],
@@ -136,7 +223,27 @@ static gpointer afpstats_thread(gpointer _data _U_)
                       g_object_ref(obj),
                       g_object_unref,
                       &error);
-    g_assert(registration_id > 0);
+    if (registration_id == 0) {
+        LOG(log_error, logtype_afpd, "afpstats_thread: Failed to register D-Bus object: %s",
+            error ? error->message : "Unknown error");
+        state->init_error = error;
+        g_object_unref(obj);
+        g_dbus_node_info_unref(introspection_data);
+        introspection_data = NULL;
+        g_object_unref(bus);
+        g_main_loop_unref(state->loop);
+        state->loop = NULL;
+        g_main_context_pop_thread_default(state->context);
+        g_main_context_unref(state->context);
+        state->context = NULL;
+        pthread_mutex_lock(&state->lock);
+        state->initialized = FALSE;
+        pthread_mutex_unlock(&state->lock);
+        return NULL;
+    }
+
+    /* Request D-Bus name */
+    error = NULL;
     request_name_result = g_bus_own_name(G_BUS_TYPE_SYSTEM,
                                          "org.netatalk.AFPStats",
                                          G_BUS_NAME_OWNER_FLAGS_NONE,
@@ -145,14 +252,56 @@ static gpointer afpstats_thread(gpointer _data _U_)
                                          on_name_lost,
                                          NULL,
                                          NULL);
-    g_main_loop_run(thread_loop);
-    g_bus_unown_name(request_name_result);
-    g_dbus_connection_unregister_object(bus, registration_id);
-    g_dbus_node_info_unref(introspection_data);
-    g_object_unref(obj);
-    g_main_context_pop_thread_default(ctxt);
-    g_main_context_unref(ctxt);
-    return thread_loop;
+
+    LOG(log_info, logtype_afpd, "afpstats_thread: Thread initialized successfully");
+
+    /* Signal successful initialization */
+    pthread_mutex_lock(&state->lock);
+    state->initialized = TRUE;
+    pthread_mutex_unlock(&state->lock);
+
+    /* Run main loop */
+    g_main_loop_run(state->loop);
+
+    LOG(log_debug, logtype_afpd, "afpstats_thread: Main loop exited, cleaning up");
+
+    /* Cleanup */
+    if (request_name_result > 0) {
+        g_bus_unown_name(request_name_result);
+    }
+
+    if (registration_id > 0) {
+        g_dbus_connection_unregister_object(bus, registration_id);
+    }
+
+    if (introspection_data) {
+        g_dbus_node_info_unref(introspection_data);
+        introspection_data = NULL;
+    }
+
+    if (obj) {
+        g_object_unref(obj);
+    }
+
+    if (bus) {
+        g_object_unref(bus);
+    }
+
+    if (state->loop) {
+        g_main_loop_unref(state->loop);
+        state->loop = NULL;
+    }
+
+    g_main_context_pop_thread_default(state->context);
+
+    if (state->context) {
+        g_main_context_unref(state->context);
+        state->context = NULL;
+    }
+
+    LOG(log_debug, logtype_afpd, "afpstats_thread: Thread cleanup complete");
+
+    return NULL;
 }
 
 static void my_glib_log(const gchar *log_domain,
@@ -160,25 +309,105 @@ static void my_glib_log(const gchar *log_domain,
                         const gchar *message,
                         gpointer user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] %s: %s", log_domain, message);
+    LOG(log_debug, logtype_afpd, "my_glib_log: %s: %s", log_domain, message);
 }
 
 server_child_t *afpstats_get_and_lock_childs(void)
 {
-    pthread_mutex_lock(&childs->servch_lock);
+    if (childs) {
+        pthread_mutex_lock(&childs->servch_lock);
+    }
     return childs;
 }
 
 void afpstats_unlock_childs(void)
 {
-    pthread_mutex_unlock(&childs->servch_lock);
+    if (childs) {
+        pthread_mutex_unlock(&childs->servch_lock);
+    }
 }
 
 int afpstats_init(server_child_t *childs_in)
 {
     GThread *thread;
+    GError *error = NULL;
+
+    if (!childs_in) {
+        LOG(log_error, logtype_afpd, "afpstats_init: Invalid server_child_t pointer");
+        return -1;
+    }
+
+    /* Allocate thread state */
+    thread_state = g_malloc0(sizeof(afpstats_thread_state_t));
+    if (!thread_state) {
+        LOG(log_error, logtype_afpd, "afpstats_init: Failed to allocate thread state");
+        return -1;
+    }
+
+    pthread_mutex_init(&thread_state->lock, NULL);
+    thread_state->initialized = FALSE;
+    thread_state->init_error = NULL;
+
     childs = childs_in;
     (void)g_log_set_default_handler(my_glib_log, NULL);
-    thread = g_thread_new("afpstats", afpstats_thread, NULL);
+
+    /* Create thread */
+    thread = g_thread_new("afpstats", afpstats_thread, thread_state);
+    if (!thread) {
+        LOG(log_error, logtype_afpd, "afpstats_init: Failed to create afpstats thread");
+        pthread_mutex_destroy(&thread_state->lock);
+        g_free(thread_state);
+        thread_state = NULL;
+        return -1;
+    }
+
+    /* Give thread time to initialize */
+    g_usleep(100000);
+
+    /* Check initialization status */
+    pthread_mutex_lock(&thread_state->lock);
+    if (!thread_state->initialized && thread_state->init_error) {
+        LOG(log_error, logtype_afpd, "afpstats_init: Thread initialization failed: %s",
+            thread_state->init_error->message);
+        g_clear_error(&thread_state->init_error);
+        pthread_mutex_unlock(&thread_state->lock);
+        pthread_mutex_destroy(&thread_state->lock);
+        g_free(thread_state);
+        thread_state = NULL;
+        return -1;
+    }
+    pthread_mutex_unlock(&thread_state->lock);
+
+    LOG(log_info, logtype_afpd, "afpstats_init: afpstats module initialized successfully");
+    g_thread_unref(thread);
+
     return 0;
+}
+
+/*!
+ * @brief Gracefully shutdown the afpstats thread
+ * @note Call this during daemon shutdown
+ */
+void afpstats_shutdown(void)
+{
+    if (!thread_state) {
+        return;
+    }
+
+    LOG(log_debug, logtype_afpd, "afpstats_shutdown: Initiating graceful shutdown");
+
+    pthread_mutex_lock(&thread_state->lock);
+    if (thread_state->loop) {
+        g_main_loop_quit(thread_state->loop);
+    }
+    pthread_mutex_unlock(&thread_state->lock);
+
+    /* Give thread time to shut down cleanly */
+    g_usleep(500000);
+
+    pthread_mutex_destroy(&thread_state->lock);
+    g_free(thread_state);
+    thread_state = NULL;
+
+    LOG(log_debug, logtype_afpd, "afpstats_shutdown: Shutdown complete");
 }

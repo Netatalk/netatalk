@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2025 Daniel Markstedt <daniel@mindani.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,6 +19,7 @@
 #include <atalk/server_child.h>
 
 extern int afpstats_init(server_child_t *);
+extern void afpstats_shutdown(void);
 extern server_child_t *afpstats_get_and_lock_childs(void);
 extern void afpstats_unlock_childs(void);
 #endif
