@@ -1279,6 +1279,9 @@ gio = dependency('gio-2.0', required: false)
 
 if not enable_afpstats
     have_afpstats = false
+elif host_os == 'darwin'
+    have_afpstats = false
+    warning('afpstats over D-Bus is not supported on Darwin/macOS')
 else
     have_afpstats = dbus.found() and glib.found() and gobject.found() and gio.found()
     if have_afpstats
