@@ -178,8 +178,20 @@ void afpstats_unlock_childs(void)
 int afpstats_init(server_child_t *childs_in)
 {
     GThread *thread;
+
+    if (!childs_in) {
+        LOG(log_error, logtype_afpd, "afpstats_init: NULL server_child_t pointer");
+        return -1;
+    }
+
     childs = childs_in;
     (void)g_log_set_default_handler(my_glib_log, NULL);
     thread = g_thread_new("afpstats", afpstats_thread, NULL);
+
+    if (!thread) {
+        LOG(log_error, logtype_afpd, "afpstats_init: Failed to create afpstats thread");
+        return -1;
+    }
+
     return 0;
 }
