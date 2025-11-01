@@ -77,21 +77,21 @@ static void on_bus_acquired(GDBusConnection *connection _U_,
                             const gchar     *name,
                             gpointer         user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] on_bus_acquired(): %s", name);
+    LOG(log_debug, logtype_afpd, "on_bus_acquired: %s", name);
 }
 
 static void on_name_acquired(GDBusConnection *connection _U_,
                              const gchar     *name,
                              gpointer         user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] on_name_acquired(): %s", name);
+    LOG(log_debug, logtype_afpd, "on_name_acquired: %s", name);
 }
 
 static void on_name_lost(GDBusConnection *connection _U_,
                          const gchar     *name,
                          gpointer         user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] on_name_lost(): %s", name);
+    LOG(log_debug, logtype_afpd, "on_name_lost: %s", name);
 }
 
 static gpointer afpstats_thread(gpointer _data _U_)
@@ -113,7 +113,8 @@ static gpointer afpstats_thread(gpointer _data _U_)
     if (!(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM,
                                NULL,
                                &error))) {
-        LOG(log_error, logtype_afpd, "Couldn't connect to system bus: %s",
+        LOG(log_error, logtype_afpd,
+            "afpstats_thread: Couldn't connect to system bus: %s",
             error->message);
         return NULL;
     }
@@ -160,7 +161,7 @@ static void my_glib_log(const gchar *log_domain,
                         const gchar *message,
                         gpointer user_data _U_)
 {
-    LOG(log_debug, logtype_afpd, "[afpstats] %s: %s", log_domain, message);
+    LOG(log_debug, logtype_afpd, "%s: %s", log_domain, message);
 }
 
 server_child_t *afpstats_get_and_lock_childs(void)
