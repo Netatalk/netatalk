@@ -1,8 +1,8 @@
 [wrap-file]
-directory = bstring-1.0.2
-source_url = https://github.com/msteinert/bstring/releases/download/v1.0.2/bstring-1.0.2.tar.xz
-source_filename = bstring-1.0.2.tar.xz
-source_hash = 9d2d207385edeb39935c53f55da57501936b67939998f3e5c5ae91cb8063fbd0
+directory = bstring-1.0.3
+source_url = https://github.com/msteinert/bstring/releases/download/v1.0.3/bstring-1.0.3.tar.xz
+source_filename = bstring-1.0.3.tar.xz
+source_hash = 90db08fd33e9494aea3f00f9b71cdcf3114c65457ee35558e8274df6ebac43f3
 
 [provide]
 bstring = bstring_dep
