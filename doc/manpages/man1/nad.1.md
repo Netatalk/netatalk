@@ -16,12 +16,16 @@ directories or files in **.AppleDouble** directories) and the CNID
 databases are updated as appropriate when files in a shared Netatalk
 volume are modified.
 
-This is preferable over using the equivalent system file operation commands
-on files in a Netatalk shared volume to preserve the integrity of Mac OS
-metadata and accuracy of the CNID database.
+Using **nad** is preferable over the operating system's native file operation commands
+on files and directories in a Netatalk shared volume, because it preserves the integrity
+of Mac OS metadata and accuracy of the CNID database.
 
 It depends on Netatalk running on the host system and the AFP volume being
 shared by Netatalk.
+
+Only users with appropriate permissions to access the files and directories
+can use **nad** to manipulate them.
+It is sensitive to afp.conf settings such as *valid users* and *invalid users*.
 
 # Available Commands
 
@@ -290,6 +294,26 @@ It takes one option:
 
 > Use path to the shared volume to search rather than the current working
 directory.
+
+# Examples
+
+List files in a shared AFP volume:
+
+    $ nad ls -al /srv/afpshare
+    -------s-v- ------ --- ---- ----          35   TheVolumeSettingsFolder
+    ---------v- ------ --- ---- ----          36   Network Trash Folder
+    ----ic-s--- ------ gre PNGf GKON          39   Picture 1.png
+    ----i---b-- ------ --- APPL SBMC          40   AppleShare IP Browser
+    ----ic----- ------ --- PNGf GKON          41   Picture 3.png
+
+The first column shows the Finder flags,
+the second column shows the AFP attributes,
+the third column shows the color label,
+the fourth and fifth columns are the file type and creator,
+the sixth column is the CNID from the AppleDouble data,
+and the last column is the file name.
+
+Note that the sort order of the output is by CNID, not alphabetically.
 
 # See also
 
