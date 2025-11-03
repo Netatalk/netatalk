@@ -604,9 +604,9 @@ static char *volxlate(const AFPObj *obj,
 }
 
 /*!
- * @brief check access list
+ * @brief check user access list for volume
  *
- * this function wants a string consisting of names seperated by comma
+ * This function wants a string consisting of names seperated by comma
  * or space. Names may be quoted within a pair of quotes. Groups are
  * denoted by a leading @ symbol.
  *
@@ -615,7 +615,9 @@ static char *volxlate(const AFPObj *obj,
  * user1 user2, user3, @group1, @group2, @group3, "user name1", "@group name1"
  * @endcode
  *
- * A NULL argument allows everybody to have access.
+ * @param[in] obj   AFPObj containing user and group info
+ * @param[in] args  access list string; NULL allows everybody to have access
+ * @param[in] name  user name to check
  *
  * @returns -1: no list
  * @returns 0: list exists, but name isn't in it
@@ -661,6 +663,20 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief check host access list for volume
+ *
+ * This function wants a string consisting of ip addresses or
+ * networks in CIDR notation seperated by comma or space.
+ *
+ * @param[in] obj     AFPObj containing client info
+ * @param[in] volname volume name (not used)
+ * @param[in] args    access list string; NULL allows all hosts to have access
+ *
+ * @returns -1: no list
+ * @returns 0: list exists, but host isn't in it
+ * @returns 1: host is in list
+ */
 static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
                          const char *args)
 {
@@ -972,25 +988,44 @@ static struct vol *creatvol(AFPObj *obj,
      * Check allow/deny lists:
      * allow -> either no list (-1), or in list (1)
      * deny -> either no list (-1), or not in list (0)
+     * When root, always allow user based access
      */
     if (pwd) {
-        if (accessvol(obj, getoption_str(obj->iniconfig, section, "invalid users",
-                                         preset, NULL), pwd->pw_name) == 1) {
-            goto EC_CLEANUP;
-        }
+        if (pwd->pw_uid == 0) {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: root user, skipping access checks for volume \"%s\"",
+                section);
+        } else {
+            if (accessvol(obj, getoption_str(obj->iniconfig, section, "invalid users",
+                                             preset, NULL), pwd->pw_name) == 1) {
+                LOG(log_debug, logtype_afpd,
+                    "creatvol: user \"%s\" is in invalid users list for volume \"%s\"",
+                    pwd->pw_name, section);
+                goto EC_CLEANUP;
+            }
 
-        if (accessvol(obj, getoption_str(obj->iniconfig, section, "valid users", preset,
-                                         NULL), pwd->pw_name) == 0) {
-            goto EC_CLEANUP;
+            if (accessvol(obj, getoption_str(obj->iniconfig, section, "valid users", preset,
+                                             NULL), pwd->pw_name) == 0) {
+                LOG(log_debug, logtype_afpd,
+                    "creatvol: user \"%s\" is NOT in valid users list for volume \"%s\"",
+                    pwd->pw_name, section);
+                goto EC_CLEANUP;
+            }
         }
 
         if (hostaccessvol(obj, section, getoption_str(obj->iniconfig, section,
                           "hosts deny", preset, NULL)) == 1) {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: host is in hosts deny list for volume \"%s\"",
+                section);
             goto EC_CLEANUP;
         }
 
         if (hostaccessvol(obj, section, getoption_str(obj->iniconfig, section,
                           "hosts allow", preset, NULL)) == 0) {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: host is NOT in hosts allow list for volume \"%s\"",
+                section);
             goto EC_CLEANUP;
         }
     }
