@@ -185,7 +185,7 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
         }
 
         if (openvol(obj, argv[0], &svolume) != 0) {
-            SLOG("Error opening CNID database for destination \"%s\": ", argv[0]);
+            SLOG("Error: could not open volume for destination \"%s\": ", argv[0]);
             return 1;
         }
 

@@ -34,6 +34,13 @@
 
 #include "nad.h"
 
+/* Workaround for mismatched gid_t type and getgrouplist() prototype on macOS */
+#ifdef __APPLE__
+#define my_gid_type int
+#else
+#define my_gid_type gid_t
+#endif
+
 typedef enum {
     CMD_UNKNOWN = -1,
     CMD_LS,
@@ -102,7 +109,31 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    setuplog("default:note", "/dev/tty", true);
+    obj.uid = getuid();
+    const struct passwd *pwd = getpwuid(obj.uid);
+
+    if (pwd) {
+        int ngroups = 0;
+        my_gid_type *groups = NULL;
+        getgrouplist(pwd->pw_name, pwd->pw_gid, NULL, &ngroups);
+        groups = malloc(sizeof(my_gid_type) * ngroups);
+
+        if (groups) {
+            if (getgrouplist(pwd->pw_name, pwd->pw_gid, groups, &ngroups) >= 0) {
+                obj.groups = malloc(sizeof(my_gid_type) * ngroups);
+
+                if (obj.groups) {
+                    memcpy(obj.groups, groups, sizeof(my_gid_type) * ngroups);
+                    obj.ngroups = ngroups;
+                }
+            }
+
+            free(groups);
+        }
+    }
+
+    setuplog(obj.options.logconfig, obj.options.logfile,
+             obj.options.log_us_timestamp);
 
     if (load_volumes(&obj, LV_DEFAULT) != 0) {
         return 1;

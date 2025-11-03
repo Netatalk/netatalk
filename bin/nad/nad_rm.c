@@ -177,6 +177,12 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
         /* Load .volinfo file for source */
         openvol(obj, argv[i], &volume);
 
+        if (volume.vol == NULL) {
+            SLOG("Error: could not open volume for %s (not removed)", argv[i]);
+            badrm = rval = 1;
+            continue;
+        }
+
         if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) == -1) {
             if (alarmed) {
                 SLOG("...break");
@@ -199,6 +205,12 @@ static int rm(const char *path,
     cnid_t cnid;
 
     if (alarmed) {
+        return -1;
+    }
+
+    if (volume.vol == NULL) {
+        SLOG("Error: could not open volume for %s (not removed)", path);
+        badrm = rval = 1;
         return -1;
     }
 
