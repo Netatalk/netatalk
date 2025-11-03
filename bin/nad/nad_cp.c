@@ -363,7 +363,18 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(obj, argv[i], &svolume);
+        if (openvol(obj, argv[i], &svolume) != 0 || svolume.vol == NULL) {
+            SLOG("Error: could not open source volume for %s", argv[i]);
+            badcp = rval = 1;
+            continue;
+        }
+
+        if (openvol(obj, to.p_path, &dvolume) != 0 || dvolume.vol == NULL) {
+            SLOG("Error: could not open destination volume for %s", to.p_path);
+            closevol(&svolume);
+            badcp = rval = 1;
+            continue;
+        }
 
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             if (alarmed) {
@@ -375,6 +386,9 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
             closevol(&svolume);
             closevol(&dvolume);
         }
+
+        closevol(&svolume);
+        closevol(&dvolume);
     }
 
     return rval;
