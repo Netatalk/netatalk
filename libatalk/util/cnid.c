@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2025 Daniel Markstedt <daniel@markstedt.net>
  * Copyright (c) 2009 Frank Lahm <franklahm@gmail.com>
  * Copyright (c) 1991, 1993, 1994
  * The Regents of the University of California.  All rights reserved.
@@ -211,4 +212,34 @@ EC_CLEANUP:
     }
 
     return cnid;
+}
+
+/*! Return allocated UUID string with dashes stripped */
+char *uuid_strip_dashes(const char *uuid)
+{
+    char stripped[33];
+    const char *p = uuid;
+    int i = 0;
+
+    if (!uuid) {
+        return NULL;
+    }
+
+    while (*p && i < 32) {
+        if (*p != '-') {
+            stripped[i++] = *p;
+        }
+
+        p++;
+    }
+
+    stripped[sizeof stripped - 1] = '\0';
+    char *result = malloc(i + 1);
+
+    if (result) {
+        strncpy(result, stripped, i + 1);
+        result[i] = '\0';
+    }
+
+    return result;
 }
