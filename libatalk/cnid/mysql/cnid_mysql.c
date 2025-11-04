@@ -808,13 +808,99 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-
-int cnid_mysql_find(struct _cnid_db *cdb _U_, const char *name,
-                    size_t namelen _U_, void *buffer _U_, size_t buflen _U_)
+/*!
+ * Find a CNID by name
+ */
+int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
+                    void *buffer, size_t buflen)
 {
-    LOG(log_error, logtype_cnid,
-        "cnid_mysql_find(\"%s\"): not supported with MySQL CNID backend", name);
-    return -1;
+    EC_INIT;
+    CNID_mysql_private *db;
+    char *sql = NULL;
+    char *namelike = NULL;
+    MYSQL_RES *result = NULL;
+    MYSQL_ROW row;
+    int count = 0;
+    cnid_t *cnids = (cnid_t *)buffer;
+    unsigned long max_results = buflen / sizeof(cnid_t);
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_mysql_find: called with name='%s', namelen=%zu, buflen=%zu", name,
+        namelen, buflen);
+
+    if (!cdb || !(db = cdb->cnid_db_private) || !name) {
+        LOG(log_error, logtype_cnid,
+            "cnid_mysql_find: Parameter error (cdb=%p, db=%p, name=%p)", cdb, db, name);
+        errno = CNID_ERR_PARAM;
+        EC_FAIL;
+    }
+
+    if (namelen > MAXPATHLEN) {
+        LOG(log_error, logtype_cnid,
+            "cnid_mysql_find: Path name is too long (namelen=%zu)", namelen);
+        errno = CNID_ERR_PATH;
+        EC_FAIL;
+    }
+
+    EC_NEG1(asprintf(&namelike, "%%%s%%", name));
+    LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'", namelike);
+    EC_NEG1(asprintf(&sql, "SELECT Id FROM `%s` WHERE Name LIKE '%s' ORDER BY Id",
+                     db->cnid_mysql_voluuid_str, namelike));
+    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
+
+    if (cnid_mysql_execute(db->cnid_mysql_con, sql) != 0) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: SQL execution failed: %s",
+            mysql_error(db->cnid_mysql_con));
+        EC_FAIL;
+    }
+
+    free(sql);
+    sql = NULL;
+    result = mysql_store_result(db->cnid_mysql_con);
+
+    if (!result) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: mysql_store_result failed: %s",
+            mysql_error(db->cnid_mysql_con));
+        EC_FAIL;
+    }
+
+    LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: mysql_num_rows=%lu",
+        (unsigned long)mysql_num_rows(result));
+
+    while ((row = mysql_fetch_row(result)) && count < max_results) {
+        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: row[%d] = '%s'", count,
+            row[0]);
+        cnids[count] = htonl(atoi(row[0]));
+        count++;
+    }
+
+    if (mysql_errno(db->cnid_mysql_con) != 0) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: MySQL error after fetch: %s",
+            mysql_error(db->cnid_mysql_con));
+        EC_FAIL;
+    }
+
+    LOG(log_debug, logtype_cnid, "cnid_mysql_find: returning %d matches", count);
+EC_CLEANUP:
+
+    if (result) {
+        mysql_free_result(result);
+    }
+
+    if (namelike) {
+        free(namelike);
+    }
+
+    if (sql) {
+        free(sql);
+    }
+
+    if (ret != 0) {
+        count = -1;
+        LOG(log_debug, logtype_cnid,
+            "cnid_mysql_find: returning error, count set to -1");
+    }
+
+    return count;
 }
 
 cnid_t cnid_mysql_rebuild_add(struct _cnid_db *cdb _U_,
