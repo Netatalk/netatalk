@@ -315,6 +315,13 @@ and the last column is the file name.
 
 Note that the sort order of the output is by CNID, not alphabetically.
 
+Find files named "Report" in the shared AFP volume at /srv/afpshare:
+
+    $ nad find -v /srv/afpshare Report
+    /srv/afpshare/Documents/2025/Report January 2025.doc
+    /srv/afpshare/Documents/2024/Report December 2024.doc
+    /srv/afpshare/Documents/Report Template.doc
+
 # See also
 
 dbd(1), addump(1)
