@@ -237,6 +237,7 @@ extern int ochmod(char *path, mode_t mode, const struct stat *st, int options);
 extern bstring rel_path_in_vol(const char *path, const char *volpath);
 extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath,
                             const char *path, cnid_t *did);
+extern char *uuid_strip_dashes(const char *uuid);
 
 /******************************************************************
  * cnid.c

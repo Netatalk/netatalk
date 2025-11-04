@@ -1220,24 +1220,6 @@ static struct _cnid_db *cnid_sqlite_new(struct vol *vol)
     return cdb;
 }
 
-/*! Return allocated UUID string with dashes stripped */
-static char *uuid_strip_dashes(const char *uuid)
-{
-    static char stripped[33];
-    int i = 0;
-
-    while (*uuid && i < 32) {
-        if (*uuid != '-') {
-            stripped[i++] = *uuid;
-        }
-
-        uuid++;
-    }
-
-    stripped[i] = '\0';
-    return strdup(stripped);
-}
-
 /* ---------------------- */
 struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 {
