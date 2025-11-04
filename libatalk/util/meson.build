@@ -9,6 +9,7 @@ util_sources = [
     'locking.c',
     'logger.c',
     'netatalk_conf.c',
+    'pathconv.c',
     'queue.c',
     'server_child.c',
     'server_ipc.c',
