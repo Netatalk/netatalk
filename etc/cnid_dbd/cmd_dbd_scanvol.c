@@ -65,48 +65,6 @@ static struct cnid_dbd_rply rply _U_;
 static jmp_buf jmp;
 static char pname[MAXPATHLEN] = "../";
 
-/*
-  Taken form afpd/desktop.c
-*/
-static char *utompath(char *upath)
-{
-    /* for convert_charset dest_len parameter +2 */
-    static char  mpath[MAXPATHLEN + 2];
-    char         *m, *u;
-    uint16_t     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
-    size_t       outlen;
-
-    if (!upath) {
-        return NULL;
-    }
-
-    m = mpath;
-    u = upath;
-    outlen = strlen(upath);
-
-    if (vol->v_casefold & AFPVOL_UTOMUPPER) {
-        flags |= CONV_TOUPPER;
-    } else if (vol->v_casefold & AFPVOL_UTOMLOWER) {
-        flags |= CONV_TOLOWER;
-    }
-
-    if (vol->v_flags & AFPVOL_EILSEQ) {
-        flags |= CONV__EILSEQ;
-    }
-
-    /* convert charsets */
-    if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
-                                 CH_UTF8_MAC,
-                                 vol->v_maccharset,
-                                 u, outlen, mpath, MAXPATHLEN, &flags))) {
-        dbd_log(LOGSTD, "Conversion from %s to %s for %s failed.",
-                vol->v_volcodepage, vol->v_maccodepage, u);
-        return NULL;
-    }
-
-    return m;
-}
-
 /*!
  * @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
  * @returns pointer to name or NULL.
@@ -233,7 +191,7 @@ static int check_adfile(const char *fname, const struct stat *st,
         }
 
         /* Set name in ad-file */
-        ad_setname(&ad, utompath((char *)fname));
+        ad_setname(&ad, convert_utf8_to_mac(vol, fname));
         ad_flush(&ad);
         ad_close(&ad, ADFLAGS_HF);
         fd = open(adname, O_RDWR | O_NOFOLLOW);
@@ -461,7 +419,7 @@ static int check_addir(int volroot _U_)
         }
 
         /* Get basename of cwd from cwdbuf */
-        mname = utompath(strrchr(cwdbuf, '/') + 1);
+        mname = convert_utf8_to_mac(vol, strrchr(cwdbuf, '/') + 1);
         /* Update name in ad file */
         ad_setname(&ad, mname);
         ad_flush(&ad);

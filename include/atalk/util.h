@@ -240,10 +240,16 @@ extern cnid_t cnid_for_path(struct _cnid_db *cdb, const char *volpath,
 extern char *uuid_strip_dashes(const char *uuid);
 
 /******************************************************************
- * cnid.c
+ * gettok.c
  *****************************************************************/
 
 extern void initline(int, char *);
 extern int  parseline(int, char *);
+
+/******************************************************************
+ * pathconv.c
+ *****************************************************************/
+
+extern char *convert_utf8_to_mac(const struct vol *vol, const char *upath);
 
 #endif  /* _ATALK_UTIL_H */

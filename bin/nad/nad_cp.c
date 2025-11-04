@@ -604,7 +604,7 @@ static int copy(const char *path,
             ad_setid(&ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
-                ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
+                ad_setname(&ad, convert_utf8_to_mac(dvolume.vol, basename(to.p_path)));
             }
 
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);
@@ -681,7 +681,7 @@ static int copy(const char *path,
             ad_setid(&ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
 
             if (dvolume.vol->v_adouble == AD_VERSION2) {
-                ad_setname(&ad, utompath(dvolume.vol, basename(to.p_path)));
+                ad_setname(&ad, convert_utf8_to_mac(dvolume.vol, basename(to.p_path)));
             }
 
             ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, (uint32_t) st.st_mtime);

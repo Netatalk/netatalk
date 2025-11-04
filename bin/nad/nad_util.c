@@ -147,50 +147,6 @@ void closevol(afpvol_t *vol)
     memset(vol, 0, sizeof(afpvol_t));
 }
 
-/*
-  Taken from afpd/desktop.c
-*/
-char *utompath(const struct vol *vol, const char *upath)
-{
-    /* for convert_charset dest_len parameter +2 */
-    static char  mpath[MAXPATHLEN + 2];
-    char         *m;
-    const char   *u;
-    uint16_t     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
-    size_t       outlen;
-
-    if (!upath) {
-        return NULL;
-    }
-
-    m = mpath;
-    u = upath;
-    outlen = strlen(upath);
-
-    if (vol->v_casefold & AFPVOL_UTOMUPPER) {
-        flags |= CONV_TOUPPER;
-    } else if (vol->v_casefold & AFPVOL_UTOMLOWER) {
-        flags |= CONV_TOLOWER;
-    }
-
-    if (vol->v_flags & AFPVOL_EILSEQ) {
-        flags |= CONV__EILSEQ;
-    }
-
-    /* convert charsets */
-    if ((size_t) -1 == convert_charset(vol->v_volcharset,
-                                       CH_UTF8_MAC,
-                                       vol->v_maccharset,
-                                       u, outlen, mpath, MAXPATHLEN, &flags)) {
-        SLOG("Conversion from %s to %s for %s failed.",
-             vol->v_volcodepage, vol->v_maccodepage, u);
-        return NULL;
-    }
-
-    return m;
-}
-
-
 /*!
  * @brief Convert dot encoding of basename _in place_
  *
