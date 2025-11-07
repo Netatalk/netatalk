@@ -815,7 +815,7 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
                     void *buffer, size_t buflen)
 {
     EC_INIT;
-    CNID_mysql_private *db;
+    CNID_mysql_private *db = cdb->cnid_db_private;
     char *sql = NULL;
     char *namelike = NULL;
     MYSQL_RES *result = NULL;
@@ -827,9 +827,8 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
         "cnid_mysql_find: called with name='%s', namelen=%zu, buflen=%zu", name,
         namelen, buflen);
 
-    if (!cdb || !(db = cdb->cnid_db_private) || !name) {
-        LOG(log_error, logtype_cnid,
-            "cnid_mysql_find: Parameter error (cdb=%p, db=%p, name=%p)", cdb, db, name);
+    if (!cdb || !db || !name) {
+        LOG(log_error, logtype_cnid, "cnid_mysql_find: Parameter error");
         errno = CNID_ERR_PARAM;
         EC_FAIL;
     }
