@@ -283,7 +283,8 @@ Install dependencies
 
 ```shell
 brew update
-brew install cmark-gfm cracklib iniparser mariadb meson openldap sqlite
+brew upgrade
+brew install bstring cmark-gfm cracklib iniparser mariadb meson openldap
 ```
 
 Configure
@@ -419,7 +420,7 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
-pkg_add -I avahi bison cmark db-4.6.21p7v0 dbus gcc-11.2.0p15 heimdal iniparser libevent libgcrypt libtalloc localsearch-3.8.2p0 mariadb-client meson openldap-client-2.6.9p0v0 p5-Net-DBus pkgconf sqlite tinysparql-3.8.2
+pkg_add -I avahi bison cmark db-4.6.21p8v0 dbus gcc-11.2.0p19 heimdal iniparser libevent libgcrypt libtalloc localsearch-3.10.0 mariadb-client meson openldap-client-2.6.10v0 p5-Net-DBus pkgconfig sqlite3-3.50.4 tinysparql-3.10.0
 ```
 
 Configure, compile, install, run, and uninstall
@@ -478,7 +479,7 @@ Install required packages
 set -e
 pkg install bison cmake flex gcc libevent libgcrypt meson ninja pkg-config sqlite-3
 curl --location -o cmark.tar.gz https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
-curl --location -o iniparser.tar.gz https://gitlab.com/iniparser/iniparser/-/archive/v4.2.5/iniparser-v4.2.5.tar.gz
+curl --location -o iniparser.tar.gz https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
 set +e # tar on Solaris is too old to handle git tarballs cleanly
 tar xzf cmark.tar.gz
 tar xzf iniparser.tar.gz
@@ -488,7 +489,7 @@ cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr
 cmake --build build
 cmake --install build
 cd ..
-cd iniparser-v4.2.5
+cd iniparser-v4.2.6
 mkdir build
 cd build
 cmake ..
