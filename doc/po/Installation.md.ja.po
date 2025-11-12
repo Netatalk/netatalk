@@ -7,9 +7,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.3.1\n"
-"POT-Creation-Date: 2025-08-03 08:44+0200\n"
-"PO-Revision-Date: 2025-01-25 15:05+0100\n"
+"Project-Id-Version: Netatalk 4.4.0\n"
+"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
 "Language: ja\n"
@@ -236,88 +236,79 @@ msgid "CNID database backends"
 msgstr "CNID データベースバックエンド一覧"
 
 #. type: Plain text
-#: manual/Installation.md:84
+#: manual/Installation.md:80
 msgid ""
 "At least one of the below database libraries is required to power the CNID "
-"scheme of your choice.  Without one of these, only the *last* backend will "
-"be available which operates in read-only mode and therefore not recommended "
-"for daily use."
+"scheme of your choice."
 msgstr ""
-"CNIDスキームを有効するには、以下のデータベースライブラリの少なくとも1つが必要"
-"になる。いずれか1つがない場合は、*last* バックエンドのみ利用可能となりるが、"
-"これは読み取り専用モードで動作するため、日常的な使用には推奨しない。"
+"選択した CNID スキームを動作させるには、以下のデータベースライブラリのいずれ"
+"かを選択する必要がある。"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:86
+#: manual/Installation.md:82
 msgid "Berkeley DB"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:90
+#: manual/Installation.md:85
 #, no-wrap
 msgid ""
-"    The default dbd CNID backend for netatalk uses Berkeley DB to store\n"
-"    unique file identifiers. At the time of writing you need at least\n"
-"    version 4.6.\n"
-msgstr ""
-"    デフォルトのdbd CNIDバックエンドは、Berkeley DBを使用して一意のファイル識別子を保存します。\n"
-"    書き込みの時に最低でもバージョン 4.6 が必要となる。\n"
+"    The default *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store\n"
+"    unique file identifiers.\n"
+msgstr "    デフォルトのdbd CNIDバックエンドは、Berkeley DBを使用して一意のファイル識別子を保存します。\n"
 
 #. type: Plain text
-#: manual/Installation.md:93
+#: manual/Installation.md:88
 #, no-wrap
 msgid ""
-"    The recommended version is 5.3, the final release under the permissive\n"
-"    Sleepycat license, and therefore the most widely distributed version.\n"
+"    The recommended Berekeley DB version is 5.3, while versions 4.6 and later should work as well.\n"
+"    Version 6 and later should generally be avoided due to licensing issues.\n"
 msgstr ""
-"    推奨バージョンは 5.3 である Sleepycat\n"
-"    ライセンスで提供された最終リリースである。\n"
+"    推奨されるBerkeley DBのバージョンは5.3であり、バージョン4.6以降も動作するはずです。\n"
+"    バージョン6以降はライセンスの問題から一般的に避けるべきである。\n"
 
 #. type: Bullet: '- '
+#: manual/Installation.md:90
+msgid "MySQL Client or MariaDB Client"
+msgstr "MySQL クライアントまたは MariaDB クライアント"
+
+#. type: Plain text
 #: manual/Installation.md:95
-msgid "MySQL or MariaDB"
-msgstr "MySQL または MariaDB"
+#, no-wrap
+msgid ""
+"    By leveraging a MySQL-compatible client library, netatalk can be built\n"
+"    with the *mysql* CNID backend that is highly scalable and reliable.\n"
+"    The administrator has to provide a separate database instance for use with\n"
+"    this backend.\n"
+msgstr ""
+"    MySQL 互換のクライアント ライブラリを活用することで、netatalk\n"
+"    は、スケーラビリティと信頼性に優れた *mysql* CNID\n"
+"    バックエンドを使用して構築できる。管理者は、このバックエンドで使用するために別のデータベース\n"
+"    インスタンスを用意する必要がある。\n"
+
+#. type: Bullet: '- '
+#: manual/Installation.md:97
+msgid "SQLite v3"
+msgstr ""
 
 #. type: Plain text
 #: manual/Installation.md:100
 #, no-wrap
 msgid ""
-"    By leveraging a MySQL-compatible client library, netatalk can be built\n"
-"    with a MySQL CNID backend that is highly scalable and reliable.\n"
-"    The administrator has to provide a separate database instance for use with\n"
-"    this backend.\n"
-msgstr ""
-"    MySQL 互換のクライアント ライブラリを活用することで、netatalk\n"
-"    は、スケーラビリティと信頼性に優れた MySQL CNID\n"
-"    バックエンドを使用して構築できる。管理者は、このバックエンドで使用するために別のデータベース\n"
-"    インスタンスを用意する必要がある。\n"
-
-#. type: Bullet: '- '
-#: manual/Installation.md:102
-msgid "SQLite v3"
-msgstr ""
-
-#. type: Plain text
-#: manual/Installation.md:107
-#, no-wrap
-msgid ""
-"    The SQLite library version 3 enables the SQLite CNID backend\n"
+"    The SQLite library version 3 enables the *sqlite* CNID backend\n"
 "    which is an alternative zero-configuration backend.\n"
-"    This backend is **experimental** and should be used only for\n"
-"    testing purposes.\n"
 msgstr ""
-"    SQLite ライブラリ バージョン3は、SQLite CNID バックエンドが有効にする。\n"
+"    SQLite ライブラリ バージョン3は、*sqlite* CNID バックエンドが有効にする。\n"
 "    設定不要の代替バックエンドである。\n"
-"    本バックエンドは**実験的**であり、テスト目的でのみ使用すること。\n"
 
 #. type: Title ###
-#: manual/Installation.md:108
+#: manual/Installation.md:101
 #, no-wrap
 msgid "Optional third-party software"
 msgstr "任意のサードパーティソフトウェア"
 
 #. type: Plain text
-#: manual/Installation.md:112
+#: manual/Installation.md:105
 msgid ""
 "Netatalk can use the following third-party software to enhance its "
 "functionality."
@@ -326,12 +317,12 @@ msgstr ""
 "ることができる。"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:114
+#: manual/Installation.md:107
 msgid "ACL and LDAP"
 msgstr "ACL と LDAP"
 
 #. type: Plain text
-#: manual/Installation.md:120
+#: manual/Installation.md:113
 #, no-wrap
 msgid ""
 "    LDAP is an open and industry-standard user directory protocol that\n"
@@ -347,12 +338,12 @@ msgstr ""
 "    パッケージをインストールする必要がある。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:122
+#: manual/Installation.md:115
 msgid "Avahi or mDNSresponder for Bonjour"
 msgstr "Bonjour 用の Avahi または mDNSresponder"
 
 #. type: Plain text
-#: manual/Installation.md:126
+#: manual/Installation.md:119
 #, no-wrap
 msgid ""
 "    Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf) for automatic\n"
@@ -364,7 +355,7 @@ msgstr ""
 "    ファイル共有と Time Machine ボリュームをアドバタイズできる。\n"
 
 #. type: Plain text
-#: manual/Installation.md:129
+#: manual/Installation.md:122
 #, no-wrap
 msgid ""
 "    When using Avahi, D-Bus is also required, and the Avahi library must\n"
@@ -374,12 +365,12 @@ msgstr ""
 "    Avahi ライブラリは必要になる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:131
+#: manual/Installation.md:124
 msgid "cmark, cmark-gfm, or pandoc"
 msgstr "cmark、cmark-gfm、またはpandoc"
 
 #. type: Plain text
-#: manual/Installation.md:136
+#: manual/Installation.md:129
 #, no-wrap
 msgid ""
 "    Netatalk's documentation is authored in Markdown format.\n"
@@ -392,7 +383,7 @@ msgstr ""
 "    ドキュメントの残りの部分はGitHub風の Markdown (gfm)で作成されている。\n"
 
 #. type: Plain text
-#: manual/Installation.md:141
+#: manual/Installation.md:134
 #, no-wrap
 msgid ""
 "    The pandoc library generates the nicest output, but is\n"
@@ -405,12 +396,12 @@ msgstr ""
 "    されているが、cmark-gfm はテーブルのようなGitHub拡張機能をよりよく扱う。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:143
+#: manual/Installation.md:136
 msgid "CrackLib"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:147
+#: manual/Installation.md:140
 #, no-wrap
 msgid ""
 "    When using the Random Number UAMs and netatalk's own **afppasswd**\n"
@@ -422,7 +413,7 @@ msgstr ""
 "    での認証に弱いパスワードを設定するのを防ぐのに役立つ。\n"
 
 #. type: Plain text
-#: manual/Installation.md:150
+#: manual/Installation.md:143
 #, no-wrap
 msgid ""
 "    The CrackLib dictionary, which is sometimes distributed separately in\n"
@@ -432,12 +423,12 @@ msgstr ""
 "    もコンパイル時にも実行時にも必須である。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:152
+#: manual/Installation.md:145
 msgid "D-Bus"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:156
+#: manual/Installation.md:149
 #, no-wrap
 msgid ""
 "    D-Bus provides a mechanism for sending messages between processes,\n"
@@ -449,23 +440,23 @@ msgstr ""
 "    **afpstats** ツール。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:158
+#: manual/Installation.md:151
 msgid "GLib and GIO"
 msgstr "GLib および GIO"
 
 #. type: Plain text
-#: manual/Installation.md:160
+#: manual/Installation.md:153
 #, no-wrap
 msgid "    Used by the **afpstats** tool to interface with D-Bus.\n"
 msgstr "    D-Bus とのインターフェースとして、**afpstats** ツールに使われる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:162
+#: manual/Installation.md:155
 msgid "iconv"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:168
+#: manual/Installation.md:161
 #, no-wrap
 msgid ""
 "    iconv provides conversion routines for many character encodings.\n"
@@ -481,12 +472,12 @@ msgstr ""
 "    実装を使用できる。それ以外の場合は、GNU libiconv 実装を使用できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:170
+#: manual/Installation.md:163
 msgid "Kerberos V"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:175
+#: manual/Installation.md:168
 #, no-wrap
 msgid ""
 "    Kerberos v5 is a client-server based authentication protocol invented\n"
@@ -500,12 +491,12 @@ msgstr ""
 "    インフラストラクチャでの認証用に GSS UAM ライブラリを作成できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:177
+#: manual/Installation.md:170
 msgid "PAM"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:182
+#: manual/Installation.md:175
 #, no-wrap
 msgid ""
 "    PAM provides a flexible mechanism for authenticating users. PAM was\n"
@@ -520,12 +511,12 @@ msgstr ""
 "    スイートである。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:184
+#: manual/Installation.md:177
 msgid "Perl"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:188
+#: manual/Installation.md:181
 #, no-wrap
 msgid ""
 "    Netatalk's administrative utility scripts rely on the Perl runtime,\n"
@@ -537,12 +528,12 @@ msgstr ""
 "    (asip-status) 又は *Net::DBus* (afpstats)。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:190
+#: manual/Installation.md:183
 msgid "po4a"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:195
+#: manual/Installation.md:188
 #, no-wrap
 msgid ""
 "    With the help of po4a, Netatalk's documentation can be translated\n"
@@ -555,18 +546,18 @@ msgstr ""
 "    ファイルに保存されている翻訳と結合する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:197
+#: manual/Installation.md:190
 msgid "TCP wrappers"
 msgstr "TCP ラッパー"
 
 #. type: Plain text
-#: manual/Installation.md:199
+#: manual/Installation.md:192
 #, no-wrap
 msgid "    Wietse Venema's network logger, also known as TCPD or LOG_TCP.\n"
 msgstr "    Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP とも呼ばれる。\n"
 
 #. type: Plain text
-#: manual/Installation.md:203
+#: manual/Installation.md:196
 #, no-wrap
 msgid ""
 "    Security options are: access control per host, domain and/or service;\n"
@@ -578,12 +569,12 @@ msgstr ""
 "    アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:205
+#: manual/Installation.md:198
 msgid "LocalSearch or Tracker"
 msgstr "LocalSearch または Tracker"
 
 #. type: Plain text
-#: manual/Installation.md:209
+#: manual/Installation.md:202
 #, no-wrap
 msgid ""
 "    Netatalk uses [GNOME LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/index.html),\n"
@@ -595,12 +586,12 @@ msgstr ""
 "    （以前は Tracker）バージョン3以降を使用する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:211
+#: manual/Installation.md:204
 msgid "talloc / bison / flex"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:214
+#: manual/Installation.md:207
 #, no-wrap
 msgid ""
 "    Samba's talloc library, a Yacc parser such as bison, and a lexer like\n"
@@ -610,12 +601,12 @@ msgstr ""
 "    パーサー、flex などのレキサーも必要。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:216
+#: manual/Installation.md:209
 msgid "UnicodeData.txt"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:219
+#: manual/Installation.md:212
 #, no-wrap
 msgid ""
 "    The [Unicode Character Database](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)\n"
@@ -626,7 +617,7 @@ msgstr ""
 "    が必要である。\n"
 
 #. type: Plain text
-#: manual/Installation.md:222
+#: manual/Installation.md:215
 #, no-wrap
 msgid ""
 "    This is mostly relevant for developers or package managers who want to regenerate\n"
@@ -636,13 +627,13 @@ msgstr ""
 "    文字変換テーブルを再生成したい場合に関連する。\n"
 
 #. type: Title ##
-#: manual/Installation.md:223
+#: manual/Installation.md:216
 #, no-wrap
 msgid "Starting and stopping Netatalk"
 msgstr "Netatalk の起動と停止"
 
 #. type: Plain text
-#: manual/Installation.md:231
+#: manual/Installation.md:224
 msgid ""
 "The Netatalk distribution comes with several operating system specific "
 "startup script templates that are tailored according to the options given to "
@@ -657,7 +648,7 @@ msgstr ""
 "トフォーム固有のスクリプトに加えて、systemd、openrc 用に提供されている。"
 
 #. type: Plain text
-#: manual/Installation.md:237
+#: manual/Installation.md:230
 msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
@@ -672,7 +663,7 @@ msgstr ""
 "テキストを参照してください。"
 
 #. type: Plain text
-#: manual/Installation.md:242
+#: manual/Installation.md:235
 msgid ""
 "Since new Linux, \\*BSD, and Solaris-like distributions appear at regular "
 "intervals, and the startup procedure for the other systems mentioned above "
@@ -685,7 +676,7 @@ msgstr ""
 "ることをお勧めする。"
 
 #. type: Plain text
-#: manual/Installation.md:247
+#: manual/Installation.md:240
 msgid ""
 "If you use Netatalk as part of a fixed setup, like a Linux distribution, an "
 "RPM or a BSD package, things will probably have been arranged properly for "
@@ -698,7 +689,7 @@ msgstr ""
 "まる。"
 
 #. type: Plain text
-#: manual/Installation.md:250
+#: manual/Installation.md:243
 msgid ""
 "The following daemon need to be started by whatever startup script mechanism "
 "is used:"
@@ -707,13 +698,13 @@ msgstr ""
 "必要がある:"
 
 #. type: Title ##
-#: manual/Installation.md:252 manual/Legal.md:10
+#: manual/Installation.md:245 manual/Legal.md:10
 #, no-wrap
 msgid "netatalk"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:255
+#: manual/Installation.md:248
 msgid ""
 "In the absence of a startup script, you can also launch this daemon directly "
 "(as root), and kill it with SIGTERM when you are done with it."
@@ -722,7 +713,7 @@ msgstr ""
 "し、使い終わったら SIGTERM で終了することもできる。"
 
 #. type: Plain text
-#: manual/Installation.md:259
+#: manual/Installation.md:252
 msgid ""
 "Additionally, make sure that the configuration file *afp.conf* is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
@@ -733,7 +724,7 @@ msgstr ""
 "かどうかを問い合わせることができる。"
 
 #. type: Plain text
-#: manual/Installation.md:263
+#: manual/Installation.md:256
 msgid ""
 "If you want to run AppleTalk services, you also need to start the **atalkd** "
 "daemon, plus the optional **papd**, **timelord**, and **a2boot** daemons. "
