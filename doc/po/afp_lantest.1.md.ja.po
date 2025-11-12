@@ -5,9 +5,9 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.3.1\n"
-"POT-Creation-Date: 2025-08-29 13:22+0200\n"
-"PO-Revision-Date: 2025-08-04 14:22+1000\n"
+"Project-Id-Version: Netatalk 4.4.0\n"
+"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
 "Language: ja\n"
@@ -17,14 +17,14 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Title #
-#: manpages/man1/ad.1.md:1 manpages/man1/addump.1.md:1
-#: manpages/man1/aecho.1.md:1 manpages/man1/afp_lantest.1.md:1
-#: manpages/man1/afp_logintest.1.md:1 manpages/man1/afp_spectest.1.md:1
-#: manpages/man1/afp_speedtest.1.md:1 manpages/man1/afparg.1.md:1
-#: manpages/man1/afpldaptest.1.md:1 manpages/man1/afppasswd.1.md:1
-#: manpages/man1/afpstats.1.md:1 manpages/man1/asip-status.1.md:1
-#: manpages/man1/dbd.1.md:1 manpages/man1/fce_listen.1.md:1
-#: manpages/man1/getzones.1.md:1 manpages/man1/macusers.1.md:1
+#: manpages/man1/addump.1.md:1 manpages/man1/aecho.1.md:1
+#: manpages/man1/afp_lantest.1.md:1 manpages/man1/afp_logintest.1.md:1
+#: manpages/man1/afp_spectest.1.md:1 manpages/man1/afp_speedtest.1.md:1
+#: manpages/man1/afparg.1.md:1 manpages/man1/afpldaptest.1.md:1
+#: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
+#: manpages/man1/asip-status.1.md:1 manpages/man1/dbd.1.md:1
+#: manpages/man1/fce_listen.1.md:1 manpages/man1/getzones.1.md:1
+#: manpages/man1/macusers.1.md:1 manpages/man1/nad.1.md:1
 #: manpages/man1/nbplkup.1.md:1 manpages/man1/nbprgstr.1.md:1
 #: manpages/man1/pap.1.md:1 manpages/man1/rtmpqry.1.md:1
 #: manpages/man3/atalk_aton.3.md:1 manpages/man3/nbp_name.3.md:1
@@ -42,14 +42,14 @@ msgid "Name"
 msgstr "名前"
 
 #. type: Title #
-#: manpages/man1/ad.1.md:5 manpages/man1/addump.1.md:5
-#: manpages/man1/aecho.1.md:5 manpages/man1/afp_lantest.1.md:5
-#: manpages/man1/afp_logintest.1.md:5 manpages/man1/afp_spectest.1.md:5
-#: manpages/man1/afp_speedtest.1.md:5 manpages/man1/afparg.1.md:5
-#: manpages/man1/afpldaptest.1.md:5 manpages/man1/afppasswd.1.md:5
-#: manpages/man1/afpstats.1.md:5 manpages/man1/asip-status.1.md:5
-#: manpages/man1/dbd.1.md:5 manpages/man1/fce_listen.1.md:5
-#: manpages/man1/getzones.1.md:5 manpages/man1/macusers.1.md:5
+#: manpages/man1/addump.1.md:5 manpages/man1/aecho.1.md:5
+#: manpages/man1/afp_lantest.1.md:5 manpages/man1/afp_logintest.1.md:5
+#: manpages/man1/afp_spectest.1.md:5 manpages/man1/afp_speedtest.1.md:5
+#: manpages/man1/afparg.1.md:5 manpages/man1/afpldaptest.1.md:5
+#: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
+#: manpages/man1/asip-status.1.md:5 manpages/man1/dbd.1.md:5
+#: manpages/man1/fce_listen.1.md:5 manpages/man1/getzones.1.md:5
+#: manpages/man1/macusers.1.md:5 manpages/man1/nad.1.md:5
 #: manpages/man1/nbplkup.1.md:5 manpages/man1/nbprgstr.1.md:5
 #: manpages/man1/pap.1.md:5 manpages/man1/rtmpqry.1.md:5
 #: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
@@ -64,14 +64,14 @@ msgid "Synopsis"
 msgstr "概要"
 
 #. type: Title #
-#: manpages/man1/ad.1.md:11 manpages/man1/addump.1.md:19
-#: manpages/man1/aecho.1.md:9 manpages/man1/afp_lantest.1.md:10
-#: manpages/man1/afp_logintest.1.md:9 manpages/man1/afp_spectest.1.md:10
-#: manpages/man1/afp_speedtest.1.md:10 manpages/man1/afparg.1.md:9
-#: manpages/man1/afpldaptest.1.md:11 manpages/man1/afppasswd.1.md:9
-#: manpages/man1/afpstats.1.md:9 manpages/man1/asip-status.1.md:13
-#: manpages/man1/dbd.1.md:11 manpages/man1/fce_listen.1.md:9
-#: manpages/man1/getzones.1.md:9 manpages/man1/macusers.1.md:11
+#: manpages/man1/addump.1.md:19 manpages/man1/aecho.1.md:9
+#: manpages/man1/afp_lantest.1.md:10 manpages/man1/afp_logintest.1.md:9
+#: manpages/man1/afp_spectest.1.md:12 manpages/man1/afp_speedtest.1.md:10
+#: manpages/man1/afparg.1.md:11 manpages/man1/afpldaptest.1.md:11
+#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/asip-status.1.md:13 manpages/man1/dbd.1.md:11
+#: manpages/man1/fce_listen.1.md:9 manpages/man1/getzones.1.md:9
+#: manpages/man1/macusers.1.md:11 manpages/man1/nad.1.md:11
 #: manpages/man1/nbplkup.1.md:9 manpages/man1/nbprgstr.1.md:11
 #: manpages/man1/pap.1.md:9 manpages/man1/rtmpqry.1.md:9
 #: manpages/man3/atalk_aton.3.md:14 manpages/man3/nbp_name.3.md:16
@@ -90,8 +90,8 @@ msgstr "説明"
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
 #: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
-#: manpages/man1/afp_spectest.1.md:18 manpages/man1/afp_speedtest.1.md:16
-#: manpages/man1/afparg.1.md:16 manpages/man1/afpldaptest.1.md:16
+#: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:16
+#: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
 #: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
 #: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
@@ -108,14 +108,14 @@ msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:302 manpages/man1/afp_logintest.1.md:84
-#: manpages/man1/afp_spectest.1.md:236 manpages/man1/afp_speedtest.1.md:147
-#: manpages/man1/afparg.1.md:110 manpages/man1/afpldaptest.1.md:34
+#: manpages/man1/afp_lantest.1.md:307 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
 #: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:30
 #: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
-#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1348
+#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1373
 #: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
 #: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
 #: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
@@ -127,14 +127,15 @@ msgstr "関連項目"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
-#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:189
-#: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:71
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:196
+#: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:73
 #: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:23
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
-#: manpages/man1/getzones.1.md:57 manpages/man1/nbplkup.1.md:74
-#: manpages/man1/nbprgstr.1.md:40 manpages/man1/rtmpqry.1.md:34
-#: manpages/man3/nbp_name.3.md:26 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1302
+#: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:298
+#: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
+#: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
+#: manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1327
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
 #, no-wrap
@@ -182,8 +183,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:24 manpages/man1/afp_logintest.1.md:25
-#: manpages/man1/afp_spectest.1.md:28 manpages/man1/afp_speedtest.1.md:26
-#: manpages/man1/afparg.1.md:26
+#: manpages/man1/afp_spectest.1.md:30 manpages/man1/afp_speedtest.1.md:26
+#: manpages/man1/afparg.1.md:28
 #, no-wrap
 msgid ""
 "**-3**\n"
@@ -194,8 +195,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:27 manpages/man1/afp_logintest.1.md:28
-#: manpages/man1/afp_spectest.1.md:31 manpages/man1/afp_speedtest.1.md:29
-#: manpages/man1/afparg.1.md:29
+#: manpages/man1/afp_spectest.1.md:33 manpages/man1/afp_speedtest.1.md:29
+#: manpages/man1/afparg.1.md:31
 #, no-wrap
 msgid ""
 "**-4**\n"
@@ -206,8 +207,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:30 manpages/man1/afp_logintest.1.md:31
-#: manpages/man1/afp_spectest.1.md:34 manpages/man1/afp_speedtest.1.md:32
-#: manpages/man1/afparg.1.md:32
+#: manpages/man1/afp_spectest.1.md:36 manpages/man1/afp_speedtest.1.md:32
+#: manpages/man1/afparg.1.md:34
 #, no-wrap
 msgid ""
 "**-5**\n"
@@ -218,8 +219,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:33 manpages/man1/afp_logintest.1.md:34
-#: manpages/man1/afp_spectest.1.md:37 manpages/man1/afp_speedtest.1.md:35
-#: manpages/man1/afparg.1.md:35
+#: manpages/man1/afp_spectest.1.md:39 manpages/man1/afp_speedtest.1.md:35
+#: manpages/man1/afparg.1.md:37
 #, no-wrap
 msgid ""
 "**-6**\n"
@@ -230,8 +231,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:36 manpages/man1/afp_logintest.1.md:37
-#: manpages/man1/afp_spectest.1.md:40 manpages/man1/afp_speedtest.1.md:38
-#: manpages/man1/afparg.1.md:38
+#: manpages/man1/afp_spectest.1.md:42 manpages/man1/afp_speedtest.1.md:38
+#: manpages/man1/afparg.1.md:40
 #, no-wrap
 msgid ""
 "**-7**\n"
@@ -300,8 +301,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:57 manpages/man1/afp_logintest.1.md:43
-#: manpages/man1/afp_spectest.1.md:58 manpages/man1/afp_speedtest.1.md:59
-#: manpages/man1/afparg.1.md:44
+#: manpages/man1/afp_spectest.1.md:65 manpages/man1/afp_speedtest.1.md:59
+#: manpages/man1/afparg.1.md:46
 #, no-wrap
 msgid ""
 "**-h** *host*\n"
@@ -332,8 +333,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:66 manpages/man1/afp_logintest.1.md:49
-#: manpages/man1/afp_spectest.1.md:73 manpages/man1/afp_speedtest.1.md:71
-#: manpages/man1/afparg.1.md:50
+#: manpages/man1/afp_spectest.1.md:80 manpages/man1/afp_speedtest.1.md:71
+#: manpages/man1/afparg.1.md:52
 #, no-wrap
 msgid ""
 "**-p** *port*\n"
@@ -343,7 +344,7 @@ msgstr ""
 ": サーバーポート番号（デフォルト: 548）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:69 manpages/man1/afp_spectest.1.md:76
+#: manpages/man1/afp_lantest.1.md:69 manpages/man1/afp_spectest.1.md:83
 #: manpages/man1/afp_speedtest.1.md:83
 #, no-wrap
 msgid ""
@@ -354,7 +355,7 @@ msgstr ""
 ": テスト用にマウントするボリューム名\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_spectest.1.md:82
+#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_spectest.1.md:89
 #: manpages/man1/afp_speedtest.1.md:89
 #, no-wrap
 msgid ""
@@ -366,8 +367,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:75 manpages/man1/afp_logintest.1.md:58
-#: manpages/man1/afp_spectest.1.md:88 manpages/man1/afp_speedtest.1.md:95
-#: manpages/man1/afparg.1.md:59
+#: manpages/man1/afp_spectest.1.md:95 manpages/man1/afp_speedtest.1.md:95
+#: manpages/man1/afparg.1.md:61
 #, no-wrap
 msgid ""
 "**-V**\n"
@@ -378,8 +379,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:78 manpages/man1/afp_logintest.1.md:55
-#: manpages/man1/afp_spectest.1.md:85 manpages/man1/afp_speedtest.1.md:92
-#: manpages/man1/afparg.1.md:56
+#: manpages/man1/afp_spectest.1.md:92 manpages/man1/afp_speedtest.1.md:92
+#: manpages/man1/afparg.1.md:58
 #, no-wrap
 msgid ""
 "**-v**\n"
@@ -390,8 +391,8 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:81 manpages/man1/afp_logintest.1.md:61
-#: manpages/man1/afp_spectest.1.md:91 manpages/man1/afp_speedtest.1.md:98
-#: manpages/man1/afparg.1.md:62
+#: manpages/man1/afp_spectest.1.md:98 manpages/man1/afp_speedtest.1.md:98
+#: manpages/man1/afparg.1.md:64
 #, no-wrap
 msgid ""
 "**-w** *password*\n"
@@ -402,15 +403,15 @@ msgstr ""
 
 #. type: Title ###
 #: manpages/man1/afp_lantest.1.md:82 manpages/man1/afp_speedtest.1.md:102
-#: manpages/man1/afparg.1.md:63 manpages/man8/cnid_dbd.8.md:64
-#: manual/Configuration.md:587
+#: manpages/man1/afparg.1.md:65 manpages/man8/cnid_dbd.8.md:64
+#: manual/Configuration.md:498
 #, no-wrap
 msgid "Configuration"
 msgstr "設定"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:86 manpages/man1/afp_speedtest.1.md:106
-#: manpages/man1/afparg.1.md:67
+#: manpages/man1/afparg.1.md:69
 msgid ""
 "The test runner AFP client only supports the ClearTxt UAM currently.  "
 "Configure the UAM in netatalk's afp.conf:"
@@ -420,7 +421,7 @@ msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:89 manpages/man1/afp_speedtest.1.md:109
-#: manpages/man1/afparg.1.md:70
+#: manpages/man1/afparg.1.md:72
 #, no-wrap
 msgid ""
 "    [Global]\n"
@@ -658,75 +659,74 @@ msgstr ""
 "hidepid=0,gid=0 proc /proc_io` とする。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:174
+#: manpages/man1/afp_lantest.1.md:172
 #, no-wrap
 msgid ""
 "    afp_lantest -n 2 -7 -h 127.0.0.1 -p 548 -u test -w test -s 'File Sharing'\n"
 "    Connecting to host 127.0.0.1:548\n"
 "    IO monitoring: /proc_io is available\n"
-"    Looking for cnid_dbd processes with -u test in command line\n"
-"    Found cnid_dbd process: PID 40\n"
-"    Looking for afpd processes owned by user 'test' (UID: 1000)\n"
-"    Found privilege-dropped afpd process: PID 36\n"
+"    Found cnid_dbd process for user 'test': PID 40\n"
+"    Found privilege-dropped afpd process for user 'test': PID 36\n"
 "    IO monitoring enabled (afpd: 36, cnid_dbd: 40)\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:223
+#: manpages/man1/afp_lantest.1.md:222
 #, no-wrap
 msgid ""
-"    Run 1 => Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]        1923 ms\n"
+"    Run 1 => Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]        4230 ms\n"
 "            IO Operations; afpd: 6000 READs, 7002 WRITEs | cnid_dbd: 0 READs, 2 WRITEs\n"
-"    Run 1 => Writing one large file [103 AFP ops]                                  136 ms for 100 MB (avg. 771 MB/s)\n"
+"    Run 1 => Writing one large file [103 AFP ops]                                  166 ms for 100 MB (avg. 631 MB/s)\n"
 "            IO Operations; afpd: 0 READs, 299 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 1 => Reading one large file [102 AFP ops]                                   39 ms for 100 MB (avg. 2688 MB/s)\n"
+"    Run 1 => Reading one large file [102 AFP ops]                                   55 ms for 100 MB (avg. 1906 MB/s)\n"
 "            IO Operations; afpd: 100 READs, 100 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 1 => Locking/Unlocking 10000 times each [20,000 AFP ops]                   799 ms\n"
+"    Run 1 => Locking/Unlocking 10000 times each [20,000 AFP ops]                   859 ms\n"
 "            IO Operations; afpd: 0 READs, 20000 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 1 => Creating dir with 2000 files [4,000 AFP ops]                         4061 ms\n"
-"            IO Operations; afpd: 2000 READs, 10005 WRITEs | cnid_dbd: 4 READs, 6150 WRITEs\n"
-"    Run 1 => Enumerate dir with 2000 files [~51 AFP ops]                           637 ms\n"
-"            IO Operations; afpd: 1960 READs, 49 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 1 => Deleting dir with 2000 files [2,000 AFP ops]                         3176 ms\n"
-"            IO Operations; afpd: 4000 READs, 4004 WRITEs | cnid_dbd: 2 READs, 6104 WRITEs\n"
-"    Run 1 => Create directory tree with 1000 dirs [1,110 AFP ops]                 1885 ms\n"
-"            IO Operations; afpd: 0 READs, 4445 WRITEs | cnid_dbd: 4 READs, 2351 WRITEs\n"
-"    Run 1 => Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]        3625 ms\n"
+"    Run 1 => Creating dir with 2000 files [4,000 AFP ops]                         4927 ms\n"
+"            IO Operations; afpd: 2000 READs, 10006 WRITEs | cnid_dbd: 4 READs, 6151 WRITEs\n"
+"    Run 1 => Enumerate dir with 2000 files [~51 AFP ops]                          1740 ms\n"
+"            IO Operations; afpd: 1959 READs, 50 WRITEs | cnid_dbd: 0 READs, 2 WRITEs\n"
+"    Run 1 => Deleting dir with 2000 files [2,000 AFP ops]                         3362 ms\n"
+"            IO Operations; afpd: 4000 READs, 4004 WRITEs | cnid_dbd: 4 READs, 6177 WRITEs\n"
+"    Run 1 => Create directory tree with 1000 dirs [1,110 AFP ops]                 2081 ms\n"
+"            IO Operations; afpd: 0 READs, 4445 WRITEs | cnid_dbd: 2 READs, 2279 WRITEs\n"
+"    Run 1 => Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]        5552 ms\n"
 "            IO Operations; afpd: 10000 READs, 11100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
-"    Run 1 => Mixed cache operations (create/stat/enum/delete) [820 AFP ops]       1134 ms\n"
-"            IO Operations; afpd: 820 READs, 1621 WRITEs | cnid_dbd: 0 READs, 1201 WRITEs\n"
-"    Run 1 => Deep path traversal (nested directory navigation) [3,500 AFP ops]     965 ms\n"
+"    Run 1 => Mixed cache operations (create/stat/enum/delete) [820 AFP ops]       1215 ms\n"
+"            IO Operations; afpd: 820 READs, 1623 WRITEs | cnid_dbd: 0 READs, 1203 WRITEs\n"
+"    Run 1 => Deep path traversal (nested directory navigation) [3,500 AFP ops]    1835 ms\n"
 "            IO Operations; afpd: 2500 READs, 3550 WRITEs | cnid_dbd: 0 READs, 50 WRITEs\n"
-"    Run 1 => Cache validation efficiency (metadata changes) [30,000 AFP ops]      8529 ms\n"
+"    Run 1 => Cache validation efficiency (metadata changes) [30,000 AFP ops]     14559 ms\n"
 "            IO Operations; afpd: 30000 READs, 30100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
-"    Run 2 => Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]        2453 ms\n"
-"            IO Operations; afpd: 6000 READs, 7002 WRITEs | cnid_dbd: 0 READs, 2 WRITEs\n"
-"    Run 2 => Writing one large file [103 AFP ops]                                   87 ms for 100 MB (avg. 1205 MB/s)\n"
+"    Run 2 => Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]        3801 ms\n"
+"            IO Operations; afpd: 6000 READs, 7005 WRITEs | cnid_dbd: 0 READs, 5 WRITEs\n"
+"    Run 2 => Writing one large file [103 AFP ops]                                  115 ms for 100 MB (avg. 911 MB/s)\n"
 "            IO Operations; afpd: 0 READs, 299 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 2 => Reading one large file [102 AFP ops]                                   36 ms for 100 MB (avg. 2912 MB/s)\n"
+"    Run 2 => Reading one large file [102 AFP ops]                                   47 ms for 100 MB (avg. 2231 MB/s)\n"
 "            IO Operations; afpd: 100 READs, 100 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 2 => Locking/Unlocking 10000 times each [20,000 AFP ops]                   769 ms\n"
+"    Run 2 => Locking/Unlocking 10000 times each [20,000 AFP ops]                  1061 ms\n"
 "            IO Operations; afpd: 0 READs, 20000 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 2 => Creating dir with 2000 files [4,000 AFP ops]                         3442 ms\n"
-"            IO Operations; afpd: 2000 READs, 10005 WRITEs | cnid_dbd: 7 READs, 6140 WRITEs\n"
-"    Run 2 => Enumerate dir with 2000 files [~51 AFP ops]                           805 ms\n"
-"            IO Operations; afpd: 1960 READs, 49 WRITEs | cnid_dbd: 0 READs, 0 WRITEs\n"
-"    Run 2 => Deleting dir with 2000 files [2,000 AFP ops]                         2475 ms\n"
-"            IO Operations; afpd: 4000 READs, 4003 WRITEs | cnid_dbd: 4 READs, 6180 WRITEs\n"
-"    Run 2 => Create directory tree with 1000 dirs [1,110 AFP ops]                 1701 ms\n"
-"            IO Operations; afpd: 0 READs, 4442 WRITEs | cnid_dbd: 2 READs, 2267 WRITEs\n"
-"    Run 2 => Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]        2962 ms\n"
+"    Run 2 => Creating dir with 2000 files [4,000 AFP ops]                         4739 ms\n"
+"            IO Operations; afpd: 2000 READs, 10005 WRITEs | cnid_dbd: 7 READs, 6141 WRITEs\n"
+"    Run 2 => Enumerate dir with 2000 files [~51 AFP ops]                          1279 ms\n"
+"            IO Operations; afpd: 1959 READs, 50 WRITEs | cnid_dbd: 0 READs, 1 WRITEs\n"
+"    Run 2 => Deleting dir with 2000 files [2,000 AFP ops]                         3470 ms\n"
+"            IO Operations; afpd: 4000 READs, 4004 WRITEs | cnid_dbd: 4 READs, 6182 WRITEs\n"
+"    Run 2 => Create directory tree with 1000 dirs [1,110 AFP ops]                 2030 ms\n"
+"            IO Operations; afpd: 0 READs, 4445 WRITEs | cnid_dbd: 2 READs, 2272 WRITEs\n"
+"    Run 2 => Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]        7074 ms\n"
 "            IO Operations; afpd: 10000 READs, 11100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
-"    Run 2 => Mixed cache operations (create/stat/enum/delete) [820 AFP ops]        598 ms\n"
-"            IO Operations; afpd: 820 READs, 1621 WRITEs | cnid_dbd: 2 READs, 1242 WRITEs\n"
-"    Run 2 => Deep path traversal (nested directory navigation) [3,500 AFP ops]     796 ms\n"
+"    Run 2 => Mixed cache operations (create/stat/enum/delete) [820 AFP ops]       1227 ms\n"
+"            IO Operations; afpd: 820 READs, 1622 WRITEs | cnid_dbd: 2 READs, 1243 WRITEs\n"
+"    Run 2 => Deep path traversal (nested directory navigation) [3,500 AFP ops]    1258 ms\n"
 "            IO Operations; afpd: 2500 READs, 3550 WRITEs | cnid_dbd: 0 READs, 50 WRITEs\n"
-"    Run 2 => Cache validation efficiency (metadata changes) [30,000 AFP ops]      8431 ms\n"
+"    Run 2 => Cache validation efficiency (metadata changes) [30,000 AFP ops]     20181 ms\n"
 "            IO Operations; afpd: 30000 READs, 30100 WRITEs | cnid_dbd: 0 READs, 100 WRITEs\n"
+"    Successfully deleted test directory 'LanTest-35'\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:226
+#: manpages/man1/afp_lantest.1.md:225
 #, no-wrap
 msgid ""
 "    Netatalk Lantest Results (Averages and standard deviations (±) for all tests, across 2 iterations (default))\n"
@@ -734,25 +734,25 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:243
+#: manpages/man1/afp_lantest.1.md:242
 #, no-wrap
 msgid ""
 "    Test                                                                Time_ms  Time± AFPD_R AFPD_R± AFPD_W AFPD_W± CNID_R CNID_R± CNID_W CNID_W±   MB/s\n"
 "    ------------------------------------------------------------------ -------- ------ ------ ------- ------ ------- ------ ------- ------ ------- ------\n"
-"    Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]          2188  374.8   6000     0.0   7002     0.0      0     0.0      2     0.0      0\n"
-"    Writing one large file [103 AFP ops]                                    111   34.7      0     0.0    299     0.0      0     0.0      0     0.0    900\n"
-"    Reading one large file [102 AFP ops]                                     37    2.2    100     0.0    100     0.0      0     0.0      0     0.0   2702\n"
-"    Locking/Unlocking 10000 times each [20,000 AFP ops]                     784   21.2      0     0.0  20000     0.0      0     0.0      0     0.0      0\n"
-"    Creating dir with 2000 files [4,000 AFP ops]                           3751  437.7   2000     0.0  10005     0.0      5     2.2   6145     7.1      0\n"
-"    Enumerate dir with 2000 files [~51 AFP ops]                             721  118.8   1960     0.0     49     0.0      0     0.0      0     0.0      0\n"
-"    Deleting dir with 2000 files [2,000 AFP ops]                           2825  495.7   4000     0.0   4003     1.0      3     1.4   6142    53.7      0\n"
-"    Create directory tree with 1000 dirs [1,110 AFP ops]                   1793  130.1      0     0.0   4443     2.2      3     1.4   2309    59.4      0\n"
-"    Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]          3293  468.8  10000     0.0  11100     0.0      0     0.0    100     0.0      0\n"
-"    Mixed cache operations (create/stat/enum/delete) [820 AFP ops]          866  379.0    820     0.0   1621     0.0      2     0.0   1221    29.0      0\n"
-"    Deep path traversal (nested directory navigation) [3,500 AFP ops]       880  119.5   2500     0.0   3550     0.0      0     0.0     50     0.0      0\n"
-"    Cache validation efficiency (metadata changes) [30,000 AFP ops]        8480   69.3  30000     0.0  30100     0.0      0     0.0    100     0.0      0\n"
+"    Open, stat and read 512 bytes from 1000 files [8,000 AFP ops]          4015  303.3   6000     0.0   7003     2.2      0     0.0      3     2.2      0\n"
+"    Writing one large file [103 AFP ops]                                    140   36.1      0     0.0    299     0.0      0     0.0      0     0.0    714\n"
+"    Reading one large file [102 AFP ops]                                     51    5.7    100     0.0    100     0.0      0     0.0      0     0.0   1960\n"
+"    Locking/Unlocking 10000 times each [20,000 AFP ops]                     960  142.8      0     0.0  20000     0.0      0     0.0      0     0.0      0\n"
+"    Creating dir with 2000 files [4,000 AFP ops]                           4833  132.9   2000     0.0  10005     1.0      5     2.2   6146     7.1      0\n"
+"    Enumerate dir with 2000 files [~51 AFP ops]                            1509  326.0   1959     0.0     50     0.0      0     0.0      1     1.0      0\n"
+"    Deleting dir with 2000 files [2,000 AFP ops]                           3416   76.4   4000     0.0   4004     0.0      4     0.0   6179     3.6      0\n"
+"    Create directory tree with 1000 dirs [1,110 AFP ops]                   2055   36.1      0     0.0   4445     0.0      2     0.0   2275     5.0      0\n"
+"    Directory cache hits (100 dirs + 1000 files) [11,000 AFP ops]          6313 1076.2  10000     0.0  11100     0.0      0     0.0    100     0.0      0\n"
+"    Mixed cache operations (create/stat/enum/delete) [820 AFP ops]         1221    8.5    820     0.0   1622     1.0      2     0.0   1223    28.3      0\n"
+"    Deep path traversal (nested directory navigation) [3,500 AFP ops]      1546  408.0   2500     0.0   3550     0.0      0     0.0     50     0.0      0\n"
+"    Cache validation efficiency (metadata changes) [30,000 AFP ops]       17370 3975.4  30000     0.0  30100     0.0      0     0.0    100     0.0      0\n"
 "    ------------------------------------------------------------------ -------- ------ ------ ------- ------ ------- ------ ------- ------ ------- ------\n"
-"    Sum of all AFP OPs = 80686                                            25729         57380          92272             13          16069               \n"
+"    Sum of all AFP OPs = 80686                                            43429         57379          92278             13          16077               \n"
 msgstr ""
 
 #. type: Plain text
@@ -760,20 +760,30 @@ msgstr ""
 #, no-wrap
 msgid ""
 "    Aggregates Summary:\n"
-"    -------------------\n"
-"    Average Time per AFP OP: 0.319 ms\n"
+"    ------------------------------------------------------------------\n"
+"    Average Time per AFP OP: 0.538 ms\n"
 "    Average AFPD Reads per AFP OP: 0.711\n"
 "    Average AFPD Writes per AFP OP: 1.144\n"
+"    See afp_lantest manpage for more information: https://netatalk.io/manual/en/afp_lantest.1\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_lantest.1.md:253
+#, no-wrap
+msgid ""
+"    Dircache Statistics (/var/log/afpd.log):\n"
+"    ------------------------------------------------------------------\n"
+"    Sep 24 13:30:15.702673 afpd[36] {dircache.c:632} (info:AFPDaemon): dircache statistics: (user: test) entries: 0, lookups: 244476, hits: 227977 (93.3%), misses: 9228, added: 9552, removed: 9552, expunged: 7271, evicted: 0\n"
 msgstr ""
 
 #. type: Title ##
-#: manpages/man1/afp_lantest.1.md:250
+#: manpages/man1/afp_lantest.1.md:254
 #, no-wrap
 msgid "IO Monitoring Result Columns"
 msgstr "IO監視結果の列"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:258
+#: manpages/man1/afp_lantest.1.md:262
 #, no-wrap
 msgid ""
 "    Time(ms) = Test runtime in milliseconds\n"
@@ -785,30 +795,33 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:260
+#: manpages/man1/afp_lantest.1.md:264
 #, no-wrap
 msgid "    CNID_*   = IO measurements for the cnid_dbd process (optional)\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:263
+#: manpages/man1/afp_lantest.1.md:266
 msgid ""
-"Note; When performance testing with afp_lantest, ensure the afp.conf `log "
-"level` is set to `default:severe`.  Anything more verbose and the counted "
-"AFPD_W IO values may include the log writes."
+"Note; When measuring afpd read/write IO with afp_lantest, ensure afp.conf "
+"`log level` is set to `default:error`"
 msgstr ""
-"注意: afp_lantest でパフォーマンステストを行う場合、afp.conf の `log level` "
-"を `default:severe` に設定してください。これより詳細に設定すると、カウントさ"
-"れた AFPD_W IO 値にログ書き込みが含まれる可能性がある。"
+
+#. type: Bullet: '- '
+#: manpages/man1/afp_lantest.1.md:268
+msgid ""
+"More verbose logging superficially increases *_W IO values. For dirstats at "
+"least `default:info` is reqired."
+msgstr ""
 
 #. type: Title ##
-#: manpages/man1/afp_lantest.1.md:264
+#: manpages/man1/afp_lantest.1.md:269
 #, no-wrap
 msgid "IO Monitoring Aggregates Summary"
 msgstr "IO監視集計サマリー"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:268
+#: manpages/man1/afp_lantest.1.md:273
 msgid ""
 "The aggregate values are purely Intrinsic Metrics, as AFP operations are a "
 "mixture of reads, writes, and connection related operations."
@@ -817,7 +830,7 @@ msgstr ""
 "の操作の混合である。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:272
+#: manpages/man1/afp_lantest.1.md:277
 msgid ""
 "Therefore the measurements are meaningful only within their own context.  "
 "They provide a way to assess changes relative to itself, but lack any "
@@ -828,7 +841,7 @@ msgstr ""
 "の一貫性や参照点を欠いている。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:276
+#: manpages/man1/afp_lantest.1.md:281
 msgid ""
 "Generally, values less than 1 indicate efficient operation (for example due "
 "to batching and caching etc), and values greater than 1 indicate sub-optimal "
@@ -840,7 +853,7 @@ msgstr ""
 "の下流操作が発生する）。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:280
+#: manpages/man1/afp_lantest.1.md:285
 msgid ""
 "Note; As total AFP Ops are a mix of reads, writes, and other ops the "
 "effective 1:1 (AFP:IO) thresholds are not equal to 1.  Accurate thresholds "
@@ -854,13 +867,13 @@ msgstr ""
 "AFPD_R/AFPD_W値と比較することで求めることができる。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:282
+#: manpages/man1/afp_lantest.1.md:287
 msgid "Ideally code changes should observe aggregate values as reducing."
 msgstr ""
 "理想的には、コードの変更により集計値が減少することを確認する必要がある。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:284
+#: manpages/man1/afp_lantest.1.md:289
 msgid ""
 "For more information see [Testing Wiki](https://netatalk.io/docs/Testing)"
 msgstr ""
@@ -868,13 +881,13 @@ msgstr ""
 "照してください。"
 
 #. type: Title #
-#: manpages/man1/afp_lantest.1.md:285
+#: manpages/man1/afp_lantest.1.md:290
 #, no-wrap
 msgid "Return Codes"
 msgstr "復帰コード"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:289
+#: manpages/man1/afp_lantest.1.md:294
 #, no-wrap
 msgid ""
 "**0**\n"
@@ -884,7 +897,7 @@ msgstr ""
 ": すべてのテストは成功した\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:292
+#: manpages/man1/afp_lantest.1.md:297
 #, no-wrap
 msgid ""
 "**1**\n"
@@ -894,13 +907,13 @@ msgstr ""
 ": 1つ以上のテストが失敗した\n"
 
 #. type: Title ##
-#: manpages/man1/afp_lantest.1.md:293 manpages/man1/nbplkup.1.md:54
+#: manpages/man1/afp_lantest.1.md:298 manpages/man1/nbplkup.1.md:57
 #, no-wrap
 msgid "Notes"
 msgstr "注記"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:301
+#: manpages/man1/afp_lantest.1.md:306
 msgid ""
 "Tests that involve large file operations (tests 2 and 3) will create "
 "temporary files in the test volume"
@@ -909,7 +922,7 @@ msgstr ""
 "ファイルが作成される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:301
+#: manpages/man1/afp_lantest.1.md:306
 msgid ""
 "The **-g** and **-G** options significantly increase test file sizes and "
 "test duration"
@@ -918,7 +931,7 @@ msgstr ""
 "増加させる。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:301
+#: manpages/man1/afp_lantest.1.md:306
 msgid ""
 "Cache-focused tests (8-11) provide the most insight into netatalk's "
 "directory cache performance"
@@ -927,20 +940,20 @@ msgstr ""
 "のパフォーマンスに関する最も詳細な情報を提供する。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:301
+#: manpages/man1/afp_lantest.1.md:306
 msgid ""
 "Multiple iterations (**-n**) are recommended for consistent performance "
 "measurements"
 msgstr "一貫したパフォーマンス測定には、複数回の反復（**-n**）が推奨される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:301
+#: manpages/man1/afp_lantest.1.md:306
 msgid "The tool requires write access to the specified AFP volume"
 msgstr ""
 "このツールは、指定された AFP ボリュームへの書き込みアクセスを必要とする。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:304
+#: manpages/man1/afp_lantest.1.md:309
 #, no-wrap
 msgid "**afp_speedtest**(1), **afpd**(8), **netatalk**(8)\n"
 msgstr ""
