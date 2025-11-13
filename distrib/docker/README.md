@@ -226,7 +226,7 @@ for it to be picked up as an AppleTalk printer.
 
 ## Environment Variables
 
-### Mandatory
+### Mandatory Settings
 
 These are required to set the credentials used to authenticate with the file server.
 
@@ -242,32 +242,38 @@ These are required to set the credentials used to authenticate with the file ser
 |------------------|--------------------------------------------|
 | ATALKD_INTERFACE | The network interface to use for AppleTalk |
 
-### Optional
+### Optional Settings
 
-#### String
+#### Value Type
 
-| Variable          | Description                                                            |
-|-------------------|------------------------------------------------------------------------|
-| AFP_UID           | Specify user id of AFP_USER                                            |
-| AFP_GID           | Specify group id of AFP_GROUP                                          |
-| AFP_USER2         | Username for the secondary user                                        |
-| AFP_PASS2         | Password for the secondary user                                        |
-| SERVER_NAME       | The name of the server (AFP and Zeroconf)                              |
-| SHARE_NAME        | The name of the primary shared volume                                  |
-| SHARE_NAME2       | The name of the secondary shared (Time Machine) volume                 |
-| AFP_LOGLEVEL      | The verbosity of logs; default is "info"                               |
-| AFP_MIMIC_MODEL   | Use a custom macOS (OSX) AFP icon; examples: *Tower*, *RackMount*      |
-| AFP_LEGACY_ICON   | Use a custom Classic Mac OS AFP icon; examples: *daemon*. *sdcard*     |
-| AFP_LOGIN_MESSAGE | A message to display when a user logs in (Classic Mac OS)              |
-| ATALKD_OPTIONS    | A string with options to append to atalkd.conf                         |
-| AFP_CNID_BACKEND  | The backend to use for the CNID database: *bdb* or *mysql*             |
-| AFP_CNID_SQL_HOST | The hostname or IP address of the CNID SQL server                      |
-| AFP_CNID_SQL_USER | The username to use when connecting to the CNID SQL server             |
-| AFP_CNID_SQL_PASS | The password to use when connecting to the CNID SQL server             |
-| AFP_CNID_SQL_DB   | The name of the designated database in the SQL server                  |
-| TZ                | The [timezone](https://nodatime.org/TimeZones) to use in the container |
+Set this environment variable to a specific value or string.
 
-#### Boolean
+| Variable                        | Description                                                            |
+|---------------------------------|------------------------------------------------------------------------|
+| AFP_UID                         | Specify user id of AFP_USER                                            |
+| AFP_GID                         | Specify group id of AFP_GROUP                                          |
+| AFP_USER2                       | Username for the secondary user                                        |
+| AFP_PASS2                       | Password for the secondary user                                        |
+| SERVER_NAME                     | The name of the server (AFP and Zeroconf)                              |
+| SHARE_NAME                      | The name of the primary shared volume                                  |
+| SHARE_NAME2                     | The name of the secondary shared (Time Machine) volume                 |
+| AFP_LOGLEVEL                    | The verbosity of logs; default is "info"                               |
+| AFP_MIMIC_MODEL                 | Use a custom macOS (OSX) AFP icon; examples: *Tower*, *RackMount*      |
+| AFP_LEGACY_ICON                 | Use a custom Classic Mac OS AFP icon; examples: *daemon*. *sdcard*     |
+| AFP_LOGIN_MESSAGE               | A message to display when a user logs in (Classic Mac OS only)         |
+| ATALKD_OPTIONS                  | A string with options to append to atalkd.conf                         |
+| AFP_CNID_BACKEND                | The backend to use for the CNID database: *dbd*, *sqlite*, or *mysql*  |
+| AFP_CNID_SQL_HOST               | The hostname or IP address of the CNID SQL server                      |
+| AFP_CNID_SQL_USER               | The username to use when connecting to the CNID SQL server             |
+| AFP_CNID_SQL_PASS               | The password to use when connecting to the CNID SQL server             |
+| AFP_CNID_SQL_DB                 | The name of the designated database in the SQL server                  |
+| AFP_DIRCACHESIZE                | The size of the directory cache                                        |
+| AFP_DIRCACHE_VALIDATION_FREQ    | The frequency to validate the directory cache                          |
+| AFP_DIRCACHE_METADATA_WINDOW    | The time window (in seconds) for metadata caching                      |
+| AFP_DIRCACHE_METADATA_THRESHOLD | The threshold (in seconds) for metadata caching                        |
+| TZ                              | The [timezone](https://nodatime.org/TimeZones) to use in the container |
+
+#### Boolean Type
 
 Set this environment variable to a non-zero value to enable, ex. "1"
 
