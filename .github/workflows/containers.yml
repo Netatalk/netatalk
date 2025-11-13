@@ -194,6 +194,10 @@ jobs:
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
               -e AFP_EXTMAP=1 \
+              -e AFP_DIRCACHESIZE=131072 \
+              -e AFP_DIRCACHE_VALIDATION_FREQ=1 \
+              -e AFP_DIRCACHE_METADATA_WINDOW=3600 \
+              -e AFP_DIRCACHE_METADATA_THRESHOLD=1800 \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -251,6 +255,10 @@ jobs:
               -e AFP_EXTMAP=1 \
               -e AFP_CNID_SQL_HOST=mariadb \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
+              -e AFP_DIRCACHESIZE=131072 \
+              -e AFP_DIRCACHE_VALIDATION_FREQ=1 \
+              -e AFP_DIRCACHE_METADATA_WINDOW=3600 \
+              -e AFP_DIRCACHE_METADATA_THRESHOLD=1800 \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -300,6 +308,10 @@ jobs:
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
               -e AFP_EXTMAP=1 \
+              -e AFP_DIRCACHESIZE=131072 \
+              -e AFP_DIRCACHE_VALIDATION_FREQ=1 \
+              -e AFP_DIRCACHE_METADATA_WINDOW=3600 \
+              -e AFP_DIRCACHE_METADATA_THRESHOLD=1800 \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
