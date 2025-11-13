@@ -1504,9 +1504,9 @@ msgid ""
 "directories and files.\n"
 "> Default size is 8192, maximum size is 131072.\n"
 msgstr ""
-"最大可能なディレクトリキャッシュ内のエントリ数。\n"
+"> 最大可能なディレクトリキャッシュ内のエントリ数。\n"
 "キャッシュはディレクトリとファイルを格納する。\n"
-"> デフォルトサイズは8192、最大サイズは131072です。\n"
+"> デフォルトサイズは8192、最大サイズは131072。\n"
 
 #. type: Plain text
 #: manpages/man5/afp.conf.5.md:543 manual/Configuration.md:739
@@ -1571,7 +1571,7 @@ msgstr ""
 #: manpages/man5/afp.conf.5.md:567
 #, no-wrap
 msgid "**Note**: See Configuration chapter in the manual for more information\n"
-msgstr "【注記】 詳細はマニュアルの設定章を参照のこと\n"
+msgstr "【注記】 詳細はマニュアルのセットアップの章を参照のこと。\n"
 
 #. type: Title ##
 #: manpages/man5/afp.conf.5.md:568
