@@ -22,18 +22,18 @@ Here follows the *backup_demo.c* code which copies metadata and resource from on
 
 ```c
 /*
-    Copyright (c) 2012, Frank Lahm 
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-    */
+ *  Copyright (c) 2012, Frank Lahm
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -62,12 +62,10 @@ static void _log(char *fmt, ...)
     int len;
     static char logbuffer[1024];
     va_list args;
-
     va_start(args, fmt);
     len = vsnprintf(logbuffer, 1023, fmt, args);
     va_end(args);
     logbuffer[1023] = 0;
-
     printf("%s\n", logbuffer);
 }
 
@@ -81,22 +79,27 @@ int main(int argc, char **argv)
     if (argc != 3) {
         ERROR("usage: backup_demo FILE NEWFILE");
     }
+
     file = argv[1];
     newfile = argv[2];
-
     AFPObj obj = { 0 };
 
-    if (afp_config_parse(&obj, "ad") != 0)
+    if (afp_config_parse(&obj, "ad") != 0) {
         ERROR("No Netatalk 3 afp.conf found", file);
+    }
 
     setuplog("default:note", "/dev/tty");
 
-    if (load_volumes(&obj, NULL) != 0)
+    if (load_volumes(&obj, NULL) != 0) {
         ERROR("Couldn't load volumes");
-    if ((vol = getvolbypath(&obj, file)) == NULL)
+    }
+
+    if ((vol = getvolbypath(&obj, file)) == NULL) {
         ERROR("Not a Netatalk volume for file \"%s\"", file);
+    }
 
     printf("Volume path \"%s\"\n", vol->v_path);
+
     if (vol->v_adouble == AD_VERSION2) {
         printf("Volume adouble version v2\n");
     } else if (vol->v_adouble == AD_VERSION_EA) {
@@ -107,34 +110,42 @@ int main(int argc, char **argv)
 
     ad_init(&ad, vol);
 
-    /* Open an existing file's metadata and ressource */
-    if (ad_open(&ad, file, ADFLAGS_HF | ADFLAGS_RDONLY) != 0)
+    /* Open an existing file's metadata and resource */
+    if (ad_open(&ad, file, ADFLAGS_HF | ADFLAGS_RDONLY) != 0) {
         ERROR("Couldn't open metadata of \"%s\"", file);
+    }
 
     int ad_size = vol->v_adouble == AD_VERSION2 ? AD_DATASZ2 : AD_DATASZ_EA;
     printf("%d bytes in adouble metadata buffer ad->ad_data\n", ad_size);
 
-    if (ad_open(&ad, file, ADFLAGS_RF | ADFLAGS_RDONLY) != 0)
-        ERROR("Couldn't open ressource of \"%s\"", file);
+    if (ad_open(&ad, file, ADFLAGS_RF | ADFLAGS_RDONLY) != 0) {
+        ERROR("Couldn't open resource of \"%s\"", file);
+    }
 
-    printf("File has ressource fork of size: %d, fd: %d\n", ad.ad_rlen, ad_reso_fileno(&ad));
+    printf("File has resource fork of size: %d, fd: %d\n", ad.ad_rlen,
+           ad_reso_fileno(&ad));
 
-    /* Copy over metadata and ressource to new file */
-    if (lstat(newfile, &st) != 0)
+    /* Copy over metadata and resource to new file */
+    if (lstat(newfile, &st) != 0) {
         ERROR("Can't stat \"%s\", must exist, create with eg touch", newfile);
+    }
 
     ad_init(&adnew, vol);
-    if (ad_open(&ad, file, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE) != 0)
-        ERROR("Couldn't create metadata/ressource of \"%s\"", newfile);
+
+    if (ad_open(&ad, file, ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE)
+            != 0) {
+        ERROR("Couldn't create metadata/resource of \"%s\"", newfile);
+    }
 
     memcpy(adnew.ad_data, ad.ad_data, ad_size);
     ad_flush(&adnew);
-    if (vol->vfs->vfs_copyfile(vol, -1, file, newfile) != 0)
-        ERROR("Couln't copy ressource to \"%s\"", newfile);
+
+    if (vol->vfs->vfs_copyfile(vol, -1, file, newfile) != 0) {
+        ERROR("Couln't copy resource to \"%s\"", newfile);
+    }
 
     ad_close(&ad, ADFLAGS_HF | ADFLAGS_RF);
     ad_close(&adnew, ADFLAGS_HF | ADFLAGS_RF);
-
 #if 0
     /* examples setting some stuff */
     ad_setdate(&ad, AD_DATE_CREATE | AD_DATE_UNIX, st.st_mtime);
@@ -143,7 +154,6 @@ int main(int argc, char **argv)
     ad_setdate(&ad, AD_DATE_BACKUP, AD_DATE_START);
     ad_flush(&ad);
 #endif
-
     return 0;
 }
 ```

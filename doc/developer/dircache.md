@@ -1,6 +1,6 @@
-# DirCache redundant stat ops
+# Directory Cache Optimization
 
-The Hidden Cost of Validation: How Netatalk's Directory Cache Optimization Reduces Storage Stack Pressure
+*The Hidden Cost of Validation: How Netatalk's Directory Cache Optimization Reduces Storage Stack Pressure*
 
 ## Introduction: The Invisible Performance Tax
 
