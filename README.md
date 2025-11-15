@@ -5,11 +5,6 @@ Continuous Integration:
 [![Test Status](https://github.com/Netatalk/netatalk/actions/workflows/test.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/test.yml)
 [![Container Status](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml/badge.svg)](https://github.com/Netatalk/netatalk/actions/workflows/containers.yml)
 
-Project Status:
-[![Packaging status](https://repology.org/badge/tiny-repos/netatalk.svg)](https://repology.org/project/netatalk/versions)
-[![Monthly commits](https://img.shields.io/github/commit-activity/m/Netatalk/netatalk)](https://github.com/Netatalk/netatalk/graphs/commit-activity)
-[![Lines of code](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=ncloc)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
-
 Code Quality:
 [![Security](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=security_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
 [![Reliability](https://sonarcloud.io/api/project_badges/measure?project=Netatalk_netatalk&metric=reliability_rating)](https://sonarcloud.io/project/overview?id=Netatalk_netatalk)
@@ -21,26 +16,26 @@ Supply Chain Security:
 
 ## About Netatalk
 
-Netatalk is a Free and Open Source file server that implements
-the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol)
-(AFP) 3.4 over TCP/IP and AppleTalk.
-AFP is the native file sharing protocol used on Apple II, Classic Mac OS, and early Mac OS X,
-as well as one of several supported protocols built into macOS.
-A *NIX/*BSD system running Netatalk provides high-speed AppleShare file sharing for Mac clients.
+Netatalk is a Free and Open Source file server for Unix-like operating systems that implements
+the [Apple Filing Protocol](https://en.wikipedia.org/wiki/Apple_Filing_Protocol) (AFP) over TCP/IP and AppleTalk.
+AFP is the native file sharing protocol used on Apple II, Classic Mac OS, early Mac OS X,
+as well as one of several supported protocols on macOS.
+Netatalk is also compatible with many 3rd party AFP clients, including *afpfs-ng* and *afp-perl*.
 
 ## Why Should I Use Netatalk?
 
 If you have a local network of macOS, Mac OS X, Classic Mac OS, or even Apple II computers,
 running a Netatalk AFP server allows you to share, collaborate on, and back up files remotely.
-The latest macOS at the time of writing (macOS 15 Sequoia) comes with a built-in AFP client,
+The latest macOS at the time of writing (macOS 26 Tahoe) comes with a built-in AFP client,
 so Netatalk can act as a seamless bridge between new and old Macs.
 
 Compared to cross-platform file sharing protocols like NFS and FTP, Netatalk delivers a Mac-like user experience,
-with seamless integration of Mac filesystem metadata - including Extended Attributes on macOSand resource forks
-on Classic Mac OS - and compatibility with modern macOS features such as Bonjour, Time Machine, and Spotlight.
+with seamless integration of Mac filesystem metadata - notably Extended Attributes on macOS and resource forks
+on Classic Mac OS - as well as compatibility with modern macOS features such as Bonjour, Time Machine, and Spotlight.
 
-Compared to [Samba](https://www.samba.org/), Netatalk has [demonstrably faster transfer speeds](https://netatalk.io/docs/Benchmarks),
-as well as stronger backwards compatibility with OS X 10.8 Mountain Lion clients and earlier.
+Compared to [Samba](https://www.samba.org/) (SMB),
+Netatalk has [demonstrably faster transfer speeds](https://netatalk.io/docs/Benchmarks),
+and stronger backwards compatibility with OS X 10.8 Mountain Lion clients and earlier.
 
 ## AppleTalk
 
@@ -88,9 +83,8 @@ the archives are a veritable treasure trove of decades of Mac networking know-ho
 Most OS distributions and package repositories ship a version of Netatalk.
 If you want a pre-built binary package, try your package manager first.
 
-To get started with building Netatalk from source code, the
-[Installation Quick Start](https://netatalk.io/install)
-is a good starting point.
+To get started with building Netatalk from source code,
+the [Installation Quick Start](https://netatalk.io/install) is a good starting point.
 
 ## Container deployments
 
@@ -112,8 +106,9 @@ or this [overview of the module's feature set](https://netatalk.io/docs/Webmin-M
 
 Bug reports and feature requests should be filed as [GitHub issue tickets](https://github.com/Netatalk/netatalk/issues).
 
-Before contributing code to the project, please read the [Developer Notes](https://netatalk.io/docs/Developer-Notes)
-for the code and PR conventions used by this project.
+Before contributing code to the project,
+please read the [Contributing readme](https://github.com/Netatalk/netatalk/blob/main/CONTRIBUTING.md)
+for the coding and collaboration conventions used by this project.
 
 PRs are automatically picked up by GitHub CI, which runs the builds, integration tests,
 as well as static analysis scan on SonarCloud (the latter only for PRs created by project members.)
