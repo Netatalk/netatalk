@@ -57,11 +57,9 @@ is published on the project website.
 Additionally, each Netatalk program and configuration file also has a man page
 which can be accessed on the command line, f.e. `man afpd`.
 
-Collaborative wiki articles can be found on the [GitHub wiki](https://github.com/Netatalk/netatalk/wiki).
-The [Netatalk website](https://netatalk.io/docs) also serves a static mirror of all wiki pages.
-
-Editing is open to all registered GitHub users.
-We are looking forward to your contributions!
+Collaborative wiki articles maintained by project members
+can be found on the [GitHub wiki](https://github.com/Netatalk/netatalk/wiki),
+which is also mirrored on the [Netatalk website](https://netatalk.io/docs).
 
 ## Community
 
