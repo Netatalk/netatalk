@@ -1,0 +1,19 @@
+# remove trailing whitespace
+06e427ea02bbcea13edd9e5e0235a7d122b171b7
+1ec59c617be7b892760aa517d8cd7a34bdebea68
+c848b5f89e303a2c5c9421c456aac7edd589696e
+# reformat code in nbp
+f2e82364c2620fea498c3ecc0d6ecdac327dda2e
+8623d44ad8b95458e187a1b1fe3bd38425ff220a
+# reformat C code with astyle
+200f3999082e10db1cc2ec155513054d6266f47d
+404567ad95a20e79300ae469d1862e0d256a040c
+# reformat Markdown files with markdownlint
+dfa94d53464d395843507867f96af9c3ad3a3667
+# reformat Perl code with perltidy
+57b83baebca8dfd695bf52cc519e310fd8bd878c
+6e549cc44f419dfee2e10ff5d9ac39e6c1637c51
+# reformat shell scripts with shfmt
+e2e6fe9287167a85fcb7c7a40c02c19e3483a49e
+# reformat yaml files with yamlfmt
+52e2ad373373b152a5915c45dee246d4168624d0
