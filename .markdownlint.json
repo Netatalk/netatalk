@@ -4,5 +4,6 @@
   "line-length": { "code_blocks": false, "line_length": 120, "tables": false },
   "no-emphasis-as-heading": false,
   "no-hard-tabs": { "code_blocks": false },
-  "single-h1": false
+  "single-h1": false,
+  "table-column-style": false
 }
