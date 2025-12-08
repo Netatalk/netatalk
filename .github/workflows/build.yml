@@ -483,7 +483,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - name: Build on VM
-        uses: vmactions/freebsd-vm@487ce35b96fae3e60d45b521735f5aa436ecfade # v1.2.4
+        uses: vmactions/freebsd-vm@1885b78bae4c4c4b331b4b0461d23cc14cc72387 # v1.2.9
         with:
           copyback: false
           prepare: |
