@@ -93,6 +93,7 @@ extern int         dir_modify(const struct vol *vol, struct dir *dir,
                               const char *new_mname, const char *new_uname, bstring pdir_fullpath);
 extern int         dir_remove(const struct vol *vol, struct dir *dir);
 extern struct dir  *dirlookup(const struct vol *, cnid_t);
+extern struct dir  *dirlookup_strict(const struct vol *, cnid_t);
 extern struct dir *dirlookup_bypath(const struct vol *vol, const char *path);
 
 extern int         movecwd(const struct vol *, struct dir *);

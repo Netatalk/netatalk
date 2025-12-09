@@ -16,7 +16,7 @@ STATIC void test83()
                       (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST
 
@@ -57,7 +57,7 @@ STATIC void test96()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST
 
@@ -136,7 +136,7 @@ STATIC void test118()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << FILPBIT_ATTR);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST
 
@@ -176,7 +176,7 @@ STATIC void test122()
                       (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST
     memset(&filedir, 0, sizeof(filedir));
@@ -235,7 +235,7 @@ STATIC void test318()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << FILPBIT_PDINFO);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST
 
@@ -270,7 +270,7 @@ static int afp_symlink(char *oldpath, char *newpath)
     struct afp_filedir_parms filedir;
     uint16_t bitmap;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int fork = 0;
     dsi = &Conn->dsi;
 
@@ -285,7 +285,7 @@ static int afp_symlink(char *oldpath, char *newpath)
         return -1;
     }
 
-    if (FPWrite(Conn, fork, 0, strlen(oldpath), oldpath, 0)) {
+    if (FPWrite(Conn, fork, 0, (int)strlen(oldpath), oldpath, 0)) {
         return -1;
     }
 
@@ -417,7 +417,7 @@ STATIC void test429()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int fork = 0;
     int id;
     dsi = &Conn->dsi;

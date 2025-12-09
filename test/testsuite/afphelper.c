@@ -76,7 +76,7 @@ int get_did(CONN *conn, uint16_t vol, int dir, char *name)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_DID);
     struct afp_filedir_parms filedir;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &conn->dsi;
     filedir.did = 0;
 
@@ -101,7 +101,7 @@ int get_fid(CONN *conn, uint16_t vol, int dir, char *name)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &conn->dsi;
+    const DSI *dsi = &conn->dsi;
     filedir.did = 0;
 
     if (FPGetFileDirParams(conn, vol, dir, name, bitmap, 0)) {
@@ -146,7 +146,7 @@ void write_fork(CONN *conn, uint16_t vol, int dir, char *name, char *txt)
         return;
     }
 
-    if (FPWrite(conn, fork, 0, strlen(txt), txt, 0)) {
+    if (FPWrite(conn, fork, 0, (int)strlen(txt), txt, 0)) {
         test_failed();
     }
 
@@ -405,7 +405,7 @@ int read_only_folder(uint16_t vol, int did, char *name)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     struct afp_filedir_parms filedir;
-    DSI *dsi2;
+    const DSI *dsi2;
 
     if (!Conn2) {
         return 0;
@@ -484,7 +484,7 @@ int read_only_folder_with_file(uint16_t vol, int did, char *name, char *file)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     struct afp_filedir_parms filedir;
-    DSI *dsi2;
+    const DSI *dsi2;
 
     if (!Conn2) {
         return 0;
@@ -566,7 +566,7 @@ int delete_folder(uint16_t vol, int did, char *name)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     struct afp_filedir_parms filedir;
-    DSI *dsi2;
+    const DSI *dsi2;
 
     if (!Conn2) {
         return 0;
@@ -627,7 +627,7 @@ int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_DID);
     struct afp_filedir_parms filedir;
-    DSI *dsi2;
+    const DSI *dsi2;
 
     if (!Conn2) {
         return 0;
@@ -972,12 +972,12 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
                           uint32_t parent_did, char *dirname)
 {
     struct afp_filedir_parms filedir;
-    DSI *dsi_ptr = &conn->dsi;
+    const DSI *dsi_ptr = &conn->dsi;
     uint32_t dir_id;
     uint16_t f_bitmap, d_bitmap;
     unsigned int ret;
     uint16_t entry_count;
-    unsigned char *entry_ptr;
+    const unsigned char *entry_ptr;
     const unsigned char *data_end;
 
     /* Step 1: Try simple delete - optimal case for empty directories */

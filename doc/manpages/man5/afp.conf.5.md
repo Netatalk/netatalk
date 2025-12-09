@@ -563,6 +563,21 @@ ctime to be considered a metadata-only change.
 > If Netatalk is the only process accessing the volume you can safely
 set a value of 1800.
 
+dircache files = *BOOLEAN* (default: *no*) **(G)**
+
+> Whether to allow files to be cached in the directory cache alongside
+directories. The default is *no* for legacy compatibility and memory
+conservation.
+>
+> When enabled (*yes*), files are cached along with directories, which
+can improve performance for file-heavy workloads by reducing CNID database
+queries. However, this increases memory usage and may cause excessive
+cache evictions if the working set is larger than the dircache size.
+>
+> **Recommendation**: Leave disabled (*no*) unless you have a large
+**dircachesize** and file-intensive workflows. For volumes where Netatalk
+is the only accessor, enabling this with a large cache may improve performance.
+
 **Note**: See Configuration chapter in the manual for more information
 
 ## Miscellaneous Options

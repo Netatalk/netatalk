@@ -54,6 +54,7 @@
 #include "acls.h"
 #include "auth.h"
 #include "desktop.h"
+#include "dircache.h"
 #include "directory.h"
 #include "fork.h"
 #include "unix.h"
@@ -888,12 +889,25 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
     uint32_t darwin_ace_flags, darwin_ace_rights;
     acl_tag_t tag;
     acl_perm_t perm;
+    int requested_ace_count = ace_count;  /* Track requested count for validation */
+    int mapped_aces = 0;  /* Track successfully mapped ACEs */
 
     for (; ace_count != 0; ace_count--, darwin_aces++) {
-        /* type: allow/deny, posix only has allow */
+        /* Darwin ACE flags (defined in etc/afpd/acls.h:70-71):
+         * DARWIN_ACE_FLAGS_PERMIT = 0x00000001 (bit 0 set - ALLOW access)
+         * DARWIN_ACE_FLAGS_DENY   = 0x00000002 (bit 1 set - DENY access)
+         *
+         * These are mutually exclusive bit flags in bits 0-3 (KINDMASK = 0xf).
+         * POSIX ACLs only support ALLOW entries (no DENY support).
+         *
+         * Skip ACEs that don't have PERMIT bit set (includes DENY ACEs and invalid types).
+         */
         darwin_ace_flags = ntohl(darwin_aces->darwin_ace_flags);
 
         if (!(darwin_ace_flags & DARWIN_ACE_FLAGS_PERMIT)) {
+            LOG(log_debug, logtype_afpd,
+                "map_aces_darwin_to_posix: ACE #%d - SKIPPED (DENY not supported in POSIX)",
+                requested_ace_count - ace_count + 1);
             continue;
         }
 
@@ -904,14 +918,24 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
 
         if (perm == 0) {
             /* don't add empty perm */
+            LOG(log_debug, logtype_afpd,
+                "map_aces_darwin_to_posix: ACE #%d - SKIPPED (no mappable POSIX permissions)",
+                requested_ace_count - ace_count + 1);
             continue;
         }
 
         LOG(log_debug, logtype_afpd,
             "map_ace: no: %u, flags: %08x, darwin: %08x, posix: %02x",
             ace_count, darwin_ace_flags, darwin_ace_rights, perm);
+
         /* uid/gid */
-        EC_ZERO_LOG(getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype));
+        if (getnamefromuuid(darwin_aces->darwin_ace_uuid, &name, &uuidtype) != 0) {
+            LOG(log_error, logtype_afpd,
+                "map_aces_darwin_to_posix: UUID lookup failed for ACE #%d (UUID: %s) - ACE will not be stored",
+                requested_ace_count - ace_count + 1,
+                uuid_bin2string(darwin_aces->darwin_ace_uuid));
+            EC_FAIL;
+        }
 
         switch (uuidtype) {
         case UUID_USER:
@@ -952,11 +976,26 @@ static int map_aces_darwin_to_posix(const darwin_ace_t *darwin_aces,
             {
                 EC_ZERO_LOG(posix_acl_add_perm(acc_aclp, tag, id, perm));
             }
+
+            mapped_aces++;  /* Successfully mapped an ACE */
         } else {
             EC_ZERO_LOG(posix_acl_add_perm(acc_aclp, tag, id, perm));
+            mapped_aces++;  /* Successfully mapped an ACE */
         }
     }
 
+    /* Validate that at least some ACEs were successfully mapped */
+    if (requested_ace_count > 0 && mapped_aces == 0) {
+        LOG(log_error, logtype_afpd,
+            "map_aces_darwin_to_posix: client requested %d ACEs but none could be mapped (likely invalid UUIDs)",
+            requested_ace_count);
+        EC_FAIL;
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "map_aces_darwin_to_posix: successfully mapped %d of %d requested ACEs",
+        mapped_aces, requested_ace_count);
+    EC_STATUS(0);
 EC_CLEANUP:
 
     if (name) {
@@ -1502,6 +1541,9 @@ static int set_acl(const struct vol *vol,
     }
 
     /* adds the clients aces */
+    LOG(log_debug, logtype_afpd,
+        "set_acl: mapping %u Darwin ACEs to POSIX ACL for %s",
+        ace_count, S_ISDIR(st.st_mode) ? "directory" : "file");
     EC_ZERO_ERR(map_aces_darwin_to_posix(daces, &default_acl, &access_acl,
                                          ace_count, &default_acl_flags), AFPERR_MISC);
     /* calcuate ACL mask */
@@ -1513,6 +1555,9 @@ static int set_acl(const struct vol *vol,
     EC_ZERO_LOG_ERR(vol->vfs->vfs_posix_acl(vol, name, ACL_TYPE_ACCESS, 0,
                                             access_acl),
                     AFPERR_MISC);
+    LOG(log_debug, logtype_afpd,
+        "set_acl: successfully wrote access ACL to filesystem (%u ACEs requested)",
+        ace_count);
 
     if (default_acl) {
         /* If the dir has an extended default acl it's ACL_MASK must be updated.*/
@@ -1526,6 +1571,9 @@ static int set_acl(const struct vol *vol,
             EC_ZERO_LOG_ERR(vol->vfs->vfs_posix_acl(vol, name, ACL_TYPE_DEFAULT, 0,
                                                     default_acl),
                             AFPERR_MISC);
+            LOG(log_debug, logtype_afpd,
+                "set_acl: successfully wrote default ACL to filesystem (inherit flags: 0x%02x)",
+                default_acl_flags);
         }
     }
 
@@ -1580,12 +1628,27 @@ static int check_acl_access(const AFPObj *obj,
     EC_ZERO_LOG_ERR(ostat(path, &st, vol_syml_opt(vol)), AFPERR_PARAM);
     is_dir = !strcmp(path, ".");
 
-    if (is_dir && (curdir->d_rights_cache != 0xffffffff)) {
-        /* its a dir and the cache value is valid */
+    /* Check if we can use cached permission rights.
+     * Cache is valid only if:
+     * 1. It's a directory
+     * 2. Cache value is not 0xffffffff (unset/invalid)
+     * 3. Filesystem ctime matches cached ctime (no external permission changes)
+     */
+    if (is_dir && (curdir->d_rights_cache != 0xffffffff) &&
+            (curdir->dcache_ctime == st.st_ctime)) {
+        /* Cache is valid - use cached rights */
         allowed_rights = curdir->d_rights_cache;
         LOG(log_debug, logtype_afpd,
-            "check_access: allowed rights from dircache: 0x%08x", allowed_rights);
+            "check_acl_access: using cached rights: 0x%08x (ctime match)", allowed_rights);
     } else {
+        /* Cached rights invalid or ctime changed - recalculate permissions */
+        if (is_dir && (curdir->d_rights_cache != 0xffffffff) &&
+                (curdir->dcache_ctime != st.st_ctime)) {
+            LOG(log_debug, logtype_afpd,
+                "check_acl_access: ctime mismatch (cached:%ld, current:%ld), invalidating permission cache",
+                (long)curdir->dcache_ctime, (long)st.st_ctime);
+        }
+
 #ifdef HAVE_NFSV4_ACLS
         EC_ZERO_LOG(solaris_acl_rights(obj, path, &st, NULL, &allowed_rights));
 #endif
@@ -1640,7 +1703,14 @@ static int check_acl_access(const AFPObj *obj,
                 allowed_rights |= DARWIN_ACE_DELETE;
             }
 
+            /* Cache the calculated rights along with the filesystem ctime.
+             * This allows us to detect external permission changes by comparing
+             * cached ctime with filesystem ctime on subsequent accesses. */
             curdir->d_rights_cache = allowed_rights;
+            curdir->dcache_ctime = st.st_ctime;
+            LOG(log_debug, logtype_afpd,
+                "check_acl_access: cached rights 0x%08x with ctime %ld",
+                allowed_rights, (long)st.st_ctime);
         }
 
         LOG(log_debug, logtype_afpd, "allowed rights: 0x%08x", allowed_rights);
@@ -1872,7 +1942,8 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    /* Use strict validation for parent directory (ACL mutation operation) */
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         LOG(log_error, logtype_afpd, "afp_setacl: error getting did:%d", did);
         return afp_errno;
     }
@@ -1957,6 +2028,36 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
         if (ret == 0) {
             ret = AFP_OK;
+            /* Update dircache after ACL changes */
+            struct stat fresh_st;
+            struct dir *target_entry = NULL;
+
+            /* Get fresh ctime after ACL modification */
+            if (ostat(s_path->u_name, &fresh_st, vol_syml_opt(vol)) == 0) {
+                /* Find existing dircache entry (file or directory) */
+                if (strcmp(s_path->u_name, ".") == 0) {
+                    /* Operating on current directory */
+                    target_entry = curdir;
+                } else {
+                    /* Operating on file or subdirectory - find its dircache entry */
+                    target_entry = NULL;
+
+                    if (s_path->u_name != NULL) {
+                        size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                        target_entry = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
+                    }
+                }
+
+                if (target_entry) {
+                    /* Update cached ctime to match filesystem after ACL change */
+                    target_entry->dcache_ctime = fresh_st.st_ctime;
+                    /* Invalidate d_rights_cache to force recalculation on next access */
+                    target_entry->d_rights_cache = 0xffffffff;
+                    LOG(log_debug, logtype_afpd,
+                        "afp_setacl: updated ctime and invalidated d_rights_cache for %s",
+                        S_ISDIR(s_path->st.st_mode) ? "directory" : "file");
+                }
+            }
         } else {
             LOG(log_warning, logtype_afpd, "afp_setacl(\"%s/%s\"): error",
                 getcwdpath(), s_path->u_name);

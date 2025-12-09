@@ -289,11 +289,21 @@ static int crit_check(struct vol *vol, struct path *path)
             /*retry with the right id */
             cnid_t id;
             adp = adl_lkup(vol, path, adp);
+
+            if (!path->u_name) {
+                LOG(log_warning, logtype_afpd,
+                    "crit_check: path->u_name is NULL, skipping file in search results");
+                return 0;
+            }
+
+            size_t uname_len = strnlen(path->u_name, CNID_MAX_PATH_LEN);
             id = get_id(vol, adp, &path->st, path->d_dir->d_did, path->u_name,
-                        strlen(path->u_name));
+                        (int)uname_len);
 
             if (!id) {
-                /* FIXME */
+                LOG(log_debug, logtype_afpd,
+                    "crit_check: get_id failed for '%s', skipping file in search results",
+                    path->u_name);
                 return 0;
             }
 
@@ -665,15 +675,18 @@ static int catsearch(const AFPObj *obj,
 
             switch (S_IFMT & path.st.st_mode) {
             case S_IFDIR:
+
                 /* here we can short cut
                    i.e. if in the same loop the parent dir wasn't in the cache
                    ALL dirsearch_byname will fail.
                 */
-                unlen = strlen(path.u_name);
-                path.d_dir = dircache_search_by_name(vol,
-                                                     currentdir,
-                                                     path.u_name,
-                                                     unlen);
+                if (!path.u_name) {
+                    /* Skip directory with NULL name */
+                    continue;
+                }
+
+                unlen = (int)strnlen(path.u_name, CNID_MAX_PATH_LEN);
+                path.d_dir = dircache_search_by_name(vol, currentdir, path.u_name, unlen);
 
                 if (path.d_dir == NULL) {
                     /* path.m_name is set by adddir */

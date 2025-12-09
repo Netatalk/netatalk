@@ -610,8 +610,9 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     }
 
     if (movecwd(vol, dir) != 0) {
-        LOG(log_error, logtype_afpd, "%s: bad fork directory", dir->d_fullpath);
-        return AFPERR_MISC;
+        LOG(log_error, logtype_afpd, "%s: bad fork directory",
+            dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
+        return afp_errno;
     }
 
     if (ofork->of_vol->v_flags & AFPVOL_RO) {

@@ -333,7 +333,7 @@ STATIC void test339()
     uint32_t len;
     CONN *loc_conn1 = NULL;
     CONN *loc_conn2 = NULL;
-    DSI *dsi;
+    const DSI *dsi;
     DSI *loc_dsi1, *loc_dsi2;
     int sock1, sock2;
     int fork = 0, fork1;
@@ -518,7 +518,7 @@ STATIC void test370()
     uint32_t len;
     CONN *loc_conn1 = NULL;
     CONN *loc_conn2 = NULL;
-    DSI *dsi;
+    const DSI *dsi;
     DSI *loc_dsi1;
     DSI *loc_dsi2;
     int sock1;
@@ -694,6 +694,244 @@ test_exit:
     exit_test("FPDisconnectOldSession:test370: AFP 3.x disconnect different user");
 }
 
+/* test535: Disconnect with active cache
+ *
+ * This test validates proper cache invalidation when a client disconnects
+ * and reconnects after another client has modified the filesystem.
+ *
+ * Scenario:
+ * 1. Client 1 creates dirs/files and populates cache
+ * 2. Client 1 disconnects (simulates timeout)
+ * 3. Client 2 renames/deletes created items
+ * 4. Client 1 reconnects
+ * 5. Client 1 accesses items via old DIDs (should fail gracefully)
+ * 6. Verify proper cache invalidation on reconnect
+ */
+STATIC void test535()
+{
+    char *dir_name = "t535_disconnect_test";
+    char *file1 = "t535_file1.txt";
+    char *file2 = "t535_file2.txt";
+    char *file3 = "t535_file3.txt";
+    char *renamed_file1 = "t535_renamed1.txt";
+    uint16_t vol = VolID;
+    uint16_t vol2 = 0;
+    uint16_t bitmap = (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) |
+                      (1 << DIRPBIT_DID);
+    int dir = 0;
+    int saved_did = 0;
+    unsigned int ret;
+    int sock;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 1: Client 1 creates items and populates cache
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 1: Client 1 creates directory and files\n");
+    }
+
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dir_name);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    saved_did = dir;
+    FAIL(FPCreateFile(Conn, vol, 0, dir, file1))
+    FAIL(FPCreateFile(Conn, vol, 0, dir, file2))
+    FAIL(FPCreateFile(Conn, vol, 0, dir, file3))
+    /* Populate cache by accessing items */
+    FAIL(FPGetFileDirParams(Conn, vol, dir, file1, bitmap, 0))
+    FAIL(FPGetFileDirParams(Conn, vol, dir, file2, bitmap, 0))
+    FAIL(FPGetFileDirParams(Conn, vol, dir, file3, bitmap, 0))
+    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    FAIL(FPEnumerate(Conn, vol, dir, "", bitmap, bitmap))
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Created 3 files and populated cache\n");
+    }
+
+    /************************************
+     * Step 2: Client 1 disconnects
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 2: Client 1 disconnects (simulates timeout)\n");
+    }
+
+    FAIL(FPCloseVol(Conn, vol))
+    FAIL(FPLogOut(Conn))
+
+    /* Close socket to simulate disconnect */
+    if (Conn->dsi.socket >= 0) {
+        close(Conn->dsi.socket);
+        Conn->dsi.socket = -1;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Client 1 disconnected\n");
+    }
+
+    /************************************
+     * Step 3: Client 2 modifies filesystem
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 3: Client 2 renames and deletes items\n");
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED Client 2 could not open volume\n");
+        }
+
+        test_nottested();
+        goto reconnect;
+    }
+
+    /* Rename file1 */
+    FAIL(FPRename(Conn2, vol2, saved_did, file1, renamed_file1))
+    /* Delete file2 */
+    FAIL(FPDelete(Conn2, vol2, saved_did, file2))
+    /* Keep file3 unchanged for comparison */
+    FPCloseVol(Conn2, vol2);
+    vol2 = 0;
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Client 2 renamed file1, deleted file2, kept file3\n");
+    }
+
+    /************************************
+     * Step 4: Client 1 reconnects
+     ************************************/
+reconnect:
+
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 4: Client 1 reconnects\n");
+    }
+
+    sock = OpenClientSocket(Server, Port);
+
+    if (sock < 0) {
+        test_nottested();
+        goto fin;
+    }
+
+    Conn->dsi.socket = sock;
+
+    if (Version >= 30) {
+        ret = FPopenLoginExt(Conn, vers, uam, User, Password);
+    } else {
+        ret = FPopenLogin(Conn, vers, uam, User, Password);
+    }
+
+    if (ret) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED Client 1 could not reconnect\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    Conn->afp_version = Version;
+    vol = FPOpenVol(Conn, Vol);
+
+    if (vol == 0xffff) {
+        test_nottested();
+        goto fin;
+    }
+
+    VolID = vol;
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Client 1 reconnected successfully\n");
+    }
+
+    /************************************
+     * Step 5: Client 1 accesses items via old names
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 5: Client 1 accesses items (cache should be invalidated)\n");
+    }
+
+    /* Try to access file1 with old name (should fail - it was renamed) */
+    ret = FPGetFileDirParams(Conn, vol, saved_did, file1, bitmap, 0);
+
+    if (ret != ntohl(AFPERR_NOOBJ)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED accessing renamed file1 should return AFPERR_NOOBJ, got %d (%s)\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+    }
+
+    /* Try to access file2 (should fail - it was deleted) */
+    ret = FPGetFileDirParams(Conn, vol, saved_did, file2, bitmap, 0);
+
+    if (ret != ntohl(AFPERR_NOOBJ)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED accessing deleted file2 should return AFPERR_NOOBJ, got %d (%s)\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+    }
+
+    /* Access file3 (should succeed - it wasn't modified) */
+    FAIL(FPGetFileDirParams(Conn, vol, saved_did, file3, bitmap, 0))
+    /* Access renamed file with new name (should succeed) */
+    FAIL(FPGetFileDirParams(Conn, vol, saved_did, renamed_file1, bitmap, 0))
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Cache properly invalidated after reconnect\n");
+    }
+
+    /************************************
+     * Step 6: Verify cache consistency
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 6: Verify cache consistency with re-enumerate\n");
+    }
+
+    /* Re-enumerate to verify cache is consistent */
+    FAIL(FPEnumerate(Conn, vol, saved_did, "", bitmap, bitmap))
+
+    if (!Quiet) {
+        fprintf(stdout, "\t  ✓ Reconnect handled cache invalidation properly\n");
+    }
+
+fin:
+
+    /* Cleanup */
+    if (saved_did) {
+        FPDelete(Conn, vol, saved_did,
+                 file1);        /* Original name (if not renamed) */
+        FPDelete(Conn, vol, saved_did, file2);        /* (if not deleted) */
+        FPDelete(Conn, vol, saved_did, file3);        /* Should exist */
+        FPDelete(Conn, vol, saved_did, renamed_file1); /* Renamed file */
+        FPDelete(Conn, vol, DIRDID_ROOT, dir_name);
+    }
+
+    if (vol2) {
+        FPCloseVol(Conn2, vol2);
+    }
+
+test_exit:
+    exit_test("FPDisconnectOldSession:test535: Disconnect with active cache and reconnect");
+}
+
 /* ----------- */
 void FPDisconnectOldSession_test()
 {
@@ -706,4 +944,5 @@ void FPDisconnectOldSession_test()
     test339();
 #endif
     test370();
+    test535();
 }

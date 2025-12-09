@@ -256,7 +256,8 @@ struct afp_volume_parms {
 void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
                        uint16_t rbitmap);
 
-void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
+void afp_filedir_unpack(struct afp_filedir_parms *filedir,
+                        const unsigned char *b,
                         uint16_t rfbitmap, uint16_t rdbitmap);
 int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
                      uint16_t rfbitmap, uint16_t rdbitmap);
@@ -378,8 +379,39 @@ unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
 unsigned int AFPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
                              off_t size);
 
+/* FileSecurity bitmap values */
+#define kFileSec_UUID        (1 << 0)
+#define kFileSec_GRPUUID     (1 << 1)
+#define kFileSec_ACL         (1 << 2)
+#define kFileSec_REMOVEACL   (1 << 3)
+#define kFileSec_Inherit     (1 << 4)
+
+/* Darwin ACE structure (24 bytes total) */
+typedef struct darwin_ace {
+    unsigned char darwin_ace_uuid[16];  /* 16 bytes UUID */
+    uint32_t darwin_ace_flags;          /* 4 bytes flags (network byte order) */
+    uint32_t darwin_ace_rights;         /* 4 bytes rights (network byte order) */
+} __attribute__((packed)) darwin_ace_t;
+
+/* Darwin ACE flags - Must match server definitions in etc/afpd/acls.h
+ * These are bit flags that can be combined with inheritance flags
+ * PERMIT/DENY occupy bits 0-1 of the flags field
+ */
+#define DARWIN_ACE_FLAGS_PERMIT         0x00000001  /* Bit 0: ALLOW access */
+#define DARWIN_ACE_FLAGS_DENY           0x00000002  /* Bit 1: DENY access */
+#define DARWIN_ACE_FLAGS_FILE_INHERIT   0x00000020  /* Bit 5: Inherit to files */
+#define DARWIN_ACE_FLAGS_DIRECTORY_INHERIT 0x00000040  /* Bit 6: Inherit to dirs */
+#define DARWIN_ACE_FLAGS_ONLY_INHERIT   0x00000100  /* Bit 8: Inherit only */
+
+/* Darwin ACE rights (simplified subset) */
+#define DARWIN_ACE_READ_DATA            0x00000002
+#define DARWIN_ACE_WRITE_DATA           0x00000004
+#define DARWIN_ACE_EXECUTE              0x00000008
+
 unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
                        char *name);
+unsigned int AFPSetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
+                       char *name, uint32_t ace_count, darwin_ace_t *aces);
 unsigned int AFPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
                             int maxsize, char *pathname);
 unsigned int AFPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,

@@ -106,13 +106,21 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             dir = s_path->d_dir;
 
             if (!dir) {
+                LOG(log_error, logtype_afpd,
+                    "afp_getfildirparams: s_path->d_dir NULL (name:\"%s\")",
+                    s_path->u_name ? s_path->u_name : "(null)");
                 return AFPERR_NOOBJ;
             }
 
+            LOG(log_debug, logtype_afpd,
+                "afp_getfildirparams: SUCCESS dir did:%u \"%s\"",
+                ntohl(dir->d_did), s_path->u_name ? s_path->u_name : ".");
             ret = getdirparams(obj, vol, dbitmap, s_path, dir,
                                rbuf + 3 * sizeof(uint16_t), &buflen);
 
             if (ret != AFP_OK) {
+                LOG(log_error, logtype_afpd,
+                    "afp_getfildirparams: getdirparams failed ret=%d", ret);
                 return ret;
             }
         }
@@ -260,11 +268,14 @@ static int moveandrename(const AFPObj *obj,
     if (!isdir) {
         if ((oldunixname = strdup(mtoupath(vol, oldname, sdir->d_did,
                                            utf8_encoding(vol->v_obj)))) == NULL) {
-            return AFPERR_PARAM;    /* can't convert */
+            /* can't convert */
+            return AFPERR_PARAM;
         }
 
+        size_t oldunixname_len = oldunixname ? strnlen(oldunixname,
+                                 CNID_MAX_PATH_LEN) : 0;
         AFP_CNID_START("cnid_get");
-        id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, strlen(oldunixname));
+        id = cnid_get(vol->v_cdb, sdir->d_did, oldunixname, oldunixname_len);
         AFP_CNID_DONE();
         path.st_valid = 0;
         path.u_name = oldunixname;
@@ -323,6 +334,55 @@ static int moveandrename(const AFPObj *obj,
         if (fchdir(cwd_fd) != 0) {
             LOG(log_error, logtype_afpd, "moveandrename: %s", strerror(errno));
             rc = AFPERR_MISC;
+            goto exit;
+        }
+    }
+
+    /* Validate oldunixname before rename. If stale, self-heal via CNID. */
+    struct stat old_st;
+    /* Convert -1 to AT_FDCWD for fstatat() - POSIX requires valid fd or AT_FDCWD */
+    int fd = (sdir_fd == -1) ? AT_FDCWD : sdir_fd;
+
+    if (fstatat(fd, oldunixname, &old_st, 0) != 0 && errno == ENOENT) {
+        LOG(log_info, logtype_afpd,
+            "moveandrename: stale source path \"%s\", healing via CNID", oldunixname);
+        /* Clean stale sdir cache */
+        cnid_t saved_sdir_did = sdir->d_did;
+
+        if (!(sdir->d_flags & DIRF_ISFILE)) {
+            dircache_remove_children(vol, sdir);
+        }
+
+        dir_remove(vol, sdir);
+
+        /* Retry via dirlookup to get fresh sdir from CNID */
+        if ((sdir = dirlookup(vol, saved_sdir_did)) != NULL) {
+            /* Reconstruct oldunixname with fresh sdir */
+            const char *fresh_oldunixname;
+
+            if (isdir) {
+                fresh_oldunixname = ctoupath(vol, dirlookup(vol, sdir->d_pdid), oldname);
+            } else {
+                fresh_oldunixname = mtoupath(vol, oldname, sdir->d_did,
+                                             utf8_encoding(vol->v_obj));
+            }
+
+            if (fresh_oldunixname) {
+                free(oldunixname);
+                oldunixname = strdup(fresh_oldunixname);
+
+                if (!oldunixname) {
+                    rc = AFPERR_MISC;
+                    goto exit;
+                }
+
+                LOG(log_debug, logtype_afpd,
+                    "moveandrename: self-healed with fresh path \"%s\"", oldunixname);
+            }
+        } else {
+            LOG(log_error, logtype_afpd,
+                "moveandrename: self-heal failed for did:%u", ntohl(saved_sdir_did));
+            rc = AFPERR_NOOBJ;
             goto exit;
         }
     }
@@ -395,6 +455,21 @@ static int moveandrename(const AFPObj *obj,
             goto exit;
         }
 
+        /* Clean stale cache entry after successful rename */
+        if (isdir && sdir) {
+            /* For directories: sdir is the directory that was renamed.
+             * Its cached d_fullpath now points to old location (stale).
+             * Clean it so next access rebuilds with new path from CNID. */
+            LOG(log_debug, logtype_afpd,
+                "moveandrename: cleaning stale directory cache after rename (did:%u, old:\"%s\")",
+                ntohl(sdir->d_did), cfrombstr(sdir->d_fullpath));
+            dircache_remove_children(vol, sdir);
+
+            if (sdir != curdir) {
+                dir_remove(vol, sdir);
+            }
+        }
+
         /* Fixup adouble info */
         if (!ad_metadata(upath, adflags, adp)) {
             ad_setid(adp, st->st_dev, st->st_ino, id, curdir->d_did, vol->v_stamp);
@@ -403,23 +478,10 @@ static int moveandrename(const AFPObj *obj,
         }
 
         /* fix up the catalog entry */
+        size_t upath_len = upath ? strnlen(upath, CNID_MAX_PATH_LEN) : 0;
         AFP_CNID_START("cnid_update");
-        cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, strlen(upath));
+        cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, upath_len);
         AFP_CNID_DONE();
-        /* Remove old file/dir entry it from the dircache */
-        struct dir *cacheddir = dircache_search_by_did(vol, id);
-
-        if (cacheddir) {
-            LOG(log_warning, logtype_afpd, "Still cached: \"%s/%s\"", getcwdpath(), upath);
-
-            /* If directory is being renamed, all child dircache entries are now invalid */
-            if (isdir && !(cacheddir->d_flags & DIRF_ISFILE)) {
-                dircache_remove_children(vol, cacheddir);
-            }
-
-            /* Remove the cache entry */
-            (void)dir_remove(vol, cacheddir);
-        }
 
         /* Send FCE event */
         if (isdir) {
@@ -488,7 +550,8 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     isdir = path_isadir(path);
 
     if (*path->m_name != '\0') {
-        strcpy(oldname, path->m_name); /* an extra copy for of_rename */
+        /* an extra copy for of_rename */
+        strlcpy(oldname, path->m_name, AFPOBJ_TMPSIZ + 1);
 
         if (isdir) {
             /* curdir parent dir, need to move sdir back */
@@ -513,7 +576,8 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     if (!plen) {
-        return AFP_OK; /* newname == oldname same dir */
+        /* newname == oldname same dir */
+        return AFP_OK;
     }
 
     rc = moveandrename(obj, vol, sdir, -1, oldname, newname, isdir);
@@ -639,8 +703,12 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(int);
+    /* Validate PARENT directory via strict lookup (stat and inode comparison) */
+    LOG(log_debug, logtype_afpd,
+        "afp_delete: validating parent did:%u with strict lookup",
+        ntohl(did));
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         return afp_errno;
     }
 
@@ -649,6 +717,21 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     upath = s_path->u_name;
+
+    /* Always perform fresh stat on final s_path for delete */
+    if (of_statdir(vol, s_path) < 0) {
+        switch (errno) {
+        case ENOENT:
+            return AFPERR_NOOBJ;
+
+        case EACCES:
+        case EPERM:
+            return AFPERR_ACCESS;
+
+        default:
+            return AFPERR_MISC;
+        }
+    }
 
     if (path_isadir(s_path)) {
         if (*s_path->m_name != '\0' || curdir->d_did == DIRDID_ROOT) {
@@ -681,14 +764,25 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             struct dir *deldir;
 
             cnid_t delcnid = CNID_INVALID;
+            /* Post-delete cleanup: directory already validated and deleted,
+             * now clean up cache and CNID unconditionally */
+            deldir = NULL;
 
-            if ((deldir = dircache_search_by_name(vol, curdir, upath, strlen(upath)))) {
-                /* If directory, also remove child dircache entries */
+            if (upath != NULL) {
+                size_t upath_len = strnlen(upath, CNID_MAX_PATH_LEN);
+                deldir = dircache_search_by_name(vol, curdir, upath, upath_len);
+            }
+
+            if (deldir) {
+                LOG(log_debug, logtype_afpd,
+                    "afp_delete: cleaning cache for deleted directory \"%s\"", upath);
+
+                /* Remove child dircache entries (orphaned after directory delete) */
                 if (!(deldir->d_flags & DIRF_ISFILE)) {
                     dircache_remove_children(vol, deldir);
                 }
 
-                /* Delete deldir's CNID */
+                /* Delete CNID from database */
                 delcnid = deldir->d_did;
 
                 if (delcnid != CNID_INVALID) {
@@ -697,12 +791,13 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     AFP_CNID_DONE();
                 }
 
-                /* Remove deldir from dircache cache */
+                /* Remove from dircache */
                 dir_remove(vol, deldir);
             } else {
                 /* Directory not in cache, delete CNID manually */
+                size_t upath_len = upath ? strnlen(upath, CNID_MAX_PATH_LEN) : 0;
                 AFP_CNID_START("cnid_get");
-                delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, strlen(upath));
+                delcnid = cnid_get(vol->v_cdb, curdir->d_did, upath, upath_len);
                 AFP_CNID_DONE();
 
                 if (delcnid != CNID_INVALID) {
@@ -739,6 +834,28 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         if (s_path->st_valid && s_path->st_errno == ENOENT) {
             rc = AFPERR_NOOBJ;
         } else {
+            /* Validate target FILE inode to detect external replacement */
+            LOG(log_debug, logtype_afpd,
+                "afp_delete: validating target file \"%s\" inode", upath);
+            struct dir *cachedfile = NULL;
+
+            if (upath != NULL) {
+                size_t upath_len = strnlen(upath, CNID_MAX_PATH_LEN);
+                cachedfile = dircache_search_by_name(vol, curdir, upath, upath_len);
+            }
+
+            if (cachedfile != NULL && cachedfile->dcache_ino != s_path->st.st_ino) {
+                /* File was replaced externally - inode mismatch */
+                LOG(log_warning, logtype_afpd,
+                    "afp_delete: inode mismatch for \"%s\" (cached:%llu vs current:%llu), file replaced externally",
+                    upath, (unsigned long long)cachedfile->dcache_ino,
+                    (unsigned long long)s_path->st.st_ino);
+                /* Invalidate stale cache entry */
+                dir_remove(vol, cachedfile);
+                /* Return error - the file the client wanted to delete no longer exists */
+                return AFPERR_NOOBJ;
+            }
+
             /* deletefile() also handles CNID and dircache cleanup */
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
                 fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
@@ -759,6 +876,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     return rc;
 }
+
 /* ------------------------ */
 char *absupath(const struct vol *vol, struct dir *dir, char *u)
 {
@@ -856,7 +974,8 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             sdir = path->d_dir;
         }
 
-        strcpy(oldname, path->m_name); /* an extra copy for of_rename */
+        /* an extra copy for of_rename */
+        strlcpy(oldname, path->m_name, AFPOBJ_TMPSIZ + 1);
     } else {
         memcpy(oldname, cfrombstr(sdir->d_m_name), blength(sdir->d_m_name) + 1);
     }
@@ -867,7 +986,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     /* get the destination directory */
     if (NULL == (ddir = dirlookup(vol, did))) {
-        rc = afp_errno; /*  was AFPERR_PARAM */
+        rc = afp_errno;
         goto exit;
     }
 

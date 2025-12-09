@@ -111,8 +111,8 @@
 /*****************************
  *       the dircache        */
 
-static hash_t       *dircache;        /* The actual cache */
-static unsigned int dircache_maxsize; /* cache maximum size */
+static hash_t       *dircache;
+static unsigned int dircache_maxsize;
 
 /*
  * Configuration variables for cache validation behavior
@@ -239,8 +239,10 @@ static int hash_comp_didname(const void *k1, const void *k2)
 /***************************
  * queue index on dircache */
 
-static q_t *index_queue;    /* the index itself */
+static q_t *index_queue;
 static unsigned long queue_count;
+/* Peak entries reached this session */
+static unsigned long queue_count_max = 0;
 
 /*!
  * @brief Determine if cache entry should be validated against filesystem
@@ -259,7 +261,8 @@ static int should_validate_cache_entry(void)
 
     /* Validate every Nth access to detect external changes */
     if (dircache_validation_freq == 0) {
-        return 1;  /* Always validate if freq is 0 (invalid config) */
+        /* Always validate if freq is 0 (invalid config) */
+        return 1;
     }
 
     /* Use the fetched value + 1 (post-increment semantics) */
@@ -289,7 +292,7 @@ static int cache_entry_externally_modified(struct dir *cdir,
     if (cdir->dcache_ino != st->st_ino) {
         LOG(log_debug, logtype_afpd,
             "dircache: inode changed for \"%s\" (%llu -> %llu)",
-            cfrombstr(cdir->d_u_name),
+            cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)",
             (unsigned long long)cdir->dcache_ino,
             (unsigned long long)st->st_ino);
         return 1;
@@ -304,7 +307,7 @@ static int cache_entry_externally_modified(struct dir *cdir,
     if (cdir->d_flags & DIRF_ISFILE) {
         LOG(log_debug, logtype_afpd,
             "dircache: file ctime changed for \"%s\"",
-            cfrombstr(cdir->d_u_name));
+            cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
         return 1;
     }
 
@@ -315,7 +318,7 @@ static int cache_entry_externally_modified(struct dir *cdir,
      * 3. Subdirectory changes - should NOT invalidate parent
      *
      * Heuristic: Recent, small ctime changes are likely metadata-only.
-     * Older or larger changes suggest content modification.
+     * Older or larger changes more likely content modification.
      */
     time_t now = time(NULL);
     time_t ctime_age = now - st->st_ctime;
@@ -329,15 +332,18 @@ static int cache_entry_externally_modified(struct dir *cdir,
          */
         LOG(log_debug, logtype_afpd,
             "dircache: metadata-only change detected for \"%s\", updating cached ctime",
-            cfrombstr(cdir->d_u_name));
+            cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
         cdir->dcache_ctime = st->st_ctime;
+        /* Keep d_rights_cache unchanged - trust it was set by Netatalk operations.
+         * External permission changes will be detected, recalculated and updated by accessmode() on next access. */
         return 0;
     }
 
     /* Significant change - assume content modification */
     LOG(log_debug, logtype_afpd,
         "dircache: significant change detected for \"%s\" (age=%lds, delta=%lds)",
-        cfrombstr(cdir->d_u_name), (long)ctime_age, (long)ctime_delta);
+        cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)", (long)ctime_age,
+        (long)ctime_delta);
     return 1;
 }
 
@@ -414,6 +420,24 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
     struct stat st;
     hnode_t *hn;
     AFP_ASSERT(vol);
+
+    /* Handle CNID_INVALID (0) gracefully - can occur in race conditions
+     * when another process deletes a directory while we're looking it up. */
+    if (cnid == CNID_INVALID) {
+        LOG(log_debug, logtype_afpd,
+            "dircache_search_by_did: cnid is CNID_INVALID, returning NULL");
+        return NULL;
+    }
+
+    /* Special AFP system DIDs (DIRDID_ROOT_PARENT=1, DIRDID_ROOT=2) are not cached */
+    if (ntohl(cnid) == 1 || ntohl(cnid) == 2) {
+        LOG(log_debug, logtype_afpd,
+            "dircache_search_by_did: cnid %u is a special AFP system DID, returning NULL",
+            ntohl(cnid));
+        return NULL;
+    }
+
+    /* DIDs 3-16 are reserved but unused - should never occur in normal operation */
     AFP_ASSERT(ntohl(cnid) >= CNID_START);
     dircache_stat.lookups++;
     key.d_vid = vol->v_vid;
@@ -428,7 +452,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
         if (cdir->d_flags & DIRF_ISFILE) {
             LOG(log_debug, logtype_afpd,
                 "dircache(cnid:%u): {not a directory:\"%s\"}",
-                ntohl(cnid), cfrombstr(cdir->d_u_name));
+                ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
             (void)dir_remove(vol, cdir);
             dircache_stat.expunged++;
             return NULL;
@@ -440,9 +464,6 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
          * Periodic validation catches external filesystem changes.
          */
         if (should_validate_cache_entry()) {
-            /* Mark entry as validated to track unvalidated entries */
-            cdir->d_flags &= ~DIRF_UNVALIDATED;
-
             /* Check if file still exists */
             if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
@@ -457,7 +478,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
             if (cache_entry_externally_modified(cdir, &st)) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(cnid:%u): {externally modified:\"%s\"}",
-                    ntohl(cnid), cfrombstr(cdir->d_u_name));
+                    ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
                 (void)dir_remove(vol, cdir);
                 dircache_stat.expunged++;
                 return NULL;
@@ -468,8 +489,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 "dircache(cnid:%u): {validated: path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
         } else {
-            /* Skipped validation for performance - mark as unvalidated */
-            cdir->d_flags |= DIRF_UNVALIDATED;
+            /* Skipped validation for performance */
             LOG(log_debug, logtype_afpd,
                 "dircache(cnid:%u): {cached (unvalidated): path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
@@ -501,18 +521,18 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
 struct dir *dircache_search_by_name(const struct vol *vol,
                                     const struct dir *dir,
                                     char *name,
-                                    int len)
+                                    size_t len)
 {
     struct dir *cdir = NULL;
     struct dir key;
     struct stat st;
     hnode_t *hn;
-    struct tagbstring uname = {-1, len, (unsigned char *)name};
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
     AFP_ASSERT(name);
     AFP_ASSERT(len == strlen(name));
-    AFP_ASSERT(len < 256);
+    AFP_ASSERT(len < 256);  /* Ensure safe conversion to int */
+    struct tagbstring uname = {-1, (int)len, (unsigned char *)name};
     dircache_stat.lookups++;
     LOG(log_debug, logtype_afpd,
         "dircache_search_by_name(did:%u, \"%s\")",
@@ -531,9 +551,6 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     if (cdir) {
         /* Periodic validation to detect external changes */
         if (should_validate_cache_entry()) {
-            /* Mark entry as validated */
-            cdir->d_flags &= ~DIRF_UNVALIDATED;
-
             /* Check if file still exists */
             if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
@@ -553,9 +570,6 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 dircache_stat.expunged++;
                 return NULL;
             }
-        } else {
-            /* Mark as unvalidated since we skipped validation */
-            cdir->d_flags |= DIRF_UNVALIDATED;
         }
 
         LOG(log_debug, logtype_afpd,
@@ -593,7 +607,8 @@ int dircache_add(const struct vol *vol,
     if (ntohl(dir->d_did) < CNID_START) {
         LOG(log_error, logtype_afpd,
             "dircache_add(): did:%u is less than the allowed %d. Try rebuilding the CNID database for: \"%s\"",
-            ntohl(dir->d_did), CNID_START, cfrombstr(dir->d_u_name));
+            ntohl(dir->d_did), CNID_START,
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
     }
 
     AFP_ASSERT(ntohl(dir->d_did) >= CNID_START);
@@ -647,11 +662,16 @@ int dircache_add(const struct vol *vol,
         exit(EXITERR_SYS);
     } else {
         queue_count++;
+
+        /* Track peak entries for statistics */
+        if (queue_count > queue_count_max) {
+            queue_count_max = queue_count;
+        }
     }
 
     dircache_stat.added++;
     LOG(log_debug, logtype_afpd, "dircache(did:%u,'%s'): {added}",
-        ntohl(dir->d_did), cfrombstr(dir->d_u_name));
+        ntohl(dir->d_did), dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
     AFP_ASSERT(queue_count == index_didname->hash_nodecount
                && queue_count == dircache->hash_nodecount);
     return 0;
@@ -670,38 +690,44 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
     AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
 
     if (flags & QUEUE_INDEX) {
-        /* remove it from the queue index */
-        dequeue(dir->qidx_node->prev); /* this effectively deletes the dequeued node */
+        /* this effectively deletes the dequeued node */
+        dequeue(dir->qidx_node->prev);
         queue_count--;
     }
 
     if (flags & DIDNAME_INDEX) {
         if ((hn = hash_lookup(index_didname, dir)) == NULL) {
-            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in didname index",
-                ntohl(dir->d_did), cfrombstr(dir->d_u_name));
-            dircache_dump();
-            AFP_PANIC("dircache_remove");
+            /* Entry not in didname index - already removed */
+            LOG(log_warning, logtype_afpd,
+                "dircache_remove: entry not in didname index (already removed) - "
+                "did:%u, pdid:%u, name:\"%s\", path:\"%s\", flags:0x%x",
+                ntohl(dir->d_did), ntohl(dir->d_pdid),
+                dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)",
+                dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+                flags);
+        } else {
+            hash_delete_free(index_didname, hn);
         }
-
-        hash_delete_free(index_didname, hn);
     }
 
     if (flags & DIRCACHE) {
         if ((hn = hash_lookup(dircache, dir)) == NULL) {
-            LOG(log_error, logtype_afpd, "dircache_remove(%u,\"%s\"): not in dircache",
-                ntohl(dir->d_did), cfrombstr(dir->d_u_name));
-            dircache_dump();
-            AFP_PANIC("dircache_remove");
+            /* Entry not in dircache - already removed */
+            LOG(log_warning, logtype_afpd,
+                "dircache_remove: entry not in dircache (already removed) - "
+                "did:%u, pdid:%u, name:\"%s\", path:\"%s\", flags:0x%x",
+                ntohl(dir->d_did), ntohl(dir->d_pdid),
+                dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)",
+                dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+                flags);
+        } else {
+            hash_delete_free(dircache, hn);
         }
-
-        hash_delete_free(dircache, hn);
     }
 
     LOG(log_debug, logtype_afpd, "dircache(did:%u,\"%s\"): {removed}",
-        ntohl(dir->d_did), cfrombstr(dir->d_u_name));
+        ntohl(dir->d_did), dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
     dircache_stat.removed++;
-    AFP_ASSERT(queue_count == index_didname->hash_nodecount
-               && queue_count == dircache->hash_nodecount);
 }
 
 /*!
@@ -715,8 +741,9 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
  *
  * @param[in] vol  volume
  * @param[in] dir  parent directory whose children should be removed
+ * @returns 0 on success, -1 if curdir was removed and recovery failed
  */
-void dircache_remove_children(const struct vol *vol, struct dir *dir)
+int dircache_remove_children(const struct vol *vol, struct dir *dir)
 {
     struct dir *entry;
     hnode_t *hn;
@@ -727,7 +754,7 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
     int remove_capacity = 0;
 
     if (!dir || !dir->d_fullpath) {
-        return;
+        return 0;
     }
 
     LOG(log_debug, logtype_afpd,
@@ -763,7 +790,7 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
                     if (!to_remove) {
                         LOG(log_error, logtype_afpd,
                             "dircache_remove_children: out of memory");
-                        return;
+                        return -1;
                     }
                 }
 
@@ -772,19 +799,35 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
                 remove_count++;
                 LOG(log_debug, logtype_afpd,
                     "dircache_remove_children: marking child \"%s\" (did:%u) for removal",
-                    cfrombstr(entry->d_u_name), ntohl(entry->d_did));
+                    entry->d_u_name ? cfrombstr(entry->d_u_name) : "(null)", ntohl(entry->d_did));
             }
         }
     }
+
+    /* Save curdir DID before loop in case dir_remove recovery fails */
+    cnid_t saved_curdir_did = curdir ? curdir->d_did : CNID_INVALID;
+    int recovery_status = 0;
 
     /* Second pass: remove collected entries from dircache */
     for (int i = 0; i < remove_count; i++) {
         entry = to_remove[i];
         LOG(log_debug, logtype_afpd,
             "dircache_remove_children: removing stale \"%s\" (did:%u) from dircache",
-            cfrombstr(entry->d_u_name), ntohl(entry->d_did));
-        /* Remove entry from dircache */
-        dir_remove(vol, entry);
+            entry->d_u_name ? cfrombstr(entry->d_u_name) : "(null)", ntohl(entry->d_did));
+
+        /* dir_remove returns -1 if it removed curdir and recovery failed */
+        if (dir_remove(vol, entry) != 0) {
+            recovery_status = -1;
+        }
+    }
+
+    /* Defensive check: If curdir is NULL, dir_remove failed to recover */
+    if (!curdir) {
+        curdir = vol->v_root ? vol->v_root : &rootParent;
+        LOG(log_error, logtype_afpd,
+            "dircache_remove_children: DEFENSIVE: curdir is NULL (was did:%u), fallback to %s",
+            ntohl(saved_curdir_did), vol->v_root ? "volume root" : "rootParent");
+        recovery_status = -1;
     }
 
     if (to_remove) {
@@ -792,14 +835,17 @@ void dircache_remove_children(const struct vol *vol, struct dir *dir)
     }
 
     if (remove_count) {
+        const char *status = recovery_status ? " (curdir recovery failed)" : "";
         LOG(log_info, logtype_afpd,
-            "dircache_remove_children: removed %d dircache entries of \"%s\"",
-            remove_count, cfrombstr(dir->d_fullpath));
+            "dircache_remove_children: removed %d dircache entries of \"%s\"%s",
+            remove_count, cfrombstr(dir->d_fullpath), status);
     } else {
         LOG(log_debug, logtype_afpd,
             "dircache_remove_children: removed %d dircache entries of \"%s\"",
             remove_count, cfrombstr(dir->d_fullpath));
     }
+
+    return recovery_status;
 }
 
 /*!
@@ -820,9 +866,10 @@ int dircache_init(int reqsize)
 {
     dircache_maxsize = DEFAULT_MAX_DIRCACHE_SIZE;
 
-    /* Initialize the main dircache */
+    /* Initialize the main dircache
+     * Allow upto and including MAX_POSSIBLE_DIRCACHE_SIZE=131072) */
     if (reqsize > DEFAULT_MAX_DIRCACHE_SIZE
-            && reqsize < MAX_POSSIBLE_DIRCACHE_SIZE) {
+            && reqsize <= MAX_POSSIBLE_DIRCACHE_SIZE) {
         while ((dircache_maxsize < MAX_POSSIBLE_DIRCACHE_SIZE)
                 && (dircache_maxsize < reqsize)) {
             dircache_maxsize *= 2;
@@ -896,12 +943,12 @@ void log_dircache_stat(void)
                             && AFPobj->username[0]) ? AFPobj->username : "unknown";
     LOG(log_info, logtype_afpd,
         "dircache statistics: (user: %s) "
-        "entries: %lu, lookups: %llu, hits: %llu (%.1f%%), misses: %llu, "
+        "entries: %lu, max_entries: %lu, config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu, "
         "validations: ~%llu (%.1f%%), "
         "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
         "validation_freq: %u",
         username,
-        queue_count,
+        queue_count, queue_count_max, dircache_maxsize,
         dircache_stat.lookups,
         dircache_stat.hits, hit_ratio,
         dircache_stat.misses,
@@ -1067,11 +1114,11 @@ void dircache_reset_validation_counter(void)
  */
 void dircache_report_invalid_entry(struct dir *dir)
 {
-    if (dir && (dir->d_flags & DIRF_UNVALIDATED)) {
-        /* Only count entries that were returned without validation */
+    if (dir) {
+        /* Increment for every cache refresh event */
         dircache_stat.invalid_on_use++;
         LOG(log_debug, logtype_afpd,
-            "dircache: unvalidated entry was invalid on use: \"%s\"",
-            cfrombstr(dir->d_u_name));
+            "dircache: cache refresh required for \"%s\"",
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
     }
 }

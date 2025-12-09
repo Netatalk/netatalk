@@ -82,44 +82,78 @@ but keep unneeded data warm in the page cache,
 pushing other more important objects off the page cache and increasing disk IO -
 even though Netatalk has the dircache containing everything needed.
 
-### How Directory Enumeration Pollutes the Page Cache
+### How Directory Enumeration Works
 
-When a client browses a Netatalk network folder, here's what traditionally happens:
+When a client browses a Netatalk network folder, here's the actual sequence:
 
 ```mermaid
 sequenceDiagram
     participant Client as Mac Client
     participant Netatalk
-    participant DirCache as Directory Cache
+    participant Disk as Filesystem
     participant PageCache as Page Cache
-    participant Disk as Storage
+    participant DirCache as Directory Cache
     
-    Client->>Netatalk: List folder contents
-    Netatalk->>DirCache: Lookup entries
+    Client->>Netatalk: List folder contents (FPEnumerate)
+    Netatalk->>Disk: readdir() - get entry names
+    Disk->>Netatalk: Return entry names
     
-    loop For EVERY cached entry
-        DirCache->>Netatalk: Return cached entry
-        Note over Netatalk: Must validate freshness
-        Netatalk->>PageCache: stat() system call
+    loop For EACH entry
+        Netatalk->>PageCache: stat() each entry
         alt Cache miss
-            PageCache->>Disk: Read inode
+            PageCache->>Disk: Read inode metadata
             Disk->>PageCache: Load metadata
-            Note over PageCache: Page-Cache Evicts something else!
+            Note over PageCache: Evicts LRU data
         end
-        PageCache->>Netatalk: Store and Return metadata
+        PageCache->>Netatalk: Return stat data
+        
+        alt Entry is directory
+            Netatalk->>DirCache: Check if cached
+            alt Not in cache
+                Netatalk->>DirCache: Add directory to cache
+            end
+        else Entry is file
+            Netatalk->>DirCache: Check if cached (if file caching enabled)
+            alt Not in cache
+                Netatalk->>DirCache: Add file to cache (if enabled)
+            end
+        end
     end
     
-    Netatalk->>Client: Return validated list
+    Netatalk->>Client: Return file list with metadata
 ```
 
-With the dircache improvements we no longer run everything inside "[For EVERY cached entry]".
-Instead we now only do this probabilistically, and transparently when a cached entry is found to be invalid on use.
+**Key insights from enumerate.c**:
+
+1. All entries are read from filesystem via `readdir()` and `stat()` all - high page-cache/disk demand
+2. **Directories**: Cache checked before adding, avoiding duplicate entries
+3. **Files**: Cache is NOT checked during enumeration - always processed via `getfilparams()`
+which may add them to cache internally
+
+**Current enumeration inefficiency:**
+
+- **Every file** is `stat()`'ed on every enumeration
+- **Every directory** is `stat()`'ed, then cache is checked to avoid duplicate entries
+- Repeatedly browsing a folder with 10,000 files = 10,000 stat calls each time (LRU scanning problem)
+
+**Future optimization opportunity - Cache-First Enumeration:**
+
+Optimal approach:
+
+1. **readdir()**: Get list of entry names from filesystem (unavoidable - must know what exists)
+2. **For each entry**: Check `dircache_search_by_name()` first
+   - **Cache HIT**: Use cached metadata
+   - **Cache MISS**: Fall back to `stat()` and add to cache
+3. **Result**: Second enumeration of same folder could be ~99% cache-served (only 1% stat for probabilistic validation)
+
+Would potentially transform repeated directory browsing from O(n) stat calls to O(n/100) stat calls,
+eliminating most filesystem I/O.
 
 ### The LRU Scanning Problem
 
 LRU caches have a fundamental weakness called the **scanning problem**:
 
-When Netatalk validates thousands of directory entries, each `stat()` call:
+When Netatalk validates thousands of entries, each `stat()` call:
 
 1. Checks the page cache
 2. Can causes a cache miss (directories and directory trees have many entries)
@@ -346,38 +380,32 @@ we reduce pressure on the subsequent cache layers:
 
 ## Part 7: Monitoring the Improvement
 
-You can observe the benefits using these metrics:
+You can observe the benefits of dircache validation optimization using these metrics:
 
-```mermaid
-graph LR
-    subgraph "Metrics to Watch"
-        M1[dircache statistics<br/>via logs]
-        M2[vmstat<br/>page cache activity]
-        M3[iostat<br/>disk IOPS]
-        M4[ZFS ARC stats<br/>hit rates]
-    end
-    
-    M1 --> R1[invalid_on_use<br/>should be low]
-    M2 --> R2[Lower scan rate]
-    M3 --> R3[Reduced read IOPS]
-    M4 --> R4[Higher hit ratio]
-    
-    style R1 fill:\#e6f3ff
-    style R2 fill:\#e6f3ff
-    style R3 fill:\#e6f3ff
-    style R4 fill:\#e6f3ff
-```
+- **Dircache statistics via logs**: Monitor `invalid_on_use` counter (should be low, indicating cached entries remain valid)
+- **vmstat page cache activity**: Look for lower page scan rates (less cache churn)
+- **iostat disk IOPS**: Measure reduced read IOPS (fewer stat calls to disk)
+- **ZFS ARC stats**: Check for higher hit ratios (more efficient cache utilization)
 
 ### Sample Statistics
 
+The actual log format from dircache.c:
+
 ```txt
 dircache statistics: (user: john)
-entries: 4096, lookups: 100000, 
-hits: 95000 (95.0%), misses: 5000,
-validations: ~950 (1.0%),  # ← Only 1% validated!
-added: 5000, removed: 900, 
-expunged: 10, invalid_on_use: 2, 
+entries: 4096, max_entries: 8192, config_max: 131072,
+lookups: 100000, hits: 95000 (95.0%), misses: 5000,
+validations: ~950 (1.0%),
+added: 5000, removed: 900, expunged: 10, invalid_on_use: 2, evicted: 256,
+validation_freq: 100
 ```
+
+**Key metrics to monitor:**
+
+- **invalid_on_use**: Should remain low - indicates cached entries stay valid
+- **validations ratio**: Shows validation frequency working as configured (1.0% = every 100th)
+- **hit_ratio**: High percentage (95%) indicates good cache effectiveness
+- **max_entries**: Peak/high-water cache usage this session - helps tune `dircachesize`
 
 ---
 
@@ -401,17 +429,24 @@ it's not doing it at all.
 
 **By default nothing changes, as the default value for `dircache validation freq = 1`.**
 
-To try this speed up, configure it;
+### File Caching Implementation
 
-```ini
-dircache validation freq = 1-100
-dircache metadata window = 60-3600
-dircache metadata threshold = 10-1800
-```
+In directory.c, the `dirlookup_internal()` function
+controls file caching behavior through the `AFPobj->options.dircache_files` configuration setting:
+
+- **Cache lookup**: When a file is found in cache, checks `AFPobj->options.dircache_files`
+  before returning it — if disabled, returns AFPERR_BADTYPE to reject the cached file entry
+- **CNID lookup**: When a file is resolved via CNID, sets the `DIRF_ISFILE` flag
+  which will cause cache rejection if file caching is disabled
+- **Parent recursion**: Uses `strict` parameter to control whether parents must be directories,
+ensuring parent-chain rebuilds work correctly (database design guarantee)
+
+This configuration-driven control separates caching policy from core lookup logic, allowing
+administrators to tune memory vs. performance tradeoffs based on workload characteristics.
 
 ---
 
-*This optimization is available in Netatalk 4.4+ with configurable validation frequency
-via the `dircache validation freq` parameter.*
+*Directory cache optimizations available in Netatalk 4.4+ with configurable validation frequency
+and file caching control via `dircache validation freq` and `dircache files` parameters.*
 
 Developed and Authored by Andy Lemin, with Contributions from the Netatalk team.
