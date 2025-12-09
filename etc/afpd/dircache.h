@@ -35,7 +35,7 @@ extern int        dircache_add(const struct vol *, struct dir *);
 extern void       dircache_remove(const struct vol *, struct dir *, int flag);
 extern struct dir *dircache_search_by_did(const struct vol *vol, cnid_t did);
 extern struct dir *dircache_search_by_name(const struct vol *,
-        const struct dir *dir, char *name, int len);
+        const struct dir *dir, char *name, size_t len);
 extern void       dircache_dump(void);
 extern void       log_dircache_stat(void);
 extern int        dircache_set_validation_params(unsigned int freq,
@@ -43,6 +43,6 @@ extern int        dircache_set_validation_params(unsigned int freq,
         unsigned int meta_thresh);
 extern void       dircache_reset_validation_counter(void);
 extern void       dircache_report_invalid_entry(struct dir *dir);
-extern void       dircache_remove_children(const struct vol *vol,
+extern int        dircache_remove_children(const struct vol *vol,
         struct dir *dir);
 #endif /* DIRCACHE_H */

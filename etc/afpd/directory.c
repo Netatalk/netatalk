@@ -363,7 +363,9 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
 
         if (curdir == NULL) {
             /* demangle_osx() calls dirlookup() which might have clobbered curdir */
-            movecwd(vol, dir);
+            if (movecwd(vol, dir) < 0) {
+                return -1;
+            }
         }
 
         LOG(log_maxdebug, logtype_afpd,
@@ -478,37 +480,109 @@ int get_afp_errno(const int param)
     return param;
 }
 
+/* Forward declaration for retry helper */
+static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
+                                      int retry, int strict);
+
 /*!
- * @brief Resolve a DID
+ * @brief Retry helper for dirlookup_internal on ENOENT
  *
- * Resolve a DID, allocate a struct dir for it
- * 1. Check for special CNIDs 0 (invalid), 1 and 2.
- *    1. Check if the DID is in the cache.
- *    2. Check if it's really a dir because we cache files too.
- * 2. If it's not in the cache resolve it via the database.
- * 3. Build complete server-side path to the dir.
- * 4. Check if it exists and is a directory.
- * 5. Create the struct dir and populate it.
- * 6. Add it to the cache.
+ * When stat() fails with ENOENT, this function cleans stale cache entries
+ * and retries the lookup via CNID database. This handles race conditions where
+ * directories are renamed/moved by external processes between cache and stat.
  *
- * @param[in] vol   pointer to struct vol
- * @param[in] did   DID to resolve
+ * @param[in] vol         Volume
+ * @param[in] did         Target DID that failed stat
+ * @param[in] strict      Validation mode (0=initial target, 1=parent recursion)
+ * @param[in,out] fullpath_ptr  Pointer to fullpath to cleanup
+ * @param[in,out] upath_ptr     Pointer to upath to cleanup
  *
- * @returns pointer to struct dir
+ * @returns Retried struct dir from CNID, or NULL on failure
  */
-struct dir *dirlookup(const struct vol *vol, cnid_t did)
+static struct dir *dirlookup_internal_retry(const struct vol *vol,
+        cnid_t did,
+        int strict,
+        bstring *fullpath_ptr,
+        char **upath_ptr)
 {
-    static char  buffer[12 + MAXPATHLEN + 1];
+    LOG(log_info, logtype_afpd,
+        "dirlookup_internal(did:%u): stat failed, cleaning stale entries, retrying via CNID",
+        ntohl(did));
+    /* Clean cached stale target if present */
+    struct dir *stale_child = dircache_search_by_did(vol, did);
+
+    if (stale_child) {
+        LOG(log_debug, logtype_afpd,
+            "dirlookup_internal(did:%u): cleaning stale target entry",
+            ntohl(did));
+
+        /* If strict=0 (initial target) & directory, also clean children.
+         * If strict=1 (parent recursion), skip children to avoid cascade. */
+        if (!strict && !(stale_child->d_flags & DIRF_ISFILE)) {
+            (void)dircache_remove_children(vol, stale_child);
+        }
+
+        dir_remove(vol, stale_child);
+    }
+
+    /* Cleanup current failed attempt */
+    if (*fullpath_ptr) {
+        bdestroy(*fullpath_ptr);
+        *fullpath_ptr = NULL;
+    }
+
+    if (*upath_ptr) {
+        free(*upath_ptr);
+        *upath_ptr = NULL;
+    }
+
+    /* Retry with cleaned cache (cache miss → CNID lookup) */
+    return dirlookup_internal(vol, did, 0, strict);
+}
+
+/*!
+ * @brief Internal CNID (Directory ID) resolution with retry control
+ *
+ * Resolve a CNID (Directory ID), allocate a struct dir for it.
+ *
+ * Algorithm:
+ * 1. Check for special DIDs 0 (invalid), 1 (root parent), and 2 (root).
+ * 2. Search dircache:
+ *    - If found and valid, return cached entry
+ *    - If strict mode, validate inode before use
+ * 3. On cache miss, query CNID database for path component
+ * 4. Recurse to build parent chain (terminates at root or cache hit)
+ * 5. Build fullpath and stat to verify existence
+ * 6. Create new struct dir and populate
+ * 7. Add new entry to cache
+ *
+ * On ENOENT during stat (step 5), if retry=1:
+ * - Clean stale cache entries
+ * - Retry once via CNID (prevents TOCTOU issues)
+ *
+ * @param[in] vol    pointer to struct vol
+ * @param[in] did    CNID to resolve
+ * @param[in] retry  1 = allow one retry on ENOENT, 0 = no retry
+ * @param[in] strict 1 = strict dircache lookup (validate with stat+inode), 0 = optimistic
+ *
+ * @returns pointer to struct dir, or NULL with afp_errno set
+ */
+static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
+                                      int retry, int strict)
+{
+#define DIRLOOKUP_LOG_FMT "dirlookup_internal(did:%u)"
+    static char  buffer[CNID_PATH_OVERHEAD + MAXPATHLEN + 1];
     struct stat  st;
     struct dir   *ret = NULL, *pdir;
     bstring      fullpath = NULL;
     char         *upath = NULL, *mpath;
     cnid_t       cnid, pdid;
-    size_t       maxpath;
-    int          buflen = 12 + MAXPATHLEN + 1;
+    int          buflen = CNID_PATH_OVERHEAD + MAXPATHLEN + 1;
     int          utf8;
     int          err = 0;
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): START", ntohl(did));
+    LOG(log_debug, logtype_afpd,
+        DIRLOOKUP_LOG_FMT ": (retry: %d, strict: %d): START",
+        ntohl(did), retry, strict);
 
     /* check for did 0, 1 and 2 */
     if (did == 0 || vol == NULL) { /* 1 */
@@ -517,6 +591,7 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         goto exit;
     } else if (did == DIRDID_ROOT_PARENT) {
         rootParent.d_vid = vol->v_vid;
+        rootParent.d_did = DIRDID_ROOT_PARENT;
         ret = &rootParent;
         goto exit;
     } else if (did == DIRDID_ROOT) {
@@ -524,72 +599,98 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
         goto exit;
     }
 
-    /* Search the cache */
+    /* Search the cache first */
     if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2a */
-        if (ret->d_flags & DIRF_ISFILE) {                   /* 2b */
+        /* Cache HIT */
+        extern AFPObj *AFPobj;
+
+        if (!AFPobj->options.dircache_files && (ret->d_flags & DIRF_ISFILE)) {
+            /* Files not supported (dircache files = no) - reject */
             afp_errno = AFPERR_BADTYPE;
             ret = NULL;
             goto exit;
         }
 
-        /* Trust the cache entry - validation already happened in dircache_search_by_did()
-         * based on the probabilistic validation model (should_validate_cache_entry).
-         * If the entry is invalid, it will be caught when actually used and
-         * dir_remove() will handle it, which reports invalid entries. */
-        goto exit;
+        /* Strict validation (parent recursion) */
+        if (strict) { /* 2b */
+            struct stat validate_st;
+
+            if (ostat(cfrombstr(ret->d_fullpath), &validate_st, vol_syml_opt(vol)) != 0 ||
+                    validate_st.st_ino != ret->dcache_ino) {
+                /* Cache is stale, clean and fall through to CNID lookup */
+                LOG(log_debug, logtype_afpd, DIRLOOKUP_LOG_FMT ": cache stale, cleaning",
+                    ntohl(did));
+                dir_remove(vol, ret);
+                ret = NULL;
+            } else {
+                /* Validated, safe to use */
+                goto exit;
+            }
+        } else {
+            /* Optimistic lookup: dircache_search_by_did() validation based on the probabilistic
+             * model (should_validate_cache_entry). If invalid, caught during use and repaired on the fly */
+            goto exit;
+        }
     }
 
-    utf8 = utf8_encoding(vol->v_obj);
-    maxpath = utf8 ? MAXPATHLEN - 7 : 255;
-    /* Get it from the database */
+    /* Cache MISS - Search the CNID database */
     cnid = did;
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u): querying CNID database",
         ntohl(did));
     AFP_CNID_START("cnid_resolve");
-    upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen);
+    upath = cnid_resolve(vol->v_cdb, &cnid, buffer, buflen); /* 3 */
     AFP_CNID_DONE();
 
+    /* CNID stores relative parent-child relationships. Input: cnid = did (DID to resolve),
+     * Outputs: upath = basename only ("mydir") + cnid modified to parent DID
+     * So we need to build the rest of the fullpath */
     if (upath == NULL) {
+        LOG(log_debug, logtype_afpd,
+            DIRLOOKUP_LOG_FMT ": cnid_resolve returned NULL, directory deleted",
+            ntohl(did));
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
 
-    if ((upath = strdup(upath)) == NULL) { /* 3 */
+    if ((upath = strdup(upath)) == NULL) {
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
 
+    /* Strict recurse parent (rebuild parent-chain), returns when either:
+     * DIRDID_ROOT is hit OR a valid cache entry found. retry once at each level */
     pdid = cnid;
-    /*
-     * Recurse up the tree, terminates in dirlookup when either
-     * - DIRDID_ROOT is hit
-     * - a cached entry is found
-     */
-    LOG(log_debug, logtype_afpd, "dirlookup(did: %u): recursion for did: %u",
-        ntohl(did), ntohl(pdid));
 
-    if ((pdir = dirlookup(vol, pdid)) == NULL) {
+    if ((pdir = dirlookup_internal(vol, pdid, 1, 1)) == NULL) { /* 4 */
         err = 1;
         goto exit;
     }
 
-    /* build the fullpath */
+    /* Build the fullpath from cached parent-chain + CNID's upath */
     if ((fullpath = bstrcpy(pdir->d_fullpath)) == NULL
             || bconchar(fullpath, '/') != BSTR_OK
-            || bcatcstr(fullpath, upath) != BSTR_OK) {
+            || bcatcstr(fullpath, upath) != BSTR_OK) { /* 5 */
         err = 1;
         goto exit;
     }
 
-    /* stat it and check if it's a dir */
+    /* Stat derived fullpath */
     LOG(log_debug, logtype_afpd, "dirlookup(did: %u): stating \"%s\"",
         ntohl(did), cfrombstr(fullpath));
 
     if (ostat(cfrombstr(fullpath), &st, vol_syml_opt(vol)) != 0) { /* 5a */
+        /* File system object at fullpath not found (possible external system change) */
         switch (errno) {
         case ENOENT:
+
+            /* Target's fullpath doesn't exist - clean target, retry via CNID */
+            if (retry) {
+                ret = dirlookup_internal_retry(vol, did, strict, &fullpath, &upath);
+                goto exit;
+            }
+
             afp_errno = AFPERR_NOOBJ;
             err = 1;
             goto exit;
@@ -605,7 +706,15 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
             goto exit;
         }
     } else {
-        if (! S_ISDIR(st.st_mode)) {  /* 5b */
+        /* Filesystem object at fullpath found (st now contains valid stat data) */
+        extern AFPObj *AFPobj;
+
+        if (!AFPobj->options.dircache_files && !S_ISDIR(st.st_mode)) {
+            /* Lookup found file, but files are disabled in dircache - reject */
+            LOG(log_debug, logtype_afpd,
+                DIRLOOKUP_LOG_FMT
+                ": file found but 'dircache files' disabled in config, rejecting",
+                ntohl(did));
             afp_errno = AFPERR_BADTYPE;
             err = 1;
             goto exit;
@@ -613,22 +722,24 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
     }
 
     /* Get macname from unix name */
+    utf8 = utf8_encoding(vol->v_obj);
+
     if ((mpath = utompath(vol, upath, did, utf8)) == NULL) {
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
     }
 
-    /* Create struct dir */
+    /* Create new struct for dircache */
     if ((ret = dir_new(mpath, upath, vol, pdid, did, fullpath,
                        &st)) == NULL) { /* 6 */
-        LOG(log_error, logtype_afpd, "dirlookup(did: %u) {%s, %s}: %s", ntohl(did),
+        LOG(log_error, logtype_afpd, DIRLOOKUP_LOG_FMT ": {%s, %s}: %s", ntohl(did),
             mpath, upath, strerror(errno));
         err = 1;
         goto exit;
     }
 
-    /* Add it to the cache only if it's a dir */
+    /* Add new struct to the cache */
     if (dircache_add(vol, ret) != 0) { /* 7 */
         err = 1;
         goto exit;
@@ -636,14 +747,19 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 
 exit:
 
-    if (upath) {
-        free(upath);
+    /* Log result and cleanup */
+    if (ret) {
+        LOG(log_debug, logtype_afpd,
+            DIRLOOKUP_LOG_FMT ": SUCCESS - pdid: %u, path: \"%s\"",
+            ntohl(ret->d_did), ntohl(ret->d_pdid), cfrombstr(ret->d_fullpath));
+    } else if (err) {
+        LOG(log_debug, logtype_afpd,
+            DIRLOOKUP_LOG_FMT ": FAILED - %s",
+            ntohl(did), AfpErr2name(afp_errno));
     }
 
     if (err) {
-        LOG(log_debug, logtype_afpd, "dirlookup(did: %u) {exit_error: %s}",
-            ntohl(did), AfpErr2name(afp_errno));
-
+        /* If dir_new failed, fullpath ownership not transferred to ret - free resources */
         if (fullpath) {
             bdestroy(fullpath);
         }
@@ -654,14 +770,106 @@ exit:
         }
     }
 
-    if (ret)
-        LOG(log_debug, logtype_afpd,
-            "dirlookup(did: %u): RESULT: pdid: %u, path: \"%s\"",
-            ntohl(ret->d_did), ntohl(ret->d_pdid), cfrombstr(ret->d_fullpath));
+    if (upath) {
+        free(upath);
+    }
 
+#undef DIRLOOKUP_LOG_FMT
     return ret;
 }
 
+
+/*!
+ * @brief Public CNID (Directory ID) resolution (supports files and directories)
+ *
+ * Resolves a CNID (Directory ID) to its cached entry. This function supports both files
+ * and directories since DID can refer to either type. If cache hit, returns
+ * cache entry, if cache miss, returns CNID database record and updates cache
+ *
+ * @param[in] vol   pointer to struct vol
+ * @param[in] did   DID to resolve
+ *
+ * @returns pointer to struct dir (may have DIRF_ISFILE flag for files)
+ */
+struct dir *dirlookup(const struct vol *vol, cnid_t did)
+{
+    /*
+    retry=1: Allow cache clean and fallback to CNID once at each level
+    strict=0: Uses optimistic dircache lookup
+    */
+    return dirlookup_internal(vol, did, 1, 0);
+}
+
+/*!
+ * @brief Strict DID resolution with inode validation
+ *
+ * Like dirlookup(), but performs additional validation to ensure the cached
+ * directory entry matches the actual filesystem state. This prevents race
+ * conditions where a directory has been renamed/moved but the cache entry
+ * still points to the old path/has become stale.
+ *
+ * Use this for destructive operations (delete, rename, move) where operating
+ * on the wrong object could cause data loss.
+ *
+ * @param[in] vol   pointer to struct vol
+ * @param[in] did   DID to resolve
+ *
+ * @returns pointer to validated struct dir, or NULL with afp_errno set
+ */
+struct dir *dirlookup_strict(const struct vol *vol, cnid_t did)
+{
+    struct dir *dir;
+    struct stat validate_st;
+    /* First do normal lookup via public interface */
+    dir = dirlookup(vol, did);
+
+    if (dir == NULL) {
+        return NULL;
+    }
+
+    /* Skip validation for special directories */
+    if (dir->d_did == DIRDID_ROOT || dir->d_did == DIRDID_ROOT_PARENT) {
+        return dir;
+    }
+
+    /* Validate with stat and inode compare to detect rename/move race or
+    changes by other users or external systems */
+    if (ostat(cfrombstr(dir->d_fullpath), &validate_st, vol_syml_opt(vol)) != 0) {
+        LOG(log_info, logtype_afpd,
+            "dirlookup_strict(did:%u): path '%s' no longer exists, cleaning cache",
+            ntohl(did), cfrombstr(dir->d_fullpath));
+        goto stale;
+    }
+
+    if (validate_st.st_ino != dir->dcache_ino) {
+        LOG(log_info, logtype_afpd,
+            "dirlookup_strict(did:%u): inode mismatch (cached:%llu, actual:%llu), path '%s' was renamed/moved",
+            ntohl(did), (unsigned long long)dir->dcache_ino,
+            (unsigned long long)validate_st.st_ino, cfrombstr(dir->d_fullpath));
+        goto stale;
+    }
+
+    /* Validation passed */
+    return dir;
+stale:
+
+    /* Clean stale entries and retry via CNID. dircache_remove_children and
+     * dir_remove handle curdir recovery internally, guaranteeing curdir != NULL. */
+    if (!(dir->d_flags & DIRF_ISFILE)) {
+        (void)dircache_remove_children(vol, dir);
+    }
+
+    (void)dir_remove(vol, dir);
+    /* Retry - will now miss cache and query CNID */
+    dir = dirlookup(vol, did);
+
+    if (dir == NULL) {
+        LOG(log_debug, logtype_afpd,
+            "dirlookup_strict(did:%u): CNID retry failed", ntohl(did));
+    }
+
+    return dir;
+}
 
 /*!
  * @brief Construct struct dir
@@ -786,9 +994,14 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
     AFP_ASSERT(dir);
     AFP_ASSERT(path);
     AFP_ASSERT(len > 0);
+    cdir = NULL;
 
-    if ((cdir = dircache_search_by_name(vol, dir, path->u_name,
-                                        strlen(path->u_name))) != NULL) {
+    if (path->u_name != NULL) {
+        size_t uname_len = strnlen(path->u_name, CNID_MAX_PATH_LEN);
+        cdir = dircache_search_by_name(vol, dir, path->u_name, uname_len);
+    }
+
+    if (cdir != NULL) {
         /* there's a stray entry in the dircache */
         LOG(log_debug, logtype_afpd,
             "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
@@ -862,7 +1075,7 @@ exit:
 
     if (err != 0) {
         LOG(log_debug, logtype_afpd, "dir_add('%s/%s'): error: %u",
-            cfrombstr(dir->d_u_name), path->u_name, err);
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)", path->u_name, err);
 
         if (adp) {
             ad_close(adp, ADFLAGS_HF);
@@ -902,17 +1115,24 @@ void dir_free_invalid_q(void)
 }
 
 /*!
- * @brief Remove a file/directory from dircache
+ * @brief Remove a file/directory from dircache with automatic curdir recovery
+ *
+ * This function centralizes global curdir safety for all callers.
+ * When removing a cache entry that is curdir, it attempts curdir recovery via
+ * CNID database and falls back to volume root if recovery fails.
  *
  * 1. Check the dir
- * 2. Remove it from the cache
- * 3. Queue it for removal
- * 4. If it's a request to remove curdir, mark curdir as invalid
- * 5. Mark it as invalid
+ * 2. Detect if removing curdir and save DID
+ * 3. Remove from cache and queue for deallocation
+ * 4. Set curdir=NULL if removing curdir (safer than dangling pointer)
+ * 5. Attempt recovery via dirlookup(saved_did)
+ * 6. If recovery fails, fallback to vol->v_root or rootParent
+ * 7. Mark entry invalid
  *
  * @param[in] vol      volume pointer
  * @param[in,out] dir  directory/file entry to remove from cache
- * @returns 0 on success
+ * @returns 0 on success, -1 if curdir was removed and recovery failed
+ *          (curdir guaranteed non-NULL on return)
  */
 int dir_remove(const struct vol *vol, struct dir *dir)
 {
@@ -924,10 +1144,21 @@ int dir_remove(const struct vol *vol, struct dir *dir)
         return 0;
     }
 
-    LOG(log_debug, logtype_afpd, "dir_remove(did:%u,'%s'): {removing from cache}",
-        ntohl(dir->d_did), cfrombstr(dir->d_u_name));
-    /* Report if this was an unvalidated entry that turned out to be invalid
-     * Only increments invalid_on_use counter if DIRF_UNVALIDATED is set */
+    LOG(log_debug, logtype_afpd,
+        "dir_remove(did:%u,'%s'): {removing from cache}",
+        ntohl(dir->d_did),
+        dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
+    /* Save curdir DID BEFORE removal - needed for recovery if dir==curdir */
+    cnid_t saved_curdir_did = CNID_INVALID;
+    bool removing_curdir = false;
+
+    if (curdir == dir && !(dir->d_flags & DIRF_ISFILE)) {
+        /* We're about to null curdir - save DID for recovery attempt */
+        saved_curdir_did = curdir->d_did;
+        removing_curdir = true;
+    }
+
+    /* Report if this was an unvalidated entry that turned out to be invalid */
     dircache_report_invalid_entry(dir);
     /* Remove the dircache entry */
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
@@ -941,6 +1172,36 @@ int dir_remove(const struct vol *vol, struct dir *dir)
 
     /* Mark invalid */
     dir->d_did = CNID_INVALID;              /* 5 */
+
+    /* CRITICAL: Attempt curdir recovery if we just removed it.
+     * Returns error if recovery fails so caller knows curdir is invalid. */
+    if (removing_curdir && !curdir) {
+        LOG(log_warning, logtype_afpd,
+            "dir_remove(did:%u): curdir was removed, attempting recovery via CNID",
+            ntohl(saved_curdir_did));
+        /* Try to recover via CNID - succeeds if directory still exists */
+        struct dir *recovered = dirlookup(vol, saved_curdir_did);
+
+        if (recovered) {
+            curdir = recovered;
+            LOG(log_info, logtype_afpd,
+                "dir_remove: curdir recovery SUCCESS (did:%u), path: \"%s\"",
+                ntohl(saved_curdir_did),
+                curdir->d_fullpath ? cfrombstr(curdir->d_fullpath) : "(null)");
+            /* Success - curdir recovered */
+            return 0;
+        }
+
+        /* Recovery failed - fallback to volume root (more graceful than rootParent) */
+        curdir = vol->v_root ? vol->v_root : &rootParent;
+        LOG(log_error, logtype_afpd,
+            "dir_remove: curdir recovery FAILED (did:%u), fallback to %s",
+            ntohl(saved_curdir_did), vol->v_root ? "volume root" : "rootParent");
+        /* FAILURE - caller must handle */
+        return -1;
+    }
+
+    /* Success - curdir unchanged or not affected */
     return 0;
 }
 
@@ -981,8 +1242,10 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     uint16_t   len16;
     int         size = 0;
     int         toUTF8 = 0;
+    /* Save original len before while loop modifies it */
+    int         original_len = 0;
     LOG(log_maxdebug, logtype_afpd, "cname('%s'): {start}",
-        cfrombstr(dir->d_fullpath));
+        dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
     data = *cpath;
     afp_errno = AFPERR_NOOBJ;
     memset(&ret, 0, sizeof(ret));
@@ -1024,10 +1287,12 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
     *cpath += len + size;
     path[0] = 0;
     ret.m_name = path;
+    /* Save before while loop modifies it */
+    original_len = len;
 
     if (movecwd(vol, dir) < 0) {
         LOG(log_debug, logtype_afpd, "cname(did:%u): failed to chdir to '%s'",
-            ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
+            ntohl(dir->d_did), dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
 
         if (len == 0) {
             return path_from_dir(vol, dir, &ret);
@@ -1035,6 +1300,10 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             return NULL;
         }
     }
+
+    /* After movecwd(), use curdir for dir. movecwd() may invalidate dir during stale
+     * entry cleaning (dir_remove sets d_did=0). movecwd always updates curdir. */
+    dir = curdir;
 
     /* 3 */
     while (len) {
@@ -1045,6 +1314,14 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 
             /* 5 */
             while (len > 0 && *data == 0) {
+                /* Check if we're at volume root - can't navigate higher */
+                if (dir->d_did == DIRDID_ROOT) {
+                    LOG(log_info, logtype_afpd,
+                        "cname: rejecting '..' navigation above volume root");
+                    afp_errno = AFPERR_PARAM;
+                    return NULL;
+                }
+
                 /* chdir to parrent dir */
                 if ((dir = dirlookup(vol, dir->d_pdid)) == NULL) {
                     return NULL;
@@ -1055,6 +1332,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                     return NULL;
                 }
 
+                /* Update dir after movecwd (may invalidate during stale cleanup) */
+                dir = curdir;
                 data++;
                 len--;
             }
@@ -1084,7 +1363,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         }
 
         LOG(log_maxdebug, logtype_afpd, "cname('%s'): {node: '%s}",
-            cfrombstr(dir->d_fullpath), ret.u_name);
+            dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", ret.u_name);
 
         /* Prevent access to our special folders like .AppleDouble */
         if (check_name(vol, ret.u_name)) {
@@ -1154,7 +1433,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             /* 11 */
             case S_IFREG:
                 LOG(log_debug, logtype_afpd, "cname('%s'): {file: '%s'}",
-                    cfrombstr(dir->d_fullpath), ret.u_name);
+                    dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", ret.u_name);
 
                 if (len > 0) {
                     /* it wasn't the last part, so we have a bogus path request */
@@ -1168,11 +1447,11 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             /* 12 */
             case S_IFLNK:
                 LOG(log_debug, logtype_afpd, "cname('%s'): {link: '%s'}",
-                    cfrombstr(dir->d_fullpath), ret.u_name);
+                    dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", ret.u_name);
 
                 if (len > 0) {
                     LOG(log_warning, logtype_afpd, "cname('%s'): {symlinked dir: '%s'}",
-                        cfrombstr(dir->d_fullpath), ret.u_name);
+                        dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", ret.u_name);
                     afp_errno = AFPERR_PARAM;
                     return NULL;
                 }
@@ -1203,7 +1482,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                 if (cdir == NULL) {
                     LOG(log_error, logtype_afpd,
                         "cname(did:%u, name:'%s', cwd:'%s'): failed to add dir",
-                        ntohl(dir->d_did), ret.u_name, getcwdpath());
+                        ntohl(dir->d_did), ret.u_name ? ret.u_name : "(null)", getcwdpath());
                     return NULL;
                 }
             }
@@ -1214,7 +1493,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         if (movecwd(vol, cdir) < 0) {
             LOG(log_debug, logtype_afpd,
                 "cname(cwd:'%s'): failed to chdir to new subdir '%s': %s",
-                cfrombstr(curdir->d_fullpath), cfrombstr(cdir->d_fullpath), strerror(errno));
+                (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "(null)",
+                cdir->d_fullpath ? cfrombstr(cdir->d_fullpath) : "(null)", strerror(errno));
 
             if (len == 0) {
                 return path_from_dir(vol, cdir, &ret);
@@ -1223,7 +1503,9 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             }
         }
 
-        dir = cdir;
+        /* Use curdir instead of cdir - movecwd() updates curdir (including after self-healing).
+         * cdir pointer may be freed during self-healing, so using it after movecwd() is unsafe. */
+        dir = curdir;
         /* 17, so we later know last token was a dir */
         ret.m_name[0] = 0;
     } /* while (len) */
@@ -1233,17 +1515,38 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
         return NULL;
     }
 
+    LOG(log_debug, logtype_afpd,
+        "cname: end check: ret.m_name[0]=%d, original_len=%d, len=%d",
+        (int)ret.m_name[0], original_len, len);
+
     if (ret.m_name[0] == 0) {
         /* Last part was a dir */
         /* Force "." into a useable static buffer */
         ret.u_name = mtoupath(vol, ret.m_name, 0, 1);
-        ret.d_dir = dir;
+        /* Use curdir (updated by movecwd, handles self-healing) */
+        ret.d_dir = curdir;
+    } else if (original_len == 0) {
+        /* Special case: original_len was 0 from start (statting directory itself via empty path).
+         * ret.m_name[0] is not 0 because the assignment in the while loop never executed.
+         * But we're in the right directory after movecwd() (which may have self-healed).
+         * Set up return structure to stat current directory. */
+        /* Mark as directory */
+        ret.m_name[0] = 0;
+        /* "." */
+        ret.u_name = mtoupath(vol, ret.m_name, 0, 1);
+        /* Use curdir (updated by movecwd, includes healing) */
+        ret.d_dir = curdir;
+        LOG(log_info, logtype_afpd,
+            "cname: len==0 fix applied, ret.d_dir set to did:%u path:\"%s\"",
+            curdir ? ntohl(curdir->d_did) : 0,
+            curdir ? (curdir->d_fullpath ? cfrombstr(curdir->d_fullpath) : "(null)") :
+            "NULL");
     }
 
     LOG(log_debug, logtype_afpd, "cname('%s') {end: curdir:'%s', path:'%s'}",
-        cfrombstr(dir->d_fullpath),
-        cfrombstr(curdir->d_fullpath),
-        ret.u_name);
+        dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+        (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "(null)",
+        ret.u_name ? ret.u_name : "(null)");
     return &ret;
 }
 
@@ -1258,22 +1561,77 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 int movecwd(const struct vol *vol, struct dir *dir)
 {
     int ret;
-    AFP_ASSERT(vol);
-    AFP_ASSERT(dir);
+    cnid_t saved_did;
+
+    /* Defensive NULL checks - return error instead of asserting */
+    if (vol == NULL || dir == NULL) {
+        LOG(log_error, logtype_afpd, "movecwd: NULL parameter (vol:%p, dir:%p)",
+            (void*)vol, (void*)dir);
+        afp_errno = AFPERR_PARAM;
+        return -1;
+    }
+
     LOG(log_maxdebug, logtype_afpd, "movecwd: from: curdir:\"%s\", cwd:\"%s\"",
-        curdir ? cfrombstr(curdir->d_fullpath) : "INVALID", getcwdpath());
+        (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "INVALID",
+        getcwdpath());
 
     if (dir->d_did == DIRDID_ROOT_PARENT) {
         curdir = &rootParent;
         return 0;
     }
 
+    /* Save DID before dir_remove() frees dir (if dir stale) */
+    saved_did = dir->d_did;
     LOG(log_debug, logtype_afpd, "movecwd(to: did: %u, \"%s\")",
-        ntohl(dir->d_did), cfrombstr(dir->d_fullpath));
+        ntohl(dir->d_did), dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
 
     if ((ret = ochdir(cfrombstr(dir->d_fullpath), vol_syml_opt(vol))) != 0) {
+        /* Failed to change directory */
         LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): %s",
-            cfrombstr(dir->d_fullpath), strerror(errno));
+            dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", strerror(errno));
+
+        /* Self-heal stale dircache entries when chdir fails */
+        if (ret != 1 && errno == ENOENT) {
+            LOG(log_info, logtype_afpd,
+                "movecwd: stale dircache entry, cleaning and retrying via CNID");
+
+            /* Clean cache - dircache_remove_children and dir_remove handle curdir recovery */
+            if (!(dir->d_flags & DIRF_ISFILE)) {
+                (void)dircache_remove_children(vol, dir);
+            }
+
+            (void)dir_remove(vol, dir);
+            /* Both functions guarantee curdir != NULL (recovered or vol->v_root/rootParent) */
+
+            /* Retry via CNID with strict validation */
+            if ((dir = dirlookup_strict(vol, saved_did)) != NULL) {
+                LOG(log_debug, logtype_afpd,
+                    "movecwd: dirlookup_strict returned validated path \"%s\", attempting chdir",
+                    dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
+                ret = ochdir(cfrombstr(dir->d_fullpath), vol_syml_opt(vol));
+
+                if (ret == 0) {
+                    curdir = dir;
+                    LOG(log_debug, logtype_afpd,
+                        "movecwd: self-healing SUCCESS to did:%u", ntohl(saved_did));
+                    return 0;
+                }
+
+                LOG(log_info, logtype_afpd,
+                    "movecwd: CNID retry chdir failed: %s", strerror(errno));
+            } else {
+                LOG(log_error, logtype_afpd,
+                    "movecwd: dirlookup_strict returned NULL for did:%u", ntohl(saved_did));
+            }
+
+            /* Special movecwd requirement: sync process CWD with curdir pointer.
+             * If curdir is at fallback, attempt to sync process CWD. */
+            if (curdir && curdir->d_fullpath && curdir != &rootParent &&
+                    ochdir(cfrombstr(curdir->d_fullpath), vol_syml_opt(vol)) == 0) {
+                LOG(log_info, logtype_afpd,
+                    "movecwd: synced process CWD to curdir fallback");
+            }
+        }
 
         if (ret == 1) {
             /* p is a symlink or getcwd failed */
@@ -1693,7 +2051,7 @@ int afp_setdirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(int);
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         return afp_errno;
     }
 
@@ -1833,7 +2191,8 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
         case DIRPBIT_UNIXPR :
             if (vol_unix_priv(vol)) {
                 set_upriv = true;
-                memcpy(&owner, buf, sizeof(owner));  /* FIXME need to change owner too? */
+                /* FIXME need to change owner too? */
+                memcpy(&owner, buf, sizeof(owner));
                 buf += sizeof(owner);
                 memcpy(&group, buf, sizeof(group));
                 buf += sizeof(group);
@@ -1957,7 +2316,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
                 err = set_dir_errors(path, "setdeskowner", errno);
 
                 if (isad && err == AFPERR_PARAM) {
-                    err = AFP_OK; /* ???*/
+                    err = AFP_OK; /* ??? */
                 } else {
                     goto setdirparam_done;
                 }
@@ -2022,8 +2381,10 @@ setdirparam_done:
             ad_setdate(&ad, AD_DATE_MODIFY, newdate);
         }
 
-        ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
-        utime(upath, &ut);
+        if (upath) {
+            ut.actime = ut.modtime = AD_DATE_TO_UNIX(newdate);
+            utime(upath, &ut);
+        }
     }
 
     if (isad) {
@@ -2094,6 +2455,29 @@ setdirparam_done:
                 err = set_dir_errors(path, "setdirunixmode", errno);
             }
         }
+
+        /* Update dircache permissions to match filesystem after ACCESS or UNIXPR changes */
+        if ((set_maccess || set_upriv) && dir) {
+            struct stat st;
+
+            if (ostat(upath, &st, vol_syml_opt(vol)) == 0) {
+                /* Update cached ctime to match filesystem after our permission changes */
+                dir->dcache_ctime = st.st_ctime;
+
+                /* Recalculate rights cache based on new permissions */
+                if (dir == curdir) {
+                    /* Only update if dir is still curdir (hasn't changed during function) */
+                    /* Invalidate first to force accessmode() to recalculate from filesystem */
+                    dir->d_rights_cache = 0xffffffff;
+                    /* Use global AFPobj (always set during AFP session in afp_over_dsi()) */
+                    extern AFPObj *AFPobj;
+                    AFP_ASSERT(AFPobj);
+                    struct maccess fresh_ma;
+                    /* accessmode() → check_acl_access() calculates and sets dir->d_rights_cache */
+                    accessmode(AFPobj, vol, upath, &fresh_ma, dir, &st);
+                }
+            }
+        }
     }
 
 setprivdone:
@@ -2147,7 +2531,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         sync();
     } else {
         if (NULL == (dir = dirlookup(vol, did))) {
-            return afp_errno; /* was AFPERR_NOOBJ */
+            return afp_errno;
         }
 
         if (movecwd(vol, dir) < 0) {
@@ -2173,14 +2557,16 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
             }
         }
 
-        LOG(log_debug, logtype_afpd, "afp_syncdir: dir: '%s'", dir->d_u_name);
+        LOG(log_debug, logtype_afpd, "afp_syncdir: dir: '%s'",
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
         dfd = dirfd(dp);
 
         if (fsync(dfd) < 0)
             LOG(log_error, logtype_afpd, "afp_syncdir(%s):  %s",
-                dir->d_u_name, strerror(errno));
+                dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)", strerror(errno));
 
-        closedir(dp); /* closes dfd too */
+        /* closes dfd too */
+        closedir(dp);
 #endif
 
         if (-1 == (dfd = open(vol->ad_path(".", ADFLAGS_DIR), O_RDWR))) {
@@ -2201,7 +2587,8 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
         if (fsync(dfd) < 0)
             LOG(log_error, logtype_afpd, "afp_syncdir(%s): %s",
-                vol->ad_path(cfrombstr(dir->d_u_name), ADFLAGS_DIR), strerror(errno));
+                dir->d_u_name ? vol->ad_path(cfrombstr(dir->d_u_name), ADFLAGS_DIR) : "(null)",
+                strerror(errno));
 
         close(dfd);
     }
@@ -2237,13 +2624,19 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     ibuf += sizeof(did);
 
     if (NULL == (dir = dirlookup(vol, did))) {
-        return afp_errno; /* was AFPERR_NOOBJ */
+        return afp_errno;
     }
 
     /* for concurrent access we need to be sure we are not in the
      * folder we want to create...
      */
-    movecwd(vol, dir);
+    if (movecwd(vol, dir) < 0) {
+        /* Return error set by movecwd() */
+        return afp_errno;
+    }
+
+    /* Use movecwd's result (dir invalidated) */
+    dir = curdir;
 
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_PARAM);
@@ -2266,12 +2659,19 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     curdir->d_offcnt++;
 
-    if ((dir = dir_add(vol, curdir, s_path, strlen(s_path->u_name))) == NULL) {
+    if (!s_path->u_name) {
+        LOG(log_error, logtype_afpd, "afp_createdir: s_path->u_name is NULL");
+        return AFPERR_MISC;
+    }
+
+    size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+
+    if ((dir = dir_add(vol, curdir, s_path, uname_len)) == NULL) {
         return AFPERR_MISC;
     }
 
     if (movecwd(vol, dir) < 0) {
-        return AFPERR_PARAM;
+        return afp_errno;
     }
 
     ad_init(&ad, vol);
@@ -2312,7 +2712,7 @@ int renamedir(struct vol *vol,
     struct adouble  ad;
     int             err;
 
-    /* existence check moved to afp_moveandrename */
+    /* Source validation and cache cleaning handled by moveandrename */
     if (unix_rename(dirfd, src, -1, dst) < 0) {
         switch (errno) {
         case ENOENT :
@@ -2343,7 +2743,10 @@ int renamedir(struct vol *vol,
 
             break;
 
-        default :
+        default:
+            LOG(log_error, logtype_afpd,
+                "renamedir(\"%s\" -> \"%s\"): unexpected errno %d: %s",
+                src ? src : "(null)", dst ? dst : "(null)", errno, strerror(errno));
             return AFPERR_PARAM;
         }
     }
@@ -2391,7 +2794,7 @@ int deletecurdir(struct vol *vol)
     if (err) {
         LOG(log_error, logtype_afpd,
             "deletecurdir: error deleting AppleDouble files in \"%s\"",
-            cfrombstr(curdir->d_fullpath));
+            (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "(null)");
         return err;
     }
 
@@ -2401,7 +2804,7 @@ int deletecurdir(struct vol *vol)
     }
 
     LOG(log_debug, logtype_afpd, "deletecurdir: moved to \"%s\"",
-        cfrombstr(curdir->d_fullpath));
+        (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "(null)");
     err = netatalk_rmdir_all_errors(-1, cfrombstr(fdir->d_u_name));
 
     switch (err) {
@@ -2420,7 +2823,7 @@ int deletecurdir(struct vol *vol)
     default:
         LOG(log_error, logtype_afpd,
             "deletecurdir(\"%s\"): netatalk_rmdir_all_errors error",
-            cfrombstr(curdir->d_fullpath));
+            (curdir && curdir->d_fullpath) ? cfrombstr(curdir->d_fullpath) : "(null)");
         goto delete_done;
     }
 

@@ -20,6 +20,7 @@
 
 echo "*** Setting up environment"
 
+# Exit immeditaly on error
 set -e
 
 [ -n "$DEBUG_ENTRY_SCRIPT" ] && set -x
@@ -213,6 +214,7 @@ cnid mysql user = $AFP_CNID_SQL_USER
 cnid mysql pw = $AFP_CNID_SQL_PASS
 cnid mysql db = $AFP_CNID_SQL_DB
 dircachesize = ${AFP_DIRCACHESIZE:-8192}
+dircache files = ${AFP_DIRCACHE_FILES:-no}
 dircache validation freq = ${AFP_DIRCACHE_VALIDATION_FREQ:-1}
 dircache metadata window = ${AFP_DIRCACHE_METADATA_WINDOW:-300}
 dircache metadata threshold = ${AFP_DIRCACHE_METADATA_THRESHOLD:-60}
@@ -285,33 +287,53 @@ else
     sleep 2
     echo "*** Running testsuite: $TESTSUITE"
     echo ""
+    # Temporarily disable exit-on-error to ensure we can dump logs even if test fails
+    set +e
+    set -x
+    TEST_EXIT_CODE=0
     case "$TESTSUITE" in
         spectest)
-            set -x
             afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
+            TEST_EXIT_CODE=$?
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
             echo "testfile dos" > /mnt/afpshare/second.txt
             mkdir /mnt/afpshare/third
-            set -x
             afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -f Readonly_test
+            TEST_EXIT_CODE=$?
             ;;
         login)
-            set -x
             afp_logintest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS"
+            TEST_EXIT_CODE=$?
             ;;
         lan)
-            set -x
             afp_lantest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME"
+            TEST_EXIT_CODE=$?
             ;;
         speed)
-            set -x
             afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 5 -f Read,Write,Copy,ServerCopy
+            TEST_EXIT_CODE=$?
             ;;
         *)
             echo "Unknown testsuite: $TESTSUITE"
-            exit 1
+            TEST_EXIT_CODE=1
             ;;
     esac
+    set +x
+    set -e
+
+    echo "==== TESTS (${TESTSUITE}) COMPLETED (exit code: $TEST_EXIT_CODE) ===="
+    # Display Netatalk's server logs if SERVER_LOGS environment variable is set
+    if [ -n "$SERVER_LOGS" ]; then
+        if [ -f /var/log/afpd.log ]; then
+            echo "/var/log/afpd.log log lines: $(wc -l /var/log/afpd.log | awk '{print $1}')"
+            echo "==== AFPD LOG CONTENT ===="
+            cat /var/log/afpd.log
+            echo "==== AFPD LOG END ===="
+        else
+            echo "NOTE: /var/log/afpd.log does not exist"
+        fi
+    fi
+    exit $TEST_EXIT_CODE
 fi

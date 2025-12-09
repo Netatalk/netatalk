@@ -48,6 +48,7 @@ our %netatalkParameterDefaults = (
                                   'convert appledouble'         => 'yes',
                                   'ddp address'                 => '0.0',
                                   'delete veto files'           => 'no',
+                                  'dircache files'              => 'no',
                                   'dircache validation freq'    => '1',
                                   'dircache metadata window'    => '300',
                                   'dircache metadata threshold' => '60',

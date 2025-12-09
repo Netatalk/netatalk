@@ -27,7 +27,7 @@ static int afp_symlink(char *oldpath, char *newpath)
         return -1;
     }
 
-    if (FPWrite(Conn, fork, 0, strlen(oldpath), oldpath, 0)) {
+    if (FPWrite(Conn, fork, 0, (int)strlen(oldpath), oldpath, 0)) {
         return -1;
     }
 
@@ -200,7 +200,7 @@ STATIC void test426()
         test_failed();
     } else {
         char *ln2 = "t426 dest 2";
-        ret = FPWrite_ext(Conn, fork, 0, strlen(ln2), ln2, 0);
+        ret = FPWrite_ext(Conn, fork, 0, (off_t)strlen(ln2), ln2, 0);
 
         if (not_valid_bitmap(ret, BITERR_ACCESS | BITERR_MISC, AFPERR_MISC)) {
             test_failed();

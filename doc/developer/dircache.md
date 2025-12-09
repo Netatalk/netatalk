@@ -401,17 +401,31 @@ it's not doing it at all.
 
 **By default nothing changes, as the default value for `dircache validation freq = 1`.**
 
-To try this speed up, configure it;
+To try this speed up, configure it:
 
 ```ini
 dircache validation freq = 1-100
 dircache metadata window = 60-3600
 dircache metadata threshold = 10-1800
+dircache files = yes/no  # New in 4.x: Allow file caching
 ```
+
+### File Caching Implementation
+
+In [`directory.c`](../../etc/afpd/directory.c), the `dirlookup_internal()` function
+controls file caching behavior through the `dircache_files_enabled` global variable:
+
+- **Cache lookup** (lines 534-542): When a file is found in cache, checks `dircache_files_enabled`
+  before returning it
+- **CNID lookup** (lines 678-686): When a file is resolved via CNID, checks config before adding to cache
+- **Parent recursion**: Requires `strict=1` parameter to ensure parent DIDs are validated to enable
+  parent-chain rebuilds (database design guarantee)
+
+This separation allows configuration-driven control without affecting core lookup logic.
 
 ---
 
-*This optimization is available in Netatalk 4.4+ with configurable validation frequency
-via the `dircache validation freq` parameter.*
+*Directory cache optimizations available in Netatalk 4.4+ with configurable validation frequency
+and file caching control via `dircache validation freq` and `dircache files` parameters.*
 
 Developed and Authored by Andy Lemin, with Contributions from the Netatalk team.

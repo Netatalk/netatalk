@@ -107,7 +107,7 @@ char    *Path;
 char    *Test = NULL;
 static uint16_t vol;
 static DSI *dsi;
-static char    *Server = "localhost";
+char    *Server = "localhost";
 static int32_t Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 static uint8_t Iterations = 2;

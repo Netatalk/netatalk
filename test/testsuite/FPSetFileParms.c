@@ -285,7 +285,7 @@ static int afp_symlink(char *oldpath, char *newpath)
         return -1;
     }
 
-    if (FPWrite(Conn, fork, 0, strlen(oldpath), oldpath, 0)) {
+    if (FPWrite(Conn, fork, 0, (int)strlen(oldpath), oldpath, 0)) {
         return -1;
     }
 

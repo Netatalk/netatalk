@@ -146,7 +146,7 @@ void write_fork(CONN *conn, uint16_t vol, int dir, char *name, char *txt)
         return;
     }
 
-    if (FPWrite(conn, fork, 0, strlen(txt), txt, 0)) {
+    if (FPWrite(conn, fork, 0, (int)strlen(txt), txt, 0)) {
         test_failed();
     }
 

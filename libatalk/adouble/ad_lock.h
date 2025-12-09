@@ -19,8 +19,19 @@
             break;                                            \
         for (i = 0; i < (a)->adf_lockcount; i++) {            \
             adf_lock_t *lock = (a)->adf_lock + i;             \
-            if (--(*lock->refcount) < 1)                      \
+            /* Always release fcntl lock when freeing array */ \
+            if ((a)->adf_fd >= 0) {                           \
+                lock->lock.l_type = F_UNLCK;                  \
+                if (fcntl((a)->adf_fd, F_SETLK, &lock->lock) == -1) { \
+                    LOG(log_warning, logtype_default,         \
+                        "adf_lock_free: fcntl unlock failed on fd %d: %s", \
+                        (a)->adf_fd, strerror(errno));        \
+                }                                             \
+            }                                                 \
+            /* Only free refcount memory when last reference */ \
+            if (--(*lock->refcount) < 1) {                    \
                 free(lock->refcount);                         \
+            }                                                 \
         }                                                     \
         free((a)->adf_lock);                                  \
         adf_lock_init(a);                                     \

@@ -823,48 +823,105 @@ STATIC void test103()
     afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
     dir = filedir.did;
     dt = FPOpenDT(Conn, vol);
+
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> test_comment()\n");
+    }
+
     test_comment(vol, dir, "");
+
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> FPGetComment()\n");
+    }
+
     ret = FPGetComment(Conn, vol, dir, "");
 
     if (not_valid(ret, /* MAC */AFPERR_ACCESS, AFPERR_NOITEM)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPGetComment: got %d (%s), expected AFPERR_ACCESS or AFPERR_NOITEM\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    } else if (!Quiet) {
+        fprintf(stdout, "\t>>> FPGetComment PASSED: got %d (%s)\n", ntohl(ret),
+                afp_error(ret));
     }
 
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
     filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
     bitmap = (1 << DIRPBIT_ATTR);
-    FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, dir, "", bitmap,
-            &filedir))
+    ret = FPSetDirParms(Conn, vol, dir, "", bitmap, &filedir);
+
+    if (ntohl(AFPERR_ACCESS) != ret) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPSetDirParms: got %d (%s), expected AFPERR_ACCESS\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+    }
 
     /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    ret = FPEnumerate(Conn, vol, dir, "",
+                      (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
+                      (1 << FILPBIT_FINFO) |
+                      (1 << FILPBIT_CDATE) | (1 << FILPBIT_PDID),
+                      (1 << DIRPBIT_ATTR) |
+                      (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                      (1 << DIRPBIT_ACCESS));
 
-    if (ntohl(AFPERR_ACCESS) != FPEnumerate(Conn, vol, dir, "",
-                                            (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
-                                            (1 << FILPBIT_FINFO) |
-                                            (1 << FILPBIT_CDATE) | (1 << FILPBIT_PDID)
-                                            ,
-                                            (1 << DIRPBIT_ATTR) |
-                                            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-                                            (1 << DIRPBIT_ACCESS)
-                                           )) {
+    if (ntohl(AFPERR_ACCESS) != ret) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPEnumerate: got %d (%s), expected AFPERR_ACCESS\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    }
+
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> FPCopyFile()\n");
     }
 
     ret = FPCopyFile(Conn, vol, dir, vol, DIRDID_ROOT, "", "", name);
 
     if (not_valid(ret, AFPERR_PARAM, AFPERR_BADTYPE)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPCopyFile: got %d (%s), expected AFPERR_PARAM or AFPERR_BADTYPE\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    } else if (!Quiet) {
+        fprintf(stdout, "\t>>> FPCopyFile PASSED\n");
     }
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
         FAIL(ntohl(AFPERR_BADTYPE) != FPCreateID(Conn, vol, dir, ""))
     }
 
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> FPExchangeFile()\n");
+    }
+
     ret = FPExchangeFile(Conn, vol, dir, DIRDID_ROOT, "", name);
 
     if (not_valid(ret, AFPERR_NOOBJ, AFPERR_BADTYPE)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPExchangeFile: got %d (%s), expected AFPERR_NOOBJ or AFPERR_BADTYPE\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    } else if (!Quiet) {
+        fprintf(stdout, "\t>>> FPExchangeFile PASSED\n");
     }
 
     ret = FPSetFileParams(Conn, vol, dir, "", bitmap, &filedir);
@@ -892,7 +949,30 @@ STATIC void test103()
         test_failed();
 #endif
     } else {
-        if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
+        if (!Quiet) {
+            fprintf(stdout, "\t>>> FPMoveAndRename succeeded\n");
+
+            /* Check filesystem state */
+            if (Path[0] != '\0') {
+                char oldpath[1024], newpath[1024];
+                snprintf(oldpath, sizeof(oldpath), "%s/%s", Path, name1);
+                snprintf(newpath, sizeof(newpath), "%s/%s", Path, name);
+                fprintf(stdout, "\t>>> OLD name \"%s\": %s\n",
+                        oldpath, access(oldpath, F_OK) == 0 ? "EXISTS" : "NOT FOUND");
+                fprintf(stdout, "\t>>> NEW name \"%s\": %s\n",
+                        newpath, access(newpath, F_OK) == 0 ? "EXISTS" : "NOT FOUND");
+            }
+        }
+
+        ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap);
+
+        if (ret) {
+            if (!Quiet) {
+                fprintf(stdout,
+                        "\tFAILED at FPGetFileDirParams after MoveAndRename: got %d (%s)\n",
+                        ntohl(ret), afp_error(ret));
+            }
+
             test_failed();
         }
 
