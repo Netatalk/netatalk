@@ -47,6 +47,7 @@ EXT_FN(FPExchangeFiles);
 EXT_FN(FPFlush);
 EXT_FN(FPFlushFork);
 EXT_FN(FPGetACL);
+EXT_FN(FPSetACL);
 EXT_FN(FPGetAPPL);
 EXT_FN(FPGetComment);
 EXT_FN(FPGetExtAttr);
@@ -90,6 +91,7 @@ EXT_FN(T2FPCreateFile);
 EXT_FN(T2FPDelete);
 EXT_FN(T2FPGetFileDirParms);
 EXT_FN(T2FPGetSrvrParms);
+EXT_FN(T2FPGetVolParms);
 EXT_FN(T2FPMoveAndRename);
 EXT_FN(T2FPOpenFork);
 EXT_FN(T2FPSetDirParms);
@@ -135,6 +137,7 @@ static struct test_fn Test_list[] = {
     FN_N(FPFlush)
     FN_N(FPFlushFork)
     FN_N(FPGetACL)
+    FN_N(FPSetACL)
     FN_N(FPGetAPPL)
     FN_N(FPGetComment)
     FN_N(FPGetExtAttr)
@@ -177,6 +180,7 @@ static struct test_fn Test_list[] = {
     FN_N(T2FPDelete)
     FN_N(T2FPGetFileDirParms)
     FN_N(T2FPGetSrvrParms)
+    FN_N(T2FPGetVolParms)
     FN_N(T2FPMoveAndRename)
     FN_N(T2FPOpenFork)
     FN_N(T2FPSetDirParms)

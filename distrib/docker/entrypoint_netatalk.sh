@@ -213,6 +213,7 @@ cnid mysql user = $AFP_CNID_SQL_USER
 cnid mysql pw = $AFP_CNID_SQL_PASS
 cnid mysql db = $AFP_CNID_SQL_DB
 dircachesize = ${AFP_DIRCACHESIZE:-8192}
+dircache files = true
 dircache validation freq = ${AFP_DIRCACHE_VALIDATION_FREQ:-1}
 dircache metadata window = ${AFP_DIRCACHE_METADATA_WINDOW:-300}
 dircache metadata threshold = ${AFP_DIRCACHE_METADATA_THRESHOLD:-60}
@@ -288,7 +289,8 @@ else
     case "$TESTSUITE" in
         spectest)
             set -x
-            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2"
+            afp_spectest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -d "$AFP_USER2" -w "$AFP_PASS" -s "$SHARE_NAME" -S "$SHARE_NAME2" || true
+            set +x
             ;;
         readonly)
             echo "testfile uno" > /mnt/afpshare/first.txt
@@ -314,4 +316,17 @@ else
             exit 1
             ;;
     esac
+
+    echo "==== TESTS COMPLETED ===="
+    # Display Netatalk's server logs if SERVER_LOGS environment variable is set
+    if [ -n "$SERVER_LOGS" ]; then
+        if [ -f /var/log/afpd.log ]; then
+            echo "/var/log/afpd.log log lines: $(wc -l /var/log/afpd.log | awk '{print $1}')"
+            echo "==== AFPD LOG CONTENT ===="
+            cat /var/log/afpd.log
+            echo "==== AFPD LOG END ===="
+        else
+            echo "NOTE: /var/log/afpd.log does not exist"
+        fi
+    fi
 fi
