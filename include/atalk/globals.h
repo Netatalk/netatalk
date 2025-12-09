@@ -47,6 +47,9 @@
 #define MAXUSERLEN 256
 #define MAXOPTLEN 256
 
+#define CNID_PATH_OVERHEAD 12  /* CNID protocol header size for path resolution */
+#define CNID_MAX_PATH_LEN (CNID_PATH_OVERHEAD + MAXPATHLEN + 1)  /* Maximum path length for CNID operations */
+
 #define DEFAULT_MAX_DIRCACHE_SIZE 8192
 
 /* Directory cache validation settings */
@@ -96,6 +99,7 @@ struct afp_options {
     int timeout;
     int flags;
     int dircachesize;
+    int dircache_files;         /*!< Whether to allow files in directory cache */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
     int disconnected;           /*!< Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /*!< number of seconds FCE file mod events are put on hold */

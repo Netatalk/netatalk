@@ -281,7 +281,7 @@ STATIC void test342()
     struct afp_filedir_parms filedir;
     char finder_info[32];
     uint16_t bitmap;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     ENTER_TEST
 
@@ -614,6 +614,225 @@ test_exit:
     exit_test("FPExchangeFiles:test391: exchange files, dest with resource fork open");
 }
 
+/* test531: File exchange with cache coherency
+ *
+ * This test validates that file exchange properly updates cache when
+ * a file is exchanged while one client has it open for reading.
+ *
+ * Scenario:
+ * 1. Client 1 creates file1, file2
+ * 2. Client 1 writes data to file1
+ * 3. Client 1 opens file1 for read (cache entry created)
+ * 4. Client 2 exchanges file1 <-> file2
+ * 5. Client 1 reads from fork (should see file2's original content)
+ * 6. Client 1 stats file1 (should have file2's metadata)
+ * 7. Verify cache updated, CNID swapped correctly
+ */
+STATIC void test531()
+{
+    char *file1 = "t531_file1.txt";
+    char *file2 = "t531_file2.txt";
+    char *data1 = "FILE1_DATA";
+    char *data2 = "FILE2_DATA";
+    uint16_t bitmap = 0;
+    uint16_t vol = VolID;
+    uint16_t vol2 = 0;
+    uint16_t fork = 0;
+    int fid_file1;
+    int fid_file2;
+    int temp_fid;
+    char read_buffer[32];
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 1-2: Client 1 creates files and writes data
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 1-2: Client 1 creates file1 and file2 with different data\n");
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, file1)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, file2)) {
+        test_nottested();
+        goto fin;
+    }
+
+    /* Get original CNIDs */
+    fid_file1 = get_fid(Conn, vol, DIRDID_ROOT, file1);
+    fid_file2 = get_fid(Conn, vol, DIRDID_ROOT, file2);
+    /* Write different data to each file */
+    write_fork(Conn, vol, DIRDID_ROOT, file1, data1);
+    write_fork(Conn, vol, DIRDID_ROOT, file2, data2);
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    file1 has '%s', file2 has '%s'\n", data1, data2);
+    }
+
+    /************************************
+     * Step 3: Client 1 opens file1 for read (cache entry created)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 3: Client 1 opens file1 for read (populates cache)\n");
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, file1,
+                      OPENACC_RD);
+
+    if (!fork) {
+        test_failed();
+        goto fin;
+    }
+
+    /* Read to populate cache */
+    size_t data1_len = strnlen(data1, 512);
+
+    if (FPRead(Conn, fork, 0, (int)data1_len, read_buffer)) {
+        test_failed();
+        goto fin;
+    }
+
+    read_buffer[data1_len] = '\0';
+
+    if (strcmp(read_buffer, data1) != 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED initial read should be '%s', got '%s'\n", data1,
+                    read_buffer);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    file1 opened and read successfully\n");
+    }
+
+    /************************************
+     * Step 4: Client 2 exchanges file1 <-> file2
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 4: Client 2 exchanges file1 <-> file2\n");
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED Client 2 could not open volume\n");
+        }
+
+        test_nottested();
+        goto fin;
+    }
+
+    FAIL(FPExchangeFile(Conn2, vol2, DIRDID_ROOT, DIRDID_ROOT, file1, file2))
+    FPCloseVol(Conn2, vol2);
+    vol2 = 0;
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Files exchanged\n");
+    }
+
+    /************************************
+     * Step 5: Client 1 reads from fork (should see file2's content)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 5: Client 1 reads from open fork (should see swapped content)\n");
+    }
+
+    /* Close and reopen the fork to get updated content */
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+    /* Read file1 (should now contain file2's original data) */
+    size_t data2_len = strnlen(data2, 512);
+    read_fork(Conn, vol, DIRDID_ROOT, file1, (int)data2_len);
+
+    if (strcmp(Data, data2) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED after exchange, file1 should contain '%s', got '%s'\n",
+                    data2, Data);
+        }
+
+        test_failed();
+    }
+
+    /* Read file2 (should now contain file1's original data) */
+    size_t data1_len2 = strnlen(data1, 512);
+    read_fork(Conn, vol, DIRDID_ROOT, file2, (int)data1_len2);
+
+    if (strcmp(Data, data1) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED after exchange, file2 should contain '%s', got '%s'\n",
+                    data1, Data);
+        }
+
+        test_failed();
+    }
+
+    /************************************
+     * Step 6-7: Verify CNID swapped correctly
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 6-7: Verify CNIDs remained with original files\n");
+    }
+
+    temp_fid = get_fid(Conn, vol, DIRDID_ROOT, file1);
+
+    if (temp_fid != fid_file1) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED file1 CNID should be %x, got %x\n", fid_file1,
+                    temp_fid);
+        }
+
+        test_failed();
+    }
+
+    temp_fid = get_fid(Conn, vol, DIRDID_ROOT, file2);
+
+    if (temp_fid != fid_file2) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED file2 CNID should be %x, got %x\n", fid_file2,
+                    temp_fid);
+        }
+
+        test_failed();
+    }
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  ✓ File exchange cache coherency validated (data swapped, CNIDs preserved)\n");
+    }
+
+fin:
+
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
+
+    if (vol2) {
+        FPCloseVol(Conn2, vol2);
+    }
+
+    FPDelete(Conn, vol, DIRDID_ROOT, file1);
+    FPDelete(Conn, vol, DIRDID_ROOT, file2);
+test_exit:
+    exit_test("FPExchangeFiles:test531: File exchange with cache coherency");
+}
+
 /* ----------- */
 void FPExchangeFiles_test()
 {
@@ -625,4 +844,5 @@ void FPExchangeFiles_test()
     test389();
     test390();
     test391();
+    test531();
 }

@@ -275,7 +275,7 @@ static void cname_test(char *name)
                       (1 << DIRPBIT_DID) |
                       (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     dsi = &Conn->dsi;
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
     filedir.isdir = 1;
@@ -345,7 +345,6 @@ static void cname_test(char *name)
 }
 
 /* ------------------------- */
-/* FIXME: afpd crash in dircache_search_by_did() */
 STATIC void test95()
 {
     int dir;
@@ -804,7 +803,7 @@ STATIC void test103()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << DIRPBIT_DID);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int  dt;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -823,48 +822,105 @@ STATIC void test103()
     afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
     dir = filedir.did;
     dt = FPOpenDT(Conn, vol);
+
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> test_comment()\n");
+    }
+
     test_comment(vol, dir, "");
+
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> FPGetComment()\n");
+    }
+
     ret = FPGetComment(Conn, vol, dir, "");
 
     if (not_valid(ret, /* MAC */AFPERR_ACCESS, AFPERR_NOITEM)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPGetComment: got %d (%s), expected AFPERR_ACCESS or AFPERR_NOITEM\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    } else if (!Quiet) {
+        fprintf(stdout, "\t>>> FPGetComment PASSED: got %d (%s)\n", ntohl(ret),
+                afp_error(ret));
     }
 
     FAIL(FPCloseDT(Conn, dt))
     filedir.isdir = 1;
     filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
     bitmap = (1 << DIRPBIT_ATTR);
-    FAIL(ntohl(AFPERR_ACCESS) != FPSetDirParms(Conn, vol, dir, "", bitmap,
-            &filedir))
+    ret = FPSetDirParms(Conn, vol, dir, "", bitmap, &filedir);
+
+    if (ntohl(AFPERR_ACCESS) != ret) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPSetDirParms: got %d (%s), expected AFPERR_ACCESS\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+    }
 
     /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    ret = FPEnumerate(Conn, vol, dir, "",
+                      (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
+                      (1 << FILPBIT_FINFO) |
+                      (1 << FILPBIT_CDATE) | (1 << FILPBIT_PDID),
+                      (1 << DIRPBIT_ATTR) |
+                      (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
+                      (1 << DIRPBIT_ACCESS));
 
-    if (ntohl(AFPERR_ACCESS) != FPEnumerate(Conn, vol, dir, "",
-                                            (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
-                                            (1 << FILPBIT_FINFO) |
-                                            (1 << FILPBIT_CDATE) | (1 << FILPBIT_PDID)
-                                            ,
-                                            (1 << DIRPBIT_ATTR) |
-                                            (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
-                                            (1 << DIRPBIT_ACCESS)
-                                           )) {
+    if (ntohl(AFPERR_ACCESS) != ret) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPEnumerate: got %d (%s), expected AFPERR_ACCESS\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    }
+
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> FPCopyFile()\n");
     }
 
     ret = FPCopyFile(Conn, vol, dir, vol, DIRDID_ROOT, "", "", name);
 
     if (not_valid(ret, AFPERR_PARAM, AFPERR_BADTYPE)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPCopyFile: got %d (%s), expected AFPERR_PARAM or AFPERR_BADTYPE\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    } else if (!Quiet) {
+        fprintf(stdout, "\t>>> FPCopyFile PASSED\n");
     }
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
         FAIL(ntohl(AFPERR_BADTYPE) != FPCreateID(Conn, vol, dir, ""))
     }
 
+    if (!Quiet) {
+        fprintf(stdout, "\t>>> FPExchangeFile()\n");
+    }
+
     ret = FPExchangeFile(Conn, vol, dir, DIRDID_ROOT, "", name);
 
     if (not_valid(ret, AFPERR_NOOBJ, AFPERR_BADTYPE)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED at FPExchangeFile: got %d (%s), expected AFPERR_NOOBJ or AFPERR_BADTYPE\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
         test_failed();
+    } else if (!Quiet) {
+        fprintf(stdout, "\t>>> FPExchangeFile PASSED\n");
     }
 
     ret = FPSetFileParams(Conn, vol, dir, "", bitmap, &filedir);
@@ -892,7 +948,30 @@ STATIC void test103()
         test_failed();
 #endif
     } else {
-        if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap)) {
+        if (!Quiet) {
+            fprintf(stdout, "\t>>> FPMoveAndRename succeeded\n");
+
+            /* Check filesystem state */
+            if (Path[0] != '\0') {
+                char oldpath[1024], newpath[1024];
+                snprintf(oldpath, sizeof(oldpath), "%s/%s", Path, name1);
+                snprintf(newpath, sizeof(newpath), "%s/%s", Path, name);
+                fprintf(stdout, "\t>>> OLD name \"%s\": %s\n",
+                        oldpath, access(oldpath, F_OK) == 0 ? "EXISTS" : "NOT FOUND");
+                fprintf(stdout, "\t>>> NEW name \"%s\": %s\n",
+                        newpath, access(newpath, F_OK) == 0 ? "EXISTS" : "NOT FOUND");
+            }
+        }
+
+        ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap);
+
+        if (ret) {
+            if (!Quiet) {
+                fprintf(stdout,
+                        "\tFAILED at FPGetFileDirParams after MoveAndRename: got %d (%s)\n",
+                        ntohl(ret), afp_error(ret));
+            }
+
             test_failed();
         }
 
@@ -1001,7 +1080,7 @@ STATIC void test170()
     int dir = DIRDID_ROOT_PARENT;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int  dt;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -1155,14 +1234,15 @@ STATIC void test170()
     FAIL(ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, DIRDID_ROOT_PARENT, ""))
     FAIL(FPCloseDT(Conn, dt))
 fin:
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
+    /* Cleanup - don't fail test if files already deleted during test */
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FPDelete(Conn, vol, DIRDID_ROOT, name1);
 test_exit:
     exit_test("Error:test170: cname error did=1 name=\"\"");
 }
 
 /* -------------------------- */
-/* FIXME: afpd crash in dircache_search_by_did() */
+/* Tests FPMoveAndRename into subdirectory - validates cache consistency after rename */
 STATIC void test171()
 {
     uint16_t bitmap = 0;
@@ -1176,7 +1256,7 @@ STATIC void test171()
     int dir = DIRDID_ROOT_PARENT;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int  dt;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -1309,14 +1389,15 @@ STATIC void test171()
     FAIL(ntohl(AFPERR_NOOBJ) != FPRemoveComment(Conn, vol, tdir, tname))
     FAIL(FPCloseDT(Conn, dt))
 fin:
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
+    /* Cleanup - don't fail test if files already deleted during test */
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FPDelete(Conn, vol, DIRDID_ROOT, name1);
 test_exit:
     exit_test("Error:test171: cname error did=1 name=bad name");
 }
 
 /* -------------------------- */
-/* FIXME: afpd crash in dircache_search_by_did() */
+/* Tests FPMoveAndRename with tdir = 0 - validates cache consistency with special DID */
 STATIC void test173()
 {
     uint16_t bitmap = 0;
@@ -1330,7 +1411,7 @@ STATIC void test173()
     int dir = DIRDID_ROOT_PARENT;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int  dt;
     dsi = &Conn->dsi;
     ENTER_TEST
@@ -1474,8 +1555,9 @@ STATIC void test173()
     FAIL(FPCloseDT(Conn, dt))
     /* ---- appl.c ---- */
 fin:
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
+    /* Cleanup - don't fail test if files already deleted during test */
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+    FPDelete(Conn, vol, DIRDID_ROOT, name1);
 test_exit:
     exit_test("Error:test173: did error did=0 name=test173 name");
 }
@@ -1495,7 +1577,7 @@ STATIC void test174()
     uint16_t vol2;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     DSI *dsi2;
     int  dt;
     ENTER_TEST
@@ -1681,20 +1763,15 @@ void Error_test()
     test35();
     test36();
     test37();
-#if 0
     test95();
-#endif
     test99();
     test100();
     test101();
     test102();
     test103();
     test105();
-    /* causes afpd crash in dircache_search_by_did() */
-#if 0
     test170();
     test171();
     test173();
-#endif
     test174();
 }

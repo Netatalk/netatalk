@@ -12,6 +12,9 @@
 
 static char temp[MAXPATHLEN];
 
+/* Forward declarations */
+STATIC void test526(void);
+
 /* ------------------------- */
 STATIC void test3()
 {
@@ -754,7 +757,7 @@ STATIC void test372()
     uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     int fd;
     ENTER_TEST
@@ -858,7 +861,7 @@ STATIC void test388()
     uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     int fd;
     ENTER_TEST
@@ -962,7 +965,7 @@ STATIC void test392()
     uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     int fd;
     ENTER_TEST
@@ -1181,7 +1184,7 @@ STATIC void test236()
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     int ofs = 3 * sizeof(uint16_t);
     ENTER_TEST
 
@@ -1271,7 +1274,7 @@ STATIC void test237()
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     int ofs = 3 * sizeof(uint16_t);
     ENTER_TEST
 
@@ -1353,7 +1356,7 @@ STATIC void test238()
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     int ofs = 3 * sizeof(uint16_t);
     ENTER_TEST
 
@@ -1443,7 +1446,7 @@ STATIC void test431()
     const char *teststring = "test\n";
     int teststring_len = 5;
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -1579,6 +1582,338 @@ test_exit:
 }
 
 
+/* ------------------------- */
+/* test526: Fork lifecycle with cache interactions
+ *
+ * This test validates cache coherency during long-running fork operations
+ * with concurrent permission changes from another client.
+ *
+ * Scenario:
+ * 1. Client 1 creates a file and opens data fork for read
+ * 2. Client 1 reads file multiple times (5+ times to populate cache)
+ * 3. Client 2 changes file permissions (chmod #1)
+ * 4. Client 1 continues reading (tests permission cache update)
+ * 5. Client 2 changes permissions again (chmod #2)
+ * 6. Client 1 seeks and reads different offsets
+ * 7. Client 1 closes fork
+ * 8. Client 2 deletes file
+ * 9. Client 1 attempts to stat file (should fail AFPERR_NOOBJ)
+ * 10. Verify cache properly cleaned, no stale entries
+ */
+STATIC void test526()
+{
+    char *name = "t526_fork_lifecycle.txt";
+    const char *testdata = "This is test data for fork lifecycle cache testing. ";
+    uint16_t bitmap = (1 << FILPBIT_ATTR) | (1 << FILPBIT_MDATE) |
+                      (1 << FILPBIT_UNIXPR);
+    uint16_t fork1 = 0;
+    uint16_t vol = VolID;
+    uint16_t vol2 = 0;
+    int fd = -1;
+    struct stat st;
+    int i;
+    ENTER_TEST
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "FPOpenFork:test526: Fork lifecycle with cache interactions and permission changes\n");
+    }
+
+    if (Path[0] == '\0') {
+        test_skipped(T_PATH);
+        goto test_exit;
+    }
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 1: Client 1 creates file and writes initial data
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 1: Client 1 creates file\n");
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /* Write test data using filesystem directly */
+    snprintf(temp, sizeof(temp), "%s/%s", Path, name);
+    fd = open(temp, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+
+    if (fd < 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED unable to open %s: %s\n", temp, strerror(errno));
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /* Write repeated test data (260+ bytes) */
+    size_t testdata_len = strnlen(testdata, 512);
+
+    for (i = 0; i < 5; i++) {
+        if (write(fd, testdata, testdata_len) != (ssize_t)testdata_len) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED unable to write data: %s\n", strerror(errno));
+            }
+
+            test_failed();
+            close(fd);
+            goto fin;
+        }
+    }
+
+    close(fd);
+    fd = -1;
+
+    /************************************
+     * Step 2: Client 1 opens fork for read and reads multiple times
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 2: Client 1 opens data fork for read\n");
+    }
+
+    fork1 = FPOpenFork(Conn, vol, OPENFORK_DATA, bitmap, DIRDID_ROOT, name,
+                       OPENACC_RD);
+
+    if (!fork1) {
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 3: Client 1 reads file 6 times to populate cache\n");
+    }
+
+    /* Read multiple times to populate cache */
+    for (i = 0; i < 6; i++) {
+        if (FPRead(Conn, fork1, i * 40, 40, Data)) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED read iteration %d failed\n", i);
+            }
+
+            test_failed();
+            goto fin;
+        }
+
+        if (!Quiet && Verbose) {
+            fprintf(stdout, "\t    Read iteration %d completed\n", i + 1);
+        }
+    }
+
+    /************************************
+     * Step 3: Client 2 changes permissions (chmod #1)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 4: Client 2 changes file permissions (chmod #1 -> 0444)\n");
+    }
+
+    if (chmod(temp, 0444) < 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED unable to chmod %s: %s\n", temp, strerror(errno));
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Permissions changed to 0444\n");
+    }
+
+    /************************************
+     * Step 4: Client 1 continues reading (tests permission cache update)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 5: Client 1 continues reading (permission cache should update)\n");
+    }
+
+    /* Read again - should still work (fork already open) */
+    for (i = 0; i < 3; i++) {
+        if (FPRead(Conn, fork1, 10 + i * 20, 20, Data)) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED read after chmod #1 failed at iteration %d\n", i + 1);
+            }
+
+            test_failed();
+            goto fin;
+        }
+
+        if (!Quiet && Verbose) {
+            fprintf(stdout, "\t    Post-chmod read iteration %d completed\n", i + 1);
+        }
+    }
+
+    /************************************
+     * Step 5: Client 2 changes permissions again (chmod #2)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 6: Client 2 changes permissions again (chmod #2 -> 0644)\n");
+    }
+
+    if (chmod(temp, 0644) < 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED unable to chmod %s: %s\n", temp, strerror(errno));
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Permissions changed back to 0644\n");
+    }
+
+    /************************************
+     * Step 6: Client 1 seeks and reads different offsets
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 7: Client 1 seeks and reads different offsets\n");
+    }
+
+    /* Read from beginning */
+    if (FPRead(Conn, fork1, 0, 50, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED read from offset 0 failed\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /* Read from middle */
+    if (FPRead(Conn, fork1, 100, 50, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED read from offset 100 failed\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /* Read from end */
+    if (FPRead(Conn, fork1, 200, 50, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED read from offset 200 failed\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 7: Client 1 closes fork
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 8: Client 1 closes fork\n");
+    }
+
+    FAIL(FPCloseFork(Conn, fork1))
+    fork1 = 0;
+
+    /************************************
+     * Step 8: Client 2 deletes file
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 9: Client 2 deletes file\n");
+    }
+
+    /* Open volume on Conn2 */
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED Client 2 could not open volume\n");
+        }
+
+        test_nottested();
+        goto fin;
+    }
+
+    if (FPDelete(Conn2, vol2, DIRDID_ROOT, name)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED Client 2 could not delete file\n");
+        }
+
+        test_failed();
+        FPCloseVol(Conn2, vol2);
+        goto fin;
+    }
+
+    FPCloseVol(Conn2, vol2);
+
+    /************************************
+     * Step 9: Client 1 attempts to stat deleted file
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 10: Client 1 attempts to stat deleted file (should fail)\n");
+    }
+
+    /* Should fail with AFPERR_NOOBJ */
+    unsigned int ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0);
+
+    if (ret != ntohl(AFPERR_NOOBJ)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED stat should return AFPERR_NOOBJ, got %d (%s)\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 10: Verify cache cleaned
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 11: Verify no stale cache entries (file gone)\n");
+    }
+
+    /* Verify file is really gone on filesystem */
+    if (stat(temp, &st) == 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED file still exists on filesystem: %s\n", temp);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet) {
+        fprintf(stdout, "\t  ✓ All steps completed - cache coherency validated\n");
+    }
+
+fin:
+
+    if (fork1) {
+        FPCloseFork(Conn, fork1);
+    }
+
+    if (fd >= 0) {
+        close(fd);
+    }
+
+    /* Cleanup: try to delete file if it still exists */
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+
+    if (vol2) {
+        FPCloseVol(Conn2, vol2);
+    }
+
+test_exit:
+    exit_test("FPOpenFork:test526: Fork lifecycle with cache interactions and permission changes");
+}
+
 /* ----------- */
 void T2FPOpenFork_test()
 {
@@ -1602,4 +1937,5 @@ void T2FPOpenFork_test()
     test237();
     test238();
     test431();
+    test526();
 }

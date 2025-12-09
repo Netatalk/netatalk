@@ -2644,6 +2644,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             NULL, 80);
     options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircachesize",
                                             NULL, DEFAULT_MAX_DIRCACHE_SIZE);
+    options->dircache_files = getoption_bool(config, INISEC_GLOBAL,
+                              "dircache files",
+                              NULL, 0);
     options->tcp_sndbuf     = getoption_int(config, INISEC_GLOBAL, "tcpsndbuf",
                                             NULL, 0);
     options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",

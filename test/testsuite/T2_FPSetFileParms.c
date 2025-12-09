@@ -12,7 +12,7 @@ static int afp_symlink(char *oldpath, char *newpath)
     struct afp_filedir_parms filedir;
     uint16_t bitmap;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int fork = 0;
     dsi = &Conn->dsi;
 
@@ -27,7 +27,7 @@ static int afp_symlink(char *oldpath, char *newpath)
         return -1;
     }
 
-    if (FPWrite(Conn, fork, 0, strlen(oldpath), oldpath, 0)) {
+    if (FPWrite(Conn, fork, 0, (int)strlen(oldpath), oldpath, 0)) {
         return -1;
     }
 
@@ -67,7 +67,7 @@ STATIC void test89()
     uint16_t bitmap = (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     unsigned ret;
     ENTER_TEST
 
@@ -118,7 +118,7 @@ STATIC void test120()
                       (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -200,7 +200,7 @@ STATIC void test426()
         test_failed();
     } else {
         char *ln2 = "t426 dest 2";
-        ret = FPWrite_ext(Conn, fork, 0, strlen(ln2), ln2, 0);
+        ret = FPWrite_ext(Conn, fork, 0, (off_t)strlen(ln2), ln2, 0);
 
         if (not_valid_bitmap(ret, BITERR_ACCESS | BITERR_MISC, AFPERR_MISC)) {
             test_failed();

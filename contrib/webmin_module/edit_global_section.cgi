@@ -547,6 +547,15 @@ print &ui_table_row(
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache files', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_dircache_files'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'dircache files', $text{'edit_undefined'}, 'yes',
+                                  'yes',       'no',        'no'
+                    )
+);
+
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'extmap file', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_extmap_file'},

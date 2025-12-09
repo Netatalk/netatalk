@@ -100,13 +100,12 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     /* Skip Bitmap, ReqCount, StartIndex and maxreply*/
     ibuf += 12;
-    /* get name */
-    s_path = cname(vol, dir, &ibuf);
 
-    if (s_path == NULL) {
+    /* get name */
+    if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         LOG(log_debug, logtype_afpd, "afp_listextattr: cname error: %s",
-            strerror(errno));
-        return AFPERR_NOOBJ;
+            AfpErr2name(afp_errno));
+        return afp_errno;
     }
 
     st = &s_path->st;
@@ -290,8 +289,8 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     /* get name */
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         LOG(log_debug, logtype_afpd, "afp_getextattr: cname error: %s",
-            strerror(errno));
-        return AFPERR_NOOBJ;
+            AfpErr2name(afp_errno));
+        return afp_errno;
     }
 
     if ((unsigned long)ibuf & 1) {
@@ -398,8 +397,8 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     /* get name */
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         LOG(log_debug, logtype_afpd, "afp_setextattr: cname error: %s",
-            strerror(errno));
-        return AFPERR_NOOBJ;
+            AfpErr2name(afp_errno));
+        return afp_errno;
     }
 
     if (path_isadir(s_path)) {
@@ -497,8 +496,8 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     /* get name */
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         LOG(log_debug, logtype_afpd, "afp_remextattr: cname error: %s",
-            strerror(errno));
-        return AFPERR_NOOBJ;
+            AfpErr2name(afp_errno));
+        return afp_errno;
     }
 
     if (path_isadir(s_path)) {
