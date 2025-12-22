@@ -65,7 +65,7 @@ jobs:
               tracker-miner-fs \
               unzip
       - name: Install Build Wrapper
-        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        uses: SonarSource/sonarqube-scan-action/install-build-wrapper@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
       - name: Run build wrapper
         run: |
           mkdir -p ${{ env.BUILD_WRAPPER_OUT_DIR }}
@@ -78,7 +78,7 @@ jobs:
               -Dwith-testsuite=true
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} meson compile -C build
       - name: Run SonarQube scan
-        uses: sonarsource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        uses: sonarsource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9 # v7.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
