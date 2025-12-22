@@ -349,7 +349,7 @@ same as **unix charset**.
 
 passwd file = *path* **(G)**
 
-> Sets the path to the Randnum UAM passwd file for this server.
+> Sets the path to the Randnum UAM *afppasswd* file for this server.
 
 passwd minlen = *number* **(G)**
 
@@ -1346,14 +1346,13 @@ The home directory is mounted on */home/{user}/afp-data*.
 ## Example: Classic Mac clients
 
 This enables AppleTalk if Netatalk was built with AppleTalk support.
-The Random Number and ClearTxt authentication modules are used.
-The **legacy icon** option is used to make the server look like a
-BSD Daemon.
+The Random Number and ClearTxt authentication modules are used to support older Mac clients.
+The **legacy icon** option is used to give the volume a custom icon
+when mounted on Classic Mac OS clients.
 
-With **legacy volume size** the volume size is limited to 2 GB
-for very old Macs, while **prodos** is used to enable ProDOS
-boot flags on the volume while limiting the volume free space
-to 32 MB.
+With **legacy volume size** the reported volume size is limited to 2 GB for very old Macs,
+while **prodos** is used to enable Apple II ProDOS boot flags on the volume
+as well as limiting the reported free space on the volume to 32 MB.
 
     [Global]
     appletalk = yes

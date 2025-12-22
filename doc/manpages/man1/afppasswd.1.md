@@ -23,6 +23,16 @@ can not deal with the more secure "DHX" or "DHX2" UAMs.
 
 # Examples
 
+Administrator initializing *afppasswd* file and adding a new user:
+
+    example% sudo afppasswd -c
+    example% sudo afppasswd -a newuser
+    Enter NEW AFP password: (hidden)
+    Enter NEW AFP password again: (hidden)
+    afppasswd: updated password.
+
+Note that newuser must already exist as a local system user.
+
 Local user changing their own password:
 
     example% afppasswd
