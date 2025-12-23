@@ -279,7 +279,8 @@ Generally, values less than 1 indicate efficient operation (for example due to b
 and values greater than 1 indicate sub-optimal operation (for example amplification of a single operation,
 causing additional downstream operations).
 
-Note; As total AFP Ops are a mix of reads, writes, and other ops the effective 1:1 (AFP:IO) thresholds are not equal to 1.
+Note; As total AFP Ops are a mix of reads, writes,
+and other ops the effective 1:1 (AFP:IO) thresholds are not equal to 1.
 Accurate thresholds can be calculated on a per test basis using the information shown in the Testing Wiki,
 and comparing relevant AFP read/write ops with the relevant AFPD_R/AFPD_W values.
 
