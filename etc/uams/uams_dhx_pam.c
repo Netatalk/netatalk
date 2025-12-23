@@ -499,8 +499,8 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     bn2 = gcry_mpi_snew(sizeof(randbuf));
     gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
     /* zero out the random number */
-    memset(rbuf, 0, sizeof(randbuf));
-    memset(randbuf, 0, sizeof(randbuf));
+    explicit_bzero(rbuf, sizeof(randbuf));
+    explicit_bzero(randbuf, sizeof(randbuf));
     rbuf += KEYSIZE;
     bn3 = gcry_mpi_snew(0);
     gcry_mpi_sub(bn3, bn1, bn2);
@@ -592,7 +592,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
         goto logincont_err;
     }
 
-    memset(rbuf, 0, PASSWDLEN); /* zero out the password */
+    explicit_bzero(rbuf, PASSWDLEN); /* zero out the password */
     *uam_pwd = dhxpwd;
     /* Log Entry */
     LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Auth OK!");
@@ -606,7 +606,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 logincont_err:
     pam_end(pamh, PAM_error);
     pamh = NULL;
-    memset(rbuf, 0, CRYPT2BUFLEN);
+    explicit_bzero(rbuf, CRYPT2BUFLEN);
     return err;
 }
 
@@ -717,8 +717,8 @@ static int pam_changepw(void *obj, unsigned char *username,
     bn2 = gcry_mpi_snew(sizeof(randbuf));
     gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
     /* zero out the random number */
-    memset(ibuf, 0, sizeof(randbuf));
-    memset(randbuf, 0, sizeof(randbuf));
+    explicit_bzero(ibuf, sizeof(randbuf));
+    explicit_bzero(randbuf, sizeof(randbuf));
     bn3 = gcry_mpi_snew(0);
     gcry_mpi_sub(bn3, bn1, bn2);
     gcry_mpi_release(bn2);
@@ -784,7 +784,7 @@ static int pam_changepw(void *obj, unsigned char *username,
     }
 
     /* clear out old passwd */
-    memset(ibuf + PASSWDLEN, 0, PASSWDLEN);
+    explicit_bzero(ibuf + PASSWDLEN, PASSWDLEN);
     /* new password */
     PAM_password = ibuf;
 
@@ -800,7 +800,7 @@ static int pam_changepw(void *obj, unsigned char *username,
         LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
     }
 
-    memset(ibuf, 0, PASSWDLEN);
+    explicit_bzero(ibuf, PASSWDLEN);
 
     if (PAM_error != PAM_SUCCESS) {
         pam_end(lpamh, PAM_error);

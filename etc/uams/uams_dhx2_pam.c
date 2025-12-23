@@ -762,10 +762,10 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         goto error_ctx;
     }
 
-    memset(ibuf, 0, 256); /* zero out the password */
+    explicit_bzero(ibuf, 256); /* zero out the password */
 
     if (utfpass) {
-        memset(utfpass, 0, strlen(utfpass));
+        explicit_bzero(utfpass, strlen(utfpass));
     }
 
     *uam_pwd = dhxpwd;
@@ -970,7 +970,7 @@ static int changepw_3(void *obj _U_,
         LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
     }
 
-    memset(ibuf, 0, 512);
+    explicit_bzero(ibuf, 512);
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: error changing pw with PAM");

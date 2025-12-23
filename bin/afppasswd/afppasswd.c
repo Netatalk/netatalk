@@ -113,7 +113,7 @@ static void convert_passwd(char *buf, char *newpwd, const int keyfd)
 
         ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
         ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
-        memset(key, 0, sizeof(key));
+        explicit_bzero(key, sizeof(key));
 
         if (newpwd) {
             ctxerror = gcry_cipher_encrypt(ctx, newpwd, DES_KEY_SZ, NULL, 0);

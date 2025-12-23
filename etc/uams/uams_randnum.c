@@ -166,7 +166,7 @@ static int afppasswd(const struct passwd *pwd,
     }
 
     pos = ftell(fp);
-    memset(buf, 0, sizeof(buf));
+    explicit_bzero(buf, sizeof(buf));
 
     while (fgets(buf, sizeof(buf), fp)) {
         if ((p = strchr(buf, ':'))) {
@@ -185,7 +185,7 @@ static int afppasswd(const struct passwd *pwd,
         }
 
         pos = ftell(fp);
-        memset(buf, 0, sizeof(buf));
+        explicit_bzero(buf, sizeof(buf));
     }
 
     err = AFPERR_PARAM;
@@ -261,7 +261,7 @@ afppasswd_found:
         memcpy(passwd, p, len);
     }
 
-    memset(buf, 0, sizeof(buf));
+    explicit_bzero(buf, sizeof(buf));
 afppasswd_done:
 
     if (keyfd > -1) {
@@ -420,11 +420,11 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
     /* test against what the client sent */
     if (memcmp(randbuf, ibuf, sizeof(randbuf))) {
         /* != */
-        memset(randbuf, 0, sizeof(randbuf));
+        explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_NOTAUTH;
     }
 
-    memset(randbuf, 0, sizeof(randbuf));
+    explicit_bzero(randbuf, sizeof(randbuf));
     *uam_pwd = randpwd;
     return AFP_OK;
 }
@@ -466,13 +466,13 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     /* test against client's reply */
     if (memcmp(randbuf, ibuf, sizeof(randbuf))) {
         /* != */
-        memset(randbuf, 0, sizeof(randbuf));
+        explicit_bzero(randbuf, sizeof(randbuf));
         gcry_cipher_close(ctx);
         return AFPERR_NOTAUTH;
     }
 
     ibuf += sizeof(randbuf);
-    memset(randbuf, 0, sizeof(randbuf));
+    explicit_bzero(randbuf, sizeof(randbuf));
     /* encrypt client's challenge and send back */
     ctxerror = gcry_cipher_encrypt(ctx, rbuf, sizeof(randbuf), ibuf,
                                    sizeof(randbuf));
@@ -553,9 +553,9 @@ static int randnum_changepw(void *obj, const char *username _U_,
     }
 
     /* zero out some fields */
-    memset(seskey, 0, sizeof(seskey));
-    memset(ibuf, 0, sizeof(seskey)); /* old passwd */
-    memset(ibuf + PASSWDLEN, 0, sizeof(seskey)); /* new passwd */
+    explicit_bzero(seskey, sizeof(seskey));
+    explicit_bzero(ibuf, sizeof(seskey)); /* old passwd */
+    explicit_bzero(ibuf + PASSWDLEN, sizeof(seskey)); /* new passwd */
 
     if (err) {
         return err;
