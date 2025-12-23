@@ -23,8 +23,6 @@ on:
       - "**/README*"
       - "COPYRIGHT"
 
-permissions: read-all
-
 jobs:
   build-alpine:
     name: Alpine Linux

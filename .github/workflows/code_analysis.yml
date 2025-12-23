@@ -13,8 +13,6 @@ on:
       - synchronize
       - reopened
 
-permissions: read-all
-
 jobs:
   static_analysis:
     name: SonarQube Static Analysis

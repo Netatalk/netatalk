@@ -6,13 +6,7 @@ on:
       - '.github/workflows/static.yml'
       - 'doc/**'
       - 'meson.build'
-
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: "pages"
@@ -24,6 +18,10 @@ jobs:
       name: html-manual
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     container:
       image: debian:trixie
     steps:
