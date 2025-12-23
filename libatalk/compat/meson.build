@@ -1,4 +1,5 @@
 compat_sources = [
+    'explicit_bzero.c',
     'misc.c',
     'rquota_xdr.c',
     'strlcpy.c',

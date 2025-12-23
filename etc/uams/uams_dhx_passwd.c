@@ -360,8 +360,8 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     bn2 = gcry_mpi_snew(sizeof(randbuf));
     gcry_mpi_scan(&bn2, GCRYMPI_FMT_STD, randbuf, sizeof(randbuf), NULL);
     /* zero out the random number */
-    memset(rbuf, 0, sizeof(randbuf));
-    memset(randbuf, 0, sizeof(randbuf));
+    explicit_bzero(rbuf, sizeof(randbuf));
+    explicit_bzero(randbuf, sizeof(randbuf));
     rbuf += KEYSIZE;
     bn3 = gcry_mpi_snew(0);
     gcry_mpi_sub(bn3, bn1, bn2);
@@ -387,7 +387,7 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
         err = AFP_OK;
     }
 
-    memset(rbuf, 0, PASSWDLEN);
+    explicit_bzero(rbuf, PASSWDLEN);
 #ifdef SHADOWPW
 
     if ((sp = getspnam(dhxpwd->pw_name)) == NULL) {

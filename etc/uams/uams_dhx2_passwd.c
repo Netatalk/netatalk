@@ -588,7 +588,7 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
         ret = AFP_OK;
     }
 
-    memset(ibuf, 0, PASSWDLEN);
+    explicit_bzero(ibuf, PASSWDLEN);
 #ifdef SHADOWPW
 
     if ((sp = getspnam(dhxpwd->pw_name)) == NULL) {

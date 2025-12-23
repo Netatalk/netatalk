@@ -319,7 +319,7 @@ static int pam_changepw(void *obj _U_, char *username,
     int PAM_error;
     /* old password */
     memcpy(pw, ibuf, PASSWDLEN);
-    memset(ibuf, 0, PASSWDLEN);
+    explicit_bzero(ibuf, PASSWDLEN);
     pw[PASSWDLEN] = '\0';
 
     /* let's do a quick check for the same password */
@@ -380,8 +380,8 @@ static int pam_changepw(void *obj _U_, char *username,
         LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
     }
 
-    memset(pw, 0, PASSWDLEN);
-    memset(ibuf, 0, PASSWDLEN);
+    explicit_bzero(pw, PASSWDLEN);
+    explicit_bzero(ibuf, PASSWDLEN);
 
     if (PAM_error != PAM_SUCCESS) {
         pam_end(lpamh, PAM_error);
@@ -456,7 +456,7 @@ static int pam_printer(char *start, char *stop, char *username,
         return -1;
     }
 
-    memset(PAM_password, 0, PASSWDLEN + 1);
+    explicit_bzero(PAM_password, PASSWDLEN + 1);
     memcpy(PAM_password, p, MIN(PASSWDLEN, (q - p)));
     /* Done copying username and password, clean up */
     free(data);

@@ -100,7 +100,7 @@ static int pwd_login(void *obj, char *username, int ulen,
 
     if (strcmp(p, pwd->pw_passwd) == 0) {
 #endif
-        memset(ibuf, 0, PASSWDLEN);
+        explicit_bzero(ibuf, PASSWDLEN);
         return AFP_OK;
     }
 
@@ -296,7 +296,7 @@ static int passwd_printer(char	*start, char *stop, char *username,
 #endif
         LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: bad password",
             username);
-        memset(password, 0, PASSWDLEN);
+        explicit_bzero(password, PASSWDLEN);
         return -1;
     }
 
