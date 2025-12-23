@@ -8,8 +8,6 @@ on:
         required: true
         type: string
 
-permissions: read-all
-
 env:
   GHCR_REGISTRY: ghcr.io
   REPO: ${{ github.repository }}

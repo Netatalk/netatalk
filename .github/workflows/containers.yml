@@ -19,7 +19,6 @@ on:
       - "contrib/webmin_module/**"
       - "COPYRIGHT"
 
-permissions: read-all
 env:
   REGISTRY: ghcr.io
   REPO: ${{ github.repository }}
