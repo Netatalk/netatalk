@@ -731,7 +731,6 @@ jobs:
             make install
           run: |
             set -e
-            export PATH=/usr/local/sbin:/usr/local/bin:$PATH
             meson setup build \
               --prefix=/usr/local \
               -Dbuildtype=release \
@@ -743,6 +742,7 @@ jobs:
             meson compile -C build
             meson test -C build
             meson install -C build
+            export PATH=/usr/local/sbin:/usr/local/bin:$PATH
             netatalk -V
             afpd -V
             sleep 1
