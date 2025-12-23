@@ -249,11 +249,26 @@ static char *xgetcwd(void)
     path_max = (unsigned) PATH_MAX;
     path_max += 2;        /* The getcwd docs say to do this. */
     cwd = malloc(path_max);
+
+    if (cwd == NULL) {
+        return NULL;
+    }
+
     errno = 0;
 
     while ((ret = getcwd(cwd, path_max)) == NULL && errno == ERANGE) {
+        char *new_cwd;
         path_max += 512;
-        cwd = realloc(cwd, path_max);
+        new_cwd = realloc(cwd, path_max);
+
+        if (new_cwd == NULL) {
+            int save_errno = errno;
+            free(cwd);
+            errno = save_errno;
+            return NULL;
+        }
+
+        cwd = new_cwd;
         errno = 0;
     }
 
