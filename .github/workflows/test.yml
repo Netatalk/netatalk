@@ -13,6 +13,9 @@ on:
       - synchronize
       - reopened
 
+permissions:
+  contents: read
+
 jobs:
   formatting:
     name: Code Formatting

@@ -19,6 +19,9 @@ on:
       - "contrib/webmin_module/**"
       - "COPYRIGHT"
 
+permissions:
+  contents: read
+
 env:
   REGISTRY: ghcr.io
   REPO: ${{ github.repository }}
@@ -32,7 +35,6 @@ jobs:
     timeout-minutes: 5
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Checkout repo
@@ -67,7 +69,6 @@ jobs:
     timeout-minutes: 5
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Checkout repo
@@ -102,7 +103,6 @@ jobs:
     timeout-minutes: 5
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Checkout repo
@@ -137,7 +137,6 @@ jobs:
     timeout-minutes: 5
     if: ${{ !github.event.pull_request.head.repo.fork }}
     permissions:
-      contents: read
       packages: write
     steps:
       - name: Checkout repo
