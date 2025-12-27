@@ -92,9 +92,7 @@ typedef struct DSI {
     int zeroconf_registered;
 #endif
 
-    /* protocol specific open/close, send/receive
-     * send/receive fill in the header and use dsi->commands.
-     * write/read just write/read data */
+    /* protocol specific open/close */
     pid_t (*proto_open)(struct DSI *);
     void (*proto_close)(struct DSI *);
 } DSI;

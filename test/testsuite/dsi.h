@@ -19,7 +19,7 @@
  * @brief DSI (Data Stream Interface) protocol definitions
  * modified for the afptest test-suite
  *
- * The interface for the test-suite differts from the libatalk DSI interface
+ * The interface for the test-suite differs from the libatalk DSI interface
  * in that is retains a statically allocated buffer for commands
  * as well as smaller command and data buffer sizes that fit in 16 bit size fields.
  *
@@ -71,9 +71,7 @@ typedef struct DSI {
     const char *program;
     int socket, serversock;
 
-    /* protocol specific open/close, send/receive
-     * send/receive fill in the header and use dsi->commands.
-     * write/read just write/read data */
+    /* protocol specific open/close */
     pid_t (*proto_open)(struct DSI *);
     void (*proto_close)(struct DSI *);
 } DSI;
