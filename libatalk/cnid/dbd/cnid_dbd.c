@@ -630,6 +630,8 @@ cnid_t cnid_dbd_add(struct _cnid_db *cdb, const struct stat *st,
         break;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_add: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 
@@ -687,6 +689,8 @@ cnid_t cnid_dbd_get(struct _cnid_db *cdb, cnid_t did, const char *name,
         break;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_get: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 
@@ -722,6 +726,9 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
     rply.namelen = len;
 
     if (transmit(db, &rqst, &rply) < 0) {
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_resolve: transmit failed for CNID %u: %s",
+            ntohl(*id), strerror(errno));
         errno = CNID_ERR_DB;
         *id = CNID_INVALID;
         return NULL;
@@ -736,6 +743,9 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
         break;
 
     case CNID_DBD_RES_NOTFOUND:
+        LOG(log_info, logtype_cnid,
+            "cnid_dbd_resolve: CNID %u not found in database (likely deleted)",
+            ntohl(*id));
         *id = CNID_INVALID;
         name = NULL;
         break;
@@ -747,6 +757,8 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
         break;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_resolve: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 
@@ -830,6 +842,8 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
         break;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_lookup: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 
@@ -886,6 +900,8 @@ int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen,
         break;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_find: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 
@@ -947,6 +963,8 @@ int cnid_dbd_update(struct _cnid_db *cdb, cnid_t id, const struct stat *st,
         return -1;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_update: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 }
@@ -1013,6 +1031,9 @@ cnid_t cnid_dbd_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
         break;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_rebuild_add: unexpected result code %d from CNID server",
+            rply.result);
         abort();
     }
 
@@ -1055,6 +1076,8 @@ int cnid_dbd_delete(struct _cnid_db *cdb, const cnid_t id)
         return -1;
 
     default:
+        LOG(log_error, logtype_cnid,
+            "cnid_dbd_delete: unexpected result code %d from CNID server", rply.result);
         abort();
     }
 }

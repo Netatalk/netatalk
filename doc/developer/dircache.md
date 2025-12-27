@@ -401,17 +401,60 @@ it's not doing it at all.
 
 **By default nothing changes, as the default value for `dircache validation freq = 1`.**
 
-To try this speed up, configure it;
+To try this speed up, configure it:
 
 ```ini
 dircache validation freq = 1-100
 dircache metadata window = 60-3600
 dircache metadata threshold = 10-1800
+dircache files = yes/no  # New in 4.x: Allow file caching
 ```
+
+### File Caching Configuration
+
+Starting with Netatalk 4.x, a new configuration option `dircache files` allows
+administrators to control whether files are cached alongside directories.
+
+**dircache files = *yes/no* (default: *no*)**
+
+By default (*no*), only directories are cached to maintain legacy behavior and
+conserve memory. When enabled (*yes*), files are also cached, which can improve
+performance for file-heavy workloads by reducing CNID database queries.
+
+**Trade-offs:**
+
+- **Memory usage**: File caching increases memory consumption
+- **Cache efficiency**: With limited cache size, adding files may cause more evictions
+- **Performance**: Can significantly improve file-intensive operations
+- **CNID queries**: Reduces database lookups for frequently accessed files
+
+**When to enable:**
+
+- Large `dircachesize` configuration (e.g., 65536+)
+- File-intensive workflows with repeated file access
+- Sufficient server memory available
+- Working set fits within cache size
+
+**Implementation Details:**
+
+In [`directory.c`](../../etc/afpd/directory.c), the `dirlookup_internal()` function
+was refactored to separate validation concerns from cache policy:
+
+1. **Parameter rename**: `dirs_only` → `strict`
+   - `strict=1`: Strict validation mode (used during parent recursion)
+   - `strict=0`: Optimistic lookup mode (normal operations)
+
+2. **File rejection control**: Now based on `dircache_files_enabled` global variable
+   - Lines 534-542: Check config when file found in cache
+   - Lines 678-686: Check config when file found via CNID lookup
+
+3. **Parent recursion**: Always uses `strict=1` for validated parent chains
+   - Parent DIDs are always directories by database design
+   - No redundant file type checking needed
 
 ---
 
-*This optimization is available in Netatalk 4.4+ with configurable validation frequency
-via the `dircache validation freq` parameter.*
+*Directory cache optimizations available in Netatalk 4.4+ with configurable validation frequency
+and file caching control via `dircache validation freq` and `dircache files` parameters.*
 
 Developed and Authored by Andy Lemin, with Contributions from the Netatalk team.

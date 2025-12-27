@@ -922,7 +922,7 @@ uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap)
 }
 
 /*! Converts Pascal string to C (null-terminated) string. */
-int strp2c(char *cstr, unsigned char *pstr)
+int strp2c(char *cstr, const unsigned char *pstr)
 {
     int i;
 
@@ -1132,7 +1132,8 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
 
 /* FIXME: redundant bitmap parameters !
  * FIXME: some of those parameters are not tested. */
-void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
+void afp_filedir_unpack(struct afp_filedir_parms *filedir,
+                        const unsigned char *b,
                         uint16_t rfbitmap, uint16_t rdbitmap)
 {
     int isdir;
@@ -1141,7 +1142,7 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir, unsigned char *b,
     int r;
     int bit = 0;
     uint16_t bitmap;
-    unsigned char *beg = b;
+    const unsigned char *beg = b;
     isdir = filedir->isdir;
     bitmap = isdir ? rdbitmap : rfbitmap;
 
@@ -2386,6 +2387,54 @@ unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
     my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
     my_dsi_data_receive(dsi);
+    return dsi->header.dsi_code;
+}
+
+/* -------------------------------
+*/
+unsigned int AFPSetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
+                       char *name, uint32_t ace_count, darwin_ace_t *aces)
+{
+    int ofs;
+    DSI *dsi;
+    dsi = &conn->dsi;
+    SendInit(dsi);
+    ofs = 0;
+    dsi->commands[ofs++] = AFP_SETACL;
+    dsi->commands[ofs++] = 0;
+    memcpy(dsi->commands + ofs, &vol, sizeof(vol));
+    ofs += sizeof(vol);
+    memcpy(dsi->commands + ofs, &did, sizeof(did));
+    ofs += sizeof(did);
+    bitmap = htons(bitmap);
+    memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
+    ofs += sizeof(bitmap);
+    ofs = FPset_name(conn, ofs, name);
+
+    /* Pad to even boundary */
+    if (ofs & 1) {
+        ofs++;
+    }
+
+    /* ACE count (network byte order) */
+    uint32_t count_n = htonl(ace_count);
+    memcpy(dsi->commands + ofs, &count_n, sizeof(uint32_t));
+    ofs += sizeof(uint32_t);
+    /* ACL flags (0 for our tests) */
+    uint32_t acl_flags = 0;
+    memcpy(dsi->commands + ofs, &acl_flags, sizeof(uint32_t));
+    ofs += sizeof(uint32_t);
+
+    /* ACEs (darwin_ace_t structures, already in network byte order) */
+    if (ace_count > 0 && aces) {
+        memcpy(dsi->commands + ofs, aces, ace_count * sizeof(darwin_ace_t));
+        ofs += ace_count * sizeof(darwin_ace_t);
+    }
+
+    SetLen(dsi, ofs);
+    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    /* ------------------ */
+    my_dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 

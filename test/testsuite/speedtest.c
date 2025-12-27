@@ -41,7 +41,7 @@ struct timeval Timer_end;
 #define MEGABYTE (KILOBYTE*KILOBYTE)
 
 /* ------------------------------- */
-static char    *Server = "localhost";
+char    *Server = "localhost";
 static int     Port = DSI_AFPOVERTCP_PORT;
 static char    *Password = "";
 char    *Vol = "";

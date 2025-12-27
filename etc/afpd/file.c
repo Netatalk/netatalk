@@ -335,8 +335,20 @@ int getmetadata(const AFPObj *obj,
             int len = strlen(upath);
 
             if ((cachedfile = dircache_search_by_name(vol, dir, upath, len)) != NULL) {
-                id = cachedfile->d_did;
-            } else {
+                /* Compare fresh stat inode matches dircache entry */
+                if (cachedfile->dcache_ino == st->st_ino) {
+                    id = cachedfile->d_did;
+                } else {
+                    /* File replaced externally - invalidate dircache */
+                    LOG(log_debug, logtype_afpd,
+                        "getmetadata: inode mismatch (cached:%llu vs current:%llu), file replaced, invalidating cache",
+                        (unsigned long long)cachedfile->dcache_ino, (unsigned long long)st->st_ino);
+                    dir_remove(vol, cachedfile);
+                    cachedfile = NULL;
+                }
+            }
+
+            if (cachedfile == NULL) {
                 id = get_id(vol, adp, st, dir->d_did, upath, len);
                 /* Add it to the cache */
                 LOG(log_debug, logtype_afpd, "getmetadata: caching: did:%u, \"%s\", cnid:%u",
@@ -742,10 +754,15 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     ibuf += sizeof(did);
 
     if (NULL == (dir = dirlookup(vol, did))) {
+        LOG(log_error, logtype_afpd,
+            "afp_createfile: dirlookup failed for did:%u, returning afp_errno=%d",
+            ntohl(did), afp_errno);
         return afp_errno;
     }
 
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
+        LOG(log_error, logtype_afpd,
+            "afp_createfile: cname failed, returning error");
         return get_afp_errno(AFPERR_PARAM);
     }
 
@@ -832,6 +849,14 @@ createfile_iderr:
     ad_flush(&ad);
     ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
     fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+
+    /* Defensive check: curdir may be corrupted by race conditions or cname() failures */
+    if (curdir == NULL) {
+        LOG(log_error, logtype_afpd,
+            "afp_createfile: curdir is NULL after operations, likely due to concurrent deletion or cname() failure");
+        return AFPERR_MISC;
+    }
+
     curdir->d_offcnt++;
     setvoltime(obj, vol);
     return retvalue;
@@ -861,7 +886,8 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    /* Use strict lookup for parent directory validation (like afp_delete) */
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         return afp_errno; /* was AFPERR_NOOBJ */
     }
 
@@ -879,6 +905,24 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     if (s_path->st_errno != 0) {
         return AFPERR_NOOBJ;
+    }
+
+    /* Validate target FILE inode to detect external replacement (like afp_delete) */
+    struct dir *cachedfile = dircache_search_by_name(vol, curdir, s_path->u_name,
+                             strlen(s_path->u_name));
+
+    if (cachedfile != NULL) {
+        if (cachedfile->dcache_ino != s_path->st.st_ino) {
+            /* File was replaced externally - inode mismatch */
+            LOG(log_warning, logtype_afpd,
+                "afp_setfilparams: inode mismatch for \"%s\" (cached:%llu vs current:%llu), file replaced externally",
+                s_path->u_name, (unsigned long long)cachedfile->dcache_ino,
+                (unsigned long long)s_path->st.st_ino);
+            /* Invalidate stale cache entry */
+            dir_remove(vol, cachedfile);
+            /* Return error - the file the client knew about no longer exists */
+            return AFPERR_NOOBJ;
+        }
     }
 
     if ((intptr_t)ibuf & 1) {
@@ -1272,6 +1316,30 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
     int		rc;
     LOG(log_debug, logtype_afpd,
         "renamefile: src[%d, \"%s\"] -> dst[\"%s\"]", sdir_fd, src, dst);
+    /* Clean BOTH source and destination cache entries before rename to prevent races
+     * and maintain cache consistency.
+     * - Source: Will have stale path after rename
+     * - Destination: May have stale collision that needs cleanup
+     * - Rename only happens if destination stat does not exist (no clobber)
+     */
+    /* Look up and clean SOURCE dircache entry being renamed */
+    struct dir *source_entry = dircache_search_by_name(vol, ddir, src, strlen(src));
+
+    if (source_entry) {
+        LOG(log_debug, logtype_afpd,
+            "renamefile: cleaning source dircache \"%s\" before rename (will be stale)",
+            src);
+        dir_remove(vol, source_entry);
+    }
+
+    /* Look up and clean DESTINATION dircache entry for stale detection */
+    struct dir *dest_entry = dircache_search_by_name(vol, ddir, dst, strlen(dst));
+
+    if (dest_entry) {
+        LOG(log_debug, logtype_afpd,
+            "renamefile: cleaning stale destination dircache \"%s\" before rename", dst);
+        dir_remove(vol, dest_entry);
+    }
 
     if (unix_rename(sdir_fd, src, -1, dst) < 0) {
         switch (errno) {
@@ -1529,7 +1597,8 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         goto copy_exit;
     }
 
-    if (NULL == (dir = dirlookup(d_vol, ddid))) {
+    /* Strict validate dest parent to ensure copy to correct location */
+    if (NULL == (dir = dirlookup_strict(d_vol, ddid))) {
         retvalue = afp_errno;
         goto copy_exit;
     }
@@ -1547,6 +1616,14 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     /* one of the handful of places that knows about the path type */
     if (copy_path_name(d_vol, newname, ibuf) < 0) {
         retvalue = AFPERR_PARAM;
+        goto copy_exit;
+    }
+
+    /* Defensive check: curdir may be corrupted by race conditions or cname() failures */
+    if (curdir == NULL) {
+        LOG(log_error, logtype_afpd,
+            "afp_copyfile: curdir is NULL after cname(), likely due to concurrent deletion");
+        retvalue = AFPERR_MISC;
         goto copy_exit;
     }
 
@@ -2349,8 +2426,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    /* source file */
-    if (NULL == (dir = dirlookup(vol, sid))) {
+    /* source file - use strict validation for parent directory */
+    if (NULL == (dir = dirlookup_strict(vol, sid))) {
         return afp_errno; /* was AFPERR_PARAM */
     }
 
@@ -2382,6 +2459,26 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         return afp_errno;
     }
 
+    /* Validate source file inode against cache to detect external replacement */
+    struct dir *cached_src = dircache_search_by_name(vol, sdir, supath,
+                             strlen(supath));
+
+    if (cached_src && cached_src->dcache_ino != srcst.st_ino) {
+        LOG(log_warning, logtype_afpd,
+            "afp_exchangefiles: source file inode mismatch (cached:%llu vs current:%llu), file replaced externally",
+            (unsigned long long)cached_src->dcache_ino,
+            (unsigned long long)srcst.st_ino);
+        /* Invalidate stale cache entry */
+        dir_remove(vol, cached_src);
+
+        /* Clean up source adouble */
+        if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {
+            ad_close(adsp, ADFLAGS_HF);
+        }
+
+        return AFPERR_NOOBJ;
+    }
+
     /* ***** from here we may have resource fork open **** */
     /* look for the source cnid. if it doesn't exist, don't worry about
      * it. */
@@ -2390,7 +2487,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                       slen = strlen(supath));
     AFP_CNID_DONE();
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    /* destination file - use strict validation for parent directory */
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         err = afp_errno; /* was AFPERR_PARAM */
         goto err_exchangefile;
     }
@@ -2420,6 +2518,31 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     destst = path->st;
+    /* Validate dest file inode against cache to detect external replacement */
+    struct dir *cached_dest = dircache_search_by_name(vol, curdir, path->u_name,
+                              strlen(path->u_name));
+
+    if (cached_dest && cached_dest->dcache_ino != destst.st_ino) {
+        LOG(log_warning, logtype_afpd,
+            "afp_exchangefiles: dest file inode mismatch (cached:%llu vs current:%llu), file replaced externally",
+            (unsigned long long)cached_dest->dcache_ino,
+            (unsigned long long)destst.st_ino);
+        /* Invalidate stale cache entry */
+        dir_remove(vol, cached_dest);
+
+        /* Clean up both adoubles before returning */
+        if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {
+            ad_close(adsp, ADFLAGS_HF);
+        }
+
+        if (!d_of && addp && ad_meta_fileno(addp) != -1) {
+            ad_close(addp, ADFLAGS_HF);
+        }
+
+        err = AFPERR_NOOBJ;
+        goto err_exchangefile;
+    }
+
     /* they are not on the same device and at least one is open
      * FIXME broken for for crossdev and adouble v2
      * return an error

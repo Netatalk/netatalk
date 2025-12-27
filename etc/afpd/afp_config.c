@@ -492,6 +492,27 @@ serv_free_return:
             "Config: Failed to configure directory cache validation parameters");
     }
 
+    /* Directory cache files configuration */
+    dircache_files_enabled =
+        false;  /* Default: false (reject files, backward compatible) */
+
+    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                              "dircache files", NULL))) {
+        if (strcasecmp(r, "true") == 0 || strcmp(r, "1") == 0 ||
+                strcasecmp(r, "yes") == 0) {
+            dircache_files_enabled = true;
+        } else if (strcasecmp(r, "false") == 0 || strcmp(r, "0") == 0 ||
+                   strcasecmp(r, "no") == 0) {
+            dircache_files_enabled = false;
+        } else {
+            LOG(log_warning, logtype_afpd,
+                "Config: invalid 'dircache files' value '%s', using default (false)", r);
+        }
+
+        LOG(log_info, logtype_afpd, "Config: dircache files = %s",
+            dircache_files_enabled ? "true" : "false");
+    }
+
 EC_CLEANUP:
 
     if (q) {

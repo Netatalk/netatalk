@@ -65,6 +65,7 @@
 #define T_NONDETERM  28
 #define T_BIGENDIAN  29
 #define T_CRED       30
+#define T_LOCALHOST  31
 
 /* Define ansi colors */
 #define ANSI_RED      "\033[0;31m"
@@ -114,6 +115,7 @@ extern char *Vol2;
 extern char *Path;
 extern char *User;
 extern char *Test;
+extern char *Server;
 
 extern int Version;
 extern int Verbose;

@@ -51,7 +51,6 @@
 #define DIRF_ISFILE    (1<<3) /*!< it's cached file, not a directory */
 #define DIRF_OFFCNT    (1<<4) /*!< offsprings count is valid */
 #define DIRF_CNID	   (1<<5) /*!< renumerate id */
-#define DIRF_UNVALIDATED (1<<6)
 
 struct dir {
     bstring     d_fullpath;          /*!< complete unix path to dir (or file) */
@@ -69,8 +68,10 @@ struct dir {
     uint32_t    d_offcnt;            /*!< offspring count */
     uint16_t    d_vid;               /*!< only needed in the dircache, because
                                       * we put all directories in one cache. */
-    uint32_t    d_rights_cache;      /*!< cached rights combinded from mode
-                                      * and possible ACL */
+    uint32_t    d_rights_cache;      /*!< cached rights combined from mode
+                                      * and possible ACL. Validate
+                                      * dcache_ctime == st_ctime before use!
+                                      * Value 0xffffffff indicates invalid/unset. */
     /* Stuff used in the dircache */
     time_t      dcache_ctime;        /*!< inode ctime,
                                       * used and modified by dircache */
