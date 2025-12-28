@@ -1,5 +1,7 @@
 ;
-; Netatalk 4.x configuration file
+; Netatalk AFP file server configuration file
+;
+; See the `afp.conf' manual page for all available options
 ;
 
 [Global]
