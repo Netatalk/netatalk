@@ -533,7 +533,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Build on VM
-        uses: vmactions/netbsd-vm@6943b597be3896f95be4a1b7f07c0fc08242789f # v1.3.0
+        uses: vmactions/netbsd-vm@2ba9902c77c2ebdb7501e5e9308dea03f0f251c4 # v1.3.1
         with:
           copyback: false
           prepare: |
