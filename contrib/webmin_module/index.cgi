@@ -84,10 +84,14 @@ if (@{$$afpconf{volumeSections}}) {
                             undef
     );
     foreach my $volumeSection (sort { lc($a->{name}) cmp lc($b->{name}) } @{$$afpconf{volumeSections}}) {
+        my $volumeName =
+          (exists $$volumeSection{parameters}{'volume name'}{value})
+          ? $$volumeSection{parameters}{'volume name'}{value}
+          : $$volumeSection{name};
         print &ui_columns_row(
             [
                 &ui_checkbox('section_index', $$volumeSection{'index'}),
-"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$$volumeSection{parameters}{'volume name'}{value}</b></a>",
+"<a href=\"edit_vol_section.cgi?action=edit_volume&tab=fileserver&index=$$volumeSection{'index'}\"><b>$volumeName</b></a>",
                 $$volumeSection{parameters}{'path'}{value},
                 $$volumeSection{parameters}{'vol preset'}{value}
             ],
