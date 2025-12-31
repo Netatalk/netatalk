@@ -1,5 +1,5 @@
 name=Netatalk Manager
 category=servers
 os_support=macos solaris *-linux freebsd openbsd netbsd
-desc=Netatalk Mac File Sharing
+desc=Netatalk AFP File Server
 version=@netatalk_version@
