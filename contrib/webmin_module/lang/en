@@ -13,7 +13,7 @@ errmsg_parameter_error=Parameter error: Illegal value for parameter '$1'.
 errmsg_title=Error
 
 index_root=Webmin Home
-index_title=Netatalk AFP Server
+index_title=Netatalk AFP File Server
 index_version=Version $1
 index_ever=The $1 program was not found on your system. Either Netatalk is not installed, or your <a href='$2'> module configuration</a> is incorrect.
 
