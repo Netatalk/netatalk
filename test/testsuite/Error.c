@@ -1761,20 +1761,15 @@ void Error_test()
     test35();
     test36();
     test37();
-#if 0
     test95();
-#endif
     test99();
     test100();
     test101();
     test102();
     test103();
     test105();
-    /* causes afpd crash in dircache_search_by_did() */
-#if 0
     test170();
     test171();
     test173();
-#endif
     test174();
 }
