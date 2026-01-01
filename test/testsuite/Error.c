@@ -1773,8 +1773,8 @@ void Error_test()
     /* causes afpd crash in dircache_search_by_did() */
 #if 0
     test170();
-#endif
     test171();
+#endif
     test173();
     test174();
 }
