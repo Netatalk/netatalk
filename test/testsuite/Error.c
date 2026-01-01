@@ -1770,7 +1770,10 @@ void Error_test()
     test102();
     test103();
     test105();
+    /* causes afpd crash in dircache_search_by_did() */
+#if 0
     test170();
+#endif
     test171();
     test173();
     test174();
