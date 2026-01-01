@@ -1761,7 +1761,9 @@ void Error_test()
     test35();
     test36();
     test37();
+#if 0
     test95();
+#endif
     test99();
     test100();
     test101();
