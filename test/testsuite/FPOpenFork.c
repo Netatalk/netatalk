@@ -4,9 +4,7 @@
 #include "afphelper.h"
 #include "testhelper.h"
 
-/* --------------------------
-FIXME
-*/
+/* -------------------------- */
 STATIC void test14()
 {
     uint16_t bitmap = 0;
@@ -623,8 +621,7 @@ STATIC void test116()
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE);
     int fork;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
@@ -862,15 +859,12 @@ static void test_openmode(char *name, int type)
     int fork1;
     uint16_t bitmap = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO);
     uint16_t vol = VolID;
-    DSI *dsi;
-    DSI *dsi2;
+    const DSI *dsi2 = &Conn2->dsi;
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     int what   = (type == OPENFORK_DATA) ? ATTRBIT_DOPEN : ATTRBIT_ROPEN;
     int nowhat = (type == OPENFORK_DATA) ? ATTRBIT_ROPEN : ATTRBIT_DOPEN;
-    dsi = &Conn->dsi;
-    dsi2 = &Conn2->dsi;
     vol2  = FPOpenVol(Conn2, Vol);
 
     if (vol2 == 0xffff) {

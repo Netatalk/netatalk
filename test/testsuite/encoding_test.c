@@ -49,8 +49,7 @@ STATIC void test_western()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     char *result;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version >= 30) {

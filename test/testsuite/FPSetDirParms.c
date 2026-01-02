@@ -16,8 +16,7 @@ STATIC void test82()
                       | (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) ;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -71,8 +70,7 @@ STATIC void test84()
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID);
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -119,9 +117,8 @@ STATIC void test88()
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     unsigned int ret;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!Conn2) {
@@ -212,13 +209,11 @@ STATIC void test107()
                       (1 << DIRPBIT_GID) ;
     uint16_t bitmap2 = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_UID) |
                        (1 << DIRPBIT_GID) ;
-    uint16_t vol2;
     int uid;
     int ret;
     uint16_t vol = VolID;
-    DSI *dsi;
-    DSI *dsi2;
-    dsi = &Conn->dsi;
+    uint16_t vol2;
+    const DSI *dsi2;
     ENTER_TEST
 
     if (!Conn2) {
@@ -319,8 +314,7 @@ STATIC void test189()
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -359,9 +353,8 @@ STATIC void test193()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int ret;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -401,8 +394,7 @@ STATIC void test351()
     uint16_t bitmap = 0;
     uint8_t old_access[4];
     int ret;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, ndir))) {
@@ -469,8 +461,7 @@ STATIC void test352()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     uint8_t old_access[4];
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, ndir))) {
@@ -531,8 +522,7 @@ STATIC void test353()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV) {
@@ -621,8 +611,7 @@ STATIC void test354()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -690,8 +679,7 @@ STATIC void test355()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -765,8 +753,7 @@ STATIC void test356()
     uint16_t bitmap = 0;
     int old_unixpriv;
     int ret;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -889,8 +876,7 @@ STATIC void test405()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {

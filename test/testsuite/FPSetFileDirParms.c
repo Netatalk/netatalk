@@ -22,8 +22,7 @@ STATIC void test98()
                       | (1 << DIRPBIT_UID) | (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS)
                       | (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE);
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!Conn2) {
@@ -110,8 +109,7 @@ STATIC void test230()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int fork;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -248,14 +246,13 @@ STATIC void test231()
     char *name = "t231 file";
     char *name1 = "t231 file user 2";
     char *ndir = "t231 dir";
-    uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
+    uint16_t vol = VolID;
     uint16_t vol2;
-    DSI *dsi2;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -369,8 +366,7 @@ STATIC void test232()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!Conn2) {
@@ -438,8 +434,7 @@ STATIC void test345()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int fork;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -523,8 +518,7 @@ STATIC void test346()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -584,8 +578,7 @@ STATIC void test347()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV) {
@@ -674,8 +667,7 @@ STATIC void test348()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -743,8 +735,7 @@ STATIC void test349()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -818,8 +809,7 @@ STATIC void test350()
     uint16_t bitmap = 0;
     int old_unixpriv;
     int ret;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -889,18 +879,17 @@ STATIC void test358()
     char *name = "t358 file";
     char *name1 = "t358 file user 2";
     char *ndir = "t358 dir";
-    uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
+    uint16_t vol = VolID;
     uint16_t vol2;
     uint8_t old_access[4];
-    DSI *dsi2;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     int maxattempts = 10;
     int attempt = 0;
     int ret;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Bigendian) {
@@ -995,8 +984,7 @@ STATIC void test359()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int ret;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -1081,15 +1069,14 @@ STATIC void test361()
     int  dir = 0;
     char *name = "t361 file.pdf";
     char *ndir = "t361 dir";
-    uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int ret;
-    DSI *dsi;
-    DSI *dsi2;
+    uint16_t vol = VolID;
     uint16_t vol2;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     ENTER_TEST
 
     if (!Conn2) {
@@ -1191,8 +1178,7 @@ STATIC void test400()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {

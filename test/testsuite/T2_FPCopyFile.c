@@ -14,7 +14,7 @@ STATIC void test373()
     int tp, tp1;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     uint32_t mdate = 0;
     ENTER_TEST

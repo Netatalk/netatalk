@@ -545,7 +545,7 @@ STATIC void test410()
     uint16_t vol = VolID;
     uint16_t bitmap = 0;
     uint16_t vol2;
-    DSI *dsi2;
+    const DSI *dsi2;
     int type = OPENFORK_DATA;
     ENTER_TEST
 
@@ -634,10 +634,9 @@ static int create_trash(CONN *conn, uint16_t vol)
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
-    DSI *dsi;
+    const DSI *dsi = &conn->dsi;
     int dir;
     struct afp_filedir_parms filedir;
-    dsi = &conn->dsi;
     dir  = FPCreateDir(conn, vol, DIRDID_ROOT, trash);
 
     if (!dir) {
@@ -675,11 +674,10 @@ static int create_trash(CONN *conn, uint16_t vol)
 /* ------------------- */
 static int create_map(CONN *conn, uint16_t vol, int dir, char *name)
 {
-    DSI *dsi;
+    const DSI *dsi = &conn->dsi;
     struct afp_filedir_parms filedir;
     int  ofs =  3 * sizeof(uint16_t);
     int fork;
-    dsi = &conn->dsi;
 
     if (FPCreateFile(conn, vol, 0, dir, name)) {
         return 0;
@@ -709,9 +707,8 @@ static int set_perm(CONN *conn, uint16_t vol, int dir)
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
-    DSI *dsi;
+    const DSI *dsi = &conn->dsi;
     struct afp_filedir_parms filedir;
-    dsi = &conn->dsi;
 
     if (FPGetFileDirParams(conn, vol, dir, "", 0, bitmap)) {
         return 0;
@@ -744,9 +741,8 @@ static int write_access(CONN *conn, uint16_t  vol, int dir)
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
-    DSI *dsi;
+    const DSI *dsi = &conn->dsi;
     struct afp_filedir_parms filedir;
-    dsi = &conn->dsi;
 
     if (FPGetFileDirParams(conn, vol, dir, "", 0, bitmap)) {
         return 0;

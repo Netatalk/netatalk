@@ -12,7 +12,7 @@ STATIC void test162()
     char ndir[4];
     int dir;
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -113,7 +113,7 @@ STATIC void test167()
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Bigendian) {
@@ -350,11 +350,10 @@ STATIC void test234()
 {
     char *name = "t234 file\314\201";
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -409,11 +408,10 @@ STATIC void test312()
 {
     char *name = "t312-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94.mp3";
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -477,10 +475,8 @@ STATIC void test313()
 {
     char *name = "t313-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94 dir";
     uint16_t vol = VolID;
-    DSI *dsi;
     int  dir;
     uint16_t bitmap = 0;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -523,9 +519,7 @@ STATIC void test314()
 {
     char *name = "test314#1";
     uint16_t vol = VolID;
-    DSI *dsi;
     uint16_t bitmap = 0;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -561,11 +555,10 @@ STATIC void test337()
 {
     char *name = "\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94 test 337.mp3";
     uint16_t vol = VolID;
-    DSI *dsi;
+    DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -636,7 +629,7 @@ STATIC void test381()
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Bigendian) {
@@ -698,7 +691,7 @@ STATIC void test382()
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Bigendian) {

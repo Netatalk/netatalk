@@ -340,8 +340,8 @@ STATIC void test357()
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID);
     uint16_t vol2;
-    DSI *dsi;
-    DSI *dsi2;
+    const DSI *dsi;
+    const DSI *dsi2;
     unsigned int ret;
     ENTER_TEST
 

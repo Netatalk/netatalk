@@ -22,7 +22,7 @@ STATIC void test129()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -89,7 +89,7 @@ STATIC void test130()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     int ret;
     ENTER_TEST
 
@@ -162,7 +162,7 @@ STATIC void test131()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -232,7 +232,7 @@ STATIC void test331()
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
     struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -394,7 +394,7 @@ STATIC void test360()
     struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
     int fork = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -514,7 +514,7 @@ STATIC void test397()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -572,7 +572,7 @@ STATIC void test412()
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
     struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -674,7 +674,7 @@ STATIC void test413()
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
     struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -780,7 +780,7 @@ STATIC void test418()
     struct afp_filedir_parms filedir = { 0 };
     int fid1 = 0;
     int fid2 = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {

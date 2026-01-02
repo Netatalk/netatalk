@@ -16,7 +16,7 @@ STATIC void test208()
                       (1 << DIRPBIT_GID) ;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {

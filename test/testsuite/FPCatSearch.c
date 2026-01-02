@@ -11,14 +11,13 @@ STATIC void test225()
     char *name = "t225 file.txt";
     uint16_t vol = VolID;
     uint32_t temp;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     char pos[16];
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     struct afp_filedir_parms filedir2;
     unsigned int ret;
     ENTER_TEST
-    dsi = &Conn->dsi;
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
