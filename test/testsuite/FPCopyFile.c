@@ -764,9 +764,8 @@ static void test_data(char *name, char *name1, uint16_t vol2)
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int fork;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     char data[20];
-    dsi = &Conn->dsi;
 
     if (FPCreateFile(Conn, vol, 0, dir, name)) {
         test_nottested();

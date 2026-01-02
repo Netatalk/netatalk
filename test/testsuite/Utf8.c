@@ -48,7 +48,7 @@ STATIC void test166()
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {

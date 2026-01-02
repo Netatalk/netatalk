@@ -148,7 +148,7 @@ void FPEnumerate_arg(char **argv)
     uint16_t tp;
     uint16_t i;
     const DSI *dsi = &Conn->dsi;
-    unsigned char *b;
+    const unsigned char *b;
     struct afp_filedir_parms filedir;
     int *stack = NULL;
     int cnt = 0;
