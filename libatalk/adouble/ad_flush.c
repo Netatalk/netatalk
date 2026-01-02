@@ -551,16 +551,16 @@ int ad_close(struct adouble *ad, int adflags)
                 adf_lock_free(ad->ad_rfp);
             }
 
-        if (ad->ad_vers == AD_VERSION_EA) {
-            if ((ad_reso_fileno(ad) != -1)
-                    && !(--ad->ad_rfp->adf_refcount)) {
-                if (close(ad->ad_rfp->adf_fd) < 0) {
-                    err = -1;
-                }
-
-                ad->ad_rlen = 0;
-                ad_reso_fileno(ad) = -1;
+        /* Check version is EA and fd is not AD_SYMLINK (-2) or -1 */
+        if ((ad->ad_vers == AD_VERSION_EA)
+                && (ad_reso_fileno(ad) >= 0)
+                && !(--ad->ad_rfp->adf_refcount)) {
+            if (close(ad->ad_rfp->adf_fd) < 0) {
+                err = -1;
             }
+
+            ad->ad_rlen = 0;
+            ad_reso_fileno(ad) = -1;
         }
     }
 
