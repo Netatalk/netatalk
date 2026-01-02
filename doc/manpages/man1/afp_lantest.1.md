@@ -68,7 +68,7 @@ features.
 : Volume name to mount for testing
 
 **-u** *user*
-: Username for authentication (default: current uid)
+: Username for authentication with AFP server (default: current uid)
 
 **-V**
 : Very verbose output
@@ -77,7 +77,7 @@ features.
 : Verbose output
 
 **-w** *password*
-: Password for authentication
+: Password for authentication with AFP server
 
 # Configuration
 
