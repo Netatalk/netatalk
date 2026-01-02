@@ -4,42 +4,39 @@ Netatalk Changelog
 Changes in 4.4.0
 ----------------
 
-* NEW: afpd: Added probabilistic dicache validation for significant I/O reduction. GitHub #2447
-* NEW: afpd: Added a runtime option for controlling shell validity checks. GitHub #2439
-* FIX: afpd: Hardened parameter validation and buffer overflow protection in dtfile(). GitHub #2436
-* FIX: afpd: Check that username is a string before assignment in log_dircache_stat(). GitHub #2442
-* FIX: afpd: Improved afpstats init error handling; afpstats is no longer built on macOS. GitHub #2448
-* FIX: atalkd: Added NULL checks before accessing struct members in rtmp_packet(). GitHub #2426
-* UPD: cnid: The SQLite CNID backend is now considered stable. GitHub #2432
-* NEW: cnid: Implemented cnid_find() in both the SQLite and MySQL CNID backends. GitHub #2464, #2508, #2515
-* NEW: distrib: Introduced a SELinux policy for Netatalk daemons. GitHub #2248
-* UPD: distrib: Containerization files have been restructured under distrib/docker. GitHub #2482
-* UPD: docker: Now uses full semantic version numbers for all container dependencies. GitHub #2427
-* UPD: docker: The production container now builds with the SQLite CNID backend. GitHub #2458
-* NEW: docs: Generate dynamic developer documentation using Doxygen. GitHub #2467, #2470, #2484, #2486
-* NEW: docs: Added a Netatalk Code of Conduct and Contributing Guidelines. GitHub #2476, #2483
-* FIX: docs: Enhanced code documentation and removed dead code throughout the codebase. GitHub #2485, #2492
-* FIX: docs: Improved documentation for UAM ciphers and configuration options. GitHub #2477, #2459
-* FIX: docs: Improved AppleTalk network layer diagrams and developer documentation. GitHub #2469, #2473
-* FIX: docs: Improved and clarified testsuite man pages and documentation. GitHub #2460
-* FIX: getzones: Fixed potential memory leaks and improved defensive memory management. GitHub #2421, #2441
-* FIX: libatalk: Purged bitrotted code in adouble and netddp modules. GitHub #2489
-* UPD: libatalk: Refactored into utility function convert_utf8_to_mac(). GitHub #2507
-* UPD: libatalk: Refactored the vfs module with explicit function definitions. GitHub #2491
-* FIX: meson: Error out if no writable CNID backend is selected for compilation. GitHub #2450
-* FIX: meson: Improved Solaris compatibility for iconv parameter checks. GitHub #2415
-* FIX: meson: Refactored docs installation logic and removed obsolete docbook path options. GitHub #2468, #2471
-* NEW: nad: The 'ad' binary has been renamed to 'nad', with code quality improvements. GitHub #2440
-* FIX: nad: Operate on shared volumes using any CNID backend with improved OS compatibility. GitHub #2461, #2506
-* UPD: testsuite: Refactored a new testhelper module and improved log output. GitHub #2425, #2495
-* NEW: testsuite: Option to clean test volumes between each spectest execution. GitHub #2437, #2424
-* UPD: testsuite: Refactored headers and declarations for internal consistency. GitHub #2443
-* UPD: testsuite: Enhanced dircache statistics log output and added log support to afp_lantest. GitHub #2433
-* NEW: webmin: Added support for dircache tuning options. GitHub #2462
-* FIX: webmin: Corrected description of fce ignore names format. GitHub #2465
-* UPD: Reduced usage of preprocessor macros for platform-specific code. GitHub #2488
-* UPD: Updated the bstring library subproject to version 1.0.3. GitHub #2501
-* UPD: Improved copyright and license information in several source files. GitHub #2493, #2494
+* NEW: afpd: Added probabilistic dicache validation for significant I/O reduction, GitHub #2447, #2577
+* NEW: afpd: Added a runtime option for controlling shell validity checks, GitHub #2439
+* FIX: afpd: Hardened parameter validation and buffer overflow protection, GitHub #2436, GitHub #2442
+* FIX: afpd: Improved afpstats init error handling; afpstats is no longer built on macOS, GitHub #2448
+* FIX: atalkd: Added NULL checks to prevent a crash when accessing freed memory, GitHub #2426
+* UPD: cnid: The SQLite CNID backend is now considered stable, GitHub #2432
+* NEW: cnid: Implemented CNID find in both the SQLite and MySQL CNID backends, GitHub #2464, #2508, #2515
+* NEW: distrib: Introduced a SELinux policy for Netatalk daemons, GitHub #2248
+* UPD: distrib: Containerization files have been restructured under distrib/docker, GitHub #2482
+* UPD: docker: The production container now builds with the SQLite CNID backend, GitHub #2458
+* NEW: docs: Generate developer documentation using Doxygen, GitHub #2467, #2470, #2484, #2486
+* NEW: docs: Added a Netatalk Code of Conduct and Contributing Guidelines, GitHub #2476, #2483
+* FIX: docs: Enhanced code documentation and removed dead code throughout the codebase, GitHub #2485, #2492
+* FIX: docs: Improved documentation for UAM ciphers and configuration options, GitHub #2477, #2459
+* FIX: docs: Improved AppleTalk network layer diagrams and developer documentation, GitHub #2469, #2473
+* FIX: docs: Improved and clarified testsuite man pages and documentation, GitHub #2460, #2591
+* UPD: docs: Adapt libatalk DSI readme to a page in the developer docs, GitHub #2570
+* UPD: docs: Restore historical changelogs from the ASUN fork to v1.5, GitHub #2579
+* FIX: getzones: Fixed potential memory leaks and improved defensive memory management, GitHub #2421, #2441
+* UPD: libatalk: Refactored the vfs module for improved memory safety, GitHub #2491
+* UPD: libatalk: regenerate utf16 case lookup tables with Unicode v17.0.0, GitHub #2594
+* FIX: meson: Error out if no writable CNID backend is selected for compilation, GitHub #2450
+* FIX: meson: Improved Solaris compatibility for iconv parameter checks, GitHub #2415
+* FIX: meson: Rename with-manual-install-dir option to with-docs-install-dir, now applied to all docs, GitHub #2471
+* NEW: nad: The 'ad' binary has been renamed to 'nad' for disambiguation, GitHub #2440
+* FIX: nad: Operate on shared volumes using any CNID backend with improved OS compatibility, GitHub #2461, #2506
+* FIX: nad: protect against potential memory leak in xgetcwd(), GitHub #2563
+* NEW: testsuite: Added argument '-E' to delete all files on test volumes between test executions, GitHub #2437, #2424
+* UPD: testsuite: Enhanced dircache statistics log output and added log support to afp_lantest, GitHub #2433
+* NEW: webmin: Added support for dircache tuning options, GitHub #2462
+* FIX: webmin: Corrected description of fce ignore names format, GitHub #2465
+* FIX: webmin: fallback to section name when volume name not set, GitHub #2586
+* UPD: Updated the bstring library subproject to version 1.0.3, GitHub #2501
 
 Changes in 4.3.2
 ----------------
