@@ -113,8 +113,12 @@ uint32_t toupper_sp(uint32_t val)
         return upper_table_sp_8[val - 0xD81BDE40];
     }
 
+    if (val >= 0xD81BDE40 && val <= 0xD81BDEFF) {
+        return upper_table_sp_9[val - 0xD81BDE40];
+    }
+
     if (val >= 0xD83ADD00 && val <= 0xD83ADD7F) {
-        return upper_table_sp_9[val - 0xD83ADD00];
+        return upper_table_sp_10[val - 0xD83ADD00];
     }
 
     return val;
@@ -217,8 +221,12 @@ uint32_t tolower_sp(uint32_t val)
         return lower_table_sp_8[val - 0xD81BDE40];
     }
 
+    if (val >= 0xD81BDE40 && val <= 0xD81BDEBF) {
+        return lower_table_sp_9[val - 0xD81BDE40];
+    }
+
     if (val >= 0xD83ADD00 && val <= 0xD83ADD3F) {
-        return lower_table_sp_9[val - 0xD83ADD00];
+        return lower_table_sp_10[val - 0xD83ADD00];
     }
 
     return val;
