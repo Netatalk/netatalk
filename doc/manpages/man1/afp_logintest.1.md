@@ -48,7 +48,7 @@ with an AFP server and then use a subset of available UAMs to authenticate with 
 : Server port number (default: 548)
 
 **-u** *user*
-: Username for authentication
+: Username for authentication with AFP server (default: current uid)
 
 **-v**
 : Verbose output
@@ -57,7 +57,7 @@ with an AFP server and then use a subset of available UAMs to authenticate with 
 : Very verbose output
 
 **-w** *password*
-: Password for authentication
+: Password for authentication with AFP server
 
 # Preconditions
 

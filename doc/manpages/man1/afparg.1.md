@@ -51,7 +51,7 @@ Run *afparg -l* to list available commands and their arguments.
 : Server port number (default: 548)
 
 **-u** *user*
-: Username for authentication
+: Username for authentication with AFP server (default: current uid)
 
 **-v**
 : Verbose output
@@ -60,7 +60,7 @@ Run *afparg -l* to list available commands and their arguments.
 : Very verbose output
 
 **-w** *password*
-: Password for authentication
+: Password for authentication with AFP server
 
 # Configuration
 

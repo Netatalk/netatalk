@@ -85,7 +85,7 @@ handy for comparing netatalk speeds against other file transfer protocols.
 : Volume name for second volume to mount for testing
 
 **-u** *user*
-: Username for authentication (default: current uid)
+: Username for authentication with AFP server (default: current uid)
 
 **-v**
 : Verbose output
@@ -94,7 +94,7 @@ handy for comparing netatalk speeds against other file transfer protocols.
 : Very verbose output
 
 **-w** *password*
-: Password for authentication
+: Password for authentication with AFP server
 
 **-y**
 : Use a new file for each run (default: same file)

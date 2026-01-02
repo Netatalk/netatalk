@@ -11,7 +11,7 @@ afp_spectest — AFP specification compliance test suite
 
 # Description
 
-**afp_spectest** is a comprehensive AFP specification test suite, with several hundred test cases.
+**afp_spectest** is a comprehensive AFP specification test suite, with several hundreds of test cases.
 It is organized into testsets, divided by the AFP commands tested, or by preconditions for testing.
 
 Available testsets can be listed with the **-l** option.
@@ -50,7 +50,7 @@ Single tests or entire testsets can be executed with the **-f** option.
 : Turn off ANSI colors in terminal output
 
 **-d** *user*
-: Second username for authentication
+: Second username for authentication with AFP server
 
 **-E**
 : Empty the test volume before running tests
@@ -73,7 +73,7 @@ Single tests or entire testsets can be executed with the **-f** option.
 : List all available testsets and exit
 
 **-m**
-: Run tests in Mac OS native AFP server compatibility mode
+: Run tests in AppleShare (Mac) AFP server compatibility mode
 
 **-p** *port*
 : Server port number (default: 548)
@@ -85,7 +85,7 @@ Single tests or entire testsets can be executed with the **-f** option.
 : Volume name for second volume to mount for testing
 
 **-u** *user*
-: Username for authentication (default: current uid)
+: Username for authentication with AFP server (default: current uid)
 
 **-v**
 : Verbose output
@@ -94,15 +94,15 @@ Single tests or entire testsets can be executed with the **-f** option.
 : Very verbose output
 
 **-w** *password*
-: Password for authentication
+: Password for authentication with AFP server
 
 **-X**
 : Skip tests that aren't big endian compatible
 
 # Usage
 
-The tests in spectest suite follow the same general usage pattern and parameters,
-with some additional requirements for particular tests.
+The tests in the spectest suite follow the same general usage pattern and parameters,
+with some additional required parameters or preconditions for particular tests.
 You set the AFP protocol version (**-1** through **-7**),
 then the address and credentials of the host to test (which can be localhost).
 Some tests require a second user and second volume to be defined.
@@ -110,22 +110,22 @@ Some tests require a second user and second volume to be defined.
 The so-called *tier 2* (T2) tests must be run from localhost,
 and the local path to the volume under test to be provided with **-c**.
 This is because they modify the file system directly with system calls
-to set up test preconditions etc.
+to set up test preconditions and validate test results.
 
 There are also read-only and sleep tests that need to be run separately.
 
 ## Extension mapping tests
 
 A handful of tests in the FPGetFileDirParms testset expect the filename
-extension to Type/Creator mapping to be enabled.
+extension to Classic Mac OS Type/Creator mapping to be enabled.
 In version 3 and later of netatalk you need to explicitly enable
 this extension mapping by editing extmap.conf(5) and uncommenting
-all commented lines in this configuration file.
+the lines for the mappings that you want to enable in this configuration file.
 
 ## Sleep tests
 
 The *FPzzz* testset contain tests for AFP sleep mode and timeouts.
-Since they by necessity take a long time to execute,
+Since they by necessity take much longer than other tests,
 they are not run by default when you execute the spectest suite.
 Instead, you must explicity run the testset using the *-f* parameter:
 
@@ -137,12 +137,12 @@ As the name suggests, the *Readonly* testset validates netatalk's behavior
 when the shared volume is in read-only mode.
 
 Needless to say, the volume you test must be configured as read-only.
-This can be achieved by for instance setting *rolist* in afp.conf.
+This can be achieved by for instance setting *read only = yes* in afp.conf.
 
     [test volume]
     path = /my/path
     volume name = test_volume
-    rolist = myuser
+    read only = yes
 
 The tests expect there to be at least two files and one directory
 in the read-only shared volume.
@@ -161,26 +161,26 @@ Each test within a testsuite returns one of the following return codes:
 
 - 0 PASSED
 - 1 FAILED
-- 2 NOT TESTED - a test setup step or precondition check failed
-- 3 SKIPPED - unmet requirements for testing
+- 2 NOT TESTED
+- 3 SKIPPED
 
-Note that a NOT TESTED result is treated as a failure of the entire test run,
-but SKIPPED is not.
+*NOT TESTED* means that a test setup step or precondition validation failed.
+This return code will flag the test run as failed.
 
-The spectest shall return the same results whether they are run
-against a native Mac OS AFP server or Netatalk,
-but in the former case you need to run the spectests with the **-m** parameter
-to enable Mac compatibility.
+*SKIPPED* means that the test is not applicable to the AFP server under test,
+or that a partical parameter required for the test is missing.
+Check the test report for the specific reason that the test was skipped.
+This return code will *not* contribute to a failed test run.
 
-## Testing a Mac AFP server
+## Testing an AppleShare AFP server
 
 This suite of tests was designed primarily to test Netatalk AFP servers,
-however they can also be used to test a native Mac OS AFP server hosted
+however they can also be used to test an AppleShare AFP server hosted
 by an older Mac OS X or Classic Mac OS system.
 
-Launch the test runner with the **-m** option when testing a Mac AFP server.
+Launch the test runner with the **-m** option when testing an AppleShare AFP server.
 When running in Mac mode, the test runner will report tests with known current
-or historical differences between Mac and Netatalk.
+or historical differences between AppleShare and Netatalk.
 
 If Mac and Netatalk differ, or if Mac results differ between versions:
 
@@ -192,6 +192,9 @@ When Mac and Netatalk historically returned different results
 but now behave the same way:
 
     Warning MAC and Netatalk now same RESULT!
+
+Apart from these cases, the spectest shall return the same results whether they are run
+against a native AppleShare AFP server or Netatalk.
 
 # Examples
 
