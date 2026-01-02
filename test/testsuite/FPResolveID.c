@@ -14,8 +14,7 @@ STATIC void test76()
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID) {
@@ -59,8 +58,7 @@ STATIC void test91()
     struct afp_filedir_parms filedir;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID)) {
@@ -129,8 +127,7 @@ STATIC void test310()
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_FILEID)) {
@@ -169,8 +166,7 @@ STATIC void test311()
     uint16_t bitmap = 0x693f;
     struct afp_filedir_parms filedir;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -208,14 +204,14 @@ STATIC void test362()
 {
     int  dir;
     uint16_t vol = VolID;
+    uint16_t vol2;
     char *name = "t362 Resolve ID file";
     char *name1 = "t362 Resolve ID dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
-    uint16_t vol2;
-    DSI *dsi2;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     ENTER_TEST
 
     if (!Conn2) {
@@ -273,7 +269,7 @@ STATIC void test417()
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
     struct afp_filedir_parms filedir;
     int fid = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {

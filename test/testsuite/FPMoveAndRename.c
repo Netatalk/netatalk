@@ -268,8 +268,7 @@ STATIC void test138()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {

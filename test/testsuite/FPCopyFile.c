@@ -188,7 +188,7 @@ static void test_meta(char *name, char *name1, uint16_t vol2)
     int tp, tp1;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     char finder_info[32];
 
@@ -275,7 +275,7 @@ STATIC void test332()
     int tp, tp1;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     uint32_t mdate = 0;
     ENTER_TEST
@@ -459,8 +459,7 @@ STATIC void test401()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int fork;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -561,8 +560,7 @@ STATIC void test402()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     int fork;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -654,8 +652,7 @@ STATIC void test403()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
@@ -744,8 +741,6 @@ STATIC void test406()
     char *name1 = "new ducky.tif";
     uint16_t vol = VolID;
     uint16_t bitmap = 0;
-    DSI *dsi;
-    dsi = &Conn->dsi;
     ENTER_TEST
     bitmap = (1 <<  FILPBIT_PDINFO) | (1 << FILPBIT_PDID) | (1 << FILPBIT_FNUM) |
              (1 << FILPBIT_ATTR);

@@ -18,10 +18,10 @@ STATIC void test146()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    uint16_t vol2;
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
-    DSI *dsi2;
+    uint16_t vol2;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     int ret;
     ENTER_TEST
 
@@ -151,7 +151,7 @@ STATIC void test507()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir = { 0 };
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {
@@ -194,7 +194,7 @@ STATIC void test363()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     int fork;
     ENTER_TEST
 
@@ -270,7 +270,7 @@ STATIC void test364()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {

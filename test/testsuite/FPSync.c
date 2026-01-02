@@ -7,11 +7,10 @@
 STATIC void test2()
 {
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     char *name = "t2 sync dir";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (FPSyncDir(Conn, vol, DIRDID_ROOT)) {

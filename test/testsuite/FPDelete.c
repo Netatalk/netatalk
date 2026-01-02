@@ -149,9 +149,8 @@ STATIC void test172()
     int dir = 0;
     unsigned int ret;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int dt;
-    dsi = &Conn->dsi;
     ENTER_TEST
     memset(&filedir, 0, sizeof(filedir));
     tdir  = FPCreateDir(Conn, vol, DIRDID_ROOT, tname);
@@ -323,7 +322,7 @@ STATIC void test196()
     int tdir1 = 0;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
                       (1 << DIRPBIT_DID) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
@@ -510,7 +509,7 @@ STATIC void test421()
     int tdir;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
                       (1 << DIRPBIT_DID) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);

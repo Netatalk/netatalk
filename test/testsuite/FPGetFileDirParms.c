@@ -167,9 +167,8 @@ STATIC void test94()
     uint16_t vol = VolID;
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE) |
                       (1 << DIRPBIT_OFFCNT);
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int offcnt;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -266,8 +265,7 @@ STATIC void test104()
     struct afp_filedir_parms filedir;
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir1 = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
@@ -531,13 +529,12 @@ STATIC void test307()
 {
     char *name = "t307 dir#2";
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -582,13 +579,12 @@ STATIC void test308()
 {
     char *name = "t308 dir";
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Conn->afp_version >= 30) {
@@ -944,7 +940,7 @@ STATIC void test371()
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     ENTER_TEST
 
@@ -1010,7 +1006,7 @@ STATIC void test380()
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     uint16_t bitmap1 = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO) |
                        (1 << FILPBIT_CDATE) |
@@ -1072,13 +1068,12 @@ STATIC void test396()
 {
     char *name = "t396 dir";
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t f_bitmap = 0x73f;
     uint16_t d_bitmap = 0x133f;
     unsigned int dir;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name))) {
@@ -1122,7 +1117,7 @@ STATIC void test423()
     struct afp_filedir_parms filedir;
     int fid = 0;
     uint16_t fork = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name1))) {
@@ -1193,7 +1188,7 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
     uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
     uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
     int ofs = 3 * sizeof(uint16_t);
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
     const unsigned char *buf;
     uint8_t prodos_type;
@@ -1270,7 +1265,7 @@ STATIC void test441()
     uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
     uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
     int ofs = 3 * sizeof(uint16_t);
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
     const unsigned char *buf;
     uint8_t prodos_type;

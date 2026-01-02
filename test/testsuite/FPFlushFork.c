@@ -13,7 +13,7 @@ STATIC void test203()
     int fork = 0;
     char *name = "t203 file";
     uint32_t mdate;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {

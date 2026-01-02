@@ -20,9 +20,8 @@ void FPResolveID_arg(char **argv)
     unsigned int ret, ofs = 3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_PDINFO);
     uint32_t id;
-    DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
-    dsi = &Conn->dsi;
     fprintf(stdout, "======================\n");
     fprintf(stdout, "FPResolveID with args:\n");
     id = atoi(argv[0]);
@@ -148,13 +147,12 @@ void FPEnumerate_arg(char **argv)
     int dir;
     uint16_t tp;
     uint16_t i;
-    const DSI *dsi;
+    const DSI *dsi = &Conn->dsi;
     unsigned char *b;
     struct afp_filedir_parms filedir;
     int *stack = NULL;
     int cnt = 0;
     int size = 1000;
-    dsi = &Conn->dsi;
     f_bitmap = (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO) |
                (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE) |
                (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN);

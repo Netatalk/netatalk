@@ -363,7 +363,7 @@ STATIC void test106()
     char *name5 = "t104 file";
     char *name6 = "t104 dir2_1";
     uint16_t vol = VolID;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     unsigned int dir1 = 0;
     unsigned int dir2 = 0;
     unsigned int dir3 = 0;
@@ -770,16 +770,15 @@ STATIC void test336()
     char *name = "t336 very long dirname (more than 31 bytes)";
     char *ndir = "t336 dir";
     uint16_t vol = VolID;
-    DSI *dsi;
+    uint16_t vol2;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     unsigned int  dir;
     uint16_t bitmap = 0;
     int ret;
     int id;
-    uint16_t vol2;
-    DSI *dsi2;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!Conn2) {
@@ -1028,7 +1027,7 @@ STATIC void test420()
     struct afp_filedir_parms filedir;
     int fid = 0;
     uint16_t fork = 0;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (Path[0] == '\0') {

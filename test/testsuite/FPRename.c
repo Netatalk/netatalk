@@ -48,8 +48,7 @@ STATIC void test72()
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t vol = VolID;
-    DSI *dsi;
-    dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
     if (!(dir = FPCreateDir(Conn, vol, DIRDID_ROOT, name2))) {
@@ -110,10 +109,10 @@ static int create_double_deleted_folder(uint16_t vol, char *name)
     uint16_t vol2;
     int tdir;
     int tdir1 = 0;
-    DSI *dsi2;
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2;
     uint16_t bitmap;
     int tp, tp1;
     tdir  = FPCreateDir(Conn, vol, DIRDID_ROOT, name);
