@@ -24,7 +24,6 @@ Changes in 4.4.0
 * UPD: docs: Restore historical changelogs from the ASUN fork to v1.5, GitHub #2579
 * FIX: getzones: Fixed potential memory leaks and improved defensive memory management, GitHub #2421, #2441
 * UPD: libatalk: Refactored the vfs module for improved memory safety, GitHub #2491
-* UPD: libatalk: regenerate utf16 case lookup tables with Unicode v17.0.0, GitHub #2594
 * FIX: meson: Error out if no writable CNID backend is selected for compilation, GitHub #2450
 * FIX: meson: Improved Solaris compatibility for iconv parameter checks, GitHub #2415
 * FIX: meson: Rename with-manual-install-dir option to with-docs-install-dir, now applied to all docs, GitHub #2471
