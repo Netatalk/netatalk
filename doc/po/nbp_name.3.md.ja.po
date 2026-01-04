@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -134,7 +134,7 @@ msgstr "例"
 #. type: Plain text
 #: manpages/man3/nbp_name.3.md:4
 msgid "nbp_name — NBP name parsing"
-msgstr "nbp_name — NBP 名の解析"
+msgstr "nbp_name — NBP名の解析"
 
 #. type: Plain text
 #: manpages/man3/nbp_name.3.md:15

@@ -2,13 +2,13 @@
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
 # Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"POT-Creation-Date: 2026-01-04 01:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -50,6 +50,11 @@ msgstr "dircache metadata window = *数値* **(G)**"
 #: manpages/man5/afp.conf.5.md:559 manual/Configuration.md:775
 msgid "dircache metadata threshold = *number* **(G)**"
 msgstr "dircache metadata threshold = *数値* **(G)**"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:567 manual/Configuration.md:789
+msgid "dircache files = *BOOLEAN* (default: *no*) **(G)**"
+msgstr "dircache files = *論理型* (デフォルト: *no*) **(G)**"
 
 #. type: Title ##
 #: manpages/man8/papd.8.md:61 manual/Configuration.md:351
@@ -2048,20 +2053,116 @@ msgstr ""
 
 #. type: Plain text
 #: manual/Configuration.md:792
-#, no-wrap
 msgid ""
-"**Example** (Netatalk only access to volume):\n"
-"dircache validation freq = 100\n"
-"dircache metadata window = 3600\n"
-"dircache metadata threshold = 1800\n"
+"Whether to allow files to be cached in the directory cache alongside "
+"directories. The default is *no* for legacy compatibility and memory "
+"conservation."
 msgstr ""
-"【例】（Netatalk のみがボリュームにアクセスする場合）：\n"
-"dircache validation freq = 100\n"
-"dircache metadata window = 3600\n"
-"dircache metadata threshold = 1800\n"
+"ディレクトリと並んでファイルもディレクトリキャッシュにキャッシュすることを許"
+"可するかどうか。デフォルトは後方互換性とメモリー節約のために *no* である。"
 
 #. type: Plain text
-#: manual/Configuration.md:796
+#: manual/Configuration.md:797
+msgid ""
+"When enabled (*yes*), files are cached along with directories, which can "
+"improve performance for file-heavy workloads by reducing CNID database "
+"queries.  However, this increases memory usage and may cause excessive cache "
+"evictions if the working set is larger than the configured dircachesize."
+msgstr ""
+"有効にすると（*yes*）、ファイルはディレクトリと共にキャッシュされ、CNID デー"
+"タベースクエリを削減することで、ファイル集約型のワークロードのパフォーマンス"
+"を向上させることができる。しかし、これはメモリー使用量を増加させ、作業セット"
+"が設定された dircachesize よりも大きい場合、過剰なキャッシュ追放を引き起こす"
+"可能性がある。"
+
+#. type: Plain text
+#: manual/Configuration.md:799
+#, no-wrap
+msgid "**Performance Impact:**\n"
+msgstr "**パフォーマンスへの影響：**\n"
+
+#. type: Bullet: '- '
+#: manual/Configuration.md:804
+msgid ""
+"**Disabled** (*no*, default): Only directories are cached. Lower memory "
+"usage, suitable for most deployments."
+msgstr ""
+"**無効**（*no*、デフォルト）：ディレクトリのみがキャッシュされる。メモリー使"
+"用量が低く、ほとんどの導入に適している。"
+
+#. type: Bullet: '- '
+#: manual/Configuration.md:804
+msgid ""
+"**Enabled** (*yes*): Both files and directories are cached. Higher memory "
+"usage, potentially better performance for file-intensive workflows."
+msgstr ""
+"**有効**（*yes*）：ファイルとディレクトリの両方がキャッシュされる。メモリー使"
+"用量が高く、ファイル集約型のワークロードに対しては潜在的により良いパフォーマ"
+"ンスを発揮する。"
+
+#. type: Plain text
+#: manual/Configuration.md:806
+#, no-wrap
+msgid "**Recommendation:**\n"
+msgstr "**推奨事項：**\n"
+
+#. type: Bullet: '- '
+#: manual/Configuration.md:811
+msgid "Leave disabled (*no*) unless you have:"
+msgstr "下記の条件がある場合を除き、無効（*no*）のままにしておくこと："
+
+#. type: Bullet: '  - '
+#: manual/Configuration.md:811
+msgid "A large **dircachesize** configuration (e.g., 65536 or higher)"
+msgstr "大きな**dircachesize** 設定（例：65536 以上）"
+
+#. type: Bullet: '  - '
+#: manual/Configuration.md:811
+msgid "File-intensive workflows with repeated access to the same files"
+msgstr "ファイルへの繰り返しアクセスを伴うファイル集約型ワークフロー"
+
+#. type: Bullet: '  - '
+#: manual/Configuration.md:811
+msgid "Sufficient server memory to handle increased cache size"
+msgstr "増加したキャッシュサイズを処理するための十分なサーバーメモリー"
+
+#. type: Plain text
+#: manual/Configuration.md:813
+msgid "Default: no. Range: yes/no, true/false, 1/0."
+msgstr "デフォルト：no。範囲：yes/no、true/false、1/0。"
+
+#. type: Plain text
+#: manual/Configuration.md:815
+#, no-wrap
+msgid "**Example** (Netatalk only access to volume):\n"
+msgstr "**例**（Netatalk のみがボリュームにアクセスする場合）：\n"
+
+#. type: Plain text
+#: manual/Configuration.md:819
+#, no-wrap
+msgid ""
+"    dircache validation freq = 100\n"
+"    dircache metadata window = 3600\n"
+"    dircache metadata threshold = 1800\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:821
+#, no-wrap
+msgid "**Example** (File-heavy workload with large cache):\n"
+msgstr "**例**（大きなキャッシュを伴うファイル集約型ワークロードの場合）：\n"
+
+#. type: Plain text
+#: manual/Configuration.md:825
+#, no-wrap
+msgid ""
+"    dircachesize = 65536\n"
+"    dircache files = yes\n"
+"    dircache validation freq = 100\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:829
 #, no-wrap
 msgid ""
 "**Note**: Monitor dircache effectiveness by checking Netatalk log files\n"
@@ -2070,13 +2171,13 @@ msgid ""
 msgstr "【注記】 afpd が正常にシャットダウンした時（ユーザーが切断した時）に Netatalk ログファイルで \"dircache statistics:\" 行をチェックして dircache の有効性を監視すること。\n"
 
 #. type: Title ##
-#: manual/Configuration.md:797
+#: manual/Configuration.md:830
 #, no-wrap
 msgid "Filesystem Change Events"
 msgstr "ファイルシステム変更イベント"
 
 #. type: Plain text
-#: manual/Configuration.md:802
+#: manual/Configuration.md:835
 msgid ""
 "Netatalk includes a nifty filesystem change event (FCE) mechanism where afpd "
 "processes notify interested listeners about certain filesystem events by UDP "
@@ -2088,7 +2189,7 @@ msgstr ""
 "経由で通知する。"
 
 #. type: Plain text
-#: manual/Configuration.md:806
+#: manual/Configuration.md:839
 msgid ""
 "This feature is disabled by default. To enable it, set the **fce listener** "
 "option in afp.conf to the hostname or IP address of the host that should "
@@ -2099,7 +2200,7 @@ msgstr ""
 "アドレスに設定する。"
 
 #. type: Plain text
-#: manual/Configuration.md:810
+#: manual/Configuration.md:843
 msgid ""
 "Netatalk distributes a simple FCE listener application called "
 "**fce_listen**.  It will print out any UDP datagrams received from the AFP "
@@ -2112,49 +2213,49 @@ msgstr ""
 "トとしても役立つ。"
 
 #. type: Title ###
-#: manual/Configuration.md:811
+#: manual/Configuration.md:844
 #, no-wrap
 msgid "FCE v1"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:814
+#: manual/Configuration.md:847
 msgid "The currently supported FCE v1 events are:"
 msgstr "現在サポートされているファイルシステム変更イベントは以下である："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:816
+#: manual/Configuration.md:849
 msgid "file modification (fmod)"
 msgstr "ファイル変更：file modification (fmod)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:818
+#: manual/Configuration.md:851
 msgid "file deletion (fdel)"
 msgstr "ファイル削除：file deletion (fdel)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:820
+#: manual/Configuration.md:853
 msgid "directory deletion (ddel)"
 msgstr "ディレクトリ削除：directory deletion (ddel)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:822
+#: manual/Configuration.md:855
 msgid "file creation (fcre)"
 msgstr "ファイル作成：file creation (fcre)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:824
+#: manual/Configuration.md:857
 msgid "directory creation (dcre)"
 msgstr "ディレクトリ削除：directory deletion (ddel)"
 
 #. type: Title ###
-#: manual/Configuration.md:825
+#: manual/Configuration.md:858
 #, no-wrap
 msgid "FCE v2"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:829
+#: manual/Configuration.md:862
 msgid ""
 "FCE v2 events provide additional context such as the user who performed the "
 "action. When using FCE v2 you also get the following events:"
@@ -2163,33 +2264,33 @@ msgstr ""
 "する。FCE v2 を使用する場合は、以下のイベントも取得できる："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:831
+#: manual/Configuration.md:864
 msgid "file moving (fmov)"
 msgstr "ファイル移動 (fmov)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:833
+#: manual/Configuration.md:866
 msgid "directory moving (dmov)"
 msgstr "ディレクトリー移動 (dmov)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:835
+#: manual/Configuration.md:868
 msgid "user login (login)"
 msgstr "ユーザーログイン (login)"
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:837
+#: manual/Configuration.md:870
 msgid "user logout (logout)"
 msgstr "ユーザーログアウト (logout)"
 
 #. type: Title ##
-#: manual/Configuration.md:838
+#: manual/Configuration.md:871
 #, no-wrap
 msgid "Spotlight Compatible Search"
 msgstr "Spotlight 互換検索"
 
 #. type: Plain text
-#: manual/Configuration.md:842
+#: manual/Configuration.md:875
 msgid ""
 "You can enable Netatalk's Spotlight compatible search and indexing either "
 "globally or on a per volume basis with the **spotlight** option."
@@ -2198,7 +2299,7 @@ msgstr ""
 "に Netatalk の Spotlight 互換検索とインデックス化を有効にできる。"
 
 #. type: Plain text
-#: manual/Configuration.md:845
+#: manual/Configuration.md:878
 #, no-wrap
 msgid ""
 "> ***WARNING:*** Once Spotlight is enabled for a single volume,\n"
@@ -2208,7 +2309,7 @@ msgstr ""
 "が無効にされたことになるその他全てのボリュームでは全く検索できないようになる。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:849
+#: manual/Configuration.md:882
 msgid ""
 "The **dbus-daemon** binary has to be installed for Spotlight feature. The "
 "path to dbus-daemon is determined at compile time the dbus-daemon build "
@@ -2219,7 +2320,7 @@ msgstr ""
 "決定する。"
 
 #. type: Plain text
-#: manual/Configuration.md:853
+#: manual/Configuration.md:886
 msgid ""
 "In case the **dbus-daemon** binary is installed at the other path, you must "
 "use the global option **dbus daemon** to point to the path, e.g. for Solaris "
@@ -2230,7 +2331,7 @@ msgstr ""
 "ば Solaris 上で OpenCSW 由来の Tracker を用いている場合は以下のようにする："
 
 #. type: Plain text
-#: manual/Configuration.md:854
+#: manual/Configuration.md:887
 #, no-wrap
 msgid "    dbus daemon = /opt/csw/bin/dbus-daemon\n"
 msgstr ""

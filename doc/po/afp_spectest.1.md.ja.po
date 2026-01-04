@@ -1,12 +1,12 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"POT-Creation-Date: 2026-01-04 01:46+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -92,7 +92,7 @@ msgstr "説明"
 #: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
 #: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:16
 #: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
-#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/afppasswd.1.md:43 manpages/man1/asip-status.1.md:28
 #: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
 #: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
@@ -108,14 +108,14 @@ msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:307 manpages/man1/afp_logintest.1.md:84
-#: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_spectest.1.md:246 manpages/man1/afp_speedtest.1.md:147
 #: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:30
+#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:30
 #: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
-#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1373
+#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1387
 #: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
 #: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
 #: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
@@ -127,7 +127,7 @@ msgstr "関連項目"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
-#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:196
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:199
 #: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:73
 #: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:23
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
@@ -135,7 +135,7 @@ msgstr "関連項目"
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
 #: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
 #: manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1327
+#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1342
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
 #, no-wrap
@@ -238,15 +238,16 @@ msgstr ""
 ": テスト用にマウントするボリューム名\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_spectest.1.md:89
-#: manpages/man1/afp_speedtest.1.md:89
+#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_logintest.1.md:52
+#: manpages/man1/afp_spectest.1.md:89 manpages/man1/afp_speedtest.1.md:89
+#: manpages/man1/afparg.1.md:55
 #, no-wrap
 msgid ""
 "**-u** *user*\n"
-": Username for authentication (default: current uid)\n"
+": Username for authentication with AFP server (default: current uid)\n"
 msgstr ""
 "**-u** *ユーザー名*\n"
-": 認証用のユーザー名（デフォルト: 現在のuid）\n"
+": AFPサーバーの認証用のユーザー名（デフォルト: 現在のuid）\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:75 manpages/man1/afp_logintest.1.md:58
@@ -279,10 +280,10 @@ msgstr ""
 #, no-wrap
 msgid ""
 "**-w** *password*\n"
-": Password for authentication\n"
+": Password for authentication with AFP server\n"
 msgstr ""
 "**-w** *パスワード文字列*\n"
-": 認証用のパスワード\n"
+": AFPサーバーの認証用のパスワード\n"
 
 #. type: Plain text
 #: manpages/man1/afp_logintest.1.md:19 manpages/man1/afp_spectest.1.md:24
@@ -321,13 +322,13 @@ msgstr ""
 #, no-wrap
 msgid ""
 "**-m**\n"
-": Run tests in Mac OS native AFP server compatibility mode\n"
+": Run tests in AppleShare (Mac) AFP server compatibility mode\n"
 msgstr ""
 "**-m**\n"
-": Mac OS ネイティブ AFP サーバー互換モードでテストを実行する\n"
+": AppleShare (Mac) AFP サーバー互換モードでテストを実行する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:70 manpages/man1/afp_spectest.1.md:217
+#: manpages/man1/afp_logintest.1.md:70 manpages/man1/afp_spectest.1.md:220
 #, no-wrap
 msgid ""
 "    [Global]\n"
@@ -346,6 +347,8 @@ msgid ""
 "**afp_spectest** [-1234567aCEimVvX] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]\n"
 "[-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]\n"
 msgstr ""
+"**afp_spectest** [-1234567aCEimVvX] [-h *ホスト*] [-H *ホスト2*] [-p *ポート*] [-s *ボリューム*] [-c *ボリュームへのパス*]\n"
+"[-S *ボリューム2*] [-u *ユーザー*] [-d *ユーザー2*] [-w *パスワード*] [-f *テスト*]\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:11
@@ -357,11 +360,11 @@ msgstr ""
 #: manpages/man1/afp_spectest.1.md:16
 #, no-wrap
 msgid ""
-"**afp_spectest** is a comprehensive AFP specification test suite, with several hundred test cases.\n"
+"**afp_spectest** is a comprehensive AFP specification test suite, with several hundreds of test cases.\n"
 "It is organized into testsets, divided by the AFP commands tested, or by preconditions for testing.\n"
 msgstr ""
-"**afp_spectest** は、数百のテストケースを含む包括的な AFP 仕様テストスイートである。\n"
-"テスト対象となる AFP コマンドごと、またはテストの前提条件ごとに分類されたテストセットで構成されている。\n"
+"**afp_spectest** は、数百のテストケースを含む包括的なAFP仕様テストスイートである。\n"
+"テスト対象となるAFPコマンドごと、またはテストの前提条件ごとに分類されたテストセットで構成されている。\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:19
@@ -397,10 +400,10 @@ msgstr ""
 #, no-wrap
 msgid ""
 "**-d** *user*\n"
-": Second username for authentication\n"
+": Second username for authentication with AFP server\n"
 msgstr ""
 "**-d** *user*\n"
-": 認証用の2番目のユーザー名\n"
+": AFPサーバーの認証用の2番目のユーザー名\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:57
@@ -409,12 +412,14 @@ msgid ""
 "**-E**\n"
 ": Empty the test volume before running tests\n"
 msgstr ""
+"**-E**\n"
+": テストを実行する前にテストボリュームを空にする\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:59
 #, no-wrap
 msgid "> ***WARNING:*** This will delete all files and directories in the test volume!\n"
-msgstr ""
+msgstr "> 【警告】 これにより、テストボリューム内のすべてのファイルとディレクトリが削除されてしまう!\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:62
@@ -485,14 +490,15 @@ msgstr "使用法"
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:109
 msgid ""
-"The tests in spectest suite follow the same general usage pattern and "
-"parameters, with some additional requirements for particular tests.  You set "
-"the AFP protocol version (**-1** through **-7**), then the address and "
-"credentials of the host to test (which can be localhost).  Some tests "
-"require a second user and second volume to be defined."
+"The tests in the spectest suite follow the same general usage pattern and "
+"parameters, with some additional required parameters or preconditions for "
+"particular tests.  You set the AFP protocol version (**-1** through **-7**), "
+"then the address and credentials of the host to test (which can be "
+"localhost).  Some tests require a second user and second volume to be "
+"defined."
 msgstr ""
-"spectest スイートのテストは、一般的な使用パターンとパラメータは同じですが、特"
-"定のテストには追加の要件がある。AFP プロトコルバージョン (**-1** から "
+"spectestのテスト項目は、一般的な使用パターンとパラメータは統一されているが、"
+"特定のテストには追加の要件がある。AFPプロトコルバージョン (**-1** から "
 "**-7**) を設定し、次にテスト対象ホスト (localhost も可) のアドレスと認証情報"
 "を設定する。一部のテストでは、2番目のユーザーと2番目のボリュームを定義する必"
 "要がある。"
@@ -503,12 +509,12 @@ msgid ""
 "The so-called *tier 2* (T2) tests must be run from localhost, and the local "
 "path to the volume under test to be provided with **-c**.  This is because "
 "they modify the file system directly with system calls to set up test "
-"preconditions etc."
+"preconditions and validate test results."
 msgstr ""
 "いわゆる *tier 2* (T2) テストは localhost から実行し、テスト対象ボリュームへ"
-"のローカルパスを **-c** で指定する必要がある。これは、テストの前提条件などを"
-"設定するために、システムコールを使用してファイルシステムを直接変更するため"
-"だ。"
+"のローカルパスを **-c** で指定する必要がある。これは、テストの前提条件や結果"
+"検証などを設定しつつ、システムコールを使用してファイルシステムを直接弄るため"
+"である。"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:116
@@ -526,16 +532,16 @@ msgstr "ファイル名拡張子マッピングのテスト"
 #: manpages/man1/afp_spectest.1.md:124
 msgid ""
 "A handful of tests in the FPGetFileDirParms testset expect the filename "
-"extension to Type/Creator mapping to be enabled.  In version 3 and later of "
-"netatalk you need to explicitly enable this extension mapping by editing "
-"extmap.conf(5) and uncommenting all commented lines in this configuration "
-"file."
+"extension to Classic Mac OS Type/Creator mapping to be enabled.  In version "
+"3 and later of netatalk you need to explicitly enable this extension mapping "
+"by editing extmap.conf(5) and uncommenting the lines for the mappings that "
+"you want to enable in this configuration file."
 msgstr ""
-"FPGetFileDirParms テストセット内のいくつかのテストでは、ファイル名拡張子とタ"
-"イプ/クリエータのマッピングが有効になっていることが想定されている。netatalk "
-"バージョン 3 以降では、extmap.conf(5) を編集し、この設定ファイル内のすべての"
-"コメント行をアンコメントすることで、この拡張子マッピングを明示的に有効にする"
-"必要がある。"
+"FPGetFileDirParms テストセット内のいくつかのテストでは、ファイル名拡張子を"
+"Classic Mac OS式の「Type/Creator」へのマッピングが有効になっていることが想定"
+"されている。netatalk バージョン 3 以降では、extmap.conf(5) を編集し、この構成"
+"ファイルで有効にしたいマッピングの行のコメントを解除することで、この拡張マッ"
+"ピングを明示的に有効にする必要がある。"
 
 #. type: Title ##
 #: manpages/man1/afp_spectest.1.md:125
@@ -547,14 +553,14 @@ msgstr "スリープテスト"
 #: manpages/man1/afp_spectest.1.md:131
 msgid ""
 "The *FPzzz* testset contain tests for AFP sleep mode and timeouts.  Since "
-"they by necessity take a long time to execute, they are not run by default "
-"when you execute the spectest suite.  Instead, you must explicity run the "
-"testset using the *-f* parameter:"
+"they by necessity take much longer than other tests, they are not run by "
+"default when you execute the spectest suite.  Instead, you must explicity "
+"run the testset using the *-f* parameter:"
 msgstr ""
-"*FPzzz* テストセットには、AFP スリープモードとタイムアウトのテストが含まれて"
-"いる。これらのテストは必然的に実行に時間がかかるため、spectest スイートの実行"
-"時にはデフォルトでは実行されない。代わりに、*-f* パラメータを使用して明示的に"
-"テストセットを実行する必要がある。"
+"*FPzzz* テストセットは、AFP スリープモードとタイムアウトを検証するテスト項目"
+"になっている。これらのテストは必然的に実行に時間がかかるため、spectest スイー"
+"トの実行時にはデフォルトでは実行されない。実行するには *-f* パラメータを使用"
+"する必要がある。"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:133
@@ -581,10 +587,11 @@ msgstr ""
 #: manpages/man1/afp_spectest.1.md:141
 msgid ""
 "Needless to say, the volume you test must be configured as read-only.  This "
-"can be achieved by for instance setting *rolist* in afp.conf."
+"can be achieved by for instance setting *read only = yes* in afp.conf."
 msgstr ""
 "言うまでもなく、テストするボリュームは読み取り専用として設定されている必要が"
-"ある。これは、例えば afp.conf で *rolist* を設定することで実現できる。"
+"ある。これは、例えば afp.conf で *read only = yes* を設定することで実現でき"
+"る。"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:146
@@ -593,7 +600,7 @@ msgid ""
 "    [test volume]\n"
 "    path = /my/path\n"
 "    volume name = test_volume\n"
-"    rolist = myuser\n"
+"    read only = yes\n"
 msgstr ""
 
 #. type: Plain text
@@ -648,68 +655,75 @@ msgstr ""
 
 #. type: Bullet: '- '
 #: manpages/man1/afp_spectest.1.md:166
-msgid "2 NOT TESTED - a test setup step or precondition check failed"
+msgid "2 NOT TESTED"
 msgstr ""
-"2 NOT TESTED - テストのセットアップ手順または前提条件チェックに失敗した"
 
 #. type: Bullet: '- '
 #: manpages/man1/afp_spectest.1.md:166
-msgid "3 SKIPPED - unmet requirements for testing"
-msgstr "3 SKIPPED - テストの要件が満たされていない"
+msgid "3 SKIPPED"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:169
+#, no-wrap
 msgid ""
-"Note that a NOT TESTED result is treated as a failure of the entire test "
-"run, but SKIPPED is not."
+"*NOT TESTED* means that a test setup step or precondition validation failed.\n"
+"This return code will flag the test run as failed.\n"
 msgstr ""
-"なお、「NOT TESTED」の結果はテスト実行全体の失敗として扱われますが、"
-"「SKIPPED」はそうではない。"
+"*NOT TESTED* は、テストセットアップステップまたは前提条件の検証に失敗したことを意味する。\n"
+"この戻りコードは、テスト実行を失敗としてフラグ付けする。\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:174
+#, no-wrap
 msgid ""
-"The spectest shall return the same results whether they are run against a "
-"native Mac OS AFP server or Netatalk, but in the former case you need to run "
-"the spectests with the **-m** parameter to enable Mac compatibility."
+"*SKIPPED* means that the test is not applicable to the AFP server under test,\n"
+"or that a partical parameter required for the test is missing.\n"
+"Check the test report for the specific reason that the test was skipped.\n"
+"This return code will *not* contribute to a failed test run.\n"
 msgstr ""
-"Spectest は、ネイティブ Mac OS AFP サーバーに対して実行した場合も Netatalk に"
-"対して実行した場合も同じ結果を返すが、前者の場合は、Mac との互換性を有効にす"
-"るために **-m** パラメータを指定して Spectest を実行する必要がある。"
+"*SKIPPED* は、テストがテスト対象の AFP サーバーに適用されないこと、またはテストに必要な特定のパラメータが欠落していることを意味する。\n"
+"テストがスキップされた具体的な理由については、テストレポートを確認すること。\n"
+"この戻りコードは、テスト結果を失敗としてフラグ付けしない。\n"
 
 #. type: Title ##
 #: manpages/man1/afp_spectest.1.md:175
 #, no-wrap
-msgid "Testing a Mac AFP server"
-msgstr "Mac AFPサーバーのテスト"
+msgid "Testing an AppleShare AFP server"
+msgstr "AppleShare AFP サーバーのテスト"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:180
 msgid ""
 "This suite of tests was designed primarily to test Netatalk AFP servers, "
-"however they can also be used to test a native Mac OS AFP server hosted by "
-"an older Mac OS X or Classic Mac OS system."
+"however they can also be used to test an AppleShare AFP server hosted by an "
+"older Mac OS X or Classic Mac OS system."
 msgstr ""
 "このツール群は、主に Netatalk AFP サーバーをテストするために設計されている"
-"が、古い Mac OS X または Classic Mac OS システムでホストされている Mac OS "
-"AFP サーバーをテストするためにも使用できる。"
+"が、古い Mac OS X または Classic Mac OS システムでホストされている "
+"AppleShare AFP サーバーをテストするためにも使用できる。"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:184
 msgid ""
-"Launch the test runner with the **-m** option when testing a Mac AFP "
-"server.  When running in Mac mode, the test runner will report tests with "
-"known current or historical differences between Mac and Netatalk."
+"Launch the test runner with the **-m** (Mac) option when testing an "
+"AppleShare AFP server.  When running in this mode, the test runner will "
+"report tests with known current or historical differences between AppleShare "
+"and Netatalk."
 msgstr ""
-"Mac AFP サーバーをテストする場合は、**-m** オプションを使用してテストランナー"
-"を起動する。Mac モードで実行すると、テストランナーは、Mac と Netatalk の間の"
-"既知の現在または過去の相違点を持つテストを報告する。"
+"AppleShare AFP サーバーをテストする場合は、**-m** (Mac) オプションを使用して"
+"テストランナーを起動する。このモードで実行すると、テストランナーは、"
+"AppleShare と Netatalk の間の既知の現在または過去の相違点を持つテストを報告す"
+"る。"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:186
-msgid "If Mac and Netatalk differ, or if Mac results differ between versions:"
+msgid ""
+"If AppleShare and Netatalk differ, or if AppleShare results differ between "
+"versions:"
 msgstr ""
-"Mac と Netatalk が異なる場合、または Mac の結果がバージョン間で異なる場合:"
+"AppleShare と Netatalk が異なる場合、または AppleShare の結果がバージョン間で"
+"異なる場合:"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:190
@@ -723,11 +737,11 @@ msgstr ""
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:193
 msgid ""
-"When Mac and Netatalk historically returned different results but now behave "
-"the same way:"
+"When AppleShare and Netatalk historically returned different results but now "
+"behave the same way:"
 msgstr ""
-"Mac と Netatalk が以前は異なる結果を返していたが、現在は同じように動作する場"
-"合:"
+"AppleShare と Netatalk が以前は異なる結果を返していたが、現在は同じように動作"
+"する場合:"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:195
@@ -735,14 +749,23 @@ msgstr ""
 msgid "    Warning MAC and Netatalk now same RESULT!\n"
 msgstr ""
 
-#. type: Title ##
+#. type: Plain text
 #: manpages/man1/afp_spectest.1.md:198
+msgid ""
+"Apart from these cases, the spectest shall return the same results whether "
+"they are run against a native AppleShare AFP server or Netatalk."
+msgstr ""
+"上記の場合以外には、Mac OS 組み込みの AppleShare AFP サーバーまたは Netatalk "
+"に対して実行されるかどうかにかかわらず、同じ結果を返すものとする。"
+
+#. type: Title ##
+#: manpages/man1/afp_spectest.1.md:201
 #, no-wrap
 msgid "Configure environment"
 msgstr "環境設定"
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:202
+#: manpages/man1/afp_spectest.1.md:205
 msgid ""
 "Below is a sample configuration for running the AFP spec tests.  Presently, "
 "only ClearTxt and Guest authentication is supported in the test runner."
@@ -751,22 +774,22 @@ msgstr ""
 "は ClearTxt とゲスト認証のみがサポートされている。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_spectest.1.md:206
+#: manpages/man1/afp_spectest.1.md:209
 msgid "2 users: user1, user2 with the same password"
 msgstr "2つのユーザー: user1, user2 は同じパスワードを持つ"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_spectest.1.md:206
+#: manpages/man1/afp_spectest.1.md:209
 msgid "1 group: afpusers"
 msgstr "1つのグループ: afpusers"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_spectest.1.md:206
+#: manpages/man1/afp_spectest.1.md:209
 msgid "user1, user2 assigned to afpusers group"
 msgstr "user1, user2 は afpusers グループに割り当てられる"
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:209
+#: manpages/man1/afp_spectest.1.md:212
 msgid ""
 "Arrange two *empty* directories. Some tests will fail if there are residual "
 "files in the test directories."
@@ -775,7 +798,7 @@ msgstr ""
 "いくつかのテストが失敗する。"
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:212
+#: manpages/man1/afp_spectest.1.md:215
 #, no-wrap
 msgid ""
 "    drwxrwsr-x    5 user1   afpusers       176 avr 27 23:56 /tmp/afptest1\n"
@@ -783,12 +806,12 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:214
+#: manpages/man1/afp_spectest.1.md:217
 msgid "Set afp.conf as follows:"
 msgstr "afp.confオプションは次の通り。"
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:223
+#: manpages/man1/afp_spectest.1.md:226
 #, no-wrap
 msgid ""
 "    [testvol1]\n"
@@ -799,7 +822,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:229
+#: manpages/man1/afp_spectest.1.md:232
 #, no-wrap
 msgid ""
 "    [testvol2]\n"
@@ -810,13 +833,13 @@ msgid ""
 msgstr ""
 
 #. type: Title ##
-#: manpages/man1/afp_spectest.1.md:230
+#: manpages/man1/afp_spectest.1.md:233
 #, no-wrap
 msgid "Running tests"
 msgstr "テストを実行する"
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:233
+#: manpages/man1/afp_spectest.1.md:236
 msgid ""
 "Run the afp_spectest against AFP server running on 10.0.0.10 for the "
 "\"FPSetForkParms_test\" testset with AFP 3.4"
@@ -824,7 +847,7 @@ msgstr ""
 "afp_spectest の FPSetForkParms_test テストセットを AFP 3.4 で実行する。"
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:242
+#: manpages/man1/afp_spectest.1.md:245
 #, no-wrap
 msgid ""
 "    % afp_spectest -h 10.0.0.10 -u user1 -d user2 -w passwd -s testvol1 -S testvol2 -c /srv/afptest1 -7 -f FPSetForkParms_test\n"
@@ -838,7 +861,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_spectest.1.md:245
+#: manpages/man1/afp_spectest.1.md:248
 #, no-wrap
 msgid "**afp_logintest**(1), **afparg**(1), **afpd**(8)\n"
 msgstr ""

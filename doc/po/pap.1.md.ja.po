@@ -1,12 +1,12 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"POT-Creation-Date: 2026-01-04 01:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -91,7 +91,7 @@ msgstr "説明"
 #: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
 #: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:16
 #: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
-#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/afppasswd.1.md:43 manpages/man1/asip-status.1.md:28
 #: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
 #: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
@@ -107,14 +107,14 @@ msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:307 manpages/man1/afp_logintest.1.md:84
-#: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_spectest.1.md:246 manpages/man1/afp_speedtest.1.md:147
 #: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:30
+#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:30
 #: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
-#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1373
+#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1387
 #: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
 #: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
 #: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
@@ -126,7 +126,7 @@ msgstr "関連項目"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:73 manpages/man1/aecho.1.md:50
-#: manpages/man1/afpldaptest.1.md:38 manpages/man1/afppasswd.1.md:72
+#: manpages/man1/afpldaptest.1.md:38 manpages/man1/afppasswd.1.md:82
 #: manpages/man1/afpstats.1.md:34 manpages/man1/asip-status.1.md:106
 #: manpages/man1/dbd.1.md:72 manpages/man1/getzones.1.md:88
 #: manpages/man1/macusers.1.md:29 manpages/man1/nad.1.md:329
@@ -134,7 +134,7 @@ msgstr "関連項目"
 #: manpages/man1/pap.1.md:97 manpages/man1/rtmpqry.1.md:56
 #: manpages/man3/atalk_aton.3.md:28 manpages/man3/nbp_name.3.md:42
 #: manpages/man4/atalk.4.md:49 manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1378
+#: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1392
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:83
@@ -148,7 +148,7 @@ msgstr "著者"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:75 manpages/man1/aecho.1.md:52
-#: manpages/man1/afpldaptest.1.md:40 manpages/man1/afppasswd.1.md:74
+#: manpages/man1/afpldaptest.1.md:40 manpages/man1/afppasswd.1.md:84
 #: manpages/man1/afpstats.1.md:36 manpages/man1/asip-status.1.md:108
 #: manpages/man1/dbd.1.md:74 manpages/man1/getzones.1.md:90
 #: manpages/man1/macusers.1.md:31 manpages/man1/nad.1.md:331
@@ -156,7 +156,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man1/rtmpqry.1.md:58
 #: manpages/man3/atalk_aton.3.md:30 manpages/man3/nbp_name.3.md:44
 #: manpages/man4/atalk.4.md:51 manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1380
+#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1394
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:120 manpages/man8/atalkd.8.md:85
@@ -168,7 +168,7 @@ msgid ""
 msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Plain text
-#: manpages/man1/afppasswd.1.md:40 manpages/man1/dbd.1.md:24
+#: manpages/man1/afppasswd.1.md:50 manpages/man1/dbd.1.md:24
 #: manpages/man1/getzones.1.md:48 manpages/man1/pap.1.md:38
 #, no-wrap
 msgid "**-c**\n"
@@ -202,7 +202,7 @@ msgstr ""
 #: manpages/man1/pap.1.md:8
 #, no-wrap
 msgid "**pap** [-A *address*] [-c] [-d] [-e] [-E] [-p *nbpname*] [-s *statusfile*] [-w] [-W] [*files*]\n"
-msgstr ""
+msgstr "**pap** [-A *アドレス*] [-c] [-d] [-e] [-E] [-p *nbp名*] [-s *ステータスファイル*] [-w] [-W] [*ファイル*]\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:15
@@ -216,7 +216,7 @@ msgstr ""
 "**pap** は、Apple Printer Access Protocol (PAP) を使用して、\n"
 "AppleTalk に接続されたプリンタに接続し、ファイルを送信するために使用される。\n"
 "**pap** が実行を開始すると、PAP を使用してプリンタとのセッションを開こうとし、\n"
-"次にプリンタに *files* をダウンロードする。\n"
+"次にプリンタに *ファイル* をダウンロードする。\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:18
@@ -224,8 +224,8 @@ msgid ""
 "If no *files* are given on the command line, **pap** begins reading from "
 "standard input."
 msgstr ""
-"コマンド ラインに *files* が指定されていない場合、**pap** は標準入力からの読"
-"み取りを開始する。"
+"コマンド ラインに *ファイル* が指定されていない場合、**pap** は標準入力からの"
+"読み取りを開始する。"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:24
@@ -237,9 +237,9 @@ msgid ""
 "local host, respectively."
 msgstr ""
 "コマンド ラインにプリンタが指定されていない場合、**pap** は現在の作業ディレク"
-"トリで *.paprc* というファイルを検索し、それを読み取ってプリンタの *nbpname* "
-"を取得する。空白行および \\`*\\#*' で始まる行は無視される。 *type* と *zone* "
-"のデフォルトはそれぞれ *LaserWriter* とローカル ホストのゾーンになる。"
+"トリで *.paprc* というファイルを検索し、それを読み取ってプリンタの *nbp名* を"
+"取得する。空白行および \\`*\\#*' で始まる行は無視される。 *type* と *zone* の"
+"デフォルトはそれぞれ *LaserWriter* とローカル ホストのゾーンになる。"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:28
@@ -256,7 +256,7 @@ msgstr ""
 #: manpages/man1/pap.1.md:32
 #, no-wrap
 msgid "**-A** *address*\n"
-msgstr ""
+msgstr "**-A* *アドレス*\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:36
@@ -324,7 +324,7 @@ msgstr ""
 #: manpages/man1/pap.1.md:62
 #, no-wrap
 msgid "**-p** *nbpname*\n"
-msgstr ""
+msgstr "**-p* *nbp名*\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:66
@@ -342,7 +342,7 @@ msgstr ""
 #: manpages/man1/pap.1.md:68
 #, no-wrap
 msgid "**-s** *statusfile*\n"
-msgstr ""
+msgstr "**-s* *ステータスファイル*\n"
 
 #. type: Plain text
 #: manpages/man1/pap.1.md:74

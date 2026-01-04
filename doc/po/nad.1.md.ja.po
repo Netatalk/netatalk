@@ -2,7 +2,7 @@
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
 # Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -827,7 +827,7 @@ msgstr "**-v** *パス*\n"
 msgid ""
 "> Use path to the shared volume to search rather than the current working\n"
 "directory.\n"
-msgstr "現在の作業ディレクトリの代わりに、共有ボリュームへのパスを使用して検索する。\n"
+msgstr "> 現在の作業ディレクトリの代わりに、共有ボリュームへのパスを使用して検索する。\n"
 
 #. type: Plain text
 #: manpages/man1/nad.1.md:301

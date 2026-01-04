@@ -1,12 +1,12 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"POT-Creation-Date: 2026-01-04 01:38+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -92,7 +92,7 @@ msgstr "説明"
 #: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
 #: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:16
 #: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
-#: manpages/man1/afppasswd.1.md:33 manpages/man1/asip-status.1.md:28
+#: manpages/man1/afppasswd.1.md:43 manpages/man1/asip-status.1.md:28
 #: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
 #: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
 #: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
@@ -108,14 +108,14 @@ msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:307 manpages/man1/afp_logintest.1.md:84
-#: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:84
+#: manpages/man1/afp_spectest.1.md:246 manpages/man1/afp_speedtest.1.md:147
 #: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:68 manpages/man1/afpstats.1.md:30
+#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:30
 #: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
 #: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
 #: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
-#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1373
+#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1387
 #: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
 #: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
 #: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
@@ -127,7 +127,7 @@ msgstr "関連項目"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
-#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:196
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:199
 #: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:73
 #: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:23
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
@@ -135,7 +135,7 @@ msgstr "関連項目"
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
 #: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
 #: manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1327
+#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1342
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
 #, no-wrap
@@ -156,6 +156,8 @@ msgid ""
 "**afp_lantest** [-34567bcGgKVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]\n"
 "[-n *iterations*] [-f *tests*] [-F *bigfile*]\n"
 msgstr ""
+"**afp_lantest** [-34567bcGgKVv] [-h *ホスト*] [-p *ポート*] [-s *ボリューム名*] [-u *ユーザー名*] [-w *パスワード*]\n"
+"[-n *回数*] [-f *テスト*] [-F *ビッグファイル*]\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:14
@@ -258,6 +260,8 @@ msgid ""
 "**-c**\n"
 ": Output results in CSV format (default: tabular)\n"
 msgstr ""
+"**-c**\n"
+": 結果をCSV形式で出力する（デフォルト: 表形式）\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:45
@@ -355,15 +359,16 @@ msgstr ""
 ": テスト用にマウントするボリューム名\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_spectest.1.md:89
-#: manpages/man1/afp_speedtest.1.md:89
+#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_logintest.1.md:52
+#: manpages/man1/afp_spectest.1.md:89 manpages/man1/afp_speedtest.1.md:89
+#: manpages/man1/afparg.1.md:55
 #, no-wrap
 msgid ""
 "**-u** *user*\n"
-": Username for authentication (default: current uid)\n"
+": Username for authentication with AFP server (default: current uid)\n"
 msgstr ""
 "**-u** *ユーザー名*\n"
-": 認証用のユーザー名（デフォルト: 現在のuid）\n"
+": AFPサーバーの認証用のユーザー名（デフォルト: 現在のuid）\n"
 
 #. type: Plain text
 #: manpages/man1/afp_lantest.1.md:75 manpages/man1/afp_logintest.1.md:58
@@ -396,10 +401,10 @@ msgstr ""
 #, no-wrap
 msgid ""
 "**-w** *password*\n"
-": Password for authentication\n"
+": Password for authentication with AFP server\n"
 msgstr ""
 "**-w** *パスワード文字列*\n"
-": 認証用のパスワード\n"
+": AFPサーバーの認証用のパスワード\n"
 
 #. type: Title ###
 #: manpages/man1/afp_lantest.1.md:82 manpages/man1/afp_speedtest.1.md:102
@@ -806,6 +811,8 @@ msgid ""
 "Note; When measuring afpd read/write IO with afp_lantest, ensure afp.conf "
 "`log level` is set to `default:error`"
 msgstr ""
+"注意: afp_lantest で afpd の読み取り/書き込み IO を測定する場合、afp.conf の "
+"`log level` が `default:error` に設定されていることを確認すること。"
 
 #. type: Bullet: '- '
 #: manpages/man1/afp_lantest.1.md:268
@@ -813,6 +820,8 @@ msgid ""
 "More verbose logging superficially increases *_W IO values. For dirstats at "
 "least `default:info` is reqired."
 msgstr ""
+"より詳細なログ記録は、表面的に *_W IO 値を増加させる。dirstats には少なくと"
+"も `default:info` が必要である。"
 
 #. type: Title ##
 #: manpages/man1/afp_lantest.1.md:269
@@ -853,7 +862,7 @@ msgstr ""
 "の下流操作が発生する）。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:285
+#: manpages/man1/afp_lantest.1.md:286
 msgid ""
 "Note; As total AFP Ops are a mix of reads, writes, and other ops the "
 "effective 1:1 (AFP:IO) thresholds are not equal to 1.  Accurate thresholds "
@@ -867,13 +876,13 @@ msgstr ""
 "AFPD_R/AFPD_W値と比較することで求めることができる。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:287
+#: manpages/man1/afp_lantest.1.md:288
 msgid "Ideally code changes should observe aggregate values as reducing."
 msgstr ""
 "理想的には、コードの変更により集計値が減少することを確認する必要がある。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:289
+#: manpages/man1/afp_lantest.1.md:290
 msgid ""
 "For more information see [Testing Wiki](https://netatalk.io/docs/Testing)"
 msgstr ""
@@ -881,13 +890,13 @@ msgstr ""
 "照してください。"
 
 #. type: Title #
-#: manpages/man1/afp_lantest.1.md:290
+#: manpages/man1/afp_lantest.1.md:291
 #, no-wrap
 msgid "Return Codes"
 msgstr "復帰コード"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:294
+#: manpages/man1/afp_lantest.1.md:295
 #, no-wrap
 msgid ""
 "**0**\n"
@@ -897,7 +906,7 @@ msgstr ""
 ": すべてのテストは成功した\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:297
+#: manpages/man1/afp_lantest.1.md:298
 #, no-wrap
 msgid ""
 "**1**\n"
@@ -907,13 +916,13 @@ msgstr ""
 ": 1つ以上のテストが失敗した\n"
 
 #. type: Title ##
-#: manpages/man1/afp_lantest.1.md:298 manpages/man1/nbplkup.1.md:57
+#: manpages/man1/afp_lantest.1.md:299 manpages/man1/nbplkup.1.md:57
 #, no-wrap
 msgid "Notes"
 msgstr "注記"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:306
+#: manpages/man1/afp_lantest.1.md:307
 msgid ""
 "Tests that involve large file operations (tests 2 and 3) will create "
 "temporary files in the test volume"
@@ -922,7 +931,7 @@ msgstr ""
 "ファイルが作成される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:306
+#: manpages/man1/afp_lantest.1.md:307
 msgid ""
 "The **-g** and **-G** options significantly increase test file sizes and "
 "test duration"
@@ -931,7 +940,7 @@ msgstr ""
 "増加させる。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:306
+#: manpages/man1/afp_lantest.1.md:307
 msgid ""
 "Cache-focused tests (8-11) provide the most insight into netatalk's "
 "directory cache performance"
@@ -940,20 +949,20 @@ msgstr ""
 "のパフォーマンスに関する最も詳細な情報を提供する。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:306
+#: manpages/man1/afp_lantest.1.md:307
 msgid ""
 "Multiple iterations (**-n**) are recommended for consistent performance "
 "measurements"
 msgstr "一貫したパフォーマンス測定には、複数回の反復（**-n**）が推奨される。"
 
 #. type: Bullet: '- '
-#: manpages/man1/afp_lantest.1.md:306
+#: manpages/man1/afp_lantest.1.md:307
 msgid "The tool requires write access to the specified AFP volume"
 msgstr ""
 "このツールは、指定された AFP ボリュームへの書き込みアクセスを必要とする。"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:309
+#: manpages/man1/afp_lantest.1.md:310
 #, no-wrap
 msgid "**afp_speedtest**(1), **afpd**(8), **netatalk**(8)\n"
 msgstr ""

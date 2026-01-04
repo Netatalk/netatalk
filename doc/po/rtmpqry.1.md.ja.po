@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -201,7 +201,7 @@ msgstr "rtmpqrt - AppleTalkルーティング情報を照会する"
 #: manpages/man1/rtmpqry.1.md:8
 #, no-wrap
 msgid "**rtmpqry** [-a | -r] [ -A local_address ] [remote_address]\n"
-msgstr ""
+msgstr "**rtmpqry** [-a | -r] [ -A ローカルアドレス ] [リモートアドレス]\n"
 
 #. type: Plain text
 #: manpages/man1/rtmpqry.1.md:14

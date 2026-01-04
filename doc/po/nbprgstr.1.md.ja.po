@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -182,7 +182,7 @@ msgid ""
 "network.  *nbpname* is parsed by **nbp_name**(3)."
 msgstr ""
 "これは Name-Binding Protocol (NBP) を使用して AppleTalk ネットワークと対話す"
-"る。*nbpname* は **nbp_name**(3) によって解析される。"
+"る。*nbp名* は **nbp_name**(3) によって解析される。"
 
 #. type: Plain text
 #: manpages/man1/nbplkup.1.md:23 manpages/man1/nbprgstr.1.md:24
@@ -191,8 +191,8 @@ msgid ""
 "**-A** *address*\n"
 "> Use *address* as the local address to be used for the lookup.\n"
 msgstr ""
-"**-A** *address*\n"
-"> 検索に使用するローカルアドレスとして *address* を使用する。\n"
+"**-A** *アドレス*\n"
+"> 検索に使用するローカルアドレスとして *アドレス* を使用する。\n"
 
 #. type: Plain text
 #: manpages/man1/nbplkup.1.md:30 manpages/man1/nbprgstr.1.md:28
@@ -202,7 +202,7 @@ msgid ""
 "> Interpret strings in the given Macintosh character set.\n"
 "> If not specified, nbplkup defaults to using MacRoman.\n"
 msgstr ""
-"**-m** *Mac charset*\n"
+"**-m** *Mac 文字セット*\n"
 "> 指定された Macintosh 文字セットで文字列を解釈する。\n"
 "> 指定されていない場合、nbplkup はデフォルトで MacRoman を使用する。\n"
 
@@ -218,10 +218,10 @@ msgid ""
 "> The *obj* and *type* can be arbitrary strings, but the *zone* must be a valid zone name.\n"
 "> An \\`*=*' for the *object* or *type* matches anything, and an \\`*\\**' for *zone* means the local zone.\n"
 msgstr ""
-"**nbpname**\n"
-"> 使用する NBP 名。\n"
+"**nbp名**\n"
+"> 使用するNBP名。\n"
 ">\n"
-"> *nbpname* は *obj:type@zone* の形式の文字列で、ここで *obj* はオブジェクト名、\n"
+"> *nbp名* は *obj:type@zone* の形式の文字列で、ここで *obj* はオブジェクト名、\n"
 "> *type* はオブジェクトのタイプ、*zone* はゾーン名である。\n"
 "> *obj* と *type* は任意の文字列にできるが、*zone* は有効なゾーン名でなければならない。\n"
 "> *object* または *type* に対する \\`*=*' は何でも一致し、*zone* に対する \\`*\\**' はローカルゾーンを意味する。\n"
@@ -237,25 +237,25 @@ msgstr ""
 #: manpages/man1/nbprgstr.1.md:8
 #, no-wrap
 msgid "**nbprgstr** [-A *address*] [-m *Mac charset*] [-p *port*] *nbpname*\n"
-msgstr ""
+msgstr "**nbprgstr** [-A *アドレス*] [-m *Mac 文字セット*] [-p *ポート*] *nbp名*\n"
 
 #. type: Plain text
 #: manpages/man1/nbprgstr.1.md:10
 #, no-wrap
 msgid "**nbpunrgstr** [-A *address*] [-m *Mac charset*] *nbpname*\n"
-msgstr ""
+msgstr "**nbpunrgstr** [-A *アドレス*] [-m *Mac 文字セット*] *nbp名*\n"
 
 #. type: Plain text
 #: manpages/man1/nbprgstr.1.md:14
 #, no-wrap
 msgid "**nbprgstr** registers *nbpname* with **atalkd**(8), at the given *port*.\n"
-msgstr "**nbprgstr** は指定された *port* で *nbpname* を **atalkd**(8) に登録する。\n"
+msgstr "**nbprgstr** は指定された *ポート* で *nbp名* を **atalkd**(8) に登録する。\n"
 
 #. type: Plain text
 #: manpages/man1/nbprgstr.1.md:16
 #, no-wrap
 msgid "**nbpunrgstr** informs **atalkd** that *nbpname* is no longer to be advertised.\n"
-msgstr "**nbpunrgstr** は *nbpname* がもはや広告されないことを **atalkd** に通知する。\n"
+msgstr "**nbpunrgstr** は *nbp名* がもはや広告されないことを **atalkd** に通知する。\n"
 
 #. type: Plain text
 #: manpages/man1/nbprgstr.1.md:31
@@ -264,8 +264,8 @@ msgid ""
 "**-p** *port*\n"
 "> Use *port* as the port to register the entity on.\n"
 msgstr ""
-"**-p** *port*\n"
-"> エンティティを登録するポートとして *port* を使用する。\n"
+"**-p** *ポート*\n"
+"> エンティティを登録するポートとして *ポート* を使用する。\n"
 
 #. type: Plain text
 #: manpages/man1/nbprgstr.1.md:43
