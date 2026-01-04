@@ -42,7 +42,7 @@ with an AFP server and then use a subset of available UAMs to authenticate with 
 : Server hostname or IP address (default: localhost)
 
 **-m**
-: Run tests in Mac OS native AFP server compatibility mode
+: Run tests in AppleShare (Mac) AFP server compatibility mode
 
 **-p** *port*
 : Server port number (default: 548)

@@ -178,17 +178,17 @@ This suite of tests was designed primarily to test Netatalk AFP servers,
 however they can also be used to test an AppleShare AFP server hosted
 by an older Mac OS X or Classic Mac OS system.
 
-Launch the test runner with the **-m** option when testing an AppleShare AFP server.
-When running in Mac mode, the test runner will report tests with known current
+Launch the test runner with the **-m** (Mac) option when testing an AppleShare AFP server.
+When running in this mode, the test runner will report tests with known current
 or historical differences between AppleShare and Netatalk.
 
-If Mac and Netatalk differ, or if Mac results differ between versions:
+If AppleShare and Netatalk differ, or if AppleShare results differ between versions:
 
     header.dsi_code       -5000     AFPERR_ACCESS
     MAC RESULT: -5019 AFPERR_PARAM    -5010 AFPERR_BUSY
     Netatalk returns AFPERR_ACCESS when a Mac return AFPERR_PARAM or AFPERR_BUSY
 
-When Mac and Netatalk historically returned different results
+When AppleShare and Netatalk historically returned different results
 but now behave the same way:
 
     Warning MAC and Netatalk now same RESULT!

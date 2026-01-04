@@ -390,7 +390,7 @@ Install required packages
 
 ```shell
 export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
-pkg_add bison cmark db5 flex gcc13 gnome-tracker heimdal iniparser libcups libevent libgcrypt meson mysql-client p5-Net-DBus perl pkg-config sqlite3 talloc
+pkg_add cmark db5 gcc13 heimdal iniparser libevent libgcrypt meson mysql-client perl pkg-config sqlite3
 ```
 
 Configure, compile, install, run, and uninstall
@@ -501,11 +501,11 @@ Configure, compile, install, run, and uninstall
 
 ```shell
 set -e
-export PATH=/usr/local/sbin:/usr/local/bin:$PATH
 meson setup build --prefix=/usr/local -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
 meson test -C build
 meson install -C build
+export PATH=/usr/local/sbin:/usr/local/bin:$PATH
 netatalk -V
 afpd -V
 sleep 1
