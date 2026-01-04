@@ -2305,7 +2305,9 @@ if 'readmes' in get_option('with-docs')
     build_readme_docs = true
 
     readmes_md = [
+        'CODE_OF_CONDUCT',
         'COMPILATION',
+        'CONTRIBUTING',
         'CONTRIBUTORS',
         'INSTALL',
         'NEWS',
