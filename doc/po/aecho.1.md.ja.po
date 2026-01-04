@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -178,7 +178,7 @@ msgstr ""
 #: manpages/man1/aecho.1.md:8
 #, no-wrap
 msgid "**aecho** [-c *count*] [*address* | *nbpname*]\n"
-msgstr ""
+msgstr "**aecho** [-c *回数*] [*アドレス* | *nbp名*]\n"
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:15
@@ -189,7 +189,7 @@ msgid ""
 "whether a reply was received. Requests are sent at the rate of one per\n"
 "second.\n"
 msgstr ""
-"**aecho** は、指定された AppleTalk *address* または *nbpname* で指定されたホストに\n"
+"**aecho** は、指定された AppleTalk *アドレス* または *nbp名* で指定されたホストに\n"
 "Apple Echo Protocol (AEP) パケットを繰り返し送信し、応答が受信されたかどうかを報告する。\n"
 "リクエストは1秒あたり1つの速度で送信される。\n"
 
@@ -201,8 +201,8 @@ msgid ""
 "*address* is parsed by **atalk_aton**(3). *nbpname* is parsed by\n"
 "**nbp_name**(3). The nbp type defaults to \\`*Workstation*'.\n"
 msgstr ""
-"*address* は、**atalk_aton**(3) によって解析される。\n"
-"*nbpname* は、**nbp_name**(3) によって解析される。\n"
+"*アドレス* は、**atalk_aton**(3) によって解析される。\n"
+"*nbp名* は、**nbp_name**(3) によって解析される。\n"
 "nbp タイプのデフォルトは \\`*Workstation*' である。\n"
 
 #. type: Plain text
@@ -261,13 +261,13 @@ msgstr ""
 #: manpages/man1/aecho.1.md:43
 #, no-wrap
 msgid "**-c** *count*\n"
-msgstr ""
+msgstr "**-c** *回数*\n"
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:45
 #, no-wrap
 msgid "> Stop after *count* packets.\n"
-msgstr "> *count* パケット後に停止する。\n"
+msgstr "> *回数* パケット後に停止する。\n"
 
 #. type: Plain text
 #: manpages/man1/aecho.1.md:49

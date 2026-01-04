@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -150,7 +150,7 @@ msgstr "fce_listen — Netatalk Filesystem Change Event リスナーアプリケ
 #: manpages/man1/fce_listen.1.md:8
 #, no-wrap
 msgid "**fce_listen** [-h *host*] [-p *port*]\n"
-msgstr ""
+msgstr "**fce_listen** [-h *ホスト*] [-p *ポート*]\n"
 
 #. type: Plain text
 #: manpages/man1/fce_listen.1.md:13

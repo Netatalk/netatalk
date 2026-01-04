@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -201,7 +201,7 @@ msgstr "papstatus — AppleTalk 接続プリンタのステータスを取得す
 #: manpages/man8/papstatus.8.md:8
 #, no-wrap
 msgid "**papstatus** [-d] [-p *printer*] [*retrytime*]\n"
-msgstr ""
+msgstr "**papstatus** [-d] [-p *プリンタ*] [*再試行時間*]\n"
 
 #. type: Plain text
 #: manpages/man8/papstatus.8.md:14
@@ -247,7 +247,7 @@ msgstr "> デバッグ モードをオンにして、標準エラーに追加情
 #: manpages/man8/papstatus.8.md:32
 #, no-wrap
 msgid "**-p** *printer*\n"
-msgstr ""
+msgstr "**-p** *プリンタ*\n"
 
 #. type: Plain text
 #: manpages/man8/papstatus.8.md:36
@@ -257,15 +257,15 @@ msgid ""
 "printer name). The syntax for *printer* is the same as discussed above\n"
 "for the *.paprc* file.\n"
 msgstr ""
-"> *printer* からステータスを取得する (他の*.paprc*\n"
-"ファイルでプリンタ名を検索する)。 *printer* の構文は、*.paprc*\n"
+"> *プリンタ* からステータスを取得する (他の*.paprc*\n"
+"ファイルでプリンタ名を検索する)。 *プリンタ* の構文は、*.paprc*\n"
 "ファイルで上で説明したものと同じ。\n"
 
 #. type: Plain text
 #: manpages/man8/papstatus.8.md:38
 #, no-wrap
 msgid "*retrytime*\n"
-msgstr ""
+msgstr "*再試行時間*\n"
 
 #. type: Plain text
 #: manpages/man8/papstatus.8.md:42
@@ -276,8 +276,8 @@ msgid ""
 "sleep of *retrytime* seconds between inquiring the printer.\n"
 msgstr ""
 "> 通常、**papstatus** はプリンタからステータスを 1 回だけ取得する。\n"
-"*retrytime* が指定されている場合は、プリンタの問い合わせの間に\n"
-"*retrytime* 秒のスリープを挟んで、ステータスが繰り返し取得される。\n"
+"*再試行時間* が指定されている場合は、プリンタの問い合わせの間に\n"
+"*再試行時間* 秒のスリープを挟んで、ステータスが繰り返し取得される。\n"
 
 #. type: Plain text
 #: manpages/man8/papstatus.8.md:48

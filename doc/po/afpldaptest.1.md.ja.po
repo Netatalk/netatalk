@@ -2,7 +2,7 @@
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
 # Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -178,7 +178,7 @@ msgstr "afpldaptest — afp.conf の LDAP パラメータを構文チェック�
 #: manpages/man1/afpldaptest.1.md:8
 #, no-wrap
 msgid "**afpldaptest** [-u *user* | -g *group* | -i *uuid*]\n"
-msgstr ""
+msgstr "**afpldaptest** [-u *ユーザ* | -g *グループ* | -i *uuid*]\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:10
@@ -198,25 +198,25 @@ msgstr "**afpldaptest**はafp.confのldapパラメータを構文チェックす
 #: manpages/man1/afpldaptest.1.md:19
 #, no-wrap
 msgid "**-u** *user*\n"
-msgstr ""
+msgstr "**-u* *ユーザ*\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:21
 #, no-wrap
 msgid "> Show uuid for *user*.\n"
-msgstr "> *user*のためのuuidを表示する。\n"
+msgstr "> *ユーザ*のためのuuidを表示する。\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:23
 #, no-wrap
 msgid "**-g** *group*\n"
-msgstr ""
+msgstr "**-g* *グループ*\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:25
 #, no-wrap
 msgid "> Show uuid for *group*.\n"
-msgstr "> *group*のためのuuidを表示する。\n"
+msgstr "> *グループ*のためのuuidを表示する。\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:27
@@ -228,7 +228,7 @@ msgstr ""
 #: manpages/man1/afpldaptest.1.md:29
 #, no-wrap
 msgid "> Show user, group or local-uuid for *uuid*.\n"
-msgstr "> *uuid*のためのuserかgroupかlocal-uuidを表示する。\n"
+msgstr "> *uuid*のためのユーザかグループかローカルuuidを表示する。\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:31

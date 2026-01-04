@@ -1,6 +1,6 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
@@ -200,7 +200,7 @@ msgstr "getzones — AppleTalk ゾーン名を一覧表示する"
 #: manpages/man1/getzones.1.md:8
 #, no-wrap
 msgid "**getzones** [-g | -l | -m | -q network | -z *zone*] [-c *Mac charset*] [*address*]\n"
-msgstr ""
+msgstr "**getzones** [-g | -l | -m | -q ネットワーク | -z *ゾーン*] [-c *Mac 文字セット*] [*アドレス*]\n"
 
 #. type: Plain text
 #: manpages/man1/getzones.1.md:15
@@ -318,7 +318,7 @@ msgstr ""
 #: manpages/man1/getzones.1.md:53
 #, no-wrap
 msgid "*address*\n"
-msgstr ""
+msgstr "*アドレス*\n"
 
 #. type: Plain text
 #: manpages/man1/getzones.1.md:56
