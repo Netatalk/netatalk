@@ -2324,7 +2324,7 @@ if 'readmes' in get_option('with-docs')
                 )
             endif
 
-            install_data(file + '.md', install_dir: docs_install_path)
+            install_data(file + '.md', install_dir: docs_install_path / 'manual')
         else
             if pandoc.found()
                 custom_target(
