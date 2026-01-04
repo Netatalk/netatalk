@@ -26,7 +26,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          ref: $RELEASE_TAG
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
       - name: Get version
         id: get_version
@@ -157,7 +157,7 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
-          file: Dockerfile
+          file: distrib/docker/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
           push: true
           labels: ${{ steps.metadata.outputs.labels }}
@@ -224,7 +224,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          ref: $RELEASE_TAG
+          ref: ${{ env.RELEASE_TAG }}
       - name: Get version
         id: get_version
         run: |
@@ -273,7 +273,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
-          ref: $RELEASE_TAG
+          ref: ${{ env.RELEASE_TAG }}
       - name: Get version
         id: get_version
         run: |
