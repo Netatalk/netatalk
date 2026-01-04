@@ -808,7 +808,7 @@ if the working set is larger than the configured dircachesize.
   - A large **dircachesize** configuration (e.g., 65536 or higher)
   - File-intensive workflows with repeated access to the same files
   - Sufficient server memory to handle increased cache size
-  
+
 Default: no. Range: yes/no, true/false, 1/0.
 
 **Example** (Netatalk only access to volume):
