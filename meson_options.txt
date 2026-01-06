@@ -371,11 +371,10 @@ option(
     type: 'array',
     choices: [
         'dbd',
-        'last',
         'mysql',
         'sqlite',
     ],
-    value: ['dbd', 'last', 'mysql', 'sqlite'],
+    value: ['dbd', 'mysql', 'sqlite'],
     description: 'Choose the CNID backends to build and install',
 )
 option(
@@ -384,7 +383,6 @@ option(
     choices: [
         '',
         'dbd',
-        'last',
         'mysql',
         'sqlite',
     ],

@@ -250,8 +250,6 @@ print &ui_table_row(
                                   $afpconfRef, $sectionRef, \%in, 'cnid scheme', $text{'edit_undefined'},
                                   'dbd',
                                   'dbd',
-                                  'last',
-                                  'last',
                                   'mysql',
                                   'mysql',
                                   'sqlite',
