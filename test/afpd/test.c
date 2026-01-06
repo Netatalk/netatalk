@@ -68,7 +68,7 @@ int main()
     printf("\n");
     /* now run tests */
     printf("Running tests\n=============\n");
-    TEST_expr(vid = openvol(&obj, "test"), vid != 0);
+    TEST_expr(vid = openvol(&obj, "afpd_test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL);
@@ -76,7 +76,7 @@ int main()
     TEST_expr(path = cname(vol, retdir, cnamewrap("Network Trash Folder")),
               path != NULL);
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT), retdir != NULL);
-    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "test"), 0);
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "afpd_test"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, ""), 0);
     TEST_expr(reti = createdir(&obj, vid, DIRDID_ROOT, "dir1"),
               reti == 0 || reti == AFPERR_EXIST);
@@ -90,4 +90,7 @@ int main()
     TEST_int(delete (&obj, vid, DIRDID_ROOT, "file1"), 0);
     /* test enumerate.c stuff */
     TEST_int(enumerate(&obj, vid, DIRDID_ROOT), 0);
+    /* cleanup */
+    closevol(&obj, vol);
+    unload_volumes(&obj);
 }
