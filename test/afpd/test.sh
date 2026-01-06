@@ -1,22 +1,39 @@
 #!/bin/sh
-if [ ! -d /tmp/AFPtestvolume ]; then
-    mkdir -p /tmp/AFPtestvolume
-    if [ $? -ne 0 ]; then
-        echo Error creating AFP test volume /tmp/AFPtestvolume
-        exit 1
-    fi
+
+AFPTESTVOLUME=$(mktemp -d /tmp/AFPtestvolume-XXXXXX)
+if [ $? -ne 0 ]; then
+    echo Error creating AFP test volume >&2
+    exit 1
 fi
 
-if [ ! -f test.conf ]; then
-    echo -n "Creating configuration template ... "
-    cat > test.conf << EOF
+AFPTESTCNID=$(mktemp -d /tmp/AFPtestCNID-XXXXXX)
+if [ $? -ne 0 ]; then
+    echo Error creating CNID test directory >&2
+    exit 1
+fi
+
+SIGNATURE=$(LC_ALL=C tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 16)
+VOLUUID=$(uuidgen | tr 'a-z' 'A-Z')
+
+if [ -f test.conf ]; then
+    echo "Removing stale configuration template test.conf ..."
+    rm -f test.conf
+fi
+
+echo -n "Creating configuration template test.conf ..."
+cat > test.conf << EOF
 [Global]
 afp port = 10548
+log file = $(pwd)/meson-logs/afpd.log
+log level = default:debug
+signature = $SIGNATURE
 
 [test]
-path = /tmp/AFPtestvolume
-cnid scheme = last
+cnid scheme = sqlite
 ea = none
+path = $AFPTESTVOLUME
+vol dbpath = $AFPTESTCNID
+volume name = afpd_test
+volume uuid = $VOLUUID
 EOF
-    echo [ok]
-fi
+echo [ok]

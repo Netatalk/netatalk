@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <string.h>
 
 #include <atalk/cnid.h>
@@ -41,12 +42,9 @@
 #include "test.h"
 #include "volume.h"
 
-/* Stuff from main.c which of cource can't be added as source to testbin */
 unsigned char nologin = 0;
 static AFPObj obj, aspobj;
-#define ARGNUM 3
 static char *args[] = {"test", "-F", "test.conf"};
-/* Static variables */
 
 int main()
 {
@@ -55,6 +53,7 @@ int main()
     struct vol *vol;
     struct dir *retdir;
     struct path *path;
+    signal(SIGPIPE, SIG_IGN);
     /* initialize */
     printf("Initializing\n============\n");
     TEST(setuplog("default:note", "/dev/tty", true));
@@ -68,7 +67,7 @@ int main()
     printf("\n");
     /* now run tests */
     printf("Running tests\n=============\n");
-    TEST_expr(vid = openvol(&obj, "test"), vid != 0);
+    TEST_expr(vid = openvol(&obj, "afpd_test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL);
@@ -76,7 +75,7 @@ int main()
     TEST_expr(path = cname(vol, retdir, cnamewrap("Network Trash Folder")),
               path != NULL);
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT), retdir != NULL);
-    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "test"), 0);
+    TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT_PARENT, "afpd_test"), 0);
     TEST_int(getfiledirparms(&obj, vid, DIRDID_ROOT, ""), 0);
     TEST_expr(reti = createdir(&obj, vid, DIRDID_ROOT, "dir1"),
               reti == 0 || reti == AFPERR_EXIST);
@@ -90,4 +89,7 @@ int main()
     TEST_int(delete (&obj, vid, DIRDID_ROOT, "file1"), 0);
     /* test enumerate.c stuff */
     TEST_int(enumerate(&obj, vid, DIRDID_ROOT), 0);
+    /* cleanup */
+    closevol(&obj, vol);
+    unload_volumes(&obj);
 }
