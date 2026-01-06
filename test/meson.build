@@ -1,9 +1,9 @@
 if get_option('with-tests')
-    if use_last_backend
+    if use_sqlite_backend
         subdir('afpd')
     else
-        warning(
-            'The afpd tests require the "last" backend to be built. Skipping afpd tests.',
+        error(
+            'The afpd tests require the "sqlite" backend to be built',
         )
     endif
 endif
