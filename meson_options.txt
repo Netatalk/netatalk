@@ -193,7 +193,7 @@ option(
     'with-tests',
     type: 'boolean',
     value: false,
-    description: 'Compile tests',
+    description: 'Compile the afpd integration tests',
 )
 option(
     'with-testsuite',
