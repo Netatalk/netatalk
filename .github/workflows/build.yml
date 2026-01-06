@@ -486,6 +486,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/freebsd-vm@9832a7f21715c1303a1b9e7c00f96508266b4e09 # v1.3.6
         with:
+          release: "14.3"
           copyback: false
           prepare: |
             pkg install -y \
