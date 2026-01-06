@@ -1126,7 +1126,7 @@ hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 >
 > Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
 
-cnid scheme = *dbd* | *last* | *mysql* | *sqlite* **(V)**
+cnid scheme = *dbd* | *mysql* | *sqlite* **(V)**
 
 > Set the CNID backend to be used for the volume.
 Not all backends may be available with your netatalk installation.
@@ -1134,9 +1134,6 @@ Run **afpd -v** to see a list of available backends, as well as which one is the
 >
 > *dbd*: uses Berkeley DB, with database reads and writes managed through the **cnid_dbd** daemon.
 It is recommended for most deployments.
->
-> *last*: uses an in-memory Trivial Database.
-It is not reliable enough for everyday use. We keep it around strictly for testing purposes.
 >
 > *mysql*: connects to a MySQL (or MariaDB) database instance that has been provisioned for use with Netatalk.
 Requires datbase administration, giving you full control over how the CNID data is stored.
