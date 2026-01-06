@@ -1238,8 +1238,14 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                 (CNID_sqlite_private *) calloc(1,
                     sizeof(CNID_sqlite_private)));
     cdb->cnid_db_private = db;
-    snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
-             vol->v_localname);
+
+    if (vol->v_dbpath) {
+        snprintf(dirpath, sizeof(dirpath), "%s", vol->v_dbpath);
+    } else {
+        snprintf(dirpath, sizeof(dirpath), "%sCNID/%s", _PATH_STATEDIR,
+                 vol->v_localname);
+    }
+
     become_root();
 
     if (mkdir(dirpath, 0755) != 0) {
