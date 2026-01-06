@@ -917,6 +917,7 @@ cnid_t cnid_sqlite_get(struct _cnid_db *cdb, cnid_t did, const char *name,
     EC_INIT;
     CNID_sqlite_private *db = cdb->cnid_db_private;
     cnid_t id = CNID_INVALID;
+    int sqlite_return;
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_get(did: %" PRIu32 ", name: \"%s\"): BEGIN",
         ntohl(did), name);
@@ -940,16 +941,21 @@ cnid_t cnid_sqlite_get(struct _cnid_db *cdb, cnid_t did, const char *name,
     EC_ZERO_LOG(sqlite3_bind_text(db->cnid_get_stmt, 1, name, len,
                                   SQLITE_STATIC));
     EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_get_stmt, 2, ntohl(did)));
+    sqlite_return = sqlite3_step(db->cnid_get_stmt);
 
-    if ((sqlite3_step(db->cnid_get_stmt) != SQLITE_ROW)
-            && (sqlite3_errcode(db->cnid_sqlite_con) != 0)) {
+    if (sqlite_return == SQLITE_DONE) {
+        LOG(log_debug, logtype_cnid,
+            "cnid_sqlite_get: name: '%s', did: %u is not in the CNID database",
+            name, ntohl(did));
+    } else if (sqlite_return != SQLITE_ROW) {
         LOG(log_error, logtype_cnid,
             "cnid_sqlite_get: sqlite query error: %s",
             sqlite3_errmsg(db->cnid_sqlite_con));
         EC_FAIL;
+    } else {
+        id = htonl((uint32_t)sqlite3_column_int64(db->cnid_get_stmt, 0));
     }
 
-    id = htonl((uint32_t)sqlite3_column_int64(db->cnid_get_stmt, 0));
 EC_CLEANUP:
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_get(id: %" PRIu32 ", did: %" PRIu32 ", name: \"%s\"): END",
