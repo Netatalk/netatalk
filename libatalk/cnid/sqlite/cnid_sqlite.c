@@ -179,6 +179,11 @@ static int init_prepared_stmt_delete(CNID_sqlite_private *db)
     EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
                                    &db->cnid_delete_stmt, NULL));
 EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
     EC_EXIT;
 }
 
@@ -1328,6 +1333,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
              "VALUES(?, ?, ?, 0)"));
     EC_ZERO_LOG(sqlite3_prepare_v2
                 (db->cnid_sqlite_con, sql, strlen(sql), &transient_stmt, NULL));
+    free(sql);
+    sql = NULL;
     EC_ZERO_LOG(sqlite3_bind_text(transient_stmt,
                                   1, db->cnid_sqlite_voluuid_str,
                                   strlen(db->cnid_sqlite_voluuid_str), SQLITE_STATIC));
@@ -1347,6 +1354,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     sqlite3_reset(transient_stmt);
     sqlite3_clear_bindings(transient_stmt);
+    sqlite3_finalize(transient_stmt);
+    transient_stmt = NULL;
 
     /*
      * Check whether CNID set overflowed before.
@@ -1492,6 +1501,10 @@ EC_CLEANUP:
 
     if (sql) {
         free(sql);
+    }
+
+    if (dbpath) {
+        bdestroy(dbpath);
     }
 
     return cdb;
