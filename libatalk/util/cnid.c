@@ -233,12 +233,11 @@ char *uuid_strip_dashes(const char *uuid)
         p++;
     }
 
-    stripped[sizeof stripped - 1] = '\0';
+    stripped[i] = '\0';
     char *result = malloc(i + 1);
 
     if (result) {
         strncpy(result, stripped, i + 1);
-        result[i] = '\0';
     }
 
     return result;
