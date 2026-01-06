@@ -104,6 +104,12 @@ jobs:
           timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-archlinux:
     name: Arch Linux
@@ -162,6 +168,12 @@ jobs:
           timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-debian:
     name: Debian Linux
@@ -240,6 +252,12 @@ jobs:
           timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-fedora:
     name: Fedora Linux
@@ -310,6 +328,12 @@ jobs:
           timelord -V
       - name: Uninstall
         run: sudo ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-ubuntu:
     name: Ubuntu Linux
@@ -382,6 +406,12 @@ jobs:
           timelord -V
       - name: Uninstall
         run: ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-macos:
     name: macOS
@@ -430,6 +460,12 @@ jobs:
         run: sudo netatalkd stop
       - name: Uninstall
         run: sudo ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-dflybsd:
     name: DragonflyBSD
@@ -441,9 +477,10 @@ jobs:
       - name: Build on VM
         uses: vmactions/dragonflybsd-vm@84277fec84c57e6f1b4eaa6a6ef3d36618d0c05b # v1.2.1
         with:
-          copyback: false
+          copyback: true
           usesh: true
           prepare: |
+            set -e
             pkg install -y \
               avahi \
               bison \
@@ -475,6 +512,12 @@ jobs:
             netatalk -V
             afpd -V
             ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-freebsd:
     name: FreeBSD
@@ -486,8 +529,10 @@ jobs:
       - name: Build on VM
         uses: vmactions/freebsd-vm@9832a7f21715c1303a1b9e7c00f96508266b4e09 # v1.3.6
         with:
-          copyback: false
+          copyback: true
+          sync: sshfs
           prepare: |
+            set -e
             pkg install -y \
               avahi \
               bison \
@@ -524,6 +569,12 @@ jobs:
             /usr/local/etc/rc.d/netatalk stop
             /usr/local/etc/rc.d/netatalk disable
             ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-netbsd:
     name: NetBSD
@@ -535,8 +586,10 @@ jobs:
       - name: Build on VM
         uses: vmactions/netbsd-vm@2ba9902c77c2ebdb7501e5e9308dea03f0f251c4 # v1.3.1
         with:
-          copyback: false
+          copyback: true
+          sync: sshfs
           prepare: |
+            set -e
             export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
             pkg_add \
               cmark \
@@ -575,6 +628,12 @@ jobs:
             asip-status localhost
             service netatalk onestop
             ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-openbsd:
     name: OpenBSD
@@ -586,8 +645,10 @@ jobs:
       - name: Build on VM
         uses: vmactions/openbsd-vm@00753f2835e62704570734312de6f212069dfef7 # v1.3.1
         with:
-          copyback: false
+          copyback: true
+          sync: sshfs
           prepare: |
+            set -e
             pkg_add -I \
               avahi \
               bison \
@@ -628,6 +689,12 @@ jobs:
             rcctl -d stop netatalk
             rcctl -d disable netatalk
             ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-omnios:
     name: OmniOS
@@ -639,8 +706,9 @@ jobs:
       - name: Build on VM
         uses: vmactions/omnios-vm@0f19598b712bbfab48e7a88c9b1038760ecc5d31 # v1.2.1
         with:
-          copyback: false
+          copyback: true
           prepare: |
+            set -e
             pkg install \
               build-essential \
               pkg-config
@@ -680,6 +748,12 @@ jobs:
             asip-status localhost
             svcadm disable svc:/network/netatalk:default
             ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
 
   build-openindiana:
     name: OpenIndiana
@@ -692,11 +766,11 @@ jobs:
       - name: Build on VM
         uses: vmactions/openindiana-vm@e90777531e6e6cfc125a2e7e9741b8012cd6a10c # v1.0.1
         with:
-          copyback: false
+          copyback: true
           prepare: |
+            set -e
             pkg install \
               archiver/gnu-tar \
-              build/meson \
               compress/gzip \
               database/mariadb-114/client \
               database/mariadb-114/library \
@@ -759,7 +833,9 @@ jobs:
       - name: Build on VM
         uses: vmactions/solaris-vm@7a5256863396c1cea1665b084d569876a1321347 # v1.2.4
         with:
-          copyback: false
+          copyback: true
+          sync-time: true
+          sync: nfs
           prepare: |
             set -e
             pkg install \
@@ -814,3 +890,9 @@ jobs:
             asip-status localhost
             svcadm -v disable svc:/network/netatalk:default
             ninja -C build uninstall
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
