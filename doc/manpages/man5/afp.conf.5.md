@@ -1235,6 +1235,17 @@ veto files = *vetoed names* **(V)**
 delimited vetoed names. The veto string must always be terminated with a
 '/', e.g. "**veto files = veto1/**", "**veto files = veto1/veto2/**".
 
+volume uuid = *UUID* **(V)**
+
+> Specify a custom UUID for the volume. The UUID must be in the standard
+format, e.g. **550E8400-E29B-41D4-A716-446655440000**.
+If not specified, a random UUID is generated for the volume at
+startup and saved in the file **afp_voluuid.conf** in the shared state directory.
+>
+> In most circumstances, you should not need to set this option, but rather let netatalk manage it for you.
+One reason to set it manually is when you want to run **afpd** as a non-privileged user
+who does not have write access to the shared state directory.
+
 ## Volume options
 
 Boolean volume options.

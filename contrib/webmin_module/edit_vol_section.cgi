@@ -565,6 +565,12 @@ if ($subject ne 'homes') {
                         &ui_textbox('p_postexec', $values[0], 60)
     );
 
+    @values = get_parameter_of_section($afpconfRef, $sectionRef, 'volume uuid', \%in);
+    print &ui_table_row(
+                        $text{'edit_vol_section_volume_uuid'},
+                        &ui_textbox('p_volume uuid', $values[0], 40)
+    );
+
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'preexec close', \%in);
     print &ui_table_row(
                         $text{'edit_vol_section_preexec_close'},
