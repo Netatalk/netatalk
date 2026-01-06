@@ -133,6 +133,7 @@ edit_vol_section_cnid_scheme=CNID scheme
 edit_vol_section_casefold=Filename case transformation
 edit_vol_section_preexec=Volume mount pre-exec commands
 edit_vol_section_postexec=Volume mount post-exec commands
+edit_vol_section_volume_uuid=Volume UUID
 edit_vol_section_veto_files=Vetoed files
 edit_vol_section_acls=Enable ACLs
 edit_vol_section_case_sensitive=Case sensitive file names

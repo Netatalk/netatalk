@@ -24,6 +24,9 @@ of the database table storing the CNID information for the volume.
 
 > ***NOTE:*** This file should not be thoughtlessly edited or copied onto another
 server.
+>
+> If you want to set a particular UUID for your volume, use the option
+"volume uuid =" in afp.conf. In this case, afp_voluuid.conf is not used.
 
 # Examples
 
