@@ -1100,8 +1100,13 @@ static struct vol *creatvol(AFPObj *obj,
         }
 
         if (val == NULL) {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: using default cnid vol dbpath for volume \"%s\"", name);
             EC_NULL(dbpath = bformat("%s/%s/", _PATH_STATEDIR "CNID/", tmpname));
         } else {
+            LOG(log_debug, logtype_afpd,
+                "creatvol: using configured cnid vol dbpath '%s' for volume \"%s\"",
+                val, name);
             EC_NULL(dbpath = bfromcstr(val));
         }
 
