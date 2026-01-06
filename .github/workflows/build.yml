@@ -478,6 +478,8 @@ jobs:
         uses: vmactions/dragonflybsd-vm@84277fec84c57e6f1b4eaa6a6ef3d36618d0c05b # v1.2.1
         with:
           copyback: true
+          sync-time: true
+          sync: nfs
           usesh: true
           prepare: |
             set -e
@@ -508,6 +510,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
@@ -680,6 +683,7 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
+            meson test -C build
             meson install -C build
             netatalk -V
             afpd -V
