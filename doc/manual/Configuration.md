@@ -153,16 +153,6 @@ to connect to it over the network.
 
 See **afp.conf**(5) for documentation of the configuration options.
 
-### last
-
-The last backend is an in-memory Trivial Database (tdb). It is not persistent,
-with IDs valid only for the current session. Starting with netatalk 3.0,
-it operates in *read only mode*. This backend is useful e.g. for
-mounting CD-ROMs, or for automated testing.
-
-This is basically equivalent to how **afpd** stored CNID data in netatalk
-1.5 and earlier.
-
 ## Charsets/Unicode
 
 ### Why Unicode?

@@ -7,9 +7,6 @@
 /* Define if CNID Database Daemon backend should be compiled. */
 #mesondefine CNID_BACKEND_DBD
 
-/* Define if CNID LAST scheme backend should be compiled. */
-#mesondefine CNID_BACKEND_LAST
-
 /* whether the MySQL CNID module is available */
 #mesondefine CNID_BACKEND_MYSQL
 
@@ -420,9 +417,6 @@
 
 /* Define whether to enable Spotlight support */
 #mesondefine WITH_SPOTLIGHT
-
-/* Define when the test suite should be executed */
-#mesondefine WITH_TESTS
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

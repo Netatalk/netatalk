@@ -6,11 +6,6 @@ if use_dbd_backend
     libcnid_libs += libcnid_dbd
 endif
 
-if use_last_backend
-    subdir('last')
-    libcnid_libs += libcnid_last
-endif
-
 if use_mysql_backend
     subdir('mysql')
     libcnid_libs += libcnid_mysql

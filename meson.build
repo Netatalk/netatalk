@@ -551,19 +551,6 @@ if 'dbd' in get_option('with-cnid-backends')
     endif
 endif
 
-# Determine whether or not to use LAST DID scheme
-
-use_last_backend = false
-
-if 'last' in get_option('with-cnid-backends')
-    use_last_backend = true
-    if cnid_backends != ''
-        cnid_backends += ' | '
-    endif
-    cnid_backends += 'last'
-    cdata.set('CNID_BACKEND_LAST', 1)
-endif
-
 # Check for mysql CNID backend
 
 mysqlclient = dependency('mysqlclient', required: false)
@@ -628,17 +615,11 @@ if default_backend == ''
         default_backend = 'sqlite'
     elif use_mysql_backend
         default_backend = 'mysql'
-    elif use_last_backend
-        error(
-            'No writable CNID backend selected for compilation; need at least one of dbd, sqlite or mysql',
-        )
     else
         error('No CNID backends selected for compilation')
     endif
 elif default_backend == 'dbd' and not use_dbd_backend
     error('Specified default CNID scheme dbd was not selected for compilation')
-elif default_backend == 'last' and not use_last_backend
-    error('Specified default CNID scheme last was not selected for compilation')
 elif default_backend == 'mysql' and not use_mysql_backend
     error(
         'Specified default CNID scheme mysql was not selected for compilation',
@@ -2278,10 +2259,6 @@ if have_webmin
     cdata.set('init_a2boot_start', init_a2boot_start)
     cdata.set('init_a2boot_stop', init_a2boot_stop)
     cdata.set('init_a2boot_restart', init_a2boot_restart)
-endif
-
-if get_option('with-tests')
-    cdata.set('WITH_TESTS', 1)
 endif
 
 configure_file(

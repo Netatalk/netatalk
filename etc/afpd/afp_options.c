@@ -70,9 +70,6 @@ static void show_version(void)
 #ifdef CNID_BACKEND_DBD
     printf("dbd ");
 #endif
-#ifdef CNID_BACKEND_LAST
-    printf("last ");
-#endif
 #ifdef CNID_BACKEND_MYSQL
     printf("mysql ");
 #endif
