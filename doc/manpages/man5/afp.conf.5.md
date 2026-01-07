@@ -1318,10 +1318,13 @@ Forces **ea = sys**.
 
 search db = *BOOLEAN* (default: *no*) **(V)**
 
-> Use fast CNID database namesearch instead of slow recursive filesystem
-search. Relies on a consistent CNID database, i.e. Samba or local
-filesystem access lead to inaccurate or wrong results. Works only for
-"dbd" CNID db volumes.
+> Use fast CNID database namesearch instead of slow recursive filesystem search
+for Classic Mac OS - Mac OS X 10.3 clients.
+>
+> ***NOTE:*** Relies on a consistent CNID database for accurate search results.
+Interacting with the AFP volume with other file sharing protocols,
+or doing local filesystem access on the host without using **nad**(1)
+will lead to an inaccurate CNID database that has to be repaired with **dbd**(1).
 
 stat vol = *BOOLEAN* (default: *yes*) **(V)**
 
