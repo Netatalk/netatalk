@@ -12,7 +12,8 @@ typedef struct CNID_sqlite_private {
     sqlite3 *cnid_sqlite_con;
     char *cnid_sqlite_voluuid_str;
     cnid_t cnid_sqlite_hint;
-    sqlite3_stmt *cnid_lookup_stmt;
+    sqlite3_stmt *cnid_lookup_devino_stmt;
+    sqlite3_stmt *cnid_lookup_didname_stmt;
     sqlite3_stmt *cnid_add_stmt;
     sqlite3_stmt *cnid_put_stmt;
     sqlite3_stmt *cnid_get_stmt;

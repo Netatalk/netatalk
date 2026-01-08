@@ -44,23 +44,49 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-static int init_prepared_stmt_lookup(CNID_sqlite_private * db)
+static int init_prepared_stmt_lookup_devino(CNID_sqlite_private *db)
 {
     EC_INIT;
     char *sql = NULL;
 
-    if (db->cnid_lookup_stmt) {
-        EC_ZERO(sqlite3_finalize(db->cnid_lookup_stmt));
+    if (db->cnid_lookup_devino_stmt) {
+        EC_ZERO(sqlite3_finalize(db->cnid_lookup_devino_stmt));
     }
 
-    EC_NEG1(asprintf
-            (&sql,
-             "SELECT Id,Did,Name,DevNo,InodeNo FROM \"%s\" "
-             "WHERE (Name = ? AND Did = ?) OR (DevNo = ? AND InodeNo = ?)",
-             db->cnid_sqlite_voluuid_str));
-    LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_lookup: SQL: %s", sql);
-    EC_ZERO_LOG(sqlite3_prepare_v2
-                (db->cnid_sqlite_con, sql, strlen(sql), &db->cnid_lookup_stmt, NULL));
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id,Did,Name,DevNo,InodeNo FROM \"%s\" "
+                     "WHERE DevNo = ? AND InodeNo = ?",
+                     db->cnid_sqlite_voluuid_str));
+    LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_lookup_devino: SQL: %s",
+        sql);
+    EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
+                                   &db->cnid_lookup_devino_stmt, NULL));
+EC_CLEANUP:
+
+    if (sql) {
+        free(sql);
+    }
+
+    EC_EXIT;
+}
+
+static int init_prepared_stmt_lookup_didname(CNID_sqlite_private *db)
+{
+    EC_INIT;
+    char *sql = NULL;
+
+    if (db->cnid_lookup_didname_stmt) {
+        EC_ZERO(sqlite3_finalize(db->cnid_lookup_didname_stmt));
+    }
+
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id,Did,Name,DevNo,InodeNo FROM \"%s\" "
+                     "WHERE Name = ? AND Did = ?",
+                     db->cnid_sqlite_voluuid_str));
+    LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_lookup_didname: SQL: %s",
+        sql);
+    EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
+                                   &db->cnid_lookup_didname_stmt, NULL));
 EC_CLEANUP:
 
     if (sql) {
@@ -229,7 +255,8 @@ EC_CLEANUP:
 static int init_prepared_stmt(CNID_sqlite_private * db)
 {
     EC_INIT;
-    EC_ZERO(init_prepared_stmt_lookup(db));
+    EC_ZERO(init_prepared_stmt_lookup_devino(db));
+    EC_ZERO(init_prepared_stmt_lookup_didname(db));
     EC_ZERO(init_prepared_stmt_add(db));
     EC_ZERO(init_prepared_stmt_put(db));
     EC_ZERO(init_prepared_stmt_get(db));
@@ -244,7 +271,8 @@ EC_CLEANUP:
 
 static void close_prepared_stmt(CNID_sqlite_private * db)
 {
-    sqlite3_finalize(db->cnid_lookup_stmt);
+    sqlite3_finalize(db->cnid_lookup_devino_stmt);
+    sqlite3_finalize(db->cnid_lookup_didname_stmt);
     sqlite3_finalize(db->cnid_add_stmt);
     sqlite3_finalize(db->cnid_put_stmt);
     sqlite3_finalize(db->cnid_get_stmt);
@@ -252,7 +280,8 @@ static void close_prepared_stmt(CNID_sqlite_private * db)
     sqlite3_finalize(db->cnid_delete_stmt);
     sqlite3_finalize(db->cnid_getstamp_stmt);
     sqlite3_finalize(db->cnid_find_stmt);
-    db->cnid_lookup_stmt = NULL;
+    db->cnid_lookup_devino_stmt = NULL;
+    db->cnid_lookup_didname_stmt = NULL;
     db->cnid_add_stmt = NULL;
     db->cnid_put_stmt = NULL;
     db->cnid_get_stmt = NULL;
@@ -466,23 +495,18 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
     uint64_t dev = st->st_dev;
     uint64_t ino = st->st_ino;
     cnid_t hint = db->cnid_sqlite_hint;
-    const unsigned char *retname;
-    cnid_t retid;
-    uint64_t retdid;
     int sqlite_return;
-    char stmt_param_name[MAXPATHLEN];
-    size_t stmt_param_name_len;
-    uint64_t stmt_param_did;
-    uint64_t stmt_param_dev;
-    uint64_t stmt_param_ino;
-    char lookup_result_name[MAXPATHLEN];
-    uint64_t lookup_result_id;
-    uint64_t lookup_result_did;
-    uint64_t lookup_result_dev;
-    uint64_t lookup_result_ino;
+    /* Results from devino lookup */
+    int devino = 0;
+    cnid_t id_devino = CNID_INVALID;
+    /* Results from didname lookup */
+    int didname = 0;
+    cnid_t id_didname = CNID_INVALID;
     LOG(log_maxdebug, logtype_cnid,
-        "cnid_sqlite_lookup(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): BEGIN",
-        ntohl(did), name, ntohl(hint));
+        "cnid_sqlite_lookup(did: %" PRIu32
+        ", name: \"%s\", dev/ino: 0x%llx/0x%llx, hint: %" PRIu32 "): BEGIN",
+        ntohl(did), name, (unsigned long long)dev, (unsigned long long)ino,
+        ntohl(hint));
 
     if (!cdb || !db || !st || !name) {
         LOG(log_error, logtype_cnid,
@@ -498,88 +522,97 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
         EC_FAIL;
     }
 
-    strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
-    stmt_param_name_len = len;
-    stmt_param_did = ntohl(did);
-    stmt_param_dev = dev;
-    stmt_param_ino = ino;
-    sqlite3_reset(db->cnid_lookup_stmt);
-    sqlite3_clear_bindings(db->cnid_lookup_stmt);
-    sqlite3_bind_text(db->cnid_lookup_stmt, 1, stmt_param_name,
-                      (int)stmt_param_name_len, SQLITE_STATIC);
-    sqlite3_bind_int64(db->cnid_lookup_stmt, 2, stmt_param_did);
-    sqlite3_bind_int64(db->cnid_lookup_stmt, 3, stmt_param_dev);
-    sqlite3_bind_int64(db->cnid_lookup_stmt, 4, stmt_param_ino);
-    sqlite_return = sqlite3_step(db->cnid_lookup_stmt);
+    /* ===== Lookup 1: By DevNo/InodeNo ===== */
+    sqlite3_reset(db->cnid_lookup_devino_stmt);
+    sqlite3_clear_bindings(db->cnid_lookup_devino_stmt);
+    sqlite3_bind_int64(db->cnid_lookup_devino_stmt, 1, dev);
+    sqlite3_bind_int64(db->cnid_lookup_devino_stmt, 2, ino);
+    sqlite_return = sqlite3_step(db->cnid_lookup_devino_stmt);
 
-    if (sqlite_return == SQLITE_DONE) {
-        /* Not found (no rows) */
-        LOG(log_debug, logtype_cnid,
-            "cnid_sqlite_lookup: name: '%s', did: %u is not in the CNID database",
-            name, ntohl(did));
-        errno = CNID_DBD_RES_NOTFOUND;
-        EC_FAIL;
-    } else if (sqlite_return != SQLITE_ROW) {
+    if (sqlite_return == SQLITE_ROW) {
+        devino = 1;
+        id_devino = htonl((uint32_t)sqlite3_column_int64(db->cnid_lookup_devino_stmt,
+                          0));
+        LOG(log_maxdebug, logtype_cnid,
+            "cnid_sqlite_lookup: devino found -> id=%" PRIu32,
+            ntohl(id_devino));
+    } else if (sqlite_return != SQLITE_DONE) {
         LOG(log_error, logtype_cnid,
-            "cnid_sqlite_lookup: sqlite query error (1): %s - %i",
-            sqlite3_errmsg(db->cnid_sqlite_con), sqlite_return);
-        errno = CNID_ERR_DB;
-        EC_FAIL;
-    }
-
-    /* got at least one row, store result in lookup_result_X */
-    lookup_result_id = sqlite3_column_int64(db->cnid_lookup_stmt, 0);
-    lookup_result_did = sqlite3_column_int64(db->cnid_lookup_stmt, 1);
-    retname = sqlite3_column_text(db->cnid_lookup_stmt, 2);
-
-    if (retname) {
-        strlcpy(lookup_result_name, (const char *)retname, MAXPATHLEN);
-    } else {
-        lookup_result_name[0] = '\0';
-    }
-
-    lookup_result_dev = sqlite3_column_int64(db->cnid_lookup_stmt, 3);
-    lookup_result_ino = sqlite3_column_int64(db->cnid_lookup_stmt, 4);
-    LOG(log_maxdebug, logtype_cnid,
-        "cnid_sqlite_lookup: id=%" PRIu64 ", did=%" PRIu64 ", name=%s, dev=%" PRIu64
-        ", ino=%" PRIu64,
-        lookup_result_id, lookup_result_did, lookup_result_name,
-        lookup_result_dev, lookup_result_ino);
-    /* Check for additional rows */
-    int row_count = 1;
-    int delete_error = 0;
-
-    while ((sqlite_return = sqlite3_step(db->cnid_lookup_stmt)) == SQLITE_ROW) {
-        uint64_t extra_id = sqlite3_column_int64(db->cnid_lookup_stmt, 0);
-        LOG(log_debug, logtype_cnid,
-            "cnid_sqlite_lookup: multiple matches for did: %u, name: '%s', deleting extra id: %"
-            PRIu64,
-            ntohl(did), name, extra_id);
-
-        if (cnid_sqlite_delete(cdb, htonl((cnid_t)extra_id))) {
-            LOG(log_error, logtype_cnid,
-                "cnid_sqlite_lookup: sqlite query error (delete extra): %s",
-                sqlite3_errmsg(db->cnid_sqlite_con));
-            delete_error = 1;
-        }
-
-        row_count++;
-    }
-
-    if (sqlite_return != SQLITE_DONE) {
-        LOG(log_error, logtype_cnid,
-            "cnid_sqlite_lookup: sqlite query error (step): %s",
+            "cnid_sqlite_lookup: devino query error: %s",
             sqlite3_errmsg(db->cnid_sqlite_con));
         errno = CNID_ERR_DB;
         EC_FAIL;
     }
 
-    if (row_count > 1) {
-        LOG(log_debug, logtype_cnid,
-            "cnid_sqlite_lookup: deleted %d duplicate rows for did: %u, name: '%s'",
-            row_count - 1, ntohl(did), name);
+    sqlite3_reset(db->cnid_lookup_devino_stmt);
+    /* ===== Lookup 2: By Did/Name ===== */
+    sqlite3_reset(db->cnid_lookup_didname_stmt);
+    sqlite3_clear_bindings(db->cnid_lookup_didname_stmt);
+    sqlite3_bind_text(db->cnid_lookup_didname_stmt, 1, name, (int)len,
+                      SQLITE_STATIC);
+    sqlite3_bind_int64(db->cnid_lookup_didname_stmt, 2, ntohl(did));
+    sqlite_return = sqlite3_step(db->cnid_lookup_didname_stmt);
 
-        if (delete_error) {
+    if (sqlite_return == SQLITE_ROW) {
+        didname = 1;
+        id_didname = htonl((uint32_t)sqlite3_column_int64(db->cnid_lookup_didname_stmt,
+                           0));
+        LOG(log_maxdebug, logtype_cnid,
+            "cnid_sqlite_lookup: didname found -> id=%" PRIu32,
+            ntohl(id_didname));
+    } else if (sqlite_return != SQLITE_DONE) {
+        LOG(log_error, logtype_cnid,
+            "cnid_sqlite_lookup: didname query error: %s",
+            sqlite3_errmsg(db->cnid_sqlite_con));
+        errno = CNID_ERR_DB;
+        EC_FAIL;
+    }
+
+    sqlite3_reset(db->cnid_lookup_didname_stmt);
+    LOG(log_maxdebug, logtype_cnid,
+        "cnid_sqlite_lookup(name:'%s', did:%u, dev/ino:0x%llx/0x%llx) {devino: %d, didname: %d}",
+        name, ntohl(did), (unsigned long long)dev, (unsigned long long)ino, devino,
+        didname);
+
+    /* ===== Decision Logic (matching dbd_lookup.c) ===== */
+
+    /* Case 1: Nothing found */
+    if (!devino && !didname) {
+        LOG(log_debug, logtype_cnid,
+            "cnid_sqlite_lookup: name: '%s', did: %u, dev/ino: 0x%llx/0x%llx is not in the CNID database",
+            name, ntohl(did), (unsigned long long)dev, (unsigned long long)ino);
+        errno = CNID_DBD_RES_NOTFOUND;
+        EC_FAIL;
+    }
+
+    /* Case 2: Both found and IDs match - everything is fine */
+    if (devino && didname && id_devino == id_didname) {
+        LOG(log_debug, logtype_cnid,
+            "cnid_sqlite_lookup(DID:%u/'%s',0x%llx/0x%llx): Got CNID: %u",
+            ntohl(did), name, (unsigned long long)dev, (unsigned long long)ino,
+            ntohl(id_didname));
+        id = id_didname;
+        goto EC_CLEANUP;
+    }
+
+    /* Case 3: Both found but IDs differ - CNID mismatch (worst case / emacs scenario) */
+    if (devino && didname && id_devino != id_didname) {
+        LOG(log_debug, logtype_cnid,
+            "cnid_sqlite_lookup: CNID mismatch: (DID:%u/'%s') --> %u, (0x%llx/0x%llx) --> %u",
+            ntohl(did), name, ntohl(id_didname),
+            (unsigned long long)dev, (unsigned long long)ino, ntohl(id_devino));
+
+        /* Delete both entries */
+        if (cnid_sqlite_delete(cdb, id_devino) < 0) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_lookup: error deleting devino CNID %u", ntohl(id_devino));
+            errno = CNID_ERR_DB;
+            EC_FAIL;
+        }
+
+        if (cnid_sqlite_delete(cdb, id_didname) < 0) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_lookup: error deleting didname CNID %u", ntohl(id_didname));
             errno = CNID_ERR_DB;
             EC_FAIL;
         }
@@ -588,30 +621,20 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
         EC_FAIL;
     }
 
-    if (lookup_result_id == 0) {
-        LOG(log_error, logtype_cnid,
-            "cnid_sqlite_lookup: Invalid/corrupt row: id=0, did=%" PRIu64
-            ", name='%s', dev=%" PRIu64 ", ino=%" PRIu64,
-            lookup_result_did, lookup_result_name,
-            lookup_result_dev, lookup_result_ino);
-        errno = CNID_INVALID;
-        EC_FAIL;
-    }
-
-    retid = htonl((uint32_t)lookup_result_id);
-    retdid = htonl((uint32_t)lookup_result_did);
-
-    if (retdid != did || STRCMP(lookup_result_name, !=, name)) {
+    /* Case 4: Found by devino but NOT by didname - server-side rename or inode reuse */
+    if (devino && !didname) {
         LOG(log_debug, logtype_cnid,
-            "cnid_sqlite_lookup(CNID %" PRIu32 ", hint %" PRIu32 ", DID: %" PRIu32
-            ", name: \"%s\"): server side mv oder reused inode",
-            retdid, ntohl(hint), ntohl(did), name);
+            "cnid_sqlite_lookup(CNID hint: %u, DID:%u, \"%s\", 0x%llx/0x%llx): "
+            "CNID resolve problem: server side rename or reused inode",
+            ntohl(hint), ntohl(did), name, (unsigned long long)dev,
+            (unsigned long long)ino);
 
-        if (hint != retid) {
-            if (cnid_sqlite_delete(cdb, retid) != 0) {
-                LOG(log_error, logtype_cnid,
-                    "cnid_sqlite_lookup: sqlite query error (hint delete): %s",
-                    sqlite3_errmsg(db->cnid_sqlite_con));
+        /* Validate DID before attempting update */
+        if (did == 0 || ntohl(did) == 0) {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_lookup: invalid DID=0 in request, cannot update");
+
+            if (cnid_sqlite_delete(cdb, id_devino) < 0) {
                 errno = CNID_ERR_DB;
                 EC_FAIL;
             }
@@ -620,46 +643,67 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
             EC_FAIL;
         }
 
-        LOG(log_debug, logtype_cnid,
-            "cnid_sqlite_lookup: server side mv, got hint, updating");
+        if (hint == id_devino) {
+            /* Hint matches - this is a legitimate server-side move */
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_lookup: server side mv (hint matches), updating");
 
-        if (cnid_sqlite_update(cdb, retid, st, did, name, len) != 0) {
-            LOG(log_error, logtype_cnid,
-                "cnid_sqlite_lookup: sqlite query error (update): %s",
-                sqlite3_errmsg(db->cnid_sqlite_con));
-            errno = CNID_ERR_DB;
+            if (cnid_sqlite_update(cdb, id_devino, st, did, name, len) != 0) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_sqlite_lookup: error updating CNID %u", ntohl(id_devino));
+                errno = CNID_ERR_DB;
+                EC_FAIL;
+            }
+
+            id = id_devino;
+            goto EC_CLEANUP;
+        } else {
+            /* No hint or wrong hint - delete and return not found */
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_lookup: hint mismatch (hint: %u, found: %u), deleting",
+                ntohl(hint), ntohl(id_devino));
+
+            if (cnid_sqlite_delete(cdb, id_devino) < 0) {
+                LOG(log_error, logtype_cnid,
+                    "cnid_sqlite_lookup: error deleting CNID %u", ntohl(id_devino));
+                errno = CNID_ERR_DB;
+                EC_FAIL;
+            }
+
+            errno = CNID_DBD_RES_NOTFOUND;
             EC_FAIL;
         }
+    }
 
-        id = retid;
-    } else if (lookup_result_dev != dev || lookup_result_ino != ino) {
+    /* Case 5: Found by didname but NOT by devino - changed dev/ino (restore/emacs) */
+    if (!devino && didname) {
         LOG(log_debug, logtype_cnid,
-            "cnid_sqlite_lookup(DID:%u, name: \"%s\"): changed dev/ino",
-            ntohl(did), name);
+            "cnid_sqlite_lookup(DID:%u/'%s',0x%llx/0x%llx): "
+            "CNID resolve problem: changed dev/ino",
+            ntohl(did), name, (unsigned long long)dev, (unsigned long long)ino);
 
-        if (cnid_sqlite_delete(cdb, retid) != 0) {
+        /* Delete the stale entry */
+        if (cnid_sqlite_delete(cdb, id_didname) < 0) {
             LOG(log_error, logtype_cnid,
-                "cnid_sqlite_lookup: sqlite query error (delete): %s",
-                sqlite3_errmsg(db->cnid_sqlite_con));
+                "cnid_sqlite_lookup: error deleting CNID %u", ntohl(id_didname));
             errno = CNID_ERR_DB;
             EC_FAIL;
         }
 
         errno = CNID_DBD_RES_NOTFOUND;
         EC_FAIL;
-    } else {
-        /* everything is good */
-        id = retid;
     }
 
+    /* Fallback: should not reach here */
+    LOG(log_error, logtype_cnid,
+        "cnid_sqlite_lookup: unexpected state (devino=%d, didname=%d)", devino,
+        didname);
+    errno = CNID_DBD_RES_NOTFOUND;
+    EC_FAIL;
 EC_CLEANUP:
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_lookup(id: %" PRIu32 ", did: %" PRIu32 ", name: \"%s\"): END",
         ntohl(id), ntohl(did), name);
-
-    if (cdb && db) {
-        sqlite3_reset(db->cnid_lookup_stmt);
-    }
 
     if (ret != 0) {
         id = CNID_INVALID;
