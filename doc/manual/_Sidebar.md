@@ -54,9 +54,3 @@ Daemons and Admin Tools
 * [papd](papd.8.html)
 * [papstatus](papstatus.8.html)
 * [timelord](timelord.8.html)
-
-Developer References
-
-* [atalk](atalk.4.html)
-* [atalk_aton](atalk_aton.3.html)
-* [nbp_name](nbp_name.3.html)
