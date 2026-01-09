@@ -684,7 +684,6 @@ jobs:
   build-openindiana:
     name: OpenIndiana
     runs-on: ubuntu-latest
-    if: 0 # pkg install process times out too frequently
     timeout-minutes: 24
     steps:
       - name: Checkout repository
@@ -698,21 +697,12 @@ jobs:
               archiver/gnu-tar \
               build/meson \
               compress/gzip \
-              database/mariadb-114/client \
-              database/mariadb-114/library \
-              database/sqlite-3 \
               developer/build/cmake \
               developer/build/meson \
               developer/build/ninja \
               developer/build/pkg-config \
               developer/gcc-14 \
-              library/cmark \
-              library/glib2 \
               library/libevent2 \
-              library/security/cracklib \
-              runtime/perl \
-              system/library/dbus \
-              system/library/libdbus \
               system/library/security/libgcrypt \
               web/curl
             curl --location -o iniparser.tar.gz \
