@@ -498,6 +498,13 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
         EC_FAIL;
     }
 
+    if (ntohl(did) < 2) {
+        LOG(log_warning, logtype_cnid,
+            "cnid_sqlite_lookup: not looking up illegal did: %" PRIu32, ntohl(did));
+        errno = CNID_INVALID;
+        EC_FAIL;
+    }
+
     strlcpy(stmt_param_name, name, sizeof(stmt_param_name));
     stmt_param_name_len = len;
     stmt_param_did = ntohl(did);
