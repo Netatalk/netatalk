@@ -757,7 +757,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Build on VM
-        uses: vmactions/solaris-vm@bc0aac1832ebad9d31cbe43a94168dce0f84ed50 # v1.2.3
+        uses: vmactions/solaris-vm@7a5256863396c1cea1665b084d569876a1321347 # v1.2.4
         with:
           copyback: false
           prepare: |
