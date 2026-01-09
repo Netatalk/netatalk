@@ -637,7 +637,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Build on VM
-        uses: vmactions/omnios-vm@f259932b10067e9cd18962ae1fd468bcb53fecac # v1.2.0
+        uses: vmactions/omnios-vm@0f19598b712bbfab48e7a88c9b1038760ecc5d31 # v1.2.1
         with:
           copyback: false
           prepare: |
