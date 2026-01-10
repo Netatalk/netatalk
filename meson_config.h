@@ -7,9 +7,6 @@
 /* Define if CNID Database Daemon backend should be compiled. */
 #mesondefine CNID_BACKEND_DBD
 
-/* Define if CNID LAST scheme backend should be compiled. */
-#mesondefine CNID_BACKEND_LAST
-
 /* whether the MySQL CNID module is available */
 #mesondefine CNID_BACKEND_MYSQL
 
