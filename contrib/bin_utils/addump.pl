@@ -18,32 +18,11 @@
 #
 # References:
 #
-# Applesingle and AppleDouble format internals (version 1)
-# http://users.phg-online.de/tk/netatalk/doc/Apple/v1/
-#
-# AppleSingle/AppleDouble Formats for Foreign Files Developer's Note (version2)
-# http://users.phg-online.de/tk/netatalk/doc/Apple/v2/AppleSingle_AppleDouble.pdf
-#
-# Inside Macintosh: Macintosh Toolbox Essentials /
-# Chapter 7 - Finder Interface / Finder Interface Reference
-# http://developer.apple.com/legacy/mac/library/documentation/mac/toolbox/Toolbox-463.html
-#
-# Finder Interface Reference
-# http://developer.apple.com/legacy/mac/library/documentation/Carbon/Reference/Finder_Interface/Reference/reference.html
-#
-# Technical Note TN1150  HFS Plus Volume Format
-# http://developer.apple.com/mac/library/technotes/tn/tn1150.html#FinderInfo
-#
-# CarbonHeaders source
-# http://www.opensource.apple.com/source/CarbonHeaders/CarbonHeaders-8A428/Finder.h
-# http://www.opensource.apple.com/source/CarbonHeaders/CarbonHeaders-9A581/Finder.h
+# https://netatalk.io/docs/Developer-Notes#appledouble
 #
 # Xcode 3.2.1
 # /usr/bin/SetFile
 # /usr/bin/GetFileInfo
-#
-# Mac OS X 10.6.2 kernel source
-# http://www.opensource.apple.com/source/xnu/xnu-1486.2.11/bsd/vfs/vfs_xattr.c
 #
 
 use strict;
