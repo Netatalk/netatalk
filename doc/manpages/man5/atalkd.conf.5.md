@@ -68,7 +68,7 @@ Phase 1 or Phase 2).
 
 > Seed an AppleTalk router. This requires two or more interfaces to be
 configured. If you have a single network interface, use **-router**
-instead. It also causes all missing arguments to be automagically
+instead. It also causes all missing arguments to be automatically
 configured from the network.
 
 **-zone** zonename

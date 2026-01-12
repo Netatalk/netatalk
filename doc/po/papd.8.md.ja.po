@@ -265,7 +265,7 @@ msgstr ""
 #: manpages/man8/papd.8.md:30
 msgid ""
 "As of Netatalk 2.0, CUPS is also supported. Simply using *cupsautoadd* as "
-"the first papd.conf entry will share all CUPS printers automagically.  It is "
+"the first papd.conf entry will share all CUPS printers automatically.  It is "
 "still possible to overwrite these defaults by individually defining printer "
 "shares. See **papd.conf**(5) for details on the configuration file format."
 msgstr ""

@@ -23,7 +23,7 @@ processing, and this is the preferred method on systems not using CUPS
 to avoid compatibility problems with all the flavours of **lpd** in use.
 
 As of Netatalk 2.0, CUPS is also supported. Simply using *cupsautoadd*
-as the first papd.conf entry will share all CUPS printers automagically.
+as the first papd.conf entry will share all CUPS printers automatically.
 It is still possible to overwrite these defaults by individually
 defining printer shares. See **papd.conf**(5) for details on the
 configuration file format.

@@ -359,7 +359,7 @@ passwd minlen = *number* **(G)**
 
 advertise ssh = *BOOLEAN* (default: *no*) **(G)**
 
-> Allows old Mac OS X clients (10.3.3-10.4) to automagically establish a
+> Allows old Mac OS X clients (10.3.3-10.4) to automatically establish a
 tunneled AFP connection through SSH. If this option is set, the server's
 answers to client's FPGetSrvrInfo requests contain an additional entry.
 It depends on both client's settings and a correctly configured and
