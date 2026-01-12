@@ -27,7 +27,7 @@ printing command in question within the *pr* option (e.g.
 *pr=|/usr/bin/lpr*).
 
 When CUPS support is compiled in, then *cupsautoadd* as the first entry
-in papd.conf will automagically configure and make all CUPS printers
+in papd.conf will automatically configure and make all CUPS printers
 available to papd (customizable -- see below). This can be overwritten
 for individual printers by subsequently adding individual entries using
 the CUPS queue name as *pr* entry. Note: CUPS support is mutually
@@ -137,7 +137,7 @@ by **papd**, too.
 
 There exists one special share named "cupsautoadd". If this is present
 as the first entry then all available CUPS queues will be served
-automagically using the parameters assigned to this global share. But
+automatically using the parameters assigned to this global share. But
 subsequent printer definitions can be used to override these global
 settings for individual spoolers.
 

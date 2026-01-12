@@ -5,7 +5,7 @@ afp_signature.conf — Configuration file used by afpd to specify server signatu
 # Description
 
 **afp_signature.conf** is the configuration file used by **afpd** to store
-a server signature automagically. The configuration lines are composed
+a server signature automatically. The configuration lines are composed
 like:
 
     "server-name" hexa-string

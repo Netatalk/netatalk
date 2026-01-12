@@ -46,7 +46,7 @@ This is the most simple form, you can use AppleTalk with netatalk. In
 case, you have only one network interface up and running, you haven't to
 deal with atalkd's config at all: atalkd will use AppleTalk's
 self-configuration features to get an AppleTalk address and to register
-itself in the network automagically.
+itself in the network automatically.
 
 In case, you have more than one active network interface, you have to
 make a decision:
@@ -346,7 +346,7 @@ by **papd**, too.
 
 There exists one special share named *cupsautoadd*. If this is present
 in *papd.conf*, then all available CUPS queues will be served
-automagically using the parameters assigned to this global share. But
+automatically using the parameters assigned to this global share. But
 subsequent printer definitions can be used to override these global
 settings for individual spoolers.
 
