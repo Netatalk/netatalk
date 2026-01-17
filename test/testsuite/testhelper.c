@@ -83,7 +83,7 @@ void test_skipped(int why)
         break;
 
     case T_MAC:
-        s = "needs Mac OS AFP server";
+        s = "not compatible with AppleShare AFP server";
         break;
 
     case T_ACL:

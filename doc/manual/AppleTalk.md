@@ -13,17 +13,15 @@ page in the Netatalk wiki for details on how to enable AppleTalk support in your
 ### To use AppleTalk or not
 
 You'll need the AppleTalk support built into Netatalk to provide file
-services to older AFP clients not capable of using AFP over TCP. It also
-enables printing services via PAP by **papd**, a timeserver
-**timelord** for older Mac clients, and NetBoot server **a2boot** for
-Apple II clients.
+services to older AFP clients not capable of using AFP over TCP.
+It also enables printing services via PAP by **papd**,
+a timeserver **timelord** for older Mac or Apple II clients,
+and a network boot server **a2boot** for Apple II clients.
 
-In addition, if you are serving Classic Mac OS clients, you might
-consider using AppleTalk for service propagation/location, having the
-ease of use for your network clients in mind. The Apple engineers
-implemented a way to easily locate an AFP server via AppleTalk but
-establishing the AFP connection itself via AFP over TCP (see the
-developer documentation for details on this cool feature, too).
+In addition, if you are serving Classic Mac OS or Apple II clients,
+you should consider using AppleTalk for service propagation/location.
+The AppleShare client in Mac OS 9, for instance, uses AppleTalk for service discovery,
+while establishing the AFP connection itself via AFP over TCP.
 
 To use the different base AppleTalk protocols with Netatalk, one has to
 use **atalkd**. It can also be used as an AppleTalk router to connect

@@ -31,8 +31,8 @@
 # REQUIRE: DAEMON @freebsd_zeroconf@
 # KEYWORD: shutdown
 #
-# AFP fileserver for Mac clients.  Add the following to /etc/rc.conf to
-# enable:
+# Netatalk AFP fileserver.
+# Add the following to /etc/rc.conf to enable:
 #
 # netatalk_enable="YES"
 #
