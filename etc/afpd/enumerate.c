@@ -93,7 +93,7 @@ static int enumerate_loop(struct dirent *de, char *mname _U_, void *data)
  * - empty the trash
  *
  * afp_enumerate return an empty listing but offspring count != 0 in afp_getdirparams
- * and the Mac doesn't try to call afp_delete!
+ * and the client doesn't try to call afp_delete!
  *
  * @sa https://sourceforge.net/p/netatalk/bugs/97/
  *

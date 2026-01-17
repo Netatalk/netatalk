@@ -2,14 +2,11 @@
 
 ## Setting up the AFP file server
 
-AFP (the Apple Filing Protocol) is a protocol used on the Apple Macintosh
-for file services. The protocol has evolved over the years.
-The final revision of the protocol, AFP 3.4, was introduced
-with OS X Lion (10.7).
+AFP (the Apple Filing Protocol) is a protocol originally created for Apple Macintosh file services.
+The final revision of the protocol, AFP 3.4, was introduced with OS X Lion (10.7).
 
-Netatalk's **afpd** daemon offers AFP fileservices to Apple clients. The
-configuration is managed through the *afp.conf* file which uses an ini
-style configuration syntax.
+Netatalk's **afpd** daemon offers AFP fileservices to clients, including Macs, Apple IIs, and other AFP clients.
+The configuration is managed through the *afp.conf* file which uses an ini style configuration syntax.
 
 Netatalk provides compatibility with Time Machine for remote backups,
 and Spotlight for indexed searching.
@@ -410,14 +407,14 @@ accidentally to unauthorized access. In case you must enable guest
 access take care that you enforce this on a per volume base using the
 access controls.
 
-    Note: "No User Authent" is required to use Apple II NetBoot services
+    Note: "No User Authent" is required to use Apple II network boot services
     (**a2boot**) to boot an Apple //e over AFP.
 
 - The "ClearTxt Passwrd" UAM is as bad as it sounds since passwords go
 unencrypted over the wire. Try to avoid it at both the server's side
 as well as on the client's.
 
-    Note: If you want to provide Mac OS 8/9 clients with NetBoot-services
+    Note: If you want to provide Mac OS 8/9 clients with network boot services,
     then you need uams_cleartxt.so since the AFP-client integrated into
     the Mac's firmware can only deal with this basic form of
     authentication.
@@ -480,7 +477,7 @@ that the UAM in question supplies. So think about eliminating weak UAMs like
 
 ### Netatalk UAM overview table
 
-A small overview of the officially supported UAMs.
+A small overview of the officially supported UAMs on Macs.
 
 | UAM              | No User Auth  | Cleartxt Passwrd | RandNum Exchange | DHCAST128    | DHX2          | Kerberos V       |
 |------------------|---------------|------------------|------------------|--------------|---------------|------------------|
@@ -489,6 +486,9 @@ A small overview of the officially supported UAMs.
 | Encryption       | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all if possible (note: providing NetBoot services requires the ClearTxt UAM) | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit CAST, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted with 128 bit CAST in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. |
 | Server support   | uams_guest.so | uams_cleartxt.so | uams_randnum.so  | uams_dhx.so  | uams_dhx2.so  | uams_gss.so      |
 | Password storage | None          | Either system auth or PAM | Passwords stored in clear text in a separate text file | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center |
+
+Note that there exists a number of open source and other 3rd party AFP clients.
+Refer to their documentation for a list of supported UAMs.
 
 ## ACL Support
 

@@ -88,7 +88,7 @@ When a client browses a Netatalk network folder, here's the actual sequence:
 
 ```mermaid
 sequenceDiagram
-    participant Client as Mac Client
+    participant Client as AFP Client
     participant Netatalk
     participant Disk as Filesystem
     participant PageCache as Page Cache

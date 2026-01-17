@@ -1,6 +1,6 @@
 # Name
 
-timelord — Macintosh time server daemon
+timelord — AppleTalk time server daemon
 
 # Synopsis
 
@@ -10,15 +10,17 @@ timelord — Macintosh time server daemon
 
 # Description
 
-**timelord** is a simple time server for Macintosh computers that use the
-*tardis* client. It has the same capabilities as the "Timelord" CDEV for
-Macintosh.
+**timelord** is a simple time server for Macintosh and Apple II computers that use
+a client called *tardis*. It has the same capabilities as the *Timelord* CDEV for
+Macintosh, created at the University of Melbourne.
 
-**tardis** is implemented as a Chooser extension. In the Chooser, choose
-the **timelord** instance to synchronize the Mac's system time with. Once
-synchronized, **tardis** will automatically synchronize with the server at
-boot, or scheduled at regular intervals while the Mac is running (the
-latter requires tardis 1.4).
+The **tardis** client for Macintosh is implemented as a Chooser extension.
+In the Chooser, pick the **timelord** instance to synchronize the Mac's system time with.
+Once synchronized, **tardis** will automatically synchronize with the server at boot,
+or scheduled at regular intervals while the Mac is running (the latter requires tardis 1.4).
+
+A **tardis** client for Apple II computers is also available,
+as part of the MG's DaveX Utilities suite.
 
 # Options
 

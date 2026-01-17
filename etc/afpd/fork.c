@@ -503,8 +503,8 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy(rbuf, &bitmap, sizeof(uint16_t));
     rbuf += sizeof(uint16_t);
 
-    /* check  WriteInhibit bit if we have a resource fork
-     * the test is done here, after some Mac trafic capture
+    /* check WriteInhibit bit if we have a resource fork
+     * the test is done here, after some client traffic capture
      */
     if (ad_meta_fileno(ofork->of_ad) != -1) {   /* META */
         ad_getattr(ofork->of_ad, &bshort);
