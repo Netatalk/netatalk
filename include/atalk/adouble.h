@@ -392,6 +392,8 @@ extern uint16_t ad_openforks(struct adouble *adp, uint16_t);
 extern int ad_lock(struct adouble *, uint32_t eid, int type, off_t off,
                    off_t len, int fork);
 extern void ad_unlock(struct adouble *, int fork, int unlckbrl);
+extern void adf_lock_init(struct ad_fd *adf);
+extern void adf_lock_free(struct ad_fd *adf);
 extern int ad_tmplock(struct adouble *, uint32_t eid, int type, off_t off,
                       off_t len, int fork);
 

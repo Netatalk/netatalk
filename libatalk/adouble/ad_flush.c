@@ -39,8 +39,6 @@
 #include <atalk/unix.h>
 #include <atalk/util.h>
 
-#include "ad_lock.h"
-
 static const uint32_t set_eid[] = {
     0, 1, 2, 3, 4, 5, 6, 7, 8,
     9, 10, 11, 12, 13, 14, 15,

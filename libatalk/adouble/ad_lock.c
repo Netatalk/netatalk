@@ -28,8 +28,6 @@
 #include <atalk/logger.h>
 #include <atalk/util.h>
 
-#include "ad_lock.h"
-
 static const char *shmdstrfromoff(off_t off)
 {
     switch (off) {
@@ -185,6 +183,74 @@ static void adf_unlock(struct adouble *ad _U_, struct ad_fd *adf,
             lock = adf->adf_lock;
         }
     }
+}
+
+/*!
+ * @brief Initialize lock tracking for an ad_fd structure
+ *
+ * Initializes the lock tracking fields in an ad_fd structure to their
+ * default empty state. This should be called when initializing a new
+ * ad_fd or after freeing all locks.
+ *
+ * @param[in,out] adf  File descriptor structure to initialize
+ */
+void adf_lock_init(struct ad_fd *adf)
+{
+    if (!adf) {
+        LOG(log_error, logtype_ad, "adf_lock_init: NULL parameter");
+        return;
+    }
+
+    adf->adf_lockmax = 0;
+    adf->adf_lockcount = 0;
+    adf->adf_lock = NULL;
+}
+
+/*!
+ * @brief Free all locks in an ad_fd structure
+ *
+ * Iterates through all locks in the ad_fd lock array, releasing fcntl locks
+ * and freeing memory. Manages refcounted locks properly by only freeing
+ * refcount memory when the last reference is released.
+ *
+ * This function is called when closing file descriptors to ensure all locks
+ * are properly released and memory is freed.
+ *
+ * @param[in,out] adf  File descriptor structure containing locks to free
+ */
+void adf_lock_free(struct ad_fd *adf)
+{
+    if (!adf) {
+        LOG(log_error, logtype_ad, "adf_lock_free: NULL parameter");
+        return;
+    }
+    
+    if (!adf->adf_lock) {
+        return;
+    }
+    
+    for (int i = 0; i < adf->adf_lockcount; i++) {
+        adf_lock_t *lock = adf->adf_lock + i;
+
+        /* Always release fcntl lock when freeing array */
+        if (adf->adf_fd >= 0) {
+            lock->lock.l_type = F_UNLCK;
+
+            if (fcntl(adf->adf_fd, F_SETLK, &lock->lock) == -1) {
+                LOG(log_warning, logtype_default,
+                    "adf_lock_free: fcntl unlock failed on fd %d: %s",
+                    adf->adf_fd, strerror(errno));
+            }
+        }
+
+        /* Only free refcount memory when last reference */
+        if (--(*lock->refcount) < 1) {
+            free(lock->refcount);
+        }
+    }
+
+    free(adf->adf_lock);
+    adf_lock_init(adf);
 }
 
 /*! relock any byte lock that overlaps off/len. unlock everything

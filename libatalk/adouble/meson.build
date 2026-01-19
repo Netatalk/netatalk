@@ -4,7 +4,6 @@ adouble_sources = [
     'ad_date.c',
     'ad_flush.c',
     'ad_lock.c',
-    'ad_lock.h',
     'ad_open.c',
     'ad_read.c',
     'ad_recvfile.c',
