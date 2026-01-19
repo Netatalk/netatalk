@@ -41,8 +41,6 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-#include "ad_lock.h"
-
 static char emptyfilad[32] = {0, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0,
                               0, 0, 0, 0, 0, 0, 0, 0,

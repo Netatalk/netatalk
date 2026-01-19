@@ -51,8 +51,6 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
-#include "ad_lock.h"
-
 #define ADEDOFF_MAGIC        (0)
 #define ADEDOFF_VERSION      (ADEDOFF_MAGIC + ADEDLEN_MAGIC)
 #define ADEDOFF_FILLER       (ADEDOFF_VERSION + ADEDLEN_VERSION)

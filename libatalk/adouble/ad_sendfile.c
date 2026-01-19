@@ -39,8 +39,6 @@
 #include <atalk/adouble.h>
 #include <atalk/logger.h>
 
-#include "ad_lock.h"
-
 #if defined(SENDFILE_FLAVOR_LINUX)
 #include <sys/sendfile.h>
 
