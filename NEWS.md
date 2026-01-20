@@ -1,6 +1,17 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.4.1
+----------------
+
+* FIX: cnid: store sqlite database files in path defined in vol dbpath, GitHub #2615
+* FIX: cnid: don't treat SQLITE_DONE as an error in cnid_sqlite_get(), GitHub #2616
+* FIX: cnid: handle error when attempting to look up did<2 in sqlite backend, GitHub #2601
+* FIX: cnid: safe memory management in sqlite backend and utility function, GitHub #2617
+* UPD: docs: revamp AFP Signature/UUID conf man pages, GitHub #2623
+* UPD: docs: overhaul the documentation for the 'search db' option, GitHub #2620
+* UPD: docs: revise CNID configuration details in afp.conf man page, GitHub #2608
+
 Changes in 4.4.0
 ----------------
 
