@@ -308,7 +308,7 @@ msgid ""
 "information.\n"
 msgstr ""
 "> 設定情報については、**papd.conf** ではなく、*設定ファイル*\n"
-"を参照してください。\n"
+"を読み込む。\n"
 
 #. type: Plain text
 #: manpages/man8/papd.8.md:49
