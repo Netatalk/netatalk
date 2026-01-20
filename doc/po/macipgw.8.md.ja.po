@@ -291,7 +291,7 @@ msgstr ""
 msgid ""
 "> Consult *configfile* instead of *macipgw.conf* for the configuration\n"
 "information.\n"
-msgstr "> 設定情報については、*macipgw.conf*ではなく、*設定ファイル*を参照する。\n"
+msgstr "> 設定情報については、*macipgw.conf*ではなく、*設定ファイル*を読み込む。\n"
 
 #. type: Plain text
 #: manpages/man8/macipgw.8.md:52

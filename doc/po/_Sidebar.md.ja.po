@@ -169,7 +169,7 @@ msgstr ""
 #. type: Plain text
 #: manual/_Sidebar.md:37
 msgid "Configuration Files"
-msgstr "コンフィグファイル"
+msgstr "設定ファイル"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:44
@@ -204,7 +204,7 @@ msgstr ""
 #. type: Plain text
 #: manual/_Sidebar.md:46
 msgid "Daemons and Admin Tools"
-msgstr "デーモン及び管理ツール"
+msgstr "デーモン、管理ツール"
 
 #. type: Bullet: '* '
 #: manual/_Sidebar.md:57
