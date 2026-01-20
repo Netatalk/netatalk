@@ -471,6 +471,44 @@ svcadm disable svc:/network/netatalk:default
 ninja -C build uninstall
 ```
 
+## OpenIndiana
+
+Install required packages
+
+```shell
+pkg install archiver/gnu-tar build/meson compress/gzip database/mariadb-114/client database/mariadb-114/library database/sqlite-3 developer/build/cmake developer/build/meson developer/build/ninja developer/build/pkg-config developer/gcc-14 library/cmark library/glib2 library/libevent2 library/security/cracklib runtime/perl system/library/dbus system/library/libdbus system/library/security/libgcrypt web/curl
+curl --location -o iniparser.tar.gz https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
+set +e # tar on illumos is too old to handle git tarballs cleanly
+tar xzf iniparser.tar.gz
+set -e
+cd iniparser-v4.2.6
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
+make all
+make install
+```
+
+Configure, compile, install, run, and uninstall
+
+```shell
+set -e
+export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true
+meson compile -C build
+meson test -C build
+meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+sleep 1
+svcadm enable svc:/network/dns/multicast:default
+svcadm enable svc:/network/netatalk:default
+sleep 1
+/usr/local/bin/asip-status localhost
+svcadm disable svc:/network/netatalk:default
+ninja -C build uninstall
+```
+
 ## Solaris
 
 Install required packages
