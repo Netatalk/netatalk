@@ -254,7 +254,7 @@ msgstr "**-F** *設定ファイル*\n"
 #: manpages/man8/cnid_metad.8.md:32
 #, no-wrap
 msgid "> Use *configuration file* as the configuration file.\n"
-msgstr "> 設定ファイルとして*設定ファイル*を使う。デフォルトは*afp.conf*である。\n"
+msgstr "> *設定ファイル*を読み込む。デフォルトは*afp.conf*である。\n"
 
 #. type: Plain text
 #: manpages/man8/cnid_metad.8.md:34

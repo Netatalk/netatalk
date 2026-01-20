@@ -2,13 +2,13 @@
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
 # Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"POT-Creation-Date: 2026-01-20 22:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -68,7 +68,7 @@ msgstr "説明"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:73 manpages/man1/aecho.1.md:50
-#: manpages/man1/afpldaptest.1.md:38 manpages/man1/afppasswd.1.md:72
+#: manpages/man1/afpldaptest.1.md:38 manpages/man1/afppasswd.1.md:82
 #: manpages/man1/afpstats.1.md:34 manpages/man1/asip-status.1.md:106
 #: manpages/man1/dbd.1.md:72 manpages/man1/getzones.1.md:88
 #: manpages/man1/macusers.1.md:29 manpages/man1/nad.1.md:329
@@ -76,7 +76,7 @@ msgstr "説明"
 #: manpages/man1/pap.1.md:97 manpages/man1/rtmpqry.1.md:56
 #: manpages/man3/atalk_aton.3.md:28 manpages/man3/nbp_name.3.md:42
 #: manpages/man4/atalk.4.md:49 manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:40 manpages/man5/afp.conf.5.md:1378
+#: manpages/man5/afp_voluuid.conf.5.md:41 manpages/man5/afp.conf.5.md:1393
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:168 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:118 manpages/man8/atalkd.8.md:83
@@ -90,7 +90,7 @@ msgstr "著者"
 
 #. type: Plain text
 #: manpages/man1/addump.1.md:75 manpages/man1/aecho.1.md:52
-#: manpages/man1/afpldaptest.1.md:40 manpages/man1/afppasswd.1.md:74
+#: manpages/man1/afpldaptest.1.md:40 manpages/man1/afppasswd.1.md:84
 #: manpages/man1/afpstats.1.md:36 manpages/man1/asip-status.1.md:108
 #: manpages/man1/dbd.1.md:74 manpages/man1/getzones.1.md:90
 #: manpages/man1/macusers.1.md:31 manpages/man1/nad.1.md:331
@@ -98,7 +98,7 @@ msgstr "著者"
 #: manpages/man1/pap.1.md:99 manpages/man1/rtmpqry.1.md:58
 #: manpages/man3/atalk_aton.3.md:30 manpages/man3/nbp_name.3.md:44
 #: manpages/man4/atalk.4.md:51 manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:42 manpages/man5/afp.conf.5.md:1380
+#: manpages/man5/afp_voluuid.conf.5.md:43 manpages/man5/afp.conf.5.md:1395
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:170 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:120 manpages/man8/atalkd.8.md:85
@@ -111,7 +111,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
-#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:196
+#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:199
 #: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:73
 #: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:23
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
@@ -119,7 +119,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
 #: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
 #: manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1327
+#: manpages/man5/afp_voluuid.conf.5.md:28 manpages/man5/afp.conf.5.md:1343
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
 #, no-wrap
@@ -130,7 +130,7 @@ msgstr "例"
 #: manpages/man1/dbd.1.md:68 manpages/man1/nad.1.md:325
 #: manpages/man1/nbplkup.1.md:101 manpages/man1/nbprgstr.1.md:55
 #: manpages/man5/afp_signature.conf.5.md:44
-#: manpages/man5/afp_voluuid.conf.5.md:36 manpages/man8/papd.8.md:130
+#: manpages/man5/afp_voluuid.conf.5.md:37 manpages/man8/papd.8.md:130
 #, no-wrap
 msgid "See also"
 msgstr "参照"
@@ -169,7 +169,7 @@ msgstr ""
 #: manpages/man5/afp_voluuid.conf.5.md:11
 #, no-wrap
 msgid "    \"volume-name\" \"uuid-string\"\n"
-msgstr ""
+msgstr "    \"volume-name\" \"UUID文字列\"\n"
 
 #. type: Plain text
 #: manpages/man5/afp_voluuid.conf.5.md:15
@@ -183,32 +183,39 @@ msgstr ""
 "ASCII文字列表現である。"
 
 #. type: Plain text
-#: manpages/man5/afp_voluuid.conf.5.md:26
+#: manpages/man5/afp_voluuid.conf.5.md:21
+msgid ""
+"This UUID is advertised by Zeroconf in order to provide robust "
+"disambiguation of Time Machine volumes."
+msgstr ""
+"このUUIDはTime Machineボリュームの強固な曖昧さ除去を提供する目的で Zeroconfに"
+"よって宣伝される。"
+
+#. type: Plain text
+#: manpages/man5/afp_voluuid.conf.5.md:24
+msgid ""
+"It is also used by the MySQL and SQLite CNID backends as the name of the "
+"database table storing the CNID information for the volume."
+msgstr ""
+"ボリュームのCNID情報を格納するデータベーステーブルの名前として、MySQLおよび"
+"SQLite CNIDバックエンドでも使用されている。"
+
+#. type: Plain text
+#: manpages/man5/afp_voluuid.conf.5.md:27
 #, no-wrap
 msgid ""
-"> ***NOTE:*** This UUID is advertised by Zeroconf in order to provide robust\n"
-"disambiguation of Time Machine volumes.\n"
-">\n"
-"> It is also used by the MySQL CNID backend.\n"
-">\n"
-"> This file should not be thoughtlessly edited or copied onto another\n"
+"> ***NOTE:*** This file should not be thoughtlessly edited or copied onto another\n"
 "server.\n"
-msgstr ""
-"> 【注記】 このUUIDはTime Machineボリュームの強固な曖昧さ除去を提供する目的で\n"
-"Zeroconfによって宣伝される。\n"
-">\n"
-"> MySQL CNIDバックエンドにも使用されている。\n"
-">\n"
-"> このファイルを軽率に編集すべきでないし、他のサーバにコピーすべきでもない。\n"
+msgstr "> 【注記】 このファイルを軽率に編集すべきでないし、他のサーバにコピーすべきでもない。\n"
 
 #. type: Title ##
-#: manpages/man5/afp_voluuid.conf.5.md:29
+#: manpages/man5/afp_voluuid.conf.5.md:30
 #, no-wrap
 msgid "Example: afp_voluuid.conf with three volumes"
 msgstr "例： 3つのボリュームは程がされた afp_voluuid.conf"
 
 #. type: Plain text
-#: manpages/man5/afp_voluuid.conf.5.md:35
+#: manpages/man5/afp_voluuid.conf.5.md:36
 #, no-wrap
 msgid ""
 "    # This is a comment.\n"
@@ -218,6 +225,6 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man5/afp_voluuid.conf.5.md:39
+#: manpages/man5/afp_voluuid.conf.5.md:40
 msgid "afpd(8), afp.conf(5), avahi-daemon(8), mDNSResponder(8)"
 msgstr ""
