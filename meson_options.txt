@@ -178,6 +178,12 @@ option(
     description: 'Create the Netatalk state directories if they do not exist',
 )
 option(
+    'with-subprojects',
+    type: 'boolean',
+    value: false,
+    description: 'Always build subprojects',
+)
+option(
     'with-tcp-wrappers',
     type: 'boolean',
     value: true,
