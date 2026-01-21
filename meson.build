@@ -667,7 +667,7 @@ has_bgets = cc.compiles(bgets_test_code, name: 'bgets defined in standard C libr
 cdata.set('HAVE_BGETS', has_bgets)
 bstring = dependency('bstring', required: false)
 
-if not bstring.found()
+if not bstring.found() or get_option('with-subprojects')
     bstring_proj = subproject('bstring')
     bstring = bstring_proj.get_variable('bstring_dep')
 endif
