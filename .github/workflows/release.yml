@@ -57,7 +57,7 @@ jobs:
       - name: Configure build
         run: meson setup build
       - name: Create distribution tarball
-        run: meson dist -C build --no-tests
+        run: meson dist -C build --include-subprojects --no-tests
       - name: Create webmin module tarball
         run: |
           meson setup build -Dwith-webmin=true -Dwith-init-hooks=false -Dwith-init-style=systemd -Dwith-install-hooks=false --sbindir=/usr/sbin --sysconfdir=/usr/etc --reconfigure
