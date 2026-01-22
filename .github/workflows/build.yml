@@ -30,7 +30,7 @@ jobs:
   build-alpine:
     name: Alpine Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     container:
       image: alpine:3.22.1
     steps:
@@ -114,7 +114,7 @@ jobs:
   build-archlinux:
     name: Arch Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     container:
       image: archlinux:base-devel-20250824.0.410029
     steps:
@@ -178,7 +178,7 @@ jobs:
   build-debian:
     name: Debian Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     container:
       image: debian:13.0
     steps:
@@ -262,7 +262,7 @@ jobs:
   build-fedora:
     name: Fedora Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     container:
       image: fedora:42
     steps:
@@ -338,7 +338,7 @@ jobs:
   build-ubuntu:
     name: Ubuntu Linux
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     container:
       image: ubuntu:25.10
     steps:
@@ -416,7 +416,7 @@ jobs:
   build-macos:
     name: macOS
     runs-on: macos-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     env:
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       HOMEBREW_NO_AUTO_UPDATE: 1
@@ -470,7 +470,7 @@ jobs:
   build-dflybsd:
     name: DragonflyBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -522,7 +522,7 @@ jobs:
   build-freebsd:
     name: FreeBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -579,7 +579,7 @@ jobs:
   build-netbsd:
     name: NetBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -638,7 +638,7 @@ jobs:
   build-openbsd:
     name: OpenBSD
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -699,7 +699,7 @@ jobs:
   build-omnios:
     name: OmniOS
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
@@ -826,7 +826,7 @@ jobs:
   build-solaris:
     name: Solaris
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 24
     steps:
       - name: Checkout repository
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
