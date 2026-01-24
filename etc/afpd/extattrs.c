@@ -23,6 +23,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/afp_util.h>
 #include <atalk/ea.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
