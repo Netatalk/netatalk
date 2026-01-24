@@ -496,7 +496,12 @@ for most deployments. The default is **localhost:4700**.
 
 cnid mysql host = *MySQL server address* **(G)**
 
-> name or address of a MySQL server for use with the mysql CNID backend.
+> Name or address of a MySQL server for use with the mysql CNID backend.
+>
+> On Unix systems, setting this to **localhost** (or leaving it unset) causes
+> the MySQL client library to prefer Unix socket connections, which offers
+> better performance for a local database. Setting it to **127.0.0.1**
+> forces a TCP connection to the loopback interface.
 
 cnid mysql user = *MySQL user* **(G)**
 
@@ -508,8 +513,9 @@ cnid mysql pw = *password* **(G)**
 
 cnid mysql db = *database name* **(G)**
 
-> Name of an existing database for which the specified user has full
-privileges.
+> Name of the database to use for CNID storage. If the database does not
+> exist, Netatalk will attempt to create it automatically (requires the
+> specified user to have CREATE DATABASE privileges).
 
 cnid server = *ipaddress[:port]* **(G)**/**(V)**
 

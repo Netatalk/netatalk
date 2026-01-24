@@ -1019,18 +1019,49 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     EC_NULL(db->cnid_mysql_voluuid_str = uuid_strip_dashes(vol->v_uuid));
     /* Initialize and connect to MySQL server */
     EC_NULL(db->cnid_mysql_con = mysql_init(NULL));
+    /*
+     * MySQL connection options for performance and reliability:
+     * - MYSQL_OPT_RECONNECT: Auto-reconnect if connection is lost
+     * - MYSQL_OPT_CONNECT_TIMEOUT: Connection timeout (30 seconds)
+     * - MYSQL_OPT_READ_TIMEOUT: Read operation timeout (30 seconds)
+     * - MYSQL_OPT_WRITE_TIMEOUT: Write operation timeout (30 seconds)
+     * - MYSQL_SET_CHARSET_NAME: Set UTF-8 charset at connection time
+     */
     bool my_recon = true;
     EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_OPT_RECONNECT, &my_recon));
-    int my_timeout = 600;
+    unsigned int connect_timeout = 30;
     EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_OPT_CONNECT_TIMEOUT,
-                          &my_timeout));
+                          &connect_timeout));
+    unsigned int read_timeout = 30;
+    EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_OPT_READ_TIMEOUT,
+                          &read_timeout));
+    unsigned int write_timeout = 30;
+    EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_OPT_WRITE_TIMEOUT,
+                          &write_timeout));
+
+    /*
+     * Set UTF-8 charset at connection time only if the volume uses UTF-8.
+     * For non-UTF-8 volumes, let MySQL negotiate the charset dynamically.
+     * utf8mb4 supports the full Unicode range including 4-byte characters.
+     */
+    if (vol->v_volcharset == CH_UTF8) {
+        EC_ZERO(mysql_options(db->cnid_mysql_con, MYSQL_SET_CHARSET_NAME, "utf8mb4"));
+    }
+
     const AFPObj *obj = vol->v_obj;
+    LOG(log_info, logtype_cnid,
+        "MySQL CNID backend: host='%s', database='%s'",
+        obj->options.cnid_mysql_host ? obj->options.cnid_mysql_host : "(default)",
+        obj->options.cnid_mysql_db ? obj->options.cnid_mysql_db : "(none)");
     temp_conn = mysql_init(NULL);
 
     if (temp_conn == NULL) {
         LOG(log_error, logtype_cnid, "Failed to initialize MySQL connection");
         EC_FAIL;
     }
+
+    /* Set timeout options for temp connection as well */
+    mysql_options(temp_conn, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
 
     if (mysql_real_connect(temp_conn,
                            obj->options.cnid_mysql_host,
@@ -1043,6 +1074,8 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
         EC_FAIL;
     }
 
+    LOG(log_info, logtype_cnid, "MySQL connection info: %s",
+        mysql_get_host_info(temp_conn));
     EC_NEG1(asprintf(&sql, "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA "
                            "WHERE SCHEMA_NAME = '%s'", obj->options.cnid_mysql_db));
 
@@ -1063,7 +1096,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
     }
 
     if (mysql_num_rows(result) == 0) {
-        LOG(log_info, logtype_cnid, "MySQL database '%s' doesn't exist; creating it",
+        LOG(log_info, logtype_cnid, "Creating MySQL database '%s'",
             obj->options.cnid_mysql_db);
         mysql_free_result(result);
         result = NULL;
@@ -1077,6 +1110,8 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
             EC_FAIL;
         }
 
+        LOG(log_info, logtype_cnid, "Successfully created MySQL database '%s'",
+            obj->options.cnid_mysql_db);
         free(sql);
         sql = NULL;
     } else {
@@ -1092,6 +1127,30 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
                                obj->options.cnid_mysql_pw,
                                obj->options.cnid_mysql_db,
                                0, NULL, CLIENT_MULTI_STATEMENTS));
+#ifdef HAVE_MYSQL_GET_SOCKET
+
+    /*
+     * Disable Nagle algorithm (TCP_NODELAY) for TCP connections to reduce latency.
+     * Important for the many small queries typical of CNID operations.
+     * Only applies to TCP connections - "localhost" uses Unix socket.
+     */
+    if (obj->options.cnid_mysql_host != NULL &&
+            strcasecmp(obj->options.cnid_mysql_host, "localhost") != 0) {
+        int sock_fd = mysql_get_socket(db->cnid_mysql_con);
+
+        if (sock_fd >= 0) {
+            int flag = 1;
+
+            if (setsockopt(sock_fd, IPPROTO_TCP, TCP_NODELAY, &flag, sizeof(flag)) == 0) {
+                LOG(log_debug, logtype_cnid, "TCP_NODELAY enabled for MySQL connection");
+            } else {
+                LOG(log_warning, logtype_cnid, "Failed to set TCP_NODELAY: %s",
+                    strerror(errno));
+            }
+        }
+    }
+
+#endif /* HAVE_MYSQL_GET_SOCKET */
     /* Add volume to volume table */
     EC_NEG1(asprintf(&sql, "CREATE TABLE IF NOT EXISTS volumes"
                            "(VolUUID CHAR(32) PRIMARY KEY, VolPath TEXT(4096), Stamp BINARY(8), "
@@ -1101,6 +1160,12 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
         LOG(log_error, logtype_cnid, "MySQL query error: %s",
             mysql_error(db->cnid_mysql_con));
         EC_FAIL;
+    }
+
+    /* If no warnings, table was just created (not already existing) */
+    if (mysql_warning_count(db->cnid_mysql_con) == 0) {
+        LOG(log_info, logtype_cnid, "Created 'volumes' table in database '%s'",
+            obj->options.cnid_mysql_db);
     }
 
     free(sql);
@@ -1166,7 +1231,7 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     mysql_free_result(result);
     result = NULL;
-    /* Create volume table */
+    /* Create CNID table for this volume */
     EC_NEG1(asprintf(&sql, "CREATE TABLE IF NOT EXISTS `%s`"
                            "(Id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,"
                            "Name VARCHAR(255) NOT NULL,"
@@ -1181,6 +1246,12 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
         LOG(log_error, logtype_cnid, "MySQL query error: %s",
             mysql_error(db->cnid_mysql_con));
         EC_FAIL;
+    }
+
+    /* If no warnings, table was just created (not already existing) */
+    if (mysql_warning_count(db->cnid_mysql_con) == 0) {
+        LOG(log_info, logtype_cnid, "Created CNID table for volume '%s'",
+            vol->v_localname);
     }
 
     EC_ZERO(init_prepared_stmt(db));

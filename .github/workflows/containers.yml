@@ -252,6 +252,7 @@ jobs:
               -e DISABLE_TIMEMACHINE=1 \
               -e AFP_EXTMAP=1 \
               -e AFP_CNID_SQL_HOST=mariadb \
+              -e AFP_CNID_SQL_USER=root \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               -e AFP_DIRCACHESIZE=131072 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
@@ -367,6 +368,7 @@ jobs:
               -e AFP_REMOTE=1 \
               -e AFP_EXTMAP=1 \
               -e AFP_CNID_SQL_HOST=mariadb \
+              -e AFP_CNID_SQL_USER=root \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 

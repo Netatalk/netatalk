@@ -184,15 +184,59 @@ else
     AFP_VALIDUSERS2="$AFP_USER $AFP_USER2"
 fi
 
+# Validate MySQL/MariaDB CNID backend configuration
 if [ "$AFP_CNID_BACKEND" = "mysql" ]; then
     if [ -z $AFP_CNID_SQL_HOST ]; then
         AFP_CNID_SQL_HOST="localhost"
     fi
     if [ -z $AFP_CNID_SQL_USER ]; then
-        AFP_CNID_SQL_USER="root"
+        AFP_CNID_SQL_USER="netatalk"
     fi
     if [ -z $AFP_CNID_SQL_DB ]; then
         AFP_CNID_SQL_DB="cnid"
+    fi
+
+    echo "*** MySQL CNID backend configured: host='$AFP_CNID_SQL_HOST', user='$AFP_CNID_SQL_USER', db='$AFP_CNID_SQL_DB'"
+    # Start MariaDB server if using localhost or 127.0.0.1 - for container-local database
+    if [ "$AFP_CNID_SQL_HOST" = "localhost" ] || [ "$AFP_CNID_SQL_HOST" = "127.0.0.1" ]; then
+        echo "*** Starting MariaDB server for MySQL CNID backend"
+        mkdir -p /run/mysqld
+        chown mysql:mysql /run/mysqld
+        if [ ! -d /var/lib/mysql/mysql ]; then
+            echo "*** Initializing MariaDB data directory"
+            mysql_install_db --user=mysql --datadir=/var/lib/mysql > /dev/null 2>&1
+        fi
+        # Configure MariaDB to listen on TCP 127.0.0.1 in addition to Unix socket
+        cat > /etc/my.cnf.d/netatalk.cnf << 'MYCNF'
+[mysqld]
+bind-address = 127.0.0.1
+skip-networking = 0
+MYCNF
+        # Start MariaDB with TCP enabled
+        mariadbd-safe --user=mysql &
+        # Wait for MariaDB to be ready
+        echo "*** Waiting for MariaDB to start..."
+        for i in 1 2 3 4 5 6 7 8 9 10; do
+            if mysqladmin ping > /dev/null 2>&1; then
+                echo "*** MariaDB is ready"
+                break
+            fi
+            sleep 1
+        done
+        # Configure MySQL user with password authentication
+        # (MariaDB uses unix_socket auth by default, which only works when running as root)
+        # Create user for both 'localhost' (Unix socket) and '127.0.0.1' (TCP)
+        echo "*** Configuring MySQL user with password authentication"
+        if [ -z "$AFP_CNID_SQL_PASS" ]; then
+            AFP_CNID_SQL_PASS="netatalk"
+        fi
+        mariadb -u root << EOSQL
+CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER'@'localhost' IDENTIFIED BY '$AFP_CNID_SQL_PASS';
+GRANT ALL PRIVILEGES ON *.* TO '$AFP_CNID_SQL_USER'@'localhost';
+CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER'@'127.0.0.1' IDENTIFIED BY '$AFP_CNID_SQL_PASS';
+GRANT ALL PRIVILEGES ON *.* TO '$AFP_CNID_SQL_USER'@'127.0.0.1';
+FLUSH PRIVILEGES;
+EOSQL
     fi
 fi
 
@@ -225,6 +269,9 @@ login message = $AFP_LOGIN_MESSAGE
 mimic model = $AFP_MIMIC_MODEL
 server name = ${SERVER_NAME:-Netatalk File Server}
 uam list = $UAMS
+mac charset = ${AFP_MAC_CHARSET:-MAC_ROMAN}
+unix charset = ${AFP_UNIX_CHARSET:-UTF8}
+vol charset = ${AFP_VOL_CHARSET:-UTF8}
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
