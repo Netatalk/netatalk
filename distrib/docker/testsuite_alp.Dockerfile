@@ -13,6 +13,7 @@ ARG RUN_DEPS="\
     libgcrypt \
     linux-pam \
     localsearch \
+    mariadb \
     mariadb-client \
     mariadb-connector-c \
     openldap \

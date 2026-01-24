@@ -271,6 +271,9 @@ Set this environment variable to a specific value or string.
 | AFP_DIRCACHE_VALIDATION_FREQ    | The frequency to validate the directory cache                          |
 | AFP_DIRCACHE_METADATA_WINDOW    | The time window (in seconds) for metadata caching                      |
 | AFP_DIRCACHE_METADATA_THRESHOLD | The threshold (in seconds) for metadata caching                        |
+| AFP_MAC_CHARSET                 | Mac client charset (default: MAC_ROMAN); see afp.conf man page         |
+| AFP_UNIX_CHARSET                | Server filesystem charset (default: UTF8); see afp.conf man page       |
+| AFP_VOL_CHARSET                 | Volume charset (default: UTF8); see afp.conf man page                  |
 | TZ                              | The [timezone](https://nodatime.org/TimeZones) to use in the container |
 
 #### Boolean Type

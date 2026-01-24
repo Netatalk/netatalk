@@ -590,6 +590,10 @@ if 'mysql' in get_option('with-cnid-backends')
         endif
         cnid_backends += 'mysql'
         cdata.set('CNID_BACKEND_MYSQL', 1)
+        # Check for mysql_get_socket() function (added in MySQL 5.7.9 / MariaDB 10.0)
+        if cc.has_function('mysql_get_socket', dependencies: mysql_deps)
+            cdata.set('HAVE_MYSQL_GET_SOCKET', 1)
+        endif
     endif
 endif
 
