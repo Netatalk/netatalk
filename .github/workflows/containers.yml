@@ -367,6 +367,7 @@ jobs:
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_EXTMAP=1 \
+              -e AFP_DIRCACHESIZE=1024 \
               -e AFP_CNID_SQL_HOST=mariadb \
               -e AFP_CNID_SQL_USER=root \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
@@ -396,6 +397,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-spectest-afp34:
@@ -421,6 +423,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-sqlite-afp34:
@@ -447,6 +450,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp34-debian:
@@ -472,6 +476,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-adtest-afp34:
@@ -498,6 +503,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-adtest-afp34-debian:
@@ -524,6 +530,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-spectest-afp33:
@@ -549,6 +556,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp32:
@@ -574,6 +582,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="5" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp31:
@@ -599,6 +608,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="4" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp30:
@@ -624,6 +634,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp30-debian:
@@ -649,6 +660,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-spectest-afp22:
@@ -674,6 +686,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="2" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp21:
@@ -699,6 +712,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp21-debian:
@@ -724,6 +738,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-adtest-afp21:
@@ -750,6 +765,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-adtest-afp21-debian:
@@ -776,6 +792,7 @@ jobs:
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-rotest-afp34:
@@ -859,7 +876,7 @@ jobs:
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-lantest:
-    name: AFP lantest - Alpine
+    name: AFP lantest (ARC) - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -876,10 +893,12 @@ jobs:
             -e VERBOSE="1" \
             -e TESTSUITE="lan" \
             -e AFP_VERSION="7" \
+            -e AFP_DIRCACHE_MODE="arc" \
+            -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-speedtest:
-    name: AFP speedtest - Alpine
+    name: AFP speedtest (ARC) - Alpine
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -896,4 +915,36 @@ jobs:
             -e VERBOSE="1" \
             -e TESTSUITE="speed" \
             -e AFP_VERSION="7" \
+            -e AFP_DIRCACHE_MODE="arc" \
+            -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-spectest-arc-stress:
+    name: AFP spec test (ARC stress, cache=1024) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite with ARC stress test
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e VERBOSE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_DIRCACHE_MODE="arc" \
+            -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
+            -e AFP_DIRCACHE_METADATA_WINDOW="3600" \
+            -e AFP_DIRCACHE_METADATA_THRESHOLD="1800" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}

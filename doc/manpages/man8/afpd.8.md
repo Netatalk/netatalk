@@ -66,10 +66,18 @@ files.
 
 SIGINT
 
-> Sending a *SIGINT* to a child **afpd** enables *max_debug* logging for
-this process.
-The log is sent to the file *afpd.PID.XXXXXX* in the system tmp directory.
-Sending another *SIGINT* will revert to the original log settings.
+> Sending a *SIGINT* to a child **afpd** enables *max_debug* logging and dumps
+caches to the system tmp directory:
+>
+> - Debug log: *afpd.PID.XXXXXX*
+> - Directory cache: *dircache.PID*
+>
+> **Directory cache dump** (see **dircache mode** in **afp.conf(5)**):
+>
+> - **LRU mode**: Single queue of cached entries
+> - **ARC mode**: T1/T2 (cached), B1/B2 (ghost) lists, parameter p, statistics
+>
+> Sending another *SIGINT* reverts to original log settings.
 
 SIGUSR1
 

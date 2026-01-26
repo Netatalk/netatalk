@@ -343,7 +343,7 @@ int getmetadata(const AFPObj *obj,
                     LOG(log_debug, logtype_afpd,
                         "getmetadata: inode mismatch (cached:%llu vs current:%llu), file replaced, invalidating cache",
                         (unsigned long long)cachedfile->dcache_ino, (unsigned long long)st->st_ino);
-                    dir_remove(vol, cachedfile);
+                    dir_remove(vol, cachedfile, 1);  /* Invalid: inode mismatch detected */
                     cachedfile = NULL;
                 }
             }
@@ -923,7 +923,7 @@ int afp_setfilparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                 s_path->u_name, (unsigned long long)cachedfile->dcache_ino,
                 (unsigned long long)s_path->st.st_ino);
             /* Invalidate stale cache entry */
-            dir_remove(vol, cachedfile);
+            dir_remove(vol, cachedfile, 1);  /* Invalid: inode mismatch, file replaced */
             /* Return error - the file the client knew about no longer exists */
             return AFPERR_NOOBJ;
         }
@@ -1341,7 +1341,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
         LOG(log_debug, logtype_afpd,
             "renamefile: cleaning source dircache \"%s\" before rename (will be stale)",
             src);
-        dir_remove(vol, source_entry);
+        dir_remove(vol, source_entry, 0);  /* Proactive cleanup before rename */
     }
 
     /* Look up and clean DESTINATION dircache entry for stale detection */
@@ -1355,7 +1355,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
     if (dest_entry) {
         LOG(log_debug, logtype_afpd,
             "renamefile: cleaning stale destination dircache \"%s\" before rename", dst);
-        dir_remove(vol, dest_entry);
+        dir_remove(vol, dest_entry, 0);  /* Proactive cleanup before rename */
     }
 
     if (unix_rename(sdir_fd, src, -1, dst) < 0) {
@@ -1965,7 +1965,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
                                                  strlen(file)); // NOSONAR:
 
             if (cachedfile) {
-                dir_remove(vol, cachedfile);
+                dir_remove(vol, cachedfile, 0);  /* User-initiated delete cleanup */
             }
         }
     }
@@ -2497,7 +2497,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             (unsigned long long)cached_src->dcache_ino,
             (unsigned long long)srcst.st_ino);
         /* Invalidate stale cache entry */
-        dir_remove(vol, cached_src);
+        dir_remove(vol, cached_src, 1);  /* Invalid: inode mismatch, file replaced */
 
         /* Clean up source adouble */
         if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {
@@ -2561,7 +2561,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             (unsigned long long)cached_dest->dcache_ino,
             (unsigned long long)destst.st_ino);
         /* Invalidate stale cache entry */
-        dir_remove(vol, cached_dest);
+        dir_remove(vol, cached_dest, 1);  /* Invalid: inode mismatch, file replaced */
 
         /* Clean up both adoubles before returning */
         if (!s_of && adsp && ad_meta_fileno(adsp) != -1) {
@@ -2785,11 +2785,11 @@ err_exchangefile:
     struct dir *cached;
 
     if ((cached = dircache_search_by_did(vol, sid)) != NULL) {
-        (void)dir_remove(vol, cached);
+        (void)dir_remove(vol, cached, 0);  /* Cleanup after exchange operation */
     }
 
     if ((cached = dircache_search_by_did(vol, did)) != NULL) {
-        (void)dir_remove(vol, cached);
+        (void)dir_remove(vol, cached, 0);  /* Cleanup after exchange operation */
     }
 
     return err;

@@ -67,7 +67,7 @@ int test002_rem_x_dirs(const struct vol *vol, cnid_t start, cnid_t end)
 
     while (start++ < end) {
         if ((dir = dircache_search_by_did(vol, htonl(start))))
-            if (dir_remove(vol, dir) != 0) {
+            if (dir_remove(vol, dir, 0) != 0) {
                 return -1;
             }
     }

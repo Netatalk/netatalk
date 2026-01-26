@@ -2667,10 +2667,45 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen",
                                             NULL, 80);
     options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircachesize",
-                                            NULL, DEFAULT_MAX_DIRCACHE_SIZE);
+                                            NULL, -1);
+
+    if (options->dircachesize == -1) {
+        options->dircachesize = getoption_int(config, INISEC_GLOBAL, "dircache size",
+                                              NULL, DEFAULT_MAX_DIRCACHE_SIZE);
+    }
+
     options->dircache_files = getoption_bool(config, INISEC_GLOBAL,
                               "dircache files",
                               NULL, 0);
+    /* Parse dircache mode: "lru" (0) or "arc" (1) */
+    {
+        const char *mode_str = getoption_str(config, INISEC_GLOBAL, "dircache mode",
+                                             NULL, NULL);
+
+        if (mode_str) {
+            if (strcasecmp(mode_str, "arc") == 0) {
+                options->dircache_mode = 1;
+            } else if (strcasecmp(mode_str, "lru") == 0) {
+                options->dircache_mode = 0;
+            } else {
+                LOG(log_warning, logtype_afpd,
+                    "Invalid dircache mode '%s', using default (lru)", mode_str);
+                options->dircache_mode = 0;
+            }
+        } else {
+            options->dircache_mode = 0;  /* Default to LRU */
+        }
+    }
+    /* Parse dircache validation parameters */
+    options->dircache_validation_freq = getoption_int(config, INISEC_GLOBAL,
+                                        "dircache validation freq", NULL,
+                                        DEFAULT_DIRCACHE_VALIDATION_FREQ);
+    options->dircache_metadata_window = getoption_int(config, INISEC_GLOBAL,
+                                        "dircache metadata window", NULL,
+                                        DEFAULT_DIRCACHE_METADATA_WINDOW);
+    options->dircache_metadata_threshold = getoption_int(config, INISEC_GLOBAL,
+                                           "dircache metadata threshold", NULL,
+                                           DEFAULT_DIRCACHE_METADATA_THRESHOLD);
     options->tcp_sndbuf     = getoption_int(config, INISEC_GLOBAL, "tcpsndbuf",
                                             NULL, 0);
     options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",

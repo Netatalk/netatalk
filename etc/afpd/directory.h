@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1991 Regents of The University of Michigan.
+ * Copyright (c) 2025 Andy Lemin (andylemin)
  * All Rights Reserved.
  *
  * Permission to use, copy, modify, and distribute this software and
@@ -19,6 +20,8 @@
  *	Ann Arbor, Michigan
  *	+1-313-763-0525
  *	netatalk@itd.umich.edu
+ *
+ * You may also use it under the terms of the General Public License (GPL). See COPYING.
  */
 
 #ifndef AFPD_DIRECTORY_H
@@ -91,7 +94,8 @@ extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
 extern int         dir_modify(const struct vol *vol, struct dir *dir,
                               cnid_t pdid, cnid_t did,
                               const char *new_mname, const char *new_uname, bstring pdir_fullpath);
-extern int         dir_remove(const struct vol *vol, struct dir *dir);
+extern int         dir_remove(const struct vol *vol, struct dir *dir,
+                              int report_invalid);
 extern struct dir  *dirlookup(const struct vol *, cnid_t);
 extern struct dir  *dirlookup_strict(const struct vol *, cnid_t);
 extern struct dir *dirlookup_bypath(const struct vol *vol, const char *path);

@@ -452,46 +452,15 @@ serv_free_return:
         dsi_obj->fce_notify_script = strdup(r);
     }
 
-    /* Directory cache validation parameters */
-    unsigned int dircache_freq = DEFAULT_DIRCACHE_VALIDATION_FREQ;
-    unsigned int dircache_window = DEFAULT_DIRCACHE_METADATA_WINDOW;
-    unsigned int dircache_threshold = DEFAULT_DIRCACHE_METADATA_THRESHOLD;
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                              "dircache validation freq", NULL))) {
-        dircache_freq = safe_atoi(r, "dircache validation freq",
-                                  1, 100, DEFAULT_DIRCACHE_VALIDATION_FREQ);
-        LOG(log_info, logtype_afpd, "Config: dircache validation freq = %u",
-            dircache_freq);
-    }
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                              "dircache metadata window", NULL))) {
-        dircache_window = safe_atoi(r, "dircache metadata window",
-                                    60, 3600, DEFAULT_DIRCACHE_METADATA_WINDOW);
-        LOG(log_info, logtype_afpd, "Config: dircache metadata window = %u",
-            dircache_window);
-    }
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                              "dircache metadata threshold", NULL))) {
-        dircache_threshold = safe_atoi(r, "dircache metadata threshold",
-                                       10, 1800, DEFAULT_DIRCACHE_METADATA_THRESHOLD);
-        LOG(log_info, logtype_afpd, "Config: dircache metadata threshold = %u",
-            dircache_threshold);
-    }
-
-    /* Apply directory cache validation configuration */
-    if (dircache_set_validation_params(dircache_freq, dircache_window,
-                                       dircache_threshold) == 0) {
-        LOG(log_info, logtype_afpd,
-            "Config: Directory cache validation configured: freq=%u, window=%us, threshold=%us",
-            dircache_freq, dircache_window, dircache_threshold);
-    } else {
-        LOG(log_error, logtype_afpd,
-            "Config: Failed to configure directory cache validation parameters");
-    }
-
+    /* Directory cache validation parameters - use values from AFPobj->options
+     * (parsed by afp_config_parse() in netatalk_conf.c using the standard pattern).
+     * These are applied in dircache_init() which reads from AFPobj->options.
+     * Log them here for visibility during startup. */
+    LOG(log_info, logtype_afpd,
+        "Config: Directory cache validation: freq=%d, window=%d, threshold=%d",
+        dsi_obj->options.dircache_validation_freq,
+        dsi_obj->options.dircache_metadata_window,
+        dsi_obj->options.dircache_metadata_threshold);
 EC_CLEANUP:
 
     if (q) {
