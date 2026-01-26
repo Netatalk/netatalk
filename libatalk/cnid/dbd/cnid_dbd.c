@@ -743,7 +743,7 @@ char *cnid_dbd_resolve(struct _cnid_db *cdb, cnid_t *id, void *buffer,
         break;
 
     case CNID_DBD_RES_NOTFOUND:
-        LOG(log_info, logtype_cnid,
+        LOG(log_debug, logtype_cnid,
             "cnid_dbd_resolve: CNID %u not found in database (likely deleted)",
             ntohl(*id));
         *id = CNID_INVALID;

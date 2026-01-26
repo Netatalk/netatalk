@@ -100,6 +100,10 @@ struct afp_options {
     int flags;
     int dircachesize;
     int dircache_files;         /*!< Whether to allow files in directory cache */
+    int dircache_mode;          /*!< Directory cache mode: 0=LRU, 1=ARC */
+    int dircache_validation_freq;    /*!< Validate every Nth access (default 1) */
+    int dircache_metadata_window;    /*!< Metadata change window (seconds) */
+    int dircache_metadata_threshold; /*!< Metadata change threshold (seconds) */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
     int disconnected;           /*!< Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /*!< number of seconds FCE file mod events are put on hold */

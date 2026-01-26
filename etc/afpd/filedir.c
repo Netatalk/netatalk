@@ -353,7 +353,7 @@ static int moveandrename(const AFPObj *obj,
             dircache_remove_children(vol, sdir);
         }
 
-        dir_remove(vol, sdir);
+        dir_remove(vol, sdir, 0);  /* Proactive cleanup during self-healing */
 
         /* Retry via dirlookup to get fresh sdir from CNID */
         if ((sdir = dirlookup(vol, saved_sdir_did)) != NULL) {
@@ -466,7 +466,7 @@ static int moveandrename(const AFPObj *obj,
             dircache_remove_children(vol, sdir);
 
             if (sdir != curdir) {
-                dir_remove(vol, sdir);
+                dir_remove(vol, sdir, 0);  /* Proactive cleanup after successful rename */
             }
         }
 
@@ -792,7 +792,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 }
 
                 /* Remove from dircache */
-                dir_remove(vol, deldir);
+                dir_remove(vol, deldir, 0);  /* User-initiated delete cleanup */
             } else {
                 /* Directory not in cache, delete CNID manually */
                 size_t upath_len = upath ? strnlen(upath, CNID_MAX_PATH_LEN) : 0;
@@ -851,7 +851,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     upath, (unsigned long long)cachedfile->dcache_ino,
                     (unsigned long long)s_path->st.st_ino);
                 /* Invalidate stale cache entry */
-                dir_remove(vol, cachedfile);
+                dir_remove(vol, cachedfile, 1);  /* Invalid: inode mismatch, file replaced */
                 /* Return error - the file the client wanted to delete no longer exists */
                 return AFPERR_NOOBJ;
             }

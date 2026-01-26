@@ -1,6 +1,9 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2025 Andy Lemin (andylemin)
+ *
  * All Rights Reserved.  See COPYRIGHT.
+ * You may also use it under the terms of the General Public License (GPL). See COPYING.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -454,7 +457,7 @@ static struct path *path_from_dir(struct vol *vol, struct dir *dir,
         }
 
         ret->d_dir = NULL;      /* 4 */
-        dir_remove(vol, dir);   /* 5 */
+        dir_remove(vol, dir, 0);   /* 5 - Proactive cleanup, not invalid on use */
         return ret;
 
     default:
@@ -521,7 +524,7 @@ static struct dir *dirlookup_internal_retry(const struct vol *vol,
             (void)dircache_remove_children(vol, stale_child);
         }
 
-        dir_remove(vol, stale_child);
+        dir_remove(vol, stale_child, 0);  /* Proactive cleanup of stale entry */
     }
 
     /* Cleanup current failed attempt */
@@ -619,7 +622,7 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
                 /* Cache is stale, clean and fall through to CNID lookup */
                 LOG(log_debug, logtype_afpd, DIRLOOKUP_LOG_FMT ": cache stale, cleaning",
                     ntohl(did));
-                dir_remove(vol, ret);
+                dir_remove(vol, ret, 0);  /* Cleanup during strict validation */
                 ret = NULL;
             } else {
                 /* Validated, safe to use */
@@ -644,9 +647,6 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
      * Outputs: upath = basename only ("mydir") + cnid modified to parent DID
      * So we need to build the rest of the fullpath */
     if (upath == NULL) {
-        LOG(log_debug, logtype_afpd,
-            DIRLOOKUP_LOG_FMT ": cnid_resolve returned NULL, directory deleted",
-            ntohl(did));
         afp_errno = AFPERR_NOOBJ;
         err = 1;
         goto exit;
@@ -858,7 +858,7 @@ stale:
         (void)dircache_remove_children(vol, dir);
     }
 
-    (void)dir_remove(vol, dir);
+    (void)dir_remove(vol, dir, 0);  /* Proactive cleanup before retry */
     /* Retry - will now miss cache and query CNID */
     dir = dirlookup(vol, did);
 
@@ -938,6 +938,8 @@ struct dir *dir_new(const char *m_name,
     }
 
     dir->d_rights_cache = 0xffffffff;
+    dir->arc_list =
+        0;  /* ARC_NONE (= 0, defined in dircache.c), safe with calloc zero-init */
     return dir;
 }
 
@@ -1006,8 +1008,11 @@ struct dir *dir_add(struct vol *vol, const struct dir *dir, struct path *path,
             "dir_add(did:%u,'%s/%s'): {stray cache entry: did:%u,'%s', removing}",
             ntohl(dir->d_did), cfrombstr(dir->d_fullpath), path->u_name,
             ntohl(cdir->d_did), cfrombstr(dir->d_fullpath));
+        int remove_result = dir_remove(vol, cdir, 0);  /* Proactive cleanup of stray */
 
-        if (dir_remove(vol, cdir) != 0) {
+        if (remove_result != 0) {
+            LOG(log_error, logtype_afpd,
+                "dir_add: CRITICAL dir_remove failed (returned -1), curdir recovery failed but curdir fallback successful");
             dircache_dump();
             AFP_PANIC("dir_add");
         }
@@ -1128,12 +1133,14 @@ void dir_free_invalid_q(void)
  * 6. If recovery fails, fallback to vol->v_root or rootParent
  * 7. Mark entry invalid
  *
- * @param[in] vol      volume pointer
- * @param[in,out] dir  directory/file entry to remove from cache
+ * @param[in] vol            volume pointer
+ * @param[in,out] dir        directory/file entry to remove from cache
+ * @param[in] report_invalid 1 = report as invalid_on_use (entry was used and found stale),
+ *                           0 = don't report (proactive cleanup, user deletion, etc.)
  * @returns 0 on success, -1 if curdir was removed and recovery failed
  *          (curdir guaranteed non-NULL on return)
  */
-int dir_remove(const struct vol *vol, struct dir *dir)
+int dir_remove(const struct vol *vol, struct dir *dir, int report_invalid)
 {
     AFP_ASSERT(vol);
     AFP_ASSERT(dir);
@@ -1144,9 +1151,10 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     }
 
     LOG(log_debug, logtype_afpd,
-        "dir_remove(did:%u,'%s'): {removing from cache}",
+        "dir_remove(did:%u,'%s'): {removing from cache, report_invalid=%d}",
         ntohl(dir->d_did),
-        dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
+        dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)",
+        report_invalid);
     /* Save curdir DID BEFORE removal - needed for recovery if dir==curdir */
     cnid_t saved_curdir_did = CNID_INVALID;
     bool removing_curdir = false;
@@ -1157,8 +1165,11 @@ int dir_remove(const struct vol *vol, struct dir *dir)
         removing_curdir = true;
     }
 
-    /* Report if this was an unvalidated entry that turned out to be invalid */
-    dircache_report_invalid_entry(dir);
+    /* Report invalid_on_use ONLY if this entry was returned to caller and found stale during use */
+    if (report_invalid) {
+        dircache_report_invalid_entry(dir);
+    }
+
     /* Remove the dircache entry */
     dircache_remove(vol, dir, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX); /* 2 */
     /* Queue pruned entry for memory deallocation */
@@ -1172,18 +1183,18 @@ int dir_remove(const struct vol *vol, struct dir *dir)
     /* Mark invalid */
     dir->d_did = CNID_INVALID;              /* 5 */
 
-    /* CRITICAL: Attempt curdir recovery if we just removed it.
+    /* Attempt curdir recovery if we just removed it.
      * Returns error if recovery fails so caller knows curdir is invalid. */
     if (removing_curdir && !curdir) {
-        LOG(log_warning, logtype_afpd,
-            "dir_remove(did:%u): curdir was removed, attempting recovery via CNID",
+        LOG(log_debug, logtype_afpd,
+            "dir_remove(did:%u): curdir was removed, attempting recovery",
             ntohl(saved_curdir_did));
         /* Try to recover via CNID - succeeds if directory still exists */
         struct dir *recovered = dirlookup(vol, saved_curdir_did);
 
         if (recovered) {
             curdir = recovered;
-            LOG(log_info, logtype_afpd,
+            LOG(log_debug, logtype_afpd,
                 "dir_remove: curdir recovery SUCCESS (did:%u), path: \"%s\"",
                 ntohl(saved_curdir_did),
                 curdir->d_fullpath ? cfrombstr(curdir->d_fullpath) : "(null)");
@@ -1191,13 +1202,38 @@ int dir_remove(const struct vol *vol, struct dir *dir)
             return 0;
         }
 
-        /* Recovery failed - fallback to volume root (more graceful than rootParent) */
-        curdir = vol->v_root ? vol->v_root : &rootParent;
-        LOG(log_error, logtype_afpd,
-            "dir_remove: curdir recovery FAILED (did:%u), fallback to %s",
-            ntohl(saved_curdir_did), vol->v_root ? "volume root" : "rootParent");
-        /* FAILURE - caller must handle */
-        return -1;
+        /* Recovery via CNID failed - check why */
+        if (afp_errno == AFPERR_NOOBJ) {
+            /* Directory was deleted - this is normal during cleanup, not an error */
+            LOG(log_debug, logtype_afpd,
+                "dir_remove: curdir (did:%u) was deleted, trying parent fallback",
+                ntohl(saved_curdir_did));
+        } else {
+            /* Other error during recovery */
+            LOG(log_debug, logtype_afpd,
+                "dir_remove: curdir recovery failed (did:%u), afp_errno=%d (%s)",
+                ntohl(saved_curdir_did), afp_errno, AfpErr2name(afp_errno));
+        }
+
+        /* Fallback hierarchy: Try parent first, otherwise volume root */
+        struct dir *fallback = dirlookup_strict(vol, dir->d_pdid);
+
+        if (fallback && fallback != dir) {
+            /* Parent exists - use it */
+            curdir = fallback;
+            LOG(log_debug, logtype_afpd,
+                "dir_remove: fallback to validated parent (did:%u)",
+                ntohl(curdir->d_did));
+            return 0;
+        }
+
+        /* Last resort, use volume root */
+        AFP_ASSERT(vol->v_root);
+        curdir = vol->v_root;
+        LOG(log_debug, logtype_afpd,
+            "dir_remove: fallback to volume root (did:%u)",
+            ntohl(curdir->d_did));
+        return 0;  /* Fallback successful, not an error */
     }
 
     /* Success - curdir unchanged or not affected */
@@ -1327,7 +1363,7 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                 }
 
                 if (movecwd(vol, dir) < 0) {
-                    dir_remove(vol, dir);
+                    dir_remove(vol, dir, 0);  /* Cleanup after movecwd failure */
                     return NULL;
                 }
 
@@ -1591,7 +1627,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
 
         /* Self-heal stale dircache entries when chdir fails */
         if (ret != 1 && errno == ENOENT) {
-            LOG(log_info, logtype_afpd,
+            LOG(log_debug, logtype_afpd,
                 "movecwd: stale dircache entry, cleaning and retrying via CNID");
 
             /* Clean cache - dircache_remove_children and dir_remove handle curdir recovery */
@@ -1599,7 +1635,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
                 (void)dircache_remove_children(vol, dir);
             }
 
-            (void)dir_remove(vol, dir);
+            (void)dir_remove(vol, dir, 0);  /* Self-healing cleanup */
             /* Both functions guarantee curdir != NULL (recovered or vol->v_root/rootParent) */
 
             /* Retry via CNID with strict validation */
@@ -1619,15 +1655,16 @@ int movecwd(const struct vol *vol, struct dir *dir)
                 LOG(log_info, logtype_afpd,
                     "movecwd: CNID retry chdir failed: %s", strerror(errno));
             } else {
-                LOG(log_error, logtype_afpd,
-                    "movecwd: dirlookup_strict returned NULL for did:%u", ntohl(saved_did));
+                LOG(log_debug, logtype_afpd,
+                    "movecwd: dirlookup_strict returned NULL for did:%u (does not exist)",
+                    ntohl(saved_did));
             }
 
             /* Special movecwd requirement: sync process CWD with curdir pointer.
              * If curdir is at fallback, attempt to sync process CWD. */
             if (curdir && curdir->d_fullpath && curdir != &rootParent &&
                     ochdir(cfrombstr(curdir->d_fullpath), vol_syml_opt(vol)) == 0) {
-                LOG(log_info, logtype_afpd,
+                LOG(log_debug, logtype_afpd,
                     "movecwd: synced process CWD to curdir fallback");
             }
         }
@@ -2836,7 +2873,7 @@ int deletecurdir(struct vol *vol)
     cnid_delete(vol->v_cdb, fdir->d_did);
     AFP_CNID_DONE();
     /* Remove from dircache */
-    dir_remove(vol, fdir);
+    dir_remove(vol, fdir, 0);  /* User-initiated delete, not invalid on use */
 delete_done:
     return err;
 }

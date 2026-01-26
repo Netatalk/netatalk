@@ -44,7 +44,7 @@
     do {                                            \
         netatalk_panic(why);                        \
         abort();                                    \
-    } while(0);
+    } while(0)
 
 #ifndef NDEBUG
 /*! LOG assert errors */

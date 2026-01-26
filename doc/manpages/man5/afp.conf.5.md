@@ -541,9 +541,9 @@ each share.
 
 dircachesize = *number* **(G)**
 
-> Maximum possible entries in the directory cache. The cache stores
-directories and files.
-> Default size is 8192, maximum size is 131072.
+> Maximum entries in the directory cache. Stores directories and optionally files.
+> Minimum: 1024 (1K). Default: 65536 (64K). Maximum: 2097152 (2M).
+> Higher values improve hit ratios but use more memory.
 
 dircache validation freq = *number* **(G)**
 
@@ -581,8 +581,19 @@ queries. However, this increases memory usage and may cause excessive
 cache evictions if the working set is larger than the dircache size.
 >
 > **Recommendation**: Leave disabled (*no*) unless you have a large
-**dircachesize** and file-intensive workflows. For volumes where Netatalk
+**dircache size** and file-intensive workflows. For volumes where Netatalk
 is the only accessor, enabling this with a large cache may improve performance.
+
+dircache mode = *lru* | *arc* (default: *lru*) **(G)**
+
+> Cache replacement algorithm. **lru** = Least Recently Used (stable, memory-efficient).
+**arc** = Adaptive Replacement Cache (self-tuning, 10-50% better hit ratios,
+2× better on sequential scans). ARC uses approximately **2× memory** (~100% overhead)
+due to ghost entries: evicted entries tracked for learning, enabling ARC to adapt.
+Example: 64K cache uses ~20-25 MB (ARC) vs ~10-12 MB (LRU).
+>
+> **Recommendation**: Use **arc** for servers with 8GB+ RAM. Use **lru** for
+constrained systems. Increase **dircache size** (max entries) for best results.
 
 **Note**: See Configuration chapter in the manual for more information
 

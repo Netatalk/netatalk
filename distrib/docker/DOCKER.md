@@ -250,40 +250,66 @@ Set this environment variable to a specific value or string.
 
 | Variable                        | Description                                                            |
 |---------------------------------|------------------------------------------------------------------------|
+| **User & Group Configuration** |                                                                        |
 | AFP_UID                         | Specify user id of AFP_USER                                            |
 | AFP_GID                         | Specify group id of AFP_GROUP                                          |
 | AFP_USER2                       | Username for the secondary user                                        |
 | AFP_PASS2                       | Password for the secondary user                                        |
+| **Server Configuration** |                                                                               |
 | SERVER_NAME                     | The name of the server (AFP and Zeroconf)                              |
 | SHARE_NAME                      | The name of the primary shared volume                                  |
 | SHARE_NAME2                     | The name of the secondary shared (Time Machine) volume                 |
 | AFP_LOGLEVEL                    | The verbosity of logs; default is "info"                               |
 | AFP_MIMIC_MODEL                 | Use a custom macOS (OSX) AFP icon; examples: *Tower*, *RackMount*      |
-| AFP_LEGACY_ICON                 | Use a custom Classic Mac OS AFP icon; examples: *daemon*. *sdcard*     |
+| AFP_LEGACY_ICON                 | Use a custom Classic Mac OS AFP icon; examples: *daemon*, *sdcard*     |
 | AFP_LOGIN_MESSAGE               | A message to display when a user logs in (Classic Mac OS only)         |
 | ATALKD_OPTIONS                  | A string with options to append to atalkd.conf                         |
+| **CNID Database Configuration** |                                                                        |
 | AFP_CNID_BACKEND                | The backend to use for the CNID database: *dbd*, *sqlite*, or *mysql*  |
 | AFP_CNID_SQL_HOST               | The hostname or IP address of the CNID SQL server                      |
 | AFP_CNID_SQL_USER               | The username to use when connecting to the CNID SQL server             |
 | AFP_CNID_SQL_PASS               | The password to use when connecting to the CNID SQL server             |
 | AFP_CNID_SQL_DB                 | The name of the designated database in the SQL server                  |
-| AFP_DIRCACHESIZE                | The size of the directory cache                                        |
-| AFP_DIRCACHE_VALIDATION_FREQ    | The frequency to validate the directory cache                          |
-| AFP_DIRCACHE_METADATA_WINDOW    | The time window (in seconds) for metadata caching                      |
-| AFP_DIRCACHE_METADATA_THRESHOLD | The threshold (in seconds) for metadata caching                        |
+| **Directory Cache Configuration** |                                                                      |
+| AFP_DIRCACHESIZE                | Directory cache size in entries (default: 65536)                       |
+| AFP_DIRCACHE_MODE               | Cache algorithm: *lru* (default) or *arc*                              |
+| AFP_DIRCACHE_FILES              | Enable full caching of files in addition to directories: *yes* or *no*         |
+| AFP_DIRCACHE_VALIDATION_FREQ    | Validate cache every Nth access (default: 1, higher = better performance) |
+| AFP_DIRCACHE_METADATA_WINDOW    | Metadata change time window in seconds (default: 300)                  |
+| AFP_DIRCACHE_METADATA_THRESHOLD | Metadata change threshold in seconds (default: 60)                     |
+| **Charset Configuration** |                                                                              |
 | AFP_MAC_CHARSET                 | Mac client charset (default: MAC_ROMAN); see afp.conf man page         |
 | AFP_UNIX_CHARSET                | Server filesystem charset (default: UTF8); see afp.conf man page       |
 | AFP_VOL_CHARSET                 | Volume charset (default: UTF8); see afp.conf man page                  |
+| **Test Suite Configuration** |                                                                           |
+| TESTSUITE                       | Run test suite on startup: *spectest*, *lan*, *speed*, *login*, *readonly* |
+| AFP_VERSION                     | AFP protocol version for tests: 1-7 (default: 7 = AFP 3.4)             |
+| AFP_HOST                        | AFP server hostname/IP for tests (default: 127.0.0.1)                  |
+| AFP_PORT                        | AFP server port for tests (default: 548)                               |
+| AFP_REMOTE                      | Test remote AFP server (vs container-local)                            |
+| TEST_FLAGS                      | Additional flags to pass to test binaries                              |
+| **Other Configuration** |                                                                              |
 | TZ                              | The [timezone](https://nodatime.org/TimeZones) to use in the container |
+| AFP_CONFIG_POLLING              | Poll afp.conf for changes every N seconds (for Webmin integration)    |
 
 #### Boolean Type
 
-Set this environment variable to a non-zero value to enable, ex. "1"
+Set these environment variables to a non-zero value to enable, ex. "1"
 
 | Variable            | Description                                                                                    |
 |---------------------|------------------------------------------------------------------------------------------------|
+| **Volume & Access Configuration** |                                                                                     |
 | AFP_DROPBOX         | Enable dropbox mode; secondary user is guest with read only access to the second shared volume |
-| AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
-| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs; the AFP password must be 8 chars or shorter            |
+| AFP_READONLY        | Mount volume as read-only                                                                      |
 | DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
+| **File System Configuration** |                                                                                         |
+| AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
+| AFP_ADOUBLE         | Use AppleDouble (ad) instead of system native EA for extended attributes                       |
+| **Authentication Configuration** |                                                                                       |
+| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs; the AFP password must be 8 chars or shorter            |
+| **Advanced Configuration** |                                                                                            |
 | MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |
+| VERBOSE             | Enable verbose test output                                                                     |
+| SERVER_LOGS         | Display afpd server logs after test completion                                                 |
+| IO_MONITORING       | Enable I/O monitoring for lantest (requires \-\-privileged)                                       |
+| DEBUG_ENTRY_SCRIPT  | Enable bash debug mode (set -x) for entrypoint script                                          |

@@ -51,6 +51,7 @@
 #define DIRF_ISFILE    (1<<3) /*!< it's cached file, not a directory */
 #define DIRF_OFFCNT    (1<<4) /*!< offsprings count is valid */
 #define DIRF_CNID	   (1<<5) /*!< renumerate id */
+#define DIRF_ARC_GHOST (1<<6) /*!< ARC ghost entry (in B1/B2) */
 
 struct dir {
     bstring     d_fullpath;          /*!< complete unix path to dir (or file) */
@@ -77,6 +78,9 @@ struct dir {
                                       * used and modified by dircache */
     ino_t       dcache_ino;          /*!< inode number,
                                       * used to detect changes in the dircache */
+    /* ARC cache metadata (see arc_list_t enum in dircache.c) */
+    uint8_t
+    arc_list;            /*!< Which ARC list: 0=NONE, 1=T1, 2=T2, 3=B1, 4=B2 */
 };
 
 struct path {

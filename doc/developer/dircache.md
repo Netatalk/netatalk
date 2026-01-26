@@ -68,8 +68,6 @@ Degeneration Under Common Patterns: LRU can perform poorly with certain access p
 For example, if an application loops over an array larger than the number of pages in the cache,
 it will cause a page fault for every access, leading to inefficiency
 (the cache churns and does not hold data long enough to achieve a good hit rate).
-Netatalk currently has a small maximum dircache value (dircachesize = 131072)
-as the implementation performance degrades above this limit.
 
 Cache Pollution: LRU may evict pages that are frequently accessed but not necessarily the most relevant,
 which can lead to less optimal cache performance.
@@ -176,7 +174,7 @@ This high entry rotation is known as "scan eviction" and means by the time you w
 and read a cached entry, it has likely already been evicted which can cause a cascade effect of recursive lookups
 and stats calls to restore the broken cached paths if parent entries are evicted.
 So unless your whole file server has less than 8192 file and directories,
-it is recommended to increase the `dircachesize` value in [afp.conf](https://netatalk.io/manual/en/afp.conf.5).
+it is recommended to increase the `dircache size` value in [afp.conf](https://netatalk.io/manual/en/afp.conf.5).
 
 Future releases will increase the maximum size of the dircache once existing performance issues are addressed.
 We are also considering retaining directories over files during eviction
@@ -387,25 +385,130 @@ You can observe the benefits of dircache validation optimization using these met
 - **iostat disk IOPS**: Measure reduced read IOPS (fewer stat calls to disk)
 - **ZFS ARC stats**: Check for higher hit ratios (more efficient cache utilization)
 
-### Sample Statistics
+---
 
-The actual log format from dircache.c:
+## Directory Cache Statistics Reference
+
+When an afpd child process exits gracefully (user disconnects) or receives SIGUSR1,
+it logs detailed cache statistics. The metrics differ between **LRU** (Least Recently Used)
+and **ARC** (Adaptive Replacement Cache) modes.
+
+### Common Metrics (Both LRU and ARC)
+
+These metrics are reported for both cache modes:
+
+- **entries**: Current number of cached entries at shutdown
+- **max_entries**: Peak entries reached during the session (high-water mark)
+- **config_max**: Maximum cache size from afp.conf configuration
+- **lookups**: Total cache lookup operations performed
+- **validations**: Approximate filesystem validations performed (based on `dircache validation freq`)
+- **added**: Entries added to cache
+- **removed**: Entries removed from cache
+- **expunged**: Invalid entries detected and removed during cache validation before use
+- **invalid_on_use**: Entries found invalid when actually used (tune `dircache validation freq` if high)
+- **evicted**: Entries removed due to cache capacity limits
+- **validation_freq**: Current validation frequency setting
+
+### LRU Mode Statistics
+
+LRU mode provides straightforward hit/miss metrics:
+
+- **hits**: Successful cache lookups (percentage shows hit rate) - served directly from memory
+- **misses**: Cache misses requiring filesystem/CNID access (percentage shows miss rate) - slower
+
+**Example LRU log output:**
 
 ```txt
-dircache statistics: (user: john)
-entries: 4096, max_entries: 8192, config_max: 131072,
-lookups: 100000, hits: 95000 (95.0%), misses: 5000,
-validations: ~950 (1.0%),
-added: 5000, removed: 900, expunged: 10, invalid_on_use: 2, evicted: 256,
-validation_freq: 100
+dircache statistics (LRU): (user: jdoe) entries: 98234, max_entries: 131072,
+config_max: 131072, lookups: 2458716, hits: 1806407 (73.5%), misses: 652309 (26.5%),
+validations: ~24587 (1.0%), added: 152341, removed: 54107, expunged: 8921,
+invalid_on_use: 234, evicted: 53873, validation_freq: 100
 ```
+
+### ARC Mode Statistics
+
+ARC typically outperforms LRU by maintaining both recent and frequent access history.
+However, it may underperform in edge cases such as rapidly changing access patterns
+(ARC relies on historical data) or workloads that fit entirely within cache
+(LRU's simpler design has less overhead).
+
+**Netatalk's ARC Implementation:** Netatalk's ARC retains all data in ghost entries
+rather than metadata-only. This eliminates disk lookups on ghost hits while preserving
+ARC's learning benefits. The total cache footprint is cache + ghosts (2× dircache size),
+but performance is improved across virtually all workload patterns.
+
+#### ARC Cache Hits
+
+- **cache_hits**: T1/T2 cached entries returning immediately (fast)
+- **ghost_hits**: B1/B2 ghost entries found and returned instantly with learning benefit (fast)
+- **total_hits**: Combined percentage of cache_hits + ghost_hits
+- **true_misses**: Complete misses requiring filesystem/CNID access (slower)
+
+#### ARC Ghost Performance
+
+- **learning_benefit**: Percentage of lookups benefiting from ghost history (demonstrates ARC's advantage over LRU)
+- Breakdown shows B1 (recent) vs B2 (frequent) ghost hits
+
+#### ARC Table State
+
+- **T1/T2**: Active cached entries (recent/frequent)
+- **B1/B2**: Ghost entries (recent/frequent, evicted but tracked)
+- **freq_bias**: Percentage in T2; high (>70%) indicates repetitive workload, low (<30%) indicates sequential access
+
+#### ARC Adaptation
+
+- **p**: Target size for T1, automatically tuned by workload
+- **p_range**: Min/max p values observed; shows adaptation range
+- **adaptations**: Total adjustments (increases favor 'recency', decreases favor 'frequency')
+
+#### ARC Operations
+
+- Detailed counters for T1/T2 hits, T1→T2 promotions, and T1/T2 evictions
+
+**Example ARC log output:**
+
+```txt
+dircache statistics (ARC): (user: jdoe) cache_entries: 98234, ghost_entries: 32838,
+max_entries: 131072, config_max: 131072, lookups: 2458716, cache_hits: 1954327 (79.5%),
+ghost_hits: 322351 (13.1%), total_hits: (92.6%), true_misses: 182038 (7.4%),
+validations: ~21365 (0.9%), added: 152341, removed: 54107, expunged: 7234,
+invalid_on_use: 187, evicted: 53873, validation_freq: 100
+
+ARC ghost performance: ghost_hits: 322351 (13.1%), ghost_hits(B1=198423, B2=123928),
+learning_benefit: (13.1%)
+
+ARC table state: T1=32847 (recent/cached), T2=65387 (frequent/cached),
+B1=19234 (recent/ghost), B2=13604 (frequent/ghost), total_cached=98234/131072,
+total_ghosts=32838, freq_bias: (66.6%)
+
+ARC adaptation: p=54823/131072 (41.8% target for T1), p_range=[28341,82934],
+adaptations=142387 (increases=76234, decreases=66153)
+
+ARC operations: cache_hits(T1=587234, T2=1367093), promotions(T1→T2=423871),
+evictions(T1=28934, T2=24939)
+```
+
+### Interpreting Statistics
+
+**High invalid_on_use counter:**
+Low numbers are normal and expected. High values indicate possible external file changes
+or high multi-user interactions. Consider lowering `dircache validation freq`.
+
+**Low invalid_on_use counter:**
+Consider increasing `dircache validation freq` for performance gains.
+
+**Low hit rate (< 20%):**
+May indicate cache size is too small or workload doesn't benefit from caching. Consider increasing `dircache size`.
+
+**High eviction rate:**
+Cache is undersized for working set. Increase `dircache size`.
 
 **Key metrics to monitor:**
 
 - **invalid_on_use**: Should remain low - indicates cached entries stay valid
 - **validations ratio**: Shows validation frequency working as configured (1.0% = every 100th)
-- **hit_ratio**: High percentage (95%) indicates good cache effectiveness
-- **max_entries**: Peak/high-water cache usage this session - helps tune `dircachesize`
+- **hit_ratio**: High percentage indicates good cache effectiveness
+- **max_entries**: Peak cache usage this session - helps tune `dircache size`
 
 ---
 

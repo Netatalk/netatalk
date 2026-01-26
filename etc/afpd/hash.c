@@ -27,7 +27,8 @@
 #ifdef KAZLIB_RCSID
 #endif
 
-#define INIT_BITS   6
+/* Initial hash table INIT_SIZE = 1024 (matches MIN_DIRCACHE_SIZE) */
+#define INIT_BITS   10
 /* must be power of two */
 #define INIT_SIZE   (1UL << (INIT_BITS))
 #define INIT_MASK   ((INIT_SIZE) - 1)
@@ -550,7 +551,7 @@ void hash_insert(hash_t *hash, hnode_t *node, const void *key)
  *    comparison between the unhashed keys. If these match, we have located the
  *    entry.
  */
-hnode_t *hash_lookup(hash_t *hash, const void *key)
+inline hnode_t *hash_lookup(hash_t *hash, const void *key)
 {
     hash_val_t hkey;
     hash_val_t chain;

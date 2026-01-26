@@ -36,6 +36,8 @@ extern void queue_destroy(q_t *q, void (*callback)(void *));
 #define queue_free(q) queue_destroy((q), free)
 extern qnode_t *enqueue(q_t *q, void *data);
 extern qnode_t *prequeue(q_t *q, void *data);
+extern qnode_t *queue_move_to_tail(q_t *q, qnode_t *node);
+extern qnode_t *queue_move_to_tail_of(q_t *from_q, q_t *to_q, qnode_t *node);
 extern void *dequeue(q_t *q);
 
 #endif  /* ATALK_QUEUE_H */

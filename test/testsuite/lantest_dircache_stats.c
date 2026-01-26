@@ -232,8 +232,8 @@ static char *find_dircache_stats_line(void)
         char saved_char = *(line_end + 1);
         *(line_end + 1) = '\0';
 
-        /* Check if this line contains "dircache statistics:" */
-        if (strstr(line_start, "dircache statistics:") != NULL) {
+        /* Check if this line contains "dircache statistics" (LRU or ARC) */
+        if (strstr(line_start, "dircache statistics") != NULL) {
             stats_line = strdup(line_start);
             *(line_end + 1) = saved_char;
             break;
@@ -252,7 +252,7 @@ static char *find_dircache_stats_line(void)
 /*! Display the last N lines from buffer when no stats found */
 static void display_last_log_lines(void)
 {
-    printf("No 'dircache statistics:' logs found.\n\n");
+    printf("No 'dircache statistics' logs found.\n\n");
     printf("(At least 'log level = default:info' is required)\n");
     printf("Last 10 lines of log file:\n");
     printf("---------------------------\n");
