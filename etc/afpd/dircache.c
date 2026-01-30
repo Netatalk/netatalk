@@ -257,7 +257,7 @@ static unsigned long queue_count_max = 0;
 static int should_validate_cache_entry(void)
 {
     /* Thread-safe increment using compiler builtins */
-    uint64_t count = __sync_fetch_and_add(&validation_counter, 1);
+    uint64_t count = __atomic_fetch_add(&validation_counter, 1, __ATOMIC_SEQ_CST);
 
     /* Validate every Nth access to detect external changes */
     if (dircache_validation_freq == 0) {
@@ -930,7 +930,7 @@ void log_dircache_stat(void)
 
         if (dircache_validation_freq > 0) {
             /* Thread-safe read of validation counter */
-            uint64_t counter_value = __sync_fetch_and_add(&validation_counter, 0);
+            uint64_t counter_value = __atomic_load_n(&validation_counter, __ATOMIC_SEQ_CST);
             validation_ratio = ((double)counter_value / (double)dircache_validation_freq) /
                                (double)dircache_stat.lookups * 100.0;
         }
@@ -952,8 +952,8 @@ void log_dircache_stat(void)
         dircache_stat.lookups,
         dircache_stat.hits, hit_ratio,
         dircache_stat.misses,
-        dircache_validation_freq > 0 ? __sync_fetch_and_add(&validation_counter,
-                0) / dircache_validation_freq : 0, validation_ratio,
+        dircache_validation_freq > 0 ? __atomic_load_n(&validation_counter,
+                __ATOMIC_SEQ_CST) / dircache_validation_freq : 0, validation_ratio,
         dircache_stat.added,
         dircache_stat.removed,
         dircache_stat.expunged,
@@ -1082,7 +1082,7 @@ int dircache_set_validation_params(unsigned int freq,
     dircache_metadata_window = meta_win;
     dircache_metadata_threshold = meta_thresh;
     /* Thread-safe reset of validation counter using compiler builtins */
-    __sync_lock_test_and_set(&validation_counter, 0);
+    (void)__atomic_exchange_n(&validation_counter, 0, __ATOMIC_SEQ_CST);
     LOG(log_info, logtype_afpd,
         "dircache: validation parameters updated (freq=%u, window=%us, threshold=%us), counter reset",
         freq, meta_win, meta_thresh);
@@ -1098,7 +1098,7 @@ int dircache_set_validation_params(unsigned int freq,
 void dircache_reset_validation_counter(void)
 {
     /* Thread-safe reset using compiler builtins */
-    __sync_lock_test_and_set(&validation_counter, 0);
+    (void)__atomic_exchange_n(&validation_counter, 0, __ATOMIC_SEQ_CST);
     LOG(log_debug, logtype_afpd, "dircache: validation counter reset");
 }
 
