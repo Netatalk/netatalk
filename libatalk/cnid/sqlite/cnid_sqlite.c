@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2013 Ralph Boehme
- * Copyright (C) 2024-2025 Daniel Markstedt
+ * Copyright (C) 2024-2026 Daniel Markstedt
  * All Rights Reserved.  See COPYING.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -763,7 +763,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                     "cnid_sqlite_add: not using CNID hint, CNID set is depleted or hint not set");
                 was_depleted = 1;
                 sqlite3_reset(db->cnid_add_stmt);
-                sqlite3_clear_bindings(db->cnid_put_stmt);
+                sqlite3_clear_bindings(db->cnid_add_stmt);
                 sqlite3_bind_text(db->cnid_add_stmt, 1, stmt_param_name,
                                   (int)stmt_param_name_len,
                                   SQLITE_STATIC);
@@ -858,7 +858,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 free(sql);
                 sql = NULL;
                 EC_NEG1(asprintf(&sql,
-                                 "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                                 "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
                                  db->cnid_sqlite_voluuid_str));
 
                 if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -868,7 +868,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
+                EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', "
                                        "16 WHERE NOT EXISTS "
                                        "(SELECT changes() AS change "
                                        "FROM sqlite_sequence WHERE change <> 0);",
@@ -1184,7 +1184,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     free(sql);
     sql = NULL;
     EC_NEG1(asprintf(&sql,
-                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
                      db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -1195,7 +1195,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     free(sql);
     sql = NULL;
     EC_NEG1(asprintf(&sql,
-                     "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
+                     "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
                      db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -1471,7 +1471,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             "Creating new CNID table for volume '%s' with ID sequence starting at 16",
             vol->v_path);
         EC_NEG1(asprintf(&sql,
-                         "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                         "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
                          db->cnid_sqlite_voluuid_str));
 
         if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -1481,7 +1481,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
         free(sql);
         sql = NULL;
-        EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
+        EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT '%s',"
                                "16 WHERE NOT EXISTS "
                                "(SELECT changes() AS change "
                                "FROM sqlite_sequence WHERE change <> 0);",
@@ -1494,6 +1494,34 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
         free(sql);
         sql = NULL;
+        /* Verify the sequence was set correctly */
+        sqlite3_stmt *verify_stmt = NULL;
+        EC_NEG1(asprintf(&sql, "SELECT seq FROM sqlite_sequence WHERE name = '%s';",
+                         db->cnid_sqlite_voluuid_str));
+
+        if (sqlite3_prepare_v2(db->cnid_sqlite_con, sql, -1, &verify_stmt,
+                               NULL) == SQLITE_OK) {
+            if (sqlite3_step(verify_stmt) == SQLITE_ROW) {
+                int64_t seq = sqlite3_column_int64(verify_stmt, 0);
+                LOG(log_debug, logtype_cnid,
+                    "Verified: sqlite_sequence initialized to seq = %" PRId64, seq);
+            } else {
+                LOG(log_warning, logtype_cnid,
+                    "No row found in sqlite_sequence after initialization");
+            }
+
+            sqlite3_finalize(verify_stmt);
+        } else {
+            LOG(log_warning, logtype_cnid,
+                "Failed to verify sqlite_sequence initialization");
+        }
+
+        free(sql);
+        sql = NULL;
+    } else {
+        LOG(log_info, logtype_cnid,
+            "CNID table already initialized with %d existing entries",
+            table_row_count);
     }
 
     EC_ZERO(init_prepared_stmt(db));
