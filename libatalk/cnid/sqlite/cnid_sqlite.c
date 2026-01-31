@@ -763,7 +763,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                     "cnid_sqlite_add: not using CNID hint, CNID set is depleted or hint not set");
                 was_depleted = 1;
                 sqlite3_reset(db->cnid_add_stmt);
-                sqlite3_clear_bindings(db->cnid_put_stmt);
+                sqlite3_clear_bindings(db->cnid_add_stmt);
                 sqlite3_bind_text(db->cnid_add_stmt, 1, stmt_param_name,
                                   (int)stmt_param_name_len,
                                   SQLITE_STATIC);
@@ -832,6 +832,8 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
             }
 
             lastid = sqlite3_last_insert_rowid(db->cnid_sqlite_con);
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_add: sqlite3_last_insert_rowid returned: %" PRIu64, lastid);
 
             if ((uint32_t) lastid > UINT32_MAX) {
                 /* CNID set is depleted, restart from scratch */
@@ -886,7 +888,11 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
             }
 
             /* Finally assign our result */
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_add: converting lastid %" PRIu64 " to network byte order", lastid);
             id = htonl((uint32_t) lastid);
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_add: after htonl, id = %" PRIu32 " (network byte order)", id);
 
             if (id == 0) {
                 LOG(log_error, logtype_cnid,
@@ -1473,12 +1479,14 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         EC_NEG1(asprintf(&sql,
                          "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
                          db->cnid_sqlite_voluuid_str));
+        LOG(log_debug, logtype_cnid, "Executing UPDATE sqlite_sequence: %s", sql);
 
         if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
             EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
             EC_FAIL;
         }
 
+        LOG(log_debug, logtype_cnid, "UPDATE sqlite_sequence successful");
         free(sql);
         sql = NULL;
         EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
@@ -1486,6 +1494,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
                                "(SELECT changes() AS change "
                                "FROM sqlite_sequence WHERE change <> 0);",
                          db->cnid_sqlite_voluuid_str));
+        LOG(log_debug, logtype_cnid, "Executing INSERT INTO sqlite_sequence: %s", sql);
 
         if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
             EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "ROLLBACK"));
