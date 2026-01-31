@@ -1450,18 +1450,25 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
     if (asprintf(&check_sql, "SELECT count(*) FROM \"%s\";",
                  db->cnid_sqlite_voluuid_str) != -1) {
+        LOG(log_debug, logtype_cnid, "Checking table row count with: %s", check_sql);
         if (sqlite3_prepare_v2(db->cnid_sqlite_con, check_sql, -1, &check_table_stmt,
                                NULL) == SQLITE_OK) {
             if (sqlite3_step(check_table_stmt) == SQLITE_ROW) {
                 table_row_count = sqlite3_column_int(check_table_stmt, 0);
+                LOG(log_debug, logtype_cnid, "Table row count: %d", table_row_count);
+            } else {
+                LOG(log_debug, logtype_cnid, "Failed to get row count from query");
             }
 
             sqlite3_finalize(check_table_stmt);
+        } else {
+            LOG(log_debug, logtype_cnid, "Failed to prepare row count query");
         }
 
         free(check_sql);
     }
 
+    LOG(log_debug, logtype_cnid, "Checking if table_row_count (%d) == 0 to init sequence", table_row_count);
     if (table_row_count == 0) {
         /* Directory IDs from 1 to 16 are reserved.
          * The Directory ID of the root is always 2.
