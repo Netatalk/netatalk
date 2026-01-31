@@ -1508,8 +1508,35 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             EC_FAIL;
         }
 
+        LOG(log_debug, logtype_cnid, "INSERT INTO sqlite_sequence completed");
         free(sql);
         sql = NULL;
+
+        /* Verify the sequence was set correctly */
+        sqlite3_stmt *verify_stmt = NULL;
+        EC_NEG1(asprintf(&sql, "SELECT seq FROM sqlite_sequence WHERE name = \"%s\";",
+                         db->cnid_sqlite_voluuid_str));
+        LOG(log_debug, logtype_cnid, "Verifying sqlite_sequence with: %s", sql);
+        if (sqlite3_prepare_v2(db->cnid_sqlite_con, sql, -1, &verify_stmt, NULL) == SQLITE_OK) {
+            if (sqlite3_step(verify_stmt) == SQLITE_ROW) {
+                int64_t seq = sqlite3_column_int64(verify_stmt, 0);
+                LOG(log_debug, logtype_cnid, "Verified: sqlite_sequence seq = %" PRId64 " for table %s",
+                    seq, db->cnid_sqlite_voluuid_str);
+            } else {
+                LOG(log_warning, logtype_cnid,
+                    "WARNING: No row found in sqlite_sequence for table %s after initialization!",
+                    db->cnid_sqlite_voluuid_str);
+            }
+            sqlite3_finalize(verify_stmt);
+        } else {
+            LOG(log_warning, logtype_cnid, "WARNING: Failed to prepare verification query");
+        }
+        free(sql);
+        sql = NULL;
+    } else {
+        LOG(log_debug, logtype_cnid,
+            "Skipping sqlite_sequence initialization - table already has %d rows",
+            table_row_count);
     }
 
     EC_ZERO(init_prepared_stmt(db));
