@@ -1484,7 +1484,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
             "Creating new CNID table for volume '%s' with ID sequence starting at 16",
             vol->v_path);
         EC_NEG1(asprintf(&sql,
-                         "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                         "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
                          db->cnid_sqlite_voluuid_str));
         LOG(log_debug, logtype_cnid, "Executing UPDATE sqlite_sequence: %s", sql);
 
