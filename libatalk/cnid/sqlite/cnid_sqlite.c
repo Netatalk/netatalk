@@ -860,7 +860,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
                 free(sql);
                 sql = NULL;
                 EC_NEG1(asprintf(&sql,
-                                 "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                                 "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
                                  db->cnid_sqlite_voluuid_str));
 
                 if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -870,7 +870,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
                 free(sql);
                 sql = NULL;
-                EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", "
+                EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', "
                                        "16 WHERE NOT EXISTS "
                                        "(SELECT changes() AS change "
                                        "FROM sqlite_sequence WHERE change <> 0);",
@@ -1190,7 +1190,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     free(sql);
     sql = NULL;
     EC_NEG1(asprintf(&sql,
-                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = \"%s\";",
+                     "UPDATE sqlite_sequence SET seq = 16 WHERE name = '%s';",
                      db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -1201,7 +1201,7 @@ int cnid_sqlite_wipe(struct _cnid_db *cdb)
     free(sql);
     sql = NULL;
     EC_NEG1(asprintf(&sql,
-                     "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\", 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
+                     "INSERT INTO sqlite_sequence (name,seq) SELECT '%s', 16 WHERE NOT EXISTS (SELECT changes() AS change FROM sqlite_sequence WHERE change <> 0);",
                      db->cnid_sqlite_voluuid_str));
 
     if (cnid_sqlite_execute(db->cnid_sqlite_con, sql) < 0) {
@@ -1496,7 +1496,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         LOG(log_debug, logtype_cnid, "UPDATE sqlite_sequence successful");
         free(sql);
         sql = NULL;
-        EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT \"%s\","
+        EC_NEG1(asprintf(&sql, "INSERT INTO sqlite_sequence (name,seq) SELECT '%s',"
                                "16 WHERE NOT EXISTS "
                                "(SELECT changes() AS change "
                                "FROM sqlite_sequence WHERE change <> 0);",
@@ -1514,7 +1514,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
 
         /* Verify the sequence was set correctly */
         sqlite3_stmt *verify_stmt = NULL;
-        EC_NEG1(asprintf(&sql, "SELECT seq FROM sqlite_sequence WHERE name = \"%s\";",
+        EC_NEG1(asprintf(&sql, "SELECT seq FROM sqlite_sequence WHERE name = '%s';",
                          db->cnid_sqlite_voluuid_str));
         LOG(log_debug, logtype_cnid, "Verifying sqlite_sequence with: %s", sql);
         if (sqlite3_prepare_v2(db->cnid_sqlite_con, sql, -1, &verify_stmt, NULL) == SQLITE_OK) {
