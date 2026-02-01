@@ -8,7 +8,7 @@ asip-status — Queries an AFP server for its capabilities
 
 **asip-status** [-4 | -6] [-d] [-i] [-x] [*HOSTNAME*:*PORT*]
 
-**asip-status** [-v | -version | --version]
+**asip-status** [-v | -version | \-\-version]
 
 # Description
 
@@ -47,7 +47,7 @@ use. You can use **-4** or **-6** option to force IPv4 or IPv6, respectively.
 
 > Enable hex dump output.
 
-**-v**, **-version**, **--version**
+**-v**, **-version**, **\-\-version**
 
 > Show version.
 

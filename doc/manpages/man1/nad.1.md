@@ -6,7 +6,7 @@ nad - Netatalk AppleDouble file utility suite
 
 **nad** [ls | cp | mv | rm | set | find] [...]
 
-**nad** [-v | --version]
+**nad** [-v | \-\-version]
 
 # Description
 
@@ -59,7 +59,7 @@ Find files and directories
 
 Show version.
 
-> nad -v | --version
+> nad -v | \-\-version
 
 # nad ls
 

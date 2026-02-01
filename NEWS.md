@@ -609,7 +609,7 @@ Changes in 3.2.6
        GitHub #1384
        When configuring with '-Dwith-rpath=true' the linker flags
        '-Wl,-rpath,' will be prepended instead of the old '-R' flag.
-       On Linux platforms, we no longer prepend '-Wl,--enable-new-dtags',
+       On Linux platforms, we no longer prepend '-Wl,\-\-enable-new-dtags',
        either.
 
 Changes in 3.2.5
@@ -706,7 +706,7 @@ Changes in 3.2.1
        - Standardises the syntax of the feature macros
        - Fixes the logic of the largefile support macro
        - Disables gssapi support if the Kerberos V UAM is not required
-       - All options are now defined either as 'with-*' or 'with-*-path'
+       - All options are now defined either as 'with-\*' or 'with-\*-path'
        - Please see the Release Notes for a full list of changed options
 * UPD: meson: Enable building with system WolfSSL library, GitHub #1160
        - Build system will attempt to detect
@@ -852,7 +852,7 @@ Changes in 3.1.16
        with mysql_config and dtrace, GitHub#384
 * FIX: build system: Support building quota against libtirpc, GitHub#385
 * FIX: build system: Fix variable substitution in configure summary, GitHub#443
-* REM: build system: Remove ABI checks and the --enable-developer option, GitHub#262
+* REM: build system: Remove ABI checks and the \-\-enable-developer option, GitHub#262
 * FIX: initscript: Improvements to Debian SysV init script
        - Source init-functions, GitHub#386
        - Add a Description and Short-Description, GitHub#428
@@ -877,7 +877,7 @@ Changes in 3.1.15
 * NEW: Support for macOS hosts, Intel and Apple silicon, GitHub#281
 * FIX: configure.ac: update deprecated autoconf syntax
 * UPD: configure.ac: Support linking with system shared libraries
-       Introduces the --with-talloc option
+       Introduces the \-\-with-talloc option
 * FIX: macros: largefile-check macro for largefile (clang 16)
 * UPD: macros: Update pthread macro to the latest from gnu.org
 * FIX: initscripts: Modernize Systemd service file.
@@ -993,17 +993,17 @@ Changes in 3.1.9
        disabled, bug #606
 * NEW: LibreSSL support, FR #98
 * FIX: cannot build when acl is not defined, bug #574
-* UPD: configure option "--with-init-style=" for Gentoo.
+* UPD: configure option "\-\-with-init-style=" for Gentoo.
        "gentoo" is renamed to "gentoo-openrc".
        "gentoo-openrc" is same as "openrc".
        "gentoo-systemd" is same as "systemd".
-* NEW: configure option "--with-dbus-daemon=PATH" for Spotlight feature
+* NEW: configure option "\-\-with-dbus-daemon=PATH" for Spotlight feature
 * UPD: use "tracker daemon" command instead of "tracker-control" command
        if Gnome Tracker is the recent version.
-* NEW: configure options "--enable-rpath" and "--disable-rpath" which
+* NEW: configure options "\-\-enable-rpath" and "\-\-disable-rpath" which
        can be used to force setting of RPATH (default on Solaris/NetBSD)
        or disable it.
-* NEW: configure option "--with-tracker-install-prefix" allows setting
+* NEW: configure option "\-\-with-tracker-install-prefix" allows setting
        an alternate install prefix for tracker when cross-compiling.
 * UPD: asip-status.pl: IPv6 support
 * UPD: asip-status.pl: show GSS-UAM SPNEGO blob
@@ -1059,9 +1059,9 @@ Changes in 3.1.6
 * UPD: afpd: distribute SIGHUP from parent afpd to children and force
        reload shares
 * FIX: netatalk: refresh Zeroconf registration when receiving SIGHUP
-* NEW: configure option "--with-init-style=debian-systemd" for Debian 8 jessie
+* NEW: configure option "\-\-with-init-style=debian-systemd" for Debian 8 jessie
        and later.
-       "--with-init-style=debian" is renamed "--with-init-style=debian-sysv".
+       "\-\-with-init-style=debian" is renamed "\-\-with-init-style=debian-sysv".
 
 Changes in 3.1.5
 ----------------
@@ -1147,11 +1147,11 @@ Changes in 3.1.0
 
 * NEW: AFP Spotlight support with Gnome Tracker
 * NEW: New option "spotlight" (G/V)
-* NEW: Configure option --with-tracker-pkgconfig-version
-* NEW: Configure option --with-tracker-prefix
+* NEW: Configure option \-\-with-tracker-pkgconfig-version
+* NEW: Configure option \-\-with-tracker-prefix
 * NEW: If Spotlight is enabled, launch our own dbus instance
 * NEW: New option "dbus daemon" (G)
-* UPD: Add configure option --with-afpstats for overriding the
+* UPD: Add configure option \-\-with-afpstats for overriding the
        result of autodetecting dbus-glib presence
 * NEW: Add recvfile support with splice() on Linux. New global options
        "recvfile" (default: no) and "splice size" (default 64k).
@@ -1191,7 +1191,7 @@ Changes in 3.0.6
 * FIX: Disable Kerberos UAM if AFP service principal name can't be
        evaluated. Fixes bug #531.
 * FIX: Fix handling of large number of volumes. Bug #527.
-* NEW: Configure option --with-tbd which can be used to disable the
+* NEW: Configure option \-\-with-tbd which can be used to disable the
        use of the bundled tdb and use a system installed version.
 
 Changes in 3.0.5
@@ -1246,7 +1246,7 @@ Changes in 3.0.3
 
 * UPD: afpd: Increase default DSI server quantum to 1 MB
 * UPD: bundled libevent2 is now static
-* NEW: --with-lockfile=PATH configure option for specifying an
+* NEW: \-\-with-lockfile=PATH configure option for specifying an
        alternative path for the netatalk lockfile.
 * UPD: systemd service file use PIDFile and ExecReload.
        From FR #70.
@@ -1257,15 +1257,15 @@ Changes in 3.0.3
        same name as the username.
        Fixes bug #497.
 * UPD: Fix PAM config install, new default installation dir is
-       $sysconfdir/pam.d/. Add configure option --with-pam-confdir
+       $sysconfdir/pam.d/. Add configure option \-\-with-pam-confdir
        to specify alternative path.
 * NEW: AFP stats about active session via dbus IPC. Client side python
        program 'afpstats'. Requires dbus, dbus-glib any python-dbus.
-       configure option --dbus-sysconf-dir for specifying dbus
+       configure option \-\-dbus-sysconf-dir for specifying dbus
        system security configuration files.
        New option 'afpstats' (default: no) which determines whether
        to enable the feature or not.
-* NEW: configure option --with-init-dir
+* NEW: configure option \-\-with-init-dir
 * NEW: dtrace probes, cf include/atalk/afp_dtrace.d for available
        probes.
 * UPD: Reload groups when reloading volumes. FR #71.
@@ -1346,10 +1346,10 @@ Changes in 3.0.1
 * UPD: Install relevant includes necessary for building programs with
        installed headers and shared lib libatalk
 * UPD: libevent configure args to pick up installed version. Removed
-       configure arg --disable-libevent, added configure args
-       --with-libevent-header|lib.
+       configure arg \-\-disable-libevent, added configure args
+       \-\-with-libevent-header|lib.
 * UPD: gentoo initscript: merge from portage netatalk.init,v 1.1
-* REM: Remove --with-smbsharemodes configure option, it was an
+* REM: Remove \-\-with-smbsharemodes configure option, it was an
        empty stub not yet implemented
 
 Changes in 3.0
@@ -1406,7 +1406,7 @@ Changes in 3.0 alpha2
        as root. Previously only unlinking the adouble:v2 file was done as root
 * UPD: dbd: -C option removes CAP encoding
 * UPD: Add graceful option to RedHat init script
-* UPD: Add --disable-bundled-libevent configure options When set to yes,
+* UPD: Add \-\-disable-bundled-libevent configure options When set to yes,
        we rely on a properly installed version on libevent CPPFLAGS and LDFLAGS
        should be set properly to pick that up
 * UPD: Run ldconfig on Linux at the end of make install
@@ -1484,10 +1484,10 @@ Changes in 2.2.2
        created for the original connecting user. Said differently: if you
        know the password of adminauthuser, you can authenticate as any other
        user.
-* NEW: configure option "--enable-suse-systemd" for openSUSE12.1 and later.
-       "--enable-redhat-systemd" and "--enable-suse-systemd" are same as
-       "--enable-systemd".
-       "--enable-suse" is renamed "--enable-suse-sysv".
+* NEW: configure option "\-\-enable-suse-systemd" for openSUSE12.1 and later.
+       "\-\-enable-redhat-systemd" and "\-\-enable-suse-systemd" are same as
+       "\-\-enable-systemd".
+       "\-\-enable-suse" is renamed "\-\-enable-suse-sysv".
 * NEW: experimental systemd service files in distrib/systemd/
 * UPD: afpd: Enhanced POSIX ACL mapping semantics, from Laura Mueller
 * UPD: afpd: Reset options every time a :DEFAULT: line is found in a
@@ -1519,8 +1519,8 @@ Changes in 2.2.1
 
 * NEW: afpd: disable continous service feature by default, new option
        -keepsessions to enable it
-* NEW: configure option "--enable-redhat-systemd" for Fedora15 and later.
-       "--enable-redhat" is renamed "--enable-redhat-sysv".
+* NEW: configure option "\-\-enable-redhat-systemd" for Fedora15 and later.
+       "\-\-enable-redhat" is renamed "\-\-enable-redhat-sysv".
 * UPD: afpd: Enhance ACL support detection for volumes: enable them per volume
        if
        1) ACL support compiled in, 2) the volume supports ACLs, 3) the new
@@ -1533,7 +1533,7 @@ Changes in 2.2.1
 * UPD: afpd: add support for new NetBSD quota subsystem, Bug ID 3249879
 * FIX: afpd: increase BerkeleyDB locks and lockobjs
 * FIX: afpd: create special folder as root
-* FIX: afpd: fix compilation error if --enable-ddp is used
+* FIX: afpd: fix compilation error if \-\-enable-ddp is used
 * FIX: afpd: More robust IPC reconnect error handling
 * FIX: afpd: ACL access checking
 * FIX: afpd: fix a possible race condition between SIGCHLD handler and
@@ -1674,7 +1674,7 @@ Changes in 2.2alpha1
        directory service, by mapping ACLs to UARight
 * UPD: afpd: performance improvements for ACL access calculations
 * UPD: AppleTalk is disabled by default at configuration time. If needed
-       use configure switch --enable-ddp.
+       use configure switch \-\-enable-ddp.
 * FIX: afpd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
        use non-blocking IO and select instead.
 * FIX: cnid_dbd: Solaris 10 compatibilty fix: don't use SO_SNDTIMEO/SO_RCVTIMEO,
@@ -1823,7 +1823,7 @@ Changes in 2.1-beta1
 * FIX: afpd: UNIX permissions handling
 * FIX: cnid_dbd: always use BerkeleyDB transactions
 * FIX: initscripts installation now correctly uses autoconf paths,
-       i.e. they're installed to --sysconfdir.
+       i.e. they're installed to \-\-sysconfdir.
 * FIX: UTF-8 volume name length
 * FIX: atalkd: workaround for broken Linux 2.6 AT kernel module:
        Linux 2.6 sends broadcast queries to the first available socket
@@ -1939,7 +1939,7 @@ Changes in 2.0.2
 Changes in 2.0.1
 ----------------
 
-* NEW: --enable-debian configure option. Will install /etc/init.d/atalk
+* NEW: \-\-enable-debian configure option. Will install /etc/init.d/atalk
        to get not in conflict with standard debian /etc/init.d/netatalk.
        Reads netatalk.conf from $ETCDIR and not from /etc/default/
 * UPD: Disable logger code by default. Log to syslog instead
@@ -2046,7 +2046,7 @@ Changes in 2.0-beta2
 * UPD: updated documentation
 * UPD: we now require Berkeley DB >= 4.1
 * UPD: 64bit Linux fixes from Stew Benedict, Mandrakesoft
-* UPD: remove --enable-sendfile
+* UPD: remove \-\-enable-sendfile
 * UPD: more verbose error messages
 * FIX: better handling for resource forks without read access
 * FIX: Tru64 build, by Burkhard Schmidt
@@ -2148,7 +2148,7 @@ Changes in 1.6.4
   [Sam Noble]
 * UPD: afpd.8: Updated the option documentation.
   [Thomas Kaiser, Sebastian Rittau]
-* FIX: configure: Removed broken --with-flock-locks option. [Bjoern Fernhomberg]
+* FIX: configure: Removed broken \-\-with-flock-locks option. [Bjoern Fernhomberg]
 * FIX: libatalk: Do not log network probe (OSX 10.3). [Didier Gautheron]
 * FIX: libatalk: Deadlock in signal handlers. [Didier]
 * FIX: libatalk: Compilation with Linux kernel 2.6 fixed. [Sebastian, Bjoern]
@@ -2158,7 +2158,7 @@ Changes in 1.6.4
 * FIX: afpd: Compilation issues. [Olaf Hering, Sebastian]
 * FIX: cnid: Fix compile problems on Tru64. [Burkhard Schmidt]
 * FIX: megatron: Fixed an uninitialized variable. [Olaf]
-* FIX: installation: Don't overwrite PAM file if --enable-overwrite configure
+* FIX: installation: Don't overwrite PAM file if \-\-enable-overwrite configure
        option is not set. [Sam, Ryan Cleary]
 * FIX: installation: Fixed BSD installation. [Toru TAKAMIZU]
 * FIX: docs: Removed ssl-dir/ssl-dirs confusion from doc/INSTALL. [Bjoern]
@@ -2192,7 +2192,7 @@ Changes in 1.6.2
 Changes in 1.6.1
 ----------------
 
-* UPD: Improve --enable-fhs. [Olaf Hering]
+* UPD: Improve \-\-enable-fhs. [Olaf Hering]
 * UPD: Add BDB 4.1.x support.
 * UPD: Add more documentation on CNID, as well as list which versions
        of Berkeley DB are supported.
@@ -2213,7 +2213,7 @@ Changes in 1.6.0
 Changes in 1.6pre2
 ------------------
 
-* UPD: Removed --with-catsearch option from configure and enable FPCatSearch
+* UPD: Removed \-\-with-catsearch option from configure and enable FPCatSearch
        by default.
 * UPD: The dbpath argument does now support variable substitution.
 * FIX: Build fix for non-GNU-C compilers in libatalk/util/logger.c.
@@ -2250,12 +2250,12 @@ Changes in 1.5.4
 * FIX: File open read only and then read write (aka pb with Illustrator).
 * FIX: Problems with unexpected EOF when reading files on a ddp connection
        Photoshop, old finder.
-* FIX: --with-nls-dir option does now work
+* FIX: \-\-with-nls-dir option does now work
 
 Changes in 1.5.3
 ----------------
 
-* UPD: Extend the --disable-shell-check functionality to ignore users
+* UPD: Extend the \-\-disable-shell-check functionality to ignore users
        with *no* shell.  Also, send a log message if a user is refused login
        based on the fact that they have no shell.
 * UPD: Autoconf updates.
@@ -2277,7 +2277,7 @@ Changes in 1.5.2
 ----------------
 
 * NEW: NetBSD support contributed by David Rankin and NetBSD contributors.
-       This includes a new configure option --enable-netbsd.
+       This includes a new configure option \-\-enable-netbsd.
 * NEW: Add the -client_polling afpd.conf flag to allow for clients to poll
        the server every 10 seconds for open window updates.  Currently
        this is the only way to get asynchronous directory updates.
@@ -2436,8 +2436,8 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
 
 2001-11-27  joe c   <marcus@marcuscom.com>
 
-* configure.in: Removed the --with-cnid-db option, and added
-    --with-did=cnid for consistency
+* configure.in: Removed the \-\-with-cnid-db option, and added
+    \-\-with-did=cnid for consistency
 
 2001-11-19  pooba53 <bobo@bocklabs.wisc.edu>
 
@@ -2672,7 +2672,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
 
 * config/Makefile.am: Added a variable substitution from
   configure.in to stop overwriting the config files.
-* configure.in: Added --enable-overwrite flag that enables the
+* configure.in: Added \-\-enable-overwrite flag that enables the
   overwriting of configure files. Default is no overwrite, but does
   check for missing files.
 
@@ -2683,7 +2683,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
 2001-08-21  jeff b  <jeff@univrel.pr.uconn.edu>
 
 * configure.in: now does rudimentary check for DB3 library
-  if CNID DB option (--enable-cnid-db) is given, with
+  if CNID DB option (\-\-enable-cnid-db) is given, with
   option to specify path to DB3 (Jeff)
 
 2001-08-16  Uwe Hees <uwe.hees@rz-online.de>
@@ -2797,7 +2797,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
   etc/atalkd/Makefile.am, etc/papd/Makefile.am,
   man/man5/Makefile.am, man/man8/Makefile.am: patch #433906
   to move to pkgconfdir for package config files (Sebastian Rittau)
-* configure.in: fixed error that caused --with-did not to function
+* configure.in: fixed error that caused \-\-with-did not to function
   properly
 
 2001-06-13  Sam Noble <ns@shadow.org>
@@ -2858,7 +2858,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
   avoid overwriting AppleDouble headers (finally)
 * configure.in, etc/afpd/enumerate.c, etc/afpd/parse_mtab.c:
   added initial support for mtab DID format. removed "lastdid"
-  configure option in favor of --with-did={last,mtab}
+  configure option in favor of \-\-with-did={last,mtab}
 
 2001-06-01  jeff b  <jeff@univrel.pr.uconn.edu>
 
@@ -2888,7 +2888,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
 
 2001-05-09  jeff b  <jeff@univrel.pr.uconn.edu>
 
-* autogen.sh: added automake --include-deps to autogen.sh to
+* autogen.sh: added automake \-\-include-deps to autogen.sh to
   promote more portable Makefiles (thanks to Christian
   Weisgerber <naddy@mips.inka.de> from OpenBSD)
 
@@ -3083,7 +3083,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
   (Bug #233756)
 * distrib/initscripts/.cvsignore: removed pulling of atalk
 * configure.in, etc/uams/Makefile.am: conditional compilation support
-  for PGP UAM module using --enable-pgp-uam
+  for PGP UAM module using \-\-enable-pgp-uam
 * configure.in, etc/uams/Makefile.am, etc/uams/uams_krb4/Makefile.am,
   etc/uams/uams_krb4/.cvsignore, etc/uams/uams_krb4/*.c: modifications
   for future Kerberos module reintegration
@@ -3727,7 +3727,7 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
 * etc/afpd/config.c (configfree): don't do an asp_close. instead,
   do an atp_close and free the asp object. oh yeah, as afpd needs
   to export symbols to its modules, make sure you don't do anything
-  more exciting than strip --strip-debug with it.
+  more exciting than strip \-\-strip-debug with it.
 
 1999-05-12  a sun  <asun@hecate.darksunrising.blah>
 
@@ -3886,10 +3886,10 @@ List of changes between version 1.4b2+asun and 1.5, from the historical *ChangeL
   generation/reading with macbinary files.
 * bin/megatron: changed all of the bcopy/bzero/bcmp's to
   memcpy/memset/memcmp's. added macbinary III support.
-* bin/megatron/macbin.c (bin_open): added --stdout as an option so
+* bin/megatron/macbin.c (bin_open): added \-\-stdout as an option so
   that we can stream macbinary file creation to stdout.
-* bin/megatron/megatron.c: incorporated information patch (--header
-  and --macheader) from <fmorton@base2inc.com>.
+* bin/megatron/megatron.c: incorporated information patch (\-\-header
+  and \-\-macheader) from <fmorton@base2inc.com>.
 
 1999-04-02  a sun  <asun@hecate.darksunrising.blah>
 
