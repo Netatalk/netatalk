@@ -12,9 +12,9 @@ addump - Dump AppleSingle/AppleDouble format data
 
 **addump** [-d] [*FILE*]
 
-**addump** [-h | -help | --help]
+**addump** [-h | -help | \-\-help]
 
-**addump** [-v | -version | --version]
+**addump** [-v | -version | \-\-version]
 
 # Description
 
@@ -48,11 +48,11 @@ look for extended attributes, *.AppleDouble/FILE* and *.\_FILE*. If
 
 > Dump *FILE*. Assume FinderInfo to be DirInfo.
 
-**-h**, **-help**, **--help**
+**-h**, **-help**, **\-\-help**
 
 > Display the help and exit
 
-**-v**, **-version**, **--version**
+**-v**, **-version**, **\-\-version**
 
 > Show version and exit
 
