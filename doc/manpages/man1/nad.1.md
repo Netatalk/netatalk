@@ -10,11 +10,12 @@ nad - Netatalk AppleDouble file utility suite
 
 # Description
 
-**nad** is a file utility suite that operates on Netatalk AFP shared volumes.
-AppleDouble data (extended attributes of files, .\_files in same
-directories or files in **.AppleDouble** directories) and the CNID
-databases are updated as appropriate when files in a shared Netatalk
-volume are modified.
+**nad** is a file utility suite that can be used on a Netatalk host
+to manipulate files and directories in AFP shared volumes.
+AppleDouble data, which could be one of extended attributes of files,
+.\_ files, or files in **.AppleDouble** directories,
+as well as the CNID databases are updated appropriately
+when files in the shared Netatalk volume are modified.
 
 Using **nad** is preferable over the operating system's native file operation commands
 on files and directories in a Netatalk shared volume, because it preserves the integrity
@@ -300,22 +301,24 @@ directory.
 List files in a shared AFP volume:
 
     $ nad ls -al /srv/afpshare
-    -------s-v- ------ --- ---- ----          35   TheVolumeSettingsFolder
-    ---------v- ------ --- ---- ----          36   Network Trash Folder
-    ----ic-s--- ------ gre PNGf GKON          39   Picture 1.png
     ----i---b-- ------ --- APPL SBMC          40   AppleShare IP Browser
-    ----ic----- ------ --- PNGf GKON          41   Picture 3.png
+    ---------v- ------ --- ---- ----          36   Network Trash Folder
+    -------s-v- ------ --- ---- ----          35   TheVolumeSettingsFolder
+    ----ic-s--- ------ gre PNGf GKON          39   picture 1.png
+    ----ic----- ------ --- PNGf GKON          41   picture 2.png
+    ----ic----- ------ --- PNGf GKON          42   picture 3.png
 
-The first column shows the Finder flags,
-the second column shows the AFP attributes,
-the third column shows the color label,
-the fourth and fifth columns are the file type and creator,
-the sixth column is the CNID from the AppleDouble data,
-and the last column is the file name.
+Legend:
 
-Note that the sort order of the output is by CNID, not alphabetically.
+- column 1: Finder flags
+- column 2: AFP attributes
+- column 3: color label
+- column 4: type
+- column 5: creator
+- column 6: CNID from AppleDouble
+- column 7: file name
 
-Find files named "Report" in the shared AFP volume at /srv/afpshare:
+Find files with "Report" in the name in the shared AFP volume at /srv/afpshare:
 
     $ nad find -v /srv/afpshare Report
     /srv/afpshare/Documents/2025/Report January 2025.doc
