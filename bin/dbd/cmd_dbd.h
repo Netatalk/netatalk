@@ -6,8 +6,6 @@
 
 #include <atalk/netatalk_conf.h>
 
-#include "dbif.h"
-
 enum logtype {LOGSTD, LOGDEBUG};
 typedef unsigned int dbd_flags_t;
 
