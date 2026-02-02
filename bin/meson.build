@@ -1,4 +1,5 @@
 subdir('afppasswd')
+subdir('dbd')
 subdir('misc')
 subdir('nad')
 

@@ -29,6 +29,7 @@
 #include <atalk/acl.h>
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
+#include <atalk/cnid_private.h>
 #include <atalk/compat.h>
 #include <atalk/ea.h>
 #include <atalk/errchk.h>
@@ -38,9 +39,6 @@
 #include <atalk/volume.h>
 
 #include "cmd_dbd.h"
-#include "db_param.h"
-#include "dbd.h"
-#include "dbif.h"
 
 /* Some defines to ease code parsing */
 #define ADDIR_OK (addir_ok == 0)
@@ -60,8 +58,6 @@ static char           *special_dirs[] = {
     ".zfs",
     NULL
 };
-static struct cnid_dbd_rqst rqst _U_;
-static struct cnid_dbd_rply rply _U_;
 static jmp_buf jmp;
 static char pname[MAXPATHLEN] = "../";
 
