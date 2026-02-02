@@ -54,6 +54,11 @@ static int ls_u;
 static int first = 1;
 static int recursion;
 
+static int compare_names(const struct dirent **a, const struct dirent **b)
+{
+    return strcmp((*a)->d_name, (*b)->d_name);
+}
+
 static char           *netatalk_dirs[] = {
     ADv2_DIRNAME,
     ".AppleDB",
@@ -528,7 +533,8 @@ static int ad_ls_r(char *path, afpvol_t *vol)
     int ret = 0, cwd, dirprinted = 0, dirempty;
     char *tmp;
     static char cwdpath[MAXPATHLEN + 1];
-    DIR *dp;
+    struct dirent **namelist = NULL;
+    int n, i;
     struct dirent *ep;
     static struct stat st;      /* Save some stack space */
 
@@ -563,15 +569,25 @@ static int ad_ls_r(char *path, afpvol_t *vol)
         return -1;
     }
 
-    if ((dp = opendir(".")) == NULL) {
-        perror("Couldn't opendir .");
+    n = scandir(".", &namelist, NULL, compare_names);
+
+    if (n < 0) {
+        perror("scandir");
+
+        if (fchdir(cwd) < 0) {
+            fprintf(stderr, "can't chdir to %i (%s)\n", cwd, strerror(errno));
+        }
+
+        close(cwd);
         return -1;
     }
 
     /* First run: print everything */
     dirempty = 1;
 
-    while ((ep = readdir(dp))) {
+    for (i = 0; i < n; i++) {
+        ep = namelist[i];
+
         if (alarmed) {
             ret = -1;
             goto exit;
@@ -616,9 +632,9 @@ static int ad_ls_r(char *path, afpvol_t *vol)
 
     /* Second run: recurse to dirs */
     if (ls_R) {
-        rewinddir(dp);
+        for (i = 0; i < n; i++) {
+            ep = namelist[i];
 
-        while ((ep = readdir(dp))) {
             if (alarmed) {
                 ret = -1;
                 goto exit;
@@ -652,10 +668,18 @@ static int ad_ls_r(char *path, afpvol_t *vol)
     }
 
 exit:
-    closedir(dp);
+
+    if (namelist) {
+        for (i = 0; i < n; i++) {
+            free(namelist[i]);
+        }
+
+        free(namelist);
+    }
 
     if (fchdir(cwd) < 0) {
-        fprintf(stderr, "can't chdir to %i (%s)", cwd, strerror(errno));
+        fprintf(stderr, "can't chdir to %i (%s)\n", cwd, strerror(errno));
+        ret = -1;
     }
 
     close(cwd);
