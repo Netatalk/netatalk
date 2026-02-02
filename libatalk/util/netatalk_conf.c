@@ -2696,16 +2696,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
             options->dircache_mode = 0;  /* Default to LRU */
         }
     }
-    /* Parse dircache validation parameters */
+    /* Parse dircache validation parameter */
     options->dircache_validation_freq = getoption_int(config, INISEC_GLOBAL,
                                         "dircache validation freq", NULL,
                                         DEFAULT_DIRCACHE_VALIDATION_FREQ);
-    options->dircache_metadata_window = getoption_int(config, INISEC_GLOBAL,
-                                        "dircache metadata window", NULL,
-                                        DEFAULT_DIRCACHE_METADATA_WINDOW);
-    options->dircache_metadata_threshold = getoption_int(config, INISEC_GLOBAL,
-                                           "dircache metadata threshold", NULL,
-                                           DEFAULT_DIRCACHE_METADATA_THRESHOLD);
     options->tcp_sndbuf     = getoption_int(config, INISEC_GLOBAL, "tcpsndbuf",
                                             NULL, 0);
     options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",

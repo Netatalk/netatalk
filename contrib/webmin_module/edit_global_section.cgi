@@ -515,34 +515,27 @@ print &ui_table_row(
                     &ui_filebox('p_dbus daemon', $values[0])
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircachesize', \%in);
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache size', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_dircachesize'},
-                    "<input name='p_dircachesize' type='number' min='0' max='131072' value='"
+                    "<input name='p_dircache size' type='number' min='0' max='2097152' value='"
                     . $values[0] . "'>" . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
+);
+
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache mode', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_dircache_mode'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'dircache mode', $text{'edit_undefined'}, 'lru',
+                                  'lru',       'arc',       'arc'
+                    )
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache validation freq', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_dircache_validation_freq'},
                     "<input name='p_dircache validation freq' type='number' min='1' max='100' value='"
-                    . $values[0] . "'>" . " "
-                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache metadata window', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_dircache_metadata_window'},
-                    "<input name='p_dircache metadata window' type='number' min='60' max='3600' value='"
-                    . $values[0] . "'>" . " "
-                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
-);
-
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache metadata threshold', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_dircache_metadata_threshold'},
-                    "<input name='p_dircache metadata threshold' type='number' min='10' max='1800' value='"
                     . $values[0] . "'>" . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );

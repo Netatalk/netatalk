@@ -553,22 +553,6 @@ compatibility), higher values validate less frequently.
 > If Netatalk is the only process accessing the volume you can safely
 set a value of 100 for maximum performance.
 
-dircache metadata window = *number* **(G)**
-
-> Time window in seconds for distinguishing metadata-only changes from
-content changes in directories.
-> Default: 300 seconds (5 minutes). Range: 60-3600 seconds.
-> If Netatalk is the only process accessing the volume you can safely
-set a value of 3600.
-
-dircache metadata threshold = *number* **(G)**
-
-> Maximum time difference in seconds between cached and current directory
-ctime to be considered a metadata-only change.
-> Default: 60 seconds (1 minute). Range: 10-1800 seconds.
-> If Netatalk is the only process accessing the volume you can safely
-set a value of 1800.
-
 dircache files = *BOOLEAN* (default: *no*) **(G)**
 
 > Whether to allow files to be cached in the directory cache alongside
