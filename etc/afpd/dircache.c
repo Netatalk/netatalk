@@ -120,12 +120,9 @@ static unsigned long queue_count_max = 0;
 
 /*
  * Configuration variables for cache validation behavior
- * These control how frequently we validate cached entries against filesystem
+ * Controls how frequently we validate cached entries against filesystem
  */
 static unsigned int dircache_validation_freq = DEFAULT_DIRCACHE_VALIDATION_FREQ;
-static unsigned int dircache_metadata_window = DEFAULT_DIRCACHE_METADATA_WINDOW;
-static unsigned int dircache_metadata_threshold =
-    DEFAULT_DIRCACHE_METADATA_THRESHOLD;
 
 /* Counter for probabilistic validation - thread-safe with compiler builtins */
 static volatile uint64_t validation_counter = 0;
@@ -933,83 +930,6 @@ static int should_validate_cache_entry(void)
     return ((count + 1) % dircache_validation_freq == 0);
 }
 
-/*!
- * @brief Smart validation for directory cache entries
- *
- * Distinguishes between metadata-only changes (permissions, xattrs) and
- * content changes (files added/removed) to avoid unnecessary cache invalidation.
- * This is critical for AFP performance as directory ctime changes frequently
- * for reasons that don't affect cached directory information.
- *
- * @param[in] cdir   cached directory entry
- * @param[in] st     fresh stat information from filesystem
- *
- * @returns 1 if entry should be invalidated, 0 if still valid
- */
-static int cache_entry_externally_modified(struct dir *cdir,
-        const struct stat *st)
-{
-    AFP_ASSERT(cdir);
-    AFP_ASSERT(st);
-
-    /* Inode number changed means file was deleted and recreated */
-    if (cdir->dcache_ino != st->st_ino) {
-        LOG(log_debug, logtype_afpd,
-            "dircache: inode changed for \"%s\" (%llu -> %llu)",
-            cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)",
-            (unsigned long long)cdir->dcache_ino,
-            (unsigned long long)st->st_ino);
-        return 1;
-    }
-
-    /* No ctime change means no external modification */
-    if (cdir->dcache_ctime == st->st_ctime) {
-        return 0;
-    }
-
-    /* Files: any ctime change is significant */
-    if (cdir->d_flags & DIRF_ISFILE) {
-        LOG(log_debug, logtype_afpd,
-            "dircache: file ctime changed for \"%s\"",
-            cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
-        return 1;
-    }
-
-    /*
-     * Directories: ctime changes for multiple reasons:
-     * 1. Content changes (files added/removed) - should invalidate
-     * 2. Metadata changes (permissions, xattrs) - should NOT invalidate
-     * 3. Subdirectory changes - should NOT invalidate parent
-     *
-     * Heuristic: Recent, small ctime changes are likely metadata-only.
-     * Older or larger changes more likely content modification.
-     */
-    time_t now = time(NULL);
-    time_t ctime_age = now - st->st_ctime;
-    time_t ctime_delta = st->st_ctime - cdir->dcache_ctime;
-
-    if (ctime_age <= dircache_metadata_window &&
-            ctime_delta <= dircache_metadata_threshold) {
-        /*
-         * Recent, small change - likely metadata update.
-         * Update cached ctime to prevent repeated checks and continue.
-         */
-        LOG(log_debug, logtype_afpd,
-            "dircache: metadata change detected for \"%s\", updating cached ctime",
-            cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
-        cdir->dcache_ctime = st->st_ctime;
-        /* Keep d_rights_cache unchanged - trust it was set by Netatalk operations.
-         * External permission changes will be detected, recalculated and updated by accessmode() on next access. */
-        return 0;
-    }
-
-    /* Significant change - assume content modification */
-    LOG(log_debug, logtype_afpd,
-        "dircache: significant change detected for \"%s\" (age=%lds, delta=%lds)",
-        cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)", (long)ctime_age,
-        (long)ctime_delta);
-    return 1;
-}
 
 /*!
  * @brief Remove a fixed number of (oldest) entries from the cache and indexes
@@ -1146,11 +1066,13 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 return NULL;
             }
 
-            /* Smart validation: distinguish meaningful changes */
-            if (cache_entry_externally_modified(cdir, &st)) {
+            /* Direct validation: inode or ctime changed = invalidate */
+            if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
                 LOG(log_debug, logtype_afpd,
-                    "dircache(cnid:%u): {externally modified:\"%s\"}",
-                    ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)");
+                    "dircache(cnid:%u): {modified:\"%s\"} (ino:%llu->%llu, ctime:%ld->%ld)",
+                    ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)",
+                    (unsigned long long)cdir->dcache_ino, (unsigned long long)st.st_ino,
+                    (long)cdir->dcache_ctime, (long)st.st_ctime);
                 (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
                 dircache_stat.expunged++;
                 dircache_stat.misses++;  /* Count expunge as miss */
@@ -1264,11 +1186,13 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 return NULL;
             }
 
-            /* Smart validation for external modifications */
-            if (cache_entry_externally_modified(cdir, &st)) {
+            /* Direct validation: inode or ctime changed = invalidate */
+            if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
                 LOG(log_debug, logtype_afpd,
-                    "dircache(did:%u,\"%s\"): {externally modified}",
-                    ntohl(dir->d_did), name);
+                    "dircache(did:%u,\"%s\"): {modified} (ino:%llu->%llu, ctime:%ld->%ld)",
+                    ntohl(dir->d_did), name,
+                    (unsigned long long)cdir->dcache_ino, (unsigned long long)st.st_ino,
+                    (long)cdir->dcache_ctime, (long)st.st_ctime);
                 (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
                 dircache_stat.expunged++;
                 dircache_stat.misses++;  /* Count expunge as miss */
@@ -1769,18 +1693,9 @@ int dircache_init(int reqsize)
     rootParent.arc_list = 0;  /* ARC_NONE (not in any ARC list) */
 
     /* Apply validation parameters from configuration */
-    if (AFPobj) {
-        int freq = AFPobj->options.dircache_validation_freq;
-        int window = AFPobj->options.dircache_metadata_window;
-        int threshold = AFPobj->options.dircache_metadata_threshold;
-
-        /* Only call if non-default values are configured (0 means use defaults) */
-        if (freq > 0 || window > 0 || threshold > 0) {
-            dircache_set_validation_params(
-                freq > 0 ? (unsigned int)freq : DEFAULT_DIRCACHE_VALIDATION_FREQ,
-                window > 0 ? (unsigned int)window : DEFAULT_DIRCACHE_METADATA_WINDOW,
-                threshold > 0 ? (unsigned int)threshold : DEFAULT_DIRCACHE_METADATA_THRESHOLD);
-        }
+    if (AFPobj && AFPobj->options.dircache_validation_freq > 0) {
+        dircache_set_validation_params(
+            (unsigned int)AFPobj->options.dircache_validation_freq);
     }
 
     return 0;
@@ -2128,21 +2043,17 @@ void dircache_dump(void)
 }
 
 /*!
- * @brief Set directory cache validation parameters
+ * @brief Set directory cache validation frequency
  *
  * Allows runtime configuration of cache validation behavior for performance tuning.
  * Lower validation frequency improves performance but may delay detection of
  * external filesystem changes.
  *
- * @param[in] freq         validation frequency (1 = validate every access, 5 = every 5th access)
- * @param[in] meta_win     metadata change time window in seconds
- * @param[in] meta_thresh  metadata change threshold in seconds
+ * @param[in] freq  validation frequency (1 = validate every access, 100 = every 100th access)
  *
  * @returns 0 on success, -1 on invalid parameters
  */
-int dircache_set_validation_params(unsigned int freq,
-                                   unsigned int meta_win,
-                                   unsigned int meta_thresh)
+int dircache_set_validation_params(unsigned int freq)
 {
     if (freq == 0 || freq > 100) {
         LOG(log_error, logtype_afpd,
@@ -2150,21 +2061,11 @@ int dircache_set_validation_params(unsigned int freq,
         return -1;
     }
 
-    if (meta_win > 3600 || meta_thresh > 1800) {
-        LOG(log_error, logtype_afpd,
-            "dircache_set_validation_params: invalid metadata parameters (%u, %u)",
-            meta_win, meta_thresh);
-        return -1;
-    }
-
     dircache_validation_freq = freq;
-    dircache_metadata_window = meta_win;
-    dircache_metadata_threshold = meta_thresh;
     /* Thread-safe reset of validation counter using compiler builtins */
     __sync_lock_test_and_set(&validation_counter, 0);
     LOG(log_info, logtype_afpd,
-        "dircache: validation parameters updated (freq=%u, window=%us, threshold=%us), counter reset",
-        freq, meta_win, meta_thresh);
+        "dircache: validation parameters updated (freq=%u), counter reset", freq);
     return 0;
 }
 

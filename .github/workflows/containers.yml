@@ -194,8 +194,6 @@ jobs:
               -e AFP_EXTMAP=1 \
               -e AFP_DIRCACHESIZE=131072 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
-              -e AFP_DIRCACHE_METADATA_WINDOW=3600 \
-              -e AFP_DIRCACHE_METADATA_THRESHOLD=1800 \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -256,8 +254,6 @@ jobs:
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
               -e AFP_DIRCACHESIZE=131072 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
-              -e AFP_DIRCACHE_METADATA_WINDOW=3600 \
-              -e AFP_DIRCACHE_METADATA_THRESHOLD=1800 \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -309,8 +305,6 @@ jobs:
               -e AFP_EXTMAP=1 \
               -e AFP_DIRCACHESIZE=131072 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
-              -e AFP_DIRCACHE_METADATA_WINDOW=3600 \
-              -e AFP_DIRCACHE_METADATA_THRESHOLD=1800 \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -945,6 +939,4 @@ jobs:
             -e AFP_DIRCACHESIZE="1024" \
             -e AFP_DIRCACHE_MODE="arc" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
-            -e AFP_DIRCACHE_METADATA_WINDOW="3600" \
-            -e AFP_DIRCACHE_METADATA_THRESHOLD="1800" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}

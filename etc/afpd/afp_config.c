@@ -452,15 +452,13 @@ serv_free_return:
         dsi_obj->fce_notify_script = strdup(r);
     }
 
-    /* Directory cache validation parameters - use values from AFPobj->options
+    /* Directory cache validation parameters - use value from AFPobj->options
      * (parsed by afp_config_parse() in netatalk_conf.c using the standard pattern).
-     * These are applied in dircache_init() which reads from AFPobj->options.
-     * Log them here for visibility during startup. */
+     * This is applied in dircache_init() which reads from AFPobj->options.
+     * Log it here for visibility during startup. */
     LOG(log_info, logtype_afpd,
-        "Config: Directory cache validation: freq=%d, window=%d, threshold=%d",
-        dsi_obj->options.dircache_validation_freq,
-        dsi_obj->options.dircache_metadata_window,
-        dsi_obj->options.dircache_metadata_threshold);
+        "Config: Directory cache validation freq = %d",
+        dsi_obj->options.dircache_validation_freq);
 EC_CLEANUP:
 
     if (q) {

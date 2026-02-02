@@ -54,8 +54,6 @@
 
 /* Directory cache validation settings */
 #define DEFAULT_DIRCACHE_VALIDATION_FREQ    1     /*!< Validate every Nth access (default 1 for backward compatibility) */
-#define DEFAULT_DIRCACHE_METADATA_WINDOW    300   /*!< Metadata change window (seconds) */
-#define DEFAULT_DIRCACHE_METADATA_THRESHOLD 60    /*!< Metadata change threshold (seconds) */
 
 #define OPTION_DEBUG         (1 << 0)
 #define OPTION_CLOSEVOL      (1 << 1)
@@ -102,8 +100,6 @@ struct afp_options {
     int dircache_files;         /*!< Whether to allow files in directory cache */
     int dircache_mode;          /*!< Directory cache mode: 0=LRU, 1=ARC */
     int dircache_validation_freq;    /*!< Validate every Nth access (default 1) */
-    int dircache_metadata_window;    /*!< Metadata change window (seconds) */
-    int dircache_metadata_threshold; /*!< Metadata change threshold (seconds) */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
     int disconnected;           /*!< Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /*!< number of seconds FCE file mod events are put on hold */

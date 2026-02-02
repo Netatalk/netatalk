@@ -746,35 +746,6 @@ always invalidate dircache entries immediately regardless of this setting.
 If Netatalk is the only process accessing the volume you can safely
 set a value of 100 for maximum performance.
 
-dircache metadata window = *number* **(G)**
-
-Time window in seconds for distinguishing metadata-only changes from
-content changes in directories. When a directory's ctime changes within
-this window from the current time, the change is considered potentially
-metadata-only (permissions, extended attributes) rather than content
-modification. Smaller values are more conservative but may cause
-unnecessary cache invalidation. Larger values improve performance but
-may retain stale entries longer.
-
-Default: 300 seconds (5 minutes). Range: 60-3600 seconds.
-
-If Netatalk is the only process accessing the volume you can safely
-set a value of 3600.
-
-dircache metadata threshold = *number* **(G)**
-
-Maximum time difference in seconds between cached and current directory
-ctime to be considered a metadata-only change. Works together with
-dircache metadata window to avoid invalidating cache entries for minor
-metadata modifications. This prevents cache invalidation for small,
-recent ctime changes that are likely due to more frequent permission or
-extended attribute modifications rather than directory content changes.
-
-Default: 60 seconds (1 minute). Range: 10-1800 seconds.
-
-If Netatalk is the only process accessing the volume you can safely
-set a value of 1800.
-
 dircache files = *BOOLEAN* (default: *no*) **(G)**
 
 Whether to allow files to be cached in the directory cache alongside
@@ -804,8 +775,6 @@ Default: no. Range: yes/no, true/false, 1/0.
 **Example** (Netatalk only access to volume):
 
     dircache validation freq = 100
-    dircache metadata window = 3600
-    dircache metadata threshold = 1800
 
 **Example** (File-heavy workload with large cache):
 
