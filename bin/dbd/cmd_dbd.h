@@ -22,7 +22,7 @@ typedef unsigned int dbd_flags_t;
 
 extern volatile sig_atomic_t alarmed;
 
-void dbd_log(enum logtype lt, char *fmt, ...);
+void dbd_log(enum logtype lt, const char *fmt, ...);
 int cmd_dbd_scanvol(struct vol *vol, dbd_flags_t flags);
 
 #endif /* CMD_DBD_H */

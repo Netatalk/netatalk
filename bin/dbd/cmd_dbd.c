@@ -118,17 +118,15 @@ static void usage(void)
  * Global functions
  ***************************************************************************/
 
-void dbd_log(enum logtype lt, char *fmt, ...)
+void dbd_log(enum logtype lt, const char *fmt, ...)
 {
-    int len;
     static char logbuffer[1024];
     va_list args;
 
     if ((lt == LOGSTD) || (flags & DBD_FLAGS_VERBOSE)) {
         va_start(args, fmt);
-        len = vsnprintf(logbuffer, 1023, fmt, args);
+        vsnprintf(logbuffer, sizeof(logbuffer), fmt, args);
         va_end(args);
-        logbuffer[1023] = 0;
         printf("%s\n", logbuffer);
     }
 }
@@ -141,7 +139,7 @@ int main(int argc, char **argv)
     AFPObj obj = { 0 };
     struct vol *vol = NULL;
     const char *volpath = NULL;
-    char *username = NULL;
+    const char *username = NULL;
     int c;
 
     while ((c = getopt(argc, argv, ":cfF:rstu:vV")) != -1) {
@@ -185,6 +183,7 @@ int main(int argc, char **argv)
 
         case ':':
         case '?':
+        default:
             usage();
             exit(EXIT_FAILURE);
             break;
@@ -235,7 +234,7 @@ int main(int argc, char **argv)
     /* Set username */
     if (username) {
         strlcpy(obj.username, username, MAXUSERLEN);
-        struct passwd *pwd;
+        const struct passwd *pwd;
         pwd = getpwnam(obj.username);
 
         if (!pwd) {
@@ -301,11 +300,9 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
-    if (flags & DBD_FLAGS_FORCE) {
-        if (cnid_wipe(vol->v_cdb) != 0) {
-            dbd_log(LOGSTD, "Failed to wipe CNID db");
-            EC_FAIL;
-        }
+    if (flags & DBD_FLAGS_FORCE && cnid_wipe(vol->v_cdb) != 0) {
+        dbd_log(LOGSTD, "Failed to wipe CNID db");
+        EC_FAIL;
     }
 
     /* Now execute given command scan|rebuild|dump */
