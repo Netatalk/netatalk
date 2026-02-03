@@ -22,7 +22,12 @@ typedef unsigned int dbd_flags_t;
 
 extern volatile sig_atomic_t alarmed;
 
+#ifdef __GNUC__
+void dbd_log(enum logtype lt, const char *fmt, ...)
+__attribute__((__format__(__printf__, 2, 3)));
+#else
 void dbd_log(enum logtype lt, const char *fmt, ...);
+#endif
 int cmd_dbd_scanvol(struct vol *vol, dbd_flags_t flags);
 
 #endif /* CMD_DBD_H */
