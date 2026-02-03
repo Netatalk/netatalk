@@ -10,13 +10,16 @@ dbd — CNID database maintenance utility
 
 # Description
 
-**dbd** scans all file and directories of AFP volumes, updating the CNID
-database of the volume. It must be run with appropriate permissions i.e.
-as root.
+**dbd** scans all file and directories of an AFP volume and updates the CNID
+database when discrepancies are found between the database and the filesystem.
+It must be run with appropriate permissions, i.e. as root.
 
 When run with the **-f** parameter, it will completely wipe the existing
 volume table in the database and create a new one from scratch.
-This can be used to for example convert from one CNID scheme to another.
+This can be used for example to convert a volume from one CNID scheme to another.
+
+Despite sharing a name with the **dbd** (Database Daemon) CNID backend module,
+this tool can be used with any CNID backend.
 
 # Options
 
@@ -67,7 +70,7 @@ modifying files.
 
 # See also
 
-nad(1), cnid_metad(8), cnid_dbd(8)
+nad(1), afpd(8), cnid_dbd(8)
 
 # Author
 
