@@ -24,6 +24,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <atalk/acl.h>
@@ -126,7 +127,6 @@ static int update_cnid(cnid_t did, const struct stat *sp, const char *oldname,
 static int check_adfile(const char *fname, const struct stat *st,
                         const char **newname)
 {
-    int ret;
     int adflags = ADFLAGS_HF;
     struct adouble ad;
     const char *adname;
@@ -178,8 +178,8 @@ static int check_adfile(const char *fname, const struct stat *st,
         /* Create ad file */
         ad_init(&ad, vol);
 
-        if ((ret = ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR,
-                           0666)) != 0) {
+        if ((ad_open(&ad, fname, adflags | ADFLAGS_CREATE | ADFLAGS_RDWR,
+                     0666)) != 0) {
             dbd_log(LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                     cwdbuf, adname, strerror(errno));
             close(fd);
@@ -338,7 +338,7 @@ static int check_addir(int volroot _U_)
     int parent_fd = -1;
     struct stat st;
     struct adouble ad;
-    char *mname = NULL;
+    const char *mname = NULL;
     const char *ad_parent_path;
 
     if (vol->v_adouble == AD_VERSION_EA) {
@@ -609,11 +609,10 @@ static int read_addir(void)
             dbd_log(LOGSTD, "Orphaned AppleDoube file '%s/%s/%s'",
                     cwdbuf, ADv2_DIRNAME, ep->d_name);
 
-            if (dbd_flags & DBD_FLAGS_SCAN)
-                /* Scan only requested, don't change anything */
-            {
+            /* Scan only requested, don't change anything */
+            if (dbd_flags & DBD_FLAGS_SCAN) {
                 continue;
-            };
+            }
 
             if ((unlink(ep->d_name)) != 0) {
                 dbd_log(LOGSTD, "Error unlinking orphaned AppleDoube file '%s/%s/%s'",
@@ -746,21 +745,16 @@ static int dbd_readdir(int volroot, cnid_t did)
     static struct stat st;      /* Save some stack space */
 
     /* Check again for .AppleDouble folder, check_adfile also checks/creates it */
-    if ((addir_ok = check_addir(volroot)) != 0)
-        if (!(dbd_flags & DBD_FLAGS_SCAN))
-            /* Fatal on rebuild run, continue if only scanning ! */
-        {
-            return -1;
-        }
+    if ((addir_ok = check_addir(volroot)) != 0 && !(dbd_flags & DBD_FLAGS_SCAN)) {
+        /* Fatal on rebuild run, continue if only scanning ! */
+        return -1;
+    }
 
     /* Check AppleDouble files in AppleDouble folder, but only if it exists or could be created */
-    if (ADDIR_OK)
-        if ((read_addir()) != 0)
-            if (!(dbd_flags & DBD_FLAGS_SCAN))
-                /* Fatal on rebuild run, continue if only scanning ! */
-            {
-                return -1;
-            }
+    if (ADDIR_OK && (read_addir()) != 0 && !(dbd_flags & DBD_FLAGS_SCAN)) {
+        /* Fatal on rebuild run, continue if only scanning ! */
+        return -1;
+    }
 
     if ((dp = opendir(".")) == NULL) {
         dbd_log(LOGSTD, "Couldn't open the directory: %s", strerror(errno));
@@ -789,11 +783,9 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
 
         /* Check for special folders in volume root e.g. ".zfs" */
-        if (volroot) {
-            if ((name = check_special_dirs(ep->d_name)) != NULL) {
-                dbd_log(LOGSTD, "Ignoring special dir \"%s\"", name);
-                continue;
-            }
+        if (volroot && (name = check_special_dirs(ep->d_name)) != NULL) {
+            dbd_log(LOGSTD, "Ignoring special dir \"%s\"", name);
+            continue;
         }
 
         /* Skip .AppleDouble dir in this loop */
@@ -821,11 +813,9 @@ static int dbd_readdir(int volroot, cnid_t did)
         default:
             dbd_log(LOGSTD, "Bad filetype: %s/%s", cwdbuf, ep->d_name);
 
-            if (!(dbd_flags & DBD_FLAGS_SCAN)) {
-                if ((unlink(ep->d_name)) != 0) {
-                    dbd_log(LOGSTD, "Error removing: %s/%s: %s", cwdbuf, ep->d_name,
-                            strerror(errno));
-                }
+            if (!(dbd_flags & DBD_FLAGS_SCAN) && (unlink(ep->d_name)) != 0) {
+                dbd_log(LOGSTD, "Error removing: %s/%s: %s", cwdbuf, ep->d_name,
+                        strerror(errno));
             }
 
             continue;
@@ -843,10 +833,9 @@ static int dbd_readdir(int volroot, cnid_t did)
 
         statcount++;
 
-        if ((statcount % 10000) == 0) {
-            if (dbd_flags & DBD_FLAGS_STATS)
-                dbd_log(LOGSTD, "Scanned: %10llu, time: %10llu s",
-                        statcount, (unsigned long long)(time(NULL) - t));
+        if ((statcount % 10000) == 0 && dbd_flags & DBD_FLAGS_STATS) {
+            dbd_log(LOGSTD, "Scanned: %10llu, time: %10llu s",
+                    statcount, (unsigned long long)(time(NULL) - t));
         }
 
         /**************************************************************************
@@ -866,7 +855,7 @@ static int dbd_readdir(int volroot, cnid_t did)
         }
 
         /* Check for appledouble file, create if missing, but only if we have addir */
-        const char *name = NULL;
+        name = NULL;
         adfile_ok = -1;
 
         if (ADDIR_OK) {
@@ -927,17 +916,16 @@ static int dbd_readdir(int volroot, cnid_t did)
     /*
       Use results of previous checks
     */
-    if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)) {
-        if (rmdir(ADv2_DIRNAME) != 0) {
-            switch (errno) {
-            case ENOENT:
-                break;
+    if ((vol->v_adouble == AD_VERSION_EA) && (dbd_flags & DBD_FLAGS_V2TOEA)
+            && rmdir(ADv2_DIRNAME) != 0) {
+        switch (errno) {
+        case ENOENT:
+            break;
 
-            default:
-                dbd_log(LOGSTD, "Error removing adouble dir \"%s/%s\": %s", cwdbuf,
-                        ADv2_DIRNAME, strerror(errno));
-                break;
-            }
+        default:
+            dbd_log(LOGSTD, "Error removing adouble dir \"%s/%s\": %s", cwdbuf,
+                    ADv2_DIRNAME, strerror(errno));
+            break;
         }
     }
 
