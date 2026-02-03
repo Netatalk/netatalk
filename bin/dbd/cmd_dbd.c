@@ -234,7 +234,7 @@ int main(int argc, char **argv)
 
     /* Set username */
     if (username) {
-        strncpy(obj.username, username, MAXUSERLEN);
+        strlcpy(obj.username, username, MAXUSERLEN);
         struct passwd *pwd;
         pwd = getpwnam(obj.username);
 
