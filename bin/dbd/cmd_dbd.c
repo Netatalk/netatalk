@@ -36,8 +36,6 @@
 
 #include "cmd_dbd.h"
 
-enum dbd_cmd {dbd_scan, dbd_rebuild};
-
 /* Global variables */
 volatile sig_atomic_t alarmed;  /*!< flags for signals */
 
@@ -134,7 +132,6 @@ void dbd_log(enum logtype lt, const char *fmt, ...)
 int main(int argc, char **argv)
 {
     EC_INIT;
-    int dbd_cmd = dbd_rebuild;
     int cdir = -1;
     AFPObj obj = { 0 };
     struct vol *vol = NULL;
@@ -161,7 +158,6 @@ int main(int argc, char **argv)
             break;
 
         case 's':
-            dbd_cmd = dbd_scan;
             flags |= DBD_FLAGS_SCAN;
             break;
 
@@ -305,15 +301,8 @@ int main(int argc, char **argv)
         EC_FAIL;
     }
 
-    /* Now execute given command scan|rebuild|dump */
-    switch (dbd_cmd) {
-    case dbd_scan:
-    case dbd_rebuild:
-        if (cmd_dbd_scanvol(vol, flags) < 0) {
-            dbd_log(LOGSTD, "Error repairing database.");
-        }
-
-        break;
+    if (cmd_dbd_scanvol(vol, flags) < 0) {
+        dbd_log(LOGSTD, "Error repairing database.");
     }
 
 EC_CLEANUP:
