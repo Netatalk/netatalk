@@ -72,13 +72,15 @@ executable(
 
 speedtest_sources = [
     'speedtest.c',
+    'speedtest_local_vfs.c',
+    'afp_tcp_analytics.c',
 ]
 
 executable(
     'afp_speedtest',
     speedtest_sources,
     include_directories: root_includes,
-    link_args: ['-rdynamic'],
+    link_args: ['-rdynamic', '-lm'],
     link_with: libafptest,
     install: true,
     install_rpath: rpath_libdir,

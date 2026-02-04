@@ -87,11 +87,14 @@
 #define ANSI_BOLD     "\033[1m"
 
 /* Function declarations */
-extern void test_failed(void);
+extern void test_failed_at(const char *file, int line);
 extern void test_skipped(int why);
 extern void test_nottested(void);
 extern void enter_test(void);
 extern void exit_test(char *name);
+
+/* Wrapper macro for automatic file/line tracking */
+#define test_failed() test_failed_at(__FILE__, __LINE__)
 
 /* Types */
 enum adouble {
