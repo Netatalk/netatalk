@@ -146,8 +146,10 @@ void test_skipped(int why)
 }
 
 /* ------------------------- */
-void test_failed(void)
+void test_failed_at(const char *file, int line)
 {
+    fprintf(stderr, "\n*** ERROR: test_failed() called at %s:%d ***\n", file, line);
+    
     if (!Quiet) {
         fprintf(stderr, "\tFAILED\n");
     }
