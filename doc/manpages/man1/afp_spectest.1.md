@@ -4,7 +4,7 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCEimVvX] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+**afp_spectest** [-1234567aCEimVv] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
 [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
 
 **afp_spectest** -l
@@ -95,9 +95,6 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 **-w** *password*
 : Password for authentication with AFP server
-
-**-X**
-: Skip tests that aren't big endian compatible
 
 # Usage
 

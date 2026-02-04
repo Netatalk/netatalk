@@ -63,7 +63,9 @@
 #define T_AFP31      26
 #define T_AFP32      27
 #define T_NONDETERM  28
+#if 0
 #define T_BIGENDIAN  29
+#endif
 #define T_CRED       30
 #define T_LOCALHOST  31
 
@@ -128,7 +130,6 @@ extern int Loglevel;
 extern int Color;
 extern int Interactive;
 extern int Throttle;
-extern int Bigendian;
 extern int EmptyVol;
 
 extern int PassCount;

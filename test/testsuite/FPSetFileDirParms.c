@@ -889,11 +889,6 @@ STATIC void test358()
     const DSI *dsi2;
     ENTER_TEST
 
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
-
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;

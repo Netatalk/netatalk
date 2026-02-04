@@ -347,7 +347,7 @@ char *uam = "Cleartxt Passwrd";
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCilmnVvX] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "usage:\t%s [-1234567aCilmnVv] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
@@ -369,7 +369,6 @@ void usage(char *av0)
     fprintf(stdout, "\t-7\tAFP 3.4 version (default)\n");
     fprintf(stdout, "\t-v\tverbose\n");
     fprintf(stdout, "\t-V\tvery verbose\n");
-    fprintf(stdout, "\t-X\tdon't run tests that fail on big-endian systems\n");
     fprintf(stdout, "\t-f\ttest or testset to run\n");
     fprintf(stdout, "\t-l\tlist testsets\n");
     fprintf(stdout,
@@ -390,7 +389,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCEilmVvXc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567aCEilmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -504,10 +503,6 @@ int main(int ac, char **av)
 
         case 'w':
             Password = strdup(optarg);
-            break;
-
-        case 'X':
-            Bigendian = 1;
             break;
 
         default :
