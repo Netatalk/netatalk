@@ -370,16 +370,58 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
         memset(&s_path, 0, sizeof(s_path));
         s_path.u_name = sd.sd_last;
+        /* Check cache before stat() to avoid syscalls. Files are cached during
+         * creation (FPGetFileDirParams) and directories during creation
+         * (FPCreateDir -> dir_add). This allows us to skip stat() for cached entries */
+        struct dir *cached = dircache_search_by_name(vol, curdir, sd.sd_last, len);
 
-        if (of_stat(vol, &s_path) < 0) {
-            /* so the next time it won't try to stat it again
-             * another solution would be to invalidate the cache with
-             * sd.sd_did = 0 but if it's not ENOENT error it will start again
-             */
-            *sd.sd_last = 0;
-            sd.sd_last += len + 1;
-            curdir->d_offcnt--;		/* a little lie */
-            continue;
+        if (cached) {
+            /* Cache hit (includes ghosts) - use cached metadata, skip stat()! */
+            /* Note: dircache_search_by_name() already performed validation if needed */
+            /* Reconstruct stat from cached fields */
+            s_path.st.st_ino = cached->dcache_ino;
+            s_path.st.st_ctime = cached->dcache_ctime;
+            s_path.st.st_mode = cached->dcache_mode;
+            s_path.st.st_mtime = cached->dcache_mtime;
+            s_path.st.st_uid = cached->dcache_uid;
+            s_path.st.st_gid = cached->dcache_gid;
+            s_path.st.st_size = cached->dcache_size;
+            /* Populate remaining system struct stat fields with safe defaults.
+             * These are NOT used by AFP enumeration (getfilparams/getdirparams)
+             * but must be initialized since s_path.st is a full struct stat */
+            s_path.st.st_dev =
+                0;        /* not cached; only needed by ad_convert CNID path */
+            s_path.st.st_nlink =
+                1;      /* safe default (dirs have >=2, but nlink is unused) */
+            s_path.st.st_rdev = 0;       /* is not a device file */
+            s_path.st.st_blocks = 0;     /* AFP uses st_size, not st_blocks */
+            s_path.st.st_blksize = 0;    /* not used by AFP */
+            s_path.st.st_atime = cached->dcache_mtime;  /* approximate; not used by AFP */
+            s_path.st_valid = 1;
+            s_path.st_errno = 0;
+            /* Pass CNID so getmetadata() skips redundant cache lookup */
+            s_path.id = cached->d_did;
+            /* Use cached mac name to skip utompath() charset conversion */
+            s_path.m_name = cfrombstr(cached->d_m_name);
+            LOG(log_maxdebug, logtype_afpd,
+                "enumerate: cache hit for '%s' (skipped stat)", sd.sd_last);
+        } else {
+            /* Cache miss - fall back to original stat() behavior */
+            if (of_stat(vol, &s_path) < 0) {
+                /* stat failed - entry doesn't exist or is inaccessible */
+                /* so the next time it won't try to stat it again
+                 * another solution would be to invalidate the cache with
+                 * sd.sd_did = 0 but if it's not ENOENT error it will start again
+                 */
+                *sd.sd_last = 0;
+                sd.sd_last += len + 1;
+                curdir->d_offcnt--;		/* a little lie */
+                continue;
+            }
+
+            LOG(log_maxdebug, logtype_afpd,
+                "enumerate: cache miss for '%s' (performed stat)", sd.sd_last);
+            /* Entry will be cached below by dir_add() (dirs) or getfilparams() (files) */
         }
 
         /* conversions on the fly */
@@ -387,6 +429,15 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
         if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0) {
             if (convname) {
+                /* ad_convert renamed the file (v2→EA migration). If we used
+                 * cached stat data, it has st_dev=0 which breaks CNID ops.
+                 * Proactively remove the stale cache entry and refresh stat. */
+                if (cached) {
+                    dir_remove(vol, cached, 0);  /* Clean removal, not an expunge */
+                    cached = NULL;               /* Treat as cache miss from here */
+                    of_stat(vol, &s_path);        /* Refresh stat from disk */
+                }
+
                 s_path.u_name = (char *)convname;
                 AFP_CNID_START("cnid_lookup");
                 s_path.id = cnid_lookup(vol->v_cdb, &s_path.st, curdir->d_did, sd.sd_last,
@@ -408,7 +459,10 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         }
 
         sd.sd_last += len + 1;
-        s_path.m_name = NULL;
+
+        if (!cached) {
+            s_path.m_name = NULL;
+        }
 
         /*
          * If a fil/dir is not a dir, it's a file. This is slightly
@@ -420,9 +474,12 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 continue;
             }
 
-            int len = strlen(s_path.u_name);
+            if (cached) {
+                /* Reuse cache hit from initial dircache_search_by_name() */
+                dir = cached;
+            } else {
+                int len = strlen(s_path.u_name);
 
-            if ((dir = dircache_search_by_name(vol, curdir, s_path.u_name, len)) == NULL) {
                 if ((dir = dir_add(vol, curdir, &s_path, len)) == NULL) {
                     LOG(log_error, logtype_afpd,
                         "enumerate(vid:%u, did:%u, name:'%s'): error adding dir: '%s'",

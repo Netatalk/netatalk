@@ -73,11 +73,16 @@ struct dir {
                                       * and possible ACL. Validate
                                       * dcache_ctime == st_ctime before use!
                                       * Value 0xffffffff indicates invalid/unset. */
-    /* Stuff used in the dircache */
     time_t      dcache_ctime;        /*!< inode ctime,
                                       * used and modified by dircache */
     ino_t       dcache_ino;          /*!< inode number,
                                       * used to detect changes in the dircache */
+    /* Additional stat fields for enumerate optimization (added 2026-02) */
+    mode_t      dcache_mode;         /*!< st_mode: file type + permissions */
+    time_t      dcache_mtime;        /*!< st_mtime: modification time */
+    uid_t       dcache_uid;          /*!< st_uid: owner user ID */
+    gid_t       dcache_gid;          /*!< st_gid: owner group ID */
+    off_t       dcache_size;         /*!< st_size: file size (for FILPBIT_DFLEN) */
     /* ARC cache metadata (see arc_list_t enum in dircache.c) */
     uint8_t
     arc_list;            /*!< Which ARC list: 0=NONE, 1=T1, 2=T2, 3=B1, 4=B2 */
