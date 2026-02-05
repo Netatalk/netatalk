@@ -132,26 +132,30 @@ as well as which one is the default.
 
 ### dbd
 
-The "Database Daemon" backend is built on Berkeley DB. Access to the
-CNID database is restricted to the **cnid_dbd** daemon process.
-**afpd** processes communicate with the **cnid_dbd** daemon
-for database reads and updates, which is in turn launched and
-controlled by the **cnid_metad** daemon.
+The "Database Daemon" backend is built on Berkeley DB.
+Rather than accessing the database directly,
+**afpd** processes communicate with one or more **cnid_dbd** daemon processes over a wire protocol.
+The **cnid_dbd** daemon is responsible for database reads and updates.
 
-This is the most reliable and proven backend for daily use.
-
-### sqlite
-
-A performant and lean CNID database backend that uses the SQLite v3
-embedded database engine.
+This is the most reliable and proven backend, recommended for most deployments.
 
 ### mysql
 
-CNID backend using a MySQL server. The MySQL server has to be
-provisioned by the system administrator, and Netatalk configured
-to connect to it over the network.
+CNID backend using a MySQL or MariaDB server.
+This is the most performant and scalable of the backend options,
+and is recommended for large deployments with many concurrent users.
 
-See **afp.conf**(5) for documentation of the configuration options.
+The SQL server has to be provisioned by the system administrator,
+and Netatalk configured to connect to it over a Unix socket or the network interface..
+
+### sqlite
+
+A fast and lean CNID database backend that uses the SQLite v3 embedded database engine.
+It is as easy to set up as dbd, but does not require separate daemon processes,
+as the database is accessed directly by afpd.
+
+The tradeoff is that the SQLite embedded database is not the most scalable for concurrent database write operations.
+Therefore it is recommended for deployments where you expect up to 20 concurrent users.
 
 ## Charsets/Unicode
 
