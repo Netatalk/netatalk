@@ -485,9 +485,6 @@ registration if Avahi or mDNSResponder were compiled in.
 Global configurations specific to the CNID database backends, which
 controls how the database is stored and accessed.
 
-The actual CNID backend scheme is configured per volume.
-See the **cnid scheme** option in the Volume Parameters section below.
-
 cnid listen = *ip address[:port] [ip address[:port] ...]* **(G)**
 
 > Specifies the IP address and port that the CNID server should listen on.
@@ -516,6 +513,21 @@ cnid mysql db = *database name* **(G)**
 > Name of the database to use for CNID storage. If the database does not
 > exist, Netatalk will attempt to create it automatically (requires the
 > specified user to have CREATE DATABASE privileges).
+
+cnid scheme = *dbd* | *mysql* | *sqlite* **(G)**/**(V)**
+
+> Set the CNID backend to be used for the volumes.
+Not all backends may be available with your netatalk installation.
+Run **afpd -v** to see a list of available backends, as well as which one is the default.
+>
+> *dbd*: uses Berkeley DB, with database reads and writes managed through the **cnid_dbd** daemon.
+It is recommended for most deployments.
+>
+> *mysql*: connects to a MySQL (or MariaDB) database instance that has been provisioned for use with Netatalk.
+Requires datbase administration, giving you full control over how the CNID data is stored.
+>
+> *sqlite*: uses the SQLite embedded database library.
+It is performant and lean, requiring no external database or daemon.
 
 cnid server = *ipaddress[:port]* **(G)**/**(V)**
 
@@ -1120,21 +1132,6 @@ hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 > Listed hosts and nets are rejected, all others are allowed.
 >
 > Example: hosts deny = 192.168.100/24 10.1.1.1 2001:db8::1428:57ab
-
-cnid scheme = *dbd* | *mysql* | *sqlite* **(V)**
-
-> Set the CNID backend to be used for the volume.
-Not all backends may be available with your netatalk installation.
-Run **afpd -v** to see a list of available backends, as well as which one is the default.
->
-> *dbd*: uses Berkeley DB, with database reads and writes managed through the **cnid_dbd** daemon.
-It is recommended for most deployments.
->
-> *mysql*: connects to a MySQL (or MariaDB) database instance that has been provisioned for use with Netatalk.
-Requires datbase administration, giving you full control over how the CNID data is stored.
->
-> *sqlite*: uses the SQLite embedded database library.
-It is performant and lean, requiring no external database or daemon.
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 

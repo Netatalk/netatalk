@@ -1136,7 +1136,14 @@ static struct vol *creatvol(AFPObj *obj,
                              NULL))) {
         EC_NULL(volume->v_cnidscheme = strdup(val));
     } else {
-        volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
+        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "cnid scheme", NULL,
+                            NULL);
+
+        if (val) {
+            EC_NULL(volume->v_cnidscheme = strdup(val));
+        } else {
+            volume->v_cnidscheme = strdup(DEFAULT_CNID_SCHEME);
+        }
     }
 
     if ((val = getoption_str(obj->iniconfig, section, "umask", preset, NULL))) {

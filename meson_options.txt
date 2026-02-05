@@ -384,18 +384,6 @@ option(
     description: 'Choose the CNID backends to build and install',
 )
 option(
-    'with-cnid-default-backend',
-    type: 'combo',
-    choices: [
-        '',
-        'dbd',
-        'mysql',
-        'sqlite',
-    ],
-    value: '',
-    description: 'Set default CNID scheme',
-)
-option(
     'with-docs',
     type: 'array',
     choices: [
