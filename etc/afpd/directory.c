@@ -66,7 +66,8 @@ struct dir rootParent  = {
     NULL, NULL, NULL, NULL,          /* d_fullpath, d_m_name, d_u_name, d_m_name_ucs2 */
     NULL, 0, 0, 0,                   /* qidx_node, d_ctime, d_flags d_pdid */
     0, 0, 0, 0,                      /* d_did, d_offcnt, d_vid, d_rights_cache */
-    0, 0                             /* d_cache_ctime, d_cache_ino */
+    0, 0,                            /* dcache_ctime, dcache_ino */
+    S_IFDIR | 0755, 0, 0, 0, 0, 0    /* dcache_mode, dcache_mtime, dcache_uid, dcache_gid, dcache_size, arc_list */
 };
 struct dir  *curdir = &rootParent;
 struct path Cur_Path = {
@@ -929,6 +930,12 @@ struct dir *dir_new(const char *m_name,
     dir->d_fullpath = path;
     dir->dcache_ctime = st->st_ctime;
     dir->dcache_ino = st->st_ino;
+    /* Populate additional stat fields for enumerate optimization */
+    dir->dcache_mode = st->st_mode;
+    dir->dcache_mtime = st->st_mtime;
+    dir->dcache_uid = st->st_uid;
+    dir->dcache_gid = st->st_gid;
+    dir->dcache_size = st->st_size;
 
     if (!S_ISDIR(st->st_mode)) {
         dir->d_flags = DIRF_ISFILE;

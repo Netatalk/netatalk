@@ -1058,7 +1058,16 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 return NULL;
             }
 
-            /* Direct validation: inode or ctime changed = invalidate */
+            /* Direct validation: inode or ctime changed = invalidate.
+             * Per POSIX (IEEE 1003.1-2017 §4.9 "File Times Update"), st_ctime
+             * ("time of last file status change") is updated by any operation
+             * that modifies file metadata: chmod (mode), chown (uid/gid),
+             * write/truncate (size/mtime), link/unlink, rename, utimens, etc.
+             * Therefore checking only inode + ctime is sufficient to detect
+             * external changes to ALL cached stat fields.
+             * This is guaranteed on all Netatalk target platforms: Linux
+             * (ext4/XFS/Btrfs), macOS (APFS/HFS+), FreeBSD/NetBSD/OpenBSD
+             * (UFS/FFS/ZFS) — all implement POSIX ctime semantics. */
             if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(cnid:%u): {modified:\"%s\"} (ino:%llu->%llu, ctime:%ld->%ld)",
@@ -1071,6 +1080,12 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 return NULL;
             }
 
+            /* Validation passed — refresh cached stat fields from fresh stat */
+            cdir->dcache_mode = st.st_mode;
+            cdir->dcache_mtime = st.st_mtime;
+            cdir->dcache_uid = st.st_uid;
+            cdir->dcache_gid = st.st_gid;
+            cdir->dcache_size = st.st_size;
             /* Entry validated and still valid */
             LOG(log_maxdebug, logtype_afpd,
                 "dircache(cnid:%u): {validated: path:\"%s\"}",
@@ -1175,7 +1190,16 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 return NULL;
             }
 
-            /* Direct validation: inode or ctime changed = invalidate */
+            /* Direct validation: inode or ctime changed = invalidate.
+             * Per POSIX (IEEE 1003.1-2017 §4.9 "File Times Update"), st_ctime
+             * ("time of last file status change") is updated by any operation
+             * that modifies file metadata: chmod (mode), chown (uid/gid),
+             * write/truncate (size/mtime), link/unlink, rename, utimens, etc.
+             * Therefore checking only inode + ctime is sufficient to detect
+             * external changes to ALL cached stat fields.
+             * This is guaranteed on all Netatalk target platforms: Linux
+             * (ext4/XFS/Btrfs), macOS (APFS/HFS+), FreeBSD/NetBSD/OpenBSD
+             * (UFS/FFS/ZFS) — all implement POSIX ctime semantics. */
             if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(did:%u,\"%s\"): {modified} (ino:%llu->%llu, ctime:%ld->%ld)",
@@ -1187,6 +1211,13 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 dircache_stat.misses++;  /* Count expunge as miss */
                 return NULL;
             }
+
+            /* Validation passed — refresh cached stat fields from fresh stat */
+            cdir->dcache_mode = st.st_mode;
+            cdir->dcache_mtime = st.st_mtime;
+            cdir->dcache_uid = st.st_uid;
+            cdir->dcache_gid = st.st_gid;
+            cdir->dcache_size = st.st_size;
         }
 
         /* ARC mode: Handle cache hits or ghost hits */
@@ -1682,6 +1713,12 @@ int dircache_init(int reqsize)
     rootParent.d_m_name = bfromcstr("ROOT_PARENT");
     rootParent.d_u_name = rootParent.d_m_name;
     rootParent.d_rights_cache = 0xffffffff;
+    /* Initialize stat fields for enumerate */
+    rootParent.dcache_mode = S_IFDIR | 0755;
+    rootParent.dcache_mtime = 0;
+    rootParent.dcache_uid = 0;
+    rootParent.dcache_gid = 0;
+    rootParent.dcache_size = 0;
     rootParent.arc_list = 0;  /* ARC_NONE (not in any ARC list) */
 
     /* Apply validation parameters from configuration */
@@ -1705,6 +1742,11 @@ void log_dircache_stat(void)
 {
     double hit_ratio = 0.0;
     double validation_ratio = 0.0;
+    /* Memory accounting: struct dir size × high-water mark entry count.
+     * This is the fixed-size allocation per entry; excludes variable-length
+     * heap data (d_fullpath, d_m_name, d_u_name bstrings, d_m_name_ucs2). */
+    unsigned long cache_max_mem_kb =
+        (queue_count_max * sizeof(struct dir)) / 1024;
 
     if (dircache_stat.lookups > 0) {
         hit_ratio = ((double)dircache_stat.hits / (double)dircache_stat.lookups) *
@@ -1760,7 +1802,7 @@ void log_dircache_stat(void)
                                    (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (ARC): (user: %s) "
-            "cache_entries: %zu, ghost_entries: %zu, max_entries: %lu, config_max: %zu, "
+            "cache_entries: %zu, ghost_entries: %zu, max_entries: %lu (%lu KB), config_max: %zu, "
             "lookups: %llu, cache_hits: %llu (%.1f%%), ghost_hits: %llu (%.1f%%), total_hits: (%.1f%%), true_misses: %llu (%.1f%%), "
             "validations: ~%llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, "
@@ -1769,6 +1811,7 @@ void log_dircache_stat(void)
             total_cached,
             total_ghosts,
             queue_count_max,
+            cache_max_mem_kb,
             arc_cache.c,
             dircache_stat.lookups,
             dircache_stat.hits, hit_ratio,
@@ -1827,13 +1870,14 @@ void log_dircache_stat(void)
                             ((double)dircache_stat.misses / (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (LRU): (user: %s) "
-            "entries: %lu, max_entries: %lu, config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
+            "entries: %lu, max_entries: %lu (%lu KB), config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
             "validations: ~%llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
             "validation_freq: %u",
             username,
             queue_count,
             queue_count_max,
+            cache_max_mem_kb,
             dircache_maxsize,
             dircache_stat.lookups,
             dircache_stat.hits, hit_ratio,
