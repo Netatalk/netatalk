@@ -245,18 +245,6 @@ if ($subject ne 'homes') {
 }
 
 print &ui_table_row(
-                    $text{'edit_vol_section_cnid_scheme'},
-                    &build_select(
-                                  $afpconfRef, $sectionRef, \%in, 'cnid scheme', $text{'edit_undefined'},
-                                  'dbd',
-                                  'dbd',
-                                  'mysql',
-                                  'mysql',
-                                  'sqlite',
-                                  'sqlite'
-                    )
-);
-print &ui_table_row(
                     $text{'edit_vol_section_ea'},
                     &build_select(
                                   $afpconfRef, $sectionRef, \%in, 'ea', $text{'edit_undefined'}, 'sys',
@@ -382,6 +370,19 @@ if ($subject ne 'homes') {
                         $text{'edit_global_section_vol_dbpath'},
                         &ui_filebox('p_vol_dbpath', $values[0], 40, undef, undef, undef, 1)
                         . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '')
+    );
+
+    print &ui_table_row(
+                        $text{'edit_global_section_cnid_scheme'},
+                        &build_select(
+                                      $afpconfRef, $sectionRef, \%in, 'cnid scheme', $text{'edit_undefined'},
+                                      'dbd',
+                                      'dbd',
+                                      'mysql',
+                                      'mysql',
+                                      'sqlite',
+                                      'sqlite'
+                        )
     );
 
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid server', \%in);

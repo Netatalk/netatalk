@@ -606,28 +606,14 @@ summary_backends = cnid_backends
 
 # Determine default CNID backend
 
-default_backend = get_option('with-cnid-default-backend')
-
-if default_backend == ''
-    if use_dbd_backend
-        default_backend = 'dbd'
-    elif use_sqlite_backend
-        default_backend = 'sqlite'
-    elif use_mysql_backend
-        default_backend = 'mysql'
-    else
-        error('No CNID backends selected for compilation')
-    endif
-elif default_backend == 'dbd' and not use_dbd_backend
-    error('Specified default CNID scheme dbd was not selected for compilation')
-elif default_backend == 'mysql' and not use_mysql_backend
-    error(
-        'Specified default CNID scheme mysql was not selected for compilation',
-    )
-elif default_backend == 'sqlite' and not use_sqlite_backend
-    error(
-        'Specified default CNID scheme sqlite was not selected for compilation',
-    )
+if use_dbd_backend
+    default_backend = 'dbd'
+elif use_sqlite_backend
+    default_backend = 'sqlite'
+elif use_mysql_backend
+    default_backend = 'mysql'
+else
+    error('No CNID backends selected for compilation')
 endif
 
 cdata.set('DEFAULT_CNID_SCHEME', '"' + default_backend + '"')

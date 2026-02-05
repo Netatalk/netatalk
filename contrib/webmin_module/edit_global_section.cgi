@@ -2,7 +2,7 @@
 #
 # Netatalk Webmin Module
 # Copyright (C) 2013 Ralph Boehme <sloowfranklin@gmail.com>
-# Copyright (C) 2023-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2023-2026 Daniel Markstedt <daniel@mindani.net>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -664,6 +664,20 @@ print &ui_table_row(
                     $text{'edit_global_section_cnid_listen'},
                     &ui_textbox('p_cnid listen', $values[0], 20) . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
+);
+
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid scheme', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_cnid_scheme'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'cnid scheme', $text{'edit_undefined'},
+                                  'dbd',
+                                  'dbd',
+                                  'mysql',
+                                  'mysql',
+                                  'sqlite',
+                                  'sqlite'
+                    )
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'cnid server', \%in);

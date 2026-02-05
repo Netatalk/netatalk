@@ -263,7 +263,7 @@ Mappings from AppleVolumes.\* to afp.conf
 | volcharset:                | vol charset        | UTF8                  | *unix charset*      | (G)/(V) | -                                |
 | maccharset:                | mac charset        | MAC_ROMAN             | MAC_ROMAN         | (G)/(V) | -                                |
 | veto:                      | veto files         | -                     | -                 | (V)     | -                                |
-| cnidscheme:                | cnid scheme        | dbd                   | dbd               | (V)     | -                                |
+| cnidscheme:                | cnid scheme        | dbd                   | dbd\*              | (G)/(V) | \* may vary per installation      |
 | casefold:                  | casefold           | -                     | -                 | (V)     | -                                |
 | adouble:                   | -                  | v2                    | -                 | -       | removed in 4.2.0                 |
 | cnidserver:                | cnid server        | localhost:4700        | localhost:4700    | (G)/(V) | -                                |
