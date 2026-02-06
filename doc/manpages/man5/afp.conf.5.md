@@ -551,7 +551,7 @@ each share.
 
 ## Directory Cache Tuning
 
-dircachesize = *number* **(G)**
+dircache size = *number* **(G)**
 
 > Maximum entries in the directory cache. Stores directories and optionally files.
 > Minimum: 1024 (1K). Default: 65536 (64K). Maximum: 2097152 (2M).
