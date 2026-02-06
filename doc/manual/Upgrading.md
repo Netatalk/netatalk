@@ -203,7 +203,7 @@ Mappings from afpd.conf to afp.conf
 | -closevol          | close vol       | -                        | no                       | (G)     | -                                    |
 | -ntdomain          | nt domain       | -                        | -                        | (G)     | -                                    |
 | -ntseparator       | nt separator    | -                        | -                        | (G)     | -                                    |
-| -dircachesize      | dircachesize    | 8192                     | 8192                     | (G)     | -                                    |
+| -dircachesize      | dircache size   | 8192                     | 65536                    | (G)     | -                                    |
 | -tcpsndbuf         | tcpsndbuf       | -                        | -                        | (G)     | OS default                           |
 | -tcprcvbuf         | tcprcvbuf       | -                        | -                        | (G)     | OS default                           |
 | -fcelistener       | fce listener    | -                        | -                        | (G)     | -                                    |

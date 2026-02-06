@@ -714,7 +714,7 @@ operations on storage/page-cache/ZFS ARC layers.
 counter is incremented, and the dircache entry is transparently rebuilt.**
 You can use the invalid_on_use counter to tune `dircache validation freq`.
 
-dircachesize = *number* **(G)**
+dircache size = *number* **(G)**
 
 Maximum possible entries in the directory cache. The cache stores
 directories and files. It is used to cache the full path to directories
@@ -723,7 +723,7 @@ Given value is rounded up to nearest power of 2. Each entry takes about
 100 bytes, which is not much, but remember that every afpd child process
 for every connected user has its own cache.
 
-Default: 8192, Maximum size: 131072.
+Default: 65536, Maximum size: 2097152.
 
 dircache validation freq = *number* **(G)**
 
@@ -754,23 +754,72 @@ directories. The default is *no* for legacy compatibility and memory conservatio
 When enabled (*yes*), files are cached along with directories, which can
 improve performance for file-heavy workloads by reducing CNID database queries.
 However, this increases memory usage and may cause excessive cache evictions
-if the working set is larger than the configured dircachesize.
+if the working set is larger than the configured dircache size.
+
+NB: This is a beta option. Files are already cached by default, but some code is missing full support for files in the cache.
+This is related to work to complete file caching support, and this option may be removed in future.
 
 **Performance Impact:**
 
-- **Disabled** (*no*, default): Only directories are cached. Lower memory usage,
+- **Disabled** (*no*, default): Only directories are fully cached. Lower memory usage,
   suitable for most deployments.
-- **Enabled** (*yes*): Both files and directories are cached. Higher memory usage,
+- **Enabled** (*yes*): Both files and directories are fully cached. Higher memory usage,
   potentially better performance for file-intensive workflows.
 
 **Recommendation:**
 
 - Leave disabled (*no*) unless you have:
-  - A large **dircachesize** configuration (e.g., 65536 or higher)
+  - A large **dircache size** configuration (e.g., 65536 or higher)
   - File-intensive workflows with repeated access to the same files
   - Sufficient server memory to handle increased cache size
 
 Default: no. Range: yes/no, true/false, 1/0.
+
+dircache mode = *lru* | *arc* (default: *lru*) **(G)**
+
+Cache replacement algorithm. Netatalk supports two eviction policies:
+
+- **LRU (Least Recently Used)** — the default. Maintains a single list
+  ordered by access time (FIFO); the least recently accessed entry is evicted when
+  the cache is full. Simple and memory-efficient.
+
+- **ARC (Adaptive Replacement Cache)** — a self-tuning algorithm that
+  dynamically balances *recency* and *frequency* to achieve better hit rates
+  than LRU. Based on
+  ["Outperforming LRU with an Adaptive Replacement Cache Algorithm"](https://theory.stanford.edu/~megiddo/pdf/IEEE_COMPUTER_0404.pdf)
+  (Megiddo & Modha, IBM, 2004).
+
+ARC adapts to the observed access pattern, making it effective for workloads
+that mix temporal locality with frequency-based reuse — for example when
+users alternate between recently and frequently accessed files or directories.
+It maintains four lists: two for cached entries (T1 recent, T2 frequent) and
+two *ghost* lists (B1, B2) that track recently evicted entries. When a ghost
+is re-accessed, ARC learns from the miss and adjusts its policy. This ghost
+learning and segmentation is what distinguishes ARC from LRU, and also makes ARC resistant to
+sequential scans and backups that can wipe an LRU cache.
+
+**Netatalk's ARC uses complete ghost entries** (retaining all content) rather
+than the metadata-only ghosts in the IBM paper. A ghost hit is promoted back
+to the cache instantly without any filesystem lookup, so ARC should always
+perform at least as well as LRU.
+
+**Memory:** ARC uses approximately **twice the memory** of LRU because it
+tracks up to *c* ghost entries alongside *c* cached entries (where *c* is
+`dircache size`). Each entry is ~100 bytes. Even so, ARC outperforms an LRU
+cache of the same total memory.
+
+| Mode | Entries tracked | Memory (1000-entry cache) |
+|------|-----------------|--------------------------|
+| LRU  | 1000 cached     | ~100 KB                  |
+| ARC  | 1000 cached + up to 1000 ghosts | ~200 KB    |
+
+For the default `dircache size` of 65536: LRU ≈ 6.4 MB, ARC ≈ 12.8 MB per
+connected user.
+
+**Recommendation**: Use **arc** for servers with 4 GB+ RAM.
+Use **lru** for memory-constrained systems.
+
+Default: lru.
 
 **Example** (Netatalk only access to volume):
 
@@ -778,9 +827,10 @@ Default: no. Range: yes/no, true/false, 1/0.
 
 **Example** (File-heavy workload with large cache):
 
-    dircachesize = 65536
+    dircache size = 65536
     dircache files = yes
     dircache validation freq = 100
+    dircache mode = arc
 
 **Note**: Monitor dircache effectiveness by checking Netatalk log files
 for "dircache statistics:" lines when afpd shuts down gracefully (user
