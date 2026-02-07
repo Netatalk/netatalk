@@ -1250,7 +1250,8 @@ int dircache_add(const struct vol *vol,
 
     if (ntohl(dir->d_did) < CNID_START) {
         LOG(log_error, logtype_afpd,
-            "dircache_add(): did:%u is less than the allowed %d. Try rebuilding the CNID database for: \"%s\"",
+            "dircache_add(): did:%u is less than the allowed %d for: \"%s\". "
+            "This indicates a caller passed an invalid CNID (possible database error).",
             ntohl(dir->d_did), CNID_START,
             dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
     }
