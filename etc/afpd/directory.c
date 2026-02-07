@@ -779,11 +779,11 @@ exit:
 
 
 /*!
- * @brief Public CNID (Directory ID) resolution (supports files and directories)
+ * @brief Optimistic CNID resolution for read/safe code paths
  *
- * Resolves a CNID (Directory ID) to its cached entry. This function supports both files
- * and directories since DID can refer to either type. If cache hit, returns
- * cache entry, if cache miss, returns CNID database record and updates cache
+ * Resolves a CNID to its cached entry using probabilistic validation.
+ * Safe for read operations (enumerate, getparams, opendir, openfork)
+ * because stale entries are detected on use and recovered via movecwd().
  *
  * @param[in] vol   pointer to struct vol
  * @param[in] did   DID to resolve
@@ -800,15 +800,12 @@ struct dir *dirlookup(const struct vol *vol, cnid_t did)
 }
 
 /*!
- * @brief Strict DID resolution with inode validation
+ * @brief Validated DID resolution for write/change code paths
  *
- * Like dirlookup(), but performs additional validation to ensure the cached
- * directory entry matches the actual filesystem state. This prevents race
- * conditions where a directory has been renamed/moved but the cache entry
- * still points to the old path/has become stale.
- *
- * Use this for destructive operations (delete, rename, move) where operating
- * on the wrong object could cause data loss.
+ * Like dirlookup(), but performs stat()+inode validation to ensure the cached
+ * entry matches the current filesystem state. Gurantees operating on valid entry.
+ * Use for all write/change operations: delete, setdirparams, setfilparams,
+ * setfildirparams, setacl, copyfile (dest), exchangefiles, createdir, createfile
  *
  * @param[in] vol   pointer to struct vol
  * @param[in] did   DID to resolve
@@ -2659,7 +2656,7 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         return afp_errno;
     }
 

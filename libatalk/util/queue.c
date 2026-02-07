@@ -183,7 +183,9 @@ void queue_destroy(q_t *q, void (*callback)(void *))
     void *p;
 
     while ((p = dequeue(q)) != NULL) {
-        callback(p);
+        if (callback) {
+            callback(p);
+        }
     }
 
     free(q);

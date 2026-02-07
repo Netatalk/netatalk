@@ -173,7 +173,7 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         return afp_errno;
     }
 
