@@ -39,14 +39,16 @@ terminated with colons. The available options and flags are:
 **am=(uams list)**
 
 > The **am** option allows specific UAMs to be specified for a particular
-printer. It has no effect if the **au** flag is not present. Note:
-possible values are *uams_guest.so* and *uams_clrtxt.so* only. The first
-method requires a valid username, but no password. The second requires
-both a valid username and the correct password.
+printer. It takes effect when authentication is enabled via **ca** or
+**sp**. Note: possible values are *uams_guest.so* and *uams_clrtxt.so*
+only. The first method requires a valid username, but no password. The
+second requires both a valid username and the correct password.
 
-**au**
+**ca=(path)**
 
-> If present, this flag enables authentication for the printer.
+> Enables CAP-style authenticated printing. The path specifies a
+directory where authenticated print jobs are staged. Implicitly enables
+authentication for the printer.
 
 **co=(CUPS options)**
 
@@ -87,6 +89,11 @@ the selected printer.
 
 > Sets the *lpd* or *CUPS* printer that this is spooled to. Default value
 is "lp".
+
+**sp**
+
+> If present, this flag enables PSSP authenticated printing. Implicitly
+enables authentication for the printer.
 
 # Examples
 
