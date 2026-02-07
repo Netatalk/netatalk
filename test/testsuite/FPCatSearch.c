@@ -14,7 +14,7 @@ STATIC void test225()
     const DSI *dsi = &Conn->dsi;
     char pos[16];
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     struct afp_filedir_parms filedir2;
     unsigned int ret;
     ENTER_TEST

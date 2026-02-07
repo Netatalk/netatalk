@@ -427,7 +427,7 @@ STATIC void test218()
     char *ndir  = "t218 enumerate dir";
     uint16_t vol = VolID;
     int  ofs =  4 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi;
     unsigned int ret;
     int bdir;
@@ -538,7 +538,7 @@ STATIC void test300(void)
     uint16_t i;
     const DSI *dsi;
     const unsigned char *b;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int *stack = NULL;
     int cnt = 0;
     int size = 1000;

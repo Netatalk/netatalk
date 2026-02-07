@@ -10,7 +10,7 @@ STATIC void test82()
     int  dir;
     char *name = "t82 test dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) |
                       (1 << DIRPBIT_MDATE)
                       | (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_UID) |
@@ -64,7 +64,7 @@ STATIC void test84()
     int  dir;
     char *name = "t84 no delete dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_FINFO) |
                       (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
@@ -112,7 +112,7 @@ STATIC void test88()
     int  ofs =  3 * sizeof(uint16_t);
     int pdir = 0;
     int rdir = 0;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = DIRPBIT_ATTR | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
@@ -202,7 +202,7 @@ STATIC void test107()
     char *name = "t107 test dir";
     char *ndir = "t107 no access";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) |
                       (1 << DIRPBIT_MDATE)
                       | (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_UID) |
@@ -309,7 +309,7 @@ STATIC void test189()
     char *name = "t189 error setdirparams";
     char *name1 = "t189 error setdirparams file";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
@@ -350,7 +350,7 @@ STATIC void test193()
     int  dir;
     char *name = "t193 no delete dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
@@ -390,7 +390,7 @@ STATIC void test351()
     char *name = "t351 file";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     uint8_t old_access[4];
     int ret;
@@ -458,7 +458,7 @@ STATIC void test352()
     char *ndir = "t352 dir";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     uint8_t old_access[4];
     const DSI *dsi = &Conn->dsi;
@@ -520,7 +520,7 @@ STATIC void test353()
     char *ndir = "t353 dir";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -609,7 +609,7 @@ STATIC void test354()
     char *name = "t354 file";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -677,7 +677,7 @@ STATIC void test355()
     char *name = "t355 file";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -749,7 +749,7 @@ STATIC void test356()
     char *name = "t356 file";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     int old_unixpriv;
     int ret;
@@ -874,7 +874,7 @@ STATIC void test405()
     char *ndir = "t405 dir";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST

@@ -15,7 +15,7 @@ STATIC void test227()
     const DSI *dsi;
     char pos[16];
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     struct afp_filedir_parms filedir2;
     unsigned int ret;
     ENTER_TEST
@@ -198,7 +198,7 @@ STATIC void test529()
     uint32_t match_count = 0;
     uint32_t temp;
     const DSI *dsi;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     struct afp_filedir_parms filedir2;
     int iteration = 0;
     ENTER_TEST

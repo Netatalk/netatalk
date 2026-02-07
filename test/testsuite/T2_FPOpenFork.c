@@ -756,7 +756,7 @@ STATIC void test372()
     uint16_t vol = VolID;
     uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     int fd;
@@ -860,7 +860,7 @@ STATIC void test388()
     uint16_t vol = VolID;
     uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     int fd;
@@ -964,7 +964,7 @@ STATIC void test392()
     uint16_t vol = VolID;
     uint16_t fork;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     int fd;
@@ -1183,7 +1183,7 @@ STATIC void test236()
     int testdir, etcdir;
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     int ofs = 3 * sizeof(uint16_t);
     ENTER_TEST
@@ -1273,7 +1273,7 @@ STATIC void test237()
     int testdir;
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     int ofs = 3 * sizeof(uint16_t);
     ENTER_TEST
@@ -1355,7 +1355,7 @@ STATIC void test238()
     int  testdir;
     uint16_t fork = 0;
     uint16_t vol = VolID, bitmap;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     int ofs = 3 * sizeof(uint16_t);
     ENTER_TEST

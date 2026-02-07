@@ -12,7 +12,7 @@ STATIC void test76()
     char *name1 = "t76 Resolve ID dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -55,7 +55,7 @@ STATIC void test91()
     char *name1 = "t91 test ID dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     unsigned int ret;
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
@@ -125,7 +125,7 @@ STATIC void test310()
     char *name1 = "t310 new name";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -164,7 +164,7 @@ STATIC void test311()
     char *name1 = "t311-\xd7\xa4\xd7\xaa\xd7\x99\xd7\x97\xd7\x94#11.mp3";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = 0x693f;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -267,7 +267,7 @@ STATIC void test417()
     char *name1 = "t417 dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST

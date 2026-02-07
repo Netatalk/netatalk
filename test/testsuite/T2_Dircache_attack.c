@@ -134,7 +134,7 @@ STATIC void test500()
     char *renamedsubdir1 = "t500 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -208,7 +208,7 @@ STATIC void test501()
     char *renamedsubdir1 = "t501 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -279,7 +279,7 @@ STATIC void test502()
     char *renamedsubdir1 = "t502 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -356,7 +356,7 @@ STATIC void test503()
     char *renamedsubdir1 = "t503 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -427,7 +427,7 @@ STATIC void test504()
     char *renamedsubdir1 = "t504 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id, file_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -497,7 +497,7 @@ STATIC void test505()
     char *renamedsubdir1 = "t505 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -569,7 +569,7 @@ STATIC void test506()
     char *renamedsubdir1 = "t506 renamedsubdir1";
     uint32_t dir_id, subdir1_id, subdir2_id, poisondir_id;
     int ofs = 3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 

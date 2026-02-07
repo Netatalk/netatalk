@@ -265,7 +265,7 @@ STATIC void test138()
     char *name = "t138 file";
     char *name1 = "t138 dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;

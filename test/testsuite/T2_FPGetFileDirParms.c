@@ -369,7 +369,7 @@ STATIC void test106()
     unsigned int dir3 = 0;
     unsigned int dir4 = 0;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
@@ -778,7 +778,7 @@ STATIC void test336()
     int ret;
     int id;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     ENTER_TEST
 
     if (!Conn2) {
@@ -1024,7 +1024,7 @@ STATIC void test420()
     char *name1 = "t420 dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
     uint16_t fork = 0;
     const DSI *dsi = &Conn->dsi;

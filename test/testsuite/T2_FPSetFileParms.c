@@ -9,7 +9,7 @@
 static int afp_symlink(char *oldpath, char *newpath)
 {
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap;
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -63,7 +63,7 @@ STATIC void test89()
     char *file = "t89 test error setfilparam";
     char *name = "t89 error setfilparams dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_FINFO) | (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
     uint16_t vol = VolID;
@@ -113,7 +113,7 @@ STATIC void test120()
 {
     char *name = "t120 test file setfilparam";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO) |
                       (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
@@ -150,7 +150,7 @@ STATIC void test426()
 {
     char *name = "t426 Symlink";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap;
     uint16_t vol = VolID;
     DSI *dsi;

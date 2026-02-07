@@ -12,7 +12,7 @@ STATIC void test75()
     int dir;
     int ret;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_UID) | (1 << DIRPBIT_GID);
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
