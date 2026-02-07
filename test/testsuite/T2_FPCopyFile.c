@@ -13,7 +13,7 @@ STATIC void test373()
     uint16_t vol = VolID;
     int tp, tp1;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     uint32_t mdate = 0;

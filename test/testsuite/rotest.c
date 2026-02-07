@@ -31,7 +31,7 @@ STATIC void test510()
     char *ndir = "read only dir";
     char *nfile = "read only file";
     int  ofs =  4 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     char *file = NULL;
     char *file1 = NULL;
     char *dir = NULL;

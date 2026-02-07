@@ -10,7 +10,7 @@ STATIC void test2()
     const DSI *dsi = &Conn->dsi;
     char *name = "t2 sync dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     ENTER_TEST
 
     if (FPSyncDir(Conn, vol, DIRDID_ROOT)) {

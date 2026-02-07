@@ -11,7 +11,7 @@ STATIC void test121()
     int  dir;
     char *name = "t121 test dir setdirparam";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_CDATE) |
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE);
     uint16_t vol = VolID;
@@ -87,7 +87,7 @@ STATIC void test528()
     uint16_t vol = VolID;
     int  ofs = 3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_UNIXPR);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 

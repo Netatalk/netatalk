@@ -345,7 +345,7 @@ STATIC void test339()
     int dir;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -532,7 +532,7 @@ STATIC void test370()
     int dir;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     ENTER_TEST
 
     if (Conn->afp_version < 30) {

@@ -9,7 +9,7 @@ STATIC void test203()
 {
     uint16_t vol = VolID;
     uint16_t bitmap = (1 << FILPBIT_MDATE);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int fork = 0;
     char *name = "t203 file";
     uint32_t mdate;

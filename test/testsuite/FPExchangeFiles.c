@@ -278,7 +278,7 @@ STATIC void test342()
     int fid_name1;
     int temp;
     uint16_t vol = VolID;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     char finder_info[32];
     uint16_t bitmap;
     const DSI *dsi = &Conn->dsi;

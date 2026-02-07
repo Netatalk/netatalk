@@ -143,7 +143,7 @@ STATIC void test172()
     char *name = "test172.txt";
     char *name1 = "newtest172.txt";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int tdir;
     int fork;
     int dir = 0;
@@ -321,7 +321,7 @@ STATIC void test196()
     int tdir;
     int tdir1 = 0;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
                       (1 << DIRPBIT_DID) | (1 << DIRPBIT_UID) |
@@ -508,7 +508,7 @@ STATIC void test421()
     uint16_t vol2;
     int tdir;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
                       (1 << DIRPBIT_DID) | (1 << DIRPBIT_UID) |

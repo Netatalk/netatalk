@@ -46,7 +46,7 @@ STATIC void test72()
     char *name2 = "t72 dir";
     unsigned int ret;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -110,7 +110,7 @@ static int create_double_deleted_folder(uint16_t vol, char *name)
     int tdir;
     int tdir1 = 0;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     const DSI *dsi2;
     uint16_t bitmap;

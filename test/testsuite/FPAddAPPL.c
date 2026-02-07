@@ -82,7 +82,7 @@ STATIC void test301()
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_DID);
     uint16_t fork;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int dir;
     ENTER_TEST
 

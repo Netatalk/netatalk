@@ -9,7 +9,7 @@ STATIC void test208()
     int  dir;
     char *name = "t208 test Map ID";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_BDATE) |
                       (1 << DIRPBIT_MDATE)
                       | (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_FINFO) | (1 << DIRPBIT_UID) |

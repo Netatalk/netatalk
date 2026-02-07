@@ -16,7 +16,7 @@ STATIC void test146()
     char *name = "t146 file";
     char *name1 = "t146 dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
     uint16_t vol = VolID;
     uint16_t vol2;
@@ -193,7 +193,7 @@ STATIC void test363()
     char *name1 = "t363 GetForkParams dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     int fork;
     ENTER_TEST
@@ -269,7 +269,7 @@ STATIC void test364()
     char *name1 = "t364 Delete ID dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 

@@ -617,7 +617,7 @@ STATIC void test116()
 {
     char *name = "t116 no write file";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE);
     int fork;
     uint16_t vol = VolID;
@@ -862,7 +862,7 @@ static void test_openmode(char *name, int type)
     const DSI *dsi2 = &Conn2->dsi;
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int what   = (type == OPENFORK_DATA) ? ATTRBIT_DOPEN : ATTRBIT_ROPEN;
     int nowhat = (type == OPENFORK_DATA) ? ATTRBIT_ROPEN : ATTRBIT_DOPEN;
     vol2  = FPOpenVol(Conn2, Vol);

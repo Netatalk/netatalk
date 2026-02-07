@@ -11,7 +11,7 @@ STATIC void test83()
     char *ndir = "t83 dir";
     int  dir;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO) |
                       (1 << FILPBIT_CDATE) |
                       (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
@@ -54,7 +54,7 @@ STATIC void test96()
 {
     char *name = "t96 invisible file";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE);
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -133,7 +133,7 @@ STATIC void test118()
 {
     char *name = "t118 no delete file";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_ATTR);
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -167,7 +167,7 @@ STATIC void test122()
 {
     char *name = "t122 setfilparam open fork";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int fork;
     int fork1;
     int ret;
@@ -232,7 +232,7 @@ STATIC void test318()
 {
     char *name = "t318 PDinfo error";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_PDINFO);
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -267,7 +267,7 @@ test_exit:
 static int afp_symlink(char *oldpath, char *newpath)
 {
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap;
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -320,7 +320,7 @@ STATIC void test427()
     char *name = "t427 Symlink";
     char *dest = "t427 dest";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap;
     uint16_t vol = VolID;
     DSI *dsi;
@@ -414,7 +414,7 @@ STATIC void test429()
     char *name = "t429 Symlink";
     char *dest = "t429 dest";
     int  ofs =  sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -476,7 +476,7 @@ STATIC void test430()
     char *name = "t430 Symlink";
     char *dest = "t430 dest";
     int  ofs =  sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << FILPBIT_FNUM);
     uint16_t vol = VolID;
     DSI *dsi;

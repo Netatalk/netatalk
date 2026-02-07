@@ -47,7 +47,7 @@ STATIC void test_western()
     uint16_t vol = VolID;
     uint16_t f_bitmap;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     char *result;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST

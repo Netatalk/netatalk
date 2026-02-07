@@ -270,7 +270,7 @@ afp_enumerate
 static void cname_test(char *name)
 {
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 <<  DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
                       (1 << DIRPBIT_DID) |
                       (1 << DIRPBIT_ACCESS);
@@ -477,7 +477,7 @@ STATIC void test100()
     int dir;
     char *name = "t100 no obj error";
     char *name1 = "t100 no obj error/none";
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR);
     unsigned int ret;
     uint16_t vol = VolID;
@@ -562,7 +562,7 @@ STATIC void test101()
     char *name = "t101 no obj error";
     char *ndir = "t101 no";
     char *name1 = "t101 no/none";
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR);
     uint16_t vol = VolID;
     unsigned int ret;
@@ -680,7 +680,7 @@ STATIC void test102()
     char *name = "t102 access error";
     char *name1 = "t102 dir --";
     int ret;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR);
     uint16_t vol = VolID;
     DSI *dsi;
@@ -800,7 +800,7 @@ STATIC void test103()
     char *name1 = "t130 dir --";
     int ret;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID);
     uint16_t vol = VolID;
     const DSI *dsi;
@@ -999,7 +999,7 @@ STATIC void test105()
     unsigned int err;
     char *name = "t105 bad did";
     char *name1 = "t105 no obj error/none";
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_ATTR);
     uint16_t vol = VolID;
     DSI *dsi;
@@ -1075,7 +1075,7 @@ STATIC void test170()
     char *name = "test170.txt";
     char *name1 = "newtest170.txt";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int fork;
     int dir = DIRDID_ROOT_PARENT;
     unsigned int ret;
@@ -1250,7 +1250,7 @@ STATIC void test171()
     char *name = "test171.txt";
     char *name1 = "newtest171.txt";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int tdir = DIRDID_ROOT_PARENT;
     int fork;
     int dir = DIRDID_ROOT_PARENT;
@@ -1405,7 +1405,7 @@ STATIC void test173()
     char *name = "test173.txt";
     char *name1 = "newtest173.txt";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int tdir = 0;
     int fork;
     int dir = DIRDID_ROOT_PARENT;
@@ -1570,7 +1570,7 @@ STATIC void test174()
     char *name = "test174.txt";
     char *name1 = "newtest174.txt";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int tdir;
     int fork;
     int dir = DIRDID_ROOT_PARENT;

@@ -636,7 +636,7 @@ static int create_trash(CONN *conn, uint16_t vol)
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
     const DSI *dsi = &conn->dsi;
     int dir;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     dir  = FPCreateDir(conn, vol, DIRDID_ROOT, trash);
 
     if (!dir) {
@@ -675,7 +675,7 @@ static int create_trash(CONN *conn, uint16_t vol)
 static int create_map(CONN *conn, uint16_t vol, int dir, char *name)
 {
     const DSI *dsi = &conn->dsi;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int  ofs =  3 * sizeof(uint16_t);
     int fork;
 
@@ -708,7 +708,7 @@ static int set_perm(CONN *conn, uint16_t vol, int dir)
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
     const DSI *dsi = &conn->dsi;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
 
     if (FPGetFileDirParams(conn, vol, dir, "", 0, bitmap)) {
         return 0;
@@ -742,7 +742,7 @@ static int write_access(CONN *conn, uint16_t  vol, int dir)
                       (1 << DIRPBIT_BDATE) | (1 << DIRPBIT_MDATE) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID) | (1 << DIRPBIT_ACCESS);
     const DSI *dsi = &conn->dsi;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
 
     if (FPGetFileDirParams(conn, vol, dir, "", 0, bitmap)) {
         return 0;

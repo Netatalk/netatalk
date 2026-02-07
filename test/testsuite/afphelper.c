@@ -75,7 +75,7 @@ int get_did(CONN *conn, uint16_t vol, int dir, char *name)
 {
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_DID);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi;
     dsi = &conn->dsi;
     filedir.did = 0;
@@ -100,7 +100,7 @@ int get_fid(CONN *conn, uint16_t vol, int dir, char *name)
 {
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &conn->dsi;
     filedir.did = 0;
 
@@ -124,7 +124,7 @@ uint32_t get_forklen(DSI *dsi, int type)
     uint16_t bitmap = 0;
     int len = (type == OPENFORK_RSCS) ? (1 << FILPBIT_RFLEN) : (1 << FILPBIT_DFLEN);
     int  ofs =  sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint32_t flen;
     filedir.isdir = 0;
     bitmap = len;
@@ -187,7 +187,7 @@ int no_access_folder(uint16_t vol, int did, char *name)
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_UID) |
                       (1 << DIRPBIT_GID);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     DSI *dsi, *dsi2;
     uint32_t uid;
 
@@ -315,7 +315,7 @@ int group_folder(uint16_t vol, int did, char *name)
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     DSI *dsi, *dsi2;
 
     if (!Conn2) {
@@ -404,7 +404,7 @@ int read_only_folder(uint16_t vol, int did, char *name)
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi2;
 
     if (!Conn2) {
@@ -483,7 +483,7 @@ int read_only_folder_with_file(uint16_t vol, int did, char *name, char *file)
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi2;
 
     if (!Conn2) {
@@ -565,7 +565,7 @@ int delete_folder(uint16_t vol, int did, char *name)
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi2;
 
     if (!Conn2) {
@@ -626,7 +626,7 @@ int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
     uint16_t vol2;
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << DIRPBIT_ACCESS) | (1 << DIRPBIT_DID);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi2;
 
     if (!Conn2) {
@@ -971,7 +971,7 @@ int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name)
 int delete_directory_tree(CONN *conn, uint16_t volume,
                           uint32_t parent_did, char *dirname)
 {
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi_ptr = &conn->dsi;
     uint32_t dir_id;
     uint16_t f_bitmap, d_bitmap;
@@ -1156,7 +1156,7 @@ void clear_volume(uint16_t vol, CONN *conn)
 {
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_PDID);
     uint32_t dir_id = DIRDID_ROOT;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int ofs = 3 * sizeof(uint16_t);
 
     while (1) {

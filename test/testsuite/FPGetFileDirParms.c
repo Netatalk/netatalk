@@ -163,7 +163,7 @@ STATIC void test94()
     int  dir;
     char *name = "t94 invisible dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t vol = VolID;
     uint16_t bitmap = (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_MDATE) |
                       (1 << DIRPBIT_OFFCNT);
@@ -262,7 +262,7 @@ STATIC void test104()
     char *name5 = "t104 file";
     unsigned int  dir1 = 0, dir2 = 0, dir3 = 0, dir4 = 0;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
@@ -531,7 +531,7 @@ STATIC void test307()
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
@@ -581,7 +581,7 @@ STATIC void test308()
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
@@ -652,7 +652,7 @@ STATIC void test324()
     uint16_t vol = VolID;
     DSI *dsi;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     unsigned int dir;
     char *result;
@@ -939,7 +939,7 @@ STATIC void test371()
     char *name1  = "t371 new name.pdf";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     ENTER_TEST
@@ -1005,7 +1005,7 @@ STATIC void test380()
     char *name  = "t380 file name.doc";
     uint16_t vol = VolID;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
     uint16_t bitmap1 = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO) |
@@ -1070,7 +1070,7 @@ STATIC void test396()
     uint16_t vol = VolID;
     const DSI *dsi = &Conn->dsi;
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t f_bitmap = 0x73f;
     uint16_t d_bitmap = 0x133f;
     unsigned int dir;
@@ -1114,7 +1114,7 @@ STATIC void test423()
     char *name1 = "t423 dir";
     int  ofs =  3 * sizeof(uint16_t);
     uint16_t bitmap = (1 << FILPBIT_FNUM) | (1 << DIRPBIT_FINFO);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     int fid = 0;
     uint16_t fork = 0;
     const DSI *dsi = &Conn->dsi;
@@ -1189,7 +1189,7 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
     uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
     int ofs = 3 * sizeof(uint16_t);
     const DSI *dsi = &Conn->dsi;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const unsigned char *buf;
     uint8_t prodos_type;
     uint16_t prodos_aux;
@@ -1266,7 +1266,7 @@ STATIC void test441()
     uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
     int ofs = 3 * sizeof(uint16_t);
     const DSI *dsi = &Conn->dsi;
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     const unsigned char *buf;
     uint8_t prodos_type;
     uint16_t prodos_aux;
