@@ -44,6 +44,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <atalk/logger.h>
+#include <atalk/compat.h>
+
 #include "printcap.h"
 
 #ifndef BUFSIZ
@@ -141,8 +144,12 @@ int getprent(char *cap, char *bp, int bufsize)
                 continue;
             }
 
-            if (bp >= tbuf + BUFSIZ) {
-                fprintf(stderr, "Termcap entry too long\n");
+            if (bp == tbuf && (c == ' ' || c == '\t')) {
+                continue;
+            }
+
+            if (bp >= tbuf + bufsize) {
+                LOG(log_error, logtype_papd, "Termcap entry too long");
                 *bp = '\0';
                 return 1;
             }
@@ -150,7 +157,7 @@ int getprent(char *cap, char *bp, int bufsize)
             *bp++ = c;
 
             if (++i >= bufsize) {
-                fprintf(stderr, "config file too large\n");
+                LOG(log_error, logtype_papd, "config file too large");
                 fclose(pfp);
                 pfp = NULL;
                 *bp = '\0';
@@ -264,7 +271,7 @@ int tgetent(char *cap, char *bp, const char *name)
             }
 
             if (cp >= bp + BUFSIZ) {
-                fprintf(stderr, "Termcap entry too long\n");
+                LOG(log_error, logtype_papd, "Termcap entry too long");
                 break;
             } else {
                 *cp++ = c;
@@ -313,7 +320,7 @@ int tnchktc(char *cap)
 
     while (*--p != ':')
         if (p < tbuf) {
-            fprintf(stderr, "Bad termcap entry\n");
+            LOG(log_error, logtype_papd, "Bad termcap entry");
             free(tcbuf);
             return 0;
         }
@@ -326,7 +333,7 @@ int tnchktc(char *cap)
         return 1;
     }
 
-    strcpy(tcname, p + 3);
+    strlcpy(tcname, p + 3, sizeof(tcname));
     q = tcname;
 
     while (q && *q != ':') {
@@ -336,7 +343,7 @@ int tnchktc(char *cap)
     *q = 0;
 
     if (++hopcount > MAXHOP) {
-        fprintf(stderr, "Infinite tc= loop\n");
+        LOG(log_error, logtype_papd, "Infinite tc= loop");
         free(tcbuf);
         return 0;
     }
@@ -352,7 +359,7 @@ int tnchktc(char *cap)
     l = p - holdtbuf + strlen(q);
 
     if (l > BUFSIZ) {
-        fprintf(stderr, "Termcap entry too long\n");
+        LOG(log_error, logtype_papd, "Termcap entry too long");
         q[BUFSIZ - (p - tbuf)] = 0;
     }
 

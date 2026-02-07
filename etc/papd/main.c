@@ -640,8 +640,44 @@ int getstatus(struct printer *pr, rbuf_t *buf)
 #endif /* HAVE_CUPS */
 }
 
-char	*pgetstr(char *id, char **area);
-char	*getpname(char **area, int bufsize);
+static void free_printer_fields(struct printer *pr)
+{
+    if (pr->p_name != NULL && pr->p_name != defprinter.p_name) {
+        free(pr->p_name);
+    }
+
+    if (pr->p_type != NULL && pr->p_type != defprinter.p_type) {
+        free(pr->p_type);
+    }
+
+    if (pr->p_zone != NULL && pr->p_zone != defprinter.p_zone) {
+        free(pr->p_zone);
+    }
+
+    if (pr->p_ppdfile != NULL) {
+        free(pr->p_ppdfile);
+    }
+
+    if (pr->p_printer != NULL && pr->p_printer != defprinter.p_printer) {
+        free(pr->p_printer);
+    }
+
+    if (pr->p_authprintdir != NULL) {
+        free(pr->p_authprintdir);
+    }
+
+    if (pr->p_operator != NULL && pr->p_operator != defprinter.p_operator) {
+        free(pr->p_operator);
+    }
+
+#ifdef HAVE_CUPS
+
+    if (pr->p_cupsoptions != NULL) {
+        free(pr->p_cupsoptions);
+    }
+
+#endif
+}
 
 #define PF_CONFBUFFER	1024
 
@@ -658,74 +694,71 @@ static void getprinters(char *cf)
          * Get the printer's nbp name.
          */
         if ((p = getpname(&a, PF_CONFBUFFER)) == NULL) {
-            fprintf(stderr, "No printer name\n");
-            exit(1);
+            LOG(log_error, logtype_papd, "No printer name, skipping entry");
+            continue;
         }
 
-        if ((pr = (struct printer *)malloc(sizeof(struct printer)))
+        if ((pr = (struct printer *)calloc(1, sizeof(struct printer)))
                 == NULL) {
-            perror("malloc");
+            LOG(log_error, logtype_papd, "calloc: %s", strerror(errno));
             exit(1);
         }
 
-        memset(pr, 0, sizeof(struct printer));
         name = defprinter.p_name;
         type = defprinter.p_type;
         zone = defprinter.p_zone;
 
         if (nbp_name(p, &name, &type, &zone)) {
-            fprintf(stderr, "Can't parse \"%s\"\n", name);
-            exit(1);
+            LOG(log_error, logtype_papd, "Can't parse \"%s\", skipping entry", name);
+            free(pr);
+            continue;
         }
 
         if (name != defprinter.p_name) {
-            if ((pr->p_name = (char *)malloc(strlen(name) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
+            if ((pr->p_name = strdup(name)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
             }
-
-            strcpy(pr->p_name, name);
         } else {
             pr->p_name = name;
         }
 
         if (type != defprinter.p_type) {
-            if ((pr->p_type = (char *)malloc(strlen(type) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
+            if ((pr->p_type = strdup(type)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
             }
-
-            strcpy(pr->p_type, type);
         } else {
             pr->p_type = type;
         }
 
         if (zone != defprinter.p_zone) {
-            if ((pr->p_zone = (char *)malloc(strlen(zone) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
+            if ((pr->p_zone = strdup(zone)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
             }
-
-            strcpy(pr->p_zone, zone);
         } else {
             pr->p_zone = zone;
         }
 
         if (pnchktc(cf) != 1) {
-            fprintf(stderr, "Bad papcap entry\n");
-            exit(1);
+            LOG(log_error, logtype_papd, "Bad papd.conf entry for %s, skipping",
+                pr->p_name);
+            goto bad_entry;
         }
 
         /*
          * Get PPD file.
          */
-        if ((p = pgetstr("pd", &a))) {
-            if ((pr->p_ppdfile = (char *)malloc(strlen(p) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
-            }
+        p = pgetstr("pd", &a);
 
-            strcpy(pr->p_ppdfile, p);
+        if (p) {
+            pr->p_ppdfile = strdup(p);
+
+            if (pr->p_ppdfile == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
+            }
         }
 
         /*
@@ -742,24 +775,21 @@ static void getprinters(char *cf)
                 pr->p_flags = P_SPOOLED;
             }
 
-            if ((pr->p_printer = (char *)malloc(strlen(p) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
+            if ((pr->p_printer = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
             }
-
-            strcpy(pr->p_printer, p);
         }
 
         /*
          * Do we want authenticated printing?
          */
         if ((p = pgetstr("ca", &a)) != NULL) {
-            if ((pr->p_authprintdir = (char *)malloc(strlen(p) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
+            if ((pr->p_authprintdir = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
             }
 
-            strcpy(pr->p_authprintdir, p);
             pr->p_flags |= P_AUTH;
             pr->p_flags |= P_AUTH_CAP;
         } else {
@@ -772,12 +802,12 @@ static void getprinters(char *cf)
         }
 
         if ((p = pgetstr("am", &a)) != NULL) {
-            if ((uamlist = (char *)malloc(strlen(p) + 1)) == NULL) {
-                perror("malloc");
-                exit(1);
-            }
+            free(uamlist);
 
-            strcpy(uamlist, p);
+            if ((uamlist = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                goto bad_entry;
+            }
         }
 
         if (pr->p_flags & P_SPOOLED) {
@@ -787,13 +817,10 @@ static void getprinters(char *cf)
             if ((p = pgetstr("op", &a)) == NULL) {
                 pr->p_operator = defprinter.p_operator;
             } else {
-                if ((pr->p_operator = (char *)malloc(strlen(p) + 1))
-                        == NULL) {
-                    perror("malloc");
-                    exit(1);
+                if ((pr->p_operator = strdup(p)) == NULL) {
+                    LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                    goto bad_entry;
                 }
-
-                strcpy(pr->p_operator, p);
             }
         }
 
@@ -842,12 +869,18 @@ static void getprinters(char *cf)
             printers = pr;
 #endif /* HAVE_CUPS */
         }
+
+        continue;
+bad_entry:
+        free_printer_fields(pr);
+        free(pr);
+        continue;
     }
 
     if (c == 0) {
         endprent();
-    } else {
-        /* No capability file, do default */
+    } else if (c < 0) {
+        LOG(log_error, logtype_papd, "cannot open config file %s, using defaults", cf);
         printers = &defprinter;
     }
 }
@@ -871,12 +904,11 @@ int rprintcap(struct printer *pr)
 
     if (pr->p_ppdfile == NULL) {
         if ((p = (char *) cups_get_printer_ppd(pr->p_printer)) != NULL) {
-            if ((pr->p_ppdfile = (char *)malloc(strlen(p) + 1)) == NULL) {
-                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
-                exit(1);
+            if ((pr->p_ppdfile = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                return -1;
             }
 
-            strcpy(pr->p_ppdfile, p);
             pr->p_flags |= P_CUPS_PPD;
             LOG(log_info, logtype_papd, "PPD File for %s set to %s", pr->p_printer,
                 pr->p_ppdfile);
@@ -908,12 +940,10 @@ int rprintcap(struct printer *pr)
         if ((p = pgetstr("sd", &a)) == NULL) {
             pr->p_spool = defprinter.p_spool;
         } else {
-            if ((pr->p_spool = (char *)malloc(strlen(p) + 1)) == NULL) {
-                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
-                exit(1);
+            if ((pr->p_spool = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                return -1;
             }
-
-            strcpy(pr->p_spool, p);
         }
 
         /*
@@ -936,13 +966,10 @@ int rprintcap(struct printer *pr)
             if ((p = pgetstr("ro", &a)) == NULL) {
                 pr->p_role = defprinter.p_role;
             } else {
-                if ((pr->p_role =
-                            (char *)malloc(strlen(p) + 1)) == NULL) {
-                    LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
-                    exit(1);
+                if ((pr->p_role = strdup(p)) == NULL) {
+                    LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                    return -1;
                 }
-
-                strcpy(pr->p_role, p);
             }
 
             if ((c = pgetnum("si")) < 0) {
@@ -965,13 +992,11 @@ int rprintcap(struct printer *pr)
         a = area;
 
         if ((p = pgetstr("pc", &a)) != NULL) {
-            if ((pr->p_pagecost_msg =
-                        (char *)malloc(strlen(p) + 1)) == NULL) {
-                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
-                exit(1);
+            if ((pr->p_pagecost_msg = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                return -1;
             }
 
-            strcpy(pr->p_pagecost_msg, p);
             pr->p_pagecost = 0;
         } else if (pr->p_flags & P_ACCOUNT) {
             if ((c = pgetnum("pc")) < 0) {
@@ -995,12 +1020,10 @@ int rprintcap(struct printer *pr)
         if ((p = pgetstr("lo", &a)) == NULL) {
             pr->p_lock = defprinter.p_lock;
         } else {
-            if ((pr->p_lock = (char *)malloc(strlen(p) + 1)) == NULL) {
-                LOG(log_error, logtype_papd, "malloc: %s", strerror(errno));
-                exit(1);
+            if ((pr->p_lock = strdup(p)) == NULL) {
+                LOG(log_error, logtype_papd, "strdup: %s", strerror(errno));
+                return -1;
             }
-
-            strcpy(pr->p_lock, p);
         }
 
         endprent();
