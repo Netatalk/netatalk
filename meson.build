@@ -247,6 +247,10 @@ endif
 
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
 
+if host_machine.endian() == 'big'
+    cdata.set('WORDS_BIGENDIAN', 1)
+endif
+
 #################
 # Header checks #
 #################
