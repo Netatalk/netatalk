@@ -762,7 +762,6 @@ jobs:
   build-openindiana:
     name: OpenIndiana
     runs-on: ubuntu-latest
-    if: 0 # pkg install process times out too frequently
     timeout-minutes: 24
     steps:
       - name: Checkout repository
