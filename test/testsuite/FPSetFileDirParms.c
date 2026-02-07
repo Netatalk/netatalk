@@ -880,16 +880,13 @@ STATIC void test358()
     char *name1 = "t358 file user 2";
     char *ndir = "t358 dir";
     int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
+    struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = 0;
     uint16_t vol = VolID;
     uint16_t vol2;
     uint8_t old_access[4];
     const DSI *dsi = &Conn->dsi;
     const DSI *dsi2;
-    int maxattempts = 10;
-    int attempt = 0;
-    int ret;
     ENTER_TEST
 
     if (Bigendian) {
@@ -947,28 +944,7 @@ STATIC void test358()
 fin:
     FAIL(FPDelete(Conn, vol, dir, name))
     FAIL(FPDelete(Conn, vol, dir, name1))
-
-    while (attempt < maxattempts) {
-        ret = FPDelete(Conn, vol, dir, "");
-
-        if (ret == AFP_OK) {
-            if (!Quiet) {
-                printf("FPDelete succeeded on attempt %d\n", attempt + 1);
-            }
-
-            break;
-        } else if (!Quiet) {
-            printf("FPDelete failed on attempt %d\n", attempt + 1);
-        }
-
-        attempt++;
-        sleep(1);
-    }
-
-    if (ret != AFP_OK) {
-        test_failed();
-    }
-
+    FAIL(FPDelete(Conn, vol, dir, ""))
 test_exit:
     exit_test("FPSetFileDirParms:test358: set unix access privilege two users");
 }
