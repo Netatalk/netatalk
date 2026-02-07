@@ -753,7 +753,7 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == (dir = dirlookup(vol, did))) {
+    if (NULL == (dir = dirlookup_strict(vol, did))) {
         LOG(log_error, logtype_afpd,
             "afp_createfile: dirlookup failed for did:%u, returning afp_errno=%d",
             ntohl(did), afp_errno);

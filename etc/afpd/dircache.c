@@ -402,9 +402,6 @@ static void arc_ensure_ghost_capacity(arc_list_t target_list)
             dir_free(ghost);
         }
     }
-
-    /* Post-condition: ghost directory has room for one more entry */
-    AFP_ASSERT((arc_cache.b1_size + arc_cache.b2_size) < arc_cache.c);
 }
 
 /*!
@@ -433,8 +430,8 @@ static void arc_replace(int in_b2)
              (arc_cache.t1_size > arc_cache.p))) {
         /* Evict LRU from T1 → B1 (move to ghost list) */
 
-        /* Check if T1 is empty */
-        if (arc_cache.t1_size == 0 || arc_cache.t1->next == arc_cache.t1) {
+        /* Defensive: check T1 queue empty (counter desync guard) */
+        if (arc_cache.t1->next == arc_cache.t1) {
             LOG(log_debug, logtype_afpd, "arc_replace: T1 is empty");
             return;
         }
@@ -450,8 +447,9 @@ static void arc_replace(int in_b2)
         if (victim == curdir) {
             /* Check if we have more than one entry */
             if (arc_cache.t1_size < 2 || arc_cache.t1->next->next == arc_cache.t1) {
-                LOG(log_debug, logtype_afpd,
-                    "arc_replace: cannot evict curdir from T1");
+                LOG(log_warning, logtype_afpd,
+                    "arc_replace: cannot evict curdir from T1 (T1=%zu, T2=%zu, c=%zu)",
+                    arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
                 return;
             }
 
@@ -459,8 +457,9 @@ static void arc_replace(int in_b2)
             victim = (struct dir *)arc_cache.t1->next->next->data;
 
             if (!victim || !victim->qidx_node || victim == curdir) {
-                LOG(log_debug, logtype_afpd,
-                    "arc_replace: cannot evict from T1 (all entries protected)");
+                LOG(log_warning, logtype_afpd,
+                    "arc_replace: cannot evict from T1 (all entries protected, T1=%zu, T2=%zu, c=%zu)",
+                    arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
                 return;
             }
         }
@@ -503,8 +502,9 @@ static void arc_replace(int in_b2)
         if (victim == curdir) {
             /* Check if we have more than one entry */
             if (arc_cache.t2_size < 2 || arc_cache.t2->next->next == arc_cache.t2) {
-                LOG(log_debug, logtype_afpd,
-                    "arc_replace: cannot evict curdir from T2");
+                LOG(log_warning, logtype_afpd,
+                    "arc_replace: cannot evict curdir from T2 (T1=%zu, T2=%zu, c=%zu)",
+                    arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
                 return;
             }
 
@@ -512,8 +512,9 @@ static void arc_replace(int in_b2)
             victim = (struct dir *)arc_cache.t2->next->next->data;
 
             if (!victim || !victim->qidx_node || victim == curdir) {
-                LOG(log_debug, logtype_afpd,
-                    "arc_replace: cannot evict from T2 (all entries protected)");
+                LOG(log_warning, logtype_afpd,
+                    "arc_replace: cannot evict from T2 (all entries protected, T1=%zu, T2=%zu, c=%zu)",
+                    arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
                 return;
             }
         }
@@ -554,7 +555,6 @@ static void arc_replace(int in_b2)
 static void arc_case_i(struct dir *dir)
 {
     AFP_ASSERT(dir);
-    AFP_ASSERT(dir->qidx_node);
     int in_t1 = (dir->arc_list == ARC_T1);
 
     if (in_t1) {
@@ -1044,17 +1044,9 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
             return NULL;
         }
 
-        /*
-         * OPTIMIZATION: Skip validation probabilistically.
-         * Internal netatalk operations invalidate cache explicitly.
-         * Periodic validation catches external filesystem changes.
-         * Always skip validation for ARC ghost entries.
-         * Ghost entries will be validated after promotion to T2 anyway.
-         */
-        if (arc_cache.enabled && (cdir->d_flags & DIRF_ARC_GHOST)) {
-            /* ARC ghost entry - increment counter but skip validation */
-            (void)should_validate_cache_entry();  /* Increments counter, ignore return value */
-        } else if (should_validate_cache_entry()) {
+        /* Periodic validation to detect external filesystem changes.
+         * Internal netatalk operations invalidate cache explicitly via dir_remove(). */
+        if (should_validate_cache_entry()) {
             /* Check if file still exists */
             if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
@@ -1080,12 +1072,12 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
             }
 
             /* Entry validated and still valid */
-            LOG(log_debug, logtype_afpd,
+            LOG(log_maxdebug, logtype_afpd,
                 "dircache(cnid:%u): {validated: path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
         } else {
             /* Skipped validation for performance */
-            LOG(log_debug, logtype_afpd,
+            LOG(log_maxdebug, logtype_afpd,
                 "dircache(cnid:%u): {cached (unvalidated): path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
         }
@@ -1169,12 +1161,9 @@ struct dir *dircache_search_by_name(const struct vol *vol,
     }
 
     if (cdir) {
-        /* Skip validation for ARC ghost entries - will validate after promotion */
-        if (arc_cache.enabled && (cdir->d_flags & DIRF_ARC_GHOST)) {
-            /* ARC ghost entry - increment counter but skip validation */
-            (void)should_validate_cache_entry();  /* Increments counter, ignore return value */
-        } else if (should_validate_cache_entry()) {
-            /* Periodic validation to detect external changes */
+        /* Periodic validation to detect external filesystem changes.
+         * Internal netatalk operations invalidate cache explicitly via dir_remove(). */
+        if (should_validate_cache_entry()) {
             /* Check if file still exists */
             if (ostat(cfrombstr(cdir->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
                 LOG(log_debug, logtype_afpd,
@@ -1218,14 +1207,14 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 /* Regular cache hit (Case I) in T1 or T2 */
                 arc_case_i(cdir);
                 /* Real cache hit */
-                LOG(log_debug, logtype_afpd,
+                LOG(log_maxdebug, logtype_afpd,
                     "dircache(did:%u,\"%s\"): {found in cache}",
                     ntohl(dir->d_did), name);
                 dircache_stat.hits++;
             }
         } else {
             /* LRU mode: All found entries are cache hits */
-            LOG(log_debug, logtype_afpd,
+            LOG(log_maxdebug, logtype_afpd,
                 "dircache(did:%u,\"%s\"): {found in cache}",
                 ntohl(dir->d_did), name);
             dircache_stat.hits++;
@@ -1521,13 +1510,16 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
                 /* Expand to_remove array */
                 if (remove_count >= remove_capacity) {
                     remove_capacity = remove_capacity ? remove_capacity * 2 : 16;
-                    to_remove = realloc(to_remove, remove_capacity * sizeof(struct dir*));
+                    struct dir **tmp = realloc(to_remove, remove_capacity * sizeof(struct dir*));
 
-                    if (!to_remove) {
+                    if (!tmp) {
                         LOG(log_error, logtype_afpd,
                             "dircache_remove_children: out of memory");
+                        free(to_remove);
                         return -1;
                     }
+
+                    to_remove = tmp;
                 }
 
                 /* Store the dir pointer for removal */
