@@ -37,15 +37,6 @@ Here is a description of this file that I emailed to the samba list once:
 
 sure.
 
-The distinction between 386 and other architectures is only there as
-an optimisation. You can take it out completely and it will make no
-difference. The routines (macros) in byteorder.h are totally byteorder
-independent. The 386 optimsation just takes advantage of the fact that
-the x86 processors don't care about alignment, so we don't have to
-align ints on int boundaries etc. If there are other processors out
-there that aren't alignment sensitive then you could also define
-CAREFUL_ALIGNMENT=0 on those processors as well.
-
 Ok, now to the macros themselves. I'll take a simple example, say we
 want to extract a 2 byte integer from a SMB packet and put it into a
 type called uint16 that is in the local machines byte order, and you
@@ -95,25 +86,10 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 */
 
-#undef CAREFUL_ALIGNMENT
-
-/* we know that the 386 can handle misalignment and has the "right"
-   byteorder */
-#ifdef __i386__
-#define CAREFUL_ALIGNMENT 0
-#endif
-
-#ifndef CAREFUL_ALIGNMENT
-#define CAREFUL_ALIGNMENT 1
-#endif
-
 #define CVAL(buf,pos) ((unsigned)(((const unsigned char *)(buf))[pos]))
 #define CVAL_NC(buf,pos) (((unsigned char *)(buf))[pos]) /*!< Non-const version of CVAL */
 #define PVAL(buf,pos) (CVAL(buf,pos))
 #define SCVAL(buf,pos,val) (CVAL_NC(buf,pos) = (val))
-
-
-#if CAREFUL_ALIGNMENT
 
 #ifdef WORDS_BIGENDIAN
 
@@ -155,40 +131,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 #define SLVAL(buf,pos,val) SLVALX((buf),(pos),((uint64_t)(val)))
 #define SLVALS(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
 
-#endif
-
-#else /* CAREFUL_ALIGNMENT */
-
-/* this handles things for architectures like the 386 that can handle
-   alignment errors */
-/*
-   WARNING: This section is dependent on the length of int16 and int32
-   being correct
-*/
-
-/* get single value from an SMB buffer */
-#define SVAL(buf,pos) (*(const uint16_t *)((const char *)(buf) + (pos)))
-#define SVAL_NC(buf,pos) (*(uint16_t *)((char *)(buf) + (pos))) /*!< Non const version of above. */
-#define IVAL(buf,pos) (*(const uint32_t *)((const char *)(buf) + (pos)))
-#define IVAL_NC(buf,pos) (*(uint32_t *)((char *)(buf) + (pos))) /*!< Non const version of above. */
-#define LVAL(buf,pos) (*(const uint64_t *)((const char *)(buf) + (pos)))
-#define LVAL_NC(buf,pos) (*(uint64_t *)((char *)(buf) + (pos)))
-#define SVALS(buf,pos) (*(const int16_t *)((const char *)(buf) + (pos)))
-#define SVALS_NC(buf,pos) (*(int16 *)((char *)(buf) + (pos))) /*!< Non const version of above. */
-#define IVALS(buf,pos) (*(const int32_t *)((const char *)(buf) + (pos)))
-#define IVALS_NC(buf,pos) (*(int32_t *)((char *)(buf) + (pos))) /*!< Non const version of above. */
-#define LVALS(buf,pos) (*(const int64_t *)((const char *)(buf) + (pos)))
-#define LVALS_NC(buf,pos) (*(int64_t *)((char *)(buf) + (pos)))
-
-/* store single value in an SMB buffer */
-#define SSVAL(buf,pos,val) SVAL_NC(buf,pos)=((uint16_t)(val))
-#define SIVAL(buf,pos,val) IVAL_NC(buf,pos)=((uint32_t)(val))
-#define SLVAL(buf,pos,val) LVAL_NC(buf,pos)=((uint64_t)(val))
-#define SSVALS(buf,pos,val) SVALS_NC(buf,pos)=((int16)(val))
-#define SIVALS(buf,pos,val) IVALS_NC(buf,pos)=((int32_t)(val))
-#define SLVALS(buf,pos,val) LVALS_NC(buf,pos)=((int64_t)(val))
-
-#endif /* CAREFUL_ALIGNMENT */
+#endif /* WORDS_BIGENDIAN */
 
 /* now the reverse routines - these are used in nmb packets (mostly) */
 #define SREV(x) ((((x)&0xFF)<<8) | (((x)>>8)&0xFF))
