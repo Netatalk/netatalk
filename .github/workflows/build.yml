@@ -762,7 +762,6 @@ jobs:
   build-openindiana:
     name: OpenIndiana
     runs-on: ubuntu-latest
-    if: 0 # pkg install process times out too frequently
     timeout-minutes: 24
     steps:
       - name: Checkout repository
@@ -770,6 +769,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/openindiana-vm@db77401fa56ea6c0f2c0324f5086305a46a4ceb7 # v1.0.5
         with:
+          release: "202510-build"
           copyback: true
           prepare: |
             set -e
