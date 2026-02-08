@@ -192,7 +192,7 @@ it also defines lots of intermediate macros, just ignore those :-)
 
 /* now the reverse routines - these are used in nmb packets (mostly) */
 #define SREV(x) ((((x)&0xFF)<<8) | (((x)>>8)&0xFF))
-#define IREV(x) ((SREV(x)<<16) | (SREV((x)>>16)))
+#define IREV(x) ((SREV((uint32_t)(x))<<16) | (SREV(((uint32_t)(x))>>16)))
 #define LREV(x) (((uint64_t)IREV(x)<<32) | (IREV((x)>>32)))
 
 #define RSVAL(buf,pos) SREV(SVAL(buf,pos))
