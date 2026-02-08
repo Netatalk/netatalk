@@ -43,7 +43,7 @@ jobs:
         run: |
           echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
       - name: Login to container registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -77,7 +77,7 @@ jobs:
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite" >> ${GITHUB_ENV}
       - name: Login to container registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -111,7 +111,7 @@ jobs:
         run: |
           echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
       - name: Login to container registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
@@ -145,7 +145,7 @@ jobs:
         run: |
           echo "IMAGE_NAME=${REPO,,}-testsuite-debian" >> ${GITHUB_ENV}
       - name: Login to container registry
-        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3.6.0
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
