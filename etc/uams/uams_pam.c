@@ -37,6 +37,9 @@ static pam_handle_t *pamh = NULL;
 static const char *hostname;
 static char *PAM_username;
 static char *PAM_password;
+static char *PAM_oldpassword;
+static int PAM_chauthtok_mode;
+static int PAM_chauthtok_count;
 
 /*XXX in etc/papd/file.h */
 struct papfile;
@@ -83,7 +86,14 @@ static int PAM_conv(int num_msg,
             break;
 
         case PAM_PROMPT_ECHO_OFF:
-            if (!(string = COPY_STRING(PAM_password))) {
+            if (PAM_chauthtok_mode && PAM_chauthtok_count == 0) {
+                string = COPY_STRING(PAM_oldpassword);
+                PAM_chauthtok_count++;
+            } else {
+                string = COPY_STRING(PAM_password);
+            }
+
+            if (!string) {
                 goto pam_fail_conv;
             }
 
@@ -313,83 +323,103 @@ static int pam_changepw(void *obj _U_, char *username,
                         struct passwd *pwd _U_, char *ibuf, size_t ibuflen _U_,
                         char *rbuf _U_, size_t *rbuflen _U_)
 {
-    char pw[PASSWDLEN + 1];
+    char oldpw[PASSWDLEN + 1];
+    char newpw[PASSWDLEN + 1];
     pam_handle_t *lpamh;
     uid_t uid;
     int PAM_error;
-    /* old password */
-    memcpy(pw, ibuf, PASSWDLEN);
-    explicit_bzero(ibuf, PASSWDLEN);
-    pw[PASSWDLEN] = '\0';
+    int ret;
+    int is_root;
+    /* Copy both passwords into stack buffers upfront */
+    memcpy(oldpw, ibuf, PASSWDLEN);
+    oldpw[PASSWDLEN] = '\0';
+    memcpy(newpw, ibuf + PASSWDLEN, PASSWDLEN);
+    newpw[PASSWDLEN] = '\0';
+    /* Clear passwords from the network buffer immediately */
+    explicit_bzero(ibuf, PASSWDLEN * 2);
 
-    /* let's do a quick check for the same password */
-    if (memcmp(pw, ibuf + PASSWDLEN, PASSWDLEN) == 0) {
+    /* Quick check for the same password */
+    if (memcmp(oldpw, newpw, PASSWDLEN) == 0) {
+        explicit_bzero(oldpw, PASSWDLEN);
+        explicit_bzero(newpw, PASSWDLEN);
         return AFPERR_PWDSAME;
     }
 
-    /* Set these things up for the conv function */
+    /* Set up for pam_authenticate conv: needs old password */
     PAM_username = username;
-    memcpy(PAM_password, pw, PASSWDLEN);
-    PAM_password[PASSWDLEN] = '\0';
+    PAM_password = oldpw;
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
                           &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        return AFPERR_PARAM;
+        ret = AFPERR_PARAM;
+        goto changepw_done;
     }
 
     pam_set_item(lpamh, PAM_TTY, "afpd");
     pam_set_item(lpamh, PAM_RHOST, hostname);
-    /* we might need to do this as root */
+    /* We might need to do this as root */
     uid = geteuid();
+    is_root = (seteuid(0) == 0);
 
-    if (seteuid(0) < 0) {
+    if (!is_root) {
         LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", 0);
     }
 
     PAM_error = pam_authenticate(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        if (seteuid(uid) < 0) {
-            LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
-        }
-
-        pam_end(lpamh, PAM_error);
-        return AFPERR_NOTAUTH;
+        ret = AFPERR_NOTAUTH;
+        goto changepw_restore_uid;
     }
 
     PAM_error = pam_acct_mgmt(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        if (seteuid(uid) < 0) {
-            LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
-        }
-
-        pam_end(lpamh, PAM_error);
-        return AFPERR_NOTAUTH;
+        ret = AFPERR_NOTAUTH;
+        goto changepw_restore_uid;
     }
 
-    /* new password */
-    ibuf += PASSWDLEN;
-    PAM_password = ibuf;
-    ibuf[PASSWDLEN] = '\0';
-    /* this really does need to be done as root */
-    PAM_error = pam_chauthtok(lpamh, 0);
+    /*
+     * Set up for pam_chauthtok conv: needs new password, and
+     * possibly old password if PAM prompts for the current password.
+     *
+     * As root, pam_unix won't prompt for the current password,
+     * so all ECHO_OFF prompts should return the new password.
+     *
+     * Not as root, pam_unix prompts for the current password first,
+     * so the first ECHO_OFF returns old, subsequent return new.
+     */
+    PAM_password = newpw;
 
-    if (seteuid(uid) < 0) {
+    if (!is_root) {
+        PAM_oldpassword = oldpw;
+        PAM_chauthtok_mode = 1;
+        PAM_chauthtok_count = 0;
+    }
+
+    PAM_error = pam_chauthtok(lpamh, 0);
+    PAM_chauthtok_mode = 0;
+
+    if (PAM_error != PAM_SUCCESS) {
+        ret = AFPERR_ACCESS;
+        goto changepw_restore_uid;
+    }
+
+    ret = AFP_OK;
+changepw_restore_uid:
+
+    if (is_root && seteuid(uid) < 0) {
         LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", uid);
     }
 
-    explicit_bzero(pw, PASSWDLEN);
-    explicit_bzero(ibuf, PASSWDLEN);
-
-    if (PAM_error != PAM_SUCCESS) {
-        pam_end(lpamh, PAM_error);
-        return AFPERR_ACCESS;
-    }
-
-    pam_end(lpamh, 0);
-    return AFP_OK;
+    pam_end(lpamh, PAM_error);
+changepw_done:
+    PAM_password = NULL;
+    PAM_oldpassword = NULL;
+    explicit_bzero(oldpw, PASSWDLEN);
+    explicit_bzero(newpw, PASSWDLEN);
+    return ret;
 }
 
 
