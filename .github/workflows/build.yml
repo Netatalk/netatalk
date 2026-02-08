@@ -768,7 +768,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Build on VM
-        uses: vmactions/openindiana-vm@e90777531e6e6cfc125a2e7e9741b8012cd6a10c # v1.0.1
+        uses: vmactions/openindiana-vm@db77401fa56ea6c0f2c0324f5086305a46a4ceb7 # v1.0.5
         with:
           copyback: true
           prepare: |
