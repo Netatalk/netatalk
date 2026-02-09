@@ -46,14 +46,14 @@
 
 #define SVAL(buf,pos) (PVAL(buf,(pos)+1)|PVAL(buf,pos)<<8)
 #define SVALS(buf,pos) ((int16_t)SVAL(buf,pos))
-#define IVAL(buf,pos) (SVAL(buf,pos)|SVAL(buf,(pos)+2)<<16)
+#define IVAL(buf,pos) (SVAL(buf,(pos)+2)|SVAL(buf,pos)<<16)
 #define IVALS(buf,pos) ((int32_t)IVAL(buf,pos))
-#define LVAL(buf,pos) (IVAL(buf,pos)|((uint64_t)IVAL(buf,(pos)+4))<<32)
+#define LVAL(buf,pos) (IVAL(buf,(pos)+4)|((uint64_t)IVAL(buf,pos))<<32)
 #define LVALS(buf,pos) ((int64_t)LVAL(buf,pos))
 
 #define SSVALX(buf,pos,val) (CVAL_NC(buf,pos+1)=(unsigned char)((val)&0xFF),CVAL_NC(buf,pos)=(unsigned char)((val)>>8))
-#define SIVALX(buf,pos,val) (SSVALX(buf,pos,((val)&0xFFFF)),SSVALX(buf,pos+2,(val)>>16))
-#define SLVALX(buf,pos,val) (SIVALX(buf,pos,((val)&0xFFFFFFFF)),SIVALX(buf,pos+4,(val)>>32))
+#define SIVALX(buf,pos,val) (SSVALX(buf,pos,(val)>>16),SSVALX(buf,pos+2,((val)&0xFFFF)))
+#define SLVALX(buf,pos,val) (SIVALX(buf,pos,(val)>>32),SIVALX(buf,pos+4,((val)&0xFFFFFFFF)))
 
 #else
 
