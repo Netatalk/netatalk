@@ -17,6 +17,12 @@
 #include <iniparser.h>
 #endif
 
+#ifdef HAVE_INIPARSER_CONST_DICTIONARY
+#define INIPARSER_DICTIONARY const dictionary
+#else
+#define INIPARSER_DICTIONARY dictionary
+#endif
+
 /**********************************************************************************************
  * Ini config manipulation macros
  **********************************************************************************************/

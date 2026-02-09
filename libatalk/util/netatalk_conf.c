@@ -774,7 +774,7 @@ static int hostaccessvol(const AFPObj *obj, const char *volname _U_,
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
-static const char *getoption_str(const dictionary *conf, const char *vol,
+static const char *getoption_str(INIPARSER_DICTIONARY *conf, const char *vol,
                                  const char *opt, const char *defsec, const char *defval)
 {
     const char *result;
@@ -806,7 +806,7 @@ static const char *getoption_str(const dictionary *conf, const char *vol,
  *
  * @returns       dynamically allocated option string from "vol" or "defsec", or "defval" if not found
  */
-static char *getoption_strdup(const dictionary *conf, const char *vol,
+static char *getoption_strdup(INIPARSER_DICTIONARY *conf, const char *vol,
                               const char *opt, const char *defsec, const char *defval)
 {
     char *result;
@@ -840,7 +840,7 @@ static char *getoption_strdup(const dictionary *conf, const char *vol,
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
-static int getoption_bool(const dictionary *conf, const char *vol,
+static int getoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
                           const char *opt, const char *defsec, int defval)
 {
     int result;
@@ -871,7 +871,7 @@ static int getoption_bool(const dictionary *conf, const char *vol,
  *
  * @returns       int option from "vol" or "defsec", or "defval" if not found
  */
-static int getoption_int(const dictionary *conf, const char *vol,
+static int getoption_int(INIPARSER_DICTIONARY *conf, const char *vol,
                          const char *opt, const char *defsec, int defval)
 {
     int result;
@@ -906,7 +906,7 @@ static int getoption_int(const dictionary *conf, const char *vol,
  *
  * @returns       const option string from "vol" or "defsec", or "defval" if not found
  */
-static int vdgoption_bool(const dictionary *conf, const char *vol,
+static int vdgoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
                           const char *opt, const char *defsec, int defval)
 {
     int result;
