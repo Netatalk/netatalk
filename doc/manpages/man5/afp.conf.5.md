@@ -246,11 +246,12 @@ through the available and active UAM authentication modules.
 save password = *BOOLEAN* (default: *yes*) **(G)**
 
 > Enables or disables the ability of clients to save passwords locally.
+Setting this option to *no* will send this hint to clients, but it is up to the client to honor it.
 
 set password = *BOOLEAN* (default: *no*) **(G)**
 
-> Enables or disables the ability of clients to change their passwords via
-chooser or the "connect to server" dialog.
+> Enables or disables the ability of clients to change their passwords.
+Setting this option to *yes* will allow clients to change their passwords if the UAM in use supports this feature.
 
 uam list = *uam list* **(G)**
 

@@ -368,7 +368,7 @@ encryption, separate password storage)
 
 - "DHX2" UAM (successor of DHCAST128)
 
-There exist other optional UAMs as well:
+With Kerberos support enabled at compile time, Netatalk also supports:
 
 - "Client Krb v2" UAM (Kerberos V, suitable for "Single Sign On" Scenarios
 with macOS clients – see below)
@@ -483,6 +483,16 @@ A small overview of the officially supported UAMs on Macs.
 
 Note that there exists a number of open source and other 3rd party AFP clients.
 Refer to their documentation for a list of supported UAMs.
+
+### Save and change passwords
+
+Netatalk can be configured to allow clients to save or change their passwords on the server.
+The **save password** option in the **Global** section of *afp.conf* enables this feature,
+but requires the AFP client to support it and honor this flag as well.
+
+In order to allow clients to change their passwords, the **set password** option has to be set.
+This one depends on the UAM in use, and is not supported by all of them.
+Notably, the PAM based UAMs support this feature, while the ones based on classic UNIX passwords do not.
 
 ## ACL Support
 
