@@ -55,13 +55,6 @@
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,((val)&0xFFFF)),SSVALX(buf,pos+2,(val)>>16))
 #define SLVALX(buf,pos,val) (SIVALX(buf,pos,((val)&0xFFFFFFFF)),SIVALX(buf,pos+4,(val)>>32))
 
-#define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
-#define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16_t)(val)))
-#define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
-#define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
-#define SLVAL(buf,pos,val) SLVALX((buf),(pos),((uint64_t)(val)))
-#define SLVALS(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
-
 #else
 
 #define SVAL(buf,pos) (PVAL(buf,pos)|PVAL(buf,(pos)+1)<<8)
@@ -75,14 +68,14 @@
 #define SIVALX(buf,pos,val) (SSVALX(buf,pos,((val)&0xFFFF)),SSVALX(buf,pos+2,(val)>>16))
 #define SLVALX(buf,pos,val) (SIVALX(buf,pos,((val)&0xFFFFFFFF)),SIVALX(buf,pos+4,(val)>>32))
 
+#endif /* WORDS_BIGENDIAN */
+
 #define SSVAL(buf,pos,val) SSVALX((buf),(pos),((uint16_t)(val)))
 #define SSVALS(buf,pos,val) SSVALX((buf),(pos),((int16_t)(val)))
 #define SIVAL(buf,pos,val) SIVALX((buf),(pos),((uint32_t)(val)))
 #define SIVALS(buf,pos,val) SIVALX((buf),(pos),((int32_t)(val)))
 #define SLVAL(buf,pos,val) SLVALX((buf),(pos),((uint64_t)(val)))
 #define SLVALS(buf,pos,val) SLVALX((buf),(pos),((int64_t)(val)))
-
-#endif /* WORDS_BIGENDIAN */
 
 /* now the reverse routines */
 #define SREV(x) ((((x)&0xFF)<<8) | (((x)>>8)&0xFF))
