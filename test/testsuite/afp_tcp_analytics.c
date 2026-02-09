@@ -174,10 +174,10 @@ int tcp_analytics_capture(CONN *conn, TcpMetrics *metrics)
         /* Retransmission metrics - available on most systems
          * Use -1 to indicate "not supported" so we can distinguish from "0 retrans" (valid)
          * Note: FreeBSD/NetBSD use __ prefix for some fields */
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         metrics->tcp_retrans = TCPI_SAFE_GET(__tcpi_retrans) ? (int)
                                tcp_info.__tcpi_retrans : -1;
-        metrics->tcp_total_retrans = -1;  /* Not available on FreeBSD/NetBSD */
+        metrics->tcp_total_retrans = -1;  /* Not available on BSDs */
 #else
         metrics->tcp_retrans = TCPI_SAFE_GET(tcpi_retrans) ? (int)
                                tcp_info.tcpi_retrans : -1;
@@ -186,7 +186,7 @@ int tcp_analytics_capture(CONN *conn, TcpMetrics *metrics)
 #endif
         /* Loss/reordering metrics - may not exist on older kernels
          * Note: FreeBSD/NetBSD use __ prefix for some fields */
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         metrics->tcp_reordering = TCPI_SAFE_GET(__tcpi_reordering) ?
                                   (int)tcp_info.__tcpi_reordering : -1;
         metrics->tcp_lost = TCPI_SAFE_GET(__tcpi_lost) ? (int)tcp_info.__tcpi_lost : -1;
@@ -201,7 +201,7 @@ int tcp_analytics_capture(CONN *conn, TcpMetrics *metrics)
                                 -1;
         metrics->tcp_recv_mss = TCPI_SAFE_GET(tcpi_rcv_mss) ? tcp_info.tcpi_rcv_mss :
                                 -1;
-#if defined(__FreeBSD__) || defined(__NetBSD__)
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
         metrics->tcp_adv_mss = TCPI_SAFE_GET(__tcpi_advmss) ? tcp_info.__tcpi_advmss :
                                -1;
 #else
