@@ -709,7 +709,7 @@ static int copy(const char *path,
 /*! Maximum buffer size in bytes - do not allow it to grow larger than this */
 #define BUFSIZE_MAX (2*1024*1024)
 
-#if ! defined __APPLE__ && ! defined __FreeBSD__
+#ifndef MAXPHYS
 /*! Small (default) buffer size in bytes. It's inefficient for this to be smaller than MAXPHYS */
 #define MAXPHYS (64 * 1024)
 #endif
