@@ -102,8 +102,6 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Uninstall
-        run: ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -166,8 +164,6 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Uninstall
-        run: ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -250,8 +246,6 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Uninstall
-        run: ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -326,8 +320,6 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Uninstall
-        run: sudo ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -404,8 +396,6 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Uninstall
-        run: ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -458,8 +448,6 @@ jobs:
           asip-status localhost
       - name: Stop netatalk
         run: sudo netatalkd stop
-      - name: Uninstall
-        run: sudo ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -514,7 +502,6 @@ jobs:
             meson install -C build
             netatalk -V
             afpd -V
-            ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -571,7 +558,6 @@ jobs:
             asip-status localhost
             /usr/local/etc/rc.d/netatalk stop
             /usr/local/etc/rc.d/netatalk disable
-            ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -630,7 +616,6 @@ jobs:
             sleep 1
             asip-status localhost
             service netatalk onestop
-            ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -692,7 +677,6 @@ jobs:
             asip-status localhost
             rcctl -d stop netatalk
             rcctl -d disable netatalk
-            ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -751,7 +735,6 @@ jobs:
             sleep 1
             asip-status localhost
             svcadm disable svc:/network/netatalk:default
-            ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
@@ -825,7 +808,6 @@ jobs:
             sleep 1
             /usr/local/bin/asip-status localhost
             svcadm disable svc:/network/netatalk:default
-            ninja -C build uninstall
 
   build-solaris:
     name: Solaris
@@ -893,7 +875,6 @@ jobs:
             sleep 1
             asip-status localhost
             svcadm -v disable svc:/network/netatalk:default
-            ninja -C build uninstall
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
