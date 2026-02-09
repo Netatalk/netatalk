@@ -160,6 +160,9 @@
 /* Define to 1 if you have the <iniparser/iniparser.h> header file. */
 #mesondefine HAVE_INIPARSER_INIPARSER_H
 
+/* Define to 1 if iniparser functions accept const dictionary pointers. */
+#mesondefine HAVE_INIPARSER_CONST_DICTIONARY
+
 /* Define if Kerberos 5 is available */
 #mesondefine HAVE_KERBEROS
 

@@ -668,6 +668,36 @@ if not iniparser.found()
     error('iniparser library required but not found!')
 endif
 
+iniparser_const_test_code = '''
+#include <iniparser.h>
+int main() {
+    const dictionary *d = 0;
+    iniparser_getboolean(d, "", 0);
+    return 0;
+}
+'''
+
+if cdata.has('HAVE_INIPARSER_INIPARSER_H')
+    iniparser_const_test_code = '''
+#include <iniparser/iniparser.h>
+int main() {
+    const dictionary *d = 0;
+    iniparser_getboolean(d, "", 0);
+    return 0;
+}
+'''
+endif
+
+have_iniparser_const = cc.compiles(
+    iniparser_const_test_code,
+    dependencies: iniparser,
+    name: 'iniparser functions accept const dictionary',
+)
+
+if have_iniparser_const
+    cdata.set('HAVE_INIPARSER_CONST_DICTIONARY', 1)
+endif
+
 #
 # Check for POSIX threads
 #
