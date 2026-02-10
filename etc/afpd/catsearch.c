@@ -48,6 +48,7 @@
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 
+#include "ad_cache.h"
 #include "desktop.h"
 #include "dircache.h"
 #include "directory.h"
@@ -205,15 +206,29 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
     isdir  = S_ISDIR(path->st.st_mode);
 
     if (!isdir && (of = of_findname(vol, path))) {
+        /* Fork-owned adouble — use directly, skip cache.
+         * Opportunistically populate cache if not yet loaded. */
         adp = of->of_ad;
+        struct dir *cached = dircache_search_by_name(vol, curdir,
+                             path->u_name, strlen(path->u_name));
+
+        /* If cache AD is unset, store fork's live adouble */
+        if (cached && cached->dcache_rlen < 0) {
+            ad_store_to_cache(adp, cached);
+        }
     } else {
         ad_init(&ad, vol);
         adp = &ad;
-    }
+        struct dir *cached = isdir ? path->d_dir
+                             : dircache_search_by_name(vol, curdir,
+                                 path->u_name, strlen(path->u_name));
 
-    if (ad_metadata(path->u_name, (isdir ? ADFLAGS_DIR : 0), adp) < 0) {
-        /* FIXME without resource fork adl_lkup will be called again */
-        adp = NULL;
+        if (ad_metadata_cached(path->u_name, (isdir ? ADFLAGS_DIR : 0),
+                               adp, vol, cached, false, NULL) < 0) {
+            adp = NULL;
+        }
+
+        /* ad_metadata_cached() handles ad_close() internally */
     }
 
     return adp;
@@ -461,11 +476,8 @@ static int crit_check(struct vol *vol, struct path *path)
     /* All criteria are met. */
     result |= 1;
 crit_check_ret:
-
-    if (adp != NULL) {
-        ad_close(adp, ADFLAGS_HF);
-    }
-
+    /* ad_metadata_cached() closes adp internally for non-fork path.
+     * Fork-owned adoubles no longer closed here — managed by of_closefork(). */
     return result;
 }
 

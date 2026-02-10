@@ -2245,6 +2245,11 @@ void ad_init(struct adouble *ad, const struct vol *vol)
     ad->ad_vers = vol->v_adouble;
     ad->ad_options = vol->v_ad_options;
     ad_init_func(ad);
+    /* Initialize offset tables so ad_entry()/ad_getattr()/ad_getdate()
+     * work on cache-hit paths where ad_metadata() is never called.
+     * Idempotent — guarded by ad_magic == AD_MAGIC, so calling again
+     * later via ad_open() → ad_header_read() is safe. */
+    ad_init_offsets(ad);
 }
 
 /*!

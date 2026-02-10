@@ -29,6 +29,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 
+#include "dircache.h"
 #include "desktop.h"
 #include "directory.h"
 #include "file.h"
@@ -325,6 +326,9 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         return AFPERR_VLOCK;
     }
 
+    /* Save ibuf position for invalid-on-use retry */
+    char *saved_ibuf = ibuf;
+
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_PARAM);
     }
@@ -340,6 +344,33 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         break;
 
     case ENOENT:
+
+        /* Invalid-on-use recovery: stale cached path may have caused
+         * cname() to resolve to a non-existent location. Retry with
+         * dirlookup_strict() which validates via stat+inode check,
+         * evicts stale entries, and rebuilds from CNID. */
+        if (dir->d_did != DIRDID_ROOT && dir->d_did != DIRDID_ROOT_PARENT) {
+            LOG(log_debug, logtype_afpd,
+                "afp_openfork: ENOENT for did:%u, retrying with strict lookup",
+                ntohl(did));
+            ibuf = saved_ibuf;
+
+            if (!(dir->d_flags & DIRF_ISFILE)) {
+                (void)dircache_remove_children(vol, dir);
+            }
+
+            (void)dir_remove(vol, dir, 0);
+            dir = dirlookup_strict(vol, did);
+
+            if (dir != NULL) {
+                s_path = cname(vol, dir, &ibuf);
+
+                if (s_path != NULL && s_path->st_errno == 0) {
+                    break;  /* Recovery succeeded — continue normally */
+                }
+            }
+        }
+
         return AFPERR_NOOBJ;
 
     case EACCES:

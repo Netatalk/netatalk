@@ -1,4 +1,5 @@
 afpd_sources = [
+    'ad_cache.c',
     'afp_config.c',
     'afp_dsi.c',
     'afp_options.c',
