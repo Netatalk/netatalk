@@ -132,26 +132,30 @@ as well as which one is the default.
 
 ### dbd
 
-The "Database Daemon" backend is built on Berkeley DB. Access to the
-CNID database is restricted to the **cnid_dbd** daemon process.
-**afpd** processes communicate with the **cnid_dbd** daemon
-for database reads and updates, which is in turn launched and
-controlled by the **cnid_metad** daemon.
+The "Database Daemon" backend is built on Berkeley DB.
+Rather than accessing the database directly,
+**afpd** processes communicate with one or more **cnid_dbd** daemon processes over a wire protocol.
+The **cnid_dbd** daemon is responsible for database reads and updates.
 
-This is the most reliable and proven backend for daily use.
-
-### sqlite
-
-A performant and lean CNID database backend that uses the SQLite v3
-embedded database engine.
+This is the most reliable and proven backend, recommended for most deployments.
 
 ### mysql
 
-CNID backend using a MySQL server. The MySQL server has to be
-provisioned by the system administrator, and Netatalk configured
-to connect to it over the network.
+CNID backend using a MySQL or MariaDB server.
+This is the most performant and scalable of the backend options,
+and is recommended for large deployments with many concurrent users.
 
-See **afp.conf**(5) for documentation of the configuration options.
+The SQL server has to be provisioned by the system administrator,
+and Netatalk configured to connect to it over a Unix socket or the network interface..
+
+### sqlite
+
+A fast and lean CNID database backend that uses the SQLite v3 embedded database engine.
+It is as easy to set up as dbd, but does not require separate daemon processes,
+as the database is accessed directly by afpd.
+
+The tradeoff is that the SQLite embedded database is not the most scalable for concurrent database write operations.
+Therefore it is recommended for deployments where you expect up to 20 concurrent users.
 
 ## Charsets/Unicode
 
@@ -364,7 +368,7 @@ encryption, separate password storage)
 
 - "DHX2" UAM (successor of DHCAST128)
 
-There exist other optional UAMs as well:
+With Kerberos support enabled at compile time, Netatalk also supports:
 
 - "Client Krb v2" UAM (Kerberos V, suitable for "Single Sign On" Scenarios
 with macOS clients – see below)
@@ -479,6 +483,16 @@ A small overview of the officially supported UAMs on Macs.
 
 Note that there exists a number of open source and other 3rd party AFP clients.
 Refer to their documentation for a list of supported UAMs.
+
+### Save and change passwords
+
+Netatalk can be configured to allow clients to save or change their passwords on the server.
+The **save password** option in the **Global** section of *afp.conf* enables this feature,
+but requires the AFP client to support it and honor this flag as well.
+
+In order to allow clients to change their passwords, the **set password** option has to be set.
+This one depends on the UAM in use, and is not supported by all of them.
+Notably, the PAM based UAMs support this feature, while the ones based on classic UNIX passwords do not.
 
 ## ACL Support
 
