@@ -31,7 +31,9 @@
 #include <atalk/util.h>
 #include <atalk/vfs.h>
 
+#include "ad_cache.h"
 #include "desktop.h"
+#include "dircache.h"
 #include "directory.h"
 #include "extattrs.h"
 #include "fork.h"
@@ -66,7 +68,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     char                *uname, *FinderInfo;
     char                emptyFinderInfo[32] = { 0 };
     size_t              attrbuflen = 0;
-    bool                close_ad = false;
+    int                 ad_available = 0;
     char                attrnamebuf[ATTRNAMEBUFSIZ];
     *rbuflen = 0;
     ibuf += 2;
@@ -129,7 +131,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     */
     adp = &ad;
     ad_init(adp, vol);
-    ad_init_offsets(adp);
+    /* ad_init_offsets() no longer needed here — called internally by ad_init() */
 
     if (path_isadir(s_path)) {
         LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
@@ -144,24 +146,45 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
     }
 
-    if (ad_metadata(uname, adflags, adp) != 0) {
-        switch (errno) {
-        case ENOENT:
-            break;
+    if (opened) {
+        /* Fork-owned adouble — use directly, skip cache.
+         * Opportunistically populate cache if not yet loaded. */
+        ad_available = 1;
+        struct dir *cached = dircache_search_by_name(vol, curdir,
+                             uname, strlen(uname));
 
-        case EACCES:
-            LOG(log_error, logtype_afpd,
-                "afp_listextattr(%s): %s: check resource fork permission?",
-                uname, strerror(errno));
-            return AFPERR_ACCESS;
-
-        default:
-            LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s",
-                uname, strerror(errno));
-            return AFPERR_MISC;
+        /* If cache AD is unset, store fork's live adouble */
+        if (cached && cached->dcache_rlen < 0) {
+            ad_store_to_cache(adp, cached);
         }
     } else {
-        close_ad = true;
+        /* No open fork — use ad_metadata_cached() (non-strict) */
+        struct dir *cached = path_isadir(s_path) ? s_path->d_dir
+                             : dircache_search_by_name(vol, curdir, uname, strlen(uname));
+
+        if (ad_metadata_cached(uname, adflags, adp, vol, cached, false, NULL) != 0) {
+            switch (errno) {
+            case ENOENT:
+                break;
+
+            case EACCES:
+                LOG(log_error, logtype_afpd,
+                    "afp_listextattr(%s): %s: check resource fork permission?",
+                    uname, strerror(errno));
+                return AFPERR_ACCESS;
+
+            default:
+                LOG(log_error, logtype_afpd, "afp_listextattr(%s): error getting metadata: %s",
+                    uname, strerror(errno));
+                return AFPERR_MISC;
+            }
+        } else {
+            ad_available = 1;
+            /* ad_metadata_cached() handles ad_close() internally */
+        }
+    }
+
+    if (ad_available) {
         FinderInfo = ad_entry(adp, ADEID_FINDERI);
 
         /* Check if FinderInfo equals default and empty FinderInfo*/
@@ -216,10 +239,6 @@ exit:
     if (maxreply > 0) {
         memcpy(rbuf, attrnamebuf, attrbuflen);
         *rbuflen += attrbuflen;
-    }
-
-    if (close_ad) {
-        ad_close(adp, ADFLAGS_HF);
     }
 
     return ret;
@@ -451,6 +470,30 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         s_path->u_name, to_stringz(attrmname, attrnamelen), attrsize);
     ret = vol->vfs->vfs_ea_set(vol, s_path->u_name, attruname, ibuf, attrsize,
                                oflag, fd);
+
+    if (ret == AFP_OK) {
+        /* EA set changes ctime — refresh stat cache */
+        struct stat post_st;
+
+        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0) {
+            struct dir *cached = NULL;
+
+            if (path_isadir(s_path)) {
+                cached = curdir;
+            } else if (s_path->u_name != NULL) {
+                size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
+            }
+
+            if (cached) {
+                dir_modify(vol, cached, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT,
+                    .st = &post_st,
+                });
+            }
+        }
+    }
+
     return ret;
 }
 
@@ -535,5 +578,29 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     LOG(log_debug, logtype_afpd, "afp_remextattr(%s): EA: %s", s_path->u_name,
         to_stringz(ibuf, attrnamelen));
     ret = vol->vfs->vfs_ea_remove(vol, s_path->u_name, attruname, oflag, fd);
+
+    if (ret == AFP_OK) {
+        /* EA remove changes ctime — refresh stat cache */
+        struct stat post_st;
+
+        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0) {
+            struct dir *cached = NULL;
+
+            if (path_isadir(s_path)) {
+                cached = curdir;
+            } else if (s_path->u_name != NULL) {
+                size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
+            }
+
+            if (cached) {
+                dir_modify(vol, cached, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT,
+                    .st = &post_st,
+                });
+            }
+        }
+    }
+
     return ret;
 }

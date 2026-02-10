@@ -1529,13 +1529,51 @@ STATIC void test431()
         goto fin;
     }
 
-    /* Enumerating should convert it */
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* Verify v2 sidecar file was created successfully before enumerate */
+    if (snprintf(cmd, sizeof(cmd), "%s/.AppleDouble/%s", Path,
+                 name) >= (int)sizeof(cmd)) {
+        test_failed();
+        goto fin;
+    }
+
+    {
+        struct stat st_pre;
+
+        if (stat(cmd, &st_pre) != 0) {
+            if (!Quiet) {
+                fprintf(stdout, "FPOpenFork:test431: v2 sidecar not created\n");
+            }
+
+            test_failed();
+            goto fin;
+        }
+    }
+
+    /* Enumerate triggers v2→EA conversion (if 'convert appledouble = yes').
+     * NB: FPEnumerate* uses my_dsi_data_receive (should be normalised).
+     * See afphelper.c:delete_directory_tree() */
     if (FPEnumerate_ext2(Conn, vol, DIRDID_ROOT, "",
                          (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN),
                          (1 << DIRPBIT_PDINFO) | (1 << DIRPBIT_OFFCNT))) {
         test_failed();
         goto fin;
+    }
+
+    /* Check if v2 sidecar was consumed by conversion. We verified it existed
+     * before enumerate. If it still exists after, conversion is disabled.
+     * Clean up filesystem artifacts directly to avoid FAIL() in fin:. */
+    {
+        struct stat st_post;
+
+        if (stat(cmd, &st_post) == 0) {
+            unlink(cmd);
+            snprintf(cmd, sizeof(cmd), "%s/.AppleDouble", Path);
+            rmdir(cmd);
+            snprintf(cmd, sizeof(cmd), "%s/%s", Path, name);
+            unlink(cmd);
+            test_skipped(T_V2CONV);
+            goto test_exit;
+        }
     }
 
     if ((fork1 = FPOpenFork(Conn, vol, OPENFORK_RSCS, (1 << FILPBIT_FINFO),

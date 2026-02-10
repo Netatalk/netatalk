@@ -22,6 +22,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 
 #ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
@@ -36,6 +37,7 @@
 #include "directory.h"
 #include "file.h"
 #include "filedir.h"
+#include "ad_cache.h"
 #include "fork.h"
 #include "unix.h"
 #include "volume.h"
@@ -381,6 +383,12 @@ int getmetadata(const AFPObj *obj,
                     LOG(log_error, logtype_afpd, "getmetadata: fatal dircache error");
                     return AFPERR_MISC;
                 }
+
+                /* Proactively populate AD cache from adp that was just read
+                 * from disk — entry was just created so has no AD data yet */
+                if (adp && adp->ad_rlen >= 0) {
+                    ad_store_to_cache(adp, cachedfile);
+                }
             }
         } else {
             id = path->id;
@@ -673,54 +681,70 @@ int getmetadata(const AFPObj *obj,
 /* ----------------------- */
 int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
                  struct path *path,
-                 struct dir *dir, char *buf, size_t *buflen, int in_enumerate)
+                 struct dir *dir, char *buf, size_t *buflen, int skip_fork_check)
 {
     struct adouble	ad, *adp;
-    int                 opened = 0;
     int rc = AFP_OK;
     int flags = 0;
     LOG(log_debug, logtype_afpd, "getfilparams(\"%s\")", path->u_name);
-    opened = PARAM_NEED_ADP(bitmap);
     adp = NULL;
 
-    if (opened) {
+    if (PARAM_NEED_ADP(bitmap)) {
         char *upath;
         /*
-         * Dont check for and resturn open fork attributes when enumerating
+         * Dont check for and return open fork attributes when enumerating.
          * This saves a lot of syscalls, the client will hopefully only use the result
          * in FPGetFileParms where we return the correct value
          */
-        flags = (!in_enumerate
+        flags = (!skip_fork_check
                  && (bitmap & (1 << FILPBIT_ATTR))) ? ADFLAGS_CHECK_OF : 0;
         adp = of_ad(vol, path, &ad);
         upath = path->u_name;
+        size_t upath_len = strnlen(upath, CNID_MAX_PATH_LEN);
 
-        if (ad_metadata(upath, flags, adp) < 0) {
-            switch (errno) {
-            case EACCES:
-                LOG(log_error, logtype_afpd,
-                    "getfilparams(%s): %s: check resource fork permission?",
-                    upath, strerror(errno));
-                return AFPERR_ACCESS;
+        if (adp != &ad) {
+            /* Fork-owned adouble — use directly, skip cache.
+             * Opportunistically populate cache if not yet loaded. */
+            struct dir *cachedfile = dircache_search_by_name(vol, dir,
+                                     upath, upath_len);
 
-            case EIO:
-                LOG(log_error, logtype_afpd, "getfilparams(%s): bad resource fork", upath);
-
-            /* fall through */
-            case ENOENT:
-            default:
-                adp = NULL;
-                break;
+            /* If cache AD is unset, store fork's live adouble */
+            if (cachedfile && cachedfile->dcache_rlen < 0) {
+                ad_store_to_cache(adp, cachedfile);
             }
+        } else {
+            /* No open fork — use ad_metadata_cached() */
+            struct dir *cachedfile = dircache_search_by_name(vol, dir,
+                                     upath, upath_len);
+            ad_init(&ad, vol);
+
+            if (ad_metadata_cached(upath, flags, &ad, vol, cachedfile, !skip_fork_check,
+                                   NULL) < 0) {
+                switch (errno) {
+                case EACCES:
+                    LOG(log_error, logtype_afpd,
+                        "getfilparams(%s): %s: check resource fork permission?",
+                        upath, strerror(errno));
+                    return AFPERR_ACCESS;
+
+                case EIO:
+                    LOG(log_error, logtype_afpd, "getfilparams(%s): bad resource fork", upath);
+
+                /* fall through */
+
+                case ENOENT:
+                default:
+                    adp = NULL;
+                    break;
+                }
+            }
+
+            /* The ad_metadata_cached function handles ad_close() internally */
         }
     }
 
     rc = getmetadata(obj, vol, bitmap, path, dir, buf, buflen, adp);
-
-    if (opened) {
-        ad_close(adp, ADFLAGS_HF | flags);
-    }
-
+    /* No ad_close() needed — handled internally or fork owns lifetime */
     return rc;
 }
 
@@ -848,6 +872,41 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     (void)ad_setid(&ad, st.st_dev, st.st_ino, id, dir->d_did, vol->v_stamp);
 createfile_iderr:
     ad_flush(&ad);
+    /* Eagerly create dircache entry with AD metadata pre-populated.
+     * Eliminates per-file getxattr on first enumerate after creation. */
+    {
+        struct dir *cachedfile = dircache_search_by_name(vol, dir,
+                                 upath, (int)upath_len);
+
+        if (!cachedfile && id != CNID_INVALID) {
+            bstring fullpath = bstrcpy(dir->d_fullpath);
+
+            if (fullpath && bconchar(fullpath, '/') == BSTR_OK
+                    && bcatcstr(fullpath, upath) == BSTR_OK) {
+                cachedfile = dir_new(path, upath, vol, dir->d_did,
+                                     id, fullpath, &st);
+
+                if (cachedfile) {
+                    if (dircache_add(vol, cachedfile) != 0) {
+                        LOG(log_warning, logtype_afpd,
+                            "afp_createfile: dircache_add failed for \"%s\"",
+                            upath);
+                        dir_free(cachedfile);
+                        cachedfile = NULL;
+                    }
+                } else {
+                    /* dir_new failed — did not take ownership of fullpath, free it */
+                    bdestroy(fullpath);
+                }
+            } else {
+                bdestroy(fullpath);
+            }
+        }
+
+        if (cachedfile) {
+            ad_store_to_cache(&ad, cachedfile);
+        }
+    }
     ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
     fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
 
@@ -858,6 +917,8 @@ createfile_iderr:
         return AFPERR_MISC;
     }
 
+    /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
+    ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     curdir->d_offcnt++;
     setvoltime(obj, vol);
     return retvalue;
@@ -977,6 +1038,11 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     ssize_t len;
     char symbuf[MAXPATHLEN + 1];
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
+
+    if (path == NULL) {
+        return AFPERR_PARAM;
+    }
+
     adp = of_ad(vol, path, &ad);
     upath = path->u_name;
 
@@ -1068,6 +1134,16 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 }
 
                 symlinked = 1;
+                /* File replaced by symlink — remove stale cache entry */
+                {
+                    size_t upath_slen = strnlen(upath, CNID_MAX_PATH_LEN);
+                    struct dir *stale = dircache_search_by_name(vol, curdir,
+                                        upath, upath_slen);
+
+                    if (stale) {
+                        dir_remove(vol, stale, 0);
+                    }
+                }
             }
 
             memcpy(finder_buf, buf, 32);
@@ -1298,8 +1374,31 @@ setfilparam_done:
         }
     }
 
+    /* Acquire cache pointer BEFORE ad_flush to avoid ctime race.
+     * Skip for symlinks — file-to-symlink conversion invalidates AD. */
+    struct dir *cached = NULL;
+
+    if (!symlinked && upath) {
+        cached = dircache_search_by_name(vol, curdir, upath, strnlen(upath,
+                                         CNID_MAX_PATH_LEN));
+    }
+
     if (isad) {
         ad_flush(adp);
+
+        /* Refresh AD cache after writing metadata */
+        if (cached) {
+            struct stat post_st;
+
+            if (ostat(upath, &post_st, 0) == 0) {
+                dir_modify(vol, cached, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_AD,
+                    .st = &post_st,
+                    .adp = adp,
+                });
+            }
+        }
+
         ad_close(adp, ADFLAGS_HF);
     }
 
@@ -1307,6 +1406,22 @@ setfilparam_done:
         newdate = AD_DATE_FROM_UNIX(tv.tv_sec);
         bitmap = 1 << FILPBIT_MDATE;
         setdirparams(vol, &Cur_Path, bitmap, (char *)&newdate);
+    }
+
+    /* Send hint to afpd siblings — file metadata changed (FinderInfo, dates, attributes).
+     * Fallback to cnid_get() when object isn't in our local dircache -
+     * may still be cached by sibling processes even if we never enumerated it. */
+    if (vol) {
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && upath && curdir) {
+            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
+        }
     }
 
     LOG(log_debug9, logtype_afpd, "end setfilparams:");
@@ -1335,40 +1450,7 @@ int renamefile(struct vol *vol, struct dir *ddir, int sdir_fd, char *src,
     int		rc;
     LOG(log_debug, logtype_afpd,
         "renamefile: src[%d, \"%s\"] -> dst[\"%s\"]", sdir_fd, src, dst);
-    /* Clean BOTH source and destination cache entries before rename to prevent races
-     * and maintain cache consistency.
-     * - Source: Will have stale path after rename
-     * - Destination: May have stale collision that needs cleanup
-     * - Rename only happens if destination stat does not exist (no clobber)
-     */
-    /* Look up and clean SOURCE dircache entry being renamed */
-    struct dir *source_entry = NULL;
-
-    if (src != NULL) {
-        size_t src_len = strnlen(src, CNID_MAX_PATH_LEN);
-        source_entry = dircache_search_by_name(vol, ddir, src, src_len);
-    }
-
-    if (source_entry) {
-        LOG(log_debug, logtype_afpd,
-            "renamefile: cleaning source dircache \"%s\" before rename (will be stale)",
-            src);
-        dir_remove(vol, source_entry, 0);  /* Proactive cleanup before rename */
-    }
-
-    /* Look up and clean DESTINATION dircache entry for stale detection */
-    struct dir *dest_entry = NULL;
-
-    if (dst != NULL) {
-        size_t dst_len = strnlen(dst, CNID_MAX_PATH_LEN);
-        dest_entry = dircache_search_by_name(vol, ddir, dst, dst_len);
-    }
-
-    if (dest_entry) {
-        LOG(log_debug, logtype_afpd,
-            "renamefile: cleaning stale destination dircache \"%s\" before rename", dst);
-        dir_remove(vol, dest_entry, 0);  /* Proactive cleanup before rename */
-    }
+    /* Cache cleanup is handled by the caller (moveandrename) via dir_modify() */
 
     if (unix_rename(sdir_fd, src, -1, dst) < 0) {
         switch (errno) {
@@ -1676,6 +1758,8 @@ copy_exit:
 
     if (upath && err == AFP_OK) {
         fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+        /* Send hint to afpd siblings — dest parent dir ctime changed due to copy */
+        ipc_send_cache_hint(obj, d_vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     }
 
     ad_close(adp, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_SETSHRMD);
@@ -1974,7 +2058,7 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
             /* file guaranteed non-NULL (checked at function entry) */
             AFP_ASSERT(file != NULL);
             cachedfile = dircache_search_by_name(vol, curdir, file,
-                                                 strlen(file)); // NOSONAR:
+                                                 strnlen(file, CNID_MAX_PATH_LEN));
 
             if (cachedfile) {
                 dir_remove(vol, cachedfile, 0);  /* User-initiated delete cleanup */
@@ -2623,12 +2707,6 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     close(fd);
 
-    if (crossdev) {
-        /* FIXME we need to close fork for copy, both s_of and d_of are null */
-        ad_close(adsp, ADFLAGS_HF);
-        ad_close(addp, ADFLAGS_HF);
-    }
-
     /* now, quickly rename the file. we error if we can't. */
     if ((err = renamefile(vol, curdir, -1, p, temp, temp, adsp)) != AFP_OK) {
         goto err_exchangefile;
@@ -2804,5 +2882,8 @@ err_exchangefile:
         (void)dir_remove(vol, cached, 0);  /* Cleanup after exchange operation */
     }
 
+    /* Send hint to afpd siblings — both exchanged files need refresh */
+    ipc_send_cache_hint(obj, vol->v_vid, sid, CACHE_HINT_REFRESH);
+    ipc_send_cache_hint(obj, vol->v_vid, did, CACHE_HINT_REFRESH);
     return err;
 }

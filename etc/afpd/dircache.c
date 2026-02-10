@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
- * Copyright (c) 2025 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "ad_cache.h"
 #include "dircache.h"
 #include "directory.h"
 #include "hash.h"
@@ -405,12 +406,102 @@ static void arc_ensure_ghost_capacity(arc_list_t target_list)
 }
 
 /*!
+ * @brief Find an evictable victim in a cache queue, skipping curdir
+ *
+ * Only searches T1 and T2 (the real cache queues).
+ * B1/B2 are ghost lists with full data.
+ *
+ * Tries the LRU entry first; if it's curdir, tries the second-LRU.
+ *
+ * @param[in] queue      The ARC queue to search (T1 or T2)
+ * @param[in] queue_size Number of entries in the queue
+ * @return evictable dir entry, or NULL if queue is empty/only contains curdir
+ */
+static struct dir *arc_find_victim(q_t *queue, size_t queue_size)
+{
+    struct dir *victim;
+
+    if (queue_size == 0 || queue->next == queue) {
+        return NULL;
+    }
+
+    victim = (struct dir *)queue->next->data;
+
+    if (!victim || !victim->qidx_node) {
+        return NULL;
+    }
+
+    if (victim == curdir) {
+        if (queue_size < 2 || queue->next->next == queue) {
+            return NULL;
+        }
+
+        victim = (struct dir *)queue->next->next->data;
+
+        if (!victim || !victim->qidx_node || victim == curdir) {
+            return NULL;
+        }
+    }
+
+    return victim;
+}
+
+/*!
+ * @brief Evict a victim from a cache queue to the corresponding ghost list
+ *
+ * Moves victim's queue node from src to dst, sets ghost flag, and updates
+ * all ARC size counters and stats.
+ *
+ * @param[in] victim    Directory entry to evict (must have valid qidx_node)
+ * @param[in] src       Source cache queue (T1 or T2)
+ * @param[in] dst       Destination ghost queue (B1 or B2)
+ * @param[in] dst_list  ARC_B1 or ARC_B2 (determines which counters to update)
+ * @param[in] fallback  true if this is a cross-queue fallback eviction (for logging)
+ */
+static void arc_evict_to_ghost(struct dir *victim, q_t *src, q_t *dst,
+                               int dst_list, bool fallback)
+{
+    const char *src_name = (dst_list == ARC_B1) ? "T1" : "T2";
+    const char *dst_name = (dst_list == ARC_B1) ? "B1" : "B2";
+    arc_ensure_ghost_capacity(dst_list);
+
+    if (queue_move_to_tail_of(src, dst, victim->qidx_node) == NULL) {
+        LOG(log_error, logtype_afpd,
+            "arc_replace: %s→%s migration failed", src_name, dst_name);
+        AFP_PANIC("arc_replace ghost migration");
+    }
+
+    victim->d_flags |= DIRF_ARC_GHOST;
+    victim->arc_list = (uint8_t)dst_list;
+
+    if (dst_list == ARC_B1) {
+        arc_cache.t1_size--;
+        arc_cache.b1_size++;
+        arc_cache.stats.evictions_t1++;
+    } else {
+        arc_cache.t2_size--;
+        arc_cache.b2_size++;
+        arc_cache.stats.evictions_t2++;
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "arc_replace: evicted from %s to %s (%sdid:%u)",
+        src_name, dst_name, fallback ? "fallback, " : "",
+        ntohl(victim->d_did));
+}
+
+/*!
  * @brief ARC REPLACE subroutine (from paper Figure 1)
  *
  * Evicts one entry from T1 or T2 and moves it to the corresponding ghost list (B1 or B2).
  * Decision based on:
  * - Current size of T1 relative to target p
  * - Whether the incoming request is in B2
+ *
+ * If the preferred queue only contains curdir (which must never be evicted),
+ * falls back to the other queue. Returns -1 only when both queues are
+ * exhausted, allowing the caller to proceed with a temporarily over-capacity
+ * cache that self-heals on the next eviction cycle.
  *
  * From paper:
  * "if |T1| ≥ 1 and ((x ∈ B2 and |T1| = p) or |T1| > p):
@@ -419,127 +510,63 @@ static void arc_ensure_ghost_capacity(arc_list_t target_list)
  *      Move LRU of T2 to MRU of B2, remove from cache"
  *
  * @param[in] in_b2  1 if incoming request is in B2, 0 otherwise
+ * @return 0 on successful eviction, -1 if no entry could be evicted
  */
-static void arc_replace(int in_b2)
+static int arc_replace(int in_b2)
 {
     struct dir *victim;
-
+    int try_t1_first;
     /* Decide which list to evict from */
-    if (arc_cache.t1_size >= 1 &&
-            ((in_b2 && arc_cache.t1_size == arc_cache.p) ||
-             (arc_cache.t1_size > arc_cache.p))) {
-        /* Evict LRU from T1 → B1 (move to ghost list) */
+    try_t1_first = (arc_cache.t1_size >= 1 &&
+                    ((in_b2 && arc_cache.t1_size == arc_cache.p) ||
+                     (arc_cache.t1_size > arc_cache.p)));
 
-        /* Defensive: check T1 queue empty (counter desync guard) */
-        if (arc_cache.t1->next == arc_cache.t1) {
-            LOG(log_debug, logtype_afpd, "arc_replace: T1 is empty");
-            return;
-        }
+    if (try_t1_first) {
+        victim = arc_find_victim(arc_cache.t1, arc_cache.t1_size);
 
-        victim = (struct dir *)arc_cache.t1->next->data;
+        if (victim) {
+            arc_evict_to_ghost(victim, arc_cache.t1, arc_cache.b1,
+                               ARC_B1, false);
+        } else {
+            /* T1 blocked by curdir or empty — fall back to T2 */
+            victim = arc_find_victim(arc_cache.t2, arc_cache.t2_size);
 
-        if (!victim || !victim->qidx_node) {
-            LOG(log_error, logtype_afpd, "arc_replace: T1 LRU entry invalid");
-            return;
-        }
-
-        /* Never evict curdir - try next entry */
-        if (victim == curdir) {
-            /* Check if we have more than one entry */
-            if (arc_cache.t1_size < 2 || arc_cache.t1->next->next == arc_cache.t1) {
+            if (!victim) {
                 LOG(log_warning, logtype_afpd,
-                    "arc_replace: cannot evict curdir from T1 (T1=%zu, T2=%zu, c=%zu)",
+                    "arc_replace: both queues blocked by curdir "
+                    "(T1=%zu, T2=%zu, c=%zu)",
                     arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
-                return;
+                return -1;
             }
 
-            /* Try second-LRU entry */
-            victim = (struct dir *)arc_cache.t1->next->next->data;
-
-            if (!victim || !victim->qidx_node || victim == curdir) {
-                LOG(log_warning, logtype_afpd,
-                    "arc_replace: cannot evict from T1 (all entries protected, T1=%zu, T2=%zu, c=%zu)",
-                    arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
-                return;
-            }
+            arc_evict_to_ghost(victim, arc_cache.t2, arc_cache.b2,
+                               ARC_B2, true);
         }
-
-        /* Ensure B1 has room before adding ghost (B1+B2 <= c) */
-        arc_ensure_ghost_capacity(ARC_B1);
-
-        /* Move node from T1 to B1 without reallocation */
-        if (queue_move_to_tail_of(arc_cache.t1, arc_cache.b1,
-                                  victim->qidx_node) == NULL) {
-            LOG(log_error, logtype_afpd, "arc_replace: T1→B1 migration failed");
-            AFP_PANIC("arc_replace T1→B1 migration");
-        }
-
-        /* Convert to ghost: Keep ALL data, just set flag */
-        victim->d_flags |= DIRF_ARC_GHOST;
-        victim->arc_list = ARC_B1;
-        arc_cache.t1_size--;
-        arc_cache.b1_size++;
-        arc_cache.stats.evictions_t1++;
-        LOG(log_debug, logtype_afpd,
-            "arc_replace: evicted from T1 to B1 (did:%u)", ntohl(victim->d_did));
     } else {
-        /* Evict LRU from T2 → B2 */
+        victim = arc_find_victim(arc_cache.t2, arc_cache.t2_size);
 
-        /* Check if T2 is empty */
-        if (arc_cache.t2_size == 0 || arc_cache.t2->next == arc_cache.t2) {
-            LOG(log_debug, logtype_afpd, "arc_replace: T2 is empty");
-            return;
-        }
+        if (victim) {
+            arc_evict_to_ghost(victim, arc_cache.t2, arc_cache.b2,
+                               ARC_B2, false);
+        } else {
+            /* T2 blocked by curdir or empty — fall back to T1 */
+            victim = arc_find_victim(arc_cache.t1, arc_cache.t1_size);
 
-        victim = (struct dir *)arc_cache.t2->next->data;
-
-        if (!victim || !victim->qidx_node) {
-            LOG(log_error, logtype_afpd, "arc_replace: T2 LRU entry invalid");
-            return;
-        }
-
-        /* Never evict curdir - try next entry */
-        if (victim == curdir) {
-            /* Check if we have more than one entry */
-            if (arc_cache.t2_size < 2 || arc_cache.t2->next->next == arc_cache.t2) {
+            if (!victim) {
                 LOG(log_warning, logtype_afpd,
-                    "arc_replace: cannot evict curdir from T2 (T1=%zu, T2=%zu, c=%zu)",
+                    "arc_replace: both queues blocked by curdir "
+                    "(T1=%zu, T2=%zu, c=%zu)",
                     arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
-                return;
+                return -1;
             }
 
-            /* Try second-LRU entry */
-            victim = (struct dir *)arc_cache.t2->next->next->data;
-
-            if (!victim || !victim->qidx_node || victim == curdir) {
-                LOG(log_warning, logtype_afpd,
-                    "arc_replace: cannot evict from T2 (all entries protected, T1=%zu, T2=%zu, c=%zu)",
-                    arc_cache.t1_size, arc_cache.t2_size, arc_cache.c);
-                return;
-            }
+            arc_evict_to_ghost(victim, arc_cache.t1, arc_cache.b1,
+                               ARC_B1, true);
         }
-
-        /* Ensure B2 has room before adding ghost to maintain B1+B2 <= c */
-        arc_ensure_ghost_capacity(ARC_B2);
-
-        /* Move node from T2 to B2 without reallocation */
-        if (queue_move_to_tail_of(arc_cache.t2, arc_cache.b2,
-                                  victim->qidx_node) == NULL) {
-            LOG(log_error, logtype_afpd, "arc_replace: T2→B2 migration failed");
-            AFP_PANIC("arc_replace T2→B2 migration");
-        }
-
-        /* Convert to ghost: Keep in hash tables with ALL data */
-        victim->d_flags |= DIRF_ARC_GHOST;
-        victim->arc_list = ARC_B2;
-        arc_cache.t2_size--;
-        arc_cache.b2_size++;
-        arc_cache.stats.evictions_t2++;
-        LOG(log_debug, logtype_afpd,
-            "arc_replace: evicted from T2 to B2 (did:%u)", ntohl(victim->d_did));
     }
 
     arc_verify_invariants();
+    return 0;
 }
 
 /*!
@@ -643,15 +670,24 @@ static void arc_case_ii_adapt_and_replace(struct dir *ghost)
         }
     }
 
-    /* Call REPLACE to make room in cache */
-    arc_replace(0);
-
-    /* Move ghost node from B1 to T2 */
     if (!ghost->qidx_node) {
         LOG(log_error, logtype_afpd, "arc_case_ii: NULL qidx_node in B1");
         AFP_PANIC("arc_case_ii NULL qidx_node");
     }
 
+    /* Protect ghost from arc_ensure_ghost_capacity() eviction:
+     * Move ghost to MRU of B1 so it won't be the LRU victim when
+     * arc_replace() → arc_evict_to_ghost() → arc_ensure_ghost_capacity()
+     * needs to shrink B1 to maintain B1+B2 ≤ c. */
+    queue_move_to_tail(arc_cache.b1, ghost->qidx_node);
+
+    /* Call REPLACE to make room in cache (ghost is safe at MRU of B1) */
+    if (arc_replace(0) != 0) {
+        LOG(log_warning, logtype_afpd,
+            "arc_case_ii: arc_replace failed, cache temporarily over capacity");
+    }
+
+    /* Promote ghost node from B1 to T2 */
     if (queue_move_to_tail_of(arc_cache.b1, arc_cache.t2,
                               ghost->qidx_node) == NULL) {
         LOG(log_error, logtype_afpd, "arc_case_ii: B1→T2 migration failed");
@@ -712,15 +748,24 @@ static void arc_case_iii_adapt_and_replace(struct dir *ghost)
         }
     }
 
-    /* Call REPLACE to make room in cache */
-    arc_replace(1);  /* in_b2 = 1 */
-
-    /* Move ghost node from B2 to T2 */
     if (!ghost->qidx_node) {
         LOG(log_error, logtype_afpd, "arc_case_iii: NULL qidx_node in B2");
         AFP_PANIC("arc_case_iii NULL qidx_node");
     }
 
+    /* Protect ghost from arc_ensure_ghost_capacity() eviction:
+     * Move ghost to MRU of B2 so it won't be the LRU victim when
+     * arc_replace() → arc_evict_to_ghost() → arc_ensure_ghost_capacity()
+     * needs to shrink B2 to maintain B1+B2 ≤ c. */
+    queue_move_to_tail(arc_cache.b2, ghost->qidx_node);
+
+    /* Call REPLACE to make room in cache (ghost is safe at MRU of B2) */
+    if (arc_replace(1) != 0) {  /* in_b2 = 1 */
+        LOG(log_warning, logtype_afpd,
+            "arc_case_iii: arc_replace failed, cache temporarily over capacity");
+    }
+
+    /* Move ghost node from B2 to T2 */
     if (queue_move_to_tail_of(arc_cache.b2, arc_cache.t2,
                               ghost->qidx_node) == NULL) {
         LOG(log_error, logtype_afpd, "arc_case_iii: B2→T2 migration failed");
@@ -775,16 +820,41 @@ static void arc_case_iv(struct dir *dir)
                 dir_free(ghost);
             }
 
-            arc_replace(0);
+            if (arc_replace(0) != 0) {
+                LOG(log_warning, logtype_afpd,
+                    "arc_case_iv(i): arc_replace failed, cache temporarily over capacity");
+            }
         } else {
-            /* |T1| = c: Delete LRU of T1 (no ghost created) */
-            struct dir *victim = (struct dir *)dequeue(arc_cache.t1);
+            /* |T1| = c: Delete LRU of T1 (no ghost created).
+             * Use arc_find_victim to skip curdir — never free a live curdir pointer.
+             * If T1 only has curdir, try T2 as fallback. */
+            struct dir *victim = arc_find_victim(arc_cache.t1, arc_cache.t1_size);
+
+            if (!victim) {
+                /* T1 only has curdir, try T2 */
+                victim = arc_find_victim(arc_cache.t2, arc_cache.t2_size);
+            }
 
             if (victim) {
-                arc_cache.t1_size--;
-                victim->qidx_node = NULL;  /* Clear queue pointer after dequeue */
+                /* Unlink victim's node from its queue (circular doubly-linked list) */
+                qnode_t *node = victim->qidx_node;
+                node->prev->next = node->next;
+                node->next->prev = node->prev;
+                free(node);
+
+                if (victim->arc_list == ARC_T1) {
+                    arc_cache.t1_size--;
+                } else {
+                    arc_cache.t2_size--;
+                }
+
+                victim->qidx_node = NULL;
                 dircache_remove(NULL, victim, DIRCACHE | DIDNAME_INDEX);
                 dir_free(victim);
+            } else {
+                LOG(log_warning, logtype_afpd,
+                    "arc_case_iv(i): cannot evict, all entries are curdir "
+                    "(T1=%zu, T2=%zu)", arc_cache.t1_size, arc_cache.t2_size);
             }
         }
     }
@@ -804,7 +874,10 @@ static void arc_case_iv(struct dir *dir)
         }
 
         /* Call REPLACE */
-        arc_replace(0);
+        if (arc_replace(0) != 0) {
+            LOG(log_warning, logtype_afpd,
+                "arc_case_iv(ii): arc_replace failed, cache temporarily over capacity");
+        }
     }
 
     /* Case (iii): Cache not full yet, just add */
@@ -1058,7 +1131,7 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 return NULL;
             }
 
-            /* Direct validation: inode or ctime changed = invalidate.
+            /* Direct validation: inode or ctime changed = refresh in-place.
              * Per POSIX (IEEE 1003.1-2017 §4.9 "File Times Update"), st_ctime
              * ("time of last file status change") is updated by any operation
              * that modifies file metadata: chmod (mode), chown (uid/gid),
@@ -1074,19 +1147,34 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                     ntohl(cnid), cdir->d_u_name ? cfrombstr(cdir->d_u_name) : "(null)",
                     (unsigned long long)cdir->dcache_ino, (unsigned long long)st.st_ino,
                     (long)cdir->dcache_ctime, (long)st.st_ctime);
-                (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
-                dircache_stat.expunged++;
-                dircache_stat.misses++;  /* Count expunge as miss */
-                return NULL;
+                /* Refresh stat in-place via dir_modify(DCMOD_STAT).
+                 * Handles inode changes (CNID refresh + AD invalidation)
+                 * and ctime changes (AD invalidation + stat update).
+                 * Avoids destroying the entire entry and forcing a
+                 * full rebuild from the CNID database. */
+                dir_modify(vol, cdir, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT,
+                    .st = &st
+                });
+
+                /* dir_modify may evict the entry (inode change + CNID miss) */
+                if (cdir->d_did == CNID_INVALID) {
+                    dircache_stat.expunged++;
+                    dircache_stat.misses++;
+                    return NULL;
+                }
+
+                /* Entry refreshed in-place — fall through to ARC handling */
             }
 
-            /* Validation passed — refresh cached stat fields from fresh stat */
+            /* Refresh non-ctime/inode stat fields from fresh stat data.
+             * Redundant after dir_modify (mismatch path) but needed
+             * when ctime/inode matched (validation-passed path). */
             cdir->dcache_mode = st.st_mode;
             cdir->dcache_mtime = st.st_mtime;
             cdir->dcache_uid = st.st_uid;
             cdir->dcache_gid = st.st_gid;
             cdir->dcache_size = st.st_size;
-            /* Entry validated and still valid */
             LOG(log_maxdebug, logtype_afpd,
                 "dircache(cnid:%u): {validated: path:\"%s\"}",
                 ntohl(cnid), cfrombstr(cdir->d_fullpath));
@@ -1190,7 +1278,7 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 return NULL;
             }
 
-            /* Direct validation: inode or ctime changed = invalidate.
+            /* Direct validation: inode or ctime changed = refresh in-place.
              * Per POSIX (IEEE 1003.1-2017 §4.9 "File Times Update"), st_ctime
              * ("time of last file status change") is updated by any operation
              * that modifies file metadata: chmod (mode), chown (uid/gid),
@@ -1206,13 +1294,29 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                     ntohl(dir->d_did), name,
                     (unsigned long long)cdir->dcache_ino, (unsigned long long)st.st_ino,
                     (long)cdir->dcache_ctime, (long)st.st_ctime);
-                (void)dir_remove(vol, cdir, 1);  /* Invalid, Expunged during validation */
-                dircache_stat.expunged++;
-                dircache_stat.misses++;  /* Count expunge as miss */
-                return NULL;
+                /* Refresh stat in-place via dir_modify(DCMOD_STAT).
+                 * Handles inode changes (CNID refresh + AD invalidation)
+                 * and ctime changes (AD invalidation + stat update).
+                 * Avoids destroying the entire entry and forcing a
+                 * full rebuild from the CNID database. */
+                dir_modify(vol, cdir, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT,
+                    .st = &st
+                });
+
+                /* dir_modify may evict the entry (inode change + CNID miss) */
+                if (cdir->d_did == CNID_INVALID) {
+                    dircache_stat.expunged++;
+                    dircache_stat.misses++;
+                    return NULL;
+                }
+
+                /* Entry refreshed in-place — fall through to ARC handling */
             }
 
-            /* Validation passed — refresh cached stat fields from fresh stat */
+            /* Refresh non-ctime/inode stat fields from fresh stat data.
+             * Redundant after dir_modify (mismatch path) but needed
+             * when ctime/inode matched (validation-passed path). */
             cdir->dcache_mode = st.st_mode;
             cdir->dcache_mtime = st.st_mtime;
             cdir->dcache_uid = st.st_uid;
@@ -1609,6 +1713,72 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
 }
 
 /*!
+ * @brief Re-insert entry into DID/name index after key change
+ *
+ * Called by dir_modify() after updating d_pdid / d_u_name.
+ * The caller MUST have already removed the entry from the DIDNAME_INDEX
+ * via dircache_remove(vol, dir, DIDNAME_INDEX) before calling this.
+ *
+ * @param[in] vol  Volume (required)
+ * @param[in] dir  Entry with updated d_pdid / d_u_name (required)
+ *
+ * @returns 0 on success, -1 on hash insert failure
+ */
+int dircache_reindex_didname(const struct vol *vol _U_, struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
+    /* Caller has already called dircache_remove(vol, dir, DIDNAME_INDEX)
+     * and updated dir->d_pdid / dir->d_u_name. Re-insert with new key. */
+    if (hash_alloc_insert(index_didname, dir, dir) == 0) {
+        LOG(log_error, logtype_afpd,
+            "dircache_reindex_didname: re-insert failed for did:%u",
+            ntohl(dir->d_did));
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Promote a cache entry in ARC to signal recency
+ *
+ * Dispatches based on arc_list membership:
+ *   T1/T2: arc_case_i() — move to MRU of T2
+ *   B1:    arc_case_ii_adapt_and_replace() — promote ghost to T2
+ *   B2:    arc_case_iii_adapt_and_replace() — promote ghost to T2
+ *   LRU:   no-op (LRU is FIFO by design, R7 D-010)
+ *
+ * @param[in,out] dir  Cache entry to promote (required)
+ */
+void dircache_promote(struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
+    if (arc_cache.enabled) {
+        switch (dir->arc_list) {
+        case ARC_T1:
+        case ARC_T2:
+            arc_case_i(dir);       /* Case I: T1→T2 or T2 MRU */
+            break;
+
+        case ARC_B1:
+            arc_case_ii_adapt_and_replace(dir);   /* Case II: B1→T2 */
+            break;
+
+        case ARC_B2:
+            arc_case_iii_adapt_and_replace(dir);  /* Case III: B2→T2 */
+            break;
+
+        default:
+            break;  /* ARC_NONE: not in any list */
+        }
+    }
+
+    /* LRU mode: no-op — LRU is FIFO by design (R7 D-010) */
+}
+
+/*!
  * @brief Initialize the dircache and indexes
  *
  * This is called in child afpd initialization. The maximum cache size will be
@@ -1707,19 +1877,13 @@ int dircache_init(int reqsize)
         return -1;
     }
 
-    /* As long as directory.c hasn't got its own initializer call, we do it for it */
+    /* As long as directory.c hasn't got its own initializer call, we do it here.
+     * Most numeric fields are set by C11 designated initializers in directory.c.
+     * d_did uses htonl() which is not a compile-time constant, set here at runtime. */
     rootParent.d_did = DIRDID_ROOT_PARENT;
     rootParent.d_fullpath = bfromcstr("ROOT_PARENT");
     rootParent.d_m_name = bfromcstr("ROOT_PARENT");
     rootParent.d_u_name = rootParent.d_m_name;
-    rootParent.d_rights_cache = 0xffffffff;
-    /* Initialize stat fields for enumerate */
-    rootParent.dcache_mode = S_IFDIR | 0755;
-    rootParent.dcache_mtime = 0;
-    rootParent.dcache_uid = 0;
-    rootParent.dcache_gid = 0;
-    rootParent.dcache_size = 0;
-    rootParent.arc_list = 0;  /* ARC_NONE (not in any ARC list) */
 
     /* Apply validation parameters from configuration */
     if (AFPobj && AFPobj->options.dircache_validation_freq > 0) {
@@ -1892,6 +2056,20 @@ void log_dircache_stat(void)
             dircache_stat.evicted,
             dircache_validation_freq);
     }
+
+    /* AD cache statistics (Tier 1) — from ad_cache.c extern counters */
+    double ad_hit_ratio = 0.0;
+    unsigned long long ad_total = ad_cache_hits + ad_cache_misses + ad_cache_no_ad;
+
+    if (ad_total > 0) {
+        ad_hit_ratio = ((double)(ad_cache_hits + ad_cache_no_ad) /
+                        (double)ad_total) * 100.0;
+    }
+
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (AD): hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
+        ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
+        ad_hit_ratio);
 }
 
 /*!
@@ -1943,12 +2121,15 @@ void dircache_dump(void)
 
     while ((hn = hash_scan_next(&hs))) {
         dir = hnode_get(hn);
-        fprintf(dump, "%05u: %3u  %6u  %6u %s    %s\n",
+        fprintf(dump, "%05u: %3u  %6u  %6u %s  rlen:%-6lld ad:%-8s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
                 dir->d_flags & DIRF_ISFILE ? "f" : "d",
+                (long long)dir->dcache_rlen,
+                dir->dcache_rlen >= 0 ? "cached" :
+                (dir->dcache_rlen == (off_t) -1 ? "unloaded" : "absent"),
                 cfrombstr(dir->d_fullpath));
     }
 

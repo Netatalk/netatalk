@@ -42,7 +42,9 @@
 #include <atalk/unix.h>
 #include <atalk/util.h>
 
+#include "ad_cache.h"
 #include "desktop.h"
+#include "dircache.h"
 #include "directory.h"
 #include "fork.h"
 #include "mangle.h"
@@ -966,7 +968,23 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
 
         ad_setentrylen(adp, ADEID_COMMENT, clen);
         memcpy(ad_entry(adp, ADEID_COMMENT), ibuf, clen);
+        /* Acquire cache pointer before flush changes ctime */
+        struct dir *cached = isadir ? path->d_dir
+                             : dircache_search_by_name(vol, curdir, upath, strlen(upath));
         ad_flush(adp);
+
+        /* Refresh cache after comment write */
+        if (cached) {
+            struct stat post_st;
+
+            if (ostat(upath, &post_st, 0) == 0) {
+                dir_modify(vol, cached, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_AD,
+                    .st = &post_st,
+                    .adp = adp,
+                });
+            }
+        }
     }
 
     ad_close(adp, ADFLAGS_HF);
@@ -1030,6 +1048,18 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
 
     if (ad_metadata(upath, (isadir ? ADFLAGS_DIR : 0), adp) < 0) {
         return AFPERR_NOITEM;
+    }
+
+    /* Opportunistic AD cache population (ADEID_COMMENT not in Tier 1 cache,
+     * but we can populate Tier 1 fields while we have the AD open) */
+    {
+        struct dir *cached = isadir ? path->d_dir
+                             : dircache_search_by_name(vol, curdir, upath, strlen(upath));
+
+        /* If cache AD is unset, store fork's live adouble */
+        if (cached && cached->dcache_rlen < 0) {
+            ad_store_to_cache(adp, cached);
+        }
     }
 
     if (!ad_getentryoff(adp, ADEID_COMMENT) || !ad_entry(adp, ADEID_COMMENT)) {
@@ -1124,8 +1154,24 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
     }
 
     if (ad_getentryoff(adp, ADEID_COMMENT)) {
+        /* Acquire cache pointer before flush changes ctime */
+        struct dir *cached = isadir ? path->d_dir
+                             : dircache_search_by_name(vol, curdir, upath, strlen(upath));
         ad_setentrylen(adp, ADEID_COMMENT, 0);
         ad_flush(adp);
+
+        /* Refresh cache after comment removal */
+        if (cached) {
+            struct stat post_st;
+
+            if (ostat(upath, &post_st, 0) == 0) {
+                dir_modify(vol, cached, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_AD,
+                    .st = &post_st,
+                    .adp = adp,
+                });
+            }
+        }
     }
 
     ad_close(adp, ADFLAGS_HF);

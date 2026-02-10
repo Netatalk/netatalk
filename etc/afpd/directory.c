@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
- * Copyright (c) 2025 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  *
  * All Rights Reserved.  See COPYRIGHT.
  * You may also use it under the terms of the General Public License (GPL). See COPYING.
@@ -40,6 +40,7 @@
 
 #include "desktop.h"
 #include "dircache.h"
+#include "ad_cache.h"
 #include "directory.h"
 #include "file.h"
 #include "filedir.h"
@@ -62,12 +63,15 @@
 
 int         afp_errno;
 /* As long as directory.c hasn't got its own init call, this get initialized in dircache_init */
-struct dir rootParent  = {
-    NULL, NULL, NULL, NULL,          /* d_fullpath, d_m_name, d_u_name, d_m_name_ucs2 */
-    NULL, 0, 0, 0,                   /* qidx_node, d_ctime, d_flags d_pdid */
-    0, 0, 0, 0,                      /* d_did, d_offcnt, d_vid, d_rights_cache */
-    0, 0,                            /* dcache_ctime, dcache_ino */
-    S_IFDIR | 0755, 0, 0, 0, 0, 0    /* dcache_mode, dcache_mtime, dcache_uid, dcache_gid, dcache_size, arc_list */
+struct dir rootParent = {
+    /* d_did set at runtime in dircache_init() — DIRDID_ROOT_PARENT uses htonl() which
+     * is not a compile-time constant on all platforms */
+    .dcache_mode = S_IFDIR | 0755,
+    /* rootParent.d_rights_cache init to 0xffffffff ('access rights not set/unknown') */
+    .d_rights_cache = 0xffffffff,
+    /* dcache_rlen init to -1 ('resource fork length unknown/not set') */
+    .dcache_rlen = (off_t) -1,
+    /* All other fields zero-initialized by C11 designated init rules */
 };
 struct dir  *curdir = &rootParent;
 struct path Cur_Path = {
@@ -936,6 +940,8 @@ struct dir *dir_new(const char *m_name,
     dir->dcache_uid = st->st_uid;
     dir->dcache_gid = st->st_gid;
     dir->dcache_size = st->st_size;
+    dir->dcache_rlen = (off_t)
+                       - 1; /* Not yet loaded — triggers ad_metadata() on first access */
 
     if (!S_ISDIR(st->st_mode)) {
         dir->d_flags = DIRF_ISFILE;
@@ -965,6 +971,304 @@ void dir_free(struct dir *dir)
     bdestroy(dir->d_m_name);
     bdestroy(dir->d_fullpath);
     free(dir);
+}
+
+/*!
+ * @brief Update a cached entry in-place with selective field updates
+ *
+ * Modifies specified field groups on an existing cache entry while
+ * maintaining hash table consistency. The DCMOD_* bitmask in
+ * args->flags controls which fields are updated — unset groups
+ * are not touched.
+ *
+ * When DCMOD_PATH is set and new_uname or new_pdid differs from current
+ * values, the DID/name index is automatically reindexed. The CNID index
+ * (d_vid, d_did) is NEVER changed.
+ *
+ * Always promotes the entry in ARC (signals recency to eviction algorithm).
+ *
+ * Common call patterns:
+ *   Rename:             DCMOD_PATH | DCMOD_STAT
+ *   After setfilparams: DCMOD_STAT | DCMOD_AD  (Phase 2)
+ *   Stat-only refresh:  DCMOD_STAT
+ *
+ * @param[in]     vol   Volume (required)
+ * @param[in,out] dir   Cache entry to update (required)
+ * @param[in]     args  Parameter struct with DCMOD_* flags and field values
+ *
+ * @returns 0 on success, -1 on error (hash re-insert failure)
+ */
+int dir_modify(const struct vol *vol, struct dir *dir,
+               const struct dir_modify_args *args)
+{
+    if (!vol) {
+        LOG(log_error, logtype_afpd,
+            "dir_modify: called with NULL vol, skipping");
+        return -1;
+    }
+
+    if (!dir) {
+        LOG(log_error, logtype_afpd,
+            "dir_modify: called with NULL dir, skipping");
+        return -1;
+    }
+
+    AFP_ASSERT(args);
+
+    /* If entry was evicted (d_did set to CNID_INVALID by dir_remove),
+     * return gracefully — the caller's cached pointer is stale. */
+    if (dir->d_did == CNID_INVALID) {
+        LOG(log_debug, logtype_afpd,
+            "dir_modify: entry already evicted (d_did=CNID_INVALID), skipping");
+        return 0;
+    }
+
+    /* DCMOD_AD and DCMOD_AD_INV are mutually exclusive (R6 D-009) */
+    AFP_ASSERT(!(args->flags & DCMOD_AD) || !(args->flags & DCMOD_AD_INV));
+    int needs_reindex = 0;
+
+    /* Self-healing: if entry is not in the cache, add it (R5 M-004 / R6 E-018).
+     * dir_modify() should always result in an up-to-date cached entry.
+     * Skip reserved CNIDs (root_parent, root) */
+    if (dir->qidx_node == NULL && ntohl(dir->d_did) >= CNID_START) {
+        AFP_ASSERT(dir->d_u_name != NULL);    /* Must be initialized */
+        AFP_ASSERT(dir->d_fullpath != NULL);  /* Must be initialized */
+        LOG(log_warning, logtype_afpd,
+            "dir_modify(did:%u): entry not in cache, adding", ntohl(dir->d_did));
+
+        if (dircache_add(vol, dir) != 0) {
+            LOG(log_error, logtype_afpd,
+                "dir_modify(did:%u): failed to add to cache", ntohl(dir->d_did));
+            return -1;
+        }
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "dir_modify: did:%u flags:0x%x(%s%s%s%s) '%s'",
+        ntohl(dir->d_did), args->flags,
+        (args->flags & DCMOD_PATH) ? "PATH" : "",
+        (args->flags & DCMOD_STAT) ? "|STAT" : "",
+        (args->flags & DCMOD_AD) ? "|AD" : "",
+        (args->flags & DCMOD_AD_INV) ? "|AD_INV" : "",
+        dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
+
+    /* --- DCMOD_PATH: Update path/name/parent --- */
+    if (args->flags & DCMOD_PATH) {
+        if (args->new_pdid != 0 && args->new_pdid != dir->d_pdid) {
+            needs_reindex = 1;
+        }
+
+        if (args->new_uname != NULL
+                && strcmp(args->new_uname, cfrombstr(dir->d_u_name)) != 0) {
+            needs_reindex = 1;
+        }
+
+        LOG(log_debug, logtype_afpd,
+            "dir_modify: PATH old pdid:%u uname:'%s' path:'%s' -> "
+            "new pdid:%u uname:'%s' reindex:%d",
+            ntohl(dir->d_pdid),
+            dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)",
+            dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)",
+            args->new_pdid ? ntohl(args->new_pdid) : ntohl(dir->d_pdid),
+            args->new_uname ? args->new_uname
+            : (dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)"),
+            needs_reindex);
+
+        /* Remove from DID/name index if key is changing */
+        if (needs_reindex) {
+            dircache_remove(vol, dir, DIDNAME_INDEX);
+        }
+
+        if (args->new_pdid != 0) {
+            dir->d_pdid = args->new_pdid;
+        }
+
+        if (args->new_uname != NULL) {
+            const char *mname = args->new_mname ? args->new_mname : args->new_uname;
+
+            if (dir->d_u_name != dir->d_m_name) {
+                bdestroy(dir->d_u_name);
+            }
+
+            bdestroy(dir->d_m_name);
+            dir->d_m_name = bfromcstr(mname);
+            dir->d_u_name = (strcmp(mname, args->new_uname) == 0)
+                            ? dir->d_m_name : bfromcstr(args->new_uname);
+
+            /* Update UCS2 mac name */
+            if (dir->d_m_name_ucs2) {
+                free(dir->d_m_name_ucs2);
+                dir->d_m_name_ucs2 = NULL;
+            }
+
+            if (convert_string_allocate(
+                        (utf8_encoding(vol->v_obj)) ? CH_UTF8_MAC : vol->v_maccharset,
+                        CH_UCS2, mname, -1,
+                        (char **)&dir->d_m_name_ucs2) == (size_t) -1) {
+                dir->d_m_name_ucs2 = NULL;
+            }
+        }
+
+        if (args->new_pdir_path != NULL) {
+            const char *uname = args->new_uname ? args->new_uname : cfrombstr(
+                                    dir->d_u_name);
+            bdestroy(dir->d_fullpath);
+            dir->d_fullpath = bstrcpy(args->new_pdir_path);
+            bconchar(dir->d_fullpath, '/');
+            bcatcstr(dir->d_fullpath, uname);
+        }
+
+        /* Re-insert into DID/name index if key changed.
+         * On failure, remove the entry entirely to avoid orphans
+         * (entry would be in CNID index + queue but not in DIDNAME index). */
+        if (needs_reindex) {
+            if (dircache_reindex_didname(vol, dir) != 0) {
+                LOG(log_error, logtype_afpd,
+                    "dir_modify: reindex failed, removing entry did:%u",
+                    ntohl(dir->d_did));
+                dir_remove(vol, dir, 0);  /* Clean removal from ALL indexes */
+                return -1;
+            }
+
+            LOG(log_debug, logtype_afpd,
+                "dir_modify: PATH reindexed did:%u -> '%s'",
+                ntohl(dir->d_did),
+                dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
+        }
+    }
+
+    /* --- DCMOD_STAT: Refresh stat fields --- */
+    if ((args->flags & DCMOD_STAT) && args->st) {
+        /* Detect external changes before updating cached stat fields */
+        bool ino_changed = (dir->dcache_ino != 0 &&
+                            dir->dcache_ino != args->st->st_ino);
+        bool ctime_changed = (dir->dcache_ctime != 0 &&
+                              dir->dcache_ctime != args->st->st_ctime);
+
+        if (ino_changed) {
+            /* Different inode = different file. AD is always stale. */
+            dir->dcache_rlen = (off_t) -1;
+            /* Refresh CNID from database */
+            cnid_t new_cnid = CNID_INVALID;
+            AFP_CNID_START("cnid_lookup");
+            new_cnid = cnid_lookup(vol->v_cdb, args->st, dir->d_pdid,
+                                   cfrombstr(dir->d_u_name),
+                                   blength(dir->d_u_name));
+            AFP_CNID_DONE();
+
+            if (new_cnid == CNID_INVALID) {
+                if (dir == curdir) {
+                    /* Do not remove curdir — callers rely on it being valid.
+                     * AD cache already invalidated (dcache_rlen = -1 above) */
+                    LOG(log_error, logtype_afpd,
+                        "dir_modify: inode change on curdir! — no CNID for "
+                        "new inode, keeping stale entry (did:%u, ino:%llu->%llu)",
+                        ntohl(dir->d_did),
+                        (unsigned long long)dir->dcache_ino,
+                        (unsigned long long)args->st->st_ino);
+                } else {
+                    /* No CNID. Remove stale entry. */
+                    LOG(log_debug, logtype_afpd,
+                        "dir_modify: inode change — no CNID for new inode, "
+                        "removing stale entry did:%u (ino:%llu->%llu)",
+                        ntohl(dir->d_did),
+                        (unsigned long long)dir->dcache_ino,
+                        (unsigned long long)args->st->st_ino);
+                    dir_remove(vol, dir, 0);
+                    return 0;
+                }
+            }
+
+            if (new_cnid != dir->d_did) {
+                LOG(log_debug, logtype_afpd,
+                    "dir_modify: inode change — CNID refreshed "
+                    "did:%u->%u (ino:%llu->%llu)",
+                    ntohl(dir->d_did), ntohl(new_cnid),
+                    (unsigned long long)dir->dcache_ino,
+                    (unsigned long long)args->st->st_ino);
+                /* Remove from all indexes, update DID, re-add */
+                dircache_remove(vol, dir,
+                                DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
+                dir->d_did = new_cnid;
+
+                if (dircache_add(vol, dir) != 0) {
+                    LOG(log_error, logtype_afpd,
+                        "dir_modify: DID re-index failed for did:%u",
+                        ntohl(new_cnid));
+                }
+            }
+        } else if (ctime_changed && dir->dcache_rlen != (off_t) -1) {
+            /* Ctime changed (same inode): metadata modified externally.
+             * Invalidate AD cache — re-read from disk on next access.
+             * Covers dcache_rlen >= 0 (cached AD) and dcache_rlen == -2 (no AD)
+             * When DCMOD_AD is also set, ad_store_to_cache() runs after
+             * this section and re-populates dcache_rlen with caller data. */
+            LOG(log_debug, logtype_afpd,
+                "dir_modify: ctime change — invalidating AD cache "
+                "did:%u (ctime:%ld->%ld)",
+                ntohl(dir->d_did),
+                (long)dir->dcache_ctime, (long)args->st->st_ctime);
+            dir->dcache_rlen = (off_t) -1;
+        }
+
+        dir->dcache_ctime = args->st->st_ctime;
+        dir->dcache_ino = args->st->st_ino;
+        dir->dcache_mode = args->st->st_mode;
+        dir->dcache_mtime = args->st->st_mtime;
+        dir->dcache_uid = args->st->st_uid;
+        dir->dcache_gid = args->st->st_gid;
+        dir->dcache_size = args->st->st_size;
+        LOG(log_debug, logtype_afpd,
+            "dir_modify: STAT did:%u ino:%llu mode:0%o size:%lld",
+            ntohl(dir->d_did),
+            (unsigned long long)dir->dcache_ino,
+            (unsigned int)dir->dcache_mode,
+            (long long)dir->dcache_size);
+    }
+
+    /* --- DCMOD_AD: Refresh AD fields from adouble --- */
+    if ((args->flags & DCMOD_AD) && args->adp) {
+        /* ad_store_to_cache() overwrites dcache_filedatesi and recomputes
+         * served mdate = max(ad_mdate, dcache_mtime) using the just-updated
+         * dcache_mtime from DCMOD_STAT above. */
+        ad_store_to_cache(args->adp, dir);
+    }
+
+    /* Auto-recompute mdate ONLY if DCMOD_AD was NOT also set
+     * (ad_store_to_cache already recomputed mdate from fresh AD + stat).
+     * This avoids duplicate mdate computation when both flags are set. */
+    if ((args->flags & DCMOD_STAT) && args->st
+            && !(args->flags & DCMOD_AD) && dir->dcache_rlen >= 0) {
+        /* Maintains invariant: dcache_filedatesi[AD_DATE_MODIFY]
+         * always contains max(ad_mdate, dcache_mtime) in network byte order. */
+        uint32_t ad_mdate;
+        memcpy(&ad_mdate, dir->dcache_filedatesi + AD_DATE_MODIFY,
+               sizeof(ad_mdate));
+        time_t ad_mtime = AD_DATE_TO_UNIX(ad_mdate);
+
+        if (args->st->st_mtime > ad_mtime) {
+            uint32_t st_mdate = AD_DATE_FROM_UNIX(args->st->st_mtime);
+            memcpy(dir->dcache_filedatesi + AD_DATE_MODIFY,
+                   &st_mdate, sizeof(st_mdate));
+        }
+    }
+
+    /* --- DCMOD_AD_INV: Invalidate AD cache --- */
+    if (args->flags & DCMOD_AD_INV) {
+        dir->dcache_rlen = (off_t) -1;
+        memset(dir->dcache_finderinfo, 0, 32);
+        memset(dir->dcache_filedatesi, 0, 16);
+        memset(dir->dcache_afpfilei, 0, 4);
+    }
+
+    /* Always promote in ARC — entry is actively being used.
+     * LRU mode: no-op (FIFO by design, R7 D-010). */
+    dircache_promote(dir);
+    LOG(log_debug, logtype_afpd,
+        "dir_modify: OK did:%u -> '%s'",
+        ntohl(dir->d_did),
+        dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
+    return 0;
 }
 
 /*!
@@ -1787,7 +2091,7 @@ int getdirparams(const AFPObj *obj,
     struct adouble  ad;
     char        *data, *l_nameoff = NULL, *utf_nameoff = NULL;
     char        *ade = NULL;
-    int         bit = 0, isad = 0;
+    int         bit = 0, ad_available = 0;
     uint32_t           aint;
     uint16_t       ashort;
     int                 ret;
@@ -1803,32 +2107,9 @@ int getdirparams(const AFPObj *obj,
                   (1 << DIRPBIT_FINFO))) {
         ad_init(&ad, vol);
 
-        if (!ad_metadata(upath, ADFLAGS_DIR, &ad)) {
-            isad = 1;
-
-            if (ad.ad_mdp->adf_flags & O_CREAT) {
-                /* We just created it */
-                if (s_path->m_name == NULL) {
-                    if ((s_path->m_name = utompath(vol,
-                                                   upath,
-                                                   dir->d_did,
-                                                   utf8_encoding(obj))) == NULL) {
-                        LOG(log_error, logtype_afpd,
-                            "getdirparams(\"%s\"): can't assign macname",
-                            cfrombstr(dir->d_fullpath));
-                        return AFPERR_MISC;
-                    }
-                }
-
-                ad_setname(&ad, s_path->m_name);
-                ad_setid(&ad,
-                         s_path->st.st_dev,
-                         s_path->st.st_ino,
-                         dir->d_did,
-                         dir->d_pdid,
-                         vol->v_stamp);
-                ad_flush(&ad);
-            }
+        if (!ad_metadata_cached(upath, ADFLAGS_DIR, &ad, vol, dir, false, NULL)) {
+            ad_available = 1;
+            /* ad_metadata_cached() handles ad_close() internally. */
         }
     }
 
@@ -1843,7 +2124,7 @@ int getdirparams(const AFPObj *obj,
 
         switch (bit) {
         case DIRPBIT_ATTR :
-            if (isad) {
+            if (ad_available) {
                 ad_getattr(&ad, &ashort);
             } else if (invisible_dots(vol, cfrombstr(dir->d_u_name))) {
                 ashort = htons(ATTRBIT_INVISIBLE);
@@ -1864,7 +2145,7 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_CDATE :
-            if (!isad || (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0)) {
+            if (!ad_available || (ad_getdate(&ad, AD_DATE_CREATE, &aint) < 0)) {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             }
 
@@ -1879,7 +2160,7 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_BDATE :
-            if (!isad || (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0)) {
+            if (!ad_available || (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0)) {
                 aint = AD_DATE_START;
             }
 
@@ -1888,7 +2169,7 @@ int getdirparams(const AFPObj *obj,
             break;
 
         case DIRPBIT_FINFO :
-            if (isad && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
+            if (ad_available && (ade = ad_entry(&ad, ADEID_FINDERI)) != NULL) {
                 memcpy(data, ade, 32);
             } else { /* no appledouble */
                 memset(data, 0, 32);
@@ -2016,10 +2297,6 @@ int getdirparams(const AFPObj *obj,
             break;
 
         default :
-            if (isad) {
-                ad_close(&ad, ADFLAGS_HF);
-            }
-
             return AFPERR_BITMAP;
         }
 
@@ -2037,10 +2314,6 @@ int getdirparams(const AFPObj *obj,
         ashort = htons(data - buf);
         memcpy(utf_nameoff, &ashort, sizeof(ashort));
         data = set_name(vol, data, pdid, cfrombstr(dir->d_m_name), dir->d_did, utf8);
-    }
-
-    if (isad) {
-        ad_close(&ad, ADFLAGS_HF);
     }
 
     *buflen = data - buf;
@@ -2448,6 +2721,18 @@ setdirparam_done:
             }
         }
 
+        /* Refresh AD cache after writing metadata (before close) */
+        {
+            struct stat post_st;
+
+            if (dir && ostat(upath, &post_st, 0) == 0) {
+                dir_modify(vol, dir, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_AD,
+                    .st = &post_st,
+                    .adp = &ad,
+                });
+            }
+        }
         ad_close(&ad, ADFLAGS_HF);
     }
 
@@ -2496,24 +2781,22 @@ setdirparam_done:
             }
         }
 
-        /* Update dircache permissions to match filesystem after ACCESS or UNIXPR changes */
+        /* Update dircache stat fields after permission changes (mode/uid/gid/ctime) */
         if ((set_maccess || set_upriv) && dir) {
             struct stat st;
 
             if (ostat(upath, &st, vol_syml_opt(vol)) == 0) {
-                /* Update cached ctime to match filesystem after our permission changes */
-                dir->dcache_ctime = st.st_ctime;
+                dir_modify(vol, dir, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT,
+                    .st = &st,
+                });
 
                 /* Recalculate rights cache based on new permissions */
                 if (dir == curdir) {
-                    /* Only update if dir is still curdir (hasn't changed during function) */
-                    /* Invalidate first to force accessmode() to recalculate from filesystem */
                     dir->d_rights_cache = 0xffffffff;
-                    /* Use global AFPobj (always set during AFP session in afp_over_dsi()) */
                     extern AFPObj *AFPobj;
                     AFP_ASSERT(AFPobj);
                     struct maccess fresh_ma;
-                    /* accessmode() → check_acl_access() calculates and sets dir->d_rights_cache */
                     accessmode(AFPobj, vol, upath, &fresh_ma, dir, &st);
                 }
             }
@@ -2726,6 +3009,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
              vol->v_stamp);
     fce_register(obj, FCE_DIR_CREATE, bdata(curdir->d_fullpath), NULL);
     ad_flush(&ad);
+    /* Eagerly populate AD cache for newly created directory */
+    ad_store_to_cache(&ad, dir);
     ad_close(&ad, ADFLAGS_HF);
     memcpy(rbuf, &dir->d_did, sizeof(uint32_t));
     *rbuflen = sizeof(uint32_t);
@@ -2819,9 +3104,9 @@ int deletecurdir(struct vol *vol)
     ad_init(&ad, vol);
 
     /* we never want to create a resource fork here, we are going to delete it */
-    if (ad_metadata(".", ADFLAGS_DIR, &ad) == 0) {
+    if (ad_metadata_cached(".", ADFLAGS_DIR, &ad, vol, fdir, true, NULL) == 0) {
         ad_getattr(&ad, &ashort);
-        ad_close(&ad, ADFLAGS_HF);
+        /* ad_metadata_cached() handles ad_close() internally */
 
         if (!(vol->v_ignattr & ATTRBIT_NODELETE)
                 && (ashort & htons(ATTRBIT_NODELETE))) {
