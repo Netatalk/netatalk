@@ -93,13 +93,9 @@ STATIC void test166()
     FPEnumerate_ext(Conn, vol, DIRDID_ROOT, "",
                     (1 << FILPBIT_PDINFO) | (1 << FILPBIT_EXTDFLEN) | (1 << FILPBIT_EXTRFLEN)
                     | (1 << FILPBIT_DFLEN) | (1 << FILPBIT_RFLEN), 0);
-
-    if (!Bigendian) {
-        strcpy(nfile, "eee.rtf");
-        nfile[1] = 0xcc;         /* é.rtf decompose */
-        nfile[2] = 0x81;
-    }
-
+    strcpy(nfile, "eee.rtf");
+    nfile[1] = 0xcc;         /* é.rtf decompose */
+    nfile[2] = 0x81;
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, nfile))
 test_exit:
     exit_test("Utf8:test166: utf8 precompose decompose");
@@ -115,11 +111,6 @@ STATIC void test167()
     struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
-
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
@@ -632,11 +623,6 @@ STATIC void test381()
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
-
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
         goto test_exit;
@@ -693,11 +679,6 @@ STATIC void test382()
     struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
-
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
@@ -756,11 +737,6 @@ STATIC void test383()
     uint16_t vol = VolID;
     ENTER_TEST
 
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
-
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
         goto test_exit;
@@ -798,11 +774,6 @@ STATIC void test384()
     uint16_t bitmap;
     uint16_t vol = VolID;
     ENTER_TEST
-
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
@@ -842,11 +813,6 @@ STATIC void test385()
     uint16_t vol = VolID;
     ENTER_TEST
 
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
-
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
         goto test_exit;
@@ -884,11 +850,6 @@ STATIC void test386()
     uint16_t bitmap;
     uint16_t vol = VolID;
     ENTER_TEST
-
-    if (Bigendian) {
-        test_skipped(T_BIGENDIAN);
-        goto test_exit;
-    }
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
