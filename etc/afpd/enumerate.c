@@ -424,10 +424,12 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             /* Entry will be cached below by dir_add() (dirs) or getfilparams() (files) */
         }
 
-        /* conversions on the fly */
+        /* On-the-fly v2→EA conversion. Skip when 'convert appledouble = no'
+         * is set (AFPVOL_NOV2TOEACONV) — eliminates per-file disk IO. */
         const char *convname;
 
-        if (ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0) {
+        if (!(vol->v_flags & AFPVOL_NOV2TOEACONV)
+                && ad_convert(sd.sd_last, &s_path.st, vol, &convname) == 0) {
             if (convname) {
                 /* ad_convert renamed the file (v2→EA migration). If we used
                  * cached stat data, it has st_dev=0 which breaks CNID ops.

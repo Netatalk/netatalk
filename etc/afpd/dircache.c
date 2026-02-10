@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
- * Copyright (c) 2025 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "ad_cache.h"
 #include "dircache.h"
 #include "directory.h"
 #include "hash.h"
@@ -1609,6 +1610,72 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
 }
 
 /*!
+ * @brief Re-insert entry into DID/name index after key change
+ *
+ * Called by dir_modify() after updating d_pdid / d_u_name.
+ * The caller MUST have already removed the entry from the DIDNAME_INDEX
+ * via dircache_remove(vol, dir, DIDNAME_INDEX) before calling this.
+ *
+ * @param[in] vol  Volume (required)
+ * @param[in] dir  Entry with updated d_pdid / d_u_name (required)
+ *
+ * @returns 0 on success, -1 on hash insert failure
+ */
+int dircache_reindex_didname(const struct vol *vol _U_, struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
+    /* Caller has already called dircache_remove(vol, dir, DIDNAME_INDEX)
+     * and updated dir->d_pdid / dir->d_u_name. Re-insert with new key. */
+    if (hash_alloc_insert(index_didname, dir, dir) == 0) {
+        LOG(log_error, logtype_afpd,
+            "dircache_reindex_didname: re-insert failed for did:%u",
+            ntohl(dir->d_did));
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Promote a cache entry in ARC to signal recency
+ *
+ * Dispatches based on arc_list membership:
+ *   T1/T2: arc_case_i() — move to MRU of T2
+ *   B1:    arc_case_ii_adapt_and_replace() — promote ghost to T2
+ *   B2:    arc_case_iii_adapt_and_replace() — promote ghost to T2
+ *   LRU:   no-op (LRU is FIFO by design, R7 D-010)
+ *
+ * @param[in,out] dir  Cache entry to promote (required)
+ */
+void dircache_promote(struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
+    if (arc_cache.enabled) {
+        switch (dir->arc_list) {
+        case ARC_T1:
+        case ARC_T2:
+            arc_case_i(dir);       /* Case I: T1→T2 or T2 MRU */
+            break;
+
+        case ARC_B1:
+            arc_case_ii_adapt_and_replace(dir);   /* Case II: B1→T2 */
+            break;
+
+        case ARC_B2:
+            arc_case_iii_adapt_and_replace(dir);  /* Case III: B2→T2 */
+            break;
+
+        default:
+            break;  /* ARC_NONE: not in any list */
+        }
+    }
+
+    /* LRU mode: no-op — LRU is FIFO by design (R7 D-010) */
+}
+
+/*!
  * @brief Initialize the dircache and indexes
  *
  * This is called in child afpd initialization. The maximum cache size will be
@@ -1707,19 +1774,13 @@ int dircache_init(int reqsize)
         return -1;
     }
 
-    /* As long as directory.c hasn't got its own initializer call, we do it for it */
+    /* As long as directory.c hasn't got its own initializer call, we do it here.
+     * Most numeric fields are set by C11 designated initializers in directory.c.
+     * d_did uses htonl() which is not a compile-time constant, set here at runtime. */
     rootParent.d_did = DIRDID_ROOT_PARENT;
     rootParent.d_fullpath = bfromcstr("ROOT_PARENT");
     rootParent.d_m_name = bfromcstr("ROOT_PARENT");
     rootParent.d_u_name = rootParent.d_m_name;
-    rootParent.d_rights_cache = 0xffffffff;
-    /* Initialize stat fields for enumerate */
-    rootParent.dcache_mode = S_IFDIR | 0755;
-    rootParent.dcache_mtime = 0;
-    rootParent.dcache_uid = 0;
-    rootParent.dcache_gid = 0;
-    rootParent.dcache_size = 0;
-    rootParent.arc_list = 0;  /* ARC_NONE (not in any ARC list) */
 
     /* Apply validation parameters from configuration */
     if (AFPobj && AFPobj->options.dircache_validation_freq > 0) {
@@ -1892,6 +1953,20 @@ void log_dircache_stat(void)
             dircache_stat.evicted,
             dircache_validation_freq);
     }
+
+    /* AD cache statistics (Tier 1) — from ad_cache.c extern counters */
+    double ad_hit_ratio = 0.0;
+    unsigned long long ad_total = ad_cache_hits + ad_cache_misses + ad_cache_no_ad;
+
+    if (ad_total > 0) {
+        ad_hit_ratio = ((double)(ad_cache_hits + ad_cache_no_ad) /
+                        (double)ad_total) * 100.0;
+    }
+
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (AD): hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
+        ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
+        ad_hit_ratio);
 }
 
 /*!
@@ -1943,12 +2018,15 @@ void dircache_dump(void)
 
     while ((hn = hash_scan_next(&hs))) {
         dir = hnode_get(hn);
-        fprintf(dump, "%05u: %3u  %6u  %6u %s    %s\n",
+        fprintf(dump, "%05u: %3u  %6u  %6u %s  rlen:%-6lld ad:%-8s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
                 dir->d_flags & DIRF_ISFILE ? "f" : "d",
+                (long long)dir->dcache_rlen,
+                dir->dcache_rlen >= 0 ? "cached" :
+                (dir->dcache_rlen == (off_t) -1 ? "unloaded" : "absent"),
                 cfrombstr(dir->d_fullpath));
     }
 

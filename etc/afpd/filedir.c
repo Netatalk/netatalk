@@ -33,6 +33,7 @@
 #include "directory.h"
 #include "file.h"
 #include "filedir.h"
+#include "ad_cache.h"
 #include "fork.h"
 #include "unix.h"
 #include "volume.h"
@@ -318,15 +319,22 @@ static int moveandrename(const AFPObj *obj,
         }
     }
 
-    if (!ad_metadata(oldunixname, adflags, adp)) {
-        uint16_t bshort;
-        ad_getattr(adp, &bshort);
-        ad_close(adp, ADFLAGS_HF);
+    {
+        /* Pre-rename: read metadata via cache (strict=true for write/change path) */
+        struct dir *src_cached = isdir ? sdir
+                                 : dircache_search_by_name(vol, sdir, oldunixname, strlen(oldunixname));
 
-        if (!(vol->v_ignattr & ATTRBIT_NORENAME)
-                && (bshort & htons(ATTRBIT_NORENAME))) {
-            rc = AFPERR_OLOCK;
-            goto exit;
+        if (!ad_metadata_cached(oldunixname, adflags, adp, vol, src_cached, true,
+                                NULL)) {
+            uint16_t bshort;
+            ad_getattr(adp, &bshort);
+            /* ad_metadata_cached() handles ad_close() internally */
+
+            if (!(vol->v_ignattr & ATTRBIT_NORENAME)
+                    && (bshort & htons(ATTRBIT_NORENAME))) {
+                rc = AFPERR_OLOCK;
+                goto exit;
+            }
         }
     }
 
@@ -431,6 +439,16 @@ static int moveandrename(const AFPObj *obj,
         goto exit;
     }
 
+    /* Pre-acquire file cache entry BEFORE rename.
+     * Old path is still valid and ctime unchanged for now. */
+    struct dir *cachedfile = NULL;
+
+    if (!isdir) {
+        cachedfile = dircache_search_by_name(vol, sdir, oldunixname,
+                                             strlen(oldunixname));
+    }
+
+    /* Perform the rename */
     if (!isdir) {
         path.st_valid = 1;
         path.st_errno = errno;
@@ -455,25 +473,64 @@ static int moveandrename(const AFPObj *obj,
             goto exit;
         }
 
-        /* Clean stale cache entry after successful rename */
+        /* Update cache entry in-place after successful rename.
+         * Separate file/directory handling because sdir has different semantics:
+         *   Directories: sdir IS the directory being renamed (its own cache entry)
+         *   Files: sdir is the PARENT directory of the file being renamed */
         if (isdir && sdir) {
-            /* For directories: sdir is the directory that was renamed.
-             * Its cached d_fullpath now points to old location (stale).
-             * Clean it so next access rebuilds with new path from CNID. */
-            LOG(log_debug, logtype_afpd,
-                "moveandrename: cleaning stale directory cache after rename (did:%u, old:\"%s\")",
-                ntohl(sdir->d_did), cfrombstr(sdir->d_fullpath));
             dircache_remove_children(vol, sdir);
 
-            if (sdir != curdir) {
-                dir_remove(vol, sdir, 0);  /* Proactive cleanup after successful rename */
+            if (dir_modify(vol, sdir, &(struct dir_modify_args) {
+            .flags = DCMOD_PATH | DCMOD_STAT,
+            .new_pdid = curdir->d_did,
+            .new_mname = newname,
+            .new_uname = upath,
+            .new_pdir_path = curdir->d_fullpath,
+            .st = st,
+        }) != 0) {
+                /* Refresh failed, purged — NULL sdir to prevent use-after-free */
+                sdir = NULL;
+            }
+            fce_register(obj, FCE_DIR_MOVE, fullpathname(upath), oldunixname);
+        }
+
+        /* File rename: update cache entry if pre-acquired */
+        if (!isdir && cachedfile) {
+            if (dir_modify(vol, cachedfile, &(struct dir_modify_args) {
+            .flags = DCMOD_PATH | DCMOD_STAT,
+            .new_pdid = curdir->d_did,
+            .new_mname = newname,
+            .new_uname = upath,
+            .new_pdir_path = curdir->d_fullpath,
+            .st = st,
+        }) != 0) {
+                /* Refresh failed, purged — NULL cachedfile */
+                cachedfile = NULL;
             }
         }
 
-        /* Fixup adouble info */
-        if (!ad_metadata(upath, adflags, adp)) {
+        /* Send FCE event */
+        if (isdir) {
+            /* Dir FCE already sent above inside the isdir block */
+        } else {
+            bstring srcpath = bformat("%s/%s", bdata(sdir->d_fullpath), oldunixname);
+            fce_register(obj, FCE_FILE_MOVE, fullpathname(upath), bdata(srcpath));
+            bdestroy(srcpath);
+        }
+
+        /* Fixup adouble info — separate ad_open for CNID write.
+         * adflags includes ADFLAGS_DIR for directories (set at line 301). */
+        if (ad_open(adp, upath, adflags | ADFLAGS_HF | ADFLAGS_RDWR) == 0) {
             ad_setid(adp, st->st_dev, st->st_ino, id, curdir->d_did, vol->v_stamp);
             ad_flush(adp);
+            /* Update cache with written data before close */
+            struct dir *dst_cached = isdir ? sdir
+                                         : cachedfile;
+
+            if (dst_cached) {
+                ad_store_to_cache(adp, dst_cached);
+            }
+
             ad_close(adp, ADFLAGS_HF);
         }
 
@@ -482,15 +539,6 @@ static int moveandrename(const AFPObj *obj,
         AFP_CNID_START("cnid_update");
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, upath_len);
         AFP_CNID_DONE();
-
-        /* Send FCE event */
-        if (isdir) {
-            fce_register(obj, FCE_DIR_MOVE, fullpathname(upath), oldunixname);
-        } else {
-            bstring srcpath = bformat("%s/%s", bdata(sdir->d_fullpath), oldunixname);
-            fce_register(obj, FCE_FILE_MOVE, fullpathname(upath), bdata(srcpath));
-            bdestroy(srcpath);
-        }
     }
 
 exit:
@@ -535,7 +583,7 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
 
-    if (NULL == (sdir = dirlookup(vol, did))) {
+    if (NULL == (sdir = dirlookup_strict(vol, did))) {
         return afp_errno;
     }
 

@@ -278,6 +278,7 @@ path = /mnt/afpshare
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
+convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-yes}
 [${SHARE_NAME2:-Time Machine}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
@@ -286,6 +287,7 @@ time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2
 volume name = ${SHARE_NAME2:-Time Machine}
 $AFP_RWRO = $AFP_VALIDUSERS2
+convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-yes}
 EOF
 fi
 

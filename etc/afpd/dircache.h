@@ -46,4 +46,7 @@ extern void       dircache_reset_validation_counter(void);
 extern void       dircache_report_invalid_entry(struct dir *dir);
 extern int        dircache_remove_children(const struct vol *vol,
         struct dir *dir);
+extern int        dircache_reindex_didname(const struct vol *vol,
+        struct dir *dir);
+extern void       dircache_promote(struct dir *dir);
 #endif /* DIRCACHE_H */

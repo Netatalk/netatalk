@@ -29,6 +29,7 @@
 
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <stdbool.h>
 
 /* sys/types.h usually snarfs in major/minor macros. if they don't
  * try this file. */
@@ -38,10 +39,35 @@
 
 #include <sys/types.h>
 
+#include <atalk/adouble.h>
 #include <atalk/directory.h>
 #include <atalk/globals.h>
 
 #include "volume.h"
+
+/* Dircache modify flags — bitmask for selective field updates in dir_modify() */
+#define DCMOD_PATH   (1 << 0)  /*!< Identity/navigation: d_pdid, names, d_fullpath */
+#define DCMOD_STAT   (1 << 1)  /*!< Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size */
+#define DCMOD_AD     (1 << 2)  /*!< AD cache: finderinfo/filedatesi/afpfilei/rlen (Phase 2) */
+#define DCMOD_AD_INV (1 << 3)  /*!< AD invalidate: zero AD fields, set rlen = -1 (Phase 2) */
+
+/*!
+ * @brief Parameters for dir_modify() selective field updates
+ *
+ * Callers set flags to indicate which field groups to update.
+ * Only fields corresponding to set DCMOD_* flags are read.
+ */
+struct dir_modify_args {
+    unsigned int     flags;          /*!< DCMOD_* bitmask */
+    cnid_t           new_pdid;       /*!< New parent DID (DCMOD_PATH) */
+    const char
+    *new_mname;      /*!< New mac name, NULL = use new_uname (DCMOD_PATH) */
+    const char      *new_uname;      /*!< New unix name (DCMOD_PATH) */
+    bstring
+    new_pdir_path;  /*!< New parent directory fullpath (DCMOD_PATH) */
+    struct stat     *st;             /*!< Fresh stat result (DCMOD_STAT) */
+    struct adouble  *adp;            /*!< AD data to store (DCMOD_AD, Phase 2) */
+};
 
 /* directory bits */
 #define DIRPBIT_ATTR	0
@@ -92,8 +118,7 @@ extern void        dir_free(struct dir *);
 extern struct dir  *dir_add(struct vol *, const struct dir *, struct path *,
                             int);
 extern int         dir_modify(const struct vol *vol, struct dir *dir,
-                              cnid_t pdid, cnid_t did,
-                              const char *new_mname, const char *new_uname, bstring pdir_fullpath);
+                              const struct dir_modify_args *args);
 extern int         dir_remove(const struct vol *vol, struct dir *dir,
                               int report_invalid);
 extern struct dir  *dirlookup(const struct vol *, cnid_t);
