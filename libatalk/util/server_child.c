@@ -2,6 +2,11 @@
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com
  * All rights reserved. See COPYRIGHT.
+ */
+
+/*!
+ * @file
+ * @brief functions to handle child processes
  *
  * handle inserting, removing, and freeing of children.
  * this does it via a hash table. it incurs some overhead over
@@ -156,6 +161,11 @@ int server_child_remove(server_child_t *children, pid_t pid)
         child->afpch_clientid = NULL;
     }
 
+    if (child->afpch_hostname) {
+        free(child->afpch_hostname);
+        child->afpch_hostname = NULL;
+    }
+
     /* In main:child_handler() we need the fd in order to remove it from the pollfd set */
     fd = child->afpch_ipc_fd;
 
@@ -189,6 +199,10 @@ void server_child_free(server_child_t *children)
 
             if (child->afpch_clientid) {
                 free(child->afpch_clientid);
+            }
+
+            if (child->afpch_hostname) {
+                free(child->afpch_hostname);
             }
 
             if (child->afpch_volumes) {
@@ -356,7 +370,7 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
 }
 
 void server_child_login_done(server_child_t *children, pid_t pid,
-                             uid_t uid)
+                             uid_t uid, const char *hostname)
 {
     afp_child_t *child;
     afp_child_t *tmp;
@@ -373,6 +387,12 @@ void server_child_login_done(server_child_t *children, pid_t pid,
                 LOG(log_debug, logtype_default, "Setting client ID for %u", child->afpch_pid);
                 child->afpch_uid = uid;
                 child->afpch_valid = 1;
+
+                if (child->afpch_hostname) {
+                    free(child->afpch_hostname);
+                }
+
+                child->afpch_hostname = hostname ? strdup(hostname) : NULL;
             }
 
             child = tmp;
