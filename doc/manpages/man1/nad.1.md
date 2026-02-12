@@ -4,7 +4,7 @@ nad - Netatalk AppleDouble file utility suite
 
 # Synopsis
 
-**nad** [ls | cp | mv | rm | set | find] [...]
+**nad** [-F *configfile*] [ls | cp | mv | rm | set | find] [...]
 
 **nad** [-v | \-\-version]
 
@@ -27,6 +27,12 @@ shared by Netatalk.
 Only users with appropriate permissions to access the files and directories
 can use **nad** to manipulate them.
 It is sensitive to afp.conf settings such as *valid users* and *invalid users*.
+
+# Options
+
+**-F** *configfile*
+
+> Use *configfile* as the full path to the Netatalk configuration file.
 
 # Available Commands
 

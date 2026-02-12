@@ -87,7 +87,7 @@ static nad_command_t get_command(const char *cmd)
 
 static void usage_main(void)
 {
-    printf("Usage: nad ls|cp|rm|mv|set|find [file|dir, ...]\n");
+    printf("Usage: nad [-F configfile] ls|cp|rm|mv|set|find [file|dir, ...]\n");
     printf("       nad -v|--version\n");
 }
 
@@ -99,10 +99,24 @@ static void show_version(void)
 int main(int argc, char **argv)
 {
     AFPObj obj = { 0 };
+    int arg_idx = 1;
 
     if (argc < 2) {
         usage_main();
         return 1;
+    }
+
+    while (arg_idx < argc) {
+        if (strcmp(argv[arg_idx], "-F") == 0) {
+            if (++arg_idx >= argc) {
+                usage_main();
+                return 1;
+            }
+
+            obj.cmdlineconfigfile = argv[arg_idx++];
+        } else {
+            break;
+        }
     }
 
     if (afp_config_parse(&obj, "nad") != 0) {
@@ -139,26 +153,31 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    nad_command_t cmd = get_command(argv[1]);
+    if (arg_idx >= argc) {
+        usage_main();
+        return 1;
+    }
+
+    nad_command_t cmd = get_command(argv[arg_idx]);
 
     switch (cmd) {
     case CMD_LS:
-        return ad_ls(argc - 1, argv + 1, &obj);
+        return ad_ls(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_CP:
-        return ad_cp(argc - 1, argv + 1, &obj);
+        return ad_cp(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_RM:
-        return ad_rm(argc - 1, argv + 1, &obj);
+        return ad_rm(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_MV:
-        return ad_mv(argc, argv, &obj);
+        return ad_mv(argc - arg_idx + 1, argv + arg_idx - 1, &obj);
 
     case CMD_SET:
-        return ad_set(argc - 1, argv + 1, &obj);
+        return ad_set(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_FIND:
-        return ad_find(argc, argv, &obj);
+        return ad_find(argc - arg_idx + 1, argv + arg_idx - 1, &obj);
 
     case CMD_VERSION:
         show_version();
