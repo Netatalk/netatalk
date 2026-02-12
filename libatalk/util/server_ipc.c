@@ -118,7 +118,8 @@ static int ipc_login_done(const struct ipc_header *ipc,
         ipc->child_pid, ipc->uid);
     server_child_login_done(children,
                             ipc->child_pid,
-                            ipc->uid);
+                            ipc->uid,
+                            ipc->msg);
     return 0;
 }
 
@@ -297,7 +298,7 @@ int ipc_server_read(server_child_t *children, int fd)
 }
 
 /* ----------------- */
-int ipc_child_write(int fd, uint16_t command, int len, void *msg)
+int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
 {
     char block[IPC_MAXMSGSIZE], *p;
     pid_t pid;

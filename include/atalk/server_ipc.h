@@ -12,7 +12,7 @@
 #define IPC_LOGINDONE        4
 
 extern int ipc_server_read(server_child_t *children, int fd);
-extern int ipc_child_write(int fd, uint16_t command, int len, void *token);
+extern int ipc_child_write(int fd, uint16_t command, size_t len, void *token);
 extern int ipc_child_state(AFPObj *obj, uint16_t state);
 
 #endif /* IPC_GETSESSION_LOGIN */
