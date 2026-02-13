@@ -31,7 +31,8 @@ so Netatalk can act as a seamless bridge between new and old Macs.
 
 Compared to cross-platform file sharing protocols like NFS and FTP, Netatalk delivers a Mac-like user experience,
 with seamless integration of Mac filesystem metadata - notably Extended Attributes on macOS and resource forks
-on Classic Mac OS - as well as compatibility with modern macOS features such as Bonjour, Time Machine, and Spotlight.
+on Classic Mac OS - as well as compatibility with modern macOS features such as Zeroconf (Bonjour) service discovery,
+Time Machine backups, and Spotlight indexed search.
 
 Compared to [Samba](https://www.samba.org/) (SMB),
 Netatalk has [demonstrably faster transfer speeds](https://netatalk.io/docs/Benchmarks),

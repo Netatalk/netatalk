@@ -88,7 +88,7 @@ typedef struct DSI {
     char     *end;
 
 #ifdef USE_ZEROCONF
-    char *bonjourname;      /*!< server name as UTF8 maxlen MAXINSTANCENAMELEN */
+    char *zeroconfname;      /*!< server name as UTF8 maxlen MAXINSTANCENAMELEN */
     int zeroconf_registered;
 #endif
 
