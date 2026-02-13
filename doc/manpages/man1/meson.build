@@ -6,7 +6,6 @@ manfiles = [
     'asip-status',
     'dbd',
     'fce_listen',
-    'macusers',
     'nad',
 ]
 
