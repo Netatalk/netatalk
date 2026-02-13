@@ -121,7 +121,12 @@ static void register_stuff(void)
 
         LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour", name);
 
-        if (avahi_entry_group_add_service(ctx->group,
+        if (ctx->obj->options.mimicmodel) {
+            strlist2 = avahi_string_list_add_printf(strlist2, "model=%s",
+                                                    ctx->obj->options.mimicmodel);
+        }
+
+        if (avahi_entry_group_add_service_strlst(ctx->group,
                                           AVAHI_IF_UNSPEC,
                                           AVAHI_PROTO_UNSPEC,
                                           0,
@@ -130,7 +135,7 @@ static void register_stuff(void)
                                           NULL,
                                           NULL,
                                           port,
-                                          NULL) < 0) {
+                                          strlist2) < 0) {
             LOG(log_error, logtype_afpd, "Failed to add service: %s",
                 avahi_strerror(avahi_client_errno(ctx->client)));
             goto fail;
@@ -152,9 +157,6 @@ static void register_stuff(void)
         }	/* if */
 
         if (ctx->obj->options.mimicmodel) {
-            strlist2 = avahi_string_list_add_printf(strlist2, "model=%s",
-                                                    ctx->obj->options.mimicmodel);
-
             if (avahi_entry_group_add_service_strlst(ctx->group,
                     AVAHI_IF_UNSPEC,
                     AVAHI_PROTO_UNSPEC,
@@ -176,6 +178,9 @@ static void register_stuff(void)
                 avahi_strerror(avahi_client_errno(ctx->client)));
             goto fail;
         }
+
+        avahi_string_list_free(strlist);
+        avahi_string_list_free(strlist2);
     }	/* if avahi_entry_group_is_empty*/
 
     return;
@@ -362,4 +367,3 @@ int av_zeroconf_unregister()
 }
 
 #endif /* USE_AVAHI */
-
