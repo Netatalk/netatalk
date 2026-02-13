@@ -121,10 +121,8 @@ static void register_stuff(void)
 
         LOG(log_info, logtype_afpd, "Registering server '%s' with Bonjour", name);
 
-        if (ctx->obj->options.mimicmodel) {
-            strlist2 = avahi_string_list_add_printf(strlist2, "model=%s",
-                                                    ctx->obj->options.mimicmodel);
-        }
+        strlist2 = avahi_string_list_add_printf(strlist2, "model=%s",
+                                                ctx->obj->options.mimicmodel ? ctx->obj->options.mimicmodel : "RackMount");
 
         if (avahi_entry_group_add_service_strlst(ctx->group,
                                           AVAHI_IF_UNSPEC,
@@ -156,7 +154,7 @@ static void register_stuff(void)
             goto fail;
         }	/* if */
 
-        if (ctx->obj->options.mimicmodel) {
+        if (strlist2) {
             if (avahi_entry_group_add_service_strlst(ctx->group,
                     AVAHI_IF_UNSPEC,
                     AVAHI_PROTO_UNSPEC,
@@ -185,6 +183,8 @@ static void register_stuff(void)
 
     return;
 fail:
+    avahi_string_list_free(strlist);
+    avahi_string_list_free(strlist2);
     time(NULL);
 #if 0
     avahi_threaded_poll_quit(ctx->threaded_poll);
