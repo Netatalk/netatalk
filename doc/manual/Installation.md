@@ -111,11 +111,11 @@ functionality.
     while on others you have to install supporting packages to enable this
     functionality.
 
-- Avahi or mDNSresponder for Bonjour
+- Avahi or mDNSresponder for Zeroconf
 
-    Mac OS X 10.2 and later uses Bonjour (a.k.a. Zeroconf) for automatic
-    service discovery. Netatalk can advertise AFP file sharing and Time
-    Machine volumes by using Avahi or mDNSResponder.
+    Mac OS X 10.2 and later uses Zeroconf for automatic service discovery.
+    Netatalk can advertise AFP file sharing and Time Machine volumes
+    by using Avahi or mDNSResponder.
 
     When using Avahi, D-Bus is also required, and the Avahi library must
     have been built with D-Bus support.

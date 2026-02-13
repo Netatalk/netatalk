@@ -111,8 +111,8 @@ void dsi_free(DSI *dsi)
     free(dsi->buffer);
     dsi->buffer = NULL;
 #ifdef USE_ZEROCONF
-    free(dsi->bonjourname);
-    dsi->bonjourname = NULL;
+    free(dsi->zeroconfname);
+    dsi->zeroconfname = NULL;
 #endif
 }
 
