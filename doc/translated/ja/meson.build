@@ -29,7 +29,6 @@ if get_option('with-website')
         'dbd.1',
         'extmap.conf.5',
         'fce_listen.1',
-        'macusers.1',
         'nad.1',
         'netatalk.8',
     ]

@@ -26,7 +26,6 @@ User Tools
 * [dbd](dbd.1.html)
 * [fce_listen](fce_listen.1.html)
 * [getzones](getzones.1.html)
-* [macusers](macusers.1.html)
 * [nad](nad.1.html)
 * [nbplkup](nbplkup.1.html)
 * [nbprgstr](nbprgstr.1.html)
@@ -35,9 +34,9 @@ User Tools
 
 Configuration Files
 
+* [afp.conf](afp.conf.5.html)
 * [afp_signature.conf](afp_signature.conf.5.html)
 * [afp_voluuid.conf](afp_voluuid.conf.5.html)
-* [afp.conf](afp.conf.5.html)
 * [atalkd.conf](atalkd.conf.5.html)
 * [extmap.conf](extmap.conf.5.html)
 * [papd.conf](papd.conf.5.html)
