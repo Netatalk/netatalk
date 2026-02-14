@@ -949,7 +949,7 @@ have_dns = (
 
 if enable_zeroconf
     if host_os == 'darwin'
-        # On Darwin/macOS, prefer mDNS (Bonjour) over Avahi
+        # On Darwin/macOS, prefer mDNS over Avahi
         if have_dns
             have_zeroconf = true
             cdata.set('USE_ZEROCONF', 1)
@@ -983,7 +983,7 @@ endif
 
 if enable_zeroconf and not have_zeroconf
     warning(
-        'Zeroconf (Bonjour) support requested but required libraries not found',
+        'Zeroconf support requested but required libraries not found',
         'Please install Avahi or mDNS',
     )
 endif

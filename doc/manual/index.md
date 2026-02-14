@@ -18,8 +18,8 @@ of new and old Macs.
 
 Netatalk ships with range of capabilities to accommodate most deployment
 environments, including Kerberos, ACLs and LDAP. Modern macOS features
-such as Bonjour service discovery, Time Machine backups, and Spotlight
-indexed search are provided.
+such as Zeroconf (Bonjour) service discovery, Time Machine backups,
+and Spotlight indexed search are provided.
 
 For AppleTalk networks with legacy Macs and Apple IIs, Netatalk provides
 a print server, time server, and Apple II network boot server. The print
