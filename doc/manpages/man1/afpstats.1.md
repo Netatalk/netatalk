@@ -4,12 +4,24 @@ afpstats — List netatalk AFP server statistics
 
 # Synopsis
 
-**afpstats**
+**afpstats** [-h *hostname*]
+
+**afpstats** [-v | \-\-version]
 
 # Description
 
 **afpstats** list information about users connected to the netatalk AFP server,
-their mounted volumes, and time of login.
+their mounted volumes, time of login, and other details.
+
+# Options
+
+**-h**, **\-\-hostname** *hostname*
+
+> Filter the output by the given hostname.
+
+**-v**, **\-\-version**
+
+> Show version and exit.
 
 # Note
 
@@ -22,10 +34,12 @@ Finally, to enable AFP statistics in netatalk at runtime, "**afpstats = yes**" m
 
 # Examples
 
-    $ afpstats
-    Connected user   PID      Login time        State          Mounted volumes
-    alice            452547   Apr 28 21:58:50   active         Test Volume, alice's Home
-    charlie          451969   Apr 28 21:21:32   active         My AFP Volume
+List all connected users to the AFP server running on *fileserver*:
+
+    $ afpstats --hostname fileserver
+    Connected user   PID      Login time        State          Hostname          Mounted volumes
+    alice            452547   Apr 28 21:58:50   active         fileserver        Test Volume, alice's Home
+    bob              451969   Apr 28 21:21:32   active         fileserver        My AFP Volume
 
 # See Also
 

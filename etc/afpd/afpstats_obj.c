@@ -79,11 +79,11 @@ gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret,
     server_child_t *childs = afpstats_get_and_lock_childs();
     afp_child_t *child;
     struct passwd *pw;
-    int i = 0, j;
+    int i = 0;
     char buf[256];
     names = g_new(char *, childs->servch_count + 1);
 
-    for (j = 0; j < CHILD_HASHSIZE && i < childs->servch_count; j++) {
+    for (int j = 0; j < CHILD_HASHSIZE && i < childs->servch_count; j++) {
         child = childs->servch_table[j];
 
         while (child) {
@@ -91,14 +91,15 @@ gboolean afpstats_obj_get_users(AFPStatsObj *obj _U_, gchar ***ret,
                 time_t time = child->afpch_logintime;
                 strftime(buf, sizeof(buf), "%b %d %H:%M:%S", localtime(&time));
                 names[i++] =
-                    g_strdup_printf("name: %s, pid: %d, logintime: %s, state: %s, volumes: %s",
+                    g_strdup_printf("name: %s, pid: %d, logintime: %s, state: %s, volumes: %s, hostname: %s",
                                     pw->pw_name, child->afpch_pid, buf,
                                     child->afpch_state == DSI_RUNNING ? "active" :
                                     child->afpch_state == DSI_SLEEPING ? "sleeping" :
                                     child->afpch_state == DSI_EXTSLEEP ? "sleeping" :
                                     child->afpch_state == DSI_DISCONNECTED ? "disconnected" :
                                     "unknown",
-                                    child->afpch_volumes ? child->afpch_volumes : "-");
+                                    child->afpch_volumes ? child->afpch_volumes : "-",
+                                    child->afpch_hostname ? child->afpch_hostname : "-");
             }
 
             child = child->afpch_next;

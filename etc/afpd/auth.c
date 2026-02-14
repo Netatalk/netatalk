@@ -333,7 +333,8 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     obj->uid = pwd->pw_uid;
     obj->euid = geteuid();
     /* report to parent */
-    ipc_child_write(obj->ipc_fd, IPC_LOGINDONE, 0, "");
+    ipc_child_write(obj->ipc_fd, IPC_LOGINDONE, strlen(obj->options.hostname),
+                    obj->options.hostname);
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
 

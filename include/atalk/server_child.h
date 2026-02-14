@@ -12,8 +12,9 @@
 
 /*!
  * @file
- * useful stuff for child processes. most of this is hidden in
- * server_child.c to ease changes in implementation
+ * @brief data structures and utility functions for child processes
+ *
+ * most of the implementation is in libatalk/util/server_child.c
  */
 
 #define CHILD_HASHSIZE 32
@@ -29,6 +30,7 @@ typedef struct afp_child {
     uint32_t  afpch_idlen;     /*!< clientid len (from the Mac client) */
     char     *afpch_clientid;  /*!< clientid (from the Mac client) */
     int       afpch_ipc_fd;    /*!< socket for IPC bw afpd parent and childs */
+    char     *afpch_hostname;  /*!< hostname of the server that the child is connected to */
     int16_t   afpch_state;     /*!< state of AFP session (eg active, sleeping, disconnected) */
     char     *afpch_volumes;   /*!< mounted volumes */
     struct afp_child **afpch_prevp;
@@ -58,7 +60,7 @@ extern int  server_child_transfer_session(server_child_t *children, pid_t,
         uid_t, int, uint16_t);
 extern void server_child_handler(server_child_t *);
 extern void server_child_login_done(server_child_t *children, pid_t pid,
-                                    uid_t);
+                                    uid_t, const char *);
 extern void server_reset_signal(void);
 
 #endif
