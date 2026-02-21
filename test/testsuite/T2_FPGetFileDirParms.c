@@ -1101,6 +1101,190 @@ test_exit:
 }
 
 
+/* test545: Multi-client FinderInfo change detection
+ *
+ * This test validates that FinderInfo changes made by one AFP client
+ * are visible to another AFP client via cross-process cache hints.
+ * The IPC hint pipe ensures Conn2's dircache is invalidated when
+ * Conn1 modifies the metadata.
+ *
+ * Scenario:
+ * 1. Create a file via Conn
+ * 2. Set FinderInfo via Conn (type=INIT, creator=CRE1)
+ * 3. Read back via Conn to confirm
+ * 4. Use Conn2 to change FinderInfo (type=UPDT, creator=CLI2)
+ * 5. Read FinderInfo via Conn - should see the Conn2 change
+ */
+STATIC void test545()
+{
+    char *name = "t545 multi finfo detect";
+    int  ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t bitmap = (1 << FILPBIT_FINFO);
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    const DSI *dsi = &Conn->dsi;
+    const DSI *dsi2 = &Conn2->dsi;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 1: Create file via AFP
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 1: Create test file via AFP\n");
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 2: Set FinderInfo via Conn (type=INIT, creator=CRE1)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 2: Set FinderInfo via Conn (type=INIT, creator=CRE1)\n");
+    }
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    memset(filedir.finder_info, 0, 32);
+    memcpy(filedir.finder_info + 0, "INIT", 4);
+    memcpy(filedir.finder_info + 4, "CRE1", 4);
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 3: Read back via Conn to confirm
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 3: Verify initial FinderInfo via Conn\n");
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+
+    if (memcmp(filedir.finder_info, "INIT", 4) != 0 ||
+            memcmp(filedir.finder_info + 4, "CRE1", 4) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED initial FinderInfo not set correctly\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 4: Use Conn2 to change FinderInfo (type=UPDT, creator=CLI2)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 4: Conn2 modifies FinderInfo (type=UPDT, creator=CLI2)\n");
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED Conn2 could not open volume\n");
+        }
+
+        test_nottested();
+        goto fin;
+    }
+
+    if (FPGetFileDirParams(Conn2, vol2, DIRDID_ROOT, name, bitmap, 0)) {
+        test_failed();
+        FPCloseVol(Conn2, vol2);
+        goto fin;
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi2->data + ofs, bitmap, 0);
+    memset(filedir.finder_info, 0, 32);
+    memcpy(filedir.finder_info + 0, "UPDT", 4);
+    memcpy(filedir.finder_info + 4, "CLI2", 4);
+
+    if (FPSetFileParams(Conn2, vol2, DIRDID_ROOT, name, bitmap, &filedir)) {
+        test_failed();
+        FPCloseVol(Conn2, vol2);
+        goto fin;
+    }
+
+    FPCloseVol(Conn2, vol2);
+
+    /************************************
+     * Step 5: Read FinderInfo via Conn - should see Conn2's change
+     *
+     * Cross-process cache hints (IPC_CACHE_HINT) ensure Conn's
+     * dircache entry was invalidated when Conn2 modified the file.
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 5: Read FinderInfo via Conn (should detect Conn2 change)\n");
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED FPGetFileDirParams after Conn2 change\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+
+    if (memcmp(filedir.finder_info, "UPDT", 4) != 0 ||
+            memcmp(filedir.finder_info + 4, "CLI2", 4) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED FinderInfo not updated! Expected UPDT/CLI2, got '%.4s'/'%.4s'\n",
+                    filedir.finder_info, filedir.finder_info + 4);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  OK Multi-client FinderInfo change detected (INIT/CRE1 -> UPDT/CLI2)\n");
+    }
+
+fin:
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
+    exit_test("FPGetFileDirParms:test545: Multi-client FinderInfo change detection");
+}
+
 /* ----------- */
 void T2FPGetFileDirParms_test()
 {
@@ -1117,4 +1301,5 @@ void T2FPGetFileDirParms_test()
     test336();
     test340();
     test420();
+    test545();
 }
