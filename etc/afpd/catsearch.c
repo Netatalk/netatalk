@@ -210,7 +210,7 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
          * Opportunistically populate cache if not yet loaded. */
         adp = of->of_ad;
         struct dir *cached = dircache_search_by_name(vol, curdir,
-                             path->u_name, strlen(path->u_name));
+                             path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
 
         /* If cache AD is unset, store fork's live adouble */
         if (cached && cached->dcache_rlen < 0) {
@@ -221,14 +221,14 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
         adp = &ad;
         struct dir *cached = isdir ? path->d_dir
                              : dircache_search_by_name(vol, curdir,
-                                 path->u_name, strlen(path->u_name));
+                                 path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
 
         if (ad_metadata_cached(path->u_name, (isdir ? ADFLAGS_DIR : 0),
                                adp, vol, cached, false, NULL) < 0) {
             adp = NULL;
         }
 
-        /* ad_metadata_cached() handles ad_close() internally */
+        /* The cached metadata reader handles ad_close() internally */
     }
 
     return adp;
@@ -476,7 +476,7 @@ static int crit_check(struct vol *vol, struct path *path)
     /* All criteria are met. */
     result |= 1;
 crit_check_ret:
-    /* ad_metadata_cached() closes adp internally for non-fork path.
+    /* The ad_metadata_cached function closes adp internally for non-fork path.
      * Fork-owned adoubles no longer closed here — managed by of_closefork(). */
     return result;
 }

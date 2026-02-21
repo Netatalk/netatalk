@@ -30,6 +30,7 @@ typedef struct afp_child {
     uint32_t  afpch_idlen;     /*!< clientid len (from the Mac client) */
     char     *afpch_clientid;  /*!< clientid (from the Mac client) */
     int       afpch_ipc_fd;    /*!< socket for IPC bw afpd parent and childs */
+    int       afpch_hint_fd;   /*!< pipe write/parent end for sending cache hints to child */
     char     *afpch_hostname;  /*!< hostname of the server that the child is connected to */
     int16_t   afpch_state;     /*!< state of AFP session (eg active, sleeping, disconnected) */
     char     *afpch_volumes;   /*!< mounted volumes */
@@ -48,7 +49,8 @@ typedef struct {
 
 /* server_child.c */
 extern server_child_t *server_child_alloc(int);
-extern afp_child_t *server_child_add(server_child_t *, pid_t, int ipc_fd);
+extern afp_child_t *server_child_add(server_child_t *, pid_t, int ipc_fd,
+                                     int hint_fd);
 extern int  server_child_remove(server_child_t *, pid_t);
 extern void server_child_free(server_child_t *);
 extern afp_child_t *server_child_resolve(server_child_t *childs, id_t pid);

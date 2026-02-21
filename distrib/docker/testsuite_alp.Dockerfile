@@ -92,7 +92,7 @@ RUN meson setup build \
     -Dwith-quota=false \
     -Dwith-spotlight=true \
     -Dwith-tcp-wrappers=false \
-    -Dwith-tests=false \
+    -Dwith-tests=true \
     -Dwith-testsuite=true \
 &&  meson compile -C build
 

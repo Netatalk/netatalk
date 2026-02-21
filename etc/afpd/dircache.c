@@ -30,7 +30,9 @@
 #include <atalk/directory.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
+#include <atalk/server_ipc.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
@@ -143,6 +145,15 @@ static struct dircache_stat {
     /*!< entries that failed when used */
     unsigned long long invalid_on_use;
 } dircache_stat;
+
+/* Cache hint processing statistics — logged by log_dircache_stat() */
+static struct {
+    unsigned long long hints_received;   /* Total hints read from pipe */
+    unsigned long long
+    hints_acted_on;   /* Hints that matched a local cache entry */
+    unsigned long long
+    hints_no_match;   /* Hints for entries not in local cache (zero cost) */
+} cache_hint_stat;
 
 /********************************************************
  * ARC (Adaptive Replacement Cache) Implementation
@@ -1688,7 +1699,7 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
     /* Defensive check: If curdir is NULL, dir_remove failed to recover */
     if (!curdir) {
         curdir = vol->v_root ? vol->v_root : &rootParent;
-        LOG(log_error, logtype_afpd,
+        LOG(log_debug, logtype_afpd,
             "dircache_remove_children: DEFENSIVE: curdir is NULL (was did:%u), fallback to %s",
             ntohl(saved_curdir_did), vol->v_root ? "volume root" : "rootParent");
         recovery_status = -1;
@@ -1700,7 +1711,7 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
 
     if (remove_count) {
         const char *status = recovery_status ? " (curdir recovery failed)" : "";
-        LOG(log_info, logtype_afpd,
+        LOG(log_debug, logtype_afpd,
             "dircache_remove_children: removed %d dircache entries of \"%s\"%s",
             remove_count, cfrombstr(dir->d_fullpath), status);
     } else {
@@ -1994,25 +2005,28 @@ void log_dircache_stat(void)
             dircache_validation_freq);
         /* ARC-specific details: ghost hits breakdown and learning metrics */
         LOG(log_info, logtype_afpd,
-            "ARC ghost performance: ghost_hits: %llu (%.1f%%), "
+            "ARC ghost performance: (user: %s) ghost_hits: %llu (%.1f%%), "
             "ghost_hits(B1=%llu, B2=%llu), learning_benefit: (%.1f%%)",
+            username,
             dircache_stat.ghost_hits, ghost_hit_ratio,
             arc_cache.stats.ghost_hits_b1,
             arc_cache.stats.ghost_hits_b2,
             ghost_hit_ratio);  /* Learning benefit (wouldn't have been cached in LRU) */
         /* ARC table state - current snapshot of all four lists */
         LOG(log_info, logtype_afpd,
-            "ARC table state: T1=%zu (recent/cached), T2=%zu (frequent/cached), "
+            "ARC table state: (user: %s) T1=%zu (recent/cached), T2=%zu (frequent/cached), "
             "B1=%zu (recent/ghost), B2=%zu (frequent/ghost), "
             "total_cached=%zu/%zu, total_ghosts=%zu, freq_bias: (%.1f%%)",
+            username,
             arc_cache.t1_size, arc_cache.t2_size,
             arc_cache.b1_size, arc_cache.b2_size,
             total_cached, arc_cache.c, total_ghosts,
             freq_bias);
         /* ARC adaptation parameters - shows how cache is tuning itself */
         LOG(log_info, logtype_afpd,
-            "ARC adaptation: p=%zu/%zu (%.1f%% target for T1), "
+            "ARC adaptation: (user: %s) p=%zu/%zu (%.1f%% target for T1), "
             "p_range=[%zu,%zu], adaptations=%llu (increases=%llu, decreases=%llu)",
+            username,
             arc_cache.p, arc_cache.c,
             (arc_cache.c > 0) ? ((double)arc_cache.p / arc_cache.c * 100.0) : 0.0,
             arc_cache.stats.p_min, arc_cache.stats.p_max,
@@ -2021,8 +2035,9 @@ void log_dircache_stat(void)
             arc_cache.stats.p_decreases);
         /* ARC operations breakdown - detailed operation counters */
         LOG(log_info, logtype_afpd,
-            "ARC operations: cache_hits(T1=%llu, T2=%llu), "
+            "ARC operations: (user: %s) cache_hits(T1=%llu, T2=%llu), "
             "promotions(T1→T2=%llu), evictions(T1=%llu, T2=%llu)",
+            username,
             arc_cache.stats.hits_t1,
             arc_cache.stats.hits_t2,
             arc_cache.stats.promotions_t1_to_t2,
@@ -2057,6 +2072,14 @@ void log_dircache_stat(void)
             dircache_validation_freq);
     }
 
+    /* Cross-process dircache hint statistics */
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (hints): (user: %s) sent: %llu, received: %llu, acted_on: %llu, no_match: %llu",
+        username,
+        ipc_get_hints_sent(),
+        cache_hint_stat.hints_received,
+        cache_hint_stat.hints_acted_on,
+        cache_hint_stat.hints_no_match);
     /* AD cache statistics (Tier 1) — from ad_cache.c extern counters */
     double ad_hit_ratio = 0.0;
     unsigned long long ad_total = ad_cache_hits + ad_cache_misses + ad_cache_no_ad;
@@ -2067,8 +2090,8 @@ void log_dircache_stat(void)
     }
 
     LOG(log_info, logtype_afpd,
-        "dircache statistics (AD): hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
-        ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
+        "dircache statistics (AD): (user: %s) hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
+        username, ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
         ad_hit_ratio);
 }
 
@@ -2079,7 +2102,7 @@ void dircache_dump(void)
 {
     char tmpnam[MAXPATHLEN + 1];
     FILE *dump;
-    qnode_t *n = index_queue->next;
+    qnode_t *n = NULL;
     hnode_t *hn;
     hscan_t hs;
     const struct dir *dir;
@@ -2099,7 +2122,8 @@ void dircache_dump(void)
         fprintf(dump, "Directory Cache Mode: ARC (Adaptive Replacement Cache)\n");
         fprintf(dump, "Cache size (c): %zu\n", arc_cache.c);
         fprintf(dump, "Target T1 size (p): %zu (%.1f%%)\n",
-                arc_cache.p, ((double)arc_cache.p / (double)arc_cache.c) * 100.0);
+                arc_cache.p,
+                arc_cache.c > 0 ? ((double)arc_cache.p / (double)arc_cache.c) * 100.0 : 0.0);
         fprintf(dump, "T1: %zu, T2: %zu, B1: %zu, B2: %zu\n",
                 arc_cache.t1_size, arc_cache.t2_size,
                 arc_cache.b1_size, arc_cache.b2_size);
@@ -2121,6 +2145,16 @@ void dircache_dump(void)
 
     while ((hn = hash_scan_next(&hs))) {
         dir = hnode_get(hn);
+        const char *ad_cache_state;
+
+        if (dir->dcache_rlen >= 0) {
+            ad_cache_state = "cached";
+        } else if (dir->dcache_rlen == (off_t) -1) {
+            ad_cache_state = "unloaded";
+        } else {
+            ad_cache_state = "absent";
+        }
+
         fprintf(dump, "%05u: %3u  %6u  %6u %s  rlen:%-6lld ad:%-8s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
@@ -2128,8 +2162,7 @@ void dircache_dump(void)
                 ntohl(dir->d_did),
                 dir->d_flags & DIRF_ISFILE ? "f" : "d",
                 (long long)dir->dcache_rlen,
-                dir->dcache_rlen >= 0 ? "cached" :
-                (dir->dcache_rlen == (off_t) -1 ? "unloaded" : "absent"),
+                ad_cache_state,
                 cfrombstr(dir->d_fullpath));
     }
 
@@ -2235,12 +2268,10 @@ void dircache_dump(void)
         fprintf(dump, "       VID     DID    CNID STAT PATH\n");
         fprintf(dump,
                 "====================================================================\n");
+        n = index_queue ? index_queue->next : NULL;
+        i = 1;
 
-        for (i = 1; i <= queue_count; i++) {
-            if (n == index_queue) {
-                break;
-            }
-
+        while (n != NULL && n != index_queue && i <= (int)queue_count) {
             dir = (struct dir *)n->data;
             fprintf(dump, "%05u: %3u  %6u  %6u %s    %s\n",
                     i,
@@ -2250,6 +2281,7 @@ void dircache_dump(void)
                     dir->d_flags & DIRF_ISFILE ? "f" : "d",
                     cfrombstr(dir->d_fullpath));
             n = n->next;
+            i++;
         }
     }
 
@@ -2297,6 +2329,190 @@ void dircache_reset_validation_counter(void)
     /* Thread-safe reset using compiler builtins */
     __sync_lock_test_and_set(&validation_counter, 0);
     LOG(log_debug, logtype_afpd, "dircache: validation counter reset");
+}
+
+/***********************************************************************************
+ * Cross-process dircache hint receiver (parent→child via dedicated hint pipe)
+ ***********************************************************************************/
+
+/*!
+ * @brief Read one cache hint from the dedicated hint pipe (non-blocking)
+ *
+ * Reads from obj->hint_fd — the dedicated pipe for parent→child hints.
+ * POSIX pipe atomicity: write() of ≤ PIPE_BUF bytes is atomic, so each
+ * read() returns either a complete message or nothing.
+ *
+ * @param[in]  obj   AFPObj with hint_fd (pipe read end)
+ * @param[out] hint  Populated on success
+ * @returns    1 if hint read, 0 if no data available, -1 on error
+ */
+static int ipc_recv_cache_hint(AFPObj *obj, struct ipc_cache_hint_payload *hint)
+{
+    char buf[IPC_MAXMSGSIZE];
+    ssize_t ret;
+
+    if (obj->hint_fd < 0) {
+        return -1;
+    }
+
+    /* Read complete hint message from pipe — atomic delivery guaranteed */
+    ret = read(obj->hint_fd, buf,
+               IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload));
+
+    if (ret == 0) {
+        /* EOF — parent process crashed (pipe write end closed).
+         * Close and disable to prevent POLLHUP spin loop. */
+        LOG(log_error, logtype_afpd,
+            "ipc_recv_cache_hint: hint pipe closed, parent lost, service restart required");
+        close(obj->hint_fd);
+        obj->hint_fd = -1;
+        return -1;
+    }
+
+    if (ret < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 0;    /* No data available */
+        }
+
+        return -1;     /* Unexpected error */
+    }
+
+    if (ret != IPC_HEADERLEN + (ssize_t)sizeof(struct ipc_cache_hint_payload)) {
+        /* Should never happen for atomic pipe writes, but defensive */
+        LOG(log_warning, logtype_afpd,
+            "ipc_recv_cache_hint: unexpected read size %zd (expected %zu)",
+            ret, IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload));
+        cache_hint_stat.hints_no_match++;
+        return 0;
+    }
+
+    /* Extract payload from after the IPC header */
+    memcpy(hint, buf + IPC_HEADERLEN, sizeof(*hint));
+    return 1;
+}
+
+/*!
+ * @brief Process cross-process dircache invalidation hints
+ *
+ * Called from the DSI command loop after each AFP command completes.
+ * Uses direct hash_lookup() on the CNID hash table to support BOTH
+ * files (DIRF_ISFILE) and directories — dircache_search_by_did() is
+ * unsuitable because it actively removes file entries.
+ *
+ * Dispatches on hint type:
+ * - CACHE_HINT_REFRESH: ostat() + dir_modify() — stat refresh, AD invalidation
+ * - CACHE_HINT_DELETE: direct dir_remove() — no ostat needed
+ * - CACHE_HINT_DELETE_CHILDREN: dircache_remove_children() + parent cleanup
+ */
+void process_cache_hints(AFPObj *obj)
+{
+    struct ipc_cache_hint_payload hint = {0};
+    struct stat st;
+    int hints_processed = 0;
+#define MAX_HINTS_PER_CYCLE 32
+
+    while (hints_processed < MAX_HINTS_PER_CYCLE &&
+            ipc_recv_cache_hint(obj, &hint) > 0) {
+        cache_hint_stat.hints_received++;
+        /* Resolve volume from vid (already network byte order).
+         * Cannot be const — passed to dir_remove/dir_modify which take non-const vol. */
+        struct vol *vol = getvolbyvid(hint.vid); // NOSONAR
+
+        if (!vol) {
+            cache_hint_stat.hints_no_match++;
+            continue;
+        }
+
+        /* Validate CNID */
+        if (hint.cnid == CNID_INVALID || ntohl(hint.cnid) < CNID_START) {
+            cache_hint_stat.hints_no_match++;
+            continue;
+        }
+
+        /* Direct hash lookup to find entry in our local dircache.
+         * Uses hash_lookup() instead of dircache_search_by_did() because
+         * the latter removes file entries (DIRF_ISFILE check). */
+        struct dir key = { .d_vid = vol->v_vid, .d_did = hint.cnid };
+        hnode_t *hn = hash_lookup(dircache, &key);
+
+        if (!hn) {
+            cache_hint_stat.hints_no_match++;
+            continue;  /* Not in our cache — nothing to invalidate */
+        }
+
+        struct dir *entry = hnode_get(hn);
+
+        cache_hint_stat.hints_acted_on++;
+        /* Save fields for logging BEFORE dispatch — dir_remove() may free entry */
+        cnid_t log_cnid = hint.cnid;
+        int log_is_ghost = (entry->d_flags & DIRF_ARC_GHOST) ? 1 : 0;
+
+        switch (hint.event) {
+        case CACHE_HINT_REFRESH:
+
+            /* ostat + dir_modify — unified handling for files and directories.
+             * DCMOD_AD_INV unconditionally invalidates AD cache because the hint
+             * is an authoritative signal metadata changed. ctime has second
+             * granularity and misses sub-second cross-client changes.
+             * DCMOD_NO_PROMOTE prevents ARC promotion from cross-process hints. */
+            if (ostat(cfrombstr(entry->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+                /* Entry gone or renamed — old path invalid, remove from cache */
+                dir_remove(vol, entry, 0);
+            } else {
+                dir_modify(vol, entry, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_AD_INV | DCMOD_NO_PROMOTE,
+                    .st = &st
+                });
+            }
+
+            break;
+
+        case CACHE_HINT_DELETE:
+            /* Direct removal — no ostat needed for deleted entries */
+            dir_remove(vol, entry, 0);
+            break;
+
+        case CACHE_HINT_DELETE_CHILDREN:
+
+            /* Remove all children first, then handle parent entry */
+            if (!(entry->d_flags & DIRF_ISFILE)) {
+                dircache_remove_children(vol, entry);
+            }
+
+            /* Then remove or refresh the parent itself */
+            if (ostat(cfrombstr(entry->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+                dir_remove(vol, entry, 0);
+            } else {
+                dir_modify(vol, entry, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_NO_PROMOTE,
+                    .st = &st
+                });
+            }
+
+            break;
+
+        default:
+            LOG(log_warning, logtype_afpd,
+                "process_cache_hints: unknown hint event %u for did:%u",
+                hint.event, ntohl(hint.cnid));
+            cache_hint_stat.hints_no_match++;
+            break;
+        }
+
+        LOG(log_debug, logtype_afpd,
+            "process_cache_hints: %s did:%u%s from sibling",
+            hint.event == CACHE_HINT_REFRESH ? "refresh" :
+            hint.event == CACHE_HINT_DELETE ? "delete" :
+            hint.event == CACHE_HINT_DELETE_CHILDREN ? "delete-children" : "unknown",
+            ntohl(log_cnid),
+            log_is_ghost ? " (ghost)" : "");
+        hints_processed++;
+    }
+
+    if (hints_processed > 0) {
+        LOG(log_debug, logtype_afpd,
+            "process_cache_hints: processed %d hints this cycle", hints_processed);
+    }
 }
 
 /*!

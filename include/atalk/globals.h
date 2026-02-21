@@ -178,6 +178,7 @@ typedef struct AFPObj {
     uid_t uid;  /*!< client login user id */
     uid_t euid; /*!< client effective process user id */
     int ipc_fd; /*!< anonymous PF_UNIX socket for IPC with afpd parent */
+    int hint_fd; /*!< pipe read/child end for receiving cache hints from parent */
     gid_t *groups;
     int ngroups;
     int afp_version;

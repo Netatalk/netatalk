@@ -52,7 +52,7 @@ unsigned long long ad_cache_no_ad;
  */
 void ad_store_to_cache(struct adouble *adp, struct dir *cached)
 {
-    char *ade;
+    const char *ade;
 
     if ((ade = ad_entry(adp, ADEID_FINDERI)) != NULL) {
         memcpy(cached->dcache_finderinfo, ade, ADEDLEN_FINDERI);

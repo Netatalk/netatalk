@@ -33,6 +33,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
@@ -512,7 +513,7 @@ static struct dir *dirlookup_internal_retry(const struct vol *vol,
         bstring *fullpath_ptr,
         char **upath_ptr)
 {
-    LOG(log_info, logtype_afpd,
+    LOG(log_debug, logtype_afpd,
         "dirlookup_internal(did:%u): stat failed, cleaning stale entries, retrying via CNID",
         ntohl(did));
     /* Clean cached stale target if present */
@@ -1261,9 +1262,14 @@ int dir_modify(const struct vol *vol, struct dir *dir,
         memset(dir->dcache_afpfilei, 0, 4);
     }
 
-    /* Always promote in ARC — entry is actively being used.
-     * LRU mode: no-op (FIFO by design, R7 D-010). */
-    dircache_promote(dir);
+    /* Promote in ARC — entry is actively being used.
+     * DCMOD_NO_PROMOTE skips promotion for cross-process hints so that
+     * User1's write activity does not promote entries in User2's cache.
+     * LRU mode: no-op (LRU is FIFO by design). */
+    if (!(args->flags & DCMOD_NO_PROMOTE)) {
+        dircache_promote(dir);
+    }
+
     LOG(log_debug, logtype_afpd,
         "dir_modify: OK did:%u -> '%s'",
         ntohl(dir->d_did),
@@ -1813,14 +1819,14 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
             }
 
             /* Search the cache */
-            int unamelen = strlen(ret.u_name);
+            size_t unamelen = strnlen(ret.u_name, CNID_MAX_PATH_LEN);
             /* 14 */
             cdir = dircache_search_by_name(vol, dir, ret.u_name, unamelen);
 
             if (cdir == NULL) {
                 /* Not in cache, create one */
                 /* 15 */
-                cdir = dir_add(vol, dir, &ret, unamelen);
+                cdir = dir_add(vol, dir, &ret, (int)unamelen);
 
                 if (cdir == NULL) {
                     LOG(log_error, logtype_afpd,
@@ -2109,7 +2115,7 @@ int getdirparams(const AFPObj *obj,
 
         if (!ad_metadata_cached(upath, ADFLAGS_DIR, &ad, vol, dir, false, NULL)) {
             ad_available = 1;
-            /* ad_metadata_cached() handles ad_close() internally. */
+            /* The ad_metadata_cached function handles ad_close() internally. */
         }
     }
 
@@ -2734,6 +2740,11 @@ setdirparam_done:
             }
         }
         ad_close(&ad, ADFLAGS_HF);
+
+        /* Send hint to afpd siblings — dir AD metadata changed (FinderInfo, dates) */
+        if (dir && dir->d_did != CNID_INVALID) {
+            ipc_send_cache_hint(AFPobj, vol->v_vid, dir->d_did, CACHE_HINT_REFRESH);
+        }
     }
 
     if (err == AFP_OK) {
@@ -2779,6 +2790,11 @@ setdirparam_done:
                     fullpathname(upath), strerror(errno));
                 err = set_dir_errors(path, "setdirunixmode", errno);
             }
+        }
+
+        /* Send hint to afpd siblings — dir permissions changed (chmod/chown) */
+        if ((set_maccess || set_upriv) && dir && dir->d_did != CNID_INVALID) {
+            ipc_send_cache_hint(AFPobj, vol->v_vid, dir->d_did, CACHE_HINT_REFRESH);
         }
 
         /* Update dircache stat fields after permission changes (mode/uid/gid/ctime) */
@@ -3012,6 +3028,8 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     /* Eagerly populate AD cache for newly created directory */
     ad_store_to_cache(&ad, dir);
     ad_close(&ad, ADFLAGS_HF);
+    /* Send hint to afpd siblings — parent dir ctime changed due to new dir creation */
+    ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     memcpy(rbuf, &dir->d_did, sizeof(uint32_t));
     *rbuflen = sizeof(uint32_t);
     setvoltime(obj, vol);
@@ -3106,7 +3124,7 @@ int deletecurdir(struct vol *vol)
     /* we never want to create a resource fork here, we are going to delete it */
     if (ad_metadata_cached(".", ADFLAGS_DIR, &ad, vol, fdir, true, NULL) == 0) {
         ad_getattr(&ad, &ashort);
-        /* ad_metadata_cached() handles ad_close() internally */
+        /* The ad_metadata_cached function handles ad_close() internally */
 
         if (!(vol->v_ignattr & ATTRBIT_NODELETE)
                 && (ashort & htons(ATTRBIT_NODELETE))) {
@@ -3157,12 +3175,16 @@ int deletecurdir(struct vol *vol)
         dircache_remove_children(vol, fdir);
     }
 
+    /* Save DID before dir_remove() frees fdir */
+    cnid_t fdir_did = fdir->d_did;
     /* Delete the directory's CNID */
     AFP_CNID_START("cnid_delete");
-    cnid_delete(vol->v_cdb, fdir->d_did);
+    cnid_delete(vol->v_cdb, fdir_did);
     AFP_CNID_DONE();
     /* Remove from dircache */
     dir_remove(vol, fdir, 0);  /* User-initiated delete, not invalid on use */
+    /* Send hint to afpd siblings — dir deleted, purge children in sibling caches */
+    ipc_send_cache_hint(AFPobj, vol->v_vid, fdir_did, CACHE_HINT_DELETE_CHILDREN);
 delete_done:
     return err;
 }

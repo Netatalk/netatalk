@@ -45,6 +45,7 @@
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
@@ -2023,6 +2024,18 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     });
                     target_entry->d_rights_cache = 0xffffffff;
                 }
+
+                /* Send hint to afpd siblings — ACL/permissions changed */
+                cnid_t hint_cnid = target_entry ? target_entry->d_did : CNID_INVALID;
+
+                if (hint_cnid == CNID_INVALID && s_path->u_name && curdir) {
+                    size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                    hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+                }
+
+                if (hint_cnid != CNID_INVALID) {
+                    ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
+                }
             }
         }
     }
@@ -2059,7 +2072,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
                 if (strcmp(s_path->u_name, ".") == 0) {
                     target_entry = curdir;
-                } else if (s_path->u_name != NULL) {
+                } else {
                     size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
                     target_entry = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
                 }
@@ -2071,6 +2084,18 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     });
                     /* Invalidate d_rights_cache to force recalculation */
                     target_entry->d_rights_cache = 0xffffffff;
+                }
+
+                /* Send hint to afpd siblings — ACL/permissions changed */
+                cnid_t hint_cnid2 = target_entry ? target_entry->d_did : CNID_INVALID;
+
+                if (hint_cnid2 == CNID_INVALID && s_path->u_name && curdir) {
+                    size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                    hint_cnid2 = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+                }
+
+                if (hint_cnid2 != CNID_INVALID) {
+                    ipc_send_cache_hint(obj, vol->v_vid, hint_cnid2, CACHE_HINT_REFRESH);
                 }
             }
         } else {
