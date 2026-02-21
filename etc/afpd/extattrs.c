@@ -28,6 +28,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/util.h>
 #include <atalk/vfs.h>
 
@@ -150,8 +151,9 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         /* Fork-owned adouble — use directly, skip cache.
          * Opportunistically populate cache if not yet loaded. */
         ad_available = 1;
+        size_t uname_len = strnlen(uname, CNID_MAX_PATH_LEN);
         struct dir *cached = dircache_search_by_name(vol, curdir,
-                             uname, strlen(uname));
+                             uname, uname_len);
 
         /* If cache AD is unset, store fork's live adouble */
         if (cached && cached->dcache_rlen < 0) {
@@ -160,7 +162,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     } else {
         /* No open fork — use ad_metadata_cached() (non-strict) */
         struct dir *cached = path_isadir(s_path) ? s_path->d_dir
-                             : dircache_search_by_name(vol, curdir, uname, strlen(uname));
+                             : dircache_search_by_name(vol, curdir, uname, strnlen(uname,
+                                 CNID_MAX_PATH_LEN));
 
         if (ad_metadata_cached(uname, adflags, adp, vol, cached, false, NULL) != 0) {
             switch (errno) {
@@ -180,7 +183,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
         } else {
             ad_available = 1;
-            /* ad_metadata_cached() handles ad_close() internally */
+            /* The ad_metadata_cached function handles ad_close() internally */
         }
     }
 
@@ -364,7 +367,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return ret;
 }
 
-int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                    char *rbuf _U_, size_t *rbuflen)
 {
     int                 oflag = 0, ret, fd = -1;
@@ -474,30 +477,39 @@ int afp_setextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     if (ret == AFP_OK) {
         /* EA set changes ctime — refresh stat cache */
         struct stat post_st;
+        struct dir *cached = NULL;
 
-        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0) {
-            struct dir *cached = NULL;
+        if (path_isadir(s_path)) {
+            cached = curdir;
+        } else if (s_path->u_name != NULL) {
+            size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+            cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
+        }
 
-            if (path_isadir(s_path)) {
-                cached = curdir;
-            } else if (s_path->u_name != NULL) {
-                size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-                cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
-            }
+        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0 && cached) {
+            dir_modify(vol, cached, &(struct dir_modify_args) {
+                .flags = DCMOD_STAT,
+                .st = &post_st,
+            });
+        }
 
-            if (cached) {
-                dir_modify(vol, cached, &(struct dir_modify_args) {
-                    .flags = DCMOD_STAT,
-                    .st = &post_st,
-                });
-            }
+        /* Send hint to afpd siblings — EA write changed ctime */
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && s_path->u_name) {
+            size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
         }
     }
 
     return ret;
 }
 
-int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
+int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                    char *rbuf _U_, size_t *rbuflen)
 {
     int                 oflag = 0, ret, fd = -1;
@@ -582,23 +594,32 @@ int afp_remextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     if (ret == AFP_OK) {
         /* EA remove changes ctime — refresh stat cache */
         struct stat post_st;
+        struct dir *cached = NULL;
 
-        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0) {
-            struct dir *cached = NULL;
+        if (path_isadir(s_path)) {
+            cached = curdir;
+        } else if (s_path->u_name != NULL) {
+            size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+            cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
+        }
 
-            if (path_isadir(s_path)) {
-                cached = curdir;
-            } else if (s_path->u_name != NULL) {
-                size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-                cached = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
-            }
+        if (ostat(s_path->u_name, &post_st, vol_syml_opt(vol)) == 0 && cached) {
+            dir_modify(vol, cached, &(struct dir_modify_args) {
+                .flags = DCMOD_STAT,
+                .st = &post_st,
+            });
+        }
 
-            if (cached) {
-                dir_modify(vol, cached, &(struct dir_modify_args) {
-                    .flags = DCMOD_STAT,
-                    .st = &post_st,
-                });
-            }
+        /* Send hint to afpd siblings — EA removal changed ctime */
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && s_path->u_name) {
+            size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
         }
     }
 

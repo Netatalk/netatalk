@@ -104,7 +104,7 @@ RUN meson setup build \
     -Dwith-spooldir=/var/spool/netatalk \
     -Dwith-spotlight=true \
     -Dwith-tcp-wrappers=false \
-    -Dwith-tests=false \
+    -Dwith-tests=true \
     -Dwith-testsuite=true \
 &&  meson compile -C build
 

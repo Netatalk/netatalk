@@ -24,6 +24,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/vfs.h>
@@ -322,13 +323,14 @@ static int moveandrename(const AFPObj *obj,
     {
         /* Pre-rename: read metadata via cache (strict=true for write/change path) */
         struct dir *src_cached = isdir ? sdir
-                                 : dircache_search_by_name(vol, sdir, oldunixname, strlen(oldunixname));
+                                 : dircache_search_by_name(vol, sdir, oldunixname, strnlen(oldunixname,
+                                     CNID_MAX_PATH_LEN));
 
         if (!ad_metadata_cached(oldunixname, adflags, adp, vol, src_cached, true,
                                 NULL)) {
             uint16_t bshort;
             ad_getattr(adp, &bshort);
-            /* ad_metadata_cached() handles ad_close() internally */
+            /* The ad_metadata_cached function handles ad_close() internally */
 
             if (!(vol->v_ignattr & ATTRBIT_NORENAME)
                     && (bshort & htons(ATTRBIT_NORENAME))) {
@@ -445,7 +447,7 @@ static int moveandrename(const AFPObj *obj,
 
     if (!isdir) {
         cachedfile = dircache_search_by_name(vol, sdir, oldunixname,
-                                             strlen(oldunixname));
+                                             strnlen(oldunixname, CNID_MAX_PATH_LEN));
     }
 
     /* Perform the rename */
@@ -473,6 +475,10 @@ static int moveandrename(const AFPObj *obj,
             goto exit;
         }
 
+        /* Save old parent DID for hint (before dir_modify changes sdir->d_pdid).
+         * For dirs: sdir->d_pdid is the old parent. For files: sdir->d_did is the parent. */
+        cnid_t old_parent_did = isdir ? sdir->d_pdid : sdir->d_did;
+
         /* Update cache entry in-place after successful rename.
          * Separate file/directory handling because sdir has different semantics:
          *   Directories: sdir IS the directory being renamed (its own cache entry)
@@ -495,18 +501,17 @@ static int moveandrename(const AFPObj *obj,
         }
 
         /* File rename: update cache entry if pre-acquired */
-        if (!isdir && cachedfile) {
-            if (dir_modify(vol, cachedfile, &(struct dir_modify_args) {
-            .flags = DCMOD_PATH | DCMOD_STAT,
-            .new_pdid = curdir->d_did,
-            .new_mname = newname,
-            .new_uname = upath,
-            .new_pdir_path = curdir->d_fullpath,
-            .st = st,
-        }) != 0) {
-                /* Refresh failed, purged — NULL cachedfile */
-                cachedfile = NULL;
-            }
+        if (!isdir && cachedfile &&
+        dir_modify(vol, cachedfile, &(struct dir_modify_args) {
+        .flags = DCMOD_PATH | DCMOD_STAT,
+        .new_pdid = curdir->d_did,
+        .new_mname = newname,
+        .new_uname = upath,
+        .new_pdir_path = curdir->d_fullpath,
+        .st = st,
+    }) != 0) {
+            /* Refresh failed, purged — NULL cachedfile */
+            cachedfile = NULL;
         }
 
         /* Send FCE event */
@@ -539,6 +544,23 @@ static int moveandrename(const AFPObj *obj,
         AFP_CNID_START("cnid_update");
         cnid_update(vol->v_cdb, id, st, curdir->d_did, upath, upath_len);
         AFP_CNID_DONE();
+
+        /* Send hints to afpd siblings — rename/move completed */
+        if (isdir && sdir) {
+            /* Dir rename: purge children in sibling caches (stale d_fullpath) */
+            ipc_send_cache_hint(obj, vol->v_vid, sdir->d_did, CACHE_HINT_DELETE_CHILDREN);
+        } else if (!isdir && id != CNID_INVALID) {
+            /* File rename: sibling's ostat on old path → ENOENT → removed */
+            ipc_send_cache_hint(obj, vol->v_vid, id, CACHE_HINT_REFRESH);
+        }
+
+        /* Old parent ctime changed */
+        ipc_send_cache_hint(obj, vol->v_vid, old_parent_did, CACHE_HINT_REFRESH);
+
+        /* New parent ctime changed (skip if same dir rename) */
+        if (curdir->d_did != old_parent_did) {
+            ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
+        }
     }
 
 exit:
@@ -855,6 +877,13 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 }
             }
 
+            /* Send hints to afpd siblings — dir deleted */
+            if (delcnid != CNID_INVALID) {
+                ipc_send_cache_hint(obj, vol->v_vid, delcnid, CACHE_HINT_DELETE_CHILDREN);
+            }
+
+            /* Parent dir ctime changed */
+            ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
             fce_register(obj, FCE_DIR_DELETE, fullpathname(upath), NULL);
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
@@ -904,9 +933,28 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 return AFPERR_NOOBJ;
             }
 
+            /* Pre-resolve CNID BEFORE deletefile() — it calls cnid_delete()
+             * which removes the CNID from the database */
+            cnid_t file_cnid = CNID_INVALID;
+
+            if (cachedfile) {
+                file_cnid = cachedfile->d_did;
+            } else if (upath) {
+                size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+                file_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+            }
+
             /* deletefile() also handles CNID and dircache cleanup */
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
                 fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
+
+                /* Send hints to afpd siblings — file deleted */
+                if (file_cnid != CNID_INVALID) {
+                    ipc_send_cache_hint(obj, vol->v_vid, file_cnid, CACHE_HINT_DELETE);
+                }
+
+                /* Parent dir ctime changed */
+                ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
 
                 if (vol->v_tm_used < s_path->st.st_size) {
                     vol->v_tm_used = 0;

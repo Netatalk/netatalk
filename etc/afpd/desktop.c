@@ -39,6 +39,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 
@@ -970,7 +971,8 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
         memcpy(ad_entry(adp, ADEID_COMMENT), ibuf, clen);
         /* Acquire cache pointer before flush changes ctime */
         struct dir *cached = isadir ? path->d_dir
-                             : dircache_search_by_name(vol, curdir, upath, strlen(upath));
+                             : dircache_search_by_name(vol, curdir, upath, strnlen(upath,
+                                 CNID_MAX_PATH_LEN));
         ad_flush(adp);
 
         /* Refresh cache after comment write */
@@ -984,6 +986,18 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
                     .adp = adp,
                 });
             }
+        }
+
+        /* Send hint to afpd siblings — AD comment write changed ctime */
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && upath) {
+            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
         }
     }
 
@@ -1054,7 +1068,8 @@ static int ad_getcomment(struct vol *vol, struct path *path, char *rbuf,
      * but we can populate Tier 1 fields while we have the AD open) */
     {
         struct dir *cached = isadir ? path->d_dir
-                             : dircache_search_by_name(vol, curdir, upath, strlen(upath));
+                             : dircache_search_by_name(vol, curdir, upath, strnlen(upath,
+                                 CNID_MAX_PATH_LEN));
 
         /* If cache AD is unset, store fork's live adouble */
         if (cached && cached->dcache_rlen < 0) {
@@ -1156,7 +1171,8 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
     if (ad_getentryoff(adp, ADEID_COMMENT)) {
         /* Acquire cache pointer before flush changes ctime */
         struct dir *cached = isadir ? path->d_dir
-                             : dircache_search_by_name(vol, curdir, upath, strlen(upath));
+                             : dircache_search_by_name(vol, curdir, upath, strnlen(upath,
+                                 CNID_MAX_PATH_LEN));
         ad_setentrylen(adp, ADEID_COMMENT, 0);
         ad_flush(adp);
 
@@ -1171,6 +1187,18 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
                     .adp = adp,
                 });
             }
+        }
+
+        /* Send hint to afpd siblings — AD comment removal changed ctime */
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && upath) {
+            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
         }
     }
 

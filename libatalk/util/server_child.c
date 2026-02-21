@@ -111,7 +111,8 @@ server_child_t *server_child_alloc(int connections)
  * @brief add a child
  * @returns pointer to struct server_child_data on success, NULL on error
  */
-afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
+afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
+                              int hint_fd)
 {
     afp_child_t *child = NULL;
     pthread_mutex_lock(&children->servch_lock);
@@ -135,6 +136,7 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd)
 
     child->afpch_pid = pid;
     child->afpch_ipc_fd = ipc_fd;
+    child->afpch_hint_fd = hint_fd;
     child->afpch_logintime = time(NULL);
     hash_child(children->servch_table, child);
     children->servch_count++;
@@ -173,6 +175,11 @@ int server_child_remove(server_child_t *children, pid_t pid)
         close(fd);
     }
 
+    /* Close dircache hint pipe write end — releases parent→child cache hint channel */
+    if (child->afpch_hint_fd >= 0) {
+        close(child->afpch_hint_fd);
+    }
+
     free(child);
     children->servch_count--;
     pthread_mutex_unlock(&children->servch_lock);
@@ -196,6 +203,11 @@ void server_child_free(server_child_t *children)
         while (child) {
             tmp = child->afpch_next;
             close(child->afpch_ipc_fd);
+
+            /* Close dircache hint pipe write end during server shutdown */
+            if (child->afpch_hint_fd >= 0) {
+                close(child->afpch_hint_fd);
+            }
 
             if (child->afpch_clientid) {
                 free(child->afpch_clientid);

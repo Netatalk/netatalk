@@ -12,6 +12,7 @@
 #endif
 
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -31,8 +32,15 @@
 #include <atalk/server_ipc.h>
 #include <atalk/util.h>
 
-#define IPC_HEADERLEN 14
-#define IPC_MAXMSGSIZE 90
+/* Build-time safety: hint message must fit within PIPE_BUF for atomic pipe delivery */
+_Static_assert(IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload) <=
+               PIPE_BUF,
+               "Cache hint message must fit within PIPE_BUF for atomic pipe delivery");
+
+/* Build-time safety: verify IPC_HEADERLEN matches actual wire format field sizes */
+_Static_assert(IPC_HEADERLEN == sizeof(uint16_t) + sizeof(pid_t) + sizeof(
+                   uid_t) + sizeof(uint32_t),
+               "IPC_HEADERLEN must match sum of wire format field sizes");
 
 typedef struct ipc_header {
     uint16_t command;
@@ -48,7 +56,8 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
                                "IPC_GETSESSION",
                                "IPC_STATE",
                                "IPC_VOLUMES",
-                               "IPC_LOGINDONE"
+                               "IPC_LOGINDONE",
+                               "IPC_CACHE_HINT"
                              };
 
 /*!
@@ -163,6 +172,86 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
+/*!
+ * @brief Relay a dircache hint from one child to all siblings
+ *
+ * Iterates ALL hash buckets in the child table (CHILD_HASHSIZE = 32).
+ * Writes to each sibling's dedicated hint pipe (afpch_hint_fd) using
+ * non-blocking write(). Hints dropped on EAGAIN (graceful degradation).
+ * Pipe writes ≤ PIPE_BUF are POSIX-guaranteed atomic — our 22-byte
+ * messages always arrive complete without framing concerns.
+ *
+ * Releases servch_lock BEFORE write loop to prevent blocking other IPC
+ * operations during relay.
+ */
+static int ipc_relay_cache_hint(struct ipc_header *ipc,
+                                server_child_t *children)
+{
+    /* Pre-build the wire message OUTSIDE lock — reduces critical section */
+    char block[IPC_MAXMSGSIZE];
+    char *p = block;
+    uint16_t cmd = IPC_CACHE_HINT;
+    uint32_t len = ipc->len;
+    memset(block, 0, IPC_MAXMSGSIZE);
+    memcpy(p, &cmd, sizeof(cmd));
+    p += sizeof(cmd);
+    memcpy(p, &ipc->child_pid, sizeof(pid_t));
+    p += sizeof(pid_t);
+    memcpy(p, &ipc->uid, sizeof(uid_t));
+    p += sizeof(uid_t);
+    memcpy(p, &len, sizeof(uint32_t));
+    p += sizeof(uint32_t);
+    memcpy(p, ipc->msg, ipc->len);
+    ssize_t total_len = IPC_HEADERLEN + ipc->len;
+    /* Snapshot sibling hint pipe fds under lock, then release before writing.
+     * Sized to configured max sessions for safety margin. */
+    int *child_fds = malloc(children->servch_nsessions * sizeof(int));
+
+    if (!child_fds) {
+        return 0;    /* OOM: drop hint gracefully */
+    }
+
+    int child_count = 0;
+    pthread_mutex_lock(&children->servch_lock);
+
+    /* Iterate ALL hash buckets — servch_table is a hash table, not a single list */
+    for (int i = 0; i < CHILD_HASHSIZE; i++) {
+        for (afp_child_t *child = children->servch_table[i]; child;
+                child = child->afpch_next) {
+            if (child->afpch_pid != ipc->child_pid && child->afpch_hint_fd >= 0) {
+                child_fds[child_count++] = child->afpch_hint_fd;
+            }
+        }
+    }
+
+    pthread_mutex_unlock(&children->servch_lock);  /* Release BEFORE write loop */
+    /* Write to all siblings' hint pipes WITHOUT holding lock.
+     * Pipe writes ≤ PIPE_BUF are POSIX-guaranteed atomic. */
+    LOG(log_debug, logtype_afpd,
+        "ipc_relay_cache_hint: relaying to %d siblings", child_count);
+
+    for (int i = 0; i < child_count; i++) {
+        ssize_t ret = write(child_fds[i], block, total_len);
+
+        if (ret > 0 && ret != total_len) {
+            /* Partial write should never happen for ≤ PIPE_BUF writes */
+            LOG(log_warning, logtype_afpd,
+                "ipc_relay_cache_hint: partial write (%zd of %zd)", ret, total_len);
+        } else if (ret < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            /* EBADF/EPIPE: child crashed or closed pipe — non-fatal */
+            LOG(log_debug, logtype_afpd,
+                "ipc_relay_cache_hint: write failed fd=%d: %s",
+                child_fds[i], strerror(errno));
+        }
+
+        /* EAGAIN/EWOULDBLOCK: pipe buffer full, hint silently dropped */
+    }
+
+    free(child_fds);
+    /* Always return 0 — relay failures are handled gracefully via drop */
+    return 0;
+}
+
 /***********************************************************************************
  * Public functions
  ***********************************************************************************/
@@ -232,6 +321,16 @@ int ipc_server_read(server_child_t *children, int fd)
     }
 
     ipc.msg = buf;
+
+    /* Bounds check before accessing ipc_cmd_str[] — corrupted IPC messages with
+     * command > array size would cause undefined behavior without this guard */
+    if (ipc.command >= sizeof(ipc_cmd_str) / sizeof(ipc_cmd_str[0])) {
+        LOG(log_warning, logtype_afpd,
+            "ipc_server_read: unknown command %u from pid %u",
+            ipc.command, ipc.child_pid);
+        return 0;  /* Don't destroy IPC channel for one unknown message */
+    }
+
     LOG(log_debug, logtype_afpd, "ipc_server_read(%s): pid: %u",
         ipc_cmd_str[ipc.command], ipc.child_pid);
 
@@ -289,9 +388,15 @@ int ipc_server_read(server_child_t *children, int fd)
 
         break;
 
+    case IPC_CACHE_HINT:
+        /* Relay dircache hint to all children except the source */
+        ipc_relay_cache_hint(&ipc, children);
+        break;
+
     default:
-        LOG(log_info, logtype_afpd, "ipc_read: unknown command: %d", ipc.command);
-        return -1;
+        /* Don't destroy IPC channel for unrecognized commands */
+        LOG(log_error, logtype_afpd, "ipc_read: unhandled command: %d", ipc.command);
+        return 0;
     }
 
     return 0;
@@ -327,7 +432,13 @@ int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
     memcpy(p, &len, 4);
     p += 4;
     memcpy(p, msg, len);
-    LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
+
+    /* Bounds check before accessing ipc_cmd_str[] */
+    if (command < sizeof(ipc_cmd_str) / sizeof(ipc_cmd_str[0])) {
+        LOG(log_debug, logtype_afpd, "ipc_child_write(%s)", ipc_cmd_str[command]);
+    } else {
+        LOG(log_debug, logtype_afpd, "ipc_child_write(cmd=%u)", command);
+    }
 
     if ((ret = writet(fd, block, len + IPC_HEADERLEN, 0,
                       1)) != len + IPC_HEADERLEN) {
@@ -340,4 +451,61 @@ int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
 int ipc_child_state(AFPObj *obj, uint16_t state)
 {
     return ipc_child_write(obj->ipc_fd, IPC_STATE, sizeof(uint16_t), &state);
+}
+
+/***********************************************************************************
+ * Cross-process dircache hint sender (child → parent via IPC socketpair)
+ ***********************************************************************************/
+
+/* Sender-side statistics counter — exposed via getter for log_dircache_stat() */
+static unsigned long long hints_sent = 0;
+
+unsigned long long ipc_get_hints_sent(void)
+{
+    return hints_sent;
+}
+
+/*!
+ * @brief Send a dircache invalidation hint from child to parent
+ *
+ * Called directly from AFP command handlers that modify dircache state.
+ * Independent of the external FCE system — always active when IPC is available.
+ *
+ * @param[in] obj    AFPObj with ipc_fd
+ * @param[in] vid    Volume ID (network byte order, matches vol->v_vid)
+ * @param[in] cnid   CNID of affected file/dir (network byte order)
+ * @param[in] event  Hint type: CACHE_HINT_REFRESH, CACHE_HINT_DELETE,
+ *                   or CACHE_HINT_DELETE_CHILDREN
+ * @returns 0 on success, -1 on error
+ */
+int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
+                        uint8_t event)
+{
+    if (obj->ipc_fd < 0) {
+        return 0;    /* No IPC channel */
+    }
+
+    /* Both vid and cnid are already network byte order in the codebase */
+    struct ipc_cache_hint_payload hint = {
+        .event = event,
+        .reserved = 0,
+        .vid = vid,
+        .cnid = cnid,
+    };
+    /* Uses existing ipc_child_write() which handles header construction
+     * and stamps our PID in the header for self-filtering by the relay */
+    int ret = ipc_child_write(obj->ipc_fd, IPC_CACHE_HINT,
+                              sizeof(hint), &hint);
+
+    if (ret == 0) {
+        hints_sent++;
+        LOG(log_debug, logtype_afpd,
+            "ipc_send_cache_hint: sent %s for vid:%u did:%u",
+            event == CACHE_HINT_REFRESH ? "REFRESH" :
+            event == CACHE_HINT_DELETE ? "DELETE" :
+            event == CACHE_HINT_DELETE_CHILDREN ? "DELETE_CHILDREN" : "?",
+            ntohs(vid), ntohl(cnid));
+    }
+
+    return ret;
 }
