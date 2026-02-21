@@ -50,6 +50,7 @@
 #define DCMOD_STAT   (1 << 1)  /*!< Stat cache: dcache_ctime/ino/mode/mtime/uid/gid/size */
 #define DCMOD_AD     (1 << 2)  /*!< AD cache: finderinfo/filedatesi/afpfilei/rlen (Phase 2) */
 #define DCMOD_AD_INV (1 << 3)  /*!< AD invalidate: zero AD fields, set rlen = -1 (Phase 2) */
+#define DCMOD_NO_PROMOTE (1 << 4)  /* Skip ARC promotion (cross-process hints) */
 
 /*!
  * @brief Parameters for dir_modify() selective field updates

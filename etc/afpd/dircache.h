@@ -19,6 +19,7 @@
 #include <sys/types.h>
 
 #include <atalk/directory.h>
+#include <atalk/globals.h>
 #include <atalk/volume.h>
 
 /* Dircache size bounds */
@@ -49,4 +50,5 @@ extern int        dircache_remove_children(const struct vol *vol,
 extern int        dircache_reindex_didname(const struct vol *vol,
         struct dir *dir);
 extern void       dircache_promote(struct dir *dir);
+extern void       process_cache_hints(AFPObj *obj);
 #endif /* DIRCACHE_H */

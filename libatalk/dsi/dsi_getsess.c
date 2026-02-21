@@ -38,6 +38,7 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
 {
     pid_t pid;
     int ipc_fds[2];
+    int hint_pipe[2];  /* Dedicated pipe for parent→child dircache hint delivery */
     afp_child_t *child;
 
     if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
@@ -50,10 +51,37 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         return -1;
     }
 
+    /* Create dedicated pipe for parent→child dircache hint delivery.
+     * Separate from IPC socketpair to avoid interfering with session
+     * transfer send_fd()/recv_fd() + SIGURG signaling. Pipe writes
+     * ≤ PIPE_BUF (4096) are POSIX-guaranteed atomic — our 22-byte
+     * dircache hint messages always arrive as complete messages. */
+    if (pipe(hint_pipe) < 0) {
+        LOG(log_error, logtype_dsi, "dsi_getsess: pipe: %s", strerror(errno));
+        close(ipc_fds[0]);
+        close(ipc_fds[1]);
+        return -1;
+    }
+
+    /* Set both pipe ends non-blocking to prevent parent relay from
+     * blocking on a slow/full child pipe, and child from blocking
+     * when no hints are queued */
+    if (setnonblock(hint_pipe[0], 1) != 0 || setnonblock(hint_pipe[1], 1) != 0) {
+        LOG(log_error, logtype_dsi, "dsi_getsess: hint pipe setnonblock: %s",
+            strerror(errno));
+        close(ipc_fds[0]);
+        close(ipc_fds[1]);
+        close(hint_pipe[0]);
+        close(hint_pipe[1]);
+        return -1;
+    }
+
     switch (pid = dsi->proto_open(dsi)) { /* in libatalk/dsi/dsi_tcp.c */
     case -1:
         /* if we fail, just return. it might work later */
         LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
+        close(hint_pipe[0]);
+        close(hint_pipe[1]);
         return -1;
 
     case 0: /* child. mostly handled below. */
@@ -63,10 +91,14 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         /* using SIGKILL is hokey, but the child might not have
          * re-established its signal handler for SIGTERM yet. */
         close(ipc_fds[1]);
+        /* Parent closes read end of hint pipe */
+        close(hint_pipe[0]);
 
-        if ((child = server_child_add(serv_children, pid, ipc_fds[0])) ==  NULL) {
+        if ((child = server_child_add(serv_children, pid, ipc_fds[0],
+                                      hint_pipe[1])) == NULL) {
             LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
             close(ipc_fds[0]);
+            close(hint_pipe[1]);
             dsi->header.dsi_flags = DSIFL_REPLY;
             dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
             dsi_send(dsi);
@@ -84,7 +116,11 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     dsi->AFPobj->cnx_max = serv_children->servch_nsessions;
     /* get rid of some stuff */
     dsi->AFPobj->ipc_fd = ipc_fds[1];
+    /* Child keeps read end of hint pipe */
+    dsi->AFPobj->hint_fd = hint_pipe[0];
     close(ipc_fds[0]);
+    /* Child closes write end of hint pipe */
+    close(hint_pipe[1]);
     close(dsi->serversock);
     dsi->serversock = -1;
     server_child_free(serv_children);

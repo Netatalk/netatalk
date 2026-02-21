@@ -39,6 +39,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 
@@ -985,6 +986,18 @@ static int ad_addcomment(const AFPObj *obj, struct vol *vol, struct path *path,
                 });
             }
         }
+
+        /* Send hint to afpd siblings — AD comment write changed ctime */
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && upath) {
+            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
+        }
     }
 
     ad_close(adp, ADFLAGS_HF);
@@ -1171,6 +1184,18 @@ static int ad_rmvcomment(const AFPObj *obj, struct vol *vol, struct path *path)
                     .adp = adp,
                 });
             }
+        }
+
+        /* Send hint to afpd siblings — AD comment removal changed ctime */
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && upath) {
+            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
         }
     }
 

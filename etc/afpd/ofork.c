@@ -21,6 +21,7 @@
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/server_ipc.h>
 #include <atalk/util.h>
 
 #include "ad_cache.h"
@@ -550,6 +551,20 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
                 .adp = (dflags & DCMOD_AD) ? ofork->of_ad : NULL,
             });
         }
+    }
+
+    /* Send hint to afpd siblings — data/resource fork write changed stat */
+    cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+    if (hint_cnid == CNID_INVALID && ofork->of_vol) {
+        char *upath = of_name(ofork);
+        size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+        hint_cnid = cnid_get(ofork->of_vol->v_cdb, ofork->of_did, upath, ulen);
+    }
+
+    if (hint_cnid != CNID_INVALID && ofork->of_vol) {
+        ipc_send_cache_hint(obj, ofork->of_vol->v_vid, hint_cnid,
+                            CACHE_HINT_REFRESH);
     }
 
     if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {

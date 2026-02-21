@@ -22,6 +22,7 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 
 #ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
@@ -915,6 +916,8 @@ createfile_iderr:
         return AFPERR_MISC;
     }
 
+    /* Send hint to afpd siblings — parent dir ctime changed due to new file creation */
+    ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     curdir->d_offcnt++;
     setvoltime(obj, vol);
     return retvalue;
@@ -1385,6 +1388,22 @@ setfilparam_done:
         setdirparams(vol, &Cur_Path, bitmap, (char *)&newdate);
     }
 
+    /* Send hint to afpd siblings — file metadata changed (FinderInfo, dates, attributes).
+     * Fallback to cnid_get() when object isn't in our local dircache -
+     * may still be cached by sibling processes even if we never enumerated it. */
+    if (vol) {
+        cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+        if (hint_cnid == CNID_INVALID && upath) {
+            size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+            hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
+        }
+
+        if (hint_cnid != CNID_INVALID) {
+            ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
+        }
+    }
+
     LOG(log_debug9, logtype_afpd, "end setfilparams:");
     return err;
 }
@@ -1719,6 +1738,8 @@ copy_exit:
 
     if (upath && err == AFP_OK) {
         fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+        /* Send hint to afpd siblings — dest parent dir ctime changed due to copy */
+        ipc_send_cache_hint(obj, d_vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     }
 
     ad_close(adp, ADFLAGS_DF | ADFLAGS_HF | ADFLAGS_SETSHRMD);
@@ -2841,5 +2862,8 @@ err_exchangefile:
         (void)dir_remove(vol, cached, 0);  /* Cleanup after exchange operation */
     }
 
+    /* Send hint to afpd siblings — both exchanged files need refresh */
+    ipc_send_cache_hint(obj, vol->v_vid, sid, CACHE_HINT_REFRESH);
+    ipc_send_cache_hint(obj, vol->v_vid, did, CACHE_HINT_REFRESH);
     return err;
 }
