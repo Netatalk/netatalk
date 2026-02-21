@@ -377,28 +377,36 @@ void display_dircache_statistics(void)
     }
 
     char *ad_line = find_dircache_stats_line("dircache statistics (AD)");
+    char *hints_line = find_dircache_stats_line("dircache statistics (hints)");
+    char *ghost_line = find_dircache_stats_line("ARC ghost performance");
+    char *table_line = find_dircache_stats_line("ARC table state");
+    char *adapt_line = find_dircache_stats_line("ARC adaptation");
+    char *ops_line = find_dircache_stats_line("ARC operations");
+    /* Print all found stats lines */
+    char *lines[] = { stats_line, ghost_line, table_line, adapt_line,
+                      ops_line, hints_line, ad_line
+                    };
+    int num_lines = sizeof(lines) / sizeof(lines[0]);
+    int found_any = 0;
 
-    if (stats_line || ad_line) {
-        if (stats_line) {
-            size_t len = strlen(stats_line);
-            printf("%s", stats_line);
-
-            if (len > 0 && stats_line[len - 1] != '\n') {
-                printf("\n");
-            }
-
-            free(stats_line);
+    for (int i = 0; i < num_lines; i++) {
+        if (lines[i]) {
+            found_any = 1;
         }
+    }
 
-        if (ad_line) {
-            size_t len = strlen(ad_line);
-            printf("%s", ad_line);
+    if (found_any) {
+        for (int i = 0; i < num_lines; i++) {
+            if (lines[i]) {
+                size_t len = strnlen(lines[i], LOG_BUFFER_SIZE);
+                printf("%s", lines[i]);
 
-            if (len > 0 && ad_line[len - 1] != '\n') {
-                printf("\n");
+                if (len > 0 && lines[i][len - 1] != '\n') {
+                    printf("\n");
+                }
+
+                free(lines[i]);
             }
-
-            free(ad_line);
         }
     } else {
         display_last_log_lines();

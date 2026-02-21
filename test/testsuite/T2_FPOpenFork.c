@@ -1681,7 +1681,7 @@ STATIC void test526()
 
     /* Write test data using filesystem directly */
     snprintf(temp, sizeof(temp), "%s/%s", Path, name);
-    fd = open(temp, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    fd = open(temp, O_WRONLY | O_CREAT | O_TRUNC, 0640);
 
     if (fd < 0) {
         if (!Quiet) {
@@ -1952,6 +1952,574 @@ test_exit:
     exit_test("FPOpenFork:test526: Fork lifecycle with cache interactions and permission changes");
 }
 
+/* test542: OpenFork on file in externally created nested directories
+ *
+ * This test validates the server's ability to resolve paths through
+ * directories that were created externally (not via AFP operations) and
+ * are therefore NOT in the dircache. This tests the "invalid-on-use"
+ * recovery path where the server must discover directories via cname()
+ * traversal, create dircache entries on-the-fly, and successfully open
+ * a fork on a file deep in the externally-created tree.
+ *
+ * Scenario:
+ * 1. Use mkdir -p to create 3-level nested directory tree on filesystem
+ * 2. Create a file with content as the leaf node
+ * 3. Resolve each directory through AFP (forces dircache entry creation)
+ * 4. FPOpenFork on the leaf file
+ * 5. Read data to verify fork is functional
+ * 6. Write additional data to verify write access
+ * 7. Read back written data to verify round-trip
+ * 8. Close fork and clean up via AFP
+ *
+ * Note: This test requires localhost connection since it directly
+ * creates filesystem artifacts via mkdir/open.
+ */
+STATIC void test542()
+{
+    char *dir1_name = "t532_ext1";
+    char *dir2_name = "t532_ext2";
+    char *dir3_name = "t532_ext3";
+    char *file_name = "t532_file.txt";
+    char pathbuf[MAXPATHLEN];
+    char cmdbuf[MAXPATHLEN];
+    const char *testdata = "external file test data\n";
+    int testdata_len = 24;
+    uint16_t vol = VolID;
+    uint16_t fork = 0;
+    int dir1 = 0, dir2 = 0, dir3 = 0;
+    int fd;
+    ENTER_TEST
+
+    if (Path[0] == '\0') {
+        test_skipped(T_PATH);
+        goto test_exit;
+    }
+
+    /* This test requires localhost connection for direct filesystem access */
+    if (strcmp(Server, "localhost") != 0 && strcmp(Server, "127.0.0.1") != 0) {
+        test_skipped(T_LOCALHOST);
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 1: Create nested directories externally (NOT via AFP)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 1: Create 3-level nested directory tree via mkdir -p\n");
+    }
+
+    snprintf(pathbuf, sizeof(pathbuf), "%s/%s/%s/%s",
+             Path, dir1_name, dir2_name, dir3_name);
+    snprintf(cmdbuf, sizeof(cmdbuf), "mkdir -p %s", pathbuf);
+
+    if (system(cmdbuf) != 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED mkdir -p %s\n", pathbuf);
+        }
+
+        test_nottested();
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 2: Create file with content externally
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 2: Create file with content in deepest directory\n");
+    }
+
+    snprintf(pathbuf, sizeof(pathbuf), "%s/%s/%s/%s/%s",
+             Path, dir1_name, dir2_name, dir3_name, file_name);
+    fd = open(pathbuf, O_WRONLY | O_CREAT | O_TRUNC, 0640);
+
+    if (fd < 0) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED unable to create %s: %s\n",
+                    pathbuf, strerror(errno));
+        }
+
+        test_nottested();
+        goto fin;
+    }
+
+    if (write(fd, testdata, testdata_len) != testdata_len) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED unable to write to %s: %s\n",
+                    pathbuf, strerror(errno));
+        }
+
+        close(fd);
+        test_nottested();
+        goto fin;
+    }
+
+    close(fd);
+    /* Ensure permissions allow AFP access */
+    snprintf(cmdbuf, sizeof(cmdbuf), "chmod -R 0777 %s/%s",
+             Path, dir1_name);
+    system(cmdbuf);
+
+    /************************************
+     * Step 3: Resolve path through AFP, forcing dircache creation
+     *
+     * Each get_did() call forces the server's cname() to discover
+     * a directory that exists on the filesystem but is NOT in the
+     * dircache. The server must lstat() the path component, create
+     * a new dircache entry, and return the directory ID.
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 3: Resolve nested dirs through AFP (dircache discovery)\n");
+    }
+
+    dir1 = get_did(Conn, vol, DIRDID_ROOT, dir1_name);
+
+    if (!dir1) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED get_did for %s\n", dir1_name);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    dir1 (%s) DID = 0x%x\n", dir1_name, dir1);
+    }
+
+    dir2 = get_did(Conn, vol, dir1, dir2_name);
+
+    if (!dir2) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED get_did for %s\n", dir2_name);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    dir2 (%s) DID = 0x%x\n", dir2_name, dir2);
+    }
+
+    dir3 = get_did(Conn, vol, dir2, dir3_name);
+
+    if (!dir3) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED get_did for %s\n", dir3_name);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    dir3 (%s) DID = 0x%x\n", dir3_name, dir3);
+    }
+
+    /************************************
+     * Step 4: Open fork on externally created file
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 4: FPOpenFork on externally created file\n");
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir3, file_name,
+                      OPENACC_RD | OPENACC_WR);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork for %s in dir3\n",
+                    file_name);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 5: Read data to verify fork is functional
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 5: Read data from fork (verify content)\n");
+    }
+
+    if (FPRead(Conn, fork, 0, testdata_len, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPRead returned error\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (memcmp(Data, testdata, testdata_len) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED read data doesn't match written data\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    Read %d bytes successfully\n",
+                testdata_len);
+    }
+
+    /************************************
+     * Step 6: Write additional data to verify write access
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 6: Write additional data to fork\n");
+    }
+
+    if (FPWrite(Conn, fork, testdata_len, 11, "extra data\n", 0)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPWrite returned error\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 7: Read back written data for round-trip verification
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 7: Read back written data (round-trip verify)\n");
+    }
+
+    if (FPRead(Conn, fork, testdata_len, 11, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPRead of written data\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (memcmp(Data, "extra data\n", 11) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED written data doesn't match on re-read\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 8: Close fork
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 8: Close fork\n");
+    }
+
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  ✓ Successfully opened fork on file in externally created nested directories\n");
+    }
+
+fin:
+
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
+
+    /* Cleanup via AFP - delete from deepest to shallowest */
+    if (dir3) {
+        FPDelete(Conn, vol, dir3, file_name);
+    }
+
+    if (dir2) {
+        FPDelete(Conn, vol, dir2, dir3_name);
+    }
+
+    if (dir1) {
+        FPDelete(Conn, vol, dir1, dir2_name);
+    }
+
+    FPDelete(Conn, vol, DIRDID_ROOT, dir1_name);
+test_exit:
+    exit_test("FPOpenFork:test542: open fork on file in externally created nested directories");
+}
+
+/* test544: Resource fork length round-trip after write+close+re-read
+ *
+ * This test validates that the resource fork length reported by
+ * FPGetFileDirParams (FILPBIT_RFLEN) correctly reflects data written
+ * to the resource fork, both while the fork is open and after
+ * close+reopen.
+ *
+ * Scenario:
+ * 1. Create a file
+ * 2. Open resource fork for write
+ * 3. Write 500 bytes of data
+ * 4. Close fork
+ * 5. Verify RFLEN == 500 via FPGetFileDirParams
+ * 6. Reopen resource fork for write
+ * 7. Append 300 more bytes (total 800)
+ * 8. Close fork
+ * 9. Verify RFLEN == 800 via FPGetFileDirParams
+ * 10. Reopen resource fork for read
+ * 11. Read 800 bytes, verify content
+ * 12. Close fork and clean up
+ */
+STATIC void test544()
+{
+    char *name = "t535 rfork length roundtrip";
+    uint16_t bitmap = 0;
+    uint16_t fork = 0;
+    uint16_t vol = VolID;
+    int  ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t fbitmap = (1 << FILPBIT_RFLEN);
+    const DSI *dsi = &Conn->dsi;
+    ENTER_TEST
+
+    /************************************
+     * Step 1: Create file
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 1: Create test file\n");
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 2: Open resource fork for write
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 2: Open resource fork for write\n");
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork resource fork\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 3: Write 500 bytes of data
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 3: Write 500 bytes to resource fork\n");
+    }
+
+    if (FPWrite(Conn, fork, 0, 500, Data, 0)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPWrite 500 bytes\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 4: Close fork
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 4: Close resource fork\n");
+    }
+
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    /************************************
+     * Step 5: Verify RFLEN == 500 via FPGetFileDirParams
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 5: Verify RFLEN == 500 via FPGetFileDirParams\n");
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, fbitmap, 0)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPGetFileDirParams for RFLEN\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, fbitmap, 0);
+
+    if (filedir.rflen != 500) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED RFLEN should be 500, got %u\n",
+                    filedir.rflen);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    RFLEN = %u (correct)\n",
+                filedir.rflen);
+    }
+
+    /************************************
+     * Step 6: Reopen resource fork for write
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 6: Reopen resource fork for write (append)\n");
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork reopen\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 7: Append 300 more bytes (total 800)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 7: Append 300 bytes (offset 500, total 800)\n");
+    }
+
+    if (FPWrite(Conn, fork, 500, 300, Data, 0)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPWrite append 300 bytes\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 8: Close fork
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 8: Close resource fork\n");
+    }
+
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    /************************************
+     * Step 9: Verify RFLEN == 800 via FPGetFileDirParams
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 9: Verify RFLEN == 800 via FPGetFileDirParams\n");
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, fbitmap, 0)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED FPGetFileDirParams for RFLEN after append\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, fbitmap, 0);
+
+    if (filedir.rflen != 800) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED RFLEN should be 800, got %u\n",
+                    filedir.rflen);
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout, "\t    RFLEN = %u (correct)\n",
+                filedir.rflen);
+    }
+
+    /************************************
+     * Step 10: Reopen resource fork for read and verify content
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 10: Reopen resource fork, read 800 bytes\n");
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_RD);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED FPOpenFork reopen for read\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (FPRead(Conn, fork, 0, 800, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPRead 800 bytes\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  ✓ Resource fork length round-trip verified (500 → 800 bytes)\n");
+    }
+
+fin:
+
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
+
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
+    exit_test("FPOpenFork:test544: Resource fork length round-trip after write+close+re-read");
+}
+
 /* ----------- */
 void T2FPOpenFork_test()
 {
@@ -1976,4 +2544,6 @@ void T2FPOpenFork_test()
     test238();
     test431();
     test526();
+    test542();
+    test544();
 }
