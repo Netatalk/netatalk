@@ -1266,13 +1266,15 @@ cnid dev = *BOOLEAN* (default: *yes*) **(V)**
 > Whether to use the device number in the CNID backends. Helps when the
 device number is not constant across a reboot, e.g. cluster, ...
 
-convert appledouble = *BOOLEAN* (default: *yes*) **(V)**
+convert appledouble = *BOOLEAN* (default: *no*) **(V)**
 
-> Whether automatic conversion from AppleDouble v2 to Extended Attributes
-is performed when accessing filesystems from clients.
-This is generally useful, but costs some performance. It's recommendable
-to run **dbd** on volumes and do the conversion with that. Then this
-option can be set to *no*.
+> Perform automatic conversion of AppleDouble v2 metadata files to filesystem Extended Attributes
+dynamically when accessing filesystems from clients.
+>
+> This is useful when upgrading from Netatalk v2 to a later version,
+but incurs a small performance cost for every filesystem access.
+If you run **dbd**(1) on the volumes to convert after upgrading Netatalk,
+you don't need to enable this option, as the conversion is done by **dbd**(1) and not on the fly.
 
 delete veto files = *BOOLEAN* (default: *no*) **(V)**
 

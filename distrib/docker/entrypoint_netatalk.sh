@@ -2,7 +2,7 @@
 
 # Entry point script for the netatalk container.
 # Copyright (C) 2023  Eric Harmon
-# Copyright (C) 2024-2025  Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026  Daniel Markstedt <daniel@mindani.net>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -278,7 +278,7 @@ path = /mnt/afpshare
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
-convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-yes}
+convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
 [${SHARE_NAME2:-Time Machine}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
@@ -287,7 +287,7 @@ time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2
 volume name = ${SHARE_NAME2:-Time Machine}
 $AFP_RWRO = $AFP_VALIDUSERS2
-convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-yes}
+convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
 EOF
 fi
 
