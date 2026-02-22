@@ -106,7 +106,7 @@ extern struct extmap	*getdefextmap(void);
 
 extern int getfilparams(const AFPObj *obj, struct vol *, uint16_t,
                         struct path *,
-                        struct dir *, char *buf, size_t *, int);
+                        struct dir *, char *buf, size_t *, int skip_fork_check);
 extern int setfilparams(const AFPObj *obj, struct vol *, struct path *,
                         uint16_t, char *);
 extern int renamefile(struct vol *, struct dir *, int, char *, char *, char *,

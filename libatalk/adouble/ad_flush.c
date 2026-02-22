@@ -492,7 +492,13 @@ int ad_close(struct adouble *ad, int adflags)
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
 
     if (adflags & (ADFLAGS_SETSHRMD | ADFLAGS_CHECK_OF)) {
-        /* sharemode locks are stored in the data fork, adouble:v2 needs this extra handling */
+        /* sharemode locks stored in the data fork, adouble:v2 needs extra handling
+         * ADFLAGS_CHECK_OF is semantically an open-mode flag ("check for open
+         * forks during metadata open"), but ad_close() gives it close-mode
+         * behavior: also close the data fork. This is correct because
+         * ad_metadataat() with ADFLAGS_CHECK_OF opens the DF for share-mode
+         * lock checking via ad_open(ADFLAGS_SETSHRMD), so the DF must be
+         * closed here too. */
         adflags |= ADFLAGS_DF;
     }
 

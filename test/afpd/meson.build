@@ -2,6 +2,7 @@ test_sources = [
     'afpfunc_helpers.c',
     'subtests.c',
     'test.c',
+    meson.project_source_root() / 'etc/afpd/ad_cache.c',
     meson.project_source_root() / 'etc/afpd/afp_config.c',
     meson.project_source_root() / 'etc/afpd/afp_dsi.c',
     meson.project_source_root() / 'etc/afpd/afp_options.c',

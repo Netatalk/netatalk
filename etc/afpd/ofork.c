@@ -21,9 +21,12 @@
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/server_ipc.h>
 #include <atalk/util.h>
 
+#include "ad_cache.h"
 #include "desktop.h"
+#include "dircache.h"
 #include "directory.h"
 #include "fork.h"
 #include "volume.h"
@@ -468,6 +471,14 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         forkpath = bformat("%s/%s", bdata(dir->d_fullpath), of_name(ofork));
     }
 
+    /* Pre-acquire cache pointer before ad_close changes ctime */
+    struct dir *cached = NULL;
+
+    if ((ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED)) && dir && forkpath) {
+        const char *upath = of_name(ofork);
+        cached = dircache_search_by_name(ofork->of_vol, dir, upath, strlen(upath));
+    }
+
     /* Somone has used write_fork, we assume file was changed, register it to file change event api */
     if ((ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
         fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
@@ -520,6 +531,40 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
                                   utf8_encoding(obj)),
                          0));
 #endif
+    }
+
+    /* Refresh cache after fork close if metadata was modified */
+    if (cached) {
+        struct stat post_st;
+
+        if (ostat(bdata(forkpath), &post_st, 0) == 0) {
+            int dflags = DCMOD_STAT;
+
+            /* If resource fork was dirty, AD header was modified too */
+            if ((ofork->of_flags & AFPFORK_RSRC) && (ofork->of_flags & AFPFORK_DIRTY)) {
+                dflags |= DCMOD_AD;
+            }
+
+            dir_modify(ofork->of_vol, cached, &(struct dir_modify_args) {
+                .flags = dflags,
+                .st = &post_st,
+                .adp = (dflags & DCMOD_AD) ? ofork->of_ad : NULL,
+            });
+        }
+    }
+
+    /* Send hint to afpd siblings — data/resource fork write changed stat */
+    cnid_t hint_cnid = cached ? cached->d_did : CNID_INVALID;
+
+    if (hint_cnid == CNID_INVALID && ofork->of_vol) {
+        char *upath = of_name(ofork);
+        size_t ulen = strnlen(upath, CNID_MAX_PATH_LEN);
+        hint_cnid = cnid_get(ofork->of_vol->v_cdb, ofork->of_did, upath, ulen);
+    }
+
+    if (hint_cnid != CNID_INVALID && ofork->of_vol) {
+        ipc_send_cache_hint(obj, ofork->of_vol->v_vid, hint_cnid,
+                            CACHE_HINT_REFRESH);
     }
 
     if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {

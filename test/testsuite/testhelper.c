@@ -126,6 +126,10 @@ void test_skipped(int why)
         s = "username/password for the AFP server";
         break;
 
+    case T_V2CONV:
+        s = "AppleDouble v2 to EA conversion enabled (convert appledouble = yes)";
+        break;
+
     default:
         s = "UNKNOWN REASON - this is a bug";
         break;

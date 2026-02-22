@@ -185,9 +185,10 @@ static bool read_log_tail(const char *log_file_path)
     return true;
 }
 
-/*! @brief Search buffer backwards for dircache statistics line
+/*! @brief Search buffer backwards for a specific dircache statistics line
+ * @param pattern  Substring to match, e.g. "dircache statistics (AD|ARC|LRU)"
  * @note Uses the global log_buffer and log_buffer_bytes_read */
-static char *find_dircache_stats_line(void)
+static char *find_dircache_stats_line(const char *pattern)
 {
     char *stats_line = NULL;
 
@@ -206,7 +207,7 @@ static char *find_dircache_stats_line(void)
     /* Safe copy - log_buffer_bytes_read is bounded by LOG_BUFFER_SIZE */
     memcpy(work_buffer, log_buffer, log_buffer_bytes_read);
     work_buffer[log_buffer_bytes_read] = '\0';
-    /* Search backwards through buffer for the LAST dircache statistics line */
+    /* Search backwards through buffer for the LAST matching line */
     char *current = work_buffer + log_buffer_bytes_read;
 
     while (current > work_buffer) {
@@ -232,8 +233,8 @@ static char *find_dircache_stats_line(void)
         char saved_char = *(line_end + 1);
         *(line_end + 1) = '\0';
 
-        /* Check if this line contains "dircache statistics" (LRU or ARC) */
-        if (strstr(line_start, "dircache statistics") != NULL) {
+        /* Check if this line contains the specific pattern */
+        if (strstr(line_start, pattern) != NULL) {
             stats_line = strdup(line_start);
             *(line_end + 1) = saved_char;
             break;
@@ -364,21 +365,41 @@ void display_dircache_statistics(void)
         return;
     }
 
-    /* Search for dircache statistics line using global buffer */
-    stats_line = find_dircache_stats_line();
+    /* Search for each dircache statistics type separately.
+     * The server logs three stat lines: ARC (or LRU), and AD. */
     printf("\nDircache Statistics (%s):\n", log_file_path);
     printf("------------------------------------------------------------------\n");
+    /* Try ARC first, fall back to LRU */
+    stats_line = find_dircache_stats_line("dircache statistics (ARC)");
 
-    if (stats_line) {
-        /* Get length while pointer is known to be non-NULL */
-        size_t len = strlen(stats_line); // NOSONAR: Pointer verified non-NULL
-        printf("%s", stats_line);
+    if (!stats_line) {
+        stats_line = find_dircache_stats_line("dircache statistics (LRU)");
+    }
 
-        if (len > 0 && stats_line[len - 1] != '\n') {
-            printf("\n");
+    char *ad_line = find_dircache_stats_line("dircache statistics (AD)");
+
+    if (stats_line || ad_line) {
+        if (stats_line) {
+            size_t len = strlen(stats_line);
+            printf("%s", stats_line);
+
+            if (len > 0 && stats_line[len - 1] != '\n') {
+                printf("\n");
+            }
+
+            free(stats_line);
         }
 
-        free(stats_line);
+        if (ad_line) {
+            size_t len = strlen(ad_line);
+            printf("%s", ad_line);
+
+            if (len > 0 && ad_line[len - 1] != '\n') {
+                printf("\n");
+            }
+
+            free(ad_line);
+        }
     } else {
         display_last_log_lines();
     }

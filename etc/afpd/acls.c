@@ -45,6 +45,7 @@
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
+#include <atalk/server_ipc.h>
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
@@ -52,6 +53,7 @@
 
 #include "acl_mappings.h"
 #include "acls.h"
+#include "ad_cache.h"
 #include "auth.h"
 #include "desktop.h"
 #include "dircache.h"
@@ -2001,6 +2003,40 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         if ((ret = remove_acl(vol, s_path->u_name,
                               S_ISDIR(s_path->st.st_mode))) != AFP_OK) {
             LOG(log_error, logtype_afpd, "afp_setacl: error from remove_acl");
+        } else {
+            /* Refresh stat cache after ACL removal */
+            struct stat fresh_st;
+
+            if (ostat(s_path->u_name, &fresh_st, vol_syml_opt(vol)) == 0) {
+                struct dir *target_entry = NULL;
+
+                if (strcmp(s_path->u_name, ".") == 0) {
+                    target_entry = curdir;
+                } else {
+                    size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                    target_entry = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
+                }
+
+                if (target_entry) {
+                    dir_modify(vol, target_entry, &(struct dir_modify_args) {
+                        .flags = DCMOD_STAT,
+                        .st = &fresh_st,
+                    });
+                    target_entry->d_rights_cache = 0xffffffff;
+                }
+
+                /* Send hint to afpd siblings — ACL/permissions changed */
+                cnid_t hint_cnid = target_entry ? target_entry->d_did : CNID_INVALID;
+
+                if (hint_cnid == CNID_INVALID && s_path->u_name) {
+                    size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                    hint_cnid = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+                }
+
+                if (hint_cnid != CNID_INVALID) {
+                    ipc_send_cache_hint(obj, vol->v_vid, hint_cnid, CACHE_HINT_REFRESH);
+                }
+            }
         }
     }
 
@@ -2028,34 +2064,38 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
         if (ret == 0) {
             ret = AFP_OK;
-            /* Update dircache after ACL changes */
+            /* Refresh stat cache after ACL modification */
             struct stat fresh_st;
-            struct dir *target_entry = NULL;
 
-            /* Get fresh ctime after ACL modification */
             if (ostat(s_path->u_name, &fresh_st, vol_syml_opt(vol)) == 0) {
-                /* Find existing dircache entry (file or directory) */
-                if (strcmp(s_path->u_name, ".") == 0) {
-                    /* Operating on current directory */
-                    target_entry = curdir;
-                } else {
-                    /* Operating on file or subdirectory - find its dircache entry */
-                    target_entry = NULL;
+                struct dir *target_entry = NULL;
 
-                    if (s_path->u_name != NULL) {
-                        size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
-                        target_entry = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
-                    }
+                if (strcmp(s_path->u_name, ".") == 0) {
+                    target_entry = curdir;
+                } else if (s_path->u_name != NULL) {
+                    size_t uname_len = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                    target_entry = dircache_search_by_name(vol, curdir, s_path->u_name, uname_len);
                 }
 
                 if (target_entry) {
-                    /* Update cached ctime to match filesystem after ACL change */
-                    target_entry->dcache_ctime = fresh_st.st_ctime;
-                    /* Invalidate d_rights_cache to force recalculation on next access */
+                    dir_modify(vol, target_entry, &(struct dir_modify_args) {
+                        .flags = DCMOD_STAT,
+                        .st = &fresh_st,
+                    });
+                    /* Invalidate d_rights_cache to force recalculation */
                     target_entry->d_rights_cache = 0xffffffff;
-                    LOG(log_debug, logtype_afpd,
-                        "afp_setacl: updated ctime and invalidated d_rights_cache for %s",
-                        S_ISDIR(s_path->st.st_mode) ? "directory" : "file");
+                }
+
+                /* Send hint to afpd siblings — ACL/permissions changed */
+                cnid_t hint_cnid2 = target_entry ? target_entry->d_did : CNID_INVALID;
+
+                if (hint_cnid2 == CNID_INVALID && s_path->u_name) {
+                    size_t ulen = strnlen(s_path->u_name, CNID_MAX_PATH_LEN);
+                    hint_cnid2 = cnid_get(vol->v_cdb, curdir->d_did, s_path->u_name, ulen);
+                }
+
+                if (hint_cnid2 != CNID_INVALID) {
+                    ipc_send_cache_hint(obj, vol->v_vid, hint_cnid2, CACHE_HINT_REFRESH);
                 }
             }
         } else {

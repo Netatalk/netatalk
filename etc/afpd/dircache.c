@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
- * Copyright (c) 2025 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,10 +30,13 @@
 #include <atalk/directory.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
+#include <atalk/netatalk_conf.h>
 #include <atalk/queue.h>
+#include <atalk/server_ipc.h>
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "ad_cache.h"
 #include "dircache.h"
 #include "directory.h"
 #include "hash.h"
@@ -142,6 +145,15 @@ static struct dircache_stat {
     /*!< entries that failed when used */
     unsigned long long invalid_on_use;
 } dircache_stat;
+
+/* Cache hint processing statistics — logged by log_dircache_stat() */
+static struct {
+    unsigned long long hints_received;   /* Total hints read from pipe */
+    unsigned long long
+    hints_acted_on;   /* Hints that matched a local cache entry */
+    unsigned long long
+    hints_no_match;   /* Hints for entries not in local cache (zero cost) */
+} cache_hint_stat;
 
 /********************************************************
  * ARC (Adaptive Replacement Cache) Implementation
@@ -1058,7 +1070,16 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 return NULL;
             }
 
-            /* Direct validation: inode or ctime changed = invalidate */
+            /* Direct validation: inode or ctime changed = invalidate.
+             * Per POSIX (IEEE 1003.1-2017 §4.9 "File Times Update"), st_ctime
+             * ("time of last file status change") is updated by any operation
+             * that modifies file metadata: chmod (mode), chown (uid/gid),
+             * write/truncate (size/mtime), link/unlink, rename, utimens, etc.
+             * Therefore checking only inode + ctime is sufficient to detect
+             * external changes to ALL cached stat fields.
+             * This is guaranteed on all Netatalk target platforms: Linux
+             * (ext4/XFS/Btrfs), macOS (APFS/HFS+), FreeBSD/NetBSD/OpenBSD
+             * (UFS/FFS/ZFS) — all implement POSIX ctime semantics. */
             if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(cnid:%u): {modified:\"%s\"} (ino:%llu->%llu, ctime:%ld->%ld)",
@@ -1071,6 +1092,12 @@ struct dir *dircache_search_by_did(const struct vol *vol, cnid_t cnid)
                 return NULL;
             }
 
+            /* Validation passed — refresh cached stat fields from fresh stat */
+            cdir->dcache_mode = st.st_mode;
+            cdir->dcache_mtime = st.st_mtime;
+            cdir->dcache_uid = st.st_uid;
+            cdir->dcache_gid = st.st_gid;
+            cdir->dcache_size = st.st_size;
             /* Entry validated and still valid */
             LOG(log_maxdebug, logtype_afpd,
                 "dircache(cnid:%u): {validated: path:\"%s\"}",
@@ -1175,7 +1202,16 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 return NULL;
             }
 
-            /* Direct validation: inode or ctime changed = invalidate */
+            /* Direct validation: inode or ctime changed = invalidate.
+             * Per POSIX (IEEE 1003.1-2017 §4.9 "File Times Update"), st_ctime
+             * ("time of last file status change") is updated by any operation
+             * that modifies file metadata: chmod (mode), chown (uid/gid),
+             * write/truncate (size/mtime), link/unlink, rename, utimens, etc.
+             * Therefore checking only inode + ctime is sufficient to detect
+             * external changes to ALL cached stat fields.
+             * This is guaranteed on all Netatalk target platforms: Linux
+             * (ext4/XFS/Btrfs), macOS (APFS/HFS+), FreeBSD/NetBSD/OpenBSD
+             * (UFS/FFS/ZFS) — all implement POSIX ctime semantics. */
             if (cdir->dcache_ino != st.st_ino || cdir->dcache_ctime != st.st_ctime) {
                 LOG(log_debug, logtype_afpd,
                     "dircache(did:%u,\"%s\"): {modified} (ino:%llu->%llu, ctime:%ld->%ld)",
@@ -1187,6 +1223,13 @@ struct dir *dircache_search_by_name(const struct vol *vol,
                 dircache_stat.misses++;  /* Count expunge as miss */
                 return NULL;
             }
+
+            /* Validation passed — refresh cached stat fields from fresh stat */
+            cdir->dcache_mode = st.st_mode;
+            cdir->dcache_mtime = st.st_mtime;
+            cdir->dcache_uid = st.st_uid;
+            cdir->dcache_gid = st.st_gid;
+            cdir->dcache_size = st.st_size;
         }
 
         /* ARC mode: Handle cache hits or ghost hits */
@@ -1553,7 +1596,7 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
     /* Defensive check: If curdir is NULL, dir_remove failed to recover */
     if (!curdir) {
         curdir = vol->v_root ? vol->v_root : &rootParent;
-        LOG(log_error, logtype_afpd,
+        LOG(log_debug, logtype_afpd,
             "dircache_remove_children: DEFENSIVE: curdir is NULL (was did:%u), fallback to %s",
             ntohl(saved_curdir_did), vol->v_root ? "volume root" : "rootParent");
         recovery_status = -1;
@@ -1565,7 +1608,7 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
 
     if (remove_count) {
         const char *status = recovery_status ? " (curdir recovery failed)" : "";
-        LOG(log_info, logtype_afpd,
+        LOG(log_debug, logtype_afpd,
             "dircache_remove_children: removed %d dircache entries of \"%s\"%s",
             remove_count, cfrombstr(dir->d_fullpath), status);
     } else {
@@ -1575,6 +1618,72 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
     }
 
     return recovery_status;
+}
+
+/*!
+ * @brief Re-insert entry into DID/name index after key change
+ *
+ * Called by dir_modify() after updating d_pdid / d_u_name.
+ * The caller MUST have already removed the entry from the DIDNAME_INDEX
+ * via dircache_remove(vol, dir, DIDNAME_INDEX) before calling this.
+ *
+ * @param[in] vol  Volume (required)
+ * @param[in] dir  Entry with updated d_pdid / d_u_name (required)
+ *
+ * @returns 0 on success, -1 on hash insert failure
+ */
+int dircache_reindex_didname(const struct vol *vol _U_, struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
+    /* Caller has already called dircache_remove(vol, dir, DIDNAME_INDEX)
+     * and updated dir->d_pdid / dir->d_u_name. Re-insert with new key. */
+    if (hash_alloc_insert(index_didname, dir, dir) == 0) {
+        LOG(log_error, logtype_afpd,
+            "dircache_reindex_didname: re-insert failed for did:%u",
+            ntohl(dir->d_did));
+        return -1;
+    }
+
+    return 0;
+}
+
+/*!
+ * @brief Promote a cache entry in ARC to signal recency
+ *
+ * Dispatches based on arc_list membership:
+ *   T1/T2: arc_case_i() — move to MRU of T2
+ *   B1:    arc_case_ii_adapt_and_replace() — promote ghost to T2
+ *   B2:    arc_case_iii_adapt_and_replace() — promote ghost to T2
+ *   LRU:   no-op (LRU is FIFO by design, R7 D-010)
+ *
+ * @param[in,out] dir  Cache entry to promote (required)
+ */
+void dircache_promote(struct dir *dir)
+{
+    AFP_ASSERT(dir);
+
+    if (arc_cache.enabled) {
+        switch (dir->arc_list) {
+        case ARC_T1:
+        case ARC_T2:
+            arc_case_i(dir);       /* Case I: T1→T2 or T2 MRU */
+            break;
+
+        case ARC_B1:
+            arc_case_ii_adapt_and_replace(dir);   /* Case II: B1→T2 */
+            break;
+
+        case ARC_B2:
+            arc_case_iii_adapt_and_replace(dir);  /* Case III: B2→T2 */
+            break;
+
+        default:
+            break;  /* ARC_NONE: not in any list */
+        }
+    }
+
+    /* LRU mode: no-op — LRU is FIFO by design (R7 D-010) */
 }
 
 /*!
@@ -1676,13 +1785,13 @@ int dircache_init(int reqsize)
         return -1;
     }
 
-    /* As long as directory.c hasn't got its own initializer call, we do it for it */
+    /* As long as directory.c hasn't got its own initializer call, we do it here.
+     * Most numeric fields are set by C11 designated initializers in directory.c.
+     * d_did uses htonl() which is not a compile-time constant, set here at runtime. */
     rootParent.d_did = DIRDID_ROOT_PARENT;
     rootParent.d_fullpath = bfromcstr("ROOT_PARENT");
     rootParent.d_m_name = bfromcstr("ROOT_PARENT");
     rootParent.d_u_name = rootParent.d_m_name;
-    rootParent.d_rights_cache = 0xffffffff;
-    rootParent.arc_list = 0;  /* ARC_NONE (not in any ARC list) */
 
     /* Apply validation parameters from configuration */
     if (AFPobj && AFPobj->options.dircache_validation_freq > 0) {
@@ -1705,6 +1814,11 @@ void log_dircache_stat(void)
 {
     double hit_ratio = 0.0;
     double validation_ratio = 0.0;
+    /* Memory accounting: struct dir size × high-water mark entry count.
+     * This is the fixed-size allocation per entry; excludes variable-length
+     * heap data (d_fullpath, d_m_name, d_u_name bstrings, d_m_name_ucs2). */
+    unsigned long cache_max_mem_kb =
+        (queue_count_max * sizeof(struct dir)) / 1024;
 
     if (dircache_stat.lookups > 0) {
         hit_ratio = ((double)dircache_stat.hits / (double)dircache_stat.lookups) *
@@ -1760,7 +1874,7 @@ void log_dircache_stat(void)
                                    (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (ARC): (user: %s) "
-            "cache_entries: %zu, ghost_entries: %zu, max_entries: %lu, config_max: %zu, "
+            "cache_entries: %zu, ghost_entries: %zu, max_entries: %lu (%lu KB), config_max: %zu, "
             "lookups: %llu, cache_hits: %llu (%.1f%%), ghost_hits: %llu (%.1f%%), total_hits: (%.1f%%), true_misses: %llu (%.1f%%), "
             "validations: ~%llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, "
@@ -1769,6 +1883,7 @@ void log_dircache_stat(void)
             total_cached,
             total_ghosts,
             queue_count_max,
+            cache_max_mem_kb,
             arc_cache.c,
             dircache_stat.lookups,
             dircache_stat.hits, hit_ratio,
@@ -1787,25 +1902,28 @@ void log_dircache_stat(void)
             dircache_validation_freq);
         /* ARC-specific details: ghost hits breakdown and learning metrics */
         LOG(log_info, logtype_afpd,
-            "ARC ghost performance: ghost_hits: %llu (%.1f%%), "
+            "ARC ghost performance: (user: %s) ghost_hits: %llu (%.1f%%), "
             "ghost_hits(B1=%llu, B2=%llu), learning_benefit: (%.1f%%)",
+            username,
             dircache_stat.ghost_hits, ghost_hit_ratio,
             arc_cache.stats.ghost_hits_b1,
             arc_cache.stats.ghost_hits_b2,
             ghost_hit_ratio);  /* Learning benefit (wouldn't have been cached in LRU) */
         /* ARC table state - current snapshot of all four lists */
         LOG(log_info, logtype_afpd,
-            "ARC table state: T1=%zu (recent/cached), T2=%zu (frequent/cached), "
+            "ARC table state: (user: %s) T1=%zu (recent/cached), T2=%zu (frequent/cached), "
             "B1=%zu (recent/ghost), B2=%zu (frequent/ghost), "
             "total_cached=%zu/%zu, total_ghosts=%zu, freq_bias: (%.1f%%)",
+            username,
             arc_cache.t1_size, arc_cache.t2_size,
             arc_cache.b1_size, arc_cache.b2_size,
             total_cached, arc_cache.c, total_ghosts,
             freq_bias);
         /* ARC adaptation parameters - shows how cache is tuning itself */
         LOG(log_info, logtype_afpd,
-            "ARC adaptation: p=%zu/%zu (%.1f%% target for T1), "
+            "ARC adaptation: (user: %s) p=%zu/%zu (%.1f%% target for T1), "
             "p_range=[%zu,%zu], adaptations=%llu (increases=%llu, decreases=%llu)",
+            username,
             arc_cache.p, arc_cache.c,
             (arc_cache.c > 0) ? ((double)arc_cache.p / arc_cache.c * 100.0) : 0.0,
             arc_cache.stats.p_min, arc_cache.stats.p_max,
@@ -1814,8 +1932,9 @@ void log_dircache_stat(void)
             arc_cache.stats.p_decreases);
         /* ARC operations breakdown - detailed operation counters */
         LOG(log_info, logtype_afpd,
-            "ARC operations: cache_hits(T1=%llu, T2=%llu), "
+            "ARC operations: (user: %s) cache_hits(T1=%llu, T2=%llu), "
             "promotions(T1→T2=%llu), evictions(T1=%llu, T2=%llu)",
+            username,
             arc_cache.stats.hits_t1,
             arc_cache.stats.hits_t2,
             arc_cache.stats.promotions_t1_to_t2,
@@ -1827,13 +1946,14 @@ void log_dircache_stat(void)
                             ((double)dircache_stat.misses / (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (LRU): (user: %s) "
-            "entries: %lu, max_entries: %lu, config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
+            "entries: %lu, max_entries: %lu (%lu KB), config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
             "validations: ~%llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
             "validation_freq: %u",
             username,
             queue_count,
             queue_count_max,
+            cache_max_mem_kb,
             dircache_maxsize,
             dircache_stat.lookups,
             dircache_stat.hits, hit_ratio,
@@ -1848,6 +1968,28 @@ void log_dircache_stat(void)
             dircache_stat.evicted,
             dircache_validation_freq);
     }
+
+    /* Cross-process dircache hint statistics */
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (hints): (user: %s) sent: %llu, received: %llu, acted_on: %llu, no_match: %llu",
+        username,
+        ipc_get_hints_sent(),
+        cache_hint_stat.hints_received,
+        cache_hint_stat.hints_acted_on,
+        cache_hint_stat.hints_no_match);
+    /* AD cache statistics (Tier 1) — from ad_cache.c extern counters */
+    double ad_hit_ratio = 0.0;
+    unsigned long long ad_total = ad_cache_hits + ad_cache_misses + ad_cache_no_ad;
+
+    if (ad_total > 0) {
+        ad_hit_ratio = ((double)(ad_cache_hits + ad_cache_no_ad) /
+                        (double)ad_total) * 100.0;
+    }
+
+    LOG(log_info, logtype_afpd,
+        "dircache statistics (AD): (user: %s) hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
+        username, ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
+        ad_hit_ratio);
 }
 
 /*!
@@ -1899,12 +2041,15 @@ void dircache_dump(void)
 
     while ((hn = hash_scan_next(&hs))) {
         dir = hnode_get(hn);
-        fprintf(dump, "%05u: %3u  %6u  %6u %s    %s\n",
+        fprintf(dump, "%05u: %3u  %6u  %6u %s  rlen:%-6lld ad:%-8s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
                 ntohl(dir->d_did),
                 dir->d_flags & DIRF_ISFILE ? "f" : "d",
+                (long long)dir->dcache_rlen,
+                dir->dcache_rlen >= 0 ? "cached" :
+                (dir->dcache_rlen == (off_t) -1 ? "unloaded" : "absent"),
                 cfrombstr(dir->d_fullpath));
     }
 
@@ -2072,6 +2217,189 @@ void dircache_reset_validation_counter(void)
     /* Thread-safe reset using compiler builtins */
     __sync_lock_test_and_set(&validation_counter, 0);
     LOG(log_debug, logtype_afpd, "dircache: validation counter reset");
+}
+
+/***********************************************************************************
+ * Cross-process dircache hint receiver (parent→child via dedicated hint pipe)
+ ***********************************************************************************/
+
+/*!
+ * @brief Read one cache hint from the dedicated hint pipe (non-blocking)
+ *
+ * Reads from obj->hint_fd — the dedicated pipe for parent→child hints.
+ * POSIX pipe atomicity: write() of ≤ PIPE_BUF bytes is atomic, so each
+ * read() returns either a complete message or nothing.
+ *
+ * @param[in]  obj   AFPObj with hint_fd (pipe read end)
+ * @param[out] hint  Populated on success
+ * @returns    1 if hint read, 0 if no data available, -1 on error
+ */
+static int ipc_recv_cache_hint(AFPObj *obj, struct ipc_cache_hint_payload *hint)
+{
+    char buf[IPC_MAXMSGSIZE];
+    ssize_t ret;
+
+    if (obj->hint_fd < 0) {
+        return -1;
+    }
+
+    /* Read complete hint message from pipe — atomic delivery guaranteed */
+    ret = read(obj->hint_fd, buf,
+               IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload));
+
+    if (ret == 0) {
+        /* EOF — parent process crashed (pipe write end closed).
+         * Close and disable to prevent POLLHUP spin loop. */
+        LOG(log_error, logtype_afpd,
+            "ipc_recv_cache_hint: hint pipe closed, parent lost, service restart required");
+        close(obj->hint_fd);
+        obj->hint_fd = -1;
+        return -1;
+    }
+
+    if (ret < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return 0;    /* No data available */
+        }
+
+        return -1;     /* Unexpected error */
+    }
+
+    if (ret != IPC_HEADERLEN + (ssize_t)sizeof(struct ipc_cache_hint_payload)) {
+        /* Should never happen for atomic pipe writes, but defensive */
+        LOG(log_warning, logtype_afpd,
+            "ipc_recv_cache_hint: unexpected read size %zd (expected %zu)",
+            ret, IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload));
+        cache_hint_stat.hints_no_match++;
+        return 0;
+    }
+
+    /* Extract payload from after the IPC header */
+    memcpy(hint, buf + IPC_HEADERLEN, sizeof(*hint));
+    return 1;
+}
+
+/*!
+ * @brief Process cross-process dircache invalidation hints
+ *
+ * Called from the DSI command loop after each AFP command completes.
+ * Uses direct hash_lookup() on the CNID hash table to support BOTH
+ * files (DIRF_ISFILE) and directories — dircache_search_by_did() is
+ * unsuitable because it actively removes file entries.
+ *
+ * Dispatches on hint type:
+ * - CACHE_HINT_REFRESH: ostat() + dir_modify() — stat refresh, AD invalidation
+ * - CACHE_HINT_DELETE: direct dir_remove() — no ostat needed
+ * - CACHE_HINT_DELETE_CHILDREN: dircache_remove_children() + parent cleanup
+ */
+void process_cache_hints(AFPObj *obj)
+{
+    struct ipc_cache_hint_payload hint;
+    struct stat st;
+    int hints_processed = 0;
+#define MAX_HINTS_PER_CYCLE 32
+
+    while (hints_processed < MAX_HINTS_PER_CYCLE &&
+            ipc_recv_cache_hint(obj, &hint) > 0) {
+        cache_hint_stat.hints_received++;
+        /* Resolve volume from vid (already network byte order) */
+        struct vol *vol = getvolbyvid(hint.vid);
+
+        if (!vol) {
+            cache_hint_stat.hints_no_match++;
+            continue;
+        }
+
+        /* Validate CNID */
+        if (hint.cnid == CNID_INVALID || ntohl(hint.cnid) < CNID_START) {
+            cache_hint_stat.hints_no_match++;
+            continue;
+        }
+
+        /* Direct hash lookup to find entry in our local dircache.
+         * Uses hash_lookup() instead of dircache_search_by_did() because
+         * the latter removes file entries (DIRF_ISFILE check). */
+        struct dir key = { .d_vid = vol->v_vid, .d_did = hint.cnid };
+        hnode_t *hn = hash_lookup(dircache, &key);
+
+        if (!hn) {
+            cache_hint_stat.hints_no_match++;
+            continue;  /* Not in our cache — nothing to invalidate */
+        }
+
+        struct dir *entry = hnode_get(hn);
+
+        cache_hint_stat.hints_acted_on++;
+        /* Save fields for logging BEFORE dispatch — dir_remove() may free entry */
+        cnid_t log_cnid = hint.cnid;
+        int log_is_ghost = (entry->d_flags & DIRF_ARC_GHOST) ? 1 : 0;
+
+        switch (hint.event) {
+        case CACHE_HINT_REFRESH:
+
+            /* ostat + dir_modify — unified handling for files and directories.
+             * DCMOD_AD_INV unconditionally invalidates AD cache because the hint
+             * is an authoritative signal metadata changed. ctime has second
+             * granularity and misses sub-second cross-client changes.
+             * DCMOD_NO_PROMOTE prevents ARC promotion from cross-process hints. */
+            if (ostat(cfrombstr(entry->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+                /* Entry gone or renamed — old path invalid, remove from cache */
+                dir_remove(vol, entry, 0);
+            } else {
+                dir_modify(vol, entry, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_AD_INV | DCMOD_NO_PROMOTE,
+                    .st = &st
+                });
+            }
+
+            break;
+
+        case CACHE_HINT_DELETE:
+            /* Direct removal — no ostat needed for deleted entries */
+            dir_remove(vol, entry, 0);
+            break;
+
+        case CACHE_HINT_DELETE_CHILDREN:
+
+            /* Remove all children first, then handle parent entry */
+            if (!(entry->d_flags & DIRF_ISFILE)) {
+                dircache_remove_children(vol, entry);
+            }
+
+            /* Then remove or refresh the parent itself */
+            if (ostat(cfrombstr(entry->d_fullpath), &st, vol_syml_opt(vol)) != 0) {
+                dir_remove(vol, entry, 0);
+            } else {
+                dir_modify(vol, entry, &(struct dir_modify_args) {
+                    .flags = DCMOD_STAT | DCMOD_NO_PROMOTE,
+                    .st = &st
+                });
+            }
+
+            break;
+
+        default:
+            LOG(log_warning, logtype_afpd,
+                "process_cache_hints: unknown hint event %u for did:%u",
+                hint.event, ntohl(hint.cnid));
+            cache_hint_stat.hints_no_match++;
+            break;
+        }
+
+        LOG(log_debug, logtype_afpd,
+            "process_cache_hints: %s did:%u%s from sibling",
+            hint.event == CACHE_HINT_REFRESH ? "refresh" :
+            hint.event == CACHE_HINT_DELETE ? "delete" :
+            hint.event == CACHE_HINT_DELETE_CHILDREN ? "delete-children" : "unknown",
+            ntohl(log_cnid),
+            log_is_ghost ? " (ghost)" : "");
+        hints_processed++;
+    }
+
+    if (hints_processed > 0) {
+        LOG(log_debug, logtype_afpd,
+            "process_cache_hints: processed %d hints this cycle", hints_processed);
+    }
 }
 
 /*!

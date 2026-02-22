@@ -23,6 +23,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 
+#include <poll.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -85,6 +86,12 @@ static void afp_dsi_close(AFPObj *obj)
     sigset_t sigs;
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
+
+    /* Close dircache hint pipe read end */
+    if (obj->hint_fd >= 0) {
+        close(obj->hint_fd);
+        obj->hint_fd = -1;
+    }
 
     /* we may have been called from a signal handler caught when afpd was running
      * as uid 0, that's the wrong user for volume's prexec_close scripts if any,
@@ -542,7 +549,100 @@ void afp_over_dsi(AFPObj *obj)
             continue;
         }
 
-        /* Blocking read on the network socket */
+        /* Event-driven hint processing: poll() monitors both dsi->socket and
+         * obj->hint_fd (dedicated hint pipe read end) so hints are processed
+         * even during idle client wait. Uses poll() instead of select() for
+         * FD_SETSIZE safety and consistent with parent main loop. */
+        while (1) {
+            /* CRITICAL: Skip poll() if DSI readahead buffer has data.
+             * dsi_peek()/dsi_buffered_stream_read() may have buffered data
+             * from a previous recv(). poll() only checks the kernel socket
+             * buffer — if data is in DSI's application-level buffer,
+             * poll() blocks even though dsi_stream_receive() would succeed. */
+            if (dsi->start != dsi->eof) {
+                /* DSI buffer has data — drain hints then proceed to receive */
+                if (obj->hint_fd >= 0) {
+                    process_cache_hints(obj);
+                }
+
+                break;
+            }
+
+            /* Check DSI session state before blocking in poll() */
+            if (dsi->flags & (DSI_EXTSLEEP | DSI_SLEEPING | DSI_DISCONNECTED | DSI_DIE)) {
+                if (obj->hint_fd >= 0) {
+                    process_cache_hints(obj);
+                }
+
+                /* Fall through to dsi_stream_receive() + existing state handling */
+                break;
+            }
+
+            struct pollfd pfds[2];
+
+            int nfds = 0;
+            pfds[nfds].fd = dsi->socket;
+            pfds[nfds].events = POLLIN;
+            nfds++;
+            int hint_idx = -1;
+
+            if (obj->hint_fd >= 0) {
+                hint_idx = nfds;
+                pfds[nfds].fd = obj->hint_fd;
+                pfds[nfds].events = POLLIN;
+                nfds++;
+            }
+
+            int ret = poll(pfds, nfds, -1);
+
+            if (ret < 0) {
+                if (errno == EINTR)
+                    /* Signal interrupted — retry */
+                {
+                    continue;
+                }
+
+                LOG(log_error, logtype_afpd, "afp_over_dsi: poll error: %s", strerror(errno));
+                break;
+            }
+
+            /* Hint pipe response handling */
+            if (hint_idx >= 0) {
+                if (pfds[hint_idx].revents & POLLNVAL) {
+                    /* hint_fd invalid — disable hint processing */
+                    LOG(log_error, logtype_afpd,
+                        "afp_over_dsi: hint pipe fd %d invalid (POLLNVAL)", obj->hint_fd);
+                    close(obj->hint_fd);
+                    obj->hint_fd = -1;
+                } else if (pfds[hint_idx].revents & (POLLIN | POLLHUP | POLLERR)) {
+                    process_cache_hints(obj);
+                }
+            }
+
+            /* DSI socket response handling */
+            if (pfds[0].revents & POLLNVAL) {
+                LOG(log_error, logtype_afpd,
+                    "afp_over_dsi: client socket fd %d invalid (POLLNVAL)", dsi->socket);
+                break;
+            }
+
+            if (pfds[0].revents & (POLLHUP | POLLERR)) {
+                LOG(log_debug, logtype_afpd,
+                    "afp_over_dsi: client socket %s during idle wait",
+                    (pfds[0].revents & POLLERR) ? "error" : "hangup");
+                break;
+            }
+
+            if (pfds[0].revents & POLLIN) {
+                /* Client data ready — fall through to dsi_stream_receive() */
+                break;
+            }
+
+            /* Only hint pipe had data — loop back to poll() */
+        }
+
+        /* Blocking read on the network socket (now guaranteed to not block
+         * when client data is available from poll()) */
         cmd = dsi_stream_receive(dsi);
 
         if (cmd == 0) {
@@ -745,6 +845,7 @@ void afp_over_dsi(AFPObj *obj)
 
         pending_request(dsi);
         fce_pending_events(obj);
+        process_cache_hints(obj);
     }
 
     /* error */
