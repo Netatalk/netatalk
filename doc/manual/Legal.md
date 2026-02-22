@@ -2,12 +2,11 @@
 
 The Netatalk software package as well as this documentation are
 distributed under the [GNU General Public License version 2](License.html).
-A copy of the license is included with this documentation,
-as well as within the Netatalk source distribution.
+See also COPYING in the Netatalk source code distribution.
 
-Legal notices for individual modules bundled with the Netatalk distribution follow below.
-
-## netatalk
+Netatalk v1.4 and earlier were distributed with the following copyright and license.
+It still applies to many source code files created between years 1990-2000.
+See also COPYRIGHT in the Netatalk source code distribution.
 
     Copyright (c) 1990,1996 Regents of The University of Michigan.
     All Rights Reserved.
@@ -45,6 +44,8 @@ Legal notices for individual modules bundled with the Netatalk distribution foll
     that both that copyright notice and this permission notice appear
     in supporting documentation. This software is supplied as is
     without expressed or implied warranties of any kind.
+
+Legal notices for modules bundled with the Netatalk distribution follow below.
 
 ## a2boot
 
