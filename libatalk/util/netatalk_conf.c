@@ -1282,7 +1282,7 @@ static struct vol *creatvol(AFPObj *obj,
 #endif
 
     if (!getoption_bool(obj->iniconfig, section, "convert appledouble", preset,
-                        1)) {
+                        0)) {
         volume->v_flags |= AFPVOL_NOV2TOEACONV;
     }
 

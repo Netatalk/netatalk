@@ -289,7 +289,7 @@ Set this environment variable to a specific value or string.
 | **Other Configuration** |                                                                              |
 | TZ                              | The [timezone](https://nodatime.org/TimeZones) to use in the container |
 | AFP_CONFIG_POLLING              | Poll afp.conf for changes every N seconds (for Webmin integration)    |
-| AFP_CONVERT_APPLEDOUBLE         | Convert AppleDouble files on the volume: *yes* (default) or *no*       |
+| AFP_CONVERT_APPLEDOUBLE         | Convert AppleDouble files on the volume: *yes* or *no* (default)       |
 
 #### Boolean Type
 

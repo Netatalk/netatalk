@@ -362,6 +362,7 @@ jobs:
               -e AFP_REMOTE=1 \
               -e AFP_EXTMAP=1 \
               -e AFP_DIRCACHESIZE=1024 \
+              -e AFP_CONVERT_APPLEDOUBLE=yes \
               -e AFP_CNID_SQL_HOST=mariadb \
               -e AFP_CNID_SQL_USER=root \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
@@ -392,6 +393,7 @@ jobs:
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_CONVERT_APPLEDOUBLE=yes \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite-debian:${{ github.sha }}
 
   afp-spectest-afp34:
@@ -551,6 +553,7 @@ jobs:
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_CONVERT_APPLEDOUBLE=yes \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp32:
@@ -577,6 +580,7 @@ jobs:
             -e AFP_VERSION="5" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_CONVERT_APPLEDOUBLE=yes \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-afp31:

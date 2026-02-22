@@ -76,8 +76,8 @@ and Classic Mac OS resource forks in extended attributes of the filesystem.
 - requires a filesystem with Extended Attributes, fallback is AppleDouble v2
 which is enabled with **ea = ad**
 
-- converts filesystems from AppleDouble v2 to Extended Attributes on
-the fly when accessed by clients (can be disabled with **convert appledouble**)
+- on the fly conversion from AppleDouble v2 to Extended Attributes
+when accessed by clients, enabled with **convert appledouble = yes**
 
 - **dbd** can be used to do conversion in one shot
 
