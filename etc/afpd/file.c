@@ -1055,6 +1055,18 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 }
 
                 of_stat(vol, path);
+
+                /* Invalidate stale dircache entry: new symlink has new inode */
+                if (path->u_name != NULL) {
+                    size_t uname_len = strnlen(path->u_name, CNID_MAX_PATH_LEN);
+                    struct dir *stale = dircache_search_by_name(
+                                            vol, curdir, path->u_name, uname_len);
+
+                    if (stale != NULL) {
+                        dir_remove(vol, stale, 0);
+                    }
+                }
+
                 symlinked = 1;
             }
 
