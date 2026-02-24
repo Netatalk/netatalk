@@ -40,7 +40,7 @@ That said, we will try to take action on your report as soon as possible!
 
 | CVE ID | Subject | Disclosure Date | Affected Versions | Fixed Versions |
 |--------|---------|-----------------|-------------------|----------------|
-| [CVE-2024-38441](https://netatalk.io/security/CVE-2024-38441.html) | Heap out-of-bounds write in directory.c  | 2024/06/28   | 2.0.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0  | 2.4.1, 3.1.19, 3.2.1, |
+| [CVE-2024-38441](https://netatalk.io/security/CVE-2024-38441.html) | Heap out-of-bounds write in directory.c  | 2024/06/28   | 2.0.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0  | 2.4.1, 3.1.19, 3.2.1 |
 | [CVE-2024-38440](https://netatalk.io/security/CVE-2024-38440.html) | Heap out-of-bounds write in uams_dhx_pam.c | 2024/06/28 | 1.5.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0| 2.4.1, 3.1.19, 3.2.1 |
 | [CVE-2024-38439](https://netatalk.io/security/CVE-2024-38439.html) | Heap out-of-bounds write in uams_pam.c   | 2024/06/28   | 1.5.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0| 2.4.1, 3.1.19, 3.2.1 |
 | [CVE-2023-42464](https://netatalk.io/security/CVE-2023-42464.html) | afpd daemon vulnerable to type confusion | 2023/09/16   | 3.1.0 - 3.1.16 | 3.1.17 |
