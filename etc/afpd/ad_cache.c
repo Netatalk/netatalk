@@ -89,7 +89,7 @@ void ad_store_to_cache(struct adouble *adp, struct dir *cached)
  * Sets up the entry directory in adp so that ad_getattr(), ad_getdate(),
  * ad_entry() all work normally — downstream code is completely unchanged.
  *
- * PRECONDITION: ad_init() must have been called on adp to set up
+ * @pre ad_init() must have been called on adp to set up
  * ad_eid[] offsets and valid_data_len via ad_init_offsets().
  * As of E-006, ad_init() now calls ad_init_offsets() internally.
  */
@@ -158,7 +158,6 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
             stp = &st_buf;
         }
 
-        /* Compare cached vs fresh to detect external changes */
         if (dir->dcache_ino != stp->st_ino || dir->dcache_ctime != stp->st_ctime) {
             /* External change detected — dir_modify handles coherence:
              * updates stat fields, refreshes CNID on inode change,
@@ -184,7 +183,17 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
     }
 
     if (!strict && dir && dir->dcache_rlen >= 0) {
-        /* Non-strict: AD data populated — rebuild adouble from cache */
+        /* If caller provided a recent stat, validate ctime/inode. */
+        if (recent_st
+                && (dir->dcache_ctime != recent_st->st_ctime
+                    || dir->dcache_ino != recent_st->st_ino)) {
+            dir_modify(vol, dir, &(struct dir_modify_args) {
+                .flags = DCMOD_STAT,
+                .st = recent_st,
+            });
+            goto disk_read;
+        }
+
         adp->ad_adflags = flags;
         ad_rebuild_from_cache(adp, dir);
         ad_cache_hits++;
@@ -192,7 +201,19 @@ int ad_metadata_cached(const char *name, int flags, struct adouble *adp,
     }
 
     if (dir && dir->dcache_rlen == (off_t) -2) {
-        /* Confirmed no AD exists — return failure without syscall */
+        /* If caller provided a recent stat and ctime/inode changed,
+         * the AD file may have been created since — re-check on disk. */
+        if (recent_st
+                && (dir->dcache_ctime != recent_st->st_ctime
+                    || dir->dcache_ino != recent_st->st_ino)) {
+            dir_modify(vol, dir, &(struct dir_modify_args) {
+                .flags = DCMOD_STAT,
+                .st = recent_st,
+            });
+            goto disk_read;
+        }
+
+        /* Confirmed no AD exists and ctime unchanged — still no AD */
         ad_cache_no_ad++;
         errno = ENOENT;
         return -1;

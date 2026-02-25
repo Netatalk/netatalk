@@ -2025,7 +2025,6 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     target_entry->d_rights_cache = 0xffffffff;
                 }
 
-                /* Send hint to afpd siblings — ACL/permissions changed */
                 cnid_t hint_cnid = target_entry ? target_entry->d_did : CNID_INVALID;
 
                 if (hint_cnid == CNID_INVALID && s_path->u_name && curdir) {
@@ -2086,7 +2085,6 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                     target_entry->d_rights_cache = 0xffffffff;
                 }
 
-                /* Send hint to afpd siblings — ACL/permissions changed */
                 cnid_t hint_cnid2 = target_entry ? target_entry->d_did : CNID_INVALID;
 
                 if (hint_cnid2 == CNID_INVALID && s_path->u_name && curdir) {

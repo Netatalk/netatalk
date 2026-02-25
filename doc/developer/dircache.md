@@ -439,10 +439,10 @@ but performance is improved across virtually all workload patterns.
 
 #### ARC Cache Hits
 
-- **cache_hits**: T1/T2 cached entries returning immediately (fast)
+- **hits**: T1/T2 cached entries returning immediately (fast)
 - **ghost_hits**: B1/B2 ghost entries found and returned instantly with learning benefit (fast)
-- **total_hits**: Combined percentage of cache_hits + ghost_hits
-- **true_misses**: Complete misses requiring filesystem/CNID access (slower)
+- **total_hits**: Combined percentage of hits + ghost_hits
+- **misses**: Complete misses requiring filesystem/CNID access (slower)
 
 #### ARC Ghost Performance
 
@@ -468,10 +468,10 @@ but performance is improved across virtually all workload patterns.
 **Example ARC log output:**
 
 ```txt
-dircache statistics (ARC): (user: jdoe) cache_entries: 98234, ghost_entries: 32838,
-max_entries: 131072, config_max: 131072, lookups: 2458716, cache_hits: 1954327 (79.5%),
-ghost_hits: 322351 (13.1%), total_hits: (92.6%), true_misses: 182038 (7.4%),
-validations: ~21365 (0.9%), added: 152341, removed: 54107, expunged: 7234,
+dircache statistics (ARC): (user: jdoe) entries: 98234, ghost_entries: 32838,
+max_entries: 131072, config_max: 131072, lookups: 2458716, hits: 1954327 (79.5%),
+ghost_hits: 322351 (13.1%), total_hits: (92.6%), misses: 182038 (7.4%),
+validations: 21365 (0.9%), added: 152341, removed: 54107, expunged: 7234,
 invalid_on_use: 187, evicted: 53873, validation_freq: 100
 
 ARC ghost performance: ghost_hits: 322351 (13.1%), ghost_hits(B1=198423, B2=123928),
@@ -484,7 +484,7 @@ total_ghosts=32838, freq_bias: (66.6%)
 ARC adaptation: p=54823/131072 (41.8% target for T1), p_range=[28341,82934],
 adaptations=142387 (increases=76234, decreases=66153)
 
-ARC operations: cache_hits(T1=587234, T2=1367093), promotions(T1→T2=423871),
+ARC operations: hits(T1=587234, T2=1367093), promotions(T1→T2=423871),
 evictions(T1=28934, T2=24939)
 ```
 

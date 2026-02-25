@@ -132,7 +132,6 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     */
     adp = &ad;
     ad_init(adp, vol);
-    /* ad_init_offsets() no longer needed here — called internally by ad_init() */
 
     if (path_isadir(s_path)) {
         LOG(log_debug, logtype_afpd, "afp_listextattr(%s): is a dir", uname);
@@ -165,7 +164,8 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                              : dircache_search_by_name(vol, curdir, uname, strnlen(uname,
                                  CNID_MAX_PATH_LEN));
 
-        if (ad_metadata_cached(uname, adflags, adp, vol, cached, false, NULL) != 0) {
+        if (ad_metadata_cached(uname, adflags, adp, vol, cached, false,
+                               (s_path->st_errno == 0) ? &s_path->st : NULL) != 0) {
             switch (errno) {
             case ENOENT:
                 break;

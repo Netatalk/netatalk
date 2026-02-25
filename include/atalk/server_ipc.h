@@ -37,12 +37,10 @@ struct __attribute__((packed)) ipc_cache_hint_payload {
 _Static_assert(sizeof(struct ipc_cache_hint_payload) == 8,
                "Hint payload must be exactly 8 bytes");
 
-/* Public function declarations */
 extern int ipc_server_read(server_child_t *children, int fd);
 extern int ipc_child_write(int fd, uint16_t command, size_t len, void *token);
 extern int ipc_child_state(AFPObj *obj, uint16_t state);
 
-/* Cross-process dircache hint functions */
 extern int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
                                uint8_t event);
 extern unsigned long long ipc_get_hints_sent(void);

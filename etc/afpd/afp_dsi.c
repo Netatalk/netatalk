@@ -87,7 +87,6 @@ static void afp_dsi_close(AFPObj *obj)
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
-    /* Close dircache hint pipe read end */
     if (obj->hint_fd >= 0) {
         close(obj->hint_fd);
         obj->hint_fd = -1;
@@ -560,11 +559,7 @@ void afp_over_dsi(AFPObj *obj)
              * buffer — if data is in DSI's application-level buffer,
              * poll() blocks even though dsi_stream_receive() would succeed. */
             if (dsi->start != dsi->eof) {
-                /* DSI buffer has data — drain hints then proceed to receive */
-                if (obj->hint_fd >= 0) {
-                    process_cache_hints(obj);
-                }
-
+                /* DSI buffer has data — proceed directly to receive */
                 break;
             }
 
@@ -574,7 +569,7 @@ void afp_over_dsi(AFPObj *obj)
                     process_cache_hints(obj);
                 }
 
-                /* Fall through to dsi_stream_receive() + existing state handling */
+                /* Fall through to dsi_stream_receive() + AFP state handling */
                 break;
             }
 
@@ -845,7 +840,6 @@ void afp_over_dsi(AFPObj *obj)
 
         pending_request(dsi);
         fce_pending_events(obj);
-        process_cache_hints(obj);
     }
 
     /* error */

@@ -1977,9 +1977,9 @@ void log_dircache_stat(void)
                                    (double)dircache_stat.lookups) * 100.0 : 0.0;
         LOG(log_info, logtype_afpd,
             "dircache statistics (ARC): (user: %s) "
-            "cache_entries: %zu, ghost_entries: %zu, max_entries: %lu (%lu KB), config_max: %zu, "
-            "lookups: %llu, cache_hits: %llu (%.1f%%), ghost_hits: %llu (%.1f%%), total_hits: (%.1f%%), true_misses: %llu (%.1f%%), "
-            "validations: ~%llu (%.1f%%), "
+            "entries: %zu, ghost_entries: %zu, max_entries: %lu (%lu KB), config_max: %zu, "
+            "lookups: %llu, hits: %llu (%.1f%%), ghost_hits: %llu (%.1f%%), total_hits: (%.1f%%), misses: %llu (%.1f%%), "
+            "validations: %llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, "
             "evicted: %llu, validation_freq: %u",
             username,
@@ -2035,7 +2035,7 @@ void log_dircache_stat(void)
             arc_cache.stats.p_decreases);
         /* ARC operations breakdown - detailed operation counters */
         LOG(log_info, logtype_afpd,
-            "ARC operations: (user: %s) cache_hits(T1=%llu, T2=%llu), "
+            "ARC operations: (user: %s) hits(T1=%llu, T2=%llu), "
             "promotions(T1→T2=%llu), evictions(T1=%llu, T2=%llu)",
             username,
             arc_cache.stats.hits_t1,
@@ -2050,7 +2050,7 @@ void log_dircache_stat(void)
         LOG(log_info, logtype_afpd,
             "dircache statistics (LRU): (user: %s) "
             "entries: %lu, max_entries: %lu (%lu KB), config_max: %u, lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
-            "validations: ~%llu (%.1f%%), "
+            "validations: %llu (%.1f%%), "
             "added: %llu, removed: %llu, expunged: %llu, invalid_on_use: %llu, evicted: %llu, "
             "validation_freq: %u",
             username,
@@ -2423,7 +2423,6 @@ void process_cache_hints(AFPObj *obj)
             continue;
         }
 
-        /* Validate CNID */
         if (hint.cnid == CNID_INVALID || ntohl(hint.cnid) < CNID_START) {
             cache_hint_stat.hints_no_match++;
             continue;
