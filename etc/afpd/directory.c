@@ -941,8 +941,8 @@ struct dir *dir_new(const char *m_name,
     dir->dcache_uid = st->st_uid;
     dir->dcache_gid = st->st_gid;
     dir->dcache_size = st->st_size;
-    dir->dcache_rlen = (off_t)
-                       - 1; /* Not yet loaded — triggers ad_metadata() on first access */
+    /* Not yet loaded — triggers ad_metadata() on first access */
+    dir->dcache_rlen = (off_t) - 1;
 
     if (!S_ISDIR(st->st_mode)) {
         dir->d_flags = DIRF_ISFILE;
@@ -1096,7 +1096,6 @@ int dir_modify(const struct vol *vol, struct dir *dir,
             dir->d_u_name = (strcmp(mname, args->new_uname) == 0)
                             ? dir->d_m_name : bfromcstr(args->new_uname);
 
-            /* Update UCS2 mac name */
             if (dir->d_m_name_ucs2) {
                 free(dir->d_m_name_ucs2);
                 dir->d_m_name_ucs2 = NULL;
@@ -2113,7 +2112,8 @@ int getdirparams(const AFPObj *obj,
                   (1 << DIRPBIT_FINFO))) {
         ad_init(&ad, vol);
 
-        if (!ad_metadata_cached(upath, ADFLAGS_DIR, &ad, vol, dir, false, NULL)) {
+        if (!ad_metadata_cached(upath, ADFLAGS_DIR, &ad, vol, dir, false,
+                                (s_path->st_errno == 0) ? &s_path->st : NULL)) {
             ad_available = 1;
             /* The ad_metadata_cached function handles ad_close() internally. */
         }

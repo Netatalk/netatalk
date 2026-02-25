@@ -718,8 +718,8 @@ int getfilparams(const AFPObj *obj, struct vol *vol, uint16_t bitmap,
                                      upath, upath_len);
             ad_init(&ad, vol);
 
-            if (ad_metadata_cached(upath, flags, &ad, vol, cachedfile, !skip_fork_check,
-                                   NULL) < 0) {
+            if (ad_metadata_cached(upath, flags, &ad, vol, cachedfile, false,
+                                   (path->st_errno == 0) ? &path->st : NULL) < 0) {
                 switch (errno) {
                 case EACCES:
                     LOG(log_error, logtype_afpd,

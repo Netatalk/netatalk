@@ -224,7 +224,8 @@ static struct adouble *adl_lkup(struct vol *vol, struct path *path,
                                  path->u_name, strnlen(path->u_name, CNID_MAX_PATH_LEN));
 
         if (ad_metadata_cached(path->u_name, (isdir ? ADFLAGS_DIR : 0),
-                               adp, vol, cached, false, NULL) < 0) {
+                               adp, vol, cached, false,
+                               (path->st_errno == 0) ? &path->st : NULL) < 0) {
             adp = NULL;
         }
 

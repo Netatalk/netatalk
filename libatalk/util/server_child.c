@@ -175,7 +175,6 @@ int server_child_remove(server_child_t *children, pid_t pid)
         close(fd);
     }
 
-    /* Close dircache hint pipe write end — releases parent→child cache hint channel */
     if (child->afpch_hint_fd >= 0) {
         close(child->afpch_hint_fd);
     }
@@ -204,7 +203,6 @@ void server_child_free(server_child_t *children)
             tmp = child->afpch_next;
             close(child->afpch_ipc_fd);
 
-            /* Close dircache hint pipe write end during server shutdown */
             if (child->afpch_hint_fd >= 0) {
                 close(child->afpch_hint_fd);
             }

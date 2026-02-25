@@ -376,8 +376,6 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         struct dir *cached = dircache_search_by_name(vol, curdir, sd.sd_last, len);
 
         if (cached) {
-            /* Cache hit (includes ghosts) - use cached metadata, skip stat()! */
-            /* Note: dircache_search_by_name() already performed validation if needed */
             /* Reconstruct stat from cached fields */
             s_path.st.st_ino = cached->dcache_ino;
             s_path.st.st_ctime = cached->dcache_ctime;
@@ -389,13 +387,11 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
             /* Populate remaining system struct stat fields with safe defaults.
              * These are NOT used by AFP enumeration (getfilparams/getdirparams)
              * but must be initialized since s_path.st is a full struct stat */
-            s_path.st.st_dev =
-                0;        /* not cached; only needed by ad_convert CNID path */
-            s_path.st.st_nlink =
-                1;      /* safe default (dirs have >=2, but nlink is unused) */
-            s_path.st.st_rdev = 0;       /* is not a device file */
-            s_path.st.st_blocks = 0;     /* AFP uses st_size, not st_blocks */
-            s_path.st.st_blksize = 0;    /* not used by AFP */
+            s_path.st.st_dev = 0;      /* not cached; only needed by ad_convert */
+            s_path.st.st_nlink = 1;    /* dirs have >=2, but nlink is unused */
+            s_path.st.st_rdev = 0;     /* is not a device file */
+            s_path.st.st_blocks = 0;   /* AFP uses st_size, not st_blocks */
+            s_path.st.st_blksize = 0;  /* not used by AFP */
             s_path.st.st_atime = cached->dcache_mtime;  /* approximate; not used by AFP */
             s_path.st_valid = 1;
             s_path.st_errno = 0;
@@ -408,8 +404,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         } else {
             /* Cache miss - fall back to original stat() behavior */
             if (of_stat(vol, &s_path) < 0) {
-                /* stat failed - entry doesn't exist or is inaccessible */
-                /* so the next time it won't try to stat it again
+                /* The next time it won't try to stat it again
                  * another solution would be to invalidate the cache with
                  * sd.sd_did = 0 but if it's not ENOENT error it will start again
                  */

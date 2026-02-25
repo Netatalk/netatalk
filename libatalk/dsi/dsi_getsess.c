@@ -91,7 +91,6 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         /* using SIGKILL is hokey, but the child might not have
          * re-established its signal handler for SIGTERM yet. */
         close(ipc_fds[1]);
-        /* Parent closes read end of hint pipe */
         close(hint_pipe[0]);
 
         if ((child = server_child_add(serv_children, pid, ipc_fds[0],
@@ -116,10 +115,8 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     dsi->AFPobj->cnx_max = serv_children->servch_nsessions;
     /* get rid of some stuff */
     dsi->AFPobj->ipc_fd = ipc_fds[1];
-    /* Child keeps read end of hint pipe */
     dsi->AFPobj->hint_fd = hint_pipe[0];
     close(ipc_fds[0]);
-    /* Child closes write end of hint pipe */
     close(hint_pipe[1]);
     close(dsi->serversock);
     dsi->serversock = -1;
