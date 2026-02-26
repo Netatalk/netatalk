@@ -2647,6 +2647,17 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                               NULL, NULL);
     options->servername     = getoption_strdup(config, INISEC_GLOBAL, "server name",
                               NULL, NULL);
+
+    if (options->servername == NULL) {
+        options->servername = getoption_strdup(config, INISEC_GLOBAL, "zeroconf name",
+                                               NULL, NULL);
+
+        if (options->servername != NULL) {
+            LOG(log_warning, logtype_afpd,
+                "Using deprecated 'zeroconf name' option, please update to 'server name'");
+        }
+    }
+
     options->adminauthuser  = getoption_strdup(config, INISEC_GLOBAL,
                               "admin auth user", NULL, NULL);
     options->ignored_attr   = getoption_strdup(config, INISEC_GLOBAL,
@@ -2673,12 +2684,19 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             NULL, DSI_SERVQUANT_DEF);
     options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen",
                                             NULL, 80);
-    options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircachesize",
+    options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircache size",
                                             NULL, -1);
 
     if (options->dircachesize == -1) {
-        options->dircachesize = getoption_int(config, INISEC_GLOBAL, "dircache size",
-                                              NULL, DEFAULT_MAX_DIRCACHE_SIZE);
+        options->dircachesize = getoption_int(config, INISEC_GLOBAL, "dircachesize",
+                                              NULL, -1);
+
+        if (options->dircachesize == -1) {
+            options->dircachesize = DEFAULT_MAX_DIRCACHE_SIZE;
+        } else {
+            LOG(log_warning, logtype_afpd,
+                "Using deprecated 'dircachesize' option, please update to 'dircache size'");
+        }
     }
 
     options->dircache_files = getoption_bool(config, INISEC_GLOBAL,
