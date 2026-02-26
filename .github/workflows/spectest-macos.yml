@@ -148,7 +148,7 @@ jobs:
           mac charset = MAC_ROMAN
           unix charset = UTF8
           vol charset = UTF8
-          dircachesize = 1024
+          dircache size = 1024
           dircache validation freq = 100
           afp listen = 0.0.0.0:5548
           cnid scheme = dbd
