@@ -11,6 +11,22 @@ Notably, the **atalkd** daemon with its **atalkd.conf** configuration file,
 and the **papd** daemon with its **papd.conf** configuration file are once
 more available.
 
+A handful of options in *afp.conf* have been changed or removed incrementally
+throughout the Netatalk v4 release history.
+See the table of old and new option names below for details.
+
+| v3 afp.conf        | v4 afp.conf      | Change in | Remarks                                                  |
+| ------------------ | ---------------- | --------- | -------------------------------------------------------- |
+| appledouble        | -                | 4.2.0     | controlled solely by 'ea' now                            |
+| dircachesize       | dircache size    | 4.5.0     | -                                                        |
+| fce ignore names   | fce ignore names | 4.2.0     | comma delineation rather than forward slash delineation  |
+| root postexec      | -                | 4.1.0     | use 'postexec' instead                                   |
+| root preexec       | -                | 4.1.0     | use 'preexec' instead                                    |
+| root preexec close | -                | 4.1.0     | use 'preexec close' instead                              |
+| start dbus         | -                | 4.1.0     | D-Bus is controlled with 'spotlight'                     |
+| start tracker      | -                | 4.1.0     | Tracker/Localsearch is controlled with 'spotlight'       |
+| zeroconf name      | server name      | 4.2.0     | now applies to Classic Mac OS clients too                |
+
 ## Upgrading from Netatalk 2
 
 There are three major changes between Netatalk 2 and Netatalk 4:
