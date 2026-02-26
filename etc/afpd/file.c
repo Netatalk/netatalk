@@ -350,6 +350,14 @@ int getmetadata(const AFPObj *obj,
 
             if (cachedfile == NULL) {
                 id = get_id(vol, adp, st, dir->d_did, upath, len);
+
+                if (id < CNID_START) {
+                    LOG(log_error, logtype_afpd,
+                        "getmetadata: get_id failed for \"%s\", invalid id %u, afp_errno=%d (%s)",
+                        upath, id, afp_errno, AfpErr2name(afp_errno));
+                    return afp_errno;
+                }
+
                 /* Add it to the cache */
                 LOG(log_debug, logtype_afpd, "getmetadata: caching: did:%u, \"%s\", cnid:%u",
                     ntohl(dir->d_did), upath, ntohl(id));
