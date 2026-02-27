@@ -927,6 +927,37 @@ test_exit:
     exit_test("FPGetFileDirParms:test335: long file name >31 bytes");
 }
 
+/* Probe the AFP server for a specific extmap type/creator mapping.
+ * Creates a temp file with the given name (which should have the target extension),
+ * reads back FinderInfo, cleans up, and returns 1 if it matches expected, 0 otherwise.
+ * Returns -1 on error (file creation or param retrieval failed).
+ */
+static int probe_extmap(char *probe_name, const char *expected_finfo8)
+{
+    uint16_t vol = VolID;
+    int ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    const DSI *dsi = &Conn->dsi;
+    uint16_t bitmap = (1 << FILPBIT_FINFO);
+    int ret;
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, probe_name)) {
+        return -1;
+    }
+
+    ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, probe_name, bitmap, 0);
+
+    if (ret) {
+        FPDelete(Conn, vol, DIRDID_ROOT, probe_name);
+        return -1;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    FPDelete(Conn, vol, DIRDID_ROOT, probe_name);
+    return memcmp(filedir.finder_info, expected_finfo8, 8) == 0;
+}
+
 /* -------------------------
  * for this test you need
 .         "????"  "????"
@@ -942,7 +973,19 @@ STATIC void test371()
     struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     uint16_t bitmap;
+    int rc1;
+    int rc2;
     ENTER_TEST
+    rc1 = probe_extmap("_probe_t371", "????????");
+    rc2 = probe_extmap("_probe_t371.pdf", "PDF CARO");
+
+    if (rc1 == 0 || rc2 == 0) {
+        test_skipped(T_EXTMAP);
+        goto test_exit;
+    } else if (rc1 < 0 || rc2 < 0) {
+        test_nottested();
+        goto test_exit;
+    }
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
@@ -1011,7 +1054,17 @@ STATIC void test380()
     uint16_t bitmap1 = (1 << FILPBIT_ATTR) | (1 << FILPBIT_FINFO) |
                        (1 << FILPBIT_CDATE) |
                        (1 << FILPBIT_BDATE) | (1 << FILPBIT_MDATE);
+    int rc;
     ENTER_TEST
+    rc = probe_extmap("_probe_t380.doc", "WDBNMSWD");
+
+    if (rc == 0) {
+        test_skipped(T_EXTMAP);
+        goto test_exit;
+    } else if (rc < 0) {
+        test_nottested();
+        goto test_exit;
+    }
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();

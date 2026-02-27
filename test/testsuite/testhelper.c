@@ -130,6 +130,10 @@ void test_skipped(int why)
         s = "AppleDouble v2 to EA conversion enabled (convert appledouble = yes)";
         break;
 
+    case T_EXTMAP:
+        s = "extmap.conf type/creator mapping";
+        break;
+
     default:
         s = "UNKNOWN REASON - this is a bug";
         break;
