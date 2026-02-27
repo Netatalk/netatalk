@@ -342,11 +342,15 @@ static int getvolparams(const AFPObj *obj, uint16_t bitmap, struct vol *vol,
     const char *slash = NULL;
     char *ade = NULL;
     LOG(log_debug, logtype_afpd, "getvolparams: Volume '%s'", vol->v_localname);
+
     /* courtesy of jallison@whistle.com:
      * For MacOS8.x support we need to create the
      * .Parent file here if it doesn't exist. */
     /* Convert adouble:v2 to adouble:ea on the fly */
-    (void)ad_convert(vol->v_path, st, vol, NULL);
+    if (!(vol->v_flags & AFPVOL_NOV2TOEACONV)) {
+        (void)ad_convert(vol->v_path, st, vol, NULL);
+    }
+    
     ad_init(&ad, vol);
 
     if (ad_open(&ad, vol->v_path,
