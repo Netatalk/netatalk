@@ -2413,7 +2413,7 @@ if 'none' not in init_style
     subdir('distrib')
 endif
 
-if get_option('with-tests') or get_option('with-testsuite')
+if get_option('with-tests') or get_option('with-testsuite') or get_option('with-fuzzing')
     subdir('test')
 endif
 

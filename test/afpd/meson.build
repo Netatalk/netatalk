@@ -89,112 +89,158 @@ if threads.found()
     test_external_deps += threads
 endif
 
-# For dtrace probes we need to invoke dtrace on all input files, before
-# linking the final executable.
-#
-# On meson there's currently no easy way to do this. So we build
-# a static library with all the input objects, run our script to generate
-# exports, and build the final executable using that static library.
+if get_option('with-tests')
 
-afpdtestlib = static_library(
-    'afpdtestlib',
-    test_sources,
-    include_directories: test_includes,
-    link_with: [test_internal_deps, libatalk],
-    dependencies: [
-        test_external_deps,
-        libcnid_deps,
-    ],
-    c_args: [
-        '-DAPPLCNAME', confdir,
-        dversion,
-        test_c_args,
-        messagedir,
-        statedir,
-        uamdir,
-    ],
-    link_args: test_link_args,
-    install: false,
-    build_by_default: false,
-)
+    # For dtrace probes we need to invoke dtrace on all input files, before
+    # linking the final executable.
+    #
+    # On meson there's currently no easy way to do this. So we build
+    # a static library with all the input objects, run our script to generate
+    # exports, and build the final executable using that static library.
 
-afpdtest_dtrace_input = []
-test_objs = [afpdtestlib.extract_all_objects(recursive: false)]
-
-# As of 2/2024:
-# The afp_dtrace.o file is necessary for dtrace support on Solaris, and on recent
-# versions of systemtap.  (Older systemtap releases just produce an empty
-# file, but that's okay.)  However, macOS's dtrace doesn't use it and doesn't
-# even recognize the -G option.  So, build afp_dtrace.o except on macOS.
-# This might need adjustment as other platforms add dtrace support.
-#
-# On at least linux we don't actually need to pass in all the objects, but
-# at least on FreeBSD and Solaris we have to.
-
-if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
-    run_command(
-        'rm',
-        '-f', meson.current_build_dir() / 'afp_dtrace.o',
-        check: true,
+    afpdtestlib = static_library(
+        'afpdtestlib',
+        test_sources,
+        include_directories: test_includes,
+        link_with: [test_internal_deps, libatalk],
+        dependencies: [
+            test_external_deps,
+            libcnid_deps,
+        ],
+        c_args: [
+            '-DAPPLCNAME', confdir,
+            dversion,
+            test_c_args,
+            messagedir,
+            statedir,
+            uamdir,
+        ],
+        link_args: test_link_args,
+        install: false,
+        build_by_default: false,
     )
-endif
 
-if have_dtrace and host_os != 'darwin'
-    afpdtest_dtrace_input += custom_target(
-        'afp_dtrace.o',
-        input: [
-            meson.project_source_root() / 'include/atalk/afp_dtrace.d',
-            afpdtestlib.extract_objects(
-                meson.project_source_root() / 'etc/afpd/afp_dsi.c',
-                meson.project_source_root() / 'etc/afpd/fork.c',
-                meson.project_source_root() / 'etc/afpd/appl.c',
-                meson.project_source_root() / 'etc/afpd/catsearch.c',
-                meson.project_source_root() / 'etc/afpd/dircache.c',
-                meson.project_source_root() / 'etc/afpd/directory.c',
-                meson.project_source_root() / 'etc/afpd/enumerate.c',
-                meson.project_source_root() / 'etc/afpd/file.c',
-                meson.project_source_root() / 'etc/afpd/filedir.c',
-            ),
+    afpdtest_dtrace_input = []
+    test_objs = [afpdtestlib.extract_all_objects(recursive: false)]
+
+    # As of 2/2024:
+    # The afp_dtrace.o file is necessary for dtrace support on Solaris, and on recent
+    # versions of systemtap.  (Older systemtap releases just produce an empty
+    # file, but that's okay.)  However, macOS's dtrace doesn't use it and doesn't
+    # even recognize the -G option.  So, build afp_dtrace.o except on macOS.
+    # This might need adjustment as other platforms add dtrace support.
+    #
+    # On at least linux we don't actually need to pass in all the objects, but
+    # at least on FreeBSD and Solaris we have to.
+
+    if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
+        run_command(
+            'rm',
+            '-f', meson.current_build_dir() / 'afp_dtrace.o',
+            check: true,
+        )
+    endif
+
+    if have_dtrace and host_os != 'darwin'
+        afpdtest_dtrace_input += custom_target(
+            'afp_dtrace.o',
+            input: [
+                meson.project_source_root() / 'include/atalk/afp_dtrace.d',
+                afpdtestlib.extract_objects(
+                    meson.project_source_root() / 'etc/afpd/afp_dsi.c',
+                    meson.project_source_root() / 'etc/afpd/fork.c',
+                    meson.project_source_root() / 'etc/afpd/appl.c',
+                    meson.project_source_root() / 'etc/afpd/catsearch.c',
+                    meson.project_source_root() / 'etc/afpd/dircache.c',
+                    meson.project_source_root() / 'etc/afpd/directory.c',
+                    meson.project_source_root() / 'etc/afpd/enumerate.c',
+                    meson.project_source_root() / 'etc/afpd/file.c',
+                    meson.project_source_root() / 'etc/afpd/filedir.c',
+                ),
+            ],
+            output: 'afp_dtrace.o',
+            command: [
+                dtrace_command,
+                '-C',
+                '-G',
+                '-o', '@OUTPUT@',
+                '-s', '@INPUT@',
+            ],
+            install: false,
+        )
+    endif
+
+    afpdtest = executable(
+        'afpdtest',
+        afpdtest_dtrace_input,
+        objects: test_objs,
+        include_directories: test_includes,
+        link_with: [test_internal_deps, libatalk],
+        dependencies: [
+            test_external_deps,
+            libcnid_deps,
         ],
-        output: 'afp_dtrace.o',
-        command: [
-            dtrace_command,
-            '-C',
-            '-G',
-            '-o', '@OUTPUT@',
-            '-s', '@INPUT@',
-        ],
+        c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
+        link_args: test_link_args,
+        export_dynamic: true,
         install: false,
     )
+
+    test_sh = find_program('test.sh')
+
+    test(
+        'afpd integration tests - setup',
+        test_sh,
+        is_parallel: false,
+        priority: 1,
+    )
+    test(
+        'afpd integration tests - run',
+        afpdtest,
+        is_parallel: false,
+        priority: 0,
+    )
+
 endif
 
-afpdtest = executable(
-    'afpdtest',
-    afpdtest_dtrace_input,
-    objects: test_objs,
-    include_directories: test_includes,
-    link_with: [test_internal_deps, libatalk],
-    dependencies: [
-        test_external_deps,
-        libcnid_deps,
-    ],
-    c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
-    link_args: test_link_args,
-    export_dynamic: true,
-    install: false,
-)
+if get_option('with-fuzzing')
+    fuzz_sources = []
+    foreach s : test_sources
+        if not s.endswith('test.c')
+            fuzz_sources += s
+        endif
+    endforeach
+    fuzz_sources += files('fuzz.c')
 
-test_sh = find_program('test.sh')
+    fuzz_engine = get_option('with-fuzzing-engine')
+    if fuzz_engine != ''
+        fuzz_link_args = [fuzz_engine] + test_link_args
+        fuzz_c_args = []
+    else
+        fuzz_link_args = ['-fsanitize=fuzzer,address'] + test_link_args
+        fuzz_c_args = ['-fsanitize=fuzzer,address']
+    endif
 
-test(
-    'afpd integration tests - setup',
-    test_sh,
-    is_parallel: false,
-    priority: 1,
-)
-test(
-    'afpd integration tests - run',
-    afpdtest,
-    is_parallel: false,
-    priority: 0,
-)
+    executable(
+        'afpd_fuzz',
+        fuzz_sources,
+        include_directories: test_includes,
+        link_with: [test_internal_deps, libatalk],
+        dependencies: [
+            test_external_deps,
+            libcnid_deps,
+        ],
+        c_args: [
+            '-DAPPLCNAME', confdir,
+            dversion,
+            test_c_args,
+            messagedir,
+            statedir,
+            uamdir,
+            fuzz_c_args,
+        ],
+        link_args: fuzz_link_args,
+        install: false,
+        build_by_default: false,
+    )
+endif

@@ -11,3 +11,9 @@ endif
 if get_option('with-testsuite')
     subdir('testsuite')
 endif
+
+if not get_option('with-tests') and get_option('with-fuzzing')
+    if use_sqlite_backend
+        subdir('afpd')
+    endif
+endif
