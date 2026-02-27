@@ -69,6 +69,7 @@
 #define T_CRED       30
 #define T_LOCALHOST  31
 #define T_V2CONV     32
+#define T_EXTMAP     33
 
 /* Define ansi colors */
 #define ANSI_RED      "\033[0;31m"
