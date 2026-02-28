@@ -1,4 +1,5 @@
 name: Code Analysis
+
 on:
   push:
     branches:

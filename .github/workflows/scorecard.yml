@@ -1,10 +1,12 @@
 name: Scorecard supply-chain security
+
 on:
   branch_protection_rule:
   schedule:
     - cron: '45 23 * * 0'
   push:
-    branches: ["main"]
+    branches:
+      - main
 
 permissions:
   contents: read
