@@ -1,14 +1,10 @@
 name: Builds
+
 on:
   push:
     branches:
       - main
       - branch-*
-    paths-ignore:
-      - "**.md"
-      - "**/COPYING"
-      - "**/README*"
-      - "COPYRIGHT"
   pull_request:
     branches:
       - main
@@ -17,11 +13,6 @@ on:
       - opened
       - synchronize
       - reopened
-    paths-ignore:
-      - "**.md"
-      - "**/COPYING"
-      - "**/README*"
-      - "COPYRIGHT"
 
 permissions:
   contents: read

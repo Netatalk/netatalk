@@ -1,23 +1,18 @@
 name: Containers
+
 on:
   push:
-    branches: ["main"]
-    paths-ignore:
-      - "**.md"
-      - "**/COPYING"
-      - "**/README*"
-      - ".github/workflows/build.yml"
-      - "contrib/webmin_module/**"
-      - "COPYRIGHT"
+    branches:
+      - main
+      - branch-*
   pull_request:
-    branches: ["main"]
-    paths-ignore:
-      - "**.md"
-      - "**/COPYING"
-      - "**/README*"
-      - ".github/workflows/build.yml"
-      - "contrib/webmin_module/**"
-      - "COPYRIGHT"
+    branches:
+      - main
+      - branch-*
+    types:
+      - opened
+      - synchronize
+      - reopened
 
 permissions:
   contents: read
