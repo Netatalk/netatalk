@@ -37,6 +37,7 @@ foreach man : manfiles
         capture: true,
         install: true,
         install_dir: mandir / 'man8',
+        install_tag: 'man',
         build_by_default: true,
     )
 endforeach

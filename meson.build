@@ -2343,6 +2343,7 @@ if 'readmes' in get_option('with-docs')
                     capture: true,
                     install: true,
                     install_dir: datadir / 'doc/netatalk',
+                    install_tag: 'doc',
                 )
             elif cmarkgfm.found()
                 custom_target(
@@ -2359,9 +2360,14 @@ if 'readmes' in get_option('with-docs')
                     capture: true,
                     install: true,
                     install_dir: datadir / 'doc/netatalk',
+                    install_tag: 'doc',
                 )
             else
-                install_data(file + '.md', install_dir: datadir / 'doc/netatalk')
+                install_data(
+                    file + '.md',
+                    install_dir: datadir / 'doc/netatalk',
+                    install_tag: 'doc',
+                )
             endif
         endif
     endforeach
