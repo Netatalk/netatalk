@@ -11,7 +11,7 @@ if have_appletalk
         'papd.conf',
     ]
 
-    install_data('macipgw.conf.5', install_dir: mandir / 'man5')
+    install_data('macipgw.conf.5', install_dir: mandir / 'man5', install_tag: 'man')
 endif
 
 foreach man : manfiles
@@ -30,6 +30,7 @@ foreach man : manfiles
         capture: true,
         install: true,
         install_dir: mandir / 'man5',
+        install_tag: 'man',
         build_by_default: true,
     )
 endforeach

@@ -19,7 +19,11 @@ if have_appletalk
         'rtmpqry',
     ]
 
-    install_data(['nbp.1', 'nbpunrgstr.1'], install_dir: mandir / 'man1')
+    install_data(
+        ['nbp.1', 'nbpunrgstr.1'],
+        install_dir: mandir / 'man1',
+        install_tag: 'man',
+    )
 endif
 
 if get_option('with-testsuite')
@@ -31,7 +35,7 @@ if get_option('with-testsuite')
         'afparg',
     ]
 
-    install_data('afptest.1', install_dir: mandir / 'man1')
+    install_data('afptest.1', install_dir: mandir / 'man1', install_tag: 'man')
 endif
 
 foreach man : manfiles
@@ -50,6 +54,7 @@ foreach man : manfiles
         capture: true,
         install: true,
         install_dir: mandir / 'man1',
+        install_tag: 'man',
         build_by_default: true,
     )
 endforeach

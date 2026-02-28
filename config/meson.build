@@ -7,7 +7,7 @@ afp_conf = configure_file(
 if (fs.exists(pkgconfdir / 'afp.conf') and not get_option('with-overwrite'))
     message('will not replace existing', pkgconfdir / 'afp.conf')
 else
-    install_data(afp_conf, install_dir: pkgconfdir)
+    install_data(afp_conf, install_dir: pkgconfdir, install_tag: 'config')
 endif
 
 if have_spotlight
@@ -23,7 +23,7 @@ if have_spotlight
     )
         message('will not replace existing', pkgconfdir / 'dbus-session.conf')
     else
-        install_data(dbus_session_conf, install_dir: pkgconfdir)
+        install_data(dbus_session_conf, install_dir: pkgconfdir, install_tag: 'config')
     endif
 endif
 
@@ -37,7 +37,11 @@ if have_afpstats
             dbus_sysconfpath / 'netatalk-dbus.conf',
         )
     else
-        install_data('netatalk-dbus.conf', install_dir: dbus_sysconfpath)
+        install_data(
+            'netatalk-dbus.conf',
+            install_dir: dbus_sysconfpath,
+            install_tag: 'config',
+        )
     endif
 endif
 
@@ -64,6 +68,7 @@ if have_appletalk and have_cups and get_option('with-cups-pap-backend')
         configuration: cdata,
         install: true,
         install_dir: cups_libdir / 'cups/backend',
+        install_tag: 'runtime',
     )
 endif
 
@@ -71,7 +76,7 @@ foreach file : static_conf_files
     if (fs.exists(pkgconfdir / file) and not get_option('with-overwrite'))
         message('will not replace existing', pkgconfdir / file)
     else
-        install_data(file, install_dir: pkgconfdir)
+        install_data(file, install_dir: pkgconfdir, install_tag: 'config')
     endif
 endforeach
 
@@ -82,11 +87,16 @@ if (fs.exists('/etc/ld.so.conf.d') and get_option('with-ldsoconf'))
         configuration: cdata,
         install: true,
         install_dir: '/etc/ld.so.conf.d',
+        install_tag: 'config',
     )
 endif
 
 if get_option('with-statedir-creation')
-    install_data('README', install_dir: localstatedir / 'netatalk/CNID')
+    install_data(
+        'README',
+        install_dir: localstatedir / 'netatalk/CNID',
+        install_tag: 'doc',
+    )
 endif
 
 if have_pam

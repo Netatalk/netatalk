@@ -38,6 +38,7 @@ foreach page : manual_pages
             capture: true,
             install: true,
             install_dir: docs_install_path / 'manual',
+            install_tag: 'doc',
         )
     elif cmarkgfm.found()
         custom_target(
@@ -54,6 +55,7 @@ foreach page : manual_pages
             capture: true,
             install: true,
             install_dir: docs_install_path / 'manual',
+            install_tag: 'doc',
         )
     elif cmark.found()
         custom_target(
@@ -70,6 +72,7 @@ foreach page : manual_pages
             capture: true,
             install: true,
             install_dir: docs_install_path / 'manual',
+            install_tag: 'doc',
         )
     endif
 endforeach

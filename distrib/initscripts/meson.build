@@ -33,6 +33,7 @@ if 'debian-sysv' in init_style
             install: true,
             install_dir: init_dir,
             install_mode: 'rwxr-xr-x',
+            install_tag: 'runtime',
         )
     endforeach
     if get_option('with-init-hooks')
@@ -60,6 +61,7 @@ if 'freebsd' in init_style
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
+        install_tag: 'runtime',
     )
     if get_option('with-init-hooks')
         meson.add_install_script(
@@ -82,6 +84,7 @@ if 'macos-launchd' in init_style
         install: true,
         install_dir: bindir,
         install_mode: 'rwxr-xr-x',
+        install_tag: 'runtime',
     )
     configure_file(
         input: 'macos.netatalk.plist.in',
@@ -89,6 +92,7 @@ if 'macos-launchd' in init_style
         configuration: cdata,
         install: true,
         install_dir: init_dir,
+        install_tag: 'runtime',
     )
     if (
         not fs.exists(init_dir / 'io.netatalk.daemon.plist')
@@ -144,6 +148,7 @@ if 'netbsd' in init_style
             install: true,
             install_dir: init_dir,
             install_mode: 'rwxr-xr-x',
+            install_tag: 'runtime',
         )
     endforeach
 endif
@@ -160,6 +165,7 @@ if 'openbsd' in init_style
         install: true,
         install_dir: init_dir,
         install_mode: 'rwxr-xr-x',
+        install_tag: 'runtime',
     )
     if get_option('with-init-hooks')
         meson.add_install_script(
@@ -193,6 +199,7 @@ if 'openrc' in init_style
             install: true,
             install_dir: init_dir,
             install_mode: 'rwxr-xr-x',
+            install_tag: 'runtime',
         )
     endforeach
     if get_option('with-init-hooks')
@@ -218,6 +225,7 @@ if 'solaris' in init_style
         configuration: cdata,
         install: true,
         install_dir: init_dir,
+        install_tag: 'runtime',
     )
     if get_option('with-init-hooks')
         meson.add_install_script(
@@ -250,6 +258,7 @@ if 'systemd' in init_style
             configuration: cdata,
             install: true,
             install_dir: init_dir,
+            install_tag: 'runtime',
         )
     endforeach
     if get_option('with-init-hooks')
