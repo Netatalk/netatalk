@@ -629,7 +629,9 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
 
     if (NULL == (ofork = of_find(ofrefnum))) {
         LOG(log_error, logtype_afpd,
-            "afp_setforkparams: of_find(%d) could not locate fork", ofrefnum);
+            "afp_setforkparams: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         return AFPERR_PARAM;
     }
 
@@ -799,8 +801,10 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     ibuf += sizeof(ofrefnum);
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_error, logtype_afpd, "byte_lock: of_find(%d) could not locate fork",
-            ofrefnum);
+        LOG(log_error, logtype_afpd,
+            "byte_lock: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         return AFPERR_PARAM;
     }
 
@@ -942,8 +946,10 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     ibuf += sizeof(u_short);
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_error, logtype_afpd, "afp_read: of_find(%d) could not locate fork",
-            ofrefnum);
+        LOG(log_error, logtype_afpd,
+            "afp_read: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         err = AFPERR_PARAM;
         goto afp_read_err;
     }
@@ -1174,8 +1180,10 @@ int afp_flushfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_error, logtype_afpd, "afp_flushfork: of_find(%d) could not locate fork",
-            ofrefnum);
+        LOG(log_error, logtype_afpd,
+            "afp_flushfork: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         return AFPERR_PARAM;
     }
 
@@ -1207,8 +1215,10 @@ int afp_syncfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     ibuf += sizeof(ofrefnum);
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_error, logtype_afpd, "afpd_syncfork: of_find(%d) could not locate fork",
-            ofrefnum);
+        LOG(log_error, logtype_afpd,
+            "afp_syncfork: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         return AFPERR_PARAM;
     }
 
@@ -1276,8 +1286,13 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&ofrefnum, ibuf, sizeof(ofrefnum));
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_error, logtype_afpd, "afp_closefork: of_find(%d) could not locate fork",
-            ofrefnum);
+        LOG(log_warning, logtype_afpd,
+            "afp_closefork: of_find(%" PRIu16 ") could not locate fork"
+            " (wire bytes: 0x%02x%02x, ntohs: %" PRIu16 ";"
+            " fork already closed or never opened)",
+            ofrefnum,
+            (unsigned char)ibuf[0], (unsigned char)ibuf[1],
+            ntohs(ofrefnum));
         return AFPERR_PARAM;
     }
 
@@ -1363,8 +1378,10 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     reqcount = get_off_t(&ibuf, is64);
 
     if (NULL == (ofork = of_find(ofrefnum))) {
-        LOG(log_error, logtype_afpd, "afp_write: of_find(%d) could not locate fork",
-            ofrefnum);
+        LOG(log_error, logtype_afpd,
+            "afp_write: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         err = AFPERR_PARAM;
         goto afp_write_err;
     }
@@ -1617,7 +1634,9 @@ int afp_getforkparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     if (NULL == (ofork = of_find(ofrefnum))) {
         LOG(log_error, logtype_afpd,
-            "afp_getforkparams: of_find(%d) could not locate fork", ofrefnum);
+            "afp_getforkparams: of_find(%" PRIu16 ") could not locate fork"
+            " (ntohs: %" PRIu16 ")",
+            ofrefnum, ntohs(ofrefnum));
         return AFPERR_PARAM;
     }
 

@@ -263,6 +263,7 @@ static int moveandrename(const AFPObj *obj,
     struct path     path;
     cnid_t          id;
     int             cwd_fd = -1;
+    bstring         saved_sdir_fullpath = NULL;
     ad_init(&ad, vol);
     adp = &ad;
     adflags = 0;
@@ -290,7 +291,7 @@ static int moveandrename(const AFPObj *obj,
     } else {
         id = sdir->d_did; /* we already have the CNID */
 
-        if ((oldunixname = strdup(ctoupath(vol, dirlookup(vol, sdir->d_pdid),
+        if ((oldunixname = strdup(ctoupath(vol, dirlookup_strict(vol, sdir->d_pdid),
                                            oldname))) == NULL) {
             if (oldunixname) {
                 free(oldunixname);
@@ -302,6 +303,9 @@ static int moveandrename(const AFPObj *obj,
         adflags = ADFLAGS_DIR;
     }
 
+    /* Save sdir->d_fullpath for LOG and FCE events — sdir may be modified during rename */
+    saved_sdir_fullpath = bstrcpy(sdir->d_fullpath);
+
     /*
      * we are in the dest folder so we need to use
      *   a) oldunixname for ad_open
@@ -311,6 +315,7 @@ static int moveandrename(const AFPObj *obj,
     if (sdir_fd != -1) {
         if ((cwd_fd = open(".", O_RDONLY)) == -1) {
             free(oldunixname);
+            bdestroy(saved_sdir_fullpath);
             return AFPERR_MISC;
         }
 
@@ -348,55 +353,6 @@ static int moveandrename(const AFPObj *obj,
         }
     }
 
-    /* Validate oldunixname before rename. If stale, self-heal via CNID. */
-    struct stat old_st;
-    /* Convert -1 to AT_FDCWD for fstatat() - POSIX requires valid fd or AT_FDCWD */
-    int fd = (sdir_fd == -1) ? AT_FDCWD : sdir_fd;
-
-    if (fstatat(fd, oldunixname, &old_st, 0) != 0 && errno == ENOENT) {
-        LOG(log_info, logtype_afpd,
-            "moveandrename: stale source path \"%s\", healing via CNID", oldunixname);
-        /* Clean stale sdir cache */
-        cnid_t saved_sdir_did = sdir->d_did;
-
-        if (!(sdir->d_flags & DIRF_ISFILE)) {
-            dircache_remove_children(vol, sdir);
-        }
-
-        dir_remove(vol, sdir, 0);  /* Proactive cleanup during self-healing */
-
-        /* Retry via dirlookup to get fresh sdir from CNID */
-        if ((sdir = dirlookup(vol, saved_sdir_did)) != NULL) {
-            /* Reconstruct oldunixname with fresh sdir */
-            const char *fresh_oldunixname;
-
-            if (isdir) {
-                fresh_oldunixname = ctoupath(vol, dirlookup(vol, sdir->d_pdid), oldname);
-            } else {
-                fresh_oldunixname = mtoupath(vol, oldname, sdir->d_did,
-                                             utf8_encoding(vol->v_obj));
-            }
-
-            if (fresh_oldunixname) {
-                free(oldunixname);
-                oldunixname = strdup(fresh_oldunixname);
-
-                if (!oldunixname) {
-                    rc = AFPERR_MISC;
-                    goto exit;
-                }
-
-                LOG(log_debug, logtype_afpd,
-                    "moveandrename: self-healed with fresh path \"%s\"", oldunixname);
-            }
-        } else {
-            LOG(log_error, logtype_afpd,
-                "moveandrename: self-heal failed for did:%u", ntohl(saved_sdir_did));
-            rc = AFPERR_NOOBJ;
-            goto exit;
-        }
-    }
-
     if (NULL == (upath = mtoupath(vol, newname, curdir->d_did,
                                   utf8_encoding(vol->v_obj)))) {
         rc = AFPERR_PARAM;
@@ -417,7 +373,7 @@ static int moveandrename(const AFPObj *obj,
     else
         LOG(log_debug, logtype_afpd,
             "moveandrename(\"%s/%s\" -> \"%s/%s\")",
-            bdata(sdir->d_fullpath), oldunixname, bdata(curdir->d_fullpath), upath);
+            bdata(saved_sdir_fullpath), oldunixname, bdata(curdir->d_fullpath), upath);
 
     /* source == destination. we just silently accept this. */
     if ((!isdir && curdir == sdir) || (isdir && curdir->d_did == sdir->d_pdid)) {
@@ -518,7 +474,7 @@ static int moveandrename(const AFPObj *obj,
         if (isdir) {
             /* Dir FCE already sent above inside the isdir block */
         } else {
-            bstring srcpath = bformat("%s/%s", bdata(sdir->d_fullpath), oldunixname);
+            bstring srcpath = bformat("%s/%s", bdata(saved_sdir_fullpath), oldunixname);
             fce_register(obj, FCE_FILE_MOVE, fullpathname(upath), bdata(srcpath));
             bdestroy(srcpath);
         }
@@ -573,6 +529,7 @@ exit:
         free(oldunixname);
     }
 
+    bdestroy(saved_sdir_fullpath);
     return rc;
 }
 
@@ -1048,7 +1005,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(int);
 
-    if (NULL == (sdir = dirlookup(vol, did))) {
+    if (NULL == (sdir = dirlookup_strict(vol, did))) {
         return afp_errno; /* was AFPERR_PARAM */
     }
 
@@ -1081,7 +1038,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     /* get the destination directory */
-    if (NULL == (ddir = dirlookup(vol, did))) {
+    if (NULL == (ddir = dirlookup_strict(vol, did))) {
         rc = afp_errno;
         goto exit;
     }
