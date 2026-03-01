@@ -418,6 +418,11 @@ void of_dealloc(struct ofork *of)
         return;
     }
 
+    LOG(log_debug, logtype_afpd,
+        "of_dealloc(fork: %" PRIu16 " [%s] \"%s\")",
+        of->of_refnum,
+        (of->of_flags & AFPFORK_DATA) ? "data" : "rsrc",
+        of_name(of));
     of_unhash(of);
     oforks[of->of_refnum % nforks] = NULL;
     /* decrease refcount */
