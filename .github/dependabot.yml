@@ -1,6 +1,11 @@
 version: 2
 updates:
   - package-ecosystem: "docker"
+    directory: "/.clusterfuzzlite"
+    schedule:
+      interval: "weekly"
+
+  - package-ecosystem: "docker"
     directory: "/distrib/docker"
     schedule:
       interval: "weekly"
