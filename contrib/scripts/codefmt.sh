@@ -2,7 +2,7 @@
 
 # Recursively format source files in the current repo directory
 #
-# (c) 2025 Daniel Markstedt <daniel@mindani.net>
+# (c) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -17,12 +17,14 @@
 FORMATTER_CMD=""
 SOURCE_TYPE=""
 IS_GIT=0
+INITIAL_DIFF_HASH=""
+FINAL_DIFF_HASH=""
 VERBOSE=0
 
 usage() {
     echo "Usage: $0 [-v] [-s c|markdown|meson|perl|shell|yaml]"
     echo "Run without arguments to format all source files recursively in working directory."
-    exit 2
+    return 0
 }
 
 while getopts "vs:" opt; do
@@ -33,7 +35,7 @@ while getopts "vs:" opt; do
         s)
             SOURCE_TYPE="$OPTARG"
             if [ "$SOURCE_TYPE" != "c" ] && [ "$SOURCE_TYPE" != "markdown" ] && [ "$SOURCE_TYPE" != "meson" ] && [ "$SOURCE_TYPE" != "perl" ] && [ "$SOURCE_TYPE" != "shell" ] && [ "$SOURCE_TYPE" != "yaml" ]; then
-                echo "Error: Source type must be either 'c', 'markdown', 'meson', 'perl', 'shell', or 'yaml'"
+                echo "Error: Source type must be either 'c', 'markdown', 'meson', 'perl', 'shell', or 'yaml'" >&2
                 usage
                 exit 2
             fi
@@ -46,11 +48,10 @@ while getopts "vs:" opt; do
 done
 
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    echo "Warning: Not inside a git repository; no diff will be produced"
+    echo "Warning: Not inside a git repository; will not be able to determine if any changes were made by this script" >&2
 else
     IS_GIT=1
-    git diff --quiet HEAD
-    INITIAL_STATE=$?
+    INITIAL_DIFF_HASH=$(git diff HEAD | git hash-object --stdin)
 fi
 
 if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
@@ -63,7 +64,7 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
         fi
         eval "$FORMATTER_CMD '*.h' '*.c'"
     else
-        echo "Error: astyle not found in PATH"
+        echo "Error: astyle not found in PATH" >&2
         exit 2
     fi
 fi
@@ -77,7 +78,7 @@ if [ "$SOURCE_TYPE" = "markdown" ] || [ "$SOURCE_TYPE" = "" ]; then
             find . -type f -name "*.md" -exec markdownlint-cli2 --fix {} + > /dev/null
         fi
     else
-        echo "Error: markdownlint-cli2 not found in PATH"
+        echo "Error: markdownlint-cli2 not found in PATH" >&2
         exit 2
     fi
 fi
@@ -88,7 +89,7 @@ if [ "$SOURCE_TYPE" = "meson" ] || [ "$SOURCE_TYPE" = "" ]; then
     elif command -v muon-meson > /dev/null 2>&1; then
         FORMATTER_CMD="muon-meson"
     else
-        echo "Error: No variant of muon found in PATH"
+        echo "Error: No variant of muon found in PATH" >&2
         exit 2
     fi
     if [ $VERBOSE -eq 1 ]; then
@@ -113,7 +114,7 @@ if [ "$SOURCE_TYPE" = "perl" ] || [ "$SOURCE_TYPE" = "" ]; then
             find . -type f \( -name "*.pl" -o -name "*.cgi" \) -exec perltidy --backup-file-extension='/' {} +
         fi
     else
-        echo "Error: perltidy not found in PATH"
+        echo "Error: perltidy not found in PATH" >&2
         exit 2
     fi
 fi
@@ -131,7 +132,7 @@ if [ "$SOURCE_TYPE" = "shell" ] || [ "$SOURCE_TYPE" = "" ]; then
         fi
         shfmt --write .
     else
-        echo "Error: shfmt not found in PATH"
+        echo "Error: shfmt not found in PATH" >&2
         exit 2
     fi
 fi
@@ -145,25 +146,20 @@ if [ "$SOURCE_TYPE" = "yaml" ] || [ "$SOURCE_TYPE" = "" ]; then
             yamlfmt .
         fi
     else
-        echo "Error: yamlfmt not found in PATH"
+        echo "Error: yamlfmt not found in PATH" >&2
         exit 2
     fi
 fi
 
 if [ $IS_GIT -eq 1 ]; then
-    git diff --quiet HEAD
-    FINAL_STATE=$?
-    if [ $INITIAL_STATE -eq 0 ] && [ $FINAL_STATE -eq 1 ]; then
+    FINAL_DIFF_HASH=$(git diff HEAD | git hash-object --stdin)
+    if [ "$INITIAL_DIFF_HASH" != "$FINAL_DIFF_HASH" ]; then
         if [ $VERBOSE -eq 1 ]; then
             git --no-pager diff
         fi
         echo
         echo "reformatted source files to adhere to coding style guide"
         exit 1
-    elif [ $INITIAL_STATE -eq 1 ] && [ $FINAL_STATE -eq 1 ]; then
-        echo
-        echo "repo was dirty, please stash changes and try again"
-        exit 2
     else
         if [ $VERBOSE -eq 1 ]; then
             echo "beautiful, source files have compliant coding style!"
