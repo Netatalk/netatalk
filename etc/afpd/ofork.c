@@ -264,11 +264,25 @@ of_alloc(struct vol *vol,
 
 struct ofork *of_find(const uint16_t ofrefnum)
 {
+    struct ofork *of;
+
     if (!oforks || !nforks) {
         return NULL;
     }
 
-    return oforks[ofrefnum % nforks];
+    of = oforks[ofrefnum % nforks];
+
+    if (of && of->of_refnum != ofrefnum) {
+        /* Slot collision: different fork now occupies this slot. */
+        LOG(log_error, logtype_afpd,
+            "of_find(%" PRIu16 "): slot %d occupied by refnum %" PRIu16
+            " (\"%s\"), requested fork already closed",
+            ofrefnum, ofrefnum % nforks,
+            of->of_refnum, of_name(of));
+        return NULL;
+    }
+
+    return of;
 }
 
 /* -------------------------- */

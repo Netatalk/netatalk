@@ -1752,13 +1752,18 @@ int dircache_reindex_didname(const struct vol *vol _U_, struct dir *dir)
 }
 
 /*!
- * @brief Promote a cache entry in ARC to signal recency
+ * @brief Promote a cache entry to signal recency
  *
- * Dispatches based on arc_list membership:
- *   T1/T2: arc_case_i() — move to MRU of T2
- *   B1:    arc_case_ii_adapt_and_replace() — promote ghost to T2
- *   B2:    arc_case_iii_adapt_and_replace() — promote ghost to T2
- *   LRU:   no-op (LRU is FIFO by design, R7 D-010)
+ * Dispatches based on cache mode:
+ *
+ * ARC mode (arc_list membership):
+ *  T1/T2: arc_case_i() — move to MRU of T2
+ *  B1:    arc_case_ii_adapt_and_replace() — promote ghost to T2
+ *  B2:    arc_case_iii_adapt_and_replace() — promote ghost to T2
+ *
+ * LRU mode:
+ *  Move entry to MRU position of the LRU queue, so recently accessed entries
+ *  are evicted last. Prevents actively-used entries from being evicted.
  *
  * @param[in,out] dir  Cache entry to promote (required)
  */
@@ -1784,9 +1789,12 @@ void dircache_promote(struct dir *dir)
         default:
             break;  /* ARC_NONE: not in any list */
         }
+    } else {
+        /* LRU mode: move to MRU position (tail) to avoid premature eviction */
+        if (dir->qidx_node) {
+            queue_move_to_tail(index_queue, dir->qidx_node);
+        }
     }
-
-    /* LRU mode: no-op — LRU is FIFO by design (R7 D-010) */
 }
 
 /*!
