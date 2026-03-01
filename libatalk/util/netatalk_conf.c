@@ -1078,7 +1078,8 @@ static struct vol *creatvol(AFPObj *obj,
     /* mac charset is in [G] and [V] */
     if ((val = getoption_str(obj->iniconfig, section, "mac charset", preset,
                              NULL))) {
-        if (strncasecmp(val, "MAC", 3) != 0) {
+        if (strncasecmp(val, "MAC", 3) != 0
+                && strcasecmp(val, "UTF8-MAC") != 0) {
             LOG(log_warning, logtype_afpd, "Is '%s' really mac charset? ", val);
         }
 
@@ -2969,7 +2970,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->maccodepage = strdup("MAC_ROMAN");
         set_charset_name(CH_MAC, "MAC_ROMAN");
     } else {
-        if (strncasecmp(p, "MAC", 3) != 0) {
+        if (strncasecmp(p, "MAC", 3) != 0
+                && strcasecmp(p, "UTF8-MAC") != 0) {
             LOG(log_warning, logtype_afpd, "'%s' is not a valid Mac charset", p);
         }
 
