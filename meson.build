@@ -226,6 +226,25 @@ if math.found()
     netatalk_common_link_args += '-lm'
 endif
 
+# Check if GCC atomic builtins need explicit libatomic linkage.
+# On some platforms (e.g. 32-bit ARM, MIPS) 64-bit atomics are not inlined
+# by the compiler and require an explicit -latomic link flag.
+atomic_test_code = '''
+#include <stdint.h>
+int main(void) {
+    uint64_t x = 0;
+    __atomic_fetch_add(&x, 1, __ATOMIC_SEQ_CST);
+    __atomic_load_n(&x, __ATOMIC_SEQ_CST);
+    uint64_t y = __atomic_exchange_n(&x, 1, __ATOMIC_SEQ_CST);
+    (void)y;
+    return 0;
+}
+'''
+if not cc.links(atomic_test_code, name: 'atomic builtins without -latomic')
+    cc.find_library('atomic', required: true)
+    netatalk_common_link_args = ['-latomic'] + netatalk_common_link_args
+endif
+
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
 
 if host_machine.endian() == 'big'
