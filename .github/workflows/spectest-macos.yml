@@ -20,7 +20,6 @@ permissions:
 env:
   AFP_USER: atalk1
   AFP_USER2: atalk2
-  AFP_PASS: ${{ secrets.AFP_PASSWD }}
   AFP_GROUP: afpusers
 
 jobs:
@@ -66,6 +65,9 @@ jobs:
 
       - name: Install
         run: sudo meson install -C build
+
+      - name: Generate test credentials
+        run: echo "AFP_PASS=$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)" >> $GITHUB_ENV
 
       - name: Create test users and group
         run: |
