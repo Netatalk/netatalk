@@ -1,5 +1,7 @@
 FROM gcr.io/oss-fuzz-base/base-builder:v1@sha256:a23bde5a143657358e1a34fd9e1fc81278b146e4469898bd14f6716458a9b8d4
 
+COPY .clusterfuzzlite/requirements-python.txt /tmp/requirements-python.txt
+
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
     libevent-dev \
@@ -9,10 +11,17 @@ RUN apt-get update \
     ninja-build \
     pkg-config \
     python3-pip \
+    python3-venv \
     uuid-runtime \
     zlib1g-dev \
-&&  pip3 install --no-cache-dir meson \
+&&  python3 -m pip install --no-cache-dir --upgrade pip pipenv \
+&&  mkdir -p /opt/pydeps \
+&&  cd /opt/pydeps \
+&&  PIPENV_VENV_IN_PROJECT=1 pipenv --python 3 \
+&&  PIPENV_VENV_IN_PROJECT=1 pipenv run pip install --no-deps --require-hashes -r /tmp/requirements-python.txt \
 &&  rm -rf /var/lib/apt/lists/*
+
+ENV PATH="/opt/pydeps/.venv/bin:${PATH}"
 
 COPY .clusterfuzzlite/build.sh $SRC/build.sh
 COPY bin/ $SRC/netatalk/bin/
