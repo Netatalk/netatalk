@@ -11,17 +11,10 @@ RUN apt-get update \
     ninja-build \
     pkg-config \
     python3-pip \
-    python3-venv \
     uuid-runtime \
     zlib1g-dev \
-&&  python3 -m pip install --no-cache-dir --upgrade pip pipenv \
-&&  mkdir -p /opt/pydeps \
-&&  cd /opt/pydeps \
-&&  PIPENV_VENV_IN_PROJECT=1 pipenv --python 3 \
-&&  PIPENV_VENV_IN_PROJECT=1 pipenv run pip install --no-deps --require-hashes -r /tmp/requirements-python.txt \
+&&  pip install --no-deps --require-hashes -r /tmp/requirements-python.txt \
 &&  rm -rf /var/lib/apt/lists/*
-
-ENV PATH="/opt/pydeps/.venv/bin:${PATH}"
 
 COPY .clusterfuzzlite/build.sh $SRC/build.sh
 COPY bin/ $SRC/netatalk/bin/
