@@ -10,6 +10,9 @@ use vars qw($MAIN_PID $NETATALK_PROCESS $AFPD_PROCESS $PS_STR $MATCH_STR $ASIP_P
 # Support Solaris added by Frank Lahm <franklahm@googlemail.com>.
 # Support has also been added for 16 character usernames.
 
+print "WARNING: macusers is deprecated and will be removed in a future Netatalk release\n";
+print "Please update your workflows to use the `afpstats` utility instead\n\n";
+
 if ($ARGV[0] =~ /^(-v|-version|--version)$/) {
     printf("%s \(Netatalk @netatalk_version@\)\n", basename($0));
     exit(1);
