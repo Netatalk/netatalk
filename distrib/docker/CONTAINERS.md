@@ -6,10 +6,13 @@ Out of the box, exactly two users, and two shared volumes are supported in this 
 One of the shared volumes is a backup volume by default.
 If you need a different setup, please use the manual configuration option.
 
+We use podman in these examples, but the Netatalk container should work with any OCI compliant container runtime
+such as Docker or CRI-O.
+
 Make sure you have a container runtime installed, then build the netatalk container:
 
 ```shell
-docker build -f distrib/docker/netatalk.Dockerfile .
+podman build -f distrib/docker/netatalk.Dockerfile .
 ```
 
 Alternatively, pull a pre-built container image from [Docker Hub](https://hub.docker.com/u/netatalk)
@@ -17,12 +20,12 @@ or [GHCR](https://github.com/Netatalk/netatalk/pkgs/container/netatalk).
 
 ## How to Run
 
-Once you have the netatalk image on your machine run it with `docker`, `podman` or equivalent container runtime.
+Once you have the netatalk image on your machine run it with your preferred container runtime.
 
-The easiest way to get started is to use the included *docer_compose.yml* file with Docker Compose.
+The easiest way to get started is to use the included *compose.yml* file.
 
 ```shell
-docker compose -f distrib/docker/docker-compose.yml up
+podman compose -f distrib/docker/compose.yml up
 ```
 
 You just need to edit the file to set the AFP_USER and AFP_PASS environment variables first.
@@ -36,23 +39,26 @@ For a hardened deployment, use the `bridge` network driver and expose port 548 f
 However, Zeroconf service discovery may not work and you will have to manually specify
 the IP address in the client when connecting to the file server.
 
-It is recommended to set up either a bind mount, or a Docker managed volume for persistent storage.
+It is recommended to set up a managed volume for persistent storage.
 Without this, the shared volume be stored in volatile storage that is lost upon container shutdown.
 
-Below follows a sample `docker run` command for illustration.
-Substitute `/path/to/share` with an actual path on your file system with appropriate permissions,
-`AFP_USER` and `AFP_PASS` with the appropriate user and password,
+Below follows a sample `podman run` command for illustration.
+Substitute `AFP_USER` and `AFP_PASS` with the appropriate user and password,
 and `ATALKD_INTERFACE` with the network interface to use for AppleTalk.
+
+We recommend named volumes for the shared volumes, but you can also use bind mounts to host machine directories if you prefer,
+as long as the permissions are set correctly for the AFP_USER and AFP_GROUP and AFP_UID,
+and AFP_GID if set to match the user and group ids on the host machine.
 
 You also need to set the timezone with `TZ` to the [IANA time zone ID](https://nodatime.org/TimeZones)
 for your location, in order to get the correct time synchronized with the Timelord time server.
 
 ```shell
-docker run --rm \
+podman run --rm \
   --network host \
   --cap-add=NET_ADMIN \
-  --volume "/path/to/share:/mnt/afpshare" \
-  --volume "/path/to/backup:/mnt/afpbackup" \
+  --volume "afpshare:/mnt/afpshare" \
+  --volume "afpbackup:/mnt/afpbackup" \
   --volume "/var/run/dbus:/var/run/dbus" \
   --env AFP_USER= \
   --env AFP_PASS= \
@@ -94,7 +100,7 @@ due to constraints when running file system indexing on the D-Bus.
 
 The MySQL CNID backend is an alternative to the default Berkeley DB CNID backend which offers better scalability.
 
-Here follows a Docker Compose example to run a container network with MariaDB as the database for the MySQL CNID backend,
+Here follows a compose example to run a container network with MariaDB as the database for the MySQL CNID backend,
 plus a web interface to administer the database for good measure.
 
 Set `AFP_CNID_SQL_PASS` and `MARIADB_ROOT_PASSWORD` to the same password.
@@ -158,7 +164,7 @@ networks:
 
 Netatalk's Webmin module is distributed as a separate container image.
 The module allows you to administer the Netatalk configuration via a web interface.
-Here follows an example Docker Compose configuration to run the module in a container.
+Here follows an example compose configuration to run the module in a container.
 
 Note that since the netatalk daemons run in a separate container, we cannot control
 the services directly. Instead, activate polling of changes to the afp.conf
