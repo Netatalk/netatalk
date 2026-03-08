@@ -49,6 +49,7 @@
 #include "hash.h"
 #include "mangle.h"
 #include "unix.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 /*
@@ -2187,6 +2188,14 @@ int getdirparams(const AFPObj *obj,
                 }
             }
 
+            /* Set hasCustomIcon on volume root when virtual icon is enabled */
+            if (dir->d_did == DIRDID_ROOT
+                    && virtual_icon_enabled(vol) && !real_icon_exists(vol)) {
+                memcpy(&ashort, data + FINDERINFO_FRFLAGOFF, sizeof(ashort));
+                ashort |= htons(FINDERINFO_HASCUSTOMICON);
+                memcpy(data + FINDERINFO_FRFLAGOFF, &ashort, sizeof(ashort));
+            }
+
             data += 32;
             break;
 
@@ -2223,6 +2232,12 @@ int getdirparams(const AFPObj *obj,
             } else if ((ret = for_each_dirent(vol, upath, NULL, NULL)) >= 0) {
                 setdiroffcnt(dir, st,  ret);
                 ashort = (dir->d_offcnt > 0xffff) ? 0xffff : dir->d_offcnt;
+            }
+
+            /* Account for virtual Icon\r file in volume root offspring count */
+            if (dir->d_did == DIRDID_ROOT && virtual_icon_enabled(vol)
+                    && !real_icon_exists(vol) && ashort < 0xffff) {
+                ashort++;
             }
 
             ashort = htons(ashort);

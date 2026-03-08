@@ -18,6 +18,7 @@ afpd_sources = [
     'filedir.c',
     'fork.c',
     'hash.c',
+    'icon.c',
     'mangle.c',
     'messages.c',
     'ofork.c',
@@ -25,6 +26,7 @@ afpd_sources = [
     'switch.c',
     'uam.c',
     'unix.c',
+    'virtual_icon.c',
     'volume.c',
     'main.c',
 ]

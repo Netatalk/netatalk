@@ -63,6 +63,7 @@
 #include "hash.h"
 #include "mangle.h"
 #include "unix.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 /*! Time Machine cache for 60 seconds */
@@ -946,6 +947,7 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         goto openvol_err;
     }
 
+    virtual_icon_init(volume);
     ret  = stat_vol(obj, bitmap, volume, rbuf, rbuflen);
 
     if (ret == AFP_OK) {

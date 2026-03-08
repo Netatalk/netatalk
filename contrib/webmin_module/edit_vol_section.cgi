@@ -419,6 +419,12 @@ if ($subject ne 'homes') {
                         )
     );
 
+    @values = get_parameter_of_section($afpconfRef, $sectionRef, 'legacy icon', \%in);
+    print &ui_table_row(
+                        $text{'edit_global_section_legacy_icon'},
+                        &ui_textbox('p_legacy icon', $values[0], 20) . $text{edit_global_section_legacy_icon_help}
+    );
+
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'mac charset', \%in);
     print &ui_table_row(
                         $text{'edit_global_section_mac_charset'},

@@ -89,6 +89,9 @@ struct vol {
     char            *v_dbpath;
     char            *v_cnidserver;
     char            *v_cnidport;
+    char            *v_legacyicon;    /*!< virtual icon name */
+    unsigned char   *v_icon_rfork;    /*!< pre-built resource fork */
+    size_t          v_icon_rfork_len; /*!< length of v_icon_rfork data */
 #if 0
     int             v_hide;       /* new volume wait until old volume is closed */
     int             v_new;        /* volume deleted but there's a new one
