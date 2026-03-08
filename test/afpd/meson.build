@@ -21,6 +21,7 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/filedir.c',
     meson.project_source_root() / 'etc/afpd/fork.c',
     meson.project_source_root() / 'etc/afpd/hash.c',
+    meson.project_source_root() / 'etc/afpd/icon.c',
     meson.project_source_root() / 'etc/afpd/mangle.c',
     meson.project_source_root() / 'etc/afpd/messages.c',
     meson.project_source_root() / 'etc/afpd/ofork.c',
@@ -28,6 +29,7 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/switch.c',
     meson.project_source_root() / 'etc/afpd/uam.c',
     meson.project_source_root() / 'etc/afpd/unix.c',
+    meson.project_source_root() / 'etc/afpd/virtual_icon.c',
     meson.project_source_root() / 'etc/afpd/volume.c',
 ]
 

@@ -1004,14 +1004,16 @@ ddp zone = *ddp zone* **(G)**
 to register the server in the default zone of the last interface
 configured by the system.
 
-legacy icon = *icon* **(G)**
+legacy icon = *icon* **(G)**/**(V)**
 
 > Sets the shared volume icon displayed in the Finder in Classic Mac OS.
-Note that some versions of Classic Mac OS ignores this icon. Examples of
-valid icon styles:
+If a custom icon is already associated with the volume, this option is ignored.
+Available icon styles:
 >
 > - **daemon**
+> - **fileserver**
 > - **globe**
+> - **nas**
 > - **sdcard**
 
 legacy volume size = *BOOLEAN* (default: *no*) **(V)**

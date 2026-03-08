@@ -37,6 +37,7 @@
 #include "ad_cache.h"
 #include "fork.h"
 #include "unix.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
@@ -96,6 +97,31 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     }
 
     if (s_path->st_errno != 0) {
+        /* Intercept virtual Icon\r at volume root */
+        if (s_path->st_errno == ENOENT
+                && curdir->d_did == DIRDID_ROOT
+                && is_virtual_icon_name(s_path->u_name)
+                && virtual_icon_enabled(vol)) {
+            buflen = 0;
+
+            if (fbitmap && AFP_OK != (ret = virtual_icon_getfilparams(
+                                                obj, vol, fbitmap,
+                                                rbuf + 3 * sizeof(uint16_t), &buflen))) {
+                return ret;
+            }
+
+            *(rbuf + 2 * sizeof(uint16_t)) = FILDIRBIT_ISFILE;
+            *rbuflen = buflen + 3 * sizeof(uint16_t);
+            fbitmap = htons(fbitmap);
+            memcpy(rbuf, &fbitmap, sizeof(fbitmap));
+            rbuf += sizeof(fbitmap);
+            dbitmap = htons(dbitmap);
+            memcpy(rbuf, &dbitmap, sizeof(dbitmap));
+            rbuf += sizeof(dbitmap) + sizeof(uint8_t);
+            *rbuf = 0;
+            return AFP_OK;
+        }
+
         if (afp_errno != AFPERR_ACCESS) {
             return AFPERR_NOOBJ;
         }
@@ -185,6 +211,14 @@ int afp_setfildirparams(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
     if (NULL == (path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_NOOBJ);
+    }
+
+    /* Reject modifications to virtual Icon\r file (but allow real ones) */
+    if (is_virtual_icon_name(path->u_name)
+            && curdir->d_did == DIRDID_ROOT
+            && virtual_icon_enabled(vol)
+            && !real_icon_exists(vol)) {
+        return AFPERR_OLOCK;
     }
 
     st   = &path->st;
@@ -571,6 +605,14 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return get_afp_errno(AFPERR_NOOBJ);
     }
 
+    /* Reject rename of virtual Icon\r file (but allow real ones) */
+    if (is_virtual_icon_name(path->u_name)
+            && curdir->d_did == DIRDID_ROOT
+            && virtual_icon_enabled(vol)
+            && !real_icon_exists(vol)) {
+        return AFPERR_OLOCK;
+    }
+
     sdir = curdir;
     newname = obj->newtmp;
     oldname = obj->oldtmp;
@@ -741,6 +783,14 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_NOOBJ);
+    }
+
+    /* Reject deletion of virtual Icon\r file (but allow real ones) */
+    if (is_virtual_icon_name(s_path->u_name)
+            && curdir->d_did == DIRDID_ROOT
+            && virtual_icon_enabled(vol)
+            && !real_icon_exists(vol)) {
+        return AFPERR_OLOCK;
     }
 
     upath = s_path->u_name;
@@ -1017,6 +1067,14 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         return get_afp_errno(AFPERR_NOOBJ);
     }
 
+    /* Reject move/rename of virtual Icon\r file (but allow real ones) */
+    if (is_virtual_icon_name(path->u_name)
+            && curdir->d_did == DIRDID_ROOT
+            && virtual_icon_enabled(vol)
+            && !real_icon_exists(vol)) {
+        return AFPERR_OLOCK;
+    }
+
     sdir = curdir;
     newname = obj->newtmp;
     oldname = obj->oldtmp;
@@ -1137,4 +1195,3 @@ int veto_file(const char *veto_str, const char *path)
 
     return 0;
 }
-

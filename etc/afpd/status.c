@@ -509,28 +509,29 @@ void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
 #endif
                     dsi);
     status_uams(status, options->uamlist);
+    icon = fileserver_icon;
+    iconlen = ICN_HASH_SIZE;
 
     if (strcmp(options->legacyicon, "daemon") == 0) {
         icon = daemon_icon;
-        iconlen = sizeof(daemon_icon);
     } else if (strcmp(options->legacyicon, "declogo") == 0) {
         icon = declogo_icon;
-        iconlen = sizeof(declogo_icon);
+    } else if (strcmp(options->legacyicon, "fileserver") == 0) {
+        icon = fileserver_icon;
     } else if (strcmp(options->legacyicon, "globe") == 0) {
         icon = globe_icon;
-        iconlen = sizeof(globe_icon);
     } else if (strcmp(options->legacyicon, "hagar") == 0) {
         icon = hagar_icon;
-        iconlen = sizeof(hagar_icon);
+    } else if (strcmp(options->legacyicon, "nas") == 0) {
+        icon = nas_icon;
     } else if (strcmp(options->legacyicon, "sdcard") == 0) {
         icon = sdcard_icon;
-        iconlen = sizeof(sdcard_icon);
     } else if (strcmp(options->legacyicon, "sunlogo") == 0) {
         icon = sunlogo_icon;
-        iconlen = sizeof(sunlogo_icon);
     } else {
-        icon = tcp_icon;
-        iconlen = sizeof(tcp_icon);
+        LOG(log_warning, logtype_afpd,
+            "WARNING: unknown legacy icon \"%s\", falling back to default icon",
+            options->legacyicon);
     }
 
     status_icon(status, icon, iconlen, c);

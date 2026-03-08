@@ -1147,6 +1147,18 @@ static struct vol *creatvol(AFPObj *obj,
         }
     }
 
+    if ((val = getoption_str(obj->iniconfig, section, "legacy icon", preset,
+                             NULL))) {
+        EC_NULL(volume->v_legacyicon = strdup(val));
+    } else {
+        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "legacy icon", NULL,
+                            NULL);
+
+        if (val && val[0] != '\0') {
+            EC_NULL(volume->v_legacyicon = strdup(val));
+        }
+    }
+
     if ((val = getoption_str(obj->iniconfig, section, "umask", preset, NULL))) {
         volume->v_umask = (int)strtol(val, NULL, 8);
     }
@@ -1969,6 +1981,8 @@ void volume_free(struct vol *vol)
     free(vol->v_uuid);
     free(vol->v_cnidserver);
     free(vol->v_cnidport);
+    free(vol->v_legacyicon);
+    free(vol->v_icon_rfork);
     free(vol->v_preexec);
     free(vol->v_postexec);
     free(vol);
