@@ -10,11 +10,14 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <bstrlib.h>
 
@@ -34,6 +37,7 @@
 #include "directory.h"
 #include "file.h"
 #include "fork.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 static int getforkparams(const AFPObj *obj, struct ofork *ofork,
@@ -44,6 +48,12 @@ static int getforkparams(const AFPObj *obj, struct ofork *ofork,
     struct adouble  *adp;
     struct dir      *dir;
     struct vol      *vol;
+
+    /* Virtual forks use synthesized params */
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        return virtual_icon_getfilparams(obj, ofork->of_vol, bitmap,
+                                         buf, buflen);
+    }
 
     /* can only get the length of the opened fork */
     if (((bitmap & ((1 << FILPBIT_DFLEN) | (1 << FILPBIT_EXTDFLEN)))
@@ -345,6 +355,141 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     case ENOENT:
 
+        /* Virtual Icon\r file at volume root */
+        if (curdir->d_did == DIRDID_ROOT
+                && is_virtual_icon_name(s_path->u_name)
+                && virtual_icon_enabled(vol)) {
+            size_t vlen;
+            const unsigned char *vdata = virtual_icon_get_rfork(vol, &vlen);
+
+            if (!vdata) {
+                return AFPERR_MISC;
+            }
+
+            /*
+             * If write access is requested, materialize the virtual
+             * file: create a real empty Icon\r on disk so the Finder
+             * can replace the default icon with a custom one.  Then
+             * fall through to the normal open path.
+             */
+            if (access & OPENACC_WR) {
+                int cfd = open(s_path->u_name,
+                               O_CREAT | O_WRONLY, 0666);
+
+                if (cfd < 0) {
+                    LOG(log_error, logtype_afpd,
+                        "afp_openfork(virtual Icon\\r): "
+                        "create failed: %s",
+                        strerror(errno));
+                    return AFPERR_MISC;
+                }
+
+                /* Seed the resource fork with the virtual icon data
+                 * so the Finder sees a valid resource fork. */
+                if (sys_fsetxattr(cfd, AD_EA_RESO,
+                                  vdata, vlen, 0) < 0) {
+                    LOG(log_warning, logtype_afpd,
+                        "afp_openfork(virtual Icon\\r): "
+                        "seed rfork xattr failed: %s",
+                        strerror(errno));
+                }
+
+                close(cfd);
+                /* Set FinderInfo invisible flag so the Finder
+                 * hides the Icon\r file in directory listings. */
+                {
+                    struct adouble icon_ad;
+                    ad_init(&icon_ad, vol);
+
+                    if (ad_open(&icon_ad, s_path->u_name,
+                                ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                                0666) == 0) {
+                        char *finfo = ad_entry(&icon_ad, ADEID_FINDERI);
+
+                        if (finfo) {
+                            memset(finfo, 0, ADEDLEN_FINDERI);
+                            uint16_t flags = htons(FINDERINFO_INVISIBLE);
+                            memcpy(finfo + FINDERINFO_FRFLAGOFF,
+                                   &flags, sizeof(flags));
+                            ad_flush(&icon_ad);
+                        }
+
+                        ad_close(&icon_ad, ADFLAGS_HF);
+                    } else {
+                        LOG(log_warning, logtype_afpd,
+                            "afp_openfork(virtual Icon\\r): "
+                            "metadata init failed: %s",
+                            strerror(errno));
+                    }
+                }
+
+                if (ostat(s_path->u_name, &s_path->st,
+                          vol_syml_opt(vol)) < 0) {
+                    return AFPERR_MISC;
+                }
+
+                s_path->st_errno = 0;
+                s_path->st_valid = 1;
+                break;  /* fall through to normal open */
+            }
+
+            /* Allocate a minimal ofork for the virtual file.
+             * We use a synthetic stat and adouble. */
+            struct stat vst;
+            struct adouble *vad;
+            memset(&vst, 0, sizeof(vst));
+            vst.st_mode = S_IFREG | 0444;
+            vst.st_ino = VIRTUAL_ICON_CNID;  /* synthetic inode */
+            vst.st_dev = 0;
+            eid = (fork == OPENFORK_DATA) ? ADEID_DFORK : ADEID_RFORK;
+            vad = malloc(sizeof(struct adouble));
+
+            if (!vad) {
+                return AFPERR_MISC;
+            }
+
+            ad_init(vad, vol);
+            vad->ad_name = strdup(VIRTUAL_ICON_NAME);
+
+            if (!vad->ad_name) {
+                free(vad);
+                return AFPERR_MISC;
+            }
+
+            ofork = of_alloc(vol, curdir, (char *)VIRTUAL_ICON_NAME,
+                             &ofrefnum, eid, vad, &vst);
+
+            if (!ofork) {
+                free(vad->ad_name);
+                free(vad);
+                return AFPERR_NFILE;
+            }
+
+            ofork->of_flags |= AFPFORK_VIRTUAL | AFPFORK_ACCRD;
+            ofork->of_virtual_data = vdata;
+            ofork->of_virtual_len = (off_t)vlen;
+            /* Fill reply with file params */
+            buflen = 0;
+            ret = virtual_icon_getfilparams(obj, vol, bitmap,
+                                            rbuf + 2 * sizeof(uint16_t),
+                                            &buflen);
+
+            if (ret != AFP_OK) {
+                LOG(log_error, logtype_afpd,
+                    "afp_openfork(virtual Icon\\r): getfilparams failed: %d",
+                    ret);
+                of_dealloc(ofork);
+                return ret;
+            }
+
+            *rbuflen = buflen + 2 * sizeof(uint16_t);
+            bitmap = htons(bitmap);
+            memcpy(rbuf, &bitmap, sizeof(uint16_t));
+            rbuf += sizeof(uint16_t);
+            memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
+            return AFP_OK;
+        }
+
         /* Invalid-on-use recovery: stale cached path may have caused
          * cname() to resolve to a non-existent location. Retry with
          * dirlookup_strict() which validates via stat+inode check,
@@ -635,6 +780,10 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
         return AFPERR_PARAM;
     }
 
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        return AFPERR_OLOCK;
+    }
+
     vol = ofork->of_vol;
 
     if ((dir = dirlookup(vol, ofork->of_did)) == NULL) {
@@ -808,6 +957,11 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         return AFPERR_PARAM;
     }
 
+    /* Virtual forks don't support byte locking */
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        return AFP_OK;
+    }
+
     if (ofork->of_flags & AFPFORK_DATA) {
         eid = ADEID_DFORK;
     } else if (ofork->of_flags & AFPFORK_RSRC) {
@@ -937,6 +1091,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     off_t        savereqcount = 0;
     off_t        size;
     ssize_t      cc;
+    ssize_t      dsi_cc;
     ssize_t      err;
     int          eid;
     uint16_t     ofrefnum;
@@ -983,6 +1138,63 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         goto afp_read_err;
     }
 
+    /* Virtual fork: serve data from in-memory buffer */
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        if (ofork->of_flags & AFPFORK_DATA) {
+            /* Data fork is empty for virtual Icon\r */
+            err = AFPERR_EOF;
+            goto afp_read_err;
+        }
+
+        /* Resource fork: serve from virtual data buffer */
+        if (offset >= ofork->of_virtual_len) {
+            err = AFPERR_EOF;
+            goto afp_read_err;
+        }
+
+        off_t avail = ofork->of_virtual_len - offset;
+
+        if (reqcount > avail) {
+            reqcount = avail;
+            err = AFPERR_EOF;
+        }
+
+        size_t tocopy = (size_t)reqcount;
+
+        switch (obj->proto) {
+#ifndef NO_DDP
+
+        case AFPPROTO_ASP:
+            *rbuflen = MIN(tocopy, *rbuflen);
+            memcpy(rbuf, ofork->of_virtual_data + offset, *rbuflen);
+
+            if (*rbuflen < tocopy) {
+                err = AFPERR_EOF;
+            }
+
+            return (int)err;
+#endif
+
+        case AFPPROTO_DSI:
+            dsi = obj->dsi;
+
+            if (dsi_readinit(dsi, (char *)ofork->of_virtual_data + offset,
+                             tocopy, tocopy, (int)err) < 0) {
+                *rbuflen = 0;
+                return AFPERR_PARAM;
+            }
+
+            dsi_readdone(dsi);
+            *rbuflen = 0;
+            return (int)err;
+
+        default:
+            LOG(log_error, logtype_afpd, "afp_read: unknown protocol %d", obj->proto);
+            *rbuflen = 0;
+            return AFPERR_PARAM;
+        }
+    }
+
     AFP_READ_START((long)reqcount);
 
     switch (obj->proto) {
@@ -998,7 +1210,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
 
         /* for asp, just send a packet at the requested buffer size */
-        *rbuflen = MIN(reqcount, *rbuflen);
+        *rbuflen = MIN((size_t)reqcount, *rbuflen);
         cc = read_file(ofork, eid, offset, rbuf, rbuflen);
 
         if (cc < 0) {
@@ -1052,7 +1264,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                 !(obj->options.flags & OPTION_NOSENDFILE)) {
             int fd = ad_readfile_init(ofork->of_ad, eid, &offset, 0);
 
-            if (dsi_stream_read_file(dsi, fd, offset, reqcount, err) < 0) {
+            if (dsi_stream_read_file(dsi, fd, offset, reqcount, (int)err) < 0) {
                 LOG(log_error, logtype_afpd, "afp_read(%s): ad_readfile: %s",
                     of_name(ofork), strerror(errno));
                 goto afp_read_exit;
@@ -1062,7 +1274,7 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
 
 #endif
-        * rbuflen = MIN(reqcount, dsi->server_quantum);
+        *rbuflen = MIN((size_t)reqcount, (size_t)dsi->server_quantum);
         cc = read_file(ofork, eid, offset, ibuf, rbuflen);
 
         if (cc < 0) {
@@ -1074,17 +1286,18 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
             "afp_read(name: \"%s\", offset: %jd, reqcount: %jd): got %jd bytes from file",
             of_name(ofork), (intmax_t)offset, (intmax_t)reqcount, (intmax_t)*rbuflen);
         offset += *rbuflen;
-
         /*
          * dsi_readinit() returns size of next read buffer. by this point,
          * we know that we're sending some data. if we fail, something
          * horrible happened.
          */
-        if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0) {
+        dsi_cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, (int)err);
+
+        if (dsi_cc < 0) {
             goto afp_read_exit;
         }
 
-        *rbuflen = cc;
+        *rbuflen = (size_t)dsi_cc;
 
         while (*rbuflen > 0) {
             /*
@@ -1099,13 +1312,13 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
             offset += *rbuflen;
             /* dsi_read() also returns buffer size of next allocation */
-            cc = dsi_read(dsi, ibuf, *rbuflen); /* send it off */
+            dsi_cc = dsi_read(dsi, ibuf, *rbuflen); /* send it off */
 
-            if (cc < 0) {
+            if (dsi_cc < 0) {
                 goto afp_read_exit;
             }
 
-            *rbuflen = cc;
+            *rbuflen = (size_t)dsi_cc;
         }
 
         dsi_readdone(dsi);
@@ -1132,10 +1345,10 @@ afp_read_done:
     }
 
     AFP_READ_DONE();
-    return err;
+    return (int)err;
 afp_read_err:
     *rbuflen = 0;
-    return err;
+    return (int)err;
 }
 
 /* ---------------------- */
@@ -1239,6 +1452,11 @@ int flushfork(struct ofork *ofork)
 {
     struct timeval tv;
     int err = 0, doflush = 0;
+
+    /* Nothing to flush for virtual forks */
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        return 0;
+    }
 
     if (ad_data_fileno(ofork->of_ad) != -1 &&
             fsync(ad_data_fileno(ofork->of_ad)) < 0) {
@@ -1388,6 +1606,11 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         "afp_write(fork: %" PRIu16 " [%s], off: %" PRIu64 ", size: %" PRIu64 ")",
         ofork->of_refnum, (ofork->of_flags & AFPFORK_DATA) ? "data" : "reso", offset,
         reqcount);
+
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        err = AFPERR_OLOCK;
+        goto afp_write_err;
+    }
 
     if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
         err = AFPERR_ACCESS;

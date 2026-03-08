@@ -26,6 +26,8 @@ struct ofork {
     cnid_t              of_did;
     uint16_t            of_refnum;
     int                 of_flags;
+    const unsigned char *of_virtual_data;
+    off_t               of_virtual_len;
     struct ofork        **prevp, *next;
 };
 
@@ -47,6 +49,7 @@ struct ofork {
 #define AFPFORK_ACCMASK (AFPFORK_ACCRD | AFPFORK_ACCWR)
 #define AFPFORK_MODIFIED (1<<6) /*!< used in FCE for modified files */
 #define AFPFORK_ERROR   (1<<7)  /*!< used to indicate an error in opening the fork */
+#define AFPFORK_VIRTUAL (1<<8)  /*!< virtual file fork */
 
 #define of_name(a) (a)->of_ad->ad_name
 /* in ofork.c */

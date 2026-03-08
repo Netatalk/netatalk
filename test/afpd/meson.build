@@ -28,6 +28,7 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/switch.c',
     meson.project_source_root() / 'etc/afpd/uam.c',
     meson.project_source_root() / 'etc/afpd/unix.c',
+    meson.project_source_root() / 'etc/afpd/virtual_icon.c',
     meson.project_source_root() / 'etc/afpd/volume.c',
 ]
 

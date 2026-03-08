@@ -29,6 +29,7 @@
 #include "dircache.h"
 #include "directory.h"
 #include "fork.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 /* we need to have a hashed list of oforks (by dev inode) */
@@ -455,6 +456,12 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     bstring forkpath = NULL;
     adflags = 0;
 
+    /* Virtual forks don't have real file descriptors or adouble data */
+    if (ofork->of_flags & AFPFORK_VIRTUAL) {
+        of_dealloc(ofork);
+        return 0;
+    }
+
     if (ofork->of_flags & AFPFORK_DATA) {
         adflags |= ADFLAGS_DF;
     }
@@ -548,6 +555,62 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 #endif
     }
 
+    /*
+     * When the Finder removes a custom icon it empties the Icon\r
+     * resource fork but does not send AFP_DELETE.  Detect this by
+     * reading the resource fork header and checking whether the
+     * resource data length is zero (i.e. no actual resources).
+     * If so, delete the now-useless physical file plus its CNID
+     * entry so the volume falls back to the virtual icon.
+     */
+    int delete_icon = 0;
+
+    if ((ofork->of_flags & AFPFORK_RSRC)
+            && (ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED))
+            && ofork->of_did == DIRDID_ROOT
+            && is_virtual_icon_name(of_name(ofork))
+            && virtual_icon_enabled(ofork->of_vol)
+            && ofork->of_ad->ad_rfp->adf_refcount == 1
+            && ad_openforks(ofork->of_ad, ATTRBIT_DOPEN) == 0
+            && forkpath) {
+        /*
+         * Read the resource fork header and check the data-length
+         * field.  Only proceed with deletion when it is zero,
+         * confirming the fork contains no actual resources.
+         */
+        char rfork_hdr[RFORK_HEADER_SIZE];
+        ssize_t n = ad_read(ofork->of_ad, ADEID_RFORK,
+                            0, rfork_hdr, sizeof(rfork_hdr));
+        uint32_t data_len = 0;
+
+        if (n == RFORK_HEADER_SIZE) {
+            memcpy(&data_len, rfork_hdr + RFORK_DATA_LEN_OFF,
+                   sizeof(data_len));
+            data_len = ntohl(data_len);
+        }
+
+        if (n == RFORK_HEADER_SIZE && data_len == 0) {
+            /* Look up and delete the CNID for this file */
+            cnid_t icon_cnid = cnid_get(ofork->of_vol->v_cdb,
+                                        ofork->of_did,
+                                        of_name(ofork),
+                                        strnlen(of_name(ofork), MAXPATHLEN));
+
+            if (icon_cnid != CNID_INVALID) {
+                cnid_delete(ofork->of_vol->v_cdb, icon_cnid);
+            }
+
+            /* Remove from dircache */
+            if (cached) {
+                dircache_remove(ofork->of_vol, cached, DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX);
+                /* invalidated by dircache_remove; skip cache refresh and hint lookup below */
+                cached = NULL;
+            }
+
+            delete_icon = 1;
+        }
+    }
+
     /* Refresh cache after fork close if metadata was modified */
     if (cached) {
         struct stat post_st;
@@ -592,6 +655,11 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
     if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {
         ret = -1;
+    }
+
+    /* Unlink the emptied Icon\r file after ad_close has released fds */
+    if (delete_icon && forkpath) {
+        (void)unlink(bdata(forkpath));
     }
 
     of_dealloc(ofork);
