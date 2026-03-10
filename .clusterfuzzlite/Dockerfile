@@ -1,4 +1,4 @@
-FROM gcr.io/oss-fuzz-base/base-builder:v1@sha256:dbc19274e11b37f844f9093ddcb805d98301365d65768a64378f01c74cfd1e67
+FROM gcr.io/oss-fuzz-base/base-builder:v1@sha256:08bb27ab1f273341ef91e68713c27e609c0c085b596757ee64d07aaff494b97c
 
 COPY .clusterfuzzlite/requirements-python.txt /tmp/requirements-python.txt
 
