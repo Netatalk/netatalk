@@ -165,7 +165,7 @@ static int deletedir(const struct vol *vol, int dirfd, char *dir)
 
     snprintf(path, MAXPATHLEN, "%s/", dir);
     len++;
-    remain = strlen(path) - len - 1;
+    remain = sizeof(path) - len - 1;
 
     while ((de = readdir(dp)) && err == AFP_OK) {
         /* skip this and previous directory */
@@ -231,10 +231,10 @@ static int copydir(struct vol *vol, struct dir *ddir, int dirfd, char *src,
     /* set things up to copy */
     snprintf(spath, MAXPATHLEN, "%s/", src);
     slen++;
-    srem = strlen(spath) - slen - 1;
+    srem = sizeof(spath) - slen - 1;
     snprintf(dpath, MAXPATHLEN, "%s/", dst);
     dlen++;
-    drem = strlen(dpath) - dlen - 1;
+    drem = sizeof(dpath) - dlen - 1;
     err = AFP_OK;
 
     while ((de = readdir(dp))) {
