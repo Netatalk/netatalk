@@ -118,7 +118,7 @@
 static hash_t       *dircache;
 static unsigned int dircache_maxsize;
 
-/* Peak cached entries reached this session (shared by LRU and ARC) */
+/*! Peak cached entries reached this session (shared by LRU and ARC) */
 static unsigned long queue_count_max = 0;
 
 /*
@@ -132,27 +132,27 @@ static volatile uint64_t validation_counter = 0;
 
 static struct dircache_stat {
     unsigned long long lookups;
-    /*!< Hits in T1/T2 (cached data, instant return) */
+    /*! Hits in T1/T2 (cached data, instant return) */
     unsigned long long hits;
-    /*!< Hits in B1/B2 (ghost entries, instant return in our impl) */
+    /*! Hits in B1/B2 (ghost entries, instant return in our impl) */
     unsigned long long ghost_hits;
-    /*!< True misses (not in any ARC list) */
+    /*! True misses (not in any ARC list) */
     unsigned long long misses;
     unsigned long long added;
     unsigned long long removed;
     unsigned long long expunged;
     unsigned long long evicted;
-    /*!< entries that failed when used */
+    /*! entries that failed when used */
     unsigned long long invalid_on_use;
 } dircache_stat;
 
-/* Cache hint processing statistics — logged by log_dircache_stat() */
+/*! Cache hint processing statistics — logged by log_dircache_stat() */
 static struct {
-    unsigned long long hints_received;   /* Total hints read from pipe */
+    unsigned long long hints_received;   /*!< Total hints read from pipe */
     unsigned long long
-    hints_acted_on;   /* Hints that matched a local cache entry */
+    hints_acted_on;   /*!< Hints that matched a local cache entry */
     unsigned long long
-    hints_no_match;   /* Hints for entries not in local cache (zero cost) */
+    hints_no_match;   /*!< Hints for entries not in local cache (zero cost) */
 } cache_hint_stat;
 
 /********************************************************
@@ -162,13 +162,13 @@ static struct {
  * https://theory.stanford.edu/~megiddo/pdf/IEEE_COMPUTER_0404.pdf
  ********************************************************/
 
-/* ARC list location for cache entries */
+/*! ARC list location for cache entries */
 typedef enum {
-    ARC_NONE = 0,   /* Not in any ARC list (matches calloc() zero init) */
-    ARC_T1,         /* Recent entries */
-    ARC_T2,         /* Frequent entries */
-    ARC_B1,         /* Ghost entries evicted from T1 */
-    ARC_B2          /* Ghost entries evicted from T2 */
+    ARC_NONE = 0,   /*!< Not in any ARC list (matches calloc() zero init) */
+    ARC_T1,         /*!< Recent entries */
+    ARC_T2,         /*!< Frequent entries */
+    ARC_B1,         /*!< Ghost entries evicted from T1 */
+    ARC_B2          /*!< Ghost entries evicted from T2 */
 } arc_list_t;
 
 /*
@@ -183,16 +183,16 @@ typedef enum {
  * and the hash tables already exist.
  */
 
-/* ARC cache state */
+/*! ARC cache state */
 static struct {
     /* Configuration */
-    int enabled;           /* 0 = LRU mode, 1 = ARC mode */
+    int enabled;           /*!< 0 = LRU mode, 1 = ARC mode */
 
     /* The four ARC lists (using existing queue.h) */
-    q_t *t1;               /* Recent entries (cached) */
-    q_t *t2;               /* Frequent entries (cached) */
-    q_t *b1;               /* Ghost entries from T1 (full struct dir with DIRF_ARC_GHOST) */
-    q_t *b2;               /* Ghost entries from T2 (full struct dir with DIRF_ARC_GHOST) */
+    q_t *t1;               /*!< Recent entries (cached) */
+    q_t *t2;               /*!< Frequent entries (cached) */
+    q_t *b1;               /*!< Ghost entries from T1 (full struct dir with DIRF_ARC_GHOST) */
+    q_t *b2;               /*!< Ghost entries from T2 (full struct dir with DIRF_ARC_GHOST) */
 
     /* List sizes (maintained explicitly for O(1) access) */
     size_t t1_size;
@@ -201,22 +201,22 @@ static struct {
     size_t b2_size;
 
     /* Adaptation parameter (0 ≤ p ≤ c) */
-    size_t p;              /* Target size for T1 */
-    size_t c;              /* Total cache size */
+    size_t p;              /*!< Target size for T1 */
+    size_t c;              /*!< Total cache size */
 
     /* Statistics */
     struct {
-        uint64_t hits_t1;         /* Hits in T1 */
-        uint64_t hits_t2;         /* Hits in T2 */
-        uint64_t ghost_hits_b1;   /* Ghost hits in B1 */
-        uint64_t ghost_hits_b2;   /* Ghost hits in B2 */
-        uint64_t adaptations;     /* Number of p adjustments */
-        uint64_t evictions_t1;    /* Evictions from T1 */
-        uint64_t evictions_t2;    /* Evictions from T2 */
-        uint64_t promotions_t1_to_t2;  /* Promotions from T1 to T2 */
-        size_t p_min, p_max;      /* Min/max p values seen */
-        uint64_t p_increases;     /* Times p increased */
-        uint64_t p_decreases;     /* Times p decreased */
+        uint64_t hits_t1;         /*!< Hits in T1 */
+        uint64_t hits_t2;         /*!< Hits in T2 */
+        uint64_t ghost_hits_b1;   /*!< Ghost hits in B1 */
+        uint64_t ghost_hits_b2;   /*!< Ghost hits in B2 */
+        uint64_t adaptations;     /*!< Number of p adjustments */
+        uint64_t evictions_t1;    /*!< Evictions from T1 */
+        uint64_t evictions_t2;    /*!< Evictions from T2 */
+        uint64_t promotions_t1_to_t2;  /*!< Promotions from T1 to T2 */
+        size_t p_min, p_max;      /*!< Min/max p values seen */
+        uint64_t p_increases;     /*!< Times p increased */
+        uint64_t p_decreases;     /*!< Times p decreased */
     } stats;
 } arc_cache = {
     .enabled = 0,  /* Default to LRU mode */
