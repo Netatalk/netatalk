@@ -1021,7 +1021,7 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
         /* FPEnumerate batch of entries */
         ret = FPEnumerate(conn, volume, dir_id, "", f_bitmap, d_bitmap);
 
-        if (ret == htonl(AFPERR_NOOBJ)) {
+        if (ret == (unsigned int)ntohl(AFPERR_NOOBJ)) {
             /* No more objects - done enumerating */
             break;
         } else if (ret != AFP_OK) {
@@ -1099,21 +1099,32 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
                 filedir.isdir = is_dir;
 
                 if (is_dir) {
-                    /* Recurse subdirectory */
+                    /* Recurse subdirectory.
+                     * IMPORTANT: copy the name before calling delete_directory_tree.
+                     * That recursive call runs FPEnumerate (my_dsi_data_receive) which
+                     * overwrites dsi->data, invalidating any pointer into it such as
+                     * filedir.lname.  The local copy survives the overwrite. */
+                    char subdir_name[NAME_MAX + 1];
                     afp_filedir_unpack(conn, &filedir, entry_ptr + 2, 0, d_bitmap);
 
                     if (filedir.lname && filedir.lname[0] != '\0') {
-                        /* Pass current dir ID as new parent, and subdir entry name as dirname */
-                        delete_directory_tree(conn, volume, dir_id, filedir.lname);
-                        batch_dirs_deleted++;
+                        strncpy(subdir_name, filedir.lname, NAME_MAX);
+                        subdir_name[NAME_MAX] = '\0';
+
+                        if (delete_directory_tree(conn, volume, dir_id, subdir_name) == 0) {
+                            batch_dirs_deleted++;
+                        }
                     }
                 } else {
-                    /* Delete file */
+                    /* Delete file.
+                     * FPDelete uses my_dsi_cmd_receive (not data_receive), so dsi->data
+                     * is not overwritten and filedir.lname stays valid. */
                     afp_filedir_unpack(conn, &filedir, entry_ptr + 2, f_bitmap, 0);
 
                     if (filedir.lname && filedir.lname[0] != '\0') {
-                        FPDelete(conn, volume, dir_id, filedir.lname);
-                        batch_files_deleted++;
+                        if (FPDelete(conn, volume, dir_id, filedir.lname) == AFP_OK) {
+                            batch_files_deleted++;
+                        }
                     }
                 }
 
@@ -1122,6 +1133,16 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
 
             total_files_deleted += batch_files_deleted;
             total_dirs_deleted += batch_dirs_deleted;
+
+            /* If nothing was deleted this round, further iterations will not
+             * make progress.  Stop now rather than spinning. */
+            if (batch_files_deleted == 0 && batch_dirs_deleted == 0) {
+                fprintf(stderr,
+                        "[delete_directory_tree] No progress deleting '%s' contents; "
+                        "aborting after %d rounds\n",
+                        dirname, enumeration_round);
+                break;
+            }
         }
     }
 

@@ -385,6 +385,77 @@ test_exit:
     exit_test("FPMoveAndRename:test378: dest file exist but diff only by case, is this one OK");
 }
 
+#define DEEP_TREE_DEPTH 20
+
+/* ------------------------- */
+STATIC void test460()
+{
+    uint16_t vol = VolID;
+    int dirs[DEEP_TREE_DEPTH + 1];
+    int ret;
+    int i;
+    char *toplevel    = "t_cdov";         /* 6-char root dir */
+    char *dst_renamed =
+        "t_cdov_renamed"; /* 14-char dest; dpath is 10 chars shorter than spath */
+    char  sub_name[201];
+    ENTER_TEST
+    memset(dirs, 0, sizeof(dirs));
+    /*
+     * Build a DEEP_TREE_DEPTH-level tree.  At level 20 (Linux MAXPATHLEN=4096):
+     *   spath actual rem = 51 bytes → overflow by 204 bytes
+     *   dpath actual rem = 61 bytes → overflow by 194 bytes
+     */
+    dirs[0] = FPCreateDir(Conn, vol, DIRDID_ROOT, toplevel);
+
+    if (!dirs[0]) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    for (i = 1; i <= DEEP_TREE_DEPTH; i++) {
+        memset(sub_name, 'a' + (i - 1), 200);
+        sub_name[200] = '\0';
+        dirs[i] = FPCreateDir(Conn, vol, dirs[i - 1], sub_name);
+
+        if (!dirs[i]) {
+            test_nottested();
+            goto cleanup;
+        }
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dirs[DEEP_TREE_DEPTH], "testfile")) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    ret = FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, toplevel,
+                          dst_renamed);
+
+    if (FPGetSrvrParms(Conn)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: server unreachable after FPMoveAndRename\n");
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    if (ret == AFP_OK) {
+        FAIL(delete_directory_tree(Conn, vol, DIRDID_ROOT, dst_renamed))
+        goto test_exit;
+    }
+
+cleanup:
+
+    if (dirs[0]) {
+        delete_directory_tree(Conn, vol, DIRDID_ROOT, toplevel);
+    }
+
+test_exit:
+    exit_test("FPMoveAndRename:test460: deeply nested rename with path overflow");
+}
+
 /* ----------- */
 void FPMoveAndRename_test()
 {
@@ -395,4 +466,5 @@ void FPMoveAndRename_test()
     test138();
     test322();
     test378();
+    test460();
 }
