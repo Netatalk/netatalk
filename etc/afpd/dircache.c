@@ -370,6 +370,7 @@ static void dircache_evict(void)
         }
 
         queue_count--;
+        dir->qidx_node = NULL;  /* Clear queue pointer after dequeue */
 
         if (curdir == dir) {                          /* 2 */
             if ((dir->qidx_node = enqueue(index_queue, dir)) == NULL) {
@@ -615,16 +616,7 @@ int dircache_add(const struct vol *vol,
     AFP_ASSERT(dir->d_u_name);
     AFP_ASSERT(dir->d_vid);
     AFP_ASSERT(dircache->hash_nodecount <= dircache_maxsize);
-
-    /* Check if cache is full */
-    if (dircache->hash_nodecount == dircache_maxsize) {
-        dircache_evict();
-    }
-
-    /*
-     * Make sure we don't add duplicates
-     */
-    /* Search primary cache by CNID */
+    /* Remove any duplicates before inserting */
     key.d_vid = dir->d_vid;
     key.d_did = dir->d_did;
 
@@ -642,6 +634,11 @@ int dircache_add(const struct vol *vol,
         /* Found an entry with the same DID/name, delete it */
         dir_remove(vol, hnode_get(hn));
         dircache_stat.expunged++;
+    }
+
+    /* Evict BEFORE hash_alloc_insert to prevent overflow when cache is full */
+    if (dircache->hash_nodecount >= dircache_maxsize) {
+        dircache_evict();
     }
 
     /* Add it to the main dircache */
@@ -690,9 +687,15 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
     AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
 
     if (flags & QUEUE_INDEX) {
-        /* this effectively deletes the dequeued node */
-        dequeue(dir->qidx_node->prev);
-        queue_count--;
+        if (!dir->qidx_node) {
+            LOG(log_error, logtype_afpd,
+                "dircache_remove: NULL qidx_node for did:%u (orphan entry!)",
+                ntohl(dir->d_did));
+        } else {
+            dequeue(dir->qidx_node->prev);
+            dir->qidx_node = NULL;  /* Clear queue pointer after dequeue */
+            queue_count--;
+        }
     }
 
     if (flags & DIDNAME_INDEX) {
