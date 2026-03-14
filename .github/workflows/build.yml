@@ -464,7 +464,6 @@ jobs:
             set -e
             pkg install -y \
               avahi \
-              bison \
               cmark \
               db5 \
               iniparser \
@@ -478,9 +477,7 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
-              sqlite \
-              talloc \
-              tracker3
+              sqlite
           run: |
             set -e
             meson setup build \
