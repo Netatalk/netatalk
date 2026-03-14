@@ -243,7 +243,7 @@ Mappings from afpd.conf to afp.conf
 | -unsetuplog        | -               | -                        | -                        | -       | obsolete                             |
 | -authprintdir      | -               | -                        | -                        | -       | CAP style auth is obsoleted          |
 | -ddpaddr           | ddp address     | 0.0                      | 0.0                      | (G)     | introduced in 4.0.0                  |
-| -[no]icon          | legacy icon     | -noicon                  | -                        | (G)     | introduced in 4.0.2                  |
+| -[no]icon          | legacy icon     | -noicon                  | -                        | (G)/(V) | introduced in 4.0.2                  |
 | -keepsessions      | -               | -                        | -                        | -       | obsolete; Use kill -HUP              |
 
 Mappings from afp_ldap.conf to afp.conf

@@ -31,6 +31,7 @@
 #include "file.h"
 #include "filedir.h"
 #include "fork.h"
+#include "virtual_icon.h"
 #include "volume.h"
 
 #define min(a,b)	((a)<(b)?(a):(b))
@@ -183,7 +184,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     uint32_t			sindex, maxsz, sz = 0;
     struct path                 *o_path;
     struct path                 s_path;
-    int                         header;
+    size_t                      header;
 
     if (sd.sd_buflen == 0) {
         if ((sd.sd_buf = (char *)malloc(SDBUFBRK)) == NULL) {
@@ -259,7 +260,7 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         ibuf += sizeof(temp16);
     }
 
-    header = ext ? 4 : 2;
+    header = (size_t)(ext ? 4 : 2);
     header *= sizeof(uint8_t);
     maxsz = min(maxsz, *rbuflen - REPLY_PARAM_MAXLEN);
     o_path = cname(vol, dir, &ibuf);
@@ -527,15 +528,21 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         }
 
         sz += esz + header;
+        {
+            size_t entry_len = esz + header;
 
-        if (ext) {
-            temp16 = htons(esz + header);
-            memcpy(data, &temp16, sizeof(temp16));
-            data += sizeof(temp16);
-        } else {
-            *data++ = esz + header;
+            if (entry_len > (ext ? UINT16_MAX : UINT8_MAX)) {
+                return AFPERR_PARAM;
+            }
+
+            if (ext) {
+                temp16 = htons((uint16_t)entry_len);
+                memcpy(data, &temp16, sizeof(temp16));
+                data += sizeof(temp16);
+            } else {
+                *data++ = (uint8_t)entry_len;
+            }
         }
-
         *data++ = S_ISDIR(s_path.st.st_mode) ? (char) FILDIRBIT_ISDIR :
                   FILDIRBIT_ISFILE;
 
@@ -546,6 +553,61 @@ static int enumerate(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         data += esz;
         actcnt++;
         /* FIXME if we rollover 16 bits and it's not FPEnumerateExt2 */
+    }
+
+    /*
+     * Inject virtual Icon\r entry at the volume root if enabled.
+     * This is treated as one extra entry appended after real entries.
+     * We track it via sindex: the virtual entry occupies position
+     * (real_count + 1). Because sd_sindex is updated below, subsequent
+     * requests with higher sindex will skip past it.
+     *
+     * The virtual entry occupies exactly one sindex position: one past
+     * the last real entry (d_offcnt + 1, 1-based).  Only emit it when
+     * the current batch reaches that position, so it is served once
+     * and subsequent calls fall through to AFPERR_NOOBJ.
+     */
+    if (len == 0 && actcnt < reqcnt && fbitmap != 0
+            && curdir->d_did == DIRDID_ROOT
+            && virtual_icon_enabled(vol)
+            && !real_icon_exists(vol)
+            && sindex + actcnt == curdir->d_offcnt + 1) {
+        esz = 0;
+        ret = virtual_icon_getfilparams(obj, vol, fbitmap,
+                                        data + header, &esz);
+
+        if (ret == AFP_OK) {
+            if ((esz + header) & 1) {
+                *(data + header + esz) = '\0';
+                esz++;
+            }
+
+            if (maxsz >= sz + esz + header) {
+                sz += esz + header;
+                {
+                    size_t entry_len = esz + header;
+
+                    if (entry_len > (ext ? UINT16_MAX : UINT8_MAX)) {
+                        return AFPERR_PARAM;
+                    }
+
+                    if (ext) {
+                        temp16 = htons((uint16_t)entry_len);
+                        memcpy(data, &temp16, sizeof(temp16));
+                        data += sizeof(temp16);
+                    } else {
+                        *data++ = (uint8_t)entry_len;
+                    }
+                }
+                *data++ = FILDIRBIT_ISFILE;
+
+                if (ext) {
+                    *data++ = 0;
+                }
+
+                actcnt++;
+            }
+        }
     }
 
     if (actcnt == 0) {

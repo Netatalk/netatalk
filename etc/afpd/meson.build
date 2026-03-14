@@ -25,6 +25,7 @@ afpd_sources = [
     'switch.c',
     'uam.c',
     'unix.c',
+    'virtual_icon.c',
     'volume.c',
     'main.c',
 ]
