@@ -470,6 +470,7 @@ jobs:
               iniparser \
               libevent \
               libgcrypt \
+              localsearch \
               meson \
               mysql80-client \
               openldap26-client \
@@ -479,8 +480,7 @@ jobs:
               py39-sqlite3 \
               py39-tkinter \
               sqlite \
-              talloc \
-              tracker3
+              talloc
           run: |
             set -e
             meson setup build \
