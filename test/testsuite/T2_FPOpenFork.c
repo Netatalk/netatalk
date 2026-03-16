@@ -2286,7 +2286,14 @@ STATIC void test544()
     struct afp_filedir_parms filedir = { 0 };
     uint16_t fbitmap = (1 << FILPBIT_RFLEN);
     const DSI *dsi = &Conn->dsi;
+    char write_buf[800];
     ENTER_TEST
+    /* Fill write buffer with deterministic non-zero patterns.
+     * First 500 bytes = 0xAA, next 300 bytes = 0xBB.
+     * This allows memcmp to detect corruption, truncation errors,
+     * and stale-data bugs that zero-fill would mask. */
+    memset(write_buf, 0xAA, 500);
+    memset(write_buf + 500, 0xBB, 300);
 
     /************************************
      * Step 1: Create file
@@ -2328,7 +2335,7 @@ STATIC void test544()
                 "\t  Step 3: Write 500 bytes to resource fork\n");
     }
 
-    if (FPWrite(Conn, fork, 0, 500, Data, 0)) {
+    if (FPWrite(Conn, fork, 0, 500, write_buf, 0)) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED FPWrite 500 bytes\n");
         }
@@ -2413,7 +2420,7 @@ STATIC void test544()
                 "\t  Step 7: Append 300 bytes (offset 500, total 800)\n");
     }
 
-    if (FPWrite(Conn, fork, 500, 300, Data, 0)) {
+    if (FPWrite(Conn, fork, 500, 300, write_buf + 500, 0)) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED FPWrite append 300 bytes\n");
         }
@@ -2501,12 +2508,30 @@ STATIC void test544()
         goto fin;
     }
 
+    /************************************
+     * Step 11: Verify content integrity (memcmp)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 11: Verify content integrity (memcmp 800 bytes)\n");
+    }
+
+    if (memcmp(Data, write_buf, 800) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED content mismatch — rfork data corrupted\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
     FAIL(FPCloseFork(Conn, fork))
     fork = 0;
 
     if (!Quiet) {
         fprintf(stdout,
-                "\t  ✓ Resource fork length round-trip verified (500 → 800 bytes)\n");
+                "\t  ✓ Resource fork content + length verified (500 → 800 bytes)\n");
     }
 
 fin:
@@ -2518,6 +2543,367 @@ fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 test_exit:
     exit_test("FPOpenFork:test544: Resource fork length round-trip after write+close+re-read");
+}
+
+/* test546: Multi-user resource fork lifecycle with content verification
+ *
+ * Tests cross-connection cache coherency by having Conn write rfork data
+ * and Conn2 read it back with memcmp verification. Covers write, overwrite,
+ * and truncation scenarios.
+ *
+ * Requires: two connections (Conn, Conn2)
+ *
+ * DESIGN NOTE: Uses separate fork variables (fork/fork1) for Conn/Conn2
+ * to avoid wrong-connection FPCloseFork in cleanup paths. This matches
+ * the established pattern in test_bytelock3() and test65().
+ */
+STATIC void test546()
+{
+    char *name = "t546 rfork multiuser lifecycle";
+    uint16_t bitmap = 0;
+    uint16_t fork = 0;       /* Conn fork handle */
+    uint16_t fork1 = 0;      /* Conn2 fork handle */
+    uint16_t vol = VolID;
+    uint16_t vol2 = 0xffff;  /* invalid until FPOpenVol succeeds */
+    int  ofs = 3 * sizeof(uint16_t);
+    struct afp_filedir_parms filedir = { 0 };
+    uint16_t fbitmap = (1 << FILPBIT_RFLEN);
+    const DSI *dsi2;
+    char write_buf[1000];
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    dsi2 = &Conn2->dsi;
+
+    /************************************
+     * Step 1: Create file
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout, "\t  Step 1: Create test file\n");
+    }
+
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /************************************
+     * Step 2: Open rfork RW (Conn), write 1000 bytes of 0xAA
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 2: Write 1000 bytes (0xAA) to rfork (Conn)\n");
+    }
+
+    memset(write_buf, 0xAA, 1000);
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork rfork (Conn)\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    if (FPWrite(Conn, fork, 0, 1000, write_buf, 0)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPWrite 1000 bytes (Conn)\n");
+        }
+
+        test_failed();
+        goto fin;
+    }
+
+    /************************************
+     * Step 3: Close rfork (Conn)
+     ************************************/
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    /************************************
+     * Step 4: Open rfork RO (Conn2), read 1000 → memcmp vs 0xAA
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 4: Read 1000 bytes from rfork (Conn2), verify 0xAA\n");
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenVol (Conn2)\n");
+        }
+
+        test_nottested();
+        goto fin;
+    }
+
+    fork1 = FPOpenFork(Conn2, vol2, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                       OPENACC_RD);
+
+    if (!fork1) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork rfork RO (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    if (FPRead(Conn2, fork1, 0, 1000, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPRead 1000 bytes (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    if (memcmp(Data, write_buf, 1000) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED content mismatch — Conn2 did not see Conn's write\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    /************************************
+     * Step 5: Close rfork (Conn2)
+     ************************************/
+    FAIL(FPCloseFork(Conn2, fork1))
+    fork1 = 0;
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout,
+                "\t    ✓ Cross-user read verified (1000 bytes of 0xAA)\n");
+    }
+
+    /************************************
+     * Step 6: Overwrite first 500 bytes with 0xBB (Conn)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 6: Overwrite first 500 bytes with 0xBB (Conn)\n");
+    }
+
+    memset(write_buf, 0xBB, 500);
+    /* write_buf is now: 0xBB×500 + 0xAA×500 */
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork rfork RW (Conn)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    if (FPWrite(Conn, fork, 0, 500, write_buf, 0)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPWrite overwrite 500 bytes (Conn)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    /************************************
+     * Step 7: Read 1000 bytes (Conn2) → verify [0xBB×500 + 0xAA×500]
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 7: Read 1000 bytes (Conn2), verify partial overwrite\n");
+    }
+
+    fork1 = FPOpenFork(Conn2, vol2, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                       OPENACC_RD);
+
+    if (!fork1) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork rfork RO (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    if (FPRead(Conn2, fork1, 0, 1000, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPRead 1000 bytes (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    /* Verify: first 500 = 0xBB, last 500 = 0xAA */
+    if (memcmp(Data, write_buf, 1000) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED content mismatch after partial overwrite\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    /************************************
+     * Step 8: Close rfork (Conn2)
+     ************************************/
+    FAIL(FPCloseFork(Conn2, fork1))
+    fork1 = 0;
+
+    if (!Quiet && Verbose) {
+        fprintf(stdout,
+                "\t    ✓ Cross-user partial overwrite verified\n");
+    }
+
+    /************************************
+     * Step 9: Truncate to 200 bytes (Conn)
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 9: Truncate rfork to 200 bytes (Conn)\n");
+    }
+
+    fork = FPOpenFork(Conn, vol, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                      OPENACC_WR | OPENACC_RD);
+
+    if (!fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPOpenFork rfork RW for truncate (Conn)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    if (FPSetForkParam(Conn, fork, (1 << FILPBIT_RFLEN), 200)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPSetForkParam truncate to 200 (Conn)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    FAIL(FPCloseFork(Conn, fork))
+    fork = 0;
+
+    /************************************
+     * Step 10: Verify RFLEN=200 (Conn2), read 200 → memcmp vs 0xBB×200
+     ************************************/
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  Step 10: Verify RFLEN=200 and content (Conn2)\n");
+    }
+
+    memset(&filedir, 0, sizeof(filedir));
+
+    if (FPGetFileDirParams(Conn2, vol2, DIRDID_ROOT, name, fbitmap, 0)) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED FPGetFileDirParams RFLEN (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi2->data + ofs, fbitmap, 0);
+
+    if (filedir.rflen != 200) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED RFLEN should be 200 after truncate, got %u\n",
+                    filedir.rflen);
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    fork1 = FPOpenFork(Conn2, vol2, OPENFORK_RSCS, bitmap, DIRDID_ROOT, name,
+                       OPENACC_RD);
+
+    if (!fork1) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED FPOpenFork rfork RO after truncate (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    if (FPRead(Conn2, fork1, 0, 200, Data)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED FPRead 200 bytes after truncate (Conn2)\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    /* First 200 bytes should be 0xBB (preserved from the overwrite) */
+    if (memcmp(Data, write_buf, 200) != 0) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED content mismatch after truncation\n");
+        }
+
+        test_failed();
+        goto fin_vol2;
+    }
+
+    /************************************
+     * Step 11: Close rfork (Conn2)
+     ************************************/
+    FAIL(FPCloseFork(Conn2, fork1))
+    fork1 = 0;
+
+    if (!Quiet) {
+        fprintf(stdout,
+                "\t  ✓ Multi-user rfork lifecycle verified "
+                "(write/overwrite/truncate with content checks)\n");
+    }
+
+fin_vol2:
+
+    if (fork1) {
+        FPCloseFork(Conn2, fork1);
+    }
+
+    if (vol2 != 0xffff) {
+        FAIL(FPCloseVol(Conn2, vol2))
+    }
+
+fin:
+
+    if (fork) {
+        FPCloseFork(Conn, fork);
+    }
+
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
+    exit_test("FPOpenFork:test546: Multi-user resource fork lifecycle "
+              "with content verification");
 }
 
 /* ----------- */
@@ -2546,4 +2932,5 @@ void T2FPOpenFork_test()
     test526();
     test542();
     test544();
+    test546();
 }

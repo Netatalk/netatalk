@@ -540,13 +540,20 @@ print &ui_table_row(
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache files', \%in);
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache rfork budget', \%in);
 print &ui_table_row(
-                    $text{'edit_global_section_dircache_files'},
-                    &build_select(
-                                  $afpconfRef, $sectionRef, \%in, 'dircache files', $text{'edit_undefined'}, 'yes',
-                                  'yes',       'no',        'no'
-                    )
+                    $text{'edit_global_section_dircache_rfork_budget'},
+                    "<input name='p_dircache rfork budget' type='number' min='0' max='10485760' value='"
+                    . $values[0] . "'>" . " "
+                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
+);
+
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'dircache rfork maxsize', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_dircache_rfork_maxsize'},
+                    "<input name='p_dircache rfork maxsize' type='number' min='0' max='10240' value='"
+                    . $values[0] . "'>" . " "
+                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'extmap file', \%in);

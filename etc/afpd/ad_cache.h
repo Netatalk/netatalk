@@ -20,4 +20,10 @@ extern unsigned long long ad_cache_hits;
 extern unsigned long long ad_cache_misses;
 extern unsigned long long ad_cache_no_ad;
 
+/* Tier 2: Resource Fork data cache helpers — defined in ad_cache.c */
+extern int  rfork_cache_store_from_fd(struct dir *entry,
+                                      struct adouble *adp, int eid);
+extern void rfork_cache_free(struct dir *entry);
+extern void rfork_cache_evict_to_budget(size_t needed);
+
 #endif /* AD_CACHE_H */
