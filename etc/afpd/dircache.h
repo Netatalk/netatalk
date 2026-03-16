@@ -51,4 +51,22 @@ extern int        dircache_reindex_didname(const struct vol *vol,
         struct dir *dir);
 extern void       dircache_promote(struct dir *dir);
 extern void       process_cache_hints(AFPObj *obj);
+extern void       dircache_rfork_shutdown(void);
+
+/* Tier 2: Resource Fork data cache — defined in dircache.c */
+extern size_t rfork_cache_used;
+extern size_t rfork_cache_budget;
+extern size_t rfork_max_entry_size;
+extern unsigned int rfork_lru_count;
+extern q_t *rfork_lru;
+
+/* Tier 2: Resource Fork data cache statistics — defined in dircache.c */
+extern unsigned long long rfork_stat_lookups;
+extern unsigned long long rfork_stat_hits;
+extern unsigned long long rfork_stat_misses;
+extern unsigned long long rfork_stat_added;
+extern unsigned long long rfork_stat_evicted;
+extern unsigned long long rfork_stat_invalidated;
+extern size_t rfork_stat_used_max;
+
 #endif /* DIRCACHE_H */

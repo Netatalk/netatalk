@@ -566,21 +566,6 @@ compatibility), higher values validate less frequently.
 > If Netatalk is the only process accessing the volume you can safely
 set a value of 100 for maximum performance.
 
-dircache files = *BOOLEAN* (default: *no*) **(G)**
-
-> Whether to allow files to be cached in the directory cache alongside
-directories. The default is *no* for legacy compatibility and memory
-conservation.
->
-> When enabled (*yes*), files are cached along with directories, which
-can improve performance for file-heavy workloads by reducing CNID database
-queries. However, this increases memory usage and may cause excessive
-cache evictions if the working set is larger than the dircache size.
->
-> **Recommendation**: Leave disabled (*no*) unless you have a large
-**dircache size** and file-intensive workflows. For volumes where Netatalk
-is the only accessor, enabling this with a large cache may improve performance.
-
 dircache mode = *lru* | *arc* (default: *lru*) **(G)**
 
 > Cache replacement algorithm. **lru** = Least Recently Used (stable, memory-efficient).
@@ -591,6 +576,23 @@ Example: 64K cache uses ~20-25 MB (ARC) vs ~10-12 MB (LRU).
 >
 > **Recommendation**: Use **arc** for servers with 8GB+ RAM. Use **lru** for
 constrained systems. Increase **dircache size** (max entries) for best results.
+
+dircache rfork budget = *number* (default: *0*) **(G)**
+
+> Total memory budget in KB for caching resource fork data in the directory
+cache. When set to 0 (the default), resource fork caching is disabled.
+Resource fork caching stores small resource fork contents in memory to avoid
+repeated disk reads during FPGetFileDirParams and FPEnumerate operations.
+>
+> Maximum: 10485760 (10 GB in KB) total.
+
+dircache rfork maxsize = *number* (default: *1024*) **(G)**
+
+> Maximum size in KB of a single resource fork entry that will be cached.
+Resource forks larger than this value will not be cached even if the total
+budget has not been exhausted.
+>
+> Maximum: 10240 (10 MB in KB) per entry.
 
 **Note**: See Configuration chapter in the manual for more information
 
@@ -1136,7 +1138,7 @@ hosts deny = *IP host address/IP netmask bits* [ ... ] **(V)**
 
 ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 
-> Specify how Extended Attributes and Classic Mac OS resource forks are
+> Specify how Extended Attributes and Mac OS Resource Forks are
 stored.
 >
 > By default, we attempt to enable **sys** with a fallback to **none**.
@@ -1164,7 +1166,7 @@ Extended Attributes.
 > > No Extended Attributes support.
 >
 > ***WARNING:*** The **samba** option should not be used on a volume that was previously
-set to **sys**. This may lead to data loss.
+set to **sys**. This may lead to data loss (client copy between shares to convert).
 
 mac charset = *charset* **(V)**
 

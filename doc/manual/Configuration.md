@@ -760,35 +760,6 @@ always invalidate dircache entries immediately regardless of this setting.
 If Netatalk is the only process accessing the volume you can safely
 set a value of 100 for maximum performance.
 
-dircache files = *BOOLEAN* (default: *no*) **(G)**
-
-Whether to allow files to be cached in the directory cache alongside
-directories. The default is *no* for legacy compatibility and memory conservation.
-
-When enabled (*yes*), files are cached along with directories, which can
-improve performance for file-heavy workloads by reducing CNID database queries.
-However, this increases memory usage and may cause excessive cache evictions
-if the working set is larger than the configured dircache size.
-
-NB: This is a beta option. Files are already cached by default, but some code is missing full support for files in the cache.
-This is related to work to complete file caching support, and this option may be removed in future.
-
-**Performance Impact:**
-
-- **Disabled** (*no*, default): Only directories are fully cached. Lower memory usage,
-  suitable for most deployments.
-- **Enabled** (*yes*): Both files and directories are fully cached. Higher memory usage,
-  potentially better performance for file-intensive workflows.
-
-**Recommendation:**
-
-- Leave disabled (*no*) unless you have:
-  - A large **dircache size** configuration (e.g., 65536 or higher)
-  - File-intensive workflows with repeated access to the same files
-  - Sufficient server memory to handle increased cache size
-
-Default: no. Range: yes/no, true/false, 1/0.
-
 dircache mode = *lru* | *arc* (default: *lru*) **(G)**
 
 Cache replacement algorithm. Netatalk supports two eviction policies:
@@ -842,7 +813,6 @@ Default: lru.
 **Example** (File-heavy workload with large cache):
 
     dircache size = 65536
-    dircache files = yes
     dircache validation freq = 100
     dircache mode = arc
 

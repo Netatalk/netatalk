@@ -29,6 +29,7 @@
 #include <atalk/netatalk_conf.h>
 #include <atalk/util.h>
 
+#include "ad_cache.h"
 #include "dircache.h"
 #include "desktop.h"
 #include "directory.h"
@@ -607,6 +608,30 @@ openfork_err:
     return ret;
 }
 
+/*!
+ * @brief Invalidate cached rfork data for a file identified by its open fork.
+ *
+ * Looks up the file's dircache entry via parent DID + name, and invalidates
+ * the AD cache (Tier 1 + Tier 2). Used after rfork writes and truncations.
+ */
+static void rfork_invalidate_for_ofork(const struct vol *vol,
+                                       struct ofork *ofork)
+{
+    const struct dir *parentdir = dirlookup(vol, ofork->of_did);
+
+    if (parentdir) {
+        char *name = of_name(ofork);
+        struct dir *cached = dircache_search_by_name(vol, parentdir,
+                             name, strnlen(name, MAXPATHLEN));
+
+        if (cached) {
+            dir_modify(vol, cached, &(struct dir_modify_args) {
+                .flags = DCMOD_AD_INV,
+            });
+        }
+    }
+}
+
 int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
                       size_t *rbuflen)
 {
@@ -740,10 +765,24 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
         if (ad_flush(ofork->of_ad) < 0) {
             LOG(log_error, logtype_afpd, "afp_setforkparams(%s): ad_flush: %s",
                 of_name(ofork), strerror(errno));
+
+            /* ad_rtruncate() succeeded but ad_flush() failed — the fork IS
+             * truncated on disk. Invalidate cached rfork data so the next
+             * access re-reads from disk (self-healing). */
+            if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
+                rfork_invalidate_for_ofork(vol, ofork);
+            }
+
             return AFPERR_PARAM;
         }
     } else {
         return AFPERR_BITMAP;
+    }
+
+    /* Invalidate cached rfork data after truncate/extend.
+     * Only resource fork truncation (ADEID_RFORK) affects the rfork cache. */
+    if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
+        rfork_invalidate_for_ofork(vol, ofork);
     }
 
     return AFP_OK;
@@ -926,6 +965,86 @@ static int read_file(const struct ofork *ofork, int eid, off_t offset,
     return AFP_OK;
 }
 
+/*!
+ * @brief Serve resource fork data from Tier 2 cache via DSI framing
+ *
+ * Shared helper for cache-hit and just-populated cache paths in read_fork().
+ * Handles dsi_readinit/dsi_read/dsi_readdone loop and LRU promotion.
+ *
+ * @param[in]  dsi           DSI connection
+ * @param[in]  cached_entry  dir entry with populated dcache_rfork_buf
+ * @param[in]  ibuf          DSI write buffer (repurposed from command buffer)
+ * @param[in]  offset        Starting byte offset in the rfork
+ * @param[in]  reqcount      Requested byte count
+ * @param[in]  err           AFP error code (AFPERR_EOF or AFP_OK)
+ * @param[out] rbuflen       Output: bytes remaining (set by dsi_read)
+ *
+ * @returns 0 on success (goto afp_read_done), -1 on DSI error (goto afp_read_exit)
+ */
+static int rfork_cache_serve_from_buf(DSI *dsi, struct dir *cached_entry,
+                                      char *ibuf, off_t offset,
+                                      off_t reqcount, int err,
+                                      size_t *rbuflen)
+{
+    ssize_t cc;
+
+    /* Defense-in-depth: validate bounds before any memcpy from rfork buffer.
+     * Callers maintain offset + reqcount <= dcache_rlen, but verify here to
+     * prevent heap over-read if invariants are ever violated. */
+    if (offset < 0 || reqcount < 0
+            || offset + reqcount > cached_entry->dcache_rlen) {
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_serve_from_buf: bounds violation "
+            "(offset=%lld, reqcount=%lld, rlen=%lld, did:%u)",
+            (long long)offset, (long long)reqcount,
+            (long long)cached_entry->dcache_rlen,
+            ntohl(cached_entry->d_did));
+        return -1;
+    }
+
+    *rbuflen = MIN(reqcount, dsi->server_quantum);
+    memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, *rbuflen);
+    offset += *rbuflen;
+
+    if ((cc = dsi_readinit(dsi, ibuf, *rbuflen, reqcount, err)) < 0) {
+        return -1;
+    }
+
+    *rbuflen = cc;
+
+    while (*rbuflen > 0) {
+        if (offset >= cached_entry->dcache_rlen) {
+            break;
+        }
+
+        size_t avail = (size_t)(cached_entry->dcache_rlen - offset);
+
+        if (avail == 0) {
+            break;    /* Safety: should not happen, all data sent */
+        }
+
+        size_t tocopy = MIN((size_t) * rbuflen, avail);
+        memcpy(ibuf, (char *)cached_entry->dcache_rfork_buf + offset, tocopy);
+        offset += tocopy;
+        cc = dsi_read(dsi, ibuf, tocopy);
+
+        if (cc < 0) {
+            return -1;
+        }
+
+        *rbuflen = cc;
+    }
+
+    dsi_readdone(dsi);
+
+    /* Promote in rfork LRU */
+    if (cached_entry->rfork_lru_node) {
+        queue_move_to_tail(rfork_lru, cached_entry->rfork_lru_node);
+    }
+
+    return 0;
+}
+
 static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                      char *rbuf _U_, size_t *rbuflen, int is64)
 {
@@ -984,6 +1103,26 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     AFP_READ_START((long)reqcount);
+    /* Tier 2 rfork cache: resolve dircache entry for resource fork reads.
+     * Both lookups are O(1) hash operations — no syscalls, no CNID DB queries.
+     * Guarded by budget > 0 so disabled (default) incurs zero overhead. */
+    struct dir *cached_entry = NULL;
+
+    if (eid == ADEID_RFORK
+            && !(ofork->of_flags & AFPFORK_ACCWR)
+            && obj->options.dircache_rfork_budget > 0) {
+        const struct dir *parentdir = dirlookup(ofork->of_vol, ofork->of_did);
+
+        if (parentdir) {
+            char *fname = of_name(ofork);
+            cached_entry = dircache_search_by_name(ofork->of_vol, parentdir,
+                                                   fname, strnlen(fname, MAXPATHLEN));
+
+            if (cached_entry) {
+                rfork_stat_lookups++;
+            }
+        }
+    }
 
     switch (obj->proto) {
 #ifndef NO_DDP
@@ -1044,6 +1183,66 @@ static int read_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                 err = AFPERR_LOCK;
                 goto afp_read_err;
             }
+        }
+
+        /* === Tier 2 rfork cache check — before sendfile === */
+        if (cached_entry && cached_entry->dcache_rfork_buf
+                && cached_entry->dcache_rlen > 0
+                && cached_entry->dcache_rlen == size) {
+            /* Serve entire request from Tier 2 cache — zero I/O. */
+            if (rfork_cache_serve_from_buf(dsi, cached_entry, ibuf,
+                                           offset, reqcount, (int)err,
+                                           rbuflen) < 0) {
+                goto afp_read_exit;
+            }
+
+            rfork_stat_hits++;
+            goto afp_read_done;
+        }
+
+        /* Size mismatch: cache stale — invalidate rfork buffer + Tier 1 AD */
+        if (cached_entry && cached_entry->dcache_rfork_buf
+                && cached_entry->dcache_rlen > 0
+                && cached_entry->dcache_rlen != size) {
+            LOG(log_debug, logtype_afpd,
+                "rfork_cache: size mismatch (cached:%lld vs live:%lld), "
+                "invalidating (did:%u)",
+                (long long)cached_entry->dcache_rlen, (long long)size,
+                ntohl(cached_entry->d_did));
+            rfork_cache_free(cached_entry);
+            rfork_stat_invalidated++;
+            rfork_stat_misses++;     /* Size mismatch counts as a miss */
+            cached_entry->dcache_rlen = (off_t) -1;
+            memset(cached_entry->dcache_finderinfo, 0, 32);
+            memset(cached_entry->dcache_filedatesi, 0, 16);
+            memset(cached_entry->dcache_afpfilei, 0, 4);
+            cached_entry = NULL;
+        }
+
+        /* Cache miss: upgrade to full-fork ad_read if cacheable */
+        if (cached_entry && cached_entry->dcache_rlen > 0
+                && (size_t)cached_entry->dcache_rlen <= rfork_max_entry_size
+                && !cached_entry->dcache_rfork_buf
+                && rfork_cache_store_from_fd(cached_entry, ofork->of_ad,
+                                             ADEID_RFORK) == 0) {
+            rfork_stat_added++;
+
+            /* Serve from newly-populated cache */
+            if (rfork_cache_serve_from_buf(dsi, cached_entry, ibuf,
+                                           offset, reqcount, (int)err,
+                                           rbuflen) < 0) {
+                goto afp_read_exit;
+            }
+
+            rfork_stat_hits++;
+            goto afp_read_done;
+        }
+
+        /* store_from_fd failed — fall through to normal fd read */
+
+        /* Count miss: any rfork cache lookup that didn't result in a hit */
+        if (cached_entry) {
+            rfork_stat_misses++;
         }
 
 #ifdef WITH_SENDFILE
@@ -1575,6 +1774,12 @@ afp_write_done:
 
     if (ad_meta_fileno(ofork->of_ad) != -1) {   /* META */
         ofork->of_flags |= AFPFORK_DIRTY;
+    }
+
+    /* Invalidate cached rfork data after write — content changed on disk.
+     * Only resource fork writes (ADEID_RFORK) affect the rfork cache. */
+    if (eid == ADEID_RFORK && obj->options.dircache_rfork_budget > 0) {
+        rfork_invalidate_for_ofork(ofork->of_vol, ofork);
     }
 
     /* we have modified any fork, remember until close_fork */
