@@ -717,6 +717,7 @@ jobs:
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
+            -e AFP_EA="ad" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
@@ -727,6 +728,8 @@ jobs:
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_DIRCACHE_RFORK_BUDGET="102400" \
+            -e AFP_DIRCACHE_RFORK_MAXSIZE="5120" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-adtest-afp34-debian:
@@ -744,6 +747,7 @@ jobs:
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
+            -e AFP_EA="ad" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
@@ -981,6 +985,7 @@ jobs:
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
+            -e AFP_EA="ad" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
@@ -1008,6 +1013,7 @@ jobs:
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_PASS2="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
+            -e AFP_EA="ad" \
             -e SHARE_NAME="test1" \
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
@@ -1170,4 +1176,6 @@ jobs:
             -e AFP_DIRCACHESIZE="1024" \
             -e AFP_DIRCACHE_MODE="arc" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
+            -e AFP_DIRCACHE_RFORK_BUDGET="102400" \
+            -e AFP_DIRCACHE_RFORK_MAXSIZE="5120" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}

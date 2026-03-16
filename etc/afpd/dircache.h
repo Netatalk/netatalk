@@ -62,5 +62,22 @@ extern void       dircache_remove_children_defer(const struct vol *vol,
 extern void       dircache_flush_deferred_for_vol(uint16_t vid);
 extern int        dircache_has_deferred_work(void);
 extern int        dircache_process_deferred_chain(void);
-#endif /* DIRCACHE_H */
+extern void       dircache_rfork_shutdown(void);
 
+/* Tier 2: Resource Fork data cache */
+extern size_t rfork_cache_used;
+extern size_t rfork_cache_budget;
+extern size_t rfork_max_entry_size;
+extern unsigned int rfork_lru_count;
+extern q_t *rfork_lru;
+
+/* Tier 2: Resource Fork data cache statistics */
+extern unsigned long long rfork_stat_lookups;
+extern unsigned long long rfork_stat_hits;
+extern unsigned long long rfork_stat_misses;
+extern unsigned long long rfork_stat_added;
+extern unsigned long long rfork_stat_evicted;
+extern unsigned long long rfork_stat_invalidated;
+extern size_t rfork_stat_used_max;
+
+#endif /* DIRCACHE_H */

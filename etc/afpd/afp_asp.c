@@ -223,6 +223,14 @@ void afp_over_asp(AFPObj *obj)
         afp_asp_die(EXITERR_SYS);
     }
 
+    /* Disable rfork caching for ASP sessions — the rfork cache tier-2
+     * layer is designed for the DSI (TCP) transport path and provides no
+     * benefit over AppleTalk. Zero the budget so dircache_init() skips
+     * rfork subsystem allocation while still initializing the core
+     * directory cache that all AFP operations depend on. */
+    obj->options.dircache_rfork_budget = 0;
+    obj->options.dircache_rfork_maxentry = 0;
+
     if (dircache_init(obj->options.dircachesize) != 0) {
         LOG(log_error, logtype_afpd, "afp_over_asp: dircache_init error");
         afp_asp_die(EXITERR_SYS);

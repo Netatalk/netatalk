@@ -29,6 +29,7 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+#include "dircache.h"
 #include "directory.h"
 
 #include "ad_cache.h"
@@ -238,8 +239,228 @@ disk_read:
         ad_close(adp, ADFLAGS_HF | flags);
     } else if (ret < 0 && errno == ENOENT && dir
                && dir->d_did != CNID_INVALID) {
+        /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
+         * Setting rlen = -2 before freeing would corrupt rfork_cache_used tracking. */
+        if (dir->dcache_rfork_buf) {
+            rfork_cache_free(dir);
+            rfork_stat_invalidated++;
+        }
+
         dir->dcache_rlen = (off_t) -2;
     }
 
     return ret;
+}
+
+/******************************************************************************
+ * Tier 2: Resource Fork data cache implementation
+ *
+ * Budget management globals and stat counters are defined in dircache.c
+ * (non-static) and accessed here via extern declarations in dircache.h.
+ ******************************************************************************/
+
+/*!
+ * @brief Free a single entry's rfork buffer, remove from rfork LRU, update counter
+ *
+ * Uses dcache_rlen for the buffer size.
+ * INVARIANT: dcache_rlen >= 0 when dcache_rfork_buf != NULL.
+ * Uses production-safe fallback: if dcache_rlen < 0 (invariant violation),
+ * logs error, frees buffer, but does NOT touch budget counter (unknown size).
+ * Handles rfork_lru_node == NULL gracefully (orphaned buffer from
+ * enqueue failure — budget is still decremented correctly).
+ * Decrements rfork_lru_count when removing from LRU.
+ * Does NOT reset dcache_rlen — the AD metadata remains valid.
+ */
+void rfork_cache_free(struct dir *entry)
+{
+    if (entry->dcache_rfork_buf == NULL) {
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_free: called with NULL buf (did:%u)",
+            ntohl(entry->d_did));
+        return;
+    }
+
+    if (entry->dcache_rlen < 0) {
+        /* INVARIANT VIOLATION: buf != NULL but rlen < 0.
+         * Production-safe: log error, free buf, but don't touch budget
+         * (unknown size would corrupt the counter). */
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_free: INVARIANT VIOLATION buf!=NULL but rlen=%lld (did:%u)",
+            (long long)entry->dcache_rlen, ntohl(entry->d_did));
+        free(entry->dcache_rfork_buf);
+        entry->dcache_rfork_buf = NULL;
+
+        if (entry->rfork_lru_node) {
+            entry->rfork_lru_node->prev->next = entry->rfork_lru_node->next;
+            entry->rfork_lru_node->next->prev = entry->rfork_lru_node->prev;
+            free(entry->rfork_lru_node);
+            entry->rfork_lru_node = NULL;
+            rfork_lru_count--;
+        }
+
+        return;
+    }
+
+    /* Normal path: decrement budget by dcache_rlen, free buf, remove from LRU */
+    if ((size_t)entry->dcache_rlen > rfork_cache_used) {
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_free: budget underflow detected "
+            "(rlen=%lld, used=%zu, did:%u) — resetting to 0",
+            (long long)entry->dcache_rlen, rfork_cache_used,
+            ntohl(entry->d_did));
+        rfork_cache_used = 0;
+    } else {
+        rfork_cache_used -= (size_t)entry->dcache_rlen;
+    }
+
+    free(entry->dcache_rfork_buf);
+    entry->dcache_rfork_buf = NULL;
+
+    if (entry->rfork_lru_node) {
+        /* Manual unlink from rfork LRU doubly-linked list.
+         * WARNING: Do NOT use dequeue() here — it frees the qnode before we can
+         * access node->data to get the struct dir. We must manually unlink. */
+        entry->rfork_lru_node->prev->next = entry->rfork_lru_node->next;
+        entry->rfork_lru_node->next->prev = entry->rfork_lru_node->prev;
+        free(entry->rfork_lru_node);
+        entry->rfork_lru_node = NULL;
+        rfork_lru_count--;
+    }
+}
+
+/*!
+ * @brief Evict rfork buffers from rfork LRU head (oldest/LRU) until under budget
+ *
+ * Queue convention: sentinel->next = head = LRU (oldest),
+ *                   sentinel->prev = tail = MRU (newest).
+ * Called by rfork_cache_store_from_fd() when budget would be exceeded.
+ * O(k) where k = entries evicted.
+ */
+void rfork_cache_evict_to_budget(size_t needed)
+{
+    /* Walk rfork LRU from head (oldest/LRU) → tail (newest/MRU), freeing
+     * buffers until under budget. O(k) where k = entries evicted.
+     * WARNING: Do NOT use dequeue() here — it frees the qnode before we
+     * can access node->data to get the struct dir. Manual unlinking required. */
+    while (rfork_lru && rfork_lru->next != rfork_lru
+            && rfork_cache_used + needed > rfork_cache_budget) {
+        qnode_t *head = rfork_lru->next;
+        struct dir *entry = (struct dir *)head->data;
+        AFP_ASSERT(entry->dcache_rfork_buf != NULL);
+        rfork_cache_free(entry);
+        rfork_stat_evicted++;
+    }
+}
+
+/*!
+ * @brief Store resource fork data by reading directly from the ad fd
+ *
+ * Allocates dcache_rlen bytes and does ad_read(adp, eid, 0, buf, dcache_rlen).
+ * ad_read() handles all storage formats (EA, macOS xattr, AD v2 sidecar).
+ * Guards: returns -1 if !AD_RSRC_OPEN(adp) (fd not open), dcache_rlen <= 0,
+ * or rlen > rfork_max_entry_size.
+ * Validates that ad_read returns exactly dcache_rlen bytes — if not, the fork
+ * size changed since Tier 1 metadata was cached: invalidates ALL cached AD
+ * metadata (Tier 1) and returns -1 (self-healing).
+ *
+ * @returns 0 on success, -1 if not cacheable, short read, or ad_read failed.
+ */
+int rfork_cache_store_from_fd(struct dir *entry, struct adouble *adp, int eid)
+{
+    AFP_ASSERT(entry->d_flags & DIRF_ISFILE);
+
+    if (!(entry->d_flags & DIRF_ISFILE)) {
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_store_from_fd: called for non-file entry did:%u",
+            ntohl(entry->d_did));
+        return -1;
+    }
+
+    /* Defense-in-depth: free any existing buffer (should never be needed) */
+    if (entry->dcache_rfork_buf) {
+        LOG(log_error, logtype_afpd,
+            "rfork_cache_store_from_fd: buf already set (did:%u), freeing first",
+            ntohl(entry->d_did));
+        rfork_cache_free(entry);
+    }
+
+    if (!AD_RSRC_OPEN(adp)) {
+        return -1;
+    }
+
+    if (entry->dcache_rlen <= 0) {
+        return -1;
+    }
+
+    size_t rlen = (size_t)entry->dcache_rlen;
+
+    if (rlen > rfork_max_entry_size) {
+        return -1;
+    }
+
+    /* Pathological check. Skip if oversubscribed by >2x — eviction won't free enough.
+     * Use subtraction to avoid size_t overflow on 32-bit platforms. */
+    if (rfork_cache_used > rfork_cache_budget
+            && rfork_cache_used - rfork_cache_budget > rfork_cache_budget) {
+        return -1;
+    }
+
+    /* Evict LRU entries until budget has room */
+    if (rfork_cache_used + rlen > rfork_cache_budget) {
+        rfork_cache_evict_to_budget(rlen);
+    }
+
+    /* Post-eviction check */
+    if (rfork_cache_used + rlen > rfork_cache_budget) {
+        return -1;
+    }
+
+    char *buf = malloc(rlen);
+
+    if (!buf) {
+        return -1;
+    }
+
+    /* AFP clients may read resource forks in chunks (e.g., 32KB at a time). We
+     * upgrade first read to full-fork ad_read() to ensure the cache contains the
+     * whole fork. Subsequent FPReads are served from cache.
+     * ad_read() handles all storage formats (EA, macOS xattr, AD v2 sidecar). */
+    ssize_t bytes_read = ad_read(adp, eid, 0, buf, (size_t)entry->dcache_rlen);
+
+    if (bytes_read != entry->dcache_rlen) {
+        /* Short read: fork size changed since Tier 1 was populated.
+         * Invalidate ALL cached metadata (not just rlen) — AD fields may also
+         * be stale. Self-healing: next ad_metadata_cached() re-reads from disk. */
+        free(buf);
+        LOG(log_debug, logtype_afpd,
+            "rfork_cache_store_from_fd: short read (%zd vs %lld) — "
+            "external change detected, invalidating AD cache (did:%u)",
+            bytes_read, (long long)entry->dcache_rlen, ntohl(entry->d_did));
+        entry->dcache_rlen = (off_t) -1;
+        memset(entry->dcache_finderinfo, 0, 32);
+        memset(entry->dcache_filedatesi, 0, 16);
+        memset(entry->dcache_afpfilei, 0, 4);
+        return -1;
+    }
+
+    /* Store buf in entry, update budget, add to rfork LRU */
+    entry->dcache_rfork_buf = buf;
+    rfork_cache_used += (size_t)entry->dcache_rlen;
+
+    if (rfork_cache_used > rfork_stat_used_max) {
+        rfork_stat_used_max = rfork_cache_used;
+    }
+
+    entry->rfork_lru_node = enqueue(rfork_lru, entry);
+
+    if (entry->rfork_lru_node == NULL) {
+        /* enqueue() malloc failed — clean up to prevent orphaned buffer */
+        free(entry->dcache_rfork_buf);
+        entry->dcache_rfork_buf = NULL;
+        rfork_cache_used -= (size_t)entry->dcache_rlen;
+        return -1;
+    }
+
+    rfork_lru_count++;
+    return 0;
 }
