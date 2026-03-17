@@ -537,8 +537,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
-            meson install -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
             netatalk -V
             afpd -V
             /usr/local/etc/rc.d/netatalk start
@@ -591,8 +591,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
-            meson install -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
             netatalk -V
             afpd -V
             atalkd -V
@@ -656,8 +656,8 @@ jobs:
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
-            meson test -C build
-            meson install -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
             netatalk -V
             afpd -V
             rcctl -d start netatalk
