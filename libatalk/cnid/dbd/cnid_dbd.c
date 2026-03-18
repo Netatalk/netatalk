@@ -24,6 +24,7 @@
 #include <sys/time.h>
 #include <sys/uio.h>
 #include <sys/un.h>
+#include <signal.h>
 #include <time.h>
 
 #include <atalk/adouble.h>
@@ -42,6 +43,13 @@
 /*! Wait MAX_DELAY seconds before a request to the CNID server times out */
 #define MAX_DELAY 20
 #define ONE_DELAY 5
+
+static volatile sig_atomic_t stop_signal = 0;
+
+static void sig_handler(int signo)
+{
+    stop_signal = signo;
+}
 
 static void RQST_RESET(struct cnid_dbd_rqst  *r)
 {
@@ -391,8 +399,20 @@ static int transmit(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
 {
     time_t orig, t;
     int clean = 1; /* no errors so far - to prevent sleep on first try */
+    struct sigaction sa, old_sa_term, old_sa_int;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGTERM, &sa, &old_sa_term);
+    sigaction(SIGINT, &sa, &old_sa_int);
+    stop_signal = 0;
 
     while (1) {
+        if (stop_signal) {
+            break;
+        }
+
         if (db->fd == -1) {
             LOG(log_maxdebug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
 
@@ -444,6 +464,13 @@ transmit_fail:
             clean = 0; /* false... next time sleep */
             time(&orig);
         }
+    }
+
+    sigaction(SIGTERM, &old_sa_term, NULL);
+    sigaction(SIGINT, &old_sa_int, NULL);
+
+    if (stop_signal) {
+        raise(stop_signal);
     }
 
     return -1;
