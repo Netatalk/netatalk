@@ -217,7 +217,6 @@ int session(ATP atp, struct sockaddr_at *sat)
                 }
 
                 return 0;
-                break;
 
             case PAP_TICKLE :
                 break;
