@@ -841,7 +841,4 @@ void afp_over_dsi(AFPObj *obj)
         pending_request(dsi);
         fce_pending_events(obj);
     }
-
-    /* error */
-    afp_dsi_die(EXITERR_CLNT);
 }

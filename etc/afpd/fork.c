@@ -718,7 +718,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 ofrefnum = 0;
                 memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
                 return AFPERR_DENYCONF;
-                break;
 
             default:
                 *rbuflen = 0;
@@ -1005,20 +1004,16 @@ static int byte_lock(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
         case EACCES:
         case EAGAIN:
             return UNLOCKBIT(flags) ? AFPERR_NORANGE : AFPERR_LOCK;
-            break;
 
         case ENOLCK:
             return AFPERR_NLOCK;
-            break;
 
         case EINVAL:
             return UNLOCKBIT(flags) ? AFPERR_NORANGE : AFPERR_RANGEOVR;
-            break;
 
         case EBADF:
         default:
             return AFPERR_PARAM;
-            break;
         }
     }
 

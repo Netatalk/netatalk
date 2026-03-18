@@ -380,9 +380,8 @@ int afprun(char *cmd, int *outfd)
         }
     }
     execl("/bin/sh", "sh", "-c", cmd, NULL);
-    /* not reached */
+    /* execl failed */
     exit(82);
-    return 1;
 }
 
 /*!
@@ -442,7 +441,6 @@ int afprun_bg(char *cmd)
     }
 
     execl("/bin/sh", "sh", "-c", cmd, NULL);
-    /* not reached */
+    /* execl failed */
     exit(82);
-    return 1;
 }

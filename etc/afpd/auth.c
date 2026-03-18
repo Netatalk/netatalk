@@ -553,7 +553,6 @@ int afp_getsession(
 
     default:
         return AFPERR_NOOP;
-        break;
     }
 
     if (tklen == 0) {

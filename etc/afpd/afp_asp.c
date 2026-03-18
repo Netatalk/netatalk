@@ -246,7 +246,6 @@ void afp_over_asp(AFPObj *obj)
             afp_asp_close(obj);
             LOG(log_note, logtype_afpd, "done");
             return;
-            break;
 
         case ASPFUNC_CMD :
             func = (unsigned char) asp->commands[0];

@@ -147,7 +147,6 @@ static void afp_goaway(int sig)
 
 #endif /* ! NO_DDP */
         _exit(0);
-        break;
 
     case SIGUSR1 :
         nologin++;
