@@ -167,7 +167,6 @@ int getnfsquota(struct vol *vol, const int uid, const uint32_t bsize,
             tv.tv_sec + gq_rslt.GQR_RQUOTA.rq_btimeleft;
         *hostpath = ':';
         return AFP_OK;
-        break;
 
     default:
         LOG(log_info, logtype_afpd, "bad rpc result, host: %s", vol->v_gvs);

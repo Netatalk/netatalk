@@ -193,7 +193,6 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
             show_paths();
             puts("");
             exit(0);
-            break;
 
         case 'V':	/* extended version */
             show_version_extended();
@@ -201,12 +200,10 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
             show_paths();
             puts("");
             exit(0);
-            break;
 
         case 'h':	/* usage */
             show_usage();
             exit(0);
-            break;
 
         default :
             err++;

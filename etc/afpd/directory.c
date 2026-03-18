@@ -2697,7 +2697,6 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
         default :
             err = AFPERR_BITMAP;
             goto setdirparam_done;
-            break;
         }
 
         bitmap = bitmap >> 1;

@@ -434,7 +434,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
         case UAM_PASSWD_EXPIRETIME: /* not implemented */
         default:
             return -1;
-            break;
         }
 
         break;
@@ -458,7 +457,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
         }
 
         return uam_random_string(obj, option, *len);
-        break;
 
     case UAM_OPTION_HOSTNAME:
         *buf = obj->options.hostname;
@@ -546,7 +544,6 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
     default:
         return -1;
-        break;
     }
 
     return 0;
