@@ -342,7 +342,6 @@ int ad_set(int argc, char **argv, AFPObj *obj)
         default:
             usage_set();
             return -1;
-            break;
         }
     }
 
