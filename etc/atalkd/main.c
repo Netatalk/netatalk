@@ -933,7 +933,6 @@ int main(int ac, char **av)
         case 'v' :	/* version */
             printf("atalkd %s - AppleTalk Network Manager Daemon\n", version);
             exit(0);
-            break;
 
         default :
             fprintf(stderr, "Usage:\tatalkd -1 -2 [-f configfile] [-P pidfile] -t -d\n");

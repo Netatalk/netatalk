@@ -504,7 +504,6 @@ int main(int argc, char **argv)
             show_netatalk_paths();
             puts("");
             exit(0);
-            break;
 
         default:
             usage();

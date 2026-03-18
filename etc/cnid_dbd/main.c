@@ -186,9 +186,6 @@ static int get_lock(int cmd, const char *dbpath)
     default:
         return -1;
     } /* switch(cmd) */
-
-    /* deadc0de, never get here */
-    return -1;
 }
 
 static int open_db(void)
