@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 
 #include <netatalk/at.h>
 
@@ -20,6 +21,14 @@
 #include "lp.h"
 
 static int state = 0;
+
+static volatile sig_atomic_t stop_requested = 0;
+
+static void sig_handler(int signo)
+{
+    (void)signo;
+    stop_requested = 1;
+}
 
 static void parser_error(struct papfile *outfile)
 {
@@ -33,8 +42,27 @@ int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
     char			*start;
     int				linelength, crlflength;
     struct papd_comment		*comment;
+    struct sigaction sa;
+    static int inited = 0;
+
+    if (!inited) {
+        memset(&sa, 0, sizeof(sa));
+        sa.sa_handler = sig_handler;
+        sa.sa_flags = SA_RESTART;
+        sigemptyset(&sa.sa_mask);
+        sigaction(SIGINT, &sa, NULL);
+        sigaction(SIGTERM, &sa, NULL);
+        inited = 1;
+    }
 
     for (;;) {
+        if (stop_requested) {
+            spoolerror(outfile, "Server shutting down.");
+            outfile->pf_state |= PF_EOF;
+            lp_close();
+            return CH_ERROR;
+        }
+
         if (infile->pf_state & PF_STW) {
             infile->pf_state &= ~PF_STW;
 
