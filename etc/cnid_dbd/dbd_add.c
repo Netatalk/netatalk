@@ -60,8 +60,6 @@ int add_cnid(DBD *dbd, struct cnid_dbd_rqst *rqst, struct cnid_dbd_rply *rply)
             } else {
                 return 0;
             }
-
-            break;
         }
 
         return -1;
