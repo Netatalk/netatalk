@@ -1617,8 +1617,6 @@ int ea_chown(const struct vol *vol, const char *path, uid_t uid, gid_t gid)
                 ret = AFPERR_MISC;
                 goto exit;
             }
-
-            continue;
         }
 
         count++;
@@ -1692,8 +1690,6 @@ int ea_chmod_file(const struct vol *vol, const char *name, mode_t mode,
                 ret = AFPERR_MISC;
                 goto exit;
             }
-
-            continue;
         }
 
         count++;
@@ -1783,8 +1779,6 @@ int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
                 ret = AFPERR_MISC;
                 goto exit;
             }
-
-            continue;
         }
 
         count++;

@@ -111,8 +111,6 @@ char_mac_roman_to_ucs2(ucs2_t *pwc, const unsigned char *s)
         *pwc = (ucs2_t) wc;
         return 1;
     }
-
-    return 0;
 }
 
 static size_t mac_roman_pull(void *cd, char **inbuf, size_t *inbytesleft,

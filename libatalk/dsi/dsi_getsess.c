@@ -139,7 +139,6 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         select(FD_SETSIZE, &readfds, NULL, NULL, &timeout);
         exit(0);
     }
-    break;
 
     case DSIFUNC_OPEN: /* setup session */
         /* set up the tickle timer */

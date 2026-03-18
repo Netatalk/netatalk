@@ -526,8 +526,13 @@ static int RF_chown_ea(const struct vol *vol, const char *path, uid_t uid,
 {
 #ifndef HAVE_EAFD
     return chown(vol->ad_path(path, ADFLAGS_HF), uid, gid);
-#endif
+#else
+    (void)vol;
+    (void)path;
+    (void)uid;
+    (void)gid;
     return 0;
+#endif
 }
 
 /* ---------------- */
@@ -600,8 +605,13 @@ static int RF_setfilmode_ea(const struct vol *vol, const char *name,
 {
 #ifndef HAVE_EAFD
     return adouble_setfilmode(vol, vol->ad_path(name, ADFLAGS_HF), mode, st);
-#endif
+#else
+    (void)vol;
+    (void)name;
+    (void)mode;
+    (void)st;
     return 0;
+#endif
 }
 
 /* ---------------- */
@@ -626,8 +636,12 @@ static int RF_deletefile_ea(const struct vol *vol, int dirfd, const char *file)
 {
 #ifndef HAVE_EAFD
     return netatalk_unlinkat(dirfd, vol->ad_path(file, ADFLAGS_HF));
-#endif
+#else
+    (void)vol;
+    (void)dirfd;
+    (void)file;
     return 0;
+#endif
 }
 static int RF_copyfile_ea(const struct vol *vol _U_, int sfd, const char *src,
                           const char *dst)
@@ -716,8 +730,13 @@ static int RF_renamefile_ea(const struct vol *vol, int dirfd, const char *src,
     }
 
     return 0;
-#endif
+#else
+    (void)vol;
+    (void)dirfd;
+    (void)src;
+    (void)dst;
     return 0;
+#endif
 }
 
 /********************************************************************************************
