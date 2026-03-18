@@ -265,7 +265,6 @@ int main(int argc, char *argv[])
                     "See the file COPYRIGHT for further information.\n",
                     version);
             exit(0);
-            break;
 
         case 'u':
             pwd = get_user(optarg);
