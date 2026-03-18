@@ -137,7 +137,6 @@ int main(int ac, char **av)
                     "Copyright (c) 1990, The University of Melbourne.\n",
                     version);
             exit(0);
-            break;
 
         default :
             fprintf(stderr, "Unknown option -- '%c'\n", c);
