@@ -38,6 +38,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <signal.h>
 
 #define _PATH_PAPRC	".paprc"
 
@@ -52,6 +53,14 @@
 #define PAPER_JAM_ERROR        0b00000100
 #define PRINTER_FAULT          0b00000010
 #define PRINTER_ACTIVE         0b00000001
+
+static volatile sig_atomic_t stop_requested = 0;
+
+static void sig_handler(int signo)
+{
+    (void)signo;
+    stop_requested = 1;
+}
 
 /* Forward Declaration */
 static void getstatus(ATP atp, struct sockaddr_at *sat, int is_imagewriter);
@@ -122,6 +131,7 @@ int main(int ac, char **av)
     extern char		*optarg;
     extern int		optind;
     int     is_imagewriter;
+    struct sigaction sa;
     memset(&addr, 0, sizeof(addr));
 
     while ((c = getopt(ac, av, "p:s:A:")) != EOF) {
@@ -193,12 +203,35 @@ int main(int ac, char **av)
     }
 
     wait = atoi(av[optind]);
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
+
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
 
     for (;;) {
+        if (stop_requested) {
+            break;
+        }
+
         getstatus(atp, &nn.nn_sat, is_imagewriter);
+
+        if (stop_requested) {
+            break;
+        }
+
         sleep(wait);
     }
 
+    atp_close(atp);
     return 0;
 }
 
