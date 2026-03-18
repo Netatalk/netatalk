@@ -284,6 +284,7 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                 return asp;
 
             case -1 : /* error */
+                atp_close(atp);
                 asp->cmdbuf[0] = 0;
                 asp->cmdbuf[1] = 0;
                 asperr = ASPERR_SERVBUSY;
@@ -310,10 +311,8 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                     asp->cmdbuf[1] = sid;
                     set_asp_ac(sid, asp_ac_tmp);
                     asperr = ASPERR_OK;
-                    break;
                 } else {
                     kill(pid, SIGQUIT);
-                    break;
                 }
 
                 atp_close(atp);
