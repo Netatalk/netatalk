@@ -80,6 +80,14 @@ static char	*pidfile = PATH_PAPD_LOCK;
 char		*uamlist;
 char		*uampath = _PATH_PAPDUAMPATH;
 
+static volatile sig_atomic_t stop_requested = 0;
+
+static void sig_handler(int signo)
+{
+    (void)signo;
+    stop_requested = 1;
+}
+
 /* Prototypes for locally used functions */
 int getstatus(struct printer *pr, rbuf_t *buf);
 int rprintcap(struct printer *pr);
@@ -94,8 +102,7 @@ static void papd_exit(const int i)
     exit(i);
 }
 
-static void
-die(int n)
+static void papd_cleanup(int n)
 {
     struct printer	*pr;
     struct at_addr	addr;
@@ -123,7 +130,11 @@ die(int n)
 
 #endif /* HAVE_CUPS */
     }
+}
 
+static void die(int n)
+{
+    papd_cleanup(n);
     papd_exit(n);
 }
 
@@ -319,11 +330,15 @@ int main(int ac, char **av)
     }
 
     memset(&sv, 0, sizeof(sv));
-    sv.sa_handler = die;
+    sv.sa_handler = sig_handler;
     sigemptyset(&sv.sa_mask);
-    sv.sa_flags = SA_RESTART;
 
     if (sigaction(SIGTERM, &sv, NULL) < 0) {
+        LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno));
+        papd_exit(1);
+    }
+
+    if (sigaction(SIGINT, &sv, NULL) < 0) {
         LOG(log_error, logtype_papd, "sigaction: %s", strerror(errno));
         papd_exit(1);
     }
@@ -347,12 +362,20 @@ int main(int ac, char **av)
     FD_ZERO(&fdset);
 
     for (;;) {
+        if (stop_requested) {
+            break;
+        }
+
         for (pr = printers; pr; pr = pr->p_next) {
             FD_SET(atp_fileno(pr->p_atp), &fdset);
         }
 
         if ((c = select(FD_SETSIZE, &fdset, NULL, NULL, NULL)) < 0) {
             if (errno == EINTR) {
+                if (stop_requested) {
+                    break;
+                }
+
                 continue;
             }
 
@@ -578,6 +601,8 @@ int main(int ac, char **av)
         }
     }
 
+    papd_cleanup(0);
+    papd_exit(0);
     return 0;
 }
 
