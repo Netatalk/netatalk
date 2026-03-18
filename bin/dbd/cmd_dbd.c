@@ -182,7 +182,6 @@ int main(int argc, char **argv)
         default:
             usage();
             exit(EXIT_FAILURE);
-            break;
         }
     }
 
