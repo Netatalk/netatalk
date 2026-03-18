@@ -234,7 +234,6 @@ int main(int ac, char **av)
         case 'v' :		/* version */
             printf("papd %s - Printer Access Protocol Daemon\n", version);
             exit(0);
-            break;
 
         default :
             fprintf(stderr,
@@ -517,7 +516,6 @@ int main(int ac, char **av)
                         }
 
                         exit(0);
-                        break;
 
                     default : /* parent */
                         LOG(log_info, logtype_papd, "child %d for \"%s\" from %u.%u",
@@ -555,7 +553,6 @@ int main(int ac, char **av)
                     LOG(log_error, logtype_papd, "Bad request from %u.%u!",
                         ntohs(sat.sat_addr.s_net), sat.sat_addr.s_node);
                     continue;
-                    break;
                 }
 
 #ifdef notdef
