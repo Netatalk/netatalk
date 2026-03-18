@@ -171,7 +171,6 @@ static int check_adfile(const char *fname, const struct stat *st,
 
         if (dbd_flags & DBD_FLAGS_SCAN) {
             /* Scan only requested, don't change anything */
-            close(fd);
             return -1;
         }
 
@@ -182,7 +181,6 @@ static int check_adfile(const char *fname, const struct stat *st,
                      0666)) != 0) {
             dbd_log(LOGSTD, "Error creating AppleDouble file '%s/%s': %s",
                     cwdbuf, adname, strerror(errno));
-            close(fd);
             return -1;
         }
 
