@@ -2472,7 +2472,6 @@ int ad_refresh(const char *path, struct adouble *ad)
         }
 
         return ad->ad_ops->ad_header_read(NULL, ad, NULL);
-        break;
 
     case AD_VERSION_EA:
 #ifdef HAVE_EAFD
@@ -2520,11 +2519,9 @@ int ad_refresh(const char *path, struct adouble *ad)
 
 #endif
         return ad->ad_ops->ad_header_read(path, ad, NULL);
-        break;
 
     default:
         return -1;
-        break;
     }
 }
 
