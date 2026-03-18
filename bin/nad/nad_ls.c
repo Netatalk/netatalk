@@ -723,7 +723,6 @@ int ad_ls(int argc, char **argv, AFPObj *obj)
         default:
             usage_ls();
             return -1;
-            break;
         }
     }
 

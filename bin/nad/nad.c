@@ -188,6 +188,4 @@ int main(int argc, char **argv)
         usage_main();
         return 1;
     }
-
-    return 0;
 }
