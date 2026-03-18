@@ -15,11 +15,20 @@
 #include <inttypes.h>
 #include <sys/types.h>
 #include <sys/param.h>
+#include <signal.h>
 
 #include <atalk/fce_api.h>
 #include <atalk/util.h>
 
 #define MAXBUFLEN 1024
+
+static volatile sig_atomic_t stop_requested = 0;
+
+static void sig_handler(int signo)
+{
+    (void)signo;
+    stop_requested = 1;
+}
 
 static char *fce_ev_names[] = {
     "",
@@ -198,6 +207,7 @@ int main(int argc, char **argv)
     socklen_t addr_len;
     char *host = strdup("localhost");
     char *port = strdup(FCE_DEFAULT_PORT_STRING);
+    struct sigaction sa;
 
     while ((c = getopt(argc, argv, "h:p:")) != -1) {
         switch (c) {
@@ -273,16 +283,38 @@ int main(int argc, char **argv)
     freeaddrinfo(servinfo);
     free((void *)host);
     free((void *)port);
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGINT, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
+
+    if (sigaction(SIGTERM, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
+
     addr_len = sizeof(their_addr);
     struct fce_packet packet;
 
     while (1) {
+        if (stop_requested) {
+            break;
+        }
+
         if ((numbytes = recvfrom(sockfd,
                                  buf,
                                  MAXBUFLEN - 1,
                                  0,
                                  (struct sockaddr *)&their_addr,
                                  &addr_len)) == -1) {
+            if (errno == EINTR && stop_requested) {
+                break;
+            }
+
             perror("recvfrom");
             exit(1);
         }
