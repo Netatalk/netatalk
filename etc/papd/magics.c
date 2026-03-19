@@ -121,17 +121,6 @@ int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
                     /* clear out the input queue if client sent data before magic string */
                     continue;
                 }
-
-#if 0
-                infile->pf_state &= ~PF_BOT;
-
-                /* set up spool file */
-                if (lp_open(outfile, sat) < 0) {
-                    LOG(log_error, logtype_papd, "lp_open failed");
-                    spoolerror(outfile, "Ignoring job.");
-                }
-
-#endif
             }
 
             /* write to file */
@@ -139,8 +128,6 @@ int ps(struct papfile *infile, struct papfile *outfile, struct sockaddr_at *sat)
             CONSUME(infile, linelength + crlflength);
         }
     }
-
-    return 0;
 }
 
 int cm_psquery(struct papfile *in, struct papfile *out,
@@ -209,14 +196,6 @@ int cm_psadobe(struct papfile *in, struct papfile *out,
 
         if (in->pf_state & PF_BOT) {
             in->pf_state &= ~PF_BOT;
-#if 0
-
-            if (lp_open(out, sat) < 0) {
-                LOG(log_error, logtype_papd, "lp_open failed");
-                spoolerror(out, "Ignoring job.");
-            }
-
-#endif
         } else {
             if ((comment = commatch(start, start + linelength, headers)) != NULL) {
                 compush(comment);
