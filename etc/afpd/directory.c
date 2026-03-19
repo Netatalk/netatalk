@@ -611,14 +611,6 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
     /* Search the cache first */
     if ((ret = dircache_search_by_did(vol, did)) != NULL) { /* 2a */
         /* Cache HIT */
-        extern AFPObj *AFPobj;
-
-        if (!AFPobj->options.dircache_files && (ret->d_flags & DIRF_ISFILE)) {
-            /* Files not supported (dircache files = no) - reject */
-            afp_errno = AFPERR_BADTYPE;
-            ret = NULL;
-            goto exit;
-        }
 
         /* Strict validation (parent recursion) */
         if (strict) { /* 2b */
@@ -708,20 +700,6 @@ static struct dir *dirlookup_internal(const struct vol *vol, cnid_t did,
 
         default:
             afp_errno = AFPERR_MISC;
-            err = 1;
-            goto exit;
-        }
-    } else {
-        /* Filesystem object at fullpath found (st now contains valid stat data) */
-        extern AFPObj *AFPobj;
-
-        if (!AFPobj->options.dircache_files && !S_ISDIR(st.st_mode)) {
-            /* Lookup found file, but files are disabled in dircache - reject */
-            LOG(log_debug, logtype_afpd,
-                DIRLOOKUP_LOG_FMT
-                ": file found but 'dircache files' disabled in config, rejecting",
-                ntohl(did));
-            afp_errno = AFPERR_BADTYPE;
             err = 1;
             goto exit;
         }
@@ -952,6 +930,9 @@ struct dir *dir_new(const char *m_name,
     dir->d_rights_cache = 0xffffffff;
     dir->arc_list =
         0;  /* ARC_NONE (= 0, defined in dircache.c), safe with calloc zero-init */
+    /* calloc already zeros these, but be explicit for clarity: */
+    dir->dcache_rfork_buf = NULL;
+    dir->rfork_lru_node = NULL;
     return dir;
 }
 
@@ -962,6 +943,12 @@ struct dir *dir_new(const char *m_name,
  */
 void dir_free(struct dir *dir)
 {
+    /* Free Tier 2 rfork buffer before deallocating the entry.
+     * rfork_cache_free() handles budget accounting and LRU removal. */
+    if (dir->dcache_rfork_buf) {
+        rfork_cache_free(dir);
+    }
+
     if (dir->d_u_name != dir->d_m_name) {
         bdestroy(dir->d_u_name);
     }
@@ -1147,6 +1134,13 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                               dir->dcache_ctime != args->st->st_ctime);
 
         if (ino_changed) {
+            /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
+             * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
+            if (dir->dcache_rfork_buf) {
+                rfork_cache_free(dir);
+                rfork_stat_invalidated++;
+            }
+
             /* Different inode = different file. AD is always stale. */
             dir->dcache_rlen = (off_t) -1;
             /* Refresh CNID from database */
@@ -1199,6 +1193,13 @@ int dir_modify(const struct vol *vol, struct dir *dir,
                 }
             }
         } else if (ctime_changed && dir->dcache_rlen != (off_t) -1) {
+            /* Free rfork buffer FIRST — rfork_cache_free() uses dcache_rlen for budget.
+             * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
+            if (dir->dcache_rfork_buf) {
+                rfork_cache_free(dir);
+                rfork_stat_invalidated++;
+            }
+
             /* Ctime changed (same inode): metadata modified externally.
              * Invalidate AD cache — re-read from disk on next access.
              * Covers dcache_rlen >= 0 (cached AD) and dcache_rlen == -2 (no AD)
@@ -1229,6 +1230,15 @@ int dir_modify(const struct vol *vol, struct dir *dir,
 
     /* --- DCMOD_AD: Refresh AD fields from adouble --- */
     if ((args->flags & DCMOD_AD) && args->adp) {
+        /* Free stale rfork buffer — content was modified.
+         * AD metadata (rlen, FinderInfo, etc) will be refreshed by ad_store_to_cache().
+         * Must free BEFORE ad_store_to_cache() which may change dcache_rlen.
+         * rfork_cache_free() uses dcache_rlen for budget accounting. */
+        if (dir->dcache_rfork_buf) {
+            rfork_cache_free(dir);
+            rfork_stat_invalidated++;
+        }
+
         /* ad_store_to_cache() overwrites dcache_filedatesi and recomputes
          * served mdate = max(ad_mdate, dcache_mtime) using the just-updated
          * dcache_mtime from DCMOD_STAT above. */
@@ -1256,6 +1266,13 @@ int dir_modify(const struct vol *vol, struct dir *dir,
 
     /* --- DCMOD_AD_INV: Invalidate AD cache --- */
     if (args->flags & DCMOD_AD_INV) {
+        /* Free rfork buffer first — rfork_cache_free() uses dcache_rlen for budget.
+         * Setting rlen = -1 before freeing would corrupt rfork_cache_used tracking. */
+        if (dir->dcache_rfork_buf) {
+            rfork_cache_free(dir);
+            rfork_stat_invalidated++;
+        }
+
         dir->dcache_rlen = (off_t) -1;
         memset(dir->dcache_finderinfo, 0, 32);
         memset(dir->dcache_filedatesi, 0, 16);

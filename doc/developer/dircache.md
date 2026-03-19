@@ -519,8 +519,6 @@ it's the compound effect across the entire storage stack:
 
 By understanding how cache layers interact and compete,
 we can make intelligent optimizations that benefit the entire system.
-The probabilistic validation approach shows that sometimes the best optimization isn't doing something faster—
-it's not doing it at all.
 
 ### Key Takeaways
 
@@ -531,25 +529,11 @@ it's not doing it at all.
 5. **Small changes can have compound effects**
 
 **By default nothing changes, as the default value for `dircache validation freq = 1`.**
-
-### File Caching Implementation
-
-In directory.c, the `dirlookup_internal()` function
-controls file caching behavior through the `AFPobj->options.dircache_files` configuration setting:
-
-- **Cache lookup**: When a file is found in cache, checks `AFPobj->options.dircache_files`
-  before returning it — if disabled, returns AFPERR_BADTYPE to reject the cached file entry
-- **CNID lookup**: When a file is resolved via CNID, sets the `DIRF_ISFILE` flag
-  which will cause cache rejection if file caching is disabled
-- **Parent recursion**: Uses `strict` parameter to control whether parents must be directories,
-ensuring parent-chain rebuilds work correctly (database design guarantee)
-
-This configuration-driven control separates caching policy from core lookup logic, allowing
-administrators to tune memory vs. performance tradeoffs based on workload characteristics.
+If you have Samba or other processes operating on the volumne this must remain set to 1.
 
 ---
 
 *Directory cache optimizations available in Netatalk 4.4+ with configurable validation frequency
-and file caching control via `dircache validation freq` and `dircache files` parameters.*
+via the `dircache validation freq` parameter.*
 
 Developed and Authored by Andy Lemin, with Contributions from the Netatalk team.

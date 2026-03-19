@@ -279,8 +279,9 @@ Set this environment variable to a specific value or string.
 | **Directory Cache Configuration** |                                                                      |
 | AFP_DIRCACHESIZE                | Directory cache size in entries (default: 65536)                       |
 | AFP_DIRCACHE_MODE               | Cache algorithm: *lru* (default) or *arc*                              |
-| AFP_DIRCACHE_FILES              | Enable full caching of files in addition to directories: *yes* or *no*         |
 | AFP_DIRCACHE_VALIDATION_FREQ    | Validate cache every Nth access (default: 1, higher = better performance) |
+| AFP_DIRCACHE_RFORK_BUDGET       | Total memory budget in KB for resource fork caching (default: 0 = disabled) |
+| AFP_DIRCACHE_RFORK_MAXSIZE      | Max size in KB of a single cached resource fork entry (default: 1024)  |
 | **Charset Configuration** |                                                                              |
 | AFP_MAC_CHARSET                 | Mac client charset (default: MAC_ROMAN); see afp.conf man page         |
 | AFP_UNIX_CHARSET                | Server filesystem charset (default: UTF8); see afp.conf man page       |

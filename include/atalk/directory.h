@@ -62,6 +62,17 @@ struct dir { // NOSONAR (max 20 fields) — fields are intentionally grouped for
     bstring     d_u_name;            /*!< unix name */
     ucs2_t      *d_m_name_ucs2;      /*!< mac name as UCS2 */
     qnode_t     *qidx_node;          /*!< pointer to position in queue index */
+
+    /* Tier 2: Resource Fork data cache.
+     * Dynamically allocated buffer containing dcache_rlen bytes of rfork data.
+     * Freed automatically when the struct dir entry is evicted from dircache.
+     * Only populated for files with resource forks <= rfork_max_entry_size.
+     * NULL = not cached (may or may not have an rfork on disk).
+     * Buffer size is always dcache_rlen (Tier 1) — no separate size field needed.
+     * INVARIANT: dcache_rfork_buf != NULL implies dcache_rlen >= 0. */
+    void        *dcache_rfork_buf;   /*!< malloc'd rfork data, or NULL */
+    qnode_t     *rfork_lru_node;     /*!< position in rfork LRU list, or NULL */
+
     time_t      d_ctime;             /*!< inode ctime,
                                       * used and modified by reenumeration */
     time_t      dcache_ctime;        /*!< inode ctime,

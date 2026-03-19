@@ -2714,9 +2714,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
     }
 
-    options->dircache_files = getoption_bool(config, INISEC_GLOBAL,
-                              "dircache files",
-                              NULL, 0);
     /* Parse dircache mode: "lru" (0) or "arc" (1) */
     {
         const char *mode_str = getoption_str(config, INISEC_GLOBAL, "dircache mode",
@@ -2740,6 +2737,43 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->dircache_validation_freq = getoption_int(config, INISEC_GLOBAL,
                                         "dircache validation freq", NULL,
                                         DEFAULT_DIRCACHE_VALIDATION_FREQ);
+    /* Tier 2: Resource Fork data cache configuration.
+     * Hard caps defined in globals.h: RFORK_BUDGET_MAX_KB, RFORK_ENTRY_MAX_KB.
+     * On 32-bit platforms, clamp to SIZE_MAX / 1024 to prevent overflow
+     * when converting KB to bytes in dircache_init(). */
+    options->dircache_rfork_budget = getoption_int(config, INISEC_GLOBAL,
+                                     "dircache rfork budget", NULL, 0);
+
+    if (options->dircache_rfork_budget < 0) {
+        options->dircache_rfork_budget = 0;
+    }
+
+    if (options->dircache_rfork_budget > RFORK_BUDGET_MAX_KB) {
+        options->dircache_rfork_budget = RFORK_BUDGET_MAX_KB;
+    }
+
+#if SIZE_MAX < UINT64_MAX
+
+    if (options->dircache_rfork_budget > (int)(SIZE_MAX / 1024)) {
+        LOG(log_info, logtype_afpd,
+            "afp_config_parse: rfork budget clamped from %d KB to %d KB "
+            "(32-bit platform)",
+            options->dircache_rfork_budget, (int)(SIZE_MAX / 1024));
+        options->dircache_rfork_budget = (int)(SIZE_MAX / 1024);
+    }
+
+#endif
+    options->dircache_rfork_maxentry = getoption_int(config, INISEC_GLOBAL,
+                                       "dircache rfork maxsize", NULL, 1024);
+
+    if (options->dircache_rfork_maxentry < 0) {
+        options->dircache_rfork_maxentry = 0;
+    }
+
+    if (options->dircache_rfork_maxentry > RFORK_ENTRY_MAX_KB) {
+        options->dircache_rfork_maxentry = RFORK_ENTRY_MAX_KB;
+    }
+
     options->tcp_sndbuf     = getoption_int(config, INISEC_GLOBAL, "tcpsndbuf",
                                             NULL, 0);
     options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",

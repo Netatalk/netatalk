@@ -91,15 +91,20 @@ struct afp_volume_name {
     int        loaded;
 };
 
+/* Tier 2: Resource Fork data cache hard caps (in KB) */
+#define RFORK_BUDGET_MAX_KB   (10 * 1024 * 1024)   /*!< Hard cap: 10 GB in KB */
+#define RFORK_ENTRY_MAX_KB    (10 * 1024)           /*!< Hard cap: 10 MB in KB */
+
 struct afp_options {
     int connections;            /*!< Maximum number of possible AFP connections */
     int tickleval;
     int timeout;
     int flags;
     int dircachesize;
-    int dircache_files;         /*!< Whether to allow files in directory cache */
     int dircache_mode;          /*!< Directory cache mode: 0=LRU, 1=ARC */
     int dircache_validation_freq;    /*!< Validate every Nth access (default 1) */
+    int dircache_rfork_budget;   /*!< Total rfork cache memory budget (KB, 0=disabled) */
+    int dircache_rfork_maxentry; /*!< Max rfork size to cache per entry (KB) */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
     int disconnected;           /*!< Maximum time in disconnected state (in tickles) */
     int fce_fmodwait;           /*!< number of seconds FCE file mod events are put on hold */

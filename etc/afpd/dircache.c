@@ -146,6 +146,28 @@ static struct dircache_stat {
     unsigned long long invalid_on_use;
 } dircache_stat;
 
+/* Tier 2: Resource Fork data cache statistics.
+ * Non-static: accessed from fork.c and ad_cache.c. */
+unsigned long long rfork_stat_lookups = 0;
+unsigned long long rfork_stat_hits = 0;
+unsigned long long rfork_stat_misses = 0;
+unsigned long long rfork_stat_added = 0;
+unsigned long long rfork_stat_evicted = 0;
+unsigned long long rfork_stat_invalidated = 0;
+size_t rfork_stat_used_max = 0;
+
+/* Tier 2: Resource Fork data cache — budget management and rfork LRU.
+ * Non-static: accessed from ad_cache.c (rfork_cache_store_from_fd, etc.).
+ * Process-safe: netatalk uses fork-per-connection — each child has its own
+ * address space and dircache. No locking needed. */
+size_t rfork_cache_used = 0;        /* current total bytes in rfork cache */
+size_t rfork_cache_budget =
+    0;      /* configurable limit (bytes), 0 = disabled */
+size_t rfork_max_entry_size = 0;    /* per-entry limit (bytes), 0 = disabled */
+unsigned int rfork_lru_count = 0;   /* entries currently in rfork LRU list */
+q_t   *rfork_lru =
+    NULL;           /* dedicated LRU list for rfork cache entries */
+
 /*! Cache hint processing statistics — logged by log_dircache_stat() */
 static struct {
     unsigned long long hints_received;   /*!< Total hints read from pipe */
@@ -1911,6 +1933,29 @@ int dircache_init(int reqsize)
             (unsigned int)AFPobj->options.dircache_validation_freq);
     }
 
+    /* Tier 2: Resource Fork data cache initialization */
+    if (AFPobj) {
+        rfork_cache_budget = (size_t)AFPobj->options.dircache_rfork_budget * 1024;
+        rfork_max_entry_size = (size_t)AFPobj->options.dircache_rfork_maxentry * 1024;
+
+        if (rfork_cache_budget > 0) {
+            rfork_lru = queue_init();
+
+            if (rfork_lru == NULL) {
+                LOG(log_error, logtype_afpd,
+                    "dircache_init: rfork_lru queue_init failed (OOM), "
+                    "disabling rfork caching for this session");
+                rfork_cache_budget = 0;
+                rfork_max_entry_size = 0;
+            } else {
+                LOG(log_info, logtype_afpd,
+                    "dircache_init: rfork cache enabled "
+                    "(budget: %zu KB, max_entry: %zu KB)",
+                    rfork_cache_budget / 1024, rfork_max_entry_size / 1024);
+            }
+        }
+    }
+
     return 0;
 }
 
@@ -2102,6 +2147,70 @@ void log_dircache_stat(void)
         "dircache statistics (AD): (user: %s) hits: %llu, misses: %llu, no_ad: %llu, hit_ratio: %.1f%%",
         username, ad_cache_hits, ad_cache_misses, ad_cache_no_ad,
         ad_hit_ratio);
+
+    /* Tier 2: Resource Fork data cache statistics — only when enabled */
+    if (rfork_cache_budget > 0) {
+        double rfork_hit_ratio = (rfork_stat_lookups > 0) ?
+                                 ((double)rfork_stat_hits /
+                                  (double)rfork_stat_lookups) * 100.0 : 0.0;
+        double rfork_miss_ratio = (rfork_stat_lookups > 0) ?
+                                  ((double)rfork_stat_misses /
+                                   (double)rfork_stat_lookups) * 100.0 : 0.0;
+        LOG(log_info, logtype_afpd,
+            "dircache statistics (rfork): (user: %s) "
+            "entries: %u, peak: %zu MB (%.1f%%), budget: %zu MB, "
+            "lookups: %llu, hits: %llu (%.1f%%), misses: %llu (%.1f%%), "
+            "added: %llu, evicted: %llu, invalidated: %llu",
+            username,
+            rfork_lru_count,
+            rfork_stat_used_max / (1024 * 1024),
+            (double)rfork_stat_used_max / rfork_cache_budget * 100.0,
+            rfork_cache_budget / (1024 * 1024),
+            rfork_stat_lookups,
+            rfork_stat_hits, rfork_hit_ratio,
+            rfork_stat_misses, rfork_miss_ratio,
+            rfork_stat_added,
+            rfork_stat_evicted,
+            rfork_stat_invalidated);
+    }
+}
+
+/*!
+ * @brief Shutdown the rfork cache — free LRU sentinel and verify consistency
+ *
+ * Called from the child shutdown path after log_dircache_stat().
+ * All struct dir entries should have been freed by this point (via
+ * dircache_evict or dir_free cascade), each of which frees its rfork
+ * buffer via rfork_cache_free(). Verify the LRU is empty and free it.
+ */
+void dircache_rfork_shutdown(void)
+{
+    if (rfork_lru != NULL) {
+        if (rfork_lru_count != 0) {
+            LOG(log_error, logtype_afpd,
+                "dircache_shutdown: LEAK DETECTED — rfork_lru_count=%u "
+                "(expected 0), rfork_cache_used=%zu bytes",
+                rfork_lru_count, rfork_cache_used);
+        }
+
+        /* Free any remaining LRU nodes. At shutdown struct dir entries
+         * may already have been freed by dircache_free(), so we must NOT
+         * dereference node->data. Just unlink and free each qnode. */
+        while (rfork_lru->next != rfork_lru) {
+            qnode_t *head = rfork_lru->next;
+            qnode_t *next = head->next;
+            rfork_lru->next = next;
+            next->prev = rfork_lru;
+            free(head);
+
+            if (rfork_lru_count > 0) {
+                rfork_lru_count--;
+            }
+        }
+
+        free(rfork_lru);
+        rfork_lru = NULL;
+    }
 }
 
 /*!
@@ -2145,6 +2254,17 @@ void dircache_dump(void)
         fprintf(dump, "Configured maximum cache size: %u\n\n", dircache_maxsize);
     }
 
+    /* Rfork cache header */
+    if (rfork_cache_budget > 0) {
+        fprintf(dump, "Rfork Cache: budget=%zu KB, used=%zu KB (%.1f%%), "
+                      "entries=%u, max_entry=%zu KB\n\n",
+                rfork_cache_budget / 1024,
+                rfork_cache_used / 1024,
+                (double)rfork_cache_used / (double)rfork_cache_budget * 100.0,
+                rfork_lru_count,
+                rfork_max_entry_size / 1024);
+    }
+
     fprintf(dump, "Primary CNID index:\n");
     fprintf(dump, "       VID     DID    CNID STAT PATH\n");
     fprintf(dump,
@@ -2164,7 +2284,8 @@ void dircache_dump(void)
             ad_cache_state = "absent";
         }
 
-        fprintf(dump, "%05u: %3u  %6u  %6u %s  rlen:%-6lld ad:%-8s  %s\n",
+        const char *rfork_state = dir->dcache_rfork_buf ? "CACHED" : "-";
+        fprintf(dump, "%05u: %3u  %6u  %6u %s  rlen:%-6lld ad:%-8s rf:%-6s  %s\n",
                 i++,
                 ntohs(dir->d_vid),
                 ntohl(dir->d_pdid),
@@ -2172,6 +2293,7 @@ void dircache_dump(void)
                 dir->d_flags & DIRF_ISFILE ? "f" : "d",
                 (long long)dir->dcache_rlen,
                 ad_cache_state,
+                rfork_state,
                 cfrombstr(dir->d_fullpath));
     }
 
