@@ -1,4 +1,6 @@
-# See https://github.com/Netatalk/netatalk/wiki/Testing for guidance
+# Debug / profiling Alpine Dockerfile for Netatalk
+# Builds with -Dbuildtype=debugoptimized (-O2 -g) and includes perf + FlameGraph tools
+# See doc/developer/profiling.md for usage guidance
 
 ARG RUN_DEPS="\
     acl \
@@ -46,18 +48,27 @@ ARG BUILD_DEPS="\
     talloc-dev \
     tinysparql-dev \
     "
+ARG DEBUG_DEPS="\
+    binutils \
+    git \
+    perf \
+    perl \
+    "
 
 FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
+ARG DEBUG_DEPS
 ENV RUN_DEPS=$RUN_DEPS
 ENV BUILD_DEPS=$BUILD_DEPS
+ENV DEBUG_DEPS=$DEBUG_DEPS
 
 RUN apk update \
 &&  apk add --no-cache \
     $RUN_DEPS \
-    $BUILD_DEPS
+    $BUILD_DEPS \
+    $DEBUG_DEPS
 
 WORKDIR /netatalk-code
 COPY bin/ ./bin/
@@ -79,8 +90,11 @@ COPY meson_options.txt .
 COPY meson.build .
 RUN rm -rf build
 
+# Build with debugoptimized: -O2 optimization + debug symbols (-g)
+# Also preserve frame pointers for accurate perf stack unwinding
 RUN meson setup build \
-    -Dbuildtype=release \
+    -Dbuildtype=debugoptimized \
+    -Dc_args=-fno-omit-frame-pointer \
     -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
@@ -101,16 +115,21 @@ RUN meson install --destdir=/staging/ -C build
 FROM alpine:3.23.3@sha256:25109184c71bdad752c8312a8623239686a9a2071e8825f20acb8f2198c3f659 AS deploy
 
 ARG RUN_DEPS
+ARG DEBUG_DEPS
 ENV RUN_DEPS=$RUN_DEPS
+ENV DEBUG_DEPS=$DEBUG_DEPS
 
 COPY --from=build /staging/ /
 
 RUN apk update \
-&&  apk add --no-cache $RUN_DEPS
+&&  apk add --no-cache $RUN_DEPS $DEBUG_DEPS
 
-COPY --from=build /netatalk-code/distrib/docker/config_watch.sh /config_watch.sh
-COPY /distrib/docker/env_setup_netatalk.sh /env_setup.sh
-COPY /distrib/docker/entrypoint_netatalk.sh /entrypoint.sh
+# Pre-clone FlameGraph tools so we don't need network at runtime
+RUN git clone --depth 1 https://github.com/brendangregg/FlameGraph.git /opt/FlameGraph
+
+COPY distrib/docker/config_watch.sh /config_watch.sh
+COPY distrib/docker/env_setup_netatalk.sh /env_setup.sh
+COPY distrib/docker/debug_entrypoint_netatalk.sh /entrypoint.sh
 
 WORKDIR /mnt
 EXPOSE 548

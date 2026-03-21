@@ -99,6 +99,7 @@ RUN apk update \
 
 RUN ln -sf /dev/stdout /var/log/afpd.log
 
+COPY /distrib/docker/env_setup_netatalk.sh /env_setup.sh
 COPY /distrib/docker/entrypoint_netatalk.sh /entrypoint.sh
 
 WORKDIR /mnt

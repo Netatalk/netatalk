@@ -160,6 +160,238 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
           tags: ${{ steps.metadata.outputs.tags }}
 
+  build-container-debug:
+    name: Build debug profiling container
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork }}
+    permissions:
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create image name
+        run: |
+          echo "IMAGE_NAME=${REPO,,}-debug" >> ${GITHUB_ENV}
+      - name: Login to container registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Extract metadata
+        id: metadata
+        uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: type=raw,value=${{ github.sha }}
+      - name: Build and push container image
+        uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+        with:
+          context: .
+          file: distrib/docker/debug_alp.Dockerfile
+          push: true
+          labels: ${{ steps.metadata.outputs.labels }}
+          tags: ${{ steps.metadata.outputs.tags }}
+
+  flamegraph-spectest:
+    name: Flamegraph (spectest AFP 3.4)
+    needs: build-container-debug
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+      pull-requests: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Run spectest with flamegraph profiling
+        run: |
+          docker run --privileged --rm \
+              -e AFP_USER=atalk1 \
+              -e AFP_USER2=atalk2 \
+              -e AFP_PASS="$CONT_PASSWD" \
+              -e AFP_PASS2="$CONT_PASSWD" \
+              -e AFP_GROUP=afpusers \
+              -e SHARE_NAME=test1 \
+              -e SHARE_NAME2=test2 \
+              -e INSECURE_AUTH=1 \
+              -e DISABLE_TIMEMACHINE=1 \
+              -e AFP_EXTMAP=1 \
+              -e AFP_DIRCACHESIZE=1024 \
+              -e AFP_DIRCACHE_MODE=arc \
+              -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
+              -e TESTSUITE=spectest \
+              -e AFP_VERSION=7 \
+              -e FLAMEGRAPH=1 \
+              ${{ env.REGISTRY }}/netatalk/netatalk-debug:${{ github.sha }} \
+              > flamegraph.svg 2>flamegraph.log
+      - name: Show profiling log
+        if: always()
+        run: cat flamegraph.log
+      - name: Validate SVG and extract summary
+        id: flamegraph-summary
+        run: |
+          if [ ! -s flamegraph.svg ]; then
+            echo "ERROR: flamegraph.svg is empty or missing" >&2
+            exit 1
+          fi
+          SVG_SIZE=$(du -h flamegraph.svg | cut -f1)
+          echo "Flamegraph SVG size: $SVG_SIZE"
+          echo "SVG line count: $(wc -l < flamegraph.svg)"
+          # Extract unique stack count from the log
+          STACK_COUNT=$(grep -o 'Folded stacks: [0-9]*' flamegraph.log | grep -o '[0-9]*' || echo "unknown")
+          echo "Unique stacks: $STACK_COUNT"
+          # Extract test runtime from structured log
+          TEST_RUNTIME=$(grep -o 'FLAMEGRAPH_RUNTIME: [0-9]*s' flamegraph.log | grep -o '[0-9]*' || echo "unknown")
+          echo "Test runtime: ${TEST_RUNTIME}s"
+          # Extract top 10 leaf functions (self-time) from the entrypoint's
+          # structured output in the log. Format: "FLAMEGRAPH_LEAF: <count> <func>"
+          TOP_FUNCS=$(grep 'FLAMEGRAPH_LEAF:' flamegraph.log \
+            | sed 's/.*FLAMEGRAPH_LEAF: //' \
+            | head -10 \
+            | awk '{cnt=$1; $1=""; sub(/^ /, "", $0); printf "| `%s` | %s |\n", $0, cnt}' \
+            || echo "| (unable to extract) | - |")
+          # Save to env for the comment step
+          {
+            echo "SVG_SIZE=$SVG_SIZE"
+            echo "STACK_COUNT=$STACK_COUNT"
+            echo "TEST_RUNTIME=${TEST_RUNTIME}s"
+            echo "TOP_FUNCS<<EOFTOP"
+            echo "$TOP_FUNCS"
+            echo "EOFTOP"
+          } >> "$GITHUB_OUTPUT"
+      - name: Convert SVG to PNG for PR comment preview
+        run: |
+          sudo apt-get install -y -qq librsvg2-bin > /dev/null
+          rsvg-convert -w 1200 flamegraph.svg -o flamegraph.png
+          echo "PNG size: $(du -h flamegraph.png | cut -f1)"
+      - name: Upload flamegraph artifacts
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: flamegraph-spectest
+          path: |
+            flamegraph.svg
+            flamegraph.png
+          retention-days: 30
+      - name: Checkout gh-pages branch for existing flamegraphs
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: gh-pages
+          path: gh-pages
+          persist-credentials: false
+        continue-on-error: true
+      - name: Build cumulative Pages site
+        run: |
+          COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
+          mkdir -p _site/flamegraphs
+          # Copy existing flamegraphs from gh-pages branch (if any)
+          if [ -d gh-pages/flamegraphs ]; then
+            cp gh-pages/flamegraphs/* _site/flamegraphs/ 2>/dev/null || true
+            echo "Existing flamegraphs: $(ls _site/flamegraphs/ | wc -l) files"
+          fi
+          # Prune flamegraphs older than 6 months to prevent unbounded growth
+          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s 2>/dev/null || echo 0)
+          if [ "$CUTOFF" -gt 0 ]; then
+            for f in _site/flamegraphs/*; do
+              [ -f "$f" ] || continue
+              FILE_AGE=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
+              if [ "$FILE_AGE" -lt "$CUTOFF" ]; then
+                echo "Pruning old flamegraph: $(basename "$f")"
+                rm -f "$f"
+              fi
+            done
+          fi
+          # Add new flamegraphs
+          cp flamegraph.svg "_site/flamegraphs/flamegraph-${COMMIT_SHA}.svg"
+          cp flamegraph.png "_site/flamegraphs/flamegraph-${COMMIT_SHA}.png"
+          echo "Total flamegraphs: $(ls _site/flamegraphs/ | wc -l) files"
+      - name: Persist flamegraphs to gh-pages branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          cd gh-pages 2>/dev/null || {
+            mkdir -p gh-pages && cd gh-pages
+            git init
+            git checkout --orphan gh-pages
+          }
+          mkdir -p flamegraphs
+          cp ../_site/flamegraphs/* flamegraphs/ 2>/dev/null || true
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" 2>/dev/null || \
+            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git"
+          git add flamegraphs/
+          git diff --cached --quiet && echo "No new flamegraphs to commit" && exit 0
+          git commit -m "flamegraphs: add flamegraph for ${COMMIT_SHA}"
+          git push origin gh-pages
+      - name: Setup Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5.0.0
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+        with:
+          path: _site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5
+      - name: Find existing flamegraph comment
+        id: find-comment
+        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body-includes: '<!-- flamegraph-spectest -->'
+      - name: Delete previous flamegraph comment
+        if: ${{ steps.find-comment.outputs.comment-id != '' }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            await github.rest.issues.deleteComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: Number('${{ steps.find-comment.outputs.comment-id }}')
+            });
+      - name: Post flamegraph PR comment
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            <!-- flamegraph-spectest -->
+            ## 🔥 Spectest (AFP 3.4) - Flamegraph
+
+            **Commit:** `${{ github.event.pull_request.head.sha }}`
+            **Profiling:** On-CPU sampling @ 999 Hz, DWARF call-graph, x86_64
+            **Build:** `debugoptimized` (-O2 -g -fno-omit-frame-pointer)
+            **Unique stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}
+            **Test runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}
+            **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
+
+            🔥 **[Open interactive Flamegraph (SVG)](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.svg)**
+
+            ![Flamegraph preview](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.png)
+
+            📥 **[Download from artifacts →](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+
+            <details>
+            <summary>🔝 Top 10 leaf functions </summary>
+
+            | Function | Samples |
+            |----------|---------|
+            ${{ steps.flamegraph-summary.outputs.TOP_FUNCS }}
+
+            </details>
+
+            Open the SVG in a browser for interactive zoom, search (`Ctrl+F`),
+            and click-to-zoom. Wide frames near the top = CPU hotspots.
+
   afp-spectest-afp34-prod:
     name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)
     needs:
