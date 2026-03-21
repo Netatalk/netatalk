@@ -121,6 +121,8 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends $RUN_DEPS
 
+COPY --from=build /netatalk-code/distrib/docker/config_watch.sh /config_watch.sh
+COPY /distrib/docker/env_setup_netatalk.sh /env_setup.sh
 COPY /distrib/docker/entrypoint_netatalk.sh /entrypoint.sh
 
 WORKDIR /mnt
