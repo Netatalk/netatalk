@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
@@ -501,15 +502,101 @@ static void print_mode(const struct stat *st)
 #undef TYPE
 #undef MODE
 
+static int get_terminal_width(void)
+{
+    struct winsize ws;
+    const char *cols = getenv("COLUMNS");
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == 0 && ws.ws_col > 0) {
+        return ws.ws_col;
+    }
+
+    if (cols) {
+        int w = atoi(cols);
+
+        if (w > 0) {
+            return w;
+        }
+    }
+
+    return 80;
+}
+
+/*!
+  @brief Print a filename with non-printable characters replaced by '?'
+  @returns the number of characters printed
+*/
+static unsigned int print_name_sanitized(const char *name)
+{
+    unsigned int len = 0;
+
+    for (const char *p = name; *p; p++) {
+        if (isprint((unsigned char) * p)) {
+            putchar(*p);
+        } else {
+            putchar('?');
+        }
+
+        len++;
+    }
+
+    return len;
+}
+
+static void print_columns(char **names, unsigned int count)
+{
+    if (count == 0) {
+        return;
+    }
+
+    unsigned int term_width = get_terminal_width();
+    /* Find max name length */
+    unsigned int maxlen = 0;
+
+    for (unsigned int i = 0; i < count; i++) {
+        unsigned int len = (unsigned int)strnlen(names[i], MAXPATHLEN);
+
+        if (len > maxlen) {
+            maxlen = len;
+        }
+    }
+
+    unsigned int col_width = maxlen + 2;
+    unsigned int num_cols = term_width / col_width;
+
+    if (num_cols < 1) {
+        num_cols = 1;
+    }
+
+    unsigned int num_rows = (count + num_cols - 1) / num_cols;
+
+    for (unsigned int row = 0; row < num_rows; row++) {
+        for (unsigned int col = 0; col < num_cols; col++) {
+            unsigned int idx = col * num_rows + row;
+
+            if (idx >= count) {
+                break;
+            }
+
+            unsigned int printed = print_name_sanitized(names[idx]);
+
+            if (col < num_cols - 1
+                    && (col + 1) * num_rows + row < count) {
+                /* Pad to column width */
+                for (unsigned int pad = printed; pad < col_width; pad++) {
+                    putchar(' ');
+                }
+            }
+        }
+
+        printf("\n");
+    }
+}
+
 static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
 {
     if (! ls_l) {
-        printf("%s  ", path);
-
-        if (ls_d) {
-            printf("\n");
-        }
-
+        printf("%s\n", path);
         return 0;
     }
 
@@ -524,7 +611,9 @@ static int ad_print(char *path, const struct stat *st, afpvol_t *vol)
     }
 
     print_flags(path, vol, st);
-    printf("  %s\n", path);
+    printf("  ");
+    print_name_sanitized(path);
+    printf("\n");
     return 0;
 }
 
@@ -584,6 +673,19 @@ static int ad_ls_r(char *path, afpvol_t *vol)
 
     /* First run: print everything */
     dirempty = 1;
+    /* For non-long mode, collect names for column output */
+    char **col_names = NULL;
+    unsigned int col_count = 0;
+
+    if (! ls_l) {
+        col_names = malloc(n * sizeof(char *));
+
+        if (col_names == NULL) {
+            perror("malloc");
+            ret = -1;
+            goto exit;
+        }
+    }
 
     for (i = 0; i < n; i++) {
         ep = namelist[i];
@@ -614,20 +716,31 @@ static int ad_ls_r(char *path, afpvol_t *vol)
             dirprinted = 1;
         }
 
-        if (lstat(ep->d_name, &st) < 0) {
-            perror("Can't stat");
-            return -1;
-        }
+        if (ls_l) {
+            if (lstat(ep->d_name, &st) < 0) {
+                perror("Can't stat");
+                ret = -1;
+                goto exit;
+            }
 
-        ret = ad_print(ep->d_name, &st, vol);
+            ret = ad_print(ep->d_name, &st, vol);
 
-        if (ret != 0) {
-            goto exit;
+            if (ret != 0) {
+                goto exit;
+            }
+        } else if (col_names != NULL) {
+            col_names[col_count++] = ep->d_name;
         }
     }
 
     if (! ls_l && ! dirempty) {
-        printf("\n");
+        if (ls_d) {
+            for (i = 0; i < col_count; i++) {
+                printf("%s\n", col_names[i]);
+            }
+        } else {
+            print_columns(col_names, col_count);
+        }
     }
 
     /* Second run: recurse to dirs */
@@ -668,6 +781,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
     }
 
 exit:
+    free(col_names);
 
     if (namelist) {
         for (i = 0; i < n; i++) {
@@ -758,7 +872,7 @@ next:
         }
 
         if (havefile && (! ls_l)) {
-            printf("\n");
+            printf("\n");  /* Blank line between files and dirs */
         }
 
         /* Second run: print dirs */
