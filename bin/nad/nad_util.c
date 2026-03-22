@@ -106,6 +106,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     memset(vol, 0, sizeof(afpvol_t));
 
     if ((vol->vol = getvolbypath(obj, path)) == NULL) {
+        SLOG("Error: \"%s\" is not inside a Netatalk volume", path);
         return -1;
     }
 

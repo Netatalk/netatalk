@@ -175,10 +175,7 @@ int ad_rm(int argc, char *argv[], AFPObj *obj)
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        openvol(obj, argv[i], &volume);
-
-        if (volume.vol == NULL) {
-            SLOG("Error: could not open volume for %s (not removed)", argv[i]);
+        if (openvol(obj, argv[i], &volume) != 0) {
             badrm = rval = 1;
             continue;
         }
