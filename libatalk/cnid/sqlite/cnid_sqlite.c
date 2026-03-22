@@ -1279,44 +1279,31 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     become_root();
     is_root = true;
 
-    if (mkdir(dirpath, 01777) != 0 && errno != EEXIST) {
-        LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
-            dirpath, strerror(errno));
-        EC_FAIL;
-    }
+    if (mkdir(dirpath, 01777) != 0) {
+        if (errno == EEXIST) {
+            int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
 
-    int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY);
+            if (dirfd < 0) {
+                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+                EC_FAIL;
+            }
 
-    if (dirfd == -1) {
-        LOG(log_error, logtype_cnid, "Failed to open CNID DB directory '%s': %s",
-            dirpath, strerror(errno));
-        EC_FAIL;
-    }
+            /* Ensure existing directories get updated to the sticky bit permissions,
+             * so that non-root clients such as 'nad' can create SQLite WAL/SHM files. */
+            struct stat st;
 
-    struct stat st;
+            if (fstat(dirfd, &st) == 0 && (st.st_mode & 01777) != 01777) {
+                fchmod(dirfd, 01777);
+            }
 
-    if (fstat(dirfd, &st) != 0 || !S_ISDIR(st.st_mode)) {
-        LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
-        close(dirfd);
-        EC_FAIL;
-    }
-
-    /* Set directory permissions to world-writable with sticky bit.
-     * SQLite WAL mode requires write access to the directory for journal files.
-     * The sticky bit prevents users from deleting each other's files. */
-    if (fchmod(dirfd, 01777) != 0) {
-        if (errno == EPERM || errno == EACCES) {
-            LOG(log_debug, logtype_cnid,
-                "cnid_sqlite_open: no permissions to set permissions on dir %s: %s",
-                dirpath, strerror(errno));
+            close(dirfd);
         } else {
-            LOG(log_error, logtype_cnid,
-                "cnid_sqlite_open: Failed to set permissions on dir %s: %s",
+            LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
                 dirpath, strerror(errno));
+            EC_FAIL;
         }
     }
 
-    close(dirfd);
     unbecome_root();
     is_root = false;
     EC_NULL(dbpath = bformat("%s/%s.sqlite", dirpath, vol->v_localname));
@@ -1355,6 +1342,29 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_busy_timeout(db->cnid_sqlite_con, 2000);
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "PRAGMA synchronous=NORMAL;"));
     EC_NEG1(cnid_sqlite_execute(db->cnid_sqlite_con, "PRAGMA journal_mode=WAL;"));
+    /* Setting permissions of the WAL and SHM files to world-writable.
+     * These files are created by SQLite when WAL mode is enabled above.
+     * Without this, files created by root would be inaccessible to non-root
+     * clients such as 'nad'. Same as with the main db file, do not treat
+     * a failure to change the permissions as a fatal error. */
+    {
+        char auxpath[PATH_MAX];
+        snprintf(auxpath, sizeof(auxpath), "%s-wal", dbpath_str);
+
+        if (chmod(auxpath, 0666) != 0 && errno != ENOENT) {
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_open: chmod failed for %s: %s",
+                auxpath, strerror(errno));
+        }
+
+        snprintf(auxpath, sizeof(auxpath), "%s-shm", dbpath_str);
+
+        if (chmod(auxpath, 0666) != 0 && errno != ENOENT) {
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_open: chmod failed for %s: %s",
+                auxpath, strerror(errno));
+        }
+    }
 
     /* Add volume to volume table */
     if (cnid_sqlite_execute(db->cnid_sqlite_con,
