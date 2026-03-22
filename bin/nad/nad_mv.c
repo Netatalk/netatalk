@@ -171,7 +171,6 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
     cnid_init();
 
     if (openvol(obj, argv[argc - 1], &dvolume) != 0) {
-        SLOG("Error opening CNID database for source \"%s\": ", argv[argc - 1]);
         return 1;
     }
 
@@ -185,7 +184,6 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
         }
 
         if (openvol(obj, argv[0], &svolume) != 0) {
-            SLOG("Error: could not open volume for destination \"%s\": ", argv[0]);
             return 1;
         }
 
@@ -248,13 +246,15 @@ int ad_mv(int argc, char *argv[], AFPObj *obj)
                 SLOG("%s: destination pathname too long", *argv);
                 rval = 1;
             } else {
-                openvol(obj, *argv, &svolume);
-
-                if (do_move(*argv, path)) {
+                if (openvol(obj, *argv, &svolume) != 0) {
                     rval = 1;
-                }
+                } else {
+                    if (do_move(*argv, path)) {
+                        rval = 1;
+                    }
 
-                closevol(&svolume);
+                    closevol(&svolume);
+                }
             }
         }
 

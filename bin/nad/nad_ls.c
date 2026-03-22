@@ -730,11 +730,15 @@ int ad_ls(int argc, char **argv, AFPObj *obj)
     cnid_init();
 
     if ((argc - optind) == 0) {
-        openvol(obj, ".", &vol);
+        if (openvol(obj, ".", &vol) != 0) {
+            return 1;
+        }
+
         ad_ls_r(".", &vol);
         closevol(&vol);
     } else {
         int havefile = 0;
+        int rval = 0;
         firstarg = optind;
 
         /* First run: only print files from argv paths */
@@ -750,7 +754,12 @@ int ad_ls(int argc, char **argv, AFPObj *obj)
             havefile = 1;
             first = 1;
             recursion = 0;
-            openvol(obj, argv[optind], &vol);
+
+            if (openvol(obj, argv[optind], &vol) != 0) {
+                rval = 1;
+                goto next;
+            }
+
             ad_ls_r(argv[optind], &vol);
             closevol(&vol);
 next:
@@ -779,12 +788,19 @@ next:
 
             first = 1;
             recursion = 0;
-            openvol(obj, argv[optind], &vol);
+
+            if (openvol(obj, argv[optind], &vol) != 0) {
+                rval = 1;
+                goto next2;
+            }
+
             ad_ls_r(argv[optind], &vol);
             closevol(&vol);
 next2:
             optind++;
         }
+
+        return rval;
     }
 
     return 0;
