@@ -350,10 +350,9 @@ int ad_set(int argc, char **argv, AFPObj *obj)
     }
 
     cnid_init();
-    openvol(obj, argv[optind], &vol);
 
-    if (vol.vol == NULL || vol.vol->v_path == NULL) {
-        exit(1);
+    if (openvol(obj, argv[optind], &vol) != 0) {
+        return 1;
     }
 
     if (stat(argv[optind], &st) != 0) {

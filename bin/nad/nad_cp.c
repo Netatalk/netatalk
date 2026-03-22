@@ -358,20 +358,15 @@ int ad_cp(int argc, char *argv[], AFPObj *obj)
     /* Inhereting perms in ad_mkdir etc requires this */
     ad_setfuid(0);
 #endif
+
     /* Load .volinfo file for destination*/
-    openvol(obj, to.p_path, &dvolume);
+    if (openvol(obj, to.p_path, &dvolume) != 0) {
+        return 1;
+    }
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        if (openvol(obj, argv[i], &svolume) != 0 || svolume.vol == NULL) {
-            SLOG("Error: could not open source volume for %s", argv[i]);
-            badcp = rval = 1;
-            continue;
-        }
-
-        if (openvol(obj, to.p_path, &dvolume) != 0 || dvolume.vol == NULL) {
-            SLOG("Error: could not open destination volume for %s", to.p_path);
-            closevol(&svolume);
+        if (openvol(obj, argv[i], &svolume) != 0) {
             badcp = rval = 1;
             continue;
         }

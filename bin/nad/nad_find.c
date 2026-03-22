@@ -220,7 +220,8 @@ int ad_find(int argc, char **argv, AFPObj *obj)
     cnid_init();
 
     if (openvol(obj, srchvol, &vol) != 0) {
-        ERROR("Can't open volume \"%s\"", srchvol);
+        free((void *)srchvol);
+        return 1;
     }
 
     free((void *)srchvol);
