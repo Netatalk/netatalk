@@ -289,7 +289,12 @@ int cnid_mysql_update(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = st->st_dev;
+    uint64_t dev = 0;
+
+    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        dev = st->st_dev;
+    }
+
     uint64_t ino = st->st_ino;
 
     do {
@@ -371,7 +376,12 @@ cnid_t cnid_mysql_lookup(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = st->st_dev;
+    uint64_t dev = 0;
+
+    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        dev = st->st_dev;
+    }
+
     uint64_t ino = st->st_ino;
     cnid_t hint = db->cnid_mysql_hint;
     LOG(log_maxdebug, logtype_cnid,
@@ -537,7 +547,12 @@ cnid_t cnid_mysql_add(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    uint64_t dev = st->st_dev;
+    uint64_t dev = 0;
+
+    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        dev = st->st_dev;
+    }
+
     uint64_t ino = st->st_ino;
     db->cnid_mysql_hint = hint;
     LOG(log_maxdebug, logtype_cnid,

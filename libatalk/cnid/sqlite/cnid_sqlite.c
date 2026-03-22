@@ -353,7 +353,7 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
     EC_INIT;
     CNID_sqlite_private *db = cdb->cnid_db_private;
     cnid_t update_id = CNID_INVALID;
-    uint64_t dev;
+    uint64_t dev = 0;
     uint64_t ino;
     char stmt_param_name[MAXPATHLEN];
     size_t stmt_param_name_len;
@@ -394,7 +394,10 @@ int cnid_sqlite_update(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    dev = st->st_dev;
+    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        dev = st->st_dev;
+    }
+
     ino = st->st_ino;
 
     do {
@@ -463,7 +466,7 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
     EC_INIT;
     CNID_sqlite_private *db = cdb->cnid_db_private;
     cnid_t id = CNID_INVALID;
-    uint64_t dev = st->st_dev;
+    uint64_t dev = 0;
     uint64_t ino = st->st_ino;
     cnid_t hint = db->cnid_sqlite_hint;
     const unsigned char *retname;
@@ -480,6 +483,11 @@ cnid_t cnid_sqlite_lookup(struct _cnid_db *cdb, const struct stat *st,
     uint64_t lookup_result_did;
     uint64_t lookup_result_dev;
     uint64_t lookup_result_ino;
+
+    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        dev = st->st_dev;
+    }
+
     LOG(log_maxdebug, logtype_cnid,
         "cnid_sqlite_lookup(did: %" PRIu32 ", name: \"%s\", hint: %" PRIu32 "): BEGIN",
         ntohl(did), name, ntohl(hint));
@@ -684,7 +692,7 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
     CNID_sqlite_private *db = cdb->cnid_db_private;
     cnid_t id = CNID_INVALID;
     uint64_t lastid;
-    uint64_t dev;
+    uint64_t dev = 0;
     uint64_t ino;
     int sqlite_return;
     int retries;
@@ -715,7 +723,10 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
         EC_FAIL;
     }
 
-    dev = st->st_dev;
+    if (!(cdb->cnid_db_flags & CNID_FLAG_NODEV)) {
+        dev = st->st_dev;
+    }
+
     ino = st->st_ino;
     db->cnid_sqlite_hint = hint;
 
@@ -742,7 +753,6 @@ cnid_t cnid_sqlite_add(struct _cnid_db *cdb,
 
             if (stmt_param_name[0] == '\0' ||
                     stmt_param_did == 0 ||
-                    stmt_param_dev == 0 ||
                     stmt_param_ino == 0) {
                 LOG(log_error, logtype_cnid,
                     "cnid_sqlite_add: Refusing to insert invalid/empty entry");
