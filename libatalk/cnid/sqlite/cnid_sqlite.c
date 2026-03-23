@@ -15,6 +15,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <inttypes.h>
 #include <net/if.h>
 #include <netdb.h>
@@ -1251,6 +1252,7 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     bstring dbpath = NULL;
     const char *dbpath_str = NULL;
     int sqlite_return;
+    bool is_root = false;
     EC_NULL(cdb = cnid_sqlite_new(vol));
     EC_NULL(db =
                 (CNID_sqlite_private *) calloc(1,
@@ -1265,28 +1267,54 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     }
 
     become_root();
+    is_root = true;
 
-    if (mkdir(dirpath, 0755) != 0) {
-        if (errno == EEXIST) {
-            struct stat st;
+    if (mkdir(dirpath, 01777) != 0 && errno != EEXIST) {
+        LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
+            dirpath, strerror(errno));
+        EC_FAIL;
+    }
 
-            if (stat(dirpath, &st) != 0 || !S_ISDIR(st.st_mode)) {
-                LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
-                EC_FAIL;
-            }
-        } else {
-            LOG(log_error, logtype_cnid, "Failed to create CNID DB directory '%s': %s",
+    int dirfd = open(dirpath, O_RDONLY | O_DIRECTORY);
+
+    if (dirfd == -1) {
+        LOG(log_error, logtype_cnid, "Failed to open CNID DB directory '%s': %s",
+            dirpath, strerror(errno));
+        EC_FAIL;
+    }
+
+    struct stat st;
+
+    if (fstat(dirfd, &st) != 0 || !S_ISDIR(st.st_mode)) {
+        LOG(log_error, logtype_cnid, "'%s' exists but is not a directory", dirpath);
+        close(dirfd);
+        EC_FAIL;
+    }
+
+    /* Set directory permissions to world-writable with sticky bit.
+     * SQLite WAL mode requires write access to the directory for journal files.
+     * The sticky bit prevents users from deleting each other's files. */
+    if (fchmod(dirfd, 01777) != 0) {
+        if (errno == EPERM || errno == EACCES) {
+            LOG(log_debug, logtype_cnid,
+                "cnid_sqlite_open: no permissions to set permissions on dir %s: %s",
                 dirpath, strerror(errno));
-            EC_FAIL;
+        } else {
+            LOG(log_error, logtype_cnid,
+                "cnid_sqlite_open: Failed to set permissions on dir %s: %s",
+                dirpath, strerror(errno));
         }
     }
 
+    close(dirfd);
     unbecome_root();
+    is_root = false;
     EC_NULL(dbpath = bformat("%s/%s.sqlite", dirpath, vol->v_localname));
     dbpath_str = bdata(dbpath);
     EC_NULL(db->cnid_sqlite_voluuid_str = uuid_strip_dashes(vol->v_uuid));
     EC_ZERO(sqlite3_initialize());
     become_root();
+    is_root = true;
 
     if (sqlite3_open_v2(dbpath_str,
                         &db->cnid_sqlite_con,
@@ -1338,7 +1366,76 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         EC_FAIL;
     }
 
-    unbecome_root();
+    /*
+     * Clean up stale volume entries for the same path but with a different UUID.
+     * This can happen when the UUID config file is rewritten without the entry
+     * for this volume (e.g. [Homes] volumes not loaded during load_volumes),
+     * causing a new UUID to be generated on the next open.
+     */
+    if (sqlite3_prepare_v2(db->cnid_sqlite_con,
+                           "SELECT VolUUID FROM volumes WHERE VolPath = ? AND VolUUID != ?",
+                           -1, &transient_stmt, NULL) == SQLITE_OK) {
+        sqlite3_bind_text(transient_stmt, 1, vol->v_path, -1, SQLITE_STATIC);
+        sqlite3_bind_text(transient_stmt, 2, db->cnid_sqlite_voluuid_str, -1,
+                          SQLITE_STATIC);
+        /* Collect stale UUIDs first, then clean up after finalizing the
+         * statement.  Executing DROP TABLE while the SELECT is still
+         * stepping would change the schema cookie and could cause
+         * sqlite3_step() to return SQLITE_SCHEMA, aborting the loop
+         * early and leaving stale entries behind. */
+        char *stale_uuids[64];
+        int stale_count = 0;
+
+        while (sqlite3_step(transient_stmt) == SQLITE_ROW
+                && stale_count < 64) {
+            const char *stale_uuid = (const char *)sqlite3_column_text(transient_stmt, 0);
+
+            if (stale_uuid) {
+                stale_uuids[stale_count] = strdup(stale_uuid);
+
+                if (stale_uuids[stale_count]) {
+                    stale_count++;
+                }
+            }
+        }
+
+        sqlite3_finalize(transient_stmt);
+        transient_stmt = NULL;
+
+        for (int i = 0; i < stale_count; i++) {
+            LOG(log_warning, logtype_cnid,
+                "cnid_sqlite_open: removing stale volume entry UUID '%s' for path '%s'",
+                stale_uuids[i], vol->v_path);
+            char *drop_sql = NULL;
+
+            if (asprintf(&drop_sql, "DROP TABLE IF EXISTS \"%s\"", stale_uuids[i]) != -1) {
+                cnid_sqlite_execute(db->cnid_sqlite_con, drop_sql);
+                free(drop_sql);
+            }
+
+            if (asprintf(&drop_sql,
+                         "DELETE FROM sqlite_sequence WHERE name = '%s'", stale_uuids[i]) != -1) {
+                cnid_sqlite_execute(db->cnid_sqlite_con, drop_sql);
+                free(drop_sql);
+            }
+
+            free(stale_uuids[i]);
+        }
+
+        /* Remove stale volume rows */
+        sqlite3_stmt *delete_stmt = NULL;
+
+        if (sqlite3_prepare_v2(db->cnid_sqlite_con,
+                               "DELETE FROM volumes WHERE VolPath = ? AND VolUUID != ?",
+                               -1, &delete_stmt, NULL) == SQLITE_OK) {
+            sqlite3_bind_text(delete_stmt, 1, vol->v_path, -1, SQLITE_STATIC);
+            sqlite3_bind_text(delete_stmt, 2, db->cnid_sqlite_voluuid_str, -1,
+                              SQLITE_STATIC);
+            sqlite3_step(delete_stmt);
+            sqlite3_finalize(delete_stmt);
+        }
+    }
+
     /* Create a blob.  The MySQL code used an escape string function,
            but we're going to use a prepared statement */
     time_t now = time(NULL);
@@ -1375,6 +1472,8 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
     sqlite3_clear_bindings(transient_stmt);
     sqlite3_finalize(transient_stmt);
     transient_stmt = NULL;
+    unbecome_root();
+    is_root = false;
 
     /*
      * Check whether CNID set overflowed before.
@@ -1529,6 +1628,10 @@ struct _cnid_db *cnid_sqlite_open(struct cnid_open_args *args)
         "Finished initializing sqlite CNID module for volume '%s'",
         vol->v_path);
 EC_CLEANUP:
+
+    if (is_root) {
+        unbecome_root();
+    }
 
     if (transient_stmt) {
         sqlite3_finalize(transient_stmt);

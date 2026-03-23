@@ -1170,6 +1170,46 @@ struct _cnid_db *cnid_mysql_open(struct cnid_open_args *args)
 
     free(sql);
     sql = NULL;
+    /*
+     * Clean up stale volume entries for the same path but with a different UUID.
+     * This can happen when the UUID config file is rewritten without the entry
+     * for this volume (e.g. [Homes] volumes not loaded during load_volumes),
+     * causing a new UUID to be generated on the next open.
+     */
+    EC_NEG1(asprintf(&sql,
+                     "SELECT VolUUID FROM volumes WHERE VolPath='%s' AND VolUUID != '%s'",
+                     vol->v_path, db->cnid_mysql_voluuid_str));
+
+    if (cnid_mysql_execute(db->cnid_mysql_con, sql) == 0) {
+        MYSQL_RES *stale_result = mysql_store_result(db->cnid_mysql_con);
+
+        if (stale_result) {
+            MYSQL_ROW stale_row;
+
+            while ((stale_row = mysql_fetch_row(stale_result))) {
+                LOG(log_warning, logtype_cnid,
+                    "cnid_mysql_open: removing stale volume entry UUID '%s' for path '%s'",
+                    stale_row[0], vol->v_path);
+                char *drop_sql = NULL;
+
+                if (asprintf(&drop_sql, "DROP TABLE IF EXISTS `%s`", stale_row[0]) != -1) {
+                    cnid_mysql_execute(db->cnid_mysql_con, drop_sql);
+                    free(drop_sql);
+                }
+            }
+
+            mysql_free_result(stale_result);
+            free(sql);
+            sql = NULL;
+            EC_NEG1(asprintf(&sql,
+                             "DELETE FROM volumes WHERE VolPath='%s' AND VolUUID != '%s'",
+                             vol->v_path, db->cnid_mysql_voluuid_str));
+            cnid_mysql_execute(db->cnid_mysql_con, sql);
+        }
+    }
+
+    free(sql);
+    sql = NULL;
     time_t now = time(NULL);
     char stamp[8];
     memset(stamp, 0, 8);

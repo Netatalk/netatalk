@@ -2137,10 +2137,13 @@ int load_volumes(AFPObj *obj, lv_flags_t flags)
     }
 
     /*
-     * Now that we an up to date list of volumes, rewrite
+     * Now that we have an up to date list of volumes, rewrite
      * afp_voluuid.conf to get rid of deleted volumes.
+     * Only do this in AFP sessions where the full volume list is loaded,
+     * otherwise non-AFP callers (dbd, nad) would erase UUIDs for
+     * dynamically created volumes like [Homes] shares.
      */
-    if (flags & LV_ALL) {
+    if ((flags & LV_ALL) && IS_AFP_SESSION(obj)) {
         become_root();
         ret = rewrite_vol_uuid_conf(obj, Volumes);
         unbecome_root();
