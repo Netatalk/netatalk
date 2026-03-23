@@ -1265,8 +1265,13 @@ earlier did not notify kCaseSensitive flag to the client. Starting with
 
 cnid dev = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether to use the device number in the CNID backends. Helps when the
-device number is not constant across a reboot, e.g. cluster, ...
+> Whether to store the unique device number for each file or directory in the CNID backend.
+This is used to detect when a file is moved across devices,
+which allows Netatalk to update the CNID database accordingly.
+>
+> When using this option, make sure that the device number of the volume is consistent across reboots,
+which can be achieved by using persistent device naming (e.g. by UUID) in /etc/fstab or equivalent.
+Otherwise, the CNID database will get constantly rebuilt on every reboot, which is not ideal.
 
 convert appledouble = *BOOLEAN* (default: *no*) **(V)**
 
