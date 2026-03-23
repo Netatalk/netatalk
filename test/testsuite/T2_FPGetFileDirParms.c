@@ -546,6 +546,9 @@ STATIC void test127()
         FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
     }
 
+    /* Allow server idle worker to process deferred child cache cleanup.
+     * The parent's children are cleaned asynchronously during poll() idle */
+    sleep(1);
     bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_OFFCNT);
     FAIL(htonl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, dir1, "", 0, bitmap))
 test_exit:

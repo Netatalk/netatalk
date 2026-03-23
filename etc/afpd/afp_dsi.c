@@ -50,6 +50,7 @@
 #include "dircache.h"
 #include "directory.h"
 #include "fork.h"
+#include "idle_worker.h"
 #include "switch.h"
 
 #ifndef SOL_TCP
@@ -84,6 +85,12 @@ static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->dsi;
     sigset_t sigs;
+    /* Sets is_idle=0 — no spin. Async-signal-safe (single atomic store only).
+     * Worker stops at next is_idle check. No spin needed because all
+     * afp_dsi_close() paths end in exit() which terminates the worker. */
+    idle_worker_stop_signal_safe();
+    /* Log idle worker stats AFTER stop but BEFORE log_dircache_stat() */
+    idle_worker_log_stats();
     close(obj->ipc_fd);
     obj->ipc_fd = -1;
 
@@ -512,6 +519,9 @@ void afp_over_dsi(AFPObj *obj)
         afp_dsi_die(EXITERR_SYS);
     }
 
+    /* Start idle worker thread — failure is non-fatal (synchronous fallback) */
+    (void)idle_worker_init();
+
     /* set TCP snd/rcv buf */
     if (obj->options.tcp_rcvbuf) {
         if (setsockopt(dsi->socket,
@@ -542,39 +552,39 @@ void afp_over_dsi(AFPObj *obj)
 
     /* get stuck here until the end */
     while (1) {
-        if (sigsetjmp(recon_jmp, 1) != 0)
+        if (sigsetjmp(recon_jmp, 1) != 0) {
             /* returning from SIGALARM handler for a primary reconnect */
-        {
+            idle_worker_stop();  /* safety stop in case longjmp from poll() */
             continue;
         }
 
-        /* Event-driven hint processing: poll() monitors both dsi->socket and
-         * obj->hint_fd (dedicated hint pipe read end) so hints are processed
-         * even during idle client wait. Uses poll() instead of select() for
-         * FD_SETSIZE safety and consistent with parent main loop. */
+        /* Prepare signal mask set — describes which signals to temporarily block.
+         * Actual blocking/unblocking happens via pthread_sigmask() inside the loop.
+         * Blocked signals are DEFERRED (not lost) — delivered when mask is restored. */
+        sigset_t idle_block;
+        sigemptyset(&idle_block);
+        sigaddset(&idle_block, SIGURG);    /* siglongjmp from reconnect handler */
+        sigaddset(&idle_block, SIGALRM);   /* alarm_handler may call afp_dsi_die */
+        sigaddset(&idle_block, SIGTERM);   /* afp_dsi_die from shutdown */
+        sigaddset(&idle_block, SIGQUIT);   /* afp_dsi_die from shutdown */
+
         while (1) {
-            /* CRITICAL: Skip poll() if DSI readahead buffer has data.
-             * dsi_peek()/dsi_buffered_stream_read() may have buffered data
-             * from a previous recv(). poll() only checks the kernel socket
-             * buffer — if data is in DSI's application-level buffer,
-             * poll() blocks even though dsi_stream_receive() would succeed. */
+            /* [A] DSI buffer check — skip poll if data buffered */
             if (dsi->start != dsi->eof) {
-                /* DSI buffer has data — proceed directly to receive */
-                break;
+                break;                          /* NO idle — data ready */
             }
 
-            /* Check DSI session state before blocking in poll() */
+            /* [B] State check — handle sleep/disconnected/die */
             if (dsi->flags & (DSI_EXTSLEEP | DSI_SLEEPING | DSI_DISCONNECTED | DSI_DIE)) {
                 if (obj->hint_fd >= 0) {
                     process_cache_hints(obj);
                 }
 
-                /* Fall through to dsi_stream_receive() + AFP state handling */
-                break;
+                break;                          /* NO idle — special state */
             }
 
+            /* [C] Setup poll fds */
             struct pollfd pfds[2];
-
             int nfds = 0;
             pfds[nfds].fd = dsi->socket;
             pfds[nfds].events = POLLIN;
@@ -588,12 +598,25 @@ void afp_over_dsi(AFPObj *obj)
                 nfds++;
             }
 
+            /* Block signals around idle_worker_start → poll → idle_worker_stop.
+             * Prevents siglongjmp() or afp_dsi_die() from skipping
+             * pthread_mutex_unlock() inside idle_worker_start(). */
+            sigset_t idle_prev;
+            pthread_sigmask(SIG_BLOCK, &idle_block, &idle_prev);
+            /* Signal idle worker — we are about to block in poll() */
+            idle_worker_start();
+            /* Restore signal mask before blocking — signals delivered during
+             * poll() cause EINTR which is handled by the existing error path. */
+            pthread_sigmask(SIG_SETMASK, &idle_prev, NULL);
+            /* [D] BLOCK IN POLL */
             int ret = poll(pfds, nfds, -1);
+            /* WARNING: idle_worker_stop() must be called before ANY
+             * break/continue after this point */
+            idle_worker_stop();
 
+            /* [E] poll error handling */
             if (ret < 0) {
-                if (errno == EINTR)
-                    /* Signal interrupted — retry */
-                {
+                if (errno == EINTR) {
                     continue;
                 }
 
@@ -601,10 +624,9 @@ void afp_over_dsi(AFPObj *obj)
                 break;
             }
 
-            /* Hint pipe response handling */
+            /* [F] Hint pipe handling */
             if (hint_idx >= 0) {
                 if (pfds[hint_idx].revents & POLLNVAL) {
-                    /* hint_fd invalid — disable hint processing */
                     LOG(log_error, logtype_afpd,
                         "afp_over_dsi: hint pipe fd %d invalid (POLLNVAL)", obj->hint_fd);
                     close(obj->hint_fd);
@@ -614,7 +636,7 @@ void afp_over_dsi(AFPObj *obj)
                 }
             }
 
-            /* DSI socket response handling */
+            /* [G] Socket error handling */
             if (pfds[0].revents & POLLNVAL) {
                 LOG(log_error, logtype_afpd,
                     "afp_over_dsi: client socket fd %d invalid (POLLNVAL)", dsi->socket);
@@ -628,12 +650,12 @@ void afp_over_dsi(AFPObj *obj)
                 break;
             }
 
+            /* [H] Client data ready */
             if (pfds[0].revents & POLLIN) {
-                /* Client data ready — fall through to dsi_stream_receive() */
                 break;
             }
 
-            /* Only hint pipe had data — loop back to poll() */
+            /* [I] Only hint pipe had data — loop back to poll() */
         }
 
         /* Blocking read on the network socket (now guaranteed to not block
@@ -765,7 +787,11 @@ void afp_over_dsi(AFPObj *obj)
                     AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
                     LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                         AfpNum2name(function), AfpErr2name(err));
-                    dir_free_invalid_q();
+
+                    if (!idle_worker_is_active()) {
+                        dir_free_invalid_q();
+                    }
+
                     dsi->flags &= ~DSI_RUNNING;
                     /* Add result to the AFP replay cache */
                     replaycache[rc_idx].DSIreqID = dsi->clientID;

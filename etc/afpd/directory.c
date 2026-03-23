@@ -43,6 +43,7 @@
 #include "dircache.h"
 #include "ad_cache.h"
 #include "directory.h"
+#include "idle_worker.h"
 #include "file.h"
 #include "filedir.h"
 #include "fork.h"
@@ -88,13 +89,24 @@ struct path Cur_Path = {
 };
 
 /*
- * dir_remove queues struct dirs to be freed here. We can't just delete them immeidately
+ * dir_remove queues struct dirs to be freed here. We can't just delete them immediately
  * e.g. in dircache_search_by_id, because a caller somewhere up the stack might be
  * referencing it.
  * So instead:
  * - we mark it as invalid by setting d_did to CNID_INVALID (ie 0)
  * - queue it in "invalid_dircache_entries" queue
- * - which is finally freed at the end of every AFP func in afp_dsi.c.
+ * - which is finally freed at the end of every AFP func in afp_dsi.c,
+ *   or by the idle worker thread during poll() idle periods.
+ *
+ * THREAD SAFETY CONTRACT:
+ * This queue is accessed by both the main thread and the idle worker thread,
+ * but NEVER concurrently. Temporal separation is enforced by:
+ *   - Main thread: accesses during AFP command processing (worker dormant)
+ *   - Worker thread: accesses during idle periods (main thread in poll())
+ *   - idle_worker_stop() spin-wait guarantees the transition
+ *
+ * The queue implementation (queue.c) is NOT thread-safe. Do NOT add
+ * concurrent access without adding synchronization.
  */
 q_t *invalid_dircache_entries;
 
@@ -528,7 +540,7 @@ static struct dir *dirlookup_internal_retry(const struct vol *vol,
         /* If strict=0 (initial target) & directory, also clean children.
          * If strict=1 (parent recursion), skip children to avoid cascade. */
         if (!strict && !(stale_child->d_flags & DIRF_ISFILE)) {
-            (void)dircache_remove_children(vol, stale_child);
+            (void)dircache_remove_children_defer(vol, stale_child);
         }
 
         dir_remove(vol, stale_child, 0);  /* Proactive cleanup of stale entry */
@@ -859,7 +871,7 @@ stale:
     /* Clean stale entries and retry via CNID. dircache_remove_children and
      * dir_remove handle curdir recovery internally, guaranteeing curdir != NULL. */
     if (!(dir->d_flags & DIRF_ISFILE)) {
-        (void)dircache_remove_children(vol, dir);
+        (void)dircache_remove_children_defer(vol, dir);
     }
 
     (void)dir_remove(vol, dir, 0);  /* Proactive cleanup before retry */
@@ -1433,6 +1445,36 @@ void dir_free_invalid_q(void)
 }
 
 /*!
+ * @brief Remove a cache entry and free it immediately.
+ *
+ * Unlike dir_remove(), this function:
+ * - Does NOT enqueue into invalid_dircache_entries (frees immediately)
+ * - Does NOT check or modify curdir (caller must ensure entry != curdir)
+ * - Does NOT attempt curdir recovery via dirlookup()
+ *
+ * DIRCACHE_NOSHRINK prevents hash table shrink during worker iteration.
+ *
+ * Used by idle worker during temporal separation AND by
+ * dircache_flush_deferred_for_vol() during synchronous volume close.
+ */
+void dir_remove_and_free(const struct vol *vol, struct dir *dir)
+{
+    AFP_ASSERT(vol);
+    AFP_ASSERT(dir);
+    AFP_ASSERT(dir != curdir);
+
+    if (dir->d_did == DIRDID_ROOT_PARENT || dir->d_did == DIRDID_ROOT
+            || dir->d_did == CNID_INVALID) {
+        return;
+    }
+
+    dircache_remove(vol, dir,
+                    DIRCACHE | DIDNAME_INDEX | QUEUE_INDEX | DIRCACHE_NOSHRINK);
+    dir->d_did = CNID_INVALID;
+    dir_free(dir);
+}
+
+/*!
  * @brief Remove a file/directory from dircache with automatic curdir recovery
  *
  * This function centralizes global curdir safety for all callers.
@@ -1946,7 +1988,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
 
             /* Clean cache - dircache_remove_children and dir_remove handle curdir recovery */
             if (!(dir->d_flags & DIRF_ISFILE)) {
-                (void)dircache_remove_children(vol, dir);
+                (void)dircache_remove_children_defer(vol, dir);
             }
 
             (void)dir_remove(vol, dir, 0);  /* Self-healing cleanup */
@@ -3186,7 +3228,7 @@ int deletecurdir(struct vol *vol)
 
     /* For directory deletion: prune all child dircache entries */
     if (!(fdir->d_flags & DIRF_ISFILE)) {
-        dircache_remove_children(vol, fdir);
+        dircache_remove_children_defer(vol, fdir);
     }
 
     /* Save DID before dir_remove() frees fdir */

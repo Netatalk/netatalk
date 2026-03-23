@@ -57,6 +57,7 @@
 #include <atalk/volume.h>
 
 #include "acls.h"
+#include "dircache.h"
 #include "directory.h"
 #include "file.h"
 #include "fork.h"
@@ -1058,6 +1059,7 @@ int afp_closevol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     curdir = NULL;
+    dircache_flush_deferred_for_vol(vid);
     closevol(obj, vol);
     server_ipc_volumes(obj);
     return AFP_OK;

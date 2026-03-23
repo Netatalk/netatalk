@@ -512,6 +512,62 @@ Cache is undersized for working set. Increase `dircache size`.
 
 ---
 
+## Part 8: Idle Worker Thread — Background Cache Maintenance
+
+Netatalk includes an idle worker thread that performs non-critical dircache
+housekeeping during `poll()` idle periods, when the main AFP command thread
+is blocked waiting for client data.
+
+### Architecture
+
+The idle worker uses **temporal separation** rather than locks: the worker
+thread and main thread never access shared dircache data concurrently.
+
+- `idle_worker_start()` — called just before `poll()`, sets `is_idle=1`
+  and wakes the worker via condvar
+- `idle_worker_stop()` — called immediately after `poll()` returns, sets
+  `is_idle=0` and spins until the worker finishes its current unit of work
+- The worker checks `is_idle` per hash chain, yielding instantly when the
+  main thread reclaims access
+
+### Deferred Work Types
+
+1. **Invalid entry queue draining** — `dir_remove()` enqueues freed entries
+   into `invalid_dircache_entries`; the worker drains this queue during idle
+   periods instead of at the end of every AFP command
+2. **Deferred child cleanup** — `dircache_remove_children_defer()` enqueues
+   an O(1) descriptor; the worker walks hash chains incrementally, removing
+   stale children in batches of 16 per chain
+
+### Graceful Degradation
+
+If the worker thread fails to start (e.g., `pthread_create()` failure or
+platforms without lock-free atomics), all operations fall back to synchronous
+behavior transparently. The `idle_worker_is_active()` guard ensures the
+`dir_free_invalid_q()` call is preserved in the DSIFUNC_CMD handler when
+the worker is not running.
+
+### Signal Safety
+
+`afp_dsi_close()` can be called from signal handler context. It uses
+`idle_worker_stop_signal_safe()` which performs only a single atomic store
+(no spin, no mutex). Since all `afp_dsi_close()` paths end in `exit()`,
+the kernel terminates the worker thread.
+
+### Statistics
+
+Worker statistics are logged at session close:
+
+```txt
+idle_worker stats: cycles=1234 completed=1100 interrupted=134
+```
+
+- **cycles**: Total idle cycles entered
+- **completed**: Cycles that finished all pending work
+- **interrupted**: Cycles cut short by `poll()` returning (client data arrived)
+
+---
+
 ## Conclusion
 
 The real benefit of this optimization isn't just the eliminated stat() calls—

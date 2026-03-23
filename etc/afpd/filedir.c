@@ -474,7 +474,7 @@ static int moveandrename(const AFPObj *obj,
          *   Directories: sdir IS the directory being renamed (its own cache entry)
          *   Files: sdir is the PARENT directory of the file being renamed */
         if (isdir && sdir) {
-            dircache_remove_children(vol, sdir);
+            dircache_remove_children_defer(vol, sdir);
 
             if (dir_modify(vol, sdir, &(struct dir_modify_args) {
             .flags = DCMOD_PATH | DCMOD_STAT,
@@ -856,7 +856,7 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
                 /* Remove child dircache entries (orphaned after directory delete) */
                 if (!(deldir->d_flags & DIRF_ISFILE)) {
-                    dircache_remove_children(vol, deldir);
+                    dircache_remove_children_defer(vol, deldir);
                 }
 
                 /* Delete CNID from database */

@@ -501,7 +501,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             ibuf = saved_ibuf;
 
             if (!(dir->d_flags & DIRF_ISFILE)) {
-                (void)dircache_remove_children(vol, dir);
+                (void)dircache_remove_children_defer(vol, dir);
             }
 
             (void)dir_remove(vol, dir, 0);

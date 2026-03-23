@@ -40,6 +40,7 @@
 #include "dircache.h"
 #include "directory.h"
 #include "hash.h"
+#include "idle_worker.h"
 
 
 /*!
@@ -117,6 +118,32 @@
 
 static hash_t       *dircache;
 static unsigned int dircache_maxsize;
+
+/* Accessor for chain-level iteration — used by dircache_process_deferred_chain()
+ * and dircache_flush_deferred_for_vol() */
+static inline hnode_t *hash_chain_head(hash_t *hash, hashcount_t chain)
+{
+    return (chain < hash->hash_nchains) ? hash->hash_table[chain] : NULL;
+}
+
+/* Deferred cleanup queue — accessed by idle worker.
+ * THREADING: main thread enqueues (tail/count++), worker dequeues (head/count--).
+ * Never concurrent — temporal separation enforced by idle_worker_start/stop.
+ * Plain int is correct; seq_cst fences on is_idle/bg_running ensure visibility. */
+struct deferred_cleanup {
+    char *parent_path;
+    size_t parent_len;
+    uint16_t v_vid;             /* Volume ID via getvolbyvid() */
+    hashcount_t chain_idx;      /* resumable scan progress */
+};
+
+/* Max deferred/queued entries before fallback to synchronous cleaning */
+#define MAX_DEFERRED_CLEANUPS 256
+
+static struct deferred_cleanup deferred_queue[MAX_DEFERRED_CLEANUPS];
+static int deferred_head = 0;
+static int deferred_tail = 0;
+static int deferred_count = 0;
 
 /*! Peak cached entries reached this session (shared by LRU and ARC) */
 static unsigned long queue_count_max = 0;
@@ -1521,7 +1548,10 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
 {
     hnode_t *hn;
     AFP_ASSERT(dir);
-    AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE)) == 0);
+    AFP_ASSERT((flags & ~(QUEUE_INDEX | DIDNAME_INDEX | DIRCACHE |
+                          DIRCACHE_NOSHRINK)) == 0);
+    AFP_ASSERT(!(flags & DIRCACHE_NOSHRINK)
+               || (flags & (DIRCACHE | DIDNAME_INDEX)));
 
     if (flags & QUEUE_INDEX) {
         /* Remove from queue - dispatch based on mode */
@@ -1583,7 +1613,11 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
                 "dircache_remove: Cache entry not in didname index: did:%u",
                 ntohl(dir->d_did));
         } else {
-            hash_delete_free(index_didname, hn);
+            if (flags & DIRCACHE_NOSHRINK) {
+                hash_scan_delfree(index_didname, hn);
+            } else {
+                hash_delete_free(index_didname, hn);
+            }
         }
     }
 
@@ -1593,7 +1627,11 @@ void dircache_remove(const struct vol *vol _U_, struct dir *dir, int flags)
                 "dircache_remove: Cache entry not in dircache: did:%u",
                 ntohl(dir->d_did));
         } else {
-            hash_delete_free(dircache, hn);
+            if (flags & DIRCACHE_NOSHRINK) {
+                hash_scan_delfree(dircache, hn);
+            } else {
+                hash_delete_free(dircache, hn);
+            }
         }
     }
 
@@ -2484,7 +2522,7 @@ void process_cache_hints(AFPObj *obj)
 
             /* Remove all children first, then handle parent entry */
             if (!(entry->d_flags & DIRF_ISFILE)) {
-                dircache_remove_children(vol, entry);
+                dircache_remove_children_defer(vol, entry);  /* O(1) enqueue */
             }
 
             /* Then remove or refresh the parent itself */
@@ -2542,5 +2580,232 @@ void dircache_report_invalid_entry(struct dir *dir)
             "dircache: cache refresh required for \"%s\"",
             dir->d_u_name ? cfrombstr(dir->d_u_name) : "(null)");
     }
+}
+
+/********************************************************
+ * Deferred cleanup functions (idle worker support)
+ ********************************************************/
+
+/*!
+ * @brief Enqueue a deferred dircache_remove_children operation.
+ *
+ * O(1) enqueue — the idle worker performs the actual hash scan during
+ * poll() idle periods. Falls back to synchronous removal if the worker
+ * is not active or the queue is full.
+ */
+void dircache_remove_children_defer(const struct vol *vol, struct dir *dir)
+{
+    if (!dir || !dir->d_fullpath) {
+        return;
+    }
+
+    /* Fallback if worker not running or queue full */
+    if (!idle_worker_is_active() || deferred_count >= MAX_DEFERRED_CLEANUPS) {
+        if (idle_worker_is_active() && deferred_count >= MAX_DEFERRED_CLEANUPS) {
+            LOG(log_warning, logtype_afpd,
+                "dircache_remove_children_defer: deferred queue full (%d/%d), "
+                "falling back to synchronous removal for \"%s\"",
+                deferred_count, MAX_DEFERRED_CLEANUPS,
+                cfrombstr(dir->d_fullpath));
+        }
+
+        dircache_remove_children(vol, dir);
+        return;
+    }
+
+    struct deferred_cleanup *dc = &deferred_queue[deferred_tail];
+
+    dc->parent_path = strdup(cfrombstr(dir->d_fullpath));
+
+    if (!dc->parent_path) {
+        dircache_remove_children(vol, dir);
+        return;
+    }
+
+    dc->parent_len = strnlen(dc->parent_path, MAXPATHLEN);
+    dc->v_vid = vol->v_vid;
+    dc->chain_idx = 0;
+    deferred_tail = (deferred_tail + 1) % MAX_DEFERRED_CLEANUPS;
+    deferred_count++;
+    LOG(log_debug, logtype_afpd,
+        "dircache_remove_children_defer: queued \"%s\" (%d pending)",
+        cfrombstr(dir->d_fullpath), deferred_count);
+}
+
+/*!
+ * @brief Process deferred cleanup entries for a closing volume synchronously.
+ *
+ * @pre: Worker is dormant (called during AFP command processing).
+ * Called from afp_closevol() before volume structures are freed.
+ */
+void dircache_flush_deferred_for_vol(uint16_t vid)
+{
+    int remaining = deferred_count;
+
+    for (int i = 0; i < remaining; i++) {
+        int idx = (deferred_head + i) % MAX_DEFERRED_CLEANUPS;
+
+        if (deferred_queue[idx].v_vid == vid) {
+            if (deferred_queue[idx].parent_path) {
+                const struct vol *vol = getvolbyvid(vid);
+
+                if (vol) {
+                    hashcount_t nchains = hash_size(dircache);
+
+                    for (hashcount_t ci = 0; ci < nchains; ci++) {
+                        hnode_t *node = hash_chain_head(dircache, ci);
+
+                        while (node) {
+                            hnode_t *next = node->hash_next;
+                            struct dir *entry = hnode_get(node);
+
+                            if (entry != curdir &&
+                                    entry->d_did != CNID_INVALID &&
+                                    entry->d_fullpath) {
+                                const char *ep = cfrombstr(entry->d_fullpath);
+
+                                if (ep &&
+                                        strncmp(ep, deferred_queue[idx].parent_path,
+                                                deferred_queue[idx].parent_len) == 0 &&
+                                        ep[deferred_queue[idx].parent_len] == '/') {
+                                    dir_remove_and_free(vol, entry);
+                                }
+                            }
+
+                            node = next;
+                        }
+                    }
+                }
+
+                free(deferred_queue[idx].parent_path);
+            }
+
+            deferred_queue[idx].parent_path = NULL;
+            deferred_queue[idx].v_vid = 0;
+        }
+    }
+
+    /* Compact: advance head past any dead entries */
+    while (deferred_count > 0) {
+        struct deferred_cleanup *dc = &deferred_queue[deferred_head];
+
+        if (dc->v_vid != 0 && dc->parent_path != NULL) {
+            break;
+        }
+
+        free(dc->parent_path);  /* safe if NULL */
+        dc->parent_path = NULL;
+        dc->v_vid = 0;
+        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
+        deferred_count--;
+    }
+}
+
+/* Called by idle worker — returns true if deferred work exists */
+int dircache_has_deferred_work(void)
+{
+    return deferred_count > 0;
+}
+
+/*!
+ * @brief Process one hash chain from the current deferred cleanup job.
+ *
+ * Called by idle worker. Walks a single hash chain, collects up to
+ * DEFERRED_CHAIN_BATCH matching children, and removes+frees them via
+ * dir_remove_and_free(). Entries matching curdir are skipped.
+ *
+ * @returns 1 if more work remains, 0 if all deferred work is complete
+ */
+int dircache_process_deferred_chain(void)
+{
+    if (deferred_count == 0) {
+        return 0;
+    }
+
+    struct deferred_cleanup *dc = &deferred_queue[deferred_head];
+
+    /* Volume safety — look up by VID, skip if volume was closed */
+    const struct vol *vol = getvolbyvid(dc->v_vid);
+
+    if (!vol) {
+        /* Volume was closed — discard this deferred entry */
+        free(dc->parent_path);
+        dc->parent_path = NULL;
+        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
+        deferred_count--;
+        return deferred_count > 0;
+    }
+
+    if (!dc->parent_path) {
+        /* Defensive: parent_path should never be NULL for a committed entry */
+        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
+        deferred_count--;
+        return deferred_count > 0;
+    }
+
+    hashcount_t nchains = hash_size(dircache);
+
+    if (dc->chain_idx >= nchains) {
+        /* All chains scanned — job complete */
+        free(dc->parent_path);
+        dc->parent_path = NULL;
+        deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
+        deferred_count--;
+        return deferred_count > 0;
+    }
+
+    /* Walk one chain — collect stale child entries into batch */
+    struct dir *to_remove[DEFERRED_CHAIN_BATCH];
+    int remove_count = 0;
+    hnode_t *node = hash_chain_head(dircache, dc->chain_idx);
+
+    while (node) {
+        hnode_t *next = node->hash_next;
+        struct dir *entry = hnode_get(node);
+
+        /* Never touch curdir from worker thread */
+        if (entry == curdir) {
+            node = next;
+            continue;
+        }
+
+        if (entry->d_did != CNID_INVALID &&
+                entry->d_fullpath) {
+            const char *ep = cfrombstr(entry->d_fullpath);
+
+            if (ep &&
+                    strncmp(ep, dc->parent_path, dc->parent_len) == 0 &&
+                    ep[dc->parent_len] == '/') {
+                if (remove_count < DEFERRED_CHAIN_BATCH) {
+                    to_remove[remove_count++] = entry;
+                } else {
+                    break;  /* Batch full — will re-scan this chain */
+                }
+            }
+        }
+
+        node = next;
+    }
+
+    /* Remove and free collected entries directly */
+    for (int i = 0; i < remove_count; i++) {
+        AFP_ASSERT(to_remove[i] != curdir);
+        dir_remove_and_free(vol, to_remove[i]);
+    }
+
+    /* Advance chain index ONLY if batch was not full */
+    if (remove_count < DEFERRED_CHAIN_BATCH) {
+        dc->chain_idx++;
+
+        if (dc->chain_idx >= nchains) {
+            free(dc->parent_path);
+            dc->parent_path = NULL;
+            deferred_head = (deferred_head + 1) % MAX_DEFERRED_CLEANUPS;
+            deferred_count--;
+            return deferred_count > 0;
+        }
+    }
+
+    return 1;  /* More work to do */
 }
 
