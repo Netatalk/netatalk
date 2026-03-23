@@ -25,7 +25,7 @@
 /* Dircache size bounds */
 #define MIN_DIRCACHE_SIZE 1024             /* 1K minimum (testing/constrained systems) */
 #define DEFAULT_DIRCACHE_SIZE 65536        /* 64K default (production) */
-#define MAX_DIRCACHE_SIZE 2097152          /* 2M maximum (high-memory servers) */
+#define MAX_DIRCACHE_SIZE 1048576          /* 1M maximum (high-memory servers) */
 #define DIRCACHE_FREE_QUANTUM 256
 
 /* Max dircache entries removed per hash chain per idle worker iteration.

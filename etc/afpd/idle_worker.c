@@ -298,6 +298,8 @@ void idle_worker_shutdown(void)
     pthread_cond_signal(&sleep_cond);
     pthread_mutex_unlock(&sleep_mutex);
     pthread_join(worker_tid, NULL);
+    /* Log stats while worker_started is still 1 */
+    idle_worker_log_stats();
     worker_started = 0;
     /* Drain any entries added after the worker's last idle cycle */
     dir_free_invalid_q();

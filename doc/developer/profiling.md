@@ -1,4 +1,4 @@
-!Flamegraph Profiling
+Flamegraph Profiling
 ====================
 
 Netatalk provides a containerized profiling workflow that generates

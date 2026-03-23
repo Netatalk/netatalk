@@ -555,7 +555,7 @@ each share.
 dircache size = *number* **(G)**
 
 > Maximum entries in the directory cache. Stores directories and optionally files.
-> Minimum: 1024 (1K). Default: 65536 (64K). Maximum: 2097152 (2M).
+> Minimum: 1024 (1K). Default: 65536 (64K). Maximum: 1048576 (1M).
 > Higher values improve hit ratios but use more memory.
 
 dircache validation freq = *number* **(G)**

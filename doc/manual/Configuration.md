@@ -732,7 +732,7 @@ The given value is rounded up to the nearest power of 2. Each entry takes about
 192 bytes (on 64-bit systems), and each **afpd** child process
 for every connected user has its own cache. Consider the number of users when configuring `dircache size`.
 
-Default: 65536, Maximum: 2097152.
+Default: 65536, Maximum: 1048576.
 
 dircache validation freq = *number* **(G)**
 
