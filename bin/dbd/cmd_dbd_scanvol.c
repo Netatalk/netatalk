@@ -755,7 +755,13 @@ static int dbd_readdir(int volroot, cnid_t did)
     }
 
     if ((dp = opendir(".")) == NULL) {
-        dbd_log(LOGSTD, "Couldn't open the directory: %s", strerror(errno));
+        if (errno == EACCES || errno == EPERM) {
+            dbd_log(LOGSTD, "Skipping directory '%s': %s", cwdbuf, strerror(errno));
+            return 0;
+        }
+
+        dbd_log(LOGSTD, "Couldn't open the directory '%s': %s", cwdbuf,
+                strerror(errno));
         return -1;
     }
 

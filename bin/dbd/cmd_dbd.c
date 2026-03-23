@@ -250,6 +250,24 @@ int main(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    /* Validate that the path is the root of the volume, not a subdirectory */
+    char *resolved_volpath = realpath_safe(volpath);
+
+    if (resolved_volpath == NULL) {
+        dbd_log(LOGSTD, "Can't resolve path '%s'", volpath);
+        exit(EXIT_FAILURE);
+    }
+
+    if (strcmp(resolved_volpath, vol->v_path) != 0) {
+        dbd_log(LOGSTD,
+                "'%s' is not the root of an AFP volume. Expected volume root: '%s'",
+                resolved_volpath, vol->v_path);
+        free(resolved_volpath);
+        exit(EXIT_FAILURE);
+    }
+
+    free(resolved_volpath);
+
     if (load_charset(vol) != 0) {
         dbd_log(LOGSTD, "Couldn't load charsets for '%s'", volpath);
         exit(EXIT_FAILURE);
