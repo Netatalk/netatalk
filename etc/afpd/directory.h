@@ -109,6 +109,8 @@ struct maccess {
 
 extern q_t *invalid_dircache_entries;
 
+extern void        dir_remove_and_free(const struct vol *, struct dir *);
+
 typedef int (*dir_loop)(struct dirent *, char *, void *);
 
 extern void        dir_free_invalid_q(void);

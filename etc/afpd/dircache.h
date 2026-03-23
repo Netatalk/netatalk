@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2010 Frank Lahm <franklahm@gmail.com>
- * Copyright (c) 2025 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (@andylemin)
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,10 +28,16 @@
 #define MAX_DIRCACHE_SIZE 2097152          /* 2M maximum (high-memory servers) */
 #define DIRCACHE_FREE_QUANTUM 256
 
+/* Max dircache entries removed per hash chain per idle worker iteration.
+ * 16 is compromise between latency (~1μs per dir_free × 16 = ~16μs per batch)
+ * and is_idle polling frequency (instant yield to AFP commands) */
+#define DEFERRED_CHAIN_BATCH 16
+
 /* flags for dircache_remove */
 #define DIRCACHE      (1 << 0)
 #define DIDNAME_INDEX (1 << 1)
 #define QUEUE_INDEX   (1 << 2)
+#define DIRCACHE_NOSHRINK (1 << 3)  /* Skip hash table shrink */
 #define DIRCACHE_ALL  (DIRCACHE|DIDNAME_INDEX|QUEUE_INDEX)
 
 extern int        dircache_init(int reqsize);
@@ -51,4 +57,10 @@ extern int        dircache_reindex_didname(const struct vol *vol,
         struct dir *dir);
 extern void       dircache_promote(struct dir *dir);
 extern void       process_cache_hints(AFPObj *obj);
+extern void       dircache_remove_children_defer(const struct vol *vol,
+        struct dir *dir);
+extern void       dircache_flush_deferred_for_vol(uint16_t vid);
+extern int        dircache_has_deferred_work(void);
+extern int        dircache_process_deferred_chain(void);
 #endif /* DIRCACHE_H */
+

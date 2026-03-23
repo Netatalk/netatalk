@@ -18,6 +18,7 @@ afpd_sources = [
     'filedir.c',
     'fork.c',
     'hash.c',
+    'idle_worker.c',
     'icon.c',
     'mangle.c',
     'messages.c',
