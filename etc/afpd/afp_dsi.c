@@ -675,12 +675,14 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi->flags & DSI_AFP_LOGGED_OUT) {
                 LOG(log_note, logtype_afpd,
                     "afp_over_dsi: client logged out, terminating DSI session");
+                idle_worker_shutdown();
                 afp_dsi_close(obj);
                 exit(0);
             }
 
             if (dsi->flags & DSI_RECONINPROG) {
                 LOG(log_note, logtype_afpd, "afp_over_dsi: failed reconnect");
+                idle_worker_shutdown();
                 afp_dsi_close(obj);
                 exit(0);
             }
@@ -745,6 +747,7 @@ void afp_over_dsi(AFPObj *obj)
         switch (cmd) {
         case DSIFUNC_CLOSE:
             LOG(log_debug, logtype_afpd, "DSI: close session request");
+            idle_worker_shutdown();
             afp_dsi_close(obj);
             LOG(log_note, logtype_afpd, "done");
             exit(0);

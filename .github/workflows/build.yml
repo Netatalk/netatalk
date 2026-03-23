@@ -520,6 +520,7 @@ jobs:
               iniparser \
               libevent \
               libgcrypt \
+              libsunacl \
               localsearch \
               meson \
               mysql91-client \

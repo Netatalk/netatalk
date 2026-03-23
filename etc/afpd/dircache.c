@@ -1887,7 +1887,7 @@ int dircache_init(int reqsize)
     }
 
     /* Initialize the main dircache with requested size
-     * Bounds: MIN_DIRCACHE_SIZE (8K) to MAX_DIRCACHE_SIZE (2M)
+     * Bounds: MIN_DIRCACHE_SIZE (1K) to MAX_DIRCACHE_SIZE (1M)
      * Default: DEFAULT_DIRCACHE_SIZE (64K) if reqsize <= 0 or out of bounds */
     if (reqsize > 0 && reqsize >= MIN_DIRCACHE_SIZE
             && reqsize <= MAX_DIRCACHE_SIZE) {

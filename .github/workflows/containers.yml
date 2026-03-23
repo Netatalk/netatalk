@@ -195,7 +195,7 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
 
   flamegraph-spectest:
-    name: Flamegraph (spectest AFP 3.4)
+    name: Flamegraph (spectest AFP 3.4) (AFP_ASSERT active)
     needs: build-container-debug
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -365,14 +365,12 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             <!-- flamegraph-spectest -->
-            ## 🔥 Spectest (AFP 3.4) - Flamegraph
+            ## 🔥 Spectest (AFP 3.4) - Flamegraph (AFP_ASSERT active)
 
             **Commit:** `${{ github.event.pull_request.head.sha }}`
             **Profiling:** On-CPU sampling @ 999 Hz, DWARF call-graph, x86_64
             **Build:** `debugoptimized` (-O2 -g -fno-omit-frame-pointer)
-            **Unique stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}
-            **Test runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}
-            **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
+            **Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
 
             🔥 **[Open interactive Flamegraph (SVG)](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.svg)**
 
@@ -388,9 +386,6 @@ jobs:
             ${{ steps.flamegraph-summary.outputs.TOP_FUNCS }}
 
             </details>
-
-            Open the SVG in a browser for interactive zoom, search (`Ctrl+F`),
-            and click-to-zoom. Wide frames near the top = CPU hotspots.
 
   afp-spectest-afp34-prod:
     name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)

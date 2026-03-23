@@ -49,7 +49,7 @@ option(
     'with-debugging',
     type: 'boolean',
     value: false,
-    description: 'Enable SIGALARM timers and DSI tickles (eg for debugging with gdb/dbx/...)',
+    description: 'Disable SIGALARM timers and DSI tickles (useful for debugging with gdb/dbx/...)',
 )
 option(
     'with-docs-install-path',
