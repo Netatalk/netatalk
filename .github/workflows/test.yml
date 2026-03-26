@@ -20,25 +20,27 @@ permissions:
 jobs:
   formatting:
     name: Code Formatting
-    runs-on: macos-latest
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.23.2
     steps:
+      - name: Install dependencies
+        run: |
+          apk add --no-cache \
+            astyle \
+            ca-certificates \
+            git \
+            muon \
+            nodejs \
+            npm \
+            perl-tidy \
+            shfmt \
+            yamlfmt
+          npm install --global --ignore-scripts markdownlint-cli2@0.22.0
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
-      - name: Install dependencies
-        run: |
-          brew update
-          brew install \
-            astyle \
-            markdownlint-cli2 \
-            muon \
-            perltidy \
-            shfmt \
-            yamlfmt
       - name: Check C formatting
         run: ./contrib/scripts/codefmt.sh -v -s c
       - name: Check markdown formatting
@@ -89,29 +91,32 @@ jobs:
 
   build-doxygen-docs:
     name: Build Doxygen Docs
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.23.2
     timeout-minutes: 12
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install dependencies
         run: |
-          brew update
-          brew upgrade
-          brew install \
-            bstring \
+          apk add --no-cache \
+            build-base \
+            ca-certificates \
             doxygen \
-            iniparser \
-            meson
+            gcc \
+            git \
+            iniparser-dev \
+            libevent-dev \
+            libgcrypt-dev \
+            meson \
+            pkgconf \
+            sqlite-dev
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Configure
         run: |
           meson setup build \
             -Dbuildtype=debug \
             -Dwith-docs=developer \
-            -Dwith-doxygen-strict=true \
-            -Dwith-homebrew=true
+            -Dwith-doxygen-strict=true
       - name: Upload Meson log on failure
         if: failure()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

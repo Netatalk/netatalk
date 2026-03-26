@@ -34,6 +34,7 @@ jobs:
             avahi-dev \
             bison \
             build-base \
+            ca-certificates \
             cracklib \
             cracklib-dev \
             cracklib-words \
@@ -406,7 +407,6 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew upgrade
           brew install \
             bstring \
             cmark-gfm \
