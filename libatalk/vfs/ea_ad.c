@@ -370,69 +370,6 @@ error:
 }
 
 /*!
- * @brief create EA header file, only called from ea_open
- *
- * @param[in] uname    filename for which we have to create a header
- * @param[in,out] ea   ea handle with already allocated storage pointed to
- *                     by ea->ea_data
- *
- * @returns fd of open header file on success, -1 on error, errno semantics:
- *          EEXIST: open with O_CREAT | O_EXCL failed
- *
- * @note Creates EA header file and initialize ea->ea_data buffer.
- * Possibe race condition with other afpd processes:
- * we were called because header file didn't exist in e.g. ea_open. We then
- * try to create a file with O_CREAT | O_EXCL, but the whole process in not atomic.
- * What do we do then? Someone else is in the process of creating the header too, but
- * it might not have finished it. That means we can't just open, read and use it!
- * We therefor currently just break with an error.
- * On return the header file is still r/w locked.
- */
-static int create_ea_header(const char *uname,
-                            struct ea *ea)
-{
-    int fd = -1, err = 0;
-    char *ptr;
-    uint16_t uint16;
-    uint32_t uint32;
-
-    if ((fd = open(uname, O_RDWR | O_CREAT | O_EXCL,
-                   0666 & ~ea->vol->v_umask)) == -1) {
-        LOG(log_error, logtype_afpd,
-            "ea_create: open race condition with ea header for file: %s", uname);
-        return -1;
-    }
-
-    /* lock it */
-    if ((write_lock(fd, 0, SEEK_SET, 0)) != 0) {
-        LOG(log_error, logtype_afpd,
-            "ea_create: lock race condition with ea header for file: %s", uname);
-        err = -1;
-        goto exit;
-    }
-
-    /* Now init it */
-    ptr = ea->ea_data;
-    uint32 = htonl(EA_MAGIC);
-    memcpy(ptr, &uint32, sizeof(uint32_t));
-    ptr += EA_MAGIC_LEN;
-    uint16 = htons(EA_VERSION);
-    memcpy(ptr, &uint16, sizeof(uint16_t));
-    ptr += EA_VERSION_LEN;
-    memset(ptr, 0, 2);          /* count */
-    ea->ea_size = EA_HEADER_SIZE;
-    ea->ea_inited = EA_INITED;
-exit:
-
-    if (err != 0) {
-        close(fd);
-        fd = -1;
-    }
-
-    return fd;
-}
-
-/*!
  * @brief write an EA to disk
  *
  * @param[in] ea         struct ea handle
