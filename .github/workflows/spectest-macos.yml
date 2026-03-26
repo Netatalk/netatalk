@@ -36,7 +36,6 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          brew upgrade
           brew install \
             bstring \
             cmark-gfm \
