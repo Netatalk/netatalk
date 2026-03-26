@@ -393,22 +393,6 @@ static void print_csv_header(void)
 }
 
 /*!
- * @brief Print single CSV row with test results
- */
-static void print_csv_row(const char *test_name, int iteration, off_t file_size)
-{
-    if (!in_warmup_phase) {
-        unsigned long long d = delta();
-        double throughput_mbs = (d > 0) ?
-                                ((double)file_size * 1000000.0) / (MEGABYTE * (double)d) : 0.0;
-        fprintf(stdout, "%s,%d,%.3f,%llu,%.2f\n",
-                test_name, iteration,
-                (double)file_size / MEGABYTE,
-                d, throughput_mbs);
-    }
-}
-
-/*!
  * @brief Print CSV statistics row with mean, median, stddev, percentiles
  */
 static void print_csv_statistics(const char *test_name, off_t file_size)
