@@ -26,7 +26,6 @@
 #include <atalk/asp.h>
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
-#include <atalk/ea.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
@@ -40,6 +39,116 @@
 #include "fork.h"
 #include "virtual_icon.h"
 #include "volume.h"
+
+/*!
+ * @brief Materialize a virtual Icon fork into a real file on disk
+ *
+ * Creates the physical Icon file, seeds its resource fork with the
+ * virtual icon data, sets FinderInfo, and re-opens the fork through
+ * ad_open so the ofork has real file descriptors for writing.
+ *
+ * @return AFP_OK on success, or an AFP error code
+ */
+static int materialize_virtual_icon(struct ofork *ofork)
+{
+    const struct vol *vol = ofork->of_vol;
+    size_t vlen;
+    const unsigned char *vdata = virtual_icon_get_rfork(vol, &vlen);
+    char path[MAXPATHLEN + 1];
+    int adflags;
+    int cfd;
+
+    if (!vdata) {
+        return AFPERR_MISC;
+    }
+
+    snprintf(path, sizeof(path), "%s/%s", vol->v_path, VIRTUAL_ICON_NAME);
+    cfd = open(path, O_CREAT | O_WRONLY, 0666);
+
+    if (cfd < 0) {
+        LOG(log_error, logtype_afpd,
+            "materialize_virtual_icon: create failed: %s",
+            strerror(errno));
+        return AFPERR_MISC;
+    }
+
+    close(cfd);
+    /* Seed the resource fork and set FinderInfo invisible flag */
+    {
+        struct adouble icon_ad;
+        ad_init(&icon_ad, vol);
+
+        if (ad_open(&icon_ad, path,
+                    ADFLAGS_HF | ADFLAGS_RF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                    0666) == 0) {
+            if (ad_write(&icon_ad, ADEID_RFORK, 0, 0,
+                         (const char *)vdata, vlen) != (ssize_t)vlen) {
+                LOG(log_warning, logtype_afpd,
+                    "materialize_virtual_icon: seed rfork failed: %s",
+                    strerror(errno));
+            }
+
+            char *finfo = ad_entry(&icon_ad, ADEID_FINDERI);
+
+            if (finfo) {
+                memset(finfo, 0, ADEDLEN_FINDERI);
+                uint16_t flags = htons(FINDERINFO_INVISIBLE);
+                memcpy(finfo + FINDERINFO_FRFLAGOFF,
+                       &flags, sizeof(flags));
+            }
+
+            ad_flush(&icon_ad);
+            ad_close(&icon_ad, ADFLAGS_HF | ADFLAGS_RF);
+        } else {
+            LOG(log_warning, logtype_afpd,
+                "materialize_virtual_icon: seed ad_open failed: %s",
+                strerror(errno));
+        }
+    }
+    /* Re-initialize the adouble for real file I/O */
+    free(ofork->of_ad->ad_name);
+    memset(ofork->of_ad, 0, sizeof(struct adouble));
+    ad_init(ofork->of_ad, vol);
+    ofork->of_ad->ad_name = strdup(VIRTUAL_ICON_NAME);
+    /* Open the data/resource fork for real */
+    adflags = ADFLAGS_SETSHRMD | ADFLAGS_RDWR;
+
+    if (ofork->of_flags & AFPFORK_RSRC) {
+        adflags |= ADFLAGS_RF | ADFLAGS_CREATE;
+    } else {
+        adflags |= ADFLAGS_DF;
+    }
+
+    if (ad_open(ofork->of_ad, path, adflags, 0666) < 0) {
+        LOG(log_error, logtype_afpd,
+            "materialize_virtual_icon: ad_open failed: %s",
+            strerror(errno));
+        (void)unlink(path);
+        return AFPERR_MISC;
+    }
+
+    /* Open metadata */
+    if (ad_open(ofork->of_ad, path,
+                ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) == 0) {
+        ofork->of_flags |= AFPFORK_META;
+    }
+
+    /* Stat the new file to update the ofork's key */
+    struct stat st;
+
+    if (ostat(path, &st, vol_syml_opt(vol)) == 0) {
+        ofork->key.dev = st.st_dev;
+        ofork->key.inode = st.st_ino;
+    }
+
+    /* Transition from virtual to real fork */
+    ofork->of_flags &= ~AFPFORK_VIRTUAL;
+    ofork->of_virtual_data = NULL;
+    ofork->of_virtual_len = 0;
+    LOG(log_debug, logtype_afpd,
+        "materialize_virtual_icon: Icon\\r materialized on disk");
+    return AFP_OK;
+}
 
 static int getforkparams(const AFPObj *obj, struct ofork *ofork,
                          uint16_t bitmap, char *buf, size_t *buflen)
@@ -367,73 +476,6 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
                 return AFPERR_MISC;
             }
 
-            /*
-             * If write access is requested, materialize the virtual
-             * file: create a real empty Icon\r on disk so the Finder
-             * can replace the default icon with a custom one.  Then
-             * fall through to the normal open path.
-             */
-            if (access & OPENACC_WR) {
-                int cfd = open(s_path->u_name,
-                               O_CREAT | O_WRONLY, 0666);
-
-                if (cfd < 0) {
-                    LOG(log_error, logtype_afpd,
-                        "afp_openfork(virtual Icon\\r): "
-                        "create failed: %s",
-                        strerror(errno));
-                    return AFPERR_MISC;
-                }
-
-                /* Seed the resource fork with the virtual icon data
-                 * so the Finder sees a valid resource fork. */
-                if (sys_fsetxattr(cfd, AD_EA_RESO,
-                                  vdata, vlen, 0) < 0) {
-                    LOG(log_warning, logtype_afpd,
-                        "afp_openfork(virtual Icon\\r): "
-                        "seed rfork xattr failed: %s",
-                        strerror(errno));
-                }
-
-                close(cfd);
-                /* Set FinderInfo invisible flag so the Finder
-                 * hides the Icon\r file in directory listings. */
-                {
-                    struct adouble icon_ad;
-                    ad_init(&icon_ad, vol);
-
-                    if (ad_open(&icon_ad, s_path->u_name,
-                                ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
-                                0666) == 0) {
-                        char *finfo = ad_entry(&icon_ad, ADEID_FINDERI);
-
-                        if (finfo) {
-                            memset(finfo, 0, ADEDLEN_FINDERI);
-                            uint16_t flags = htons(FINDERINFO_INVISIBLE);
-                            memcpy(finfo + FINDERINFO_FRFLAGOFF,
-                                   &flags, sizeof(flags));
-                            ad_flush(&icon_ad);
-                        }
-
-                        ad_close(&icon_ad, ADFLAGS_HF);
-                    } else {
-                        LOG(log_warning, logtype_afpd,
-                            "afp_openfork(virtual Icon\\r): "
-                            "metadata init failed: %s",
-                            strerror(errno));
-                    }
-                }
-
-                if (ostat(s_path->u_name, &s_path->st,
-                          vol_syml_opt(vol)) < 0) {
-                    return AFPERR_MISC;
-                }
-
-                s_path->st_errno = 0;
-                s_path->st_valid = 1;
-                break;  /* fall through to normal open */
-            }
-
             /* Allocate a minimal ofork for the virtual file.
              * We use a synthetic stat and adouble. */
             struct stat vst;
@@ -467,6 +509,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             }
 
             ofork->of_flags |= AFPFORK_VIRTUAL | AFPFORK_ACCRD;
+
+            if (access & OPENACC_WR) {
+                ofork->of_flags |= AFPFORK_ACCWR;
+            }
+
             ofork->of_virtual_data = vdata;
             ofork->of_virtual_len = (off_t)vlen;
             /* Fill reply with file params */
@@ -805,7 +852,15 @@ int afp_setforkparams(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
     }
 
     if (ofork->of_flags & AFPFORK_VIRTUAL) {
-        return AFPERR_OLOCK;
+        if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
+            return AFPERR_ACCESS;
+        }
+
+        int mret = materialize_virtual_icon(ofork);
+
+        if (mret != AFP_OK) {
+            return mret;
+        }
     }
 
     vol = ofork->of_vol;
@@ -1802,8 +1857,16 @@ static int write_fork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         reqcount);
 
     if (ofork->of_flags & AFPFORK_VIRTUAL) {
-        err = AFPERR_OLOCK;
-        goto afp_write_err;
+        if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
+            err = AFPERR_ACCESS;
+            goto afp_write_err;
+        }
+
+        err = materialize_virtual_icon(ofork);
+
+        if (err != AFP_OK) {
+            goto afp_write_err;
+        }
     }
 
     if ((ofork->of_flags & AFPFORK_ACCWR) == 0) {
