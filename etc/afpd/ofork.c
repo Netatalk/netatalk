@@ -566,7 +566,6 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     int delete_icon = 0;
 
     if ((ofork->of_flags & AFPFORK_RSRC)
-            && (ofork->of_flags & (AFPFORK_DIRTY | AFPFORK_MODIFIED))
             && ofork->of_did == DIRDID_ROOT
             && is_virtual_icon_name(of_name(ofork))
             && virtual_icon_enabled(ofork->of_vol)
@@ -589,7 +588,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
             data_len = ntohl(data_len);
         }
 
-        if (n == RFORK_HEADER_SIZE && data_len == 0) {
+        if ((n >= 0 && n < RFORK_HEADER_SIZE) || data_len == 0) {
             /* Look up and delete the CNID for this file */
             cnid_t icon_cnid = cnid_get(ofork->of_vol->v_cdb,
                                         ofork->of_did,
@@ -658,7 +657,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     }
 
     /* Unlink the emptied Icon\r file after ad_close has released fds */
-    if (delete_icon && forkpath) {
+    if (delete_icon && forkpath && bdata(forkpath)) {
         (void)unlink(bdata(forkpath));
     }
 
