@@ -41,11 +41,9 @@ static void usage_rmdir(void)
 {
     printf(
         "Usage: nad rmdir [-pv] <dir> [<dir> ...]\n\n"
-        "The rmdir utility removes the directory entry specified by\n"
-        "each dir operand, which must refer to an empty directory.\n"
-        "If the directories reside on an AFP volume, the corresponding\n"
-        "CNIDs are deleted from the volume's database and AppleDouble\n"
-        "metadata is removed.\n\n"
+        "The rmdir utility removes empty directories in an AFP volume.\n"
+        "The corresponding CNIDs are deleted from the volume's database,\n"
+        "and AppleDouble metadata is removed.\n\n"
         "The options are as follows:\n\n"
         "   -p   Each dir operand is treated as a pathname of which all\n"
         "        components will be removed, if they are empty, starting\n"

@@ -63,6 +63,8 @@ static void usage_set(void)
 {
     printf(
         "Usage: nad set [-t TYPE] [-c CREATOR] [-l label] [-f flags] [-a attributes] file|dir \n\n"
+        "The set utility modifies AppleDouble metadata on files and\n"
+        "directories in an AFP volume.\n\n"
         "     Color Label:\n"
         "       none | grey | green | violet | blue | yellow | red | orange\n\n"
         "     FinderFlags:\n"
