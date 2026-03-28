@@ -85,10 +85,9 @@ static void usage_rm(void)
 {
     printf(
         "Usage: nad rm [-vR] <file|dir> [<file|dir> ...]\n\n"
-        "The rm utility attempts to remove the non-directory type files specified\n"
-        "on the command line.\n"
-        "If the files and directories reside on an AFP volume, the corresponding\n"
-        "CNIDs are deleted from the volumes database.\n\n"
+        "The rm utility attempts to remove non-directory type files on an AFP volume.\n"
+        "The corresponding CNIDs are deleted from the volumes database,\n"
+        "and AppleDouble metadata is removed from the file system if present.\n\n"
         "The options are as follows:\n\n"
         "   -R   Attempt to remove the file hierarchy rooted in each file argument.\n"
         "   -v   Be verbose when deleting files, showing them as they are removed.\n"

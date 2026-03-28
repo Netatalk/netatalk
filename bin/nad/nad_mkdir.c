@@ -40,10 +40,9 @@ static void usage_mkdir(void)
 {
     printf(
         "Usage: nad mkdir [-pv] <dir> [<dir> ...]\n\n"
-        "The mkdir utility creates the directories named as operands.\n"
-        "If the directories reside on an AFP volume, the corresponding\n"
-        "CNIDs are added to the volume's database and AppleDouble\n"
-        "metadata is initialized.\n\n"
+        "The mkdir utility creates directories in an AFP volume.\n"
+        "The corresponding CNIDs are added to the volume's database,\n"
+        "and AppleDouble metadata is initialized.\n\n"
         "The options are as follows:\n\n"
         "   -p   Create intermediate directories as required.\n"
         "   -v   Be verbose when creating directories, showing them\n"

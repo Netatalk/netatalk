@@ -41,7 +41,12 @@
 static void usage_find(void)
 {
     printf(
-        "Usage: nad find [-v VOLUME_PATH] NAME\n"
+        "Usage: nad find [-v VOLUME_PATH] NAME\n\n"
+        "The find utility searches for files and directories by name\n"
+        "in an AFP volume's CNID database.\n\n"
+        "The options are as follows:\n\n"
+        "   -v   Use VOLUME_PATH as the volume to search rather than\n"
+        "        the current working directory.\n"
     );
 }
 

@@ -98,8 +98,13 @@ static const char *check_netatalk_dirs(const char *name)
 static void usage_ls(void)
 {
     printf(
-        "Usage: nad ls [-dRl[u]] [file|dir, ...]\n\n"
-        "  -l Long Output [-u: unix info]:\n"
+        "Usage: nad ls [-adRl[u]] [file|dir, ...]\n\n"
+        "The ls utility lists files and directories in an AFP volume.\n"
+        "AppleDouble metadata and CNIDs are displayed in long output mode.\n\n"
+        "  -a   Include . and .. entries.\n"
+        "  -d   Directories are listed as plain files.\n"
+        "  -R   List subdirectories recursively.\n"
+        "  -l   Long output [-u: unix info]:\n"
         "     <unixinfo ...> <FinderFlags> <AFPAttributes> <Color> <Type> <Creator> <CNID from AppleDouble> <name>\n\n"
         "     FinderFlags (valid for (f)ile and/or (d)irectory):\n"
         "       d = On Desktop (f/d)\n"
