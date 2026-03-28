@@ -44,7 +44,6 @@
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
 
-static volatile sig_atomic_t alarmed;
 
 /* ls options */
 static int ls_a;
@@ -79,49 +78,6 @@ static char *labels[] = {
     "red",
     "ora"
 };
-
-/*
-  SIGNAL handling:
-  catch SIGINT and SIGTERM which cause clean exit. Ignore anything else.
-*/
-
-static void sig_handler(int signo _U_)
-{
-    alarmed = 1;
-    return;
-}
-
-static void set_signal(void)
-{
-    struct sigaction sv;
-    sv.sa_handler = sig_handler;
-    sv.sa_flags = SA_RESTART;
-    sigemptyset(&sv.sa_mask);
-
-    if (sigaction(SIGTERM, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
-    }
-
-    if (sigaction(SIGINT, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGINT): %s", strerror(errno));
-    }
-
-    memset(&sv, 0, sizeof(struct sigaction));
-    sv.sa_handler = SIG_IGN;
-    sigemptyset(&sv.sa_mask);
-
-    if (sigaction(SIGABRT, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
-    }
-
-    if (sigaction(SIGHUP, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
-    }
-
-    if (sigaction(SIGQUIT, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
-    }
-}
 
 /*!
   @brief Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop"
