@@ -628,6 +628,8 @@ int afp_rename(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         }
     } else {
         if (sdir->d_did == DIRDID_ROOT) {   /* root directory */
+            LOG(log_debug, logtype_afpd,
+                "afp_rename: volume root cannot be renamed");
             return AFPERR_NORENAME;
         }
 
