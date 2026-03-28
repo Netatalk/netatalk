@@ -35,6 +35,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/cnid.h>
+#include <atalk/directory.h>
 
 #include "nad.h"
 
@@ -256,6 +257,20 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     ad_init(&ad, vol->vol);
 
     if (ad_metadata(path, adflags, &ad) < 0) {
+        /* Print placeholder columns to maintain alignment */
+        printf(" ----------- ------ --- ---- ----");
+
+        /*
+         * ad_metadata succeeds for .. in non-root dirs, so this
+         * fallback only triggers for the volume root's parent,
+         * which is the virtual DIRDID_ROOT_PARENT node (CNID 1).
+         */
+        if (strcmp(path, "..") == 0) {
+            printf("  %10u ", ntohl(DIRDID_ROOT_PARENT));
+        } else {
+            printf("  !ADVOL_CACHE ");
+        }
+
         return;
     }
 
@@ -679,12 +694,35 @@ static int ad_ls_r(char *path, afpvol_t *vol)
     unsigned int col_count = 0;
 
     if (! ls_l) {
-        col_names = malloc(n * sizeof(char *));
+        col_names = malloc((n + 2) * sizeof(char *));
 
         if (col_names == NULL) {
             perror("malloc");
             ret = -1;
             goto exit;
+        }
+    }
+
+    /* Print . and .. first when -a is set */
+    if (ls_a) {
+        dirempty = 0;
+
+        if (recursion && ! dirprinted) {
+            printf("\n%s:\n", cwdpath);
+            dirprinted = 1;
+        }
+
+        if (ls_l) {
+            if (lstat(".", &st) >= 0) {
+                ad_print(".", &st, vol);
+            }
+
+            if (lstat("..", &st) >= 0) {
+                ad_print("..", &st, vol);
+            }
+        } else if (col_names != NULL) {
+            col_names[col_count++] = ".";
+            col_names[col_count++] = "..";
         }
     }
 
@@ -696,7 +734,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
             goto exit;
         }
 
-        /* Check if its "." or ".." */
+        /* Skip . and .. (handled above when -a is set) */
         if (DIR_DOT_OR_DOTDOT(ep->d_name)) {
             continue;
         }
@@ -735,13 +773,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
     }
 
     if (! ls_l && ! dirempty) {
-        if (ls_d) {
-            for (i = 0; i < col_count; i++) {
-                printf("%s\n", col_names[i]);
-            }
-        } else {
-            print_columns(col_names, col_count);
-        }
+        print_columns(col_names, col_count);
     }
 
     /* Second run: recurse to dirs */

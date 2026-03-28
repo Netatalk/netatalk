@@ -38,7 +38,7 @@ It is sensitive to afp.conf settings such as *valid users* and *invalid users*.
 
 List files and directories.
 
-> nad ls [-dRl[u]] {file|directory [...]}
+> nad ls [-adlRu] {file|directory [...]}
 
 Copy files and directories.
 
@@ -70,19 +70,26 @@ Show version.
 
 # nad ls
 
-List files and directories. Options:
+List files and directories in an AFP volume.
+AppleDouble metadata and CNIDs are displayed in long output mode.
+
+Options:
+
+**-a**
+
+> Include directory entries whose names begin with a dot (.)
 
 **-d**
 
 > Directories are listed as plain files
 
-**-R**
-
-> list subdirectories recursively
-
 **-l**
 
 > Long output, list AFP info
+
+**-R**
+
+> List subdirectories recursively
 
 **-u**
 
@@ -307,6 +314,8 @@ directory.
 List files in a shared AFP volume:
 
     $ nad ls -al /srv/afpshare
+    ---Nic-s--- ------ --- ---- ----           2   .
+    ----------- ------ --- ---- ----           1   ..
     ----i---b-- ------ --- APPL SBMC          40   AppleShare IP Browser
     ---------v- ------ --- ---- ----          36   Network Trash Folder
     -------s-v- ------ --- ---- ----          35   TheVolumeSettingsFolder
