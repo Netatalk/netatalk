@@ -54,7 +54,9 @@ typedef struct {
 } afpvol_t;
 
 extern int log_verbose;             /*!< Logging flag */
+extern volatile sig_atomic_t alarmed; /*!< Signal flag for clean exit */
 extern void _log(enum logtype lt, char *fmt, ...);
+extern void set_signal(void);
 
 extern int nad_ls(int argc, char **argv, AFPObj *obj);
 extern int nad_cp(int argc, char **argv, AFPObj *obj);
