@@ -121,7 +121,7 @@ static void usage_mv(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_mv(int argc, char *argv[], AFPObj *obj)
+int nad_mv(int argc, char *argv[], AFPObj *obj)
 {
     size_t baselen;
     size_t len;

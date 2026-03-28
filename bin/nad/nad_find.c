@@ -188,7 +188,7 @@ bstring bjoin_inv(const struct bstrList *bl, const bstring sep)
     return b;
 }
 
-int ad_find(int argc, char **argv, AFPObj *obj)
+int nad_find(int argc, char **argv, AFPObj *obj)
 {
     int c, ret;
     afpvol_t vol;

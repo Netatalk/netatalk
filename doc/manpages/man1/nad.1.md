@@ -4,7 +4,7 @@ nad - Netatalk AppleDouble file utility suite
 
 # Synopsis
 
-**nad** [-F *configfile*] [ls | cp | mv | rm | set | find] [...]
+**nad** [-F *configfile*] [ls | cp | mv | rm | mkdir | rmdir | set | find] [...]
 
 **nad** [-v | \-\-version]
 
@@ -56,13 +56,21 @@ Remove files and directories.
 
 > nad rm [-Rv] {file|directory}
 
+Create directories.
+
+> nad mkdir [-pv] {directory [...]}
+
+Remove empty directories.
+
+> nad rmdir [-pv] {directory [...]}
+
 Set metadata on files.
 
 > nad set [-t type] [-c creator] [-l label] [-f flags] [-a attributes] {file}
 
-Find files and directories
+Find files and directories.
 
-> nad find [-v volume path] {file|directory}
+> nad find [-v volume_path] {name}
 
 Show version.
 
@@ -126,7 +134,7 @@ Options:
 
 # nad cp
 
-Copy files and directories.
+Copy files and directories in an AFP volume.
 
 In the first synopsis form, the cp utility copies the contents of the
 src_file to the dst_file. In the second synopsis form, the contents of
@@ -221,11 +229,12 @@ input begins with the character \`y' or \`Y', the move is attempted.
 
 # nad rm
 
-Remove files and directories.
+Remove files and directories in an AFP volume.
 
 The rm utility attempts to remove the non-directory type files specified
-on the command line. If the files and directories reside on an AFP
-volume, the corresponding CNIDs are deleted from the volumes database.
+on the command line.
+The corresponding CNIDs are deleted from the volume's database,
+and AppleDouble metadata is removed.
 
 The options are as follows:
 
@@ -236,6 +245,44 @@ The options are as follows:
 **-v**
 
 > Be verbose when deleting files, showing them as they are removed.
+
+# nad mkdir
+
+Create directories in an AFP volume.
+The corresponding CNIDs are added to the volume's database,
+and AppleDouble metadata is initialized.
+
+The options are as follows:
+
+**-p**
+
+> Create intermediate directories as required.
+If an intermediate or the target directory already exists, it is not
+considered an error.
+
+**-v**
+
+> Be verbose when creating directories, showing them as they are created.
+
+# nad rmdir
+
+Remove empty directories in an AFP volume.
+The corresponding CNIDs are deleted from the volume's database,
+and AppleDouble metadata is removed.
+
+The volume root directory and its parent directories cannot be removed.
+
+The options are as follows:
+
+**-p**
+
+> Each operand is treated as a pathname of which all components will be
+removed, if they are empty, starting with the last most component.
+Will not remove the volume root directory or its parents.
+
+**-v**
+
+> Be verbose when removing directories, showing them as they are removed.
 
 # nad set
 

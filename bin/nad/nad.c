@@ -49,6 +49,8 @@ typedef enum {
     CMD_MV,
     CMD_SET,
     CMD_FIND,
+    CMD_MKDIR,
+    CMD_RMDIR,
     CMD_VERSION
 } nad_command_t;
 
@@ -78,6 +80,14 @@ static nad_command_t get_command(const char *cmd)
         return CMD_FIND;
     }
 
+    if (STRCMP(cmd, ==, "mkdir")) {
+        return CMD_MKDIR;
+    }
+
+    if (STRCMP(cmd, ==, "rmdir")) {
+        return CMD_RMDIR;
+    }
+
     if (STRCMP(cmd, ==, "-v") || STRCMP(cmd, ==, "--version")) {
         return CMD_VERSION;
     }
@@ -87,7 +97,7 @@ static nad_command_t get_command(const char *cmd)
 
 static void usage_main(void)
 {
-    printf("Usage: nad [-F configfile] ls|cp|rm|mv|set|find [file|dir, ...]\n");
+    printf("Usage: nad [-F configfile] ls|cp|rm|mv|mkdir|rmdir|set|find [file|dir, ...]\n");
     printf("       nad -v|--version\n");
 }
 
@@ -162,22 +172,28 @@ int main(int argc, char **argv)
 
     switch (cmd) {
     case CMD_LS:
-        return ad_ls(argc - arg_idx, argv + arg_idx, &obj);
+        return nad_ls(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_CP:
-        return ad_cp(argc - arg_idx, argv + arg_idx, &obj);
+        return nad_cp(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_RM:
-        return ad_rm(argc - arg_idx, argv + arg_idx, &obj);
+        return nad_rm(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_MV:
-        return ad_mv(argc - arg_idx + 1, argv + arg_idx - 1, &obj);
+        return nad_mv(argc - arg_idx + 1, argv + arg_idx - 1, &obj);
 
     case CMD_SET:
-        return ad_set(argc - arg_idx, argv + arg_idx, &obj);
+        return nad_set(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_FIND:
-        return ad_find(argc - arg_idx + 1, argv + arg_idx - 1, &obj);
+        return nad_find(argc - arg_idx + 1, argv + arg_idx - 1, &obj);
+
+    case CMD_MKDIR:
+        return nad_mkdir(argc - arg_idx, argv + arg_idx, &obj);
+
+    case CMD_RMDIR:
+        return nad_rmdir(argc - arg_idx, argv + arg_idx, &obj);
 
     case CMD_VERSION:
         show_version();

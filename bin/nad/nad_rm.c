@@ -140,7 +140,7 @@ static void usage_rm(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_rm(int argc, char *argv[], AFPObj *obj)
+int nad_rm(int argc, char *argv[], AFPObj *obj)
 {
     int ch;
     pdid = htonl(1);
