@@ -980,6 +980,24 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
             setmessage(msg);
         }
 
+        {
+            struct adouble ad;
+            ad_init(&ad, volume);
+            if (!ad_metadata(".", ADFLAGS_DIR, &ad)) {
+                const char *fi = ad_entry(&ad, ADEID_FINDERI);
+                if (fi) {
+                    uint16_t fflags;
+                    memcpy(&fflags, fi + FINDERINFO_FRFLAGOFF, sizeof(fflags));
+                    if (fflags & htons(FINDERINFO_NAMELOCKED)) {
+                        LOG(log_note, logtype_afpd,
+                            "afp_openvol: volume root of \"%s\" has name locked FinderFlag set",
+                            volume->v_localname);
+                    }
+                }
+                ad_close(&ad, ADFLAGS_HF);
+            }
+        }
+
         free(vol_mname);
         server_ipc_volumes(obj);
         return AFP_OK;
