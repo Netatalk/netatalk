@@ -199,7 +199,7 @@ static void usage_cp(void)
     exit(EXIT_FAILURE);
 }
 
-int ad_cp(int argc, char *argv[], AFPObj *obj)
+int nad_cp(int argc, char *argv[], AFPObj *obj)
 {
     struct stat to_stat, tmp_stat;
     int r, ch, have_trailing_slash;

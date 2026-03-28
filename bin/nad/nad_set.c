@@ -309,7 +309,7 @@ static void change_flags(char *path _U_, afpvol_t *vol _U_,
     memcpy(FinderInfo + 8, &FinderFlags, 2);
 }
 
-int ad_set(int argc, char **argv, AFPObj *obj)
+int nad_set(int argc, char **argv, AFPObj *obj)
 {
     int c;
     afpvol_t vol;

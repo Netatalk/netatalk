@@ -839,7 +839,7 @@ exit:
     return ret;
 }
 
-int ad_ls(int argc, char **argv, AFPObj *obj)
+int nad_ls(int argc, char **argv, AFPObj *obj)
 {
     int c, firstarg;
     afpvol_t vol;

@@ -56,12 +56,14 @@ typedef struct {
 extern int log_verbose;             /*!< Logging flag */
 extern void _log(enum logtype lt, char *fmt, ...);
 
-extern int ad_ls(int argc, char **argv, AFPObj *obj);
-extern int ad_cp(int argc, char **argv, AFPObj *obj);
-extern int ad_rm(int argc, char **argv, AFPObj *obj);
-extern int ad_mv(int argc, char **argv, AFPObj *obj);
-extern int ad_set(int argc, char **argv, AFPObj *obj);
-extern int ad_find(int argc, char **argv, AFPObj *obj);
+extern int nad_ls(int argc, char **argv, AFPObj *obj);
+extern int nad_cp(int argc, char **argv, AFPObj *obj);
+extern int nad_rm(int argc, char **argv, AFPObj *obj);
+extern int nad_mv(int argc, char **argv, AFPObj *obj);
+extern int nad_set(int argc, char **argv, AFPObj *obj);
+extern int nad_find(int argc, char **argv, AFPObj *obj);
+extern int nad_mkdir(int argc, char **argv, AFPObj *obj);
+extern int nad_rmdir(int argc, char **argv, AFPObj *obj);
 
 /* ad_util.c */
 extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
