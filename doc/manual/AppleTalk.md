@@ -10,6 +10,9 @@ Classic AFP (or AFP over DDP) depends on an AppleTalk network stack, typically p
 See the [AppleTalk Kernel Module](https://netatalk.io/docs/AppleTalk-Kernel-Module.html)
 page in the Netatalk wiki for details on how to enable AppleTalk support in your OS kernel.
 
+To see if your version of Netatalk has been built with AppleTalk support,
+check the output of **afpd -V** for the line *Transport layers: TCP/IP AppleTalk*
+
 ### To use AppleTalk or not
 
 You'll need the AppleTalk support built into Netatalk to provide file

@@ -1,17 +1,20 @@
 manual_pages = [
+    'ACL',
+    'AppleTalk',
+    'Authentication',
+    'Charsets',
+    'CNID',
     'Configuration',
+    'Dircache',
+    'FCE',
+    'index',
     'Installation',
+    'Interoperability',
     'Legal',
     'License',
+    'Search',
     'Upgrading',
-    'index',
 ]
-
-if have_appletalk
-    manual_pages += [
-        'AppleTalk',
-    ]
-endif
 
 if get_option('with-website')
     manual_pages += [

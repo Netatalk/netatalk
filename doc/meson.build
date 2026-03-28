@@ -2,11 +2,7 @@ if build_man_docs
     subdir('manpages')
 endif
 
-if have_appletalk
-    navlinks = '_Navlinks_atalk.md'
-else
-    navlinks = '_Navlinks.md'
-endif
+navlinks = '_Navlinks.md'
 
 if build_html_docs
     subdir('manual')

@@ -1,16 +1,27 @@
 manual_pages = [
+    'ACL',
+    'AppleTalk',
+    'Authentication',
+    'Charsets',
+    'CNID',
     'Configuration',
+    'Dircache',
+    'FCE',
     'index',
     'Installation',
+    'Interoperability',
     'Legal',
     'License',
+    'Search',
     'Upgrading',
 ]
 
 if get_option('with-website')
     manual_pages += [
         '_Sidebar',
+        'a2boot.8',
         'addump.1',
+        'aecho.1',
         'afp.conf.5',
         'afp_signature.conf.5',
         'afp_voluuid.conf.5',
@@ -24,39 +35,26 @@ if get_option('with-website')
         'afppasswd.1',
         'afpstats.1',
         'asip-status.1',
+        'atalkd.8',
+        'atalkd.conf.5',
         'cnid_dbd.8',
         'cnid_metad.8',
         'dbd.1',
         'extmap.conf.5',
         'fce_listen.1',
+        'getzones.1',
+        'macipgw.8',
         'nad.1',
+        'nbplkup.1',
+        'nbprgstr.1',
         'netatalk.8',
+        'pap.1',
+        'papd.8',
+        'papd.conf.5',
+        'papstatus.8',
+        'rtmpqry.1',
+        'timelord.8',
     ]
-endif
-
-if have_appletalk
-    manual_pages += [
-        'AppleTalk',
-    ]
-
-    if get_option('with-website')
-        manual_pages += [
-            'a2boot.8',
-            'aecho.1',
-            'atalkd.8',
-            'atalkd.conf.5',
-            'getzones.1',
-            'macipgw.8',
-            'nbplkup.1',
-            'nbprgstr.1',
-            'pap.1',
-            'papd.8',
-            'papd.conf.5',
-            'papstatus.8',
-            'rtmpqry.1',
-            'timelord.8',
-        ]
-    endif
 endif
 
 if get_option('with-website')
