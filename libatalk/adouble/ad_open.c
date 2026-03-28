@@ -2013,7 +2013,7 @@ const char *ad_path_osx(const char *path, int adflags _U_)
 
 #ifdef __APPLE__
     /* macos abstracts the resource fork as "filename/..namedfork/rsrc" which we can treat as a file */
-    strlcat(pathbuf, buf, MAXPATHLEN + 1);
+    strlcat(pathbuf, slash, MAXPATHLEN + 1);
     strlcat(pathbuf, "/..namedfork/rsrc", MAXPATHLEN  + 1);
 #else
     strlcat(pathbuf, "._", MAXPATHLEN  + 1);
