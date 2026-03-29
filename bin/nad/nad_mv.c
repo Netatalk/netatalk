@@ -25,7 +25,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <sys/wait.h>
+#include <dirent.h>
 #include <unistd.h>
 
 #include <bstrlib.h>
@@ -46,6 +46,7 @@
 
 static int fflg, iflg, nflg, vflg;
 
+static AFPObj *afp_obj;
 static afpvol_t svolume, dvolume;
 static cnid_t did, pdid;
 static int copy(const char *, const char *);
@@ -124,8 +125,9 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
 
     set_signal();
     cnid_init();
+    afp_obj = obj;
 
-    if (openvol(obj, argv[argc - 1], &dvolume) != 0) {
+    if (openvol_optional(obj, argv[argc - 1], &dvolume) != 0) {
         return 1;
     }
 
@@ -138,14 +140,21 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
             usage_mv();
         }
 
-        if (openvol(obj, argv[0], &svolume) != 0) {
+        if (openvol_optional(obj, argv[0], &svolume) != 0) {
             return 1;
         }
 
-        do_move(argv[0], argv[1]);
+        if (!svolume.vol->v_path && !dvolume.vol->v_path) {
+            SLOG("Neither source nor destination is an AFP volume");
+            closevol(&svolume);
+            closevol(&dvolume);
+            return 1;
+        }
+
+        rval = do_move(argv[0], argv[1]);
         closevol(&svolume);
         closevol(&dvolume);
-        return 1;
+        return rval;
     }
 
     /* It's a directory, move each file into it. */
@@ -171,7 +180,7 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
 
     rval = 0;
 
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc - 1; i++) {
         /*
          * Find the last component of the source pathname using basename
          */
@@ -187,30 +196,32 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
         len = strnlen(base_name, PATH_MAX);
 
         if ((baselen + len) >= PATH_MAX) {
-            SLOG("%s: base name too long", base_name);
+            SLOG("%s: destination pathname too long", argv[i]);
             free(src_copy);
-            return 1;
+            rval = 1;
+            continue;
         }
 
-        if ((baselen + len) >= PATH_MAX) {
-            SLOG("%s: destination pathname too long", *argv);
+        /* Copy safely with bounds checking */
+        if (strlcpy(endp, base_name, PATH_MAX - baselen) >= (PATH_MAX - baselen)) {
+            SLOG("%s: destination pathname too long", argv[i]);
+            free(src_copy);
+            rval = 1;
+            continue;
+        }
+
+        if (openvol_optional(obj, argv[i], &svolume) != 0) {
+            rval = 1;
+        } else if (!svolume.vol->v_path && !dvolume.vol->v_path) {
+            SLOG("Neither source nor destination is an AFP volume");
+            closevol(&svolume);
             rval = 1;
         } else {
-            /* Copy safely with bounds checking */
-            if (strlcpy(endp, base_name, PATH_MAX - baselen) >= (PATH_MAX - baselen)) {
-                SLOG("%s: destination pathname too long", *argv);
+            if (do_move(argv[i], path)) {
                 rval = 1;
-            } else {
-                if (openvol(obj, *argv, &svolume) != 0) {
-                    rval = 1;
-                } else {
-                    if (do_move(*argv, path)) {
-                        rval = 1;
-                    }
-
-                    closevol(&svolume);
-                }
             }
+
+            closevol(&svolume);
         }
 
         free(src_copy);
@@ -322,6 +333,10 @@ static int do_move(const char *from, const char *to)
                     SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
                     return 1;
                 }
+
+                /* Cross-device: fall through to copy-and-remove */
+                mustcopy = 1;
+                goto docopy;
             } else { /* != EXDEV */
                 SLOG("rename %s to %s: %s", from, to, strerror(errno));
                 return 1;
@@ -391,6 +406,8 @@ static int do_move(const char *from, const char *to)
         return 0;
     }
 
+docopy:
+
     if (mustcopy) {
         return copy(from, to);
     }
@@ -399,10 +416,48 @@ static int do_move(const char *from, const char *to)
     return -1;
 }
 
+static int remove_path(const char *path)
+{
+    struct stat sb;
+
+    if (lstat(path, &sb) != 0) {
+        return -1;
+    }
+
+    if (S_ISDIR(sb.st_mode)) {
+        DIR *d = opendir(path);
+
+        if (d == NULL) {
+            return -1;
+        }
+
+        struct dirent *ent;
+
+        char child[MAXPATHLEN];
+
+        while ((ent = readdir(d)) != NULL) {
+            if (DIR_DOT_OR_DOTDOT(ent->d_name)) {
+                continue;
+            }
+
+            snprintf(child, sizeof(child), "%s/%s", path, ent->d_name);
+
+            if (remove_path(child) != 0) {
+                closedir(d);
+                return -1;
+            }
+        }
+
+        closedir(d);
+        return rmdir(path);
+    }
+
+    return unlink(path);
+}
+
 static int copy(const char *from, const char *to)
 {
     struct stat sb;
-    int pid, status;
 
     if (lstat(to, &sb) == 0) {
         /* Destination path exists. */
@@ -423,63 +478,32 @@ static int copy(const char *from, const char *to)
     }
 
     /* Copy source to destination. */
-    if (!(pid = fork())) {
-        execl(_PATH_NAD, "nad", "cp", vflg ? "-Rpv" : "-Rp", from, to, (char *)NULL);
-        _exit(1);
-    }
+    {
+        const char *cp_argv[] = {
+            "cp", vflg ? "-Rpv" : "-Rp", from, to, NULL
+        };
+        optind = 1;
 
-    while ((waitpid(pid, &status, 0)) == -1) {
-        if (errno == EINTR) {
-            continue;
+        if (nad_cp(4, (char **)cp_argv, afp_obj) != 0) {
+            SLOG("cp -R %s %s: failed", from, to);
+            return 1;
         }
-
-        SLOG("%s cp -R %s %s: waitpid: %s", _PATH_NAD, from, to, strerror(errno));
-        return 1;
-    }
-
-    if (!WIFEXITED(status)) {
-        SLOG("%s cp -R %s %s: did not terminate normally", _PATH_NAD, from, to);
-        return 1;
-    }
-
-    switch (WEXITSTATUS(status)) {
-    case 0:
-        break;
-
-    default:
-        SLOG("%s cp -R %s %s: terminated with %d (non-zero) status",
-             _PATH_NAD, from, to, WEXITSTATUS(status));
-        return 1;
     }
 
     /* Delete the source. */
-    if (!(pid = fork())) {
-        execl(_PATH_NAD, "nad", "rm", "-R", from, (char *)NULL);
-        _exit(1);
-    }
+    if (svolume.vol->v_path) {
+        const char *rm_argv[] = { "rm", "-R", from, NULL };
+        optind = 1;
 
-    while ((waitpid(pid, &status, 0)) == -1) {
-        if (errno == EINTR) {
-            continue;
+        if (nad_rm(3, (char **)rm_argv, afp_obj) != 0) {
+            SLOG("rm -R %s: failed", from);
+            return 1;
         }
-
-        SLOG("%s rm -R %s: waitpid: %s", _PATH_NAD, from, strerror(errno));
-        return 1;
-    }
-
-    if (!WIFEXITED(status)) {
-        SLOG("%s rm -R %s: did not terminate normally", _PATH_NAD, from);
-        return 1;
-    }
-
-    switch (WEXITSTATUS(status)) {
-    case 0:
-        break;
-
-    default:
-        SLOG("%s rm -R %s: terminated with %d (non-zero) status",
-             _PATH_NAD, from, WEXITSTATUS(status));
-        return 1;
+    } else {
+        if (remove_path(from) != 0) {
+            SLOG("remove %s: %s", from, strerror(errno));
+            return 1;
+        }
     }
 
     return 0;

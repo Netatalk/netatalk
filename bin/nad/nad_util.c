@@ -130,23 +130,35 @@ void _log(enum logtype lt, char *fmt, ...)
     }
 }
 
+/*! Static stub volume for paths outside any AFP volume */
+static struct vol null_vol;
+
 /*!
- * @brief Load volinfo and initialize struct vol
+ * @brief Open an AFP volume, or return a stub for non-AFP paths
+ *
+ * If the path is inside an AFP volume, the volume's CNID database is
+ * opened.  If the path is outside any AFP volume, a stub volume with
+ * v_path=NULL and v_cdb=NULL is returned so that callers can use
+ * v_path as a guard for AFP-specific operations.
+ *
+ * This is intended for commands like mv and cp that may operate across
+ * AFP and non-AFP paths.
  *
  * @param[in] obj        AFPObj of the current connection
  * @param[in] path       path to evaluate
  * @param[in,out] vol    structure to initialize
  *
- * @returns 0 on success, exits on error
+ * @returns 0 on success, -1 on error
  */
-int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
+int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
 {
     int flags = 0;
     memset(vol, 0, sizeof(afpvol_t));
 
     if ((vol->vol = getvolbypath(obj, path)) == NULL) {
-        SLOG("Error: \"%s\" is not inside a Netatalk volume", path);
-        return -1;
+        memset(&null_vol, 0, sizeof(struct vol));
+        vol->vol = &null_vol;
+        return 0;
     }
 
     /* Sanity checks to ensure we can touch this volume */
@@ -160,15 +172,22 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
         ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
     }
 
-    if (vol->vol->v_flags & AFPVOL_NODEV) {
-        flags |= CNID_FLAG_NODEV;
-    }
+    if (vol->vol->v_cdb) {
+        /* Another afpvol_t already opened this volume's CNID db */
+        vol->owns_cdb = false;
+    } else {
+        if (vol->vol->v_flags & AFPVOL_NODEV) {
+            flags |= CNID_FLAG_NODEV;
+        }
 
-    if ((vol->vol->v_cdb = cnid_open(vol->vol,
-                                     vol->vol->v_cnidscheme,
-                                     flags)) == NULL) {
-        ERROR("Can't initialize CNID database connection for %s",
-              vol->vol->v_path);
+        if ((vol->vol->v_cdb = cnid_open(vol->vol,
+                                         vol->vol->v_cnidscheme,
+                                         flags)) == NULL) {
+            ERROR("Can't initialize CNID database connection for %s",
+                  vol->vol->v_path);
+        }
+
+        vol->owns_cdb = true;
     }
 
     cnid_getstamp(vol->vol->v_cdb,
@@ -177,9 +196,36 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     return 0;
 }
 
+/*!
+ * @brief Load volinfo and initialize struct vol
+ *
+ * The path must be inside an AFP volume.  Returns -1 if it is not.
+ *
+ * @param[in] obj        AFPObj of the current connection
+ * @param[in] path       path to evaluate
+ * @param[in,out] vol    structure to initialize
+ *
+ * @returns 0 on success, -1 on error
+ */
+int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
+{
+    if (openvol_optional(obj, path, vol) != 0) {
+        return -1;
+    }
+
+    if (!vol->vol->v_path) {
+        SLOG("\"%s\" is not inside an AFP volume", path);
+        memset(vol, 0, sizeof(afpvol_t));
+        return -1;
+    }
+
+    return 0;
+}
+
 void closevol(afpvol_t *vol)
 {
-    if (vol->vol && vol->vol->v_cdb) {
+    if (vol->vol && vol->vol != &null_vol
+            && vol->vol->v_cdb && vol->owns_cdb) {
         cnid_close(vol->vol->v_cdb);
         vol->vol->v_cdb = NULL;
     }
