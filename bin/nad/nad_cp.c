@@ -309,13 +309,20 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
 #endif
 
     /* Load .volinfo file for destination*/
-    if (openvol(obj, to.p_path, &dvolume) != 0) {
+    if (openvol_optional(obj, to.p_path, &dvolume) != 0) {
         return 1;
     }
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        if (openvol(obj, argv[i], &svolume) != 0) {
+        if (openvol_optional(obj, argv[i], &svolume) != 0) {
+            badcp = rval = 1;
+            continue;
+        }
+
+        if (!svolume.vol->v_path && !dvolume.vol->v_path) {
+            SLOG("Neither source nor destination is an AFP volume");
+            closevol(&svolume);
             badcp = rval = 1;
             continue;
         }
@@ -323,18 +330,15 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             if (alarmed) {
                 SLOG("...break");
-            } else {
+            } else if (!badcp) {
                 SLOG("Error: %s: %s", argv[i], strerror(errno));
             }
-
-            closevol(&svolume);
-            closevol(&dvolume);
         }
 
         closevol(&svolume);
-        closevol(&dvolume);
     }
 
+    closevol(&dvolume);
     return rval;
 }
 
@@ -367,7 +371,8 @@ static int copy(const char *path,
         dir++;
     }
 
-    if (!dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir)) {
+    if (dvolume.vol->v_path
+            && !dvolume.vol->vfs->vfs_validupath(dvolume.vol, dir)) {
         return FTW_SKIP_SUBTREE;
     }
 
@@ -716,7 +721,11 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             /* remove existing destination file name,
              * create a new file  */
             (void)unlink(to.p_path);
-            (void)dvolume.vol->vfs->vfs_deletefile(dvolume.vol, -1, to.p_path);
+
+            if (dvolume.vol->v_path) {
+                (void)dvolume.vol->vfs->vfs_deletefile(dvolume.vol, -1, to.p_path);
+            }
+
             to_fd = open(to.p_path, O_WRONLY | O_TRUNC | O_CREAT,
                          sp->st_mode & ~(S_ISUID | S_ISGID));
         } else {

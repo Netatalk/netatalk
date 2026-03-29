@@ -51,6 +51,7 @@ enum logtype {STD, DBG};
 typedef struct {
     struct vol     *vol;
     char           db_stamp[ADEDLEN_PRIVSYN];
+    bool           owns_cdb;  /*!< true if this wrapper opened v_cdb */
 } afpvol_t;
 
 extern int log_verbose;             /*!< Logging flag */
@@ -69,6 +70,7 @@ extern int nad_rmdir(int argc, char **argv, AFPObj *obj);
 
 /* ad_util.c */
 extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
+extern int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path,
                                     cnid_t *did);
