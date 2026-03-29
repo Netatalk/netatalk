@@ -1715,7 +1715,8 @@ int dircache_remove_children(const struct vol *vol, struct dir *dir)
 
             /* Check if entry's path starts with parent's path followed by '/' */
             if (parent_path && entry_path && parent_len > 0 &&
-                    strncmp(entry_path, parent_path, parent_len) == 0 &&
+                    (size_t)blength(entry->d_fullpath) > parent_len &&
+                    memcmp(entry_path, parent_path, parent_len) == 0 &&
                     entry_path[parent_len] == '/') {
                 /* Expand to_remove array */
                 if (remove_count >= remove_capacity) {
@@ -2780,8 +2781,9 @@ void dircache_flush_deferred_for_vol(uint16_t vid)
                                 const char *ep = cfrombstr(entry->d_fullpath);
 
                                 if (ep &&
-                                        strncmp(ep, deferred_queue[idx].parent_path,
-                                                deferred_queue[idx].parent_len) == 0 &&
+                                        (size_t)blength(entry->d_fullpath) > deferred_queue[idx].parent_len &&
+                                        memcmp(ep, deferred_queue[idx].parent_path,
+                                               deferred_queue[idx].parent_len) == 0 &&
                                         ep[deferred_queue[idx].parent_len] == '/') {
                                     dir_remove_and_free(vol, entry);
                                 }
@@ -2889,7 +2891,8 @@ int dircache_process_deferred_chain(void)
             const char *ep = cfrombstr(entry->d_fullpath);
 
             if (ep &&
-                    strncmp(ep, dc->parent_path, dc->parent_len) == 0 &&
+                    (size_t)blength(entry->d_fullpath) > dc->parent_len &&
+                    memcmp(ep, dc->parent_path, dc->parent_len) == 0 &&
                     ep[dc->parent_len] == '/') {
                 if (remove_count < DEFERRED_CHAIN_BATCH) {
                     to_remove[remove_count++] = entry;
