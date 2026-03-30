@@ -727,6 +727,10 @@ endif
 
 threads = dependency('threads', required: true)
 
+if cc.has_function('pthread_condattr_setclock', dependencies: threads, prefix: '#include <pthread.h>')
+    cdata.set('HAVE_PTHREAD_CONDATTR_SETCLOCK', 1)
+endif
+
 #
 # Check for libevent
 #

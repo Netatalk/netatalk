@@ -244,6 +244,9 @@
 /* Whether POSIX ACLs are available */
 #mesondefine HAVE_POSIX_ACLS
 
+/* Define to 1 if you have the `pthread_condattr_setclock' function. */
+#mesondefine HAVE_PTHREAD_CONDATTR_SETCLOCK
+
 /* Define to 1 if you have the `pread' function. */
 #mesondefine HAVE_PREAD
 
