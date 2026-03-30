@@ -21,6 +21,7 @@
 #include <signal.h>
 #include <stdatomic.h>
 #include <string.h>
+#include <time.h>
 
 #include <atalk/logger.h>
 #include <atalk/queue.h>
@@ -29,6 +30,11 @@
 #include "directory.h"
 #include "idle_worker.h"
 
+/* Self-wake interval for the idle worker thread. 1ms ~0.05% CPU overhead */
+#define IDLE_WORKER_WAKE_MS 1
+_Static_assert(IDLE_WORKER_WAKE_MS < 1000,
+               "Use a while loop for nanosecond normalization if IDLE_WORKER_WAKE_MS >= 1s");
+
 /* Atomic coordination flags.
  * Using default memory_order_seq_cst for all atomic operations. Could use
  * acquire/release for ~25ns savings on ARM, but seq_cst is simpler and the
@@ -36,9 +42,12 @@
 static atomic_int is_idle = 0;
 static atomic_int bg_running = 0;
 
-/* Condvar for sleep/wake — mutex only held during condvar wait */
+/* Condvar + mutex for worker timedwait loop and shutdown signal.
+ * The mutex is required by pthread_cond_timedwait() and provides
+ * a memory barrier for the non-atomic queue reads in idle_worker_has_work().
+ * idle_worker_shutdown() signals the condvar for immediate wakeup. */
 static pthread_mutex_t sleep_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t  sleep_cond  = PTHREAD_COND_INITIALIZER;
+static pthread_cond_t  sleep_cond;
 static atomic_int      shutdown_flag = 0;
 
 static pthread_t worker_tid;
@@ -92,7 +101,20 @@ static void *idle_worker_main(void *arg)
         /* Sleep until work exists AND main thread is idle */
         while (!atomic_load(&shutdown_flag) &&
                 !idle_worker_has_work()) {
-            pthread_cond_wait(&sleep_cond, &sleep_mutex);
+            struct timespec wake_ts;
+#ifdef HAVE_PTHREAD_CONDATTR_SETCLOCK
+            clock_gettime(CLOCK_MONOTONIC, &wake_ts);
+#else
+            clock_gettime(CLOCK_REALTIME, &wake_ts);
+#endif
+            wake_ts.tv_nsec += IDLE_WORKER_WAKE_MS * 1000000L;
+
+            if (wake_ts.tv_nsec >= 1000000000L) {
+                wake_ts.tv_sec++;
+                wake_ts.tv_nsec -= 1000000000L;
+            }
+
+            pthread_cond_timedwait(&sleep_cond, &sleep_mutex, &wake_ts);
         }
 
         if (atomic_load(&shutdown_flag)) {
@@ -183,6 +205,15 @@ void idle_worker_log_stats(void) { }
  */
 int idle_worker_init(void)
 {
+    pthread_condattr_t cattr;
+    pthread_condattr_init(&cattr);
+#ifdef HAVE_PTHREAD_CONDATTR_SETCLOCK
+    /* CLOCK_MONOTONIC for condvar timedwait — immune to time adjustments */
+    pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC);
+#endif
+    pthread_cond_init(&sleep_cond, &cattr);
+    pthread_condattr_destroy(&cattr);
+
     if (pthread_create(&worker_tid, NULL, idle_worker_main, NULL) != 0) {
         LOG(log_error, logtype_afpd,
             "idle_worker_init: pthread_create failed: %s", strerror(errno));
@@ -197,11 +228,9 @@ int idle_worker_init(void)
 /*!
  * @brief Signal the idle worker that the main thread is about to enter poll().
  *
- * Sets is_idle=1 and wakes the worker via condvar signal.
- * MUST be called with SIGURG/SIGALRM/SIGTERM/SIGQUIT blocked by the caller
- * (the DSI loop blocks these signals around the start/poll/stop sequence).
- * This prevents siglongjmp() or afp_dsi_die() from skipping
- * pthread_mutex_unlock(), which would leave the mutex in a corrupt state.
+ * Sets is_idle=1 — worker self-wakes via timedwait to check for work.
+ * This function is async-signal-safe (single atomic store only).
+ * No signal masking is needed by the caller.
  */
 void idle_worker_start(void)
 {
@@ -210,18 +239,6 @@ void idle_worker_start(void)
     }
 
     atomic_store(&is_idle, 1);
-
-    /* Only signal condvar if work is pending — avoids futex/try_to_wake_up
-     * on every poll(). Non-atomic queue check is safe here: work enqueued
-     * by main thread during AFP command processing (before this point).
-     * If no work exists, worker stays sleeping */
-    if ((invalid_dircache_entries &&
-            invalid_dircache_entries->next != invalid_dircache_entries) ||
-            dircache_has_deferred_work()) {
-        pthread_mutex_lock(&sleep_mutex);
-        pthread_cond_signal(&sleep_cond);
-        pthread_mutex_unlock(&sleep_mutex);
-    }
 }
 
 /*!

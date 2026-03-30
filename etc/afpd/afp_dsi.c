@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2026 Andy Lemin (@andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  *
  * modified from main.c. this handles afp over tcp.
@@ -559,16 +560,6 @@ void afp_over_dsi(AFPObj *obj)
             continue;
         }
 
-        /* Prepare signal mask set — describes which signals to temporarily block.
-         * Actual blocking/unblocking happens via pthread_sigmask() inside the loop.
-         * Blocked signals are DEFERRED (not lost) — delivered when mask is restored. */
-        sigset_t idle_block;
-        sigemptyset(&idle_block);
-        sigaddset(&idle_block, SIGURG);    /* siglongjmp from reconnect handler */
-        sigaddset(&idle_block, SIGALRM);   /* alarm_handler may call afp_dsi_die */
-        sigaddset(&idle_block, SIGTERM);   /* afp_dsi_die from shutdown */
-        sigaddset(&idle_block, SIGQUIT);   /* afp_dsi_die from shutdown */
-
         while (1) {
             /* [A] DSI buffer check — skip poll if data buffered */
             if (dsi->start != dsi->eof) {
@@ -599,16 +590,9 @@ void afp_over_dsi(AFPObj *obj)
                 nfds++;
             }
 
-            /* Block signals around idle_worker_start → poll → idle_worker_stop.
-             * Prevents siglongjmp() or afp_dsi_die() from skipping
-             * pthread_mutex_unlock() inside idle_worker_start(). */
-            sigset_t idle_prev;
-            pthread_sigmask(SIG_BLOCK, &idle_block, &idle_prev);
-            /* Signal idle worker — we are about to block in poll() */
+            /* Signal idle worker to start — we are about to block in poll().
+             * idle_worker_start() is async-signal-safe (single atomic store) */
             idle_worker_start();
-            /* Restore signal mask before blocking — signals delivered during
-             * poll() cause EINTR which is handled by the existing error path. */
-            pthread_sigmask(SIG_SETMASK, &idle_prev, NULL);
             /* [D] BLOCK IN POLL */
             int ret = poll(pfds, nfds, -1);
             /* WARNING: idle_worker_stop() must be called before ANY
