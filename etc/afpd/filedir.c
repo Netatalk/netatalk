@@ -40,6 +40,31 @@
 #include "virtual_icon.h"
 #include "volume.h"
 
+static int virtual_icon_reply(const AFPObj *obj, struct vol *vol,
+                              uint16_t fbitmap, uint16_t dbitmap,
+                              char *rbuf, size_t *rbuflen)
+{
+    size_t buflen = 0;
+    int ret;
+
+    if (fbitmap && AFP_OK != (ret = virtual_icon_getfilparams(
+                                        obj, vol, fbitmap,
+                                        rbuf + 3 * sizeof(uint16_t), &buflen))) {
+        return ret;
+    }
+
+    *(rbuf + 2 * sizeof(uint16_t)) = FILDIRBIT_ISFILE;
+    *rbuflen = buflen + 3 * sizeof(uint16_t);
+    fbitmap = htons(fbitmap);
+    memcpy(rbuf, &fbitmap, sizeof(fbitmap));
+    rbuf += sizeof(fbitmap);
+    dbitmap = htons(dbitmap);
+    memcpy(rbuf, &dbitmap, sizeof(dbitmap));
+    rbuf += sizeof(dbitmap) + sizeof(uint8_t);
+    *rbuf = 0;
+    return AFP_OK;
+}
+
 int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                         char *rbuf, size_t *rbuflen)
 {
@@ -65,17 +90,24 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
 
     memcpy(&did, ibuf, sizeof(did));
     ibuf += sizeof(did);
-
-    if (NULL == (dir = dirlookup(vol, did))) {
-        return afp_errno;
-    }
-
     memcpy(&fbitmap, ibuf, sizeof(fbitmap));
     fbitmap = ntohs(fbitmap);
     ibuf += sizeof(fbitmap);
     memcpy(&dbitmap, ibuf, sizeof(dbitmap));
     dbitmap = ntohs(dbitmap);
     ibuf += sizeof(dbitmap);
+
+    /* Intercept FPGetFilDirParms for virtual Icon\r by CNID */
+    if (did == htonl(VIRTUAL_ICON_CNID)
+            && virtual_icon_enabled(vol)
+            && !real_icon_exists(vol)) {
+        return virtual_icon_reply(obj, vol, fbitmap, dbitmap,
+                                  rbuf, rbuflen);
+    }
+
+    if (NULL == (dir = dirlookup(vol, did))) {
+        return afp_errno;
+    }
 
     if (NULL == (s_path = cname(vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_NOOBJ);
@@ -102,24 +134,8 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 && curdir->d_did == DIRDID_ROOT
                 && is_virtual_icon_name(s_path->u_name)
                 && virtual_icon_enabled(vol)) {
-            buflen = 0;
-
-            if (fbitmap && AFP_OK != (ret = virtual_icon_getfilparams(
-                                                obj, vol, fbitmap,
-                                                rbuf + 3 * sizeof(uint16_t), &buflen))) {
-                return ret;
-            }
-
-            *(rbuf + 2 * sizeof(uint16_t)) = FILDIRBIT_ISFILE;
-            *rbuflen = buflen + 3 * sizeof(uint16_t);
-            fbitmap = htons(fbitmap);
-            memcpy(rbuf, &fbitmap, sizeof(fbitmap));
-            rbuf += sizeof(fbitmap);
-            dbitmap = htons(dbitmap);
-            memcpy(rbuf, &dbitmap, sizeof(dbitmap));
-            rbuf += sizeof(dbitmap) + sizeof(uint8_t);
-            *rbuf = 0;
-            return AFP_OK;
+            return virtual_icon_reply(obj, vol, fbitmap, dbitmap,
+                                      rbuf, rbuflen);
         }
 
         if (afp_errno != AFPERR_ACCESS) {
