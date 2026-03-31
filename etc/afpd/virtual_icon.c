@@ -323,7 +323,7 @@ int virtual_icon_getfilparams(const AFPObj *obj,
     int bit = 0;
     uint16_t bmap = bitmap;
     cnid_t id = htonl(VIRTUAL_ICON_CNID);
-    cnid_t pdid = htonl(DIRDID_ROOT);
+    cnid_t pdid = DIRDID_ROOT;
     char name[] = VIRTUAL_ICON_NAME;
 
     if (!vol->v_icon_rfork) {
