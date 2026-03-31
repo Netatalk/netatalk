@@ -2317,7 +2317,7 @@ doxygen = find_program('doxygen', required: false)
 build_man_docs = false
 build_html_docs = false
 build_readme_docs = false
-build_dev_docs = true
+build_dev_docs = false
 
 if 'readmes' in get_option('with-docs')
     make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: false)
@@ -2401,7 +2401,7 @@ if 'html_manual' in get_option('with-docs')
     endif
 endif
 
-if 'dev' in get_option('with-docs')
+if 'developer' in get_option('with-docs')
     if doxygen.found()
         build_dev_docs = true
     else
