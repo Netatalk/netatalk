@@ -644,7 +644,7 @@ jobs:
               openldap-client-2.6.10v0 \
               p5-Net-DBus \
               pkgconfig \
-              sqlite3-3.50.4 \
+              sqlite3-3.50.7p0 \
               tinysparql-3.10.0
           run: |
             set -e
