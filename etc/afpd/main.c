@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -401,6 +402,13 @@ int main(int ac, char **av)
     pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
     /* Initialize */
     cnid_init();
+
+    /* Start hint flush thread — Startup failure is fatal. */
+    if (hint_flush_start(server_children) != 0) {
+        LOG(log_error, logtype_afpd,
+            "main: FATAL: hint flush thread failed to start");
+        afp_exit(EXITERR_SYS);
+    }
 
     /* watch atp, dsi sockets and ipc parent/child file descriptor. */
     if (!(init_listening_sockets(&dsi_obj, &asp_obj))) {

@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
- * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com
+ * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * All rights reserved. See COPYRIGHT.
  */
 
@@ -116,6 +117,14 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
 {
     afp_child_t *child = NULL;
     pthread_mutex_lock(&children->servch_lock);
+
+    /* Enforce configured session limit */
+    if (children->servch_count >= children->servch_nsessions) {
+        LOG(log_error, logtype_default,
+            "server_child_add: at max users capacity (%d/%d), rejecting pid [%d]",
+            children->servch_count, children->servch_nsessions, pid);
+        goto exit;
+    }
 
     /* it's possible that the child could have already died before the
      * pthread_sigmask. we need to check for this. */

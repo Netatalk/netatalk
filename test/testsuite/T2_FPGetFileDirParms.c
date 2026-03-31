@@ -1238,6 +1238,8 @@ STATIC void test545()
     }
 
     FPCloseVol(Conn2, vol2);
+    /* Allow time for batched IPC hint delivery (flush thread interval is 50ms) */
+    sleep(1);
 
     /************************************
      * Step 5: Read FinderInfo via Conn - should see Conn2's change

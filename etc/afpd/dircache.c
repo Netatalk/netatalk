@@ -2496,63 +2496,14 @@ void dircache_reset_validation_counter(void)
 
 /***********************************************************************************
  * Cross-process dircache hint receiver (parent→child via dedicated hint pipe)
+ *
+ * Bulk framed read: single read() drains up to MAX_HINTS_PER_CYCLE hints,
+ * then parses in 22-byte (IPC_HEADERLEN + payload) increments.
  ***********************************************************************************/
 
-/*!
- * @brief Read one cache hint from the dedicated hint pipe (non-blocking)
- *
- * Reads from obj->hint_fd — the dedicated pipe for parent→child hints.
- * POSIX pipe atomicity: write() of ≤ PIPE_BUF bytes is atomic, so each
- * read() returns either a complete message or nothing.
- *
- * @param[in]  obj   AFPObj with hint_fd (pipe read end)
- * @param[out] hint  Populated on success
- * @returns    1 if hint read, 0 if no data available, -1 on error
- */
-static int ipc_recv_cache_hint(AFPObj *obj, struct ipc_cache_hint_payload *hint)
-{
-    char buf[IPC_MAXMSGSIZE];
-    ssize_t ret;
-
-    if (obj->hint_fd < 0) {
-        return -1;
-    }
-
-    /* Read complete hint message from pipe — atomic delivery guaranteed */
-    ret = read(obj->hint_fd, buf,
-               IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload));
-
-    if (ret == 0) {
-        /* EOF — parent process crashed (pipe write end closed).
-         * Close and disable to prevent POLLHUP spin loop. */
-        LOG(log_error, logtype_afpd,
-            "ipc_recv_cache_hint: hint pipe closed, parent lost, service restart required");
-        close(obj->hint_fd);
-        obj->hint_fd = -1;
-        return -1;
-    }
-
-    if (ret < 0) {
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            return 0;    /* No data available */
-        }
-
-        return -1;     /* Unexpected error */
-    }
-
-    if (ret != IPC_HEADERLEN + (ssize_t)sizeof(struct ipc_cache_hint_payload)) {
-        /* Should never happen for atomic pipe writes, but defensive */
-        LOG(log_warning, logtype_afpd,
-            "ipc_recv_cache_hint: unexpected read size %zd (expected %zu)",
-            ret, IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload));
-        cache_hint_stat.hints_no_match++;
-        return 0;
-    }
-
-    /* Extract payload from after the IPC header */
-    memcpy(hint, buf + IPC_HEADERLEN, sizeof(*hint));
-    return 1;
-}
+#define MAX_HINTS_PER_CYCLE 32
+#define HINT_READ_BUF_SIZE  (MAX_HINTS_PER_CYCLE * \
+    (IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload)))
 
 /*!
  * @brief Process cross-process dircache invalidation hints
@@ -2569,13 +2520,48 @@ static int ipc_recv_cache_hint(AFPObj *obj, struct ipc_cache_hint_payload *hint)
  */
 void process_cache_hints(AFPObj *obj)
 {
-    struct ipc_cache_hint_payload hint = {0};
+    static char buf[HINT_READ_BUF_SIZE];
+    static size_t carry = 0;  /* bytes carried over from previous read */
+    const size_t msg_size = IPC_HEADERLEN + sizeof(struct ipc_cache_hint_payload);
     struct stat st;
     int hints_processed = 0;
-#define MAX_HINTS_PER_CYCLE 32
 
-    while (hints_processed < MAX_HINTS_PER_CYCLE &&
-            ipc_recv_cache_hint(obj, &hint) > 0) {
+    if (obj->hint_fd < 0) {
+        return;
+    }
+
+    /* Read into buffer after any carried-over partial message bytes */
+    ssize_t n = read(obj->hint_fd, buf + carry, sizeof(buf) - carry);
+
+    if (n == 0) {
+        /* EOF — parent process crashed (pipe write end closed) */
+        LOG(log_error, logtype_afpd,
+            "process_cache_hints: hint pipe closed, parent lost");
+        close(obj->hint_fd);
+        obj->hint_fd = -1;
+        carry = 0;
+        return;
+    }
+
+    if (n < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return;
+        }
+
+        LOG(log_error, logtype_afpd,
+            "process_cache_hints: read error: %s", strerror(errno));
+        carry = 0;
+        return;
+    }
+
+    size_t total = carry + (size_t)n;
+    size_t offset = 0;
+
+    while (offset + msg_size <= total
+            && hints_processed < MAX_HINTS_PER_CYCLE) {
+        struct ipc_cache_hint_payload hint;
+        memcpy(&hint, buf + offset + IPC_HEADERLEN, sizeof(hint));
+        offset += msg_size;
         cache_hint_stat.hints_received++;
         /* Resolve volume from vid (already network byte order).
          * Cannot be const — passed to dir_remove/dir_modify which take non-const vol. */
@@ -2599,15 +2585,12 @@ void process_cache_hints(AFPObj *obj)
 
         if (!hn) {
             cache_hint_stat.hints_no_match++;
-            continue;  /* Not in our cache — nothing to invalidate */
+            continue;
         }
 
         struct dir *entry = hnode_get(hn);
 
         cache_hint_stat.hints_acted_on++;
-        /* Save fields for logging BEFORE dispatch — dir_remove() may free entry */
-        cnid_t log_cnid = hint.cnid;
-        int log_is_ghost = (entry->d_flags & DIRF_ARC_GHOST) ? 1 : 0;
 
         switch (hint.event) {
         case CACHE_HINT_REFRESH:
@@ -2630,7 +2613,6 @@ void process_cache_hints(AFPObj *obj)
             break;
 
         case CACHE_HINT_DELETE:
-            /* Direct removal — no ostat needed for deleted entries */
             dir_remove(vol, entry, 0);
             break;
 
@@ -2638,7 +2620,7 @@ void process_cache_hints(AFPObj *obj)
 
             /* Remove all children first, then handle parent entry */
             if (!(entry->d_flags & DIRF_ISFILE)) {
-                dircache_remove_children_defer(vol, entry);  /* O(1) enqueue */
+                dircache_remove_children_defer(vol, entry);
             }
 
             /* Then remove or refresh the parent itself */
@@ -2661,19 +2643,20 @@ void process_cache_hints(AFPObj *obj)
             break;
         }
 
-        LOG(log_debug, logtype_afpd,
-            "process_cache_hints: %s did:%u%s from sibling",
-            hint.event == CACHE_HINT_REFRESH ? "refresh" :
-            hint.event == CACHE_HINT_DELETE ? "delete" :
-            hint.event == CACHE_HINT_DELETE_CHILDREN ? "delete-children" : "unknown",
-            ntohl(log_cnid),
-            log_is_ghost ? " (ghost)" : "");
         hints_processed++;
+    }
+
+    /* Carry over any trailing partial message bytes for the next read */
+    carry = total - offset;
+
+    if (carry > 0) {
+        memmove(buf, buf + offset, carry);
     }
 
     if (hints_processed > 0) {
         LOG(log_debug, logtype_afpd,
-            "process_cache_hints: processed %d hints this cycle", hints_processed);
+            "process_cache_hints: processed %d hints this cycle",
+            hints_processed);
     }
 }
 

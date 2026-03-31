@@ -45,4 +45,7 @@ extern int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
                                uint8_t event);
 extern unsigned long long ipc_get_hints_sent(void);
 
+extern int hint_flush_start(server_child_t *children);
+extern void hint_flush_stop(void);
+
 #endif /* ATALK_SERVER_IPC_H */
