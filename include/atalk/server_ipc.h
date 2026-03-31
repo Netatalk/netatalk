@@ -37,6 +37,14 @@ struct __attribute__((packed)) ipc_cache_hint_payload {
 _Static_assert(sizeof(struct ipc_cache_hint_payload) == 8,
                "Hint payload must be exactly 8 bytes");
 
+/* Hint buffer capacity — main.c checks this to trigger immediate flush
+ * when buffer is full after fd event processing. */
+#define HINT_BUF_SIZE           128
+
+/* Flush interval for poll timeout — main.c uses this to set poll timeout
+ * when hints are buffered. 50ms balances latency vs syscall overhead. */
+#define HINT_FLUSH_INTERVAL_MS  50
+
 extern int ipc_server_read(server_child_t *children, int fd);
 extern int ipc_child_write(int fd, uint16_t command, size_t len, void *token);
 extern int ipc_child_state(AFPObj *obj, uint16_t state);
@@ -44,5 +52,9 @@ extern int ipc_child_state(AFPObj *obj, uint16_t state);
 extern int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
                                uint8_t event);
 extern unsigned long long ipc_get_hints_sent(void);
+
+/* Poll-driven hint flush API (parent-side only, single-threaded) */
+extern void hint_flush_pending(server_child_t *children);
+extern int  hint_buf_count(void);
 
 #endif /* ATALK_SERVER_IPC_H */

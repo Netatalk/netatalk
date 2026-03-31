@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
- * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com
+ * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * All rights reserved. See COPYRIGHT.
  */
 
@@ -115,7 +116,17 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
                               int hint_fd)
 {
     afp_child_t *child = NULL;
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_lock(&children->servch_lock);
+#endif
+
+    /* Enforce configured session limit */
+    if (children->servch_count >= children->servch_nsessions) {
+        LOG(log_error, logtype_default,
+            "server_child_add: at max users capacity (%d/%d), rejecting pid [%d]",
+            children->servch_count, children->servch_nsessions, pid);
+        goto exit;
+    }
 
     /* it's possible that the child could have already died before the
      * pthread_sigmask. we need to check for this. */
@@ -141,7 +152,9 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
     hash_child(children->servch_table, child);
     children->servch_count++;
 exit:
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_unlock(&children->servch_lock);
+#endif
     return child;
 }
 
@@ -155,7 +168,9 @@ int server_child_remove(server_child_t *children, pid_t pid)
         return -1;
     }
 
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_lock(&children->servch_lock);
+#endif
     unhash_child(child);
 
     if (child->afpch_clientid) {
@@ -181,7 +196,9 @@ int server_child_remove(server_child_t *children, pid_t pid)
 
     free(child);
     children->servch_count--;
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_unlock(&children->servch_lock);
+#endif
     return fd;
 }
 
@@ -329,7 +346,9 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
 {
     afp_child_t *child, *tmp;
     int i;
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_lock(&children->servch_lock);
+#endif
 
     for (i = 0; i < CHILD_HASHSIZE; i++) {
         child = children->servch_table[i];
@@ -376,7 +395,9 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
         }
     }
 
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_unlock(&children->servch_lock);
+#endif
 }
 
 void server_child_login_done(server_child_t *children, pid_t pid,
@@ -384,7 +405,9 @@ void server_child_login_done(server_child_t *children, pid_t pid,
 {
     afp_child_t *child;
     afp_child_t *tmp;
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_lock(&children->servch_lock);
+#endif
 
     for (int i = 0; i < CHILD_HASHSIZE; i++) {
         child = children->servch_table[i];
@@ -409,7 +432,9 @@ void server_child_login_done(server_child_t *children, pid_t pid,
         }
     }
 
+#ifdef HAVE_DBUS_GLIB
     pthread_mutex_unlock(&children->servch_lock);
+#endif
 }
 
 /*!

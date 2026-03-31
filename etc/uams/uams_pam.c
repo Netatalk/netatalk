@@ -153,7 +153,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 
     if (uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME,
                              (void *) &hostname, NULL) < 0) {
-        LOG(log_info, logtype_uams,
+        LOG(log_error, logtype_uams,
             "uams_pam.c :PAM: unable to retrieve client hostname");
         hostname = NULL;
     }
@@ -174,21 +174,26 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
         return AFPERR_NOTAUTH;
     }
 
-    LOG(log_info, logtype_uams, "cleartext login: %s", username);
+    LOG(log_warning, logtype_uams, "cleartext login: %s", username);
     PAM_username = username;
     PAM_password = ibuf; /* Set these things up for the conv function */
     err = AFPERR_NOTAUTH;
+    LOG(log_debug, logtype_uams, "PAM: calling pam_start for %s", username);
     PAM_error = pam_start("netatalk", username, &PAM_conversation,
                           &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
+        LOG(log_error, logtype_uams, "PAM: pam_start failed: %d", PAM_error);
         goto login_err;
     }
 
+    LOG(log_debug, logtype_uams, "PAM: pam_start OK, calling pam_set_item");
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, hostname);
     /* use PAM_DISALLOW_NULL_AUTHTOK if passwdminlen > 0 */
+    LOG(log_debug, logtype_uams, "PAM: calling pam_authenticate");
     PAM_error = pam_authenticate(pamh, 0);
+    LOG(log_debug, logtype_uams, "PAM: pam_authenticate returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
         if (PAM_error == PAM_MAXTRIES) {
@@ -198,7 +203,9 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
         goto login_err;
     }
 
+    LOG(log_debug, logtype_uams, "PAM: calling pam_acct_mgmt");
     PAM_error = pam_acct_mgmt(pamh, 0);
+    LOG(log_debug, logtype_uams, "PAM: pam_acct_mgmt returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
         /* Password change required */
@@ -220,19 +227,24 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 #ifndef PAM_CRED_ESTABLISH
 #define PAM_CRED_ESTABLISH PAM_ESTABLISH_CRED
 #endif /* PAM_CRED_ESTABLISH */
+    LOG(log_debug, logtype_uams, "PAM: calling pam_setcred");
     PAM_error = pam_setcred(pamh, PAM_CRED_ESTABLISH);
+    LOG(log_debug, logtype_uams, "PAM: pam_setcred returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
         goto login_err;
     }
 
+    LOG(log_debug, logtype_uams, "PAM: calling pam_open_session");
     PAM_error = pam_open_session(pamh, 0);
+    LOG(log_debug, logtype_uams, "PAM: pam_open_session returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
         goto login_err;
     }
 
     *uam_pwd = pwd;
+    LOG(log_debug, logtype_uams, "PAM: login complete for %s", username);
 
     if (err == AFPERR_PWDEXPR) {
         return err;
@@ -436,7 +448,7 @@ static int pam_printer(char *start, char *stop, char *username,
     data = (char *)malloc(stop - start + 1);
 
     if (!data) {
-        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: malloc");
+        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: malloc");
         return -1;
     }
 
@@ -450,7 +462,7 @@ static int pam_printer(char *start, char *stop, char *username,
 
     /* Parse input for username in () */
     if ((p = strchr(data, '(')) == NULL) {
-        LOG(log_info, logtype_uams,
+        LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: username not found in string");
         free(data);
         return -1;
@@ -459,7 +471,7 @@ static int pam_printer(char *start, char *stop, char *username,
     p++;
 
     if ((q = strstr(p, ") (")) == NULL) {
-        LOG(log_info, logtype_uams,
+        LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: username not found in string");
         free(data);
         return -1;
@@ -470,7 +482,7 @@ static int pam_printer(char *start, char *stop, char *username,
     p = q + 3;
 
     if ((q = strrchr(p, ')')) == NULL) {
-        LOG(log_info, logtype_uams,
+        LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: password not found in string");
         free(data);
         return -1;
@@ -480,7 +492,7 @@ static int pam_printer(char *start, char *stop, char *username,
     PAM_password = (char *)malloc(PASSWDLEN + 1);
 
     if (!PAM_password) {
-        LOG(log_info, logtype_uams,
+        LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: malloc failed for password");
         free(data);
         return -1;
@@ -492,7 +504,7 @@ static int pam_printer(char *start, char *stop, char *username,
     free(data);
 
     if ((pwd = uam_getname(NULL, username, strlen(username))) == NULL) {
-        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
+        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
             username);
         free(PAM_password);
         PAM_password = NULL;
@@ -511,7 +523,7 @@ static int pam_printer(char *start, char *stop, char *username,
                           &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
+        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -525,7 +537,7 @@ static int pam_printer(char *start, char *stop, char *username,
     PAM_error = pam_authenticate(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
+        LOG(log_debug, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -537,7 +549,7 @@ static int pam_printer(char *start, char *stop, char *username,
     PAM_error = pam_acct_mgmt(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
+        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -549,7 +561,7 @@ static int pam_printer(char *start, char *stop, char *username,
     PAM_error = pam_open_session(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        LOG(log_info, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
+        LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
@@ -561,7 +573,7 @@ static int pam_printer(char *start, char *stop, char *username,
     /* Login successful, but no need to hang onto it,
        so logout immediately */
     append(out, loginok, strlen(loginok));
-    LOG(log_info, logtype_uams, "Login ClearTxtUAM: %s", username);
+    LOG(log_warning, logtype_uams, "Login ClearTxtUAM: %s", username);
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;

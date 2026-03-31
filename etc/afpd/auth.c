@@ -742,11 +742,15 @@ int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     }
 
     i = afp_uam->u.uam_login.login(obj, &pwd, ibuf, ibuflen, rbuf, rbuflen);
+    LOG(log_debug, logtype_afpd, "afp_login: UAM login returned %d, pwd=%p", i,
+        pwd);
 
     if (!pwd || (i != AFP_OK && i != AFPERR_PWDEXPR)) {
+        LOG(log_error, logtype_afpd, "afp_login: UAM login failed, sending reply");
         return send_reply(obj, i);
     }
 
+    LOG(log_debug, logtype_afpd, "afp_login: UAM login OK, calling login()");
     return send_reply(obj, login(obj, pwd, afp_uam->u.uam_login.logout,
                                  ((i == AFPERR_PWDEXPR) ? 1 : 0)));
 }
