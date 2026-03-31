@@ -76,6 +76,8 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         return -1;
     }
 
+    LOG(log_debug, logtype_dsi, "dsi_getsess: about to fork child (proto_open)");
+
     switch (pid = dsi->proto_open(dsi)) { /* in libatalk/dsi/dsi_tcp.c */
     case -1:
         /* if we fail, just return. it might work later */
@@ -85,9 +87,12 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         return -1;
 
     case 0: /* child. mostly handled below. */
+        LOG(log_debug, logtype_dsi, "dsi_getsess: child process started (pid %d)",
+            getpid());
         break;
 
     default: /* parent */
+        LOG(log_debug, logtype_dsi, "dsi_getsess: forked child pid %d", pid);
         /* using SIGKILL is hokey, but the child might not have
          * re-established its signal handler for SIGTERM yet. */
         close(ipc_fds[1]);
@@ -141,15 +146,19 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     }
 
     case DSIFUNC_OPEN: /* setup session */
+        LOG(log_debug, logtype_dsi,
+            "dsi_getsess: child setting up session (DSIFUNC_OPEN)");
         /* set up the tickle timer */
         dsi->timer.it_interval.tv_sec = dsi->timer.it_value.tv_sec = tickleval;
         dsi->timer.it_interval.tv_usec = dsi->timer.it_value.tv_usec = 0;
         dsi_opensession(dsi);
+        LOG(log_debug, logtype_dsi,
+            "dsi_getsess: child session opened, returning to afp_over_dsi");
         *childp = NULL;
         return 0;
 
     default: /* just close */
-        LOG(log_info, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);
+        LOG(log_warning, logtype_dsi, "DSIUnknown %d", dsi->header.dsi_command);
         dsi->proto_close(dsi);
         exit(EXITERR_CLNT);
     }

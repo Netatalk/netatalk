@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 2025-2026 Andy Lemin (andylemin)
  * All Rights Reserved.  See COPYRIGHT.
  */
 
@@ -420,17 +421,35 @@ int main(int ac, char **av)
      * afterwards. establishing timeouts for logins is a possible
      * solution. */
     while (1) {
+        /* Use 50ms timeout when hints are buffered, else block indefinitely */
+        int poll_timeout = (hint_buf_count() > 0) ? HINT_FLUSH_INTERVAL_MS : -1;
         pthread_sigmask(SIG_UNBLOCK, &sigs, NULL);
-        ret = poll(asev->fdset, asev->used, -1);
+        ret = poll(asev->fdset, asev->used, poll_timeout);
         pthread_sigmask(SIG_BLOCK, &sigs, NULL);
         saveerrno = errno;
 
+        /* 1. Process SIGCHLD first — remove dead children from table
+         *    before hint flush or fd events access it. */
         if (gotsigchld) {
             gotsigchld = 0;
             child_handler();
-            continue;
         }
 
+        /* 2. Error handling — use saveerrno because child_handler()
+         *    clobbers errno via waitpid/close/asev_del_fd.
+         *    EINTR is the most frequent non-event (every signal during poll),
+         *    so short-circuit back to poll immediately. */
+        if (ret < 0) {
+            if (saveerrno == EINTR) {
+                continue;
+            }
+
+            LOG(log_error, logtype_afpd, "main: can't wait for input: %s",
+                strerror(saveerrno));
+            break;
+        }
+
+        /* 3. Config reload */
         if (reloadconfig) {
             nologin++;
 
@@ -490,81 +509,82 @@ int main(int ac, char **av)
             continue;
         }
 
-        if (ret == 0) {
-            continue;
-        }
-
-        if (ret < 0) {
-            if (errno == EINTR) {
-                continue;
-            }
-
-            LOG(log_error, logtype_afpd, "main: can't wait for input: %s", strerror(errno));
-            break;
-        }
-
-        for (int i = 0; i < asev->used; i++) {
-            if (asev->fdset[i].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
-                switch (asev->data[i].fdtype) {
-                case LISTEN_FD:
-                    switch (asev->data[i].protocol) {
-                    case AFPPROTO_DSI:
-                        if ((child = dsi_start(&dsi_obj, (DSI *)(asev->data[i].private),
-                                               server_children))) {
-                            if (!(asev_add_fd(asev, child->afpch_ipc_fd, IPC_FD, child, 0))) {
-                                LOG(log_error, logtype_afpd, "out of asev slots");
-                                /*
-                                 * Close IPC fd here and mark it as unused
-                                 */
-                                close(child->afpch_ipc_fd);
-                                child->afpch_ipc_fd = -1;
-                                /*
-                                 * Being unfriendly here, but we really
-                                 * want to get rid of it. The 'child'
-                                 * handle gets cleaned up in the SIGCLD
-                                 * handler.
-                                 */
-                                kill(child->afpch_pid, SIGKILL);
+        /* 4. Process fd events — IPC messages fill hint_buf via
+         *    ipc_server_read → ipc_relay_cache_hint */
+        if (ret > 0) {
+            for (int i = 0; i < asev->used; i++) {
+                if (asev->fdset[i].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL)) {
+                    switch (asev->data[i].fdtype) {
+                    case LISTEN_FD:
+                        switch (asev->data[i].protocol) {
+                        case AFPPROTO_DSI:
+                            if ((child = dsi_start(&dsi_obj, (DSI *)(asev->data[i].private),
+                                                   server_children))) {
+                                if (!(asev_add_fd(asev, child->afpch_ipc_fd, IPC_FD, child, 0))) {
+                                    LOG(log_error, logtype_afpd, "out of asev slots");
+                                    /*
+                                     * Close IPC fd here and mark it as unused
+                                     */
+                                    close(child->afpch_ipc_fd);
+                                    child->afpch_ipc_fd = -1;
+                                    /*
+                                     * Being unfriendly here, but we really
+                                     * want to get rid of it. The 'child'
+                                     * handle gets cleaned up in the SIGCLD
+                                     * handler.
+                                     */
+                                    kill(child->afpch_pid, SIGKILL);
+                                }
                             }
-                        }
 
-                        break;
+                            break;
 #ifndef NO_DDP
 
-                    case AFPPROTO_ASP:
-                        asp_start(&asp_obj, server_children);
-                        break;
+                        case AFPPROTO_ASP:
+                            asp_start(&asp_obj, server_children);
+                            break;
 #endif /* no afp/asp */
 
-                    default:
-                        LOG(log_debug, logtype_afpd, "main: unknown protocol type");
-                        break;
-                    }
-
-                    break;
-
-                case IPC_FD:
-                    child = (afp_child_t *)(asev->data[i].private);
-                    LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]",
-                        child->afpch_pid);
-
-                    if (ipc_server_read(server_children, child->afpch_ipc_fd) != 0) {
-                        if (!(asev_del_fd(asev, child->afpch_ipc_fd))) {
-                            LOG(log_error, logtype_afpd, "child[%u]: no IPC fd");
+                        default:
+                            LOG(log_debug, logtype_afpd, "main: unknown protocol type");
+                            break;
                         }
 
-                        close(child->afpch_ipc_fd);
-                        child->afpch_ipc_fd = -1;
-                    }
+                        break;
 
-                    break;
+                    case IPC_FD:
+                        child = (afp_child_t *)(asev->data[i].private);
+                        LOG(log_debug, logtype_afpd, "main: IPC request from child[%u]",
+                            child->afpch_pid);
 
-                default:
-                    LOG(log_debug, logtype_afpd, "main: IPC request for unknown type");
-                    break;
-                } /* switch */
-            }  /* if */
-        } /* for (i)*/
+                        if (ipc_server_read(server_children, child->afpch_ipc_fd) != 0) {
+                            if (!(asev_del_fd(asev, child->afpch_ipc_fd))) {
+                                LOG(log_error, logtype_afpd, "child[%u]: no IPC fd");
+                            }
+
+                            close(child->afpch_ipc_fd);
+                            child->afpch_ipc_fd = -1;
+                        }
+
+                        break;
+
+                    default:
+                        LOG(log_debug, logtype_afpd, "main: IPC request for unknown type");
+                        break;
+                    } /* switch */
+                }  /* if */
+            } /* for (i)*/
+        } /* if (ret > 0) */
+
+        /* 5. Flush buffered hints — single flush point, two triggers:
+         *    - ret == 0: 50ms timeout expired, flush batched hints
+         *    - count >= HINT_BUF_SIZE: buffer full from IPC burst
+         *    When ret > 0 and count < HINT_BUF_SIZE, hints continue to
+         *    accumulate until the next 50ms timeout (batching preserved). */
+        if (hint_buf_count() > 0
+                && (ret == 0 || hint_buf_count() >= HINT_BUF_SIZE)) {
+            hint_flush_pending(server_children);
+        }
     } /* while (1) */
 
     return 0;

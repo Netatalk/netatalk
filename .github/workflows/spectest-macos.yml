@@ -193,7 +193,7 @@ jobs:
       - name: Show netatalk log before test
         if: always()
         run: |
-          cat /tmp/afpd.log 2>/dev/null | tail -50 || echo "No log file"
+          cat /tmp/afpd.log 2>/dev/null | tail -100 || echo "No log file"
 
       - name: Run AFP spec test (AFP 3.4)
         run: |
