@@ -42,9 +42,15 @@ jobs:
             echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
+          if [[ -n "$SUFFIX" ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
           echo "tarball_name=netatalk-${SEM_VERSION}" >> $GITHUB_OUTPUT
+          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -74,6 +80,7 @@ jobs:
           tag_name: ${{ env.RELEASE_TAG }}
           name: Netatalk ${{ steps.get_version.outputs.version }}
           draft: true
+          prerelease: ${{ steps.get_version.outputs.is_prerelease == 'true' }}
           generate_release_notes: true
           body: |
             # Netatalk ${{ steps.get_version.outputs.version }} is available!
@@ -128,9 +135,15 @@ jobs:
             echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
+          if [[ -n "$SUFFIX" ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}" >> ${GITHUB_ENV}
@@ -146,10 +159,10 @@ jobs:
         with:
           images: ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable=${{ steps.get_version.outputs.is_prerelease == 'false' }}
             type=raw,value=${{ github.sha }}
-            type=raw,value=${{ steps.get_version.outputs.major_version }}
-            type=raw,value=${{ steps.get_version.outputs.minor_version }}
+            type=raw,value=${{ steps.get_version.outputs.major_version }},enable=${{ steps.get_version.outputs.is_prerelease == 'false' }}
+            type=raw,value=${{ steps.get_version.outputs.minor_version }},enable=${{ steps.get_version.outputs.is_prerelease == 'false' }}
             type=raw,value=${{ steps.get_version.outputs.version }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
@@ -189,9 +202,15 @@ jobs:
             echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
+          if [[ -n "$SUFFIX" ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
       - name: Create image name
         run: |
           echo "IMAGE_NAME=${REPO,,}-webmin" >> ${GITHUB_ENV}
@@ -207,10 +226,10 @@ jobs:
         with:
           images: ${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=latest
+            type=raw,value=latest,enable=${{ steps.get_version.outputs.is_prerelease == 'false' }}
             type=raw,value=${{ github.sha }}
-            type=raw,value=${{ steps.get_version.outputs.major_version }}
-            type=raw,value=${{ steps.get_version.outputs.minor_version }}
+            type=raw,value=${{ steps.get_version.outputs.major_version }},enable=${{ steps.get_version.outputs.is_prerelease == 'false' }}
+            type=raw,value=${{ steps.get_version.outputs.minor_version }},enable=${{ steps.get_version.outputs.is_prerelease == 'false' }}
             type=raw,value=${{ steps.get_version.outputs.version }}
       - name: Build and push container image
         uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
@@ -243,9 +262,29 @@ jobs:
             echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
+          if [[ -n "$SUFFIX" ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
+      - name: Generate tags
+        id: tags
+        run: |
+          IMAGE=netatalk/netatalk
+          VERSION=${{ steps.get_version.outputs.version }}
+          TAGS="${IMAGE}:${VERSION}"
+          if [[ "${{ steps.get_version.outputs.is_prerelease }}" == "false" ]]; then
+            for TAG in latest ${{ steps.get_version.outputs.major_version }} ${{ steps.get_version.outputs.minor_version }}; do
+              printf -v TAGS '%s\n%s:%s' "$TAGS" "$IMAGE" "$TAG"
+            done
+          fi
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - name: Login to Docker Hub
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
@@ -264,11 +303,7 @@ jobs:
           file: distrib/docker/netatalk.Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64
           push: true
-          tags: |
-            netatalk/netatalk:latest
-            netatalk/netatalk:${{ steps.get_version.outputs.major_version }}
-            netatalk/netatalk:${{ steps.get_version.outputs.minor_version }}
-            netatalk/netatalk:${{ steps.get_version.outputs.version }}
+          tags: ${{ steps.tags.outputs.tags }}
 
   docker-hub-webmin:
     name: Publish Netatalk Webmin Module Container Image to Docker Hub
@@ -292,9 +327,29 @@ jobs:
             echo "Error: Tag '$RELEASE_TAG' does not match expected format 'netatalk-x-y-z'"
             exit 1
           fi
+          if [[ -n "$SUFFIX" ]]; then
+            IS_PRERELEASE=true
+          else
+            IS_PRERELEASE=false
+          fi
           echo "major_version=${MAJOR}" >> $GITHUB_OUTPUT
           echo "minor_version=${MIN_VERSION}" >> $GITHUB_OUTPUT
           echo "version=${SEM_VERSION}" >> $GITHUB_OUTPUT
+          echo "is_prerelease=${IS_PRERELEASE}" >> $GITHUB_OUTPUT
+      - name: Generate tags
+        id: tags
+        run: |
+          IMAGE=netatalk/webmin
+          VERSION=${{ steps.get_version.outputs.version }}
+          TAGS="${IMAGE}:${VERSION}"
+          if [[ "${{ steps.get_version.outputs.is_prerelease }}" == "false" ]]; then
+            for TAG in latest ${{ steps.get_version.outputs.major_version }} ${{ steps.get_version.outputs.minor_version }}; do
+              printf -v TAGS '%s\n%s:%s' "$TAGS" "$IMAGE" "$TAG"
+            done
+          fi
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "$TAGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
       - name: Login to Docker Hub
         uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
         with:
@@ -305,8 +360,4 @@ jobs:
         with:
           file: distrib/docker/webmin_module.Dockerfile
           push: true
-          tags: |
-            netatalk/webmin:latest
-            netatalk/webmin:${{ steps.get_version.outputs.major_version }}
-            netatalk/webmin:${{ steps.get_version.outputs.minor_version }}
-            netatalk/webmin:${{ steps.get_version.outputs.version }}
+          tags: ${{ steps.tags.outputs.tags }}
