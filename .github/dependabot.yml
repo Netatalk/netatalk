@@ -14,8 +14,3 @@ updates:
     directory: "/.github/workflows"
     schedule:
       interval: "weekly"
-
-  - package-ecosystem: "pip"
-    directory: "/.clusterfuzzlite"
-    schedule:
-      interval: "weekly"

@@ -29,13 +29,13 @@ jobs:
     steps:
       - name: Build Fuzzers
         id: build
-        uses: google/clusterfuzzlite/actions/build_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        uses: google/clusterfuzzlite/actions/build_fuzzers@d2c7d068aab9081cbbc57825ad0d5d6ca6674f95
         with:
           language: c
           sanitizer: ${{ matrix.sanitizer }}
       - name: Run Fuzzers
         id: run
-        uses: google/clusterfuzzlite/actions/run_fuzzers@884713a6c30a92e5e8544c39945cd7cb630abcd1 # v1
+        uses: google/clusterfuzzlite/actions/run_fuzzers@d2c7d068aab9081cbbc57825ad0d5d6ca6674f95
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           fuzz-seconds: 120

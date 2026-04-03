@@ -1,6 +1,4 @@
-FROM gcr.io/oss-fuzz-base/base-builder:v1@sha256:cb8b7ff401eeb38a378428e6d9ec5a7dc18441ba999e1db21f1641d4debf8f3b
-
-COPY .clusterfuzzlite/requirements-python.txt /tmp/requirements-python.txt
+FROM gcr.io/oss-fuzz-base/base-builder@sha256:bbcd30758c3f71243d6e57b1bce73e06c4489ded6661f51347ad4b78432812fe
 
 RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
@@ -8,12 +6,11 @@ RUN apt-get update \
     libgcrypt20-dev \
     libiniparser-dev \
     libsqlite3-dev \
+    meson \
     ninja-build \
     pkg-config \
-    python3-pip \
     uuid-runtime \
     zlib1g-dev \
-&&  pip install --no-deps --require-hashes -r /tmp/requirements-python.txt \
 &&  rm -rf /var/lib/apt/lists/*
 
 COPY .clusterfuzzlite/build.sh $SRC/build.sh
