@@ -95,7 +95,7 @@ foreach my $key (keys %{$workflow->{jobs}}) {
               $step->{with}->{prepare},
               "```",
               "",
-              "Configure, compile, install, run, and uninstall",
+              "Build and install",
               "",
               "```shell",
               $step->{with}->{run},
