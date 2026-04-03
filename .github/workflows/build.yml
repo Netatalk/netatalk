@@ -776,6 +776,7 @@ jobs:
             cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
             make all
             make install
+            cd ../..
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
@@ -843,6 +844,7 @@ jobs:
             cmake ..
             make all
             make install
+            cd ../..
           run: |
             set -e
             meson setup build \
