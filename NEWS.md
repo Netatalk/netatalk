@@ -1,6 +1,64 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.5.0beta
+--------------------
+
+* NEW: afpd: Introduced ARC (Adaptive Replacement Cache) option for directory cache, GitHub #2668
+* NEW: afpd: Added enumerate cache, AppleDouble support in cache, and inter-process cache sync, GitHub #2733
+* NEW: afpd: Added Tier-2 ResourceFork caching framework, GitHub #2783
+* NEW: afpd: Added idle worker thread for background dircache maintenance, GitHub #2808
+* NEW: afpd: Introduced a default global 'cnid scheme' afp.conf option, GitHub #2689
+* NEW: afpd: Synthesize virtual Icon\r file in volume root for Classic Mac OS, GitHub #2775, #2820, #2833
+* NEW: afpstats: Expose hostname for each afpd child process, GitHub #2720
+* NEW: cnid: Added support for 'cnid dev = no' in MySQL and SQLite backends, GitHub #2806
+* NEW: libatalk: Added volume option 'volume uuid' to define static UUID, GitHub #2619
+* NEW: libatalk: Log a warning when deprecated afp.conf option is being used, GitHub #2746
+* NEW: meson: Introduced option to force the building of subprojects, GitHub #2652
+* NEW: nad: Added an -F option for reading a custom afp.conf file, GitHub #2722
+* NEW: nad: Implemented mkdir and rmdir commands, GitHub #2823
+* UPD: afpd: Turn 'convert appledouble' option off by default, GitHub #2734
+* UPD: afpd: Use C11 atomic operations in dircache for 32 bit OS compatibility, GitHub #2756
+* UPD: afpd: Improved signal handlers and refactored away unreachable code, GitHub #2796
+* UPD: afpd: Optimized dircache child scan with blength pre-check and memcmp, GitHub #2827
+* UPD: cnid: Improved MySQL backend charset and TCP performance, GitHub #2649
+* UPD: dbd: Decoupled the dbd binary from cnid_dbd with improvements, GitHub #2685
+* UPD: docs: Revised CNID configuration details in afp.conf man page, GitHub #2608
+* UPD: docs: Overhauled the documentation for the 'search db' option, GitHub #2620
+* UPD: docs: Revamped AFP Signature/UUID conf man pages, GitHub #2623
+* UPD: docs: Integrated AppleTalk man page contents into Doxygen docs, GitHub #2624
+* UPD: docs: Improved descriptions of CNID backends, set/save password options, GitHub #2690
+* UPD: docs: Split up Configuration into multiple manual chapters, GitHub #2825
+* UPD: libatalk: Converted adf_lock macros to functions, GitHub #2645
+* UPD: libatalk: Backwards compatibility with iniparser v3, GitHub #2715
+* UPD: libatalk: Regenerated utf16 case lookup tables with Unicode v17.0.0, GitHub #2594
+* UPD: meson: Package release tarball with subprojects, GitHub #2658
+* UPD: nad: Organized ls output into columns and sanitized filenames, GitHub #2804
+* UPD: nad: Implemented ls -a flag with . and .. entries, GitHub #2821
+* UPD: nad: Overhauled file operations that cross AFP volume boundary, GitHub #2828
+* UPD: testsuite: Enhanced afp_speedtest with throughput statistics, TCP statistics, and CSV export, GitHub #2687
+* UPD: Updated the bstring library subproject to version 1.1.0, GitHub #2829
+* FIX: afpd: Fixed implicit declaration of function AfpErr2name, GitHub #2664
+* FIX: afpd: Fixed dircache realloc leak, validated ghosts, improved error logging, GitHub #2693
+* FIX: afpd: Fixed moveandrename stale paths and 'mac charset' option, GitHub #2754
+* FIX: afpd: Validated CNID from get_id() before calling dircache_add(), GitHub #2697
+* FIX: cnid: Fixed sqlite backend bugs, added post init validation and logging, GitHub #2672
+* FIX: cnid: Disallow looking up did<2 in sqlite backend, GitHub #2632
+* FIX: cnid: Fixed permissions for multi-user access to SQLite db files, GitHub #2805
+* FIX: initscripts: netatalk systemd now depends on network-online.target, GitHub #2639
+* FIX: libatalk: Fixed UUID instability for dynamic volumes with non-AFP clients, GitHub #2809
+* FIX: meson: Detect big-endian architecture correctly, GitHub #2694
+* FIX: meson: Fixed bugs that prevent disabling dev docs, GitHub #2840
+* FIX: nad: More sophisticated check for the MAXPHYS macro, GitHub #2717
+* FIX: nad: Centralized volume validation and fixed inconsistent error handling, GitHub #2803
+* FIX: papd: Hardened config parsing with graceful error recovery, GitHub #2696
+* FIX: testsuite: Initialized filedir params to avoid garbage data in the bitmap, GitHub #2688
+* FIX: uams: Fixed password corruption when changing password in Cleartxt PAM UAM, GitHub #2699
+* REM: afpd: Removed superseded dircache metadata window/threshold parameters, GitHub #2683
+* REM: afpd: Removed obsoleted 'dircache files' option, GitHub #2783
+* REM: cnid: Removed the obsolete 'last' CNID backend, GitHub #2634
+* REM: contrib: Removed obsolete macusers script, GitHub #2723
+
 Changes in 4.4.1
 ----------------
 
