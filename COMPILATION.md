@@ -12,7 +12,7 @@ and may not always be optimized for standalone execution.
 Install dependencies
 
 ```shell
-apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc glib iniparser-dev krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc pandoc perl pkgconfig rpcsvc-proto-dev sqlite-dev talloc-dev tinysparql-dev valgrind
+apk add acl-dev avahi-compat-libdns_sd avahi-dev bison build-base ca-certificates cracklib cracklib-dev cracklib-words cups cups-dev curl db-dev dbus-dev flex gcc glib iniparser-dev krb5-dev libevent-dev libgcrypt-dev libtirpc-dev libtracker linux-pam-dev localsearch mariadb-dev meson ninja openldap-dev openrc pandoc perl pkgconfig rpcsvc-proto-dev sqlite-dev talloc-dev tinysparql-dev valgrind
 ```
 
 Configure
@@ -57,12 +57,6 @@ papd -V
 timelord -V
 ```
 
-Uninstall
-
-```shell
-ninja -C build uninstall
-```
-
 ## Arch Linux
 
 Install dependencies
@@ -105,12 +99,6 @@ a2boot -V
 macipgw -V
 papd -V
 timelord -V
-```
-
-Uninstall
-
-```shell
-ninja -C build uninstall
 ```
 
 ## Debian Linux
@@ -164,12 +152,6 @@ papd -V
 timelord -V
 ```
 
-Uninstall
-
-```shell
-ninja -C build uninstall
-```
-
 ## Fedora Linux
 
 Install dependencies
@@ -220,12 +202,6 @@ papd -V
 timelord -V
 ```
 
-Uninstall
-
-```shell
-sudo ninja -C build uninstall
-```
-
 ## Ubuntu Linux
 
 Install dependencies
@@ -271,19 +247,12 @@ papd -V
 timelord -V
 ```
 
-Uninstall
-
-```shell
-ninja -C build uninstall
-```
-
 ## macOS
 
 Install dependencies
 
 ```shell
 brew update
-brew upgrade
 brew install bstring cmark-gfm cracklib iniparser mariadb meson openldap
 ```
 
@@ -332,30 +301,25 @@ Stop netatalk
 sudo netatalkd stop
 ```
 
-Uninstall
-
-```shell
-sudo ninja -C build uninstall
-```
-
 ## DragonflyBSD
 
 Install required packages
 
 ```shell
-pkg install -y avahi bison cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter sqlite talloc tracker3
+set -e
+pkg install -y avahi cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter sqlite
 ```
 
-Configure, compile, install, run, and uninstall
+Build and install
 
 ```shell
 set -e
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
+meson test -C build
 meson install -C build
 netatalk -V
 afpd -V
-ninja -C build uninstall
 ```
 
 ## FreeBSD
@@ -363,17 +327,18 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
-pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql91-client openldap26-client p5-Net-DBus perl5 pkgconf sqlite3 talloc
+set -e
+pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt libsunacl localsearch meson mysql91-client openldap26-client p5-Net-DBus perl5 pkgconf sqlite3 talloc
 ```
 
-Configure, compile, install, run, and uninstall
+Build and install
 
 ```shell
 set -e
 meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/libdata/pkgconfig -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-meson test -C build
-meson install -C build
+meson test -C build --no-rebuild
+meson install -C build --no-rebuild
 netatalk -V
 afpd -V
 /usr/local/etc/rc.d/netatalk start
@@ -381,7 +346,6 @@ sleep 1
 asip-status localhost
 /usr/local/etc/rc.d/netatalk stop
 /usr/local/etc/rc.d/netatalk disable
-ninja -C build uninstall
 ```
 
 ## NetBSD
@@ -389,18 +353,19 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
+set -e
 export PKG_PATH="http://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
 pkg_add cmark db5 gcc13 heimdal iniparser libevent libgcrypt meson mysql-client perl pkg-config sqlite3
 ```
 
-Configure, compile, install, run, and uninstall
+Build and install
 
 ```shell
 set -e
 meson setup build -Dbuildtype=release -Dwith-appletalk=true -Dwith-cups-pap-backend=true -Dwith-dtrace=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-meson test -C build
-meson install -C build
+meson test -C build --no-rebuild
+meson install -C build --no-rebuild
 netatalk -V
 afpd -V
 atalkd -V
@@ -412,7 +377,6 @@ service netatalk onestart
 sleep 1
 asip-status localhost
 service netatalk onestop
-ninja -C build uninstall
 ```
 
 ## OpenBSD
@@ -420,16 +384,18 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
-pkg_add -I avahi bison cmark db-4.6.21p8v0 dbus gcc-11.2.0p19 heimdal iniparser libevent libgcrypt libtalloc localsearch-3.10.0 mariadb-client meson openldap-client-2.6.10v0 p5-Net-DBus pkgconfig sqlite3-3.50.4 tinysparql-3.10.0
+set -e
+pkg_add -I avahi bison cmark db-4.6.21p8v0 dbus gcc-11.2.0p19 heimdal iniparser libevent libgcrypt libtalloc localsearch-3.10.0 mariadb-client meson openldap-client-2.6.10v0 p5-Net-DBus pkgconfig sqlite3-3.50.7p0 tinysparql-3.10.0
 ```
 
-Configure, compile, install, run, and uninstall
+Build and install
 
 ```shell
 set -e
 meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/local/lib/pkgconfig -Dwith-gssapi-path=/usr/local/heimdal -Dwith-kerberos-path=/usr/local/heimdal -Dwith-pam=false -Dwith-tests=true -Dwith-testsuite=true
 meson compile -C build
-meson install -C build
+meson test -C build --no-rebuild
+meson install -C build --no-rebuild
 netatalk -V
 afpd -V
 rcctl -d start netatalk
@@ -437,7 +403,6 @@ sleep 1
 asip-status localhost
 rcctl -d stop netatalk
 rcctl -d disable netatalk
-ninja -C build uninstall
 ```
 
 ## OmniOS
@@ -445,6 +410,7 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
+set -e
 pkg install build-essential pkg-config
 curl -o bootstrap.tar.gz https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2024Q4-x86_64.tar.gz
 tar -zxpf bootstrap.tar.gz -C /
@@ -452,7 +418,7 @@ export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin
 pkgin -y install avahi cmark gnome-tracker iniparser libevent libgcrypt meson mysql-client sqlite3 talloc
 ```
 
-Configure, compile, install, run, and uninstall
+Build and install
 
 ```shell
 set -e
@@ -468,7 +434,45 @@ svcadm enable svc:/network/netatalk:default
 sleep 1
 asip-status localhost
 svcadm disable svc:/network/netatalk:default
-ninja -C build uninstall
+```
+
+## OpenIndiana
+
+Install required packages
+
+```shell
+set -e
+pkg install archiver/gnu-tar compress/gzip database/mariadb-114/client database/mariadb-114/library database/sqlite-3 developer/build/cmake developer/build/meson developer/build/ninja developer/build/pkg-config developer/gcc-14 library/cmark library/glib2 library/libevent2 library/security/cracklib runtime/perl system/library/dbus system/library/libdbus system/library/security/libgcrypt web/curl
+curl --location -o iniparser.tar.gz https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
+set +e # tar on illumos is too old to handle git tarballs cleanly
+tar xzf iniparser.tar.gz
+set -e
+cd iniparser-v4.2.6
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
+make all
+make install
+cd ../..
+```
+
+Build and install
+
+```shell
+set -e
+export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+meson setup build -Dbuildtype=release -Dpkg_config_path=/usr/lib/amd64/pkgconfig -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d -Dwith-iniparser-path=/usr/local -Dwith-tests=true -Dwith-testsuite=true
+meson compile -C build
+meson test -C build
+meson install -C build
+/usr/local/sbin/netatalk -V
+/usr/local/sbin/afpd -V
+sleep 1
+svcadm enable svc:/network/dns/multicast:default
+svcadm enable svc:/network/netatalk:default
+sleep 1
+/usr/local/bin/asip-status localhost
+svcadm disable svc:/network/netatalk:default
 ```
 
 ## Solaris
@@ -495,9 +499,10 @@ cd build
 cmake ..
 make all
 make install
+cd ../..
 ```
 
-Configure, compile, install, run, and uninstall
+Build and install
 
 ```shell
 set -e
@@ -513,5 +518,4 @@ svcadm -v enable svc:/network/netatalk:default
 sleep 1
 asip-status localhost
 svcadm -v disable svc:/network/netatalk:default
-ninja -C build uninstall
 ```
