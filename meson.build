@@ -1129,14 +1129,6 @@ endif
 
 enable_quota = get_option('with-quota')
 
-if host_os == 'netbsd'
-    enable_quota = false
-    cdata.set('NO_QUOTA_SUPPORT', 1)
-    warning(
-        'quota is broken on NetBSD, see https://github.com/Netatalk/netatalk/issues/1225',
-    )
-endif
-
 prop = cc.find_library('prop', required: false)
 quota = cc.find_library('quota', required: false)
 rpcsvc = cc.find_library('rpcsvc', required: false)
@@ -1161,12 +1153,13 @@ elif quota.found() and cc.has_function('quota_open')
     have_quota = true
     quota_provider += 'libquota'
     cdata.set('HAVE_LIBQUOTA', 1)
-    #elif quota.found() and cc.has_function('quota_open', dependencies: [quota, prop])
-    #    have_libquota = true
-    #    have_quota = true
-    #    quota_provider += 'libquota'
-    #    quota_deps += [quota, prop]
-    #    cdata.set('HAVE_LIBQUOTA', 1)
+elif quota.found() and prop.found() and cc.has_function('quota_open', dependencies: [quota, prop])
+    # NetBSD provides libquota API in libquota (depends on libprop)
+    have_libquota = true
+    have_quota = true
+    quota_provider += 'libquota'
+    quota_deps += [quota, prop]
+    cdata.set('HAVE_LIBQUOTA', 1)
 elif tirpc.found() and cc.has_header('rpcsvc/rquota.h')
     cdata.set('NEED_RQUOTA', 1)
     quota_deps += tirpc

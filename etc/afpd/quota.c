@@ -44,7 +44,6 @@ static int
 getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
              VolSpace *btotal, id_t id, int idtype)
 {
-    uid_t prevuid;
     const char *msg;
     struct quotahandle *qh;
     struct quotakey qk;
@@ -66,13 +65,13 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
     if (qh == NULL) {
         if (errno == EOPNOTSUPP || errno == ENXIO) {
             /* no quotas on this volume */
-            seteuid(prevuid);
+            unbecome_root();
             return 0;
         }
 
         LOG(log_info, logtype_afpd, "quota_open(%s): %s", vol->v_path,
             strerror(errno));
-        seteuid(prevuid);
+        unbecome_root();
         return -1;
     }
 
@@ -84,7 +83,7 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
         if (errno == ENOENT) {
             /* no quotas for this id */
             quota_close(qh);
-            seteuid(prevuid);
+            unbecome_root();
             return 0;
         }
 
@@ -92,7 +91,7 @@ getfreespace(const AFPObj *obj, struct vol *vol, VolSpace *bfree,
         LOG(log_info, logtype_afpd, "quota_get(%s, %s): %s",
             vol->v_path, quota_idtype_getname(qh, idtype), msg);
         quota_close(qh);
-        seteuid(prevuid);
+        unbecome_root();
         return -1;
     }
 
