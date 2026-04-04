@@ -262,7 +262,7 @@ static void guess_interface(DSI *dsi, const char *hostname, const char *port)
         strlcpy(ifr.ifr_name, *list, sizeof(ifr.ifr_name));
         list++;
 
-        if (ioctl(dsi->serversock, SIOCGIFFLAGS, &ifr) < 0) {
+        if (ioctl(fd, SIOCGIFFLAGS, &ifr) < 0) {
             continue;
         }
 
@@ -351,10 +351,14 @@ static int dsi_tcp_listen(const char *address,
         flag = 1;
         setsockopt(dsi->serversock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 #endif
-#if defined(FREEBSD) && defined(IPV6_BINDV6ONLY)
-        int on = 0;
-        setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_BINDV6ONLY, (char *)&on,
-                   sizeof(on));
+#if !defined(__OpenBSD__) && defined(IPV6_V6ONLY)
+
+        if (p->ai_family == AF_INET6) {
+            int on = 0;
+            setsockopt(dsi->serversock, IPPROTO_IPV6, IPV6_V6ONLY, &on,
+                       sizeof(on));
+        }
+
 #endif
 #ifndef SOL_TCP
 #define SOL_TCP IPPROTO_TCP
