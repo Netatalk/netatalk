@@ -49,13 +49,28 @@ static int getifaces(const int sockfd, char ***list)
 {
 #ifdef HAVE_IFNAMEINDEX
     struct if_nameindex *ifstart, *ifs;
-    int i = 0;
+    int i = 0, count = 0;
     char **new;
     ifs = ifstart = if_nameindex();
-    new = (char **) malloc((sizeof(ifs) / sizeof(struct if_nameindex) + 1) * sizeof(
-                               char *));
 
-    while (ifs && ifs->if_name) {
+    if (!ifstart) {
+        return 0;
+    }
+
+    while (ifs->if_name) {
+        count++;
+        ifs++;
+    }
+
+    ifs = ifstart;
+    new = (char **) malloc((count + 1) * sizeof(char *));
+
+    if (!new) {
+        if_freenameindex(ifstart);
+        return 0;
+    }
+
+    while (ifs->if_name) {
         /* just bail if there's a problem */
         if (addname(new, &i, ifs->if_name) < 0) {
             break;
