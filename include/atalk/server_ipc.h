@@ -44,5 +44,6 @@ extern int ipc_child_state(AFPObj *obj, uint16_t state);
 extern int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
                                uint8_t event);
 extern unsigned long long ipc_get_hints_sent(void);
+extern unsigned long long ipc_get_hints_dropped(void);
 
 #endif /* ATALK_SERVER_IPC_H */

@@ -138,7 +138,7 @@ struct deferred_cleanup {
 };
 
 /* Max deferred/queued entries before fallback to synchronous cleaning */
-#define MAX_DEFERRED_CLEANUPS 256
+#define MAX_DEFERRED_CLEANUPS 1024
 
 static struct deferred_cleanup deferred_queue[MAX_DEFERRED_CLEANUPS];
 static int deferred_head = 0;
@@ -2170,9 +2170,10 @@ void log_dircache_stat(void)
 
     /* Cross-process dircache hint statistics */
     LOG(log_info, logtype_afpd,
-        "dircache statistics (hints): (user: %s) sent: %llu, received: %llu, acted_on: %llu, no_match: %llu",
+        "dircache statistics (hints): (user: %s) sent: %llu, dropped: %llu, received: %llu, acted_on: %llu, no_match: %llu",
         username,
         ipc_get_hints_sent(),
+        ipc_get_hints_dropped(),
         cache_hint_stat.hints_received,
         cache_hint_stat.hints_acted_on,
         cache_hint_stat.hints_no_match);
