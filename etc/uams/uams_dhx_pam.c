@@ -11,6 +11,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -531,9 +532,19 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
     pam_set_item(pamh, PAM_TTY, "afpd");
     pam_set_item(pamh, PAM_RHOST, hostname);
+    /* Reset SIGCHLD to default during PAM auth: PAM modules like
+     * pam_bsdauth fork helper processes and waitpid for them.
+     * afpd sets SA_NOCLDWAIT which causes the kernel to auto-reap
+     * children, making waitpid fail with ECHILD. */
+    struct sigaction sa_dfl, sa_old;
+    memset(&sa_dfl, 0, sizeof(sa_dfl));
+    sa_dfl.sa_handler = SIG_DFL;
+    sigaction(SIGCHLD, &sa_dfl, &sa_old);
     PAM_error = pam_authenticate(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
+        sigaction(SIGCHLD, &sa_old, NULL);
+
         if (PAM_error == PAM_MAXTRIES) {
             err = AFPERR_PWDEXPR;
         }
@@ -546,6 +557,7 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
+    sigaction(SIGCHLD, &sa_old, NULL);
 
     if (PAM_error != PAM_SUCCESS) {
         /* Log Entry */
