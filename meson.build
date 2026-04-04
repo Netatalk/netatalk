@@ -1655,16 +1655,18 @@ else
         pam = cc.find_library('pam', dirs: libsearch_dirs, required: false)
     endif
 
+    pam_header_dirs = include_directories(header_dir)
+
     have_pam = (
-        cc.has_header('security/pam_appl.h')
-        or cc.has_header('pam/pam_appl.h')
+        cc.has_header('security/pam_appl.h', include_directories: pam_header_dirs)
+        or cc.has_header('pam/pam_appl.h', include_directories: pam_header_dirs)
         or cc.has_function('pam_set_item', dependencies: pam)
     )
 
     if have_pam
         uams_options += 'pam'
-        # Debian/SuSE
         if fs.exists(pam_d_dir / 'common-auth')
+            # Debian/SuSE
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', 'common-auth')
             cdata.set('PAM_ACCOUNT', 'common-account')
@@ -1676,36 +1678,36 @@ else
             else
                 cdata.set('PAM_SESSION', 'common-session')
             endif
-            # RHEL/FC
         elif fs.exists(pam_d_dir / 'system-auth')
+            # RHEL/FC
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', 'system-auth')
             cdata.set('PAM_ACCOUNT', 'system-auth')
             cdata.set('PAM_PASSWORD', 'system-auth')
             cdata.set('PAM_SESSION', 'system-auth')
-            # FreeBSD
         elif fs.exists(pam_d_dir / 'system')
+            # FreeBSD, NetBSD, OpenBSD
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', 'system')
             cdata.set('PAM_ACCOUNT', 'system')
             cdata.set('PAM_PASSWORD', 'system')
             cdata.set('PAM_SESSION', 'system')
-            # macOS
         elif fs.exists(pam_d_dir / 'chkpasswd')
+            # macOS
             cdata.set('PAM_DIRECTIVE', 'required')
             cdata.set('PAM_AUTH', 'pam_opendirectory.so')
             cdata.set('PAM_ACCOUNT', 'pam_opendirectory.so')
             cdata.set('PAM_PASSWORD', 'pam_permit.so')
             cdata.set('PAM_SESSION', 'pam_permit.so')
-            # Solaris 11+
         elif fs.exists(pam_d_dir / 'other')
+            # Solaris 11+
             cdata.set('PAM_DIRECTIVE', 'include')
             cdata.set('PAM_AUTH', pam_dir / 'etc/pam.d/other')
             cdata.set('PAM_ACCOUNT', pam_dir / 'etc/pam.d/other')
             cdata.set('PAM_PASSWORD', pam_dir / 'etc/pam.d/other')
             cdata.set('PAM_SESSION', pam_dir / 'etc/pam.d/other')
-            # Fallback
         else
+            # Fallback
             cdata.set('PAM_DIRECTIVE', 'required')
             cdata.set('PAM_AUTH', 'pam_unix.so')
             cdata.set('PAM_ACCOUNT', 'pam_unix.so')
@@ -1713,8 +1715,16 @@ else
             cdata.set('PAM_SESSION', 'pam_unix.so')
         endif
 
+        if cdata.has('HAVE_SECURITY_PAM_APPL_H')
+            pam_header = 'security/pam_appl.h'
+        elif cdata.has('HAVE_PAM_PAM_APPL_H')
+            pam_header = 'pam/pam_appl.h'
+        else
+            pam_header = 'security/pam_appl.h'
+        endif
+
         pam_conv_with_const_code = '''
-        #include <security/pam_appl.h>
+        #include <@0@>
 
         int my_conv(int, const struct pam_message **, struct pam_response **, void *);
 
@@ -1726,10 +1736,11 @@ else
         int main(void) {
         return 0;
         }
-        '''
+        '''.format(pam_header)
 
         have_pam_conv_with_const = cc.compiles(
             pam_conv_with_const_code,
+            include_directories: pam_header_dirs,
             name: 'pam_conv with const pam_message',
         )
 
