@@ -628,7 +628,6 @@ jobs:
             set -e
             pkg_add -I \
               avahi \
-              bison \
               cmark \
               db-4.6.21p8v0 \
               dbus \
@@ -637,15 +636,12 @@ jobs:
               iniparser \
               libevent \
               libgcrypt \
-              libtalloc \
-              localsearch-3.10.0 \
               mariadb-client \
               meson \
               openldap-client-2.6.10v0 \
               p5-Net-DBus \
               pkgconfig \
-              sqlite3-3.50.7p0 \
-              tinysparql-3.10.0
+              sqlite3-3.50.7p0
           run: |
             set -e
             meson setup build \
