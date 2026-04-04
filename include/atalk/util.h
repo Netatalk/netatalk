@@ -120,16 +120,7 @@ extern void mod_close(void *);
 #define RTLD_NOW 1
 #endif /* ! RTLD_NOW */
 
-/* NetBSD doesn't like RTLD_NOW for dlopen (it fails). Use RTLD_LAZY.
- * OpenBSD currently does not use the second arg for dlopen(). For
- * future compatibility we define DL_LAZY */
-#ifdef __NetBSD__
-#define mod_open(a)      dlopen(a, RTLD_LAZY)
-#elif defined(__OpenBSD__)
-#define mod_open(a)      dlopen(a, DL_LAZY)
-#else /* ! __NetBSD__ && ! __OpenBSD__ */
-#define mod_open(a)      dlopen(a, RTLD_NOW)
-#endif /* __NetBSD__ */
+#define mod_open(a)      dlopen(a, RTLD_NOW | RTLD_GLOBAL)
 
 #define mod_symbol(a, b) dlsym(a, b)
 #define mod_error()      dlerror()
