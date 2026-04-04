@@ -674,12 +674,18 @@ void hint_flush_pending(server_child_t *children)
  * Cross-process dircache hint sender (child → parent via IPC socketpair)
  ***********************************************************************************/
 
-/* Sender-side statistics counter — exposed via getter for log_dircache_stat() */
+/* Sender-side statistics counters — exposed via getters for log_dircache_stat() */
 static unsigned long long hints_sent = 0;
+static unsigned long long hints_dropped = 0;
 
 unsigned long long ipc_get_hints_sent(void)
 {
     return hints_sent;
+}
+
+unsigned long long ipc_get_hints_dropped(void)
+{
+    return hints_dropped;
 }
 
 /*!
@@ -688,12 +694,23 @@ unsigned long long ipc_get_hints_sent(void)
  * Called directly from AFP command handlers that modify dircache state.
  * Independent of the external FCE system — always active when IPC is available.
  *
+ * Uses a direct non-blocking write() to the IPC socketpair instead of
+ * ipc_child_write()/writet() — this ensures the AFP command handler is
+ * never blocked waiting for IPC buffer space. If the kernel socket buffer
+ * is full (parent not draining fast enough), the hint is silently dropped.
+ * Hints are best-effort optimizations, and the dircache validation mechanism
+ * & graceful fail-on-use detection makes drops safe.
+ *
+ * The 22-byte message (14-byte IPC header + 8-byte payload) is well under
+ * the kernel socket buffer size, so partial writes cannot occur when space
+ * is available.
+ *
  * @param[in] obj    AFPObj with ipc_fd
  * @param[in] vid    Volume ID (network byte order, matches vol->v_vid)
  * @param[in] cnid   CNID of affected file/dir (network byte order)
  * @param[in] event  Hint type: CACHE_HINT_REFRESH, CACHE_HINT_DELETE,
  *                   or CACHE_HINT_DELETE_CHILDREN
- * @returns 0 on success, -1 on error
+ * @returns 0 on success (or graceful drop), -1 on fatal error
  */
 int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
                         uint8_t event)
@@ -709,12 +726,28 @@ int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
         .vid = vid,
         .cnid = cnid,
     };
-    /* Uses existing ipc_child_write() which handles header construction
-     * and stamps our PID in the header for self-filtering by the relay */
-    int ret = ipc_child_write(obj->ipc_fd, IPC_CACHE_HINT,
-                              sizeof(hint), &hint);
+    /* Build the IPC wire message inline — same format as ipc_child_write()
+     * but we avoid writet() which retries on EAGAIN with select() timeout */
+    char block[IPC_MAXMSGSIZE];
+    char *p = block;
+    uint16_t command = IPC_CACHE_HINT;
+    pid_t pid = getpid();
+    uid_t uid = geteuid();
+    uint32_t len = sizeof(hint);
+    memset(block, 0, IPC_MAXMSGSIZE);
+    memcpy(p, &command, sizeof(command));
+    p += sizeof(command);
+    memcpy(p, &pid, sizeof(pid_t));
+    p += sizeof(pid_t);
+    memcpy(p, &uid, sizeof(uid_t));
+    p += sizeof(uid_t);
+    memcpy(p, &len, 4);
+    p += 4;
+    memcpy(p, &hint, sizeof(hint));
+    ssize_t total = IPC_HEADERLEN + sizeof(hint);
+    ssize_t ret = write(obj->ipc_fd, block, total);
 
-    if (ret == 0) {
+    if (ret == total) {
         hints_sent++;
         LOG(log_debug, logtype_afpd,
             "ipc_send_cache_hint: sent %s for vid:%u did:%u",
@@ -722,7 +755,29 @@ int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
             event == CACHE_HINT_DELETE ? "DELETE" :
             event == CACHE_HINT_DELETE_CHILDREN ? "DELETE_CHILDREN" : "?",
             ntohs(vid), ntohl(cnid));
+        return 0;
     }
 
-    return ret;
+    if (ret == -1 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
+        hints_dropped++;
+        LOG(log_debug, logtype_afpd,
+            "ipc_send_cache_hint: dropped (buffer full) %s for vid:%u did:%u "
+            "(total dropped: %llu)",
+            event == CACHE_HINT_REFRESH ? "REFRESH" :
+            event == CACHE_HINT_DELETE ? "DELETE" :
+            event == CACHE_HINT_DELETE_CHILDREN ? "DELETE_CHILDREN" : "?",
+            ntohs(vid), ntohl(cnid), hints_dropped);
+        return 0;  /* Graceful drop — not a fatal error */
+    }
+
+    /* Unexpected error (not EAGAIN) or partial write */
+    if (ret == -1) {
+        LOG(log_warning, logtype_afpd,
+            "ipc_send_cache_hint: write error: %s", strerror(errno));
+    } else {
+        LOG(log_warning, logtype_afpd,
+            "ipc_send_cache_hint: partial write (%zd of %zd)", ret, total);
+    }
+
+    return -1;
 }
