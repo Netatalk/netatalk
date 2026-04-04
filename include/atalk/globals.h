@@ -74,6 +74,7 @@
 #define OPTION_SPOTLIGHT_EXPR (1 << 16) /*!< whether to allow Spotlight logic expressions */
 #define OPTION_DDP     (1 << 17) /*!< whether to allow connections via appletalk/ddp */
 #define OPTION_VALID_SHELLCHECK (1 << 18) /*!< whether to check for valid login shell */
+#define OPTION_CLOSE_STALE_RLOCKS (1 << 19) /*!< whether to force-close read-locked stale forks on delete */
 
 #define PASSWD_NONE     0
 #define PASSWD_SET     (1 << 0)

@@ -301,6 +301,7 @@ dircache mode = ${AFP_DIRCACHE_MODE:-lru}
 dircache validation freq = ${AFP_DIRCACHE_VALIDATION_FREQ:-1}
 dircache rfork budget = ${AFP_DIRCACHE_RFORK_BUDGET:-0}
 dircache rfork maxsize = ${AFP_DIRCACHE_RFORK_MAXSIZE:-1024}
+close stale rlocks = ${AFP_CLOSE_STALE_RLOCKS:-no}
 legacy icon = $AFP_LEGACY_ICON
 log file = /var/log/afpd.log
 log level = default:${AFP_LOGLEVEL:-info}

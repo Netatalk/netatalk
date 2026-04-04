@@ -2604,6 +2604,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_AFP_READ_LOCK;
     }
 
+    if (getoption_bool(config, INISEC_GLOBAL, "close stale rlocks", NULL, 0)) {
+        options->flags |= OPTION_CLOSE_STALE_RLOCKS;
+    }
+
     if (getoption_bool(config, INISEC_GLOBAL, "spotlight", NULL, 0)) {
         options->flags |= OPTION_SPOTLIGHT_VOL;
     }
