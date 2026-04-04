@@ -121,6 +121,20 @@ static void afp_dsi_close(AFPObj *obj)
         (*obj->logout)();
     }
 
+    /* Log TCP buffer sizes at session close (socket may already be closed
+     * during disconnect path — check fd validity first) */
+    if (dsi->socket >= 0) {
+        int close_rcvbuf = 0, close_sndbuf = 0;
+        socklen_t optlen = sizeof(int);
+        getsockopt(dsi->socket, SOL_SOCKET, SO_RCVBUF, &close_rcvbuf, &optlen);
+        optlen = sizeof(int);
+        getsockopt(dsi->socket, SOL_SOCKET, SO_SNDBUF, &close_sndbuf, &optlen);
+        LOG(log_info, logtype_dsi,
+            "Session close TCP buffer sizes for \"%s\": "
+            "rcvbuf=%d sndbuf=%d",
+            obj->username, close_rcvbuf, close_sndbuf);
+    }
+
     LOG(log_note, logtype_afpd,
         "AFP statistics: %.2f KB read, %.2f KB written via DSI",
         dsi->read_count / 1024.0, dsi->write_count / 1024.0);
@@ -547,6 +561,20 @@ void afp_over_dsi(AFPObj *obj)
         }
     }
 
+    /* Log TCP buffer sizes: configured vs actual (kernel may adjust) */
+    {
+        int actual_rcvbuf = 0, actual_sndbuf = 0;
+        socklen_t optlen = sizeof(int);
+        getsockopt(dsi->socket, SOL_SOCKET, SO_RCVBUF, &actual_rcvbuf, &optlen);
+        optlen = sizeof(int);
+        getsockopt(dsi->socket, SOL_SOCKET, SO_SNDBUF, &actual_sndbuf, &optlen);
+        LOG(log_info, logtype_dsi,
+            "Session start TCP buffer sizes: "
+            "configured rcvbuf=%u sndbuf=%u, "
+            "actual rcvbuf=%d sndbuf=%d",
+            obj->options.tcp_rcvbuf, obj->options.tcp_sndbuf,
+            actual_rcvbuf, actual_sndbuf);
+    }
     /* set TCP_NODELAY */
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
