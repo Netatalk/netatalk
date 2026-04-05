@@ -2,6 +2,7 @@
  * Copyright (c) 1999 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 2026 Andy Lemin (@andylemin)
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  * All Rights Reserved.  See COPYRIGHT.
  *
  * modified from main.c. this handles afp over tcp.
@@ -13,9 +14,9 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -81,7 +82,78 @@ typedef struct {
  */
 static rc_elem_t replaycache[REPLAYCACHE_SIZE];
 
-static sigjmp_buf recon_jmp;
+/*
+ * Pending signal flags — set by async-signal-safe handlers,
+ * processed in the main event loop.
+ *
+ * All signal handlers are kept minimal (set flag only) to avoid
+ * calling non-async-signal-safe functions (malloc, syslog, LOG, etc.)
+ * from signal context.  See POSIX.1-2017 §2.4.3.
+ */
+static volatile sig_atomic_t alarm_pending = 0;
+static volatile sig_atomic_t die_pending = 0;
+static volatile sig_atomic_t transfer_pending = 0;
+static volatile sig_atomic_t timedown_pending = 0;
+static volatile sig_atomic_t getmesg_pending = 0;
+
+/*!
+ * @brief Self-pipe for waking poll() from signal handlers.
+ *
+ * Signal handlers write a single byte to sigpipe_fd[1].  The read end
+ * sigpipe_fd[0] is included in the poll() set so that the main loop
+ * wakes up promptly even when SA_RESTART would otherwise cause poll()
+ * to be restarted transparently.
+ *
+ * Although POSIX says poll() is not affected by SA_RESTART, some
+ * platforms (Solaris, illumos) have historically restarted it.
+ * The self-pipe makes wake-up behaviour portable and deterministic.
+ */
+static int sigpipe_fd[2] = {-1, -1};
+
+static void sigpipe_init(void)
+{
+    if (pipe(sigpipe_fd) == -1) {
+        /* Fatal — without the pipe, signals cannot wake poll() reliably */
+        exit(EXITERR_SYS);
+    }
+
+    /* Both ends non-blocking: write so handlers never stall,
+     * read so sigpipe_drain() never blocks */
+    fcntl(sigpipe_fd[0], F_SETFL,
+          fcntl(sigpipe_fd[0], F_GETFL) | O_NONBLOCK);
+    fcntl(sigpipe_fd[1], F_SETFL,
+          fcntl(sigpipe_fd[1], F_GETFL) | O_NONBLOCK);
+    fcntl(sigpipe_fd[0], F_SETFD, FD_CLOEXEC);
+    fcntl(sigpipe_fd[1], F_SETFD, FD_CLOEXEC);
+}
+
+/*!
+ * @brief Write a single byte to the self-pipe.
+ *
+ * Called from signal handlers — async-signal-safe.
+ */
+static void sigpipe_notify(void)
+{
+    int saved_errno = errno;
+    char c = 1;
+    (void)write(sigpipe_fd[1], &c, 1);
+    errno = saved_errno;
+}
+
+/*!
+ * @brief Drain all pending bytes from the self-pipe.
+ *
+ * Called from the main loop after poll() returns.
+ */
+static void sigpipe_drain(void)
+{
+    char buf[64];
+
+    while (read(sigpipe_fd[0], buf, sizeof(buf)) > 0) {
+        /* drain */
+    }
+}
+
 static void afp_dsi_close(AFPObj *obj)
 {
     DSI *dsi = obj->dsi;
@@ -143,9 +215,15 @@ static void afp_dsi_close(AFPObj *obj)
     dsi_close(dsi);
 }
 
-/* -------------------------------
- * SIGTERM
- * a little bit of code duplication.
+/*!
+ * @brief SIGTERM: Terminate the AFP session and exit.
+ *
+ * Wraps afp_dsi_close() + exit() with pre-flight checks and a shutdown
+ * attention to notify the client.  Other call sites in this file invoke
+ * afp_dsi_close() + exit() directly — a future cleanup could funnel
+ * all exit paths through here.
+ *
+ * @param sig  signal number or EXITERR_* code; 0 for maintenance shutdown.
  */
 static void afp_dsi_die(int sig)
 {
@@ -178,30 +256,41 @@ static void afp_dsi_die(int sig)
     }
 }
 
-/* SIGURG handler (primary reconnect) */
-static void afp_dsi_transfer_session(int sig _U_)
+/*! SIGURG handler (primary reconnect) — async-signal-safe */
+static void afp_dsi_transfer_handler(int sig _U_)
+{
+    transfer_pending = 1;
+    sigpipe_notify();
+}
+
+/*!
+ * @brief Process deferred SIGURG: primary reconnect.
+ *
+ * Called from the main event loop where non-signal-safe functions are permitted.
+ */
+static void handle_transfer_session(AFPObj *obj)
 {
     uint16_t dsiID;
     int socket;
-    DSI *dsi = (DSI *)AFPobj->dsi;
+    DSI *dsi = obj->dsi;
     LOG(log_debug, logtype_afpd,
-        "afp_dsi_transfer_session: got SIGURG, trying to receive session");
+        "handle_transfer_session: got SIGURG, trying to receive session");
 
-    if (readt(AFPobj->ipc_fd, &dsiID, 2, 0, 2) != 2) {
+    if (readt(obj->ipc_fd, &dsiID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_afpd,
-            "afp_dsi_transfer_session: couldn't receive DSI id, goodbye");
-        afp_dsi_close(AFPobj);
+            "handle_transfer_session: couldn't receive DSI id, goodbye");
+        afp_dsi_close(obj);
         exit(EXITERR_SYS);
     }
 
-    if ((socket = recv_fd(AFPobj->ipc_fd, 1)) == -1) {
+    if ((socket = recv_fd(obj->ipc_fd, 1)) == -1) {
         LOG(log_error, logtype_afpd,
-            "afp_dsi_transfer_session: couldn't receive session fd, goodbye");
-        afp_dsi_close(AFPobj);
+            "handle_transfer_session: couldn't receive session fd, goodbye");
+        afp_dsi_close(obj);
         exit(EXITERR_SYS);
     }
 
-    LOG(log_debug, logtype_afpd, "afp_dsi_transfer_session: received socket fd: %i",
+    LOG(log_debug, logtype_afpd, "handle_transfer_session: received socket fd: %i",
         socket);
     dsi->proto_close(dsi);
     dsi->socket = socket;
@@ -218,33 +307,40 @@ static void afp_dsi_transfer_session(int sig _U_)
      */
     if (!dsi_cmdreply(dsi, AFP_OK)) {
         LOG(log_error, logtype_afpd, "dsi_cmdreply: %s", strerror(errno));
-        afp_dsi_close(AFPobj);
+        afp_dsi_close(obj);
         exit(EXITERR_CLNT);
     }
 
     LOG(log_note, logtype_afpd,
-        "afp_dsi_transfer_session: successful primary reconnect");
-    /*
-     * Now returning from this signal handler return to dsi_receive which should start
-     * reading/continuing from the connected socket that was passed via the parent from
-     * another session. The parent will terminate that session.
-     */
-    siglongjmp(recon_jmp, 1);
+        "handle_transfer_session: successful primary reconnect");
 }
 
-/* ------------------- */
-static void afp_dsi_timedown(int sig _U_)
+/* Forward declaration — defined after alarm_handler */
+static void afp_dsi_die_handler(int sig);
+
+/*! SIGUSR1 handler — async-signal-safe */
+static void afp_dsi_timedown_handler(int sig _U_)
+{
+    timedown_pending = 1;
+    sigpipe_notify();
+}
+
+/*!
+ * @brief Process deferred SIGUSR1: server going down in 5 minutes.
+ *
+ * Called from the main event loop.
+ */
+static void handle_timedown(AFPObj *obj)
 {
     struct sigaction	sv;
     struct itimerval	it;
-    DSI                 *dsi = (DSI *)AFPobj->dsi;
+    DSI *dsi = obj->dsi;
     dsi->flags |= DSI_DIE;
     /* shutdown and don't reconnect. server going down in 5 minutes. */
     setmessage("The server is going down for maintenance.");
 
-    if (dsi_attention(AFPobj->dsi, AFPATTN_SHUTDOWN | AFPATTN_NORECONNECT |
+    if (dsi_attention(obj->dsi, AFPATTN_SHUTDOWN | AFPATTN_NORECONNECT |
                       AFPATTN_MESG | AFPATTN_TIME(5)) < 0) {
-        DSI *dsi = (DSI *)AFPobj->dsi;
         dsi->down_request = 1;
     }
 
@@ -259,7 +355,7 @@ static void afp_dsi_timedown(int sig _U_)
     }
 
     memset(&sv, 0, sizeof(sv));
-    sv.sa_handler = afp_dsi_die;
+    sv.sa_handler = afp_dsi_die_handler;
     sigemptyset(&sv.sa_mask);
     sigaddset(&sv.sa_mask, SIGHUP);
     sigaddset(&sv.sa_mask, SIGTERM);
@@ -276,49 +372,87 @@ static void afp_dsi_timedown(int sig _U_)
     sv.sa_flags = SA_RESTART;
 
     if (sigaction(SIGUSR1, &sv, NULL) < 0) {
-        LOG(log_error, logtype_afpd, "afp_timedown: sigaction SIGHUP: %s",
+        LOG(log_error, logtype_afpd, "afp_timedown: sigaction SIGUSR1: %s",
             strerror(errno));
         afp_dsi_die(EXITERR_SYS);
     }
 }
 
-/* ---------------------------------
- * SIGHUP reload configuration file
+/*!
+ * SIGHUP: reload configuration file — async-signal-safe
  */
-volatile int reload_request = 0;
+volatile sig_atomic_t reload_request = 0;
 
 static void afp_dsi_reload(int sig _U_)
 {
     reload_request = 1;
+    sigpipe_notify();
 }
 
-/* ---------------------------------
- * SIGINT: enable max_debug LOGging
+/*!
+ * SIGINT: enable max_debug LOGging — async-signal-safe
  */
 static volatile sig_atomic_t debug_request = 0;
 
 static void afp_dsi_debug(int sig _U_)
 {
     debug_request = 1;
+    sigpipe_notify();
 }
 
-/* ---------------------- */
-static void afp_dsi_getmesg(int sig _U_)
+/*! SIGUSR2 handler — async-signal-safe */
+static void afp_dsi_getmesg_handler(int sig _U_)
 {
-    DSI *dsi = (DSI *)AFPobj->dsi;
+    getmesg_pending = 1;
+    sigpipe_notify();
+}
+
+/*!
+ * @brief Process deferred SIGUSR2: server message.
+ *
+ * Called from the main event loop.
+ */
+static void handle_getmesg(AFPObj *obj)
+{
+    DSI *dsi = obj->dsi;
     dsi->msg_request = 1;
 
-    if (dsi_attention(AFPobj->dsi, AFPATTN_MESG | AFPATTN_TIME(5)) < 0) {
+    if (dsi_attention(obj->dsi, AFPATTN_MESG | AFPATTN_TIME(5)) < 0) {
         dsi->msg_request = 2;
     }
 }
 
+/*! SIGTERM/SIGQUIT handler — async-signal-safe */
+static void afp_dsi_die_handler(int sig)
+{
+    die_pending = sig ? sig : -1;
+    sigpipe_notify();
+}
+
+/*!
+ * @brief SIGALRM handler — async-signal-safe.
+ *
+ * Only restarts the timer (setitimer is async-signal-safe) and sets a flag.
+ * All tickle/timeout logic is deferred to handle_alarm().
+ */
 static void alarm_handler(int sig _U_)
 {
-    int err;
-    DSI *dsi = (DSI *)AFPobj->dsi;
+    const DSI *dsi = AFPobj->dsi;
     /* we have to restart the timer because some libraries may use alarm() */
     setitimer(ITIMER_REAL, &dsi->timer, NULL);
+    alarm_pending = 1;
+    sigpipe_notify();
+}
+
+/*!
+ * @brief Process deferred SIGALRM: tickle/timeout management.
+ *
+ * Called from the main event loop where LOG/malloc/syslog are safe.
+ */
+static void handle_alarm(AFPObj *obj)
+{
+    int err;
+    DSI *dsi = obj->dsi;
 
     /* we got some traffic from the client since the previous timer tick. */
     if (dsi->flags & DSI_DATA) {
@@ -341,7 +475,7 @@ static void alarm_handler(int sig _U_)
         (dsi->flags & DSI_RECONINPROG) ?  "DSI_RECONINPROG" : "-");
 
     if (dsi->flags & DSI_SLEEPING) {
-        if (dsi->tickle > AFPobj->options.sleep) {
+        if (dsi->tickle > obj->options.sleep) {
             LOG(log_note, logtype_afpd, "afp_alarm: sleep time ended");
             afp_dsi_die(EXITERR_CLNT);
         }
@@ -356,7 +490,7 @@ static void alarm_handler(int sig _U_)
             afp_dsi_die(EXITERR_CLNT);
         }
 
-        if (dsi->tickle > AFPobj->options.disconnected) {
+        if (dsi->tickle > obj->options.disconnected) {
             LOG(log_error, logtype_afpd, "afp_alarm: reconnect timer expired, goodbye");
             afp_dsi_die(EXITERR_CLNT);
         }
@@ -365,7 +499,7 @@ static void alarm_handler(int sig _U_)
     }
 
     /* if we're in the midst of processing something, don't die. */
-    if (dsi->tickle >= AFPobj->options.timeout) {
+    if (dsi->tickle >= obj->options.timeout) {
         LOG(log_error, logtype_afpd,
             "afp_alarm: child timed out, entering disconnected state");
 
@@ -376,9 +510,9 @@ static void alarm_handler(int sig _U_)
         return;
     }
 
-    if ((err = pollvoltime(AFPobj)) == 0) {
+    if ((err = pollvoltime(obj)) == 0) {
         LOG(log_debug, logtype_afpd, "afp_alarm: sending DSI tickle");
-        err = dsi_tickle(AFPobj->dsi);
+        err = dsi_tickle(obj->dsi);
     }
 
     if (err <= 0) {
@@ -400,6 +534,53 @@ static void alarm_handler(int sig _U_)
 static void child_handler(int sig _U_)
 {
     wait(NULL);
+}
+
+/*!
+ * @brief Process all pending deferred signals.
+ *
+ * @returns 1 if the caller should restart the outer event loop
+ *          (primary reconnect), 0 otherwise.
+ *
+ * @note Must be called from the main event loop, never from signal context.
+ */
+static int process_deferred_signals(AFPObj *obj)
+{
+    /* Highest priority: die (SIGTERM/SIGQUIT/SIGALRM-after-timedown) */
+    if (die_pending) {
+        int sig = die_pending;
+        die_pending = 0;
+        afp_dsi_die(sig);
+        /* afp_dsi_die calls exit() — should not return */
+    }
+
+    /* Primary reconnect (SIGURG) */
+    if (transfer_pending) {
+        transfer_pending = 0;
+        idle_worker_stop();
+        handle_transfer_session(obj);
+        return 1;
+    }
+
+    /* Server going down (SIGUSR1) */
+    if (timedown_pending) {
+        timedown_pending = 0;
+        handle_timedown(obj);
+    }
+
+    /* Server message (SIGUSR2) */
+    if (getmesg_pending) {
+        getmesg_pending = 0;
+        handle_getmesg(obj);
+    }
+
+    /* Tickle / timeout (SIGALRM) */
+    if (alarm_pending) {
+        alarm_pending = 0;
+        handle_alarm(obj);
+    }
+
+    return 0;
 }
 
 /* -----------------
@@ -444,7 +625,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGURG */
-    action.sa_handler = afp_dsi_transfer_session;
+    action.sa_handler = afp_dsi_transfer_handler;
 
     if (sigaction(SIGURG, &action, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno));
@@ -452,7 +633,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGTERM */
-    action.sa_handler = afp_dsi_die;
+    action.sa_handler = afp_dsi_die_handler;
 
     if (sigaction(SIGTERM, &action, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno));
@@ -460,7 +641,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* install SIGQUIT */
-    action.sa_handler = afp_dsi_die;
+    action.sa_handler = afp_dsi_die_handler;
 
     if (sigaction(SIGQUIT, &action, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno));
@@ -468,7 +649,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /* SIGUSR2 - server message support */
-    action.sa_handler = afp_dsi_getmesg;
+    action.sa_handler = afp_dsi_getmesg_handler;
 
     if (sigaction(SIGUSR2, &action, NULL) < 0) {
         LOG(log_error, logtype_afpd, "afp_over_dsi: sigaction: %s", strerror(errno));
@@ -476,7 +657,7 @@ void afp_over_dsi_sighandlers(AFPObj *obj)
     }
 
     /*  SIGUSR1 - set down in 5 minutes  */
-    action.sa_handler = afp_dsi_timedown;
+    action.sa_handler = afp_dsi_timedown_handler;
     action.sa_flags = SA_RESTART;
 
     if (sigaction(SIGUSR1, &action, NULL) < 0) {
@@ -579,16 +760,19 @@ void afp_over_dsi(AFPObj *obj)
     int flag = 1;
     setsockopt(dsi->socket, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
     ipc_child_state(obj, DSI_RUNNING);
+    /* Initialise self-pipe for signal-to-mainloop notification */
+    sigpipe_init();
 
     /* get stuck here until the end */
     while (1) {
-        if (sigsetjmp(recon_jmp, 1) != 0) {
-            /* returning from SIGALARM handler for a primary reconnect */
-            idle_worker_stop();  /* safety stop in case longjmp from poll() */
-            continue;
-        }
-
         while (1) {
+            /* [A0] Process deferred signals before any blocking I/O */
+            sigpipe_drain();
+
+            if (process_deferred_signals(obj)) {
+                goto restart_outer;
+            }
+
             /* [A] DSI buffer check — skip poll if data buffered */
             if (dsi->start != dsi->eof) {
                 break;                          /* NO idle — data ready */
@@ -603,8 +787,8 @@ void afp_over_dsi(AFPObj *obj)
                 break;                          /* NO idle — special state */
             }
 
-            /* [C] Setup poll fds */
-            struct pollfd pfds[2];
+            /* [C] Setup poll fds — includes self-pipe for signal wake-up */
+            struct pollfd pfds[3];
             int nfds = 0;
             pfds[nfds].fd = dsi->socket;
             pfds[nfds].events = POLLIN;
@@ -618,6 +802,10 @@ void afp_over_dsi(AFPObj *obj)
                 nfds++;
             }
 
+            int sigpipe_idx = nfds;
+            pfds[nfds].fd = sigpipe_fd[0];
+            pfds[nfds].events = POLLIN;
+            nfds++;
             /* Signal idle worker to start — we are about to block in poll().
              * idle_worker_start() is async-signal-safe (single atomic store) */
             idle_worker_start();
@@ -635,6 +823,15 @@ void afp_over_dsi(AFPObj *obj)
 
                 LOG(log_error, logtype_afpd, "afp_over_dsi: poll error: %s", strerror(errno));
                 break;
+            }
+
+            /* [E1] Signal pipe — drain and loop back to process signals at [A0] */
+            if (pfds[sigpipe_idx].revents & POLLIN) {
+                sigpipe_drain();
+
+                if (process_deferred_signals(obj)) {
+                    goto restart_outer;
+                }
             }
 
             /* [F] Hint pipe handling */
@@ -668,7 +865,7 @@ void afp_over_dsi(AFPObj *obj)
                 break;
             }
 
-            /* [I] Only hint pipe had data — loop back to poll() */
+            /* [I] Only hint/signal pipe had data — loop back to poll() */
         }
 
         /* Blocking read on the network socket (now guaranteed to not block
@@ -680,6 +877,14 @@ void afp_over_dsi(AFPObj *obj)
             if (dsi->flags & DSI_RECONSOCKET) {
                 /* we just got a reconnect so we immediately try again to receive on the new fd */
                 dsi->flags &= ~DSI_RECONSOCKET;
+                continue;
+            }
+
+            /* A deferred SIGURG may have arrived during dsi_stream_receive */
+            if (transfer_pending) {
+                transfer_pending = 0;
+                idle_worker_stop();
+                handle_transfer_session(obj);
                 continue;
             }
 
@@ -707,8 +912,13 @@ void afp_over_dsi(AFPObj *obj)
             ipc_child_state(obj, DSI_DISCONNECTED);
 
             while (dsi->flags & DSI_DISCONNECTED) {
-                /* gets interrupted by SIGALARM or SIGURG tickle */
+                /* gets interrupted by SIGALRM or SIGURG */
                 pause();
+                sigpipe_drain();
+
+                if (process_deferred_signals(obj)) {
+                    break;
+                }
             }
 
             ipc_child_state(obj, DSI_RUNNING);
@@ -882,5 +1092,6 @@ void afp_over_dsi(AFPObj *obj)
 
         pending_request(dsi);
         fce_pending_events(obj);
+restart_outer: ;
     }
 }

@@ -17,6 +17,7 @@ Netatalk 2001 (c)
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -463,7 +464,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     /* fn is not reentrant but is used in signal handler
      * with LOGGER it's a little late source name and line number
      * are already changed. */
-    static int inlog = 0;
+    static volatile sig_atomic_t inlog = 0;
     int fd, len;
     char *user_message, *log_message;
     va_list args;
@@ -486,6 +487,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
             va_end(args);
 
             if (len == -1) {
+                inlog = 0;
                 return;
             }
 
