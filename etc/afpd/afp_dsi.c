@@ -91,10 +91,11 @@ static rc_elem_t replaycache[REPLAYCACHE_SIZE];
  * from signal context.  See POSIX.1-2017 §2.4.3.
  */
 static volatile sig_atomic_t alarm_pending = 0;
-static volatile sig_atomic_t die_pending = 0;
 static volatile sig_atomic_t transfer_pending = 0;
 static volatile sig_atomic_t timedown_pending = 0;
 static volatile sig_atomic_t getmesg_pending = 0;
+/* Non-static: also checked by afp_disconnect() in auth.c */
+volatile sig_atomic_t die_pending = 0;
 
 /*!
  * @brief Self-pipe for waking poll() from signal handlers.

@@ -13,6 +13,7 @@
 #include <grp.h>
 #include <limits.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,9 @@
 #include "status.h"
 #include "switch.h"
 #include "uam_auth.h"
+
+/* Deferred SIGTERM flag — defined in afp_dsi.c */
+extern volatile sig_atomic_t die_pending;
 
 static int afp_version_index;
 static struct uam_mod uam_modules = {NULL, NULL, &uam_modules, &uam_modules};
@@ -639,6 +643,14 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     /* Now see what happens: either afpd master sends us SIGTERM because our session */
     /* has been transferred to a old disconnected session, or we continue    */
     sleep(5);
+
+    /* With deferred signal handling, SIGTERM only sets die_pending
+     * instead of directly calling afp_dsi_die() which would clear
+     * DSI_RECONINPROG.  Do that here. */
+    if (die_pending) {
+        die_pending = 0;
+        dsi->flags &= ~DSI_RECONINPROG;
+    }
 
     if (!(dsi->flags & DSI_RECONINPROG)) { /* deleted in SIGTERM handler */
         /* Reconnect succeeded, we exit now after sleeping some more */
