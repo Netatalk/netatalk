@@ -42,6 +42,13 @@ the behavior and configuration of the AFP file server and the AFP volumes that i
 
 Any section not named **Global** or **Homes** is interpreted as an AFP volume.
 
+> **Note:** Nested volumes (where one volume's path is a subdirectory of another's) are not allowed.
+When Netatalk detects a nested volume configuration, it will skip the nested volume and log a warning.
+This is because nested volumes cause CNID database inconsistencies that lead to crashes or data corruption.
+If you need to share both a parent directory and a subdirectory,
+use the **path** option in the **Homes** section to limit the home volume to a subdirectory,
+or reorganize your shares so that no volume path is contained within another.
+
 To share user homes,
 define a **Homes** section and specify the **basedir regex** option.
 This can be a simple path to the parent directory of all user homes,
