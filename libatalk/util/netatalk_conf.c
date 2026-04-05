@@ -995,11 +995,110 @@ static struct vol *creatvol(AFPObj *obj,
             EC_EXIT_STATUS(0);
         }
 
-        /*
-         * We could check for nested volume paths here, but
-         * nobody was able to come up with an implementation yet,
-         * that is simple, fast and correct.
-         */
+        /* Check for nested volume paths */
+        size_t vol_path_len = strlen(vol->v_path);
+        size_t new_path_len = strlen(path);
+
+        if (new_path_len > vol_path_len
+                && strncmp(path, vol->v_path, vol_path_len) == 0
+                && path[vol_path_len] == '/') {
+            LOG(log_warning, logtype_afpd,
+                "creatvol: volume \"%s\" path \"%s\" "
+                "is nested inside volume \"%s\" path \"%s\", skipping",
+                name, path, vol->v_configname, vol->v_path);
+            EC_EXIT_STATUS(0);
+        }
+
+        if (vol_path_len > new_path_len
+                && strncmp(vol->v_path, path, new_path_len) == 0
+                && vol->v_path[new_path_len] == '/') {
+            LOG(log_warning, logtype_afpd,
+                "creatvol: volume \"%s\" path \"%s\" "
+                "is nested inside volume \"%s\" path \"%s\", skipping",
+                vol->v_configname, vol->v_path, name, path);
+            EC_EXIT_STATUS(0);
+        }
+    }
+
+    /*
+     * Check if this non-Homes volume is nested inside a potential home volume.
+     * Home volumes are created dynamically at login, so they won't be in the
+     * Volumes list yet. We check against [Homes] basedir regex instead.
+     */
+    if (STRCMP(section, !=, INISEC_HOMES)) {
+        const char *basedir = getoption_str(obj->iniconfig, INISEC_HOMES,
+                                            "basedir regex", NULL, NULL);
+
+        if (basedir) {
+            regex_t basedir_reg;
+            regmatch_t basedir_match[1];
+
+            if (regcomp(&basedir_reg, basedir, REG_EXTENDED) == 0) {
+                if (regexec(&basedir_reg, path, 1, basedir_match, 0) == 0
+                        && basedir_match[0].rm_so == 0) {
+                    /*
+                     * Path matches basedir at position 0.
+                     * A home volume path is: <basedir>/<user>[/<subpath>]
+                     * Find the username component after the basedir match.
+                     */
+                    const char *remainder = path + basedir_match[0].rm_eo;
+
+                    /* Skip leading slashes after basedir */
+                    while (*remainder == '/') {
+                        remainder++;
+                    }
+
+                    /* Skip the username component */
+                    const char *slash = strchr(remainder, '/');
+
+                    if (slash) {
+                        /*
+                         * Path extends beyond <basedir>/<user>.
+                         * Check against [Homes] path option if set.
+                         */
+                        const char *homes_subpath = getoption_str(
+                                                        obj->iniconfig, INISEC_HOMES, "path", NULL, NULL);
+
+                        if (homes_subpath) {
+                            /*
+                             * Home volume is <basedir>/<user>/<subpath>.
+                             * The new volume is nested only if it starts
+                             * with <basedir>/<user>/<subpath>/
+                             */
+                            slash++; /* skip past '/' after username */
+                            size_t subpath_len = strlen(homes_subpath);
+
+                            if (strncmp(slash, homes_subpath, subpath_len) == 0
+                                    && (slash[subpath_len] == '/'
+                                        || slash[subpath_len] == '\0')) {
+                                LOG(log_warning, logtype_afpd,
+                                    "creatvol: volume \"%s\" path \"%s\" "
+                                    "is nested inside a [Homes] volume "
+                                    "(basedir regex: \"%s\", path: \"%s\"), "
+                                    "skipping",
+                                    name, path, basedir, homes_subpath);
+                                regfree(&basedir_reg);
+                                EC_EXIT_STATUS(0);
+                            }
+                        } else {
+                            /*
+                             * No subpath: home volume is <basedir>/<user>.
+                             * Any deeper path is nested.
+                             */
+                            LOG(log_warning, logtype_afpd,
+                                "creatvol: volume \"%s\" path \"%s\" "
+                                "is nested inside a [Homes] volume "
+                                "(basedir regex: \"%s\"), skipping",
+                                name, path, basedir);
+                            regfree(&basedir_reg);
+                            EC_EXIT_STATUS(0);
+                        }
+                    }
+                }
+
+                regfree(&basedir_reg);
+            }
+        }
     }
 
     /*
