@@ -175,7 +175,7 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
         return AFPERR_NOTAUTH;
     }
 
-    LOG(log_warning, logtype_uams, "cleartext login: %s", username);
+    LOG(log_warning, logtype_uams, "cleartext login: %s (INSECURE)", username);
     PAM_username = username;
     PAM_password = ibuf; /* Set these things up for the conv function */
     err = AFPERR_NOTAUTH;
@@ -598,7 +598,7 @@ static int pam_printer(char *start, char *stop, char *username,
     /* Login successful, but no need to hang onto it,
        so logout immediately */
     append(out, loginok, strlen(loginok));
-    LOG(log_warning, logtype_uams, "Login ClearTxtUAM: %s", username);
+    LOG(log_warning, logtype_uams, "Login ClearTxtUAM: %s (INSECURE)", username);
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
