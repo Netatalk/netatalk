@@ -59,7 +59,7 @@ static int pwd_login(void *obj, char *username, int ulen,
         return AFPERR_NOTAUTH;
     }
 
-    LOG(log_info, logtype_uams, "cleartext login: %s", username);
+    LOG(log_warning, logtype_uams, "cleartext login: %s (INSECURE)", username);
 
     if (uam_checkuser(obj, pwd) < 0) {
         LOG(log_info, logtype_uams, "not a valid user");
@@ -302,7 +302,7 @@ static int passwd_printer(char	*start, char *stop, char *username,
 
     /* Login successful */
     append(out, loginok, strlen(loginok));
-    LOG(log_info, logtype_uams, "Login ClearTxtUAM: %s", username);
+    LOG(log_warning, logtype_uams, "Login ClearTxtUAM: %s (INSECURE)", username);
     return 0;
 }
 
