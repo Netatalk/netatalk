@@ -130,7 +130,7 @@ static void afp_asp_timedown(int sig _U_)
 /* ---------------------------------
  * SIGHUP reload configuration file
 */
-extern volatile int reload_request;
+extern volatile sig_atomic_t reload_request;
 
 static void afp_asp_reload(int sig _U_)
 {
