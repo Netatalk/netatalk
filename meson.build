@@ -1763,9 +1763,9 @@ else
             cdata.set('PAM_SESSION', 'pam_unix.so')
         endif
 
-        if cdata.has('HAVE_SECURITY_PAM_APPL_H')
+        if cc.has_header('security/pam_appl.h', include_directories: pam_header_dirs)
             pam_header = 'security/pam_appl.h'
-        elif cdata.has('HAVE_PAM_PAM_APPL_H')
+        elif cc.has_header('pam/pam_appl.h', include_directories: pam_header_dirs)
             pam_header = 'pam/pam_appl.h'
         else
             pam_header = 'security/pam_appl.h'
