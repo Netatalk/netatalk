@@ -646,7 +646,21 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     /* Get CNID from ad-file */
     ad_cnid = CNID_INVALID;
 
-    if (ADFILE_OK) {
+    if (dbd_flags & DBD_FLAGS_STRIP_AD) {
+        dbd_log(LOGDEBUG, "Ignoring AppleDouble CNID hint for '%s/%s'", cwdbuf, name);
+
+        if (ADFILE_OK && vol->v_adouble == AD_VERSION_EA) {
+            int oflags = (dbd_flags & DBD_FLAGS_SCAN) ? ADFLAGS_RDONLY : ADFLAGS_RDWR;
+            ad_init(&ad, vol);
+
+            if (ad_open(&ad, name, adflags | oflags) != 0) {
+                dbd_log(LOGDEBUG, "File without meta EA: \"%s/%s\"", cwdbuf, name);
+                adfile_ok = 1;
+            } else {
+                ad_close(&ad, ADFLAGS_HF);
+            }
+        }
+    } else if (ADFILE_OK) {
         ad_init(&ad, vol);
 
         if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {
@@ -679,7 +693,7 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     }
 
     /* Compare CNID from db and adouble file */
-    if (ad_cnid != db_cnid && adfile_ok == 0) {
+    if (ad_cnid != db_cnid && adfile_ok == 0 && !(dbd_flags & DBD_FLAGS_SCAN)) {
         /* Mismatch, overwrite ad file with value from db */
         dbd_log(LOGSTD, "CNID mismatch for '%s/%s', CNID db: %u, ad-file: %u",
                 cwdbuf, name, ntohl(db_cnid), ntohl(ad_cnid));
