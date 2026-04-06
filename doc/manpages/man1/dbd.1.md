@@ -4,7 +4,7 @@ dbd — CNID database maintenance utility
 
 # Synopsis
 
-**dbd** [-cfFstuv] [*volumepath*]
+**dbd** [-cfFistuv] [*volumepath*]
 
 **dbd** [-V]
 
@@ -34,6 +34,12 @@ this tool can be used with any CNID backend.
 **-F**
 
 > location of the *afp.conf* config file
+
+**-i**
+
+> invalidate CNID hints stored in AppleDouble files,
+so existing database entries are used instead of stale AD hints;
+combine with **-f** to assign fresh CNIDs to all files and directories
 
 **-s**
 
