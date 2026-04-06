@@ -195,17 +195,21 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
      * pam_bsdauth fork helper processes and waitpid for them.
      * afpd sets SA_NOCLDWAIT which causes the kernel to auto-reap
      * children, making waitpid fail with ECHILD. */
-    struct sigaction sa_dfl, sa_old;
-    memset(&sa_dfl, 0, sizeof(sa_dfl));
+    struct sigaction sa_dfl = {0};
+    struct sigaction sa_old;
+    int sigchld_saved;
     sa_dfl.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &sa_dfl, &sa_old);
+    sigemptyset(&sa_dfl.sa_mask);
+    sigchld_saved = (sigaction(SIGCHLD, &sa_dfl, &sa_old) == 0);
     /* use PAM_DISALLOW_NULL_AUTHTOK if passwdminlen > 0 */
     LOG(log_debug, logtype_uams, "PAM: calling pam_authenticate");
     PAM_error = pam_authenticate(pamh, 0);
     LOG(log_debug, logtype_uams, "PAM: pam_authenticate returned: %d", PAM_error);
 
     if (PAM_error != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old, NULL);
+        if (sigchld_saved) {
+            sigaction(SIGCHLD, &sa_old, NULL);
+        }
 
         if (PAM_error == PAM_MAXTRIES) {
             err = AFPERR_PWDEXPR;
@@ -217,7 +221,10 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     LOG(log_debug, logtype_uams, "PAM: calling pam_acct_mgmt");
     PAM_error = pam_acct_mgmt(pamh, 0);
     LOG(log_debug, logtype_uams, "PAM: pam_acct_mgmt returned: %d", PAM_error);
-    sigaction(SIGCHLD, &sa_old, NULL);
+
+    if (sigchld_saved) {
+        sigaction(SIGCHLD, &sa_old, NULL);
+    }
 
     if (PAM_error != PAM_SUCCESS) {
         /* Password change required */
@@ -390,21 +397,27 @@ static int pam_changepw(void *obj _U_, char *username,
         LOG(log_error, logtype_uams, "pam_changepw: could not seteuid(%i)", 0);
     }
 
-    struct sigaction sa_dfl2, sa_old2;
-
-    memset(&sa_dfl2, 0, sizeof(sa_dfl2));
+    struct sigaction sa_dfl2 = {0}, sa_old2;
+    int sigchld_saved2;
     sa_dfl2.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &sa_dfl2, &sa_old2);
+    sigemptyset(&sa_dfl2.sa_mask);
+    sigchld_saved2 = (sigaction(SIGCHLD, &sa_dfl2, &sa_old2) == 0);
     PAM_error = pam_authenticate(lpamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old2, NULL);
+        if (sigchld_saved2) {
+            sigaction(SIGCHLD, &sa_old2, NULL);
+        }
+
         ret = AFPERR_NOTAUTH;
         goto changepw_restore_uid;
     }
 
     PAM_error = pam_acct_mgmt(lpamh, 0);
-    sigaction(SIGCHLD, &sa_old2, NULL);
+
+    if (sigchld_saved2) {
+        sigaction(SIGCHLD, &sa_old2, NULL);
+    }
 
     if (PAM_error != PAM_SUCCESS) {
         ret = AFPERR_NOTAUTH;
@@ -553,14 +566,18 @@ static int pam_printer(char *start, char *stop, char *username,
 
     pam_set_item(pamh, PAM_TTY, "papd");
     pam_set_item(pamh, PAM_RHOST, hostname);
-    struct sigaction sa_dfl3, sa_old3;
-    memset(&sa_dfl3, 0, sizeof(sa_dfl3));
+    struct sigaction sa_dfl3 = {0}, sa_old3;
+    int sigchld_saved3;
     sa_dfl3.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &sa_dfl3, &sa_old3);
+    sigemptyset(&sa_dfl3.sa_mask);
+    sigchld_saved3 = (sigaction(SIGCHLD, &sa_dfl3, &sa_old3) == 0);
     PAM_error = pam_authenticate(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old3, NULL);
+        if (sigchld_saved3) {
+            sigaction(SIGCHLD, &sa_old3, NULL);
+        }
+
         LOG(log_debug, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
@@ -571,7 +588,10 @@ static int pam_printer(char *start, char *stop, char *username,
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
-    sigaction(SIGCHLD, &sa_old3, NULL);
+
+    if (sigchld_saved3) {
+        sigaction(SIGCHLD, &sa_old3, NULL);
+    }
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",

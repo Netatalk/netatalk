@@ -597,24 +597,35 @@ static int loginasroot(const char *adminauthuser, const char **hostname,
      * pam_bsdauth fork helper processes and waitpid for them.
      * afpd sets SA_NOCLDWAIT which causes the kernel to auto-reap
      * children, making waitpid fail with ECHILD. */
-    struct sigaction sa_dfl, sa_old;
-    memset(&sa_dfl, 0, sizeof(sa_dfl));
+    struct sigaction sa_dfl = {0};
+    struct sigaction sa_old;
+    int sigchld_saved;
     sa_dfl.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &sa_dfl, &sa_old);
+    sigemptyset(&sa_dfl.sa_mask);
+    sigchld_saved = (sigaction(SIGCHLD, &sa_dfl, &sa_old) == 0);
 
     if ((PAM_error = pam_authenticate(pamh, 0)) != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old, NULL);
+        if (sigchld_saved) {
+            sigaction(SIGCHLD, &sa_old, NULL);
+        }
+
         LOG(log_info, logtype_uams, "DHX2 loginasroot: error authenticating with PAM");
         goto exit;
     }
 
     if ((PAM_error = pam_acct_mgmt(pamh, 0)) != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old, NULL);
+        if (sigchld_saved) {
+            sigaction(SIGCHLD, &sa_old, NULL);
+        }
+
         LOG(log_info, logtype_uams, "DHX2 loginasroot: error validating PAM account");
         goto exit;
     }
 
-    sigaction(SIGCHLD, &sa_old, NULL);
+    if (sigchld_saved) {
+        sigaction(SIGCHLD, &sa_old, NULL);
+    }
+
     LOG(log_warning, logtype_uams, "DHX2: Authenticated as \"%s\"", adminauthuser);
 exit:
     return PAM_error;
@@ -719,14 +730,18 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
      * pam_bsdauth fork helper processes and waitpid for them.
      * afpd sets SA_NOCLDWAIT which causes the kernel to auto-reap
      * children, making waitpid fail with ECHILD. */
-    struct sigaction sa_dfl, sa_old;
-    memset(&sa_dfl, 0, sizeof(sa_dfl));
+    struct sigaction sa_dfl = {0};
+    struct sigaction sa_old;
+    int sigchld_saved;
     sa_dfl.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &sa_dfl, &sa_old);
+    sigemptyset(&sa_dfl.sa_mask);
+    sigchld_saved = (sigaction(SIGCHLD, &sa_dfl, &sa_old) == 0);
     PAM_error = pam_authenticate(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old, NULL);
+        if (sigchld_saved) {
+            sigaction(SIGCHLD, &sa_old, NULL);
+        }
 
         if (PAM_error == PAM_MAXTRIES) {
             ret = AFPERR_PWDEXPR;
@@ -746,7 +761,10 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
-    sigaction(SIGCHLD, &sa_old, NULL);
+
+    if (sigchld_saved) {
+        sigaction(SIGCHLD, &sa_old, NULL);
+    }
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",

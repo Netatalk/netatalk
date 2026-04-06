@@ -536,14 +536,18 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
      * pam_bsdauth fork helper processes and waitpid for them.
      * afpd sets SA_NOCLDWAIT which causes the kernel to auto-reap
      * children, making waitpid fail with ECHILD. */
-    struct sigaction sa_dfl, sa_old;
-    memset(&sa_dfl, 0, sizeof(sa_dfl));
+    struct sigaction sa_dfl = {0};
+    struct sigaction sa_old;
+    int sigchld_saved;
     sa_dfl.sa_handler = SIG_DFL;
-    sigaction(SIGCHLD, &sa_dfl, &sa_old);
+    sigemptyset(&sa_dfl.sa_mask);
+    sigchld_saved = (sigaction(SIGCHLD, &sa_dfl, &sa_old) == 0);
     PAM_error = pam_authenticate(pamh, 0);
 
     if (PAM_error != PAM_SUCCESS) {
-        sigaction(SIGCHLD, &sa_old, NULL);
+        if (sigchld_saved) {
+            sigaction(SIGCHLD, &sa_old, NULL);
+        }
 
         if (PAM_error == PAM_MAXTRIES) {
             err = AFPERR_PWDEXPR;
@@ -557,7 +561,10 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
-    sigaction(SIGCHLD, &sa_old, NULL);
+
+    if (sigchld_saved) {
+        sigaction(SIGCHLD, &sa_old, NULL);
+    }
 
     if (PAM_error != PAM_SUCCESS) {
         /* Log Entry */
