@@ -646,7 +646,9 @@ static cnid_t check_cnid(const char *name, cnid_t did, struct stat *st,
     /* Get CNID from ad-file */
     ad_cnid = CNID_INVALID;
 
-    if (ADFILE_OK) {
+    if (dbd_flags & DBD_FLAGS_STRIP_AD) {
+        dbd_log(LOGDEBUG, "Ignoring AppleDouble CNID hint for '%s/%s'", cwdbuf, name);
+    } else if (ADFILE_OK) {
         ad_init(&ad, vol);
 
         if (ad_open(&ad, name, adflags | ADFLAGS_RDWR) != 0) {

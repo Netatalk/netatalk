@@ -14,6 +14,7 @@ typedef unsigned int dbd_flags_t;
 #define DBD_FLAGS_STATS    (1 << 2)
 #define DBD_FLAGS_V2TOEA   (1 << 3) /*!< Convert adouble:v2 to adouble:ea */
 #define DBD_FLAGS_VERBOSE  (1 << 4)
+#define DBD_FLAGS_STRIP_AD (1 << 5) /*!< Invalidate AppleDouble CNID hints */
 
 #define ADv2_DIRNAME ".AppleDouble"
 

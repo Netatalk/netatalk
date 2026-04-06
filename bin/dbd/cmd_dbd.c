@@ -95,7 +95,7 @@ static void set_signal(void)
 
 static void usage(void)
 {
-    printf("Usage: dbd [-cfFstuvV] <path to netatalk volume>\n\n"
+    printf("Usage: dbd [-cfFistuvV] <path to netatalk volume>\n\n"
            "dbd scans all file and directories of AFP volumes, updating the\n"
            "CNID database of the volume. dbd must be run with appropriate\n"
            "permissions i.e. as root.\n\n"
@@ -105,6 +105,7 @@ static void usage(void)
            "   -c convert from adouble:v2 to adouble:ea\n"
            "   -F location of the afp.conf config file\n"
            "   -f delete and recreate CNID database\n"
+           "   -i invalidate CNID hints in AppleDouble files\n"
            "   -t show statistics while running\n"
            "   -u username for use with AFP volumes using user variable $u\n"
            "   -v verbose\n"
@@ -139,7 +140,7 @@ int main(int argc, char **argv)
     const char *username = NULL;
     int c;
 
-    while ((c = getopt(argc, argv, ":cfF:rstu:vV")) != -1) {
+    while ((c = getopt(argc, argv, ":cfF:irstu:vV")) != -1) {
         switch (c) {
         case 'c':
             flags |= DBD_FLAGS_V2TOEA;
@@ -147,6 +148,10 @@ int main(int argc, char **argv)
 
         case 'f':
             flags |= DBD_FLAGS_FORCE;
+            break;
+
+        case 'i':
+            flags |= DBD_FLAGS_STRIP_AD;
             break;
 
         case 'F':
