@@ -41,10 +41,6 @@ string (no quotes needed) or a boolean, which may be given as yes/no,
 preserved in string values. Some options such as **file perm** take
 numeric values.
 
-The parameter **include = path** allows you to include one config file
-inside another. The file is included literally, as though typed in
-place. Nested includes are not supported.
-
 # Section Descriptions
 
 Each section in the configuration file (except for the [Global]
