@@ -48,7 +48,7 @@ jobs:
             glib \
             iniparser-dev \
             krb5-dev \
-            libevent-dev \
+            libev-dev \
             libgcrypt-dev \
             libtirpc-dev \
             libtracker \
@@ -74,6 +74,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+            -Dwith-eventloop=libev \
             -Dwith-statedir-path=/var/lib \
             -Dwith-tests=true \
             -Dwith-testsuite=true
@@ -121,6 +122,7 @@ jobs:
             flex \
             gcc \
             iniparser \
+            libev \
             localsearch \
             mariadb-clients \
             meson \
@@ -138,6 +140,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+            -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-tests=true \
             -Dwith-testsuite=true
@@ -188,7 +191,7 @@ jobs:
             libcups2-dev \
             libdb-dev \
             libdbus-1-dev \
-            libevent-dev \
+            libev-dev \
             libgcrypt20-dev \
             libglib2.0-dev \
             libiniparser-dev \
@@ -216,6 +219,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+            -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-sysv,systemd \
             -Dwith-pkgconfdir-path=/etc/netatalk \
@@ -268,6 +272,7 @@ jobs:
             krb5-devel \
             libacl-devel \
             libdb-devel \
+            libev-devel \
             libgcrypt-devel \
             libtalloc-devel \
             localsearch \
@@ -292,6 +297,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+            -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-tests=true \
             -Dwith-testsuite=true
@@ -344,7 +350,7 @@ jobs:
             libcups2-dev \
             libdb-dev \
             libdbus-1-dev \
-            libevent-dev \
+            libev-dev \
             libgcrypt20-dev \
             libglib2.0-dev \
             libiniparser-dev \
@@ -370,6 +376,7 @@ jobs:
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+            -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-tests=true \
             -Dwith-testsuite=true
@@ -412,6 +419,7 @@ jobs:
             cmark-gfm \
             cracklib \
             iniparser \
+            libev \
             mariadb \
             meson \
             openldap
@@ -419,6 +427,7 @@ jobs:
         run: |
           meson setup build \
             -Dbuildtype=release \
+            -Dwith-eventloop=libev \
             -Dwith-homebrew=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
@@ -467,7 +476,7 @@ jobs:
               cmark \
               db5 \
               iniparser \
-              libevent \
+              libev \
               libgcrypt \
               meson \
               mysql80-client \
@@ -483,6 +492,7 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dwith-appletalk=true \
+              -Dwith-eventloop=libev \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -518,7 +528,7 @@ jobs:
               db5 \
               flex \
               iniparser \
-              libevent \
+              libev \
               libgcrypt \
               libsunacl \
               localsearch \
@@ -535,6 +545,7 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dwith-eventloop=libev \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -575,7 +586,7 @@ jobs:
               gcc13 \
               heimdal \
               iniparser \
-              libevent \
+              libev \
               libgcrypt \
               meson \
               mysql-client \
@@ -589,6 +600,7 @@ jobs:
               -Dwith-appletalk=true \
               -Dwith-cups-pap-backend=true \
               -Dwith-dtrace=false \
+              -Dwith-eventloop=libev \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -634,7 +646,7 @@ jobs:
               gcc-11.2.0p19 \
               heimdal \
               iniparser \
-              libevent \
+              libev \
               libgcrypt \
               mariadb-client \
               meson \
@@ -648,6 +660,7 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/local/lib/pkgconfig \
+              -Dwith-eventloop=libev \
               -Dwith-gssapi-path=/usr/local/heimdal \
               -Dwith-kerberos-path=/usr/local/heimdal \
               -Dwith-tests=true \
@@ -693,7 +706,7 @@ jobs:
               cmark \
               gnome-tracker \
               iniparser \
-              libevent \
+              libev \
               libgcrypt \
               meson \
               mysql-client \
@@ -707,6 +720,7 @@ jobs:
               -Dbuildtype=release \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+              -Dwith-eventloop=libev \
               -Dwith-ldap-path=/opt/local \
               -Dwith-tests=true \
               -Dwith-testsuite=true
@@ -754,7 +768,7 @@ jobs:
               developer/gcc-14 \
               library/cmark \
               library/glib2 \
-              library/libevent2 \
+              library/libev \
               library/security/cracklib \
               runtime/perl \
               system/library/dbus \
@@ -780,6 +794,7 @@ jobs:
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
+              -Dwith-eventloop=libev \
               -Dwith-iniparser-path=/usr/local \
               -Dwith-tests=true \
               -Dwith-testsuite=true
