@@ -685,7 +685,7 @@ jobs:
             pkg install \
               build-essential \
               pkg-config
-            curl -o bootstrap.tar.gz https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2024Q4-x86_64.tar.gz
+            curl -o bootstrap.tar.gz https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
             tar -zxpf bootstrap.tar.gz -C /
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             pkgin -y install \
