@@ -29,7 +29,12 @@
 #include <sys/wait.h>
 
 #include <bstrlib.h>
+
+#ifdef WITH_LIBEV
+#include <ev.h>
+#else
 #include <event2/event.h>
+#endif
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
@@ -54,9 +59,10 @@
 #define NETATALK_SRV_OPTIONAL 0
 #define NETATALK_SRV_ERROR    NETATALK_SRV_NEEDED
 
-/* forward declaration */
+/* forward declarations */
 static pid_t run_process(const char *path, ...);
 static void kill_childs(int sig, ...);
+static void netatalk_exit(int ret);
 
 /* static variables */
 static AFPObj obj;
@@ -68,8 +74,14 @@ static pid_t cnid_metad_pid = NETATALK_SRV_OPTIONAL;
 #endif
 static pid_t dbus_pid = NETATALK_SRV_OPTIONAL;
 static uint afpd_restarts, cnid_metad_restarts, dbus_restarts _U_;
+#ifdef WITH_LIBEV
+static struct ev_loop *loop;
+static ev_signal sigterm_ev, sigquit_ev, sigchld_ev, sighup_ev;
+static ev_timer timer_ev, kill_timer_ev;
+#else
 static struct event_base *base;
 struct event *sigterm_ev, *sigquit_ev, *sigchld_ev, *sighup_ev, *timer_ev;
+#endif
 static int in_shutdown;
 static const char *dbus_path _U_;
 
@@ -170,8 +182,18 @@ EC_CLEANUP:
 #endif /* WITH_SPOTLIGHT */
 
 /******************************************************************
- * libevent helper functions
+ * event library helper functions
  ******************************************************************/
+
+#ifdef WITH_LIBEV
+
+/*! libev syserr callback */
+static void libev_syserr_cb(const char *msg) EV_NOEXCEPT {
+    LOG(log_error, logtype_default, "libev fatal: %s", msg);
+    netatalk_exit(EXITERR_SYS);
+}
+
+#else
 
 /*! libevent logging callback */
 static void libevent_logmsg_cb(int severity, const char *msg)
@@ -199,37 +221,24 @@ static void libevent_logmsg_cb(int severity, const char *msg)
     }
 }
 
+#endif
+
 /******************************************************************
- * libevent event callbacks
+ * event callback implementations (library agnostic)
  ******************************************************************/
 
-/*! SIGTERM callback */
-static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+/*! SIGTERM implementation — caller must check in_shutdown before calling */
+static void sigterm_impl(void)
 {
     sigset_t sigs;
-    struct timeval tv;
-    int sysret;
     LOG(log_info, logtype_afpd, "Exiting on SIGTERM");
-
-    if (in_shutdown) {
-        return;
-    }
-
     in_shutdown = 1;
     /* block any signal but SIGCHLD */
     sigfillset(&sigs);
     sigdelset(&sigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &sigs, NULL);
-    /* add 10 sec timeout timer, remove all events but SIGCHLD */
-    tv.tv_sec = KILL_GRACETIME;
-    tv.tv_usec = 0;
-    event_base_loopexit(base, &tv);
-    event_del(sigterm_ev);
-    event_del(sigquit_ev);
-    event_del(sighup_ev);
-    event_del(timer_ev);
 #ifdef WITH_SPOTLIGHT
-    sysret = system(INDEXER_COMMAND " -t");
+    int sysret = system(INDEXER_COMMAND " -t");
 
     if (sysret == -1) {
         LOG(log_error, logtype_afpd,
@@ -245,8 +254,8 @@ static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
-/*! SIGQUIT callback */
-static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+/*! SIGQUIT implementation */
+static void sigquit_impl(void)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef WITH_SPOTLIGHT
@@ -266,8 +275,8 @@ static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
-/*! SIGHUP callback */
-static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+/*! SIGHUP implementation */
+static void sighup_impl(void)
 {
     LOG(log_note, logtype_afpd,
         "Received SIGHUP, sending all processes signal to reload config");
@@ -282,8 +291,8 @@ static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
     kill_childs(SIGHUP, &afpd_pid, &cnid_metad_pid, NULL);
 }
 
-/*! SIGCHLD callback */
-static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+/*! SIGCHLD implementation, returns true if all services have exited during shutdown */
+static bool sigchld_impl(void)
 {
     int status;
     pid_t pid;
@@ -316,16 +325,14 @@ static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
         }
     }
 
-    if (in_shutdown
-            && !service_running(afpd_pid)
-            && !service_running(cnid_metad_pid)
-            && !service_running(dbus_pid)) {
-        event_base_loopbreak(base);
-    }
+    return in_shutdown
+           && !service_running(afpd_pid)
+           && !service_running(cnid_metad_pid)
+           && !service_running(dbus_pid);
 }
 
-/*! timer callback */
-static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+/*! timer implementation */
+static void timer_impl(void)
 {
     if (in_shutdown) {
         return;
@@ -366,6 +373,107 @@ static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
 
 #endif
 }
+
+/******************************************************************
+ * event library callback wrappers
+ ******************************************************************/
+
+#ifdef WITH_LIBEV
+
+/*! kill timer callback for graceful shutdown timeout */
+static void kill_timer_cb(struct ev_loop *ev_loop _U_, ev_timer *w _U_,
+                          int revents _U_)
+{
+    ev_break(loop, EVBREAK_ALL);
+}
+
+static void sigterm_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
+                       int revents _U_)
+{
+    if (in_shutdown) {
+        return;
+    }
+
+    sigterm_impl();
+    /* set gracetime timeout timer, remove all events but SIGCHLD */
+    ev_timer_init(&kill_timer_ev, kill_timer_cb, KILL_GRACETIME, 0.0);
+    ev_timer_start(loop, &kill_timer_ev);
+    ev_signal_stop(loop, &sigterm_ev);
+    ev_signal_stop(loop, &sigquit_ev);
+    ev_signal_stop(loop, &sighup_ev);
+    ev_timer_stop(loop, &timer_ev);
+}
+
+static void sigquit_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
+                       int revents _U_)
+{
+    sigquit_impl();
+}
+
+static void sighup_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
+                      int revents _U_)
+{
+    sighup_impl();
+}
+
+static void sigchld_cb(struct ev_loop *ev_loop _U_, ev_signal *w _U_,
+                       int revents _U_)
+{
+    if (sigchld_impl()) {
+        ev_break(loop, EVBREAK_ALL);
+    }
+}
+
+static void timer_cb(struct ev_loop *ev_loop _U_, ev_timer *w _U_,
+                     int revents _U_)
+{
+    timer_impl();
+}
+
+#else /* libevent2 */
+
+static void sigterm_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+{
+    struct timeval tv;
+
+    if (in_shutdown) {
+        return;
+    }
+
+    sigterm_impl();
+    /* set gracetime timeout timer, remove all events but SIGCHLD */
+    tv.tv_sec = KILL_GRACETIME;
+    tv.tv_usec = 0;
+    event_base_loopexit(base, &tv);
+    event_del(sigterm_ev);
+    event_del(sigquit_ev);
+    event_del(sighup_ev);
+    event_del(timer_ev);
+}
+
+static void sigquit_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+{
+    sigquit_impl();
+}
+
+static void sighup_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+{
+    sighup_impl();
+}
+
+static void sigchld_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+{
+    if (sigchld_impl()) {
+        event_base_loopbreak(base);
+    }
+}
+
+static void timer_cb(evutil_socket_t fd _U_, short what _U_, void *arg _U_)
+{
+    timer_impl();
+}
+
+#endif /* WITH_LIBEV */
 
 /******************************************************************
  * helper functions
@@ -482,7 +590,9 @@ int main(int argc, char **argv)
 {
     int c, ret, debug = 0;
     sigset_t blocksigs;
+#ifndef WITH_LIBEV
     struct timeval tv;
+#endif
     int sysret;
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
@@ -531,8 +641,12 @@ int main(int argc, char **argv)
     }
 
     load_volumes(&obj, LV_ALL);
+#ifdef WITH_LIBEV
+    ev_set_syserr_cb(libev_syserr_cb);
+#else
     event_set_log_callback(libevent_logmsg_cb);
     event_set_fatal_callback(netatalk_exit);
+#endif
     LOG(log_note, logtype_default, "Netatalk AFP server starting");
 
     if ((afpd_pid = run_process(_PATH_AFPD, "-d", "-F", obj.options.configfile,
@@ -550,6 +664,24 @@ int main(int argc, char **argv)
     }
 
 #endif
+#ifdef WITH_LIBEV
+
+    if ((loop = ev_default_loop(EVFLAG_NOENV)) == NULL) {
+        LOG(log_error, logtype_afpd, "Error starting event loop");
+        netatalk_exit(EXITERR_CONF);
+    }
+
+    ev_signal_init(&sigterm_ev, sigterm_cb, SIGTERM);
+    ev_signal_init(&sigquit_ev, sigquit_cb, SIGQUIT);
+    ev_signal_init(&sighup_ev, sighup_cb, SIGHUP);
+    ev_signal_init(&sigchld_ev, sigchld_cb, SIGCHLD);
+    ev_signal_start(loop, &sigterm_ev);
+    ev_signal_start(loop, &sigquit_ev);
+    ev_signal_start(loop, &sigchld_ev);
+    ev_signal_start(loop, &sighup_ev);
+    ev_timer_init(&timer_ev, timer_cb, 1.0, 1.0);
+    ev_timer_start(loop, &timer_ev);
+#else
 
     if ((base = event_base_new()) == NULL) {
         LOG(log_error, logtype_afpd, "Error starting event loop");
@@ -568,6 +700,7 @@ int main(int argc, char **argv)
     event_add(sigchld_ev, NULL);
     event_add(sighup_ev, NULL);
     event_add(timer_ev, &tv);
+#endif
     sigfillset(&blocksigs);
     sigdelset(&blocksigs, SIGTERM);
     sigdelset(&blocksigs, SIGQUIT);
@@ -619,7 +752,12 @@ int main(int argc, char **argv)
     }
 
     /* run the event loop */
+#ifdef WITH_LIBEV
+    ev_run(loop, 0);
+    ret = 0;
+#else
     ret = event_base_dispatch(base);
+#endif
 
     if (service_running(afpd_pid) || service_running(cnid_metad_pid)
             || service_running(dbus_pid)) {

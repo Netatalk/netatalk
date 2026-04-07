@@ -45,7 +45,7 @@ These are the libraries that are hard requirements for netatalk.
 |--------------|---------|
 | bstring      | built as subproject when shared library not found |
 | iniparser    | v3.1 or later |
-| libevent     | v2.0 or later |
+| libevent2 **OR** libev |  |
 | libgcrypt    | v1.2.3 or later |
 
 ### CNID Backend Requirements
