@@ -408,6 +408,13 @@ option(
     description: 'Choose the type documentation to build and install',
 )
 option(
+    'with-eventloop',
+    type: 'combo',
+    choices: ['auto', 'libevent', 'libev'],
+    value: 'auto',
+    description: 'Choose the event loop library (auto prefers libevent)',
+)
+option(
     'with-init-style',
     type: 'array',
     choices: [

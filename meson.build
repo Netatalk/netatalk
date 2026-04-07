@@ -736,14 +736,69 @@ if cc.has_function(
 endif
 
 #
-# Check for libevent
+# Check for libevent or libev
 #
 
-libevent = dependency(
-    'libevent',
-    required: true,
-    not_found_message: 'Libevent library required but not found! Please install the libevent devel package',
-)
+eventloop_opt = get_option('with-eventloop')
+have_libevent = false
+have_libev = false
+
+if eventloop_opt in ['auto', 'libevent']
+    libevent = dependency('libevent', required: eventloop_opt == 'libevent')
+    have_libevent = libevent.found()
+endif
+
+if have_libevent
+    event_lib = libevent
+elif eventloop_opt in ['auto', 'libev']
+    # Try pkg-config / cmake first
+    libev = dependency('libev', required: false)
+
+    # Fall back to manual library + header search
+    if not libev.found()
+        # Find the library: system paths, platform paths, then ev/ subdirs
+        # (e.g. NetBSD pkgsrc installs to /usr/pkg/lib/ev/)
+        libev_lib = cc.find_library('ev', required: false)
+        foreach d : libsearch_dirs
+            if not libev_lib.found()
+                libev_lib = cc.find_library('ev', dirs: d, required: false)
+            endif
+            if not libev_lib.found()
+                libev_lib = cc.find_library('ev', dirs: d / 'ev', required: false)
+            endif
+        endforeach
+
+        # Find the header: standard include paths, then ev/ subdirs
+        # (e.g. NetBSD pkgsrc installs to /usr/pkg/include/ev/)
+        if libev_lib.found()
+            libev_incdirs = include_dirs
+            if not cc.has_header('ev.h', include_directories: include_directories(libev_incdirs))
+                foreach d : libsearch_dirs
+                    libev_hdir = d.replace('/lib', '/include') / 'ev'
+                    if fs.is_dir(libev_hdir)
+                        libev_incdirs += libev_hdir
+                    endif
+                endforeach
+            endif
+            if cc.has_header('ev.h', include_directories: include_directories(libev_incdirs))
+                libev = declare_dependency(
+                    dependencies: libev_lib,
+                    include_directories: include_directories(libev_incdirs),
+                )
+            endif
+        endif
+    endif
+
+    have_libev = libev.found()
+    if have_libev
+        cdata.set('WITH_LIBEV', 1)
+        event_lib = libev
+    endif
+endif
+
+if not have_libevent and not have_libev
+    error('Either libevent or libev is required! Please install one of them.')
+endif
 
 #
 # Check for libgcrypt
@@ -2522,6 +2577,7 @@ summary_info = {
     '  Cracklib': have_cracklib,
     '  CUPS': have_cups,
     '  dtrace probes': have_dtrace,
+    '  Event loop provider': have_libevent ? 'libevent' : 'libev',
     '  GSSAPI': have_gssapi,
     '  Kerberos': have_kerberos,
     '  LDAP': have_ldap,

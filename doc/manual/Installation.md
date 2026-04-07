@@ -63,10 +63,10 @@ packages that can be installed to enhance Netatalk's functionality.
     The iniparser library is used to parse the configuration files.
     At least version 3.1 is required, while 4.0 or later is recommended.
 
-- libevent
+- libevent / libev
 
-    Internal event callbacks in the netatalk service controller daemon are
-    built on libevent version 2.
+    Internal event callbacks in the *netatalk* service controller daemon
+    are implemented using libevent version 2 or libev.
 
 - Libgcrypt
 

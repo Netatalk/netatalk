@@ -418,6 +418,9 @@
 /* Whether sendfile() should be used */
 #mesondefine WITH_SENDFILE
 
+/* Define whether to use libev instead of libevent */
+#mesondefine WITH_LIBEV
+
 /* Define whether to enable Spotlight support */
 #mesondefine WITH_SPOTLIGHT
 
