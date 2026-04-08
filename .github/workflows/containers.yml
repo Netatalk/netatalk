@@ -252,6 +252,9 @@ jobs:
           # Extract test runtime from structured log
           TEST_RUNTIME=$(grep -o 'FLAMEGRAPH_RUNTIME: [0-9]*s' flamegraph.log | grep -o '[0-9]*' || echo "unknown")
           echo "Test runtime: ${TEST_RUNTIME}s"
+          # Extract Netatalk self-time percentage from structured log
+          SELF_TIME=$(grep -o 'FLAMEGRAPH_SELF_TIME: [0-9.]*%' flamegraph.log | grep -o '[0-9.]*%' || echo "unknown")
+          echo "Netatalk self-time: $SELF_TIME"
           # Extract top 10 leaf functions (self-time) from the entrypoint's
           # structured output in the log. Format: "FLAMEGRAPH_LEAF: <count> <func>"
           TOP_FUNCS=$(grep 'FLAMEGRAPH_LEAF:' flamegraph.log \
@@ -264,6 +267,7 @@ jobs:
             echo "SVG_SIZE=$SVG_SIZE"
             echo "STACK_COUNT=$STACK_COUNT"
             echo "TEST_RUNTIME=${TEST_RUNTIME}s"
+            echo "SELF_TIME=$SELF_TIME"
             echo "TOP_FUNCS<<EOFTOP"
             echo "$TOP_FUNCS"
             echo "EOFTOP"
@@ -340,6 +344,7 @@ jobs:
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
         with:
           path: _site
+          overwrite: true
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
@@ -368,9 +373,10 @@ jobs:
             ## 🔥 Spectest (AFP 3.4) - Flamegraph (AFP_ASSERT active)
 
             **Commit:** `${{ github.event.pull_request.head.sha }}`
-            **Profiling:** On-CPU sampling @ 999 Hz, DWARF call-graph, x86_64
+            **Profiling:** On-CPU sampling @ 1009 Hz (prime), DWARF call-graph, x86_64
             **Build:** `debugoptimized` (-O2 -g -fno-omit-frame-pointer)
-            **Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
+            **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Netatalk Code-time:** ${{ steps.flamegraph-summary.outputs.SELF_TIME }},
+            **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
 
             🔥 **[Open interactive Flamegraph (SVG)](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.svg)**
 
