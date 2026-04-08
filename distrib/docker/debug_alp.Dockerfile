@@ -122,7 +122,7 @@ ENV DEBUG_DEPS=$DEBUG_DEPS
 COPY --from=build /staging/ /
 
 RUN apk update \
-&&  apk add --no-cache $RUN_DEPS $DEBUG_DEPS
+&&  apk add --no-cache $RUN_DEPS $DEBUG_DEPS musl-dbg
 
 # Pre-clone FlameGraph tools so we don't need network at runtime
 RUN git clone --depth 1 https://github.com/brendangregg/FlameGraph.git /opt/FlameGraph

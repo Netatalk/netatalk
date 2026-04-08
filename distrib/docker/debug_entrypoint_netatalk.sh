@@ -64,10 +64,10 @@ PERF_FOLDED="/tmp/perf.folded"
 FLAMEGRAPH_SVG="/tmp/flamegraph.svg"
 PERF_PID=""
 
-# Perf sampling frequency (samples per second). Default 999 for high
-# resolution profiling. Use a prime-ish number to avoid lockstep with
-# timer interrupts.
-PERF_FREQ="${PERF_FREQ:-999}"
+# Perf sampling frequency (samples per second). Default 1009 Hz — a
+# prime number chosen to avoid lockstep synchronization with timer
+# interrupts and the idle worker's 1ms polling interval.
+PERF_FREQ="${PERF_FREQ:-1009}"
 
 start_flamegraph_profiling() {
     # Verify FlameGraph tools are available
@@ -102,15 +102,22 @@ start_flamegraph_profiling() {
         # since off-CPU tracing records every context switch (not sampled).
         echo "*** Setting up OFF-CPU flamegraph profiling (sched:sched_switch tracepoint)"
         echo "*** Starting perf record on afpd PIDs: $AFPD_PIDS"
-        perf record -e sched:sched_switch --call-graph dwarf --max-size 1G -p "$AFPD_PIDS" -o "$PERF_DATA" &
-    else
-        # On-CPU flamegraph: samples at PERF_FREQ Hz to show where afpd
-        # spends CPU time. Best for CPU-bound workloads like spectest/lantest.
-        # Use --call-graph dwarf for reliable stack unwinding on kernels
-        # compiled without frame pointers (e.g. GitHub Actions x86_64 runners).
-        echo "*** Setting up ON-CPU flamegraph profiling (perf sampling at ${PERF_FREQ} Hz)"
+        perf record --inherit -e sched:sched_switch --call-graph dwarf --max-size 1G -p "$AFPD_PIDS" -o "$PERF_DATA" &
+    elif [ -n "$FLAMEGRAPH_FP" ]; then
+        # On-CPU flamegraph with frame-pointer unwinding: lighter weight but
+        # requires -fno-omit-frame-pointer (set in debug_alp.Dockerfile).
+        # Kernel/musl frames without frame pointers will show as [unknown].
+        echo "*** Setting up ON-CPU flamegraph profiling (perf @ ${PERF_FREQ} Hz, frame-pointer unwinding)"
         echo "*** Starting perf record on afpd PIDs: $AFPD_PIDS"
-        perf record -F "$PERF_FREQ" --call-graph dwarf -p "$AFPD_PIDS" -o "$PERF_DATA" &
+        perf record --inherit -F "$PERF_FREQ" --call-graph fp -p "$AFPD_PIDS" -o "$PERF_DATA" &
+    else
+        # Default: On-CPU flamegraph with DWARF unwinding for deep stack
+        # traces into kernel and musl libc. Consecutive __clone frames are
+        # collapsed in post-processing. --inherit ensures forked child
+        # session processes are profiled too.
+        echo "*** Setting up ON-CPU flamegraph profiling (perf @ ${PERF_FREQ} Hz, DWARF unwinding)"
+        echo "*** Starting perf record on afpd PIDs: $AFPD_PIDS"
+        perf record --inherit -F "$PERF_FREQ" --call-graph dwarf -p "$AFPD_PIDS" -o "$PERF_DATA" &
     fi
     PERF_PID=$!
     echo "*** perf record started (PID: $PERF_PID)"
@@ -142,18 +149,30 @@ stop_flamegraph_profiling() {
 
     "$FLAMEGRAPH_DIR/stackcollapse-perf.pl" "$PERF_SCRIPT" > "$PERF_FOLDED"
 
+    # Collapse consecutive duplicate __clone frames caused by DWARF unwinding
+    # through musl's __clone assembly trampoline (common on x86_64 CI runners).
+    # e.g. "afpd;__clone;__clone;__clone;start;..." → "afpd;__clone;start;..."
+    perl -pi -e 's/;__clone(?:;__clone)+/;__clone/g' "$PERF_FOLDED"
+
+    FLAMEGRAPH_DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
+
     if [ -n "$FLAMEGRAPH_OFFCPU" ]; then
         # Off-CPU: blue color palette and distinct title to distinguish
         # from on-CPU flamegraphs.
         "$FLAMEGRAPH_DIR/flamegraph.pl" \
-            --title "Netatalk afpd ${TESTSUITE} OFF-CPU flamegraph" \
+            --title "Netatalk afpd ${TESTSUITE} OFF-CPU flamegraph ${FLAMEGRAPH_DATE}" \
             --subtitle "buildtype=debugoptimized, sched:sched_switch tracepoint" \
             --color io \
             "$PERF_FOLDED" > "$FLAMEGRAPH_SVG"
     else
+        if [ -n "$FLAMEGRAPH_FP" ]; then
+            UNWIND_METHOD="frame-pointer unwinding"
+        else
+            UNWIND_METHOD="DWARF unwinding"
+        fi
         "$FLAMEGRAPH_DIR/flamegraph.pl" \
-            --title "Netatalk afpd ${TESTSUITE} flamegraph" \
-            --subtitle "buildtype=debugoptimized, perf @ ${PERF_FREQ} Hz" \
+            --title "Netatalk afpd ${TESTSUITE} flamegraph ${FLAMEGRAPH_DATE}" \
+            --subtitle "buildtype=debugoptimized, perf @ ${PERF_FREQ} Hz, ${UNWIND_METHOD}" \
             "$PERF_FOLDED" > "$FLAMEGRAPH_SVG"
     fi
 
@@ -180,6 +199,60 @@ stop_flamegraph_profiling() {
     }' "$PERF_FOLDED" | sort -rn | head -10 | while read cnt fn; do
         echo "FLAMEGRAPH_LEAF: $cnt $fn"
     done
+
+    # Calculate Netatalk self-time: percentage of on-CPU samples where the
+    # leaf function (the function actually executing) is Netatalk code.
+    # This measures time spent IN Netatalk functions, excluding time in
+    # kernel, libc, or library functions called by Netatalk.
+    #
+    # Method: extract function symbols from installed Netatalk binaries
+    # via nm, then match leaf functions in folded stacks against that set.
+    NETATALK_SYMS="/tmp/netatalk_syms.txt"
+    {
+        # All Netatalk binaries (afpd is the profiled process)
+        nm -D /usr/local/sbin/netatalk 2>/dev/null
+        nm -D /usr/local/sbin/afpd 2>/dev/null
+        nm -D /usr/local/sbin/cnid_dbd 2>/dev/null
+        nm -D /usr/local/sbin/cnid_metad 2>/dev/null
+        # Shared library and UAM modules
+        nm -D /usr/local/lib/libatalk.so* 2>/dev/null
+        nm -D /usr/local/lib/netatalk/*.so 2>/dev/null
+    } | awk '/^[0-9a-f]+ [TtWw] / { print $3 }' | sort -u > "$NETATALK_SYMS"
+
+    NETATALK_SYM_COUNT=$(wc -l < "$NETATALK_SYMS")
+    echo "*** Netatalk symbol table: $NETATALK_SYM_COUNT functions"
+
+    if [ "$NETATALK_SYM_COUNT" -gt 0 ]; then
+        SELF_TIME_RESULT=$(awk -v symfile="$NETATALK_SYMS" '
+            BEGIN {
+                while ((getline sym < symfile) > 0) netatalk_syms[sym] = 1
+                close(symfile)
+            }
+            {
+                count = $NF
+                stack = $0
+                sub(/ [0-9]+$/, "", stack)
+                n = split(stack, parts, ";")
+                leaf = parts[n]
+                total += count
+                if (leaf in netatalk_syms) netatalk_self += count
+            }
+            END {
+                if (total > 0) {
+                    pct = (netatalk_self / total) * 100
+                    printf "%.1f %d %d", pct, netatalk_self, total
+                } else {
+                    printf "0.0 0 0"
+                }
+            }
+        ' "$PERF_FOLDED")
+
+        SELF_PCT=$(echo "$SELF_TIME_RESULT" | cut -d' ' -f1)
+        SELF_SAMPLES=$(echo "$SELF_TIME_RESULT" | cut -d' ' -f2)
+        TOTAL_SAMPLES=$(echo "$SELF_TIME_RESULT" | cut -d' ' -f3)
+        echo "*** Netatalk self-time: ${SELF_PCT}% (${SELF_SAMPLES}/${TOTAL_SAMPLES} leaf samples)"
+        echo "FLAMEGRAPH_SELF_TIME: ${SELF_PCT}%"
+    fi
 
     # Emit the SVG to fd 3 (the original stdout, saved at script start).
     # This is the ONLY data that goes to stdout, so the user can capture
