@@ -496,7 +496,7 @@ jobs:
               libgcrypt \
               localsearch \
               meson \
-              mysql91-client \
+              mysql96-client \
               openldap26-client \
               p5-Net-DBus \
               perl5 \
