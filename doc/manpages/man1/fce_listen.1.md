@@ -11,6 +11,9 @@ fce_listen — Netatalk Filesystem Change Events listener application
 **fce_listen** is a simple listener for Netatalk's Filesystem Change Event (FCE) protocol.
 It will print out any UDP datagrams received from the AFP server to stdout.
 
+> **Note:** This utility requires netatalk to be built with FCE support enabled
+> (the `-Dwith-fce=true` meson build option, which is enabled by default).
+
 # Options
 
 **-h** *host*

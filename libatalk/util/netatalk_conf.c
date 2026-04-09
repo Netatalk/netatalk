@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <grp.h>
+#include <limits.h>
 #include <inttypes.h>
 #include <stdbool.h>
 
@@ -861,7 +862,58 @@ static int getoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
 }
 
 /*!
+ * @brief Safe string to integer conversion with bounds checking
+ *
+ * @param str         String to convert
+ * @param param_name  Parameter name for error messages
+ * @param min_val     Minimum allowed value
+ * @param max_val     Maximum allowed value
+ * @param default_val Default value to return on error
+ *
+ * @returns Converted integer value or default_val on error
+ */
+int safe_atoi(const char *str, const char *param_name,
+              int min_val, int max_val, int default_val)
+{
+    char *endptr;
+    long val;
+
+    if (!str || *str == '\0') {
+        return default_val;
+    }
+
+    errno = 0;
+    val = strtol(str, &endptr, 10);
+
+    if (errno == ERANGE) {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s value '%s' out of range, using default %d",
+            param_name, str, default_val);
+        return default_val;
+    }
+
+    if (*endptr != '\0') {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s value '%s' contains non-numeric characters, using default %d",
+            param_name, str, default_val);
+        return default_val;
+    }
+
+    if (val < min_val || val > max_val) {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s value %ld out of range [%d, %d], using default %d",
+            param_name, val, min_val, max_val, default_val);
+        return default_val;
+    }
+
+    return (int)val;
+}
+
+/*!
  * @brief Get integer option from config, use default value if not set
+ *
+ * Uses safe_atoi() for bounds-checked string-to-integer conversion with
+ * overflow detection and non-numeric character rejection.
  *
  * @param[in] conf    config handle
  * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
@@ -874,20 +926,21 @@ static int getoption_bool(INIPARSER_DICTIONARY *conf, const char *vol,
 static int getoption_int(INIPARSER_DICTIONARY *conf, const char *vol,
                          const char *opt, const char *defsec, int defval)
 {
-    int result;
+    const char *strval;
     char option[MAXOPTLEN];
     snprintf(option, sizeof(option), "%s:%s", vol, opt);
+    strval = iniparser_getstring(conf, option, NULL);
 
-    if (((result = iniparser_getint(conf, option, -1)) == -1) && (defsec != NULL)) {
+    if (!strval && defsec) {
         snprintf(option, sizeof(option), "%s:%s", defsec, opt);
-        result = iniparser_getint(conf, option, -1);
+        strval = iniparser_getstring(conf, option, NULL);
     }
 
-    if (result == -1) {
-        result = defval;
+    if (!strval) {
+        return defval;
     }
 
-    return result;
+    return safe_atoi(strval, opt, INT_MIN, INT_MAX, defval);
 }
 
 /*!
@@ -2880,10 +2933,12 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             NULL, 0);
     options->tcp_rcvbuf     = getoption_int(config, INISEC_GLOBAL, "tcprcvbuf",
                                             NULL, 0);
+#ifdef WITH_FCE
     options->fce_fmodwait   = getoption_int(config, INISEC_GLOBAL, "fce holdfmod",
                                             NULL, 60);
     options->fce_sendwait   = getoption_int(config, INISEC_GLOBAL, "fce sendwait",
                                             NULL, 0);
+#endif /* WITH_FCE */
     options->sleep          = getoption_int(config, INISEC_GLOBAL, "sleep time",
                                             NULL, 10);
     options->disconnected   = getoption_int(config, INISEC_GLOBAL,

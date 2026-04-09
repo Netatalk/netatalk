@@ -107,8 +107,10 @@ struct afp_options {
     int dircache_rfork_maxentry; /*!< Max rfork size to cache per entry (KB) */
     int sleep;                  /*!< Maximum time allowed to sleep (in tickles) */
     int disconnected;           /*!< Maximum time in disconnected state (in tickles) */
+#ifdef WITH_FCE
     int fce_fmodwait;           /*!< number of seconds FCE file mod events are put on hold */
     int fce_sendwait;           /*!< number of ms to wait between udp event sending */
+#endif /* WITH_FCE */
     unsigned int tcp_sndbuf, tcp_rcvbuf;
     unsigned char passwdbits, passwdminlen;
     uint32_t server_quantum;
@@ -194,10 +196,12 @@ typedef struct AFPObj {
     void (*exit)(int);
     int (*reply)(void *, int);
     int (*attention)(void *, AFPUserBytes);
+#ifdef WITH_FCE
     int fce_version;
     char *fce_ign_names;
     char *fce_ign_directories;
     char *fce_notify_script;
+#endif /* WITH_FCE */
     struct sl_ctx *sl_ctx;
 } AFPObj;
 

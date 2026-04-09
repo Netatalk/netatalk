@@ -12,8 +12,6 @@ afpd_sources = [
     'directory.c',
     'enumerate.c',
     'extattrs.c',
-    'fce_api.c',
-    'fce_util.c',
     'file.c',
     'filedir.c',
     'fork.c',
@@ -41,6 +39,13 @@ afpd_includes = [root_includes]
 if have_appletalk
     afpd_sources += [
         'afp_asp.c',
+    ]
+endif
+
+if have_fce
+    afpd_sources += [
+        'fce_api.c',
+        'fce_util.c',
     ]
 endif
 

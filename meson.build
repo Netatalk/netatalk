@@ -1982,6 +1982,16 @@ else
 endif
 
 #
+# Check whether to enable FCE (File Change Events)
+#
+
+have_fce = get_option('with-fce')
+
+if have_fce
+    cdata.set('WITH_FCE', 1)
+endif
+
+#
 # Check for optional initscript install
 #
 
@@ -2224,6 +2234,12 @@ endif
 if get_option('with-debugging')
     cdata.set('DEBUGGING', 1)
 endif
+
+#
+# Record build type for version display
+#
+
+cdata.set('BUILD_TYPE', '"' + build_type + '"')
 
 #
 # Variable substitution
@@ -2578,6 +2594,7 @@ summary_info = {
     '  CUPS': have_cups,
     '  dtrace probes': have_dtrace,
     '  Event loop provider': have_libevent ? 'libevent' : 'libev',
+    '  FCE': have_fce,
     '  GSSAPI': have_gssapi,
     '  Kerberos': have_kerberos,
     '  LDAP': have_ldap,

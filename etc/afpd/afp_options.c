@@ -52,7 +52,7 @@ static void show_version(void)
     puts("version. Please see the file COPYING for further information and details.\n");
     puts("afpd has been compiled with support for these features:\n");
     num = sizeof(afp_versions) / sizeof(afp_versions[0]);
-    printf("          AFP versions:\t");
+    printf("               AFP versions:\t");
 
     for (i = 0; i < num; i++) {
         printf("%d.%d ", afp_versions[i].av_number / 10,
@@ -60,13 +60,13 @@ static void show_version(void)
     }
 
     puts("");
-    printf("      Transport layers:\t");
+    printf("           Transport layers:\t");
 #ifdef NO_DDP
     puts("TCP/IP");
 #else
     puts("TCP/IP AppleTalk");
 #endif
-    printf("         CNID backends:\t");
+    printf("              CNID backends:\t");
 #ifdef CNID_BACKEND_DBD
     printf("dbd ");
 #endif
@@ -77,7 +77,7 @@ static void show_version(void)
     printf("sqlite ");
 #endif
     puts("");
-    printf("  Default CNID backend:\t");
+    printf("       Default CNID backend:\t");
     puts(DEFAULT_CNID_SCHEME);
 }
 
@@ -88,8 +88,21 @@ static void show_version(void)
  */
 static void show_version_extended(void)
 {
-    show_version();
-    printf("      Zeroconf support:\t");
+    printf("                 Build type:\t");
+    puts(BUILD_TYPE);
+    printf("              Verbose debug:\t");
+#ifdef DEBUG
+    puts("Yes");
+#else
+    puts("No");
+#endif
+    printf(" Debugging (no ALRM/TICKLE):\t");
+#ifdef DEBUGGING
+    puts("Yes");
+#else
+    puts("No");
+#endif
+    printf("           Zeroconf support:\t");
 #if defined (HAVE_MDNS)
     puts("mDNSResponder");
 #elif defined (HAVE_AVAHI)
@@ -97,52 +110,58 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("  TCP wrappers support:\t");
+    printf("       TCP wrappers support:\t");
 #ifdef TCPWRAP
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("         Quota support:\t");
+    printf("              Quota support:\t");
 #ifndef NO_QUOTA_SUPPORT
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("      cracklib support:\t");
+    printf("           cracklib support:\t");
 #ifdef USE_CRACKLIB
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("            EA support:\t");
+    printf("                 EA support:\t");
     puts(EA_MODULES);
-    printf("           ACL support:\t");
+    printf("                ACL support:\t");
 #ifdef HAVE_ACLS
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("          LDAP support:\t");
+    printf("               LDAP support:\t");
 #ifdef HAVE_LDAP
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("AFP statistics support:\t");
+    printf("     AFP statistics support:\t");
 #ifdef HAVE_DBUS_GLIB
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("     Spotlight support:\t");
+    printf("          Spotlight support:\t");
 #ifdef WITH_SPOTLIGHT
     puts("Yes");
 #else
     puts("No");
 #endif
-    printf("         DTrace probes:\t");
+    printf("              DTrace probes:\t");
 #ifdef WITH_DTRACE
+    puts("Yes");
+#else
+    puts("No");
+#endif
+    printf("                FCE support:\t");
+#ifdef WITH_FCE
     puts("Yes");
 #else
     puts("No");
@@ -154,13 +173,14 @@ static void show_version_extended(void)
  */
 static void show_paths(void)
 {
-    printf("              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
-    printf("           extmap.conf:\t%s\n", _PATH_CONFDIR "extmap.conf");
-    printf("       state directory:\t%s\n", _PATH_STATEDIR);
-    printf("    afp_signature.conf:\t%s\n", _PATH_STATEDIR "afp_signature.conf");
-    printf("      afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");
-    printf("       UAM search path:\t%s\n", _PATH_AFPDUAMPATH);
-    printf("  Server messages path:\t%s\n", SERVERTEXT);
+    printf("                   afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+    printf("                extmap.conf:\t%s\n", _PATH_CONFDIR "extmap.conf");
+    printf("            state directory:\t%s\n", _PATH_STATEDIR);
+    printf("         afp_signature.conf:\t%s\n",
+           _PATH_STATEDIR "afp_signature.conf");
+    printf("           afp_voluuid.conf:\t%s\n", _PATH_STATEDIR "afp_voluuid.conf");
+    printf("            UAM search path:\t%s\n", _PATH_AFPDUAMPATH);
+    printf("       Server messages path:\t%s\n", SERVERTEXT);
 }
 
 /*!
@@ -195,6 +215,7 @@ void afp_options_parse_cmdline(AFPObj *obj, int ac, char **av)
             exit(0);
 
         case 'V':	/* extended version */
+            show_version();
             show_version_extended();
             puts("");
             show_paths();

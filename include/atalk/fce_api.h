@@ -10,6 +10,8 @@
 #ifndef _FCE_API_H
 #define	_FCE_API_H
 
+#ifdef WITH_FCE
+
 #include <atalk/globals.h>
 
 #define FCE_PACKET_VERSION  2
@@ -144,5 +146,7 @@ int fce_set_events(const char *events);
 
 #define FCE_DEFAULT_PORT 12250
 #define FCE_DEFAULT_PORT_STRING "12250"
+
+#endif /* WITH_FCE */
 
 #endif	/* _FCE_API_H */

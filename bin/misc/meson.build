@@ -21,14 +21,16 @@ executable(
     install: false,
 )
 
-executable(
-    'fce_listen',
-    ['fce.c'],
-    include_directories: root_includes,
-    link_with: libatalk,
-    dependencies: [bstring, iniparser, misc_deps],
-    install: true,
-)
+if have_fce
+    executable(
+        'fce_listen',
+        ['fce.c'],
+        include_directories: root_includes,
+        link_with: libatalk,
+        dependencies: [bstring, iniparser, misc_deps],
+        install: true,
+    )
+endif
 
 afpldaptest_deps = [iniparser, ldap]
 

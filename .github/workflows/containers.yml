@@ -420,8 +420,12 @@ jobs:
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
               -e AFP_EXTMAP=1 \
-              -e AFP_DIRCACHESIZE=131072 \
+              -e AFP_DIRCACHESIZE=1048576 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
+              -e AFP_DIRCACHE_MODE=arc \
+              -e AFP_DIRCACHE_RFORK_BUDGET=1048576000 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1048576 \
+              -e AFP_CONVERT_APPLEDOUBLE=no \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -480,8 +484,12 @@ jobs:
               -e AFP_CNID_SQL_HOST=mariadb \
               -e AFP_CNID_SQL_USER=root \
               -e AFP_CNID_SQL_PASS="$DB_PASSWD" \
-              -e AFP_DIRCACHESIZE=131072 \
+              -e AFP_DIRCACHESIZE=1048576 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
+              -e AFP_DIRCACHE_MODE=arc \
+              -e AFP_DIRCACHE_RFORK_BUDGET=1048576000 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1048576 \
+              -e AFP_CONVERT_APPLEDOUBLE=no \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |
@@ -531,8 +539,12 @@ jobs:
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
               -e AFP_EXTMAP=1 \
-              -e AFP_DIRCACHESIZE=131072 \
+              -e AFP_DIRCACHESIZE=1048576 \
               -e AFP_DIRCACHE_VALIDATION_FREQ=100 \
+              -e AFP_DIRCACHE_MODE=arc \
+              -e AFP_DIRCACHE_RFORK_BUDGET=1048576000 \
+              -e AFP_DIRCACHE_RFORK_MAXSIZE=1048576 \
+              -e AFP_CONVERT_APPLEDOUBLE=no \
               ${{ env.REGISTRY }}/netatalk/netatalk:${{ github.sha }}
       - name: Run Netatalk testsuite
         run: |

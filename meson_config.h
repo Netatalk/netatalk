@@ -16,6 +16,9 @@
 /* Path to dbus-daemon */
 #mesondefine DBUS_DAEMON_PATH
 
+/* Build type string (release, debugoptimized, debug, etc.) */
+#mesondefine BUILD_TYPE
+
 /* Define if verbose debugging information should be included */
 #mesondefine DEBUG
 
@@ -411,6 +414,9 @@
 
 /* dtrace probes */
 #mesondefine WITH_DTRACE
+
+/* Define whether to enable File Change Events support */
+#mesondefine WITH_FCE
 
 /* Whether recvfile should be used */
 #mesondefine WITH_RECVFILE
