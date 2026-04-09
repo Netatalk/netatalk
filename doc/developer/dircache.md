@@ -524,7 +524,7 @@ The idle worker uses **temporal separation** rather than locks: the worker
 thread and main thread never access shared dircache data concurrently.
 
 - `idle_worker_start()` — called just before `poll()`, sets `is_idle=1`
-  and wakes the worker via condvar
+  (the worker self-wakes every 1ms via `nanosleep()` and checks this flag)
 - `idle_worker_stop()` — called immediately after `poll()` returns, sets
   `is_idle=0` and spins until the worker finishes its current unit of work
 - The worker checks `is_idle` per hash chain, yielding instantly when the
