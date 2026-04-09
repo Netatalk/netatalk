@@ -916,7 +916,9 @@ createfile_iderr:
         }
     }
     ad_close(&ad, ADFLAGS_DF | ADFLAGS_HF);
+#ifdef WITH_FCE
     fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+#endif /* WITH_FCE */
 
     /* Defensive check: curdir may be corrupted by race conditions or cname() failures */
     if (curdir == NULL) {
@@ -1765,7 +1767,9 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 copy_exit:
 
     if (upath && err == AFP_OK) {
+#ifdef WITH_FCE
         fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
+#endif /* WITH_FCE */
         /* Send hint to afpd siblings — dest parent dir ctime changed due to copy */
         ipc_send_cache_hint(obj, d_vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     }

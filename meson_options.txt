@@ -76,6 +76,12 @@ option(
     description: 'Enable dtrace probes',
 )
 option(
+    'with-fce',
+    type: 'boolean',
+    value: true,
+    description: 'Enable File Change Event notification support',
+)
+option(
     'with-gssapi',
     type: 'boolean',
     value: true,

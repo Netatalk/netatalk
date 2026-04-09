@@ -272,6 +272,10 @@ else
     netatalk
     sleep 2
 
+    echo "*** AFP server compile-time features:"
+    afpd -V
+    echo ""
+
     # Start flamegraph profiling if FLAMEGRAPH env var is set
     if [ -n "$FLAMEGRAPH" ]; then
         start_flamegraph_profiling

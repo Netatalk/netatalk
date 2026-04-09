@@ -501,11 +501,14 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
                                          CNID_MAX_PATH_LEN));
     }
 
+#ifdef WITH_FCE
+
     /* Somone has used write_fork, we assume file was changed, register it to file change event api */
     if ((ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
         fce_register(obj, FCE_FILE_MODIFY, bdata(forkpath), NULL);
     }
 
+#endif /* WITH_FCE */
     ad_unlock(ofork->of_ad, ofork->of_refnum,
               ofork->of_flags & AFPFORK_ERROR ? 0 : 1);
 #ifdef HAVE_FSHARE_T

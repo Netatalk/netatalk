@@ -214,6 +214,8 @@ extern char *realpath_safe(const char *path);
 extern const char *basename_safe(const char *path);
 extern char *strtok_quote(char *s, const char *delim);
 extern const char *tmpdir(void);
+extern int safe_atoi(const char *str, const char *param_name,
+                     int min_val, int max_val, int default_val);
 
 extern int ochdir(const char *dir, int options);
 extern int ostat(const char *path, struct stat *buf, int options);

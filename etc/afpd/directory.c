@@ -3096,7 +3096,9 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     ad_setname(&ad, s_path->m_name);
     ad_setid(&ad, s_path->st.st_dev, s_path->st.st_ino, dir->d_did, did,
              vol->v_stamp);
+#ifdef WITH_FCE
     fce_register(obj, FCE_DIR_CREATE, bdata(curdir->d_fullpath), NULL);
+#endif /* WITH_FCE */
     ad_flush(&ad);
     /* Eagerly populate AD cache for newly created directory */
     ad_store_to_cache(&ad, dir);

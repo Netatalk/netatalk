@@ -15,8 +15,6 @@ test_sources = [
     meson.project_source_root() / 'etc/afpd/directory.c',
     meson.project_source_root() / 'etc/afpd/enumerate.c',
     meson.project_source_root() / 'etc/afpd/extattrs.c',
-    meson.project_source_root() / 'etc/afpd/fce_api.c',
-    meson.project_source_root() / 'etc/afpd/fce_util.c',
     meson.project_source_root() / 'etc/afpd/file.c',
     meson.project_source_root() / 'etc/afpd/filedir.c',
     meson.project_source_root() / 'etc/afpd/fork.c',
@@ -39,6 +37,13 @@ test_external_deps = [bstring, iniparser, libgcrypt]
 test_internal_deps = []
 test_link_args = []
 test_includes = [root_includes]
+
+if have_fce
+    test_sources += [
+        meson.project_source_root() / 'etc/afpd/fce_api.c',
+        meson.project_source_root() / 'etc/afpd/fce_util.c',
+    ]
+endif
 
 if have_spotlight
     test_sources += [

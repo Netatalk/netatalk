@@ -503,7 +503,9 @@ static int moveandrename(const AFPObj *obj,
                 /* Refresh failed, purged — NULL sdir to prevent use-after-free */
                 sdir = NULL;
             }
+#ifdef WITH_FCE
             fce_register(obj, FCE_DIR_MOVE, fullpathname(upath), oldunixname);
+#endif /* WITH_FCE */
         }
 
         /* File rename: update cache entry if pre-acquired */
@@ -519,6 +521,7 @@ static int moveandrename(const AFPObj *obj,
             /* Refresh failed, purged — NULL cachedfile */
             cachedfile = NULL;
         }
+#ifdef WITH_FCE
 
         /* Send FCE event */
         if (isdir) {
@@ -528,6 +531,8 @@ static int moveandrename(const AFPObj *obj,
             fce_register(obj, FCE_FILE_MOVE, fullpathname(upath), bdata(srcpath));
             bdestroy(srcpath);
         }
+
+#endif /* WITH_FCE */
 
         /* Fixup adouble info — separate ad_open for CNID write.
          * adflags includes ADFLAGS_DIR for directories (set at line 301). */
@@ -909,7 +914,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             /* Parent dir ctime changed */
             ipc_send_cache_hint(obj, vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
+#ifdef WITH_FCE
             fce_register(obj, FCE_DIR_DELETE, fullpathname(upath), NULL);
+#endif /* WITH_FCE */
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
             /* but we need the positive returncode to send our event */
@@ -921,7 +928,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             /* deletecurdir() also handles CNID and dircache cleanup */
             if ((rc = deletecurdir(vol)) == AFP_OK) {
+#ifdef WITH_FCE
                 fce_register(obj, FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL);
+#endif /* WITH_FCE */
             }
 
             bdestroy(dname);
@@ -971,7 +980,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             /* deletefile() also handles CNID and dircache cleanup */
             if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
+#ifdef WITH_FCE
                 fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
+#endif /* WITH_FCE */
 
                 /* Send hints to afpd siblings — file deleted */
                 if (file_cnid != CNID_INVALID) {

@@ -52,60 +52,6 @@
 #include "dircache.h"
 
 /*!
- * @brief Safe string to integer conversion with bounds checking
- *
- * @param str         String to convert
- * @param param_name  Parameter name for error messages
- * @param min_val     Minimum allowed value
- * @param max_val     Maximum allowed value
- * @param default_val Default value to return on error
- *
- * @returns Converted integer value or default_val on error
- */
-static int safe_atoi(const char *str, const char *param_name,
-                     int min_val, int max_val, int default_val)
-{
-    char *endptr;
-    long val;
-
-    if (!str || *str == '\0') {
-        LOG(log_warning, logtype_afpd,
-            "Config: Empty %s parameter, using default %d",
-            param_name, default_val);
-        return default_val;
-    }
-
-    errno = 0;  /* Reset errno before conversion */
-    val = strtol(str, &endptr, 10);
-
-    /* Check for conversion errors */
-    if (errno == ERANGE || val < LONG_MIN || val > LONG_MAX) {
-        LOG(log_warning, logtype_afpd,
-            "Config: %s parameter '%s' out of range, using default %d",
-            param_name, str, default_val);
-        return default_val;
-    }
-
-    /* Check for non-numeric characters */
-    if (*endptr != '\0') {
-        LOG(log_warning, logtype_afpd,
-            "Config: Invalid %s parameter '%s' - contains non-numeric characters, using default %d",
-            param_name, str, default_val);
-        return default_val;
-    }
-
-    /* Check parameter-specific bounds */
-    if (val < min_val || val > max_val) {
-        LOG(log_warning, logtype_afpd,
-            "Config: %s parameter %ld out of valid range [%d, %d], using default %d",
-            param_name, val, min_val, max_val, default_val);
-        return default_val;
-    }
-
-    return (int)val;
-}
-
-/*!
  * @brief Free and cleanup config and DSI
  *
  * "dsi" can be NULL in which case all DSI objects and the config object is freed,
@@ -174,7 +120,6 @@ int configinit(AFPObj *dsi_obj, AFPObj *asp_obj)
     DSI *dsi = NULL;
     DSI **next = &dsi_obj->dsi;
     char *p = NULL, *q = NULL, *savep;
-    const char *r;
     struct ifaddrs *ifaddr _U_, *ifa _U_;
     int family _U_, s _U_;
     static char interfaddr[NI_MAXHOST] _U_;
@@ -414,44 +359,48 @@ serv_free_return:
     /* Parse afp.conf */
     acl_ldap_readconfig(dsi_obj->iniconfig);
 #endif /* HAVE_LDAP */
+#ifdef WITH_FCE
+    {
+        const char *r;
 
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce listener",
-                              NULL))) {
-        LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
-        fce_add_udp_socket(r);
+        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce listener",
+                                  NULL))) {
+            LOG(log_note, logtype_afpd, "Adding FCE listener: %s", r);
+            fce_add_udp_socket(r);
+        }
+
+        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce coalesce",
+                                  NULL))) {
+            LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
+            fce_set_coalesce(r);
+        }
+
+        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce events",
+                                  NULL))) {
+            LOG(log_note, logtype_afpd, "Fce events: %s", r);
+            fce_set_events(r);
+        }
+
+        r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
+        LOG(log_debug, logtype_afpd, "Fce version: %s", r);
+        dsi_obj->fce_version = safe_atoi(r, "fce version", 1, 2, 1);
+
+        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names",
+                                  ".DS_Store"))) {
+            dsi_obj->fce_ign_names = strdup(r);
+        }
+
+        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                                  "fce ignore directories", NULL))) {
+            dsi_obj->fce_ign_directories = strdup(r);
+        }
+
+        if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
+                                  "fce notify script", NULL))) {
+            dsi_obj->fce_notify_script = strdup(r);
+        }
     }
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce coalesce",
-                              NULL))) {
-        LOG(log_note, logtype_afpd, "Fce coalesce: %s", r);
-        fce_set_coalesce(r);
-    }
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce events",
-                              NULL))) {
-        LOG(log_note, logtype_afpd, "Fce events: %s", r);
-        fce_set_events(r);
-    }
-
-    r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce version", "1");
-    LOG(log_debug, logtype_afpd, "Fce version: %s", r);
-    dsi_obj->fce_version = safe_atoi(r, "fce version", 1, 2, 1);
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL, "fce ignore names",
-                              ".DS_Store"))) {
-        dsi_obj->fce_ign_names = strdup(r);
-    }
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                              "fce ignore directories", NULL))) {
-        dsi_obj->fce_ign_directories = strdup(r);
-    }
-
-    if ((r = INIPARSER_GETSTR(dsi_obj->iniconfig, INISEC_GLOBAL,
-                              "fce notify script", NULL))) {
-        dsi_obj->fce_notify_script = strdup(r);
-    }
-
+#endif /* WITH_FCE */
     /* Directory cache validation parameters - use value from AFPobj->options
      * (parsed by afp_config_parse() in netatalk_conf.c using the standard pattern).
      * This is applied in dircache_init() which reads from AFPobj->options.

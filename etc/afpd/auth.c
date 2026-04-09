@@ -349,8 +349,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
         afp_over_dsi_sighandlers(obj);
     }
 
+#ifdef WITH_FCE
     /* Send FCE login event */
     fce_register(obj, FCE_LOGIN, "", NULL);
+#endif /* WITH_FCE */
     return AFP_OK;
 }
 
@@ -975,8 +977,10 @@ int afp_logout(AFPObj *obj, char *ibuf _U_, size_t ibuflen  _U_,
     }
 
     *rbuflen = 0;
-    /* Send FCE login event */
+#ifdef WITH_FCE
+    /* Send FCE logout event */
     fce_register(obj, FCE_LOGOUT, "", NULL);
+#endif /* WITH_FCE */
     return AFP_OK;
 }
 
