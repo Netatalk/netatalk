@@ -115,6 +115,12 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
         return 0;
     }
 
+    /* Cache forked child PID and EUID at fork time.
+     * PID never changes for this child process.
+     * EUID is set to whatever the process inherited,
+     * EUID is then updated again after login in auth.c to reflect the logged-in user. */
+    dsi->AFPobj->pid = getpid();
+    dsi->AFPobj->euid = geteuid();
     /* Save number of existing and maximum connections */
     dsi->AFPobj->cnx_cnt = serv_children->servch_count;
     dsi->AFPobj->cnx_max = serv_children->servch_nsessions;

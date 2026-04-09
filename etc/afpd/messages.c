@@ -64,7 +64,7 @@ void readmessage(AFPObj *obj)
         return;
     }
 
-    sprintf(filename, "%s/message.%d", SERVERTEXT, getpid());
+    sprintf(filename, "%s/message.%d", SERVERTEXT, obj->pid);
     LOG(log_debug9, logtype_afpd, "Reading file %s ", filename);
     message = fopen(filename, "r");
 
