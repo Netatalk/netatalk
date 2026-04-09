@@ -336,8 +336,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     obj->logout = logout;
     obj->uid = pwd->pw_uid;
     obj->euid = geteuid();
+    obj->pid = getpid();
     /* report to parent */
-    ipc_child_write(obj->ipc_fd, IPC_LOGINDONE, strlen(obj->options.hostname),
+    ipc_child_write(obj, IPC_LOGINDONE,
+                    strnlen(obj->options.hostname, IPC_MAXMSGSIZE - IPC_HEADERLEN),
                     obj->options.hostname);
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
@@ -431,7 +433,7 @@ static int create_session_token(AFPObj *obj)
 
     memset(obj->sinfo.sessiontoken, 0, SESSIONTOKEN_LEN);
     obj->sinfo.sessiontoken_len = SESSIONTOKEN_LEN;
-    pid = getpid();
+    pid = obj->pid;
     memcpy(obj->sinfo.sessiontoken, &pid, sizeof(pid_t));
     return 0;
 }
@@ -539,7 +541,7 @@ int afp_getsession(
                 obj->sinfo.clientid_len = idlen + 8;
             }
 
-            if (ipc_child_write(obj->ipc_fd, IPC_GETSESSION, idlen + 8, p) != 0) {
+            if (ipc_child_write(obj, IPC_GETSESSION, idlen + 8, p) != 0) {
                 return AFPERR_MISC;
             }
 
@@ -625,7 +627,7 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     setitimer(ITIMER_REAL, &none, NULL);
 
     /* check for old session, possibly transferring session from here to there */
-    if (ipc_child_write(obj->ipc_fd, IPC_DISCOLDSESSION, tklen, &token) != 0) {
+    if (ipc_child_write(obj, IPC_DISCOLDSESSION, tklen, &token) != 0) {
         goto exit;
     }
 
@@ -1102,7 +1104,7 @@ int afp_getuserinfo(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     /* copy the user/group info */
     if (bitmap & USERIBIT_USER) {
-        id = htonl(geteuid());
+        id = htonl(obj->euid);
         memcpy(rbuf, &id, sizeof(id));
         rbuf += sizeof(id);
         *rbuflen += sizeof(id);

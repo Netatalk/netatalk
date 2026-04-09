@@ -1785,8 +1785,8 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
                             ret.u_name, bdata(dir->d_u_name));
 
                 /* Client may make multiple attempts, only send the message the first time */
-                if (setmessage(bdata(message)) == 0) {
-                    kill(getpid(), SIGUSR2);
+                if (setmessage(bdata(message)) == 0 && vol->v_obj->pid > 0) {
+                    kill(vol->v_obj->pid, SIGUSR2);
                 }
 
                 bdestroy(message);

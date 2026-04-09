@@ -182,6 +182,7 @@ typedef struct AFPObj {
     struct session_info  sinfo;
     uid_t uid;  /*!< client login user id */
     uid_t euid; /*!< client effective process user id */
+    pid_t pid;  /*!< client process id */
     int ipc_fd; /*!< anonymous PF_UNIX socket for IPC with afpd parent */
     int hint_fd; /*!< pipe read/child end for receiving cache hints from parent */
     gid_t *groups;

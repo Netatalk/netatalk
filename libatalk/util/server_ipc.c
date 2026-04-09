@@ -490,12 +490,9 @@ int ipc_server_read(server_child_t *children, int fd)
 }
 
 /* ----------------- */
-int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
+int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
 {
     char block[IPC_MAXMSGSIZE], *p;
-    pid_t pid;
-    uid_t uid;
-    ssize_t ret;
     p = block;
     memset(p, 0, IPC_MAXMSGSIZE);
 
@@ -505,16 +502,14 @@ int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
 
     memcpy(p, &command, sizeof(command));
     p   += sizeof(command);
-    pid = getpid();
-    memcpy(p, &pid, sizeof(pid_t));
+    memcpy(p, &obj->pid, sizeof(pid_t));
     p += sizeof(pid_t);
     /* FIXME
      * using uid is wrong. It will not disconnect if the new connection
      * is with a different user.
      * But we really don't want a remote kill command.
     */
-    uid = geteuid();
-    memcpy(p, &uid, sizeof(uid_t));
+    memcpy(p, &obj->euid, sizeof(uid_t));
     p += sizeof(uid_t);
     memcpy(p, &len, 4);
     p += 4;
@@ -527,8 +522,8 @@ int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
         LOG(log_debug, logtype_afpd, "ipc_child_write(cmd=%u)", command);
     }
 
-    if ((ret = writet(fd, block, len + IPC_HEADERLEN, 0,
-                      1)) != len + IPC_HEADERLEN) {
+    if (writet(obj->ipc_fd, block, len + IPC_HEADERLEN, 0,
+               1) != (ssize_t)(len + IPC_HEADERLEN)) {
         return -1;
     }
 
@@ -537,7 +532,7 @@ int ipc_child_write(int fd, uint16_t command, size_t len, void *msg)
 
 int ipc_child_state(AFPObj *obj, uint16_t state)
 {
-    return ipc_child_write(obj->ipc_fd, IPC_STATE, sizeof(uint16_t), &state);
+    return ipc_child_write(obj, IPC_STATE, sizeof(uint16_t), &state);
 }
 
 /***********************************************************************************
@@ -731,8 +726,8 @@ int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
     char block[IPC_MAXMSGSIZE];
     char *p = block;
     uint16_t command = IPC_CACHE_HINT;
-    pid_t pid = getpid();
-    uid_t uid = geteuid();
+    pid_t pid = obj->pid;
+    uid_t uid = obj->euid;
     uint32_t len = sizeof(hint);
     memset(block, 0, IPC_MAXMSGSIZE);
     memcpy(p, &command, sizeof(command));

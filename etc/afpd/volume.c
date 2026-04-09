@@ -792,7 +792,7 @@ static void server_ipc_volumes(AFPObj *obj)
         volume = volume->v_next;
     }
 
-    ipc_child_write(obj->ipc_fd, IPC_VOLUMES, blength(openvolnames),
+    ipc_child_write(obj, IPC_VOLUMES, blength(openvolnames),
                     bdata(openvolnames));
     bdestroy(openvolnames);
 }

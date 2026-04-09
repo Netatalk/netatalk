@@ -659,7 +659,7 @@ static int posix_acls_to_uaperms(const AFPObj *obj, const char *path,
     acl_t acl = NULL;
     uid_t *uid;
     gid_t *gid;
-    uid_t whoami = geteuid();
+    uid_t whoami = obj->euid;
     uint8_t group_rights = 0x00;
     uint8_t acl_rights = 0x00;
     uint8_t mask = 0xff;

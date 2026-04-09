@@ -436,11 +436,11 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
             bdestroy(bpath);
         }
 
-        if (fce_ev_info | FCE_EV_INFO_PID) {
-            bformata(cmd, " -p %" PRIu64 "", (uint64_t)getpid());
+        if (fce_ev_info & FCE_EV_INFO_PID) {
+            bformata(cmd, " -p %" PRIu64 "", (uint64_t)obj->pid);
         }
 
-        if (fce_ev_info | FCE_EV_INFO_USER) {
+        if (fce_ev_info & FCE_EV_INFO_USER) {
             bformata(cmd, " -u %s", user);
         }
 
@@ -490,7 +490,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
 
             udp_entry->next_try_on_error = 0;
             /* Okay, we have a running socket again, send server that we had a problem on our side*/
-            data_len = build_fce_packet(obj, iobuf, FCE_CONN_BROKEN, "", NULL, getpid(),
+            data_len = build_fce_packet(obj, iobuf, FCE_CONN_BROKEN, "", NULL, obj->pid,
                                         user, 0);
             sendto(udp_entry->sock,
                    iobuf,
@@ -501,7 +501,7 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
         }
 
         /* build our data packet */
-        data_len = build_fce_packet(obj, iobuf, event, path, oldpath, getpid(), user,
+        data_len = build_fce_packet(obj, iobuf, event, path, oldpath, obj->pid, user,
                                     event_id);
         sent_data = sendto(udp_entry->sock,
                            iobuf,

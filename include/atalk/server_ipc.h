@@ -46,7 +46,8 @@ _Static_assert(sizeof(struct ipc_cache_hint_payload) == 8,
 #define HINT_FLUSH_INTERVAL_MS  50
 
 extern int ipc_server_read(server_child_t *children, int fd);
-extern int ipc_child_write(int fd, uint16_t command, size_t len, void *token);
+extern int ipc_child_write(AFPObj *obj, uint16_t command, size_t len,
+                           void *token);
 extern int ipc_child_state(AFPObj *obj, uint16_t state);
 
 extern int ipc_send_cache_hint(const AFPObj *obj, uint16_t vid, cnid_t cnid,
