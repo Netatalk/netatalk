@@ -38,17 +38,10 @@ _Static_assert(IDLE_WORKER_WAKE_MS < 1000,
 /* Atomic coordination flags.
  * Using default memory_order_seq_cst for all atomic operations. Could use
  * acquire/release for ~25ns savings on ARM, but seq_cst is simpler and the
- * overhead is negligible relative to poll() syscall cost (~1-5μs). */
+ * overhead is negligible relative to nanosleep() syscall cost (~1-5μs). */
 static atomic_int is_idle = 0;
 static atomic_int bg_running = 0;
-
-/* Condvar + mutex for worker timedwait loop and shutdown signal.
- * The mutex is required by pthread_cond_timedwait() and provides
- * a memory barrier for the non-atomic queue reads in idle_worker_has_work().
- * idle_worker_shutdown() signals the condvar for immediate wakeup. */
-static pthread_mutex_t sleep_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t  sleep_cond;
-static atomic_int      shutdown_flag = 0;
+static atomic_int shutdown_flag = 0;
 
 static pthread_t worker_tid;
 static int       worker_started = 0;
@@ -64,10 +57,9 @@ static struct {
  * @brief Check if any idle work is pending (work-availability predicate).
  *
  * This function serves two purposes:
- * 1. POSIX spurious wakeup guard: the is_idle check ensures the worker
- *    does not start work if woken spuriously when the main thread is NOT
- *    in poll(). Also prevents work during the window between
- *    idle_worker_stop() and the next idle_worker_start().
+ * 1. Idle guard: the is_idle check ensures the worker does not start work
+ *    when the main thread is NOT in poll(). Also prevents work during the
+ *    window between idle_worker_stop() and the next idle_worker_start().
  * 2. Work-availability predicate: returns true only if there is actual
  *    work to perform. If new work types are added to the idle worker
  *    (e.g., FCE event dispatch), their pending-work check MUST be added
@@ -80,14 +72,18 @@ static int idle_worker_has_work(void)
     }
 
     /* Non-atomic read of queue sentinel pointers is safe here because:
-     * 1. We hold sleep_mutex (provides memory barrier)
-     * 2. is_idle==1 means main thread is in poll() (cannot modify queue)
-     * 3. Only the condvar wait loop calls this, so mutex is always held */
+     * 1. atomic_load(&is_idle) with seq_cst provides a full memory fence
+     * 2. is_idle==1 means main thread is in poll() (cannot modify queue) */
     return (invalid_dircache_entries &&
             invalid_dircache_entries->next != invalid_dircache_entries)
            || dircache_has_deferred_work();
 }
 
+/*!
+ * @brief Worker thread main loop
+ *
+ * Uses nanosleep() for 1ms polling which is a direct SYS_nanosleep syscall
+ */
 static void *idle_worker_main(void *arg)
 {
     (void)arg;
@@ -95,37 +91,27 @@ static void *idle_worker_main(void *arg)
     sigset_t sigs;
     sigfillset(&sigs);
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-    pthread_mutex_lock(&sleep_mutex);
+    const struct timespec sleep_ts = {
+        .tv_sec = 0,
+        .tv_nsec = IDLE_WORKER_WAKE_MS * 1000000L
+    };
 
     while (!atomic_load(&shutdown_flag)) {
-        /* Sleep until work exists AND main thread is idle */
-        while (!atomic_load(&shutdown_flag) &&
-                !idle_worker_has_work()) {
-            struct timespec wake_ts;
-#ifdef HAVE_PTHREAD_CONDATTR_SETCLOCK
-            clock_gettime(CLOCK_MONOTONIC, &wake_ts);
-#else
-            clock_gettime(CLOCK_REALTIME, &wake_ts);
-#endif
-            wake_ts.tv_nsec += IDLE_WORKER_WAKE_MS * 1000000L;
+        /* nanosleep uses hrtimer internally; the thread is off-CPU
+         * EINTR is harmless: worker thread blocks signals, and
+         * an early wake just re-checks and sleeps again. */
+        nanosleep(&sleep_ts, NULL);
 
-            if (wake_ts.tv_nsec >= 1000000000L) {
-                wake_ts.tv_sec++;
-                wake_ts.tv_nsec -= 1000000000L;
-            }
-
-            pthread_cond_timedwait(&sleep_cond, &sleep_mutex, &wake_ts);
+        /* Check if work exists AND main thread is idle */
+        if (!idle_worker_has_work()) {
+            continue;
         }
 
-        if (atomic_load(&shutdown_flag)) {
-            break;
-        }
-
-        /* Signal main thread we are active before releasing mutex.
-         * Ordering is critical, idle_worker_stop() spins on bg_running. */
+        /* Note: there is a benign race where idle_worker_stop() may
+         * complete its spin (seeing bg_running==0) before we set it to 1.
+         * This is safe because all work loops below re-check is_idle
+         * before touching shared data */
         atomic_store(&bg_running, 1);
-        /* Release sleep mutex — not needed during work */
-        pthread_mutex_unlock(&sleep_mutex);
         worker_stat.cycles_started++;
 
         /* Process jobs in priority order, checking is_idle per unit of work.
@@ -158,11 +144,8 @@ static void *idle_worker_main(void *arg)
 
         /* Done or interrupted — signal dormant */
         atomic_store(&bg_running, 0);
-        /* Re-acquire sleep mutex for condvar */
-        pthread_mutex_lock(&sleep_mutex);
     }
 
-    pthread_mutex_unlock(&sleep_mutex);
     return NULL;
 }
 
@@ -205,15 +188,6 @@ void idle_worker_log_stats(void) { }
  */
 int idle_worker_init(void)
 {
-    pthread_condattr_t cattr;
-    pthread_condattr_init(&cattr);
-#ifdef HAVE_PTHREAD_CONDATTR_SETCLOCK
-    /* CLOCK_MONOTONIC for condvar timedwait — immune to time adjustments */
-    pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC);
-#endif
-    pthread_cond_init(&sleep_cond, &cattr);
-    pthread_condattr_destroy(&cattr);
-
     if (pthread_create(&worker_tid, NULL, idle_worker_main, NULL) != 0) {
         LOG(log_error, logtype_afpd,
             "idle_worker_init: pthread_create failed: %s", strerror(errno));
@@ -228,7 +202,7 @@ int idle_worker_init(void)
 /*!
  * @brief Signal the idle worker that the main thread is about to enter poll().
  *
- * Sets is_idle=1 — worker self-wakes via timedwait to check for work.
+ * Sets is_idle=1 — worker self-wakes via nanosleep to check for work.
  * This function is async-signal-safe (single atomic store only).
  * No signal masking is needed by the caller.
  */
@@ -296,11 +270,13 @@ void idle_worker_stop_signal_safe(void)
 /*!
  * @brief Shut down the idle worker thread cleanly.
  *
- * Sets shutdown flag, signals condvar, joins thread.
+ * Sets shutdown flag and joins thread. The worker observes shutdown_flag
+ * at the top of its loop — after nanosleep() expires (≤1ms) and after any
+ * work completes. Join latency is therefore 1ms plus remaining work time.
+ *
  * WARNING: Must NOT be called from signal handler context —
- * pthread_mutex_lock/pthread_cond_signal/pthread_join are
- * async-signal-unsafe. Use idle_worker_stop_signal_safe() in signal
- * handlers instead.
+ * pthread_join is async-signal-unsafe. Use idle_worker_stop_signal_safe()
+ * in signal handlers instead.
  */
 void idle_worker_shutdown(void)
 {
@@ -309,11 +285,6 @@ void idle_worker_shutdown(void)
     }
 
     atomic_store(&shutdown_flag, 1);
-    /* shutdown_flag=1 alone exits the condvar while loop (!shutdown_flag → false).
-     * No need to set is_idle=1 — the outer while catches shutdown first. */
-    pthread_mutex_lock(&sleep_mutex);
-    pthread_cond_signal(&sleep_cond);
-    pthread_mutex_unlock(&sleep_mutex);
     pthread_join(worker_tid, NULL);
     /* Log stats while worker_started is still 1 */
     idle_worker_log_stats();
