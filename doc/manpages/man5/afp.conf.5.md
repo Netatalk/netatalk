@@ -604,6 +604,11 @@ close vol = *BOOLEAN* (default: *no*) **(G)**
 > Whether to close volumes possibly opened by clients when they're removed
 from the configuration and the configuration is reloaded.
 
+close stale rlocks = *BOOLEAN* (default: *no*) **(G)**
+
+> Whether to force-close stale forks holding only read byte-range
+locks when a client deletes a file.
+
 extmap file = *path* **(G)**
 
 > Sets the path to the file which defines file extension type/creator

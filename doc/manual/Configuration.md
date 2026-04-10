@@ -82,3 +82,26 @@ For example, when */home* links to */usr/home*:
 
 For a detailed explanation of all available options,
 refer to the [afp.conf](afp.conf.5.html) man page.
+
+### Stale fork cleanup on file deletion
+
+When a client deletes a file via AFP (FPDelete), the server checks for
+any open forks associated with the file (forks are internal tracking
+objects created when the client opens a file for reading and/or writing).
+Netatalk automatically cleans up any forks that are stale (client did not
+send a close for each open) — meaning they are not dirty (no
+pending metadata flush) and hold no locks. This allows file deletion to
+succeed even when a client has neglected to close before deleting the file.
+
+By default, forks holding locks of any type (read or write) are considered
+active and will prevent the delete from proceeding (the client receives
+a busy error). However, if **close stale rlocks** is set to **yes** in
+the Global section of *afp.conf*, forks that only hold read locks (and
+no write locks) will also be force-closed.
+
+Forks holding write locks always block deletion.
+
+Example:
+
+    [Global]
+    close stale rlocks = yes

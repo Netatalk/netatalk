@@ -69,6 +69,7 @@ extern void         of_pforkdesc(FILE *);
 extern int          of_stat(const struct vol *vol, struct path *);
 extern int          of_statdir(struct vol *vol, struct path *);
 extern int          of_closefork(const AFPObj *obj, struct ofork *ofork);
+extern int          of_close_stale_forks(const AFPObj *, struct path *);
 extern void         of_closevol(const AFPObj *obj, const struct vol *vol);
 extern void         of_close_all_forks(const AFPObj *obj);
 extern struct adouble *of_ad(const struct vol *, struct path *,

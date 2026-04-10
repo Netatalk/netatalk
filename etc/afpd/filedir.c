@@ -926,14 +926,27 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
             bdestroy(dname);
         }
-    } else if (of_findname(vol, s_path)) {
-        rc = AFPERR_BUSY;
     } else {
+        /* It's a file. Check for open forks before attempting delete.
+         * of_findname() is a cheap hash lookup — no syscalls. */
+        if (of_findname(vol, s_path)) {
+            /* File has open forks — attempt stale fork cleanup */
+            if (of_close_stale_forks(obj, s_path) != 0) {
+                /* Active forks remain (dirty/locked) — cannot delete */
+                rc = AFPERR_BUSY;
+            } else if (of_findname(vol, s_path)) {
+                /* Safety: forks still present after cleanup */
+                rc = AFPERR_BUSY;
+            }
+        }
+
         /* it's a file st_valid should always be true
          * only test for ENOENT because EACCES needs
          * to read meta data in deletefile
          */
-        if (s_path->st_valid && s_path->st_errno == ENOENT) {
+        if (rc != AFP_OK) {
+            /* Fork check or stale cleanup failed — skip deletion */
+        } else if (s_path->st_valid && s_path->st_errno == ENOENT) {
             rc = AFPERR_NOOBJ;
         } else {
             /* Validate target FILE inode to detect external replacement */
@@ -969,8 +982,20 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
                 file_cnid = cnid_get(vol->v_cdb, curdir->d_did, upath, ulen);
             }
 
-            /* deletefile() also handles CNID and dircache cleanup */
-            if ((rc = deletefile(vol, -1, upath, 1)) == AFP_OK) {
+            /* Optimistic delete — try without fork pre-check.
+             * If it fails with AFPERR_BUSY (open forks hold locks),
+             * attempt stale fork cleanup and retry once. */
+            rc = deletefile(vol, -1, upath, 1);
+
+            if (rc == AFPERR_BUSY && of_findname(vol, s_path)) {
+                /* Delete blocked by open forks — try cleaning stale ones */
+                if (of_close_stale_forks(obj, s_path) == 0) {
+                    /* All stale forks closed — retry delete */
+                    rc = deletefile(vol, -1, upath, 1);
+                }
+            }
+
+            if (rc == AFP_OK) {
                 fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
 
                 /* Send hints to afpd siblings — file deleted */

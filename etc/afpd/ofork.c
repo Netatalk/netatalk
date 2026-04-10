@@ -203,7 +203,9 @@ of_alloc(struct vol *vol,
     lastrefnum = refnum;
 
     if (i == nforks) {
-        LOG(log_error, logtype_afpd, "of_alloc: maximum number of forks exceeded.");
+        LOG(log_error, logtype_afpd,
+            "of_alloc: maximum number of forks (%d) reached for "
+            "\"%s\"", nforks, path);
         return NULL;
     }
 
@@ -670,6 +672,117 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     return ret;
 }
 
+/*!
+ * @brief Force-close stale forks for a file to unblock deletion
+ *
+ * Iterates all open forks matching the target file/directory
+ * (by dev/ino) and closes any that are safe to force-close:
+ *   - Not DIRTY (no pending AD header changes)
+ *   - No outstanding locks on the shared adouble
+ *
+ * AFPFORK_MODIFIED is intentionally not checked: since the file is
+ * being deleted, any data written via FPWrite is already on disk and
+ * will be destroyed by the subsequent unlink().
+ *
+ * @param obj    AFP object (session context)
+ * @param path   Path structure with valid st_dev/st_ino
+ *
+ * @return 0 if all forks were closed (or none found), -1 if any
+ *         active fork remains that cannot be safely closed
+ */
+int of_close_stale_forks(const AFPObj *obj, struct path *path)
+{
+    struct file_key key;
+    int active_remaining = 0;
+
+    if (!path->st_valid || path->st_errno) {
+        return -1;
+    }
+
+    key.dev = path->st.st_dev;
+    key.inode = path->st.st_ino;
+    struct ofork *of = ofork_table[hashfn(&key)];
+
+    while (of != NULL) {
+        struct ofork *next = of->next;  /* save before potential dealloc */
+
+        if (key.dev != of->key.dev || key.inode != of->key.inode) {
+            /* Different file — skip */
+        } else if (!of->of_ad) {
+            /* Guard: of_ad must be valid for of_name() and of_closefork() */
+            LOG(log_error, logtype_afpd,
+                "of_close_stale_forks: fork refnum:%u has NULL adouble, "
+                "skipping", of->of_refnum);
+            active_remaining++;
+        } else if (of->of_flags & AFPFORK_ACCWR) {
+            /* Safety check 1: fork opened with write access — the client
+             * may write more data at any time. Never force-close. */
+            LOG(log_warning, logtype_afpd,
+                "of_close_stale_forks: fork refnum:%u opened for write, "
+                "skipping", of->of_refnum);
+            active_remaining++;
+        } else if (of->of_flags & AFPFORK_DIRTY) {
+            /* Safety check 2: Is DIRTY - pending flush */
+            LOG(log_warning, logtype_afpd,
+                "of_close_stale_forks: fork refnum:%u has DIRTY flag, "
+                "skipping (pending flush)",
+                of->of_refnum);
+            active_remaining++;
+        } else if (adf_has_wrlocks(&of->of_ad->ad_data_fork) ||
+                   adf_has_wrlocks(of->of_ad->ad_rfp)) {
+            /* Safety check 3: write locks
+             * Write locks indicate a potentially active writer. */
+            LOG(log_warning, logtype_afpd,
+                "of_close_stale_forks: fork refnum:%u — adouble holds "
+                "write locks (data:%d rsrc:%d total), skipping",
+                of->of_refnum,
+                of->of_ad->ad_data_fork.adf_lockcount,
+                of->of_ad->ad_rfp->adf_lockcount);
+            active_remaining++;
+        } else if ((of->of_ad->ad_data_fork.adf_lockcount > 0 ||
+                    of->of_ad->ad_rfp->adf_lockcount > 0) &&
+                   !(obj->options.flags & OPTION_CLOSE_STALE_RLOCKS)) {
+            /* Safety check 3: read-only locks present, but "close stale
+             * rlocks" is disabled — fall back to conservative behavior. */
+            LOG(log_warning, logtype_afpd,
+                "of_close_stale_forks: fork refnum:%u — adouble holds "
+                "read locks (data:%d rsrc:%d), skipping "
+                "(close stale rlocks = no)",
+                of->of_refnum,
+                of->of_ad->ad_data_fork.adf_lockcount,
+                of->of_ad->ad_rfp->adf_lockcount);
+            active_remaining++;
+        } else {
+            /* Fork is safe to force-close:
+             * - Not dirty, no write locks
+             * - Either no locks at all, or only read locks with
+             *   "close stale rlocks" enabled */
+            LOG(log_warning, logtype_afpd,
+                "of_close_stale_forks: force-closing stale fork refnum:%u "
+                "name:\"%s\" flags:0x%x access:%s "
+                "(not dirty, no write locks, rdlocks data:%d rsrc:%d)",
+                of->of_refnum, of_name(of), of->of_flags,
+                (of->of_flags & AFPFORK_ACCWR) ? "write" :
+                (of->of_flags & AFPFORK_ACCRD) ? "read" : "none",
+                of->of_ad->ad_data_fork.adf_lockcount,
+                of->of_ad->ad_rfp->adf_lockcount);
+            /* Note: of_closefork() may emit FCE_FILE_MODIFY for MODIFIED
+             * stale forks. This is harmless — the subsequent deletefile()
+             * emits FCE_FILE_DELETE, and well-behaved FCE consumers handle
+             * MODIFY→DELETE sequences correctly.
+             *
+             * The zero-length resource fork check in of_closefork() may
+             * also unlink the AppleDouble file early. This is safe because
+             * the delete path handles ENOENT gracefully. */
+            of_closefork(obj, of);
+        }
+
+        of = next;
+    }
+
+    return active_remaining ? -1 : 0;
+}
+
 struct adouble *of_ad(const struct vol *vol, struct path *path,
                       struct adouble *ad)
 {
@@ -692,6 +805,7 @@ struct adouble *of_ad(const struct vol *vol, struct path *path,
 void of_closevol(const AFPObj *obj, const struct vol *vol)
 {
     int refnum;
+    int closed_count = 0;
 
     if (!oforks) {
         return;
@@ -699,10 +813,20 @@ void of_closevol(const AFPObj *obj, const struct vol *vol)
 
     for (refnum = 0; refnum < nforks; refnum++) {
         if (oforks[refnum] != NULL && oforks[refnum]->of_vol == vol) {
+            closed_count++;
+
             if (of_closefork(obj, oforks[refnum]) < 0) {
                 LOG(log_error, logtype_afpd, "of_closevol: %s", strerror(errno));
             }
         }
+    }
+
+    if (closed_count > 0) {
+        LOG(log_info, logtype_afpd,
+            "Closing Volume: closed %d open fork(s) for user \"%s\" "
+            "vol \"%s\"",
+            closed_count, obj->username,
+            vol->v_localname ? vol->v_localname : "unknown");
     }
 
     return;
@@ -714,6 +838,7 @@ void of_closevol(const AFPObj *obj, const struct vol *vol)
 void of_close_all_forks(const AFPObj *obj)
 {
     int refnum;
+    int closed_count = 0;
 
     if (!oforks) {
         return;
@@ -721,10 +846,18 @@ void of_close_all_forks(const AFPObj *obj)
 
     for (refnum = 0; refnum < nforks; refnum++) {
         if (oforks[refnum] != NULL) {
+            closed_count++;
+
             if (of_closefork(obj, oforks[refnum]) < 0) {
                 LOG(log_error, logtype_afpd, "of_close_all_forks: %s", strerror(errno));
             }
         }
+    }
+
+    if (closed_count > 0) {
+        LOG(log_info, logtype_afpd,
+            "Session shutdown for \"%s\": closed %d open fork(s)",
+            obj->username, closed_count);
     }
 
     return;

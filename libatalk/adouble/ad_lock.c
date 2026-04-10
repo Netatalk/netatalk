@@ -207,6 +207,32 @@ void adf_lock_init(struct ad_fd *adf)
 }
 
 /*!
+ * @brief Check if an ad_fd holds any write (exclusive) locks
+ *
+ * Scans the tracked lock array for F_WRLCK entries. Read locks (F_RDLCK)
+ * are not counted. Used by of_close_stale_forks() to distinguish between
+ * read-only locked forks (safe to force-close on delete) and write-locked
+ * forks (potentially mid-write, must block).
+ *
+ * @param[in] adf  File descriptor structure to inspect
+ * @return 1 if at least one write lock exists, 0 otherwise
+ */
+int adf_has_wrlocks(const struct ad_fd *adf)
+{
+    if (!adf || adf->adf_lockcount == 0) {
+        return 0;
+    }
+
+    for (int i = 0; i < adf->adf_lockcount; i++) {
+        if (adf->adf_lock[i].lock.l_type == F_WRLCK) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
  * @brief Free all locks in an ad_fd structure
  *
  * Iterates through all locks in the ad_fd lock array, releasing fcntl locks
