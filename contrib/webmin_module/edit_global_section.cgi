@@ -87,7 +87,7 @@ print &ui_table_row(
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'uam list', \%in);
 my $nonstandardUAMs = @values[0];
-$nonstandardUAMs =~ s/uams_dhx2?.so|uams_clrtxt.so|uams_guest.so|uams_gss.so|uams_randnum.so//g;
+$nonstandardUAMs =~ s/uams_dhx2?.so|uams_clrtxt.so|uams_guest.so|uams_gss.so|uams_randnum.so|uams_srp.so//g;
 $nonstandardUAMs =~ s/^[ ,]+//;
 $nonstandardUAMs =~ s/[ ,]+$//;
 $nonstandardUAMs =~ s/[ ,]+/ /g;
@@ -106,6 +106,7 @@ print &ui_table_row(
                     )
                     . &ui_checkbox('p_uam list', 'uams_guest.so', 'Guest UAM',    $values[0] =~ /uams_guest.so/ ? 1 : 0)
                     . &ui_checkbox('p_uam list', 'uams_gss.so',   'Kerberos UAM', $values[0] =~ /uams_gss.so/   ? 1 : 0)
+                    . &ui_checkbox('p_uam list', 'uams_srp.so',   'SRP UAM',      $values[0] =~ /uams_srp.so/   ? 1 : 0)
                     . "<br>"
                     . $text{'edit_global_section_uam_list_other'} . " "
                     . &ui_textbox('p_uam list', $nonstandardUAMs, 40)
@@ -327,6 +328,13 @@ print &ui_table_row(
 print &ui_table_row(
                     $text{'edit_global_section_passwd_file'},
                     &ui_filebox('p_passwd file', $values[0]) . " "
+                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
+);
+
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'srp passwd file', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_srp_passwd_file'},
+                    &ui_filebox('p_srp passwd file', $values[0]) . " "
                     . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
 );
 

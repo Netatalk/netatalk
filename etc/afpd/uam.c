@@ -422,8 +422,35 @@ int uam_afpserver_option(void *private, const int what, void *option,
 
         switch (*len) {
         case UAM_PASSWD_FILENAME:
+            if (!obj->options.passwdfile) {
+                *buf = NULL;
+                *len = 0;
+                break;
+            }
+
             *buf = obj->options.passwdfile;
-            *len = strlen(obj->options.passwdfile);
+            *len = strnlen(obj->options.passwdfile, MAXPATHLEN + 1);
+
+            if (*len > MAXPATHLEN) {
+                return -1;
+            }
+
+            break;
+
+        case UAM_PASSWD_SRP_FILENAME:
+            if (!obj->options.srppasswdfile) {
+                *buf = NULL;
+                *len = 0;
+                break;
+            }
+
+            *buf = obj->options.srppasswdfile;
+            *len = strnlen(obj->options.srppasswdfile, MAXPATHLEN + 1);
+
+            if (*len > MAXPATHLEN) {
+                return -1;
+            }
+
             break;
 
         case UAM_PASSWD_MINLENGTH:

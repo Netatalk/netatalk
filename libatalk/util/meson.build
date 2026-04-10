@@ -28,6 +28,7 @@ libutil = static_library(
         confdir,
         messagedir,
         afpdpwfile,
+        afpdsrppwfile,
         uamdir,
         statedir,
         dversion,
