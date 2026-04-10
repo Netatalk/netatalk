@@ -43,8 +43,8 @@
  * RPC data marshalling and unmarshalling
  **************************************************************************************************/
 
-/*! Spotlight epoch is UNIX epoch minus SPOTLIGHT_TIME_DELTA */
-#define SPOTLIGHT_TIME_DELTA INT64_C(280878921600U)
+ /* Spotlight epoch is 1.1.2001 00:00 UTC */
+#define SPOTLIGHT_TIME_DELTA 978307200 /* Diff from UNIX epoch to Spotlight epoch */
 
 #define SQ_TYPE_NULL    0x0000
 #define SQ_TYPE_COMPLEX 0x0200
@@ -199,7 +199,13 @@ static int sl_pack_date(sl_time_t t, char *buf, int offset)
 {
     EC_INIT;
     uint64_t data = 0;
-    data = (t.tv_sec + SPOTLIGHT_TIME_DELTA) << 24;
+    union {
+        double d;
+        uint64_t w;
+    } ieee_fp_union;
+    ieee_fp_union.d = (double)(t.tv_sec - SPOTLIGHT_TIME_DELTA);
+    ieee_fp_union.d += (double)t.tv_usec / 1000000;
+    data = ieee_fp_union.w;
     EC_ZERO(slvalc(buf, offset, MAX_SLQ_DAT, sl_pack_tag(SQ_TYPE_DATE, 2, 1)));
     EC_ZERO(slvalc(buf, offset + 8, MAX_SLQ_DAT, data));
 EC_CLEANUP:
@@ -482,6 +488,11 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
 {
     int count, i;
     uint64_t query_data64;
+    union {
+        double d;
+        uint64_t w;
+    } ieee_fp_union;
+    double fraction;
     sl_time_t t;
     query_data64 = sl_unpack_uint64(buf, offset, encoding);
     count = query_data64 >> 32;
@@ -489,9 +500,14 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
     i = 0;
 
     while (i++ < count) {
-        query_data64 = sl_unpack_uint64(buf, offset, encoding) >> 24;
-        t.tv_sec = query_data64 - SPOTLIGHT_TIME_DELTA;
-        t.tv_usec = 0;
+        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        ieee_fp_union.w = query_data64;
+        fraction = ieee_fp_union.d - (uint64_t)ieee_fp_union.d;
+
+        t = (sl_time_t){
+            .tv_sec = ieee_fp_union.d + SPOTLIGHT_TIME_DELTA,
+            .tv_usec = fraction * 1000000
+        };
         dalloc_add_copy(query, &t, sl_time_t);
         offset += 8;
     }

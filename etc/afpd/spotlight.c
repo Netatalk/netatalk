@@ -48,6 +48,14 @@
 
 #define MAX_SL_RESULTS 20
 
+struct timeval convert_timespec_to_timeval(const struct timespec ts)
+{
+    struct timeval tv;
+    tv.tv_sec = ts.tv_sec;
+    tv.tv_usec = ts.tv_nsec / 1000;
+    return tv;
+}
+
 struct slq_state_names {
     slq_state_t state;
     const char *state_name;
@@ -346,7 +354,8 @@ static bool add_filemeta(sl_array_t *reqinfo,
 
     for (i = 0; i < metacount; i++) {
         if (strequal(reqinfo->dd_talloc_array[i], "kMDItemDisplayName")
-                || strequal(reqinfo->dd_talloc_array[i], "kMDItemFSName")) {
+                || strequal(reqinfo->dd_talloc_array[i], "kMDItemFSName")
+                || strequal(reqinfo->dd_talloc_array[i], "_kMDItemFileName")) {
             if ((p = strrchr(path, '/'))) {
                 name = dalloc_strdup(meta, p + 1);
                 dalloc_add(meta, name, "char *");
@@ -355,8 +364,8 @@ static bool add_filemeta(sl_array_t *reqinfo,
                             "kMDItemPath")) {
             name = dalloc_strdup(meta, path);
             dalloc_add(meta, name, "char *");
-        } else if (strequal(reqinfo->dd_talloc_array[i],
-                            "kMDItemFSSize")) {
+        } else if (strequal(reqinfo->dd_talloc_array[i], "kMDItemFSSize")
+                       || strequal(reqinfo->dd_talloc_array[i], "kMDItemLogicalSize")) {
             uint64var = sp->st_size;
             dalloc_add_copy(meta, &uint64var, uint64_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
@@ -369,7 +378,11 @@ static bool add_filemeta(sl_array_t *reqinfo,
             dalloc_add_copy(meta, &uint64var, uint64_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemFSContentChangeDate")) {
-            sl_time.tv_sec = sp->st_mtime;
+            sl_time = convert_timespec_to_timeval(sp->st_mtim);
+            dalloc_add_copy(meta, &sl_time, sl_time_t);
+        } else if (strequal(reqinfo->dd_talloc_array[i],
+                            "kMDItemLastUsedDate")) {
+            sl_time = convert_timespec_to_timeval(sp->st_atim);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else {
             dalloc_add_copy(meta, &nil, sl_nil_t);
@@ -1090,7 +1103,14 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
     }
-
+    else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
+        "DALLOC_CTX", 1,
+        "kMDItemLastUsedDate", "sl_time_t"))) {
+        struct utimbuf atimes;
+        atimes.actime = sl_time->tv_sec;
+        utime(path, &atimes);
+    }
+    
     array = talloc_zero(reply, sl_array_t);
     uint64_t sl_res = 0;
     dalloc_add_copy(array, &sl_res, uint64_t);
