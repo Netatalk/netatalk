@@ -95,9 +95,17 @@ if [ -f "/etc/netatalk/afppasswd" ]; then
     rm -f /etc/netatalk/afppasswd
 fi
 
+if [ -f "/etc/netatalk/afppasswd.srp" ]; then
+    rm -f /etc/netatalk/afppasswd.srp
+fi
+
 # Creating credentials for the RandNum UAM
+afppasswd -c -r
+afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null
+
+# Creating credentials for the SRP UAM
 afppasswd -c
-afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null
+afppasswd -a "$AFP_USER" -f -w "$AFP_PASS" > /dev/null
 
 # Optional second user
 if [ -n "$AFP_DROPBOX" ]; then
@@ -115,7 +123,8 @@ elif [ -n "$AFP_USER2" ]; then
         usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
     fi
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
-    afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null
+    afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null
+    afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null
 fi
 
 # --------------------------------------------------------------------------
@@ -161,7 +170,7 @@ fi
 # --------------------------------------------------------------------------
 
 echo "*** Configuring Netatalk"
-UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
+UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so uams_srp.so"
 
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 

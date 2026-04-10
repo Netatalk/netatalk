@@ -21,6 +21,7 @@ executable(
     link_with: afppasswd_libs,
     c_args: [
         afpdpwfile,
+        afpdsrppwfile,
         dversion,
     ],
     install: true,

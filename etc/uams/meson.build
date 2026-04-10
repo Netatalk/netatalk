@@ -75,6 +75,18 @@ library(
     install_dir: libdir / 'netatalk',
 )
 
+library(
+    'uams_srp',
+    ['uams_srp.c'],
+    include_directories: root_includes,
+    dependencies: [libgcrypt],
+    name_prefix: '',
+    name_suffix: lib_suffix,
+    override_options: 'b_lundef=false',
+    install: true,
+    install_dir: libdir / 'netatalk',
+)
+
 if have_pam
     library(
         'uams_dhx_pam',

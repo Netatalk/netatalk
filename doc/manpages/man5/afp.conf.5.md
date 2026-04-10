@@ -239,16 +239,6 @@ nt domain = *domain* **(G)**; nt separator = *SEPARATOR* **(G)**
 username from login and then tries to authenticate with the result
 through the available and active UAM authentication modules.
 
-save password = *BOOLEAN* (default: *yes*) **(G)**
-
-> Enables or disables the ability of clients to save passwords locally.
-Setting this option to *no* will send this hint to clients, but it is up to the client to honor it.
-
-set password = *BOOLEAN* (default: *no*) **(G)**
-
-> Enables or disables the ability of clients to change their passwords.
-Setting this option to *yes* will allow clients to change their passwords if the UAM in use supports this feature.
-
 uam list = *uam list* **(G)**
 
 > Space or comma separated list of UAMs. (The default is "uams_dhx.so
@@ -271,7 +261,6 @@ in the clear. Compatible with Mac OS 9 and earlier.
 authentication (requires a separate file containing the passwords,
 either the default *afppasswd* file or the one specified via
 "**passwd file**"). See **afppasswd**(1) for details.
-Compatible with Mac OS 9 and earlier.
 >
 > uams_dhx.so
 >
@@ -285,7 +274,12 @@ Compatible with Mac OS 9 and earlier.
 >
 > uam_gss.so
 >
-> > Allow Kerberos V for authentication (optional)
+> > Allow Kerberos V for authentication
+>
+> uams_srp.so
+> > Allow SRP ("Secure Remote Password") for authentication. Requires a separate
+file containing the SRP salts and verifiers, either the default *afppasswd.srp* file
+or the one specified via "**srp passwd file**". See **afppasswd**(1) for details.
 
 uam path = *path* **(G)**
 
@@ -346,11 +340,25 @@ same as **unix charset**.
 
 passwd file = *path* **(G)**
 
-> Sets the path to the Randnum UAM *afppasswd* file for this server.
+> Sets the path to the Randnum UAM password file for this server.
 
 passwd minlen = *number* **(G)**
 
 > Sets the minimum password length, if supported by the UAM
+
+save password = *BOOLEAN* (default: *yes*) **(G)**
+
+> Enables or disables the ability of clients to save passwords locally.
+Setting this option to *no* will send this hint to clients, but it is up to the client to honor it.
+
+set password = *BOOLEAN* (default: *no*) **(G)**
+
+> Enables or disables the ability of clients to change their passwords.
+Setting this option to *yes* will allow clients to change their passwords if the UAM in use supports this feature.
+
+srp passwd file = *path* **(G)**
+
+> Sets the path to the SRP UAM verifier file for this server.
 
 ## Network Options
 

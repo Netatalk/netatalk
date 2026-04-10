@@ -2789,6 +2789,9 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                               NULL, _PATH_CONFDIR "extmap.conf");
     options->passwdfile     = getoption_strdup(config, INISEC_GLOBAL, "passwd file",
                               NULL, _PATH_AFPDPWFILE);
+    options->srppasswdfile  = getoption_strdup(config, INISEC_GLOBAL,
+                              "srp passwd file",
+                              NULL, _PATH_AFPDSRPPWFILE);
     options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",
                               NULL, _PATH_AFPDUAMPATH);
     options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",
@@ -3265,6 +3268,10 @@ void afp_config_free(AFPObj *obj)
 
     if (obj->options.passwdfile) {
         CONFIG_ARG_FREE(obj->options.passwdfile)
+    }
+
+    if (obj->options.srppasswdfile) {
+        CONFIG_ARG_FREE(obj->options.srppasswdfile)
     }
 
     if (obj->options.uampath) {

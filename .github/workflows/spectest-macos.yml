@@ -95,9 +95,16 @@ jobs:
           # Initialize AFP password database for RandNum UAM
           CONFDIR="$(brew --prefix)/etc"
           sudo rm -f "$CONFDIR/afppasswd"
+          sudo afppasswd -c -r
+          sudo afppasswd -a $AFP_USER -f -n -r -w "$AFP_PASS"
+          sudo afppasswd -a $AFP_USER2 -f -n -r -w "$AFP_PASS"
+
+          # Initialize AFP password database for SRP UAM
+          CONFDIR="$(brew --prefix)/etc"
+          sudo rm -f "$CONFDIR/afppasswd.srp"
           sudo afppasswd -c
-          sudo afppasswd -a -f -n -w "$AFP_PASS" $AFP_USER
-          sudo afppasswd -a -f -n -w "$AFP_PASS" $AFP_USER2
+          sudo afppasswd -a $AFP_USER -f -n -w "$AFP_PASS"
+          sudo afppasswd -a $AFP_USER2 -f -n -w "$AFP_PASS"
 
       - name: Create PAM service file for netatalk
         run: |

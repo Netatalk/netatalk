@@ -50,6 +50,7 @@
  * get back the corresponding option. not all of these are implemented. */
 #define UAM_PASSWD_FILENAME     (1 << 0)
 #define UAM_PASSWD_MINLENGTH    (1 << 1)
+#define UAM_PASSWD_SRP_FILENAME (1 << 2)
 #define UAM_PASSWD_EXPIRETIME   (1 << 3) /*!< not implemented yet. */
 
 /* max lenght of username  */

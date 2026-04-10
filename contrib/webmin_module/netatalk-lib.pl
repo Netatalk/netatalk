@@ -85,6 +85,7 @@ our %netatalkParameterDefaults = (
                                   'splice size'                 => '65536',
                                   'spotlight'                   => 'yes',
                                   'spotlight expr'              => 'yes',
+                                  'srp passwd file'             => '/etc/netatalk/afppasswd.srp',
                                   'stat vol'                    => 'yes',
                                   'time machine'                => 'no',
                                   'uam list'                    => 'uams_dhx.so uams_dhx2.so',

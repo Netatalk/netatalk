@@ -134,6 +134,7 @@ netatalk_common_link_args = []
 
 afpd = '-D_PATH_AFPD="' + sbindir + '/afpd"'
 afpdpwfile = '-D_PATH_AFPDPWFILE="' + pkgconfdir + '/afppasswd"'
+afpdsrppwfile = '-D_PATH_AFPDSRPPWFILE="' + pkgconfdir + '/afppasswd.srp"'
 cnid_dbd = '-D_PATH_CNID_DBD="' + sbindir + '/cnid_dbd"'
 cnid_metad = '-D_PATH_CNID_METAD="' + sbindir + '/cnid_metad"'
 confdir = '-D_PATH_CONFDIR="' + pkgconfdir + '/"'
@@ -2583,6 +2584,7 @@ summary_info = {
     '  Guest': true,
     '  Kerberos V': have_krb5_uam,
     '  RandNum': have_libgcrypt,
+    '  SRP': have_libgcrypt,
 }
 summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 
