@@ -123,8 +123,8 @@ the lines for the mappings that you want to enable in this configuration file.
 
 The *FPzzz* testset contain tests for AFP sleep mode and timeouts.
 Since they by necessity take much longer than other tests,
-they are not run by default when you execute the spectest suite.
-Instead, you must explicity run the testset using the *-f* parameter:
+they are not included when you execute the full spectest suite.
+Rather, you must run the testset separately using the *-f* parameter:
 
     afp_spectest -f FPzzz
 
@@ -165,7 +165,7 @@ Each test within a testsuite returns one of the following return codes:
 This return code will flag the test run as failed.
 
 *SKIPPED* means that the test is not applicable to the AFP server under test,
-or that a partical parameter required for the test is missing.
+or that a particular parameter required for the test is missing.
 Check the test report for the specific reason that the test was skipped.
 This return code will *not* contribute to a failed test run.
 
