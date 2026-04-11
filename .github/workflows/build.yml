@@ -188,6 +188,7 @@ jobs:
             libacl1-dev \
             libavahi-client-dev \
             libcrack2-dev \
+            libcrypt-dev \
             libcups2-dev \
             libdb-dev \
             libdbus-1-dev \
