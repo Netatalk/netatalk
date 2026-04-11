@@ -263,7 +263,6 @@ endif
 check_headers = [
     'acl/libacl.h',
     'attr/xattr.h',
-    'crypt.h',
     'dlfcn.h',
     'iniparser/iniparser.h',
     'langinfo.h',

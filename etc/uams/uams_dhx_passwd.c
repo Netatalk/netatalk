@@ -18,10 +18,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef HAVE_CRYPT_H
-#include <crypt.h>
-#endif /* ! HAVE_CRYPT_H */
-
 #ifdef SHADOWPW
 #include <shadow.h>
 #endif /* SHADOWPW */
