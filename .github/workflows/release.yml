@@ -75,7 +75,7 @@ jobs:
           sha256sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha256sum"
           sha512sum "${{ steps.get_version.outputs.tarball_name }}.tar.xz" > "${{ steps.get_version.outputs.tarball_name }}.tar.xz.sha512sum"
       - name: Create release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
+        uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: Netatalk ${{ steps.get_version.outputs.version }}
