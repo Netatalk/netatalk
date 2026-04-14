@@ -97,7 +97,7 @@ jobs:
           timelord -V
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -161,7 +161,7 @@ jobs:
           timelord -V
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -245,7 +245,7 @@ jobs:
           timelord -V
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -321,7 +321,7 @@ jobs:
           timelord -V
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -398,7 +398,7 @@ jobs:
           timelord -V
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -451,7 +451,7 @@ jobs:
         run: sudo netatalkd stop
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -503,7 +503,7 @@ jobs:
             afpd -V
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -561,7 +561,7 @@ jobs:
             /usr/local/etc/rc.d/netatalk disable
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -620,7 +620,7 @@ jobs:
             service netatalk onestop
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -678,7 +678,7 @@ jobs:
             rcctl -d disable netatalk
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -737,7 +737,7 @@ jobs:
             svcadm disable svc:/network/netatalk:default
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
@@ -880,7 +880,7 @@ jobs:
             svcadm -v disable svc:/network/netatalk:default
       - name: Upload meson logs
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: meson-logs-${{ github.job }}
           path: build/meson-logs
