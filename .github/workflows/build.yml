@@ -693,6 +693,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/omnios-vm@cfa22c687939a88f4938c03c5413062dd3642eac # v1.2.8
         with:
+          release: r151056-build
           copyback: true
           prepare: |
             set -e
