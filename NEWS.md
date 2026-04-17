@@ -1,6 +1,16 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.4.2
+----------------
+
+* FIX: afpd: use C11 atomic operations in dircache, conditional check for libatomic, GitHub #2767
+* FIX: afpd: fix implicit declaration of function AfpErr2name, GitHub #2662
+* FIX: afpd: fix LRU cache eviction crash and dangling pointers, GitHub #2779
+* FIX: cnid: fix sqlite backend bugs, add post init validation and logging, GitHub #2673
+* FIX: meson: fix bugs that prevent you from disabling dev docs, GitHub #2882
+* UPD: macusers: add a deprecation warning for this script, GitHub #2768
+
 Changes in 4.4.1
 ----------------
 
