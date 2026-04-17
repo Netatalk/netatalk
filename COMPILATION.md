@@ -343,7 +343,7 @@ sudo ninja -C build uninstall
 Install required packages
 
 ```shell
-pkg install -y avahi bison cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter sqlite talloc tracker3
+pkg install -y avahi cmark db5 iniparser libevent libgcrypt meson mysql80-client openldap26-client perl5 pkgconf py39-gdbm py39-sqlite3 py39-tkinter sqlite
 ```
 
 Configure, compile, install, run, and uninstall
@@ -363,7 +363,7 @@ ninja -C build uninstall
 Install required packages
 
 ```shell
-pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql91-client openldap26-client p5-Net-DBus perl5 pkgconf sqlite3 talloc
+pkg install -y avahi bison cmark db5 flex iniparser libevent libgcrypt localsearch meson mysql96-client openldap26-client p5-Net-DBus perl5 pkgconf sqlite3 talloc
 ```
 
 Configure, compile, install, run, and uninstall
