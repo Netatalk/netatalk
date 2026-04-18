@@ -1103,13 +1103,6 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
     }
-    else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-        "DALLOC_CTX", 1,
-        "kMDItemLastUsedDate", "sl_time_t"))) {
-        struct utimbuf atimes;
-        atimes.actime = sl_time->tv_sec;
-        utime(path, &atimes);
-    }
     
     array = talloc_zero(reply, sl_array_t);
     uint64_t sl_res = 0;
