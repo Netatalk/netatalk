@@ -682,7 +682,6 @@ static void tracker_cursor_cb(GObject      *object,
     gboolean more_results;
     const gchar *uri;
     char *path;
-    int result;
     struct stat sb;
     uint64_t uint64var;
     bool ok;
@@ -736,9 +735,11 @@ static void tracker_cursor_cb(GObject      *object,
         return;
     }
 
-    result = access(path, R_OK);
+    if (stat(path, &sb) != 0) {
+        goto exit;
+    }
 
-    if (result != 0) {
+    if (access(path, R_OK) != 0) {
         goto exit;
     }
 
