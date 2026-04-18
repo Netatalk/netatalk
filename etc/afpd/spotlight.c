@@ -365,7 +365,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
             name = dalloc_strdup(meta, path);
             dalloc_add(meta, name, "char *");
         } else if (strequal(reqinfo->dd_talloc_array[i], "kMDItemFSSize")
-                       || strequal(reqinfo->dd_talloc_array[i], "kMDItemLogicalSize")) {
+                   || strequal(reqinfo->dd_talloc_array[i], "kMDItemLogicalSize")) {
             uint64var = sp->st_size;
             dalloc_add_copy(meta, &uint64var, uint64_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
@@ -1102,15 +1102,19 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
         struct utimbuf utimes;
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
+    } else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX",
+                          1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
+        /*
+         * Update atime only. Using utimensat with UTIME_OMIT on the mtime
+         * slot avoids touching mtime.
+         */
+        struct timespec ts[2] = {{0}};
+        ts[0].tv_sec  = sl_time->tv_sec;
+        ts[0].tv_nsec = sl_time->tv_usec * 1000;
+        ts[1].tv_nsec = UTIME_OMIT;
+        utimensat(AT_FDCWD, path, ts, 0);
     }
-    else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-        "DALLOC_CTX", 1,
-        "kMDItemLastUsedDate", "sl_time_t"))) {
-        struct utimbuf atimes;
-        atimes.actime = sl_time->tv_sec;
-        utime(path, &atimes);
-    }
-    
+
     array = talloc_zero(reply, sl_array_t);
     uint64_t sl_res = 0;
     dalloc_add_copy(array, &sl_res, uint64_t);
