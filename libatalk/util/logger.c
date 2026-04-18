@@ -59,6 +59,8 @@ Netatalk 2001 (c)
   "CNID",                            \
   "AFPDaemon",                       \
   "DSI",                             \
+  "ATalkDaemon",                     \
+  "PAPDaemon",                       \
   "UAMS",                            \
   "FCE",                             \
   "ad",                              \

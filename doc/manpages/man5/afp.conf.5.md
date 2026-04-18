@@ -724,7 +724,8 @@ should be logged.
 > By default afpd logs to syslog with a default logging setup equivalent
 to **default:note**
 >
-> logtypes: default, logger, cnid, afpd, dsi, uams, fce, ad, sl
+> logtypes: default, logger, cnid, afpdaemon, dsi, atalkdaemon, papdaemon,
+uams, fce, ad, spotlight
 >
 > loglevels: severe, error, warn, note, info, debug, debug6, debug7,
 debug8, debug9, maxdebug
