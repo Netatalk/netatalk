@@ -449,17 +449,15 @@ static bool add_results(sl_array_t *array, slq_t *slq)
         return false;
     }
 
-    switch (slq->slq_state) {
-    case SLQ_STATE_RUNNING:
-        /*
-         * Wtf, why 35? Taken from an AFP capture.
-         */
-        status = 35;
-        break;
-
-    default:
+    /*
+     * Status 35 (0x23) signals "results pending, poll again".
+     * All states prior to DONE (RUNNING, RESULTS, FULL) return 0x23;
+     * DONE and beyond return 0.
+     */
+    if (slq->slq_state >= SLQ_STATE_DONE) {
         status = 0;
-        break;
+    } else {
+        status = 35;
     }
 
     dalloc_add_copy(array, &status, uint64_t);
