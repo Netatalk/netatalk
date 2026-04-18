@@ -1527,7 +1527,8 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
             EC_ZERO_LOG(sl_rpc_storeAttributesForOIDArray(obj, query, reply, vol));
         } else if (STRCMP(rpccmd, ==, "fetchAttributeNamesForOIDArray:context:")) {
             EC_ZERO_LOG(sl_rpc_fetchAttributeNamesForOIDArray(obj, query, reply, vol));
-        } else if (STRCMP(rpccmd, ==, "fetchAttributes:forOIDArray:context:")) {
+        } else if (STRCMP(rpccmd, ==, "fetchAttributes:forOIDArray:context:")
+                   || STRCMP(rpccmd, ==, "fetchAllAttributes:forOIDArray:context:")) {
             EC_ZERO_LOG(sl_rpc_fetchAttributesForOIDArray(obj, query, reply, vol));
         } else if (STRCMP(rpccmd, ==, "closeQueryForContext:")) {
             EC_ZERO_LOG(sl_rpc_closeQueryForContext(obj, query, reply, vol));
