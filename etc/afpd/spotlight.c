@@ -352,18 +352,31 @@ static bool add_filemeta(sl_array_t *reqinfo,
     }
 
     meta = talloc_zero(fm_array, sl_array_t);
+    /*
+     * macOS expects filenames and paths in NFD (decomposed) form.
+     * Convert the NFC server-side path to NFD before returning string
+     * attributes. Fall back to the original path if conversion fails.
+     */
+    size_t nfd_buf_size = strlen(path) * 3 + 1;
+    char *nfd_path = talloc_array(meta, char, nfd_buf_size);
+
+    if (nfd_path == NULL
+            || charset_decompose(CH_UTF8, (char *)path, strlen(path),
+                                 nfd_path, nfd_buf_size) == (size_t) -1) {
+        nfd_path = (char *)path;
+    }
 
     for (i = 0; i < metacount; i++) {
         if (strequal(reqinfo->dd_talloc_array[i], "kMDItemDisplayName")
                 || strequal(reqinfo->dd_talloc_array[i], "kMDItemFSName")
                 || strequal(reqinfo->dd_talloc_array[i], "_kMDItemFileName")) {
-            if ((p = strrchr(path, '/'))) {
+            if ((p = strrchr(nfd_path, '/'))) {
                 name = dalloc_strdup(meta, p + 1);
                 dalloc_add(meta, name, "char *");
             }
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemPath")) {
-            name = dalloc_strdup(meta, path);
+            name = dalloc_strdup(meta, nfd_path);
             dalloc_add(meta, name, "char *");
         } else if (strequal(reqinfo->dd_talloc_array[i], "kMDItemFSSize")
                    || strequal(reqinfo->dd_talloc_array[i], "kMDItemLogicalSize")) {
