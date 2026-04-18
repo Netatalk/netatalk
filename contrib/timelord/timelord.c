@@ -255,7 +255,7 @@ int main(int ac, char **av)
 #if defined (HAVE_STRUCT_TM_TM_GMTOFF)
                 mtime = tv.tv_sec + EPOCH + tm.tm_gmtoff;
 #else /* HAVE_STRUCT_TM_TM_GMTOFF */
-                mtime = tv.tv_sec + EPOCH - timezone;
+                mtime = timegm(&tm) + EPOCH;
 #endif /* HAVE_STRUCT_TM_TM_GMTOFF */
             } else {
                 if (gmtime_r(&tv.tv_sec, &tm) == NULL) {
