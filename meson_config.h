@@ -403,6 +403,18 @@
 /* Indexer D-Bus name */
 #mesondefine INDEXER_DBUS_NAME
 
+/* Indexer dconf keyfile path (schema with dots replaced by slashes, lowercased) */
+#mesondefine INDEXER_DCONF_PATH
+
+/* Directory for the netatalk dconf database keyfiles */
+#mesondefine INDEXER_DCONF_DB_DIR
+
+/* Path to the netatalk dconf profile file */
+#mesondefine INDEXER_DCONF_PROFILE
+
+/* dconf update command with absolute path */
+#mesondefine DCONF_UPDATE_COMMAND
+
 /* Define if cracklib should be used */
 #mesondefine USE_CRACKLIB
 

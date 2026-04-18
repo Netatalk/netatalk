@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <sys/stat.h>
 #include <sys/resource.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -99,82 +100,111 @@ static bool service_running(pid_t pid)
 }
 
 #ifdef WITH_SPOTLIGHT
-/*! Set indexers to index all our volumes */
+/*! Create directory and all missing parent directories (like mkdir -p) */
+static int makedirs(const char *path, mode_t mode)
+{
+    char tmp[PATH_MAX];
+    char *p;
+
+    if (strlcpy(tmp, path, sizeof(tmp)) >= sizeof(tmp)) {
+        errno = ENAMETOOLONG;
+        return -1;
+    }
+
+    for (p = tmp + 1; *p; p++) {
+        if (*p == '/') {
+            *p = '\0';
+
+            if (mkdir(tmp, mode) != 0 && errno != EEXIST) {
+                return -1;
+            }
+
+            *p = '/';
+        }
+    }
+
+    if (mkdir(tmp, mode) != 0 && errno != EEXIST) {
+        return -1;
+    }
+
+    return 0;
+}
+
+/*! Set indexers to index all our volumes via a dconf keyfile */
 static int set_sl_volumes(void)
 {
     EC_INIT;
     const struct vol *volumes, *vol;
-    struct bstrList *vollist = bstrListCreate();
+    FILE *fp = NULL;
     int sysret;
-    bstring sep = bfromcstr(", ");
-    bstring volnamelist = NULL, cmd = NULL;
+    bool first;
     EC_NULL_LOG(volumes = getvolumes());
+
+    if (makedirs(INDEXER_DCONF_DB_DIR, 0755) != 0) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to create " INDEXER_DCONF_DB_DIR ": %s",
+            strerror(errno));
+        EC_FAIL;
+    }
+
+    if ((fp = fopen(INDEXER_DCONF_DB_DIR "/10-spotlight", "w")) == NULL) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to open " INDEXER_DCONF_DB_DIR "/10-spotlight: %s",
+            strerror(errno));
+        EC_FAIL;
+    }
+
+    fprintf(fp, "[" INDEXER_DCONF_PATH "]\n");
+    /* Collect Spotlight-enabled volume paths */
+    first = true;
 
     for (vol = volumes; vol; vol = vol->v_next) {
         if (vol->v_flags & AFPVOL_SPOTLIGHT) {
-            bstring volnamequot = bformat("'%s'", vol->v_path);
-
-            if (vollist->qty == vollist->mlen
-                    && bstrListAlloc(vollist, vollist->qty + 1) != BSTR_OK) {
-                LOG(log_error, logtype_default,
-                    "set_sl_volumes: failed to initialize indexing for %s",
-                    bdata(volnamequot));
+            if (first) {
+                fprintf(fp, "index-recursive-directories=['%s'", vol->v_path);
+                first = false;
+            } else {
+                fprintf(fp, ", '%s'", vol->v_path);
             }
-
-            vollist->entry[vollist->qty] = volnamequot;
-            vollist->qty++;
         }
     }
 
-    volnamelist = bjoin(vollist, sep);
-    cmd = bformat("gsettings set " INDEXER_DBUS_NAME
-                  " index-recursive-directories \"[%s]\"",
-                  bdata(volnamelist) ? bdata(volnamelist) : "");
-    LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
-    sysret = system(bdata(cmd));
+    if (first) {
+        /* No Spotlight volumes: emit typed empty array so dconf update parses it */
+        fprintf(fp, "index-recursive-directories=@as []\n");
+    } else {
+        fprintf(fp, "]\n");
+    }
 
-    if (sysret == -1) {
-        LOG(log_error, logtype_sl, "set_sl_volumes: system() failed to run '%s': %s",
-            bdata(cmd), strerror(errno));
-        EC_FAIL;
-    } else if (sysret != 0) {
-        LOG(log_error, logtype_sl, "set_sl_volumes: command '%s' exited with status %d",
-            bdata(cmd), WEXITSTATUS(sysret));
+    fprintf(fp, "index-single-directories=@as []\n");
+
+    if (fflush(fp) != 0) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: failed to write " INDEXER_DCONF_DB_DIR "/10-spotlight: %s",
+            strerror(errno));
         EC_FAIL;
     }
 
-    /* Disable default root user home indexing */
-    sysret = system("gsettings set " INDEXER_DBUS_NAME
-                    " index-single-directories \"[]\"");
+    fclose(fp);
+    fp = NULL;
+    sysret = system(DCONF_UPDATE_COMMAND);
 
     if (sysret == -1) {
         LOG(log_error, logtype_sl,
-            "set_sl_volumes: system() failed to run disable home indexing: %s",
+            "set_sl_volumes: system() failed to run 'dconf update': %s",
             strerror(errno));
         EC_FAIL;
     } else if (sysret != 0) {
         LOG(log_error, logtype_sl,
-            "set_sl_volumes: disable home indexing exited with status %d",
+            "set_sl_volumes: 'dconf update' exited with status %d",
             WEXITSTATUS(sysret));
         EC_FAIL;
     }
 
 EC_CLEANUP:
 
-    if (cmd) {
-        bdestroy(cmd);
-    }
-
-    if (sep) {
-        bdestroy(sep);
-    }
-
-    if (vollist) {
-        bstrListDestroy(vollist);
-    }
-
-    if (volnamelist) {
-        bdestroy(volnamelist);
+    if (fp) {
+        fclose(fp);
     }
 
     EC_EXIT;
@@ -593,7 +623,6 @@ int main(int argc, char **argv)
 #ifndef WITH_LIBEV
     struct timeval tv;
 #endif
-    int sysret;
     /* Log SIGBUS/SIGSEGV SBT */
     fault_setup(NULL);
 
@@ -712,6 +741,7 @@ int main(int argc, char **argv)
     if (obj.options.flags & OPTION_SPOTLIGHT) {
         setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",
                1);
+        setenv("DCONF_PROFILE", INDEXER_DCONF_PROFILE, 1);
         setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
         setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
         setenv("TRACKER_USE_LOG_FILES", "1", 0);
@@ -730,7 +760,7 @@ int main(int argc, char **argv)
         sleep(1);
         set_sl_volumes();
         LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
-        sysret = system(INDEXER_COMMAND " -s");
+        int sysret = system(INDEXER_COMMAND " -s");
 
         if (sysret == -1) {
             LOG(log_error, logtype_default,
