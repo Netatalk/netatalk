@@ -378,7 +378,9 @@ static bool add_filemeta(sl_array_t *reqinfo,
             uint64var = sp->st_gid;
             dalloc_add_copy(meta, &uint64var, uint64_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
-                            "kMDItemFSContentChangeDate")) {
+                            "kMDItemFSContentChangeDate")
+                   || strequal(reqinfo->dd_talloc_array[i],
+                               "kMDItemContentModificationDate")) {
             sl_time = convert_timespec_to_timeval(sp->st_mtim);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
