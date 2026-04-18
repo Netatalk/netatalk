@@ -853,29 +853,48 @@ static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj,
     }
 
     dict = talloc_zero(reply, sl_dict_t);
-    /* key/val 1 */
+    sl_bool_t b;
+    /* kMDSStoreMetaScopes */
     s = dalloc_strdup(dict, "kMDSStoreMetaScopes");
     dalloc_add(dict, s, char *);
     array = talloc_zero(dict, sl_array_t);
     s = dalloc_strdup(array, "kMDQueryScopeComputer");
     dalloc_add(array, s, char *);
+    s = dalloc_strdup(array, "kMDQueryScopeAllIndexed");
+    dalloc_add(array, s, char *);
+    s = dalloc_strdup(array, "kMDQueryScopeComputerIndexed");
+    dalloc_add(array, s, char *);
     dalloc_add(dict, array, sl_array_t);
-    /* key/val 2 */
+    /* kMDSStorePathScopes */
     s = dalloc_strdup(dict, "kMDSStorePathScopes");
     dalloc_add(dict, s, char *);
     array = talloc_zero(dict, sl_array_t);
     s = dalloc_strdup(array, v->v_path);
     dalloc_add(array, s, char *);
     dalloc_add(dict, array, sl_array_t);
-    /* key/val 3 */
+    /* kMDSStoreUUID */
     s = dalloc_strdup(dict, "kMDSStoreUUID");
     dalloc_add(dict, s, char *);
     memcpy(uuid.sl_uuid, v->v_uuid, 16);
     dalloc_add_copy(dict, &uuid, sl_uuid_t);
-    /* key/val 4 */
+    /* kMDSVolumeUUID */
+    s = dalloc_strdup(dict, "kMDSVolumeUUID");
+    dalloc_add(dict, s, char *);
+    dalloc_add_copy(dict, &uuid, sl_uuid_t);
+    /* kMDSStoreHasPersistentUUID */
     s = dalloc_strdup(dict, "kMDSStoreHasPersistentUUID");
     dalloc_add(dict, s, char *);
-    sl_bool_t b = true;
+    b = true;
+    dalloc_add_copy(dict, &b, sl_bool_t);
+    /* kMDSStoreIsBackup */
+    s = dalloc_strdup(dict, "kMDSStoreIsBackup");
+    dalloc_add(dict, s, char *);
+    b = (v->v_flags & AFPVOL_TM) ? true : false;
+    dalloc_add_copy(dict, &b, sl_bool_t);
+    /* kMDSStoreSupportsVolFS */
+    s = dalloc_strdup(dict, "kMDSStoreSupportsVolFS");
+    dalloc_add(dict, s, char *);
+    b = true;
     dalloc_add_copy(dict, &b, sl_bool_t);
     dalloc_add(reply, dict, sl_dict_t);
 EC_CLEANUP:
