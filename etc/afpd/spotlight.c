@@ -387,6 +387,14 @@ static bool add_filemeta(sl_array_t *reqinfo,
                             "kMDItemLastUsedDate")) {
             sl_time = convert_timespec_to_timeval(sp->st_atim);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
+        } else if (strequal(reqinfo->dd_talloc_array[i],
+                            "kMDItemContentCreationDate")) {
+#ifdef HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC
+            sl_time = convert_timespec_to_timeval(sp->st_birthtimespec);
+            dalloc_add_copy(meta, &sl_time, sl_time_t);
+#else
+            dalloc_add_copy(meta, &nil, sl_nil_t);
+#endif
         } else {
             dalloc_add_copy(meta, &nil, sl_nil_t);
         }
