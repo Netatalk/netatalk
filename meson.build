@@ -1115,20 +1115,59 @@ if get_option('with-spotlight')
     indexer_found = false
     localsearch = find_program('localsearch', required: false)
     tracker3 = find_program('tracker3', required: false)
+    gsettings = find_program('gsettings', required: false)
+    dconf = find_program('dconf', required: false)
 
-    if localsearch.found()
-        indexer_found = true
-        cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.LocalSearch3"')
-        cdata.set('INDEXER_COMMAND', '"' + localsearch.full_path() + ' daemon"')
-    elif tracker3.found()
-        indexer_found = true
-        cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.Tracker3.Miner.Files"')
-        cdata.set('INDEXER_COMMAND', '"' + tracker3.full_path() + ' daemon"')
+    localsearch3_schema_found = false
+    tracker3_schema_found = false
+    if gsettings.found()
+        localsearch3_schema_check = run_command(
+            gsettings,
+            'list-keys',
+            'org.freedesktop.LocalSearch3.Miner.Files',
+            check: false,
+        )
+        tracker3_schema_check = run_command(
+            gsettings,
+            'list-keys',
+            'org.freedesktop.Tracker3.Miner.Files',
+            check: false,
+        )
+        localsearch3_schema_found = localsearch3_schema_check.returncode() == 0
+        tracker3_schema_found = tracker3_schema_check.returncode() == 0
     endif
 
+    indexer = disabler()
+    if localsearch.found()
+        indexer = localsearch
+    elif tracker3.found()
+        indexer = tracker3
+    endif
+
+    if indexer.found() and localsearch3_schema_found
+        indexer_found = true
+        cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.LocalSearch3"')
+        cdata.set(
+            'INDEXER_DCONF_PATH',
+            '"org/freedesktop/localsearch/miner/files"',
+        )
+        cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
+    elif indexer.found() and tracker3_schema_found
+        indexer_found = true
+        cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.Tracker3.Miner.Files"')
+        cdata.set(
+            'INDEXER_DCONF_PATH',
+            '"org/freedesktop/tracker/miner/files"',
+        )
+        cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
+    endif
+
+    cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
+    cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
     have_spotlight = (
         sparql_found
         and indexer_found
+        and dconf.found()
         and talloc.found()
         and flex.found()
         and bison.found()
@@ -1136,9 +1175,13 @@ if get_option('with-spotlight')
 
     if have_spotlight
         cdata.set('WITH_SPOTLIGHT', 1)
+        cdata.set('DCONF_UPDATE_COMMAND', '"' + dconf.full_path() + ' update"')
+        if get_option('with-install-hooks')
+            meson.add_install_script(dconf, 'update')
+        endif
     else
         warning(
-            'Spotlight support requested but required libraries not found',
+            'Spotlight support requested but one or more required dependencies not found',
         )
     endif
 endif
