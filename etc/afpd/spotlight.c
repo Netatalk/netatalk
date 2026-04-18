@@ -47,6 +47,7 @@
 #include "etc/spotlight/sparql_parser.h"
 
 #define MAX_SL_RESULTS 20
+#define MAX_SL_QUERY_IDLE_TIME 60
 
 struct timeval convert_timespec_to_timeval(const struct timespec ts)
 {
@@ -599,6 +600,60 @@ static void slq_cancelled_cleanup(void)
     return;
 }
 
+/*!
+ * @brief Cancel or destroy queries idle longer than MAX_SL_QUERY_IDLE_TIME
+ *
+ * Called on every Spotlight RPC to reap queries abandoned by clients that
+ * disconnected or crashed without sending closeQueryForContext.
+ */
+static void slq_idle_cleanup(void)
+{
+    struct list_head *p;
+    slq_t *q = NULL;
+    time_t now = time(NULL);
+    bool found;
+
+    /*
+     * list_for_each is not safe for deletion, so restart after each
+     * mutation. The active query list is short and bounded, so the
+     * overhead is negligible.
+     */
+    do {
+        found = false;
+        list_for_each(p, &sl_queries) {
+            q = list_entry(p, slq_t, slq_list);
+
+            if (q->slq_time > now || now - q->slq_time < MAX_SL_QUERY_IDLE_TIME) {
+                continue;
+            }
+
+            LOG(log_debug, logtype_sl,
+                "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": idle timeout, state: %s",
+                q->slq_ctx1, q->slq_ctx2,
+                slq_state_names[q->slq_state].state_name);
+
+            switch (q->slq_state) {
+            case SLQ_STATE_DONE:
+            case SLQ_STATE_FULL:
+            case SLQ_STATE_ERROR:
+                slq_destroy(q);
+                break;
+
+            case SLQ_STATE_RUNNING:
+            case SLQ_STATE_RESULTS:
+                slq_cancel(q);
+                break;
+
+            default:
+                break;
+            }
+
+            found = true;
+            break;
+        }
+    } while (found);
+}
+
 static void slq_dump(void)
 {
     struct list_head *p;
@@ -1016,6 +1071,9 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
         EC_FAIL;
     }
 
+    /* Reset idle timer: client is still actively polling this query */
+    slq->slq_time = time(NULL);
+
     switch (slq->slq_state) {
     case SLQ_STATE_RUNNING:
     case SLQ_STATE_RESULTS:
@@ -1412,6 +1470,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     }
 
     slq_cancelled_cleanup();
+    slq_idle_cleanup();
     ibuf += 2;
     ibuflen -= 2;
     vid = SVAL(ibuf, 0);

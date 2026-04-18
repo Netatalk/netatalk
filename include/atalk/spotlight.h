@@ -94,7 +94,7 @@ typedef struct _slq_t {
     AFPObj           *slq_obj;          /*!< global AFPObj handle            */
     const struct vol *slq_vol;          /*!< volume handle                   */
     char             *slq_scope;        /*!< search scope                    */
-    time_t            slq_time;         /*!< timestamp received query        */
+    time_t            slq_time;         /*!< last client activity timestamp  */
     uint64_t          slq_ctx1;         /*!< client context 1                */
     uint64_t          slq_ctx2;         /*!< client context 2                */
     sl_array_t       *slq_reqinfo;      /*!< array with requested metadata   */
