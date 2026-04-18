@@ -11,6 +11,8 @@ else
 endif
 
 if have_spotlight
+    subdir('dconf')
+
     dbus_session_conf = configure_file(
         input: 'dbus-session.conf.in',
         output: 'dbus-session.conf',
