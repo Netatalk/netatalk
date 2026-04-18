@@ -483,6 +483,10 @@ static bool add_results(sl_array_t *array, slq_t *slq)
         status = 35;
     }
 
+    LOG(log_debug, logtype_sl,
+        "dispatching %d result(s) to client, status %" PRIu64 " (ctx1: %" PRIx64
+        ", ctx2: %" PRIx64 ")",
+        slq->query_results->num_results, status, slq->slq_ctx1, slq->slq_ctx2);
     dalloc_add_copy(array, &status, uint64_t);
     dalloc_add(array, slq->query_results->cnids, sl_cnids_t);
 
@@ -757,17 +761,20 @@ static void tracker_cursor_cb(GObject      *object,
     }
 
     if (stat(path, &sb) != 0) {
+        LOG(log_debug, logtype_sl, "skipping result, stat failed: %s", path);
         goto exit;
     }
 
     if (access(path, R_OK) != 0) {
+        LOG(log_debug, logtype_sl, "skipping result, access denied: %s", path);
         goto exit;
     }
 
     id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did);
 
     if (id == CNID_INVALID) {
-        LOG(log_error, logtype_sl, "cnid_for_path error: %s", path);
+        LOG(log_debug, logtype_sl,
+            "skipping result, no CNID (file moved or deleted?): %s", path);
         goto exit;
     }
 
@@ -778,10 +785,14 @@ static void tracker_cursor_cb(GObject      *object,
                      sizeof(uint64_t), cnid_comp_fn);
 
         if (!ok) {
+            LOG(log_debug, logtype_sl, "skipping result, CNID not in client filter: %s",
+                path);
             goto exit;
         }
     }
 
+    LOG(log_debug, logtype_sl, "adding result CNID %" PRIu32 ": %s",
+        ntohl(id), path);
     dalloc_add_copy(slq->query_results->cnids->ca_cnids,
                     &uint64var, uint64_t);
     ok = add_filemeta(slq->slq_reqinfo, slq->query_results->fm_array,
@@ -1105,10 +1116,15 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
     }
 
     ctx2 = *uint64;
+    LOG(log_debug, logtype_sl,
+        "fetchQueryResults: ctx1: %" PRIx64 ", ctx2: %" PRIx64, ctx1, ctx2);
     /* Get query for context */
     slq = slq_for_ctx(ctx1, ctx2);
 
     if (slq == NULL) {
+        LOG(log_error, logtype_sl,
+            "fetchQueryResults: no query for ctx1: %" PRIx64 ", ctx2: %" PRIx64, ctx1,
+            ctx2);
         EC_FAIL;
     }
 
