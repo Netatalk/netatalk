@@ -47,6 +47,7 @@
 #include "etc/spotlight/sparql_parser.h"
 
 #define MAX_SL_RESULTS 20
+#define MAX_SL_QUERY_IDLE_TIME 60
 
 struct timeval convert_timespec_to_timeval(const struct timespec ts)
 {
@@ -351,21 +352,35 @@ static bool add_filemeta(sl_array_t *reqinfo,
     }
 
     meta = talloc_zero(fm_array, sl_array_t);
+    /*
+     * macOS expects filenames and paths in NFD (decomposed) form.
+     * Convert the NFC server-side path to NFD before returning string
+     * attributes. Fall back to the original path if conversion fails.
+     */
+    size_t path_len = strlen(path);
+    size_t nfd_buf_size = path_len * 3 + 1;
+    char *nfd_path = talloc_array(meta, char, nfd_buf_size);
+
+    if (nfd_path == NULL
+            || charset_decompose(CH_UTF8, (char *)path, path_len,
+                                 nfd_path, nfd_buf_size) == (size_t) -1) {
+        nfd_path = (char *)path;
+    }
 
     for (i = 0; i < metacount; i++) {
         if (strequal(reqinfo->dd_talloc_array[i], "kMDItemDisplayName")
                 || strequal(reqinfo->dd_talloc_array[i], "kMDItemFSName")
                 || strequal(reqinfo->dd_talloc_array[i], "_kMDItemFileName")) {
-            if ((p = strrchr(path, '/'))) {
+            if ((p = strrchr(nfd_path, '/'))) {
                 name = dalloc_strdup(meta, p + 1);
                 dalloc_add(meta, name, "char *");
             }
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemPath")) {
-            name = dalloc_strdup(meta, path);
+            name = dalloc_strdup(meta, nfd_path);
             dalloc_add(meta, name, "char *");
         } else if (strequal(reqinfo->dd_talloc_array[i], "kMDItemFSSize")
-                       || strequal(reqinfo->dd_talloc_array[i], "kMDItemLogicalSize")) {
+                   || strequal(reqinfo->dd_talloc_array[i], "kMDItemLogicalSize")) {
             uint64var = sp->st_size;
             dalloc_add_copy(meta, &uint64var, uint64_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
@@ -377,13 +392,23 @@ static bool add_filemeta(sl_array_t *reqinfo,
             uint64var = sp->st_gid;
             dalloc_add_copy(meta, &uint64var, uint64_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
-                            "kMDItemFSContentChangeDate")) {
+                            "kMDItemFSContentChangeDate")
+                   || strequal(reqinfo->dd_talloc_array[i],
+                               "kMDItemContentModificationDate")) {
             sl_time = convert_timespec_to_timeval(sp->st_mtim);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemLastUsedDate")) {
             sl_time = convert_timespec_to_timeval(sp->st_atim);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
+        } else if (strequal(reqinfo->dd_talloc_array[i],
+                            "kMDItemContentCreationDate")) {
+#ifdef HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC
+            sl_time = convert_timespec_to_timeval(sp->st_birthtimespec);
+            dalloc_add_copy(meta, &sl_time, sl_time_t);
+#else
+            dalloc_add_copy(meta, &nil, sl_nil_t);
+#endif
         } else {
             dalloc_add_copy(meta, &nil, sl_nil_t);
         }
@@ -448,19 +473,21 @@ static bool add_results(sl_array_t *array, slq_t *slq)
         return false;
     }
 
-    switch (slq->slq_state) {
-    case SLQ_STATE_RUNNING:
-        /*
-         * Wtf, why 35? Taken from an AFP capture.
-         */
-        status = 35;
-        break;
-
-    default:
+    /*
+     * Status 35 (0x23) signals "results pending, poll again".
+     * All states prior to DONE (RUNNING, RESULTS, FULL) return 0x23;
+     * DONE and beyond return 0.
+     */
+    if (slq->slq_state >= SLQ_STATE_DONE) {
         status = 0;
-        break;
+    } else {
+        status = 35;
     }
 
+    LOG(log_debug, logtype_sl,
+        "dispatching %d result(s) to client, status %" PRIu64 " (ctx1: %" PRIx64
+        ", ctx2: %" PRIx64 ")",
+        slq->query_results->num_results, status, slq->slq_ctx1, slq->slq_ctx2);
     dalloc_add_copy(array, &status, uint64_t);
     dalloc_add(array, slq->query_results->cnids, sl_cnids_t);
 
@@ -599,6 +626,60 @@ static void slq_cancelled_cleanup(void)
     return;
 }
 
+/*!
+ * @brief Cancel or destroy queries idle longer than MAX_SL_QUERY_IDLE_TIME
+ *
+ * Called on every Spotlight RPC to reap queries abandoned by clients that
+ * disconnected or crashed without sending closeQueryForContext.
+ */
+static void slq_idle_cleanup(void)
+{
+    struct list_head *p;
+    slq_t *q = NULL;
+    time_t now = time(NULL);
+    bool found;
+
+    /*
+     * list_for_each is not safe for deletion, so restart after each
+     * mutation. The active query list is short and bounded, so the
+     * overhead is negligible.
+     */
+    do {
+        found = false;
+        list_for_each(p, &sl_queries) {
+            q = list_entry(p, slq_t, slq_list);
+
+            if (q->slq_time > now || now - q->slq_time < MAX_SL_QUERY_IDLE_TIME) {
+                continue;
+            }
+
+            LOG(log_debug, logtype_sl,
+                "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": idle timeout, state: %s",
+                q->slq_ctx1, q->slq_ctx2,
+                slq_state_names[q->slq_state].state_name);
+
+            switch (q->slq_state) {
+            case SLQ_STATE_DONE:
+            case SLQ_STATE_FULL:
+            case SLQ_STATE_ERROR:
+                slq_destroy(q);
+                break;
+
+            case SLQ_STATE_RUNNING:
+            case SLQ_STATE_RESULTS:
+                slq_cancel(q);
+                break;
+
+            default:
+                break;
+            }
+
+            found = true;
+            break;
+        }
+    } while (found);
+}
+
 static void slq_dump(void)
 {
     struct list_head *p;
@@ -627,11 +708,19 @@ static void tracker_cursor_cb(GObject      *object,
     gboolean more_results;
     const gchar *uri;
     char *path;
-    int result;
     struct stat sb;
     uint64_t uint64var;
     bool ok;
     cnid_t did, id;
+
+    if (slq->query_results == NULL) {
+        LOG(log_error, logtype_sl,
+            "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": no result handle",
+            slq->slq_ctx1, slq->slq_ctx2);
+        slq->slq_state = SLQ_STATE_ERROR;
+        return;
+    }
+
     LOG(log_debug, logtype_sl,
         "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
         slq->query_results->num_results, slq->slq_ctx1, slq->slq_ctx2);
@@ -681,16 +770,21 @@ static void tracker_cursor_cb(GObject      *object,
         return;
     }
 
-    result = access(path, R_OK);
+    if (stat(path, &sb) != 0) {
+        LOG(log_debug, logtype_sl, "skipping result, stat failed: %s", path);
+        goto exit;
+    }
 
-    if (result != 0) {
+    if (access(path, R_OK) != 0) {
+        LOG(log_debug, logtype_sl, "skipping result, access denied: %s", path);
         goto exit;
     }
 
     id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did);
 
     if (id == CNID_INVALID) {
-        LOG(log_error, logtype_sl, "cnid_for_path error: %s", path);
+        LOG(log_debug, logtype_sl,
+            "skipping result, no CNID (file moved or deleted?): %s", path);
         goto exit;
     }
 
@@ -701,10 +795,14 @@ static void tracker_cursor_cb(GObject      *object,
                      sizeof(uint64_t), cnid_comp_fn);
 
         if (!ok) {
+            LOG(log_debug, logtype_sl, "skipping result, CNID not in client filter: %s",
+                path);
             goto exit;
         }
     }
 
+    LOG(log_debug, logtype_sl, "adding result CNID %" PRIu32 ": %s",
+        ntohl(id), path);
     dalloc_add_copy(slq->query_results->cnids->ca_cnids,
                     &uint64var, uint64_t);
     ok = add_filemeta(slq->slq_reqinfo, slq->query_results->fm_array,
@@ -789,29 +887,48 @@ static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj,
     }
 
     dict = talloc_zero(reply, sl_dict_t);
-    /* key/val 1 */
+    sl_bool_t b;
+    /* kMDSStoreMetaScopes */
     s = dalloc_strdup(dict, "kMDSStoreMetaScopes");
     dalloc_add(dict, s, char *);
     array = talloc_zero(dict, sl_array_t);
     s = dalloc_strdup(array, "kMDQueryScopeComputer");
     dalloc_add(array, s, char *);
+    s = dalloc_strdup(array, "kMDQueryScopeAllIndexed");
+    dalloc_add(array, s, char *);
+    s = dalloc_strdup(array, "kMDQueryScopeComputerIndexed");
+    dalloc_add(array, s, char *);
     dalloc_add(dict, array, sl_array_t);
-    /* key/val 2 */
+    /* kMDSStorePathScopes */
     s = dalloc_strdup(dict, "kMDSStorePathScopes");
     dalloc_add(dict, s, char *);
     array = talloc_zero(dict, sl_array_t);
     s = dalloc_strdup(array, v->v_path);
     dalloc_add(array, s, char *);
     dalloc_add(dict, array, sl_array_t);
-    /* key/val 3 */
+    /* kMDSStoreUUID */
     s = dalloc_strdup(dict, "kMDSStoreUUID");
     dalloc_add(dict, s, char *);
     memcpy(uuid.sl_uuid, v->v_uuid, 16);
     dalloc_add_copy(dict, &uuid, sl_uuid_t);
-    /* key/val 4 */
+    /* kMDSVolumeUUID */
+    s = dalloc_strdup(dict, "kMDSVolumeUUID");
+    dalloc_add(dict, s, char *);
+    dalloc_add_copy(dict, &uuid, sl_uuid_t);
+    /* kMDSStoreHasPersistentUUID */
     s = dalloc_strdup(dict, "kMDSStoreHasPersistentUUID");
     dalloc_add(dict, s, char *);
-    sl_bool_t b = true;
+    b = true;
+    dalloc_add_copy(dict, &b, sl_bool_t);
+    /* kMDSStoreIsBackup */
+    s = dalloc_strdup(dict, "kMDSStoreIsBackup");
+    dalloc_add(dict, s, char *);
+    b = (v->v_flags & AFPVOL_TM) ? true : false;
+    dalloc_add_copy(dict, &b, sl_bool_t);
+    /* kMDSStoreSupportsVolFS */
+    s = dalloc_strdup(dict, "kMDSStoreSupportsVolFS");
+    dalloc_add(dict, s, char *);
+    b = true;
     dalloc_add_copy(dict, &b, sl_bool_t);
     dalloc_add(reply, dict, sl_dict_t);
 EC_CLEANUP:
@@ -1009,12 +1126,20 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
     }
 
     ctx2 = *uint64;
+    LOG(log_debug, logtype_sl,
+        "fetchQueryResults: ctx1: %" PRIx64 ", ctx2: %" PRIx64, ctx1, ctx2);
     /* Get query for context */
     slq = slq_for_ctx(ctx1, ctx2);
 
     if (slq == NULL) {
+        LOG(log_error, logtype_sl,
+            "fetchQueryResults: no query for ctx1: %" PRIx64 ", ctx2: %" PRIx64, ctx1,
+            ctx2);
         EC_FAIL;
     }
+
+    /* Reset idle timer: client is still actively polling this query */
+    slq->slq_time = time(NULL);
 
     switch (slq->slq_state) {
     case SLQ_STATE_RUNNING:
@@ -1102,15 +1227,19 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
         struct utimbuf utimes;
         utimes.actime = utimes.modtime = sl_time->tv_sec;
         utime(path, &utimes);
+    } else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX",
+                          1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
+        /*
+         * Update atime only. Using utimensat with UTIME_OMIT on the mtime
+         * slot avoids touching mtime.
+         */
+        struct timespec ts[2] = {{0}};
+        ts[0].tv_sec  = sl_time->tv_sec;
+        ts[0].tv_nsec = sl_time->tv_usec * 1000;
+        ts[1].tv_nsec = UTIME_OMIT;
+        utimensat(AT_FDCWD, path, ts, 0);
     }
-    else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-        "DALLOC_CTX", 1,
-        "kMDItemLastUsedDate", "sl_time_t"))) {
-        struct utimbuf atimes;
-        atimes.actime = sl_time->tv_sec;
-        utime(path, &atimes);
-    }
-    
+
     array = talloc_zero(reply, sl_array_t);
     uint64_t sl_res = 0;
     dalloc_add_copy(array, &sl_res, uint64_t);
@@ -1412,6 +1541,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     }
 
     slq_cancelled_cleanup();
+    slq_idle_cleanup();
     ibuf += 2;
     ibuflen -= 2;
     vid = SVAL(ibuf, 0);
@@ -1435,8 +1565,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     case SPOTLIGHT_CMD_OPEN2:
         RSIVAL(rbuf, 0, ntohs(vid));
         RSIVAL(rbuf, 4, 0);
-        len = strlen(vol->v_path) + 1;
-        strlcpy(rbuf + 8, vol->v_path, len);
+        len = (int)strlcpy(rbuf + 8, vol->v_path, MAXPATHLEN) + 1;
         *rbuflen += 8 + len;
         break;
 
@@ -1465,7 +1594,8 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
             EC_ZERO_LOG(sl_rpc_storeAttributesForOIDArray(obj, query, reply, vol));
         } else if (STRCMP(rpccmd, ==, "fetchAttributeNamesForOIDArray:context:")) {
             EC_ZERO_LOG(sl_rpc_fetchAttributeNamesForOIDArray(obj, query, reply, vol));
-        } else if (STRCMP(rpccmd, ==, "fetchAttributes:forOIDArray:context:")) {
+        } else if (STRCMP(rpccmd, ==, "fetchAttributes:forOIDArray:context:")
+                   || STRCMP(rpccmd, ==, "fetchAllAttributes:forOIDArray:context:")) {
             EC_ZERO_LOG(sl_rpc_fetchAttributesForOIDArray(obj, query, reply, vol));
         } else if (STRCMP(rpccmd, ==, "closeQueryForContext:")) {
             EC_ZERO_LOG(sl_rpc_closeQueryForContext(obj, query, reply, vol));

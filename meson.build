@@ -349,8 +349,8 @@ endforeach
 if cc.has_type('fshare_t', prefix: '#include <fcntl.h>')
     cdata.set('HAVE_FSHARE_T', 1)
 endif
-if cc.has_member('struct tm', 'tm_gmtoff', prefix: '#include <time.h>')
-    cdata.set('HAVE_STRUCT_TM_TM_GMTOFF', 1)
+if cc.has_member('struct stat', 'st_birthtimespec', prefix: '#include <sys/stat.h>')
+    cdata.set('HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC', 1)
 endif
 
 #################

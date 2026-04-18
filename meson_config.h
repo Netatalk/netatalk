@@ -301,9 +301,6 @@
 /* Define to 1 if you have the `strnlen' function. */
 #mesondefine HAVE_STRNLEN
 
-/* Define to 1 if `tm_gmtoff' is a member of `struct tm'. */
-#mesondefine HAVE_STRUCT_TM_TM_GMTOFF
-
 /* Define to 1 if you have the <sys/attr.h> header file. */
 #mesondefine HAVE_SYS_ATTR_H
 

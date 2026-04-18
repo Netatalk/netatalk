@@ -60,6 +60,8 @@ Netatalk 2001 (c)
   "CNID",                            \
   "AFPDaemon",                       \
   "DSI",                             \
+  "ATalkDaemon",                     \
+  "PAPDaemon",                       \
   "UAMS",                            \
   "FCE",                             \
   "ad",                              \
@@ -408,7 +410,7 @@ static void setuplog_internal(const char *loglevel, const char *logtype,
         }
     }
 
-    if (typenum >= num_logtype_strings) {
+    if (typenum >= (unsigned int)logtype_end_of_list_marker) {
         return;
     }
 

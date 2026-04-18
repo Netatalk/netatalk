@@ -43,7 +43,7 @@
  * RPC data marshalling and unmarshalling
  **************************************************************************************************/
 
- /* Spotlight epoch is 1.1.2001 00:00 UTC */
+/* Spotlight epoch is 1.1.2001 00:00 UTC */
 #define SPOTLIGHT_TIME_DELTA 978307200 /* Diff from UNIX epoch to Spotlight epoch */
 
 #define SQ_TYPE_NULL    0x0000
@@ -503,8 +503,7 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
         ieee_fp_union.w = query_data64;
         fraction = ieee_fp_union.d - (uint64_t)ieee_fp_union.d;
-
-        t = (sl_time_t){
+        t = (sl_time_t) {
             .tv_sec = ieee_fp_union.d + SPOTLIGHT_TIME_DELTA,
             .tv_usec = fraction * 1000000
         };
