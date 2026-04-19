@@ -194,10 +194,15 @@ static int set_sl_volumes(void)
             "set_sl_volumes: system() failed to run 'dconf update': %s",
             strerror(errno));
         EC_FAIL;
-    } else if (sysret != 0) {
+    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
         LOG(log_error, logtype_sl,
             "set_sl_volumes: 'dconf update' exited with status %d",
             WEXITSTATUS(sysret));
+        EC_FAIL;
+    } else if (WIFSIGNALED(sysret)) {
+        LOG(log_error, logtype_sl,
+            "set_sl_volumes: 'dconf update' killed by signal %d",
+            WTERMSIG(sysret));
         EC_FAIL;
     }
 
@@ -274,10 +279,14 @@ static void sigterm_impl(void)
         LOG(log_error, logtype_afpd,
             "sigterm_cb: system() failed to run Spotlight indexer stop: %s",
             strerror(errno));
-    } else if (sysret != 0) {
+    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
         LOG(log_error, logtype_afpd,
             "sigterm_cb: Spotlight indexer stop exited with status %d",
             WEXITSTATUS(sysret));
+    } else if (WIFSIGNALED(sysret)) {
+        LOG(log_error, logtype_afpd,
+            "sigterm_cb: Spotlight indexer stop killed by signal %d",
+            WTERMSIG(sysret));
     }
 
 #endif
@@ -295,10 +304,14 @@ static void sigquit_impl(void)
         LOG(log_error, logtype_afpd,
             "sigquit_cb: system() failed to run Spotlight indexer stop: %s",
             strerror(errno));
-    } else if (sysret != 0) {
+    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
         LOG(log_error, logtype_afpd,
             "sigquit_cb: Spotlight indexer stop exited with status %d",
             WEXITSTATUS(sysret));
+    } else if (WIFSIGNALED(sysret)) {
+        LOG(log_error, logtype_afpd,
+            "sigquit_cb: Spotlight indexer stop killed by signal %d",
+            WTERMSIG(sysret));
     }
 
 #endif
@@ -766,9 +779,13 @@ int main(int argc, char **argv)
             LOG(log_error, logtype_default,
                 "system() failed to run Spotlight indexer start: %s", strerror(errno));
             netatalk_exit(EXITERR_CONF);
-        } else if (sysret != 0) {
+        } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
             LOG(log_error, logtype_default, "Spotlight indexer start exited with status %d",
                 WEXITSTATUS(sysret));
+            netatalk_exit(EXITERR_CONF);
+        } else if (WIFSIGNALED(sysret)) {
+            LOG(log_error, logtype_default, "Spotlight indexer start killed by signal %d",
+                WTERMSIG(sysret));
             netatalk_exit(EXITERR_CONF);
         }
     }
