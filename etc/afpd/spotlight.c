@@ -357,11 +357,12 @@ static bool add_filemeta(sl_array_t *reqinfo,
      * Convert the NFC server-side path to NFD before returning string
      * attributes. Fall back to the original path if conversion fails.
      */
-    size_t nfd_buf_size = strlen(path) * 3 + 1;
+    size_t path_len = strlen(path);
+    size_t nfd_buf_size = path_len * 3 + 1;
     char *nfd_path = talloc_array(meta, char, nfd_buf_size);
 
     if (nfd_path == NULL
-            || charset_decompose(CH_UTF8, (char *)path, strlen(path),
+            || charset_decompose(CH_UTF8, (char *)path, path_len,
                                  nfd_path, nfd_buf_size) == (size_t) -1) {
         nfd_path = (char *)path;
     }
@@ -1564,8 +1565,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     case SPOTLIGHT_CMD_OPEN2:
         RSIVAL(rbuf, 0, ntohs(vid));
         RSIVAL(rbuf, 4, 0);
-        len = strlen(vol->v_path) + 1;
-        strlcpy(rbuf + 8, vol->v_path, len);
+        len = (int)strlcpy(rbuf + 8, vol->v_path, MAXPATHLEN) + 1;
         *rbuflen += 8 + len;
         break;
 
