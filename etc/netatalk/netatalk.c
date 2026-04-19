@@ -274,10 +274,14 @@ static void sigterm_impl(void)
         LOG(log_error, logtype_afpd,
             "sigterm_cb: system() failed to run Spotlight indexer stop: %s",
             strerror(errno));
-    } else if (sysret != 0) {
+    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
         LOG(log_error, logtype_afpd,
             "sigterm_cb: Spotlight indexer stop exited with status %d",
             WEXITSTATUS(sysret));
+    } else if (WIFSIGNALED(sysret)) {
+        LOG(log_error, logtype_afpd,
+            "sigterm_cb: Spotlight indexer stop killed by signal %d",
+            WTERMSIG(sysret));
     }
 
 #endif
@@ -295,10 +299,14 @@ static void sigquit_impl(void)
         LOG(log_error, logtype_afpd,
             "sigquit_cb: system() failed to run Spotlight indexer stop: %s",
             strerror(errno));
-    } else if (sysret != 0) {
+    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
         LOG(log_error, logtype_afpd,
             "sigquit_cb: Spotlight indexer stop exited with status %d",
             WEXITSTATUS(sysret));
+    } else if (WIFSIGNALED(sysret)) {
+        LOG(log_error, logtype_afpd,
+            "sigquit_cb: Spotlight indexer stop killed by signal %d",
+            WTERMSIG(sysret));
     }
 
 #endif

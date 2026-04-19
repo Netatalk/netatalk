@@ -485,9 +485,11 @@ static bool add_results(sl_array_t *array, slq_t *slq)
     }
 
     LOG(log_debug, logtype_sl,
-        "dispatching %d result(s) to client, status %" PRIu64 " (ctx1: %" PRIx64
-        ", ctx2: %" PRIx64 ")",
-        slq->query_results->num_results, status, slq->slq_ctx1, slq->slq_ctx2);
+        "add_results: dispatching %d result(s), status %" PRIu64
+        ", state=%s (ctx1: %" PRIx64 ", ctx2: %" PRIx64 ")",
+        slq->query_results->num_results, status,
+        slq_state_names[slq->slq_state].state_name,
+        slq->slq_ctx1, slq->slq_ctx2);
     dalloc_add_copy(array, &status, uint64_t);
     dalloc_add(array, slq->query_results->cnids, sl_cnids_t);
 
@@ -744,7 +746,9 @@ static void tracker_cursor_cb(GObject      *object,
     }
 
     if (!more_results) {
-        LOG(log_debug, logtype_sl, "tracker_cursor_cb: done");
+        LOG(log_debug, logtype_sl,
+            "tracker_cursor_cb: done, %d result(s) accumulated in this batch",
+            slq->query_results ? slq->query_results->num_results : -1);
         slq->slq_state = SLQ_STATE_DONE;
         return;
     }
@@ -801,8 +805,8 @@ static void tracker_cursor_cb(GObject      *object,
         }
     }
 
-    LOG(log_debug, logtype_sl, "adding result CNID %" PRIu32 ": %s",
-        ntohl(id), path);
+    LOG(log_debug, logtype_sl, "adding result CNID %" PRIu32 " (%s): %s",
+        ntohl(id), S_ISDIR(sb.st_mode) ? "dir" : "file", path);
     dalloc_add_copy(slq->query_results->cnids->ca_cnids,
                     &uint64var, uint64_t);
     ok = add_filemeta(slq->slq_reqinfo, slq->query_results->fm_array,
@@ -931,6 +935,14 @@ static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj,
     b = true;
     dalloc_add_copy(dict, &b, sl_bool_t);
     dalloc_add(reply, dict, sl_dict_t);
+    LOG(log_debug, logtype_sl,
+        "fetchPropertiesForContext: vol=\"%s\", uuid=%s, is_backup=%s",
+        v->v_localname,
+        v->v_uuid ? v->v_uuid : "(null)",
+        (v->v_flags & AFPVOL_TM) ? "true" : "false");
+    LOG(log_debug, logtype_sl,
+        "fetchPropertiesForContext: kMDSStorePathScopes=\"%s\"",
+        v->v_path);
 EC_CLEANUP:
     EC_EXIT;
 }
@@ -1567,12 +1579,18 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
         RSIVAL(rbuf, 4, 0);
         len = (int)strlcpy(rbuf + 8, vol->v_path, MAXPATHLEN) + 1;
         *rbuflen += 8 + len;
+        LOG(log_debug, logtype_sl,
+            "SPOTLIGHT_CMD_OPEN%s: vid=%" PRIu16 ", path=\"%s\"",
+            cmd == SPOTLIGHT_CMD_OPEN2 ? "2" : "",
+            ntohs(vid), vol->v_path);
         break;
 
     case SPOTLIGHT_CMD_FLAGS:
         /* Whatever this value means... flags? Helios uses 0x1eefface */
         RSIVAL(rbuf, 0, 0x0100006b);
         *rbuflen += 4;
+        LOG(log_debug, logtype_sl,
+            "SPOTLIGHT_CMD_FLAGS: returning 0x0100006b");
         break;
 
     case SPOTLIGHT_CMD_RPC:
