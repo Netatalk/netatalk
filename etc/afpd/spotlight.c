@@ -711,6 +711,15 @@ static void tracker_cursor_cb(GObject      *object,
     uint64_t uint64var;
     bool ok;
     cnid_t did, id;
+
+    if (slq->query_results == NULL) {
+        LOG(log_error, logtype_sl,
+            "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": no result handle",
+            slq->slq_ctx1, slq->slq_ctx2);
+        slq->slq_state = SLQ_STATE_ERROR;
+        return;
+    }
+
     LOG(log_debug, logtype_sl,
         "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
         slq->query_results->num_results, slq->slq_ctx1, slq->slq_ctx2);
