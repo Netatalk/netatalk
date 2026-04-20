@@ -75,7 +75,7 @@ required at the bare minimum.
 |------------|---------|
 | bison      | or compatible Yacc parser |
 | D-Bus      | also used by avahi and afpstats |
-| Dconf      | sometimes packaged as `dconf-cli` |
+| DConf      | sometimes packaged as `dconf-cli` |
 | flex       | or compatible lexer |
 | localsearch **OR** tracker | v3.0 or later |
 | talloc     |  |
