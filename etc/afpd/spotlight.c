@@ -1032,11 +1032,38 @@ static int sl_rpc_openQuery(AFPObj *obj,
     scope_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                        "kMDScopeArray", "sl_array_t");
 
-    if (scope_array == NULL) {
+    if (scope_array == NULL
+            || talloc_array_length(scope_array->dd_talloc_array) == 0) {
         scope = g_uri_escape_string(v->v_path,
                                     G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
     } else {
-        scope = g_uri_escape_string(scope_array->dd_talloc_array[0],
+        const void *first = scope_array->dd_talloc_array[0];
+
+        /*
+         * macOS may wrap the scope path in a nested array (observed in Tahoe
+         * for volume-specific searches): kMDScopeArray → sl_array_t → char *
+         * vs. the normal flat form:   kMDScopeArray → char *
+         * Unwrap one extra level when the first element is itself an array.
+         */
+        if (first != NULL
+                && strcmp(talloc_get_name(first), "sl_array_t") == 0) {
+            const sl_array_t *inner = first;
+            first = (talloc_array_length(inner->dd_talloc_array) > 0)
+                    ? inner->dd_talloc_array[0] : NULL;
+        }
+
+        if (first == NULL) {
+            LOG(log_error, logtype_sl, "empty kMDScopeArray");
+            EC_FAIL;
+        }
+
+        if (strcmp(talloc_get_name(first), "char *") != 0) {
+            LOG(log_error, logtype_sl, "unexpected kMDScopeArray element type: %s",
+                talloc_get_name(first));
+            EC_FAIL;
+        }
+
+        scope = g_uri_escape_string(first,
                                     G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
     }
 
