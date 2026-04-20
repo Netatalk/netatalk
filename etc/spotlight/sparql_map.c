@@ -29,7 +29,7 @@
 
 struct spotlight_sparql_map spotlight_sparql_map[] = {
     /* ssm_spotlight_attr               ssm_enabled, ssm_type,   ssm_sparql_attr */
-    {"*",                               true, ssmt_fts,   "fts:match"},
+    {"*",                               true, ssmt_fts_or_fname, "fts:match"},
 
     /* Filesystem metadata */
     {"kMDItemFSLabel",                  true, ssmt_num,   NOTSUPPORTED},

@@ -20,12 +20,13 @@
 #define SPOTLIGHT_SPARQL_MAP_H
 
 enum ssm_type {
-    ssmt_bool,   /*!< a boolean value that doesn't requires a SPARQL FILTER */
-    ssmt_num,    /*!< a numeric value that requires a SPARQL FILTER */
-    ssmt_str,    /*!< a string value that requieres a SPARQL FILTER */
-    ssmt_fts,    /*!< a string value that will be queried with SPARQL 'fts:match' */
-    ssmt_date,   /*!< date values are handled in a special map function map_daterange() */
-    ssmt_type    /*!< kMDItemContentType, requires special mapping */
+    ssmt_bool,         /*!< a boolean value that doesn't requires a SPARQL FILTER */
+    ssmt_num,          /*!< a numeric value that requires a SPARQL FILTER */
+    ssmt_str,          /*!< a string value that requieres a SPARQL FILTER */
+    ssmt_fts,          /*!< a string value that will be queried with SPARQL 'fts:match' */
+    ssmt_fts_or_fname, /*!< fts:match UNION nfo:fileName regex; used for the '*' wildcard */
+    ssmt_date,         /*!< date values are handled in a special map function map_daterange() */
+    ssmt_type          /*!< kMDItemContentType, requires special mapping */
 };
 
 enum kMDTypeMap {
