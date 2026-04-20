@@ -1152,7 +1152,7 @@ if get_option('with-spotlight')
         cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.LocalSearch3"')
         cdata.set(
             'INDEXER_DCONF_PATH',
-            '"org/freedesktop/localsearch3/miner/files"',
+            '"org/freedesktop/localsearch/miner/files"',
         )
         cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
     elif indexer.found() and tracker3_schema_found
@@ -1160,7 +1160,7 @@ if get_option('with-spotlight')
         cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.Tracker3.Miner.Files"')
         cdata.set(
             'INDEXER_DCONF_PATH',
-            '"org/freedesktop/tracker3/miner/files"',
+            '"org/freedesktop/tracker/miner/files"',
         )
         cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
     endif
