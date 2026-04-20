@@ -1166,7 +1166,7 @@ if get_option('with-spotlight')
     endif
 
     cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
-    cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/user"')
+    cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
     have_spotlight = (
         sparql_found
         and indexer_found
@@ -1179,6 +1179,9 @@ if get_option('with-spotlight')
     if have_spotlight
         cdata.set('WITH_SPOTLIGHT', 1)
         cdata.set('DCONF_UPDATE_COMMAND', '"' + dconf.full_path() + ' update"')
+        if get_option('with-install-hooks')
+            meson.add_install_script(dconf, 'update')
+        endif
     else
         warning(
             'Spotlight support requested but required libraries not found',
