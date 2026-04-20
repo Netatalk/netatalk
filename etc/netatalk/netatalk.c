@@ -747,6 +747,12 @@ int main(int argc, char **argv)
 #ifdef WITH_SPOTLIGHT
 
     if (obj.options.flags & OPTION_SPOTLIGHT) {
+        if (makedirs(_PATH_STATEDIR, 0755) != 0) {
+            LOG(log_error, logtype_default,
+                "Failed to create state directory " _PATH_STATEDIR ": %s",
+                strerror(errno));
+            netatalk_exit(EXITERR_CONF);
+        }
         setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",
                1);
         setenv("DCONF_PROFILE", INDEXER_DCONF_PROFILE, 1);
