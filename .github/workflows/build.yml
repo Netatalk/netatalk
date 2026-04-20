@@ -182,6 +182,7 @@ jobs:
             ca-certificates \
             cmark-gfm \
             cracklib-runtime \
+            dconf-cli \
             file \
             flex \
             gcc \

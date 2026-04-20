@@ -1184,7 +1184,7 @@ if get_option('with-spotlight')
         endif
     else
         warning(
-            'Spotlight support requested but required libraries not found',
+            'Spotlight support requested but one or more required dependencies not found',
         )
     endif
 endif
