@@ -746,7 +746,7 @@ int main(int argc, char **argv)
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 #ifdef WITH_SPOTLIGHT
 
-    if (obj.options.flags & OPTION_SPOTLIGHT) {
+    if (obj.options.flags & OPTION_SPOTLIGHT_VOL) {
         if (makedirs(_PATH_STATEDIR, 0755) != 0) {
             LOG(log_error, logtype_default,
                 "Failed to create state directory " _PATH_STATEDIR ": %s",
