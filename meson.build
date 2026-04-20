@@ -1166,7 +1166,7 @@ if get_option('with-spotlight')
     endif
 
     cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
-    cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
+    cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/user"')
     have_spotlight = (
         sparql_found
         and indexer_found
