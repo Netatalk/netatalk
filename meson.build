@@ -1154,8 +1154,8 @@ if get_option('with-spotlight')
             'INDEXER_DCONF_PATH',
             '"org/freedesktop/localsearch/miner/files"',
         )
-        daemon_check = run_command(indexer, 'daemon', '--help', check: false)
-        if daemon_check.returncode() == 0
+        help_output = run_command(indexer, '--help', check: false)
+        if (help_output.stdout() + help_output.stderr()).contains('daemon')
             cdata.set('INDEXER_START_COMMAND', '"' + indexer.full_path() + ' daemon -s"')
             cdata.set('INDEXER_STOP_COMMAND', '"' + indexer.full_path() + ' daemon -t"')
         else
