@@ -194,17 +194,6 @@ functionality.
     detection of host name spoofing or host address spoofing; booby traps
     to implement an early-warning system.
 
-- LocalSearch or Tracker
-
-    Netatalk uses [GNOME LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/index.html),
-    or Tracker as it was previously known, version 3 or later as the metadata backend for Spotlight
-    compatible search indexing.
-
-- talloc / bison / flex
-
-    Samba's talloc library, a Yacc parser such as bison, and a lexer like
-    flex are also required for Spotlight.
-
 - UnicodeData.txt
 
     The [Unicode Character Database](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)
@@ -212,6 +201,48 @@ functionality.
 
     This is mostly relevant for developers or package managers who want to regenerate
     the Unicode source files.
+
+### Spotlight dependencies
+
+Netatalk's Spotlight support relies on the following third-party software:
+
+- bison
+
+    A Yacc parser such as bison is required to build the SPARQL query parser
+    for Spotlight support.
+
+- DConf
+
+    DConf is a low-level configuration system that can be used to store
+    Netatalk's Spotlight related settings. It is used in combination with
+    D-Bus to trigger updates of the Spotlight indexer when Netatalk's
+    configuration changes.
+
+- flex
+
+    A lexer like flex is required to build the SPARQL query parser for
+    Spotlight support.
+
+- LocalSearch
+
+    Netatalk uses [GNOME LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/index.html),
+    or Tracker as it was previously known, version 3 or later as the metadata extractor for Spotlight
+    compatible search indexing.
+
+    You can add metadata extraction support for additional file types
+    by installing the appropriate Tracker extractors.
+
+- talloc
+
+    Samba's talloc library is used for memory management in the Spotlight query parser.
+
+- TinySPARQL
+
+    The [TinySPARQL](https://tracker.gnome.org/) library is used
+    for parsing SPARQL queries in the Spotlight support.
+
+**Note:** LocalSearch and TinySPARQL together were previously known as Tracker.
+Netatalk still supports the older Tracker v3 library and schema.
 
 ## Starting and stopping Netatalk
 
