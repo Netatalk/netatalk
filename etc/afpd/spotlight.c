@@ -1046,7 +1046,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
         if (first != NULL
                 && strcmp(talloc_get_name(first), "sl_array_t") == 0) {
             sl_array_t *inner = first;
-            first = (inner->dd_talloc_array_count > 0)
+            first = (talloc_array_length(inner->dd_talloc_array) > 0)
                     ? inner->dd_talloc_array[0] : NULL;
         }
         if (first == NULL) {
