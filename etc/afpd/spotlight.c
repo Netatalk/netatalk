@@ -1036,7 +1036,24 @@ static int sl_rpc_openQuery(AFPObj *obj,
         scope = g_uri_escape_string(v->v_path,
                                     G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
     } else {
-        scope = g_uri_escape_string(scope_array->dd_talloc_array[0],
+        void *first = scope_array->dd_talloc_array[0];
+        /*
+         * macOS may wrap the scope path in a nested array (observed in Tahoe
+         * for volume-specific searches): kMDScopeArray → sl_array_t → char *
+         * vs. the normal flat form:   kMDScopeArray → char *
+         * Unwrap one extra level when the first element is itself an array.
+         */
+        if (first != NULL
+                && strcmp(talloc_get_name(first), "sl_array_t") == 0) {
+            sl_array_t *inner = first;
+            first = (inner->dd_talloc_array_count > 0)
+                    ? inner->dd_talloc_array[0] : NULL;
+        }
+        if (first == NULL) {
+            LOG(log_error, logtype_sl, "empty kMDScopeArray");
+            EC_FAIL;
+        }
+        scope = g_uri_escape_string(first,
                                     G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
     }
 
