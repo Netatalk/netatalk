@@ -34,6 +34,8 @@
     static gchar *ssp_result;
     static char sparqlvar;
     static char *result_limit;
+    static bool ssp_has_fts_or_fname;
+    static char *ssp_fname_pattern;
 %}
 
 %code provides {
@@ -78,10 +80,22 @@ expr                           {
         result_limit = "";
     }
 
-    ssp_result = talloc_asprintf(ssp_slq,
-                                 "SELECT ?url WHERE "
-                                 "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
-                                 $1, ssp_slq->slq_scope, result_limit);
+    if (ssp_has_fts_or_fname && ssp_fname_pattern) {
+        ssp_result = talloc_asprintf(ssp_slq,
+                                     "SELECT DISTINCT ?url WHERE "
+                                     "{ { %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url }"
+                                     " UNION "
+                                     "{ ?file nfo:fileName ?%c FILTER(regex(?%c, '%s', 'i')) . ?file nie:url ?url }"
+                                     " . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                     $1, sparqlvar, sparqlvar, ssp_fname_pattern,
+                                     ssp_slq->slq_scope, result_limit);
+        sparqlvar++;
+    } else {
+        ssp_result = talloc_asprintf(ssp_slq,
+                                     "SELECT ?url WHERE "
+                                     "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                     $1, ssp_slq->slq_scope, result_limit);
+    }
     $$ = ssp_result;
 }
 ;
@@ -288,6 +302,16 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
                 break;
 
+            case ssmt_fts_or_fname:
+                q = bformat("^%s$", val);
+                search = bfromcstr("*");
+                replace = bfromcstr(".*");
+                bfindreplace(q, search, replace, 0);
+                ssp_has_fts_or_fname = true;
+                ssp_fname_pattern = talloc_strdup(ssp_slq, bdata(q));
+                result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
+                break;
+
             case ssmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL(tmp = localtime(&t));
@@ -362,6 +386,8 @@ int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
     YY_BUFFER_STATE s = NULL;
     ssp_result = NULL;
     ssp_slq = slq;
+    ssp_has_fts_or_fname = false;
+    ssp_fname_pattern = NULL;
     s = yy_scan_string(slq->slq_qstring);
     sparqlvar = 'a';
     EC_ZERO(yyparse());
