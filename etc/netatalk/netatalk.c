@@ -268,22 +268,23 @@ static void sigterm_impl(void)
     sigdelset(&sigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &sigs, NULL);
 #ifdef WITH_SPOTLIGHT
-    int sysret = system(INDEXER_COMMAND " -t");
+    if (strlen(INDEXER_STOP_COMMAND) > 0) {
+        int sysret = system(INDEXER_STOP_COMMAND);
 
-    if (sysret == -1) {
-        LOG(log_error, logtype_afpd,
-            "sigterm_cb: system() failed to run Spotlight indexer stop: %s",
-            strerror(errno));
-    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
-        LOG(log_error, logtype_afpd,
-            "sigterm_cb: Spotlight indexer stop exited with status %d",
-            WEXITSTATUS(sysret));
-    } else if (WIFSIGNALED(sysret)) {
-        LOG(log_error, logtype_afpd,
-            "sigterm_cb: Spotlight indexer stop killed by signal %d",
-            WTERMSIG(sysret));
+        if (sysret == -1) {
+            LOG(log_error, logtype_afpd,
+                "sigterm_cb: system() failed to run Spotlight indexer stop: %s",
+                strerror(errno));
+        } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
+            LOG(log_error, logtype_afpd,
+                "sigterm_cb: Spotlight indexer stop exited with status %d",
+                WEXITSTATUS(sysret));
+        } else if (WIFSIGNALED(sysret)) {
+            LOG(log_error, logtype_afpd,
+                "sigterm_cb: Spotlight indexer stop killed by signal %d",
+                WTERMSIG(sysret));
+        }
     }
-
 #endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -293,22 +294,23 @@ static void sigquit_impl(void)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
 #ifdef WITH_SPOTLIGHT
-    int sysret = system(INDEXER_COMMAND " -t");
+    if (strlen(INDEXER_STOP_COMMAND) > 0) {
+        int sysret = system(INDEXER_STOP_COMMAND);
 
-    if (sysret == -1) {
-        LOG(log_error, logtype_afpd,
-            "sigquit_cb: system() failed to run Spotlight indexer stop: %s",
-            strerror(errno));
-    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
-        LOG(log_error, logtype_afpd,
-            "sigquit_cb: Spotlight indexer stop exited with status %d",
-            WEXITSTATUS(sysret));
-    } else if (WIFSIGNALED(sysret)) {
-        LOG(log_error, logtype_afpd,
-            "sigquit_cb: Spotlight indexer stop killed by signal %d",
-            WTERMSIG(sysret));
+        if (sysret == -1) {
+            LOG(log_error, logtype_afpd,
+                "sigquit_cb: system() failed to run Spotlight indexer stop: %s",
+                strerror(errno));
+        } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
+            LOG(log_error, logtype_afpd,
+                "sigquit_cb: Spotlight indexer stop exited with status %d",
+                WEXITSTATUS(sysret));
+        } else if (WIFSIGNALED(sysret)) {
+            LOG(log_error, logtype_afpd,
+                "sigquit_cb: Spotlight indexer stop killed by signal %d",
+                WTERMSIG(sysret));
+        }
     }
-
 #endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
@@ -610,7 +612,8 @@ static void show_netatalk_paths(void)
 #ifdef WITH_SPOTLIGHT
     printf("           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
     printf("     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
-    printf("       indexer manager:\t%s\n", INDEXER_COMMAND);
+    printf("      indexer start cmd:\t%s\n", INDEXER_START_COMMAND);
+    printf("       indexer stop cmd:\t%s\n", INDEXER_STOP_COMMAND);
 #endif
 #ifndef SOLARIS
     printf("    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
@@ -773,17 +776,19 @@ int main(int argc, char **argv)
         /* Allow dbus some time to start up */
         sleep(1);
         set_sl_volumes();
-        LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
-        int sysret = system(INDEXER_COMMAND " -s");
+        if (strlen(INDEXER_START_COMMAND) > 0) {
+            LOG(log_note, logtype_default, "Starting indexer: %s", INDEXER_START_COMMAND);
+            int sysret = system(INDEXER_START_COMMAND);
 
-        if (sysret == -1) {
-            LOG(log_error, logtype_default,
-                "system() failed to run Spotlight indexer start: %s", strerror(errno));
-            netatalk_exit(EXITERR_CONF);
-        } else if (sysret != 0) {
-            LOG(log_error, logtype_default, "Spotlight indexer start exited with status %d",
-                WEXITSTATUS(sysret));
-            netatalk_exit(EXITERR_CONF);
+            if (sysret == -1) {
+                LOG(log_error, logtype_default,
+                    "system() failed to run Spotlight indexer start: %s", strerror(errno));
+                netatalk_exit(EXITERR_CONF);
+            } else if (sysret != 0) {
+                LOG(log_error, logtype_default,
+                    "Spotlight indexer start exited with status %d", WEXITSTATUS(sysret));
+                netatalk_exit(EXITERR_CONF);
+            }
         }
     }
 

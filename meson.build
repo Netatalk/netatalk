@@ -1154,7 +1154,15 @@ if get_option('with-spotlight')
             'INDEXER_DCONF_PATH',
             '"org/freedesktop/localsearch/miner/files"',
         )
-        cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
+        daemon_check = run_command(indexer, 'daemon', '--help', check: false)
+        if daemon_check.returncode() == 0
+            cdata.set('INDEXER_START_COMMAND', '"' + indexer.full_path() + ' daemon -s"')
+            cdata.set('INDEXER_STOP_COMMAND', '"' + indexer.full_path() + ' daemon -t"')
+        else
+            # localsearch 3.7+: purely D-Bus activated, no explicit start/stop needed
+            cdata.set('INDEXER_START_COMMAND', '""')
+            cdata.set('INDEXER_STOP_COMMAND', '""')
+        endif
     elif indexer.found() and tracker3_schema_found
         indexer_found = true
         cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.Tracker3.Miner.Files"')
@@ -1162,7 +1170,8 @@ if get_option('with-spotlight')
             'INDEXER_DCONF_PATH',
             '"org/freedesktop/tracker/miner/files"',
         )
-        cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
+        cdata.set('INDEXER_START_COMMAND', '"' + indexer.full_path() + ' daemon -s"')
+        cdata.set('INDEXER_STOP_COMMAND', '"' + indexer.full_path() + ' daemon -t"')
     endif
 
     cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
