@@ -67,35 +67,39 @@ required at the bare minimum.
 |------------|---------|
 | C compiler | clang or gcc are recommended |
 | meson      | v0.61.2 or later |
-| ninja      | Often packaged as `ninja-build` |
+| ninja      | often packaged as `ninja-build` |
 
 ### Optional Spotlight Support
 
 | Package    | Details |
 |------------|---------|
-| D-Bus      | Also used by avahi and afpstats |
+| bison      | or compatible Yacc parser |
+| D-Bus      | also used by avahi and afpstats |
+| DConf      | sometimes packaged as `dconf-cli` |
+| GLib 2     | gsettings is used to determine the localsearch schema |
+| flex       | or compatible lexer |
 | localsearch **OR** tracker | v3.0 or later |
 | talloc     |  |
-| bison      |  |
-| flex       |  |
+| tinysparql |  |
 
 ### Optional Features
 
 | Package      | Details |
 |--------------|---------|
-| avahi **OR** mDNSresponder | For Zeroconf support |
-| cmark **OR** cmark-gfm **OR** pandoc | For generating documentation |
-| cracklib and cracklib dictionary | For password strength check in afppasswd |
-| GLib 2 and GIO             | For afpstats support |
-| Kerberos V                 | For krbV UAM support |
-| libacl                     | For ACL support |
-| libldap                    | For LDAP support |
-| libpam                     | For PAM support |
-| libtirpc **OR** libquota   | For Quota support |
-| Perl                       | For admin scripts |
-| po4a                       | For localization of documentation |
-| tcpwrap                    | For TCP wrapper support |
-| [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | For regenerating Unicode lookup tables |
+| avahi **OR** mDNSresponder | Zeroconf support |
+| cmark **OR** cmark-gfm **OR** pandoc | generating documentation |
+| cracklib and cracklib dictionary | password strength check in afppasswd |
+| D-Bus daemon               | afpstats support (also transient dependency for avahi and localsearch) |
+| GLib 2 and GIO             | afpstats support |
+| Kerberos V                 | krbV UAM support |
+| libacl                     | ACL support |
+| libldap                    | LDAP support |
+| libpam                     | PAM support |
+| libtirpc **OR** libquota   | Quota support |
+| Perl                       | admin scripts |
+| po4a                       | localization of documentation |
+| tcpwrap                    | TCP wrapper support |
+| [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | regenerating Unicode lookup tables |
 
 ## Build the software
 
