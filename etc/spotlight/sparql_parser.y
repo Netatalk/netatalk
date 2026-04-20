@@ -79,7 +79,7 @@ expr                           {
     }
 
     ssp_result = talloc_asprintf(ssp_slq,
-                                 "SELECT ?url WHERE "
+                                 "SELECT DISTINCT ?url WHERE "
                                  "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
                                  $1, ssp_slq->slq_scope, result_limit);
     $$ = ssp_result;
@@ -286,6 +286,21 @@ static const char *map_expr(const char *attr, char op, const char *val)
 
             case ssmt_fts:
                 result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
+                break;
+
+            case ssmt_fts_or_fname:
+                q = bformat("^%s$", val);
+                search = bfromcstr("*");
+                replace = bfromcstr(".*");
+                bfindreplace(q, search, replace, 0);
+                result = talloc_asprintf(ssp_slq,
+                                         "{ ?obj %s '%s' }"
+                                         " UNION "
+                                         "{ ?obj nie:isStoredAs ?file . ?file nfo:fileName ?%c FILTER(regex(?%c, '%s', 'i')) }",
+                                         p->ssm_sparql_attr, val,
+                                         sparqlvar, sparqlvar,
+                                         bdata(q));
+                sparqlvar++;
                 break;
 
             case ssmt_date:
