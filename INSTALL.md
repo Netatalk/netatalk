@@ -67,17 +67,18 @@ required at the bare minimum.
 |------------|---------|
 | C compiler | clang or gcc are recommended |
 | meson      | v0.61.2 or later |
-| ninja      | Often packaged as `ninja-build` |
+| ninja      | often packaged as `ninja-build` |
 
 ### Optional Spotlight Support
 
 | Package    | Details |
 |------------|---------|
-| D-Bus      | Also used by avahi and afpstats |
+| bison      | or compatible Yacc parser |
+| D-Bus      | also used by avahi and afpstats |
+| Dconf      | sometimes packaged as `dconf-cli` |
+| flex       | or compatible lexer |
 | localsearch **OR** tracker | v3.0 or later |
 | talloc     |  |
-| bison      |  |
-| flex       |  |
 
 ### Optional Features
 
