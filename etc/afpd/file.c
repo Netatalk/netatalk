@@ -321,6 +321,7 @@ int getmetadata(const AFPObj *obj,
     uint32_t           utf8 = 0;
     struct stat         *st;
     struct maccess	ma;
+    int                 timeoffset = 0;
     LOG(log_debug, logtype_afpd, "getmetadata(\"%s\")", path->u_name);
     upath = path->u_name;
     st = &path->st;
@@ -410,6 +411,10 @@ int getmetadata(const AFPObj *obj,
             path->m_name = utompath(vol, upath, id, utf8_encoding(vol->v_obj));
         }
     }
+    /* If this is a ProDOS client, adjust date-time values to match local time */
+    if (obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
+        timeoffset = 1;
+    }
 
     while (bitmap != 0) {
         while ((bitmap & 1) == 0) {
@@ -460,6 +465,9 @@ int getmetadata(const AFPObj *obj,
             if (!adp || (ad_getdate(adp, AD_DATE_CREATE, &aint) < 0)) {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             }
+            if (timeoffset == 1) {
+                set_utc_offset(&aint, TO_LOCALTIME);
+            }
 
             memcpy(data, &aint, sizeof(aint));
             data += sizeof(aint);
@@ -473,6 +481,9 @@ int getmetadata(const AFPObj *obj,
             } else {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             }
+            if (timeoffset == 1) {
+                set_utc_offset(&aint, TO_LOCALTIME);
+            }
 
             memcpy(data, &aint, sizeof(int));
             data += sizeof(int);
@@ -481,6 +492,9 @@ int getmetadata(const AFPObj *obj,
         case FILPBIT_BDATE :
             if (!adp || (ad_getdate(adp, AD_DATE_BACKUP, &aint) < 0)) {
                 aint = AD_DATE_START;
+            }
+            if (timeoffset == 1 && aint != AD_DATE_START) {
+                set_utc_offset(&aint, TO_LOCALTIME);
             }
 
             memcpy(data, &aint, sizeof(int));
@@ -1036,7 +1050,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     struct utimbuf	ut;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
-    int                 newdate = 0;
+    uint32_t                 newdate = 0;
     struct timeval      tv;
     uid_t		f_uid;
     gid_t		f_gid;
@@ -1047,6 +1061,7 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
     int fp;
     ssize_t len;
     char symbuf[MAXPATHLEN + 1];
+    int                 timeoffset = 0;
     LOG(log_debug9, logtype_afpd, "begin setfilparams:");
 
     if (path == NULL) {
@@ -1062,6 +1077,11 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
 
     /* with unix priv maybe we have to change adouble file priv first */
     bit = 0;
+
+    /* If this is a ProDOS client, adjust date-time values to match UTC time */
+    if (obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
+        timeoffset = 1;
+    }
 
     while (bitmap != 0) {
         while ((bitmap & 1) == 0) {
@@ -1085,17 +1105,26 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             change_mdate = 1;
             memcpy(&cdate, buf, sizeof(cdate));
             buf += sizeof(cdate);
+            if (timeoffset == 1) {
+                set_utc_offset(&cdate, TO_UTC);
+            }
             break;
 
         case FILPBIT_MDATE :
             memcpy(&newdate, buf, sizeof(newdate));
             buf += sizeof(newdate);
+            if (timeoffset == 1) {
+                set_utc_offset(&newdate, TO_UTC);
+            }
             break;
 
         case FILPBIT_BDATE :
             change_mdate = 1;
             memcpy(&bdate, buf, sizeof(bdate));
             buf += sizeof(bdate);
+            if (timeoffset == 1 && bdate != AD_DATE_START) {
+                set_utc_offset(&bdate, TO_UTC);
+            }
             break;
 
         case FILPBIT_FINFO :
