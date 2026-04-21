@@ -2164,6 +2164,7 @@ int getdirparams(const AFPObj *obj,
     cnid_t              pdid;
     struct stat *st = &s_path->st;
     char *upath = s_path->u_name;
+    int                 timeoffset = 0;
 
     if (bitmap & ((1 << DIRPBIT_ATTR)  |
                   (1 << DIRPBIT_CDATE) |
@@ -2181,6 +2182,11 @@ int getdirparams(const AFPObj *obj,
 
     pdid = dir->d_pdid;
     data = buf;
+
+    /* If this is a ProDOS client, adjust date-time values to match local time */
+    if (obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
+        timeoffset = 1;
+    }
 
     while (bitmap != 0) {
         while ((bitmap & 1) == 0) {
@@ -2215,12 +2221,21 @@ int getdirparams(const AFPObj *obj,
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             }
 
+            if (timeoffset == 1) {
+                set_utc_offset(&aint, TO_LOCALTIME);
+            }
+
             memcpy(data, &aint, sizeof(aint));
             data += sizeof(aint);
             break;
 
         case DIRPBIT_MDATE :
             aint = AD_DATE_FROM_UNIX(st->st_mtime);
+
+            if (timeoffset == 1) {
+                set_utc_offset(&aint, TO_LOCALTIME);
+            }
+
             memcpy(data, &aint, sizeof(aint));
             data += sizeof(aint);
             break;
@@ -2228,6 +2243,10 @@ int getdirparams(const AFPObj *obj,
         case DIRPBIT_BDATE :
             if (!ad_available || (ad_getdate(&ad, AD_DATE_BACKUP, &aint) < 0)) {
                 aint = AD_DATE_START;
+            }
+
+            if (timeoffset == 1 && aint != AD_DATE_START) {
+                set_utc_offset(&aint, TO_LOCALTIME);
             }
 
             memcpy(data, &aint, sizeof(aint));
@@ -2493,23 +2512,29 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
     char                *ade = NULL;
     struct dir          *dir;
     int         bit, isad = 0;
-    int                 cdate, bdate;
+    uint32_t                 cdate, bdate;
     int                 owner, group;
     uint16_t       ashort, bshort, oshort;
     int                 err = AFP_OK;
     int                 change_mdate = 0;
     int                 change_parent_mdate = 0;
-    int                 newdate = 0;
+    uint32_t                 newdate = 0;
     uint16_t           bitmap = d_bitmap;
     uint8_t              finder_buf[32];
     uint32_t       upriv;
     mode_t              mpriv = 0;
+    int                 timeoffset = 0;
     bool                set_upriv = false, set_maccess = false;
     LOG(log_debug, logtype_afpd, "setdirparams(\"%s\", bitmap: %02x)", path->u_name,
         bitmap);
     bit = 0;
     upath = path->u_name;
     dir   = path->d_dir;
+
+    /* If this is a ProDOS client, adjust date-time values to match UTC time */
+    if (vol->v_obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
+        timeoffset = 1;
+    }
 
     while (bitmap != 0) {
         while ((bitmap & 1) == 0) {
@@ -2528,17 +2553,26 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
             change_mdate = 1;
             memcpy(&cdate, buf, sizeof(cdate));
             buf += sizeof(cdate);
+            if (timeoffset == 1) {
+                set_utc_offset(&cdate, TO_UTC);
+            }
             break;
 
         case DIRPBIT_MDATE :
             memcpy(&newdate, buf, sizeof(newdate));
             buf += sizeof(newdate);
+            if (timeoffset == 1) {
+                set_utc_offset(&newdate, TO_UTC);
+            }
             break;
 
         case DIRPBIT_BDATE :
             change_mdate = 1;
             memcpy(&bdate, buf, sizeof(bdate));
             buf += sizeof(bdate);
+            if (timeoffset == 1 && bdate != AD_DATE_START) {
+                set_utc_offset(&bdate, TO_UTC);
+            }
             break;
 
         case DIRPBIT_FINFO :

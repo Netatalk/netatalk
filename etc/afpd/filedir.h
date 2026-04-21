@@ -9,6 +9,10 @@
 
 extern struct afp_options default_options;
 
+#define TO_UTC 0
+#define TO_LOCALTIME 1
+
+extern int set_utc_offset(uint32_t *aint_p, int offset_dir);
 extern char *ctoupath(const struct vol *, struct dir *, char *);
 extern char *absupath(const struct vol *, struct dir *, char *);
 extern int veto_file(const char *veto_str, const char *path);
