@@ -352,9 +352,6 @@ endif
 if cc.has_member('struct stat', 'st_birthtimespec', prefix: '#include <sys/stat.h>')
     cdata.set('HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC', 1)
 endif
-if cc.has_member('struct stat', 'st_birthtimespec', prefix: '#include <sys/stat.h>')
-    cdata.set('HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC', 1)
-endif
 
 #################
 # Configuration #
