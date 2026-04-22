@@ -32,7 +32,7 @@
 
     /* local vars */
     static gchar *ssp_result;
-    static char sparqlvar;
+    static int sparqlvar;
     static char *result_limit;
 %}
 
@@ -187,7 +187,7 @@ static const char *map_daterange(const char *dateattr, time_t date1,
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
         if (strcmp(dateattr, p->ssm_spotlight_attr) == 0) {
             result = talloc_asprintf(ssp_slq,
-                                     "?obj %s ?%c FILTER (?%c > '%s' && ?%c < '%s')",
+                                     "?obj %s ?v%d FILTER (?v%d > '%s' && ?v%d < '%s')",
                                      p->ssm_sparql_attr,
                                      sparqlvar,
                                      sparqlvar,
@@ -261,7 +261,7 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 break;
 
             case ssmt_num:
-                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c%c '%s')",
+                result = talloc_asprintf(ssp_slq, "?obj %s ?v%d FILTER(?v%d %c%c '%s')",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
@@ -276,7 +276,7 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 search = bfromcstr("*");
                 replace = bfromcstr(".*");
                 bfindreplace(q, search, replace, 0);
-                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(regex(?%c, '%s'))",
+                result = talloc_asprintf(ssp_slq, "?obj %s ?v%d FILTER(regex(?v%d, '%s'))",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
@@ -296,7 +296,7 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 result = talloc_asprintf(ssp_slq,
                                          "{ ?obj %s '%s' }"
                                          " UNION "
-                                         "{ ?obj nie:isStoredAs ?file . ?file nfo:fileName ?%c FILTER(regex(?%c, '%s', 'i')) }",
+                                         "{ ?obj nie:isStoredAs ?file . ?file nfo:fileName ?v%d FILTER(regex(?v%d, '%s', 'i')) }",
                                          p->ssm_sparql_attr, val,
                                          sparqlvar, sparqlvar,
                                          bdata(q));
@@ -307,7 +307,7 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL(tmp = localtime(&t));
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-                result = talloc_asprintf(ssp_slq, "?obj %s ?%c FILTER(?%c %c '%s')",
+                result = talloc_asprintf(ssp_slq, "?obj %s ?v%d FILTER(?v%d %c '%s')",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
@@ -378,7 +378,7 @@ int map_spotlight_to_sparql_query(slq_t *slq, gchar **sparql_result)
     ssp_result = NULL;
     ssp_slq = slq;
     s = yy_scan_string(slq->slq_qstring);
-    sparqlvar = 'a';
+    sparqlvar = 0;
     EC_ZERO(yyparse());
 EC_CLEANUP:
 
@@ -409,7 +409,7 @@ int main(int argc, char **argv)
     ssp_slq = talloc_zero(NULL, slq_t);
     ssp_slq->slq_scope = talloc_strdup(ssp_slq, "/Volumes/test");
     ssp_slq->slq_allow_expr = true;
-    sparqlvar = 'a';
+    sparqlvar = 0;
     s = yy_scan_string(argv[1]);
     ret = yyparse();
     yy_delete_buffer(s);
