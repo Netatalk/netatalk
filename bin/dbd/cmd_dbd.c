@@ -140,7 +140,7 @@ int main(int argc, char **argv)
     const char *username = NULL;
     int c;
 
-    while ((c = getopt(argc, argv, ":cfF:irstu:vV")) != -1) {
+    while ((c = getopt(argc, argv, ":cfF:istu:vV")) != -1) {
         switch (c) {
         case 'c':
             flags |= DBD_FLAGS_V2TOEA;
@@ -156,10 +156,6 @@ int main(int argc, char **argv)
 
         case 'F':
             obj.cmdlineconfigfile = strdup(optarg);
-            break;
-
-        case 'r':
-            /* the default */
             break;
 
         case 's':
