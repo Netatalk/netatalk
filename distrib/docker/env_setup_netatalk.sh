@@ -48,7 +48,7 @@ fi
 # Validate required environment variables and create users / groups
 # --------------------------------------------------------------------------
 
-echo "*** Setting up users and groups"
+echo "*** Setting up first AFP user"
 
 if [ -z "$AFP_USER" ]; then
     echo "ERROR: AFP_USER needs to be set to use this container." >&2
@@ -99,13 +99,23 @@ if [ -f "/etc/netatalk/afppasswd.srp" ]; then
     rm -f /etc/netatalk/afppasswd.srp
 fi
 
+UAMS="uams_dhx.so uams_dhx2.so"
+
 # Creating credentials for the RandNum UAM
+RANDNUM_OK=0
 afppasswd -c -r
-afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null
+
+if afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null; then
+    RANDNUM_OK=1
+fi
 
 # Creating credentials for the SRP UAM
+SRP_OK=0
 afppasswd -c
-afppasswd -a "$AFP_USER" -f -w "$AFP_PASS" > /dev/null
+
+if afppasswd -a "$AFP_USER" -f -w "$AFP_PASS" > /dev/null; then
+    SRP_OK=1
+fi
 
 # Optional second user
 if [ -n "$AFP_DROPBOX" ]; then
@@ -115,6 +125,8 @@ if [ -n "$AFP_DROPBOX" ]; then
         usermod -aG $AFP_GROUP nobody 2> /dev/null || true
     fi
 elif [ -n "$AFP_USER2" ]; then
+    echo "*** Setting up second AFP user"
+
     if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         adduser --no-create-home --disabled-password "$AFP_USER2" 2> /dev/null || true
         addgroup "$AFP_USER2" "$AFP_GROUP"
@@ -122,9 +134,26 @@ elif [ -n "$AFP_USER2" ]; then
         adduser --no-create-home --disabled-password --gecos '' "$AFP_USER2" 2> /dev/null || true
         usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
     fi
+
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
-    afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null
-    afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null
+
+    if ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
+        RANDNUM_OK=0
+    fi
+    if ! afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null; then
+        SRP_OK=0
+    fi
+fi
+
+if [ "$RANDNUM_OK" = "1" ]; then
+    UAMS="$UAMS uams_randnum.so"
+else
+    echo "NOTE: uams_randnum.so will not be loaded"
+fi
+if [ "$SRP_OK" = "1" ]; then
+    UAMS="$UAMS uams_srp.so"
+else
+    echo "NOTE: uams_srp.so will not be loaded"
 fi
 
 # --------------------------------------------------------------------------
@@ -170,8 +199,6 @@ fi
 # --------------------------------------------------------------------------
 
 echo "*** Configuring Netatalk"
-UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so uams_srp.so"
-
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 
 [ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
