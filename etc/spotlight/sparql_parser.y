@@ -348,7 +348,7 @@ int yywrap()
     return 1;
 }
 
-/**
+/*!
  * Map a Spotlight RAW query string to a SPARQL query string
  *
  * @param[in]     slq            Spotlight query handle
