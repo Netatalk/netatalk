@@ -210,13 +210,13 @@ stop_flamegraph_profiling() {
     NETATALK_SYMS="/tmp/netatalk_syms.txt"
     {
         # All Netatalk binaries (afpd is the profiled process)
-        nm -D /usr/local/sbin/netatalk 2>/dev/null
-        nm -D /usr/local/sbin/afpd 2>/dev/null
-        nm -D /usr/local/sbin/cnid_dbd 2>/dev/null
-        nm -D /usr/local/sbin/cnid_metad 2>/dev/null
+        nm -D /usr/local/sbin/netatalk 2> /dev/null
+        nm -D /usr/local/sbin/afpd 2> /dev/null
+        nm -D /usr/local/sbin/cnid_dbd 2> /dev/null
+        nm -D /usr/local/sbin/cnid_metad 2> /dev/null
         # Shared library and UAM modules
-        nm -D /usr/local/lib/libatalk.so* 2>/dev/null
-        nm -D /usr/local/lib/netatalk/*.so 2>/dev/null
+        nm -D /usr/local/lib/libatalk.so* 2> /dev/null
+        nm -D /usr/local/lib/netatalk/*.so 2> /dev/null
     } | awk '/^[0-9a-f]+ [TtWw] / { print $3 }' | sort -u > "$NETATALK_SYMS"
 
     NETATALK_SYM_COUNT=$(wc -l < "$NETATALK_SYMS")
