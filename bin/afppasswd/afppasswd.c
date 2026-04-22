@@ -282,7 +282,7 @@ static int update_srp_passwd(const char *path, const char *name, int flags,
     pass_len = strnlen(pass, SRP_PASSWDLEN + 1);
 
     if (pass_len > SRP_PASSWDLEN) {
-        fprintf(stderr, "afppasswd: max password length is %d.\n", SRP_PASSWDLEN);
+        fprintf(stderr, "afppasswd: max SRP password length is %d.\n", SRP_PASSWDLEN);
         return -1;
     }
 
@@ -421,7 +421,7 @@ found_entry:
         size_t passwd_len = strnlen(passwd, SRP_PASSWDLEN + 1);
 
         if (passwd_len > SRP_PASSWDLEN) {
-            fprintf(stderr, "afppasswd: max password length is %d.\n", SRP_PASSWDLEN);
+            fprintf(stderr, "afppasswd: max SRP password length is %d.\n", SRP_PASSWDLEN);
             err = -1;
             goto done;
         }
@@ -630,7 +630,7 @@ found_entry:
         size_t passwd_len = strnlen(passwd, PASSWDLEN + 1);
 
         if (passwd_len > PASSWDLEN) {
-            fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
+            fprintf(stderr, "afppasswd: max RandNum password length is %d.\n", PASSWDLEN);
             err = -1;
             goto update_done;
         }
@@ -855,7 +855,7 @@ int main(int argc, char **argv)
 
     /* Validate password length for RandNum mode */
     if ((flags & OPT_RANDNUM) && strnlen(pass, PASSWDLEN + 1) > PASSWDLEN) {
-        fprintf(stderr, "afppasswd: max password length is %d.\n", PASSWDLEN);
+        fprintf(stderr, "afppasswd: max RandNum password length is %d.\n", PASSWDLEN);
         return -1;
     }
 
@@ -863,12 +863,12 @@ int main(int argc, char **argv)
 
     if (flags & OPT_CREATE) {
         if ((flags & OPT_ISROOT) == 0) {
-            fprintf(stderr, "afppasswd: only root can create the password file.\n");
+            fprintf(stderr, "afppasswd: only root can create the RandNum password file.\n");
             return -1;
         }
 
         if (!i && ((flags & OPT_FORCE) == 0)) {
-            fprintf(stderr, "afppasswd: password file already exists.\n");
+            fprintf(stderr, "afppasswd: RandNum password file already exists.\n");
             return -1;
         }
 
