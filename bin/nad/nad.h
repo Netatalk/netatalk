@@ -28,13 +28,6 @@
 #define DIR_DOT_OR_DOTDOT(a) \
         ((strcmp(a, ".") == 0) || (strcmp(a, "..") == 0))
 
-#ifndef TIMESPEC_TO_TIMEVAL
-#define TIMESPEC_TO_TIMEVAL(tv, ts) { \
-    (tv)->tv_sec = (ts)->tv_sec; \
-    (tv)->tv_usec = (ts)->tv_nsec / 1000; \
-    }
-#endif
-
 #define ADVOL_V2_OR_EA(ad) ((ad) == AD_VERSION2 || (ad) == AD_VERSION_EA)
 
 enum logtype {STD, DBG};
