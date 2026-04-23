@@ -175,7 +175,7 @@ option(
     'with-spotlight',
     type: 'boolean',
     value: true,
-    description: 'Enable Spotlight support',
+    description: 'Enable Spotlight search support',
 )
 option(
     'with-statedir-creation',
@@ -437,4 +437,11 @@ option(
     ],
     value: ['auto'],
     description: 'Use OS specific init config',
+)
+option(
+    'with-spotlight-backends',
+    type: 'array',
+    choices: ['cnid', 'localsearch'],
+    value: ['cnid', 'localsearch'],
+    description: 'Spotlight search backends to build',
 )

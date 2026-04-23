@@ -1461,6 +1461,24 @@ static struct vol *creatvol(AFPObj *obj,
         obj->options.flags |= OPTION_SPOTLIGHT;
     }
 
+    if ((val = getoption_str(obj->iniconfig, section, "spotlight backend", preset,
+                             NULL))) {
+        EC_NULL(volume->v_sl_backend_name = strdup(val));
+    } else {
+        val = getoption_str(obj->iniconfig, INISEC_GLOBAL, "spotlight backend", NULL,
+                            NULL);
+
+        if (val) {
+            EC_NULL(volume->v_sl_backend_name = strdup(val));
+        } else {
+            volume->v_sl_backend_name = strdup("cnid");
+        }
+    }
+
+    LOG(log_debug, logtype_afpd,
+        "creatvol: volume \"%s\": spotlight backend \"%s\"",
+        name, volume->v_sl_backend_name);
+
     if (getoption_bool(obj->iniconfig, section, "delete veto files", preset, 0)) {
         volume->v_flags |= AFPVOL_DELVETO;
     }
@@ -2137,6 +2155,7 @@ void volume_free(struct vol *vol)
     free(vol->v_icon_rfork);
     free(vol->v_preexec);
     free(vol->v_postexec);
+    free(vol->v_sl_backend_name);
     free(vol);
 }
 

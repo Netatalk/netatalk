@@ -391,6 +391,15 @@
 /* Solaris compatibility macro */
 #mesondefine SOLARIS
 
+/* Whether the CNID Spotlight search backend is supported */
+#mesondefine SPOTLIGHT_BACKEND_CNID
+
+/* Whether the LocalSearch Spotlight search backend is supported */
+#mesondefine SPOTLIGHT_BACKEND_LOCALSEARCH
+
+/* List of supported Spotlight search backends */
+#mesondefine SPOTLIGHT_BACKENDS
+
 /* Define if TCP wrappers should be used */
 #mesondefine TCPWRAP
 

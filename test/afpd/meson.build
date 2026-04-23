@@ -50,12 +50,11 @@ if have_spotlight
         meson.project_source_root() / 'etc/afpd/spotlight.c',
         meson.project_source_root() / 'etc/afpd/spotlight_marshalling.c',
     ]
-    test_internal_deps += libspotlight
-    test_external_deps += [
-        glib,
-        talloc,
-        sparql,
-    ]
+    test_external_deps += libspotlight_backends
+    test_external_deps += [talloc]
+    if use_spotlight_localsearch
+        test_external_deps += [glib, sparql]
+    endif
 endif
 
 if have_acls
