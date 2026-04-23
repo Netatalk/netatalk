@@ -32,7 +32,7 @@ else
     echo "WARNING: /etc/os-release not found; unable to detect Linux distro"
 fi
 
-echo "*** Setting up users and groups"
+echo "*** Setting up first AFP user"
 
 if [ -z "$AFP_USER" ]; then
     echo "ERROR: AFP_USER needs to be set to use this container."
@@ -79,9 +79,15 @@ if [ -f "/etc/netatalk/afppasswd" ]; then
     rm -f /etc/netatalk/afppasswd
 fi
 
+UAMS="uams_dhx.so uams_dhx2.so"
+
 # Creating credentials for the RandNum UAM
+RANDNUM_OK=0
 afppasswd -c
-afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null
+
+if afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null; then
+    RANDNUM_OK=1
+fi
 
 # Optional second user
 if [ -n "$AFP_DROPBOX" ]; then
@@ -91,6 +97,8 @@ if [ -n "$AFP_DROPBOX" ]; then
         usermod -aG $AFP_GROUP nobody 2> /dev/null || true
     fi
 elif [ -n "$AFP_USER2" ]; then
+    echo "*** Setting up second AFP user"
+
     if [ "$DISTRO" = "alpine" ]; then
         adduser --no-create-home --disabled-password "$AFP_USER2" 2> /dev/null || true
         addgroup "$AFP_USER2" "$AFP_GROUP"
@@ -98,8 +106,18 @@ elif [ -n "$AFP_USER2" ]; then
         adduser --no-create-home --disabled-password --gecos '' "$AFP_USER2" 2> /dev/null || true
         usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
     fi
+
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
-    afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null
+
+    if ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null; then
+        RANDNUM_OK=0
+    fi
+fi
+
+if [ "$RANDNUM_OK" = "1" ]; then
+    UAMS="$UAMS uams_randnum.so"
+else
+    echo "NOTE: uams_randnum.so will not be loaded"
 fi
 
 echo "*** Configuring shared volume"
@@ -133,7 +151,6 @@ else
 fi
 
 echo "*** Configuring Netatalk"
-UAMS="uams_dhx.so uams_dhx2.so uams_randnum.so"
 
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 
