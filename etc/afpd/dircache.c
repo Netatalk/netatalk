@@ -2535,9 +2535,12 @@ void process_cache_hints(AFPObj *obj)
     ssize_t n = read(obj->hint_fd, buf + carry, sizeof(buf) - carry);
 
     if (n == 0) {
-        /* EOF — parent process crashed (pipe write end closed) */
-        LOG(log_error, logtype_afpd,
-            "process_cache_hints: hint pipe closed, parent lost");
+        /*
+         * EOF: parent write end closed. This is expected during parent
+         * shutdown/restart, but can also happen if the parent crashed.
+         */
+        LOG(log_info, logtype_afpd,
+            "process_cache_hints: hint pipe closed (parent exiting/restarting)");
         close(obj->hint_fd);
         obj->hint_fd = -1;
         carry = 0;
@@ -2910,4 +2913,3 @@ int dircache_process_deferred_chain(void)
 
     return 1;  /* More work to do */
 }
-
