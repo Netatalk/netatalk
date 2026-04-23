@@ -20,6 +20,9 @@
 
 typedef uint64_t VolSpace;
 
+/* Forward declaration — full definition in atalk/spotlight.h */
+struct sl_backend_ops;
+
 /* This should belong in a file.h */
 struct extmap {
     char		*em_ext;
@@ -98,6 +101,8 @@ struct vol {
                                    * with the same name */
 #endif
     int             v_deleted;    /*!< volume open but deleted in new config file */
+    char            *v_search_backend_name; /*!< name of search backend, or NULL */
+    const struct sl_backend_ops *v_search_backend; /*!< NULL if search disabled */
 #if 0
     char            *v_root_preexec;
 #endif

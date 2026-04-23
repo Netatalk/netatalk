@@ -28,8 +28,11 @@
 #include <time.h>
 #include <utime.h>
 
-#include <glib.h>
 #include <talloc.h>
+
+#ifdef SEARCH_BACKEND_LOCALSEARCH
+#include <glib.h>
+#endif
 
 #include <atalk/byteorder.h>
 #include <atalk/compat.h>
@@ -44,10 +47,11 @@
 #include <atalk/volume.h>
 
 #include "directory.h"
-#include "etc/spotlight/sparql_parser.h"
+#include "etc/spotlight/spotlight_private.h"
 
 #define MAX_SL_RESULTS 20
-#define MAX_SL_QUERY_IDLE_TIME 60
+#define MAX_SL_QUERY_IDLE_TIME_ACTIVE 60
+#define MAX_SL_QUERY_IDLE_TIME_TERMINAL 300
 
 struct timeval convert_timespec_to_timeval(const struct timespec ts)
 {
@@ -73,14 +77,8 @@ static struct slq_state_names slq_state_names[] = {
     {SLQ_STATE_ERROR, "SLQ_STATE_ERROR"}
 };
 
-
-static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri);
 static int cnid_comp_fn(const void *p1, const void *p2);
 static bool create_result_handle(slq_t *slq);
-static bool add_filemeta(sl_array_t *reqinfo,
-                         sl_array_t *fm_array,
-                         const char *path,
-                         const struct stat *sp);
 
 /************************************************
  * Misc utility functions
@@ -102,11 +100,10 @@ static char *tab_level(TALLOC_CTX *mem_ctx, int level)
 static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
 {
     const char *type;
-    int n;
     uint64_t i;
     sl_bool_t bl;
     sl_time_t t;
-    struct tm *tm;
+    const struct tm *tm;
     char datestring[256];
     sl_cnids_t cnids;
     char *logstring, *nested_logstring;
@@ -124,7 +121,7 @@ static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
                                 talloc_get_name(dd),
                                 talloc_array_length(dd->dd_talloc_array));
 
-    for (n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
+    for (int n = 0; n < talloc_array_length(dd->dd_talloc_array); n++) {
         type = talloc_get_name(dd->dd_talloc_array[n]);
 
         if (strequal(type, "DALLOC_CTX")
@@ -293,36 +290,11 @@ static int sl_createCNIDArray(slq_t *slq, const DALLOC_CTX *p)
     slq->slq_cnids_num = talloc_array_length(p);
 EC_CLEANUP:
 
-    if (ret != 0) {
-        if (cnids) {
-            talloc_free(cnids);
-        }
+    if (ret != 0 && cnids) {
+        talloc_free(cnids);
     }
 
     EC_EXIT;
-}
-
-static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
-{
-    GFile *f;
-    char *path;
-    char *talloc_path = NULL;
-    f = g_file_new_for_uri(uri);
-
-    if (!f) {
-        return NULL;
-    }
-
-    path = g_file_get_path(f);
-    g_object_unref(f);
-
-    if (!path) {
-        return NULL;
-    }
-
-    talloc_path = talloc_strdup(mem_ctx, path);
-    g_free(path);
-    return talloc_path;
 }
 
 /*!
@@ -333,17 +305,18 @@ static char *tracker_to_unix_path(TALLOC_CTX *mem_ctx, const char *uri)
  *
  * If path or sp is NULL, simply add nil values for all attributes.
  */
-static bool add_filemeta(sl_array_t *reqinfo,
-                         sl_array_t *fm_array,
-                         const char *path,
-                         const struct stat *sp)
+bool add_filemeta(sl_array_t *reqinfo,
+                  sl_array_t *fm_array,
+                  const char *path,
+                  const struct stat *sp)
 {
     sl_array_t *meta;
     sl_nil_t nil;
-    int i, metacount;
+    size_t metacount;
     uint64_t uint64var;
     sl_time_t sl_time;
-    char *p, *name;
+    const char *p;
+    char *name;
     metacount = talloc_array_length(reqinfo->dd_talloc_array);
 
     if (metacount == 0 || path == NULL || sp == NULL) {
@@ -357,7 +330,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
      * Convert the NFC server-side path to NFD before returning string
      * attributes. Fall back to the original path if conversion fails.
      */
-    size_t path_len = strlen(path);
+    size_t path_len = strnlen(path, MAXPATHLEN);
     size_t nfd_buf_size = path_len * 3 + 1;
     char *nfd_path = talloc_array(meta, char, nfd_buf_size);
 
@@ -367,7 +340,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
         nfd_path = (char *)path;
     }
 
-    for (i = 0; i < metacount; i++) {
+    for (size_t i = 0; i < metacount; i++) {
         if (strequal(reqinfo->dd_talloc_array[i], "kMDItemDisplayName")
                 || strequal(reqinfo->dd_talloc_array[i], "kMDItemFSName")
                 || strequal(reqinfo->dd_talloc_array[i], "_kMDItemFileName")) {
@@ -395,11 +368,19 @@ static bool add_filemeta(sl_array_t *reqinfo,
                             "kMDItemFSContentChangeDate")
                    || strequal(reqinfo->dd_talloc_array[i],
                                "kMDItemContentModificationDate")) {
+#ifdef HAVE_STRUCT_STAT_ST_MTIM
             sl_time = convert_timespec_to_timeval(sp->st_mtim);
+#else
+            sl_time = convert_timespec_to_timeval(sp->st_mtimespec);
+#endif
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemLastUsedDate")) {
+#ifdef HAVE_STRUCT_STAT_ST_MTIM
             sl_time = convert_timespec_to_timeval(sp->st_atim);
+#else
+            sl_time = convert_timespec_to_timeval(sp->st_atimespec);
+#endif
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemContentCreationDate")) {
@@ -419,7 +400,7 @@ static bool add_filemeta(sl_array_t *reqinfo,
 }
 
 /*!
- * @brief Allocate result handle used in the async Tracker cursor result
+ * Allocate result handle used in the async search backend result
  * handler for storing results
  */
 static bool create_result_handle(slq_t *slq)
@@ -448,7 +429,7 @@ static bool create_result_handle(slq_t *slq)
     }
 
     query_results->cnids->ca_unkn1 = 0xadd;
-    query_results->cnids->ca_context = slq->slq_ctx2;
+    query_results->cnids->ca_context = (uint32_t)slq->slq_ctx2;
     /* FileMeta */
     query_results->fm_array = talloc_zero(query_results, sl_array_t);
 
@@ -519,7 +500,7 @@ static ATALK_LIST_HEAD(sl_queries);
 static ATALK_LIST_HEAD(sl_cancelled_queries);
 
 /*!
- * @brief Add a query to the list of active queries
+ * Add a query to the list of active queries
  */
 static void slq_add(slq_t *slq)
 {
@@ -527,7 +508,7 @@ static void slq_add(slq_t *slq)
 }
 
 /*!
- * @brief Add a query to the list of active queries
+ * Add a query to the list of cancelled queries
  */
 static void slq_cancelled_add(slq_t *slq)
 {
@@ -535,16 +516,21 @@ static void slq_cancelled_add(slq_t *slq)
 }
 
 /*!
- * @brief Remove a query from the active list
+ * Remove a query from the active list
+ *
+ * Uses pointer identity rather than ctx-value comparison so that a query
+ * that was never enqueued (e.g. openQuery failure before slq_add()) cannot
+ * accidentally remove an unrelated active query whose ctx IDs happen to
+ * match the zero-initialized or partially-parsed values.
  */
 static void slq_remove(slq_t *slq)
 {
     struct list_head *p;
-    slq_t *q = NULL;
+    const slq_t *q = NULL;
     list_for_each(p, &sl_queries) {
         q = list_entry(p, slq_t, slq_list);
 
-        if ((q->slq_ctx1 == slq->slq_ctx1) && (q->slq_ctx2 == slq->slq_ctx2)) {
+        if (q == slq) {
             list_del(p);
             break;
         }
@@ -569,7 +555,7 @@ static slq_t *slq_for_ctx(uint64_t ctx1, uint64_t ctx2)
 }
 
 /*!
- * @brief Remove a query from the active queue and free it
+ * Invoke the backend close_query hook then free the slq
  */
 static void slq_destroy(slq_t *slq)
 {
@@ -577,12 +563,17 @@ static void slq_destroy(slq_t *slq)
         return;
     }
 
+    if (slq->slq_vol && slq->slq_vol->v_search_backend
+            && slq->slq_vol->v_search_backend->sbo_close_query) {
+        slq->slq_vol->v_search_backend->sbo_close_query(slq);
+    }
+
     slq_remove(slq);
     talloc_free(slq);
 }
 
 /*!
- * @brief Cancel a query
+ * Cancel a query (move to cancelled list; backend cleanup deferred)
  */
 static void slq_cancel(slq_t *slq)
 {
@@ -592,66 +583,70 @@ static void slq_cancel(slq_t *slq)
 }
 
 /*!
- * @brief talloc destructor cb
- */
-static int slq_free_cb(slq_t *slq)
-{
-    if (slq->tracker_cursor) {
-        g_object_unref(slq->tracker_cursor);
-    }
-
-    return 0;
-}
-
-/*!
- * @brief Free all cancelled queries
+ * Free all fully-cancelled queries
  */
 static void slq_cancelled_cleanup(void)
 {
-    struct list_head *p;
     slq_t *q = NULL;
-    list_for_each(p, &sl_cancelled_queries) {
+    struct list_head *p = sl_cancelled_queries.next;
+
+    while (p != &sl_cancelled_queries) {
+        struct list_head *next = p->next;
         q = list_entry(p, slq_t, slq_list);
 
         if (q->slq_state == SLQ_STATE_CANCELLED) {
             LOG(log_debug, logtype_sl,
                 "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": cancelled",
                 q->slq_ctx1, q->slq_ctx2);
+
+            if (q->slq_vol && q->slq_vol->v_search_backend
+                    && q->slq_vol->v_search_backend->sbo_close_query) {
+                q->slq_vol->v_search_backend->sbo_close_query(q);
+            }
+
             list_del(p);
             talloc_free(q);
         } else {
             LOG(log_debug, logtype_sl,
                 "ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": %s",
-                q->slq_ctx1, q->slq_ctx2, slq_state_names[q->slq_state].state_name);
+                q->slq_ctx1, q->slq_ctx2,
+                slq_state_names[q->slq_state].state_name);
         }
+        p = next;
     }
+
     return;
 }
 
 /*!
- * @brief Cancel or destroy queries idle longer than MAX_SL_QUERY_IDLE_TIME
- *
- * Called on every Spotlight RPC to reap queries abandoned by clients that
- * disconnected or crashed without sending closeQueryForContext.
+ * Cancel or destroy queries idle longer than MAX_SL_QUERY_IDLE_TIME
  */
 static void slq_idle_cleanup(void)
 {
     struct list_head *p;
     slq_t *q = NULL;
     time_t now = time(NULL);
+    time_t idle_limit;
     bool found;
 
-    /*
-     * list_for_each is not safe for deletion, so restart after each
-     * mutation. The active query list is short and bounded, so the
-     * overhead is negligible.
-     */
     do {
         found = false;
         list_for_each(p, &sl_queries) {
             q = list_entry(p, slq_t, slq_list);
 
-            if (q->slq_time > now || now - q->slq_time < MAX_SL_QUERY_IDLE_TIME) {
+            switch (q->slq_state) {
+            case SLQ_STATE_DONE:
+            case SLQ_STATE_FULL:
+            case SLQ_STATE_ERROR:
+                idle_limit = MAX_SL_QUERY_IDLE_TIME_TERMINAL;
+                break;
+
+            default:
+                idle_limit = MAX_SL_QUERY_IDLE_TIME_ACTIVE;
+                break;
+            }
+
+            if (q->slq_time > now || now - q->slq_time < idle_limit) {
                 continue;
             }
 
@@ -685,7 +680,7 @@ static void slq_idle_cleanup(void)
 static void slq_dump(void)
 {
     struct list_head *p;
-    slq_t *q = NULL;
+    const slq_t *q = NULL;
     int i = 0;
     list_for_each(p, &sl_queries) {
         q = list_entry(p, slq_t, slq_list);
@@ -697,186 +692,31 @@ static void slq_dump(void)
     return;
 }
 
-/************************************************
- * Tracker async callbacks
- ************************************************/
-
-static void tracker_cursor_cb(GObject      *object,
-                              GAsyncResult *res,
-                              gpointer      user_data)
+/*!
+ * Return true if any currently-open volume uses the localsearch backend
+ */
+#ifdef SEARCH_BACKEND_LOCALSEARCH
+static bool localsearch_backend_active(const AFPObj *obj)
 {
-    GError *error = NULL;
-    slq_t *slq = user_data;
-    gboolean more_results;
-    const gchar *uri;
-    char *path;
-    struct stat sb;
-    uint64_t uint64var;
-    bool ok;
-    cnid_t did, id;
+    const struct vol *v;
 
-    if (slq->query_results == NULL) {
-        LOG(log_error, logtype_sl,
-            "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": no result handle",
-            slq->slq_ctx1, slq->slq_ctx2);
-        slq->slq_state = SLQ_STATE_ERROR;
-        return;
-    }
-
-    LOG(log_debug, logtype_sl,
-        "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
-        slq->query_results->num_results, slq->slq_ctx1, slq->slq_ctx2);
-    more_results = tracker_sparql_cursor_next_finish(slq->tracker_cursor,
-                   res,
-                   &error);
-
-    if (slq->slq_state == SLQ_STATE_CANCEL_PENDING) {
-        LOG(log_debug, logtype_sl,
-            "cursor cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": cancelled",
-            slq->slq_ctx1, slq->slq_ctx2);
-        slq->slq_state = SLQ_STATE_CANCELLED;
-        return;
-    }
-
-    if (error) {
-        LOG(log_error, logtype_sl, "Tracker cursor: %s", error->message);
-        g_error_free(error);
-        slq->slq_state = SLQ_STATE_ERROR;
-        return;
-    }
-
-    if (!more_results) {
-        LOG(log_debug, logtype_sl,
-            "tracker_cursor_cb: done, %d result(s) accumulated in this batch",
-            slq->query_results ? slq->query_results->num_results : -1);
-        slq->slq_state = SLQ_STATE_DONE;
-        return;
-    }
-
-    uri = tracker_sparql_cursor_get_string(slq->tracker_cursor, 0, NULL);
-
-    if (uri == NULL) {
-        /*
-         * Not sure how this could happen if
-         * tracker_sparql_cursor_next_finish() returns true, but I've
-         * seen it.
-         */
-        LOG(log_debug, logtype_sl, "no URI for result");
-        return;
-    }
-
-    LOG(log_debug, logtype_sl, "URI: %s", uri);
-    path = tracker_to_unix_path(slq->query_results, uri);
-
-    if (path == NULL) {
-        LOG(log_error, logtype_sl, "error converting Tracker URI: %s", uri);
-        slq->slq_state = SLQ_STATE_ERROR;
-        return;
-    }
-
-    if (stat(path, &sb) != 0) {
-        LOG(log_debug, logtype_sl, "skipping result, stat failed: %s", path);
-        goto exit;
-    }
-
-    if (access(path, R_OK) != 0) {
-        LOG(log_debug, logtype_sl, "skipping result, access denied: %s", path);
-        goto exit;
-    }
-
-    id = cnid_for_path(slq->slq_vol->v_cdb, slq->slq_vol->v_path, path, &did);
-
-    if (id == CNID_INVALID) {
-        LOG(log_debug, logtype_sl,
-            "skipping result, no CNID (file moved or deleted?): %s", path);
-        goto exit;
-    }
-
-    uint64var = ntohl(id);
-
-    if (slq->slq_cnids) {
-        ok = bsearch(&uint64var, slq->slq_cnids, slq->slq_cnids_num,
-                     sizeof(uint64_t), cnid_comp_fn);
-
-        if (!ok) {
-            LOG(log_debug, logtype_sl, "skipping result, CNID not in client filter: %s",
-                path);
-            goto exit;
+    for (v = getvolumes(); v != NULL; v = v->v_next) {
+        if (v->v_search_backend != NULL
+                && strcmp(v->v_search_backend->sbo_name, "localsearch") == 0) {
+            return true;
         }
     }
 
-    LOG(log_debug, logtype_sl, "adding result CNID %" PRIu32 " (%s): %s",
-        ntohl(id), S_ISDIR(sb.st_mode) ? "dir" : "file", path);
-    dalloc_add_copy(slq->query_results->cnids->ca_cnids,
-                    &uint64var, uint64_t);
-    ok = add_filemeta(slq->slq_reqinfo, slq->query_results->fm_array,
-                      path, &sb);
-
-    if (!ok) {
-        LOG(log_error, logtype_sl, "add_filemeta error");
-        slq->slq_state = SLQ_STATE_ERROR;
-        return;
-    }
-
-    slq->query_results->num_results++;
-exit:
-
-    if (slq->query_results->num_results < MAX_SL_RESULTS) {
-        LOG(log_debug, logtype_sl,
-            "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": requesting more results",
-            slq->query_results->num_results - 1, slq->slq_ctx1, slq->slq_ctx2);
-        slq->slq_state = SLQ_STATE_RESULTS;
-        tracker_sparql_cursor_next_async(slq->tracker_cursor,
-                                         slq->slq_obj->sl_ctx->cancellable,
-                                         tracker_cursor_cb,
-                                         slq);
-    } else {
-        LOG(log_debug, logtype_sl,
-            "cursor cb[%d]: ctx1: %" PRIx64 ", ctx2: %" PRIx64 ": full",
-            slq->query_results->num_results - 1, slq->slq_ctx1, slq->slq_ctx2);
-        slq->slq_state = SLQ_STATE_FULL;
-    }
+    return false;
 }
-
-static void tracker_query_cb(GObject      *object,
-                             GAsyncResult *res,
-                             gpointer      user_data)
-{
-    GError *error = NULL;
-    slq_t *slq = user_data;
-    LOG(log_debug, logtype_sl,
-        "query cb: ctx1: %" PRIx64 ", ctx2: %" PRIx64,
-        slq->slq_ctx1, slq->slq_ctx2);
-    slq->tracker_cursor = tracker_sparql_connection_query_finish(
-                              TRACKER_SPARQL_CONNECTION(object),
-                              res,
-                              &error);
-
-    if (slq->slq_state == SLQ_STATE_CANCEL_PENDING) {
-        slq->slq_state = SLQ_STATE_CANCELLED;
-        return;
-    }
-
-    if (error) {
-        slq->slq_state = SLQ_STATE_ERROR;
-        LOG(log_error, logtype_sl, "Tracker query error: %s", error->message);
-        g_error_free(error);
-        return;
-    }
-
-    slq->slq_state = SLQ_STATE_RESULTS;
-    tracker_sparql_cursor_next_async(slq->tracker_cursor,
-                                     slq->slq_obj->sl_ctx->cancellable,
-                                     tracker_cursor_cb,
-                                     slq);
-}
+#endif /* SEARCH_BACKEND_LOCALSEARCH */
 
 /*******************************************************************************
  * Spotlight RPC functions
  ******************************************************************************/
 
-static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj,
-        const DALLOC_CTX *query,
+static int sl_rpc_fetchPropertiesForContext(const AFPObj *obj _U_,
+        const DALLOC_CTX *query _U_,
         DALLOC_CTX *reply,
         const struct vol *v)
 {
@@ -954,34 +794,44 @@ static int sl_rpc_openQuery(AFPObj *obj,
 {
     EC_INIT;
     char *sl_query;
-    uint64_t *uint64;
+    const uint64_t *uint64;
     DALLOC_CTX *reqinfo;
     sl_array_t *array;
-    sl_cnids_t *cnids;
+    const sl_cnids_t *cnids = NULL;
+    const sl_array_t *cnid_array = NULL;
     slq_t *slq = NULL;
     char slq_host[MAXPATHLEN + 1];
     uint16_t convflags = v->v_mtou_flags;
+    ssize_t convret;
     uint64_t result;
-    gchar *sparql_query;
-    GError *error = NULL;
     bool ok;
-    sl_array_t *scope_array;
-    char *scope = NULL;
+    bool open_ok = false;
+    const sl_array_t *scope_array;
+    const char *raw_scope = NULL;
     array = talloc_zero(reply, sl_array_t);
 
-    if (obj->sl_ctx->tracker_con == NULL) {
-        LOG(log_error, logtype_sl, "no tracker connection");
+    if (v->v_search_backend == NULL) {
+        LOG(log_error, logtype_sl, "no search backend configured for volume");
         EC_FAIL;
     }
 
     /* Allocate and initialize query object */
-    slq = talloc_zero(obj->sl_ctx, slq_t);
+    /*
+     * AFPObj is a static/global object, not a talloc context.
+     * Allocate slq as a standalone talloc root and free it via slq_destroy().
+     */
+    slq = talloc_zero(NULL, slq_t);
+
+    if (slq == NULL) {
+        LOG(log_error, logtype_sl, "openQuery: failed to allocate query context");
+        EC_FAIL;
+    }
+
     slq->slq_state = SLQ_STATE_NEW;
     slq->slq_obj = obj;
     slq->slq_vol = v;
     slq->slq_allow_expr = obj->options.flags & OPTION_SPOTLIGHT_EXPR ? true : false;
     slq->slq_result_limit = obj->options.sparql_limit;
-    talloc_set_destructor(slq, slq_free_cb);
     LOG(log_debug, logtype_sl, "Spotlight: expr: %s, limit: %" PRIu64,
         slq->slq_allow_expr ? "yes" : "no", slq->slq_result_limit);
     /* convert spotlight query charset to host charset */
@@ -991,15 +841,16 @@ static int sl_rpc_openQuery(AFPObj *obj,
                                     "char *");
 
     if (sl_query == NULL) {
+        LOG(log_error, logtype_sl, "openQuery: kMDQueryString not found in request");
         EC_FAIL;
     }
 
     LOG(log_debug, logtype_sl, "Spotlight query pre-conversion: \"%s\"", sl_query);
-    ret = convert_charset(CH_UTF8_MAC, v->v_volcharset, v->v_maccharset,
-                          sl_query, strlen(sl_query), slq_host, MAXPATHLEN,
-                          &convflags);
+    convret = convert_charset(CH_UTF8_MAC, v->v_volcharset, v->v_maccharset,
+                              sl_query, strnlen(sl_query, MAXPATHLEN), slq_host, MAXPATHLEN,
+                              &convflags);
 
-    if (ret == -1) {
+    if (convret == -1) {
         LOG(log_error, logtype_sl, "charset conversion failed");
         EC_FAIL;
     }
@@ -1010,6 +861,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 1);
 
     if (uint64 == NULL) {
+        LOG(log_error, logtype_sl, "openQuery: ctx1 not found in request");
         EC_FAIL;
     }
 
@@ -1017,6 +869,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
     uint64 = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0, "uint64_t", 2);
 
     if (uint64 == NULL) {
+        LOG(log_error, logtype_sl, "openQuery: ctx2 not found in request");
         EC_FAIL;
     }
 
@@ -1025,6 +878,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
                                    "kMDAttributeArray", "sl_array_t");
 
     if (reqinfo == NULL) {
+        LOG(log_error, logtype_sl, "openQuery: kMDAttributeArray not found in request");
         EC_FAIL;
     }
 
@@ -1034,8 +888,7 @@ static int sl_rpc_openQuery(AFPObj *obj,
 
     if (scope_array == NULL
             || talloc_array_length(scope_array->dd_talloc_array) == 0) {
-        scope = g_uri_escape_string(v->v_path,
-                                    G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
+        raw_scope = v->v_path;
     } else {
         const void *first = scope_array->dd_talloc_array[0];
 
@@ -1063,17 +916,10 @@ static int sl_rpc_openQuery(AFPObj *obj,
             EC_FAIL;
         }
 
-        scope = g_uri_escape_string(first,
-                                    G_URI_RESERVED_CHARS_ALLOWED_IN_PATH, TRUE);
+        raw_scope = first;
     }
 
-    if (scope == NULL) {
-        LOG(log_error, logtype_sl, "failed to setup search scope");
-        EC_FAIL;
-    }
-
-    slq->slq_scope = talloc_strdup(slq, scope);
-    g_free(scope);
+    slq->slq_scope = talloc_strdup(slq, raw_scope);
 
     if (slq->slq_scope == NULL) {
         LOG(log_error, logtype_sl, "talloc_strdup failed");
@@ -1082,34 +928,25 @@ static int sl_rpc_openQuery(AFPObj *obj,
 
     LOG(log_debug, logtype_sl, "Search scope: \"%s\"", slq->slq_scope);
     cnids = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
-                                 "kMDQueryItemArray", "sl_array_t");
+                                 "kMDQueryItemArray", "sl_cnids_t");
 
-    if (cnids) {
+    if (cnids && cnids->ca_cnids) {
         EC_ZERO_LOG(sl_createCNIDArray(slq, cnids->ca_cnids));
+    } else {
+        cnid_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
+                                          "kMDQueryItemArray", "sl_array_t");
+
+        if (cnid_array) {
+            EC_ZERO_LOG(sl_createCNIDArray(slq, cnid_array));
+        }
     }
 
-    ret = map_spotlight_to_sparql_query(slq, &sparql_query);
-
-    if (ret != 0) {
-        LOG(log_debug, logtype_sl, "mapping returned non-zero");
-        EC_FAIL;
-    }
-
-    LOG(log_debug, logtype_sl, "SPARQL query: \"%s\"", sparql_query);
-    tracker_sparql_connection_query_async(obj->sl_ctx->tracker_con,
-                                          sparql_query,
-                                          slq->slq_obj->sl_ctx->cancellable,
-                                          tracker_query_cb,
-                                          slq);
-
-    if (error) {
-        LOG(log_error, logtype_sl, "Couldn't query the Tracker Store: '%s'",
-            error->message);
-        g_clear_error(&error);
-        EC_FAIL;
-    }
-
-    slq->slq_state = SLQ_STATE_RUNNING;
+    EC_ZERO_LOG(v->v_search_backend->sbo_init(obj));
+    /*
+     * create_result_handle must be called before sbo_open_query so that
+     * synchronous backends (e.g. cnid) can write results into
+     * slq->query_results immediately during sbo_open_query.
+     */
     ok = create_result_handle(slq);
 
     if (!ok) {
@@ -1118,30 +955,51 @@ static int sl_rpc_openQuery(AFPObj *obj,
         EC_FAIL;
     }
 
+    EC_ZERO_LOG(v->v_search_backend->sbo_open_query(slq));
     slq_add(slq);
-EC_CLEANUP:
+    open_ok = true;
+EC_CLEANUP: {
+        uint64_t log_ctx1 = slq ? slq->slq_ctx1 : 0;
+        uint64_t log_ctx2 = slq ? slq->slq_ctx2 : 0;
 
-    if (ret != 0 && slq != NULL) {
-        slq_destroy(slq);
-        result = UINT64_MAX;
-        ret = 0;
-    } else {
-        result = 0;
+        if (!open_ok) {
+            if (slq != NULL) {
+                slq_destroy(slq);
+            }
+
+            result = UINT64_MAX;
+            ret = 0;
+        } else {
+            if (ret != 0) {
+                LOG(log_warning, logtype_sl,
+                    "openQuery: ignoring non-zero internal ret=%d after success"
+                    " (ctx1: %" PRIx64 ", ctx2: %" PRIx64 ")",
+                    ret, log_ctx1, log_ctx2);
+            }
+
+            result = 0;
+            ret = 0;
+        }
+
+        LOG(log_debug, logtype_sl,
+            "openQuery: returning result=%" PRIu64
+            " (ctx1: %" PRIx64 ", ctx2: %" PRIx64 ")",
+            result, log_ctx1, log_ctx2);
     }
-
     dalloc_add_copy(array, &result, uint64_t);
     dalloc_add(reply, array, sl_array_t);
     EC_EXIT;
 }
 
-static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
+static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj _U_,
         const DALLOC_CTX *query,
         DALLOC_CTX *reply,
-        const struct vol *v)
+        const struct vol *v _U_)
 {
     EC_INIT;
     slq_t *slq = NULL;
-    uint64_t *uint64, ctx1, ctx2, status;
+    const uint64_t *uint64;
+    uint64_t ctx1, ctx2, status;
     sl_array_t *array;
     bool ok;
     array = talloc_zero(reply, sl_array_t);
@@ -1172,8 +1030,8 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
 
     if (slq == NULL) {
         LOG(log_error, logtype_sl,
-            "fetchQueryResults: no query for ctx1: %" PRIx64 ", ctx2: %" PRIx64, ctx1,
-            ctx2);
+            "fetchQueryResults: no query for ctx1: %" PRIx64 ", ctx2: %" PRIx64,
+            ctx1, ctx2);
         EC_FAIL;
     }
 
@@ -1185,20 +1043,16 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
     case SLQ_STATE_RESULTS:
     case SLQ_STATE_FULL:
     case SLQ_STATE_DONE:
+        LOG(log_debug, logtype_sl,
+            "fetchQueryResults: dispatching %d result(s), state=%s",
+            slq->query_results ? slq->query_results->num_results : -1,
+            slq_state_names[slq->slq_state].state_name);
+        EC_ZERO_LOG(slq->slq_vol->v_search_backend->sbo_fetch_results(slq));
         ok = add_results(array, slq);
 
         if (!ok) {
             LOG(log_error, logtype_sl, "error adding results");
             EC_FAIL;
-        }
-
-        if (slq->slq_state == SLQ_STATE_FULL) {
-            slq->slq_state = SLQ_STATE_RESULTS;
-            tracker_sparql_cursor_next_async(
-                slq->tracker_cursor,
-                slq->slq_obj->sl_ctx->cancellable,
-                tracker_cursor_cb,
-                slq);
         }
 
         break;
@@ -1215,6 +1069,9 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj,
     dalloc_add(reply, array, sl_array_t);
     EC_EXIT;
 EC_CLEANUP:
+    LOG(log_error, logtype_sl,
+        "fetchQueryResults: failed (ctx1: %" PRIx64 ", ctx2: %" PRIx64 ")",
+        ctx1, ctx2);
     slq_destroy(slq);
     status = UINT64_MAX;
     dalloc_add_copy(array, &status, uint64_t);
@@ -1222,7 +1079,7 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
+static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj _U_,
         const DALLOC_CTX *query,
         DALLOC_CTX *reply,
         const struct vol *vol)
@@ -1230,10 +1087,10 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
     EC_INIT;
     uint64_t uint64;
     sl_array_t *array;
-    sl_cnids_t *cnids;
-    sl_time_t *sl_time;
+    const sl_cnids_t *cnids;
+    const sl_time_t *sl_time;
     cnid_t id;
-    char *path;
+    const char *path;
     struct dir *dir;
     EC_NULL_LOG(cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 2));
     memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
@@ -1253,25 +1110,16 @@ static int sl_rpc_storeAttributesForOIDArray(const AFPObj *obj,
         EC_NEG1_LOG(movecwd(vol, dir));
     }
 
-    /*
-     * We're possibly supposed to update attributes in two places: the
-     * database and the filesystem.  Due to the lack of documentation
-     * and not yet implemented database updates, we cherry pick attributes
-     * that seems to be candidates for updating filesystem metadata.
-     */
-
     if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                         "DALLOC_CTX", 1,
                                         "kMDItemFSContentChangeDate", "sl_time_t"))) {
-        struct utimbuf utimes;
-        utimes.actime = utimes.modtime = sl_time->tv_sec;
-        utime(path, &utimes);
+        struct timespec ts[2];
+        ts[0].tv_sec  = sl_time->tv_sec;
+        ts[0].tv_nsec = sl_time->tv_usec * 1000;
+        ts[1] = ts[0];
+        utimensat(AT_FDCWD, path, ts, 0);
     } else if ((sl_time = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX",
                           1, "DALLOC_CTX", 1, "kMDItemLastUsedDate", "sl_time_t"))) {
-        /*
-         * Update atime only. Using utimensat with UTIME_OMIT on the mtime
-         * slot avoids touching mtime.
-         */
         struct timespec ts[2] = {{0}};
         ts[0].tv_sec  = sl_time->tv_sec;
         ts[0].tv_nsec = sl_time->tv_usec * 1000;
@@ -1287,33 +1135,18 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj,
-        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
+static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj _U_,
+        const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol _U_)
 {
     EC_INIT;
     uint64_t uint64;
-    sl_cnids_t *cnids;
+    const sl_cnids_t *cnids;
     cnid_t id;
-    char *path;
-    struct dir *dir;
     EC_NULL_LOG(cnids = dalloc_get(query, "DALLOC_CTX", 0, "sl_cnids_t", 1));
     memcpy(&uint64, cnids->ca_cnids->dd_talloc_array[0], sizeof(uint64_t));
     id = (cnid_t)uint64;
     LOG(log_debug, logtype_sl,
         "sl_rpc_fetchAttributeNamesForOIDArray: CNID: %" PRIu32, id);
-
-    if (htonl(id) == DIRDID_ROOT) {
-        path = vol->v_path;
-    } else if (id < CNID_START) {
-        EC_FAIL;
-    } else {
-        cnid_t did;
-        char buffer[12 + MAXPATHLEN + 1];
-        did = htonl(id);
-        EC_NULL_LOG(path = cnid_resolve(vol->v_cdb, &did, buffer, sizeof(buffer)));
-        EC_NULL_LOG(dir = dirlookup(vol, did));
-        EC_NEG1_LOG(movecwd(vol, dir));
-    }
 
     /* Result array */
     sl_array_t *array = talloc_zero(reply, sl_array_t);
@@ -1330,10 +1163,6 @@ static int sl_rpc_fetchAttributeNamesForOIDArray(const AFPObj *obj,
     dalloc_add_copy(replycnids->ca_cnids, &uint64, uint64_t);
     dalloc_add(array, replycnids, sl_cnids_t);
     /* Return filemeta array */
-    /*
-     * FIXME: this should return the real attributes from all known metadata sources
-     * (Tracker and filesystem)
-     */
     sl_array_t *mdattrs = talloc_zero(reply, sl_array_t);
     dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemFSName"), "char *");
     dalloc_add(mdattrs, dalloc_strdup(mdattrs, "kMDItemDisplayName"), "char *");
@@ -1349,12 +1178,13 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj,
+static int sl_rpc_fetchAttributesForOIDArray(AFPObj *obj _U_,
         const DALLOC_CTX *query, DALLOC_CTX *reply, const struct vol *vol)
 {
     EC_INIT;
     uint64_t uint64;
-    sl_cnids_t *cnids, *replycnids;
+    const sl_cnids_t *cnids;
+    sl_cnids_t *replycnids;
     cnid_t id, did;
     struct dir *dir;
     sl_array_t *array, *reqinfo, *fm_array;
@@ -1424,14 +1254,15 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-static int sl_rpc_closeQueryForContext(const AFPObj *obj,
+static int sl_rpc_closeQueryForContext(const AFPObj *obj _U_,
                                        const DALLOC_CTX *query,
                                        DALLOC_CTX *reply,
-                                       const struct vol *v)
+                                       const struct vol *v _U_)
 {
     EC_INIT;
     slq_t *slq = NULL;
-    uint64_t *uint64, ctx1, ctx2;
+    const uint64_t *uint64;
+    uint64_t ctx1, ctx2;
     sl_array_t *array;
     uint64_t sl_result;
     array = talloc_zero(reply, sl_array_t);
@@ -1491,61 +1322,6 @@ EC_CLEANUP:
 }
 
 /******************************************************************************
- * Spotlight functions
- ******************************************************************************/
-
-int spotlight_init(AFPObj *obj)
-{
-    static bool initialized = false;
-    const char *attributes;
-    struct sl_ctx *sl_ctx;
-    GError *error = NULL;
-
-    if (initialized) {
-        return 0;
-    }
-
-    LOG(log_info, logtype_sl, "Initializing Spotlight");
-    sl_ctx = talloc_zero(NULL, struct sl_ctx);
-    obj->sl_ctx = sl_ctx;
-    attributes = INIPARSER_GETSTR(obj->iniconfig, INISEC_GLOBAL,
-                                  "spotlight attributes", NULL);
-
-    if (attributes) {
-        configure_spotlight_attributes(attributes);
-    }
-
-    /*
-     * Tracker uses glibs event dispatching, so we need a mainloop
-     */
-#if ((GLIB_MAJOR_VERSION <= 2) && (GLIB_MINOR_VERSION < 36))
-    g_type_init();
-#endif
-    sl_ctx->mainloop = g_main_loop_new(NULL, false);
-    sl_ctx->cancellable = g_cancellable_new();
-    setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",
-           1);
-    setenv("XDG_DATA_HOME", _PATH_STATEDIR, 0);
-    setenv("XDG_CACHE_HOME", _PATH_STATEDIR, 0);
-    setenv("TRACKER_USE_LOG_FILES", "1", 0);
-    sl_ctx->tracker_con =
-        tracker_sparql_connection_bus_new(INDEXER_DBUS_NAME,
-                                          NULL, NULL, &error);
-
-    if (error) {
-        LOG(log_error, logtype_sl, "Could not connect to indexer: %s",
-            error->message);
-        sl_ctx->tracker_con = NULL;
-        g_error_free(error);
-        return -1;
-    }
-
-    LOG(log_info, logtype_sl, "connected to indexer");
-    initialized = true;
-    return 0;
-}
-
-/******************************************************************************
  * AFP functions
  ******************************************************************************/
 
@@ -1561,29 +1337,33 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     DALLOC_CTX *reply;
     char *rpccmd;
     int len;
-    bool event;
     *rbuflen = 0;
 
     if (!(obj->options.flags & OPTION_SPOTLIGHT)) {
         return AFPERR_NOOP;
     }
 
-    spotlight_init(obj);
     slq_dump();
-    /*
-     * Process finished glib events
-     */
-    event = true;
+#ifdef SEARCH_BACKEND_LOCALSEARCH
 
-    while (event) {
-        event = g_main_context_iteration(NULL, false);
+    /*
+     * Process pending GLib/Tracker async events.
+     * Only needed when the localsearch backend is in use.
+     */
+    if (localsearch_backend_active(obj)) {
+        bool event = true;
+
+        while (event) {
+            event = g_main_context_iteration(NULL, false);
+        }
     }
 
+#endif /* SEARCH_BACKEND_LOCALSEARCH */
     slq_cancelled_cleanup();
     slq_idle_cleanup();
     ibuf += 2;
     ibuflen -= 2;
-    vid = SVAL(ibuf, 0);
+    vid = (uint16_t)SVAL(ibuf, 0);
     LOG(log_debug, logtype_sl, "afp_spotlight_rpc(vid: %" PRIu16 ")", vid);
 
     if ((vol = getvolbyvid(vid)) == NULL) {
@@ -1656,6 +1436,11 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
         EC_NEG1_LOG(len = sl_pack(reply, rbuf + 4));
         *rbuflen += len;
         break;
+
+    default:
+        LOG(log_error, logtype_sl, "afp_spotlight_rpc: unknown cmd: %d", cmd);
+        ret = AFPERR_PARAM;
+        goto EC_CLEANUP;
     }
 
 EC_CLEANUP:

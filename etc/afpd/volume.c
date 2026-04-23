@@ -56,6 +56,10 @@
 #include <atalk/vfs.h>
 #include <atalk/volume.h>
 
+#ifdef WITH_SPOTLIGHT
+#include "etc/spotlight/sl_backends.h"
+#endif
+
 #include "acls.h"
 #include "dircache.h"
 #include "directory.h"
@@ -948,6 +952,41 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         goto openvol_err;
     }
 
+#ifdef WITH_SPOTLIGHT
+
+    if (volume->v_flags & AFPVOL_SPOTLIGHT) {
+        const char *bname = volume->v_search_backend_name
+                            ? volume->v_search_backend_name : "cnid";
+        volume->v_search_backend = NULL;
+#ifdef SEARCH_BACKEND_CNID
+
+        if (strcasecmp(bname, "cnid") == 0) {
+            volume->v_search_backend = &sl_cnid_ops;
+        }
+
+#endif
+#ifdef SEARCH_BACKEND_LOCALSEARCH
+
+        if (strcasecmp(bname, "localsearch") == 0) {
+            volume->v_search_backend = &sl_localsearch_ops;
+        }
+
+#endif
+
+        if (volume->v_search_backend == NULL) {
+            LOG(log_warning, logtype_afpd,
+                "Unknown or unsupported search backend \"%s\" for volume %s, "
+                "Spotlight disabled for this volume",
+                bname, volume->v_path);
+            volume->v_flags &= ~AFPVOL_SPOTLIGHT;
+        } else {
+            LOG(log_info, logtype_afpd,
+                "Volume %s: using \"%s\" search backend",
+                volume->v_path, volume->v_search_backend->sbo_name);
+        }
+    }
+
+#endif /* WITH_SPOTLIGHT */
     virtual_icon_init(volume);
     ret  = stat_vol(obj, bitmap, volume, rbuf, rbuflen);
 

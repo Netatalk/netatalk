@@ -1461,6 +1461,15 @@ static struct vol *creatvol(AFPObj *obj,
         obj->options.flags |= OPTION_SPOTLIGHT;
     }
 
+    {
+        const char *backend = getoption_str(obj->iniconfig, section,
+                                            "search backend", preset, "cnid");
+
+        if (backend) {
+            volume->v_search_backend_name = strdup(backend);
+        }
+    }
+
     if (getoption_bool(obj->iniconfig, section, "delete veto files", preset, 0)) {
         volume->v_flags |= AFPVOL_DELVETO;
     }
@@ -2137,6 +2146,7 @@ void volume_free(struct vol *vol)
     free(vol->v_icon_rfork);
     free(vol->v_preexec);
     free(vol->v_postexec);
+    free(vol->v_search_backend_name);
     free(vol);
 }
 

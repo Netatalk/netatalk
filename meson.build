@@ -352,6 +352,9 @@ endif
 if cc.has_member('struct stat', 'st_birthtimespec', prefix: '#include <sys/stat.h>')
     cdata.set('HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC', 1)
 endif
+if cc.has_member('struct stat', 'st_mtim', prefix: '#include <sys/stat.h>')
+    cdata.set('HAVE_STRUCT_STAT_ST_MTIM', 1)
+endif
 
 #################
 # Configuration #
@@ -1076,12 +1079,25 @@ if enable_zeroconf and not have_zeroconf
 endif
 
 #
-# Check for Spotlight support
+# Check for Spotlight search backend support
 #
 
-have_spotlight = false
+search_backends = ''
+use_search_cnid = false
+use_search_localsearch = false
+talloc = dependency('talloc', required: false)
 
-if get_option('with-spotlight')
+if 'cnid' in get_option('with-search-backends')
+    if talloc.found()
+        use_search_cnid = true
+        search_backends = 'cnid'
+        cdata.set('SEARCH_BACKEND_CNID', 1)
+    else
+        warning('talloc library required for Spotlight CNID search')
+    endif
+endif
+
+if 'localsearch' in get_option('with-search-backends')
     if host_os == 'darwin'
         if brew_prefix != ''
             bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
@@ -1093,7 +1109,9 @@ if get_option('with-spotlight')
     endif
 
     flex = find_program('flex', required: false)
-    talloc = dependency('talloc', required: false)
+    if not use_search_cnid
+        talloc = dependency('talloc', required: false)
+    endif
 
     # Check for SPARQL
 
@@ -1164,7 +1182,8 @@ if get_option('with-spotlight')
 
     cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
     cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
-    have_spotlight = (
+
+    have_search_localsearch = (
         sparql_found
         and indexer_found
         and dconf.found()
@@ -1173,17 +1192,30 @@ if get_option('with-spotlight')
         and bison.found()
     )
 
-    if have_spotlight
-        cdata.set('WITH_SPOTLIGHT', 1)
+    if have_search_localsearch
+        use_search_localsearch = true
+        if search_backends != ''
+            search_backends += ' | '
+        endif
+        search_backends += 'localsearch'
+        cdata.set('SEARCH_BACKEND_LOCALSEARCH', 1)
         cdata.set('DCONF_UPDATE_COMMAND', '"' + dconf.full_path() + ' update"')
+        install_emptydir('/etc/dconf/db')
         if get_option('with-install-hooks')
             meson.add_install_script(dconf, 'update')
         endif
     else
         warning(
-            'Spotlight support requested but one or more required dependencies not found',
+            'localsearch search backend requested but one or more required dependencies not found',
         )
     endif
+endif
+
+have_search = use_search_cnid or use_search_localsearch
+
+if have_search
+    cdata.set('WITH_SPOTLIGHT', 1)
+    cdata.set('SEARCH_BACKENDS', '"' + search_backends + '"')
 endif
 
 #
@@ -2616,6 +2648,7 @@ summary_info = {
     '  CNID backends': summary_backends,
     '  Default CNID backend': default_backend,
     '  Extended Attributes': netatalk_ea,
+    '  Event loop provider': have_libevent ? 'libevent' : 'libev',
     '  Init script style': init_style,
 }
 summary(summary_info, bool_yn: true, section: '  Options:')
@@ -2638,7 +2671,6 @@ summary_info = {
     '  Cracklib': have_cracklib,
     '  CUPS': have_cups,
     '  dtrace probes': have_dtrace,
-    '  Event loop provider': have_libevent ? 'libevent' : 'libev',
     '  FCE': have_fce,
     '  GSSAPI': have_gssapi,
     '  Kerberos': have_kerberos,
@@ -2651,7 +2683,8 @@ if have_quota
     }
 endif
 summary_info += {
-    '  Spotlight': have_spotlight,
+    '  Spotlight search': have_search,
+    '  Search backends': search_backends != '' ? search_backends : 'none',
     '  TCP wrapper': have_tcpwrap,
     '  Zeroconf': have_zeroconf,
 }

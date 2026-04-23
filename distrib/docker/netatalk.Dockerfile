@@ -13,6 +13,7 @@ ARG RUN_DEPS="\
     mariadb-connector-c \
     openldap \
     sqlite \
+    talloc \
     tzdata \
     "
 ARG BUILD_DEPS="\
@@ -33,6 +34,7 @@ ARG BUILD_DEPS="\
     openldap-dev \
     pkgconfig \
     sqlite-dev \
+    talloc-dev \
     "
 
 FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS build
@@ -79,7 +81,6 @@ RUN meson setup build \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-quota=false \
     -Dwith-fce=false \
-    -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-tests=false \
     -Dwith-testsuite=false \

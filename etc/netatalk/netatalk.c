@@ -99,7 +99,7 @@ static bool service_running(pid_t pid)
     return false;
 }
 
-#ifdef WITH_SPOTLIGHT
+#ifdef SEARCH_BACKEND_LOCALSEARCH
 /*! Create directory and all missing parent directories (like mkdir -p) */
 static int makedirs(const char *path, mode_t mode)
 {
@@ -272,7 +272,7 @@ static void sigterm_impl(void)
     sigfillset(&sigs);
     sigdelset(&sigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &sigs, NULL);
-#ifdef WITH_SPOTLIGHT
+#ifdef SEARCH_BACKEND_LOCALSEARCH
     int sysret = system(INDEXER_COMMAND " -t");
 
     if (sysret == -1) {
@@ -297,7 +297,7 @@ static void sigterm_impl(void)
 static void sigquit_impl(void)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-#ifdef WITH_SPOTLIGHT
+#ifdef SEARCH_BACKEND_LOCALSEARCH
     int sysret = system(INDEXER_COMMAND " -t");
 
     if (sysret == -1) {
@@ -591,34 +591,34 @@ static void show_netatalk_version(void)
     puts("Foundation; either version 2 of the License, or (at your option) any later");
     puts("version. Please see the file COPYING for further information and details.\n");
     puts("netatalk has been compiled with support for these features:\n");
-    printf("      Zeroconf support:\t");
+    printf("          Zeroconf backend:\t");
 #if defined (HAVE_MDNS)
     puts("mDNSResponder");
 #elif defined (HAVE_AVAHI)
     puts("Avahi");
 #else
-    puts("No");
+    puts("None");
 #endif
-    printf("     Spotlight support:\t");
+    printf(" Spotlight search backends:\t");
 #ifdef WITH_SPOTLIGHT
-    puts("Yes");
+    puts(SEARCH_BACKENDS);
 #else
-    puts("No");
+    puts("None");
 #endif
 }
 
 static void show_netatalk_paths(void)
 {
-    printf("              afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
-    printf("                  afpd:\t%s\n", _PATH_AFPD);
-    printf("            cnid_metad:\t%s\n", _PATH_CNID_METAD);
-#ifdef WITH_SPOTLIGHT
-    printf("           dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
-    printf("     dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
-    printf("       indexer manager:\t%s\n", INDEXER_COMMAND);
+    printf("                  afp.conf:\t%s\n", _PATH_CONFDIR "afp.conf");
+    printf("                      afpd:\t%s\n", _PATH_AFPD);
+    printf("                cnid_metad:\t%s\n", _PATH_CNID_METAD);
+#ifdef SEARCH_BACKEND_LOCALSEARCH
+    printf("               dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
+    printf("         dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
+    printf("           indexer manager:\t%s\n", INDEXER_COMMAND);
 #endif
 #ifndef SOLARIS
-    printf("    netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
+    printf("        netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
 #endif
 }
 
@@ -749,7 +749,7 @@ int main(int argc, char **argv)
     sigdelset(&blocksigs, SIGCHLD);
     sigdelset(&blocksigs, SIGHUP);
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
-#ifdef WITH_SPOTLIGHT
+#ifdef SEARCH_BACKEND_LOCALSEARCH
 
     if (obj.options.flags & OPTION_SPOTLIGHT) {
         setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",

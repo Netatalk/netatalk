@@ -10,7 +10,7 @@ else
     install_data(afp_conf, install_dir: pkgconfdir, install_tag: 'config')
 endif
 
-if have_spotlight
+if use_search_localsearch
     subdir('dconf')
 
     dbus_session_conf = configure_file(

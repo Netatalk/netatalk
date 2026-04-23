@@ -376,6 +376,15 @@
 /* Whether the realpath function allows NULL */
 #mesondefine REALPATH_TAKES_NULL
 
+/* Whether the CNID search backend is supported */
+#mesondefine SEARCH_BACKEND_CNID
+
+/* Whether the LocalSearch search backend is supported */
+#mesondefine SEARCH_BACKEND_LOCALSEARCH
+
+/* List of supported search backends */
+#mesondefine SEARCH_BACKENDS
+
 /* Define if the sendfile() function uses BSD semantics */
 #mesondefine SENDFILE_FLAVOR_FREEBSD
 
