@@ -355,6 +355,15 @@ endif
 if cc.has_member('struct stat', 'st_mtim', prefix: '#include <sys/stat.h>')
     cdata.set('HAVE_STRUCT_STAT_ST_MTIM', 1)
 endif
+if cc.has_member('struct stat', 'st_atim', prefix: '#include <sys/stat.h>')
+    cdata.set('HAVE_STRUCT_STAT_ST_ATIM', 1)
+endif
+if cc.has_member('struct stat', 'st_mtimespec', prefix: '#include <sys/stat.h>')
+    cdata.set('HAVE_STRUCT_STAT_ST_MTIMESPEC', 1)
+endif
+if cc.has_member('struct stat', 'st_atimespec', prefix: '#include <sys/stat.h>')
+    cdata.set('HAVE_STRUCT_STAT_ST_ATIMESPEC', 1)
+endif
 
 #################
 # Configuration #
