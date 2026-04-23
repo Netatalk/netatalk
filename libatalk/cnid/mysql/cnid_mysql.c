@@ -857,8 +857,9 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
 
     EC_NEG1(asprintf(&namelike, "%%%s%%", name));
     LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'", namelike);
-    EC_NEG1(asprintf(&sql, "SELECT Id FROM `%s` WHERE Name LIKE '%s' ORDER BY Id",
-                     db->cnid_mysql_voluuid_str, namelike));
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id FROM `%s` WHERE Name LIKE '%s' ORDER BY Id LIMIT %lu",
+                     db->cnid_mysql_voluuid_str, namelike, max_results));
     LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
 
     if (cnid_mysql_execute(db->cnid_mysql_con, sql) != 0) {
