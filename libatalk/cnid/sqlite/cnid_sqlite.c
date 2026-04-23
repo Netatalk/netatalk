@@ -197,7 +197,8 @@ static int init_prepared_stmt_find(CNID_sqlite_private *db)
         sqlite3_finalize(db->cnid_find_stmt);
     }
 
-    EC_NEG1(asprintf(&sql, "SELECT Id FROM \"%s\" WHERE Name LIKE ? ORDER BY Id",
+    EC_NEG1(asprintf(&sql,
+                     "SELECT Id FROM \"%s\" WHERE Name LIKE ? ORDER BY Id LIMIT ?",
                      db->cnid_sqlite_voluuid_str));
     LOG(log_maxdebug, logtype_cnid, "init_prepared_stmt_find: SQL: %s", sql);
     EC_ZERO_LOG(sqlite3_prepare_v2(db->cnid_sqlite_con, sql, strlen(sql),
@@ -1114,6 +1115,8 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     sqlite3_clear_bindings(db->cnid_find_stmt);
     EC_ZERO_LOG(sqlite3_bind_text(db->cnid_find_stmt, 1, namelike, strlen(namelike),
                                   SQLITE_STATIC));
+    EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_find_stmt, 2,
+                                   (sqlite3_int64)max_results));
 
     /* Fetch results */
     while (sqlite3_step(db->cnid_find_stmt) == SQLITE_ROW && count < max_results) {
