@@ -202,7 +202,7 @@ typedef struct AFPObj {
     char *fce_ign_directories;
     char *fce_notify_script;
 #endif /* WITH_FCE */
-    struct sl_ctx *sl_ctx;
+    void *sl_ctx; /*!< opaque handle for the active search backend */
 } AFPObj;
 
 /*! typedef for AFP functions handlers */

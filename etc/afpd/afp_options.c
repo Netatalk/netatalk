@@ -102,7 +102,7 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("           Zeroconf support:\t");
+    printf("           Zeroconf backend:\t");
 #if defined (HAVE_MDNS)
     puts("mDNSResponder");
 #elif defined (HAVE_AVAHI)
@@ -148,11 +148,11 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("          Spotlight support:\t");
+    printf("  Spotlight search backends:\t");
 #ifdef WITH_SPOTLIGHT
-    puts("Yes");
+    puts(SPOTLIGHT_BACKENDS);
 #else
-    puts("No");
+    puts("None");
 #endif
     printf("              DTrace probes:\t");
 #ifdef WITH_DTRACE
