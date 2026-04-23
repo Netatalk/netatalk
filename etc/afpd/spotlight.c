@@ -53,14 +53,6 @@
 #define MAX_SL_QUERY_IDLE_TIME_ACTIVE 60
 #define MAX_SL_QUERY_IDLE_TIME_TERMINAL 300
 
-struct timeval convert_timespec_to_timeval(const struct timespec ts)
-{
-    struct timeval tv;
-    tv.tv_sec = ts.tv_sec;
-    tv.tv_usec = ts.tv_nsec / 1000;
-    return tv;
-}
-
 struct slq_state_names {
     slq_state_t state;
     const char *state_name;
@@ -368,24 +360,19 @@ bool add_filemeta(sl_array_t *reqinfo,
                             "kMDItemFSContentChangeDate")
                    || strequal(reqinfo->dd_talloc_array[i],
                                "kMDItemContentModificationDate")) {
-#ifdef HAVE_STRUCT_STAT_ST_MTIM
-            sl_time = convert_timespec_to_timeval(sp->st_mtim);
-#else
-            sl_time = convert_timespec_to_timeval(sp->st_mtimespec);
-#endif
+            struct timespec ts = atalk_stat_mtime_timespec(sp);
+            atalk_timespec_to_timeval(&sl_time, &ts);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemLastUsedDate")) {
-#ifdef HAVE_STRUCT_STAT_ST_MTIM
-            sl_time = convert_timespec_to_timeval(sp->st_atim);
-#else
-            sl_time = convert_timespec_to_timeval(sp->st_atimespec);
-#endif
+            struct timespec ts = atalk_stat_atime_timespec(sp);
+            atalk_timespec_to_timeval(&sl_time, &ts);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
         } else if (strequal(reqinfo->dd_talloc_array[i],
                             "kMDItemContentCreationDate")) {
 #ifdef HAVE_STRUCT_STAT_ST_BIRTHTIMESPEC
-            sl_time = convert_timespec_to_timeval(sp->st_birthtimespec);
+            struct timespec ts = sp->st_birthtimespec;
+            atalk_timespec_to_timeval(&sl_time, &ts);
             dalloc_add_copy(meta, &sl_time, sl_time_t);
 #else
             dalloc_add_copy(meta, &nil, sl_nil_t);
