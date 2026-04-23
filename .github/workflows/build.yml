@@ -43,6 +43,7 @@ jobs:
             curl \
             db-dev \
             dbus-dev \
+            dconf \
             flex \
             gcc \
             glib \
@@ -119,6 +120,7 @@ jobs:
             cracklib \
             cups \
             db \
+            dconf \
             flex \
             gcc \
             iniparser \
@@ -268,6 +270,7 @@ jobs:
             cracklib-devel \
             cups-devel \
             dbus-devel \
+            dconf \
             flex \
             glib2-devel \
             iniparser-devel \
@@ -425,7 +428,8 @@ jobs:
             libev \
             mariadb \
             meson \
-            openldap
+            openldap \
+            talloc
       - name: Configure
         run: |
           meson setup build \
@@ -489,7 +493,8 @@ jobs:
               py39-gdbm \
               py39-sqlite3 \
               py39-tkinter \
-              sqlite
+              sqlite \
+              talloc
           run: |
             set -e
             meson setup build \
@@ -530,6 +535,7 @@ jobs:
               bison \
               cmark \
               db5 \
+              dconf \
               flex \
               iniparser \
               libev \
@@ -596,7 +602,8 @@ jobs:
               mysql-client \
               perl \
               pkg-config \
-              sqlite3
+              sqlite3 \
+              talloc
           run: |
             set -e
             meson setup build \
@@ -652,6 +659,7 @@ jobs:
               iniparser \
               libev \
               libgcrypt \
+              libtalloc \
               mariadb-client \
               meson \
               openldap-client-2.6.10v0 \
@@ -709,6 +717,7 @@ jobs:
             pkgin -y install \
               avahi \
               cmark \
+              dconf \
               gnome-tracker \
               iniparser \
               libev \
@@ -775,6 +784,7 @@ jobs:
               library/glib2 \
               library/libev \
               library/security/cracklib \
+              library/talloc \
               runtime/perl \
               system/library/dbus \
               system/library/libdbus \

@@ -42,7 +42,7 @@ if have_appletalk
     ]
 endif
 
-if have_spotlight
+if have_search
     subdir('dalloc')
     libatalk_libs += libdalloc
 endif

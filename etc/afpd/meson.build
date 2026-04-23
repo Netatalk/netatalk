@@ -49,17 +49,16 @@ if have_fce
     ]
 endif
 
-if have_spotlight
+if have_search
     afpd_sources += [
         'spotlight.c',
         'spotlight_marshalling.c',
     ]
-    afpd_internal_deps += libspotlight
-    afpd_external_deps += [
-        glib,
-        talloc,
-        sparql,
-    ]
+    afpd_external_deps += libspotlight_backends
+    afpd_external_deps += [talloc]
+    if use_search_localsearch
+        afpd_external_deps += [glib, sparql]
+    endif
 endif
 
 if have_afpstats

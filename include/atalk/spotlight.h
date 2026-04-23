@@ -22,14 +22,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <gio/gio.h>
-
-#ifdef HAVE_TRACKER3
-#include <tracker-sparql.h>
-#else
-#include <tinysparql.h>
-#endif
-
 #include <atalk/globals.h>
 #include <atalk/volume.h>
 #include <atalk/dalloc.h>
@@ -71,10 +63,10 @@ typedef struct {
 /*! query state */
 typedef enum {
     SLQ_STATE_NEW,            /*!< Query received from client           */
-    SLQ_STATE_RUNNING,        /*!< Query dispatched to Tracker          */
-    SLQ_STATE_RESULTS,        /*!< Async Tracker query read             */
+    SLQ_STATE_RUNNING,        /*!< Query dispatched to backend          */
+    SLQ_STATE_RESULTS,        /*!< Async backend query read             */
     SLQ_STATE_FULL,           /*!< result queue is full                 */
-    SLQ_STATE_DONE,           /*!< Got all results from Tracker         */
+    SLQ_STATE_DONE,           /*!< Got all results from backend         */
     SLQ_STATE_CANCEL_PENDING, /*!< a cancel op for the query is pending */
     SLQ_STATE_CANCELLED,      /*!< the query has been cancelled         */
     SLQ_STATE_ERROR	          /*!< an error happended somewhere         */
@@ -101,24 +93,43 @@ typedef struct _slq_t {
     const char       *slq_qstring;      /*!< the Spotlight query string      */
     uint64_t         *slq_cnids;        /*!< Pointer to array with CNIDs     */
     size_t            slq_cnids_num;    /*!< Size of slq_cnids array         */
-    void             *tracker_cursor;   /*!< Tracker SPARQL cursor           */
+    void             *slq_backend_private; /*!< backend-private query state  */
     bool              slq_allow_expr;   /*!< Whether to allow expressions    */
     uint64_t          slq_result_limit; /*!< Whether to LIMIT SPARQL results */
     struct sl_rslts  *query_results;    /*!< query results                   */
 } slq_t;
 
-struct sl_ctx {
-    TrackerSparqlConnection *tracker_con;
-    GCancellable *cancellable;
-    GMainLoop *mainloop;
-    slq_t *query_list; /*!< list of active queries */
-};
+/******************************************************************************
+ * Pluggable search backend vtable
+ ******************************************************************************/
+
+typedef struct sl_backend_ops {
+    const char  *sbo_name;
+
+    /* Called once globally when the first volume using this backend is opened. */
+    int  (*sbo_init)(AFPObj *obj);
+
+    /* Called on afpd shutdown. */
+    void (*sbo_close)(AFPObj *obj);
+
+    /* Translate slq->slq_qstring into results.
+     * May be async (localsearch) or synchronous (cnid).
+     * On return slq_state must be SLQ_STATE_RUNNING or SLQ_STATE_DONE. */
+    int  (*sbo_open_query)(slq_t *slq);
+
+    /* Fetch the next batch of results into slq->query_results.
+     * For async backends: pumps the event loop.
+     * For sync backends: no-op after sbo_open_query() already set SLQ_STATE_DONE. */
+    int  (*sbo_fetch_results)(slq_t *slq);
+
+    /* Cancel and clean up query state. */
+    void (*sbo_close_query)(slq_t *slq);
+} sl_backend_ops;
 
 /******************************************************************************
  * Function declarations
  ******************************************************************************/
 
-extern int spotlight_init(AFPObj *obj);
 extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                              char *rbuf, size_t *rbuflen);
 extern int sl_pack(DALLOC_CTX *query, char *buf);

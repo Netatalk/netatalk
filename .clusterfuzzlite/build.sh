@@ -35,7 +35,6 @@ meson setup build \
     -Dwith-ldap=false \
     -Dwith-pam=false \
     -Dwith-quota=false \
-    -Dwith-spotlight=false \
     -Dwith-tcp-wrappers=false \
     -Dwith-zeroconf=false \
     -Dwith-init-hooks=false \

@@ -1,4 +1,4 @@
-if have_spotlight
+if have_search
     subdir('spotlight')
 endif
 

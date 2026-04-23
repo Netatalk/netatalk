@@ -172,12 +172,6 @@ option(
     description: 'Enable checking for a valid shell',
 )
 option(
-    'with-spotlight',
-    type: 'boolean',
-    value: true,
-    description: 'Enable Spotlight support',
-)
-option(
     'with-statedir-creation',
     type: 'boolean',
     value: true,
@@ -437,4 +431,11 @@ option(
     ],
     value: ['auto'],
     description: 'Use OS specific init config',
+)
+option(
+    'with-search-backends',
+    type: 'array',
+    choices: ['cnid', 'localsearch'],
+    value: ['cnid', 'localsearch'],
+    description: 'Spotlight search backends to build',
 )
