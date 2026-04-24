@@ -1430,7 +1430,7 @@ static struct vol *creatvol(AFPObj *obj,
         volume->v_flags |= AFPVOL_TM;
     }
 
-    if (getoption_bool(obj->iniconfig, section, "search db", preset, 0)) {
+    if (getoption_bool(obj->iniconfig, section, "search db", preset, 1)) {
         volume->v_flags |= AFPVOL_SEARCHDB;
     }
 
@@ -2775,7 +2775,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         options->flags |= OPTION_AFP_READ_LOCK;
     }
 
-    if (getoption_bool(config, INISEC_GLOBAL, "spotlight", NULL, 0)) {
+    if (getoption_bool(config, INISEC_GLOBAL, "spotlight", NULL, 1)) {
         options->flags |= OPTION_SPOTLIGHT_VOL;
     }
 
