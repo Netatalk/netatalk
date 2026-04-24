@@ -524,6 +524,7 @@ jobs:
           sync: sshfs
           prepare: |
             set -e
+            pkg update
             pkg install -y \
               avahi \
               bison \
