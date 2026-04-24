@@ -520,6 +520,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
         with:
+          release: "14.4"
           copyback: true
           sync: sshfs
           prepare: |
@@ -695,7 +696,7 @@ jobs:
       - name: Build on VM
         uses: vmactions/omnios-vm@cfa22c687939a88f4938c03c5413062dd3642eac # v1.2.8
         with:
-          release: r151056-build
+          release: "r151056-build"
           copyback: true
           prepare: |
             set -e
