@@ -516,18 +516,20 @@ void status_init(AFPObj *dsi_obj, AFPObj *asp_obj, DSI *dsi)
         icon = daemon_icon;
     } else if (strcmp(options->legacyicon, "declogo") == 0) {
         icon = declogo_icon;
-    } else if (strcmp(options->legacyicon, "fileserver") == 0) {
+    } else if ((strcmp(options->legacyicon, "fileserver") == 0)
+               || (strcmp(options->legacyicon, "tcp") == 0)) {
         icon = fileserver_icon;
     } else if (strcmp(options->legacyicon, "globe") == 0) {
         icon = globe_icon;
-    } else if (strcmp(options->legacyicon, "hagar") == 0) {
-        icon = hagar_icon;
     } else if (strcmp(options->legacyicon, "nas") == 0) {
         icon = nas_icon;
     } else if (strcmp(options->legacyicon, "sdcard") == 0) {
         icon = sdcard_icon;
     } else if (strcmp(options->legacyicon, "sunlogo") == 0) {
         icon = sunlogo_icon;
+    } else if ((strcmp(options->legacyicon, "viking") == 0)
+               || (strcmp(options->legacyicon, "hagar") == 0)) {
+        icon = viking_icon;
     } else if (options->legacyicon[0] != '\0') {
         LOG(log_warning, logtype_afpd,
             "WARNING: unknown legacy icon \"%s\", falling back to default icon",
