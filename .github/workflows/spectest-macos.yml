@@ -37,6 +37,7 @@ jobs:
         run: |
           brew update
           brew install \
+            berkeley-db@5 \
             bstring \
             cmark-gfm \
             cracklib \
