@@ -30,4 +30,4 @@ foreach my $p (@printers) {
 }
 
 &close_tempfile($papd_fh);
-&redirect("index.cgi?tab=general");
+&redirect("index.cgi?tab=ddp");

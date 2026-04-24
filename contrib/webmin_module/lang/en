@@ -24,7 +24,7 @@ no_path=No Path
 
 index_tab_general=Advanced Settings
 index_tab_ddp=DDP Services
-index_tab_fileserver=File Sharing Services
+index_tab_fileserver=File Sharing
 
 index_filesharing_services=File Sharing Service Control
 index_appletalk_services=DDP (AppleTalk) Service Control
@@ -81,7 +81,9 @@ index_icon_text_capabilities=Show Server Status
 edit_return=index page
 
 edit_title_extmap=Edit Extension Mapping
+edit_extmap_description=Uncomment or modify file name extension to Mac type/creator mapping
 edit_title_print=Edit Print Server Configuration
+edit_print_description=Modify PAP printer definitions
 
 edit_vol_section_title_edit_volume=Edit Volume
 edit_vol_section_title_edit_volume_preset=Edit Volume Preset
@@ -164,21 +166,22 @@ edit_global_section_server_name=Server name
 edit_global_section_server_name_default=Leave empty to use hostname as server name
 edit_global_section_vol_preset=Volume preset for all volumes
 edit_global_section_login_message=Login message
-edit_global_section_uam_list=Authentication
-edit_global_section_uam_list_other=Additional non-standard UAM modules:
+edit_global_section_uam_list=User Authentication Methods
+edit_global_section_uam_list_note=Note: SRP and RandNum require password initialization with afppasswd
 edit_global_section_fqdn=Fully-qualified domain name
 edit_global_section_log_file=Log file
 edit_global_section_log_file_default=Leave empty to log through syslog daemon
-edit_global_section_log_level=Log level
+edit_global_section_log_level_entries=Log levels
+edit_global_section_log_add=Add log entry
+edit_global_section_log_remove=Remove
 edit_global_section_log_microseconds=Log microsecond timestamps
 edit_global_section_zeroconf=Enable service discovery (Zeroconf)
 edit_global_section_appletalk=Enable DDP (AppleTalk)
 edit_global_section_spotlight=Enable Spotlight support
 edit_global_section_afpstats=Enable AFP stats over D-Bus
-edit_global_section_mimic_model=Mounted volume icon
+edit_global_section_mimic_model=Volume icon (macOS)
 edit_global_section_mimic_model_help=Examples: Laptop, RackMount, Tower
-edit_global_section_legacy_icon=Mounted volume icon (Classic Mac OS)
-edit_global_section_legacy_icon_help=Examples: daemon, globe, sdcard
+edit_global_section_legacy_icon=Volume icon (Classic Mac OS)
 edit_global_section_mac_charset=Classic Mac OS charset
 edit_global_section_unix_charset=Unix charset
 edit_global_section_vol_charset=Volume charset
@@ -276,7 +279,7 @@ edit_global_section_fce_sendwait=FCE event send wait (milliseconds)
 
 edit_users=Users
 edit_groups=Groups
-edit_undefined=Leave undefined
+edit_undefined=(not set)
 edit_default=default
 
 show_atalk_notice=<em>Note:</em> When <code>atalkd</code> starts up, it attempts to autodetect available interfaces and may rewrite these settings.
