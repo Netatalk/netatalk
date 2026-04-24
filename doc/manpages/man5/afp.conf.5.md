@@ -694,22 +694,37 @@ vol preset = *name* **(G)**/**(V)**
 [Global] section) or for one volume (when set in that volume's
 section).
 
-## Spotlight Options
+## Search Options
 
-Configure Netatalk's Spotlight compatibility layer.
+Configure Netatalk's file search capabilities,
+covering Spotlight and Catalog Search.
 
 dbus daemon = *path* **(G)**
 
 > Sets the path to dbus-daemon binary used by the Spotlight feature. Can
 be used when the compile-time default path does not match the runtime
 environment.
+>
+> If support is compiled into Netatalk, you may alternatively use
+the *localsearch* backend which enables more advanced search
+capabilities, including full text search and file metadata search.
+
+search db = *BOOLEAN* (default: *yes*) **(V)**
+
+> Use fast CNID database namesearch instead of slow recursive filesystem search
+for Classic Mac OS - Mac OS X 10.3 clients.
+>
+> ***NOTE:*** Relies on a consistent CNID database for accurate search results.
+Interacting with the AFP volume with other file sharing protocols,
+or doing local filesystem access on the host without using **nad**(1)
+will lead to an inaccurate CNID database that has to be repaired with **dbd**(1).
 
 sparql results limit = *NUMBER* (default: *UNLIMITED*) **(G)**
 
 > Impose a limit on the number of results queried from Tracker or
 LocalSearch via SPARQL queries.
 
-spotlight = *BOOLEAN* (default: *no*) **(G)**/**(V)**
+spotlight = *BOOLEAN* (default: *yes*) **(G)**/**(V)**
 
 > Whether to enable Spotlight searches. Note: once the global option is
 enabled, any volume that is not enabled won't be searchable at all. See
@@ -722,6 +737,12 @@ By default all attributes can be searched, passing a string limits
 attributes to elements of the string. Example:
 
     spotlight attributes = *,kMDItemTextContent
+
+spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
+
+> Search backend used by the Spotlight feature.
+Most Netatalk configurations will have the *cnid* backend available,
+which allows simple file name matching search on shared volumes.
 
 spotlight expr = *BOOLEAN* (default: *yes*) **(G)**
 
@@ -1346,16 +1367,6 @@ read only = *BOOLEAN* (default: *no*) **(V)**
 
 > Specifies the share as being read only for all users.
 Forces **ea = sys**.
-
-search db = *BOOLEAN* (default: *no*) **(V)**
-
-> Use fast CNID database namesearch instead of slow recursive filesystem search
-for Classic Mac OS - Mac OS X 10.3 clients.
->
-> ***NOTE:*** Relies on a consistent CNID database for accurate search results.
-Interacting with the AFP volume with other file sharing protocols,
-or doing local filesystem access on the host without using **nad**(1)
-will lead to an inaccurate CNID database that has to be repaired with **dbd**(1).
 
 stat vol = *BOOLEAN* (default: *yes*) **(V)**
 

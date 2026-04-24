@@ -14,12 +14,6 @@ Netatalk provides remote backup functionality for macOS Time Machine over AFP.
 To make a volume a Time Machine target,
 set the volume option **time machine = yes**.
 
-Spotlight compatible indexed search on AFP volumes is also supported.
-Spotlight is the search technology built into macOS.
-Indexing is disabled by default, but you can enable it globally or on a per-volume basis.
-To enable Spotlight indexing globally or for a specific volume,
-set the option **spotlight = yes** where appropriate.
-
 Starting with Netatalk 2.1, UNIX symlinks are supported on the server.
 The semantics are the same as for NFS:
 symlinks are not resolved on the server side but are instead passed to the client for resolution,
