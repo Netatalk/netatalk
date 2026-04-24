@@ -400,6 +400,17 @@ if ($subject ne 'homes') {
                         )
     );
 
+    print &ui_table_row(
+                        $text{'edit_global_section_spotlight_backend'},
+                        &build_select(
+                                      $afpconfRef, $sectionRef, \%in, 'spotlight backend', $text{'edit_undefined'},
+                                      'cnid',
+                                      'cnid',
+                                      'localsearch',
+                                      'localsearch'
+                        )
+    );
+
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'force xattr with sticky bit', \%in);
     print &ui_table_row(
                         $text{'edit_global_section_force_xattr_with_sticky_bit'},

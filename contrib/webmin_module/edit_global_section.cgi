@@ -152,6 +152,18 @@ print &ui_table_row(
                     )
 );
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'spotlight backend', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_spotlight_backend'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'spotlight backend', $text{'edit_undefined'},
+                                  'cnid',
+                                  'cnid',
+                                  'localsearch',
+                                  'localsearch'
+                    )
+);
+
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'afpstats', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_afpstats'},
