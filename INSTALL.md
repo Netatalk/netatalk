@@ -69,19 +69,6 @@ required at the bare minimum.
 | meson      | v0.61.2 or later |
 | ninja      | often packaged as `ninja-build` |
 
-### Optional Spotlight Support
-
-| Package    | Details |
-|------------|---------|
-| bison      | or compatible Yacc parser |
-| D-Bus      | also used by avahi and afpstats |
-| DConf      | sometimes packaged as `dconf-cli` |
-| GLib 2     | gsettings is used to determine the localsearch schema |
-| flex       | or compatible lexer |
-| localsearch **OR** tracker | v3.0 or later |
-| talloc     |  |
-| tinysparql |  |
-
 ### Optional Features
 
 | Package      | Details |
@@ -98,8 +85,25 @@ required at the bare minimum.
 | libtirpc **OR** libquota   | Quota support |
 | Perl                       | admin scripts |
 | po4a                       | localization of documentation |
+| talloc                     | Spotlight search |
 | tcpwrap                    | TCP wrapper support |
 | [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | regenerating Unicode lookup tables |
+
+### Optional Spotlight Backends
+
+With `talloc` you get filename search functionality via the Netatalk CNID database.
+If you want more advanced search functionality with file contents and metadata,
+install the LocalSearch dependencies.
+
+| Package    | Details |
+|------------|---------|
+| bison      | or compatible Yacc parser |
+| D-Bus      | also used by avahi and afpstats |
+| DConf      | sometimes packaged as `dconf-cli` |
+| GLib 2     | gsettings is used to determine the localsearch schema |
+| flex       | or compatible lexer |
+| localsearch **OR** tracker | v3.0 or later |
+| tinysparql |  |
 
 ## Build the software
 
