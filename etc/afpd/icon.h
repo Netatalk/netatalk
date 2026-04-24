@@ -22,10 +22,10 @@ extern const unsigned char declogo_icon[];
 extern const unsigned char daemon_icon[];
 extern const unsigned char fileserver_icon[];
 extern const unsigned char globe_icon[];
-extern const unsigned char hagar_icon[];
 extern const unsigned char nas_icon[];
 extern const unsigned char sdcard_icon[];
 extern const unsigned char sunlogo_icon[];
+extern const unsigned char viking_icon[];
 
 /* Colorized icons (icl4 = 4-bit, icl8 = 8-bit) */
 extern const unsigned char declogo_icon_icl4[];
@@ -36,13 +36,13 @@ extern const unsigned char fileserver_icon_icl4[];
 extern const unsigned char fileserver_icon_icl8[];
 extern const unsigned char globe_icon_icl4[];
 extern const unsigned char globe_icon_icl8[];
-extern const unsigned char hagar_icon_icl4[];
-extern const unsigned char hagar_icon_icl8[];
 extern const unsigned char nas_icon_icl4[];
 extern const unsigned char nas_icon_icl8[];
 extern const unsigned char sdcard_icon_icl4[];
 extern const unsigned char sdcard_icon_icl8[];
 extern const unsigned char sunlogo_icon_icl4[];
 extern const unsigned char sunlogo_icon_icl8[];
+extern const unsigned char viking_icon_icl4[];
+extern const unsigned char viking_icon_icl8[];
 
 #endif /* AFPD_ICON_H */

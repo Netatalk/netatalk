@@ -257,7 +257,8 @@ void virtual_icon_init(struct vol *vol)
         icon = declogo_icon;
         icon_icl4 = declogo_icon_icl4;
         icon_icl8 = declogo_icon_icl8;
-    } else if (strcmp(vol->v_legacyicon, "fileserver") == 0) {
+    } else if ((strcmp(vol->v_legacyicon, "fileserver")
+                || (strcmp(vol->v_legacyicon, "tcp") == 0)) == 0) {
         icon = fileserver_icon;
         icon_icl4 = fileserver_icon_icl4;
         icon_icl8 = fileserver_icon_icl8;
@@ -265,10 +266,6 @@ void virtual_icon_init(struct vol *vol)
         icon = globe_icon;
         icon_icl4 = globe_icon_icl4;
         icon_icl8 = globe_icon_icl8;
-    } else if (strcmp(vol->v_legacyicon, "hagar") == 0) {
-        icon = hagar_icon;
-        icon_icl4 = hagar_icon_icl4;
-        icon_icl8 = hagar_icon_icl8;
     } else if (strcmp(vol->v_legacyicon, "nas") == 0) {
         icon = nas_icon;
         icon_icl4 = nas_icon_icl4;
@@ -281,6 +278,11 @@ void virtual_icon_init(struct vol *vol)
         icon = sunlogo_icon;
         icon_icl4 = sunlogo_icon_icl4;
         icon_icl8 = sunlogo_icon_icl8;
+    } else if ((strcmp(vol->v_legacyicon, "viking") == 0)
+               || (strcmp(vol->v_legacyicon, "hagar") == 0)) {
+        icon = viking_icon;
+        icon_icl4 = viking_icon_icl4;
+        icon_icl8 = viking_icon_icl8;
     } else {
         LOG(log_warning, logtype_afpd, "virtual_icon_init: unknown legacy icon '%s'",
             vol->v_legacyicon);
