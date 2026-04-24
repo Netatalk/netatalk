@@ -152,6 +152,18 @@ print &ui_table_row(
                     )
 );
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'search backend', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_search_backend'},
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'search backend', $text{'edit_undefined'},
+                                  'cnid',
+                                  'cnid',
+                                  'localsearch',
+                                  'localsearch'
+                    )
+);
+
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'afpstats', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_afpstats'},
