@@ -215,7 +215,7 @@ if ($subject eq 'volume') {
                                     "required",
                                     1
                         )
-                        . "<br /><a href=\"/filemin\" target=\"_blank\">$text{'edit_vol_section_path_note'}</a>"
+                        . "<br><a href=\"/filemin\" target=\"_blank\">$text{'edit_vol_section_path_note'}</a>"
     );
 }
 
@@ -422,7 +422,25 @@ if ($subject ne 'homes') {
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'legacy icon', \%in);
     print &ui_table_row(
                         $text{'edit_global_section_legacy_icon'},
-                        &ui_textbox('p_legacy icon', $values[0], 20) . $text{edit_global_section_legacy_icon_help}
+                        &build_select(
+                                    $afpconfRef, $sectionRef, \%in, 'legacy icon', $text{'edit_undefined'},
+                                    'daemon',
+                                    'daemon',
+                                    'declogo',
+                                    'declogo',
+                                    'fileserver',
+                                    'fileserver',
+                                    'globe',
+                                    'globe',
+                                    'nas',
+                                    'nas',
+                                    'sdcard',
+                                    'sdcard',
+                                    'sunlogo',
+                                    'sunlogo',
+                                    'viking',
+                                    'viking'
+                        )
     );
 
     @values = get_parameter_of_section($afpconfRef, $sectionRef, 'mac charset', \%in);

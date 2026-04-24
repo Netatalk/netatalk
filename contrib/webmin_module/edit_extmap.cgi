@@ -23,6 +23,7 @@ our (%config, %text);
 
 &ui_print_header(undef, $text{'edit_title_extmap'}, "", "extmap", 1);
 
+print "<p>" . $text{'edit_extmap_description'} . "</p>\n";
 print &ui_form_start("save_extmap.cgi", "post");
 print &ui_table_start(undef, undef, 2);
 print &ui_table_row(

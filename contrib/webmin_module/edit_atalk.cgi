@@ -45,7 +45,7 @@ print &ui_table_row(
                                 'atalk_iface', @atalk ? $atalk[$in{index}]{atalk_iface} : '', undef, undef, undef,
                                 'required'
                     )
-                    . "<br /><a href=\"/net/list_ifcs.cgi\" target=\"_blank\">$text{'edit_atalk_iface_help'}</a>"
+                    . "<br><a href=\"/net/list_ifcs.cgi\" target=\"_blank\">$text{'edit_atalk_iface_help'}</a>"
 );
 print &ui_table_row(
                     $text{'edit_atalk_addr'},

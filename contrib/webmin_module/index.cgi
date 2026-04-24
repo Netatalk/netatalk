@@ -139,14 +139,17 @@ if (!$config{hide_service_controls}) {
     }
 
     my @links_f = (
+                   "edit_global_section.cgi",
                    "server_status.cgi",
                    "show_users.cgi"
     );
     my @titles_f = (
+                    $text{'index_icon_text_server'},
                     $text{'index_icon_text_capabilities'},
                     $text{'index_icon_text_users'}
     );
     my @icons_f = (
+                   "images/server.png",
                    "images/inspect.png",
                    "images/users.png"
     );
@@ -239,17 +242,14 @@ if ($$afpconf{sectionsByName}{'Homes'}) {
 print "<h3>$text{index_global}</h3>\n";
 
 my @links_g = (
-               "edit_global_section.cgi",
                "edit_extmap.cgi",
                "rebuild_db.cgi"
 );
 my @titles_g = (
-                $text{'index_icon_text_server'},
                 $text{'index_icon_text_extmap'},
                 $text{'index_icon_text_rebuild'}
 );
 my @icons_g = (
-               "images/server.png",
                "images/digest.png",
                "images/options.png",
 );

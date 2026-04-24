@@ -94,22 +94,20 @@ $nonstandardUAMs =~ s/[ ,]+/ /g;
 @values[0] = "uams_dhx.so uams_dhx2.so" if !@values[0];
 print &ui_table_row(
                     $text{'edit_global_section_uam_list'},
-                    &ui_checkbox('p_uam list', 'uams_dhx2.so', 'DHX2 UAM', $values[0] =~ /uams_dhx2.so/ ? 1 : 0)
-                    . &ui_checkbox('p_uam list', 'uams_dhx.so', 'DHX UAM', $values[0] =~ /uams_dhx.so/  ? 1 : 0)
+                    &ui_checkbox('p_uam list', 'uams_dhx2.so', 'DHX2', $values[0] =~ /uams_dhx2.so/ ? 1 : 0)
+                    . &ui_checkbox('p_uam list', 'uams_dhx.so', 'DHX', $values[0] =~ /uams_dhx.so/  ? 1 : 0)
                     . &ui_checkbox(
-                                   'p_uam list', 'uams_clrtxt.so', 'Cleartext UAM',
+                                   'p_uam list', 'uams_clrtxt.so', 'Cleartext',
                                    $values[0] =~ /uams_clrtxt.so/ ? 1 : 0
                     )
                     . &ui_checkbox(
-                                   'p_uam list', 'uams_randnum.so', 'RandNum UAM',
+                                   'p_uam list', 'uams_randnum.so', 'RandNum',
                                    $values[0] =~ /uams_randnum.so/ ? 1 : 0
                     )
-                    . &ui_checkbox('p_uam list', 'uams_guest.so', 'Guest UAM',    $values[0] =~ /uams_guest.so/ ? 1 : 0)
-                    . &ui_checkbox('p_uam list', 'uams_gss.so',   'Kerberos UAM', $values[0] =~ /uams_gss.so/   ? 1 : 0)
-                    . &ui_checkbox('p_uam list', 'uams_srp.so',   'SRP UAM',      $values[0] =~ /uams_srp.so/   ? 1 : 0)
-                    . "<br>"
-                    . $text{'edit_global_section_uam_list_other'} . " "
-                    . &ui_textbox('p_uam list', $nonstandardUAMs, 40)
+                    . &ui_checkbox('p_uam list', 'uams_guest.so', 'Guest',    $values[0] =~ /uams_guest.so/ ? 1 : 0)
+                    . &ui_checkbox('p_uam list', 'uams_gss.so',   'Kerberos', $values[0] =~ /uams_gss.so/   ? 1 : 0)
+                    . &ui_checkbox('p_uam list', 'uams_srp.so',   'SRP',      $values[0] =~ /uams_srp.so/   ? 1 : 0)
+                    . "<br>" . $text{'edit_global_section_uam_list_note'}
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'log file', \%in);
@@ -119,11 +117,81 @@ print &ui_table_row(
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'log level', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_log_level'},
-                    &ui_textbox('p_log level', $values[0], 30) . " "
-                    . ($values[2] ? html_escape($values[2]) . ": " . html_escape($values[1]) : '') . "\n"
-);
+
+my @log_types  = qw(default logger cnid afpdaemon dsi atalkdaemon papdaemon uams fce ad spotlight);
+my @log_levels = qw(severe error warn note info debug debug6 debug7 debug8 debug9 maxdebug);
+
+my @log_pairs = ();
+if (exists $in{'reload'}) {
+    my @types  = split /\x00/, (defined $in{'p_log_type'}  ? $in{'p_log_type'}  : '');
+    my @levels = split /\x00/, (defined $in{'p_log_level'} ? $in{'p_log_level'} : '');
+    for my $i (0 .. $#types) {
+        push @log_pairs, [lc($types[$i]), lc($levels[$i] // '')];
+    }
+} elsif ($values[0]) {
+    for my $pair (split /[,\s]+/, $values[0]) {
+        push @log_pairs, [lc($1), lc($2)] if $pair =~ /^(\w+):(\w+)$/;
+    }
+}
+push @log_pairs, ['', ''] unless @log_pairs;
+
+my $undef_text  = $text{'edit_undefined'};
+my $remove_text = $text{'edit_global_section_log_remove'};
+my $add_text    = $text{'edit_global_section_log_add'};
+
+my $log_rows_html = '';
+for my $pair (@log_pairs) {
+    my ($t, $l) = @$pair;
+    my $type_opts = "<option value=''>$undef_text</option>\n"
+                  . join('', map { "<option value='$_'" . ($t eq $_ ? " selected" : "") . ">$_</option>\n" } @log_types);
+    my $level_opts = "<option value=''>$undef_text</option>\n"
+                   . join('', map { "<option value='$_'" . ($l eq $_ ? " selected" : "") . ">$_</option>\n" } @log_levels);
+    $log_rows_html .= "<div class='log-entry-row' style='margin-bottom:4px'>"
+                    . "<select name='p_log_type'>$type_opts</select>"
+                    . " : <select name='p_log_level'>$level_opts</select>"
+                    . " <button type='button' onclick='removeLogRow(this)'>$remove_text</button>"
+                    . "</div>\n";
+}
+
+my $js_types  = join(',', map { "\"$_\"" } @log_types);
+my $js_levels = join(',', map { "\"$_\"" } @log_levels);
+
+my $log_widget_html = qq{<div id="log_entries">
+$log_rows_html</div>
+<button type="button" onclick="addLogRow()">$add_text</button>
+<script>
+(function() {
+    var logTypes  = [$js_types];
+    var logLevels = [$js_levels];
+    var undefText  = "$undef_text";
+    var removeText = "$remove_text";
+    function makeOptions(opts, selected) {
+        var html = '<option value="">' + undefText + '</option>';
+        opts.forEach(function(o) {
+            html += '<option value="' + o + '"' + (o === selected ? ' selected' : '') + '>' + o + '</option>';
+        });
+        return html;
+    }
+    window.addLogRow = function() {
+        var container = document.getElementById('log_entries');
+        var div = document.createElement('div');
+        div.className = 'log-entry-row';
+        div.style.marginBottom = '4px';
+        div.innerHTML = '<select name="p_log_type">' + makeOptions(logTypes, '') + '</select>'
+                      + ' : <select name="p_log_level">' + makeOptions(logLevels, '') + '</select>'
+                      + ' <button type="button" onclick="removeLogRow(this)">' + removeText + '</button>';
+        container.appendChild(div);
+    };
+    window.removeLogRow = function(btn) {
+        var container = document.getElementById('log_entries');
+        if (container.children.length > 1) {
+            container.removeChild(btn.parentNode);
+        }
+    };
+})();
+</script>};
+
+print &ui_table_row($text{'edit_global_section_log_level_entries'}, $log_widget_html);
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'zeroconf', \%in);
 print &ui_table_row(
@@ -170,7 +238,25 @@ print &ui_table_row(
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'legacy icon', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_legacy_icon'},
-                    &ui_textbox('p_legacy icon', $values[0], 20) . $text{edit_global_section_legacy_icon_help}
+                    &build_select(
+                                  $afpconfRef, $sectionRef, \%in, 'legacy icon', $text{'edit_undefined'},
+                                  'daemon',
+                                  'daemon',
+                                  'declogo',
+                                  'declogo',
+                                  'fileserver',
+                                  'fileserver',
+                                  'globe',
+                                  'globe',
+                                  'nas',
+                                  'nas',
+                                  'sdcard',
+                                  'sdcard',
+                                  'sunlogo',
+                                  'sunlogo',
+                                  'viking',
+                                  'viking'
+                    )
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'mac charset', \%in);
@@ -938,4 +1024,4 @@ print &ui_tabs_end();
 
 print &ui_form_end([[undef, $text{'save_button_title'}, 0, undef]]);
 
-ui_print_footer("index.cgi?tab=general", $text{'edit_return'});
+ui_print_footer("index.cgi?tab=fileserver", $text{'edit_return'});

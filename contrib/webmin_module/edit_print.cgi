@@ -23,6 +23,7 @@ our (%config, %text);
 
 &ui_print_header(undef, $text{'edit_title_print'}, "", "print", 1);
 
+print "<p>" . $text{'edit_print_description'} . "</p>\n";
 print &ui_form_start("save_print.cgi", "post");
 print &ui_table_start(undef, undef, 2);
 print &ui_table_row(
@@ -32,4 +33,4 @@ print &ui_table_row(
 print &ui_table_end();
 print &ui_form_end([[undef, $text{'save_button_title'}]]);
 
-&ui_print_footer("index.cgi?tab=general", $text{'edit_return'});
+&ui_print_footer("index.cgi?tab=ddp", $text{'edit_return'});

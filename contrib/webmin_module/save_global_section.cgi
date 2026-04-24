@@ -41,10 +41,22 @@ eval {
     $in{'p_log file'} = $in{'p_log_file'};
     delete $in{'p_log_file'};
 
+    # collate multiple log type/level pairs into the combined "log level" parameter
+    my @_log_types  = split /\x00/, ($in{'p_log_type'}  // '');
+    my @_log_levels = split /\x00/, ($in{'p_log_level'} // '');
+    my @_log_pairs  = ();
+    for my $i (0 .. $#_log_types) {
+        push @_log_pairs, $_log_types[$i] . ':' . $_log_levels[$i]
+            if $_log_types[$i] && $_log_levels[$i];
+    }
+    $in{'p_log level'} = join(',', @_log_pairs);
+    delete $in{'p_log_type'};
+    delete $in{'p_log_level'};
+
     my $afpconfRef = &read_afpconf();
     modify_afpconf_ref_and_write($afpconfRef, \%in);
 
-    redirect("index.cgi?tab=general");
+    redirect("index.cgi?tab=fileserver");
 };
 if ($@) {
     my $msg = $@;
@@ -53,6 +65,6 @@ if ($@) {
 
     print "<p>$msg<p>";
 
-    ui_print_footer("index.cgi?tab=general", $text{'edit_return'});
+    ui_print_footer("index.cgi?tab=fileserver", $text{'edit_return'});
     exit;
 }
