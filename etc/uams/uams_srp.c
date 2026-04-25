@@ -643,6 +643,14 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
     unsigned char A_buf[SRP_NBYTES];
     unsigned char K[SRP_SESSION_KEY_LEN];
     *rbuflen = 0;
+
+    /* Make sure srp_setup actually ran and established session state */
+    if (session_v == NULL) {
+        LOG(log_error, logtype_uams, "srp_logincont: called without completing setup");
+        ret = AFPERR_PARAM;
+        goto fail;
+    }
+
     unsigned char *d = (unsigned char *)ibuf;
     const unsigned char *end = d + ibuflen;
 
