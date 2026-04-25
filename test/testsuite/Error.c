@@ -6,83 +6,608 @@
 #include "afphelper.h"
 #include "testhelper.h"
 
-/* ------------------------- */
-static unsigned char afp_cmd_with_vol[] = {
-    AFP_CLOSEVOL,			/* 2 */
-#if 0
-    AFP_CLOSEDIR,			/* 3 */
-#endif
-    AFP_COPYFILE, 			/* 5 */
-    AFP_CREATEDIR,			/* 6 */
-    AFP_CREATEFILE,			/* 7 */
-    AFP_DELETE,				/* 8 */
-    AFP_ENUMERATE,			/* 9 */
-    AFP_FLUSH,				/* 10 */
-
-    AFP_GETVOLPARAM,		/* 17 */
-    AFP_MOVE,				/* 23 */
-    AFP_OPENDIR,			/* 25 */
-    AFP_OPENFORK,           /* 26 */
-    AFP_RENAME,				/* 28 */
-    AFP_SETDIRPARAM,		/* 29 */
-    AFP_SETFILEPARAM, 		/* 30 */
-    AFP_SETVOLPARAM,		/* 32 */
-    AFP_GETFLDRPARAM,		/* 34 */
-    AFP_SETFLDRPARAM,		/* 35 */
-    AFP_CREATEID,			/* 39 */
-    AFP_DELETEID, 			/* 40 */
-    AFP_RESOLVEID,			/* 41 */
-    AFP_EXCHANGEFILE,		/* 42 */
-    AFP_CATSEARCH,			/* 43 */
-    AFP_OPENDT,				/* 48 */
-    AFP_GETICON,			/* 51 */
-    AFP_GTICNINFO,			/* 52 */
-    AFP_ADDAPPL,			/* 53 */
-    AFP_RMVAPPL,			/* 54 */
-    AFP_GETAPPL,			/* 55 */
-    AFP_ADDCMT,				/* 56 */
-    AFP_RMVCMT,				/* 57 */
-    AFP_GETCMT,				/* 58 */
-    AFP_ADDICON,			/* 192 */
+struct t35_cmd {
+    unsigned char cmd;
+    int expected;
+    int min_version;
+    unsigned char variant;
+    int required_attrs;
 };
+
+#define T35_DEFAULT          0
+#define T35_COPYFILE_DEST   1
+
+/* ------------------------- */
+static struct t35_cmd afp_cmd_with_vol[] = {
+    { AFP_CLOSEVOL, AFPERR_PARAM, 21 },			/* 2 */
+    { AFP_CLOSEDIR, AFPERR_PARAM, 21 },			/* 3 */
+    { AFP_COPYFILE, AFPERR_PARAM, 21 },			/* 5 */
+    { AFP_COPYFILE, AFPERR_PARAM, 21, T35_COPYFILE_DEST },	/* 5, DestVolumeID */
+    { AFP_CREATEDIR, AFPERR_PARAM, 21 },			/* 6 */
+    { AFP_CREATEFILE, AFPERR_PARAM, 21 },		/* 7 */
+    { AFP_DELETE, AFPERR_PARAM, 21 },			/* 8 */
+    { AFP_ENUMERATE, AFPERR_PARAM, 21 },		/* 9 */
+    { AFP_FLUSH, AFPERR_PARAM, 21 },			/* 10 */
+
+    { AFP_GETVOLPARAM, AFPERR_PARAM, 21 },		/* 17 */
+    { AFP_MOVE, AFPERR_PARAM, 21 },			/* 23 */
+    { AFP_OPENDIR, AFPERR_PARAM, 21 },			/* 25 */
+    { AFP_OPENFORK, AFPERR_PARAM, 21 },			/* 26 */
+    { AFP_RENAME, AFPERR_PARAM, 21 },			/* 28 */
+    { AFP_SETDIRPARAM, AFPERR_PARAM, 21 },		/* 29 */
+    { AFP_SETFILEPARAM, AFPERR_PARAM, 21 },		/* 30 */
+    { AFP_SETVOLPARAM, AFPERR_PARAM, 21 },		/* 32 */
+    { AFP_GETFLDRPARAM, AFPERR_PARAM, 21 },		/* 34 */
+    { AFP_SETFLDRPARAM, AFPERR_PARAM, 21 },		/* 35 */
+    { AFP_CREATEID, AFPERR_PARAM, 21 },			/* 39 */
+    { AFP_DELETEID, AFPERR_PARAM, 21 },			/* 40 */
+    { AFP_RESOLVEID, AFPERR_PARAM, 21 },		/* 41 */
+    { AFP_EXCHANGEFILE, AFPERR_PARAM, 21 },		/* 42 */
+    { AFP_CATSEARCH, AFPERR_PARAM, 21 },		/* 43 */
+    { AFP_OPENDT, AFPERR_PARAM, 21 },			/* 48 */
+
+    { AFP_ENUMERATE_EXT, AFPERR_PARAM, 30 },		/* 66 */
+    { AFP_CATSEARCH_EXT, AFPERR_PARAM, 30 },		/* 67 */
+    { AFP_ENUMERATE_EXT2, AFPERR_PARAM, 31 },		/* 68 */
+    { AFP_GETEXTATTR, AFPERR_PARAM, 32 },		/* 69 */
+    { AFP_SETEXTATTR, AFPERR_PARAM, 32 },		/* 70 */
+    { AFP_REMOVEATTR, AFPERR_PARAM, 32 },		/* 71 */
+    { AFP_LISTEXTATTR, AFPERR_PARAM, 32 },		/* 72 */
+#ifdef HAVE_ACLS
+    { AFP_GETACL, AFPERR_PARAM, 32, T35_DEFAULT, VOLPBIT_ATTR_ACLS },	/* 73 */
+    { AFP_SETACL, AFPERR_PARAM, 32, T35_DEFAULT, VOLPBIT_ATTR_ACLS },	/* 74 */
+    { AFP_ACCESS, AFPERR_PARAM, 32, T35_DEFAULT, VOLPBIT_ATTR_ACLS },	/* 75 */
+#endif
+    { AFP_SYNCDIR, AFPERR_NOOBJ, 31 },			/* 78 */
+};
+
+static struct t35_cmd afp_cmd_with_dt[] = {
+    { AFP_CLOSEDT, AFPERR_PARAM, 21 },			/* 49 */
+    { AFP_GETICON, AFPERR_PARAM, 21 },			/* 51 */
+    { AFP_GTICNINFO, AFPERR_PARAM, 21 },		/* 52 */
+    { AFP_ADDAPPL, AFPERR_PARAM, 21 },			/* 53 */
+    { AFP_RMVAPPL, AFPERR_PARAM, 21 },			/* 54 */
+    { AFP_GETAPPL, AFPERR_PARAM, 21 },			/* 55 */
+    { AFP_ADDCMT, AFPERR_PARAM, 21 },			/* 56 */
+    { AFP_RMVCMT, AFPERR_PARAM, 21 },			/* 57 */
+    { AFP_GETCMT, AFPERR_PARAM, 21 },			/* 58 */
+    { AFP_ADDICON, AFPERR_PARAM, 21 },			/* 192 */
+};
+
+static int t35_add_u16(unsigned char *buf, int ofs, uint16_t value)
+{
+    memcpy(buf + ofs, &value, sizeof(value));
+    return ofs + sizeof(value);
+}
+
+static int t35_add_u32(unsigned char *buf, int ofs, uint32_t value)
+{
+    memcpy(buf + ofs, &value, sizeof(value));
+    return ofs + sizeof(value);
+}
+
+static int t35_add_u64(unsigned char *buf, int ofs, uint64_t value)
+{
+    memcpy(buf + ofs, &value, sizeof(value));
+    return ofs + sizeof(value);
+}
+
+static int t35_add_did(unsigned char *buf, int ofs)
+{
+    uint32_t did = DIRDID_ROOT;
+    return t35_add_u32(buf, ofs, did);
+}
+
+static int t35_add_name(int ofs, char *name)
+{
+    return FPset_name(Conn, ofs, name);
+}
+
+static int t35_add_extattr_name(unsigned char *buf, int ofs, const char *name)
+{
+    size_t len;
+    size_t maxlen;
+    size_t remaining;
+    uint16_t netlen;
+
+    if (ofs < 0 || (size_t)ofs > DSI_CMDSIZ - sizeof(netlen)) {
+        return -1;
+    }
+
+    remaining = DSI_CMDSIZ - (size_t)ofs - sizeof(netlen);
+    maxlen = remaining < UINT16_MAX ? remaining : UINT16_MAX;
+    len = strnlen(name, maxlen + 1);
+
+    if (len > maxlen) {
+        return -1;
+    }
+
+    netlen = htons((uint16_t) len);
+    ofs = t35_add_u16(buf, ofs, netlen);
+    memcpy(buf + ofs, name, len);
+    return ofs + (int)len;
+}
+
+static int t35_add_filedir_parms(unsigned char *buf, int ofs, uint16_t bitmap,
+                                 int isdir)
+{
+    struct afp_filedir_parms filedir = { 0 };
+    filedir.isdir = isdir;
+    return ofs + afp_filedir_pack(buf + ofs, &filedir, bitmap, bitmap);
+}
+
+static const char *t35_variant_name(unsigned char variant)
+{
+    switch (variant) {
+    case T35_COPYFILE_DEST:
+        return " DestVolumeID";
+
+    default:
+        return "";
+    }
+}
+
+static int t35_cmd_supported(const struct t35_cmd *entry, int vol_attrs)
+{
+    if (Conn->afp_version < entry->min_version) {
+        return 0;
+    }
+
+    return (entry->required_attrs & vol_attrs) == entry->required_attrs;
+}
+
+static int t35_build_request(DSI *dsi, unsigned char cmd, unsigned char variant,
+                             uint16_t bad_ref)
+{
+    int ofs = 0;
+    uint16_t bitmap;
+    uint32_t temp;
+    uint32_t zero = 0;
+    uint64_t zero64 = 0;
+    uint64_t allones64 = UINT64_MAX;
+    unsigned char creator[] = "ttxt";
+    char catpos[16] = { 0 };
+    memset(dsi->commands, 0, DSI_CMDSIZ);
+    dsi->header.dsi_flags = DSIFL_REQUEST;
+    dsi->header.dsi_command = DSIFUNC_CMD;
+    dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
+    dsi->commands[ofs++] = cmd;
+    dsi->commands[ofs++] = 0;
+
+    switch (cmd) {
+    case AFP_CLOSEVOL:
+    case AFP_FLUSH:
+    case AFP_OPENDT:
+    case AFP_CLOSEDT:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        break;
+
+    case AFP_CLOSEDIR:
+    case AFP_SYNCDIR:
+    case AFP_DELETEID:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        break;
+
+    case AFP_GETVOLPARAM:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        bitmap = htons(1 << VOLPBIT_VID);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        break;
+
+    case AFP_SETVOLPARAM:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        bitmap = htons(1 << VOLPBIT_BDATE);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        break;
+
+    case AFP_CREATEDIR:
+    case AFP_DELETE:
+    case AFP_OPENDIR:
+    case AFP_CREATEID:
+    case AFP_CREATEFILE:
+    case AFP_RMVCMT:
+    case AFP_GETCMT:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+
+    case AFP_RESOLVEID:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(1 << FILPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        break;
+
+    case AFP_ENUMERATE:
+    case AFP_ENUMERATE_EXT:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(1 << FILPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1 << DIRPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1024);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "");
+        break;
+
+    case AFP_ENUMERATE_EXT2:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(1 << FILPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1 << DIRPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        temp = htonl(1);
+        ofs = t35_add_u32(dsi->commands, ofs, temp);
+        temp = htonl(1024);
+        ofs = t35_add_u32(dsi->commands, ofs, temp);
+        ofs = t35_add_name(ofs, "");
+        break;
+
+    case AFP_OPENFORK:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(OPENACC_RD);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+
+    case AFP_GETFLDRPARAM:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(1 << FILPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1 << DIRPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "");
+        break;
+
+    case AFP_SETDIRPARAM:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(1 << DIRPBIT_ATTR);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "t35");
+
+        if (ofs & 1) {
+            ofs++;
+        }
+
+        ofs = t35_add_filedir_parms(dsi->commands, ofs, 1 << DIRPBIT_ATTR, 1);
+        break;
+
+    case AFP_SETFILEPARAM:
+    case AFP_SETFLDRPARAM:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(1 << FILPBIT_ATTR);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "t35");
+
+        if (ofs & 1) {
+            ofs++;
+        }
+
+        ofs = t35_add_filedir_parms(dsi->commands, ofs, 1 << FILPBIT_ATTR, 0);
+        break;
+
+    case AFP_COPYFILE:
+        ofs = t35_add_u16(dsi->commands, ofs,
+                          variant == T35_COPYFILE_DEST ? VolID : bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_u16(dsi->commands, ofs,
+                          variant == T35_COPYFILE_DEST ? bad_ref : VolID);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_name(ofs, "t35");
+        ofs = t35_add_name(ofs, "");
+        ofs = t35_add_name(ofs, "t35-copy");
+        break;
+
+    case AFP_MOVE:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_name(ofs, "t35");
+        ofs = t35_add_name(ofs, "");
+        ofs = t35_add_name(ofs, "t35-moved");
+        break;
+
+    case AFP_RENAME:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_name(ofs, "t35");
+        ofs = t35_add_name(ofs, "t35-renamed");
+        break;
+
+    case AFP_EXCHANGEFILE:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_name(ofs, "t35-a");
+        ofs = t35_add_name(ofs, "t35-b");
+        break;
+
+    case AFP_CATSEARCH:
+    case AFP_CATSEARCH_EXT:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        temp = htonl(1);
+        ofs = t35_add_u32(dsi->commands, ofs, temp);
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        memcpy(dsi->commands + ofs, catpos, sizeof(catpos));
+        ofs += sizeof(catpos);
+        bitmap = htons(1 << FILPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1 << DIRPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        ofs += 2;
+        ofs += 2;
+        break;
+
+    case AFP_GETEXTATTR:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u64(dsi->commands, ofs, zero64);
+        ofs = t35_add_u64(dsi->commands, ofs, allones64);
+        temp = htonl(1024);
+        ofs = t35_add_u32(dsi->commands, ofs, temp);
+        ofs = t35_add_name(ofs, "t35");
+
+        if (ofs & 1) {
+            ofs++;
+        }
+
+        ofs = t35_add_extattr_name(dsi->commands, ofs, "user.t35");
+        break;
+
+    case AFP_SETEXTATTR:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u64(dsi->commands, ofs, zero64);
+        ofs = t35_add_name(ofs, "t35");
+
+        if (ofs & 1) {
+            ofs++;
+        }
+
+        ofs = t35_add_extattr_name(dsi->commands, ofs, "user.t35");
+
+        if (ofs < 0) {
+            return -1;
+        }
+
+        temp = htonl(1);
+        ofs = t35_add_u32(dsi->commands, ofs, temp);
+        dsi->commands[ofs++] = 'x';
+        break;
+
+    case AFP_REMOVEATTR:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "t35");
+
+        if (ofs & 1) {
+            ofs++;
+        }
+
+        ofs = t35_add_extattr_name(dsi->commands, ofs, "user.t35");
+        break;
+
+    case AFP_LISTEXTATTR:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        temp = htonl(1024);
+        ofs = t35_add_u32(dsi->commands, ofs, temp);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+#ifdef HAVE_ACLS
+
+    case AFP_GETACL:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = htons(kFileSec_UUID);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+
+    case AFP_SETACL:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+
+    case AFP_ACCESS:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        memset(dsi->commands + ofs, 0, 16);
+        ofs += 16;
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+#endif
+
+    case AFP_GETICON:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        memcpy(dsi->commands + ofs, creator, 4);
+        ofs += 4;
+        memcpy(dsi->commands + ofs, "TEXT", 4);
+        ofs += 4;
+        dsi->commands[ofs++] = 1;
+        dsi->commands[ofs++] = 0;
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        break;
+
+    case AFP_GTICNINFO:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        memcpy(dsi->commands + ofs, creator, 4);
+        ofs += 4;
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        break;
+
+    case AFP_ADDAPPL:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        memcpy(dsi->commands + ofs, creator, 4);
+        ofs += 4;
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        ofs = t35_add_name(ofs, "t35");
+        break;
+
+    case AFP_RMVAPPL:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        memcpy(dsi->commands + ofs, creator, 4);
+        ofs += 4;
+        ofs = t35_add_name(ofs, "t35");
+        break;
+
+    case AFP_GETAPPL:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        memcpy(dsi->commands + ofs, creator, 4);
+        ofs += 4;
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        bitmap = htons(1 << FILPBIT_LNAME);
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        break;
+
+    case AFP_ADDCMT:
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        ofs = t35_add_did(dsi->commands, ofs);
+        ofs = t35_add_name(ofs, "t35");
+
+        if (ofs & 1) {
+            ofs++;
+        }
+
+        dsi->commands[ofs++] = 0;
+        break;
+
+    case AFP_ADDICON:
+        dsi->header.dsi_command = DSIFUNC_WRITE;
+        ofs = t35_add_u16(dsi->commands, ofs, bad_ref);
+        memcpy(dsi->commands + ofs, creator, 4);
+        ofs += 4;
+        memcpy(dsi->commands + ofs, "TEXT", 4);
+        ofs += 4;
+        dsi->commands[ofs++] = 1;
+        dsi->commands[ofs++] = 0;
+        ofs = t35_add_u32(dsi->commands, ofs, zero);
+        bitmap = 0;
+        ofs = t35_add_u16(dsi->commands, ofs, bitmap);
+        dsi->header.dsi_code = htonl(ofs);
+        break;
+
+    default:
+        return -1;
+    }
+
+    if (ofs < 0) {
+        return -1;
+    }
+
+    dsi->datalen = ofs;
+    dsi->header.dsi_len = htonl(dsi->datalen);
+
+    if (cmd != AFP_ADDICON) {
+        dsi->header.dsi_code = 0;
+    }
+
+    return ofs;
+}
 
 STATIC void test35()
 {
-    int ofs;
-    uint16_t param = VolID + 1;
     DSI *dsi;
     unsigned int ret;
+    unsigned int expected;
     unsigned char cmd;
+    uint16_t bad_ref = 0xffff;
+    int vol_attrs;
     dsi = &Conn->dsi;
     ENTER_TEST
 
-    if (!Mac) {
+    if (Mac) {
         test_skipped(T_MAC);
         goto test_exit;
     }
 
-    for (unsigned int i = 0 ; i < sizeof(afp_cmd_with_vol); i++) {
-        memset(dsi->commands, 0, DSI_CMDSIZ);
-        dsi->header.dsi_flags = DSIFL_REQUEST;
-        dsi->header.dsi_command = DSIFUNC_CMD;
-        dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
-        ofs = 0;
-        cmd = afp_cmd_with_vol[i];
-        dsi->commands[ofs++] = cmd;
-        dsi->commands[ofs++] = 0;
-        memcpy(dsi->commands + ofs, &param, sizeof(param));
-        ofs += sizeof(param);
-        dsi->datalen = ofs;
-        dsi->header.dsi_len = htonl(dsi->datalen);
-        dsi->header.dsi_code = 0;
+    vol_attrs = get_vol_attrib(VolID);
+
+    for (unsigned int i = 0 ;
+            i < sizeof(afp_cmd_with_vol) / sizeof(afp_cmd_with_vol[0]);
+            i++) {
+        if (!t35_cmd_supported(&afp_cmd_with_vol[i], vol_attrs)) {
+            continue;
+        }
+
+        cmd = afp_cmd_with_vol[i].cmd;
+        expected = ntohl(afp_cmd_with_vol[i].expected);
+        FAIL(t35_build_request(dsi, cmd, afp_cmd_with_vol[i].variant, bad_ref) < 0)
         my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
         my_dsi_cmd_receive(dsi);
         ret = dsi->header.dsi_code;
 
-        if (ntohl(AFPERR_PARAM) != ret) {
+        if (expected != ret) {
             if (!Quiet) {
-                fprintf(stdout, "\tFAILED command %3i %s\t result %d %s\n", cmd,
-                        AfpNum2name(cmd), ntohl(ret), afp_error(ret));
+                fprintf(stdout, "\tFAILED command %3i %s%s\t result %d %s expected %d %s\n",
+                        cmd, AfpNum2name(cmd),
+                        t35_variant_name(afp_cmd_with_vol[i].variant), ntohl(ret), afp_error(ret),
+                        ntohl(expected), afp_error(expected));
+            }
+
+            test_failed();
+        }
+    }
+
+    for (unsigned int i = 0 ;
+            i < sizeof(afp_cmd_with_dt) / sizeof(afp_cmd_with_dt[0]);
+            i++) {
+        if (!t35_cmd_supported(&afp_cmd_with_dt[i], vol_attrs)) {
+            continue;
+        }
+
+        cmd = afp_cmd_with_dt[i].cmd;
+        expected = ntohl(afp_cmd_with_dt[i].expected);
+        FAIL(t35_build_request(dsi, cmd, afp_cmd_with_dt[i].variant, bad_ref) < 0)
+        my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+        my_dsi_cmd_receive(dsi);
+        ret = dsi->header.dsi_code;
+
+        if (expected != ret) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED command %3i %s\t result %d %s expected %d %s\n", cmd,
+                        AfpNum2name(cmd), ntohl(ret), afp_error(ret),
+                        ntohl(expected), afp_error(expected));
             }
 
             test_failed();
@@ -90,7 +615,7 @@ STATIC void test35()
     }
 
 test_exit:
-    exit_test("Error:test35: illegal volume (-5019 AFP_ERRPARAM)");
+    exit_test("Error:test35: illegal volume/desktop ref");
 }
 
 /* ----------------------- */
@@ -196,7 +721,7 @@ STATIC void test37()
     dsi = &Conn->dsi;
     ENTER_TEST
 
-    if (!Mac) {
+    if (Mac) {
         test_skipped(T_MAC);
         goto test_exit;
     }
