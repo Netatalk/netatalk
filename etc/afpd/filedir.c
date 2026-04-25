@@ -123,10 +123,8 @@ int afp_getfildirparams(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
     ibuf += sizeof(vid);
 
     if (NULL == (vol = getvolbyvid(vid))) {
-        /* was AFPERR_PARAM but it helps OS 10.3 when a volume has been removed
-         * from the list.
-         */
-        return AFPERR_ACCESS;
+        /* AFP 3.4 FPGetFileDirParms Table 32: unknown Volume ID is kFPParamErr. */
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
