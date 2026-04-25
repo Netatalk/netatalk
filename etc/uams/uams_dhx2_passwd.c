@@ -246,8 +246,13 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
+
     /* g is next */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten, g);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten,
+                       g) != 0) {
+        ret = AFPERR_MISC;
+        goto error;
+    }
 
     if (nwritten < 4) {
         memmove(rbuf + 4 - nwritten, rbuf, nwritten);
@@ -261,13 +266,28 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
+
     /* p */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8, NULL, p);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8,
+                       &nwritten, p) != 0) {
+        ret = AFPERR_MISC;
+        goto error;
+    }
+
+    if (nwritten < PRIMEBITS / 8) {
+        memmove(rbuf + (PRIMEBITS / 8) - nwritten, rbuf, nwritten);
+        memset(rbuf, 0, (PRIMEBITS / 8) - nwritten);
+    }
+
     rbuf += PRIMEBITS / 8;
     *rbuflen += PRIMEBITS / 8;
+
     /* Ma */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8, &nwritten,
-                   Ma);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8,
+                       &nwritten, Ma) != 0) {
+        ret = AFPERR_MISC;
+        goto error;
+    }
 
     if (nwritten < PRIMEBITS / 8) {
         memmove(rbuf + (PRIMEBITS / 8) - nwritten, rbuf, nwritten);
