@@ -2925,7 +2925,7 @@ int afp_syncdir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     ibuf += sizeof(vid);
 
     if (NULL == (vol = getvolbyvid(vid))) {
-        return AFPERR_PARAM;
+        return AFPERR_NOOBJ;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -3520,10 +3520,18 @@ int afp_mapname(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 /*
    variable DID support
 */
-int afp_closedir(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
+int afp_closedir(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                  char *rbuf _U_, size_t *rbuflen)
 {
+    uint16_t        vid;
     *rbuflen = 0;
+    ibuf += 2;
+    memcpy(&vid, ibuf, sizeof(vid));
+
+    if (NULL == getvolbyvid(vid)) {
+        return AFPERR_PARAM;
+    }
+
     /* do nothing as dids are static for the life of the process. */
     return AFP_OK;
 }

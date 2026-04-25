@@ -1763,7 +1763,7 @@ int afp_access(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_error, logtype_afpd, "afp_access: error getting volid:%d", vid);
-        return AFPERR_NOOBJ;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -1821,7 +1821,7 @@ int afp_getacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_error, logtype_afpd, "afp_getacl: error getting volid:%d", vid);
-        return AFPERR_NOOBJ;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -1938,7 +1938,7 @@ int afp_setacl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_error, logtype_afpd, "afp_setacl: error getting volid:%d", vid);
-        return AFPERR_NOOBJ;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
