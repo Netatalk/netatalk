@@ -228,7 +228,11 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        *rbuflen = 0;
+        goto pam_fail;
+    }
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
@@ -240,7 +244,11 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     memcpy(rbuf, &sessid, sizeof(sessid));
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, KEYSIZE, &nwritten, Mb);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, KEYSIZE, &nwritten, Mb) != 0) {
+        *rbuflen = 0;
+        goto pam_fail;
+    }
 
     if (nwritten < KEYSIZE) {
         memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
@@ -316,6 +324,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     return AFPERR_AUTHCONT;
 pam_fail:
     gcry_mpi_release(K);
+    K = NULL;
     /* Log Entry */
     LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Fail - Cast Encryption -- %s",
         strerror(errno));
@@ -437,6 +446,13 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     unsigned char K_binary[16];
     size_t i;
     *rbuflen = 0;
+
+    /* Make sure dhx_setup actually ran and established the shared key */
+    if (K == NULL) {
+        LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        return AFPERR_PARAM;
+    }
+
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
 
@@ -458,7 +474,14 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
         hostname = NULL;
     }
 
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        gcry_mpi_release(K);
+        K = NULL;
+        return AFPERR_PARAM;
+    }
+
+    gcry_mpi_release(K);
+    K = NULL;
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
@@ -674,6 +697,13 @@ static int pam_changepw(void *obj, unsigned char *username,
 
     /* otherwise, it's like logincont but different. */
 
+    /* Make sure dhx_setup actually ran and established the shared key */
+    if (K == NULL) {
+        LOG(log_error, logtype_uams,
+            "DHX: changepw called without completing key exchange");
+        return AFPERR_PARAM;
+    }
+
     /* check out the session id */
     if (sessid != dhxhash(obj)) {
         /* Log Entry */
@@ -694,7 +724,14 @@ static int pam_changepw(void *obj, unsigned char *username,
         return AFPERR_MISC;
     }
 
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        gcry_mpi_release(K);
+        K = NULL;
+        return AFPERR_PARAM;
+    }
+
+    gcry_mpi_release(K);
+    K = NULL;
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
