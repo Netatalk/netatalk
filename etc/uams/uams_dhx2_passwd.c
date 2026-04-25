@@ -216,8 +216,13 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
+
     /* g is next */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten, g);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten,
+                       g) != 0) {
+        ret = AFPERR_MISC;
+        goto error;
+    }
 
     if (nwritten < 4) {
         memmove(rbuf + 4 - nwritten, rbuf, nwritten);
@@ -231,13 +236,28 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
+
     /* p */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8, NULL, p);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8,
+                       &nwritten, p) != 0) {
+        ret = AFPERR_MISC;
+        goto error;
+    }
+
+    if (nwritten < PRIMEBITS / 8) {
+        memmove(rbuf + (PRIMEBITS / 8) - nwritten, rbuf, nwritten);
+        memset(rbuf, 0, (PRIMEBITS / 8) - nwritten);
+    }
+
     rbuf += PRIMEBITS / 8;
     *rbuflen += PRIMEBITS / 8;
+
     /* Ma */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8, &nwritten,
-                   Ma);
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8,
+                       &nwritten, Ma) != 0) {
+        ret = AFPERR_MISC;
+        goto error;
+    }
 
     if (nwritten < PRIMEBITS / 8) {
         memmove(rbuf + (PRIMEBITS / 8) - nwritten, rbuf, nwritten);
@@ -520,6 +540,14 @@ static int logincont2(void *obj _U_, struct passwd **uam_pwd,
     gcry_error_t ctxerror;
     *rbuflen = 0;
     retServerNonce = gcry_mpi_new(0);
+
+    /* Make sure logincont1 actually ran and established the shared key */
+    if (K_MD5hash == NULL) {
+        LOG(log_error, logtype_uams,
+            "DHX2: logincont2 called without completing logincont1");
+        ret = AFPERR_PARAM;
+        goto error_noctx;
+    }
 
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs)*/
     if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
