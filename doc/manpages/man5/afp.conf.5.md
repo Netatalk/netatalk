@@ -1262,13 +1262,8 @@ in, this is yes by default.
 
 case sensitive = *BOOLEAN* (default: *yes*) **(V)**
 
-> Whether to flag volumes as supporting case-sensitive filenames. If the
-filesystem is case-insensitive, set to no. However, it is not fully
-verified.
->
-> ***NOTE:*** In spite of being case sensitive as a matter of fact, netatalk 3.1.3 and
-earlier did not notify kCaseSensitive flag to the client. Starting with
-3.1.4, it is notified correctly by default.
+> Whether to advertise volumes as supporting case-sensitive filenames.
+If the host filesystem is case-insensitive, set to no.
 
 cnid dev = *BOOLEAN* (default: *yes*) **(V)**
 
