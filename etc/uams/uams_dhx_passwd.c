@@ -44,6 +44,15 @@
 
 /*! the secret key */
 gcry_mpi_t K;
+
+static void dhx_release_key(void)
+{
+    if (K != NULL) {
+        gcry_mpi_release(K);
+        K = NULL;
+    }
+}
+
 static struct passwd *dhxpwd;
 static uint8_t randbuf[16];
 
@@ -78,6 +87,7 @@ static int pwd_login(void *obj, char *username, int ulen,
     Rb = gcry_mpi_new(0);
     Ma = gcry_mpi_new(0);
     Mb = gcry_mpi_new(0);
+    dhx_release_key();
     K = gcry_mpi_new(0);
     unsigned char Rb_binary[32], K_binary[16];
     gcry_cipher_hd_t ctx;
@@ -128,7 +138,11 @@ static int pwd_login(void *obj, char *username, int ulen,
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        *rbuflen = 0;
+        goto passwd_fail;
+    }
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
@@ -140,7 +154,12 @@ static int pwd_login(void *obj, char *username, int ulen,
     memcpy(rbuf, &sessid, sizeof(sessid));
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *) rbuf, KEYSIZE, &nwritten, Mb);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *) rbuf, KEYSIZE,
+                       &nwritten, Mb) != 0) {
+        *rbuflen = 0;
+        goto passwd_fail;
+    }
 
     if (nwritten < KEYSIZE) {
         memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
@@ -206,7 +225,7 @@ static int pwd_login(void *obj, char *username, int ulen,
     gcry_cipher_close(ctx);
     return AFPERR_AUTHCONT;
 passwd_fail:
-    gcry_mpi_release(K);
+    dhx_release_key();
     return AFPERR_PARAM;
 }
 
@@ -306,6 +325,13 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     char *p;
     int err = AFPERR_NOTAUTH;
     *rbuflen = 0;
+
+    /* Make sure pwd_login actually ran and established the shared key */
+    if (K == NULL) {
+        LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        return AFPERR_PARAM;
+    }
+
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
 
@@ -315,11 +341,18 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
             "uams_dhx_passwd.c :passwd Session ID - DHXHash Mismatch -- %s",
             strerror(errno));
         /* Log Entry */
+        dhx_release_key();
         return AFPERR_PARAM;
     }
 
     ibuf += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        dhx_release_key();
+        return AFPERR_PARAM;
+    }
+
+    dhx_release_key();
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
@@ -428,6 +461,7 @@ static int uam_setup(void *obj, const char *path)
 
 static void uam_cleanup(void)
 {
+    dhx_release_key();
     uam_unregister(UAM_SERVER_LOGIN, "DHCAST128");
 #if 0
     uam_unregister(UAM_SERVER_PRINTAUTH, "DHCAST128");
