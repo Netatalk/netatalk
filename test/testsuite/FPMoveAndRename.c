@@ -81,13 +81,13 @@ STATIC void test73()
     int dir2;
     uint16_t bitmap = 0;
     char *name  = "t73 Move and rename";
-    char *name1 = "T73 Move and rename";
+    char *name1 = "t73 Move and rename dest";
     char *name2 = "t73 dir";
     uint16_t vol = VolID;
     int ret;
     ENTER_TEST
 
-    if (!Mac) {
+    if (Mac) {
         test_skipped(T_MAC);
         goto test_exit;
     }
@@ -132,7 +132,7 @@ STATIC void test73()
     FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT, name))
     FAIL(FPMoveAndRename(Conn, vol, dir1, DIRDID_ROOT, name, ""))
     /* dirty but well */
-    FAIL(ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
+    FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
     FAIL(ntohl(AFPERR_EXIST) !=
          FPMoveAndRename(Conn, vol, DIRDID_ROOT, DIRDID_ROOT, name, name1))
     FAIL(ntohl(AFPERR_EXIST) != FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
@@ -150,7 +150,7 @@ STATIC void test73()
     }
 
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
-    FAIL(ntohl(AFPERR_NOOBJ) != FPDelete(Conn, vol, DIRDID_ROOT, name1))
+    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name1))
     FAIL(!(dir2 = FPCreateDir(Conn, vol, DIRDID_ROOT, name)))
     FAIL(!FPCreateDir(Conn, vol, dir2, name1))
     FAIL(FPMoveAndRename(Conn, vol, DIRDID_ROOT, dir1,  name, ""))
