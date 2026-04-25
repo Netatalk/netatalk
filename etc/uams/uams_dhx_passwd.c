@@ -127,7 +127,11 @@ static int pwd_login(void *obj, char *username, int ulen,
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        *rbuflen = 0;
+        goto passwd_fail;
+    }
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
@@ -139,7 +143,12 @@ static int pwd_login(void *obj, char *username, int ulen,
     memcpy(rbuf, &sessid, sizeof(sessid));
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *) rbuf, KEYSIZE, &nwritten, Mb);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *) rbuf, KEYSIZE,
+                       &nwritten, Mb) != 0) {
+        *rbuflen = 0;
+        goto passwd_fail;
+    }
 
     if (nwritten < KEYSIZE) {
         memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
@@ -206,6 +215,7 @@ static int pwd_login(void *obj, char *username, int ulen,
     return AFPERR_AUTHCONT;
 passwd_fail:
     gcry_mpi_release(K);
+    K = NULL;
     return AFPERR_PARAM;
 }
 
@@ -305,6 +315,13 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     char *p;
     int err = AFPERR_NOTAUTH;
     *rbuflen = 0;
+
+    /* Make sure pwd_login actually ran and established the shared key */
+    if (K == NULL) {
+        LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        return AFPERR_PARAM;
+    }
+
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
 
@@ -318,7 +335,15 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     ibuf += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+
+    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
+        gcry_mpi_release(K);
+        K = NULL;
+        return AFPERR_PARAM;
+    }
+
+    gcry_mpi_release(K);
+    K = NULL;
 
     if (i < KEYSIZE) {
         memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
