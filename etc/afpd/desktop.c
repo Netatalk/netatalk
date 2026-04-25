@@ -298,10 +298,18 @@ int afp_opendt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     return AFP_OK;
 }
 
-int afp_closedt(AFPObj *obj _U_, char *ibuf _U_, size_t ibuflen _U_,
+int afp_closedt(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_,
                 char *rbuf _U_, size_t *rbuflen)
 {
+    uint16_t dtref;
     *rbuflen = 0;
+    ibuf += 2;
+    memcpy(&dtref, ibuf, sizeof(dtref));
+
+    if (NULL == getvolbyvid(dtref)) {
+        return AFPERR_PARAM;
+    }
+
     return AFP_OK;
 }
 

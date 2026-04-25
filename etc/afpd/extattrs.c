@@ -85,7 +85,7 @@ int afp_listextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     if (vol == NULL) {
         LOG(log_debug, logtype_afpd, "afp_listextattr: getvolbyvid error: %s",
             strerror(errno));
-        return AFPERR_ACCESS;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -282,7 +282,7 @@ int afp_getextattr(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_debug, logtype_afpd, "afp_getextattr: getvolbyvid error: %s",
             strerror(errno));
-        return AFPERR_ACCESS;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -388,7 +388,7 @@ int afp_setextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_debug, logtype_afpd, "afp_setextattr: getvolbyvid error: %s",
             strerror(errno));
-        return AFPERR_ACCESS;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));
@@ -529,7 +529,7 @@ int afp_remextattr(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     if (NULL == (vol = getvolbyvid(vid))) {
         LOG(log_debug, logtype_afpd, "afp_remextattr: getvolbyvid error: %s",
             strerror(errno));
-        return AFPERR_ACCESS;
+        return AFPERR_PARAM;
     }
 
     memcpy(&did, ibuf, sizeof(did));

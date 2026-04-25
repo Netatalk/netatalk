@@ -1711,6 +1711,10 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&ddid, ibuf, sizeof(ddid));
     ibuf += sizeof(ddid);
 
+    if (NULL == (d_vol = getvolbyvid(dvid))) {
+        return AFPERR_PARAM;
+    }
+
     if (NULL == (s_path = cname(s_vol, dir, &ibuf))) {
         return get_afp_errno(AFPERR_PARAM);
     }
@@ -1761,11 +1765,6 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     p = ctoupath(s_vol, curdir, newname);
 
     if (!p) {
-        retvalue = AFPERR_PARAM;
-        goto copy_exit;
-    }
-
-    if (NULL == (d_vol = getvolbyvid(dvid))) {
         retvalue = AFPERR_PARAM;
         goto copy_exit;
     }
