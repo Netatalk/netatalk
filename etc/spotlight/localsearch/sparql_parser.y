@@ -211,6 +211,7 @@ EC_CLEANUP:
 static char *map_type_search(const char *attr, char op, const char *val)
 {
     char *result = NULL;
+    char *expr = NULL;
     const char *sparqlAttr;
 
     for (struct MDTypeMap *p = MDTypeMap; p->mdtm_value; p++) {
@@ -228,10 +229,23 @@ static char *map_type_search(const char *attr, char op, const char *val)
                 return NULL;
             }
 
-            result = talloc_asprintf(ssp_slq, "?obj %s '%s'",
-                                     sparqlAttr,
-                                     p->mdtm_sparql);
-            break;
+            expr = talloc_asprintf(ssp_slq, "?obj %s '%s'",
+                                   sparqlAttr,
+                                   p->mdtm_sparql);
+            if (expr == NULL) {
+                return NULL;
+            }
+
+            if (result == NULL) {
+                result = expr;
+            } else {
+                result = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }",
+                                         result,
+                                         expr);
+                if (result == NULL) {
+                    return NULL;
+                }
+            }
         }
     }
 

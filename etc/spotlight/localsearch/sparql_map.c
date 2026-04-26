@@ -50,6 +50,7 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemDurationSeconds",          true, ssmt_num,   "nfo:duration"},
     {"kMDItemNumberOfPages",            true, ssmt_num,   "nfo:pageCount"},
     {"kMDItemTitle",                    true, ssmt_str,   "nie:title"},
+    {"kMDItemKind",                     true, ssmt_type,  SPECIAL},
     {"_kMDItemGroupId",                 true, ssmt_type,  SPECIAL},
     {"kMDItemContentTypeTree",          true, ssmt_type,  SPECIAL},
 
@@ -101,6 +102,8 @@ struct MDTypeMap MDTypeMap[] = {
     {"public.html",             kMDTypeMapMime,     "text/html"},
     {"public.xml",              kMDTypeMapMime,     "text/xml"},
     {"public.source-code",      kMDTypeMapRDF,      "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo#SourceCode"},
+    {"net.daringfireball.markdown", kMDTypeMapMime,     "text/markdown"},
+    {"net.daringfireball.markdown", kMDTypeMapMime,     "text/x-markdown"},
     {NULL,                      kMDTypeMapNotSup,   NULL}
 };
 
