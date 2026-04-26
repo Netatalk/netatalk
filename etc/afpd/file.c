@@ -433,6 +433,15 @@ int getmetadata(const AFPObj *obj,
             }
 
             ashort &= ~htons(vol->v_ignattr);
+
+            /*
+             * If this is an AFP 1.1 client we need to set the WriteInhibit
+             * flag if RenameInhibit and/or DeleteInhibit flags are set.
+             */
+            if (obj->afp_version < 20) {
+                if (ashort & htons(ATTRBIT_NORENAME) || ashort & htons(ATTRBIT_NODELETE))
+                    ashort |= htons(ATTRBIT_NOWRITE);
+            }
 #if 0
             /* FIXME do we want a visual clue if the file is read only
              */
@@ -1302,6 +1311,15 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
 
             ad_getattr(adp, &bshort);
             oshort = bshort;
+
+            /*
+             * AFP 1.1 clients need to also set or clear RenameInhibit
+             * and DeleteInhibit bits alongside WriteInhibit.
+             */
+            if (obj->afp_version < 20) {
+                if (ntohs(ashort) & ATTRBIT_NOWRITE)
+                    ashort |= htons(ATTRBIT_NORENAME | ATTRBIT_NODELETE);
+            }
 
             if (ntohs(ashort) & ATTRBIT_SETCLR) {
                 ashort &= ~htons(vol->v_ignattr);
