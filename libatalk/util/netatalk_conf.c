@@ -1462,30 +1462,49 @@ static struct vol *creatvol(AFPObj *obj,
     }
 
     {
-        const char *backend = getoption_str(obj->iniconfig, section,
-                                            "search backend", preset, NULL);
-        const char *backend_source = "volume/preset";
+        const char *backend = NULL;
+        const char *backend_source = NULL;
+        const char *volume_backend;
+        const char *global_backend;
+        const char *preset_backend = NULL;
+        char option[MAXOPTLEN];
 
-        if (backend == NULL) {
-            backend = getoption_str(obj->iniconfig, INISEC_GLOBAL,
-                                    "search backend", NULL, NULL);
-            backend_source = "global";
+        snprintf(option, sizeof(option), "%s:%s", section, "search backend");
+        volume_backend = iniparser_getstring(obj->iniconfig, option, NULL);
+
+        snprintf(option, sizeof(option), "%s:%s", INISEC_GLOBAL, "search backend");
+        global_backend = iniparser_getstring(obj->iniconfig, option, NULL);
+
+        if (preset != NULL) {
+            snprintf(option, sizeof(option), "%s:%s", preset, "search backend");
+            preset_backend = iniparser_getstring(obj->iniconfig, option, NULL);
         }
 
-        if (backend == NULL) {
+        if (volume_backend != NULL) {
+            backend = volume_backend;
+            backend_source = "volume";
+        } else if (global_backend != NULL) {
+            backend = global_backend;
+            backend_source = "global";
+        } else if (preset_backend != NULL) {
+            backend = preset_backend;
+            backend_source = "preset";
+        } else {
             backend = "cnid";
             backend_source = "default";
         }
 
-        if (backend) {
-            EC_NULL(volume->v_search_backend_name = strdup(backend));
-            LOG(log_debug, logtype_afpd,
-                "creatvol: volume \"%s\" section [%s]: spotlight=%s, "
-                "resolved search backend=\"%s\" (source=%s)",
-                name, section,
-                (volume->v_flags & AFPVOL_SPOTLIGHT) ? "yes" : "no",
-                volume->v_search_backend_name, backend_source);
-        }
+        EC_NULL(volume->v_search_backend_name = strdup(backend));
+        LOG(log_debug, logtype_afpd,
+            "creatvol: volume \"%s\" section [%s]: spotlight=%s, "
+            "search backend volume=\"%s\", global=\"%s\", preset=\"%s\", "
+            "resolved=\"%s\" (source=%s)",
+            name, section,
+            (volume->v_flags & AFPVOL_SPOTLIGHT) ? "yes" : "no",
+            volume_backend ? volume_backend : "(unset)",
+            global_backend ? global_backend : "(unset)",
+            preset_backend ? preset_backend : "(unset)",
+            volume->v_search_backend_name, backend_source);
     }
 
     if (getoption_bool(obj->iniconfig, section, "delete veto files", preset, 0)) {
