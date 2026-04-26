@@ -323,6 +323,7 @@ static void log_setup(const char *filename, enum loglevels loglevel,
 
     fcntl(type_configs[logtype].fd, F_SETFD, FD_CLOEXEC);
     type_configs[logtype].set = true;
+    type_configs[logtype].syslog = false;
     log_config.inited = true;
 
     /* Here's how we make it possible to LOG to a logtype like "logtype_afpd" */
