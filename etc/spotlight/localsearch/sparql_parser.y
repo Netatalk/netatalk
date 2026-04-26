@@ -81,7 +81,10 @@ expr                           {
 
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT DISTINCT ?url WHERE "
-                                 "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                 "{ %s . "
+                                 "{ { ?obj nie:isStoredAs ?file . ?file nie:url ?url } "
+                                 "UNION { ?obj nie:url ?url } } . "
+                                 "FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
                                  $1, ssp_slq->slq_scope, result_limit);
     $$ = ssp_result;
 }
@@ -213,26 +216,40 @@ static char *map_type_search(const char *attr, char op, const char *val)
 {
     char *result = NULL;
     char *expr = NULL;
-    const char *sparqlAttr;
 
     for (struct MDTypeMap *p = MDTypeMap; p->mdtm_value; p++) {
         if (strcmp(p->mdtm_value, val) == 0) {
             switch (p->mdtm_type) {
             case kMDTypeMapRDF:
-                sparqlAttr = "rdf:type";
+                expr = talloc_asprintf(ssp_slq, "?obj rdf:type <%s>",
+                                       p->mdtm_sparql);
                 break;
 
             case kMDTypeMapMime:
-                sparqlAttr = "nie:mimeType";
+                expr = talloc_asprintf(ssp_slq,
+                                       "{ { ?obj nie:mimeType '%s' }"
+                                       " UNION "
+                                       "{ ?obj nie:isStoredAs ?file . ?file nie:mimeType '%s' } }",
+                                       p->mdtm_sparql,
+                                       p->mdtm_sparql);
+                break;
+
+            case kMDTypeMapFileName:
+                expr = talloc_asprintf(ssp_slq,
+                                       "{ { ?obj nfo:fileName ?typeFileName "
+                                       "FILTER(regex(?typeFileName, '%s', 'i')) }"
+                                       " UNION "
+                                       "{ ?obj nie:isStoredAs ?file . "
+                                       "?file nfo:fileName ?typeFileName "
+                                       "FILTER(regex(?typeFileName, '%s', 'i')) } }",
+                                       p->mdtm_sparql,
+                                       p->mdtm_sparql);
                 break;
 
             default:
                 return NULL;
             }
 
-            expr = talloc_asprintf(ssp_slq, "?obj %s '%s'",
-                                   sparqlAttr,
-                                   p->mdtm_sparql);
             if (expr == NULL) {
                 return NULL;
             }
@@ -240,7 +257,7 @@ static char *map_type_search(const char *attr, char op, const char *val)
             if (result == NULL) {
                 result = expr;
             } else {
-                result = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }",
+                result = talloc_asprintf(ssp_slq, "{ { %s } UNION { %s } }",
                                          result,
                                          expr);
                 if (result == NULL) {

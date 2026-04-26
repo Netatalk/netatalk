@@ -32,7 +32,8 @@ enum ssm_type {
 enum kMDTypeMap {
     kMDTypeMapNotSup,           /*!< not supported */
     kMDTypeMapRDF,              /*!< query with rdf:type */
-    kMDTypeMapMime              /*!< query with nie:mimeType */
+    kMDTypeMapMime,             /*!< query with nie:mimeType */
+    kMDTypeMapFileName          /*!< query with nfo:fileName regex */
 };
 
 struct spotlight_sparql_map {
@@ -46,8 +47,7 @@ struct MDTypeMap {
     const char *mdtm_value;    /*!< MD query value of attributes
                                 * 'kMDItemKind', '_kMDItemGroupId' and
                                 * 'kMDItemContentTypeTree' */
-    enum kMDTypeMap mdtm_type; /*!< whether SPARQL query must search attribute
-                                * rdf:type or nie:mime_Type */
+    enum kMDTypeMap mdtm_type; /*!< SPARQL mapping strategy */
     const char *mdtm_sparql;   /*!< the SPARQL query match string */
 };
 
