@@ -1463,16 +1463,28 @@ static struct vol *creatvol(AFPObj *obj,
 
     {
         const char *backend = getoption_str(obj->iniconfig, section,
-                                            "search backend", preset, "cnid");
+                                            "search backend", preset, NULL);
+        const char *backend_source = "volume/preset";
+
+        if (backend == NULL) {
+            backend = getoption_str(obj->iniconfig, INISEC_GLOBAL,
+                                    "search backend", NULL, NULL);
+            backend_source = "global";
+        }
+
+        if (backend == NULL) {
+            backend = "cnid";
+            backend_source = "default";
+        }
 
         if (backend) {
-            volume->v_search_backend_name = strdup(backend);
+            EC_NULL(volume->v_search_backend_name = strdup(backend));
             LOG(log_debug, logtype_afpd,
                 "creatvol: volume \"%s\" section [%s]: spotlight=%s, "
-                "configured search backend=\"%s\"",
+                "resolved search backend=\"%s\" (source=%s)",
                 name, section,
                 (volume->v_flags & AFPVOL_SPOTLIGHT) ? "yes" : "no",
-                volume->v_search_backend_name);
+                volume->v_search_backend_name, backend_source);
         }
     }
 
