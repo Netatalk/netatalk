@@ -104,6 +104,7 @@ struct MDTypeMap MDTypeMap[] = {
     {"public.source-code",      kMDTypeMapRDF,      "https://www.semanticdesktop.org/ontologies/2007/03/22/nfo#SourceCode"},
     {"net.daringfireball.markdown", kMDTypeMapMime,     "text/markdown"},
     {"net.daringfireball.markdown", kMDTypeMapMime,     "text/x-markdown"},
+    {"net.daringfireball.markdown", kMDTypeMapFileName, "\\\\.(md|markdown|mdown|mkd|mkdn)$"},
     {NULL,                      kMDTypeMapNotSup,   NULL}
 };
 
