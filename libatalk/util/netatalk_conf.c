@@ -1467,6 +1467,12 @@ static struct vol *creatvol(AFPObj *obj,
 
         if (backend) {
             volume->v_search_backend_name = strdup(backend);
+            LOG(log_debug, logtype_afpd,
+                "creatvol: volume \"%s\" section [%s]: spotlight=%s, "
+                "configured search backend=\"%s\"",
+                name, section,
+                (volume->v_flags & AFPVOL_SPOTLIGHT) ? "yes" : "no",
+                volume->v_search_backend_name);
         }
     }
 

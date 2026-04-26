@@ -957,18 +957,52 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
     if (volume->v_flags & AFPVOL_SPOTLIGHT) {
         const char *bname = volume->v_search_backend_name
                             ? volume->v_search_backend_name : "cnid";
+        const char *compiled_backends;
+#ifdef SEARCH_BACKENDS
+        compiled_backends = SEARCH_BACKENDS;
+#else
+        compiled_backends = "none";
+#endif
         volume->v_search_backend = NULL;
+        LOG(log_debug, logtype_afpd,
+            "Volume %s: selecting Spotlight search backend, configured=\"%s\", "
+            "compiled=\"%s\"",
+            volume->v_path, bname, compiled_backends);
 #ifdef SEARCH_BACKEND_CNID
 
         if (strcasecmp(bname, "cnid") == 0) {
+            LOG(log_debug, logtype_afpd,
+                "Volume %s: matched Spotlight search backend \"cnid\"",
+                volume->v_path);
             volume->v_search_backend = &sl_cnid_ops;
+        }
+
+#else
+
+        if (strcasecmp(bname, "cnid") == 0) {
+            LOG(log_debug, logtype_afpd,
+                "Volume %s: Spotlight search backend \"cnid\" requested "
+                "but not compiled in",
+                volume->v_path);
         }
 
 #endif
 #ifdef SEARCH_BACKEND_LOCALSEARCH
 
         if (strcasecmp(bname, "localsearch") == 0) {
+            LOG(log_debug, logtype_afpd,
+                "Volume %s: matched Spotlight search backend \"localsearch\"",
+                volume->v_path);
             volume->v_search_backend = &sl_localsearch_ops;
+        }
+
+#else
+
+        if (strcasecmp(bname, "localsearch") == 0) {
+            LOG(log_debug, logtype_afpd,
+                "Volume %s: Spotlight search backend \"localsearch\" requested "
+                "but not compiled in",
+                volume->v_path);
         }
 
 #endif
