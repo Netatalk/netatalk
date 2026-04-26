@@ -325,6 +325,22 @@ static int sl_cnid_fill_results(slq_t *slq)
     struct stat sb;
     bool        ok;
 
+    if (slq->query_results == NULL) {
+        LOG(log_error, logtype_sl, "cnid backend: no result handle");
+        slq->slq_state = SLQ_STATE_ERROR;
+        EC_FAIL;
+    }
+
+    if (csq == NULL) {
+        if (slq->slq_state == SLQ_STATE_DONE) {
+            EC_EXIT;
+        }
+
+        LOG(log_error, logtype_sl, "cnid backend: no query state");
+        slq->slq_state = SLQ_STATE_ERROR;
+        EC_FAIL;
+    }
+
     while (csq->pos < csq->count && page_count < SL_CNID_PAGE_SIZE) {
         /* network byte order, as returned by cnid_find */
         id = csq->cnids[csq->pos++];
@@ -449,6 +465,20 @@ EC_CLEANUP:
 
 static int sl_cnid_fetch_results(slq_t *slq)
 {
+    if (slq->query_results == NULL) {
+        LOG(log_error, logtype_sl, "cnid backend: no result handle");
+        slq->slq_state = SLQ_STATE_ERROR;
+        return -1;
+    }
+
+    /*
+     * open_query() pre-fills the current result page. Let the RPC layer send
+     * it before filling the next page into the fresh handle it creates.
+     */
+    if (slq->query_results->num_results > 0 || slq->slq_state == SLQ_STATE_DONE) {
+        return 0;
+    }
+
     return sl_cnid_fill_results(slq);
 }
 
