@@ -736,19 +736,32 @@ log file = *logfile* **(G)**
 > Write logs to *logfile* on the file system. If not specified, Netatalk
 logs to the syslog daemon facility.
 
-log level = *type:level [type:level ...]* **(G)**; log level = *type:level,[type:level, ...]* **(G)**
+log level = *type:level [type:level ...]*; log level = *type:level,[type:level, ...]* **(G)**
 
-> Specify that any message of a loglevel up to the given *log level*
-should be logged.
+> Space or comma separated list of one or more log type and log level pairs.
 >
-> By default afpd logs to syslog with a default logging setup equivalent
-to **default:note**
+> The default log level and severity is **default:note**
 >
-> logtypes: default, logger, cnid, afpdaemon, dsi, atalkdaemon, papdaemon,
-uams, fce, ad, spotlight
+> For each pair, the log level specifies the minimum severity of messages of the given log type that will be logged.
+Only messages of the specified log type with severity equal to or higher than the specified log level will be logged,
+while messages of that log type with lower severity will be ignored.
 >
-> loglevels: severe, error, warn, note, info, debug, debug6, debug7,
-debug8, debug9, maxdebug
+> The *default* log type is a special log type that applies to all messages.
+If no log level is specified for *default*, only log types with explicitly specified log levels will be logged,
+and all other log types will be ignored.
+>
+> For example, if you specify **log level = default:warn**,
+then all messages with severity *warn* or higher (i.e. *warn*, *error*, *severe*) will be logged,
+and anything below *warn* (*note*, *info*, *debug* etc.) will be ignored.
+>
+> By chaining multiple log type and log level pairs are together,
+you get fine-grained control over which messages are logged based on their type and severity.
+>
+> Available logtypes: *default*, *logger*, *cnid*, *afpdaemon*, *dsi*, *atalkdaemon*, *papdaemon*,
+*uams*, *fce*, *ad*, *spotlight*
+>
+> Available loglevels (by falling order of severity): *severe*, *error*, *warn*, *note*, *info*, *debug*, *debug6*, *debug7*,
+*debug8*, *debug9*, *maxdebug*
 >
 > ***NOTE:*** Both logtype and loglevels are case insensitive.
 
