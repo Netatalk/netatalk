@@ -2553,26 +2553,32 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
             change_mdate = 1;
             memcpy(&cdate, buf, sizeof(cdate));
             buf += sizeof(cdate);
+
             if (timeoffset == 1) {
                 set_utc_offset(&cdate, TO_UTC);
             }
+
             break;
 
         case DIRPBIT_MDATE :
             memcpy(&newdate, buf, sizeof(newdate));
             buf += sizeof(newdate);
+
             if (timeoffset == 1) {
                 set_utc_offset(&newdate, TO_UTC);
             }
+
             break;
 
         case DIRPBIT_BDATE :
             change_mdate = 1;
             memcpy(&bdate, buf, sizeof(bdate));
             buf += sizeof(bdate);
+
             if (timeoffset == 1 && bdate != AD_DATE_START) {
                 set_utc_offset(&bdate, TO_UTC);
             }
+
             break;
 
         case DIRPBIT_FINFO :

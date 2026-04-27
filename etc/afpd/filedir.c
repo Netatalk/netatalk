@@ -40,7 +40,7 @@
 #include "virtual_icon.h"
 #include "volume.h"
 
-/*! 
+/*!
  * @brief Convert an AFP date-time value between local time and UTC.
  * @param aint_p AFP date-time to be converted.
  * @param offset_dir Which direction we want to convert the timestamp.
@@ -51,33 +51,39 @@ int set_utc_offset(uint32_t *aint_p, int offset_dir)
     if (*aint_p == AD_DATE_START) {
         return 0;
     }
+
     struct timeval tv;
+
     tv.tv_sec = AD_DATE_TO_UNIX(*aint_p);
     tv.tv_usec = 0;
     struct tm tm;
 
     if (offset_dir == TO_LOCALTIME) {
         if (localtime_r(&tv.tv_sec, &tm) == NULL) {
-            LOG(log_error, logtype_default, "set_utc_offset: localtime_r: %s", strerror(errno));
+            LOG(log_error, logtype_default, "set_utc_offset: localtime_r: %s",
+                strerror(errno));
             return -1;
         }
+
         tv.tv_sec = timegm(&tm);
         *aint_p = AD_DATE_FROM_UNIX(tv.tv_sec);
-    }
-    else {
-        /* 
-         * This won't work reliably during the transition to/from DST. 
+    } else {
+        /*
+         * This won't work reliably during the transition to/from DST.
          * The timestamp may be a hour off during the transistion back
          * to standard time at 0200 hours.
          */
         if (gmtime_r(&tv.tv_sec, &tm) == NULL) {
-            LOG(log_error, logtype_default, "set_utc_offset: gmtime_r: %s", strerror(errno));
+            LOG(log_error, logtype_default, "set_utc_offset: gmtime_r: %s",
+                strerror(errno));
             return -1;
         }
+
         tm.tm_isdst = -1;
         tv.tv_sec = mktime(&tm);
         *aint_p = AD_DATE_FROM_UNIX(tv.tv_sec);
     }
+
     return 0;
 }
 
