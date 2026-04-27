@@ -434,23 +434,23 @@ if ($subject ne 'homes') {
     print &ui_table_row(
                         $text{'edit_global_section_legacy_icon'},
                         &build_select(
-                                    $afpconfRef, $sectionRef, \%in, 'legacy icon', $text{'edit_undefined'},
-                                    'daemon',
-                                    'daemon',
-                                    'declogo',
-                                    'declogo',
-                                    'fileserver',
-                                    'fileserver',
-                                    'globe',
-                                    'globe',
-                                    'nas',
-                                    'nas',
-                                    'sdcard',
-                                    'sdcard',
-                                    'sunlogo',
-                                    'sunlogo',
-                                    'viking',
-                                    'viking'
+                                      $afpconfRef, $sectionRef, \%in, 'legacy icon', $text{'edit_undefined'},
+                                      'daemon',
+                                      'daemon',
+                                      'declogo',
+                                      'declogo',
+                                      'fileserver',
+                                      'fileserver',
+                                      'globe',
+                                      'globe',
+                                      'nas',
+                                      'nas',
+                                      'sdcard',
+                                      'sdcard',
+                                      'sunlogo',
+                                      'sunlogo',
+                                      'viking',
+                                      'viking'
                         )
     );
 
