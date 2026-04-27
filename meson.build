@@ -1100,132 +1100,133 @@ endif
 have_spotlight = false
 use_spotlight_cnid = false
 use_spotlight_localsearch = false
+spotlight_backends = ''
 
 if get_option('with-spotlight')
-    spotlight_backends = ''
     talloc = dependency('talloc', required: false)
 
-    if 'cnid' in get_option('with-spotlight-backends')
-        if talloc.found()
+    if talloc.found()
+        if 'cnid' in get_option('with-spotlight-backends')
             use_spotlight_cnid = true
             spotlight_backends = 'cnid'
             cdata.set('SPOTLIGHT_BACKEND_CNID', 1)
-        else
-            warning('talloc library required for cnid Spotlight search backend')
         endif
-    endif
 
-    if 'localsearch' in get_option('with-spotlight-backends')
-        if host_os == 'darwin'
-            if brew_prefix != ''
-                bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+        if 'localsearch' in get_option('with-spotlight-backends')
+            if host_os == 'darwin'
+                if brew_prefix != ''
+                    bison = find_program(brew_prefix / 'opt/bison/bin/bison', required: false)
+                else
+                    bison = find_program('/opt/local/bin/bison', required: false)
+                endif
             else
-                bison = find_program('/opt/local/bin/bison', required: false)
+                bison = find_program('bison', required: false)
             endif
-        else
-            bison = find_program('bison', required: false)
-        endif
 
-        flex = find_program('flex', required: false)
-        if not use_spotlight_cnid
-            talloc = dependency('talloc', required: false)
-        endif
+            flex = find_program('flex', required: false)
 
-        # Check for SPARQL
+            # Check for SPARQL
 
-        sparql_found = false
-        tinysparql = dependency('tinysparql-3.0', required: false)
-        tracker_sparql = dependency('tracker-sparql-3.0', required: false)
+            sparql_found = false
+            tinysparql = dependency('tinysparql-3.0', required: false)
+            tracker_sparql = dependency('tracker-sparql-3.0', required: false)
 
-        if tinysparql.found()
-            sparql_found = true
-            sparql = tinysparql
-        elif tracker_sparql.found()
-            sparql_found = true
-            sparql = tracker_sparql
-            cdata.set('HAVE_TRACKER3', 1)
-        endif
-
-        # Check for indexer
-
-        indexer_found = false
-        localsearch = find_program('localsearch', required: false)
-        tracker3 = find_program('tracker3', required: false)
-        gsettings = find_program('gsettings', required: false)
-        dconf = find_program('dconf', required: false)
-
-        localsearch3_schema_found = false
-        tracker3_schema_found = false
-        if gsettings.found()
-            localsearch3_schema_check = run_command(
-                gsettings,
-                'list-keys',
-                'org.freedesktop.LocalSearch3.Miner.Files',
-                check: false,
-            )
-            tracker3_schema_check = run_command(
-                gsettings,
-                'list-keys',
-                'org.freedesktop.Tracker3.Miner.Files',
-                check: false,
-            )
-            localsearch3_schema_found = localsearch3_schema_check.returncode() == 0
-            tracker3_schema_found = tracker3_schema_check.returncode() == 0
-        endif
-
-        indexer = disabler()
-        if localsearch.found()
-            indexer = localsearch
-        elif tracker3.found()
-            indexer = tracker3
-        endif
-
-        if indexer.found() and localsearch3_schema_found
-            indexer_found = true
-            cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.LocalSearch3"')
-            cdata.set(
-                'INDEXER_DCONF_PATH',
-                '"org/freedesktop/localsearch/miner/files"',
-            )
-            cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
-        elif indexer.found() and tracker3_schema_found
-            indexer_found = true
-            cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.Tracker3.Miner.Files"')
-            cdata.set(
-                'INDEXER_DCONF_PATH',
-                '"org/freedesktop/tracker/miner/files"',
-            )
-            cdata.set('INDEXER_COMMAND', '"' + indexer.full_path() + ' daemon"')
-        endif
-
-        cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
-        cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
-
-        use_spotlight_localsearch = (
-            sparql_found
-            and indexer_found
-            and dconf.found()
-            and talloc.found()
-            and flex.found()
-            and bison.found()
-        )
-
-        if use_spotlight_localsearch
-            if spotlight_backends != ''
-                spotlight_backends += ' | '
+            if tinysparql.found()
+                sparql_found = true
+                sparql = tinysparql
+            elif tracker_sparql.found()
+                sparql_found = true
+                sparql = tracker_sparql
+                cdata.set('HAVE_TRACKER3', 1)
             endif
-            spotlight_backends += 'localsearch'
-            cdata.set('SPOTLIGHT_BACKEND_LOCALSEARCH', 1)
-            cdata.set('DCONF_UPDATE_COMMAND', '"' + dconf.full_path() + ' update"')
-            install_emptydir('/etc/dconf/db')
-            if get_option('with-install-hooks')
-                meson.add_install_script(dconf, 'update')
+
+            # Check for indexer
+
+            indexer_found = false
+            localsearch = find_program('localsearch', required: false)
+            tracker3 = find_program('tracker3', required: false)
+            gsettings = find_program('gsettings', required: false)
+            dconf = find_program('dconf', required: false)
+
+            localsearch3_schema_found = false
+            tracker3_schema_found = false
+            if gsettings.found()
+                localsearch3_schema_check = run_command(
+                    gsettings,
+                    'list-keys',
+                    'org.freedesktop.LocalSearch3.Miner.Files',
+                    check: false,
+                )
+                tracker3_schema_check = run_command(
+                    gsettings,
+                    'list-keys',
+                    'org.freedesktop.Tracker3.Miner.Files',
+                    check: false,
+                )
+                localsearch3_schema_found = localsearch3_schema_check.returncode() == 0
+                tracker3_schema_found = tracker3_schema_check.returncode() == 0
             endif
-        else
-            warning(
-                'localsearch Spotlight search backend requested but one or more required dependencies not found',
+
+            indexer = disabler()
+            if localsearch.found()
+                indexer = localsearch
+            elif tracker3.found()
+                indexer = tracker3
+            endif
+
+            if indexer.found() and localsearch3_schema_found
+                indexer_found = true
+                cdata.set('INDEXER_DBUS_NAME', '"org.freedesktop.LocalSearch3"')
+                cdata.set(
+                    'INDEXER_DCONF_PATH',
+                    '"org/freedesktop/localsearch/miner/files"',
+                )
+            elif indexer.found() and tracker3_schema_found
+                indexer_found = true
+                cdata.set(
+                    'INDEXER_DBUS_NAME',
+                    '"org.freedesktop.Tracker3.Miner.Files"',
+                )
+                cdata.set(
+                    'INDEXER_DCONF_PATH',
+                    '"org/freedesktop/tracker/miner/files"',
+                )
+            endif
+
+            cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
+            cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
+
+            use_spotlight_localsearch = (
+                sparql_found
+                and indexer_found
+                and dconf.found()
+                and talloc.found()
+                and flex.found()
+                and bison.found()
             )
+
+            if use_spotlight_localsearch
+                if spotlight_backends != ''
+                    spotlight_backends += ' | '
+                endif
+                spotlight_backends += 'localsearch'
+                cdata.set('SPOTLIGHT_BACKEND_LOCALSEARCH', 1)
+                cdata.set(
+                    'DCONF_UPDATE_COMMAND',
+                    '"' + dconf.full_path() + ' update"',
+                )
+                install_emptydir('/etc/dconf/db')
+                if get_option('with-install-hooks')
+                    meson.add_install_script(dconf, 'update')
+                endif
+            else
+                warning(
+                    'localsearch Spotlight search backend requested but one or more required dependencies not found',
+                )
+            endif
         endif
+    else
+        warning('talloc library required for Spotlight search support')
     endif
 
     have_spotlight = use_spotlight_cnid or use_spotlight_localsearch

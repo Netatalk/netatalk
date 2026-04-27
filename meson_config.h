@@ -403,9 +403,6 @@
 /* Define if TCP wrappers should be used */
 #mesondefine TCPWRAP
 
-/* Indexer managing command */
-#mesondefine INDEXER_COMMAND
-
 /* Indexer D-Bus name */
 #mesondefine INDEXER_DBUS_NAME
 
