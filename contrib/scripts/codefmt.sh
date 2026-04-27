@@ -47,9 +47,9 @@ while getopts "vs:" opt; do
     esac
 done
 
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    echo "Warning: Not inside a git repository; will not be able to determine if any changes were made by this script" >&2
-else
+git config --global --add safe.directory "$PWD" > /dev/null 2>&1
+
+if git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     IS_GIT=1
     INITIAL_DIFF_HASH=$(git diff HEAD | git hash-object --stdin)
 fi
@@ -166,4 +166,7 @@ if [ $IS_GIT -eq 1 ]; then
         fi
         exit 0
     fi
+else
+    echo "Error: Not inside a git repository; cannot verify formatting changes" >&2
+    exit 2
 fi
