@@ -411,6 +411,7 @@ int getmetadata(const AFPObj *obj,
             path->m_name = utompath(vol, upath, id, utf8_encoding(vol->v_obj));
         }
     }
+
     /* If this is a ProDOS client, adjust date-time values to match local time */
     if (obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
         timeoffset = 1;
@@ -465,6 +466,7 @@ int getmetadata(const AFPObj *obj,
             if (!adp || (ad_getdate(adp, AD_DATE_CREATE, &aint) < 0)) {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             }
+
             if (timeoffset == 1) {
                 set_utc_offset(&aint, TO_LOCALTIME);
             }
@@ -481,6 +483,7 @@ int getmetadata(const AFPObj *obj,
             } else {
                 aint = AD_DATE_FROM_UNIX(st->st_mtime);
             }
+
             if (timeoffset == 1) {
                 set_utc_offset(&aint, TO_LOCALTIME);
             }
@@ -493,6 +496,7 @@ int getmetadata(const AFPObj *obj,
             if (!adp || (ad_getdate(adp, AD_DATE_BACKUP, &aint) < 0)) {
                 aint = AD_DATE_START;
             }
+
             if (timeoffset == 1 && aint != AD_DATE_START) {
                 set_utc_offset(&aint, TO_LOCALTIME);
             }
@@ -1105,26 +1109,32 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
             change_mdate = 1;
             memcpy(&cdate, buf, sizeof(cdate));
             buf += sizeof(cdate);
+
             if (timeoffset == 1) {
                 set_utc_offset(&cdate, TO_UTC);
             }
+
             break;
 
         case FILPBIT_MDATE :
             memcpy(&newdate, buf, sizeof(newdate));
             buf += sizeof(newdate);
+
             if (timeoffset == 1) {
                 set_utc_offset(&newdate, TO_UTC);
             }
+
             break;
 
         case FILPBIT_BDATE :
             change_mdate = 1;
             memcpy(&bdate, buf, sizeof(bdate));
             buf += sizeof(bdate);
+
             if (timeoffset == 1 && bdate != AD_DATE_START) {
                 set_utc_offset(&bdate, TO_UTC);
             }
+
             break;
 
         case FILPBIT_FINFO :
