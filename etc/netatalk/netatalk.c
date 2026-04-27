@@ -272,33 +272,6 @@ static void sigterm_impl(void)
     sigfillset(&sigs);
     sigdelset(&sigs, SIGCHLD);
     sigprocmask(SIG_SETMASK, &sigs, NULL);
-#ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
-    int sysret = system(INDEXER_COMMAND " -t");
-
-    if (sysret == -1) {
-        LOG(log_error, logtype_afpd,
-            "sigterm_cb: system() failed to run Spotlight indexer stop: %s",
-            strerror(errno));
-    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
-        LOG(log_error, logtype_afpd,
-            "sigterm_cb: Spotlight indexer stop exited with status %d",
-            WEXITSTATUS(sysret));
-    } else if (WIFSIGNALED(sysret)) {
-        int sig = WTERMSIG(sysret);
-
-        if (sig == SIGTERM || sig == SIGINT) {
-            LOG(log_info, logtype_afpd,
-                "sigterm_cb: Spotlight indexer stop interrupted by signal %d"
-                " (expected during shutdown)",
-                sig);
-        } else {
-            LOG(log_error, logtype_afpd,
-                "sigterm_cb: Spotlight indexer stop killed by signal %d",
-                sig);
-        }
-    }
-
-#endif
     kill_childs(SIGTERM, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
@@ -306,33 +279,6 @@ static void sigterm_impl(void)
 static void sigquit_impl(void)
 {
     LOG(log_note, logtype_afpd, "Exiting on SIGQUIT");
-#ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
-    int sysret = system(INDEXER_COMMAND " -t");
-
-    if (sysret == -1) {
-        LOG(log_error, logtype_afpd,
-            "sigquit_cb: system() failed to run Spotlight indexer stop: %s",
-            strerror(errno));
-    } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
-        LOG(log_error, logtype_afpd,
-            "sigquit_cb: Spotlight indexer stop exited with status %d",
-            WEXITSTATUS(sysret));
-    } else if (WIFSIGNALED(sysret)) {
-        int sig = WTERMSIG(sysret);
-
-        if (sig == SIGTERM || sig == SIGINT) {
-            LOG(log_info, logtype_afpd,
-                "sigquit_cb: Spotlight indexer stop interrupted by signal %d"
-                " (expected during shutdown)",
-                sig);
-        } else {
-            LOG(log_error, logtype_afpd,
-                "sigquit_cb: Spotlight indexer stop killed by signal %d",
-                sig);
-        }
-    }
-
-#endif
     kill_childs(SIGQUIT, &afpd_pid, &cnid_metad_pid, &dbus_pid, NULL);
 }
 
@@ -633,7 +579,6 @@ static void show_netatalk_paths(void)
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
     printf("               dbus-daemon:\t%s\n", DBUS_DAEMON_PATH);
     printf("         dbus-session.conf:\t%s\n", _PATH_CONFDIR "dbus-session.conf");
-    printf("           indexer manager:\t%s\n", INDEXER_COMMAND);
 #endif
 #ifndef SOLARIS
     printf("        netatalk lock file:\t%s\n", PATH_NETATALK_LOCK);
@@ -790,22 +735,6 @@ int main(int argc, char **argv)
         /* Allow dbus some time to start up */
         sleep(1);
         set_sl_volumes();
-        LOG(log_note, logtype_default, "Starting indexer: " INDEXER_COMMAND " -s");
-        int sysret = system(INDEXER_COMMAND " -s");
-
-        if (sysret == -1) {
-            LOG(log_error, logtype_default,
-                "system() failed to run Spotlight indexer start: %s", strerror(errno));
-            netatalk_exit(EXITERR_CONF);
-        } else if (WIFEXITED(sysret) && WEXITSTATUS(sysret) != 0) {
-            LOG(log_error, logtype_default, "Spotlight indexer start exited with status %d",
-                WEXITSTATUS(sysret));
-            netatalk_exit(EXITERR_CONF);
-        } else if (WIFSIGNALED(sysret)) {
-            LOG(log_error, logtype_default, "Spotlight indexer start killed by signal %d",
-                WTERMSIG(sysret));
-            netatalk_exit(EXITERR_CONF);
-        }
     }
 
 #endif
