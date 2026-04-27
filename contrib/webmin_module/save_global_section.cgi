@@ -47,7 +47,7 @@ eval {
     my @_log_pairs  = ();
     for my $i (0 .. $#_log_types) {
         push @_log_pairs, $_log_types[$i] . ':' . $_log_levels[$i]
-            if $_log_types[$i] && $_log_levels[$i];
+          if $_log_types[$i] && $_log_levels[$i];
     }
     $in{'p_log level'} = join(',', @_log_pairs);
     delete $in{'p_log_type'};
