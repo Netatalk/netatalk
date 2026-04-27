@@ -90,8 +90,7 @@ while IFS= read -r line; do
             printf '%s\n' "$line"
             ;;
 
-        *)
-            ;;
+        *) ;;
 
     esac
 done < "${1}"

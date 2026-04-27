@@ -106,8 +106,8 @@ print &ui_table_row(
                     )
                     . &ui_checkbox('p_uam list', 'uams_guest.so', 'Guest',    $values[0] =~ /uams_guest.so/ ? 1 : 0)
                     . &ui_checkbox('p_uam list', 'uams_gss.so',   'Kerberos', $values[0] =~ /uams_gss.so/   ? 1 : 0)
-                    . &ui_checkbox('p_uam list', 'uams_srp.so',   'SRP',      $values[0] =~ /uams_srp.so/   ? 1 : 0)
-                    . "<br>" . $text{'edit_global_section_uam_list_note'}
+                    . &ui_checkbox('p_uam list', 'uams_srp.so',   'SRP', $values[0] =~ /uams_srp.so/ ? 1 : 0) . "<br>"
+                    . $text{'edit_global_section_uam_list_note'}
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'log file', \%in);
@@ -143,18 +143,19 @@ my $log_rows_html = '';
 for my $pair (@log_pairs) {
     my ($t, $l) = @$pair;
     my $type_opts = "<option value=''>$undef_text</option>\n"
-                  . join('', map { "<option value='$_'" . ($t eq $_ ? " selected" : "") . ">$_</option>\n" } @log_types);
+      . join('', map { "<option value='$_'" . ($t eq $_ ? " selected" : "") . ">$_</option>\n" } @log_types);
     my $level_opts = "<option value=''>$undef_text</option>\n"
-                   . join('', map { "<option value='$_'" . ($l eq $_ ? " selected" : "") . ">$_</option>\n" } @log_levels);
-    $log_rows_html .= "<div class='log-entry-row' style='margin-bottom:4px'>"
-                    . "<select name='p_log_type'>$type_opts</select>"
-                    . " : <select name='p_log_level'>$level_opts</select>"
-                    . " <button type='button' onclick='removeLogRow(this)'>$remove_text</button>"
-                    . "</div>\n";
+      . join('', map { "<option value='$_'" . ($l eq $_ ? " selected" : "") . ">$_</option>\n" } @log_levels);
+    $log_rows_html .=
+        "<div class='log-entry-row' style='margin-bottom:4px'>"
+      . "<select name='p_log_type'>$type_opts</select>"
+      . " : <select name='p_log_level'>$level_opts</select>"
+      . " <button type='button' onclick='removeLogRow(this)'>$remove_text</button>"
+      . "</div>\n";
 }
 
-my $js_types  = join(',', map { "\"$_\"" } @log_types);
-my $js_levels = join(',', map { "\"$_\"" } @log_levels);
+my $js_types  = join(',', map {"\"$_\""} @log_types);
+my $js_levels = join(',', map {"\"$_\""} @log_levels);
 
 my $log_widget_html = qq{<div id="log_entries">
 $log_rows_html</div>
