@@ -143,6 +143,8 @@
 #define VOLPBIT_ATTR_NOEXCHANGE   (1 << 9)
 #define VOLPBIT_ATTR_EXTATTRS     (1 << 10)
 #define VOLPBIT_ATTR_ACLS         (1 << 11)
+#define VOLPBIT_ATTR_CASESENS     (1 << 12)
+#define VOLPBIT_ATTR_TM           (1 << 13)
 
 #define VOLPBIT_ATTR    0
 #define VOLPBIT_SIG     1
