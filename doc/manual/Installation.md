@@ -186,6 +186,10 @@ functionality.
     strings from source files and merge them with the translations
     stored in PO files.
 
+- talloc
+
+    Samba's talloc library is used for memory management in the Spotlight query parser.
+
 - TCP wrappers
 
     Wietse Venema's network logger, also known as TCPD or LOG_TCP.
@@ -202,9 +206,9 @@ functionality.
     This is mostly relevant for developers or package managers who want to regenerate
     the Unicode source files.
 
-### Spotlight dependencies
+### Spotlight LocalSearch backend dependencies
 
-Netatalk's Spotlight support relies on the following third-party software:
+The LocalSearch backend for Spotlight depends on the following third-party software:
 
 - bison
 
@@ -232,17 +236,10 @@ Netatalk's Spotlight support relies on the following third-party software:
     You can add metadata extraction support for additional file types
     by installing the appropriate Tracker extractors.
 
-- talloc
-
-    Samba's talloc library is used for memory management in the Spotlight query parser.
-
 - TinySPARQL
 
     The [TinySPARQL](https://tracker.gnome.org/) library is used
     for parsing SPARQL queries in the Spotlight support.
-
-**Note:** LocalSearch and TinySPARQL together were previously known as Tracker.
-Netatalk still supports the older Tracker v3 library and schema.
 
 ## Starting and stopping Netatalk
 
