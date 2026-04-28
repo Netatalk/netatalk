@@ -365,7 +365,7 @@ static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
 {
     EC_INIT;
     int len, octets, used_in_last_octet;
-    len = strlen(s);
+    len = (int)strnlen(s, talloc_get_size(s));
     octets = (len / 8) + (len & 7 ? 1 : 0);
     used_in_last_octet = 8 - (octets * 8 - len);
     EC_ZERO(slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC,
@@ -715,12 +715,13 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             }
 
             slen -= mark_exists ? 2 : 0;
-            EC_NEG1(convert_string_allocate(CH_UCS2,
-                                            CH_UTF8,
-                                            buf + offset + (mark_exists ? 10 : 8),
-                                            slen,
-                                            &tmp));
-            p = dalloc_strndup(query, tmp, strlen(tmp));
+            size_t tmp_len;
+            EC_NEG1(tmp_len = convert_string_allocate(CH_UCS2,
+                              CH_UTF8,
+                              buf + offset + (mark_exists ? 10 : 8),
+                              slen,
+                              &tmp));
+            p = dalloc_strndup(query, tmp, tmp_len);
             free(tmp);
         }
 
