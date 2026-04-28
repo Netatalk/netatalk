@@ -28,7 +28,7 @@ STATIC void test180()
 
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     FAIL(FPMapID(Conn, 1, 0))   /* user to Mac roman */
     ret = FPMapID(Conn, 1, filedir.uid);  /* user to Mac roman */
 

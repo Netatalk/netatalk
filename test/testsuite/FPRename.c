@@ -68,7 +68,7 @@ STATIC void test72()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.attr = ATTRBIT_NORENAME | ATTRBIT_SETCLR ;
         FAIL(FPSetDirParms(Conn, vol, dir1, "", bitmap, &filedir))
         ret = FPRename(Conn, vol, DIRDID_ROOT, ndel, "volume");
@@ -142,7 +142,7 @@ static int create_double_deleted_folder(uint16_t vol, char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 7;
     filedir.access[2] = 7;

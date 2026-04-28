@@ -29,7 +29,7 @@ STATIC void test2()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, (1 << DIRPBIT_DID));
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, (1 << DIRPBIT_DID));
 
     if (FPSyncDir(Conn, vol, filedir.did)) {
         test_failed();

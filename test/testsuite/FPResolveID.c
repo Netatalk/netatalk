@@ -34,7 +34,7 @@ STATIC void test76()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
         FAIL(htonl(AFPERR_BITMAP) != FPResolveID(Conn, vol, filedir.did, 0xffff))
     }
@@ -99,7 +99,7 @@ STATIC void test91()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPDeleteID(Conn, vol, filedir.did))
     }
 
@@ -143,7 +143,7 @@ STATIC void test310()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     }
 
     FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
@@ -187,7 +187,7 @@ STATIC void test311()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     }
 
     FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
@@ -243,7 +243,7 @@ STATIC void test362()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL((FPResolveID(Conn, vol, filedir.did, bitmap)))
     }
 
@@ -288,7 +288,7 @@ STATIC void test417()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         fid = filedir.did;
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
@@ -299,7 +299,7 @@ STATIC void test417()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (fid != filedir.did) {
             if (!Quiet) {

@@ -300,7 +300,7 @@ STATIC void test342()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     memcpy(filedir.finder_info, "TESTTEST", 8);
     memcpy(finder_info, filedir.finder_info, 32);
     FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
@@ -317,7 +317,7 @@ STATIC void test342()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (memcmp(finder_info, filedir.finder_info, 32) != 0) {
         if (!Quiet) {

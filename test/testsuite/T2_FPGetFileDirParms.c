@@ -409,7 +409,7 @@ STATIC void test106()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != dir3) {
         if (!Quiet) {
@@ -448,7 +448,7 @@ STATIC void test106()
                            bitmap)) {
         test_failed();
     } else {
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (filedir.did != dir2) {
             if (!Quiet) {
@@ -478,7 +478,7 @@ STATIC void test106()
     if (FPGetFileDirParams(Conn, vol, dir3, "t104 dir4/", 0, bitmap)) {
         test_failed();
     } else {
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (filedir.did != dir4) {
             if (!Quiet) {
@@ -869,7 +869,7 @@ STATIC void test336()
         test_nottested();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (filedir.pdid != ntohl(dir)) {
             if (!Quiet) {
@@ -1062,7 +1062,7 @@ STATIC void test420()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         fid = filedir.did;
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
@@ -1080,7 +1080,7 @@ STATIC void test420()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (fid != filedir.did) {
             if (!Quiet) {
@@ -1161,7 +1161,7 @@ STATIC void test545()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     memset(filedir.finder_info, 0, 32);
     memcpy(filedir.finder_info + 0, "INIT", 4);
     memcpy(filedir.finder_info + 4, "CRE1", 4);
@@ -1186,7 +1186,7 @@ STATIC void test545()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (memcmp(filedir.finder_info, "INIT", 4) != 0 ||
             memcmp(filedir.finder_info + 4, "CRE1", 4) != 0) {
@@ -1226,7 +1226,7 @@ STATIC void test545()
 
     memset(&filedir, 0, sizeof(filedir));
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, bitmap, 0);
     memset(filedir.finder_info, 0, 32);
     memcpy(filedir.finder_info + 0, "UPDT", 4);
     memcpy(filedir.finder_info + 4, "CLI2", 4);
@@ -1265,7 +1265,7 @@ STATIC void test545()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (memcmp(filedir.finder_info, "UPDT", 4) != 0 ||
             memcmp(filedir.finder_info + 4, "CLI2", 4) != 0) {

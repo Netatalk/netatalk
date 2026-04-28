@@ -506,9 +506,9 @@ STATIC void test218()
     filedir.isdir = isdir;
 
     if (isdir) {
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     } else {
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     }
 
     FAIL(FPDelete(Conn, vol, bdir, filedir.lname))
@@ -597,7 +597,7 @@ STATIC void test300(void)
             for (int j = 1; j <= tp; j++, b += b[0]) {
                 if (b[1]) {
                     filedir.isdir = 1;
-                    afp_filedir_unpack(&filedir, b + 2, 0, d_bitmap);
+                    afp_filedir_unpack(Conn, &filedir, b + 2, 0, d_bitmap);
 
                     if (cnt > size) {
                         size += 1000;
@@ -612,7 +612,7 @@ STATIC void test300(void)
                     cnt++;
                 } else {
                     filedir.isdir = 0;
-                    afp_filedir_unpack(&filedir, b + 2, f_bitmap, 0);
+                    afp_filedir_unpack(Conn, &filedir, b + 2, f_bitmap, 0);
                 }
 
                 if (!Quiet) {

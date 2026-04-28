@@ -45,7 +45,7 @@ static int afp_symlink(char *oldpath, char *newpath)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     memcpy(filedir.finder_info, "slnkrhap", 8);
     bitmap = (1 << FILPBIT_FINFO);
 
@@ -85,7 +85,7 @@ STATIC void test89()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         ret = FPSetFileParams(Conn, vol, dir, file, bitmap, &filedir);
 
         if (not_valid(ret, 0, AFPERR_ACCESS)) {
@@ -99,7 +99,7 @@ STATIC void test89()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPSetFileParams(Conn, vol, dir, file, bitmap, &filedir))
     }
 
@@ -135,7 +135,7 @@ STATIC void test120()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         delete_unix_md(Path, "", name);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
     }
@@ -282,7 +282,7 @@ STATIC void test543()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     /************************************
      * Step 3: Set custom FinderInfo with known pattern
@@ -346,7 +346,7 @@ STATIC void test543()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     /************************************
      * Step 5: Compare all 32 bytes byte-for-byte
@@ -447,7 +447,7 @@ STATIC void test543()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (memcmp(saved_finfo, filedir.finder_info, 32) != 0) {
         if (!Quiet) {
@@ -542,7 +542,7 @@ STATIC void test534()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (!Quiet && Verbose) {
         fprintf(stdout,
@@ -598,7 +598,7 @@ STATIC void test534()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     /************************************
      * Step 5: Compare each date value
@@ -691,7 +691,7 @@ STATIC void test534()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (filedir.cdate != saved_cdate) {
         if (!Quiet) {
@@ -796,7 +796,7 @@ STATIC void test538()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     memset(filedir.finder_info, 0, 32);
     memcpy(filedir.finder_info + 0, "TSTA", 4);
     memcpy(filedir.finder_info + 4, "CRE1", 4);
@@ -845,7 +845,7 @@ STATIC void test538()
     }
 
     filedir2.isdir = 0;
-    afp_filedir_unpack(&filedir2, dsi2->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn2, &filedir2, dsi2->data + ofs, bitmap, 0);
 
     if (memcmp(saved_finfo, filedir2.finder_info, 32) != 0) {
         if (!Quiet) {
@@ -927,7 +927,7 @@ STATIC void test538()
     }
 
     filedir2.isdir = 0;
-    afp_filedir_unpack(&filedir2, dsi2->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn2, &filedir2, dsi2->data + ofs, bitmap, 0);
 
     if (memcmp(saved_finfo, filedir2.finder_info, 32) != 0) {
         if (!Quiet) {

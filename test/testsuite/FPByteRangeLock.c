@@ -649,7 +649,7 @@ static int create_trash(CONN *conn, uint16_t vol)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 7;
     filedir.access[2] = 7;
@@ -688,7 +688,7 @@ static int create_map(CONN *conn, uint16_t vol, int dir, char *name)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0x73f, 0);
+    afp_filedir_unpack(conn, &filedir, dsi->data + ofs, 0x73f, 0);
     filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
 
     if (FPSetFilDirParam(conn, vol, dir, name, (1 << DIRPBIT_ATTR), &filedir)) {
@@ -715,7 +715,7 @@ static int set_perm(CONN *conn, uint16_t vol, int dir)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 0;
     filedir.access[2] = 0;
@@ -749,7 +749,7 @@ static int write_access(CONN *conn, uint16_t  vol, int dir)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if ((filedir.access[0] & 7) == 7) {
         return 1;

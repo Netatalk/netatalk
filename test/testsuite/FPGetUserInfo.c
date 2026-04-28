@@ -25,7 +25,7 @@ STATIC void test75()
 
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     FAIL(htonl(AFPERR_PARAM) != FPGetUserInfo(Conn, 0, 0, 1))
     FAIL(htonl(AFPERR_BITMAP) != FPGetUserInfo(Conn, 1, 0, 0xff))
     ret = FPGetUserInfo(Conn, 1, 0, 3);

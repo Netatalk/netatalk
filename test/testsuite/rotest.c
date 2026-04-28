@@ -77,7 +77,7 @@ STATIC void test510()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     dir = strdup(filedir.lname);
 
     if (!dir) {
@@ -99,7 +99,7 @@ STATIC void test510()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     file = strdup(filedir.lname);
 
     if (!file) {
@@ -121,7 +121,7 @@ STATIC void test510()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     file1 = strdup(filedir.lname);
 
     if (!file1) {
@@ -149,7 +149,7 @@ STATIC void test510()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + 3 * sizeof(uint16_t), bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + 3 * sizeof(uint16_t), bitmap, 0);
         ret  = FPSetFileParams(Conn, VolID,  DIRDID_ROOT, file, bitmap, &filedir);
         check_test(ret);
     }
@@ -202,7 +202,7 @@ STATIC void test510()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + 3 * sizeof(uint16_t), bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + 3 * sizeof(uint16_t), bitmap, 0);
         ret = FPSetFilDirParam(Conn, VolID,  DIRDID_ROOT, file, bitmap, &filedir);
         check_test(ret);
     }
@@ -214,7 +214,7 @@ STATIC void test510()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + 3 * sizeof(uint16_t), 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + 3 * sizeof(uint16_t), 0, bitmap);
         ret = FPSetFilDirParam(Conn, VolID,  DIRDID_ROOT, dir, bitmap, &filedir);
         check_test(ret);
     }
@@ -227,7 +227,7 @@ STATIC void test510()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + 3 * sizeof(uint16_t), 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + 3 * sizeof(uint16_t), 0, bitmap);
         ret = FPDelete(Conn, VolID, DIRDID_ROOT, dir);
 
         if (ret != htonl(AFPERR_VLOCK)) {
@@ -252,7 +252,7 @@ STATIC void test510()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + 3 * sizeof(uint16_t), 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + 3 * sizeof(uint16_t), 0, bitmap);
         ret = FPSetDirParms(Conn, VolID,  DIRDID_ROOT, dir, bitmap, &filedir);
         check_test(ret);
     }

@@ -635,7 +635,7 @@ STATIC void test116()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     filedir.attr = ATTRBIT_NOWRITE | ATTRBIT_SETCLR ;
     bitmap = (1 << DIRPBIT_ATTR);
 
@@ -887,7 +887,7 @@ static void test_openmode(char *name, int type)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, bitmap, 0);
 
         if (!(filedir.attr & what)) {
             test_failed();
@@ -908,7 +908,7 @@ static void test_openmode(char *name, int type)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, bitmap, 0);
 
         if (!(filedir.attr & what)) {
             test_failed();
@@ -925,7 +925,7 @@ static void test_openmode(char *name, int type)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, bitmap, 0);
 
         if (!(filedir.attr & what)) {
             test_failed();
@@ -942,7 +942,7 @@ static void test_openmode(char *name, int type)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, bitmap, 0);
 
         if (filedir.attr & what) {
             test_failed();

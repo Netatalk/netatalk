@@ -210,7 +210,7 @@ static void test_meta(char *name, char *name1, uint16_t vol2)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         memcpy(filedir.finder_info, "PDF CARO", 8);
         memcpy(finder_info, filedir.finder_info, 32);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
@@ -223,7 +223,7 @@ static void test_meta(char *name, char *name1, uint16_t vol2)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (memcmp(finder_info, filedir.finder_info, 32)) {
             if (!Quiet) {
@@ -303,7 +303,7 @@ STATIC void test332()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         mdate = filedir.mdate;
     }
 
@@ -313,7 +313,7 @@ STATIC void test332()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (mdate != filedir.mdate)  {
             if (!Quiet) {
@@ -473,7 +473,7 @@ STATIC void test401()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0770;
     filedir.access[0] = 0;
@@ -524,7 +524,7 @@ STATIC void test401()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0444;
     filedir.access[0] = 0;
@@ -617,7 +617,7 @@ STATIC void test402()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0222;
     filedir.access[0] = 0;
@@ -666,7 +666,7 @@ STATIC void test403()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0770;
     filedir.access[0] = 0;
@@ -687,7 +687,7 @@ STATIC void test403()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0444;
     filedir.access[0] = 0;
@@ -711,7 +711,7 @@ STATIC void test403()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if ((filedir.unix_priv & 0444) != 0444) {
         if (!Quiet) {
@@ -828,7 +828,7 @@ static void test_data(char *name, char *name1, uint16_t vol2)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (filedir.dflen != 400 || filedir.rflen != 300) {
         if (!Quiet) {
@@ -902,7 +902,7 @@ static void test_data(char *name, char *name1, uint16_t vol2)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (filedir.dflen != 400 || filedir.rflen != 300) {
         if (!Quiet) {

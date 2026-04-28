@@ -169,7 +169,7 @@ STATIC void test500()
     /* Manually check name and CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, renamedsubdir1, 0, bitmap));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != subdir1_id) {
         if (!Quiet) {
@@ -240,7 +240,7 @@ STATIC void test501()
     /* Manually check name and CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, renamedsubdir1, 0, bitmap));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != subdir1_id) {
         if (!Quiet) {
@@ -316,7 +316,7 @@ STATIC void test502()
     /* Manually check name and CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir1_id, "", 0, bitmap));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != subdir1_id) {
         if (!Quiet) {
@@ -388,7 +388,7 @@ STATIC void test503()
     /* Manually check name and CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir1_id, "", 0, bitmap));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != subdir1_id) {
         if (!Quiet) {
@@ -458,14 +458,14 @@ STATIC void test504()
     FAIL(FPCreateFile(Conn, vol1,  0, subdir2_id, "file1"));
     FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "file1", 0, bitmap));
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     file_id = filedir.did;
     /* Move and rename dir with second connection */
     FAIL(FPMoveAndRename(Conn2, vol2, dir_id, dir_id, subdir1, renamedsubdir1));
     /* check CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "file1", 0, bitmap));
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != file_id) {
         if (!Quiet) {
@@ -529,7 +529,7 @@ STATIC void test505()
     /* Manually check name and CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != subdir2_id) {
         if (!Quiet) {
@@ -607,7 +607,7 @@ STATIC void test506()
     /* Manually check name and CNID */
     FAIL(FPGetFileDirParams(Conn, vol1, subdir2_id, "", 0, bitmap));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != subdir2_id) {
         if (!Quiet) {

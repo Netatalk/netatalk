@@ -258,10 +258,11 @@ struct afp_volume_parms {
 void afp_volume_unpack(struct afp_volume_parms *parms, unsigned char *b,
                        uint16_t rbitmap);
 
-void afp_filedir_unpack(struct afp_filedir_parms *filedir,
+void afp_filedir_unpack(CONN *conn, struct afp_filedir_parms *filedir,
                         const unsigned char *b,
                         uint16_t rfbitmap, uint16_t rdbitmap);
-int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
+int afp_filedir_pack(CONN *conn, unsigned char *b,
+                     struct afp_filedir_parms *filedir,
                      uint16_t rfbitmap, uint16_t rdbitmap);
 
 /*

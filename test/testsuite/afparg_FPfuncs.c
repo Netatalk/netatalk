@@ -48,7 +48,7 @@ void FPResolveID_arg(char **argv)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + 2, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + 2, bitmap, 0);
     fprintf(stdout, "Resolved ID %d to: '%s'\n", id, filedir.utf8_name);
 }
 
@@ -215,7 +215,7 @@ void FPEnumerate_arg(char **argv)
             for (int j = 1; j <= tp; j++, b += b[0]) {
                 if (b[1]) {
                     filedir.isdir = 1;
-                    afp_filedir_unpack(&filedir, b + 2, 0, d_bitmap);
+                    afp_filedir_unpack(Conn, &filedir, b + 2, 0, d_bitmap);
 
                     if (cnt > size) {
                         size += 1000;
@@ -230,7 +230,7 @@ void FPEnumerate_arg(char **argv)
                     cnt++;
                 } else {
                     filedir.isdir = 0;
-                    afp_filedir_unpack(&filedir, b + 2, f_bitmap, 0);
+                    afp_filedir_unpack(Conn, &filedir, b + 2, f_bitmap, 0);
                 }
 
                 if (!Quiet) {

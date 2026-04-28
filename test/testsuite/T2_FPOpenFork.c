@@ -781,7 +781,7 @@ STATIC void test372()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         memcpy(filedir.finder_info, "TEXTttxt", 8);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, (1 << FILPBIT_FINFO),
                              &filedir))
@@ -885,7 +885,7 @@ STATIC void test388()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         memcpy(filedir.finder_info, "TEXTttxt", 8);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, (1 << FILPBIT_FINFO),
                              &filedir))
@@ -989,7 +989,7 @@ STATIC void test392()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         memcpy(filedir.finder_info, "PDF CARO", 8);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, (1 << FILPBIT_FINFO),
                              &filedir))
@@ -1243,7 +1243,7 @@ STATIC void test236()
             test_failed();
         }
 
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
 
         if (!(S_ISLNK(filedir.unix_priv))) {
             test_skipped(T_NOSYML);
@@ -1306,7 +1306,7 @@ STATIC void test237()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
 
     if (!(S_ISLNK(filedir.unix_priv))) {
         test_skipped(T_NOSYML);
@@ -1392,7 +1392,7 @@ STATIC void test238()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 1 << FILPBIT_UNIXPR, 0);
 
     if (!(S_ISLNK(filedir.unix_priv))) {
         test_skipped(T_NOSYML);
@@ -1597,7 +1597,7 @@ STATIC void test431()
         test_failed();
     }
 
-    afp_filedir_unpack(&filedir, dsi->data + 6, (1 << FILPBIT_FINFO), 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + 6, (1 << FILPBIT_FINFO), 0);
 
     if (memcmp(filedir.finder_info, "TEXTTEST", 8)) {
         if (!Quiet) {
@@ -2374,7 +2374,7 @@ STATIC void test544()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, fbitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, fbitmap, 0);
 
     if (filedir.rflen != 500) {
         if (!Quiet) {
@@ -2460,7 +2460,7 @@ STATIC void test544()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, fbitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, fbitmap, 0);
 
     if (filedir.rflen != 800) {
         if (!Quiet) {
@@ -2826,7 +2826,7 @@ STATIC void test546()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, fbitmap, 0);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, fbitmap, 0);
 
     if (filedir.rflen != 200) {
         if (!Quiet) {

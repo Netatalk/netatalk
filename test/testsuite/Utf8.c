@@ -78,7 +78,7 @@ STATIC void test166()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (strcmp(filedir.lname, "\216.rtf")) {
             if (!Quiet) {
@@ -139,7 +139,7 @@ STATIC void test167()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (strcmp(filedir.lname, "l\210")) {
             if (!Quiet) {
@@ -369,7 +369,7 @@ STATIC void test234()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         sprintf(temp, "t23#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
@@ -427,7 +427,7 @@ STATIC void test312()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         sprintf(temp, "t312-#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
@@ -441,7 +441,7 @@ STATIC void test312()
             test_failed();
         } else {
             filedir.isdir = 0;
-            afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+            afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
             if (strcmp(filedir.utf8_name, name) && !Quiet) {
                 fprintf(stdout, "\tFAILED %s should be %s\n", filedir.utf8_name, name);
@@ -574,7 +574,7 @@ STATIC void test337()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         sprintf(temp, "???#%X", ntohl(filedir.did));
 
         if (ntohl(AFPERR_NOOBJ) != 	FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp,
@@ -589,7 +589,7 @@ STATIC void test337()
             test_failed();
         } else {
             filedir.isdir = 0;
-            afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+            afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
             if (strcmp(filedir.utf8_name, name) && !Quiet) {
                 fprintf(stdout, "\tFAILED %s should be %s\n", filedir.utf8_name, name);
@@ -650,7 +650,7 @@ STATIC void test381()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (strcmp(filedir.lname, "l\210")) {
             if (!Quiet) {
@@ -707,7 +707,7 @@ STATIC void test382()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (strcmp(filedir.lname, "l\210")) {
             if (!Quiet) {

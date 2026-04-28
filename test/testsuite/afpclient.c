@@ -1131,7 +1131,7 @@ int afp_volume_pack(unsigned char *b, struct afp_volume_parms *parms,
 
 /* FIXME: redundant bitmap parameters !
  * FIXME: some of those parameters are not tested. */
-void afp_filedir_unpack(struct afp_filedir_parms *filedir,
+void afp_filedir_unpack(CONN *conn, struct afp_filedir_parms *filedir,
                         const unsigned char *b,
                         uint16_t rfbitmap, uint16_t rdbitmap)
 {
@@ -1221,18 +1221,21 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir,
 
         case FILPBIT_PDINFO: /* utf8 name */
             memcpy(filedir->pdinfo, b, sizeof(filedir->pdinfo));
+
             /* blindly try utf8 name */
-            memcpy(&i, b, sizeof(i));
-            i = ntohs(i);
+            if (UNICODE(conn)) {
+                memcpy(&i, b, sizeof(i));
+                i = ntohs(i);
 
-            if (i != 0) {
-                memcpy(&j, beg + i + 4, sizeof(j));
-                j = ntohs(j);
+                if (i != 0) {
+                    memcpy(&j, beg + i + 4, sizeof(j));
+                    j = ntohs(j);
 
-                /* hack */
-                if (j && j < 512 && (filedir->utf8_name = fp_malloc(j + 1))) {
-                    memcpy(filedir->utf8_name, beg + i + 6, j);
-                    filedir->utf8_name[j] = 0;
+                    /* hack */
+                    if (j && j < 512 && (filedir->utf8_name = fp_malloc(j + 1))) {
+                        memcpy(filedir->utf8_name, beg + i + 6, j);
+                        filedir->utf8_name[j] = 0;
+                    }
                 }
             }
 
@@ -1306,7 +1309,8 @@ void afp_filedir_unpack(struct afp_filedir_parms *filedir,
 }
 
 /* ---------------------- */
-int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
+int afp_filedir_pack(CONN *conn, unsigned char *b,
+                     struct afp_filedir_parms *filedir,
                      uint16_t rfbitmap, uint16_t rdbitmap)
 {
     int isdir;
@@ -1372,8 +1376,13 @@ int afp_filedir_pack(unsigned char *b, struct afp_filedir_parms *filedir,
             break;
 
         case FILPBIT_PDINFO: /* utf8 name */
-            u_ofs = b;
-            b += 2;
+            if (UNICODE(conn)) {
+                u_ofs = b;
+            } else {
+                memcpy(b, filedir->pdinfo, sizeof(filedir->pdinfo));
+            }
+
+            b += sizeof(filedir->pdinfo);
             break;
 
         case FILPBIT_UNIXPR:
@@ -2296,10 +2305,12 @@ unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t nbe, char *pos,
     temp = htonl(rbitmap);
     memcpy(dsi->commands + ofs, &temp, sizeof(temp));
     ofs += sizeof(temp);
-    len = afp_filedir_pack(dsi->commands + ofs + 2, filedir, rbitmap & 0xffff, 0);
+    len = afp_filedir_pack(conn, dsi->commands + ofs + 2, filedir, rbitmap & 0xffff,
+                           0);
     dsi->commands[ofs] = (uint8_t) len;
     ofs += len + 2;
-    len = afp_filedir_pack(dsi->commands + ofs + 2, filedir2, rbitmap & 0xffff, 0);
+    len = afp_filedir_pack(conn, dsi->commands + ofs + 2, filedir2,
+                           rbitmap & 0xffff, 0);
     dsi->commands[ofs] = (uint8_t) len;
     ofs += len + 2;
     SetLen(dsi, ofs);
@@ -2345,11 +2356,13 @@ unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
     temp = htonl(rbitmap);
     memcpy(dsi->commands + ofs, &temp, sizeof(temp));
     ofs += sizeof(temp);
-    len = afp_filedir_pack(dsi->commands + ofs + 2, filedir, rbitmap & 0xffff, 0);
+    len = afp_filedir_pack(conn, dsi->commands + ofs + 2, filedir, rbitmap & 0xffff,
+                           0);
     i = htons((uint16_t) len);
     memcpy(dsi->commands + ofs, &i, sizeof(i));
     ofs += len + 2;
-    len = afp_filedir_pack(dsi->commands + ofs + 2, filedir2, rbitmap & 0xffff, 0);
+    len = afp_filedir_pack(conn, dsi->commands + ofs + 2, filedir2,
+                           rbitmap & 0xffff, 0);
     i = htons((uint16_t) len);
     memcpy(dsi->commands + ofs, &i, sizeof(i));
     ofs += len + 2;
