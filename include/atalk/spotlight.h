@@ -72,6 +72,17 @@ typedef enum {
     SLQ_STATE_ERROR	          /*!< an error happended somewhere         */
 } slq_state_t;
 
+/*! file-system changes a Spotlight backend may index incrementally */
+typedef enum {
+    SL_INDEX_FILE_MODIFY,
+    SL_INDEX_FILE_DELETE,
+    SL_INDEX_DIR_DELETE,
+    SL_INDEX_FILE_CREATE,
+    SL_INDEX_DIR_CREATE,
+    SL_INDEX_FILE_MOVE,
+    SL_INDEX_DIR_MOVE
+} sl_index_event_t;
+
 /*! Handle for query results */
 struct sl_rslts {
     int         num_results;
@@ -124,6 +135,13 @@ typedef struct sl_backend_ops {
 
     /* Cancel and clean up query state. */
     void (*sbo_close_query)(slq_t *slq);
+
+    /* Optional incremental index update hook. */
+    int  (*sbo_index_event)(const AFPObj *obj,
+                            const struct vol *vol,
+                            sl_index_event_t event,
+                            const char *path,
+                            const char *oldpath);
 } sl_backend_ops;
 
 /******************************************************************************
@@ -132,6 +150,11 @@ typedef struct sl_backend_ops {
 
 extern int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
                              char *rbuf, size_t *rbuflen);
+extern int sl_index_event(const AFPObj *obj,
+                          const struct vol *vol,
+                          sl_index_event_t event,
+                          const char *path,
+                          const char *oldpath);
 extern int sl_pack(DALLOC_CTX *query, char *buf);
 extern int sl_unpack(DALLOC_CTX *query, const char *buf);
 extern void configure_spotlight_attributes(const char *attributes);

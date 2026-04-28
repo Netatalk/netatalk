@@ -206,9 +206,20 @@ functionality.
     This is mostly relevant for developers or package managers who want to regenerate
     the Unicode source files.
 
+- Xapian
+
+    The [Xapian](https://xapian.org/) library is used for Netatalk-managed
+    filename, plain-text content, and MIME type indexing.
+
+- libmagic
+
+    The libmagic library is used by the Xapian Spotlight backend to identify
+    file MIME types.
+
 ### Spotlight LocalSearch backend dependencies
 
-The LocalSearch backend for Spotlight depends on the following third-party software:
+The LocalSearch backend for Spotlight enables rich file content and metadata matching,
+and depends on the following third-party software:
 
 - bison
 

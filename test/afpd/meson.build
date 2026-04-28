@@ -55,6 +55,9 @@ if have_spotlight
     if use_spotlight_localsearch
         test_external_deps += [glib, sparql]
     endif
+    if use_spotlight_xapian
+        test_external_deps += [xapian, libmagic]
+    endif
 endif
 
 if have_acls
@@ -189,6 +192,7 @@ if get_option('with-tests')
         ],
         c_args: ['-DAPPLCNAME', dversion, messagedir, uamdir, confdir, statedir],
         link_args: test_link_args,
+        link_language: use_spotlight_xapian ? 'cpp' : 'c',
         export_dynamic: true,
         install: false,
     )
@@ -247,6 +251,7 @@ if get_option('with-fuzzing')
             fuzz_c_args,
         ],
         link_args: fuzz_link_args,
+        link_language: use_spotlight_xapian ? 'cpp' : 'c',
         install: false,
         build_by_default: false,
     )

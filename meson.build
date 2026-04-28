@@ -130,6 +130,15 @@ add_global_arguments(netatalk_common_flags, language: 'c')
 
 netatalk_common_link_args = []
 
+if 'xapian' in get_option('with-spotlight-backends')
+    cpp_found = add_languages('cpp', native: false, required: false)
+    if cpp_found
+        add_global_arguments(netatalk_common_flags, language: 'cpp')
+    endif
+else
+    cpp_found = false
+endif
+
 # Per target
 
 afpd = '-D_PATH_AFPD="' + sbindir + '/afpd"'
@@ -247,6 +256,9 @@ if not cc.links(atomic_test_code, name: 'atomic builtins without -latomic')
 endif
 
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
+if cpp_found
+    add_global_link_arguments(netatalk_common_link_args, language: 'cpp')
+endif
 
 if host_machine.endian() == 'big'
     cdata.set('WORDS_BIGENDIAN', 1)
@@ -1100,6 +1112,7 @@ endif
 have_spotlight = false
 use_spotlight_cnid = false
 use_spotlight_localsearch = false
+use_spotlight_xapian = false
 spotlight_backends = ''
 
 if get_option('with-spotlight')
@@ -1225,11 +1238,43 @@ if get_option('with-spotlight')
                 )
             endif
         endif
+
+        if 'xapian' in get_option('with-spotlight-backends')
+            xapian = dependency('xapian-core', required: false)
+            libmagic = dependency('libmagic', required: false)
+
+            if not libmagic.found()
+                magic_lib = cc.find_library('magic', required: false)
+
+                if magic_lib.found() and cc.has_header('magic.h') and cc.has_function(
+                    'magic_open',
+                    prefix: '#include <magic.h>',
+                    dependencies: magic_lib,
+                )
+                    libmagic = magic_lib
+                endif
+            endif
+
+            if cpp_found and xapian.found() and libmagic.found()
+                use_spotlight_xapian = true
+
+                if spotlight_backends != ''
+                    spotlight_backends += ' | '
+                endif
+
+                spotlight_backends += 'xapian'
+                cdata.set('SPOTLIGHT_BACKEND_XAPIAN', 1)
+            else
+                warning(
+                    'xapian Spotlight search backend requested but one or more dependencies were not found',
+                )
+            endif
+        endif
     else
         warning('talloc library required for Spotlight search support')
     endif
 
-    have_spotlight = use_spotlight_cnid or use_spotlight_localsearch
+    have_spotlight = use_spotlight_cnid or use_spotlight_localsearch or use_spotlight_xapian
 endif
 
 if have_spotlight
@@ -2706,7 +2751,7 @@ summary_info += {
 }
 if have_spotlight
     summary_info += {
-        '  Search backends': spotlight_backends != '' ? spotlight_backends : 'none',
+        '  Spotlight backends': spotlight_backends != '' ? spotlight_backends : 'none',
     }
 endif
 summary_info += {

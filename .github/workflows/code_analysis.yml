@@ -39,6 +39,7 @@ jobs:
               cracklib-runtime \
               curl \
               flex \
+              g++ \
               gcc \
               git \
               libacl1-dev \
@@ -53,12 +54,14 @@ jobs:
               libiniparser-dev \
               libkrb5-dev \
               libldap2-dev \
+              libmagic-dev \
               libmariadb-dev \
               libpam0g-dev \
               libtalloc-dev \
               libtirpc-dev \
               libtracker-sparql-3.0-dev \
               libwrap0-dev \
+              libxapian-dev \
               meson \
               ninja-build \
               systemtap-sdt-dev \

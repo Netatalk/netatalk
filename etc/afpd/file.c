@@ -947,6 +947,9 @@ createfile_iderr:
 #ifdef WITH_FCE
     fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+    sl_index_event(obj, vol, SL_INDEX_FILE_CREATE, fullpathname(upath), NULL);
+#endif /* WITH_SPOTLIGHT */
 
     /* Defensive check: curdir may be corrupted by race conditions or cname() failures */
     if (curdir == NULL) {
@@ -1826,6 +1829,9 @@ copy_exit:
 #ifdef WITH_FCE
         fce_register(obj, FCE_FILE_CREATE, fullpathname(upath), NULL);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+        sl_index_event(obj, d_vol, SL_INDEX_FILE_CREATE, fullpathname(upath), NULL);
+#endif /* WITH_SPOTLIGHT */
         /* Send hint to afpd siblings — dest parent dir ctime changed due to copy */
         ipc_send_cache_hint(obj, d_vol->v_vid, curdir->d_did, CACHE_HINT_REFRESH);
     }
