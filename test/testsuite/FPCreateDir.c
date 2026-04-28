@@ -360,7 +360,7 @@ STATIC void test357()
 
     FAIL(FPGetFileDirParams(Conn, vol, tdir, "", 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 0;
     filedir.access[2] = 0;
@@ -377,7 +377,7 @@ STATIC void test357()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
     FAIL(FPSetDirParms(Conn2, vol2, DIRDID_ROOT, name, bitmap, &filedir))
 

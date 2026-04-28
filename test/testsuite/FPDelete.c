@@ -186,7 +186,7 @@ STATIC void test172()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
                 &filedir))
@@ -268,7 +268,7 @@ STATIC void test172()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
                 &filedir))
     }
@@ -355,7 +355,7 @@ STATIC void test196()
     bitmap = (1 << DIRPBIT_ACCESS);
     FAIL(FPGetFileDirParams(Conn, vol, tdir, "", 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 7;
     filedir.access[2] = 7;
@@ -530,7 +530,7 @@ STATIC void test421()
     bitmap = (1 << DIRPBIT_ACCESS);
     FAIL(FPGetFileDirParams(Conn, vol, tdir, "", 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 7;
     filedir.access[2] = 7;

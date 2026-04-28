@@ -133,7 +133,7 @@ static int t35_add_filedir_parms(unsigned char *buf, int ofs, uint16_t bitmap,
 {
     struct afp_filedir_parms filedir = { 0 };
     filedir.isdir = isdir;
-    return ofs + afp_filedir_pack(buf + ofs, &filedir, bitmap, bitmap);
+    return ofs + afp_filedir_pack(Conn, buf + ofs, &filedir, bitmap, bitmap);
 }
 
 static const char *t35_variant_name(unsigned char variant)
@@ -804,7 +804,7 @@ static void cname_test(char *name)
     dsi = &Conn->dsi;
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.pdid != 2) {
         if (!Quiet) {
@@ -831,7 +831,7 @@ static void cname_test(char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.pdid != 2) {
         if (!Quiet) {
@@ -1344,7 +1344,7 @@ STATIC void test103()
 
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name1, 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     dir = filedir.did;
     dt = FPOpenDT(Conn, vol);
 
@@ -1632,7 +1632,7 @@ STATIC void test170()
         goto test_exit;
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_PARAM) != FPSetFileParams(Conn, vol, DIRDID_ROOT_PARENT, "",
                 bitmap, &filedir))
@@ -1715,7 +1715,7 @@ STATIC void test170()
         goto test_exit;
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, DIRDID_ROOT_PARENT, "",
                 bitmap, &filedir)) {
@@ -1808,7 +1808,7 @@ STATIC void test171()
         goto test_exit;
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
                 &filedir))
@@ -1875,7 +1875,7 @@ STATIC void test171()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
                 &filedir))
     }
@@ -1963,7 +1963,7 @@ STATIC void test173()
         goto fin;
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_PARAM) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
                 &filedir))
@@ -2040,7 +2040,7 @@ STATIC void test173()
         goto test_exit;
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_PARAM) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
                 &filedir))
     }
@@ -2158,7 +2158,7 @@ STATIC void test174()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.isdir = 0;
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, tdir, tname, bitmap,
                 &filedir))
@@ -2240,7 +2240,7 @@ STATIC void test174()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         FAIL(ntohl(AFPERR_NOOBJ) != FPSetFilDirParam(Conn, vol, tdir, tname, bitmap,
                 &filedir))
     }

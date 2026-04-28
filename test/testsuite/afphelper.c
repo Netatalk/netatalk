@@ -86,7 +86,7 @@ int get_did(CONN *conn, uint16_t vol, int dir, char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!filedir.did) {
         test_nottested();
@@ -108,7 +108,7 @@ int get_fid(CONN *conn, uint16_t vol, int dir, char *name)
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (!filedir.did) {
             test_failed();
@@ -128,7 +128,7 @@ uint32_t get_forklen(DSI *dsi, int type)
     uint32_t flen;
     filedir.isdir = 0;
     bitmap = len;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     flen = (type == OPENFORK_RSCS) ? filedir.rflen : filedir.dflen;
     return flen;
 }
@@ -239,7 +239,7 @@ int no_access_folder(uint16_t vol, int did, char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
     bitmap = (1 << DIRPBIT_ACCESS);
     filedir.access[0] = 0;
     filedir.access[1] = 0;
@@ -346,7 +346,7 @@ int group_folder(uint16_t vol, int did, char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 0;
     filedir.access[2] = 7;
@@ -434,7 +434,7 @@ int read_only_folder(uint16_t vol, int did, char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 3;
     filedir.access[2] = 3;
@@ -513,7 +513,7 @@ int read_only_folder_with_file(uint16_t vol, int did, char *name, char *file)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
 
     if (FPCreateFile(Conn2, vol2,  0, dir, file)) {
         test_nottested();
@@ -591,7 +591,7 @@ int delete_folder(uint16_t vol, int did, char *name)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 7;
     filedir.access[2] = 7;
@@ -652,7 +652,7 @@ int delete_folder_with_file(uint16_t vol, int did, char *name, char *file)
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     filedir.access[1] = 7;
     filedir.access[2] = 7;
@@ -996,7 +996,7 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
 
     /* Extract directory ID for dirname from DSI following FPGetFileDirParams call */
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi_ptr->data + (3 * sizeof(uint16_t)), 0,
+    afp_filedir_unpack(conn, &filedir, dsi_ptr->data + (3 * sizeof(uint16_t)), 0,
                        (1 << DIRPBIT_DID));
     dir_id = filedir.did;
 
@@ -1100,7 +1100,7 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
 
                 if (is_dir) {
                     /* Recurse subdirectory */
-                    afp_filedir_unpack(&filedir, entry_ptr + 2, 0, d_bitmap);
+                    afp_filedir_unpack(conn, &filedir, entry_ptr + 2, 0, d_bitmap);
 
                     if (filedir.lname && filedir.lname[0] != '\0') {
                         /* Pass current dir ID as new parent, and subdir entry name as dirname */
@@ -1109,7 +1109,7 @@ int delete_directory_tree(CONN *conn, uint16_t volume,
                     }
                 } else {
                     /* Delete file */
-                    afp_filedir_unpack(&filedir, entry_ptr + 2, f_bitmap, 0);
+                    afp_filedir_unpack(conn, &filedir, entry_ptr + 2, f_bitmap, 0);
 
                     if (filedir.lname && filedir.lname[0] != '\0') {
                         FPDelete(conn, volume, dir_id, filedir.lname);
@@ -1166,7 +1166,7 @@ void clear_volume(uint16_t vol, CONN *conn)
             break;
         }
 
-        afp_filedir_unpack(&filedir, conn->dsi.data + ofs, 0, bitmap);
+        afp_filedir_unpack(conn, &filedir, conn->dsi.data + ofs, 0, bitmap);
 
         if (filedir.isdir) {
             int result = delete_directory_tree(conn, vol, DIRDID_ROOT, filedir.lname);

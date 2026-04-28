@@ -182,7 +182,7 @@ STATIC void test94()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     offcnt = filedir.offcnt;
 
     if (!Quiet) {
@@ -197,7 +197,7 @@ STATIC void test94()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!Quiet) {
         fprintf(stdout, "Modif date dir %x \n", filedir.mdate);
@@ -220,7 +220,7 @@ STATIC void test94()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!Quiet) {
         fprintf(stdout, "Modif date dir %x\n", filedir.mdate);
@@ -232,7 +232,7 @@ STATIC void test94()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (offcnt != filedir.offcnt) {
         if (!Quiet) {
@@ -299,7 +299,7 @@ STATIC void test104()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != dir3) {
         if (!Quiet) {
@@ -326,7 +326,7 @@ STATIC void test104()
         goto fin;
     }
 
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != dir2) {
         if (!Quiet) {
@@ -360,7 +360,7 @@ STATIC void test104()
         goto fin;
     }
 
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (filedir.did != dir4) {
         if (!Quiet) {
@@ -552,7 +552,7 @@ STATIC void test307()
         test_nottested();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
 
         if (strcmp(result, name)) {
@@ -607,7 +607,7 @@ STATIC void test308()
         test_nottested();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
 
         if (strcmp(result, name)) {
@@ -953,7 +953,7 @@ static int probe_extmap(char *probe_name, const char *expected_finfo8)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     FPDelete(Conn, vol, DIRDID_ROOT, probe_name);
     return memcmp(filedir.finder_info, expected_finfo8, 8) == 0;
 }
@@ -1001,7 +1001,7 @@ STATIC void test371()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (memcmp(filedir.finder_info, "????????", 8)) {
             if (!Quiet) {
@@ -1020,7 +1020,7 @@ STATIC void test371()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (memcmp(filedir.finder_info, "PDF CARO", 8)) {
             if (!Quiet) {
@@ -1080,7 +1080,7 @@ STATIC void test380()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (memcmp(filedir.finder_info, "WDBNMSWD", 8)) {
             if (!Quiet) {
@@ -1099,7 +1099,7 @@ STATIC void test380()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (memcmp(filedir.finder_info, "WDBNMSWD", 8)) {
             if (!Quiet) {
@@ -1139,14 +1139,14 @@ STATIC void test396()
         test_nottested();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, d_bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, d_bitmap);
     }
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, f_bitmap, d_bitmap)) {
         test_nottested();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, d_bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, d_bitmap);
     }
 
     FPCreateID(Conn, vol, dir, "");
@@ -1197,7 +1197,7 @@ STATIC void test423()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         fid = filedir.did;
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
@@ -1208,7 +1208,7 @@ STATIC void test423()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (fid != filedir.did) {
             if (!Quiet) {
@@ -1244,6 +1244,7 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
     const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir = { 0 };
     const unsigned char *buf;
+    const char *creator = "pdos";
     uint8_t prodos_type;
     uint16_t prodos_aux;
     FPCreateFile(Conn, vol, 0, DIRDID_ROOT, fname);
@@ -1256,9 +1257,10 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_finfo, 0);
     /* Overwrite the first 4 bytes with our test type */
     memcpy(filedir.finder_info, fourcc, 4);
+    memcpy(filedir.finder_info + 4, creator, 4);
 
     /* Set FinderInfo via AFP */
     if (FPSetFileParams(Conn, vol, DIRDID_ROOT, fname, bitmap_finfo, &filedir)) {
@@ -1274,9 +1276,10 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
         return;
     }
 
-    buf = dsi->data + ofs;
-    prodos_type = buf[0];
-    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_pdinfo, 0);
+    prodos_type = filedir.pdinfo[0];
+    prodos_aux = (uint16_t)(filedir.pdinfo[3] << 8) | filedir.pdinfo[2];
 
     if (prodos_type != expect_type || prodos_aux != expect_aux) {
         test_failed();
@@ -1307,6 +1310,8 @@ STATIC void test440()
     do_pdinfo_test(name_psys, "PSYS", 0xff, 0x0000);
     /* PS16: type 'PS16' -> ProDOS type 0xb3, aux 0x0000 */
     do_pdinfo_test(name_ps16, "PS16", 0xb3, 0x0000);
+    /* PXYY: type 'pPTE' -> ProDOS type 0x50, aux 0x5445 */
+    do_pdinfo_test(name_ps16, "pPTE", 0x50, 0x5445);
 test_exit:
     exit_test("FPGetFileDirParms:test440: ProDOS Info Bit for legacy clients");
 }
@@ -1340,7 +1345,7 @@ STATIC void test441()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap_finfo, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_finfo, 0);
     /* Set type to "APPL" and creator to "TEST" - an invalid combination */
     memcpy(filedir.finder_info, "APPLTEST", 8);
 
@@ -1359,9 +1364,10 @@ STATIC void test441()
         goto test_exit;
     }
 
-    buf = dsi->data + ofs;
-    prodos_type = buf[0];
-    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_pdinfo, 0);
+    prodos_type = filedir.pdinfo[0];
+    prodos_aux = (uint16_t)(filedir.pdinfo[3] << 8) | filedir.pdinfo[2];
 
     if (prodos_type != 0x00 || prodos_aux != 0x0000) {
         test_failed();
@@ -1376,9 +1382,10 @@ STATIC void test442()
 {
     char *dirname = "pdinfo_dir";
     uint16_t vol = VolID;
-    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    uint16_t bitmap_pdinfo = (1 << DIRPBIT_PDINFO);
     int ofs = 3 * sizeof(uint16_t);
     const DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir = { 0 };
     const unsigned char *buf;
     uint8_t prodos_type;
     uint16_t prodos_aux;
@@ -1404,9 +1411,10 @@ STATIC void test442()
         goto test_exit;
     }
 
-    buf = dsi->data + ofs;
-    prodos_type = buf[0];
-    prodos_aux = (uint16_t)(buf[2] << 8) | buf[3];
+    filedir.isdir = 1;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap_pdinfo);
+    prodos_type = filedir.pdinfo[0];
+    prodos_aux = (uint16_t)(filedir.pdinfo[3] << 8) | filedir.pdinfo[2];
 
     if (prodos_type != 0x0F || prodos_aux != 0x0200) {
         test_failed();

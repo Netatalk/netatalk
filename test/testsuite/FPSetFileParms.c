@@ -34,7 +34,7 @@ STATIC void test83()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
         FAIL(htonl(AFPERR_NOOBJ) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name1,
                 bitmap, &filedir))
@@ -72,7 +72,7 @@ STATIC void test96()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!Quiet) {
         fprintf(stdout, "Modif date parent %x\n", filedir.mdate);
@@ -86,7 +86,7 @@ STATIC void test96()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (!Quiet) {
         fprintf(stdout, "Modif date file %x\n", filedir.mdate);
@@ -104,7 +104,7 @@ STATIC void test96()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (!Quiet) {
         fprintf(stdout, "Modif date file %x\n", filedir.mdate);
@@ -116,7 +116,7 @@ STATIC void test96()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!Quiet) {
         fprintf(stdout, "Modif date parent %x\n", filedir.mdate);
@@ -149,7 +149,7 @@ STATIC void test118()
         test_nottested();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
         FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
         FAIL(ntohl(AFPERR_OLOCK) != FPDelete(Conn, vol, DIRDID_ROOT, name))
@@ -198,7 +198,7 @@ STATIC void test122()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         /* wrong attrib (open fork set ) */
         ret = FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir);
 
@@ -253,7 +253,7 @@ STATIC void test318()
         test_nottested();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(htonl(AFPERR_BITMAP) != FPSetFileParams(Conn, vol, DIRDID_ROOT, name,
                 bitmap, &filedir))
     }
@@ -303,7 +303,7 @@ static int afp_symlink(char *oldpath, char *newpath)
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     memcpy(filedir.finder_info, "slnkrhap", 8);
     bitmap = (1 << FILPBIT_FINFO);
 
@@ -448,7 +448,7 @@ STATIC void test429()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (!filedir.did || filedir.did != id) {
             if (!Quiet) {
@@ -504,6 +504,181 @@ test_exit:
 }
 
 
+STATIC void test433()
+{
+    char *name = "pdinfo_text";
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    uint16_t bitmap_date = (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
+                           (1 << FILPBIT_MDATE);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
+
+    /* Update the date of the file to ensure AppleDouble is created */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_date, 0);
+    filedir.cdate += 1;
+    filedir.bdate += 1;
+    filedir.mdate += 1;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_pdinfo, 0);
+    /* ProDOS type */
+    filedir.pdinfo[0] = 0x50;
+    /* Unused bytes */
+    filedir.pdinfo[1] = 0x00;
+    /* Low byte of prodos_aux */
+    filedir.pdinfo[2] = 0x45;
+    /* High byte of prodos_aux */
+    filedir.pdinfo[3] = 0x54;
+    /* Unused bytes */
+    filedir.pdinfo[4] = 0x00;
+    /* Unused bytes */
+    filedir.pdinfo[5] = 0x00;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    /* Now get FinderInfo and verify type/creator mapping */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_finfo, 0);
+
+    if (memcmp(filedir.finder_info, "pPTEpdos", 8) != 0) {
+        if (!Quiet) {
+            fprintf(stdout, "Mac creator/type needs to be pPTEpdos, was: %.8s - ",
+                    filedir.finder_info);
+
+            for (int i = 0; i < 8; i++) {
+                fprintf(stdout, "%02x ", (unsigned char)filedir.finder_info[i]);
+            }
+
+            fprintf(stdout, "\n");
+        }
+
+        test_failed();
+    }
+
+fin:
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+test_exit:
+    exit_test("FPSetFileParms:test433: set ProDOS $50/$5445, verify Mac pPTE/pdos mapping");
+}
+
+STATIC void test434()
+{
+    char *name = "pdinfo_text";
+    uint16_t vol = VolID;
+    uint16_t bitmap_finfo = (1 << FILPBIT_FINFO);
+    uint16_t bitmap_pdinfo = (1 << FILPBIT_PDINFO);
+    uint16_t bitmap_date = (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
+                           (1 << FILPBIT_MDATE);
+    int ofs = 3 * sizeof(uint16_t);
+    DSI *dsi = &Conn->dsi;
+    struct afp_filedir_parms filedir;
+    ENTER_TEST
+
+    if (Conn->afp_version >= 30) {
+        test_skipped(T_AFP2);
+        goto test_exit;
+    }
+
+    FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
+
+    /* Update the date of the file to ensure AppleDouble is created */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_date, 0);
+    filedir.cdate += 1;
+    filedir.bdate += 1;
+    filedir.mdate += 1;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_date, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_pdinfo, 0);
+    /* ProDOS type */
+    filedir.pdinfo[0] = 0x04;
+    /* Unused bytes */
+    filedir.pdinfo[1] = 0x00;
+    /* Low byte of prodos_aux */
+    filedir.pdinfo[2] = 0x00;
+    /* High byte of prodos_aux */
+    filedir.pdinfo[3] = 0x00;
+    /* Unused bytes */
+    filedir.pdinfo[4] = 0x00;
+    /* Unused bytes */
+    filedir.pdinfo[5] = 0x00;
+
+    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap_pdinfo, &filedir)) {
+        test_failed();
+        goto fin;
+    }
+
+    /* Now get FinderInfo and verify type/creator mapping */
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap_finfo, 0)) {
+        test_failed();
+        goto fin;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_finfo, 0);
+
+    if (memcmp(filedir.finder_info, "TEXTpdos", 8) != 0) {
+        if (!Quiet) {
+            fprintf(stdout, "Mac creator/type needs to be TEXTpdos, was: %.8s - ",
+                    filedir.finder_info);
+
+            for (int i = 0; i < 8; i++) {
+                fprintf(stdout, "%02x ", (unsigned char)filedir.finder_info[i]);
+            }
+
+            fprintf(stdout, "\n");
+        }
+
+        test_failed();
+    }
+
+fin:
+    FPDelete(Conn, vol, DIRDID_ROOT, name);
+test_exit:
+    exit_test("FPSetFileParms:test434: set ProDOS $04/$0000, verify Mac TEXT/pdos mapping");
+}
+
+
 /* ----------- */
 void FPSetFileParms_test()
 {
@@ -517,4 +692,6 @@ void FPSetFileParms_test()
     test428();
     test429();
     test430();
+    test433();
+    test434();
 }

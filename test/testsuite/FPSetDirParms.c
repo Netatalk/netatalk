@@ -30,7 +30,7 @@ STATIC void test82()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
 
     if (FPSetDirParms(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir)) {
@@ -44,7 +44,7 @@ STATIC void test82()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
 
     if (FPSetDirParms(Conn, vol, DIRDID_ROOT, "", bitmap, &filedir)) {
@@ -82,7 +82,7 @@ STATIC void test84()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.attr = ATTRBIT_NODELETE | ATTRBIT_SETCLR ;
         FAIL(FPSetDirParms(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
 
@@ -155,7 +155,7 @@ STATIC void test88()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         bitmap = (1 << DIRPBIT_ATTR);
         filedir.attr = ATTRBIT_INVISIBLE | ATTRBIT_SETCLR ;
@@ -244,7 +244,7 @@ STATIC void test107()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi2->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     uid = filedir.uid;
 
@@ -252,7 +252,7 @@ STATIC void test107()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         filedir.uid = uid;
         /* change owner */
@@ -263,7 +263,7 @@ STATIC void test107()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         filedir.uid = uid;
         FAIL(FPSetDirParms(Conn2, vol2, DIRDID_ROOT, ndir, bitmap2, &filedir))
@@ -273,7 +273,7 @@ STATIC void test107()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         filedir.uid = uid;
         ret = FPSetDirParms(Conn2, vol2, DIRDID_ROOT, "", bitmap2, &filedir);
@@ -333,7 +333,7 @@ STATIC void test189()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     filedir.access[0] = 0;
     FAIL(ntohl(AFPERR_BADTYPE) != FPSetDirParms(Conn, vol, dir, name1, bitmap,
             &filedir))
@@ -366,7 +366,7 @@ STATIC void test193()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         ret = FPSetDirParms(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir);
 
         if (not_valid(ret, /* MAC */AFPERR_PARAM, 0)) {
@@ -411,7 +411,7 @@ STATIC void test351()
 
     memset(&filedir, 0, sizeof(filedir));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs,  0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs,  0, bitmap);
     bitmap = (1 << DIRPBIT_ACCESS);
     filedir.access[0] = 0;
     memcpy(old_access, filedir.access, sizeof(old_access));
@@ -477,7 +477,7 @@ STATIC void test352()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     bitmap = (1 << DIRPBIT_ACCESS);
     filedir.unix_priv = 0;
     filedir.access[0] = 0;
@@ -550,7 +550,7 @@ STATIC void test353()
 
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 1;
     filedir.access[0] = 0;
@@ -580,7 +580,7 @@ STATIC void test353()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0;
     filedir.access[0] = 0;
@@ -633,7 +633,7 @@ STATIC void test354()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0;
     filedir.access[0] = 0;
@@ -706,7 +706,7 @@ STATIC void test355()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs,  0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs,  0, bitmap);
     bitmap = (1 << DIRPBIT_UNIXPR);
     filedir.unix_priv = 0;
     filedir.access[0] = 0;
@@ -776,7 +776,7 @@ STATIC void test356()
 
     memset(&filedir, 0, sizeof(filedir));
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs,  0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs,  0, bitmap);
     bitmap = (1 << DIRPBIT_UNIXPR);
     old_unixpriv = filedir.unix_priv;
     filedir.unix_priv = 0;
@@ -903,7 +903,7 @@ STATIC void test405()
     }
 
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!(filedir.gid = check_group(filedir.gid))) {
         test_skipped(T_UNIX_GROUP);

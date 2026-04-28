@@ -70,7 +70,7 @@ STATIC void test_western()
         }
 
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, f_bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, f_bitmap, 0);
         result = (Conn->afp_version >= 30) ? filedir.utf8_name : filedir.lname;
 
         if (strcmp(result, extascii[i])) {

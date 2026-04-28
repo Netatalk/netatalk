@@ -145,7 +145,7 @@ STATIC void test301()
 
         bitmap = (1 << DIRPBIT_ACCESS);
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi2->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn2, &filedir, dsi2->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         filedir.access[1] = 0;
         filedir.access[2] = 0;

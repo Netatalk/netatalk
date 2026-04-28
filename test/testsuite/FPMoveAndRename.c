@@ -288,7 +288,7 @@ STATIC void test138()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         filedir.access[1] = 3;
         filedir.access[2] = 3;

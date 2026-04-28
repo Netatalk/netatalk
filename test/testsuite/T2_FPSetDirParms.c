@@ -36,7 +36,7 @@ STATIC void test121()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
         if (delete_unix_adouble(Path, name)) {
             goto fin;
@@ -212,7 +212,7 @@ STATIC void test528()
      * any cached permission information. */
     FAIL(FPGetFileDirParams(Conn, vol, DIRDID_ROOT, parent_name, 0, bitmap))
     filedir.isdir = 1;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
 
     if (!Quiet && Verbose) {
         fprintf(stdout, "\t    Parent stat completed, cache should be invalidated\n");

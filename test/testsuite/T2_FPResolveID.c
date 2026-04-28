@@ -41,7 +41,7 @@ STATIC void test129()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL((FPResolveID(Conn, vol, filedir.did, bitmap)))
     }
 
@@ -110,7 +110,7 @@ STATIC void test130()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
 
@@ -181,7 +181,7 @@ STATIC void test131()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
 
@@ -256,7 +256,7 @@ STATIC void test331()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         fid = filedir.did;
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
@@ -299,7 +299,7 @@ STATIC void test331()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (fid != filedir.did) {
             if (!Quiet) {
@@ -431,7 +431,7 @@ STATIC void test360()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         fid = filedir.did;
         FAIL(FPResolveID(Conn, vol, filedir.did, bitmap))
     }
@@ -478,7 +478,7 @@ STATIC void test360()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
         if (fid != filedir.did) {
             if (!Quiet) {
@@ -528,7 +528,7 @@ STATIC void test397()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL((FPResolveID(Conn, vol, filedir.did, bitmap)))
     }
 
@@ -598,7 +598,7 @@ STATIC void test412()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     fid = filedir.did;
     FAIL(FPResolveID(Conn, vol, fid, bitmap))
     sprintf(temp, "%s/%s", Path, ndir1);
@@ -640,7 +640,7 @@ STATIC void test412()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (fid != filedir.did) {
         if (!Quiet) {
@@ -700,7 +700,7 @@ STATIC void test413()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     fid = filedir.did;
     FAIL(FPResolveID(Conn, vol, fid, bitmap))
     sprintf(temp, "%s/%s/%s", Path, name1, name);
@@ -743,7 +743,7 @@ STATIC void test413()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (fid != filedir.did) {
         if (!Quiet) {
@@ -802,7 +802,7 @@ STATIC void test418()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     fid1 = filedir.did;
     FAIL(FPResolveID(Conn, vol, fid1, bitmap))
     /* create file2 */
@@ -814,7 +814,7 @@ STATIC void test418()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     fid2 = filedir.did;
     FAIL(FPResolveID(Conn, vol, fid2, bitmap))
     /* rename name1 --> tmp */
@@ -831,7 +831,7 @@ STATIC void test418()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (fid2 != filedir.did) {
         if (!Quiet) {
@@ -851,7 +851,7 @@ STATIC void test418()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
 
     if (fid1 != filedir.did) {
         if (!Quiet) {

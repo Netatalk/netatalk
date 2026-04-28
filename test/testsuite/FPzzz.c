@@ -59,7 +59,7 @@ STATIC void test223()
     sleep(60 * 3);
     ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
-    if (sigp || ret == (unsigned) -1) {
+    if (sigp || ret == (unsigned) - 1) {
         fprintf(stdout, "\tFAILED disconnected %d\n", sigp);
         test_failed();
         /* try to reconnect */
@@ -151,7 +151,7 @@ STATIC void test224()
     sleep(60 * 3);
     ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
 
-    if (!sigp && ret != (unsigned) -1) {
+    if (!sigp && ret != (unsigned) - 1) {
         fprintf(stdout, "\tFAILED not disconnected \n");
         test_failed();
     } else {

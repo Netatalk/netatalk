@@ -64,7 +64,7 @@ STATIC void test227()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     filedir.attr = 0x01a0 | ATTRBIT_SETCLR ;
     FAIL(FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir))
     memset(&filedir, 0, sizeof(filedir));

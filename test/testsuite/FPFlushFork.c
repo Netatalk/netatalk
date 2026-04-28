@@ -30,7 +30,8 @@ STATIC void test203()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->commands + 2 * sizeof(uint16_t), bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->commands + 2 * sizeof(uint16_t), bitmap,
+                       0);
     mdate = filedir.mdate;
     sleep(2);
     FAIL(FPFlushFork(Conn, fork))
@@ -41,7 +42,7 @@ STATIC void test203()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + sizeof(uint16_t), bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + sizeof(uint16_t), bitmap, 0);
 
     /* is that always true? ie over nfs */
     if (mdate != filedir.mdate) {
@@ -63,7 +64,7 @@ STATIC void test203()
     }
 
     filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + sizeof(uint16_t), bitmap, 0);
+    afp_filedir_unpack(Conn, &filedir, dsi->data + sizeof(uint16_t), bitmap, 0);
 
     /* is that always true? ie over nfs */
     if (mdate == filedir.mdate) {

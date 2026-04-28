@@ -205,7 +205,7 @@ STATIC void test306()
     int fork;
     char *name = "t306 file.txt";
     uint16_t vol = VolID;
-    uint32_t data = (unsigned) -1;
+    uint32_t data = (unsigned) - 1;
     DSI *dsi;
     dsi = &Conn->dsi;
     ENTER_TEST

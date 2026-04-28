@@ -46,7 +46,7 @@ STATIC void test146()
         test_failed();
     } else {
         filedir.isdir = 1;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, 0, bitmap);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, 0, bitmap);
         filedir.access[0] = 0;
         filedir.access[1] = 3; /* everyone */
         filedir.access[2] = 3; /* group */
@@ -170,7 +170,7 @@ STATIC void test507()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL((FPResolveID(Conn, vol, filedir.did, bitmap)))
     }
 
@@ -220,7 +220,7 @@ STATIC void test363()
         test_failed();
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     }
 
     sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
@@ -290,7 +290,7 @@ STATIC void test364()
         goto fin;
     } else {
         filedir.isdir = 0;
-        afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
         FAIL((FPResolveID(Conn, vol, filedir.did, bitmap)))
     }
 

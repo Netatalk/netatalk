@@ -1979,7 +1979,7 @@ unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name,
         ofs++;
     }
 
-    ofs += afp_filedir_pack(dsi->commands + ofs, dir, 0, bitmap);
+    ofs += afp_filedir_pack(conn, dsi->commands + ofs, dir, 0, bitmap);
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
@@ -2025,7 +2025,7 @@ unsigned int FPSetFileParams(CONN *conn, uint16_t vol, int did, char *name,
         ofs++;
     }
 
-    ofs += afp_filedir_pack(dsi->commands + ofs, fil, bitmap, 0);
+    ofs += afp_filedir_pack(conn, dsi->commands + ofs, fil, bitmap, 0);
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
@@ -2145,7 +2145,7 @@ unsigned int FPSetFilDirParam(CONN *conn, uint16_t vol, int did, char *name,
         ofs++;
     }
 
-    ofs += afp_filedir_pack(dsi->commands + ofs, fil, bitmap, bitmap);
+    ofs += afp_filedir_pack(conn, dsi->commands + ofs, fil, bitmap, bitmap);
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;

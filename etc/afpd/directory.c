@@ -2366,7 +2366,7 @@ int getdirparams(const AFPObj *obj,
                 /* ProDOS Info Block */
                 *data++ = 0x0f;
                 *data++ = 0;
-                ashort = htons(0x0200);
+                ashort = htons(0x0002);
                 memcpy(data, &ashort, sizeof(ashort));
                 data += sizeof(ashort);
                 memset(data, 0, sizeof(ashort));
