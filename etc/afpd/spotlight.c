@@ -987,7 +987,7 @@ static int sl_rpc_fetchQueryResultsForContext(const AFPObj *obj _U_,
     EC_INIT;
     slq_t *slq = NULL;
     const uint64_t *uint64;
-    uint64_t ctx1, ctx2, status;
+    uint64_t ctx1 = 0, ctx2 = 0, status;
     sl_array_t *array;
     bool ok;
     array = talloc_zero(reply, sl_array_t);
