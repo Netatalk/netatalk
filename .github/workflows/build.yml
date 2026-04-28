@@ -45,6 +45,7 @@ jobs:
             dbus-dev \
             dconf \
             flex \
+            file-dev \
             gcc \
             glib \
             iniparser-dev \
@@ -67,7 +68,8 @@ jobs:
             sqlite-dev \
             talloc-dev \
             tinysparql-dev \
-            valgrind
+            valgrind \
+            xapian-core-dev
       - name: Configure
         run: |
           meson setup build \
@@ -122,6 +124,7 @@ jobs:
             db \
             dconf \
             flex \
+            file \
             gcc \
             iniparser \
             libev \
@@ -134,7 +137,8 @@ jobs:
             rpcsvc-proto \
             sqlite \
             talloc \
-            tinysparql
+            tinysparql \
+            xapian-core
       - name: Configure
         run: |
           meson setup build \
@@ -187,6 +191,7 @@ jobs:
             dconf-cli \
             file \
             flex \
+            g++ \
             gcc \
             libacl1-dev \
             libavahi-client-dev \
@@ -201,6 +206,7 @@ jobs:
             libiniparser-dev \
             libkrb5-dev \
             libldap2-dev \
+            libmagic-dev \
             libmariadb-dev \
             libpam0g-dev \
             libsqlite3-dev \
@@ -208,6 +214,7 @@ jobs:
             libtirpc-dev \
             libtracker-sparql-3.0-dev \
             libwrap0-dev \
+            libxapian-dev \
             meson \
             ninja-build \
             quota \
@@ -272,12 +279,14 @@ jobs:
             dbus-devel \
             dconf \
             flex \
+            gcc-c++ \
             glib2-devel \
             iniparser-devel \
             krb5-devel \
             libacl-devel \
             libdb-devel \
             libev-devel \
+            file-devel \
             libgcrypt-devel \
             libtalloc-devel \
             localsearch \
@@ -294,7 +303,8 @@ jobs:
             systemd \
             systemtap-sdt-devel \
             tinysparql-devel \
-            valgrind
+            valgrind \
+            xapian-core-devel
       - name: Configure
         run: |
           meson setup build \
@@ -349,6 +359,7 @@ jobs:
             dconf-cli \
             file \
             flex \
+            g++ \
             gcc \
             libacl1-dev \
             libavahi-client-dev \
@@ -362,12 +373,14 @@ jobs:
             libiniparser-dev \
             libkrb5-dev \
             libldap2-dev \
+            libmagic-dev \
             libmariadb-dev \
             libpam0g-dev \
             libtalloc-dev \
             libtirpc-dev \
             libtracker-sparql-3.0-dev \
             libwrap0-dev \
+            libxapian-dev \
             meson \
             ninja-build \
             quota \
@@ -426,10 +439,12 @@ jobs:
             cracklib \
             iniparser \
             libev \
+            libmagic \
             mariadb \
             meson \
             openldap \
-            talloc
+            talloc \
+            xapian
       - name: Configure
         run: |
           meson setup build \
@@ -484,6 +499,7 @@ jobs:
               db5 \
               iniparser \
               libev \
+              file \
               libgcrypt \
               meson \
               mysql80-client \
@@ -494,7 +510,8 @@ jobs:
               py39-sqlite3 \
               py39-tkinter \
               sqlite \
-              talloc
+              talloc \
+              xapian-core
           run: |
             set -e
             meson setup build \
@@ -539,6 +556,7 @@ jobs:
               flex \
               iniparser \
               libev \
+              file \
               libgcrypt \
               libsunacl \
               localsearch \
@@ -549,7 +567,8 @@ jobs:
               perl5 \
               pkgconf \
               sqlite3 \
-              talloc
+              talloc \
+              xapian-core
           run: |
             set -e
             meson setup build \
@@ -599,11 +618,13 @@ jobs:
               libev \
               libgcrypt \
               meson \
+              file \
               mysql-client \
               perl \
               pkg-config \
               sqlite3 \
-              talloc
+              talloc \
+              xapian
           run: |
             set -e
             meson setup build \
@@ -659,14 +680,17 @@ jobs:
               iniparser \
               libev \
               libgcrypt \
+              libmagic \
               libtalloc \
+              file \
               mariadb-client \
               meson \
               openldap-client-2.6.10v0 \
               openpam \
               p5-Net-DBus \
               pkgconfig \
-              sqlite3-3.50.7p0
+              sqlite3-3.50.7p0 \
+              xapian-core
           run: |
             set -e
             meson setup build \
@@ -721,11 +745,13 @@ jobs:
               gnome-tracker \
               iniparser \
               libev \
+              file \
               libgcrypt \
               meson \
               mysql-client \
               sqlite3 \
-              talloc
+              talloc \
+              xapian
           run: |
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
@@ -783,8 +809,10 @@ jobs:
               library/cmark \
               library/glib2 \
               library/libev \
+              library/magic \
               library/security/cracklib \
               library/talloc \
+              library/xapian \
               runtime/perl \
               system/library/dbus \
               system/library/libdbus \

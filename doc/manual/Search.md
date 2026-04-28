@@ -23,7 +23,7 @@ Spotlight query handling uses a pluggable backend architecture.
 The AFP Spotlight RPC protocol layer is shared,
 while query execution is delegated to a backend selected per volume.
 
-You can select the backend with the volume option **search backend**.
+You can select the backend with the volume option **spotlight backend**.
 If not set, the default is **cnid**.
 
 Example:
@@ -37,7 +37,7 @@ Example:
 
     [Media]
     path = /srv/afp/media
-    spotlight backend = localsearch
+    spotlight backend = xapian
 
     [Private]
     path = /srv/afp/private
@@ -53,16 +53,27 @@ Available Spotlight backends:
   Uses the LocalSearch/Tracker SPARQL backend for broader file contents and metadata indexing/search.
   This backend requires LocalSearch/Tracker, TinySPARQL, GLib, D-Bus, and related tooling.
 
+- **xapian**
+  Uses a per-volume Xapian index maintained by Netatalk for filename, plain-text content, and MIME type search.
+  This backend requires xapian-core and libmagic.
+
+The **xapian** backend stores a shared per-volume index. To avoid indexing
+private file contents into that shared index, it indexes body text only for
+regular files that are world-readable, readable by the indexing process,
+plain-text-like, and below the backend's text size limit. Files readable to
+a specific AFP user but not world-readable can still match filename and type
+queries, but may not match content queries such as `kMDItemTextContent`.
+
 ### Building Spotlight backends
 
-The Meson option **with-search-backends** controls which Spotlight backends are built.
-Supported values are **cnid** and **localsearch**.
+The Meson option **with-spotlight-backends** controls which Spotlight backends are built.
+Supported values are **cnid**, **localsearch**, and **xapian**.
 
 Example:
 
-    meson setup build -Dwith-search-backends=cnid,localsearch
+    meson setup build -Dwith-spotlight-backends=cnid,localsearch,xapian
 
-The default build enables both backends when their dependencies are available.
+The default build enables the selected backends when their dependencies are available.
 
 ### D-Bus daemon for localsearch
 

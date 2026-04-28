@@ -1,5 +1,10 @@
 libspotlight_backends_libs = []
 
+if use_spotlight_xapian
+    subdir('xapian')
+    libspotlight_backends_libs += libspotlight_xapian
+endif
+
 if use_spotlight_localsearch
     subdir('localsearch')
     libspotlight_backends_libs += libspotlight_localsearch

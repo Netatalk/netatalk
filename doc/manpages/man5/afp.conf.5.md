@@ -701,8 +701,9 @@ covering Spotlight and Catalog Search.
 
 dbus daemon = *path* **(G)**
 
-> Sets the path to dbus-daemon binary used by the Spotlight feature. Can
-be used when the compile-time default path does not match the runtime
+> Sets the path to dbus-daemon binary used to launch a private D-Bus
+for the LocalSearch backend.
+Can be used when the compile-time default path does not match the runtime
 environment.
 >
 > If support is compiled into Netatalk, you may alternatively use
@@ -723,30 +724,51 @@ sparql results limit = *NUMBER* (default: *UNLIMITED*) **(G)**
 
 > Impose a limit on the number of results queried from Tracker or
 LocalSearch via SPARQL queries.
+>
+> The *xapian* backend also uses this value as its per-query result limit,
+despite the historical option name. When set to *0*, LocalSearch queries
+are unlimited, while the *xapian* backend applies an internal safety cap
+of 10000 candidate results. Set a larger nonzero value to raise the
+*xapian* cap. The *cnid* backend does not use this option and is limited
+by its fixed CNID search reply cap.
 
 spotlight = *BOOLEAN* (default: *yes*) **(G)**/**(V)**
 
-> Whether to enable Spotlight searches. Note: once the global option is
-enabled, any volume that is not enabled won't be searchable at all. See
-also *dbus daemon* option.
+> Whether to enable Spotlight-compatible searches.
+As a global option, this sets the default for volumes. As a volume option,
+it overrides the global default for that volume.
+>
+> A volume is searchable only when its effective **spotlight** setting is
+enabled and a supported **spotlight backend** is available for that volume.
 
 spotlight attributes = *COMMA SEPARATED STRING* (default: *EMPTY*) **(G)**
 
-> A list of attributes that are allowed to be used in Spotlight searches.
-By default all attributes can be searched, passing a string limits
-attributes to elements of the string. Example:
+> A list of Spotlight query attributes accepted by the *localsearch*
+backend. By default all attributes known to the LocalSearch SPARQL mapper
+can be searched; passing a string limits searchable attributes to elements
+of the string. Example:
 
     spotlight attributes = *,kMDItemTextContent
+
+> This option does not affect the *cnid* or *xapian* backends.
 
 spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
 
 > Search backend used by the Spotlight feature.
 Most Netatalk configurations will have the *cnid* backend available,
 which allows simple file name matching search on shared volumes.
+>
+> If support is compiled into Netatalk, you may alternatively use
+the *localsearch* or *xapian* backends, which enable more advanced search
+capabilities, including full text search and file metadata search.
+Run **netatalk -v** to see which backends are available in your installation.
 
 spotlight expr = *BOOLEAN* (default: *yes*) **(G)**
 
-> Whether to allow the use of logic expression in searches.
+> Whether the *localsearch* backend allows Spotlight logic expressions
+when translating Spotlight RAW queries to SPARQL.
+>
+> This option does not affect the *cnid* or *xapian* backends.
 
 ## Logging Options
 

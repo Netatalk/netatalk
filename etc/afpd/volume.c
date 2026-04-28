@@ -972,6 +972,13 @@ int afp_openvol(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
         }
 
 #endif
+#ifdef SPOTLIGHT_BACKEND_XAPIAN
+
+        if (strcasecmp(bname, "xapian") == 0) {
+            volume->v_sl_backend = &sl_xapian_ops;
+        }
+
+#endif
 
         if (volume->v_sl_backend == NULL) {
             LOG(log_warning, logtype_afpd,

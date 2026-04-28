@@ -85,15 +85,16 @@ required at the bare minimum.
 | libtirpc **OR** libquota   | Quota support |
 | Perl                       | admin scripts |
 | po4a                       | localization of documentation |
-| talloc                     | Spotlight search |
+| talloc                     | Spotlight support |
 | tcpwrap                    | TCP wrapper support |
 | [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | regenerating Unicode lookup tables |
 
 ### Optional Spotlight Backends
 
-With `talloc` you get filename search functionality via the Netatalk CNID database.
-If you want more advanced search functionality with file contents and metadata,
-install the LocalSearch dependencies.
+In order to enable more advanced Spotlight search functionality such as content searching or metadata,
+install the dependencies for one of the following search backends.
+
+#### LocalSearch
 
 | Package    | Details |
 |------------|---------|
@@ -104,6 +105,14 @@ install the LocalSearch dependencies.
 | flex       | or compatible lexer |
 | localsearch **OR** tracker | v3.0 or later |
 | tinysparql |  |
+
+#### Xapian
+
+| Package      | Details |
+|--------------|---------|
+| C++ compiler | clang++ or g++ are recommended |
+| libmagic     | MIME type detection; sometimes packaged as `file` |
+| xapian-core  |  |
 
 ## Build the software
 

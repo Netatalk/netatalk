@@ -25,6 +25,9 @@
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/server_ipc.h>
+#ifdef WITH_SPOTLIGHT
+#include <atalk/spotlight.h>
+#endif
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/vfs.h>
@@ -401,6 +404,12 @@ static int moveandrename(const AFPObj *obj,
     /* Save sdir->d_fullpath for LOG and FCE events — sdir may be modified during rename */
     saved_sdir_fullpath = bstrcpy(sdir->d_fullpath);
 
+    if (saved_sdir_fullpath == NULL) {
+        LOG(log_error, logtype_afpd, "moveandrename: out of memory");
+        free(oldunixname);
+        return AFPERR_MISC;
+    }
+
     /*
      * we are in the dest folder so we need to use
      *   a) oldunixname for ad_open
@@ -551,6 +560,10 @@ static int moveandrename(const AFPObj *obj,
 #ifdef WITH_FCE
             fce_register(obj, FCE_DIR_MOVE, fullpathname(upath), oldunixname);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+            sl_index_event(obj, vol, SL_INDEX_DIR_MOVE,
+                           fullpathname(upath), bdata(saved_sdir_fullpath));
+#endif /* WITH_SPOTLIGHT */
         }
 
         /* File rename: update cache entry if pre-acquired */
@@ -578,6 +591,19 @@ static int moveandrename(const AFPObj *obj,
         }
 
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+
+        if (!isdir) {
+            bstring srcpath = bformat("%s/%s", bdata(saved_sdir_fullpath), oldunixname);
+
+            if (srcpath != NULL) {
+                sl_index_event(obj, vol, SL_INDEX_FILE_MOVE,
+                               fullpathname(upath), bdata(srcpath));
+                bdestroy(srcpath);
+            }
+        }
+
+#endif /* WITH_SPOTLIGHT */
 
         /* Fixup adouble info — separate ad_open for CNID write.
          * adflags includes ADFLAGS_DIR for directories (set at line 301). */
@@ -962,6 +988,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 #ifdef WITH_FCE
             fce_register(obj, FCE_DIR_DELETE, fullpathname(upath), NULL);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+            sl_index_event(obj, vol, SL_INDEX_DIR_DELETE, fullpathname(upath), NULL);
+#endif /* WITH_SPOTLIGHT */
         } else {
             /* we have to cache this, the structs are lost in deletcurdir*/
             /* but we need the positive returncode to send our event */
@@ -976,6 +1005,10 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 #ifdef WITH_FCE
                 fce_register(obj, FCE_DIR_DELETE, fullpathname(cfrombstr(dname)), NULL);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+                sl_index_event(obj, vol, SL_INDEX_DIR_DELETE,
+                               fullpathname(cfrombstr(dname)), NULL);
+#endif /* WITH_SPOTLIGHT */
             }
 
             bdestroy(dname);
@@ -1028,6 +1061,9 @@ int afp_delete(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 #ifdef WITH_FCE
                 fce_register(obj, FCE_FILE_DELETE, fullpathname(upath), NULL);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+                sl_index_event(obj, vol, SL_INDEX_FILE_DELETE, fullpathname(upath), NULL);
+#endif /* WITH_SPOTLIGHT */
 
                 /* Send hints to afpd siblings — file deleted */
                 if (file_cnid != CNID_INVALID) {

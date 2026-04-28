@@ -89,6 +89,21 @@ static char *tab_level(TALLOC_CTX *mem_ctx, int level)
     return string;
 }
 
+int sl_index_event(const AFPObj *obj,
+                   const struct vol *vol,
+                   sl_index_event_t event,
+                   const char *path,
+                   const char *oldpath)
+{
+    if (vol == NULL || !(vol->v_flags & AFPVOL_SPOTLIGHT)
+            || vol->v_sl_backend == NULL
+            || vol->v_sl_backend->sbo_index_event == NULL) {
+        return 0;
+    }
+
+    return vol->v_sl_backend->sbo_index_event(obj, vol, event, path, oldpath);
+}
+
 static char *dd_dump(DALLOC_CTX *dd, int nestinglevel)
 {
     const char *type;

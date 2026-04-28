@@ -34,6 +34,9 @@
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
 #include <atalk/server_ipc.h>
+#ifdef WITH_SPOTLIGHT
+#include <atalk/spotlight.h>
+#endif
 #include <atalk/unix.h>
 #include <atalk/util.h>
 #include <atalk/uuid.h>
@@ -3139,6 +3142,9 @@ int afp_createdir(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf,
 #ifdef WITH_FCE
     fce_register(obj, FCE_DIR_CREATE, bdata(curdir->d_fullpath), NULL);
 #endif /* WITH_FCE */
+#ifdef WITH_SPOTLIGHT
+    sl_index_event(obj, vol, SL_INDEX_DIR_CREATE, bdata(curdir->d_fullpath), NULL);
+#endif /* WITH_SPOTLIGHT */
     ad_flush(&ad);
     /* Eagerly populate AD cache for newly created directory */
     ad_store_to_cache(&ad, dir);

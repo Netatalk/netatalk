@@ -22,6 +22,9 @@
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/server_ipc.h>
+#ifdef WITH_SPOTLIGHT
+#include <atalk/spotlight.h>
+#endif
 #include <atalk/util.h>
 
 #include "ad_cache.h"
@@ -658,6 +661,15 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {
         ret = -1;
     }
+
+#ifdef WITH_SPOTLIGHT
+
+    if (ret == 0 && (ofork->of_flags & AFPFORK_MODIFIED) && forkpath) {
+        sl_index_event(obj, ofork->of_vol, SL_INDEX_FILE_MODIFY,
+                       bdata(forkpath), NULL);
+    }
+
+#endif /* WITH_SPOTLIGHT */
 
     /* Unlink the emptied Icon\r file after ad_close has released fds */
     if (delete_icon && forkpath && bdata(forkpath)) {

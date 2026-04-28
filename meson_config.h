@@ -397,6 +397,9 @@
 /* Whether the LocalSearch Spotlight search backend is supported */
 #mesondefine SPOTLIGHT_BACKEND_LOCALSEARCH
 
+/* Whether the Xapian Spotlight search backend is supported */
+#mesondefine SPOTLIGHT_BACKEND_XAPIAN
+
 /* List of supported Spotlight search backends */
 #mesondefine SPOTLIGHT_BACKENDS
 

@@ -59,6 +59,9 @@ if have_spotlight
     if use_spotlight_localsearch
         afpd_external_deps += [glib, sparql]
     endif
+    if use_spotlight_xapian
+        afpd_external_deps += [xapian, libmagic]
+    endif
 endif
 
 if have_afpstats
@@ -210,6 +213,7 @@ executable(
         uamdir,
     ],
     link_args: netatalk_common_link_args,
+    link_language: use_spotlight_xapian ? 'cpp' : 'c',
     export_dynamic: true,
     install: true,
     install_dir: sbindir,

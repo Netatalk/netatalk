@@ -441,7 +441,7 @@ option(
 option(
     'with-spotlight-backends',
     type: 'array',
-    choices: ['cnid', 'localsearch'],
-    value: ['cnid', 'localsearch'],
+    choices: ['cnid', 'localsearch', 'xapian'],
+    value: ['cnid', 'localsearch', 'xapian'],
     description: 'Spotlight search backends to build',
 )
