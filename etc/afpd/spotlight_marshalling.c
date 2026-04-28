@@ -17,6 +17,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <math.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -365,7 +366,13 @@ static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
 {
     EC_INIT;
     int len, octets, used_in_last_octet;
-    len = (int)strnlen(s, talloc_get_size(s));
+    size_t alloc_size = talloc_get_size(s);
+    len = (int)strnlen(s, alloc_size - 1);
+
+    if (alloc_size == 0 || (size_t)len == alloc_size - 1) {
+        EC_FAIL;
+    }
+
     octets = (len / 8) + (len & 7 ? 1 : 0);
     used_in_last_octet = 8 - (octets * 8 - len);
     EC_ZERO(slvalc(toc_buf, *toc_idx * 8, MAX_SLQ_TOC,
@@ -492,7 +499,7 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
         double d;
         uint64_t w;
     } ieee_fp_union;
-    double fraction;
+    double unix_time;
     sl_time_t t;
     query_data64 = sl_unpack_uint64(buf, offset, encoding);
     count = query_data64 >> 32;
@@ -502,10 +509,10 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
     while (i++ < count) {
         query_data64 = sl_unpack_uint64(buf, offset, encoding);
         ieee_fp_union.w = query_data64;
-        fraction = ieee_fp_union.d - (uint64_t)ieee_fp_union.d;
+        unix_time = ieee_fp_union.d + SPOTLIGHT_TIME_DELTA;
         t = (sl_time_t) {
-            .tv_sec = ieee_fp_union.d + SPOTLIGHT_TIME_DELTA,
-            .tv_usec = fraction * 1000000
+            .tv_sec  = (time_t)floor(unix_time),
+            .tv_usec = (suseconds_t)((unix_time - floor(unix_time)) * 1000000)
         };
         dalloc_add_copy(query, &t, sl_time_t);
         offset += 8;
@@ -715,6 +722,11 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             }
 
             slen -= mark_exists ? 2 : 0;
+
+            if (slen <= 0 || offset + (mark_exists ? 10 : 8) + slen > (int)toc_offset) {
+                EC_FAIL;
+            }
+
             size_t tmp_len;
             EC_NEG1(tmp_len = convert_string_allocate(CH_UCS2,
                               CH_UTF8,
