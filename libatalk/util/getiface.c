@@ -84,8 +84,9 @@ static int getifaces(const int sockfd, char ***list)
     return i;
 #else
     struct ifconf	ifc;
-    struct ifreq	ifrs[64], *ifr, *nextifr;
+    struct ifreq	ifrs[64], ifrbuf;
     int			ifrsize, i = 0;
+    char *nextifrp;
     char **new;
 
     if (!list) {
@@ -104,19 +105,20 @@ static int getifaces(const int sockfd, char ***list)
     new = (char **) malloc((ifc.ifc_len / sizeof(struct ifreq) + 1) * sizeof(
                                char *));
 
-    for (ifr = ifc.ifc_req; ifc.ifc_len >= (int) sizeof(struct ifreq);
-            ifc.ifc_len -= ifrsize, ifr = nextifr) {
+    for (char *ifrp = ifc.ifc_buf; ifc.ifc_len >= (int) sizeof(struct ifreq);
+            ifc.ifc_len -= ifrsize, ifrp = nextifrp) {
+        memcpy(&ifrbuf, ifrp, sizeof(ifrbuf));
 #ifdef BSD4_4
-        ifrsize = sizeof(ifr->ifr_name) +
-                  (ifr->ifr_addr.sa_len > sizeof(struct sockaddr)
-                   ? ifr->ifr_addr.sa_len : sizeof(struct sockaddr));
+        ifrsize = sizeof(ifrbuf.ifr_name) +
+                  (ifrbuf.ifr_addr.sa_len > sizeof(struct sockaddr)
+                   ? ifrbuf.ifr_addr.sa_len : sizeof(struct sockaddr));
 #else /* !BSD4_4 */
         ifrsize = sizeof(struct ifreq);
 #endif /* BSD4_4 */
-        nextifr = (struct ifreq *)((caddr_t)ifr + ifrsize);
+        nextifrp = ifrp + ifrsize;
 
         /* just bail if there's a problem */
-        if (addname(new, &i, ifr->ifr_name) < 0) {
+        if (addname(new, &i, ifrbuf.ifr_name) < 0) {
             break;
         }
     }
