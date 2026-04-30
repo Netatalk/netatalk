@@ -604,7 +604,7 @@ int getmetadata(const AFPObj *obj,
                         ashort = 0x0000;
                     } else if (fdType[0] == 'p') {
                         achar = fdType[1];
-                        ashort = (fdType[2] * 256) + fdType[3];
+                        ashort = htons((fdType[3] * 256) + fdType[2]);
                     } else {
                         achar = '\x00';
                         ashort = 0x0000;

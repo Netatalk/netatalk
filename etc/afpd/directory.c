@@ -2184,7 +2184,7 @@ int getdirparams(const AFPObj *obj,
     data = buf;
 
     /* If this is a ProDOS client, adjust date-time values to match local time */
-    if (obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
+    if (obj->afp_version < 30 && (bitmap & 1 << DIRPBIT_PDINFO)) {
         timeoffset = 1;
     }
 
@@ -2532,7 +2532,7 @@ int setdirparams(struct vol *vol, struct path *path, uint16_t d_bitmap,
     dir   = path->d_dir;
 
     /* If this is a ProDOS client, adjust date-time values to match UTC time */
-    if (vol->v_obj->afp_version < 30 && (bitmap & 1 << FILPBIT_PDINFO)) {
+    if (vol->v_obj->afp_version < 30 && (bitmap & 1 << DIRPBIT_PDINFO)) {
         timeoffset = 1;
     }
 
