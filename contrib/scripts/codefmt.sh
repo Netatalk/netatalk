@@ -58,11 +58,11 @@ if [ "$SOURCE_TYPE" = "c" ] || [ "$SOURCE_TYPE" = "" ]; then
     if command -v astyle > /dev/null 2>&1; then
         FORMATTER_CMD="astyle --options=.astylerc --recursive --suffix=none"
         if [ $VERBOSE -eq 1 ]; then
-            echo "Formatting C sources..."
+            echo "Formatting C / C++ sources..."
         else
             FORMATTER_CMD="$FORMATTER_CMD --quiet"
         fi
-        eval "$FORMATTER_CMD '*.h' '*.c'"
+        eval "$FORMATTER_CMD '*.h' '*.c' '*.cc'"
     else
         echo "Error: astyle not found in PATH" >&2
         exit 2
