@@ -29,12 +29,13 @@
 
 struct spotlight_sparql_map spotlight_sparql_map[] = {
     /* ssm_spotlight_attr               ssm_enabled, ssm_type,   ssm_sparql_attr */
-    {"*",                               true, ssmt_fts_or_fname, "fts:match"},
+    {"*",                               true, ssmt_fname, "nfo:fileName"},
 
     /* Filesystem metadata */
     {"kMDItemFSLabel",                  true, ssmt_num,   NOTSUPPORTED},
-    {"kMDItemDisplayName",              true, ssmt_str,   "nfo:fileName"},
-    {"kMDItemFSName",                   true, ssmt_str,   "nfo:fileName"},
+    {"kMDItemDisplayName",              true, ssmt_fname, "nfo:fileName"},
+    {"kMDItemFSName",                   true, ssmt_fname, "nfo:fileName"},
+    {"_kMDItemFileName",                true, ssmt_fname, "nfo:fileName"},
     {"kMDItemFSContentChangeDate",      true, ssmt_date,  "nfo:fileLastModified"},
 
     /* Common metadata */
@@ -52,6 +53,7 @@ struct spotlight_sparql_map spotlight_sparql_map[] = {
     {"kMDItemTitle",                    true, ssmt_str,   "nie:title"},
     {"_kMDItemGroupId",                 true, ssmt_type,  SPECIAL},
     {"kMDItemContentTypeTree",          true, ssmt_type,  SPECIAL},
+    {"kMDItemKind",                     true, ssmt_type,  SPECIAL},
 
     /* Image metadata */
     {"kMDItemPixelWidth",               true, ssmt_num,   "nfo:width"},

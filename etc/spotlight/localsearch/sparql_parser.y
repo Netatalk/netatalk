@@ -1,4 +1,5 @@
 %{
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -71,6 +72,10 @@ input:
 
 line:
 expr                           {
+    if ($1 == NULL) {
+        YYABORT;
+    }
+
     if (ssp_slq->slq_result_limit) {
         result_limit = talloc_asprintf(ssp_slq, "LIMIT %ld",
                                        ssp_slq->slq_result_limit);
@@ -78,9 +83,23 @@ expr                           {
         result_limit = "";
     }
 
+    /*
+     * Wrapper binds only ?file. Each ssmt_* template that needs ?obj
+     * (the nie:InformationElement) prepends its own
+     * "?obj nie:isStoredAs ?file ." join, so plain-file queries that
+     * don't reference ?obj aren't filtered out by an InformationElement
+     * that may not exist (localsearch only creates one when a content
+     * extractor ran for that file's MIME type).
+     *
+     * Scope is filtered with STRSTARTS(STR(?url), 'file://prefix/')
+     * rather than tracker:uri-is-descendant: the latter NULL-derefs in
+     * libc AVX2 string routines on percent-encoded file URIs (#2945).
+     * The trailing '/' in the prefix preserves descendant semantics
+     * (prevents '/srv/afp2/' from matching '/srv/afp22/...').
+     */
     ssp_result = talloc_asprintf(ssp_slq,
                                  "SELECT DISTINCT ?url WHERE "
-                                 "{ %s . ?obj nie:isStoredAs ?file . ?file nie:url ?url . FILTER(tracker:uri-is-descendant('file://%s/', ?url)) } %s",
+                                 "{ %s . ?file nie:url ?url . FILTER(STRSTARTS(STR(?url), 'file://%s/')) } %s",
                                  $1, ssp_slq->slq_scope, result_limit);
     $$ = ssp_result;
 }
@@ -99,26 +118,32 @@ BOOL {
     YYABORT;
 }
 | match OR match                 {
-    if ($1 == NULL || $3 == NULL) {
-        YYABORT;
-    }
-
-    if (strcmp($1, $3) != 0) {
-        $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
-    } else {
+    if ($1 == NULL && $3 == NULL) {
+        $$ = NULL;
+    } else if ($1 == NULL) {
+        $$ = $3;
+    } else if ($3 == NULL) {
+        $$ = $1;
+    } else if (strcmp($1, $3) == 0) {
         $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    } else {
+        $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     }
 }
-| match                        {$$ = $1; if ($$ == NULL) YYABORT;}
+| match                        {$$ = $1;}
 | function                     {$$ = $1;}
-| OBRACE expr CBRACE           {$$ = talloc_asprintf(ssp_slq, "%s", $2);}
+| OBRACE expr CBRACE           {$$ = $2;}
 | expr AND expr                {
     if (!ssp_slq->slq_allow_expr) {
         yyerror("Spotlight queries with logic expressions are disabled");
         YYABORT;
     }
 
-    $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
+    if ($1 == NULL || $3 == NULL) {
+        $$ = NULL;
+    } else {
+        $$ = talloc_asprintf(ssp_slq, "%s . %s", $1, $3);
+    }
 }
 | expr OR expr                 {
     if (!ssp_slq->slq_allow_expr) {
@@ -126,14 +151,16 @@ BOOL {
         YYABORT;
     }
 
-    if ($1 == NULL || $3 == NULL) {
-        YYABORT;
-    }
-
-    if (strcmp($1, $3) != 0) {
-        $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
-    } else {
+    if ($1 == NULL && $3 == NULL) {
+        $$ = NULL;
+    } else if ($1 == NULL) {
+        $$ = $3;
+    } else if ($3 == NULL) {
+        $$ = $1;
+    } else if (strcmp($1, $3) == 0) {
         $$ = talloc_asprintf(ssp_slq, "%s", $1);
+    } else {
+        $$ = talloc_asprintf(ssp_slq, "{ %s } UNION { %s }", $1, $3);
     }
 }
 ;
@@ -171,6 +198,24 @@ static time_t isodate2unix(const char *s)
     return mktime(&tm);
 }
 
+/*!
+ * Lowercase ASCII letters in-place in a talloc'd copy of `s`.
+ */
+static char *ascii_lower_dup(TALLOC_CTX *ctx, const char *s, size_t len)
+{
+    char *out = talloc_strndup(ctx, s, len);
+
+    if (out == NULL) {
+        return NULL;
+    }
+
+    for (char *p = out; *p; p++) {
+        *p = tolower((unsigned char)*p);
+    }
+
+    return out;
+}
+
 static const char *map_daterange(const char *dateattr, time_t date1,
                                  time_t date2)
 {
@@ -187,7 +232,7 @@ static const char *map_daterange(const char *dateattr, time_t date1,
     for (p = spotlight_sparql_map; p->ssm_spotlight_attr; p++) {
         if (strcmp(dateattr, p->ssm_spotlight_attr) == 0) {
             result = talloc_asprintf(ssp_slq,
-                                     "?obj %s ?v%d FILTER (?v%d > '%s' && ?v%d < '%s')",
+                                     "?obj nie:isStoredAs ?file . ?obj %s ?v%d FILTER (?v%d > '%s' && ?v%d < '%s')",
                                      p->ssm_sparql_attr,
                                      sparqlvar,
                                      sparqlvar,
@@ -228,7 +273,8 @@ static char *map_type_search(const char *attr, char op, const char *val)
                 return NULL;
             }
 
-            result = talloc_asprintf(ssp_slq, "?obj %s '%s'",
+            result = talloc_asprintf(ssp_slq,
+                                     "?obj nie:isStoredAs ?file . ?obj %s '%s'",
                                      sparqlAttr,
                                      p->mdtm_sparql);
             break;
@@ -257,11 +303,14 @@ static const char *map_expr(const char *attr, char op, const char *val)
 
             switch (p->ssm_type) {
             case ssmt_bool:
-                result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
+                result = talloc_asprintf(ssp_slq,
+                                         "?obj nie:isStoredAs ?file . ?obj %s '%s'",
+                                         p->ssm_sparql_attr, val);
                 break;
 
             case ssmt_num:
-                result = talloc_asprintf(ssp_slq, "?obj %s ?v%d FILTER(?v%d %c%c '%s')",
+                result = talloc_asprintf(ssp_slq,
+                                         "?obj nie:isStoredAs ?file . ?obj %s ?v%d FILTER(?v%d %c%c '%s')",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
@@ -276,7 +325,8 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 search = bfromcstr("*");
                 replace = bfromcstr(".*");
                 bfindreplace(q, search, replace, 0);
-                result = talloc_asprintf(ssp_slq, "?obj %s ?v%d FILTER(regex(?v%d, '%s'))",
+                result = talloc_asprintf(ssp_slq,
+                                         "?obj nie:isStoredAs ?file . ?obj %s ?v%d FILTER(regex(?v%d, '%s'))",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
@@ -284,30 +334,95 @@ static const char *map_expr(const char *attr, char op, const char *val)
                 sparqlvar++;
                 break;
 
-            case ssmt_fts:
-                result = talloc_asprintf(ssp_slq, "?obj %s '%s'", p->ssm_sparql_attr, val);
-                break;
+            case ssmt_fname: {
+                /*
+                 * Detect simple wildcard patterns and emit SPARQL string
+                 * functions (STRSTARTS/STRENDS/CONTAINS/equality) instead of
+                 * regex. These are dramatically cheaper than scanning every
+                 * indexed filename with a regex, and they avoid the
+                 * regex-cancel codepath in localsearch that crashes on
+                 * mid-flight cancellation of broad queries.
+                 */
+                size_t val_len = strlen(val);
+                int n_stars = 0;
+                for (size_t i = 0; i < val_len; i++) {
+                    if (val[i] == '*') {
+                        n_stars++;
+                    }
+                }
+                bool starts_star = val_len > 0 && val[0] == '*';
+                bool ends_star = val_len > 0 && val[val_len - 1] == '*';
+                const char *fname_filter;
+                char *lit;
 
-            case ssmt_fts_or_fname:
-                q = bformat("^%s$", val);
-                search = bfromcstr("*");
-                replace = bfromcstr(".*");
-                bfindreplace(q, search, replace, 0);
+                if (n_stars == 0) {
+                    /* exact: foo */
+                    lit = ascii_lower_dup(ssp_slq, val, val_len);
+                    EC_NULL(lit);
+                    fname_filter = talloc_asprintf(ssp_slq,
+                                                   "LCASE(?vfname) = '%s'",
+                                                   lit);
+                    EC_NULL(fname_filter);
+                } else if (n_stars == 1 && ends_star) {
+                    /* prefix: foo* */
+                    lit = ascii_lower_dup(ssp_slq, val, val_len - 1);
+                    EC_NULL(lit);
+                    fname_filter = talloc_asprintf(ssp_slq,
+                                                   "STRSTARTS(LCASE(?vfname), '%s')",
+                                                   lit);
+                    EC_NULL(fname_filter);
+                } else if (n_stars == 1 && starts_star) {
+                    /* suffix: *foo */
+                    lit = ascii_lower_dup(ssp_slq, val + 1, val_len - 1);
+                    EC_NULL(lit);
+                    fname_filter = talloc_asprintf(ssp_slq,
+                                                   "STRENDS(LCASE(?vfname), '%s')",
+                                                   lit);
+                    EC_NULL(fname_filter);
+                } else if (n_stars == 2 && starts_star && ends_star
+                           && val_len >= 2) {
+                    /* contains: *foo* */
+                    lit = ascii_lower_dup(ssp_slq, val + 1, val_len - 2);
+                    EC_NULL(lit);
+                    fname_filter = talloc_asprintf(ssp_slq,
+                                                   "CONTAINS(LCASE(?vfname), '%s')",
+                                                   lit);
+                    EC_NULL(fname_filter);
+                } else {
+                    /* embedded or multiple wildcards: fall back to regex */
+                    q = bformat("^%s$", val);
+                    EC_NULL(q);
+                    search = bfromcstr("*");
+                    EC_NULL(search);
+                    replace = bfromcstr(".*");
+                    EC_NULL(replace);
+                    bfindreplace(q, search, replace, 0);
+                    fname_filter = talloc_asprintf(ssp_slq,
+                                                   "regex(?vfname, '%s', 'i')",
+                                                   bdata(q));
+                    EC_NULL(fname_filter);
+                }
+
                 result = talloc_asprintf(ssp_slq,
-                                         "{ ?obj %s '%s' }"
-                                         " UNION "
-                                         "{ ?obj nie:isStoredAs ?file . ?file nfo:fileName ?v%d FILTER(regex(?v%d, '%s', 'i')) }",
-                                         p->ssm_sparql_attr, val,
-                                         sparqlvar, sparqlvar,
-                                         bdata(q));
-                sparqlvar++;
+                                         "?file %s ?vfname FILTER(%s)",
+                                         p->ssm_sparql_attr,
+                                         fname_filter);
+                EC_NULL(result);
+                break;
+            }
+
+            case ssmt_fts:
+                result = talloc_asprintf(ssp_slq,
+                                         "?obj nie:isStoredAs ?file . ?obj %s '%s'",
+                                         p->ssm_sparql_attr, val);
                 break;
 
             case ssmt_date:
                 t = atoi(val) + SPRAW_TIME_OFFSET;
                 EC_NULL(tmp = localtime(&t));
                 strftime(buf1, sizeof(buf1), "%Y-%m-%dT%H:%M:%SZ", tmp);
-                result = talloc_asprintf(ssp_slq, "?obj %s ?v%d FILTER(?v%d %c '%s')",
+                result = talloc_asprintf(ssp_slq,
+                                         "?obj nie:isStoredAs ?file . ?obj %s ?v%d FILTER(?v%d %c '%s')",
                                          p->ssm_sparql_attr,
                                          sparqlvar,
                                          sparqlvar,
