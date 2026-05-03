@@ -138,6 +138,11 @@ STATIC void test500()
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
@@ -212,6 +217,11 @@ STATIC void test501()
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
@@ -282,6 +292,11 @@ STATIC void test502()
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
+
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
 
     if (!Conn2) {
         test_skipped(T_CONN2);
@@ -360,6 +375,11 @@ STATIC void test503()
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
@@ -431,6 +451,11 @@ STATIC void test504()
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
 
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
@@ -500,6 +525,11 @@ STATIC void test505()
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
+
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
 
     if (!Conn2) {
         test_skipped(T_CONN2);
@@ -572,6 +602,11 @@ STATIC void test506()
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap = (1 << DIRPBIT_DID) | (1 << DIRPBIT_LNAME);
     ENTER_TEST
+
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
 
     if (!Conn2) {
         test_skipped(T_CONN2);
@@ -670,6 +705,12 @@ STATIC void test508()
     char dir_name[64];
     int created_count = 0;
     ENTER_TEST
+
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     /* Allocate array for directory IDs */
     dir_ids = calloc(NUM_DIRS, sizeof(uint32_t));
 
@@ -921,6 +962,12 @@ STATIC void test509()
     int created_count = 0;
     int accesses = 0;
     ENTER_TEST
+
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     /* Allocate array for directory IDs */
     dir_ids = calloc(NUM_DIRS, sizeof(uint32_t));
 

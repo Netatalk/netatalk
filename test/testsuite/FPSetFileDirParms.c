@@ -369,6 +369,11 @@ STATIC void test232()
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
@@ -436,6 +441,11 @@ STATIC void test345()
     int fork;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
@@ -521,6 +531,11 @@ STATIC void test346()
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
         goto test_exit;
@@ -580,6 +595,11 @@ STATIC void test347()
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
 
     if (get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV) {
         test_skipped(T_NO_UNIX_PREV);
@@ -670,6 +690,11 @@ STATIC void test348()
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
         goto test_exit;
@@ -737,6 +762,11 @@ STATIC void test349()
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
@@ -811,6 +841,11 @@ STATIC void test350()
     int ret;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
@@ -958,6 +993,11 @@ STATIC void test359()
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
 
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);
         goto test_exit;
@@ -1049,6 +1089,11 @@ STATIC void test361()
     const DSI *dsi = &Conn->dsi;
     const DSI *dsi2;
     ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
 
     if (!Conn2) {
         test_skipped(T_CONN2);
@@ -1151,6 +1196,11 @@ STATIC void test400()
     uint16_t bitmap = 0;
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
 
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_UNIXPRIV)) {
         test_skipped(T_UNIX_PREV);

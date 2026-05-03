@@ -354,6 +354,12 @@ STATIC void test378()
     int ret;
     ENTER_TEST
 
+    /* AFP 2.x technically doesn't support case sensitive file system */
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_failed();
         goto test_exit;
