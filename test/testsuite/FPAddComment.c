@@ -150,6 +150,11 @@ STATIC void test537()
     const DSI *dsi2;
     ENTER_TEST
 
+    if (Mac) {
+        test_skipped(T_MAC);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
