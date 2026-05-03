@@ -367,9 +367,9 @@ static int sl_pack_string(char *s, char *buf, int offset, char *toc_buf,
     EC_INIT;
     int len, octets, used_in_last_octet;
     size_t alloc_size = talloc_get_size(s);
-    len = (int)strnlen(s, alloc_size - 1);
+    len = (int)strnlen(s, alloc_size);
 
-    if (alloc_size == 0 || (size_t)len == alloc_size - 1) {
+    if (alloc_size == 0 || (size_t)len == alloc_size) {
         EC_FAIL;
     }
 
