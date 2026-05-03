@@ -3,9 +3,10 @@
 Netatalk provides support for Spotlight-compatible search and indexing on macOS clients.
 This allows users to search for files and metadata on Netatalk volumes in macOS.
 
-> **Note:** The Netatalk development team has observed that in macOS,
+> ***NOTE:*** The Netatalk development team has observed that in macOS,
 remote file systems can be searched only through *Finder Search* and not through
-the *Spotlight Search* widget in the menu bar. This is a limitation of macOS and not of Netatalk.
+the *Spotlight Search* widget access from the looking glass icon in the menu bar.
+This is a limitation of macOS and not of Netatalk.
 >
 > Open a Finder window and use the search box in the top right corner, enter a search term,
 and make sure to select the Network neighborhood or the specific Netatalk volume in the search scope options.
@@ -24,20 +25,17 @@ The AFP Spotlight RPC protocol layer is shared,
 while query execution is delegated to a backend selected per volume.
 
 You can select the backend with the volume option **spotlight backend**.
-If not set, the default is **cnid**.
+If not set, the default is **localsearch** which is the backend currently
+considered stable and recommended for general use.
 
 Example:
 
     [Global]
     spotlight = yes
 
-    [Documents]
-    path = /srv/afp/docs
-    spotlight backend = cnid
-
     [Media]
     path = /srv/afp/media
-    spotlight backend = xapian
+    spotlight backend = localsearch
 
     [Private]
     path = /srv/afp/private
@@ -49,6 +47,8 @@ Available Spotlight backends:
   Uses *cnid_find()* against the CNID database for filename-oriented searches.
   It has no extra runtime dependencies beyond the *talloc* library and Netatalk's CNID support.
 
+  ***NOTE:*** The **cnid** backend is considered *EXPERIMENTAL* and is not recommended for general use.
+
 - **localsearch**
   Uses the LocalSearch/Tracker SPARQL backend for broader file contents and metadata indexing/search.
   This backend requires LocalSearch/Tracker, TinySPARQL, GLib, D-Bus, and related tooling.
@@ -56,6 +56,8 @@ Available Spotlight backends:
 - **xapian**
   Uses a per-volume Xapian index maintained by Netatalk for filename, plain-text content, and MIME type search.
   This backend requires xapian-core and libmagic.
+
+  ***NOTE:*** The **xapian** backend is considered *EXPERIMENTAL* and is not recommended for general use.
 
 The **xapian** backend stores a shared per-volume index. To avoid indexing
 private file contents into that shared index, it indexes body text only for

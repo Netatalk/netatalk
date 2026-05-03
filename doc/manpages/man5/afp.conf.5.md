@@ -752,16 +752,17 @@ of the string. Example:
 
 > This option does not affect the *cnid* or *xapian* backends.
 
-spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
+spotlight backend = *backend* (default: *localsearch*) **(G)**/**(V)**
 
 > Search backend used by the Spotlight feature.
-Most Netatalk configurations will have the *cnid* backend available,
-which allows simple file name matching search on shared volumes.
 >
-> If support is compiled into Netatalk, you may alternatively use
-the *localsearch* or *xapian* backends, which enable more advanced search
-capabilities, including full text search and file metadata search.
-Run **netatalk -v** to see which backends are available in your installation.
+> Depending on your Netatalk configuration, the available backends may include:
+*cnid*, *localsearch*, *xapian*.
+>
+>Run **netatalk -v** to see which backends are available in your installation.
+>
+> ***NOTE:*** The *cnid* and *xapian* backends are considered *EXPERIMENTAL*
+and are not recommended for production use at this time.
 
 spotlight expr = *BOOLEAN* (default: *yes*) **(G)**
 
