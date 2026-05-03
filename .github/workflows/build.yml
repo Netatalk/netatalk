@@ -795,6 +795,8 @@ jobs:
           copyback: true
           prepare: |
             set -e
+            pkg refresh --full
+            pkg update -v
             pkg install \
               archiver/gnu-tar \
               compress/gzip \
