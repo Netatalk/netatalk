@@ -798,21 +798,15 @@ jobs:
             pkg install \
               archiver/gnu-tar \
               compress/gzip \
-              database/mariadb-114/client \
-              database/mariadb-114/library \
               database/sqlite-3 \
               developer/build/cmake \
               developer/build/meson \
               developer/build/ninja \
               developer/build/pkg-config \
               developer/gcc-14 \
-              library/cmark \
               library/glib2 \
               library/libev \
-              library/magic \
               library/security/cracklib \
-              library/talloc \
-              library/xapian \
               runtime/perl \
               system/library/dbus \
               system/library/libdbus \
