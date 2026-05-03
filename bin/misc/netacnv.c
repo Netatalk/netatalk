@@ -40,7 +40,7 @@ static void usage(void)
     printf("Defaults: -f: UTF8-MAC, -t: UTF8, -m MAC_ROMAN\n");
     printf("Available conversion options:\n");
 
-    for (int i = 0; i < (sizeof(flag_map) / sizeof(struct flag_map) - 1); i++) {
+    for (size_t i = 0; i < sizeof(flag_map) / sizeof(struct flag_map); i++) {
         printf("%s\n", flag_map[i].flagname);
     }
 }
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
             break;
 
         case 'o':
-            for (int i = 0; i < sizeof(flag_map) / sizeof(struct flag_map) - 1; i++)
+            for (size_t i = 0; i < sizeof(flag_map) / sizeof(struct flag_map); i++)
                 if ((strcmp(flag_map[i].flagname, optarg)) == 0) {
                     flags |= flag_map[i].flag;
                 }
