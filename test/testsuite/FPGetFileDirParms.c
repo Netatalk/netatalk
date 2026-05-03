@@ -707,19 +707,26 @@ STATIC void test326()
     int ret;
     int id;
     ENTER_TEST
-    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
-
-    if (ret) {
-        test_nottested();
-        goto test_exit;
-    }
 
     if (Conn->afp_version >= 30) {
         bitmap = (1 << FILPBIT_PDINFO);
     } else {
+        if (Mac) {
+            /* a Mac AFP 2.x can't create filename longer than 31 bytes */
+            test_skipped(T_MAC);
+            goto test_exit;
+        }
+
         /* FIXME: fails with afp 2.x despite the comment below */
         bitmap = (1 << DIRPBIT_LNAME);
         test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    ret = FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name);
+
+    if (ret) {
+        test_nottested();
         goto test_exit;
     }
 
@@ -742,8 +749,8 @@ STATIC void test326()
         test_failed();
     }
 
-test_exit:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+test_exit:
     exit_test("FPGetFileDirParms:test326: long file name >31 bytes");
 }
 
@@ -1280,6 +1287,17 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
     afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap_pdinfo, 0);
     prodos_type = filedir.pdinfo[0];
     prodos_aux = (uint16_t)(filedir.pdinfo[3] << 8) | filedir.pdinfo[2];
+
+    /*
+     * Apple's AFP servers will return an auxtype of 0xFFFF
+     * for PSYS/pdos and PS16/pdos mappings. The last two
+     * bytes of the ProDOS Info bit will also be 0xFF in
+     * these cases.
+     */
+    if ((prodos_aux == 0xFFFF) && (filedir.pdinfo[4] == 0xFF)
+            && (filedir.pdinfo[5] == 0xFF)) {
+        expect_aux = 0xFFFF;
+    }
 
     if (prodos_type != expect_type || prodos_aux != expect_aux) {
         test_failed();

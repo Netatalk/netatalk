@@ -724,6 +724,11 @@ STATIC void test535()
     int sock;
     ENTER_TEST
 
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
     if (!Conn2) {
         test_skipped(T_CONN2);
         goto test_exit;
