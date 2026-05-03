@@ -1471,7 +1471,7 @@ static struct vol *creatvol(AFPObj *obj,
         if (val) {
             EC_NULL(volume->v_sl_backend_name = strdup(val));
         } else {
-            volume->v_sl_backend_name = strdup("cnid");
+            volume->v_sl_backend_name = strdup("localsearch");
         }
     }
 
