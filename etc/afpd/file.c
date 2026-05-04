@@ -75,6 +75,83 @@ static const uint8_t old_ufinderi[] = {
     'T', 'E', 'X', 'T', 'U', 'N', 'I', 'X'
 };
 
+static int has_dotdot_component(const char *path)
+{
+    const char *p = path;
+
+    while (*p) {
+        size_t len;
+        const char *slash = strchr(p, '/');
+        len = slash ? (size_t)(slash - p) : strlen(p);
+
+        if (len == 2 && p[0] == '.' && p[1] == '.') {
+            return 1;
+        }
+
+        if (!slash) {
+            break;
+        }
+
+        p = slash + 1;
+    }
+
+    return 0;
+}
+
+static int path_is_inside_volume(const struct vol *vol, const char *path)
+{
+    size_t volpath_len = strlen(vol->v_path);
+
+    if (strncmp(path, vol->v_path, volpath_len) != 0) {
+        return 0;
+    }
+
+    return path[volpath_len] == '\0' || path[volpath_len] == '/';
+}
+
+static int symlink_target_safe(const struct vol *vol,
+                               const char *link_path,
+                               const char *target)
+{
+    char target_path[MAXPATHLEN + 1];
+    char link_dir[MAXPATHLEN + 1];
+    char *slash;
+    char *resolved_target = NULL;
+    int safe = 0;
+
+    if (target[0] == '/' || has_dotdot_component(target)) {
+        return 0;
+    }
+
+    if (strlcpy(link_dir, link_path, sizeof(link_dir)) >= sizeof(link_dir)) {
+        return 0;
+    }
+
+    slash = strrchr(link_dir, '/');
+
+    if (slash == link_dir) {
+        slash[1] = '\0';
+    } else if (slash) {
+        *slash = '\0';
+    } else {
+        strlcpy(link_dir, ".", sizeof(link_dir));
+    }
+
+    if (snprintf(target_path, sizeof(target_path), "%s/%s", link_dir, target)
+            >= sizeof(target_path)) {
+        return 0;
+    }
+
+    resolved_target = realpath_safe(target_path);
+
+    if (resolved_target) {
+        safe = path_is_inside_volume(vol, resolved_target);
+        free(resolved_target);
+    }
+
+    return safe;
+}
+
 /* ----------------------
 */
 static int default_type(void *finder)
@@ -1176,6 +1253,11 @@ int setfilparams(const AFPObj *obj, struct vol *vol,
                 }
 
                 symbuf[len] = 0;
+
+                if (!symlink_target_safe(vol, path->u_name, symbuf)) {
+                    err = AFPERR_ACCESS;
+                    goto setfilparam_done;
+                }
 
                 if (symlink(symbuf, path->u_name) != 0) {
                     err = AFPERR_MISC;
