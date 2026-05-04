@@ -956,13 +956,14 @@ end:
 
 /*!
  * @bug the size is a mess we really need a malloc/free logic
- * @note dest size must be dest_len +2
+ * @note dest_len must include space for the two-byte terminator
  */
 size_t convert_charset(charset_t from_set, charset_t to_set,
                        charset_t cap_charset, const char *src, size_t src_len, char *dest,
                        size_t dest_len, uint16_t *flags)
 {
     size_t i_len, o_len;
+    size_t dest_capacity;
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN + 2];
     ucs2_t buffer2[MAXPATHLEN + 2];
@@ -1021,9 +1022,16 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
         strlower_w(u);
     }
 
+    if (dest_len < 2) {
+        errno = E2BIG;
+        return (size_t) -1;
+    }
+
+    dest_capacity = dest_len - 2;
+
     /* Convert UCS2 to to_set */
     if ((size_t)(-1) == (o_len = push_charset_flags(to_set, cap_charset, (char *)u,
-                                 i_len, dest, dest_len, flags))) {
+                                 i_len, dest, dest_capacity, flags))) {
         LOG(log_error, logtype_default,
             "Conversion failed (CH_UCS2 to %s):%s", charset_name(to_set), strerror(errno));
         return (size_t) -1;
