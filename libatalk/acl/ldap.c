@@ -182,8 +182,8 @@ retry:
             if (ldap_bind_s(ld, ldap_auth_dn, ldap_auth_pw,
                             ldap_auth_method) != LDAP_SUCCESS) {
                 LOG(log_error, logtype_default,
-                    "ldap: ldap_bind failed: ldap_auth_dn: \'%s\', ldap_auth_pw: \'%s\', ldap_auth_method: \'%d\'",
-                    ldap_auth_dn, ldap_auth_pw, ldap_auth_method);
+                    "ldap: ldap_bind failed: ldap_auth_dn: \'%s\', ldap_auth_method: \'%d\'",
+                    ldap_auth_dn, ldap_auth_method);
                 free(ld);
                 ld = NULL;
                 return -1;
