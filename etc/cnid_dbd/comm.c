@@ -247,6 +247,13 @@ int comm_rcv(struct cnid_dbd_rqst *rqst, time_t timeout,
 
     rqst->name = nametmp;
 
+    if (rqst->namelen > MAXPATHLEN) {
+        LOG(log_error, logtype_cnid, "comm_rcv: name too long: %zu",
+            rqst->namelen);
+        invalidate_fd(cur_fd);
+        return 0;
+    }
+
     if (rqst->namelen
             && readt(cur_fd, (char *)rqst->name, rqst->namelen, 1, CNID_DBD_TIMEOUT)
             != rqst->namelen) {
