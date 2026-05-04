@@ -848,7 +848,6 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     static char  upath[MAXPATHLEN + 2];
     char	*m, *u;
     size_t       inplen;
-    size_t       outlen;
     uint16_t	 flags;
 
     if (*mpath == '\0') {
@@ -867,11 +866,11 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     m = mpath;
     u = upath;
     inplen = strlen(m);
-    outlen = MAXPATHLEN;
 
-    if ((size_t) -1 == (outlen = convert_charset(utf8 ? CH_UTF8_MAC :
-                                 vol->v_maccharset, vol->v_volcharset, vol->v_maccharset, m, inplen, u, outlen,
-                                 &flags))) {
+    if ((size_t) -1 == convert_charset(utf8 ? CH_UTF8_MAC :
+                                       vol->v_maccharset, vol->v_volcharset, vol->v_maccharset, m, inplen, u,
+                                       sizeof(upath),
+                                       &flags)) {
         LOG(log_error, logtype_afpd, "conversion from %s to %s for %s failed.",
             (utf8) ? "UTF8-MAC" : vol->v_maccodepage, vol->v_volcodepage, mpath);
         return NULL;
@@ -899,7 +898,7 @@ char *utompath(const struct vol *vol, char *upath, cnid_t id, int utf8)
     /* convert charsets */
     if ((size_t) -1 == (outlen = convert_charset(vol->v_volcharset,
                                  utf8 ? CH_UTF8_MAC : vol->v_maccharset, vol->v_maccharset, u, outlen, mpath,
-                                 MAXPATHLEN, &flags))) {
+                                 sizeof(mpath), &flags))) {
         LOG(log_error, logtype_afpd, "Conversion from %s to %s for %s (%u) failed.",
             vol->v_volcodepage, vol->v_maccodepage, u, ntohl(id));
         goto utompath_error;

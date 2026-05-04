@@ -36,7 +36,7 @@ static size_t mangle_extension(const struct vol *vol, const char *uname,
         uint16_t flags = CONV_FORCE | CONV_UNESCAPEHEX;
         size_t len = convert_charset(vol->v_volcharset, charset,
                                      vol->v_maccharset, p, strlen(p),
-                                     extension, MAX_EXT_LENGTH, &flags);
+                                     extension, MAX_EXT_LENGTH + 2, &flags);
 
         if (len != (size_t) -1) {
             return len;
@@ -83,7 +83,7 @@ static char *demangle_checks(const struct vol *vol, char *uname,
     flags = CONV_IGNORE | CONV_UNESCAPEHEX;
 
     if ((size_t) -1 == (len = convert_charset(vol->v_volcharset, vol->v_maccharset,
-                              0, uname, strlen(uname), buffer, MAXPATHLEN, &flags))) {
+                              0, uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
         return mfilename;
     }
 
@@ -106,7 +106,7 @@ static char *demangle_checks(const struct vol *vol, char *uname,
         if (len) {
             /* convert the buffer to UTF8_MAC ... */
             if ((size_t) -1 == (len = convert_charset(vol->v_maccharset, CH_UTF8_MAC, 0,
-                                      buffer, len, buffer, MAXPATHLEN, &flags))) {
+                                      buffer, len, buffer, sizeof(buffer), &flags))) {
                 return mfilename;
             }
 
@@ -130,7 +130,7 @@ static char *demangle_checks(const struct vol *vol, char *uname,
             /* characters have to match ... again a possible race FIXME			  */
 
             if ((size_t) -1 == (len = convert_charset(vol->v_volcharset, CH_UTF8_MAC, 0,
-                                      uname, strlen(uname), buffer, MAXPATHLEN, &flags))) {
+                                      uname, strlen(uname), buffer, sizeof(buffer), &flags))) {
                 return mfilename;
             }
 
@@ -267,7 +267,7 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
 {
     char *m = NULL;
     /* way > maxlen */
-    static char mfilename[MAXPATHLEN];
+    static char mfilename[MAXPATHLEN + 2];
     char mangle_suffix[MANGLE_LENGTH + 1];
     /* for convert_charset dest_len parameter +2 */
     char ext[MAX_EXT_LENGTH + 2];
@@ -295,10 +295,11 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
 
     if (filenamelen + k + ext_len > maxlen) {
         uint16_t opt = CONV_FORCE | CONV_UNESCAPEHEX;
+        size_t prefix_len = maxlen - k - ext_len;
         size_t n = convert_charset(vol->v_volcharset,
                                    (flags & 2) ? CH_UTF8_MAC : vol->v_maccharset,
                                    vol->v_maccharset, uname, strlen(uname),
-                                   m, maxlen - k - ext_len, &opt);
+                                   m, prefix_len + 2, &opt);
         m[n != (size_t) -1 ? n : 0] = 0;
     } else {
         strlcpy(m, filename, filenamelen + 1);
