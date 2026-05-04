@@ -5,57 +5,6 @@
 #include "afphelper.h"
 #include "testhelper.h"
 
-/* ------------------------ */
-static int afp_symlink(char *oldpath, char *newpath)
-{
-    int  ofs =  3 * sizeof(uint16_t);
-    struct afp_filedir_parms filedir;
-    uint16_t bitmap;
-    uint16_t vol = VolID;
-    const DSI *dsi;
-    int fork = 0;
-    dsi = &Conn->dsi;
-
-    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, newpath)) {
-        return -1;
-    }
-
-    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, newpath,
-                      OPENACC_WR | OPENACC_RD);
-
-    if (!fork) {
-        return -1;
-    }
-
-    if (FPWrite(Conn, fork, 0, (int)strlen(oldpath), oldpath, 0)) {
-        return -1;
-    }
-
-    if (FPCloseFork(Conn, fork)) {
-        return -1;
-    }
-
-    fork = 0;
-    bitmap = (1 << DIRPBIT_ATTR) | (1 << FILPBIT_FINFO) |
-             (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_MDATE) |
-             (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << FILPBIT_FNUM);
-
-    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, newpath, bitmap, 0)) {
-        return -1;
-    }
-
-    filedir.isdir = 0;
-    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
-    memcpy(filedir.finder_info, "slnkrhap", 8);
-    bitmap = (1 << FILPBIT_FINFO);
-
-    if (FPSetFileParams(Conn, vol, DIRDID_ROOT, newpath, bitmap, &filedir)) {
-        return -1;
-    }
-
-    return 0;
-}
-
 /* ------------------------- */
 STATIC void test89()
 {
@@ -149,12 +98,15 @@ test_exit:
 STATIC void test426()
 {
     char *name = "t426 Symlink";
+    char *target = "t426 dest";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir;
     uint16_t bitmap;
     uint16_t vol = VolID;
-    DSI *dsi;
+    const DSI *dsi;
     int fork = 0;
+    int created = 0;
+    int len;
     unsigned int ret;
     char temp[MAXPATHLEN];
     struct stat st;
@@ -172,57 +124,80 @@ STATIC void test426()
         goto test_exit;
     }
 
-    if (afp_symlink("t426 dest", name)) {
+    if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
         goto test_exit;
     }
 
-    /* Check if volume uses option 'followsymlinks' */
-    sprintf(temp, "%s/%s", Path, name);
-
-    if (lstat(temp, &st)) {
-        if (!Quiet) {
-            fprintf(stdout, "\tFAILED stat( %s ) %s\n", temp, strerror(errno));
-        }
-
-        test_failed();
-    }
-
-    if (!S_ISLNK(st.st_mode)) {
-        test_skipped(T_NOSYML);
-        goto test_exit;
-    }
-
+    created = 1;
     fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name,
                       OPENACC_WR | OPENACC_RD);
 
     if (!fork) {
-        test_failed();
-    } else {
-        char *ln2 = "t426 dest 2";
-        ret = FPWrite_ext(Conn, fork, 0, (off_t)strlen(ln2), ln2, 0);
+        test_nottested();
+        goto test_exit;
+    }
 
-        if (not_valid_bitmap(ret, BITERR_ACCESS | BITERR_MISC, AFPERR_MISC)) {
+    if (FPWrite(Conn, fork, 0, (int)strlen(target), target, 0)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCloseFork(Conn, fork)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    fork = 0;
+    bitmap = (1 << DIRPBIT_ATTR) | (1 << FILPBIT_FINFO) |
+             (1 << DIRPBIT_CDATE) | (1 << DIRPBIT_MDATE) |
+             (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << FILPBIT_FNUM);
+
+    if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, name, bitmap, 0)) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(&filedir, dsi->data + ofs, bitmap, 0);
+    memcpy(filedir.finder_info, "slnkrhap", 8);
+    bitmap = (1 << FILPBIT_FINFO);
+    ret = FPSetFileParams(Conn, vol, DIRDID_ROOT, name, bitmap, &filedir);
+
+    if (ret != htonl(AFPERR_ACCESS)) {
+        test_failed();
+    }
+
+    len = snprintf(temp, sizeof(temp), "%s/%s", Path, name);
+
+    if (len < 0 || len >= (int)sizeof(temp)) {
+        test_failed();
+        goto test_exit;
+    }
+
+    if (lstat(temp, &st) == 0) {
+        if (S_ISLNK(st.st_mode)) {
             test_failed();
         }
-
-        FPCloseFork(Conn, fork);
-    }
-
-    fork = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, DIRDID_ROOT, name, OPENACC_RD);
-
-    if (!fork) {
-        /* Trying to open the linked file? */
+    } else if (errno != ENOENT) {
         test_failed();
     }
+
+test_exit:
 
     if (fork) {
         FPCloseFork(Conn, fork);
     }
 
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
-test_exit:
-    exit_test("FPSetFileParms:test426: Create a dangling symlink");
+    if (created) {
+        ret = FPDelete(Conn, vol, DIRDID_ROOT, name);
+
+        if (ret && ret != htonl(AFPERR_NOOBJ)) {
+            test_failed();
+        }
+    }
+
+    exit_test("FPSetFileParms:test426: Reject a dangling symlink");
 }
 
 /* ----------- */
