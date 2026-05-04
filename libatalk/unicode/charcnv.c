@@ -966,6 +966,7 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
     ucs2_t *u;
     ucs2_t buffer[MAXPATHLEN + 2];
     ucs2_t buffer2[MAXPATHLEN + 2];
+    size_t u_size;
     lazy_initialize_conv();
     /* convert from_set to UCS2 */
     errno = 0;
@@ -1003,8 +1004,15 @@ size_t convert_charset(charset_t from_set, charset_t to_set,
     }
 
     /* null terminate */
-    u[i_len] = 0;
-    u[i_len + 1] = 0;
+    u_size = (u == buffer2) ? sizeof(buffer2) : sizeof(buffer);
+
+    if (i_len > u_size - 2) {
+        errno = E2BIG;
+        return (size_t) -1;
+    }
+
+    ((char *)u)[i_len] = 0;
+    ((char *)u)[i_len + 1] = 0;
 
     /* Do case conversions */
     if (CHECK_FLAGS(flags, CONV_TOUPPER)) {
