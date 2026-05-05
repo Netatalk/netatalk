@@ -141,6 +141,7 @@ static int afppasswd(const struct passwd *pwd,
     FILE *fp;
     unsigned int i, j;
     int keyfd = -1, err = 0;
+    ssize_t keylen;
     off_t pos;
     gcry_cipher_hd_t ctx;
     gcry_error_t ctxerror;
@@ -205,12 +206,30 @@ afppasswd_found:
 
     if (keyfd > -1) {
         /* read in the hex representation of an 8-byte key */
-        if (read(keyfd, key, sizeof(key)) < 0) {
+        keylen = read(keyfd, key, sizeof(key));
+
+        if (keylen < 0) {
             LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
+            err = AFPERR_ACCESS;
+            goto afppasswd_done;
+        }
+
+        if (keylen != sizeof(key)) {
+            LOG(log_info, logtype_uams, "invalid key length in afppasswd key file");
+            err = AFPERR_ACCESS;
+            goto afppasswd_done;
+        }
+
+        for (i = 0; i < sizeof(key); i++) {
+            if (!isxdigit(key[i])) {
+                LOG(log_info, logtype_uams, "invalid character in afppasswd key file");
+                err = AFPERR_ACCESS;
+                goto afppasswd_done;
+            }
         }
 
         /* convert to binary key */
-        for (i = j = 0; i < strlen((char *) key); i += 2, j++) {
+        for (i = j = 0; i < sizeof(key); i += 2, j++) {
             key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
         }
 
