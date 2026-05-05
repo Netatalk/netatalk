@@ -1291,7 +1291,7 @@ cups_config = find_program('cups-config', required: false)
 spooldir = ''
 
 if get_option('with-cups') and get_option('with-appletalk')
-    spooldir = get_option('localstatedir') / 'spool' / 'netatalk'
+    spooldir = localstatedir / 'spool' / 'netatalk'
 
     spooldir_override = get_option('with-spooldir')
     if spooldir_override != ''
@@ -1300,7 +1300,6 @@ if get_option('with-cups') and get_option('with-appletalk')
 
     have_cups = cups.found() and cups_config.found()
     if have_cups
-        spooldir_required = true
         cdata.set('HAVE_CUPS', 1)
         cups_api_version = run_command(
             cups_config,
@@ -1315,7 +1314,6 @@ if get_option('with-cups') and get_option('with-appletalk')
     endif
 else
     have_cups = false
-    spooldir_required = false
 endif
 
 #

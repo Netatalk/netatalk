@@ -56,6 +56,6 @@ executable(
     install_rpath: rpath_libdir,
 )
 
-if have_cups and spooldir_required
+if have_cups
     install_emptydir(spooldir, install_mode: 'rwxrwxrwx')
 endif
