@@ -91,8 +91,32 @@ fi
 
 echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 
-if [ -f "/etc/netatalk/afppasswd" ]; then
-    rm -f /etc/netatalk/afppasswd
+RANDNUM_PASSWD_FILE="/etc/netatalk/afppasswd"
+RANDNUM_KEY_FILE="$RANDNUM_PASSWD_FILE.key"
+
+ensure_randnum_key_file() {
+    if [ -f "$RANDNUM_KEY_FILE" ]; then
+        chown root:root "$RANDNUM_KEY_FILE" && chmod 600 "$RANDNUM_KEY_FILE"
+        return $?
+    fi
+
+    echo "*** Creating RandNum password key file"
+    old_umask=$(umask)
+    umask 077
+    randnum_key=$(od -An -N8 -tx1 /dev/urandom)
+    if ! printf '%s\n' "$randnum_key" | tr -d ' \n' > "$RANDNUM_KEY_FILE"; then
+        umask "$old_umask"
+        return 1
+    fi
+    if ! chown root:root "$RANDNUM_KEY_FILE" || ! chmod 600 "$RANDNUM_KEY_FILE"; then
+        umask "$old_umask"
+        return 1
+    fi
+    umask "$old_umask"
+}
+
+if [ -f "$RANDNUM_PASSWD_FILE" ]; then
+    rm -f "$RANDNUM_PASSWD_FILE"
 fi
 
 if [ -f "/etc/netatalk/afppasswd.srp" ]; then
@@ -103,10 +127,16 @@ UAMS="uams_dhx.so uams_dhx2.so"
 
 # Creating credentials for the RandNum UAM
 RANDNUM_OK=0
-afppasswd -c -r
+if [ -n "$INSECURE_AUTH" ]; then
+    if ensure_randnum_key_file; then
+        afppasswd -c -r
 
-if afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null; then
-    RANDNUM_OK=1
+        if afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null; then
+            RANDNUM_OK=1
+        fi
+    else
+        echo "ERROR: Failed to secure $RANDNUM_KEY_FILE; disabling RandNum UAM" >&2
+    fi
 fi
 
 # Creating credentials for the SRP UAM
@@ -137,7 +167,7 @@ elif [ -n "$AFP_USER2" ]; then
 
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
 
-    if ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
+    if [ -n "$INSECURE_AUTH" ] && ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
         RANDNUM_OK=0
     fi
     if ! afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null; then
@@ -147,7 +177,7 @@ fi
 
 if [ "$RANDNUM_OK" = "1" ]; then
     UAMS="$UAMS uams_randnum.so"
-else
+elif [ -n "$INSECURE_AUTH" ]; then
     echo "NOTE: uams_randnum.so will not be loaded"
 fi
 if [ "$SRP_OK" = "1" ]; then
