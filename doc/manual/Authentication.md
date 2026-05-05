@@ -70,7 +70,8 @@ DHX2 is sufficient and provides the strongest encryption.
 
 - "Randnum exchange"/"2-Way Randnum exchange" uses only 56-bit DES for encryption,
   so it should also be avoided.
-  An additional disadvantage is that passwords must be stored as raw hex on the server.
+  An additional disadvantage is that passwords are stored separately on the server:
+  as raw hex by default, or DES-encrypted and hex-encoded when a key file is used.
 
     However, this is the strongest form of authentication available for
     Macintosh System Software 7.1 or earlier.
@@ -140,9 +141,9 @@ An overview of the officially supported UAMs on Macs.
 | ---------------- | ------------- | ---------------- | ---------------- | ------------ | ------------- | ---------------- | ---------------- |
 | Password length  | guest access  | max 8 chars      | max 8 chars      | max 64 chars | max 255 chars | Kerberos tickets | max 255 chars    |
 | Client support   | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.7 |
-| Encryption       | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all costs. | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires passwords in clear on the server. | Password will be encrypted with 128 bit CAST, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted with 128 bit CAST in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. | Password is never sent; SRP uses a verifier and mutual proofs (M1/M2) to authenticate both client and server, providing protection against man‑in‑the‑middle attacks. |
+| Encryption       | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all costs. | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires separately stored server-side passwords. | Password will be encrypted with 128 bit CAST, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted with 128 bit CAST in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. | Password is never sent; SRP uses a verifier and mutual proofs (M1/M2) to authenticate both client and server, providing protection against man‑in‑the‑middle attacks. |
 | Server support   | uams_guest.so | uams_clrtxt.so   | uams_randnum.so  | uams_dhx.so  | uams_dhx2.so  | uams_gss.so      | uams_srp.so      |
-| Password storage | None          | Either system auth or PAM | Separate *afppasswd* file; raw hex or DES-encrypted with *.key* | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center | In a separate *afppasswd.srp* verifier file |
+| Password storage | None          | Either system auth or PAM | Separate *afppasswd* file; raw hex by default, or DES-encrypted hex with *.key* | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center | In a separate *afppasswd.srp* verifier file |
 
 Note that a number of open-source and other third-party AFP clients exist.
 Refer to their documentation for a list of supported UAMs.
