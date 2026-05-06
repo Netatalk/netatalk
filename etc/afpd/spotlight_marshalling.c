@@ -71,7 +71,12 @@
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf,
                         int *toc_idx);
 static int sl_unpack_loop(DALLOC_CTX *query, const char *buf, int offset,
-                          uint count, const uint toc_offset, const uint encoding);
+                          uint count, const uint toc_offset, const uint encoding,
+                          int depth);
+static int sl_unpack_cpx(DALLOC_CTX *query, const char *buf, const int offset,
+                         uint cpx_query_type, uint cpx_query_count,
+                         const uint toc_offset, const uint encoding, int depth);
+static int sl_unpack_r(DALLOC_CTX *query, const char *buf, int depth);
 
 /**************************************************************************************************
  * Wrapper functions for the *VAL macros with bound checking
@@ -675,9 +680,15 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
                          uint cpx_query_type,
                          uint cpx_query_count,
                          const uint toc_offset,
-                         const uint encoding)
+                         const uint encoding,
+                         int depth)
 {
     EC_INIT;
+
+    if (depth >= SUBQ_SAFETY_LIM) {
+        EC_FAIL;
+    }
+
     int roffset = offset;
     uint64_t query_data64;
     uint unicode_encoding;
@@ -692,14 +703,14 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     case SQ_CPX_TYPE_ARRAY:
         sl_array = talloc_zero(query, sl_array_t);
         EC_NEG1_LOG(roffset = sl_unpack_loop(sl_array, buf, offset, cpx_query_count,
-                                             toc_offset, encoding));
+                                             toc_offset, encoding, depth + 1));
         dalloc_add(query, sl_array, sl_array_t);
         break;
 
     case SQ_CPX_TYPE_DICT:
         sl_dict = talloc_zero(query, sl_dict_t);
         EC_NEG1_LOG(roffset = sl_unpack_loop(sl_dict, buf, offset, cpx_query_count,
-                                             toc_offset, encoding));
+                                             toc_offset, encoding, depth + 1));
         dalloc_add(query, sl_dict, sl_dict_t);
         break;
 
@@ -749,7 +760,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8: %d", qlen);
         } else {
             sl_fm = talloc_zero(query, sl_filemeta_t);
-            EC_NEG1_LOG(sl_unpack(sl_fm, buf + offset + 8));
+            EC_NEG1_LOG(sl_unpack_r(sl_fm, buf + offset + 8, depth + 1));
             dalloc_add(query, sl_fm, sl_filemeta_t);
         }
 
@@ -781,9 +792,15 @@ static int sl_unpack_loop(DALLOC_CTX *query,
                           int offset,
                           uint count,
                           const uint toc_offset,
-                          const uint encoding)
+                          const uint encoding,
+                          int depth)
 {
     EC_INIT;
+
+    if (depth >= SUBQ_SAFETY_LIM) {
+        EC_FAIL;
+    }
+
     int i, toc_index, query_length;
     uint subcount;
     uint64_t query_data64, query_type;
@@ -807,7 +824,8 @@ static int sl_unpack_loop(DALLOC_CTX *query,
             cpx_query_type = (query_data64 & 0xffff0000) >> 16;
             cpx_query_count = query_data64 >> 32;
             EC_NEG1_LOG(offset = sl_unpack_cpx(query, buf, offset + 8, cpx_query_type,
-                                               cpx_query_count, toc_offset, encoding));
+                                               cpx_query_count, toc_offset, encoding,
+                                               depth + 1));
             count--;
             break;
 
@@ -905,10 +923,10 @@ EC_CLEANUP:
     return len;
 }
 
-int sl_unpack(DALLOC_CTX *query, const char *buf)
+static int sl_unpack_r(DALLOC_CTX *query, const char *buf, int depth)
 {
     EC_INIT;
-    int encoding, toc_entries;
+    int encoding;
     uint64_t toc_offset;
 
     if (strncmp(buf, "md031234", 8) == 0) {
@@ -920,13 +938,17 @@ int sl_unpack(DALLOC_CTX *query, const char *buf)
     buf += 8;
     toc_offset = ((sl_unpack_uint64(buf, 0, encoding) >> 32) - 1) * 8;
 
-    if (toc_offset < 0 || (toc_offset > 65000)) {
+    if (toc_offset > 65000) {
         EC_FAIL;
     }
 
     buf += 8;
-    toc_entries = (int)(sl_unpack_uint64(buf, toc_offset, encoding) & 0xffff);
-    EC_NEG1(sl_unpack_loop(query, buf, 0, 1, toc_offset + 8, encoding));
+    EC_NEG1(sl_unpack_loop(query, buf, 0, 1, toc_offset + 8, encoding, depth));
 EC_CLEANUP:
     EC_EXIT;
+}
+
+int sl_unpack(DALLOC_CTX *query, const char *buf)
+{
+    return sl_unpack_r(query, buf, 0);
 }
