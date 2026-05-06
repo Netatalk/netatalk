@@ -369,10 +369,39 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  *
  * @returns 0 on success, -1 on error or not found
  */
+/* Escape a string for use in an LDAP filter per RFC 4515. */
+static int ldap_escape_filter_value(const char *src, char *dst, size_t dstlen)
+{
+    size_t out = 0;
+
+    for (; *src; src++) {
+        unsigned char c = (unsigned char) * src;
+
+        if (c == '*' || c == '(' || c == ')' || c == '\\' || c == '\0') {
+            if (out + 3 >= dstlen) {
+                return -1;
+            }
+
+            snprintf(dst + out, dstlen - out, "\\%02x", c);
+            out += 3;
+        } else {
+            if (out + 1 >= dstlen) {
+                return -1;
+            }
+
+            dst[out++] = (char)c;
+        }
+    }
+
+    dst[out] = '\0';
+    return 0;
+}
+
 int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
 {
     int ret;
     int len;
+    char escaped_name[512];
     /* this should really be enough. we don't want to malloc everything! */
     char filter[256];
     char *attributes[] = {ldap_uuid_attr, NULL};
@@ -390,7 +419,13 @@ int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
         ldap_attr = ldap_name_attr;
     }
 
-    len = snprintf(filter, 256, "%s=%s", ldap_attr, name);
+    if (ldap_escape_filter_value(name, escaped_name, sizeof(escaped_name)) != 0) {
+        LOG(log_error, logtype_default,
+            "ldap_getuuidfromname: name too long to escape");
+        return -1;
+    }
+
+    len = snprintf(filter, 256, "%s=%s", ldap_attr, escaped_name);
 
     if (len >= 256 || len == -1) {
         LOG(log_error, logtype_default, "ldap_getuuidfromname: filter error:%d, \"%s\"",
