@@ -75,18 +75,46 @@ fi
 
 echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 
-if [ -f "/etc/netatalk/afppasswd" ]; then
-    rm -f /etc/netatalk/afppasswd
+RANDNUM_PASSWD_FILE="/etc/netatalk/afppasswd"
+RANDNUM_KEY_FILE="$RANDNUM_PASSWD_FILE.key"
+
+ensure_randnum_key_file() {
+    if [ -f "$RANDNUM_KEY_FILE" ]; then
+        chown root:root "$RANDNUM_KEY_FILE" && chmod 600 "$RANDNUM_KEY_FILE"
+        return $?
+    fi
+
+    echo "*** Creating RandNum password key file"
+    old_umask=$(umask)
+    umask 077
+    randnum_key=$(od -An -N8 -tx1 /dev/urandom)
+    if ! printf '%s\n' "$randnum_key" | tr -d ' \n' > "$RANDNUM_KEY_FILE"; then
+        umask "$old_umask"
+        return 1
+    fi
+    if ! chown root:root "$RANDNUM_KEY_FILE" || ! chmod 600 "$RANDNUM_KEY_FILE"; then
+        umask "$old_umask"
+        return 1
+    fi
+    umask "$old_umask"
+}
+
+if [ -f "$RANDNUM_PASSWD_FILE" ]; then
+    rm -f "$RANDNUM_PASSWD_FILE"
 fi
 
 UAMS="uams_dhx.so uams_dhx2.so"
 
 # Creating credentials for the RandNum UAM
 RANDNUM_OK=0
-afppasswd -c
+if [ -n "$INSECURE_AUTH" ] && ensure_randnum_key_file; then
+    afppasswd -c
 
-if afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null; then
-    RANDNUM_OK=1
+    if afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null; then
+        RANDNUM_OK=1
+    fi
+elif [ -n "$INSECURE_AUTH" ]; then
+    echo "ERROR: Failed to secure $RANDNUM_KEY_FILE; disabling RandNum UAM" >&2
 fi
 
 # Optional second user
@@ -109,14 +137,14 @@ elif [ -n "$AFP_USER2" ]; then
 
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
 
-    if ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null; then
+    if [ -n "$INSECURE_AUTH" ] && ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null; then
         RANDNUM_OK=0
     fi
 fi
 
 if [ "$RANDNUM_OK" = "1" ]; then
     UAMS="$UAMS uams_randnum.so"
-else
+elif [ -n "$INSECURE_AUTH" ]; then
     echo "NOTE: uams_randnum.so will not be loaded"
 fi
 
