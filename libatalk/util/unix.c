@@ -168,17 +168,22 @@ int daemonize(void)
 }
 
 static uid_t saved_uid = -1;
+static int root_nesting = 0;
 
 /*!
- * seteuid(0) and back, if either fails and panic != 0 we PANIC
+ * seteuid(0) and back, if either fails and panic != 0 we PANIC.
+ * Nesting is tracked: only the outermost become_root() elevates privileges
+ * and only the matching unbecome_root() drops them.
  */
 void become_root(void)
 {
     if (getuid() == 0) {
-        saved_uid = geteuid();
+        if (root_nesting++ == 0) {
+            saved_uid = geteuid();
 
-        if (seteuid(0) != 0) {
-            AFP_PANIC("Can't seteuid(0)");
+            if (seteuid(0) != 0) {
+                AFP_PANIC("Can't seteuid(0)");
+            }
         }
     }
 }
@@ -186,11 +191,17 @@ void become_root(void)
 void unbecome_root(void)
 {
     if (getuid() == 0) {
-        if (saved_uid == -1 || seteuid(saved_uid) < 0) {
-            AFP_PANIC("Can't seteuid back");
+        if (root_nesting <= 0) {
+            AFP_PANIC("unbecome_root: nesting underflow");
         }
 
-        saved_uid = -1;
+        if (--root_nesting == 0) {
+            if (saved_uid == -1 || seteuid(saved_uid) < 0) {
+                AFP_PANIC("Can't seteuid back");
+            }
+
+            saved_uid = -1;
+        }
     }
 }
 
@@ -711,7 +722,7 @@ int set_groups(AFPObj *obj, struct passwd *pwd)
     }
 
     if (NULL == (obj->groups = calloc(obj->ngroups, sizeof(gid_t)))) {
-        LOG(log_error, logtype_afpd, "login: %s calloc: %d", obj->ngroups);
+        LOG(log_error, logtype_afpd, "login: calloc(%d) failed", obj->ngroups);
         return -1;
     }
 
