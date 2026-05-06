@@ -19,13 +19,14 @@ Netatalk supports the following UAMs by default:
 - "Cleartxt Passwrd" UAM (no password encryption)
 
 - "Randnum exchange"/"2-Way Randnum exchange" UAMs
-(weak password encryption, separate password storage)
+  (very weak password encryption, separate password storage)
 
-- "DHCAST128" UAM (a.k.a. DHX; stronger password encryption)
+- "DHCAST128" UAM (a.k.a. DHX; weak password encryption)
 
-- "DHX2" UAM (successor of DHCAST128 with even stronger password encryption)
+- "DHX2" UAM (successor of DHCAST128 with stronger password encryption)
 
-- "SRP" UAM ("Secure Remote Password", strongest password encryption, separate verifier storage)
+- "SRP" UAM ("Secure Remote Password", strongest password encryption and resistant to man-in-the-middle attacks,
+  separate verifier storage)
 
 With Kerberos support enabled at compile time, Netatalk also supports:
 
@@ -48,9 +49,12 @@ See this [hint](https://web.archive.org/web/20080312054723/http://article.gmane.
 
 ## Which UAMs to activate?
 
-The choice depends primarily on your needs and the macOS clients you need to support.
-If your network consists exclusively of macOS clients,
-DHX2 is sufficient and provides the strongest encryption.
+The choice depends primarily on your needs and the clients you need to support.
+If your network consists exclusively of macOS (Mac OS X) clients,
+DHX2 provides strong encryption with PAM (or system password database) integration.
+
+If you want stronger security and don't mind the extra maintenance overhead of a separate verifier file,
+SRP is the best choice.
 
 - Unless you specifically need guest access,
   do not enable "No User Authent" to prevent accidental unauthorized access.
@@ -76,10 +80,17 @@ DHX2 is sufficient and provides the strongest encryption.
     However, this is the strongest form of authentication available for
     Macintosh System Software 7.1 or earlier.
 
-- "DHCAST128" ("DHX") or "DHX2" is the best choice for most users,
-  combining stronger encryption with PAM integration.
+- "DHCAST128" ("DHX") is a significant improvement over Randnum,
+  but has weak encryption by today's standards.
 
-- "SRP" is the strongest UAM, but it requires a separate file to store per-user salts and verifiers.
+   This is the strongest form of authentication available for
+   Mac OS 8/9 clients.
+
+- "DHX2" is the best choice for most users,
+  combining stronger encryption with the convenience of PAM integration.
+
+- "SRP" is the strongest UAM with the strongest password encryption and resistance to man-in-the-middle attacks,
+  but it requires administration of a separate file to store per-user salts and verifiers.
   If you don't mind the extra maintenance overhead of this file, SRP is the best choice for security-conscious users.
 
 - The Kerberos V ("Client Krb v2")

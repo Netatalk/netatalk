@@ -2814,7 +2814,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->uampath        = getoption_strdup(config, INISEC_GLOBAL, "uam path",
                               NULL, _PATH_AFPDUAMPATH);
     options->uamlist        = getoption_strdup(config, INISEC_GLOBAL, "uam list",
-                              NULL, "uams_dhx.so uams_dhx2.so");
+                              NULL, "uams_dhx2.so");
     options->port           = getoption_strdup(config, INISEC_GLOBAL, "afp port",
                               NULL, "548");
     options->signatureopt   = getoption_strdup(config, INISEC_GLOBAL, "signature",

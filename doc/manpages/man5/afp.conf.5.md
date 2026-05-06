@@ -239,47 +239,47 @@ nt domain = *domain* **(G)**; nt separator = *SEPARATOR* **(G)**
 username from login and then tries to authenticate with the result
 through the available and active UAM authentication modules.
 
-uam list = *uam list* **(G)**
+uam list = *uam list* (default: *uams_dhx2.so*) **(G)**
 
-> Space or comma separated list of UAMs. (The default is "uams_dhx.so
-uams_dhx2.so").
-
-The most commonly used UAMs are:
-
-> uams_guest.so
+> Space or comma separated list of User Authentication Methods.
 >
-> > Allows guest logins.
->
-> uams_clrtxt.so
->
-> > (uams_pam.so or uams_passwd.so) Allow logins with passwords transmitted
-in the clear. Compatible with Mac OS 9 and earlier.
->
-> uams_randnum.so
->
-> > Allows Random Number and Two-Way Random Number Exchange for
-authentication (requires a separate file containing the passwords,
-either the default *afppasswd* file or the one specified via
-"**passwd file**"). See **afppasswd**(1) for details.
->
-> uams_dhx.so
->
-> > (uams_dhx_pam.so or uams_dhx_passwd.so) Allow Diffie-Hellman eXchange
-(DHX) for authentication.
+> Available UAMs are:
 >
 > uams_dhx2.so
 >
 > > (uams_dhx2_pam.so or uams_dhx2_passwd.so) Allow Diffie-Hellman eXchange 2
 (DHX2) for authentication.
 >
-> uam_gss.so
->
-> > Allow Kerberos V for authentication
->
 > uams_srp.so
 > > Allow SRP ("Secure Remote Password") for authentication. Requires a separate
 file containing the SRP salts and verifiers, either the default *afppasswd.srp* file
 or the one specified via "**srp passwd file**". See **afppasswd**(1) for details.
+>
+> uam_gss.so
+>
+> > Allow Kerberos V for authentication. Requires Kerberos support to be enabled at compile time
+and a properly configured Kerberos environment.
+>
+> uams_guest.so
+>
+> > Allows guest logins. (***INSECURE!***)
+>
+> uams_clrtxt.so
+>
+> > (uams_pam.so or uams_passwd.so) Allow logins with passwords transmitted
+in the clear. Compatible with Mac OS 9 and earlier. (***INSECURE!***)
+>
+> uams_randnum.so
+>
+> > Allows Random Number and Two-Way Random Number Exchange for
+authentication (requires a separate file containing the passwords,
+either the default *afppasswd* file or the one specified via
+"**passwd file**"). See **afppasswd**(1) for details. (***INSECURE!***)
+>
+> uams_dhx.so
+>
+> > (uams_dhx_pam.so or uams_dhx_passwd.so) Allow Diffie-Hellman eXchange
+(DHX) for authentication. (***INSECURE!***)
 
 uam path = *path* **(G)**
 
