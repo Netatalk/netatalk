@@ -160,6 +160,13 @@ static int set_sl_volumes(void)
 
     for (vol = volumes; vol; vol = vol->v_next) {
         if (vol->v_flags & AFPVOL_SPOTLIGHT) {
+            if (strchr(vol->v_path, '\'') != NULL) {
+                LOG(log_warning, logtype_sl,
+                    "set_sl_volumes: skipping volume with single quote in path: \"%s\"",
+                    vol->v_path);
+                continue;
+            }
+
             if (first) {
                 fprintf(fp, "index-recursive-directories=['%s'", vol->v_path);
                 first = false;
