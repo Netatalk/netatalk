@@ -48,28 +48,36 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
                                "IPC_GETSESSION",
                                "IPC_STATE",
                                "IPC_VOLUMES",
-                               "IPC_LOGINDONE"
+                               "IPC_LOGINDONE",
+                               "IPC_SESSIONTOKEN"
                              };
 
 /*!
- * @brief Pass afp_socket to old disconnected session if one has a matching token (token = pid)
+ * @brief Pass afp_socket to old disconnected session matching the random session token
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
 static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
 {
-    pid_t pid;
-
-    if (ipc->len != sizeof(pid_t)) {
+    if (ipc->len == 0 || ipc->msg == NULL) {
         return -1;
     }
 
-    /* assume signals SA_RESTART set */
-    memcpy(&pid, ipc->msg, sizeof(pid_t));
     return server_child_transfer_session(children,
-                                         pid,
+                                         ipc->msg,
+                                         ipc->len,
                                          ipc->uid,
                                          ipc->afp_socket,
                                          ipc->DSI_requestID);
+}
+
+static int ipc_session_token(struct ipc_header *ipc, server_child_t *children)
+{
+    if (ipc->len == 0 || ipc->msg == NULL) {
+        return -1;
+    }
+
+    server_child_set_token(children, ipc->child_pid, ipc->msg, ipc->len);
+    return 0;
 }
 
 /* ----------------- */
@@ -283,6 +291,13 @@ int ipc_server_read(server_child_t *children, int fd)
 
     case IPC_LOGINDONE:
         if (ipc_login_done(&ipc, children) != 0) {
+            return -1;
+        }
+
+        break;
+
+    case IPC_SESSIONTOKEN:
+        if (ipc_session_token(&ipc, children) != 0) {
             return -1;
         }
 

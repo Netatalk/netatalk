@@ -31,6 +31,8 @@ typedef struct afp_child {
     int       afpch_ipc_fd;    /*!< socket for IPC bw afpd parent and childs */
     int16_t   afpch_state;     /*!< state of AFP session (eg active, sleeping, disconnected) */
     char     *afpch_volumes;   /*!< mounted volumes */
+    char     *afpch_sessiontoken;     /*!< session token for reconnect */
+    uint32_t  afpch_sessiontoken_len;
     struct afp_child **afpch_prevp;
     struct afp_child *afpch_next;
 } afp_child_t;
@@ -54,8 +56,10 @@ extern void server_child_kill(server_child_t *, int);
 extern void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                                         uid_t, uint32_t len, char *id,
                                         uint32_t boottime);
-extern int  server_child_transfer_session(server_child_t *children, pid_t,
-        uid_t, int, uint16_t);
+extern int  server_child_transfer_session(server_child_t *children,
+        const char *token, uint32_t tokenlen, uid_t, int, uint16_t);
+extern void server_child_set_token(server_child_t *children, pid_t pid,
+                                   const char *token, uint32_t tokenlen);
 extern void server_child_handler(server_child_t *);
 extern void server_child_login_done(server_child_t *children, pid_t pid,
                                     uid_t);

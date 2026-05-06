@@ -156,6 +156,11 @@ int server_child_remove(server_child_t *children, pid_t pid)
         child->afpch_clientid = NULL;
     }
 
+    if (child->afpch_sessiontoken) {
+        free(child->afpch_sessiontoken);
+        child->afpch_sessiontoken = NULL;
+    }
+
     /* In main:child_handler() we need the fd in order to remove it from the pollfd set */
     fd = child->afpch_ipc_fd;
 
@@ -193,6 +198,10 @@ void server_child_free(server_child_t *children)
 
             if (child->afpch_volumes) {
                 free(child->afpch_volumes);
+            }
+
+            if (child->afpch_sessiontoken) {
+                free(child->afpch_sessiontoken);
             }
 
             free(child);
@@ -238,60 +247,97 @@ static int kill_child(afp_child_t *child)
 }
 
 /*!
- * @brief Try to find an old session and pass socket
+ * @brief Try to find an old session by token and pass socket
  * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
  */
 int server_child_transfer_session(server_child_t *children,
-                                  pid_t pid,
+                                  const char *token,
+                                  uint32_t tokenlen,
                                   uid_t uid,
                                   int afp_socket,
                                   uint16_t DSI_requestID)
 {
     EC_INIT;
-    afp_child_t *child;
+    afp_child_t *child = NULL;
+    int i;
+    pthread_mutex_lock(&children->servch_lock);
 
-    if ((child = server_child_resolve(children, pid)) == NULL) {
-        LOG(log_note, logtype_default, "Reconnect: no child[%u]", pid);
+    for (i = 0; i < CHILD_HASHSIZE && child == NULL; i++) {
+        afp_child_t *c;
 
-        if (kill(pid, 0) == 0) {
-            LOG(log_note, logtype_default, "Reconnect: terminating old session[%u]", pid);
-            kill(pid, SIGTERM);
-            sleep(2);
-
-            if (kill(pid, 0) == 0) {
-                LOG(log_error, logtype_default, "Reconnect: killing old session[%u]", pid);
-                kill(pid, SIGKILL);
-                sleep(2);
+        for (c = children->servch_table[i]; c; c = c->afpch_next) {
+            if (c->afpch_sessiontoken_len == tokenlen
+                    && c->afpch_sessiontoken != NULL
+                    && memcmp(c->afpch_sessiontoken, token, tokenlen) == 0) {
+                child = c;
+                break;
             }
         }
+    }
 
+    pthread_mutex_unlock(&children->servch_lock);
+
+    if (child == NULL) {
+        LOG(log_note, logtype_default,
+            "Reconnect: no child with matching session token");
         return 0;
     }
 
     if (!child->afpch_valid) {
-        /* hmm, client 'guess' the pid, rogue? */
-        LOG(log_error, logtype_default, "Reconnect: invalidated child[%u]", pid);
+        LOG(log_error, logtype_default, "Reconnect: child[%u] not yet valid",
+            child->afpch_pid);
         return 0;
     } else if (child->afpch_uid != uid) {
-        LOG(log_error, logtype_default, "Reconnect: child[%u] not the same user", pid);
+        LOG(log_error, logtype_default, "Reconnect: child[%u] not the same user",
+            child->afpch_pid);
         return 0;
     }
 
     LOG(log_note, logtype_default, "Reconnect: transferring session to child[%u]",
-        pid);
+        child->afpch_pid);
 
     if (writet(child->afpch_ipc_fd, &DSI_requestID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_default, "Reconnect: error sending DSI id to child[%u]",
-            pid);
+            child->afpch_pid);
         EC_STATUS(-1);
         goto EC_CLEANUP;
     }
 
     EC_ZERO_LOG(send_fd(child->afpch_ipc_fd, afp_socket));
-    EC_ZERO_LOG(kill(pid, SIGURG));
+    EC_ZERO_LOG(kill(child->afpch_pid, SIGURG));
     EC_STATUS(1);
 EC_CLEANUP:
     EC_EXIT;
+}
+
+void server_child_set_token(server_child_t *children, pid_t pid,
+                            const char *token, uint32_t tokenlen)
+{
+    afp_child_t *child;
+    char *buf;
+
+    if ((buf = malloc(tokenlen)) == NULL) {
+        return;
+    }
+
+    memcpy(buf, token, tokenlen);
+    pthread_mutex_lock(&children->servch_lock);
+
+    if ((child = server_child_resolve(children, pid)) != NULL) {
+        if (child->afpch_sessiontoken) {
+            free(child->afpch_sessiontoken);
+        }
+
+        child->afpch_sessiontoken = buf;
+        child->afpch_sessiontoken_len = tokenlen;
+        buf = NULL;
+    }
+
+    pthread_mutex_unlock(&children->servch_lock);
+
+    if (buf) {
+        free(buf);
+    }
 }
 
 
