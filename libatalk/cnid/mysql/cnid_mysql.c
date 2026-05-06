@@ -8,10 +8,6 @@
  * (at your option) any later version.
  */
 
-#ifdef _FORTIFY_SOURCE
-#undef _FORTIFY_SOURCE
-#endif
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
