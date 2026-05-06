@@ -37,6 +37,19 @@
 #define PASSWDLEN 8
 
 static unsigned char seskey[8];
+
+static int ct_memcmp(const void *a, const void *b, size_t n)
+{
+    const unsigned char *pa = (const unsigned char *)a;
+    const unsigned char *pb = (const unsigned char *)b;
+    unsigned char diff = 0;
+
+    for (size_t i = 0; i < n; i++) {
+        diff |= pa[i] ^ pb[i];
+    }
+
+    return diff != 0;
+}
 static struct passwd	*randpwd;
 static uint8_t         randbuf[8];
 
@@ -446,7 +459,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
     gcry_cipher_close(ctx);
 
     /* test against what the client sent */
-    if (memcmp(randbuf, ibuf, sizeof(randbuf))) {
+    if (ct_memcmp(randbuf, ibuf, sizeof(randbuf))) {
         /* != */
         explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_NOTAUTH;
@@ -492,7 +505,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     ctxerror = gcry_cipher_encrypt(ctx, randbuf, sizeof(randbuf), NULL, 0);
 
     /* test against client's reply */
-    if (memcmp(randbuf, ibuf, sizeof(randbuf))) {
+    if (ct_memcmp(randbuf, ibuf, sizeof(randbuf))) {
         /* != */
         explicit_bzero(randbuf, sizeof(randbuf));
         gcry_cipher_close(ctx);
@@ -562,9 +575,9 @@ static int randnum_changepw(void *obj, const char *username _U_,
     ctxerror = gcry_cipher_decrypt(ctx, ibuf, PASSWDLEN, NULL, 0);
     gcry_cipher_close(ctx);
 
-    if (memcmp(seskey, ibuf, sizeof(seskey))) {
+    if (ct_memcmp(seskey, ibuf, sizeof(seskey))) {
         err = AFPERR_NOTAUTH;
-    } else if (memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0) {
+    } else if (ct_memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0) {
         err = AFPERR_PWDSAME;
     }
 
