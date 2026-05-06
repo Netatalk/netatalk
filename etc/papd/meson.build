@@ -56,6 +56,6 @@ executable(
     install_rpath: rpath_libdir,
 )
 
-if have_cups
+if have_cups and get_option('with-statedir-creation')
     install_emptydir(spooldir, install_mode: 'rwxrwxrwx')
 endif
