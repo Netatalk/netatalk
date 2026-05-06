@@ -198,14 +198,6 @@ ad domain = *domain* **(G)**
 Directory environments that otherwise would require the user to enter
 the full user@domain string.
 
-admin auth user = *user* **(G)**
-
-> Specifying e.g. "**admin auth user = root**" whenever a normal user login
-fails, afpd will try to authenticate as the specified **admin auth user**.
-If this succeeds, a normal session is created for the original
-connecting user. Said differently: if you know the password of
-**admin auth user**, you can authenticate as any other user.
-
 admin group = *group* **(G)**
 
 > Allows users of a certain group to be seen as the superuser when they

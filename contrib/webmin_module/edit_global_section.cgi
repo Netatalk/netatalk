@@ -351,12 +351,6 @@ print &ui_table_row(
                     &ui_textbox('p_ad domain', $values[0], 40)
 );
 
-@values = get_parameter_of_section($afpconfRef, $sectionRef, 'admin auth user', \%in);
-print &ui_table_row(
-                    $text{'edit_global_section_admin_auth_user'},
-                    &ui_textbox('p_admin auth user', $values[0], 40) . &user_chooser_button("admin auth user")
-);
-
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'admin group', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_admin_group'},

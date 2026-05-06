@@ -568,68 +568,6 @@ exit:
     return ret;
 }
 
-/*!
- * @brief Try to authenticate via PAM as "adminauthuser"
- */
-static int loginasroot(const char *adminauthuser, const char **hostname,
-                       int status)
-{
-    int PAM_error;
-
-    if ((PAM_error = pam_end(pamh, status)) != PAM_SUCCESS) {
-        goto exit;
-    }
-
-    pamh = NULL;
-
-    if ((PAM_error = pam_start("netatalk", adminauthuser, &PAM_conversation,
-                               &pamh)) != PAM_SUCCESS) {
-        LOG(log_info,
-            logtype_uams,
-            "DHX2: PAM_Error: %s", pam_strerror(pamh, PAM_error));
-        goto exit;
-    }
-
-    /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
-    pam_set_item(pamh, PAM_TTY, "afpd");
-    pam_set_item(pamh, PAM_RHOST, *hostname);
-    /* Reset SIGCHLD to default during PAM auth: PAM modules like
-     * pam_bsdauth fork helper processes and waitpid for them.
-     * afpd sets SA_NOCLDWAIT which causes the kernel to auto-reap
-     * children, making waitpid fail with ECHILD. */
-    struct sigaction sa_dfl = {0};
-    struct sigaction sa_old;
-    int sigchld_saved;
-    sa_dfl.sa_handler = SIG_DFL;
-    sigemptyset(&sa_dfl.sa_mask);
-    sigchld_saved = (sigaction(SIGCHLD, &sa_dfl, &sa_old) == 0);
-
-    if ((PAM_error = pam_authenticate(pamh, 0)) != PAM_SUCCESS) {
-        if (sigchld_saved) {
-            sigaction(SIGCHLD, &sa_old, NULL);
-        }
-
-        LOG(log_info, logtype_uams, "DHX2 loginasroot: error authenticating with PAM");
-        goto exit;
-    }
-
-    if ((PAM_error = pam_acct_mgmt(pamh, 0)) != PAM_SUCCESS) {
-        if (sigchld_saved) {
-            sigaction(SIGCHLD, &sa_old, NULL);
-        }
-
-        LOG(log_info, logtype_uams, "DHX2 loginasroot: error validating PAM account");
-        goto exit;
-    }
-
-    if (sigchld_saved) {
-        sigaction(SIGCHLD, &sa_old, NULL);
-    }
-
-    LOG(log_warning, logtype_uams, "DHX2: Authenticated as \"%s\"", adminauthuser);
-exit:
-    return PAM_error;
-}
 
 static int logincont2(void *obj_in, struct passwd **uam_pwd,
                       char *ibuf, size_t ibuflen,
@@ -750,14 +688,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
                 PAM_error));
 
-        if (!obj->options.adminauthuser) {
-            goto error_ctx;
-        }
-
-        if (loginasroot(obj->options.adminauthuser, &hostname,
-                        PAM_error) != PAM_SUCCESS) {
-            goto error_ctx;
-        }
+        goto error_ctx;
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);

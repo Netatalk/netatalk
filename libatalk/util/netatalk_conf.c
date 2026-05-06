@@ -2865,8 +2865,6 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         }
     }
 
-    options->adminauthuser  = getoption_strdup(config, INISEC_GLOBAL,
-                              "admin auth user", NULL, NULL);
     options->ignored_attr   = getoption_strdup(config, INISEC_GLOBAL,
                               "ignored attributes", NULL, NULL);
     options->cnid_mysql_host = getoption_strdup(config, INISEC_GLOBAL,
@@ -3366,10 +3364,6 @@ void afp_config_free(AFPObj *obj)
 
     if (obj->options.servername) {
         CONFIG_ARG_FREE(obj->options.servername)
-    }
-
-    if (obj->options.adminauthuser) {
-        CONFIG_ARG_FREE(obj->options.adminauthuser)
     }
 
     if (obj->options.hostname) {

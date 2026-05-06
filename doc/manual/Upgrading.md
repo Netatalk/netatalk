@@ -227,7 +227,7 @@ Mappings from afpd.conf to afp.conf
 | -fceevents         | fce events      | -                        | -                        | (G)     | -                                    |
 | -fceholdfmod       | fce holdfmod    | 60                       | 60                       | (G)     | -                                    |
 | -mimicmodel        | mimic model     | -                        | -                        | (G)     | -                                    |
-| -adminauthuser     | admin auth user | -                        | -                        | (G)     | -                                    |
+| -adminauthuser     | -               | -                        | -                        | (G)     | removed in 4.5.0                     |
 | -noacl2maccess     | map acls        | -                        | rights                   | (G)     | -                                    |
 | -[no]tcp           | -               | -tcp                     | -                        | -       | TCP transport layer is always active |
 | -[no]ddp           | appletalk       | -ddp                     | no                       | (G)     | introduced in 4.0.0                  |

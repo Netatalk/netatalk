@@ -151,7 +151,6 @@ struct afp_options {
     char *legacyicon;
     char *mimicmodel;
     char *servername;
-    char *adminauthuser;
     char *ignored_attr;
     int  splice_size;
     char *cnid_mysql_host;
