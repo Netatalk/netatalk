@@ -518,8 +518,13 @@ static char *volxlate(const AFPObj *obj,
 
                 if (obj->proto == AFPPROTO_ASP) {
                     ASP asp = obj->handle;
-                    len = sprintf(dest, "%u.%u", ntohs(asp->asp_sat.sat_addr.s_net),
-                                  asp->asp_sat.sat_addr.s_node);
+                    len = snprintf(dest, destlen, "%u.%u", ntohs(asp->asp_sat.sat_addr.s_net),
+                                   asp->asp_sat.sat_addr.s_node);
+
+                    if (len < 0 || (size_t)len >= destlen) {
+                        break;
+                    }
+
                     dest += len;
                     destlen -= len;
                 }
@@ -528,9 +533,14 @@ static char *volxlate(const AFPObj *obj,
 
                 if (obj->proto == AFPPROTO_DSI) {
                     DSI *dsi = obj->dsi;
-                    len = sprintf(dest, "%s:%u",
-                                  getip_string((struct sockaddr *)&dsi->client),
-                                  getip_port((struct sockaddr *)&dsi->client));
+                    len = snprintf(dest, destlen, "%s:%u",
+                                   getip_string((struct sockaddr *)&dsi->client),
+                                   getip_port((struct sockaddr *)&dsi->client));
+
+                    if (len < 0 || (size_t)len >= destlen) {
+                        break;
+                    }
+
                     dest += len;
                     destlen -= len;
                 }
@@ -556,7 +566,12 @@ static char *volxlate(const AFPObj *obj,
 
             if (obj->proto == AFPPROTO_ASP) {
                 ASP asp = obj->handle;
-                len = sprintf(dest, "%u", ntohs(asp->asp_sat.sat_addr.s_net));
+                len = snprintf(dest, destlen, "%u", ntohs(asp->asp_sat.sat_addr.s_net));
+
+                if (len < 0 || (size_t)len >= destlen) {
+                    break;
+                }
+
                 dest += len;
                 destlen -= len;
             }
