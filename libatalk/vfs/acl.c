@@ -78,7 +78,7 @@ int remove_nfsv4_acl_vfs(const char *name)
     } else {
         LOG(log_error, logtype_afpd, "set_acl: error setting acl: %s", strerror(errno));
 
-        if (errno == (EACCES | EPERM)) {
+        if (errno == EACCES || errno == EPERM) {
             ret = AFPERR_ACCESS;
         } else if (errno == ENOENT) {
             ret = AFPERR_NOITEM;
