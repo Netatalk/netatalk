@@ -440,8 +440,12 @@ static void send_fce_event(const AFPObj *obj, int event, const char *path,
             bformata(cmd, " -p %" PRIu64 "", (uint64_t)getpid());
         }
 
-        if (fce_ev_info | FCE_EV_INFO_USER) {
-            bformata(cmd, " -u %s", user);
+        if (fce_ev_info & FCE_EV_INFO_USER) {
+            bstring buser = bfromcstr(user);
+            bfindreplace(buser, slash, slashrep, 0);
+            bfindreplace(buser, quote, quoterep, 0);
+            bformata(cmd, " -u '%s'", bdata(buser));
+            bdestroy(buser);
         }
 
         if (oldpath) {
