@@ -905,6 +905,9 @@ static int changepw_3(void *obj _U_,
 
     if (seteuid(0) < 0) {
         LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", 0);
+        pam_end(lpamh, PAM_SUCCESS);
+        ret = AFPERR_MISC;
+        goto error_ctx;
     }
 
     PAM_error = pam_authenticate(lpamh, 0);
@@ -914,6 +917,9 @@ static int changepw_3(void *obj _U_,
 
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
+            pam_end(lpamh, PAM_error);
+            ret = AFPERR_MISC;
+            goto error_ctx;
         }
 
         pam_end(lpamh, PAM_error);
@@ -928,6 +934,9 @@ static int changepw_3(void *obj _U_,
 
         if (seteuid(uid) < 0) {
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
+            pam_end(lpamh, PAM_error);
+            ret = AFPERR_MISC;
+            goto error_ctx;
         }
 
         pam_end(lpamh, PAM_error);
@@ -940,6 +949,10 @@ static int changepw_3(void *obj _U_,
 
     if (seteuid(uid) < 0) {
         LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
+        explicit_bzero(ibuf, 512);
+        pam_end(lpamh, PAM_SUCCESS);
+        ret = AFPERR_MISC;
+        goto error_ctx;
     }
 
     explicit_bzero(ibuf, 512);
