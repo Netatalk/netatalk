@@ -792,7 +792,7 @@ int lp_write(struct papfile *in, char *buf, size_t len)
      * REALLY ugly hack, remove ASAP again */
     if ((printer->p_flags & P_FOOMATIC_HACK) && (in->pf_state & PF_TRANSLATE) &&
             (buf[len - 1] != '\n')) {
-        if (len <= BUFSIZE) {
+        if (len <= BUFSIZE - 2) {
             if (!last_line_translated) {
                 tempbuf2[0] = '\n';
                 memcpy(tempbuf2 + 1, buf, len++);
