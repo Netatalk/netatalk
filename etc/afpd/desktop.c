@@ -58,7 +58,7 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
     EC_INIT;
     char		wd[MAXPATHLEN + 1];
     struct stat         st;
-    char		modbuf[12 + 1], *m;
+    char		modbuf[MAXPATHLEN + 1];
     struct dirent	*deskp, *subp;
     DIR			*desk, *sub;
 
@@ -89,10 +89,6 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
             continue;
         }
 
-        strcpy(modbuf, deskp->d_name);
-        strcat(modbuf, "/");
-        m = strchr(modbuf, '\0');
-
         if ((sub = opendir(deskp->d_name)) == NULL) {
             continue;
         }
@@ -103,8 +99,7 @@ int setdeskmode(const struct vol *vol, const mode_t mode)
                 continue;
             }
 
-            *m = '\0';
-            strcat(modbuf, subp->d_name);
+            snprintf(modbuf, sizeof(modbuf), "%s/%s", deskp->d_name, subp->d_name);
 
             /* XXX: need to preserve special modes */
             if (lstat(modbuf, &st) < 0) {
@@ -171,7 +166,7 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
 {
     EC_INIT;
     char		wd[MAXPATHLEN + 1];
-    char		modbuf[12 + 1], *m;
+    char		modbuf[MAXPATHLEN + 1];
     struct dirent	*deskp, *subp;
     DIR			*desk, *sub;
 
@@ -198,10 +193,6 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
             continue;
         }
 
-        strcpy(modbuf, deskp->d_name);
-        strcat(modbuf, "/");
-        m = strchr(modbuf, '\0');
-
         if ((sub = opendir(deskp->d_name)) == NULL) {
             continue;
         }
@@ -212,8 +203,7 @@ int setdeskowner(const struct vol *vol, uid_t uid, gid_t gid)
                 continue;
             }
 
-            *m = '\0';
-            strcat(modbuf, subp->d_name);
+            snprintf(modbuf, sizeof(modbuf), "%s/%s", deskp->d_name, subp->d_name);
 
             /* XXX: add special any uid, ignore group bits */
             if (chown(modbuf, uid, gid) < 0 && errno != EPERM) {
