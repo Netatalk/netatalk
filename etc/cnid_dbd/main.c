@@ -234,8 +234,9 @@ static int delete_db(void)
     EC_NEG1(cwd = open(".", O_RDONLY));
 
     if (chdir(cfrombstr(dbpath)) < 0) {
-        LOG(log_error, logtype_cnid, "delete_db: could not chdir to \"%s\"", dbpath,
-            strerror(errno));
+        LOG(log_error, logtype_cnid, "delete_db: could not chdir to \"%s\": %s",
+            bdata(dbpath), strerror(errno));
+        EC_FAIL;
     }
 
     if (system("rm -f cnid2.db lock log.* __db.*") < 0) {
