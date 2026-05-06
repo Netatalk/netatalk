@@ -19,6 +19,7 @@
 #define IPC_VOLUMES          3  /*!< pass list of open volumes */
 #define IPC_LOGINDONE        4
 #define IPC_CACHE_HINT       5  /*!< Cross-process dircache invalidation hint */
+#define IPC_SESSIONTOKEN     6  /*!< pass opaque reconnect token */
 
 /* Cache hint types — carried in struct ipc_cache_hint_payload.event */
 #define CACHE_HINT_REFRESH          0  /*!< ostat + dir_modify(DCMOD_STAT) */

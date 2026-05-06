@@ -57,7 +57,8 @@ static char *ipc_cmd_str[] = { "IPC_DISCOLDSESSION",
                                "IPC_STATE",
                                "IPC_VOLUMES",
                                "IPC_LOGINDONE",
-                               "IPC_CACHE_HINT"
+                               "IPC_CACHE_HINT",
+                               "IPC_SESSIONTOKEN"
                              };
 
 /***********************************************************************************
@@ -153,22 +154,20 @@ static int serialize_hint(char *buf, const struct hint_entry *e)
 }
 
 /*!
- * @brief Pass afp_socket to old disconnected session if one has a matching token (token = pid)
- * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
+ * @brief Pass afp_socket to old disconnected session if one has a matching token
+ * @returns -1 on error, 0 if no matching session was found,
+ *          1 if session was found and socket passed
  */
 static int ipc_kill_token(struct ipc_header *ipc, server_child_t *children)
 {
-    pid_t pid;
-
-    if (ipc->len != sizeof(pid_t)) {
+    if (ipc->len == 0) {
         return -1;
     }
 
-    /* assume signals SA_RESTART set */
-    memcpy(&pid, ipc->msg, sizeof(pid_t));
     return server_child_transfer_session(children,
-                                         pid,
                                          ipc->uid,
+                                         ipc->msg,
+                                         ipc->len,
                                          ipc->afp_socket,
                                          ipc->DSI_requestID);
 }
@@ -222,6 +221,18 @@ static int ipc_login_done(const struct ipc_header *ipc,
                             ipc->uid,
                             ipc->msg);
     return 0;
+}
+
+static int ipc_set_session_token(const struct ipc_header *ipc,
+                                 server_child_t *children)
+{
+    LOG(log_debug, logtype_afpd, "ipc_set_session_token(pid: %u, uid: %u)",
+        ipc->child_pid, ipc->uid);
+    return server_child_set_session_token(children,
+                                          ipc->child_pid,
+                                          ipc->uid,
+                                          ipc->msg,
+                                          ipc->len);
 }
 
 static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
@@ -480,6 +491,13 @@ int ipc_server_read(server_child_t *children, int fd)
         ipc_relay_cache_hint(&ipc, children);
         break;
 
+    case IPC_SESSIONTOKEN:
+        if (ipc_set_session_token(&ipc, children) != 0) {
+            return -1;
+        }
+
+        break;
+
     default:
         /* Don't destroy IPC channel for unrecognized commands */
         LOG(log_error, logtype_afpd, "ipc_read: unhandled command: %d", ipc.command);
@@ -493,6 +511,7 @@ int ipc_server_read(server_child_t *children, int fd)
 int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
 {
     char block[IPC_MAXMSGSIZE], *p;
+    uint32_t msglen;
     p = block;
     memset(p, 0, IPC_MAXMSGSIZE);
 
@@ -500,6 +519,7 @@ int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
         return -1;
     }
 
+    msglen = (uint32_t)len;
     memcpy(p, &command, sizeof(command));
     p   += sizeof(command);
     memcpy(p, &obj->pid, sizeof(pid_t));
@@ -511,7 +531,7 @@ int ipc_child_write(AFPObj *obj, uint16_t command, size_t len, void *msg)
     */
     memcpy(p, &obj->euid, sizeof(uid_t));
     p += sizeof(uid_t);
-    memcpy(p, &len, 4);
+    memcpy(p, &msglen, sizeof(msglen));
     p += 4;
     memcpy(p, msg, len);
 

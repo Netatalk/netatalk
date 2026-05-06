@@ -8,6 +8,7 @@
 
 #include <arpa/inet.h>
 #include <pthread.h>
+#include <stddef.h>
 #include <sys/types.h>
 
 /*!
@@ -29,6 +30,8 @@ typedef struct afp_child {
     time_t    afpch_logintime; /*!< time the child was added */
     uint32_t  afpch_idlen;     /*!< clientid len (from the Mac client) */
     char     *afpch_clientid;  /*!< clientid (from the Mac client) */
+    size_t    afpch_sessiontoken_len; /*!< reconnect token length */
+    char     *afpch_sessiontoken; /*!< opaque reconnect token */
     int       afpch_ipc_fd;    /*!< socket for IPC bw afpd parent and childs */
     int       afpch_hint_fd;   /*!< pipe write/parent end for sending cache hints to child */
     char     *afpch_hostname;  /*!< hostname of the server that the child is connected to */
@@ -58,8 +61,11 @@ extern void server_child_kill(server_child_t *, int);
 extern void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
                                         uid_t, uint32_t len, char *id,
                                         uint32_t boottime);
-extern int  server_child_transfer_session(server_child_t *children, pid_t,
-        uid_t, int, uint16_t);
+extern int  server_child_set_session_token(server_child_t *children, pid_t pid,
+        uid_t uid, const void *token, size_t token_len);
+extern int  server_child_transfer_session(server_child_t *children, uid_t uid,
+        const void *token, size_t token_len, int afp_socket,
+        uint16_t DSI_requestID);
 extern void server_child_handler(server_child_t *);
 extern void server_child_login_done(server_child_t *children, pid_t pid,
                                     uid_t, const char *);

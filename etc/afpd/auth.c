@@ -421,22 +421,18 @@ int afp_zzz(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
 /* ---------------------- */
 static int create_session_token(AFPObj *obj)
 {
-    pid_t pid;
-
-    /* use 8 bytes for token as OSX, don't know if it helps */
-    if (sizeof(pid_t) > SESSIONTOKEN_LEN) {
-        LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u", SESSIONTOKEN_LEN);
-        return AFPERR_MISC;
-    }
-
     if (NULL == (obj->sinfo.sessiontoken = malloc(SESSIONTOKEN_LEN))) {
         return AFPERR_MISC;
     }
 
-    memset(obj->sinfo.sessiontoken, 0, SESSIONTOKEN_LEN);
     obj->sinfo.sessiontoken_len = SESSIONTOKEN_LEN;
-    pid = obj->pid;
-    memcpy(obj->sinfo.sessiontoken, &pid, sizeof(pid_t));
+
+    if (uam_random_string(obj, obj->sinfo.sessiontoken, SESSIONTOKEN_LEN) < 0) {
+        free(obj->sinfo.sessiontoken);
+        obj->sinfo.sessiontoken = NULL;
+        return AFPERR_MISC;
+    }
+
     return 0;
 }
 
@@ -491,6 +487,11 @@ int afp_getsession(
         if (create_session_token(obj)) {
             return AFPERR_MISC;
         }
+    }
+
+    if (ipc_child_write(obj, IPC_SESSIONTOKEN, obj->sinfo.sessiontoken_len,
+                        obj->sinfo.sessiontoken) != 0) {
+        return AFPERR_MISC;
     }
 
     /*
@@ -582,16 +583,21 @@ int afp_getsession(
 }
 
 /* ---------------------- */
-int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
+int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf _U_,
                    size_t *rbuflen)
 {
     DSI                 *dsi = (DSI *)obj->dsi;
     uint16_t           type;
     uint32_t           tklen;
-    pid_t               token;
-    int                 i;
+    char               *token;
     *rbuflen = 0;
+
+    if (ibuflen < 2 + sizeof(type) + sizeof(tklen)) {
+        return AFPERR_PARAM;
+    }
+
     ibuf += 2;
+    ibuflen -= 2;
 #if 0
 
     /* check for guest user */
@@ -603,30 +609,22 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     memcpy(&type, ibuf, sizeof(type));
     type = ntohs(type);
     ibuf += sizeof(type);
+    ibuflen -= sizeof(type);
     memcpy(&tklen, ibuf, sizeof(tklen));
     tklen = ntohl(tklen);
     ibuf += sizeof(tklen);
-
-    if (sizeof(pid_t) > SESSIONTOKEN_LEN) {
-        LOG(log_error, logtype_afpd, "sizeof(pid_t) > %u", SESSIONTOKEN_LEN);
-        return AFPERR_MISC;
-    }
+    ibuflen -= sizeof(tklen);
+    (void)type;
 
     if (tklen != SESSIONTOKEN_LEN) {
         return AFPERR_MISC;
     }
 
-    tklen = sizeof(pid_t);
-    memcpy(&token, ibuf, tklen);
-    /* our stuff is pid + zero pad */
-    ibuf += tklen;
-
-    for (i = tklen; i < SESSIONTOKEN_LEN; i++, ibuf++) {
-        if (*ibuf != 0) {
-            return AFPERR_MISC;
-        }
+    if (ibuflen < tklen) {
+        return AFPERR_PARAM;
     }
 
+    token = ibuf;
     LOG(log_note, logtype_afpd, "afp_disconnect: trying primary reconnect");
     dsi->flags |= DSI_RECONINPROG;
     /* Deactivate tickle timer */
@@ -634,7 +632,7 @@ int afp_disconnect(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     setitimer(ITIMER_REAL, &none, NULL);
 
     /* check for old session, possibly transferring session from here to there */
-    if (ipc_child_write(obj, IPC_DISCOLDSESSION, tklen, &token) != 0) {
+    if (ipc_child_write(obj, IPC_DISCOLDSESSION, tklen, token) != 0) {
         goto exit;
     }
 

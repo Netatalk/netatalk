@@ -56,6 +56,19 @@
 /* hash/child functions: hash OR's pid */
 #define HASH(i) ((((i) >> 8) ^ (i)) & (CHILD_HASHSIZE - 1))
 
+static int ct_memcmp(const void *a, const void *b, size_t n)
+{
+    const unsigned char *pa = a;
+    const unsigned char *pb = b;
+    volatile unsigned char diff = 0;
+
+    while (n--) {
+        diff |= *pa++ ^ *pb++;
+    }
+
+    return diff != 0;
+}
+
 static inline void hash_child(afp_child_t **htable, afp_child_t *child)
 {
     afp_child_t **table;
@@ -178,6 +191,12 @@ int server_child_remove(server_child_t *children, pid_t pid)
         child->afpch_clientid = NULL;
     }
 
+    if (child->afpch_sessiontoken) {
+        memset(child->afpch_sessiontoken, 0, child->afpch_sessiontoken_len);
+        free(child->afpch_sessiontoken);
+        child->afpch_sessiontoken = NULL;
+    }
+
     if (child->afpch_hostname) {
         free(child->afpch_hostname);
         child->afpch_hostname = NULL;
@@ -226,6 +245,11 @@ void server_child_free(server_child_t *children)
 
             if (child->afpch_clientid) {
                 free(child->afpch_clientid);
+            }
+
+            if (child->afpch_sessiontoken) {
+                memset(child->afpch_sessiontoken, 0, child->afpch_sessiontoken_len);
+                free(child->afpch_sessiontoken);
             }
 
             if (child->afpch_hostname) {
@@ -279,59 +303,131 @@ static int kill_child(afp_child_t *child)
 }
 
 /*!
+ * @brief Store an opaque reconnect token for a child session
+ * @returns 0 on success, -1 on error
+ */
+int server_child_set_session_token(server_child_t *children, pid_t pid,
+                                   uid_t uid, const void *token,
+                                   size_t token_len)
+{
+    EC_INIT;
+    afp_child_t *child;
+    char *sessiontoken = NULL;
+
+    if (token_len == 0 || token == NULL) {
+        return -1;
+    }
+
+    if ((sessiontoken = malloc(token_len)) == NULL) {
+        return -1;
+    }
+
+    memcpy(sessiontoken, token, token_len);
+#ifdef HAVE_DBUS_GLIB
+    pthread_mutex_lock(&children->servch_lock);
+#endif
+
+    if ((child = server_child_resolve(children, pid)) == NULL) {
+        EC_STATUS(-1);
+        goto EC_CLEANUP;
+    }
+
+    if (child->afpch_uid != uid) {
+        LOG(log_error, logtype_default,
+            "Reconnect: token update from child[%u] has wrong user", pid);
+        EC_STATUS(-1);
+        goto EC_CLEANUP;
+    }
+
+    if (child->afpch_sessiontoken) {
+        memset(child->afpch_sessiontoken, 0, child->afpch_sessiontoken_len);
+        free(child->afpch_sessiontoken);
+    }
+
+    child->afpch_sessiontoken = sessiontoken;
+    child->afpch_sessiontoken_len = token_len;
+    sessiontoken = NULL;
+EC_CLEANUP:
+#ifdef HAVE_DBUS_GLIB
+    pthread_mutex_unlock(&children->servch_lock);
+#endif
+
+    if (sessiontoken) {
+        memset(sessiontoken, 0, token_len);
+        free(sessiontoken);
+    }
+
+    EC_EXIT;
+}
+
+/*!
  * @brief Try to find an old session and pass socket
- * @returns -1 on error, 0 if no matching session was found, 1 if session was found and socket passed
+ * @returns -1 on error, 0 if no matching session was found,
+ *          1 if session was found and socket passed
  */
 int server_child_transfer_session(server_child_t *children,
-                                  pid_t pid,
                                   uid_t uid,
+                                  const void *token,
+                                  size_t token_len,
                                   int afp_socket,
                                   uint16_t DSI_requestID)
 {
     EC_INIT;
-    afp_child_t *child;
+    afp_child_t *child = NULL;
 
-    if ((child = server_child_resolve(children, pid)) == NULL) {
-        LOG(log_note, logtype_default, "Reconnect: no child[%u]", pid);
-
-        if (kill(pid, 0) == 0) {
-            LOG(log_note, logtype_default, "Reconnect: terminating old session[%u]", pid);
-            kill(pid, SIGTERM);
-            sleep(2);
-
-            if (kill(pid, 0) == 0) {
-                LOG(log_error, logtype_default, "Reconnect: killing old session[%u]", pid);
-                kill(pid, SIGKILL);
-                sleep(2);
-            }
-        }
-
+    if (token_len == 0 || token == NULL) {
         return 0;
     }
+
+#ifdef HAVE_DBUS_GLIB
+    pthread_mutex_lock(&children->servch_lock);
+#endif
+
+    for (int i = 0; i < CHILD_HASHSIZE; i++) {
+        for (child = children->servch_table[i]; child; child = child->afpch_next) {
+            if (child->afpch_sessiontoken_len == token_len
+                    && child->afpch_sessiontoken != NULL
+                    && ct_memcmp(child->afpch_sessiontoken, token, token_len) == 0) {
+                goto found;
+            }
+        }
+    }
+
+    LOG(log_note, logtype_default, "Reconnect: no matching session token");
+    EC_STATUS(0);
+    goto EC_CLEANUP;
+found:
 
     if (!child->afpch_valid) {
         /* hmm, client 'guess' the pid, rogue? */
-        LOG(log_error, logtype_default, "Reconnect: invalidated child[%u]", pid);
-        return 0;
+        LOG(log_error, logtype_default, "Reconnect: invalidated child[%u]",
+            child->afpch_pid);
+        EC_STATUS(0);
+        goto EC_CLEANUP;
     } else if (child->afpch_uid != uid) {
-        LOG(log_error, logtype_default, "Reconnect: child[%u] not the same user", pid);
-        return 0;
+        LOG(log_error, logtype_default, "Reconnect: child[%u] not the same user",
+            child->afpch_pid);
+        EC_STATUS(0);
+        goto EC_CLEANUP;
     }
 
     LOG(log_note, logtype_default, "Reconnect: transferring session to child[%u]",
-        pid);
+        child->afpch_pid);
 
     if (writet(child->afpch_ipc_fd, &DSI_requestID, 2, 0, 2) != 2) {
         LOG(log_error, logtype_default, "Reconnect: error sending DSI id to child[%u]",
-            pid);
+            child->afpch_pid);
         EC_STATUS(-1);
         goto EC_CLEANUP;
     }
 
     EC_ZERO_LOG(send_fd(child->afpch_ipc_fd, afp_socket));
-    EC_ZERO_LOG(kill(pid, SIGURG));
+    EC_ZERO_LOG(kill(child->afpch_pid, SIGURG));
     EC_STATUS(1);
 EC_CLEANUP:
+#ifdef HAVE_DBUS_GLIB
+    pthread_mutex_unlock(&children->servch_lock);
+#endif
     EC_EXIT;
 }
 
