@@ -25,13 +25,17 @@ The AFP Spotlight RPC protocol layer is shared,
 while query execution is delegated to a backend selected per volume.
 
 You can select the backend with the volume option **spotlight backend**.
-If not set, the default is **localsearch** which is the backend currently
-considered stable and recommended for general use.
+If not set, the default is **cnid** which is the simple and lightweight backend
+that uses the Netatalk CNID database for filename search.
 
 Example:
 
     [Global]
     spotlight = yes
+
+    [Documents]
+    path = /srv/afp/docs
+    spotlight backend = cnid
 
     [Media]
     path = /srv/afp/media
@@ -45,9 +49,7 @@ Available Spotlight backends:
 
 - **cnid**
   Uses *cnid_find()* against the CNID database for filename-oriented searches.
-  It has no extra runtime dependencies beyond the *talloc* library and Netatalk's CNID support.
-
-  ***NOTE:*** The **cnid** backend is considered *EXPERIMENTAL* and is not recommended for general use.
+  It has no extra runtime dependencies beyond the *talloc* library and Netatalk's CNID database.
 
 - **localsearch**
   Uses the LocalSearch/Tracker SPARQL backend for broader file contents and metadata indexing/search.
