@@ -701,7 +701,8 @@ int dsi_stream_receive(DSI *dsi)
     }
 
     /* Receiving DSIWrite data is done in AFP function, not here */
-    if (dsi->header.dsi_data.dsi_doff) {
+    if (dsi->header.dsi_command == DSIFUNC_WRITE
+            && dsi->header.dsi_data.dsi_doff) {
         LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: write request");
         dsi->cmdlen = dsi->header.dsi_data.dsi_doff;
     }
