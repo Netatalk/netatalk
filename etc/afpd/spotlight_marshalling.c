@@ -700,6 +700,10 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         slen = qlen - 16 + used_in_last_block;
 
         if (cpx_query_type == SQ_CPX_TYPE_STRING) {
+            if (slen < 0 || offset + 8 + slen > (int)toc_offset) {
+                EC_FAIL;
+            }
+
             p = dalloc_strndup(query, buf + offset + 8, slen);
         } else {
             unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 8, slen,
@@ -711,12 +715,18 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
             }
 
             slen -= mark_exists ? 2 : 0;
-            EC_NEG1(convert_string_allocate(CH_UCS2,
-                                            CH_UTF8,
-                                            buf + offset + (mark_exists ? 10 : 8),
-                                            slen,
-                                            &tmp));
-            p = dalloc_strndup(query, tmp, strlen(tmp));
+
+            if (slen <= 0 || offset + (mark_exists ? 10 : 8) + slen > (int)toc_offset) {
+                EC_FAIL;
+            }
+
+            size_t tmp_len;
+            EC_NEG1(tmp_len = convert_string_allocate(CH_UCS2,
+                              CH_UTF8,
+                              buf + offset + (mark_exists ? 10 : 8),
+                              slen,
+                              &tmp));
+            p = dalloc_strndup(query, tmp, tmp_len);
             free(tmp);
         }
 
