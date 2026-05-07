@@ -26,6 +26,11 @@
 size_t dsi_writeinit(DSI *dsi, void *buf, const size_t buflen)
 {
     size_t bytes = 0;
+
+    if (ntohl(dsi->header.dsi_len) < dsi->header.dsi_data.dsi_doff) {
+        return 0;
+    }
+
     dsi->datasize = ntohl(dsi->header.dsi_len) - dsi->header.dsi_data.dsi_doff;
 
     if (dsi->eof > dsi->start) {
