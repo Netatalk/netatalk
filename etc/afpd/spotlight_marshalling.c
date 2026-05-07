@@ -722,6 +722,10 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         slen = qlen - 16 + used_in_last_block;
 
         if (cpx_query_type == SQ_CPX_TYPE_STRING) {
+            if (slen < 0 || offset + 8 + slen > (int)toc_offset) {
+                EC_FAIL;
+            }
+
             p = dalloc_strndup(query, buf + offset + 8, slen);
         } else {
             unicode_encoding = spotlight_get_utf16_string_encoding(buf, offset + 8, slen,
