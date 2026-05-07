@@ -64,10 +64,10 @@ PERF_FOLDED="/tmp/perf.folded"
 FLAMEGRAPH_SVG="/tmp/flamegraph.svg"
 PERF_PID=""
 
-# Perf sampling frequency (samples per second). Default 1009 Hz — a
+# Perf sampling frequency (samples per second). Default 1019 Hz — a
 # prime number chosen to avoid lockstep synchronization with timer
-# interrupts and the idle worker's 1ms polling interval.
-PERF_FREQ="${PERF_FREQ:-1009}"
+# interrupts and the idle worker's 10ms polling interval.
+PERF_FREQ="${PERF_FREQ:-1019}"
 
 start_flamegraph_profiling() {
     # Verify FlameGraph tools are available
