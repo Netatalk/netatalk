@@ -752,7 +752,7 @@ of the string. Example:
 
 > This option does not affect the *cnid* or *xapian* backends.
 
-spotlight backend = *backend* (default: *localsearch*) **(G)**/**(V)**
+spotlight backend = *backend* (default: *cnid*) **(G)**/**(V)**
 
 > Search backend used by the Spotlight feature.
 >
@@ -761,8 +761,8 @@ spotlight backend = *backend* (default: *localsearch*) **(G)**/**(V)**
 >
 >Run **netatalk -v** to see which backends are available in your installation.
 >
-> ***NOTE:*** The *cnid* and *xapian* backends are considered *EXPERIMENTAL*
-and are not recommended for production use at this time.
+> ***NOTE:*** The *xapian* backend is considered *EXPERIMENTAL*
+and is not recommended for production use at this time.
 
 spotlight expr = *BOOLEAN* (default: *yes*) **(G)**
 
