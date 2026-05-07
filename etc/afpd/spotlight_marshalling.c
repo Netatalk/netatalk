@@ -824,6 +824,10 @@ static int sl_unpack_loop(DALLOC_CTX *query,
                 dalloc_add_copy(query, &nil, sl_nil_t);
             }
 
+            if (subcount > count) {
+                EC_FAIL;
+            }
+
             offset += query_length;
             count -= subcount;
             break;
@@ -837,24 +841,44 @@ static int sl_unpack_loop(DALLOC_CTX *query,
 
         case SQ_TYPE_INT64:
             EC_NEG1_LOG(subcount = sl_unpack_ints(query, buf, offset, encoding));
+
+            if (subcount > count) {
+                EC_FAIL;
+            }
+
             offset += query_length;
             count -= subcount;
             break;
 
         case SQ_TYPE_UUID:
             EC_NEG1_LOG(subcount = sl_unpack_uuid(query, buf, offset, encoding));
+
+            if (subcount > count) {
+                EC_FAIL;
+            }
+
             offset += query_length;
             count -= subcount;
             break;
 
         case SQ_TYPE_FLOAT:
             EC_NEG1_LOG(subcount = sl_unpack_floats(query, buf, offset, encoding));
+
+            if (subcount > count) {
+                EC_FAIL;
+            }
+
             offset += query_length;
             count -= subcount;
             break;
 
         case SQ_TYPE_DATE:
             EC_NEG1_LOG(subcount = sl_unpack_date(query, buf, offset, encoding));
+
+            if (subcount > count) {
+                EC_FAIL;
+            }
+
             offset += query_length;
             count -= subcount;
             break;
