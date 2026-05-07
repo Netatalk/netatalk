@@ -30,8 +30,8 @@
 #include "directory.h"
 #include "idle_worker.h"
 
-/* Self-wake interval for the idle worker thread. 1ms ~0.05% CPU overhead */
-#define IDLE_WORKER_WAKE_MS 1
+/* Self-wake interval for the idle worker thread. 10ms ~0.005% CPU overhead */
+#define IDLE_WORKER_WAKE_MS 10
 _Static_assert(IDLE_WORKER_WAKE_MS < 1000,
                "Use a while loop for nanosecond normalization if IDLE_WORKER_WAKE_MS >= 1s");
 
@@ -82,7 +82,7 @@ static int idle_worker_has_work(void)
 /*!
  * @brief Worker thread main loop
  *
- * Uses nanosleep() for 1ms polling which is a direct SYS_nanosleep syscall
+ * Uses nanosleep() for 10ms polling which is a direct SYS_nanosleep syscall
  */
 static void *idle_worker_main(void *arg)
 {
@@ -271,8 +271,8 @@ void idle_worker_stop_signal_safe(void)
  * @brief Shut down the idle worker thread cleanly.
  *
  * Sets shutdown flag and joins thread. The worker observes shutdown_flag
- * at the top of its loop — after nanosleep() expires (≤1ms) and after any
- * work completes. Join latency is therefore 1ms plus remaining work time.
+ * at the top of its loop — after nanosleep() expires (≤10ms) and after any
+ * work completes. Join latency is therefore 10ms plus remaining work time.
  *
  * WARNING: Must NOT be called from signal handler context —
  * pthread_join is async-signal-unsafe. Use idle_worker_stop_signal_safe()

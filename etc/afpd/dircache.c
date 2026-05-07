@@ -138,7 +138,7 @@ struct deferred_cleanup {
 };
 
 /* Max deferred/queued entries before fallback to synchronous cleaning */
-#define MAX_DEFERRED_CLEANUPS 1024
+#define MAX_DEFERRED_CLEANUPS 5120
 
 static struct deferred_cleanup deferred_queue[MAX_DEFERRED_CLEANUPS];
 static int deferred_head = 0;
