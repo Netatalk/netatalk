@@ -537,6 +537,11 @@ char *ea_path(const struct ea *ea, const char *eaname,
     strlcat(pathbuf, "::EA", MAXPATHLEN + 1);
 
     if (eaname) {
+        if (strchr(eaname, '/') != NULL) {
+            LOG(log_warning, logtype_afpd, "ea_path: EA name contains '/': \"%s\"", eaname);
+            return NULL;
+        }
+
         strlcat(pathbuf, "::", MAXPATHLEN + 1);
 
         if (macname)
@@ -1649,7 +1654,6 @@ int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
     int ret = AFP_OK;
     unsigned int count = 0;
     const char *eaname;
-    const char *eaname_safe = NULL;
     struct ea ea;
     LOG(log_debug, logtype_afpd, "ea_chmod_dir('%s')", name);
     /* .AppleDouble already might be inaccesible, so we must run as id 0 */
@@ -1686,17 +1690,6 @@ int ea_chmod_dir(const struct vol *vol, const char *name, mode_t mode,
     /* Set mode on EA files */
     while (count < ea.ea_count) {
         eaname = (*ea.ea_entries)[count].ea_name;
-
-        /*
-         * Be careful with EA names from the EA header!
-         * E.g. NFS users might have access to them, can inject paths using ../ or /.....
-         * FIXME:
-         * Until the EA code escapes / in EA name requests from the client, these therefor wont work.
-         */
-        if ((eaname_safe = strrchr(eaname, '/'))) {
-            LOG(log_warning, logtype_afpd, "ea_chmod_dir('%s'): contains a slash", eaname);
-            eaname = eaname_safe;
-        }
 
         if ((eaname = ea_path(&ea, eaname, 1)) == NULL) {
             ret = AFPERR_MISC;
