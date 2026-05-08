@@ -73,7 +73,6 @@ RUN meson setup build \
     -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-cnid-backends=dbd,mysql,sqlite \
-    -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-dbus-sysconf-path=/etc \
     -Dwith-docs= \
     -Dwith-dtrace=false \
