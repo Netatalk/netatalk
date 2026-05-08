@@ -786,6 +786,11 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                     i_len--;
                 } else if (to_set == CH_UTF8_MAC || to_set == CH_MAC) {
                     /* convert to a '/' */
+                    if (o_len < 2) {
+                        errno = E2BIG;
+                        goto end;
+                    }
+
                     ucs2_t slash = 0x002f;
                     memcpy(outbuf, &slash, sizeof(ucs2_t));
                     outbuf += 2;
@@ -794,6 +799,11 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                     i_len--;
                 } else {
                     /* keep as ':' */
+                    if (o_len < 2) {
+                        errno = E2BIG;
+                        goto end;
+                    }
+
                     ucs2_t ucs2 = 0x003a;
                     memcpy(outbuf, &ucs2, sizeof(ucs2_t));
                     outbuf += 2;
@@ -822,6 +832,11 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                 } else if ((from_set == CH_UTF8_MAC || from_set == CH_MAC)
                            && (to_set != CH_UTF8_MAC  || to_set != CH_MAC)) {
                     /* convert to ':' */
+                    if (o_len < 2) {
+                        errno = E2BIG;
+                        goto end;
+                    }
+
                     ucs2_t ucs2 = 0x003a;
                     memcpy(outbuf, &ucs2, sizeof(ucs2_t));
                     outbuf += 2;
@@ -830,6 +845,11 @@ static size_t pull_charset_flags(charset_t from_set, charset_t to_set,
                     i_len--;
                 } else {
                     /* keep as '/' */
+                    if (o_len < 2) {
+                        errno = E2BIG;
+                        goto end;
+                    }
+
                     ucs2_t ucs2 = 0x002f;
                     memcpy(outbuf, &ucs2, sizeof(ucs2_t));
                     outbuf += 2;
