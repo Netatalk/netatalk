@@ -59,7 +59,8 @@ static atalk_iconv_t conv_handles[MAX_CHARSETS][MAX_CHARSETS];
 static char *charset_names[MAX_CHARSETS];
 static struct charset_functions *charsets[MAX_CHARSETS];
 static char hexdig[] = "0123456789abcdef";
-#define hextoint( c )   ( isdigit( c ) ? c - '0' : c + 10 - 'a' )
+#define hextoint(c) (isdigit(c) ? (c) - '0' : tolower(c) + 10 - 'a')
+#define MAX_CONVERT_SIZE (1 << 20)
 
 
 /*!
@@ -385,6 +386,12 @@ static size_t convert_string_allocate_internal(charset_t from, charset_t to,
 
     destlen = MAX(srclen, 512);
 convert:
+
+    if (destlen > MAX_CONVERT_SIZE) {
+        SAFE_FREE(ob);
+        return (size_t) -1;
+    }
+
     destlen = destlen * 2;
     outbuf = (char *)realloc(ob, destlen);
 
