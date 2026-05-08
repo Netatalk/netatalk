@@ -93,8 +93,10 @@ for further details.
 The container is hard coded to output `afpd` (the Netatalk file server daemon) logs to the container's stdout,
 with default log level `info`. Logs from the AppleTalk daemons are sent to the syslog.
 
-Spotlight compatible search is currently not supported in a containerized environment
-due to constraints when running file system indexing on the D-Bus.
+File search on mounted volumes in the Finder is supported with the `cnid` Spotlight backend.
+The `cnid` backend supports filename search only, no file content or metadata index searching.
+This is recommend over `localsearch`/`xapian` (full content indexing) in production environments
+for technical and privacy reasons.
 
 ## MySQL CNID Backend
 
