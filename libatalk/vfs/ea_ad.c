@@ -164,12 +164,20 @@ static int unpack_header(struct ea *ea)
     }
 
     buf = ea->ea_data + EA_HEADER_SIZE;
+    const char *buf_end = ea->ea_data + ea->ea_size;
 
     while (count < ea->ea_count) {
+        if (buf + 5 > buf_end) { /* 4-byte size field + at least null terminator */
+            LOG(log_error, logtype_afpd, "unpack_header: EA header overrun at entry %u",
+                count);
+            ret = -1;
+            goto exit;
+        }
+
         memcpy(&uint32, buf, 4); /* EA size */
         buf += 4;
         (*(ea->ea_entries))[count].ea_size = ntohl(uint32);
-        (*(ea->ea_entries))[count].ea_name = strdup(buf);
+        (*(ea->ea_entries))[count].ea_name = strndup(buf, buf_end - buf);
 
         if (!(*(ea->ea_entries))[count].ea_name) {
             LOG(log_error, logtype_afpd, "unpack_header: OOM");
