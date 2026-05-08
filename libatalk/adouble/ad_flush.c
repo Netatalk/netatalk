@@ -263,6 +263,7 @@ static int ad_flush_hf(struct adouble *ad)
     EC_INIT;
     int len;
     int cwd = -1;
+    int dirfd = -1;
     LOG(log_debug, logtype_ad, "ad_flush_hf(%s)", adflags2logstr(ad->ad_adflags));
     struct ad_fd *adf;
 
@@ -316,11 +317,12 @@ static int ad_flush_hf(struct adouble *ad)
                 if (ad->ad_adflags & ADFLAGS_DIR) {
                     EC_NEG1_LOG(cwd = open(".", O_RDONLY));
                     EC_NEG1_LOG(fchdir(ad_data_fileno(ad)));
-                    ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+                    EC_NEG1_LOG(dirfd = open(".", O_RDONLY | O_DIRECTORY));
+                    ret = sys_fsetxattr(dirfd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
 #ifdef __APPLE__
 
                     if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
-                        sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
+                        sys_fsetxattr(dirfd, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
                     }
 
 #endif
@@ -341,11 +343,11 @@ static int ad_flush_hf(struct adouble *ad)
                          * owner is allowed to write xattrs
                          */
                         become_root();
-                        ret = sys_lsetxattr(".", AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
+                        ret = sys_fsetxattr(dirfd, AD_EA_META, ad->ad_data, AD_DATASZ_EA, 0);
 #ifdef __APPLE__
 
                         if (!(ad->ad_mdp->adf_flags & O_CREAT)) {
-                            sys_lsetxattr(".", EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
+                            sys_fsetxattr(dirfd, EA_FINFO, NativeFinderInfo, ADEDLEN_FINDERI, 0);
                         }
 
 #endif
@@ -357,6 +359,8 @@ static int ad_flush_hf(struct adouble *ad)
                         }
                     }
 
+                    close(dirfd);
+                    dirfd = -1;
                     EC_NEG1_LOG(fchdir(cwd));
                     EC_NEG1_LOG(close(cwd));
                     cwd = -1;
@@ -384,6 +388,10 @@ static int ad_flush_hf(struct adouble *ad)
     }
 
 EC_CLEANUP:
+
+    if (dirfd != -1) {
+        close(dirfd);
+    }
 
     if (cwd != -1) {
         if (fchdir(cwd) != 0) {
