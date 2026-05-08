@@ -1517,33 +1517,26 @@ endif
 # Set dbus-daemon path
 #
 
-dbus_daemon_path = get_option('with-dbus-daemon-path')
-dbus_daemonpath = ''
+dbus_daemonpath = get_option('with-dbus-daemon-path')
 
-if dbus_daemon_path != ''
-    dbus_daemonpath += dbus_daemon_path
-    cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemon_path + '"')
-elif fs.exists(bindir / 'dbus-daemon')
+if dbus_daemonpath == '' and fs.exists(bindir / 'dbus-daemon')
     dbus_daemonpath += bindir / 'dbus-daemon'
-    cdata.set('DBUS_DAEMON_PATH', '"' + bindir / 'dbus-daemon' + '"')
-elif dbus.found()
+elif dbus_daemonpath == '' and dbus.found()
     dbus_daemonpath += '/bin/dbus-daemon'
-    cdata.set('DBUS_DAEMON_PATH', '"/bin/dbus-daemon"')
+endif
+
+if dbus_daemonpath != ''
+    cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemonpath + '"')
 endif
 
 #
 # Set dbus sysconf directory
 #
 
-dbus_sysconf_path = get_option('with-dbus-sysconf-path')
-dbus_sysconfpath = ''
+dbus_sysconfpath = get_option('with-dbus-sysconf-path')
 
-if dbus_sysconf_path != ''
-    dbus_sysconfpath += dbus_sysconf_path
-    cdata.set('DBUS_SYS_DIR', '"' + dbus_sysconf_path + '"')
-elif dbus.found()
+if dbus_sysconfpath == '' and dbus.found()
     dbus_sysconfpath += datadir / 'dbus-1/system.d'
-    cdata.set('DBUS_SYS_DIR', '"' + datadir + '/dbus-1/system.d' + '"')
 endif
 
 #
