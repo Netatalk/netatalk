@@ -209,6 +209,9 @@ fails, afpd will try to authenticate as the specified **admin auth user**.
 If this succeeds, a normal session is created for the original
 connecting user. Said differently: if you know the password of
 **admin auth user**, you can authenticate as any other user.
+>
+> ***WARNING:*** This option is a security sensitive and should be used with caution.
+It will be removed in a future Netatalk release.
 
 admin group = *group* **(G)**
 
