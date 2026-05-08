@@ -373,7 +373,7 @@ Netatalk supports the following ones by default:
 - "Randnum exchange"/"2-Way Randnum exchange" UAMs (weak password
 encryption, separate password storage)
 
-- "DHCAST128" UAM (a.k.a. DHX; stronger password encryption)
+- "DHCAST128" UAM (a.k.a. DHX; weak password encryption)
 
 - "DHX2" UAM (successor of DHCAST128)
 
@@ -433,8 +433,14 @@ UAMs)
     However, this is the strongest form of authentication that can be used
     with Macintosh System Software 7.1 or earlier.
 
-- "DHCAST128" ("DHX") or "DHX2" should be the sweet spot for most people
-since it combines stronger encryption with PAM integration.
+- "DHCAST128" ("DHX") is a significant improvement over Randnum,
+  but has weak encryption by today's standards.
+
+    This is the strongest form of authentication available for
+    Mac OS 8/9 clients.
+
+- "DHX2" should be the sweet spot for most people
+  since it combines stronger encryption with PAM integration.
 
 - Using the Kerberos V ("Client Krb v2")
 UAM, it's possible to implement real single sign on scenarios using
