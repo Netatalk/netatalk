@@ -87,26 +87,113 @@ static bool service_running(pid_t pid)
 }
 
 #ifdef WITH_SPOTLIGHT
+static bstring quote_gvariant_string(const char *str)
+{
+    bstring quoted = bfromcstr("\"");
+
+    if (quoted == NULL) {
+        return NULL;
+    }
+
+    for (const unsigned char *p = (const unsigned char *)str; *p; p++) {
+        int rc;
+
+        switch (*p) {
+        case '\\':
+            rc = bcatcstr(quoted, "\\\\");
+            break;
+
+        case '"':
+            rc = bcatcstr(quoted, "\\\"");
+            break;
+
+        case '\n':
+            rc = bcatcstr(quoted, "\\n");
+            break;
+
+        case '\r':
+            rc = bcatcstr(quoted, "\\r");
+            break;
+
+        case '\t':
+            rc = bcatcstr(quoted, "\\t");
+            break;
+
+        default:
+            rc = bconchar(quoted, (char) * p);
+            break;
+        }
+
+        if (rc != BSTR_OK) {
+            bdestroy(quoted);
+            return NULL;
+        }
+    }
+
+    if (bconchar(quoted, '"') != BSTR_OK) {
+        bdestroy(quoted);
+        return NULL;
+    }
+
+    return quoted;
+}
+
+static bstring quote_shell_arg(const char *str)
+{
+    bstring quoted = bfromcstr("'");
+
+    if (quoted == NULL) {
+        return NULL;
+    }
+
+    for (const char *p = str; *p; p++) {
+        int rc;
+
+        if (*p == '\'') {
+            rc = bcatcstr(quoted, "'\\''");
+        } else {
+            rc = bconchar(quoted, *p);
+        }
+
+        if (rc != BSTR_OK) {
+            bdestroy(quoted);
+            return NULL;
+        }
+    }
+
+    if (bconchar(quoted, '\'') != BSTR_OK) {
+        bdestroy(quoted);
+        return NULL;
+    }
+
+    return quoted;
+}
+
 /*! Set indexers to index all our volumes */
 static int set_sl_volumes(void)
 {
     EC_INIT;
     const struct vol *volumes, *vol;
-    struct bstrList *vollist = bstrListCreate();
+    struct bstrList *vollist = NULL;
     int sysret;
-    bstring sep = bfromcstr(", ");
-    bstring volnamelist = NULL, cmd = NULL;
+    bstring sep = NULL, volnamelist = NULL, gvariant = NULL, shellarg = NULL;
+    bstring cmd = NULL;
+    EC_NULL_LOG(vollist = bstrListCreate());
+    EC_NULL_LOG(sep = bfromcstr(", "));
     EC_NULL_LOG(volumes = getvolumes());
 
     for (vol = volumes; vol; vol = vol->v_next) {
         if (vol->v_flags & AFPVOL_SPOTLIGHT) {
-            bstring volnamequot = bformat("'%s'", vol->v_path);
+            bstring volnamequot = quote_gvariant_string(vol->v_path);
+            EC_NULL_LOG(volnamequot);
 
             if (vollist->qty == vollist->mlen
                     && bstrListAlloc(vollist, vollist->qty + 1) != BSTR_OK) {
                 LOG(log_error, logtype_default,
                     "set_sl_volumes: failed to initialize indexing for %s",
                     bdata(volnamequot));
+                bdestroy(volnamequot);
+                EC_FAIL;
             }
 
             vollist->entry[vollist->qty] = volnamequot;
@@ -115,9 +202,15 @@ static int set_sl_volumes(void)
     }
 
     volnamelist = bjoin(vollist, sep);
+    EC_NULL_LOG(volnamelist);
+    gvariant = bformat("[%s]", bdata(volnamelist));
+    EC_NULL_LOG(gvariant);
+    shellarg = quote_shell_arg(bdata(gvariant));
+    EC_NULL_LOG(shellarg);
     cmd = bformat("gsettings set " INDEXER_DBUS_NAME
-                  " index-recursive-directories \"[%s]\"",
-                  bdata(volnamelist) ? bdata(volnamelist) : "");
+                  " index-recursive-directories %s",
+                  bdata(shellarg));
+    EC_NULL_LOG(cmd);
     LOG(log_debug, logtype_sl, "set_sl_volumes: %s", bdata(cmd));
     sysret = system(bdata(cmd));
 
@@ -155,6 +248,14 @@ EC_CLEANUP:
 
     if (sep) {
         bdestroy(sep);
+    }
+
+    if (gvariant) {
+        bdestroy(gvariant);
+    }
+
+    if (shellarg) {
+        bdestroy(shellarg);
     }
 
     if (vollist) {
