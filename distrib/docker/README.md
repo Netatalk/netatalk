@@ -267,6 +267,7 @@ Set this environment variable to a specific value or string.
 | AFP_CNID_SQL_USER               | The username to use when connecting to the CNID SQL server             |
 | AFP_CNID_SQL_PASS               | The password to use when connecting to the CNID SQL server             |
 | AFP_CNID_SQL_DB                 | The name of the designated database in the SQL server                  |
+| AFP_UAMS                        | Space-separated list of UAM .so files to load, overriding the default list and INSECURE_AUTH |
 | AFP_DIRCACHESIZE                | The size of the directory cache                                        |
 | AFP_DIRCACHE_VALIDATION_FREQ    | The frequency to validate the directory cache                          |
 | AFP_DIRCACHE_METADATA_WINDOW    | The time window (in seconds) for metadata caching                      |
@@ -281,6 +282,6 @@ Set this environment variable to a non-zero value to enable, ex. "1"
 |---------------------|------------------------------------------------------------------------------------------------|
 | AFP_DROPBOX         | Enable dropbox mode; secondary user is guest with read only access to the second shared volume |
 | AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
-| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs; the AFP password must be 8 chars or shorter            |
+| INSECURE_AUTH       | Enable the "RandNum", "ClearTxt", and "Guest" UAMs; the AFP password must be 8 chars or shorter; use `AFP_UAMS` for finer control |
 | DISABLE_TIMEMACHINE | The secondary shared volume is a regular volume, not a backup volume                           |
 | MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |
