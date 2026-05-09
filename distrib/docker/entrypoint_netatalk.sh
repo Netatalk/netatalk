@@ -103,17 +103,30 @@ if [ -f "$RANDNUM_PASSWD_FILE" ]; then
     rm -f "$RANDNUM_PASSWD_FILE"
 fi
 
-UAMS="uams_dhx.so uams_dhx2.so"
+# Use AFP_UAMS verbatim if set, otherwise build from defaults
+if [ -n "$AFP_UAMS" ]; then
+    UAMS="$AFP_UAMS"
+else
+    UAMS="uams_dhx.so uams_dhx2.so"
+fi
+
+# Determine if RandNum UAM setup is needed
+RANDNUM_WANTED=0
+case "$UAMS" in
+    *uams_randnum.so*) RANDNUM_WANTED=1 ;;
+    *) ;;
+esac
+[ -z "$AFP_UAMS" ] && [ -n "$INSECURE_AUTH" ] && RANDNUM_WANTED=1
 
 # Creating credentials for the RandNum UAM
 RANDNUM_OK=0
-if [ -n "$INSECURE_AUTH" ] && ensure_randnum_key_file; then
+if [ "$RANDNUM_WANTED" = "1" ] && ensure_randnum_key_file; then
     afppasswd -c
 
     if afppasswd -a -f -w "$AFP_PASS" "$AFP_USER" > /dev/null; then
         RANDNUM_OK=1
     fi
-elif [ -n "$INSECURE_AUTH" ]; then
+elif [ "$RANDNUM_WANTED" = "1" ]; then
     echo "ERROR: Failed to secure $RANDNUM_KEY_FILE; disabling RandNum UAM" >&2
 fi
 
@@ -137,15 +150,19 @@ elif [ -n "$AFP_USER2" ]; then
 
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
 
-    if [ -n "$INSECURE_AUTH" ] && ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null; then
+    if [ "$RANDNUM_WANTED" = "1" ] && ! afppasswd -a -f -w "$AFP_PASS2" "$AFP_USER2" > /dev/null; then
         RANDNUM_OK=0
     fi
 fi
 
-if [ "$RANDNUM_OK" = "1" ]; then
-    UAMS="$UAMS uams_randnum.so"
-elif [ -n "$INSECURE_AUTH" ]; then
-    echo "NOTE: uams_randnum.so will not be loaded"
+if [ -z "$AFP_UAMS" ]; then
+    if [ "$RANDNUM_OK" = "1" ]; then
+        UAMS="$UAMS uams_randnum.so"
+    elif [ -n "$INSECURE_AUTH" ]; then
+        echo "NOTE: uams_randnum.so will not be loaded"
+    fi
+elif [ "$RANDNUM_WANTED" = "1" ] && [ "$RANDNUM_OK" = "0" ]; then
+    echo "WARNING: uams_randnum.so in AFP_UAMS but setup failed; it may not load" >&2
 fi
 
 echo "*** Configuring shared volume"
@@ -192,7 +209,7 @@ if [ -z "$AFP_PORT" ]; then
     AFP_PORT="548"
 fi
 
-if [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; then
+if [ -z "$AFP_UAMS" ] && { [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; }; then
     UAMS="$UAMS uams_clrtxt.so uams_guest.so"
 fi
 
