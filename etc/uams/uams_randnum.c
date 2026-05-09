@@ -161,9 +161,25 @@ static int afppasswd(const struct passwd *pwd,
     /* open the key file if it exists */
     strcpy(buf, path);
 
-    if (pathlen < (int) sizeof(buf) - 5) {
+    if (pathlen <= (int) sizeof(buf) - 5) {
         strcat(buf, ".key");
         keyfd = open(buf, O_RDONLY);
+
+        if (keyfd < 0) {
+            LOG(log_warning, logtype_uams,
+                "SECURITY WARNING: afppasswd key file \"%s\" is unavailable "
+                "(%s); Randnum passwords in \"%s\" are stored and used in "
+                "clear text. This insecure fallback is deprecated and will "
+                "become a hard failure in a future release.",
+                buf, strerror(errno), path);
+        }
+    } else {
+        LOG(log_warning, logtype_uams,
+            "SECURITY WARNING: afppasswd path \"%s\" is too long to locate "
+            "the companion key file; Randnum passwords are stored and used in "
+            "clear text. This insecure fallback is deprecated and will become "
+            "a hard failure in a future release.",
+            path);
     }
 
     pos = ftell(fp);
