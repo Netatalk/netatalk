@@ -123,11 +123,31 @@ if [ -f "/etc/netatalk/afppasswd.srp" ]; then
     rm -f /etc/netatalk/afppasswd.srp
 fi
 
-UAMS="uams_dhx.so uams_dhx2.so"
+# Use AFP_UAMS verbatim if set, otherwise build from defaults
+if [ -n "$AFP_UAMS" ]; then
+    UAMS="$AFP_UAMS"
+else
+    UAMS="uams_dhx2.so"
+fi
+
+# Determine which UAM setups are needed
+RANDNUM_WANTED=0
+case "$UAMS" in
+    *uams_randnum.so*) RANDNUM_WANTED=1 ;;
+    *) ;;
+esac
+[ -z "$AFP_UAMS" ] && [ -n "$INSECURE_AUTH" ] && RANDNUM_WANTED=1
+
+SRP_WANTED=0
+case "$UAMS" in
+    *uams_srp.so*) SRP_WANTED=1 ;;
+    *) ;;
+esac
+[ -z "$AFP_UAMS" ] && SRP_WANTED=1
 
 # Creating credentials for the RandNum UAM
 RANDNUM_OK=0
-if [ -n "$INSECURE_AUTH" ]; then
+if [ "$RANDNUM_WANTED" = "1" ]; then
     if ensure_randnum_key_file; then
         afppasswd -c -r
 
@@ -141,10 +161,12 @@ fi
 
 # Creating credentials for the SRP UAM
 SRP_OK=0
-afppasswd -c
+if [ "$SRP_WANTED" = "1" ]; then
+    afppasswd -c
 
-if afppasswd -a "$AFP_USER" -f -w "$AFP_PASS" > /dev/null; then
-    SRP_OK=1
+    if afppasswd -a "$AFP_USER" -f -w "$AFP_PASS" > /dev/null; then
+        SRP_OK=1
+    fi
 fi
 
 # Optional second user
@@ -167,23 +189,32 @@ elif [ -n "$AFP_USER2" ]; then
 
     echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
 
-    if [ -n "$INSECURE_AUTH" ] && ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
+    if [ "$RANDNUM_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
         RANDNUM_OK=0
     fi
-    if ! afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null; then
+    if [ "$SRP_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -f -w "$AFP_PASS2" > /dev/null; then
         SRP_OK=0
     fi
 fi
 
-if [ "$RANDNUM_OK" = "1" ]; then
-    UAMS="$UAMS uams_randnum.so"
-elif [ -n "$INSECURE_AUTH" ]; then
-    echo "NOTE: uams_randnum.so will not be loaded"
-fi
-if [ "$SRP_OK" = "1" ]; then
-    UAMS="$UAMS uams_srp.so"
+if [ -z "$AFP_UAMS" ]; then
+    if [ "$RANDNUM_OK" = "1" ]; then
+        UAMS="$UAMS uams_randnum.so"
+    elif [ -n "$INSECURE_AUTH" ]; then
+        echo "NOTE: uams_randnum.so will not be loaded"
+    fi
+    if [ "$SRP_OK" = "1" ]; then
+        UAMS="$UAMS uams_srp.so"
+    else
+        echo "NOTE: uams_srp.so will not be loaded"
+    fi
 else
-    echo "NOTE: uams_srp.so will not be loaded"
+    if [ "$RANDNUM_WANTED" = "1" ] && [ "$RANDNUM_OK" = "0" ]; then
+        echo "WARNING: uams_randnum.so in AFP_UAMS but setup failed; it may not load" >&2
+    fi
+    if [ "$SRP_WANTED" = "1" ] && [ "$SRP_OK" = "0" ]; then
+        echo "WARNING: uams_srp.so in AFP_UAMS but setup failed; it may not load" >&2
+    fi
 fi
 
 # --------------------------------------------------------------------------
@@ -241,7 +272,7 @@ if [ -z "$AFP_PORT" ]; then
     AFP_PORT="548"
 fi
 
-if [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; then
+if [ -z "$AFP_UAMS" ] && { [ -n "$INSECURE_AUTH" ] || [ -n "$AFP_DROPBOX" ]; }; then
     UAMS="$UAMS uams_clrtxt.so uams_guest.so"
 fi
 
