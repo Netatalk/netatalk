@@ -37,9 +37,15 @@ The named user must already exist as a local system user.
 > ***NOTE:*** The legacy Randnum and 2-Way Randnum UAMs only provide
 weak password protection and are discouraged. They should only be enabled
 to support very old AFP clients that cannot use SRP, DHX, or DHX2.
-If a file named *afppasswd.key* exists at the same path as the *afppasswd* file,
-Randnum uses its hex-encoded 8-byte DES key to encrypt the stored password;
-otherwise the password is stored as raw hex.
+Randnum requires a file named *afppasswd.key* at the same path as the
+*afppasswd* file. The key file contains a hex-encoded 8-byte DES key that
+Randnum uses to encrypt the stored password. The Randnum UAM refuses to load
+if the key file is missing or unavailable.
+
+The key file must begin with 16 hexadecimal characters, such as
+`0123456789ABCDEF`; Randnum reads those first 16 bytes as the key material,
+so a trailing newline after them is harmless. Generate a fresh random key for
+each server instead of reusing this example value.
 
 # Examples
 
