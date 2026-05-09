@@ -18,7 +18,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #ifdef USE_CRACKLIB
@@ -47,72 +46,90 @@ static uint8_t         randbuf[8];
 		      ((unsigned long)a)) & 0xffff)
 
 
-/*! handle ~/.passwd. courtesy of shirsch@ibm.net. */
-static  int home_passwd(const struct passwd *pwd,
-                        const char *path, const int pathlen _U_,
-                        unsigned char *passwd, const int len,
-                        const int set)
-{
-    struct stat st;
-    int fd, i;
-
-    if ((fd = open(path, set ? O_WRONLY : O_RDONLY)) < 0) {
-        LOG(log_error, logtype_uams, "Failed to open %s", path);
-        return AFPERR_ACCESS;
-    }
-
-    if (fstat(fd, &st) < 0) {
-        goto home_passwd_fail;
-    }
-
-    /* If any of these are true, disallow login:
-     * - not a regular file
-     * - gid or uid don't match user
-     * - anyone else has permissions of any sort
-     */
-    if (!S_ISREG(st.st_mode) || (pwd->pw_uid != st.st_uid) ||
-            (pwd->pw_gid != st.st_gid) ||
-            (st.st_mode & (S_IRWXG | S_IRWXO))) {
-        LOG(log_info, logtype_uams, "Insecure permissions found for %s.", path);
-        goto home_passwd_fail;
-    }
-
-    /* get the password */
-    if (set) {
-        if (write(fd, passwd, len) < 0) {
-            LOG(log_error, logtype_uams, "Failed to write to %s", path);
-            goto home_passwd_fail;
-        }
-    } else {
-        if (read(fd, passwd, len) < 0) {
-            LOG(log_error, logtype_uams, "Failed to read from %s", path);
-            goto home_passwd_fail;
-        }
-
-        /* get rid of pesky characters */
-        for (i = 0; i < len; i++)
-            if ((passwd[i] != ' ') && isspace(passwd[i])) {
-                passwd[i] = '\0';
-            }
-    }
-
-    close(fd);
-    return AFP_OK;
-home_passwd_fail:
-    close(fd);
-    return AFPERR_ACCESS;
-}
-
-
 #define PASSWD_ILLEGAL '*'
 #define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
 
+static int randnum_cipher_check(const char *op, gcry_error_t err)
+{
+    if (!err) {
+        return 0;
+    }
+
+    LOG(log_error, logtype_uams, "UAM RandNum: %s failed: %s", op,
+        gcry_strerror(err));
+    return -1;
+}
+
+static int afppasswd_open_keyfile(const char *path, const int pathlen)
+{
+    char keypath[MAXPATHLEN + 1];
+    int keyfd;
+
+    if (pathlen > (int) sizeof(keypath) - 5) {
+        LOG(log_error, logtype_uams,
+            "UAM RandNum: afppasswd path \"%s\" is too long to locate "
+            "the required companion key file; refusing to use Randnum.",
+            path);
+        return -1;
+    }
+
+    strlcpy(keypath, path, sizeof(keypath));
+    strlcat(keypath, ".key", sizeof(keypath));
+    keyfd = open(keypath, O_RDONLY);
+
+    if (keyfd < 0) {
+        LOG(log_error, logtype_uams,
+            "UAM RandNum: required afppasswd key file \"%s\" is unavailable "
+            "(%s); refusing to use Randnum because passwords in \"%s\" "
+            "would otherwise be stored and used in clear text.",
+            keypath, strerror(errno), path);
+    }
+
+    return keyfd;
+}
+
+static int randnum_check_passwdfile_key(void *obj)
+{
+    char *passwdfile = NULL;
+    int keyfd;
+    size_t len = UAM_PASSWD_FILENAME;
+
+    if (uam_afpserver_option(obj, UAM_OPTION_PASSWDOPT,
+                             (void *) &passwdfile, &len) < 0) {
+        LOG(log_error, logtype_uams,
+            "UAM RandNum: failed to get afppasswd file option; refusing to load Randnum.");
+        return -1;
+    }
+
+    if (!passwdfile || len == 0) {
+        LOG(log_error, logtype_uams,
+            "UAM RandNum: afppasswd file is not configured; refusing to load Randnum.");
+        return -1;
+    }
+
+    if (*passwdfile == '~') {
+        LOG(log_error, logtype_uams,
+            "UAM RandNum: home password files cannot be protected by the "
+            "required afppasswd key file; refusing to load Randnum.");
+        return -1;
+    }
+
+    keyfd = afppasswd_open_keyfile(passwdfile, (int) len);
+
+    if (keyfd < 0) {
+        return -1;
+    }
+
+    close(keyfd);
+    return 0;
+}
+
 /*!
- * @brief handle /path/afppasswd with an optional key file.
+ * @brief handle /path/afppasswd with a required key file.
  * we're a lot more trusting of this file.
  * @note we use our own password entry writing bits
  * as we want to avoid tromping over global variables.
- * in addition, we look for a key file and use that if it's there.
+ * in addition, we require a key file and fail if it is not available.
  *
  * here are the formats:
  *
@@ -122,8 +139,7 @@ home_passwd_fail:
  * username:password:last login date:failedcount
  * @endcode
  *
- * password is just the hex equivalent of either the ASCII password
- * (if the key file doesn't exist) or the des encrypted password.
+ * password is just the hex equivalent of the DES encrypted password.
  *
  * key file
  * --------
@@ -143,7 +159,7 @@ static int afppasswd(const struct passwd *pwd,
     int keyfd = -1, err = 0;
     ssize_t keylen;
     off_t pos;
-    gcry_cipher_hd_t ctx;
+    gcry_cipher_hd_t ctx = NULL;
     gcry_error_t ctxerror;
 
     if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
@@ -158,12 +174,11 @@ static int afppasswd(const struct passwd *pwd,
         return AFPERR_ACCESS;
     }
 
-    /* open the key file if it exists */
-    strcpy(buf, path);
+    keyfd = afppasswd_open_keyfile(path, pathlen);
 
-    if (pathlen < (int) sizeof(buf) - 5) {
-        strcat(buf, ".key");
-        keyfd = open(buf, O_RDONLY);
+    if (keyfd < 0) {
+        err = AFPERR_ACCESS;
+        goto afppasswd_done;
     }
 
     pos = ftell(fp);
@@ -204,52 +219,76 @@ afppasswd_found:
         }
     }
 
-    if (keyfd > -1) {
-        /* read in the hex representation of an 8-byte key */
-        keylen = read(keyfd, key, sizeof(key));
+    /* read in the hex representation of an 8-byte key */
+    keylen = read(keyfd, key, sizeof(key));
 
-        if (keylen < 0) {
-            LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
+    if (keylen < 0) {
+        LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
+        err = AFPERR_ACCESS;
+        goto afppasswd_done;
+    }
+
+    if (keylen != sizeof(key)) {
+        LOG(log_info, logtype_uams, "invalid key length in afppasswd key file");
+        err = AFPERR_ACCESS;
+        goto afppasswd_done;
+    }
+
+    for (i = 0; i < sizeof(key); i++) {
+        if (!isxdigit(key[i])) {
+            LOG(log_info, logtype_uams, "invalid character in afppasswd key file");
             err = AFPERR_ACCESS;
             goto afppasswd_done;
         }
+    }
 
-        if (keylen != sizeof(key)) {
-            LOG(log_info, logtype_uams, "invalid key length in afppasswd key file");
+    /* convert to binary key */
+    for (i = j = 0; i < sizeof(key); i += 2, j++) {
+        key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
+    }
+
+    if (j <= DES_KEY_SZ) {
+        memset(key + j, 0, sizeof(key) - j);
+    }
+
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
+
+    if (randnum_cipher_check("gcry_cipher_open", ctxerror) < 0) {
+        err = AFPERR_ACCESS;
+        goto afppasswd_done;
+    }
+
+    ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
+
+    if (randnum_cipher_check("gcry_cipher_setkey", ctxerror) < 0) {
+        err = AFPERR_ACCESS;
+        goto afppasswd_close_cipher;
+    }
+
+    if (set) {
+        /* NOTE: this takes advantage of the fact that passwd doesn't
+         *       get used after this call if it's being set. */
+        ctxerror = gcry_cipher_encrypt(ctx, passwd, len, NULL, 0);
+
+        if (randnum_cipher_check("gcry_cipher_encrypt", ctxerror) < 0) {
             err = AFPERR_ACCESS;
-            goto afppasswd_done;
+            goto afppasswd_close_cipher;
         }
+    } else {
+        /* decrypt the password */
+        ctxerror = gcry_cipher_decrypt(ctx, p, DES_KEY_SZ, NULL, 0);
 
-        for (i = 0; i < sizeof(key); i++) {
-            if (!isxdigit(key[i])) {
-                LOG(log_info, logtype_uams, "invalid character in afppasswd key file");
-                err = AFPERR_ACCESS;
-                goto afppasswd_done;
-            }
+        if (randnum_cipher_check("gcry_cipher_decrypt", ctxerror) < 0) {
+            err = AFPERR_ACCESS;
+            goto afppasswd_close_cipher;
         }
+    }
 
-        /* convert to binary key */
-        for (i = j = 0; i < sizeof(key); i += 2, j++) {
-            key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-        }
+afppasswd_close_cipher:
+    gcry_cipher_close(ctx);
 
-        if (j <= DES_KEY_SZ) {
-            memset(key + j, 0, sizeof(key) - j);
-        }
-
-        ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-        ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
-
-        if (set) {
-            /* NOTE: this takes advantage of the fact that passwd doesn't
-             *       get used after this call if it's being set. */
-            ctxerror = gcry_cipher_encrypt(ctx, passwd, len, NULL, 0);
-        } else {
-            /* decrypt the password */
-            ctxerror = gcry_cipher_decrypt(ctx, p, DES_KEY_SZ, NULL, 0);
-        }
-
-        gcry_cipher_close(ctx);
+    if (err) {
+        goto afppasswd_done;
     }
 
     if (set) {
@@ -294,44 +333,14 @@ afppasswd_done:
 
 /*!
  * @brief this sets the uid.
- * @note it needs to do slightly different things
- * depending upon whether or not the password is in ~/.passwd
- * or in a global location
+ * @note the afppasswd file must be read and updated as root.
  */
 static int randpass(const struct passwd *pwd, const char *file,
                     unsigned char *passwd, const int len, const int set)
 {
     int i;
     uid_t uid = geteuid();
-    /* Build pathname to user's '.passwd' file */
     i = strlen(file);
-
-    if (*file == '~') {
-        char path[MAXPATHLEN + 1];
-
-        if ((strlen(pwd->pw_dir) + i - 1) > MAXPATHLEN) {
-            return AFPERR_PARAM;
-        }
-
-        strcpy(path,  pwd->pw_dir);
-        strcat(path, "/");
-        strcat(path, file + 2);
-
-        /* change ourselves to the user */
-        if (!uid && (seteuid(pwd->pw_uid) < 0)) {
-            LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", pwd->pw_uid,
-                strerror(errno));
-        }
-
-        i = home_passwd(pwd, path, i, passwd, len, set);
-
-        /* change ourselves back to root */
-        if (!uid && (seteuid(0) < 0)) {
-            LOG(log_info, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
-        }
-
-        return i;
-    }
 
     if (i > MAXPATHLEN) {
         return AFPERR_PARAM;
@@ -655,6 +664,10 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int uam_setup(void *obj, const char *path)
 {
+    if (randnum_check_passwdfile_key(obj) < 0) {
+        return -1;
+    }
+
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Randnum exchange",
                      randnum_login, randnum_logincont, NULL, randnum_login_ext) < 0) {
         return -1;
