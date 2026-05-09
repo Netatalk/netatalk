@@ -272,6 +272,8 @@ Set this environment variable to a specific value or string.
 | AFP_LEGACY_ICON                 | Use a custom Classic Mac OS AFP icon; examples: *daemon*, *sdcard*     |
 | AFP_LOGIN_MESSAGE               | A message to display when a user logs in (Classic Mac OS only)         |
 | ATALKD_OPTIONS                  | A string with options to append to atalkd.conf                         |
+| **Authentication Configuration** |                                                                       |
+| AFP_UAMS                        | Space-separated list of UAM .so files to load, overriding the default list (`uams_dhx2.so uams_srp.so`) as well as the INSECURE_AUTH flag |
 | **CNID Database Configuration** |                                                                        |
 | AFP_CNID_BACKEND                | The backend to use for the CNID database: *dbd*, *sqlite*, or *mysql*  |
 | AFP_CNID_SQL_HOST               | The hostname or IP address of the CNID SQL server                      |
@@ -314,7 +316,7 @@ Set these environment variables to a non-zero value to enable, ex. "1"
 | AFP_EXTMAP          | Enable mapping of filename extension to Classic Mac OS type/creator                            |
 | AFP_ADOUBLE         | Use AppleDouble (ad) instead of system native EA for extended attributes                       |
 | **Authentication Configuration** |                                                                                       |
-| INSECURE_AUTH       | Enable the "ClearTxt" and "Guest" UAMs; the AFP password must be 8 chars or shorter            |
+| INSECURE_AUTH       | Enable the "RandNum", "ClearTxt", and "Guest" UAMs; the AFP password must be 8 chars or shorter; use `AFP_UAMS` for finer control |
 | **Advanced Configuration** |                                                                                            |
 | MANUAL_CONFIG       | Enable manual management of configurations; overrides most other options                       |
 | VERBOSE             | Enable verbose test output                                                                     |
