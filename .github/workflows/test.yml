@@ -32,12 +32,21 @@ jobs:
         run: |
           brew update
           brew install \
-            astyle \
             markdownlint-cli2 \
             muon \
             perltidy \
             shfmt \
             yamlfmt
+      - name: Build astyle 3.6.14 from source
+        run: |
+          git clone --depth 1 --branch 3.6.14 \
+            https://gitlab.com/saalen/astyle.git /tmp/astyle
+          cmake -S /tmp/astyle -B /tmp/astyle/build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local
+          cmake --build /tmp/astyle/build -j"$(sysctl -n hw.ncpu)"
+          sudo cmake --install /tmp/astyle/build
+          astyle --version
       - name: Check C formatting
         run: ./contrib/scripts/codefmt.sh -v -s c
       - name: Check markdown formatting
