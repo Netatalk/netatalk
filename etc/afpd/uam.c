@@ -15,6 +15,7 @@
 #include <dlfcn.h>
 #endif /* HAVE_DLFCN_H */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -346,41 +347,54 @@ int uam_checkuser(void *private, const struct passwd *pwd)
     return 0;
 }
 
-int uam_random_string(AFPObj *obj, char *buf, int len)
+/*!
+ * @brief Fill a buffer with cryptographically secure random bytes
+ *
+ * Reads from /dev/urandom, looping until all bytes are filled so the
+ * caller always receives a fully-populated nonce. Retries on EINTR;
+ * never falls back to a deterministic source.
+ *
+ * @param obj  AFP session object (unused)
+ * @param buf  destination buffer
+ * @param len  number of bytes to fill; must be a positive multiple of 4
+ * @return     0 on success, -1 on error
+ */
+int uam_random_string(AFPObj *obj _U_, char *buf, int len)
 {
-    uint32_t result;
-    int ret;
     int fd;
+    int done = 0;
 
-    if ((len <= 0) || (len % sizeof(result))) {
+    if ((len <= 0) || (len % sizeof(uint32_t))) {
         return -1;
     }
 
-    /* construct a random number */
     if ((fd = open("/dev/urandom", O_RDONLY)) < 0) {
-        struct timeval tv;
-        struct timezone tz;
-        int i;
-
-        if (gettimeofday(&tv, &tz) < 0) {
-            return -1;
-        }
-
-        srandom(tv.tv_sec + (unsigned long) obj + (unsigned long) obj->dsi);
-
-        for (i = 0; i < len; i += sizeof(result)) {
-            result = random();
-            memcpy(buf + i, &result, sizeof(result));
-        }
-    } else {
-        ret = read(fd, buf, len);
-        close(fd);
-
-        if (ret <= 0) {
-            return -1;
-        }
+        return -1;
     }
 
+    while (done < len) {
+        int ret = read(fd, buf + done, len - done);
+
+        if (ret < 0) {
+            if (errno == EINTR) {
+                continue;
+            }
+
+            int saved_errno = errno;
+            close(fd);
+            errno = saved_errno;
+            return -1;
+        }
+
+        if (ret == 0) {
+            close(fd);
+            return -1;
+        }
+
+        done += ret;
+    }
+
+    close(fd);
     return 0;
 }
 
