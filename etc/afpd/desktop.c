@@ -834,7 +834,7 @@ char *dtfile(const struct vol *vol, uint8_t creator[], char *ext)
     }
 
     *p = '\0';
-    strcat(path, ext);
+    strlcat(path, ext, sizeof(path));
     return path;
 }
 
@@ -852,7 +852,7 @@ char *mtoupath(const struct vol *vol, char *mpath, cnid_t did, int utf8)
     uint16_t	 flags;
 
     if (*mpath == '\0') {
-        strcpy(upath, ".");
+        strlcpy(upath, ".", sizeof(upath));
         return upath;
     }
 

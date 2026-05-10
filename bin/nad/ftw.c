@@ -235,7 +235,7 @@ static char *mystpcpy(char *dest, const char *src, size_t dest_size)
 
         return dest;
     } else {
-        strcpy(dest, src);
+        strlcpy(dest, src, dest_size);
         return dest + src_len;
     }
 }

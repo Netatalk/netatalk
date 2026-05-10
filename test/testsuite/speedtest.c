@@ -805,7 +805,7 @@ void Write(void)
     reset_statistics();
     print_test_header("Write");
     header();
-    sprintf(temp, "WriteTest-%d", id);
+    snprintf(temp, sizeof(temp), "WriteTest-%d", id);
 
     if (check_test_dir_exists(vol, temp, "Write")) {
         return;
@@ -1030,7 +1030,7 @@ void Copy(void)
     reset_statistics();
     print_test_header("Copy");
     header();
-    sprintf(temp, "CopyTest-%d", id);
+    snprintf(temp, sizeof(temp), "CopyTest-%d", id);
 
     if (!Filename) {
         if (check_test_dir_exists(vol, temp, "Copy")) {
@@ -1064,14 +1064,14 @@ void Copy(void)
     }
 
     if (!Filename) {
-        strcpy(temp, "Source");
+        strlcpy(temp, "Source", sizeof(temp));
 
         if (VFS.createfile(Conn, vol, 0, dir, temp)) {
             test_failed();
             goto fin;
         }
     } else {
-        strcpy(temp, Filename);
+        strlcpy(temp, Filename, sizeof(temp));
     }
 
     if (VFS.createfile(Conn, vol2,  0, dir2, "Destination")) {
@@ -1317,7 +1317,7 @@ void ServerCopy(void)
     reset_statistics();
     print_test_header("ServerCopy");
     header();
-    sprintf(temp, "ServerCopyTest-%d", id);
+    snprintf(temp, sizeof(temp), "ServerCopyTest-%d", id);
 
     if (check_test_dir_exists(vol, temp, "ServerCopy")) {
         return;
@@ -1453,7 +1453,7 @@ void Read(void)
     header();
 
     if (!Filename) {
-        sprintf(temp, "ReadTest-%d", id);
+        snprintf(temp, sizeof(temp), "ReadTest-%d", id);
 
         if (check_test_dir_exists(vol, temp, "Read")) {
             return;
@@ -1471,10 +1471,10 @@ void Read(void)
             goto fin;
         }
 
-        strcpy(temp, "File");
+        strlcpy(temp, "File", sizeof(temp));
     } else {
         dir = DIRDID_ROOT;
-        strcpy(temp, Filename);
+        strlcpy(temp, Filename, sizeof(temp));
 
         if (ntohl(AFP_OK) != is_there(Conn, VolID, dir, temp)) {
             test_nottested();

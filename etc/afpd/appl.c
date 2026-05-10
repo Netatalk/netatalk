@@ -273,7 +273,7 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
 
     dtf = dtfile(vol, creator, ".appl.temp");
     tempfile = obj->oldtmp;
-    strcpy(tempfile, dtf);
+    strlcpy(tempfile, dtf, AFPOBJ_TMPSIZ);
 
     if ((tfd = open(tempfile, O_RDWR | O_CREAT, 0666)) < 0) {
         return AFPERR_PARAM;
@@ -409,7 +409,7 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         return AFPERR_PARAM;
     }
 
-    strcpy(tempfile, dtf);
+    strlcpy(tempfile, dtf, AFPOBJ_TMPSIZ);
 
     if ((tfd = open(tempfile, O_RDWR | O_CREAT, 0666)) < 0) {
         close(sa.sdt_fd);

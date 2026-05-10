@@ -823,10 +823,10 @@ STATIC void test336()
         bitmap = (1 << DIRPBIT_LNAME);
     }
 
-    sprintf(temp1, "#%X", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap)) {
         test_failed();

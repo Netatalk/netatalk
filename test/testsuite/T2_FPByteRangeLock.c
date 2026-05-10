@@ -62,10 +62,10 @@ static void test_bytelock(uint16_t vol2, char *name, int type)
         FPCloseFork(Conn, fork);
     }
 
-    strcpy(temp, Path);
-    strcat(temp, (type == OPENFORK_RSCS
-                  && adouble == AD_V2) ? "/.AppleDouble/" : "/");
-    strcat(temp, name);
+    strlcpy(temp, Path, sizeof(temp));
+    strlcat(temp, (type == OPENFORK_RSCS
+                   && adouble == AD_V2) ? "/.AppleDouble/" : "/", sizeof(temp));
+    strlcat(temp, name, sizeof(temp));
 
     if (!Quiet) {
         fprintf(stdout, " \n---------------------\n");
