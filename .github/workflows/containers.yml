@@ -1093,7 +1093,7 @@ jobs:
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
-            -e INSECURE_AUTH="1" \
+            -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_dhx.so" \
             -e VERBOSE="1" \
             -e TESTSUITE="login" \
             -e AFP_VERSION="7" \

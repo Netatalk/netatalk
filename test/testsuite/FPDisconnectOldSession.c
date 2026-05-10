@@ -756,7 +756,7 @@ STATIC void test535()
     FAIL(FPGetFileDirParams(Conn, vol, dir, file1, bitmap, 0))
     FAIL(FPGetFileDirParams(Conn, vol, dir, file2, bitmap, 0))
     FAIL(FPGetFileDirParams(Conn, vol, dir, file3, bitmap, 0))
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FAIL(FPEnumerate(Conn, vol, dir, "", bitmap, bitmap))
 
     if (!Quiet && Verbose) {

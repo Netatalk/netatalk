@@ -16,12 +16,16 @@
 
 /*!
  * @file
- * @brief DSI (Data Stream Interface) protocol definitions
- * modified for the afptest test-suite
+ * @brief DSI (Data Stream Interface) protocol definitions for the test-suite.
  *
- * The interface for the test-suite differs from the libatalk DSI interface
- * in that is retains a statically allocated buffer for commands
- * as well as smaller command and data buffer sizes that fit in 16 bit size fields.
+ * Client-side DSI used by the afptest tools. Unlike the libatalk server-side
+ * DSI implementation, this variant:
+ *  - has no proto_open/proto_close, no listening socket, no AFPObj
+ *  - uses statically allocated buffers (commands[DSI_CMDSIZ],
+ *    data[DSI_DATASIZ]) sized to fit 16-bit AFP length fields
+ *  - only implements the stream send/receive primitives a client needs;
+ *    server-side helpers (dsi_init, dsi_readinit, dsi_writeinit, etc.) are
+ *    intentionally not provided here
  *
  * What a DSI packet looks like:
  * @code
@@ -52,8 +56,6 @@ struct dsi_block {
 
 #define DSI_CMDSIZ        800
 #define DSI_DATASIZ       8192
-/* child and parent processes might interpret a couple of these
- * differently. */
 typedef struct DSI {
     struct dsi_block header;
     struct sockaddr_in server, client;
@@ -117,41 +119,18 @@ typedef struct DSI {
 /*! default port number */
 #define DSI_AFPOVERTCP_PORT 548
 
-/*! basic initialization: dsi_init.c */
-extern DSI *dsi_init(
-    const char * /*program*/,
-    const char * /*host*/, const char * /*address*/,
-    const int /*port*/, const int /*proxy*/,
-    const uint32_t /* server quantum */);
-extern void dsi_setstatus(DSI *, uint8_t *, const int);
-
-/* in dsi_getsess.c */
-extern void dsi_kill(int);
-
-/* low-level stream commands -- in dsi_stream.c */
-extern size_t dsi_stream_write(DSI *, void *, const size_t);
+/* low-level stream commands -- implemented in afpclient.c */
 extern size_t dsi_stream_read(DSI *, void *, const size_t);
-extern int dsi_stream_send(DSI *, void *, size_t);
 extern int dsi_stream_receive(DSI *, void *, const size_t, size_t *);
-
-/* client writes -- dsi_write.c */
-extern size_t dsi_writeinit(DSI *, void *, const size_t);
-extern size_t dsi_write(DSI *, void *, const size_t);
-extern void   dsi_writeflush(DSI *);
-#define dsi_wrtreply(a,b)  dsi_cmdreply(a,b)
-
-/* client reads -- dsi_read.c */
-extern ssize_t dsi_readinit(DSI *, void *, const size_t, const size_t,
-                            const int);
-extern ssize_t dsi_read(DSI *, void *, const size_t);
-extern void dsi_readdone(DSI *);
+extern size_t dsi_stream_write(DSI *, void *, const size_t);
+extern int dsi_stream_send(DSI *, void *, size_t);
 
 /* some useful macros */
+#define dsi_clientID(x)   ((x)->clientID++)
 #define dsi_serverID(x)   ((x)->serverID++)
 #define dsi_send(x)       do { \
     (x)->header.dsi_len = htonl((x)->cmdlen); \
     dsi_stream_send((x), (x)->commands, (x)->cmdlen); \
 } while (0)
-#define dsi_receive(x)    (dsi_stream_receive((x), (x)->commands, \
-					      DSI_CMDSIZ, &(x)->cmdlen))
+
 #endif /* atalk/dsi.h */

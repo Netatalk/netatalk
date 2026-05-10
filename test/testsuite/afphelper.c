@@ -62,8 +62,8 @@ void illegal_fork(DSI *dsi, char cmd, char *name)
         fprintf(stdout, "AFP call  %d\n\n", cmd);
     }
 
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
-    my_dsi_cmd_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
 
     if (ntohl(AFPERR_PARAM) != dsi->header.dsi_code) {
@@ -273,7 +273,7 @@ int no_access_folder(uint16_t vol, int did, char *name)
         /* Mac OSX here does strange things
          * for when things go wrong */
         test_nottested();
-        /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+        /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
         FPEnumerate(Conn2, vol2,  DIRDID_ROOT, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR),
                     (1 << DIRPBIT_ATTR) | (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) |
@@ -1049,11 +1049,11 @@ int delete_directory_tree_by_did(CONN *conn, uint16_t volume, uint32_t dir_id)
         }
 
         /* Process batch */
-        /* WARN: FPEnumerate and FPEnumerate* use my_dsi_data_receive, other commands use my_dsi_cmd_receive.
-         my_dsi_data_receive stores data length in 'cmdlen', not 'datalen'?
-         my_dsi_cmd_receive (line 321) - receives data into DSI_CMDSIZ buffer (x->commands)
-         my_dsi_data_receive (line 327) - receives data into DSI_DATASIZ buffer (x->data)
-         So my_dsi_data_receive data is received into dsi->data buffer, not dsi->commands.
+        /* WARN: FPEnumerate and FPEnumerate* use dsi_data_receive, other commands use dsi_cmd_receive.
+         dsi_data_receive stores data length in 'cmdlen', not 'datalen'?
+         dsi_cmd_receive (line 321) - receives data into DSI_CMDSIZ buffer (x->commands)
+         dsi_data_receive (line 327) - receives data into DSI_DATASIZ buffer (x->data)
+         So dsi_data_receive data is received into dsi->data buffer, not dsi->commands.
          &conn->dsi->cmdlen = datalen
          &conn->dsi->data + 0 = fbitmap
          &conn->dsi->data + 2 = dbitmap

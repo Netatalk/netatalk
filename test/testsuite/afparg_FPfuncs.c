@@ -201,7 +201,7 @@ void FPEnumerate_arg(char **argv)
             goto fin;
         }
 
-        /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+        /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
 
         while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir, "", f_bitmap,
                                        d_bitmap))) {
