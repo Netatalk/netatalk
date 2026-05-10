@@ -97,7 +97,7 @@ char **cnamewrap(const char *name)
     PUSHVAL(p, uint8_t, 3, len); /* path type */
     PUSHVAL(p, uint32_t, kTextEncodingUTF8, len); /* text encoding hint */
     PUSHVAL(p, uint16_t, htons(strlen(name)), len);
-    strcpy(p, name);
+    strlcpy(p, name, sizeof(buf) - len);
     p = buf;
     return &p;
 }

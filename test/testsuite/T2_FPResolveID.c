@@ -46,7 +46,7 @@ STATIC void test129()
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
+        snprintf(temp1, sizeof(temp1), "%s/%s/.AppleDouble/%s", Path, name1, name);
 
         if (unlink(temp1) < 0) {
             if (!Quiet) {
@@ -57,7 +57,7 @@ STATIC void test129()
         }
     }
 
-    sprintf(temp1, "%s/%s/%s", Path, name1, name);
+    snprintf(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name);
 
     if (unlink(temp1) < 0) {
         if (!Quiet) {

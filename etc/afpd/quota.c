@@ -633,14 +633,12 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq,
         }
 
         if (vol->v_nfs) {
-            if ((vol->v_gvs = (char *)malloc(strlen(p) + 1)) == NULL) {
-                LOG(log_error, logtype_afpd, "getquota: malloc: %s", strerror(errno));
+            if ((vol->v_gvs = strdup(p)) == NULL) {
+                LOG(log_error, logtype_afpd, "getquota: strdup: %s", strerror(errno));
                 return AFPERR_MISC;
             }
-
-            strcpy(vol->v_gvs, p);
         } else {
-            sprintf(buf, "%s/quotas", p);
+            snprintf(buf, sizeof(buf), "%s/quotas", p);
 
             if ((vol->v_qfd = open(buf, O_RDONLY, 0)) < 0) {
                 LOG(log_info, logtype_afpd, "open %s: %s", buf, strerror(errno));
@@ -657,12 +655,10 @@ static int getquota(const AFPObj *obj, struct vol *vol, struct dqblk *dq,
             return AFPERR_PARAM;
         }
 
-        if ((vol->v_gvs = (char *)malloc(strlen(p) + 1)) == NULL) {
-            LOG(log_error, logtype_afpd, "getquota: malloc: %s", strerror(errno));
+        if ((vol->v_gvs = strdup(p)) == NULL) {
+            LOG(log_error, logtype_afpd, "getquota: strdup: %s", strerror(errno));
             return AFPERR_MISC;
         }
-
-        strcpy(vol->v_gvs, p);
     }
 
 #endif

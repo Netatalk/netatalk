@@ -57,14 +57,15 @@ void readmessage(AFPObj *obj)
     maxmsgsize = (obj->proto == AFPPROTO_DSI) ? MIN(MAX(obj->dsi->attn_quantum,
                  MAXMESGSIZE), MAXPATHLEN) : MAXMESGSIZE;
     i = 0;
-
     /* Construct file name SERVERTEXT/message.[pid] */
-    if (NULL == (filename = (char *) malloc(sizeof(SERVERTEXT) + 15))) {
+    size_t filenamelen = sizeof(SERVERTEXT) + 15;
+
+    if (NULL == (filename = (char *) malloc(filenamelen))) {
         LOG(log_error, logtype_afpd, "readmessage: malloc: %s", strerror(errno));
         return;
     }
 
-    sprintf(filename, "%s/message.%d", SERVERTEXT, obj->pid);
+    snprintf(filename, filenamelen, "%s/message.%d", SERVERTEXT, obj->pid);
     LOG(log_debug9, logtype_afpd, "Reading file %s ", filename);
     message = fopen(filename, "r");
 
@@ -72,7 +73,7 @@ void readmessage(AFPObj *obj)
         /* try without the process id */
         LOG(log_info, logtype_afpd, "Unable to open file %s; trying without the pid",
             filename);
-        sprintf(filename, "%s/message", SERVERTEXT);
+        snprintf(filename, filenamelen, "%s/message", SERVERTEXT);
         message = fopen(filename, "r");
     }
 

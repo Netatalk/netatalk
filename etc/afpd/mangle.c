@@ -291,7 +291,8 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
     ext_len = mangle_extension(vol, uname, ext,
                                (flags & 2) ? CH_UTF8_MAC : vol->v_maccharset);
     m = mfilename;
-    k = sprintf(mangle_suffix, "%c%X", MANGLE_CHAR, ntohl(id));
+    k = snprintf(mangle_suffix, sizeof(mangle_suffix), "%c%X", MANGLE_CHAR,
+                 ntohl(id));
 
     if (filenamelen + k + ext_len > maxlen) {
         uint16_t opt = CONV_FORCE | CONV_UNESCAPEHEX;
@@ -306,10 +307,10 @@ mangle(const struct vol *vol, char *filename, size_t filenamelen, char *uname,
     }
 
     if (*m == 0) {
-        strcat(m, "???");
+        strlcat(m, "???", MAXPATHLEN);
     }
 
-    strcat(m, mangle_suffix);
+    strlcat(m, mangle_suffix, MAXPATHLEN);
 
     if (ext_len) {
         strncat(m, ext, ext_len);
