@@ -96,8 +96,10 @@ char **cnamewrap(const char *name)
     int len = 0;
     PUSHVAL(p, uint8_t, 3, len); /* path type */
     PUSHVAL(p, uint32_t, kTextEncodingUTF8, len); /* text encoding hint */
-    PUSHVAL(p, uint16_t, htons(strlen(name)), len);
-    strlcpy(p, name, sizeof(buf) - len);
+    size_t avail = sizeof(buf) - len - sizeof(uint16_t);
+    size_t namelen = strnlen(name, avail);
+    PUSHVAL(p, uint16_t, htons(namelen), len);
+    memcpy(p, name, namelen);
     p = buf;
     return &p;
 }
