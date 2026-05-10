@@ -592,6 +592,23 @@ static void usage(void)
     printf("       netatalk -v|-V \n");
 }
 
+#ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
+static bool any_volume_uses_localsearch(void)
+{
+    const struct vol *vol;
+
+    for (vol = getvolumes(); vol != NULL; vol = vol->v_next) {
+        if ((vol->v_flags & AFPVOL_SPOTLIGHT)
+                && vol->v_sl_backend_name != NULL
+                && strcasecmp(vol->v_sl_backend_name, "localsearch") == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+#endif /* SPOTLIGHT_BACKEND_LOCALSEARCH */
+
 int main(int argc, char **argv)
 {
     int c, ret, debug = 0;
@@ -714,7 +731,7 @@ int main(int argc, char **argv)
     sigprocmask(SIG_SETMASK, &blocksigs, NULL);
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
 
-    if (obj.options.flags & OPTION_SPOTLIGHT) {
+    if (any_volume_uses_localsearch()) {
         setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=" _PATH_STATEDIR "spotlight.ipc",
                1);
         setenv("DCONF_PROFILE", INDEXER_DCONF_PROFILE, 1);
