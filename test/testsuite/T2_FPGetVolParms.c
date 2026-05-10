@@ -176,7 +176,7 @@ STATIC void test532()
         fprintf(stdout, "\t  Step 6: Verify enumeration still works correctly\n");
     }
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, DIRDID_ROOT, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM),
                     (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_DID))) {

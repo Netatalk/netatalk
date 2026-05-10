@@ -72,7 +72,7 @@ int CloseClientSocket(int fd)
 
 /*! read raw data. return actual bytes read. this will wait until
  * it gets length bytes */
-size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length)
+size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
     size_t stored;
     ssize_t len;
@@ -92,10 +92,9 @@ size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length)
                         (len < 0) ? strerror(errno) : "EOF");
             }
 
-            if (!len) {
-                dsi->header.dsi_code = 0xffffffff;
-            }
-
+            /* Mark the header as invalid so callers see a non-zero dsi_code
+             * rather than mistaking the zeroed header for a success response. */
+            dsi->header.dsi_code = 0xffffffff;
             break;
         }
     }
@@ -110,7 +109,7 @@ int dsi_read_header(DSI *dsi)
     char block[DSI_BLOCKSIZ];
 
     /* read in the header */
-    if (my_dsi_stream_read(dsi, block, sizeof(block)) != sizeof(block)) {
+    if (dsi_stream_read(dsi, block, sizeof(block)) != sizeof(block)) {
         return -1;
     }
 
@@ -128,8 +127,8 @@ int dsi_read_header(DSI *dsi)
 /*! read data. function on success. 0 on failure. data length gets
  * stored in length variable. this should really use size_t's, but
  * that would require changes elsewhere. */
-int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
-                          size_t *rlength)
+int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
+                       size_t *rlength)
 {
     int ret;
 
@@ -140,7 +139,7 @@ int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
     /* make sure we don't over-write our buffers. */
     *rlength = min(ntohl(dsi->header.dsi_len), ilength);
 
-    if (my_dsi_stream_read(dsi, buf, *rlength) != *rlength) {
+    if (dsi_stream_read(dsi, buf, *rlength) != *rlength) {
         return 0;
     }
 
@@ -148,7 +147,7 @@ int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
 }
 
 /* ======================================================= */
-size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length)
+size_t dsi_stream_write(DSI *dsi, void *data, const size_t length)
 {
     size_t written;
     ssize_t len;
@@ -179,7 +178,7 @@ size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length)
 /*! write data. 0 on failure. this assumes that dsi_len will never
  * cause an overflow in the data buffer. */
 static int use_writev = 1;
-int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
+int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 {
     char block[DSI_BLOCKSIZ];
     struct iovec iov[2];
@@ -198,7 +197,7 @@ int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
     }
 
     if (!length) { /* just write the header */
-        length = (my_dsi_stream_write(dsi, block, sizeof(block)) == sizeof(block));
+        length = (dsi_stream_write(dsi, block, sizeof(block)) == sizeof(block));
         /* really 0 on failure, 1 on success */
         return (int) length;
     }
@@ -220,7 +219,7 @@ int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
                 break;
             } else if (len < 0) { /* error */
                 if (!Quiet) {
-                    fprintf(stdout, "my_dsi_stream_send: %s", strerror(errno));
+                    fprintf(stdout, "dsi_stream_send: %s", strerror(errno));
                 }
 
                 return 0;
@@ -243,8 +242,8 @@ int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
         }
     } else {
         /* write the header then data */
-        if ((my_dsi_stream_write(dsi, block, sizeof(block)) != sizeof(block)) ||
-                (my_dsi_stream_write(dsi, buf, length) != length)) {
+        if ((dsi_stream_write(dsi, block, sizeof(block)) != sizeof(block)) ||
+                (dsi_stream_write(dsi, buf, length) != length)) {
             return 0;
         }
     }
@@ -253,7 +252,7 @@ int my_dsi_stream_send(DSI *dsi, void *buf, size_t length)
 }
 
 /* ------------------------------------- */
-void my_dsi_tickle(DSI *dsi)
+void dsi_tickle(DSI *dsi)
 {
     char block[DSI_BLOCKSIZ];
     uint16_t id;
@@ -263,19 +262,19 @@ void my_dsi_tickle(DSI *dsi)
     block[1] = DSIFUNC_TICKLE;
     memcpy(block + 2, &id, sizeof(id));
     /* code = len = reserved = 0 */
-    my_dsi_stream_write(dsi, block, DSI_BLOCKSIZ);
+    dsi_stream_write(dsi, block, DSI_BLOCKSIZ);
 }
 
 /* ------------------------------------- */
 int Attention_received;
 
-static int my_dsi_receive(DSI *x, unsigned char *buf, size_t length)
+static int dsi_receive(DSI *x, unsigned char *buf, size_t length)
 {
     int ret;
     Attention_received = 0;
 
     while (1) {
-        ret = my_dsi_stream_receive(x, buf, length, &x->cmdlen);
+        ret = dsi_stream_receive(x, buf, length, &x->cmdlen);
 
         if (ret == DSIFUNC_ATTN) {
             Attention_received = 1;
@@ -283,7 +282,7 @@ static int my_dsi_receive(DSI *x, unsigned char *buf, size_t length)
         } else if (ret == DSIFUNC_CLOSE) {
             continue;
         } else if (ret == DSIFUNC_TICKLE) {
-            my_dsi_tickle(x);
+            dsi_tickle(x);
         } else {
             break;
         }
@@ -293,19 +292,19 @@ static int my_dsi_receive(DSI *x, unsigned char *buf, size_t length)
 }
 
 /* ------------------------------------- */
-static int my_dsi_full_receive(DSI *x, unsigned char *buf, int length)
+static int dsi_full_receive(DSI *x, unsigned char *buf, int length)
 {
     int ret;
     Attention_received = 0;
 
     while (1) {
-        ret = my_dsi_stream_receive(x, buf, length, &x->cmdlen);
+        ret = dsi_stream_receive(x, buf, length, &x->cmdlen);
 
         if (ret == DSIFUNC_ATTN) {
             Attention_received = 1;
             continue;
         } else if (ret == DSIFUNC_TICKLE) {
-            my_dsi_tickle(x);
+            dsi_tickle(x);
         } else {
             break;
         }
@@ -315,15 +314,15 @@ static int my_dsi_full_receive(DSI *x, unsigned char *buf, int length)
 }
 
 /* ------------------------------------- */
-int my_dsi_cmd_receive(DSI *x)
+int dsi_cmd_receive(DSI *x)
 {
-    return my_dsi_receive(x, x->commands, DSI_CMDSIZ);
+    return dsi_receive(x, x->commands, DSI_CMDSIZ);
 }
 
 /* ------------------------------------- */
-int my_dsi_data_receive(DSI *x)
+int dsi_data_receive(DSI *x)
 {
-    return my_dsi_receive(x, x->data, DSI_DATASIZ);
+    return dsi_receive(x, x->data, DSI_DATASIZ);
 }
 
 /* ------------------------------- */
@@ -352,7 +351,7 @@ static int  SendCmd(DSI *dsi, uint8_t cmd)
     ofs = 0;
     dsi->commands[ofs++] = cmd;
     SetLen(dsi, ofs);
-    return my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    return dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 }
 
 /* ------------------------------- */
@@ -366,7 +365,7 @@ static int  SendCmdWithU16(DSI *dsi, uint8_t cmd, uint16_t param)
     memcpy(dsi->commands + ofs, &param, sizeof(param));
     ofs += sizeof(param);
     SetLen(dsi, ofs);
-    return my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    return dsi_stream_send(dsi, dsi->commands, dsi->datalen);
 }
 
 /* ------------------------- */
@@ -386,9 +385,9 @@ static unsigned int SendCmdVolDidCname(CONN *conn, uint8_t cmd, uint16_t vol,
     ofs += sizeof(did);
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -410,8 +409,8 @@ unsigned int DSIOpenSession(CONN *conn)
     dsi->commands[1] = sizeof(i);
     i = htonl(DSI_DEFQUANT);
     memcpy(dsi->commands + 2, &i, sizeof(i));
-    my_dsi_send(dsi);
-    my_dsi_cmd_receive(dsi);
+    dsi_send(dsi);
+    dsi_cmd_receive(dsi);
 #if 0
     dump_header(dsi);
 
@@ -444,8 +443,8 @@ unsigned int DSIGetStatus(CONN *conn)
     dsi->header.dsi_command = DSIFUNC_STAT;
     dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
     dsi->cmdlen = 0;
-    my_dsi_send(dsi);
-    my_dsi_cmd_receive(dsi);
+    dsi_send(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -462,7 +461,7 @@ unsigned int DSICloseSession(CONN *conn)
     dsi->header.dsi_command = DSIFUNC_CLOSE;
     dsi->header.dsi_requestID = htons(dsi_clientID(dsi));
     dsi->cmdlen = 0;
-    my_dsi_send(dsi);
+    dsi_send(dsi);
     return 0;
 }
 
@@ -470,8 +469,8 @@ unsigned int DSICloseSession(CONN *conn)
 	@bug spec violation in netatalk
 	FPlogout ==> dsiclose
 */
-unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
-                          char *pwd)
+unsigned int AFPopenLogin(CONN *conn, const char *vers, const char *uam,
+                          const char *usr, const char *pwd)
 {
     uint8_t len;
     int ofs;
@@ -510,80 +509,171 @@ unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
+/* Capture FPLoginExt/FPLoginCont reply block on kFPAuthContinue.
+ * Reply payload layout (AFP Reference table 51): int16_t ID, then UAM-specific
+ * UserAuthInfo. */
+static void capture_login_cont(CONN *conn)
+{
+    const DSI *dsi = &conn->dsi;
+    uint16_t id_be;
+    conn->login_cont_id = 0;
+    conn->login_cont_len = 0;
+
+    if (dsi->cmdlen < sizeof(id_be)) {
+        return;
+    }
+
+    memcpy(&id_be, dsi->commands, sizeof(id_be));
+    conn->login_cont_id = ntohs(id_be);
+    conn->login_cont_len = dsi->cmdlen - sizeof(id_be);
+
+    if (conn->login_cont_len > sizeof(dsi->commands) - sizeof(id_be)) {
+        conn->login_cont_len = sizeof(dsi->commands) - sizeof(id_be);
+    }
+
+    memcpy(conn->login_cont_data, dsi->commands + sizeof(id_be),
+           conn->login_cont_len);
+}
+
 /* ---------------------------- */
-unsigned int AFPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
-                             char *pwd)
+/* FPLoginExt wire layout per AFP spec §FPLoginExt and netatalk server
+ * parser in etc/afpd/auth.c:778-903. UserAuthInfo is opaque to this
+ * function; callers pass the UAM-specific blob. */
+unsigned int AFPopenLoginExt(CONN *conn,
+                             const char *vers, const char *uam,
+                             const char *usr,
+                             const void *auth_info, size_t auth_info_len)
 {
     uint8_t len;
-    uint16_t len16;
     uint16_t temp16;
+    size_t usr_len;
     int ofs;
-    DSI *dsi;
-    dsi = &conn->dsi;
+    DSI *dsi = &conn->dsi;
 
     if (DSIOpenSession(conn)) {
         return dsi->header.dsi_code;
     }
 
-    /* -------------- */
     SendInit(dsi);
     ofs = 0;
     dsi->commands[ofs++] = AFP_LOGIN_EXT;
-    dsi->commands[ofs++] = 0; /* pad */
-    temp16 = 0;		/* flag */
+    dsi->commands[ofs++] = 0;
+    temp16 = 0;
     memcpy(&dsi->commands[ofs], &temp16, sizeof(temp16));
     ofs += sizeof(temp16);
-    len = (uint8_t) strlen(vers);
+    len = (uint8_t) strnlen(vers, UINT8_MAX);
     dsi->commands[ofs++] = len;
     memcpy(&dsi->commands[ofs], vers, len);
     ofs += len;
-    len = (uint8_t) strlen(uam);
+    len = (uint8_t) strnlen(uam, UINT8_MAX);
     dsi->commands[ofs++] = len;
     memcpy(&dsi->commands[ofs], uam, len);
     ofs += len;
-    len16 = (uint16_t) strlen(usr);
-    /* user name */
+    /* UserNameType = 3 (UTF-8), UserName as AFPName (uint16_t length). */
+    usr_len = strnlen(usr, UINT16_MAX);
     dsi->commands[ofs++] = 3;
-    temp16 = htons(len16);
+    temp16 = htons((uint16_t) usr_len);
     memcpy(&dsi->commands[ofs], &temp16, sizeof(temp16));
     ofs += sizeof(temp16);
-    memcpy(&dsi->commands[ofs], usr, len16);
-    ofs += len16;
-    /* directory service */
+    memcpy(&dsi->commands[ofs], usr, usr_len);
+    ofs += usr_len;
+    /* PathType = 3, empty directory service pathname. */
     dsi->commands[ofs++] = 3;
     temp16 = 0;
     memcpy(&dsi->commands[ofs], &temp16, sizeof(temp16));
     ofs += sizeof(temp16);
 
+    /* Pad to even offset before UserAuthInfo. The server checks pointer
+     * alignment (auth.c:900); this matches as long as dsi->commands starts
+     * at an even address, which is true for the heap-allocated CONN. */
     if (ofs & 1) {
         dsi->commands[ofs++] = 0;
     }
 
-    /* now the uam parts */
-#if 0
-    len = len16;
-    dsi->commands[ofs++] = len;
-    memcpy(&dsi->commands[ofs], usr, len);
-    ofs += len;
-#endif
-
-    /* HACK */
-    if (len16) {
-        len = (uint8_t) strlen(pwd);
-        memcpy(&dsi->commands[ofs], pwd, len);
-        ofs += PASSWDLEN;
+    if (auth_info && auth_info_len) {
+        memcpy(&dsi->commands[ofs], auth_info, auth_info_len);
+        ofs += auth_info_len;
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
-    /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
+
+    if (dsi->header.dsi_code == htonl((uint32_t) AFPERR_AUTHCONT)) {
+        capture_login_cont(conn);
+    }
+
+    return dsi->header.dsi_code;
+}
+
+/* ---------------------------- */
+unsigned int AFPopenLoginExt_pwd(CONN *conn,
+                                 const char *vers, const char *uam,
+                                 const char *usr, const char *pwd)
+{
+    uint8_t pwbuf[PASSWDLEN];
+
+    /* The Cleartxt Passwrd UAM over FPLoginExt has been broken in netatalk
+     * for years; afpfs-ng works around it by always using FPLogin for
+     * cleartext. Mirror that here so the wrapper still works for callers
+     * that don't care which AFP command is used under the hood. */
+    if (uam && strcmp(uam, "Cleartxt Passwrd") == 0) {
+        return AFPopenLogin(conn, vers, uam, usr ? usr : "", pwd ? pwd : "");
+    }
+
+    memset(pwbuf, 0, sizeof(pwbuf));
+
+    if (pwd) {
+        size_t pwlen = strnlen(pwd, PASSWDLEN);
+        memcpy(pwbuf, pwd, pwlen);
+    }
+
+    /* No User Authent / empty user: server expects no UserAuthInfo at all,
+     * matching the historical "if (len16)" gate this wrapper replaces. */
+    if (!usr || !*usr) {
+        return AFPopenLoginExt(conn, vers, uam, "", NULL, 0);
+    }
+
+    return AFPopenLoginExt(conn, vers, uam, usr, pwbuf, PASSWDLEN);
+}
+
+/* ---------------------------- */
+/* FPLoginCont wire layout per AFP spec §FPLoginCont and server parser at
+ * etc/afpd/auth.c:922-944. Caller must have populated conn->login_cont_id
+ * from a previous FPLoginExt/FPLoginCont that returned kFPAuthContinue. */
+unsigned int AFPLoginCont(CONN *conn,
+                          const void *auth_info, size_t auth_info_len)
+{
+    uint16_t id_be;
+    int ofs;
+    DSI *dsi = &conn->dsi;
+    SendInit(dsi);
+    ofs = 0;
+    dsi->commands[ofs++] = AFP_LOGINCONT;
+    dsi->commands[ofs++] = 0;
+    id_be = htons(conn->login_cont_id);
+    memcpy(&dsi->commands[ofs], &id_be, sizeof(id_be));
+    ofs += sizeof(id_be);
+
+    if (auth_info && auth_info_len) {
+        memcpy(&dsi->commands[ofs], auth_info, auth_info_len);
+        ofs += auth_info_len;
+    }
+
+    SetLen(dsi, ofs);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
+
+    if (dsi->header.dsi_code == htonl((uint32_t) AFPERR_AUTHCONT)) {
+        capture_login_cont(conn);
+    }
+
     return dsi->header.dsi_code;
 }
 
@@ -628,9 +718,9 @@ unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 /* ------------------------------- */
@@ -639,7 +729,7 @@ unsigned int AFPLogOut(CONN *conn)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmd(dsi, AFP_LOGOUT);
-    my_dsi_full_receive(dsi, dsi->commands, DSI_CMDSIZ);
+    dsi_full_receive(dsi, dsi->commands, DSI_CMDSIZ);
     DSICloseSession(conn);
     return dsi->header.dsi_code;
 }
@@ -658,9 +748,9 @@ unsigned int AFPzzz(CONN *conn, int flag)
     memcpy(dsi->commands + ofs, &temp, sizeof(temp));
     ofs += sizeof(temp);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -670,7 +760,7 @@ unsigned int AFPGetSrvrInfo(CONN *conn)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmd(dsi, AFP_GETSRVINFO);
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -680,7 +770,7 @@ unsigned int AFPGetSrvrParms(CONN *conn)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmd(dsi, AFP_GETSRVPARAM);
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -701,8 +791,8 @@ unsigned int AFPGetSrvrMsg(CONN *conn, uint16_t type, uint16_t bitmap)
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
-    my_dsi_cmd_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -712,7 +802,7 @@ unsigned int AFPCloseVol(CONN *conn, uint16_t vol)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_CLOSEVOL, vol);
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -722,7 +812,7 @@ unsigned int AFPCloseDT(CONN *conn, uint16_t vol)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_CLOSEDT, vol);
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -732,7 +822,7 @@ unsigned int AFPCloseFork(CONN *conn, uint16_t fork)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_CLOSEFORK, fork);
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -756,8 +846,8 @@ unsigned int AFPByteLock(CONN *conn, uint16_t fork, int end, int mode,
     memcpy(dsi->commands + ofs, &size, sizeof(size));
     ofs += sizeof(size);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
-    my_dsi_cmd_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -818,8 +908,8 @@ unsigned int AFPByteLock_ext(CONN *conn, uint16_t fork, int end, int mode,
     ofs += set_off_t(offset, dsi->commands + ofs, 1);
     ofs += set_off_t(size, dsi->commands + ofs, 1);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
-    my_dsi_cmd_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -842,9 +932,9 @@ unsigned int AFPSetForkParam(CONN *conn, uint16_t fork,  uint16_t bitmap,
     ofs += sizeof(bitmap);
     ofs += set_off_t(size, dsi->commands + ofs, is64);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -854,7 +944,7 @@ unsigned int AFPFlush(CONN *conn, uint16_t vol)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_FLUSH, vol);
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -864,7 +954,7 @@ unsigned int AFPFlushFork(CONN *conn, uint16_t vol)
     DSI *dsi;
     dsi = &conn->dsi;
     SendCmdWithU16(dsi, AFP_FLUSHFORK, vol);
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -894,9 +984,9 @@ uint16_t AFPOpenVol(CONN *conn, char *vol, uint16_t bitmap)
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
         ofs = 0;
@@ -1496,9 +1586,9 @@ unsigned int AFPGetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap)
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += 2;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1521,9 +1611,9 @@ unsigned int AFPSetVolParam(CONN *conn, uint16_t vol, uint16_t bitmap,
     ofs += sizeof(tp);
     ofs += afp_volume_pack(dsi->commands + ofs, parms, bitmap);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1596,9 +1686,9 @@ unsigned int  AFPCreateFile(CONN *conn, uint16_t vol, char type, int did,
     ofs += sizeof(did);
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1628,8 +1718,8 @@ unsigned int AFPWriteHeader(DSI *dsi, uint16_t fork, int offset, int size,
     dsi->datalen = ofs;		/* 12*/
     dsi->header.dsi_len = htonl((uint32_t) dsi->datalen + size);
     dsi->header.dsi_code = htonl(ofs);
-    my_dsi_stream_send(dsi, dsi->commands, ofs);
-    my_dsi_stream_write(dsi, data, size);
+    dsi_stream_send(dsi, dsi->commands, ofs);
+    dsi_stream_write(dsi, data, size);
     return 0;
 }
 
@@ -1638,7 +1728,7 @@ unsigned int AFPWriteFooter(DSI *dsi, uint16_t fork _U_, int offset, int size,
                             char *data _U_, char whence)
 {
     uint32_t last;
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
         if (dsi->cmdlen != 4) {
@@ -1693,9 +1783,9 @@ unsigned int AFPWrite_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen + size);
     dsi->header.dsi_code = htonl(ofs);
-    my_dsi_stream_send(dsi, dsi->commands, ofs);
-    my_dsi_stream_write(dsi, data, size);
-    my_dsi_cmd_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, ofs);
+    dsi_stream_write(dsi, data, size);
+    dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
         if (dsi->cmdlen != 8) {
@@ -1737,8 +1827,8 @@ unsigned int AFPWrite_ext_async(CONN *conn, uint16_t fork, off_t offset,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen + size);
     dsi->header.dsi_code = htonl(ofs);
-    my_dsi_stream_send(dsi, dsi->commands, ofs);
-    my_dsi_stream_write(dsi, data, size);
+    dsi_stream_send(dsi, dsi->commands, ofs);
+    dsi_stream_write(dsi, data, size);
     return 0;
 }
 
@@ -1768,9 +1858,9 @@ uint16_t  AFPOpenFork(CONN *conn, uint16_t vol, char type, uint16_t bitmap,
     ofs += sizeof(access);
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
         ofs = 0;
@@ -1828,9 +1918,9 @@ unsigned int AFPAddComment(CONN *conn, uint16_t vol, int did, char *name,
     memcpy(dsi->commands + ofs, cmt, len);
     ofs += len;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1866,9 +1956,9 @@ unsigned int AFPGetSessionToken(CONN *conn, int type, uint32_t time, int len,
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1893,9 +1983,9 @@ unsigned int AFPDisconnectOldSession(CONN *conn, uint16_t type, int len,
     memcpy(dsi->commands + ofs, token, len);
     ofs += len;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1917,9 +2007,9 @@ unsigned int AFPGetUserInfo(CONN *conn, char flag, int id, uint16_t bitmap)
     memcpy(dsi->commands + ofs, &type, sizeof(type));
     ofs += sizeof(type);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1938,9 +2028,9 @@ unsigned int AFPMapID(CONN *conn, char fn, int id)
     memcpy(dsi->commands + ofs, &id, sizeof(id));
     ofs += sizeof(id);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1976,9 +2066,9 @@ unsigned int AFPMapName(CONN *conn, char fn, char *name)
     memcpy(dsi->commands + ofs, name, len);
     ofs += len;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -1999,9 +2089,9 @@ unsigned int AFPBadPacket(CONN *conn, char fn, char *name)
     memcpy(dsi->commands + ofs, name, sizeof(&name));
     ofs += sizeof(&name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2026,7 +2116,7 @@ unsigned int AFPReadHeader(DSI *dsi, uint16_t fork, int offset, int size,
     dsi->commands[ofs++] = 0;	/* NewLineMask */
     dsi->commands[ofs++] = 0;	/* NewLineChar */
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     return 0;
 }
 
@@ -2035,11 +2125,11 @@ unsigned int AFPReadFooter(DSI *dsi, uint16_t fork _U_, int offset _U_,
                            int size, char *data)
 {
     int rsize;
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     memcpy(data, dsi->commands, dsi->cmdlen);
     rsize =  ntohl(dsi->header.dsi_len);
     rsize -= dsi->cmdlen;
-    my_dsi_stream_read(dsi, data + dsi->cmdlen, rsize);
+    dsi_stream_read(dsi, data + dsi->cmdlen, rsize);
 
     if (dsi->header.dsi_code) {
         return dsi->header.dsi_code;
@@ -2079,10 +2169,10 @@ unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
     ofs += set_off_t(offset, dsi->commands + ofs, 1);
     ofs += set_off_t(size, dsi->commands + ofs, 1);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
 #if 0
-    my_dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
+    dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
     dump_header(dsi);
     rsize =  ntohl(dsi->header.dsi_len);
     rsize -= dsi->datalen;
@@ -2090,7 +2180,7 @@ unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
     while (rsize > 0) {
         int len = min(rsize, DSI_DATASIZ);
 
-        if (my_dsi_stream_read(dsi, dsi->data, len) != len) {
+        if (dsi_stream_read(dsi, dsi->data, len) != len) {
             break;
         }
 
@@ -2098,11 +2188,11 @@ unsigned int AFPRead_ext(CONN *conn, uint16_t fork, off_t offset, off_t size,
     }
 
 #endif
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     memcpy(data, dsi->commands, dsi->cmdlen);
     rsize =  ntohl(dsi->header.dsi_len);
     rsize -= dsi->cmdlen;
-    my_dsi_stream_read(dsi, data + dsi->cmdlen, rsize);
+    dsi_stream_read(dsi, data + dsi->cmdlen, rsize);
 
     if (dsi->header.dsi_code) {
         return dsi->header.dsi_code;
@@ -2128,7 +2218,7 @@ unsigned int AFPRead_ext_async(CONN *conn, uint16_t fork, off_t offset,
     ofs += set_off_t(offset, dsi->commands + ofs, 1);
     ofs += set_off_t(size, dsi->commands + ofs, 1);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     return 0;
 }
 
@@ -2149,9 +2239,9 @@ unsigned int  AFPCreateDir(CONN *conn, uint16_t vol, int did, char *name)
     ofs += sizeof(did);
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
 
     if (!dsi->header.dsi_code) {
         memcpy(&dir, dsi->commands, sizeof(dir));			/* did */
@@ -2180,9 +2270,9 @@ unsigned int AFPGetForkParam(CONN *conn, uint16_t fork, uint16_t bitmap)
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap)); /* bitmap */
     ofs += sizeof(bitmap);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2210,9 +2300,9 @@ unsigned int AFPGetAPPL(CONN *conn, uint16_t dt, char *name, uint16_t index,
     memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
     ofs += sizeof(bitmap);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2238,9 +2328,9 @@ unsigned int AFPAddAPPL(CONN *conn, uint16_t dt, int did, char *creator,
     ofs += sizeof(tag);
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2264,9 +2354,9 @@ unsigned int AFPRemoveAPPL(CONN *conn, uint16_t dt, int did, char *creator,
     ofs += 4;
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2314,9 +2404,9 @@ unsigned int AFPCatSearch(CONN *conn, uint16_t vol, uint32_t nbe, char *pos,
     dsi->commands[ofs] = (uint8_t) len;
     ofs += len + 2;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2367,9 +2457,9 @@ unsigned int AFPCatSearchExt(CONN *conn, uint16_t vol, uint32_t  nbe, char *pos,
     memcpy(dsi->commands + ofs, &i, sizeof(i));
     ofs += len + 2;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2396,9 +2486,9 @@ unsigned int AFPGetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
     ofs += 4;
     ofs = FPset_name(conn, ofs, name);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2444,9 +2534,9 @@ unsigned int AFPSetACL(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2497,9 +2587,9 @@ unsigned int AFPGetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
     memcpy(&dsi->commands[ofs], attrname, len);
     ofs += len;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2532,9 +2622,9 @@ unsigned int AFPListExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
     ofs += sizeof(maxsize);
     ofs = FPset_name(conn, ofs, pathname);
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2584,9 +2674,9 @@ unsigned int AFPSetExtAttr(CONN *conn, uint16_t vol, int did, uint16_t bitmap,
     memcpy(&dsi->commands[ofs], data, datalen);
     ofs += datalen;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 
@@ -2623,8 +2713,8 @@ unsigned int AFPRemoveExtAttr(CONN *conn, uint16_t vol, int did,
     memcpy(&dsi->commands[ofs], attrname, len);
     ofs += len;
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }

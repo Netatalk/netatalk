@@ -180,6 +180,13 @@ typedef struct CONN {
 #endif
     int type;
     int afp_version;
+
+    /* Captured on kFPAuthContinue from FPLoginExt or FPLoginCont.
+     * UAM helpers can read login_cont_data/_len and pass login_cont_id
+     * back into AFPLoginCont for the next round trip. */
+    uint16_t login_cont_id;
+    size_t   login_cont_len;
+    uint8_t  login_cont_data[DSI_CMDSIZ];
 } CONN;
 
 extern CONN *Conn, *Conn2;
@@ -188,15 +195,8 @@ extern CONN *Conn, *Conn2;
 
 #define PASSWDLEN 8
 
-#define dsi_clientID(x)   ((x)->clientID++)
-
-#define my_dsi_send(x)       do { \
-    (x)->header.dsi_len = htonl((x)->cmdlen); \
-    my_dsi_stream_send((x), (x)->commands, (x)->cmdlen); \
-} while (0)
-
-int my_dsi_cmd_receive(DSI *x);
-int my_dsi_data_receive(DSI *x);
+int dsi_cmd_receive(DSI *x);
+int dsi_data_receive(DSI *x);
 
 void SendInit(DSI *dsi);
 void SetLen(DSI *dsi, int ofs);
@@ -259,22 +259,34 @@ int OpenClientSocket(char *host, int port);
 int CloseClientSocket(int fd);
 
 
-size_t my_dsi_stream_read(DSI *dsi, void *data, const size_t length);
-int my_dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
-                          size_t *rlength);
-size_t my_dsi_stream_write(DSI *dsi, void *data, const size_t length);
-int my_dsi_stream_send(DSI *dsi, void *buf, size_t length);
-uint16_t my_dsi_cmd_nwriterply_async(CONN *conn, uint64_t n);
 void dump_header(DSI *dsi);
 
 unsigned int DSIOpenSession(CONN *conn);
 unsigned int DSIGetStatus(CONN *conn);
 unsigned int DSICloseSession(CONN *conn);
 
-unsigned int AFPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
-                          char *pwd);
-unsigned int AFPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
-                             char *pwd);
+unsigned int AFPopenLogin(CONN *conn, const char *vers, const char *uam,
+                          const char *usr, const char *pwd);
+
+/* Build an FPLoginExt with an arbitrary UserAuthInfo payload.
+ * Callers that need plain 8-byte cleartext padding should use
+ * AFPopenLoginExt_pwd() instead. */
+unsigned int AFPopenLoginExt(CONN *conn,
+                             const char *vers, const char *uam,
+                             const char *usr,
+                             const void *auth_info, size_t auth_info_len);
+
+/* Convenience wrapper: FPLoginExt with the 8-byte zero-padded cleartext
+ * password payload that No-User-Authent and Cleartxt-Passwrd UAMs expect. */
+unsigned int AFPopenLoginExt_pwd(CONN *conn,
+                                 const char *vers, const char *uam,
+                                 const char *usr, const char *pwd);
+
+/* FPLoginCont with an arbitrary UserAuthInfo payload. Uses
+ * conn->login_cont_id captured from the previous FPLoginExt/FPLoginCont
+ * reply, and refreshes conn->login_cont_* on kFPAuthContinue. */
+unsigned int AFPLoginCont(CONN *conn,
+                          const void *auth_info, size_t auth_info_len);
 unsigned int AFPLogOut(CONN *conn);
 unsigned int AFPChangePW(CONN *conn, char *uam, char *usr, char *opwd,
                          char *pwd);

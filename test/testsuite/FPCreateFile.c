@@ -135,7 +135,7 @@ STATIC void test393()
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name))
     FAIL(FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name1))
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, DIRDID_ROOT, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |

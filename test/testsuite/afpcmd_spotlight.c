@@ -118,8 +118,8 @@ static unsigned int spotlight_send(CONN *conn,
     }
 
     SetLen(dsi, ofs);
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
-    my_dsi_data_receive(dsi);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_data_receive(dsi);
     return dsi->header.dsi_code;
 }
 

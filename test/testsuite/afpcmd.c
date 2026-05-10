@@ -621,12 +621,7 @@ unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,
                 __func__, vers, uam, usr);
     }
 
-#if 0
-    /* FIXME: Workaround for AFPopenLoginExt() being broken */
-    ret = AFPopenLoginExt(conn, vers, uam, usr, pwd);
-#else
-    ret = AFPopenLogin(conn, vers, uam, usr, pwd);
-#endif
+    ret = AFPopenLoginExt_pwd(conn, vers, uam, usr, pwd);
     dump_header(dsi);
     return ret;
 }
@@ -876,9 +871,9 @@ uint16_t  FPOpenDT(CONN *conn, uint16_t vol)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
 
     if (!dsi->header.dsi_code) {
@@ -930,9 +925,9 @@ unsigned int FPGetIcon(CONN *conn, uint16_t dt, char *creator, char *type,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -974,10 +969,10 @@ unsigned int FPAddIcon(CONN *conn, uint16_t dt, char *creator, char *type,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen + size);
     dsi->header.dsi_code = htonl(ofs);
-    my_dsi_stream_send(dsi, dsi->commands, ofs);
-    my_dsi_stream_write(dsi, data, size);
+    dsi_stream_send(dsi, dsi->commands, ofs);
+    dsi_stream_write(dsi, data, size);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1012,9 +1007,9 @@ unsigned int FPGetIconInfo(CONN *conn, uint16_t dt, unsigned char *creator,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1182,15 +1177,15 @@ unsigned int FPCloseDir(CONN *conn, uint16_t vol, int did)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
 
 /* -------------------------------
-* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
+* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerate(CONN *conn,
                          uint16_t vol,
@@ -1244,16 +1239,16 @@ unsigned int FPEnumerate(CONN *conn,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
 
 
 /* -------------------------------
-* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
+* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerateFull(CONN *conn,
                              uint16_t vol,
@@ -1314,9 +1309,9 @@ unsigned int FPEnumerateFull(CONN *conn,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1357,9 +1352,9 @@ unsigned int FPGetFileDirParams(CONN *conn, uint16_t vol, int did, char *name,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1392,9 +1387,9 @@ unsigned int FPCreateID(CONN *conn, uint16_t vol, int did, char *name)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1426,9 +1421,9 @@ unsigned int FPDeleteID(CONN *conn, uint16_t vol, int did)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1463,14 +1458,14 @@ unsigned int FPResolveID(CONN *conn, uint16_t vol, int did, uint16_t bitmap)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
 /* -------------------------------
-* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
+* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
                              uint16_t f_bitmap, uint16_t d_bitmap)
@@ -1527,15 +1522,15 @@ unsigned int FPEnumerate_ext(CONN *conn, uint16_t vol, int did, char *name,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
 
 /* -------------------------------
-* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
+* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
                               uint16_t f_bitmap, uint16_t d_bitmap)
@@ -1593,15 +1588,15 @@ unsigned int FPEnumerate_ext2(CONN *conn, uint16_t vol, int did, char *name,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
 
 /* -------------------------------
-* FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree()
+* FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree()
 */
 unsigned int FPEnumerateExt2Full(CONN *conn,
                                  uint16_t vol,
@@ -1666,9 +1661,9 @@ unsigned int FPEnumerateExt2Full(CONN *conn,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -1777,9 +1772,9 @@ unsigned int FPOpenDir(CONN *conn, uint16_t vol, int did, char *name)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
 
     if (!dsi->header.dsi_code) {
@@ -1983,9 +1978,9 @@ unsigned int FPSetDirParms(CONN *conn, uint16_t vol, int did, char *name,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2029,9 +2024,9 @@ unsigned int FPSetFileParams(CONN *conn, uint16_t vol, int did, char *name,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2061,9 +2056,9 @@ unsigned int FPSyncDir(CONN *conn, uint16_t vol, int did)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2149,9 +2144,9 @@ unsigned int FPSetFilDirParam(CONN *conn, uint16_t vol, int did, char *name,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_cmd_receive(dsi);
+    dsi_cmd_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2190,9 +2185,9 @@ unsigned int FPCopyFile(CONN *conn, uint16_t svol, int sdid, uint16_t dvol,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2229,9 +2224,9 @@ unsigned int FPExchangeFile(CONN *conn, uint16_t vol, int sdid, int ddid,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2268,9 +2263,9 @@ unsigned int FPMoveAndRename(CONN *conn, uint16_t svol, int sdid, int ddid,
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }
@@ -2302,9 +2297,9 @@ unsigned int FPRename(CONN *conn, uint16_t svol, int sdid, char *src, char *dst)
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_data_receive(dsi);
+    dsi_data_receive(dsi);
     dump_header(dsi);
     return dsi->header.dsi_code;
 }

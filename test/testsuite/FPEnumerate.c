@@ -46,7 +46,7 @@ STATIC void test28()
         goto test_exit;
     }
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, dir1, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |
@@ -106,7 +106,7 @@ STATIC void test34()
         goto test_exit;
     }
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     FPEnumerate(Conn, vol, DIRDID_ROOT, "",
                 (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM),
                 (1 << DIRPBIT_LNAME) | (1 << DIRPBIT_PDID) | (1 << DIRPBIT_DID) |
@@ -154,7 +154,7 @@ STATIC void test38()
 
     memcpy(&did, dsi->data + 3 * sizeof(uint16_t), sizeof(did));
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, DIRDID_ROOT, name,
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |
@@ -228,7 +228,7 @@ STATIC void test40()
 
     FAIL(FPCreateFile(Conn, vol, 0, dir, name1))
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, dir, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |
@@ -293,7 +293,7 @@ STATIC void test41()
         goto fin;
     }
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (FPEnumerate(Conn, vol, dir, "",
                     (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                     (1 << FILPBIT_FINFO) |
@@ -392,7 +392,7 @@ STATIC void test93()
         test_failed();
     }
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerate(Conn, vol, DIRDID_ROOT, name,
                       (1 << FILPBIT_LNAME) | (1 << FILPBIT_FNUM) | (1 << FILPBIT_ATTR) |
                       (1 << FILPBIT_FINFO) |
@@ -451,7 +451,7 @@ STATIC void test218()
 
     bitmap = (1 << FILPBIT_LNAME);
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     if (htonl(AFPERR_NOOBJ) != FPEnumerateFull(Conn, vol, 1, 1, 800,  bdir, "",
             bitmap, bitmap)) {
         test_nottested();
@@ -584,7 +584,7 @@ STATIC void test300(void)
             goto test_exit;
         }
 
-        /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+        /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
         while (!(ret = FPEnumerateFull(Conn, vol, i, 150, 8000,  dir, "", f_bitmap,
                                        d_bitmap))) {
             /* FPResolveID will trash dsi->data */
@@ -719,7 +719,7 @@ STATIC void test533()
         fprintf(stdout, "\t  Step 2: Client 1 starts enumerate (first batch)\n");
     }
 
-    /* FIXME: FPEnumerate* uses my_dsi_data_receive. See afphelper.c:delete_directory_tree() */
+    /* FIXME: FPEnumerate* uses dsi_data_receive. See afphelper.c:delete_directory_tree() */
     ret = FPEnumerateFull(Conn, vol, 1, 20, 8000, dir, "", f_bitmap, d_bitmap);
 
     if (ret) {

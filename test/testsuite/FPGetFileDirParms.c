@@ -144,9 +144,9 @@ STATIC void test70()
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl(dsi->datalen);
     dsi->header.dsi_code = 0;
-    my_dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     /* ------------------ */
-    my_dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
+    dsi_stream_receive(dsi, dsi->data, DSI_DATASIZ, &dsi->datalen);
     dump_header(dsi);
 
     if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
