@@ -40,6 +40,41 @@ That said, we will try to take action on your report as soon as possible!
 
 | CVE ID | Subject | Disclosure Date | Affected Versions | Fixed Versions |
 |--------|---------|-----------------|-------------------|----------------|
+| [CVE-2026-45699](https://netatalk.io/security/CVE-2026-45699.html) | Stack-based buffer overflow in copydir() | 2026/05/13 | 3.2.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-45698](https://netatalk.io/security/CVE-2026-45698.html) | Stack-based buffer overflow in deletedir() | 2026/05/13 | 3.2.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44076](https://netatalk.io/security/CVE-2026-44076.html) | Shell injection via volume path | 2026/05/13 | 3.1.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44075](https://netatalk.io/security/CVE-2026-44075.html) | Missing break in DSI OpenSession | 2026/05/13 | 1.5.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44074](https://netatalk.io/security/CVE-2026-44074.html) | Bitwise OR of errno values | 2026/05/13 | 2.1.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44073](https://netatalk.io/security/CVE-2026-44073.html) | seteuid failure ignored in auth modules | 2026/05/13 | 1.5.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44072](https://netatalk.io/security/CVE-2026-44072.html) | system() after failed chdir() | 2026/05/13 | 2.2.1 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44071](https://netatalk.io/security/CVE-2026-44071.html) | FORTIFY_SOURCE disabled | 2026/05/13 | 3.1.2 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44070](https://netatalk.io/security/CVE-2026-44070.html) | Unbounded realloc in charset conversion | 2026/05/13 | 2.0.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44069](https://netatalk.io/security/CVE-2026-44069.html) | Integer underflow in volxlate | 2026/05/13 | 3.0.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44068](https://netatalk.io/security/CVE-2026-44068.html) | EA path traversal via incomplete sanitization | 2026/05/13 | 2.1.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44067](https://netatalk.io/security/CVE-2026-44067.html) | EA header parsing heap over-read | 2026/05/13 | 2.1.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44066](https://netatalk.io/security/CVE-2026-44066.html) | Heap out-of-bounds reads in Spotlight RPC unmarshalling | 2026/05/13 | 3.0.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44065](https://netatalk.io/security/CVE-2026-44065.html) | Off-by-two in papd lp_write() | 2026/05/13 | 2.0.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44064](https://netatalk.io/security/CVE-2026-44064.html) | ASP session ID out-of-bounds access | 2026/05/13 | 1.3 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44063](https://netatalk.io/security/CVE-2026-44063.html) | LDAP filter injection | 2026/05/13 | 2.1.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44062](https://netatalk.io/security/CVE-2026-44062.html) | Missing o_len bounds check in pull_charset_flags() | 2026/05/13 | 2.0.4 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44061](https://netatalk.io/security/CVE-2026-44061.html) | DES-ECB auth with timing side channel | 2026/05/13 | 1.5.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44060](https://netatalk.io/security/CVE-2026-44060.html) | Integer underflow in dsi_writeinit() leads to denial of service | 2026/05/13 | 1.5.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44059](https://netatalk.io/security/CVE-2026-44059.html) | Non-reentrant privilege toggle | 2026/05/13 | 2.2.5 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44058](https://netatalk.io/security/CVE-2026-44058.html) | Authentication bypass via admin auth user | 2026/05/13 | 2.2.2 - 4.4.2 | 4.5.0 |
+| [CVE-2026-44057](https://netatalk.io/security/CVE-2026-44057.html) | Dead bounds check in Spotlight RPC unmarshaller | 2026/05/13 | 3.0.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44056](https://netatalk.io/security/CVE-2026-44056.html) | Stack buffer overflow in desktop.c | 2026/05/13 | 1.3 - 4.2.2 | 4.5.0 |
+| [CVE-2026-44055](https://netatalk.io/security/CVE-2026-44055.html) | Bitwise OR logic bug enables shell injection | 2026/05/13 | 3.1.4 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44054](https://netatalk.io/security/CVE-2026-44054.html) | Predictable afpd session token | 2026/05/13 | 2.0.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44053](https://netatalk.io/security/CVE-2026-44053.html) | Weak cryptography in DHCAST128 UAM | 2026/05/13 | 1.5.0 - 4.2.2 | 4.5.0 |
+| [CVE-2026-44052](https://netatalk.io/security/CVE-2026-44052.html) | LDAP simple-bind password exposure in log output | 2026/05/13 | 2.1.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44051](https://netatalk.io/security/CVE-2026-44051.html) | Arbitrary file read via attacker-controlled symlink creation | 2026/05/13 | 3.0.2 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44050](https://netatalk.io/security/CVE-2026-44050.html) | Heap buffer overflow in CNID daemon comm_rcv() | 2026/05/13 | 2.0.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44049](https://netatalk.io/security/CVE-2026-44049.html) | Out-of-bounds write in convert_charset() null termination | 2026/05/13 | 2.0.4 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44048](https://netatalk.io/security/CVE-2026-44048.html) | Stack buffer overflow via UCS-2 type confusion in convert_charset() | 2026/05/13 | 2.0.4 - 4.4.2 | 4.4.3 |
+| [CVE-2026-44047](https://netatalk.io/security/CVE-2026-44047.html) | SQL injection in MySQL CNID backend | 2026/05/13 | 3.1.0 - 4.4.2 | 4.4.3 |
+| [CVE-2026-7837](https://netatalk.io/security/CVE-2026-7837.html) | TOCTOU with root privilege in ad_flush | 2026/05/13 | 3.0.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-7836](https://netatalk.io/security/CVE-2026-7836.html) | hextoint macro uppercase bug | 2026/05/13 | 2.0.0 - 4.4.2 | 4.5.0 |
+| [CVE-2026-7835](https://netatalk.io/security/CVE-2026-7835.html) | Format string argument mismatch | 2026/05/13 | 3.0.3 - 4.4.2 | 4.5.0 |
 | [CVE-2024-38441](https://netatalk.io/security/CVE-2024-38441.html) | Heap out-of-bounds write in directory.c  | 2024/06/28   | 2.0.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0  | 2.4.1, 3.1.19, 3.2.1, |
 | [CVE-2024-38440](https://netatalk.io/security/CVE-2024-38440.html) | Heap out-of-bounds write in uams_dhx_pam.c | 2024/06/28 | 1.5.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0| 2.4.1, 3.1.19, 3.2.1 |
 | [CVE-2024-38439](https://netatalk.io/security/CVE-2024-38439.html) | Heap out-of-bounds write in uams_pam.c   | 2024/06/28   | 1.5.0 - 2.4.0, 3.0.0 - 3.1.18, 3.2.0| 2.4.1, 3.1.19, 3.2.1 |
