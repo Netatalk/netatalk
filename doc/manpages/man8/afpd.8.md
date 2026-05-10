@@ -89,11 +89,26 @@ disabling all new connections.
 
 SIGUSR2
 
-> The **afpd** process will look in the message directory configured at
-build time for a file named message.pid. For each one found, a the
-contents will be sent as a message to the associated AFP client. The
-file is removed after the message is sent. This should only be sent to a
-child **afpd**.
+> Send a server message to the AFP client of a child **afpd** process.
+When the signal is received, **afpd** looks in the message directory
+(default: *LOCALSTATEDIR/netatalk/msg/*; the compiled-in path is
+printed by **afpd -V**) for a message file in the following order:
+>
+> 1. *message.PID* — a file whose name ends with the child process ID
+> 2. *message* — a fallback used when no PID-specific file is found
+>
+> The contents of the file are read and forwarded to the connected AFP
+client as a server message.  The file is deleted after it is read.
+This signal must only be sent to a **child** afpd process.  The parent
+afpd does not install a SIGUSR2 handler, so sending it there will
+terminate the parent process and prevent new connections.
+>
+> **Example usage:**
+>
+>     # Find the child afpd PID for the connected user, then:
+>     echo "Scheduled maintenance tonight at 22:00" \
+>         > LOCALSTATEDIR/netatalk/msg/message.PID
+>     kill -USR2 PID
 
 # Files
 
@@ -113,9 +128,13 @@ child **afpd**.
 
 > list of UUIDs for Time Machine volumes
 
-*message.pid*
+*LOCALSTATEDIR/netatalk/msg/message.PID*, *LOCALSTATEDIR/netatalk/msg/message*
 
-> contains messages to be sent to users
+> Server message files read on SIGUSR2.  The PID-specific form
+(*message.PID*) targets a single connected client; the plain *message*
+form is a fallback when no PID-specific file exists.  Both are deleted
+after being read.  The compiled-in directory path is printed by
+**afpd -V**.
 
 # See Also
 
