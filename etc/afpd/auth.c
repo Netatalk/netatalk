@@ -448,7 +448,12 @@ static int create_session_key(AFPObj *obj)
             return AFPERR_MISC;
         }
 
-        uam_random_string(obj, obj->sinfo.sessionkey, SESSIONKEY_LEN);
+        if (uam_random_string(obj, obj->sinfo.sessionkey, SESSIONKEY_LEN) != 0) {
+            free(obj->sinfo.sessionkey);
+            obj->sinfo.sessionkey = NULL;
+            return AFPERR_MISC;
+        }
+
         obj->sinfo.sessionkey_len = SESSIONKEY_LEN;
     }
 
