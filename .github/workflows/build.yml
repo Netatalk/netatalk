@@ -542,7 +542,6 @@ jobs:
       - name: Build on VM
         uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
         with:
-          release: "14.4"
           copyback: true
           sync: sshfs
           prepare: |
