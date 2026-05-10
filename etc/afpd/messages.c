@@ -8,6 +8,7 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -49,7 +50,7 @@ void readmessage(AFPObj *obj)
     /* Read server message from file defined as SERVERTEXT */
 #ifdef SERVERTEXT
     FILE *message;
-    char *filename;
+    char filename[MAXPATHLEN + 1];
     unsigned int i;
     int rc;
     static int c;
@@ -58,14 +59,8 @@ void readmessage(AFPObj *obj)
                  MAXMESGSIZE), MAXPATHLEN) : MAXMESGSIZE;
     i = 0;
     /* Construct file name SERVERTEXT/message.[pid] */
-    size_t filenamelen = sizeof(SERVERTEXT) + 15;
-
-    if (NULL == (filename = (char *) malloc(filenamelen))) {
-        LOG(log_error, logtype_afpd, "readmessage: malloc: %s", strerror(errno));
-        return;
-    }
-
-    snprintf(filename, filenamelen, "%s/message.%d", SERVERTEXT, obj->pid);
+    snprintf(filename, sizeof(filename), "%s/message.%" PRIiMAX,
+             SERVERTEXT, (intmax_t)obj->pid);
     LOG(log_debug9, logtype_afpd, "Reading file %s ", filename);
     message = fopen(filename, "r");
 
@@ -73,7 +68,7 @@ void readmessage(AFPObj *obj)
         /* try without the process id */
         LOG(log_info, logtype_afpd, "Unable to open file %s; trying without the pid",
             filename);
-        snprintf(filename, filenamelen, "%s/message", SERVERTEXT);
+        snprintf(filename, sizeof(filename), "%s/message", SERVERTEXT);
         message = fopen(filename, "r");
     }
 
@@ -109,7 +104,6 @@ void readmessage(AFPObj *obj)
         LOG(log_debug9, logtype_afpd, "Set server message to \"%s\"", servermesg);
     }
 
-    free(filename);
 #endif /* SERVERTEXT */
 }
 
