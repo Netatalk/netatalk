@@ -1,6 +1,37 @@
 Netatalk Changelog
 ==================
 
+Changes in 4.4.3
+----------------
+
+* FIX: CVE-2026-44047: cnid: fix MySQL CNID filename SQL injection
+* FIX: CVE-2026-44048: libatalk: fix UCS-2 terminator bounds in charset conversion
+* FIX: CVE-2026-44049: libatalk: reserve charset terminator space in conversion
+* FIX: CVE-2026-44050: cnid: validate CNID request name length in DBD backend
+* FIX: CVE-2026-44051: afpd: validate symlink targets from FinderInfo
+* FIX: CVE-2026-44052: libatalk: avoid logging LDAP bind passwords
+* FIX: CVE-2026-44054: afpd: randomize reconnect session token
+* FIX: CVE-2026-44055: afpd: correct bitwise check and escape user in FCE notify script
+* FIX: CVE-2026-44057,CVE-2026-44066: afpd: fix spotlight unmarshalling depth and dead check
+* FIX: CVE-2026-44060: libatalk: fix write underflow in dsi_writeinit
+* FIX: CVE-2026-44062: libatalk: guard UCS2 slash and colon writes
+* FIX: CVE-2026-44064: libatalk: bounds-check ASP session ID
+* FIX: CVE-2026-44068: libatalk: reject slash in EA names in VFS module
+* FIX: CVE-2026-44076: netatalk: fix Spotlight volume path shell quoting
+* FIX: CVE-2026-45354: libatalk: guard cmdlen override to DSIWrite to prevent DoS
+* FIX: CVE-2026-45355: afpd: signed integer underflow in sl_unpack_cpx string length
+* FIX: CVE-2026-45356: afpd: guard against unsigned underflow in sl_unpack_loop count decrement
+* FIX: CVE-2026-45698,CVE-2026-45699: afpd: fix stack buffer overflow in copydir() and deletedir()
+* FIX: uams: harden RandNum key file read bounds and integrity checks, GitHub #2964
+* UPD: uams: warn when Randnum afppasswd key file is missing, GitHub #2973
+* FIX: libatalk: map identifiers correctly for all logtypes, GitHub #2903
+* FIX: libatalk: fix OOB access when loading logtype, GitHub #2904
+* UPD: docker: bump production container alpine base image from 3.23.2 to 3.23.4, GitHub #2920
+* FIX: docker: load RandNum UAM only when password init succeeds, GitHub #2922
+* UPD: docker: harden RandNum UAM in production container, GitHub #2965
+* NEW: docker: introduce AFP_UAMS option for fine grained control of UAMs, GitHub #2975
+* UPD: docs: discourage the use of DHCAST128 UAM and 'admin auth user' option, GitHub #2972
+
 Changes in 4.4.2
 ----------------
 
