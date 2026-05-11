@@ -153,6 +153,14 @@ int			phase;
         bcopy((caddr_t)dsh, (caddr_t)&ddps, sizeof(struct ddpshdr));
         ddps.dsh_bytes = ntohl(ddps.dsh_bytes);
         dlen = ddps.dsh_len;
+
+        if (dlen < sizeof(struct ddpshdr) + 1 ||
+                dlen > sizeof(struct ddpshdr) + DDP_MAXSZ) {
+            ddpstat.ddps_tooshort++;
+            m_freem(m);
+            return;
+        }
+
         to.sat_addr.s_net = 0;
         to.sat_addr.s_node = elh->el_dnode;
         to.sat_port = ddps.dsh_dport;
@@ -185,6 +193,13 @@ int			phase;
         bcopy((caddr_t)deh, (caddr_t)&ddpe, sizeof(struct ddpehdr));
         ddpe.deh_bytes = ntohl(ddpe.deh_bytes);
         dlen = ddpe.deh_len;
+
+        if (dlen < sizeof(struct ddpehdr) + 1 ||
+                dlen > sizeof(struct ddpehdr) + DDP_MAXSZ) {
+            ddpstat.ddps_tooshort++;
+            m_freem(m);
+            return;
+        }
 
         if ((cksum = ddpe.deh_sum) == 0) {
             ddpstat.ddps_nosum++;
