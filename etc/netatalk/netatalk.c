@@ -146,6 +146,11 @@ static bstring quote_shell_arg(const char *str)
         return NULL;
     }
 
+    if (str == NULL) {
+        bdestroy(quoted);
+        return NULL;
+    }
+
     for (const char *p = str; *p; p++) {
         int rc;
 
