@@ -126,15 +126,12 @@ static int pwd_login(void *obj, char *username, int ulen,
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
-
     uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
-
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
     memcpy(rbuf, &sessid, sizeof(sessid));
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
-
     uam_mpi_to_padded_buf((unsigned char *)rbuf, KEYSIZE, Mb);
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
@@ -291,7 +288,6 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     ibuf += sizeof(sessid);
-
     uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
     gcry_mpi_release(K);
     K = NULL;

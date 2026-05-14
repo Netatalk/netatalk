@@ -107,15 +107,12 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
-
     uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
-
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
     memcpy(rbuf, &sessid, sizeof(sessid));
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
-
     uam_mpi_to_padded_buf(rbuf, KEYSIZE, Mb);
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;

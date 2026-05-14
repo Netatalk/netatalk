@@ -32,6 +32,8 @@
 #include <atalk/uam.h>
 #include <atalk/util.h>
 
+#include "uam_common.h"
+
 #define PASSWDLEN 8
 
 /*XXX in etc/papd/file.h */
@@ -113,7 +115,7 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
                         char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t len, ulen;
+    size_t ulen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
@@ -121,25 +123,8 @@ static int passwd_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
     }
 
-    if (ibuflen < 2) {
+    if (uam_extract_username_v1(&ibuf, &ibuflen, username, ulen) < 0) {
         return AFPERR_PARAM;
-    }
-
-    len = (unsigned char) * ibuf++;
-    ibuflen--;
-
-    if (!len || len > ibuflen || len > ulen) {
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, ibuf, len);
-    ibuf += len;
-    ibuflen -= len;
-    username[len] = '\0';
-
-    if ((unsigned long) ibuf & 1) { /* pad character */
-        ++ibuf;
-        ibuflen--;
     }
 
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
@@ -159,9 +144,8 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                             char *ibuf, size_t ibuflen,
                             char *rbuf, size_t *rbuflen)
 {
-    char       *username;
-    size_t     len, ulen;
-    uint16_t  temp16;
+    char *username;
+    size_t ulen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
@@ -169,20 +153,11 @@ static int passwd_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
         return AFPERR_MISC;
     }
 
-    if (*uname != 3 || ibuflen < 2) {
+    if (ibuflen < 2 ||
+            uam_extract_username_v2(uname, username, ulen) < 0) {
         return AFPERR_PARAM;
     }
 
-    uname++;
-    memcpy(&temp16, uname, sizeof(temp16));
-    len = ntohs(temp16);
-
-    if (!len || len > ulen) {
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, uname + 2, len);
-    username[len] = '\0';
     return pwd_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 

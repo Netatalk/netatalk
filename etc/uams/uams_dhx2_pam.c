@@ -89,7 +89,6 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
-
     /* g is next */
     uam_mpi_to_padded_buf((unsigned char *)rbuf, 4, g);
     rbuf += 4;
@@ -99,12 +98,10 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     memcpy(rbuf, &uint16, sizeof(uint16_t));
     rbuf += 2;
     *rbuflen += 2;
-
     /* p */
     uam_mpi_to_padded_buf((unsigned char *)rbuf, PRIMEBITS / 8, p);
     rbuf += PRIMEBITS / 8;
     *rbuflen += PRIMEBITS / 8;
-
     /* Ma */
     uam_mpi_to_padded_buf((unsigned char *)rbuf, PRIMEBITS / 8, Ma);
     rbuf += PRIMEBITS / 8;
