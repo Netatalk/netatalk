@@ -1,8 +1,17 @@
 /* ----------------------------------------------
 */
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/param.h>
+
+#include <atalk/compat.h>
+
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
+
+#define TESTSUITE_NAME_MAX 255
 
 /* ------------------------- */
 STATIC void test43()
@@ -385,25 +394,140 @@ test_exit:
     exit_test("FPMoveAndRename:test378: dest file exist but diff only by case, is this one OK");
 }
 
-#define DEEP_TREE_DEPTH 20
+#define DEEP_TREE_TARGET_COMPONENT_LEN 200
+#define DEEP_TREE_DEFAULT_VOLUME_PREFIX_LEN 26
+#define DEEP_TREE_LEAF_NAME "testfile"
+
+struct test460_tree_plan {
+    int depth;
+    size_t component_len;
+};
+
+static size_t test460_volume_prefix_len(void)
+{
+    size_t len;
+
+    if (!Path || Path[0] == '\0') {
+        return DEEP_TREE_DEFAULT_VOLUME_PREFIX_LEN;
+    }
+
+    len = strnlen(Path, MAXPATHLEN);
+
+    if (len == MAXPATHLEN) {
+        return MAXPATHLEN;
+    }
+
+    return len + (Path[len - 1] == '/' ? 0 : 1);
+}
+
+static int test460_component_len(const char *name, size_t *len)
+{
+    if (!name || !len) {
+        return -1;
+    }
+
+    *len = strnlen(name, TESTSUITE_NAME_MAX + 1);
+
+    if (*len > TESTSUITE_NAME_MAX) {
+        return -1;
+    }
+
+    return 0;
+}
+
+static int test460_tree_plan(const char *toplevel, const char *dst_renamed,
+                             const char *leaf_name,
+                             struct test460_tree_plan *plan)
+{
+    size_t max_path = MAXPATHLEN - 1;
+    size_t prefix_len = test460_volume_prefix_len();
+    size_t toplevel_len;
+    size_t dst_renamed_len;
+    size_t rename_delta;
+    size_t leaf_name_len;
+    size_t leaf_len;
+    size_t fixed_len;
+    size_t max_depth;
+    size_t best_score = (size_t) -1;
+    memset(plan, 0, sizeof(*plan));
+
+    if (test460_component_len(toplevel, &toplevel_len) < 0
+            || test460_component_len(dst_renamed, &dst_renamed_len) < 0
+            || test460_component_len(leaf_name, &leaf_name_len) < 0) {
+        return -1;
+    }
+
+    if (dst_renamed_len <= toplevel_len) {
+        return -1;
+    }
+
+    rename_delta = dst_renamed_len - toplevel_len;
+    leaf_len = leaf_name_len + 1; /* slash + leaf */
+
+    if (prefix_len > max_path || toplevel_len > max_path - prefix_len
+            || leaf_len > max_path - prefix_len - toplevel_len) {
+        return -1;
+    }
+
+    fixed_len = prefix_len + toplevel_len + leaf_len;
+    max_depth = (max_path - fixed_len) / 2; /* slash + at least one char */
+
+    for (int depth = 1; (size_t)depth <= max_depth; depth++) {
+        for (size_t component_len = 1; component_len <= TESTSUITE_NAME_MAX;
+                component_len++) {
+            size_t full_len = fixed_len + (size_t)depth * (component_len + 1);
+            size_t score;
+
+            if (full_len > max_path || full_len + rename_delta <= max_path) {
+                continue;
+            }
+
+            score = component_len > DEEP_TREE_TARGET_COMPONENT_LEN
+                    ? component_len - DEEP_TREE_TARGET_COMPONENT_LEN
+                    : DEEP_TREE_TARGET_COMPONENT_LEN - component_len;
+
+            if (score < best_score
+                    || (score == best_score && depth > plan->depth)) {
+                plan->depth = depth;
+                plan->component_len = component_len;
+                best_score = score;
+            }
+        }
+    }
+
+    return plan->depth > 0 ? 0 : -1;
+}
 
 /* ------------------------- */
 STATIC void test460()
 {
     uint16_t vol = VolID;
-    int dirs[DEEP_TREE_DEPTH + 1];
+    int *dirs = NULL;
+    struct test460_tree_plan plan;
     int ret;
-    int i;
     char *toplevel    = "t_cdov";         /* 6-char root dir */
     char *dst_renamed =
-        "t_cdov_renamed"; /* 14-char dest; dpath is 10 chars shorter than spath */
-    char  sub_name[201];
+        "t_cdov_renamed";
+    char  sub_name[TESTSUITE_NAME_MAX + 1];
     ENTER_TEST
-    memset(dirs, 0, sizeof(dirs));
+
+    if (test460_tree_plan(toplevel, dst_renamed, DEEP_TREE_LEAF_NAME,
+                          &plan) < 0) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    dirs = calloc((size_t)plan.depth + 1, sizeof(*dirs));
+
+    if (!dirs) {
+        test_nottested();
+        goto test_exit;
+    }
+
     /*
-     * Build a DEEP_TREE_DEPTH-level tree.  At level 20 (Linux MAXPATHLEN=4096):
-     *   spath actual rem = 51 bytes → overflow by 204 bytes
-     *   dpath actual rem = 61 bytes → overflow by 194 bytes
+     * Build a tree whose leaf still fits in this platform's MAXPATHLEN,
+     * including the local volume path when known, but whose leaf would exceed
+     * that limit after renaming the top-level directory.
      */
     dirs[0] = FPCreateDir(Conn, vol, DIRDID_ROOT, toplevel);
 
@@ -412,9 +536,9 @@ STATIC void test460()
         goto test_exit;
     }
 
-    for (i = 1; i <= DEEP_TREE_DEPTH; i++) {
-        memset(sub_name, 'a' + (i - 1), 200);
-        sub_name[200] = '\0';
+    for (int i = 1; i <= plan.depth; i++) {
+        memset(sub_name, 'a' + ((i - 1) % 26), plan.component_len);
+        sub_name[plan.component_len] = '\0';
         dirs[i] = FPCreateDir(Conn, vol, dirs[i - 1], sub_name);
 
         if (!dirs[i]) {
@@ -423,7 +547,7 @@ STATIC void test460()
         }
     }
 
-    if (FPCreateFile(Conn, vol, 0, dirs[DEEP_TREE_DEPTH], "testfile")) {
+    if (FPCreateFile(Conn, vol, 0, dirs[plan.depth], DEEP_TREE_LEAF_NAME)) {
         test_nottested();
         goto cleanup;
     }
@@ -448,11 +572,12 @@ STATIC void test460()
 
 cleanup:
 
-    if (dirs[0]) {
+    if (dirs && dirs[0]) {
         delete_directory_tree(Conn, vol, DIRDID_ROOT, toplevel);
     }
 
 test_exit:
+    free(dirs);
     exit_test("FPMoveAndRename:test460: deeply nested rename with path overflow");
 }
 
