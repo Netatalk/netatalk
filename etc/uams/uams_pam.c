@@ -1,5 +1,4 @@
 /*
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -29,121 +28,21 @@
 #include <atalk/logger.h>
 #include <atalk/compat.h>
 
+#include "uam_common.h"
+
 #define PASSWDLEN 8
 
-/* Static variables used to communicate between the conversation function
- * and the server_login function
- */
+/* hostname is set in login() and re-used by pam_changepw / pam_printer.
+ * PAM_username persists from login() into pam_logout()'s pam_end.  All
+ * other PAM state (passwords, conv struct) is now passed via stack-local
+ * struct uam_pam_ctx at each pam_start site. */
 static pam_handle_t *pamh = NULL;
 static const char *hostname;
 static char *PAM_username;
-static char *PAM_password;
-static char *PAM_oldpassword;
-static int PAM_chauthtok_mode;
-static int PAM_chauthtok_count;
 
 /*XXX in etc/papd/file.h */
 struct papfile;
 extern UAM_MODULE_EXPORT void append(struct papfile *, const char *, int);
-
-/*!
- * @brief PAM conversation function
- * @note Here we assume (for now, at least) that echo on means login name,
- * and echo off means password.
- */
-static int PAM_conv(int num_msg,
-#ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
-                    const struct pam_message **msg,
-#else
-                    struct pam_message **msg,
-#endif
-                    struct pam_response **resp,
-                    void *appdata_ptr _U_)
-{
-    struct pam_response *reply;
-    int count;
-#define COPY_STRING(s) (s) ? strdup(s) : NULL
-
-    if (num_msg < 1) {
-        return PAM_CONV_ERR;
-    }
-
-    reply = (struct pam_response *)
-            calloc(num_msg, sizeof(struct pam_response));
-
-    if (!reply) {
-        return PAM_CONV_ERR;
-    }
-
-    for (count = 0; count < num_msg; count++) {
-        char *string = NULL;
-
-        switch (msg[count]->msg_style) {
-        case PAM_PROMPT_ECHO_ON:
-            if (!(string = COPY_STRING(PAM_username))) {
-                goto pam_fail_conv;
-            }
-
-            break;
-
-        case PAM_PROMPT_ECHO_OFF:
-            if (PAM_chauthtok_mode && PAM_chauthtok_count == 0) {
-                string = COPY_STRING(PAM_oldpassword);
-                PAM_chauthtok_count++;
-            } else {
-                string = COPY_STRING(PAM_password);
-            }
-
-            if (!string) {
-                goto pam_fail_conv;
-            }
-
-            break;
-
-        case PAM_TEXT_INFO:
-#ifdef PAM_BINARY_PROMPT
-        case PAM_BINARY_PROMPT:
-#endif /* PAM_BINARY_PROMPT */
-            /* ignore it... */
-            break;
-
-        case PAM_ERROR_MSG:
-        default:
-            goto pam_fail_conv;
-        }
-
-        if (string) {
-            reply[count].resp_retcode = 0;
-            reply[count].resp = string;
-            string = NULL;
-        }
-    }
-
-    *resp = reply;
-    return PAM_SUCCESS;
-pam_fail_conv:
-
-    for (count = 0; count < num_msg; count++) {
-        if (!reply[count].resp) {
-            continue;
-        }
-
-        switch (msg[count]->msg_style) {
-        case PAM_PROMPT_ECHO_OFF:
-        case PAM_PROMPT_ECHO_ON:
-            free(reply[count].resp);
-            break;
-        }
-    }
-
-    free(reply);
-    return PAM_CONV_ERR;
-}
-
-static struct pam_conv PAM_conversation = {
-    &PAM_conv,
-    NULL
-};
 
 static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
                  char *ibuf, size_t ibuflen _U_,
@@ -151,6 +50,8 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
 {
     struct passwd *pwd;
     int err, PAM_error;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
 
     if (uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME,
                              (void *) &hostname, NULL) < 0) {
@@ -170,18 +71,20 @@ static int login(void *obj, char *username, int ulen,  struct passwd **uam_pwd,
     }
 
     if (uam_checkuser(NULL, pwd) < 0) {
-        free(PAM_password);
-        PAM_password = NULL;
         return AFPERR_NOTAUTH;
     }
 
     LOG(log_warning, logtype_uams, "cleartext login: %s (INSECURE)", username);
     PAM_username = username;
-    PAM_password = ibuf; /* Set these things up for the conv function */
+    /* Set up the conv ctx — password lives in ibuf */
+    pam_ctx.username = username;
+    pam_ctx.password = ibuf;
+    pam_ctx.log_tag = "uams_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
     err = AFPERR_NOTAUTH;
     LOG(log_debug, logtype_uams, "PAM: calling pam_start for %s", username);
-    PAM_error = pam_start("netatalk", username, &PAM_conversation,
-                          &pamh);
+    PAM_error = pam_start("netatalk", username, &pam_conv_local, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_error, logtype_uams, "PAM: pam_start failed: %d", PAM_error);
@@ -284,7 +187,11 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t  len, ulen;
+    size_t ulen;
+    /* login() checks `ibuflen <= PASSWDLEN` against the *original* packet
+     * length, not the remaining bytes after the username — preserve that
+     * meaning, since uam_extract_username_v1 updates the length it sees. */
+    size_t orig_ibuflen = ibuflen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &username,
@@ -292,21 +199,12 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
     }
 
-    len = (unsigned char) * ibuf++;
-
-    if (len > ulen) {
+    if (uam_extract_username_v1(&ibuf, &ibuflen, username, ulen) < 0) {
         return AFPERR_PARAM;
     }
 
-    memcpy(username, ibuf, len);
-    ibuf += len;
-    username[len] = '\0';
-
-    if ((unsigned long) ibuf & 1) { /* pad character */
-        ++ibuf;
-    }
-
-    return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
+    return login(obj, username, ulen, uam_pwd, ibuf, orig_ibuflen, rbuf,
+                 rbuflen);
 }
 
 /* ----------------------------- */
@@ -315,8 +213,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t  len, ulen;
-    uint16_t  temp16;
+    size_t ulen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME, (void *) &username,
@@ -324,20 +221,10 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
         return AFPERR_MISC;
     }
 
-    if (*uname != 3) {
+    if (uam_extract_username_v2(uname, username, ulen) < 0) {
         return AFPERR_PARAM;
     }
 
-    uname++;
-    memcpy(&temp16, uname, sizeof(temp16));
-    len = ntohs(temp16);
-
-    if (!len || len > ulen) {
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, uname + 2, len);
-    username[len] = '\0';
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
@@ -361,6 +248,8 @@ static int pam_changepw(void *obj _U_, char *username,
     int PAM_error;
     int ret;
     int is_root;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
     /* Copy both passwords into stack buffers upfront */
     memcpy(oldpw, ibuf, PASSWDLEN);
     oldpw[PASSWDLEN] = '\0';
@@ -378,9 +267,12 @@ static int pam_changepw(void *obj _U_, char *username,
 
     /* Set up for pam_authenticate conv: needs old password */
     PAM_username = username;
-    PAM_password = oldpw;
-    PAM_error = pam_start("netatalk", username, &PAM_conversation,
-                          &lpamh);
+    pam_ctx.username = username;
+    pam_ctx.password = oldpw;
+    pam_ctx.log_tag = "uams_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
+    PAM_error = pam_start("netatalk", username, &pam_conv_local, &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
         ret = AFPERR_PARAM;
@@ -425,25 +317,24 @@ static int pam_changepw(void *obj _U_, char *username,
     }
 
     /*
-     * Set up for pam_chauthtok conv: needs new password, and
-     * possibly old password if PAM prompts for the current password.
+     * Set up for pam_chauthtok conv.
      *
      * As root, pam_unix won't prompt for the current password,
      * so all ECHO_OFF prompts should return the new password.
      *
      * Not as root, pam_unix prompts for the current password first,
      * so the first ECHO_OFF returns old, subsequent return new.
+     * We use uam_pam_ctx.old_password — a one-shot field that the
+     * conv consumes on first use, so subsequent prompts return
+     * pam_ctx.password (new).
      */
-    PAM_password = newpw;
+    pam_ctx.password = newpw;
 
     if (!is_root) {
-        PAM_oldpassword = oldpw;
-        PAM_chauthtok_mode = 1;
-        PAM_chauthtok_count = 0;
+        pam_ctx.old_password = oldpw;
     }
 
     PAM_error = pam_chauthtok(lpamh, 0);
-    PAM_chauthtok_mode = 0;
 
     if (PAM_error != PAM_SUCCESS) {
         ret = AFPERR_ACCESS;
@@ -459,8 +350,6 @@ changepw_restore_uid:
 
     pam_end(lpamh, PAM_error);
 changepw_done:
-    PAM_password = NULL;
-    PAM_oldpassword = NULL;
     explicit_bzero(oldpw, PASSWDLEN);
     explicit_bzero(newpw, PASSWDLEN);
     return ret;
@@ -473,10 +362,14 @@ static int pam_printer(char *start, char *stop, char *username,
 {
     int PAM_error;
     char *data;
+    char *password = NULL;
     const char *p;
     const char *q;
     static const char *loginok = "0\r";
     struct passwd *pwd;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
+    int ret = -1;
     data = (char *)malloc(stop - start + 1);
 
     if (!data) {
@@ -496,8 +389,7 @@ static int pam_printer(char *start, char *stop, char *username,
     if ((p = strchr(data, '(')) == NULL) {
         LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: username not found in string");
-        free(data);
-        return -1;
+        goto out;
     }
 
     p++;
@@ -505,8 +397,7 @@ static int pam_printer(char *start, char *stop, char *username,
     if ((q = strstr(p, ") (")) == NULL) {
         LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: username not found in string");
-        free(data);
-        return -1;
+        goto out;
     }
 
     memcpy(username, p, MIN(UAM_USERNAMELEN, q - p));
@@ -516,52 +407,45 @@ static int pam_printer(char *start, char *stop, char *username,
     if ((q = strrchr(p, ')')) == NULL) {
         LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: password not found in string");
-        free(data);
-        return -1;
+        goto out;
     }
 
-    /* Allocate memory for the global PAM_password */
-    PAM_password = (char *)malloc(PASSWDLEN + 1);
+    password = (char *)malloc(PASSWDLEN + 1);
 
-    if (!PAM_password) {
+    if (!password) {
         LOG(log_error, logtype_uams,
             "Bad Login ClearTxtUAM: malloc failed for password");
-        free(data);
-        return -1;
+        goto out;
     }
 
-    explicit_bzero(PAM_password, PASSWDLEN + 1);
-    memcpy(PAM_password, p, MIN(PASSWDLEN, (q - p)));
-    /* Done copying username and password, clean up */
-    free(data);
+    explicit_bzero(password, PASSWDLEN + 1);
+    memcpy(password, p, MIN(PASSWDLEN, (q - p)));
 
     if ((pwd = uam_getname(NULL, username, strlen(username))) == NULL) {
         LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: ( %s ) not found ",
             username);
-        free(PAM_password);
-        PAM_password = NULL;
-        return -1;
+        goto out;
     }
 
     if (uam_checkuser(NULL, pwd) < 0) {
         /* syslog of error happens in uam_checkuser */
-        free(PAM_password);
-        PAM_password = NULL;
-        return -1;
+        goto out;
     }
 
     PAM_username = username;
-    PAM_error = pam_start("netatalk", username, &PAM_conversation,
-                          &pamh);
+    pam_ctx.username = username;
+    pam_ctx.password = password;
+    pam_ctx.log_tag = "uams_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
+    PAM_error = pam_start("netatalk", username, &pam_conv_local, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_error, logtype_uams, "Bad Login ClearTxtUAM: %s: %s",
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
-        free(PAM_password);
-        PAM_password = NULL;
-        return -1;
+        goto out;
     }
 
     pam_set_item(pamh, PAM_TTY, "papd");
@@ -582,9 +466,7 @@ static int pam_printer(char *start, char *stop, char *username,
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
-        free(PAM_password);
-        PAM_password = NULL;
-        return -1;
+        goto out;
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
@@ -598,9 +480,7 @@ static int pam_printer(char *start, char *stop, char *username,
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
-        free(PAM_password);
-        PAM_password = NULL;
-        return -1;
+        goto out;
     }
 
     PAM_error = pam_open_session(pamh, 0);
@@ -610,9 +490,7 @@ static int pam_printer(char *start, char *stop, char *username,
             username, pam_strerror(pamh, PAM_error));
         pam_end(pamh, PAM_error);
         pamh = NULL;
-        free(PAM_password);
-        PAM_password = NULL;
-        return -1;
+        goto out;
     }
 
     /* Login successful, but no need to hang onto it,
@@ -622,10 +500,16 @@ static int pam_printer(char *start, char *stop, char *username,
     pam_close_session(pamh, 0);
     pam_end(pamh, 0);
     pamh = NULL;
-    /* Before returning, free the allocated password */
-    free(PAM_password);
-    PAM_password = NULL;
-    return 0;
+    ret = 0;
+out:
+    free(data);
+
+    if (password != NULL) {
+        explicit_bzero(password, PASSWDLEN + 1);
+        free(password);
+    }
+
+    return ret;
 }
 
 

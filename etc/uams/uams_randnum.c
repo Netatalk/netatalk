@@ -1,5 +1,4 @@
 /*
- *
  * Copyright (c) 1990,1993 Regents of The University of Michigan.
  * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
  * All Rights Reserved.  See COPYRIGHT.
@@ -34,22 +33,12 @@
 #include <atalk/afp.h>
 #include <atalk/uam.h>
 
+#include "uam_common.h"
+
 #define PASSWDLEN 8
 
 static unsigned char seskey[8];
 
-static int ct_memcmp(const void *a, const void *b, size_t n)
-{
-    const unsigned char *pa = (const unsigned char *)a;
-    const unsigned char *pb = (const unsigned char *)b;
-    unsigned char diff = 0;
-
-    for (size_t i = 0; i < n; i++) {
-        diff |= pa[i] ^ pb[i];
-    }
-
-    return diff != 0;
-}
 static struct passwd	*randpwd;
 static uint8_t         randbuf[8];
 
@@ -355,35 +344,6 @@ static int randpass(const struct passwd *pwd, const char *file,
     uid_t uid = geteuid();
     i = strlen(file);
 
-    if (*file == '~') {
-        char path[MAXPATHLEN + 1];
-
-        if ((strlen(pwd->pw_dir) + i - 1) > MAXPATHLEN) {
-            return AFPERR_PARAM;
-        }
-
-        strcpy(path,  pwd->pw_dir);
-        strcat(path, "/");
-        strcat(path, file + 2);
-
-        /* change ourselves to the user */
-        if (!uid && (seteuid(pwd->pw_uid) < 0)) {
-            LOG(log_error, logtype_uams, "seteuid(%i) failed (%s)", pwd->pw_uid,
-                strerror(errno));
-            return AFPERR_MISC;
-        }
-
-        i = home_passwd(pwd, path, i, passwd, len, set);
-
-        /* change ourselves back to root */
-        if (!uid && (seteuid(0) < 0)) {
-            LOG(log_error, logtype_uams, "seteuid(%i) failed (%s)", 0, strerror(errno));
-            return AFPERR_MISC;
-        }
-
-        return i;
-    }
-
     if (i > MAXPATHLEN) {
         return AFPERR_PARAM;
     }
@@ -490,7 +450,7 @@ static int randnum_logincont(void *obj, struct passwd **uam_pwd,
     gcry_cipher_close(ctx);
 
     /* test against what the client sent */
-    if (ct_memcmp(randbuf, ibuf, sizeof(randbuf))) {
+    if (uam_ct_memcmp(randbuf, ibuf, sizeof(randbuf))) {
         /* != */
         explicit_bzero(randbuf, sizeof(randbuf));
         return AFPERR_NOTAUTH;
@@ -536,7 +496,7 @@ static int rand2num_logincont(void *obj, struct passwd **uam_pwd,
     ctxerror = gcry_cipher_encrypt(ctx, randbuf, sizeof(randbuf), NULL, 0);
 
     /* test against client's reply */
-    if (ct_memcmp(randbuf, ibuf, sizeof(randbuf))) {
+    if (uam_ct_memcmp(randbuf, ibuf, sizeof(randbuf))) {
         /* != */
         explicit_bzero(randbuf, sizeof(randbuf));
         gcry_cipher_close(ctx);
@@ -606,9 +566,9 @@ static int randnum_changepw(void *obj, const char *username _U_,
     ctxerror = gcry_cipher_decrypt(ctx, ibuf, PASSWDLEN, NULL, 0);
     gcry_cipher_close(ctx);
 
-    if (ct_memcmp(seskey, ibuf, sizeof(seskey))) {
+    if (uam_ct_memcmp(seskey, ibuf, sizeof(seskey))) {
         err = AFPERR_NOTAUTH;
-    } else if (ct_memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0) {
+    } else if (uam_ct_memcmp(seskey, ibuf + PASSWDLEN, sizeof(seskey)) == 0) {
         err = AFPERR_PWDSAME;
     }
 
@@ -642,7 +602,7 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
                          char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t len, ulen;
+    size_t ulen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
@@ -650,25 +610,8 @@ static int randnum_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_MISC;
     }
 
-    if (ibuflen < 2) {
+    if (uam_extract_username_v1(&ibuf, &ibuflen, username, ulen) < 0) {
         return AFPERR_PARAM;
-    }
-
-    len = (unsigned char) * ibuf++;
-    ibuflen--;
-
-    if (!len || len > ibuflen || len > ulen) {
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, ibuf, len);
-    ibuf += len;
-    ibuflen -= len;
-    username[len] = '\0';
-
-    if ((unsigned long) ibuf & 1) { /* pad character */
-        ++ibuf;
-        ibuflen--;
     }
 
     return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
@@ -679,9 +622,8 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                              char *ibuf, size_t ibuflen,
                              char *rbuf, size_t *rbuflen)
 {
-    char       *username;
-    size_t     len, ulen;
-    uint16_t  temp16;
+    char *username;
+    size_t ulen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
@@ -689,20 +631,10 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
         return AFPERR_MISC;
     }
 
-    if (*uname != 3) {
+    if (uam_extract_username_v2(uname, username, ulen) < 0) {
         return AFPERR_PARAM;
     }
 
-    uname++;
-    memcpy(&temp16, uname, sizeof(temp16));
-    len = ntohs(temp16);
-
-    if (!len || len > ulen) {
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, uname + 2, len);
-    username[len] = '\0';
     return rand_login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 

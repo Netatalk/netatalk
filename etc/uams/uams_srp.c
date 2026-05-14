@@ -41,6 +41,8 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
+#include "uam_common.h"
+
 /* -------------------- Constants -------------------- */
 
 #define SRP_INIT_MARKER   0x0001
@@ -105,23 +107,6 @@ static char session_username[UAM_USERNAMELEN + 1];
 static struct passwd *srppwd;
 
 /* -------------------- Crypto helpers -------------------- */
-
-/*!
- * @brief Constant-time memory comparison to avoid timing oracles.
- * @returns non-zero if the buffers differ, 0 if equal.
- */
-static int ct_memcmp(const unsigned char *a, const unsigned char *b, size_t n)
-{
-    /* Use volatile to prevent compiler optimizations
-     * that could leak timing information. */
-    volatile unsigned char diff = 0;
-
-    while (n--) {
-        diff |= *a++ ^ *b++;
-    }
-
-    return diff != 0;
-}
 
 /*!
  * @brief Strip leading zero bytes from a big-endian integer buffer.
@@ -221,25 +206,6 @@ static int sha1_multi(unsigned char *out, ...)
     memcpy(out, gcry_md_read(hd, GCRY_MD_SHA1), SRP_SHA1_LEN);
     gcry_md_close(hd);
     return 0;
-}
-
-/*!
- * @brief Write an MPI to a buffer as a big-endian integer, zero-padded.
- *
- * @param[out] buf    Output buffer (must be at least @p nbytes).
- * @param[in]  nbytes Target length with leading zero padding.
- * @param[in]  m      MPI to serialize.
- */
-static void mpi_to_padded_buf(unsigned char *buf, size_t nbytes, gcry_mpi_t m)
-{
-    size_t nwritten;
-    memset(buf, 0, nbytes);
-    gcry_mpi_print(GCRYMPI_FMT_USG, buf, nbytes, &nwritten, m);
-
-    if (nwritten < nbytes) {
-        memmove(buf + nbytes - nwritten, buf, nwritten);
-        memset(buf, 0, nbytes - nwritten);
-    }
 }
 
 /*!
@@ -480,7 +446,7 @@ static int srp_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
 
     gcry_mpi_release(gb);
     /* Store B in wire format for later use in u computation */
-    mpi_to_padded_buf(session_B_buf, SRP_NBYTES, session_B);
+    uam_mpi_to_padded_buf(session_B_buf, SRP_NBYTES, session_B);
     /* Build response:
      * context(2) | group_index(2) | N_len(2) | N(192) |
      * g_len(2) | g(1) | salt_len(2) | salt(16) | B_len(2) | B(192)
@@ -531,31 +497,16 @@ static int srp_login(void *obj, struct passwd **uam_pwd _U_,
                      char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t len, ulen;
+    size_t ulen;
     *rbuflen = 0;
-
-    if (ibuflen < 1) {
-        return AFPERR_PARAM;
-    }
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
                              (void *)&username, &ulen) < 0) {
         return AFPERR_PARAM;
     }
 
-    len = (unsigned char) * ibuf++;
-    ibuflen--;
-
-    if (len > ulen || len > ibuflen) {
+    if (uam_extract_username_v1(&ibuf, &ibuflen, username, ulen) < 0) {
         return AFPERR_PARAM;
-    }
-
-    memcpy(username, ibuf, len);
-    ibuf += len;
-    username[len] = '\0';
-
-    if ((unsigned long)ibuf & 1) {
-        ++ibuf;
     }
 
     if ((srppwd = uam_getname(obj, username, (int)ulen)) == NULL) {
@@ -584,8 +535,7 @@ static int srp_login_ext(void *obj, char *uname, struct passwd **uam_pwd _U_,
                          char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t len, ulen;
-    uint16_t temp16;
+    size_t ulen;
     *rbuflen = 0;
 
     if (uam_afpserver_option(obj, UAM_OPTION_USERNAME,
@@ -593,20 +543,9 @@ static int srp_login_ext(void *obj, char *uname, struct passwd **uam_pwd _U_,
         return AFPERR_PARAM;
     }
 
-    if (*uname != 3) {
+    if (uam_extract_username_v2(uname, username, ulen) < 0) {
         return AFPERR_PARAM;
     }
-
-    uname++;
-    memcpy(&temp16, uname, sizeof(temp16));
-    len = ntohs(temp16);
-
-    if (!len || len > ulen) {
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, uname + 2, len);
-    username[len] = '\0';
 
     if ((srppwd = uam_getname(obj, username, (int)ulen)) == NULL) {
         LOG(log_info, logtype_uams, "srp_login_ext: unknown username");
@@ -643,6 +582,14 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
     unsigned char A_buf[SRP_NBYTES];
     unsigned char K[SRP_SESSION_KEY_LEN];
     *rbuflen = 0;
+
+    /* Make sure srp_setup actually ran and established session state */
+    if (session_v == NULL) {
+        LOG(log_error, logtype_uams, "srp_logincont: called without completing setup");
+        ret = AFPERR_PARAM;
+        goto fail;
+    }
+
     unsigned char *d = (unsigned char *)ibuf;
     const unsigned char *end = d + ibuflen;
 
@@ -746,7 +693,7 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
         goto fail;
     }
 
-    mpi_to_padded_buf(S_binary, SRP_NBYTES, S);
+    uam_mpi_to_padded_buf(S_binary, SRP_NBYTES, S);
     size_t S_stripped_len;
     const unsigned char *S_stripped = strip_leading_zeros(S_binary, SRP_NBYTES,
                                       &S_stripped_len);
@@ -835,7 +782,7 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
         goto fail;
     }
 
-    if (ct_memcmp(M1_received, M1_expected, SRP_SHA1_LEN)) {
+    if (uam_ct_memcmp(M1_received, M1_expected, SRP_SHA1_LEN)) {
         LOG(log_info, logtype_uams, "srp_logincont: M1 verification failed for %s",
             session_username);
         ret = SRP_AUTH_FAILURE;

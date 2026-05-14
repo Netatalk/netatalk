@@ -15,6 +15,43 @@ if crypt.found()
     passwd_deps += crypt
 endif
 
+# Shared helpers used by multiple UAM modules.  Compiled with -fPIC so it
+# can be linked into the dlopen'd uams_*.so shared objects.  Add
+# `uam_common_dep` to a module's `dependencies:` to use it; PAM-only
+# helpers are gated by the UAM_COMMON_USE_PAM define and require pam
+# in the consumer's include path.
+uam_common = static_library(
+    'uam_common',
+    ['uam_common.c'],
+    include_directories: root_includes,
+    dependencies: [libgcrypt],
+    pic: true,
+    install: false,
+)
+
+uam_common_dep = declare_dependency(
+    link_with: uam_common,
+    include_directories: include_directories('.'),
+)
+
+if have_pam
+    uam_common_pam = static_library(
+        'uam_common_pam',
+        ['uam_common.c'],
+        include_directories: [pam_includes, root_includes],
+        dependencies: [libgcrypt, pam],
+        c_args: ['-DUAM_COMMON_USE_PAM'],
+        pic: true,
+        install: false,
+    )
+
+    uam_common_pam_dep = declare_dependency(
+        link_with: uam_common_pam,
+        include_directories: include_directories('.'),
+        compile_args: ['-DUAM_COMMON_USE_PAM'],
+    )
+endif
+
 library(
     'uams_guest',
     ['uams_guest.c'],
@@ -31,7 +68,7 @@ library(
     'uams_passwd',
     ['uams_passwd.c'],
     include_directories: root_includes,
-    dependencies: passwd_deps,
+    dependencies: [passwd_deps, uam_common_dep],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -43,7 +80,7 @@ library(
     'uams_randnum',
     ['uams_randnum.c'],
     include_directories: root_includes,
-    dependencies: [crack, libgcrypt],
+    dependencies: [crack, libgcrypt, uam_common_dep],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -55,7 +92,7 @@ library(
     'uams_dhx_passwd',
     ['uams_dhx_passwd.c'],
     include_directories: root_includes,
-    dependencies: [passwd_deps, libgcrypt],
+    dependencies: [passwd_deps, libgcrypt, uam_common_dep],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -67,7 +104,7 @@ library(
     'uams_dhx2_passwd',
     ['uams_dhx2_passwd.c'],
     include_directories: root_includes,
-    dependencies: [passwd_deps, libgcrypt],
+    dependencies: [passwd_deps, libgcrypt, uam_common_dep],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -79,7 +116,7 @@ library(
     'uams_srp',
     ['uams_srp.c'],
     include_directories: root_includes,
-    dependencies: [libgcrypt],
+    dependencies: [libgcrypt, uam_common_dep],
     name_prefix: '',
     name_suffix: lib_suffix,
     override_options: 'b_lundef=false',
@@ -92,7 +129,7 @@ if have_pam
         'uams_dhx_pam',
         ['uams_dhx_pam.c'],
         include_directories: [pam_includes, root_includes],
-        dependencies: [pam, libgcrypt],
+        dependencies: [pam, libgcrypt, uam_common_pam_dep],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -104,7 +141,7 @@ if have_pam
         'uams_dhx2_pam',
         ['uams_dhx2_pam.c'],
         include_directories: [pam_includes, root_includes],
-        dependencies: [iniparser, pam, libgcrypt],
+        dependencies: [iniparser, pam, libgcrypt, uam_common_pam_dep],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',
@@ -116,7 +153,7 @@ if have_pam
         'uams_pam',
         ['uams_pam.c'],
         include_directories: [pam_includes, root_includes],
-        dependencies: [bstring, pam],
+        dependencies: [bstring, pam, uam_common_pam_dep],
         name_prefix: '',
         name_suffix: lib_suffix,
         override_options: 'b_lundef=false',

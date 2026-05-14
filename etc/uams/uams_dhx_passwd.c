@@ -32,6 +32,8 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
+#include "uam_common.h"
+
 #define KEYSIZE 16
 #define PASSWDLEN 64
 #define CRYPTBUFLEN  (KEYSIZE*2)
@@ -61,7 +63,6 @@ static int pwd_login(void *obj, char *username, int ulen,
     struct spwd *sp;
 #endif /* SHADOWPW */
     uint16_t sessid;
-    size_t nwritten;
     size_t i;
 
     if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
@@ -79,8 +80,6 @@ static int pwd_login(void *obj, char *username, int ulen,
     Mb = gcry_mpi_new(0);
     K = gcry_mpi_new(0);
     unsigned char Rb_binary[32], K_binary[16];
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     *rbuflen = 0;
 
     if ((dhxpwd = uam_getname(obj, username, ulen)) == NULL) {
@@ -127,25 +126,13 @@ static int pwd_login(void *obj, char *username, int ulen,
     gcry_mpi_release(g);
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
-
-    if (i < KEYSIZE) {
-        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
-        memset(K_binary, 0, sizeof(K_binary) - i);
-    }
-
+    uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
     memcpy(rbuf, &sessid, sizeof(sessid));
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *) rbuf, KEYSIZE, &nwritten, Mb);
-
-    if (nwritten < KEYSIZE) {
-        memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
-        memset(rbuf, 0, KEYSIZE - nwritten);
-    }
-
+    uam_mpi_to_padded_buf((unsigned char *)rbuf, KEYSIZE, Mb);
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
     gcry_mpi_release(Mb);
@@ -172,40 +159,19 @@ static int pwd_login(void *obj, char *username, int ulen,
 #else /* 0 */
     memset(rbuf + KEYSIZE, 0, KEYSIZE);
 #endif /* 0 */
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
-                                GCRY_CIPHER_MODE_CBC, 0);
 
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        goto passwd_fail;
-    }
-
-    /* Set the binary form of K as our key for this encryption context. */
-    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        goto passwd_fail;
-    }
-
-    /* Set the initialization vector for server->client transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, iv, sizeof(iv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        goto passwd_fail;
-    }
-
-    /* Encrypt the ciphertext from the server. */
-    ctxerror = gcry_cipher_encrypt(ctx, rbuf, CRYPTBUFLEN, NULL, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    if (uam_cast5_cbc_encrypt(K_binary, sizeof(K_binary),
+                              iv, sizeof(iv),
+                              (unsigned char *)rbuf, CRYPTBUFLEN,
+                              NULL, 0) != 0) {
         goto passwd_fail;
     }
 
     *rbuflen += CRYPTBUFLEN;
-    gcry_cipher_close(ctx);
     return AFPERR_AUTHCONT;
 passwd_fail:
     gcry_mpi_release(K);
+    K = NULL;
     return AFPERR_PARAM;
 }
 
@@ -297,14 +263,18 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
 #endif /* SHADOWPW */
     unsigned char iv[] = "LWallace";
     gcry_mpi_t bn1, bn2, bn3;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     unsigned char K_binary[16];
-    size_t i;
     uint16_t sessid;
     char *p;
     int err = AFPERR_NOTAUTH;
     *rbuflen = 0;
+
+    /* Make sure pwd_login actually ran and established the shared key */
+    if (K == NULL) {
+        LOG(log_error, logtype_uams, "DHX: logincont called without completing login");
+        return AFPERR_PARAM;
+    }
+
     /* check for session id */
     memcpy(&sessid, ibuf, sizeof(sessid));
 
@@ -318,43 +288,18 @@ static int passwd_logincont(void *obj, struct passwd **uam_pwd,
     }
 
     ibuf += sizeof(sessid);
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K);
+    uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
+    gcry_mpi_release(K);
+    K = NULL;
 
-    if (i < KEYSIZE) {
-        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
-        memset(K_binary, 0, sizeof(K_binary) - i);
-    }
-
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
-                                GCRY_CIPHER_MODE_CBC, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    if (uam_cast5_cbc_decrypt(K_binary, sizeof(K_binary),
+                              iv, sizeof(iv),
+                              (unsigned char *)rbuf, CRYPT2BUFLEN,
+                              (const unsigned char *)ibuf,
+                              CRYPT2BUFLEN) != 0) {
         return AFPERR_PARAM;
     }
 
-    /* Set the binary form of K as our key for this encryption context. */
-    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    /* Set the initialization vector for client->server transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, iv, sizeof(iv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    /* Decrypt the ciphertext from the client. */
-    ctxerror = gcry_cipher_decrypt(ctx, rbuf, CRYPT2BUFLEN, ibuf, CRYPT2BUFLEN);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    gcry_cipher_close(ctx);
     bn1 = gcry_mpi_snew(KEYSIZE);
     gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, rbuf, KEYSIZE, NULL);
     bn2 = gcry_mpi_snew(sizeof(randbuf));
