@@ -715,7 +715,6 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
 
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
                 PAM_error));
-
         goto error_ctx;
     }
 

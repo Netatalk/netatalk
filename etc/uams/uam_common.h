@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2026 Netatalk Project
+ * All Rights Reserved.  See COPYRIGHT.
+ *
+ * Shared helpers for UAM authentication modules.  See uam_common.c
+ * for behavioural contracts and rationale.
+ */
+
+#ifndef UAM_COMMON_H
+#define UAM_COMMON_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#include <gcrypt.h>
+
+void uam_mpi_to_padded_buf(unsigned char *buf, size_t nbytes, gcry_mpi_t m);
+void uam_mpi_release(gcry_mpi_t *m);
+int uam_ct_memcmp(const void *a, const void *b, size_t n);
+
+int uam_dh_params_generate(gcry_mpi_t *out_p, gcry_mpi_t *out_g,
+                           unsigned int bits);
+
+int uam_cast5_cbc_encrypt(const unsigned char *key, size_t keylen,
+                          const unsigned char *iv, size_t ivlen,
+                          unsigned char *out, size_t outlen,
+                          const unsigned char *in, size_t inlen);
+int uam_cast5_cbc_decrypt(const unsigned char *key, size_t keylen,
+                          const unsigned char *iv, size_t ivlen,
+                          unsigned char *out, size_t outlen,
+                          const unsigned char *in, size_t inlen);
+
+int uam_extract_username_v1(char **ibuf, size_t *ibuflen,
+                            char *dst, size_t dstlen);
+int uam_extract_username_v2(const char *uname, char *dst, size_t dstlen);
+
+#ifdef UAM_COMMON_USE_PAM
+
+#ifdef HAVE_SECURITY_PAM_APPL_H
+#include <security/pam_appl.h>
+#endif
+#ifdef HAVE_PAM_PAM_APPL_H
+#include <pam/pam_appl.h>
+#endif
+
+struct uam_pam_ctx {
+    const char *username;
+    const char *password;
+    const char *log_tag;
+};
+
+int uam_pam_conv(int num_msg,
+#ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
+                 const struct pam_message **msg,
+#else
+                 struct pam_message **msg,
+#endif
+                 struct pam_response **resp,
+                 void *appdata_ptr);
+
+#endif /* UAM_COMMON_USE_PAM */
+
+#endif /* UAM_COMMON_H */
