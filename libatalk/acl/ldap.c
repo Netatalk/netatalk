@@ -358,17 +358,6 @@ static char *gen_uuid_filter(const char *uuidstr_in, const char *attr_filter)
  * Interface
  ********************************************************/
 
-/*!
- * @brief Search UUID for name in LDAP
- *
- * Caller must free uuid_string when done with it
- *
- * @param[in] name          name to search
- * @param[in] type          type of USER or GROUP
- * @param[out] uuid_string  result as pointer to allocated UUID-string
- *
- * @returns 0 on success, -1 on error or not found
- */
 /* Escape a string for use in an LDAP filter per RFC 4515. */
 static int ldap_escape_filter_value(const char *src, char *dst, size_t dstlen)
 {
@@ -397,6 +386,17 @@ static int ldap_escape_filter_value(const char *src, char *dst, size_t dstlen)
     return 0;
 }
 
+/*!
+ * @brief Search UUID for name in LDAP
+ *
+ * Caller must free uuid_string when done with it
+ *
+ * @param[in] name          name to search
+ * @param[in] type          type of USER or GROUP
+ * @param[out] uuid_string  result as pointer to allocated UUID-string
+ *
+ * @returns 0 on success, -1 on error or not found
+ */
 int ldap_getuuidfromname(const char *name, uuidtype_t type, char **uuid_string)
 {
     int ret;
