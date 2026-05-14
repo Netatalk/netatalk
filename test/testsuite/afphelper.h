@@ -56,6 +56,8 @@ extern int not_valid(unsigned int ret, int mac_error, int afpd_error);
 extern int not_valid_bitmap(unsigned int ret, unsigned int bitmap,
                             int afpd_error);
 extern int32_t is_there(CONN *conn, uint16_t volume, int32_t did, char *name);
+extern int delete_directory_tree_by_did(CONN *conn, uint16_t volume,
+                                        uint32_t dir_id);
 extern int delete_directory_tree(CONN *conn, uint16_t volume,
                                  uint32_t parent_did, char *dirname);
 extern void clear_volume(uint16_t vol, CONN *conn);
