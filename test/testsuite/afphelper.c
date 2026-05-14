@@ -1,6 +1,7 @@
 /* ----------------------------------------------
 */
 
+#include <limits.h>
 #include <signal.h>
 #include <stdarg.h>
 
