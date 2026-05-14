@@ -1,7 +1,21 @@
 /*
- * Copyright (c) 2026 Netatalk Project
- * All Rights Reserved.  See COPYRIGHT.
+ * Copyright (c) 1990,1993 Regents of The University of Michigan.
+ * Copyright (c) 1999 Adrian Sun (asun@u.washington.edu)
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/*!
+ * @file
  * Shared helpers for UAM authentication modules.
  *
  * These helpers exist to consolidate code that has historically been
