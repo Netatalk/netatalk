@@ -32,6 +32,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include <atalk/compat.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/server_child.h>
@@ -192,7 +193,8 @@ int server_child_remove(server_child_t *children, pid_t pid)
     }
 
     if (child->afpch_sessiontoken) {
-        memset(child->afpch_sessiontoken, 0, child->afpch_sessiontoken_len);
+        explicit_bzero(child->afpch_sessiontoken,
+                       child->afpch_sessiontoken_len);
         free(child->afpch_sessiontoken);
         child->afpch_sessiontoken = NULL;
     }
@@ -248,7 +250,8 @@ void server_child_free(server_child_t *children)
             }
 
             if (child->afpch_sessiontoken) {
-                memset(child->afpch_sessiontoken, 0, child->afpch_sessiontoken_len);
+                explicit_bzero(child->afpch_sessiontoken,
+                               child->afpch_sessiontoken_len);
                 free(child->afpch_sessiontoken);
             }
 
@@ -340,7 +343,8 @@ int server_child_set_session_token(server_child_t *children, pid_t pid,
     }
 
     if (child->afpch_sessiontoken) {
-        memset(child->afpch_sessiontoken, 0, child->afpch_sessiontoken_len);
+        explicit_bzero(child->afpch_sessiontoken,
+                       child->afpch_sessiontoken_len);
         free(child->afpch_sessiontoken);
     }
 
@@ -353,7 +357,7 @@ EC_CLEANUP:
 #endif
 
     if (sessiontoken) {
-        memset(sessiontoken, 0, token_len);
+        explicit_bzero(sessiontoken, token_len);
         free(sessiontoken);
     }
 
