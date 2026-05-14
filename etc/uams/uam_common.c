@@ -352,12 +352,12 @@ int uam_extract_username_v1(char **ibuf, size_t *ibuflen,
     p += len;
     remaining -= len;
 
-    /* AFP pads to an even pointer offset. */
-    if (((uintptr_t) p) & 1) {
-        if (remaining < 1) {
-            return -1;
-        }
-
+    /* AFP pads to an even pointer offset.  The pad byte is only
+     * consumed when there is more data after it — packets that end
+     * right after the username (DHX/DHX2/randnum v1 AFPLogin) may
+     * be exactly at the buffer end with an odd pointer; that is a
+     * valid terminus, not a malformed packet. */
+    if ((((uintptr_t) p) & 1) && remaining > 0) {
         p++;
         remaining--;
     }
