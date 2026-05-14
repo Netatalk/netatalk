@@ -425,7 +425,8 @@ int uam_pam_conv(int num_msg,
                  struct pam_response **resp,
                  void *appdata_ptr)
 {
-    const struct uam_pam_ctx *ctx = appdata_ptr;
+    /* ctx is mutable: old_password is a one-shot that we clear on use. */
+    struct uam_pam_ctx *ctx = appdata_ptr;
     const char *tag = (ctx && ctx->log_tag) ? ctx->log_tag : "uam_pam_conv";
     struct pam_response *reply;
     int i;
@@ -463,20 +464,31 @@ int uam_pam_conv(int num_msg,
 
             break;
 
-        case PAM_PROMPT_ECHO_OFF:
-            if (ctx->password == NULL) {
+        case PAM_PROMPT_ECHO_OFF: {
+            const char *src;
+
+            /* one-shot old_password takes precedence on the first prompt */
+            if (ctx->old_password != NULL) {
+                src = ctx->old_password;
+                ctx->old_password = NULL;
+            } else {
+                src = ctx->password;
+            }
+
+            if (src == NULL) {
                 LOG(log_info, logtype_uams,
                     "%s: PAM asked for password but none provided", tag);
                 goto fail;
             }
 
-            string = strdup(ctx->password);
+            string = strdup(src);
 
             if (string == NULL) {
                 goto fail;
             }
 
             break;
+        }
 
         case PAM_TEXT_INFO:
 #ifdef PAM_BINARY_PROMPT

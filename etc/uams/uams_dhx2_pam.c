@@ -29,6 +29,8 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
+#include "uam_common.h"
+
 /*! Number of bits for p which we generate. Everybody out there uses 512, so we beat them */
 #define PRIMEBITS 1024
 
@@ -47,213 +49,18 @@ static uint16_t ID;
 static unsigned char dhx_c2siv[] = { 'L', 'W', 'a', 'l', 'l', 'a', 'c', 'e' };
 static unsigned char dhx_s2civ[] = { 'C', 'J', 'a', 'l', 'b', 'e', 'r', 't' };
 
-/* Static variables used to communicate between the conversation function
- * and the server_login function */
+/* PAM_username persists across rounds (login → logincont, or across the
+ * three changepw packets).  The password is passed via a stack-local
+ * struct uam_pam_ctx at each pam_start site. */
 static pam_handle_t *pamh = NULL;
 static char *PAM_username;
-static char *PAM_password;
 static struct passwd *dhxpwd;
-
-/*********************************************************
- * Crypto helper func to generate p and g for use in DH.
- * libgcrypt doesn't provide one directly.
- * Algorithm taken from GNUTLS:gnutls_dh_primes.c
- *********************************************************/
-
-/*!
- * @brief Generate a new pair of prime and generator for use in
- * the Diffie-Hellman key exchange.
- *
- * The bits value should be one of 768, 1024, 2048, 3072 or 4096.
- */
-static int dh_params_generate(unsigned int bits)
-{
-    int result, times = 0, qbits;
-    gcry_mpi_t *factors = NULL;
-    gcry_error_t err;
-
-    /* Version check should be the very first call because it
-       makes sure that important subsystems are initialized. */
-    if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
-        LOG(log_error, logtype_uams,
-            "PAM DHX2: libgcrypt versions mismatch. Needs: %s Has: %s",
-            UAM_NEED_LIBGCRYPT_VERSION, gcry_check_version(NULL));
-        result = AFPERR_MISC;
-        goto error;
-    }
-
-    if (bits < 256) {
-        qbits = bits / 2;
-    } else {
-        qbits = (bits / 40) + 105;
-    }
-
-    /* better have an even number */
-    if (qbits & 1) {
-        qbits++;
-    }
-
-    /* find a prime number of size bits. */
-    do {
-        if (times) {
-            gcry_mpi_release(p);
-            gcry_prime_release_factors(factors);
-        }
-
-        err = gcry_prime_generate(&p, bits, qbits, &factors, NULL, NULL,
-                                  GCRY_STRONG_RANDOM, GCRY_PRIME_FLAG_SPECIAL_FACTOR);
-
-        if (err != 0) {
-            result = AFPERR_MISC;
-            goto error;
-        }
-
-        err = gcry_prime_check(p, 0);
-        times++;
-    } while (err != 0 && times < 10);
-
-    if (err != 0) {
-        result = AFPERR_MISC;
-        goto error;
-    }
-
-    /* generate the group generator. */
-    err = gcry_prime_group_generator(&g, p, factors, NULL);
-
-    if (err != 0) {
-        result = AFPERR_MISC;
-        goto error;
-    }
-
-    gcry_prime_release_factors(factors);
-    return 0;
-error:
-    gcry_prime_release_factors(factors);
-    return result;
-}
-
-
-/*!
- * @brief PAM conversation function
- * @note Here we assume (for now, at least) that echo on means login name,
- * and echo off means password.
- */
-static int PAM_conv(int num_msg,
-#ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
-                    const struct pam_message **msg,
-#else
-                    struct pam_message **msg,
-#endif
-                    struct pam_response **resp,
-                    void *appdata_ptr _U_)
-{
-    int count = 0;
-    struct pam_response *reply;
-#define COPY_STRING(s) (s) ? strdup(s) : NULL
-    errno = 0;
-
-    if (num_msg < 1) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "PAM DHX2 Conversation Err -- %s",
-            strerror(errno));
-        /* Log Entry */
-        return PAM_CONV_ERR;
-    }
-
-    reply = (struct pam_response *)
-            calloc(num_msg, sizeof(struct pam_response));
-
-    if (!reply) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "PAM DHX2: Conversation Err -- %s",
-            strerror(errno));
-        /* Log Entry */
-        return PAM_CONV_ERR;
-    }
-
-    for (count = 0; count < num_msg; count++) {
-        char *string = NULL;
-
-        switch (msg[count]->msg_style) {
-        case PAM_PROMPT_ECHO_ON:
-            if (!(string = COPY_STRING(PAM_username))) {
-                /* Log Entry */
-                LOG(log_info, logtype_uams, "PAM DHX2: username failure -- %s",
-                    strerror(errno));
-                /* Log Entry */
-                goto pam_fail_conv;
-            }
-
-            break;
-
-        case PAM_PROMPT_ECHO_OFF:
-            if (!(string = COPY_STRING(PAM_password))) {
-                /* Log Entry */
-                LOG(log_info, logtype_uams, "PAM DHX2: passwd failure: --: %s",
-                    strerror(errno));
-                /* Log Entry */
-                goto pam_fail_conv;
-            }
-
-            break;
-
-        case PAM_TEXT_INFO:
-#ifdef PAM_BINARY_PROMPT
-        case PAM_BINARY_PROMPT:
-#endif /* PAM_BINARY_PROMPT */
-            /* ignore it... */
-            break;
-
-        case PAM_ERROR_MSG:
-        default:
-            LOG(log_info, logtype_uams, "PAM DHX2: Binary_Prompt -- %s", strerror(errno));
-            goto pam_fail_conv;
-        }
-
-        if (string) {
-            reply[count].resp_retcode = 0;
-            reply[count].resp = string;
-            string = NULL;
-        }
-    }
-
-    *resp = reply;
-    LOG(log_info, logtype_uams, "PAM DHX2: PAM Success");
-    return PAM_SUCCESS;
-pam_fail_conv:
-
-    for (count = 0; count < num_msg; count++) {
-        if (!reply[count].resp) {
-            continue;
-        }
-
-        switch (msg[count]->msg_style) {
-        case PAM_PROMPT_ECHO_OFF:
-        case PAM_PROMPT_ECHO_ON:
-            free(reply[count].resp);
-            break;
-        }
-    }
-
-    free(reply);
-    /* Log Entry */
-    LOG(log_info, logtype_uams, "PAM DHX2: Conversation Err -- %s",
-        strerror(errno));
-    /* Log Entry */
-    return PAM_CONV_ERR;
-}
-
-static struct pam_conv PAM_conversation = {
-    &PAM_conv,
-    NULL
-};
 
 
 static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
                       char *rbuf, size_t *rbuflen)
 {
     int ret;
-    size_t nwritten;
     gcry_mpi_t Ma;
     char *Ra_binary = NULL;
     uint16_t uint16;
@@ -284,17 +91,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     *rbuflen += 2;
 
     /* g is next */
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, 4, &nwritten,
-                       g) != 0) {
-        ret = AFPERR_MISC;
-        goto error;
-    }
-
-    if (nwritten < 4) {
-        memmove(rbuf + 4 - nwritten, rbuf, nwritten);
-        memset(rbuf, 0, 4 - nwritten);
-    }
-
+    uam_mpi_to_padded_buf((unsigned char *)rbuf, 4, g);
     rbuf += 4;
     *rbuflen += 4;
     /* len = length of p = PRIMEBITS/8 */
@@ -304,32 +101,12 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     *rbuflen += 2;
 
     /* p */
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8,
-                       &nwritten, p) != 0) {
-        ret = AFPERR_MISC;
-        goto error;
-    }
-
-    if (nwritten < PRIMEBITS / 8) {
-        memmove(rbuf + (PRIMEBITS / 8) - nwritten, rbuf, nwritten);
-        memset(rbuf, 0, (PRIMEBITS / 8) - nwritten);
-    }
-
+    uam_mpi_to_padded_buf((unsigned char *)rbuf, PRIMEBITS / 8, p);
     rbuf += PRIMEBITS / 8;
     *rbuflen += PRIMEBITS / 8;
 
     /* Ma */
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8,
-                       &nwritten, Ma) != 0) {
-        ret = AFPERR_MISC;
-        goto error;
-    }
-
-    if (nwritten < PRIMEBITS / 8) {
-        memmove(rbuf + (PRIMEBITS / 8) - nwritten, rbuf, nwritten);
-        memset(rbuf, 0, (PRIMEBITS / 8) - nwritten);
-    }
-
+    uam_mpi_to_padded_buf((unsigned char *)rbuf, PRIMEBITS / 8, Ma);
     rbuf += PRIMEBITS / 8;
     *rbuflen += PRIMEBITS / 8;
     ret = AFPERR_AUTHCONT;
@@ -366,7 +143,7 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
                      char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t len, ulen;
+    size_t ulen;
     *rbuflen = 0;
 
     /* grab some of the options */
@@ -378,21 +155,10 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_PARAM;
     }
 
-    len = (unsigned char) * ibuf++;
-
-    if (len > ulen) {
-        LOG(log_info, logtype_uams, "DHX2: Signature Retieval Failure -- %s",
-            strerror(errno));
+    if (uam_extract_username_v1(&ibuf, &ibuflen, username, ulen) < 0) {
+        LOG(log_info, logtype_uams,
+            "DHX2: malformed username in login packet");
         return AFPERR_PARAM;
-    }
-
-    memcpy(username, ibuf, len);
-    ibuf += len;
-    username[len] = '\0';
-
-    /* pad to even boundary */
-    if ((unsigned long) ibuf & 1) {
-        ++ibuf;
     }
 
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
@@ -404,8 +170,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          char *rbuf, size_t *rbuflen)
 {
     char *username;
-    size_t len, ulen;
-    uint16_t  temp16;
+    size_t ulen;
     *rbuflen = 0;
 
     /* grab some of the options */
@@ -417,22 +182,12 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
         return AFPERR_PARAM;
     }
 
-    if (*uname != 3) {
+    if (uam_extract_username_v2(uname, username, ulen) < 0) {
+        LOG(log_info, logtype_uams,
+            "DHX2: malformed username in ext login packet");
         return AFPERR_PARAM;
     }
 
-    uname++;
-    memcpy(&temp16, uname, sizeof(temp16));
-    len = ntohs(temp16);
-
-    if (!len || len > ulen) {
-        LOG(log_info, logtype_uams, "DHX2: Signature Retrieval Failure -- %s",
-            strerror(errno));
-        return AFPERR_PARAM;
-    }
-
-    memcpy(username, uname + 2, len);
-    username[len] = '\0';
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
@@ -441,12 +196,9 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
                       size_t *rbuflen)
 {
     int ret;
-    size_t nwritten;
     gcry_mpi_t Mb, K, clientNonce;
     unsigned char *K_bin = NULL;
     char serverNonce_bin[16];
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     uint16_t uint16;
     *rbuflen = 0;
     Mb = gcry_mpi_new(0);
@@ -458,7 +210,7 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
     if (ibuflen != 2 + PRIMEBITS / 8 + 16) {
         LOG(log_error, logtype_uams, "DHX2: Packet length not correct");
         ret = AFPERR_PARAM;
-        goto error_noctx;
+        goto error_release;
     }
 
     /* Skip session id */
@@ -473,59 +225,31 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
 
     if (K_bin == NULL) {
         ret = AFPERR_MISC;
-        goto error_noctx;
+        goto error_release;
     }
 
-    gcry_mpi_print(GCRYMPI_FMT_USG, K_bin, PRIMEBITS / 8, &nwritten, K);
-
-    if (nwritten < PRIMEBITS / 8) {
-        memmove(K_bin + PRIMEBITS / 8 - nwritten, K_bin, nwritten);
-        memset(K_bin, 0, PRIMEBITS / 8 - nwritten);
-    }
-
+    uam_mpi_to_padded_buf(K_bin, PRIMEBITS / 8, K);
     /* ... generate the MD5 hash of K. K_MD5hash is what we actually use ! */
     K_MD5hash = calloc(1, K_hash_len = gcry_md_get_algo_dlen(GCRY_MD_MD5));
 
     if (K_MD5hash == NULL) {
         ret = AFPERR_MISC;
         free(K_bin);
-        goto error_noctx;
+        goto error_release;
     }
 
     gcry_md_hash_buffer(GCRY_MD_MD5, K_MD5hash, K_bin, PRIMEBITS / 8);
     free(K_bin);
     K_bin = NULL;
     /* FIXME: To support the Reconnect UAM, we need to store this key somewhere */
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5, GCRY_CIPHER_MODE_CBC, 0);
 
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    /* Decrypt client's md5_K(client nonce, C2SIV) inplace */
+    if (uam_cast5_cbc_decrypt((unsigned char *)K_MD5hash, K_hash_len,
+                              dhx_c2siv, sizeof(dhx_c2siv),
+                              (unsigned char *)ibuf, 16,
+                              NULL, 0) != 0) {
         ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Set key */
-    ctxerror = gcry_cipher_setkey(ctx, K_MD5hash, K_hash_len);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Set the initialization vector for client->server transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, dhx_c2siv, sizeof(dhx_c2siv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Finally: decrypt client's md5_K(client nonce, C2SIV) inplace */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16, NULL, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
+        goto error_release;
     }
 
     /* Pull out clients nonce */
@@ -544,39 +268,24 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
     rbuf += 2;
     *rbuflen += 2;
     /* Client nonce + 1 */
-    gcry_mpi_print(GCRYMPI_FMT_USG, (unsigned char *)rbuf, PRIMEBITS / 8, &nwritten,
-                   clientNonce);
-
-    if (nwritten < 16) {
-        memmove(rbuf + 16 - nwritten, rbuf, nwritten);
-        memset(rbuf, 0, 16 - nwritten);
-    }
-
+    uam_mpi_to_padded_buf((unsigned char *)rbuf, 16, clientNonce);
     /* Server nonce */
     memcpy(rbuf + 16, serverNonce_bin, 16);
-    /* Set the initialization vector for server->client transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, dhx_s2civ, sizeof(dhx_s2civ));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
 
     /* Encrypt md5_K(clientNonce+1, serverNonce) inplace */
-    ctxerror = gcry_cipher_encrypt(ctx, rbuf, 32, NULL, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    if (uam_cast5_cbc_encrypt((unsigned char *)K_MD5hash, K_hash_len,
+                              dhx_s2civ, sizeof(dhx_s2civ),
+                              (unsigned char *)rbuf, 32,
+                              NULL, 0) != 0) {
         ret = AFPERR_MISC;
-        goto error_ctx;
+        goto error_release;
     }
 
     rbuf += 32;
     *rbuflen += 32;
     ret = AFPERR_AUTHCONT;
     goto exit;
-error_ctx:
-    gcry_cipher_close(ctx);
-error_noctx:
+error_release:
     gcry_mpi_release(serverNonce);
     free(K_MD5hash);
     K_MD5hash = NULL;
@@ -598,9 +307,9 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     int PAM_error;
     const char *hostname = NULL;
     gcry_mpi_t retServerNonce = NULL;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     char *utfpass = NULL;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
     *rbuflen = 0;
 
     /* Make sure logincont1 actually ran and established the shared key */
@@ -608,7 +317,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         LOG(log_error, logtype_uams,
             "DHX2: logincont2 called without completing logincont1");
         ret = AFPERR_PARAM;
-        goto error_noctx;
+        goto error_exit;
     }
 
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs) */
@@ -616,44 +325,22 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         LOG(log_error, logtype_uams,
             "DHX2: Packet length not correct: %u. Should be 274 or 284.", ibuflen);
         ret = AFPERR_PARAM;
-        goto error_noctx;
+        goto error_exit;
     }
 
     retServerNonce = gcry_mpi_new(0);
     /* For PAM */
     uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME, (void *) &hostname, NULL);
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5, GCRY_CIPHER_MODE_CBC, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Set key */
-    ctxerror = gcry_cipher_setkey(ctx, K_MD5hash, K_hash_len);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Set the initialization vector for client->server transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, dhx_c2siv, sizeof(dhx_c2siv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
     /* Skip Session ID */
     ibuf += 2;
-    /* Finally: decrypt client's md5_K(serverNonce+1, passwor, C2SIV) inplace */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16 + 256, NULL, 0);
 
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    /* Decrypt client's md5_K(serverNonce+1, password) inplace */
+    if (uam_cast5_cbc_decrypt((unsigned char *)K_MD5hash, K_hash_len,
+                              dhx_c2siv, sizeof(dhx_c2siv),
+                              (unsigned char *)ibuf, 16 + 256,
+                              NULL, 0) != 0) {
         ret = AFPERR_MISC;
-        goto error_ctx;
+        goto error_exit;
     }
 
     /* Pull out nonce. Should be serverNonce+1 */
@@ -663,7 +350,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     if (gcry_mpi_cmp(serverNonce, retServerNonce) != 0) {
         /* We're hacked!  */
         ret = AFPERR_NOTAUTH;
-        goto error_ctx;
+        goto error_exit;
     }
 
     ibuf += 16;
@@ -674,18 +361,22 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     if (convert_string_allocate(CH_MAC, CH_UNIX, ibuf, -1,
                                 &utfpass) == (size_t) -1) {
         LOG(log_error, logtype_uams, "DHX2: conversion error");
-        goto error_ctx;
+        goto error_exit;
     }
 
-    PAM_password = utfpass;
     /* Set these things up for the conv function */
+    pam_ctx.username = PAM_username;
+    pam_ctx.password = utfpass;
+    pam_ctx.log_tag = "uams_dhx2_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
     ret = AFPERR_NOTAUTH;
-    PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &pamh);
+    PAM_error = pam_start("netatalk", PAM_username, &pam_conv_local, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
                 PAM_error));
-        goto error_ctx;
+        goto error_exit;
     }
 
     /* solaris craps out if PAM_TTY and PAM_RHOST aren't set. */
@@ -715,7 +406,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
 
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s", pam_strerror(pamh,
                 PAM_error));
-        goto error_ctx;
+        goto error_exit;
     }
 
     PAM_error = pam_acct_mgmt(pamh, 0);
@@ -739,7 +430,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
         }
 
 #endif
-        goto error_ctx;
+        goto error_exit;
     }
 
 #ifndef PAM_CRED_ESTABLISH
@@ -750,7 +441,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
             pam_strerror(pamh, PAM_error));
-        goto error_ctx;
+        goto error_exit;
     }
 
     PAM_error = pam_open_session(pamh, 0);
@@ -758,7 +449,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2: PAM_Error: %s",
             pam_strerror(pamh, PAM_error));
-        goto error_ctx;
+        goto error_exit;
     }
 
     explicit_bzero(ibuf, 256); /* zero out the password */
@@ -770,9 +461,7 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     *uam_pwd = dhxpwd;
     LOG(log_info, logtype_uams, "DHX2: PAM Auth OK!");
     ret = AFP_OK;
-error_ctx:
-    gcry_cipher_close(ctx);
-error_noctx:
+error_exit:
 
     if (utfpass) {
         free(utfpass);
@@ -844,8 +533,8 @@ static int changepw_3(void *obj _U_,
     pam_handle_t *lpamh;
     const char *hostname = NULL;
     gcry_mpi_t retServerNonce = NULL;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
     *rbuflen = 0;
     LOG(log_error, logtype_uams, "DHX2 ChangePW: packet 3 processing");
 
@@ -854,51 +543,29 @@ static int changepw_3(void *obj _U_,
         LOG(log_error, logtype_uams,
             "DHX2 ChangePW: called without completing key exchange");
         ret = AFPERR_PARAM;
-        goto error_noctx;
+        goto error_exit;
     }
 
     /* Packet size should be: Session ID + ServerNonce + 2*Passwd buffer */
     if (ibuflen != 2 + 16 + 2 * 256) {
         LOG(log_error, logtype_uams, "DHX2: Packet length not correct");
         ret = AFPERR_PARAM;
-        goto error_noctx;
+        goto error_exit;
     }
 
     retServerNonce = gcry_mpi_new(0);
     /* For PAM */
     uam_afpserver_option(obj, UAM_OPTION_CLIENTNAME, (void *) &hostname, NULL);
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5, GCRY_CIPHER_MODE_CBC, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Set key */
-    ctxerror = gcry_cipher_setkey(ctx, K_MD5hash, K_hash_len);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
-    /* Set the initialization vector for client->server transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, dhx_c2siv, sizeof(dhx_c2siv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        ret = AFPERR_MISC;
-        goto error_ctx;
-    }
-
     /* Skip Session ID */
     ibuf += 2;
-    /* Finally: decrypt client's md5_K(serverNonce+1, 2*password, C2SIV) inplace */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, 16 + 2 * 256, NULL, 0);
 
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    /* Decrypt client's md5_K(serverNonce+1, 2*password) inplace */
+    if (uam_cast5_cbc_decrypt((unsigned char *)K_MD5hash, K_hash_len,
+                              dhx_c2siv, sizeof(dhx_c2siv),
+                              (unsigned char *)ibuf, 16 + 2 * 256,
+                              NULL, 0) != 0) {
         ret = AFPERR_MISC;
-        goto error_ctx;
+        goto error_exit;
     }
 
     /* Pull out nonce. Should be serverNonce+1 */
@@ -908,7 +575,7 @@ static int changepw_3(void *obj _U_,
     if (gcry_mpi_cmp(serverNonce, retServerNonce) != 0) {
         /* We're hacked!  */
         ret = AFPERR_NOTAUTH;
-        goto error_ctx;
+        goto error_exit;
     }
 
     ibuf += 16;
@@ -920,17 +587,24 @@ static int changepw_3(void *obj _U_,
     if (memcmp(ibuf, ibuf + 256, 255) == 0) {
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: new and old password are equal");
         ret = AFPERR_PWDSAME;
-        goto error_ctx;
+        goto error_exit;
     }
 
-    /* Set these things up for the conv function. PAM_username was set in changepw_1 */
-    PAM_password = ibuf + 256;
-    PAM_error = pam_start("netatalk", PAM_username, &PAM_conversation, &lpamh);
+    /* Set these things up for the conv function. PAM_username was set in changepw_1.
+     * The conv function answers ECHO_OFF with pam_ctx.password — we point it at
+     * the old password for authenticate, then swap to the new password for
+     * chauthtok further down. */
+    pam_ctx.username = PAM_username;
+    pam_ctx.password = ibuf + 256;    /* old password */
+    pam_ctx.log_tag = "uams_dhx2_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
+    PAM_error = pam_start("netatalk", PAM_username, &pam_conv_local, &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: PAM error in pam_start");
         ret = AFPERR_PARAM;
-        goto error_ctx;
+        goto error_exit;
     }
 
     pam_set_item(lpamh, PAM_TTY, "afpd");
@@ -942,7 +616,7 @@ static int changepw_3(void *obj _U_,
         LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", 0);
         pam_end(lpamh, PAM_SUCCESS);
         ret = AFPERR_MISC;
-        goto error_ctx;
+        goto error_exit;
     }
 
     PAM_error = pam_authenticate(lpamh, 0);
@@ -954,12 +628,12 @@ static int changepw_3(void *obj _U_,
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
             pam_end(lpamh, PAM_error);
             ret = AFPERR_MISC;
-            goto error_ctx;
+            goto error_exit;
         }
 
         pam_end(lpamh, PAM_error);
         ret = AFPERR_NOTAUTH;
-        goto error_ctx;
+        goto error_exit;
     }
 
     PAM_error = pam_acct_mgmt(lpamh, 0);
@@ -971,15 +645,15 @@ static int changepw_3(void *obj _U_,
             LOG(log_error, logtype_uams, "DHX2 Chgpwd: could not seteuid(%i)", uid);
             pam_end(lpamh, PAM_error);
             ret = AFPERR_MISC;
-            goto error_ctx;
+            goto error_exit;
         }
 
         pam_end(lpamh, PAM_error);
         ret = AFPERR_NOTAUTH;
-        goto error_ctx;
+        goto error_exit;
     }
 
-    PAM_password = ibuf;
+    pam_ctx.password = ibuf;          /* new password for chauthtok */
     PAM_error = pam_chauthtok(lpamh, 0);
 
     if (seteuid(uid) < 0) {
@@ -987,7 +661,7 @@ static int changepw_3(void *obj _U_,
         explicit_bzero(ibuf, 512);
         pam_end(lpamh, PAM_SUCCESS);
         ret = AFPERR_MISC;
-        goto error_ctx;
+        goto error_exit;
     }
 
     explicit_bzero(ibuf, 512);
@@ -996,14 +670,12 @@ static int changepw_3(void *obj _U_,
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: error changing pw with PAM");
         pam_end(lpamh, PAM_error);
         ret = AFPERR_ACCESS;
-        goto error_ctx;
+        goto error_exit;
     }
 
     pam_end(lpamh, 0);
     ret = AFP_OK;
-error_ctx:
-    gcry_cipher_close(ctx);
-error_noctx:
+error_exit:
     free(K_MD5hash);
     K_MD5hash = NULL;
     gcry_mpi_release(serverNonce);
@@ -1064,7 +736,7 @@ static int uam_setup(void *obj _U_, const char *path)
     LOG(log_debug, logtype_uams, "DHX2: generating mersenne primes");
 
     /* Generate p and g for DH */
-    if (dh_params_generate(PRIMEBITS) != 0) {
+    if (uam_dh_params_generate(&p, &g, PRIMEBITS) != 0) {
         LOG(log_error, logtype_uams, "DHX2: Couldn't generate p and g");
         return -1;
     }

@@ -31,6 +31,8 @@
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
+#include "uam_common.h"
+
 #define KEYSIZE 16
 #define PASSWDLEN 64
 #define CRYPTBUFLEN  (KEYSIZE*2)
@@ -56,132 +58,12 @@ static const unsigned char p_binary[] = {0xBA, 0x28, 0x73, 0xDF, 0xB0, 0x60, 0x5
 static const unsigned char g_binary[] = {0x07};
 
 
-/* Static variables used to communicate between the conversation function
- * and the server_login function
- */
+/* Username is captured during pam_login() and consulted again during the
+ * later pam_logincont() round, so it has to survive across calls.  The
+ * password lives only within a single function and is passed to PAM via
+ * a stack-local struct uam_pam_ctx. */
 static pam_handle_t *pamh = NULL;
 static unsigned char *PAM_username;
-static unsigned char *PAM_password;
-
-/*!
- * @brief PAM conversation function
- * @note Here we assume (for now, at least) that echo on means login name,
- * and echo off means password.
- */
-static int PAM_conv(int num_msg,
-#ifdef HAVE_PAM_CONV_CONST_PAM_MESSAGE
-                    const struct pam_message **msg,
-#else
-                    struct pam_message **msg,
-#endif
-                    struct pam_response **resp,
-                    void *appdata_ptr _U_)
-{
-    int count = 0;
-    struct pam_response *reply;
-#define COPY_STRING(s) (s) ? strdup(s) : NULL
-    errno = 0;
-
-    if (num_msg < 1) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
-            strerror(errno));
-        /* Log Entry */
-        return PAM_CONV_ERR;
-    }
-
-    reply = (struct pam_response *)
-            calloc(num_msg, sizeof(struct pam_response));
-
-    if (!reply) {
-        /* Log Entry */
-        LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
-            strerror(errno));
-        /* Log Entry */
-        return PAM_CONV_ERR;
-    }
-
-    for (count = 0; count < num_msg; count++) {
-        char *string = NULL;
-
-        switch (msg[count]->msg_style) {
-        case PAM_PROMPT_ECHO_ON:
-            if (!(string = COPY_STRING((const char *)PAM_username))) {
-                /* Log Entry */
-                LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: username failure -- %s",
-                    strerror(errno));
-                /* Log Entry */
-                goto pam_fail_conv;
-            }
-
-            break;
-
-        case PAM_PROMPT_ECHO_OFF:
-            if (!(string = COPY_STRING((const char *)PAM_password))) {
-                /* Log Entry */
-                LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: passwd failure: --: %s",
-                    strerror(errno));
-                /* Log Entry */
-                goto pam_fail_conv;
-            }
-
-            break;
-
-        case PAM_TEXT_INFO:
-#ifdef PAM_BINARY_PROMPT
-        case PAM_BINARY_PROMPT:
-#endif /* PAM_BINARY_PROMPT */
-            /* ignore it... */
-            break;
-
-        case PAM_ERROR_MSG:
-        default:
-            /* Log Entry */
-            LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: Binary_Prompt -- %s",
-                strerror(errno));
-            /* Log Entry */
-            goto pam_fail_conv;
-        }
-
-        if (string) {
-            reply[count].resp_retcode = 0;
-            reply[count].resp = string;
-            string = NULL;
-        }
-    }
-
-    *resp = reply;
-    /* Log Entry */
-    LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM: PAM Success");
-    /* Log Entry */
-    return PAM_SUCCESS;
-pam_fail_conv:
-
-    for (count = 0; count < num_msg; count++) {
-        if (!reply[count].resp) {
-            continue;
-        }
-
-        switch (msg[count]->msg_style) {
-        case PAM_PROMPT_ECHO_OFF:
-        case PAM_PROMPT_ECHO_ON:
-            free(reply[count].resp);
-            break;
-        }
-    }
-
-    free(reply);
-    /* Log Entry */
-    LOG(log_info, logtype_uams, "uams_dhx_pam.c :PAM DHX Conversation Err -- %s",
-        strerror(errno));
-    /* Log Entry */
-    return PAM_CONV_ERR;
-}
-
-static struct pam_conv PAM_conversation = {
-    &PAM_conv,
-    NULL
-};
 
 
 static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
@@ -189,7 +71,6 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
 {
     uint16_t sessid;
     size_t i;
-    size_t nwritten;
 
     if (!gcry_check_version(UAM_NEED_LIBGCRYPT_VERSION)) {
         LOG(log_error, logtype_uams,
@@ -206,8 +87,6 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     Mb = gcry_mpi_new(0);
     K = gcry_mpi_new(0);
     unsigned char Rb_binary[32], K_binary[16];
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     /* Extract Ma, client's "public" key */
     gcry_mpi_scan(&Ma, GCRYMPI_FMT_USG, ibuf, KEYSIZE, NULL);
     /* Get p and g into a form that libgcrypt can use */
@@ -229,15 +108,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     gcry_mpi_release(Ma);
     gcry_mpi_release(Rb);
 
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
-        *rbuflen = 0;
-        goto pam_fail;
-    }
-
-    if (i < KEYSIZE) {
-        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
-        memset(K_binary, 0, sizeof(K_binary) - i);
-    }
+    uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
 
     /* session id. it's just a hashed version of the object pointer. */
     sessid = dhxhash(obj);
@@ -245,16 +116,7 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
     rbuf += sizeof(sessid);
     *rbuflen += sizeof(sessid);
 
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, rbuf, KEYSIZE, &nwritten, Mb) != 0) {
-        *rbuflen = 0;
-        goto pam_fail;
-    }
-
-    if (nwritten < KEYSIZE) {
-        memmove(rbuf + KEYSIZE - nwritten, rbuf, nwritten);
-        memset(rbuf, 0, KEYSIZE - nwritten);
-    }
-
+    uam_mpi_to_padded_buf(rbuf, KEYSIZE, Mb);
     rbuf += KEYSIZE;
     *rbuflen += KEYSIZE;
     gcry_mpi_release(Mb);
@@ -290,37 +152,15 @@ static int dhx_setup(void *obj, const unsigned char *ibuf, size_t ibuflen _U_,
 #else /* 0 */
     memset(rbuf + KEYSIZE, 0, KEYSIZE);
 #endif /* 0 */
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
-                                GCRY_CIPHER_MODE_CBC, 0);
 
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        goto pam_fail;
-    }
-
-    /* Set the binary form of K as our key for this encryption context. */
-    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        goto pam_fail;
-    }
-
-    /* Set the initialization vector for server->client transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, msg2_iv, sizeof(msg2_iv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        goto pam_fail;
-    }
-
-    /* Encrypt the ciphertext from the server. */
-    ctxerror = gcry_cipher_encrypt(ctx, rbuf, CRYPTBUFLEN, NULL, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    if (uam_cast5_cbc_encrypt(K_binary, sizeof(K_binary),
+                              msg2_iv, sizeof(msg2_iv),
+                              rbuf, CRYPTBUFLEN,
+                              NULL, 0) != 0) {
         goto pam_fail;
     }
 
     *rbuflen += CRYPTBUFLEN;
-    gcry_cipher_close(ctx);
     return AFPERR_AUTHCONT;
 pam_fail:
     gcry_mpi_release(K);
@@ -358,7 +198,8 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
                      unsigned char *rbuf, size_t *rbuflen)
 {
     unsigned char *username;
-    size_t len, ulen;
+    size_t ulen;
+    char *cibuf = (char *)ibuf;
     *rbuflen = 0;
 
     /* grab some of the options */
@@ -370,25 +211,15 @@ static int pam_login(void *obj, struct passwd **uam_pwd,
         return AFPERR_PARAM;
     }
 
-    len = *ibuf++;
-
-    if (len > ulen) {
+    if (uam_extract_username_v1(&cibuf, &ibuflen,
+                                (char *)username, ulen) < 0) {
         LOG(log_info, logtype_uams,
-            "uams_dhx_pam.c :PAM: Signature Retieval Failure -- %s",
-            strerror(errno));
+            "uams_dhx_pam.c :PAM: malformed username in login packet");
         return AFPERR_PARAM;
     }
 
-    memcpy(username, ibuf, len);
-    ibuf += len;
-    username[len] = '\0';
-
-    /* pad to even boundary */
-    if ((unsigned long) ibuf & 1) {
-        ++ibuf;
-    }
-
-    return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
+    return login(obj, username, ulen, uam_pwd,
+                 (const unsigned char *)cibuf, ibuflen, rbuf, rbuflen);
 }
 
 /* ----------------------------- */
@@ -397,9 +228,7 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
                          unsigned char *rbuf, size_t *rbuflen)
 {
     unsigned char *username;
-    int len;
     size_t ulen;
-    uint16_t temp16;
     *rbuflen = 0;
 
     /* grab some of the options */
@@ -411,23 +240,12 @@ static int pam_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
         return AFPERR_PARAM;
     }
 
-    if (*uname != 3) {
-        return AFPERR_PARAM;
-    }
-
-    uname++;
-    memcpy(&temp16, uname, sizeof(temp16));
-    len = ntohs(temp16);
-
-    if (!len || len > ulen) {
+    if (uam_extract_username_v2(uname, (char *)username, ulen) < 0) {
         LOG(log_info, logtype_uams,
-            "uams_dhx_pam.c :PAM: Signature Retrieval Failure -- %s",
-            strerror(errno));
+            "uams_dhx_pam.c :PAM: malformed username in ext login packet");
         return AFPERR_PARAM;
     }
 
-    memcpy(username, uname + 2, len);
-    username[len] = '\0';
     return login(obj, username, ulen, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
 }
 
@@ -439,12 +257,11 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
 {
     const char *hostname;
     gcry_mpi_t bn1, bn2, bn3;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     uint16_t sessid;
     int err, PAM_error;
     unsigned char K_binary[16];
-    size_t i;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
     *rbuflen = 0;
 
     /* Make sure dhx_setup actually ran and established the shared key */
@@ -474,50 +291,17 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
         hostname = NULL;
     }
 
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
-        gcry_mpi_release(K);
-        K = NULL;
-        return AFPERR_PARAM;
-    }
-
+    uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
     gcry_mpi_release(K);
     K = NULL;
 
-    if (i < KEYSIZE) {
-        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
-        memset(K_binary, 0, sizeof(K_binary) - i);
-    }
-
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
-                                GCRY_CIPHER_MODE_CBC, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    if (uam_cast5_cbc_decrypt(K_binary, sizeof(K_binary),
+                              msg3_iv, sizeof(msg3_iv),
+                              rbuf, CRYPT2BUFLEN,
+                              ibuf, CRYPT2BUFLEN) != 0) {
         return AFPERR_PARAM;
     }
 
-    /* Set the binary form of K as our key for this encryption context. */
-    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    /* Set the initialization vector for client->server transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, msg3_iv, sizeof(msg3_iv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    /* Decrypt the ciphertext from the client. */
-    ctxerror = gcry_cipher_decrypt(ctx, rbuf, CRYPT2BUFLEN, ibuf, CRYPT2BUFLEN);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    gcry_cipher_close(ctx);
     bn1 = gcry_mpi_snew(KEYSIZE);
     gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, rbuf, KEYSIZE, NULL);
     bn2 = gcry_mpi_snew(sizeof(randbuf));
@@ -539,10 +323,14 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     gcry_mpi_release(bn3);
     /* Set these things up for the conv function */
     rbuf[PASSWDLEN] = '\0';
-    PAM_password = rbuf;
+    pam_ctx.username = (const char *)PAM_username;
+    pam_ctx.password = (const char *)rbuf;
+    pam_ctx.log_tag = "uams_dhx_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
     err = AFPERR_NOTAUTH;
     PAM_error = pam_start("netatalk", (const char *)PAM_username,
-                          &PAM_conversation, &pamh);
+                          &pam_conv_local, &pamh);
 
     if (PAM_error != PAM_SUCCESS) {
         /* Log Entry */
@@ -671,15 +459,14 @@ static int pam_changepw(void *obj, unsigned char *username,
                         size_t ibuflen, unsigned char *rbuf, size_t *rbuflen)
 {
     gcry_mpi_t bn1, bn2, bn3;
-    gcry_cipher_hd_t ctx;
-    gcry_error_t ctxerror;
     unsigned char K_binary[16];
-    size_t i;
     char *hostname;
     pam_handle_t *lpamh;
     uid_t uid;
     uint16_t sessid;
     int PAM_error;
+    struct uam_pam_ctx pam_ctx = {0};
+    struct pam_conv pam_conv_local;
 
     if (ibuflen < sizeof(sessid)) {
         return AFPERR_PARAM;
@@ -724,50 +511,17 @@ static int pam_changepw(void *obj, unsigned char *username,
         return AFPERR_MISC;
     }
 
-    if (gcry_mpi_print(GCRYMPI_FMT_USG, K_binary, sizeof(K_binary), &i, K) != 0) {
-        gcry_mpi_release(K);
-        K = NULL;
-        return AFPERR_PARAM;
-    }
-
+    uam_mpi_to_padded_buf(K_binary, sizeof(K_binary), K);
     gcry_mpi_release(K);
     K = NULL;
 
-    if (i < KEYSIZE) {
-        memmove(K_binary + sizeof(K_binary) - i, K_binary, i);
-        memset(K_binary, 0, sizeof(K_binary) - i);
-    }
-
-    /* Set up our encryption context. */
-    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_CAST5,
-                                GCRY_CIPHER_MODE_CBC, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
+    if (uam_cast5_cbc_decrypt(K_binary, sizeof(K_binary),
+                              msg3_iv, sizeof(msg3_iv),
+                              ibuf, CHANGEPWBUFLEN,
+                              NULL, 0) != 0) {
         return AFPERR_PARAM;
     }
 
-    /* Set the binary form of K as our key for this encryption context. */
-    ctxerror = gcry_cipher_setkey(ctx, K_binary, sizeof(K_binary));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    /* Set the initialization vector for server->client transfer. */
-    ctxerror = gcry_cipher_setiv(ctx, msg3_iv, sizeof(msg3_iv));
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    /* Decrypt the ciphertext from the server. */
-    ctxerror = gcry_cipher_decrypt(ctx, ibuf, CHANGEPWBUFLEN, NULL, 0);
-
-    if (gcry_err_code(ctxerror) != GPG_ERR_NO_ERROR) {
-        return AFPERR_PARAM;
-    }
-
-    gcry_cipher_close(ctx);
     bn1 = gcry_mpi_snew(KEYSIZE);
     gcry_mpi_scan(&bn1, GCRYMPI_FMT_STD, ibuf, KEYSIZE, NULL);
     bn2 = gcry_mpi_snew(sizeof(randbuf));
@@ -795,8 +549,12 @@ static int pam_changepw(void *obj, unsigned char *username,
     }
 
     ibuf[PASSWDLEN + PASSWDLEN] = '\0';
-    PAM_password = ibuf + PASSWDLEN;
-    PAM_error = pam_start("netatalk", (char *)username, &PAM_conversation,
+    pam_ctx.username = (const char *)username;
+    pam_ctx.password = (const char *)(ibuf + PASSWDLEN); /* old password */
+    pam_ctx.log_tag = "uams_dhx_pam";
+    pam_conv_local.conv = uam_pam_conv;
+    pam_conv_local.appdata_ptr = &pam_ctx;
+    PAM_error = pam_start("netatalk", (char *)username, &pam_conv_local,
                           &lpamh);
 
     if (PAM_error != PAM_SUCCESS) {
@@ -841,8 +599,9 @@ static int pam_changepw(void *obj, unsigned char *username,
 
     /* clear out old passwd */
     explicit_bzero(ibuf + PASSWDLEN, PASSWDLEN);
-    /* new password */
-    PAM_password = ibuf;
+    /* new password — appdata_ptr is still &pam_ctx, so updating
+     * pam_ctx.password is what the conv function sees for chauthtok. */
+    pam_ctx.password = (const char *)ibuf;
 
     if (ibuflen <= PASSWDLEN) {
         return AFPERR_PARAM;

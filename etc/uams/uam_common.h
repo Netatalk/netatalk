@@ -46,6 +46,11 @@ int uam_extract_username_v2(const char *uname, char *dst, size_t dstlen);
 struct uam_pam_ctx {
     const char *username;
     const char *password;
+    /* If non-NULL, the conv answers the FIRST PAM_PROMPT_ECHO_OFF with
+     * old_password and clears the field (so the next ECHO_OFF returns
+     * password).  Used by pam_chauthtok when running non-root, where
+     * pam_unix asks for the current password first then the new one. */
+    const char *old_password;
     const char *log_tag;
 };
 
