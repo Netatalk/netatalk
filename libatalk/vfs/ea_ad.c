@@ -107,6 +107,16 @@ static char *mtoupath(const struct vol *vol, const char *mpath)
     return upath;
 }
 
+static int ea_attrname_invalid(const char *func, const char *attruname)
+{
+    if (attruname == NULL) {
+        LOG(log_error, logtype_afpd, "%s: missing EA name", func);
+        return 1;
+    }
+
+    return 0;
+}
+
 
 /*!
  * @brief unpack and verify header file data buffer at ea->ea_data into struct ea
@@ -306,10 +316,15 @@ static int ea_addentry(struct ea *ea,
     unsigned int count = 0;
     void *tmprealloc;
 
+    if (ea_attrname_invalid("ea_addentry", attruname)) {
+        return -1;
+    }
+
     /* First check if an EA of the requested name already exist */
     if (ea->ea_count > 0) {
         while (count < ea->ea_count) {
-            if (strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
+            if ((*ea->ea_entries)[count].ea_name &&
+                    strcmp(attruname, (*ea->ea_entries)[count].ea_name) == 0) {
                 ea_existed = 1;
                 LOG(log_debug, logtype_afpd, "ea_addentry('%s', bitmap:0x%x): exists",
                     attruname, bitmap);
@@ -398,6 +413,10 @@ static int write_ea(const struct ea *ea,
     int ret = AFP_OK;
     char *eaname;
 
+    if (ea_attrname_invalid("write_ea", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     if ((eaname = ea_path(ea, attruname, 1)) == NULL) {
         LOG(log_error, logtype_afpd, "write_ea('%s'): ea_path error", attruname);
         return AFPERR_MISC;
@@ -456,6 +475,10 @@ static int ea_delentry(struct ea *ea, const char *attruname)
     int ret = 0;
     unsigned int count = 0;
 
+    if (ea_attrname_invalid("ea_delentry", attruname)) {
+        return -1;
+    }
+
     if (ea->ea_count == 0) {
         LOG(log_error, logtype_afpd,
             "ea_delentry('%s'): illegal ea_count of 0 on deletion",
@@ -493,6 +516,10 @@ static int delete_ea_file(const struct ea *ea, const char *eaname)
     int ret = 0;
     char *eafile;
     struct stat st;
+
+    if (ea_attrname_invalid("delete_ea_file", eaname)) {
+        return -1;
+    }
 
     if ((eafile = ea_path(ea, eaname, 1)) == NULL) {
         LOG(log_error, logtype_afpd, "delete_ea_file('%s'): ea_path error", eaname);
@@ -929,6 +956,10 @@ int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
     struct ea ea;
     LOG(log_debug, logtype_afpd, "get_easize: file: %s", uname);
 
+    if (ea_attrname_invalid("get_easize", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
         if (errno != ENOENT) {
             LOG(log_error, logtype_afpd, "get_easize: error calling ea_open for file: %s",
@@ -941,7 +972,8 @@ int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
     }
 
     while (count < ea.ea_count) {
-        if (strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
+        if ((*ea.ea_entries)[count].ea_name &&
+                strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
             uint32 = htonl((*ea.ea_entries)[count].ea_size);
             memcpy(rbuf, &uint32, 4);
             *rbuflen += 4;
@@ -989,6 +1021,11 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     size_t toread;
     struct ea ea;
     char *eafile;
+
+    if (ea_attrname_invalid("get_eacontent", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     LOG(log_debug, logtype_afpd, "get_eacontent('%s/%s')", uname, attruname);
 
     if ((ea_open(vol, uname, EA_RDONLY, &ea)) != 0) {
@@ -1002,7 +1039,8 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     }
 
     while (count < ea.ea_count) {
-        if (strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
+        if ((*ea.ea_entries)[count].ea_name &&
+                strcmp(attruname, (*ea.ea_entries)[count].ea_name) == 0) {
             if ((eafile = ea_path(&ea, attruname, 1)) == NULL) {
                 ret = AFPERR_MISC;
                 break;
@@ -1163,6 +1201,10 @@ int set_ea(const struct vol *vol, const char *uname, const char *attruname,
     struct ea ea;
     LOG(log_debug, logtype_afpd, "set_ea: file: %s", uname);
 
+    if (ea_attrname_invalid("set_ea", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     if ((ea_open(vol, uname, EA_CREATE | EA_RDWR, &ea)) != 0) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): ea_open error", uname);
         return AFPERR_MISC;
@@ -1209,6 +1251,11 @@ int remove_ea(const struct vol *vol, const char *uname, const char *attruname,
 {
     int ret = AFP_OK;
     struct ea ea;
+
+    if (ea_attrname_invalid("remove_ea", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     LOG(log_debug, logtype_afpd, "remove_ea('%s/%s')", uname, attruname);
 
     if ((ea_open(vol, uname, EA_RDWR, &ea)) != 0) {
