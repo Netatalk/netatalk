@@ -104,7 +104,7 @@ STATIC void test426()
     uint16_t bitmap;
     uint16_t vol = VolID;
     const DSI *dsi;
-    int fork = 0;
+    uint16_t fork = 0;
     int created = 0;
     int len;
     unsigned int ret;

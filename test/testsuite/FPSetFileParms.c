@@ -513,7 +513,7 @@ STATIC void test433()
     uint16_t bitmap_date = (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
                            (1 << FILPBIT_MDATE);
     int ofs = 3 * sizeof(uint16_t);
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
     ENTER_TEST
 
@@ -600,7 +600,7 @@ STATIC void test434()
     uint16_t bitmap_date = (1 << FILPBIT_CDATE) | (1 << FILPBIT_BDATE) |
                            (1 << FILPBIT_MDATE);
     int ofs = 3 * sizeof(uint16_t);
-    DSI *dsi = &Conn->dsi;
+    const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir;
     ENTER_TEST
 

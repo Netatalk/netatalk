@@ -1250,7 +1250,6 @@ static void do_pdinfo_test(char *fname, const char *fourcc, uint8_t expect_type,
     int ofs = 3 * sizeof(uint16_t);
     const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir = { 0 };
-    const unsigned char *buf;
     const char *creator = "pdos";
     uint8_t prodos_type;
     uint16_t prodos_aux;
@@ -1343,7 +1342,6 @@ STATIC void test441()
     int ofs = 3 * sizeof(uint16_t);
     const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir = { 0 };
-    const unsigned char *buf;
     uint8_t prodos_type;
     uint16_t prodos_aux;
     ENTER_TEST
@@ -1404,7 +1402,6 @@ STATIC void test442()
     int ofs = 3 * sizeof(uint16_t);
     const DSI *dsi = &Conn->dsi;
     struct afp_filedir_parms filedir = { 0 };
-    const unsigned char *buf;
     uint8_t prodos_type;
     uint16_t prodos_aux;
     int dir;
