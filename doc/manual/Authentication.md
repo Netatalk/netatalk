@@ -113,15 +113,15 @@ Randnum and SRP do not use system passwords directly. They both rely on
 separate files managed with **afppasswd**:
 
 - **Randnum** uses the legacy *afppasswd* file. It requires a key file
-  alongside the Randnum password file (same path with a `.key` suffix), and
-  refuses to load when the key file is missing or unavailable. Create
-  `<passwd file>.key` containing 16 hex characters (8 bytes) and restrict
-  permissions (for example, owner-readable only). Stored passwords are
-  DES-encrypted using that key.
+  alongside the Randnum password file (same path with a `.key` suffix).
+  **afppasswd -r -c** creates this key file if it is missing and validates an
+  existing one; password updates refuse to proceed unless the key file is
+  present and valid. The Randnum UAM logs a startup warning when the key file
+  is missing or invalid, but authentication and password changes still fail
+  until it is fixed. Stored passwords are DES-encrypted using that key.
 
-  For example, a valid key file begins with 16 hexadecimal characters, such
-  as `0123456789ABCDEF`; Randnum reads those first 16 bytes as the key
-  material, so a trailing newline after them is harmless. Generate a fresh
+  The key file must contain exactly 16 hexadecimal characters, such as
+  `0123456789ABCDEF`, with an optional trailing newline. Generate a fresh
   random key for each server instead of reusing this example value.
 
 - **SRP** uses *afppasswd.srp*, which stores per-user salts and verifiers.

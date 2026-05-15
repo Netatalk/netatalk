@@ -16,7 +16,7 @@
  *
  * **RandNum mode** (-r flag):
  * Manages legacy password file for use with the RandNum UAM.
- * Format: name:hex_password(16):last_login(16):fail_count(8)
+ * Format: username:hex_password(16):last_login(16):fail_count(8)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -75,6 +75,11 @@
 #define HEXPASSWDLEN 16
 #define PASSWDLEN 8
 
+static int unhex(unsigned char x)
+{
+    return isdigit(x) ? x - '0' : toupper(x) + 10 - 'A';
+}
+
 /*
  * RFC 5054 group #2: 1536-bit MODP group. N is the safe prime, g = 2.
  */
@@ -106,72 +111,258 @@ static const unsigned char srp_N_bytes[SRP_NBYTES] = {
 };
 
 static char buf[MAXPATHLEN + 1];
+static const unsigned char hextable[] = "0123456789ABCDEF";
 
-/* if newpwd is null, convert buf from hex to binary. if newpwd isn't
- * null, convert newpwd to hex and save it in buf. */
-#define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
-static void convert_passwd(char *buf, char *newpwd, const int keyfd)
+static int randnum_make_keypath(const char *path, char *keypath,
+                                size_t keypath_size)
 {
-    uint8_t key[HEXPASSWDLEN];
+    size_t path_len = strnlen(path, keypath_size);
+
+    if (path_len > keypath_size - sizeof(".key")) {
+        fprintf(stderr,
+                "afppasswd: Randnum password file path is too long to locate companion key file.\n");
+        return -1;
+    }
+
+    strlcpy(keypath, path, keypath_size);
+    strlcat(keypath, ".key", keypath_size);
+    return 0;
+}
+
+static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
+                              const char *keypath)
+{
+    uint8_t encoded[HEXPASSWDLEN + 2];
+    ssize_t keylen;
+
+    if (lseek(keyfd, 0, SEEK_SET) < 0) {
+        fprintf(stderr, "afppasswd: could not seek Randnum key file%s%s: %s\n",
+                keypath ? " " : "", keypath ? keypath : "", strerror(errno));
+        return -1;
+    }
+
+    keylen = read(keyfd, encoded, sizeof(encoded));
+
+    if (keylen < 0) {
+        fprintf(stderr, "afppasswd: could not read Randnum key file%s%s: %s\n",
+                keypath ? " " : "", keypath ? keypath : "", strerror(errno));
+        return -1;
+    }
+
+    if (keylen != HEXPASSWDLEN &&
+            (keylen != HEXPASSWDLEN + 1 || encoded[HEXPASSWDLEN] != '\n')) {
+        fprintf(stderr,
+                "afppasswd: invalid Randnum key file%s%s: expected 16 hexadecimal characters with an optional trailing newline.\n",
+                keypath ? " " : "", keypath ? keypath : "");
+        return -1;
+    }
+
+    for (int i = 0; i < HEXPASSWDLEN; i++) {
+        if (!isxdigit(encoded[i])) {
+            fprintf(stderr,
+                    "afppasswd: invalid Randnum key file%s%s: expected hexadecimal characters only.\n",
+                    keypath ? " " : "", keypath ? keypath : "");
+            return -1;
+        }
+    }
+
+    for (int i = 0, j = 0; i < HEXPASSWDLEN; i += 2, j++) {
+        key[j] = (uint8_t)((unhex(encoded[i]) << 4) | unhex(encoded[i + 1]));
+    }
+
+    explicit_bzero(encoded, sizeof(encoded));
+    return 0;
+}
+
+static int randnum_open_keyfile(const char *path, int *keyfd_out)
+{
+    char keypath[MAXPATHLEN + 1];
+    uint8_t key[DES_KEY_SZ];
+    int keyfd;
+
+    if (randnum_make_keypath(path, keypath, sizeof(keypath)) < 0) {
+        return -1;
+    }
+
+    keyfd = open(keypath, O_RDONLY);
+
+    if (keyfd < 0) {
+        fprintf(stderr, "afppasswd: required Randnum key file %s is unavailable: %s\n",
+                keypath, strerror(errno));
+        return -1;
+    }
+
+    if (randnum_read_keyfd(keyfd, key, keypath) < 0) {
+        close(keyfd);
+        explicit_bzero(key, sizeof(key));
+        return -1;
+    }
+
+    explicit_bzero(key, sizeof(key));
+    *keyfd_out = keyfd;
+    return 0;
+}
+
+static int randnum_write_keyfile(const char *keypath)
+{
+    uint8_t key[DES_KEY_SZ];
+    char encoded[HEXPASSWDLEN + 1];
+    int fd;
+    gcry_randomize(key, sizeof(key), GCRY_STRONG_RANDOM);
+
+    for (int i = 0, j = 0; i < DES_KEY_SZ; i++, j += 2) {
+        encoded[j] = hextable[(key[i] & 0xF0) >> 4];
+        encoded[j + 1] = hextable[key[i] & 0x0F];
+    }
+
+    encoded[HEXPASSWDLEN] = '\n';
+    fd = open(keypath, O_WRONLY | O_CREAT | O_TRUNC, 0600);
+
+    if (fd < 0) {
+        fprintf(stderr, "afppasswd: can't create Randnum key file %s: %s\n",
+                keypath, strerror(errno));
+        explicit_bzero(key, sizeof(key));
+        explicit_bzero(encoded, sizeof(encoded));
+        return -1;
+    }
+
+    if (fchmod(fd, 0600) < 0) {
+        fprintf(stderr, "afppasswd: can't set permissions on Randnum key file %s: %s\n",
+                keypath, strerror(errno));
+        close(fd);
+        explicit_bzero(key, sizeof(key));
+        explicit_bzero(encoded, sizeof(encoded));
+        return -1;
+    }
+
+    if (write(fd, encoded, sizeof(encoded)) != (ssize_t)sizeof(encoded)) {
+        fprintf(stderr, "afppasswd: problem writing Randnum key file %s: %s\n",
+                keypath, strerror(errno));
+        close(fd);
+        explicit_bzero(key, sizeof(key));
+        explicit_bzero(encoded, sizeof(encoded));
+        return -1;
+    }
+
+    close(fd);
+    explicit_bzero(key, sizeof(key));
+    explicit_bzero(encoded, sizeof(encoded));
+    return 0;
+}
+
+static int randnum_ensure_keyfile(const char *path, int flags)
+{
+    char keypath[MAXPATHLEN + 1];
+    uint8_t key[DES_KEY_SZ];
+    int keyfd;
+
+    if (randnum_make_keypath(path, keypath, sizeof(keypath)) < 0) {
+        return -1;
+    }
+
+    keyfd = open(keypath, O_RDONLY);
+
+    if (keyfd < 0) {
+        if (errno != ENOENT) {
+            fprintf(stderr, "afppasswd: can't open Randnum key file %s: %s\n",
+                    keypath, strerror(errno));
+            return -1;
+        }
+
+        return randnum_write_keyfile(keypath);
+    }
+
+    if (randnum_read_keyfd(keyfd, key, keypath) == 0) {
+        close(keyfd);
+        explicit_bzero(key, sizeof(key));
+        return 0;
+    }
+
+    close(keyfd);
+    explicit_bzero(key, sizeof(key));
+
+    if (!(flags & OPT_FORCE)) {
+        fprintf(stderr,
+                "afppasswd: use -f with -r -c to replace invalid Randnum key file %s.\n",
+                keypath);
+        return -1;
+    }
+
+    return randnum_write_keyfile(keypath);
+}
+
+/* if newpwd is null, convert passwd_buf from hex to binary. if newpwd isn't
+ * null, convert newpwd to hex and save it in passwd_buf. */
+static int convert_passwd(char *passwd_buf, char *newpwd, const int keyfd)
+{
+    uint8_t key[DES_KEY_SZ];
     unsigned int i, j;
-    gcry_cipher_hd_t ctx;
+    gcry_cipher_hd_t ctx = NULL;
     gcry_error_t ctxerror;
 
     if (!newpwd) {
         /* convert to binary */
-        for (i = j = 0; i < sizeof(key); i += 2, j++) {
-            buf[j] = (unhex(buf[i]) << 4) | unhex(buf[i + 1]);
+        for (i = j = 0; i < HEXPASSWDLEN; i += 2, j++) {
+            passwd_buf[j] = (char)(uint8_t)((unhex(passwd_buf[i]) << 4) |
+                                            unhex(passwd_buf[i + 1]));
         }
 
         if (j <= DES_KEY_SZ) {
-            memset(buf + j, 0, sizeof(key) - j);
+            memset(passwd_buf + j, 0, HEXPASSWDLEN - j);
         }
     }
 
-    if (keyfd > -1) {
-        lseek(keyfd, 0, SEEK_SET);
+    if (keyfd < 0 || randnum_read_keyfd(keyfd, key, NULL) < 0) {
+        return -1;
+    }
 
-        if (read(keyfd, key, sizeof(key)) < 0) {
-            fprintf(stderr, "could not read key (%s)\n", strerror(errno));
-        }
+    ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
 
-        /* convert to binary */
-        for (i = j = 0; i < sizeof(key); i += 2, j++) {
-            key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-        }
-
-        if (j <= DES_KEY_SZ) {
-            memset(key + j, 0, sizeof(key) - j);
-        }
-
-        ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
-        ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
+    if (ctxerror) {
+        fprintf(stderr, "afppasswd: gcry_cipher_open failed: %s\n",
+                gcry_strerror(ctxerror));
         explicit_bzero(key, sizeof(key));
+        return -1;
+    }
 
-        if (newpwd) {
-            ctxerror = gcry_cipher_encrypt(ctx, newpwd, DES_KEY_SZ, NULL, 0);
-        } else {
-            /* decrypt the password */
-            ctxerror = gcry_cipher_decrypt(ctx, buf, DES_KEY_SZ, NULL, 0);
-        }
+    ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
+    explicit_bzero(key, sizeof(key));
 
+    if (ctxerror) {
+        fprintf(stderr, "afppasswd: gcry_cipher_setkey failed: %s\n",
+                gcry_strerror(ctxerror));
         gcry_cipher_close(ctx);
+        return -1;
     }
 
     if (newpwd) {
-        const unsigned char hextable[] = "0123456789ABCDEF";
+        ctxerror = gcry_cipher_encrypt(ctx, newpwd, DES_KEY_SZ, NULL, 0);
+    } else {
+        /* decrypt the password */
+        ctxerror = gcry_cipher_decrypt(ctx, passwd_buf, DES_KEY_SZ, NULL, 0);
+    }
 
+    if (ctxerror) {
+        fprintf(stderr, "afppasswd: Randnum password conversion failed: %s\n",
+                gcry_strerror(ctxerror));
+        gcry_cipher_close(ctx);
+        return -1;
+    }
+
+    gcry_cipher_close(ctx);
+
+    if (newpwd) {
         /* convert to hex */
         for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
-            buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
-            buf[j + 1] = hextable[newpwd[i] & 0x0F];
+            passwd_buf[j] = hextable[(newpwd[i] & 0xF0) >> 4];
+            passwd_buf[j + 1] = hextable[newpwd[i] & 0x0F];
         }
     }
+
+    return 0;
 }
 
 /* -------------------- SRP verifier functions -------------------- */
-
-static const unsigned char hextable[] = "0123456789ABCDEF";
 
 /*
  * Compute SRP verifier: x = SHA1(salt | SHA1(username | ":" | password)),
@@ -561,18 +752,14 @@ static int update_passwd(const char *path, const char *name, int flags,
     size_t pass_len;
     size_t name_len;
 
-    if ((fp = fopen(path, "r+")) == NULL) {
-        fprintf(stderr, "afppasswd: can't open %s: %s\n", path, strerror(errno));
+    if (randnum_open_keyfile(path, &keyfd) < 0) {
         return -1;
     }
 
-    /* open the key file if it exists */
-    strlcpy(buf, path, sizeof(buf));
-    size_t path_len = strnlen(path, sizeof(buf));
-
-    if (path_len < sizeof(buf) - 5) {
-        strlcat(buf, ".key", sizeof(buf));
-        keyfd = open(buf, O_RDONLY);
+    if ((fp = fopen(path, "r+")) == NULL) {
+        fprintf(stderr, "afppasswd: can't open %s: %s\n", path, strerror(errno));
+        close(keyfd);
+        return -1;
     }
 
     pass_len = strnlen(pass, PASSWDLEN + 1);
@@ -615,7 +802,11 @@ found_entry:
     /* need to verify against old password */
     if ((flags & OPT_ISROOT) == 0) {
         passwd = getpass("Enter OLD AFP password: ");
-        convert_passwd(p, NULL, keyfd);
+
+        if (convert_passwd(p, NULL, keyfd) < 0) {
+            err = -1;
+            goto update_done;
+        }
 
         if (strncmp(passwd, p, PASSWDLEN)) {
             fprintf(stderr, "afppasswd: invalid password.\n");
@@ -675,7 +866,12 @@ found_entry:
     if (strcmp(passwd, password) == 0 || pass_len > 0) {
         struct flock lock;
         int fd = fileno(fp);
-        convert_passwd(p, password, keyfd);
+
+        if (convert_passwd(p, password, keyfd) < 0) {
+            err = -1;
+            goto update_done;
+        }
+
         lock.l_type = F_WRLCK;
         lock.l_start = pos;
         lock.l_len = 1;
@@ -685,7 +881,7 @@ found_entry:
         fwrite(buf, p - buf + HEXPASSWDLEN, 1, fp);
         lock.l_type = F_UNLCK;
         fcntl(fd, F_SETLK, &lock);
-        printf("afppasswd: updated password.\n");
+        printf("afppasswd: updated Randnum password.\n");
     } else {
         fprintf(stderr, "afppasswd: passwords don't match!\n");
         err = -1;
@@ -873,6 +1069,10 @@ int main(int argc, char **argv)
         }
 
         if (flags & OPT_RANDNUM) {
+            if (randnum_ensure_keyfile(path, flags) < 0) {
+                return -1;
+            }
+
             return create_file(path, uid_min);
         } else {
             return create_srp_file(path, uid_min);

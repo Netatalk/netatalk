@@ -39,13 +39,15 @@ weak password protection and are discouraged. They should only be enabled
 to support very old AFP clients that cannot use SRP, DHX, or DHX2.
 Randnum requires a file named *afppasswd.key* at the same path as the
 *afppasswd* file. The key file contains a hex-encoded 8-byte DES key that
-Randnum uses to encrypt the stored password. The Randnum UAM refuses to load
-if the key file is missing or unavailable.
+Randnum uses to encrypt the stored password. **afppasswd -r -c** creates
+this key file if it is missing and validates an existing one. Randnum
+password updates refuse to proceed unless the key file is present and valid.
+The Randnum UAM logs a warning at startup when the key file is missing or
+invalid, but authentication and password changes still fail until it is fixed.
 
-The key file must begin with 16 hexadecimal characters, such as
-`0123456789ABCDEF`; Randnum reads those first 16 bytes as the key material,
-so a trailing newline after them is harmless. Generate a fresh random key for
-each server instead of reusing this example value.
+The key file must contain exactly 16 hexadecimal characters, such as
+`0123456789ABCDEF`, with an optional trailing newline. Generate a fresh random
+key for each server instead of reusing this example value.
 
 # Examples
 
@@ -69,6 +71,9 @@ Administrator managing the legacy Randnum file at a non-default path:
 
     example% sudo afppasswd -r -c -p /usr/local/etc/afppasswd
     example% sudo afppasswd -r -a olduser -p /usr/local/etc/afppasswd
+    Enter NEW AFP password: (hidden)
+    Enter NEW AFP password again: (hidden)
+    afppasswd: updated Randnum password.
 
 # Options
 
@@ -83,7 +88,8 @@ user and do not accept this option.
 > Create and initialise the password/verifier file. Existing entries are
 populated as placeholders for every local system user with a uid at or
 above the **-u** threshold; passwords still need to be set individually
-with **-a**.
+with **-a**. With **-r**, also create or validate the companion
+*afppasswd.key* file for the Randnum UAM.
 
 **-f**
 
@@ -133,6 +139,11 @@ directory. One line per user, formatted as
 > Default legacy Randnum file, located under the netatalk configuration
 directory. Used only with **-r**. Override with **-p** or with the
 "**passwd file**" option in **afp.conf**(5).
+
+*afppasswd.key*
+
+> Companion key file for the legacy Randnum file. It must contain exactly
+16 hexadecimal characters with an optional trailing newline.
 
 # See Also
 
