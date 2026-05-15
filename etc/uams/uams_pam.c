@@ -24,6 +24,7 @@
 #endif
 
 #include <atalk/afp.h>
+#include <atalk/constant_time.h>
 #include <atalk/uam.h>
 #include <atalk/util.h>
 #include <atalk/logger.h>
@@ -370,7 +371,7 @@ static int pam_changepw(void *obj _U_, char *username,
     explicit_bzero(ibuf, PASSWDLEN * 2);
 
     /* Quick check for the same password */
-    if (memcmp(oldpw, newpw, PASSWDLEN) == 0) {
+    if (atalk_ct_memcmp(oldpw, newpw, PASSWDLEN) == 0) {
         explicit_bzero(oldpw, PASSWDLEN);
         explicit_bzero(newpw, PASSWDLEN);
         return AFPERR_PWDSAME;

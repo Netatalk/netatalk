@@ -2,6 +2,7 @@ util_sources = [
     'afp_util.c',
     'atalk_addr.c',
     'bprint.c',
+    'constant_time.c',
     'cnid.c',
     'fault.c',
     'getiface.c',

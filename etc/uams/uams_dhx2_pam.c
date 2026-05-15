@@ -25,6 +25,7 @@
 #endif
 
 #include <atalk/afp.h>
+#include <atalk/constant_time.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/uam.h>
@@ -881,7 +882,7 @@ static int changepw_3(void *obj _U_,
     ibuf[511] = '\0';
 
     /* check if new and old password are equal */
-    if (memcmp(ibuf, ibuf + 256, 255) == 0) {
+    if (atalk_ct_memcmp(ibuf, ibuf + 256, 255) == 0) {
         LOG(log_info, logtype_uams, "DHX2 Chgpwd: new and old password are equal");
         ret = AFPERR_PWDSAME;
         goto error_ctx;

@@ -7,6 +7,7 @@ headers = [
     'asp.h',
     'atp.h',
     'cnid.h',
+    'constant_time.h',
     'ddp.h',
     'ea.h',
     'globals.h',
