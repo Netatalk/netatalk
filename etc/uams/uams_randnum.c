@@ -112,6 +112,7 @@ static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
 
     if (lseek(keyfd, 0, SEEK_SET) < 0) {
         LOG(log_info, logtype_uams, "lseek(keyfd) failed (%s)", strerror(errno));
+        explicit_bzero(encoded, sizeof(encoded));
         return -1;
     }
 
@@ -119,6 +120,7 @@ static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
 
     if (keylen < 0) {
         LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
+        explicit_bzero(encoded, sizeof(encoded));
         return -1;
     }
 
@@ -126,12 +128,14 @@ static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
             (keylen != HEXPASSWDLEN + 1 || encoded[HEXPASSWDLEN] != '\n')) {
         LOG(log_info, logtype_uams,
             "invalid key length in afppasswd key file");
+        explicit_bzero(encoded, sizeof(encoded));
         return -1;
     }
 
     for (int i = 0; i < HEXPASSWDLEN; i++) {
         if (!isxdigit(encoded[i])) {
             LOG(log_info, logtype_uams, "invalid character in afppasswd key file");
+            explicit_bzero(encoded, sizeof(encoded));
             return -1;
         }
     }
