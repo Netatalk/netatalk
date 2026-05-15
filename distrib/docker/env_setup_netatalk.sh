@@ -92,28 +92,6 @@ fi
 echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 
 RANDNUM_PASSWD_FILE="/etc/netatalk/afppasswd"
-RANDNUM_KEY_FILE="$RANDNUM_PASSWD_FILE.key"
-
-ensure_randnum_key_file() {
-    if [ -f "$RANDNUM_KEY_FILE" ]; then
-        chown root:root "$RANDNUM_KEY_FILE" && chmod 600 "$RANDNUM_KEY_FILE"
-        return $?
-    fi
-
-    echo "*** Creating RandNum password key file"
-    old_umask=$(umask)
-    umask 077
-    randnum_key=$(od -An -N8 -tx1 /dev/urandom)
-    if ! printf '%s\n' "$randnum_key" | tr -d ' \n' > "$RANDNUM_KEY_FILE"; then
-        umask "$old_umask"
-        return 1
-    fi
-    if ! chown root:root "$RANDNUM_KEY_FILE" || ! chmod 600 "$RANDNUM_KEY_FILE"; then
-        umask "$old_umask"
-        return 1
-    fi
-    umask "$old_umask"
-}
 
 if [ -f "$RANDNUM_PASSWD_FILE" ]; then
     rm -f "$RANDNUM_PASSWD_FILE"
@@ -148,14 +126,12 @@ esac
 # Creating credentials for the RandNum UAM
 RANDNUM_OK=0
 if [ "$RANDNUM_WANTED" = "1" ]; then
-    if ensure_randnum_key_file; then
-        afppasswd -c -r
-
+    if afppasswd -c -f -r; then
         if afppasswd -a "$AFP_USER" -f -r -w "$AFP_PASS" > /dev/null; then
             RANDNUM_OK=1
         fi
     else
-        echo "ERROR: Failed to secure $RANDNUM_KEY_FILE; disabling RandNum UAM" >&2
+        echo "ERROR: Failed to initialize RandNum password file; disabling RandNum UAM" >&2
     fi
 fi
 

@@ -60,7 +60,12 @@ static uint8_t         randbuf[8];
 
 
 #define PASSWD_ILLEGAL '*'
-#define unhex(x)  (isdigit(x) ? (x) - '0' : toupper(x) + 10 - 'A')
+#define HEXPASSWDLEN (DES_KEY_SZ * 2)
+
+static int unhex(unsigned char x)
+{
+    return isdigit(x) ? x - '0' : toupper(x) + 10 - 'A';
+}
 
 static int randnum_cipher_check(const char *op, gcry_error_t err)
 {
@@ -79,9 +84,9 @@ static int afppasswd_open_keyfile(const char *path, const int pathlen)
     int keyfd;
 
     if (pathlen > (int) sizeof(keypath) - 5) {
-        LOG(log_error, logtype_uams,
+        LOG(log_warning, logtype_uams,
             "UAM RandNum: afppasswd path \"%s\" is too long to locate "
-            "the required companion key file; refusing to use Randnum.",
+            "the required companion key file.",
             path);
         return -1;
     }
@@ -91,50 +96,96 @@ static int afppasswd_open_keyfile(const char *path, const int pathlen)
     keyfd = open(keypath, O_RDONLY);
 
     if (keyfd < 0) {
-        LOG(log_error, logtype_uams,
+        LOG(log_warning, logtype_uams,
             "UAM RandNum: required afppasswd key file \"%s\" is unavailable "
-            "(%s); refusing to use Randnum because passwords in \"%s\" "
-            "would otherwise be stored and used in clear text.",
+            "(%s); passwords in \"%s\" cannot be used securely without it.",
             keypath, strerror(errno), path);
     }
 
     return keyfd;
 }
 
-static int randnum_check_passwdfile_key(void *obj)
+static int afppasswd_read_keyfile(int keyfd, uint8_t key[DES_KEY_SZ])
+{
+    uint8_t encoded[HEXPASSWDLEN + 2];
+    ssize_t keylen;
+
+    if (lseek(keyfd, 0, SEEK_SET) < 0) {
+        LOG(log_info, logtype_uams, "lseek(keyfd) failed (%s)", strerror(errno));
+        return -1;
+    }
+
+    keylen = read(keyfd, encoded, sizeof(encoded));
+
+    if (keylen < 0) {
+        LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
+        return -1;
+    }
+
+    if (keylen != HEXPASSWDLEN &&
+            (keylen != HEXPASSWDLEN + 1 || encoded[HEXPASSWDLEN] != '\n')) {
+        LOG(log_info, logtype_uams,
+            "invalid key length in afppasswd key file");
+        return -1;
+    }
+
+    for (int i = 0; i < HEXPASSWDLEN; i++) {
+        if (!isxdigit(encoded[i])) {
+            LOG(log_info, logtype_uams, "invalid character in afppasswd key file");
+            return -1;
+        }
+    }
+
+    for (int i = 0, j = 0; i < HEXPASSWDLEN; i += 2, j++) {
+        key[j] = (uint8_t)((unhex(encoded[i]) << 4) | unhex(encoded[i + 1]));
+    }
+
+    explicit_bzero(encoded, sizeof(encoded));
+    return 0;
+}
+
+static void randnum_warn_passwdfile_key(void *obj)
 {
     char *passwdfile = NULL;
+    uint8_t key[DES_KEY_SZ];
     int keyfd;
     size_t len = UAM_PASSWD_FILENAME;
 
     if (uam_afpserver_option(obj, UAM_OPTION_PASSWDOPT,
                              (void *) &passwdfile, &len) < 0) {
-        LOG(log_error, logtype_uams,
-            "UAM RandNum: failed to get afppasswd file option; refusing to load Randnum.");
-        return -1;
+        LOG(log_warning, logtype_uams,
+            "UAM RandNum: failed to get afppasswd file option; Randnum will register but authentication will fail until the password file and companion key are available.");
+        return;
     }
 
     if (!passwdfile || len == 0) {
-        LOG(log_error, logtype_uams,
-            "UAM RandNum: afppasswd file is not configured; refusing to load Randnum.");
-        return -1;
+        LOG(log_warning, logtype_uams,
+            "UAM RandNum: afppasswd file is not configured; Randnum will register but authentication will fail until the password file and companion key are available.");
+        return;
     }
 
     if (*passwdfile == '~') {
-        LOG(log_error, logtype_uams,
+        LOG(log_warning, logtype_uams,
             "UAM RandNum: home password files cannot be protected by the "
-            "required afppasswd key file; refusing to load Randnum.");
-        return -1;
+            "required afppasswd key file; Randnum will register but authentication will fail.");
+        return;
     }
 
     keyfd = afppasswd_open_keyfile(passwdfile, (int) len);
 
     if (keyfd < 0) {
-        return -1;
+        LOG(log_warning, logtype_uams,
+            "UAM RandNum: Randnum will register but authentication will fail until the required key file is available.");
+        return;
     }
 
+    if (afppasswd_read_keyfile(keyfd, key) < 0) {
+        LOG(log_warning, logtype_uams,
+            "UAM RandNum: Randnum will register but authentication will fail until the required key file is valid.");
+    }
+
+    explicit_bzero(key, sizeof(key));
     close(keyfd);
-    return 0;
 }
 
 /*!
@@ -165,12 +216,11 @@ static int afppasswd(const struct passwd *pwd,
                      unsigned char *passwd, int len,
                      const int set)
 {
-    uint8_t key[DES_KEY_SZ * 2];
+    uint8_t key[DES_KEY_SZ];
     char buf[MAXPATHLEN + 1], *p;
     FILE *fp;
     unsigned int i, j;
     int keyfd = -1, err = 0;
-    ssize_t keylen;
     off_t pos;
     gcry_cipher_hd_t ctx = NULL;
     gcry_error_t ctxerror;
@@ -223,45 +273,18 @@ afppasswd_found:
 
     if (!set) {
         /* convert to binary. */
-        for (i = j = 0; i < sizeof(key); i += 2, j++) {
+        for (i = j = 0; i < HEXPASSWDLEN; i += 2, j++) {
             p[j] = (unhex(p[i]) << 4) | unhex(p[i + 1]);
         }
 
         if (j <= DES_KEY_SZ) {
-            memset(p + j, 0, sizeof(key) - j);
+            memset(p + j, 0, HEXPASSWDLEN - j);
         }
     }
 
-    /* read in the hex representation of an 8-byte key */
-    keylen = read(keyfd, key, sizeof(key));
-
-    if (keylen < 0) {
-        LOG(log_info, logtype_uams, "read(keyfd) failed (%s)", strerror(errno));
+    if (afppasswd_read_keyfile(keyfd, key) < 0) {
         err = AFPERR_ACCESS;
         goto afppasswd_done;
-    }
-
-    if (keylen != sizeof(key)) {
-        LOG(log_info, logtype_uams, "invalid key length in afppasswd key file");
-        err = AFPERR_ACCESS;
-        goto afppasswd_done;
-    }
-
-    for (i = 0; i < sizeof(key); i++) {
-        if (!isxdigit(key[i])) {
-            LOG(log_info, logtype_uams, "invalid character in afppasswd key file");
-            err = AFPERR_ACCESS;
-            goto afppasswd_done;
-        }
-    }
-
-    /* convert to binary key */
-    for (i = j = 0; i < sizeof(key); i += 2, j++) {
-        key[j] = (unhex(key[i]) << 4) | unhex(key[i + 1]);
-    }
-
-    if (j <= DES_KEY_SZ) {
-        memset(key + j, 0, sizeof(key) - j);
     }
 
     ctxerror = gcry_cipher_open(&ctx, GCRY_CIPHER_DES, GCRY_CIPHER_MODE_ECB, 0);
@@ -272,6 +295,7 @@ afppasswd_found:
     }
 
     ctxerror = gcry_cipher_setkey(ctx, key, DES_KEY_SZ);
+    explicit_bzero(key, sizeof(key));
 
     if (randnum_cipher_check("gcry_cipher_setkey", ctxerror) < 0) {
         err = AFPERR_ACCESS;
@@ -306,16 +330,17 @@ afppasswd_close_cipher:
 
     if (set) {
         const unsigned char hextable[] = "0123456789ABCDEF";
+        uint8_t encoded[HEXPASSWDLEN];
         struct flock lock;
         int fd = fileno(fp);
 
         /* convert to hex password */
         for (i = j = 0; i < DES_KEY_SZ; i++, j += 2) {
-            key[j] = hextable[(passwd[i] & 0xF0) >> 4];
-            key[j + 1] = hextable[passwd[i] & 0x0F];
+            encoded[j] = hextable[(passwd[i] & 0xF0) >> 4];
+            encoded[j + 1] = hextable[passwd[i] & 0x0F];
         }
 
-        memcpy(p, key, sizeof(key));
+        memcpy(p, encoded, sizeof(encoded));
         /* get exclusive access to the user's password entry. we don't
          * worry so much on reads. in the worse possible case there, the
          * user will just need to re-enter their password. */
@@ -325,9 +350,10 @@ afppasswd_close_cipher:
         lock.l_whence = SEEK_SET;
         fseek(fp, pos, SEEK_SET);
         fcntl(fd, F_SETLKW, &lock);
-        fwrite(buf, p - buf + sizeof(key), 1, fp);
+        fwrite(buf, p - buf + sizeof(encoded), 1, fp);
         lock.l_type = F_UNLCK;
         fcntl(fd, F_SETLK, &lock);
+        explicit_bzero(encoded, sizeof(encoded));
     } else {
         memcpy(passwd, p, len);
     }
@@ -679,9 +705,7 @@ static int randnum_login_ext(void *obj, char *uname, struct passwd **uam_pwd,
 
 static int uam_setup(void *obj, const char *path)
 {
-    if (randnum_check_passwdfile_key(obj) < 0) {
-        return -1;
-    }
+    randnum_warn_passwdfile_key(obj);
 
     if (uam_register(UAM_SERVER_LOGIN_EXT, path, "Randnum exchange",
                      randnum_login, randnum_logincont, NULL, randnum_login_ext) < 0) {
