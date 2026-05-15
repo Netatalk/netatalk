@@ -97,8 +97,8 @@ test_exit:
 /* ------------------------- */
 STATIC void test426()
 {
-    char *name = "t426 Symlink";
-    char *target = "t426 dest";
+    char name[] = "t426 Symlink";
+    char target[] = "t426 dest";
     int  ofs =  3 * sizeof(uint16_t);
     struct afp_filedir_parms filedir = { 0 };
     uint16_t bitmap;
@@ -138,7 +138,7 @@ STATIC void test426()
         goto test_exit;
     }
 
-    if (FPWrite(Conn, fork, 0, (int)strlen(target), target, 0)) {
+    if (FPWrite(Conn, fork, 0, (int)sizeof(target) - 1, target, 0)) {
         test_nottested();
         goto test_exit;
     }

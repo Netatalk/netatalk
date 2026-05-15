@@ -102,6 +102,10 @@ static int path_is_inside_volume(const struct vol *vol, const char *path)
 {
     size_t volpath_len = strlen(vol->v_path);
 
+    if (volpath_len == 1 && vol->v_path[0] == '/') {
+        return path[0] == '/';
+    }
+
     if (strncmp(path, vol->v_path, volpath_len) != 0) {
         return 0;
     }
