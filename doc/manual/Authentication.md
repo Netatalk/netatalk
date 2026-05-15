@@ -156,10 +156,15 @@ An overview of the officially supported UAMs on Macs.
 | UAM              | No User Auth  | Cleartxt Passwrd | RandNum Exchange | DHCAST128    | DHX2          | Kerberos V       | SRP              |
 | ---------------- | ------------- | ---------------- | ---------------- | ------------ | ------------- | ---------------- | ---------------- |
 | Password length  | guest access  | max 8 chars      | max 8 chars      | max 64 chars | max 255 chars | Kerberos tickets | max 255 chars    |
-| Client support   | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0. Has to be activated explicitly in later Mac OS X versions | built-in into almost all Mac OS versions | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3, integrated in macOS's AFP client | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.7 |
+| Client support   | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0; deprecated in 10.7 and later | built-in into almost all Mac OS versions; deprecated in 10.7 and later | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3; deprecated in 10.7 and later | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.7 |
 | Encryption       | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all costs. | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires separately stored server-side passwords. | Password will be encrypted with 128 bit CAST, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted with 128 bit CAST in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. | Password is never sent; SRP uses a verifier and mutual proofs (M1/M2) to authenticate both client and server, providing protection against man‑in‑the‑middle attacks. |
 | Server support   | uams_guest.so | uams_clrtxt.so   | uams_randnum.so  | uams_dhx.so  | uams_dhx2.so  | uams_gss.so      | uams_srp.so      |
 | Password storage | None          | Either system auth or PAM | Separate *afppasswd* file (DES-encrypted) | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center | Separate *afppasswd.srp* verifier file |
+
+See the Apple Support knowledge base article on [Connecting to legacy AFP services](https://support.apple.com/en-us/101137)
+on how to enable deprecated legacy UAM in macOS.
+It is not recommended that you do this in production environments, however,
+since this may expose AFP user credentials in network traffic.
 
 Note that a number of open-source and other third-party AFP clients exist.
 Refer to their documentation for a list of supported UAMs.
