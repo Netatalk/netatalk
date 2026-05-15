@@ -9,12 +9,11 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <arpa/inet.h>
-#include <arpa/inet.h>
 #include <errno.h>
-#include <errno.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <net/if.h>
 #include <netdb.h>
-#include <netinet/in.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <stdlib.h>
@@ -394,11 +393,97 @@ static int dbd_rpc(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
 }
 
 /* -------------------- */
+/*!
+ * @brief Inner transmit body, signal handlers must already be installed
+ *
+ * Caller must have installed sig_handler for SIGTERM/SIGINT and reset
+ * stop_signal to 0; otherwise the first loop iteration breaks immediately
+ * and returns -1 (which the caller would misread as an I/O failure).
+ *
+ * Used directly by cnid_dbd_find()'s pagination loop, which installs
+ * sigaction once across all batches.
+ */
+static int transmit_locked(CNID_bdb_private *db,
+                           struct cnid_dbd_rqst *rqst,
+                           struct cnid_dbd_rply *rply)
+{
+    time_t orig, t;
+    /* No errors so far - prevents sleep on first try. */
+    int clean = 1;
+
+    while (1) {
+        if (stop_signal) {
+            break;
+        }
+
+        if (db->fd == -1) {
+            LOG(log_maxdebug, logtype_cnid,
+                "transmit_locked: connecting to cnid_dbd ...");
+
+            if ((db->fd = init_tsock(db)) < 0) {
+                goto transmit_fail;
+            }
+
+            if (db->notfirst) {
+                LOG(log_debug7, logtype_cnid,
+                    "transmit_locked: reconnected to cnid_dbd");
+            } else {
+                db->notfirst = 1;
+            }
+
+            LOG(log_debug, logtype_cnid,
+                "transmit_locked: attached to '%s'", db->vol->v_localname);
+        }
+
+        if (!dbd_rpc(db, rqst, rply)) {
+            LOG(log_maxdebug, logtype_cnid, "transmit_locked: {done}");
+            return 0;
+        }
+
+transmit_fail:
+
+        if (db->fd != -1) {
+            close(db->fd);
+            /* FD not valid... will need to reconnect */
+            db->fd = -1;
+        }
+
+        /* errno carefully injected in tsock_getfd */
+        if (errno == ECONNREFUSED) {
+            LOG(log_error, logtype_cnid,
+                "transmit_locked: connection refused (volume %s)",
+                db->vol->v_localname);
+            return -1;
+        }
+
+        /* Don't sleep if just got disconnected by cnid server. */
+        if (!clean) {
+            time(&t);
+
+            if (t - orig > MAX_DELAY) {
+                LOG(log_error, logtype_cnid,
+                    "transmit_locked: Request to dbd daemon "
+                    "(volume %s) timed out.", db->vol->v_localname);
+                return -1;
+            }
+
+            /* Sleep a little before retry. */
+            delay(1);
+        } else {
+            /* False; next time sleep. */
+            clean = 0;
+            time(&orig);
+        }
+    }
+
+    return -1;
+}
+
+/* -------------------- */
 static int transmit(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
                     struct cnid_dbd_rply *rply)
 {
-    time_t orig, t;
-    int clean = 1; /* no errors so far - to prevent sleep on first try */
+    int ret;
     struct sigaction sa, old_sa_term, old_sa_int;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = sig_handler;
@@ -407,65 +492,7 @@ static int transmit(CNID_bdb_private *db, struct cnid_dbd_rqst *rqst,
     sigaction(SIGTERM, &sa, &old_sa_term);
     sigaction(SIGINT, &sa, &old_sa_int);
     stop_signal = 0;
-
-    while (1) {
-        if (stop_signal) {
-            break;
-        }
-
-        if (db->fd == -1) {
-            LOG(log_maxdebug, logtype_cnid, "transmit: connecting to cnid_dbd ...");
-
-            if ((db->fd = init_tsock(db)) < 0) {
-                goto transmit_fail;
-            }
-
-            if (db->notfirst) {
-                LOG(log_debug7, logtype_cnid, "transmit: reconnected to cnid_dbd");
-            } else { /* db->notfirst == 0 */
-                db->notfirst = 1;
-            }
-
-            LOG(log_debug, logtype_cnid, "transmit: attached to '%s'",
-                db->vol->v_localname);
-        }
-
-        if (!dbd_rpc(db, rqst, rply)) {
-            LOG(log_maxdebug, logtype_cnid, "transmit: {done}");
-            return 0;
-        }
-
-transmit_fail:
-
-        if (db->fd != -1) {
-            close(db->fd);
-            db->fd = -1; /* FD not valid... will need to reconnect */
-        }
-
-        if (errno == ECONNREFUSED) { /* errno carefully injected in tsock_getfd */
-            /* give up */
-            LOG(log_error, logtype_cnid, "transmit: connection refused (volume %s)",
-                db->vol->v_localname);
-            return -1;
-        }
-
-        if (!clean) { /* don't sleep if just got disconnected by cnid server */
-            time(&t);
-
-            if (t - orig > MAX_DELAY) {
-                LOG(log_error, logtype_cnid,
-                    "transmit: Request to dbd daemon (volume %s) timed out.", db->vol->v_localname);
-                return -1;
-            }
-
-            /* sleep a little before retry */
-            delay(1);
-        } else {
-            clean = 0; /* false... next time sleep */
-            time(&orig);
-        }
-    }
-
+    ret = transmit_locked(db, rqst, rply);
     sigaction(SIGTERM, &old_sa_term, NULL);
     sigaction(SIGINT, &old_sa_int, NULL);
 
@@ -473,7 +500,7 @@ transmit_fail:
         raise(stop_signal);
     }
 
-    return -1;
+    return ret;
 }
 
 /* ---------------------- */
@@ -878,61 +905,192 @@ cnid_t cnid_dbd_lookup(struct _cnid_db *cdb, const struct stat *st, cnid_t did,
 }
 
 /* ---------------------- */
+/*!
+ * @brief Backend implementation of cnid_find() for the DBD daemon backend
+ *
+ * Parameter validation is performed once in the wrapper at libatalk/cnid/cnid.c.
+ * This function trusts that cdb, name, namelen, buffer and buflen are sane and
+ * focuses on driving the paginated SEARCH RPC to cnid_dbd.
+ *
+ * The single cleanup path (`goto out`) ensures signal-handler restoration and
+ * `more_available` write-back happen in exactly one place — every error arm
+ * goes through it. *more_available is set to true if the result set was
+ * truncated by the daemon offset cap, the wall-clock deadline, signal-induced
+ * abort, or the buffer-fit guard; written only on success (the wrapper has
+ * already pre-zeroed it for error paths).
+ */
 int cnid_dbd_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                  void *buffer, size_t buflen)
+                  void *buffer, size_t buflen, bool *more_available)
 {
-    CNID_bdb_private *db;
+    CNID_bdb_private *db = cdb->cnid_db_private;
     struct cnid_dbd_rqst rqst;
     struct cnid_dbd_rply rply;
-    int count;
+    int      total = 0;
+    int      batch;
+    int      max_results;
+    /* Default: error. */
+    int      rv = -1;
+    uint32_t offset = 0;
+    bool     more_local = false;
+    /* Signal-induced loop exit. */
+    bool     stop_aborted = false;
+    /* 4-byte offset prefix + name. */
+    char     payload[sizeof(uint32_t) + MAXPATHLEN];
+    time_t   deadline_ts;
+    struct sigaction sa, old_sa_term, old_sa_int;
+    max_results = (int)(buflen / sizeof(cnid_t));
+    deadline_ts = time(NULL) + DBD_FIND_DEADLINE_SEC;
+    /* %.*s is critical: name is documented as not necessarily NUL-
+     * terminated. namelen is bounded in [1, MAXPATHLEN - sizeof(uint32_t)]
+     * by the cnid_find() wrapper, so the (int) cast is safe. */
+    LOG(log_debug, logtype_cnid,
+        "cnid_find(\"%.*s\"), max_results=%d, deadline=%ds",
+        (int)namelen, name, max_results, DBD_FIND_DEADLINE_SEC);
+    /* Install sigaction once across all batches; ~100x fewer syscalls vs
+     * per-batch transmit() install/restore. */
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = sig_handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sigaction(SIGTERM, &sa, &old_sa_term);
+    sigaction(SIGINT,  &sa, &old_sa_int);
+    stop_signal = 0;
 
-    if (!cdb || !(db = cdb->cnid_db_private) || !name) {
-        LOG(log_error, logtype_cnid, "cnid_find: Parameter error");
-        errno = CNID_ERR_PARAM;
-        return CNID_INVALID;
+    while (total < max_results) {
+        /* Loop exit due to signal: treat the partial total as a successful
+         * return; cleanup raises the signal afterwards. stop_aborted=true
+         * forces more_available=true so a 0-result signal-aborted search is
+         * not misreported as "no matches". */
+        if (stop_signal) {
+            stop_aborted = true;
+            break;
+        }
+
+        if (time(NULL) >= deadline_ts) {
+            /* %.*s: see comment at function entry. */
+            LOG(log_warning, logtype_cnid,
+                "cnid_find(\"%.*s\"): wall-clock %ds exceeded after %d "
+                "results; returning partial set",
+                (int)namelen, name, DBD_FIND_DEADLINE_SEC, total);
+            more_local = true;
+            break;
+        }
+
+        if (offset >= (uint32_t)DBD_SEARCH_MAX_OFFSET) {
+            /* %.*s: see comment at function entry. */
+            LOG(log_warning, logtype_cnid,
+                "cnid_find(\"%.*s\"): reached daemon offset cap (%u)",
+                (int)namelen, name, (unsigned)DBD_SEARCH_MAX_OFFSET);
+            more_local = true;
+            break;
+        }
+
+        /* Buffer-fit guard: stop if remaining buffer cannot hold a full
+         * batch. dbd_rpc() rejects oversize replies. Always allow at least
+         * one iteration so a 100-cnid buffer still gets its full reply. */
+        if ((max_results - total) < DBD_MAX_SRCH_RSLTS && total > 0) {
+            more_local = true;
+            break;
+        }
+
+        /* Build SEARCH payload: 4-byte native-byte-order offset prefix
+         * followed by the search-name bytes. */
+        memcpy(payload, &offset, sizeof(offset));
+        memcpy(payload + sizeof(offset), name, namelen);
+        RQST_RESET(&rqst);
+        /* Defensive: zero rply between iterations so a future partial-write
+         * of rply (e.g. on short read) cannot leak stale fields from the
+         * prior batch into this one. */
+        memset(&rply, 0, sizeof(rply));
+        rqst.op      = CNID_DBD_OP_SEARCH;
+        rqst.name    = payload;
+        rqst.namelen = sizeof(offset) + namelen;
+        rply.name    = (char *)buffer + ((size_t)total * sizeof(cnid_t));
+        rply.namelen = (size_t)(max_results - total) * sizeof(cnid_t);
+
+        if (transmit_locked(db, &rqst, &rply) < 0) {
+            /*
+             * transmit_locked() returns -1 for both genuine I/O failures
+             * (ECONNREFUSED, MAX_DELAY timeout) and signal-driven exits.
+             * The only side-channel that disambiguates them is stop_signal
+             * itself, which is left non-zero only by the signal arm.
+             *
+             * Treat the signal case as a partial-success exit: report the
+             * partial total to the caller with more_available = true.
+             * Test stop_signal first so a real I/O error coincident with
+             * a stale stop_signal still surfaces a partial-but-aborted
+             * return rather than a spurious CNID_ERR_DB.
+             */
+            if (stop_signal) {
+                stop_aborted = true;
+                break;
+            }
+
+            errno = CNID_ERR_DB;
+            /* rv stays -1 */
+            goto out;
+        }
+
+        switch (rply.result) {
+        case CNID_DBD_RES_SRCH_CNT:
+            batch = (int)(rply.namelen / sizeof(cnid_t));
+            total  += batch;
+            offset += (uint32_t)batch;
+            more_local = true;
+            LOG(log_debug, logtype_cnid,
+                "cnid_find: batch of %d (total %d), continuing",
+                batch, total);
+            break;
+
+        case CNID_DBD_RES_SRCH_DONE:
+            batch = (int)(rply.namelen / sizeof(cnid_t));
+            total += batch;
+            more_local = false;
+            LOG(log_debug, logtype_cnid,
+                "cnid_find: final batch of %d (total %d)", batch, total);
+            goto success;
+
+        case CNID_DBD_RES_ERR_DB:
+            LOG(log_error, logtype_cnid, "cnid_find: daemon DB error");
+            errno = CNID_ERR_DB;
+            /* rv stays -1 */
+            goto out;
+
+        default:
+            /* Per operator policy, mixed-version deployments are out of
+             * scope; any unexpected reply code (including the legacy
+             * RES_OK/RES_NOTFOUND from a pre-pagination daemon) is a
+             * protocol violation that aborts the worker, matching the
+             * convention of every other cnid_dbd_* op in this file. */
+            LOG(log_error, logtype_cnid,
+                "cnid_dbd_find: unexpected result code %d", rply.result);
+            abort();
+        }
     }
 
-    if (namelen > MAXPATHLEN) {
-        LOG(log_error, logtype_cnid, "cnid_find: Path name is too long");
-        errno = CNID_ERR_PATH;
-        return CNID_INVALID;
+success:
+    rv = total;
+out:
+
+    /* Contract: write back only on success. On error the caller MUST NOT
+     * inspect the value (documented in cnid.c). The wrapper pre-zeroes
+     * *more_available, so leaving it untouched on error is safe.
+     * stop_aborted ORs into more_local so a signal-aborted search before
+     * the first batch still reports the search as incomplete. */
+    if (more_available) {
+        *more_available = (rv < 0) ? false : (more_local || stop_aborted);
     }
 
-    LOG(log_debug, logtype_cnid, "cnid_find(\"%s\")", name);
-    RQST_RESET(&rqst);
-    rqst.op = CNID_DBD_OP_SEARCH;
-    rqst.name = name;
-    rqst.namelen = namelen;
-    rply.name = buffer;
-    rply.namelen = buflen;
+    sigaction(SIGTERM, &old_sa_term, NULL);
+    sigaction(SIGINT,  &old_sa_int,  NULL);
 
-    if (transmit(db, &rqst, &rply) < 0) {
-        errno = CNID_ERR_DB;
-        return CNID_INVALID;
+    /* Note: stop_signal raised after returning the partial total to the
+     * caller, matching transmit()'s pattern. */
+    if (stop_signal) {
+        raise(stop_signal);
     }
 
-    switch (rply.result) {
-    case CNID_DBD_RES_OK:
-        count = rply.namelen / sizeof(cnid_t);
-        LOG(log_debug, logtype_cnid, "cnid_find: got %d matches", count);
-        break;
-
-    case CNID_DBD_RES_NOTFOUND:
-        count = 0;
-        break;
-
-    case CNID_DBD_RES_ERR_DB:
-        errno = CNID_ERR_DB;
-        count = -1;
-        break;
-
-    default:
-        LOG(log_error, logtype_cnid,
-            "cnid_dbd_find: unexpected result code %d from CNID server", rply.result);
-        abort();
-    }
-
-    return count;
+    return rv;
 }
 
 /* ---------------------- */

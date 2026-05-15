@@ -6,6 +6,18 @@
 
 #include "afpclient.h"
 
+extern unsigned int FPSpotlightOpen(CONN *conn, uint16_t vid,
+                                    char *vol_path_out,
+                                    size_t vol_path_buflen);
+extern unsigned int FPSpotlightOpenQuery(CONN *conn, uint16_t vid,
+        const char *query_dsl,
+        uint64_t ctx);
+extern unsigned int FPSpotlightDrainResults(CONN *conn, uint16_t vid,
+        uint64_t ctx,
+        int *total_results_out);
+extern unsigned int FPSpotlightCloseQuery(CONN *conn, uint16_t vid,
+        uint64_t ctx);
+
 extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
                                 char *pwd);
 extern unsigned int FPopenLoginExt(CONN *conn, char *vers, char *uam, char *usr,

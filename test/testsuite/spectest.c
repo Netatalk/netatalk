@@ -31,6 +31,9 @@ EXT_FN(FPByteRangeLock);
 EXT_FN(FPByteRangeLockExt);
 EXT_FN(FPCatSearch);
 EXT_FN(FPCatSearchExt);
+#ifdef HAVE_SPOTLIGHT_TEST
+EXT_FN(FPSpotlightRPC);
+#endif
 EXT_FN(FPCloseDir);
 EXT_FN(FPCloseDT);
 EXT_FN(FPCloseFork);
@@ -121,6 +124,9 @@ static struct test_fn Test_list[] = {
     FN_N(FPByteRangeLockExt)
     FN_N(FPCatSearch)
     FN_N(FPCatSearchExt)
+#ifdef HAVE_SPOTLIGHT_TEST
+    FN_N(FPSpotlightRPC)
+#endif
     FN_N(FPCloseDir)
     FN_N(FPCloseDT)
     FN_N(FPCloseFork)

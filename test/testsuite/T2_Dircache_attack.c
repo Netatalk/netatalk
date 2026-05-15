@@ -992,8 +992,18 @@ STATIC void test509()
 
     /* ============================================================
      * PHASE 1: Create all directories
-     * ============================================================ */
-    if (!Quiet) {
+     *
+     * The bulk creates / accesses / deletes below produce ~50000+ AFP
+     * call log lines via FPCreateDir/FPGetFileDirParams/FPDelete in
+     * afpcmd.c. That floods CI logs and obscures the test summary;
+     * silence the per-call AFP log spam by raising Quiet for the
+     * duration of the workload, restoring the caller's value at the
+     * end of the test. The phase-level printf()s above remain
+     * !Quiet-gated against `saved_quiet`. */
+    int saved_quiet = Quiet;
+    Quiet = 1;
+
+    if (!saved_quiet) {
         printf("  Phase 1: Creating %d directories...\n", NUM_DIRS);
     }
 
@@ -1002,10 +1012,11 @@ STATIC void test509()
         dir_ids[i] = FPCreateDir(Conn, vol, DIRDID_ROOT, dir_name);
 
         if (!dir_ids[i]) {
-            if (!Quiet) {
+            if (!saved_quiet) {
                 fprintf(stdout, "\tFAILED to create directory %d\n", i);
             }
 
+            Quiet = saved_quiet;
             test_failed();
             goto cleanup;
         }
@@ -1016,13 +1027,13 @@ STATIC void test509()
     /* ============================================================
      * PHASE 2: Build HOT working set (5x access → strong T2 promotion)
      * ============================================================ */
-    if (!Quiet) {
+    if (!saved_quiet) {
         printf("  Phase 2: Building HOT working set (5x access)...\n");
     }
 
     accesses = access_working_set(vol, HOT_SET_START, HOT_SET_END, 5, prefix);
 
-    if (!Quiet) {
+    if (!saved_quiet) {
         printf("    Hot set accesses: %d (expected: %d)\n",
                accesses, (HOT_SET_END - HOT_SET_START) * 5);
     }
@@ -1030,13 +1041,13 @@ STATIC void test509()
     /* ============================================================
      * PHASE 3: Build WARM working set (2x access → moderate T2 promotion)
      * ============================================================ */
-    if (!Quiet) {
+    if (!saved_quiet) {
         printf("  Phase 3: Building WARM working set (2x access)...\n");
     }
 
     accesses = access_working_set(vol, WARM_SET_START, WARM_SET_END, 2, prefix);
 
-    if (!Quiet) {
+    if (!saved_quiet) {
         printf("    Warm set accesses: %d (expected: %d)\n",
                accesses, (WARM_SET_END - WARM_SET_START) * 2);
     }
@@ -1046,13 +1057,13 @@ STATIC void test509()
      * This demonstrates sustained ARC advantage over LRU
      * ============================================================ */
     for (int cycle = 1; cycle <= NUM_CYCLES; cycle++) {
-        if (!Quiet) {
+        if (!saved_quiet) {
             printf("  \n");
             printf("  === CYCLE %d/%d ===\n", cycle, NUM_CYCLES);
         }
 
         /* Sequential scan (should pollute T1, not T2 in ARC) */
-        if (!Quiet) {
+        if (!saved_quiet) {
             printf("    Scan: %d dirs (1.5x cache size)...\n",
                    SCAN_END - SCAN_START);
         }
@@ -1060,31 +1071,31 @@ STATIC void test509()
         (void)sequential_scan(vol, SCAN_START, SCAN_END, prefix);
 
         /* Verify hot working set (should HIT in ARC T2, MISS in LRU) */
-        if (!Quiet) {
+        if (!saved_quiet) {
             printf("    Verify hot set: %d dirs (2x access)...\n",
                    HOT_SET_END - HOT_SET_START);
         }
 
         accesses = access_working_set(vol, HOT_SET_START, HOT_SET_END, 2, prefix);
 
-        if (!Quiet) {
+        if (!saved_quiet) {
             printf("      Hot set accesses: %d\n", accesses);
         }
 
         /* Verify warm working set (should HIT in ARC T2, MISS in LRU) */
-        if (!Quiet) {
+        if (!saved_quiet) {
             printf("    Verify warm set: %d dirs (1x access)...\n",
                    WARM_SET_END - WARM_SET_START);
         }
 
         accesses = access_working_set(vol, WARM_SET_START, WARM_SET_END, 1, prefix);
 
-        if (!Quiet) {
+        if (!saved_quiet) {
             printf("      Warm set accesses: %d\n", accesses);
         }
     }
 
-    if (!Quiet) {
+    if (!saved_quiet) {
         printf("  \n");
         printf("  ✓ Scan resistance test completed\n");
         printf("  \n");
@@ -1101,6 +1112,9 @@ STATIC void test509()
         printf("      - Demonstrates frequency-based cache retention\n");
     }
 
+    /* Restore the caller's Quiet so the post-test summary in spectest.c
+     * and any subsequent test sees the original verbosity. */
+    Quiet = saved_quiet;
 cleanup:
 
     /* Cleanup: delete all created directories */

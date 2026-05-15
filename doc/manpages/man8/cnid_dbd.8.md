@@ -139,6 +139,12 @@ Berkeley DB library versions, follow these steps:
 
 - Start the the new version of Netatalk
 
+# Wire Protocol
+
+**cnid_dbd** speaks a private TCP/IP protocol with **afpd** and **nad** on `localhost:4700`
+(configurable per-volume via *cnid server* / *cnid port* in **afp.conf**(5)). The protocol is
+internal and may change between releases. After a netatalk upgrade, restart the netatalk service.
+
 # See Also
 
 cnid_metad(8), afpd(8), dbd(1)

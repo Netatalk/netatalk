@@ -14,10 +14,36 @@ libafptest_sources = [
     'testhelper.c',
 ]
 
+# Spotlight-only testsuite additions. The talloc dependency and the
+# spotlight_marshalling.c TU are reused only when have_spotlight is true;
+# afpcmd_spotlight.c uses the testsuite-local dsi.h exclusively (via
+# afpclient.h) and must NOT be compiled against <atalk/dsi.h>.
+libafptest_extra = []
+libafptest_deps = []
+spectest_extra_c_args = []
+
+if have_spotlight
+    libafptest_extra += [
+        'afpcmd_spotlight.c',
+        '../../etc/afpd/spotlight_marshalling.c',
+    ]
+    # spotlight_marshalling.c transitively pulls in <atalk/util.h>, which
+    # in turn includes <bstrlib.h>; the bstring header search path comes
+    # from the top-level `bstring` dependency. afpcmd_spotlight.c
+    # transitively pulls in <atalk/spotlight.h> -> <atalk/globals.h> ->
+    # <iniparser.h>, so the iniparser include path is required too.
+    libafptest_deps += [talloc, bstring, iniparser]
+    # HAVE_SPOTLIGHT_TEST gates the FPSpotlightRPC EXT_FN/FN_N
+    # registrations in spectest.c. Local to the testsuite, not in
+    # meson_config.h, so it cannot leak into other build units.
+    spectest_extra_c_args += ['-DHAVE_SPOTLIGHT_TEST=1']
+endif
+
 libafptest = static_library(
     'afptest',
-    libafptest_sources,
+    libafptest_sources + libafptest_extra,
     include_directories: root_includes,
+    dependencies: libafptest_deps,
     link_with: libatalk,
 )
 
@@ -169,11 +195,16 @@ spectest_sources = [
     'spectest.c',
 ]
 
+if have_spotlight
+    spectest_sources += ['FPSpotlightRPC.c']
+endif
+
 executable(
     'afp_spectest',
     spectest_sources,
     include_directories: root_includes,
-    c_args: ['-D_PATH_TESTDATA_DIR="' + datadir + '/netatalk/test-data"'],
+    c_args: ['-D_PATH_TESTDATA_DIR="' + datadir + '/netatalk/test-data"']
+    + spectest_extra_c_args,
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,

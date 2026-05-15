@@ -9,6 +9,7 @@
 #define _ATALK_CNID_DBD__H 1
 
 #include <arpa/inet.h>
+#include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -27,7 +28,8 @@ extern cnid_t cnid_dbd_lookup(struct _cnid_db *, const struct stat *, cnid_t,
                               const char *, size_t);
 extern int    cnid_dbd_find(struct _cnid_db *cdb, const char *name,
                             size_t namelen,
-                            void *buffer, size_t buflen);
+                            void *buffer, size_t buflen,
+                            bool *more_available);
 extern int    cnid_dbd_update(struct _cnid_db *, cnid_t, const struct stat *,
                               cnid_t, const char *, size_t);
 extern int    cnid_dbd_delete(struct _cnid_db *, const cnid_t);

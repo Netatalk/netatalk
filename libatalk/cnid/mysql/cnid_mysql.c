@@ -861,13 +861,23 @@ EC_CLEANUP:
 }
 
 /*!
- * Find a CNID by name
+ * @brief Backend implementation of cnid_find() for the mysql backend
+ *
+ * Parameters are pre-validated by the libatalk/cnid/cnid.c wrapper, so
+ * cdb, name, namelen and buflen are all sane on entry. Detects truncation
+ * by building "LIMIT max_results + 1" into the SQL and observing whether
+ * the extra row was produced; reports it via @p more_available.
+ *
+ * The Name LIKE parameter is bound via mysql_stmt_bind_param, never inlined
+ * into the SQL string, to prevent a filename SQL-injection vector. The
+ * LIMIT literal is not user-controlled (derived from caller's buflen) and
+ * is safely interpolated into the SQL string.
  */
 int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                    void *buffer, size_t buflen)
+                    void *buffer, size_t buflen, bool *more_available)
 {
     EC_INIT;
-    CNID_mysql_private *db = NULL;
+    CNID_mysql_private *db = cdb->cnid_db_private;
     char *sql = NULL;
     char *namelike = NULL;
     MYSQL_STMT *stmt = NULL;
@@ -881,30 +891,31 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     bool have_result = false;
     int fetch_ret = MYSQL_NO_DATA;
 
-    if (!cdb || !(db = cdb->cnid_db_private) || !name) {
-        LOG(log_error, logtype_cnid, "cnid_mysql_find: Parameter error");
-        errno = CNID_ERR_PARAM;
-        EC_FAIL;
+    /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
+     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN-sizeof(uint32_t)];
+     *   buflen >= CNID_FIND_MIN_BUFLEN.
+     * Re-checking here would risk emitting a different errno value than
+     * the wrapper for the same input. */
+
+    if (more_available) {
+        *more_available = false;
     }
 
     LOG(log_maxdebug, logtype_cnid,
         "cnid_mysql_find: called with name='%s', namelen=%zu, buflen=%zu", name,
         namelen, buflen);
-
-    if (namelen > MAXPATHLEN) {
-        LOG(log_error, logtype_cnid,
-            "cnid_mysql_find: Path name is too long (namelen=%zu)", namelen);
-        errno = CNID_ERR_PATH;
-        EC_FAIL;
-    }
-
     EC_NEG1(asprintf(&namelike, "%%%s%%", name));
     namelike_len = strlen(namelike);
     LOG(log_debug, logtype_cnid, "cnid_mysql_find: LIKE pattern is '%s'", namelike);
     EC_NULL(stmt = mysql_stmt_init(db->cnid_mysql_con));
+    /* LIMIT max_results + 1: peek pattern (matches SQLite). The LIMIT value
+     * is not user-controlled (derived from caller's buflen) and is safe to
+     * interpolate as a literal; the Name LIKE parameter is bound via
+     * mysql_stmt_bind_param below, never inlined into the SQL string. */
     EC_NEG1(asprintf(&sql,
-                     "SELECT Id FROM `%s` WHERE Name LIKE ? ORDER BY Id LIMIT %lu",
-                     db->cnid_mysql_voluuid_str, max_results));
+                     "SELECT Id FROM `%s` WHERE Name LIKE ? "
+                     "ORDER BY Id LIMIT %lu",
+                     db->cnid_mysql_voluuid_str, max_results + 1));
     LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: SQL query: %s", sql);
     EC_ZERO_LOG(mysql_stmt_prepare(stmt, sql, strlen(sql)));
     free(sql);
@@ -926,15 +937,29 @@ int cnid_mysql_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: mysql_num_rows=%lu",
         (unsigned long)mysql_stmt_num_rows(stmt));
 
-    while (count < max_results && (fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
-        LOG(log_maxdebug, logtype_cnid, "cnid_mysql_find: row[%d] = '%llu'", count,
-            result_id);
-        cnids[count] = htonl((uint32_t)result_id);
+    /* Fetch up to max_results + 1 rows. The (max_results + 1)-th row, if
+     * it exists, is the "more available" sentinel and is not stored in
+     * cnids[]. */
+    while (count <= (int)max_results
+            && (fetch_ret = mysql_stmt_fetch(stmt)) == 0) {
+        if (count < (int)max_results) {
+            LOG(log_maxdebug, logtype_cnid,
+                "cnid_mysql_find: row[%d] = '%llu'", count, result_id);
+            cnids[count] = htonl((uint32_t)result_id);
+        }
+
         count++;
     }
 
-    if (count < max_results && fetch_ret != MYSQL_NO_DATA) {
-        LOG(log_error, logtype_cnid, "cnid_mysql_find: MySQL error after fetch: %s",
+    if (count > (int)max_results) {
+        if (more_available) {
+            *more_available = true;
+        }
+
+        count = (int)max_results;
+    } else if (fetch_ret != MYSQL_NO_DATA && fetch_ret != 0) {
+        LOG(log_error, logtype_cnid,
+            "cnid_mysql_find: MySQL error after fetch: %s",
             mysql_stmt_error(stmt));
         EC_FAIL;
     }

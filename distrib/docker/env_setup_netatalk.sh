@@ -277,6 +277,8 @@ else
     AFP_DDP="no"
 fi
 
+AFP_SPOTLIGHT_GLOBAL="${AFP_SPOTLIGHT:-yes}"
+
 if [ -n "$AFP_DROPBOX" ]; then
     AFP_VALIDUSERS1="$AFP_USER"
     AFP_VALIDUSERS2="$AFP_USER nobody"
@@ -384,6 +386,8 @@ uam list = $UAMS
 mac charset = ${AFP_MAC_CHARSET:-MAC_ROMAN}
 unix charset = ${AFP_UNIX_CHARSET:-UTF8}
 vol charset = ${AFP_VOL_CHARSET:-UTF8}
+spotlight = $AFP_SPOTLIGHT_GLOBAL
+spotlight backend = ${AFP_SPOTLIGHT_BACKEND:-cnid}
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
@@ -392,6 +396,7 @@ valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
 convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
+spotlight = $AFP_SPOTLIGHT_GLOBAL
 [${SHARE_NAME2:-Time Machine}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
@@ -401,6 +406,7 @@ valid users = $AFP_VALIDUSERS2
 volume name = ${SHARE_NAME2:-Time Machine}
 $AFP_RWRO = $AFP_VALIDUSERS2
 convert appledouble = ${AFP_CONVERT_APPLEDOUBLE:-no}
+spotlight = $AFP_SPOTLIGHT_GLOBAL
 EOF
 fi
 

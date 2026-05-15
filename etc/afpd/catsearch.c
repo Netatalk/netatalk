@@ -816,6 +816,7 @@ static int catsearch_db(const AFPObj *obj,
                         int *rsize,
                         int ext)
 {
+    /* resbuf must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
     static char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
     static uint32_t cur_pos;
     static int num_matches;
@@ -853,7 +854,8 @@ static int catsearch_db(const AFPObj *obj,
                                 buffer,
                                 strlen(uname),
                                 resbuf,
-                                sizeof(resbuf));
+                                sizeof(resbuf),
+                                NULL);
         AFP_CNID_DONE();
 
         if (num_matches == -1) {

@@ -37,6 +37,9 @@
 #include <atalk/util.h>
 #include <atalk/volume.h>
 
+/* If you change this constant, also update SL_PACK_BUFLEN in
+ * test/testsuite/afpcmd_spotlight.c — that file deliberately
+ * cannot #include <atalk/dsi.h> and therefore hard-codes 65472. */
 #define MAX_SLQ_DAT (DSI_DATASIZ - 64)
 #define MAX_SLQ_TOC 8192
 

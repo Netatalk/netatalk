@@ -27,6 +27,9 @@
 #ifndef _ATALK_CNID__H
 #define _ATALK_CNID__H 1
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <atalk/adouble.h>
 #include <atalk/list.h>
 #include <atalk/uuid.h>
@@ -48,6 +51,13 @@
 #define CNID_ERR_DB    0x80000003
 #define CNID_ERR_CLOSE 0x80000004   /*!< the db was not open */
 #define CNID_ERR_MAX   0x80000005
+
+/* cnid_find() requires a result buffer large enough to hold at least one
+ * full DBD-backend batch (CNID_FIND_MIN_RESULTS = 100 CNIDs in network
+ * byte order). The cnid_find() wrapper enforces this minimum centrally
+ * so every CNID backend behaves identically. */
+#define CNID_FIND_MIN_RESULTS  100
+#define CNID_FIND_MIN_BUFLEN   (CNID_FIND_MIN_RESULTS * sizeof(uint32_t))
 
 /*!
  * This is instance of CNID database object.
@@ -76,7 +86,7 @@ typedef struct _cnid_db {
     cnid_t (*cnid_rebuild_add)(struct _cnid_db *, const struct stat *, cnid_t,
                                const char *, size_t, cnid_t);
     int (*cnid_find)(struct _cnid_db *cdb, const char *name, size_t namelen,
-                     void *buffer, size_t buflen);
+                     void *buffer, size_t buflen, bool *more_available);
     int (*cnid_wipe)(struct _cnid_db *cdb);
 } cnid_db;
 
@@ -128,7 +138,7 @@ cnid_t cnid_rebuild_add(struct _cnid_db *cdb, const struct stat *st,
                         const cnid_t did, char *name, const size_t len,
                         cnid_t hint);
 int    cnid_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                 void *buffer, size_t buflen);
+                 void *buffer, size_t buflen, bool *more_available);
 int    cnid_wipe(struct _cnid_db *cdb);
 void   cnid_close(struct _cnid_db *db);
 

@@ -4,6 +4,14 @@ Netatalk Changelog
 Changes in 4.5.0beta
 --------------------
 
+* BREAKING: libatalk: cnid_find() ABI changed — gained a `bool *more_available` out-parameter and a
+  400-byte minimum result-buffer requirement. The libatalk soversion has been bumped accordingly.
+  Out-of-tree consumers that link against libatalk must be rebuilt against the new headers.
+* NEW: afpd: Spotlight searches against the CNID, SQLite, and MySQL backends now return up to 10000
+  results per query, or as many as fit within a 10-second wall-clock budget.
+* NEW: afpd: Spotlight filename queries shorter than 3 characters are silently ignored by the
+  Spotlight backend (return 0 results). `nad find` and FPCatSearch / CatSearchExt continue to accept
+  1- and 2-character prefixes unchanged.
 * NEW: afpd: Introduced ARC (Adaptive Replacement Cache) option for directory cache, GitHub #2668
 * NEW: afpd: Added enumerate cache, AppleDouble support in cache, and inter-process cache sync, GitHub #2733
 * NEW: afpd: Added Tier-2 ResourceFork caching framework, GitHub #2783

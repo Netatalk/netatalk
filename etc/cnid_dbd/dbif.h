@@ -57,6 +57,9 @@
 #ifndef CNID_DBD_DBIF_H
 #define CNID_DBD_DBIF_H 1
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <db.h>
 
 #include <atalk/adouble.h>
@@ -107,7 +110,8 @@ int dbif_pget(DBD *, const int, DBT *, DBT *, DBT *, uint32_t);
 int dbif_put(DBD *, const int, DBT *, DBT *, uint32_t);
 int dbif_del(DBD *, const int, DBT *, uint32_t);
 int dbif_count(DBD *, const int, uint32_t *);
-int dbif_search(DBD *dbd, DBT *key, char *resbuf);
+int dbif_search(DBD *dbd, DBT *key, char *resbuf,
+                uint32_t offset, bool *more);
 int dbif_copy_rootinfokey(DBD *srcdbd, DBD *destdbd);
 int dbif_txn_begin(DBD *);
 int dbif_txn_commit(DBD *);
