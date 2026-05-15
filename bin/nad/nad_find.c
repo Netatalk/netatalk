@@ -202,13 +202,15 @@ int nad_find(int argc, char **argv, AFPObj *obj)
     }
 
     int count;
+    /* Must be >= CNID_FIND_MIN_BUFLEN; see libatalk/cnid/cnid.c. */
     char resbuf[DBD_MAX_SRCH_RSLTS * sizeof(cnid_t)];
 
     if ((count = cnid_find(vol.vol->v_cdb,
                            namebuf,
                            strlen(namebuf),
                            resbuf,
-                           sizeof(resbuf))) < 1) {
+                           sizeof(resbuf),
+                           NULL)) < 1) {
         ret = 1;
     } else {
         ret = 0;

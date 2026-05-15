@@ -64,10 +64,10 @@ PERF_FOLDED="/tmp/perf.folded"
 FLAMEGRAPH_SVG="/tmp/flamegraph.svg"
 PERF_PID=""
 
-# Perf sampling frequency (samples per second). Default 1019 Hz — a
+# Perf sampling frequency (samples per second). Default 1193 Hz — a
 # prime number chosen to avoid lockstep synchronization with timer
 # interrupts and the idle worker's 10ms polling interval.
-PERF_FREQ="${PERF_FREQ:-1019}"
+PERF_FREQ="${PERF_FREQ:-1193}"
 
 start_flamegraph_profiling() {
     # Verify FlameGraph tools are available
@@ -342,6 +342,21 @@ else
             echo "==== AFPD LOG END ===="
         else
             echo "NOTE: /var/log/afpd.log does not exist"
+        fi
+    fi
+
+    # Display the generated afp.conf if SERVER_CONFIG environment variable is
+    # set. CI-only diagnostic; redact lines that look like credentials so the
+    # output is safe to attach to GitHub Actions logs.
+    if [ -n "$SERVER_CONFIG" ]; then
+        if [ -f /etc/netatalk/afp.conf ]; then
+            echo "==== AFPD CONFIG CONTENT (redacted) ===="
+            sed -E \
+                -e 's/^([[:space:]]*[^=#]*(pass|secret|token|key)[^=]*=[[:space:]]*).*/\1***REDACTED***/I' \
+                /etc/netatalk/afp.conf
+            echo "==== AFPD CONFIG END ===="
+        else
+            echo "NOTE: /etc/netatalk/afp.conf does not exist"
         fi
     fi
     exit $TEST_EXIT_CODE

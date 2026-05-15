@@ -1,6 +1,13 @@
 /*!
  * @file
- * Interface to the cnid_dbd daemon that stores/retrieves CNIDs from a database.
+ * Interface to cnid_dbd daemon. The below structs are on-the-wire layout
+ * of a private TCP/IP RPC. All fields are written in NATIVE byte order.
+ *
+ * SEARCH wire format: for op == CNID_DBD_OP_SEARCH the variable-length
+ * `name` payload is prefixed by a 4-byte native-byte-order srch_offset
+ * before the search-name bytes; namelen = 4 + actual_name_length.
+ * sizeof(struct cnid_dbd_rqst) is unchanged on the wire — non-SEARCH
+ * opcodes remain wire-compatible with previous releases.
  */
 
 
@@ -36,8 +43,21 @@
 #define CNID_DBD_RES_SRCH_CNT      0x05
 #define CNID_DBD_RES_SRCH_DONE     0x06
 
-#define DBD_MAX_SRCH_RSLTS 100
-#define DBD_NUM_OPEN_ARGS 3
+/* DBD_MAX_SRCH_RSLTS is the wire-protocol maximum batch size for the
+ * SEARCH op. It must equal CNID_FIND_MIN_RESULTS in <atalk/cnid.h>;
+ * the wrapper's lower-bound buflen check uses the latter so that the
+ * sqlite/mysql backends do not have to include this DBD-private header. */
+#define DBD_MAX_SRCH_RSLTS    100
+#define DBD_SEARCH_MAX_OFFSET 50000
+#define DBD_FIND_DEADLINE_SEC 10
+#define DBD_NUM_OPEN_ARGS     3
+
+/* NOTE: Spotlight's per-term minimum length (formerly named
+ * DBD_SEARCH_MIN_NAMELEN here) is intentionally NOT defined in this
+ * header. It is a Spotlight-backend policy, not a DBD wire-protocol
+ * constant; placing it here would force etc/spotlight/cnid/sl_cnid.c
+ * to include this DBD-private header. The constant lives as
+ * `SL_CNID_MIN_TERMLEN` inside etc/spotlight/cnid/sl_cnid.c */
 
 struct cnid_dbd_rqst {
     int     op;

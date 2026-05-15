@@ -48,6 +48,12 @@ reconnect.
 
 netatalk(8), cnid_dbd(8), afpd(8), dbd(1), afp.conf(5)
 
+# Operator Notes
+
+After a netatalk upgrade, restart **cnid_metad** (typically
+`systemctl restart netatalk`) so its **cnid_dbd** children pick up
+the new binary.
+
 # Author
 
 [Contributors to the Netatalk Project](https://netatalk.io/contributors)

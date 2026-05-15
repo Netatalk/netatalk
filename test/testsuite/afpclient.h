@@ -214,6 +214,9 @@ extern CONN *Conn, *Conn2;
 int my_dsi_cmd_receive(DSI *x);
 int my_dsi_data_receive(DSI *x);
 
+void SendInit(DSI *dsi);
+void SetLen(DSI *dsi, int ofs);
+
 /* from
    modified
  */

@@ -50,13 +50,28 @@ static int cnid_comp_fn(const void *p1, const void *p2)
 }
 
 /*
- * Maximum number of CNID results requested per cnid_find() call.
- *
- * The CNID DBD backend can return up to 100 IDs in one search reply
- * (DBD_MAX_SRCH_RSLTS). Keep this buffer at least that large, otherwise
- * dbd_rpc() treats the larger reply as protocol garbage and resets.
+ * Spotlight CNID-backend buffer cap. Must be a clean multiple of
+ * CNID_FIND_MIN_RESULTS (the public-API minimum batch size) so the DBD
+ * pagination loop fills full 100-row batches. The SQLite and MySQL
+ * backends do not paginate (they use a single LIMIT max_results+1 peek
+ * query), so the multiple-of constraint matters only for the DBD
+ * backend, but expressing it via the public-API constant keeps this
+ * file from depending on any CNID-private header.
  */
-#define SL_CNID_MAX_RESULTS 100
+#define SL_CNID_MAX_RESULTS 10000
+
+_Static_assert(SL_CNID_MAX_RESULTS % CNID_FIND_MIN_RESULTS == 0,
+               "SL_CNID_MAX_RESULTS must be a multiple of CNID_FIND_MIN_RESULTS");
+
+/*
+ * Minimum filename-substring length the Spotlight CNID backend will pass
+ * through to cnid_find(). Sub-3-char terms produce too many matches
+ * against a typical CNID database to be useful, so we silently return no
+ * results. This policy is Spotlight-only: `nad find` and FPCatSearch /
+ * CatSearchExt continue to accept 1- and 2-character prefixes through
+ * the same cnid_find() API.
+ */
+#define SL_CNID_MIN_TERMLEN 3
 
 /*
  * Maximum results returned per RPC reply page.
@@ -73,9 +88,14 @@ static int cnid_comp_fn(const void *p1, const void *p2)
 
 /* Per-query private state for the CNID backend */
 struct sl_cnid_query {
-    cnid_t cnids[SL_CNID_MAX_RESULTS]; /* raw results from cnid_find()      */
-    int    count;                      /* total CNIDs returned              */
-    int    pos;                        /* next index to process             */
+    /* Raw results from cnid_find() */
+    cnid_t cnids[SL_CNID_MAX_RESULTS];
+    /* Total CNIDs returned */
+    int    count;
+    /* Next index to process */
+    int    pos;
+    /* Result set was truncated by cnid_find() */
+    bool   more_available;
 };
 
 /****************************************************************************
@@ -167,8 +187,11 @@ static char *sl_cnid_extract_term(TALLOC_CTX *mem_ctx, const char *qstring)
             }
         }
 
-        /* Skip empty or whitespace-only terms */
-        if (term[0] == '\0') {
+        if (strnlen(term, MAXPATHLEN) < (size_t)SL_CNID_MIN_TERMLEN) {
+            LOG(log_debug, logtype_sl,
+                "cnid backend: ignoring term \"%s\" "
+                "(length < SL_CNID_MIN_TERMLEN=%d)",
+                term, SL_CNID_MIN_TERMLEN);
             return NULL;
         }
 
@@ -209,6 +232,15 @@ static char *sl_cnid_extract_term(TALLOC_CTX *mem_ctx, const char *qstring)
 
                     while (len > 0 && term[len - 1] == '*') {
                         term[--len] = '\0';
+                    }
+
+                    if (strnlen(term, MAXPATHLEN)
+                            < (size_t)SL_CNID_MIN_TERMLEN) {
+                        LOG(log_debug, logtype_sl,
+                            "cnid backend: ignoring *== term \"%s\" "
+                            "(length < SL_CNID_MIN_TERMLEN=%d)",
+                            term, SL_CNID_MIN_TERMLEN);
+                        return NULL;
                     }
 
                     if (term[0] != '\0') {
@@ -447,7 +479,8 @@ static int sl_cnid_open_query(slq_t *slq)
         "cnid backend: calling cnid_find for term \"%s\"", term);
     csq->count = cnid_find(slq->slq_vol->v_cdb,
                            term, strnlen(term, MAXPATHLEN),
-                           csq->cnids, sizeof(csq->cnids));
+                           csq->cnids, sizeof(csq->cnids),
+                           &csq->more_available);
 
     if (csq->count < 0) {
         LOG(log_error, logtype_sl,
@@ -458,6 +491,13 @@ static int sl_cnid_open_query(slq_t *slq)
 
     LOG(log_debug, logtype_sl,
         "cnid backend: cnid_find(\"%s\") returned %d result(s)", term, csq->count);
+
+    if (csq->more_available) {
+        LOG(log_info, logtype_sl,
+            "cnid backend: result set for \"%s\" truncated to %d; "
+            "additional matches exist", term, csq->count);
+    }
+
     EC_ZERO(sl_cnid_fill_results(slq));
 EC_CLEANUP:
     EC_EXIT;

@@ -327,7 +327,7 @@ int my_dsi_data_receive(DSI *x)
 }
 
 /* ------------------------------- */
-static void SendInit(DSI *dsi)
+void SendInit(DSI *dsi)
 {
     memset(dsi->commands, 0, DSI_CMDSIZ);
     memset(&dsi->header, 0, sizeof(dsi->header));
@@ -337,7 +337,7 @@ static void SendInit(DSI *dsi)
 }
 
 /* ------------------------------- */
-static void SetLen(DSI *dsi, int ofs)
+void SetLen(DSI *dsi, int ofs)
 {
     dsi->datalen = ofs;
     dsi->header.dsi_len = htonl((uint32_t) dsi->datalen);

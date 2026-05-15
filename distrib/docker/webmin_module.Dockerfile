@@ -75,6 +75,7 @@ RUN sed -i 's/hide_service_controls=0/hide_service_controls=1/' /netatalk-code/c
     -Dwith-krbV-uam=false \
     -Dwith-pkgconfdir-path=/etc/netatalk \
     -Dwith-rpath=false \
+    -Dwith-spotlight=true \
     -Dwith-tcp-wrappers=false \
     -Dwith-tests=false \
     -Dwith-testsuite=false \

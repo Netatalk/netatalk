@@ -1086,8 +1086,21 @@ EC_CLEANUP:
     EC_EXIT;
 }
 
-int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
-                     void *buffer, size_t buflen)
+/*!
+ * @brief Backend implementation of cnid_find() for the sqlite backend
+ *
+ * Parameters are pre-validated by the libatalk/cnid/cnid.c wrapper, so
+ * cdb, name, namelen and buflen are all sane on entry. Detects truncation
+ * by binding LIMIT max_results+1 and observing whether the extra row was
+ * produced; reports it via @p more_available.
+ *
+ * @p namelen is unused: the SQLite backend builds the LIKE pattern via
+ * asprintf("%%%s%%", name), which already requires a NUL-terminated
+ * @p name. The parameter is kept to satisfy the cnid_db function-pointer
+ * signature shared with the dbd / mysql backends.
+ */
+int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen _U_,
+                     void *buffer, size_t buflen, bool *more_available)
 {
     EC_INIT;
     CNID_sqlite_private *db = cdb->cnid_db_private;
@@ -1097,16 +1110,15 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     unsigned long max_results = buflen / sizeof(cnid_t);
     LOG(log_maxdebug, logtype_cnid, "cnid_sqlite_find(\"%s\"): BEGIN", name);
 
-    if (!cdb || !db || !name) {
-        LOG(log_error, logtype_cnid, "cnid_sqlite_find: Parameter error");
-        errno = CNID_ERR_PARAM;
-        EC_FAIL;
-    }
+    /* Parameters pre-validated by the libatalk/cnid/cnid.c wrapper:
+     *   cdb, name non-NULL; namelen in [1, MAXPATHLEN-sizeof(uint32_t)];
+     *   buflen >= CNID_FIND_MIN_BUFLEN.
+     * Re-checking here would risk emitting a different errno value
+     * (CNID_ERR_PATH) than the wrapper (CNID_ERR_PARAM) for the same
+     * input, contradicting the uniform-behaviour-across-backends goal. */
 
-    if (namelen > MAXPATHLEN) {
-        LOG(log_error, logtype_cnid, "cnid_sqlite_find: Path name is too long");
-        errno = CNID_ERR_PATH;
-        EC_FAIL;
+    if (more_available) {
+        *more_available = false;
     }
 
     /* Construct the LIKE pattern, escaping any special characters */
@@ -1115,13 +1127,29 @@ int cnid_sqlite_find(struct _cnid_db *cdb, const char *name, size_t namelen,
     sqlite3_clear_bindings(db->cnid_find_stmt);
     EC_ZERO_LOG(sqlite3_bind_text(db->cnid_find_stmt, 1, namelike, strlen(namelike),
                                   SQLITE_STATIC));
+    /* LIMIT max_results + 1: peek for an extra row to detect "more results
+     * exist" without a second query. */
     EC_ZERO_LOG(sqlite3_bind_int64(db->cnid_find_stmt, 2,
-                                   (sqlite3_int64)max_results));
+                                   (sqlite3_int64)(max_results + 1)));
 
-    /* Fetch results */
-    while (sqlite3_step(db->cnid_find_stmt) == SQLITE_ROW && count < max_results) {
-        cnids[count] = htonl((uint32_t)sqlite3_column_int64(db->cnid_find_stmt, 0));
+    /* Fetch up to max_results + 1 rows. The (max_results + 1)-th row, if
+     * it exists, is the "more available" sentinel and is not stored in
+     * cnids[]. */
+    while (sqlite3_step(db->cnid_find_stmt) == SQLITE_ROW
+            && count <= (int)max_results) {
+        if (count < (int)max_results) {
+            cnids[count] = htonl((uint32_t)sqlite3_column_int64(db->cnid_find_stmt, 0));
+        }
+
         count++;
+    }
+
+    if (count > (int)max_results) {
+        if (more_available) {
+            *more_available = true;
+        }
+
+        count = (int)max_results;
     }
 
     if (sqlite3_errcode(db->cnid_sqlite_con) != SQLITE_OK
