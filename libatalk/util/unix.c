@@ -178,7 +178,10 @@ static int root_nesting = 0;
 void become_root(void)
 {
     if (getuid() == 0) {
-        if (root_nesting++ == 0) {
+        int outermost = (root_nesting == 0);
+        root_nesting++;
+
+        if (outermost) {
             saved_uid = geteuid();
 
             if (seteuid(0) != 0) {
@@ -195,7 +198,9 @@ void unbecome_root(void)
             AFP_PANIC("unbecome_root: nesting underflow");
         }
 
-        if (--root_nesting == 0) {
+        root_nesting--;
+
+        if (root_nesting == 0) {
             if (saved_uid == -1 || seteuid(saved_uid) < 0) {
                 AFP_PANIC("Can't seteuid back");
             }
