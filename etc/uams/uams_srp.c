@@ -38,6 +38,7 @@
 #include <unistd.h>
 
 #include <atalk/afp.h>
+#include <atalk/constant_time.h>
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 
@@ -105,23 +106,6 @@ static char session_username[UAM_USERNAMELEN + 1];
 static struct passwd *srppwd;
 
 /* -------------------- Crypto helpers -------------------- */
-
-/*!
- * @brief Constant-time memory comparison to avoid timing oracles.
- * @returns non-zero if the buffers differ, 0 if equal.
- */
-static int ct_memcmp(const unsigned char *a, const unsigned char *b, size_t n)
-{
-    /* Use volatile to prevent compiler optimizations
-     * that could leak timing information. */
-    volatile unsigned char diff = 0;
-
-    while (n--) {
-        diff |= *a++ ^ *b++;
-    }
-
-    return diff != 0;
-}
 
 /*!
  * @brief Strip leading zero bytes from a big-endian integer buffer.
@@ -835,7 +819,7 @@ static int srp_logincont(void *obj _U_, struct passwd **uam_pwd,
         goto fail;
     }
 
-    if (ct_memcmp(M1_received, M1_expected, SRP_SHA1_LEN)) {
+    if (atalk_ct_memcmp(M1_received, M1_expected, SRP_SHA1_LEN)) {
         LOG(log_info, logtype_uams, "srp_logincont: M1 verification failed for %s",
             session_username);
         ret = SRP_AUTH_FAILURE;

@@ -33,6 +33,7 @@
 #include <unistd.h>
 
 #include <atalk/compat.h>
+#include <atalk/constant_time.h>
 #include <atalk/errchk.h>
 #include <atalk/logger.h>
 #include <atalk/server_child.h>
@@ -56,19 +57,6 @@
 
 /* hash/child functions: hash OR's pid */
 #define HASH(i) ((((i) >> 8) ^ (i)) & (CHILD_HASHSIZE - 1))
-
-static int ct_memcmp(const void *a, const void *b, size_t n)
-{
-    const unsigned char *pa = a;
-    const unsigned char *pb = b;
-    volatile unsigned char diff = 0;
-
-    while (n--) {
-        diff |= *pa++ ^ *pb++;
-    }
-
-    return diff != 0;
-}
 
 static inline void hash_child(afp_child_t **htable, afp_child_t *child)
 {
@@ -391,7 +379,7 @@ int server_child_transfer_session(server_child_t *children,
         for (child = children->servch_table[i]; child; child = child->afpch_next) {
             if (child->afpch_sessiontoken_len == token_len
                     && child->afpch_sessiontoken != NULL
-                    && ct_memcmp(child->afpch_sessiontoken, token, token_len) == 0) {
+                    && atalk_ct_memcmp(child->afpch_sessiontoken, token, token_len) == 0) {
                 goto found;
             }
         }
