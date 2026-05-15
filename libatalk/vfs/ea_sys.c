@@ -41,6 +41,16 @@
  * EA VFS funcs for storing EAs in nativa filesystem EAs
  **********************************************************************************/
 
+static int sys_ea_attrname_invalid(const char *func, const char *attruname)
+{
+    if (attruname == NULL) {
+        LOG(log_error, logtype_afpd, "%s: missing EA name", func);
+        return 1;
+    }
+
+    return 0;
+}
+
 /*!
  * @brief get size of a native EA
  *
@@ -61,6 +71,11 @@ int sys_get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
 {
     ssize_t   ret;
     uint32_t  attrsize;
+
+    if (sys_ea_attrname_invalid("sys_get_easize", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     LOG(log_debug7, logtype_afpd, "sys_getextattr_size(%s): attribute: \"%s\"",
         uname, attruname);
 
@@ -156,6 +171,11 @@ int sys_get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
     ssize_t   ret;
     uint32_t  attrsize;
     size_t    extra = 0;
+
+    if (sys_ea_attrname_invalid("sys_get_eacontent", attruname)) {
+        return AFPERR_PARAM;
+    }
+
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 
     /* Protect special attributes set by NFS server */
@@ -386,6 +406,11 @@ int sys_set_ea(const struct vol *vol, const char *uname, const char *attruname,
     int attr_flag;
     int ret;
     char *eabuf;
+
+    if (sys_ea_attrname_invalid("sys_set_ea", attruname)) {
+        return AFPERR_PARAM;
+    }
+
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 
     /* Protect special attributes set by NFS server */
@@ -499,6 +524,11 @@ int sys_remove_ea(const struct vol *vol _U_, const char *uname,
                   const char *attruname, int oflag, int fd)
 {
     int ret;
+
+    if (sys_ea_attrname_invalid("sys_remove_ea", attruname)) {
+        return AFPERR_PARAM;
+    }
+
 #if defined(SOLARIS) && defined(HAVE_SYS_ATTR_H)
 
     /* Protect special attributes set by NFS server */

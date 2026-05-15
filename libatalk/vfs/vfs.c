@@ -995,11 +995,25 @@ static int vfs_remove_acl(const struct vol *vol, const char *path, int dir)
 }
 #endif /* HAVE_ACLS */
 
+static int vfs_ea_attrname_invalid(const char *func, const char *attruname)
+{
+    if (attruname == NULL) {
+        LOG(log_error, logtype_afpd, "%s: missing EA name", func);
+        return 1;
+    }
+
+    return 0;
+}
+
 static int vfs_ea_getsize(const struct vol *vol, char *rbuf,
                           size_t *rbuflen, const char *uname, int oflag,
                           const char *attruname, int fd)
 {
     int ret = AFP_OK;
+
+    if (vfs_ea_attrname_invalid("vfs_ea_getsize", attruname)) {
+        return AFPERR_PARAM;
+    }
 
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_getsize) {
@@ -1020,6 +1034,10 @@ static int vfs_ea_getcontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                              int maxreply, int fd)
 {
     int ret = AFP_OK;
+
+    if (vfs_ea_attrname_invalid("vfs_ea_getcontent", attruname)) {
+        return AFPERR_PARAM;
+    }
 
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_getcontent) {
@@ -1061,6 +1079,10 @@ static int vfs_ea_set(const struct vol *vol, const char *uname,
 {
     int ret = AFP_OK;
 
+    if (vfs_ea_attrname_invalid("vfs_ea_set", attruname)) {
+        return AFPERR_PARAM;
+    }
+
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_set) {
             int curr_ret = vol->vfs_modules[i]->vfs_ea_set(vol, uname, attruname, ibuf,
@@ -1079,6 +1101,10 @@ static int vfs_ea_remove(const struct vol *vol, const char *uname,
                          const char *attruname, int oflag, int fd)
 {
     int ret = AFP_OK;
+
+    if (vfs_ea_attrname_invalid("vfs_ea_remove", attruname)) {
+        return AFPERR_PARAM;
+    }
 
     for (int i = 0; i < VFS_MODULES_MAX; i++) {
         if (vol->vfs_modules[i] && vol->vfs_modules[i]->vfs_ea_remove) {
