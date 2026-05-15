@@ -138,6 +138,7 @@ static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
     if (lseek(keyfd, 0, SEEK_SET) < 0) {
         fprintf(stderr, "afppasswd: could not seek Randnum key file%s%s: %s\n",
                 keypath ? " " : "", keypath ? keypath : "", strerror(errno));
+        explicit_bzero(encoded, sizeof(encoded));
         return -1;
     }
 
@@ -146,6 +147,7 @@ static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
     if (keylen < 0) {
         fprintf(stderr, "afppasswd: could not read Randnum key file%s%s: %s\n",
                 keypath ? " " : "", keypath ? keypath : "", strerror(errno));
+        explicit_bzero(encoded, sizeof(encoded));
         return -1;
     }
 
@@ -154,6 +156,7 @@ static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
         fprintf(stderr,
                 "afppasswd: invalid Randnum key file%s%s: expected 16 hexadecimal characters with an optional trailing newline.\n",
                 keypath ? " " : "", keypath ? keypath : "");
+        explicit_bzero(encoded, sizeof(encoded));
         return -1;
     }
 
@@ -162,6 +165,7 @@ static int randnum_read_keyfd(int keyfd, uint8_t key[DES_KEY_SZ],
             fprintf(stderr,
                     "afppasswd: invalid Randnum key file%s%s: expected hexadecimal characters only.\n",
                     keypath ? " " : "", keypath ? keypath : "");
+            explicit_bzero(encoded, sizeof(encoded));
             return -1;
         }
     }
