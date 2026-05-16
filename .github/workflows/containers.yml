@@ -372,7 +372,7 @@ jobs:
             ## 🔥 Spectest (AFP 3.4) - Flamegraph (AFP_ASSERT active)
 
             **Commit:** `${{ github.event.pull_request.head.sha }}`
-            **Profiling:** On-CPU sampling @ 1193 Hz (prime), DWARF call-graph, x86_64
+            **Profiling:** On-CPU sampling @ 2000 Hz, DWARF call-graph, x86_64
             **Build:** `debugoptimized` (-O2 -g -fno-omit-frame-pointer)
             **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Netatalk Code-time:** ${{ steps.flamegraph-summary.outputs.SELF_TIME }},
             **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}

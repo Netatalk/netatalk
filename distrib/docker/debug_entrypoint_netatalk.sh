@@ -64,10 +64,11 @@ PERF_FOLDED="/tmp/perf.folded"
 FLAMEGRAPH_SVG="/tmp/flamegraph.svg"
 PERF_PID=""
 
-# Perf sampling frequency (samples per second). Default 1193 Hz — a
-# prime number chosen to avoid lockstep synchronization with timer
-# interrupts and the idle worker's 10ms polling interval.
-PERF_FREQ="${PERF_FREQ:-1193}"
+# Perf sampling frequency (samples per second). Default 2000 Hz —
+# higher resolution to make narrow Netatalk frames visible. The
+# previous lockstep-with-idle-worker concern is now handled by the
+# post-hoc folded-stack filter for idle_worker_main → nanosleep.
+PERF_FREQ="${PERF_FREQ:-2000}"
 
 start_flamegraph_profiling() {
     # Verify FlameGraph tools are available
@@ -153,6 +154,22 @@ stop_flamegraph_profiling() {
     # through musl's __clone assembly trampoline (common on x86_64 CI runners).
     # e.g. "afpd;__clone;__clone;__clone;start;..." → "afpd;__clone;start;..."
     perl -pi -e 's/;__clone(?:;__clone)+/;__clone/g' "$PERF_FOLDED"
+
+    # Drop folded-stack samples where idle_worker_main calls nanosleep.
+    # The idle worker runs in its own thread, so time it spends in
+    # nanosleep is unrelated to the main afpd worker's CPU time on the
+    # AFP request path. Even with a prime PERF_FREQ, perf sampling
+    # occasionally aligns with the idle worker's poll wake-ups and
+    # produces a misleading ~5% nanosleep tower under idle_worker_main.
+    #
+    # Once we see idle_worker_main → nanosleep at any depth, drop the
+    # whole sample regardless of what kernel frames sit above nanosleep
+    # (__schedule, hrtimer_*, finish_task_switch, entry_SYSCALL_64,
+    # etc.). idle_worker_main itself stays visible if it has any
+    # non-nanosleep on-CPU stack.
+    grep -Ev ';idle_worker_main;nanosleep(_\[k\])?[;[:space:]]' \
+        "$PERF_FOLDED" > "${PERF_FOLDED}.tmp"
+    mv "${PERF_FOLDED}.tmp" "$PERF_FOLDED"
 
     FLAMEGRAPH_DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
 
