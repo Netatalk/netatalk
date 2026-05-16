@@ -1,4 +1,9 @@
 /*
+ * CNID database implementation using SQLite embedded database engine.
+ * Built on proof-of-concept code written by Christopher Kobayashi in 2022
+ * for the netatalk-classic project, in turn based on the cnid_mysql.c
+ * implementation by Ralph Boehme.
+ *
  * Copyright (C) 2013 Ralph Boehme
  * Copyright (C) 2024-2026 Daniel Markstedt
  * All Rights Reserved.  See COPYING.
