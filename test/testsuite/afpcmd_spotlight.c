@@ -48,9 +48,7 @@
 #include <atalk/spotlight.h>
 #include <atalk/dalloc.h>
 
-/* Locally declared so we do not pull in testhelper.h, whose `enum adouble`
- * conflicts with libatalk's `struct adouble` brought in transitively by
- * <atalk/spotlight.h>. */
+/* Locally declared so we do not pull in testhelper.h. */
 extern int Quiet;
 
 /*

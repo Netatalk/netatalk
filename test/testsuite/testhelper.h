@@ -100,8 +100,10 @@ extern void exit_test(char *name);
 /* Wrapper macro for automatic file/line tracking */
 #define test_failed() test_failed_at(__FILE__, __LINE__)
 
-/* Types */
-enum adouble {
+/* Types — `enum ad_format` (renamed from `enum adouble` to avoid a
+ * tag collision with `struct adouble` in <atalk/adouble.h>, which is
+ * now reachable via afpclient.h's include chain). */
+enum ad_format {
     AD_EA = 1,
     AD_V2 = 2
 };
@@ -110,7 +112,7 @@ enum adouble {
 extern uint16_t VolID;
 extern int Mac;
 extern int ExitCode;
-extern enum adouble adouble;
+extern enum ad_format adouble;
 
 extern char Data[];
 extern char FailedTests[1024][256];

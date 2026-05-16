@@ -344,7 +344,7 @@ int     Mac = 0;
 char    *Test;
 int		Locking;
 int     EmptyVol = 0;
-enum adouble adouble = AD_EA;
+enum ad_format adouble = AD_EA;
 
 char *vers = "AFP3.4";
 char *uam = "Cleartxt Passwrd";

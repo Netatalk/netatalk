@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <netdb.h>
 
+#include <atalk/adouble.h>
 #include <atalk/afp.h>
 #include "dsi.h"
 
@@ -85,10 +86,7 @@
 #define DIRPBIT_PDINFO  13         /*!< ProDOS Info /UTF8 name */
 #define DIRPBIT_UNIXPR  15
 
-/* directory attribute bits (see file.h for other bits) */
-#define ATTRBIT_EXPFOLDER   (1 << 1) /*!< shared point */
-#define ATTRBIT_MOUNTED     (1 << 3) /*!< mounted share point by non-admin */
-#define ATTRBIT_INEXPFOLDER (1 << 4) /*!< folder in a shared area */
+/* ATTRBIT_* macros are inherited from <atalk/adouble.h>. */
 
 #define FILDIRBIT_ISDIR        (1 << 7) /*!< is a directory */
 #define FILDIRBIT_ISFILE       (0)      /*!< is a file */
@@ -114,20 +112,6 @@
 #define FILPBIT_PDINFO   13    /*!< ProDOS Info/ UTF8 name */
 #define FILPBIT_EXTRFLEN 14
 #define FILPBIT_UNIXPR   15
-
-/* attribute bits. d = directory attribute bit as well. */
-#define ATTRBIT_INVISIBLE (1<<0)  /*!< invisible (d) */
-#define ATTRBIT_MULTIUSER (1<<1)  /*!< multiuser */
-#define ATTRBIT_SYSTEM    (1<<2)  /*!< system (d) */
-#define ATTRBIT_DOPEN     (1<<3)  /*!< data fork already open */
-#define ATTRBIT_ROPEN     (1<<4)  /*!< resource fork already open */
-#define ATTRBIT_SHARED    (1<<4)  /*!< shared area (d) */
-#define ATTRBIT_NOWRITE   (1<<5)  /*!< write inhibit(v2)/read-only(v1) bit */
-#define ATTRBIT_BACKUP    (1<<6)  /*!< backup needed (d) */
-#define ATTRBIT_NORENAME  (1<<7)  /*!< rename inhibit (d) */
-#define ATTRBIT_NODELETE  (1<<8)  /*!< delete inhibit (d) */
-#define ATTRBIT_NOCOPY    (1<<10) /*!< copy protect */
-#define ATTRBIT_SETCLR    (1<<15) /*!< set/clear bits (d) */
 
 /* ----------------------------- */
 /* from etc/afpd/volume.h volume attributes */
