@@ -65,7 +65,7 @@
  * @returns the network-byte-order new DID on success, 0 on error
  */
 static int pag_create_dir_get_did(uint16_t vol, uint32_t parent_did,
-                                  const char *name)
+                                  char *name)
 {
     return FPCreateDir(Conn, vol, parent_did, name);
 }
