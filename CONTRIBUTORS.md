@@ -262,6 +262,7 @@ Our gratitude goes out to all package maintainers not listed here, too!
 - Sergey Fedorov <vital.had@gmail.com>
 - Jakub Jirutka <jakub@jirutka.cz>
 - Blake Garner
+- OrbisAI Security
 
 ## macipgw
 
