@@ -596,7 +596,10 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
     afp_child_t *child = NULL;
 
     if (dsi_getsession(dsi, server_children, obj->options.tickleval, &child) != 0) {
-        LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
+        if (errno) {
+            LOG(log_error, logtype_afpd, "dsi_start: session error: %s", strerror(errno));
+        }
+
         return NULL;
     }
 
