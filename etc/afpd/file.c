@@ -149,7 +149,16 @@ static int symlink_target_safe(const struct vol *vol,
     resolved_target = realpath_safe(target_path);
 
     if (resolved_target) {
-        safe = path_is_inside_volume(vol, resolved_target);
+        if (path_is_inside_volume(vol, resolved_target)) {
+            struct stat vol_st, target_st;
+
+            if (stat(vol->v_path, &vol_st) == 0 &&
+                    stat(resolved_target, &target_st) == 0 &&
+                    vol_st.st_dev == target_st.st_dev) {
+                safe = 1;
+            }
+        }
+
         free(resolved_target);
     }
 

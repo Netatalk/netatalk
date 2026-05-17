@@ -1348,13 +1348,18 @@ delete any files and directories within the vetoed directory.
 follow symlinks = *BOOLEAN* (default: *no*) **(V)**
 
 > The default setting is false thus symlinks are not followed on the
-server. This is the same behaviour as OS X's AFP server. Setting the
-option to true causes afpd to follow symlinks on the server. symlinks
-may point outside of the AFP volume, currently afpd doesn't do any
-checks for "wide symlinks".
+server.
+This is the same behaviour as Mac OS X's AFP server.
+Setting the option to true causes afpd to follow symlinks on the server.
 >
-> ***NOTE:*** This option will subtly break when the symlinks point across filesystem
-boundaries.
+> When a client creates a symlink via AFP, the target is validated:
+absolute paths, paths containing **..** components, relative paths that
+resolve outside the volume root, and targets on a different filesystem
+device than the volume are rejected.
+>
+> ***NOTE:*** This option is security-sensitive,
+and should only be enabled if you understand the security implications
+of allowing clients to follow symlinks on the server.
 
 invisible dots = *BOOLEAN* (default: *no*) **(V)**
 
