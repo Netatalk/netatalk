@@ -1067,10 +1067,13 @@ If a custom icon is already associated with the volume, this option is ignored.
 Available icon styles:
 >
 > - **daemon**
+> - **declogo**
 > - **fileserver**
 > - **globe**
 > - **nas**
 > - **sdcard**
+> - **sunlogo**
+> - **viking**
 
 legacy volume size = *BOOLEAN* (default: *no*) **(V)**
 
