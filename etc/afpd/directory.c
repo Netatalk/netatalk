@@ -1962,6 +1962,37 @@ struct path *cname(struct vol *vol, struct dir *dir, char **cpath)
 }
 
 /*!
+ * @brief ochdir() wrapper that rejects chdir across filesystem device boundaries
+ *
+ * @param[in] dir   path to chdir to
+ * @param[in] vol   volume the path must reside on
+ *
+ * @returns 0 on success, 1 on symlink or device violation, -1 on syserror
+ */
+static int ochdir_vol(const char *dir, const struct vol *vol)
+{
+    struct stat st;
+    int ret = ochdir(dir, vol_syml_opt(vol));
+
+    if (ret != 0) {
+        return ret;
+    }
+
+    if (vol_syml_opt(vol) == 0) {
+        if (stat(".", &st) != 0) {
+            return -1;
+        }
+
+        if (st.st_dev != vol->v_dev) {
+            errno = EXDEV;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*!
  * @brief chdir() to dir
  *
  * @param[in] vol   pointer to struct vol
@@ -1996,7 +2027,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
     LOG(log_debug, logtype_afpd, "movecwd(to: did: %u, \"%s\")",
         ntohl(dir->d_did), dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
 
-    if ((ret = ochdir(cfrombstr(dir->d_fullpath), vol_syml_opt(vol))) != 0) {
+    if ((ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol)) != 0) {
         /* Failed to change directory */
         LOG(log_debug, logtype_afpd, "movecwd(\"%s\"): %s",
             dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)", strerror(errno));
@@ -2019,7 +2050,7 @@ int movecwd(const struct vol *vol, struct dir *dir)
                 LOG(log_debug, logtype_afpd,
                     "movecwd: dirlookup_strict returned validated path \"%s\", attempting chdir",
                     dir->d_fullpath ? cfrombstr(dir->d_fullpath) : "(null)");
-                ret = ochdir(cfrombstr(dir->d_fullpath), vol_syml_opt(vol));
+                ret = ochdir_vol(cfrombstr(dir->d_fullpath), vol);
 
                 if (ret == 0) {
                     curdir = dir;
@@ -2039,14 +2070,14 @@ int movecwd(const struct vol *vol, struct dir *dir)
             /* Special movecwd requirement: sync process CWD with curdir pointer.
              * If curdir is at fallback, attempt to sync process CWD. */
             if (curdir && curdir->d_fullpath && curdir != &rootParent &&
-                    ochdir(cfrombstr(curdir->d_fullpath), vol_syml_opt(vol)) == 0) {
+                    ochdir_vol(cfrombstr(curdir->d_fullpath), vol) == 0) {
                 LOG(log_debug, logtype_afpd,
                     "movecwd: synced process CWD to curdir fallback");
             }
         }
 
         if (ret == 1) {
-            /* p is a symlink or getcwd failed */
+            /* path is a symlink, crosses a device boundary, or getcwd failed */
             afp_errno = AFPERR_BADTYPE;
 
             if (chdir(vol->v_path) < 0) {

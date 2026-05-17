@@ -10,15 +10,6 @@ including Macs, Apple IIs, and other AFP clients.
 Configuration is managed through the *afp.conf* file,
 which uses an ini-style syntax.
 
-Netatalk provides remote backup functionality for macOS Time Machine over AFP.
-To make a volume a Time Machine target,
-set the volume option **time machine = yes**.
-
-Starting with Netatalk 2.1, UNIX symlinks are supported on the server.
-The semantics are the same as for NFS:
-symlinks are not resolved on the server side but are instead passed to the client for resolution,
-resulting in links that point somewhere inside the client's filesystem view.
-
 ### afp.conf
 
 *afp.conf* is the configuration file used by **afpd** to determine
@@ -76,3 +67,27 @@ For example, when */home* links to */usr/home*:
 
 For a detailed explanation of all available options,
 refer to the [afp.conf](afp.conf.5.html) man page.
+
+### Backup Volumes
+
+Netatalk provides remote backup functionality for macOS Time Machine over AFP.
+To make a volume a Time Machine target,
+set the volume option **time machine = yes**.
+
+When used together with Zeroconf,
+the backup volume will be automatically advertised via Bonjour when the server is running,
+allowing macOS clients to discover and select it as a Time Machine backup destination.
+
+### Symlinks
+
+By default, symlinks are not followed on the server side but are instead passed to the client for
+resolution, resulting in links that point somewhere inside the client's filesystem view.
+This is the same behaviour as the historical Mac OS X AFP server.
+
+Server-side symlink following can be enabled per volume with **follow symlinks = yes**.
+When enabled, symlink targets created via AFP are validated: absolute paths, paths containing
+**..** components, targets that resolve outside the volume root, and targets on a different
+filesystem device are rejected.
+Note that pre-existing symlinks created outside of AFP are not subject to this validation.
+
+Be aware that enabling server-side symlink following can lead to security issues if not used carefully.
