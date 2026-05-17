@@ -41,6 +41,46 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
     int hint_pipe[2];  /* Dedicated pipe for parent→child dircache hint delivery */
     afp_child_t *child;
 
+    /* Pre-fork session limit check: reject without forking to avoid a
+     * fork+SIGKILL cycle per over-cap connection.  MSG_DONTWAIT keeps the
+     * parent non-blocking; if the client's DSIOpenSession header hasn't
+     * arrived yet we still send SERVBUSY but with requestID=0 instead of
+     * echoing the client's ID.  The post-fork check in server_child_add
+     * remains as defence-in-depth for the narrow race window. */
+    if (serv_children->servch_count >= serv_children->servch_nsessions) {
+        socklen_t addrlen = sizeof(dsi->client);
+        uint8_t block[DSI_BLOCKSIZ];
+        ssize_t n;
+        LOG(log_note, logtype_dsi,
+            "dsi_getsess: at session cap (%d/%d), rejecting without fork",
+            serv_children->servch_count, serv_children->servch_nsessions);
+        dsi->socket = accept(dsi->serversock,
+                             (struct sockaddr *)&dsi->client, &addrlen);
+
+        if (dsi->socket >= 0) {
+            n = recv(dsi->socket, block, DSI_BLOCKSIZ, MSG_DONTWAIT);
+            memset(&dsi->header, 0, sizeof(dsi->header));
+            dsi->header.dsi_flags = DSIFL_REPLY;
+            dsi->header.dsi_command = DSIFUNC_OPEN;
+
+            if (n == DSI_BLOCKSIZ)
+                memcpy(&dsi->header.dsi_requestID, block + 2,
+                       sizeof(dsi->header.dsi_requestID));
+            else {
+                dsi->header.dsi_requestID = 0;
+            }
+
+            dsi->header.dsi_data.dsi_code = htonl(DSIERR_SERVBUSY);
+            dsi->cmdlen = 0;
+            dsi_send(dsi);
+            close(dsi->socket);
+            dsi->socket = -1;
+        }
+
+        errno = 0;
+        return -1;
+    }
+
     if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
         LOG(log_error, logtype_dsi, "dsi_getsess: %s", strerror(errno));
         return -1;
@@ -108,6 +148,8 @@ int dsi_getsession(DSI *dsi, server_child_t *serv_children, int tickleval,
             dsi_send(dsi);
             dsi->header.dsi_data.dsi_code = DSIERR_OK;
             kill(pid, SIGKILL);
+            dsi->proto_close(dsi);
+            return -1;
         }
 
         dsi->proto_close(dsi);
