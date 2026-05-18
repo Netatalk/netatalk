@@ -5,8 +5,8 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2026-01-04 01:46+0100\n"
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-19 20:06+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -24,11 +24,9 @@ msgstr ""
 #: manpages/man1/afppasswd.1.md:1 manpages/man1/afpstats.1.md:1
 #: manpages/man1/asip-status.1.md:1 manpages/man1/dbd.1.md:1
 #: manpages/man1/fce_listen.1.md:1 manpages/man1/getzones.1.md:1
-#: manpages/man1/macusers.1.md:1 manpages/man1/nad.1.md:1
-#: manpages/man1/nbplkup.1.md:1 manpages/man1/nbprgstr.1.md:1
-#: manpages/man1/pap.1.md:1 manpages/man1/rtmpqry.1.md:1
-#: manpages/man3/atalk_aton.3.md:1 manpages/man3/nbp_name.3.md:1
-#: manpages/man4/atalk.4.md:1 manpages/man5/afp_signature.conf.5.md:1
+#: manpages/man1/nad.1.md:1 manpages/man1/nbplkup.1.md:1
+#: manpages/man1/nbprgstr.1.md:1 manpages/man1/pap.1.md:1
+#: manpages/man1/rtmpqry.1.md:1 manpages/man5/afp_signature.conf.5.md:1
 #: manpages/man5/afp_voluuid.conf.5.md:1 manpages/man5/afp.conf.5.md:1
 #: manpages/man5/atalkd.conf.5.md:1 manpages/man5/extmap.conf.5.md:1
 #: manpages/man5/papd.conf.5.md:1 manpages/man8/a2boot.8.md:1
@@ -49,11 +47,9 @@ msgstr "名前"
 #: manpages/man1/afppasswd.1.md:5 manpages/man1/afpstats.1.md:5
 #: manpages/man1/asip-status.1.md:5 manpages/man1/dbd.1.md:5
 #: manpages/man1/fce_listen.1.md:5 manpages/man1/getzones.1.md:5
-#: manpages/man1/macusers.1.md:5 manpages/man1/nad.1.md:5
-#: manpages/man1/nbplkup.1.md:5 manpages/man1/nbprgstr.1.md:5
-#: manpages/man1/pap.1.md:5 manpages/man1/rtmpqry.1.md:5
-#: manpages/man3/atalk_aton.3.md:5 manpages/man3/nbp_name.3.md:5
-#: manpages/man4/atalk.4.md:5 manpages/man5/afp.conf.5.md:5
+#: manpages/man1/nad.1.md:5 manpages/man1/nbplkup.1.md:5
+#: manpages/man1/nbprgstr.1.md:5 manpages/man1/pap.1.md:5
+#: manpages/man1/rtmpqry.1.md:5 manpages/man5/afp.conf.5.md:5
 #: manpages/man8/a2boot.8.md:5 manpages/man8/afpd.8.md:5
 #: manpages/man8/atalkd.8.md:5 manpages/man8/cnid_dbd.8.md:5
 #: manpages/man8/cnid_metad.8.md:5 manpages/man8/macipgw.8.md:5
@@ -65,17 +61,15 @@ msgstr "概要"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:19 manpages/man1/aecho.1.md:9
-#: manpages/man1/afp_lantest.1.md:10 manpages/man1/afp_logintest.1.md:9
-#: manpages/man1/afp_spectest.1.md:12 manpages/man1/afp_speedtest.1.md:10
+#: manpages/man1/afp_lantest.1.md:10 manpages/man1/afp_logintest.1.md:11
+#: manpages/man1/afp_spectest.1.md:12 manpages/man1/afp_speedtest.1.md:11
 #: manpages/man1/afparg.1.md:11 manpages/man1/afpldaptest.1.md:11
-#: manpages/man1/afppasswd.1.md:9 manpages/man1/afpstats.1.md:9
+#: manpages/man1/afppasswd.1.md:11 manpages/man1/afpstats.1.md:11
 #: manpages/man1/asip-status.1.md:13 manpages/man1/dbd.1.md:11
 #: manpages/man1/fce_listen.1.md:9 manpages/man1/getzones.1.md:9
-#: manpages/man1/macusers.1.md:11 manpages/man1/nad.1.md:11
-#: manpages/man1/nbplkup.1.md:9 manpages/man1/nbprgstr.1.md:11
-#: manpages/man1/pap.1.md:9 manpages/man1/rtmpqry.1.md:9
-#: manpages/man3/atalk_aton.3.md:14 manpages/man3/nbp_name.3.md:16
-#: manpages/man4/atalk.4.md:10 manpages/man5/afp_signature.conf.5.md:5
+#: manpages/man1/nad.1.md:11 manpages/man1/nbplkup.1.md:9
+#: manpages/man1/nbprgstr.1.md:11 manpages/man1/pap.1.md:9
+#: manpages/man1/rtmpqry.1.md:9 manpages/man5/afp_signature.conf.5.md:5
 #: manpages/man5/afp_voluuid.conf.5.md:5 manpages/man5/atalkd.conf.5.md:5
 #: manpages/man5/extmap.conf.5.md:5 manpages/man5/papd.conf.5.md:5
 #: manpages/man8/a2boot.8.md:11 manpages/man8/afpd.8.md:11
@@ -89,62 +83,61 @@ msgstr "説明"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:29 manpages/man1/aecho.1.md:40
-#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:15
-#: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:16
+#: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:17
+#: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:27
 #: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
-#: manpages/man1/afppasswd.1.md:43 manpages/man1/asip-status.1.md:28
-#: manpages/man1/dbd.1.md:21 manpages/man1/fce_listen.1.md:14
-#: manpages/man1/getzones.1.md:16 manpages/man1/macusers.1.md:15
-#: manpages/man1/nbplkup.1.md:19 manpages/man1/nbprgstr.1.md:20
-#: manpages/man1/pap.1.md:29 manpages/man1/rtmpqry.1.md:15
-#: manpages/man8/a2boot.8.md:32 manpages/man8/afpd.8.md:19
-#: manpages/man8/atalkd.8.md:26 manpages/man8/cnid_dbd.8.md:58
-#: manpages/man8/cnid_metad.8.md:21 manpages/man8/macipgw.8.md:38
-#: manpages/man8/netatalk.8.md:26 manpages/man8/papd.8.md:37
-#: manpages/man8/papstatus.8.md:24 manpages/man8/timelord.8.md:23
+#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:16
+#: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:24
+#: manpages/man1/fce_listen.1.md:17 manpages/man1/getzones.1.md:16
+#: manpages/man1/nad.1.md:31 manpages/man1/nbplkup.1.md:19
+#: manpages/man1/nbprgstr.1.md:20 manpages/man1/pap.1.md:29
+#: manpages/man1/rtmpqry.1.md:15 manpages/man8/a2boot.8.md:32
+#: manpages/man8/afpd.8.md:19 manpages/man8/atalkd.8.md:26
+#: manpages/man8/cnid_dbd.8.md:58 manpages/man8/cnid_metad.8.md:21
+#: manpages/man8/macipgw.8.md:38 manpages/man8/netatalk.8.md:26
+#: manpages/man8/papd.8.md:37 manpages/man8/papstatus.8.md:24
+#: manpages/man8/timelord.8.md:25
 #, no-wrap
 msgid "Options"
 msgstr "オプション"
 
 #. type: Title #
 #: manpages/man1/addump.1.md:68 manpages/man1/aecho.1.md:46
-#: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:84
-#: manpages/man1/afp_spectest.1.md:246 manpages/man1/afp_speedtest.1.md:147
+#: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:112
+#: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:238
 #: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:30
-#: manpages/man1/fce_listen.1.md:45 manpages/man1/getzones.1.md:84
-#: manpages/man1/macusers.1.md:25 manpages/man1/pap.1.md:93
-#: manpages/man1/rtmpqry.1.md:52 manpages/man3/atalk_aton.3.md:24
-#: manpages/man4/atalk.4.md:45 manpages/man5/afp.conf.5.md:1387
-#: manpages/man5/atalkd.conf.5.md:98 manpages/man5/extmap.conf.5.md:28
-#: manpages/man5/papd.conf.5.md:164 manpages/man8/afpd.8.md:112
-#: manpages/man8/atalkd.8.md:79 manpages/man8/cnid_dbd.8.md:142
-#: manpages/man8/cnid_metad.8.md:47 manpages/man8/macipgw.8.md:98
-#: manpages/man8/netatalk.8.md:57 manpages/man8/papstatus.8.md:49
+#: manpages/man1/afppasswd.1.md:148 manpages/man1/afpstats.1.md:44
+#: manpages/man1/fce_listen.1.md:48 manpages/man1/getzones.1.md:84
+#: manpages/man1/pap.1.md:93 manpages/man1/rtmpqry.1.md:52
+#: manpages/man5/afp.conf.5.md:1450 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:171
+#: manpages/man8/afpd.8.md:139 manpages/man8/atalkd.8.md:79
+#: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:47
+#: manpages/man8/macipgw.8.md:98 manpages/man8/netatalk.8.md:57
+#: manpages/man8/papstatus.8.md:49
 #, no-wrap
 msgid "See Also"
 msgstr "関連項目"
 
 #. type: Title #
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
-#: manpages/man1/afp_logintest.1.md:73 manpages/man1/afp_spectest.1.md:199
-#: manpages/man1/afp_speedtest.1.md:110 manpages/man1/afparg.1.md:73
-#: manpages/man1/afppasswd.1.md:24 manpages/man1/afpstats.1.md:23
-#: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:22
-#: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:298
+#: manpages/man1/afp_logintest.1.md:84 manpages/man1/afp_spectest.1.md:196
+#: manpages/man1/afp_speedtest.1.md:170 manpages/man1/afparg.1.md:73
+#: manpages/man1/afppasswd.1.md:52 manpages/man1/afpstats.1.md:35
+#: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:25
+#: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:359
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
-#: manpages/man1/rtmpqry.1.md:34 manpages/man3/nbp_name.3.md:26
-#: manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:27 manpages/man5/afp.conf.5.md:1342
+#: manpages/man1/rtmpqry.1.md:34 manpages/man5/afp_signature.conf.5.md:37
+#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1405
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
-#: manpages/man5/papd.conf.5.md:91 manpages/man8/macipgw.8.md:78
+#: manpages/man5/papd.conf.5.md:98 manpages/man8/macipgw.8.md:78
 #, no-wrap
 msgid "Examples"
 msgstr "例"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:24 manpages/man1/afp_logintest.1.md:25
-#: manpages/man1/afp_spectest.1.md:30 manpages/man1/afp_speedtest.1.md:26
+#: manpages/man1/afp_lantest.1.md:24 manpages/man1/afp_logintest.1.md:27
+#: manpages/man1/afp_spectest.1.md:30 manpages/man1/afp_speedtest.1.md:37
 #: manpages/man1/afparg.1.md:28
 #, no-wrap
 msgid ""
@@ -155,8 +148,8 @@ msgstr ""
 ": AFP 3.0プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:27 manpages/man1/afp_logintest.1.md:28
-#: manpages/man1/afp_spectest.1.md:33 manpages/man1/afp_speedtest.1.md:29
+#: manpages/man1/afp_lantest.1.md:27 manpages/man1/afp_logintest.1.md:30
+#: manpages/man1/afp_spectest.1.md:33 manpages/man1/afp_speedtest.1.md:40
 #: manpages/man1/afparg.1.md:31
 #, no-wrap
 msgid ""
@@ -167,8 +160,8 @@ msgstr ""
 ": AFP 3.1プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:30 manpages/man1/afp_logintest.1.md:31
-#: manpages/man1/afp_spectest.1.md:36 manpages/man1/afp_speedtest.1.md:32
+#: manpages/man1/afp_lantest.1.md:30 manpages/man1/afp_logintest.1.md:33
+#: manpages/man1/afp_spectest.1.md:36 manpages/man1/afp_speedtest.1.md:43
 #: manpages/man1/afparg.1.md:34
 #, no-wrap
 msgid ""
@@ -179,8 +172,8 @@ msgstr ""
 ": AFP 3.2プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:33 manpages/man1/afp_logintest.1.md:34
-#: manpages/man1/afp_spectest.1.md:39 manpages/man1/afp_speedtest.1.md:35
+#: manpages/man1/afp_lantest.1.md:33 manpages/man1/afp_logintest.1.md:36
+#: manpages/man1/afp_spectest.1.md:39 manpages/man1/afp_speedtest.1.md:46
 #: manpages/man1/afparg.1.md:37
 #, no-wrap
 msgid ""
@@ -191,8 +184,8 @@ msgstr ""
 ": AFP 3.3プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:36 manpages/man1/afp_logintest.1.md:37
-#: manpages/man1/afp_spectest.1.md:42 manpages/man1/afp_speedtest.1.md:38
+#: manpages/man1/afp_lantest.1.md:36 manpages/man1/afp_logintest.1.md:39
+#: manpages/man1/afp_spectest.1.md:42 manpages/man1/afp_speedtest.1.md:49
 #: manpages/man1/afparg.1.md:40
 #, no-wrap
 msgid ""
@@ -203,9 +196,8 @@ msgstr ""
 ": AFP 3.4プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:57 manpages/man1/afp_logintest.1.md:43
-#: manpages/man1/afp_spectest.1.md:65 manpages/man1/afp_speedtest.1.md:59
-#: manpages/man1/afparg.1.md:46
+#: manpages/man1/afp_lantest.1.md:57 manpages/man1/afp_logintest.1.md:48
+#: manpages/man1/afp_spectest.1.md:65 manpages/man1/afparg.1.md:46
 #, no-wrap
 msgid ""
 "**-h** *host*\n"
@@ -215,9 +207,8 @@ msgstr ""
 ": サーバーのホスト名またはIPアドレス（デフォルト: localhost）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:66 manpages/man1/afp_logintest.1.md:49
-#: manpages/man1/afp_spectest.1.md:80 manpages/man1/afp_speedtest.1.md:71
-#: manpages/man1/afparg.1.md:52
+#: manpages/man1/afp_lantest.1.md:66 manpages/man1/afp_logintest.1.md:57
+#: manpages/man1/afp_spectest.1.md:80 manpages/man1/afparg.1.md:52
 #, no-wrap
 msgid ""
 "**-p** *port*\n"
@@ -227,20 +218,19 @@ msgstr ""
 ": サーバーポート番号（デフォルト: 548）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_logintest.1.md:52
-#: manpages/man1/afp_spectest.1.md:89 manpages/man1/afp_speedtest.1.md:89
-#: manpages/man1/afparg.1.md:55
+#: manpages/man1/afp_lantest.1.md:72 manpages/man1/afp_logintest.1.md:60
+#: manpages/man1/afp_spectest.1.md:89 manpages/man1/afparg.1.md:55
 #, no-wrap
 msgid ""
 "**-u** *user*\n"
 ": Username for authentication with AFP server (default: current uid)\n"
 msgstr ""
-"**-u** *ユーザー名*\n"
+"**-u** *user*\n"
 ": AFPサーバーの認証用のユーザー名（デフォルト: 現在のuid）\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:75 manpages/man1/afp_logintest.1.md:58
-#: manpages/man1/afp_spectest.1.md:95 manpages/man1/afp_speedtest.1.md:95
+#: manpages/man1/afp_lantest.1.md:75 manpages/man1/afp_logintest.1.md:66
+#: manpages/man1/afp_spectest.1.md:95 manpages/man1/afp_speedtest.1.md:125
 #: manpages/man1/afparg.1.md:61
 #, no-wrap
 msgid ""
@@ -251,8 +241,8 @@ msgstr ""
 ": 超詳細出力\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:78 manpages/man1/afp_logintest.1.md:55
-#: manpages/man1/afp_spectest.1.md:92 manpages/man1/afp_speedtest.1.md:92
+#: manpages/man1/afp_lantest.1.md:78 manpages/man1/afp_logintest.1.md:63
+#: manpages/man1/afp_spectest.1.md:92 manpages/man1/afp_speedtest.1.md:122
 #: manpages/man1/afparg.1.md:58
 #, no-wrap
 msgid ""
@@ -263,15 +253,14 @@ msgstr ""
 ": 詳細出力\n"
 
 #. type: Plain text
-#: manpages/man1/afp_lantest.1.md:81 manpages/man1/afp_logintest.1.md:61
-#: manpages/man1/afp_spectest.1.md:98 manpages/man1/afp_speedtest.1.md:98
-#: manpages/man1/afparg.1.md:64
+#: manpages/man1/afp_lantest.1.md:81 manpages/man1/afp_logintest.1.md:69
+#: manpages/man1/afp_spectest.1.md:98 manpages/man1/afparg.1.md:64
 #, no-wrap
 msgid ""
 "**-w** *password*\n"
 ": Password for authentication with AFP server\n"
 msgstr ""
-"**-w** *パスワード文字列*\n"
+"**-w** *password*\n"
 ": AFPサーバーの認証用のパスワード\n"
 
 #. type: Plain text
@@ -282,24 +271,30 @@ msgstr "afp_logintest — AFP認証とDSIセッションテストスイート"
 #. type: Plain text
 #: manpages/man1/afp_logintest.1.md:8
 #, no-wrap
-msgid "**afp_logintest** [-1234567CmVv] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]\n"
-msgstr "**afp_logintest** [-1234567CmVv] [-h *ホスト*] [-p *ポート*] [-s *ボリューム*] [-u *ユーザー名*] [-w *パスワード文字列*]\n"
+msgid "**afp_logintest** [-1234567CmVv] [-f *test*] [-h *host*] [-p *port*] [-s *volume*] [-u *user*] [-w *password*]\n"
+msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:14
+#: manpages/man1/afp_logintest.1.md:10
+#, no-wrap
+msgid "**afp_logintest** -l\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_logintest.1.md:16
 #, no-wrap
 msgid ""
 "**afp_logintest** is a testsuite for DSI sessions and authentication from an AFP client.\n"
 "It will run a range of happy path and corner case tests for establishing a DSI session\n"
-"with an AFP server and then use a subset of available UAMs to authenticate with a user.\n"
+"with an AFP server and then use UAMs (User Authentication Methods) to authenticate with a user.\n"
 msgstr ""
 "**afp_logintest** は、DSIセッションとAFPクライアントからの認証のためのテストスイートである。\n"
 "AFPサーバーとのDSIセッションを確立するための様々なハッピーパステストとコーナーケーステストを実行し、\n"
-"利用可能なUAMのサブセットを使用してユーザー認証を行う。\n"
+"利用可能なUAM（ユーザ認証メソッド）を使用してユーザー認証を行う。\n"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:19 manpages/man1/afp_spectest.1.md:24
-#: manpages/man1/afp_speedtest.1.md:20 manpages/man1/afparg.1.md:22
+#: manpages/man1/afp_logintest.1.md:21 manpages/man1/afp_spectest.1.md:24
+#: manpages/man1/afp_speedtest.1.md:31 manpages/man1/afparg.1.md:22
 #, no-wrap
 msgid ""
 "**-1**\n"
@@ -309,8 +304,8 @@ msgstr ""
 ": AFP 2.1プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:22 manpages/man1/afp_spectest.1.md:27
-#: manpages/man1/afp_speedtest.1.md:23 manpages/man1/afparg.1.md:25
+#: manpages/man1/afp_logintest.1.md:24 manpages/man1/afp_spectest.1.md:27
+#: manpages/man1/afp_speedtest.1.md:34 manpages/man1/afparg.1.md:25
 #, no-wrap
 msgid ""
 "**-2**\n"
@@ -320,7 +315,7 @@ msgstr ""
 ": AFP 2.2プロトコルバージョンを使用する\n"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:40 manpages/man1/afp_spectest.1.md:51
+#: manpages/man1/afp_logintest.1.md:42 manpages/man1/afp_spectest.1.md:51
 #, no-wrap
 msgid ""
 "**-C**\n"
@@ -330,7 +325,27 @@ msgstr ""
 ": 端末出力でANSIカラーをオフにする\n"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:46 manpages/man1/afp_spectest.1.md:77
+#: manpages/man1/afp_logintest.1.md:45
+#, no-wrap
+msgid ""
+"**-f** *test*\n"
+": Run a specific test\n"
+msgstr ""
+"**-f** *test*\n"
+": 実行するテストを指定する\n"
+
+#. type: Plain text
+#: manpages/man1/afp_logintest.1.md:51
+#, no-wrap
+msgid ""
+"**-l**\n"
+": List available tests\n"
+msgstr ""
+"**-l**\n"
+": 利用可能なすべてのテストを一覧表示する\n"
+
+#. type: Plain text
+#: manpages/man1/afp_logintest.1.md:54 manpages/man1/afp_spectest.1.md:77
 #, no-wrap
 msgid ""
 "**-m**\n"
@@ -340,13 +355,13 @@ msgstr ""
 ": AppleShare (Mac) AFP サーバー互換モードでテストを実行する\n"
 
 #. type: Title #
-#: manpages/man1/afp_logintest.1.md:62
+#: manpages/man1/afp_logintest.1.md:70
 #, no-wrap
 msgid "Preconditions"
 msgstr "前提条件"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:67
+#: manpages/man1/afp_logintest.1.md:75
 msgid ""
 "In order to test Guest and Clear Text authentication, netatalk must be "
 "configured to use the *uams_guest* and *uams_clrtxt.so* UAMs, respectively.  "
@@ -357,7 +372,7 @@ msgstr ""
 "の通り、netatalk の afp.conf で UAM を設定する。"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:70 manpages/man1/afp_spectest.1.md:220
+#: manpages/man1/afp_logintest.1.md:78 manpages/man1/afp_spectest.1.md:217
 #, no-wrap
 msgid ""
 "    [Global]\n"
@@ -365,7 +380,16 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:72
+#: manpages/man1/afp_logintest.1.md:81
+msgid ""
+"Other tests may require additional UAMs to be configured; see the test "
+"output for details on which tests failed due to missing UAMs."
+msgstr ""
+"その他のテストでは、追加のUAMを設定する必要がある場合がある。どのテストがUAM"
+"の不足のために失敗したかの詳細については、テスト出力を参照すること。"
+
+#. type: Plain text
+#: manpages/man1/afp_logintest.1.md:83
 msgid ""
 "Additionally, in order to test non-Guest authentication, a username and "
 "password must be passed to the test runner."
@@ -374,7 +398,7 @@ msgstr ""
 "に渡す必要がある。"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:76
+#: manpages/man1/afp_logintest.1.md:87
 msgid ""
 "Run all tests against an AFP server running on 10.0.0.10, without user "
 "credentials"
@@ -383,19 +407,41 @@ msgstr ""
 "トを実行する。"
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:83
+#: manpages/man1/afp_logintest.1.md:106
 #, no-wrap
 msgid ""
-"    $ ./build/test/testsuite/afp_logintest -h 10.0.0.10\n"
+"    $ afp_logintest -h 10.0.0.10\n"
 "    Logintest:test1: DSI with no open session - PASSED\n"
 "    Logintest:test2: DSI with open session - PASSED\n"
 "    Logintest:test3: Guest login - PASSED\n"
+"    Logintest:test4: connection limit hit returns server-busy - PASSED\n"
 "    Logintest:test5: Clear text login - SKIPPED (username/password for the AFP server)\n"
 "    Logintest:test6: DSIOpenSession non zero parameter should be ignored by the server - SKIPPED (username/password for the AFP server)\n"
+"    Logintest:test7: DSI round-trip via renamed dsi_stream_send/dsi_cmd_receive - PASSED\n"
+"    Logintest:test8: FPLoginExt + No User Authent (direct) - PASSED\n"
+"    Logintest:test9: AFPLoginCont primitive round-trip - SKIPPED (username/password for the AFP server)\n"
+"    Logintest:test10: UAM matrix walk - PASSED\n"
+"    =====================\n"
+"    TEST RESULT SUMMARY\n"
+"    ---------------------\n"
+"    Passed:     7\n"
+"    Skipped:    3\n"
+"    Failed:     0\n"
+"    Not tested: 0\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afp_logintest.1.md:86
+#: manpages/man1/afp_logintest.1.md:111
+#, no-wrap
+msgid ""
+"    Skipped tests (precondition not met):\n"
+"        Logintest:test5: Clear text login\n"
+"        Logintest:test6: DSIOpenSession non zero parameter should be ignored by the server\n"
+"        Logintest:test9: AFPLoginCont primitive round-trip\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afp_logintest.1.md:114
 #, no-wrap
 msgid "**afp_lantest**(1), **afp_spectest**(1), **afparg**(1), **afpd**(8)\n"
 msgstr ""

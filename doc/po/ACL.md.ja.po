@@ -1,0 +1,539 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title ##
+#: manpages/man1/afp_lantest.1.md:82 manpages/man1/afp_speedtest.1.md:142
+#: manpages/man1/afparg.1.md:65 manpages/man8/cnid_dbd.8.md:64 manual/ACL.md:6
+#, no-wrap
+msgid "Configuration"
+msgstr "設定"
+
+#. type: Title #
+#: manual/ACL.md:1
+#, no-wrap
+msgid "ACL Support"
+msgstr "ACL のサポート"
+
+#. type: Plain text
+#: manual/ACL.md:5
+msgid ""
+"ACL support for AFP is implemented for ZFS ACLs on Solaris and derived "
+"platforms, and for POSIX 1e ACLs on Linux."
+msgstr ""
+"AFP の ACL サポートは Solaris の ZFS ACL、派生したプラットフォーム、そして、"
+"Linux の POSIX 1e ACL で実装されている。"
+
+#. type: Plain text
+#: manual/ACL.md:16
+msgid ""
+"For basic operation, no additional configuration is needed.  Netatalk reads "
+"ACLs on the fly and calculates effective permissions, which are then sent to "
+"the AFP client via the so-called UARights permission bits.  On a Mac, the "
+"Finder uses these bits to adjust permissions in its windows.  For example, a "
+"folder whose UNIX mode is read-only but whose ACL grants the user write "
+"access will display the effective read-write permission.  Without this "
+"permission mapping, the Finder would display a read-only icon and the user "
+"would not be able to write to the folder."
+msgstr ""
+"基本的な方式で運用するならば設定することは何もない。Netatalk は ACL をオンザ"
+"フライで読み込み、そののちいわゆる UARights パーミションビット経由で AFP クラ"
+"イアントに送られる有効なパーミッションを算出する。 マック上では、これらのビッ"
+"トを Finder ウィンドウ内のパーミッションと調整するために Finder が使用する。"
+"例：UNIX のモードでは書き込み専用だが ACL がユーザーに書き込み権限を与えてい"
+"るフォルダーは有効な読み書き権限を表示する。権限のマッピングなしに Finder は"
+"読み込み専用アイコンを表示するだろうし、ユーザーはそのフォルダーに書き込みは"
+"できないであろう。"
+
+#. type: Plain text
+#: manual/ACL.md:21
+msgid ""
+"By default, the authenticated user's effective permissions are only mapped "
+"to the UARights permission structure, not the UNIX mode.  You can adjust "
+"this behavior with the configuration option [map acls](afp.conf.html#options-"
+"for-acl-handling)."
+msgstr ""
+"デフォルトでは、認証ユーザーに有効なパーミションは UNIX のモードではなく、前"
+"記 UARights の機構のみに対応付けられる。この挙動は設定オプション [map acls]"
+"(afp.conf.html#options-for-acl-handling) で修正することができる。"
+
+#. type: Plain text
+#: manual/ACL.md:32
+msgid ""
+"However, neither in Finder \"Get Info\" windows nor in the Terminal will you "
+"be able to see the ACLs, because of how macOS ACLs are designed.  To display "
+"ACLs on the client, you must set up both client and server as part of an "
+"authentication domain (directory service, e.g. LDAP, OpenDirectory).  The "
+"reason is that macOS ACLs are bound to UUIDs, not just UIDs or GIDs.  "
+"Therefore **afpd** must be able to map every filesystem UID and GID to a "
+"UUID so that it can return server-side ACLs — which are bound to UNIX UID "
+"and GID — mapped to macOS UUIDs."
+msgstr ""
+"しかしながら、Finder の「情報を見る」ウィンドウでもターミナルでも、ACL を見る"
+"ことは不可能で、そこで見ているのは macOS で ACL がどのように設計されたのかと"
+"いう結果である。もしクライアント上でも ACL を表示させたいと思うならば、諸々を"
+"認証ドメイン（ディレクトリサービス、例えば、LDAP や OpenDirectory）の一部と、"
+"より内包されているようにして、クライアント側でもサーバー側でもセットアップを"
+"おこなうべきである。その理由は、macOS ACL UID と GID だけでなく UUID と紐付い"
+"ているためである。このため、afpd は全てのファイルシステムの UID と GID を "
+"UUID に紐付けできなければならない。そうすれば、afpd は macOS の UUID に紐付け"
+"た UNIX UID と GID も含めたサーバー側の ACL を返すことができる。"
+
+#. type: Plain text
+#: manual/ACL.md:38
+msgid ""
+"Netatalk can query a directory server using LDAP.  Either the directory "
+"server already provides a UUID attribute for users and groups (Active "
+"Directory, Open Directory), or you can repurpose an unused attribute (or add "
+"a new one) in your directory server (e.g. OpenLDAP)."
+msgstr ""
+"Netatalk は LDAP クエリーを使ってディレクトリサーバーに問い合わせができる。"
+"ディレクトリサーバー（Active Directory、Open Directory）が既にユーザーとグ"
+"ループの UUID 属性を提供している。 あるいはディレクトリサーバー（例えば "
+"OpenLDAP）に使用されていない属性を再利用する（あるいは新たに追加する）のいず"
+"れかである。"
+
+#. type: Plain text
+#: manual/ACL.md:40
+msgid "In detail:"
+msgstr "より踏み込むと："
+
+#. type: Bullet: '1. '
+#: manual/ACL.md:42
+msgid "For Solaris/ZFS: ZFS Volumes"
+msgstr "ZFS を使っている Solarisの ZFS ボリュームごとに対して、"
+
+#. type: Plain text
+#: manual/ACL.md:45
+#, no-wrap
+msgid ""
+"    You should configure the following ZFS ACL properties for any volume you want to use\n"
+"    with Netatalk:\n"
+msgstr "    Netatalk を使用したいと思っているあらゆるボリュームを下記 ZFS ACL のプロパティを設定するべきである：\n"
+
+#. type: Plain text
+#: manual/ACL.md:48
+#, no-wrap
+msgid ""
+"        aclinherit = passthrough\n"
+"        aclmode = passthrough\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/ACL.md:51
+#, no-wrap
+msgid ""
+"    For an explanation of what these properties do and how to apply them,\n"
+"    check your host's ZFS documentation (e.g. *man zfs*).\n"
+msgstr ""
+"    このプロパティが何をするのか、どのように適用するのか、についての説明は、ホストの\n"
+"    ZFS ドキュメンテーション（例えば *man zfs*）を確認のこと。\n"
+
+#. type: Bullet: '2. '
+#: manual/ACL.md:53
+msgid "Authentication Domain"
+msgstr "認証ドメイン"
+
+#. type: Plain text
+#: manual/ACL.md:60
+#, no-wrap
+msgid ""
+"    Your server and clients must be part of a security association\n"
+"    where identity data comes from a common source.\n"
+"    ACLs in Darwin are based on UUIDs, as is the ACL specification in AFP 3.2.\n"
+"    Your source of identity data must provide an attribute\n"
+"    for every user and group containing a UUID stored as an ASCII string.\n"
+"    In other words:\n"
+msgstr ""
+"    サーバーとクライアントがセキュリティ連携の一部となっていて、ユーザー\n"
+"    id データは共通のソースから出てこなければならない。Darwin の ACL は\n"
+"    UUID に基づいている。なので、AFP 3.2 での ACL の仕様は Darwin の ACL\n"
+"    である。故に id\n"
+"    データのソースは全てのユーザーとグループの属性を提供できなければならない。ここで\n"
+"    UUID は ASCII テキストとして保管されている。言い換えれば：\n"
+
+#. type: Bullet: '    - '
+#: manual/ACL.md:63
+msgid ""
+"You need an Open Directory server or an LDAP server where you store UUIDs in "
+"an attribute."
+msgstr ""
+"UUID を何らかの属性に保管している場合は Open Directory サーバーないしは LDAP "
+"サーバーが必要である。"
+
+#. type: Bullet: '    - '
+#: manual/ACL.md:65
+msgid "Your clients must be configured to use this server."
+msgstr ""
+"クライアントはこのサーバーを使用するように構成されていなければならない。"
+
+#. type: Bullet: '    - '
+#: manual/ACL.md:68
+msgid ""
+"Your server should be configured to use this server via nsswitch and PAM."
+msgstr ""
+"サーバーは nsswitch と PAM 経由で使用されるよう構成しなければならない。"
+
+#. type: Bullet: '    - '
+#: manual/ACL.md:72
+msgid ""
+"Configure Netatalk via the [LDAP options for ACLs](afp.conf.html#options-for-"
+"acl-handling)  in *afp.conf* so that Netatalk can retrieve UUIDs for users "
+"and groups via LDAP search queries."
+msgstr ""
+"Netatalk が LDAP 検索クエリでユーザーとグループの UUID を引き出せるように、"
+"*afp.conf* 内で [ACL 専用のオプション](afp.conf.html#options-for-acl-"
+"handling)を使って Netatalk を設定しなければならない。"
+
+#. type: Title ##
+#: manual/ACL.md:73
+#, no-wrap
+msgid "macOS ACLs"
+msgstr "macOS の ACL"
+
+#. type: Plain text
+#: manual/ACL.md:79
+msgid ""
+"With Access Control Lists (ACLs), macOS offers a powerful extension of the "
+"traditional UNIX permissions model.  An ACL is an ordered list of Access "
+"Control Entries (ACEs)  that explicitly grant or deny a set of permissions "
+"to a given user or group."
+msgstr ""
+"アクセス制御リスト (ACL) と共に、macOS は正統的な UNIX のパーミッションモデル"
+"の有力な拡張を提案した。 ACL は、所定のユーザーあるいはグループのパーミッショ"
+"ンのセットを明示的に許可したり拒否するアクセス制御エントリー (ACE) の番号つき"
+"リストである。"
+
+#. type: Plain text
+#: manual/ACL.md:85
+msgid ""
+"Unlike UNIX permissions, which are bound to user or group IDs, ACLs are tied "
+"to UUIDs.  Accessing an object's ACL therefore requires that server and "
+"client use a common directory service to translate between UUIDs and user/"
+"group IDs."
+msgstr ""
+"ユーザー ID、またはグループ ID と紐付いている UNIX パーミッションとは異なり、"
+"ACL は UUID と紐付いている。この理由により、あるオブジェクトの ACL にアクセス"
+"すると、サーバーとクライアントは、UUID と ユーザー／グループ ID 間の変換をし"
+"てくれる、共通のディレクトリサービスを使うことを要求される。"
+
+#. type: Plain text
+#: manual/ACL.md:98
+msgid ""
+"ACLs and UNIX permissions interact straightforwardly.  Because ACLs are "
+"optional, UNIX permissions act as a default mechanism for access control.  "
+"Changing an object's UNIX permissions leaves its ACL intact, and modifying "
+"an ACL never changes the object's UNIX permissions.  During access checks, "
+"macOS first examines an object's ACL, evaluating ACEs in order until all "
+"requested rights have been granted, a requested right has been explicitly "
+"denied by an ACE, or the end of the list has been reached.  If there is no "
+"ACL or the permissions granted by the ACL are insufficient, macOS next "
+"evaluates the object's UNIX permissions.  ACLs therefore always take "
+"precedence over UNIX permissions."
+msgstr ""
+"ACL と UNIX のパーミションの相互関係は比較的シンプルなものである。ACL はオプ"
+"ションなので、UNIX パーミションはアクセス制御のデフォルトのメカニズムの役割を"
+"する。オブジェクトの UNIX パーミションを変更しても ACL は手付かずのままで、"
+"ACL の修正でもオブジェクトの UNIX パーミションは決して変更されない。アクセス"
+"チェックの間、macOS は最初に以下の順序で ACE の評価をして、オブジェクトの "
+"ACL を検査する： 全てのリクエスト権限が許可されるまで、リクエストされた権限"
+"が ACE によって明示的に拒否された、あるいはリストの最後までたどり着いた。であ"
+"る。ACL がない、あるいは ACL に許可されたパーミションがリクエストを実行するの"
+"に十分でない場合、macOS は次にオブジェクトの UNIX パーミションの評価に入る。 "
+"つまり、ACL は常に UNIX のパーミションより優先順位が上位ということである。"
+
+#. type: Title ##
+#: manual/ACL.md:99
+#, no-wrap
+msgid "ZFS ACLs"
+msgstr "ZFS の ACL"
+
+#. type: Plain text
+#: manual/ACL.md:103
+msgid ""
+"ZFS ACLs closely match macOS ACLs.  Both offer mostly identical fine-grained "
+"permissions and inheritance settings."
+msgstr ""
+"ZFS の ACL はほぼ macOS の ACL に匹敵するものである。 両者ともほぼ同一の良い"
+"粒度のパーミションと設定の継承が提供されている。"
+
+#. type: Title ##
+#: manual/ACL.md:104
+#, no-wrap
+msgid "POSIX ACLs"
+msgstr "POSIX の ACL"
+
+#. type: Title ###
+#: manual/ACL.md:106
+#, no-wrap
+msgid "Overview"
+msgstr "概要"
+
+#. type: Plain text
+#: manual/ACL.md:112
+msgid ""
+"Compared to macOS or NFSv4 ACLs, POSIX ACLs represent a different, less "
+"versatile approach to overcoming the limitations of traditional UNIX "
+"permissions.  Implementations are based on the withdrawn POSIX 1003.1e "
+"standard."
+msgstr ""
+"macOS あるいは NFSv4 の ACL と比較すると、POSIX ACL は、伝統的な UNIX パーミ"
+"ションの制限を打開するには異質で汎用性のないアプローチを表現している。実装は "
+"POSIX 標準を取り込んだものを基礎としている。"
+
+#. type: Plain text
+#: manual/ACL.md:122
+msgid ""
+"The standard defines two types of ACLs.  Files and directories can have "
+"access ACLs, which are consulted for access checks.  Directories can also "
+"have default ACLs, which are not used in access checks.  When a new object "
+"is created inside a directory with a default ACL, the default ACL is applied "
+"to the new object as its access ACL.  Subdirectories inherit default ACLs "
+"from their parent.  There are no further mechanisms of inheritance control."
+msgstr ""
+"POSIX 1003.1e 標準では二つのタイプの ACL を定義している。ファイルとディレクト"
+"リは、 アクセスチェックのために問い合わせを受けるアクセス ACL を保持すること"
+"ができる。 ディレクトリはアクセスチェックには向いていないデフォルトの ACL も"
+"保持することができる。デフォルトの ACL 付きでディレクトリの内側に新規オブジェ"
+"クトが作成された時、デフォルトの ACL はそれがアクセス ACL であるものとして新"
+"規オブジェクトに適用される。サブディレクトリは親ディレクトリのデフォルト ACL "
+"を継承する。 継承制御にそれ以上のメカニズムは何もない。"
+
+#. type: Plain text
+#: manual/ACL.md:124
+msgid "Architectural differences between POSIX ACLs and macOS ACLs include:"
+msgstr "設計上、POSIX ACL と macOS 間の違いに含まれている特筆すべき点は："
+
+#. type: Plain text
+#: manual/ACL.md:128
+msgid ""
+"- No fine-grained permissions model.  Like UNIX permissions, POSIX ACLs only "
+"differentiate between read, write, and execute permissions."
+msgstr ""
+"- パーミションモデルは何も細分化されていない。UNIX のパーミション同様、POSIX "
+"ACLは読み込み、書き込み、そして実行権限を区別している。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:130
+msgid "Entries within an ACL are unordered."
+msgstr "ACL 内のエントリーに順序はない。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:132
+msgid ""
+"POSIX ACLs can only grant rights. There is no way to explicitly deny rights."
+msgstr ""
+"POSIX ACLは権限を許可することしかできない。権限を明示的に拒否する手立てはな"
+"い。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:134
+msgid "UNIX permissions are integrated into an ACL as special entries."
+msgstr "UNIX パーミションは特別なエントリーとして ACL に統合されている。"
+
+#. type: Plain text
+#: manual/ACL.md:139
+msgid ""
+"POSIX 1003.1e defines six different types of ACL entries.  The first three "
+"types integrate standard UNIX permissions.  They form a minimal ACL; their "
+"presence is mandatory and only one entry of each type is allowed per ACL."
+msgstr ""
+"POSIX 1003.1e は6つの異なるタイプの ACL エントリーを定義している。前半の3つは"
+"標準の UNIX パーミションを統合するのに用いられている。これらは ACL として最小"
+"限の形であり、存在することは必須であり、 そして各々のタイプにつきたった一つの"
+"エントリーだけが ACL 内に許される。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:141
+msgid "ACL_USER_OBJ: the owner's access rights."
+msgstr "ACL_USER_OBJ：所有ユーザー（オーナー）のアクセス権限。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:143
+msgid "ACL_GROUP_OBJ: the owning group's access rights."
+msgstr "ACL_GROUP_OBJ：所有グループ（オーナーグループ）のアクセス権限。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:145
+msgid "ACL_OTHER: everybody's access rights."
+msgstr "ACL_OTHER：あらゆるユーザー・グループに対するアクセス権限。"
+
+#. type: Plain text
+#: manual/ACL.md:147
+msgid "The remaining entry types extend the traditional permissions model:"
+msgstr "残りのエントリーのタイプは伝統的パーミションモデルの拡張である："
+
+#. type: Bullet: '- '
+#: manual/ACL.md:149
+msgid "ACL_USER: grants access rights to a specific user."
+msgstr "ACL_USER：あるユーザーに対するアクセス権を許可する。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:151
+msgid "ACL_GROUP: grants access rights to a specific group."
+msgstr "ACL_GROUP：あるグループに対するアクセス権を許可する。"
+
+#. type: Plain text
+#: manual/ACL.md:159
+msgid ""
+"- ACL_MASK: limits the maximum access rights that can be granted by entries "
+"of type ACL_GROUP_OBJ, ACL_USER, and ACL_GROUP.  As the name suggests, this "
+"entry acts as a mask.  Only one ACL_MASK entry is allowed per ACL.  If an "
+"ACL contains ACL_USER or ACL_GROUP entries, an ACL_MASK entry must be "
+"present; otherwise it is optional."
+msgstr ""
+"- ACL_MASK：ACL_GROUP_OBJ、ACL_USER および ACL_GROUP タイプのエントリーで許可"
+"されうるアクセス権の最大値を制限する。名前の示すように、このエントリーはマス"
+"クとして働く。一つの ACL あたり一個だけの ACL_MASK エントリーが許される。も"
+"し ACL に、ACL_USER ないしは ACL_GROUP エントリーが含まれているのであれば、"
+"ACL_MASK エントリーも存在しなければならない。さもなくば、ACL_MASK はオプショ"
+"ンである。"
+
+#. type: Plain text
+#: manual/ACL.md:166
+msgid ""
+"In order to maintain compatibility with applications not aware of ACLs, "
+"POSIX 1003.1e changes the semantics of system calls and utilities that "
+"retrieve or manipulate an object's UNIX permissions.  If an object only has "
+"a minimal ACL, the group permission bits of the UNIX permissions correspond "
+"to the value of the ACL_GROUP_OBJ entry."
+msgstr ""
+"ACL を意識していないアプリケーションとの互換性を維持のため、POSIX 1003.1e "
+"は、オブジェクトの UNIX パーミションを検索したり処理するシステムコールやユー"
+"ティリティーのセマンティクスを変える。オブジェクトが必要最低限の ACL のみ保持"
+"している場合、UNIX パーミションのグループパーミションビットは ACL_GROUP_OBJ "
+"エントリーの値に対応する。"
+
+#. type: Plain text
+#: manual/ACL.md:172
+msgid ""
+"However, if the ACL also contains an ACL_MASK entry, the behavior differs.  "
+"The group permission bits of the UNIX permissions correspond to the value of "
+"the ACL_MASK entry — i.e. calling *chmod g-w* will not only revoke write "
+"access for the group, but for all entities granted write access by ACL_USER "
+"or ACL_GROUP entries."
+msgstr ""
+"しかしながら、もし ACL に ACL_MASK エントリーが含まれている場合、挙動は異なる"
+"ものとなる。UNIX パーミションのグループパーミションビットは ACL_MASK エント"
+"リーの値に対応する、すなわち、*chmod g-w* の呼び出しは、グループに対する書き"
+"込みアクセスを無効にするだけでなく、 ACL_USER ないしは ACL_GROUP エントリーに"
+"よって許可されていた書き込みアクセスのエンティティ全てを無効にするのである。"
+
+#. type: Title ###
+#: manual/ACL.md:173
+#, no-wrap
+msgid "Mapping POSIX ACLs to macOS ACLs"
+msgstr "POSIX ACL から macOS の ACL へのマッピング"
+
+#. type: Plain text
+#: manual/ACL.md:182
+msgid ""
+"When a client reads an object's ACL, **afpd** maps its POSIX ACL onto an "
+"equivalent macOS ACL.  Writing an object's ACL requires **afpd** to map a "
+"macOS ACL onto a POSIX ACL.  Due to architectural limitations of POSIX ACLs, "
+"an exact mapping is usually impossible, so the result is an approximation of "
+"the original ACL's semantics."
+msgstr ""
+"クライアントがオブジェクトの ACL を読み込もうとした時、**afpd** は POSIX ACL "
+"からそれに等価な macOS の ACL にマップする。オブジェクトの ACL の書き込みに"
+"は **afpd** が macOS の ACL を POSIX ACL にマップすることが要求される。POSIX "
+"ACL の設計上の制約から、マッピングを経た結果がオリジナルの ACL のセマンティク"
+"スと概ね同じになるような正確なマッピングを見出すことは通常不可能である。"
+
+#. type: Plain text
+#: manual/ACL.md:185
+msgid ""
+"- **afpd** silently discards entries that deny permissions, because they "
+"cannot be represented in the POSIX architecture."
+msgstr ""
+"- **afpd** はパーミションを拒否したエントリーを通告なしに破棄する。これは "
+"POSIX の設計では表現する手立てがないためである。"
+
+#. type: Plain text
+#: manual/ACL.md:188
+msgid ""
+"- Because entries within POSIX ACLs are unordered, it is impossible to "
+"preserve order."
+msgstr ""
+"- POSIX ACL ではエントリーが順序付きではないので、順序を保管するのは不可能で"
+"ある。"
+
+#. type: Bullet: '- '
+#: manual/ACL.md:190
+msgid "Inheritance control is subject to severe limitations:"
+msgstr "継承制御は厳しい制限を受けやすい："
+
+#. type: Bullet: '  - '
+#: manual/ACL.md:193
+msgid ""
+"Entries with the only_inherit flag set become part of the directory's "
+"default ACL only."
+msgstr ""
+"only_inherit フラグが設定されたエントリーはディレクトリのデフォルト ACL の一"
+"部にしかならない。"
+
+#. type: Bullet: '  - '
+#: manual/ACL.md:198
+msgid ""
+"Entries with at least one of the flags file_inherit, directory_inherit, or "
+"limit_inherit set become part of the directory's access and default ACL, but "
+"the restrictions they impose on inheritance are ignored."
+msgstr ""
+"少なくとも file_inherit、directory_inherit ないしは limit_inherit のうち一つ"
+"が設定されたエントリーはディレクトリアクセスとデフォルト ACL の一部分となる。"
+"しかし継承に課せられた制約は無視される。"
+
+#. type: Plain text
+#: manual/ACL.md:201
+msgid ""
+"- The lack of a fine-grained permission model on the POSIX side normally "
+"results in an increase of granted permissions."
+msgstr ""
+"- POSIX 側により細分化されたパーミションモデルがないことで、 結果としては通常"
+"は許可されるパーミションが増えるという結果になる。"
+
+#. type: Plain text
+#: manual/ACL.md:216
+msgid ""
+"Because macOS clients are unaware of the POSIX 1003.1e-specific relationship "
+"between UNIX permissions and ACL_MASK, **afpd** does not expose this feature "
+"to the client.  This avoids compatibility issues and handles UNIX "
+"permissions and ACLs the same way as Apple's reference implementation of "
+"AFP.  When an object's UNIX permissions are requested, **afpd** calculates "
+"proper group rights and returns the result together with the owner's and "
+"everybody's access rights to the caller via the \"permissions\" and "
+"\"ua_permissions\" members of the FPUnixPrivs structure (see Apple Filing "
+"Protocol Reference, page 181).  When changing an object's permissions, "
+"**afpd** always updates ACL_USER_OBJ, ACL_GROUP_OBJ, and ACL_OTHER.  If an "
+"ACL_MASK entry is present, **afpd** recalculates its value so that the new "
+"group rights become effective while existing ACL_USER and ACL_GROUP entries "
+"remain intact."
+msgstr ""
+"macOS クライアントは POSIX 1003.1e 特有の UNIX パーミションと ACL_MASK との関"
+"係を意識していないので、**afpd** は互換性問題を回避するためにこの機能をクライ"
+"アントに公開せず、そして **afpd** は \\*unix パーミションと ACL をアップルの "
+"AFP 用リファレンス実装がするのと同じ方法で扱う。オブジェクトの UNIX パーミ"
+"ションがリクエストされた時、**afpd** は適切なグループ権限を算出し、"
+"FPUNIXPrivs 構造の \"permissions\" と \"ua_permissions\" 要素を介し、オーナー"
+"および全ての者のアクセス権限も共に付して、リクエストした側に結果を返す。"
+"（Apple Filing Protocol Reference の 181 ページ参照） オブジェクトのパーミ"
+"ションを変更すると、**afpd** は常に ACL_USER_OBJ、ACL_GROUP_OBJ および "
+"ACL_OTHERS を更新する。もし ACL_MASK エントリーも存在すれば、新しいグループの"
+"権限が有効になり、かつ、既存の ACL_USER あるいは ACL_GROUP 型のエントリーは手"
+"付かずになるような ACL_MASK の値の再計算を **afpd** が行う。"

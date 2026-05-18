@@ -2,13 +2,13 @@
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
 # Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-05-25 10:43+0200\n"
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #. type: Title ####
-#: manual/Configuration.md:29 manual/Upgrading.md:32
+#: manual/Configuration.md:13 manual/Upgrading.md:48
 #, no-wrap
 msgid "afp.conf"
 msgstr ""
@@ -58,19 +58,57 @@ msgstr ""
 "主に、**atalkd** デーモンと **atalkd.conf** 設定ファイル、また **papd** デー"
 "モンと **papd.conf** 設定ファイルが追加された。"
 
+#. type: Plain text
+#: manual/Upgrading.md:17
+msgid ""
+"A handful of options in *afp.conf* have been changed or removed "
+"incrementally throughout the Netatalk v4 release history.  See the table of "
+"old and new option names below for details."
+msgstr ""
+"*afp.conf* の一部のオプションは Netatalk v4 のリリース履歴を通じて段階的に変"
+"更または削除されている。詳細は以下の新旧オプション名対応表を参照のこと。"
+
+#. type: Plain text
+#: manual/Upgrading.md:29
+#, no-wrap
+msgid ""
+"| v3 afp.conf        | v4 afp.conf      | Change in | Remarks                                                  |\n"
+"| ------------------ | ---------------- | --------- | -------------------------------------------------------- |\n"
+"| appledouble        | -                | 4.2.0     | controlled solely by 'ea' now                            |\n"
+"| dircachesize       | dircache size    | 4.5.0     | -                                                        |\n"
+"| fce ignore names   | fce ignore names | 4.2.0     | comma delineation rather than forward slash delineation  |\n"
+"| root postexec      | -                | 4.1.0     | use 'postexec' instead                                   |\n"
+"| root preexec       | -                | 4.1.0     | use 'preexec' instead                                    |\n"
+"| root preexec close | -                | 4.1.0     | use 'preexec close' instead                              |\n"
+"| start dbus         | -                | 4.1.0     | D-Bus is controlled with 'spotlight'                     |\n"
+"| start tracker      | -                | 4.1.0     | Tracker/Localsearch is controlled with 'spotlight'       |\n"
+"| zeroconf name      | server name      | 4.2.0     | now applies to Classic Mac OS clients too                |\n"
+msgstr ""
+"| v3 afp.conf | v4 afp.conf | 変更バージョン | 詳細 |\n"
+"|----|----|----|----|\n"
+"| appledouble | - | 4.2.0 | 'ea' のみで制御されるようになった |\n"
+"| dircachesize | dircache size | 4.5.0 | - |\n"
+"| fce ignore names | fce ignore names | 4.2.0 | スラッシュ区切りからカンマ区切りへ |\n"
+"| root postexec | - | 4.1.0 | 'postexec' を使用する |\n"
+"| root preexec | - | 4.1.0 | 'preexec' を使用する |\n"
+"| root preexec close | - | 4.1.0 | 'preexec close' を使用する |\n"
+"| start dbus | - | 4.1.0 | D-Bus は 'spotlight' で制御 |\n"
+"| start tracker | - | 4.1.0 | Tracker/Localsearch は 'spotlight' で制御 |\n"
+"| zeroconf name | server name | 4.2.0 | Classic Mac OS クライアントにも適用されるようになった |\n"
+
 #. type: Title ##
-#: manual/Upgrading.md:14
+#: manual/Upgrading.md:30
 #, no-wrap
 msgid "Upgrading from Netatalk 2"
 msgstr "Netatalk 2 からのアップグレード"
 
 #. type: Plain text
-#: manual/Upgrading.md:17
+#: manual/Upgrading.md:33
 msgid "There are three major changes between Netatalk 2 and Netatalk 4:"
 msgstr "Netatalk 4 の主要な変更は以下の3点："
 
 #. type: Bullet: '1. '
-#: manual/Upgrading.md:20
+#: manual/Upgrading.md:36
 msgid ""
 "New configuration files that replaces most of the previous ones: *afp.conf* "
 "and *extmap.conf*"
@@ -79,7 +117,7 @@ msgstr ""
 "を変更し、新しい設定ファイルを追加した： *afp.conf* と *extmap.conf*"
 
 #. type: Bullet: '2. '
-#: manual/Upgrading.md:23
+#: manual/Upgrading.md:39
 msgid ""
 "New backend for file metadata which stores metadata in extended attributes "
 "of the filesystem."
@@ -87,7 +125,7 @@ msgstr ""
 "ファイルメタデータをファイルシステムの拡張属性に保存する新しいバックエンド。"
 
 #. type: Bullet: '3. '
-#: manual/Upgrading.md:29
+#: manual/Upgrading.md:45
 msgid ""
 "The AppleTalk transport layer is disabled by default. If you want to use "
 "Netatalk with very old Macs, turn it on with the **appletalk = yes** option "
@@ -100,25 +138,25 @@ msgstr ""
 "を立ち上げてください。"
 
 #. type: Title ###
-#: manual/Upgrading.md:30
+#: manual/Upgrading.md:46
 #, no-wrap
 msgid "New configuration"
 msgstr "設定まわりの変更点"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:35
+#: manual/Upgrading.md:51
 msgid "ini style syntax (akin to Samba's smb.conf)"
 msgstr "（Samba の smb.conf のような） \"ini\" スタイルの構文"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:37
+#: manual/Upgrading.md:53
 msgid "one to rule them all: configure AFP settings and volumes in one file"
 msgstr ""
 "一つで設定すべてを指示するという点： AFP 及びボリュームの構成を共に一つのファ"
 "イルで設定することになるという点"
 
 #. type: Plain text
-#: manual/Upgrading.md:40
+#: manual/Upgrading.md:56
 msgid ""
 "- obsoletes *afpd.conf*, *netatalk.conf*, *AppleVolumes.default* and "
 "*afp_ldap.conf*"
@@ -127,7 +165,7 @@ msgstr ""
 "*afp_ldap.conf* の廃止"
 
 #. type: Plain text
-#: manual/Upgrading.md:43
+#: manual/Upgrading.md:59
 #, no-wrap
 msgid ""
 "> ***WARNING:*** Most option names have changed. Read the full manpage\n"
@@ -137,18 +175,18 @@ msgstr ""
 "[afp.conf](afp.conf.5.html) の manpage 全体を読むこと\n"
 
 #. type: Title ####
-#: manual/Upgrading.md:44
+#: manual/Upgrading.md:60
 #, no-wrap
 msgid "extmap.conf"
 msgstr ""
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:47
+#: manual/Upgrading.md:63
 msgid "maps file extensions to Classic Mac OS type/creator"
 msgstr "Classic Mac OS type/creator と拡張子の関連付け"
 
 #. type: Plain text
-#: manual/Upgrading.md:50
+#: manual/Upgrading.md:66
 msgid ""
 "- unlike 2.x, the mappings are disabled by default; uncomment the lines in "
 "the file to enable them"
@@ -157,18 +195,18 @@ msgstr ""
 "ファイル内の行のコメントを解除する"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:52
+#: manual/Upgrading.md:68
 msgid "obsoletes *AppleVolumes.system*"
 msgstr "*AppleVolumes.system* の廃止"
 
 #. type: Title ###
-#: manual/Upgrading.md:53
+#: manual/Upgrading.md:69
 #, no-wrap
 msgid "New metadata backend"
 msgstr "新たなメタデータバックエンド"
 
 #. type: Plain text
-#: manual/Upgrading.md:57
+#: manual/Upgrading.md:73
 msgid ""
 "New file metadata backend **ea = sys** which stores macOS extended "
 "attributes and Classic Mac OS resource forks in extended attributes of the "
@@ -178,12 +216,12 @@ msgstr ""
 "性に保存する **ea = sys** という新しいバックエンド。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:59
+#: manual/Upgrading.md:75
 msgid "default backend (!)"
 msgstr "デフォルトのバックエンドである（！）"
 
 #. type: Plain text
-#: manual/Upgrading.md:62
+#: manual/Upgrading.md:78
 msgid ""
 "- requires a filesystem with Extended Attributes, fallback is AppleDouble v2 "
 "which is enabled with **ea = ad**"
@@ -192,26 +230,26 @@ msgstr ""
 "使用が代替となる"
 
 #. type: Plain text
-#: manual/Upgrading.md:65
+#: manual/Upgrading.md:81
 msgid ""
-"- converts filesystems from AppleDouble v2 to Extended Attributes on the fly "
-"when accessed by clients (can be disabled with **convert appledouble**)"
+"- on the fly conversion from AppleDouble v2 to Extended Attributes when "
+"accessed by clients, enabled with **convert appledouble = yes**"
 msgstr ""
-"- ファイルシステムを AppleDouble v2 から拡張属性への変換はアクセス時、その都"
-"度行われる（**convert appledouble** オプションを無効にすることも可能）"
+"- クライアントによるアクセス時に AppleDouble v2 から拡張属性へのオンザフライ"
+"変換が行われる。**convert appledouble = yes** で有効化される。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:67
+#: manual/Upgrading.md:83
 msgid "**dbd** can be used to do conversion in one shot"
 msgstr "一括で変換する場合 **dbd** を用いることができる"
 
 #. type: Plain text
-#: manual/Upgrading.md:69
+#: manual/Upgrading.md:85
 msgid "Implementation details:"
 msgstr "実装の詳細："
 
 #. type: Plain text
-#: manual/Upgrading.md:72
+#: manual/Upgrading.md:88
 msgid ""
 "- stores Mac Metadata (e.g. FinderInfo, AFP Flags, Comment, CNID) in an "
 "Extended Attributed named *org.netatalk.Metadata*"
@@ -220,7 +258,7 @@ msgstr ""
 "*org.netatalk.Metadata*という名前の拡張属性に保存される。"
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:76
+#: manual/Upgrading.md:92
 msgid ""
 "Additionally, on macOS hosts running Netatalk 4.1.0 or later, FinderInfo is "
 "natively stored in the file system and appears as an Extended Attribute "
@@ -231,12 +269,12 @@ msgstr ""
 "として表示される。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:78
+#: manual/Upgrading.md:94
 msgid "stores Mac ResourceFork either in"
 msgstr "マックのリソースフォークは："
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:81
+#: manual/Upgrading.md:97
 msgid ""
 "an Extended Attribute named *org.netatalk.ResourceFork* on Solaris w. ZFS, "
 "or in"
@@ -244,14 +282,14 @@ msgstr ""
 "ZFSを用いたSolarisでは*org.netatalk.ResourceFork*という拡張属性に保存される。"
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:84
+#: manual/Upgrading.md:100
 msgid "an extra AppleDouble file named *._file* for a file named *file*, or"
 msgstr ""
 "ないしは、ファイル名が*file*であるものに対して各々、*._file*という名の別の"
 "AppleDoubleファイルに保存される。"
 
 #. type: Bullet: '  - '
-#: manual/Upgrading.md:87
+#: manual/Upgrading.md:103
 msgid ""
 "natively stored in the resource fork on macOS hosts as of Netatalk 4.1.0."
 msgstr ""
@@ -259,7 +297,7 @@ msgstr ""
 "いる。"
 
 #. type: Plain text
-#: manual/Upgrading.md:95
+#: manual/Upgrading.md:111
 msgid ""
 "- the format of the .\\_ file is exactly as the Mac’s CIFS client expects it "
 "when accessing the same filesystem via a CIFS server (Samba), thus you can "
@@ -279,13 +317,13 @@ msgstr ""
 "要である。"
 
 #. type: Title ###
-#: manual/Upgrading.md:96
+#: manual/Upgrading.md:112
 #, no-wrap
 msgid "Other major changes"
 msgstr "そのほかの主要な変更点"
 
 #. type: Plain text
-#: manual/Upgrading.md:101
+#: manual/Upgrading.md:117
 msgid ""
 "- New service controller daemon [netatalk](netatalk.8.html) which is "
 "responsible for starting and restarting the AFP and CNID daemons. All "
@@ -297,7 +335,7 @@ msgstr ""
 "要あり！"
 
 #. type: Plain text
-#: manual/Upgrading.md:105
+#: manual/Upgrading.md:121
 msgid ""
 "- All CNID databases are now stored in a *netatalk/CNID* subdirectory of "
 "your system's state directory path, e.g. */var/lib*, rather than in the "
@@ -308,7 +346,7 @@ msgstr ""
 "前は各共有ボリュームにて保存されていた。"
 
 #. type: Plain text
-#: manual/Upgrading.md:108
+#: manual/Upgrading.md:124
 msgid ""
 "- Netatalk 2.x volume options **usedots** and **upriv** now enabled by "
 "default"
@@ -317,33 +355,33 @@ msgstr ""
 "なった。"
 
 #. type: Bullet: '- '
-#: manual/Upgrading.md:110
+#: manual/Upgrading.md:126
 msgid "Removed SLP and AFP proxy support"
 msgstr "SLP 及び AFP プロキシのサポート機能は削除。"
 
 #. type: Title ###
-#: manual/Upgrading.md:111
+#: manual/Upgrading.md:127
 #, no-wrap
 msgid "Upgrading procedure"
 msgstr "アップグレード手段"
 
 #. type: Bullet: '1. '
-#: manual/Upgrading.md:114
+#: manual/Upgrading.md:130
 msgid "Stop Netatalk 2.x"
 msgstr "Netatalk 2.x を停止する"
 
 #. type: Bullet: '2. '
-#: manual/Upgrading.md:116
+#: manual/Upgrading.md:132
 msgid "Install Netatalk 4"
 msgstr "Netatalk 4 をインストールする"
 
 #. type: Bullet: '3. '
-#: manual/Upgrading.md:118
+#: manual/Upgrading.md:134
 msgid "Manually recreate configurations in *afp.conf* and *extmap.conf*"
 msgstr "設定 *afp.conf* 及び *extmap.conf* を自力で書き換える"
 
 #. type: Bullet: '4. '
-#: manual/Upgrading.md:122
+#: manual/Upgrading.md:138
 msgid ""
 "Update your Netatalk init script to start **netatalk** instead of **afpd** "
 "and **cnid_metad**, or replace it with the appropriate stock init script for "
@@ -353,7 +391,7 @@ msgstr ""
 "Netatalk 起動スクリプトを更新するか、標準の起動スクリプトに置き換える。"
 
 #. type: Bullet: '5. '
-#: manual/Upgrading.md:126
+#: manual/Upgrading.md:142
 msgid ""
 "Move *afp_voluuid.conf* and *afp_signature.conf* to the localstate directory "
 "(default *$prefix/var/netatalk/*), you can use **afpd -v** in order to find "
@@ -364,18 +402,18 @@ msgstr ""
 "**afpd -v** コマンドが有用"
 
 #. type: Bullet: '6. '
-#: manual/Upgrading.md:128
+#: manual/Upgrading.md:144
 msgid "Start Netatalk 4"
 msgstr "Netatalk 4 を起動する"
 
 #. type: Title ###
-#: manual/Upgrading.md:129
+#: manual/Upgrading.md:145
 #, no-wrap
 msgid "Old and new configuration file names"
 msgstr "新旧設定ファイル名"
 
 #. type: Plain text
-#: manual/Upgrading.md:142
+#: manual/Upgrading.md:158
 #, no-wrap
 msgid ""
 "| Old File Name        | New File Name      | Remarks                       |\n"
@@ -403,13 +441,13 @@ msgstr ""
 "| ~/.AppleVolumes | - | 廃止 |\n"
 
 #. type: Title ###
-#: manual/Upgrading.md:143
+#: manual/Upgrading.md:159
 #, no-wrap
 msgid "Old and new option names"
 msgstr "新旧オプション対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:147
+#: manual/Upgrading.md:163
 msgid ""
 "Mappings from netatalk.conf (Debian: */etc/default/netatalk*) to afp.conf or "
 "to the means of invocation"
@@ -418,7 +456,7 @@ msgstr ""
 "表、および起動手段の対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:166
+#: manual/Upgrading.md:182
 #, no-wrap
 msgid ""
 "| Old netatalk.conf  | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                       |\n"
@@ -460,12 +498,12 @@ msgstr ""
 "| ATALK_ZONE | ddp zone | - | - | (G) | 4.0.0で復活 |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:168
+#: manual/Upgrading.md:184
 msgid "Mappings from afpd.conf to afp.conf"
 msgstr "afpd.conf から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:232
+#: manual/Upgrading.md:248
 #, no-wrap
 msgid ""
 "| Old afpd.conf      | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                              |\n"
@@ -505,7 +543,7 @@ msgid ""
 "| -closevol          | close vol       | -                        | no                       | (G)     | -                                    |\n"
 "| -ntdomain          | nt domain       | -                        | -                        | (G)     | -                                    |\n"
 "| -ntseparator       | nt separator    | -                        | -                        | (G)     | -                                    |\n"
-"| -dircachesize      | dircachesize    | 8192                     | 8192                     | (G)     | -                                    |\n"
+"| -dircachesize      | dircache size   | 8192                     | 65536                    | (G)     | -                                    |\n"
 "| -tcpsndbuf         | tcpsndbuf       | -                        | -                        | (G)     | OS default                           |\n"
 "| -tcprcvbuf         | tcprcvbuf       | -                        | -                        | (G)     | OS default                           |\n"
 "| -fcelistener       | fce listener    | -                        | -                        | (G)     | -                                    |\n"
@@ -513,7 +551,7 @@ msgid ""
 "| -fceevents         | fce events      | -                        | -                        | (G)     | -                                    |\n"
 "| -fceholdfmod       | fce holdfmod    | 60                       | 60                       | (G)     | -                                    |\n"
 "| -mimicmodel        | mimic model     | -                        | -                        | (G)     | -                                    |\n"
-"| -adminauthuser     | admin auth user | -                        | -                        | (G)     | -                                    |\n"
+"| -adminauthuser     | -               | -                        | -                        | (G)     | removed in 4.5.0                     |\n"
 "| -noacl2maccess     | map acls        | -                        | rights                   | (G)     | -                                    |\n"
 "| -[no]tcp           | -               | -tcp                     | -                        | -       | TCP transport layer is always active |\n"
 "| -[no]ddp           | appletalk       | -ddp                     | no                       | (G)     | introduced in 4.0.0                  |\n"
@@ -529,7 +567,7 @@ msgid ""
 "| -unsetuplog        | -               | -                        | -                        | -       | obsolete                             |\n"
 "| -authprintdir      | -               | -                        | -                        | -       | CAP style auth is obsoleted          |\n"
 "| -ddpaddr           | ddp address     | 0.0                      | 0.0                      | (G)     | introduced in 4.0.0                  |\n"
-"| -[no]icon          | legacy icon     | -noicon                  | -                        | (G)     | introduced in 4.0.2                  |\n"
+"| -[no]icon          | legacy icon     | -noicon                  | -                        | (G)/(V) | introduced in 4.0.2                  |\n"
 "| -keepsessions      | -               | -                        | -                        | -       | obsolete; Use kill -HUP              |\n"
 msgstr ""
 "| 旧 afpd.conf | 新 afp.conf | 旧デフォルト値 | 新デフォルト値 | セクション | 詳細 |\n"
@@ -569,7 +607,7 @@ msgstr ""
 "| -closevol | close vol | - | no | (G) | - |\n"
 "| -ntdomain | nt domain | - | - | (G) | - |\n"
 "| -ntseparator | nt separator | - | - | (G) | - |\n"
-"| -dircachesize | dircachesize | 8192 | 8192 | (G) | - |\n"
+"| -dircachesize | dircache size | 8192 | 65536 | (G) | - |\n"
 "| -tcpsndbuf | tcpsndbuf | - | - | (G) | OS のデフォルト |\n"
 "| -tcprcvbuf | tcprcvbuf | - | - | (G) | OS のデフォルト |\n"
 "| -fcelistener | fce listener | - | - | (G) | - |\n"
@@ -577,7 +615,7 @@ msgstr ""
 "| -fceevents | fce events | - | - | (G) | - |\n"
 "| -fceholdfmod | fce holdfmod | 60 | 60 | (G) | - |\n"
 "| -mimicmodel | mimic model | - | - | (G) | - |\n"
-"| -adminauthuser | admin auth user | - | - | (G) | - |\n"
+"| -adminauthuser | - | - | - | (G) | 4.5.0で廃止 |\n"
 "| -noacl2maccess | map acls | - | rights | (G) | - |\n"
 "| -[no]tcp | - | -tcp | - | - | 常に TCP を有効 |\n"
 "| -[no]ddp | appletalk | -ddp | no | (G) | 4.0.0で復活 |\n"
@@ -593,16 +631,16 @@ msgstr ""
 "| -unsetuplog | - | - | - | - | 廃止 |\n"
 "| -authprintdir | - | - | - | - | CAP スタイル認証印刷が廃止 |\n"
 "| -ddpaddr | ddp address | 0.0 | 0.0 | (G) | 4.0.0で復活 |\n"
-"| -[no]icon | legacy icon | -noicon | - | (G) | 4.0.2で復活 |\n"
+"| -[no]icon | legacy icon | -noicon | - | (G)/(V) | 4.0.2で復活 |\n"
 "| -keepsessions | - | - | - | - | 廃止。kill -HUP を使用 |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:234
+#: manual/Upgrading.md:250
 msgid "Mappings from afp_ldap.conf to afp.conf"
 msgstr "afp_ldap.conf から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:249
+#: manual/Upgrading.md:265
 #, no-wrap
 msgid ""
 "| Old afp_ldap.conf | New afp.conf     | Old Default Value | New Default Value | Section | Remarks |\n"
@@ -636,12 +674,12 @@ msgstr ""
 "| ldap_group_attr | ldap group attr | - | - | (G) | - |\n"
 
 #. type: Plain text
-#: manual/Upgrading.md:251
+#: manual/Upgrading.md:267
 msgid "Mappings from AppleVolumes.\\* to afp.conf"
 msgstr "AppleVolumes.\\* から afp.conf への対応表"
 
 #. type: Plain text
-#: manual/Upgrading.md:309
+#: manual/Upgrading.md:325
 #, no-wrap
 msgid ""
 "| Old AppleVolumes.\\*         | New afp.conf       | Old Default Value     | New Default Value | Section | Remarks                          |\n"
@@ -658,7 +696,7 @@ msgid ""
 "| volcharset:                | vol charset        | UTF8                  | *unix charset*      | (G)/(V) | -                                |\n"
 "| maccharset:                | mac charset        | MAC_ROMAN             | MAC_ROMAN         | (G)/(V) | -                                |\n"
 "| veto:                      | veto files         | -                     | -                 | (V)     | -                                |\n"
-"| cnidscheme:                | cnid scheme        | dbd                   | dbd               | (V)     | -                                |\n"
+"| cnidscheme:                | cnid scheme        | dbd                   | dbd\\*              | (G)/(V) | \\* may vary per installation      |\n"
 "| casefold:                  | casefold           | -                     | -                 | (V)     | -                                |\n"
 "| adouble:                   | -                  | v2                    | -                 | -       | removed in 4.2.0                 |\n"
 "| cnidserver:                | cnid server        | localhost:4700        | localhost:4700    | (G)/(V) | -                                |\n"
@@ -717,7 +755,7 @@ msgstr ""
 "| volcharset: | vol charset | UTF8 | *unix charset* を使用する | (G)/(V) | - |\n"
 "| maccharset: | mac charset | MAC_ROMAN | MAC_ROMAN | (G)/(V) | - |\n"
 "| veto: | veto files | - | - | (V) | - |\n"
-"| cnidscheme: | cnid scheme | dbd | dbd | (V) | - |\n"
+"| cnidscheme: | cnid scheme | dbd | dbd\\* | (G)/(V) | \\* インストール環境によって異なる場合がある |\n"
 "| casefold: | casefold | - | - | (V) | - |\n"
 "| adouble: | appledouble | v2 | ea | (V) | 4.2.0で廃止 |\n"
 "| cnidserver: | cnid server | localhost:4700 | localhost:4700 | (G)/(V) | - |\n"

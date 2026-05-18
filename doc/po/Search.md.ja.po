@@ -1,0 +1,290 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Plain text
+#: manual/Configuration.md:43 manual/Search.md:32 manual/Search.md:77
+msgid "Example:"
+msgstr "例："
+
+#. type: Title #
+#: manual/Search.md:1
+#, no-wrap
+msgid "Search"
+msgstr "検索"
+
+#. type: Plain text
+#: manual/Search.md:5
+msgid ""
+"Netatalk provides support for Spotlight-compatible search and indexing on "
+"macOS clients.  This allows users to search for files and metadata on "
+"Netatalk volumes in macOS."
+msgstr ""
+"Netatalk は macOS クライアント向けに Spotlight 互換の検索およびインデックス機"
+"能をサポートしており、macOS から Netatalk ボリューム上のファイルやメタデータ"
+"を検索できる。"
+
+#. type: Plain text
+#: manual/Search.md:13
+#, no-wrap
+msgid ""
+"> ***NOTE:*** The Netatalk development team has observed that in macOS,\n"
+"remote file systems can be searched only through *Finder Search* and not through\n"
+"the *Spotlight Search* widget access from the looking glass icon in the menu bar.\n"
+"This is a limitation of macOS and not of Netatalk.\n"
+">\n"
+"> Open a Finder window and use the search box in the top right corner, enter a search term,\n"
+"and make sure to select the Network neighborhood or the specific Netatalk volume in the search scope options.\n"
+msgstr ""
+"> 【注意】 Netatalk 開発チームの観測では、macOS においてリモートファイルシステムを検索できるのは\n"
+"*Finder 検索* からのみであり、メニューバーの虫眼鏡アイコンから呼び出す\n"
+"*Spotlight 検索* ウィジェットからは検索できない。これは macOS の制限であり、Netatalk の制限ではない。\n"
+">\n"
+"> Finder ウィンドウを開き、右上の検索ボックスで検索語句を入力し、\n"
+"検索範囲オプションでネットワーク近隣または特定の Netatalk ボリュームを選択すること。\n"
+
+#. type: Plain text
+#: manual/Search.md:17
+msgid ""
+"For Classic Mac OS clients and very early Mac OS X clients, Netatalk "
+"provides support for the older search feature called Catalog Search, which "
+"is used by the Sherlock app in Mac OS."
+msgstr ""
+"Classic Mac OS クライアントおよび初期の Mac OS X クライアント向けには、Mac "
+"OS のSherlock アプリで使用される旧来の検索機能「Catalog Search」をサポートし"
+"ている。"
+
+#. type: Title ##
+#: manual/Search.md:18
+#, no-wrap
+msgid "Spotlight Search for macOS"
+msgstr "macOS 向け Spotlight 検索"
+
+#. type: Plain text
+#: manual/Search.md:22
+msgid ""
+"Netatalk's Spotlight-compatible search can be controlled with the "
+"**spotlight** option.  Enabled by default, you can turn it on or off "
+"globally and per volume."
+msgstr ""
+"Netatalk の Spotlight 互換検索は **spotlight** オプションで制御できる。デフォ"
+"ルトで有効になっており、グローバルまたはボリューム単位でオン・オフを切り替え"
+"られる。"
+
+#. type: Plain text
+#: manual/Search.md:26
+msgid ""
+"Spotlight query handling uses a pluggable backend architecture.  The AFP "
+"Spotlight RPC protocol layer is shared, while query execution is delegated "
+"to a backend selected per volume."
+msgstr ""
+"Spotlight のクエリ処理はプラグ可能なバックエンドアーキテクチャを採用してい"
+"る。AFP Spotlight RPC プロトコル層は共通で、クエリの実行はボリュームごとに選"
+"択したバックエンドに委譲される。"
+
+#. type: Plain text
+#: manual/Search.md:30
+msgid ""
+"You can select the backend with the volume option **spotlight backend**.  If "
+"not set, the default is **cnid** which is the simple and lightweight backend "
+"that uses the Netatalk CNID database for filename search."
+msgstr ""
+"バックエンドはボリュームオプション **spotlight backend** で選択できる。未設定"
+"の場合、デフォルトは **cnid** で、Netatalk CNID データベースを使ったシンプル"
+"で軽量なファイル名検索バックエンドである。"
+
+#. type: Plain text
+#: manual/Search.md:35
+#, no-wrap
+msgid ""
+"    [Global]\n"
+"    spotlight = yes\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Search.md:39
+#, no-wrap
+msgid ""
+"    [Documents]\n"
+"    path = /srv/afp/docs\n"
+"    spotlight backend = cnid\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Search.md:43
+#, no-wrap
+msgid ""
+"    [Media]\n"
+"    path = /srv/afp/media\n"
+"    spotlight backend = localsearch\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Search.md:47
+#, no-wrap
+msgid ""
+"    [Private]\n"
+"    path = /srv/afp/private\n"
+"    spotlight = no\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Search.md:49
+msgid "Available Spotlight backends:"
+msgstr "利用可能な Spotlight バックエンド："
+
+#. type: Bullet: '- '
+#: manual/Search.md:53
+msgid ""
+"**cnid** Uses *cnid_find()* against the CNID database for filename-oriented "
+"searches.  It has no extra runtime dependencies beyond the *talloc* library "
+"and Netatalk's CNID database."
+msgstr ""
+"**cnid** ファイル名指向の検索に CNID データベースに対して *cnid_find()* を使"
+"用する。*talloc* ライブラリと Netatalk CNID データベース以外に実行時の追加依"
+"存関係はない。"
+
+#. type: Bullet: '- '
+#: manual/Search.md:57
+msgid ""
+"**localsearch** Uses the LocalSearch/Tracker SPARQL backend for broader file "
+"contents and metadata indexing/search.  This backend requires LocalSearch/"
+"Tracker, TinySPARQL, GLib, D-Bus, and related tooling."
+msgstr ""
+"**localsearch** ファイルコンテンツおよびメタデータの広範なインデックス・検索"
+"にLocalSearch/Tracker SPARQL バックエンドを使用する。このバックエンドには"
+"LocalSearch/Tracker、TinySPARQL、GLib、D-Bus および関連ツールが必要である。"
+
+#. type: Bullet: '- '
+#: manual/Search.md:61
+msgid ""
+"**xapian** Uses a per-volume Xapian index maintained by Netatalk for "
+"filename, plain-text content, and MIME type search.  This backend requires "
+"xapian-core and libmagic."
+msgstr ""
+"**xapian** ファイル名、プレーンテキストコンテンツ、MIME タイプ検索のために"
+"Netatalk が管理するボリュームごとの Xapian インデックスを使用する。このバック"
+"エンドには xapian-core と libmagic が必要である。"
+
+#. type: Plain text
+#: manual/Search.md:63
+#, no-wrap
+msgid "  ***NOTE:*** The **xapian** backend is considered *EXPERIMENTAL* and is not recommended for general use.\n"
+msgstr "  【注意】 **xapian** バックエンドは*実験的*とみなされており、一般的な使用は推奨されない。\n"
+
+#. type: Plain text
+#: manual/Search.md:70
+msgid ""
+"The **xapian** backend stores a shared per-volume index. To avoid indexing "
+"private file contents into that shared index, it indexes body text only for "
+"regular files that are world-readable, readable by the indexing process, "
+"plain-text-like, and below the backend's text size limit. Files readable to "
+"a specific AFP user but not world-readable can still match filename and type "
+"queries, but may not match content queries such as `kMDItemTextContent`."
+msgstr ""
+"**xapian** バックエンドはボリュームごとの共有インデックスを保存する。プライ"
+"ベートなファイルコンテンツが共有インデックスに取り込まれないよう、world-"
+"readable かつインデックスプロセスが読み取り可能で、プレーンテキスト的であり、"
+"バックエンドのテキストサイズ制限内にある通常ファイルの本文のみをインデックス"
+"する。特定の AFPユーザーには読み取れるが world-readable でないファイルは、"
+"ファイル名やタイプのクエリにはマッチするが、`kMDItemTextContent` などのコンテ"
+"ンツクエリにはマッチしない場合がある。"
+
+#. type: Title ###
+#: manual/Search.md:71
+#, no-wrap
+msgid "Building Spotlight backends"
+msgstr "Spotlight バックエンドのビルド"
+
+#. type: Plain text
+#: manual/Search.md:75
+msgid ""
+"The Meson option **with-spotlight-backends** controls which Spotlight "
+"backends are built.  Supported values are **cnid**, **localsearch**, and "
+"**xapian**."
+msgstr ""
+"Meson オプション **with-spotlight-backends** でビルドする Spotlight バックエ"
+"ンドを制御する。サポートされる値は **cnid**、**localsearch**、**xapian** であ"
+"る。"
+
+#. type: Plain text
+#: manual/Search.md:79
+#, no-wrap
+msgid "    meson setup build -Dwith-spotlight-backends=cnid,localsearch,xapian\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Search.md:81
+msgid ""
+"The default build enables the selected backends when their dependencies are "
+"available."
+msgstr ""
+"デフォルトのビルドでは、依存関係が利用可能な場合に選択したバックエンドが有効"
+"になる。"
+
+#. type: Title ###
+#: manual/Search.md:82
+#, no-wrap
+msgid "D-Bus daemon for localsearch"
+msgstr "localsearch 向け D-Bus デーモン"
+
+#. type: Plain text
+#: manual/Search.md:86
+msgid ""
+"The *dbus-daemon* binary is required when using the **localsearch** "
+"backend.  Its path is determined at compile time by the dbus-daemon build "
+"system option."
+msgstr ""
+"*dbus-daemon* バイナリは **localsearch** バックエンドを使用する際に必要であ"
+"る。そのパスは dbus-daemon ビルドシステムオプションによりコンパイル時に決定さ"
+"れる。"
+
+#. type: Plain text
+#: manual/Search.md:90
+msgid ""
+"If *dbus-daemon* is installed at a different path, use the global option "
+"**dbus daemon** to specify it.  For example, for Solaris with Tracker from "
+"OpenCSW:"
+msgstr ""
+"*dbus-daemon* が別のパスにインストールされている場合は、グローバルオプション"
+"**dbus daemon** でパスを指定する。例えば OpenCSW 由来の Tracker を使用する"
+"Solaris の場合は以下のようにする："
+
+#. type: Plain text
+#: manual/Search.md:92
+#, no-wrap
+msgid "    dbus daemon = /opt/csw/bin/dbus-daemon\n"
+msgstr ""
+
+#. type: Title ##
+#: manual/Search.md:93
+#, no-wrap
+msgid "Catalog Search for Classic Mac OS"
+msgstr "Classic Mac OS 向け Catalog Search"
+
+#. type: Plain text
+#: manual/Search.md:97
+msgid ""
+"Netatalk leverages the CNID database for fast filename search on shared "
+"volumes.  You can also control whether to use fast database search or the "
+"slower recursive directory scanning through the **search db** option."
+msgstr ""
+"Netatalk は共有ボリューム上の高速なファイル名検索に CNID データベースを活用し"
+"ている。**search db** オプションで、高速なデータベース検索を使うか、より低速"
+"な再帰的ディレクトリスキャンを使うかを制御することもできる。"

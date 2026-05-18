@@ -1,12 +1,12 @@
 # Japanese translations for Netatalk documentation
 # Netatalk ドキュメントの日本語訳
-# Copyright (C) 2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-11-12 19:44+0100\n"
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -17,39 +17,79 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
 msgid "[Introduction](index.html)"
 msgstr "[序説](index.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
 msgid "[Installation](Installation.html)"
 msgstr "[インストール](Installation.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
 msgid "[Configuration](Configuration.html)"
 msgstr "[セットアップ](Configuration.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[CNID Backends](CNID.html)"
+msgstr "[CNID バックエンド](CNID.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[Character Sets](Charsets.html)"
+msgstr "[文字セット](Charsets.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[Authentication](Authentication.html)"
+msgstr "[認証](Authentication.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[ACL Support](ACL.html)"
+msgstr "[ACL](ACL.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[Directory Caching](Dircache.html)"
+msgstr "[ディレクトリキャッシュ](Dircache.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[Interoperability](Interoperability.html)"
+msgstr "[相互運用性](Interoperability.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[Filesystem Change Events](FCE.html)"
+msgstr "[FCE](FCE.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[Search](Search.html)"
+msgstr "[検索](Search.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
+msgid "[AppleTalk](AppleTalk.html)"
+msgstr "[AppleTalk](AppleTalk.html)"
+
+#. type: Bullet: '* '
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
 msgid "[Upgrading](Upgrading.html)"
 msgstr "[アップグレード](Upgrading.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
 msgid "[License](License.html)"
 msgstr "[ライセンス](License.html)"
 
 #. type: Bullet: '* '
-#: manual/_Navlinks.md:8 manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
+#: manual/_Navlinks.md:17 manual/_Sidebar.md:20
 msgid "[Legal Notices](Legal.html)"
 msgstr "[法的条項](Legal.html)"
-
-#. type: Bullet: '* '
-#: manual/_Navlinks_atalk.md:9 manual/_Sidebar.md:12
-msgid "[AppleTalk](AppleTalk.html)"
-msgstr ""
 
 #. type: Plain text
 #: manual/_Sidebar.md:2
@@ -62,216 +102,191 @@ msgid "Manual"
 msgstr "マニュアル"
 
 #. type: Plain text
-#: manual/_Sidebar.md:14
+#: manual/_Sidebar.md:22
 msgid "User Tools"
 msgstr "ユーザーツール"
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[addump](addump.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[aecho](aecho.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afp_lantest](afp_lantest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afp_logintest](afp_logintest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afp_spectest](afp_spectest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afp_speedtest](afp_speedtest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afparg](afparg.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afpldaptest](afpldaptest.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afppasswd](afppasswd.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[afpstats](afpstats.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[asip-status](asip-status.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[dbd](dbd.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[fce_listen](fce_listen.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[getzones](getzones.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
-msgid "[macusers](macusers.1.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[nad](nad.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[nbplkup](nbplkup.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[nbprgstr](nbprgstr.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[pap](pap.1.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:35
+#: manual/_Sidebar.md:42
 msgid "[rtmpqry](rtmpqry.1.html)"
 msgstr ""
 
 #. type: Plain text
-#: manual/_Sidebar.md:37
+#: manual/_Sidebar.md:44
 msgid "Configuration Files"
 msgstr "設定ファイル"
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:44
-msgid "[afp_signature.conf](afp_signature.conf.5.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:44
-msgid "[afp_voluuid.conf](afp_voluuid.conf.5.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:44
+#: manual/_Sidebar.md:51
 msgid "[afp.conf](afp.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:44
+#: manual/_Sidebar.md:51
+msgid "[afp_signature.conf](afp_signature.conf.5.html)"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:51
+msgid "[afp_voluuid.conf](afp_voluuid.conf.5.html)"
+msgstr ""
+
+#. type: Bullet: '* '
+#: manual/_Sidebar.md:51
 msgid "[atalkd.conf](atalkd.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:44
+#: manual/_Sidebar.md:51
 msgid "[extmap.conf](extmap.conf.5.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:44
+#: manual/_Sidebar.md:51
 msgid "[papd.conf](papd.conf.5.html)"
 msgstr ""
 
 #. type: Plain text
-#: manual/_Sidebar.md:46
+#: manual/_Sidebar.md:53
 msgid "Daemons and Admin Tools"
-msgstr "デーモン、管理ツール"
+msgstr "デーモンと管理ツール"
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[a2boot](a2boot.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[afpd](afpd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[atalkd](atalkd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[cnid_dbd](cnid_dbd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[cnid_metad](cnid_metad.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[macipgw](macipgw.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[netatalk](netatalk.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[papd](papd.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[papstatus](papstatus.8.html)"
 msgstr ""
 
 #. type: Bullet: '* '
-#: manual/_Sidebar.md:57
+#: manual/_Sidebar.md:63
 msgid "[timelord](timelord.8.html)"
-msgstr ""
-
-#. type: Plain text
-#: manual/_Sidebar.md:59
-msgid "Developer References"
-msgstr "開発者参考資料"
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:62
-msgid "[atalk](atalk.4.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:62
-msgid "[atalk_aton](atalk_aton.3.html)"
-msgstr ""
-
-#. type: Bullet: '* '
-#: manual/_Sidebar.md:62
-msgid "[nbp_name](nbp_name.3.html)"
 msgstr ""

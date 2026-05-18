@@ -1,0 +1,526 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manpages/man8/papd.8.md:61 manual/Authentication.md:1
+#, no-wrap
+msgid "Authentication"
+msgstr "認証"
+
+#. type: Title ##
+#: manual/Authentication.md:3
+#, no-wrap
+msgid "AFP authentication basics"
+msgstr "AFP 認証の基本"
+
+#. type: Plain text
+#: manual/Authentication.md:9
+msgid ""
+"Apple chose a flexible model called \"User Authentication Modules\" (UAMs)  "
+"for authentication between AFP clients and servers.  An AFP client "
+"connecting to an AFP server first requests the list of UAMs that the server "
+"supports, then chooses the one with the strongest encryption that the client "
+"also supports."
+msgstr ""
+"Apple は AFP クライアントとサーバー間の認証のために \"User Authentication "
+"Modules\" (UAM)  と呼ばれる柔軟なモデルを選んだ。AFP クライアントがまず最初"
+"に AFP サーバーと接続するとき、 サーバーが提供している UAM のリストを問い合わ"
+"せる。そして、クライアントがサポートしている最も強い暗号化の UAM を選ぶ。"
+
+#. type: Plain text
+#: manual/Authentication.md:12
+msgid ""
+"Several UAMs have been developed by Apple over the years, and some by third-"
+"party developers."
+msgstr ""
+"数個の UAM は時間をかけて Apple が開発してものであり、サードパーティの開発者"
+"によるものもある。"
+
+#. type: Title ##
+#: manual/Authentication.md:13
+#, no-wrap
+msgid "UAMs supported by Netatalk"
+msgstr "Netatalk でサポートされている UAM"
+
+#. type: Plain text
+#: manual/Authentication.md:16
+msgid "Netatalk supports the following UAMs by default:"
+msgstr "Netatalk はデフォルトで以下の UAM をサポートしている："
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:18
+msgid "\"No User Authent\" UAM (guest access without authentication)"
+msgstr "\"No User Authent\" UAM（ユーザー認証なしのゲスト接続）"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:20
+msgid "\"Cleartxt Passwrd\" UAM (no password encryption)"
+msgstr "\"Cleartxt Passwrd\" UAM（クリアテキスト(平文)パスワード、暗号化なし）"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:23
+msgid ""
+"\"Randnum exchange\"/\"2-Way Randnum exchange\" UAMs (very weak password "
+"encryption, separate password storage)"
+msgstr ""
+"\"Randnum exchange\"、\"2-Way Randnum exchange\" UAM （乱数交換・双方向乱数交"
+"換、非常に弱いパスワード暗号化、パスワードを別途保存する）"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:25
+msgid "\"DHCAST128\" UAM (a.k.a. DHX; weak password encryption)"
+msgstr "\"DHCAST128\" UAM（弱いパスワード暗号化）"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:27
+msgid "\"DHX2\" UAM (successor of DHCAST128 with stronger password encryption)"
+msgstr "\"DHX2\" UAM（DHCAST128 の後継で、より強力なパスワード暗号化）"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:30
+msgid ""
+"\"SRP\" UAM (\"Secure Remote Password\", strongest password encryption and "
+"resistant to man-in-the-middle attacks, separate verifier storage)"
+msgstr ""
+"\"SRP\" UAM（Secure Remote Password、最も強力なパスワード暗号化と中間者攻撃へ"
+"の耐性、別の検証子ストレージ）"
+
+#. type: Plain text
+#: manual/Authentication.md:32
+msgid "With Kerberos support enabled at compile time, Netatalk also supports:"
+msgstr ""
+"コンパイル時に Kerberos サポートが有効になっている場合、Netatalk は以下もサ"
+"ポートする："
+
+#. type: Plain text
+#: manual/Authentication.md:35
+msgid ""
+"- \"Client Krb v2\" UAM (Kerberos V, suitable for \"Single Sign On\" "
+"scenarios with macOS clients — see below)"
+msgstr ""
+"- \"Client Krb v2\" UAM （Kerberos V、macOS で“シングルサインオン”環境には最"
+"も適当である――下記参照）"
+
+#. type: Plain text
+#: manual/Authentication.md:40
+msgid ""
+"You can configure which UAMs to activate by setting **uam list** in the "
+"**Global** section.  **afpd** logs which UAMs it activates and reports any "
+"problems in either **netatalk.log** or syslog at startup.  **asip-status** "
+"can also query the available UAMs of AFP servers."
+msgstr ""
+"\"**uam list**\" を **Global** セクションで定義することによって、どの UAM を"
+"有効化すべきか設定できる。**afpd** はどの UAM を使っているのか、UAM を有効化"
+"した時に問題が起こっているのかどうかを、**netatalk.log** あるいは起動時の "
+"syslog にログとして保存する。**asip-status** も AFP サーバーで有効な UAM の問"
+"い合わせをするのに使うことができる。"
+
+#. type: Plain text
+#: manual/Authentication.md:45
+msgid ""
+"Having a specific UAM available on the server does not automatically mean "
+"that a client can use it.  Client-side support is also required.  For older "
+"Macintosh clients running Classic Mac OS, DHCAST128 support has been "
+"available since AppleShare client 3.8.x."
+msgstr ""
+"ある特定の UAM がサーバー上で有効であるということが、直ちに、 クライアントも"
+"それを使うことができるということを意味するわけではない。クライアント側でのサ"
+"ポートもまた必要である。Classic Mac OS が使われている古い Macintosh では、"
+"DHCAST128 のサポートは AppleShare クライアント 3.8.x 以降には存在している。"
+
+#. type: Plain text
+#: manual/Authentication.md:49
+msgid ""
+"On macOS, there are client-side techniques to make the AFP client more "
+"verbose, allowing you to observe the UAM negotiation process.  See this "
+"[hint](https://web.archive.org/web/20080312054723/http://article.gmane.org/"
+"gmane.network.netatalk.devel/7383/)."
+msgstr ""
+"macOS では、AFP クライアントをもっと冗長にするクライアント側のテクニックがい"
+"くつかあるので、使用する UAM と折り合いをつけるまでに何が起こっているのか見る"
+"ことができる。[このヒント](https://web.archive.org/web/20080312054723/http://"
+"article.gmane.org/gmane.network.netatalk.devel/7383/)  と比較してみるとよい。"
+
+#. type: Title ##
+#: manual/Authentication.md:50
+#, no-wrap
+msgid "Which UAMs to activate?"
+msgstr "どの UAM を有効にすべきか？"
+
+#. type: Plain text
+#: manual/Authentication.md:55
+msgid ""
+"The choice depends primarily on your needs and the clients you need to "
+"support.  If your network consists exclusively of macOS (Mac OS X) clients, "
+"DHX2 provides strong encryption with PAM (or system password database) "
+"integration."
+msgstr ""
+"それは主に、ニーズとサポートする必要がある macOS クライアントの種類に依存す"
+"る。ネットワークが macOS (Mac OS X)  クライアントのみで構成されている場合は、"
+"DHX2 で十分であり、強力な暗号化と PAM（あるいはシステムのパスワードデータベー"
+"ス）との統合を提供する。"
+
+#. type: Plain text
+#: manual/Authentication.md:58
+msgid ""
+"If you want stronger security and don't mind the extra maintenance overhead "
+"of a separate verifier file, SRP is the best choice."
+msgstr ""
+"より強力なセキュリティを望み、別の検証子ファイルの追加のメンテナンスオーバー"
+"ヘッドを気にしない場合は、SRP が最適な選択肢である。"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:63
+msgid ""
+"Unless you specifically need guest access, do not enable \"No User Authent\" "
+"to prevent accidental unauthorized access.  If you must enable guest access, "
+"enforce it on a per-volume basis using access controls."
+msgstr ""
+"サーバーのボリュームに本当にゲストアクセスを供することが必要な場合以外は、"
+"\"No User Authent\" が無効化されているか確認すべきである。さもないと、意図し"
+"ない権限のないアクセスを引き起こすことにもなる。 ゲストアクセスを有効にしなけ"
+"ればならない場合は、アクセスコントロールを使って、 ボリューム各々についてゲス"
+"トアクセスを有効化することを強制するように気を配るべきである。"
+
+#. type: Plain text
+#: manual/Authentication.md:66
+#, no-wrap
+msgid ""
+"    Note: \"No User Authent\" is required to use Apple II network boot services\n"
+"    (**a2boot**) to boot an Apple //e over AFP.\n"
+msgstr ""
+"    注意：Apple II ネットブートサービス (**a2boot**) を使用して AFP 経由で\n"
+"    Apple //e を起動するには、「ユーザー認証なし」が必要である。\n"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:70
+msgid ""
+"The \"ClearTxt Passwrd\" UAM is as bad as it sounds: passwords are sent "
+"unencrypted over the wire.  Avoid it on both the server and client side."
+msgstr ""
+"\"ClearTxt Passwrd\" UAM ではパスワードがネットワーク上を暗号化されずに伝わっ"
+"ていくので、 字句そのまんまに良くない。クライアント側のみならずサーバー側でも"
+"無効にするよう務めるべきである。"
+
+#. type: Plain text
+#: manual/Authentication.md:74
+#, no-wrap
+msgid ""
+"    Note: If you want to provide Mac OS 8/9 clients with network boot services,\n"
+"    you need uams_clrtxt.so since the AFP client integrated into\n"
+"    the Mac's firmware can only handle this basic form of authentication.\n"
+msgstr ""
+"    注意：もしネットブートサービスを使用している Mac OS 8/9\n"
+"    にサービスを提供したい場合、uams_cleartxt.so の UAM が必要となる。\n"
+"    これはそういった Mac のファームウエアに組み込まれた AFP\n"
+"    クライアントがこうした基本的な形の認証しか扱わないためである。\n"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:79
+msgid ""
+"\"Randnum exchange\"/\"2-Way Randnum exchange\" uses only 56-bit DES for "
+"encryption, so it should also be avoided.  An additional disadvantage is "
+"that passwords are stored separately on the server: DES-encrypted and hex-"
+"encoded with a required key file."
+msgstr ""
+"\"Randnum exchange\"/\"2-Way Randnum exchange\" は暗号化に 56 ビット DES のみ"
+"を使用するので、これも避けるべきである。さらに、パスワードはサーバー上で別々"
+"に保存されるという欠点もある：DES で暗号化され、必須キーファイルで 16 進数エ"
+"ンコードされる。"
+
+#. type: Plain text
+#: manual/Authentication.md:82
+#, no-wrap
+msgid ""
+"    However, this is the strongest form of authentication available for\n"
+"    Macintosh System Software 7.1 or earlier.\n"
+msgstr "    ただし、これは 漢字Talk 7.1 以前で使用できる最も強力な認証形式である。\n"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:85
+msgid ""
+"\"DHCAST128\" (\"DHX\") is a significant improvement over Randnum, but has "
+"weak encryption by today's standards."
+msgstr ""
+"\"DHCAST128\" (\"DHX\") は Randnum よりは大幅な改善であるが、今日の基準では暗"
+"号化が弱い。"
+
+#. type: Plain text
+#: manual/Authentication.md:88
+#, no-wrap
+msgid ""
+"   This is the strongest form of authentication available for\n"
+"   Mac OS 8/9 clients.\n"
+msgstr "    これは 漢字Talk 7.1 以前で使用できる最も強力な認証形式である。\n"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:91
+msgid ""
+"\"DHX2\" is the best choice for most users, combining stronger encryption "
+"with the convenience of PAM integration."
+msgstr ""
+"\"DHX2\" はより強力な暗号化と PAM 統合の利便性を組み合わせているので、ほとん"
+"どのユーザーにとって最適な選択肢である。"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:95
+msgid ""
+"\"SRP\" is the strongest UAM with the strongest password encryption and "
+"resistance to man-in-the-middle attacks, but it requires administration of a "
+"separate file to store per-user salts and verifiers.  If you don't mind the "
+"extra maintenance overhead of this file, SRP is the best choice for security-"
+"conscious users."
+msgstr ""
+"\"SRP\" は最も強力な UAM で、最も強力なパスワード暗号化と中間者攻撃への耐性を"
+"提供するが、ユーザーごとのソルトと検証子を保存するための別のファイルの管理が"
+"必要である。このファイルの追加のメンテナンスオーバーヘッドを気にしないのであ"
+"れば、SRP はセキュリティに敏感なユーザーにとって最適な選択肢である。"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:105
+msgid ""
+"The Kerberos V (\"Client Krb v2\")  UAM enables true single sign-on "
+"scenarios using Kerberos tickets.  The password is not sent over the "
+"network.  Instead, the user's password decrypts a service ticket for the AFP "
+"server.  The service ticket contains an encryption key for the client and "
+"some encrypted data (which only the AFP server can decrypt).  The encrypted "
+"portion of the service ticket is sent to the server and used to authenticate "
+"the user.  Because of how **afpd** implements service principal detection, "
+"this authentication method is vulnerable to man-in-the-middle attacks."
+msgstr ""
+"Kerberos V (\"Client Krb v2\") UAM を用いれば、Kerberos チケットを用いて真の"
+"シングルサインオン環境を実装することが可能である。パスワードがネットワークを"
+"通して送られることもない。 その代わり、ユーザーのパスワードは AppleShare サー"
+"バーへのサービスチケットを暗号から復号するのに用いられる。 サービスチケットに"
+"はクライアントの暗号鍵と幾らかの暗号化されたデータが含まれる （それは "
+"AppleShare サーバーだけが復号できる）。サービスチケットの暗号化された部分が"
+"サーバーに送られ、ユーザーを認証するのに使われる。**afpd** サービスプリンシパ"
+"ル検知の実装の仕方のために、この認証方法は中間者攻撃に対して脆弱である。"
+
+#. type: Plain text
+#: manual/Authentication.md:109
+msgid ""
+"For a more detailed overview of the technical implications of the different "
+"UAMs, see Apple's [File Server Security](http://developer.apple.com/library/"
+"mac/#documentation/Networking/Conceptual/AFP/AFPSecurity/AFPSecurity.html#//"
+"apple_ref/doc/uid/TP40000854-CH232-SW1)  documentation."
+msgstr ""
+"様々な UAM の技術的実装についてのより詳細な概要については、Apple の [File "
+"Server Security](http://developer.apple.com/library/mac/#documentation/"
+"Networking/Conceptual/AFP/AFPSecurity/AFPSecurity.html#//apple_ref/doc/uid/"
+"TP40000854-CH232-SW1)  ページを見ていただきたい。"
+
+#. type: Title ##
+#: manual/Authentication.md:110
+#, no-wrap
+msgid "Password storage"
+msgstr "パスワード保管"
+
+#. type: Plain text
+#: manual/Authentication.md:114
+msgid ""
+"Randnum and SRP do not use system passwords directly. They both rely on "
+"separate files managed with **afppasswd**:"
+msgstr ""
+"Randnum と SRP はシステムのパスワードを直接使用しない。両方とも "
+"**afppasswd** で管理される別のファイルに依存している："
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:122
+msgid ""
+"**Randnum** uses the legacy *afppasswd* file. It requires a key file "
+"alongside the Randnum password file (same path with a `.key` suffix).  "
+"**afppasswd -r -c** creates this key file if it is missing and validates an "
+"existing one; password updates refuse to proceed unless the key file is "
+"present and valid. The Randnum UAM logs a startup warning when the key file "
+"is missing or invalid, but authentication and password changes still fail "
+"until it is fixed. Stored passwords are DES-encrypted using that key."
+msgstr ""
+"**Randnum** は従来の *afppasswd* ファイルを使用する。Randnum パスワードファイ"
+"ルと並んでキーファイルが必要である（同じパスで `.key` サフィックスがついてい"
+"る）。**afppasswd -r -c** はこのキー ファイルが存在しない場合に作成し、既存の"
+"ものを検証する。キーファイルが存在し有効でない限り、パスワードの更新は進行を"
+"拒否する。Randnum UAM はキーファイルが存在しないか無効な場合に起動時の警告を"
+"ログに記録するが、修正されるまでは認証とパスワード変更は失敗する。保存された"
+"パスワードはそのキーを使って DES で暗号化される。"
+
+#. type: Plain text
+#: manual/Authentication.md:126
+#, no-wrap
+msgid ""
+"  The key file must contain exactly 16 hexadecimal characters, such as\n"
+"  `0123456789ABCDEF`, with an optional trailing newline. Generate a fresh\n"
+"  random key for each server instead of reusing this example value.\n"
+msgstr ""
+"  キーファイルには、オプションの改行を伴う 16 個の 16 進数文字が正確に含まれている必要がある。\n"
+"  例の値を再利用するのではなく、各サーバーのために新しいランダムなキーを生成すること。\n"
+
+#. type: Bullet: '- '
+#: manual/Authentication.md:128
+msgid ""
+"**SRP** uses *afppasswd.srp*, which stores per-user salts and verifiers."
+msgstr ""
+"**SRP** はユーザーごとのソルトと検証子を保存する *afppasswd.srp* を使用する。"
+
+#. type: Title ##
+#: manual/Authentication.md:129
+#, no-wrap
+msgid "Using different authentication backends"
+msgstr "認証バックエンドの切り替え"
+
+#. type: Plain text
+#: manual/Authentication.md:138
+msgid ""
+"Some UAMs support different authentication backends, namely "
+"**uams_clrtxt.so**, **uams_dhx.so**, and **uams_dhx2.so**.  They can use "
+"either classic UNIX passwords from */etc/passwd* (*/etc/shadow*)  or PAM if "
+"the system supports it.  **uams_clrtxt.so** can be symlinked to either "
+"**uams_passwd.so** or **uams_pam.so**, **uams_dhx.so** to "
+"**uams_dhx_passwd.so** or **uams_dhx_pam.so**, and **uams_dhx2.so** to "
+"**uams_dhx2_passwd.so** or **uams_dhx2_pam.so**."
+msgstr ""
+"いくつかの UAM は別の認証バックエンドを使えるようにしてある。いわゆる "
+"**uams_clrtxt.so**、**uams_dhx.so** 及び **uams_dhx2.so** である。これらは */"
+"etc/passwd* (*/etc/shadow*) からの古典的 UNIX パスワードでも、システムがサ"
+"ポートしていれば PAM でもどちらでも使うことができる。 **uams_clrtxt.so** は "
+"**uams_passwd.so** ないしは **uams_pam.so** へのシンボリックリンクとして、 "
+"**uams_dhx.so** は **uams_dhx_passwd.so** ないしは **uams_dhx_pam.so** へのシ"
+"ンボリックリンクとして、さらには **uams_dhx2.so** は **uams_dhx2_passwd.so** "
+"ないしは **uams_dhx2_pam.so**へのシンボリックリンクとすることができる。"
+
+#. type: Plain text
+#: manual/Authentication.md:142
+msgid ""
+"If Netatalk's UAM folder (by default */etc/netatalk/uams/*) looks like this, "
+"then you are using PAM; otherwise you are using classic UNIX passwords:"
+msgstr ""
+"もし Netatalk の UAM フォルダー（デフォルトで */etc/netatalk/uams/*）が以下の"
+"ようであれば、PAM さもなくば古典的な UNIX パスワードを使用しているわけであ"
+"る。"
+
+#. type: Plain text
+#: manual/Authentication.md:146
+#, no-wrap
+msgid ""
+"    uams_clrtxt.so -> uams_pam.so\n"
+"    uams_dhx.so -> uams_dhx_pam.so\n"
+"    uams_dhx2.so -> uams_dhx2_pam.so\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Authentication.md:151
+msgid ""
+"The main advantage of PAM is that it integrates Netatalk into centralized "
+"authentication scenarios, such as LDAP, NIS, and similar systems.  Keep in "
+"mind that the security of your users' login credentials in such scenarios "
+"also depends on the encryption strength of the UAM in use."
+msgstr ""
+"PAM を使用することで最も有利なのは、例えば LDAP 経由、あるいは NIS 経由などの"
+"集約した認証環境に Netatalk を統合できることである。そのような環境でのユー"
+"ザーのログイン資格情報 (credentials) の保護は、UAM そのものが供している暗号化"
+"の強さにもまた依存している。 ということを常に念頭においていただきたい。"
+
+#. type: Title ##
+#: manual/Authentication.md:152
+#, no-wrap
+msgid "Netatalk UAM overview table"
+msgstr "Netatalk UAM を概要表"
+
+#. type: Plain text
+#: manual/Authentication.md:155
+msgid "An overview of the officially supported UAMs on Macs."
+msgstr "公式にサポートされているUAMの概観。"
+
+#. type: Plain text
+#: manual/Authentication.md:163
+#, no-wrap
+msgid ""
+"| UAM              | No User Auth  | Cleartxt Passwrd | RandNum Exchange | DHCAST128    | DHX2          | Kerberos V       | SRP              |\n"
+"| ---------------- | ------------- | ---------------- | ---------------- | ------------ | ------------- | ---------------- | ---------------- |\n"
+"| Password length  | guest access  | max 8 chars      | max 8 chars      | max 64 chars | max 255 chars | Kerberos tickets | max 255 chars    |\n"
+"| Client support   | built-in into all Mac OS versions | built-in in all Mac OS versions except 10.0; deprecated in 10.7 and later | built-in into almost all Mac OS versions; deprecated in 10.7 and later | built-in since AppleShare client 3.8.4, available as a plug-in for 3.8.3; deprecated in 10.7 and later | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.2 | built-in since Mac OS X 10.7 |\n"
+"| Encryption       | Enables guest access without authentication between client and server. | Password will be sent in cleartext over the wire. Just as bad as it sounds, therefore avoid at all costs. | 8-byte random numbers are sent over the wire, comparable with DES, 56 bits. Vulnerable to offline dictionary attack. Requires separately stored server-side passwords. | Password will be encrypted with 128 bit CAST, user will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password will be encrypted with 128 bit CAST in CBC mode. User will be authenticated against the server but not vice versa. Therefore weak against man-in-the-middle attacks. | Password is not sent over the network. Due to the service principal detection method, this authentication method is vulnerable to man-in-the-middle attacks. | Password is never sent; SRP uses a verifier and mutual proofs (M1/M2) to authenticate both client and server, providing protection against man‑in‑the‑middle attacks. |\n"
+"| Server support   | uams_guest.so | uams_clrtxt.so   | uams_randnum.so  | uams_dhx.so  | uams_dhx2.so  | uams_gss.so      | uams_srp.so      |\n"
+"| Password storage | None          | Either system auth or PAM | Separate *afppasswd* file (DES-encrypted) | Either system auth or PAM | Either system auth or PAM | At the Kerberos Key Distribution Center | Separate *afppasswd.srp* verifier file |\n"
+msgstr ""
+"| UAM              | No User Auth  | Cleartxt Passwrd | RandNum Exchange | DHCAST128    | DHX2          | Kerberos V       | SRP              |\n"
+"| ---------------- | ------------- | ---------------- | ---------------- | ------------ | ------------- | ---------------- | ---------------- |\n"
+"| パスワード長 | ゲストアクセス | 最大 8 文字 | 最大 8 文字 | 最大 64 文字 | 最大 255 文字 | Kerberos チケット | 最大 255 文字 |\n"
+"| サポートするクライアント | 全ての Mac OS のバージョンで組み込み済 | 10.0 を除く全ての Mac OS のバージョンで組み込み済。 最近のバージョンでは明示的にアクティブ化する必要がある。 | ほとんど全ての Mac OS のバージョンで組み込み済 | AppleShare クライアント 3.8.4 より組み込み済で、3.8.3 では macOS の AFP クライアントに統合したプラグインとしての用意あり。 | Mac OS X 10.2 より組み込み済 | Mac OS X 10.2 より組み込み済 |  Mac OS X 10.7 より組み込み済 |\n"
+"| 暗号化 | クライアント・サーバー間で認証なくゲストアクセス可能。 | パスワードがネットワーク上を暗号化されずに伝わっていく。 字句そのままに悪いので、可能ならば全面的に使用を回避すべき （注意：NetBoot サービスの提供には ClearTxt UAM が必要） | DES, 56 ビットに相当する 8 バイトの乱数がネットワーク上に送出。オフラインの辞書攻撃に対して脆弱。 パスワードがサーバー上で平文であることが求められる。 | パスワードは 128 ビット CAST 128 で暗号化され、ユーザーはサーバーに認証されるが、“逆もまた真”ではない。このため中間者攻撃に対して弱い。 | パスワードは CAST 128、CBC モードを用いて暗号化される。 ユーザーはサーバーに認証されるが、“逆もまた真”ではない。このため中間者攻撃に対して弱い。 | パスワードがネットワークを通して送られることがない。サービスプリンシパル検知の方法が原因で、 この認証方法は中間者攻撃に対して脆弱である。 | パスワードは決して送られない。SRP は検証子と相互証明 (M1/M2) を使用してクライアントとサーバーの両方を認証し、中間者攻撃に対する保護を提供する。 |\n"
+"| サーバーがサポートする共有オブジェクト | uams_guest.so | uams_cleartxt.so | uams_randnum.so | uams_dhx.so | uams_dhx2.so | uams_gss.so | uams_srp.so |\n"
+"| パスワードの保管方法 | なし | システム認証ないしはPAM | *afppasswd* ファイル (DES暗号化) | システム認証ないしはPAM | システム認証ないしはPAM | Kerberosキー配布センター | *afppasswd.srp* という検証子ファイル |\n"
+
+#. type: Plain text
+#: manual/Authentication.md:168
+msgid ""
+"See the Apple Support knowledge base article on [Connecting to legacy AFP "
+"services](https://support.apple.com/en-us/101137)  on how to enable "
+"deprecated legacy UAM in macOS.  It is not recommended that you do this in "
+"production environments, however, since this may expose AFP user credentials "
+"in network traffic."
+msgstr ""
+"macOS で非推奨のレガシー UAM を有効にする方法については、Apple サポートのナ"
+"レッジベース記事 [Connecting to legacy AFP services](https://"
+"support.apple.com/en-us/101137) を参照すること。ただし、これを本番環境で行う"
+"ことは推奨されない。なぜなら、これにより AFP ユーザー資格情報がネットワークト"
+"ラフィックにさらされる可能性があるからである。"
+
+#. type: Plain text
+#: manual/Authentication.md:171
+msgid ""
+"Note that a number of open-source and other third-party AFP clients exist.  "
+"Refer to their documentation for a list of supported UAMs."
+msgstr ""
+"多くのオープンソースやその他のサードパーティ製 AFP クライアントが存在する。。"
+"サポートされている UAM のリストについては、それらのドキュメントを参照するこ"
+"と。"
+
+#. type: Title ##
+#: manual/Authentication.md:172
+#, no-wrap
+msgid "Save and change passwords"
+msgstr "パスワードの保存と変更"
+
+#. type: Plain text
+#: manual/Authentication.md:177
+msgid ""
+"Netatalk can be configured to allow clients to save or change their "
+"passwords on the server.  The **save password** option in the **Global** "
+"section of *afp.conf* enables this feature, but the AFP client must also "
+"support and honor this flag."
+msgstr ""
+"Netatalk はクライアントがサーバー上でパスワードを保存または変更できるように構"
+"成できる。**afp.conf** の **Global** セクションの **save password** オプショ"
+"ンはこの機能を有効にするが、AFP クライアントもこのフラグをサポートし、尊重す"
+"る必要がある。"
+
+#. type: Plain text
+#: manual/Authentication.md:180
+msgid ""
+"To allow clients to change their passwords, set the **set password** "
+"option.  This depends on the UAM in use and is not supported by all of "
+"them.  Notably, the PAM-based UAMs support this feature, while those based "
+"on classic UNIX passwords do not."
+msgstr ""
+"クライアントがパスワードを変更できるようにするには、**set password** オプショ"
+"ンを設定すること。これは使用している UAM に依存し、すべての UAM がこれをサ"
+"ポートしているわけではない。特に、PAM ベースの UAM はこの機能をサポートする"
+"が、古典的な UNIX パスワードに基づく UAM はサポートしない。"
