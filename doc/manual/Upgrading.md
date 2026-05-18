@@ -169,7 +169,7 @@ to the means of invocation
 | CNID_METAD_RUN     | -               | yes                      | -                        | -       | controlled by netatalk(8)     |
 | AFPD_RUN           | -               | yes                      | -                        | -       | controlled by netatalk(8)     |
 | AFPD_MAX_CLIENTS   | max connections | 20                       | 200                      | (G)     | -                             |
-| AFPD_UAMLIST       | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | (G)     | -                             |
+| AFPD_UAMLIST       | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx2.so             | (G)     | -                             |
 | AFPD_GUEST         | guest account   | nobody                   | nobody                   | (G)     | -                             |
 | CNID_CONFIG        | log level       | log_note                 | cnid:note                | (G)     | -                             |
 | CNID_CONFIG        | log file        | -                        | -                        | (G)     | -                             |
@@ -185,7 +185,7 @@ Mappings from afpd.conf to afp.conf
 | Old afpd.conf      | New afp.conf    | Old Default Value        | New Default Value        | Section | Remarks                              |
 |--------------------|-----------------|--------------------------|--------------------------|---------|--------------------------------------|
 | - or "server name" | server name     | -                        | -                        | (G)     | new in 4.2.0; default is *hostname*    |
-| -uamlist           | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx.so uams_dhx2.so | (G)     | -                                    |
+| -uamlist           | uam list        | uams_dhx.so,uams_dhx2.so | uams_dhx2.so             | (G)     | -                                    |
 | -nozeroconf        | zeroconf        | -                        | yes (if supported)       | (G)     | -                                    |
 | -advertise_ssh     | advertise ssh   | -                        | no                       | (G)     | -                                    |
 | -[no]savepassword  | save password   | -savepassword            | yes                      | (G)     | -                                    |
