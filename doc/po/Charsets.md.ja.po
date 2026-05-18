@@ -1,0 +1,476 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manual/Charsets.md:1
+#, no-wrap
+msgid "Character Sets"
+msgstr "文字セット"
+
+#. type: Title ##
+#: manual/Charsets.md:3
+#, no-wrap
+msgid "Introduction to character sets"
+msgstr "文字セットの紹介"
+
+#. type: Plain text
+#: manual/Charsets.md:9
+msgid ""
+"Internally, computers only work with numbers, not characters.  Each letter "
+"is assigned a number, and a character set — often called a *charset* or "
+"*codepage* — defines the mappings between numbers and letters."
+msgstr ""
+"内部的には、コンピューターは文字（キャラクター）について、 テキストについて何"
+"も知らない、唯一“数字（数）”ならコンピュータにもわかる。 それ故各々の“字”には"
+"“数”が割り当てられている。文字セット、しばしば *charset* あるいは *codepage* "
+"とも呼ばれるが、これは“数”と“字”の一対一対応を規定している。"
+
+#. type: Plain text
+#: manual/Charsets.md:16
+msgid ""
+"When two or more computer systems communicate, they must use the same "
+"character set.  In the 1960s, the ASCII (American Standard Code for "
+"Information Interchange)  character set was defined by the American "
+"Standards Association.  The original form of ASCII represented 128 "
+"characters, more than enough to cover the English alphabet and numerals.  To "
+"this day, ASCII has been the foundational character encoding used by "
+"computers."
+msgstr ""
+"二つあるいはそれ以上のコンピューターがお互いに通信する必要がある場合、各々は"
+"同じ文字セットを使う必要がある。1960 年代には ASCII (American Standard Code "
+"for Information Interchange) 文字セットが ASA（米国標準協会：the American "
+"Standards Association）によって標準化された。 オリジナルの ASCII 形式は、英語"
+"で用いられるアルファベット及び数字を網羅するのに十分な数より多い 128 のキャラ"
+"クターを表している。今日においても、ASCII はコンピューターで使われるキャラク"
+"タースキームの標準的なものである。"
+
+#. type: Plain text
+#: manual/Charsets.md:22
+msgid ""
+"Later extensions defined 256 characters to accommodate international "
+"characters and some graphical symbols.  In this mode of encoding, each "
+"character takes exactly one byte.  Obviously, 256 characters was still not "
+"enough to represent all the characters used across the world's languages in "
+"a single character set."
+msgstr ""
+"国際的にもっと都合よく、そして若干内輪向けの記号文字を含めるために、つづく"
+"バージョンでは 256 のキャラクターを規定した。 このエンコードの仕様だと一文字"
+"はきっちり 1 バイトに収まるが、明らかに、256 キャラクターというのは、 いろい"
+"ろな言語で用いる全ての文字を一つのキャラクターに一対一対応させるのに依然十分"
+"ではなかった。"
+
+#. type: Plain text
+#: manual/Charsets.md:29
+msgid ""
+"As a result, localized character sets were defined, such as the ISO-8859 "
+"family.  Most operating system vendors introduced their own character sets: "
+"IBM defined *codepage 437 (DOSLatinUS)*, Apple introduced *MacRoman*, and so "
+"on.  Characters assigned numbers larger than 127 were referred to as "
+"*extended* characters.  These character sets conflict with one another, as "
+"they use the same number for different characters, or vice versa."
+msgstr ""
+"結果的には後にローカライズされた文字セットが規定された。例えば ISO-8859 文字"
+"セットである。 ほとんどのオペレーティングシステムベンダーは自らの要求を満たす"
+"ために、独自の文字セットを導入した。すなわち IBM であれば *コードページ 437 "
+"(DOSLatinUS)*、アップルは *MacRoman* コードページ、などである。127 以上のキャ"
+"ラクターが定義されているものを*拡張* キャラクターと呼ぶ。 これらの文字セット"
+"は異なるキャラクターに同じ番号をふってあるので、 他の文字セットとまたは文字"
+"セット同士で衝突を起こす。"
+
+#. type: Plain text
+#: manual/Charsets.md:34
+msgid ""
+"Almost all of these character sets defined 256 characters, with the first "
+"128 (0–127) mappings identical to ASCII.  As a result, communication between "
+"systems using different codepages was effectively limited to the ASCII "
+"subset."
+msgstr ""
+"そういった文字セットのほぼ全てが 256 個のキャラクターを定義していて、最初の "
+"128 個（0 から 127 まで）のキャラクターを ASCII と同一対応となるようにしてい"
+"る。結果的に、違ったコードページを使っているシステム同士の通信では、事実上 "
+"ASCII 文字セット限定となった。"
+
+#. type: Plain text
+#: manual/Charsets.md:38
+msgid ""
+"To solve this problem, new, larger character sets were defined.  To make "
+"room for more mappings, these character sets use at least 2 bytes per "
+"character.  They are therefore referred to as *multibyte* character sets."
+msgstr ""
+"この問題を新たに解決するために、より大きい文字セットが規定された。より多くの"
+"キャラクターマッピングの場所を確保するために、 これらのキャラクターセットは一"
+"つのキャラクターの格納のために最低でも 2 バイトを使用する。 このためそういっ"
+"た文字セットは*マルチバイト* 文字セットと呼ばれる。"
+
+#. type: Plain text
+#: manual/Charsets.md:42
+msgid ""
+"One standardized multibyte encoding scheme is [Unicode](http://"
+"www.unicode.org/).  A key advantage of using a multibyte charset is that you "
+"only need one.  There is no need to ensure that two computers use the same "
+"charset when communicating."
+msgstr ""
+"標準化されたマルチバイトキャラクターエンコード方式として知られているものの一"
+"つとして [ユニコード](http://www.unicode.org/)がある。 マルチバイトキャラク"
+"ターセット使用の大きな利点として“それ一つで済む”がある。 二つのコンピューター"
+"が通信しているときに両者が同じ文字セットを使用しているか確認する必要がない。"
+
+#. type: Title ##
+#: manual/Charsets.md:43
+#, no-wrap
+msgid "Character sets used by Apple"
+msgstr "Apple で使われている（使われていた）文字セット"
+
+#. type: Plain text
+#: manual/Charsets.md:48
+msgid ""
+"In the past, Apple clients used single-byte charsets for network "
+"communication.  Over the years Apple defined a number of codepages; Western "
+"users most commonly used the *MacRoman* codepage."
+msgstr ""
+"過去に Apple クライアントは、ネットワーク間の通信のためにシングルバイトのキャ"
+"ラクターセットを使用していた。 年を経るに従い、Apple はいくつものキャラクター"
+"セットを定義したが、欧米ユーザーは *MacRoman* コードセットを最もよく使用する"
+"であろう。"
+
+#. type: Plain text
+#: manual/Charsets.md:50
+msgid "Codepages defined by Apple include:"
+msgstr "Apple の定義したコードページに含まれるもの："
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:52
+msgid "MacArabic, MacFarsi"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:54
+msgid "MacCentralEurope"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:56
+msgid "MacChineseSimple"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:58
+msgid "MacChineseTraditional"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:60
+msgid "MacCroatian"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:62
+msgid "MacCyrillic"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:64
+msgid "MacDevanagari"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:66
+msgid "MacGreek"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:68
+msgid "MacHebrew"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:70
+msgid "MacIcelandic"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:72
+msgid "MacJapanese"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:74
+msgid "MacKorean"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:76
+msgid "MacRoman"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:78
+msgid "MacRomanian"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:80
+msgid "MacThai"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:82
+msgid "MacTurkish"
+msgstr ""
+
+#. type: Plain text
+#: manual/Charsets.md:87
+msgid ""
+"Starting with Mac OS X and AFP 3.x, [UTF-8](http://www.utf-8.com/) is used.  "
+"UTF-8 encodes Unicode characters in an ASCII-compatible way; each Unicode "
+"character is encoded into 1–4 bytes.  UTF-8 is therefore not a charset "
+"itself, but rather an encoding of the Unicode charset."
+msgstr ""
+"Mac OS X 以降そして AFP 3.x 以降では [UTF-8](http://www.utf-8.com/)  が用いら"
+"れる。UTF-8 は Unicode キャラクターを ASCII 互換のやり方でエンコードする。"
+"各々の Unicode キャラクターは一個から四個のバイトにエンコードされる。 故に、"
+"UTF-8 自体が本当の文字セットなのではなく、ユニコード文字セットのエンコーディ"
+"ングなのである。"
+
+#. type: Plain text
+#: manual/Charsets.md:93
+msgid ""
+"To complicate matters, Unicode defines several *[normalization](http://"
+"www.unicode.org/reports/tr15/index.html)* forms.  While [Samba](http://"
+"www.samba.org) uses *precomposed* Unicode (which most UNIX tools prefer as "
+"well), Apple chose *decomposed* normalization."
+msgstr ""
+"厄介なことにも Unicode はいくつかの *[normalization（正規化）](http://"
+"www.unicode.org/reports/tr15/index.html)* 方式を規定している。[Samba](http://"
+"www.samba.org)  はほとんどの UNIX ツールも好んで用いる *precomposed* Unicode "
+"を使用する。一方 Apple は *decomposed* normalization を使うことに決めた。"
+
+#. type: Plain text
+#: manual/Charsets.md:98
+msgid ""
+"For example, take the character 'ä' (lowercase a with diaeresis).  Using "
+"precomposed normalization, Unicode maps this character to 0xE4.  In "
+"decomposed normalization, 'ä' is mapped to two characters: 0x61 for 'a' and "
+"0x308 for *COMBINING DIAERESIS*."
+msgstr ""
+"例として、文字 'ä'（小文字aにダイエリシスがついたもの）についてみてみる。"
+"Precomposed normalization を使えば Unicode はこの文字に 0xE4 を対応付ける。"
+"Decomposed normalization では 'ä' を正確には 0x61 と 0x308 の二つの文字に対応"
+"付ける。0x61 は 'a' に、0x308 は *COMBINING DIAERESIS*に対応付けられている。"
+
+#. type: Plain text
+#: manual/Charsets.md:101
+msgid ""
+"Netatalk refers to precomposed UTF-8 as *UTF8* and to decomposed UTF-8 as "
+"*UTF8-MAC*."
+msgstr ""
+"Netatalk では precomposed UTF-8 を *UTF8* と、decomposed UTF-8 を *UTF8-MAC* "
+"と呼ぶ。"
+
+#. type: Title ##
+#: manual/Charsets.md:102
+#, no-wrap
+msgid "afpd and character sets"
+msgstr "afpd と文字セット"
+
+#. type: Plain text
+#: manual/Charsets.md:108
+msgid ""
+"To support both AFP 3.x and older AFP 2.x clients simultaneously, **afpd** "
+"must convert between the various charsets in use.  AFP 3.x clients always "
+"use UTF8-MAC, while AFP 2.x clients use one of the Apple codepages."
+msgstr ""
+"新しい AFP 3.x クライアントも古い AFP 2.x クライアントも同時にサポートするた"
+"めに、**afpd** は使われている様々な文字セット間の変換が可能であることを必要と"
+"した。AFP 3.x クライアントは常に UTF8-MAC を、AFP 2.x クライアントは Apple "
+"コードページのうちの一つを使う。"
+
+#. type: Plain text
+#: manual/Charsets.md:110
+msgid ""
+"At the time of writing, Netatalk supports the following Apple codepages:"
+msgstr ""
+"本稿執筆時点（訳注：原文の）で、Netatalk は以下の Apple コードページをサポー"
+"トしている："
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:112
+msgid "MAC_CENTRALEUROPE"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:114
+msgid "MAC_CHINESE_SIMP"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:116
+msgid "MAC_CHINESE_TRAD"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:118
+msgid "MAC_CYRILLIC"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:120
+msgid "MAC_GREEK"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:122
+msgid "MAC_HEBREW"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:124
+msgid "MAC_JAPANESE"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:126
+msgid "MAC_KOREAN"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:128
+msgid "MAC_ROMAN"
+msgstr ""
+
+#. type: Bullet: '- '
+#: manual/Charsets.md:130
+msgid "MAC_TURKISH"
+msgstr ""
+
+#. type: Plain text
+#: manual/Charsets.md:132
+#, no-wrap
+msgid "**afpd** handles three different character set options:\n"
+msgstr "**afpd** は三つの異なる文字セットオプションを扱う：\n"
+
+#. type: Plain text
+#: manual/Charsets.md:134
+msgid "unix charset"
+msgstr ""
+
+#. type: Plain text
+#: manual/Charsets.md:141
+#, no-wrap
+msgid ""
+"> The codepage used internally by your operating system.\n"
+"If not specified, it defaults to **UTF8**.\n"
+"If **LOCALE** is specified and your system supports UNIX locales,\n"
+"**afpd** tries to detect the codepage.\n"
+"**afpd** uses this codepage to read its configuration files,\n"
+"so you can use extended characters for volume names, login messages, etc.\n"
+msgstr ""
+"> オペレーティングシステムの内側で使われているコードページである。\n"
+"もし指定されていなければ、デフォルトで\n"
+"**UTF8** になる。もし **LOCALE** が指定されていて、 システムが UNIX locales\n"
+"をサポートしていれば、afpd はコードページを検出しようとし、afpd\n"
+"は検出したコードページを使って設定ファイルを読む。\n"
+"なので、ボリューム名やログインメッセージなどに拡張文字を使うことができる。\n"
+
+#. type: Plain text
+#: manual/Charsets.md:143
+msgid "mac charset"
+msgstr ""
+
+#. type: Plain text
+#: manual/Charsets.md:149
+#, no-wrap
+msgid ""
+"> Older Mac OS clients (up to AFP 2.2) use codepages to communicate with **afpd**.\n"
+"However, the AFP protocol has no support for negotiating the codepage in use.\n"
+"If not specified otherwise, **afpd** assumes *MacRoman*.\n"
+"If your clients use a different codepage, such as *MacCyrillic*,\n"
+"you **must** configure this explicitly.\n"
+msgstr ""
+"> 旧式の Mac OS クライアント（AFP 2.2 までのもの）は\n"
+"**afpd** と通信するのにコードページを用いる。しかしながら、AFP\n"
+"プロトコルにはクライアントが使用しているコードページの折り合いをつけるというサポートはない。\n"
+"もしほかのどこかで指定されていないと、\n"
+"afpd は *MacRoman* コードページが使われていると仮定する。\n"
+"クライアントが別のコードページ、例えば *MacCyrillic* を使っていたならば,\n"
+"それを明示的に設定**しなければならない**だろう。\n"
+
+#. type: Plain text
+#: manual/Charsets.md:151
+msgid "vol charset"
+msgstr ""
+
+#. type: Plain text
+#: manual/Charsets.md:156
+#, no-wrap
+msgid ""
+"> The charset that **afpd** uses for filenames on disk.\n"
+"By default, this is the same as **unix charset**.\n"
+"If you have [iconv](http://www.gnu.org/software/libiconv/) installed,\n"
+"you can use any iconv-provided charset as well.\n"
+msgstr ""
+"> **afpd** がディスク上のファイル名として使うべき charset\n"
+"を定義する。デフォルトでは **unix charset** と同じである。もし\n"
+"[iconv](http://www.gnu.org/software/libiconv/)\n"
+"がインストールしてあるならば、iconv\n"
+"が提供する文字セットも使用することができる。\n"
+
+#. type: Plain text
+#: manual/Charsets.md:164
+#, no-wrap
+msgid ""
+"**afpd** needs a way to preserve extended Macintosh characters,\n"
+"or characters illegal in UNIX filenames, when saving files on a UNIX filesystem.\n"
+"Earlier versions used the so-called CAP encoding.\n"
+"An extended character (>0x7F) was converted to a *:xx* hex sequence —\n"
+"for example, the Apple Logo (MacRoman: 0xF0) was saved as *:f0*.\n"
+"Some special characters are also converted to *:xx* notation: */* is encoded as *:2f*,\n"
+"and if **usedots** is not specified, a leading dot *.* is encoded as *:2e*.\n"
+msgstr ""
+"**afpd** はファイルをUNIXのファイルシステムに保存する時、拡張マッキントッシュキャラクター、あるいは\n"
+"UNIXのファイル名として不正なキャラクターを保持する手段が必要である。初期のバージョンでは、いわゆる\n"
+"CAPエンコーディングを使った。拡張キャラクター\n"
+"(\\>0x7F) は *:xx* の16進数に変換される。例えば、アップルのロゴ\n"
+"(MacRoman: 0xF0) は *:f0* として保存される。\n"
+"いくつかの特殊なキャラクターも *:xx* という表記に変換される。'/' は *:2f*\n"
+"にエンコードされる。もし、**usedots**オプションが設定されていなければ、先頭のピリオド '.' は *:2e*\n"
+"にエンコードされる。\n"
+
+#. type: Plain text
+#: manual/Charsets.md:168
+msgid ""
+"Even though this version now uses **UTF8** as the default encoding for "
+"filenames, */* is still converted to *:*. For western users, another useful "
+"setting is **vol charset = ISO-8859-15**."
+msgstr ""
+"本ドキュメントでのバージョンではファイル名のデフォルトエンコーディングとして "
+"**UTF8** を使っているにもかかわらず、*/* は *:* に変換される。欧米のユーザー"
+"にとって別の有用な設定として **vol charset = ISO-8859-15** もあり得る。"
+
+#. type: Plain text
+#: manual/Charsets.md:171
+msgid ""
+"If a character cannot be converted from the **mac charset** to the selected "
+"**vol charset**, you will receive a -50 error on the Mac.  *Note*: Whenever "
+"possible, use the default UTF8 volume format."
+msgstr ""
+"もし、あるキャラクターが **mac charset** から選定した **vol charset** への変"
+"換ができない場合、マック上で -50 エラーを受け取るだろう。 *注意*： 可能な限り"
+"常に、デフォルトの UTF8 ボリュームフォーマットにしてください。"

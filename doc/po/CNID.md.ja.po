@@ -1,0 +1,252 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manual/CNID.md:1
+#, no-wrap
+msgid "CNID Backends"
+msgstr "CNID バックエンド"
+
+#. type: Plain text
+#: manual/CNID.md:10
+msgid ""
+"Unlike other protocols such as SMB or NFS, the AFP protocol mostly refers to "
+"files and directories by ID rather than by path.  These IDs are called CNIDs "
+"(Catalog Node Identifiers).  A typical AFP request uses a directory ID and a "
+"filename, for example: \"server, please open the file named 'Test' in the "
+"directory with ID 167\".  Mac aliases work by CNID, with a fallback to the "
+"absolute path in more recent AFP clients.  (This fallback applies only to "
+"the Finder, not to applications.)"
+msgstr ""
+"SMB や NFS のようなほかのプロトコルとは異なり、ほとんどの場合、AFP プロトコル"
+"はファイルやディレクトリをパスではなく ID を通して参照している。その ID は "
+"CNID とも言われ、カタログ・ノード ID (Catalog Node ID) の略である。典型的に"
+"は、まず AFP リクエストで、例えば、“サーバーさん id 167 のディレクトリにあ"
+"る、ファイル名 'Test' というのを開いてください。”といった調子でディレクトリ "
+"IDとファイル名を用いる。例えば、Mac での \"Aliases\" は基本的には ID として作"
+"用する（より最近の AFP クライアントでは絶対パスにフォールバックするが、これ"
+"は Finder のみで当てはまることであり、アプリケーションでは当てはまらない）。"
+
+#. type: Plain text
+#: manual/CNID.md:18
+msgid ""
+"Every file in an AFP volume must have a unique file ID.  According to the "
+"AFP specification, CNIDs must never be reused.  IDs are represented as 32-"
+"bit numbers, and directories share the same ID pool.  After approximately 4 "
+"billion files and directories have been written to an AFP volume, the ID "
+"pool is depleted and no new files can be written to the volume.  Some of "
+"Netatalk's CNID backends may attempt to reuse available IDs after depletion, "
+"which technically violates the spec but may allow continuous use on long-"
+"lived volumes."
+msgstr ""
+"AFP ボリュームにある各々のファイルに一意のファイル ID が割り当てられる。仕様"
+"により CNID は絶対に再利用禁止であり、32 bit の数字である。ディレクトリ ID も"
+"同じ ID プールを使用する。このため、ある AFP ボリュームにおよそ 40 億個以上の"
+"ファイル・フォルダーを書き込むと、その時点で ID プールが枯渇され、当該ボ"
+"リュームへの新ファイルの書き込みができなくなる。Netatalk の CNID バックエンド"
+"の一部は、利用可能な ID を使い果たした後に再利用しようとする場合がある。これ"
+"は厳密的には仕様違反にはなるが、長期間有効なボリュームでは継続的な使用可能に"
+"する。"
+
+#. type: Plain text
+#: manual/CNID.md:22
+msgid ""
+"Netatalk maps IDs to files and directories in the host filesystem.  Several "
+"CNID backends are available and can be selected with the **cnid scheme** "
+"option in *afp.conf*.  A CNID backend is essentially a database storing ID ↔ "
+"name mappings."
+msgstr ""
+"Netatalk はホストのファイルシステム内で ID とファイルあるいはフォルダーのマッ"
+"プ（ID との対応付け）をする必要がある。 それを実現するためにいくつかの異なる "
+"CNID バックエンドが用意されていて、*afp.conf* 設定ファイル内で **cnid "
+"scheme** オプションで選択が可能である。CNID バックエンドは基本的には、ストア"
+"された ID ↔ 名前を一対一対応させるデータベースである。"
+
+#. type: Plain text
+#: manual/CNID.md:28
+msgid ""
+"For CNID backends that use a zero-configuration database, the database files "
+"are located by default in a *netatalk/CNID* subdirectory of your system's "
+"state directory path, e.g. */var/lib*.  You can change the state directory "
+"path with *-Dwith-statedir-path=PATH* at compile time."
+msgstr ""
+"設定の必要ないCNIDバックエンドの場合、CNIDデータベースはデフォルトではシステ"
+"ムの状態ディレクトリパス（例：*/var/lib*）の下にある *netatalk/CNID* サブディ"
+"レクトリに置かれる。コンパイル時に *-Dwith-statedir-path=PATH* オプションで場"
+"所を変えられる。"
+
+#. type: Plain text
+#: manual/CNID.md:30
+msgid ""
+"The **dbd** command-line utility can verify, repair, and rebuild the CNID "
+"database."
+msgstr ""
+"CNID データベースの検証・修復・再構築のために用いることができる **dbd** とい"
+"う名のコマンドが用意されている。"
+
+#. type: Plain text
+#: manual/CNID.md:32
+#, no-wrap
+msgid "> **NOTE:** Keep the following CNID-related considerations in mind:\n"
+msgstr "> 【注記】 以下の CNID 関連の考慮事項を念頭に置くと良い:\n"
+
+#. type: Bullet: '- '
+#: manual/CNID.md:45
+msgid "Don't nest volumes unless **vol dbnest = yes** is set."
+msgstr ""
+"**vol dbnest = yes** が指定してある時以外はボリュームをネスト（入れ子）にして"
+"はならない。"
+
+#. type: Bullet: '- '
+#: manual/CNID.md:45
+msgid ""
+"CNID backends are databases, so they make **afpd** a combined file server "
+"and database system."
+msgstr ""
+"CNIDバックエンドはデータベースである。それ故 **afpd** はファイルサーバーと"
+"データベースの混成物とならしめている。"
+
+#. type: Bullet: '- '
+#: manual/CNID.md:45
+msgid ""
+"If the filesystem runs out of space, the database will become corrupted.  "
+"You can work around this by using the **vol dbpath** option to store "
+"database files in a different location."
+msgstr ""
+"もしファイルシステムに空き容量がなくなった場合、データベースは破損するかもし"
+"れない。それを回避するために取る策としては、 **vol dbpath** オプションを使用"
+"して、データベースファイルをどこか別の場所に置く、か、クオータを使っているな"
+"らばCNIDデータベースフォルダーがクオータなしでユーザー／グループのオーナーと"
+"なっているか確認する。のいずれかである。"
+
+#. type: Bullet: '- '
+#: manual/CNID.md:45
+msgid ""
+"Be careful with CNID databases on NFS-mounted volumes.  Serving AFP volumes "
+"over NFS is already risky, and placing a database there compounds the risk "
+"of corruption.  Use the **vol dbpath** option to store databases on a local "
+"disk if you must use NFS-mounted volumes."
+msgstr ""
+"NFS 経由でマウントされているボリュームのCNIDデータベースには注意すべきであ"
+"る。いずれにしろそのような構成にすると決める事自体かなり無謀である。が、さら"
+"にデータベースもその上に置くとなると決定的にトラブルの元となる。要はデータ"
+"ベースの破損である。もしどうしてもNFSマウントしたボリュームを使わねばならない"
+"場合はデータベースをローカルディスクに置くために **vol dbpath** ディレクティ"
+"ブを使用するべきである。"
+
+#. type: Plain text
+#: manual/CNID.md:49
+msgid ""
+"The following sections describe the CNID backends included with Netatalk.  "
+"You can choose to build one or several of them at compile time.  Run *afpd "
+"-v* to see which backends are available and which one is the default."
+msgstr ""
+"以下は、netatalk に含まれる様々な CNID バックエンドの説明がある。コンパイル時"
+"に、これらのバックエンドを1つまたは複数選択してビルドできる。使用可能なバック"
+"エンドとデフォルトのバックエンドを確認するには、コマンド *afpd -v* を実行する"
+"こと。"
+
+#. type: Title ##
+#: manual/CNID.md:50
+#, no-wrap
+msgid "dbd"
+msgstr ""
+
+#. type: Plain text
+#: manual/CNID.md:56
+msgid ""
+"The \"Database Daemon\" backend is built on Berkeley DB.  Rather than "
+"accessing the database directly, **afpd** processes communicate with one or "
+"more **cnid_dbd** daemon processes over a wire protocol.  The **cnid_dbd** "
+"daemon is responsible for database reads and updates."
+msgstr ""
+"「データベースデーモン」（dbd）バックエンドはBerkeley DB上に構築されている。"
+"CNID データベースへのアクセスは **cnid_dbd** デーモンプロセスのみに制限されて"
+"いる。**afpd** プロセスは **cnid_dbd** データベースの読み込みと更新のために "
+"**cnid_dbd** デーモン とやりとりをする。全ては **cnid_metad** デーモンによっ"
+"て制御されている。"
+
+#. type: Plain text
+#: manual/CNID.md:58
+msgid ""
+"This is the most reliable and proven backend, recommended for most "
+"deployments."
+msgstr ""
+"本バックエンドは日常使用において最も信頼性が高く、実績のあるバックエンドであ"
+"る。"
+
+#. type: Title ##
+#: manual/CNID.md:59
+#, no-wrap
+msgid "mysql"
+msgstr ""
+
+#. type: Plain text
+#: manual/CNID.md:64
+msgid ""
+"CNID backend using a MySQL or MariaDB server.  This is the most performant "
+"and scalable backend option, and is recommended for large deployments with "
+"many concurrent users."
+msgstr ""
+"MySQL または MariaDB サーバーを使用する CNID バックエンド。これは最も高性能で"
+"スケーラブルなバックエンドオプションであり、多数の同時ユーザーがいる大規模な"
+"展開に推奨される。"
+
+#. type: Plain text
+#: manual/CNID.md:67
+msgid ""
+"The SQL server must be provisioned by the system administrator, and Netatalk "
+"configured to connect to it over a Unix socket or a network interface."
+msgstr ""
+"SQL サーバーはシステム管理者がプロビジョニングする必要があり、Netatalkをデー"
+"タベースに接続する設定する必要もある。"
+
+#. type: Title ##
+#: manual/CNID.md:68
+#, no-wrap
+msgid "sqlite"
+msgstr ""
+
+#. type: Plain text
+#: manual/CNID.md:75
+msgid ""
+"A fast and lightweight CNID database backend that uses the SQLite v3 "
+"embedded database engine.  It has a simpler architecture compared to *dbd* "
+"because the database is accessed directly by **afpd**, which means that it "
+"does not require separate controller daemon processes.  And compared to "
+"*mysql*, it does not require a separate SQL server to be set up and "
+"maintained by the system administrator."
+msgstr ""
+"SQLite v3 組み込みデータベースエンジンを使用する高速で軽量な CNID データベー"
+"スバックエンド。データベースは **afpd** によって直接アクセスされるため、"
+"*dbd* と比べてシンプルなアーキテクチャを持ち、*mysql* と比べて、システム管理"
+"者が別の SQL サーバーをセットアップして維持する必要もない。"
+
+#. type: Plain text
+#: manual/CNID.md:79
+msgid ""
+"The tradeoff is that SQLite's embedded database is not the most scalable for "
+"concurrent write operations.  It is therefore recommended for deployments "
+"with up to 20 concurrent users, or for system administrators who do not want "
+"to set up MySQL or MariaDB."
+msgstr ""
+"トレードオフとして、SQLite の組み込みデータベースは同時書き込み操作に対して最"
+"もスケーラブルなものではない。したがって、同時ユーザーが 20 人までの展開や、"
+"MySQL や MariaDB をセットアップしたくないシステム管理者に推奨される。"

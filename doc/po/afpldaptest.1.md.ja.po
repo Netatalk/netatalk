@@ -7,7 +7,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.4.0\n"
+"Project-Id-Version: Netatalk 4.5.0\n"
 "POT-Creation-Date: 2025-11-12 19:44+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
@@ -178,7 +178,7 @@ msgstr "afpldaptest — afp.conf の LDAP パラメータを構文チェック�
 #: manpages/man1/afpldaptest.1.md:8
 #, no-wrap
 msgid "**afpldaptest** [-u *user* | -g *group* | -i *uuid*]\n"
-msgstr "**afpldaptest** [-u *ユーザ* | -g *グループ* | -i *uuid*]\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:10
@@ -198,25 +198,25 @@ msgstr "**afpldaptest**はafp.confのldapパラメータを構文チェックす
 #: manpages/man1/afpldaptest.1.md:19
 #, no-wrap
 msgid "**-u** *user*\n"
-msgstr "**-u* *ユーザ*\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:21
 #, no-wrap
 msgid "> Show uuid for *user*.\n"
-msgstr "> *ユーザ*のためのuuidを表示する。\n"
+msgstr "> *user*のためのuuidを表示する。\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:23
 #, no-wrap
 msgid "**-g** *group*\n"
-msgstr "**-g* *グループ*\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:25
 #, no-wrap
 msgid "> Show uuid for *group*.\n"
-msgstr "> *グループ*のためのuuidを表示する。\n"
+msgstr "> *group*のためのuuidを表示する。\n"
 
 #. type: Plain text
 #: manpages/man1/afpldaptest.1.md:27

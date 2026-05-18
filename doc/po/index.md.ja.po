@@ -2,13 +2,13 @@
 # Netatalk ドキュメントの日本語訳
 # Copyright (C) 2015-2017 Eiichirou UDA
 # Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
-# Copyright (C) 2024-2025 Daniel Markstedt <daniel@mindani.net>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 # This file is distributed under the same license as the Netatalk package.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.4.0\n"
-"POT-Creation-Date: 2025-07-29 20:18+0200\n"
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -24,19 +24,32 @@ msgid "Introduction to Netatalk"
 msgstr "序説"
 
 #. type: Plain text
-#: manual/index.md:7
+#: manual/index.md:8
 msgid ""
 "Netatalk is an Open Source software package that can be used to turn a "
-"\\*NIX machine into a performant and light-weight file server for Macintosh "
-"computers. It provides a TCP/IP as well as a traditional AppleTalk transport "
-"layer."
+"\\*NIX machine into a performant and light-weight file server.  Any computer "
+"with an AFP client can connect to a Netatalk server.  AFP clients include "
+"macOS, Classic Mac OS, Apple II ProDOS or GS/OS, and other operating systems "
+"with 3rd party AFP client software."
 msgstr ""
-"Netatalk は、\\*NIX マシンを Macintosh コンピュータ用の高性能で軽量なファイ"
-"ル サーバーに変えるために使用できるオープン ソース ソフトウェア パッケージで"
-"す。TCP/IP と従来の AppleTalk トランスポート層を提供する。"
+"Netatalk は、\\*NIX マシンを高性能かつ軽量なファイルサーバーへと転換できる、"
+"オープンソースのソフトウェアパッケージである。AFP クライアントを搭載したコン"
+"ピュータであれば、いずれも Netatalk サーバーに接続できる。AFP クライアントに"
+"は、macOS、Classic Mac OS、Apple II ProDOS や GS/OS、さらにサードパーティ製"
+"の AFP クライアントソフトウェアを備えた他のオペレーティングシステムが含まれ"
+"る。"
 
 #. type: Plain text
-#: manual/index.md:14
+#: manual/index.md:11
+msgid ""
+"It provides a modern TCP/IP transport layer, as well as a traditional "
+"AppleTalk transport layer for very old Mac and Apple II clients."
+msgstr ""
+"モダンな TCP/IP トランスポート層と非常に古い Mac や Apple II クライアントに使"
+"える、従来の AppleTalk トランスポート層を両方提供する。"
+
+#. type: Plain text
+#: manual/index.md:18
 msgid ""
 "Using Netatalk's AFP 3.4 compliant file-server leads to noticeably higher "
 "transmission speeds for macOS clients compared to Samba/NFS, while providing "
@@ -51,33 +64,33 @@ msgstr ""
 "の Mac が混在する環境を容易にする。"
 
 #. type: Plain text
-#: manual/index.md:19
+#: manual/index.md:23
 msgid ""
 "Netatalk ships with range of capabilities to accommodate most deployment "
 "environments, including Kerberos, ACLs and LDAP. Modern macOS features such "
-"as Bonjour service discovery, Time Machine backups, and Spotlight indexed "
-"search are provided."
+"as Zeroconf (Bonjour) service discovery, Time Machine backups, and Spotlight "
+"indexed search are provided."
 msgstr ""
 "Netatalk には、Kerberos、ACL、LDAP など、ほとんどの展開環境に対応できるさまざ"
-"まな機能が搭載されている。 Bonjour サービス検出、Time Machine バックアップ、"
-"Spotlight インデックス検索などの最新の macOS 機能が提供される。"
+"まな機能が搭載されている。 Zeroconf（Bonjour）サービス検出、Time Machine バッ"
+"クアップ、Spotlight インデックス検索などの最新の macOS 機能が提供される。"
 
 #. type: Plain text
-#: manual/index.md:24
+#: manual/index.md:28
 msgid ""
 "For AppleTalk networks with legacy Macs and Apple IIs, Netatalk provides a "
-"print server, time server, and Apple II NetBoot server. The print server is "
-"fully integrated with CUPS, allowing old Macs to discover and print to a "
-"modern CUPS/AirPrint compatible printer on the network."
+"print server, time server, and Apple II network boot server. The print "
+"server is fully integrated with CUPS, allowing old Macs to discover and "
+"print to a modern CUPS/AirPrint compatible printer on the network."
 msgstr ""
 "レガシー Mac および Apple II を使用した AppleTalk ネットワークの場合、"
-"Netatalk はプリント サーバー、タイム サーバー、および Apple II NetBoot サー"
-"バーを提供する。プリント サーバーは CUPS と完全に統合されているため、古い "
-"Mac はネットワーク上の最新の CUPS/AirPrint 互換プリンターを検出して印刷でき"
-"る。"
+"Netatalk はプリント サーバー、タイム サーバー、および Apple II ネットブート"
+"サーバーを提供する。プリント サーバーは CUPS と完全に統合されているため、古"
+"い Mac はネットワーク上の最新の CUPS/AirPrint 互換プリンターを検出して印刷で"
+"きる。"
 
 #. type: Plain text
-#: manual/index.md:27
+#: manual/index.md:31
 msgid ""
 "Additionally, Netatalk can be configured as an AppleTalk router through its "
 "AppleTalk Network Management daemon, providing both segmentation and zone "

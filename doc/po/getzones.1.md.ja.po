@@ -5,7 +5,7 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: Netatalk 4.4.0\n"
+"Project-Id-Version: Netatalk 4.5.0\n"
 "POT-Creation-Date: 2025-11-12 19:44+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
@@ -200,7 +200,7 @@ msgstr "getzones — AppleTalk ゾーン名を一覧表示する"
 #: manpages/man1/getzones.1.md:8
 #, no-wrap
 msgid "**getzones** [-g | -l | -m | -q network | -z *zone*] [-c *Mac charset*] [*address*]\n"
-msgstr "**getzones** [-g | -l | -m | -q ネットワーク | -z *ゾーン*] [-c *Mac 文字セット*] [*アドレス*]\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/getzones.1.md:15
@@ -318,7 +318,7 @@ msgstr ""
 #: manpages/man1/getzones.1.md:53
 #, no-wrap
 msgid "*address*\n"
-msgstr "*アドレス*\n"
+msgstr ""
 
 #. type: Plain text
 #: manpages/man1/getzones.1.md:56

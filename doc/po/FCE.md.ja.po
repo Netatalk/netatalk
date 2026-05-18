@@ -1,0 +1,132 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manual/FCE.md:1
+#, no-wrap
+msgid "Filesystem Change Events"
+msgstr "ファイルシステム変更イベント"
+
+#. type: Plain text
+#: manual/FCE.md:5
+msgid ""
+"Netatalk includes a filesystem change event (FCE) mechanism that allows "
+"**afpd** processes to notify interested listeners about certain filesystem "
+"events via UDP network datagrams."
+msgstr ""
+"Netatalk にはファイルシステム変更イベント (Filesystem Change Events, FCE) 機"
+"構が含まれている。ここで、**afpd** プロセスは、なにがしかのファイルシステムイ"
+"ベントについて、関心を寄せているリスナーに、UDP ネットワークデータグラム経由"
+"で通知する。"
+
+#. type: Plain text
+#: manual/FCE.md:10
+msgid ""
+"This feature is disabled by default.  To enable it, set the **fce listener** "
+"option in *afp.conf* to the hostname or IP address of the host that should "
+"listen for FCE events."
+msgstr ""
+"この機能はデフォルトでは無効になっている。有効にするには、*afp.conf* の "
+"**fce listener** オプションを、FCE イベントを受け取るべきホストのホスト名また"
+"は IP アドレスに設定する。"
+
+#. type: Plain text
+#: manual/FCE.md:14
+msgid ""
+"Netatalk distributes a simple FCE listener application called "
+"**fce_listen**.  It prints any UDP datagrams received from the AFP server.  "
+"Its source code also serves as documentation for the format of the UDP "
+"packets."
+msgstr ""
+"Netatalk には、UDP データグラムを受信した AFP サーバーについての情報を出力す"
+"る簡単な FCE リスナーアプリケーション **fce_listen** が含まれている。このアプ"
+"リケーションのソースコードは、UDP パケットのフォーマットについてのドキュメン"
+"トとしても役立つ。"
+
+#. type: Title ##
+#: manual/FCE.md:15
+#, no-wrap
+msgid "FCE v1"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:18
+msgid "The supported FCE v1 events are:"
+msgstr "サポートされているファイルシステム変更イベントは以下である："
+
+#. type: Bullet: '- '
+#: manual/FCE.md:20
+msgid "file modification (fmod)"
+msgstr "ファイル変更：file modification (fmod)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:22
+msgid "file deletion (fdel)"
+msgstr "ファイル削除：file deletion (fdel)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:24
+msgid "directory deletion (ddel)"
+msgstr "ディレクトリ削除：directory deletion (ddel)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:26
+msgid "file creation (fcre)"
+msgstr "ファイル作成：file creation (fcre)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:28
+msgid "directory creation (dcre)"
+msgstr "ディレクトリ削除：directory deletion (ddel)"
+
+#. type: Title ##
+#: manual/FCE.md:29
+#, no-wrap
+msgid "FCE v2"
+msgstr ""
+
+#. type: Plain text
+#: manual/FCE.md:33
+msgid ""
+"FCE v2 events provide additional context such as the user who performed the "
+"action.  FCE v2 also adds the following events:"
+msgstr ""
+"FCE v2 イベントは、アクションを実行したユーザーなどの追加のコンテキストを提供"
+"する。また、FCE v2 では以下のイベントは加われた："
+
+#. type: Bullet: '- '
+#: manual/FCE.md:35
+msgid "file moving (fmov)"
+msgstr "ファイル移動 (fmov)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:37
+msgid "directory moving (dmov)"
+msgstr "ディレクトリー移動 (dmov)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:39
+msgid "user login (login)"
+msgstr "ユーザーログイン (login)"
+
+#. type: Bullet: '- '
+#: manual/FCE.md:40
+msgid "user logout (logout)"
+msgstr "ユーザーログアウト (logout)"

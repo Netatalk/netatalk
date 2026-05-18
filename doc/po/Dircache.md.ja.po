@@ -1,0 +1,433 @@
+# Japanese translations for Netatalk documentation
+# Netatalk ドキュメントの日本語訳
+# Copyright (C) 2015-2017 Eiichirou UDA
+# Copyright (C) 2015-2017 HAT <hat@fa2.so-net.ne.jp>
+# Copyright (C) 2024-2026 Daniel Markstedt <daniel@mindani.net>
+# This file is distributed under the same license as the Netatalk package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Netatalk 4.5.0\n"
+"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"PO-Revision-Date: 2026-05-17 23:17+0200\n"
+"Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
+"Language-Team: none\n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#. type: Title #
+#: manpages/man5/afp.conf.5.md:549 manual/Dircache.md:1
+#, no-wrap
+msgid "Directory Cache Tuning"
+msgstr "ディレクトリキャッシュの調整"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:552 manual/Dircache.md:32
+msgid "dircache size = *number* **(G)**"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:558 manual/Dircache.md:42
+msgid "dircache validation freq = *number* **(G)**"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:566 manual/Dircache.md:62
+msgid "dircache mode = *lru* | *arc* (default: *lru*) **(G)**"
+msgstr "dircache mode = *lru* | *arc* (デフォルト: *lru*) **(G)**"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:577 manual/Dircache.md:123
+msgid "dircache rfork budget = *number* (default: *0*) **(G)**"
+msgstr "dircache rfork budget = *number* (デフォルト: *0*) **(G)**"
+
+#. type: Plain text
+#: manpages/man5/afp.conf.5.md:586 manual/Dircache.md:130
+msgid "dircache rfork maxsize = *number* (default: *1024*) **(G)**"
+msgstr "dircache rfork maxsize = *number* (デフォルト: *1024*) **(G)**"
+
+#. type: Plain text
+#: manual/Dircache.md:5
+msgid ""
+"The dircache (directory cache) in Netatalk is a sophisticated multi-layer "
+"cache for files and directories, including filesystem stat information, "
+"AppleDouble metadata, and resource forks."
+msgstr ""
+"Netatalk の dircache（ディレクトリキャッシュ）は、ファイルとディレクトリの高"
+"度なマルチレイヤーキャッシュで、ファイルシステムの stat 情報、AppleDouble メ"
+"タデータ、およびリソースフォークを含む。"
+
+#. type: Plain text
+#: manual/Dircache.md:14
+msgid ""
+"Once populated during an initial directory enumeration, subsequent "
+"operations return cached data directly from memory.  This enables fast "
+"operations even with very large working sets.  When any AFP user renames or "
+"deletes files and directories, dircache entries are updated or removed for "
+"all users.  While the dircache is always kept in sync with AFP operations, "
+"it does not detect changes made outside of Netatalk (e.g. local filesystem "
+"changes, or modifications by other file sharing services such as Samba)."
+msgstr ""
+"最初のディレクトリ列挙中にキャッシュが構築されると、その後の操作はメモリから"
+"直接キャッシュされたデータを返すようになる。これにより、非常に大きなワーキン"
+"グセットでも高速な操作が可能になる。AFPユーザーがファイルやディレクトリを名前"
+"変更または削除すると、dircacheエントリーはすべてのユーザーのために更新または"
+"削除される。dircacheは常にAFP操作と同期されているが、Netatalkの外部で行われた"
+"変更（例：ローカルファイルシステムの変更やSambaなどの他のファイル共有サービス"
+"による変更）を検出しない。"
+
+#. type: Plain text
+#: manual/Dircache.md:23
+msgid ""
+"By default (with *dircache validation freq = 1*), Netatalk performs a "
+"*stat()* operation on every access to validate that the cache entry still "
+"matches the storage layer.  While the cache still avoids most I/O "
+"operations, this ctime check adds some overhead.  When Netatalk is the only "
+"process accessing a storage volume, you can set a high *dircache validation "
+"freq* value (e.g. 100) to skip most of these extra *stat()* calls, reducing "
+"load on the storage and page-cache layers."
+msgstr ""
+"デフォルトでは（*dircache validation freq = 1* の場合）、Netatalk はキャッ"
+"シュエントリーがストレージレイヤーとまだ一致していることを検証するために、す"
+"べてのアクセスで *stat()* 操作を実行する。キャッシュはほとんどのI/O操作を回避"
+"するが、この ctime チェックは多少のオーバーヘッドを追加する。Netatalk がスト"
+"レージボリュームにアクセスする唯一のプロセスである場合は、高い *dircache "
+"validation freq* 値（例：100）を設定して、これらの余分な *stat()* 呼び出しの"
+"ほとんどをスキップし、ストレージとページキャッシュレイヤーの負荷を減らすこと"
+"ができる。"
+
+#. type: Plain text
+#: manual/Dircache.md:30
+msgid ""
+"If a dircache entry is found to be stale when accessed, Netatalk gracefully "
+"detects the issue, rebuilds the entry with the latest state from storage, "
+"and increments the *invalid_on_use* counter.  You can use the "
+"*invalid_on_use* counter to tune *dircache validation freq* in environments "
+"where external changes are infrequent but maximum performance is still "
+"desired."
+msgstr ""
+"dircacheエントリーがアクセス時に古いと判断された場合、Netatalkは問題を優雅に"
+"検出し、ストレージから最新の状態でエントリーを再構築し、*invalid_on_use* カウ"
+"ンターをインクリメントする。*invalid_on_use* カウンターを使用して、外部の変更"
+"がまれであるが最大のパフォーマンスがまだ望ましい環境で *dircache validation "
+"freq* を調整することができる。"
+
+#. type: Plain text
+#: manual/Dircache.md:38
+msgid ""
+"Maximum number of entries in the cache.  The given value is rounded up to "
+"the nearest power of 2.  Each entry takes about 192 bytes (on 64-bit "
+"systems), and each **afpd** child process for every connected user has its "
+"own cache.  Consider the number of users when configuring *dircache size*."
+msgstr ""
+"キャッシュ内のエントリーの最大数。与えられた値は、最も近い2のべき乗に切り上げ"
+"られる。各エントリーは約192バイト（64ビットシステムの場合）を占め、接続された"
+"ユーザーごとに各**afpd**子プロセスが独自のキャッシュを持つ。*dircache size* "
+"を構成するときは、ユーザーの数を考慮すること。"
+
+#. type: Plain text
+#: manual/Dircache.md:40
+msgid "Default: 65536, Maximum: 1048576."
+msgstr "デフォルト：65536、最大サイズ：1048576。"
+
+#. type: Plain text
+#: manual/Dircache.md:53
+msgid ""
+"Directory cache validation frequency for external change detection.  "
+"Controls how often cached entries are validated against the filesystem to "
+"detect changes made outside of Netatalk (e.g. direct filesystem "
+"modifications by other processes).  A value of 1 means validate on every "
+"access (the default, for backward compatibility); higher values validate "
+"less frequently.  For example, 5 means validate cache entries every 5th "
+"access.  Higher values improve performance and reduce storage I/O and page-"
+"cache stress, but may delay detection of external changes."
+msgstr ""
+"外部変更検出のためのディレクトリキャッシュ検証頻度。 netatalk の外側で行われ"
+"た変更を検出するために、キャッシュされたエントリーがファイルシステムに対して"
+"どのくらいの頻度で検証されるかを制御する。（例：他のプロセスによる直接的な"
+"ファイルシステムの修正）。1 の値は、毎回のアクセスでキャッシュを検証すること"
+"を意味する（互換性のためのデフォルト）。より高い値は検証頻度が低くなる。例え"
+"ば、5 は 5 回に一度キャッシュエントリーを検証することを意味する。より高い値は"
+"パフォーマンスを向上させ、ストレージ IO とページキャッシュのストレスを大幅に"
+"削減するが、Netatalk の外側での変更の検出が遅れる可能性がある。"
+
+#. type: Plain text
+#: manual/Dircache.md:55
+msgid "Default: 1, Range: 1–100."
+msgstr "デフォルト：1、範囲：1-100。"
+
+#. type: Plain text
+#: manual/Dircache.md:60
+msgid ""
+"Internal Netatalk operations (file/directory create, delete, rename)  always "
+"update dircache entries immediately regardless of this setting.  If Netatalk "
+"is the only process accessing the volume, you can safely set a value of 100 "
+"for maximum performance."
+msgstr ""
+"内部の netatalk 操作（ファイル／ディレクトリの作成、削除、名前変更）は、この"
+"設定に関係なく、常に dircache エントリーを即座に更新にする。Netatalk がボ"
+"リュームにアクセスする唯一のプロセスである場合、最大のパフォーマンスのために "
+"100 の値を安全に設定できる。"
+
+#. type: Plain text
+#: manual/Dircache.md:64
+msgid ""
+"Cache replacement algorithm. Netatalk supports two cache eviction policies:"
+msgstr ""
+"キャッシュ置換アルゴリズム。Netatalk は 2 つのキャッシュエビクションポリシー"
+"をサポートする："
+
+#. type: Bullet: '- '
+#: manual/Dircache.md:69
+msgid ""
+"**LRU (Least Recently Used)** — the legacy algorithm and the default.  "
+"Maintains a single list ordered by access time (FIFO); the least recently "
+"accessed entry is evicted when the cache is full.  Simple and memory-"
+"efficient."
+msgstr ""
+"**LRU（最も最近使用されていない）** — レガシーアルゴリズムでデフォルト。アク"
+"セス時間順に並べられた単一のリストを維持する（FIFO）。キャッシュがいっぱいに"
+"なると、最も最近アクセスされていないエントリーが削除される。シンプルでメモ"
+"リー効率が良い。"
+
+#. type: Bullet: '- '
+#: manual/Dircache.md:75
+msgid ""
+"**ARC (Adaptive Replacement Cache)** — a modern self-tuning algorithm that "
+"dynamically balances *recency* and *frequency* to achieve better cache hit "
+"rates.  Based on [\"Outperforming LRU with an Adaptive Replacement Cache "
+"Algorithm\"](https://theory.stanford.edu/~megiddo/pdf/"
+"IEEE_COMPUTER_0404.pdf)  (Megiddo & Modha, IBM, 2004)."
+msgstr ""
+"**ARC（適応型置換キャッシュ）** — より良いキャッシュヒット率を達成するため"
+"に、*新しさ* と *頻度* を動的にバランスさせる最新の自己調整アルゴリズム。"
+"[「LRUを上回る適応型置換キャッシュアルゴリズム」](https://"
+"theory.stanford.edu/~megiddo/pdf/IEEE_COMPUTER_0404.pdf)（Megiddo & Modha、"
+"IBM、2004）に基づいている。"
+
+#. type: Plain text
+#: manual/Dircache.md:84
+msgid ""
+"ARC adapts to the observed access pattern, making it effective for workloads "
+"that mix temporal locality with frequency-based reuse — for example, when "
+"users alternate between recently and frequently accessed files or "
+"directories.  It maintains four lists: two for cached entries (T1 recent, T2 "
+"frequent)  and two *ghost* lists (B1, B2) that track recently evicted "
+"entries.  When a ghost entry is re-accessed, ARC learns from the miss and "
+"adjusts its policy.  This ghost learning and segmentation is what "
+"distinguishes ARC from LRU, and also makes ARC resistant to sequential scans "
+"and backups that can flush an LRU cache."
+msgstr ""
+"ARCは観測されたアクセスパターンに適応するため、時間的局所性と頻度ベースの再利"
+"用を組み合わせたワークロードに対して効果的である。例えば、ユーザーが最近アク"
+"セスしたファイルやディレクトリと頻繁にアクセスしたファイルやディレクトリを交"
+"互に切り替える場合など。ARCは4つのリストを維持する：キャッシュされたエント"
+"リーのための2つのリスト（T1最近、T2頻繁）と、最近削除されたエントリーを追跡す"
+"る2つの*ゴースト*リスト（B1、B2）。ゴーストエントリーが再アクセスされると、"
+"ARCはミスから学習し、ポリシーを調整する。このゴースト学習とセグメンテーション"
+"がARCをLRUと区別するものであり、またARCをLRUキャッシュをフラッシュする可能性"
+"のあるシーケンシャルスキャンやバックアップに対して耐性のあるものにしている。"
+
+#. type: Plain text
+#: manual/Dircache.md:90
+#, no-wrap
+msgid ""
+"**Netatalk's ARC uses complete ghost entries** (retaining all content)\n"
+"rather than the metadata-only ghosts in the IBM paper,\n"
+"because cache entries are small.\n"
+"A ghost hit is promoted back to the cache instantly without any filesystem lookup,\n"
+"so ARC should always perform at least as well as LRU in edge cases and better in all others.\n"
+msgstr ""
+"Netatalk の ARC は、完全なゴーストエントリーを使用する（すべての内容を保持する）\n"
+"IBMの論文のメタデータのみのゴーストではなく、\n"
+"キャッシュエントリーが小さいため。\n"
+"ゴーストヒットは、ファイルシステムのルックアップなしですぐにキャッシュに昇格されるため、\n"
+"ARCはエッジケースでは常にLRUと同等以上のパフォーマンスを発揮し、\n"
+"その他すべてのケースでより良いパフォーマンスを発揮するはずである。\n"
+
+#. type: Plain text
+#: manual/Dircache.md:96
+#, no-wrap
+msgid ""
+"**Memory:** ARC uses approximately **twice the memory** of LRU\n"
+"because it tracks up to *c* ghost entries alongside *c* cached entries\n"
+"(where *c* is *dircache size*).\n"
+"Each entry is ~192 bytes on 64-bit systems.\n"
+"Even so, ARC still outperforms an LRU cache of the same total memory.\n"
+msgstr ""
+"**メモリ：** ARCはLRUの約**2倍のメモリ**を使用する\n"
+"なぜなら、*c* キャッシュされたエントリーと並行して最大 *c* ゴーストエントリーを追跡するからである\n"
+"（ここで *c* は *dircache size*）。\n"
+"各エントリーは64ビットシステムで約192バイトである。\n"
+"それでも、ARCは同じ総メモリのLRUキャッシュよりも優れたパフォーマンスを発揮する。\n"
+
+#. type: Plain text
+#: manual/Dircache.md:101
+#, no-wrap
+msgid ""
+"| Mode | Entries tracked | Memory (1000-entry cache) |\n"
+"| ---- | --------------- | ------------------------- |\n"
+"| LRU  | 1000 cached     | ~192 KB                   |\n"
+"| ARC  | 1000 cached + up to 1000 ghosts | ~384 KB   |\n"
+msgstr ""
+"| モード | 追跡されるエントリー | メモリ（1000エントリーキャッシュ） |\n"
+"| ---- | --------------- | ------------------------- |\n"
+"| LRU  | 1000 キャッシュされたエントリー     | 約192 KB                   |\n"
+"| ARC  | 1000 キャッシュされたエントリー + 最大1000 ゴーストエントリー | 約384 KB   |\n"
+
+#. type: Plain text
+#: manual/Dircache.md:103
+msgid ""
+"For the default *dircache size* of 65536: LRU ≈ 12 MB, ARC ≈ 24 MB per "
+"connected user."
+msgstr ""
+"デフォルトの *dircache size* 65536の場合：LRUは約12 MB、ARCは接続されたユー"
+"ザーごとに約24 MB。"
+
+#. type: Plain text
+#: manual/Dircache.md:106
+#, no-wrap
+msgid ""
+"**Recommendation**: Use **arc** for servers with 4 GB or more RAM.\n"
+"Use **lru** for memory-constrained systems.\n"
+msgstr ""
+"**推奨**：RAMが4 GB以上のサーバーには **arc** を使用すること。\n"
+"メモリが制約されているシステムには **lru** を使用すること。\n"
+
+#. type: Plain text
+#: manual/Dircache.md:108
+msgid "Default: lru."
+msgstr "デフォルト：lru。"
+
+#. type: Title ##
+#: manual/Dircache.md:109
+#, no-wrap
+msgid "Resource Fork Caching"
+msgstr "リソースフォークのキャッシュ"
+
+#. type: Plain text
+#: manual/Dircache.md:119
+msgid ""
+"Netatalk can optionally cache resource fork data (AppleDouble *._* data in "
+"classic Mac OS, or extended attributes in modern macOS/Linux/UNIX systems) "
+"in a tier-2 dircache layer.  This avoids repeated storage I/O when AFP "
+"clients enumerate directories with FPGetFileDirParams or FPEnumerate and "
+"request resource fork data.  Resource forks store many macOS data structures "
+"such as folder cover art (icns data).  Users who set custom directory icons, "
+"for example, will observe significant performance gains from the resource "
+"fork cache layer."
+msgstr ""
+"Netatalk は、リソースフォークデータ（クラシックMac OSのAppleDouble *._* デー"
+"タ、または現代のmacOS/Linux/UNIXシステムの拡張属性）をオプションでtier-2 "
+"dircacheレイヤーにキャッシュすることができる。これにより、AFPクライアントが"
+"FPGetFileDirParamsやFPEnumerateでディレクトリを列挙し、リソースフォークデータ"
+"を要求する際の繰り返しのストレージI/Oを回避することができる。リソースフォーク"
+"は、フォルダのカバーアート（icnsデータ）などの多くのmacOSデータ構造を格納す"
+"る。例えば、カスタムディレクトリアイコンを設定するユーザーは、リソースフォー"
+"クキャッシュレイヤーから大幅なパフォーマンス向上を観察することができる。"
+
+#. type: Plain text
+#: manual/Dircache.md:121
+msgid ""
+"Resource fork caching is disabled by default and is controlled by two "
+"settings:"
+msgstr ""
+"リソースフォークのキャッシュはデフォルトで無効になっており、2つの設定で制御さ"
+"れる："
+
+#. type: Plain text
+#: manual/Dircache.md:126
+msgid ""
+"Total memory budget in KB for caching resource fork data per connected "
+"user.  When set to 0 (the default), resource fork caching is disabled."
+msgstr ""
+"接続されたユーザーごとにリソースフォークデータをキャッシュするためのKB単位の"
+"総メモリ予算。0に設定すると（デフォルト）、リソースフォークのキャッシュが無効"
+"になる。"
+
+#. type: Plain text
+#: manual/Dircache.md:128
+msgid "Maximum: 10485760 (10 GB in KB)."
+msgstr "最大：10485760（KB単位で10 GB）。"
+
+#. type: Plain text
+#: manual/Dircache.md:133
+msgid ""
+"Maximum size in KB of a single resource fork entry that will be cached.  "
+"Resource forks larger than this value are not cached even if the total "
+"budget has space remaining."
+msgstr ""
+"キャッシュされる単一のリソースフォークエントリーの最大サイズ（KB単位）。この"
+"値より大きいリソースフォークは、総予算にスペースが残っていてもキャッシュされ"
+"ない。"
+
+#. type: Plain text
+#: manual/Dircache.md:135
+msgid "Maximum: 10240 (10 MB in KB)."
+msgstr "最大：10240（KB単位で10 MB）。"
+
+#. type: Plain text
+#: manual/Dircache.md:139
+msgid ""
+"Cached entries are automatically invalidated when the file's ctime or inode "
+"changes, or when an AFP client modifies the resource fork.  Entries are "
+"evicted in LRU/ARC order when the budget is exceeded."
+msgstr ""
+"ファイルの ctime や inode は更新されたり、または AFP クライアントはリソース"
+"フォークを更新されたりした場合にキュアッシュされたエントリーは無効になる。予"
+"算は超過される場合に LRU/ARC 順にエントリが削除される。"
+
+#. type: Plain text
+#: manual/Dircache.md:141
+#, no-wrap
+msgid "**Example** (100 MB rfork budget, max 5 MB per entry):\n"
+msgstr "**例** （100 MB rfork 予算、エントリー毎に最大 5 MB）：\n"
+
+#. type: Plain text
+#: manual/Dircache.md:144
+#, no-wrap
+msgid ""
+"    dircache rfork budget = 102400\n"
+"    dircache rfork maxsize = 5120\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Dircache.md:146
+#, no-wrap
+msgid "**Example** (Netatalk-only access to volume):\n"
+msgstr "**例**（Netatalk のみがボリュームにアクセスする場合）：\n"
+
+#. type: Plain text
+#: manual/Dircache.md:148
+#, no-wrap
+msgid "    dircache validation freq = 100\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Dircache.md:150
+#, no-wrap
+msgid "**Example** (file-heavy workload with large cache):\n"
+msgstr "**例**（大きなキャッシュを伴うファイル集約型ワークロードの場合）：\n"
+
+#. type: Plain text
+#: manual/Dircache.md:154
+#, no-wrap
+msgid ""
+"    dircache size = 262144\n"
+"    dircache validation freq = 100\n"
+"    dircache mode = arc\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Dircache.md:157
+#, no-wrap
+msgid ""
+"**Note**: Monitor dircache effectiveness by checking Netatalk log files\n"
+"for \"dircache statistics:\" lines when **afpd** shuts down gracefully\n"
+"(on user disconnect) or gets the SIGHUP signal.\n"
+msgstr ""
+"【注記】 **afpd** が正常にシャットダウンした時（ユーザーが切断した時）に Netatalk ログファイルで \n"
+"\"dircache statistics:\" 行をチェックして dircache の有効性を監視すること。\n"
