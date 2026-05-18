@@ -518,7 +518,7 @@ Not all backends may be available with your netatalk installation.
 Run **afpd -v** to see a list of available backends, as well as which one is the default.
 >
 > *dbd*: uses Berkeley DB, with database reads and writes managed through the **cnid_dbd** daemon.
-It is recommended for most deployments.
+It is deprecated and not recommended for new deployments.
 >
 > *mysql*: connects to a MySQL (or MariaDB) database instance that has been provisioned for use with Netatalk.
 Requires datbase administration, giving you full control over how the CNID data is stored.

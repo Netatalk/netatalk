@@ -54,7 +54,7 @@ Rather than accessing the database directly,
 **afpd** processes communicate with one or more **cnid_dbd** daemon processes over a wire protocol.
 The **cnid_dbd** daemon is responsible for database reads and updates.
 
-This is the most reliable and proven backend, recommended for most deployments.
+It is deprecated and not recommended for new deployments.
 
 ## mysql
 
