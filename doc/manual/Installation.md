@@ -80,7 +80,7 @@ At least one of the below database libraries is required to power the CNID schem
 
 - Berkeley DB
 
-    The default *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store
+    The *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store
     unique file identifiers.
 
     The recommended Berekeley DB version is 5.3, while versions 4.6 and later should work as well.
@@ -96,7 +96,8 @@ At least one of the below database libraries is required to power the CNID schem
 - SQLite v3
 
     The SQLite library version 3 enables the *sqlite* CNID backend
-    which is an alternative zero-configuration backend.
+    which is an embedded database option that does not require a separate database server
+    to be set up and maintained by the system administrator.
 
 ### Optional third-party software
 
