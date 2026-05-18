@@ -2,7 +2,7 @@
 
 ## AFP authentication basics
 
-Apple chose a flexible model called "User Authentication Modules" (UAMs)
+Apple chose a flexible model called "User Authentication Methods" (UAMs)
 for authentication between AFP clients and servers.
 An AFP client connecting to an AFP server first requests the list of UAMs that the server supports,
 then chooses the one with the strongest encryption that the client also supports.
