@@ -26,7 +26,7 @@ There are two invocation styles:
 
 - *As root*, **afppasswd** manages credentials for any system user.
   The user is named with **-a** *username* (which both adds new entries
-  and updates existing ones), or the entire file is initialised at once
+  and updates existing ones), or the entire file is initialized at once
   with **-c**.
 - *As a regular user*, **afppasswd** takes no positional arguments and
   changes the calling user's own AFP password: for SRP by default and for
@@ -85,7 +85,7 @@ user and do not accept this option.
 
 **-c**
 
-> Create and initialise the password/verifier file. Existing entries are
+> Create and initialize the password/verifier file. Existing entries are
 populated as placeholders for every local system user with a uid at or
 above the **-u** threshold; passwords still need to be set individually
 with **-a**. With **-r**, also create or validate the companion
