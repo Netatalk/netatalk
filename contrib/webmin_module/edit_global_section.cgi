@@ -25,7 +25,7 @@
 use strict;
 use warnings;
 require 'netatalk-lib.pl';
-our (%in, %text);
+our (%in, %text, %netatalkParameterDefaults);
 my ($afpconfRef, $sectionRef);
 
 eval {
@@ -86,27 +86,23 @@ print &ui_table_row(
 );
 
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'uam list', \%in);
-my $nonstandardUAMs = @values[0];
-$nonstandardUAMs =~ s/uams_dhx2?.so|uams_clrtxt.so|uams_guest.so|uams_gss.so|uams_randnum.so|uams_srp.so//g;
-$nonstandardUAMs =~ s/^[ ,]+//;
-$nonstandardUAMs =~ s/[ ,]+$//;
-$nonstandardUAMs =~ s/[ ,]+/ /g;
-@values[0] = "uams_dhx.so uams_dhx2.so" if !@values[0];
+@values[0] = $netatalkParameterDefaults{'uam list'} if !@values[0];
 print &ui_table_row(
                     $text{'edit_global_section_uam_list'},
-                    &ui_checkbox('p_uam list', 'uams_dhx2.so', 'DHX2', $values[0] =~ /uams_dhx2.so/ ? 1 : 0)
-                    . &ui_checkbox('p_uam list', 'uams_dhx.so', 'DHX', $values[0] =~ /uams_dhx.so/  ? 1 : 0)
+                    &ui_checkbox('p_uam list', 'uams_srp.so', 'SRP', $values[0]     =~ /uams_srp.so/  ? 1 : 0)
+                    . &ui_checkbox('p_uam list', 'uams_dhx2.so', 'DHX2', $values[0] =~ /uams_dhx2.so/ ? 1 : 0)
+                    . &ui_checkbox('p_uam list', 'uams_dhx.so', 'DHX', $values[0]   =~ /uams_dhx.so/  ? 1 : 0)
+                    . &ui_checkbox(
+                                   'p_uam list', 'uams_randnum.so', 'Randnum',
+                                   $values[0] =~ /uams_randnum.so/ ? 1 : 0
+                    )
                     . &ui_checkbox(
                                    'p_uam list', 'uams_clrtxt.so', 'Cleartext',
                                    $values[0] =~ /uams_clrtxt.so/ ? 1 : 0
                     )
-                    . &ui_checkbox(
-                                   'p_uam list', 'uams_randnum.so', 'RandNum',
-                                   $values[0] =~ /uams_randnum.so/ ? 1 : 0
-                    )
                     . &ui_checkbox('p_uam list', 'uams_guest.so', 'Guest',    $values[0] =~ /uams_guest.so/ ? 1 : 0)
                     . &ui_checkbox('p_uam list', 'uams_gss.so',   'Kerberos', $values[0] =~ /uams_gss.so/   ? 1 : 0)
-                    . &ui_checkbox('p_uam list', 'uams_srp.so',   'SRP', $values[0] =~ /uams_srp.so/ ? 1 : 0) . "<br>"
+                    . "<br>"
                     . $text{'edit_global_section_uam_list_note'}
 );
 
