@@ -85,7 +85,7 @@ Additionally, in order to test non-Guest authentication, a username and password
 
 Run all tests against an AFP server running on 10.0.0.10, without user credentials
 
-    $ ./build/test/testsuite/afp_logintest -h 10.0.0.10
+    $ afp_logintest -h 10.0.0.10
     Logintest:test1: DSI with no open session - PASSED
     Logintest:test2: DSI with open session - PASSED
     Logintest:test3: Guest login - PASSED
