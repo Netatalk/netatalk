@@ -24,11 +24,9 @@ Changes in 4.5.0
        400-byte minimum result-buffer requirement. The libatalk soversion has been bumped to v20.
        Out-of-tree consumers that link against libatalk must be rebuilt against the new headers.
 * NEW: libatalk: Added volume option 'volume uuid' to define static UUID, GitHub #2619
-* NEW: libatalk: Log a warning when deprecated afp.conf option is being used, GitHub #2746
 * UPD: libatalk: turn on spotlight and search db options by default, GitHub #2923
-* UPD: libatalk: Converted adf_lock macros to functions, GitHub #2645
 * UPD: libatalk: Backwards compatibility with iniparser v3, GitHub #2715
-* UPD: libatalk: Regenerated utf16 case lookup tables with Unicode v17.0.0, GitHub #2594
+* UPD: libatalk: support for Unicode v17.0.0, GitHub #2594
 * FIX: libatalk: Fixed UUID instability for dynamic volumes with non-AFP clients, GitHub #2809
 * FIX: libatalk: reject nested volume paths to prevent CNID crash, GitHub #2862
 * FIX: libatalk: fix IPv4 interface detection and connectivity on NetBSD, GitHub #2859
@@ -46,14 +44,11 @@ Changes in 4.5.0
        Spotlight backend (return 0 results). 'nad find' and FPCatSearch / CatSearchExt continue to accept
        1- and 2-character prefixes unchanged, GitHub #3001
 * UPD: afpd: Turn 'convert appledouble' option off by default, GitHub #2734
-* UPD: afpd: Improved signal handlers and refactored away unreachable code, GitHub #2796
-* UPD: afpd: Optimized dircache child scan with blength pre-check and memcmp, GitHub #2827
 * FIX: afpd: Fixed moveandrename stale paths and 'mac charset' option, GitHub #2754
-* FIX: afpd: Validated CNID from get_id() before calling dircache_add(), GitHub #2697
 * FIX: afpd: add support for Spotlight wildcard queries with SPARQL, GitHub #2915
 * FIX: afpd: handle Spotlight search paths in nested arrays for macOS Tahoe, GitHub #2916
 * FIX: afpd: fix Spotlight timestamps and add additional attributes, GitHub #2878
-* FIX: afpd: fix connection limit off-by-one condition, GitHub #2985
+* FIX: afpd: allow exactly the number of max connections, and not one too many, GitHub #2985
 * FIX: afpd: make signal handlers async-signal-safe to fix crash on macOS, GitHub #2860
 * FIX: afpd: harden follow symlinks against cross-device targets, GitHub #3006
 * REM: afpd: Removed superseded dircache metadata window/threshold parameters, GitHub #2683
@@ -79,8 +74,6 @@ Changes in 4.5.0
 * UPD: nad: Overhauled file operations that cross AFP volume boundary, GitHub #2828
 * NEW: dbd: add -i option to invalidate AppleDouble CNID hints, GitHub #2863
 * UPD: dbd: Decoupled the dbd binary from cnid_dbd with improvements, GitHub #2685
-* FIX: nad: More sophisticated check for the MAXPHYS macro, GitHub #2717
-* FIX: nad: Centralized volume validation and fixed inconsistent error handling, GitHub #2803
 * FIX: papd: Hardened config parsing with graceful error recovery, GitHub #2696
 * FIX: timelord: fix local time offset when DST is in effect, GitHub #2895
 * NEW: meson: Introduced option to force the building of subprojects, GitHub #2652
@@ -93,12 +86,7 @@ Changes in 4.5.0
 * UPD: testsuite: Enhanced afp_speedtest with throughput statistics, TCP statistics, and CSV export, GitHub #2687
 * UPD: testsuite: add afp_spectest module for Spotlight RPC testing, GitHub #3001
 * UPD: testsuite: overhaul DSI test client and expand afp_logintest coverage, GitHub #2992
-* FIX: testsuite: Initialized filedir params to avoid garbage data in the bitmap, GitHub #2688
-* UPD: docs: Revised CNID configuration details in afp.conf man page, GitHub #2608
-* UPD: docs: Overhauled the documentation for the 'search db' option, GitHub #2620
-* UPD: docs: Revamped AFP Signature/UUID conf man pages, GitHub #2623
 * UPD: docs: Integrated AppleTalk man page contents into Doxygen docs, GitHub #2624
-* UPD: docs: Improved descriptions of CNID backends, set/save password options, GitHub #2690
 * UPD: docs: Split up Configuration into multiple manual chapters, GitHub #2825
 
 Changes in 4.4.3
