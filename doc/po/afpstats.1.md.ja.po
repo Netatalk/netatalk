@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-05-30 08:52+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -87,7 +87,7 @@ msgstr "説明"
 #: manpages/man1/afp_lantest.1.md:20 manpages/man1/afp_logintest.1.md:17
 #: manpages/man1/afp_spectest.1.md:20 manpages/man1/afp_speedtest.1.md:27
 #: manpages/man1/afparg.1.md:18 manpages/man1/afpldaptest.1.md:16
-#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:16
+#: manpages/man1/afppasswd.1.md:78 manpages/man1/afpstats.1.md:22
 #: manpages/man1/asip-status.1.md:28 manpages/man1/dbd.1.md:24
 #: manpages/man1/fce_listen.1.md:17 manpages/man1/getzones.1.md:16
 #: manpages/man1/nad.1.md:31 manpages/man1/nbplkup.1.md:19
@@ -103,7 +103,7 @@ msgid "Options"
 msgstr "オプション"
 
 #. type: Title #
-#: manpages/man1/addump.1.md:59 manpages/man1/afpstats.1.md:26
+#: manpages/man1/addump.1.md:59 manpages/man1/afpstats.1.md:39
 #, no-wrap
 msgid "Note"
 msgstr "注記"
@@ -113,10 +113,10 @@ msgstr "注記"
 #: manpages/man1/afp_lantest.1.md:308 manpages/man1/afp_logintest.1.md:112
 #: manpages/man1/afp_spectest.1.md:243 manpages/man1/afp_speedtest.1.md:238
 #: manpages/man1/afparg.1.md:112 manpages/man1/afpldaptest.1.md:34
-#: manpages/man1/afppasswd.1.md:148 manpages/man1/afpstats.1.md:44
+#: manpages/man1/afppasswd.1.md:148 manpages/man1/afpstats.1.md:56
 #: manpages/man1/fce_listen.1.md:48 manpages/man1/getzones.1.md:84
 #: manpages/man1/pap.1.md:93 manpages/man1/rtmpqry.1.md:52
-#: manpages/man5/afp.conf.5.md:1450 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1464 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:171
 #: manpages/man8/afpd.8.md:139 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:47
@@ -129,12 +129,12 @@ msgstr "関連項目"
 #. type: Title #
 #: manpages/man1/addump.1.md:73 manpages/man1/aecho.1.md:50
 #: manpages/man1/afpldaptest.1.md:38 manpages/man1/afppasswd.1.md:152
-#: manpages/man1/afpstats.1.md:48 manpages/man1/asip-status.1.md:106
+#: manpages/man1/afpstats.1.md:60 manpages/man1/asip-status.1.md:106
 #: manpages/man1/dbd.1.md:81 manpages/man1/getzones.1.md:88
 #: manpages/man1/nad.1.md:394 manpages/man1/nbplkup.1.md:105
 #: manpages/man1/nbprgstr.1.md:59 manpages/man1/pap.1.md:97
 #: manpages/man1/rtmpqry.1.md:56 manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1455
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1469
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:175 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:145 manpages/man8/atalkd.8.md:83
@@ -149,12 +149,12 @@ msgstr "著者"
 #. type: Plain text
 #: manpages/man1/addump.1.md:75 manpages/man1/aecho.1.md:52
 #: manpages/man1/afpldaptest.1.md:40 manpages/man1/afppasswd.1.md:154
-#: manpages/man1/afpstats.1.md:50 manpages/man1/asip-status.1.md:108
+#: manpages/man1/afpstats.1.md:62 manpages/man1/asip-status.1.md:108
 #: manpages/man1/dbd.1.md:83 manpages/man1/getzones.1.md:90
 #: manpages/man1/nad.1.md:396 manpages/man1/nbplkup.1.md:107
 #: manpages/man1/nbprgstr.1.md:61 manpages/man1/pap.1.md:99
 #: manpages/man1/rtmpqry.1.md:58 manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:46 manpages/man5/afp.conf.5.md:1457
+#: manpages/man5/afp_voluuid.conf.5.md:46 manpages/man5/afp.conf.5.md:1471
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:177 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:147 manpages/man8/atalkd.8.md:85
@@ -169,12 +169,12 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/aecho.1.md:24 manpages/man1/afp_lantest.1.md:136
 #: manpages/man1/afp_logintest.1.md:84 manpages/man1/afp_spectest.1.md:196
 #: manpages/man1/afp_speedtest.1.md:170 manpages/man1/afparg.1.md:73
-#: manpages/man1/afppasswd.1.md:52 manpages/man1/afpstats.1.md:35
+#: manpages/man1/afppasswd.1.md:52 manpages/man1/afpstats.1.md:47
 #: manpages/man1/asip-status.1.md:54 manpages/man1/fce_listen.1.md:25
 #: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:359
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
 #: manpages/man1/rtmpqry.1.md:34 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1405
+#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1418
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:98 manpages/man8/macipgw.8.md:78
 #, no-wrap
@@ -182,14 +182,19 @@ msgid "Examples"
 msgstr "例"
 
 #. type: Plain text
+#: manpages/man1/afppasswd.1.md:151 manpages/man1/afpstats.1.md:59
+msgid "afpd(8), afp.conf(5)"
+msgstr ""
+
+#. type: Plain text
 #: manpages/man1/afpstats.1.md:4
-msgid "afpstats — List netatalk AFP server statistics"
-msgstr "afpstats — netatalk AFP サーバの利用状況を参照する"
+msgid "afpstats — List Netatalk AFP server statistics"
+msgstr "afpstats — Netatalk AFP サーバの利用状況を参照する"
 
 #. type: Plain text
 #: manpages/man1/afpstats.1.md:8
 #, no-wrap
-msgid "**afpstats** [-h *hostname*]\n"
+msgid "**afpstats** [-h *client-address*] [-s *socket*]\n"
 msgstr ""
 
 #. type: Plain text
@@ -199,80 +204,103 @@ msgid "**afpstats** [-v | \\-\\-version]\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:15
+#: manpages/man1/afpstats.1.md:16
 #, no-wrap
 msgid ""
-"**afpstats** list information about users connected to the netatalk AFP server,\n"
+"**afpstats** lists information about users connected to a Netatalk AFP server running on the local machine,\n"
 "their mounted volumes, time of login, and other details.\n"
-msgstr "**afpstats** は netatalk AFP サーバに接続しているユーザ、そのマウントされたボリューム、ログイン時間などに関する情報を一覧表示する。\n"
-
-#. type: Plain text
-#: manpages/man1/afpstats.1.md:19
-#, no-wrap
-msgid "**-h**, **\\-\\-hostname** *hostname*\n"
+"Sessions connected over both TCP/IP (DSI) and AppleTalk (ASP) are reported.\n"
 msgstr ""
+"**afpstats** は本マシンでの Netatalk AFP サーバに接続しているユーザ、そのマウントされたボリューム、\n"
+"ログイン時間などに関する情報を一覧表示する。\n"
+"TCP/IP (DSI) と AppleTalk (ASP) で接続しているセッション両方を表示する。\n"
 
 #. type: Plain text
 #: manpages/man1/afpstats.1.md:21
-#, no-wrap
-msgid "> Filter the output by the given hostname.\n"
-msgstr "> 出力を指定されたホスト名でフィルタリングする。\n"
+msgid ""
+"To enable AFP statistics in Netatalk at runtime, **afpstats = yes** must be "
+"set in *afp.conf*.  By default, only root and users permitted by the "
+"socket's group ownership can query the session list.  To allow other users "
+"to query the socket, set \"**afpstats group = *group***\" and add those "
+"users to the configured group."
+msgstr ""
+"実行時に Netatalk で AFP 統計を有効にするには、\"**afpstats = yes**\" を "
+"*afp.conf* に設定する必要がある。デフォルトでは、root とソケットのグループ所有者によって許可されたユーザだけがセッションリストを照会できる。"
+"これ以外のユーザを照会できるようにするには、\"**afpstats group = *group***\" を設定し、これらのユーザを設定されたグループに追加する必要がある。"
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:23
+#: manpages/man1/afpstats.1.md:25
+#, no-wrap
+msgid "**-h**, **\\-\\-hostname** *client-address*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afpstats.1.md:29
+#, no-wrap
+msgid ""
+"> Filter the output by the given client hostname or address.\n"
+"> TCP/IP sessions use the resolved client hostname, falling back to the IP address.\n"
+"> AppleTalk sessions use the client DDP address in *net.node* form.\n"
+msgstr ""
+"> 指定されたクライアントのホスト名またはアドレスで出力をフィルタリングする。\n"
+"> TCP/IP セッションは、解決されたクライアントのホスト名を使用し、IP アドレスにフォールバックする。\n"
+"> AppleTalk セッションは、*net.node* 形式のクライアント DDP アドレスを使用する。\n"
+
+#. type: Plain text
+#: manpages/man1/afpstats.1.md:31
+#, no-wrap
+msgid "**-s**, **\\-\\-socket** *path*\n"
+msgstr ""
+
+#. type: Plain text
+#: manpages/man1/afpstats.1.md:34
+#, no-wrap
+msgid ""
+"> Connect to the afpstats Unix socket at *path*.\n"
+"> Defaults to */var/lib/netatalk/afpstats.sock* (path varies with the configured *localstatedir*).\n"
+msgstr ""
+"> *path* にある afpstats Unix ソケットに接続する。\n"
+"> デフォルトは */var/lib/netatalk/afpstats.sock*。（パスは設定された *localstatedir* によって異なる。）\n"
+
+#. type: Plain text
+#: manpages/man1/afpstats.1.md:36
 #, no-wrap
 msgid "**-v**, **\\-\\-version**\n"
 msgstr ""
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:25 manpages/man8/cnid_dbd.8.md:63
+#: manpages/man1/afpstats.1.md:38 manpages/man8/cnid_dbd.8.md:63
 #: manpages/man8/cnid_metad.8.md:36
 #, no-wrap
 msgid "> Show version and exit.\n"
 msgstr "> バージョンを表示してから終了する。\n"
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:32
+#: manpages/man1/afpstats.1.md:46
 msgid ""
-"To make use of this feature, **afpd** must be built with *AFP statistics* "
-"support, which can be checked with \"**afpd -V**\".  Furthermore, the host "
-"must be running D-Bus configured with a policy that defines the "
-"*org.netatalk.AFPStats* service, typically enabled through a configuration "
-"file called *netatalk-dbus.conf* which is distributed with netatalk."
+"The socket is created by **afpd** on startup with mode 0660. By default, "
+"only root and users permitted by the socket's group ownership can query the "
+"session list. Use the **afpstats group** option in *afp.conf* to set the "
+"group owner explicitly, for example to a dedicated *netatalk* group.  The "
+"socket path also depends on search permissions for the parent directory."
 msgstr ""
-"この機能を利用するには、**afpd** が AFP 統計サポートでビルドされている必要が"
-"あり、これは \"**afpd -V**\" で確認できる。さらに、ホストは D-Bus を実行して"
-"おり、通常 netatalk に付属の *netatalk-dbus.conf* という設定ファイルを通じて"
-"有効になる *org.netatalk.AFPStats* サービスを定義するポリシーで構成されている"
-"必要がある。"
+"ソケットは起動時に **afpd** によってモード0660で作成される。デフォルトでは、"
+"root とソケットのグループ所有者によって許可されたユーザだけがセッションリスト"
+"を照会できる。*afp.conf* の **afpstats group** オプションを使用して、例えば専"
+"用の *netatalk* グループなど、グループ所有者を明示的に設定することができる。"
+"ソケットのパスは親ディレクトリの検索権限にも依存する。"
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:34
-msgid ""
-"Finally, to enable AFP statistics in netatalk at runtime, \"**afpstats = "
-"yes**\" must be set in *afp.conf*."
-msgstr ""
-"最後に、実行時に netatalk で AFP 統計を有効にするには、\"**afpstats = "
-"yes**\" を *afp.conf* に設定する必要がある。"
+#: manpages/man1/afpstats.1.md:50
+msgid "List connected users:"
+msgstr "接続されているユーザを一覧表示する："
 
 #. type: Plain text
-#: manpages/man1/afpstats.1.md:38
-msgid "List all connected users to the AFP server running on *fileserver*:"
-msgstr ""
-"*fileserver* で実行されている AFP サーバに接続しているすべてのユーザを一覧表"
-"示する："
-
-#. type: Plain text
-#: manpages/man1/afpstats.1.md:43
+#: manpages/man1/afpstats.1.md:55
 #, no-wrap
 msgid ""
-"    $ afpstats --hostname fileserver\n"
-"    Connected user   PID      Login time        State          Hostname          Mounted volumes\n"
-"    alice            452547   Apr 28 21:58:50   active         fileserver        Test Volume, alice's Home\n"
-"    bob              451969   Apr 28 21:21:32   active         fileserver        My AFP Volume\n"
-msgstr ""
-
-#. type: Plain text
-#: manpages/man1/afpstats.1.md:47
-msgid "afpd(8), afp.conf(5), dbus-daemon(1)"
+"    $ afpstats\n"
+"    Connected user  PID     Login time       State     Protocol   Client address     Mounted volumes\n"
+"    alice           452547  Apr 28 21:58:50  sleeping  TCP/IP     workstation.local  Data Vault, alice's Home\n"
+"    bob             451969  Apr 28 21:21:32  active    AppleTalk  65280.12           My AFP Volume\n"
 msgstr ""

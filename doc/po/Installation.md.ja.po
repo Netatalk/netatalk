@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-05-21 19:40+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -210,8 +210,8 @@ msgid ""
 "    Internal event callbacks in the *netatalk* service controller daemon\n"
 "    are implemented using libevent version 2 or libev.\n"
 msgstr ""
-"    netatalk サービス コントローラー デーモンの内部イベント\n"
-"    コールバックは、 libevent バージョン 2 もしくは libev に基づいて構築されている。\n"
+"    **netatalk** サービス コントローラー デーモンの内部イベント\n"
+"    コールバックは、libevent バージョン2もしくは libev に基づいて構築されている。\n"
 
 #. type: Bullet: '- '
 #: manual/Installation.md:72
@@ -223,13 +223,12 @@ msgstr ""
 #, no-wrap
 msgid ""
 "    The [Libgcrypt](https://gnupg.org/software/libgcrypt/) library\n"
-"    supplies the encryption for the standard User Authentication Modules\n"
-"    (UAMs). They are: DHX2, DHCAST128 (a.k.a. DHX) and RandNum.\n"
+"    supplies the encryption for the password based User Authentication Methods\n"
+"    (UAMs).\n"
 msgstr ""
 "    [Libgcrypt](https://gnupg.org/software/libgcrypt/)\n"
-"    ライブラリは、標準のユーザー認証モジュール (UAM)\n"
-"    の暗号化を提供する。これらは、DHX2、DHCAST128 (別名 DHX)、および\n"
-"    RandNum である。\n"
+"    ライブラリは、パスワードを使う User Authentication Methods (UAM)\n"
+"    の暗号化を提供する。\n"
 
 #. type: Title ####
 #: manual/Installation.md:77
@@ -255,9 +254,9 @@ msgstr ""
 #: manual/Installation.md:85
 #, no-wrap
 msgid ""
-"    The default *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store\n"
+"    The *dbd* (*Database Daemon*) CNID backend for netatalk uses Berkeley DB to store\n"
 "    unique file identifiers.\n"
-msgstr "    デフォルトのdbd CNIDバックエンドは、Berkeley DBを使用して一意のファイル識別子を保存します。\n"
+msgstr "    *dbd* (*Database Daemon*) CNIDバックエンドは、Berkeley DB を使用して一意のファイル識別子を保存する。\n"
 
 #. type: Plain text
 #: manual/Installation.md:88
@@ -266,7 +265,7 @@ msgid ""
 "    The recommended Berekeley DB version is 5.3, while versions 4.6 and later should work as well.\n"
 "    Version 6 and later should generally be avoided due to licensing issues.\n"
 msgstr ""
-"    推奨されるBerkeley DBのバージョンは5.3であり、バージョン4.6以降も動作するはずです。\n"
+"    推奨されるBerkeley DBのバージョンは5.3であり、バージョン4.6以降も動作するはず。\n"
 "    バージョン6以降はライセンスの問題から一般的に避けるべきである。\n"
 
 #. type: Bullet: '- '
@@ -294,23 +293,24 @@ msgid "SQLite v3"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:100
+#: manual/Installation.md:101
 #, no-wrap
 msgid ""
 "    The SQLite library version 3 enables the *sqlite* CNID backend\n"
-"    which is an alternative zero-configuration backend.\n"
+"    which is an embedded database option that does not require a separate database server\n"
+"    to be set up and maintained by the system administrator.\n"
 msgstr ""
-"    SQLite ライブラリ バージョン3は、*sqlite* CNID バックエンドが有効にする。\n"
-"    設定不要の代替バックエンドである。\n"
+"    SQLite ライブラリバージョン3では、*sqlite* CNID バックエンドが有効にする。\n"
+"    組み込みデータベースオプションであり、システム管理者が別途データベースサーバーを手配および管理する必要がない。\n"
 
 #. type: Title ###
-#: manual/Installation.md:101
+#: manual/Installation.md:102
 #, no-wrap
 msgid "Optional third-party software"
 msgstr "任意のサードパーティソフトウェア"
 
 #. type: Plain text
-#: manual/Installation.md:105
+#: manual/Installation.md:106
 msgid ""
 "Netatalk can use the following third-party software to enhance its "
 "functionality."
@@ -319,12 +319,12 @@ msgstr ""
 "ることができる。"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:107
+#: manual/Installation.md:108
 msgid "ACL and LDAP"
 msgstr "ACL と LDAP"
 
 #. type: Plain text
-#: manual/Installation.md:113
+#: manual/Installation.md:114
 #, no-wrap
 msgid ""
 "    LDAP is an open and industry-standard user directory protocol that\n"
@@ -340,12 +340,12 @@ msgstr ""
 "    パッケージをインストールする必要がある。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:115
+#: manual/Installation.md:116
 msgid "Avahi or mDNSresponder for Zeroconf"
 msgstr "Zeroconf 用の Avahi または mDNSresponder"
 
 #. type: Plain text
-#: manual/Installation.md:119
+#: manual/Installation.md:120
 #, no-wrap
 msgid ""
 "    Mac OS X 10.2 and later uses Zeroconf for automatic service discovery.\n"
@@ -357,7 +357,7 @@ msgstr ""
 "    ファイル共有と Time Machine ボリュームをアドバタイズできる。\n"
 
 #. type: Plain text
-#: manual/Installation.md:122
+#: manual/Installation.md:123
 #, no-wrap
 msgid ""
 "    When using Avahi, D-Bus is also required, and the Avahi library must\n"
@@ -367,12 +367,12 @@ msgstr ""
 "    Avahi ライブラリは必要になる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:124
+#: manual/Installation.md:125
 msgid "cmark, cmark-gfm, or pandoc"
 msgstr "cmark、cmark-gfm、またはpandoc"
 
 #. type: Plain text
-#: manual/Installation.md:129
+#: manual/Installation.md:130
 #, no-wrap
 msgid ""
 "    Netatalk's documentation is authored in Markdown format.\n"
@@ -385,7 +385,7 @@ msgstr ""
 "    ドキュメントの残りの部分はGitHub風の Markdown (gfm)で作成されている。\n"
 
 #. type: Plain text
-#: manual/Installation.md:134
+#: manual/Installation.md:135
 #, no-wrap
 msgid ""
 "    The pandoc library generates the nicest output, but is\n"
@@ -398,12 +398,12 @@ msgstr ""
 "    されているが、cmark-gfm はテーブルのようなGitHub拡張機能をよりよく扱う。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:136
+#: manual/Installation.md:137
 msgid "CrackLib"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:140
+#: manual/Installation.md:141
 #, no-wrap
 msgid ""
 "    When using the Random Number UAMs and netatalk's own **afppasswd**\n"
@@ -415,7 +415,7 @@ msgstr ""
 "    での認証に弱いパスワードを設定するのを防ぐのに役立つ。\n"
 
 #. type: Plain text
-#: manual/Installation.md:143
+#: manual/Installation.md:144
 #, no-wrap
 msgid ""
 "    The CrackLib dictionary, which is sometimes distributed separately in\n"
@@ -425,40 +425,12 @@ msgstr ""
 "    もコンパイル時にも実行時にも必須である。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:145
-msgid "D-Bus"
-msgstr ""
-
-#. type: Plain text
-#: manual/Installation.md:149
-#, no-wrap
-msgid ""
-"    D-Bus provides a mechanism for sending messages between processes,\n"
-"    used by multiple Netatalk features: Spotlight, Zeroconf with Avahi,\n"
-"    and the **afpstats** tool.\n"
-msgstr ""
-"    D-Bus はプロセス間にメッセージを通信するメカニズムを提供し、下記\n"
-"    Netatalk 機能に使われる： Spotlight、Avahi を使用した Zeroconf、および\n"
-"    **afpstats** ツール。\n"
-
-#. type: Bullet: '- '
-#: manual/Installation.md:151
-msgid "GLib and GIO"
-msgstr "GLib および GIO"
-
-#. type: Plain text
-#: manual/Installation.md:153
-#, no-wrap
-msgid "    Used by the **afpstats** tool to interface with D-Bus.\n"
-msgstr "    D-Bus とのインターフェースとして、**afpstats** ツールに使われる。\n"
-
-#. type: Bullet: '- '
-#: manual/Installation.md:155
+#: manual/Installation.md:146
 msgid "iconv"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:161
+#: manual/Installation.md:152
 #, no-wrap
 msgid ""
 "    iconv provides conversion routines for many character encodings.\n"
@@ -474,12 +446,12 @@ msgstr ""
 "    実装を使用できる。それ以外の場合は、GNU libiconv 実装を使用できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:163
+#: manual/Installation.md:154
 msgid "Kerberos V"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:168
+#: manual/Installation.md:159
 #, no-wrap
 msgid ""
 "    Kerberos v5 is a client-server based authentication protocol invented\n"
@@ -493,12 +465,12 @@ msgstr ""
 "    インフラストラクチャでの認証用に GSS UAM ライブラリを作成できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:170
+#: manual/Installation.md:161
 msgid "PAM"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:175
+#: manual/Installation.md:166
 #, no-wrap
 msgid ""
 "    PAM provides a flexible mechanism for authenticating users. PAM was\n"
@@ -513,29 +485,29 @@ msgstr ""
 "    スイートである。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:177
+#: manual/Installation.md:168
 msgid "Perl"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:181
+#: manual/Installation.md:172
 #, no-wrap
 msgid ""
 "    Netatalk's administrative utility scripts rely on the Perl runtime,\n"
 "    version 5.8 or later. The required Perl modules include\n"
-"    *IO::Socket::IP* (asip-status) and *Net::DBus* (afpstats).\n"
+"    *IO::Socket::IP* (asip-status) and *IO::Socket::UNIX* (afpstats).\n"
 msgstr ""
 "    Netatalk の管理ユーティリティ スクリプトは、Perl ランタイム バージョン\n"
 "    5.8 以降に依存する。必須 Perl モジュールは以下： *IO::Socket::IP*\n"
-"    (asip-status) 又は *Net::DBus* (afpstats)。\n"
+"    (asip-status) 又は *IO::Socket::UNIX*  (afpstats)。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:183
+#: manual/Installation.md:174
 msgid "po4a"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:188
+#: manual/Installation.md:179
 #, no-wrap
 msgid ""
 "    With the help of po4a, Netatalk's documentation can be translated\n"
@@ -548,29 +520,29 @@ msgstr ""
 "    ファイルに保存されている翻訳と結合する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:190
+#: manual/Installation.md:181
 msgid "talloc"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:192
+#: manual/Installation.md:183
 #, no-wrap
 msgid "    Samba's talloc library is used for memory management in the Spotlight query parser.\n"
 msgstr "    Spotlight クエリパーサーでは、メモリ管理に Samba の talloc ライブラリが使用されている。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:194
+#: manual/Installation.md:185
 msgid "TCP wrappers"
 msgstr "TCP ラッパー"
 
 #. type: Plain text
-#: manual/Installation.md:196
+#: manual/Installation.md:187
 #, no-wrap
 msgid "    Wietse Venema's network logger, also known as TCPD or LOG_TCP.\n"
 msgstr "    Wietse Venema のネットワーク ロガー。TCPD または LOG_TCP とも呼ばれる。\n"
 
 #. type: Plain text
-#: manual/Installation.md:200
+#: manual/Installation.md:191
 #, no-wrap
 msgid ""
 "    Security options are: access control per host, domain and/or service;\n"
@@ -582,12 +554,12 @@ msgstr ""
 "    アドレスのスプーフィングの検出。ブービートラップを使用して早期警告システムを実装する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:202
+#: manual/Installation.md:193
 msgid "UnicodeData.txt"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:205
+#: manual/Installation.md:196
 #, no-wrap
 msgid ""
 "    The [Unicode Character Database](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt)\n"
@@ -598,7 +570,7 @@ msgstr ""
 "    が必要である。\n"
 
 #. type: Plain text
-#: manual/Installation.md:208
+#: manual/Installation.md:199
 #, no-wrap
 msgid ""
 "    This is mostly relevant for developers or package managers who want to regenerate\n"
@@ -608,12 +580,12 @@ msgstr ""
 "    文字変換テーブルを再生成したい場合に関連する。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:210
+#: manual/Installation.md:201
 msgid "Xapian"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:213
+#: manual/Installation.md:204
 #, no-wrap
 msgid ""
 "    The [Xapian](https://xapian.org/) library is used for Netatalk-managed\n"
@@ -623,12 +595,12 @@ msgstr ""
 "    ファイル名、プレーンテキストコンテンツ、および MIME タイプのインデックスに使用される。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:215
+#: manual/Installation.md:206
 msgid "libmagic"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:218
+#: manual/Installation.md:209
 #, no-wrap
 msgid ""
 "    The libmagic library is used by the Xapian Spotlight backend to identify\n"
@@ -638,13 +610,13 @@ msgstr ""
 "    MIME タイプを識別するために使用される。\n"
 
 #. type: Title ###
-#: manual/Installation.md:219
+#: manual/Installation.md:210
 #, no-wrap
 msgid "Spotlight LocalSearch backend dependencies"
 msgstr "Spotlight LocalSearch バックエンドの依存パッケージ"
 
 #. type: Plain text
-#: manual/Installation.md:223
+#: manual/Installation.md:214
 msgid ""
 "The LocalSearch backend for Spotlight enables rich file content and metadata "
 "matching, and depends on the following third-party software:"
@@ -653,12 +625,12 @@ msgstr ""
 "タのマッチングを可能にし、以下のサードパーティソフトウェアに依存する："
 
 #. type: Bullet: '- '
-#: manual/Installation.md:225
+#: manual/Installation.md:216
 msgid "bison"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:228
+#: manual/Installation.md:219
 #, no-wrap
 msgid ""
 "    A Yacc parser such as bison is required to build the SPARQL query parser\n"
@@ -668,30 +640,50 @@ msgstr ""
 "    bison などの Yacc パーサーが必要である。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:230
+#: manual/Installation.md:221
+msgid "D-Bus"
+msgstr ""
+
+#. type: Plain text
+#: manual/Installation.md:226
+#, no-wrap
+msgid ""
+"    The LocalSearch indexer is a D-Bus session-bus service. Netatalk\n"
+"    launches a private **dbus-daemon** to host an isolated session bus\n"
+"    that **afpd** and the indexer communicate over, separate from the\n"
+"    system bus and any user session bus.\n"
+msgstr ""
+"    LocalSearch インデクサーは D-Bus セッションバスサービスである。Netatalk\n"
+"    は、**afpd** とインデクサーが通信するための分離されたセッションバスを\n"
+"    ホストする専用の **dbus-daemon** を起動する。このバスは、システムバス\n"
+"    および任意のユーザーセッションバスとは別個のものである。\n"
+
+#. type: Bullet: '- '
+#: manual/Installation.md:228
 msgid "DConf"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:235
+#: manual/Installation.md:233
 #, no-wrap
 msgid ""
-"    DConf is a low-level configuration system that can be used to store\n"
-"    Netatalk's Spotlight related settings. It is used in combination with\n"
-"    D-Bus to trigger updates of the Spotlight indexer when Netatalk's\n"
-"    configuration changes.\n"
+"    DConf is a low-level configuration database. Netatalk writes a\n"
+"    dconf keyfile listing the volumes to index, then runs *dconf\n"
+"    update* to compile it into the binary database. The LocalSearch\n"
+"    indexer reads this configuration on startup.\n"
 msgstr ""
-"    DConf は、Netatalk の Spotlight 関連設定を保存するために使用できる低レベルの\n"
-"    設定システムである。Netatalk の設定が変更されたときに Spotlight インデクサの\n"
-"    更新をトリガーするために、D-Bus と組み合わせて使用される。\n"
+"    DConf は低レベルの設定データベースである。Netatalk は、インデックス化する\n"
+"    ボリュームを列挙した dconf キーファイルを書き込み、その後 *dconf\n"
+"    update* を実行してバイナリデータベースへコンパイルする。LocalSearch\n"
+"    インデクサーは起動時にこの設定を読み込む。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:237
+#: manual/Installation.md:235
 msgid "flex"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:240
+#: manual/Installation.md:238
 #, no-wrap
 msgid ""
 "    A lexer like flex is required to build the SPARQL query parser for\n"
@@ -701,12 +693,27 @@ msgstr ""
 "    flex などのレキサーが必要である。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:242
+#: manual/Installation.md:240
+msgid "GLib and GIO"
+msgstr "GLib および GIO"
+
+#. type: Plain text
+#: manual/Installation.md:243
+#, no-wrap
+msgid ""
+"    GLib's main loop drives the TinySPARQL/LocalSearch async query\n"
+"    pipeline.\n"
+msgstr ""
+"    GLib のメインループは、TinySPARQL/LocalSearch の非同期クエリ\n"
+"    パイプラインを駆動する。\n"
+
+#. type: Bullet: '- '
+#: manual/Installation.md:245
 msgid "LocalSearch"
 msgstr "LocalSearch"
 
 #. type: Plain text
-#: manual/Installation.md:246
+#: manual/Installation.md:249
 #, no-wrap
 msgid ""
 "    Netatalk uses [GNOME LocalSearch](https://gnome.pages.gitlab.gnome.org/localsearch/index.html),\n"
@@ -718,7 +725,7 @@ msgstr ""
 "    （以前は Tracker）バージョン3以降を使用する。\n"
 
 #. type: Plain text
-#: manual/Installation.md:249
+#: manual/Installation.md:252
 #, no-wrap
 msgid ""
 "    You can add metadata extraction support for additional file types\n"
@@ -728,12 +735,12 @@ msgstr ""
 "    追加のファイルタイプのメタデータ抽出サポートを追加できる。\n"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:251
+#: manual/Installation.md:254
 msgid "TinySPARQL"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:254
+#: manual/Installation.md:257
 #, no-wrap
 msgid ""
 "    The [TinySPARQL](https://tracker.gnome.org/) library is used\n"
@@ -743,13 +750,13 @@ msgstr ""
 "    SPARQL クエリのパースに使用される。\n"
 
 #. type: Title ##
-#: manual/Installation.md:255
+#: manual/Installation.md:258
 #, no-wrap
 msgid "Starting and stopping Netatalk"
 msgstr "Netatalk の起動と停止"
 
 #. type: Plain text
-#: manual/Installation.md:263
+#: manual/Installation.md:266
 msgid ""
 "The Netatalk distribution comes with several operating system specific "
 "startup script templates that are tailored according to the options given to "
@@ -764,7 +771,7 @@ msgstr ""
 "トフォーム固有のスクリプトに加えて、systemd、openrc 用に提供されている。"
 
 #. type: Plain text
-#: manual/Installation.md:269
+#: manual/Installation.md:272
 msgid ""
 "When building from source, the Netatalk build system will attempt to detect "
 "which init style is appropriate for your platform. You can also configure "
@@ -779,7 +786,7 @@ msgstr ""
 "テキストを参照してください。"
 
 #. type: Plain text
-#: manual/Installation.md:274
+#: manual/Installation.md:277
 msgid ""
 "Since new Linux, \\*BSD, and Solaris-like distributions appear at regular "
 "intervals, and the startup procedure for the other systems mentioned above "
@@ -792,7 +799,7 @@ msgstr ""
 "ることをお勧めする。"
 
 #. type: Plain text
-#: manual/Installation.md:279
+#: manual/Installation.md:282
 msgid ""
 "If you use Netatalk as part of a fixed setup, like a Linux distribution, an "
 "RPM or a BSD package, things will probably have been arranged properly for "
@@ -805,7 +812,7 @@ msgstr ""
 "まる。"
 
 #. type: Plain text
-#: manual/Installation.md:282
+#: manual/Installation.md:285
 msgid ""
 "The following daemon need to be started by whatever startup script mechanism "
 "is used:"
@@ -814,12 +821,12 @@ msgstr ""
 "必要がある:"
 
 #. type: Bullet: '- '
-#: manual/Installation.md:284
+#: manual/Installation.md:287
 msgid "netatalk"
 msgstr ""
 
 #. type: Plain text
-#: manual/Installation.md:287
+#: manual/Installation.md:290
 msgid ""
 "In the absence of a startup script, you can also launch this daemon directly "
 "(as root), and kill it with SIGTERM when you are done with it."
@@ -828,7 +835,7 @@ msgstr ""
 "し、使い終わったら SIGTERM で終了することもできる。"
 
 #. type: Plain text
-#: manual/Installation.md:291
+#: manual/Installation.md:294
 msgid ""
 "Additionally, make sure that the configuration file *afp.conf* is in the "
 "right place. You can inquire netatalk where it is expecting the file to be "
@@ -839,7 +846,7 @@ msgstr ""
 "かどうかを問い合わせることができる。"
 
 #. type: Plain text
-#: manual/Installation.md:295
+#: manual/Installation.md:298
 msgid ""
 "If you want to run AppleTalk services, you also need to start the **atalkd** "
 "daemon, plus the optional **papd**, **timelord**, and **a2boot** daemons. "

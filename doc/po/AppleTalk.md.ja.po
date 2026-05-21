@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-05-19 20:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -873,9 +873,9 @@ msgid ""
 "printer will be used."
 msgstr ""
 "CUPS サポートがコンパイルされていない場合 (Netatalk 2.0 以降ではデフォルト)、"
-"**pr** パラメータをキュー名に設定することで、問題の lpd キューを定義するだけ"
-"です。 **pr** パラメータが設定されていない場合は、デフォルトのプリンタが使用"
-"される。"
+"**pr** パラメータをキュー名に設定することで、問題の lpd キューを定義するだ"
+"け。 **pr** パラメータが設定されていない場合は、デフォルトのプリンタが使用さ"
+"れる。"
 
 #. type: Title ####
 #: manual/AppleTalk.md:334
@@ -1032,9 +1032,9 @@ msgstr ""
 "CUPS 1.x では、「Find New Printers」ウィザードを使用して AppleTalk プリンタを"
 "設定できる。ただし、CUPS 2.x では、バックエンドを手動で CUPS Web インターフェ"
 "イスでプリンタ URL を追加することで設定する必要がある。URL は、直接 pap バッ"
-"クエンド スクリプトを引数無しで実行することで取得できます。さらに、CUPS 3.x "
-"では、カスタム バックエンド機能が完全に削除されているため、CUPS は pap バック"
-"エンドを使用できない。"
+"クエンド スクリプトを引数無しで実行することで取得できる。さらに、CUPS 3.x で"
+"は、カスタム バックエンド機能が完全に削除されているため、CUPS は pap バックエ"
+"ンドを使用できない。"
 
 #. type: Title ##
 #: manual/AppleTalk.md:401

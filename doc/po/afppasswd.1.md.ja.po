@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-05-20 20:48+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -110,7 +110,7 @@ msgstr "オプション"
 #: manpages/man1/afppasswd.1.md:148 manpages/man1/afpstats.1.md:44
 #: manpages/man1/fce_listen.1.md:48 manpages/man1/getzones.1.md:84
 #: manpages/man1/pap.1.md:93 manpages/man1/rtmpqry.1.md:52
-#: manpages/man5/afp.conf.5.md:1450 manpages/man5/atalkd.conf.5.md:98
+#: manpages/man5/afp.conf.5.md:1453 manpages/man5/atalkd.conf.5.md:98
 #: manpages/man5/extmap.conf.5.md:28 manpages/man5/papd.conf.5.md:171
 #: manpages/man8/afpd.8.md:139 manpages/man8/atalkd.8.md:79
 #: manpages/man8/cnid_dbd.8.md:148 manpages/man8/cnid_metad.8.md:47
@@ -128,7 +128,7 @@ msgstr "関連項目"
 #: manpages/man1/nad.1.md:394 manpages/man1/nbplkup.1.md:105
 #: manpages/man1/nbprgstr.1.md:59 manpages/man1/pap.1.md:97
 #: manpages/man1/rtmpqry.1.md:56 manpages/man5/afp_signature.conf.5.md:48
-#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1455
+#: manpages/man5/afp_voluuid.conf.5.md:44 manpages/man5/afp.conf.5.md:1458
 #: manpages/man5/atalkd.conf.5.md:102 manpages/man5/extmap.conf.5.md:32
 #: manpages/man5/papd.conf.5.md:175 manpages/man8/a2boot.8.md:46
 #: manpages/man8/afpd.8.md:145 manpages/man8/atalkd.8.md:83
@@ -148,7 +148,7 @@ msgstr "著者"
 #: manpages/man1/nad.1.md:396 manpages/man1/nbplkup.1.md:107
 #: manpages/man1/nbprgstr.1.md:61 manpages/man1/pap.1.md:99
 #: manpages/man1/rtmpqry.1.md:58 manpages/man5/afp_signature.conf.5.md:50
-#: manpages/man5/afp_voluuid.conf.5.md:46 manpages/man5/afp.conf.5.md:1457
+#: manpages/man5/afp_voluuid.conf.5.md:46 manpages/man5/afp.conf.5.md:1460
 #: manpages/man5/atalkd.conf.5.md:104 manpages/man5/extmap.conf.5.md:34
 #: manpages/man5/papd.conf.5.md:177 manpages/man8/a2boot.8.md:48
 #: manpages/man8/afpd.8.md:147 manpages/man8/atalkd.8.md:85
@@ -168,7 +168,7 @@ msgstr "[CONTRIBUTORS](https://netatalk.io/contributors) を参照"
 #: manpages/man1/getzones.1.md:57 manpages/man1/nad.1.md:359
 #: manpages/man1/nbplkup.1.md:77 manpages/man1/nbprgstr.1.md:40
 #: manpages/man1/rtmpqry.1.md:34 manpages/man5/afp_signature.conf.5.md:37
-#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1405
+#: manpages/man5/afp_voluuid.conf.5.md:31 manpages/man5/afp.conf.5.md:1408
 #: manpages/man5/atalkd.conf.5.md:80 manpages/man5/extmap.conf.5.md:18
 #: manpages/man5/papd.conf.5.md:98 manpages/man8/macipgw.8.md:78
 #, no-wrap
@@ -201,7 +201,8 @@ msgid ""
 "file used by the \"Randnum exchange\" and \"2-Way Randnum exchange\" UAMs.\n"
 msgstr ""
 "**afppasswd** は SRP（\"Secure Remote Password\"）UAMで使用される資格情報ファイルを作成および管理し、\n"
-"**-r**オプションを使用すると、\"Randnum exchange\" および \"2-Way Randnum exchange\" UAMで使用される従来の*afppasswd*ファイルも管理します。\n"
+"**-r** オプションを使用すると、\"Randnum exchange\" および \"2-Way Randnum exchange\" UAM \n"
+"で使用される従来の *afppasswd* ファイルも管理する。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:24
@@ -232,7 +233,7 @@ msgstr "呼び出しパターンは2つある:"
 msgid ""
 "*As root*, **afppasswd** manages credentials for any system user.  The user "
 "is named with **-a** *username* (which both adds new entries and updates "
-"existing ones), or the entire file is initialised at once with **-c**."
+"existing ones), or the entire file is initialized at once with **-c**."
 msgstr ""
 "*rootユーザとして*, **afppasswd**は任意のシステムユーザの資格情報を管理す"
 "る。\n"
@@ -280,7 +281,8 @@ msgstr ""
 "キーファイルには、Randnumが保存されたパスワードを暗号化するために使用する16進エンコードされた8バイトのDESキーが含まれている。\n"
 "**afppasswd -r -c**は、このキーファイルが存在しない場合に作成し、既存のファイルを検証する。\n"
 "キーファイルが存在し、有効でない限り、Randnumのパスワードの更新は続行を拒否する。\n"
-"Randnum UAMは、キーファイルが存在しないか無効な場合に起動時に警告をログに記録しますが、修正されるまで認証とパスワードの変更は失敗する。\n"
+"Randnum UAMは、キーファイルが存在しないか無効な場合に起動時に警告をログに記録しるが、\n"
+"修正されるまで認証とパスワードの変更は失敗する。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:51
@@ -290,9 +292,8 @@ msgid ""
 "random key for each server instead of reusing this example value."
 msgstr ""
 "キーファイルには、オプションの改行を含む16個の16進文字が正確に含まれている必"
-"要がある。\n"
-"`0123456789ABCDEF`のような値で、サーバごとにこの例の値を再利用するのではな"
-"く、新しいランダムなキーを生成すると良い。"
+"要がある。`0123456789ABCDEF`のような値で、サーバごとにこの例の値を再利用する"
+"のではなく、新しいランダムなキーを生成すると良い。"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:55
@@ -371,7 +372,9 @@ msgid ""
 "> Add or update the named user. Required when an administrator operates\n"
 "on a specific user. Non-root invocations always operate on the calling\n"
 "user and do not accept this option.\n"
-msgstr "> 管理者が特定のユーザを操作する場合に必要。非rootユーザの呼び出しは常に呼び出しユーザを操作し、このオプションは受け付けない。\n"
+msgstr ""
+"> 指摘ユーザ情報を追加または更新。管理者が特定のユーザを操作する場合に必要。\n"
+"非rootユーザの呼び出しは常に呼び出しユーザを操作し、このオプションは受け付けない。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:87 manpages/man1/dbd.1.md:27
@@ -384,14 +387,16 @@ msgstr ""
 #: manpages/man1/afppasswd.1.md:93
 #, no-wrap
 msgid ""
-"> Create and initialise the password/verifier file. Existing entries are\n"
+"> Create and initialize the password/verifier file. Existing entries are\n"
 "populated as placeholders for every local system user with a uid at or\n"
 "above the **-u** threshold; passwords still need to be set individually\n"
 "with **-a**. With **-r**, also create or validate the companion\n"
 "*afppasswd.key* file for the Randnum UAM.\n"
 msgstr ""
-"> パスワード/検証子ファイルを作成して初期化する。既存のエントリは、**-u**の閾値以上のuidを持つすべてのローカルシステムユーザのプレースホルダとして配置される。\n"
-"パスワードは**-a**で個別に設定する必要がある。**-r**を使用すると、Randnum UAMのコンパニオン*afppasswd.key*ファイルも作成または検証する。\n"
+"> パスワード/検証子ファイルを作成して初期化する。\n"
+"既存のエントリは、**-u**の閾値以上のuidを持つすべてのローカルシステムユーザのプレースホルダとして配置される。\n"
+"パスワードは**-a**で個別に設定する必要がある。**-r**を使用すると、\n"
+"Randnum UAMのコンパニオン*afppasswd.key*ファイルも作成または検証する。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:95 manpages/man1/dbd.1.md:31
@@ -518,7 +523,8 @@ msgid ""
 "*username:hex_salt:hex_verifier*. Override with **-p** or with the\n"
 "\"**srp passwd file**\" option in **afp.conf**(5).\n"
 msgstr ""
-"> netatalk構成ディレクトリのデフォルトSRP検証子ファイル。ユーザごとに1行で、*username:hex_salt:hex_verifier*の形式。\n"
+"> netatalk構成ディレクトリのデフォルトSRP検証子ファイル。ユーザごとに1行で、\n"
+"*username:hex_salt:hex_verifier*の形式。\n"
 "**-p**または**afp.conf**(5)の\"**srp passwd file**\"オプションで上書きすることができる。\n"
 
 #. type: Plain text
@@ -550,7 +556,9 @@ msgstr ""
 msgid ""
 "> Companion key file for the legacy Randnum file. It must contain exactly\n"
 "16 hexadecimal characters with an optional trailing newline.\n"
-msgstr "> 従来のRandnumファイルのコンパニオンキーファイル。オプションの改行を含む16個の16進文字が正確に含まれている必要がある。\n"
+msgstr ""
+"> 従来のRandnumファイルのコンパニオンキーファイル。\n"
+"オプションの改行を含む16個の16進文字が正確に含まれている必要がある。\n"
 
 #. type: Plain text
 #: manpages/man1/afppasswd.1.md:151
