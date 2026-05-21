@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-05-19 20:08+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -435,7 +435,7 @@ msgid ""
 ": Interactive mode – prompt user before each test (used for debugging)\n"
 msgstr ""
 "**-i**\n"
-": 対話型モード – 各テストの前にユーザーにプロンプトを表示します（デバッグに使用）\n"
+": 対話型モード – 各テストの前にユーザーにプロンプトを表示する（デバッグ専用）\n"
 
 #. type: Plain text
 #: manpages/man1/afp_spectest.1.md:74
@@ -747,8 +747,8 @@ msgid ""
 "Below is a sample configuration for running the AFP spec tests.  Presently, "
 "only ClearTxt and Guest authentication is supported in the test runner."
 msgstr ""
-"以下は、AFP仕様テストを実行するためのサンプル設定です。現在、テストランナーで"
-"は ClearTxt とゲスト認証のみがサポートされている。"
+"以下は、AFP仕様テストを実行するためのサンプル設定にある。現在、テストランナー"
+"では ClearTxt とゲスト認証のみがサポートされている。"
 
 #. type: Bullet: '- '
 #: manpages/man1/afp_spectest.1.md:206
