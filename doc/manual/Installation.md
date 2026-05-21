@@ -71,8 +71,8 @@ packages that can be installed to enhance Netatalk's functionality.
 - Libgcrypt
 
     The [Libgcrypt](https://gnupg.org/software/libgcrypt/) library
-    supplies the encryption for the standard User Authentication Methods
-    (UAMs). They are: DHX2, DHCAST128 (a.k.a. DHX) and RandNum.
+    supplies the encryption for the password based User Authentication Methods
+    (UAMs).
 
 #### CNID database backends
 

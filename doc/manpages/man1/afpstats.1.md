@@ -14,9 +14,10 @@ afpstats — List Netatalk AFP server statistics
 their mounted volumes, time of login, and other details.
 Sessions connected over both TCP/IP (DSI) and AppleTalk (ASP) are reported.
 
-To enable AFP statistics in Netatalk at runtime, "**afpstats = yes**" must be set in *afp.conf*.
-To allow non-root users to query the socket, set "**afpstats group = *group***" and add those users
-to that group.
+To enable AFP statistics in Netatalk at runtime, **afpstats = yes** must be set in *afp.conf*.
+By default, only root and users permitted by the socket's group ownership can query the session list.
+To allow other users to query the socket, set "**afpstats group = *group***" and add those users
+to the configured group.
 
 # Options
 
