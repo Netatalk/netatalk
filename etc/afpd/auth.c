@@ -341,6 +341,11 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     ipc_child_write(obj, IPC_LOGINDONE,
                     strnlen(obj->options.hostname, IPC_MAXMSGSIZE - IPC_HEADERLEN),
                     obj->options.hostname);
+
+    if (obj->proto == AFPPROTO_ASP) {
+        ipc_child_state(obj, ASP_RUNNING);
+    }
+
     /* pam_umask or similar might have changed our umask */
     (void)umask(obj->options.umask);
 

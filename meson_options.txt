@@ -10,12 +10,6 @@ option(
     description: 'Enable ACL support',
 )
 option(
-    'with-afpstats',
-    type: 'boolean',
-    value: true,
-    description: 'Enable AFP statistics via D-Bus',
-)
-option(
     'with-cracklib',
     type: 'boolean',
     value: true,
@@ -284,12 +278,6 @@ option(
     type: 'string',
     value: '',
     description: 'Set path to D-Bus daemon',
-)
-option(
-    'with-dbus-sysconf-path',
-    type: 'string',
-    value: '',
-    description: 'Set path to D-Bus system bus security configuration directory',
 )
 option(
     'with-gssapi-path',

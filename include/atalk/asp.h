@@ -61,6 +61,10 @@ typedef struct ASP {
     char                data[ASP_DATAMAXSIZ];
     size_t		cmdlen, datalen;
     off_t 		read_count, write_count;
+    int         asp_ipc_fd;
+    int         asp_hint_fd;
+    int         asp_cnx_cnt;
+    int         asp_cnx_max;
 } *ASP;
 
 #define ASPFL_SLS	1
@@ -89,7 +93,7 @@ typedef struct ASP {
 
 extern ASP asp_init(ATP);
 extern void asp_setstatus(ASP, char *, const int);
-extern ASP asp_getsession(ASP, server_child_t *, const int);
+extern ASP asp_getsession(ASP, server_child_t *, const int, afp_child_t **);
 extern int asp_close(ASP);
 extern int asp_shutdown(ASP);
 extern int asp_attention(ASP, AFPUserBytes);

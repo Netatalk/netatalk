@@ -159,6 +159,14 @@ void afp_over_asp(AFPObj *obj)
     obj->attention = (int (*)(void *, AFPUserBytes)) asp_attention;
     child = obj;
     asp = (ASP) obj->handle;
+    /* Adopt the connection snapshot, IPC socketpair and dircache hint pipe
+     * that asp_getsess created before fork(). This mirrors what dsi_getsess
+     * does for DSI children and keeps login limits plus IPC reporting valid
+     * for ASP sessions. */
+    obj->cnx_cnt = asp->asp_cnx_cnt;
+    obj->cnx_max = asp->asp_cnx_max;
+    obj->ipc_fd  = asp->asp_ipc_fd;
+    obj->hint_fd = asp->asp_hint_fd;
     /* install signal handlers
      * With ASP tickle handler is done in the parent process
     */

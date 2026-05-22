@@ -67,7 +67,6 @@ COPY meson.build .
 RUN sed -i 's/hide_service_controls=0/hide_service_controls=1/' /netatalk-code/contrib/webmin_module/config.in \
 &&  meson setup build \
     -Dbuildtype=release \
-    -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-docs= \
     -Dwith-dtrace=false \

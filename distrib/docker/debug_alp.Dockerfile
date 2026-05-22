@@ -95,10 +95,8 @@ RUN rm -rf build
 RUN meson setup build \
     -Dbuildtype=debugoptimized \
     -Dc_args=-fno-omit-frame-pointer \
-    -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
-    -Dwith-dbus-sysconf-path=/etc \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \

@@ -29,24 +29,6 @@ if have_spotlight and use_spotlight_localsearch
     endif
 endif
 
-if have_afpstats
-    if (
-        fs.exists(dbus_sysconfpath / 'netatalk-dbus.conf')
-        and not get_option('with-overwrite')
-    )
-        message(
-            'will not replace existing',
-            dbus_sysconfpath / 'netatalk-dbus.conf',
-        )
-    else
-        install_data(
-            'netatalk-dbus.conf',
-            install_dir: dbus_sysconfpath,
-            install_tag: 'config',
-        )
-    endif
-endif
-
 static_conf_files = ['extmap.conf']
 
 if have_appletalk

@@ -104,7 +104,7 @@ static void set_asp_ac(int sid, struct asp_child *tmp);
  * an error.
  */
 ASP asp_getsession(ASP asp, server_child_t *server_children,
-                   const int tickleval)
+                   const int tickleval, afp_child_t **childp)
 {
     struct sigaction    action;
     struct itimerval    timer;
@@ -117,6 +117,11 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
     uint16_t           asperr = 0;
     char                *buf;
     int                 buflen;
+    afp_child_t         *child;
+
+    if (childp) {
+        *childp = NULL;
+    }
 
     if (!asp->inited) {
         if (!(children = server_children)) {
@@ -261,11 +266,54 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                 return NULL;
             }
 
-            int dummy[2];
+            int ipc_fds[2] = { -1, -1 };
+            int hint_pipe[2] = { -1, -1 };
+            int ipc_ok = 0;
+
+            if (socketpair(PF_UNIX, SOCK_STREAM, 0, ipc_fds) < 0) {
+                LOG(log_error, logtype_default,
+                    "asp_getsess: socketpair: %s", strerror(errno));
+            } else if (pipe(hint_pipe) < 0) {
+                LOG(log_error, logtype_default,
+                    "asp_getsess: pipe: %s", strerror(errno));
+                close(ipc_fds[0]);
+                close(ipc_fds[1]);
+                ipc_fds[0] = ipc_fds[1] = -1;
+            } else if (setnonblock(ipc_fds[0], 1) != 0
+                       || setnonblock(ipc_fds[1], 1) != 0
+                       || setnonblock(hint_pipe[0], 1) != 0
+                       || setnonblock(hint_pipe[1], 1) != 0) {
+                LOG(log_error, logtype_default,
+                    "asp_getsess: setnonblock: %s", strerror(errno));
+                close(ipc_fds[0]);
+                close(ipc_fds[1]);
+                close(hint_pipe[0]);
+                close(hint_pipe[1]);
+                ipc_fds[0] = ipc_fds[1] = -1;
+                hint_pipe[0] = hint_pipe[1] = -1;
+            } else {
+                ipc_ok = 1;
+            }
+
+            if (!ipc_ok) {
+                atp_close(atp);
+                asp->cmdbuf[0] = 0;
+                asp->cmdbuf[1] = 0;
+                asperr = ASPERR_SERVBUSY;
+                memcpy(asp->cmdbuf + 2, &asperr, sizeof(asperr));
+                iov[0].iov_base = asp->cmdbuf;
+                iov[0].iov_len = 4;
+                atpb.atp_sresiov = iov;
+                atpb.atp_sresiovcnt = 1;
+                atp_sresp(asp->asp_atp, &atpb);
+                break;
+            }
 
             switch ((pid = fork())) {
             case 0 : /* child */
                 server_reset_signal();
+                asp->asp_cnx_cnt = children->servch_count;
+                asp->asp_cnx_max = children->servch_nsessions;
 
                 /* free/close some things */
                 for (i = 0; i < children->servch_nsessions; i++) {
@@ -278,6 +326,8 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                 server_child_free(children);
                 children = NULL;
                 atp_close(asp->asp_atp);
+                close(ipc_fds[0]);
+                close(hint_pipe[1]);
                 asp->child = 1;
                 asp->asp_atp = atp;
                 asp->asp_sat = sat;
@@ -285,9 +335,15 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                 asp->asp_seq = 0;
                 asp->asp_sid = sid;
                 asp->asp_flags = ASPFL_SSS;
+                asp->asp_ipc_fd = ipc_fds[1];
+                asp->asp_hint_fd = hint_pipe[0];
                 return asp;
 
             case -1 : /* error */
+                close(ipc_fds[0]);
+                close(ipc_fds[1]);
+                close(hint_pipe[0]);
+                close(hint_pipe[1]);
                 atp_close(atp);
                 asp->cmdbuf[0] = 0;
                 asp->cmdbuf[1] = 0;
@@ -295,15 +351,21 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                 break;
 
             default : /* parent process */
+                close(ipc_fds[1]);
+                close(hint_pipe[0]);
 
                 /* we need atomic setting or pb with tickle_handler */
-                /* TODO: This was "(long)dummy" in 2.x for 3rd parameter since we don't have IPC on ASP.
-                * Right now this throws an error in child_handler() in main.c, so setting to -1 to
-                * mitigate that. Original 2.x code wasn't checking IPC handles on close.
-                * hint_fd=-1: ASP (legacy AppleTalk) doesn't use IPC or hint pipe infrastructure. */
-                if (server_child_add(children, pid, -1, -1)) {
+                if ((child = server_child_add(children, pid, ipc_fds[0],
+                                              hint_pipe[1]))) {
                     if ((asp_ac_tmp = malloc(sizeof(struct asp_child))) == NULL) {
+                        /* Roll back the just-added entry; server_child_remove
+                         * closes both the IPC and hint fds and frees the
+                         * record, so we don't leak the parent ends. */
+                        (void)server_child_remove(children, pid);
                         kill(pid, SIGQUIT);
+                        asp->cmdbuf[0] = 0;
+                        asp->cmdbuf[1] = 0;
+                        asperr = ASPERR_SERVBUSY;
                         break;
                     }
 
@@ -314,9 +376,19 @@ ASP asp_getsession(ASP asp, server_child_t *server_children,
                     asp->cmdbuf[0] = atp_sockaddr(atp)->sat_port;
                     asp->cmdbuf[1] = sid;
                     set_asp_ac(sid, asp_ac_tmp);
+
+                    if (childp) {
+                        *childp = child;
+                    }
+
                     asperr = ASPERR_OK;
                 } else {
+                    close(ipc_fds[0]);
+                    close(hint_pipe[1]);
                     kill(pid, SIGQUIT);
+                    asp->cmdbuf[0] = 0;
+                    asp->cmdbuf[1] = 0;
+                    asperr = ASPERR_SERVBUSY;
                 }
 
                 atp_close(atp);

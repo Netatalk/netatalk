@@ -106,7 +106,6 @@ server_child_t *server_child_alloc(int connections)
     }
 
     children->servch_nsessions = connections;
-    pthread_mutex_init(&children->servch_lock, NULL);
     return children;
 }
 
@@ -118,9 +117,6 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
                               int hint_fd)
 {
     afp_child_t *child = NULL;
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     /* Enforce configured session limit */
     if (children->servch_count >= children->servch_nsessions) {
@@ -154,9 +150,6 @@ afp_child_t *server_child_add(server_child_t *children, pid_t pid, int ipc_fd,
     hash_child(children->servch_table, child);
     children->servch_count++;
 exit:
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
     return child;
 }
 
@@ -170,9 +163,6 @@ int server_child_remove(server_child_t *children, pid_t pid)
         return -1;
     }
 
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
     unhash_child(child);
 
     if (child->afpch_clientid) {
@@ -205,9 +195,6 @@ int server_child_remove(server_child_t *children, pid_t pid)
 
     free(child);
     children->servch_count--;
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
     return fd;
 }
 
@@ -314,9 +301,6 @@ int server_child_set_session_token(server_child_t *children, pid_t pid,
     }
 
     memcpy(sessiontoken, token, token_len);
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     if ((child = server_child_resolve(children, pid)) == NULL) {
         EC_STATUS(-1);
@@ -340,9 +324,6 @@ int server_child_set_session_token(server_child_t *children, pid_t pid,
     child->afpch_sessiontoken_len = token_len;
     sessiontoken = NULL;
 EC_CLEANUP:
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
 
     if (sessiontoken) {
         explicit_bzero(sessiontoken, token_len);
@@ -370,10 +351,6 @@ int server_child_transfer_session(server_child_t *children,
     if (token_len == 0 || token == NULL) {
         return 0;
     }
-
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     for (int i = 0; i < CHILD_HASHSIZE; i++) {
         for (child = children->servch_table[i]; child; child = child->afpch_next) {
@@ -417,9 +394,6 @@ found:
     EC_ZERO_LOG(kill(child->afpch_pid, SIGURG));
     EC_STATUS(1);
 EC_CLEANUP:
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
     EC_EXIT;
 }
 
@@ -434,9 +408,6 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
 {
     afp_child_t *child, *tmp;
     int i;
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     for (i = 0; i < CHILD_HASHSIZE; i++) {
         child = children->servch_table[i];
@@ -482,10 +453,6 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
             child = tmp;
         }
     }
-
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
 }
 
 void server_child_login_done(server_child_t *children, pid_t pid,
@@ -493,9 +460,6 @@ void server_child_login_done(server_child_t *children, pid_t pid,
 {
     afp_child_t *child;
     afp_child_t *tmp;
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     for (int i = 0; i < CHILD_HASHSIZE; i++) {
         child = children->servch_table[i];
@@ -519,10 +483,6 @@ void server_child_login_done(server_child_t *children, pid_t pid,
             child = tmp;
         }
     }
-
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
 }
 
 /*!

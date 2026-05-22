@@ -142,12 +142,6 @@ static void show_version_extended(void)
 #else
     puts("No");
 #endif
-    printf("     AFP statistics support:\t");
-#ifdef HAVE_DBUS_GLIB
-    puts("Yes");
-#else
-    puts("No");
-#endif
     printf("  Spotlight search backends:\t");
 #ifdef WITH_SPOTLIGHT
     puts(SPOTLIGHT_BACKENDS);

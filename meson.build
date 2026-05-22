@@ -1114,6 +1114,7 @@ use_spotlight_cnid = false
 use_spotlight_localsearch = false
 use_spotlight_xapian = false
 spotlight_backends = ''
+dbus_daemonpath = get_option('with-dbus-daemon-path')
 
 if get_option('with-spotlight')
     talloc = dependency('talloc', required: false)
@@ -1153,6 +1154,10 @@ if get_option('with-spotlight')
                 cdata.set('HAVE_TRACKER3', 1)
             endif
 
+            # GLib's main loop drives the TinySPARQL/LocalSearch async
+            # query pipeline.
+            glib = dependency('glib-2.0', required: false)
+
             # Check for indexer
 
             indexer_found = false
@@ -1160,6 +1165,21 @@ if get_option('with-spotlight')
             tracker3 = find_program('tracker3', required: false)
             gsettings = find_program('gsettings', required: false)
             dconf = find_program('dconf', required: false)
+
+            # The localsearch backend launches a private dbus-daemon to
+            # host an isolated session bus that afpd and the indexer
+            # communicate over.
+            dbus = dependency('dbus-1', required: false)
+
+            if dbus_daemonpath == '' and fs.exists(bindir / 'dbus-daemon')
+                dbus_daemonpath += bindir / 'dbus-daemon'
+            elif dbus_daemonpath == '' and dbus.found()
+                dbus_daemonpath += '/bin/dbus-daemon'
+            endif
+
+            if dbus_daemonpath != ''
+                cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemonpath + '"')
+            endif
 
             localsearch3_schema_found = false
             tracker3_schema_found = false
@@ -1213,6 +1233,7 @@ if get_option('with-spotlight')
                 sparql_found
                 and indexer_found
                 and dconf.found()
+                and glib.found()
                 and talloc.found()
                 and flex.found()
                 and bison.found()
@@ -1484,59 +1505,6 @@ int main(void) {
 ''',
 )
     cdata.set('XATTR_ADD_OPT', 1)
-endif
-
-#
-# Check for dbus and glib, for AFP stats
-#
-
-enable_afpstats = get_option('with-afpstats')
-
-dbus = dependency('dbus-1', required: false)
-glib = dependency('glib-2.0', required: false)
-gobject = dependency('gobject-2.0', required: false)
-gio = dependency('gio-2.0', required: false)
-
-if not enable_afpstats
-    have_afpstats = false
-elif host_os == 'darwin'
-    have_afpstats = false
-    warning('afpstats over D-Bus is not supported on Darwin/macOS')
-else
-    have_afpstats = dbus.found() and glib.found() and gobject.found() and gio.found()
-    if have_afpstats
-        cdata.set('HAVE_DBUS_GLIB', 1)
-    else
-        warning(
-            'afpstats support requested but required D-Bus and GLib libraries not found',
-        )
-    endif
-endif
-
-#
-# Set dbus-daemon path
-#
-
-dbus_daemonpath = get_option('with-dbus-daemon-path')
-
-if dbus_daemonpath == '' and fs.exists(bindir / 'dbus-daemon')
-    dbus_daemonpath += bindir / 'dbus-daemon'
-elif dbus_daemonpath == '' and dbus.found()
-    dbus_daemonpath += '/bin/dbus-daemon'
-endif
-
-if dbus_daemonpath != ''
-    cdata.set('DBUS_DAEMON_PATH', '"' + dbus_daemonpath + '"')
-endif
-
-#
-# Set dbus sysconf directory
-#
-
-dbus_sysconfpath = get_option('with-dbus-sysconf-path')
-
-if dbus_sysconfpath == '' and dbus.found()
-    dbus_sysconfpath += datadir / 'dbus-1/system.d'
 endif
 
 #
@@ -2721,7 +2689,6 @@ summary(summary_info, bool_yn: true, section: '  User Authentication Methods:')
 
 summary_info = {
     '  ACL': have_acls,
-    '  AFP stats via D-Bus': have_afpstats,
     '  AppleTalk': have_appletalk,
     '  Cracklib': have_cracklib,
     '  CUPS': have_cups,
@@ -2758,7 +2725,6 @@ summary(summary_info, bool_yn: true, section: '  Features:')
 
 summary_info = {
     '  dbus daemon path': dbus_daemonpath,
-    '  dbus system directory': dbus_sysconfpath,
     '  init directory': init_dirs,
     '  lockfile directory': lockfile_path,
     '  PAM config directory': pam_confdir,

@@ -2734,6 +2734,8 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     options->sigconffile = strdup(_PATH_STATEDIR "afp_signature.conf");
     options->uuidconf    = strdup(_PATH_STATEDIR "afp_voluuid.conf");
     options->flags       = OPTION_UUID | AFPObj->cmdlineflags;
+    options->afpstats_group = false;
+    options->afpstats_gid = 0;
     become_root();
     config = iniparser_load(AFPObj->options.configfile);
     unbecome_root();
@@ -2783,7 +2785,22 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
     if (getoption_bool(config, INISEC_GLOBAL, "afpstats", NULL, 0)) {
-        options->flags |= OPTION_DBUS_AFPSTATS;
+        options->flags |= OPTION_AFPSTATS;
+    }
+
+    if ((p = getoption_strdup(config, INISEC_GLOBAL, "afpstats group", NULL,
+                              NULL))) {
+        struct group *gr = getgrnam(p);
+
+        if (gr != NULL) {
+            options->afpstats_gid = gr->gr_gid;
+            options->afpstats_group = true;
+        } else {
+            LOG(log_warning, logtype_afpd,
+                "Unknown afpstats group '%s'", p);
+        }
+
+        free(p);
     }
 
     if (getoption_bool(config, INISEC_GLOBAL, "afp read locks", NULL, 0)) {
@@ -3085,7 +3102,7 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
     }
 
     if ((p = getoption_strdup(config, INISEC_GLOBAL, "force group", NULL, NULL))) {
-        struct group *gr = getgrnam(p);
+        const struct group *gr = getgrnam(p);
 
         if (gr != NULL) {
             options->force_gid = gr->gr_gid;

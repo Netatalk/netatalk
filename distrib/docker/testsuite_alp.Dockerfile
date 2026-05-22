@@ -81,10 +81,8 @@ RUN rm -rf build
 
 RUN meson setup build \
     -Dbuildtype=release \
-    -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
-    -Dwith-dbus-sysconf-path=/etc \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \

@@ -170,7 +170,7 @@ extern int tokenize_ip_port(const char *ipurl, char **address, char **port);
 
 /* Structures and functions dealing with dynamic pollfd arrays */
 
-enum asev_fdtype {IPC_FD, LISTEN_FD};
+enum asev_fdtype {IPC_FD, LISTEN_FD, STATS_FD};
 
 /*!
  * @brief atalk socket event data
