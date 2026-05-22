@@ -2446,7 +2446,6 @@ PREDEFINED             = \
     HAVE_ACLS=1 \
     HAVE_AVAHI=1 \
     HAVE_CUPS=1 \
-    HAVE_DBUS_GLIB=1 \
     HAVE_LDAP=1 \
     HAVE_LIBQUOTA=1 \
     HAVE_MDNS=1 \

@@ -238,6 +238,12 @@ print &ui_table_row(
                     )
 );
 
+@values = get_parameter_of_section($afpconfRef, $sectionRef, 'afpstats group', \%in);
+print &ui_table_row(
+                    $text{'edit_global_section_afpstats_group'},
+                    &ui_textbox('p_afpstats group', $values[0], 40) . &group_chooser_button("afpstats group")
+);
+
 @values = get_parameter_of_section($afpconfRef, $sectionRef, 'mimic model', \%in);
 print &ui_table_row(
                     $text{'edit_global_section_mimic_model'},

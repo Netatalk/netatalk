@@ -1,6 +1,6 @@
 #!@PERL@
 #
-# AFP Statistics over D-Bus
+# AFP Statistics over a Unix domain socket
 #
 # (c) 2024-2026 Daniel Markstedt <daniel@mindani.net>
 #
@@ -18,10 +18,29 @@
 use strict;
 use warnings;
 use File::Basename;
-use Net::DBus;
+use IO::Socket::UNIX;
+
+my $DEFAULT_SOCKET = '@localstatedir@/netatalk/afpstats.sock';
+
+sub usage {
+    printf("Usage: %s [-h hostname] [-s socket] [-v]\n", basename($0));
+    exit 1;
+}
+
+sub display_name {
+    my ($name) = @_;
+
+    if ($name =~ /^uid=([0-9]+)$/) {
+        my @pw = getpwuid($1);
+        return $pw[0] if defined $pw[0];
+    }
+
+    return $name;
+}
 
 sub main {
     my $hostname_filter;
+    my $socket_path = $DEFAULT_SOCKET;
 
     while (my $arg = shift @ARGV) {
         if ($arg =~ /^(-v|--version)$/) {
@@ -29,40 +48,63 @@ sub main {
             exit 1;
         } elsif ($arg =~ /^(-h|--hostname)$/) {
             $hostname_filter = shift @ARGV;
+            usage() unless defined $hostname_filter;
+        } elsif ($arg =~ /^(-s|--socket)$/) {
+            $socket_path = shift @ARGV;
+            usage() unless defined $socket_path;
         } else {
-            printf("Usage: %s [-h hostname] [-v]\n", basename($0));
-            exit 1;
+            usage();
         }
     }
 
-    my $bus = Net::DBus->system();
+    my $sock = IO::Socket::UNIX->new(
+                                     Peer => $socket_path,
+                                     Type => SOCK_STREAM,
+    );
 
-    eval {
-        my $service = $bus->get_service("org.netatalk.AFPStats");
-        my $remote_object = $service->get_object(
-                                                 "/org/netatalk/AFPStats",
-                                                 "org.netatalk.AFPStats"
-        );
-
-        print "Connected user   PID      Login time        State          Hostname          Mounted volumes\n";
-
-        foreach my $user (@{$remote_object->GetUsers}) {
-            if ($user =~
-                 /^name: ([^,]+), pid: ([^,]+), logintime: ([^,]+), state: ([^,]+), volumes: (.*), hostname: (.+)/) {
-                my ($name, $pid, $logintime, $state, $volume, $hostname) = ($1, $2, $3, $4, $5, $6);
-                if (defined $hostname_filter && $hostname ne $hostname_filter) {
-                    next;
-                }
-                printf "%-17s%-9s%-18s%-15s%-18s%s\n", $name, $pid, $logintime, $state, $hostname, $volume;
-            } else {
-                print "WARNING Unexpected output. This is probably a bug:\n" . $user . "\n";
-            }
-        }
-    };
-    if ($@) {
-        print "Error: $@\n";
+    if (!$sock) {
+        print "Error: cannot connect to $socket_path: $!\n";
         exit 1;
     }
+
+    my @header = ('Connected user', 'PID', 'Login time', 'State', 'Protocol', 'Hostname', 'Mounted volumes');
+    my @rows;
+
+    while (defined(my $user = <$sock>)) {
+        chomp $user;
+
+        if ($user =~
+/^name: ([^,]+), pid: ([^,]+), logintime: ([^,]+), state: ([^,]+), protocol: ([^,]+), volumes: (.*), hostname: (.+)/
+        ) {
+            my ($name, $pid, $logintime, $state, $protocol, $volume, $hostname) = ($1, $2, $3, $4, $5, $6, $7);
+            $name = display_name($name);
+            if (defined $hostname_filter && $hostname ne $hostname_filter) {
+                next;
+            }
+            push @rows, [$name, $pid, $logintime, $state, $protocol, $hostname, $volume];
+        } else {
+            print "WARNING Unexpected output. This is probably a bug:\n" . $user . "\n";
+        }
+    }
+
+    close $sock;
+
+    # Compute column widths from header + data so long hostnames or volume
+    # lists don't bleed into the next column.
+    my @widths = map {length} @header;
+    for my $row (@rows) {
+        for my $i (0 .. $#widths) {
+            my $len = length($row->[$i]);
+            $widths[$i] = $len if $len > $widths[$i];
+        }
+    }
+
+    # Two-space gap between columns; the last column is left unpadded so
+    # we don't emit trailing whitespace.
+    my @left = @widths[0 .. $#widths - 1];
+    my $fmt  = join('  ', map {"%-${_}s"} @left) . '  %s' . "\n";
+    printf $fmt, @header;
+    printf $fmt, @$_ for @rows;
 }
 
 main();

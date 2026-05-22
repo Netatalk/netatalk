@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2024-2026 Daniel Markstedt <daniel@mindani.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,181 +18,215 @@
 #endif /* HAVE_CONFIG_H */
 
 #include <errno.h>
-#include <pthread.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 
-#include <glib.h>
-#include <gio/gio.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/un.h>
 
 #include <atalk/compat.h>
-#include <atalk/errchk.h>
+#include <atalk/dsi.h>
 #include <atalk/logger.h>
 #include <atalk/server_child.h>
 
-#include "afpstats_obj.h"
+#include "afpstats.h"
 
-/*
- * Beware: this struct is accessed and modified from the main thread
- * and from this thread, thus be careful to lock and unlock the mutex.
- */
 static server_child_t *childs;
-static GDBusNodeInfo *introspection_data = NULL;
 
-static void handle_method_call(GDBusConnection *connection _U_,
-                               const gchar           *sender _U_,
-                               const gchar           *object_path _U_,
-                               const gchar           *interface_name _U_,
-                               const gchar           *method_name,
-                               GVariant              *parameters _U_,
-                               GDBusMethodInvocation *invocation,
-                               gpointer               user_data)
+int afpstats_init(server_child_t *childs_in, const char *sock_path,
+                  bool set_group, gid_t gid)
 {
-    AFPStatsObj *obj = AFPSTATS_OBJECT(user_data);
-
-    if (g_strcmp0(method_name, "GetUsers") == 0) {
-        GError *local_error = NULL;
-        gchar **users = NULL;
-
-        if (afpstats_obj_get_users(obj, &users, &local_error)) {
-            g_dbus_method_invocation_return_value(invocation, g_variant_new("(^as)",
-                                                  users));
-        } else {
-            g_dbus_method_invocation_return_gerror(invocation, local_error);
-        }
-
-        g_strfreev(users);
-        g_clear_error(&local_error);
-    }
-}
-
-static const GDBusInterfaceVTable interface_vtable = {
-    &handle_method_call,
-    NULL,
-    NULL,
-    { 0 }
-};
-
-static void on_bus_acquired(GDBusConnection *connection _U_,
-                            const gchar     *name,
-                            gpointer         user_data _U_)
-{
-    LOG(log_debug, logtype_afpd, "on_bus_acquired: %s", name);
-}
-
-static void on_name_acquired(GDBusConnection *connection _U_,
-                             const gchar     *name,
-                             gpointer         user_data _U_)
-{
-    LOG(log_debug, logtype_afpd, "on_name_acquired: %s", name);
-}
-
-static void on_name_lost(GDBusConnection *connection _U_,
-                         const gchar     *name,
-                         gpointer         user_data _U_)
-{
-    LOG(log_debug, logtype_afpd, "on_name_lost: %s", name);
-}
-
-static gpointer afpstats_thread(gpointer _data _U_)
-{
-    GDBusConnection *bus;
-    GError *error = NULL;
-    GMainContext *ctxt;
-    GMainLoop *thread_loop;
-    GBusNameOwnerFlags request_name_result;
-    guint registration_id;
-    sigset_t sigs;
-    /* Block all signals in this thread */
-    sigfillset(&sigs);
-    pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-    ctxt = g_main_context_new();
-    g_main_context_push_thread_default(ctxt);
-    thread_loop = g_main_loop_new(ctxt, FALSE);
-
-    if (!(bus = g_bus_get_sync(G_BUS_TYPE_SYSTEM,
-                               NULL,
-                               &error))) {
-        LOG(log_error, logtype_afpd,
-            "afpstats_thread: Couldn't connect to system bus: %s",
-            error->message);
-        return NULL;
-    }
-
-    static const gchar introspection_xml[] =
-        "<node>"
-        "  <interface name='org.netatalk.AFPStats'>"
-        "    <method name='GetUsers'>"
-        "      <arg name='ret' type='as' direction='out'/>"
-        "    </method>"
-        "  </interface>"
-        "</node>";
-    introspection_data = g_dbus_node_info_new_for_xml(introspection_xml, NULL);
-    g_assert(introspection_data != NULL);
-    AFPStatsObj *obj = g_object_new(AFPSTATS_TYPE_OBJECT, NULL);
-    registration_id = g_dbus_connection_register_object(bus,
-                      "/org/netatalk/AFPStats",
-                      introspection_data->interfaces[0],
-                      &interface_vtable,
-                      g_object_ref(obj),
-                      g_object_unref,
-                      &error);
-    g_assert(registration_id > 0);
-    request_name_result = g_bus_own_name(G_BUS_TYPE_SYSTEM,
-                                         "org.netatalk.AFPStats",
-                                         G_BUS_NAME_OWNER_FLAGS_NONE,
-                                         on_bus_acquired,
-                                         on_name_acquired,
-                                         on_name_lost,
-                                         NULL,
-                                         NULL);
-    g_main_loop_run(thread_loop);
-    g_bus_unown_name(request_name_result);
-    g_dbus_connection_unregister_object(bus, registration_id);
-    g_dbus_node_info_unref(introspection_data);
-    g_object_unref(obj);
-    g_main_context_pop_thread_default(ctxt);
-    g_main_context_unref(ctxt);
-    return thread_loop;
-}
-
-static void my_glib_log(const gchar *log_domain,
-                        GLogLevelFlags log_level _U_,
-                        const gchar *message,
-                        gpointer user_data _U_)
-{
-    LOG(log_debug, logtype_afpd, "%s: %s", log_domain, message);
-}
-
-server_child_t *afpstats_get_and_lock_childs(void)
-{
-    pthread_mutex_lock(&childs->servch_lock);
-    return childs;
-}
-
-void afpstats_unlock_childs(void)
-{
-    pthread_mutex_unlock(&childs->servch_lock);
-}
-
-int afpstats_init(server_child_t *childs_in)
-{
-    GThread *thread;
+    int fd;
+    struct sockaddr_un addr;
 
     if (!childs_in) {
         LOG(log_error, logtype_afpd, "afpstats_init: NULL server_child_t pointer");
         return -1;
     }
 
-    childs = childs_in;
-    (void)g_log_set_default_handler(my_glib_log, NULL);
-    thread = g_thread_new("afpstats", afpstats_thread, NULL);
-
-    if (!thread) {
-        LOG(log_error, logtype_afpd, "afpstats_init: Failed to create afpstats thread");
+    if (!sock_path) {
+        LOG(log_error, logtype_afpd, "afpstats_init: NULL socket path");
         return -1;
     }
 
-    return 0;
+    memset(&addr, 0, sizeof(addr));
+    addr.sun_family = AF_UNIX;
+
+    if (strlcpy(addr.sun_path, sock_path, sizeof(addr.sun_path))
+            >= sizeof(addr.sun_path)) {
+        LOG(log_error, logtype_afpd,
+            "afpstats_init: socket path too long: %s", sock_path);
+        return -1;
+    }
+
+    fd = socket(AF_UNIX, SOCK_STREAM, 0);
+
+    if (fd < 0) {
+        LOG(log_error, logtype_afpd,
+            "afpstats_init: socket: %s", strerror(errno));
+        return -1;
+    }
+
+    (void)fcntl(fd, F_SETFD, FD_CLOEXEC);
+
+    /*
+     * Netatalk-managed startup serializes afpd through the top-level
+     * netatalk PID-file check. Treat a pre-existing afpstats socket here
+     * as stale cleanup from a previous run.
+     */
+    if (unlink(sock_path) != 0 && errno != ENOENT) {
+        LOG(log_warning, logtype_afpd,
+            "afpstats_init: unlink stale %s: %s", sock_path, strerror(errno));
+    }
+
+    if (bind(fd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+        LOG(log_error, logtype_afpd,
+            "afpstats_init: bind %s: %s", sock_path, strerror(errno));
+        close(fd);
+        return -1;
+    }
+
+    if (set_group && chown(sock_path, (uid_t) -1, gid) != 0) {
+        LOG(log_error, logtype_afpd,
+            "afpstats_init: chown %s: %s", sock_path, strerror(errno));
+        close(fd);
+        unlink(sock_path);
+        return -1;
+    }
+
+    if (chmod(sock_path, 0660) != 0) {
+        LOG(log_error, logtype_afpd,
+            "afpstats_init: chmod %s: %s", sock_path, strerror(errno));
+        close(fd);
+        unlink(sock_path);
+        return -1;
+    }
+
+    if (listen(fd, 8) != 0) {
+        LOG(log_error, logtype_afpd,
+            "afpstats_init: listen: %s", strerror(errno));
+        close(fd);
+        unlink(sock_path);
+        return -1;
+    }
+
+    childs = childs_in;
+    LOG(log_info, logtype_afpd, "afpstats listening on %s", sock_path);
+    return fd;
+}
+
+static const char *state_name(int16_t state)
+{
+    switch (state) {
+    case ASP_RUNNING:
+    case DSI_RUNNING:
+        return "active";
+
+    case DSI_SLEEPING:
+    case DSI_EXTSLEEP:
+        return "sleeping";
+
+    case DSI_DISCONNECTED:
+        return "disconnected";
+
+    default:
+        return "unknown";
+    }
+}
+
+static const char *protocol_name(int16_t state)
+{
+    /*
+     * afp_child_t does not carry the listener protocol, so infer it from
+     * state. ASP sessions can be visible after IPC_LOGINDONE but before
+     * IPC_STATE sets ASP_RUNNING; report "unknown" in that window rather than
+     * defaulting to TCP/IP.
+     */
+    if (state & ASP_RUNNING) {
+        return "AppleTalk";
+    }
+
+    if (state & (DSI_RUNNING | DSI_SLEEPING | DSI_EXTSLEEP | DSI_DISCONNECTED)) {
+        return "TCP/IP";
+    }
+
+    return "unknown";
+}
+
+static const char *user_name(uid_t uid, char *buf, size_t buflen)
+{
+    const struct passwd *pw;
+    pw = getpwuid(uid);
+
+    if (pw && pw->pw_name) {
+        return pw->pw_name;
+    }
+
+    snprintf(buf, buflen, "uid=%u", (unsigned)uid);
+    return buf;
+}
+
+void afpstats_handle_accept(int listen_fd)
+{
+    int client_fd;
+    struct timeval tv;
+    afp_child_t *child;
+
+    do {
+        client_fd = accept(listen_fd, NULL, NULL);
+    } while (client_fd < 0 && errno == EINTR);
+
+    if (client_fd < 0) {
+        LOG(log_error, logtype_afpd,
+            "afpstats: accept: %s", strerror(errno));
+        return;
+    }
+
+    (void)fcntl(client_fd, F_SETFD, FD_CLOEXEC);
+    /* Cap how long a stuck client can stall the parent's main event loop.
+     * The payload is tiny — anything more than a second is a misbehaving peer. */
+    tv.tv_sec = 1;
+    tv.tv_usec = 0;
+    (void)setsockopt(client_fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof(tv));
+
+    for (int j = 0; j < CHILD_HASHSIZE; j++) {
+        child = childs->servch_table[j];
+
+        while (child) {
+            if (child->afpch_valid) {
+                char namebuf[32];
+                const char *uname;
+                char timebuf[64];
+                time_t login_time = child->afpch_logintime;
+                uname = user_name(child->afpch_uid, namebuf, sizeof(namebuf));
+                strftime(timebuf, sizeof(timebuf), "%b %d %H:%M:%S",
+                         localtime(&login_time));
+
+                /* afpd ignores SIGPIPE at startup, so closed peers surface
+                 * here as write errors instead of terminating the parent. */
+                if (dprintf(client_fd,
+                            "name: %s, pid: %d, logintime: %s, state: %s, protocol: %s, volumes: %s, hostname: %s\n",
+                            uname, child->afpch_pid, timebuf,
+                            state_name(child->afpch_state),
+                            protocol_name(child->afpch_state),
+                            child->afpch_volumes ? child->afpch_volumes : "-",
+                            child->afpch_hostname ? child->afpch_hostname : "-") < 0) {
+                    /* Client went away mid-write; abandon this iteration. */
+                    close(client_fd);
+                    return;
+                }
+            }
+
+            child = child->afpch_next;
+        }
+    }
+
+    close(client_fd);
 }

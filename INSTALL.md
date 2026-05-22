@@ -76,8 +76,6 @@ required at the bare minimum.
 | avahi **OR** mDNSresponder | Zeroconf support |
 | cmark **OR** cmark-gfm **OR** pandoc | generating documentation |
 | cracklib and cracklib dictionary | password strength check in afppasswd |
-| D-Bus daemon               | afpstats support (also transient dependency for avahi and localsearch) |
-| GLib 2 and GIO             | afpstats support |
 | Kerberos V                 | krbV UAM support |
 | libacl                     | ACL support |
 | libldap                    | LDAP support |
@@ -96,15 +94,15 @@ install the dependencies for one of the following search backends.
 
 #### LocalSearch
 
-| Package    | Details |
-|------------|---------|
-| bison      | or compatible Yacc parser |
-| D-Bus      | also used by avahi and afpstats |
-| DConf      | sometimes packaged as `dconf-cli` |
-| GLib 2     | gsettings is used to determine the localsearch schema |
-| flex       | or compatible lexer |
+| Package                    | Details |
+|----------------------------|---------|
+| bison                      | or compatible Yacc parser |
+| D-Bus daemon               |  |
+| DConf                      | sometimes packaged as `dconf-cli` |
+| GLib 2 and GIO             |  |
+| flex                       | or compatible lexer |
 | localsearch **OR** tracker | v3.0 or later |
-| tinysparql |  |
+| tinysparql                 |  |
 
 #### Xapian
 

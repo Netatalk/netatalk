@@ -7,7 +7,6 @@
 #define _ATALK_SERVER_CHILD_H 1
 
 #include <arpa/inet.h>
-#include <pthread.h>
 #include <stddef.h>
 #include <sys/types.h>
 
@@ -19,6 +18,9 @@
  */
 
 #define CHILD_HASHSIZE 32
+
+/* The other afpch_state values are the DSI_* flags from dsi.h */
+#define ASP_RUNNING          (1 << 10)
 
 /* One AFP session child process */
 typedef struct afp_child {
@@ -43,7 +45,6 @@ typedef struct afp_child {
 
 /* Info and table with all AFP session child processes */
 typedef struct {
-    pthread_mutex_t servch_lock;      /*!< Lock */
     int             servch_count;     /*!< Current count of active AFP sessions */
     int             servch_nsessions; /*!< Number of allowed AFP sessions */
     afp_child_t    *servch_table[CHILD_HASHSIZE]; /*!< Hashtable with data

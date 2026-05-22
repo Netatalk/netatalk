@@ -73,9 +73,6 @@
 /* Define to enable CUPS Support */
 #mesondefine HAVE_CUPS
 
-/* Define if support for dbus-glib was found */
-#mesondefine HAVE_DBUS_GLIB
-
 /* Define to 1 if you have the `dirfd' function. */
 #mesondefine HAVE_DIRFD
 

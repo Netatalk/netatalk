@@ -27,6 +27,16 @@ See the table of old and new option names below for details.
 | start tracker      | -                | 4.1.0     | Tracker/Localsearch is controlled with 'spotlight'       |
 | zeroconf name      | server name      | 4.2.0     | now applies to Classic Mac OS clients too                |
 
+### afpstats breaking changes
+
+The **afpstats** tool was introduced as a replacement for the historical **macusers**
+script in Netatalk 3.0. In its original shape, the tool communicated with *afpd* over
+D-Bus, but as of Netatalk 4.5 it has been rewritten to use a standard Unix socket for
+simplicity and portability.
+
+If you upgrade from a previous version, you may need to manually delete the
+*netatalk-dbus.conf* file which is usually stored in */usr/share/dbus-1/system.d*.
+
 ## Upgrading from Netatalk 2
 
 There are three major changes between Netatalk 2 and Netatalk 4:

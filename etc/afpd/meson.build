@@ -4,6 +4,7 @@ afpd_sources = [
     'afp_dsi.c',
     'afp_options.c',
     'afprun.c',
+    'afpstats.c',
     'appl.c',
     'auth.c',
     'catsearch.c',
@@ -62,19 +63,6 @@ if have_spotlight
     if use_spotlight_xapian
         afpd_external_deps += [xapian, libmagic]
     endif
-endif
-
-if have_afpstats
-    afpd_sources += [
-        'afpstats_obj.c',
-        'afpstats.c',
-    ]
-    afpd_external_deps += [
-        dbus,
-        gio,
-        glib,
-        gobject,
-    ]
 endif
 
 if have_acls

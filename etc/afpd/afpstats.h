@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
+ * Copyright (c) 2026 Daniel Markstedt <daniel@mindani.net>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +16,13 @@
 #ifndef AFPD_AFPSTATS_H
 #define AFPD_AFPSTATS_H
 
+#include <stdbool.h>
+#include <sys/types.h>
+
 #include <atalk/server_child.h>
 
-extern int afpstats_init(server_child_t *);
-extern server_child_t *afpstats_get_and_lock_childs(void);
-extern void afpstats_unlock_childs(void);
+extern int afpstats_init(server_child_t *children, const char *sock_path,
+                         bool set_group, gid_t gid);
+extern void afpstats_handle_accept(int listen_fd);
+
 #endif

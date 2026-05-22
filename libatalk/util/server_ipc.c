@@ -239,9 +239,6 @@ static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
 {
     EC_INIT;
     afp_child_t *child;
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     if ((child = server_child_resolve(children, ipc->child_pid)) == NULL) {
         EC_FAIL;
@@ -249,9 +246,6 @@ static int ipc_set_state(struct ipc_header *ipc, server_child_t *children)
 
     memcpy(&child->afpch_state, ipc->msg, sizeof(uint16_t));
 EC_CLEANUP:
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
     EC_EXIT;
 }
 
@@ -259,9 +253,6 @@ static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
 {
     EC_INIT;
     afp_child_t *child;
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_lock(&children->servch_lock);
-#endif
 
     if ((child = server_child_resolve(children, ipc->child_pid)) == NULL) {
         EC_FAIL;
@@ -277,9 +268,6 @@ static int ipc_set_volumes(struct ipc_header *ipc, server_child_t *children)
     }
 
 EC_CLEANUP:
-#ifdef HAVE_DBUS_GLIB
-    pthread_mutex_unlock(&children->servch_lock);
-#endif
     EC_EXIT;
 }
 

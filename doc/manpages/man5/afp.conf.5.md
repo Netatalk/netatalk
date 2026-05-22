@@ -597,7 +597,14 @@ budget has not been exhausted.
 afpstats = *BOOLEAN* (default: *no*) **(G)**
 
 > Whether to provide AFP runtime statistics (connected users, open
-volumes) via dbus.
+volumes) via a Unix socket.
+
+afpstats group = *group* **(G)**
+
+> Sets the group owner of the afpstats Unix socket. The socket is created
+with mode 0660, so only root and members of this group can access runtime
+statistics. If unset, the socket keeps the group assigned by the operating
+system when afpd creates it.
 
 close vol = *BOOLEAN* (default: *no*) **(G)**
 
@@ -1417,6 +1424,7 @@ The home directory is mounted on */home/{user}/afp-data*.
 
     [Global]
     afpstats = yes
+    afpstats group = netatalk
     spotlight = yes
     mimic model = RackMac
 

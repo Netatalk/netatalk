@@ -1,17 +1,22 @@
 # Name
 
-afpstats — List netatalk AFP server statistics
+afpstats — List Netatalk AFP server statistics
 
 # Synopsis
 
-**afpstats** [-h *hostname*]
+**afpstats** [-h *hostname*] [-s *socket*]
 
 **afpstats** [-v | \-\-version]
 
 # Description
 
-**afpstats** list information about users connected to the netatalk AFP server,
+**afpstats** lists information about users connected to a Netatalk AFP server running on the local machine,
 their mounted volumes, time of login, and other details.
+Sessions connected over both TCP/IP (DSI) and AppleTalk (ASP) are reported.
+
+To enable AFP statistics in Netatalk at runtime, "**afpstats = yes**" must be set in *afp.conf*.
+To allow non-root users to query the socket, set "**afpstats group = *group***" and add those users
+to that group.
 
 # Options
 
@@ -19,31 +24,35 @@ their mounted volumes, time of login, and other details.
 
 > Filter the output by the given hostname.
 
+**-s**, **\-\-socket** *path*
+
+> Connect to the afpstats Unix socket at *path*.
+> Defaults to */var/lib/netatalk/afpstats.sock* (path varies with the configured *localstatedir*).
+
 **-v**, **\-\-version**
 
 > Show version and exit.
 
 # Note
 
-To make use of this feature, **afpd** must be built with *AFP statistics* support,
-which can be checked with "**afpd -V**".
-Furthermore, the host must be running D-Bus configured with a policy that defines the *org.netatalk.AFPStats* service,
-typically enabled through a configuration file called *netatalk-dbus.conf* which is distributed with netatalk.
-
-Finally, to enable AFP statistics in netatalk at runtime, "**afpstats = yes**" must be set in *afp.conf*.
+The socket is created by **afpd** on startup with mode 0660. By default,
+only root and users permitted by the socket's group ownership can query the
+session list. Use the **afpstats group** option in *afp.conf* to set the
+group owner explicitly, for example to a dedicated *netatalk* group.
+The socket path also depends on search permissions for the parent directory.
 
 # Examples
 
 List all connected users to the AFP server running on *fileserver*:
 
     $ afpstats --hostname fileserver
-    Connected user   PID      Login time        State          Hostname          Mounted volumes
-    alice            452547   Apr 28 21:58:50   active         fileserver        Test Volume, alice's Home
-    bob              451969   Apr 28 21:21:32   active         fileserver        My AFP Volume
+    Connected user  PID     Login time       State     Protocol  Hostname    Mounted volumes
+    alice           452547  Apr 28 21:58:50  active    TCP/IP    fileserver  Data Vault, alice's Home
+    bob             451969  Apr 28 21:21:32  sleeping  TCP/IP    fileserver  My AFP Volume
 
 # See Also
 
-afpd(8), afp.conf(5), dbus-daemon(1)
+afpd(8), afp.conf(5)
 
 # Author
 

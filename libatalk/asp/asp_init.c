@@ -56,6 +56,8 @@ ASP asp_init(ATP atp)
     asp->asp_slen = 0;
     asp->asp_sid = 0;
     asp->asp_flags = ASPFL_SLS;
+    asp->asp_ipc_fd = -1;
+    asp->asp_hint_fd = -1;
     asp->cmdlen = asp->datalen = 0;
     asp->read_count = asp->write_count = 0;
     asp->commands = asp->cmdbuf + 4;

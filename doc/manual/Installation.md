@@ -142,16 +142,6 @@ functionality.
     The CrackLib dictionary, which is sometimes distributed separately in
     a runtime package, is also a requirement both at compile and run time.
 
-- D-Bus
-
-    D-Bus provides a mechanism for sending messages between processes,
-    used by multiple Netatalk features: Spotlight, Zeroconf with Avahi,
-    and the **afpstats** tool.
-
-- GLib and GIO
-
-    Used by the **afpstats** tool to interface with D-Bus.
-
 - iconv
 
     iconv provides conversion routines for many character encodings.
@@ -178,7 +168,7 @@ functionality.
 
     Netatalk's administrative utility scripts rely on the Perl runtime,
     version 5.8 or later. The required Perl modules include
-    *IO::Socket::IP* (asip-status) and *Net::DBus* (afpstats).
+    *IO::Socket::IP* (asip-status) and *IO::Socket::UNIX* (afpstats).
 
 - po4a
 
@@ -227,17 +217,29 @@ and depends on the following third-party software:
     A Yacc parser such as bison is required to build the SPARQL query parser
     for Spotlight support.
 
+- D-Bus
+
+    The LocalSearch indexer is a D-Bus session-bus service. Netatalk
+    launches a private **dbus-daemon** to host an isolated session bus
+    that **afpd** and the indexer communicate over, separate from the
+    system bus and any user session bus.
+
 - DConf
 
-    DConf is a low-level configuration system that can be used to store
-    Netatalk's Spotlight related settings. It is used in combination with
-    D-Bus to trigger updates of the Spotlight indexer when Netatalk's
-    configuration changes.
+    DConf is a low-level configuration database. Netatalk writes a
+    dconf keyfile listing the volumes to index, then runs *dconf
+    update* to compile it into the binary database. The LocalSearch
+    indexer reads this configuration on startup.
 
 - flex
 
     A lexer like flex is required to build the SPARQL query parser for
     Spotlight support.
+
+- GLib and GIO
+
+    GLib's main loop drives the TinySPARQL/LocalSearch async query
+    pipeline.
 
 - LocalSearch
 

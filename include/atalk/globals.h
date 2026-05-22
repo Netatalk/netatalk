@@ -67,7 +67,7 @@
 #define OPTION_NOZEROCONF    (1 << 9)
 #define OPTION_ACL2MODE      (1 << 10)
 #define OPTION_SHARE_RESERV  (1 << 11) /*!< whether to use Solaris fcntl F_SHARE locks */
-#define OPTION_DBUS_AFPSTATS (1 << 12) /*!< whether to run dbus thread for afpstats */
+#define OPTION_AFPSTATS      (1 << 12) /*!< whether to expose afpstats Unix socket */
 #define OPTION_SPOTLIGHT     (1 << 13) /*!< whether to initialize Spotlight support */
 #define OPTION_SPOTLIGHT_VOL (1 << 14) /*!< whether spotlight shall be enabled by default for volumes */
 #define OPTION_RECVFILE      (1 << 15)
@@ -138,6 +138,8 @@ struct afp_options {
     mode_t umask;
     mode_t save_mask;
     gid_t admingid;
+    bool afpstats_group;
+    gid_t afpstats_gid;
     bool force_user;
     uid_t force_uid;
     bool force_group;

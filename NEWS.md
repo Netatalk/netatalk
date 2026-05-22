@@ -23,6 +23,8 @@ Changes in 4.5.0
 * BREAKING: libatalk: cnid_find() ABI changed — gained a 'bool *more_available' out-parameter and a
        400-byte minimum result-buffer requirement. The libatalk soversion has been bumped to v20.
        Out-of-tree consumers that link against libatalk must be rebuilt against the new headers.
+* BREAKING: libatalk: server_child_t ABI changed — removed the servch_lock pthread mutex field
+       now that the afpstats handler runs in the parent's main event loop.
 * NEW: libatalk: Added volume option 'volume uuid' to define static UUID, GitHub #2619
 * UPD: libatalk: turn on spotlight and search db options by default, GitHub #2923
 * UPD: libatalk: Backwards compatibility with iniparser v3, GitHub #2715
@@ -67,6 +69,8 @@ Changes in 4.5.0
 * FIX: uams: fix PAM auth with forking modules on OpenBSD, GitHub #2854
 * NEW: afppasswd: manage Randnum key files programmatically, GitHub #2995
 * NEW: afpstats: print hostname for each afpd child process, GitHub #2720
+* UPD: afpstats: replace D-Bus IPC with a Unix domain socket, removing the GLib/D-Bus dependency, GitHub #3017
+* FIX: afpstats: list sessions connected via AppleTalk (ASP), GitHub #2947
 * NEW: nad: Added an -F option for reading a custom afp.conf file, GitHub #2722
 * NEW: nad: Implemented mkdir and rmdir commands, GitHub #2823
 * UPD: nad: Organized ls output into columns and sanitized filenames, GitHub #2804

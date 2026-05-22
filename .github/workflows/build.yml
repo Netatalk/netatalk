@@ -76,7 +76,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
-            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-eventloop=libev \
             -Dwith-statedir-path=/var/lib \
             -Dwith-tests=true \
@@ -145,7 +144,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
-            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-tests=true \
@@ -229,7 +227,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
-            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-init-style=debian-sysv,systemd \
@@ -297,7 +294,6 @@ jobs:
             pam-devel \
             pandoc \
             perl \
-            perl-Net-DBus \
             quota-devel \
             sqlite-devel \
             systemd \
@@ -311,7 +307,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
-            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-tests=true \
@@ -394,7 +389,6 @@ jobs:
             -Dbuildtype=release \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
-            -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
             -Dwith-tests=true \
@@ -562,7 +556,6 @@ jobs:
               meson \
               mysql96-client \
               openldap26-client \
-              p5-Net-DBus \
               perl5 \
               pkgconf \
               sqlite3 \
@@ -686,7 +679,6 @@ jobs:
               meson \
               openldap-client-2.6.10v0 \
               openpam \
-              p5-Net-DBus \
               pkgconfig \
               sqlite3-3.50.7p0 \
               xapian-core
@@ -758,7 +750,6 @@ jobs:
               --prefix=/opt/local \
               -Dbuildtype=release \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
-              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-eventloop=libev \
               -Dwith-ldap-path=/opt/local \
               -Dwith-tests=true \
@@ -803,12 +794,9 @@ jobs:
               developer/build/ninja \
               developer/build/pkg-config \
               developer/gcc-14 \
-              library/glib2 \
               library/libev \
               library/security/cracklib \
               runtime/perl \
-              system/library/dbus \
-              system/library/libdbus \
               system/library/security/libgcrypt \
               web/curl
             curl --location -o iniparser.tar.gz \
@@ -829,7 +817,6 @@ jobs:
             meson setup build \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-eventloop=libev \
               -Dwith-iniparser-path=/usr/local \
               -Dwith-tests=true \
@@ -862,9 +849,7 @@ jobs:
           prepare: |
             set -e
             pkg install \
-              bison \
               cmake \
-              flex \
               gcc \
               libevent \
               libgcrypt \
@@ -898,7 +883,6 @@ jobs:
               --prefix=/usr/local \
               -Dbuildtype=release \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
-              -Dwith-dbus-sysconf-path=/usr/share/dbus-1/system.d \
               -Dwith-iniparser-path=/usr/local \
               -Dwith-tests=true \
               -Dwith-testsuite=true

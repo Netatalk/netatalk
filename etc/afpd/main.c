@@ -52,10 +52,11 @@ static server_child_t *server_children;
 static sig_atomic_t reloadconfig = 0;
 static sig_atomic_t gotsigchld = 0;
 static struct asev *asev;
+static int afpstats_listen_fd = -1;
 
 static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
                               server_child_t *server_children);
-static int asp_start(AFPObj *obj, server_child_t *server_children);
+static afp_child_t *asp_start(AFPObj *obj, server_child_t *server_children);
 static void asp_cleanup(const AFPObj *obj);
 
 static void afp_exit(int ret)
@@ -147,6 +148,11 @@ static void afp_goaway(int sig)
         }
 
 #endif /* ! NO_DDP */
+
+        if (afpstats_listen_fd >= 0) {
+            unlink(_PATH_STATEDIR "afpstats.sock");
+        }
+
         _exit(0);
 
     case SIGUSR1 :
@@ -385,14 +391,6 @@ int main(int ac, char **av)
     sigaddset(&sigs, SIGUSR1);
     sigaddset(&sigs, SIGCHLD);
     pthread_sigmask(SIG_BLOCK, &sigs, NULL);
-#ifdef HAVE_DBUS_GLIB
-
-    /* Run dbus AFP statistics thread */
-    if (dsi_obj.options.flags & OPTION_DBUS_AFPSTATS) {
-        (void)afpstats_init(server_children);
-    }
-
-#endif
 
     if (configinit(&dsi_obj, &asp_obj) != 0) {
         LOG(log_error, logtype_afpd, "main: no servers configured");
@@ -407,6 +405,22 @@ int main(int ac, char **av)
     if (!(init_listening_sockets(&dsi_obj, &asp_obj))) {
         LOG(log_error, logtype_afpd, "main: couldn't initialize socket handler");
         afp_exit(EXITERR_CONF);
+    }
+
+    if (dsi_obj.options.flags & OPTION_AFPSTATS) {
+        afpstats_listen_fd = afpstats_init(server_children,
+                                           _PATH_STATEDIR "afpstats.sock",
+                                           dsi_obj.options.afpstats_group,
+                                           dsi_obj.options.afpstats_gid);
+
+        if (afpstats_listen_fd >= 0
+                && !asev_add_fd(asev, afpstats_listen_fd, STATS_FD, NULL, 0)) {
+            LOG(log_error, logtype_afpd,
+                "main: failed to register afpstats listen fd with asev");
+            close(afpstats_listen_fd);
+            unlink(_PATH_STATEDIR "afpstats.sock");
+            afpstats_listen_fd = -1;
+        }
     }
 
     /* set limits */
@@ -541,7 +555,14 @@ int main(int ac, char **av)
 #ifndef NO_DDP
 
                         case AFPPROTO_ASP:
-                            asp_start(&asp_obj, server_children);
+                            if ((child = asp_start(&asp_obj, server_children))
+                                    && !(asev_add_fd(asev, child->afpch_ipc_fd, IPC_FD, child, 0))) {
+                                LOG(log_error, logtype_afpd, "out of asev slots");
+                                close(child->afpch_ipc_fd);
+                                child->afpch_ipc_fd = -1;
+                                kill(child->afpch_pid, SIGKILL);
+                            }
+
                             break;
 #endif /* no afp/asp */
 
@@ -566,6 +587,10 @@ int main(int ac, char **av)
                             child->afpch_ipc_fd = -1;
                         }
 
+                        break;
+
+                    case STATS_FD:
+                        afpstats_handle_accept(asev->fdset[i].fd);
                         break;
 
                     default:
@@ -613,12 +638,13 @@ static afp_child_t *dsi_start(AFPObj *obj, DSI *dsi,
     return child;
 }
 #ifndef NO_DDP
-static int asp_start(AFPObj *obj, server_child_t *server_children)
+static afp_child_t *asp_start(AFPObj *obj, server_child_t *active_children)
 {
     ASP asp;
+    afp_child_t *child = NULL;
 
-    if (!(asp = asp_getsession(obj->handle, server_children,
-                               obj->options.tickleval))) {
+    if (!(asp = asp_getsession(obj->handle, active_children,
+                               obj->options.tickleval, &child))) {
         LOG(log_error, logtype_afpd, "main: asp_getsession: %s", strerror(errno));
         exit(EXITERR_CLNT);
     }
@@ -628,7 +654,7 @@ static int asp_start(AFPObj *obj, server_child_t *server_children)
         exit(0);
     }
 
-    return 0;
+    return child;
 }
 static void asp_cleanup(const AFPObj *obj)
 {

@@ -28,7 +28,6 @@ meson setup build \
     -Dwith-cracklib=false \
     -Dwith-cups=false \
     -Dwith-appletalk=false \
-    -Dwith-afpstats=false \
     -Dwith-gssapi=false \
     -Dwith-kerberos=false \
     -Dwith-krbV-uam=false \

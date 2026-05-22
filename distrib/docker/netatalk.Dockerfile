@@ -70,10 +70,8 @@ COPY meson.build .
 RUN meson setup build \
     -Dbuildtype=release \
     -Dwith-acls=false \
-    -Dwith-afpstats=false \
     -Dwith-appletalk=true \
     -Dwith-cnid-backends=dbd,mysql,sqlite \
-    -Dwith-dbus-sysconf-path=/etc \
     -Dwith-docs= \
     -Dwith-dtrace=false \
     -Dwith-init-style=none \
