@@ -122,6 +122,164 @@ static int dssize = 0;  	         /*!< Directory stack (allocated) size... */
 static int dsidx = 0;   	         /*!< First free item index... */
 static struct scrit c1, c2;          /*!< search criteria */
 
+struct catsearch_spec_layout {
+    size_t fixed_len;
+    size_t lname_offset;
+    size_t pdinfo_offset;
+    int has_lname;
+    int has_pdinfo;
+};
+
+static int catsearch_spec_addlen(size_t *len, size_t add)
+{
+    if (*len > (size_t) -1 - add) {
+        return AFPERR_PARAM;
+    }
+
+    *len += add;
+    return 0;
+}
+
+static int catsearch_spec_layout(uint16_t fbitmap, uint16_t dbitmap,
+                                 uint32_t rbitmap,
+                                 struct catsearch_spec_layout *layout)
+{
+    int ret;
+    memset(layout, 0, sizeof(*layout));
+
+    if (rbitmap & (1U << FILPBIT_ATTR)) {
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(c1.attr));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_PDID)) {
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(c1.pdid));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_CDATE)) {
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(uint32_t));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_MDATE)) {
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(uint32_t));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_BDATE)) {
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(uint32_t));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_FINFO)) {
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(packed_finder));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if ((rbitmap & (1U << DIRPBIT_OFFCNT)) != 0) {
+        if (fbitmap == 0) {
+            ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(c1.offcnt));
+
+            if (ret != 0) {
+                return ret;
+            }
+        } else if (dbitmap != 0) {
+            return AFPERR_BITMAP;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_LNAME)) {
+        layout->has_lname = 1;
+        layout->lname_offset = layout->fixed_len;
+        ret = catsearch_spec_addlen(&layout->fixed_len, sizeof(uint16_t));
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    if (rbitmap & (1U << FILPBIT_PDINFO)) {
+        layout->has_pdinfo = 1;
+        layout->pdinfo_offset = layout->fixed_len;
+        ret = catsearch_spec_addlen(&layout->fixed_len, 6);
+
+        if (ret != 0) {
+            return ret;
+        }
+    }
+
+    return 0;
+}
+
+static int catsearch_validate_spec(const unsigned char *spec, size_t spec_len,
+                                   const struct catsearch_spec_layout *layout)
+{
+    size_t offset;
+    size_t len;
+    uint16_t name_offset;
+    uint16_t name_len;
+
+    if (spec_len < layout->fixed_len) {
+        return AFPERR_PARAM;
+    }
+
+    if (layout->has_lname) {
+        offset = spec[layout->lname_offset + 1];
+
+        if (offset >= spec_len) {
+            return AFPERR_PARAM;
+        }
+
+        len = spec[offset];
+
+        if (len > spec_len - offset - 1) {
+            return AFPERR_PARAM;
+        }
+    }
+
+    if (layout->has_pdinfo) {
+        memcpy(&name_offset, spec + layout->pdinfo_offset, sizeof(name_offset));
+        name_offset = ntohs(name_offset);
+
+        if ((size_t)name_offset > spec_len
+                || spec_len - (size_t)name_offset < 6) {
+            return AFPERR_PARAM;
+        }
+
+        memcpy(&name_len, spec + name_offset + 4, sizeof(name_len));
+        name_len = ntohs(name_len);
+
+        if (name_len > UTF8FILELEN_EARLY) {
+            name_len = UTF8FILELEN_EARLY;
+        }
+
+        if ((size_t)name_len > spec_len - (size_t)name_offset - 6) {
+            return AFPERR_PARAM;
+        }
+    }
+
+    return 0;
+}
+
 /*! @brief Clears directory stack. */
 static void clearstack(void)
 {
@@ -967,23 +1125,34 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
                          char *rbuf, size_t *rbuflen, int ext)
 {
     struct vol *vol;
+    char *ibuf_start = ibuf;
     uint16_t   vid;
     uint16_t   spec_len;
     uint32_t   rmatches, reserved;
     uint32_t	catpos[4];
     uint32_t   pdid = 0;
+    uint32_t   ad_date;
     int ret, rsize;
     uint32_t nrecs = 0;
     unsigned char *spec1, *spec2, *bspec1, *bspec2;
     size_t	len;
+    size_t spec_area_len;
+    size_t spec2_area_len;
+    size_t min_header_len;
+    uint16_t spec2_len;
     uint16_t	namelen;
     uint16_t	flags;
+    struct catsearch_spec_layout spec_layout;
     char  	    tmppath[256];
     const char  *uname = NULL;
     *rbuflen = 0;
+    /*
+     * Minimum bytes read before the spec area: fixed header plus the first
+     * spec length field (16 bits for CatSearchExt, 8 bits for CatSearch).
+     */
+    min_header_len = 36 + (ext ? sizeof(spec_len) : 1);
 
-    /* min header size */
-    if (ibuflen < 32) {
+    if (ibuflen < min_header_len) {
         return AFPERR_PARAM;
     }
 
@@ -1028,6 +1197,57 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
         spec_len = *(unsigned char *) ibuf;
     }
 
+    len = (size_t)(ibuf - ibuf_start);
+
+    if (len > ibuflen) {
+        return AFPERR_PARAM;
+    }
+
+    spec_area_len = ibuflen - len;
+
+    if (spec_area_len < sizeof(spec_len)
+            || (size_t)spec_len > spec_area_len - sizeof(spec_len)) {
+        return AFPERR_PARAM;
+    }
+
+    spec2 = (unsigned char *) ibuf + sizeof(spec_len) + spec_len;
+    spec2_area_len = spec_area_len - sizeof(spec_len) - spec_len;
+
+    if (spec2_area_len < sizeof(spec2_len)) {
+        return AFPERR_PARAM;
+    }
+
+    if (ext) {
+        memcpy(&spec2_len, spec2, sizeof(spec2_len));
+        spec2_len = ntohs(spec2_len);
+    } else {
+        spec2_len = *spec2;
+    }
+
+    if ((size_t)spec2_len > spec2_area_len - sizeof(spec2_len)) {
+        return AFPERR_PARAM;
+    }
+
+    ret = catsearch_spec_layout(c1.fbitmap, c1.dbitmap, c1.rbitmap, &spec_layout);
+
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = catsearch_validate_spec((unsigned char *) ibuf + sizeof(spec_len),
+                                  spec_len, &spec_layout);
+
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = catsearch_validate_spec(spec2 + sizeof(spec2_len), spec2_len,
+                                  &spec_layout);
+
+    if (ret != 0) {
+        return AFPERR_PARAM;
+    }
+
     /* Parse file specifications */
     spec1 = (unsigned char *) ibuf;
     spec2 = (unsigned char *) ibuf + spec_len + 2;
@@ -1054,33 +1274,32 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
     /* Creation date */
     if (c1.rbitmap & (1U << FILPBIT_CDATE)) {
-        memcpy(&c1.cdate, spec1, sizeof(c1.cdate));
-        spec1 += sizeof(c1.cdate);
-        c1.cdate = AD_DATE_TO_UNIX(c1.cdate);
-        memcpy(&c2.cdate, spec2, sizeof(c2.cdate));
-        spec2 += sizeof(c1.cdate);
-        ibuf += sizeof(c1.cdate);;
-        c2.cdate = AD_DATE_TO_UNIX(c2.cdate);
+        memcpy(&ad_date, spec1, sizeof(ad_date));
+        spec1 += sizeof(ad_date);
+        c1.cdate = AD_DATE_TO_UNIX(ad_date);
+        memcpy(&ad_date, spec2, sizeof(ad_date));
+        spec2 += sizeof(ad_date);
+        c2.cdate = AD_DATE_TO_UNIX(ad_date);
     }
 
     /* Modification date */
     if (c1.rbitmap & (1U << FILPBIT_MDATE)) {
-        memcpy(&c1.mdate, spec1, sizeof(c1.mdate));
-        c1.mdate = AD_DATE_TO_UNIX(c1.mdate);
-        spec1 += sizeof(c1.mdate);
-        memcpy(&c2.mdate, spec2, sizeof(c2.mdate));
-        c2.mdate = AD_DATE_TO_UNIX(c2.mdate);
-        spec2 += sizeof(c1.mdate);
+        memcpy(&ad_date, spec1, sizeof(ad_date));
+        c1.mdate = AD_DATE_TO_UNIX(ad_date);
+        spec1 += sizeof(ad_date);
+        memcpy(&ad_date, spec2, sizeof(ad_date));
+        c2.mdate = AD_DATE_TO_UNIX(ad_date);
+        spec2 += sizeof(ad_date);
     }
 
     /* Backup date */
     if (c1.rbitmap & (1U << FILPBIT_BDATE)) {
-        memcpy(&c1.bdate, spec1, sizeof(c1.bdate));
-        spec1 += sizeof(c1.bdate);
-        c1.bdate = AD_DATE_TO_UNIX(c1.bdate);
-        memcpy(&c2.bdate, spec2, sizeof(c2.bdate));
-        spec2 += sizeof(c2.bdate);
-        c1.bdate = AD_DATE_TO_UNIX(c2.bdate);
+        memcpy(&ad_date, spec1, sizeof(ad_date));
+        spec1 += sizeof(ad_date);
+        c1.bdate = AD_DATE_TO_UNIX(ad_date);
+        memcpy(&ad_date, spec2, sizeof(ad_date));
+        spec2 += sizeof(ad_date);
+        c2.bdate = AD_DATE_TO_UNIX(ad_date);
     }
 
     /* Finder info */
@@ -1114,8 +1333,10 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     /* Long name */
     if (c1.rbitmap & (1U << FILPBIT_LNAME)) {
         /* Get the long filename */
-        memcpy(tmppath, bspec1 + spec1[1] + 1, (bspec1 + spec1[1])[0]);
-        tmppath[(bspec1 + spec1[1])[0]] = 0;
+        len = bspec1[spec_layout.lname_offset + 1];
+        namelen = bspec1[len];
+        memcpy(tmppath, bspec1 + len + 1, namelen);
+        tmppath[namelen] = 0;
         len = convert_string(vol->v_maccharset, CH_UCS2, tmppath, -1, c1.lname,
                              sizeof(c1.lname));
 
@@ -1133,6 +1354,7 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
     /* UTF8 Name */
     if (c1.rbitmap & (1U << FILPBIT_PDINFO)) {
         /* offset */
+        spec1 = bspec1 + spec_layout.pdinfo_offset;
         memcpy(&namelen, spec1, sizeof(namelen));
         namelen = ntohs(namelen);
         /* Skip Unicode Hint */
