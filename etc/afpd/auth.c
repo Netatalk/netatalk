@@ -764,6 +764,10 @@ int afp_login(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     LOG(log_debug, logtype_afpd, "afp_login: UAM login returned %d, pwd=%p", i,
         pwd);
 
+    if (i == AFPERR_AUTHCONT) {
+        return send_reply(obj, i);
+    }
+
     if (!pwd || (i != AFP_OK && i != AFPERR_PWDEXPR)) {
         LOG(log_error, logtype_afpd, "afp_login: UAM login failed, sending reply");
         return send_reply(obj, i);
@@ -932,6 +936,10 @@ int afp_login_ext(AFPObj *obj, char *ibuf, size_t ibuflen, char *rbuf,
     /* FIXME user name are in UTF8 */
     i = afp_uam->u.uam_login.login_ext(obj, username, &pwd, ibuf, ibuflen, rbuf,
                                        rbuflen);
+
+    if (i == AFPERR_AUTHCONT) {
+        return send_reply(obj, i);
+    }
 
     if (!pwd || (i != AFP_OK && i != AFPERR_PWDEXPR)) {
         return send_reply(obj, i);
