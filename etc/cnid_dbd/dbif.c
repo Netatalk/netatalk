@@ -966,13 +966,36 @@ int dbif_del(DBD *dbd, const int dbi, DBT *key, uint32_t flags)
     }
 }
 
+static bool dbif_name_contains(const void *name, size_t namelen,
+                               const void *term, size_t termlen)
+{
+    const char *n = name;
+    const char *t = term;
+
+    if (termlen == 0) {
+        return true;
+    }
+
+    if (namelen < termlen) {
+        return false;
+    }
+
+    for (size_t i = 0; i <= namelen - termlen; i++) {
+        if (memcmp(n + i, t, termlen) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 /*!
- * @brief Paginated cursor scan over the name index
+ * @brief Paginated substring cursor scan over the name index
  *
  * Skips @p offset matching entries before emitting up to DBD_MAX_SRCH_RSLTS
- * results into @p resbuf. After the buffer fills, performs one additional
- * cursor step to decide whether further matching entries exist; reports
- * the result via @p more.
+ * results into @p resbuf. After the buffer fills, continues until the next
+ * matching entry to decide whether further matches exist; reports the result
+ * via @p more.
  *
  * The caller MUST keep a separate backup of the original name bytes
  * because BDB takes ownership of key->data after each pget() call.
@@ -1033,15 +1056,12 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf,
         goto exit;
     }
 
-    ret = cursorp->pget(cursorp, key, &pkey, &data, DB_SET_RANGE);
+    ret = cursorp->pget(cursorp, key, &pkey, &data, DB_FIRST);
 
-    /* Main fill loop: collect up to DBD_MAX_SRCH_RSLTS matches into
-     * resbuf. The trailing pget(DB_NEXT) at the bottom of the loop body
-     * always runs — including on the iteration where `count` becomes
-     * DBD_MAX_SRCH_RSLTS. The post-loop peek block then inspects the
-     * pending `ret` to decide SRCH_CNT vs SRCH_DONE without taking
-     * another cursor step. */
-    while (count < DBD_MAX_SRCH_RSLTS) {
+    /* Main fill loop: collect up to DBD_MAX_SRCH_RSLTS substring matches
+     * into resbuf, then keep walking until the first extra match so the
+     * caller knows whether to request the next page. */
+    while (true) {
         /* Cursor exhausted before buffer filled, no more entries possible;
          * *more stays false. */
         if (ret == DB_NOTFOUND) {
@@ -1056,18 +1076,21 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf,
         }
 
         /* BDB owns key->data after pget(); compare against caller-saved
-         * backups (namebkp/namelenbkp). The first non-prefix-matching
-         * entry means no more matches in the sorted secondary index;
-         * *more stays false */
-        if (!((namelenbkp <= (size_t)key->size)
-                && (strncmp(namebkp, key->data, namelenbkp) == 0))) {
-            break;
+         * backups (namebkp/namelenbkp). */
+        if (!dbif_name_contains(key->data, key->size, namebkp, namelenbkp)) {
+            ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
+            continue;
         }
 
         if (skipped < offset) {
             skipped++;
             ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
             continue;
+        }
+
+        if (count == DBD_MAX_SRCH_RSLTS) {
+            *more = true;
+            break;
         }
 
         memcpy(cnids, pkey.data, sizeof(cnid_t));
@@ -1077,36 +1100,6 @@ int dbif_search(DBD *dbd, DBT *key, char *resbuf,
         LOG(log_debug, logtype_cnid, "dbif_search: match CNID %" PRIu32,
             ntohl(cnid));
         ret = cursorp->pget(cursorp, key, &pkey, &data, DB_NEXT);
-    }
-
-    /* Buffer-fill peek: when the loop exits with
-     * count == DBD_MAX_SRCH_RSLTS, the cursor was advanced once past
-     * the last match we wrote. Inspect the pending `ret` to decide
-     * SRCH_CNT vs SRCH_DONE without taking another cursor step:
-     *
-     *   - DB_NOTFOUND               → no further entry → *more = false.
-     *   - != 0                      → BDB engine error → return -1.
-     *   - == 0 && prefix matches    → 101st match exists → *more = true.
-     *   - == 0 && prefix mismatches → no further matching entry in the
-     *                                 sorted secondary index → *more = false.
-     *
-     * If the loop exited via `break` (natural completion before the
-     * buffer filled), `count < DBD_MAX_SRCH_RSLTS` and the peek block
-     * is skipped; *more was already initialised to false. */
-    if (count == DBD_MAX_SRCH_RSLTS) {
-        if (ret == DB_NOTFOUND) {
-            *more = false;
-        } else if (ret != 0) {
-            LOG(log_error, logtype_cnid,
-                "dbif_search: peek pget failed: %s", db_strerror(ret));
-            ret = -1;
-            goto exit;
-        } else if ((namelenbkp <= (size_t)key->size)
-                   && (strncmp(namebkp, key->data, namelenbkp) == 0)) {
-            *more = true;
-        } else {
-            *more = false;
-        }
     }
 
     ret = count;
