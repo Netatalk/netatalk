@@ -117,9 +117,64 @@ test_exit:
     exit_test("FPCatSearch:test225: Catalog search");
 }
 
+/* ------------------------- */
+STATIC void test551()
+{
+    uint16_t vol = VolID;
+    uint16_t bitmap;
+    uint16_t spec_len;
+    uint32_t temp;
+    uint32_t rbitmap;
+    char pos[16];
+    int ofs;
+    DSI *dsi;
+    ENTER_TEST
+    dsi = &Conn->dsi;
+    memset(pos, 0, sizeof(pos));
+    SendInit(dsi);
+    ofs = 0;
+    dsi->commands[ofs++] = AFP_CATSEARCH;
+    dsi->commands[ofs++] = 0;
+    memcpy(dsi->commands + ofs, &vol, sizeof(vol));
+    ofs += sizeof(vol);
+    temp = htonl(10);
+    memcpy(dsi->commands + ofs, &temp, sizeof(temp));
+    ofs += sizeof(temp);
+    temp = 0;
+    memcpy(dsi->commands + ofs, &temp, sizeof(temp));
+    ofs += sizeof(temp);
+    memcpy(dsi->commands + ofs, pos, sizeof(pos));
+    ofs += sizeof(pos);
+    bitmap = htons(0x42);
+    memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
+    ofs += sizeof(bitmap);
+    bitmap = 0;
+    memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
+    ofs += sizeof(bitmap);
+    rbitmap = htonl(1 << FILPBIT_ATTR);
+    memcpy(dsi->commands + ofs, &rbitmap, sizeof(rbitmap));
+    ofs += sizeof(rbitmap);
+    spec_len = 0;
+    memcpy(dsi->commands + ofs, &spec_len, sizeof(spec_len));
+    ofs += sizeof(spec_len);
+    memcpy(dsi->commands + ofs, &spec_len, sizeof(spec_len));
+    ofs += sizeof(spec_len);
+    SetLen(dsi, ofs);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_data_receive(dsi);
+
+    if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearch:test551: truncated search-spec payload");
+}
+
 /* ----------- */
 void FPCatSearch_test()
 {
     ENTER_TESTSET
     test225();
+    test551();
 }

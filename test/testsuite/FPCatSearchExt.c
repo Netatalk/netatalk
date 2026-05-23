@@ -5,6 +5,69 @@
 #include "testhelper.h"
 
 /* ------------------------- */
+STATIC void catsearch_ext_send_raw(uint16_t f_bitmap, uint16_t d_bitmap,
+                                   uint32_t rbitmap, uint16_t spec1_len,
+                                   const void *spec1, size_t spec1_payload_len,
+                                   uint16_t spec2_len, const void *spec2,
+                                   size_t spec2_payload_len)
+{
+    uint16_t vol = VolID;
+    uint16_t bitmap;
+    uint16_t net_len;
+    uint32_t temp;
+    uint32_t net_rbitmap;
+    char pos[16];
+    int ofs;
+    DSI *dsi;
+    dsi = &Conn->dsi;
+    memset(pos, 0, sizeof(pos));
+    SendInit(dsi);
+    ofs = 0;
+    dsi->commands[ofs++] = AFP_CATSEARCH_EXT;
+    dsi->commands[ofs++] = 0;
+    memcpy(dsi->commands + ofs, &vol, sizeof(vol));
+    ofs += sizeof(vol);
+    temp = htonl(10);
+    memcpy(dsi->commands + ofs, &temp, sizeof(temp));
+    ofs += sizeof(temp);
+    temp = 0;
+    memcpy(dsi->commands + ofs, &temp, sizeof(temp));
+    ofs += sizeof(temp);
+    memcpy(dsi->commands + ofs, pos, sizeof(pos));
+    ofs += sizeof(pos);
+    bitmap = htons(f_bitmap);
+    memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
+    ofs += sizeof(bitmap);
+    bitmap = htons(d_bitmap);
+    memcpy(dsi->commands + ofs, &bitmap, sizeof(bitmap));
+    ofs += sizeof(bitmap);
+    net_rbitmap = htonl(rbitmap);
+    memcpy(dsi->commands + ofs, &net_rbitmap, sizeof(net_rbitmap));
+    ofs += sizeof(net_rbitmap);
+    net_len = htons(spec1_len);
+    memcpy(dsi->commands + ofs, &net_len, sizeof(net_len));
+    ofs += sizeof(net_len);
+
+    if (spec1_payload_len != 0) {
+        memcpy(dsi->commands + ofs, spec1, spec1_payload_len);
+        ofs += spec1_payload_len;
+    }
+
+    net_len = htons(spec2_len);
+    memcpy(dsi->commands + ofs, &net_len, sizeof(net_len));
+    ofs += sizeof(net_len);
+
+    if (spec2_payload_len != 0) {
+        memcpy(dsi->commands + ofs, spec2, spec2_payload_len);
+        ofs += spec2_payload_len;
+    }
+
+    SetLen(dsi, ofs);
+    dsi_stream_send(dsi, dsi->commands, dsi->datalen);
+    dsi_data_receive(dsi);
+}
+
+/* ------------------------- */
 STATIC void test227()
 {
     uint16_t bitmap = (1 << FILPBIT_ATTR);
@@ -422,10 +485,215 @@ test_exit:
     exit_test("FPCatSearchExt:test529: Catalog search with concurrent renames");
 }
 
+/* ------------------------- */
+STATIC void test530()
+{
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    catsearch_ext_send_raw(0x42, 0, 1 << FILPBIT_ATTR, 0xffff, NULL, 0, 0,
+                           NULL, 0);
+
+    if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test530: malformed search-spec length");
+}
+
+/* ------------------------- */
+STATIC void test549()
+{
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    catsearch_ext_send_raw(0x42, 0, 1 << FILPBIT_ATTR, 0, NULL, 0, 0, NULL,
+                           0);
+
+    if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test549: truncated search-spec payload");
+}
+
+/* ------------------------- */
+STATIC void test550()
+{
+    uint16_t name_offset;
+    unsigned char spec1[2];
+    unsigned char spec2[3];
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    memset(spec1, 0, sizeof(spec1));
+    memset(spec2, 0, sizeof(spec2));
+    name_offset = htons(2);
+    memcpy(spec1, &name_offset, sizeof(name_offset));
+    memcpy(spec2, &name_offset, sizeof(name_offset));
+    catsearch_ext_send_raw(0x42, 0, 1 << FILPBIT_LNAME, sizeof(spec1), spec1,
+                           sizeof(spec1), sizeof(spec2), spec2, sizeof(spec2));
+
+    if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test550: bad long-name search-spec offset");
+}
+
+/* ------------------------- */
+STATIC void test552()
+{
+    uint16_t name_offset;
+    unsigned char spec1[6];
+    unsigned char spec2[6];
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    memset(spec1, 0, sizeof(spec1));
+    memset(spec2, 0, sizeof(spec2));
+    name_offset = htons(7);
+    memcpy(spec1, &name_offset, sizeof(name_offset));
+    catsearch_ext_send_raw(0x42, 0, 1 << FILPBIT_PDINFO, sizeof(spec1), spec1,
+                           sizeof(spec1), sizeof(spec2), spec2, sizeof(spec2));
+
+    if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test552: bad UTF8-name search-spec offset");
+}
+
+/* ------------------------- */
+STATIC void test553()
+{
+    uint16_t name_len;
+    unsigned char spec1[7];
+    unsigned char spec2[6];
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    memset(spec1, 0, sizeof(spec1));
+    memset(spec2, 0, sizeof(spec2));
+    name_len = htons(2);
+    memcpy(spec1 + 4, &name_len, sizeof(name_len));
+    catsearch_ext_send_raw(0x42, 0, 1 << FILPBIT_PDINFO, sizeof(spec1), spec1,
+                           sizeof(spec1), sizeof(spec2), spec2, sizeof(spec2));
+
+    if (dsi->header.dsi_code != htonl(AFPERR_PARAM)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test553: bad UTF8-name search-spec length");
+}
+
+/* ------------------------- */
+STATIC void test554()
+{
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    catsearch_ext_send_raw(1 << FILPBIT_ATTR, 1 << DIRPBIT_ATTR,
+                           1 << DIRPBIT_OFFCNT, 0, NULL, 0, 0, NULL, 0);
+
+    if (dsi->header.dsi_code != htonl(AFPERR_BITMAP)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test554: conflicting search-result bitmaps");
+}
+
+/* ------------------------- */
+STATIC void test555()
+{
+    uint16_t offset;
+    uint16_t name_len;
+    unsigned char spec1[23];
+    DSI *dsi;
+    ENTER_TEST
+
+    if (Conn->afp_version < 30) {
+        test_skipped(T_AFP3);
+        goto test_exit;
+    }
+
+    dsi = &Conn->dsi;
+    memset(spec1, 0, sizeof(spec1));
+    offset = htons(8);
+    memcpy(spec1, &offset, sizeof(offset));
+    offset = htons(13);
+    memcpy(spec1 + 2, &offset, sizeof(offset));
+    spec1[8] = 4;
+    memcpy(spec1 + 9, "Data", 4);
+    name_len = htons(4);
+    memcpy(spec1 + 17, &name_len, sizeof(name_len));
+    memcpy(spec1 + 19, "Data", 4);
+    catsearch_ext_send_raw(0x42, 0, (1 << FILPBIT_LNAME) | (1 << FILPBIT_PDINFO),
+                           sizeof(spec1), spec1, sizeof(spec1), sizeof(spec1),
+                           spec1, sizeof(spec1));
+
+    if (dsi->header.dsi_code != 0
+            && dsi->header.dsi_code != htonl(AFPERR_EOF)) {
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPCatSearchExt:test555: long-name and UTF8-name search-spec layout");
+}
+
 /* ----------- */
 void FPCatSearchExt_test()
 {
     ENTER_TESTSET
     test227();
     test529();
+    test530();
+    test549();
+    test550();
+    test552();
+    test553();
+    test554();
+    test555();
 }
