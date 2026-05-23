@@ -959,6 +959,72 @@ static int getoption_int(INIPARSER_DICTIONARY *conf, const char *vol,
 }
 
 /*!
+ * @brief Get uint32 option from config, use default value if unset or invalid
+ *
+ * @param[in] conf    config handle
+ * @param[in] vol     volume name (must be section name i.e. wo vars expanded)
+ * @param[in] opt     option
+ * @param[in] defsec  if "option" is not found in "vol", try to find it in section "defsec"
+ * @param[in] minval  minimum accepted value
+ * @param[in] maxval  maximum accepted value
+ * @param[in] defval  if unset or out of range return "defval"
+ *
+ * @returns       uint32 option from "vol" or "defsec", or "defval"
+ */
+static uint32_t getoption_uint32_strict(INIPARSER_DICTIONARY *conf,
+                                        const char *vol, const char *opt,
+                                        const char *defsec, uint32_t minval,
+                                        uint32_t maxval, uint32_t defval)
+{
+    const char *val = getoption_str(conf, vol, opt, defsec, NULL);
+    const char *p;
+    char *endptr;
+    uintmax_t result;
+
+    if (val == NULL) {
+        return defval;
+    }
+
+    p = val;
+
+    while (isspace((unsigned char) * p)) {
+        p++;
+    }
+
+    if (*p == '\0' || *p == '-') {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s value '%s' is invalid, using default %lu",
+            opt, val, (unsigned long)defval);
+        return defval;
+    }
+
+    errno = 0;
+    result = strtoumax(p, &endptr, 0);
+
+    while (isspace((unsigned char) * endptr)) {
+        endptr++;
+    }
+
+    if (errno == ERANGE || result > UINT32_MAX || result < minval
+            || result > maxval) {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s value '%s' out of valid range [%lu, %lu], using default %lu",
+            opt, val, (unsigned long)minval, (unsigned long)maxval,
+            (unsigned long)defval);
+        return defval;
+    }
+
+    if (*endptr != '\0') {
+        LOG(log_warning, logtype_afpd,
+            "Config: %s value '%s' is invalid, using default %lu",
+            opt, val, (unsigned long)defval);
+        return defval;
+    }
+
+    return (uint32_t)result;
+}
+
+/*!
  * @brief Get boolean option from volume, default section or global -
  * use default value if not set
  *
@@ -2902,8 +2968,10 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
                                             NULL, 4);
     options->dsireadbuf     = getoption_int(config, INISEC_GLOBAL, "dsireadbuf",
                                             NULL, 12);
-    options->server_quantum = getoption_int(config, INISEC_GLOBAL, "server quantum",
-                                            NULL, DSI_SERVQUANT_DEF);
+    options->server_quantum = getoption_uint32_strict(config, INISEC_GLOBAL,
+                              "server quantum", NULL,
+                              DSI_SERVQUANT_MIN, DSI_SERVQUANT_MAX,
+                              DSI_SERVQUANT_DEF);
     options->volnamelen     = getoption_int(config, INISEC_GLOBAL, "volnamelen",
                                             NULL, 80);
     options->dircachesize   = getoption_int(config, INISEC_GLOBAL, "dircache size",

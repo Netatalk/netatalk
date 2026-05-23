@@ -440,7 +440,7 @@ the server (default is 200).
 server quantum = *number* **(G)**
 
 > This specifies the DSI server quantum. The default value is 0x100000 (1
-MiB). The maximum value is 0xFFFFFFFFF, the minimum is 32000. If you
+MiB). The maximum value is 0xFFFFFFFF, the minimum is 32000. If you
 specify a value that is out of range, the default value will be set. Do
 not change this value unless you're absolutely sure, what you're doing
 
