@@ -779,8 +779,9 @@ void afp_over_dsi(AFPObj *obj)
                 break;                          /* NO idle — data ready */
             }
 
-            /* [B] State check — handle sleep/disconnected/die */
-            if (dsi->flags & (DSI_EXTSLEEP | DSI_SLEEPING | DSI_DISCONNECTED | DSI_DIE)) {
+            /* [B] State check — disconnected/die bypass poll; sleeping must
+             * still poll so deferred SIGURG reconnects can wake via self-pipe. */
+            if (dsi->flags & (DSI_DISCONNECTED | DSI_DIE)) {
                 if (obj->hint_fd >= 0) {
                     process_cache_hints(obj);
                 }
