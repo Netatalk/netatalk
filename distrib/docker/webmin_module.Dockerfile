@@ -40,7 +40,7 @@ RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
     $RUN_DEPS \
     $BUILD_DEPS \
-&&  curl --fail --show-error --location -o webmin-setup-repo.sh \
+&&  curl --fail --proto '=https' --show-error --location -o webmin-setup-repo.sh \
     "https://raw.githubusercontent.com/webmin/webmin/${WEBMIN_COMMIT}/webmin-setup-repo.sh" \
 &&  printf '%s  webmin-setup-repo.sh\n' "${WEBMIN_SETUP_REPO_SHA256}" | sha256sum -c - \
 &&  sh webmin-setup-repo.sh --force \
