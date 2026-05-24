@@ -25,6 +25,9 @@ ARG BUILD_DEPS="\
     pkg-config \
     systemtap-sdt-dev \
     "
+ARG WEBMIN_VERSION=2.641
+ARG WEBMIN_COMMIT=ce1ab74c6fe6a7c5f776ba8e62ec0fcf812414c9
+ARG WEBMIN_SETUP_REPO_SHA256=c752127dcd345494432979eb13140f358243b95b249e9fb7744034393dbccab9
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -37,10 +40,11 @@ RUN apt-get update \
 &&  apt-get install --yes --no-install-recommends \
     $RUN_DEPS \
     $BUILD_DEPS \
-&&  curl -o webmin-setup-repo.sh \
-    https://raw.githubusercontent.com/webmin/webmin/master/webmin-setup-repo.sh \
+&&  curl --fail --proto '=https' --show-error --location -o webmin-setup-repo.sh \
+    "https://raw.githubusercontent.com/webmin/webmin/${WEBMIN_COMMIT}/webmin-setup-repo.sh" \
+&&  printf '%s  webmin-setup-repo.sh\n' "${WEBMIN_SETUP_REPO_SHA256}" | sha256sum -c - \
 &&  sh webmin-setup-repo.sh --force \
-&&  apt-get install --yes --no-install-recommends webmin \
+&&  apt-get install --yes --no-install-recommends webmin=${WEBMIN_VERSION} \
 &&  apt-get clean
 
 WORKDIR /netatalk-code
