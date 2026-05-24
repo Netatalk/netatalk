@@ -291,6 +291,20 @@ fi
 # MySQL / MariaDB CNID backend
 # --------------------------------------------------------------------------
 
+sql_escape_identifier() {
+    local identifier
+    identifier=$1
+    printf '%s' "$identifier" | sed 's/`/``/g'
+    return $?
+}
+
+sql_escape_literal() {
+    local literal
+    literal=$1
+    printf '%s' "$literal" | sed "s/'/''/g"
+    return $?
+}
+
 if [ "$AFP_CNID_BACKEND" = "mysql" ]; then
     if [ -z $AFP_CNID_SQL_HOST ]; then
         AFP_CNID_SQL_HOST="localhost"
@@ -300,6 +314,10 @@ if [ "$AFP_CNID_BACKEND" = "mysql" ]; then
     fi
     if [ -z $AFP_CNID_SQL_DB ]; then
         AFP_CNID_SQL_DB="cnid"
+    fi
+    if [ -z "$AFP_CNID_SQL_PASS" ]; then
+        echo "*** Error: AFP_CNID_SQL_PASS must be set when AFP_CNID_BACKEND=mysql" >&2
+        exit 1
     fi
 
     echo "*** MySQL CNID backend configured: host='$AFP_CNID_SQL_HOST', user='$AFP_CNID_SQL_USER', db='$AFP_CNID_SQL_DB'"
@@ -333,14 +351,15 @@ MYCNF
         # (MariaDB uses unix_socket auth by default, which only works when running as root)
         # Create user for both 'localhost' (Unix socket) and '127.0.0.1' (TCP)
         echo "*** Configuring MySQL user with password authentication"
-        if [ -z "$AFP_CNID_SQL_PASS" ]; then
-            AFP_CNID_SQL_PASS="netatalk"
-        fi
+        AFP_CNID_SQL_DB_SQL=$(sql_escape_identifier "$AFP_CNID_SQL_DB")
+        AFP_CNID_SQL_USER_SQL=$(sql_escape_literal "$AFP_CNID_SQL_USER")
+        AFP_CNID_SQL_PASS_SQL=$(sql_escape_literal "$AFP_CNID_SQL_PASS")
         mariadb -u root << EOSQL
-CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER'@'localhost' IDENTIFIED BY '$AFP_CNID_SQL_PASS';
-GRANT ALL PRIVILEGES ON *.* TO '$AFP_CNID_SQL_USER'@'localhost';
-CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER'@'127.0.0.1' IDENTIFIED BY '$AFP_CNID_SQL_PASS';
-GRANT ALL PRIVILEGES ON *.* TO '$AFP_CNID_SQL_USER'@'127.0.0.1';
+CREATE DATABASE IF NOT EXISTS \`$AFP_CNID_SQL_DB_SQL\`;
+CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER_SQL'@'localhost' IDENTIFIED BY '$AFP_CNID_SQL_PASS_SQL';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON \`$AFP_CNID_SQL_DB_SQL\`.* TO '$AFP_CNID_SQL_USER_SQL'@'localhost';
+CREATE USER IF NOT EXISTS '$AFP_CNID_SQL_USER_SQL'@'127.0.0.1' IDENTIFIED BY '$AFP_CNID_SQL_PASS_SQL';
+GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER ON \`$AFP_CNID_SQL_DB_SQL\`.* TO '$AFP_CNID_SQL_USER_SQL'@'127.0.0.1';
 FLUSH PRIVILEGES;
 EOSQL
     fi
