@@ -407,7 +407,9 @@ if ($subject ne 'homes') {
                                       'cnid',
                                       'cnid',
                                       'localsearch',
-                                      'localsearch'
+                                      'localsearch',
+                                      'xapian',
+                                      'xapian'
                         )
     );
 

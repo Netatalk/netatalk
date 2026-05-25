@@ -225,7 +225,9 @@ print &ui_table_row(
                                   'cnid',
                                   'cnid',
                                   'localsearch',
-                                  'localsearch'
+                                  'localsearch',
+                                  'xapian',
+                                  'xapian'
                     )
 );
 
