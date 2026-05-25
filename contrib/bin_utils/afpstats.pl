@@ -23,7 +23,7 @@ use IO::Socket::UNIX;
 my $DEFAULT_SOCKET = '@localstatedir@/netatalk/afpstats.sock';
 
 sub usage {
-    printf("Usage: %s [-h hostname] [-s socket] [-v]\n", basename($0));
+    printf("Usage: %s [-h client-address] [-s socket] [-v]\n", basename($0));
     exit 1;
 }
 
@@ -67,7 +67,7 @@ sub main {
         exit 1;
     }
 
-    my @header = ('Connected user', 'PID', 'Login time', 'State', 'Protocol', 'Hostname', 'Mounted volumes');
+    my @header = ('Connected user', 'PID', 'Login time', 'State', 'Protocol', 'Client address', 'Mounted volumes');
     my @rows;
 
     while (defined(my $user = <$sock>)) {

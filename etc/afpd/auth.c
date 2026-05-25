@@ -12,11 +12,13 @@
 #include <errno.h>
 #include <grp.h>
 #include <limits.h>
+#include <netdb.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/socket.h>
 #include <sys/param.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -24,7 +26,11 @@
 #include <unistd.h>
 
 #include <atalk/afp.h>
+#ifndef NO_DDP
+#include <atalk/asp.h>
+#endif
 #include <atalk/compat.h>
+#include <atalk/dsi.h>
 #include <atalk/fce_api.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
@@ -62,6 +68,49 @@ static struct uam_obj uam_changepw = {"", "", 0, {{NULL, NULL, NULL, NULL}}, &ua
 };
 
 static struct uam_obj *afp_uam = NULL;
+
+static socklen_t sockaddr_len(const struct sockaddr *sa)
+{
+    switch (sa->sa_family) {
+    case AF_INET:
+        return sizeof(struct sockaddr_in);
+
+    case AF_INET6:
+        return sizeof(struct sockaddr_in6);
+
+    default:
+        return sizeof(struct sockaddr_storage);
+    }
+}
+
+static const char *client_address(AFPObj *obj)
+{
+    static char host[NI_MAXHOST];
+
+    if (obj->proto == AFPPROTO_DSI && obj->dsi) {
+        const struct sockaddr *sa = (const struct sockaddr *)&obj->dsi->client;
+
+        if (getnameinfo(sa, sockaddr_len(sa), host, sizeof(host), NULL, 0,
+                        NI_NAMEREQD) == 0) {
+            return host;
+        }
+
+        return getip_string(sa);
+    }
+
+#ifndef NO_DDP
+
+    if (obj->proto == AFPPROTO_ASP && obj->handle) {
+        const struct ASP *asp = obj->handle;
+        snprintf(host, sizeof(host), "%u.%u",
+                 ntohs(asp->asp_sat.sat_addr.s_net),
+                 asp->asp_sat.sat_addr.s_node);
+        return host;
+    }
+
+#endif
+    return "-";
+}
 
 
 void status_versions(char *data,
@@ -338,9 +387,10 @@ static int login(AFPObj *obj, struct passwd *pwd, void (*logout)(void),
     obj->euid = geteuid();
     obj->pid = getpid();
     /* report to parent */
+    const char *address = client_address(obj);
     ipc_child_write(obj, IPC_LOGINDONE,
-                    strnlen(obj->options.hostname, IPC_MAXMSGSIZE - IPC_HEADERLEN),
-                    obj->options.hostname);
+                    strnlen(address, IPC_MAXMSGSIZE - IPC_HEADERLEN),
+                    (void *)address);
 
     if (obj->proto == AFPPROTO_ASP) {
         ipc_child_state(obj, ASP_RUNNING);
