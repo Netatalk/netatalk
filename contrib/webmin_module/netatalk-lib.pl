@@ -102,6 +102,78 @@ our %netatalkParameterDefaults = (
                                   'zeroconf'                    => 'yes',
 );
 
+my @yesNoSelectOptions = ('yes', 'no');
+
+our %netatalkParameterSelectOptions = (
+                                       'acls'           => [@yesNoSelectOptions],
+                                       'advertise ssh'  => [@yesNoSelectOptions],
+                                       'afp read locks' => [@yesNoSelectOptions],
+                                       'afpstats'       => [@yesNoSelectOptions],
+                                       'appletalk'      => [@yesNoSelectOptions],
+                                       'case sensitive' => [@yesNoSelectOptions],
+                                       'casefold' => [
+                                                      'tolower', 'toupper', 'xlatelower',
+                                                      'xlateupper'
+                                       ],
+                                       'chmod request'               => ['preserve', 'ignore', 'simple'],
+                                       'close vol'                   => [@yesNoSelectOptions],
+                                       'cnid dev'                    => [@yesNoSelectOptions],
+                                       'cnid scheme'                 => ['dbd', 'mysql', 'sqlite'],
+                                       'convert appledouble'         => [@yesNoSelectOptions],
+                                       'delete veto files'           => [@yesNoSelectOptions],
+                                       'dircache mode'               => ['lru', 'arc'],
+                                       'ea'                          => ['sys', 'samba',  'ad', 'none'],
+                                       'fce coalesce'                => ['all', 'delete', 'create'],
+                                       'fce version'                 => ['1',   '2'],
+                                       'follow symlinks'             => [@yesNoSelectOptions],
+                                       'force xattr with sticky bit' => [@yesNoSelectOptions],
+                                       'ignored attributes'          => ['all', 'nowrite', 'nodelete', 'norename'],
+                                       'invisible dots'              => [@yesNoSelectOptions],
+                                       'ldap auth method'            => ['none',   'simple'],
+                                       'ldap groupscope'             => ['base',   'one', 'sub'],
+                                       'ldap userscope'              => ['base',   'one', 'sub'],
+                                       'ldap uuid encoding'          => ['string', 'ms-guid'],
+                                       'legacy icon' => [
+                                                         'daemon', 'declogo', 'fileserver', 'globe',
+                                                         'nas',    'sdcard',  'sunlogo',    'viking'
+                                       ],
+                                       'legacy volume size' => [@yesNoSelectOptions],
+                                       'log microseconds'   => [@yesNoSelectOptions],
+                                       'mac charset' => [
+                                                         'MAC_CENTRALEUROPE',
+                                                         'MAC_CHINESE_SIMP',
+                                                         'MAC_CHINESE_TRAD',
+                                                         'MAC_CYRILLIC',
+                                                         'MAC_GREEK',
+                                                         'MAC_HEBREW',
+                                                         'MAC_JAPANESE',
+                                                         'MAC_KOREAN',
+                                                         'MAC_ROMAN',
+                                                         'MAC_TURKISH'
+                                       ],
+                                       'map acls'                   => ['none', 'rights', 'mode'],
+                                       'network ids'                => [@yesNoSelectOptions],
+                                       'preexec close'              => [@yesNoSelectOptions],
+                                       'prodos'                     => [@yesNoSelectOptions],
+                                       'read only'                  => [@yesNoSelectOptions],
+                                       'recvfile'                   => [@yesNoSelectOptions],
+                                       'save password'              => [@yesNoSelectOptions],
+                                       'search db'                  => [@yesNoSelectOptions],
+                                       'set password'               => [@yesNoSelectOptions],
+                                       'solaris share reservations' => [@yesNoSelectOptions],
+                                       'spotlight'                  => [@yesNoSelectOptions],
+                                       'spotlight backend'          => ['cnid', 'localsearch', 'xapian'],
+                                       'spotlight expr'             => [@yesNoSelectOptions],
+                                       'stat vol'                   => [@yesNoSelectOptions],
+                                       'time machine'               => [@yesNoSelectOptions],
+                                       'unix priv'                  => [@yesNoSelectOptions],
+                                       'use sendfile'               => [@yesNoSelectOptions],
+                                       'valid shellcheck'           => [@yesNoSelectOptions],
+                                       'veto message'               => [@yesNoSelectOptions],
+                                       'vol dbnest'                 => [@yesNoSelectOptions],
+                                       'zeroconf'                   => [@yesNoSelectOptions],
+);
+
 sub write_afpconf {
     file_rotate($config{'afp_conf'});
 
@@ -531,6 +603,21 @@ sub build_select {
     }
 
     return $select . "</select>\n";
+}
+
+sub build_parameter_select {
+    my $afpconfRef      = shift;
+    my $sectionRef      = shift;
+    my $inRef           = shift;
+    my $parameterName   = shift;
+    my $textIfNoDefault = @_ ? shift : $text{'edit_undefined'};
+
+    die "No select options defined for parameter '$parameterName'.\n"
+      unless (exists $netatalkParameterSelectOptions{$parameterName});
+
+    my @selectOptions = map { ($_, $_) } @{$netatalkParameterSelectOptions{$parameterName}};
+
+    return build_select($afpconfRef, $sectionRef, $inRef, $parameterName, $textIfNoDefault, @selectOptions);
 }
 
 sub build_user_group_selection {
