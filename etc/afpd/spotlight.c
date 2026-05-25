@@ -1345,6 +1345,10 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
         return AFPERR_NOOP;
     }
 
+    if (ibuflen < 2) {
+        return AFPERR_PARAM;
+    }
+
     slq_dump();
 #ifdef SPOTLIGHT_BACKEND_LOCALSEARCH
 
@@ -1365,6 +1369,12 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
     slq_idle_cleanup();
     ibuf += 2;
     ibuflen -= 2;
+
+    if (ibuflen < 10) {
+        ret = AFPERR_PARAM;
+        goto EC_CLEANUP;
+    }
+
     vid = (uint16_t)SVAL(ibuf, 0);
     LOG(log_debug, logtype_sl, "afp_spotlight_rpc(vid: %" PRIu16 ")", vid);
 
@@ -1403,9 +1413,14 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
         break;
 
     case SPOTLIGHT_CMD_RPC:
+        if (ibuflen < 22) {
+            ret = AFPERR_PARAM;
+            goto EC_CLEANUP;
+        }
+
         EC_NULL(query = talloc_zero(tmp_ctx, DALLOC_CTX));
         EC_NULL(reply = talloc_zero(tmp_ctx, DALLOC_CTX));
-        EC_NEG1_LOG(sl_unpack(query, ibuf + 22));
+        EC_NEG1_LOG(sl_unpack_len(query, ibuf + 22, ibuflen - 22));
         LOG(log_debug, logtype_sl, "Spotlight RPC request:\n%s",
             dd_dump(query, 0));
         EC_NULL_LOG(rpccmd = dalloc_get(query, "DALLOC_CTX", 0, "DALLOC_CTX", 0,

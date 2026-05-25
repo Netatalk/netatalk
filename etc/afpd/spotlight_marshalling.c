@@ -19,6 +19,7 @@
 #include <errno.h>
 #include <math.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -74,12 +75,14 @@
 static int sl_pack_loop(DALLOC_CTX *query, char *buf, int offset, char *toc_buf,
                         int *toc_idx);
 static int sl_unpack_loop(DALLOC_CTX *query, const char *buf, int offset,
-                          uint count, const uint toc_offset, const uint encoding,
-                          int depth);
+                          uint count, size_t buf_len, const uint toc_offset,
+                          uint toc_count, const uint encoding, int depth);
 static int sl_unpack_cpx(DALLOC_CTX *query, const char *buf, const int offset,
                          uint cpx_query_type, uint cpx_query_count,
-                         const uint toc_offset, const uint encoding, int depth);
-static int sl_unpack_r(DALLOC_CTX *query, const char *buf, int depth);
+                         size_t buf_len, const uint toc_offset, uint toc_count,
+                         const uint encoding, int depth);
+static int sl_unpack_r(DALLOC_CTX *query, const char *buf, size_t buf_len,
+                       int depth);
 
 /**************************************************************************************************
  * Wrapper functions for the *VAL macros with bound checking
@@ -470,6 +473,13 @@ EC_CLEANUP:
  * unmarshalling functions
  **************************************************************************************************/
 
+static bool sl_unpack_range_valid(size_t buf_len, int offset, size_t length)
+{
+    return offset >= 0
+           && (size_t)offset <= buf_len
+           && length <= buf_len - (size_t)offset;
+}
+
 static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
 {
     if (encoding == SL_ENC_LITTLE_ENDIAN) {
@@ -479,18 +489,64 @@ static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
     }
 }
 
+static int sl_unpack_uint64_checked(const char *buf, size_t buf_len, int offset,
+                                    uint encoding, uint64_t *value)
+{
+    if (!sl_unpack_range_valid(buf_len, offset, sizeof(uint64_t))) {
+        return -1;
+    }
+
+    *value = sl_unpack_uint64(buf, offset, encoding);
+    return 0;
+}
+
+static int sl_unpack_count(uint64_t query_data64, int query_length,
+                           size_t element_size, int *count)
+{
+    uint64_t count64;
+
+    if (query_length < (int)sizeof(uint64_t)) {
+        return -1;
+    }
+
+    count64 = query_data64 >> 32;
+
+    if (count64 > INT_MAX
+            || count64 > (uint64_t)((query_length - (int)sizeof(uint64_t))
+                                    / (int)element_size)) {
+        LOG(log_error, logtype_sl,
+            "Spotlight unmarshalling rejected element count: "
+            "count=%" PRIu64 ", query_length=%d, element_size=%zu",
+            count64, query_length, element_size);
+        return -1;
+    }
+
+    *count = (int)count64;
+    return 0;
+}
+
 static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset,
-                          uint encoding)
+                          int query_length, size_t buf_len, uint encoding)
 {
     int count, i;
     uint64_t query_data64;
-    query_data64 = sl_unpack_uint64(buf, offset, encoding);
-    count = query_data64 >> 32;
+
+    if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                 &query_data64) < 0
+            || sl_unpack_count(query_data64, query_length, sizeof(uint64_t),
+                               &count) < 0) {
+        return -1;
+    }
+
     offset += 8;
     i = 0;
 
     while (i++ < count) {
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                     &query_data64) < 0) {
+            return -1;
+        }
+
         dalloc_add_copy(query, &query_data64, uint64_t);
         offset += 8;
     }
@@ -499,7 +555,7 @@ static int sl_unpack_ints(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
-                          uint encoding)
+                          int query_length, size_t buf_len, uint encoding)
 {
     int count, i;
     uint64_t query_data64;
@@ -509,13 +565,23 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
     } ieee_fp_union;
     double unix_time;
     sl_time_t t;
-    query_data64 = sl_unpack_uint64(buf, offset, encoding);
-    count = query_data64 >> 32;
+
+    if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                 &query_data64) < 0
+            || sl_unpack_count(query_data64, query_length, sizeof(uint64_t),
+                               &count) < 0) {
+        return -1;
+    }
+
     offset += 8;
     i = 0;
 
     while (i++ < count) {
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                     &query_data64) < 0) {
+            return -1;
+        }
+
         ieee_fp_union.w = query_data64;
         unix_time = ieee_fp_union.d + SPOTLIGHT_TIME_DELTA;
         t = (sl_time_t) {
@@ -530,17 +596,27 @@ static int sl_unpack_date(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset,
-                          uint encoding)
+                          int query_length, size_t buf_len, uint encoding)
 {
     int count, i;
     uint64_t query_data64;
     sl_uuid_t uuid;
-    query_data64 = sl_unpack_uint64(buf, offset, encoding);
-    count = query_data64 >> 32;
+
+    if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                 &query_data64) < 0
+            || sl_unpack_count(query_data64, query_length, sizeof(uuid),
+                               &count) < 0) {
+        return -1;
+    }
+
     offset += 8;
     i = 0;
 
     while (i++ < count) {
+        if (!sl_unpack_range_valid(buf_len, offset, sizeof(uuid))) {
+            return -1;
+        }
+
         memcpy(uuid.sl_uuid, buf + offset, 16);
         dalloc_add_copy(query, &uuid, sl_uuid_t);
         offset += 16;
@@ -550,7 +626,7 @@ static int sl_unpack_uuid(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
-                            uint encoding)
+                            int query_length, size_t buf_len, uint encoding)
 {
     int count, i;
     uint64_t query_data64;
@@ -558,12 +634,22 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
         double d;
         uint32_t w[2];
     } ieee_fp_union;
-    query_data64 = sl_unpack_uint64(buf, offset, encoding);
-    count = query_data64 >> 32;
+
+    if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                 &query_data64) < 0
+            || sl_unpack_count(query_data64, query_length, sizeof(uint64_t),
+                               &count) < 0) {
+        return -1;
+    }
+
     offset += 8;
     i = 0;
 
     while (i++ < count) {
+        if (!sl_unpack_range_valid(buf_len, offset, sizeof(uint64_t))) {
+            return -1;
+        }
+
         if (encoding == SL_ENC_LITTLE_ENDIAN) {
 #ifdef WORDS_BIGENDIAN
             ieee_fp_union.w[0] = IVAL(buf, offset + 4);
@@ -590,7 +676,7 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
 }
 
 static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset,
-                          int length, uint encoding)
+                          int length, size_t buf_len, uint encoding)
 {
     EC_INIT;
     int count;
@@ -605,14 +691,25 @@ static int sl_unpack_CNID(DALLOC_CTX *query, const char *buf, int offset,
         goto EC_CLEANUP;
     }
 
-    query_data64 = sl_unpack_uint64(buf, offset, encoding);
+    if (!sl_unpack_range_valid(buf_len, offset, (size_t)(length - 8))
+            || sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                        &query_data64) < 0) {
+        EC_FAIL;
+    }
+
     count = query_data64 & 0xffff;
+
+    if (count > (length - 2 * (int)sizeof(uint64_t)) / (int)sizeof(uint64_t)) {
+        EC_FAIL;
+    }
+
     cnids->ca_unkn1 = (query_data64 & 0xffff0000) >> 16;
     cnids->ca_context = query_data64 >> 32;
     offset += 8;
 
     while (count --) {
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                         &query_data64));
         dalloc_add_copy(cnids->ca_cnids, &query_data64, uint64_t);
         offset += 8;
     }
@@ -682,7 +779,9 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
                          const int offset,
                          uint cpx_query_type,
                          uint cpx_query_count,
+                         size_t buf_len,
                          const uint toc_offset,
+                         uint toc_count,
                          const uint encoding,
                          int depth)
 {
@@ -693,7 +792,7 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     }
 
     int roffset = offset;
-    uint64_t query_data64;
+    uint64_t query_data64, used_in_last_block64;
     uint unicode_encoding;
     uint8_t mark_exists;
     char *p, *tmp;
@@ -706,23 +805,36 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
     case SQ_CPX_TYPE_ARRAY:
         sl_array = talloc_zero(query, sl_array_t);
         EC_NEG1_LOG(roffset = sl_unpack_loop(sl_array, buf, offset, cpx_query_count,
-                                             toc_offset, encoding, depth + 1));
+                                             buf_len, toc_offset, toc_count,
+                                             encoding, depth + 1));
         dalloc_add(query, sl_array, sl_array_t);
         break;
 
     case SQ_CPX_TYPE_DICT:
         sl_dict = talloc_zero(query, sl_dict_t);
         EC_NEG1_LOG(roffset = sl_unpack_loop(sl_dict, buf, offset, cpx_query_count,
-                                             toc_offset, encoding, depth + 1));
+                                             buf_len, toc_offset, toc_count,
+                                             encoding, depth + 1));
         dalloc_add(query, sl_dict, sl_dict_t);
         break;
 
     case SQ_CPX_TYPE_STRING:
     case SQ_CPX_TYPE_UTF16_STRING:
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                         &query_data64));
         qlen = (query_data64 & 0xffff) * 8;
-        used_in_last_block = query_data64 >> 32;
+        used_in_last_block64 = query_data64 >> 32;
+
+        if (used_in_last_block64 > 8) {
+            EC_FAIL;
+        }
+
+        used_in_last_block = (int)used_in_last_block64;
         slen = qlen - 16 + used_in_last_block;
+
+        if (qlen <= 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
+            EC_FAIL;
+        }
 
         if (cpx_query_type == SQ_CPX_TYPE_STRING) {
             if (slen < 0 || offset + 8 + slen > (int)toc_offset) {
@@ -760,14 +872,16 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         break;
 
     case SQ_CPX_TYPE_FILEMETA:
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                         &query_data64));
         qlen = (query_data64 & 0xffff) * 8;
 
-        if (qlen <= 8) {
+        if (qlen <= 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
             EC_FAIL_LOG("SQ_CPX_TYPE_FILEMETA: query_length <= 8: %d", qlen);
         } else {
             sl_fm = talloc_zero(query, sl_filemeta_t);
-            EC_NEG1_LOG(sl_unpack_r(sl_fm, buf + offset + 8, depth + 1));
+            EC_NEG1_LOG(sl_unpack_r(sl_fm, buf + offset + 8, qlen - 8,
+                                    depth + 1));
             dalloc_add(query, sl_fm, sl_filemeta_t);
         }
 
@@ -775,9 +889,16 @@ static int sl_unpack_cpx(DALLOC_CTX *query,
         break;
 
     case SQ_CPX_TYPE_CNIDS:
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                         &query_data64));
         qlen = (query_data64 & 0xffff) * 8;
-        EC_NEG1_LOG(sl_unpack_CNID(query, buf, offset + 8, qlen, encoding));
+
+        if (qlen <= 8 || !sl_unpack_range_valid(buf_len, offset, qlen)) {
+            EC_FAIL;
+        }
+
+        EC_NEG1_LOG(sl_unpack_CNID(query, buf, offset + 8, qlen, buf_len,
+                                   encoding));
         roffset += qlen;
         break;
 
@@ -798,7 +919,9 @@ static int sl_unpack_loop(DALLOC_CTX *query,
                           const char *buf,
                           int offset,
                           uint count,
+                          size_t buf_len,
                           const uint toc_offset,
+                          uint toc_count,
                           const uint encoding,
                           int depth)
 {
@@ -808,15 +931,18 @@ static int sl_unpack_loop(DALLOC_CTX *query,
         EC_FAIL;
     }
 
-    int i, toc_index, query_length;
+    int i, query_length;
     uint subcount;
     uint64_t query_data64, query_type;
+    uint64_t toc_index64;
+    size_t toc_index;
     uint cpx_query_type, cpx_query_count;
     sl_nil_t nil;
     sl_bool_t b;
 
     while (count > 0 && (offset < toc_offset)) {
-        query_data64 = sl_unpack_uint64(buf, offset, encoding);
+        EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                         &query_data64));
         query_length = (query_data64 & 0xffff) * 8;
         query_type = (query_data64 & 0xffff0000) >> 16;
 
@@ -824,15 +950,46 @@ static int sl_unpack_loop(DALLOC_CTX *query,
             EC_FAIL;
         }
 
+        if (!sl_unpack_range_valid(buf_len, offset, (size_t)query_length)) {
+            EC_FAIL;
+        }
+
         switch (query_type) {
         case SQ_TYPE_COMPLEX:
-            toc_index = (query_data64 >> 32) - 1;
-            query_data64 = sl_unpack_uint64(buf, toc_offset + toc_index * 8, encoding);
+            toc_index64 = query_data64 >> 32;
+
+            if (toc_index64 == 0 || toc_index64 > toc_count) {
+                LOG(log_error, logtype_sl,
+                    "Spotlight unmarshalling rejected TOC index: "
+                    "index=%" PRIu64 ", toc_count=%u",
+                    toc_index64, toc_count);
+                EC_FAIL;
+            }
+
+            toc_index = (size_t)(toc_index64 - 1);
+
+            if (toc_index > (SIZE_MAX - toc_offset) / sizeof(uint64_t)
+                    || toc_offset + toc_index * sizeof(uint64_t) > INT_MAX
+                    || !sl_unpack_range_valid(buf_len,
+                                              (int)(toc_offset
+                                                    + toc_index * sizeof(uint64_t)),
+                                              sizeof(uint64_t))) {
+                LOG(log_error, logtype_sl,
+                    "Spotlight unmarshalling rejected TOC offset: "
+                    "index=%zu, toc_offset=%u, buf_len=%zu",
+                    toc_index, toc_offset, buf_len);
+                EC_FAIL;
+            }
+
+            query_data64 = sl_unpack_uint64(buf,
+                                            (int)(toc_offset
+                                                  + toc_index * sizeof(uint64_t)),
+                                            encoding);
             cpx_query_type = (query_data64 & 0xffff0000) >> 16;
             cpx_query_count = query_data64 >> 32;
             EC_NEG1_LOG(offset = sl_unpack_cpx(query, buf, offset + 8, cpx_query_type,
-                                               cpx_query_count, toc_offset, encoding,
-                                               depth + 1));
+                                               cpx_query_count, buf_len, toc_offset,
+                                               toc_count, encoding, depth + 1));
             count--;
             break;
 
@@ -865,7 +1022,8 @@ static int sl_unpack_loop(DALLOC_CTX *query,
             break;
 
         case SQ_TYPE_INT64:
-            EC_NEG1_LOG(subcount = sl_unpack_ints(query, buf, offset, encoding));
+            EC_NEG1_LOG(subcount = sl_unpack_ints(query, buf, offset, query_length,
+                                                  buf_len, encoding));
 
             if (subcount > count) {
                 EC_FAIL;
@@ -876,7 +1034,8 @@ static int sl_unpack_loop(DALLOC_CTX *query,
             break;
 
         case SQ_TYPE_UUID:
-            EC_NEG1_LOG(subcount = sl_unpack_uuid(query, buf, offset, encoding));
+            EC_NEG1_LOG(subcount = sl_unpack_uuid(query, buf, offset, query_length,
+                                                  buf_len, encoding));
 
             if (subcount > count) {
                 EC_FAIL;
@@ -887,7 +1046,9 @@ static int sl_unpack_loop(DALLOC_CTX *query,
             break;
 
         case SQ_TYPE_FLOAT:
-            EC_NEG1_LOG(subcount = sl_unpack_floats(query, buf, offset, encoding));
+            EC_NEG1_LOG(subcount = sl_unpack_floats(query, buf, offset,
+                                                    query_length, buf_len,
+                                                    encoding));
 
             if (subcount > count) {
                 EC_FAIL;
@@ -898,7 +1059,8 @@ static int sl_unpack_loop(DALLOC_CTX *query,
             break;
 
         case SQ_TYPE_DATE:
-            EC_NEG1_LOG(subcount = sl_unpack_date(query, buf, offset, encoding));
+            EC_NEG1_LOG(subcount = sl_unpack_date(query, buf, offset, query_length,
+                                                  buf_len, encoding));
 
             if (subcount > count) {
                 EC_FAIL;
@@ -954,11 +1116,21 @@ EC_CLEANUP:
     return len;
 }
 
-static int sl_unpack_r(DALLOC_CTX *query, const char *buf, int depth)
+static int sl_unpack_r(DALLOC_CTX *query, const char *buf, size_t buf_len,
+                       int depth)
 {
     EC_INIT;
     int encoding;
-    uint64_t toc_offset;
+    uint64_t query_data64;
+    uint64_t toc_offset64;
+    uint64_t toc_entry_count64;
+    size_t data_len;
+    uint toc_offset;
+    uint toc_entry_count;
+
+    if (buf_len < 16) {
+        EC_FAIL;
+    }
 
     if (strncmp(buf, "md031234", 8) == 0) {
         encoding = SL_ENC_BIG_ENDIAN;
@@ -967,19 +1139,60 @@ static int sl_unpack_r(DALLOC_CTX *query, const char *buf, int depth)
     }
 
     buf += 8;
-    toc_offset = ((sl_unpack_uint64(buf, 0, encoding) >> 32) - 1) * 8;
+    buf_len -= 8;
+    EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, 0, encoding,
+                                     &query_data64));
+    toc_offset64 = ((query_data64 >> 32) - 1) * 8;
+    buf += 8;
+    buf_len -= 8;
+    data_len = buf_len;
 
-    if (toc_offset > 65000) {
+    /*
+     * From here buf/buf_len cover only the post-header data region;
+     * toc_offset is relative to this region and must point at the TOC tag.
+     */
+    if (toc_offset64 > 65000
+            || !sl_unpack_range_valid(data_len, (int)toc_offset64,
+                                      sizeof(uint64_t))) {
+        EC_FAIL_LOG("Spotlight unmarshalling rejected TOC offset: "
+                    "toc_offset=%" PRIu64 ", data_len=%zu",
+                    toc_offset64, data_len);
+    }
+
+    toc_offset = (uint)toc_offset64;
+    EC_NEG1(sl_unpack_uint64_checked(buf, buf_len, toc_offset, encoding,
+                                     &query_data64));
+
+    if (((query_data64 & 0xffff0000) >> 16) != SQ_TYPE_TOC) {
         EC_FAIL;
     }
 
-    buf += 8;
-    EC_NEG1(sl_unpack_loop(query, buf, 0, 1, toc_offset + 8, encoding, depth));
+    toc_entry_count64 = query_data64 & 0xffff;
+
+    if (toc_entry_count64 == 0) {
+        EC_FAIL;
+    }
+
+    toc_entry_count64--;
+
+    if (toc_entry_count64 > UINT_MAX
+            || toc_entry_count64 > (buf_len - (toc_offset + 8)) / 8) {
+        EC_FAIL;
+    }
+
+    toc_entry_count = (uint)toc_entry_count64;
+    EC_NEG1(sl_unpack_loop(query, buf, 0, 1, buf_len, toc_offset + 8,
+                           toc_entry_count, encoding, depth));
 EC_CLEANUP:
     EC_EXIT;
 }
 
 int sl_unpack(DALLOC_CTX *query, const char *buf)
 {
-    return sl_unpack_r(query, buf, 0);
+    return sl_unpack_r(query, buf, MAX_SLQ_DAT, 0);
+}
+
+int sl_unpack_len(DALLOC_CTX *query, const char *buf, size_t buf_len)
+{
+    return sl_unpack_r(query, buf, buf_len, 0);
 }

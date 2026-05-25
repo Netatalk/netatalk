@@ -19,8 +19,9 @@
 #ifndef SPOTLIGHT_H
 #define SPOTLIGHT_H
 
-#include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 #include <atalk/globals.h>
 #include <atalk/volume.h>
@@ -157,6 +158,7 @@ extern int sl_index_event(const AFPObj *obj,
                           const char *oldpath);
 extern int sl_pack(DALLOC_CTX *query, char *buf);
 extern int sl_unpack(DALLOC_CTX *query, const char *buf);
+extern int sl_unpack_len(DALLOC_CTX *query, const char *buf, size_t buf_len);
 extern void configure_spotlight_attributes(const char *attributes);
 
 #endif /* SPOTLIGHT_H */
