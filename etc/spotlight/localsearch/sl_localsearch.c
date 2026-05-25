@@ -164,7 +164,7 @@ static void tracker_cursor_cb(GObject      *object,
 
     if (uri == NULL) {
         LOG(log_debug, logtype_sl, "no URI for result");
-        return;
+        goto exit;
     }
 
     LOG(log_debug, logtype_sl, "URI: %s", uri);
@@ -394,6 +394,21 @@ static int sl_localsearch_fetch_results(slq_t *slq)
         slq->slq_state = SLQ_STATE_RESULTS;
         tracker_sparql_cursor_next_async(lsq->cursor, ctx->cancellable,
                                          tracker_cursor_cb, slq);
+    }
+
+    /*
+     * The AFP client may poll immediately after query_cb has queued the
+     * first cursor_next_async() but before the cursor callback has run.
+     * Drain callbacks that are already ready so fetchQueryResults can return
+     * the first available page, or DONE for an empty result set, instead of
+     * repeatedly returning empty pending pages.
+     */
+    while ((slq->slq_state == SLQ_STATE_RUNNING
+            || slq->slq_state == SLQ_STATE_RESULTS)
+            && slq->query_results != NULL
+            && slq->query_results->num_results == 0
+            && g_main_context_iteration(NULL, false)) {
+        ;
     }
 
     return 0;
