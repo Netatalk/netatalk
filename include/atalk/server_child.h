@@ -36,7 +36,7 @@ typedef struct afp_child {
     char     *afpch_sessiontoken; /*!< opaque reconnect token */
     int       afpch_ipc_fd;    /*!< socket for IPC bw afpd parent and childs */
     int       afpch_hint_fd;   /*!< pipe write/parent end for sending cache hints to child */
-    char     *afpch_hostname;  /*!< hostname of the server that the child is connected to */
+    char     *afpch_hostname;  /*!< hostname or address of the connected client */
     int16_t   afpch_state;     /*!< state of AFP session (eg active, sleeping, disconnected) */
     char     *afpch_volumes;   /*!< mounted volumes */
     struct afp_child **afpch_prevp;
@@ -69,7 +69,7 @@ extern int  server_child_transfer_session(server_child_t *children, uid_t uid,
         uint16_t DSI_requestID);
 extern void server_child_handler(server_child_t *);
 extern void server_child_login_done(server_child_t *children, pid_t pid,
-                                    uid_t, const char *);
+                                    uid_t, const char *client_address);
 extern void server_reset_signal(void);
 
 #endif

@@ -4,7 +4,7 @@ afpstats — List Netatalk AFP server statistics
 
 # Synopsis
 
-**afpstats** [-h *hostname*] [-s *socket*]
+**afpstats** [-h *client-address*] [-s *socket*]
 
 **afpstats** [-v | \-\-version]
 
@@ -20,9 +20,11 @@ to that group.
 
 # Options
 
-**-h**, **\-\-hostname** *hostname*
+**-h**, **\-\-hostname** *client-address*
 
-> Filter the output by the given hostname.
+> Filter the output by the given client hostname or address.
+> TCP/IP sessions use the resolved client hostname, falling back to the IP address.
+> AppleTalk sessions use the client DDP address in *net.node* form.
 
 **-s**, **\-\-socket** *path*
 
@@ -43,12 +45,12 @@ The socket path also depends on search permissions for the parent directory.
 
 # Examples
 
-List all connected users to the AFP server running on *fileserver*:
+List connected users:
 
-    $ afpstats --hostname fileserver
-    Connected user  PID     Login time       State     Protocol  Hostname    Mounted volumes
-    alice           452547  Apr 28 21:58:50  active    TCP/IP    fileserver  Data Vault, alice's Home
-    bob             451969  Apr 28 21:21:32  sleeping  TCP/IP    fileserver  My AFP Volume
+    $ afpstats
+    Connected user  PID     Login time       State     Protocol   Client address     Mounted volumes
+    alice           452547  Apr 28 21:58:50  sleeping  TCP/IP     workstation.local  Data Vault, alice's Home
+    bob             451969  Apr 28 21:21:32  active    AppleTalk  65280.12           My AFP Volume
 
 # See Also
 

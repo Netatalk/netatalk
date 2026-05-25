@@ -456,7 +456,7 @@ void server_child_kill_one_by_id(server_child_t *children, pid_t pid,
 }
 
 void server_child_login_done(server_child_t *children, pid_t pid,
-                             uid_t uid, const char *hostname)
+                             uid_t uid, const char *client_address)
 {
     afp_child_t *child;
     afp_child_t *tmp;
@@ -477,7 +477,9 @@ void server_child_login_done(server_child_t *children, pid_t pid,
                     free(child->afpch_hostname);
                 }
 
-                child->afpch_hostname = hostname ? strdup(hostname) : NULL;
+                child->afpch_hostname = client_address
+                                        ? strdup(client_address)
+                                        : NULL;
             }
 
             child = tmp;
