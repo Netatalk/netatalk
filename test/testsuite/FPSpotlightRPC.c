@@ -214,9 +214,145 @@ test_exit:
     exit_test("FPSpotlightRPC:test548: paged search (>=3 SEARCH batches)");
 }
 
+STATIC void test560()
+{
+    uint16_t vol = VolID;
+    unsigned int ret;
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    /*
+     * This is a valid fetchPropertiesForContext: RPC with a tampered TOC
+     * tag: the tag says there are zero complex-object entries, while the
+     * physical entries are still present in the payload. The old parser
+     * ignores the declared TOC count and executes the RPC; the bounded
+     * parser rejects the first complex index before dereferencing it.
+     */
+    ret = FPSpotlightFetchPropertiesWithShrunkTOC(Conn, vol);
+
+    if (ret != htonl(AFPERR_MISC)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: undeclared TOC entry payload "
+                            "returned %d (%s), expected AFPERR_MISC\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: undeclared TOC entry payload "
+                            "left Spotlight RPC unusable\n");
+        }
+
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPSpotlightRPC:test560: reject undeclared TOC entry payload");
+}
+
+STATIC void test561()
+{
+    uint16_t vol = VolID;
+    unsigned int ret;
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    ret = FPSpotlightRPCWithLargeInt64Count(Conn, vol);
+
+    if (ret != htonl(AFPERR_MISC)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: oversized INT64 count returned "
+                            "%d (%s), expected AFPERR_MISC\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: oversized INT64 count left "
+                            "Spotlight RPC unusable\n");
+        }
+
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPSpotlightRPC:test561: reject oversized INT64 count");
+}
+
+STATIC void test562()
+{
+    uint16_t vol = VolID;
+    unsigned int ret;
+    ENTER_TEST
+
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
+        goto test_exit;
+    }
+
+    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    ret = FPSpotlightFetchPropertiesWithLargeTOCIndex(Conn, vol);
+
+    if (ret != htonl(AFPERR_MISC)) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: out-of-range TOC index returned "
+                            "%d (%s), expected AFPERR_MISC\n",
+                    ntohl(ret), afp_error(ret));
+        }
+
+        test_failed();
+        goto test_exit;
+    }
+
+    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: out-of-range TOC index left "
+                            "Spotlight RPC unusable\n");
+        }
+
+        test_failed();
+    }
+
+test_exit:
+    exit_test("FPSpotlightRPC:test562: reject out-of-range TOC index");
+}
+
 void FPSpotlightRPC_test()
 {
     ENTER_TESTSET
     test547();
     test548();
+    test560();
+    test561();
+    test562();
 }

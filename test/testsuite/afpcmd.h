@@ -17,6 +17,12 @@ extern unsigned int FPSpotlightDrainResults(CONN *conn, uint16_t vid,
         int *total_results_out);
 extern unsigned int FPSpotlightCloseQuery(CONN *conn, uint16_t vid,
         uint64_t ctx);
+extern unsigned int FPSpotlightFetchPropertiesWithShrunkTOC(CONN *conn,
+        uint16_t vid);
+extern unsigned int FPSpotlightFetchPropertiesWithLargeTOCIndex(CONN *conn,
+        uint16_t vid);
+extern unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn,
+        uint16_t vid);
 
 extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
                                 char *pwd);

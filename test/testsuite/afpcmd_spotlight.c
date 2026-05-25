@@ -62,6 +62,54 @@ extern int Quiet;
  */
 #define SL_PACK_BUFLEN  65472
 
+#define TEST_SQ_TYPE_INT64  0x8400
+#define TEST_SQ_TYPE_TOC    0x8800
+
+static uint64_t spotlight_test_pack_tag(uint16_t type, uint16_t size_or_count,
+                                        uint32_t val)
+{
+    return ((uint64_t)val << 32) | ((uint64_t)type << 16) | size_or_count;
+}
+
+static uint32_t spotlight_test_get_le32(const char *buf, size_t offset)
+{
+    const uint8_t *p = (const uint8_t *)buf + offset;
+    return (uint32_t)p[0]
+           | ((uint32_t)p[1] << 8)
+           | ((uint32_t)p[2] << 16)
+           | ((uint32_t)p[3] << 24);
+}
+
+static void spotlight_test_put_le32(uint8_t *buf, size_t offset, uint32_t val)
+{
+    buf[offset] = (uint8_t)val;
+    buf[offset + 1] = (uint8_t)(val >> 8);
+    buf[offset + 2] = (uint8_t)(val >> 16);
+    buf[offset + 3] = (uint8_t)(val >> 24);
+}
+
+static void spotlight_test_put_le64(uint8_t *buf, size_t offset, uint64_t val)
+{
+    spotlight_test_put_le32(buf, offset, (uint32_t)val);
+    spotlight_test_put_le32(buf, offset + 4, (uint32_t)(val >> 32));
+}
+
+static int spotlight_pack_fetch_properties_rpc(char *rpcbuf)
+{
+    int          rpclen;
+    TALLOC_CTX  *tmp         = talloc_new(NULL);
+    DALLOC_CTX  *outer       = talloc_zero(tmp, DALLOC_CTX);
+    sl_array_t  *outer_array = talloc_zero(outer, sl_array_t);
+    sl_array_t  *args        = talloc_zero(outer_array, sl_array_t);
+    dalloc_add(args, dalloc_strdup(args, "fetchPropertiesForContext:"),
+               "char *");
+    dalloc_add(outer_array, args, "sl_array_t");
+    dalloc_add(outer, outer_array, "sl_array_t");
+    rpclen = sl_pack(outer, rpcbuf);
+    talloc_free(tmp);
+    return rpclen;
+}
+
 /*!
  * @brief Wrap an AFP_SPOTLIGHT_PRIVATE request and ship it on the DSI
  *
@@ -121,6 +169,89 @@ static unsigned int spotlight_send(CONN *conn,
     dsi_stream_send(dsi, dsi->commands, dsi->datalen);
     dsi_data_receive(dsi);
     return dsi->header.dsi_code;
+}
+
+/*!
+ * @brief Send an otherwise-valid fetchPropertiesForContext: request whose
+ *        TOC tag claims no usable complex-object entries
+ */
+unsigned int FPSpotlightFetchPropertiesWithShrunkTOC(CONN *conn, uint16_t vid)
+{
+    char         rpcbuf[SL_PACK_BUFLEN];
+    int          rpclen;
+    uint32_t     data_dwords;
+    size_t       toc_tag_offset;
+    rpclen = spotlight_pack_fetch_properties_rpc(rpcbuf);
+
+    if (rpclen < 0) {
+        return htonl(AFPERR_PARAM);
+    }
+
+    /*
+     * Little-endian Spotlight header:
+     *   bytes 12..15 = DataDwords
+     *   TOC tag      = header + ((DataDwords - 1) * 8)
+     *
+     * The tag's low 16 bits are size_or_count. Setting them to 1 means
+     * "the TOC consists only of the TOC tag itself", so there are zero
+     * declared complex-object entries. The old parser ignores this field
+     * and will still dereference the physically present entries below it.
+     */
+    data_dwords = spotlight_test_get_le32(rpcbuf, 12);
+    toc_tag_offset = 16 + ((size_t)data_dwords - 1) * 8;
+
+    if (toc_tag_offset + 1 >= (size_t)rpclen) {
+        return htonl(AFPERR_PARAM);
+    }
+
+    rpcbuf[toc_tag_offset] = 1;
+    rpcbuf[toc_tag_offset + 1] = 0;
+    return spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC,
+                          (const uint8_t *)rpcbuf, (size_t)rpclen);
+}
+
+/*!
+ * @brief Send a valid fetchPropertiesForContext: request whose first complex
+ *        tag references a far out-of-range TOC index
+ */
+unsigned int FPSpotlightFetchPropertiesWithLargeTOCIndex(CONN *conn,
+        uint16_t vid)
+{
+    char rpcbuf[SL_PACK_BUFLEN];
+    int  rpclen;
+    rpclen = spotlight_pack_fetch_properties_rpc(rpcbuf);
+
+    if (rpclen < 0) {
+        return htonl(AFPERR_PARAM);
+    }
+
+    /*
+     * First post-header tag starts at byte 16; its high 32 bits are the
+     * one-based TOC index used by SQ_TYPE_COMPLEX. Pick an out-of-range
+     * index whose old signed 32-bit multiply wraps back onto TOC entry 0.
+     */
+    spotlight_test_put_le32((uint8_t *)rpcbuf, 20, 0x20000001);
+    return spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC,
+                          (const uint8_t *)rpcbuf, (size_t)rpclen);
+}
+
+/*!
+ * @brief Send the companion advisory PoC: one INT64 tag claiming a huge count
+ */
+unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn, uint16_t vid)
+{
+    uint8_t rpcbuf[40];
+    memset(rpcbuf, 0, sizeof(rpcbuf));
+    memcpy(rpcbuf, "432130dm", 8);
+    spotlight_test_put_le32(rpcbuf, 8, 4);
+    spotlight_test_put_le32(rpcbuf, 12, 3);
+    spotlight_test_put_le64(rpcbuf, 16,
+                            spotlight_test_pack_tag(TEST_SQ_TYPE_INT64, 2,
+                                    0x7fffffff));
+    spotlight_test_put_le64(rpcbuf, 24, 0);
+    spotlight_test_put_le64(rpcbuf, 32,
+                            spotlight_test_pack_tag(TEST_SQ_TYPE_TOC, 1, 0));
+    return spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC, rpcbuf, sizeof(rpcbuf));
 }
 
 /*!
@@ -315,7 +446,8 @@ unsigned int FPSpotlightDrainResults(CONN *conn, uint16_t vid,
         tmp   = talloc_new(NULL);
         reply = talloc_zero(tmp, DALLOC_CTX);
 
-        if (sl_unpack(reply, (const char *)dsi->data + 4) < 0) {
+        if (ntohl(dsi->header.dsi_len) < 4
+                || sl_unpack(reply, (const char *)dsi->data + 4) < 0) {
             talloc_free(tmp);
             return htonl(AFPERR_PARAM);
         }
