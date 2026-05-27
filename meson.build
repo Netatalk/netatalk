@@ -4,9 +4,7 @@ project(
     version: '4.5.0',
     license: 'GPLv2',
     default_options: ['warning_level=3', 'c_std=c11'],
-    meson_version: '>=0.61.2',
-    # Reserved for future use:
-    # meson_version: '>=0.62.0',
+    meson_version: '>=0.62.0',
 )
 
 cc = meson.get_compiler('c')
@@ -2742,7 +2740,8 @@ summary_info = {
 summary(summary_info, bool_yn: true, section: '  Documentation:')
 
 summary_info = {
-    '  Test suite': get_option('with-testsuite'),
+    '  afpd integration tests': get_option('with-tests'),
+    '  AFP testsuite': get_option('with-testsuite'),
     '  Webmin module': have_webmin,
 }
 summary(summary_info, bool_yn: true, section: '  Extras:')

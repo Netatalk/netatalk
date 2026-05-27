@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
@@ -45,17 +46,50 @@
 unsigned char nologin = 0;
 static AFPObj obj, aspobj;
 static char *args[] = {"test", "-F", "test.conf"};
+int test_output_tap = 0;
+int test_case_num = 0;
+FILE *test_report_stream = NULL;
 
-int main()
+int main(int argc, char *argv[])
 {
     int reti;
     uint16_t vid;
     struct vol *vol;
     struct dir *retdir;
     struct path *path;
+    int test_report_fd;
     signal(SIGPIPE, SIG_IGN);
+
+    if (argc == 2 && strcmp(argv[1], "--tap") == 0) {
+        test_output_tap = 1;
+    }
+
+    test_report_fd = dup(STDOUT_FILENO);
+
+    if (test_report_fd != -1) {
+        test_report_stream = fdopen(test_report_fd, "w");
+
+        if (test_report_stream == NULL) {
+            close(test_report_fd);
+        }
+    }
+
+    if (test_report_stream == NULL) {
+        if (test_output_tap) {
+            printf("Bail out! failed to initialize TAP output\n");
+            fflush(stdout);
+            exit(1);
+        }
+
+        test_report_stream = stdout;
+    }
+
+    if (test_output_tap) {
+        setvbuf(test_report_stream, NULL, _IONBF, 0);
+    }
+
     /* initialize */
-    printf("Initializing\n============\n");
+    test_section("Initializing", "============");
     TEST(setuplog("default:note", "/dev/tty", true));
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]));
     TEST_int(afp_config_parse(&obj, NULL), 0);
@@ -75,9 +109,13 @@ int main()
     obj.hint_fd = -1;
     /* Set global AFPobj — normally done by afp_over_dsi() which tests bypass */
     AFPobj = &obj;
-    printf("\n");
+
+    if (!test_output_tap) {
+        fprintf(test_stream(), "\n");
+    }
+
     /* now run tests */
-    printf("Running tests\n=============\n");
+    test_section("Running tests", "=============");
     TEST_expr(vid = openvol(&obj, "afpd_test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
     TEST_expr(reti = 0,
@@ -109,4 +147,5 @@ int main()
     /* cleanup */
     closevol(&obj, vol);
     unload_volumes(&obj);
+    test_plan(test_case_num);
 }

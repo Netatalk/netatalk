@@ -208,6 +208,9 @@ if get_option('with-tests')
     test(
         'afpd integration tests - run',
         afpdtest,
+        args: ['--tap'],
+        protocol: 'tap',
+        verbose: true,
         is_parallel: false,
         priority: 0,
     )
