@@ -59,6 +59,12 @@ int main()
     TEST(setuplog("default:note", "/dev/tty", true));
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]));
     TEST_int(afp_config_parse(&obj, NULL), 0);
+    TEST_expr(reti = 0,
+              obj.options.Cnid_srv != NULL
+              && strcmp(obj.options.Cnid_srv, "127.0.0.1") == 0);
+    TEST_expr(reti = 0,
+              obj.options.Cnid_port != NULL
+              && strcmp(obj.options.Cnid_port, "4700") == 0);
     TEST_int(configinit(&obj, &aspobj), 0);
     TEST(cnid_init());
     TEST(load_volumes(&obj, LV_ALL));
@@ -74,6 +80,12 @@ int main()
     printf("Running tests\n=============\n");
     TEST_expr(vid = openvol(&obj, "afpd_test"), vid != 0);
     TEST_expr(vol = getvolbyvid(vid), vol != NULL);
+    TEST_expr(reti = 0,
+              vol->v_cnidserver != NULL
+              && strcmp(vol->v_cnidserver, "localhost") == 0);
+    TEST_expr(reti = 0,
+              vol->v_cnidport != NULL
+              && strcmp(vol->v_cnidport, "4700") == 0);
     /* test directory.c stuff */
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT_PARENT), retdir != NULL);
     TEST_expr(retdir = dirlookup(vol, DIRDID_ROOT), retdir != NULL);

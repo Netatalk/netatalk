@@ -482,11 +482,13 @@ registration if Avahi or mDNSResponder were compiled in.
 Global configurations specific to the CNID database backends, which
 controls how the database is stored and accessed.
 
-cnid listen = *ip address[:port] [ip address[:port] ...]* **(G)**
+cnid listen = *host[:port]* **(G)**
 
-> Specifies the IP address and port that the CNID server should listen on.
-This should match the address and port of the **cnid server** option
-for most deployments. The default is **localhost:4700**.
+> Specifies the hostname or IP address and port that the CNID server should listen on.
+The host must resolve to a local address that cnid_metad can bind.
+This should match the address and port of the **cnid server** option for most
+deployments. The default is **localhost:4700**. When only a hostname or IP
+address is specified, the default port 4700 is used.
 
 cnid mysql host = *MySQL server address* **(G)**
 
@@ -526,14 +528,15 @@ Requires datbase administration, giving you full control over how the CNID data 
 > *sqlite*: uses the SQLite embedded database library.
 It is performant and lean, requiring no external database or daemon.
 
-cnid server = *ipaddress[:port]* **(G)**/**(V)**
+cnid server = *host[:port]* **(G)**/**(V)**
 
-> Specifies the IP address and port of a cnid_metad server, required
+> Specifies the hostname or IP address and port of a cnid_metad server, required
 for the CNID dbd backend. This should match the address and port of the
 **cnid listen** option for most deployments. Defaults to localhost:4700.
+When only a hostname or IP address is specified, the default port 4700 is used.
 >
-> The network address may be specified either in dotted-decimal format
-for IPv4 or in hexadecimal format for IPv6.
+> Hostnames and IPv4 addresses are accepted. Hostnames may resolve to IPv4
+or IPv6 addresses.
 
 vol dbpath = *path* **(G)**/**(V)**
 

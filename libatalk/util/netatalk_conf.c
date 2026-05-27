@@ -1359,7 +1359,7 @@ static struct vol *creatvol(AFPObj *obj,
         EC_NULL(p = strdup(val));
         volume->v_cnidserver = p;
 
-        if ((q = strrchr(val, ':'))) {
+        if ((q = strrchr(p, ':'))) {
             *q++ = 0;
             volume->v_cnidport = strdup(q);
         } else {
@@ -3112,23 +3112,20 @@ int afp_config_parse(AFPObj *AFPObj, char *processname)
         free(p);
     }
 
-    q = getoption_strdup(config, INISEC_GLOBAL, "cnid server", NULL,
-                         "localhost:4700");
+    EC_NULL_LOG(q = getoption_strdup(config, INISEC_GLOBAL, "cnid server", NULL,
+                                     "localhost:4700"));
     r = strrchr(q, ':');
 
     if (r) {
         size_t hostname_length = r - q;
-        options->Cnid_srv = (char *)malloc(hostname_length + 1);
-
-        if (options->Cnid_srv) {
-            strlcpy(options->Cnid_srv, q, hostname_length + 1);
-        }
-
-        options->Cnid_port = strdup(r + 1);
+        EC_NULL_LOG(options->Cnid_srv = (char *)malloc(hostname_length + 1));
+        strlcpy(options->Cnid_srv, q, hostname_length + 1);
+        EC_NULL_LOG(options->Cnid_port = strdup(r + 1));
     } else {
         LOG(log_debug, logtype_afpd,
             "CNID Server: no port number detected, so falling back to default 4700");
-        options->Cnid_port = strdup("4700");
+        EC_NULL_LOG(options->Cnid_srv = strdup(q));
+        EC_NULL_LOG(options->Cnid_port = strdup("4700"));
     }
 
     LOG(log_debug, logtype_afpd, "CNID Server: %s:%s", options->Cnid_srv,
