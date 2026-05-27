@@ -66,7 +66,7 @@ required at the bare minimum.
 | Package    | Details |
 |------------|---------|
 | C compiler | clang or gcc are recommended |
-| meson      | v0.61.2 or later |
+| meson      | v0.62.0 or later |
 | ninja      | often packaged as `ninja-build` |
 
 ### Optional Features
