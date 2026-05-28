@@ -58,6 +58,12 @@ option(
     description: 'Build and install the localized documentation',
 )
 option(
+    'with-docs-only',
+    type: 'boolean',
+    value: false,
+    description: 'Build and install only documentation',
+)
+option(
     'with-doxygen-strict',
     type: 'boolean',
     value: false,

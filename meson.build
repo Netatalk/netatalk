@@ -1,20 +1,10 @@
 project(
     'netatalk',
-    'c',
     version: '4.5.0',
     license: 'GPLv2',
     default_options: ['warning_level=3', 'c_std=c11'],
     meson_version: '>=0.62.0',
 )
-
-cc = meson.get_compiler('c')
-
-if not cc.compiles('int func() { return 0; }')
-    error('The C compiler cannot compile code. Please check the logs.')
-endif
-
-# Reserved for future use:
-# cc.has_function_attribute('unused', required: false)
 
 ####################
 # Global variables #
@@ -99,6 +89,172 @@ docs_install_path = datadir / 'doc' / meson.project_name()
 
 if get_option('with-docs-install-path') != ''
     docs_install_path = get_option('with-docs-install-path')
+endif
+
+with_docs_only = get_option('with-docs-only')
+docs_options = get_option('with-docs')
+
+if with_docs_only and docs_options == []
+    error('with-docs-only requires at least one documentation type in with-docs')
+endif
+
+#
+# Check for Perl
+#
+
+perl_path = get_option('with-perl-path')
+
+if perl_path == ''
+    perl = find_program('perl', required: false)
+else
+    perl = find_program(perl_path / 'perl', required: false)
+endif
+
+#########################
+# Prepare documentation #
+#########################
+
+cmark = find_program('cmark', required: false)
+cmarkgfm = find_program('cmark-gfm', required: false)
+pandoc = find_program('pandoc', required: false)
+doxygen = find_program('doxygen', required: false)
+
+build_man_docs = false
+build_html_docs = false
+build_readme_docs = false
+build_dev_docs = false
+
+if 'readmes' in docs_options
+    make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: false)
+    build_readme_docs = true
+
+    readmes_md = [
+        'CODE_OF_CONDUCT',
+        'COMPILATION',
+        'CONTRIBUTING',
+        'CONTRIBUTORS',
+        'INSTALL',
+        'NEWS',
+        'README',
+        'SECURITY',
+    ]
+
+    foreach file : readmes_md
+        if get_option('with-website')
+            if perl.found() and make_compile_doc.found()
+                run_command(
+                    make_compile_doc,
+                    '.github/workflows/build.yml',
+                    'COMPILATION.md',
+                    check: true,
+                )
+            endif
+
+            install_data(file + '.md', install_dir: docs_install_path / 'manual')
+        else
+            if pandoc.found()
+                custom_target(
+                    'readmes_' + file,
+                    input: file + '.md',
+                    output: file + '.txt',
+                    command: [
+                        pandoc,
+                        '--from', 'gfm+pipe_tables',
+                        '--to', 'plain',
+                        '@INPUT@',
+                    ],
+                    capture: true,
+                    install: true,
+                    install_dir: datadir / 'doc/netatalk',
+                    install_tag: 'doc',
+                )
+            elif cmarkgfm.found()
+                custom_target(
+                    'readmes_' + file,
+                    input: file + '.md',
+                    output: file + '.txt',
+                    command: [
+                        cmarkgfm,
+                        '--extension', 'table',
+                        '--width', '80',
+                        '--to', 'plaintext',
+                        '@INPUT@',
+                    ],
+                    capture: true,
+                    install: true,
+                    install_dir: datadir / 'doc/netatalk',
+                    install_tag: 'doc',
+                )
+            else
+                install_data(
+                    file + '.md',
+                    install_dir: datadir / 'doc/netatalk',
+                    install_tag: 'doc',
+                )
+            endif
+        endif
+    endforeach
+endif
+
+if 'man' in docs_options
+    if cmark.found() or cmarkgfm.found() or pandoc.found()
+        build_man_docs = true
+    else
+        warning('cmark, cmark-gfm, or pandoc is required to build man pages')
+    endif
+endif
+
+if 'html_manual' in docs_options
+    if cmark.found() or cmarkgfm.found() or pandoc.found()
+        build_html_docs = true
+    else
+        warning('cmark, cmark-gfm or pandoc is required to build the html manual')
+    endif
+endif
+
+if 'developer' in docs_options
+    if doxygen.found()
+        build_dev_docs = true
+    else
+        warning('doxygen is required to build developer documentation')
+    endif
+endif
+
+if with_docs_only
+    use_dbd_backend = 'dbd' in get_option('with-cnid-backends')
+    have_appletalk = get_option('with-appletalk')
+
+    if docs_options != []
+        subdir('doc')
+    endif
+
+    summary(
+        {'Netatalk version': netatalk_version},
+        section: 'Configuration Summary:',
+    )
+    summary(
+        {'Documentation-only build': true},
+        bool_yn: true,
+        section: '  Options:',
+    )
+    summary(
+        {
+            '  developer': build_dev_docs,
+            '  html manual': build_html_docs,
+            '  man pages': build_man_docs,
+            '  readmes': build_readme_docs,
+        },
+        bool_yn: true,
+        section: '  Documentation:',
+    )
+    subdir_done()
+endif
+
+add_languages('c', native: false)
+cc = meson.get_compiler('c')
+
+if not cc.compiles('int func() { return 0; }')
+    error('The C compiler cannot compile code. Please check the logs.')
 endif
 
 ##################
@@ -860,18 +1016,6 @@ if not have_libgcrypt
     error(
         'Libgcrypt library required for encrypted user auth! Please install version 1.2.3 or later',
     )
-endif
-
-#
-# Check for Perl
-#
-
-perl_path = get_option('with-perl-path')
-
-if perl_path == ''
-    perl = find_program('perl', required: false)
-else
-    perl = find_program(perl_path / 'perl', required: false)
 endif
 
 #
@@ -2487,116 +2631,6 @@ configure_file(
 )
 
 #########################
-# Prepare documentation #
-#########################
-
-cmark = find_program('cmark', required: false)
-cmarkgfm = find_program('cmark-gfm', required: false)
-pandoc = find_program('pandoc', required: false)
-doxygen = find_program('doxygen', required: false)
-
-build_man_docs = false
-build_html_docs = false
-build_readme_docs = false
-build_dev_docs = false
-
-if 'readmes' in get_option('with-docs')
-    make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: false)
-    build_readme_docs = true
-
-    readmes_md = [
-        'CODE_OF_CONDUCT',
-        'COMPILATION',
-        'CONTRIBUTING',
-        'CONTRIBUTORS',
-        'INSTALL',
-        'NEWS',
-        'README',
-        'SECURITY',
-    ]
-
-    foreach file : readmes_md
-        if get_option('with-website')
-            if perl.found() and make_compile_doc.found()
-                run_command(
-                    make_compile_doc,
-                    '.github/workflows/build.yml',
-                    'COMPILATION.md',
-                    check: true,
-                )
-            endif
-
-            install_data(file + '.md', install_dir: docs_install_path / 'manual')
-        else
-            if pandoc.found()
-                custom_target(
-                    'readmes_' + file,
-                    input: file + '.md',
-                    output: file + '.txt',
-                    command: [
-                        pandoc,
-                        '--from', 'gfm+pipe_tables',
-                        '--to', 'plain',
-                        '@INPUT@',
-                    ],
-                    capture: true,
-                    install: true,
-                    install_dir: datadir / 'doc/netatalk',
-                    install_tag: 'doc',
-                )
-            elif cmarkgfm.found()
-                custom_target(
-                    'readmes_' + file,
-                    input: file + '.md',
-                    output: file + '.txt',
-                    command: [
-                        cmarkgfm,
-                        '--extension', 'table',
-                        '--width', '80',
-                        '--to', 'plaintext',
-                        '@INPUT@',
-                    ],
-                    capture: true,
-                    install: true,
-                    install_dir: datadir / 'doc/netatalk',
-                    install_tag: 'doc',
-                )
-            else
-                install_data(
-                    file + '.md',
-                    install_dir: datadir / 'doc/netatalk',
-                    install_tag: 'doc',
-                )
-            endif
-        endif
-    endforeach
-endif
-
-if 'man' in get_option('with-docs')
-    if cmark.found() or cmarkgfm.found() or pandoc.found()
-        build_man_docs = true
-    else
-        warning('cmark, cmark-gfm, or pandoc is required to build man pages')
-    endif
-endif
-
-if 'html_manual' in get_option('with-docs')
-    if cmark.found() or cmarkgfm.found() or pandoc.found()
-        build_html_docs = true
-    else
-        warning('cmark, cmark-gfm or pandoc is required to build the html manual')
-    endif
-endif
-
-if 'developer' in get_option('with-docs')
-    if doxygen.found()
-        build_dev_docs = true
-    else
-        warning('doxygen is required to build developer documentation')
-    endif
-endif
-
-#########################
 # Building the modules  #
 #########################
 
@@ -2610,7 +2644,7 @@ subdir('etc')
 subdir('contrib')
 subdir('sys')
 
-if get_option('with-docs') != []
+if docs_options != []
     subdir('doc')
 endif
 
