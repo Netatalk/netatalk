@@ -18,7 +18,7 @@
 use strict;
 use warnings;
 use YAML::PP;
-use YAML::PP::Common qw/ :PRESERVE /;
+use YAML::PP::Common qw/ PRESERVE_ORDER /;
 
 if (@ARGV < 2 || grep { $_ eq '--help' || $_ eq '-h' } @ARGV) {
     print "Usage: $0 input_file output_file\n";
