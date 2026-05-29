@@ -125,12 +125,10 @@ build_readme_docs = false
 build_dev_docs = false
 
 if 'readmes' in docs_options
-    make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: false)
     build_readme_docs = true
 
     readmes_md = [
         'CODE_OF_CONDUCT',
-        'COMPILATION',
         'CONTRIBUTING',
         'CONTRIBUTORS',
         'INSTALL',
@@ -139,17 +137,19 @@ if 'readmes' in docs_options
         'SECURITY',
     ]
 
+    if get_option('with-website') and perl.found()
+        make_compile_doc = find_program('contrib/scripts/make_compile_docs.pl', required: true)
+        run_command(
+            make_compile_doc,
+            '.github/workflows/build.yml',
+            'COMPILATION.md',
+            check: true,
+        )
+        readmes_md += ['COMPILATION']
+    endif
+
     foreach file : readmes_md
         if get_option('with-website')
-            if perl.found() and make_compile_doc.found()
-                run_command(
-                    make_compile_doc,
-                    '.github/workflows/build.yml',
-                    'COMPILATION.md',
-                    check: true,
-                )
-            endif
-
             install_data(file + '.md', install_dir: docs_install_path / 'manual')
         else
             if pandoc.found()
