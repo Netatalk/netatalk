@@ -1,4 +1,5 @@
 # Generated source files
+COMPILATION.md
 etc/spotlight/sparql_parser.c
 etc/spotlight/sparql_parser.h
 etc/spotlight/spotlight_rawquery_lexer.c
