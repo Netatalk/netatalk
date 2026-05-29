@@ -42,6 +42,7 @@ jobs:
             cmark-gfm \
             cracklib \
             iniparser \
+            libev \
             libiconv \
             mariadb \
             meson \
