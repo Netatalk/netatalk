@@ -224,9 +224,11 @@ msgid ""
 "to query the socket, set \"**afpstats group = *group***\" and add those "
 "users to the configured group."
 msgstr ""
-"実行時に Netatalk で AFP 統計を有効にするには、\"**afpstats = yes**\" を "
-"*afp.conf* に設定する必要がある。デフォルトでは、root とソケットのグループ所有者によって許可されたユーザだけがセッションリストを照会できる。"
-"これ以外のユーザを照会できるようにするには、\"**afpstats group = *group***\" を設定し、これらのユーザを設定されたグループに追加する必要がある。"
+"実行時に Netatalk で AFP 統計を有効にするには、**afpstats = yes** を "
+"*afp.conf* に設定する必要がある。デフォルトでは、root とソケットのグループ所"
+"有者によって許可されたユーザだけがセッションリストを照会できる。これ以外の"
+"ユーザを照会できるようにするには、\"**afpstats group = *group***\" を設定し、"
+"これらのユーザを設定されたグループに追加する必要がある。"
 
 #. type: Plain text
 #: manpages/man1/afpstats.1.md:25

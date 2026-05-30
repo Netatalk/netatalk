@@ -747,8 +747,8 @@ msgid ""
 "Below is a sample configuration for running the AFP spec tests.  Presently, "
 "only ClearTxt and Guest authentication is supported in the test runner."
 msgstr ""
-"以下は、AFP仕様テストを実行するためのサンプル設定にある。現在、テストランナー"
-"では ClearTxt とゲスト認証のみがサポートされている。"
+"以下は、AFP仕様テストを実行するための設定例である。現在、テストランナーでは "
+"ClearTxt とゲスト認証のみがサポートされている。"
 
 #. type: Bullet: '- '
 #: manpages/man1/afp_spectest.1.md:206

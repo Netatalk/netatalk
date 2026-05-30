@@ -186,7 +186,7 @@ msgstr ""
 #. type: Plain text
 #: manual/CNID.md:58
 msgid "It is deprecated and not recommended for new deployments."
-msgstr "本バックエンドは非推奨であり、新規導入の際に選択しない様に"
+msgstr "本バックエンドは非推奨であり、新規導入の際に選択しないことを推奨する。"
 
 #. type: Title ##
 #: manual/CNID.md:59

@@ -281,7 +281,7 @@ msgstr ""
 "キーファイルには、Randnumが保存されたパスワードを暗号化するために使用する16進エンコードされた8バイトのDESキーが含まれている。\n"
 "**afppasswd -r -c**は、このキーファイルが存在しない場合に作成し、既存のファイルを検証する。\n"
 "キーファイルが存在し、有効でない限り、Randnumのパスワードの更新は続行を拒否する。\n"
-"Randnum UAMは、キーファイルが存在しないか無効な場合に起動時に警告をログに記録しるが、\n"
+"Randnum UAMは、キーファイルが存在しないか無効な場合に起動時に警告をログに記録し、\n"
 "修正されるまで認証とパスワードの変更は失敗する。\n"
 
 #. type: Plain text
@@ -373,7 +373,7 @@ msgid ""
 "on a specific user. Non-root invocations always operate on the calling\n"
 "user and do not accept this option.\n"
 msgstr ""
-"> 指摘ユーザ情報を追加または更新。管理者が特定のユーザを操作する場合に必要。\n"
+"> 指定されたユーザを追加または更新する。管理者が特定のユーザを操作する場合に必要。\n"
 "非rootユーザの呼び出しは常に呼び出しユーザを操作し、このオプションは受け付けない。\n"
 
 #. type: Plain text
