@@ -405,8 +405,23 @@ int main(void) {
 }
 '''
 if not cc.links(atomic_test_code, name: 'atomic builtins without -latomic')
-    cc.find_library('atomic', required: true)
-    netatalk_common_link_args = ['-latomic'] + netatalk_common_link_args
+    # Find the library: system paths, platform paths
+    atomic = cc.find_library('atomic', required: false)
+    foreach d : libsearch_dirs
+        if not atomic.found()
+            atomic = cc.find_library('atomic', dirs: d, required: false)
+            if atomic.found()
+                netatalk_common_link_args += ['-L' + d]
+            endif
+        endif
+    endforeach
+    if atomic.found()
+        netatalk_common_link_args += '-latomic'
+    endif
+    have_atomic = atomic.found()
+    if not have_atomic
+        error('libatomic is required! Please install it.')
+    endif
 endif
 
 add_global_link_arguments(netatalk_common_link_args, language: 'c')
