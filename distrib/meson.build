@@ -1,2 +1,1 @@
-subdir('docker')
 subdir('initscripts')

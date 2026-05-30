@@ -129,6 +129,7 @@ if 'readmes' in docs_options
 
     readmes_md = [
         'CODE_OF_CONDUCT',
+        'CONTAINERS',
         'CONTRIBUTING',
         'CONTRIBUTORS',
         'INSTALL',
