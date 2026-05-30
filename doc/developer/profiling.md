@@ -112,7 +112,7 @@ Environment Variables
 
 The following environment variables control the profiling behavior.
 They are used in addition to the standard container environment
-variables documented in `distrib/docker/CONTAINERS.md`.
+variables documented in `CONTAINERS.md`.
 
 | Variable            | Description                                       |
 |---------------------|---------------------------------------------------|
