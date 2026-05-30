@@ -20,6 +20,9 @@ Changes in 4.5.0
 * CVE-2026-44073: uams: treat seteuid failures as fatal
 * CVE-2026-44074: libatalk/vfs: fix ACL errno check
 * CVE-2026-44075: libatalk/dsi: add missing break in dsi_opensession
+* CVE-2026-49387,CVE-2026-49388: afpd: bound Spotlight unmarshalling reads
+* CVE-2026-49389: afpd: bound CatSearch search-spec length and reject truncated specs
+* CVE-2026-49390: afpd: strictly parse server quantum
 * BREAKING: libatalk: cnid_find() ABI changed — gained a 'bool *more_available' out-parameter and a
        400-byte minimum result-buffer requirement. The libatalk soversion has been bumped to v20.
        Out-of-tree consumers that link against libatalk must be rebuilt against the new headers.
