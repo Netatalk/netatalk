@@ -40,6 +40,10 @@ That said, we will try to take action on your report as soon as possible!
 
 | CVE ID | Subject | Disclosure Date | Affected Versions | Severity |
 |--------|---------|-----------------|-------------------|----------|
+| [CVE-2026-49390](https://netatalk.io/security/CVE-2026-49390.html) | Missing range validation for server quantum | 2026/05/30 | 3.0.0 - 4.4.3 | Low |
+| [CVE-2026-49389](https://netatalk.io/security/CVE-2026-49389.html) | Heap over-read in CatSearch search-spec parsing | 2026/05/30 | 2.0.0 - 4.4.3 | Low |
+| [CVE-2026-49388](https://netatalk.io/security/CVE-2026-49388.html) | Heap out-of-bounds read in Spotlight RPC TOC index | 2026/05/30 | 3.1.0 - 4.4.3 | High |
+| [CVE-2026-49387](https://netatalk.io/security/CVE-2026-49387.html) | Heap out-of-bounds reads in Spotlight RPC element counts | 2026/05/30 | 3.1.0 - 4.4.3 | High |
 | [CVE-2026-45699](https://netatalk.io/security/CVE-2026-45699.html) | Stack-based buffer overflow in copydir() | 2026/05/13 | 3.2.0 - 4.4.2 | High |
 | [CVE-2026-45698](https://netatalk.io/security/CVE-2026-45698.html) | Stack-based buffer overflow in deletedir() | 2026/05/13 | 3.2.0 - 4.4.2 | High |
 | [CVE-2026-45356](https://netatalk.io/security/CVE-2026-45356.html) | Integer underflow in Spotlight RPC count decrement | 2026/05/13 | 3.1.0 - 4.4.2 | High |
