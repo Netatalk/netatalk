@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026, Andy Lemin (andylemin)
+ * Copyright (c) 2026, Andy Lemin (@andylemin)
  * Credits; Based on work by Netatalk contributors
  *
  * This program is free software; you can redistribute it and/or modify
