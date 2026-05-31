@@ -314,6 +314,7 @@ static void handle_transfer_session(AFPObj *obj)
 
     LOG(log_note, logtype_afpd,
         "handle_transfer_session: successful primary reconnect");
+    ipc_child_state(obj, DSI_RUNNING);
 }
 
 /* Forward declaration — defined after alarm_handler */
