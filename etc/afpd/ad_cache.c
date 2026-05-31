@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Andy Lemin (andylemin)
+ * Copyright (c) 2026 Andy Lemin (@andylemin)
  *
  * AD (AppleDouble) metadata cache layer for dircache.
  * Provides ad_store_to_cache(), ad_rebuild_from_cache(), and

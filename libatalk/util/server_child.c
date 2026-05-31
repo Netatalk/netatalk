@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 1997 Adrian Sun (asun@zoology.washington.edu)
  * Copyright (c) 2013 Frank Lahm <franklahm@gmail.com>
- * Copyright (c) 2025-2026 Andy Lemin (andylemin)
+ * Copyright (c) 2025-2026 Andy Lemin (@andylemin)
  * All rights reserved. See COPYRIGHT.
  */
 
