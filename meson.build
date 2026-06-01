@@ -277,6 +277,12 @@ netatalk_c_flags = cc.get_supported_arguments('-Werror=implicit-function-declara
 
 if host_os == 'linux'
     netatalk_common_flags += '-D_GNU_SOURCE'
+elif host_os == 'sunos'
+    netatalk_common_flags += [
+        '-D__EXTENSIONS__',
+        '-D_ISOC9X_SOURCE',
+        '-D_XOPEN_SOURCE=600',
+    ]
 endif
 
 if build_type == 'debug'
@@ -2443,7 +2449,6 @@ if host_os == 'freebsd'
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
 elif host_os == 'linux'
     use_glibc_at_header = cc.has_header('netatalk/at.h')
-    cdata.set('_GNU_SOURCE', 1)
     if cc.compiles(
         '''
 #include <sys/socket.h>
@@ -2470,10 +2475,7 @@ elif host_os == 'netbsd'
 elif host_os == 'openbsd'
     cdata.set('BSD4_4', 1)
 elif host_os == 'sunos'
-    cdata.set('__EXTENSIONS__', 1)
     cdata.set('__svr4__', 1)
-    cdata.set('_ISOC9X_SOURCE', 1)
-    cdata.set('_XOPEN_SOURCE', 600)
     cdata.set('SOLARIS', 1)
 elif host_os == 'darwin'
     cdata.set('HAVE_BROKEN_DBTOB', 1)
