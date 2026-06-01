@@ -286,6 +286,12 @@ option(
     description: 'Set path to D-Bus daemon',
 )
 option(
+    'with-dconf-path',
+    type: 'string',
+    value: '',
+    description: 'Set base path for the dconf database and profile used by the localsearch Spotlight backend (default /etc/dconf)',
+)
+option(
     'with-gssapi-path',
     type: 'string',
     value: '',

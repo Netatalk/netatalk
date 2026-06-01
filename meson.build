@@ -1384,8 +1384,19 @@ if get_option('with-spotlight')
                 )
             endif
 
-            cdata.set('INDEXER_DCONF_DB_DIR', '"/etc/dconf/db/netatalk.d"')
-            cdata.set('INDEXER_DCONF_PROFILE', '"/etc/dconf/profile/netatalk"')
+            dconf_path = get_option('with-dconf-path')
+            if dconf_path == ''
+                dconf_path = '/etc/dconf'
+            endif
+
+            cdata.set(
+                'INDEXER_DCONF_DB_DIR',
+                '"' + dconf_path + '/db/netatalk.d"',
+            )
+            cdata.set(
+                'INDEXER_DCONF_PROFILE',
+                '"' + dconf_path + '/profile/netatalk"',
+            )
 
             use_spotlight_localsearch = (
                 sparql_found
@@ -1407,7 +1418,7 @@ if get_option('with-spotlight')
                     'DCONF_UPDATE_COMMAND',
                     '"' + dconf.full_path() + ' update"',
                 )
-                install_emptydir('/etc/dconf/db')
+                install_emptydir(dconf_path / 'db')
                 if get_option('with-install-hooks')
                     meson.add_install_script(dconf, 'update')
                 endif
