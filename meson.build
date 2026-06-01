@@ -273,6 +273,8 @@ netatalk_common_flags = [
     '-Wno-deprecated-declarations',
 ]
 
+netatalk_c_flags = cc.get_supported_arguments('-Werror=implicit-function-declaration')
+
 if host_os == 'linux'
     netatalk_common_flags += '-D_GNU_SOURCE'
 endif
@@ -282,6 +284,7 @@ if build_type == 'debug'
 endif
 
 add_global_arguments(netatalk_common_flags, language: 'c')
+add_global_arguments(netatalk_c_flags, language: 'c')
 
 netatalk_common_link_args = []
 
