@@ -1,5 +1,10 @@
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <assert.h>
 #include <atalk/afp.h>
+#include <atalk/compat.h>
 
 #include "afpclient.h"
 #include "testhelper.h"

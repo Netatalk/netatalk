@@ -38,6 +38,7 @@
 #include <unistd.h>
 
 #include <atalk/afp.h>
+#include <atalk/compat.h>
 #include <atalk/constant_time.h>
 #include <atalk/logger.h>
 #include <atalk/uam.h>
