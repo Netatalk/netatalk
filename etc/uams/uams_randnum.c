@@ -32,6 +32,7 @@
 
 #include <atalk/logger.h>
 #include <atalk/afp.h>
+#include <atalk/compat.h>
 #include <atalk/uam.h>
 #include <atalk/constant_time.h>
 

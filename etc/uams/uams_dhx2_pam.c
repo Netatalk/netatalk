@@ -8,6 +8,7 @@
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <gcrypt.h>
 #include <signal.h>
@@ -25,6 +26,7 @@
 #endif
 
 #include <atalk/afp.h>
+#include <atalk/compat.h>
 #include <atalk/constant_time.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>

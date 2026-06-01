@@ -29,6 +29,7 @@
 #include <gcrypt.h>
 
 #include <atalk/afp.h>
+#include <atalk/compat.h>
 #include <atalk/logger.h>
 #include <atalk/uam.h>
 

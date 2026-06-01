@@ -16,6 +16,7 @@
 #include "config.h"
 #endif
 
+#include <arpa/inet.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
