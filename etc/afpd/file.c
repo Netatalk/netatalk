@@ -16,6 +16,7 @@
 
 #include <atalk/adouble.h>
 #include <atalk/afp.h>
+#include <atalk/afp_util.h>
 #include <atalk/cnid.h>
 #include <atalk/dsi.h>
 #include <atalk/fce_api.h>
