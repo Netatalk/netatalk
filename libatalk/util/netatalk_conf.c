@@ -364,7 +364,7 @@ static void check_ea_support(struct vol *vol)
         if (haseas) {
             vol->v_vfs_ea = AFPVOL_EA_SYS;
         } else {
-            vol->v_vfs_ea = AFPVOL_EA_NONE;
+            vol->v_vfs_ea = AFPVOL_EA_AD;
         }
     }
 
