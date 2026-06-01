@@ -302,7 +302,10 @@ static int pack_header(struct ea *ea)
  * @param[in] attrsize      size of ea
  * @param[in] bitmap        bitmap from FP func
  *
- * @returns new number of EA entries, -1 on error
+ * @returns new number of EA entries,
+ *          -1 on misc error,
+ *          -2 if EA exists and kXCreateAttr (passed as O_CREAT) flag set,
+ *          -3 if no EA exists and kXAttrReplace (passed as O_TRUNC) flag set
  *
  * @note Grow array ea->ea_entries[]. If ea->ea_entries is still NULL, start allocating.
  * Otherwise realloc and put entry at the end. Increments ea->ea_count.
@@ -329,10 +332,10 @@ static int ea_addentry(struct ea *ea,
                 LOG(log_debug, logtype_afpd, "ea_addentry('%s', bitmap:0x%x): exists",
                     attruname, bitmap);
 
-                if (bitmap & kXAttrCreate)
+                if (bitmap & O_CREAT)
                     /* its like O_CREAT|O_EXCL -> fail */
                 {
-                    return -1;
+                    return -2;
                 }
 
                 (*(ea->ea_entries))[count].ea_size = attrsize;
@@ -343,10 +346,10 @@ static int ea_addentry(struct ea *ea,
         }
     }
 
-    if ((bitmap & kXAttrReplace) && ! ea_existed)
+    if ((bitmap & O_TRUNC) && ! ea_existed)
         /* replace was requested, but EA didn't exist */
     {
-        return -1;
+        return -3;
     }
 
     if (ea->ea_count == 0) {
@@ -968,6 +971,11 @@ int get_easize(const struct vol *vol, char *rbuf, size_t *rbuflen,
 
         memset(rbuf, 0, 4);
         *rbuflen += 4;
+
+        if (vol->v_obj->afp_version >= 34) {
+            ret = AFPERR_NOITEM;
+        }
+
         return ret;
     }
 
@@ -1035,6 +1043,11 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
 
         memset(rbuf, 0, 4);
         *rbuflen += 4;
+
+        if (vol->v_obj->afp_version >= 34) {
+            ret = AFPERR_NOITEM;
+        }
+
         return ret;
     }
 
@@ -1053,6 +1066,18 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 break;
             }
 
+            if (maxreply <= MAX_REPLY_EXTRA_BYTES) {
+                /*
+                 * maxreply must be at least size of xattr + MAX_REPLY_EXTRA_BYTES (6)
+                 * bytes. The 6 bytes are the AFP reply packets bitmap and length field.
+                 */
+                memset(rbuf, 0, 4);
+                *rbuflen += 4;
+                close(fd);
+                ret = AFPERR_PARAM;
+                break;
+            }
+
             /* Check how much the client wants, give him what we think is right */
             maxreply -= MAX_REPLY_EXTRA_BYTES;
 
@@ -1060,8 +1085,19 @@ int get_eacontent(const struct vol *vol, char *rbuf, size_t *rbuflen,
                 maxreply = MAX_EA_SIZE;
             }
 
-            toread = (maxreply < (*ea.ea_entries)[count].ea_size) ? maxreply :
-                     (*ea.ea_entries)[count].ea_size;
+            if (maxreply < (*ea.ea_entries)[count].ea_size) {
+                /*
+                 * maxreply must be at least size of xattr. Return error instead of
+                 * truncating data.
+                 */
+                memset(rbuf, 0, 4);
+                *rbuflen += 4;
+                close(fd);
+                ret = AFPERR_PARAM;
+                break;
+            }
+
+            toread = (*ea.ea_entries)[count].ea_size;
             LOG(log_debug, logtype_afpd, "get_eacontent('%s'): sending %u bytes", attruname,
                 toread);
             /* Put length of EA data in reply buffer */
@@ -1198,6 +1234,7 @@ int set_ea(const struct vol *vol, const char *uname, const char *attruname,
            const char *ibuf, size_t attrsize, int oflag, int fd _U_)
 {
     int ret = AFP_OK;
+    int ea_addentry_ret = 0;
     struct ea ea;
     LOG(log_debug, logtype_afpd, "set_ea: file: %s", uname);
 
@@ -1210,9 +1247,27 @@ int set_ea(const struct vol *vol, const char *uname, const char *attruname,
         return AFPERR_MISC;
     }
 
-    if ((ea_addentry(&ea, attruname, attrsize, oflag)) == -1) {
+    ea_addentry_ret = ea_addentry(&ea, attruname, attrsize, oflag);
+
+    if (ea_addentry_ret == -1) {
         LOG(log_error, logtype_afpd, "set_ea('%s'): ea_addentry error", uname);
         ret = AFPERR_MISC;
+        goto exit;
+    } else if (ea_addentry_ret == -2) {
+        LOG(log_debug, logtype_afpd,
+            "set_ea('%s'): ea_addentry exists but create flag set", uname);
+        ret = AFPERR_EXIST;
+        goto exit;
+    } else if (ea_addentry_ret == -3) {
+        LOG(log_debug, logtype_afpd,
+            "set_ea('%s'): ea_addentry doesn't exist but replace flag set", uname);
+
+        if (vol->v_obj->afp_version >= 34) {
+            ret = AFPERR_NOITEM;
+        } else {
+            ret = AFPERR_MISC;
+        }
+
         goto exit;
     }
 

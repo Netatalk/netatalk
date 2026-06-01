@@ -13,13 +13,8 @@ STATIC void test399()
     int remerror = AFPERR_NOITEM;
     ENTER_TEST
 
-    if (Conn->afp_version < 30) {
-        test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 
@@ -36,6 +31,12 @@ STATIC void test399()
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, file)) {
         test_nottested();
         goto test_exit;
+    }
+
+    /* check replace flag */
+    if (ntohl(remerror) != FPSetExtAttr(Conn, vol, DIRDID_ROOT, 4, file,
+                                        attr_name, "test399_data")) {
+        test_failed();
     }
 
     FAIL(FPSetExtAttr(Conn, vol, DIRDID_ROOT, 2, file, attr_name, "test399_data"))
@@ -82,11 +83,6 @@ STATIC void test416()
         goto test_exit;
     }
 
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
-        goto test_exit;
-    }
-
     if (!(get_vol_attrib(vol) & VOLPBIT_ATTR_EXTATTRS)) {
         test_skipped(T_EA);
         goto test_exit;
@@ -123,13 +119,8 @@ STATIC void test432()
     dsi = &Conn->dsi;
     ENTER_TEST
 
-    if (Conn->afp_version < 30) {
-        test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 
@@ -202,13 +193,8 @@ STATIC void test536()
     int remerror = AFPERR_NOITEM;
     ENTER_TEST
 
-    if (Conn->afp_version < 30) {
-        test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 
@@ -387,13 +373,8 @@ STATIC void test540()
     int remerror = AFPERR_NOITEM;
     ENTER_TEST
 
-    if (Conn->afp_version < 30) {
-        test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 
@@ -600,13 +581,8 @@ STATIC void test541()
     char *data = "test541_persistent_value_data";
     ENTER_TEST
 
-    if (Conn->afp_version < 30) {
-        test_skipped(T_AFP3);
-        goto test_exit;
-    }
-
-    if (adouble == AD_V2) {
-        test_skipped(T_ADEA);
+    if (Conn->afp_version < 32) {
+        test_skipped(T_AFP32);
         goto test_exit;
     }
 
