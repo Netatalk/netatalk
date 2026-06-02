@@ -72,6 +72,19 @@ static struct slq_state_names slq_state_names[] = {
 static int cnid_comp_fn(const void *p1, const void *p2);
 static bool create_result_handle(slq_t *slq);
 
+static uint32_t spotlight_get_be32(const char *buf, size_t offset)
+{
+    uint32_t val;
+    memcpy(&val, buf + offset, sizeof(val));
+    return ntohl(val);
+}
+
+static void spotlight_put_be32(char *buf, size_t offset, uint32_t val)
+{
+    val = htonl(val);
+    memcpy(buf + offset, &val, sizeof(val));
+}
+
 /************************************************
  * Misc utility functions
  ************************************************/
@@ -1385,17 +1398,23 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
         goto EC_CLEANUP;
     }
 
-    /*    IVAL(ibuf, 2): unknown, always 0x00008004, some flags ? */
-    cmd = RIVAL(ibuf, 6);
+    /*
+     * The FPSpotlightRPC envelope uses big-endian 32-bit fields.
+     * RIVAL() is reverse-host-order in this codebase, so it decodes
+     * these bytes correctly only on little-endian hosts.
+     *
+     * spotlight_get_be32(ibuf, 2): unknown, always 0x00008004, some flags ?
+     */
+    cmd = spotlight_get_be32(ibuf, 6);
     LOG(log_debug, logtype_sl, "afp_spotlight_rpc(cmd: %d)", cmd);
 
-    /*    IVAL(ibuf, 10: unknown, always 0x00000000 */
+    /* spotlight_get_be32(ibuf, 10): unknown, always 0x00000000 */
 
     switch (cmd) {
     case SPOTLIGHT_CMD_OPEN:
     case SPOTLIGHT_CMD_OPEN2:
-        RSIVAL(rbuf, 0, ntohs(vid));
-        RSIVAL(rbuf, 4, 0);
+        spotlight_put_be32(rbuf, 0, ntohs(vid));
+        spotlight_put_be32(rbuf, 4, 0);
         len = (int)strlcpy(rbuf + 8, vol->v_path, MAXPATHLEN) + 1;
         *rbuflen += 8 + len;
         LOG(log_debug, logtype_sl,
@@ -1406,7 +1425,7 @@ int afp_spotlight_rpc(AFPObj *obj, char *ibuf, size_t ibuflen,
 
     case SPOTLIGHT_CMD_FLAGS:
         /* Whatever this value means... flags? Helios uses 0x1eefface */
-        RSIVAL(rbuf, 0, 0x0100006b);
+        spotlight_put_be32(rbuf, 0, 0x0100006b);
         *rbuflen += 4;
         LOG(log_debug, logtype_sl,
             "SPOTLIGHT_CMD_FLAGS: returning 0x0100006b");
