@@ -67,7 +67,7 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
     struct stat st;
 
     if (mkdir(path, mode) != 0) {
-        SLOG("mkdir: %s: %s", path, strerror(errno));
+        NAD_INFO("mkdir: %s: %s", path, strerror(errno));
         return -1;
     }
 
@@ -85,12 +85,12 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
 
     if ((did = cnid_for_path(vol->vol->v_cdb, vol->vol->v_path, path,
                              &pdid)) == CNID_INVALID) {
-        SLOG("Error resolving CNID for %s", path);
+        NAD_INFO("Error resolving CNID for %s", path);
         return -1;
     }
 
     if (lstat(path, &st) != 0) {
-        SLOG("lstat: %s: %s", path, strerror(errno));
+        NAD_INFO("lstat: %s: %s", path, strerror(errno));
         return -1;
     }
 
@@ -99,7 +99,7 @@ static int mkdir_with_cnid(const char *path, mode_t mode, afpvol_t *vol)
     if (ad_open(&ad, path,
                 ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE,
                 0666) != 0) {
-        SLOG("Error opening adouble for: %s", path);
+        NAD_INFO("Error opening adouble for: %s", path);
         return -1;
     }
 
@@ -151,7 +151,7 @@ static int do_mkdir(const char *path, afpvol_t *vol)
     char buf[MAXPATHLEN + 1];
 
     if (strlcpy(buf, path, sizeof(buf)) >= sizeof(buf)) {
-        SLOG("Path too long: %s", path);
+        NAD_INFO("Path too long: %s", path);
         return 1;
     }
 
@@ -165,7 +165,7 @@ static int do_mkdir(const char *path, afpvol_t *vol)
 
         if (lstat(buf, &st) != 0) {
             if (errno != ENOENT) {
-                SLOG("lstat: %s: %s", buf, strerror(errno));
+                NAD_INFO("lstat: %s: %s", buf, strerror(errno));
                 return 1;
             }
 
@@ -177,7 +177,7 @@ static int do_mkdir(const char *path, afpvol_t *vol)
                 printf("%s\n", buf);
             }
         } else if (!S_ISDIR(st.st_mode)) {
-            SLOG("%s: Not a directory", buf);
+            NAD_INFO("%s: Not a directory", buf);
             return 1;
         }
 
@@ -187,7 +187,7 @@ static int do_mkdir(const char *path, afpvol_t *vol)
     /* Create the final directory */
     if (lstat(buf, &st) != 0) {
         if (errno != ENOENT) {
-            SLOG("lstat: %s: %s", buf, strerror(errno));
+            NAD_INFO("lstat: %s: %s", buf, strerror(errno));
             return 1;
         }
 
@@ -199,7 +199,7 @@ static int do_mkdir(const char *path, afpvol_t *vol)
             printf("%s\n", buf);
         }
     } else if (!S_ISDIR(st.st_mode)) {
-        SLOG("%s: Not a directory", buf);
+        NAD_INFO("%s: Not a directory", buf);
         return 1;
     }
 
@@ -240,11 +240,11 @@ int nad_mkdir(int argc, char *argv[], AFPObj *obj)
 
     for (int i = 0; i < argc; i++) {
         if (alarmed) {
-            SLOG("...break");
+            NAD_INFO("...break");
             break;
         }
 
-        if (openvol(obj, argv[i], &volume) != 0) {
+        if (openvol_optional(obj, argv[i], &volume) != 0) {
             rval = 1;
             continue;
         }

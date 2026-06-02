@@ -1,5 +1,10 @@
 nad_sources = [
+    'crc16.c',
     'ftw.c',
+    'hqx.c',
+    'macbin.c',
+    'megatron.c',
+    'nad_adouble.c',
     'nad_cp.c',
     'nad_find.c',
     'nad_ls.c',

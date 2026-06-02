@@ -51,6 +51,10 @@ typedef enum {
     CMD_FIND,
     CMD_MKDIR,
     CMD_RMDIR,
+    CMD_BIN,
+    CMD_HEX,
+    CMD_UNBIN,
+    CMD_UNHEX,
     CMD_VERSION
 } nad_command_t;
 
@@ -88,6 +92,22 @@ static nad_command_t get_command(const char *cmd)
         return CMD_RMDIR;
     }
 
+    if (STRCMP(cmd, ==, "bin")) {
+        return CMD_BIN;
+    }
+
+    if (STRCMP(cmd, ==, "hex")) {
+        return CMD_HEX;
+    }
+
+    if (STRCMP(cmd, ==, "unbin")) {
+        return CMD_UNBIN;
+    }
+
+    if (STRCMP(cmd, ==, "unhex")) {
+        return CMD_UNHEX;
+    }
+
     if (STRCMP(cmd, ==, "-v") || STRCMP(cmd, ==, "--version")) {
         return CMD_VERSION;
     }
@@ -97,7 +117,7 @@ static nad_command_t get_command(const char *cmd)
 
 static void usage_main(void)
 {
-    printf("Usage: nad [-F configfile] ls|cp|rm|mv|mkdir|rmdir|set|find [file|dir, ...]\n");
+    printf("Usage: nad [-F configfile] [--force] ls|cp|rm|mv|mkdir|rmdir|set|find|bin|hex|unbin|unhex [file|dir, ...]\n");
     printf("       nad -v|--version\n");
 }
 
@@ -124,6 +144,9 @@ int main(int argc, char **argv)
             }
 
             obj.cmdlineconfigfile = argv[arg_idx++];
+        } else if (strcmp(argv[arg_idx], "--force") == 0) {
+            forceflag = 1;
+            arg_idx++;
         } else {
             break;
         }
@@ -195,9 +218,15 @@ int main(int argc, char **argv)
     case CMD_RMDIR:
         return nad_rmdir(argc - arg_idx, argv + arg_idx, &obj);
 
+    case CMD_BIN:
+    case CMD_HEX:
+    case CMD_UNBIN:
+    case CMD_UNHEX:
+        return nad_archive(argc - arg_idx, argv + arg_idx, &obj);
+
     case CMD_VERSION:
         show_version();
-        return 1;
+        return 0;
 
     case CMD_UNKNOWN:
     default:

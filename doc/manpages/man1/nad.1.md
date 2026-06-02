@@ -4,35 +4,51 @@ nad - Netatalk AppleDouble file utility suite
 
 # Synopsis
 
-**nad** [-F *configfile*] [ls | cp | mv | rm | mkdir | rmdir | set | find] [...]
+**nad** [-F *configfile*] [\-\-force] [ls | cp | mv | rm | mkdir | rmdir | set | find | bin | hex | unbin | unhex] [...]
 
 **nad** [-v | \-\-version]
 
 # Description
 
 **nad** is a file utility suite that can be used on a Netatalk host
-to manipulate files and directories in AFP shared volumes.
+to manipulate files and directories, including files in AFP shared volumes.
 AppleDouble data, which could be one of extended attributes of files,
 .\_ files, or files in **.AppleDouble** directories,
 as well as the CNID databases are updated appropriately
 when files in the shared Netatalk volume are modified.
+By default, **nad** refuses to operate on paths outside configured AFP
+volumes. Use **\-\-force** to override this validation.
 
 Using **nad** is preferable over the operating system's native file operation commands
-on files and directories in a Netatalk shared volume, because it preserves the integrity
+on files and directories in a Netatalk AFP volume, because it preserves the integrity
 of Mac OS metadata and accuracy of the CNID database.
 
-It depends on Netatalk running on the host system and the AFP volume being
-shared by Netatalk.
-
-Only users with appropriate permissions to access the files and directories
+Only users with appropriate permissions to access AFP files and directories
 can use **nad** to manipulate them.
 It is sensitive to afp.conf settings such as *valid users* and *invalid users*.
+
+When used with **\-\-force** outside AFP volumes, **nad** can manipulate files
+and directories while making a best effort to preserve Mac OS metadata using
+extended attributes or AppleDouble sidecar files, depending on the options
+used. CNID database updates are skipped outside AFP volumes.
+
+The **bin**, **hex**, **unbin**, and **unhex** commands transform files
+between Netatalk metadata, MacBinary, and BinHex formats. They preserve data
+forks, resource forks, and Finder metadata when moving files between classic
+Mac archive formats and Netatalk-managed storage.
+
+The file format transformer commands are based on *megatron* by Charles Clark.
 
 # Options
 
 **-F** *configfile*
 
 > Use *configfile* as the full path to the Netatalk configuration file.
+
+**\-\-force**
+
+> Allow operations on paths outside configured AFP volumes. Outside AFP
+volumes, CNID database updates are skipped.
 
 # Available Commands
 
@@ -71,6 +87,16 @@ Set metadata on files.
 Find files and directories.
 
 > nad find [-v volume_path] {name}
+
+Convert between Netatalk metadata, MacBinary, and BinHex.
+
+> nad bin [\-\-header] [\-\-filename NAME] [\-\-stdout] [\-\-adouble] [\-\-verbose] FILE [...]
+>
+> nad hex [\-\-header] [\-\-filename NAME] [\-\-stdout] [\-\-adouble] [\-\-verbose] FILE [...]
+>
+> nad unbin [\-\-header] [\-\-filename NAME] [\-\-adouble] [\-\-verbose] [SOURCEFILE [...]]
+>
+> nad unhex [\-\-header] [\-\-filename NAME] [\-\-adouble] [\-\-verbose] [SOURCEFILE [...]]
 
 Show version.
 
@@ -142,10 +168,11 @@ each named src_file is copied to the destination dst_directory. The
 names of the files themselves are not changed. If cp detects an attempt
 to copy a file to itself, the copy will fail.
 
-When a copy targeting an AFP volume is detected, its CNID database
-daemon is connected and all copies will also go through the CNID
-database. AppleDouble data are also copied and created as needed when
-the target is an AFP volume.
+Source and destination paths must be inside configured AFP volumes unless
+**\-\-force** is used. When a copy targeting an AFP volume is detected, its
+CNID database daemon is connected and all copies will also go through the
+CNID database. AppleDouble data are also copied and created as needed when the
+target is an AFP volume.
 
 Options:
 
@@ -198,7 +225,9 @@ contents of the directory are copied rather than the directory itself.
 Move files and directories.
 
 Move files around within an AFP volume, updating the CNID database as
-needed. If either condition below is true, the files are copied and removed from the source.
+needed. Source and destination paths must be inside configured AFP volumes
+unless **\-\-force** is used. If either condition below is true, the files are
+copied and removed from the source.
 
 - source or destination is not an AFP volume
 
@@ -345,16 +374,100 @@ Uppercase letter sets the flag, lowercase removes the flag.
 
 # nad find
 
-Find files and directories in an AFP volume.
+Find files and directories.
 
 This returns a list of paths that wholly or partially match the given name.
+Inside AFP volumes, the CNID database is searched. With **\-\-force** outside
+AFP volumes, the filesystem is traversed from the selected path.
 
 It takes one option:
 
 **-v** *path*
 
 > Use path to the shared volume to search rather than the current working
-directory.
+directory. With **\-\-force** outside AFP volumes, use path as the filesystem
+traversal root.
+
+# nad bin, hex, unbin, unhex
+
+Encode and decode MacBinary and BinHex, while reading and storing Mac OS
+metadata (resource forks and FinderInfo) in the metadata format used by
+Netatalk. Inside AFP volumes, the configured Netatalk volume metadata format
+is used and CNID metadata is updated.
+
+The command reads *afp.conf*, resolves each relevant path to a configured
+AFP volume, and uses that volume's metadata format when the path is inside
+an AFP volume. AppleDouble v2 volumes (**ea = ad**) use AppleDouble
+sidecar files. Extended Attributes volumes (**ea = sys**) use Netatalk's
+EA/sys-xattr metadata path.
+
+When operating with **\-\-force** outside an AFP volume, **nad** uses
+filesystem EA metadata by default and silently skips CNID database updates.
+Use **\-\-adouble** to use AppleDouble sidecar metadata outside AFP volumes
+instead.
+
+The filename used for an output file is the filename encoded in the
+source file, unless **\-\-filename** is supplied. MacBinary output files are
+created with a *.bin* extension. BinHex output files are created with a
+*.hqx* extension.
+
+Commands:
+
+**bin**
+
+> Convert Netatalk metadata, data fork, and resource fork to MacBinary
+(*.bin*).
+
+**hex**
+
+> Convert Netatalk metadata, data fork, and resource fork to BinHex
+(*.hqx*).
+
+**unbin**
+
+> Convert MacBinary (*.bin*) input to the current AFP volume's metadata
+format, or filesystem EA metadata outside an AFP volume.
+
+**unhex**
+
+> Convert BinHex (*.hqx*) input to the current AFP volume's metadata
+format, or filesystem EA metadata outside an AFP volume.
+
+Options:
+
+**\-\-header**
+
+> Print header information for the selected input format instead of performing
+a conversion. For **bin** and **hex**, this prints Netatalk metadata. For
+**unbin** and **unhex**, this prints the archive header.
+
+**\-\-filename** *NAME*
+
+> Use *NAME* in the converted file header instead of the name encoded in the
+source file. An appropriate file extension is still added to the output file.
+
+**\-\-stdout**
+
+> Write generated MacBinary or BinHex data to standard output.
+
+**\-\-adouble**
+
+> Write AppleDouble sidecar metadata instead of filesystem EA metadata outside
+AFP volumes. Configured AFP volumes continue to use the metadata format from
+*afp.conf*.
+
+**\-\-verbose**
+
+> Print diagnostic conversion details. Without this option, normal conversion
+is silent unless an error occurs.
+
+**-h**, **\-\-help**
+
+> Display archive command help and exit.
+
+If no *SOURCEFILE* is given, or if *SOURCEFILE* is '-', **unbin** and
+**unhex** read archive data from standard input. Options must appear before
+positional *FILE* arguments.
 
 # Examples
 
@@ -386,6 +499,35 @@ Find files with "Report" in the name in the shared AFP volume at /srv/afpshare:
     /srv/afpshare/Documents/2025/Report January 2025.doc
     /srv/afpshare/Documents/2024/Report December 2024.doc
     /srv/afpshare/Documents/Report Template.doc
+
+Convert a file to MacBinary:
+
+    nad bin /srv/afpshare/picture
+
+Convert a file to BinHex:
+
+    nad hex /srv/afpshare/picture
+
+Convert MacBinary input into filesystem EA metadata outside an AFP volume:
+
+    nad --force unbin /tmp/picture.bin
+
+Convert BinHex input to the current AFP volume's metadata format:
+
+    nad unhex file.hqx
+
+Inspect a MacBinary header:
+
+    $ nad unbin --header MacTCP_Ping_2.0.2.sea_.bin
+    name:               MacTCP Ping 2.0.2.sea
+    comment:
+    creator:            'aust'
+    type:               'APPL'
+    fork length[0]:     24419
+    fork length[1]:     18774
+    creation date:      Wed May 17 19:41:57 1995
+    modification date:  Wed May 17 19:41:58 1995
+    backup date:        (not set)
 
 # See also
 

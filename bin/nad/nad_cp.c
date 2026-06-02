@@ -216,7 +216,7 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
     target = argv[--argc];
 
     if ((strlcpy(to.p_path, target, PATH_MAX)) >= PATH_MAX) {
-        ERROR("%s: name too long", target);
+        NAD_FATAL("%s: name too long", target);
     }
 
     to.p_end = to.p_path + strlen(to.p_path);
@@ -252,7 +252,7 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
     r = stat(to.p_path, &to_stat);
 
     if (r == -1 && errno != ENOENT) {
-        ERROR("%s", to.p_path);
+        NAD_FATAL("%s", to.p_path);
     }
 
     if (r == -1 || !S_ISDIR(to_stat.st_mode)) {
@@ -260,7 +260,7 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
          * Case (1).  Target is not a directory.
          */
         if (argc > 1) {
-            ERROR("%s is not a directory", to.p_path);
+            NAD_FATAL("%s is not a directory", to.p_path);
         }
 
         /*
@@ -284,9 +284,9 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
 
         if (have_trailing_slash && type == FILE_TO_FILE) {
             if (r == -1) {
-                ERROR("directory %s does not exist", to.p_path);
+                NAD_FATAL("directory %s does not exist", to.p_path);
             } else {
-                ERROR("%s is not a directory", to.p_path);
+                NAD_FATAL("%s is not a directory", to.p_path);
             }
         }
     } else
@@ -320,18 +320,11 @@ int nad_cp(int argc, char *argv[], AFPObj *obj)
             continue;
         }
 
-        if (!svolume.vol->v_path && !dvolume.vol->v_path) {
-            SLOG("Neither source nor destination is an AFP volume");
-            closevol(&svolume);
-            badcp = rval = 1;
-            continue;
-        }
-
         if (nftw(argv[i], copy, upfunc, 20, ftw_options) == -1) {
             if (alarmed) {
-                SLOG("...break");
+                NAD_INFO("...break");
             } else if (!badcp) {
-                SLOG("Error: %s: %s", argv[i], strerror(errno));
+                NAD_INFO("Error: %s: %s", argv[i], strerror(errno));
             }
         }
 
@@ -360,7 +353,7 @@ static int copy(const char *path,
 
     /* This currently doesn't work with "." */
     if (strcmp(path, ".") == 0) {
-        ERROR("\".\" not supported");
+        NAD_FATAL("\".\" not supported");
     }
 
     const char *dir = strrchr(path, '/');
@@ -423,7 +416,7 @@ static int copy(const char *path,
         *target_mid = 0;
 
         if (target_mid - to.p_path + nlen >= PATH_MAX) {
-            SLOG("%s%s: name too long (not copied)", to.p_path, p);
+            NAD_INFO("%s%s: name too long (not copied)", to.p_path, p);
             badcp = rval = 1;
             return 0;
         }
@@ -440,7 +433,7 @@ static int copy(const char *path,
     } else {
         if (to_stat.st_dev == statp->st_dev &&
                 to_stat.st_ino == statp->st_ino) {
-            SLOG("%s and %s are identical (not copied).", to.p_path, path);
+            NAD_INFO("%s and %s are identical (not copied).", to.p_path, path);
             badcp = rval = 1;
 
             if (S_ISDIR(statp->st_mode))
@@ -454,9 +447,9 @@ static int copy(const char *path,
 
         if (!S_ISDIR(statp->st_mode) &&
                 S_ISDIR(to_stat.st_mode)) {
-            SLOG("cannot overwrite directory %s with "
-                 "non-directory %s",
-                 to.p_path, path);
+            NAD_INFO("cannot overwrite directory %s with "
+                     "non-directory %s",
+                     to.p_path, path);
             badcp = rval = 1;
             return 0;
         }
@@ -467,7 +460,7 @@ static int copy(const char *path,
     /* Convert basename to appropriate volume encoding */
     if (dvolume.vol->v_path
             && (convert_dots_encoding(&svolume, &dvolume, to.p_path)) == -1) {
-        SLOG("Error converting name for %s", to.p_path);
+        NAD_INFO("Error converting name for %s", to.p_path);
         badcp = rval = 1;
         return -1;
     }
@@ -482,7 +475,7 @@ static int copy(const char *path,
 
     case S_IFDIR:
         if (!Rflag) {
-            SLOG("%s is a directory", path);
+            NAD_INFO("%s is a directory", path);
             badcp = rval = 1;
             return -1;
         }
@@ -497,11 +490,11 @@ static int copy(const char *path,
          */
         if (dne) {
             if (mkdir(to.p_path, statp->st_mode | S_IRWXU) < 0) {
-                ERROR("mkdir: %s: %s", to.p_path, strerror(errno));
+                NAD_FATAL("mkdir: %s: %s", to.p_path, strerror(errno));
             }
         } else if (!S_ISDIR(to_stat.st_mode)) {
             errno = ENOTDIR;
-            ERROR("%s", to.p_path);
+            NAD_FATAL("%s", to.p_path);
         }
 
         /* Create ad dir and copy ".Parent" */
@@ -519,7 +512,7 @@ static int copy(const char *path,
             /* copy metadata file */
             if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
                     && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
-                SLOG("Error copying adouble for %s -> %s", path, to.p_path);
+                NAD_INFO("Error copying adouble for %s -> %s", path, to.p_path);
                 badcp = rval = 1;
                 break;
             }
@@ -529,7 +522,7 @@ static int copy(const char *path,
 
             if ((did = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path,
                                      &pdid)) == CNID_INVALID) {
-                SLOG("Error resolving CNID for %s", to.p_path);
+                NAD_INFO("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;
             }
@@ -547,7 +540,7 @@ static int copy(const char *path,
 
             if (ad_open(&ad, to.p_path,
                         ADFLAGS_HF | ADFLAGS_DIR | ADFLAGS_RDWR | ADFLAGS_CREATE, 0666) != 0) {
-                ERROR("Error opening adouble for: %s", to.p_path);
+                NAD_FATAL("Error opening adouble for: %s", to.p_path);
             }
 
             ad_setid(&ad, st.st_dev, st.st_ino, did, pdid, dvolume.db_stamp);
@@ -573,15 +566,15 @@ static int copy(const char *path,
 
     case S_IFBLK:
     case S_IFCHR:
-        SLOG("%s is a device file (not copied).", path);
+        NAD_INFO("%s is a device file (not copied).", path);
         break;
 
     case S_IFSOCK:
-        SLOG("%s is a socket (not copied).", path);
+        NAD_INFO("%s is a socket (not copied).", path);
         break;
 
     case S_IFIFO:
-        SLOG("%s is a FIFO (not copied).", path);
+        NAD_INFO("%s is a FIFO (not copied).", path);
         break;
 
     default:
@@ -595,7 +588,7 @@ static int copy(const char *path,
             /* copy ad-file */
             if (svolume.vol->v_path && ADVOL_V2_OR_EA(svolume.vol->v_adouble)
                     && dvolume.vol->vfs->vfs_copyfile(dvolume.vol, -1, path, to.p_path)) {
-                SLOG("Error copying adouble for %s -> %s", path, to.p_path);
+                NAD_INFO("Error copying adouble for %s -> %s", path, to.p_path);
                 badcp = rval = 1;
                 break;
             }
@@ -606,7 +599,7 @@ static int copy(const char *path,
 
             if ((cnid = cnid_for_path(dvolume.vol->v_cdb, dvolume.vol->v_path, to.p_path,
                                       &did)) == CNID_INVALID) {
-                SLOG("Error resolving CNID for %s", to.p_path);
+                NAD_INFO("Error resolving CNID for %s", to.p_path);
                 badcp = rval = 1;
                 return -1;
             }
@@ -624,7 +617,7 @@ static int copy(const char *path,
 
             if (ad_open(&ad, to.p_path, ADFLAGS_HF | ADFLAGS_RDWR | ADFLAGS_CREATE,
                         0666) != 0) {
-                ERROR("Error opening adouble for: %s", to.p_path);
+                NAD_FATAL("Error opening adouble for: %s", to.p_path);
             }
 
             ad_setid(&ad, st.st_dev, st.st_ino, cnid, did, dvolume.db_stamp);
@@ -679,7 +672,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     char *p;
 
     if ((from_fd = open(spath, O_RDONLY, 0)) == -1) {
-        SLOG("%s: %s", spath, strerror(errno));
+        NAD_INFO("%s: %s", spath, strerror(errno));
         return 1;
     }
 
@@ -738,7 +731,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     }
 
     if (to_fd == -1) {
-        SLOG("%s: %s", to.p_path, strerror(errno));
+        NAD_INFO("%s: %s", to.p_path, strerror(errno));
         (void)close(from_fd);
         return 1;
     }
@@ -775,13 +768,13 @@ static int ftw_copy_file(const struct FTW *entp _U_,
         }
 
         if (wcount != (ssize_t)wresid) {
-            SLOG("%s: %s", to.p_path, strerror(errno));
+            NAD_INFO("%s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
 
         /* Some systems don't unmap on close(2). */
         if (munmap(p, sp->st_size) < 0) {
-            SLOG("%s: %s", spath, strerror(errno));
+            NAD_INFO("%s: %s", spath, strerror(errno));
             rval = 1;
         }
     } else {
@@ -822,7 +815,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             buf = malloc(bufsize);
 
             if (buf == NULL) {
-                ERROR("Not enough memory");
+                NAD_FATAL("Not enough memory");
             }
         }
 
@@ -845,14 +838,14 @@ static int ftw_copy_file(const struct FTW *entp _U_,
             }
 
             if (wcount != (ssize_t)wresid) {
-                SLOG("%s: %s", to.p_path, strerror(errno));
+                NAD_INFO("%s: %s", to.p_path, strerror(errno));
                 rval = 1;
                 break;
             }
         }
 
         if (rcount < 0) {
-            SLOG("%s: %s", spath, strerror(errno));
+            NAD_INFO("%s: %s", spath, strerror(errno));
             rval = 1;
         }
     }
@@ -869,7 +862,7 @@ static int ftw_copy_file(const struct FTW *entp _U_,
     }
 
     if (close(to_fd)) {
-        SLOG("%s: %s", to.p_path, strerror(errno));
+        NAD_INFO("%s: %s", to.p_path, strerror(errno));
         rval = 1;
     }
 
@@ -886,24 +879,24 @@ static int ftw_copy_link(const struct FTW *p _U_,
     char llink[PATH_MAX];
 
     if ((len = (int) readlink(spath, llink, sizeof(llink) - 1)) == -1) {
-        SLOG("readlink: %s: %s", spath, strerror(errno));
+        NAD_INFO("readlink: %s: %s", spath, strerror(errno));
         return 1;
     }
 
     if (len < 0 || len >= sizeof(llink)) {
-        SLOG("readlink: %s: invalid link length", spath);
+        NAD_INFO("readlink: %s: invalid link length", spath);
         return 1;
     }
 
     llink[len] = '\0';
 
     if (exists && unlink(to.p_path)) {
-        SLOG("unlink: %s: %s", to.p_path, strerror(errno));
+        NAD_INFO("unlink: %s: %s", to.p_path, strerror(errno));
         return 1;
     }
 
     if (symlink(llink, to.p_path)) {
-        SLOG("symlink: %s: %s", llink, strerror(errno));
+        NAD_INFO("symlink: %s: %s", llink, strerror(errno));
         return 1;
     }
 
@@ -928,7 +921,7 @@ static int setfile(const struct stat *fs, int fd)
     atalk_timespec_to_timeval(&tv[1], &mtime_ts);
 
     if (utimes(to.p_path, tv)) {
-        SLOG("utimes: %s", to.p_path);
+        NAD_INFO("utimes: %s", to.p_path);
         rval = 1;
     }
 
@@ -965,7 +958,7 @@ static int setfile(const struct stat *fs, int fd)
         }
 
         if (result != 0 && errno != EPERM) {
-            SLOG("chown: %s: %s", to.p_path, strerror(errno));
+            NAD_INFO("chown: %s: %s", to.p_path, strerror(errno));
             rval = 1;
         }
 
@@ -974,7 +967,7 @@ static int setfile(const struct stat *fs, int fd)
 
     if ((!gotstat || mode != ts.st_mode)
             && (fdval ? fchmod(fd, mode) : chmod(to.p_path, mode))) {
-        SLOG("chmod: %s: %s", to.p_path, strerror(errno));
+        NAD_INFO("chmod: %s: %s", to.p_path, strerror(errno));
         rval = 1;
     }
 
@@ -984,7 +977,7 @@ static int setfile(const struct stat *fs, int fd)
         fchflags(fd, fs->st_flags) :
         (islink ? lchflags(to.p_path, fs->st_flags) :
          chflags(to.p_path, fs->st_flags))) {
-        SLOG("chflags: %s: %s", to.p_path, strerror(errno));
+        NAD_INFO("chflags: %s: %s", to.p_path, strerror(errno));
         rval = 1;
     }
 

@@ -8,6 +8,7 @@ with their contributions. Cheers.
 Thanks a bunch folks, wherever you are.
 
 - Wesley Craig <wesley.craig@umich.edu>
+- Charles Clark <cmclark@umich.edu>: megatron Macintosh file format transformer
 - Adrian Sun <asun@cobaltnet.com>
 - Steve Hirsch <shirsch@adelphia.net>: ProDOS II support/initial Randnum
 support

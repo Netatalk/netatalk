@@ -63,6 +63,10 @@ static int is_protected_dir(const char *path, const afpvol_t *vol)
 {
     char resolved[PATH_MAX];
 
+    if (vol->vol == NULL || vol->vol->v_path == NULL) {
+        return 0;
+    }
+
     if (realpath(path, resolved) == NULL) {
         return 0;
     }
@@ -78,9 +82,9 @@ static int is_protected_dir(const char *path, const afpvol_t *vol)
 
     if (*r == '\0' && (*remainder == '/' || *remainder == '\0')) {
         if (*remainder == '\0') {
-            SLOG("Refusing to remove volume root: %s", path);
+            NAD_INFO("Refusing to remove volume root: %s", path);
         } else {
-            SLOG("Refusing to remove volume root parent: %s", path);
+            NAD_INFO("Refusing to remove volume root parent: %s", path);
         }
 
         return 1;
@@ -101,7 +105,7 @@ static int rmdir_with_cnid(const char *path, afpvol_t *vol)
 {
     cnid_t did, pdid;
 
-    if (is_protected_dir(path, vol)) {
+    if (vol->vol->v_path && is_protected_dir(path, vol)) {
         return -1;
     }
 
@@ -109,7 +113,7 @@ static int rmdir_with_cnid(const char *path, afpvol_t *vol)
         /* Resolve CNID before any modifications */
         if ((did = cnid_for_path(vol->vol->v_cdb, vol->vol->v_path, path,
                                  &pdid)) == CNID_INVALID) {
-            SLOG("Error resolving CNID for %s", path);
+            NAD_INFO("Error resolving CNID for %s", path);
             return -1;
         }
 
@@ -130,18 +134,18 @@ static int rmdir_with_cnid(const char *path, afpvol_t *vol)
         }
 
         if (rmdir(path) != 0) {
-            SLOG("rmdir: %s: %s", path, strerror(errno));
+            NAD_INFO("rmdir: %s: %s", path, strerror(errno));
             return -1;
         }
 
         /* Only delete CNID after successful removal from disk */
         if (cnid_delete(vol->vol->v_cdb, did) != 0) {
-            SLOG("Error removing CNID %u for %s", ntohl(did), path);
+            NAD_INFO("Error removing CNID %u for %s", ntohl(did), path);
             return -1;
         }
     } else {
         if (rmdir(path) != 0) {
-            SLOG("rmdir: %s: %s", path, strerror(errno));
+            NAD_INFO("rmdir: %s: %s", path, strerror(errno));
             return -1;
         }
     }
@@ -179,7 +183,7 @@ static int do_rmdir(const char *path, afpvol_t *vol)
     size_t len = strlcpy(buf, path, sizeof(buf));
 
     if (len >= sizeof(buf)) {
-        SLOG("Path too long: %s", path);
+        NAD_INFO("Path too long: %s", path);
         return 1;
     }
 
@@ -200,7 +204,7 @@ static int do_rmdir(const char *path, afpvol_t *vol)
 
         *slash = '\0';
 
-        if (is_protected_dir(buf, vol)) {
+        if (vol->vol->v_path && is_protected_dir(buf, vol)) {
             break;
         }
 
@@ -250,11 +254,11 @@ int nad_rmdir(int argc, char *argv[], AFPObj *obj)
 
     for (int i = 0; i < argc; i++) {
         if (alarmed) {
-            SLOG("...break");
+            NAD_INFO("...break");
             break;
         }
 
-        if (openvol(obj, argv[i], &volume) != 0) {
+        if (openvol_optional(obj, argv[i], &volume) != 0) {
             rval = 1;
             continue;
         }

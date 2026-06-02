@@ -36,7 +36,6 @@
 #include <fcntl.h>
 #include <libgen.h>
 #include <limits.h>
-#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,6 +62,7 @@
 #include <sys/types.h>
 #endif /* HAVE_POSIX_ACLS */
 
+#include <atalk/adouble.h>
 #include <atalk/cnid.h>
 #include <atalk/errchk.h>
 #include <atalk/globals.h>
@@ -71,11 +71,22 @@
 #include <atalk/unicode.h>
 #include <atalk/util.h>
 
-
 #include "nad.h"
 
-int log_verbose;             /*!< Logging flag */
+int nad_log_verbose;         /*!< Logging flag */
+int forceflag;               /*!< Allow operations outside AFP volumes */
 volatile sig_atomic_t alarmed; /*!< Signal flag for clean exit */
+
+void nad_not_inside_volume(FILE *out, const char *path, int force_hint)
+{
+    fprintf(out, "\"%s\" is not inside an AFP volume", path);
+
+    if (force_hint) {
+        fprintf(out, " (use 'nad --force ...' to override)");
+    }
+
+    fputc('\n', out);
+}
 
 static void sig_handler(int signo _U_)
 {
@@ -91,11 +102,11 @@ void set_signal(void)
     sigemptyset(&sv.sa_mask);
 
     if (sigaction(SIGTERM, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGTERM): %s", strerror(errno));
+        NAD_FATAL("error in sigaction(SIGTERM): %s", strerror(errno));
     }
 
     if (sigaction(SIGINT, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGINT): %s", strerror(errno));
+        NAD_FATAL("error in sigaction(SIGINT): %s", strerror(errno));
     }
 
     memset(&sv, 0, sizeof(struct sigaction));
@@ -103,35 +114,33 @@ void set_signal(void)
     sigemptyset(&sv.sa_mask);
 
     if (sigaction(SIGABRT, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGABRT): %s", strerror(errno));
+        NAD_FATAL("error in sigaction(SIGABRT): %s", strerror(errno));
     }
 
     if (sigaction(SIGHUP, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGHUP): %s", strerror(errno));
+        NAD_FATAL("error in sigaction(SIGHUP): %s", strerror(errno));
     }
 
     if (sigaction(SIGQUIT, &sv, NULL) < 0) {
-        ERROR("error in sigaction(SIGQUIT): %s", strerror(errno));
-    }
-}
-
-void _log(enum logtype lt, char *fmt, ...)
-{
-    int len _U_;
-    static char logbuffer[1024];
-    va_list args;
-
-    if ((lt == STD) || (log_verbose == 1)) {
-        va_start(args, fmt);
-        len = vsnprintf(logbuffer, 1023, fmt, args);
-        va_end(args);
-        logbuffer[1023] = 0;
-        printf("%s\n", logbuffer);
+        NAD_FATAL("error in sigaction(SIGQUIT): %s", strerror(errno));
     }
 }
 
 /*! Static stub volume for paths outside any AFP volume */
 static struct vol null_vol;
+
+static void init_null_vol(void)
+{
+    memset(&null_vol, 0, sizeof(struct vol));
+    null_vol.v_adouble = AD_VERSION_EA;
+    null_vol.v_ad_options = 0;
+    null_vol.v_vfs_ea = AFPVOL_EA_SYS;
+#if defined(HAVE_EAFD) && defined(SOLARIS)
+    null_vol.ad_path = ad_path_ea;
+#else
+    null_vol.ad_path = ad_path_osx;
+#endif
+}
 
 /*!
  * @brief Open an AFP volume, or return a stub for non-AFP paths
@@ -156,7 +165,12 @@ int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
     memset(vol, 0, sizeof(afpvol_t));
 
     if ((vol->vol = getvolbypath(obj, path)) == NULL) {
-        memset(&null_vol, 0, sizeof(struct vol));
+        if (!forceflag) {
+            nad_not_inside_volume(stdout, path, 1);
+            return -1;
+        }
+
+        init_null_vol();
         vol->vol = &null_vol;
         return 0;
     }
@@ -164,12 +178,12 @@ int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
     /* Sanity checks to ensure we can touch this volume */
     if (vol->vol->v_adouble != AD_VERSION2
             && vol->vol->v_adouble != AD_VERSION_EA) {
-        ERROR("Unsupported adouble versions: %u", vol->vol->v_adouble);
+        NAD_FATAL("Unsupported adouble versions: %u", vol->vol->v_adouble);
     }
 
     if (vol->vol->v_vfs_ea != AFPVOL_EA_AD && vol->vol->v_vfs_ea != AFPVOL_EA_SYS
             && vol->vol->v_vfs_ea != AFPVOL_EA_NONE) {
-        ERROR("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
+        NAD_FATAL("Unsupported Extended Attributes option: %u", vol->vol->v_vfs_ea);
     }
 
     if (vol->vol->v_cdb) {
@@ -183,8 +197,8 @@ int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol)
         if ((vol->vol->v_cdb = cnid_open(vol->vol,
                                          vol->vol->v_cnidscheme,
                                          flags)) == NULL) {
-            ERROR("Can't initialize CNID database connection for %s",
-                  vol->vol->v_path);
+            NAD_FATAL("Can't initialize CNID database connection for %s",
+                      vol->vol->v_path);
         }
 
         vol->owns_cdb = true;
@@ -214,7 +228,7 @@ int openvol(AFPObj *obj, const char *path, afpvol_t *vol)
     }
 
     if (!vol->vol->v_path) {
-        SLOG("\"%s\" is not inside an AFP volume", path);
+        nad_not_inside_volume(stdout, path, 0);
         memset(vol, 0, sizeof(afpvol_t));
         return -1;
     }
@@ -356,4 +370,3 @@ EC_CLEANUP:
 
     return cnid;
 }
-
