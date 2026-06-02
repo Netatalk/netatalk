@@ -88,6 +88,47 @@ static int sl_unpack_r(DALLOC_CTX *query, const char *buf, size_t buf_len,
  * Wrapper functions for the *VAL macros with bound checking
  **************************************************************************************************/
 
+static void sl_put_le32(char *buf, off_t off, uint32_t val)
+{
+    uint8_t *p = (uint8_t *)buf + off;
+    p[0] = (uint8_t)val;
+    p[1] = (uint8_t)(val >> 8);
+    p[2] = (uint8_t)(val >> 16);
+    p[3] = (uint8_t)(val >> 24);
+}
+
+static void sl_put_le64(char *buf, off_t off, uint64_t val)
+{
+    sl_put_le32(buf, off, (uint32_t)val);
+    sl_put_le32(buf, off + 4, (uint32_t)(val >> 32));
+}
+
+static uint64_t sl_get_le64(const char *buf, int offset)
+{
+    const uint8_t *p = (const uint8_t *)buf + offset;
+    return (uint64_t)p[0]
+           | ((uint64_t)p[1] << 8)
+           | ((uint64_t)p[2] << 16)
+           | ((uint64_t)p[3] << 24)
+           | ((uint64_t)p[4] << 32)
+           | ((uint64_t)p[5] << 40)
+           | ((uint64_t)p[6] << 48)
+           | ((uint64_t)p[7] << 56);
+}
+
+static uint64_t sl_get_be64(const char *buf, int offset)
+{
+    const uint8_t *p = (const uint8_t *)buf + offset;
+    return (uint64_t)p[7]
+           | ((uint64_t)p[6] << 8)
+           | ((uint64_t)p[5] << 16)
+           | ((uint64_t)p[4] << 24)
+           | ((uint64_t)p[3] << 32)
+           | ((uint64_t)p[2] << 40)
+           | ((uint64_t)p[1] << 48)
+           | ((uint64_t)p[0] << 56);
+}
+
 static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
 {
     if (off + sizeof(val) >= maxoff) {
@@ -95,7 +136,13 @@ static int sivalc(char *buf, off_t off, off_t maxoff, uint32_t val)
         return -1;
     }
 
-    SIVAL(buf, off, val);
+    /*
+     * sl_pack() emits the "432130dm" Spotlight payload variant, whose
+     * numeric fields are little-endian on the wire. Do not use Netatalk's
+     * SIVAL/SLVAL here: in this tree they write host order, not fixed
+     * little-endian, and that breaks Spotlight RPC on big-endian systems.
+     */
+    sl_put_le32(buf, off, val);
     return 0;
 }
 
@@ -106,7 +153,7 @@ static int slvalc(char *buf, off_t off, off_t maxoff, uint64_t val)
         return -1;
     }
 
-    SLVAL(buf, off, val);
+    sl_put_le64(buf, off, val);
     return 0;
 }
 
@@ -483,9 +530,9 @@ static bool sl_unpack_range_valid(size_t buf_len, int offset, size_t length)
 static uint64_t sl_unpack_uint64(const char *buf, int offset, uint encoding)
 {
     if (encoding == SL_ENC_LITTLE_ENDIAN) {
-        return LVAL(buf, offset);
+        return sl_get_le64(buf, offset);
     } else {
-        return RLVAL(buf, offset);
+        return sl_get_be64(buf, offset);
     }
 }
 
@@ -632,7 +679,7 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
     uint64_t query_data64;
     union {
         double d;
-        uint32_t w[2];
+        uint64_t w;
     } ieee_fp_union;
 
     if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
@@ -646,26 +693,9 @@ static int sl_unpack_floats(DALLOC_CTX *query, const char *buf, int offset,
     i = 0;
 
     while (i++ < count) {
-        if (!sl_unpack_range_valid(buf_len, offset, sizeof(uint64_t))) {
+        if (sl_unpack_uint64_checked(buf, buf_len, offset, encoding,
+                                     &ieee_fp_union.w) < 0) {
             return -1;
-        }
-
-        if (encoding == SL_ENC_LITTLE_ENDIAN) {
-#ifdef WORDS_BIGENDIAN
-            ieee_fp_union.w[0] = IVAL(buf, offset + 4);
-            ieee_fp_union.w[1] = IVAL(buf, offset);
-#else
-            ieee_fp_union.w[0] = IVAL(buf, offset);
-            ieee_fp_union.w[1] = IVAL(buf, offset + 4);
-#endif
-        } else {
-#ifdef WORDS_BIGENDIAN
-            ieee_fp_union.w[0] = RIVAL(buf, offset);
-            ieee_fp_union.w[1] = RIVAL(buf, offset + 4);
-#else
-            ieee_fp_union.w[0] = RIVAL(buf, offset + 4);
-            ieee_fp_union.w[1] = RIVAL(buf, offset);
-#endif
         }
 
         dalloc_add_copy(query, &ieee_fp_union.d, double);
