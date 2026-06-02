@@ -24,6 +24,7 @@
  *      FPSpotlightOpen, which the fixture treats as test_nottested().
  */
 #include <stdio.h>
+#include <inttypes.h>
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -70,9 +71,67 @@ static int pag_create_dir_get_did(uint16_t vol, uint32_t parent_did,
     return FPCreateDir(Conn, vol, parent_did, name);
 }
 
+static void pag_log_ret(const char *testname, const char *op,
+                        unsigned int ret)
+{
+    if (!Quiet) {
+        fprintf(stdout, "\tFAILED: %s: %s returned %" PRIu32
+                " (%s), raw=0x%08x\n",
+                testname, op, ntohl(ret), afp_error(ret), ret);
+    }
+}
+
+static int pag_spotlight_open(uint16_t vol, const char *testname)
+{
+    unsigned int ret = FPSpotlightOpen(Conn, vol, NULL, 0);
+
+    if (ret == AFP_OK) {
+        return 1;
+    }
+
+    if (!Quiet) {
+        fprintf(stdout, "\t%s: %s: FPSpotlightOpen returned %" PRIu32
+                " (%s), raw=0x%08x\n",
+                ret == htonl(AFPERR_NOOP) ? "NOT TESTED" : "FAILED",
+                testname, ntohl(ret), afp_error(ret), ret);
+    }
+
+    if (ret == htonl(AFPERR_NOOP)) {
+        test_nottested();
+    } else {
+        test_failed();
+    }
+
+    return 0;
+}
+
+static void pag_log_create_dir_failure(const char *testname,
+                                       const char *dirname)
+{
+    if (!Quiet) {
+        unsigned int ret = Conn->dsi.header.dsi_code;
+        fprintf(stdout, "\tNOT TESTED: %s: FPCreateDir(\"%s\") returned "
+                        "no DID; dsi_code=%" PRIu32 " (%s), raw=0x%08x\n",
+                testname, dirname, ntohl(ret), afp_error(ret), ret);
+    }
+}
+
+static void pag_log_create_file_failure(const char *testname,
+                                        const char *filename,
+                                        unsigned int ret)
+{
+    if (!Quiet) {
+        fprintf(stdout, "\tNOT TESTED: %s: FPCreateFile(\"%s\") returned "
+                        "%" PRIu32 " (%s), raw=0x%08x\n",
+                testname, filename, ntohl(ret), afp_error(ret), ret);
+    }
+}
+
 STATIC void test547()
 {
+    const char *testname = "test547";
     uint16_t vol = VolID;
+    unsigned int ret;
     int got = 0;
     int dir_id;
     char fn[64];
@@ -86,8 +145,7 @@ STATIC void test547()
     /* FPSpotlightOpen returns AFPERR_NOOP if `spotlight = no` in
      * afp.conf, or AFP_OK on success. We do not need the populated
      * vol_path, so pass NULL/0 to skip the optional path-extract. */
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
-        test_nottested();
+    if (!pag_spotlight_open(vol, testname)) {
         goto test_exit;
     }
 
@@ -99,14 +157,17 @@ STATIC void test547()
      * the high byte may sign-bit-set. Check for the failure sentinel
      * exactly, NOT `<= 0`. */
     if (dir_id == 0) {
+        pag_log_create_dir_failure(testname, PAG_DIR_SMALL);
         test_nottested();
         goto cleanup;
     }
 
     for (int i = 0; i < PAG_CORPUS_SMALL; i++) {
         snprintf(fn, sizeof(fn), PAG_PREFIX_530 "%05d.txt", i);
+        ret = FPCreateFile(Conn, vol, 0, dir_id, fn);
 
-        if (FPCreateFile(Conn, vol, 0, dir_id, fn) != AFP_OK) {
+        if (ret != AFP_OK) {
+            pag_log_create_file_failure(testname, fn, ret);
             test_nottested();
             goto cleanup;
         }
@@ -114,14 +175,20 @@ STATIC void test547()
 
     /* Use the long, test-unique prefix so the unscoped substring search
      * across the volume cannot pick up unrelated files. */
-    if (FPSpotlightOpenQuery(Conn, vol,
-                             "kMDItemFSName==\"" PAG_PREFIX_530 "*\"cd",
-                             0x1234) != AFP_OK) {
+    ret = FPSpotlightOpenQuery(Conn, vol,
+                               "kMDItemFSName==\"" PAG_PREFIX_530 "*\"cd",
+                               0x1234);
+
+    if (ret != AFP_OK) {
+        pag_log_ret(testname, "FPSpotlightOpenQuery", ret);
         test_failed();
         goto cleanup;
     }
 
-    if (FPSpotlightDrainResults(Conn, vol, 0x1234, &got) != AFP_OK) {
+    ret = FPSpotlightDrainResults(Conn, vol, 0x1234, &got);
+
+    if (ret != AFP_OK) {
+        pag_log_ret(testname, "FPSpotlightDrainResults", ret);
         test_failed();
         goto close_query;
     }
@@ -148,7 +215,9 @@ test_exit:
 
 STATIC void test548()
 {
+    const char *testname = "test548";
     uint16_t vol = VolID;
+    unsigned int ret;
     int got = 0;
     int dir_id;
     char fn[64];
@@ -159,8 +228,7 @@ STATIC void test548()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
-        test_nottested();
+    if (!pag_spotlight_open(vol, testname)) {
         goto test_exit;
     }
 
@@ -169,27 +237,36 @@ STATIC void test548()
 
     /* See test547: dir_id is a network-byte-order CNID stored as int. */
     if (dir_id == 0) {
+        pag_log_create_dir_failure(testname, PAG_DIR_PAGED);
         test_nottested();
         goto cleanup;
     }
 
     for (int i = 0; i < PAG_CORPUS_PAGED; i++) {
         snprintf(fn, sizeof(fn), PAG_PREFIX_531 "%05d.txt", i);
+        ret = FPCreateFile(Conn, vol, 0, dir_id, fn);
 
-        if (FPCreateFile(Conn, vol, 0, dir_id, fn) != AFP_OK) {
+        if (ret != AFP_OK) {
+            pag_log_create_file_failure(testname, fn, ret);
             test_nottested();
             goto cleanup;
         }
     }
 
-    if (FPSpotlightOpenQuery(Conn, vol,
-                             "kMDItemFSName==\"" PAG_PREFIX_531 "*\"cd",
-                             0x1235) != AFP_OK) {
+    ret = FPSpotlightOpenQuery(Conn, vol,
+                               "kMDItemFSName==\"" PAG_PREFIX_531 "*\"cd",
+                               0x1235);
+
+    if (ret != AFP_OK) {
+        pag_log_ret(testname, "FPSpotlightOpenQuery", ret);
         test_failed();
         goto cleanup;
     }
 
-    if (FPSpotlightDrainResults(Conn, vol, 0x1235, &got) != AFP_OK) {
+    ret = FPSpotlightDrainResults(Conn, vol, 0x1235, &got);
+
+    if (ret != AFP_OK) {
+        pag_log_ret(testname, "FPSpotlightDrainResults", ret);
         test_failed();
         goto close_query;
     }
@@ -216,6 +293,7 @@ test_exit:
 
 STATIC void test560()
 {
+    const char *testname = "test560";
     uint16_t vol = VolID;
     unsigned int ret;
     ENTER_TEST
@@ -225,8 +303,7 @@ STATIC void test560()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
-        test_nottested();
+    if (!pag_spotlight_open(vol, testname)) {
         goto test_exit;
     }
 
@@ -242,7 +319,8 @@ STATIC void test560()
     if (ret != htonl(AFPERR_MISC)) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED: undeclared TOC entry payload "
-                            "returned %d (%s), expected AFPERR_MISC\n",
+                            "returned %" PRIu32
+                            " (%s), expected AFPERR_MISC\n",
                     ntohl(ret), afp_error(ret));
         }
 
@@ -250,10 +328,15 @@ STATIC void test560()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+    ret = FPSpotlightOpen(Conn, vol, NULL, 0);
+
+    if (ret != AFP_OK) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED: undeclared TOC entry payload "
-                            "left Spotlight RPC unusable\n");
+                            "left Spotlight RPC unusable: "
+                            "FPSpotlightOpen returned %" PRIu32
+                            " (%s), raw=0x%08x\n",
+                    ntohl(ret), afp_error(ret), ret);
         }
 
         test_failed();
@@ -265,6 +348,7 @@ test_exit:
 
 STATIC void test561()
 {
+    const char *testname = "test561";
     uint16_t vol = VolID;
     unsigned int ret;
     ENTER_TEST
@@ -274,8 +358,7 @@ STATIC void test561()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
-        test_nottested();
+    if (!pag_spotlight_open(vol, testname)) {
         goto test_exit;
     }
 
@@ -284,7 +367,7 @@ STATIC void test561()
     if (ret != htonl(AFPERR_MISC)) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED: oversized INT64 count returned "
-                            "%d (%s), expected AFPERR_MISC\n",
+                            "%" PRIu32 " (%s), expected AFPERR_MISC\n",
                     ntohl(ret), afp_error(ret));
         }
 
@@ -292,10 +375,15 @@ STATIC void test561()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+    ret = FPSpotlightOpen(Conn, vol, NULL, 0);
+
+    if (ret != AFP_OK) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED: oversized INT64 count left "
-                            "Spotlight RPC unusable\n");
+                            "Spotlight RPC unusable: "
+                            "FPSpotlightOpen returned %" PRIu32
+                            " (%s), raw=0x%08x\n",
+                    ntohl(ret), afp_error(ret), ret);
         }
 
         test_failed();
@@ -307,6 +395,7 @@ test_exit:
 
 STATIC void test562()
 {
+    const char *testname = "test562";
     uint16_t vol = VolID;
     unsigned int ret;
     ENTER_TEST
@@ -316,8 +405,7 @@ STATIC void test562()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
-        test_nottested();
+    if (!pag_spotlight_open(vol, testname)) {
         goto test_exit;
     }
 
@@ -326,7 +414,7 @@ STATIC void test562()
     if (ret != htonl(AFPERR_MISC)) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED: out-of-range TOC index returned "
-                            "%d (%s), expected AFPERR_MISC\n",
+                            "%" PRIu32 " (%s), expected AFPERR_MISC\n",
                     ntohl(ret), afp_error(ret));
         }
 
@@ -334,10 +422,15 @@ STATIC void test562()
         goto test_exit;
     }
 
-    if (FPSpotlightOpen(Conn, vol, NULL, 0) != AFP_OK) {
+    ret = FPSpotlightOpen(Conn, vol, NULL, 0);
+
+    if (ret != AFP_OK) {
         if (!Quiet) {
             fprintf(stdout, "\tFAILED: out-of-range TOC index left "
-                            "Spotlight RPC unusable\n");
+                            "Spotlight RPC unusable: "
+                            "FPSpotlightOpen returned %" PRIu32
+                            " (%s), raw=0x%08x\n",
+                    ntohl(ret), afp_error(ret), ret);
         }
 
         test_failed();
