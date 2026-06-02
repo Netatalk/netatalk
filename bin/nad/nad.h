@@ -17,6 +17,7 @@
 
 #include <arpa/inet.h>
 #include <signal.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 
@@ -30,15 +31,23 @@
 
 #define ADVOL_V2_OR_EA(ad) ((ad) == AD_VERSION2 || (ad) == AD_VERSION_EA)
 
-enum logtype {STD, DBG};
+#define NAD_INFO(...)                         \
+    do {                                      \
+        printf(__VA_ARGS__);                  \
+        putchar('\n');                        \
+    } while (0)
 
-#define SLOG(...)                             \
-    _log(STD, __VA_ARGS__)
+#define NAD_DEBUG(...)                        \
+    do {                                      \
+        if (nad_log_verbose) {                \
+            fprintf(stderr, __VA_ARGS__);     \
+        }                                     \
+    } while (0)
 
-#define ERROR(...)                              \
-    do {                                        \
-        _log(STD, __VA_ARGS__);                 \
-        exit(1);                                \
+#define NAD_FATAL(...)                        \
+    do {                                      \
+        NAD_INFO(__VA_ARGS__);                \
+        exit(1);                              \
     } while (0)
 
 typedef struct {
@@ -47,9 +56,9 @@ typedef struct {
     bool           owns_cdb;  /*!< true if this wrapper opened v_cdb */
 } afpvol_t;
 
-extern int log_verbose;             /*!< Logging flag */
+extern int nad_log_verbose;         /*!< Logging flag */
+extern int forceflag;               /*!< Allow operations outside AFP volumes */
 extern volatile sig_atomic_t alarmed; /*!< Signal flag for clean exit */
-extern void _log(enum logtype lt, char *fmt, ...);
 extern void set_signal(void);
 
 extern int nad_ls(int argc, char **argv, AFPObj *obj);
@@ -60,10 +69,12 @@ extern int nad_set(int argc, char **argv, AFPObj *obj);
 extern int nad_find(int argc, char **argv, AFPObj *obj);
 extern int nad_mkdir(int argc, char **argv, AFPObj *obj);
 extern int nad_rmdir(int argc, char **argv, AFPObj *obj);
+extern int nad_archive(int argc, char **argv, AFPObj *obj);
 
 /* ad_util.c */
 extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
 extern int openvol_optional(AFPObj *obj, const char *path, afpvol_t *vol);
+extern void nad_not_inside_volume(FILE *out, const char *path, int force_hint);
 extern void closevol(afpvol_t *vol);
 extern cnid_t cnid_for_paths_parent(const afpvol_t *vol, const char *path,
                                     cnid_t *did);

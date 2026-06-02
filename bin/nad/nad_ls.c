@@ -211,7 +211,8 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
         adflags = ADFLAGS_DIR;
     }
 
-    if (vol->vol == NULL || vol->vol->v_path == NULL) {
+    if (vol->vol == NULL) {
+        printf(" ----------- ------ --- ---- ----   !NO-CNID ");
         return;
     }
 
@@ -226,7 +227,9 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
          * fallback only triggers for the volume root's parent,
          * which is the virtual DIRDID_ROOT_PARENT node (CNID 1).
          */
-        if (strcmp(path, "..") == 0) {
+        if (vol->vol->v_path == NULL) {
+            printf("   !NO-CNID ");
+        } else if (strcmp(path, "..") == 0) {
             printf("  %10u ", ntohl(DIRDID_ROOT_PARENT));
         } else {
             printf("  !ADVOL_CACHE ");
@@ -396,13 +399,18 @@ static void print_flags(char *path, afpvol_t *vol, const struct stat *st)
     }
 
     putchar(' ');
-    /* CNID */
-    cnid = ad_forcegetid(&ad);
 
-    if (cnid) {
-        printf(" %10u ", ntohl(cnid));
+    /* CNID */
+    if (vol->vol->v_path == NULL) {
+        printf("   !NO-CNID ");
     } else {
-        printf(" !ADVOL_CACHE ");
+        cnid = ad_forcegetid(&ad);
+
+        if (cnid) {
+            printf(" %10u ", ntohl(cnid));
+        } else {
+            printf(" !ADVOL_CACHE ");
+        }
     }
 
     ad_close(&ad, ADFLAGS_HF);
@@ -701,7 +709,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
         }
 
         /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
-        if (check_netatalk_dirs(ep->d_name) != NULL) {
+        if (vol->vol->v_path && check_netatalk_dirs(ep->d_name) != NULL) {
             continue;
         }
 
@@ -753,7 +761,7 @@ static int ad_ls_r(char *path, afpvol_t *vol)
             }
 
             /* Check for netatalk special folders e.g. ".AppleDB" or ".AppleDesktop" */
-            if (check_netatalk_dirs(ep->d_name) != NULL) {
+            if (vol->vol->v_path && check_netatalk_dirs(ep->d_name) != NULL) {
                 continue;
             }
 
@@ -838,7 +846,7 @@ int nad_ls(int argc, char **argv, AFPObj *obj)
     cnid_init();
 
     if ((argc - optind) == 0) {
-        if (openvol(obj, ".", &vol) != 0) {
+        if (openvol_optional(obj, ".", &vol) != 0) {
             return 1;
         }
 
@@ -863,7 +871,7 @@ int nad_ls(int argc, char **argv, AFPObj *obj)
             first = 1;
             recursion = 0;
 
-            if (openvol(obj, argv[optind], &vol) != 0) {
+            if (openvol_optional(obj, argv[optind], &vol) != 0) {
                 rval = 1;
                 goto next;
             }
@@ -897,7 +905,7 @@ next:
             first = 1;
             recursion = 0;
 
-            if (openvol(obj, argv[optind], &vol) != 0) {
+            if (openvol_optional(obj, argv[optind], &vol) != 0) {
                 rval = 1;
                 goto next2;
             }

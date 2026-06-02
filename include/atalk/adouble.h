@@ -292,6 +292,14 @@ struct adouble {
 #define AD_DATE_DELTA         946684800
 #define AD_DATE_FROM_UNIX(x)  htonl((x) - AD_DATE_DELTA)
 #define AD_DATE_TO_UNIX(x)    (ntohl(x) + AD_DATE_DELTA)
+#define AD_DATE_MAC_DELTA     3029529600U
+#define AD_DATE_FROM_MAC(x)   htonl(ntohl(x) - AD_DATE_MAC_DELTA)
+#define AD_DATE_TO_MAC(x)     htonl(ntohl(x) + AD_DATE_MAC_DELTA)
+
+typedef enum {
+    TO_UTC = 0,
+    TO_LOCALTIME = 1
+} ad_time_offset_dir_t;
 
 /* various finder offset and info bits */
 #define FINDERINFO_FRTYPEOFF   0
@@ -450,6 +458,7 @@ extern off_t ad_size(const struct adouble *, uint32_t);
 /* ad_date.c */
 extern int ad_setdate(struct adouble *, unsigned int, uint32_t);
 extern int ad_getdate(const struct adouble *, unsigned int, uint32_t *);
+extern int set_utc_offset(uint32_t *, ad_time_offset_dir_t);
 
 /* ad_attr.c */
 extern int       ad_setattr(const struct adouble *, const uint16_t);

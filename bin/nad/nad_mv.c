@@ -144,13 +144,6 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
             return 1;
         }
 
-        if (!svolume.vol->v_path && !dvolume.vol->v_path) {
-            SLOG("Neither source nor destination is an AFP volume");
-            closevol(&svolume);
-            closevol(&dvolume);
-            return 1;
-        }
-
         rval = do_move(argv[0], argv[1]);
         closevol(&svolume);
         closevol(&dvolume);
@@ -159,14 +152,14 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
 
     /* It's a directory, move each file into it. */
     if (strlen(argv[argc - 1]) >= sizeof(path)) {
-        SLOG("%s: destination pathname too long", argv[argc - 1]);
+        NAD_INFO("%s: destination pathname too long", argv[argc - 1]);
         return 1;
     }
 
     size_t copied = strlcpy(path, argv[argc - 1], sizeof(path));
 
     if (copied >= sizeof(path)) {
-        SLOG("%s: destination pathname too long", argv[argc - 1]);
+        NAD_INFO("%s: destination pathname too long", argv[argc - 1]);
         return 1;
     }
 
@@ -187,7 +180,7 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
         char *src_copy = strdup(argv[i]);
 
         if (src_copy == NULL) {
-            SLOG("Memory allocation error");
+            NAD_INFO("Memory allocation error");
             rval = 1;
             continue;
         }
@@ -196,7 +189,7 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
         len = strnlen(base_name, PATH_MAX);
 
         if ((baselen + len) >= PATH_MAX) {
-            SLOG("%s: destination pathname too long", argv[i]);
+            NAD_INFO("%s: destination pathname too long", argv[i]);
             free(src_copy);
             rval = 1;
             continue;
@@ -204,17 +197,13 @@ int nad_mv(int argc, char *argv[], AFPObj *obj)
 
         /* Copy safely with bounds checking */
         if (strlcpy(endp, base_name, PATH_MAX - baselen) >= (PATH_MAX - baselen)) {
-            SLOG("%s: destination pathname too long", argv[i]);
+            NAD_INFO("%s: destination pathname too long", argv[i]);
             free(src_copy);
             rval = 1;
             continue;
         }
 
         if (openvol_optional(obj, argv[i], &svolume) != 0) {
-            rval = 1;
-        } else if (!svolume.vol->v_path && !dvolume.vol->v_path) {
-            SLOG("Neither source nor destination is an AFP volume");
-            closevol(&svolume);
             rval = 1;
         } else {
             if (do_move(argv[i], path)) {
@@ -244,7 +233,7 @@ static int do_move(const char *from, const char *to)
     if (!fflg && !access(to, F_OK)) {
         /* prompt only if source exist */
         if (lstat(from, &sb) == -1) {
-            SLOG("%s: %s", from, strerror(errno));
+            NAD_INFO("%s: %s", from, strerror(errno));
             return 1;
         }
 
@@ -280,6 +269,24 @@ static int do_move(const char *from, const char *to)
 
     int mustcopy = 0;
 
+    if (!svolume.vol->v_path && !dvolume.vol->v_path) {
+        if (renameat(AT_FDCWD, from, AT_FDCWD, to) == 0) {
+            if (vflg) {
+                printf("%s -> %s\n", from, to);
+            }
+
+            return 0;
+        }
+
+        if (errno != EXDEV) {
+            NAD_INFO("rename %s to %s: %s", from, to, strerror(errno));
+            return 1;
+        }
+
+        mustcopy = 1;
+        goto docopy;
+    }
+
     /*
      * Besides the usual EXDEV we copy instead of moving if
      * 1) source AFP volume != dest AFP volume
@@ -296,20 +303,20 @@ static int do_move(const char *from, const char *to)
     if (!mustcopy) {
         if ((cnid = cnid_for_path(svolume.vol->v_cdb, svolume.vol->v_path, from,
                                   &did)) == CNID_INVALID) {
-            SLOG("Couldn't resolve CNID for %s", from);
+            NAD_INFO("Couldn't resolve CNID for %s", from);
             return -1;
         }
 
         int srcfd = open(from, O_RDONLY);
 
         if (srcfd == -1) {
-            SLOG("Can't open %s: %s", from, strerror(errno));
+            NAD_INFO("Can't open %s: %s", from, strerror(errno));
             return -1;
         }
 
         if (fstat(srcfd, &sb) != 0) {
             close(srcfd);
-            SLOG("Can't fstat %s: %s", from, strerror(errno));
+            NAD_INFO("Can't fstat %s: %s", from, strerror(errno));
             return -1;
         }
 
@@ -324,13 +331,13 @@ static int do_move(const char *from, const char *to)
                  * filesystem, it can be recreated at the destination.
                  */
                 if (lstat(from, &sb) == -1) {
-                    SLOG("%s: %s", from, strerror(errno));
+                    NAD_INFO("%s: %s", from, strerror(errno));
                     return -1;
                 }
 
                 /* Can't mv(1) a mount point. */
                 if (!S_ISLNK(sb.st_mode) && realpath(from, path) == NULL) {
-                    SLOG("cannot resolve %s: %s: %s", from, path, strerror(errno));
+                    NAD_INFO("cannot resolve %s: %s: %s", from, path, strerror(errno));
                     return 1;
                 }
 
@@ -338,7 +345,7 @@ static int do_move(const char *from, const char *to)
                 mustcopy = 1;
                 goto docopy;
             } else { /* != EXDEV */
-                SLOG("rename %s to %s: %s", from, to, strerror(errno));
+                NAD_INFO("rename %s to %s: %s", from, to, strerror(errno));
                 return 1;
             }
         } /* rename != 0*/
@@ -348,7 +355,7 @@ static int do_move(const char *from, const char *to)
         switch (sb.st_mode & S_IFMT) {
         case S_IFREG:
             if (dvolume.vol->vfs->vfs_renamefile(dvolume.vol, -1, from, to) != 0) {
-                SLOG("Error moving adouble file for %s", from);
+                NAD_INFO("Error moving adouble file for %s", from);
                 return -1;
             }
 
@@ -358,7 +365,7 @@ static int do_move(const char *from, const char *to)
             break;
 
         default:
-            SLOG("Not a file or dir: %s", from);
+            NAD_INFO("Not a file or dir: %s", from);
             return -1;
         }
 
@@ -366,12 +373,12 @@ static int do_move(const char *from, const char *to)
         cnid_t newpdid, newdid;
 
         if ((newdid = cnid_for_paths_parent(&dvolume, to, &newpdid)) == CNID_INVALID) {
-            SLOG("Couldn't resolve CNID for parent of %s", to);
+            NAD_INFO("Couldn't resolve CNID for parent of %s", to);
             return -1;
         }
 
         if (stat(to, &sb) != 0) {
-            SLOG("Can't stat %s: %s", to, strerror(errno));
+            NAD_INFO("Can't stat %s: %s", to, strerror(errno));
             return 1;
         }
 
@@ -380,7 +387,7 @@ static int do_move(const char *from, const char *to)
 
         if (cnid_update(dvolume.vol->v_cdb, cnid, &sb, newdid, name,
                         strlen(name)) != 0) {
-            SLOG("Can't update CNID for: %s", to);
+            NAD_INFO("Can't update CNID for: %s", to);
             free(p);
             return 1;
         }
@@ -391,7 +398,7 @@ static int do_move(const char *from, const char *to)
 
         if (ad_open(&ad, to, S_ISDIR(sb.st_mode) ? (ADFLAGS_DIR | ADFLAGS_HF |
                     ADFLAGS_RDWR) : ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
-            SLOG("Error opening adouble for: %s", to);
+            NAD_INFO("Error opening adouble for: %s", to);
             return 1;
         }
 
@@ -463,17 +470,17 @@ static int copy(const char *from, const char *to)
         /* Destination path exists. */
         if (S_ISDIR(sb.st_mode)) {
             if (rmdir(to) != 0) {
-                SLOG("rmdir %s: %s", to, strerror(errno));
+                NAD_INFO("rmdir %s: %s", to, strerror(errno));
                 return 1;
             }
         } else {
             if (unlink(to) != 0) {
-                SLOG("unlink %s: %s", to, strerror(errno));
+                NAD_INFO("unlink %s: %s", to, strerror(errno));
                 return 1;
             }
         }
     } else if (errno != ENOENT) {
-        SLOG("%s: %s", to, strerror(errno));
+        NAD_INFO("%s: %s", to, strerror(errno));
         return 1;
     }
 
@@ -485,7 +492,7 @@ static int copy(const char *from, const char *to)
         optind = 1;
 
         if (nad_cp(4, (char **)cp_argv, afp_obj) != 0) {
-            SLOG("cp -R %s %s: failed", from, to);
+            NAD_INFO("cp -R %s %s: failed", from, to);
             return 1;
         }
     }
@@ -496,12 +503,12 @@ static int copy(const char *from, const char *to)
         optind = 1;
 
         if (nad_rm(3, (char **)rm_argv, afp_obj) != 0) {
-            SLOG("rm -R %s: failed", from);
+            NAD_INFO("rm -R %s: failed", from);
             return 1;
         }
     } else {
         if (remove_path(from) != 0) {
-            SLOG("remove %s: %s", from, strerror(errno));
+            NAD_INFO("remove %s: %s", from, strerror(errno));
             return 1;
         }
     }

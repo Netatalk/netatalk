@@ -22,8 +22,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <dirent.h>
 
 #include <bstrlib.h>
 
@@ -48,6 +50,61 @@ static void usage_find(void)
         "   -v   Use VOLUME_PATH as the volume to search rather than\n"
         "        the current working directory.\n"
     );
+}
+
+static int filesystem_find(const char *path, const char *needle, int *found)
+{
+    struct stat st;
+    const char *base;
+
+    if (lstat(path, &st) != 0) {
+        NAD_INFO("%s: %s", path, strerror(errno));
+        return -1;
+    }
+
+    base = strrchr(path, '/');
+    base = base ? base + 1 : path;
+
+    if (strstr(base, needle) != NULL) {
+        printf("%s\n", path);
+        *found = 1;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+        return 0;
+    }
+
+    DIR *dir = opendir(path);
+
+    if (dir == NULL) {
+        NAD_INFO("%s: %s", path, strerror(errno));
+        return -1;
+    }
+
+    struct dirent *ent;
+
+    while ((ent = readdir(dir)) != NULL) {
+        char child[MAXPATHLEN + 1];
+
+        if (DIR_DOT_OR_DOTDOT(ent->d_name)) {
+            continue;
+        }
+
+        if (snprintf(child, sizeof(child), "%s/%s", path, ent->d_name)
+                >= (int)sizeof(child)) {
+            NAD_INFO("%s/%s: name too long", path, ent->d_name);
+            closedir(dir);
+            return -1;
+        }
+
+        if (filesystem_find(child, needle, found) != 0) {
+            closedir(dir);
+            return -1;
+        }
+    }
+
+    closedir(dir);
+    return 0;
 }
 
 /*!
@@ -181,9 +238,17 @@ int nad_find(int argc, char **argv, AFPObj *obj)
     set_signal();
     cnid_init();
 
-    if (openvol(obj, srchvol, &vol) != 0) {
+    if (openvol_optional(obj, srchvol, &vol) != 0) {
         free((void *)srchvol);
         return 1;
+    }
+
+    if (vol.vol->v_path == NULL) {
+        int found = 0;
+        ret = filesystem_find(srchvol, argv[optind], &found) == 0 && found ? 0 : 1;
+        closevol(&vol);
+        free((void *)srchvol);
+        return ret;
     }
 
     free((void *)srchvol);
@@ -198,7 +263,7 @@ int nad_find(int argc, char **argv, AFPObj *obj)
                         namebuf,
                         MAXPATHLEN,
                         &flags) == (size_t) -1) {
-        ERROR("conversion error");
+        NAD_FATAL("conversion error");
     }
 
     int count;
@@ -236,7 +301,7 @@ int nad_find(int argc, char **argv, AFPObj *obj)
                 }
 
                 if (bstr_list_push(pathlist, bfromcstr(name)) < 0) {
-                    ERROR("bstr_list_push failed for \"%s\"", name);
+                    NAD_FATAL("bstr_list_push failed for \"%s\"", name);
                     bstrListDestroy(pathlist);
                     bdestroy(volpath);
                     return 1;
@@ -244,7 +309,7 @@ int nad_find(int argc, char **argv, AFPObj *obj)
             }
 
             if (bstr_list_push(pathlist, volpath) < 0) {
-                ERROR("bstr_list_push failed for volume path");
+                NAD_FATAL("bstr_list_push failed for volume path");
                 bstrListDestroy(pathlist);
                 bdestroy(volpath);
                 return 1;

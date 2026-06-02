@@ -130,20 +130,20 @@ int nad_rm(int argc, char *argv[], AFPObj *obj)
 
     for (int i = 0; argv[i] != NULL; i++) {
         /* Load .volinfo file for source */
-        if (openvol(obj, argv[i], &volume) != 0) {
+        if (openvol_optional(obj, argv[i], &volume) != 0) {
             badrm = rval = 1;
             continue;
         }
 
         if (nftw(argv[i], rm, upfunc, 20, FTW_DEPTH | FTW_PHYS) == -1) {
             if (alarmed) {
-                SLOG("...break");
+                NAD_INFO("...break");
             } else {
-                SLOG("Error: %s", argv[i]);
+                NAD_INFO("Error: %s", argv[i]);
             }
-
-            closevol(&volume);
         }
+
+        closevol(&volume);
     }
 
     return rval;
@@ -161,7 +161,7 @@ static int rm(const char *path,
     }
 
     if (volume.vol == NULL) {
-        SLOG("Error: could not open volume for %s (not removed)", path);
+        NAD_INFO("Error: could not open volume for %s (not removed)", path);
         badrm = rval = 1;
         return -1;
     }
@@ -196,12 +196,12 @@ static int rm(const char *path,
 
             if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
                                       &did)) == CNID_INVALID) {
-                SLOG("Error resolving CNID for %s", path);
+                NAD_INFO("Error resolving CNID for %s", path);
                 return -1;
             }
 
             if (cnid_delete(volume.vol->v_cdb, cnid) != 0) {
-                SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
+                NAD_INFO("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
             }
         }
@@ -215,7 +215,7 @@ static int rm(const char *path,
 
     case S_IFDIR:
         if (!Rflag) {
-            SLOG("%s is a directory", path);
+            NAD_INFO("%s is a directory", path);
             return FTW_SKIP_SUBTREE;
         }
 
@@ -224,7 +224,7 @@ static int rm(const char *path,
                     && (strstr(path, ".AppleDouble") != NULL)) {
                 /* should be adouble dir itself */
                 if (rmdir(path) != 0) {
-                    SLOG("Error removing dir \"%s\": %s", path, strerror(errno));
+                    NAD_INFO("Error removing dir \"%s\": %s", path, strerror(errno));
                     badrm = rval = 1;
                     return -1;
                 }
@@ -235,18 +235,18 @@ static int rm(const char *path,
             /* Get CNID of Parent and add new childir to CNID database */
             if ((did = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
                                      &pdid)) == CNID_INVALID) {
-                SLOG("Error resolving CNID for %s", path);
+                NAD_INFO("Error resolving CNID for %s", path);
                 return -1;
             }
 
             if (cnid_delete(volume.vol->v_cdb, did) != 0) {
-                SLOG("Error removing CNID %u for %s", ntohl(did), path);
+                NAD_INFO("Error removing CNID %u for %s", ntohl(did), path);
                 return -1;
             }
         }
 
         if (rmdir(path) != 0) {
-            SLOG("Error removing dir \"%s\": %s", path, strerror(errno));
+            NAD_INFO("Error removing dir \"%s\": %s", path, strerror(errno));
             badrm = rval = 1;
             return -1;
         }
@@ -255,17 +255,17 @@ static int rm(const char *path,
 
     case S_IFBLK:
     case S_IFCHR:
-        SLOG("%s is a device file.", path);
+        NAD_INFO("%s is a device file.", path);
         badrm = rval = 1;
         break;
 
     case S_IFSOCK:
-        SLOG("%s is a socket.", path);
+        NAD_INFO("%s is a socket.", path);
         badrm = rval = 1;
         break;
 
     case S_IFIFO:
-        SLOG("%s is a FIFO.", path);
+        NAD_INFO("%s is a FIFO.", path);
         badrm = rval = 1;
         break;
 
@@ -286,12 +286,12 @@ static int rm(const char *path,
 
             if ((cnid = cnid_for_path(volume.vol->v_cdb, volume.vol->v_path, path,
                                       &did)) == CNID_INVALID) {
-                SLOG("Error resolving CNID for %s", path);
+                NAD_INFO("Error resolving CNID for %s", path);
                 return -1;
             }
 
             if (cnid_delete(volume.vol->v_cdb, cnid) != 0) {
-                SLOG("Error removing CNID %u for %s", ntohl(cnid), path);
+                NAD_INFO("Error removing CNID %u for %s", ntohl(cnid), path);
                 return -1;
             }
 

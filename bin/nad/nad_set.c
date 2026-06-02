@@ -353,7 +353,7 @@ int nad_set(int argc, char **argv, AFPObj *obj)
 
     cnid_init();
 
-    if (openvol(obj, argv[optind], &vol) != 0) {
+    if (openvol_optional(obj, argv[optind], &vol) != 0) {
         return 1;
     }
 
