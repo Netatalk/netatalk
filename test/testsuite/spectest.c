@@ -353,8 +353,9 @@ char *uam = "Cleartxt Passwrd";
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCilmnVv] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "usage:\t%s [-1234567aCilmnVv] [-A uam] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
+    fprintf(stdout, "\t-A\tUAM name or alias (default Cleartxt Passwrd)\n");
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
@@ -395,7 +396,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCEilmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567A:aCEilmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -430,6 +431,10 @@ int main(int ac, char **av)
         case '7':
             vers = "AFP3.4";
             Version = 34;
+            break;
+
+        case 'A':
+            uam = strdup(optarg);
             break;
 
         case 'a':

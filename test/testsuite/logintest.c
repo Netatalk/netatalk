@@ -50,6 +50,7 @@ STATIC void connect_server(CONN *conn)
     }
 
     memset(&conn->dsi, 0, sizeof(conn->dsi));
+    conn->use_legacy_transport = 0;
     conn->dsi.socket = sock;
     /* Guard against a server that accepts the TCP connection but stalls before
      * replying (e.g. parent busy reaping prior children after a connection-limit
@@ -185,6 +186,7 @@ STATIC void test4(void)
         }
 
         connect_server(&conn[i]);
+        AFPUseLegacyTransport(&conn[i]);
         Dsi = &conn[i].dsi;
         cnt++;
 
@@ -344,6 +346,7 @@ STATIC void test7(void)
     DSI *dsi;
     ENTER_TEST
     connect_server(Conn);
+    AFPUseLegacyTransport(Conn);
     Dsi = &Conn->dsi;
     dsi = Dsi;
 
@@ -425,6 +428,7 @@ STATIC void test9(void)
     uint8_t garbage[16];
     ENTER_TEST
     connect_server(Conn);
+    AFPUseLegacyTransport(Conn);
     Dsi = &Conn->dsi;
 
     if (Version < 30) {

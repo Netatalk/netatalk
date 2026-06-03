@@ -208,6 +208,12 @@ option(
     description: 'Compile the AFP test suite',
 )
 option(
+    'with-testsuite-libafpclient',
+    type: 'feature',
+    value: 'auto',
+    description: 'Use libafpclient as the AFP testsuite transport when available',
+)
+option(
     'with-fuzzing',
     type: 'boolean',
     value: false,

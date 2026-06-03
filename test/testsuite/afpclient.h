@@ -187,6 +187,16 @@ typedef struct CONN {
     uint16_t login_cont_id;
     size_t   login_cont_len;
     uint8_t  login_cont_data[DSI_CMDSIZ];
+
+    /* Optional testsuite transport backend. When populated, the public DSI
+     * fields above remain the compatibility surface for tests, while AFP
+     * command bytes are sent through the backend. */
+    void *transport;
+    int use_legacy_transport;
+    void *pending_payload;
+    size_t pending_payload_len;
+    size_t pending_payload_cap;
+    uint32_t pending_data_offset;
 } CONN;
 
 extern CONN *Conn, *Conn2;
@@ -257,6 +267,7 @@ int afp_filedir_pack(CONN *conn, unsigned char *b,
 */
 int OpenClientSocket(char *host, int port);
 int CloseClientSocket(int fd);
+void AFPUseLegacyTransport(CONN *conn);
 
 
 void dump_header(DSI *dsi);

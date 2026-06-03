@@ -1814,8 +1814,9 @@ fin1:
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-34567bcGgKVv] [-h host] [-p port] [-s vol] [-u user] [-w password] "
+            "usage:\t%s [-34567bcGgKVv] [-A uam] [-h host] [-p port] [-s vol] [-u user] [-w password] "
             "[-n iterations] [-f tests] [-F bigfile]\n", av0);
+    fprintf(stdout, "\t-A\tUAM name or alias (default Cleartxt Passwrd)\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
     fprintf(stdout, "\t-s\tvolume to mount\n");
@@ -1869,7 +1870,7 @@ int main(int32_t ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "34567bcGgKVvF:f:h:n:p:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "34567A:bcGgKVvF:f:h:n:p:s:u:w:")) != EOF) {
         switch (cc) {
         case '3':
             vers = "AFPX03";
@@ -1894,6 +1895,10 @@ int main(int32_t ac, char **av)
         case '7':
             vers = "AFP3.4";
             Version = 34;
+            break;
+
+        case 'A':
+            uam = strdup(optarg);
             break;
 
         case 'b':

@@ -1801,9 +1801,10 @@ static void run_one(char *name)
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567acDeiLTVvy] [-h host] [-p port] [-s vol] [-P path] [-S vol2] [-u user] [-w password] [-n iterations] [-W warmup] "
+            "usage:\t%s [-1234567acDeiLTVvy] [-A uam] [-h host] [-p port] [-s vol] [-P path] [-S vol2] [-u user] [-w password] [-n iterations] [-W warmup] "
             "[-t delay] [-d size] [-z sizes] [-q quantum] [-r requests] [-f test] [-F file] \n",
             av0);
+    fprintf(stdout, "\t-A\tUAM name or alias (default Cleartxt Passwrd)\n");
     fprintf(stdout, "\t-h\tserver host name (default localhost)\n");
     fprintf(stdout, "\t-p\tserver port (default 548)\n");
     fprintf(stdout, "\t-s\tvolume/share to mount (AFP mode)\n");
@@ -1859,7 +1860,7 @@ int main(int ac, char **av)
     }
 
     while ((cc = getopt(ac, av,
-                        "1234567aceDiLTVvyd:F:f:h:n:p:P:q:r:S:s:t:u:w:W:z:")) != EOF) {
+                        "1234567A:aceDiLTVvyd:F:f:h:n:p:P:q:r:S:s:t:u:w:W:z:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -1894,6 +1895,10 @@ int main(int ac, char **av)
         case '7':
             vers = "AFP3.4";
             Version = 34;
+            break;
+
+        case 'A':
+            uam = strdup(optarg);
             break;
 
         case 'a':

@@ -20,7 +20,20 @@ libafptest_sources = [
 # afpclient.h) and must NOT be compiled against <atalk/dsi.h>.
 libafptest_extra = []
 libafptest_deps = []
+libafptest_c_args = []
 spectest_extra_c_args = []
+
+testsuite_libafpclient = dependency(
+    'libafpclient',
+    required: get_option('with-testsuite-libafpclient'),
+)
+
+if testsuite_libafpclient.found()
+    libafptest_extra += ['afpclient_libafpclient.c']
+    libafptest_deps += testsuite_libafpclient
+    afptest_external_deps += testsuite_libafpclient
+    libafptest_c_args += ['-DHAVE_TESTSUITE_LIBAFPCLIENT=1']
+endif
 
 if have_spotlight
     libafptest_extra += [
@@ -44,6 +57,7 @@ libafptest = static_library(
     libafptest_sources + libafptest_extra,
     include_directories: root_includes,
     dependencies: libafptest_deps,
+    c_args: libafptest_c_args,
     link_with: libatalk,
 )
 
@@ -56,6 +70,7 @@ executable(
     'afparg',
     afparg_sources,
     include_directories: root_includes,
+    dependencies: afptest_external_deps,
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
@@ -89,6 +104,7 @@ executable(
     'afp_logintest',
     login_test_sources,
     include_directories: root_includes,
+    dependencies: afptest_external_deps,
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
@@ -106,6 +122,7 @@ executable(
     'afp_speedtest',
     speedtest_sources,
     include_directories: root_includes,
+    dependencies: afptest_external_deps,
     link_args: ['-rdynamic', '-lm'],
     link_with: libafptest,
     install: true,
@@ -203,6 +220,7 @@ executable(
     'afp_spectest',
     spectest_sources,
     include_directories: root_includes,
+    dependencies: afptest_external_deps,
     c_args: ['-D_PATH_TESTDATA_DIR="' + datadir + '/netatalk/test-data"']
     + spectest_extra_c_args,
     link_args: ['-rdynamic'],
