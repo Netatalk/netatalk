@@ -196,7 +196,15 @@ typedef struct CONN {
     void *pending_payload;
     size_t pending_payload_len;
     size_t pending_payload_cap;
+    uint8_t pending_dsi_command;
     uint32_t pending_data_offset;
+    void *reply_queue_head;
+    void *reply_queue_tail;
+    void *reply_payload;
+    size_t reply_payload_len;
+    size_t reply_payload_pos;
+    uint8_t reply_dsi_command;
+    uint32_t reply_dsi_code;
 } CONN;
 
 extern CONN *Conn, *Conn2;

@@ -12,6 +12,7 @@ int afptest_libafpclient_login(struct CONN *conn, const char *host, int port,
                                const char *user, const char *password);
 int afptest_libafpclient_raw_command(struct CONN *conn,
                                      const void *payload, size_t payload_len,
+                                     uint8_t dsi_command,
                                      uint32_t data_offset,
                                      uint32_t *dsi_code,
                                      void *reply, size_t reply_cap,

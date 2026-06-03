@@ -20,6 +20,18 @@ int	Color = 1;
 
 #define kTextEncodingUTF8 0x08000103
 
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+struct afptest_libafpclient_reply {
+    uint8_t dsi_command;
+    uint32_t dsi_code;
+    uint8_t *payload;
+    size_t payload_len;
+    struct afptest_libafpclient_reply *next;
+};
+
+static int afptest_libafpclient_pop_reply(CONN *conn);
+#endif
+
 /* -------------------------------------------- */
 int OpenClientSocket(char *host, int port)
 {
@@ -94,6 +106,33 @@ size_t dsi_stream_read(DSI *dsi, void *data, const size_t length)
 {
     size_t stored;
     ssize_t len;
+
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    CONN *conn = (CONN *)dsi;
+
+    if (conn->transport && !conn->use_legacy_transport) {
+        size_t available;
+
+        if (!conn->reply_payload
+                || conn->reply_payload_pos >= conn->reply_payload_len) {
+            return 0;
+        }
+
+        available = conn->reply_payload_len - conn->reply_payload_pos;
+        stored = min(length, available);
+
+        if (stored) {
+            memcpy(data, (uint8_t *)conn->reply_payload + conn->reply_payload_pos,
+                   stored);
+            conn->reply_payload_pos += stored;
+            dsi->read_count += stored;
+        }
+
+        return stored;
+    }
+
+#endif
+
     stored = 0;
 
     while (stored < length) {
@@ -153,10 +192,21 @@ int dsi_stream_receive(DSI *dsi, void *buf, const size_t ilength,
     CONN *conn = (CONN *)dsi;
 
     if (conn->transport && !conn->use_legacy_transport) {
-        *rlength = min(dsi->cmdlen, ilength);
+        if (!conn->reply_payload
+                || conn->reply_payload_pos >= conn->reply_payload_len) {
+            if (!afptest_libafpclient_pop_reply(conn)) {
+                *rlength = 0;
+                return 0;
+            }
+        }
+
+        size_t available = conn->reply_payload_len - conn->reply_payload_pos;
+        *rlength = min(available, ilength);
 
         if (*rlength) {
-            memmove(buf, dsi->data, *rlength);
+            memmove(buf, (uint8_t *)conn->reply_payload + conn->reply_payload_pos,
+                    *rlength);
+            conn->reply_payload_pos += *rlength;
         }
 
         return dsi->header.dsi_command;
@@ -185,51 +235,213 @@ static void afptest_libafpclient_clear_pending(CONN *conn)
     conn->pending_payload = NULL;
     conn->pending_payload_len = 0;
     conn->pending_payload_cap = 0;
+    conn->pending_dsi_command = 0;
     conn->pending_data_offset = 0;
 }
 
-static void afptest_libafpclient_mirror_reply(CONN *conn, uint32_t dsi_code,
-        size_t reply_len)
+static void afptest_libafpclient_clear_active_reply(CONN *conn)
+{
+    free(conn->reply_payload);
+    conn->reply_payload = NULL;
+    conn->reply_payload_len = 0;
+    conn->reply_payload_pos = 0;
+    conn->reply_dsi_command = 0;
+    conn->reply_dsi_code = 0;
+}
+
+static void afptest_libafpclient_clear_replies(CONN *conn)
+{
+    struct afptest_libafpclient_reply *reply = conn->reply_queue_head;
+
+    afptest_libafpclient_clear_active_reply(conn);
+
+    while (reply) {
+        struct afptest_libafpclient_reply *next = reply->next;
+        free(reply->payload);
+        free(reply);
+        reply = next;
+    }
+
+    conn->reply_queue_head = NULL;
+    conn->reply_queue_tail = NULL;
+}
+
+static int afptest_libafpclient_pop_reply(CONN *conn)
 {
     DSI *dsi = &conn->dsi;
-    dsi->header.dsi_flags = DSIFL_REPLY;
-    dsi->header.dsi_command = DSIFUNC_CMD;
-    dsi->header.dsi_code = dsi_code;
-    dsi->header.dsi_len = htonl((uint32_t)reply_len);
-    dsi->cmdlen = reply_len;
-    dsi->datalen = reply_len;
+    struct afptest_libafpclient_reply *reply = conn->reply_queue_head;
 
-    if (reply_len > sizeof(dsi->commands)) {
-        memcpy(dsi->commands, dsi->data, sizeof(dsi->commands));
-    } else if (reply_len) {
-        memcpy(dsi->commands, dsi->data, reply_len);
+    if (!reply) {
+        return 0;
     }
+
+    afptest_libafpclient_clear_active_reply(conn);
+    conn->reply_queue_head = reply->next;
+
+    if (!conn->reply_queue_head) {
+        conn->reply_queue_tail = NULL;
+    }
+
+    dsi->header.dsi_flags = DSIFL_REPLY;
+    dsi->header.dsi_command = reply->dsi_command;
+    dsi->header.dsi_code = reply->dsi_code;
+    dsi->header.dsi_len = htonl((uint32_t)reply->payload_len);
+    dsi->cmdlen = reply->payload_len;
+    dsi->datalen = reply->payload_len;
+    if (reply->payload_len) {
+        conn->reply_payload = reply->payload;
+        conn->reply_payload_len = reply->payload_len;
+        conn->reply_payload_pos = 0;
+    } else {
+        free(reply->payload);
+        conn->reply_payload = NULL;
+        conn->reply_payload_len = 0;
+        conn->reply_payload_pos = 0;
+    }
+
+    conn->reply_dsi_command = reply->dsi_command;
+    conn->reply_dsi_code = reply->dsi_code;
+
+    if (reply->payload_len > sizeof(dsi->data)) {
+        memcpy(dsi->data, reply->payload, sizeof(dsi->data));
+    } else if (reply->payload_len) {
+        memcpy(dsi->data, reply->payload, reply->payload_len);
+    }
+
+    if (reply->payload_len > sizeof(dsi->commands)) {
+        memcpy(dsi->commands, reply->payload, sizeof(dsi->commands));
+    } else if (reply->payload_len) {
+        memcpy(dsi->commands, reply->payload, reply->payload_len);
+    }
+
+    reply->payload = NULL;
+    free(reply);
+    return 1;
+}
+
+static int afptest_libafpclient_enqueue_reply(CONN *conn, uint8_t dsi_command,
+        uint32_t dsi_code, uint8_t *payload, size_t payload_len)
+{
+    struct afptest_libafpclient_reply *reply;
+
+    reply = calloc(1, sizeof(*reply));
+
+    if (!reply) {
+        free(payload);
+        return 0;
+    }
+
+    reply->dsi_command = dsi_command;
+    reply->dsi_code = dsi_code;
+    reply->payload = payload;
+    reply->payload_len = payload_len;
+
+    if (conn->reply_queue_tail) {
+        ((struct afptest_libafpclient_reply *)conn->reply_queue_tail)->next = reply;
+    } else {
+        conn->reply_queue_head = reply;
+    }
+
+    conn->reply_queue_tail = reply;
+    return 1;
+}
+
+static size_t afptest_libafpclient_read_reply_size(const void *payload,
+        size_t payload_len)
+{
+    const uint8_t *p = payload;
+    uint32_t count32;
+    uint32_t count_hi;
+    uint32_t count_lo;
+
+    if (!payload || payload_len == 0) {
+        return DSI_DATASIZ;
+    }
+
+    if (p[0] == AFP_READ) {
+        if (payload_len < 12) {
+            return DSI_DATASIZ;
+        }
+
+        memcpy(&count32, p + 8, sizeof(count32));
+        return ntohl(count32);
+    }
+
+    if (p[0] == AFP_READ_EXT) {
+        if (payload_len < 20) {
+            return DSI_DATASIZ;
+        }
+
+        memcpy(&count_hi, p + 12, sizeof(count_hi));
+        memcpy(&count_lo, p + 16, sizeof(count_lo));
+
+        if (ntohl(count_hi) != 0) {
+            return DSI_DATASIZ;
+        }
+
+        return ntohl(count_lo);
+    }
+
+    return DSI_DATASIZ;
 }
 
 static int afptest_libafpclient_dispatch_raw(CONN *conn, const void *payload,
-        size_t payload_len, uint32_t data_offset)
+        size_t payload_len, uint8_t dsi_command, uint32_t data_offset)
 {
     DSI *dsi = &conn->dsi;
     uint32_t dsi_code = 0;
+    uint8_t *reply = NULL;
+    size_t reply_cap = DSI_DATASIZ;
     size_t reply_len = 0;
 
-    if (afptest_libafpclient_raw_command(conn, payload, payload_len,
-                                         data_offset, &dsi_code,
-                                         dsi->data, sizeof(dsi->data),
-                                         &reply_len) < 0) {
-        dsi->header.dsi_code = dsi_code ? dsi_code : 0xffffffff;
+    if (payload_len && (((const uint8_t *)payload)[0] == AFP_READ
+                        || ((const uint8_t *)payload)[0] == AFP_READ_EXT)) {
+        reply_cap = afptest_libafpclient_read_reply_size(payload, payload_len);
+    }
+
+    if (reply_cap == 0) {
+        reply_cap = 1;
+    }
+
+    reply = malloc(reply_cap);
+
+    if (!reply) {
+        dsi->header.dsi_code = htonl((uint32_t)-1);
         dsi->header.dsi_len = 0;
         dsi->cmdlen = 0;
         dsi->datalen = 0;
         return 0;
     }
 
-    afptest_libafpclient_mirror_reply(conn, dsi_code, reply_len);
+    if (afptest_libafpclient_raw_command(conn, payload, payload_len,
+                                         dsi_command, data_offset, &dsi_code,
+                                         reply, reply_cap,
+                                         &reply_len) < 0) {
+        free(reply);
+        dsi->header.dsi_code = dsi_code ? dsi_code : 0xffffffff;
+        dsi->header.dsi_len = 0;
+        dsi->cmdlen = 0;
+        dsi->datalen = 0;
+        conn->reply_payload_len = 0;
+        conn->reply_payload_pos = 0;
+        return 0;
+    }
+
+    if (!afptest_libafpclient_enqueue_reply(conn, dsi_command, dsi_code, reply,
+                                            reply_len)) {
+        dsi->header.dsi_code = htonl((uint32_t)-1);
+        dsi->header.dsi_len = 0;
+        dsi->cmdlen = 0;
+        dsi->datalen = 0;
+        return 0;
+    }
+
     return 1;
 }
 
 static int afptest_libafpclient_queue_raw(CONN *conn, const void *payload,
-        size_t payload_len, size_t total_len, uint32_t data_offset)
+        size_t payload_len, size_t total_len, uint8_t dsi_command,
+        uint32_t data_offset)
 {
     void *pending;
 
@@ -248,6 +460,7 @@ static int afptest_libafpclient_queue_raw(CONN *conn, const void *payload,
     conn->pending_payload = pending;
     conn->pending_payload_len = payload_len;
     conn->pending_payload_cap = total_len;
+    conn->pending_dsi_command = dsi_command;
     conn->pending_data_offset = data_offset;
     return 1;
 }
@@ -258,6 +471,7 @@ static size_t afptest_libafpclient_append_raw(CONN *conn, const void *data,
     size_t available;
     size_t pending_len;
     void *pending;
+    uint8_t dsi_command;
     uint32_t data_offset;
     int ok;
 
@@ -283,13 +497,15 @@ static size_t afptest_libafpclient_append_raw(CONN *conn, const void *data,
 
     pending = conn->pending_payload;
     pending_len = conn->pending_payload_len;
+    dsi_command = conn->pending_dsi_command;
     data_offset = conn->pending_data_offset;
     conn->pending_payload = NULL;
     conn->pending_payload_len = 0;
     conn->pending_payload_cap = 0;
+    conn->pending_dsi_command = 0;
     conn->pending_data_offset = 0;
     ok = afptest_libafpclient_dispatch_raw(conn, pending, pending_len,
-                                           data_offset);
+                                           dsi_command, data_offset);
     free(pending);
     return ok ? length : 0;
 }
@@ -349,13 +565,20 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
             afptest_libafpclient_clear_pending(conn);
         }
 
+        if (conn->reply_payload
+                && conn->reply_payload_pos >= conn->reply_payload_len) {
+            afptest_libafpclient_clear_active_reply(conn);
+        }
+
         if (total_len > length) {
             return afptest_libafpclient_queue_raw(conn, buf, length,
-                                                  total_len, data_offset);
+                                                  total_len,
+                                                  dsi->header.dsi_command,
+                                                  data_offset);
         }
 
         return afptest_libafpclient_dispatch_raw(conn, buf, length,
-                data_offset);
+                dsi->header.dsi_command, data_offset);
     }
 
 #endif
@@ -663,6 +886,7 @@ unsigned int AFPopenLogin(CONN *conn, const char *vers, const char *uam,
     if (!conn->use_legacy_transport) {
         int old_socket = dsi->socket;
         afptest_libafpclient_clear_pending(conn);
+        afptest_libafpclient_clear_replies(conn);
         unsigned int ret = afptest_libafpclient_login(conn, LastHost, LastPort, vers,
                            uam, usr, pwd);
 
@@ -760,6 +984,7 @@ unsigned int AFPopenLoginExt(CONN *conn,
     if (!conn->use_legacy_transport) {
         int old_socket = dsi->socket;
         afptest_libafpclient_clear_pending(conn);
+        afptest_libafpclient_clear_replies(conn);
         unsigned int ret = afptest_libafpclient_login(conn, LastHost, LastPort, vers,
                            uam, usr, auth_info ? (const char *)auth_info : "");
 
@@ -845,6 +1070,7 @@ unsigned int AFPopenLoginExt_pwd(CONN *conn,
         DSI *dsi = &conn->dsi;
         int old_socket = dsi->socket;
         afptest_libafpclient_clear_pending(conn);
+        afptest_libafpclient_clear_replies(conn);
         unsigned int ret = afptest_libafpclient_login(conn, LastHost, LastPort, vers,
                            uam, usr ? usr : "", pwd ? pwd : "");
 
@@ -974,6 +1200,7 @@ unsigned int AFPLogOut(CONN *conn)
 
     if (conn->transport && !conn->use_legacy_transport) {
         afptest_libafpclient_clear_pending(conn);
+        afptest_libafpclient_clear_replies(conn);
         afptest_libafpclient_logout(conn);
         afptest_libafpclient_close(conn);
         dsi->header.dsi_code = 0;
