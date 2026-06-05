@@ -33,6 +33,7 @@ if testsuite_libafpclient.found()
     libafptest_deps += testsuite_libafpclient
     afptest_external_deps += testsuite_libafpclient
     libafptest_c_args += ['-DHAVE_TESTSUITE_LIBAFPCLIENT=1']
+    spectest_extra_c_args += ['-DHAVE_TESTSUITE_LIBAFPCLIENT=1']
 endif
 
 if have_spotlight

@@ -29,6 +29,13 @@ struct afptest_libafpclient_transport {
     pthread_t loop_thread;
 };
 
+struct afptest_server_ref {
+    struct afp_server *server;
+    unsigned int refs;
+    int logout_requested;
+    struct afptest_server_ref *next;
+};
+
 struct CONN {
     DSI dsi;
     int type;
@@ -83,9 +90,107 @@ void dsi_setup_header(struct afp_server *server,
                       char command);
 int dsi_send(struct afp_server *server, char *msg, int size, int wait,
              unsigned char subcommand, void *other);
+void rm_fd_and_signal(int fd);
 
 static pthread_mutex_t libafpclient_init_lock = PTHREAD_MUTEX_INITIALIZER;
 static int libafpclient_started;
+static pthread_mutex_t server_refs_lock = PTHREAD_MUTEX_INITIALIZER;
+static struct afptest_server_ref *server_refs;
+
+static int register_server_ref(struct afp_server *server)
+{
+    struct afptest_server_ref *ref;
+
+    if (!server) {
+        return -1;
+    }
+
+    pthread_mutex_lock(&server_refs_lock);
+
+    for (ref = server_refs; ref; ref = ref->next) {
+        if (ref->server == server) {
+            ref->refs++;
+            pthread_mutex_unlock(&server_refs_lock);
+            return 0;
+        }
+    }
+
+    ref = calloc(1, sizeof(*ref));
+
+    if (!ref) {
+        pthread_mutex_unlock(&server_refs_lock);
+        return -1;
+    }
+
+    ref->server = server;
+    ref->refs = 1;
+    ref->next = server_refs;
+    server_refs = ref;
+    pthread_mutex_unlock(&server_refs_lock);
+    return 0;
+}
+
+static void request_server_logout(struct afp_server *server)
+{
+    struct afptest_server_ref *ref;
+
+    if (!server) {
+        return;
+    }
+
+    pthread_mutex_lock(&server_refs_lock);
+
+    for (ref = server_refs; ref; ref = ref->next) {
+        if (ref->server == server) {
+            ref->logout_requested = 1;
+            break;
+        }
+    }
+
+    pthread_mutex_unlock(&server_refs_lock);
+}
+
+static int unregister_server_ref(struct afp_server *server, int *logout_requested)
+{
+    struct afptest_server_ref **refp;
+    struct afptest_server_ref *ref;
+
+    if (logout_requested) {
+        *logout_requested = 0;
+    }
+
+    if (!server) {
+        return 0;
+    }
+
+    pthread_mutex_lock(&server_refs_lock);
+
+    for (refp = &server_refs; *refp; refp = &(*refp)->next) {
+        ref = *refp;
+
+        if (ref->server != server) {
+            continue;
+        }
+
+        if (ref->refs > 1) {
+            ref->refs--;
+            pthread_mutex_unlock(&server_refs_lock);
+            return 0;
+        }
+
+        if (logout_requested) {
+            *logout_requested = ref->logout_requested;
+        }
+
+        *refp = ref->next;
+        free(ref);
+        pthread_mutex_unlock(&server_refs_lock);
+        return 1;
+    }
+
+    pthread_mutex_unlock(&server_refs_lock);
+    return 1;
+}
 
 static int raw_reply(struct afp_server *server, char *buf, unsigned int size,
                      void *other)
@@ -252,6 +357,12 @@ int afptest_libafpclient_login(struct CONN *conn, const char *host, int port,
         return htonl((uint32_t)kFPUserNotAuth);
     }
 
+    if (register_server_ref(transport->server) != 0) {
+        afp_server_remove(transport->server);
+        free(transport);
+        return htonl((uint32_t)kFPMiscErr);
+    }
+
     conn->transport = transport;
     conn->dsi.socket = transport->server->fd;
     conn->dsi.server_quantum = transport->server->tx_quantum;
@@ -408,13 +519,16 @@ void afptest_libafpclient_logout(struct CONN *conn)
     transport = conn->transport;
 
     if (transport->server) {
-        afp_logout(transport->server, 1);
+        request_server_logout(transport->server);
     }
 }
 
 void afptest_libafpclient_close(struct CONN *conn)
 {
     struct afptest_libafpclient_transport *transport;
+    int logout_requested;
+    int last_ref;
+    int fd;
 
     if (!conn || !conn->transport) {
         return;
@@ -423,7 +537,21 @@ void afptest_libafpclient_close(struct CONN *conn)
     transport = conn->transport;
 
     if (transport->server) {
-        afp_server_remove(transport->server);
+        last_ref = unregister_server_ref(transport->server, &logout_requested);
+
+        if (last_ref) {
+            if (logout_requested) {
+                afp_logout(transport->server, 1);
+            }
+
+            fd = transport->server->fd >= 0 ? transport->server->fd : conn->dsi.socket;
+
+            if (fd >= 0) {
+                rm_fd_and_signal(fd);
+            }
+
+            afp_server_remove(transport->server);
+        }
     }
 
     free(transport);

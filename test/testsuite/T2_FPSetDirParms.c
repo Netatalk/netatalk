@@ -123,10 +123,11 @@ STATIC void test528()
 
     if (chmod(parent_path, 0777) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unable to chmod parent: %s\n", strerror(errno));
+            fprintf(stdout, "\tNOT TESTED unable to chmod parent: %s\n",
+                    strerror(errno));
         }
 
-        test_failed();
+        test_nottested();
         goto fin;
     }
 
@@ -187,10 +188,11 @@ STATIC void test528()
      * which means accessing files in subdirectories will fail */
     if (chmod(parent_path, 0444) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unable to chmod parent: %s\n", strerror(errno));
+            fprintf(stdout, "\tNOT TESTED unable to chmod parent: %s\n",
+                    strerror(errno));
         }
 
-        test_failed();
+        test_nottested();
         goto fin;
     }
 
@@ -257,10 +259,11 @@ STATIC void test528()
     /* Restore execute permission - this allows traversing the directory again */
     if (chmod(parent_path, 0777) < 0) {
         if (!Quiet) {
-            fprintf(stdout, "\tFAILED unable to chmod parent back: %s\n", strerror(errno));
+            fprintf(stdout, "\tNOT TESTED unable to chmod parent back: %s\n",
+                    strerror(errno));
         }
 
-        test_failed();
+        test_nottested();
         goto fin;
     }
 

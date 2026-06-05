@@ -134,6 +134,14 @@ void test_skipped(int why)
         s = "extmap.conf type/creator mapping";
         break;
 
+    case T_LIBAFPCLIENT:
+        s = "libafpclient transport";
+        break;
+
+    case T_RFORK_4GB:
+        s = "resource fork larger than 4GB";
+        break;
+
     default:
         s = "UNKNOWN REASON - this is a bug";
         break;

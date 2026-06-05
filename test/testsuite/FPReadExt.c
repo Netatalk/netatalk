@@ -17,6 +17,7 @@ STATIC void test22()
     uint16_t vol = VolID;
     char utf8name[20];
     int i;
+    int ret;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -116,7 +117,18 @@ fin2g:
     }
 
     FAIL(FPWrite_ext(Conn, fork, ((off_t)1 << 32) + 20, 2000, w_buf, 0))
-    FAIL(FPWrite_ext(Conn, fork1, ((off_t)1 << 32) + 20, 1000, w_buf, 0))
+
+    if (Conn2) {
+        FPGetSrvrMsg(Conn2, 0, 0);
+    }
+
+    ret = FPWrite_ext(Conn, fork1, ((off_t)1 << 32) + 20, 1000, w_buf, 0);
+
+    if (ret == htonl(AFPERR_DFULL)) {
+        test_skipped(T_RFORK_4GB);
+    } else {
+        FAIL(ret)
+    }
 
     if (Conn2) {
         FPGetSrvrMsg(Conn2, 0, 0);

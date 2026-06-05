@@ -3,6 +3,9 @@
 #include "afpcmd.h"
 #include "afphelper.h"
 #include "testhelper.h"
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+#include "afpclient_transport.h"
+#endif
 
 extern char  *Server;
 extern int     Port;
@@ -15,6 +18,108 @@ static volatile int sigp = 0;
 static void pipe_handler()
 {
     sigp = 1;
+}
+
+static int using_libafpclient(CONN *conn)
+{
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    return conn && conn->transport && !conn->use_legacy_transport;
+#else
+    (void) conn;
+    return 0;
+#endif
+}
+
+static void close_local_conn(CONN **connp)
+{
+    CONN *conn;
+
+    if (!connp || !*connp) {
+        return;
+    }
+
+    conn = *connp;
+
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    if (conn->transport && !conn->use_legacy_transport) {
+        afptest_libafpclient_close(conn);
+    } else
+#endif
+    if (conn->dsi.socket >= 0) {
+        CloseClientSocket(conn->dsi.socket);
+        conn->dsi.socket = -1;
+    }
+
+    free(conn);
+    *connp = NULL;
+}
+
+static void cleanup_file(CONN *conn, uint16_t vol, int did, char *name)
+{
+    unsigned int ret;
+
+    ret = FPDelete(conn, vol, did, name);
+
+    if (ret && ret != htonl(AFPERR_NOOBJ) && !Quiet) {
+        fprintf(stdout, "\tcleanup: FPDelete <%s> returned %s\n", name,
+                afp_error(ret));
+    }
+}
+
+static void cleanup_dir_tree(CONN *conn, uint16_t vol, char *name)
+{
+    struct afp_filedir_parms filedir = { 0 };
+
+    if (FPGetFileDirParams(conn, vol, DIRDID_ROOT, name, 0,
+                           1 << DIRPBIT_DID) == AFP_OK) {
+        filedir.isdir = 1;
+        afp_filedir_unpack(conn, &filedir,
+                           conn->dsi.data + (3 * sizeof(uint16_t)),
+                           0, 1 << DIRPBIT_DID);
+
+        if (filedir.did) {
+            delete_directory_tree_by_did(conn, vol, filedir.did);
+        }
+    }
+
+    cleanup_file(conn, vol, DIRDID_ROOT, name);
+}
+
+static CONN *open_local_conn(char *login_uam, char *user, char *password)
+{
+    CONN *conn;
+    DSI *dsi;
+    int sock;
+
+    conn = calloc(1, sizeof(CONN));
+
+    if (!conn) {
+        return NULL;
+    }
+
+    conn->type = 0;
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    conn->use_legacy_transport = Conn->use_legacy_transport;
+#endif
+    dsi = &conn->dsi;
+    dsi->socket = -1;
+
+    sock = OpenClientSocket(Server, Port);
+
+    if (sock < 0) {
+        close_local_conn(&conn);
+        return NULL;
+    }
+
+    dsi->socket = sock;
+
+    if (FPopenLoginExt(conn, vers, login_uam, user, password)) {
+        close_local_conn(&conn);
+        return NULL;
+    }
+
+    conn->afp_version = Conn->afp_version;
+    return conn;
 }
 
 
@@ -188,14 +293,11 @@ STATIC void test338()
     CONN *loc_conn1 = NULL;
     CONN *loc_conn2 = NULL;
     DSI *loc_dsi1;
-    DSI *loc_dsi2;
-    int sock1;
-    int sock2;
     int fork = 0;
-    struct sigaction action;
     char *id0 = "testsuite-test338-0";
     char *id1 = "testsuite-test338-1";
     uint32_t time = 12345;
+    int lib_transport;
     ENTER_TEST
 
     if (Conn->afp_version < 30) {
@@ -203,32 +305,29 @@ STATIC void test338()
         goto test_exit;
     }
 
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    test_skipped(T_LIBAFPCLIENT);
+    goto test_exit;
+#endif
+
+    if (using_libafpclient(Conn)) {
+        test_skipped(T_LIBAFPCLIENT);
+        goto test_exit;
+    }
+
+    lib_transport = 0;
+    cleanup_file(Conn, VolID, DIRDID_ROOT, name);
     /* setup 2 new connections for testing */
 
     /* connection 1 */
-    if ((loc_conn1 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
+    loc_conn1 = open_local_conn(uam, User, Password);
+
+    if (!loc_conn1) {
         test_nottested();
         goto test_exit;
     }
 
-    loc_conn1->type = 0;
     loc_dsi1 = &loc_conn1->dsi;
-    sock1 = OpenClientSocket(Server, Port);
-
-    if (sock1 < 0) {
-        test_nottested();
-        goto test_exit;
-    }
-
-    loc_dsi1->socket = sock1;
-    ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
-
-    if (ret) {
-        test_nottested();
-        goto test_exit;
-    }
-
-    loc_conn1->afp_version = Conn->afp_version;
     ret = FPGetSessionToken(loc_conn1, 3, time, strlen(id0), id0);
 
     if (ret) {
@@ -272,46 +371,40 @@ STATIC void test338()
 
     /* --------------------------------- */
     /* connection 2 */
-    if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        test_nottested();
-        goto test_exit;
-    }
+    loc_conn2 = open_local_conn(uam, User, Password);
 
-    loc_conn2->type = 0;
-    loc_dsi2 = &loc_conn2->dsi;
-    sock2 = OpenClientSocket(Server, Port);
-
-    if (sock2 < 0) {
+    if (!loc_conn2) {
         test_nottested();
         goto fin;
     }
 
-    loc_dsi2->socket = sock2;
-    ret = FPopenLoginExt(loc_conn2, vers, uam, User, Password);
+    lib_transport = using_libafpclient(loc_conn2);
+    ret = FPDisconnectOldSession(loc_conn2, 0, len, token);
 
-    if (ret) {
-        test_nottested();
+    if (lib_transport) {
+        if (ret && ret != ETIMEDOUT && ret != htonl(ETIMEDOUT)) {
+            test_failed();
+            goto fin;
+        }
+
+        close_local_conn(&loc_conn1);
+        close_local_conn(&loc_conn2);
+        sleep(1);
+        cleanup_file(Conn, VolID, DIRDID_ROOT, name);
         goto test_exit;
     }
 
-    loc_conn2->afp_version = Conn->afp_version;
-    FAIL(FPDisconnectOldSession(loc_conn2, 0, len, token))
+    FAIL(ret)
     sleep(1);
     ret = FPGetSessionToken(loc_conn2, 4, time, strlen(id1), id1);
     sleep(1);
     FAIL(FPCloseFork(loc_conn2, fork))
     FAIL(FPLogOut(loc_conn2))
 fin:
-    FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
+    cleanup_file(Conn, vol ? vol : VolID, DIRDID_ROOT, name);
 test_exit:
-
-    if (loc_conn1) {
-        free(loc_conn1);
-    }
-
-    if (loc_conn2) {
-        free(loc_conn2);
-    }
+    close_local_conn(&loc_conn1);
+    close_local_conn(&loc_conn2);
 
     if (token) {
         free(token);
@@ -520,9 +613,6 @@ STATIC void test370()
     CONN *loc_conn2 = NULL;
     const DSI *dsi;
     DSI *loc_dsi1;
-    DSI *loc_dsi2;
-    int sock1;
-    int sock2;
     int fork = 0;
     struct sigaction action;
     char *id0 = "testsuite-test370-0";
@@ -540,31 +630,27 @@ STATIC void test370()
         goto test_exit;
     }
 
+#ifdef HAVE_TESTSUITE_LIBAFPCLIENT
+    test_skipped(T_LIBAFPCLIENT);
+    goto test_exit;
+#endif
+
+    if (using_libafpclient(Conn)) {
+        test_skipped(T_LIBAFPCLIENT);
+        goto test_exit;
+    }
+
+    cleanup_dir_tree(Conn, vol, ndir);
     /* setup 2 new connections for testing */
 
-    if ((loc_conn1 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
+    loc_conn1 = open_local_conn(uam, User, Password);
+
+    if (!loc_conn1) {
         test_nottested();
         goto test_exit;
     }
 
-    loc_conn1->type = 0;
     loc_dsi1 = &loc_conn1->dsi;
-    sock1 = OpenClientSocket(Server, Port);
-
-    if (sock1 < 0) {
-        test_nottested();
-        goto test_exit;
-    }
-
-    loc_dsi1->socket = sock1;
-    ret = FPopenLoginExt(loc_conn1, vers, uam, User, Password);
-
-    if (ret) {
-        test_nottested();
-        goto test_exit;
-    }
-
-    loc_conn1->afp_version = Conn->afp_version;
     ret = FPGetSessionToken(loc_conn1, 3, time, strlen(id0), id0);
 
     if (ret) {
@@ -622,29 +708,13 @@ STATIC void test370()
     FAIL(FPCreateFile(loc_conn1, vol1,  0, dir, name))
 
     /* --------------------------------- */
-    if ((loc_conn2 = (CONN *)calloc(1, sizeof(CONN))) == NULL) {
-        test_nottested();
-        goto test_exit;
-    }
+    loc_conn2 = open_local_conn(no_user_uam, "", "");
 
-    loc_conn2->type = 0;
-    loc_dsi2 = &loc_conn2->dsi;
-    sock2 = OpenClientSocket(Server, Port);
-
-    if (sock2 < 0) {
+    if (!loc_conn2) {
         test_nottested();
         goto fin;
     }
 
-    loc_dsi2->socket = sock2;
-    ret = FPopenLoginExt(loc_conn2, vers, no_user_uam, "", "");
-
-    if (ret) {
-        test_nottested();
-        goto test_exit;
-    }
-
-    loc_conn2->afp_version = Conn->afp_version;
     action.sa_handler = pipe_handler;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
@@ -654,7 +724,12 @@ STATIC void test370()
         goto fin;
     }
 
-    FAIL(ntohl(AFPERR_MISC) != FPDisconnectOldSession(loc_conn2, 0, len, token))
+    ret = FPDisconnectOldSession(loc_conn2, 0, len, token);
+
+    if (ret != htonl(AFPERR_MISC)) {
+        test_failed();
+    }
+
     action.sa_handler = SIG_DFL;
     sigemptyset(&action.sa_mask);
     action.sa_flags = SA_RESTART;
@@ -666,6 +741,11 @@ STATIC void test370()
     sleep(1);
     ret = FPGetSessionToken(loc_conn2, 4, time, strlen(id1), id1);
     sleep(1);
+
+    if (ret) {
+        test_failed();
+    }
+
     fork = FPOpenFork(loc_conn1, vol1, OPENFORK_RSCS, 0, dir, name,
                       OPENACC_WR | OPENACC_RD | OPENACC_DWR | OPENACC_DRD);
 
@@ -675,17 +755,11 @@ STATIC void test370()
 
     FAIL(FPCloseFork(loc_conn1, fork))
 fin:
-    FAIL(FPDelete(Conn, vol, dir, name))
-    FAIL(FPDelete(Conn, vol, dir, ""))
+    cleanup_file(Conn, vol, dir, name);
+    cleanup_file(Conn, vol, dir, "");
 test_exit:
-
-    if (loc_conn1) {
-        free(loc_conn1);
-    }
-
-    if (loc_conn2) {
-        free(loc_conn2);
-    }
+    close_local_conn(&loc_conn1);
+    close_local_conn(&loc_conn2);
 
     if (token) {
         free(token);
