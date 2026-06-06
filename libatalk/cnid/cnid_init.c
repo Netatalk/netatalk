@@ -1,6 +1,4 @@
-
 /*
- *
  * Copyright (c) 2003 the Netatalk Team
  * Copyright (c) 2003 Rafal Lewczuk <rlewczuk@pronet.pl>
  *

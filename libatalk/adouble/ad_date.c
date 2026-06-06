@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
+ * All rights reserved. See COPYRIGHT.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */

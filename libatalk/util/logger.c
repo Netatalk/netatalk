@@ -1,8 +1,3 @@
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 /* =========================================================================
 
 logger.c was written by Simon Bazley (sibaz@sibaz.com)
@@ -12,6 +7,10 @@ Just incase, it is, thats the licence I'm applying to this file.
 Netatalk 2001 (c)
 
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ctype.h>
 #include <errno.h>
