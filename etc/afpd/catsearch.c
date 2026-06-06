@@ -1390,15 +1390,10 @@ static int catsearch_afp(AFPObj *obj _U_, char *ibuf, size_t ibuflen,
 
     if ((c1.rbitmap & (1U << FILPBIT_PDINFO))
             && !(c1.rbitmap & (1U << CATPBIT_PARTIAL))
-            && (strcmp(vol->v_cnidscheme, "dbd") == 0)
-            && (vol->v_flags & AFPVOL_SEARCHDB))
-        /* we've got a name and it's a dbd volume, so search CNID database */
-    {
+            && (vol->v_flags & AFPVOL_SEARCHDB)) {
         ret = catsearch_db(obj, vol, uname, rmatches, &catpos[0],
                            rbuf + 24, &nrecs, &rsize, ext);
-    } else
-        /* perform a slow filesystem tree search */
-    {
+    } else {
         ret = catsearch(obj, vol, vol->v_root, rmatches, &catpos[0], rbuf + 24, &nrecs,
                         &rsize, ext);
     }
