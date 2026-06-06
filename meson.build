@@ -1474,8 +1474,7 @@ endif
 # Check for CUPS
 #
 
-cups = dependency('cups', required: false)
-cups_config = find_program('cups-config', required: false)
+cups = dependency('cups', required: false, version: '>=1.6')
 spooldir = ''
 
 if get_option('with-cups') and get_option('with-appletalk')
@@ -1486,18 +1485,13 @@ if get_option('with-cups') and get_option('with-appletalk')
         spooldir = spooldir_override
     endif
 
-    have_cups = cups.found() and cups_config.found()
+    have_cups = cups.found()
     if have_cups
         cdata.set('HAVE_CUPS', 1)
-        cups_api_version = run_command(
-            cups_config,
-            '--api-version',
-            check: true,
-        ).stdout().strip()
-        cdata.set('CUPS_API_VERSION', '"' + cups_api_version + '"')
+        cdata.set('CUPS_API_VERSION', '"' + cups.version() + '"')
     else
         warning(
-            'CUPS not found, you might need to specify the path to cups-config',
+            'CUPS 1.6 or newer not found',
         )
     endif
 else
