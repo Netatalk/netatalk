@@ -667,26 +667,22 @@ jobs:
               cmark \
               db-4.6.21p8v0 \
               dbus \
-              gcc-11.2.0p19 \
               heimdal \
               iniparser \
               libev \
               libgcrypt \
               libmagic \
               libtalloc \
-              file \
               mariadb-client \
               meson \
               openldap-client-2.6.10v0 \
               openpam \
-              pkgconfig \
               sqlite3-3.50.7p0 \
               xapian-core
           run: |
             set -e
             meson setup build \
               -Dbuildtype=release \
-              -Dpkg_config_path=/usr/local/lib/pkgconfig \
               -Dwith-eventloop=libev \
               -Dwith-gssapi-path=/usr/local/heimdal \
               -Dwith-kerberos-path=/usr/local/heimdal \
