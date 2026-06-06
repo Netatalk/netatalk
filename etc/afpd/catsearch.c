@@ -980,6 +980,7 @@ static int catsearch_db(const AFPObj *obj,
     static int num_matches;
     int ccr, r;
     int result = AFP_OK;
+    size_t namelen;
     struct path path;
     char *rrbuf = rbuf;
     char buffer[MAXPATHLEN + 2];
@@ -993,14 +994,16 @@ static int catsearch_db(const AFPObj *obj,
     }
 
     if (cur_pos == 0 || *pos == 0) {
-        if (convert_charset(vol->v_volcharset,
-                            vol->v_volcharset,
-                            vol->v_maccharset,
-                            uname,
-                            strlen(uname),
-                            buffer,
-                            MAXPATHLEN,
-                            &flags) == (size_t) -1) {
+        namelen = convert_charset(vol->v_volcharset,
+                                  vol->v_volcharset,
+                                  vol->v_maccharset,
+                                  uname,
+                                  strlen(uname),
+                                  buffer,
+                                  MAXPATHLEN,
+                                  &flags);
+
+        if (namelen == (size_t) -1) {
             LOG(log_error, logtype_afpd, "catsearch_db: conversion error");
             result = AFPERR_MISC;
             goto catsearch_end;
@@ -1010,7 +1013,7 @@ static int catsearch_db(const AFPObj *obj,
         AFP_CNID_START("cnid_find");
         num_matches = cnid_find(vol->v_cdb,
                                 buffer,
-                                strlen(uname),
+                                namelen,
                                 resbuf,
                                 sizeof(resbuf),
                                 NULL);
