@@ -49,6 +49,22 @@
 
 #define MAXCHOOSERLEN 31
 
+#if CUPS_VERSION_MAJOR < 3 /* CUPS 2.x and older */
+/* Functions renamed in libcups3 */
+#define cupsGetDests           cupsGetDests2
+#define cupsSetPasswordCB  cupsSetPasswordCB2
+#define cupsGetError cupsLastError
+#define cupsGetErrorString  cupsLastErrorString
+#define cupsParseOptions(arg, end, num_options, options) cupsParseOptions(arg, num_options, options)
+#define cupsCopyDestInfo(http, dest, dflags) cupsCopyDestInfo(http, dest)
+/* Function replaced by a different function in libcups3 */
+#define cupsCreateTempFile(prefix,suffix,buffer,bufsize) cupsTempFile2(buffer,bufsize)
+/* Some functions used ints in CUPS 2.x, but are now specific types */
+#define cups_len_t	int
+#else
+#define cups_len_t	size_t
+#endif
+
 static const char *cups_status_msg[] = {
     "status: busy; info: \"%s\" is rejecting jobs; ",
     "status: idle; info: \"%s\" is stopped, accepting jobs ; ",
@@ -67,10 +83,16 @@ static void     cups_free_printer(struct printer *pr);
 
 const char *cups_get_language(void)
 {
+#if CUPS_VERSION_MAJOR < 3 /* CUPS 2.x and older */
     cups_lang_t *language;
     /* needed for conversion */
     language = cupsLangDefault();
     const char *curr_encoding = cupsLangEncoding(language);
+#else
+    cups_encoding_t language;
+    cupsLangGetEncoding();
+    const char *curr_encoding = cupsEncodingString(language);
+#endif
     return curr_encoding;
 }
 
@@ -114,7 +136,7 @@ int cups_printername_ok(char *name)
     /*
      * Make sure we don't ask for passwords...
      */
-    cupsSetPasswordCB2(cups_passwd_cb, NULL);
+    cupsSetPasswordCB(cups_passwd_cb, NULL);
     /*
      * Try to connect to the requested printer...
      */
@@ -122,7 +144,7 @@ int cups_printername_ok(char *name)
 
     if (!dest) {
         LOG(log_error, logtype_papd,
-            "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
+            "Unable to get destination \"%s\": %s", name, cupsGetErrorString());
         return 0;
     }
 
@@ -130,7 +152,7 @@ int cups_printername_ok(char *name)
                                 NULL, NULL)) == NULL) {
         LOG(log_error, logtype_papd,
             "Unable to connect to destination \"%s\": %s", dest->name,
-            cupsLastErrorString());
+            cupsGetErrorString());
         return 0;
     }
 
@@ -166,13 +188,13 @@ const char *cups_get_printer_ppd(char *name)
     char *model;
     /* Destination flag */
     unsigned flags = 0;
-    cupsSetPasswordCB2(cups_passwd_cb, NULL);
-    int num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
+    cupsSetPasswordCB(cups_passwd_cb, NULL);
+    cups_len_t num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
     dest = cupsGetDest(name, NULL, num_dests, dests);
 
     if (!dest) {
         LOG(log_error, logtype_papd, "Unable to get destination \"%s\": %s\n", name,
-            cupsLastErrorString());
+            cupsGetErrorString());
         cupsFreeDests(num_dests, dests);
         return 0;
     }
@@ -194,7 +216,7 @@ const char *cups_get_printer_ppd(char *name)
     if ((http = cupsConnectDest(dest, flags, 30000, NULL, NULL, 0, NULL,
                                 NULL)) == NULL) {
         LOG(log_error, logtype_papd, "Unable to connect to destination \"%s\": %s\n",
-            dest->name, cupsLastErrorString());
+            dest->name, cupsGetErrorString());
         cupsFreeDests(num_dests, dests);
         return 0;
     }
@@ -228,7 +250,7 @@ const char *cups_get_printer_ppd(char *name)
 
     if ((response = cupsDoRequest(http, request, "/")) == NULL) {
         LOG(log_error, logtype_papd,  "Unable to get printer attribs for %s - %s", name,
-            ippErrorString(cupsLastError()));
+            ippErrorString(cupsGetError()));
         httpClose(http);
         cupsFreeDests(num_dests, dests);
         return 0;
@@ -270,7 +292,7 @@ const char *cups_get_printer_ppd(char *name)
      * Open a temporary file for the PPD...
      */
 
-    if ((fp = cupsTempFile2(buffer, (int)bufsize)) == NULL) {
+    if ((fp = cupsCreateTempFile(NULL, NULL, buffer, (int)bufsize)) == NULL) {
         LOG(log_error, logtype_papd, strerror(errno));
         ippDelete(response);
         httpClose(http);
@@ -350,7 +372,7 @@ cups_get_printer_status(struct printer *pr)
     /*
      * Make sure we don't ask for passwords...
      */
-    cupsSetPasswordCB2(cups_passwd_cb, NULL);
+    cupsSetPasswordCB(cups_passwd_cb, NULL);
     /*
      * Try to connect to the requested printer...
      */
@@ -358,7 +380,7 @@ cups_get_printer_status(struct printer *pr)
 
     if (!dest) {
         LOG(log_error, logtype_papd,
-            "Unable to get destination \"%s\": %s", pr->p_printer, cupsLastErrorString());
+            "Unable to get destination \"%s\": %s", pr->p_printer, cupsGetErrorString());
         snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.",
                  pr->p_printer);
         return 0;
@@ -384,7 +406,7 @@ cups_get_printer_status(struct printer *pr)
                                 NULL)) == NULL) {
         LOG(log_error, logtype_papd,
             "Unable to connect to destination \"%s\": %s", dest->name,
-            cupsLastErrorString());
+            cupsGetErrorString());
         snprintf(pr->p_status, 255, "status: busy; info: \"%s\" appears to be offline.",
                  pr->p_printer);
         cupsFreeDests(1, dest);
@@ -431,7 +453,7 @@ cups_get_printer_status(struct printer *pr)
         /* Printer didn't respond to status request. Don't block print jobs as the scheduler will handle them */
         LOG(log_error, logtype_papd, "Unable to get printer attribs for %s - %s",
             pr->p_printer,
-            ippErrorString(cupsLastError()));
+            ippErrorString(cupsGetError()));
         snprintf(pr->p_status, 255,
                  "status: busy; info: \"%s\" not responding to queries.", pr->p_printer);
         httpClose(http);
@@ -516,7 +538,7 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
     cups_dinfo_t *info = NULL;
     int jobid;
     char filepath[MAXPATHLEN];
-    int num_options;
+    cups_len_t num_options;
     cups_option_t *options;
     /* Initialize the options array */
     num_options = 0;
@@ -524,7 +546,7 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
     /*
      * Make sure we don't ask for passwords...
      */
-    cupsSetPasswordCB2(cups_passwd_cb, NULL);
+    cupsSetPasswordCB(cups_passwd_cb, NULL);
     /*
      * Try to connect to the requested printer...
      */
@@ -532,12 +554,12 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
 
     if (!dest) {
         LOG(log_error, logtype_papd,
-            "Unable to get destination \"%s\": %s", name, cupsLastErrorString());
+            "Unable to get destination \"%s\": %s", name, cupsGetErrorString());
         cupsFreeDests(1, dest);
         return 0;
     }
 
-    info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest);
+    info = cupsCopyDestInfo(CUPS_HTTP_DEFAULT, dest, CUPS_DEST_FLAGS_NONE);
 
     if (username != NULL) {
         num_options = cupsAddOption("job-originating-user-name", username, num_options,
@@ -548,7 +570,7 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
     }
 
     if (cupsoptions != NULL) {
-        num_options = cupsParseOptions(cupsoptions, num_options, &options);
+        num_options = cupsParseOptions(cupsoptions, NULL, num_options, &options);
     }
 
     strlcpy(filepath, SPOOLDIR, sizeof(filepath));
@@ -566,7 +588,7 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
     } else {
         LOG(log_error, logtype_papd,
             "Unable to print job '%s' to printer '%s' for user '%s' - CUPS error : '%s'",
-            job, name, username, cupsLastErrorString());
+            job, name, username, cupsGetErrorString());
     }
 
     /*
@@ -597,7 +619,7 @@ int cups_print_job(char *name, const char *filename, char *job, char *username,
             LOG(log_info, logtype_papd, "Document send succeeded.");
         } else {
             LOG(log_error, logtype_papd, "Document send failed: %s\n",
-                cupsLastErrorString());
+                cupsGetErrorString());
         }
     }
 
@@ -614,12 +636,12 @@ struct printer	*
 cups_autoadd_printers(struct printer	*defprinter, struct printer *printers)
 {
     struct printer 	*pr;
-    int         	num_dests, i;
+    cups_len_t         	num_dests, i;
     int 	    	ret;
     cups_dest_t 	*dests;
     char 	    	name[MAXCHOOSERLEN + 1], *p;
     /* get the available destination from CUPS */
-    num_dests = cupsGetDests2(CUPS_HTTP_DEFAULT, &dests);
+    num_dests = cupsGetDests(CUPS_HTTP_DEFAULT, &dests);
 
     for (i = 0; i < num_dests; i++) {
         if ((pr = (struct printer *)malloc(sizeof(struct printer)))	== NULL) {
