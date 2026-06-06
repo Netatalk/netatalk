@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 1990,1991 Regents of The University of Michigan.
+ * All Rights Reserved.  See COPYRIGHT.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif /* HAVE_CONFIG_H */
