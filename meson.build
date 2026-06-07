@@ -833,12 +833,12 @@ summary_backends = cnid_backends
 
 # Determine default CNID backend
 
-if use_dbd_backend
-    default_backend = 'dbd'
-elif use_sqlite_backend
+if use_sqlite_backend
     default_backend = 'sqlite'
 elif use_mysql_backend
     default_backend = 'mysql'
+elif use_dbd_backend
+    default_backend = 'dbd'
 else
     error('No CNID backends selected for compilation')
 endif
