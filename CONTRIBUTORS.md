@@ -7,19 +7,19 @@ with their contributions. Cheers.
 
 Thanks a bunch folks, wherever you are.
 
-- Wesley Craig <wesley.craig@umich.edu>
+- Wesley Craig <wesley.craig@umich.edu>: creator of Netatalk
 - Charles Clark <cmclark@umich.edu>: megatron Macintosh file format transformer
-- Adrian Sun <asun@cobaltnet.com>
+- Adrian Sun <asun@cobaltnet.com>: ASIP and much more
 - Steve Hirsch <shirsch@adelphia.net>: ProDOS II support/initial Randnum
-support
-- Robert Marinchick: initial rquota patch
-- Frank Morton: megatron information patch
-- Tim Carlson: Solaris testing
+  support
+- Robert Marinchick <rjm8m@majink1.itc.virginia.edu>: initial rquota patch
+- Frank Morton <fmorton@base2inc.com>: megatron information patch
+- Tim Carlson <tim@santafe.edu>: Solaris testing
 - iNOUE Koichi: RPM for RedHat systems
-- Stefan Bethke: FreeBSD
-- Leland Wallace
+- Stefan Bethke <Stefan.Bethke@Hanse.DE>: FreeBSD port
+- Leland Wallace <randall@apple.com>: expert advice
 - Gerry Tomlinson <Gerry.Tomlinson@newcastle.ac.uk>:
-original afile/achfile/acleandir implementation
+  original afile/achfile/acleandir implementation
 - Marsha Jackson: reverse engineered the Apple II boot protocol
 
 ## Community Contributors
