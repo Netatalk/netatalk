@@ -833,6 +833,109 @@ test_exit:
     exit_test("FPExchangeFiles:test531: File exchange with cache coherency");
 }
 
+/* -------------------------
+ * test625  FPExchangeFiles succeeds with metadata sidecars present, and metadata
+ * stays with the NAME (per AFP spec: only filename, Parent DID, File ID, and
+ * creation dates are exchanged - FinderInfo is not).
+ *
+ * Both files get DISTINCT FinderInfo (which also creates their metadata, so the
+ * exchange's header-swap path runs). After exchange each name must still carry
+ * its OWN FinderInfo. The exchange opens each metadata fork to swap headers; if
+ * that open lacks write access, a strict-POSIX backend rejects it (the call
+ * fails with AFPERR_PARAM) and other backends silently drop the header write -
+ * either way the metadata is no longer correctly associated. Opening the
+ * metadata fork RDWR fixes it.
+ *
+ * Files live in a dedicated directory cleaned up via delete_directory_tree. */
+STATIC void test625()
+{
+    char *dname = "t625";
+    char *name  = "A";
+    char *name1 = "B";
+    uint16_t vol = VolID;
+    int  ofs = 3 * sizeof(uint16_t);
+    uint16_t bitmap = (1 << FILPBIT_FINFO);
+    struct afp_filedir_parms filedir = { 0 };
+    const DSI *dsi = &Conn->dsi;
+    int dir;
+    ENTER_TEST
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)
+            || FPCreateFile(Conn, vol, 0, dir, name1)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    /* stamp distinct FinderInfo on each (also creates the metadata fork, so the
+     * exchange's header-swap block executes) */
+    if (FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
+        test_failed();
+        goto cleanup;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+    memcpy(filedir.finder_info, "AAAAAAAA", 8);
+    FAIL(FPSetFileParams(Conn, vol, dir, name, bitmap, &filedir))
+
+    if (FPGetFileDirParams(Conn, vol, dir, name1, bitmap, 0)) {
+        test_failed();
+        goto cleanup;
+    }
+
+    filedir.isdir = 0;
+    afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+    memcpy(filedir.finder_info, "BBBBBBBB", 8);
+    FAIL(FPSetFileParams(Conn, vol, dir, name1, bitmap, &filedir))
+    /* exchange must succeed (fails AFPERR_PARAM on a strict-POSIX backend when
+     * the metadata fork is opened without write access) */
+    FAIL(FPExchangeFile(Conn, vol, dir, dir, name, name1))
+
+    /* FinderInfo stays with the name */
+    if (FPGetFileDirParams(Conn, vol, dir, name, bitmap, 0)) {
+        test_failed();
+    } else {
+        filedir.isdir = 0;
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+
+        if (memcmp(filedir.finder_info, "AAAAAAAA", 8)) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED: \"%s\" FinderInfo not preserved after exchange\n",
+                        name);
+            }
+
+            test_failed();
+        }
+    }
+
+    if (FPGetFileDirParams(Conn, vol, dir, name1, bitmap, 0)) {
+        test_failed();
+    } else {
+        filedir.isdir = 0;
+        afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
+
+        if (memcmp(filedir.finder_info, "BBBBBBBB", 8)) {
+            if (!Quiet) {
+                fprintf(stdout, "\tFAILED: \"%s\" FinderInfo not preserved after exchange\n",
+                        name1);
+            }
+
+            test_failed();
+        }
+    }
+
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
+test_exit:
+    exit_test("FPExchangeFiles:test625: exchange succeeds, FinderInfo preserved");
+}
+
 /* ----------- */
 void FPExchangeFiles_test()
 {
@@ -845,4 +948,5 @@ void FPExchangeFiles_test()
     test390();
     test391();
     test531();
+    test625();
 }

@@ -189,6 +189,7 @@ spectest_sources = [
     'T2_FPSetDirParms.c',
     'T2_FPSetFileParms.c',
     'T2_FPSetForkParms.c',
+    'T2_Lock_attack.c',
     'Utf8.c',
     'encoding_test.c',
     'rotest.c',

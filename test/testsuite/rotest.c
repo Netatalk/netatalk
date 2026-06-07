@@ -353,8 +353,92 @@ test_exit:
     exit_test("Readonly:test510: Access files and directories on a read only volume");
 }
 
+/* -----------------
+ * A write-intent FPOpenFork on a read-only volume must return AFPERR_VLOCK (or
+ * AFPERR_ACCESS via the per-file path), never AFPERR_NFILE.
+ *
+ * Uses a known file seeded on the read-only test volume ("first.txt", created
+ * by the readonly testsuite entrypoint) rather than enumerating, so the test
+ * does not depend on enumeration order and never accidentally targets a
+ * directory. */
+STATIC void test511()
+{
+    char *file = "first.txt";
+    uint16_t fork;
+    const DSI *dsi = &Conn->dsi;
+    ENTER_TEST
+
+    if (!Test) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "Has to be tested with a read only volume, two files and one dir.\n");
+        }
+
+        test_skipped(T_SINGLE);
+        goto test_exit;
+    }
+
+    VolID = FPOpenVol(Conn, Vol);
+
+    if (VolID == 0xffff) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (!really_ro()) {
+        goto fin;
+    }
+
+    /* the seeded file must be present, else this volume is not the expected
+     * read-only fixture */
+    if (FPGetFileDirParams(Conn, VolID, DIRDID_ROOT, file, (1 << FILPBIT_LNAME),
+                           0)) {
+        test_nottested();
+        goto fin;
+    }
+
+    /* write-intent open on the RO volume must fail */
+    fork = FPOpenFork(Conn, VolID, OPENFORK_DATA, 0, DIRDID_ROOT, file,
+                      OPENACC_WR);
+
+    if (fork) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: write-intent open succeeded on RO volume\n");
+        }
+
+        test_failed();
+        FAIL(FPCloseFork(Conn, fork))
+        goto fin;
+    }
+
+    /* VLOCK, never NFILE. ACCESS is also acceptable (per-file permission
+     * path); NFILE ("too many open files") is the wrong code here. */
+    if (ntohl(AFPERR_NFILE) == dsi->header.dsi_code) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: RO write open returned AFPERR_NFILE, want VLOCK\n");
+        }
+
+        test_failed();
+    } else if (ntohl(AFPERR_VLOCK) != dsi->header.dsi_code
+               && ntohl(AFPERR_ACCESS) != dsi->header.dsi_code) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: unexpected code 0x%x (want VLOCK)\n",
+                    ntohl(dsi->header.dsi_code));
+        }
+
+        test_failed();
+    }
+
+fin:
+    FAIL(FPCloseVol(Conn, VolID))
+test_exit:
+    exit_test("Readonly:test511: RO FPOpenFork write -> VLOCK not NFILE");
+}
+
 void Readonly_test()
 {
     ENTER_TESTSET
     test510();
+    test511();
 }

@@ -102,6 +102,7 @@ EXT_FN(T2FPSetFileParms);
 EXT_FN(T2FPResolveID);
 EXT_FN(T2FPRead);
 EXT_FN(T2FPSetForkParms);
+EXT_FN(T2LockAttack);
 
 EXT_FN(Dircache_attack);
 EXT_FN(Encoding);
@@ -194,6 +195,7 @@ static struct test_fn Test_list[] = {
     FN_N(T2FPResolveID)
     FN_N(T2FPRead)
     FN_N(T2FPSetForkParms)
+    FN_N(T2LockAttack)
 
     FN_N(Dircache_attack)
     FN_N(Encoding)
@@ -353,7 +355,7 @@ char *uam = "Cleartxt Passwrd";
 void usage(char *av0)
 {
     fprintf(stdout,
-            "usage:\t%s [-1234567aCilmnVv] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
+            "usage:\t%s [-1234567aCEiLlmVv] [-h host] [-H host2] [-p port] [-s vol] [-c vol path] [-S vol2] "
             "[-u user] [-d user2] [-w password] [-F testsuite] [-f test]\n", av0);
     fprintf(stdout, "\t-a\tvolume is using AppleDouble metadata and not EA\n");
     fprintf(stdout, "\t-m\tserver is a Mac\n");
@@ -378,6 +380,8 @@ void usage(char *av0)
     fprintf(stdout, "\t-f\ttest or testset to run\n");
     fprintf(stdout, "\t-l\tlist testsets\n");
     fprintf(stdout,
+            "\t-L\tserver has 'afp read locks = yes'; run byte-range read-lock conflict tests\n");
+    fprintf(stdout,
             "\t-i\tinteractive mode, prompts before every test (debug purposes)\n");
     fprintf(stdout, "\t-C\tturn off terminal color output\n");
     fprintf(stdout,
@@ -395,7 +399,7 @@ int main(int ac, char **av)
         usage(av[0]);
     }
 
-    while ((cc = getopt(ac, av, "1234567aCEilmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
+    while ((cc = getopt(ac, av, "1234567aCEiLlmVvc:d:f:H:h:p:S:s:u:w:")) != EOF) {
         switch (cc) {
         case '1':
             vers = "AFPVersion 2.1";
@@ -450,6 +454,10 @@ int main(int ac, char **av)
 
         case 'E':
             EmptyVol = 1;
+            break;
+
+        case 'L':
+            Locking = 1;
             break;
 
         case 'f' :

@@ -30,6 +30,10 @@ void test_skipped(int why)
         s = "has to be run on localhost with -c volume path";
         break;
 
+    case T_LOCKING:
+        s = "server option 'afp read locks = yes' and -L";
+        break;
+
     case T_AFP2:
         s = "AFP 2.x";
         break;
