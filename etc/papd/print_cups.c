@@ -60,9 +60,9 @@
 /* Function replaced by a different function in libcups3 */
 #define cupsCreateTempFile(prefix,suffix,buffer,bufsize) cupsTempFile2(buffer,bufsize)
 /* Some functions used ints in CUPS 2.x, but are now specific types */
-#define cups_len_t	int
+typedef int cups_len_t;
 #else
-#define cups_len_t	size_t
+typedef size_t cups_len_t;
 #endif
 
 static const char *cups_status_msg[] = {
@@ -89,8 +89,7 @@ const char *cups_get_language(void)
     language = cupsLangDefault();
     const char *curr_encoding = cupsLangEncoding(language);
 #else
-    cups_encoding_t language;
-    cupsLangGetEncoding();
+    cups_encoding_t language = cupsLangGetEncoding();
     const char *curr_encoding = cupsEncodingString(language);
 #endif
     return curr_encoding;
@@ -182,7 +181,7 @@ const char *cups_get_printer_ppd(char *name)
     /* I - Filename buffer */
     static char buffer[1024];
     /* I - Size of filename buffer */
-    size_t bufsize;
+    cups_len_t bufsize;
     /* Make and model */
     char make[256];
     char *model;
@@ -292,7 +291,7 @@ const char *cups_get_printer_ppd(char *name)
      * Open a temporary file for the PPD...
      */
 
-    if ((fp = cupsCreateTempFile(NULL, NULL, buffer, (int)bufsize)) == NULL) {
+    if ((fp = cupsCreateTempFile(NULL, NULL, buffer, bufsize)) == NULL) {
         LOG(log_error, logtype_papd, strerror(errno));
         ippDelete(response);
         httpClose(http);
