@@ -2,12 +2,13 @@
 
 ## Setting up the AFP file server
 
-AFP (the Apple Filing Protocol) is a protocol originally created for Apple Macintosh file services.
-The final revision of the protocol, AFP 3.4, was introduced with OS X Lion (10.7).
+Netatalk's **afpd** daemon provides AFP file services to clients.
+You usually launch the AFP file service daemon through the **netatalk** controller daemon.
+The controller daemon manages the lifecycle of the AFP file service daemon,
+including Zeroconf service registration, and housekeeping for certain CNID backends
+and Spotlight indexing.
 
-Netatalk's **afpd** daemon provides AFP file services to clients,
-including Macs, Apple IIs, and other AFP clients.
-Configuration is managed through the *afp.conf* file,
+Configuration of both the daemons and the AFP volumes are managed through the *afp.conf* file,
 which uses an ini-style syntax.
 
 ### afp.conf

@@ -269,6 +269,36 @@ that the configuration of all connected routers is exactly the same
 regarding netranges, published zone names and also the "standard zone"
 per segment
 
+## MacIP Gateway
+
+**macipgw** provides TCP/IP connectivity for Macintosh clients that are
+connected only through AppleTalk, such as LocalTalk or Apple Remote
+Access. MacIP encapsulates IP packets in AppleTalk packets; **macipgw**
+terminates those packets on a tunnel interface and forwards them through
+the host IP stack.
+
+A MacIP gateway needs a dedicated IP subnet for its clients. The first
+host address is reserved for the gateway itself, and the remaining
+addresses are leased to clients that request an address from the MacIP
+server. For example, with a network of 192.168.151.0 and a netmask of
+255.255.255.0, the gateway uses 192.168.151.1.
+
+Example *macipgw.conf*:
+
+    [Global]
+    network = 192.168.151.0
+    netmask = 255.255.255.0
+    nameserver = 8.8.8.8
+    zone = My Zone
+
+Classic Mac TCP/IP clients discover the gateway as an *IPGATEWAY* in the
+configured AppleTalk zone. Configure routing or NAT on the host system
+separately if MacIP clients should reach IP networks beyond the Netatalk
+host.
+
+For further information please have a look at the [macipgw](macipgw.8.html)
+manual page.
+
 ## Printing
 
 Netatalk can act both as a PAP client to

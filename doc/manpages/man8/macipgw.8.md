@@ -75,6 +75,18 @@ zone.
 
 > Specifies the netmask for the network.
 
+# Client Configuration
+
+Classic Mac TCP/IP clients discover **macipgw** through NBP as an
+*IPGATEWAY* in the configured AppleTalk zone. When a client requests an
+address, **macipgw** leases one from the configured network and returns
+the subnet mask, broadcast address, and optional name server. The first
+host address in the network is reserved for the gateway itself.
+
+Configure routing or NAT on the host system separately if MacIP clients
+should reach IP networks beyond the Netatalk host. **macipgw** only
+creates and manages the tunnel interface used for the MacIP subnet.
+
 # Examples
 
 ## Example: macipgw invocation
