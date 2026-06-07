@@ -255,6 +255,15 @@ jobs:
           # Extract Netatalk self-time percentage from structured log
           SELF_TIME=$(grep -o 'FLAMEGRAPH_SELF_TIME: [0-9.]*%' flamegraph.log | grep -o '[0-9.]*%' || echo "unknown")
           echo "Netatalk self-time: $SELF_TIME"
+          # Flag if Netatalk code-time exceeds the regression threshold (5%).
+          # A breach means more CPU is being spent in Netatalk code than expected.
+          SELF_TIME_THRESHOLD=5
+          SELF_TIME_NUM=$(echo "$SELF_TIME" | grep -o '[0-9.]*' || echo "")
+          SELF_TIME_WARNING=""
+          if [ -n "$SELF_TIME_NUM" ] && awk "BEGIN { exit !($SELF_TIME_NUM > $SELF_TIME_THRESHOLD) }"; then
+            SELF_TIME_WARNING="⚠️ **WARNING: Netatalk Code-time ${SELF_TIME} exceeds the ${SELF_TIME_THRESHOLD}% threshold — possible performance regression!**"
+            echo "$SELF_TIME_WARNING"
+          fi
           # Extract top 10 leaf functions (self-time) from the entrypoint's
           # structured output in the log. Format: "FLAMEGRAPH_LEAF: <count> <func>"
           TOP_FUNCS=$(grep 'FLAMEGRAPH_LEAF:' flamegraph.log \
@@ -268,6 +277,7 @@ jobs:
             echo "STACK_COUNT=$STACK_COUNT"
             echo "TEST_RUNTIME=${TEST_RUNTIME}s"
             echo "SELF_TIME=$SELF_TIME"
+            echo "SELF_TIME_WARNING=$SELF_TIME_WARNING"
             echo "TOP_FUNCS<<EOFTOP"
             echo "$TOP_FUNCS"
             echo "EOFTOP"
@@ -371,10 +381,14 @@ jobs:
             <!-- flamegraph-spectest -->
             ## 🔥 Spectest (AFP 3.4) - Flamegraph (AFP_ASSERT active)
 
+            ## **Netatalk Code-time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}**
+
+            ${{ steps.flamegraph-summary.outputs.SELF_TIME_WARNING }}
+
             **Commit:** `${{ github.event.pull_request.head.sha }}`
-            **Profiling:** On-CPU sampling @ 2000 Hz, DWARF call-graph, x86_64
+            **Profiling:** On-CPU sampling @ 907 Hz, DWARF call-graph, x86_64
             **Build:** `debugoptimized` (-O2 -g -fno-omit-frame-pointer)
-            **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Netatalk Code-time:** ${{ steps.flamegraph-summary.outputs.SELF_TIME }},
+            **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }},
             **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
 
             🔥 **[Open interactive Flamegraph (SVG)](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.svg)**
@@ -437,7 +451,6 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
-              -e VERBOSE=1 \
               -e TESTSUITE=spectest \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -501,7 +514,6 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
-              -e VERBOSE=1 \
               -e TESTSUITE=spectest \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -556,7 +568,6 @@ jobs:
               -e AFP_GROUP=afpusers \
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
-              -e VERBOSE=1 \
               -e TESTSUITE=spectest \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -595,7 +606,6 @@ jobs:
               -e SHARE_NAME2=test2 \
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
-              -e VERBOSE=1 \
               -e TESTSUITE=spectest \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
@@ -627,7 +637,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -654,11 +663,36 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+
+  afp-spectest-readlocks-afp34:
+    name: AFP spec test (afp read locks) AFP 3.4 - Alpine
+    needs: build-container-testsuite
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: ${{ github.actor != 'dependabot[bot]' }}
+    steps:
+      - name: Run Netatalk testsuite
+        run: |
+          docker run --rm \
+            -e AFP_USER="atalk1" \
+            -e AFP_USER2="atalk2" \
+            -e AFP_PASS="$CONT_PASSWD" \
+            -e AFP_PASS2="$CONT_PASSWD" \
+            -e AFP_GROUP="afpusers" \
+            -e SHARE_NAME="test1" \
+            -e SHARE_NAME2="test2" \
+            -e INSECURE_AUTH="1" \
+            -e DISABLE_TIMEMACHINE="1" \
+            -e TESTSUITE="spectest" \
+            -e AFP_VERSION="7" \
+            -e AFP_EXTMAP="1" \
+            -e AFP_DIRCACHESIZE="1024" \
+            -e AFP_READ_LOCKS="yes" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-sqlite-afp34:
@@ -681,7 +715,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -707,7 +740,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
@@ -734,7 +766,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
@@ -764,7 +795,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
@@ -791,7 +821,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
@@ -818,7 +847,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="5" \
             -e AFP_EXTMAP="1" \
@@ -845,7 +873,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="4" \
             -e AFP_EXTMAP="1" \
@@ -871,7 +898,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
@@ -897,7 +923,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
@@ -923,7 +948,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="2" \
             -e AFP_EXTMAP="1" \
@@ -949,7 +973,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
@@ -975,7 +998,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
@@ -1002,7 +1024,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
@@ -1030,7 +1051,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="1" \
@@ -1053,7 +1073,6 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
-            -e VERBOSE="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="readonly" \
             -e AFP_VERSION="7" \
@@ -1074,7 +1093,6 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
-            -e VERBOSE="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="readonly" \
             -e AFP_VERSION="1" \
@@ -1094,7 +1112,6 @@ jobs:
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_dhx.so" \
-            -e VERBOSE="1" \
             -e TESTSUITE="login" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
@@ -1113,7 +1130,6 @@ jobs:
             -e AFP_PASS="$CONT_PASSWD" \
             -e AFP_GROUP="afpusers" \
             -e INSECURE_AUTH="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="login" \
             -e AFP_VERSION="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
@@ -1133,7 +1149,6 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="lan" \
             -e AFP_VERSION="7" \
             -e AFP_DIRCACHE_MODE="arc" \
@@ -1155,7 +1170,6 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e SHARE_NAME="test1" \
             -e INSECURE_AUTH="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="speed" \
             -e AFP_VERSION="7" \
             -e AFP_DIRCACHE_MODE="arc" \
@@ -1181,7 +1195,6 @@ jobs:
             -e SHARE_NAME2="test2" \
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
-            -e VERBOSE="1" \
             -e TESTSUITE="spectest" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \

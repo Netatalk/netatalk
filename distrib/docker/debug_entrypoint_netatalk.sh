@@ -64,11 +64,11 @@ PERF_FOLDED="/tmp/perf.folded"
 FLAMEGRAPH_SVG="/tmp/flamegraph.svg"
 PERF_PID=""
 
-# Perf sampling frequency (samples per second). Default 2000 Hz —
+# Perf sampling frequency (samples per second). Default 907 Hz —
 # higher resolution to make narrow Netatalk frames visible. The
 # previous lockstep-with-idle-worker concern is now handled by the
 # post-hoc folded-stack filter for idle_worker_main → nanosleep.
-PERF_FREQ="${PERF_FREQ:-2000}"
+PERF_FREQ="${PERF_FREQ:-907}"
 
 start_flamegraph_profiling() {
     # Verify FlameGraph tools are available

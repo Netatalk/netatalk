@@ -44,6 +44,38 @@ else
     echo "WARNING: /etc/os-release not found; unable to detect Linux distro" >&2
 fi
 
+# Detect the OS kernel. This is orthogonal to the Linux distro detection
+# above: Linux containers report "Linux" (so every existing code path is
+# unchanged), while the *BSD / illumos CI VMs report their own kernel name
+# and select the matching user-provisioning branches below.
+OS_KERNEL=$(uname -s 2> /dev/null || echo Linux)
+
+# Map the kernel to the user/group provisioning toolchain. Containers report
+# "Linux" and keep USER_TOOL empty, so the existing Alpine/glibc branches run
+# unchanged. FreeBSD and DragonFly both ship the BSD `pw` tool and share one
+# branch.
+USER_TOOL=""
+case "$OS_KERNEL" in
+    FreeBSD | DragonFly) USER_TOOL="pw" ;;
+esac
+
+# --------------------------------------------------------------------------
+# Path configuration
+# --------------------------------------------------------------------------
+# These default to the container layout so behavior is unchanged there. The
+# non-container CI VMs (which install under a different prefix) override them
+# via the environment before sourcing this script.
+
+NETATALK_CONFDIR="${NETATALK_CONFDIR:-/etc/netatalk}"
+NETATALK_SHARE_DIR="${NETATALK_SHARE_DIR:-/mnt/afpshare}"
+NETATALK_BACKUP_DIR="${NETATALK_BACKUP_DIR:-/mnt/afpbackup}"
+NETATALK_LOG_FILE="${NETATALK_LOG_FILE:-/var/log/afpd.log}"
+if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
+    NETATALK_LOCKDIR="${NETATALK_LOCKDIR:-/run/lock}"
+else
+    NETATALK_LOCKDIR="${NETATALK_LOCKDIR:-/var/lock}"
+fi
+
 # --------------------------------------------------------------------------
 # Validate required environment variables and create users / groups
 # --------------------------------------------------------------------------
@@ -63,7 +95,21 @@ if [ -z "$AFP_GROUP" ]; then
     exit 1
 fi
 
-if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
+if [ "$USER_TOOL" = "pw" ]; then
+    if ! pw groupshow "$AFP_GROUP" > /dev/null 2>&1; then
+        if [ -n "$AFP_GID" ]; then
+            pw groupadd "$AFP_GROUP" -g "$AFP_GID"
+        else
+            pw groupadd "$AFP_GROUP"
+        fi
+    fi
+    if ! pw usershow "$AFP_USER" > /dev/null 2>&1; then
+        uidcmd=""
+        [ -n "$AFP_UID" ] && uidcmd="-u $AFP_UID"
+        pw useradd "$AFP_USER" $uidcmd -g "$AFP_GROUP" -d /nonexistent -s /usr/sbin/nologin -c "" -w no
+    fi
+    pw groupmod "$AFP_GROUP" -m "$AFP_USER"
+elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
     uidcmd=""
     gidcmd=""
     if [ -n "$AFP_UID" ]; then
@@ -89,16 +135,20 @@ else
     usermod -aG $AFP_GROUP $AFP_USER 2> /dev/null || true
 fi
 
-echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
+if [ "$USER_TOOL" = "pw" ]; then
+    echo "$AFP_PASS" | pw usermod "$AFP_USER" -h 0
+else
+    echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
+fi
 
-RANDNUM_PASSWD_FILE="/etc/netatalk/afppasswd"
+RANDNUM_PASSWD_FILE="$NETATALK_CONFDIR/afppasswd"
 
 if [ -f "$RANDNUM_PASSWD_FILE" ]; then
     rm -f "$RANDNUM_PASSWD_FILE"
 fi
 
-if [ -f "/etc/netatalk/afppasswd.srp" ]; then
-    rm -f /etc/netatalk/afppasswd.srp
+if [ -f "$NETATALK_CONFDIR/afppasswd.srp" ]; then
+    rm -f "$NETATALK_CONFDIR/afppasswd.srp"
 fi
 
 # Use AFP_UAMS verbatim if set, otherwise build from defaults
@@ -147,7 +197,9 @@ fi
 
 # Optional second user
 if [ -n "$AFP_DROPBOX" ]; then
-    if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
+    if [ "$USER_TOOL" = "pw" ]; then
+        pw groupmod "$AFP_GROUP" -m nobody
+    elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         addgroup nobody "$AFP_GROUP"
     else
         usermod -aG $AFP_GROUP nobody 2> /dev/null || true
@@ -155,7 +207,12 @@ if [ -n "$AFP_DROPBOX" ]; then
 elif [ -n "$AFP_USER2" ]; then
     echo "*** Setting up second AFP user"
 
-    if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
+    if [ "$USER_TOOL" = "pw" ]; then
+        if ! pw usershow "$AFP_USER2" > /dev/null 2>&1; then
+            pw useradd "$AFP_USER2" -g "$AFP_GROUP" -d /nonexistent -s /usr/sbin/nologin -c "" -w no
+        fi
+        pw groupmod "$AFP_GROUP" -m "$AFP_USER2"
+    elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         adduser --no-create-home --disabled-password "$AFP_USER2" 2> /dev/null || true
         addgroup "$AFP_USER2" "$AFP_GROUP"
     else
@@ -163,7 +220,11 @@ elif [ -n "$AFP_USER2" ]; then
         usermod -aG $AFP_GROUP $AFP_USER2 2> /dev/null || true
     fi
 
-    echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
+    if [ "$USER_TOOL" = "pw" ]; then
+        echo "$AFP_PASS2" | pw usermod "$AFP_USER2" -h 0
+    else
+        echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
+    fi
 
     if [ "$RANDNUM_WANTED" = "1" ] && ! afppasswd -a "$AFP_USER2" -f -r -w "$AFP_PASS2" > /dev/null; then
         RANDNUM_OK=0
@@ -198,20 +259,20 @@ fi
 # --------------------------------------------------------------------------
 
 echo "*** Configuring shared volume"
-[ -d /mnt/afpshare ] || mkdir /mnt/afpshare
-[ -d /mnt/afpbackup ] || mkdir /mnt/afpbackup
+[ -d "$NETATALK_SHARE_DIR" ] || mkdir "$NETATALK_SHARE_DIR"
+[ -d "$NETATALK_BACKUP_DIR" ] || mkdir "$NETATALK_BACKUP_DIR"
 
 echo "*** Fixing permissions"
 if [ -n "$AFP_DROPBOX" ]; then
-    chmod 2755 /mnt/afpshare
-    chmod 2775 /mnt/afpbackup
+    chmod 2755 "$NETATALK_SHARE_DIR"
+    chmod 2775 "$NETATALK_BACKUP_DIR"
 else
-    chmod 2775 /mnt/afpshare /mnt/afpbackup
+    chmod 2775 "$NETATALK_SHARE_DIR" "$NETATALK_BACKUP_DIR"
 fi
 if [ -n "$AFP_UID" ] && [ -n "$AFP_GID" ]; then
-    chown "$AFP_UID:$AFP_GID" /mnt/afpshare /mnt/afpbackup
+    chown "$AFP_UID:$AFP_GID" "$NETATALK_SHARE_DIR" "$NETATALK_BACKUP_DIR"
 else
-    chown "$AFP_USER:$AFP_GROUP" /mnt/afpshare /mnt/afpbackup
+    chown "$AFP_USER:$AFP_GROUP" "$NETATALK_SHARE_DIR" "$NETATALK_BACKUP_DIR"
 fi
 
 if [ -n "$AFP_DROPBOX" ] && [ -z "$SHARE_NAME2" ]; then
@@ -224,12 +285,13 @@ fi
 
 echo "*** Removing residual lock files"
 
-if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
-    mkdir -p /run/lock
-    rm -f /run/lock/netatalk /run/lock/atalkd /run/lock/papd
-else
-    rm -f /var/lock/netatalk /var/lock/atalkd /var/lock/papd
-fi
+# Ensure the lock directory exists before netatalk tries to create its lock
+# file there (it exits silently, before logging is set up, if it cannot).
+# The container images already ship this dir, so mkdir -p is a harmless no-op
+# there; the BSD VMs may not have the compiled lock path (e.g. DragonflyBSD's
+# /var/spool/locks), so this creates it.
+mkdir -p "$NETATALK_LOCKDIR"
+rm -f "$NETATALK_LOCKDIR/netatalk" "$NETATALK_LOCKDIR/atalkd" "$NETATALK_LOCKDIR/papd"
 
 # --------------------------------------------------------------------------
 # Netatalk configuration variables
@@ -370,12 +432,20 @@ fi
 # --------------------------------------------------------------------------
 
 if [ "$TESTSUITE" = "spectest" ] && [ -z "$AFP_REMOTE" ]; then
-    TEST_FLAGS="$TEST_FLAGS -c /mnt/afpshare"
+    TEST_FLAGS="$TEST_FLAGS -c $NETATALK_SHARE_DIR"
+fi
+
+# When the server enables 'afp read locks', tell afp_spectest (-L) so the
+# byte-range read-lock conflict tests run instead of skipping (T_LOCKING).
+# -L is an afp_spectest-only flag, so gate it on the spectest suite to avoid
+# passing an unknown option to the other test runners.
+if [ "$TESTSUITE" = "spectest" ] && [ "$AFP_READ_LOCKS" = "yes" ]; then
+    TEST_FLAGS="$TEST_FLAGS -L"
 fi
 
 if [ -n "$AFP_CONFIG_POLLING" ]; then
     echo "*** Starting config file polling"
-    /config_watch.sh /etc/netatalk/afp.conf "$AFP_CONFIG_POLLING" &
+    /config_watch.sh "$NETATALK_CONFDIR/afp.conf" "$AFP_CONFIG_POLLING" &
 fi
 
 # --------------------------------------------------------------------------
@@ -383,9 +453,11 @@ fi
 # --------------------------------------------------------------------------
 
 if [ -z "$MANUAL_CONFIG" ]; then
-    cat << EOF > /etc/netatalk/afp.conf
+    cat << EOF > "$NETATALK_CONFDIR/afp.conf"
 [Global]
 appletalk = $AFP_DDP
+afp listen = ${AFP_LISTEN:-0.0.0.0}
+afp read locks = ${AFP_READ_LOCKS:-no}
 cnid mysql host = $AFP_CNID_SQL_HOST
 cnid mysql user = $AFP_CNID_SQL_USER
 cnid mysql pw = $AFP_CNID_SQL_PASS
@@ -396,7 +468,7 @@ dircache validation freq = ${AFP_DIRCACHE_VALIDATION_FREQ:-1}
 dircache rfork budget = ${AFP_DIRCACHE_RFORK_BUDGET:-0}
 dircache rfork maxsize = ${AFP_DIRCACHE_RFORK_MAXSIZE:-1024}
 legacy icon = $AFP_LEGACY_ICON
-log file = /var/log/afpd.log
+log file = $NETATALK_LOG_FILE
 log level = default:${AFP_LOGLEVEL:-info}
 login message = $AFP_LOGIN_MESSAGE
 mimic model = $AFP_MIMIC_MODEL
@@ -410,7 +482,7 @@ spotlight backend = ${AFP_SPOTLIGHT_BACKEND:-cnid}
 [${SHARE_NAME:-File Sharing}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
-path = /mnt/afpshare
+path = $NETATALK_SHARE_DIR
 valid users = $AFP_VALIDUSERS1
 volume name = ${SHARE_NAME:-File Sharing}
 $AFP_RWRO = $AFP_VALIDUSERS1
@@ -419,7 +491,7 @@ spotlight = $AFP_SPOTLIGHT_GLOBAL
 [${SHARE_NAME2:-Time Machine}]
 cnid scheme = ${AFP_CNID_BACKEND:-dbd}
 ea = $AFP_EA
-path = /mnt/afpbackup
+path = $NETATALK_BACKUP_DIR
 time machine = $TIMEMACHINE
 valid users = $AFP_VALIDUSERS2
 volume name = ${SHARE_NAME2:-Time Machine}
@@ -430,7 +502,13 @@ EOF
 fi
 
 if [ -n "$AFP_EXTMAP" ]; then
-    sed -i 's/^#\./\./' /etc/netatalk/extmap.conf
+    # BSD sed requires a backup-suffix argument to -i ('' = no backup); GNU
+    # sed treats that as the script. Branch on the kernel to stay portable.
+    if [ "$OS_KERNEL" = "Linux" ]; then
+        sed -i 's/^#\./\./' "$NETATALK_CONFDIR/extmap.conf"
+    else
+        sed -i '' 's/^#\./\./' "$NETATALK_CONFDIR/extmap.conf"
+    fi
 fi
 
 # --------------------------------------------------------------------------

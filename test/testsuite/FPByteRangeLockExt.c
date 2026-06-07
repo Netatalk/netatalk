@@ -80,12 +80,21 @@ fin:
     FPDelete(Conn, vol, DIRDID_ROOT, name);
 }
 
-/* ----------- */
-/* FIXME: broken since at least 3.1.12 */
+/* -----------
+ * Requires "afp read locks = yes" (OPTION_AFP_READ_LOCK): test_bytelock_ext()
+ * asserts AFPERR_LOCK on a second fork's FPRead/FPWrite over a range locked by
+ * the first fork, which afpd only enforces with that option enabled. The option
+ * is off by default (AFP-spec behaviour, traded off against UNIX semantics and
+ * performance). Skipped via the Locking guard unless the option is on. */
 STATIC void test66()
 {
     char *name = "t66 FPByteLock_ext DF";
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
@@ -97,12 +106,17 @@ test_exit:
     exit_test("FPByteRangeLockExt:test66: FPByteLock Data Fork");
 }
 
-/* ----------- */
-/* FIXME: broken since at least 3.1.12 - could not locate fork */
+/* -----------
+ * Requires "afp read locks = yes"; see test66. */
 STATIC void test67()
 {
     char *name = "t67 FPByteLock_ext RF";
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
 
     if (Conn->afp_version < 30) {
         test_skipped(T_AFP3);
@@ -137,9 +151,7 @@ test_exit:
 void FPByteRangeLockExt_test()
 {
     ENTER_TESTSET
-#if 0
     test66();
     test67();
-#endif
     test195();
 }

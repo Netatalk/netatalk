@@ -99,23 +99,42 @@ static void test_bytelock(uint16_t vol, char *name, int type)
         test_nottested();
     }
 }
-/* ----------- */
-/* FIXME: broken since at least 3.1.12 - could not locate fork */
+/* -----------
+ * Requires "afp read locks = yes" (OPTION_AFP_READ_LOCK): test_bytelock()
+ * asserts AFPERR_LOCK on a second fork's FPRead/FPWrite over a range locked by
+ * the first fork, which afpd only enforces when that option is enabled. The
+ * option is off by default (AFP-spec behaviour, traded off against UNIX
+ * semantics and performance), so without it the conflict checks pass through to
+ * success. Skipped via the Locking guard unless the option is on. */
 STATIC void test63()
 {
     char *name = "test63 FPByteLock DF";
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
+
     test_bytelock(VolID, name, OPENFORK_DATA);
+test_exit:
     exit_test("FPByteRangeLock:test63: FPByteLock Data Fork");
 }
 
-/* ----------- */
-/* FIXME: broken since at least 3.1.12 - could not locate fork */
+/* -----------
+ * Requires "afp read locks = yes"; see test63. */
 STATIC void test64()
 {
     char *name = "test64 FPByteLock RF";
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
+
     test_bytelock(VolID, name, OPENFORK_RSCS);
+test_exit:
     exit_test("FPByteRangeLock:test64: FPByteLock Resource Fork");
 }
 
@@ -182,12 +201,19 @@ fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 }
 
-/* --------------- */
-/* FIXME: broken since at least 3.1.12 - could not locate fork */
+/* ---------------
+ * Requires "afp read locks = yes"; see test63. test_bytelock3() asserts a
+ * second user's FPRead/FPWrite over the first user's locked range returns
+ * AFPERR_LOCK, which afpd only enforces with that option enabled. */
 STATIC void test65()
 {
     char *name = "t65 DF FPByteLock 2 users";
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
 
     if (!Quiet) {
         fprintf(stdout, "FPByteRangeLock:test65: FPByteLock 2users DATA FORK\n");
@@ -299,12 +325,22 @@ fin:
     FAIL(FPDelete(Conn, vol, DIRDID_ROOT, name))
 }
 
-/* -------------------------- */
-/* badly broken, didn't bother fixing for appledouble = ea */
+/* --------------------------
+ * Requires "afp read locks = yes" (the FPWrite_ext-over-lock assertion in
+ * test_bytelock2() is only enforced with that option; see test63).
+ *
+ * test_bytelock2() takes a to-EOF lock [0,-1] on one fork, closes a sibling fork
+ * on the same file, then expects a conflicting FPWrite_ext from a second user to
+ * return AFPERR_LOCK - i.e. the holder's lock must survive the sibling close. */
 void test78()
 {
     char *name = "t78 FPByteLock RF size -1";
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
 
     if (!Quiet) {
         fprintf(stdout,
@@ -320,11 +356,14 @@ void test78()
 
     name = "t78 FPByteLock DF size -1";
     test_bytelock2(name, OPENFORK_DATA);
+test_exit:
     exit_test("FPByteRangeLock:test78: test Byte Lock size -1");
 }
 
-/* ----------- */
-/* FIXME: broken since at least 3.1.12 - could not locate fork */
+/* -----------
+ * Requires "afp read locks = yes" (OPTION_AFP_READ_LOCK): asserts a second
+ * fork's FPRead over a range locked by the first fork returns AFPERR_LOCK,
+ * which afpd only enforces with that option enabled. See test63. */
 STATIC void test79()
 {
     int fork;
@@ -335,6 +374,11 @@ STATIC void test79()
     char *name = "t79 FPByteLock Read";
     int len = (type == OPENFORK_RSCS) ? (1 << FILPBIT_RFLEN) : (1 << FILPBIT_DFLEN);
     ENTER_TEST
+
+    if (!Locking) {
+        test_skipped(T_LOCKING);
+        goto test_exit;
+    }
 
     if (FPCreateFile(Conn, vol, 0, DIRDID_ROOT, name)) {
         test_nottested();
@@ -1031,22 +1075,358 @@ test_exit:
     exit_test("FPByteRangeLock:test366: Locks released on exit");
 }
 
+/* -----------------------------------------------------------------
+ * test602  Shared deny-mode survives partial close (black-box).
+ *
+ * Conn opens the data fork twice with deny-write (DWR). Conn2's write-intent
+ * open must fail while EITHER Conn fork is open, and only succeed after BOTH are
+ * closed. If closing the first fork wrongly released the shared deny lock,
+ * Conn2's open would succeed too early -> failure.
+ * ----------------------------------------------------------------- */
+STATIC void test602()
+{
+    char *dname = "t602";
+    char *name = "f";
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    uint16_t fork, fork1, fork2;
+    int dir;
+    int type = OPENFORK_DATA;
+    const DSI *dsi2;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    dsi2 = &Conn2->dsi;
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    fork = FPOpenFork(Conn, vol, type, 0, dir, name,
+                      OPENACC_RD | OPENACC_DWR);
+
+    if (!fork) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    /* second deny-write open in the same session: shares the deny lock */
+    fork1 = FPOpenFork(Conn, vol, type, 0, dir, name,
+                       OPENACC_RD | OPENACC_DWR);
+
+    if (!fork1) {
+        test_nottested();
+        FAIL(FPCloseFork(Conn, fork))
+        goto cleanup;
+    }
+
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        FPCloseFork(Conn, fork);
+        FPCloseFork(Conn, fork1);
+        goto cleanup;
+    }
+
+    /* Conn2 wants write access: must be denied (kFPDenyConflict) while a sharer
+     * holds DWR */
+    fork2 = FPOpenFork(Conn2, vol2, type, 0, dir, name,
+                       OPENACC_RD | OPENACC_WR);
+
+    if (fork2) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: Conn2 write open succeeded despite deny-write\n");
+        }
+
+        test_failed();
+        FPCloseFork(Conn2, fork2);
+    } else {
+        FAIL(ntohl(AFPERR_DENYCONF) != dsi2->header.dsi_code)
+    }
+
+    /* close the FIRST sharer; deny lock must remain (fork1 still holds it) */
+    FAIL(FPCloseFork(Conn, fork))
+    fork2 = FPOpenFork(Conn2, vol2, type, 0, dir, name,
+                       OPENACC_RD | OPENACC_WR);
+
+    if (fork2) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: shared deny-write released after first close "
+                    "(over-unlock regression)\n");
+        }
+
+        test_failed();
+        FPCloseFork(Conn2, fork2);
+    } else {
+        FAIL(ntohl(AFPERR_DENYCONF) != dsi2->header.dsi_code)
+    }
+
+    /* close the SECOND sharer; now Conn2 may open for write */
+    FAIL(FPCloseFork(Conn, fork1))
+    fork2 = FPOpenFork(Conn2, vol2, type, 0, dir, name,
+                       OPENACC_RD | OPENACC_WR);
+
+    if (!fork2) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: Conn2 write open still denied after all closes\n");
+        }
+
+        test_failed();
+    } else {
+        FAIL(FPCloseFork(Conn2, fork2))
+    }
+
+    FAIL(FPCloseVol(Conn2, vol2))
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
+test_exit:
+    exit_test("FPByteRangeLock:test602: shared deny-write survives partial close");
+}
+
+/* -----------------------------------------------------------------
+ * test606  Fork isolation across two sessions.
+ *
+ * Two AFP sessions each lock a DISJOINT range on the same file; assert both
+ * succeed. Then assert an overlapping-range lock from the other session is
+ * refused (AFPERR_LOCK). FPByteLock-vs-FPByteLock conflict is always enforced
+ * (independent of "afp read locks"), so this runs by default.
+ * ----------------------------------------------------------------- */
+STATIC void test606()
+{
+    char *dname = "t606";
+    char *name = "f";
+    uint16_t vol = VolID;
+    uint16_t vol2;
+    uint16_t fork, fork1;
+    int dir;
+    int type = OPENFORK_DATA;
+    ENTER_TEST
+
+    if (!Conn2) {
+        test_skipped(T_CONN2);
+        goto test_exit;
+    }
+
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    fork = FPOpenFork(Conn, vol, type, 0, dir, name,
+                      OPENACC_RD | OPENACC_WR);
+
+    if (!fork) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    FAIL(FPSetForkParam(Conn, fork, (1 << FILPBIT_DFLEN), 400))
+    vol2 = FPOpenVol(Conn2, Vol);
+
+    if (vol2 == 0xffff) {
+        test_nottested();
+        FPCloseFork(Conn, fork);
+        goto cleanup;
+    }
+
+    fork1 = FPOpenFork(Conn2, vol2, type, 0, dir, name,
+                       OPENACC_RD | OPENACC_WR);
+
+    if (!fork1) {
+        test_nottested();
+        FAIL(FPCloseVol(Conn2, vol2))
+        FPCloseFork(Conn, fork);
+        goto cleanup;
+    }
+
+    /* disjoint ranges: both must succeed */
+    FAIL(FPByteLock(Conn, fork, 0, 0 /* set */, 0, 100))
+    FAIL(FPByteLock(Conn2, fork1, 0, 0 /* set */, 200, 100))
+    /* overlapping range from the other session must be refused */
+    FAIL(htonl(AFPERR_LOCK) != FPByteLock(Conn2, fork1, 0, 0 /* set */, 50, 100))
+    FAIL(htonl(AFPERR_LOCK) != FPByteLock(Conn, fork, 0, 0 /* set */, 250, 100))
+    /* each releases its own range cleanly */
+    FAIL(FPByteLock(Conn, fork, 0, 1 /* clear */, 0, 100))
+    FAIL(FPByteLock(Conn2, fork1, 0, 1 /* clear */, 200, 100))
+    FAIL(FPCloseFork(Conn2, fork1))
+    FAIL(FPCloseVol(Conn2, vol2))
+    FAIL(FPCloseFork(Conn, fork))
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
+test_exit:
+    exit_test("FPByteRangeLock:test606: fork isolation across children");
+}
+
+/* -----------------------------------------------------------------
+ * test630  No quick refnum reuse (FIFO allocator).
+ *
+ * Open fork A, record its refnum, close it; then open a handful more forks. The
+ * just-freed refnum must NOT be the very next one handed back - the free-slot
+ * FIFO hands out the oldest-freed slot, so reuse distance is maximal. Black-box:
+ * FPOpenFork returns the refnum directly.
+ * ----------------------------------------------------------------- */
+STATIC void test630()
+{
+    char *dname = "t630";
+    char *name = "f";
+    uint16_t vol = VolID;
+    uint16_t first, r;
+    uint16_t held[8];
+    int i, n = 0;
+    int dir;
+    int reused_immediately = 0;
+    ENTER_TEST
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    first = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
+                       OPENACC_RD | OPENACC_WR);
+
+    if (!first) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    FAIL(FPCloseFork(Conn, first))
+
+    /* open several more; none should immediately reuse `first` */
+    for (i = 0; i < 8; i++) {
+        r = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
+                       OPENACC_RD | OPENACC_WR);
+
+        if (!r) {
+            break;
+        }
+
+        held[n++] = r;
+
+        if (i == 0 && r == first) {
+            reused_immediately = 1;
+        }
+    }
+
+    /* need at least one post-close open to validate the reuse property; if even
+     * the first reopen failed (e.g. a fork-constrained server) there is nothing
+     * to assert - report not-tested rather than a false pass. */
+    if (n == 0) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    if (reused_immediately) {
+        if (!Quiet) {
+            fprintf(stdout,
+                    "\tFAILED: refnum %u reused on the very next open (LIFO/instant "
+                    "reuse) - FIFO allocator expected\n", first);
+        }
+
+        test_failed();
+    }
+
+    for (i = 0; i < n; i++) {
+        FAIL(FPCloseFork(Conn, held[i]))
+    }
+
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
+test_exit:
+    exit_test("FPByteRangeLock:test630: no quick refnum reuse");
+}
+
+/* -----------------------------------------------------------------
+ * test631  Stale refnum is rejected (of_find collision guard).
+ *
+ * Open fork (refnum r), close it, then issue a fork op against the stale r. Must
+ * return AFPERR_PARAM (no such fork), not silently act on a reused slot. Valid in
+ * the normal regime (nforks large); the documented refnum==slot trade-off only
+ * narrows this near saturation.
+ * ----------------------------------------------------------------- */
+STATIC void test631()
+{
+    char *dname = "t631";
+    char *name = "f";
+    uint16_t vol = VolID;
+    uint16_t r;
+    int dir;
+    unsigned int ret;
+    ENTER_TEST
+    dir = FPCreateDir(Conn, vol, DIRDID_ROOT, dname);
+
+    if (!dir) {
+        test_nottested();
+        goto test_exit;
+    }
+
+    if (FPCreateFile(Conn, vol, 0, dir, name)) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    r = FPOpenFork(Conn, vol, OPENFORK_DATA, 0, dir, name,
+                   OPENACC_RD | OPENACC_WR);
+
+    if (!r) {
+        test_nottested();
+        goto cleanup;
+    }
+
+    FAIL(FPCloseFork(Conn, r))
+    /* stale use of a closed refnum */
+    ret = FPByteLock(Conn, r, 0, 0 /* set */, 0, 100);
+    FAIL(ntohl(AFPERR_PARAM) != ret)
+cleanup:
+    delete_directory_tree(Conn, vol, DIRDID_ROOT, dname);
+test_exit:
+    exit_test("FPByteRangeLock:test631: stale refnum rejected");
+}
+
 /* ----------- */
 void FPByteRangeLock_test()
 {
     ENTER_TESTSET
     test60();
-#if 0
     test63();
     test64();
     test65();
     test78();
     test79();
-#endif
     test80();
     test329();
     test330();
     test410();
+    test602();
+    test606();
+    test630();
+    test631();
     /* must be the last one */
     test366();
 }

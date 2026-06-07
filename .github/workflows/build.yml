@@ -472,7 +472,7 @@ jobs:
           path: build/meson-logs
 
   build-dflybsd:
-    name: DragonflyBSD
+    name: AFP Spectest - DragonflyBSD (sys:ad, HAMMER2)
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -519,6 +519,104 @@ jobs:
             meson install -C build
             netatalk -V
             afpd -V
+      # ================================================================
+      # Production AFP spec test (AFP 3.4)
+      #
+      # Runs inside the same VM (kept alive by the action's custom shell)
+      # using the binaries installed by the build step above. Identical in
+      # intent to the FreeBSD job below — DragonflyBSD shares the BSD `pw` user
+      # tooling, so it reuses the same portable env_setup_netatalk.sh branch.
+      # Only the compiled lock path differs (DragonFly has no meson
+      # special-case -> /var/spool/locks).
+      # ================================================================
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: dragonflybsd {0}
+        run: |
+          set -e
+          export AFP_USER=atalk1
+          export AFP_USER2=atalk2
+          export AFP_GROUP=afpusers
+          export AFP_PASS="$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)"
+          export AFP_PASS2="$AFP_PASS"
+          export SHARE_NAME=test1
+          export SHARE_NAME2=test2
+          # DragonflyBSD installs under the /usr/local prefix
+          export NETATALK_CONFDIR=/usr/local/etc
+          export NETATALK_SHARE_DIR=/mnt/afpshare
+          export NETATALK_BACKUP_DIR=/mnt/afpbackup
+          export NETATALK_LOG_FILE=/var/log/afpd.log
+          export NETATALK_LOCKDIR=/var/spool/locks
+          # Production max-performance tuning knobs
+          export AFP_DIRCACHESIZE=1048576
+          export AFP_DIRCACHE_MODE=arc
+          export AFP_DIRCACHE_VALIDATION_FREQ=100
+          export AFP_DIRCACHE_RFORK_BUDGET=1048576000
+          export AFP_DIRCACHE_RFORK_MAXSIZE=1048576
+          export AFP_CNID_BACKEND=dbd
+          export AFP_CONVERT_APPLEDOUBLE=no
+          export AFP_EXTMAP=1
+          # HAMMER2, DragonflyBSD's default root filesystem (where the share
+          # /mnt/afpshare lives), does not support extended attributes, so
+          # afpd is built with "EA support: ad" only. Use AppleDouble EA
+          # storage (ea = ad, + afp_spectest -a) to match; ea = sys would make
+          # every FPGetExtAttr test fail.
+          export AFP_ADOUBLE=1
+          # Same cleartext-over-PAM auth path as the Linux/Alpine prod
+          # spectest (see the FreeBSD job for the full explanation).
+          export INSECURE_AUTH=1
+          export DISABLE_TIMEMACHINE=1
+          export SERVER_NAME=Netatalk
+          export AFP_HOST=127.0.0.1
+          export AFP_PORT=548
+          export AFP_VERSION=7
+          # TESTSUITE=spectest makes env_setup populate TEST_FLAGS with the
+          # spectest options: -c <share> for the local-fs tests, -a (AFP_ADOUBLE
+          # is set above, so the client uses AD_V2 semantics and manipulates the
+          # .AppleDouble sidecar). We pass $TEST_FLAGS to afp_spectest exactly
+          # like entrypoint_netatalk.sh.
+          export TESTSUITE=spectest
+
+          [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
+
+          # env_setup is written for the container contract (set -e, no
+          # nounset) and references many optional AFP_* vars bare, expecting
+          # them to expand to empty. Disable nounset around the source so it
+          # behaves the same here as in the container.
+          set +u
+          . ./distrib/docker/env_setup_netatalk.sh
+          set -u
+
+          echo "==== Starting netatalk (production config) ===="
+          netatalk
+          sleep 3
+          asip-status "$AFP_HOST:$AFP_PORT" || true
+
+          echo "==== Running AFP spec test (AFP 3.4) ===="
+          # Mirror entrypoint_netatalk.sh: pass $TEST_FLAGS (built by env_setup
+          # from TESTSUITE/AFP_ADOUBLE) so -a and -c are included.
+          # Full suite (no -f) to get the true current pass/fail after the dev_t,
+          # EMLINK and ad_open_hf_v2 fixes.
+          set +e
+          afp_spectest $TEST_FLAGS \
+            -"$AFP_VERSION" \
+            -h "$AFP_HOST" \
+            -p "$AFP_PORT" \
+            -u "$AFP_USER" \
+            -d "$AFP_USER2" \
+            -w "$AFP_PASS" \
+            -s "$SHARE_NAME" \
+            -S "$SHARE_NAME2"
+          SPECTEST_RC=$?
+          set -e
+
+          echo "==== afpd.log (tail) ===="
+          tail -200 "$NETATALK_LOG_FILE" 2>/dev/null || echo "no log file"
+          echo "==== afp.conf (redacted) ===="
+          sed -E 's/^([[:space:]]*[^=#]*(pass|pw|secret|key)[^=]*=).*/\1 ***REDACTED***/I' \
+            "$NETATALK_CONFDIR/afp.conf" 2>/dev/null || true
+
+          killall netatalk afpd cnid_metad 2>/dev/null || true
+          exit $SPECTEST_RC
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -527,7 +625,7 @@ jobs:
           path: build/meson-logs
 
   build-freebsd:
-    name: FreeBSD
+    name: AFP Spectest - FreeBSD (Prod)
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -574,11 +672,123 @@ jobs:
             meson install -C build --no-rebuild
             netatalk -V
             afpd -V
+            # ---- Smoke test: start/stop with the installed rc.d packaging ----
             /usr/local/etc/rc.d/netatalk start
             sleep 1
             asip-status localhost
             /usr/local/etc/rc.d/netatalk stop
             /usr/local/etc/rc.d/netatalk disable
+      # ================================================================
+      # Production AFP spec test (AFP 3.4)
+      #
+      # Runs inside the same VM (kept alive by the action's custom shell)
+      # using the binaries installed by the build step above. Reuses the
+      # container's env_setup_netatalk.sh (synced into the VM) to provision
+      # users and generate afp.conf, so the FreeBSD config matches the Alpine
+      # "prod" spectest. The script is portable: it selects FreeBSD
+      # user-creation (pw) via uname and honours the NETATALK_* path overrides
+      # exported below. We then start netatalk and run afp_spectest against it,
+      # mirroring spectest-macos.yml.
+      #
+      # The "production" tuning here matches the Alpine prod job: ARC dircache,
+      # validation freq 100, large rfork budget, ea=sys, convert appledouble=no,
+      # cnid scheme=dbd.
+      # ================================================================
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: freebsd {0}
+        run: |
+          set -e
+          export AFP_USER=atalk1
+          export AFP_USER2=atalk2
+          export AFP_GROUP=afpusers
+          export AFP_PASS="$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)"
+          export AFP_PASS2="$AFP_PASS"
+          export SHARE_NAME=test1
+          export SHARE_NAME2=test2
+          # FreeBSD installs under the /usr/local prefix
+          export NETATALK_CONFDIR=/usr/local/etc
+          export NETATALK_SHARE_DIR=/mnt/afpshare
+          export NETATALK_BACKUP_DIR=/mnt/afpbackup
+          export NETATALK_LOG_FILE=/var/log/afpd.log
+          export NETATALK_LOCKDIR=/var/spool/lock
+          # Production max-performance tuning knobs
+          export AFP_DIRCACHESIZE=1048576
+          export AFP_DIRCACHE_MODE=arc
+          export AFP_DIRCACHE_VALIDATION_FREQ=100
+          export AFP_DIRCACHE_RFORK_BUDGET=1048576000
+          export AFP_DIRCACHE_RFORK_MAXSIZE=1048576
+          export AFP_CNID_BACKEND=dbd
+          export AFP_CONVERT_APPLEDOUBLE=no
+          export AFP_EXTMAP=1
+          # FreeBSD's filesystem supports native EAs, so this leg runs the real
+          # production config: ea = sys (AFP_ADOUBLE unset). This is the
+          # max-performance "(Prod)" configuration, matching the Alpine prod
+          # spectest. (DragonflyBSD must use ea = ad because HAMMER2 has no
+          # native EA support, so it is NOT a Prod-config leg.)
+          # Same auth path as the Linux/Alpine prod spectest: INSECURE_AUTH
+          # (with no AFP_UAMS override) makes env_setup emit the identical
+          # UAMS list, including uams_clrtxt.so. afp_spectest logs in with the
+          # "Cleartxt Passwrd" UAM, which — with PAM enabled (default on both
+          # Alpine and FreeBSD) — resolves to uams_pam.so and validates via
+          # pam_start("netatalk", ...). `meson install` lays down the
+          # /etc/pam.d/netatalk service file and env_setup sets the account's
+          # Unix password (pw usermod -h 0).
+          export INSECURE_AUTH=1
+          export DISABLE_TIMEMACHINE=1
+          export SERVER_NAME=Netatalk
+          export AFP_HOST=127.0.0.1
+          export AFP_PORT=548
+          export AFP_VERSION=7
+          # TESTSUITE=spectest makes env_setup populate TEST_FLAGS with the
+          # spectest options: -c <share> for the local-fs tests (FreeBSD uses
+          # ea = sys, so no -a). We pass $TEST_FLAGS to afp_spectest exactly like
+          # entrypoint_netatalk.sh.
+          export TESTSUITE=spectest
+
+          # extmap.conf ships under the prefix; copy the template if absent
+          # so the env_setup AFP_EXTMAP activation has a file to edit.
+          [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
+
+          # Provision users + generate afp.conf via the shared setup script.
+          # env_setup is written for the container contract (set -e, no
+          # nounset) and references many optional AFP_* vars bare, expecting
+          # them to expand to empty. Disable nounset around the source so it
+          # behaves the same here as in the container.
+          set +u
+          . ./distrib/docker/env_setup_netatalk.sh
+          set -u
+
+          echo "==== Starting netatalk (production config) ===="
+          netatalk
+          sleep 3
+          asip-status "$AFP_HOST:$AFP_PORT" || true
+
+          echo "==== Running AFP spec test (AFP 3.4) ===="
+          # Mirror entrypoint_netatalk.sh: pass $TEST_FLAGS (built by env_setup
+          # from TESTSUITE/AFP_ADOUBLE) so -a and -c are included.
+          set +e
+          afp_spectest $TEST_FLAGS \
+            -"$AFP_VERSION" \
+            -h "$AFP_HOST" \
+            -p "$AFP_PORT" \
+            -u "$AFP_USER" \
+            -d "$AFP_USER2" \
+            -w "$AFP_PASS" \
+            -s "$SHARE_NAME" \
+            -S "$SHARE_NAME2"
+          SPECTEST_RC=$?
+          set -e
+
+          echo "==== afpd.log (tail) ===="
+          tail -200 "$NETATALK_LOG_FILE" 2>/dev/null || echo "no log file"
+          echo "==== afp.conf (redacted) ===="
+          sed -E 's/^([[:space:]]*[^=#]*(pass|pw|secret|key)[^=]*=).*/\1 ***REDACTED***/I' \
+            "$NETATALK_CONFDIR/afp.conf" 2>/dev/null || true
+
+          # netatalk has no stop flag; it shuts down (and reaps afpd /
+          # cnid_metad) on SIGTERM, so signal it by name like the macOS job.
+          killall netatalk afpd cnid_metad 2>/dev/null || true
+          exit $SPECTEST_RC
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
