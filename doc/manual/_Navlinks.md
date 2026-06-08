@@ -8,7 +8,6 @@
   * [Authentication](Authentication.html)
   * [ACL Support](ACL.html)
   * [Directory Caching](Dircache.html)
-  * [Interoperability](Interoperability.html)
   * [Filesystem Change Events](FCE.html)
   * [Search](Search.html)
 * [AppleTalk](AppleTalk.html)
