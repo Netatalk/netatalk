@@ -8,7 +8,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Netatalk 4.5.0\n"
-"POT-Creation-Date: 2026-05-17 23:17+0200\n"
+"POT-Creation-Date: 2026-06-08 23:30+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Daniel Markstedt <daniel@mindani.net>\n"
 "Language-Team: none\n"
@@ -30,34 +30,37 @@ msgid "Setting up the AFP file server"
 msgstr "AFP ファイルサーバーのセットアップ"
 
 #. type: Plain text
-#: manual/Configuration.md:7
+#: manual/Configuration.md:10
 msgid ""
-"AFP (the Apple Filing Protocol) is a protocol originally created for Apple "
-"Macintosh file services.  The final revision of the protocol, AFP 3.4, was "
-"introduced with OS X Lion (10.7)."
+"Netatalk's **afpd** daemon provides AFP file services to clients.  You "
+"usually launch the AFP file service daemon through the **netatalk** "
+"controller daemon.  The controller daemon manages the lifecycle of the AFP "
+"file service daemon, including Zeroconf service registration, and "
+"housekeeping for certain CNID backends and Spotlight indexing."
 msgstr ""
-"AFP (Apple Filing Protocol)  はそもそもアップル・マッキントッシュのために開発"
-"されたファイルサービスプロトコルである。AFP プロトコルは年を追うごとに進展を"
-"見せ、最終バージョンは OS X Lion (10.7) で加えられた AFP 3.4 である。"
+"Netatalk の **afpd** デーモンは AFP クライアントに対してファイルサービスを提"
+"供する。AFP ファイルサービスデーモンは通常、netatalk コントローラーデーモンを"
+"通じて起動する。コントローラーデーモンは、Zeroconf サービス登録を含む AFP "
+"ファイルサービスデーモンのライフサイクル管理、および特定の CNID バックエンド"
+"と Spotlight インデックスのハウスキーピングを管理する。"
 
 #. type: Plain text
-#: manual/Configuration.md:12
+#: manual/Configuration.md:13
 msgid ""
-"Netatalk's **afpd** daemon provides AFP file services to clients, including "
-"Macs, Apple IIs, and other AFP clients.  Configuration is managed through "
+"Configuration of both the daemons and the AFP volumes are managed through "
 "the *afp.conf* file, which uses an ini-style syntax."
 msgstr ""
-"Netatalk の afpd デーモンは AFP クライアントに対してファイルサービスを提供す"
-"る。設定ファイルは *afp.conf* のみで、\"ini\" スタイルの構文で記述する。"
+"デーモン両方と AFP ボリュームの設定は、ini スタイルの構文を使用する "
+"*afp.conf* ファイルを通じて管理される。"
 
 #. type: Title ####
-#: manual/Configuration.md:13 manual/Upgrading.md:48
+#: manual/Configuration.md:14 manual/Upgrading.md:58
 #, no-wrap
 msgid "afp.conf"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:17
+#: manual/Configuration.md:18
 #, no-wrap
 msgid ""
 "*afp.conf* is the configuration file used by **afpd** to determine\n"
@@ -67,35 +70,35 @@ msgstr ""
 "決定するために **afpd** が使用する設定ファイルである。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:19
+#: manual/Configuration.md:20
 #, no-wrap
 msgid "*afp.conf* is divided into several sections:\n"
 msgstr "*afp.conf* は複数のサーバーセクションに分割できる。すなわち：\n"
 
 #. type: Plain text
-#: manual/Configuration.md:21
+#: manual/Configuration.md:22
 msgid "[Global]"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:23
+#: manual/Configuration.md:24
 #, no-wrap
 msgid "> The global section defines general server options.\n"
 msgstr "> グローバルセクションで基本的なサーバーオプションを定義する。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:25
+#: manual/Configuration.md:26
 msgid "[Homes]"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:27
+#: manual/Configuration.md:28
 #, no-wrap
 msgid "> The homes section defines user home volumes.\n"
 msgstr "> ホームセクションでユーザーのホームボリュームを定義する。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:29
+#: manual/Configuration.md:30
 msgid ""
 "Any section not named **Global** or **Homes** is interpreted as an AFP "
 "volume."
@@ -104,7 +107,7 @@ msgstr ""
 "リュームであると解釈される"
 
 #. type: Plain text
-#: manual/Configuration.md:36
+#: manual/Configuration.md:37
 #, no-wrap
 msgid ""
 "> **Note:** Nested volumes (where one volume's path is a subdirectory of another's) are not allowed.\n"
@@ -122,7 +125,7 @@ msgstr ""
 "ボリュームパスが他のボリューム内に含まれないように共有を再構成することを検討すると良い。\n"
 
 #. type: Plain text
-#: manual/Configuration.md:41
+#: manual/Configuration.md:42
 msgid ""
 "To share user homes, define a **Homes** section and specify the **basedir "
 "regex** option.  This can be a simple path to the parent directory of all "
@@ -133,12 +136,12 @@ msgstr ""
 "ディレクトリのパスあるいは正規表現からなる単純な文字列でよい。"
 
 #. type: Plain text
-#: manual/Configuration.md:43 manual/Search.md:32 manual/Search.md:77
+#: manual/Configuration.md:44 manual/Search.md:32 manual/Search.md:77
 msgid "Example:"
 msgstr "例："
 
 #. type: Plain text
-#: manual/Configuration.md:46
+#: manual/Configuration.md:47
 #, no-wrap
 msgid ""
 "    [Homes]\n"
@@ -146,7 +149,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:49
+#: manual/Configuration.md:50
 msgid ""
 "Any user logging into the AFP server will now have a user volume available "
 "at the path */home/NAME*."
@@ -155,7 +158,7 @@ msgstr ""
 "パス名でのユーザーボリュームを使用できる。"
 
 #. type: Plain text
-#: manual/Configuration.md:52
+#: manual/Configuration.md:53
 msgid ""
 "A more complex setup involves a server with many user homes split across two "
 "different filesystems:"
@@ -164,22 +167,22 @@ msgstr ""
 "された、 大量のユーザーホームディレクトリーのあるサーバーなら："
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:54
+#: manual/Configuration.md:55
 msgid "/RAID1/homes"
 msgstr ""
 
 #. type: Bullet: '- '
-#: manual/Configuration.md:56
+#: manual/Configuration.md:57
 msgid "/RAID2/morehomes"
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:58
+#: manual/Configuration.md:59
 msgid "The following configuration handles this:"
 msgstr "以下の設定が必要である："
 
 #. type: Plain text
-#: manual/Configuration.md:61
+#: manual/Configuration.md:62
 #, no-wrap
 msgid ""
 "    [Homes]\n"
@@ -187,7 +190,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:64
+#: manual/Configuration.md:65
 msgid ""
 "If **basedir regex** contains a symlink, set the canonicalized absolute "
 "path.  For example, when */home* links to */usr/home*:"
@@ -197,7 +200,7 @@ msgstr ""
 "リンクがはられていた場合："
 
 #. type: Plain text
-#: manual/Configuration.md:67
+#: manual/Configuration.md:68
 #, no-wrap
 msgid ""
 "    [Homes]\n"
@@ -205,7 +208,7 @@ msgid ""
 msgstr ""
 
 #. type: Plain text
-#: manual/Configuration.md:70
+#: manual/Configuration.md:71
 msgid ""
 "For a detailed explanation of all available options, refer to the [afp.conf]"
 "(afp.conf.5.html) man page."
@@ -214,13 +217,13 @@ msgstr ""
 "の man page を参照いただきたい。"
 
 #. type: Title ###
-#: manual/Configuration.md:71
+#: manual/Configuration.md:72
 #, no-wrap
 msgid "Backup Volumes"
 msgstr "バックアップボリューム"
 
 #. type: Plain text
-#: manual/Configuration.md:76
+#: manual/Configuration.md:77
 msgid ""
 "Netatalk provides remote backup functionality for macOS Time Machine over "
 "AFP.  To make a volume a Time Machine target, set the volume option **time "
@@ -231,7 +234,7 @@ msgstr ""
 "machine = yes** を使う。"
 
 #. type: Plain text
-#: manual/Configuration.md:80
+#: manual/Configuration.md:81
 msgid ""
 "When used together with Zeroconf, the backup volume will be automatically "
 "advertised via Bonjour when the server is running, allowing macOS clients to "
@@ -242,13 +245,13 @@ msgstr ""
 "Machine バックアップの宛先としてそれを発見し選択できるようになる。"
 
 #. type: Title ###
-#: manual/Configuration.md:81
+#: manual/Configuration.md:82
 #, no-wrap
 msgid "Symlinks"
 msgstr "シンボリックリンク"
 
 #. type: Plain text
-#: manual/Configuration.md:86
+#: manual/Configuration.md:87
 msgid ""
 "By default, symlinks are not followed on the server side but are instead "
 "passed to the client for resolution, resulting in links that point somewhere "
@@ -260,7 +263,7 @@ msgstr ""
 "ンクになる。これは歴史的な Mac OS X AFP サーバーと同じ挙動である。"
 
 #. type: Plain text
-#: manual/Configuration.md:92
+#: manual/Configuration.md:93
 msgid ""
 "Server-side symlink following can be enabled per volume with **follow "
 "symlinks = yes**.  When enabled, symlink targets created via AFP are "
@@ -277,10 +280,166 @@ msgstr ""
 "ことに注意。"
 
 #. type: Plain text
-#: manual/Configuration.md:93
+#: manual/Configuration.md:95
 msgid ""
 "Be aware that enabling server-side symlink following can lead to security "
 "issues if not used carefully."
 msgstr ""
 "サーバー側のシンボリックリンクの追跡を有効にすると、注意して使用しないとセ"
 "キュリティ上の問題につながる可能性があることに注意。"
+
+#. type: Title ##
+#: manual/Configuration.md:96
+#, no-wrap
+msgid "Interoperability with Other Network File Systems"
+msgstr "他のネットワークファイルシステムとの相互運用性"
+
+#. type: Plain text
+#: manual/Configuration.md:101
+msgid ""
+"Netatalk and Samba can share the same volume and store Extended Attribute "
+"metadata in a mutually compatible format, enabling access via AFP or SMB."
+msgstr ""
+"Netatalk と Samba は同じボリュームを共有し、拡張属性メタデータを相互互換のあ"
+"る形式で保存できるため、AFP または SMB 経由でのアクセスが可能になる。"
+
+#. type: Plain text
+#: manual/Configuration.md:107
+#, no-wrap
+msgid ""
+"> ***WARNING:*** The **ea = samba** and **ea = sys** (Netatalk default)\n"
+"> metadata formats are **not** compatible,\n"
+"> and there is currently no automated way to convert between them.\n"
+"> If you have an existing Netatalk volume using the default settings and want to add Samba sharing,\n"
+"> the recommended migration path is to copy files from one volume to another using an AFP client.\n"
+msgstr ""
+"> 【警告】 **ea = samba** と **ea = sys** (Netatalk デフォルト) の\n"
+"> メタデータ形式は互換性が**ない**。\n"
+"> 現時点では、両形式の間で自動的に変換する方法はない。\n"
+"> デフォルト設定を使用している既存の Netatalk ボリュームに Samba 共有を追加したい場合は、\n"
+"> AFP クライアントを使用してファイルを別のボリュームにコピーすることが推奨の移行方法である。\n"
+
+#. type: Plain text
+#: manual/Configuration.md:113
+msgid ""
+"When sharing a volume with other processes (Samba, NFS, local applications), "
+"keep *dircache validation freq* at **1** (the default)  so Netatalk detects "
+"external changes on every access.  If Netatalk is the **only** process on "
+"the volume, you can set *dircache validation freq* = 100 for maximum "
+"performance."
+msgstr ""
+"Samba、NFS、ローカルアプリケーションなど他のプロセスとボリュームを共有する場"
+"合は、Netatalk がアクセスのたびに外部の変更を検出できるよう、*dircache "
+"validation freq* を **1** (デフォルト) のままにしておくこと。Netatalk がその"
+"ボリュームの**唯一の**プロセスであれば、最大パフォーマンスのために *dircache "
+"validation freq* = 100 に設定できる。"
+
+#. type: Title ###
+#: manual/Configuration.md:114
+#, no-wrap
+msgid "Netatalk configuration"
+msgstr "Netatalk の設定"
+
+#. type: Plain text
+#: manual/Configuration.md:117
+msgid ""
+"Use *ea = samba* to store Extended Attributes in the Samba-compatible format."
+msgstr "*ea = samba* を使用して、Samba 互換形式で拡張属性を保存する。"
+
+#. type: Plain text
+#: manual/Configuration.md:122
+#, no-wrap
+msgid ""
+"    [Global]\n"
+"        vol preset = my default values\n"
+"        dircache validation freq = 1\n"
+"        ea = samba\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:125
+#, no-wrap
+msgid ""
+"    [Homes]\n"
+"        basedir regex = /home\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:128 manual/Configuration.md:155
+#, no-wrap
+msgid ""
+"    [Test Volume]\n"
+"        path = /export/test1\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:132
+#, no-wrap
+msgid ""
+"    [My Time Machine Volume]\n"
+"        path = /export/timemachine\n"
+"        time machine = yes\n"
+msgstr ""
+
+#. type: Title ###
+#: manual/Configuration.md:133
+#, no-wrap
+msgid "Samba configuration"
+msgstr "Samba の設定"
+
+#. type: Plain text
+#: manual/Configuration.md:138
+msgid ""
+"The Samba **catia**, **fruit**, and **streams_xattr** VFS modules provide "
+"compatibility for Apple SMB clients and interoperability with Netatalk.  Use "
+"**hide files** (not **veto files**) to hide Netatalk's invisible files from "
+"Windows clients."
+msgstr ""
+"Samba の **catia**、**fruit**、**streams_xattr** VFS モジュールは、Apple SMB "
+"クライアントとの互換性および Netatalk との相互運用性を提供する。**veto "
+"files** ではなく **hide files** を使用して、Netatalk の不可視ファイルを "
+"Windows クライアントから隠す。"
+
+#. type: Plain text
+#: manual/Configuration.md:142
+#, no-wrap
+msgid ""
+"    [global]\n"
+"        ea support = yes\n"
+"        vfs objects = catia fruit streams_xattr\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:146
+#, no-wrap
+msgid ""
+"        fruit:encoding = native\n"
+"        streams_xattr:prefix = user.\n"
+"        streams_xattr:store_stream_type = no\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:148
+#, no-wrap
+msgid "        hide files = /.DS_Store/Network Trash Folder/TheFindByContentFolder/TheVolumeSettingsFolder/Temporary Items/.TemporaryItems/.VolumeIcon.icns/Icon?/.FBCIndex/.FBCLockFolder/\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:150
+#, no-wrap
+msgid "        read only = no\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:152
+#, no-wrap
+msgid "    [homes]\n"
+msgstr ""
+
+#. type: Plain text
+#: manual/Configuration.md:157
+#, no-wrap
+msgid ""
+"    [My Time Machine Volume]\n"
+"        path = /export/timemachine\n"
+msgstr ""

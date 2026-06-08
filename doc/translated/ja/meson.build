@@ -9,7 +9,6 @@ manual_pages = [
     'FCE',
     'index',
     'Installation',
-    'Interoperability',
     'Legal',
     'License',
     'Search',
