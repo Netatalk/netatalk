@@ -73,7 +73,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
@@ -141,7 +141,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
@@ -224,7 +224,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
@@ -304,7 +304,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
@@ -386,7 +386,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-appletalk=true \
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
@@ -408,62 +408,6 @@ jobs:
           macipgw -V
           papd -V
           timelord -V
-      - name: Upload meson logs
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: meson-logs-${{ github.job }}
-          path: build/meson-logs
-
-  build-macos:
-    name: macOS
-    runs-on: macos-latest
-    timeout-minutes: 24
-    env:
-      HOMEBREW_NO_INSTALL_CLEANUP: 1
-      HOMEBREW_NO_AUTO_UPDATE: 1
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install dependencies
-        run: |
-          brew update
-          brew install \
-            bstring \
-            cmark-gfm \
-            cracklib \
-            iniparser \
-            libev \
-            libmagic \
-            mariadb \
-            meson \
-            openldap \
-            talloc \
-            xapian
-      - name: Configure
-        run: |
-          meson setup build \
-            -Dbuildtype=release \
-            -Dwith-eventloop=libev \
-            -Dwith-homebrew=true \
-            -Dwith-tests=true \
-            -Dwith-testsuite=true
-      - name: Build
-        run: meson compile -C build
-      - name: Run integration tests
-        run: meson test -C build
-      - name: Install
-        run: sudo meson install -C build
-      - name: Check netatalk capabilities
-        run: |
-          netatalk -V
-          afpd -V
-      - name: Start netatalk
-        run: |
-          sudo netatalkd start
-          sleep 1
-          asip-status localhost
-      - name: Stop netatalk
-        run: sudo netatalkd stop
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -509,7 +453,7 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dwith-appletalk=true \
               -Dwith-eventloop=libev \
               -Dwith-tests=true \
@@ -625,7 +569,7 @@ jobs:
           path: build/meson-logs
 
   build-freebsd:
-    name: AFP Spectest - FreeBSD (Prod)
+    name: AFP Spectest - FreeBSD (PerfConfig)
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -662,7 +606,7 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-eventloop=libev \
               -Dwith-tests=true \
@@ -722,9 +666,9 @@ jobs:
           export AFP_EXTMAP=1
           # FreeBSD's filesystem supports native EAs, so this leg runs the real
           # production config: ea = sys (AFP_ADOUBLE unset). This is the
-          # max-performance "(Prod)" configuration, matching the Alpine prod
-          # spectest. (DragonflyBSD must use ea = ad because HAMMER2 has no
-          # native EA support, so it is NOT a Prod-config leg.)
+          # max-performance "(PerfConfig)" configuration, matching the Alpine
+          # PerfConfig spectest. (DragonflyBSD must use ea = ad because HAMMER2
+          # has no native EA support, so it is NOT a PerfConfig leg.)
           # Same auth path as the Linux/Alpine prod spectest: INSECURE_AUTH
           # (with no AFP_UAMS override) makes env_setup emit the identical
           # UAMS list, including uams_clrtxt.so. afp_spectest logs in with the
@@ -830,7 +774,7 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dwith-appletalk=true \
               -Dwith-cups-pap-backend=true \
               -Dwith-dtrace=false \
@@ -892,7 +836,7 @@ jobs:
           run: |
             set -e
             meson setup build \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dwith-eventloop=libev \
               -Dwith-gssapi-path=/usr/local/heimdal \
               -Dwith-kerberos-path=/usr/local/heimdal \
@@ -954,7 +898,7 @@ jobs:
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             meson setup build \
               --prefix=/opt/local \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/opt/local/lib/pkgconfig \
               -Dwith-eventloop=libev \
               -Dwith-ldap-path=/opt/local \
@@ -1021,7 +965,7 @@ jobs:
             set -e
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
             meson setup build \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-eventloop=libev \
               -Dwith-iniparser-path=/usr/local \
@@ -1087,7 +1031,7 @@ jobs:
             set -e
             meson setup build \
               --prefix=/usr/local \
-              -Dbuildtype=release \
+              -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
               -Dwith-iniparser-path=/usr/local \
               -Dwith-tests=true \

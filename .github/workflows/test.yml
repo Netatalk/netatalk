@@ -84,7 +84,7 @@ jobs:
       - name: Configure
         run: |
           meson setup build \
-            -Dbuildtype=release \
+            -Dbuildtype=debugoptimized \
             -Dwith-init-hooks=false \
             -Dwith-tests=true
       - name: Run distribution tests

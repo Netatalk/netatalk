@@ -80,7 +80,7 @@ COPY meson.build .
 RUN rm -rf build
 
 RUN meson setup build \
-    -Dbuildtype=release \
+    -Dbuildtype=debugoptimized \
     -Dwith-appletalk=true \
     -Dwith-dbus-daemon-path=/usr/bin/dbus-daemon \
     -Dwith-docs= \
