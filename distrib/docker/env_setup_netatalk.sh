@@ -54,18 +54,19 @@ OS_KERNEL=$(uname -s 2> /dev/null || echo Linux)
 # container image) keeps USER_TOOL empty, so the existing Alpine/glibc branches
 # run unchanged. FreeBSD and DragonFly ship the BSD `pw` tool; NetBSD and
 # OpenBSD share the user(8) suite (useradd/usermod/groupadd), differing only in
-# the password-hash tool (pwhash vs encrypt), handled per OS_KERNEL below.
+# the password-hash tool (pwhash vs encrypt). illumos/Solaris (SunOS) use the
+# SVR4 useradd/groupadd suite, with the password written to /etc/shadow.
 #
 # The default arm hard-fails on any unrecognised kernel: every OS that reaches
 # this script must have an explicit provisioning toolchain, otherwise it would
 # silently fall through to the Linux/glibc branches and mis-provision users.
-# When adding a new VM platform (OmniOS/illumos, Solaris, ...), add its kernel
-# here with the correct USER_TOOL.
+# When adding a new VM platform, add its kernel here with the correct USER_TOOL.
 USER_TOOL=""
 case "$OS_KERNEL" in
     Linux) USER_TOOL="" ;;
     FreeBSD | DragonFly) USER_TOOL="pw" ;;
     NetBSD | OpenBSD) USER_TOOL="user" ;;
+    SunOS) USER_TOOL="svr4" ;;
     *)
         echo "ERROR: unsupported OS kernel '$OS_KERNEL'; no user-provisioning toolchain defined" >&2
         exit 1
@@ -73,20 +74,33 @@ case "$OS_KERNEL" in
 esac
 
 # Hash a plaintext password for `usermod -p` on the user(8) suite (NetBSD and
-# OpenBSD only; other kernels use pw or chpasswd and never call this). NetBSD
-# ships pwhash; OpenBSD hashes via encrypt(1) reading the password on stdin.
+# OpenBSD only; other kernels use pw, chpasswd or the SVR4 shadow path and never
+# call this). NetBSD ships pwhash; OpenBSD hashes via encrypt(1) on stdin.
 hash_afp_password() {
-    local password
-    password=$1
+    afp_pw=$1
     case "$OS_KERNEL" in
-        NetBSD) pwhash "$password" ;;
-        OpenBSD) echo "$password" | encrypt ;;
+        NetBSD) pwhash "$afp_pw" ;;
+        OpenBSD) echo "$afp_pw" | encrypt ;;
         *)
             echo "ERROR: no password-hash tool for OS kernel '$OS_KERNEL'" >&2
             exit 1
             ;;
     esac
     return $?
+}
+
+# Set a user's password on the SVR4 suite (illumos/Solaris): there is no
+# `usermod -p`, and passwd(1) is interactive, so write a crypt(3C) hash into
+# /etc/shadow. openssl passwd -1 emits md5crypt ($1$), which illumos crypt(3C)
+# verifies (BSD/Linux compatibility), so PAM's pam_unix_auth accepts it.
+set_svr4_password() {
+    svr4_user=$1
+    svr4_hash=$(openssl passwd -1 "$2")
+    svr4_tmp=$(mktemp)
+    awk -F: -v u="$svr4_user" -v h="$svr4_hash" \
+        'BEGIN { OFS = ":" } $1 == u { $2 = h } { print }' \
+        /etc/shadow > "$svr4_tmp" && cat "$svr4_tmp" > /etc/shadow
+    rm -f "$svr4_tmp"
 }
 
 # --------------------------------------------------------------------------
@@ -156,6 +170,20 @@ elif [ "$USER_TOOL" = "user" ]; then
         useradd $uidcmd -g "$AFP_GROUP" -d /nonexistent -s /sbin/nologin "$AFP_USER"
     fi
     usermod -G "$AFP_GROUP" "$AFP_USER"
+elif [ "$USER_TOOL" = "svr4" ]; then
+    if ! getent group "$AFP_GROUP" > /dev/null 2>&1; then
+        if [ -n "$AFP_GID" ]; then
+            groupadd -g "$AFP_GID" "$AFP_GROUP"
+        else
+            groupadd "$AFP_GROUP"
+        fi
+    fi
+    if ! getent passwd "$AFP_USER" > /dev/null 2>&1; then
+        uidcmd=""
+        [ -n "$AFP_UID" ] && uidcmd="-u $AFP_UID"
+        useradd $uidcmd -g "$AFP_GROUP" -G "$AFP_GROUP" -d /nonexistent -s /bin/false "$AFP_USER"
+    fi
+    usermod -G "$AFP_GROUP" "$AFP_USER"
 elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
     uidcmd=""
     gidcmd=""
@@ -186,6 +214,8 @@ if [ "$USER_TOOL" = "pw" ]; then
     echo "$AFP_PASS" | pw usermod "$AFP_USER" -h 0
 elif [ "$USER_TOOL" = "user" ]; then
     usermod -p "$(hash_afp_password "$AFP_PASS")" "$AFP_USER"
+elif [ "$USER_TOOL" = "svr4" ]; then
+    set_svr4_password "$AFP_USER" "$AFP_PASS"
 else
     echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 fi
@@ -248,7 +278,7 @@ fi
 if [ -n "$AFP_DROPBOX" ]; then
     if [ "$USER_TOOL" = "pw" ]; then
         pw groupmod "$AFP_GROUP" -m nobody
-    elif [ "$USER_TOOL" = "user" ]; then
+    elif [ "$USER_TOOL" = "user" ] || [ "$USER_TOOL" = "svr4" ]; then
         usermod -G "$AFP_GROUP" nobody
     elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         addgroup nobody "$AFP_GROUP"
@@ -268,6 +298,11 @@ elif [ -n "$AFP_USER2" ]; then
             useradd -g "$AFP_GROUP" -d /nonexistent -s /sbin/nologin "$AFP_USER2"
         fi
         usermod -G "$AFP_GROUP" "$AFP_USER2"
+    elif [ "$USER_TOOL" = "svr4" ]; then
+        if ! getent passwd "$AFP_USER2" > /dev/null 2>&1; then
+            useradd -g "$AFP_GROUP" -G "$AFP_GROUP" -d /nonexistent -s /bin/false "$AFP_USER2"
+        fi
+        usermod -G "$AFP_GROUP" "$AFP_USER2"
     elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         adduser --no-create-home --disabled-password "$AFP_USER2" 2> /dev/null || true
         addgroup "$AFP_USER2" "$AFP_GROUP"
@@ -280,6 +315,8 @@ elif [ -n "$AFP_USER2" ]; then
         echo "$AFP_PASS2" | pw usermod "$AFP_USER2" -h 0
     elif [ "$USER_TOOL" = "user" ]; then
         usermod -p "$(hash_afp_password "$AFP_PASS2")" "$AFP_USER2"
+    elif [ "$USER_TOOL" = "svr4" ]; then
+        set_svr4_password "$AFP_USER2" "$AFP_PASS2"
     else
         echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
     fi
@@ -412,16 +449,14 @@ fi
 # --------------------------------------------------------------------------
 
 sql_escape_identifier() {
-    local identifier
-    identifier=$1
-    printf '%s' "$identifier" | sed 's/`/``/g'
+    sql_identifier=$1
+    printf '%s' "$sql_identifier" | sed 's/`/``/g'
     return $?
 }
 
 sql_escape_literal() {
-    local literal
-    literal=$1
-    printf '%s' "$literal" | sed "s/'/''/g"
+    sql_literal=$1
+    printf '%s' "$sql_literal" | sed "s/'/''/g"
     return $?
 }
 
