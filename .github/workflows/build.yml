@@ -970,7 +970,7 @@ jobs:
           path: build/meson-logs
 
   build-omnios:
-    name: OmniOS
+    name: AFP Spectest - OmniOS (sys:ad)
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -1024,6 +1024,83 @@ jobs:
             sleep 1
             asip-status localhost
             svcadm disable svc:/network/netatalk:default
+      # Production AFP spectest in the same VM, reusing env_setup_netatalk.sh
+      # to provision users + afp.conf (like the FreeBSD leg).
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: omnios {0}
+        run: |
+          set -e
+          export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+          export AFP_USER=atalk1
+          export AFP_USER2=atalk2
+          export AFP_GROUP=afpusers
+          export AFP_PASS="$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-8)"
+          export AFP_PASS2="$AFP_PASS"
+          export SHARE_NAME=test1
+          export SHARE_NAME2=test2
+          # OmniOS installs under the pkgsrc /opt/local prefix
+          export NETATALK_CONFDIR=/opt/local/etc
+          export NETATALK_SHARE_DIR=/mnt/afpshare
+          export NETATALK_BACKUP_DIR=/mnt/afpbackup
+          export NETATALK_LOG_FILE=/var/log/afpd.log
+          # illumos has no meson lock special-case -> /var/spool/locks
+          export NETATALK_LOCKDIR=/var/spool/locks
+          # Production max-performance tuning knobs
+          export AFP_DIRCACHESIZE=1048576
+          export AFP_DIRCACHE_MODE=arc
+          export AFP_DIRCACHE_VALIDATION_FREQ=100
+          export AFP_DIRCACHE_RFORK_BUDGET=1048576000
+          export AFP_DIRCACHE_RFORK_MAXSIZE=1048576
+          export AFP_CNID_BACKEND=dbd
+          export AFP_CONVERT_APPLEDOUBLE=no
+          export AFP_EXTMAP=1
+          # The VM's /mnt share filesystem has no runtime EA support, so use
+          # AppleDouble storage (ea = ad, + afp_spectest -a) like the BSD legs.
+          export AFP_ADOUBLE=1
+          export INSECURE_AUTH=1
+          export DISABLE_TIMEMACHINE=1
+          export SERVER_NAME=Netatalk
+          export AFP_HOST=127.0.0.1
+          export AFP_PORT=548
+          export AFP_VERSION=7
+          export TESTSUITE=spectest
+
+          # copy the extmap template if absent so env_setup can activate it
+          [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
+
+          # env_setup expects the container contract (no nounset); disable it
+          set +u
+          . ./distrib/docker/env_setup_netatalk.sh
+          set -u
+
+          echo "==== Starting netatalk (production config) ===="
+          netatalk
+          sleep 3
+          asip-status "$AFP_HOST:$AFP_PORT" || true
+
+          echo "==== Running AFP spec test (AFP 3.4) ===="
+          set +e
+          afp_spectest $TEST_FLAGS \
+            -"$AFP_VERSION" \
+            -h "$AFP_HOST" \
+            -p "$AFP_PORT" \
+            -u "$AFP_USER" \
+            -d "$AFP_USER2" \
+            -w "$AFP_PASS" \
+            -s "$SHARE_NAME" \
+            -S "$SHARE_NAME2"
+          SPECTEST_RC=$?
+          set -e
+
+          echo "==== afpd.log (tail) ===="
+          tail -200 "$NETATALK_LOG_FILE" 2>/dev/null || echo "no log file"
+          echo "==== afp.conf (redacted) ===="
+          sed -E 's/^([[:space:]]*[^=#]*(pass|pw|secret|key)[^=]*=).*/\1 ***REDACTED***/I' \
+            "$NETATALK_CONFDIR/afp.conf" 2>/dev/null || true
+
+          # netatalk shuts down on SIGTERM, reaping afpd/cnid_metad.
+          pkill -x netatalk 2>/dev/null || true
+          exit $SPECTEST_RC
       - name: Upload meson logs
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
