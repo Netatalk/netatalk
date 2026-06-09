@@ -1295,7 +1295,7 @@ int auth_load(AFPObj *obj, const char *path, const char *list)
                 LOG(log_error, logtype_afpd, "uam: %s load failure", p);
             }
         } else {
-            LOG(log_info, logtype_afpd, "uam: uam not found (status=%d)", stat(name, &st));
+            LOG(log_info, logtype_afpd, "uam: uam not found (%s)", strerror(errno));
         }
 
         p = strtok_r(NULL, ", ", &last);

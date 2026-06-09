@@ -2955,7 +2955,8 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
         if (!AD_META_OPEN(adsp)) {
             if (ad_open(adsp, p, ADFLAGS_HF) != 0) {
-                return -1;
+                err = AFPERR_MISC;
+                goto err_temp_to_dest;
             }
 
             opened_ads = true;
@@ -2963,21 +2964,57 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
 
         if (!AD_META_OPEN(addp)) {
             if (ad_open(addp, upath, ADFLAGS_HF) != 0) {
-                return -1;
+                err = AFPERR_MISC;
+
+                if (opened_ads) {
+                    ad_close(adsp, ADFLAGS_HF);
+                }
+
+                goto err_temp_to_dest;
             }
 
             opened_add = true;
         }
 
         if (ad_copy_header(&adtmp, adsp) != 0) {
+            err = AFPERR_MISC;
+
+            if (opened_ads) {
+                ad_close(adsp, ADFLAGS_HF);
+            }
+
+            if (opened_add) {
+                ad_close(addp, ADFLAGS_HF);
+            }
+
             goto err_temp_to_dest;
         }
 
         if (ad_copy_header(adsp, addp) != 0) {
+            err = AFPERR_MISC;
+
+            if (opened_ads) {
+                ad_close(adsp, ADFLAGS_HF);
+            }
+
+            if (opened_add) {
+                ad_close(addp, ADFLAGS_HF);
+            }
+
             goto err_temp_to_dest;
         }
 
         if (ad_copy_header(addp, &adtmp) != 0) {
+            err = AFPERR_MISC;
+
+            if (opened_ads) {
+                ad_close(adsp, ADFLAGS_HF);
+            }
+
+            if (opened_add) {
+                ad_close(addp, ADFLAGS_HF);
+            }
+
             goto err_temp_to_dest;
         }
 
