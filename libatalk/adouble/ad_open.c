@@ -1192,7 +1192,33 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
     ad->ad_data_fork.adf_fd = open(path, oflags, admode);
 
     if (ad->ad_data_fork.adf_fd == -1) {
-        switch (errno) {
+        int open_errno = errno;
+
+        /* Symlink emulation (O_NOFOLLOW set, i.e. 'follow symlinks' off): detect
+         * the symlink with lstat() rather than by matching errno. The errno for
+         * an O_NOFOLLOW symlink open varies by platform (EMLINK/EFTYPE/ELOOP),
+         * and DragonflyBSD returns EACCES for an unprivileged caller because its
+         * permission check precedes the symlink check. lstat() is unambiguous. */
+        if (oflags & O_NOFOLLOW) {
+            struct stat lst;
+
+            if (lstat(path, &lst) == 0 && S_ISLNK(lst.st_mode)) {
+                EC_NULL(ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN + 1));
+                lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN);
+
+                if (lsz <= 0 || lsz > MAXPATHLEN) {
+                    free(ad->ad_data_fork.adf_syml);
+                    ad->ad_data_fork.adf_syml = NULL;
+                    EC_FAIL;
+                }
+
+                ad->ad_data_fork.adf_syml[lsz] = 0;
+                ad->ad_data_fork.adf_fd = AD_SYMLINK;
+                goto symlink_emulated;
+            }
+        }
+
+        switch (open_errno) {
         case EACCES:
         case EPERM:
         case EROFS:
@@ -1203,25 +1229,16 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
                 break;
             }
 
+            errno = open_errno;
             return -1;
 
-        case OPEN_NOFOLLOW_ERRNO:
-            ad->ad_data_fork.adf_syml = malloc(MAXPATHLEN + 1);
-
-            if ((lsz = readlink(path, ad->ad_data_fork.adf_syml, MAXPATHLEN)) <= 0
-                    || lsz > MAXPATHLEN) {
-                free(ad->ad_data_fork.adf_syml);
-                EC_FAIL;
-            }
-
-            ad->ad_data_fork.adf_syml[lsz] = 0;
-            ad->ad_data_fork.adf_fd = AD_SYMLINK;
-            break;
-
         default:
+            errno = open_errno;
             EC_FAIL;
         }
     }
+
+symlink_emulated:
 
     if (!st_invalid) {
         /* just created, set owner if admin (root) */
@@ -1258,6 +1275,12 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode,
         ad_data_fileno(ad), ad->ad_data_fork.adf_refcount,
         ad_meta_fileno(ad), ad->ad_mdp->adf_refcount,
         ad_reso_fileno(ad), ad->ad_rfp->adf_refcount);
+
+    /* A symlink (data fd == AD_SYMLINK, set by ad_open_df) has no .AppleDouble
+     * sidecar to open; short-circuit as ad_open_hf_ea() does. */
+    if (ad_data_fileno(ad) == AD_SYMLINK) {
+        goto EC_CLEANUP;
+    }
 
     if (ad_meta_fileno(ad) != -1) {
         /* the file is already open, but we want write access: */

@@ -951,8 +951,20 @@ int afp_createfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
         case ENOENT : /* we were already in 'did folder' so chdir() didn't fail */
             return AFPERR_NOOBJ;
 
-        case EEXIST :
+        case EEXIST : {
+            /* DragonflyBSD remaps EACCES->EEXIST for a denied O_CREAT|O_EXCL
+             * create. Only report AFPERR_EXIST when we can confirm the target
+             * really exists; if lstat() fails for any reason (ENOENT means it
+             * was a remapped denial, EACCES or other means we cannot confirm
+             * existence) treat it as an access denial instead of masking it. */
+            struct stat est;
+
+            if (lstat(upath, &est) != 0) {
+                return AFPERR_ACCESS;
+            }
+
             return AFPERR_EXIST;
+        }
 
         case EACCES :
             return AFPERR_ACCESS;
