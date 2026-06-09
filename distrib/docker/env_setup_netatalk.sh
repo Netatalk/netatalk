@@ -52,24 +52,42 @@ OS_KERNEL=$(uname -s 2> /dev/null || echo Linux)
 
 # Map the kernel to the user/group provisioning toolchain. Linux (every
 # container image) keeps USER_TOOL empty, so the existing Alpine/glibc branches
-# run unchanged. FreeBSD and DragonFly both ship the BSD `pw` tool and share one
-# branch; NetBSD uses the user(8) suite (useradd/usermod/groupadd + pwhash).
+# run unchanged. FreeBSD and DragonFly ship the BSD `pw` tool; NetBSD and
+# OpenBSD share the user(8) suite (useradd/usermod/groupadd), differing only in
+# the password-hash tool (pwhash vs encrypt), handled per OS_KERNEL below.
 #
 # The default arm hard-fails on any unrecognised kernel: every OS that reaches
 # this script must have an explicit provisioning toolchain, otherwise it would
 # silently fall through to the Linux/glibc branches and mis-provision users.
-# When adding a new VM platform (OpenBSD, OmniOS/illumos, Solaris, ...), add its
-# kernel here with the correct USER_TOOL.
+# When adding a new VM platform (OmniOS/illumos, Solaris, ...), add its kernel
+# here with the correct USER_TOOL.
 USER_TOOL=""
 case "$OS_KERNEL" in
     Linux) USER_TOOL="" ;;
     FreeBSD | DragonFly) USER_TOOL="pw" ;;
-    NetBSD) USER_TOOL="user" ;;
+    NetBSD | OpenBSD) USER_TOOL="user" ;;
     *)
         echo "ERROR: unsupported OS kernel '$OS_KERNEL'; no user-provisioning toolchain defined" >&2
         exit 1
         ;;
 esac
+
+# Hash a plaintext password for `usermod -p` on the user(8) suite (NetBSD and
+# OpenBSD only; other kernels use pw or chpasswd and never call this). NetBSD
+# ships pwhash; OpenBSD hashes via encrypt(1) reading the password on stdin.
+hash_afp_password() {
+    local password
+    password=$1
+    case "$OS_KERNEL" in
+        NetBSD) pwhash "$password" ;;
+        OpenBSD) echo "$password" | encrypt ;;
+        *)
+            echo "ERROR: no password-hash tool for OS kernel '$OS_KERNEL'" >&2
+            exit 1
+            ;;
+    esac
+    return $?
+}
 
 # --------------------------------------------------------------------------
 # Path configuration
@@ -167,8 +185,7 @@ fi
 if [ "$USER_TOOL" = "pw" ]; then
     echo "$AFP_PASS" | pw usermod "$AFP_USER" -h 0
 elif [ "$USER_TOOL" = "user" ]; then
-    AFP_PASS_HASH=$(pwhash "$AFP_PASS")
-    usermod -p "$AFP_PASS_HASH" "$AFP_USER"
+    usermod -p "$(hash_afp_password "$AFP_PASS")" "$AFP_USER"
 else
     echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 fi
@@ -262,7 +279,7 @@ elif [ -n "$AFP_USER2" ]; then
     if [ "$USER_TOOL" = "pw" ]; then
         echo "$AFP_PASS2" | pw usermod "$AFP_USER2" -h 0
     elif [ "$USER_TOOL" = "user" ]; then
-        usermod -p "$(pwhash "$AFP_PASS2")" "$AFP_USER2"
+        usermod -p "$(hash_afp_password "$AFP_PASS2")" "$AFP_USER2"
     else
         echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
     fi
