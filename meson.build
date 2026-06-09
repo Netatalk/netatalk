@@ -2,7 +2,7 @@ project(
     'netatalk',
     version: '4.6.0dev',
     license: 'GPLv2',
-    default_options: ['warning_level=3', 'c_std=c11'],
+    default_options: ['warning_level=3', 'c_std=c11', 'b_ndebug=if-release'],
     meson_version: '>=0.62.0',
 )
 
@@ -286,7 +286,7 @@ elif host_os == 'sunos'
 endif
 
 if build_type == 'debug'
-    netatalk_common_flags += '-DEBUG'
+    netatalk_common_flags += '-DDEBUG'
 endif
 
 add_global_arguments(netatalk_common_flags, language: 'c')

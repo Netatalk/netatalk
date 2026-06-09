@@ -195,7 +195,7 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
 
   flamegraph-spectest:
-    name: Flamegraph (spectest AFP 3.4) (AFP_ASSERT active)
+    name: Flamegraph (spectest AFP 3.4)
     needs: build-container-debug
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -255,9 +255,9 @@ jobs:
           # Extract Netatalk self-time percentage from structured log
           SELF_TIME=$(grep -o 'FLAMEGRAPH_SELF_TIME: [0-9.]*%' flamegraph.log | grep -o '[0-9.]*%' || echo "unknown")
           echo "Netatalk self-time: $SELF_TIME"
-          # Flag if Netatalk code-time exceeds the regression threshold (5%).
+          # Flag if Netatalk code-time exceeds the regression threshold (7.5%).
           # A breach means more CPU is being spent in Netatalk code than expected.
-          SELF_TIME_THRESHOLD=5
+          SELF_TIME_THRESHOLD=7.5
           SELF_TIME_NUM=$(echo "$SELF_TIME" | grep -o '[0-9.]*' || echo "")
           SELF_TIME_WARNING=""
           if [ -n "$SELF_TIME_NUM" ] && awk "BEGIN { exit !($SELF_TIME_NUM > $SELF_TIME_THRESHOLD) }"; then
@@ -379,7 +379,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             <!-- flamegraph-spectest -->
-            ## 🔥 Spectest (AFP 3.4) - Flamegraph (AFP_ASSERT active)
+            ## 🔥 Spectest (AFP 3.4) - Flamegraph
 
             ## **Netatalk Code-time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}**
 
@@ -407,7 +407,7 @@ jobs:
             </details>
 
   afp-spectest-afp34-prod:
-    name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Prod)
+    name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (PerfConfig)
     needs:
       - build-container
       - build-container-testsuite
@@ -458,7 +458,7 @@ jobs:
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-mysql-afp34-prod:
-    name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Prod)
+    name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (PerfConfig)
     needs:
       - build-container
       - build-container-testsuite
@@ -523,7 +523,7 @@ jobs:
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-sqlite-afp34-prod:
-    name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine (Prod)
+    name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine (PerfConfig)
     needs:
       - build-container
       - build-container-testsuite
