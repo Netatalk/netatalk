@@ -594,7 +594,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Build on VM
-        uses: vmactions/netbsd-vm@eb3ba840926911ccf17dc9de235335cb27a02ba0 # v1.3.8
+        uses: vmactions/netbsd-vm@ad31081832386a0ba569aee243e6edf9524f3f80 # v1.3.9
         with:
           copyback: true
           sync: sshfs
