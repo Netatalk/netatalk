@@ -50,13 +50,25 @@ fi
 # and select the matching user-provisioning branches below.
 OS_KERNEL=$(uname -s 2> /dev/null || echo Linux)
 
-# Map the kernel to the user/group provisioning toolchain. Containers report
-# "Linux" and keep USER_TOOL empty, so the existing Alpine/glibc branches run
-# unchanged. FreeBSD and DragonFly both ship the BSD `pw` tool and share one
-# branch.
+# Map the kernel to the user/group provisioning toolchain. Linux (every
+# container image) keeps USER_TOOL empty, so the existing Alpine/glibc branches
+# run unchanged. FreeBSD and DragonFly both ship the BSD `pw` tool and share one
+# branch; NetBSD uses the user(8) suite (useradd/usermod/groupadd + pwhash).
+#
+# The default arm hard-fails on any unrecognised kernel: every OS that reaches
+# this script must have an explicit provisioning toolchain, otherwise it would
+# silently fall through to the Linux/glibc branches and mis-provision users.
+# When adding a new VM platform (OpenBSD, OmniOS/illumos, Solaris, ...), add its
+# kernel here with the correct USER_TOOL.
 USER_TOOL=""
 case "$OS_KERNEL" in
+    Linux) USER_TOOL="" ;;
     FreeBSD | DragonFly) USER_TOOL="pw" ;;
+    NetBSD) USER_TOOL="user" ;;
+    *)
+        echo "ERROR: unsupported OS kernel '$OS_KERNEL'; no user-provisioning toolchain defined" >&2
+        exit 1
+        ;;
 esac
 
 # --------------------------------------------------------------------------
@@ -75,6 +87,9 @@ if [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
 else
     NETATALK_LOCKDIR="${NETATALK_LOCKDIR:-/var/lock}"
 fi
+
+# ensure the conf dir exists before we write afppasswd/afp.conf/extmap.conf
+mkdir -p "$NETATALK_CONFDIR"
 
 # --------------------------------------------------------------------------
 # Validate required environment variables and create users / groups
@@ -109,6 +124,20 @@ if [ "$USER_TOOL" = "pw" ]; then
         pw useradd "$AFP_USER" $uidcmd -g "$AFP_GROUP" -d /nonexistent -s /usr/sbin/nologin -c "" -w no
     fi
     pw groupmod "$AFP_GROUP" -m "$AFP_USER"
+elif [ "$USER_TOOL" = "user" ]; then
+    if ! groupinfo -e "$AFP_GROUP"; then
+        if [ -n "$AFP_GID" ]; then
+            groupadd -g "$AFP_GID" "$AFP_GROUP"
+        else
+            groupadd "$AFP_GROUP"
+        fi
+    fi
+    if ! userinfo -e "$AFP_USER"; then
+        uidcmd=""
+        [ -n "$AFP_UID" ] && uidcmd="-u $AFP_UID"
+        useradd $uidcmd -g "$AFP_GROUP" -d /nonexistent -s /sbin/nologin "$AFP_USER"
+    fi
+    usermod -G "$AFP_GROUP" "$AFP_USER"
 elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
     uidcmd=""
     gidcmd=""
@@ -137,6 +166,9 @@ fi
 
 if [ "$USER_TOOL" = "pw" ]; then
     echo "$AFP_PASS" | pw usermod "$AFP_USER" -h 0
+elif [ "$USER_TOOL" = "user" ]; then
+    AFP_PASS_HASH=$(pwhash "$AFP_PASS")
+    usermod -p "$AFP_PASS_HASH" "$AFP_USER"
 else
     echo "$AFP_USER:$AFP_PASS" | chpasswd > /dev/null 2>&1
 fi
@@ -199,6 +231,8 @@ fi
 if [ -n "$AFP_DROPBOX" ]; then
     if [ "$USER_TOOL" = "pw" ]; then
         pw groupmod "$AFP_GROUP" -m nobody
+    elif [ "$USER_TOOL" = "user" ]; then
+        usermod -G "$AFP_GROUP" nobody
     elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         addgroup nobody "$AFP_GROUP"
     else
@@ -212,6 +246,11 @@ elif [ -n "$AFP_USER2" ]; then
             pw useradd "$AFP_USER2" -g "$AFP_GROUP" -d /nonexistent -s /usr/sbin/nologin -c "" -w no
         fi
         pw groupmod "$AFP_GROUP" -m "$AFP_USER2"
+    elif [ "$USER_TOOL" = "user" ]; then
+        if ! userinfo -e "$AFP_USER2"; then
+            useradd -g "$AFP_GROUP" -d /nonexistent -s /sbin/nologin "$AFP_USER2"
+        fi
+        usermod -G "$AFP_GROUP" "$AFP_USER2"
     elif [ "$DISTRO" = "$DISTRO_ALPINE" ]; then
         adduser --no-create-home --disabled-password "$AFP_USER2" 2> /dev/null || true
         addgroup "$AFP_USER2" "$AFP_GROUP"
@@ -222,6 +261,8 @@ elif [ -n "$AFP_USER2" ]; then
 
     if [ "$USER_TOOL" = "pw" ]; then
         echo "$AFP_PASS2" | pw usermod "$AFP_USER2" -h 0
+    elif [ "$USER_TOOL" = "user" ]; then
+        usermod -p "$(pwhash "$AFP_PASS2")" "$AFP_USER2"
     else
         echo "$AFP_USER2:$AFP_PASS2" | chpasswd > /dev/null 2>&1
     fi
@@ -502,13 +543,12 @@ EOF
 fi
 
 if [ -n "$AFP_EXTMAP" ]; then
-    # BSD sed requires a backup-suffix argument to -i ('' = no backup); GNU
-    # sed treats that as the script. Branch on the kernel to stay portable.
-    if [ "$OS_KERNEL" = "Linux" ]; then
-        sed -i 's/^#\./\./' "$NETATALK_CONFDIR/extmap.conf"
-    else
-        sed -i '' 's/^#\./\./' "$NETATALK_CONFDIR/extmap.conf"
-    fi
+    # The -i flag is not portable: GNU/NetBSD sed take an optional attached
+    # suffix, while FreeBSD/DragonFly/macOS sed require a separate suffix arg
+    # ('' = no backup). Use a temp file + mv instead, which works everywhere.
+    extmap_file="$NETATALK_CONFDIR/extmap.conf"
+    sed 's/^#\./\./' "$extmap_file" > "$extmap_file.tmp" \
+        && mv "$extmap_file.tmp" "$extmap_file"
 fi
 
 # --------------------------------------------------------------------------
