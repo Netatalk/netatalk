@@ -95,12 +95,15 @@ hash_afp_password() {
 # verifies (BSD/Linux compatibility), so PAM's pam_unix_auth accepts it.
 set_svr4_password() {
     svr4_user=$1
-    svr4_hash=$(openssl passwd -1 "$2")
+    svr4_pw=$2
+    svr4_hash=$(openssl passwd -1 "$svr4_pw")
     svr4_tmp=$(mktemp)
     awk -F: -v u="$svr4_user" -v h="$svr4_hash" \
         'BEGIN { OFS = ":" } $1 == u { $2 = h } { print }' \
         /etc/shadow > "$svr4_tmp" && cat "$svr4_tmp" > /etc/shadow
+    svr4_rc=$?
     rm -f "$svr4_tmp"
+    return $svr4_rc
 }
 
 # --------------------------------------------------------------------------
