@@ -140,8 +140,12 @@ int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino,
     }
 
     memcpy(ade, &tmp, sizeof(tmp));
+    /* PRIVDEV/PRIVINO are fixed 8-byte on-disk fields; widen the native dev_t/
+     * ino_t (dev_t is 4 bytes on DragonflyBSD) so the stored width never depends
+     * on sizeof(). Byte-identical on 8-byte platforms; only ever compared against
+     * a same-host stat(), so native byte order is fine. */
     dev_len = ad_getentrylen(adp, ADEID_PRIVDEV);
-    ad_setentrylen(adp, ADEID_PRIVDEV, sizeof(dev_t));
+    ad_setentrylen(adp, ADEID_PRIVDEV, ADEDLEN_PRIVDEV);
     ade = ad_entry(adp, ADEID_PRIVDEV);
 
     if (ade == NULL) {
@@ -151,13 +155,14 @@ int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino,
     }
 
     if (adp->ad_options & ADVOL_NODEV) {
-        memset(ade, 0, sizeof(dev_t));
+        memset(ade, 0, ADEDLEN_PRIVDEV);
     } else {
-        memcpy(ade, &dev, sizeof(dev_t));
+        uint64_t dev64 = (uint64_t)dev;
+        memcpy(ade, &dev64, ADEDLEN_PRIVDEV);
     }
 
     ino_len = ad_getentrylen(adp, ADEID_PRIVINO);
-    ad_setentrylen(adp, ADEID_PRIVINO, sizeof(ino_t));
+    ad_setentrylen(adp, ADEID_PRIVINO, ADEDLEN_PRIVINO);
     ade = ad_entry(adp, ADEID_PRIVINO);
 
     if (ade == NULL) {
@@ -166,7 +171,10 @@ int ad_setid(struct adouble *adp, const dev_t dev, const ino_t ino,
         EC_FAIL;
     }
 
-    memcpy(ade, &ino, sizeof(ino_t));
+    {
+        uint64_t ino64 = (uint64_t)ino;
+        memcpy(ade, &ino64, ADEDLEN_PRIVINO);
+    }
 
     if (adp->ad_vers != AD_VERSION_EA) {
         did_len = ad_getentrylen(adp, ADEID_DID);
@@ -234,55 +242,66 @@ uint32_t ad_getid(struct adouble *adp, const dev_t st_dev, const ino_t st_ino,
     ino_t  ino;
     cnid_t a_did = 0;
 
-    if (adp) {
-        if (sizeof(dev_t) == ad_getentrylen(adp, ADEID_PRIVDEV)) {
-            char *ade = NULL;
-            ade = ad_entry(adp, ADEID_PRIVDEV);
+    /* gate on the fixed 8-byte stored width, not sizeof(dev_t) (4 on
+     * DragonflyBSD); read back into a uint64_t and narrow to native. */
+    if (adp && ad_getentrylen(adp, ADEID_PRIVDEV) == ADEDLEN_PRIVDEV) {
+        char *ade = NULL;
+        uint64_t dev64, ino64;
+        ade = ad_entry(adp, ADEID_PRIVDEV);
+
+        if (ade == NULL) {
+            LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_PRIVDEV\n");
+            return CNID_INVALID;
+        }
+
+        memcpy(&dev64, ade, ADEDLEN_PRIVDEV);
+        dev = (dev_t)dev64;
+
+        /* gate the inode read on its fixed 8-byte stored width too, so a
+         * corrupt/short ADEID_PRIVINO entry can't be read past its end. */
+        if (ad_getentrylen(adp, ADEID_PRIVINO) != ADEDLEN_PRIVINO) {
+            LOG(log_warning, logtype_ad, "ad_getid: unexpected ADEID_PRIVINO length\n");
+            return CNID_INVALID;
+        }
+
+        ade = ad_entry(adp, ADEID_PRIVINO);
+
+        if (ade == NULL) {
+            LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_PRIVINO\n");
+            return CNID_INVALID;
+        }
+
+        memcpy(&ino64, ade, ADEDLEN_PRIVINO);
+        ino = (ino_t)ino64;
+
+        if (adp->ad_vers != AD_VERSION_EA) {
+            /* ADEID_DID is not stored for AD_VERSION_EA */
+            ade = ad_entry(adp, ADEID_DID);
 
             if (ade == NULL) {
-                LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_PRIVDEV\n");
+                LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_DID\n");
                 return CNID_INVALID;
             }
 
-            memcpy(&dev, ade, sizeof(dev_t));
-            ade = ad_entry(adp, ADEID_PRIVINO);
+            memcpy(&a_did, ade, sizeof(cnid_t));
+        }
+
+        if (((adp->ad_options & ADVOL_NODEV) || (dev == st_dev))
+                && ino == st_ino
+                && (!did || a_did == 0 || a_did == did)) {
+            ade = ad_entry(adp, ADEID_PRIVID);
 
             if (ade == NULL) {
-                LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_PRIVINO\n");
+                LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_PRIVID\n");
                 return CNID_INVALID;
             }
 
-            memcpy(&ino, ade, sizeof(ino_t));
+            memcpy(&aint, ade, sizeof(aint));
 
-            if (adp->ad_vers != AD_VERSION_EA) {
-                /* ADEID_DID is not stored for AD_VERSION_EA */
-                ade = ad_entry(adp, ADEID_DID);
-
-                if (ade == NULL) {
-                    LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_DID\n");
-                    return CNID_INVALID;
-                }
-
-                memcpy(&a_did, ade, sizeof(cnid_t));
-            }
-
-            if (((adp->ad_options & ADVOL_NODEV) || (dev == st_dev))
-                    && ino == st_ino
-                    && (!did || a_did == 0 || a_did == did)) {
-                ade = ad_entry(adp, ADEID_PRIVID);
-
-                if (ade == NULL) {
-                    LOG(log_warning, logtype_ad, "ad_getid: failed to retrieve ADEID_PRIVID\n");
-                    return CNID_INVALID;
-                }
-
-                memcpy(&aint, ade, sizeof(aint));
-
-                if (adp->ad_vers == AD_VERSION2) {
-                    return aint;
-                } else {
-                    return ntohl(aint);
-                }
+            if (adp->ad_vers == AD_VERSION2) {
+                return aint;
+            } else {
+                return ntohl(aint);
             }
         }
     }

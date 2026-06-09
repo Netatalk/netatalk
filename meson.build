@@ -2441,6 +2441,10 @@ if host_os == 'freebsd'
     cdata.set('BSD4_4', 1)
     cdata.set('FREEBSD', 1)
     cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
+elif host_os == 'dragonfly'
+    # FreeBSD-derived: open(O_NOFOLLOW) on a symlink fails with EMLINK, not ELOOP.
+    cdata.set('BSD4_4', 1)
+    cdata.set('OPEN_NOFOLLOW_ERRNO', 'EMLINK')
 elif host_os == 'linux'
     use_glibc_at_header = cc.has_header('netatalk/at.h')
     if cc.compiles(
