@@ -135,8 +135,9 @@ The tool supports comprehensive performance analysis including:
 
 **-z** *sizes*
 : File size sweep mode – comma-separated list of sizes in MB
-: Example: `-z 0.004,0.008,0.016,0.032,0.064,0.128,0.256,0.512,1,2,4,8,16,32,64,128,256,512`
-: Minimum: 0.004 MB (4 KB), Maximum: 1024 MB
+: Example: `-z 0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.25,0.5,1,2,4,8,16,32,64,128,256,512`
+: Minimum: 0.0009765625 MB (1 KiB), Maximum: 1024 MB
+: Use exact KiB fractions (n/1024) for power-of-two file sizes, e.g. 4 KiB = 0.00390625
 : If neither `-d` nor `-z` is specified, uses default 18-size sweep: 4KB,8KB,16KB,32KB,64KB,128KB,256KB,512KB,1MB,2MB,4MB,8MB,16MB,32MB,64MB,128MB,256MB,512MB
 
 # Configuration

@@ -451,7 +451,7 @@ static void print_test_summary(const char *test_name,
         /* CSV header for size sweep results */
         fprintf(stdout, "\n# File Size Performance Summary for %s\n", test_name);
         fprintf(stdout,
-                "file_size_mb,mean_throughput_mbs,median_throughput_mbs,min_throughput_mbs,max_throughput_mbs,stddev_ms,mean_time_ms\n");
+                "file_size_bytes,file_size_mb,mean_throughput_mbs,median_throughput_mbs,min_throughput_mbs,max_throughput_mbs,stddev_ms,mean_time_ms\n");
 
         for (int i = 0; i < result_count; i++) {
             off_t file_size_bytes = (off_t)(results[i].file_size_mb * MEGABYTE);
@@ -462,7 +462,8 @@ static void print_test_summary(const char *test_name,
             double min_throughput_mbs = (results[i].max_time_us > 0) ?
                                         ((double)file_size_bytes * 1000000.0) / (MEGABYTE * (double)
                                             results[i].max_time_us) : 0.0;
-            fprintf(stdout, "%.3f,%.2f,%.2f,%.2f,%.2f,%.1f,%.1f\n",
+            fprintf(stdout, "%lld,%.3f,%.2f,%.2f,%.2f,%.2f,%.1f,%.1f\n",
+                    (long long)file_size_bytes,
                     results[i].file_size_mb,
                     results[i].mean_throughput_mbs,
                     results[i].median_throughput_mbs,
@@ -1829,7 +1830,7 @@ void usage(char *av0)
             "\t-t\tdelay in seconds between test iterations (default: 0)\n");
     fprintf(stdout, "\t-d\tfile size (Mbytes, default 64)\n");
     fprintf(stdout,
-            "\t-z\tfile size sweep, comma-separated list in MB (e.g., '0.004,1,2,4,8,16') (max 1024)\n");
+            "\t-z\tfile size sweep, comma-separated list in MB (e.g., '0.00390625,1,2,4,8,16') (max 1024)\n");
     fprintf(stdout, "\t-q\tpacket size (Kbytes, default server quantum)\n");
     fprintf(stdout,
             "\t-r\tnumber of outstanding requests for pipelining (default 1)\n");
@@ -2030,9 +2031,10 @@ int main(int ac, char **av)
             while (token && size_sweep_count < MAX_SIZE_SWEEP) {
                 double size_mb = atof(token);
 
-                if (size_mb < 0.004 || size_mb > 1024) {
+                if (size_mb < 0.0009765625 || size_mb > 1024) {
                     fprintf(stderr,
-                            "Invalid size in sweep: %s (must be between 0.004 and 1024 MB)\n", token);
+                            "Invalid size in sweep: %s (must be between 0.0009765625 and 1024 MB)\n",
+                            token);
                     exit(1);
                 }
 
