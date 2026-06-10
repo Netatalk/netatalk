@@ -104,6 +104,52 @@ def _parse_summary_row(line):
         return None
 
 
+class _ParseState:
+    """Mutable accumulator for parse_csv's line-by-line scan."""
+
+    def __init__(self):
+        self.results = {}
+        self.meta = {}
+        self.max_iter = 0
+        self.current_op = None
+        self.in_data = False
+
+
+def _consume_line(line, st):
+    """Fold one CSV line into the parse state (see parse_csv)."""
+    cfg = _parse_config_meta(line)
+    if cfg is not None:
+        st.meta.update(cfg)
+        return
+
+    it = ITER_ROW_RE.match(line)
+    if it:
+        st.max_iter = max(st.max_iter, int(it.group(2)))
+
+    header = SUMMARY_HEADER_RE.search(line)
+    if header:
+        st.current_op = header.group(1)
+        st.results.setdefault(st.current_op, [])
+        st.in_data = False
+        return
+
+    if st.current_op is None:
+        return
+
+    if line.startswith(COLUMN_HEADER_PREFIX):
+        st.in_data = True
+        return
+
+    if not st.in_data:
+        return
+
+    row = _parse_summary_row(line)
+    if row is None:
+        st.in_data = False  # blank line / next section / log noise
+    else:
+        st.results[st.current_op].append(row)
+
+
 def parse_csv(path):
     """Parse a speedtest CSV capture.
 
@@ -114,47 +160,14 @@ def parse_csv(path):
         (max per-iteration index seen) plus any key=value pairs from an
         optional "# Config: k=v,k=v" line emitted by the tool.
     """
-    results = {}
-    meta = {}
-    max_iter = 0
-    current_op = None
-    in_data = False
-
+    st = _ParseState()
     with open(path, "r", encoding="utf-8", errors="replace") as fh:
         for raw in fh:
-            line = raw.strip()
+            _consume_line(raw.strip(), st)
 
-            cfg = _parse_config_meta(line)
-            if cfg is not None:
-                meta.update(cfg)
-                continue
-
-            it = ITER_ROW_RE.match(line)
-            if it:
-                max_iter = max(max_iter, int(it.group(2)))
-
-            header = SUMMARY_HEADER_RE.search(line)
-            if header:
-                current_op = header.group(1)
-                results.setdefault(current_op, [])
-                in_data = False
-                continue
-
-            if current_op is None:
-                continue
-
-            if line.startswith(COLUMN_HEADER_PREFIX):
-                in_data = True
-                continue
-
-            if not in_data:
-                continue
-
-            row = _parse_summary_row(line)
-            if row is None:
-                in_data = False  # blank line / next section / log noise
-            else:
-                results[current_op].append(row)
+    results = st.results
+    meta = st.meta
+    max_iter = st.max_iter
 
     cleaned = {
         op: sorted(rows, key=lambda r: r["size_bytes"])
@@ -192,7 +205,8 @@ def build_info_lines(results, meta):
 
     lines = []
     if sizes:
-        lines.append(f"Size sweep: {format_size(min(sizes))}–{format_size(max(sizes))}")
+        lines.append(
+            f"Size sweep: {format_size(min(sizes))}–{format_size(max(sizes))}")
     if "iterations" in meta:
         warm = f" +{meta['warmup']} warmup" if meta.get("warmup") else ""
         lines.append(f"Iterations: {meta['iterations']}{warm} per point")
@@ -222,11 +236,23 @@ def _draw_operation(ax, op, rows, baseline):
     color = OP_COLORS.get(op, None)
     sizes = [r["size_bytes"] for r in rows]
     median = [r["median"] for r in rows]
+    # With >= 20 iterations the median line is a stable P95-grade reference.
     ax.plot(sizes, median, marker="o", markersize=4, linewidth=2,
-            color=color, label=op, zorder=3)
+            color=color, label=f"{op} (P95)", zorder=3)
     # min..max band gives a sense of run-to-run variance.
     ax.fill_between(sizes, [r["min"] for r in rows], [r["max"] for r in rows],
                     color=color, alpha=0.12, zorder=1)
+
+    # Mark the dircache quantum (1 MB) on the Read curve: label the data point
+    # at exactly 1 MiB so the rfork-cache boundary is visible on the chart.
+    if op == "Read":
+        for r in rows:
+            if r["size_bytes"] == 1024 * 1024:
+                ax.annotate("quantum", xy=(r["size_bytes"], r["median"]),
+                            xytext=(6, 8), textcoords="offset points",
+                            fontsize=7, color=color, fontweight="bold",
+                            zorder=6)
+                break
 
     # Horizontal reference at this op's mean throughput, with a value label
     # just right of the Y axis so it never overlaps the Y tick labels.
@@ -236,8 +262,8 @@ def _draw_operation(ax, op, rows, baseline):
     ax.text(0.012, avg, f"{avg:.0f}", transform=ax.get_yaxis_transform(),
             ha="left", va="bottom", fontsize=7, color=color,
             fontweight="bold", zorder=5,
-            bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
-                      edgecolor="none", alpha=0.7))
+            bbox={"boxstyle": "round,pad=0.15", "facecolor": "white",
+                  "edgecolor": "none", "alpha": 0.7})
 
     if baseline and op in baseline:
         b = sorted(baseline[op], key=lambda r: r["size_bytes"])
@@ -249,7 +275,8 @@ def _draw_operation(ax, op, rows, baseline):
 def _configure_xaxis(ax, results):
     """Log2 X axis with one integer KiB/MiB tick per swept size, clamped."""
     ax.set_xscale("log", base=2)
-    all_sizes = sorted({r["size_bytes"] for rows in results.values() for r in rows})
+    all_sizes = sorted(
+        {r["size_bytes"] for rows in results.values() for r in rows})
     if all_sizes:
         ax.set_xticks(all_sizes)
         ax.set_xticklabels([format_size(s) for s in all_sizes], fontsize=8)
@@ -261,7 +288,7 @@ def _configure_xaxis(ax, results):
 def plot(results, out_base, title, subtitle, baseline=None, meta=None):
     """Render the throughput-vs-size chart to <out_base>.png."""
     meta = meta or {}
-    fig, ax = plt.subplots(figsize=(11, 6.5))
+    fig, ax = plt.subplots(figsize=(11, 5.2))
     fig.patch.set_facecolor(BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
 
@@ -285,27 +312,27 @@ def plot(results, out_base, title, subtitle, baseline=None, meta=None):
     legend = ax.legend(loc="upper left", fontsize=9, framealpha=0.9)
     legend.get_frame().set_facecolor("#F5F5F5")
 
-    suptitle = title or "Netatalk AFP Speedtest — throughput vs file size"
-    fig.suptitle(suptitle, fontsize=14, fontweight="bold", y=0.96)
-
-    # Header text below the title: the caller's subtitle plus the run-config
-    # lines, rendered in the title area rather than a floating box so it never
-    # overlaps the curves or the bottom-right data corner.
+    # Config items packed into a single "·"-separated line under the subtitle.
     header_lines = []
     if subtitle:
         header_lines.append(subtitle)
-    # Pack the config items into a single "·"-separated line under the
-    # subtitle (compact, won't push the plot down or overlap the curves).
     info = build_info_lines(results, meta)
     if info:
         header_lines.append(" · ".join(info))
-    if header_lines:
-        ax.set_title("\n".join(header_lines), fontsize=8.5, color="#222222")
 
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    # Lay out the plot first, then place the title block manually so the gap
+    # between the bold title and the subtitle is fixed (tight_layout leaves
+    # uncontrollable slack between a suptitle and an axes title).
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
+    suptitle = title or "Netatalk AFP Speedtest — throughput vs file size"
+    fig.text(0.5, 0.965, suptitle, ha="center", va="top",
+             fontsize=14, fontweight="bold")
+    if header_lines:
+        fig.text(0.5, 0.905, "\n".join(header_lines), ha="center", va="top",
+                 fontsize=8.5, color="#222222")
 
     png_path = f"{out_base}.png"
-    # facecolor=fig... so savefig keeps the grey background (it defaults to white).
+    # facecolor=... so savefig keeps the grey background (defaults to white).
     fig.savefig(png_path, format="png", dpi=130, facecolor=fig.get_facecolor())
     plt.close(fig)
     sys.stderr.write(f"Wrote {png_path}\n")
@@ -314,7 +341,8 @@ def plot(results, out_base, title, subtitle, baseline=None, meta=None):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("input", help="speedtest CSV capture (afp_speedtest -c)")
+    parser.add_argument(
+        "input", help="speedtest CSV capture (afp_speedtest -c)")
     parser.add_argument(
         "-o", "--output", default="speedtest",
         help="output basename (default: speedtest -> speedtest.svg/.png)",

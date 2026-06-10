@@ -360,7 +360,7 @@ static void results_print_headers(bool is_csv)
     if (io_monitoring_enabled) {
         if (is_csv) {
             fprintf(stdout,
-                    "Test,Time_ms,Time±,AFPD_R,AFPD_R±,AFPD_W,AFPD_W±,CNID_R,CNID_R±,CNID_W,CNID_W±,MB/s\n");
+                    "Test,Time_ms,Time±,Min_ms,Max_ms,Median_ms,AFPD_R,AFPD_R±,AFPD_W,AFPD_W±,CNID_R,CNID_R±,CNID_W,CNID_W±,MB/s\n");
         } else {
             fprintf(stdout, "%-66s %8s %6s %6s %7s %6s %7s %6s %7s %6s %7s %6s\n",
                     "Test", " Time_ms", " Time±", "AFPD_R", "AFPD_R±", "AFPD_W", "AFPD_W±",
@@ -373,7 +373,7 @@ static void results_print_headers(bool is_csv)
         }
     } else {
         if (is_csv) {
-            fprintf(stdout, "Test,Time_ms,Time±,MB/s\n");
+            fprintf(stdout, "Test,Time_ms,Time±,Min_ms,Max_ms,Median_ms,MB/s\n");
         } else {
             fprintf(stdout, "%-66s %7s %6s %6s\n",
                     "Test", "Time_ms", "Time±", "MB/s");
@@ -400,6 +400,50 @@ static void results_print_headers(bool is_csv)
 #endif
 }
 
+/*! qsort comparator for uint64_t */
+static int cmp_uint64(const void *a, const void *b)
+{
+    uint64_t x = *(const uint64_t *)a;
+    uint64_t y = *(const uint64_t *)b;
+    return (x > y) - (x < y);
+}
+
+/*! Compute min, max and median of a test's per-iteration MEASURE_TIME_MS
+ * samples (>0 values only). Outputs 0 when no valid samples exist. */
+static void results_time_spread(int32_t test, uint64_t *min_ms,
+                                uint64_t *max_ms, uint64_t *median_ms)
+{
+    enum { MAX_SAMPLES = 256 };
+    uint64_t samples[MAX_SAMPLES];
+    int32_t n = 0;
+    /* Iterations_save is a uint8_t (<= 255), so it always fits in samples[],
+     * but clamp explicitly so the bound is obvious and future-proof. */
+    int32_t count = Iterations_save;
+
+    if (count > MAX_SAMPLES) {
+        count = MAX_SAMPLES;
+    }
+
+    for (int32_t i = 0; i < count; i++) {
+        uint64_t v = (*results)[i][test][MEASURE_TIME_MS];
+
+        if (v > 0) {
+            samples[n++] = v;
+        }
+    }
+
+    if (n == 0) {
+        *min_ms = *max_ms = *median_ms = 0;
+        return;
+    }
+
+    qsort(samples, n, sizeof(samples[0]), cmp_uint64);
+    *min_ms = samples[0];
+    *max_ms = samples[n - 1];
+    *median_ms = (n % 2) ? samples[n / 2]
+                 : (samples[n / 2 - 1] + samples[n / 2]) / 2;
+}
+
 /*! Helper function to print data row */
 static void results_print_row(int32_t test, bool is_csv,
                               uint64_t averages[NUMTESTS][NUM_MEASUREMENTS],
@@ -413,15 +457,19 @@ static void results_print_row(int32_t test, bool is_csv,
         thrput = (100 * 1000) / averages[test][MEASURE_TIME_MS];
     }
 
+    /* min/max/median of the per-iteration time samples (CSV only) */
+    uint64_t time_min = 0, time_max = 0, time_median = 0;
+    results_time_spread(test, &time_min, &time_max, &time_median);
 #ifdef __linux__
 
     if (io_monitoring_enabled) {
         if (is_csv) {
             fprintf(stdout,
-                    "%s,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%"
-                    PRIu64 ",%.1f,%" PRIu64 "\n",
+                    "%s,%" PRIu64 ",%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%.1f,%"
+                    PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 ",%.1f,%" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
+                    time_min, time_max, time_median,
                     averages[test][MEASURE_AFPD_READ_IO], std_devs[test][MEASURE_AFPD_READ_IO],
                     averages[test][MEASURE_AFPD_WRITE_IO], std_devs[test][MEASURE_AFPD_WRITE_IO],
                     averages[test][MEASURE_CNID_READ_IO], std_devs[test][MEASURE_CNID_READ_IO],
@@ -441,9 +489,11 @@ static void results_print_row(int32_t test, bool is_csv,
         }
     } else {
         if (is_csv) {
-            fprintf(stdout, "%s,%" PRIu64 ",%.1f,%" PRIu64 "\n",
+            fprintf(stdout,
+                    "%s,%" PRIu64 ",%.1f,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 "\n",
                     test_names[test],
                     averages[test][MEASURE_TIME_MS], std_devs[test][MEASURE_TIME_MS],
+                    time_min, time_max, time_median,
                     thrput);
         } else {
             fprintf(stdout, "%-66s %7" PRIu64 " %6.1f %6" PRIu64 "\n",
