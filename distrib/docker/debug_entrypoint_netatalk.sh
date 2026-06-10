@@ -326,7 +326,7 @@ else
             TEST_EXIT_CODE=$?
             ;;
         speed)
-            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 5 -f Read,Write,Copy,ServerCopy
+            afp_speedtest $TEST_FLAGS -"$AFP_VERSION" -h "$AFP_HOST" -p "$AFP_PORT" -u "$AFP_USER" -w "$AFP_PASS" -s "$SHARE_NAME" -n 10 -f Read,Write,Copy,ServerCopy
             TEST_EXIT_CODE=$?
             ;;
         *)

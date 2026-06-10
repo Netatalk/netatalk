@@ -195,22 +195,14 @@ jobs:
           tags: ${{ steps.metadata.outputs.tags }}
 
   flamegraph-spectest:
-    name: Flamegraph (spectest AFP 3.4)
+    name: Spectest (AFP 3.4) - FlameGraph
     needs: build-container-debug
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
     permissions:
       contents: write
-      pages: write
-      id-token: write
       pull-requests: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Run spectest with flamegraph profiling
         run: |
@@ -295,68 +287,35 @@ jobs:
             flamegraph.svg
             flamegraph.png
           retention-days: 30
-      - name: Checkout gh-pages branch for existing flamegraphs
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: gh-pages
-          path: gh-pages
-          persist-credentials: false
-        continue-on-error: true
-      - name: Build cumulative Pages site
-        run: |
-          COMMIT_SHA="${{ github.event.pull_request.head.sha }}"
-          mkdir -p _site/flamegraphs
-          # Copy existing flamegraphs from gh-pages branch (if any)
-          if [ -d gh-pages/flamegraphs ]; then
-            cp gh-pages/flamegraphs/* _site/flamegraphs/ 2>/dev/null || true
-            echo "Existing flamegraphs: $(ls _site/flamegraphs/ | wc -l) files"
-          fi
-          # Prune flamegraphs older than 6 months to prevent unbounded growth
-          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s 2>/dev/null || echo 0)
-          if [ "$CUTOFF" -gt 0 ]; then
-            for f in _site/flamegraphs/*; do
-              [ -f "$f" ] || continue
-              FILE_AGE=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
-              if [ "$FILE_AGE" -lt "$CUTOFF" ]; then
-                echo "Pruning old flamegraph: $(basename "$f")"
-                rm -f "$f"
-              fi
-            done
-          fi
-          # Add new flamegraphs
-          cp flamegraph.svg "_site/flamegraphs/flamegraph-${COMMIT_SHA}.svg"
-          cp flamegraph.png "_site/flamegraphs/flamegraph-${COMMIT_SHA}.png"
-          echo "Total flamegraphs: $(ls _site/flamegraphs/ | wc -l) files"
-      - name: Persist flamegraphs to gh-pages branch
+      - name: Publish flamegraph to gh-pages branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          cd gh-pages 2>/dev/null || {
-            mkdir -p gh-pages && cd gh-pages
-            git init
-            git checkout --orphan gh-pages
-          }
-          mkdir -p flamegraphs
-          cp ../_site/flamegraphs/* flamegraphs/ 2>/dev/null || true
+          # Full clone (not --depth 1) so the prune below can read file age
+          # from git commit timestamps.
+          git clone --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
+          cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" 2>/dev/null || \
-            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git"
-          git add flamegraphs/
-          git diff --cached --quiet && echo "No new flamegraphs to commit" && exit 0
-          git commit -m "flamegraphs: add flamegraph for ${COMMIT_SHA}"
+          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
+          for f in speedtest/pr-*.png spectest/pr-*.svg spectest/pr-*.png; do
+            [ -f "$f" ] || continue
+            TS=$(git log -1 --format=%ct -- "$f")
+            if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
+              echo "Pruning stale chart: $f"
+              git rm -q "$f"
+            fi
+          done
+          mkdir -p spectest
+          cp ../flamegraph.svg "spectest/pr-${PR_NUMBER}.svg"
+          cp ../flamegraph.png "spectest/pr-${PR_NUMBER}.png"
+          git add "spectest/pr-${PR_NUMBER}.svg" "spectest/pr-${PR_NUMBER}.png"
+          git diff --cached --quiet && echo "No flamegraph change to commit" && exit 0
+          git commit -m "flamegraph: chart for PR #${PR_NUMBER}"
           git push origin gh-pages
-      - name: Setup Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: _site
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
       - name: Find existing flamegraph comment
         id: find-comment
         uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
@@ -379,7 +338,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             <!-- flamegraph-spectest -->
-            ## 🔥 Spectest (AFP 3.4) - Flamegraph
+            ## 🔥 Spectest (AFP 3.4) - FlameGraph
 
             ## **Netatalk Code-time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}**
 
@@ -387,15 +346,11 @@ jobs:
 
             **Commit:** `${{ github.event.pull_request.head.sha }}`
             **Profiling:** On-CPU sampling @ 907 Hz, DWARF call-graph, x86_64
-            **Build:** `debugoptimized` (-O2 -g -fno-omit-frame-pointer)
-            **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }},
-            **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
+            **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
 
-            🔥 **[Open interactive Flamegraph (SVG)](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.svg)**
+            🔥 Click the preview to open the interactive flamegraph (zoom + search).
 
-            ![Flamegraph preview](https://netatalk.github.io/netatalk/flamegraphs/flamegraph-${{ github.event.pull_request.head.sha }}.png)
-
-            📥 **[Download from artifacts →](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+            [![Flamegraph preview](https://netatalk.github.io/netatalk/spectest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/spectest/pr-${{ github.event.pull_request.number }}.svg)
 
             <details>
             <summary>🔝 Top 10 leaf functions </summary>
@@ -1156,34 +1111,21 @@ jobs:
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   perfgraph-speedtest:
-    name: Speedtest (AFP 3.4) - Perfgraph
+    name: Speedtest (AFP 3.4) - PerfGraph
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-    # Share the "pages" concurrency group with flamegraph-spectest so the two
-    # jobs that deploy to GitHub Pages / push to gh-pages never race.
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
     permissions:
       contents: write
-      pages: write
-      id-token: write
       pull-requests: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Run Netatalk speedtest (CSV output)
         run: |
-          # afp_speedtest's -c flag emits machine-readable CSV; it is reached
-          # via $TEST_FLAGS, which the entrypoint prepends to the command line
-          # (distrib/docker/entrypoint_netatalk.sh). -z sets the file-size
-          # sweep so CI runtime stays bounded. The container's setup log lines
-          # land on the same stdout but are ignored by the CSV parser.
+          # -c (CSV) and -z (size sweep) are passed via $TEST_FLAGS, which the
+          # entrypoint prepends to afp_speedtest.
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
@@ -1196,6 +1138,7 @@ jobs:
             -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
             -e AFP_DIRCACHE_RFORK_BUDGET="1048576000" \
             -e AFP_DIRCACHE_RFORK_MAXSIZE="1048576" \
+            -e AFP_TEST_ITERATIONS="10" \
             -e TEST_FLAGS="-c -z 0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.25,0.5,1,2,4,8,16,32,64,128,256" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }} \
             > speedtest.csv 2> speedtest.log
@@ -1213,13 +1156,11 @@ jobs:
             exit 1
           fi
           echo "CSV lines: $(wc -l < speedtest.csv)"
-      - name: Render throughput chart (SVG + PNG)
+      - name: Render throughput chart (PNG)
         run: |
-          python3 -m pip install --quiet --user matplotlib
+          python3 -m pip install --quiet --user 'matplotlib==3.10.9'
           COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
           SHORT_SHA="$(echo "$COMMIT_SHA" | cut -c1-7)"
-          # dircache_size=65536 is the env_setup_netatalk.sh default written
-          # when AFP_DIRCACHESIZE is unset; quantum isn't carried in the CSV.
           python3 contrib/scripts/plot_speedtest.py speedtest.csv \
             -o speedtest \
             --title "Netatalk AFP Speedtest — throughput vs file size" \
@@ -1230,17 +1171,16 @@ jobs:
             --meta dircache_size=65536 \
             --meta dircache_validation_freq=100 \
             --meta warmup=1
-          echo "SVG size: $(du -h speedtest.svg | cut -f1), PNG size: $(du -h speedtest.png | cut -f1)"
+          echo "PNG size: $(du -h speedtest.png | cut -f1)"
       - name: Extract per-operation peak throughput for PR comment
         id: speedtest-summary
         run: |
-          # Peak median throughput per op = max of the median column (col 3) in
-          # each "# File Size Performance Summary for <Op>" block.
+          # Peak per op = max of the median column ($4) in each summary block.
           PEAKS=$(awk -F, '
             /# File Size Performance Summary for/ { op=$NF; sub(/.* for[[:space:]]*/, "", op); next }
-            /^file_size_mb,/ { next }
-            op != "" && NF >= 3 && $3+0 == $3 {
-              if ($3+0 > peak[op]) peak[op]=$3+0
+            /^file_size_bytes,/ { next }
+            op != "" && NF >= 4 && $4+0 == $4 {
+              if ($4+0 > peak[op]) peak[op]=$4+0
               next
             }
             { op="" }
@@ -1256,78 +1196,40 @@ jobs:
             echo "$PEAKS"
             echo "EOFPEAKS"
           } >> "$GITHUB_OUTPUT"
-      - name: Upload speedtest artifacts
+      - name: Upload speedtest artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: perfgraph-speedtest
-          path: |
-            speedtest.csv
-            speedtest.svg
-            speedtest.png
+          path: speedtest.png
           retention-days: 30
-      - name: Checkout gh-pages branch for existing speedtests
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          ref: gh-pages
-          path: gh-pages
-          persist-credentials: false
-        continue-on-error: true
-      - name: Build cumulative Pages site
-        run: |
-          COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          mkdir -p _site/speedtests
-          # Copy existing speedtests from gh-pages branch (if any)
-          if [ -d gh-pages/speedtests ]; then
-            cp gh-pages/speedtests/* _site/speedtests/ 2>/dev/null || true
-            echo "Existing speedtests: $(ls _site/speedtests/ | wc -l) files"
-          fi
-          # Prune speedtests older than 1 month to prevent unbounded growth
-          CUTOFF=$(date -d '1 month ago' +%s 2>/dev/null || date -v-1m +%s 2>/dev/null || echo 0)
-          if [ "$CUTOFF" -gt 0 ]; then
-            for f in _site/speedtests/*; do
-              [ -f "$f" ] || continue
-              FILE_AGE=$(stat -c %Y "$f" 2>/dev/null || stat -f %m "$f" 2>/dev/null || echo 0)
-              if [ "$FILE_AGE" -lt "$CUTOFF" ]; then
-                echo "Pruning old speedtest: $(basename "$f")"
-                rm -f "$f"
-              fi
-            done
-          fi
-          # Add new speedtest snapshot
-          cp speedtest.svg "_site/speedtests/speedtest-${COMMIT_SHA}.svg"
-          cp speedtest.png "_site/speedtests/speedtest-${COMMIT_SHA}.png"
-          cp speedtest.csv "_site/speedtests/speedtest-${COMMIT_SHA}.csv"
-          echo "Total speedtests: $(ls _site/speedtests/ | wc -l) files"
-      - name: Persist speedtests to gh-pages branch
+      - name: Publish chart to gh-pages branch
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
-          COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          cd gh-pages 2>/dev/null || {
-            mkdir -p gh-pages && cd gh-pages
-            git init
-            git checkout --orphan gh-pages
-          }
-          mkdir -p speedtests
-          cp ../_site/speedtests/* speedtests/ 2>/dev/null || true
+          # Full clone (not --depth 1) so the prune below can read file age
+          # from git commit timestamps.
+          git clone --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
+          cd gh-pages
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" 2>/dev/null || \
-            git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git"
-          git add speedtests/
-          git diff --cached --quiet && echo "No new speedtests to commit" && exit 0
-          git commit -m "speedtests: add speedtest chart for ${COMMIT_SHA}"
+          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
+          for f in speedtest/pr-*.png spectest/pr-*.svg spectest/pr-*.png; do
+            [ -f "$f" ] || continue
+            TS=$(git log -1 --format=%ct -- "$f")
+            if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
+              echo "Pruning stale chart: $f"
+              git rm -q "$f"
+            fi
+          done
+          mkdir -p speedtest
+          cp ../speedtest.png "speedtest/pr-${PR_NUMBER}.png"
+          git add "speedtest/pr-${PR_NUMBER}.png"
+          git diff --cached --quiet && echo "No chart change to commit" && exit 0
+          git commit -m "speedtest: chart for PR #${PR_NUMBER}"
           git push origin gh-pages
-      - name: Setup Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
-        with:
-          path: _site
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128 # v5.0.0
       - name: Find existing speedtest comment
         if: ${{ github.event_name == 'pull_request' }}
         id: find-comment
@@ -1352,17 +1254,11 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
             <!-- perfgraph-speedtest -->
-            ## 📈 Speedtest (AFP 3.4) - Perfgraph
+            ## 📈 Speedtest (AFP 3.4) - PerfGraph
 
             **Commit:** `${{ github.event.pull_request.head.sha }}`
-            **Config:** AFP 3.4 · ARC dircache · 5 iterations + 1 warmup · file-size sweep 4 KB–256 MB
-            **Metric:** median throughput (MB/s), shaded band = min–max across iterations
 
-            ![Speedtest throughput](https://netatalk.github.io/netatalk/speedtests/speedtest-${{ github.event.pull_request.head.sha }}.png)
-
-            📈 **[Open chart (SVG)](https://netatalk.github.io/netatalk/speedtests/speedtest-${{ github.event.pull_request.head.sha }}.svg)** · 📄 **[Raw CSV](https://netatalk.github.io/netatalk/speedtests/speedtest-${{ github.event.pull_request.head.sha }}.csv)**
-
-            📥 **[Download from artifacts →](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})**
+            [![Speedtest throughput](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)
 
             <details>
             <summary>🔝 Peak throughput per operation</summary>
