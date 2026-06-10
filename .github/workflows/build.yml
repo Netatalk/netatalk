@@ -510,6 +510,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -638,6 +639,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -772,6 +774,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -905,6 +908,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -975,7 +979,7 @@ jobs:
               libtalloc \
               mariadb-client \
               meson \
-              openldap-client \
+              openldap-client-2.6.13v0 \
               openpam \
               sqlite3 \
               xapian-core
@@ -1032,6 +1036,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -1165,6 +1170,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -1305,6 +1311,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"
@@ -1447,6 +1454,7 @@ jobs:
           export AFP_PORT=548
           export AFP_VERSION=7
           export TESTSUITE=spectest
+          export VERBOSE=1
 
           # copy the extmap template if absent so env_setup can activate it
           [ -f "$NETATALK_CONFDIR/extmap.conf" ] || cp config/extmap.conf "$NETATALK_CONFDIR/extmap.conf"

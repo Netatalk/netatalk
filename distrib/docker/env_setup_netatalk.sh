@@ -398,7 +398,8 @@ rm -f "$NETATALK_LOCKDIR/netatalk" "$NETATALK_LOCKDIR/atalkd" "$NETATALK_LOCKDIR
 echo "*** Configuring Netatalk"
 ATALK_NAME="${SERVER_NAME:-$(hostname | cut -d. -f1)}"
 
-[ -n "$VERBOSE" ] && TEST_FLAGS="$TEST_FLAGS -v"
+# Prepend so a -c (CSV, forces quiet) later in TEST_FLAGS wins over -v
+[ -n "$VERBOSE" ] && TEST_FLAGS="-v $TEST_FLAGS"
 
 if [ -z "$AFP_HOST" ]; then
     AFP_HOST="127.0.0.1"

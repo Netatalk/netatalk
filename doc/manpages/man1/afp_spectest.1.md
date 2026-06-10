@@ -4,7 +4,7 @@ afp_spectest — AFP specification compliance test suite
 
 # Synopsis
 
-**afp_spectest** [-1234567aCEimVv] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
+**afp_spectest** [-1234567aCEiLmVv] [-h *host*] [-H *host2*] [-p *port*] [-s *volume*] [-c *path to volume*]
 [-S *volume2*] [-u *user*] [-d *user2*] [-w *password*] [-f *test*]
 
 **afp_spectest** -l
@@ -71,6 +71,10 @@ Single tests or entire testsets can be executed with the **-f** option.
 
 **-l**
 : List all available testsets and exit
+
+**-L**
+: Server under test has *afp read locks = yes* set in afp.conf(5);
+run the byte-range read-lock conflict tests instead of skipping them
 
 **-m**
 : Run tests in AppleShare (Mac) AFP server compatibility mode

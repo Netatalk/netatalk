@@ -202,7 +202,13 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
       contents: write
-      pull-requests: write
+    outputs:
+      self_time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}
+      self_time_warning: ${{ steps.flamegraph-summary.outputs.SELF_TIME_WARNING }}
+      runtime: ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}
+      stacks: ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}
+      svg_size: ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
+      top_funcs: ${{ steps.flamegraph-summary.outputs.TOP_FUNCS }}
     steps:
       - name: Run spectest with flamegraph profiling
         run: |
@@ -301,7 +307,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
-          for f in speedtest/pr-*.png spectest/pr-*.svg spectest/pr-*.png; do
+          for f in spectest/pr-*.svg spectest/pr-*.png; do
             [ -f "$f" ] || continue
             TS=$(git log -1 --format=%ct -- "$f")
             if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
@@ -315,54 +321,23 @@ jobs:
           git add "spectest/pr-${PR_NUMBER}.svg" "spectest/pr-${PR_NUMBER}.png"
           git diff --cached --quiet && echo "No flamegraph change to commit" && exit 0
           git commit -m "flamegraph: chart for PR #${PR_NUMBER}"
-          git push origin gh-pages
-      - name: Find existing flamegraph comment
-        id: find-comment
-        uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body-includes: '<!-- flamegraph-spectest -->'
-      - name: Delete previous flamegraph comment
-        if: ${{ steps.find-comment.outputs.comment-id != '' }}
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          script: |
-            await github.rest.issues.deleteComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: Number('${{ steps.find-comment.outputs.comment-id }}')
-            });
-      - name: Post flamegraph PR comment
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            <!-- flamegraph-spectest -->
-            ## 🔥 Spectest (AFP 3.4) - FlameGraph
+          # Another PR's job may push to gh-pages between our clone and push
+          # (the "pages" concurrency group only serialises within a workflow,
+          # not across PRs). Rebase and retry on rejection.
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin gh-pages; then
+              pushed=1
+              break
+            fi
+            echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
+            git pull --rebase origin gh-pages
+            sleep $((attempt * 3))
+          done
+          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
 
-            ## **Netatalk Code-time: ${{ steps.flamegraph-summary.outputs.SELF_TIME }}**
-
-            ${{ steps.flamegraph-summary.outputs.SELF_TIME_WARNING }}
-
-            **Commit:** `${{ github.event.pull_request.head.sha }}`
-            **Profiling:** On-CPU sampling @ 907 Hz, DWARF call-graph, x86_64
-            **Total Runtime:** ${{ steps.flamegraph-summary.outputs.TEST_RUNTIME }}, **Stacks:** ${{ steps.flamegraph-summary.outputs.STACK_COUNT }}, **SVG size:** ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
-
-            🔥 Click the preview to open the interactive flamegraph (zoom + search).
-
-            [![Flamegraph preview](https://netatalk.github.io/netatalk/spectest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/spectest/pr-${{ github.event.pull_request.number }}.svg)
-
-            <details>
-            <summary>🔝 Top 10 leaf functions </summary>
-
-            | Function | Samples |
-            |----------|---------|
-            ${{ steps.flamegraph-summary.outputs.TOP_FUNCS }}
-
-            </details>
-
-  afp-spectest-afp34-prod:
-    name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (PerfConfig)
+  afp-spectest-dbd-afp34-prod:
+    name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Client/Server, PerfConfig)
     needs:
       - build-container
       - build-container-testsuite
@@ -407,13 +382,14 @@ jobs:
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
               -e TESTSUITE=spectest \
+              -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_HOST=afp_server \
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-mysql-afp34-prod:
-    name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (PerfConfig)
+    name: AFP spec test (cnid:mysql) AFP 3.4 - Alpine (Client/Server/Database, PerfConfig)
     needs:
       - build-container
       - build-container-testsuite
@@ -470,6 +446,7 @@ jobs:
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
               -e TESTSUITE=spectest \
+              -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_HOST=afp_server \
@@ -478,7 +455,7 @@ jobs:
               ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
   afp-spectest-sqlite-afp34-prod:
-    name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine (PerfConfig)
+    name: AFP spec test (cnid:sqlite) AFP 3.4 - Alpine (Client/Server, PerfConfig)
     needs:
       - build-container
       - build-container-testsuite
@@ -524,6 +501,7 @@ jobs:
               -e SHARE_NAME=test1 \
               -e SHARE_NAME2=test2 \
               -e TESTSUITE=spectest \
+              -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_HOST=afp_server \
@@ -562,6 +540,7 @@ jobs:
               -e INSECURE_AUTH=1 \
               -e DISABLE_TIMEMACHINE=1 \
               -e TESTSUITE=spectest \
+              -e VERBOSE=1 \
               -e AFP_VERSION=7 \
               -e AFP_REMOTE=1 \
               -e AFP_EXTMAP=1 \
@@ -593,6 +572,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -619,6 +599,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -644,6 +625,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -671,6 +653,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -696,6 +679,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -723,6 +707,7 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -752,6 +737,7 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -777,6 +763,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="6" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -803,6 +790,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="5" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -829,6 +817,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="4" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -854,6 +843,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -879,6 +869,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="3" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -904,6 +895,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="2" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -929,6 +921,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -954,6 +947,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -981,6 +975,7 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -1008,6 +1003,7 @@ jobs:
             -e DISABLE_TIMEMACHINE="1" \
             -e AFP_ADOUBLE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
@@ -1030,6 +1026,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="readonly" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
@@ -1050,6 +1047,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e AFP_READONLY="1" \
             -e TESTSUITE="readonly" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
@@ -1068,6 +1066,7 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e AFP_UAMS="uams_guest.so uams_clrtxt.so uams_dhx.so" \
             -e TESTSUITE="login" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
@@ -1086,18 +1085,29 @@ jobs:
             -e AFP_GROUP="afpusers" \
             -e INSECURE_AUTH="1" \
             -e TESTSUITE="login" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="1" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
 
-  afp-lantest:
-    name: AFP lantest (ARC) - Alpine
+  latencygraph-lantest:
+    name: Lantest (AFP 3.4) - LatencyGraph
     needs: build-container-testsuite
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.actor != 'dependabot[bot]' }}
+    if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+    permissions:
+      contents: write
+    env:
+      AFP_TEST_ITERATIONS: 20
+    outputs:
+      slowest: ${{ steps.lantest-summary.outputs.SLOW }}
     steps:
-      - name: Run Netatalk testsuite
+      - name: Checkout repo
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Run Netatalk lantest (CSV output)
         run: |
+          # -c (CSV) is passed via $TEST_FLAGS, which the entrypoint prepends
+          # to afp_lantest.
           docker run --rm \
             -e AFP_USER="atalk1" \
             -e AFP_PASS="$CONT_PASSWD" \
@@ -1108,7 +1118,106 @@ jobs:
             -e AFP_VERSION="7" \
             -e AFP_DIRCACHE_MODE="arc" \
             -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
-            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }}
+            -e AFP_TEST_ITERATIONS="${{ env.AFP_TEST_ITERATIONS }}" \
+            -e TEST_FLAGS="-c" \
+            ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }} \
+            > lantest.csv 2> lantest.log
+      - name: Show lantest log
+        if: always()
+        run: cat lantest.log
+      - name: Validate CSV output
+        run: |
+          if [ ! -s lantest.csv ]; then
+            echo "ERROR: lantest.csv is empty or missing" >&2
+            exit 1
+          fi
+          if ! grep -q '^Test,Time_ms,' lantest.csv; then
+            echo "ERROR: no lantest CSV header found — was -c (CSV) active?" >&2
+            exit 1
+          fi
+          echo "CSV lines: $(wc -l < lantest.csv)"
+      - name: Render latency chart (PNG)
+        run: |
+          python3 -m pip install --quiet --user 'matplotlib==3.10.9'
+          COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          SHORT_SHA="$(echo "$COMMIT_SHA" | cut -c1-7)"
+          python3 contrib/scripts/plot_lantest.py lantest.csv \
+            -o lantest \
+            --title "Netatalk AFP Lantest — per-test latency" \
+            --subtitle "commit ${SHORT_SHA} · ${{ env.AFP_TEST_ITERATIONS }} iterations (mean ≈ P95) · candle: min–max wick, mean±σ box, median line" \
+            --meta afp=3.4 \
+            --meta dircache_mode=arc \
+            --meta dircache_size=65536 \
+            --meta dircache_validation_freq=100
+          echo "PNG size: $(du -h lantest.png | cut -f1)"
+      - name: Extract slowest tests for PR comment
+        id: lantest-summary
+        run: |
+          # Top 5 tests by median time. Right-anchored parse: the trailing six
+          # fields are mean,stddev,min,max,median,mbs and the name (which may
+          # contain commas) precedes them. Require that exact numeric tail so
+          # afpd log lines (also comma-rich) are rejected.
+          SLOW=$(awk -F, '
+            $(NF) ~ /^[0-9]+$/ && $(NF-1) ~ /^[0-9]+$/ && $(NF-2) ~ /^[0-9]+$/ \
+              && $(NF-3) ~ /^[0-9]+$/ && $(NF-4) ~ /^[0-9.]+$/ && $(NF-5) ~ /^[0-9]+$/ {
+              median=$(NF-1)+0
+              name=$1; for (i=2; i<=NF-6; i++) name=name","$i
+              sub(/ *\[[^]]*\] *$/, "", name)
+              printf "%d\t%s\n", median, name
+            }' lantest.csv | sort -rn | head -5 \
+            | awk -F'\t' '{ printf "| %s | %s |\n", $2, $1 }')
+          {
+            echo "SLOW<<EOFSLOW"
+            echo "$SLOW"
+            echo "EOFSLOW"
+          } >> "$GITHUB_OUTPUT"
+      - name: Upload lantest artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: latencygraph-lantest
+          path: lantest.png
+          retention-days: 30
+      - name: Publish chart to gh-pages branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Full clone (not --depth 1) so the prune below can read file age
+          # from git commit timestamps.
+          git clone --branch gh-pages \
+            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
+          cd gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
+          for f in lantest/pr-*.png; do
+            [ -f "$f" ] || continue
+            TS=$(git log -1 --format=%ct -- "$f")
+            if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
+              echo "Pruning stale chart: $f"
+              git rm -q "$f"
+            fi
+          done
+          mkdir -p lantest
+          cp ../lantest.png "lantest/pr-${PR_NUMBER}.png"
+          git add "lantest/pr-${PR_NUMBER}.png"
+          git diff --cached --quiet && echo "No chart change to commit" && exit 0
+          git commit -m "lantest: chart for PR #${PR_NUMBER}"
+          # Another PR's job may push to gh-pages between our clone and push
+          # (the "pages" concurrency group only serialises within a workflow,
+          # not across PRs). Rebase and retry on rejection.
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin gh-pages; then
+              pushed=1
+              break
+            fi
+            echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
+            git pull --rebase origin gh-pages
+            sleep $((attempt * 3))
+          done
+          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
 
   perfgraph-speedtest:
     name: Speedtest (AFP 3.4) - PerfGraph
@@ -1118,7 +1227,10 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
     permissions:
       contents: write
-      pull-requests: write
+    env:
+      AFP_TEST_ITERATIONS: 20
+    outputs:
+      peaks: ${{ steps.speedtest-summary.outputs.PEAKS }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -1138,7 +1250,7 @@ jobs:
             -e AFP_DIRCACHE_VALIDATION_FREQ="100" \
             -e AFP_DIRCACHE_RFORK_BUDGET="1048576000" \
             -e AFP_DIRCACHE_RFORK_MAXSIZE="1048576" \
-            -e AFP_TEST_ITERATIONS="10" \
+            -e AFP_TEST_ITERATIONS="${{ env.AFP_TEST_ITERATIONS }}" \
             -e TEST_FLAGS="-c -z 0.00390625,0.0078125,0.015625,0.03125,0.0625,0.125,0.25,0.5,1,2,4,8,16,32,64,128,256" \
             ${{ env.REGISTRY }}/netatalk/netatalk-testsuite:${{ github.sha }} \
             > speedtest.csv 2> speedtest.log
@@ -1164,7 +1276,7 @@ jobs:
           python3 contrib/scripts/plot_speedtest.py speedtest.csv \
             -o speedtest \
             --title "Netatalk AFP Speedtest — throughput vs file size" \
-            --subtitle "commit ${SHORT_SHA} · median MB/s, shaded band = min–max" \
+            --subtitle "commit ${SHORT_SHA} · ${{ env.AFP_TEST_ITERATIONS }} iterations (mean ≈ P95) · median MB/s, shaded band = min–max" \
             --meta afp=3.4 \
             --meta quantum_kb=1024 \
             --meta dircache_mode=arc \
@@ -1216,7 +1328,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
-          for f in speedtest/pr-*.png spectest/pr-*.svg spectest/pr-*.png; do
+          for f in speedtest/pr-*.png; do
             [ -f "$f" ] || continue
             TS=$(git log -1 --format=%ct -- "$f")
             if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
@@ -1229,16 +1341,43 @@ jobs:
           git add "speedtest/pr-${PR_NUMBER}.png"
           git diff --cached --quiet && echo "No chart change to commit" && exit 0
           git commit -m "speedtest: chart for PR #${PR_NUMBER}"
-          git push origin gh-pages
-      - name: Find existing speedtest comment
-        if: ${{ github.event_name == 'pull_request' }}
+          # Another PR's job may push to gh-pages between our clone and push
+          # (the "pages" concurrency group only serialises within a workflow,
+          # not across PRs). Rebase and retry on rejection.
+          pushed=0
+          for attempt in 1 2 3; do
+            if git push origin gh-pages; then
+              pushed=1
+              break
+            fi
+            echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
+            git pull --rebase origin gh-pages
+            sleep $((attempt * 3))
+          done
+          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
+
+  perf-dashboard:
+    name: Performance Dashboard
+    needs:
+      - flamegraph-spectest
+      - perfgraph-speedtest
+      - latencygraph-lantest
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # always() so the dashboard still posts the charts that did succeed even
+    # if one of the three graph jobs failed or was skipped.
+    if: ${{ always() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Find existing dashboard comment
         id: find-comment
         uses: peter-evans/find-comment@b30e6a3c0ed37e7c023ccd3f1db5c6c0b0c23aad # v4.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
-          body-includes: '<!-- perfgraph-speedtest -->'
-      - name: Delete previous speedtest comment
-        if: ${{ github.event_name == 'pull_request' && steps.find-comment.outputs.comment-id != '' }}
+          body-includes: '<!-- perf-dashboard -->'
+      - name: Delete previous dashboard comment
+        if: ${{ steps.find-comment.outputs.comment-id != '' }}
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
@@ -1247,16 +1386,36 @@ jobs:
               repo: context.repo.repo,
               comment_id: Number('${{ steps.find-comment.outputs.comment-id }}')
             });
-      - name: Post speedtest PR comment
-        if: ${{ github.event_name == 'pull_request' }}
+      - name: Post performance dashboard comment
         uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9 # v5.0.0
         with:
           issue-number: ${{ github.event.pull_request.number }}
           body: |
-            <!-- perfgraph-speedtest -->
-            ## 📈 Speedtest (AFP 3.4) - PerfGraph
+            <!-- perf-dashboard -->
+            # 📊 Performance Dashboard
 
             **Commit:** `${{ github.event.pull_request.head.sha }}`
+
+            ## 🔥 [Spectest](https://netatalk.io/manual/en/afp_spectest.1) (AFP 3.4) - FlameGraph
+
+            **Netatalk Code-time: ${{ needs.flamegraph-spectest.outputs.self_time }}** · Runtime: ${{ needs.flamegraph-spectest.outputs.runtime }} · Stacks: ${{ needs.flamegraph-spectest.outputs.stacks }}
+
+            ${{ needs.flamegraph-spectest.outputs.self_time_warning }}
+
+            🔥 Click the preview to open the interactive flamegraph (zoom + search).
+
+            [![Flamegraph preview](https://netatalk.github.io/netatalk/spectest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/spectest/pr-${{ github.event.pull_request.number }}.svg)
+
+            <details>
+            <summary>🔝 Top 10 leaf functions</summary>
+
+            | Function | Samples |
+            |----------|---------|
+            ${{ needs.flamegraph-spectest.outputs.top_funcs }}
+
+            </details>
+
+            ## 📈 [Speedtest](https://netatalk.io/manual/en/afp_speedtest.1) (AFP 3.4) - PerfGraph
 
             [![Speedtest throughput](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/speedtest/pr-${{ github.event.pull_request.number }}.png)
 
@@ -1265,7 +1424,20 @@ jobs:
 
             | Operation | Peak median (MB/s) |
             |-----------|--------------------|
-            ${{ steps.speedtest-summary.outputs.PEAKS }}
+            ${{ needs.perfgraph-speedtest.outputs.peaks }}
+
+            </details>
+
+            ## ⏱️ [Lantest](https://netatalk.io/manual/en/afp_lantest.1) (AFP 3.4) - LatencyGraph
+
+            [![Lantest latency](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)
+
+            <details>
+            <summary>🐢 Slowest operations (median)</summary>
+
+            | Test | Median (ms) |
+            |------|-------------|
+            ${{ needs.latencygraph-lantest.outputs.slowest }}
 
             </details>
 
@@ -1289,6 +1461,7 @@ jobs:
             -e INSECURE_AUTH="1" \
             -e DISABLE_TIMEMACHINE="1" \
             -e TESTSUITE="spectest" \
+            -e VERBOSE="1" \
             -e AFP_VERSION="7" \
             -e AFP_EXTMAP="1" \
             -e AFP_DIRCACHESIZE="1024" \
