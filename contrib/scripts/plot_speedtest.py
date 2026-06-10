@@ -36,8 +36,7 @@ Usage:
     plot_speedtest.py INPUT.csv [-o OUTPUT_BASENAME] [--title TITLE]
                       [--subtitle SUBTITLE] [--baseline BASELINE.csv]
 
-Writes OUTPUT_BASENAME.svg and OUTPUT_BASENAME.png (default basename:
-"speedtest").
+Writes OUTPUT_BASENAME.png (default basename: "speedtest").
 """
 
 import argparse
@@ -72,6 +71,39 @@ CONFIG_LINE_RE = re.compile(r"#\s*Config:\s*(.+)", re.IGNORECASE)
 ITER_ROW_RE = re.compile(r"^([A-Za-z]+),(\d+),([\d.]+),(\d+),([\d.]+)\s*$")
 
 
+def _parse_config_meta(line):
+    """Return the k=v pairs from a "# Config: k=v,k=v" line, else None."""
+    cfg = CONFIG_LINE_RE.match(line)
+    if not cfg:
+        return None
+    pairs = {}
+    for pair in cfg.group(1).split(","):
+        if "=" in pair:
+            k, v = pair.split("=", 1)
+            pairs[k.strip()] = v.strip()
+    return pairs
+
+
+def _parse_summary_row(line):
+    """Parse a summary data row into a row dict, or None if it isn't one.
+
+    Row layout: size_bytes,size_mb,mean,median,min,max,stddev,mean_time.
+    """
+    parts = line.split(",")
+    if len(parts) < 6:
+        return None
+    try:
+        return {
+            "size_bytes": float(parts[0]),
+            "mean": float(parts[2]),
+            "median": float(parts[3]),
+            "min": float(parts[4]),
+            "max": float(parts[5]),
+        }
+    except ValueError:
+        return None
+
+
 def parse_csv(path):
     """Parse a speedtest CSV capture.
 
@@ -92,20 +124,14 @@ def parse_csv(path):
         for raw in fh:
             line = raw.strip()
 
-            cfg = CONFIG_LINE_RE.match(line)
-            if cfg:
-                for pair in cfg.group(1).split(","):
-                    if "=" in pair:
-                        k, v = pair.split("=", 1)
-                        meta[k.strip()] = v.strip()
+            cfg = _parse_config_meta(line)
+            if cfg is not None:
+                meta.update(cfg)
                 continue
 
-            # Track iterations from the per-iteration rows (before summaries).
             it = ITER_ROW_RE.match(line)
             if it:
-                idx = int(it.group(2))
-                if idx > max_iter:
-                    max_iter = idx
+                max_iter = max(max_iter, int(it.group(2)))
 
             header = SUMMARY_HEADER_RE.search(line)
             if header:
@@ -117,7 +143,6 @@ def parse_csv(path):
             if current_op is None:
                 continue
 
-            # The column-header line marks the start of this op's data rows.
             if line.startswith(COLUMN_HEADER_PREFIX):
                 in_data = True
                 continue
@@ -125,32 +150,16 @@ def parse_csv(path):
             if not in_data:
                 continue
 
-            # Data row: size_bytes,size_mb,mean,median,min,max,stddev,mean_time.
-            # Anything else (blank line, next section, log noise) ends the block.
-            parts = line.split(",")
-            if len(parts) < 6:
-                in_data = False
-                continue
+            row = _parse_summary_row(line)
+            if row is None:
+                in_data = False  # blank line / next section / log noise
+            else:
+                results[current_op].append(row)
 
-            try:
-                row = {
-                    "size_bytes": float(parts[0]),
-                    "mean": float(parts[2]),
-                    "median": float(parts[3]),
-                    "min": float(parts[4]),
-                    "max": float(parts[5]),
-                }
-            except ValueError:
-                in_data = False
-                continue
-
-            results[current_op].append(row)
-
-    # Sort each op by size and drop empty ops.
-    cleaned = {}
-    for op, rows in results.items():
-        if rows:
-            cleaned[op] = sorted(rows, key=lambda r: r["size_bytes"])
+    cleaned = {
+        op: sorted(rows, key=lambda r: r["size_bytes"])
+        for op, rows in results.items() if rows
+    }
     if max_iter and "iterations" not in meta:
         meta["iterations"] = str(max_iter)
     return cleaned, meta
@@ -208,84 +217,68 @@ def build_info_lines(results, meta):
 BACKGROUND_COLOR = "#EEEEEE"
 
 
+def _draw_operation(ax, op, rows, baseline):
+    """Plot one operation's median line, min–max band, and mean reference."""
+    color = OP_COLORS.get(op, None)
+    sizes = [r["size_bytes"] for r in rows]
+    median = [r["median"] for r in rows]
+    ax.plot(sizes, median, marker="o", markersize=4, linewidth=2,
+            color=color, label=op, zorder=3)
+    # min..max band gives a sense of run-to-run variance.
+    ax.fill_between(sizes, [r["min"] for r in rows], [r["max"] for r in rows],
+                    color=color, alpha=0.12, zorder=1)
+
+    # Horizontal reference at this op's mean throughput, with a value label
+    # just right of the Y axis so it never overlaps the Y tick labels.
+    avg = sum(median) / len(median)
+    ax.axhline(avg, color=color, linestyle="--", linewidth=1.0, alpha=0.6,
+               zorder=2, label=f"{op} mean ({avg:.0f} MB/s)")
+    ax.text(0.012, avg, f"{avg:.0f}", transform=ax.get_yaxis_transform(),
+            ha="left", va="bottom", fontsize=7, color=color,
+            fontweight="bold", zorder=5,
+            bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
+                      edgecolor="none", alpha=0.7))
+
+    if baseline and op in baseline:
+        b = sorted(baseline[op], key=lambda r: r["size_bytes"])
+        ax.plot([r["size_bytes"] for r in b], [r["median"] for r in b],
+                linestyle="--", linewidth=1.3, color=color, alpha=0.6,
+                zorder=2, label=f"{op} (baseline)")
+
+
+def _configure_xaxis(ax, results):
+    """Log2 X axis with one integer KiB/MiB tick per swept size, clamped."""
+    ax.set_xscale("log", base=2)
+    all_sizes = sorted({r["size_bytes"] for rows in results.values() for r in rows})
+    if all_sizes:
+        ax.set_xticks(all_sizes)
+        ax.set_xticklabels([format_size(s) for s in all_sizes], fontsize=8)
+        ax.minorticks_off()
+        ax.set_xlim(all_sizes[0], all_sizes[-1])
+    ax.xaxis.set_major_formatter(FuncFormatter(format_size))
+
+
 def plot(results, out_base, title, subtitle, baseline=None, meta=None):
-    """Render the throughput-vs-size chart to <out_base>.svg and .png."""
+    """Render the throughput-vs-size chart to <out_base>.png."""
     meta = meta or {}
     fig, ax = plt.subplots(figsize=(11, 6.5))
     fig.patch.set_facecolor(BACKGROUND_COLOR)
     ax.set_facecolor(BACKGROUND_COLOR)
 
-    plotted_any = False
-    for op in OPERATIONS:
-        rows = results.get(op)
-        if not rows:
-            continue
-        plotted_any = True
-        sizes = [r["size_bytes"] for r in rows]
-        median = [r["median"] for r in rows]
-        lo = [r["min"] for r in rows]
-        hi = [r["max"] for r in rows]
-        color = OP_COLORS.get(op, None)
+    # Known operations first (stable colour/order), then any unexpected ones.
+    ordered = [op for op in OPERATIONS if results.get(op)]
+    ordered += [op for op in results if op not in OPERATIONS and results[op]]
+    for op in ordered:
+        _draw_operation(ax, op, results[op], baseline)
 
-        ax.plot(
-            sizes, median,
-            marker="o", markersize=4, linewidth=2,
-            color=color, label=op, zorder=3,
-        )
-        # min..max band gives a sense of run-to-run variance.
-        ax.fill_between(sizes, lo, hi, color=color, alpha=0.12, zorder=1)
-
-        # Horizontal reference line at this op's mean median-throughput across
-        # all sizes, so the overall level per operation is visible at a glance.
-        avg = sum(median) / len(median)
-        ax.axhline(avg, color=color, linestyle="--", linewidth=1.0,
-                   alpha=0.6, zorder=2,
-                   label=f"{op} mean ({avg:.0f} MB/s)")
-        # Value label just inside the left edge (right of the Y axis) so it
-        # never overlaps the Y tick labels.
-        ax.text(0.012, avg, f"{avg:.0f}", transform=ax.get_yaxis_transform(),
-                ha="left", va="bottom", fontsize=7, color=color,
-                fontweight="bold", zorder=5,
-                bbox=dict(boxstyle="round,pad=0.15", facecolor="white",
-                          edgecolor="none", alpha=0.7))
-
-        # Optional baseline (previous commit) drawn dashed for comparison.
-        if baseline and op in baseline:
-            b = sorted(baseline[op], key=lambda r: r["size_bytes"])
-            ax.plot(
-                [r["size_bytes"] for r in b], [r["median"] for r in b],
-                linestyle="--", linewidth=1.3, color=color, alpha=0.6,
-                zorder=2, label=f"{op} (baseline)",
-            )
-
-    # Plot any operations we found but didn't anticipate, for forward-compat.
-    for op, rows in results.items():
-        if op in OPERATIONS or not rows:
-            continue
-        plotted_any = True
-        sizes = [r["size_bytes"] for r in rows]
-        ax.plot(sizes, [r["median"] for r in rows],
-                marker="o", markersize=4, linewidth=2, label=op, zorder=3)
-
-    if not plotted_any:
+    if not ordered:
         sys.stderr.write(
             "ERROR: no speedtest summary data found in input — "
             "was afp_speedtest run with -c (CSV)?\n"
         )
         return False
 
-    ax.set_xscale("log", base=2)
-    # Tick at every swept file size (union across operations), so each data
-    # point gets its own labelled tick rather than only every power of two.
-    all_sizes = sorted({r["size_bytes"] for rows in results.values() for r in rows})
-    if all_sizes:
-        ax.set_xticks(all_sizes)
-        ax.set_xticklabels([format_size(s) for s in all_sizes], fontsize=8)
-        ax.minorticks_off()
-        # Clamp the axis to the data range so there's no padding before the
-        # first point or after the last.
-        ax.set_xlim(all_sizes[0], all_sizes[-1])
-    ax.xaxis.set_major_formatter(FuncFormatter(format_size))
+    _configure_xaxis(ax, results)
     ax.set_xlabel("File size")
     ax.set_ylabel("Throughput (MB/s)")
     ax.grid(True, which="both", linestyle=":", alpha=0.4)
@@ -311,13 +304,11 @@ def plot(results, out_base, title, subtitle, baseline=None, meta=None):
 
     fig.tight_layout(rect=(0, 0, 1, 0.97))
 
-    svg_path = f"{out_base}.svg"
     png_path = f"{out_base}.png"
     # facecolor=fig... so savefig keeps the grey background (it defaults to white).
-    fig.savefig(svg_path, format="svg", facecolor=fig.get_facecolor())
     fig.savefig(png_path, format="png", dpi=130, facecolor=fig.get_facecolor())
     plt.close(fig)
-    sys.stderr.write(f"Wrote {svg_path} and {png_path}\n")
+    sys.stderr.write(f"Wrote {png_path}\n")
     return True
 
 
