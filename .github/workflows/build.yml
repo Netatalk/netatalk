@@ -675,9 +675,9 @@ jobs:
               libtalloc \
               mariadb-client \
               meson \
-              openldap-client-2.6.10v0 \
+              openldap-client-2.6.13v0-gssapi \
               openpam \
-              sqlite3-3.50.7p0 \
+              sqlite3 \
               xapian-core
           run: |
             set -e
