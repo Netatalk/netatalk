@@ -1,0 +1,613 @@
+name: VM Spec Tests
+
+# Build + AFP spectest legs that run on non-Linux VMs (vmactions).
+# Each job builds netatalk inside the VM, installs it with the OS service
+# packaging, then runs the production AFP spectest via the shared driver
+# .github/scripts/vm_spectest.sh (per-OS knobs are exported by each step).
+# Pure Linux build jobs live in build.yml; container spectests in
+# containers.yml; the macOS leg in spectest-macos.yml.
+
+on:
+  push:
+    branches:
+      - main
+      - branch-*
+  pull_request:
+    branches:
+      - main
+      - branch-*
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+
+jobs:
+  spectest-dflybsd:
+    name: AFP Spectest - DragonflyBSD (sys:ad, HAMMER2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/dragonflybsd-vm@b4468429bb9ab60b14600c6eeeb6464427f29391 # v1.2.9
+        with:
+          copyback: true
+          sync-time: true
+          sync: nfs
+          usesh: true
+          prepare: |
+            set -e
+            pkg install -y \
+              avahi \
+              cmark \
+              db5 \
+              iniparser \
+              libev \
+              file \
+              libgcrypt \
+              meson \
+              mysql80-client \
+              openldap26-client \
+              perl5 \
+              pkgconf \
+              py39-gdbm \
+              py39-sqlite3 \
+              py39-tkinter \
+              sqlite \
+              talloc \
+              xapian-core
+          run: |
+            set -e
+            # DragonflyBSD isn't in meson's init-style auto-detection; it is
+            # FreeBSD-derived and uses the same rc.d script, so select it
+            # explicitly to install /usr/local/etc/rc.d/netatalk.
+            meson setup build \
+              -Dbuildtype=debugoptimized \
+              -Dwith-appletalk=true \
+              -Dwith-eventloop=libev \
+              -Dwith-init-style=freebsd \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build
+            meson install -C build
+            netatalk -V
+            afpd -V
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: dragonflybsd {0}
+        run: |
+          set -e
+          # DragonflyBSD installs under the /usr/local prefix
+          export NETATALK_CONFDIR=/usr/local/etc
+          export NETATALK_LOCKDIR=/var/spool/locks
+          # HAMMER2, DragonflyBSD's default root filesystem (where the share
+          # /mnt/afpshare lives), does not support extended attributes, so
+          # afpd is built with "EA support: ad" only. Use AppleDouble EA
+          # storage (ea = ad, + afp_spectest -a) to match; ea = sys would make
+          # every FPGetExtAttr test fail.
+          export AFP_ADOUBLE=1
+          export SERVICE_START="/usr/local/etc/rc.d/netatalk onestart"
+          export SERVICE_STOP="/usr/local/etc/rc.d/netatalk onestop"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-freebsd:
+    name: AFP Spectest - FreeBSD (PerfConfig, UFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
+        with:
+          copyback: true
+          sync: sshfs
+          prepare: |
+            set -e
+            pkg install -y \
+              avahi \
+              bison \
+              cmark \
+              db5 \
+              dconf \
+              flex \
+              iniparser \
+              libev \
+              file \
+              libgcrypt \
+              libsunacl \
+              localsearch \
+              meson \
+              mysql96-client \
+              openldap26-client \
+              perl5 \
+              pkgconf \
+              sqlite3 \
+              talloc \
+              xapian-core
+          run: |
+            set -e
+            meson setup build \
+              -Dbuildtype=debugoptimized \
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dwith-eventloop=libev \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
+            netatalk -V
+            afpd -V
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: freebsd {0}
+        run: |
+          set -e
+          # FreeBSD installs under the /usr/local prefix
+          export NETATALK_CONFDIR=/usr/local/etc
+          export NETATALK_LOCKDIR=/var/spool/lock
+          # FreeBSD's root UFS supports native EAs, so this leg runs the real
+          # ea = sys PerfConfig (AFP_ADOUBLE unset).
+          export SERVICE_START="/usr/local/etc/rc.d/netatalk onestart"
+          export SERVICE_STOP="/usr/local/etc/rc.d/netatalk onestop"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-freebsd-zfs:
+    name: AFP Spectest - FreeBSD (PerfConfig, ZFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
+        with:
+          copyback: true
+          sync: sshfs
+          prepare: |
+            set -e
+            pkg install -y \
+              avahi \
+              bison \
+              cmark \
+              db5 \
+              dconf \
+              flex \
+              iniparser \
+              libev \
+              file \
+              libgcrypt \
+              libsunacl \
+              localsearch \
+              meson \
+              mysql96-client \
+              openldap26-client \
+              perl5 \
+              pkgconf \
+              sqlite3 \
+              talloc \
+              xapian-core
+          run: |
+            set -e
+            meson setup build \
+              -Dbuildtype=debugoptimized \
+              -Dpkg_config_path=/usr/local/libdata/pkgconfig \
+              -Dwith-eventloop=libev \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
+            netatalk -V
+            afpd -V
+      # Same as the FreeBSD UFS leg, but the share lives on a file-backed ZFS
+      # pool (ZFS is in the FreeBSD base kernel) to exercise the ea = sys path
+      # on ZFS rather than UFS.
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: freebsd {0}
+        run: |
+          set -e
+          # Create a file-backed ZFS pool and datasets for the AFP shares.
+          truncate -s 2G /afppool.img
+          zpool create afppool /afppool.img
+          zfs create -o mountpoint=/mnt/afpshare afppool/afpshare
+          zfs create -o mountpoint=/mnt/afpbackup afppool/afpbackup
+          # FreeBSD installs under the /usr/local prefix
+          export NETATALK_CONFDIR=/usr/local/etc
+          export NETATALK_LOCKDIR=/var/spool/lock
+          # ZFS supports native EAs, so this leg runs the real ea = sys
+          # PerfConfig (AFP_ADOUBLE unset).
+          export SERVICE_START="/usr/local/etc/rc.d/netatalk onestart"
+          export SERVICE_STOP="/usr/local/etc/rc.d/netatalk onestop"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-netbsd:
+    name: AFP Spectest - NetBSD (sys:ad, FFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/netbsd-vm@ad31081832386a0ba569aee243e6edf9524f3f80 # v1.3.9
+        with:
+          copyback: true
+          sync: sshfs
+          prepare: |
+            set -e
+            export PKG_PATH="https://ftp.NetBSD.org/pub/pkgsrc/packages/NetBSD/$(uname -p)/$(uname -r|cut -f '1 2' -d.)/All"
+            pkg_add \
+              cmark \
+              db5 \
+              gcc13 \
+              heimdal \
+              iniparser \
+              libev \
+              libgcrypt \
+              meson \
+              file \
+              mysql-client \
+              perl \
+              pkg-config \
+              sqlite3 \
+              talloc \
+              xapian
+          run: |
+            set -e
+            meson setup build \
+              -Dbuildtype=debugoptimized \
+              -Dwith-appletalk=true \
+              -Dwith-cups-pap-backend=true \
+              -Dwith-dtrace=false \
+              -Dwith-eventloop=libev \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
+            netatalk -V
+            afpd -V
+            atalkd -V
+            a2boot -V
+            macipgw -V
+            papd -V
+            timelord -V
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: netbsd {0}
+        run: |
+          set -e
+          # NetBSD installs under the default meson prefix /usr/local
+          export NETATALK_CONFDIR=/usr/local/etc
+          # NetBSD's compiled-in lockfile path is /var/run (see meson.build)
+          export NETATALK_LOCKDIR=/var/run
+          # The VM's FFS share has no runtime EA support, so use AppleDouble
+          # storage (ea = ad, + afp_spectest -a) like the DragonflyBSD leg.
+          export AFP_ADOUBLE=1
+          export SERVICE_START="service netatalk onestart"
+          export SERVICE_STOP="service netatalk onestop"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-openbsd:
+    name: AFP Spectest - OpenBSD (sys:ad, FFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/openbsd-vm@6fac4962055fe9952d29930942445739e509fecd # v1.4.2
+        with:
+          copyback: true
+          sync: sshfs
+          prepare: |
+            set -e
+            pkg_add -I \
+              avahi \
+              cmark \
+              db-4.6.21p8v0 \
+              dbus \
+              heimdal \
+              iniparser \
+              libev \
+              libgcrypt \
+              libmagic \
+              libtalloc \
+              mariadb-client \
+              meson \
+              openldap-client-2.6.13v0 \
+              openpam \
+              sqlite3 \
+              xapian-core
+          run: |
+            set -e
+            meson setup build \
+              -Dbuildtype=debugoptimized \
+              -Dwith-eventloop=libev \
+              -Dwith-gssapi-path=/usr/local/heimdal \
+              -Dwith-kerberos-path=/usr/local/heimdal \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build --no-rebuild
+            meson install -C build --no-rebuild
+            netatalk -V
+            afpd -V
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: openbsd {0}
+        run: |
+          set -e
+          # OpenBSD installs under the default meson prefix /usr/local
+          export NETATALK_CONFDIR=/usr/local/etc
+          # OpenBSD's compiled-in lockfile path is /var/run (see meson.build)
+          export NETATALK_LOCKDIR=/var/run
+          # OpenBSD's FFS has no extended attributes, so use AppleDouble
+          # storage (ea = ad, + afp_spectest -a) like the NetBSD leg.
+          export AFP_ADOUBLE=1
+          export SERVICE_START="rcctl -d start netatalk"
+          export SERVICE_STOP="rcctl -d stop netatalk"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-omnios:
+    name: AFP Spectest - OmniOS (sys:ad, ZFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/omnios-vm@df424df5cba0f61cd5275cac0770fe1331ef2edb # v1.3.0
+        with:
+          release: "r151056-build"
+          copyback: true
+          prepare: |
+            set -e
+            pkg install \
+              build-essential \
+              pkg-config
+            curl -o bootstrap.tar.gz https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
+            tar -zxpf bootstrap.tar.gz -C /
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            pkgin -y install \
+              avahi \
+              cmark \
+              dconf \
+              gnome-tracker \
+              iniparser \
+              libev \
+              file \
+              libgcrypt \
+              meson \
+              mysql-client \
+              sqlite3 \
+              talloc \
+              xapian
+          run: |
+            set -e
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            meson setup build \
+              --prefix=/opt/local \
+              -Dbuildtype=debugoptimized \
+              -Dpkg_config_path=/opt/local/lib/pkgconfig \
+              -Dwith-eventloop=libev \
+              -Dwith-ldap-path=/opt/local \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build
+            meson install -C build
+            netatalk -V
+            afpd -V
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: omnios {0}
+        run: |
+          set -e
+          export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+          # OmniOS installs under the pkgsrc /opt/local prefix
+          export NETATALK_CONFDIR=/opt/local/etc
+          # illumos has no meson lock special-case -> /var/spool/locks
+          export NETATALK_LOCKDIR=/var/spool/locks
+          # The VM's /mnt share filesystem has no runtime EA support, so use
+          # AppleDouble storage (ea = ad, + afp_spectest -a) like the BSD legs.
+          export AFP_ADOUBLE=1
+          export SERVICE_START="svcadm enable -s svc:/network/netatalk:default"
+          export SERVICE_STOP="svcadm disable -s svc:/network/netatalk:default"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-openindiana:
+    name: AFP Spectest - OpenIndiana (sys:ad, ZFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/openindiana-vm@390c2c95de889e95a15bf127b07924ca26cda9f7 # v1.1.0
+        with:
+          release: "202510-build"
+          copyback: true
+          prepare: |
+            set -e
+            pkg install \
+              archiver/gnu-tar \
+              compress/gzip \
+              database/sqlite-3 \
+              developer/build/cmake \
+              developer/build/meson \
+              developer/build/ninja \
+              developer/build/pkg-config \
+              developer/gcc-14 \
+              library/libev \
+              library/security/cracklib \
+              runtime/perl \
+              system/library/security/libgcrypt \
+              web/curl
+            curl --location -o iniparser.tar.gz \
+              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
+            set +e # tar on illumos is too old to handle git tarballs cleanly
+            tar xzf iniparser.tar.gz
+            set -e
+            cd iniparser-v4.2.6
+            mkdir build
+            cd build
+            cmake -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
+            make all
+            make install
+            cd ../..
+          run: |
+            set -e
+            export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+            meson setup build \
+              -Dbuildtype=debugoptimized \
+              -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-eventloop=libev \
+              -Dwith-iniparser-path=/usr/local \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build
+            meson install -C build
+            /usr/local/sbin/netatalk -V
+            /usr/local/sbin/afpd -V
+            # Multicast DNS is a dependency of the netatalk SMF service.
+            svcadm enable svc:/network/dns/multicast:default
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: openindiana {0}
+        run: |
+          set -e
+          export PATH=/usr/local/sbin:/usr/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+          # OpenIndiana installs under the default meson prefix /usr/local
+          export NETATALK_CONFDIR=/usr/local/etc
+          # illumos has no meson lock special-case -> /var/spool/locks
+          export NETATALK_LOCKDIR=/var/spool/locks
+          # The VM's /mnt share filesystem has no runtime EA support, so use
+          # AppleDouble storage (ea = ad, + afp_spectest -a) like the BSD legs.
+          export AFP_ADOUBLE=1
+          export SERVICE_START="svcadm enable -s svc:/network/netatalk:default"
+          export SERVICE_STOP="svcadm disable -s svc:/network/netatalk:default"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs
+
+  spectest-solaris:
+    name: AFP Spectest - Solaris (sys:ad, ZFS)
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Build on VM
+        uses: vmactions/solaris-vm@970a329b471871f9a6765c8f166765fa4ddfb446 # v1.3.4
+        with:
+          copyback: true
+          sync-time: true
+          sync: nfs
+          prepare: |
+            set -e
+            pkg install \
+              cmake \
+              gcc \
+              libevent \
+              libgcrypt \
+              meson \
+              ninja \
+              pkg-config \
+              sqlite-3
+            curl --location -o cmark.tar.gz \
+              https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
+            curl --location -o iniparser.tar.gz \
+              https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
+            set +e # tar on Solaris is too old to handle git tarballs cleanly
+            tar xzf cmark.tar.gz
+            tar xzf iniparser.tar.gz
+            set -e
+            cd cmark-0.31.1
+            cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr
+            cmake --build build
+            cmake --install build
+            cd ..
+            cd iniparser-v4.2.6
+            mkdir build
+            cd build
+            cmake ..
+            make all
+            make install
+            cd ../..
+          run: |
+            set -e
+            meson setup build \
+              --prefix=/usr/local \
+              -Dbuildtype=debugoptimized \
+              -Dpkg_config_path=/usr/lib/amd64/pkgconfig \
+              -Dwith-iniparser-path=/usr/local \
+              -Dwith-tests=true \
+              -Dwith-testsuite=true
+            meson compile -C build
+            meson test -C build
+            meson install -C build
+            export PATH=/usr/local/sbin:/usr/local/bin:$PATH
+            netatalk -V
+            afpd -V
+      - name: AFP Spectest (production, AFP 3.4)
+        shell: solaris {0}
+        run: |
+          set -e
+          export PATH=/usr/local/sbin:/usr/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
+          # Solaris installs under the default meson prefix /usr/local
+          export NETATALK_CONFDIR=/usr/local/etc
+          # illumos/Solaris has no meson lock special-case -> /var/spool/locks
+          export NETATALK_LOCKDIR=/var/spool/locks
+          # The VM's /mnt share filesystem has no runtime EA support, so use
+          # AppleDouble storage (ea = ad, + afp_spectest -a) like the BSD legs.
+          export AFP_ADOUBLE=1
+          export SERVICE_START="svcadm enable -s svc:/network/netatalk:default"
+          export SERVICE_STOP="svcadm disable -s svc:/network/netatalk:default"
+          sh ./.github/scripts/vm_spectest.sh
+      - name: Upload meson logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: meson-logs-${{ github.job }}
+          path: build/meson-logs

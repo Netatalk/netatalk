@@ -210,6 +210,9 @@ jobs:
       svg_size: ${{ steps.flamegraph-summary.outputs.SVG_SIZE }}
       top_funcs: ${{ steps.flamegraph-summary.outputs.TOP_FUNCS }}
     steps:
+      # Checkout is needed to resolve the local publish-gh-pages action
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Run spectest with flamegraph profiling
         run: |
           docker run --privileged --rm \
@@ -294,47 +297,12 @@ jobs:
             flamegraph.png
           retention-days: 30
       - name: Publish flamegraph to gh-pages branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          # Full clone (not --depth 1) so the prune below can read file age
-          # from git commit timestamps.
-          git clone --branch gh-pages \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
-          cd gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
-          for f in spectest/pr-*.svg spectest/pr-*.png; do
-            [ -f "$f" ] || continue
-            TS=$(git log -1 --format=%ct -- "$f")
-            if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
-              echo "Pruning stale chart: $f"
-              git rm -q "$f"
-            fi
-          done
-          mkdir -p spectest
-          cp ../flamegraph.svg "spectest/pr-${PR_NUMBER}.svg"
-          cp ../flamegraph.png "spectest/pr-${PR_NUMBER}.png"
-          git add "spectest/pr-${PR_NUMBER}.svg" "spectest/pr-${PR_NUMBER}.png"
-          git diff --cached --quiet && echo "No flamegraph change to commit" && exit 0
-          git commit -m "flamegraph: chart for PR #${PR_NUMBER}"
-          # Another PR's job may push to gh-pages between our clone and push
-          # (the "pages" concurrency group only serialises within a workflow,
-          # not across PRs). Rebase and retry on rejection.
-          pushed=0
-          for attempt in 1 2 3; do
-            if git push origin gh-pages; then
-              pushed=1
-              break
-            fi
-            echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
-            git pull --rebase origin gh-pages
-            sleep $((attempt * 3))
-          done
-          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
+        uses: ./.github/actions/publish-gh-pages
+        with:
+          files: flamegraph.svg flamegraph.png
+          dest-dir: spectest
+          commit-prefix: flamegraph
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   afp-spectest-dbd-afp34-prod:
     name: AFP spec test (cnid:dbd) AFP 3.4 - Alpine (Client/Server, PerfConfig)
@@ -1138,14 +1106,20 @@ jobs:
           echo "CSV lines: $(wc -l < lantest.csv)"
       - name: Render latency chart (PNG)
         run: |
-          python3 -m pip install --quiet --user 'matplotlib==3.10.9'
+          # fonts-dejavu-core: the chart scripts request "DejaVu Sans"
+          # (matplotlib's default face); install it explicitly rather than
+          # rely on the runner image preinstalling it.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gnuplot-nox fonts-dejavu-core
           COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
           SHORT_SHA="$(echo "$COMMIT_SHA" | cut -c1-7)"
-          python3 contrib/scripts/plot_lantest.py lantest.csv \
+          perl contrib/scripts/plot_lantest.pl lantest.csv \
             -o lantest \
             --title "Netatalk AFP Lantest — per-test latency" \
-            --subtitle "commit ${SHORT_SHA} · ${{ env.AFP_TEST_ITERATIONS }} iterations (mean ≈ P95) · candle: min–max wick, mean±σ box, median line" \
+            --subtitle "commit ${SHORT_SHA} · candle: min–max wick, mean±σ box, median line" \
             --meta afp=3.4 \
+            --meta iterations=${{ env.AFP_TEST_ITERATIONS }} \
             --meta dircache_mode=arc \
             --meta dircache_size=65536 \
             --meta dircache_validation_freq=100
@@ -1178,46 +1152,12 @@ jobs:
           path: lantest.png
           retention-days: 30
       - name: Publish chart to gh-pages branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          # Full clone (not --depth 1) so the prune below can read file age
-          # from git commit timestamps.
-          git clone --branch gh-pages \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
-          cd gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
-          for f in lantest/pr-*.png; do
-            [ -f "$f" ] || continue
-            TS=$(git log -1 --format=%ct -- "$f")
-            if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
-              echo "Pruning stale chart: $f"
-              git rm -q "$f"
-            fi
-          done
-          mkdir -p lantest
-          cp ../lantest.png "lantest/pr-${PR_NUMBER}.png"
-          git add "lantest/pr-${PR_NUMBER}.png"
-          git diff --cached --quiet && echo "No chart change to commit" && exit 0
-          git commit -m "lantest: chart for PR #${PR_NUMBER}"
-          # Another PR's job may push to gh-pages between our clone and push
-          # (the "pages" concurrency group only serialises within a workflow,
-          # not across PRs). Rebase and retry on rejection.
-          pushed=0
-          for attempt in 1 2 3; do
-            if git push origin gh-pages; then
-              pushed=1
-              break
-            fi
-            echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
-            git pull --rebase origin gh-pages
-            sleep $((attempt * 3))
-          done
-          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
+        uses: ./.github/actions/publish-gh-pages
+        with:
+          files: lantest.png
+          dest-dir: lantest
+          commit-prefix: lantest
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   perfgraph-speedtest:
     name: Speedtest (AFP 3.4) - PerfGraph
@@ -1270,13 +1210,18 @@ jobs:
           echo "CSV lines: $(wc -l < speedtest.csv)"
       - name: Render throughput chart (PNG)
         run: |
-          python3 -m pip install --quiet --user 'matplotlib==3.10.9'
+          # fonts-dejavu-core: the chart scripts request "DejaVu Sans"
+          # (matplotlib's default face); install it explicitly rather than
+          # rely on the runner image preinstalling it.
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gnuplot-nox fonts-dejavu-core
           COMMIT_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
           SHORT_SHA="$(echo "$COMMIT_SHA" | cut -c1-7)"
-          python3 contrib/scripts/plot_speedtest.py speedtest.csv \
+          perl contrib/scripts/plot_speedtest.pl speedtest.csv \
             -o speedtest \
             --title "Netatalk AFP Speedtest — throughput vs file size" \
-            --subtitle "commit ${SHORT_SHA} · ${{ env.AFP_TEST_ITERATIONS }} iterations (mean ≈ P95) · median MB/s, shaded band = min–max" \
+            --subtitle "commit ${SHORT_SHA} · mean MB/s, shaded band = min–max" \
             --meta afp=3.4 \
             --meta quantum_kb=1024 \
             --meta dircache_mode=arc \
@@ -1287,12 +1232,12 @@ jobs:
       - name: Extract per-operation peak throughput for PR comment
         id: speedtest-summary
         run: |
-          # Peak per op = max of the median column ($4) in each summary block.
+          # Peak per op = max of the mean column ($3) in each summary block.
           PEAKS=$(awk -F, '
             /# File Size Performance Summary for/ { op=$NF; sub(/.* for[[:space:]]*/, "", op); next }
             /^file_size_bytes,/ { next }
-            op != "" && NF >= 4 && $4+0 == $4 {
-              if ($4+0 > peak[op]) peak[op]=$4+0
+            op != "" && NF >= 4 && $3+0 == $3 {
+              if ($3+0 > peak[op]) peak[op]=$3+0
               next
             }
             { op="" }
@@ -1315,46 +1260,12 @@ jobs:
           path: speedtest.png
           retention-days: 30
       - name: Publish chart to gh-pages branch
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          # Full clone (not --depth 1) so the prune below can read file age
-          # from git commit timestamps.
-          git clone --branch gh-pages \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
-          cd gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
-          for f in speedtest/pr-*.png; do
-            [ -f "$f" ] || continue
-            TS=$(git log -1 --format=%ct -- "$f")
-            if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
-              echo "Pruning stale chart: $f"
-              git rm -q "$f"
-            fi
-          done
-          mkdir -p speedtest
-          cp ../speedtest.png "speedtest/pr-${PR_NUMBER}.png"
-          git add "speedtest/pr-${PR_NUMBER}.png"
-          git diff --cached --quiet && echo "No chart change to commit" && exit 0
-          git commit -m "speedtest: chart for PR #${PR_NUMBER}"
-          # Another PR's job may push to gh-pages between our clone and push
-          # (the "pages" concurrency group only serialises within a workflow,
-          # not across PRs). Rebase and retry on rejection.
-          pushed=0
-          for attempt in 1 2 3; do
-            if git push origin gh-pages; then
-              pushed=1
-              break
-            fi
-            echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
-            git pull --rebase origin gh-pages
-            sleep $((attempt * 3))
-          done
-          [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
+        uses: ./.github/actions/publish-gh-pages
+        with:
+          files: speedtest.png
+          dest-dir: speedtest
+          commit-prefix: speedtest
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   perf-dashboard:
     name: Performance Dashboard
@@ -1422,8 +1333,8 @@ jobs:
             <details>
             <summary>🔝 Peak throughput per operation</summary>
 
-            | Operation | Peak median (MB/s) |
-            |-----------|--------------------|
+            | Operation | Peak mean (MB/s) |
+            |-----------|------------------|
             ${{ needs.perfgraph-speedtest.outputs.peaks }}
 
             </details>

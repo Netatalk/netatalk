@@ -1,0 +1,69 @@
+name: Publish charts to gh-pages
+description: >
+  Copy generated chart files into a folder on the gh-pages branch under a pr-<N> name, prune charts in that folder older than
+  six months, and push with rebase-and-retry (another PR's job may push between clone and push; the "pages" concurrency group
+  only serialises within a workflow, not across PRs).
+inputs:
+  files:
+    description: >
+      Space-separated chart files (relative to the workspace) to publish. Each is copied to <dest-dir>/pr-<N>.<ext>, keeping
+      its extension.
+    required: true
+  dest-dir:
+    description: Folder on gh-pages to publish into (also the prune scope)
+    required: true
+  commit-prefix:
+    description: Prefix for the commit message, e.g. "lantest"
+    required: true
+  github-token:
+    description: Token used to clone and push the gh-pages branch
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Publish to gh-pages branch
+      shell: sh
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+        GH_REPO: ${{ github.repository }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        FILES: ${{ inputs.files }}
+        DEST_DIR: ${{ inputs.dest-dir }}
+        COMMIT_PREFIX: ${{ inputs.commit-prefix }}
+      run: |
+        set -e
+        # Full clone (not --depth 1) so the prune below can read file age
+        # from git commit timestamps.
+        git clone --branch gh-pages \
+          "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" gh-pages
+        cd gh-pages
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        CUTOFF=$(date -d '6 months ago' +%s 2>/dev/null || date -v-6m +%s)
+        for f in "$DEST_DIR"/pr-*; do
+          [ -f "$f" ] || continue
+          TS=$(git log -1 --format=%ct -- "$f")
+          if [ -n "$TS" ] && [ "$TS" -lt "$CUTOFF" ]; then
+            echo "Pruning stale chart: $f"
+            git rm -q "$f"
+          fi
+        done
+        mkdir -p "$DEST_DIR"
+        for src in $FILES; do
+          ext="${src##*.}"
+          cp "../$src" "$DEST_DIR/pr-${PR_NUMBER}.${ext}"
+          git add "$DEST_DIR/pr-${PR_NUMBER}.${ext}"
+        done
+        git diff --cached --quiet && echo "No chart change to commit" && exit 0
+        git commit -m "${COMMIT_PREFIX}: chart for PR ${PR_NUMBER}"
+        pushed=0
+        for attempt in 1 2 3; do
+          if git push origin gh-pages; then
+            pushed=1
+            break
+          fi
+          echo "gh-pages push rejected (attempt ${attempt}); rebasing..."
+          git pull --rebase origin gh-pages
+          sleep $((attempt * 3))
+        done
+        [ "$pushed" = "1" ] || { echo "ERROR: gh-pages push failed after retries" >&2; exit 1; }
