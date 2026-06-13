@@ -249,6 +249,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
                cnid_t id, uint32_t utf8)
 {
     uint32_t   aint;
+    uint32_t   tp_len = 0;
     char        *tp = NULL;
     char        *src = name;
     aint = strlen(name);
@@ -259,6 +260,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
             /* but name is an utf8 mac name */
             char *u, *m;
             /* global static variable... */
+            tp_len = aint;
             tp = strdup(name);
 
             if (!(u = mtoupath(vol, name, pid, 1)) || !(m = utompath(vol, u, id, 0))) {
@@ -294,7 +296,7 @@ char *set_name(const struct vol *vol, char *data, cnid_t pid, char *name,
     data += aint;
 
     if (tp) {
-        strcpy(name, tp);
+        memcpy(name, tp, tp_len + 1);
         free(tp);
     }
 
@@ -1872,7 +1874,7 @@ int afp_copyfile(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     newname = obj->newtmp;
-    strcpy(newname, s_path->m_name);
+    strlcpy(newname, s_path->m_name, AFPOBJ_TMPSIZ + 1);
     p = ctoupath(s_vol, curdir, newname);
 
     if (!p) {

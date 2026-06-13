@@ -86,7 +86,7 @@ STATIC void test_western()
 
     if (Path[0] != '\0') {
         int fd;
-        sprintf(temp, "%s/:test", Path);
+        snprintf(temp, sizeof(temp), "%s/:test", Path);
         fd = open(temp, O_RDWR | O_CREAT, 0666);
 
         if (fd < 0) {
