@@ -1366,7 +1366,8 @@ jobs:
     timeout-minutes: 5
     # always() so the dashboard still posts the charts that did succeed even
     # if one of the three graph jobs failed or was skipped.
-    if: ${{ always() && github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+    if: ${{ always() && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork && github.actor !=
+      'dependabot[bot]' }}
     permissions:
       pull-requests: write
     steps:
