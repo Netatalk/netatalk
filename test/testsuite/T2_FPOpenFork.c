@@ -12,6 +12,14 @@
 
 static char temp[MAXPATHLEN];
 
+static void put_be32(uint8_t *buf, size_t offset, uint32_t value)
+{
+    buf[offset] = (uint8_t)(value >> 24);
+    buf[offset + 1] = (uint8_t)(value >> 16);
+    buf[offset + 2] = (uint8_t)(value >> 8);
+    buf[offset + 3] = (uint8_t)value;
+}
+
 /* Forward declarations */
 STATIC void test526(void);
 
@@ -1439,12 +1447,45 @@ test_exit:
 /* ------------------------- */
 STATIC void test431()
 {
+    static const struct {
+        uint32_t id;
+        uint32_t offset;
+        uint32_t length;
+    } entries[] = {
+        { 2,          741, 5 },
+        { 3,          182, 4 },
+        { 4,          437, 0 },
+        { 8,          637, 16 },
+        { 9,          653, 32 },
+        { 11,         705, 8 },
+        { 13,         693, 0 },
+        { 14,         689, 4 },
+        { 15,         685, 4 },
+        { 0x80444556, 713, 8 },
+        { 0x80494e4f, 721, 8 },
+        { 0x8053594e, 729, 8 },
+        { 0x8053567e, 737, 4 },
+    };
+    static const uint8_t dates[16] = {
+        0x1b, 0x34, 0x67, 0xc4, 0x1b, 0x34, 0x68, 0x8d,
+        0x80, 0x00, 0x00, 0x00, 0x1b, 0x34, 0x67, 0xc4,
+    };
+    static const uint8_t private_data[28] = {
+        0x00, 0xfd, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x8c, 0xf9, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0xf1, 0xe3, 0x86, 0x53, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x01, 0x27,
+    };
+    uint8_t adouble_data[746] = { 0 };
     char *name = "t431";
     uint16_t fork1 = 0;
     uint16_t vol = VolID;
     char cmd[8192];
     const char *teststring = "test\n";
     int teststring_len = 5;
+    int fd = -1;
+    size_t i;
+    ssize_t written;
     struct afp_filedir_parms filedir = { 0 };
     const DSI *dsi = &Conn->dsi;
     ENTER_TEST
@@ -1469,29 +1510,27 @@ STATIC void test431()
         goto test_exit;
     }
 
-    /* touch resource fork conversion test base file */
-    if (snprintf(cmd, sizeof(cmd), "touch %s/%s", Path, name) > sizeof(cmd)) {
-        if (!Quiet) {
-            fprintf(stdout, "FPOpenFork:test431: path too long\n");
+    /* Create the resource fork conversion test base file. */
+    {
+        int len = snprintf(cmd, sizeof(cmd), "%s/%s", Path, name);
+
+        if (len < 0 || len >= (int)sizeof(cmd)) {
+            if (!Quiet) {
+                fprintf(stdout, "FPOpenFork:test431: path too long\n");
+            }
+
+            test_failed();
+            goto fin;
         }
+    }
+    fd = open(cmd, O_WRONLY | O_CREAT | O_TRUNC, 0666);
 
+    if (fd == -1 || close(fd) != 0) {
         test_failed();
         goto fin;
     }
 
-    if (system(cmd) != 0) {
-        test_failed();
-        goto fin;
-    }
-
-    if (snprintf(cmd, sizeof(cmd), "%s/%s", Path, name) > sizeof(cmd)) {
-        if (!Quiet) {
-            fprintf(stdout, "FPOpenFork:test431: path too long\n");
-        }
-
-        test_failed();
-        goto fin;
-    }
+    fd = -1;
 
     if (chmod(cmd, 0666) != 0) {
         test_failed();
@@ -1499,13 +1538,17 @@ STATIC void test431()
     }
 
     /* Create .AppleDouble directory */
-    if (snprintf(cmd, sizeof(cmd), "%s/.AppleDouble", Path) > sizeof(cmd)) {
-        if (!Quiet) {
-            fprintf(stdout, "FPOpenFork:test431: path too long\n");
-        }
+    {
+        int len = snprintf(cmd, sizeof(cmd), "%s/.AppleDouble", Path);
 
-        test_failed();
-        goto fin;
+        if (len < 0 || len >= (int)sizeof(cmd)) {
+            if (!Quiet) {
+                fprintf(stdout, "FPOpenFork:test431: path too long\n");
+            }
+
+            test_failed();
+            goto fin;
+        }
     }
 
     if (mkdir(cmd, 0777) != 0 && errno != EEXIST) {
@@ -1513,29 +1556,70 @@ STATIC void test431()
         goto fin;
     }
 
-    /* Copy resource fork */
-    if (snprintf(cmd, sizeof(cmd), "cp %s/test431_data %s/.AppleDouble/%s",
-                 _PATH_TESTDATA_DIR, Path, name) > sizeof(cmd)) {
-        if (!Quiet) {
-            fprintf(stdout, "FPOpenFork:test431: path too long\n");
+    /* Build the AppleDouble v2 sidecar */
+    adouble_data[1] = 0x05;
+    adouble_data[2] = 0x16;
+    adouble_data[3] = 0x07;
+    adouble_data[5] = 0x02;
+    adouble_data[25] = 13;
+
+    for (i = 0; i < sizeof(entries) / sizeof(entries[0]); i++) {
+        size_t offset = 26 + i * 12;
+        put_be32(adouble_data, offset, entries[i].id);
+        put_be32(adouble_data, offset + 4, entries[i].offset);
+        put_be32(adouble_data, offset + 8, entries[i].length);
+    }
+
+    memcpy(adouble_data + 182, "file", 4);
+    memcpy(adouble_data + 637, dates, sizeof(dates));
+    memcpy(adouble_data + 653, "TEXTTEST", 8);
+    adouble_data[688] = 2;
+    memcpy(adouble_data + 713, private_data, sizeof(private_data));
+    memcpy(adouble_data + 741, teststring, teststring_len);
+    {
+        int len = snprintf(cmd, sizeof(cmd), "%s/.AppleDouble/%s", Path,
+                           name);
+
+        if (len < 0 || len >= (int)sizeof(cmd)) {
+            if (!Quiet) {
+                fprintf(stdout, "FPOpenFork:test431: path too long\n");
+            }
+
+            test_failed();
+            goto fin;
+        }
+    }
+    fd = open(cmd, O_WRONLY | O_CREAT | O_TRUNC, 0666);
+
+    if (fd == -1) {
+        test_failed();
+        goto fin;
+    }
+
+    i = 0;
+
+    while (i < sizeof(adouble_data)) {
+        written = write(fd, adouble_data + i, sizeof(adouble_data) - i);
+
+        if (written < 0 && errno == EINTR) {
+            continue;
         }
 
+        if (written <= 0) {
+            test_failed();
+            goto fin;
+        }
+
+        i += (size_t)written;
+    }
+
+    if (close(fd) != 0) {
         test_failed();
         goto fin;
     }
 
-    if (system(cmd) != 0) {
-        test_failed();
-        goto fin;
-    }
-
-    /* Verify v2 sidecar file was created successfully before enumerate */
-    if (snprintf(cmd, sizeof(cmd), "%s/.AppleDouble/%s", Path,
-                 name) >= (int)sizeof(cmd)) {
-        test_failed();
-        goto fin;
-    }
-
+    fd = -1;
+    /* Verify v2 sidecar file was created successfully before enumerate. */
     {
         struct stat st_pre;
 
@@ -1567,9 +1651,23 @@ STATIC void test431()
 
         if (stat(cmd, &st_post) == 0) {
             unlink(cmd);
-            snprintf(cmd, sizeof(cmd), "%s/.AppleDouble", Path);
+            {
+                int len = snprintf(cmd, sizeof(cmd), "%s/.AppleDouble", Path);
+
+                if (len < 0 || len >= (int)sizeof(cmd)) {
+                    test_failed();
+                    goto test_exit;
+                }
+            }
             rmdir(cmd);
-            snprintf(cmd, sizeof(cmd), "%s/%s", Path, name);
+            {
+                int len = snprintf(cmd, sizeof(cmd), "%s/%s", Path, name);
+
+                if (len < 0 || len >= (int)sizeof(cmd)) {
+                    test_failed();
+                    goto test_exit;
+                }
+            }
             unlink(cmd);
             test_skipped(T_V2CONV);
             goto test_exit;
@@ -1608,6 +1706,10 @@ STATIC void test431()
     }
 
 fin:
+
+    if (fd != -1) {
+        close(fd);
+    }
 
     if (fork1) {
         FPCloseFork(Conn, fork1);

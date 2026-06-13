@@ -1,5 +1,3 @@
-subdir('data')
-
 afptest_external_deps = []
 
 if threads.found()
@@ -204,8 +202,7 @@ executable(
     'afp_spectest',
     spectest_sources,
     include_directories: root_includes,
-    c_args: ['-D_PATH_TESTDATA_DIR="' + datadir + '/netatalk/test-data"']
-    + spectest_extra_c_args,
+    c_args: spectest_extra_c_args,
     link_args: ['-rdynamic'],
     link_with: libafptest,
     install: true,
