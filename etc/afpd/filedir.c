@@ -1183,7 +1183,7 @@ int afp_moveandrename(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
     }
 
     if (!plen) {
-        strcpy(newname, oldname);
+        strlcpy(newname, oldname, AFPOBJ_TMPSIZ + 1);
     }
 
     /* This does the work */

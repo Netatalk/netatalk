@@ -380,7 +380,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
                     return -1;
                 }
 
-                strcpy(ret->m_name, temp);
+                strlcpy(ret->m_name, temp, MAXPATHLEN + 1);
             }
         }
 
@@ -404,7 +404,7 @@ static int cname_mtouname(const struct vol *vol, struct dir *dir,
              */
             if ((t = utompath(vol, ret->u_name, fileid, utf8_encoding(vol->v_obj)))) {
                 /* at last got our view of mac name */
-                strcpy(ret->m_name, t);
+                strlcpy(ret->m_name, t, MAXPATHLEN + 1);
             }
         }
     } /* afp_version >= 30 */

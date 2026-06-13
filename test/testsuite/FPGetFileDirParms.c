@@ -615,13 +615,13 @@ STATIC void test308()
         }
     }
 
-    sprintf(temp, "t307#%X", ntohl(dir));
+    snprintf(temp, sizeof(temp), "t307#%X", ntohl(dir));
 
     if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap)) {
         test_failed();
     }
 
-    sprintf(temp, "t308#%X", ntohl(dir));
+    snprintf(temp, sizeof(temp), "t308#%X", ntohl(dir));
 
     if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, 0, bitmap)) {
         test_failed();
@@ -683,10 +683,10 @@ STATIC void test324()
         test_nottested();
     }
 
-    sprintf(temp1, "#%X.txt", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
@@ -738,10 +738,10 @@ STATIC void test326()
         goto test_exit;
     }
 
-    sprintf(temp1, "#%X.txt", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
     ret = FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0);
 
     if ((Conn->afp_version >= 30 && ret != ntohl(AFPERR_NOOBJ))
@@ -789,19 +789,19 @@ STATIC void test333()
         test_nottested();
     }
 
-    sprintf(temp1, "#%X.txt", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-    sprintf(temp1, "#0%X.txt", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#0%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
@@ -846,19 +846,19 @@ STATIC void test334()
         test_nottested();
     }
 
-    sprintf(temp1, "#%X", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
     }
 
-    sprintf(temp1, "#%X.", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X.", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (!FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();
@@ -912,10 +912,10 @@ STATIC void test335()
         test_nottested();
     }
 
-    sprintf(temp1, "#%X.txt", ntohl(id));
+    snprintf(temp1, sizeof(temp1), "#%X.txt", ntohl(id));
     memset(temp, 0, sizeof(temp));
     strncpy(temp, name, 31 - strlen(temp1));
-    strcat(temp, temp1);
+    strlcat(temp, temp1, sizeof(temp));
 
     if (FPGetFileDirParams(Conn, vol, DIRDID_ROOT, temp, bitmap, 0)) {
         test_failed();

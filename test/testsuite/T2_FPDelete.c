@@ -85,7 +85,7 @@ STATIC void test146()
     FAIL(ntohl(AFPERR_BUSY) != FPDelete(Conn2, vol2,  dir, name))
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, name1, name);
+        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, name1, name);
 
         if (chmod(temp, 0644) < 0) {
             if (!Quiet) {
@@ -223,7 +223,7 @@ STATIC void test363()
         afp_filedir_unpack(Conn, &filedir, dsi->data + ofs, bitmap, 0);
     }
 
-    sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, name1, name);
+    snprintf(temp1, sizeof(temp1), "%s/%s/.AppleDouble/%s", Path, name1, name);
 
     if (unlink(temp1) < 0) {
         if (!Quiet) {
@@ -233,7 +233,7 @@ STATIC void test363()
         test_failed();
     }
 
-    sprintf(temp1, "%s/%s/%s", Path, name1, name);
+    snprintf(temp1, sizeof(temp1), "%s/%s/%s", Path, name1, name);
 
     if (unlink(temp1) < 0) {
         if (!Quiet) {

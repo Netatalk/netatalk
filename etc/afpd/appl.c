@@ -272,6 +272,11 @@ int afp_addappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     dtf = dtfile(vol, creator, ".appl.temp");
+
+    if (!dtf) {
+        return AFPERR_PARAM;
+    }
+
     tempfile = obj->oldtmp;
     strlcpy(tempfile, dtf, AFPOBJ_TMPSIZ + 1);
 
@@ -400,6 +405,13 @@ int afp_rmvappl(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     }
 
     dtf = dtfile(vol, creator, ".appl.temp");
+
+    if (!dtf) {
+        close(sa.sdt_fd);
+        sa.sdt_fd = -1;
+        return AFPERR_PARAM;
+    }
+
     /* Use existing tempfile buffers but check if the path fits */
     tempfile = obj->oldtmp;
 

@@ -18,9 +18,9 @@ int delete_unix_md(char *path, char *name, char *file)
 {
     if (adouble == AD_V2) {
         if (!*file) {
-            sprintf(temp, "%s/%s/.AppleDouble/.Parent", path, name);
+            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name);
         } else {
-            sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
+            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
         }
 
         if (!Quiet) {
@@ -35,7 +35,7 @@ int delete_unix_md(char *path, char *name, char *file)
             return -1;
         }
     } else {
-        sprintf(temp, "%s/%s/%s", path, name, file);
+        snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
 
         if (sys_lremovexattr(temp, AD_EA_META) != 0) {
             if (!Quiet) {
@@ -57,9 +57,9 @@ int delete_unix_rf(char *path, char *name, char *file)
 {
     if (adouble == AD_V2) {
         if (!*file) {
-            sprintf(temp, "%s/%s/.AppleDouble/.Parent", path, name);
+            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name);
         } else {
-            sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
+            snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
         }
 
         if (!Quiet) {
@@ -77,7 +77,7 @@ int delete_unix_rf(char *path, char *name, char *file)
 #ifdef HAVE_EAFD
 
         if (file) {
-            sprintf(temp, "%s/%s/%s", path, name, file);
+            snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
 
             if (sys_lremovexattr(temp, AD_EA_RESO) != 0) {
                 if (!Quiet) {
@@ -92,7 +92,7 @@ int delete_unix_rf(char *path, char *name, char *file)
 #else
 
         if (file) {
-            sprintf(temp, "%s/%s/._%s", path, name, file);
+            snprintf(temp, sizeof(temp), "%s/%s/._%s", path, name, file);
 
             if (!Quiet) {
                 fprintf(stdout, "unlink(%s)\n", temp);
@@ -124,7 +124,7 @@ int delete_unix_file(char *path, char *name, char *file)
         rc = -1;
     }
 
-    sprintf(temp, "%s/%s/%s", path, name, file);
+    snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
 
     if (!Quiet) {
         fprintf(stdout, "unlink(%s)\n", temp);
@@ -144,8 +144,8 @@ int delete_unix_file(char *path, char *name, char *file)
 /*! Rename a file and its resource fork */
 int rename_unix_file(char *path, char *dir, char *src, char *dst)
 {
-    sprintf(temp, "%s/%s/%s", Path, dir, src);
-    sprintf(temp1, "%s/%s/%s", Path, dir, dst);
+    snprintf(temp, sizeof(temp), "%s/%s/%s", Path, dir, src);
+    snprintf(temp1, sizeof(temp1), "%s/%s/%s", Path, dir, dst);
 
     if (!Quiet) {
         fprintf(stdout, "rename %s %s\n", temp, temp1);
@@ -162,8 +162,8 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
     }
 
     if (adouble == AD_V2) {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", Path, dir, src);
-        sprintf(temp1, "%s/%s/.AppleDouble/%s", Path, dir, dst);
+        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", Path, dir, src);
+        snprintf(temp1, sizeof(temp1), "%s/%s/.AppleDouble/%s", Path, dir, dst);
 
         if (!Quiet) {
             fprintf(stdout, "rename %s %s\n", temp, temp1);
@@ -180,8 +180,8 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
         }
     } else {
 #ifndef HAVE_EAFD
-        sprintf(temp, "%s/%s/._%s", Path, dir, src);
-        sprintf(temp1, "%s/%s/._%s", Path, dir, dst);
+        snprintf(temp, sizeof(temp), "%s/%s/._%s", Path, dir, src);
+        snprintf(temp1, sizeof(temp1), "%s/%s/._%s", Path, dir, dst);
 
         if (!Quiet) {
             fprintf(stdout, "rename %s %s\n", temp, temp1);
@@ -206,7 +206,7 @@ int rename_unix_file(char *path, char *dir, char *src, char *dst)
 /*! unlink file only, dont care about adouble file */
 int unlink_unix_file(char *path, char *name, char *file)
 {
-    sprintf(temp, "%s/%s/%s", path, name, file);
+    snprintf(temp, sizeof(temp), "%s/%s/%s", path, name, file);
 
     if (!Quiet) {
         fprintf(stdout, "unlink(%s)\n", temp);
@@ -227,7 +227,7 @@ int unlink_unix_file(char *path, char *name, char *file)
 /* ----------------------------- */
 int symlink_unix_file(char *target, char *path, char *source)
 {
-    sprintf(temp, "%s/%s", path, source);
+    snprintf(temp, sizeof(temp), "%s/%s", path, source);
 
     if (!Quiet) {
         fprintf(stdout, "symlink(%s -> %s)\n", temp, target);
@@ -250,7 +250,7 @@ int symlink_unix_file(char *target, char *path, char *source)
 int delete_unix_adouble(char *path, char *name)
 {
     if (adouble == AD_EA) {
-        sprintf(temp, "%s/%s", path, name);
+        snprintf(temp, sizeof(temp), "%s/%s", path, name);
         sys_lremovexattr(temp, AD_EA_META);
         sys_lremovexattr(temp, AD_EA_RESO);
     } else {
@@ -258,7 +258,7 @@ int delete_unix_adouble(char *path, char *name)
             fprintf(stdout, "rmdir(%s/.AppleDouble) \n", name);
         }
 
-        sprintf(temp, "%s/%s/.AppleDouble/.Parent", path, name);
+        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/.Parent", path, name);
 
         if (unlink(temp) < 0) {
             if (!Quiet) {
@@ -269,7 +269,7 @@ int delete_unix_adouble(char *path, char *name)
             return -1;
         }
 
-        sprintf(temp, "%s/%s/.AppleDouble", path, name);
+        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble", path, name);
 
         if (rmdir(temp) < 0) {
             if (!Quiet) {
@@ -291,7 +291,7 @@ static int chmod_unix_adouble(char *path, char *name, int mode)
         return 0;
     }
 
-    sprintf(temp, "%s/%s/.AppleDouble", path, name);
+    snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble", path, name);
 
     if (!Quiet) {
         fprintf(stdout, "chmod (%s, %o)\n", temp, mode);
@@ -315,8 +315,8 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
-        sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode,
-                AD_EA_META);
+        snprintf(temp, sizeof(temp), "runat '%s/%s/%s' chmod 0%o %s", path, name, file,
+                 mode, AD_EA_META);
 
         if (!Quiet) {
             fprintf(stdout, "%s\n", temp);
@@ -336,7 +336,7 @@ int chmod_unix_meta(char *path, char *name, char *file, mode_t mode)
         return 0;
 #endif
     } else {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
+        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
 
         if (!Quiet) {
             fprintf(stdout, "chmod (%s, 0%o)\n", temp, mode);
@@ -361,8 +361,8 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
 {
     if (adouble == AD_EA) {
 #if defined (HAVE_EAFD) && defined (SOLARIS)
-        sprintf(temp, "runat '%s/%s/%s' chmod 0%o %s", path, name, file, mode,
-                AD_EA_RESO);
+        snprintf(temp, sizeof(temp), "runat '%s/%s/%s' chmod 0%o %s", path, name, file,
+                 mode, AD_EA_RESO);
 
         if (!Quiet) {
             fprintf(stdout, "%s\n", temp);
@@ -380,7 +380,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
         return 0;
 #else
 #ifndef __APPLE__
-        sprintf(temp, "%s/%s/._%s", path, name, file);
+        snprintf(temp, sizeof(temp), "%s/%s/._%s", path, name, file);
 
         if (!Quiet) {
             fprintf(stdout, "chmod(%s, 0%o)\n", temp, mode);
@@ -399,7 +399,7 @@ int chmod_unix_rfork(char *path, char *name, char *file, mode_t mode)
         return 0;
 #endif
     } else {
-        sprintf(temp, "%s/%s/.AppleDouble/%s", path, name, file);
+        snprintf(temp, sizeof(temp), "%s/%s/.AppleDouble/%s", path, name, file);
 
         if (!Quiet) {
             fprintf(stdout, "chmod (%s, 0%o)\n", temp, mode);
@@ -432,7 +432,7 @@ int delete_unix_dir(char *path, char *name)
             return -1;
         }
 
-    sprintf(temp, "%s/%s", path, name);
+    snprintf(temp, sizeof(temp), "%s/%s", path, name);
 
     if (rmdir(temp) < 0) {
         if (!Quiet) {
