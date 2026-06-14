@@ -43,7 +43,7 @@ use strict;
 use warnings;
 use Getopt::Long qw(GetOptions);
 
-# Operations in the order the speedtest runs them, with stable colours so
+# Operations in the order the speedtest runs them, with stable colors so
 # the chart reads the same across commits.
 my @OPERATIONS = qw(Read Write Copy ServerCopy);
 my %OP_COLORS = (
@@ -64,12 +64,9 @@ my $HEIGHT_PX = 676;
 # Column header line that immediately precedes the data rows.
 my $COLUMN_HEADER_PREFIX = 'file_size_bytes,';
 
-# Parse a speedtest CSV capture. Returns (results, meta) where:
-#   * results = {operation => [row_hash, ...]}, each row_hash with keys
-#     size_bytes, mean, median, min, max; rows sorted by ascending size.
-#   * meta = hash of run metadata derived from the capture: "iterations"
-#     (max per-iteration index seen) plus any key=value pairs from an
-#     optional "# Config: k=v,k=v" line emitted by the tool.
+# Parse a speedtest CSV capture into (results, meta): results = {op => [rows
+# sorted by size]}; meta = run metadata (iterations from the max per-iteration
+# index seen, plus any key=value pairs from an optional "# Config:" line).
 sub parse_csv {
     my ($path) = @_;
     my (%results, %meta);
@@ -148,7 +145,7 @@ sub format_size {
     return sprintf('%dM', $kib / 1024.0 + 0.5);
 }
 
-# Known operations first (stable colour/order), then any unexpected ones.
+# Known operations first (stable color/order), then any unexpected ones.
 sub ordered_ops {
     my ($results) = @_;
     my @ops = grep { $results->{$_} } @OPERATIONS;
@@ -159,16 +156,12 @@ sub ordered_ops {
     return @ops;
 }
 
-# Compose the run-config lines shown in the chart's info box. Values come
-# from the CSV where available (size range, iterations) and from --meta
-# key=value pairs the caller injects for things the CSV cannot carry
-# (quantum, ARC dircache, AFP version). Missing values are omitted rather
-# than guessed.
+# Run-config lines shown in the chart's info box, from the CSV and --meta.
+# Missing values are omitted rather than guessed. Size sweep is omitted (the
+# X axis already shows the range).
 sub build_info_lines {
     my ($results, $meta) = @_;
     my @ops = ordered_ops($results);
-
-    # Size sweep is omitted here — the X axis already shows the range.
     my @lines;
     if ($meta->{iterations}) {
         my $warm = $meta->{warmup} ? " +$meta->{warmup} warmup" : '';
@@ -186,8 +179,7 @@ sub build_info_lines {
     return @lines;
 }
 
-# Escape a string for embedding in a double-quoted gnuplot string.
-# Literal newlines become \n escapes (gnuplot renders them as line breaks).
+# Escape a string for a double-quoted gnuplot string (newline -> \n escape).
 sub gp_quote {
     my ($s) = @_;
     $s =~ s/\\/\\\\/g;
@@ -196,7 +188,6 @@ sub gp_quote {
     return $s;
 }
 
-# Render the throughput-vs-size chart to <out_base>.png via gnuplot.
 sub plot {
     my ($results, $out_base, $title, $subtitle, $baseline, $meta) = @_;
     my @ordered = ordered_ops($results);
@@ -225,27 +216,23 @@ sub plot {
         }
         $blocks .= "EOD\n";
 
-        # min..max band gives a sense of run-to-run variance.
+        # min..max band shows run-to-run variance.
         push @bands,
           "\$$tag using 1:3:4 with filledcurves "
           . "fillcolor rgb \"$color\" fillstyle transparent solid 0.12 "
           . 'notitle';
-        # Mean throughput line.
         push @meancurves,
           "\$$tag using 1:2 with linespoints linewidth 2 pointtype 7 "
           . "pointsize 0.5 linecolor rgb \"$color\" notitle";
-        # Max (best run) traces the top of the band, drawn as a dotted line
-        # in the op colour but alpha-blended (#80… = 50% transparent) so
-        # it reads lighter than the solid mean.
+        # Max (best run) traces the band top, alpha-blended (#80 = 50%
+        # transparent) so it reads lighter than the solid mean.
         my $light = '#80' . substr($color, 1);
         push @maxes,
           "\$$tag using 1:4 with lines dashtype (2,1) linewidth 1 " . "linecolor rgb \"$light\" notitle";
 
-        # Two horizontal references per op: the mean of the per-size mean
-        # series as a solid line (matching the solid mean curve) and the mean
-        # of the max series as a dotted line (matching the dotted max hats).
-        # Value labels sit just inside the plot edges so they never overlap
-        # the Y ticks.
+        # Two horizontal references per op: solid = mean of the per-size means
+        # (pairs with the solid mean curve), dotted = mean of the maxes (pairs
+        # with the dotted max hats).
         my ($sum_mean, $sum_max) = (0, 0);
         for my $r (@$rows) {
             $sum_mean += $r->{mean};
@@ -263,10 +250,9 @@ sub plot {
                   '%s with lines dashtype (2,1) linewidth 1 linecolor rgb "%s" ' . 'notitle',
                   $avg_max, $light
           );
-        # "boxed" gives the matplotlib-style white backing behind the value
-        # so it stays readable over the grid (see set style textbox). The
-        # avg-mean label is left-anchored at the Y axis; the avg-max label
-        # is right-aligned (the right edge) so the two never collide.
+        # Value labels: avg-mean left-anchored at the Y axis, avg-max
+        # right-anchored at the right edge, so the two never collide. "boxed"
+        # gives a white backing (see set style textbox) for grid readability.
         push @labels,
           sprintf(
                     'set label %d "%.0f" at graph 0.012, first %s left front '
@@ -280,8 +266,8 @@ sub plot {
                   $idx + 30, $avg_max, $avg_max, $color
           );
 
-        # Legend: only the per-op mean curve (the avg-max/quantum overlays are
-        # explained by the on-chart labels, keeping the key compact).
+        # Legend: only the per-op mean curve; the avg-max/quantum overlays are
+        # explained by the on-chart labels, keeping the key compact.
         push @keyentries,
           sprintf(
                     'keyentry with linespoints linewidth 2 pointtype 7 '
@@ -289,9 +275,8 @@ sub plot {
                   $color, gp_quote($op)
           );
 
-        # Mark the dircache quantum (1 MB) on the Read curve: label the
-        # data point at exactly 1 MiB so the rfork-cache boundary is
-        # visible on the chart.
+        # Mark the dircache quantum (1 MiB) on the Read curve so the
+        # rfork-cache boundary is visible.
         if ($op eq 'Read') {
             for my $r (@$rows) {
                 next unless $r->{size_bytes} == 1024 * 1024;
@@ -355,21 +340,18 @@ sub plot {
     my $gp_bin = $ENV{GNUPLOT_BIN} || 'gnuplot';
     open my $gp, '|-', $gp_bin or die "cannot run $gp_bin: $!\n";
     print $gp <<"EOF";
-# DejaVu Sans is matplotlib's default face; pangocairo falls back to the
-# system sans when it is absent, so this renders everywhere. The 1.8
-# fontscale/linewidth/pointscale matches matplotlib's dpi=130 rendering
-# (130/72), so point sizes below mirror the old matplotlib values.
+# fontscale/linewidth/pointscale 1.8 matches matplotlib's dpi=130 (130/72),
+# so the point sizes below mirror the old matplotlib values. DejaVu Sans is
+# matplotlib's default; pangocairo falls back to system sans if it is absent.
 set terminal pngcairo noenhanced size $WIDTH_PX,$HEIGHT_PX \\
     fontscale 1.8 linewidth 1.8 pointscale 1.8 \\
     background rgb "$BACKGROUND_COLOR" font "DejaVu Sans,7"
 set output "@{[ gp_quote($png) ]}"
 
-# Full matplotlib-style frame: box border, ticks outward on left/bottom.
 set border 15 linewidth 0.8 linecolor rgb "#333333"
 set tics nomirror out scale 0.6
 
-# Reserve the top band for the manually placed title block (a fixed gap
-# between the bold title and the subtitle, like the matplotlib layout).
+# Title block manually placed above the plot for a fixed title/subtitle gap.
 set tmargin at screen 0.84
 set bmargin at screen 0.12
 set label 1 "$suptitle" at screen 0.5, screen 0.95 center \\
@@ -378,27 +360,21 @@ set label 2 "$header" at screen 0.5, screen 0.885 center \\
     font "DejaVu Sans,5.5" textcolor rgb "#222222"
 
 set logscale x 2
-# Tiny right-margin factor so the boundary tick label is not clipped.
+# 1.001 factor so the boundary tick label is not clipped.
 set xrange [$all_sizes[0]:@{[ $all_sizes[-1] * 1.001 ]}]
 set xtics font ",7" ($tics)
 set xlabel "File size"
 set ylabel "Throughput (MB/s)"
-# Fine dotted grid matching the lantest chart. Major lines at #BBBBBB;
-# minor lines a touch fainter so they don't read heavy.
+# Dotted grid; minor lines fainter so they don't read heavy.
 set grid xtics ytics mxtics mytics linetype 1 dashtype (1,2) linewidth 1 \\
     linecolor rgb "#BBBBBB", linetype 1 dashtype (1,2) linewidth 1 \\
     linecolor rgb "#DDDDDD"
-# Legend pinned to the free top-left of the outer canvas (above the plot,
-# left of the centred title/subtitle) so it sits entirely outside the plot
-# area and never overlaps a data curve.
+# Legend in the free top-left outer canvas, outside the plot area.
 set key at screen 0.005, screen 0.995 top left Left reverse samplen 1.5 \\
     width -1 spacing 1.1 font ",6" \\
     box linewidth 0.6 linecolor rgb "#CCCCCC" opaque fillcolor rgb "#F5F5F5"
-# White backing for the boxed mean-value labels (matplotlib bbox style).
 set style textbox opaque fillcolor rgb "#FFFFFF" noborder margins 0.6,0.6
-# Column headers over the two value-label stacks. Each value is a mean
-# across the size sweep: "avg mean" at the left (Y axis), "avg max" at
-# the right edge.
+# Column headers over the two value-label stacks (means across the sweep).
 set label 3 "avg mean" at graph 0.012, graph 1.02 left front \\
     font "DejaVu Sans:Bold,6" textcolor rgb "#444444"
 set label 4 "avg max" at graph 0.988, graph 1.02 right front \\

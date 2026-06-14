@@ -1069,6 +1069,7 @@ jobs:
       AFP_TEST_ITERATIONS: 20
     outputs:
       slowest: ${{ steps.lantest-summary.outputs.SLOW }}
+      aggregates: ${{ steps.lantest-summary.outputs.AGG }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -1104,6 +1105,35 @@ jobs:
             exit 1
           fi
           echo "CSV lines: $(wc -l < lantest.csv)"
+      - name: Summarize lantest results
+        run: |
+          # Build a readable summary from lantest.csv for the run page.
+          # Per-test rows have a 6-field numeric tail
+          # (Time,Time±,Min,Max,Median,MB/s); the aggregate block is keyed by
+          # the "# Aggregate" marker that afp_lantest emits in CSV mode.
+          {
+            echo "## Lantest results (${{ env.AFP_TEST_ITERATIONS }} iterations)"
+            echo ""
+            echo "### Aggregates"
+            echo "| Metric | Value |"
+            echo "|--------|-------|"
+            awk -F, '
+              /^# Aggregate/ { agg = 1; next }
+              agg && NF == 2 { printf "| %s | %s |\n", $1, $2 }
+            ' lantest.csv
+            echo ""
+            echo "### Per-test median latency (slowest first)"
+            echo "| Test | Median ms | Min | Max | MB/s |"
+            echo "|------|-----------|-----|-----|------|"
+            awk -F, '
+              $(NF) ~ /^[0-9]+$/ && $(NF-1) ~ /^[0-9]+$/ && $(NF-2) ~ /^[0-9]+$/ \
+                && $(NF-3) ~ /^[0-9]+$/ && $(NF-4) ~ /^[0-9.]+$/ && $(NF-5) ~ /^[0-9]+$/ {
+                mbs = $(NF); median = $(NF-1); max = $(NF-2); min = $(NF-3)
+                name = $1; for (i = 2; i <= NF-6; i++) name = name "," $i
+                sub(/ *\[[^]]*\] *$/, "", name)
+                printf "%d\t| %s | %d | %d | %d | %d |\n", median, name, median, min, max, mbs
+              }' lantest.csv | sort -rn | cut -f2-
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Render latency chart (PNG)
         run: |
           # fonts-dejavu-core: the chart scripts request "DejaVu Sans"
@@ -1120,6 +1150,7 @@ jobs:
             --subtitle "commit ${SHORT_SHA} · candle: min–max wick, mean±σ box, median line" \
             --meta afp=3.4 \
             --meta iterations=${{ env.AFP_TEST_ITERATIONS }} \
+            --meta quantum_kb=1024 \
             --meta dircache_mode=arc \
             --meta dircache_size=65536 \
             --meta dircache_validation_freq=100
@@ -1140,10 +1171,21 @@ jobs:
               printf "%d\t%s\n", median, name
             }' lantest.csv | sort -rn | head -5 \
             | awk -F'\t' '{ printf "| %s | %s |\n", $2, $1 }')
+          # Average time per AFP op (emitted by afp_lantest in CSV mode under
+          # the "# Aggregate" marker) as a single inline stat for the comment.
+          AGG=$(awk -F, '
+            /^# Aggregate/ { agg = 1; next }
+            agg && $1 == "Avg time per AFP op (ms)" {
+              printf "**Avg time per AFP op: %s ms**", $2
+            }
+          ' lantest.csv)
           {
             echo "SLOW<<EOFSLOW"
             echo "$SLOW"
             echo "EOFSLOW"
+            echo "AGG<<EOFAGG"
+            echo "$AGG"
+            echo "EOFAGG"
           } >> "$GITHUB_OUTPUT"
       - name: Upload lantest artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -1343,6 +1385,8 @@ jobs:
             ## ⏱️ [Lantest](https://netatalk.io/manual/en/afp_lantest.1) (AFP 3.4) - LatencyGraph
 
             [![Lantest latency](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)](https://netatalk.github.io/netatalk/lantest/pr-${{ github.event.pull_request.number }}.png)
+
+            ${{ needs.latencygraph-lantest.outputs.aggregates }}
 
             <details>
             <summary>🐢 Slowest operations (median)</summary>
