@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/dragonflybsd-vm@b4468429bb9ab60b14600c6eeeb6464427f29391 # v1.2.9
         with:
@@ -106,7 +106,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
         with:
@@ -173,7 +173,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/freebsd-vm@d1e65811565151536c0c894fff74f06351ed26e6 # v1.4.5
         with:
@@ -248,7 +248,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/netbsd-vm@ad31081832386a0ba569aee243e6edf9524f3f80 # v1.3.9
         with:
@@ -320,7 +320,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/openbsd-vm@6fac4962055fe9952d29930942445739e509fecd # v1.4.2
         with:
@@ -386,7 +386,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/omnios-vm@493aabc6b4f4dd6dcb81e748548b5f4bf56dd2b1 # v1.3.1
         with:
@@ -458,7 +458,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/openindiana-vm@5ecd04945b8ac6c9b82248324912326a4d065094 # v1.1.2
         with:
@@ -537,7 +537,7 @@ jobs:
     timeout-minutes: 24
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Build on VM
         uses: vmactions/solaris-vm@970a329b471871f9a6765c8f166765fa4ddfb446 # v1.3.4
         with:
