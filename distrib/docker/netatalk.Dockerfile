@@ -37,7 +37,7 @@ ARG BUILD_DEPS="\
     talloc-dev \
     "
 
-FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS build
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS build
 
 ARG RUN_DEPS
 ARG BUILD_DEPS
@@ -86,7 +86,7 @@ RUN meson setup build \
 
 RUN meson install --destdir=/staging/ -C build
 
-FROM alpine:3.23.4@sha256:5b10f432ef3da1b8d4c7eb6c487f2f5a8f096bc91145e68878dd4a5019afde11 AS deploy
+FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b AS deploy
 
 ARG RUN_DEPS
 ENV RUN_DEPS=$RUN_DEPS
