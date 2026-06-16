@@ -55,6 +55,7 @@
 #define DDPTYPE_MACIP (22)
 #define MACIP_ASSIGN (1)
 #define MACIP_SERVER (3)
+#define MACIP_ERROR (-1)
 #define MACIP_PORT (72)
 
 #define MACIP_MAXMTU (586)
@@ -78,7 +79,7 @@
 struct macip_req_control {
     uint16_t mipr_version;
     uint16_t _mipr_pad1;
-    uint32_t mipr_function;
+    int32_t mipr_function;
 } __attribute__((__packed__));
 
 struct macip_req_data {
@@ -87,6 +88,10 @@ struct macip_req_data {
     uint32_t mipr_broadcast;
     uint32_t _mipr_pad2;
     uint32_t mipr_subnet;
+    uint32_t _mipr_pad3;
+    uint32_t _mipr_pad4;
+    uint32_t _mipr_pad5;
+    char mipr_error[22];
 } __attribute__((__packed__));
 
 struct macip_req {
@@ -131,6 +136,8 @@ static struct macip_data gMacip;
 static struct zones gZones;
 static outputfunc_t gOutput;
 
+static const char *error_noip = "No Address Available.";
+static const char *error_noop = "Unknown Operation.";
 
 static uint16_t cksum(char *buffer, int len)
 {
@@ -415,35 +422,36 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
 
     rq = (struct macip_req *) buffer;
     bzero(rq, sizeof(struct macip_req));
+    /* We always send these fields */
+    rq->miprc.mipr_version = htons(1U);
+    rq->miprd.mipr_nameserver =
+        htonl(gMacip.nameserver);
+    rq->miprd.mipr_broadcast = htonl(gMacip.broadcast);
+    rq->miprd.mipr_subnet = htonl(gMacip.mask);
+    /* Set packet length to size of macip_req minus error message buffer */
+    len = sizeof(struct macip_req) - 21;
 
     switch (f) {
     case MACIP_ASSIGN:
-        rq->miprc.mipr_version = htons(1U);
+        rq->miprc.mipr_function = htonl(MACIP_ASSIGN);
 
         if ((ip = lease_ip())) {
-            rq->miprc.mipr_function = htonl(1U);
             rq->miprd.mipr_ipaddr = htonl(ip);
-            rq->miprd.mipr_nameserver =
-                htonl(gMacip.nameserver);
-            rq->miprd.mipr_broadcast = htonl(gMacip.broadcast);
-            rq->miprd.mipr_subnet = htonl(gMacip.mask);
-            len = sizeof(struct macip_req);
             arp_set(ip, &sat);
 
             if (gDebug & DEBUG_MACIP) {
                 printf("assigned %s.\n", iptoa(ip));
             }
         } else {
-            rq->miprc.mipr_function = htonl(0);
-            len = sizeof(struct macip_req);
+            rq->miprc.mipr_function = htonl(MACIP_ERROR);
+            strncpy(rq->miprd.mipr_error, error_noip, strlen(error_noip));
+            len = len + strlen(error_noip);
         }
 
         break;
 
     case MACIP_SERVER:
-        rq->miprc.mipr_version = htons(1U);
-        rq->miprc.mipr_function = htonl(3U);
-        len = sizeof(struct macip_req_control);
+        rq->miprc.mipr_function = htonl(MACIP_SERVER);
         break;
 
     default:
@@ -452,9 +460,10 @@ static void config_input(ATP atp, struct sockaddr_at *faddr, char *packet,
             ("macip_input: unknown request #%d received; ignored.\n",
              f);
 
-        rq->miprc.mipr_version = htons(1U);
-        rq->miprc.mipr_function = htonl(0U);
-        len = sizeof(struct macip_req_control);
+        rq->miprc.mipr_function = htonl(MACIP_ERROR);
+        strncpy(rq->miprd.mipr_error, error_noop, strlen(error_noop));
+        len = len + strlen(error_noop);
+        break;
     }
 
     iov.iov_base = buffer;
