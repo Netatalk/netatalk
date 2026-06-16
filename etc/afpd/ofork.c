@@ -151,8 +151,6 @@ int of_rename(const struct vol *vol,
     return AFP_OK;
 }
 
-#define min(a,b)    ((a)<(b)?(a):(b))
-
 struct ofork *
 of_alloc(struct vol *vol,
          struct dir    *dir,
@@ -167,14 +165,32 @@ of_alloc(struct vol *vol,
     int         i;
 
     if (!oforks) {
-        nforks = getdtablesize() - 10;
-        /* protect against insane ulimit -n */
-        nforks = min(nforks, 0xffff);
+        /* Two ceilings: the 16-bit protocol max (0xffff), and half the realised
+         * fd limit -- a fork costs ~2 fds (data fork + sidecar/resource fd) on
+         * both AD and EA backends -- so we never advertise a slot whose backing
+         * open(2)s would EMFILE.  getdtablesize() read once. */
+        int fdlimit = getdtablesize();
+        int fdcap   = fdlimit / 2;
+
+        /* Floor at 1 so a degenerate/-1 fd limit can't make nforks 0 (would
+         * divide by zero at "refnum % nforks" below). */
+        if (fdcap < 1) {
+            fdcap = 1;
+        }
+
+        nforks = (fdcap < 0xffff) ? fdcap : 0xffff;
         oforks = (struct ofork **) calloc(nforks, sizeof(struct ofork *));
 
         if (!oforks) {
+            LOG(log_error, logtype_afpd,
+                "of_alloc: cannot allocate %d-slot ofork table: %s",
+                nforks, strerror(errno));
             return NULL;
         }
+
+        LOG(log_debug, logtype_afpd,
+            "of_alloc: ofork table sized to %d slots (protocol max 0xffff, "
+            "fd limit %d, ~2 fds/fork)", nforks, fdlimit);
     }
 
     for (refnum = ++lastrefnum, i = 0; i < nforks; i++, refnum++) {

@@ -26,11 +26,15 @@
 #include <atalk/unicode.h>
 
 #ifndef RLIM_MAX
-#ifdef __APPLE__
-#define RLIM_MAX 10240
-#else
-#define RLIM_MAX 65535
+/* Desired afpd fd budget: backs the full 0xffff refnum space at ~2 fds/fork
+ * plus infra fds.  A target only; setlimits() probes down if the kernel says no. */
+#define RLIM_MAX 133120
 #endif
+
+#ifndef RLIM_MAX_CNID_METAD
+/* cnid_metad's fd need is bounded by MAXVOLS, not the refnum space; modest fixed
+ * raise.  Guarded separately so a platform-defined RLIM_MAX can't skip it. */
+#define RLIM_MAX_CNID_METAD 4200
 #endif
 
 /* exit error codes */

@@ -220,28 +220,108 @@ static void child_handler(void)
     }
 }
 
-static int setlimits(void)
+/*!
+ * @brief Raise RLIMIT_NOFILE toward a target, probing down on rejection
+ *
+ * Requests @p target and, if the kernel refuses it with EINVAL/EPERM,
+ * binary-searches for the largest acceptable value. The realised soft limit is
+ * delivered via @p out (not the return value) so RLIM_INFINITY is never
+ * confused with the -1 error sentinel. The caller guarantees the current soft
+ * limit is finite and below @p target.
+ *
+ * @param[in] who      caller label for log messages
+ * @param[in] target   desired soft (and, if lower, hard) limit
+ * @param[out] out      realised soft limit after the attempt
+ * @return 0 on success, -1 only if the current limit cannot be read
+ */
+static int raise_nofile_to(const char *who, rlim_t target, rlim_t *out)
 {
     struct rlimit rlim;
 
     if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-        LOG(log_warning, logtype_afpd, "setlimits: reading current limits failed: %s",
+        LOG(log_warning, logtype_afpd, "%s: getrlimit(RLIMIT_NOFILE): %s",
+            who, strerror(errno));
+        return -1;
+    }
+
+    rlim_t lo = rlim.rlim_cur;             /* known-good floor (finite, < target) */
+    struct rlimit t = rlim;
+    t.rlim_cur = target;
+
+    if (t.rlim_max != RLIM_INFINITY && t.rlim_max < target) {
+        t.rlim_max = target;
+    }
+
+    if (setrlimit(RLIMIT_NOFILE, &t) != 0) {
+        if (errno == EINVAL || errno == EPERM) {
+            /* Kernel refused the target: search the largest acceptable value. */
+            rlim_t hi = target;
+
+            while (lo + 1 < hi) {
+                rlim_t mid = lo + (hi - lo) / 2;
+                t = rlim;
+                t.rlim_cur = mid;
+
+                if (t.rlim_max != RLIM_INFINITY && t.rlim_max < mid) {
+                    t.rlim_max = mid;
+                }
+
+                if (setrlimit(RLIMIT_NOFILE, &t) == 0) {
+                    lo = mid;              /* accepted: raise the floor */
+                } else if (errno == EINVAL || errno == EPERM) {
+                    hi = mid;              /* rejected: lower the ceiling */
+                } else {
+                    LOG(log_warning, logtype_afpd,
+                        "%s: setrlimit(RLIMIT_NOFILE, %ju): %s",
+                        who, (uintmax_t)mid, strerror(errno));
+                    break;
+                }
+            }
+        } else {
+            LOG(log_warning, logtype_afpd, "%s: setrlimit(RLIMIT_NOFILE, %ju): %s",
+                who, (uintmax_t)target, strerror(errno));
+        }
+    }
+
+    /* Re-read the realised value rather than trusting the search. */
+    if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
+        *out = rlim.rlim_cur;
+    } else {
+        *out = lo;
+    }
+
+    return 0;
+}
+
+static int setlimits(void)
+{
+    struct rlimit rlim;
+    rlim_t got;
+
+    if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
+        LOG(log_warning, logtype_afpd, "setlimits: getrlimit(RLIMIT_NOFILE): %s",
             strerror(errno));
         return -1;
     }
 
-    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < RLIM_MAX) {
-        rlim.rlim_cur = RLIM_MAX;
+    /* Already unlimited or at/above target: nothing to raise. */
+    if (rlim.rlim_cur == RLIM_INFINITY || rlim.rlim_cur >= (rlim_t)RLIM_MAX) {
+        got = rlim.rlim_cur;
+    } else if (raise_nofile_to("setlimits", (rlim_t)RLIM_MAX, &got) != 0) {
+        return -1;
+    }
 
-        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < RLIM_MAX) {
-            rlim.rlim_max = RLIM_MAX;
-        }
+    LOG(log_info, logtype_afpd,
+        "setlimits: RLIMIT_NOFILE realised soft limit %ju (target %d)",
+        (uintmax_t)got, RLIM_MAX);
 
-        if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-            LOG(log_warning, logtype_afpd, "setlimits: increasing limits failed: %s",
-                strerror(errno));
-            return -1;
-        }
+    /* Below target -> of_alloc() sizes the refnum table to got/2. */
+    if (got != RLIM_INFINITY && got < (rlim_t)RLIM_MAX) {
+        LOG(log_warning, logtype_afpd,
+            "setlimits: RLIMIT_NOFILE %ju is below the desired %d; open-fork "
+            "capacity is reduced (table sized to ~%ju forks). Raise the "
+            "process NOFILE limit (e.g. kern.maxfilesperproc / limits.conf).",
+            (uintmax_t)got, RLIM_MAX, (uintmax_t)(got / 2));
     }
 
     return 0;
