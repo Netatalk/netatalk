@@ -72,6 +72,9 @@ static void of_unhash(struct ofork *of)
         }
 
         *(of->prevp) = of->next;
+        /* Idempotent: a second call short-circuits on the prevp guard. */
+        of->prevp = NULL;
+        of->next = NULL;
     }
 }
 
