@@ -454,21 +454,30 @@ static int setlimits(void)
     struct rlimit rlim;
 
     if (getrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-        LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
-        exit(1);
+        LOG(log_warning, logtype_cnid, "setlimits: getrlimit: %s", strerror(errno));
+        return -1;
     }
 
-    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < RLIM_MAX) {
-        rlim.rlim_cur = RLIM_MAX;
+    if (rlim.rlim_cur != RLIM_INFINITY && rlim.rlim_cur < RLIM_MAX_CNID_METAD) {
+        rlim.rlim_cur = RLIM_MAX_CNID_METAD;
 
-        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < RLIM_MAX) {
-            rlim.rlim_max = RLIM_MAX;
+        if (rlim.rlim_max != RLIM_INFINITY && rlim.rlim_max < RLIM_MAX_CNID_METAD) {
+            rlim.rlim_max = RLIM_MAX_CNID_METAD;
         }
 
         if (setrlimit(RLIMIT_NOFILE, &rlim) != 0) {
-            LOG(log_error, logtype_afpd, "setlimits: %s", strerror(errno));
-            exit(1);
+            /* Non-fatal: 4200 is below every platform's ceiling, so run with
+             * what we have rather than refusing to start (the #1793 regression). */
+            LOG(log_warning, logtype_cnid,
+                "setlimits: could not raise RLIMIT_NOFILE to %d: %s; continuing",
+                RLIM_MAX_CNID_METAD, strerror(errno));
         }
+    }
+
+    if (getrlimit(RLIMIT_NOFILE, &rlim) == 0) {
+        LOG(log_info, logtype_cnid,
+            "setlimits: RLIMIT_NOFILE soft=%ju hard=%ju",
+            (uintmax_t)rlim.rlim_cur, (uintmax_t)rlim.rlim_max);
     }
 
     return 0;

@@ -145,6 +145,8 @@ static pid_t dsi_tcp_open(DSI *dsi)
 
     getitimer(ITIMER_PROF, &itimer);
 
+    /* Child inherits the parent's RLIMIT_NOFILE; no re-raise needed (and none
+     * possible after the per-session seteuid()). */
     if (0 == (pid = fork())) {  /* child */
         static struct itimerval timer = {{0, 0}, {DSI_TCPTIMEOUT, 0}};
         struct sigaction newact, oldact;
