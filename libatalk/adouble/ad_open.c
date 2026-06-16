@@ -1121,6 +1121,19 @@ static int ad2openflags(const struct adouble *ad, int adfile, int adflags)
         oflags |= O_NOFOLLOW;
     }
 
+    /* POSIX open(2) needs an explicit access mode.  Detect a missing one at the
+     * adflags level: O_RDONLY is 0, so testing oflags can't tell "no mode" from
+     * a real read-only open, but ADFLAGS_RDWR/ADFLAGS_RDONLY are distinct bits.
+     * Strict backends (FreeBSD, FUSE) reject access-mode-less flags with EINVAL;
+     * default to O_RDONLY. */
+    if (!(adflags & (ADFLAGS_RDWR | ADFLAGS_RDONLY))) {
+        LOG(log_warning, logtype_ad,
+            "ad2openflags: missing access mode (adflags=0x%x adfile=0x%x); "
+            "defaulting to O_RDONLY", adflags, adfile);
+        /* No-op on the bits (O_RDONLY==0); documents the read-only default. */
+        oflags |= O_RDONLY;
+    }
+
     return oflags;
 }
 #ifdef __APPLE__
