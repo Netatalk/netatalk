@@ -2954,7 +2954,9 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         ad_init_offsets(&adtmp);
 
         if (!AD_META_OPEN(adsp)) {
-            if (ad_open(adsp, p, ADFLAGS_HF) != 0) {
+            /* RDWR: this block rewrites the metadata header (ad_flush only
+             * persists when the fd carries O_RDWR). */
+            if (ad_open(adsp, p, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
                 err = AFPERR_MISC;
                 goto err_temp_to_dest;
             }
@@ -2963,7 +2965,7 @@ int afp_exchangefiles(AFPObj *obj, char *ibuf, size_t ibuflen _U_,
         }
 
         if (!AD_META_OPEN(addp)) {
-            if (ad_open(addp, upath, ADFLAGS_HF) != 0) {
+            if (ad_open(addp, upath, ADFLAGS_HF | ADFLAGS_RDWR) != 0) {
                 err = AFPERR_MISC;
 
                 if (opened_ads) {
