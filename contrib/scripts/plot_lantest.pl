@@ -128,6 +128,11 @@ sub build_info_lines {
         my $warm = $meta->{warmup} ? " +$meta->{warmup} warmup" : '';
         push @lines, "Iterations: $meta->{iterations}$warm";
     }
+    # Avg time one full pass over all tests takes = sum of per-test means
+    # (the same figure the candle labels' percentages are normalized against).
+    my $total_mean = 0;
+    $total_mean += $_->{mean} for @$tests;
+    push @lines, sprintf('Avg total runtime: %.0f ms', $total_mean);
     push @lines, "AFP: $meta->{afp}"               if $meta->{afp};
     push @lines, "Quantum: $meta->{quantum_kb} KB" if $meta->{quantum_kb};
     my @dc;
@@ -163,11 +168,28 @@ sub plot {
     }
     my $y_lo = $data_min / 1.6;
     $y_lo = 0.1 if $y_lo < 0.1;
-    my $y_hi = $data_max * 1.6;
+    # The candle-max labels sit a fixed character height above the tallest
+    # candle, so on a log axis they occupy more *decades* of headroom the wider
+    # the data range. Reserve top headroom as a fraction of the decade span
+    # (floored at ~0.2 decades = the former fixed 1.6x, so the common narrow
+    # range is unchanged), then place the axis top that many decades above the
+    # tallest candle so a candle pinned to the top of the scale still clears its
+    # label.
+    my $span_decades     = (log($data_max) - log($y_lo)) / log(10);
+    my $headroom_decades = 0.08 * $span_decades;
+    $headroom_decades = 0.2 if $headroom_decades < 0.2;
+    my $y_hi = $data_max * (10**$headroom_decades);
+
+    # Total mean runtime (sum of per-test means) is the denominator for each
+    # candle's "% of total runtime" label, so a test's share of one full pass
+    # is comparable across runs even when absolute times drift.
+    my $total_mean = 0;
+    $total_mean += $_->{mean} for @$tests;
 
     # Columns per candlestick: x, box_lo, wick_lo, box_hi, wick_hi, median,
-    # cov. Box = mean ± 1 stddev clamped to the wick; cov (stddev/mean %) is
-    # the normalized jitter plotted as bars in the lower panel.
+    # cov, mean, pct. Box = mean ± 1 stddev clamped to the wick; cov
+    # (stddev/mean %) is the normalized jitter plotted as bars in the lower
+    # panel. mean + pct drive the label printed above each candle.
     my $rows    = '';
     my $cov_max = 0;
     my (@tics, @blank_tics);
@@ -179,7 +201,8 @@ sub plot {
         $box_hi = $t->{max} if $box_hi > $t->{max};
         my $cov = $t->{mean} > 0 ? 100 * $t->{stddev} / $t->{mean} : 0;
         $cov_max = $cov if $cov > $cov_max;
-        $rows .= "$x $box_lo $t->{min} $box_hi $t->{max} $t->{median} $cov\n";
+        my $pct = $total_mean > 0 ? 100 * $t->{mean} / $total_mean : 0;
+        $rows .= "$x $box_lo $t->{min} $box_hi $t->{max} $t->{median} $cov " . "$t->{mean} $pct\n";
         push @tics, sprintf('"%s" %d', gp_quote($t->{label}), $x);
         push @blank_tics, sprintf('"" %d', $x);
         $x++;
@@ -280,8 +303,9 @@ plot \$DATA using 1:2:3:5:4 with candlesticks whiskerbars 0.48 \\
         linewidth 2 linecolor rgb "$MEDIAN_COLOR" notitle, \\
      \$DATA using (\$1 - 0.24):5:(0.48):(0.0) with vectors nohead \\
         linewidth 1 dashtype (2,1) linecolor rgb "$MAX_COLOR" notitle, \\
-     \$DATA using 1:5:(sprintf("%d", \$6)) with labels \\
-        offset 0,0.6 font ",5" textcolor rgb "$MEDIAN_COLOR" notitle, \\
+     \$DATA using 1:5:(\$9 < 10 ? sprintf("%d · %.1f%%", \$8, \$9) \\
+        : sprintf("%d · %.0f%%", \$8, \$9)) with labels \\
+        offset 0,0.6 font ",5" textcolor rgb "$BOX_COLOR" notitle, \\
      keyentry with lines linecolor rgb "$BOX_COLOR" linewidth 1 \\
         title "min–max range", \\
      keyentry with boxes fillstyle transparent solid 0.35 \\
