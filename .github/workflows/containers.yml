@@ -1155,30 +1155,44 @@ jobs:
             --meta dircache_size=65536 \
             --meta dircache_validation_freq=100
           echo "PNG size: $(du -h lantest.png | cut -f1)"
-      - name: Extract slowest tests for PR comment
+      - name: Extract per-test table and aggregates for PR comment
         id: lantest-summary
         run: |
-          # Top 5 tests by median time. Right-anchored parse: the trailing six
-          # fields are mean,stddev,min,max,median,mbs and the name (which may
-          # contain commas) precedes them. Require that exact numeric tail so
-          # afpd log lines (also comma-rich) are rejected.
+          # Full per-test results in execution order (matching the chart's
+          # x-axis left-to-right). Right-anchored parse: the trailing six fields
+          # are mean,stddev,min,max,median,mbs and the name (which may contain
+          # commas) precedes them. Require that exact numeric tail so afpd log
+          # lines (also comma-rich) are rejected. The mean is the per-test
+          # average runtime over the iterations — the same statistic the chart's
+          # candle labels and percentages use.
           SLOW=$(awk -F, '
             $(NF) ~ /^[0-9]+$/ && $(NF-1) ~ /^[0-9]+$/ && $(NF-2) ~ /^[0-9]+$/ \
               && $(NF-3) ~ /^[0-9]+$/ && $(NF-4) ~ /^[0-9.]+$/ && $(NF-5) ~ /^[0-9]+$/ {
-              median=$(NF-1)+0
+              mean=$(NF-5)+0
               name=$1; for (i=2; i<=NF-6; i++) name=name","$i
               sub(/ *\[[^]]*\] *$/, "", name)
-              printf "%d\t%s\n", median, name
-            }' lantest.csv | sort -rn | head -5 \
-            | awk -F'\t' '{ printf "| %s | %s |\n", $2, $1 }')
-          # Average time per AFP op (emitted by afp_lantest in CSV mode under
-          # the "# Aggregate" marker) as a single inline stat for the comment.
-          AGG=$(awk -F, '
+              printf "| %s | %d |\n", name, mean
+            }' lantest.csv)
+          # Two inline aggregate stats for the comment:
+          #   * Avg time per AFP op (from the "# Aggregate" block).
+          #   * Avg total runtime for all tests = sum of per-test means, which
+          #     afp_lantest already prints as the second field of the
+          #     "Sum of all AFP OPs = N,SUM,," row (SUM = summed means).
+          AVG_OP=$(awk -F, '
             /^# Aggregate/ { agg = 1; next }
-            agg && $1 == "Avg time per AFP op (ms)" {
-              printf "**Avg time per AFP op: %s ms**", $2
-            }
+            agg && $1 == "Avg time per AFP op (ms)" { print $2 }
           ' lantest.csv)
+          TOTAL=$(awk -F, '
+            /^Sum of all AFP OPs =/ { print $2 + 0; exit }
+          ' lantest.csv)
+          # Only emit a stat that actually parsed, so a truncated CSV drops the
+          # missing figure rather than rendering "Avg ...:  ms" in the comment.
+          AGG=""
+          [ -n "$TOTAL" ] && AGG="**Avg total runtime: ${TOTAL} ms**"
+          if [ -n "$AVG_OP" ]; then
+            [ -n "$AGG" ] && AGG="$AGG · "
+            AGG="${AGG}**Avg time per AFP op: ${AVG_OP} ms**"
+          fi
           {
             echo "SLOW<<EOFSLOW"
             echo "$SLOW"
@@ -1389,10 +1403,10 @@ jobs:
             ${{ needs.latencygraph-lantest.outputs.aggregates }}
 
             <details>
-            <summary>🐢 Slowest operations (median)</summary>
+            <summary>🐢 All operations (avg runtime, in test order)</summary>
 
-            | Test | Median (ms) |
-            |------|-------------|
+            | Test | Avg (ms) |
+            |------|----------|
             ${{ needs.latencygraph-lantest.outputs.slowest }}
 
             </details>
