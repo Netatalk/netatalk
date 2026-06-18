@@ -183,6 +183,11 @@ if get_option('with-tests')
     afpdtest = executable(
         'afpdtest',
         afpdtest_dtrace_input,
+        # The fault-injection control block (fi) and the unit tests that use it
+        # live in the executable; export_dynamic below lets the LD_PRELOAD
+        # interposer (libfaultinject.so) resolve `fi` back into this binary.
+        'faultinject.c',
+        'subtests_lock.c',
         objects: test_objs,
         include_directories: test_includes,
         link_with: [test_internal_deps, libatalk],
@@ -195,6 +200,24 @@ if get_option('with-tests')
         link_language: use_spotlight_xapian ? 'cpp' : 'c',
         export_dynamic: true,
         install: false,
+    )
+
+    # LD_PRELOAD interposer: replaces open/close/fcntl/fchdir at dynamic-link
+    # resolution, so calls made INSIDE libatalk.so (ad_open/ad_close/…) are
+    # intercepted — which a link-time --wrap on afpdtest cannot reach.  Reads the
+    # `fi` control block exported by afpdtest; forwards to the real libc symbol
+    # via dlsym(RTLD_NEXT) unless a test has armed a failure.  Under glibc's
+    # _FILE_OFFSET_BITS=64 the single open() definition is renamed by <fcntl.h>
+    # to open64() (the symbol LFS callers reference), so no separate wrapper is
+    # needed — see faultinject.c.
+    faultinject_preload = shared_library(
+        'faultinject',
+        'faultinject.c',
+        include_directories: test_includes,
+        c_args: ['-DFAULTINJECT_PRELOAD'],
+        dependencies: cc.find_library('dl', required: false),
+        install: false,
+        build_by_default: true,
     )
 
     test_sh = find_program('test.sh')
@@ -210,6 +233,8 @@ if get_option('with-tests')
         afpdtest,
         args: ['--tap'],
         protocol: 'tap',
+        env: {'LD_PRELOAD': faultinject_preload.full_path()},
+        depends: faultinject_preload,
         verbose: true,
         is_parallel: false,
         priority: 0,

@@ -521,10 +521,18 @@ int ad_close(struct adouble *ad, int adflags)
                 adf_lock_free(&ad->ad_data_fork);
             }
 
-        if (--ad->ad_data_fork.adf_refcount == 0) {
-            if (ad_data_closefd(ad) < 0) {
-                err = -1;
+        if (ad->ad_data_fork.adf_refcount > 0) {
+            if (--ad->ad_data_fork.adf_refcount == 0) {
+                if (ad_data_closefd(ad) < 0) {
+                    err = -1;
+                }
             }
+        } else {
+            LOG(log_error, logtype_ad,
+                "ad_close: data-fork adf_refcount underflow (already %d) — "
+                "stray double ad_close()? fd=%d",
+                ad->ad_data_fork.adf_refcount, ad_data_fileno(ad));
+            AFP_ASSERT(ad->ad_data_fork.adf_refcount > 0);
         }
     }
 
@@ -533,12 +541,20 @@ int ad_close(struct adouble *ad, int adflags)
             ad->ad_meta_refcount--;
         }
 
-        if (!(--ad->ad_mdp->adf_refcount)) {
-            if (close(ad_meta_fileno(ad)) < 0) {
-                err = -1;
-            }
+        if (ad->ad_mdp->adf_refcount > 0) {
+            if (!(--ad->ad_mdp->adf_refcount)) {
+                if (close(ad_meta_fileno(ad)) < 0) {
+                    err = -1;
+                }
 
-            ad_meta_fileno(ad) = -1;
+                ad_meta_fileno(ad) = -1;
+            }
+        } else {
+            LOG(log_error, logtype_ad,
+                "ad_close: meta-fork adf_refcount underflow (already %d) — "
+                "stray double ad_close()? fd=%d",
+                ad->ad_mdp->adf_refcount, ad_meta_fileno(ad));
+            AFP_ASSERT(ad->ad_mdp->adf_refcount > 0);
         }
     }
 
@@ -549,12 +565,20 @@ int ad_close(struct adouble *ad, int adflags)
                 ad->ad_meta_refcount--;
             }
 
-            if (!(--ad->ad_mdp->adf_refcount)) {
-                if (close(ad_meta_fileno(ad)) < 0) {
-                    err = -1;
-                }
+            if (ad->ad_mdp->adf_refcount > 0) {
+                if (!(--ad->ad_mdp->adf_refcount)) {
+                    if (close(ad_meta_fileno(ad)) < 0) {
+                        err = -1;
+                    }
 
-                ad_meta_fileno(ad) = -1;
+                    ad_meta_fileno(ad) = -1;
+                }
+            } else {
+                LOG(log_error, logtype_ad,
+                    "ad_close: meta-fork (v2 RF) adf_refcount underflow "
+                    "(already %d) — stray double ad_close()? fd=%d",
+                    ad->ad_mdp->adf_refcount, ad_meta_fileno(ad));
+                AFP_ASSERT(ad->ad_mdp->adf_refcount > 0);
             }
         }
 
@@ -565,14 +589,23 @@ int ad_close(struct adouble *ad, int adflags)
 
         /* Check version is EA and fd is not AD_SYMLINK (-2) or -1 */
         if ((ad->ad_vers == AD_VERSION_EA)
-                && (ad_reso_fileno(ad) >= 0)
-                && !(--ad->ad_rfp->adf_refcount)) {
-            if (close(ad->ad_rfp->adf_fd) < 0) {
-                err = -1;
-            }
+                && (ad_reso_fileno(ad) >= 0)) {
+            if (ad->ad_rfp->adf_refcount > 0) {
+                if (!(--ad->ad_rfp->adf_refcount)) {
+                    if (close(ad->ad_rfp->adf_fd) < 0) {
+                        err = -1;
+                    }
 
-            ad->ad_rlen = 0;
-            ad_reso_fileno(ad) = -1;
+                    ad->ad_rlen = 0;
+                    ad_reso_fileno(ad) = -1;
+                }
+            } else {
+                LOG(log_error, logtype_ad,
+                    "ad_close: reso-fork adf_refcount underflow (already %d) — "
+                    "stray double ad_close()? fd=%d",
+                    ad->ad_rfp->adf_refcount, ad_reso_fileno(ad));
+                AFP_ASSERT(ad->ad_rfp->adf_refcount > 0);
+            }
         }
     }
 

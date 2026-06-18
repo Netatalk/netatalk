@@ -131,36 +131,76 @@ static inline void test_abort(void)
     }
 }
 
-#define TEST(a) \
+/*! Sentinel return value: a test could not run on this platform/build and is
+ *  skipped (not a failure).  Mirrors the conventional autotools/meson skip
+ *  exit code; surfaced as a TAP "ok N - name # SKIP" directive. */
+#define TEST_SKIP 77
+
+static inline void test_skip(const char *name)
+{
+    if (test_output_tap) {
+        fprintf(test_stream(), "ok %d - %s # SKIP\n", ++test_case_num, name);
+        fflush(test_stream());
+    } else {
+        fprintf(test_stream(), "[skip]\n");
+    }
+}
+
+/* Every TEST* macro takes a trailing human-readable summary `desc` that becomes
+ * the test NAME in the output: the text after "ok N - " in TAP mode (what
+ * `meson test` shows), and after "Testing: " in plain mode.  `desc` is REQUIRED
+ * -- it is what makes the run self-describing ("ok 25 - openfork() error path
+ * closes the leaked fork" instead of an opaque stringified expression).  On
+ * failure, file:line still pinpoints the offending call. */
+
+#define TEST(a, desc) \
     do {                               \
-        test_begin(#a);                \
+        test_begin(desc);              \
         a;                             \
-        test_ok(#a);                   \
+        test_ok(desc);                 \
     } while (0)
 
-#define TEST_int(a, b) \
+#define TEST_int(a, b, desc) \
     do {                                           \
-        test_begin(#a);                            \
+        test_begin(desc);                          \
         if ((reti = (a)) != b) {                   \
-            test_fail_int(#a, reti, b, __FILE__,   \
+            test_fail_int(desc, reti, b, __FILE__, \
                           __LINE__);               \
             test_abort();                           \
             exit(1);                               \
         } else {                                   \
-            test_ok(#a);                           \
+            test_ok(desc);                         \
         }                                          \
     } while (0)
 
-#define TEST_expr(a, b)                           \
+#define TEST_expr(a, b, desc)                     \
     do {                                          \
-        test_begin(#a);                           \
+        test_begin(desc);                         \
         a;                                        \
         if (b) {                                  \
-            test_ok(#a);                          \
+            test_ok(desc);                        \
         } else {                                  \
-            test_fail(#a, __FILE__, __LINE__);    \
+            test_fail(desc, __FILE__, __LINE__);  \
             test_abort();                         \
             exit(1);                              \
         }                                         \
+    } while (0)
+
+/*! Like TEST_int, but a TEST_SKIP return marks the test skipped (not failed),
+ *  for tests that cannot run on the current platform or build configuration. */
+#define TEST_int_or_skip(a, b, desc)               \
+    do {                                           \
+        test_begin(desc);                          \
+        reti = (a);                                \
+        if (reti == TEST_SKIP) {                   \
+            test_skip(desc);                       \
+        } else if (reti != b) {                    \
+            test_fail_int(desc, reti, b, __FILE__, \
+                          __LINE__);               \
+            test_abort();                          \
+            exit(1);                               \
+        } else {                                   \
+            test_ok(desc);                         \
+        }                                          \
     } while (0)
 #endif  /* TEST_H */

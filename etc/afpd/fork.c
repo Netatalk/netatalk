@@ -626,18 +626,22 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         fullpathname(s_path->u_name),
         (fork == OPENFORK_DATA) ? "data" : "reso",
         !(access & OPENACC_WR) ? "O_RDONLY" : "O_RDWR");
-    ret = AFPERR_NOOBJ;
 
     /* First ad_open(), opens data or resource fork */
     if (ad_open(ofork->of_ad, upath, adflags, 0666) < 0) {
+        /* Set ret per case (no fall-through): the cleanup label returns ret and
+         * must not consult errno, which the cleanup ad_close()/close(2) clobbers. */
         switch (errno) {
         case EROFS:
             ret = AFPERR_VLOCK;
+            goto openfork_err;
 
         case EACCES:
+            ret = (access & OPENACC_WR) ? AFPERR_LOCK : AFPERR_ACCESS;
             goto openfork_err;
 
         case ENOENT:
+            ret = AFPERR_NOOBJ;
             goto openfork_err;
 
         case EMFILE :
@@ -676,6 +680,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
             if ((id = get_id(vol, ofork->of_ad, st, dir->d_did, upath,
                              strlen(upath))) == CNID_INVALID) {
                 LOG(log_error, logtype_afpd, "afp_createfile(\"%s\"): CNID error", upath);
+                ret = AFPERR_MISC;
                 goto openfork_err;
             }
 
@@ -692,6 +697,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
         case EROFS:
             ret = AFPERR_VLOCK;
+            goto openfork_err;
 
         case EMFILE :
         case ENFILE :
@@ -718,7 +724,7 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
 
     if ((ret = getforkparams(obj, ofork, bitmap, rbuf + 2 * sizeof(int16_t),
                              &buflen)) != AFP_OK) {
-        ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
+        /* No local ad_close(): the openfork_err label closes whatever is open. */
         goto openfork_err;
     }
 
@@ -734,11 +740,11 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         ad_getattr(ofork->of_ad, &bshort);
 
         if ((bshort & htons(ATTRBIT_NOWRITE)) && (access & OPENACC_WR)) {
-            ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
-            of_dealloc(ofork);
+            ret = AFPERR_OLOCK;
             ofrefnum = 0;
             memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
-            return AFPERR_OLOCK;
+            /* No local ad_close()/of_dealloc(): the openfork_err label does it. */
+            goto openfork_err;
         }
     }
 
@@ -755,24 +761,27 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
         /* can we access the fork? */
         if (ret < 0) {
             ofork->of_flags |= AFPFORK_ERROR;
-            ret = errno;
-            ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD);
-            of_dealloc(ofork);
 
-            switch (ret) {
+            /* Map errno before the goto: the cleanup ad_close()/close(2)
+             * clobbers it. */
+            switch (errno) {
             case EAGAIN: /* return data anyway */
             case EACCES:
             case EINVAL:
                 ofrefnum = 0;
                 memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
-                return AFPERR_DENYCONF;
+                ret = AFPERR_DENYCONF;
+                break;
 
             default:
                 *rbuflen = 0;
-                LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_lock: %s", s_path->m_name,
-                    strerror(ret));
-                return AFPERR_PARAM;
+                LOG(log_error, logtype_afpd, "afp_openfork(%s): ad_lock: %s",
+                    s_path->m_name, strerror(errno));
+                ret = AFPERR_PARAM;
+                break;
             }
+
+            goto openfork_err;
         }
 
         if (access & OPENACC_WR) {
@@ -790,12 +799,18 @@ int afp_openfork(AFPObj *obj _U_, char *ibuf, size_t ibuflen _U_, char *rbuf,
     memcpy(rbuf, &ofrefnum, sizeof(ofrefnum));
     return AFP_OK;
 openfork_err:
-    of_dealloc(ofork);
 
-    if (errno == EACCES) {
-        return (access & OPENACC_WR) ? AFPERR_LOCK : AFPERR_ACCESS;
+    /* Close whatever is actually open (data/rsrc from the first ad_open(), HF
+     * from the second), in every failure combination, exactly once.  SETSHRMD
+     * releases any share-mode locks ad_open_df() set; the AD_*_OPEN guard makes
+     * a failure before the first open close nothing.  ret was set per case. */
+    if (AD_DATA_OPEN(ofork->of_ad) || AD_META_OPEN(ofork->of_ad)
+            || AD_RSRC_OPEN(ofork->of_ad)) {
+        ad_close(ofork->of_ad,
+                 (ADFLAGS_DF | ADFLAGS_RF | ADFLAGS_HF) | ADFLAGS_SETSHRMD);
     }
 
+    of_dealloc(ofork);
     return ret;
 }
 
