@@ -1165,7 +1165,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
 {
     EC_INIT;
     struct stat st_dir;
-    int         oflags;
+    int         oflags, oflags_orig;
     mode_t      admode;
     int         st_invalid = -1;
     ssize_t     lsz;
@@ -1192,6 +1192,7 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
     }
 
     oflags = ad2openflags(ad, ADFLAGS_DF, adflags);
+    oflags_orig = oflags;       /* caller's intent, for the read-only-retry check */
     admode = mode;
 
     if (adflags & ADFLAGS_CREATE) {
@@ -1236,7 +1237,17 @@ static int ad_open_df(const char *path, int adflags, mode_t mode,
         case EPERM:
         case EROFS:
             if ((adflags & ADFLAGS_SETSHRMD) && (adflags & ADFLAGS_RDONLY)) {
-                oflags &= ~O_RDWR;
+                /* Strict read-only re-open: strip any write-implying or
+                 * destructive flag ad2openflags() may have set; only the
+                 * access mode and the surviving flags (e.g. O_NOFOLLOW) stay. */
+                if (oflags_orig & (O_CREAT | O_EXCL | O_TRUNC)) {
+                    LOG(log_warning, logtype_ad,
+                        "ad_open_df: SETSHRMD|RDONLY caller passed "
+                        "O_CREAT/O_EXCL/O_TRUNC (0x%x); stripped on retry",
+                        oflags_orig);
+                }
+
+                oflags &= ~(O_RDWR | O_WRONLY | O_CREAT | O_EXCL | O_TRUNC);
                 oflags |= O_RDONLY;
                 EC_NEG1(ad->ad_data_fork.adf_fd = open(path, oflags, admode));
                 break;
@@ -1326,7 +1337,11 @@ static int ad_open_hf_v2(const char *path, int adflags, mode_t mode,
         case EPERM:
         case EROFS:
             if ((adflags & ADFLAGS_RDONLY) && (adflags & ADFLAGS_SETSHRMD)) {
-                nocreatflags &= ~O_RDWR;
+                /* Strict read-only re-open: also drop O_TRUNC so a downgrade
+                 * retry can never truncate the metadata file.  O_CREAT/O_EXCL
+                 * are already absent from nocreatflags (stripped at its
+                 * construction).  Mirrors ad_open_df()'s retry mask. */
+                nocreatflags &= ~(O_RDWR | O_TRUNC);
                 nocreatflags |= O_RDONLY;
                 EC_NEG1(ad_meta_fileno(ad) = open(ad_p, nocreatflags));
                 ad->ad_mdp->adf_flags = nocreatflags;
@@ -1700,7 +1715,11 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
                     EC_FAIL;
                 }
 
-                oflags &= ~O_RDWR;
+                /* Strict read-only re-open: also drop O_TRUNC so a downgrade
+                 * retry can never truncate the resource fork.  O_CREAT is
+                 * already absent (stripped at oflags construction above).
+                 * Mirrors ad_open_df()'s retry mask. */
+                oflags &= ~(O_RDWR | O_TRUNC);
                 oflags |= O_RDONLY;
 
                 if ((ad_reso_fileno(ad) = sys_getxattrfd(ad_meta_fileno(ad), AD_EA_RESO,
@@ -1742,7 +1761,11 @@ static int ad_open_rf_ea(const char *path, int adflags, int mode,
                     EC_FAIL;
                 }
 
-                oflags &= ~O_RDWR;
+                /* Strict read-only re-open: also drop O_TRUNC so a downgrade
+                 * retry can never truncate the resource fork.  O_CREAT is
+                 * already absent (stripped at oflags construction above).
+                 * Mirrors ad_open_df()'s retry mask. */
+                oflags &= ~(O_RDWR | O_TRUNC);
                 oflags |= O_RDONLY;
 
                 if ((ad_reso_fileno(ad) = open(rfpath, oflags)) == -1) {

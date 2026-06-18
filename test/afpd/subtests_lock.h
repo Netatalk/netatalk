@@ -21,5 +21,6 @@ extern int utest_faultinject_selftest(const struct vol *vol);
 extern int utest_openfork_no_fd_leak(const struct vol *vol);
 extern int utest_shared_adouble_refcount_balance(const struct vol *vol);
 extern int utest_adclose_underflow_aborts(const struct vol *vol);
+extern int utest_ro_retry_strips_destructive_flags(const struct vol *vol);
 
 #endif /* SUBTESTS_LOCK_H */

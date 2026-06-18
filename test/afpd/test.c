@@ -184,6 +184,8 @@ int main(int argc, char *argv[])
                      "shared adouble: ad_close() refcount balance, no early fd close");
     TEST_int_or_skip(utest_adclose_underflow_aborts(vol), 0,
                      "ad_close() hard-fails (abort) on adf_refcount underflow");
+    TEST_int_or_skip(utest_ro_retry_strips_destructive_flags(vol), 0,
+                     "read-only downgrade retry strips O_TRUNC (no truncate)");
     /* cleanup */
     closevol(&obj, vol);
     unload_volumes(&obj);

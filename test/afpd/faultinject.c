@@ -170,6 +170,16 @@ int open(const char *path, int flags, ...)
         real_open = (open_fn)dlsym(RTLD_NEXT, "open");
     }
 
+    /* Record the flags of every armed open() so a test can inspect WHAT a retry
+     * re-opened with (e.g. assert a read-only downgrade retry dropped O_TRUNC),
+     * not merely that an open happened.  Recorded before the failure decision so
+     * the count and flags reflect the attempt regardless of outcome; only while
+     * armed, to stay inert for unrelated infrastructure opens. */
+    if (fi.open_armed) {
+        fi.open_calls++;
+        fi.open_last_flags = flags;
+    }
+
     if (fault_should_fire(fi.open_armed, &fi.open_fail_after, fi.open_errno)) {
         return -1;
     }
