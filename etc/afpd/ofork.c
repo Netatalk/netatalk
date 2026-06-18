@@ -547,12 +547,18 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
         fshare_t shmd;
         shmd.f_id = ofork->of_refnum;
 
-        if (AD_DATA_OPEN(ofork->of_ad)) {
-            fcntl(ad_data_fileno(ofork->of_ad), F_UNSHARE, &shmd);
+        if (AD_DATA_OPEN(ofork->of_ad)
+                && fcntl(ad_data_fileno(ofork->of_ad), F_UNSHARE, &shmd) < 0) {
+            LOG(log_warning, logtype_afpd,
+                "of_closefork: F_UNSHARE on data fork failed for refnum %"
+                PRIu16 ": %s", ofork->of_refnum, strerror(errno));
         }
 
-        if (AD_RSRC_OPEN(ofork->of_ad)) {
-            fcntl(ad_reso_fileno(ofork->of_ad), F_UNSHARE, &shmd);
+        if (AD_RSRC_OPEN(ofork->of_ad)
+                && fcntl(ad_reso_fileno(ofork->of_ad), F_UNSHARE, &shmd) < 0) {
+            LOG(log_warning, logtype_afpd,
+                "of_closefork: F_UNSHARE on rsrc fork failed for refnum %"
+                PRIu16 ": %s", ofork->of_refnum, strerror(errno));
         }
     }
 
