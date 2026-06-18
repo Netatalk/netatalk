@@ -1767,7 +1767,7 @@ int afp_closefork(AFPObj *obj, char *ibuf, size_t ibuflen _U_, char *rbuf _U_,
     if (of_closefork(obj, ofork) < 0) {
         LOG(log_error, logtype_afpd, "afp_closefork: of_closefork: %s",
             strerror(errno));
-        return AFPERR_PARAM;
+        return AFPERR_MISC;
     }
 
     return AFP_OK;

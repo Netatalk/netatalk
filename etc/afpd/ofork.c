@@ -474,6 +474,7 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     struct timeval      tv;
     int         adflags = 0;
     int                 ret;
+    int                 saved_errno = 0;
     struct dir *dir;
     bstring forkpath = NULL;
     adflags = 0;
@@ -678,7 +679,19 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
     }
 
     if (ad_close(ofork->of_ad, adflags | ADFLAGS_SETSHRMD) < 0) {
+        /* A failed close(2) is a deferred flush error: the fd is already
+         * detached and locks were released by F_UNLCK before the close, so
+         * nothing is stranded.  Log and deallocate normally; the client gets
+         * the error code.  Stash errno: the unlink/dealloc/bdestroy below would
+         * otherwise clobber it before callers read it. */
+        saved_errno = errno;
         ret = -1;
+        LOG(log_error, logtype_afpd,
+            "of_closefork: ad_close failed for fork %" PRIu16 " (\"%s\") "
+            "dev=%ju ino=%ju: %s",
+            ofork->of_refnum, of_name(ofork),
+            (uintmax_t)ofork->key.dev, (uintmax_t)ofork->key.inode,
+            strerror(saved_errno));
     }
 
 #ifdef WITH_SPOTLIGHT
@@ -699,6 +712,10 @@ int of_closefork(const AFPObj *obj, struct ofork *ofork)
 
     if (forkpath) {
         bdestroy(forkpath);
+    }
+
+    if (ret < 0) {
+        errno = saved_errno;
     }
 
     return ret;
