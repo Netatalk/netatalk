@@ -328,3 +328,77 @@ int utest_adclose_underflow_aborts(const struct vol *vol)
     return 5;
 #endif
 }
+
+/*!
+ * @brief Read-only downgrade retry re-opens without destructive flags.
+ *
+ * Category: targeted (nuanced).  ad_open_df() retries a failed open() read-only
+ * when the caller passed ADFLAGS_SETSHRMD | ADFLAGS_RDONLY and attempt 1 hit
+ * EACCES/EPERM/EROFS; the retry must strip O_TRUNC/O_CREAT/O_EXCL, not just flip
+ * the access mode, or a SETSHRMD|RDONLY|TRUNC caller would truncate on the retry
+ * a file it asked to open read-only.  No fd/refcount ledger sees this -- the bug
+ * is in WHICH flags the second open() carries -- so drive the retry and inspect
+ * the flags the shim recorded.  ad2openflags() makes attempt 1 O_RDWR|O_TRUNC;
+ * arming EACCES on it forces the retry, whose flags land in open_last_flags
+ * (open_calls == 2).  Skips where the shim cannot intercept libatalk's open().
+ */
+int utest_ro_retry_strips_destructive_flags(const struct vol *vol)
+{
+    struct adouble ad;
+    char path[MAXPATHLEN + 1];
+    int ad_ret, retry_flags, calls;
+    snprintf(path, sizeof(path), "%s/fi_ro_retry", vol->v_path);
+
+    if (!faultinject_open_works(path)) {
+        return TEST_SKIP;
+    }
+
+    /* Disarm any injection a prior test left armed before the pre-create setup,
+     * so a stale fi.open_armed cannot fail it or skew open_calls. */
+    fault_inject_reset();
+    /* Pre-create: the RDONLY retry (no O_CREAT) needs the file to exist. */
+    ad_init(&ad, vol);
+
+    if (ad_open(&ad, path, ADFLAGS_DF | ADFLAGS_RDWR | ADFLAGS_CREATE,
+                0666) != 0) {
+        (void)unlink(path);          /* may have been created before failing */
+        return 1;                    /* setup create failed */
+    }
+
+    ad_close(&ad, ADFLAGS_DF);
+    ad_init(&ad, vol);
+    fault_inject_reset();
+    fi.open_armed = 1;
+    fi.open_fail_after = 0;           /* attempt 1 fails EACCES; retry runs */
+    fi.open_errno = EACCES;
+    ad_ret = ad_open(&ad, path,
+                     ADFLAGS_DF | ADFLAGS_RDONLY | ADFLAGS_SETSHRMD | ADFLAGS_TRUNC,
+                     0666);
+    calls = fi.open_calls;
+    retry_flags = fi.open_last_flags;
+    fault_inject_reset();
+
+    if (ad_ret == 0) {
+        ad_close(&ad, ADFLAGS_DF);
+    }
+
+    (void)unlink(path);
+
+    if (calls != 2) {
+        return 2;                    /* negative control: retry did not run */
+    }
+
+    if (retry_flags & O_TRUNC) {
+        return 3;                    /* destructive flag survived the RO retry */
+    }
+
+    if (retry_flags & (O_RDWR | O_WRONLY)) {
+        return 4;                    /* retry not downgraded to read-only */
+    }
+
+    if (ad_ret != 0) {
+        return 5;                    /* read-only retry open failed */
+    }
+
+    return 0;
+}

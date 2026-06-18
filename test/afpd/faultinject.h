@@ -32,6 +32,8 @@ struct fault_inject {
     int open_armed;
     int open_fail_after;    /*!< succeed this many armed opens, then fail once */
     int open_errno;
+    int open_calls;         /*!< count of armed open() calls seen */
+    int open_last_flags;    /*!< flags arg of the most recent armed open() */
     int close_armed;
     int close_fail_after;
     int close_errno;
