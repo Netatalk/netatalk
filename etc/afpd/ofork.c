@@ -441,12 +441,19 @@ void of_dealloc(struct ofork *of)
 
     of_unhash(of);
     oforks[of->of_refnum % nforks] = NULL;
-    /* decrease refcount */
-    of->of_ad->ad_refcount--;
 
-    if (of->of_ad->ad_refcount <= 0) {
-        free(of->of_ad->ad_name);
-        free(of->of_ad);
+    /* decrease refcount; guard so a stray double-dealloc on a shared adouble is
+     * logged (and asserts in non-NDEBUG builds) instead of silently absorbed. */
+    if (of->of_ad->ad_refcount > 0) {
+        if (--of->of_ad->ad_refcount == 0) {
+            free(of->of_ad->ad_name);
+            free(of->of_ad);
+        }
+    } else {
+        LOG(log_error, logtype_afpd,
+            "of_dealloc: ad_refcount underflow (already %d) — stray double "
+            "of_dealloc()?", of->of_ad->ad_refcount);
+        AFP_ASSERT(of->of_ad->ad_refcount > 0);
     }
 
     free(of);
