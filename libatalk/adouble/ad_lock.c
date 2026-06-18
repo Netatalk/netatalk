@@ -257,12 +257,23 @@ void adf_lock_free(struct ad_fd *adf)
  * else. */
 static void adf_relockrange(struct ad_fd *ad, int fd, off_t off, off_t len)
 {
-    adf_lock_t *lock = ad->adf_lock;
     int i;
 
     for (i = 0; i < ad->adf_lockcount; i++) {
-        if (OVERLAP(off, len, lock[i].lock.l_start, lock[i].lock.l_len)) {
-            set_lock(fd, F_SETLK, &lock[i].lock);
+        adf_lock_t *lock = &ad->adf_lock[i];
+
+        if (!OVERLAP(off, len, lock->lock.l_start, lock->lock.l_len)) {
+            continue;
+        }
+
+        /* Optimistic restore: the temp-lock release already succeeded and the
+         * guarded operation is done, so log a failed range but never fail. */
+        if (set_lock(fd, F_SETLK, &lock->lock) < 0) {
+            LOG(log_error, logtype_ad,
+                "adf_relockrange: F_SETLK fd=%d off=%jd len=%jd type=%d: %s",
+                fd, (intmax_t)lock->lock.l_start,
+                (intmax_t)lock->lock.l_len, lock->lock.l_type,
+                strerror(errno));
         }
     }
 }
@@ -596,7 +607,14 @@ exit:
     if (ret != 0) {
         if (fcntl_lock_err != 0) {
             lock.l_type = F_UNLCK;
-            set_lock(adf->adf_fd, F_SETLK, &lock);
+
+            if (set_lock(adf->adf_fd, F_SETLK, &lock) < 0) {
+                LOG(log_error, logtype_ad,
+                    "ad_lock: cleanup F_UNLCK failed fd=%d off=%jd len=%jd: %s "
+                    "— kernel lock may be stranded until process exit",
+                    adf->adf_fd, (intmax_t)lock.l_start,
+                    (intmax_t)lock.l_len, strerror(errno));
+            }
         }
     }
 
