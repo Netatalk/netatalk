@@ -470,8 +470,13 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     int fd, len;
     char *user_message, *log_message;
     va_list args;
+    /* A logger must not perturb the caller's errno: the write()/vasprintf()
+     * below set it, and callers commonly log on an error path and then act on
+     * errno.  Saved on entry, restored at exit. */
+    int saved_errno = errno;
 
     if (inlog) {
+        errno = saved_errno;
         return;
     }
 
@@ -490,6 +495,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
 
             if (len == -1) {
                 inlog = 0;
+                errno = saved_errno;
                 return;
             }
 
@@ -498,6 +504,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
         }
 
         inlog = 0;
+        errno = saved_errno;
         return;
     }
 
@@ -552,6 +559,7 @@ void make_log_entry(enum loglevels loglevel, enum logtypes logtype,
     free(user_message);
 exit:
     inlog = 0;
+    errno = saved_errno;
 }
 
 void setuplog(const char *logstr, const char *logfile,
