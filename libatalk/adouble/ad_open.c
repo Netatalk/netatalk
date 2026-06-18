@@ -2468,25 +2468,58 @@ int ad_metadataat(int dirfd, const char *name, int flags, struct adouble *adp)
     int cwdfd = -1;
 
     if (dirfd != -1) {
-        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
-            ret = -1;
-            goto exit;
+        if ((cwdfd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC)) == -1) {
+            LOG(log_error, logtype_ad,
+                "ad_metadataat: cannot snapshot cwd: %s", strerror(errno));
+            return -1;
+        }
+
+        if (fchdir(dirfd) != 0) {
+            /* Preserve fchdir's errno across close(). */
+            int saved = errno;
+            LOG(log_error, logtype_ad,
+                "ad_metadataat: fchdir(target) failed: %s", strerror(saved));
+            close(cwdfd);
+            errno = saved;
+            return -1;
         }
     }
 
     if (ad_metadata(name, flags, adp) < 0) {
         ret = -1;
-        goto exit;
+        /* fall through: restore cwd before returning */
     }
 
     if (dirfd != -1) {
+        /* Captured before the restore so its chdir()/close() can't clobber the
+         * operation's errno (which callers map to an AFPERR). */
+        int saved = errno;
+
         if (fchdir(cwdfd) != 0) {
-            LOG(log_error, logtype_ad, "ad_openat: can't chdir back, exiting");
-            exit(EXITERR_SYS);
+            int restore_errno = errno;
+            /* The saved fd is the thing that failed, so cwd cannot be
+             * restored.  Anchor to "/" (always valid) so no relative path
+             * resolves against an unknown directory; the caller re-establishes
+             * cwd via movecwd() on its next path op. */
+            LOG(log_error, logtype_ad,
+                "ad_metadataat: cannot restore cwd (%s); anchoring to \"/\"",
+                strerror(restore_errno));
+
+            if (chdir("/") != 0) {
+                LOG(log_error, logtype_ad,
+                    "ad_metadataat: chdir(/) also failed: %s",
+                    strerror(errno));
+            }
+
+            /* When only the restore failed, that is the error to report. */
+            if (ret == 0) {
+                saved = restore_errno;
+            }
+
+            ret = -1;
+            errno = saved;
         }
     }
-
-exit:
 
     if (cwdfd != -1) {
         close(cwdfd);
@@ -2564,13 +2597,29 @@ int ad_openat(struct adouble  *ad,
 {
     EC_INIT;
     int cwdfd = -1;
+    int changed_cwd = 0;
     va_list args;
     mode_t mode = 0;
 
     if (dirfd != -1) {
-        if (((cwdfd = open(".", O_RDONLY)) == -1) || (fchdir(dirfd) != 0)) {
+        if ((cwdfd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC)) == -1) {
+            LOG(log_error, logtype_ad,
+                "ad_openat: cannot snapshot cwd: %s", strerror(errno));
             EC_FAIL;
         }
+
+        if (fchdir(dirfd) != 0) {
+            /* Preserve fchdir's errno across close(). */
+            int saved = errno;
+            LOG(log_error, logtype_ad,
+                "ad_openat: fchdir(target) failed: %s", strerror(saved));
+            close(cwdfd);
+            cwdfd = -1;
+            errno = saved;
+            EC_FAIL;
+        }
+
+        changed_cwd = 1;
     }
 
     va_start(args, adflags);
@@ -2582,14 +2631,38 @@ int ad_openat(struct adouble  *ad,
 
     va_end(args);
     EC_NEG1(ad_open(ad, path, adflags, mode));
+EC_CLEANUP:
 
-    if (dirfd != -1) {
+    /* Restore cwd on every exit path once we changed it, including the EC_NEG1
+     * failure above.  The saved fd is the thing that failed, so on restore
+     * failure anchor to "/" (always valid) rather than leaving cwd unknown;
+     * the caller re-establishes cwd via movecwd() on its next path op.
+     * If the operation failed, keep its errno so callers can map it to an
+     * AFPERR.  If it succeeded but the restore fails, surface the restore errno
+     * instead (otherwise we would return -1 with a stale/zero errno). */
+    if (changed_cwd) {
+        int saved = errno;
+
         if (fchdir(cwdfd) != 0) {
-            AFP_PANIC("ad_openat: can't chdir back");
+            int restore_errno = errno;
+            LOG(log_error, logtype_ad,
+                "ad_openat: cannot restore cwd (%s); anchoring to \"/\"",
+                strerror(restore_errno));
+
+            if (chdir("/") != 0) {
+                LOG(log_error, logtype_ad,
+                    "ad_openat: chdir(/) also failed: %s", strerror(errno));
+            }
+
+            /* When only the restore failed, that is the error to report. */
+            if (ret == 0) {
+                saved = restore_errno;
+            }
+
+            ret = -1;
+            errno = saved;
         }
     }
-
-EC_CLEANUP:
 
     if (cwdfd != -1) {
         close(cwdfd);
