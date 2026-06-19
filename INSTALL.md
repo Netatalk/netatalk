@@ -83,6 +83,7 @@ required at the bare minimum.
 | libtirpc **OR** libquota   | Quota support |
 | Perl                       | admin scripts |
 | po4a                       | localization of documentation |
+| stuffit-ffi                | StuffIt support in `nad` |
 | talloc                     | Spotlight support |
 | tcpwrap                    | TCP wrapper support |
 | [UnicodeData.txt](https://www.unicode.org/Public/UNIDATA/UnicodeData.txt) | regenerating Unicode lookup tables |

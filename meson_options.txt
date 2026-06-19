@@ -184,6 +184,12 @@ option(
     description: 'Create the Netatalk state directories if they do not exist',
 )
 option(
+    'with-stuffit',
+    type: 'boolean',
+    value: false,
+    description: 'Enable StuffIt support in nad',
+)
+option(
     'with-subprojects',
     type: 'boolean',
     value: false,

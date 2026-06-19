@@ -24,6 +24,9 @@ on:
 permissions:
   contents: read
 
+env:
+  STUFFIT_RS_COMMIT: 16336d7abff5c925e8081869bfa0dd6ee27f0658
+
 jobs:
   spectest-dflybsd:
     name: AFP Spectest - DragonFlyBSD (sys:ad, HAMMER2)
@@ -117,6 +120,8 @@ jobs:
               db5 \
               dconf \
               flex \
+              git \
+              gmake \
               iniparser \
               libev \
               file \
@@ -128,15 +133,26 @@ jobs:
               openldap26-client \
               perl5 \
               pkgconf \
+              rust \
               sqlite3 \
               talloc \
               xapian-core
           run: |
             set -e
+            repo_dir=$(pwd)
+            git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+            cd /tmp/stuffit-rs
+            git checkout "${{ env.STUFFIT_RS_COMMIT }}"
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
+            cd "$repo_dir"
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-eventloop=libev \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -184,6 +200,8 @@ jobs:
               db5 \
               dconf \
               flex \
+              git \
+              gmake \
               iniparser \
               libev \
               file \
@@ -195,15 +213,26 @@ jobs:
               openldap26-client \
               perl5 \
               pkgconf \
+              rust \
               sqlite3 \
               talloc \
               xapian-core
           run: |
             set -e
+            repo_dir=$(pwd)
+            git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+            cd /tmp/stuffit-rs
+            git checkout "${{ env.STUFFIT_RS_COMMIT }}"
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
+            cd "$repo_dir"
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/libdata/pkgconfig
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dpkg_config_path=/usr/local/libdata/pkgconfig \
               -Dwith-eventloop=libev \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
@@ -329,6 +358,8 @@ jobs:
               cmark \
               db-4.6.21p8v0 \
               dbus \
+              git \
+              gmake \
               heimdal \
               iniparser \
               libev \
@@ -339,15 +370,26 @@ jobs:
               meson \
               openldap-client-2.6.13v0 \
               openpam \
+              rust \
               sqlite3 \
               xapian-core
           run: |
             set -e
+            repo_dir=$(pwd)
+            git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+            cd /tmp/stuffit-rs
+            git checkout "${{ env.STUFFIT_RS_COMMIT }}"
+            cargo build --release --locked -p stuffit-ffi
+            gmake -C stuffit-ffi install-files PREFIX=/usr/local
+            cd "$repo_dir"
+            export LD_LIBRARY_PATH=/usr/local/lib
+            export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dwith-eventloop=libev \
               -Dwith-gssapi-path=/usr/local/heimdal \
               -Dwith-kerberos-path=/usr/local/heimdal \
+              -Dwith-stuffit=true \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build

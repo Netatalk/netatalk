@@ -70,6 +70,9 @@ extern int nad_find(int argc, char **argv, AFPObj *obj);
 extern int nad_mkdir(int argc, char **argv, AFPObj *obj);
 extern int nad_rmdir(int argc, char **argv, AFPObj *obj);
 extern int nad_archive(int argc, char **argv, AFPObj *obj);
+#ifdef HAVE_STUFFIT
+extern int nad_stuffit(int argc, char **argv, AFPObj *obj);
+#endif
 
 /* ad_util.c */
 extern int openvol(AFPObj *obj, const char *path, afpvol_t *vol);
