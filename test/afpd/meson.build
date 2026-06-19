@@ -1,103 +1,13 @@
-test_sources = [
+afpd_test_sources = files(
     'afpfunc_helpers.c',
     'subtests.c',
-    'test.c',
-    meson.project_source_root() / 'etc/afpd/ad_cache.c',
-    meson.project_source_root() / 'etc/afpd/afp_config.c',
-    meson.project_source_root() / 'etc/afpd/afp_dsi.c',
-    meson.project_source_root() / 'etc/afpd/afp_options.c',
-    meson.project_source_root() / 'etc/afpd/afprun.c',
-    meson.project_source_root() / 'etc/afpd/appl.c',
-    meson.project_source_root() / 'etc/afpd/auth.c',
-    meson.project_source_root() / 'etc/afpd/catsearch.c',
-    meson.project_source_root() / 'etc/afpd/desktop.c',
-    meson.project_source_root() / 'etc/afpd/dircache.c',
-    meson.project_source_root() / 'etc/afpd/directory.c',
-    meson.project_source_root() / 'etc/afpd/enumerate.c',
-    meson.project_source_root() / 'etc/afpd/extattrs.c',
-    meson.project_source_root() / 'etc/afpd/file.c',
-    meson.project_source_root() / 'etc/afpd/filedir.c',
-    meson.project_source_root() / 'etc/afpd/fork.c',
-    meson.project_source_root() / 'etc/afpd/hash.c',
-    meson.project_source_root() / 'etc/afpd/idle_worker.c',
-    meson.project_source_root() / 'etc/afpd/icon.c',
-    meson.project_source_root() / 'etc/afpd/mangle.c',
-    meson.project_source_root() / 'etc/afpd/messages.c',
-    meson.project_source_root() / 'etc/afpd/ofork.c',
-    meson.project_source_root() / 'etc/afpd/status.c',
-    meson.project_source_root() / 'etc/afpd/switch.c',
-    meson.project_source_root() / 'etc/afpd/uam.c',
-    meson.project_source_root() / 'etc/afpd/unix.c',
-    meson.project_source_root() / 'etc/afpd/virtual_icon.c',
-    meson.project_source_root() / 'etc/afpd/volume.c',
-]
+) + afpd_common_sources
 
-test_c_args = []
-test_external_deps = [bstring, iniparser, libgcrypt]
-test_internal_deps = []
-test_link_args = []
-test_includes = [root_includes]
-
-if have_fce
-    test_sources += [
-        meson.project_source_root() / 'etc/afpd/fce_api.c',
-        meson.project_source_root() / 'etc/afpd/fce_util.c',
-    ]
-endif
-
-if have_spotlight
-    test_sources += [
-        meson.project_source_root() / 'etc/afpd/spotlight.c',
-        meson.project_source_root() / 'etc/afpd/spotlight_marshalling.c',
-    ]
-    test_external_deps += libspotlight_backends
-    test_external_deps += [talloc]
-    if use_spotlight_localsearch
-        test_external_deps += [glib, sparql]
-    endif
-    if use_spotlight_xapian
-        test_external_deps += [xapian, libmagic]
-    endif
-endif
-
-if have_acls
-    test_sources += meson.project_source_root() / 'etc/afpd/acls.c'
-    test_external_deps += acl_deps
-endif
-
-if have_quota
-    test_sources += [
-        meson.project_source_root() / 'etc/afpd/quota.c',
-    ]
-    if not have_libquota
-        test_sources += [
-            meson.project_source_root() / 'etc/afpd/nfsquota.c',
-        ]
-    endif
-    test_external_deps += quota_deps
-endif
-
-if have_krb5_uam
-    test_external_deps += gss
-endif
-
-if have_kerberos
-    test_external_deps += kerberos
-    test_c_args += kerberos_c_args
-    test_includes += kerberos_includes
-endif
-
-if have_tcpwrap
-    test_external_deps += wrap
-endif
-
-if use_mysql_backend
-    test_external_deps += mysqlclient
-endif
-
-if threads.found()
-    test_external_deps += threads
-endif
+test_c_args = [] + afpd_common_c_args
+test_external_deps = [] + afpd_common_external_deps
+test_internal_deps = [] + afpd_common_internal_deps
+test_link_args = [] + afpd_common_link_args
+test_includes = [] + afpd_common_includes
 
 if get_option('with-tests')
 
@@ -110,7 +20,7 @@ if get_option('with-tests')
 
     afpdtestlib = static_library(
         'afpdtestlib',
-        test_sources,
+        afpd_test_sources + files('test.c'),
         include_directories: test_includes,
         link_with: [test_internal_deps, libatalk],
         dependencies: [
@@ -131,7 +41,8 @@ if get_option('with-tests')
     )
 
     afpdtest_dtrace_input = []
-    test_objs = [afpdtestlib.extract_all_objects(recursive: false)]
+    afpdtest_objects = []
+    afpdtest_link_whole = [afpdtestlib]
 
     # As of 2/2024:
     # The afp_dtrace.o file is necessary for dtrace support on Solaris, and on recent
@@ -142,6 +53,11 @@ if get_option('with-tests')
     #
     # On at least linux we don't actually need to pass in all the objects, but
     # at least on FreeBSD and Solaris we have to.
+
+    if have_dtrace and host_os != 'darwin'
+        afpdtest_objects = [afpdtestlib.extract_all_objects(recursive: false)]
+        afpdtest_link_whole = []
+    endif
 
     if fs.exists(meson.current_build_dir() / 'afp_dtrace.o')
         run_command(
@@ -156,17 +72,7 @@ if get_option('with-tests')
             'afp_dtrace.o',
             input: [
                 meson.project_source_root() / 'include/atalk/afp_dtrace.d',
-                afpdtestlib.extract_objects(
-                    meson.project_source_root() / 'etc/afpd/afp_dsi.c',
-                    meson.project_source_root() / 'etc/afpd/fork.c',
-                    meson.project_source_root() / 'etc/afpd/appl.c',
-                    meson.project_source_root() / 'etc/afpd/catsearch.c',
-                    meson.project_source_root() / 'etc/afpd/dircache.c',
-                    meson.project_source_root() / 'etc/afpd/directory.c',
-                    meson.project_source_root() / 'etc/afpd/enumerate.c',
-                    meson.project_source_root() / 'etc/afpd/file.c',
-                    meson.project_source_root() / 'etc/afpd/filedir.c',
-                ),
+                afpdtestlib.extract_objects(afpd_dtrace_sources),
             ],
             output: 'afp_dtrace.o',
             command: [
@@ -188,8 +94,9 @@ if get_option('with-tests')
         # interposer (libfaultinject.so) resolve `fi` back into this binary.
         'faultinject.c',
         'subtests_lock.c',
-        objects: test_objs,
         include_directories: test_includes,
+        objects: afpdtest_objects,
+        link_whole: afpdtest_link_whole,
         link_with: [test_internal_deps, libatalk],
         dependencies: [
             test_external_deps,
@@ -243,15 +150,8 @@ if get_option('with-tests')
 endif
 
 if get_option('with-fuzzing')
-    fuzz_sources = []
-    foreach s : test_sources
-        if not s.endswith('test.c')
-            fuzz_sources += s
-        endif
-    endforeach
-    fuzz_sources += files('fuzz.c')
-
     fuzz_engine = get_option('with-fuzzing-engine')
+
     if fuzz_engine != ''
         fuzz_link_args = [fuzz_engine] + test_link_args
         fuzz_c_args = []
@@ -262,7 +162,7 @@ if get_option('with-fuzzing')
 
     executable(
         'afpd_fuzz',
-        fuzz_sources,
+        afpd_test_sources + files('fuzz.c'),
         include_directories: test_includes,
         link_with: [test_internal_deps, libatalk],
         dependencies: [
