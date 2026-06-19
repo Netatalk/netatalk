@@ -1,4 +1,4 @@
-afpd_sources = [
+afpd_common_sources = files(
     'ad_cache.c',
     'afp_config.c',
     'afp_dsi.c',
@@ -17,8 +17,8 @@ afpd_sources = [
     'filedir.c',
     'fork.c',
     'hash.c',
-    'idle_worker.c',
     'icon.c',
+    'idle_worker.c',
     'mangle.c',
     'messages.c',
     'ofork.c',
@@ -28,84 +28,87 @@ afpd_sources = [
     'unix.c',
     'virtual_icon.c',
     'volume.c',
-    'main.c',
-]
+)
 
-afpd_c_args = []
-afpd_external_deps = [bstring, iniparser, libgcrypt]
-afpd_internal_deps = []
-afpd_link_args = []
-afpd_includes = [root_includes]
-
-if have_appletalk
-    afpd_sources += [
-        'afp_asp.c',
-    ]
-endif
+afpd_common_c_args = []
+afpd_common_external_deps = [bstring, iniparser, libgcrypt]
+afpd_common_internal_deps = []
+afpd_common_link_args = []
+afpd_common_includes = [root_includes]
 
 if have_fce
-    afpd_sources += [
+    afpd_common_sources += files(
         'fce_api.c',
         'fce_util.c',
-    ]
+    )
 endif
 
 if have_spotlight
-    afpd_sources += [
+    afpd_common_sources += files(
         'spotlight.c',
         'spotlight_marshalling.c',
-    ]
-    afpd_external_deps += libspotlight_backends
-    afpd_external_deps += [talloc]
+    )
+    afpd_common_external_deps += libspotlight_backends
+    afpd_common_external_deps += [talloc]
     if use_spotlight_localsearch
-        afpd_external_deps += [glib, sparql]
+        afpd_common_external_deps += [glib, sparql]
     endif
     if use_spotlight_xapian
-        afpd_external_deps += [xapian, libmagic]
+        afpd_common_external_deps += [xapian, libmagic]
     endif
 endif
 
 if have_acls
-    afpd_sources += 'acls.c'
-    afpd_external_deps += [acl_deps]
-endif
-
-if have_iconv
-    afpd_external_deps += iconv
+    afpd_common_sources += files('acls.c')
+    afpd_common_external_deps += acl_deps
 endif
 
 if have_quota
-    afpd_sources += [
+    afpd_common_sources += files(
         'quota.c',
-    ]
+    )
     if not have_libquota
-        afpd_sources += [
+        afpd_common_sources += files(
             'nfsquota.c',
-        ]
+        )
     endif
-    afpd_external_deps += quota_deps
+    afpd_common_external_deps += quota_deps
 endif
 
 if have_krb5_uam
-    afpd_external_deps += gss
+    afpd_common_external_deps += gss
 endif
 
 if have_kerberos
-    afpd_external_deps += kerberos
-    afpd_c_args += kerberos_c_args
-    afpd_includes += kerberos_includes
+    afpd_common_external_deps += kerberos
+    afpd_common_c_args += kerberos_c_args
+    afpd_common_includes += kerberos_includes
 endif
 
 if have_tcpwrap
-    afpd_external_deps += wrap
+    afpd_common_external_deps += wrap
 endif
 
 if use_mysql_backend
-    afpd_external_deps += mysqlclient
+    afpd_common_external_deps += mysqlclient
 endif
 
 if threads.found()
-    afpd_external_deps += threads
+    afpd_common_external_deps += threads
+endif
+
+if have_appletalk
+    afpd_common_sources += files('afp_asp.c')
+endif
+
+afpd_c_args = [] + afpd_common_c_args
+afpd_external_deps = [] + afpd_common_external_deps
+afpd_internal_deps = [] + afpd_common_internal_deps
+afpd_link_args = [] + afpd_common_link_args
+afpd_includes = [] + afpd_common_includes
+
+if have_iconv
+    afpd_external_deps += iconv
 endif
 
 # For dtrace probes we need to invoke dtrace on all input files, before
@@ -117,7 +120,7 @@ endif
 
 libafpd = static_library(
     'afpd',
-    afpd_sources,
+    afpd_common_sources + files('main.c'),
     include_directories: afpd_includes,
     link_with: [afpd_internal_deps, libatalk],
     dependencies: afpd_external_deps,
@@ -136,6 +139,17 @@ libafpd = static_library(
 
 afpd_dtrace_input = []
 afpd_objs = [libafpd.extract_all_objects(recursive: false)]
+afpd_dtrace_sources = files(
+    'afp_dsi.c',
+    'appl.c',
+    'catsearch.c',
+    'dircache.c',
+    'directory.c',
+    'enumerate.c',
+    'file.c',
+    'filedir.c',
+    'fork.c',
+)
 
 # As of 2/2024:
 # The afp_dtrace.o file is necessary for dtrace support on Solaris, and on recent
@@ -160,17 +174,7 @@ if have_dtrace and host_os != 'darwin'
         'afp_dtrace.o',
         input: [
             meson.project_source_root() / 'include/atalk/afp_dtrace.d',
-            libafpd.extract_objects(
-                'afp_dsi.c',
-                'fork.c',
-                'appl.c',
-                'catsearch.c',
-                'dircache.c',
-                'directory.c',
-                'enumerate.c',
-                'file.c',
-                'filedir.c',
-            ),
+            libafpd.extract_objects(afpd_dtrace_sources),
         ],
         output: 'afp_dtrace.o',
         command: [
