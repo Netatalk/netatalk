@@ -55,6 +55,10 @@ typedef enum {
     CMD_HEX,
     CMD_UNBIN,
     CMD_UNHEX,
+#ifdef HAVE_STUFFIT
+    CMD_SIT,
+    CMD_UNSIT,
+#endif
     CMD_VERSION
 } nad_command_t;
 
@@ -108,6 +112,18 @@ static nad_command_t get_command(const char *cmd)
         return CMD_UNHEX;
     }
 
+#ifdef HAVE_STUFFIT
+
+    if (STRCMP(cmd, ==, "sit")) {
+        return CMD_SIT;
+    }
+
+    if (STRCMP(cmd, ==, "unsit")) {
+        return CMD_UNSIT;
+    }
+
+#endif
+
     if (STRCMP(cmd, ==, "-v") || STRCMP(cmd, ==, "--version")) {
         return CMD_VERSION;
     }
@@ -117,7 +133,11 @@ static nad_command_t get_command(const char *cmd)
 
 static void usage_main(void)
 {
-    printf("Usage: nad [-F configfile] [--force] ls|cp|rm|mv|mkdir|rmdir|set|find|bin|hex|unbin|unhex [file|dir, ...]\n");
+#ifdef HAVE_STUFFIT
+    printf("Usage: nad [-F configfile] [--force] ls|cp|rm|mv|mkdir|rmdir|set|find|bin|unbin|hex|unhex|sit|unsit [file|dir, ...]\n");
+#else
+    printf("Usage: nad [-F configfile] [--force] ls|cp|rm|mv|mkdir|rmdir|set|find|bin|unbin|hex|unhex [file|dir, ...]\n");
+#endif
     printf("       nad -v|--version\n");
 }
 
@@ -223,6 +243,12 @@ int main(int argc, char **argv)
     case CMD_UNBIN:
     case CMD_UNHEX:
         return nad_archive(argc - arg_idx, argv + arg_idx, &obj);
+#ifdef HAVE_STUFFIT
+
+    case CMD_SIT:
+    case CMD_UNSIT:
+        return nad_stuffit(argc - arg_idx, argv + arg_idx, &obj);
+#endif
 
     case CMD_VERSION:
         show_version();

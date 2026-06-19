@@ -177,6 +177,14 @@ functionality.
     strings from source files and merge them with the translations
     stored in PO files.
 
+- stuffit-rs
+
+    The [stuffit-rs](https://github.com/benletchford/stuffit-rs)
+    Rust library provides the C interface used by the **nad sit** and
+    **nad unsit** commands to create and extract StuffIt archives.
+    StuffIt support is disabled by default; enable
+    it when configuring Netatalk with **-Dwith-stuffit=true**.
+
 - talloc
 
     Samba's talloc library is used for memory management in the Spotlight query parser.

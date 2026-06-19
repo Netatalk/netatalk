@@ -4,7 +4,8 @@ nad - Netatalk AppleDouble file utility suite
 
 # Synopsis
 
-**nad** [-F *configfile*] [\-\-force] [ls | cp | mv | rm | mkdir | rmdir | set | find | bin | hex | unbin | unhex] [...]
+**nad** [-F *configfile*] [\-\-force] [ls | cp | mv | rm | mkdir | rmdir | set | find | bin | unbin | hex | unhex |
+sit | unsit] [...]
 
 **nad** [-v | \-\-version]
 
@@ -32,12 +33,16 @@ and directories while making a best effort to preserve Mac OS metadata using
 extended attributes or AppleDouble sidecar files, depending on the options
 used. CNID database updates are skipped outside AFP volumes.
 
-The **bin**, **hex**, **unbin**, and **unhex** commands transform files
+The **bin**, **unbin**, **hex**, and **unhex** commands transform files
 between Netatalk metadata, MacBinary, and BinHex formats. They preserve data
 forks, resource forks, and Finder metadata when moving files between classic
 Mac archive formats and Netatalk-managed storage.
+These file format transformer commands are based on *megatron* by Charles Clark.
 
-The file format transformer commands are based on *megatron* by Charles Clark.
+When Netatalk is built with the **with-stuffit** option and the
+**stuffit-ffi** library, the **sit** and **unsit** commands create and extract
+StuffIt archives. These commands preserve data forks, resource forks, file
+type and creator codes, and Finder flags.
 
 # Options
 
@@ -92,11 +97,17 @@ Convert between Netatalk metadata, MacBinary, and BinHex.
 
 > nad bin [\-\-header] [\-\-filename NAME] [\-\-stdout] [\-\-adouble] [\-\-verbose] FILE [...]
 >
-> nad hex [\-\-header] [\-\-filename NAME] [\-\-stdout] [\-\-adouble] [\-\-verbose] FILE [...]
->
 > nad unbin [\-\-header] [\-\-filename NAME] [\-\-adouble] [\-\-verbose] [SOURCEFILE [...]]
 >
+> nad hex [\-\-header] [\-\-filename NAME] [\-\-stdout] [\-\-adouble] [\-\-verbose] FILE [...]
+>
 > nad unhex [\-\-header] [\-\-filename NAME] [\-\-adouble] [\-\-verbose] [SOURCEFILE [...]]
+
+Create or extract StuffIt archives (when built with **with-stuffit**).
+
+> nad sit [-o FILE] [\-\-method METHOD] [\-\-verbose] FILE|DIR [FILE|DIR ...]
+>
+> nad unsit [\-\-verbose] ARCHIVE.sit [ARCHIVE.sit ...]
 
 Show version.
 
@@ -388,7 +399,7 @@ It takes one option:
 directory. With **\-\-force** outside AFP volumes, use path as the filesystem
 traversal root.
 
-# nad bin, hex, unbin, unhex
+# nad bin, unbin, hex, unhex
 
 Encode and decode MacBinary and BinHex, while reading and storing Mac OS
 metadata (resource forks and FinderInfo) in the metadata format used by
@@ -418,15 +429,15 @@ Commands:
 > Convert Netatalk metadata, data fork, and resource fork to MacBinary
 (*.bin*).
 
-**hex**
-
-> Convert Netatalk metadata, data fork, and resource fork to BinHex
-(*.hqx*).
-
 **unbin**
 
 > Convert MacBinary (*.bin*) input to the current AFP volume's metadata
 format, or filesystem EA metadata outside an AFP volume.
+
+**hex**
+
+> Convert Netatalk metadata, data fork, and resource fork to BinHex
+(*.hqx*).
 
 **unhex**
 
@@ -468,6 +479,44 @@ is silent unless an error occurs.
 If no *SOURCEFILE* is given, or if *SOURCEFILE* is '-', **unbin** and
 **unhex** read archive data from standard input. Options must appear before
 positional *FILE* arguments.
+
+# nad sit, unsit
+
+Create and extract StuffIt (*.sit*) archives while preserving Mac OS data
+forks, resource forks, Finder type and creator codes, and Finder flags.
+These commands are available only when Netatalk is configured with
+**-Dwith-stuffit=true** and the **stuffit-ffi** library is installed.
+
+**sit** accepts one or more files or directories. Directories are archived
+recursively. With one input and no explicit output path,
+the archive is named by appending *.sit* to the input path.
+Multiple inputs require **-o**.
+
+**unsit** accepts one or more archives and extracts their entries beneath the
+current directory. Existing files are not overwritten. Archive entry paths
+that are absolute, contain traversal components, or are otherwise unsafe are
+rejected.
+
+Options:
+
+**-o**, **\-\-output** *FILE*
+
+> Write the archive created by **sit** to *FILE*. This option is required when
+more than one input path is supplied.
+
+**\-\-method** *METHOD*
+
+> Select the numeric StuffIt compression method used by **sit**.
+Supported write methods are 0 (uncompressed), 13, 14 (Deflate), and 15.
+The default is 13.
+
+**\-\-verbose**
+
+> Print diagnostic archive conversion details.
+
+**-h**, **\-\-help**
+
+> Display StuffIt command help and exit.
 
 # Examples
 
@@ -515,6 +564,18 @@ Convert MacBinary input into filesystem EA metadata outside an AFP volume:
 Convert BinHex input to the current AFP volume's metadata format:
 
     nad unhex file.hqx
+
+Create a StuffIt archive from a directory:
+
+    nad sit Documents
+
+Create one StuffIt archive from several inputs:
+
+    nad sit -o Pictures.sit "Picture 1" "Picture 2"
+
+Extract a StuffIt archive into the current directory:
+
+    nad unsit Pictures.sit
 
 Inspect a MacBinary header:
 

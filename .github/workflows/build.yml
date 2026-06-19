@@ -22,6 +22,11 @@ on:
 permissions:
   contents: read
 
+env:
+  STUFFIT_RS_COMMIT: 16336d7abff5c925e8081869bfa0dd6ee27f0658
+  LD_LIBRARY_PATH: /usr/local/lib
+  PKG_CONFIG_PATH: /usr/local/lib/pkgconfig
+
 jobs:
   build-alpine:
     name: Alpine Linux
@@ -40,6 +45,7 @@ jobs:
             bison \
             build-base \
             ca-certificates \
+            cargo \
             cracklib \
             cracklib-dev \
             cracklib-words \
@@ -51,6 +57,7 @@ jobs:
             dconf \
             flex \
             file-dev \
+            git \
             gcc \
             glib \
             iniparser-dev \
@@ -70,11 +77,19 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto-dev \
+            rust \
             sqlite-dev \
             talloc-dev \
             tinysparql-dev \
             valgrind \
             xapian-core-dev
+      - name: Install stuffit-ffi
+        run: |
+          git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+          cd /tmp/stuffit-rs
+          git checkout "$STUFFIT_RS_COMMIT"
+          cargo build --release --locked -p stuffit-ffi
+          make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
         run: |
           meson setup build \
@@ -83,6 +98,7 @@ jobs:
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
             -Dwith-statedir-path=/var/lib \
+            -Dwith-stuffit=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build
@@ -130,6 +146,7 @@ jobs:
             flex \
             file \
             gcc \
+            git \
             iniparser \
             libev \
             localsearch \
@@ -139,10 +156,18 @@ jobs:
             perl \
             pkgconfig \
             rpcsvc-proto \
+            rust \
             sqlite \
             talloc \
             tinysparql \
             xapian-core
+      - name: Install stuffit-ffi
+        run: |
+          git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+          cd /tmp/stuffit-rs
+          git checkout "$STUFFIT_RS_COMMIT"
+          cargo build --release --locked -p stuffit-ffi
+          make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
         run: |
           meson setup build \
@@ -151,6 +176,7 @@ jobs:
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
+            -Dwith-stuffit=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build
@@ -275,6 +301,7 @@ jobs:
           dnf --setopt=install_weak_deps=False --assumeyes install \
             avahi-devel \
             bison \
+            cargo \
             chkconfig \
             cracklib-devel \
             cups-devel \
@@ -282,6 +309,7 @@ jobs:
             dconf \
             flex \
             gcc-c++ \
+            git \
             glib2-devel \
             iniparser-devel \
             krb5-devel \
@@ -292,6 +320,7 @@ jobs:
             libgcrypt-devel \
             libtalloc-devel \
             localsearch \
+            make \
             mariadb-connector-c-devel \
             meson \
             ninja-build \
@@ -301,11 +330,19 @@ jobs:
             perl \
             quota-devel \
             sqlite-devel \
+            rust \
             systemd \
             systemtap-sdt-devel \
             tinysparql-devel \
             valgrind \
             xapian-core-devel
+      - name: Install stuffit-ffi
+        run: |
+          git clone https://github.com/benletchford/stuffit-rs.git /tmp/stuffit-rs
+          cd /tmp/stuffit-rs
+          git checkout "$STUFFIT_RS_COMMIT"
+          cargo build --release --locked -p stuffit-ffi
+          make -C stuffit-ffi install-files PREFIX=/usr/local
       - name: Configure
         run: |
           meson setup build \
@@ -314,6 +351,7 @@ jobs:
             -Dwith-cups-pap-backend=true \
             -Dwith-eventloop=libev \
             -Dwith-init-hooks=false \
+            -Dwith-stuffit=true \
             -Dwith-tests=true \
             -Dwith-testsuite=true
       - name: Build
