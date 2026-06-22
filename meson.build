@@ -266,7 +266,6 @@ endif
 
 netatalk_common_flags = [
     '-DHAVE_CONFIG_H',
-    '-D_U_=__attribute__((unused))',
     '-Wno-pedantic',
     '-Wno-extra',
     '-Wno-all',

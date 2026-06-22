@@ -16,6 +16,10 @@
  *
  * $Name:  $
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif /* HAVE_CONFIG_H */
+
 #define NDEBUG
 #include <assert.h>
 #include <stddef.h>
