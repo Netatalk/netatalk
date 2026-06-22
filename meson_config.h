@@ -473,6 +473,21 @@
 /* Solaris compatibility macro */
 #mesondefine __svr4__
 
+/* Mark a declaration as intentionally unused when the compiler supports it. */
+#ifndef _U_
+#if defined(__has_attribute)
+#if __has_attribute(unused)
+#define _U_ __attribute__((unused))
+#else
+#define _U_
+#endif
+#elif defined(__GNUC__)
+#define _U_ __attribute__((unused))
+#else
+#define _U_
+#endif
+#endif
+
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
