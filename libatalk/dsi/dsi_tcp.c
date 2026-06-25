@@ -150,6 +150,7 @@ static pid_t dsi_tcp_open(DSI *dsi)
         struct sigaction newact, oldact;
         uint8_t block[DSI_BLOCKSIZ];
         size_t stored;
+        uint32_t dsi_len;
         /* reset signals */
         server_reset_signal();
 #ifndef DEBUGGING
@@ -209,8 +210,16 @@ static pid_t dsi_tcp_open(DSI *dsi)
         memcpy(&dsi->header.dsi_reserved, block + 12,
                sizeof(dsi->header.dsi_reserved));
         dsi->clientID = ntohs(dsi->header.dsi_requestID);
-        /* make sure we don't over-write our buffers. */
-        dsi->cmdlen = min(ntohl(dsi->header.dsi_len), dsi->server_quantum);
+        dsi_len = ntohl(dsi->header.dsi_len);
+
+        if (dsi_len > dsi->server_quantum) {
+            LOG(log_error, logtype_dsi,
+                "dsi_tcp_open: request payload too large: %u > %u",
+                (unsigned int)dsi_len, (unsigned int)dsi->server_quantum);
+            exit(EXITERR_CLNT);
+        }
+
+        dsi->cmdlen = dsi_len;
         stored = 0;
 
         while (stored < dsi->cmdlen) {
