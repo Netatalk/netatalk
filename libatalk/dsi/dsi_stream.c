@@ -662,6 +662,8 @@ int dsi_stream_send(DSI *dsi, void *buf, size_t length)
 int dsi_stream_receive(DSI *dsi)
 {
     char block[DSI_BLOCKSIZ];
+    uint32_t dsi_len;
+    uint32_t dsi_doff;
     LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: START");
 
     if (dsi->flags & DSI_DISCONNECTED) {
@@ -689,22 +691,37 @@ int dsi_stream_receive(DSI *dsi)
     memcpy(&dsi->header.dsi_len, block + 8, sizeof(dsi->header.dsi_len));
     memcpy(&dsi->header.dsi_reserved, block + 12, sizeof(dsi->header.dsi_reserved));
     dsi->clientID = ntohs(dsi->header.dsi_requestID);
-    /* make sure we don't over-write our buffers. */
-    dsi->cmdlen = MIN(ntohl(dsi->header.dsi_len), dsi->server_quantum);
-    dsi->header.dsi_data.dsi_doff = MIN(dsi->header.dsi_data.dsi_doff,
-                                        dsi->server_quantum);
+    dsi_len = ntohl(dsi->header.dsi_len);
+    dsi_doff = dsi->header.dsi_data.dsi_doff;
+
+    if (dsi_len > dsi->server_quantum) {
+        LOG(log_error, logtype_dsi,
+            "dsi_stream_receive: request payload too large: %u > %u",
+            (unsigned int)dsi_len, (unsigned int)dsi->server_quantum);
+        return 0;
+    }
+
+    dsi->cmdlen = dsi_len;
 
     /* Work around bug in ASC 3.7.x when client sends a zero byte AFPWrite() */
     if (dsi->header.dsi_command == DSIFUNC_WRITE
-            && !(dsi->header.dsi_data.dsi_doff)) {
-        dsi->header.dsi_data.dsi_doff = 12;
+            && !dsi_doff) {
+        dsi_doff = 12;
+        dsi->header.dsi_data.dsi_doff = dsi_doff;
+    }
+
+    if (dsi->header.dsi_command == DSIFUNC_WRITE && dsi_doff > dsi_len) {
+        LOG(log_error, logtype_dsi,
+            "dsi_stream_receive: write data offset exceeds payload length: %u > %u",
+            (unsigned int)dsi_doff, (unsigned int)dsi_len);
+        return 0;
     }
 
     /* Receiving DSIWrite data is done in AFP function, not here */
     if (dsi->header.dsi_command == DSIFUNC_WRITE
-            && dsi->header.dsi_data.dsi_doff) {
+            && dsi_doff) {
         LOG(log_maxdebug, logtype_dsi, "dsi_stream_receive: write request");
-        dsi->cmdlen = dsi->header.dsi_data.dsi_doff;
+        dsi->cmdlen = dsi_doff;
     }
 
     if (dsi_stream_read(dsi, dsi->commands, dsi->cmdlen) != dsi->cmdlen) {

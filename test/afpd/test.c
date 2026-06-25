@@ -21,10 +21,12 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 
 #include <atalk/cnid.h>
 #include <atalk/directory.h>
+#include <atalk/dsi.h>
 #include <atalk/globals.h>
 #include <atalk/logger.h>
 #include <atalk/netatalk_conf.h>
@@ -55,6 +57,137 @@ static char *args[] = {"test", "-F", confpath};
 int test_output_tap = 0;
 int test_case_num = 0;
 FILE *test_report_stream = NULL;
+
+static void dsi_test_header(uint8_t *block, uint8_t command,
+                            uint16_t request_id,
+                            uint32_t code_or_doff, uint32_t len)
+{
+    uint16_t request_id_be;
+    uint32_t code_or_doff_be;
+    uint32_t len_be;
+    uint32_t reserved_be;
+    memset(block, 0, DSI_BLOCKSIZ);
+    block[0] = DSIFL_REQUEST;
+    block[1] = command;
+    request_id_be = htons(request_id);
+    code_or_doff_be = htonl(code_or_doff);
+    len_be = htonl(len);
+    reserved_be = 0;
+    memcpy(block + 2, &request_id_be, sizeof(request_id_be));
+    memcpy(block + 4, &code_or_doff_be, sizeof(code_or_doff_be));
+    memcpy(block + 8, &len_be, sizeof(len_be));
+    memcpy(block + 12, &reserved_be, sizeof(reserved_be));
+}
+
+static int dsi_test_receive(uint8_t command, uint32_t code_or_doff,
+                            uint32_t len, const uint8_t *payload,
+                            size_t payload_len, DSI *dsi)
+{
+    uint8_t block[DSI_BLOCKSIZ];
+    int fds[2];
+    size_t quantum;
+    ssize_t written;
+    memset(dsi, 0, sizeof(*dsi));
+    dsi->socket = -1;
+
+    if (socketpair(AF_UNIX, SOCK_STREAM, 0, fds) != 0) {
+        return -1;
+    }
+
+    dsi->socket = fds[1];
+    dsi->server_quantum = 16;
+    quantum = dsi->server_quantum;
+    dsi->commands = calloc(1, quantum);
+    dsi->buffer = calloc(1, quantum);
+
+    if (dsi->commands == NULL || dsi->buffer == NULL) {
+        close(fds[0]);
+        return -1;
+    }
+
+    dsi->start = dsi->buffer;
+    dsi->eof = dsi->buffer;
+    dsi->end = dsi->buffer + quantum;
+    dsi_test_header(block, command, 0x1234, code_or_doff, len);
+    written = write(fds[0], block, sizeof(block));
+
+    if (written != sizeof(block)) {
+        close(fds[0]);
+        return -1;
+    }
+
+    if (payload_len > 0) {
+        written = write(fds[0], payload, payload_len);
+
+        if (written != (ssize_t)payload_len) {
+            close(fds[0]);
+            return -1;
+        }
+    }
+
+    close(fds[0]);
+    return dsi_stream_receive(dsi);
+}
+
+static void dsi_test_cleanup(DSI *dsi)
+{
+    if (dsi->socket != -1) {
+        close(dsi->socket);
+    }
+
+    free(dsi->commands);
+    free(dsi->buffer);
+}
+
+static int utest_dsi_receive_valid_cmd(void)
+{
+    uint8_t payload[2] = {AFP_LOGIN, 0};
+    DSI dsi;
+    int ret;
+    ret = dsi_test_receive(DSIFUNC_CMD, 0, sizeof(payload), payload,
+                           sizeof(payload), &dsi);
+
+    if (ret != DSIFUNC_CMD || dsi.cmdlen != sizeof(payload)
+            || memcmp(dsi.commands, payload, sizeof(payload)) != 0) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    dsi_test_cleanup(&dsi);
+    return 0;
+}
+
+static int utest_dsi_receive_rejects_oversized_payload(void)
+{
+    DSI dsi;
+    int ret;
+    ret = dsi_test_receive(DSIFUNC_CMD, 0, 17, NULL, 0, &dsi);
+
+    if (ret != 0) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    dsi_test_cleanup(&dsi);
+    return 0;
+}
+
+static int utest_dsi_receive_rejects_write_offset_past_payload(void)
+{
+    uint8_t payload[4] = {AFP_WRITE, 0, 0, 0};
+    DSI dsi;
+    int ret;
+    ret = dsi_test_receive(DSIFUNC_WRITE, 8, sizeof(payload), payload,
+                           sizeof(payload), &dsi);
+
+    if (ret != 0) {
+        dsi_test_cleanup(&dsi);
+        return -1;
+    }
+
+    dsi_test_cleanup(&dsi);
+    return 0;
+}
 
 int main(int argc, char *argv[])
 {
@@ -109,6 +242,12 @@ int main(int argc, char *argv[])
      * fail with ENXIO and every LOG() is silently dropped.  stderr is captured. */
     TEST(setuplog("default:note", "/dev/stderr", true),
          "init logging to stderr");
+    TEST_int(utest_dsi_receive_valid_cmd(), 0,
+             "DSI receive accepts valid command frame");
+    TEST_int(utest_dsi_receive_rejects_oversized_payload(), 0,
+             "DSI receive rejects payload larger than server quantum");
+    TEST_int(utest_dsi_receive_rejects_write_offset_past_payload(), 0,
+             "DSI receive rejects DSIWrite offset beyond payload");
     TEST(afp_options_parse_cmdline(&obj, 3, &args[0]),
          "parse afpd command-line options");
     TEST_int(afp_config_parse(&obj, NULL), 0,
