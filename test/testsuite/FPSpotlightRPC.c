@@ -440,6 +440,25 @@ test_exit:
     exit_test("FPSpotlightRPC:test562: reject out-of-range TOC index");
 }
 
+STATIC void test563()
+{
+    unsigned int ret;
+    ENTER_TEST
+    ret = FPSpotlightPackFilemetaOverflowProbe();
+
+    if (ret != AFP_OK) {
+        if (!Quiet) {
+            fprintf(stdout, "\tFAILED: oversized filemeta pack probe "
+                            "returned %" PRIu32 " (%s), raw=0x%08x\n",
+                    ntohl(ret), afp_error(ret), ret);
+        }
+
+        test_failed();
+    }
+
+    exit_test("FPSpotlightRPC:test563: reject oversized filemeta pack");
+}
+
 void FPSpotlightRPC_test()
 {
     ENTER_TESTSET
@@ -448,4 +467,5 @@ void FPSpotlightRPC_test()
     test560();
     test561();
     test562();
+    test563();
 }

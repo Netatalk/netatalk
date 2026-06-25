@@ -23,6 +23,7 @@ extern unsigned int FPSpotlightFetchPropertiesWithLargeTOCIndex(CONN *conn,
         uint16_t vid);
 extern unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn,
         uint16_t vid);
+extern unsigned int FPSpotlightPackFilemetaOverflowProbe(void);
 
 extern unsigned int FPopenLogin(CONN *conn, char *vers, char *uam, char *usr,
                                 char *pwd);

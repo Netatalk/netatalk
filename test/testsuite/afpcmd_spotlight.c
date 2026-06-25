@@ -29,6 +29,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* afpcmd.h / afpclient.h MUST be included first so the testsuite-local
@@ -61,6 +62,10 @@ extern int Quiet;
  * etc/afpd/spotlight_marshalling.c next to MAX_SLQ_DAT.
  */
 #define SL_PACK_BUFLEN  65472
+#define SL_TEST_SERVER_DSI_DATASIZ (SL_PACK_BUFLEN + 64)
+#define SL_TEST_GUARD_LEN          4096
+#define SL_TEST_FILEMETA_STRINGS   230
+#define SL_TEST_FILEMETA_STRLEN    280
 
 #define TEST_SQ_TYPE_INT64  0x8400
 #define TEST_SQ_TYPE_TOC    0x8800
@@ -252,6 +257,116 @@ unsigned int FPSpotlightRPCWithLargeInt64Count(CONN *conn, uint16_t vid)
     spotlight_test_put_le64(rpcbuf, 32,
                             spotlight_test_pack_tag(TEST_SQ_TYPE_TOC, 1, 0));
     return spotlight_send(conn, vid, SPOTLIGHT_CMD_RPC, rpcbuf, sizeof(rpcbuf));
+}
+
+/*!
+ * Pack an oversized server-style reply and verify it cannot write past
+ * the server DSI reply buffer.
+ */
+unsigned int FPSpotlightPackFilemetaOverflowProbe(void)
+{
+    unsigned int ret = AFP_OK;
+    TALLOC_CTX  *tmp;
+    DALLOC_CTX  *reply;
+    sl_array_t  *outer_array;
+    sl_cnids_t  *cnids;
+    sl_filemeta_t *filemeta;
+    sl_array_t  *filemeta_array;
+    sl_array_t  *attrs;
+    uint8_t     *buf;
+    uint64_t     status = 35;
+    uint64_t     cnid = 1234;
+    sl_nil_t     nil = 0;
+    int          len;
+    tmp = talloc_new(NULL);
+    buf = malloc(SL_TEST_SERVER_DSI_DATASIZ + SL_TEST_GUARD_LEN);
+
+    if (tmp == NULL || buf == NULL) {
+        ret = htonl(AFPERR_MISC);
+        goto cleanup;
+    }
+
+    reply = talloc_zero(tmp, DALLOC_CTX);
+    outer_array = talloc_zero(reply, sl_array_t);
+    cnids = talloc_zero(outer_array, sl_cnids_t);
+    filemeta = talloc_zero(outer_array, sl_filemeta_t);
+    filemeta_array = talloc_zero(filemeta, sl_array_t);
+    attrs = talloc_zero(filemeta_array, sl_array_t);
+
+    if (reply == NULL || outer_array == NULL || cnids == NULL
+            || filemeta == NULL || filemeta_array == NULL || attrs == NULL) {
+        ret = htonl(AFPERR_MISC);
+        goto cleanup;
+    }
+
+    cnids->ca_unkn1 = 0x0add;
+    cnids->ca_context = 0x41414141;
+    cnids->ca_cnids = talloc_zero(cnids, DALLOC_CTX);
+
+    if (cnids->ca_cnids == NULL) {
+        ret = htonl(AFPERR_MISC);
+        goto cleanup;
+    }
+
+    if (dalloc_add_copy(cnids->ca_cnids, &cnid, uint64_t) < 0
+            || dalloc_add_copy(outer_array, &status, uint64_t) < 0
+            || dalloc_add(outer_array, cnids, sl_cnids_t) < 0
+            || dalloc_add_copy(filemeta_array, &nil, sl_nil_t) < 0) {
+        ret = htonl(AFPERR_MISC);
+        goto cleanup;
+    }
+
+    for (int i = 0; i < SL_TEST_FILEMETA_STRINGS; i++) {
+        char raw[SL_TEST_FILEMETA_STRLEN + 1];
+        char *attr;
+        memset(raw, 'A' + (i % 26), SL_TEST_FILEMETA_STRLEN);
+        raw[SL_TEST_FILEMETA_STRLEN] = '\0';
+        attr = dalloc_strdup(attrs, raw);
+
+        if (attr == NULL || dalloc_add(attrs, attr, char *) < 0) {
+            ret = htonl(AFPERR_MISC);
+            goto cleanup;
+        }
+    }
+
+    if (dalloc_add(filemeta_array, attrs, sl_array_t) < 0
+            || dalloc_add(filemeta, filemeta_array, sl_array_t) < 0
+            || dalloc_add(outer_array, filemeta, sl_filemeta_t) < 0
+            || dalloc_add(reply, outer_array, sl_array_t) < 0) {
+        ret = htonl(AFPERR_MISC);
+        goto cleanup;
+    }
+
+    memset(buf, 0, SL_TEST_SERVER_DSI_DATASIZ);
+    memset(buf + SL_TEST_SERVER_DSI_DATASIZ, 0xa5, SL_TEST_GUARD_LEN);
+    len = sl_pack(reply, (char *)buf + 4);
+
+    if (len != -1) {
+        if (!Quiet) {
+            fprintf(stderr, "[%s] oversized filemeta pack returned %d, "
+                            "expected -1\n", __func__, len);
+        }
+
+        ret = htonl(AFPERR_PARAM);
+        goto cleanup;
+    }
+
+    for (size_t i = 0; i < SL_TEST_GUARD_LEN; i++) {
+        if (buf[SL_TEST_SERVER_DSI_DATASIZ + i] != 0xa5) {
+            if (!Quiet) {
+                fprintf(stderr, "[%s] guard byte changed at offset %zu\n",
+                        __func__, i);
+            }
+
+            ret = htonl(AFPERR_PARAM);
+            goto cleanup;
+        }
+    }
+
+cleanup:
+    free(buf);
+    talloc_free(tmp);
+    return ret;
 }
 
 /*!
