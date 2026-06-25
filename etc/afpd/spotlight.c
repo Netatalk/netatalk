@@ -50,6 +50,7 @@
 #include "etc/spotlight/spotlight_private.h"
 
 #define MAX_SL_RESULTS 20
+#define MAX_SL_REQINFO_ATTRS 64
 #define MAX_SL_QUERY_IDLE_TIME_ACTIVE 60
 #define MAX_SL_QUERY_IDLE_TIME_TERMINAL 300
 
@@ -315,6 +316,59 @@ EC_CLEANUP:
     }
 
     EC_EXIT;
+}
+
+static bool sl_reqinfo_contains(sl_array_t *reqinfo, const char *attr)
+{
+    for (int i = 0; i < talloc_array_length(reqinfo->dd_talloc_array); i++) {
+        if (strequal(reqinfo->dd_talloc_array[i], attr)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static sl_array_t *sl_sanitize_reqinfo(TALLOC_CTX *mem_ctx,
+                                       const sl_array_t *reqinfo)
+{
+    sl_array_t *attrs;
+    const char *attr;
+    char *copy;
+    attrs = talloc_zero(mem_ctx, sl_array_t);
+
+    if (attrs == NULL) {
+        return NULL;
+    }
+
+    for (int i = 0; i < talloc_array_length(reqinfo->dd_talloc_array); i++) {
+        if (talloc_array_length(attrs->dd_talloc_array) >= MAX_SL_REQINFO_ATTRS) {
+            break;
+        }
+
+        if (reqinfo->dd_talloc_array[i] == NULL
+                || strcmp(talloc_get_name(reqinfo->dd_talloc_array[i]), "char *") != 0) {
+            talloc_free(attrs);
+            return NULL;
+        }
+
+        attr = reqinfo->dd_talloc_array[i];
+
+        if (sl_reqinfo_contains(attrs, attr)) {
+            continue;
+        }
+
+        copy = dalloc_strdup(attrs, attr);
+
+        if (copy == NULL) {
+            talloc_free(attrs);
+            return NULL;
+        }
+
+        dalloc_add(attrs, copy, char *);
+    }
+
+    return attrs;
 }
 
 /*!
@@ -898,7 +952,13 @@ static int sl_rpc_openQuery(AFPObj *obj,
         EC_FAIL;
     }
 
-    slq->slq_reqinfo = talloc_steal(slq, reqinfo);
+    slq->slq_reqinfo = sl_sanitize_reqinfo(slq, reqinfo);
+
+    if (slq->slq_reqinfo == NULL) {
+        LOG(log_error, logtype_sl, "openQuery: invalid kMDAttributeArray");
+        EC_FAIL;
+    }
+
     scope_array = dalloc_value_for_key(query, "DALLOC_CTX", 0, "DALLOC_CTX", 1,
                                        "kMDScopeArray", "sl_array_t");
 
