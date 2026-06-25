@@ -46,6 +46,33 @@ static char *K_MD5hash = NULL;
 static int K_hash_len;
 static uint16_t ID;
 
+enum dhx2_state {
+    DHX2_STATE_IDLE,
+    DHX2_STATE_EXPECT_CONT1,
+    DHX2_STATE_EXPECT_CONT2,
+};
+
+static enum dhx2_state dhx2_state = DHX2_STATE_IDLE;
+
+static void dhx2_release_mpi(gcry_mpi_t *mpi)
+{
+    if (mpi != NULL && *mpi != NULL) {
+        gcry_mpi_release(*mpi);
+        *mpi = NULL;
+    }
+}
+
+static void dhx2_clear_session(void)
+{
+    dhx2_release_mpi(&Ra);
+    dhx2_release_mpi(&serverNonce);
+    free(K_MD5hash);
+    K_MD5hash = NULL;
+    K_hash_len = 0;
+    ID = 0;
+    dhx2_state = DHX2_STATE_IDLE;
+}
+
 /* The initialization vectors for CAST128 are fixed by Apple. */
 static unsigned char dhx_c2siv[] = { 'L', 'W', 'a', 'l', 'l', 'a', 'c', 'e' };
 static unsigned char dhx_s2civ[] = { 'C', 'J', 'a', 'l', 'b', 'e', 'r', 't' };
@@ -261,6 +288,7 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     char *Ra_binary = NULL;
     uint16_t uint16;
     *rbuflen = 0;
+    dhx2_clear_session();
     Ra = gcry_mpi_new(0);
     Ma = gcry_mpi_new(0);
     /* Generate our random number Ra. */
@@ -316,9 +344,15 @@ static int dhx2_setup(void *obj, char *ibuf _U_, size_t ibuflen _U_,
     rbuf += PRIMEBITS / 8;
     *rbuflen += PRIMEBITS / 8;
     ret = AFPERR_AUTHCONT;
+    dhx2_state = DHX2_STATE_EXPECT_CONT1;
 error:              /* We exit here anyway */
     /* We will need Ra later, but mustn't forget to release it ! */
     gcry_mpi_release(Ma);
+
+    if (ret != AFPERR_AUTHCONT) {
+        dhx2_clear_session();
+    }
+
     return ret;
 }
 
@@ -432,6 +466,13 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
     gcry_error_t ctxerror;
     uint16_t uint16;
     *rbuflen = 0;
+
+    if (dhx2_state != DHX2_STATE_EXPECT_CONT1 || Ra == NULL) {
+        LOG(log_info, logtype_uams,
+            "DHX2: unexpected first login continuation");
+        return AFPERR_PARAM;
+    }
+
     Mb = gcry_mpi_new(0);
     K = gcry_mpi_new(0);
     clientNonce = gcry_mpi_new(0);
@@ -560,13 +601,17 @@ static int logincont1(void *obj _U_, char *ibuf, size_t ibuflen, char *rbuf,
 error_ctx:
     gcry_cipher_close(ctx);
 error_noctx:
-    gcry_mpi_release(serverNonce);
-    free(K_MD5hash);
-    K_MD5hash = NULL;
 exit:
+
+    if (ret == AFPERR_AUTHCONT) {
+        dhx2_release_mpi(&Ra);
+        dhx2_state = DHX2_STATE_EXPECT_CONT2;
+    } else {
+        dhx2_clear_session();
+    }
+
     gcry_mpi_release(K);
     gcry_mpi_release(Mb);
-    gcry_mpi_release(Ra);
     gcry_mpi_release(clientNonce);
     return ret;
 }
@@ -585,6 +630,14 @@ static int logincont2(void *obj_in, struct passwd **uam_pwd,
     gcry_error_t ctxerror;
     char *utfpass = NULL;
     *rbuflen = 0;
+
+    if (dhx2_state != DHX2_STATE_EXPECT_CONT2 ||
+            K_MD5hash == NULL || serverNonce == NULL) {
+        LOG(log_info, logtype_uams,
+            "DHX2: unexpected second login continuation");
+        dhx2_clear_session();
+        return AFPERR_PARAM;
+    }
 
     /* Packet size should be: Session ID + ServerNonce + Passwd buffer (evantually +10 extra bytes, see Apples Docs) */
     if ((ibuflen != 2 + 16 + 256) && (ibuflen != 2 + 16 + 256 + 10)) {
@@ -753,9 +806,7 @@ error_noctx:
         free(utfpass);
     }
 
-    free(K_MD5hash);
-    K_MD5hash = NULL;
-    gcry_mpi_release(serverNonce);
+    dhx2_clear_session();
     gcry_mpi_release(retServerNonce);
     return ret;
 }
@@ -770,12 +821,14 @@ static int pam_logincont(void *obj, struct passwd **uam_pwd,
     memcpy(&retID, ibuf, sizeof(uint16_t));
     retID = ntohs(retID);
 
-    if (retID == ID) {
+    if (retID == ID && dhx2_state == DHX2_STATE_EXPECT_CONT1) {
         ret = logincont1(obj, ibuf, ibuflen, rbuf, rbuflen);
-    } else if (retID == ID + 1) {
+    } else if (retID == ID + 1 && dhx2_state == DHX2_STATE_EXPECT_CONT2) {
         ret = logincont2(obj, uam_pwd, ibuf, ibuflen, rbuf, rbuflen);
     } else {
-        LOG(log_info, logtype_uams, "DHX2: Session ID Mismatch");
+        LOG(log_info, logtype_uams,
+            "DHX2: Session ID mismatch or unexpected login continuation");
+        dhx2_clear_session();
         ret = AFPERR_PARAM;
     }
 
@@ -823,6 +876,14 @@ static int changepw_3(void *obj _U_,
     gcry_error_t ctxerror;
     *rbuflen = 0;
     LOG(log_error, logtype_uams, "DHX2 ChangePW: packet 3 processing");
+
+    if (dhx2_state != DHX2_STATE_EXPECT_CONT2 ||
+            K_MD5hash == NULL || serverNonce == NULL) {
+        LOG(log_info, logtype_uams,
+            "DHX2 ChangePW: unexpected password-change continuation");
+        ret = AFPERR_PARAM;
+        goto error_noctx;
+    }
 
     /* Packet size should be: Session ID + ServerNonce + 2*Passwd buffer */
     if (ibuflen != 2 + 16 + 2 * 256) {
@@ -971,9 +1032,7 @@ static int changepw_3(void *obj _U_,
 error_ctx:
     gcry_cipher_close(ctx);
 error_noctx:
-    free(K_MD5hash);
-    K_MD5hash = NULL;
-    gcry_mpi_release(serverNonce);
+    dhx2_clear_session();
     gcry_mpi_release(retServerNonce);
     return ret;
 }
