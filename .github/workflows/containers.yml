@@ -199,7 +199,7 @@ jobs:
     needs: build-container-debug
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+    if: false
     concurrency:
       group: "pages"
       cancel-in-progress: false
