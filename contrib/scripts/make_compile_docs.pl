@@ -1,8 +1,8 @@
 #!/usr/bin/env perl
 
-# This script generates the compilation readme from the GitHub build.yml file.
+# This script generates a compilation readme from GitHub workflow files
 #
-# (c) 2025 Daniel Markstedt <daniel@mindani.net>
+# (c) 2025-2026 Daniel Markstedt <daniel@mindani.net>
 #
 #  This program is free software; you can redistribute it and/or modify
 #  it under the terms of the GNU General Public License as published by
@@ -20,25 +20,99 @@ use warnings;
 use YAML::PP;
 use YAML::PP::Common qw/ PRESERVE_ORDER /;
 
-if (@ARGV < 2 || grep { $_ eq '--help' || $_ eq '-h' } @ARGV) {
-    print "Usage: $0 input_file output_file\n";
-    print "  input_file   Path to the build.yml file (required)\n";
+if (grep { $_ eq '--help' || $_ eq '-h' } @ARGV) {
+    print "Usage: $0 input_file [input_file ...] output_file\n";
+    print "  input_file   Path to a workflow YAML file (one or more required)\n";
     print "  output_file  Path to the output markdown file (required)\n";
-    exit((@ARGV < 2) ? 1 : 0);
+    exit 0;
 }
 
-my $input_file  = $ARGV[0];
-my $output_file = $ARGV[1];
+if (@ARGV < 2) {
+    print "Usage: $0 input_file [input_file ...] output_file\n";
+    print "  input_file   Path to a workflow YAML file (one or more required)\n";
+    print "  output_file  Path to the output markdown file (required)\n";
+    exit 1;
+}
 
-unless (-e $input_file) {
-    die "Error: Input file '$input_file' does not exist.\n";
+my $output_file = pop @ARGV;
+my @input_files = @ARGV;
+
+foreach my $input_file (@input_files) {
+    unless (-e $input_file) {
+        die "Error: Input file '$input_file' does not exist.\n";
+    }
 }
 
 my $ypp = YAML::PP->new(preserve => PRESERVE_ORDER);
-my $workflow;
-eval { $workflow = $ypp->load_file($input_file); };
-if ($@) {
-    die "Error parsing YAML file: $@\n";
+
+sub format_shell_command {
+    my ($shell) = @_;
+
+    return unless defined $shell;
+
+    $shell =~ s/\\\n\s+//g;
+    $shell =~ s/-Dbuildtype=debugoptimized/-Dbuildtype=release/g;
+    $shell =~ s/-Dwith-init-hooks=false/-Dwith-init-hooks=true/g;
+    $shell =~ s/^\s*set\b[^\n]*(?:\n|$)//gm;
+    $shell =~ s/^\s*.*-V\s*(?:\n|$)//gm;
+    $shell =~ s/\n+$//;
+
+    return $shell;
+}
+
+sub wanted_step {
+    my ($step) = @_;
+
+    return unless exists $step->{name};
+
+    my %wanted = map { $_ => 1 } (
+                                  'Install dependencies',
+                                  'Configure',
+                                  'Build',
+                                  'Test',
+                                  'Install',
+                                  'Build on VM',
+    );
+
+    return $wanted{$step->{name}};
+}
+
+sub format_job_name {
+    my ($name) = @_;
+
+    if ($name =~ /-\s*([^(]+?)\s*\(/) {
+        return $1;
+    }
+
+    return $name;
+}
+
+sub render_step {
+    my ($markdown, $step) = @_;
+
+    if (exists $step->{uses} && $step->{uses} =~ /^vmactions\//) {
+        push @{$markdown},
+          "Install dependencies",
+          "",
+          "```shell",
+          format_shell_command($step->{with}->{prepare}),
+          "```",
+          "",
+          "Build and install",
+          "",
+          "```shell",
+          format_shell_command($step->{with}->{run}),
+          "```",
+          "";
+    } else {
+        push @{$markdown},
+          $step->{name},
+          "",
+          "```shell",
+          format_shell_command($step->{run}),
+          "```",
+          "";
+    }
 }
 
 my @markdown = (
@@ -48,67 +122,34 @@ my @markdown = (
             "Before starting, please read through the [Install Quick Start](https://netatalk.io/install) guide first.",
             "You need to have a local clone of Netatalk's source code before proceeding.",
             "",
-            "Please note that these steps are automatically generated from the CI jobs,",
-            "and may not always be optimized for standalone execution.",
+            "```shell",
+            "git clone https://github.com/Netatalk/netatalk.git",
+            "cd netatalk",
+            "```",
+            "",
+            "**Note:** Installation commands may require `sudo` privileges depending on your system configuration.",
             "",
 );
 
-foreach my $key (keys %{$workflow->{jobs}}) {
-    my $job = $workflow->{jobs}->{$key};
+foreach my $input_file (@input_files) {
+    my $workflow;
+    eval { $workflow = $ypp->load_file($input_file); };
+    if ($@) {
+        die "Error parsing YAML file '$input_file': $@\n";
+    }
 
-    # No need to document the SonarQube job
-    next if $job->{name} eq "Static Analysis";
+    foreach my $key (keys %{$workflow->{jobs}}) {
+        my $job = $workflow->{jobs}->{$key};
 
-    push @markdown, "## " . $job->{name}, "";
+        next if $job->{name} =~ /\(32-bit\)$/;
 
-    foreach my $step (@{$job->{steps}}) {
-        # Skip unnamed steps
-        next unless exists $step->{name};
+        my @steps = grep { wanted_step($_) } @{$job->{steps}};
+        next unless @steps;
 
-        # Skip GitHub actions steps irrelevant to documentation
-        next if exists $step->{uses} && $step->{uses} =~ /^actions\//;
+        push @markdown, "## " . format_job_name($job->{name}), "";
 
-        # Adjust line breaks for better readability
-        if (exists $step->{run}) {
-            $step->{run} =~ s/\\\n\s+//g;
-            $step->{run} =~ s/\n+$//;
-        }
-
-        if (exists $step->{with}) {
-            if (exists $step->{with}->{prepare}) {
-                $step->{with}->{prepare} =~ s/\\\n\s+//g;
-                $step->{with}->{prepare} =~ s/\n+$//;
-            }
-
-            if (exists $step->{with}->{run}) {
-                $step->{with}->{run} =~ s/\\\n\s+//g;
-                $step->{with}->{run} =~ s/\n+$//;
-            }
-        }
-
-        # There are two types of jobs with different structures
-        if (exists $step->{uses} && $step->{uses} =~ /^vmactions\//) {
-            push @markdown,
-              "Install required packages",
-              "",
-              "```shell",
-              $step->{with}->{prepare},
-              "```",
-              "",
-              "Build and install",
-              "",
-              "```shell",
-              $step->{with}->{run},
-              "```",
-              "";
-        } else {
-            push @markdown,
-              $step->{name},
-              "",
-              "```shell",
-              $step->{run},
-              "```",
-              "";
+        foreach my $step (@steps) {
+            render_step(\@markdown, $step);
         }
     }
 }

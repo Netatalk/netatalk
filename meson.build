@@ -143,6 +143,8 @@ if 'readmes' in docs_options
         run_command(
             make_compile_doc,
             '.github/workflows/build.yml',
+            '.github/workflows/spectest-macos.yml',
+            '.github/workflows/spectest-vms.yml',
             'COMPILATION.md',
             check: true,
         )
