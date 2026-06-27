@@ -26,7 +26,7 @@ permissions:
 
 jobs:
   spectest-dflybsd:
-    name: AFP Spectest - DragonflyBSD (sys:ad, HAMMER2)
+    name: AFP Spectest - DragonFlyBSD (sys:ad, HAMMER2)
     runs-on: ubuntu-latest
     timeout-minutes: 24
     steps:
@@ -397,6 +397,10 @@ jobs:
             pkg install \
               build-essential \
               pkg-config
+            # This installs the SmartOS pkgsrc bootstrap, which is a self-contained pkgsrc environment
+            # containing a pkgin package manager and a /opt/local prefix.
+            # The bootstrap is used to install the required dependencies for building netatalk on OmniOS.
+            # This step can be skipped if the bootstrap is already installed.
             curl -o bootstrap.tar.gz https://pkgsrc.smartos.org/packages/SmartOS/bootstrap/bootstrap-2025Q4-x86_64.tar.gz
             tar -zxpf bootstrap.tar.gz -C /
             export PATH=/opt/local/sbin:/opt/local/bin:/usr/gnu/bin:/usr/bin:/usr/sbin:/sbin:$PATH
@@ -482,7 +486,8 @@ jobs:
               web/curl
             curl --location -o iniparser.tar.gz \
               https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
-            set +e # tar on illumos is too old to handle git tarballs cleanly
+            # tar on illumos is too old to handle git tarballs cleanly
+            set +e
             tar xzf iniparser.tar.gz
             set -e
             cd iniparser-v4.2.6
@@ -559,7 +564,8 @@ jobs:
               https://github.com/commonmark/cmark/archive/refs/tags/0.31.1.tar.gz
             curl --location -o iniparser.tar.gz \
               https://gitlab.com/iniparser/iniparser/-/archive/v4.2.6/iniparser-v4.2.6.tar.gz
-            set +e # tar on Solaris is too old to handle git tarballs cleanly
+            # tar on Solaris is too old to handle git tarballs cleanly
+            set +e
             tar xzf cmark.tar.gz
             tar xzf iniparser.tar.gz
             set -e

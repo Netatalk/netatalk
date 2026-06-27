@@ -24,7 +24,7 @@ env:
 
 jobs:
   spectest-macos:
-    name: AFP spec test (ea:sys) AFP 3.4 - macOS
+    name: AFP Spectest - macOS (ea:sys)
     runs-on: macos-latest
     timeout-minutes: 24
     env:
@@ -61,7 +61,7 @@ jobs:
       - name: Build
         run: meson compile -C build
 
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
 
       - name: Install

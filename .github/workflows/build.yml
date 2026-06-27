@@ -87,7 +87,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
       - name: Run memory profiling
         run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
@@ -155,7 +155,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
       - name: Install
         run: meson install -C build
@@ -240,7 +240,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
       - name: Run memory profiling
         run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
@@ -318,7 +318,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
       - name: Run memory profiling
         run: meson test --wrapper='valgrind --leak-check=full --error-exitcode=1' -C build
@@ -401,7 +401,7 @@ jobs:
             -Dwith-testsuite=true
       - name: Build
         run: meson compile -C build
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
       - name: Install
         run: meson install -C build
@@ -483,7 +483,7 @@ jobs:
         run: meson compile -C build
       - name: Verify 32-bit binary
         run: file build/etc/afpd/afpd | grep -q 'ELF 32-bit'
-      - name: Run integration tests
+      - name: Test
         run: meson test -C build
       - name: Install
         run: meson install -C build
