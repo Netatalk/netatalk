@@ -62,14 +62,10 @@ jobs:
               xapian-core
           run: |
             set -e
-            # DragonflyBSD isn't in meson's init-style auto-detection; it is
-            # FreeBSD-derived and uses the same rc.d script, so select it
-            # explicitly to install /usr/local/etc/rc.d/netatalk.
             meson setup build \
               -Dbuildtype=debugoptimized \
               -Dwith-appletalk=true \
               -Dwith-eventloop=libev \
-              -Dwith-init-style=freebsd \
               -Dwith-tests=true \
               -Dwith-testsuite=true
             meson compile -C build
