@@ -2271,7 +2271,7 @@ if 'auto' in init_style
             init_style = ['openrc']
             init_cmd = 'rc-service'
         endif
-    elif host_os == 'freebsd'
+    elif host_os in ['dragonfly', 'freebsd']
         init_style = ['freebsd']
     elif host_os == 'netbsd'
         init_style = ['netbsd']
