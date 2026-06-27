@@ -2591,7 +2591,9 @@ if have_webmin
         init_a2boot_restart = 'service a2boot restart'
     elif 'freebsd' in init_style
         init_dir_override = get_option('with-init-dir')
-        if init_dir_override == ''
+        if init_dir_override != ''
+            init_dir = init_dir_override
+        else
             init_dir = '/usr/local/etc/rc.d'
         endif
         init_netatalk_start = init_dir + '/netatalk start'
