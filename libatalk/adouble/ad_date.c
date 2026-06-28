@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 1998 Adrian Sun (asun@zoology.washington.edu)
+ * Copyright (c) 1990,1991 Regents of The University of Michigan.
  * All rights reserved. See COPYRIGHT.
  */
 
