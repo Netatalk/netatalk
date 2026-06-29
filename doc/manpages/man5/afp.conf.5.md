@@ -1210,7 +1210,8 @@ ea = *sys* | *samba* | *ad* | *none* (default: auto detect) **(V)**
 > Specify how Extended Attributes and Mac OS Resource Forks are
 stored.
 >
-> By default, we attempt to enable **sys** with a fallback to **none**.
+> By default, we attempt to enable **sys** (filesystem Extended Attributes)
+with a fallback to **ad** (AppleDouble sidecars.)
 For the auto detection to work, the volume needs to be writable
 because we attempt to set an EA on the shared directory itself.
 For read-only volumes, set this option explicitly.
@@ -1226,8 +1227,8 @@ order to be compatible with Samba's vfs_streams_xattr.
 >
 > ad
 >
-> > Use AppleDouble v2 metadata stored as files in *.AppleDouble* directories.
-This should only be used when the host's filesystem does not support
+> > Use AppleDouble v2 metadata stored as files in *.AppleDouble* sidecar directories.
+This is only recommended when the host's filesystem does not support
 Extended Attributes.
 >
 > none
