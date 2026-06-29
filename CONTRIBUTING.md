@@ -20,8 +20,7 @@ If you haven't used git before, you should probably familiarize yourself with th
 - Before submitting PRs against stable branches, please make sure an issue report has been filed first.
 - When patching stable branches, prioritize submitting PRs for those stable branches.
   The patches can be cherry-picked to `main` by a maintainer later.
-- When applicable, the issue report key must be referenced in the commit message.
-- We allow rebase merges only; no branch merges.
+- We allow rebase merges only; no branch merges or squash merges.
 
 ## Review process
 
@@ -32,14 +31,14 @@ The code review can be carried out by any Netatalk Developer.
 ## Commit messages
 
 Commit messages should have a short, descriptive first summary line that
-begins with the affected component, and ends with the GitHub issue
-ticket # e.g.
+begins with the affected component (i.e. the subdir that houses the majority of changed code.)
 
-> afpd: new options "force user" and "force group", GitHub #1234
+> afpd: new options "force user" and "force group"
 
 This is helpful when browsing a git log in oneline mode.
 
 Then the commit message should explain what the change is about, the more context the better.
+Each line of the commit message shall be max 80 characters long.
 
 ## Basic Netatalk Git
 
@@ -75,11 +74,10 @@ The description of the workflow can be read in
 and will not be repeated here.
 
 The title of the PR should be descriptive and fit on one line.
-It should *not* contain the GitHub ticket number.
 When it is a PR against a *stable branch*, prepend a tag with the major and minor Netatalk version.
 For PRs against the **main** development branch, do not prepend any tags.
 
-A good example:
+A good example for a stable branch:
 
 > [3.2] meson: Allow choosing shared or static libraries to build
 
@@ -88,6 +86,35 @@ with a breakdown of the major changes that it is making.
 
 The PR reviewers will be automatically assigned based on the CODEOWNERS settings,
 so sit back and relax while a project member follows up!
+
+All PR feedback must be addressed, either by code changes or by an explanation that is acceptable to the reviewer.
+When making code changes, the commit history in the PR must be rebased for a clean and logical changeset.
+(As per the policy above, we only do rebase merges, no squash merges.)
+
+### AI assisted contributions
+
+AI tools may be used to assist with code contributions, but AI is a tool,
+not an independent author.
+
+- The submitter is expected to have read and internalized every line of code
+  in the changeset, regardless of how it was produced.
+- The submitter is responsible for the correctness, security, maintainability,
+  and licensing of all submitted code.
+- The submitter is responsible for ensuring that AI generated code does not
+  plagiarize copyrighted code or introduce code with incompatible licensing.
+
+### Testing
+
+Pull Requests should be accompanied by tests when appropriate, especially for
+bug fixes, new AFP functionality, and changes to shared behavior.
+Tests should use the existing structures under `test/**`, including the
+`test/afpd` component integration tests and the `test/testsuite` system
+integration tests.
+
+Novel test failures should be fixed before submitting a PR.
+It is strongly recommended to run the relevant tests locally before submitting.
+For more details, see the
+[Testing wiki page](https://github.com/Netatalk/netatalk/wiki/Testing).
 
 ### Alternative patch submission
 
