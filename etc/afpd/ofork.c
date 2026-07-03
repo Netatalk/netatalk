@@ -25,6 +25,7 @@
 #ifdef WITH_SPOTLIGHT
 #include <atalk/spotlight.h>
 #endif
+#include <atalk/unix.h>
 #include <atalk/util.h>
 
 #include "ad_cache.h"
@@ -449,12 +450,300 @@ struct ofork *of_findnameat(int dirfd, struct path *path)
     return NULL;
 }
 
+/*!
+ * @brief Conflict GET (F_GETLK only): read another holder's locks on a file.
+ *
+ * Reuses a held fork's fd when one exists, else opens+closes a transient one.
+ * Reading through a held fd (never a transient open+close on an inode we hold a
+ * lock on) is what keeps the held byte locks from being dropped on close.  The
+ * rfork is never opened onto of->of_ad (would corrupt ad_rlen / underflow the v2
+ * meta refcount).
+ *
+ * @param[in]  vol          volume the target lives on
+ * @param[in]  dirfd        directory fd for openat-style resolution, or -1
+ * @param[in]  path         target; both fork inodes derive from it
+ * @param[in]  df_get       probe data-fork content if non-zero
+ * @param[in]  df_off       data-fork content offset
+ * @param[in]  df_len       data-fork content length (0 = whole data zone)
+ * @param[in]  rf_get       probe resource-fork content if non-zero
+ * @param[in]  rf_off       resource-fork content offset
+ * @param[in]  rf_len       resource-fork content length (0 = whole zone)
+ * @param[in]  band_request share-mode band bitmap; OR together the per-offset
+ *                          *_BIT aliases from adouble.h (or ALL_BAND_BITS for all
+ *                          ten).  Bit n maps to offset AD_FILELOCK_BASE + n.
+ * @param[in]  try_root     retry the open as root on EACCES (the band is the
+ *                          server's own bookkeeping, not a user permission)
+ * @param[out] df_locked    set if the data-fork content range is locked
+ * @param[out] rf_locked    set if the resource-fork content range is locked
+ * @param[out] band_held    positional bitmap of held band bits (same positions
+ *                          as band_request)
+ *
+ * @returns OF_LOCKS_OK (0)    outputs valid (all 0 == nothing locked)
+ *          OF_LOCKS_NOENT (1) target absent; outputs stay zeroed
+ *          OF_LOCKS_ERROR(-1) lock state indeterminate -> caller must fail closed
+ *          Outputs are zeroed on entry and only populated on OF_LOCKS_OK, so a
+ *          caller that ignores the return still reads zeros, never stale data -
+ *          but the return MUST be checked (zeros do not mean "no locks").
+ *
+ * Data/band fd is fail-closed (any non-ENOENT failure -> ERROR).  The
+ * rfork-content leg is best-effort (rf_locked stays 0 on open failure / the
+ * HAVE_EAFD && SOLARIS skip; the rfork band is still read via the data fd).
+ */
+int of_get_locks(const struct vol *vol, int dirfd, struct path *path,
+                 int df_get, off_t df_off, off_t df_len,
+                 int rf_get, off_t rf_off, off_t rf_len,
+                 uint16_t band_request, int try_root,
+                 int *df_locked, int *rf_locked, uint16_t *band_held)
+{
+    struct ofork   *of;
+    struct adouble  addata;
+    struct adouble  adrf;
+    struct adouble *dadp = NULL;
+    struct adouble *radp = NULL;
+    uint16_t        held = 0;
+    int             d_opened = 0, r_opened = 0, rc = OF_LOCKS_OK;
+    int             dflk = 0, rflk = 0;
+    int             need_data = (df_get || band_request);
+    *df_locked = 0;
+    *rf_locked = 0;
+    *band_held = 0;
+    of = (dirfd != -1) ? of_findnameat(dirfd, path) : of_findname(vol, path);
+
+    /* of_findname[at]() stat()s the target (filling path->st_errno) and returns
+     * NULL when it does not exist.  Map a provably-absent target to NOENT here, so
+     * the tri-valued contract holds for every request shape - including an
+     * rfork-only probe, whose ADFLAGS_NORF open would otherwise succeed (no rfork
+     * is not an error) and leave a missing file reported as OF_LOCKS_OK. */
+    if (of == NULL && path->st_errno == ENOENT) {
+        rc = OF_LOCKS_NOENT;
+        goto done;
+    }
+
+    /* --- data fd: carries data content + the whole band --- */
+    if (need_data) {
+        if (of != NULL && (ad_data_fileno(of->of_ad) >= 0
+                           || ad_data_fileno(of->of_ad) == AD_SYMLINK)) {
+            dadp = of->of_ad;            /* reuse held fd, never close */
+        } else if (of != NULL) {
+            /* held ofork with a closed data fd: GETting through -1 would
+             * short-circuit to "no conflict" (fail-OPEN), so refuse */
+            LOG(log_error, logtype_afpd,
+                "of_get_locks(\"%s\"): held ofork has no data fd (refnum %" PRIu16
+                ") - failing closed", path->u_name, of->of_refnum);
+            rc = OF_LOCKS_ERROR;
+            goto done;
+        }
+
+        if (dadp == NULL) {
+            /* DF|RDONLY, no SETSHRMD (a F_GETLK test needs no write access; the
+             * probe sets F_WRLCK explicitly regardless of fd mode) and no HF
+             * (metadata is not a lock surface). */
+            int dflags = ADFLAGS_DF | ADFLAGS_RDONLY;
+            int derr, oerr;
+            ad_init(&addata, vol);
+            derr = ad_openat(&addata, dirfd, path->u_name, dflags);
+            oerr = errno;
+
+            if (derr < 0 && oerr == EACCES && try_root) {
+                become_root();
+                derr = ad_openat(&addata, dirfd, path->u_name, dflags);
+                oerr = errno;            /* before unbecome_root: seteuid sets errno */
+                unbecome_root();
+            }
+
+            if (derr == 0) {
+                dadp = &addata;
+                d_opened = 1;
+            } else if (oerr == ENOENT) {
+                rc = OF_LOCKS_NOENT;
+                goto done;
+            } else {
+                rc = OF_LOCKS_ERROR;     /* fail closed */
+                goto done;
+            }
+        }
+    }
+
+    /* --- rfork fd: separate inode; never opened onto of->of_ad --- */
+    if (rf_get) {
+        if (of != NULL && AD_RSRC_OPEN(of->of_ad)) {
+            radp = of->of_ad;            /* reuse held rfork, never close */
+        } else if (of != NULL) {
+            /* hold a fork but not the rfork.  On HAVE_EAFD && SOLARIS the rfork's
+             * O_XATTR fd hangs off the data fd, so a private open here would open a
+             * second fd to an inode we hold a lock on, and closing it would drop
+             * that lock -> skip.  Other backends open the rfork as a separate
+             * object and are safe. */
+#if !(defined(HAVE_EAFD) && defined(SOLARIS))
+            int rerr, roerr;
+            ad_init(&adrf, vol);
+            rerr = ad_openat(&adrf, dirfd, path->u_name,
+                             ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY);
+            roerr = errno;
+
+            if (rerr < 0 && roerr == EACCES && try_root) {
+                become_root();
+                rerr = ad_openat(&adrf, dirfd, path->u_name,
+                                 ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY);
+                /* roerr is not re-read: any failure here is unconditional ERROR */
+                unbecome_root();
+            }
+
+            if (rerr == 0) {
+                /* ADFLAGS_NORF returns 0 with no rfork opened when none is present;
+                 * probe only when the rfork actually opened, but close whatever did
+                 * open (the base fd may have, e.g. on Solaris). */
+                r_opened = 1;
+
+                if (AD_RSRC_OPEN(&adrf)) {
+                    radp = &adrf;
+                }
+            } else {
+                /* ADFLAGS_NORF masks only a missing rfork, not a hard error, so a
+                 * failure here means the rfork lock state is indeterminate: fail
+                 * closed rather than let the caller read it as "unlocked". */
+                rc = OF_LOCKS_ERROR;
+                goto done;
+            }
+
+#endif
+        } else {
+            /* no fork held: a transient open strands nothing.  HAVE_EAFD &&
+             * SOLARIS needs DF too (the O_XATTR base fd). */
+            int rflags = ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY;
+            int rerr, roerr;
+#if defined(HAVE_EAFD) && defined(SOLARIS)
+            rflags |= ADFLAGS_DF;
+#endif
+            ad_init(&adrf, vol);
+            rerr = ad_openat(&adrf, dirfd, path->u_name, rflags);
+            roerr = errno;
+
+            if (rerr < 0 && roerr == EACCES && try_root) {
+                become_root();
+                rerr = ad_openat(&adrf, dirfd, path->u_name, rflags);
+                roerr = errno;
+                unbecome_root();
+            }
+
+            if (rerr == 0) {
+                /* close whatever opened (on Solaris ADFLAGS_DF opens the O_XATTR
+                 * base fd even when the rfork itself does not open); probe only when
+                 * the rfork actually opened. */
+                r_opened = 1;
+
+                if (AD_RSRC_OPEN(&adrf)) {
+                    radp = &adrf;
+                }
+            } else if (roerr == ENOENT) {
+                /* target vanished after the lookup (race): definitely absent */
+                rc = OF_LOCKS_NOENT;
+                goto done;
+            } else {
+                /* hard error (not masked by NORF): indeterminate -> fail closed */
+                rc = OF_LOCKS_ERROR;
+                goto done;
+            }
+        }
+    }
+
+    /* rfork content: one range probe (no band lives on the rfork fd) */
+    if (rf_get && radp != NULL) {
+        int r = ad_testlock_range(radp, ADEID_RFORK, rf_off, rf_len);
+
+        if (r < 0) {
+            rc = OF_LOCKS_ERROR;
+            goto done;
+        }
+
+        rflk = (r > 0);
+    }
+
+    /* data fd: whole-fd fast path when >= 2 dimensions requested, else probe the
+     * one dimension directly.  band_request & (band_request-1) tests ">= 2 bits". */
+    if (dadp != NULL) {
+        int band_multi = (band_request & (band_request - 1)) != 0;
+        int use_whole  = (df_get && band_request != 0) || band_multi;
+        int resolve    = 1;
+
+        if (use_whole) {
+            int whole = ad_testlock_whole(dadp, ADEID_DFORK);
+
+            if (whole < 0) {
+                rc = OF_LOCKS_ERROR;
+                goto done;
+            }
+
+            resolve = (whole > 0);       /* clear => data fd holds nothing */
+        }
+
+        if (resolve) {
+            if (df_get) {
+                int r = ad_testlock_range(dadp, ADEID_DFORK, df_off, df_len);
+
+                if (r < 0) {
+                    rc = OF_LOCKS_ERROR;
+                    goto done;
+                }
+
+                dflk = (r > 0);
+            }
+
+            for (int bit = 0; bit < AD_FILELOCK_BAND_BITS; bit++) {
+                int r;
+
+                if (!(band_request & (1U << bit))) {
+                    continue;
+                }
+
+                r = ad_testlock_range(dadp, ADEID_DFORK, AD_FILELOCK_BASE + bit, 1);
+
+                if (r < 0) {
+                    rc = OF_LOCKS_ERROR;
+                    goto done;
+                }
+
+                if (r > 0) {
+                    held |= (uint16_t)(1U << bit);
+                }
+            }
+        }
+    }
+
+done:
+
+    if (d_opened) {
+        ad_close(&addata, ADFLAGS_DF);
+    }
+
+    if (r_opened) {
+        ad_close(&adrf, ADFLAGS_RF | ADFLAGS_HF
+#if defined(HAVE_EAFD) && defined(SOLARIS)
+                 | ADFLAGS_DF
+#endif
+                );
+    }
+
+    if (rc == OF_LOCKS_OK) {
+        *df_locked = dflk;
+        *rf_locked = rflk;
+        *band_held = held;
+    }
+
+    return rc;
+}
+
 void of_dealloc(struct ofork *of)
 {
     if (!oforks) {
         return;
     }
 
+    /* pairs each removal with its afp_openfork open */
+    LOG(log_debug, logtype_afpd,
+        "of_dealloc(refnum %" PRIu16 ", \"%s\", flags 0x%x, dev/ino %ju/%ju)",
+        of->of_refnum, of_name(of), of->of_flags,
+        (uintmax_t)of->key.dev, (uintmax_t)of->key.inode);
     of_unhash(of);
     oforks[of->of_refnum % nforks] = NULL;
 

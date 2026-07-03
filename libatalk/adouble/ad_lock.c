@@ -741,6 +741,162 @@ int ad_testlock(struct adouble *ad, int eid, const off_t off)
 }
 
 /*!
+ * @brief GET-only range probe: does another process hold a conflicting lock?
+ *
+ * Tests whether another process holds a conflicting lock on [off, off+len) of
+ * fork @p eid.  Unlike ad_testlock()/testlock() this does not scan our own
+ * adf_lock[] array first: it is kernel F_GETLK only.  By POSIX, F_GETLK never
+ * reports the calling process's own locks, so this can be called through a fd of
+ * a fork we hold open without self-reporting our own band/byte entries — exactly
+ * the conflict read a delete needs (it must see only other holders).  It never
+ * issues F_SETLK, so it has no acquire/release lifetime and cannot strand a lock.
+ *
+ * Key behaviours:
+ *
+ *  - No adf_lock[] array scan — kernel F_GETLK only (no self-report).
+ *  - Always probes with an explicit F_WRLCK.  A write probe conflicts with a
+ *    peer's read or write lock, so it sees the F_RDLCK share-mode band entries.
+ *    F_GETLK only tests, so the probe type is independent of the fd's
+ *    O_RDWR/O_RDONLY mode (cf. testlock(), which picks F_RDLCK on an RO fd and
+ *    would miss the band).
+ *  - eid dispatch: ADEID_DFORK uses the data fd at the literal offset, which also
+ *    covers the whole share-mode band (OPEN, DENY and RSRC mirrors), since the
+ *    band lives on the data fd via rf2off().  ADEID_RFORK uses the resource fork's
+ *    own fd (ad_rfp) at off + ad_getentryoff(), matching ad_lock()'s rfork
+ *    non-FILELOCK branch.  Band offsets are never passed with ADEID_RFORK; a band
+ *    offset is recognised as off >= AD_FILELOCK_BASE.
+ *  - Zone clamp on data-zone requests only (off < AD_FILELOCK_BASE): a len == 0
+ *    ("whole data zone") or over-long request is bounded to the data zone, never
+ *    a POSIX l_len == 0 ("to infinity") that would sweep the share-mode band.
+ *    An explicit band probe (off >= AD_FILELOCK_BASE) passes through unclamped.
+ *
+ * @param[in,out] ad   handle
+ * @param[in] eid      ADEID_DFORK (data + band) or ADEID_RFORK (rfork content)
+ * @param[in] off      offset (content) or a band offset (>= AD_FILELOCK_BASE)
+ * @param[in] len      length; 0 == whole data zone (data-zone requests only)
+ *
+ * @returns  1 = a conflicting lock exists (incl. F_GETLK EACCES/EAGAIN, reported
+ *               as locked/indeterminate — fail safe, matching testlock());
+ *           0 = no conflict (incl. no fd to probe);
+ *          -1 = hard error (caller must refuse the operation, never proceed).
+ */
+int ad_testlock_range(struct adouble *ad, int eid, off_t off, off_t len)
+{
+    const struct ad_fd *adf;
+    struct flock  lock;
+    LOG(log_debug, logtype_ad,
+        "ad_testlock_range(%s, off: %jd (%s), len: %jd): BEGIN",
+        eid == ADEID_DFORK ? "data" : "reso",
+        (intmax_t)off, shmdstrfromoff(off), (intmax_t)len);
+
+    /* dispatch to the correct fd and offset */
+    if (eid == ADEID_DFORK) {
+        adf = &ad->ad_data_fork;
+        lock.l_start = off;
+    } else {
+        adf = ad->ad_rfp;
+        lock.l_start = off + ad_getentryoff(ad, ADEID_RFORK);
+    }
+
+    /* No fd to probe (rfork not open / no sidecar): nothing of another process
+     * can be locked here through this handle. */
+    if (adf->adf_fd == -1) {
+        return 0;
+    }
+
+    /* zone clamp — data-zone requests only, by subtraction against the actual
+     * lock position (for ADEID_RFORK l_start already includes the resource-fork
+     * entry offset).  An explicit band probe (off >= AD_FILELOCK_BASE) reads the
+     * sentinel zone and is left unclamped. */
+    if (off < AD_FILELOCK_BASE) {
+        if (lock.l_start >= BYTELOCK_MAX) {
+            /* nothing in the data zone left to test */
+            return 0;
+        }
+
+        /* compare by subtraction: `l_start + len` overflows off_t for huge len */
+        off_t zone_max = BYTELOCK_MAX - lock.l_start;   /* >= 1 */
+
+        if (len == 0 || len > zone_max) {
+            len = zone_max;
+        }
+
+        if (len <= 0) {
+            return 0;
+        }
+    }
+
+    /* explicit F_WRLCK (sees a peer's F_RDLCK band entry on any fd mode), kernel
+     * F_GETLK only, no adf_lock[] scan */
+    lock.l_type   = F_WRLCK;
+    lock.l_whence = SEEK_SET;
+    lock.l_len    = len;
+
+    if (set_lock(adf->adf_fd, F_GETLK, &lock) < 0) {
+        /* EACCES/EAGAIN: kernel declined to answer — treat as locked/
+         * indeterminate (matches testlock()).  Any other error is a hard -1;
+         * the caller must refuse, never proceed. */
+        LOG(log_debug, logtype_ad,
+            "ad_testlock_range: F_GETLK fd=%d off=%jd len=%jd: %s",
+            adf->adf_fd, (intmax_t)lock.l_start, (intmax_t)lock.l_len,
+            strerror(errno));
+        return (errno == EACCES || errno == EAGAIN) ? 1 : -1;
+    }
+
+    LOG(log_debug, logtype_ad, "ad_testlock_range: END: %d",
+        (lock.l_type == F_UNLCK) ? 0 : 1);
+    return (lock.l_type == F_UNLCK) ? 0 : 1;
+}
+
+/*!
+ * @brief GET-only whole-fd probe: does another process hold any lock on the fd?
+ *
+ * The negative-case fast path.  Issues one F_GETLK over the entire fd of fork
+ * @p eid — deliberately unclamped (l_start = 0, l_len = 0 = "to infinity"), so on
+ * the data fd it spans the data content zone and the whole share-mode band, a
+ * strict superset of every ad_testlock_range dimension on that fd.  A clear (0)
+ * result proves the fd holds nothing, letting a caller skip the per-dimension
+ * content + per-bit band probes; a hit (1) forces the fidelity-preserving
+ * per-dimension resolution.
+ *
+ * This is the one probe that must span the band, so unlike ad_testlock_range it
+ * is not zone-clamped.  That is sound only because its sole use is the
+ * all-or-nothing fast path, never a per-dimension result.  Like ad_testlock_range
+ * it is kernel F_GETLK only (no array scan), probes with an explicit F_WRLCK, and
+ * shares the same fail-safe contract.
+ *
+ * Callers pass ADEID_DFORK: the rfork fd carries only a content range and no
+ * band, so a whole-fd probe there would collapse 1->1 and force the real range
+ * probe anyway (a net extra syscall) — the rfork is read with ad_testlock_range
+ * directly.
+ *
+ * @returns  1 = some lock exists (incl. F_GETLK EACCES/EAGAIN — fail safe);
+ *           0 = wholly clear (incl. no fd to probe);
+ *          -1 = hard error (caller must fail closed).
+ */
+int ad_testlock_whole(struct adouble *ad, int eid)
+{
+    const struct ad_fd *adf;
+    struct flock  lock;
+    adf = (eid == ADEID_DFORK) ? &ad->ad_data_fork : ad->ad_rfp;
+
+    if (adf->adf_fd == -1) {
+        return 0;
+    }
+
+    lock.l_type   = F_WRLCK;   /* sees a peer's F_RDLCK band too */
+    lock.l_whence = SEEK_SET;
+    lock.l_start  = 0;
+    lock.l_len    = 0;         /* whole fd to infinity — deliberately unclamped */
+
+    if (set_lock(adf->adf_fd, F_GETLK, &lock) < 0) {
+        return (errno == EACCES || errno == EAGAIN) ? 1 : -1;   /* fail safe */
+    }
+
+    return (lock.l_type == F_UNLCK) ? 0 : 1;
+}
+
+/*!
  * @brief Return if a file is open by another process.
  *
  * Optimized for the common case:

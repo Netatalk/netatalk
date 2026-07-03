@@ -63,7 +63,7 @@ ssize_t ad_write(struct adouble *ad, uint32_t eid, off_t off, int end,
         return -1;
     }
 
-    LOG(log_debug, logtype_ad, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
+    LOG(log_maxdebug, logtype_ad, "ad_write: off: %ju, size: %zu, eabuflen: %zu",
         (uintmax_t)off, buflen, ad->ad_rlen);
 
     if (eid == ADEID_DFORK) {

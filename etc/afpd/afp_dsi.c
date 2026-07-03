@@ -993,7 +993,7 @@ void afp_over_dsi(AFPObj *obj)
             function = (uint8_t) dsi->commands[0];
             /* AFP replay cache */
             rc_idx = dsi->clientID % REPLAYCACHE_SIZE;
-            LOG(log_debug, logtype_dsi, "DSI request ID: %u", dsi->clientID);
+            LOG(log_maxdebug, logtype_dsi, "DSI request ID: %u", dsi->clientID);
 
             if (replaycache[rc_idx].DSIreqID == dsi->clientID
                     && replaycache[rc_idx].AFPcommand == function) {
@@ -1007,14 +1007,14 @@ void afp_over_dsi(AFPObj *obj)
                 if (afp_switch[function]) {
                     dsi->datalen = DSI_DATASIZ;
                     dsi->flags |= DSI_RUNNING;
-                    LOG(log_debug, logtype_afpd, "<== Start AFP command: %s",
+                    LOG(log_maxdebug, logtype_afpd, "<== Start AFP command: %s",
                         AfpNum2name(function));
                     AFP_AFPFUNC_START(function, (char *)AfpNum2name(function));
                     err = (*afp_switch[function])(obj,
                                                   (char *)dsi->commands, dsi->cmdlen,
                                                   (char *)&dsi->data, &dsi->datalen);
                     AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
-                    LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
+                    LOG(log_maxdebug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                         AfpNum2name(function), AfpErr2name(err));
 
                     if (!idle_worker_is_active()) {
@@ -1054,14 +1054,14 @@ void afp_over_dsi(AFPObj *obj)
             if (afp_switch[function] != NULL) {
                 dsi->datalen = DSI_DATASIZ;
                 dsi->flags |= DSI_RUNNING;
-                LOG(log_debug, logtype_afpd, "<== Start AFP command: %s",
+                LOG(log_maxdebug, logtype_afpd, "<== Start AFP command: %s",
                     AfpNum2name(function));
                 AFP_AFPFUNC_START(function, (char *)AfpNum2name(function));
                 err = (*afp_switch[function])(obj,
                                               (char *)dsi->commands, dsi->cmdlen,
                                               (char *)&dsi->data, &dsi->datalen);
                 AFP_AFPFUNC_DONE(function, (char *)AfpNum2name(function));
-                LOG(log_debug, logtype_afpd, "==> Finished AFP command: %s -> %s",
+                LOG(log_maxdebug, logtype_afpd, "==> Finished AFP command: %s -> %s",
                     AfpNum2name(function), AfpErr2name(err));
                 dsi->flags &= ~DSI_RUNNING;
             } else {

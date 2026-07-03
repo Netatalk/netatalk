@@ -2012,7 +2012,18 @@ int copyfile(struct vol *s_vol,
         ad_close(adp, adflags);
 
         if (EEXIST != err) {
-            deletefile(d_vol, -1, dst, 0);
+            /* dst ownership is not certain here (the create failed for a
+             * non-EEXIST reason, or dst appeared via a race), so the conflict
+             * check governs the cleanup unlink: if it reports the object as
+             * held or unreadable, do not remove it — log and leave it. */
+            int dret = deletefile(d_vol, -1, dst, 0);
+
+            if (dret != AFP_OK && dret != AFPERR_NOOBJ) {
+                LOG(log_error, logtype_afpd,
+                    "copyfile('%s'): could not remove partial destination: %d",
+                    dst, dret);
+            }
+
             goto done;
         }
 
@@ -2072,7 +2083,17 @@ error:
     }
 
     if (err) {
-        deletefile(d_vol, -1, dst, 0);
+        /* dst is the server's own freshly-created file (the CREATE|EXCL open
+         * above succeeded, so nothing pre-existed).  Log if the conflict check
+         * refuses (e.g. a peer raced an open on it), so a stranded temp file is
+         * diagnosable rather than silent. */
+        int dret = deletefile(d_vol, -1, dst, 0);
+
+        if (dret != AFP_OK && dret != AFPERR_NOOBJ) {
+            LOG(log_error, logtype_afpd,
+                "copyfile('%s'): could not remove failed-copy destination: %d",
+                dst, dret);
+        }
     } else if (stat_result == 0) {
         /* set dest modification date to src date */
         struct utimbuf	ut;
@@ -2111,44 +2132,25 @@ done:
 
 /* -----------------------------------
    vol: not NULL delete cnid entry. then we are in curdir and file is a only filename
-   checkAttrib:   1 check kFPDeleteInhibitBit (deletfile called by afp_delete)
+   checkAttrib:   1 check kFPDeleteInhibitBit (deletefile called by afp_delete)
 
-   when deletefile is called we don't have lock on it, file is closed (for us)
-   untrue if called by renamefile
+   NODELETE check -> one conflict GET -> policy -> unlink -> CNID/dircache
+   cleanup (afp_delete only).
 
-   ad_open always try to open file RDWR first and ad_lock takes care of
-   WRITE lock on read only file.
+   The conflict read goes through of_get_locks(), which reuses a held fork's fd
+   instead of opening+closing a transient one, so it never drops a lock this child
+   holds on the target inode.  The unlink itself needs no fd.
 */
-
-static int check_attrib(const struct vol *vol, struct adouble *adp)
-{
-    uint16_t   bshort = 0;
-    ad_getattr(adp, &bshort);
-
-    /*
-     * Does kFPDeleteInhibitBit (bit 8) set?
-     */
-    if (!(vol->v_ignattr & ATTRBIT_NODELETE)
-            && (bshort & htons(ATTRBIT_NODELETE))) {
-        return AFPERR_OLOCK;
-    }
-
-    if (bshort & htons(ATTRBIT_DOPEN | ATTRBIT_ROPEN)) {
-        return AFPERR_BUSY;
-    }
-
-    return 0;
-}
 
 /*!
  * @note dirfd can be used for unlinkat semantics
  */
 int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
 {
-    struct adouble	ad;
-    struct adouble      *adp = NULL;
-    int			adflags, err = AFP_OK;
-    int			meta = 0;
+    struct path  dpath = {0};
+    int          df_locked = 0, rf_locked = 0;
+    uint16_t     band_held = 0;
+    int          err = AFP_OK;
 
     if (file == NULL) {
         LOG(log_error, logtype_afpd, "deletefile: file parameter is NULL");
@@ -2156,109 +2158,112 @@ int deletefile(const struct vol *vol, int dirfd, char *file, int checkAttrib)
     }
 
     LOG(log_debug, logtype_afpd, "deletefile('%s')", file);
-    ad_init(&ad, vol);
+    /* of_get_locks() stats this fresh (of_findname/at), resolving "do we hold a
+     * fork on this inode?" and reporting a missing target as OF_LOCKS_NOENT. */
+    dpath.u_name = file;
 
+    /* --- NODELETE / kFPDeleteInhibitBit (afp_delete only) ---
+     * Read the in-core header when a fork with loaded metadata is held (no open),
+     * else a private ad_metadata().  Never ad_open(HF) onto of->of_ad: on v2 the
+     * ._ sidecar shares the rfork inode and on EA the meta fd is the data fd, so a
+     * transient meta open+close there would strand a held lock.  The EA metadata
+     * read must stay RDONLY (an RDWR read would open() the data inode). */
     if (checkAttrib) {
-        /* was EACCESS error try to get only metadata */
-        /* we never want to create a resource fork here, we are going to delete it
-         * moreover sometimes deletefile is called with a no existent file and
-         * ad_open would create a 0 byte resource fork
-        */
-        if (ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &ad) == 0) {
-            if ((err = check_attrib(vol, &ad))) {
-                ad_close(&ad, ADFLAGS_HF | ADFLAGS_CHECK_OF);
-                return err;
+        const struct ofork *ofm = (dirfd != -1) ? of_findnameat(dirfd, &dpath)
+                                  : of_findname(vol, &dpath);
+        uint16_t      attr = 0;
+
+        if (ofm != NULL && AD_META_OPEN(ofm->of_ad)) {
+            ad_getattr(ofm->of_ad, &attr);
+        } else {
+            /* No usable in-core header: read it privately.  ADFLAGS_CHECK_OF opens
+             * the data fork (-> SETSHRMD -> DF), so an EACCES on a no-access file
+             * propagates and ad_metadata() retries the read as root; flags=0 would
+             * read the EA by path, get EACCES masked to ENOENT, and miss the bit.
+             * The transient open+close strands no lock of ours: this branch only
+             * runs when no metadata-bearing fork is held on the inode. */
+            struct adouble admeta;
+            ad_init(&admeta, vol);
+
+            if (ad_metadataat(dirfd, file, ADFLAGS_CHECK_OF, &admeta) == 0) {
+                ad_getattr(&admeta, &attr);
+                ad_close(&admeta, ADFLAGS_HF | ADFLAGS_CHECK_OF);
+            } else if (errno != ENOENT) {
+                /* Fail closed: an errored metadata read leaves NODELETE unknown,
+                 * so refuse rather than risk bypassing it.  ENOENT is not an error
+                 * here - a file with no header simply has no NODELETE bit. */
+                LOG(log_error, logtype_afpd,
+                    "deletefile('%s'): NODELETE metadata read failed (%s); refusing "
+                    "delete with AFPERR_ACCESS", file, strerror(errno));
+                return AFPERR_ACCESS;
             }
+        }
 
-            meta = 1;
+        if (!(vol->v_ignattr & ATTRBIT_NODELETE)
+                && (attr & htons(ATTRBIT_NODELETE))) {
+            return AFPERR_OLOCK;
         }
     }
 
-    /* try to open both forks at once */
-    adflags = ADFLAGS_DF;
+    /* --- one conflict GET: data + rfork content + full band ---
+     * try_root = 1 always: the band is the server's own bookkeeping, so even the
+     * checkAttrib==0 overwrite callers read it as root (the unlink still runs as
+     * the user).  Fail closed on an indeterminate read. */
+    switch (of_get_locks(vol, dirfd, &dpath,
+                         1, 0, 0,        /* data content: whole data zone */
+                         1, 0, 0,        /* rfork content: whole rfork zone */
+                         ALL_BAND_BITS, 1,
+                         &df_locked, &rf_locked, &band_held)) {
+    case OF_LOCKS_NOENT:
+        return AFPERR_NOOBJ;
 
-    if (ad_openat(&ad, dirfd, file,
-                  adflags | ADFLAGS_RF | ADFLAGS_NORF | ADFLAGS_RDONLY) < 0) {
-        switch (errno) {
-        case ENOENT:
-            err = AFPERR_NOOBJ;
-            goto end;
+    case OF_LOCKS_ERROR:
+        /* indeterminate lock state -> refuse, never unlink.  AFPERR_ACCESS is the
+         * client-visible code for the dominant EACCES cause; the log keeps the
+         * rarer causes (a hard F_GETLK error, a held ofork with no data fd)
+         * diagnosable. */
+        LOG(log_error, logtype_afpd,
+            "deletefile('%s'): conflict GET indeterminate (could not read lock "
+            "state); refusing delete with AFPERR_ACCESS", file);
+        return AFPERR_ACCESS;
 
-        case EACCES: /* maybe it's a file with no write mode for us */
-            break;   /* was return AFPERR_ACCESS;*/
-
-        case EROFS:
-            err = AFPERR_VLOCK;
-            goto end;
-
-        default:
-            err = AFPERR_PARAM;
-            goto end;
-        }
-    } else {
-        adp = &ad;
+    default:                       /* OF_LOCKS_OK */
+        break;
     }
 
-    if (adp && AD_RSRC_OPEN(adp)) {   /* there's a resource fork */
-        adflags |= ADFLAGS_RF;
-
-        /* FIXME we have a pb here because we want to know if a file is open
-         * there's a 'priority inversion' if you can't open the resource fork RW
-         * you can delete it if it's open because you can't get a write lock.
-         *
-         * ADLOCK_FILELOCK means the whole resource fork, not only after the
-         * metadatas
-         *
-         * FIXME it doesn't work for RFORK open read only and fork open without deny mode
-         */
-        if (ad_tmplock(&ad, ADEID_RFORK, ADLOCK_WR | ADLOCK_FILELOCK, 0, 0, 0) < 0) {
-            err = AFPERR_BUSY;
-            goto end;
-        }
+    /* An open with no deny claim does not block a delete: DELETE_BLOCKING_BAND_BITS
+     * excludes the "none" access markers (OPEN_NONE, which plants a band entry only
+     * so a mode-less open registers) and the read-only-open markers (OPEN_RD) for
+     * both data and rsrc.  Deny modes (DENY_*) and a write open (OPEN_WR) still
+     * block (left unchanged pending AFP/SMB spec and client validation). */
+    if (df_locked || rf_locked || (band_held & DELETE_BLOCKING_BAND_BITS)) {
+        return AFPERR_BUSY;
     }
 
-    if (adp && ad_tmplock(&ad, ADEID_DFORK, ADLOCK_WR, 0, 0, 0) < 0) {
-        LOG(log_error, logtype_afpd, "deletefile('%s'): ad_tmplock error: %s", file,
-            strerror(errno));
-        err = AFPERR_BUSY;
-    } else if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file))
-               && !(err = netatalk_unlinkat(dirfd, file))) {
-        cnid_t id;
+    /* checkAttrib is last in the && so the unlink is never short-circuited away
+     * for the rename/copy-overwrite callers. */
+    if (!(err = vol->vfs->vfs_deletefile(vol, dirfd, file))
+            && !(err = netatalk_unlinkat(dirfd, file))
+            && checkAttrib) {
+        cnid_t      id;
         struct dir *cachedfile;
+        AFP_CNID_START("cnid_get");
+        id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file));
+        AFP_CNID_DONE();
 
-        if (checkAttrib) {
-            /* Delete CNID */
-            AFP_CNID_START("cnid_get");
-            id = cnid_get(vol->v_cdb, curdir->d_did, file, strlen(file));
+        if (id) {
+            AFP_CNID_START("cnid_delete");
+            cnid_delete(vol->v_cdb, id);
             AFP_CNID_DONE();
-
-            if (id) {
-                AFP_CNID_START("cnid_delete");
-                cnid_delete(vol->v_cdb, id);
-                AFP_CNID_DONE();
-            }
-
-            /* Remove file from dircache */
-            /* file guaranteed non-NULL (checked at function entry) */
-            AFP_ASSERT(file != NULL);
-            cachedfile = dircache_search_by_name(vol, curdir, file,
-                                                 strnlen(file, CNID_MAX_PATH_LEN));
-
-            if (cachedfile) {
-                dir_remove(vol, cachedfile, 0);  /* User-initiated delete cleanup */
-            }
         }
-    }
 
-end:
+        AFP_ASSERT(file != NULL);
+        cachedfile = dircache_search_by_name(vol, curdir, file,
+                                             strnlen(file, CNID_MAX_PATH_LEN));
 
-    if (meta) {
-        ad_close(&ad, ADFLAGS_HF | ADFLAGS_CHECK_OF);
-    }
-
-    if (adp) {
-        /* ad_close removes locks if any */
-        ad_close(&ad, adflags);
+        if (cachedfile) {
+            dir_remove(vol, cachedfile, 0);  /* User-initiated delete cleanup */
+        }
     }
 
     return err;

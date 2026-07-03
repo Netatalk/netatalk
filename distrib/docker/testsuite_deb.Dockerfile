@@ -107,6 +107,8 @@ RUN meson setup build \
     -Dwith-testsuite=true \
 &&  meson compile -C build
 
+RUN meson test -C build --print-errorlogs
+
 RUN meson install --destdir=/staging/ -C build
 
 FROM debian:13.5-slim@sha256:28de0877c2189802884ccd20f15ee41c203573bd87bb6b883f5f46362d24c5c2 AS deploy
